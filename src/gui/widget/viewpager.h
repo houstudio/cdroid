@@ -220,6 +220,10 @@ public:
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode);
     void addTouchables(std::vector<View*>& views);
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs);
+    bool beginFakeDrag();
+    void endFakeDrag();
+    void fakeDragBy(float xOffset);
+    bool isFakeDragging()const;
 };
 
 }//endof namespace
