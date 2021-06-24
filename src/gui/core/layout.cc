@@ -28,7 +28,7 @@ Layout::Layout(int fontSize,int width,int ellipsis){
     mSpacingAdd=0;
     mLayout=0;
     mMultiline=false;
-    mBreakStrategy=1;//BREAK_STRATEGY_SIMPLE ;
+    mBreakStrategy=BREAK_STRATEGY_SIMPLE ;
     mEditable=false;
 }
 
@@ -461,7 +461,6 @@ void Layout::relayout(bool force){
         wch[1]=0;
         switch(breaks[0]){
         case WORDBREAK_NOBREAK:
-            LOGD_IF(wch[0]=='\n',"i=%d");
             word.append(1,mText[i]);
             measureSize(word,extents);
             if(mBreakStrategy && (total_width+extents.x_advance>mWidth)){
@@ -479,7 +478,6 @@ void Layout::relayout(bool force){
             word.append(1,mText[i]);
             measureSize(word,extents);
             int outofwidth=(total_width+extents.x_advance>mWidth);
-            LOGD_IF(wch[0]=='\n',"i=%d");
             if( (((breaks[0]==WORDBREAK_BREAK) && ( outofwidth && (mBreakStrategy==0) ))||(linebreak==LINEBREAK_MUSTBREAK))){
                 pushLineData(start,ytop,fontextents.descent,total_width);
                 ytop += mLineHeight;

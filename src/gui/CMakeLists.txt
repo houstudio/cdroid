@@ -40,8 +40,8 @@ set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} ${SRCS_WIDGET}
 	${SRCS_DRAWABLES} ${SRCS_CAIROMM} ${SRCS_DIALOG} ${SRCS_LOOP})
 
 add_library(gui_objs OBJECT ${SOURCES_GUI})
-add_library(gui_static STATIC ${SOURCES_GUI})
-add_library(gui SHARED ${SOURCES_GUI})
+add_library(gui_static STATIC $<TARGET_OBJECTS:gui_objs>)
+add_library(gui SHARED $<TARGET_OBJECTS:gui_objs>)
 
 add_custom_target(systempak
    COMMAND zip -r -0 ${CMAKE_CURRENT_BINARY_DIR}/system.pak *
