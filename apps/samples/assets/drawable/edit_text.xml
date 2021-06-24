@@ -1,0 +1,8 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item state_window_focused="false" state_enabled="true" drawable="@drawable/textfield_default" />
+    <item state_window_focused="false" state_enabled="false" drawable="@drawable/textfield_disabled" />
+    <item state_enabled="true" state_focused="true" drawable="@drawable/textfield_selected" />
+    <item state_enabled="true" drawable="@drawable/textfield_default" />
+    <item state_focused="true" drawable="@drawable/textfield_disabled_selected" />
+    <item drawable="@drawable/textfield_disabled" />
+</selector>

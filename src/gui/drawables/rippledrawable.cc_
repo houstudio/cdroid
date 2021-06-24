@@ -1,0 +1,48 @@
+#include <drawables/rippledrawable.h>
+namespace cdroid{
+
+RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner)
+    :LayerDrawable::LayerState(orig,owner){
+    mTouchThemeAttrs = orig->mTouchThemeAttrs;
+    mColor = orig->mColor;
+    if (orig->mDensity != mDensity) {
+        applyDensityScaling(orig->mDensity, mDensity);
+    }
+}
+
+void RippleDrawable::RippleState::onDensityChanged(int sourceDensity, int targetDensity){
+    LayerDrawable::LayerState::onDensityChanged(sourceDensity, targetDensity);
+    applyDensityScaling(sourceDensity, targetDensity);
+}
+
+void RippleDrawable::RippleState::applyDensityScaling(int sourceDensity, int targetDensity) {
+    if (mMaxRadius != RADIUS_AUTO) {
+        mMaxRadius = Drawable::scaleFromDensity(
+                mMaxRadius, sourceDensity, targetDensity, true);
+    }
+}
+
+Drawable* RippleDrawable::RippleState::newDrawable() {
+    return new RippleDrawable(this, nullptr);
+}
+
+int RippleDrawable::RippleState::getChangingConfigurations()const{
+    return LayerDrawable::LayerState::getChangingConfigurations()
+        |(mColor != nullptr ? mColor->getChangingConfigurations() : 0);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
+    mState.reset(new RippleState(state, this));
+    mLayerState = mState;
+    mDensity = 160;//Drawable::resolveDensity(res, mState.mDensity);
+
+    if (mState->mChildren.size()) {
+        ensurePadding();
+        refreshPadding();
+    }
+    updateLocalState();
+}
+
+}

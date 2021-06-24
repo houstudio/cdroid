@@ -1,0 +1,103 @@
+#ifndef __UI_IMAGE_VIEW_H__
+#define __UI_IMAGE_VIEW_H__
+
+#include <widget/view.h>
+
+namespace cdroid{
+
+enum ScaleType{
+    MATRIX       =0,
+    FIT_XY       =1,
+    FIT_START    =2,
+    FIT_CENTER   =3,
+    FIT_END      =4,
+    CENTER       =5,
+    CENTER_CROP  =6,
+    CENTER_INSIDE=7
+};
+class ImageView : public View {
+private:
+    bool mColorMod;
+    bool mHasColorFilter;
+    bool mHasDrawableTint;
+    bool mHasDrawableTintMode;
+    bool mBaselineAlignBottom;
+    int mBaseline;
+    int mAlpha;
+    int mViewAlphaScale;
+    void initImageView();
+    void resolveUri();
+    int resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec);
+    void applyImageTint();
+    void applyColorMod();
+protected:
+    std::string mResource;
+    int mScaleType;
+    int mLevel;
+    int mMaxWidth;
+    int mMaxHeight;
+    int mDrawableWidth;
+    int mDrawableHeight;
+    bool mAdjustViewBounds;
+    bool mMergeState;
+    bool mHaveFrame;
+    bool mCropToPadding;
+    std::vector<int>mState;
+    Drawable*mDrawable;
+    ColorFilter*mColorFilter;
+    ColorStateList*mDrawableTintList;
+    int mDrawableTintMode;
+    BitmapDrawable*mRecycleableBitmapDrawable;
+    Matrix mMatrix;
+    Matrix mDrawMatrix;
+    void updateDrawable(Drawable* d);
+    void resizeFromDrawable();
+    void configureBounds();
+    bool setFrame(int l, int t, int w, int h)override;
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    virtual void onDraw(Canvas& canvas) override;
+public:
+public:
+    ImageView(Context*ctx,const AttributeSet&attrs);
+    explicit ImageView(int w, int h);
+    virtual ~ImageView();
+    bool verifyDrawable(Drawable* dr)const override;
+    void jumpDrawablesToCurrentState();
+    void invalidateDrawable(Drawable& dr)override;
+    std::vector<int> onCreateDrawableState()const override;
+    int getScaleType()const;
+    void setScaleType(int st);
+    bool getCropToPadding()const;
+    void setCropToPadding(bool cropToPadding);
+    void setMaxWidth(int);
+    void setMaxHeight(int);
+    int getMaxWidth()const;
+    int getMaxHeight()const;
+    Drawable*getDrawable();
+    void setBaseline(int baseline);
+    int getBaseline()override;
+    void setBaselineAlignBottom(bool aligned);
+    bool getBaselineAlignBottom()const;
+    bool getAdjustViewBounds()const;
+    void setAdjustViewBounds(bool adjustViewBounds);
+    void setImageResource(const std::string&resid);
+    void setImageDrawable(Drawable* drawable);
+    void setImageBitmap(RefPtr<ImageSurface>bitmap);
+    void setImageTintList(ColorStateList*tint);
+    ColorStateList* getImageTintList();
+    void setImageTintMode(int mode);
+    int getImageTintMode()const;
+    void setColorFilter(int color,int mode);
+    void setColorFilter(int color);
+    void setColorFilter(ColorFilter* cf);
+    void clearColorFilter();
+    ColorFilter* getColorFilter();
+    void setImageAlpha(int alpha);
+    int getImageAlpha()const;
+    void setImageLevel(int level);
+    void setSelected(bool selected)override;
+    void setImageState(const std::vector<int>&state, bool merge);
+};
+
+}
+#endif

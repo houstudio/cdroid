@@ -1,0 +1,40 @@
+## id3 makefile for Borland/Embarcadero C++ (tested with 5.5) ##############
+
+CC     = bcc32 -q -D_POSIX_
+!ifndef CFLAGS
+CFLAGS = -w- -d -k- -O1
+!endif
+
+.autodepend
+
+############################################################################
+
+id3.exe: main.obj varexp.obj fileexp.obj dumptag.obj \
+	 sedit.obj mass_tag.obj pattern.obj \
+	 setid3.obj getid3.obj id3v1.obj \
+	 setid3v2.obj getid3v2.obj id3v2.obj fileops.obj \
+	 setlyr3.obj getlyr3.obj lyrics3.obj \
+	 setfname.obj setquery.obj charconv.obj char_ucs.obj char_utf8.obj
+	$(CC) $(CFLAGS) -e$@ $**
+
+all  : id3.exe
+
+final: id3.exe
+	upx --best $**				## requires upx installed ##
+
+clean:
+	del *.tds *.obj *.exe
+
+############################################################################
+
+main.obj: main.cpp
+	$(CC) $(CFLAGS) -o$@ -c main.cpp
+
+.c.obj:
+	$(CC) $(CFLAGS) -c $<
+
+.cpp.obj:
+	$(CC) $(CFLAGS) -c $<
+
+############################################################################
+

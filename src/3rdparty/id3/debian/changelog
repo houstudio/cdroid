@@ -1,0 +1,50 @@
+id3mtag (0.80-1) unstable; urgency=low
+
+  * ID3v2.4 support added: upon writing, will be converted to ID3v2.3
+  * Added support for --long-options
+  * Added complete tag viewing by using -v/--verbose
+  * Added programmable bash completion
+  * Bug fixes to handling of COMM/TXXX frames in ID3v2
+
+ -- Marc R. Schoolderman <squell@alumina.nl>  Sun, 20 Dec 2015 23:51:44 +0100
+
+id3mtag (0.79-1) unstable; urgency=low
+
+  * Added tag viewing
+  * Will now read/write ID3v2 tags by default if already present
+  * Support for reading non-standard ID3v2 frames using %{XXXX}
+  * Minor bug fixes
+
+ -- Marc R. Schoolderman <squell@alumina.nl>  Thu, 29 Jan 2015 18:17:23 +0100
+
+id3mtag (0.78-1) unstable; urgency=low
+
+  * Added support for Lyrics3 v2 tags
+  * Added -E to only process existing tags
+  * Added word splitting (%*) in substitution
+  * Other minor changes
+
+ -- Marc R. Schoolderman <squell@alumina.nl>  Tue, 21 Mar 2006 09:25:33 +0100
+
+id3mtag (0.77-1) unstable; urgency=low
+
+  * Added support for ID3v2.2 tags and Unicode inside ID3v2 tags.
+  * Added -M to preserve file timestamps
+  * Added -D to copy tags between files
+  * Added selection in string substitution ("%||?")
+
+ -- Marc R. Schoolderman <squell@alumina.nl>  Tue, 31 Jan 2006 18:16:58 +0100
+
+id3mtag (0.76-1) unstable; urgency=low
+
+  * Added -m switch for shorthand tagging (-m "%a.mp3" == -a %1 "*.mp3")
+  * Added -R switch for GNU find-like recursive searching
+  * Fixed some cases of ID3v2 tag rejection
+
+ -- Marc R. Schoolderman <squell@alumina.nl>  Wed, 20 Jul 2005 22:44:40 +0200
+
+id3mtag (0.75-1) unstable; urgency=low
+
+  * First Debianization; see `CHANGES' for further history.
+
+ -- Marc R. Schoolderman <squell@alumina.nl>  Thu,  3 Feb 2005 07:00:34 +0100

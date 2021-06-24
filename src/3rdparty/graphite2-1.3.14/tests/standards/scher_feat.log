@@ -1,0 +1,67 @@
+20 features
+1668690226 cv12 Dal
+	0	Standard
+	1	Alternate
+1668690996 cv44 Meem
+	0	Standard
+	1	Sindhi-style
+1668691000 cv48 Heh
+	0	Standard
+	3	Kurdish-style
+	1	Sindhi-style
+	2	Urdu-style
+1668691248 cv50 Arabic U
+	0	Standard
+	1	Filled
+1668691504 cv60 Maddah
+	0	Small
+	1	Large
+1668691506 cv62 Shadda+kasra placement
+	0	Raised
+	1	Lowered
+1668691760 cv70 Damma
+	0	Standard
+	1	Filled
+	2	Short
+1668691762 cv72 Dammatan
+	0	Standard
+	1	Six-nine
+1668691764 cv74 Inverted Damma
+	0	Standard
+	1	Hollow
+1668691766 cv76 Superscript Alef
+	0	Small
+	1	Large
+1668691768 cv78 Sukun
+	0	Closed
+	1	Open down
+	2	Open left
+1668692016 cv80 End of ayah
+	0	Standard
+	1	Simplified A
+	2	Simplified B
+1668692018 cv82 Eastern digits
+	0	Standard
+	4	Rohingya-style
+	1	Sindhi-style
+	2	Urdu-style
+1668692020 cv84 Comma
+	0	Upward
+	1	Downward
+1668692272 cv90 Jeh hack
+	0	Standard
+	1	Dot Hat
+1668692274 cv92 Dotless head of khah hack
+	0	Standard
+	1	Jazm
+1735537005 gr1m Mirroring for Graphite 1
+	0	False
+	1	True
+1685284204 dsel Diacritic selection
+	1	True
+	0	False
+1768846963 invs Show invisible characters
+	0	False
+	1	True
+1 NoName
+Feature Languages:	bdh	ckb	kmr	kur	plk	rhg	scl	sd	sdh	snd	ur	urd

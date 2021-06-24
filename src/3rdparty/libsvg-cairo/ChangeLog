@@ -1,0 +1,736 @@
+2009-04-08 16:02  philipn
+
+	* src/svg_cairo.c: libsvg added the index parameter (ignore by
+	  libsvg-cairo) to the render_image callback function;
+
+2009-04-08 11:59  philipn
+
+	* src/svg_cairo.c: mods for change in order of functions in render
+	  engine structure; remove functions not implemented and set
+	  pointer to NULL in callback struct;
+
+2009-04-01 18:06  philipn
+
+	* src/svg_cairo.c: libsvg removed embedded image render callback;
+	  external and embedded images are rendered using the same callback
+	  and are converted to bgra using the same libsvg utility function;
+
+2009-03-30 13:18  philipn
+
+	* src/svg_cairo.c: using libsvg utility function to convert from
+	  elliptical arc endpoint parameterization to center
+	  parameterization;
+
+2009-03-29 13:22  philipn
+
+	* src/svg_cairo.c: libsvg added const qualifiers to callback
+	  function parameters
+
+2009-03-29 11:29  philipn
+
+	* src/: svg-cairo-internal.h, svg_cairo.c, svg_cairo_state.c: font
+	  family and dash array pointers are guaranteed to remain valid
+	  during rendering and therefore there is no need to keep duplicate
+	  copies;
+
+2009-03-27 16:06  philipn
+
+	* src/svg_cairo.c: changed path creation given the change to libsvg
+	  where a path data structure is passed to render_path;
+
+2009-03-25 21:19  philipn
+
+	* configure.in: use m4_define() to avoid errors like: error:
+	  possibly undefined macro: LT_CURRENT;
+
+2009-03-23 16:37  philipn
+
+	* NEWS, configure.in: update for snapshot 0.4.0
+
+2009-03-23 14:42  philipn
+
+	* src/svg_cairo.c: add explict cast to avoid msvc warning;
+
+2009-03-23 12:16  philipn
+
+	* src/: svg-cairo-internal.h, svg_cairo.c, svg_cairo_state.c: fix
+	  percentage lengths which are relative to the view box
+	  width/height and not viewport width/height; fix formula for
+	  percentage length with 'other' orientation;
+
+2009-03-21 12:51  philipn
+
+	* src/svg_cairo.c: handling new image view box information provided
+	  by libsvg; replaced simple image width/height scaling with proper
+	  view box scaling and translation;
+
+2009-03-20 15:10  philipn
+
+	* src/svg_cairo.c: implement new circle render api callback
+
+2009-03-18 21:20  philipn
+
+	* src/svg_cairo.c: view_box parameter changed to pointer in libsvg
+
+2009-03-17 22:37  philipn
+
+	* src/svg_cairo.c: changes to match change to transform type from
+	  libsvg
+
+2009-03-13 15:04  philipn
+
+	* src/svg_cairo.c: implemented new callback function for buffered
+	  (embedded) images
+
+2009-03-10 11:47  philipn
+
+	* src/svg_cairo.c: using libsvg utility function to get the
+	  transform associated with the view box
+
+2009-03-08 12:47  philipn
+
+	* src/svg_cairo.c: added placeholder functions for new marker style
+	  callbacks
+
+2009-03-02 19:12  philipn
+
+	* src/svg_cairo.c: implemented new measure_font_size function;
+	  moved set_clip_path and set_mask functions following changed to
+	  libsvg; changed set_font_size to accept a double following change
+	  to libsvg;
+
+2009-02-28 13:06  philipn
+
+	* NEWS, configure.in: updates for version 0.3
+
+2009-02-27 12:18  philipn
+
+	* src/svg_cairo.c: added placeholder for new set_visibility
+	  callback
+
+2009-02-26 14:11  philipn
+
+	* src/svg_cairo.c: updated following libsvg's change of
+	  set_viewport_dimension to set_viewport adding translation from
+	  the x and y parameters in the set_viewport call
+
+2009-02-23 11:47  philipn
+
+	* src/svg_cairo.c: added placeholder for function set_mask added to
+	  render engine changed name of bbox/user units following change in
+	  libsvg
+
+2009-02-20 11:12  philipn
+
+	* src/: svg-cairo.h, svg_cairo.c: added element ref render function
+	  which calls the associated libsvg function changes to pattern
+	  getting and renderring following changes to libsvg
+
+2009-02-19 15:09  philipn
+
+	* src/svg_cairo.c: added placeholder implementation for new
+	  clipping path callbacks from libsvg modified render engine struct
+	  to match new patch construction sub-structure
+
+2009-02-15 14:17  philipn
+
+	* src/: svg-cairo.h, svg_cairo.c: replace base directory setting
+	  function with new base setting functions from libsvg
+
+2009-02-10 19:06  philipn
+
+	* NEWS, configure.in: updates for snapshot 0.2
+
+2009-02-08 17:23  philipn
+
+	* src/svg-cairo-internal.h, win32_config.h: simplify by not
+	  including win32 config
+
+2009-02-07 14:27  philipn
+
+	* src/: svg-cairo.h, svg_cairo.c: add function to set the base
+	  directory name when FILE or buffer is parsed
+
+2009-02-06 20:31  philipn
+
+	* src/svg_cairo.c: move function up to before it is referenced to
+	  avoid msvc warning
+
+2009-02-06 15:39  philipn
+
+	* src/: svg-cairo-internal.h, svg_cairo.c: changes for new text
+	  rendering method used by libsvg
+
+2009-01-28 12:43  philipn
+
+	* src/svg_cairo_sprintf_alloc.c: win32 compat
+
+2009-01-28 12:42  philipn
+
+	* src/svg_cairo.c: font size is now a svg_length_t. Get the image
+	  bitmap data using the new 2 step svg api hierarchy callbacks now
+	  have id and class parameters implementation of new functions
+	  defined in svg-cairo.h
+
+2009-01-28 12:42  philipn
+
+	* src/svg-cairo.h: add alternative render function allowing
+	  different svg_t to be used. Allow the render engine to be gotten,
+	  e.g. for setting an initial context Allow the drawing context to
+	  be set when getting and using the render engine
+
+2009-01-28 12:41  philipn
+
+	* src/svg-cairo-internal.h: win32 compat include
+
+2009-01-28 12:41  philipn
+
+	* win32_config.h: win32 config
+
+2009-01-27 18:03  philipn
+
+	* .cvsignore, AUTHORS, COPYING, Makefile.am, NEWS, README,
+	  RELEASING, autogen.sh, configure.in, libsvg-cairo.pc.in,
+	  src/.cvsignore, src/Makefile.am, src/svg-cairo-internal.h,
+	  src/svg-cairo-version.h.in, src/svg-cairo.h,
+	  src/svg_cairo_sprintf_alloc.c, src/svg_cairo_state.c,
+	  src/svg_cairo.c: Initial revision
+
+2009-01-27 18:03  philipn
+
+	* .cvsignore, AUTHORS, COPYING, Makefile.am, NEWS, README,
+	  RELEASING, autogen.sh, configure.in, libsvg-cairo.pc.in,
+	  src/.cvsignore, src/Makefile.am, src/svg-cairo-internal.h,
+	  src/svg-cairo-version.h.in, src/svg-cairo.h,
+	  src/svg_cairo_sprintf_alloc.c, src/svg_cairo_state.c,
+	  src/svg_cairo.c: copy from cvs
+	  -d:pserver:anonymous@cvs.cairographics.org:/cvs/cairo co -D
+	  2009-01-01 libsvg-cairo
+
+2005-08-13  Jason Dorje Short  <jdorje@users.sf.net>
+	* src/svg_cairo.c: (_svg_cairo_length_to_pixel):
+	Use svg_get_dpi to query the DPI rather than assuming it to be 100.
+
+2005-07-31  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* configure.in: Requires libsvg >= 0.1.4 since svg_cairo.c sets
+	the text_extents, measure_position and get_text_anchor fields of
+	svg_render_engine_t.
+
+2005-07-27  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_cairo.c: (_svg_cairo_set_gradient): Fix bug so that
+	object opacity gets multiplied into the gradient as well.
+
+	* src/svg_cairo.c: (_svg_cairo_set_color_and_alpha),
+	(_svg_cairo_set_paint_and_opacity): Move multiplication of object
+	opacity down from _svg_cairo_set_paint_and_opacity to
+	_svg_cairo_set_color_and_alpha in order to be consistent with
+	_svg_cairo_set_gradient.
+
+2005-07-20  Malcolm Tredinnick <malcolm@commsecure.com.au>
+
+	* configure.in:
+	Continue the configure process if pangocairo is not available.
+	Fix a typo in the description of --disable-pango.
+
+2005-07-19  Keith Packard  <keithp@keithp.com>
+
+	* src/svg_cairo.c: (_svg_cairo_get_text_anchor),
+	(_svg_cairo_render_text):
+	Kludge - pull text_anchor out of backend as it's stacked there.
+	Ignore it in the backend as it's done already in libsvg.
+
+2005-07-18  Keith Packard  <keithp@keithp.com>
+
+	* src/svg_cairo.c: (_svg_cairo_render_text),
+	(_svg_cairo_render_image), (_svg_cairo_text_extents),
+	(_svg_cairo_measure_position):
+	Add primitive support for <tspan> code in libsvg,
+	this required redoing the text api to measure and
+	position text in pixels.
+
+2005-07-12  Keith Packard  <keithp@keithp.com>
+
+	* configure.in:
+	* src/Makefile.am:
+	* src/svg-cairo-internal.h:
+	* src/svg_cairo.c: (_svg_cairo_set_font_family),
+	(_svg_cairo_set_font_size), (_svg_cairo_set_font_style),
+	(_svg_cairo_set_font_weight), (_svg_cairo_render_text),
+	(_svg_cairo_text_size), (_svg_cairo_length_to_pixel):
+	* src/svg_cairo_sprintf_alloc.c:
+	* src/svg_cairo_state.c: (_svg_cairo_state_init),
+	(_svg_cairo_state_init_copy), (_svg_cairo_state_deinit):
+	Use pangocairo where available to draw text instead of
+	the toy API. Disable with ./configure -disable-pango
+	
+	Also, add a few #defines needed to define some new libc
+	functions from system includes
+
+2005-07-12  Carl Worth  <cworth@cworth.org>
+
+	* src/svg-cairo-internal.h:
+	* src/svg-cairo.h:
+	* src/svg_cairo_sprintf_alloc.c:
+	* src/svg_cairo_state.c: Convert files to utf-8.
+
+2005-07-12  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_cairo.c: (_svg_cairo_begin_group),
+	(_svg_cairo_set_pattern): Track change in
+	cairo_surface_create_similar to accept a cairo_content_t rather
+	than a cairo_format_t.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Bump version to 0.1.5-head after tagging.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* NEWS: Add notes for 0.1.6 snapshot.
+
+	* configure.in:	Increment LIBSVG_CAIRO_VERSION to 0.1.6
+
+	* configure.in: Require cairo >= 0.5.0.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* .cvsignore: Ignore releases directory.
+
+2005-05-12  Carl Worth  <cworth@cworth.org>
+
+	* src/svg-cairo-internal.h:
+	* src/svg_cairo.c: (svg_cairo_create), (_svg_cairo_begin_group),
+	(_svg_cairo_begin_element), (_svg_cairo_end_group),
+	(_svg_cairo_quadratic_curve_to), (_svg_cairo_set_gradient),
+	(_svg_cairo_set_pattern), (_svg_cairo_select_font),
+	(_svg_cairo_transform), (_svg_cairo_render_ellipse),
+	(_svg_cairo_render_image), (_svg_cairo_copy_cairo_state),
+	(_svg_cairo_push_state), (_svg_cairo_pop_state),
+	(_svg_cairo_arc_to):
+	* src/svg_cairo_state.c: (_svg_cairo_state_init),
+	(_svg_cairo_state_init_copy), (_svg_cairo_state_deinit): Port to
+	latest cairo API changes. Cleanup implementation of group
+	opacity. Re-enable group opacity now that cairo_paint_with_alpha
+	exists. All thanks to Owen Taylor.
+
+2005-05-11  Owen Taylor  <otaylor@redhat.com>
+
+	* svg/svg_cairo.c: Fix up for cairo API changes.
+	(cairo_matrix_t, cairo_get_current_point,
+	cairo_set_source_surface, etc.)
+
+	* svg/svg-cairo-internal.h svg/svg_cairo_state.c: 
+	Add a saved_cr field to the state.
+
+	* svg/svg_cairo.c: Add a child_surface parameter to
+	_svg_cairo_push_state(), and when set, create a new
+	cairo_t and save the old one away to be restored 
+	at _svg_cairo_pop_state() time.
+
+2005-05-02  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_cairo.c: (_svg_cairo_render_path): Fix to correctly
+	handle shapes with fill="none" and stroke="none" by calling
+	cairo_new_path so that the path isn't later drawn by subsequent
+	shapes.
+
+2005-04-26  Carl Worth  <cworth@cworth.org>
+
+	* src/svg-cairo-internal.h:
+	* src/svg_cairo.c: (_svg_cairo_set_pattern),
+	(_svg_cairo_render_path), (_svg_cairo_render_text):
+	* src/svg_cairo_state.c: (_svg_cairo_state_init):
+
+	Track change in cairo API that the path is no longer inside the
+	graphics state, (so we use cairo_fill_preserve rather than
+	save/restore around cairo_fill). Clean up pattern handling
+	considerably, (elimate state->in_set_pattern_HACK). Manually save
+	the current path before re-using the same cairo context for
+	drawing a pattern.
+
+2005-04-19  Carl Worth  <cworth@cworth.org>
+
+	* src/svg-cairo-internal.h:
+	* src/svg_cairo.c: (_svg_cairo_end_group), (_svg_cairo_set_color),
+	(_svg_cairo_set_color_and_alpha), (_svg_cairo_set_gradient),
+	(_svg_cairo_set_paint_and_opacity), (_svg_cairo_render_image):
+	Track changes in cairo API (removal of cairo_set_alpha).
+
+2005-04-11  Carl Worth  <cworth@cworth.org>
+
+	* src/svg-cairo.h:
+	* src/svg_cairo.c: (svg_cairo_get_size): Use unisgned int for
+	width/height.
+
+	* src/svg_cairo.c: (_svg_cairo_begin_group),
+	(_svg_cairo_end_group): Preserve CTM over change to target surface
+	so that groups with opacity are rendered in the right place.
+
+2005-04-11  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_cairo.c: Fix a bunch of indentation.
+	(_svg_cairo_render_text): Track unsigned char* change from libsvg.
+	(_svg_cairo_render_image): Track unsigned char* change from cairo.
+
+2005-04-02  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_cairo.c: (_svg_cairo_render_image): Use cairo_move_to
+	rather than cairo_translate to position the image, (not that it
+	should make any difference, but this will exercise a code path
+	that had been buggy).
+
+2005-02-16  Carl Worth  <cworth@cworth.org>
+
+	* autogen.sh: Call all autotool commands through environment
+	variables. Thanks to Rui Lopes.
+
+2005-02-13  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Bump version to 0.1.5-head after tagging.
+
+	* NEWS: Add notes for 0.1.5 snapshot.
+
+	* configure.in: Increment LIBSVG_CAIRO_VERSION to 0.1.5.
+
+2005-01-27  David Reveman  <davidr@novell.com>
+
+	* src/svg-cairo-internal.h: Add missing include directive.
+
+2005-01-20  Carl Worth  <cworth@cworth.org>
+
+	* src/Makefile.am (INCLUDES): 
+	* configure.in: Add lots of warning flags when compiling with gcc.
+
+2005-01-14  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_cairo_state.c (_svg_cairo_state_init_copy): Don't copy
+	child_surface. This saves huge amounts of time for SVG images with
+	deep grouping within a group with opacity != 1.0. Thanks to
+	TOKUNAGA Hiroyuki <tkng@xem.jp>.
+
+	* src/svg_cairo.c (_svg_cairo_begin_group, _svg_cairo_end_group):
+	Fix to use state->viewport_width/height so that large pieces of
+	the drawing aren't just ignored. Thanks to TOKUNAGA Hiroyuki
+	<tkng@xem.jp>.
+
+2004-08-02  Carl Worth  <cworth@isi.edu>
+
+	* COPYING:
+	* src/svg-cairo-internal.h:
+	* src/svg-cairo.h:
+	* src/svg_cairo.c:
+	* src/svg_cairo_sprintf_alloc.c:
+	* src/svg_cairo_state.c: Change copyright attribution from
+	'USC/Information Sciences Institute' to the actual corporation
+	'University of Southern California'. Change from MIT license to
+	LGPL.
+
+2004-06-07  David Reveman  <c99drn@cs.umu.se>
+
+	* src/svg_cairo.c (_svg_cairo_set_gradient): Support bounding box
+	units and gradient matrix.
+	(_svg_cairo_render_path): Pass render type to
+	_svg_cairo_set_paint_and_opacity.
+	(_svg_cairo_set_paint_and_opacity): Render type to
+	_svg_cairo_set_gradient and _svg_cairo_set_pattern.
+	(_svg_cairo_length_to_pixel): Handle bounding box coordinates
+	correctly.
+
+	* src/svg_cairo_state.c (_svg_cairo_state_init): Set bbox to 0.
+
+	* src/svg-cairo-internal.h: Added enum svg_cairo_render_type_t.
+	Added bbox flag to svg_cairo_state_t.
+
+2004-05-04  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_cairo.c (_svg_cairo_set_gradient): Call
+	cairo_pattern_destroy to avoid memory leak.
+
+2004-04-29  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_cairo.c (_svg_cairo_set_gradient): Fix focal point Y
+	offset (thanks to Keith).
+
+2004-04-28  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_cairo.c (_svg_cairo_set_gradient):
+	(_svg_cairo_set_pattern): Update to use new cairo_pattern API.
+	(_svg_cairo_set_paint_and_opacity): Make alpha apply to all paint
+	types, (not just solid colors). Thanks to David Reveman.
+
+2003-12-16  Carl Worth  <cworth@isi.edu>
+
+	* configure.in: Bump version to 0.1.4 for new stroked, pattern
+	text support and some text alignment fixes.
+
+	* src/svg_cairo.c (_svg_cairo_render_text): Added support for
+	stroked text. Fixed drawing of text with pattern paint.
+
+2003-12-15  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_cairo.c (_svg_cairo_render_text): Add missing (?) call
+	to _svg_cairo_select_font.
+	(_svg_cairo_render_text): Re-enable text alignment now that cairo
+	has text extents working.
+
+2003-12-15  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg-cairo.h: Add extern "C" stuff to get along with C++.
+
+2003-12-05  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg-cairo.h: Remove unwanted "#include <cairo-xlib.h>"
+
+2003-12-05  Richard Worth <richard@theworths.org>
+
+	* Renamed libxsvg to libsvg-cairo
+	libxsvg\                 libsvg-cairo\
+	        libxsvg.pc.in                 libsvg-cairo.pc.in
+	        src\                          src\
+	            xsvg.h                        svg-cairo.h
+	            xsvgint.h                     svg-cairo-internal.h
+	            xsvgversion.h.in              svg-cairo-version.h.in
+	            xsvg.c                        svg_cairo.c
+	            xsvg_sprintf_alloc.c          svg_cairo_sprintf_alloc.c
+	            xsvg_state.c                  svg_cairo_state.c
+	* In above files: 'xsvg' changed to 'svg_cairo'
+
+	* configure.in: Bump version to 0.1.3 because of rename
+
+	* src/Makefile.am
+	* Makefile.am
+	* COPYING
+	* NEWS
+	* README
+	* autogen.sh
+	* configure.in
+	* libsvg-cairo.pc.in: modified files because of rename (libxsvg to
+	libsvg-cairo)
+	
+2003-11-17  Carl Worth  <cworth@isi.edu>
+
+	* configure.in: Bump version to 0.1.2 for new dependency on libsvg
+	>= 0.1.2
+
+	* src/xsvg.c (_xsvg_arc_to): Use absolute value for rx and
+	ry. Thanks to Rob Buis <rwlbuis@xs4all.nl>.
+
+2003-11-15  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvg.c (xsvg_get_size): Track change in svg_get_size. Must
+	fetch in svg_length_t and convert to ints.
+	(_xsvg_select_font): Fix swap of slant/weight arguments to
+	cairo_select_font.
+
+	* configure.in: Now requires libsvg >= 0.1.2
+
+2003-11-06  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Bump version to 0.1.1. Now requires libsvg >= 0.1.1
+
+	* src/xsvg.h: Change xsvg_parse_file and add xsvg_parse to match
+	updates in libsvg.
+
+	* autogen.sh (PKG_NAME): Add --enable-maintainer-mode
+
+2003-10-31  Carl Worth  <cworth@east.isi.edu>
+
+	* src/xsvg.c: Fix so that setting things like opacity on the
+	top-level <svg> won't cause a crash:
+	(xsvg_create): Add _xsvg_push_state.
+	(xsvg_destroy): Add _xsvg_pop_state.
+
+2003-10-24  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Now depends on Cairo 0.1.8.
+
+	* src/xsvg.c (_xsvg_select_font): Updated to track changes in API
+	for cairo_select_font.
+	(_xsvg_select_font, _xsvg_set_font_size, _xsvg_set_font_style)
+	(_xsvg_set_font_weight): Implement font->dirty flag so
+	cairo_select_font is only called once after a flurry of font style
+	changes.
+	(_xsvg_render_text): Disable text_anchor support since Cairo lost
+	support for cairo_text_extents. Call _xsvg_select_font just once
+	before cairo_show_text.
+
+2003-09-29  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (CAIRO_REQUIRED): Require Cairo 0.1.6 for cairo_arc.
+
+	* src/xsvg.c (_xsvg_render_ellipse): Use cairo_arc to draw ellipse
+	rather than 4 hard-coded calls to cairo_curve_to.
+
+2003-09-04  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvg.c: Renamed xsvg->xrs to xsvg->cr to catch up with the
+	fact that we're using Cairo now, not Xr.
+
+	* configure.in (CAIRO_REQUIRED): Now needs Cairo 0.1.1 or better.
+
+	* src/xsvg.c: Updated to track change in Cairo API (cairo_get ->
+	cairo_current).
+
+2003-08-29  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvg.h (xsvg_get_size): Added new get_size function to track
+	libsvg change.
+
+	* src/xsvg.c: Track minor changes in libsvg, (eg. svg_fill_rule_t
+	instead of svg_style_fill_rule_t).
+	(_xsvg_quadratic_curve_to): Added new quadratic_curve_to to track
+	libsvg, (can't remember why this was needed though).
+	(_xsvg_set_gradient): Preliminary gradient support. It only does
+	linear, (not radial), and it's not doing offsets or
+	objectBoundingBox correctly yet. Still, it handles quite a few
+	common cases.
+	(_xsvg_set_pattern): Very weak pattern support. This is not quite
+	half-baked, and it exercises some bugs in Cairo. The right way to
+	fix all of this is probably to introduce procedural pattern
+	support into Cairo.
+	(_xsvg_render_path): Big kludge to avoid infinite recursion due to
+	current incorrect implementation of pattern support, (the real fix
+	is that it needs to draw the pattern with the attributes inherited
+	from the pattern definition, not its use).
+	(_xsvg_render_image): Use only cairo_show_surface, not
+	cairo_surface_put_image, (which only worked for X11 surfaces
+	anyway).
+	(_xsvg_length_to_pixel): Use switch instead of monster
+	if-then-else chain.
+
+2003-07-18  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvg.h: Updated to work with Cairo rather than Xr.
+
+2003-06-13  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvg.c: Tracked changes in libsvg.
+
+2003-05-01  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvgint.h: Dropped current_pt from xsvg_state_t as Xr now
+	allows us to query the current point.
+
+	* src/xsvg.c (_xsvg_arc_to): Now use XrGetCurrentPoint to
+	construct arc path.
+
+	* configure.in (LIBXSVG_VERSION): Fixed libtool shared library
+	versioning.
+
+2003-04-22  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvg.h: Track change in Xr header file location.
+
+	* src/xsvg.c (_xsvg_begin_group):
+	(_xsvg_end_group): Manage our own local child_surface now that Xr
+	no longer has support for PushGroup/PopGroup
+
+	* configure.in (dnl): Track change in Xr to support pkg-config.
+
+2003-03-03  Carl Worth  <cworth@isi.edu>
+
+	* src/xsvgint.h: Added current_pt to xsvg_state to fix bug and
+	simplify arc handling code.
+
+	* src/xsvg.c: Added two versions of path creation functions, one
+	accepting svg_length_t and one accepting doubles.  Tracked changes
+	in libsvg render_engine interface (svg_length_t *)
+	(_xsvg_move_to_length): Cleaned up local variable names, (no ugly
+	_ prefix).
+	(_svg_path_arc_segment):
+	(_xsvg_arc_to): Moved all the arc magic to libxsvg from libsvg
+	(Rob Buis). This helps complete the support for svg_length_t
+	everywhere appropriate.
+
+2003-02-22  Rob Buis    <buis@kde.org>
+
+	* src/xsvg.c (xsvg_set_viewport_dimension): Added method to set
+	viewport dimension to real value. When applied to resizing the
+	viewport and using percentages on outer <svg>, the whole content
+	will scale during resize.
+
+2003-02-21  Rob Buis    <buis@kde.org>
+
+	* src/xsvg.c: Many changes needed to offer a more
+	clear seperation between specified ("50%") and computed values ("225").
+	The render engine in libxsvg interprets svg_length_t instead
+	of doubles.
+
+2003-02-11  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (LIBXSVG_MAJOR_VERSION): Renamed libxrsvg to
+	libxsvg.
+
+2003-02-10  Carl Worth  <cworth@east.isi.edu>
+
+	* src/xrsvg_state.c (_xrsvg_state_init_copy): Fixed copy of
+	state->dash.
+
+2003-01-29  Carl Worth  <cworth@east.isi.edu>
+
+	* src/xrsvg.c (_xrsvg_render_path): Added support for paint type
+	of currentColor (Rob Buis).
+
+2003-01-28  Carl Worth  <cworth@east.isi.edu>
+
+	* src/xrsvg_state.c (_xrsvg_state_deinit): Patched memory leak of
+	dash array.
+
+	* src/xrsvg.c (_xrsvg_set_stroke_dash_array): Don't try to malloc
+	for an emtpy dash_array.
+
+2003-01-25  Carl Worth  <cworth@isi.edu>
+
+	* src/xrsvg.c (_xrsvg_set_stroke_dash_array): Added support for
+	setting stroke_dash_array and stroke_dash_offset.
+
+2002-11-11  Carl Worth  <cworth@isi.edu>
+
+	* src/xrsvg.c (_xrsvg_render_image): Fixed to use XrTranslate to
+	position image rather than XrMoveTo.
+
+2002-11-04  Carl Worth  <cworth@isi.edu>
+
+	* src/xrsvg.c (_xrsvg_begin_group):
+	(_xrsvg_end_group): Now uses the new XrPushGroup/XrPopGroup for
+	intermediate group compositing! It's even clever enough not to go
+	through the extra work when the group opacity is 1.0.
+	(_xrsvg_set_opacity): Support for opacity property.
+	(_xrsvg_render_text): Now properly multiples stroke/fill_opacity
+	with opacity.
+	(_xrsvg_render_image): Now properly sets alpha for images.
+
+2002-11-01  Carl Worth  <cworth@east.isi.edu>
+
+	* src/xrsvg.c (_xrsvg_render_image): Added preliminart image
+	support.
+
+2002-10-31  Carl Worth  <cworth@isi.edu>
+
+	* src/xrsvg.c: Reorganized function names/orders to match the
+	cleanup in libsvg.
+	(_xrsvg_set_fill_opacity): Fixed all opacity values to be doubles
+	from 0 to 1 rathe than integers from 0 to 255.
+	(_xrsvg_select_font): Added support for font style/weight.
+	(_xrsvg_show_text): Added text anchor support.
+	(_xrsvg_push_state): 
+	(_xrsvg_pop_state): Move xrsvg_state data to separate xrsvg_state.c
+
+2002-10-29  Carl Worth  <cworth@east.isi.edu>
+
+	* src/xrsvg.c (_xrsvg_set_font_size, _xrsvg_set_font_family) 
+	(_xrsvg_show_text): Added basic font support.
+
+2002-10-24  Carl Worth  <cworth@brudder>
+
+	* src/xrsvg.c (_xrsvg_begin_element): Added new _begin_element and
+	_end_element functions to fix style inheritance.
+	(_xrsvg_set_fill_rule): Added fill_rule support.
+
+2002-10-23  Carl Worth  <cworth@brudder>
+
+	* AUTHORS:
+	* COPYING: 
+	* README: Created various files for meta-data.

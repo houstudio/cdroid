@@ -1,0 +1,10 @@
+out*
+?
+*.bak
+*.pak
+*.swp
+src/test4ext/porting
+src/test4ext/*.gz
+deps
+appdevops*
+src/tools/po2json.py

@@ -1,0 +1,192 @@
+Snapshot 0.5.0 (2009-04-11 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+
+- differentiate between a general XML error and an unbound prefix error so that
+common errors such as missing xlink namespace declarations are easily identified
+- render engine API callback function can now be set to null if they are not 
+implemented
+- replaced path callbacks with a path data structure which makes it simpler and
+allows text-on-path to be implemented in future releases
+- simplified path data by removing redundant elements
+- peeking ahead in parse tree to avoid redundant or unneccessary render 
+callbacks
+- added utility function to convert elliptical arc endpoint parameterization to 
+center point parameterization
+- merged render_image_buffer callback with render_image and added a function to
+detect data: scheme URIs
+- setting viewport x and y for patterns to 0, requiring client applications to
+make the adjustment 'manually'
+- added utility function to return a relative image URI relative to the document
+- added utility function to return the list of image URIs for the document
+- supporting UTF-8 characters when processing text data
+- added end_transform and end_style callback functions to allow clients apps to
+detect the end of the respective sections
+- several code cleanups and restructuring
+
+Bug fixes
+---------
+
+
+Snapshot 0.4.0 (2009-03-23 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+- major overhaul of style handling and inheritance
+- setting correct style context for referenced elements (e.g. patterns)
+and cloned elements (e.g. symbol)
+- handling relative font sizes using a render engine API callback
+- implemented <marker>, 'marker', 'marker-start', 'marker-mid' and 'marker-end'
+- added support for gzip files in addition to zlib
+- added utility function to get the transform associated with a view box
+- implemented embedded image data: URI scheme
+- extended the list of error codes
+- improved error reporting and checking
+- implemented 'xml:base'
+- added trace option to print render engine API calls
+- implemented 'preserveAspectRatio' for <image> elements
+- various code restructuring
+
+Bug fixes
+---------
+- a moveto followed by multiple pairs of coordinates, then subsequent pairs are 
+treated as implicit lineto commands
+- fixed color name mappings
+- fixed percentage lengths for circle radius caused by incorrect orientation
+
+
+Snapshot 0.3.0 (2009-02-28 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+- added proper URI support using uriparser (http://uriparser.sourceforge.net)
+- added network resource support using libcurl (http://curl.haxx.se/libcurl/)
+- supporting references to fragments in external SVG documents
+- added support for clipping paths: <clipPath>, 'clip', 'overflow', 'clip-rule'
+and 'clip-path'
+- supporting CSS @import rule
+- added support for masks: <mask> and 'mask'
+- enabled <use> element referencing <symbol>
+- completed xml:space support
+- added 'visibility' style callback
+- various changes to the internal code structure
+
+Bug fixes
+---------
+- fixed memory segmentation and leak faults when an error occurs for deferred 
+element parsing
+- trim leading and trailing spaces from XML attributes (not done by Expat)
+
+
+Snapshot 0.2.0 (2009-02-10 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+- Copied code from cairo graphics CVS
+- Add support for compiling on Windows
+- Add support for CSS in <style> elements and external stylesheets using 
+libcroco library
+- Creating an XML DOM tree for processing CSS before creating the SVG tree
+- Added id and class attributes to element and group callbacks
+- Removed libxml2 XML parsing
+- Image data is handled in 2 steps, first uri is returned and then the user 
+application can use a utility function to read and decode the image
+- Improved support for <text> and <tspan> elements
+- Improved support for patterns
+- Providing line number and element name information for better error reporting
+- XML parsing is now namespace aware
+- Added function to allow user applications to set the SVG base directory for 
+resolving external references
+
+Bug fixes
+---------
+- fix memory leaks associated with <text> and <tspan> handling
+- fix ordering of colors causing color not to be found in Windows build
+- fix various initializations and defaults
+- cleaned up gradient processing
+- removed bitfields in struct decls causing platform incompatibilities
+- type casts etc. to avoid MSVC compiler warnings
+
+
+Snapshot 0.1.4 (2005-06-15 Carl Worth <cworth@cworth.org>)
+==========================================================
+- Add support to use expat rather than libxml2 for XML parsing.
+  Use the "--with-expat" argument to configure or autogen.sh.
+  (Thanks to Phil Blundell)
+
+Bug fixes
+---------
+- Fix autogen.sh to call all commands through environment variables.
+
+- Use getcwd in POSIX-compliant way, (rather than a Linux-specific way)
+
+- Fix code to compile cleanly with gcc version 4.
+
+- Fix several memory leaks and other memory mismanagement.
+
+Snapshot 0.1.3 (2005-02-13 Carl Worth <cworth@cworth.org>)
+==========================================================
+Add extern "C" stuff to svg.h for easier use from C++.
+
+Add whitespace compaction following the specification for
+xml:space="default".
+
+Various minor bug fixes.
+
+Initial version of libsvg
+=========================
+
+- Rewrote everything as libsvg, independent of libart, glib, pango, etc.
+
+This is old news from librsvg
+-----------------------------
+
+Version 2.1.0
+
+- New comaintainer Dom Lachowicz
+
+- Added new svg based gtk+ engine
+
+- Handles SVGs a lot better. Especially with regards to units.
+
+Version 2.0.1
+
+- Fixed misrender of the ScalableGorilla trashcan.
+
+Version 2.0.0
+
+- Fixed crash when trying to open empty files (Anders)
+
+Version 1.1.6
+
+- Fix division by zero crashes when scaling an .svg without dimensions (Darin)
+
+Version 1.1.5
+
+- Add another new function for use in Nautilus icons (Alex Larsson)
+
+Version 1.1.4
+
+- Add new function for auto-scaling svg for use in Nautilus icons (Alex Larsson)
+- Fix xml parsing to read much faster and work around libxml bug (Michael Meeks)
+- Add back handling for .svg file without width and height (Darin)
+- Improved internal error handling (Darin)
+
+Version 1.1.3
+
+- Fix major storage leaks (Anders)
+
+Version 1.1.2
+
+- Use the new intersector (Alex)
+
+Version 1.1.1
+
+- Ported to Gnome 2 (Ramiro, Darin)
+- Ported to Pango instead of using FreeType directly (Darin)
+- Replace FILE-based API with data pushing API (Jonathan)
+
+- Use pkgconfig rather than config scripts or .m4 files (Ramiro)
+- Use stuff from libart rather than having our own copies (Darin)
+- Move art_render_mask into libart (Darin)
+- Use locale-independent functions for parsing the XML files,
+  not <ctype.h>, which is locale dependent (Darin)
+- Other misc. API cleanups (Jonathan).
+- Fix NULL-dereference bugs in gradient code (Darin)
+- Fix handling of empty .svg files (Darin)
+- Measures strings propertly taking affine into account (Darin)
+- Fix empty struct portability problem (Darin)
+- Other build fixes (Owen, Jacob, Anders)

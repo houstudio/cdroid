@@ -1,0 +1,221 @@
+#include <drawables/ninepatchdrawable.h>
+#include <gravity.h>
+#include <fstream>
+#include <cdlog.h>
+namespace cdroid{
+//https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
+
+NinePatchDrawable::NinePatchState::NinePatchState(){
+    mTint=nullptr;
+    mBaseAlpha=1.0f;
+    mDither=true;
+    mTint=nullptr;
+    mTintMode=DEFAULT_TINT_MODE;
+	mChangingConfigurations=0;
+    mAutoMirrored=false;
+    mPadding.set(0,0,0,0);
+    mOpticalInsets.set(0,0,0,0);
+}
+
+NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const RECT*padding){
+    bitmap->get_ninepatch(mHorz,mVert);
+    if(padding)
+       mPadding=*padding;
+    mNinePatch=bitmap;
+    mPadding.set(0,0,0,0);
+}
+
+NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
+    mTint = orig.mTint;
+    mNinePatch=orig.mNinePatch;
+    mTintMode = orig.mTintMode;
+    mPadding = orig.mPadding;
+    mOpticalInsets = orig.mOpticalInsets;
+    mBaseAlpha = orig.mBaseAlpha;
+    mDither = orig.mDither;
+    mHorz =orig.mHorz;
+    mVert =orig.mVert;
+	mChangingConfigurations=orig.mChangingConfigurations;
+    mAutoMirrored = orig.mAutoMirrored;
+    //mThemeAttrs = orig.mThemeAttrs;
+}
+
+Drawable*NinePatchDrawable::NinePatchState::newDrawable(){
+    return new NinePatchDrawable(shared_from_this());
+}
+
+int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{
+   return mChangingConfigurations|(mTint ? mTint->getChangingConfigurations() : 0);
+}
+
+NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
+    mNinePatchState=state;
+	mAlpha=255;
+    computeBitmapSize();
+}
+
+NinePatchDrawable::NinePatchDrawable(){
+    mNinePatchState=std::make_shared<NinePatchState>();
+	mAlpha=255;
+    mTintFilter=nullptr;
+    computeBitmapSize();
+}
+
+NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp){
+    mNinePatchState=std::make_shared<NinePatchState>(bmp);
+    computeBitmapSize();
+}
+
+NinePatchDrawable::~NinePatchDrawable(){
+}
+
+void NinePatchDrawable::computeBitmapSize(){
+#if 1
+    const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch;
+    if (ninePatch == nullptr) return;
+    const int sourceDensity =160;// ninePatch.getDensity();
+    const int targetDensity =160;// mTargetDensity;
+
+    /*const RECT sourceOpticalInsets = mNinePatchState->mOpticalInsets;
+    if (sourceOpticalInsets.empty()){// != Insets.NONE) {
+        const int left = Drawable::scaleFromDensity( sourceOpticalInsets.x    , sourceDensity, targetDensity, true);
+        const int top  = Drawable::scaleFromDensity( sourceOpticalInsets.y    , sourceDensity, targetDensity, true);
+        const int right= Drawable::scaleFromDensity( sourceOpticalInsets.width, sourceDensity, targetDensity, true);
+        const int bottom=Drawable::scaleFromDensity( sourceOpticalInsets.height,sourceDensity, targetDensity, true);
+        mOpticalInsets.set(left, top, right, bottom);// = Insets.of(left, top, right, bottom);
+    } else*/ {
+        mOpticalInsets.set(0,0,0,0);// = Insets.NONE;
+    }
+
+    const RECT sourcePadding = mNinePatchState->mPadding;
+    if (1/*sourcePadding != nullptr*/) {
+        
+        mPadding.x     = Drawable::scaleFromDensity( sourcePadding.x    , sourceDensity, targetDensity, false);
+        mPadding.y     = Drawable::scaleFromDensity( sourcePadding.y    , sourceDensity, targetDensity, false);
+        mPadding.width = Drawable::scaleFromDensity( sourcePadding.width, sourceDensity, targetDensity, false);
+        mPadding.height= Drawable::scaleFromDensity( sourcePadding.height,sourceDensity, targetDensity, false);
+    }
+
+    mBitmapHeight= Drawable::scaleFromDensity( ninePatch->get_height(), sourceDensity, targetDensity, true);
+    mBitmapWidth = Drawable::scaleFromDensity( ninePatch->get_width(), sourceDensity, targetDensity, true);
+
+    /*const NinePatch.InsetStruct insets = ninePatch.getBitmap().getNinePatchInsets();
+    if (insets != null) {
+        RECT outlineRect = insets.outlineRect;
+        mOutlineInsets = NinePatch.InsetStruct.scaleInsets(outlineRect.left, outlineRect.top,
+                    outlineRect.right, outlineRect.bottom, targetDensity / (float) sourceDensity);
+        mOutlineRadius = Drawable::scaleFromDensity(insets.outlineRadius, sourceDensity, targetDensity);
+    } else {
+        mOutlineInsets = null;
+    }*/
+#endif
+}
+
+void NinePatchDrawable::setTargetDensity(int density){
+    if (density == 0) {
+        density =160; //DisplayMetrics.DENSITY_DEFAULT;
+    }
+    if (mTargetDensity != density) {
+        mTargetDensity = density;
+        computeBitmapSize();
+        invalidateSelf();
+    }
+}
+
+void NinePatchDrawable::setAlpha(int alpha) {
+    if(mAlpha!=alpha){
+        mAlpha=alpha;
+        invalidateSelf();
+    }
+}
+
+bool NinePatchDrawable::getPadding(RECT& padding){
+    padding=mPadding;
+    return (padding.x | padding.y | padding.width | padding.height) != 0;
+}
+
+int NinePatchDrawable::getAlpha()const{
+    return mAlpha;
+}
+
+void NinePatchDrawable::setTintList(ColorStateList* tint){
+    mNinePatchState->mTint = tint;
+    mTintFilter = updateTintFilter(mTintFilter, tint, mNinePatchState->mTintMode);
+    invalidateSelf();    
+}
+
+void NinePatchDrawable::setTintMode(int tintMode) {
+    mNinePatchState->mTintMode = tintMode;
+    mTintFilter = updateTintFilter(mTintFilter, mNinePatchState->mTint, tintMode);
+    invalidateSelf();
+}
+
+void NinePatchDrawable::setAutoMirrored(bool mirrored) {
+    mNinePatchState->mAutoMirrored = mirrored;
+}
+
+bool NinePatchDrawable::needsMirroring() {
+    return isAutoMirrored() && getLayoutDirection() == LayoutDirection::RTL;
+}
+
+bool NinePatchDrawable::isAutoMirrored(){
+    return mNinePatchState->mAutoMirrored;
+}
+
+int NinePatchDrawable::getIntrinsicWidth()const{
+    return mBitmapWidth;
+}
+
+int NinePatchDrawable::getIntrinsicHeight()const {
+    return mBitmapHeight;
+}
+
+Drawable* NinePatchDrawable::mutate() {
+    if (!mMutated && Drawable::mutate() == this) {
+        mNinePatchState=std::make_shared<NinePatchState>(*mNinePatchState);
+        mMutated = true;
+    }
+    return this;
+}
+
+bool NinePatchDrawable::onStateChange(const std::vector<int>& stateSet){
+    if (mNinePatchState->mTint != nullptr ){//&& mNinePatchState->mTintMode != nullptr) {
+        //mTintFilter = updateTintFilter(mTintFilter, mNinePatchState->mTint, mNinePatchState->mTintMode);
+        return true;
+    }
+    return false;
+}
+
+bool NinePatchDrawable::isStateful()const{
+    return Drawable::isStateful() || (mNinePatchState->mTint != nullptr && mNinePatchState->mTint->isStateful());
+}
+
+bool NinePatchDrawable::hasFocusStateSpecified()const {
+    return mNinePatchState->mTint != nullptr && mNinePatchState->mTint->hasFocusStateSpecified();
+}
+
+std::shared_ptr<Drawable::ConstantState>NinePatchDrawable::getConstantState(){
+    return mNinePatchState;
+}
+
+void NinePatchDrawable::draw(Canvas&canvas){
+    if(mNinePatchState->mNinePatch)
+        canvas.draw_ninepatch(mNinePatchState->mNinePatch,mBounds,mNinePatchState->mHorz,mNinePatchState->mVert);
+}
+
+Drawable*NinePatchDrawable::inflate(Context*ctx,const AttributeSet&atts){
+    const std::string src=atts.getString("src");
+    RefPtr<ImageSurface>bmp;
+    if(ctx==nullptr){
+	std::string path=atts.getAbsolutePath(src);
+        std::ifstream fs(path);
+        bmp=ImageSurface::create_from_stream(fs);
+    }else{
+        std::unique_ptr<std::istream>is=ctx->getInputStream(src);
+        bmp=ImageSurface::create_from_stream(*is);
+    }
+    return new NinePatchDrawable(bmp);
+}
+
+}
+

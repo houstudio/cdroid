@@ -1,0 +1,169 @@
+The libsvg TODO 
+---------------
+(sorted roughly by intention)
+
+Non-critical, relatively minor
+------------------------------
+Add svg image support.
+
+Fix to not preserve whitespace by default.
+
+Resolve proper rendering of width 1 lines (see "Fail, due to secondary considerations" below)
+
+Fix units (come up with a general solution for dealing with 100% on outer <svg>)
+
+Fix aligning of text, (note that text-alignment-BE-10 breaks when scaling)
+
+Big work ahead
+--------------
+Add gradients
+
+Add clipping/masking
+
+Add filters
+
+Add whatever else is missing to bring all other tests into conformance
+
+Conformance Testing Status
+==========================
+Here is the status of libsvg with respect to the tests from the W3C
+conformance suite. The test suite is available from:
+
+	    http://www.w3.org/Graphics/SVG/Test/
+
+The status below reflects results from the xsvg viewer using libsvg-cairo
+which uses cairo and libsvg. Hence, some of the failures noted below
+could be bugs in xsvg, libsvg-cairo, or cairo rather than directly in libsvg.
+
+Test are grouped according to their behavior:
+
+Pass perfectly [*]
+-----------------
+color-datatypes-BE-01.svg
+coords-transforms-BE-02.svg
+coords-units-BE-01.svg
+coords-unitsProc-BE-04.svg
+masking-groupOpac-BE-04.svg
+paint-inherit-BE-06.svg
+paint-stroke-BE-02.svg
+path-curves-BE-02.svg
+path-curves-BE-03.svg
+path-curves-BE-04.svg
+path-lines-BE-01.svg
+rendering-orderGr-BE-01.svg
+rendering-shape-BE-03.svg
+shapes-circle-BE-03.svg
+shapes-ellipse-BE-02.svg
+shapes-line-BE-04.svg
+shapes-polygon-BE-05.svg
+shapes-polyline-BE-06.svg
+shapes-rect-BE-01.svg
+structure-basicG-BE-03.svg
+structure-empty-BE-01.svg
+structure-nested-BE-02.svg
+
+[*] There is one big difference between my images and the reference images:
+
+    The SVG conformance suite reference images have width 1 stroked
+    rectangles, (with integer coordinates), occupying one row of
+    pixels. This is in contrast to my current output which occupies 2
+    rows of pixels (each at 50%). My current result is more "correct"
+    geometrically, but it looks nasty. I found language in the
+    spec. saying that all results had to be within 1 pixel of the
+    geometrically correct result. Also, property controlling this has
+    a default value of "auto" which means the user agent is allowed to
+    tradeoff geometrical accuracy for crisp edges.
+
+    So, I think the results I have conform, but I want to find a clean
+    way to get these silly width 1 rectangles nice and crisp and
+    matching the reference images.
+
+Fail, but look hopeful
+----------------------
+text-font-BE-15.svg		# Might be conforming, (I just don't have the fonts)
+
+Fail completely
+---------------
+color-colorProf-BE-03.svg	/* ICC */
+color-property-BE-02.svg	/* gradients */
+coords-unitsProc-BE-05.svg	/* gradients */
+coords-viewBox-BE-03.svg	/* clipping for slice */
+filters-blend-BE-02.svg		/* filters */
+filters-blur-BE-12.svg		/* filters */
+filters-colorMtrx-BE-03.svg	/* filters */
+filters-composite-BE-05.svg	/* filters */
+filters-convolve-BE-06.svg	/* filters */
+filters-diffuseLt-BE-07.svg	/* filters */
+filters-dispMap-BE-16.svg	/* filters */
+filters-feImage-BE-13.svg	/* filters */
+filters-feTile-BE-14.svg	/* filters */
+filters-fldMrgOff-BE-15.svg	/* filters */
+filters-lights-BE-09.svg	/* filters */
+filters-many-BE-01.svg		/* filters */
+filters-morph-BE-10.svg		/* filters */
+filters-specularLt-BE-08.svg	/* filters */
+filters-transfer-BE-04.svg	/* filters */
+filters-turb-BE-11.svg		/* filters */
+fonts-fontElement-BE-01.svg
+gradPatt-linearGr-BE-01.svg	/* gradients */
+gradPatt-linearGr-BE-02.svg	/* gradients */
+gradPatt-linearGr-BE-03.svg	/* gradients */
+gradPatt-pattern-BE-07.svg	/* gradients */
+gradPatt-radialGr-BE-04.svg	/* gradients */
+gradPatt-radialGr-BE-05.svg	/* gradients */
+gradPatt-referenc-BE-08.svg	/* gradients */
+gradPatt-stop-BE-06.svg		/* gradients */
+gradPatt-stop-BE-10.svg		/* gradients */
+gradPatt-transfrm-BE-09.svg	/* gradients */
+masking-clipPath-BE-01.svg	/* clipping */
+masking-clipPath-BE-02.svg	/* clipping */
+masking-clipPath-BE-08.svg	/* clipping */
+masking-clipRule-BE-03.svg	/* clipping */
+masking-mask-BE-05.svg		/* clipping */
+masking-mask-BE-06.svg		/* clipping */
+masking-property-BE-07.svg	/* clipping */
+masking-vportClip-BE-09.svg	/* clipping */
+metadata-sample-BE-01.svg
+paint-colIntProp-BE-05.svg	/* gradients, interpolation */
+paint-fill-BE-01.svg		/* gradients */
+paint-markers-BE-03.svg		/* markers */
+paint-markers-BE-04.svg		/* markers */
+rendering-text-BE-02.svg
+structure-allElem-BE-09.svg	/* switch */
+structure-defs-BE-04.svg	/* gradients */
+structure-extRef-BE-10.svg	/* linking */
+structure-image-BE-06.svg	/* linking */
+structure-imggamma-BE-11.svg	/* gamma? */
+structure-lang-BE-08.svg	/* systemLangauge */
+structure-switch-BE-07.svg	/* switch */
+structure-symbol-BE-05.svg	/* symbol */
+style-selector-BE-01.svg	/* css */
+style-selector-BE-02.svg	/* css */
+style-selector-BE-03.svg	/* css */
+text-alignment-BR-10.svg
+text-alignment-BR-11.svg
+text-altGlyph-BE-07.svg
+text-decoration-BE-12.svg
+text-extTref-BE-18.svg
+text-font-BE-16.svg
+text-i18n-BE-09.svg
+text-selection-BE-13.svg
+text-spacing-BE-14.svg
+text-text-BE-01.svg
+text-textAnchor-BE-05.svg
+text-textLength-BE-17.svg
+text-textOnPath-BE-03.svg
+text-tref-BE-04.svg
+text-tspan-BE-02.svg
+text-whiteSpace-BE-06.svg
+
+
+Dynamic tests (all of these fail due to major functionality not yet implemented in libsvg)
+------------------------------------------------------------------------------------------
+animation-*
+dom-*
+extend-*
+filters-*
+interact-*
+linking-*
+script-*

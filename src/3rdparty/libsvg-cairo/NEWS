@@ -1,0 +1,67 @@
+Snapshot 0.5.0 (2009-04-11 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+- Various changes (some as placeholders) to match changes to libsvg (v0.4-0.5)
+- storing a pointer to the font family and dash array rather than duplicating
+because they are guaranteed to remain valid during rendering
+- using libsvg utility to convert elliptical arc end point parameterization to
+center point parameterization
+- setting unimplemented callback pointers to null
+
+Bug fixes
+---------
+
+
+Snapshot 0.4.0 (2009-03-23 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+- Various changes (some as placeholders) to match changes to libsvg (v0.3-0.4)
+
+Bug fixes
+---------
+- fix percentage lengths which should be relative to the view box width or 
+height
+
+
+Snapshot 0.3.0 (2009-02-28 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+- Various changes (some as placeholders) to match changes to libsvg (v0.2-0.3)
+
+
+Snapshot 0.2.0 (2009-02-10 Philip de Nier <philipn@users.sourceforge.net>)
+==========================================================================
+- Copied code from cairo graphics CVS
+- Add support for compiling on Windows
+- Added functions to allow a different svg_t parse tree to be rendered from and
+a function to return the render engine
+- Changes to match changes to the libsvg API 0.2.0
+
+Bug fixes
+---------
+- type casts etc. to avoid MSVC compiler warnings
+
+
+Snapshot 0.1.6 (2005-06-15 Carl Worth <cworth@cworth.org>)
+==========================================================
+Track all changes in cairo API up to cairo 0.5.0 (which is now the 
+minimum version of cairo required).
+
+Bug fixes
+---------
+- Fix autogen.sh to call all commands through environment variables.
+
+Snapshot 0.1.5 (2005-02-13 Carl Worth <cworth@cworth.org>)
+==========================================================
+Big performance fix for SVG images with deep grouping within a group
+with opacity != 1.0, (thanks to TOKUNAGA Hiroyuki)
+
+Various bug fixes.
+
+Older snapshots
+===============
+
+2003-11-15  Richard Worth <richard@theworths.org>
+
+        * Renamed libxsvg to libsvg-cairo
+
+2002-??-??  Carl Worth  <cworth@east.isi.edu>
+
+        * Initial version of libxsvg

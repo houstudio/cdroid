@@ -1,0 +1,100 @@
+AC_INIT(src/svg.h)
+
+dnl ===========================================================================
+
+# Package version number, (as distinct from shared library version)
+LIBSVG_VERSION=0.5.0
+
+# libtool shared library version
+
+# Increment if the interface has additions, changes, removals.
+m4_define(LT_CURRENT, 1)
+
+# Increment any time the source changes; set to
+# 0 if you increment CURRENT
+m4_define(LT_REVISION, 0)
+
+# Increment if any interfaces have been added; set to 0
+# if any interfaces have been removed. removal has
+# precedence over adding, so set to 0 if both happened.
+m4_define(LT_AGE, 0)
+
+VERSION_INFO="LT_CURRENT():LT_REVISION():LT_AGE()"
+AC_SUBST(VERSION_INFO)
+
+dnl ===========================================================================
+
+AM_INIT_AUTOMAKE(libsvg, $LIBSVG_VERSION)
+AM_CONFIG_HEADER(config.h)
+
+AM_MAINTAINER_MODE
+
+AC_ISC_POSIX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_AWK
+AM_PROG_LIBTOOL
+AC_STDC_HEADERS
+
+EXPAT_MISSING="expat.h not found - libsvg requires expat"
+AC_CHECK_HEADER(expat.h,, AC_MSG_ERROR(${EXPAT_MISSING}))
+
+URIPARSER_MISSING="liburiparser not found - libsvg requires liburiparser"
+AC_CHECK_LIB(uriparser, uriParseUriA,, AC_MSG_ERROR(${URIPARSER_MISSING}))
+AC_CHECK_HEADER(uriparser/Uri.h,, AC_MSG_ERROR(${URIPARSER_MISSING}))
+
+LIBCURL_MISSING="libcurl not found - libsvg requires libcurl"
+AC_CHECK_LIB(curl, curl_easy_perform,, AC_MSG_ERROR(${LIBCURL_MISSING}))
+AC_CHECK_HEADER(curl/curl.h,, AC_MSG_ERROR(${LIBCURL_MISSING}))
+
+AC_CHECK_PROG(CURL_CONFIG,curl-config,"yes")
+if test "x$CURL_CONFIG" != "xyes"; then
+	AC_MSG_ERROR("missing curl-config for setting curl cflags and libs")
+fi
+
+dnl ===========================================================================
+
+AC_ARG_ENABLE(libcroco,
+	AC_HELP_STRING([--disable-libcroco],
+		[do not use libcroco to parse css styles]),
+	[LIBCROCO="$enableval"], [LIBCROCO=yes])
+
+dnl ===========================================================================
+
+if test "x$LIBCROCO" = "xyes"; then
+  PKG_CHECK_MODULES(LIBCROCO, libcroco-0.6)
+  LIBSVG_CFLAGS+="-DLIBSVG_LIBCROCO $LIBCROCO_CFLAGS"
+  LIBSVG_LIBS+=$LIBCROCO_LIBS
+fi
+
+LIBSVG_LIBS+="-lexpat "
+
+lIBSVG_LIBS+="-luriparser "
+
+lIBSVG_CFLAGS+="`curl-config --cflags` "
+lIBSVG_LIBS+="`curl-config --libs` "
+
+AC_SUBST(LIBSVG_CFLAGS)
+AC_SUBST(LIBSVG_LIBS)
+AC_SUBST(LIBSVG_REQUIRES)
+
+dnl ===========================================================================
+dnl Use lots of warning flags with GCC
+
+WARN_CFLAGS=""
+if test "x$GCC" = "xyes"; then
+	WARN_CFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes \
+	-Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs -fno-strict-aliasing"
+fi
+AC_SUBST(WARN_CFLAGS)
+
+dnl ===========================================================================
+
+AC_OUTPUT([
+libsvg.spec
+libsvg.pc
+src/svg_version.h
+Makefile
+src/Makefile
+])

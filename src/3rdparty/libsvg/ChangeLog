@@ -1,0 +1,2452 @@
+2009-04-08 16:01  philipn
+
+	* src/: svg.c, svg.h, svg_image.c, svg_render_engine.c,
+	  svg_trace.c, svgint.h: maintain an array of image uris which can
+	  be accessed by clients using a new utility function; added an
+	  index parameter to the render_image callback which corresponds to
+	  the index of the image in the image uri array; only print the
+	  first 64 characters of data: scheme uri when printing trace;
+
+2009-04-08 11:58  philipn
+
+	* src/: svg.h, svg_clip_path.c, svg_group.c, svg_image.c,
+	  svg_marker.c, svg_mask.c, svg_path.c, svg_pattern.c,
+	  svg_render_engine.c, svg_shapes.c, svg_style.c, svg_svg_group.c,
+	  svg_text.c, svg_trace.c, svg_use.c, svgint.h: order render engine
+	  callbacks in roughly same order they are called; added
+	  end_transform and end_style callbacks to mark the end of the
+	  transform and style sections;
+
+2009-04-07 11:59  philipn
+
+	* src/: svg.c, svg.h, svg_dom.c, svg_parser.c, svg_parser_expat.c,
+	  svgint.h: move xml character data normalization to svg_dom.c;
+	  process and validate utf-8 characters; added
+	  SVG_STATUS_XML_INVALID_TOKEN error code, e.g. returned for
+	  invalid utf-8 character;
+
+2009-04-06 13:29  philipn
+
+	* src/: svg.c, svg.h, svg_image.c, svg_uri.c, svgint.h: added
+	  utility function to get a relative uri from a base uri and
+	  absolute uri
+
+2009-04-02 18:51  philipn
+
+	* src/svg_pattern.c: setting viewport x,y to 0,0; the render engine
+	  is required to apply the viewport x,y shift;
+
+2009-04-01 18:01  philipn
+
+	* src/: svg.h, svg_image.c, svg_render_engine.c, svg_trace.c,
+	  svg_uri.c, svgint.h: removed render image buffer callback; added
+	  functions to detect and decode data scheme uri;
+
+2009-04-01 17:59  philipn
+
+	* src/svg_path.c: add define for msvc build to make M_PI available
+
+2009-03-30 13:17  philipn
+
+	* src/: svg.h, svg_path.c: added utility function for converting
+	  elliptical arc endpoint parameterization to center
+	  parameterization;
+
+2009-03-29 16:27  philipn
+
+	* src/svg.h: various coding style cleanups
+
+2009-03-29 16:09  philipn
+
+	* src/: svg_clip_path.c, svg_container.c, svg_element.c,
+	  svg_group.c, svg_image.c, svg_marker.c, svg_mask.c, svg_path.c,
+	  svg_pattern.c, svg_render_engine.c, svg_shapes.c,
+	  svg_svg_group.c, svg_text.c, svg_use.c, svgint.h: peek ahead in
+	  render tree and skip element if nothing would be rendered;
+
+2009-03-29 13:21  philipn
+
+	* src/: svg.c, svg.h, svg_render_engine.c, svg_trace.c,
+	  svg_view_box.c, svgint.h: added const qualifier to function
+	  parameters
+
+2009-03-29 11:25  philipn
+
+	* src/svg_render_engine.c: initial add
+
+2009-03-27 16:04  philipn
+
+	* src/: svg.h, svg_parser.c, svg_path.c, svg_trace.c, svgint.h:
+	  passing a path data structure to render_path callback function;
+	  removed callbacks for path operation / construction; simplified
+	  path data structure; moved polygon and polyline attribute parsing
+	  into svg_path.c; ignoring close_path operations if is first op,
+	  or is preceded by a move_to or close_path; combining move_to
+	  operation with previous op if previous op is a move_to; trace
+	  print set_stroke_dash_array(NULL) when is empty; changed trace
+	  for path now that it is a data structure;
+
+2009-03-25 21:22  philipn
+
+	* src/: Makefile.am, svg_element.c, svg_parser.c, svg_path.c,
+	  svg_shapes.c, svgint.h: moved shapes (line, rect, circle,
+	  ellipse) processing to separate file from paths; moved shape
+	  apply_attributes functionality to separate function consistent
+	  with other svg elements;
+
+2009-03-25 21:19  philipn
+
+	* configure.in: use m4_define() to avoid errors like: error:
+	  possibly undefined macro: LT_CURRENT;
+
+2009-03-25 12:00  philipn
+
+	* src/: Makefile.am, svg_clip_path.c, svg_container.c,
+	  svg_css_style.c, svg_dom.c, svg_group.c, svg_image.c,
+	  svg_marker.c, svg_mask.c, svg_path.c, svg_pattern.c,
+	  svg_resource.c, svg_style.c, svg_svg_group.c, svg_symbol.c,
+	  svg_text.c, svg_trace.c, svg_transform.c, svg_uri.c,
+	  svg_uri_reference.c, svg_use.c, svg_view_box.c, svgint.h,
+	  win32_compat.h: render engine api functions can now be null;
+	  replaced render engine api calls with wrapper function calls
+	  which check whether the target function is null; null trace
+	  render engine functions matches the target render engine null
+	  functions; remove duplicate email address from author line;
+
+2009-03-25 09:36  philipn
+
+	* src/: svg.c, svg.h, svg_parser_expat.c: differentiate between a
+	  general xml parse error and an unbound xml prefix error, e.g.
+	  error occurs when the xlink namespace is not declared;
+
+2009-03-23 16:36  philipn
+
+	* NEWS, configure.in: update for version snapshot 0.4.0
+
+2009-03-23 13:56  philipn
+
+	* src/: svg_element.c, svg_style.c: guard against null parent node
+	  when style is 'inherit'; fix 'inherit' style for marker to not
+	  always inherit marker start; set the parent node for virtual
+	  nodes (e.g. virtual tspan elements) so that the parent font size
+	  is known when measuring;
+
+2009-03-21 12:50  philipn
+
+	* src/: svg.h, svg_image.c, svg_trace.c, svg_view_box.c, svgint.h:
+	  processing preserveAspectRatio attribute on image elements; added
+	  view_box template to image render functions; added function to
+	  complete the image view box template with image width and height;
+
+2009-03-20 15:09  philipn
+
+	* src/: svg.h, svg_element.c, svg_parser.c, svg_path.c,
+	  svg_trace.c, svgint.h: handling circle element separate from
+	  ellipse because the orientation for r is not the same (other) as
+	  rx or ry;
+
+2009-03-20 11:30  philipn
+
+	* src/: Makefile.am, svg_resource.c, svg_uri.c,
+	  svg_uri_reference.c, svgint.h: moved uri handling functions into
+	  separate file, svg_uri.c;
+
+2009-03-19 15:00  philipn
+
+	* src/svg_parser.c: jump to end of deferred element parse on error
+	  to reset the parser state;
+
+2009-03-19 14:59  philipn
+
+	* src/svg.c: only add original (not deep cloned) element ids to
+	  avoid duplicates;
+
+2009-03-19 10:07  philipn
+
+	* src/: svg.c, svg_element.c, svg_element_ref.c, svg_marker.c,
+	  svg_trace.c, svgint.h: added node name and line number to help
+	  match trace output to document; removed unneccessary trace target
+	  setup in marker render function
+
+2009-03-18 21:20  philipn
+
+	* src/: svg.h, svg_marker.c, svg_pattern.c, svg_svg_group.c,
+	  svg_trace.c: changed view_box parameter in apply_view_box
+	  callback to pointer for consistency
+
+2009-03-18 18:05  philipn
+
+	* src/: Makefile.am, svg.c, svg.h, svg_element.c,
+	  svg_element_ref.c, svg_marker.c, svg_resource.c, svg_trace.c,
+	  svgint.h: added trace output option for render engine calls
+
+2009-03-17 22:37  philipn
+
+	* src/: svg.h, svg_gradient.c, svg_pattern.c, svg_transform.c,
+	  svg_view_box.c, svgint.h: replaced transform type with cairo
+	  equivalent matrix type; transform type passed through render
+	  engine api is the same as the internal transform type
+
+2009-03-17 15:48  philipn
+
+	* src/: svg.c, svg_dom.c, svg_gradient.c, svg_image.c, svg_paint.c,
+	  svg_parser.c, svg_pattern.c, svg_resource.c, svg_style.c,
+	  svg_uri_reference.c, svg_use.c, svgint.h: implemented xml:base;
+	  added base_uri to xml node to support xml:base attributes; added
+	  document_uri to xml node for local document references; url
+	  references in external documents now fixed with xml:base
+	  implementation and addition of document_uri to node struct;
+
+2009-03-17 10:34  philipn
+
+	* AUTHORS, src/svg.c, src/svg.h, src/svg_attribute.c,
+	  src/svg_element.c, src/svg_gradient.c, src/svg_group.c,
+	  src/svg_image.c, src/svg_length.c, src/svg_parser.c,
+	  src/svg_parser_expat.c, src/svg_path.c, src/svg_pattern.c,
+	  src/svg_str.c, src/svg_style.c, src/svg_text.c,
+	  src/win32_compat.h: added myself to AUTHORS; added copyright
+	  lines;
+
+2009-03-17 10:16  philipn
+
+	* src/: svg.c, svg.h, svg_attribute.c, svg_clip_path.c,
+	  svg_color.c, svg_css_style.c, svg_element.c, svg_element_ref.c,
+	  svg_gradient.c, svg_group.c, svg_hash.c, svg_image.c,
+	  svg_length.c, svg_marker.c, svg_mask.c, svg_paint.c,
+	  svg_parser.c, svg_parser_expat.c, svg_path.c, svg_pattern.c,
+	  svg_resource.c, svg_style.c, svg_svg_group.c, svg_symbol.c,
+	  svg_text.c, svg_transform.c, svg_use.c, svg_view_box.c, svgint.h:
+	  extended error status list; added api function to get error
+	  string; added api functions to get error info; various code
+	  restructuring to use consistent style; removed setting parse and
+	  render position info; setting error info when an error occurs
+	  only; simplified check for duplicate element identifier; fixed
+	  logic for resolving external references; always checking result
+	  of parsing length values; null/empty color property is now an
+	  error; fixed code for handling inherited stops in gradient;
+	  checking for invalid (negative) width and heights; added separate
+	  function for parsing lengths in an array string; fixed code for
+	  handling inherited content in pattern;
+
+2009-03-14 20:24  philipn
+
+	* src/svg_image.c: least worst typecast to avoid signed/unsigned
+	  comparison warning in msvc
+
+2009-03-13 15:17  philipn
+
+	* src/svg_image.c: fix typo reslting in build failure
+
+2009-03-13 15:03  philipn
+
+	* src/: svg.h, svg_image.c, svg_resource.c, svgint.h: implemented
+	  data: URI scheme; added function to render image from buffer to
+	  render engine api; added function to convert an image buffer to
+	  bgra raw bitmap; restructured svg_image.c to support both file
+	  and buffer images;
+
+2009-03-12 11:53  philipn
+
+	* src/svg_color.c: regenerated color name mapping table from spec.
+	  to fix typos;
+
+2009-03-11 15:24  philipn
+
+	* src/: svg_length.c, svg_style.c: fix orientation in
+	  initialization of clip rectangle lengths; check length units to
+	  limited size to allow parsing of length arrays where the text
+	  string contains character data after the length units
+
+2009-03-10 22:58  philipn
+
+	* src/svg_marker.c: add missing viewbox initialization and copy
+
+2009-03-10 22:57  philipn
+
+	* src/svg_path.c: If a moveto is followed by multiple pairs of
+	  coordinates, then subsequent pairs are treated as implicit lineto
+	  commands
+
+2009-03-10 11:46  philipn
+
+	* src/: svg.h, svg_view_box.c: added api function for getting the
+	  transform associated with a view box; setting view box transform
+	  to zero scale if view box or viewport dimensions is zero
+
+2009-03-09 16:20  philipn
+
+	* src/svg.c: enable gzip compressed files in addition to zlib by
+	  using inflateInit2; accept Z_STREAM_END result from inflate() as
+	  not an error; fix passing output buffer (not input buffer) to
+	  parser;
+
+2009-03-08 12:45  philipn
+
+	* src/: Makefile.am, svg.h, svg_element.c, svg_element_ref.c,
+	  svg_marker.c, svg_parser.c, svg_str.c, svg_style.c,
+	  svg_transform.c, svg_view_box.c, svgint.h: implemented <marker>,
+	  'marker', 'marker-start', 'marker-mid' and 'marker-end'; marker
+	  styles are added to the render engine api as well as a marker
+	  render function; moved virtual node and element creation code for
+	  the <tspan> replacing text in <text> into functions;
+
+2009-03-02 19:10  philipn
+
+	* src/: svg.h, svg_clip_path.c, svg_css_style.c, svg_dom.c,
+	  svg_element.c, svg_element_ref.c, svg_group.c, svg_image.c,
+	  svg_mask.c, svg_parser.c, svg_parser_expat.c, svg_path.c,
+	  svg_pattern.c, svg_style.c, svg_svg_group.c, svg_symbol.c,
+	  svg_text.c, svg_use.c, svgint.h: no longer treating clipping path
+	  and mask differently from other styles; render engine can assume
+	  that all styles inherit and libsvg will ensure the styles; that
+	  do not inherit are reset; svg_element_t no longer has
+	  svg_style_t; only svg_dom_node_t has a style; deep cloning dom
+	  subtree referenced by a <use>; not cloning the SVG subtree for
+	  <use>; deep cloned tree does not get included in css processing;
+	  creating a virtual node for the virtual <tspan> element used to
+	  represent character data from <text> elements; all style
+	  processing happens in the dom tree and no longer in the SVG
+	  element tree; the style flags is reset when rendering an element
+	  reference because it belongs in a different context; using <g>
+	  element as replacement for <a> until <a> processing is supported;
+	  implemented style inheritance internally and not relying on
+	  render engine; implemented 'inherit' values for style properties;
+	  clamping opacity values to 0..1; overriding 'display' property on
+	  referenced elements; computing colors (replace currentColor) to
+	  avoid problems when element is used in a different context;
+	  computing font size at render time; changed render engine
+	  callback for font size to use user space units added render
+	  engine callback function for measuring the font size
+
+2009-02-28 13:06  philipn
+
+	* NEWS, configure.in: updates for version 0.3
+
+2009-02-27 12:17  philipn
+
+	* src/: svg.h, svg_gradient.c, svg_style.c, svgint.h: add render
+	  engine callback to set the element/group visibility stop-opacity
+	  and stop-color are now separate style attributes removed
+	  unneccessary initializations of style always calling callback if
+	  style attributes is not inherited added boolean variables for
+	  display and visibility style attributes and not relying on the
+	  flags to get the value
+
+2009-02-26 14:08  philipn
+
+	* src/: Makefile.am, svg.c, svg.h, svg_clip_path.c,
+	  svg_container.c, svg_element.c, svg_gradient.c, svg_group.c,
+	  svg_svg_group.c, svg_symbol.c, svg_use.c, svg_view_box.c,
+	  svg_image.c, svg_mask.c, svg_parser.c, svg_path.c, svg_pattern.c,
+	  svg_style.c, svg_text.c, svgint.h: introduced 'container element'
+	  type for elements that contain child elements the word group is
+	  used to refer to the <g> element moved use, svg group, symbol out
+	  of svg_group.c and into their own source files renamed svg_t
+	  group_element to root_element initializing width and height units
+	  in get_viewport_dimension function when the root element is null
+	  moved view box handling to separate source file renamed
+	  set_viewport_dimensions render engine function and added x and y
+	  coordinates viewport x and y coordinates are passed to the
+	  set_viewport function rather than internally changing the
+	  transform moved render code to the individual element render
+	  functions setting the viewport when rendering the pattern element
+	  removed unused function _svg_element_get_nearest_viewport
+	  resetting 'display' property on elements that aren't effected by
+	  it, e.g.  elements referenced by <use>, <pattern> etc.
+	  re-implemented properties application and rendering of <use> to
+	  follow the spec.  more closely
+
+2009-02-25 14:18  philipn
+
+	* src/: svg_dom.c, svg_parser.c, svgint.h: move xml:space handling
+	  to svg_dom.c and child nodes inherit the value
+
+2009-02-23 18:38  philipn
+
+	* src/svg.c: typecasts from size_t to int and vice versa to avoid
+	  msvc warning assuming that the read buffer does not exceed max
+	  unsigned int - reads from buffer will not exceed this limit and
+	  we assume network reads don't as well
+
+2009-02-23 11:46  philipn
+
+	* src/svg_group.c: temp fix: enable rendering by setting symbol
+	  clone to type group
+
+2009-02-23 11:45  philipn
+
+	* src/: Makefile.am, svg.h, svg_clip_path.c, svg_element.c,
+	  svg_element_ref.c, svg_gradient.c, svg_mask.c, svg_parser.c,
+	  svg_pattern.c, svg_style.c, svgint.h: add support for masks:
+	  <mask> element and 'mask' attributes added render engine callback
+	  set_mask define single enum for bbox/user units used in patterns,
+	  gradients, masks etc.
+
+2009-02-20 17:38  philipn
+
+	* src/svg_style.c: report invalid value error if a clip-path
+	  attribute doesn't reference a <clipPath> element
+
+2009-02-20 11:49  philipn
+
+	* src/svg_css_style.c: implemented css import rule
+
+2009-02-20 11:10  philipn
+
+	* src/: svg.h, svg_clip_path.c, svg_element.c, svg_element_ref.c,
+	  svg_image.c, svg_paint.c, svg_parser.c, svg_pattern.c,
+	  svg_style.c, svgint.h: added external clip path struct to
+	  internal struct and style holds a const reference to the internal
+	  struct using the group member to refer to the clip path group
+	  instead of a type cast added missing group renderring for clip
+	  path in svg_element_render improved parsing of viewbox
+	  preserveAspectRatio attribute changed pattern parsing and struct
+	  to match the handling and struct of clip paths
+
+2009-02-19 15:04  philipn
+
+	* src/: Makefile.am, svg.h, svg_clip_path.c, svg_element.c,
+	  svg_element_ref.c, svg_group.c, svg_parser.c, svg_path.c,
+	  svg_style.c, svgint.h: added support for clipping paths:
+	  attributes 'overflow', 'clip' and 'clip-rule', element <clipPath>
+	  added callback to set an initial clipping path for <svg> elements
+	  when overflow is hidden; TODO: still need to apply the same for
+	  other elements that establish a new viewport created struct for
+	  path creation functions in render engine - code to copy a path
+	  now only needs callback functions for this struct
+
+2009-02-19 15:03  philipn
+
+	* src/svg_attribute.c: trim both leading and trailing whitespace in
+	  attribute values because the Expat parser doesn't do it
+
+2009-02-17 11:43  philipn
+
+	* src/svg.c: remove code that is never used now that element ref is
+	  absolute
+
+2009-02-17 11:30  philipn
+
+	* src/: svg.c, svg_uri_reference.c, svgint.h: made element
+	  reference an absolute uri reference to allow comparison with the
+	  absolute document uri
+
+2009-02-16 18:07  philipn
+
+	* src/: Makefile.am, svg.c, svg_gradient.c, svg_group.c,
+	  svg_paint.c, svg_pattern.c, svg_resource.c, svg_uri_reference.c,
+	  svgint.h: added support for external element references added
+	  svg_uri_ref_t type to represent uri references resolving element
+	  id references in xlink:href and url(...) to any document
+	  unescaping element id references <use> element with no xlink:href
+	  is no longer ignored and is an error always normalising uri
+	  values to allow checks for equality
+
+2009-02-16 17:58  philipn
+
+	* src/svg_attribute.c: trim leading whitespace from attribute
+	  values restructured code to reuse code to find the target
+	  attribute
+
+2009-02-16 17:53  philipn
+
+	* src/svg_parser.c: reset parser state to original when parsing
+	  deferred elements to avoid seg fault when a destroying svg_t
+	  after a parser error use simple free function to destroy deferred
+	  element
+
+2009-02-16 17:50  philipn
+
+	* src/svg_parser_expat.c: cosmetic change to make coding logic
+	  style consistent and using simple free
+
+2009-02-15 14:15  philipn
+
+	* configure.in, src/Makefile.am, src/svg.c, src/svg.h,
+	  src/svg_css_style.c, src/svg_element.c, src/svg_image.c,
+	  src/svg_parser.c, src/svg_parser_expat.c, src/svg_resource.c,
+	  src/svgint.h: Added proper uri handling using uriparser
+	  (http://uriparser.sourceforge.net/) Added network resource
+	  support using libcurl (http://curl.haxx.se/libcurl/) Fixed double
+	  memory deallocation of deferred elements when an error occurs
+	  Parse either a filename or a uri Using a temporary file when
+	  access is required to a network resource
+
+2009-02-10 19:07  philipn
+
+	* NEWS, configure.in: updates for snapshot 0.2
+
+2009-02-07 13:25  philipn
+
+	* src/svg.h: remove bitfield from struct fields to avoid difference
+	  between how msvc and gcc handle enums msvc represents enums as
+	  signed int and therefore a bitfield ':4' has a positive maximum
+	  of 7 and not 15
+
+2009-02-07 12:12  philipn
+
+	* src/svg_parser_expat.c: fix handling of size_t/int value range
+	  differences using INT_MAX
+
+2009-02-06 20:22  philipn
+
+	* src/svgint.h: fix incorrect parameter type declaration
+
+2009-02-06 20:14  philipn
+
+	* src/: svg_dom.c, svg_parser.c, svg_text.c, svgint.h: use size_t
+	  instead of int to represent length of xml character data
+
+2009-02-06 20:11  philipn
+
+	* src/: svg_path.c, svg_style.c, svg_transform.c: casts to avoid
+	  msvc warnings
+
+2009-02-06 20:11  philipn
+
+	* src/svg_parser_expat.c: parse chunks in multiple calls to expat
+	  if input size_t value > expat parser int value
+
+2009-02-06 20:06  philipn
+
+	* src/: svg_image.c, svg_paint.c: casts to avoid msvc warnings
+
+2009-02-06 20:03  philipn
+
+	* src/svg_css_style.c: typecast character buffer pointers to
+	  libcroco's gunchar* to avoid msvc warnings
+
+2009-02-06 20:02  philipn
+
+	* src/svg_ascii.c: typecast to avoid msvc warning
+
+2009-02-06 20:02  philipn
+
+	* win32_config.h: remove unused define causing duplicate warning in
+	  msvc
+
+2009-02-06 15:38  philipn
+
+	* src/: svg.h, svg_element.c, svg_parser.c, svg_path.c, svg_text.c,
+	  svgint.h: changed how text rendering is prepared and performed
+	  supporting x,y, dx and dy attributes (single length) on <text>
+	  and <tspan> elements removing leading and trailing whitespace in
+	  text elements removed get_text_anchor kludge from render engine
+	  api text anchor adjustment is left to the render engine (given
+	  the text chunk width)
+
+2009-02-06 15:37  philipn
+
+	* src/svg_style.c: using init functions to initialize lengths
+
+2009-02-04 16:56  philipn
+
+	* src/svg_parser.c: checking xml:space='preserve' when parsing
+	  character data
+
+2009-02-04 14:52  philipn
+
+	* src/svg_transform.c: support 1 and 3 args for rotate
+	  transformation command
+
+2009-02-04 11:44  philipn
+
+	* src/: svg_dom.c, svg_parser.c, svg_parser_expat.c, svgint.h:
+	  create/init a nsname using the namespace index and not uri to
+	  avoid unneccessary lookups
+
+2009-02-03 21:41  philipn
+
+	* src/svg_style.c: added namespace awareness to libsvg element and
+	  attribute names are namespace qualified initializing orientation
+	  in properties with svg_length_t type
+
+2009-02-03 21:39  philipn
+
+	* src/: svg_attribute.c, svg_css_style.c, svg_dom.c, svg_element.c,
+	  svg_gradient.c, svg_group.c, svg_image.c, svg_parser.c,
+	  svg_parser_expat.c, svg_path.c, svg_pattern.c, svg_text.c,
+	  svg_transform.c, svgint.h: added namespace awareness to libsvg
+	  element names and attribute names are namespace qualified
+
+2009-02-03 21:38  philipn
+
+	* configure.in, src/Makefile.am, src/svg_parser_libxml.c: removed
+	  libxml2; only supporting expat xml parser
+
+2009-02-02 13:26  philipn
+
+	* src/: svg_element.c, svg_gradient.c, svg_paint.c, svg_parser.c,
+	  svgint.h: cleanup gradient parsing treat gradient stops as proper
+	  svg_element_t made gradient (svg_gradient_int_t) a subclass of
+	  svg_group_t the internal gradient structure, svg_gradient_int_t,
+	  contains the gradient struct passed to clients
+
+2009-02-01 19:08  philipn
+
+	* src/svgint.h: various changes related to changes in other files
+	  made just now
+
+2009-02-01 19:07  philipn
+
+	* src/svg_style.c: changed _svg_style_get_display and
+	  _svg_style_get_visibility to return bool
+
+2009-02-01 19:07  philipn
+
+	* src/: svg_parser_expat.c, svg_parser_libxml.c: added function to
+	  return the current line number set line number when xml parse
+	  error occurs init and deinit line numbers and current element
+	  names
+
+2009-02-01 19:07  philipn
+
+	* src/svg_parser.c: setting xml parser line number and current node
+	  name to allow errors to be located setting xml line number on
+	  node to pass through to svg_element_t in second pass stopping the
+	  parser immediately after an error occurs
+
+2009-02-01 19:05  philipn
+
+	* src/svg_group.c: return immediatly when a render error occurs
+
+2009-02-01 19:05  philipn
+
+	* src/svg_element.c: add document line number and name to element
+	  data returning success and not SVG_STATUS_INVALID_VALUE for
+	  elements with display=none
+
+2009-02-01 19:04  philipn
+
+	* src/svg_dom.c: returning newly created dom node added functon to
+	  set the document line number corresponding to the dom node
+
+2009-02-01 19:04  philipn
+
+	* src/: svg.c, svg.h: add functions to get current parse or render
+	  position
+
+2009-01-31 17:47  philipn
+
+	* src/: svg.c, svg_element.c, svg_gradient.c, svg_parser.c,
+	  svg_parser_expat.c, svg_parser_libxml.c, svg_pattern.c, svgint.h:
+	  renamed parsing functions to make clear when the dom is being
+	  parsed or dom elements/characters processed deferring gradient
+	  and pattern parsing to a second phase if the xlink:href
+	  references a later element in the dom tree
+
+2009-01-31 16:50  philipn
+
+	* src/svg_transform.c: allow empty or trailing whitespace in
+	  transform attribute
+
+2009-01-31 13:15  philipn
+
+	* src/svg_style.c: apply svg presentation attrs before CSS
+	  properties because they have lower priority
+
+2009-01-31 12:42  philipn
+
+	* configure.in: set LIBSVG_LIBCROCO define to enable css support
+
+2009-01-31 12:35  philipn
+
+	* src/: svg_element.c, svg_pattern.c, svgint.h: process xlink:href
+	  attribute
+
+2009-01-31 12:34  philipn
+
+	* src/svg_gradient.c: set stop offset to previous offset if it is <
+	  previous offset return error (invalid value) when a gradient href
+	  can't be resolved
+
+2009-01-30 16:37  philipn
+
+	* configure.in: using cflags and libs variables provided by
+	  PKG_CHECK_MODULES
+
+2009-01-30 11:31  philipn
+
+	* src/svg_css_style.c: using new libcroco function to parse inline
+	  css styles
+
+2009-01-29 11:38  philipn
+
+	* src/svg_element.c: remove duplicate text group deinit and add
+	  tspan deinit to fix memory leak
+
+2009-01-28 15:29  philipn
+
+	* src/svg_css_style.c: msvc requires non-empty struct decl; use
+	  different include path in msvc because it doesn't get it from an
+	  install directory with a libcroco directory
+
+2009-01-28 12:07  philipn
+
+	* win32_config.h: config for win32 build
+
+2009-01-28 12:03  philipn
+
+	* src/: svg_hash.c, svg_hash.h: remove cvs id causing diffs
+
+2009-01-28 12:02  philipn
+
+	* src/: svg.c, svg.h, svg_attribute.c, svg_element.c,
+	  svg_gradient.c, svg_group.c, svg_image.c, svg_length.c,
+	  svg_paint.c, svg_parser.c, svg_parser_expat.c,
+	  svg_parser_libxml.c, svg_path.c, svg_pattern.c, svg_str.c,
+	  svg_style.c, svg_text.c, svg_transform.c, svgint.h: remove
+	  copyright symbol causing diffs
+
+2009-01-28 11:58  philipn
+
+	* src/svgint.h: win32 config include various changes matching the
+	  .c files
+
+2009-01-28 11:58  philipn
+
+	* src/svg_transform.c: win32 compatibility include
+
+2009-01-28 11:57  philipn
+
+	* src/svg_text.c: added id and class data to hierarchy callbacks
+
+2009-01-28 11:57  philipn
+
+	* src/svg_style.c: apply both xml attributes and css declarations
+	  to the svg style assume font-size is a length or a percentage
+	  inline css parsing replaced with impl in svg_css_style.c
+
+2009-01-28 11:56  philipn
+
+	* src/svg_pattern.c: set flag to indicate wherher a pattern element
+	  has a viewbox.  The default width and height is 100%.  Add width,
+	  height and viewbox attributes to pattern's group element if a
+	  viewbox is present
+
+2009-01-28 11:56  philipn
+
+	* src/: svg_parser_expat.c, svg_parser_libxml.c: parse proc
+	  instruction for external css stylesheets allow the parser to be
+	  stopped when an error occurs init dom and css stylesheet when
+	  creating the parser
+
+2009-01-28 11:56  philipn
+
+	* src/svg_parser.c: normalising gradient stop offset value to 0..1
+	  parsing in 2 stages, create a dom tree and then create the svg
+	  tree parse external stylesheets and internal <style> elements
+	  apply both xml attributes and css declarations to the svg
+	  elements
+
+2009-01-28 11:55  philipn
+
+	* src/svg_image.c: bitmap image data is returned in 2 steps;
+	  firstly the url is passed to the render engine and secondly a
+	  helper function can be used to decode the image to a selected
+	  format
+
+2009-01-28 11:55  philipn
+
+	* src/svg_group.c: default viewbox preserveAspectRatio is xmidymid
+	  and meet
+
+2009-01-28 11:54  philipn
+
+	* src/svg_gradient.c: radial gradient radius has other orientation
+
+2009-01-28 11:54  philipn
+
+	* src/svg_element.c: added id and class data to hierarchy callbacks
+	  applying svg properties using both xml attributes and css
+	  declarations
+
+2009-01-28 11:53  philipn
+
+	* src/svg_color.c: fix ordering to ensure bsearch finds color
+
+2009-01-28 11:53  philipn
+
+	* src/svg_ascii.h: win32 compatibility include
+
+2009-01-28 11:53  philipn
+
+	* src/: svg.c, svg.h: win32 compatibility include allow external
+	  setting of the svg directory name if not parsing from a filename
+	  use xmlChar to support both libxml2 and expat without warnings
+	  added id and class data to hierarchy callbacks changed font size
+	  to a <length> bitmap image data is returned in 2 steps; firstly
+	  the url is passed to the render engine and secondly a helper
+	  function can be used to decode the image to a selected format
+	  remove copyright symbol causing diff
+
+2009-01-28 11:51  philipn
+
+	* src/svg_css_style.c: impl of css parsing and selection
+
+2009-01-28 11:51  philipn
+
+	* src/svg_dom.c: impl of xml dom
+
+2009-01-28 11:50  philipn
+
+	* src/win32_compat.h: windows compatibility stuff
+
+2009-01-28 11:50  philipn
+
+	* src/Makefile.am: added new files
+
+2009-01-28 11:49  philipn
+
+	* configure.in: Added libcroco dependency (still needs some work)
+
+2009-01-27 18:01  philipn
+
+	* Makefile.am, NEWS, TODO, MAINTAINERS, RELEASING, configure.in,
+	  libsvg.spec.in, .cvsignore, AUTHORS, COPYING, README, autogen.sh,
+	  libsvg.pc.in, src/.cvsignore, src/Makefile.am, src/svg.c,
+	  src/svg.h, src/svg_ascii.c, src/svg_ascii.h, src/svg_attribute.c,
+	  src/svg_color.c, src/svg_element.c, src/svg_gradient.c,
+	  src/svg_group.c, src/svg_hash.c, src/svg_hash.h, src/svg_image.c,
+	  src/svg_length.c, src/svg_paint.c, src/svg_parser.c,
+	  src/svg_parser_expat.c, src/svg_parser_libxml.c, src/svg_path.c,
+	  src/svg_pattern.c, src/svg_str.c, src/svg_style.c,
+	  src/svg_text.c, src/svg_transform.c, src/svg_version.h.in,
+	  src/svgint.h: Initial revision
+
+2009-01-27 18:01  philipn
+
+	* Makefile.am, NEWS, TODO, MAINTAINERS, RELEASING, configure.in,
+	  libsvg.spec.in, .cvsignore, AUTHORS, COPYING, README, autogen.sh,
+	  libsvg.pc.in, src/.cvsignore, src/Makefile.am, src/svg.c,
+	  src/svg.h, src/svg_ascii.c, src/svg_ascii.h, src/svg_attribute.c,
+	  src/svg_color.c, src/svg_element.c, src/svg_gradient.c,
+	  src/svg_group.c, src/svg_hash.c, src/svg_hash.h, src/svg_image.c,
+	  src/svg_length.c, src/svg_paint.c, src/svg_parser.c,
+	  src/svg_parser_expat.c, src/svg_parser_libxml.c, src/svg_path.c,
+	  src/svg_pattern.c, src/svg_str.c, src/svg_style.c,
+	  src/svg_text.c, src/svg_transform.c, src/svg_version.h.in,
+	  src/svgint.h: copy from cvs
+	  -d:pserver:anonymous@cvs.cairographics.org:/cvs/cairo co -D
+	  2009-01-01 libsvg
+
+2005-12-01  Keith Packard  <keithp@keithp.com>
+
+	* src/svg_parser.c: (_svg_parser_parse_text_characters):
+	Oops - text elements get characters in chunks when there
+	are non-trivial entities in the string.
+	Also, glue all of the text into a single implicit tspan
+
+2005-12-01  Keith Packard  <keithp@keithp.com>
+
+	* src/svg_parser.c: (_svg_parser_sax_start_element),
+	(_svg_parser_parse_text), (_svg_parser_parse_tspan),
+	(_svg_parser_parse_text_characters):
+	Some file elements don't create data structures. Don't attempt to
+	apply attributes through the resulting uninitialized pointer.
+	* src/svg_text.c: (_svg_tspan_init):
+	* src/svgint.h:
+	Strip characters from <text> elements which have embedded <tspan>
+	elements.
+
+2005-08-13  Jason Dorje Short  <jdorje@users.sf.net>
+	* src/svg.h
+	* src/svg.c: (_svg_init), (svg_get_dpi):
+	Change default DPI to 90, and provide a new function to query the
+	current DPI.
+
+2005-07-19  Keith Packard  <keithp@keithp.com>
+
+	* src/svg.h:
+	* src/svg_element.c: (_svg_element_apply_attributes):
+	* src/svg_style.c: (_svg_style_render):
+	* src/svg_text.c: (_svg_text_render):
+	* src/svgint.h:
+	Kludge - pull text_anchor out of backend as it's stacked there.
+
+2005-07-19  Keith Packard  <keithp@keithp.com>
+
+	* src/svg_element.c: (_svg_element_apply_attributes):
+	* src/svg_style.c: (_svg_style_render):
+	* src/svg_text.c: (_svg_text_render):
+	* src/svgint.h:
+	Pull text anchor support up into libsvg.
+	set_text_anchor left in engine to avoid breaking ABI.
+
+2005-07-18  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* src/svg.h:
+	* src/svg_element.c: (_svg_element_init), (_svg_element_init_copy),
+	(_svg_element_deinit), (svg_element_render),
+	(_svg_element_apply_attributes):
+	* src/svg_parser.c: (_svg_parser_parse_text),
+	(_svg_parser_parse_tspan), (_svg_parser_parse_text_characters),
+	(_svg_parser_parse_tspan_characters):
+	* src/svg_text.c: (_svg_tspan_init), (_svg_tspan_init_copy),
+	(_svg_tspan_deinit), (_svg_tspan_append_chars),
+	(_svg_tspan_render), (_svg_tspan_apply_attributes),
+	(_svg_tspan_extents), (_svg_text_init), (_svg_text_init_copy),
+	(_svg_text_deinit), (_svg_text_prepare_tspan), (_svg_text_render),
+	(_svg_text_apply_attributes), (_svg_text_extents):
+	* src/svgint.h:
+	Add preliminary support for <tspan>. No support
+	for positioning tspan elements.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* .cvsignore: Ignore releases directory.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Increment version to 0.1.4-head after tagging the
+	snapshot.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* NEWS: Add notes for 0.1.4 snapshot.
+
+	* configure.in: Increment LIBSVG_VERSION to 0.1.4.
+
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
+	* src/svgint.h:
+	* src/svg_transform.c: (_svg_transform_multiply_into_left),
+	(_svg_transform_multiply_into_right), (_svg_transform_multiply):
+	Rework the argument order of _svg_transform_multiply to match what
+	I came up with for cairo_matrix_multiply, (which I trust to have
+	had more review). Also avoid use of new as a parameter name in
+	header files.
+
+2005-05-12  Keith Packard  <keithp@keithp.com>
+
+	* src/svg_pattern.c: (_svg_pattern_init_copy),
+	(_svg_pattern_deinit):
+	Make pattern_init_copy clone the element instead of
+	doing bad things.  Free the element when deiniting the pattern.
+
+2005-05-12  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* src/svg_style.c: (_svg_style_init_empty), (_svg_style_deinit):
+	Valgrind discovered a few memory leaks and use of uninitialized
+	values.  There are leaks remaining in the xml parsing code which
+	are demonstrated by several of the w3c svg conformance suite.
+
+2005-04-22  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_parser.c: (_svg_parser_parse_gradient_stop): Use
+	symbolic value.
+	
+	* src/svg_style.c: (_svg_style_init_empty): Add missing
+	initialization for style->num_dashes.
+	
+	* src/svg_style.c (_svg_style_init_copy): Fix to actually copy
+	memory for style->font_family and style->stroke_dash_array.
+
+	* src/svg_text.c: (_svg_text_init_copy): Fix zero termination of
+	text->chars.
+
+2005-04-22  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_text.c (_svg_text_init_copy): Fix to actually copy
+	memory for text->chars.
+
+2005-04-11  Carl Worth  <cworth@cworth.org>
+
+	* src/svg.h: Qualify utf8 parameter to render_text as const.
+
+2005-04-11  Carl Worth  <cworth@cworth.org>
+
+	* src/Makefile.am:
+	* configure.in: Enable a bunch of useful warnings when using gcc.
+
+	* src/svg_ascii.h:
+	* src/svg_ascii.c: (_svg_ascii_strtod): Fix indentation.
+
+	Fixes for more strict signedness checks as of gcc version 4:
+
+	* src/svg_element.c: (_svg_element_init_copy),
+	(_svg_element_apply_attributes): Cast to unsigned char* just
+	before calling into libxml routines.
+
+	* src/svg.h: Change render_text callback to accept char* instead
+	of unsigned char *.
+
+	* src/svg_parser_libxml.c: Move prototypes for
+	_svg_parser_sax_start_element, _svg_parser_sax_end_element, and
+	_svg_parser_sax_characters into svgint.h where they belong.
+	Use xmlStrdup instead of xmlMemStrdup for correct signedness.
+
+	* src/svg_attribute.c:
+	* src/svg.c:
+	* src/svg_gradient.c:
+	* src/svg_group.c:
+	* src/svg_image.c:
+	* src/svg_paint.c:
+	* src/svg_parser.c:
+	* src/svg_path.c:
+	* src/svg_pattern.c:
+	* src/svg_style.c:
+	* src/svg_text.c:
+	* src/svg_transform.c:
+	* src/svgint.h: Prefer char* over xmlChar* for internal use.
+
+2005-02-28  Carl Worth  <cworth@cworth.org>
+
+	* src/svg.c (svg_render): Use getcwd in accordance with POSIX
+	rather than relying on a Linux-specific extension to its
+	behavior. Based on a patch by Brian Cameron, (thanks for helping
+	us track this down, Brian).
+
+2005-02-16  Carl Worth  <cworth@cworth.org>
+
+	* autogen.sh: Call all autotool commands through environment
+	variables. Thanks to Rui Lopes.
+
+	* NEWS: Fix typo in release date.
+
+2005-02-14  Phil Blundell  <philb@gnu.org>
+
+	* configure.in: Add "--with-expat" flag.
+	(LIBSVG_PARSER_BACKEND, LIBSVG_REQUIRES): Define appropriately.
+	(EXPAT): New automake conditional.
+	* libsvg.pc.in (Requires): Use value from LIBSVG_REQUIRES.
+	* src/svgint.h (svg_xml_parser_context_t, svg_hash_table_t,
+	_svg_xml_hash_add_entry, _svg_xml_hash_lookup,
+	_svg_xml_hash_create, _svg_xml_hash_free, _svg_xml_strdup):
+	Declare.
+	(struct svg, struct svg_parser): Use svg_hash_table_t and
+	svg_xml_parser_context_t.
+	* src/svg.c (_svg_init, _svg_deinit, _svg_store_element_by_id,
+	_svg_fetch_element_by_id): Replace direct calls to xmlHash
+	functions with _svg_xml_hash equivalents.	
+	* src/svg_element.c (_svg_element_apply_attributes): Use
+	_svg_xml_strdup in place of xmlMemStrdup.
+	(_svg_element_init_copy): Likewise.
+	* src/svg_parser.c (SVG_PARSER_SAX_HANDLER, _svg_parser_init,
+	_svg_parser_deinit, _svg_parser_begin, _svg_parser_parse_chunk,
+	_svg_parser_end, _svg_parser_sax_get_entity,
+	_svg_parser_sax_entity_decl, _svg_parser_sax_warning,
+	_svg_parser_sax_error, _svg_parser_sax_fatal_error): Move to
+	new file svg_parser_libxml.c.
+	(_svg_parser_sax_start_element, _svg_parser_sax_end_element,
+	_svg_parser_sax_characters): Make linkage global.  Move
+	declarations to svgint.h.
+	* src/svg_parser_expat.c: New file.
+	* src/svg_hash.c, src/svg_hash.h: New files.  Code supplied by
+	Chris Osgood.	
+	* src/Makefile.am (LIBSVG_EXTRA_SOURCES): Select expat or libxml
+	parser backend as appropriate.
+	(libsvg_la_SOURCES): Include LIBSVG_EXTRA_SOURCES.
+
+2005-02-13  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Increment version to 0.1.3-head after tagging the
+	snapshot.
+
+	* NEWS: Add notes for 0.1.3 snapshot.
+
+	* configure.in: Increment LIBSVG_VERSION to 0.1.3.
+
+	* Makefile.am (release-publish): Add targets for easier creation
+	of snapshots.
+
+	* RELEASING: Add instructions on how to create a snapshot.
+
+2005-01-21  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_str.c (_svg_str_parse_all_csv_doubles): Fix segfault bug
+	introduced in last commit.
+
+2004-12-23  Carl Worth  <cworth@cworth.org>
+
+	* src/svg_str.c (_svg_str_parse_all_csv_doubles): 
+	* src/svg_group.c (_svg_group_add_element): 
+	* src/svg_gradient.c (_svg_gradient_add_stop): Grow arrays by
+	doubling rather than by linear increments.
+
+2004-07-05  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_gradient.c (_svg_gradient_set_type): Add mising return
+	value.
+
+2004-06-07  David Reveman  <c99drn@cs.umu.se>
+
+	* src/svgint.h: Added _svg_gradient_set_type.
+
+	* src/svg_parser.c (_svg_parser_parse_linear_gradient): Set
+	gradient type using _svg_gradient_set_type.
+	(_svg_parser_parse_radial_gradient): Set gradient type using
+	_svg_gradient_set_type.
+
+	* src/svg_gradient.c (_svg_gradient_init): Set gradient defaults using
+	_svg_gradient_set_type. Use SVG_GRADIENT_UNITS_BBOX as default units.
+	(_svg_gradient_apply_attributes): Allow referenced gradient of
+	different type.
+	(_svg_gradient_apply_attributes): Read spread type.
+
+	Added _svg_gradient_set_type.
+	
+
+2004-05-06  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_element.c (_svg_element_apply_attributes): Fix to not
+	return bogus error for circle elements.
+
+2004-05-04  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_group.c (_svg_group_init_copy): Don't forget to copy x
+	and y.
+
+	* src/svg_parser.c (_svg_parser_sax_entity_decl): Fix missing
+	initialization of entity fields URI, orig, owner, and children.
+	(_svg_parser_sax_characters): Patch memory leak.
+
+	* src/svg_image.c (_svg_image_init_copy): Fix missing copy of
+	image->url.
+
+2004-04-30  Keith Packard  <keithp@keithp.com>
+
+	* src/svg_element.c: (_svg_element_init_copy):
+	Initialize element->id to NULL when other->id has no id.
+
+2004-04-29  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_gradient.c (_svg_gradient_init): Fix missing
+	intialization of units and spread.
+
+	* src/svg_element.c (_svg_element_init_copy): Add missing copy for
+	ellipse and line.
+	(_svg_element_deinit): Add missing deinit for a few trivial types.
+
+	* src/svg_parser.c: Don't leave ignorableWhitespace NULL (which
+	makes newer libxml2 croak).
+	(_svg_parser_sax_characters): Do whitespace compaction ala
+	xml:space="default".
+
+2004-04-26  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_style.c: Switch default font from serif to sans-serif
+	for better compatibility with files designed for other user agent
+	defaults.
+
+	* src/svgint.h: 
+	* src/svg_path.c (_svg_path_init, _svg_path_add_va)
+	(_svg_path_line_to, _svg_path_smooth_curve_to)
+	(_svg_path_smooth_quadratic_curve_to): Add path->last_path_op to
+	fix handling of smooth curves/quads not preceded by a curve/quad.
+
+	* src/svg_parser.c: Condense SVG_PARSER_MAP for readability.
+
+	* src/svg_group.c (_svg_group_get_size): Add missing return value.
+
+2003-12-15  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg.h: Add extern "C" stuff to get along with C++.
+
+2003-11-15  Carl Worth  <cworth@isi.edu>
+
+	* configure.in: Bump version to 0.1.2 for new svg_get_size
+	interface.
+
+	* src/svg_group.c (_svg_group_apply_svg_attributes): Remove some
+	stale comments.
+	(_svg_group_get_size): Add accessor.
+
+	* src/svg.h: svg_get_size now fills in svg_length_t rather than
+	int.
+
+	* src/svg.c (_svg_init): Drop x,y,width,height from svg_t.
+	(svg_get_size): Switch from int to svg_length_t. Get size from top
+	element. Thanks to Noah Levitt <nlevitt@columbia.edu> for
+	confirming this fix.
+
+2003-11-06  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Bump version number to 0.1.1 to indicate change in
+	svg_parse_file and addition of svg_parse.
+
+	* src/svg.c (svg_parse_file): Add support for parsing an open
+	"FILE *" stream. Many thanks to John Ellson
+	<ellson@research.att.com> for this addition.
+	(svg_parse): New svg_parse function takes the place of the old
+	svg_parse_file.
+
+	* autogen.sh (PKG_NAME): Add "--enable-maintainer-mode" to
+	configure line.
+
+2003-10-30  Carl Worth  <cworth@isi.edu>
+
+	* Makefile.am: Removed libsvg.spec as it is not currently being
+	maintained or tested. Volunteers are welcome.
+
+2003-08-29  Carl Worth  <cworth@isi.edu>
+
+	* src/svgint.h (SVG_STYLE_FLAGS): Switch to ULL for literals of
+	more than 32 bits.
+
+	* src/svg_parser.c: Removed an unnecessary layer of redundant
+	functions (_svg_parser_new_*_element). Instead, share new
+	_svg_parser_new_leaf_element function.
+	(_svg_parser_parse_linear_gradient):
+	(_svg_parser_parse_radial_gradient):
+	(_svg_parser_parse_gradient_stop):
+	(_svg_parser_parse_pattern): Gradient/Pattern parsing from Steven
+	Kramer.
+
+	* src/svg_paint.c (_svg_paint_init): Added gradient/pattern
+	parsing from Steven Kramer.
+
+	* src/svg_color.c: Added is_current_color field to svg_color_t.
+
+	* src/svg.h: Export opaque svg_group_t and svg_element_t.  Made
+	several names more consistent, (PRESERVE_ASPECT_RATIO not
+	PRESERVEASPECTRATIO, etc.). Eliminated useless _STYLE from names
+	like SVG_STYLE_STROKE_LINE_JOIN_ROUND. Added svg_gradient_t,
+	svg_pattern_units_t, svg_pattern_t from Steven Kramer
+	<post@stevenkramer.com>. Added functions svg_element_render and
+	svg_element_pattern.
+
+	* src/svg.c (svg_get_size): New query function added.
+
+	* src/Makefile: Added svg_gradient.c and svg_pattern.c. This is
+	part of the new gradient/pattern parsing support originally by
+	Steven Kramer <post@stevenkramer.com>. I've done various
+	modifications, but the original work is his.
+
+2003-06-13  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_path.c (_svg_path_init_copy): Fixed to allocate new
+	memory for the copy.
+	(_svg_path_render): Use doubles rather than svg_length_t.
+
+	* src/svg_group.c (_svg_group_deinit): Fixed memory leak
+
+2003-05-24  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_group.c (_svg_group_deinit): Fixed memory leak of group
+	elements.
+
+2003-05-01  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (LT_REVISION): Fixed libtool shared-library
+	versioning.
+
+2003-03-03  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_path.c (_svg_path_render): Fixed initialization of
+	temporary svg_length_t array.
+	(_svg_path_arc_to): Moved arc magic out of libsvg (Rob Buis).
+
+	* src/svg.h: Changed all of render_engine from svg_length_t to
+	svg_length_t *.
+
+2003-02-21  Rob Buis    <buis@kde.org>
+
+	* src/svg_path.c, src/svg_parser.c: Many changes needed to offer a more
+	clear seperation between specified ("50%") and computed values ("225").
+	Also now everywhere appropriate in libsvg svg_length_t is used.
+
+2003-02-19  Carl Worth  <cworth@isi.edu>
+
+	* src/svg.c (svg_parse_file): Support for gzipped files
+	(eg. .svgz) from Rob Buis.
+
+2003-02-16  Rob Buis    <buis@kde.org>
+
+	* src/svg_element.c (_svg_element_clone): Added several cloning/copying
+	functions. This is mainly for <use> atm. Notice that all copy routines are
+	shallow copies, deep cloning seems not needed at this point.
+
+2003-02-13  Rob Buis    <buis@kde.org>
+
+	* src/svg_group.c (_svg_group_apply_use_attributes): Better handling of
+	viewBox on symbol. Still cloning needed to clean <use> up.
+
+2003-02-12  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_style.c (_svg_style_parse_color): Real fix for
+	color="inherit".
+
+	* src/svg_color.c (_svg_color_init_from_str): Fixed
+	color="inherit".
+
+2003-02-11  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_element.c (_svg_element_apply_attributes): Don't access
+	element->group fields unless element->type == SVG_ELEMENT_TYPE_SVG_GROUP.
+
+2003-02-09  Rob Buis    <buis@kde.org>
+
+	* src/svg_length.c (_svg_length_to_pixel): Improved length unit handling,
+	now also handling %, em and ex (but relying on fallback values).
+
+	* src/svg_parser.c (_svg_parser_parse_use): Added parsing and handling for
+	<use>, <defs>, <symbol>, which all are group types. Cleaned up the group
+	parsing code a bit (less functions needed).
+
+	* src/svg_parser.c (svg_parser_parse_rect): Use as intermediate
+	results for processing lengths on <rect>, <circle> svg_length_t
+	variables. Note that its better to make these member variables, since
+	we need to know their value for DOM, changes in value and cloning.
+
+2003-02-08  Rob Buis    <buis@kde.org>
+
+	* src/svg_attribute.c (_svg_attribute_get_length): Added method for
+	getting a length type from an attribute.
+
+2003-02-07  Rob Buis    <buis@kde.org>
+
+	* src/svg_element.c (_svg_element_parse_view_box): Parse and store viewBox
+	attribute specifics. Added aspectratio values, but not handling them yet. 
+
+	* src/svg_parser.c (_svg_parser_parse_defs): parse and store defs
+	as a special kind of group. Do not render its contents directly.
+
+2003-02-06  Rob Buis    <buis@kde.org>
+
+	* src/svg_style.c (_svg_style_parse_visibility)
+	(_svg_style_parse_visibility): Added visibility/display handling.
+
+2003-02-05  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_parser.c (_svg_parser_sax_start_element): Store all
+	elements with an "id" attribute in a hash (Rob Buis).
+
+	* src/svg_path.c (_svg_path_apply_attributes): Don't try to get
+	"d" attribute if the path already exists, (eg. svg_path_t
+	represents a <circle>, <rect>, etc.)
+
+2003-02-04  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_parser.c (_svg_parser_sax_get_entity)
+	(_svg_parser_sax_entity_decl): Entity support using an xmlHash
+	(Rob Buis).
+
+	* src/svg_element.c (_svg_element_init, _svg_element_deinit)
+	(_svg_element_apply_attributes): Added support for parsing "id"
+	(Rob Buis).
+
+2003-02-03  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_image.c (_svg_image_read_jpeg): Added support for
+	reading JPEG images (Rob Buis).
+
+2003-02-01  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_path.c (_svg_path_arc_to): Fix for arc drawing (Rob
+	Buis).
+
+	* src/svg_color.c (_svg_color_get_two_hex_digits): Color parsing
+	fix (Rob Buis).
+
+2003-01-29  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_style.c (_svg_style_parse_fill_rule): Fixed NONZERO fill
+	rule (Rob Buis).
+
+	* src/svg_paint.c (_svg_paint_init): Added parsing of currentColor
+	(Rob Buis).
+
+2003-01-28  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_style.c (_svg_style_init_empty): Fixed free() of wild
+	pointer.
+
+2003-01-25  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_style.c (_svg_style_parse_stroke_dash_array): Added
+	parsing for stroke_dash_array.
+
+	* src/svg_str.c (_svg_str_parse_all_csv_doubles): Added utility
+	function for parsing an arbitrary number of comma-separated
+	doubles.
+
+	* src/svg.h: Added set_stroke_dash_array to svg_render_engine
+
+2003-01-24  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_path.c (_svg_path_quadratic_curve_to): Fixed quadratic curves.
+	(_svg_path_smooth_quadratic_curve_to): Fixed smooth quadratic curves.
+
+	* TODO: shapes-polyline-BE-06.svg now passes.
+		path-curves-BE-02.svg now passes
+		path-curves-BE-03.svg now passes
+
+2002-12-06  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_parser.c (_svg_parser_end): Removed bogus delivery of
+	"\0" to xmlParseChunk, (was causing messages about extra content
+	after end of file)
+
+2002-11-11  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_transform.c (_svg_transform_add_translate):
+	(_svg_transform_add_scale):
+	(_svg_transform_add_rotate):
+	(_svg_transform_add_skew_x):
+	(_svg_transform_add_skew_y): New functions to append a
+	transformation to an existing transformation.
+
+	* src/svg_parser.c (_svg_parser_new_group_element):
+	(_svg_parser_new_path_element):
+	(_svg_parser_new_text_element):
+	(_svg_parser_new_image_element): Updated to use
+	_svg_element_create and _svg_group_add_element rathern than old
+	_svg_group_create functions.
+
+	* src/svg_image.c (premultiply_data): Fixed to premultiply alpha
+	data loaded from a PNG image, (code snatched from xcursorgen).
+
+	* src/svg_group.c (_svg_group_add_element): Move element creation
+	out of svg_group.
+
+	* src/svg_element.c (_svg_element_init):
+	(_svg_element_deinit):
+	(_svg_element_render):
+	(_svg_element_apply_attributes): Eliminated svg_state_t by just
+	putting the svg_transform_t and the svg_style_t directly into the
+	svg_element_t.
+
+	* src/svg.c (svg_render): Now changes current directory to easily
+	resolve relative references.
+
+2002-11-04  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_style.c (_svg_style_parse_opacity): Added support for
+	opacity property.
+
+	* src/svg_element.c (_svg_element_render): begin_group/end_group
+	now accept group opacity value so the render engine can decide if
+	an intermediate group is actually necessary.
+
+	* src/svg.h: Added set_opacity to svg_render_engine.
+
+2002-11-02  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_path.c (_svg_path_rect): Made new _svg_path_rect without
+	rounded corners. Rounded version is now _svg_path_rect_rounded.
+
+	* src/svg_parser.c (_svg_parser_parse_rect):
+	(_svg_parser_parse_circle):
+	(_svg_parser_parse_ellipse):
+	(_svg_parser_parse_polyline): Fixed parsing of each of these
+	elements to match the SVG spec. with regards to missing
+	attributes.
+
+	* src/svg_image.c (_svg_image_read_image): Fixed to return error
+	code if image is of an unsupported type.
+
+	* src/svg_group.c (_svg_group_render): Continues rendering more
+	elements in the group even if svg_element_render fails.
+
+	* src/svg_element.c (_svg_element_render): Fixed to call
+	render_engine->end_element even if svg_element_render fails.
+
+2002-11-01  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_image.c (_svg_image_init, _svg_image_deinit)
+	(_svg_image_apply_attributes, _svg_image_render)
+	(_svg_image_read_image, _svg_image_read_png): Added basic image
+	support. The xlink namespace is not handled properly. The image's
+	URL is not resolved properly. Only png images are currently
+	supported, not jpeg or svg yet.
+
+	* src/svg_parser.c (_svg_parser_new_image_element)
+	(_svg_parser_parse_image): Added support for parsing the image
+	element.
+
+	* src/svg_element.c (_svg_element_init, _svg_element_deinit)
+	(_svg_element_render, _svg_element_apply_attributes): Added
+	support for image elements.
+
+	* src/svg.h: For svg_render_image, renamed show_text to
+	render_text; added render_image.
+
+2002-10-31  Carl Worth  <cworth@isi.edu>
+
+	* src/svg.h: Cleaned up the names/orders of all svg_render_engine
+	functions, (and everything related in the libsvg implementation)
+
+	* src/svgint.h (SVG_STYLE_FLAG_NONE): Changed flag values from an
+	enum to #defines since I have well over 32 flags now.
+
+	* src/svg_transform.c (_svg_transform_parse_str): Fixed
+	composition of transforms, (they were being multiplied in the
+	wrong order previously).
+
+	* src/svg_style.c (_svg_style_init_defaults): Big cleanup of
+	default style initialization. Now covers the SVG defaults much
+	more completely and neatly.
+
+	* TODO: Upgraded coords-transforms-BE-02 now that transforms are
+	fixed.
+
+2002-10-29  Carl Worth  <cworth@east.isi.edu>
+
+	* src/svg_path.c (_svg_path_apply_attributes): Cleaned up
+	attribute handling, (each subtype now applies its own attributes
+	in the same way as element rendering).
+
+	* src/svg_parser.c (_svg_parser_parse_text): Added text parsing
+	support.
+	(_svg_parser_sax_start_element): Now ignores unknown elements.
+	(_svg_parser_push_state, _svg_parser_pop_state): Cleaned up
+	parsing. Current path, group, etc. now stored in stack in parser
+	rather than in svg_t.
+
+	* src/svg_element.c (_svg_element_init, _svg_element_render):
+	Added basic text support.
+	(_svg_element_apply_attributes): Made attribute handling
+	consistent.
+	(_svg_element_deinit): Fixed memory leaks.
+	
+	* src/svg_group.c (_svg_group_create_text_element): 
+
+2002-10-26  Carl Worth  <cworth@isi.edu>
+
+	* src/svg_path.c (_svg_path_close_path): Fixed state update of
+	current point after a close path operation.
+
+2002-10-24  Carl Worth  <cworth@brudder>
+
+	* src/svg_style.c (_svg_style_parse_fill_rule): Added support to
+	parse fill_rule.
+	(_svg_style_init_defaults): Changed default join style to miter,
+	(to match conformance images -- still need to find all the style
+	defaults in the spec. somewhere).
+	(_svg_style_apply_attributes): Added support for presentation
+	attributes, (ie. fill="#ffffff" rather than
+	style="fill:#ffffff;").
+
+	* src/svg_path.c (_svg_path_curve_to): Fixed computation of
+	reflected_pt so that smooth cubic splines now work, (there's still
+	a bug with the qradratic splines though).
+	(_svg_path_rect): rect is now properly closed
+
+	* src/svg_parser.c (_svg_parser_parse_polygon): Added parsing of
+	polygon/polyline points. Fixed polygon to actually close.
+
+	* src/svg_element.c (_svg_element_render): Added calls to
+	engine->begin_element/end_element to fix some cases of style
+	inheritance, (ie. each element is in an implicit group).
+
+	* src/svg_color.c (_svg_color_init_from_str): Fixed to parse
+	3-digit hex colors. Also, mixed percentage/integer components will
+	now work, (I don't know if they meet spec. or not, but I'll be
+	forgiving in what I accept).
+
+	* src/svg_str.c: extracted out some common string manipulation functions.
+
+	* TODO: Added status of conformance testing.
+
+2002-10-23  Carl Worth  <cworth@brudder>
+
+	* libsvg is alive now for the first time. So far, it does much
+	less than librsvg did, (eg. no text/images yet), but it is enough
+	to at least render tiger.svg.
+
+2002-10-04  Carl Worth  <cworth@isi.edu>
+
+	* rsvg.c: Began work to generalize everything into libsvg.
+
+2002-10-04  Dom Lachowicz <doml@appligent.com>
+
+	* test-rsvg.c (main): Implemented version, better help description
+	
+2002-10-04  Alexander Larsson  <alexl@redhat.com>
+
+	* Makefile.am:
+	* configure.in:
+	Install test-rsvg as rsvg
+	Fix gdk-pixbuf-loader build when you have an old version of gdk-pixbuf.
+
+2002-10-03  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (start_svg): Fix error that was hurting nautilus icon themes
+
+	* test-rsvg.c (main): fix segfaults, add width, height arguments, configurable output format
+	
+2002-10-03  Matthias Clasen <maclas@gmx.de>
+
+	* gdk-pixbuf-loader : RSVG can now be optionally a loadable module for GdkPixbuf, if you have a new enough version of GdkPixbuf
+	
+2002-10-03  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (set_dpi): minor update to reset the DPI if necessary
+	
+2002-10-02  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-path.c (*): Remove VERBOSE statements
+	* rsvg.c (*): Remove VERBOSE statements
+	(rsvg_pixbuf_from_file_with_size_data): New FN for parsing through SVG files. Optionally Gnome-VFS aware (no configure joo-joo yet)
+	(rsvg_pixbuf_from_file_*): use above function
+	(rsvg_text_handler_characters): fix segfault, handle <tspan> to a large degree
+	(rsvg_text_handler_end): ditto
+	
+2002-10-02  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_parse_style_args): handle dashoffset and dasharray
+	(state_finalize): support dashes
+	(state_clone): ditto
+	(render_bpath): ditto
+	
+	* TODO: update to reflect work done
+	
+2002-10-01  Dom Lachowicz <doml@appligent.com>
+
+	* TODO: update
+
+	* rsvg.c (): lay some framework for stroke-dash parameters
+	
+2002-10-01  jacob berkman  <jacob@ximian.com>
+
+	* rsvg-css.c (rsvg_css_parse_normalized_length): fix to build with
+	a C compiler
+
+2002-10-01  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (rsvg_css_parse_color): Handle all 146 of svg's named colors. Please someone check this for correctness
+	
+2002-10-01  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (gradient_stop): Handle % gradient stop offsets
+	
+2002-10-01  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (rsvg_css_parse_length): handle %, em units now. ex can easily be handled once we have a way to get the font's XHeight
+	(rsvg_css_parse_normalized_length): updated for above ^^^
+	
+	* rsvg.c (rsvg_handle_set_dpi): new function for setting the DPI
+	(macro) RSVG_DPI: assume default of 90 DPI instead of 72
+	(rsvg_viewport_percentage): new fn for calculating percentages relative to viewports
+	(*): update to use new CSS length routines
+	(rsvg_start_text): handle -x and -y values for text offsets
+	
+2002-10-01  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (*): Make drawing functions handle % widths, heights too
+	Use parse_normalized_length for font sizes as well
+	
+	* rsvg-css.[ch] (rsvg_css_parse_fontsize): kill function
+	
+2002-09-29  Larry Ewing  <lewing@ximian.com>
+
+	* rsvg.c (rsvg_start_ellipse): correct the ellipse rendering
+	coordinates.
+
+=== librsvg 2.1.0 ===
+	
+2002-09-27  Alexander Larsson  <alexl@redhat.com>
+
+	* NEWS:
+	Add some news about 2.1.0
+
+2002-09-27  Alexander Larsson  <alexl@redhat.com>
+
+	* configure.in:
+	Bump version to 2.1.0
+
+2002-09-25  jacob berkman  <jacob@ximian.com>
+
+	* gtk-engine/Makefile.am: add $(top_srcdir) to $INCLUDES, remove
+	broken and non-portable dist-hook in favor of real SUBDIRS (which
+	only get built if the engine is enabled)
+
+	* gtk-engine/ChangeLog: rename to ChangeLog-old
+
+	* configure.in (AC_OUTPUT): add new Makefiles
+
+2002-09-25  Dom Lachowicz <doml@appligent.com>
+
+	* (configure.in): --enable-gtk-theme argument (default=yes)
+	
+2002-09-25  Dom Lachowicz <doml@appligent.com>
+
+	* (): Import and create a SVG based GTK+ theme engine
+
+2002-09-22  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (clip_rgb_percent): fix bug. stoopid math...
+
+2002-09-19  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_start_ellipse): Ellipses work ok
+	(rsvg_start_tspan): Start of tspan work. Needs to handle x offset
+	
+2002-09-18  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (rsvg_color_parse) : use bsearch instead of GHashTable. Potentially faster, 
+	you don't leak GHashTable, no need to alloc and free 2 GStrings, and it *actually works here*
+
+2002-09-17  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_text_handler_characters): Handle scaling font by affine/viewbox
+	(rsvg_start_rect): Correct for bug in border drawing around a rect
+	
+2002-09-17  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_start_svg): Parse viewbox as floats, not ints.
+	(rsvg_start_text): Handle x & y attributes. TODO: dx,dy
+	
+2002-09-16  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_start_svg): Support the viewbox
+	
+2002-09-15  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (): Use g_ascii_strtod instead of atof, strtod, g_strtod
+	* rsvg-css.c (): ditto
+	
+2002-09-15  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_parse_style_attrs): Support styles in the form of fill="color" in addition to style="fill:color"
+	(rsvg_is_style_arg): Helper fn for above
+	(rsvg_parse_style_pair): Ditto
+	
+2002-09-14  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_start_image): draw raster images 
+
+2002-09-14  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg.c (rsvg_start_element): Support for more tags
+	(rsvg_start_ellipse): draw ellipses (buggy - ellipses are off-center)
+	(rsvg_start_circle): draw circles
+	(rsvg_start_rect): draw rectangles
+	(rsvg_start_line): draw lines
+	(rsvg_start_image): eventually will draw images (todo)
+	(rsvg_start_polyline): draw polylines
+	(rsvg_start_polygon): draw polygons
+	(rsvg_start_any_poly): helper fn for polyline|polygon
+	(rsvg_make_poly_point_list): ditto
+	
+2002-09-13  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (rsvg_css_parse_color): Optimize RGB value determination from rgb() spec
+	(rsvg_css_normalize_rgb_percent): Floor returned value
+	(rsvg_css_parse_opacity): Check for null, use g_strtod
+	(rsvg_css_parse_fontsize): ditto
+	
+2002-09-13  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (rsvg_css_parse_color): Handle rgb(r,g,b) and rgb(r%,g%,b%) color specifications
+	(rsvg_css_normalize_rgb): new function used in parse_color
+	(rsvg_css_normalize_rgb_percent): ditto
+
+	* test-rgb.svg: Testcase for the above
+	
+2002-09-13  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (rsvg_css_parse_length): Remove setlocale calls - this should be done at a level higher than this
+	
+2002-09-12  Dom Lachowicz <doml@appligent.com>
+
+	* rsvg-css.c (rsvg_css_parse_length): Handle errors, handle more units, reduce number of string compares
+	(rsvg_css_parse_normalized_length): New function, like rsvg_parse_length, except normalizes output to a width or height argument
+	(rsvg_css_parse_color): fix 2 memory leaks in color parsing routine
+
+	* rsvg.c (rsvg_start_svg): Use rsvg_css_parse_length
+	(rsvg_parse_style_arg): ditto
+	(rsvg_start_linear_gradient): ditto
+	(rsvg_start_radial_gradient): ditto
+	
+=== librsvg 2.0.1 ===
+	
+2002-07-22  Alexander Larsson  <alexl@redhat.com>
+
+	* NEWS: 
+	* configure.in:
+	Bump to 2.0.1
+
+2002-07-09  Alexander Larsson  <alexl@redhat.com>
+
+	* librsvg.spec.in:
+	s/@ART_REQUIRED@/@LIBART_REQUIRED@/
+	Patch from Pierre Sarrazin <sarrazip@sympatico.ca>
+
+2002-07-01  Alexander Larsson  <alexl@redhat.com>
+
+	* configure.in:
+	Require libart 2.3.10 for bugfix
+
+	* rsvg.c (rsvg_render_bpath):
+	Back out michaels workaround, now that the real bug has been fixed.
+	The gorilla trashcan still works.
+
+=== librsvg 2.0.0 ===
+
+2002-06-19  Alexander Larsson  <alla@lysator.liu.se>
+
+	* NEWS:
+	Add news
+	
+	* configure.in:
+	Bump version to 2.0.0
+	Update requirements 
+
+2002-06-08  Michael Meeks  <michael@ximian.com>
+
+	* rsvg.c (rsvg_render_bpath): perturb the 
+	close vpath so we don't get numerical stability
+	problems.
+
+2002-05-01  Anders Carlsson  <andersca@gnu.org>
+
+	* rsvg.c: (rsvg_handle_close):
+	Check for a NULL context in case we haven't called
+	rsvg_handle_write to create it. Fixes #80374, reported by
+	Jakub Steiner.
+	
+2002-04-18  Ramiro Estrugo  <ramiro@fateware.com>
+
+	* MAINTAINERS: Removed myself from list.
+
+2002-03-13  Gregory Leblanc  <gleblanc@linuxweasel.com>
+
+	* librsvg.spec.in: rather big rework, from Chris Chabot
+
+	Not sure if that next line belongs or not...
+
+=== librsvg 1.1.6 ===
+
+2002-03-07  Darin Adler  <darin@bentspoon.com>
+
+	* NEWS: News for 1.1.6.
+	* configure.in: Bump version.
+
+2002-03-07  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg.c: (rsvg_start_svg): Check for width 0 and height 0
+	cases. Make warnings clearer.
+	(rsvg_size_callback): Explicitly check for bad width and
+	height. Before, we sometimes did math starting with -1 and
+	yielding 0, which led to a divide by zero.
+	
+	* test-71622.svg: New test case.
+
+=== librsvg 1.1.5 ===
+
+2002-03-04  Darin Adler  <darin@bentspoon.com>
+
+	* NEWS: News for 1.1.5.
+
+2002-02-28  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Bump version.
+
+2002-02-28  Alexander Larsson  <alla@lysator.liu.se>
+
+	* rsvg.h: (rsvg_pixbuf_from_file_at_zoom_with_max): New function.
+	* rsvg.c: (RsvgSizeType, struct RsvgSizeCallbackData):
+	Use enum instead of booleans to store the type of size callback.
+	(rsvg_size_callback): Implement ZOOM_MAX, other changes due to the
+	usage of the RsvgSizeType enum.
+	(rsvg_pixbuf_from_file_at_zoom_with_max): Implement new function.
+
+=== librsvg 1.1.4 ===
+
+2002-02-25  Darin Adler  <darin@bentspoon.com>
+
+	* NEWS: News for 1.1.4.
+
+2002-02-25  Darin Adler  <darin@bentspoon.com>
+
+	* .cvsignore: Ignore new test program binary.
+	* configure.in: Bump version.
+
+2002-02-24  Alexander Larsson  <alla@lysator.liu.se>
+
+	* rsvg.c: (rsvg_pixbuf_from_file_at_max_size): New function
+	for scaling an svg uniformly to fit in a rectangle.
+	(rsvg_size_callback): Handle max_size_set
+	(rsvg_pixbuf_from_file_at_zoom),(rsvg_pixbuf_from_file_at_size):
+	Set max_size_set to false.
+	
+	* rsvg.h: Add rsvg_pixbuf_from_file_at_max_size()
+
+2002-02-20  Michael Meeks  <michael@ximian.com>
+
+	* Makefile.am: add test-performance.c
+
+	* test-performance.c: impl.
+
+2002-02-17  Michael Meeks  <michael@ximian.com>
+
+	* rsvg.c (rsvg_handle_write): make sure we set
+	replaceEntities before we parse any of the buffer.
+	(rsvg_pixbuf_from_file_at_size),
+	(rsvg_pixbuf_from_file_at_zoom): read / parse
+	SVG_BUFFER_SIZE bytes at a time, not 3.
+	(rsvgSAXHandler): kill bogus module global.
+	(rsvg_error_cb): impl.
+
+2002-02-18  Gediminas Paulauskas <menesis@delfi.lt>
+
+	* configure.in: remove GNOME_COMMON_INIT, GNOME_PLATFORM_GNOME_2
+
+2002-02-16  Alexander Larsson  <alla@lysator.liu.se>
+
+	* test-71297.svg: Add test case.
+
+2002-02-12  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg-paint-server.c: (rsvg_render_paint_server): Add a
+	return_if_fail.
+	
+	* rsvg.c: (rsvg_start_svg): Handle .svg files without width and
+	height values better. This was actually better in librsvg 1.0,
+	and got lost in the rework of the API.
+	(rsvg_push_opacity_group): Handle the case where ctx->pixbuf is NULL.
+	(rsvg_pop_opacity_group): Handle NULL pixbuf cases.
+	(rsvg_render_svp): Handle NULL pixbuf case better.
+	(rsvg_render_bpath): Handle NULL pixbuf case.
+	(rsvg_text_handler_characters): Handle NULL pixbuf case.
+	
+	* test-20020212.svg: Add a test file from Sodipodi without a width
+	or height.
+
+==== librsvg 1.1.3 ====
+
+2002-02-09  Darin Adler  <darin@bentspoon.com>
+
+	* NEWS: Release notes for 1.1.3.
+	* configure.in: Bump version number.
+
+2002-02-08  Anders Carlsson  <andersca@gnu.org>
+
+	* rsvg.c (rsvg_pixmap_destroy): Add from GNOME 1 version.
+	(rsvg_start_svg): Use rsvg_pixmap_destroy as finalize function.
+	(rsvg_push_opacity_group): Likewise.
+	(rsvg_pixbuf_from_file_at_size): Call rsvg_handle_close.
+	(rsvg_pixbuf_from_file_at_zoom): Likewise.
+
+==== librsvg 1.1.2 ====
+
+2002-02-04  Darin Adler  <darin@bentspoon.com>
+
+	* NEWS: Release notes for 1.1.2.
+	* configure.in: Bump version number, give better error message
+	when popt is missing.
+
+2002-02-01  Laszlo Peter  <laca@ireland.sun.com>
+
+	*  rsvg-bpath-util.c rsvg-bpath-util.h rsvg-css.c rsvg-css.c
+	   rsvg-defs.c rsvg-paint-server.c rsvg-path.c rsvg-path.h
+	   rsvg.c rsvg.h test-rsvg.c: correct licensing information
+           in the headers by permission of the Copyright holder.
+
+2002-01-21  Alex Larsson  <alexl@redhat.com>
+
+	* rsvg.c (rsvg_render_bpath):
+	Use the new libart intersector.
+
+==== librsvg 1.1.1 ====
+
+2002-01-08  Darin Adler  <darin@bentspoon.com>
+
+	* NEWS: Release notes for 1.1.1.
+
+2002-01-04  Darin Adler  <darin@bentspoon.com>
+
+	* README:
+	* configure.in:
+	* librsvg.spec.in:
+	More tweaking. I just can't stop myself.
+
+2002-01-04  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Bump required libart version to the one
+	with art_render_mask.
+
+2002-01-04  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Bump version, update dependencies.
+	* librsvg-2.0.pc.in: Update dependencies.
+
+	* rsvg-bpath-util.c:
+	* rsvg-css.c:
+	* rsvg-css.h:
+	* rsvg-defs.c:
+	* rsvg-paint-server.c:
+	* rsvg-paint-server.h:
+	* rsvg-path.c:
+	* rsvg-path.h:
+	* rsvg.c:
+	Fix includes to include only what's needed.
+
+	* test-62699.svg: Add a test case for another bug.
+
+2002-01-03  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg.c: Use art_render_mask in libart.
+
+	* Makefile.am:
+	* art_render_mask.c: Remove.
+	* art_render_mask.h: Remove.
+	Get rid of our own copy of art_render_mask.
+
+	* configure.in: Change back so compatible with older autoconf
+	and automake. We'll go back to the future when glib does.
+
+2002-01-03  Darin Adler  <darin@bentspoon.com>
+
+	* acinclude.m4: Remove.
+	We don't need the NAUTILUS_FREETYPE2 macro any more.
+
+2002-01-03  Darin Adler  <darin@bentspoon.com>
+
+	* TODO:
+	* test-rsvg.c: (main):
+	Some cleanup on the test program.
+
+	* configure.in:
+	* librsvg.spec.in:
+	Remove gtk requirement and remove remnants of the old
+	freetype requirement. Also get rid of gmodule and gthread
+	since we only use glib itself.
+
+	* makefile-simple:
+	* subpixel-text-test:
+	Remove some no-longer-useful files (these were never
+	in the tarball anyway).
+
+2002-01-03  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg.c: (rsvg_text_handler_characters):
+	Don't set font_family to NULL -- by not setting it, we
+	end up with the default font family. If we set it, we'd
+	get an error when rendering.
+
+2002-01-02  Darin Adler  <darin@bentspoon.com>
+
+	* librsvg-2.0.pc.in: Remove spurious 2.0 from pango
+	package name.
+
+2002-01-02  Darin Adler  <darin@bentspoon.com>
+
+	* Makefile.am:
+	* configure.in:
+	* librsvg-2.0.pc.in:
+	* librsvg.spec.in:
+	* rsvg-ft.c: Remove.
+	* rsvg-ft.h: Remove.
+	* rsvg.h:
+	* test-ft-gtk.c: Remove.
+	* test-ft.c: Remove.
+	* test-rsvg.c:
+	Remove direct FreeType dependency and also remove
+	dependency on libpng. No more rsvg_set_fonts_dir
+	or rsvg-ft.h header.
+
+	* rsvg.c: (rsvg_state_clone), (rsvg_state_finalize),
+	(rsvg_parse_style_arg), (rsvg_pop_opacity_group),
+	(rsvg_text_handler_characters), (rsvg_handle_free):
+	Port from direct FreeType use to Pango.
+
+2001-12-06  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg-paint-server.h: Add a dummy member since empty structs
+	are illegal.
+
+2001-12-03  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg-paint-server.c: (rsvg_paint_server_lin_grad_render),
+	(rsvg_paint_server_rad_grad_render): Prevent empty gradients
+	from crashing librsvg.
+
+	* rsvg.c: (rsvg_start_svg): Prevent huge image sizes from causing
+	a core dump by doing overflow checking and using g_try_malloc
+	instead of g_new.
+
+	* test-64684-1.svg:
+	* test-64684-2.svg:
+	Add some more test cases.
+
+Tue Nov 20 20:20:50 2001  Owen Taylor  <otaylor@redhat.com>
+
+	* configure.in (dnl): Add some quoting needed by
+	some autoconf versions.
+
+2001-11-08  jacob berkman  <jacob@ximian.com>
+
+	* configure.in (AC_INIT): call ourselves librsvg rather than
+	librsvg2
+
+2001-11-05  Darin Adler  <darin@bentspoon.com>
+
+	* test-62614.svg:
+	* test-62620.svg:
+	* test-rsvg.c: (main): If no output file name is given,
+	don't try to write the image (would segfault before).
+
+2001-10-22  Darin Adler  <darin@bentspoon.com>
+
+	* .cvsignore: Don't ignore tarballs.
+	* test-ft-gtk.c: (check_button), (new_test_window):
+	Switch from gtk_signal_connect to g_signal_connect.
+
+2001-10-19  Anders Carlsson  <andersca@gnu.org>
+
+	* acinclude.m4: Change comment so that we won't fool
+	automake into thinking it's a macro.
+
+2001-09-29  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg-ft.c: (rsvg_ft_measure_or_render_string): Fix font metrics
+	to take affine matrix into account.
+	
+	* rsvg.c: (rsvg_text_handler_characters): Point to correct
+	directory for eel 2.
+	
+	* test-61223.svg: Test file for another bug.
+
+2001-09-25  Darin Adler  <darin@bentspoon.com>
+
+	* test-60544.svg: Another test file, from another bug.
+
+2001-09-25  Darin Adler  <darin@bentspoon.com>
+
+	* test-61082.svg: Check in test file for bug. I should really
+	do this more often.
+
+2001-09-24  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg.h:
+	* rsvg.c: (rsvg_pixbuf_from_file), (rsvg_pixbuf_from_file_at_zoom),
+	(rsvg_pixbuf_from_file_at_size): Take const char *, not char *.
+
+	* test-rsvg.c: (main): Remove unneeded casts. Restore the error
+	message for the case when the parser doesn't parse anything.
+
+2001-09-24  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg.c: (rsvg_entity_decl): Change so it can handle a NULL
+	for the content passed in. Happens at least if the .svg file
+	is empty and presumably in other cases.
+	(rsvg_handle_free): Handle case where pixbuf is NULL.
+	* test-rsvg.c: (main): Don't write anything out if a NULL
+	pixbuf is returned. This can happen if the .svg file is
+	empty.
+
+2001-09-24  Darin Adler  <darin@bentspoon.com>
+
+	* librsvg-2.0.pc.in: Update to point to libart 2.
+
+2001-09-17  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg.h:
+	* rsvg.c: (rsvg_text_handler_characters), (rsvg_set_fonts_dir):
+	Roll back fonts_dir to be global like before. We can get rid
+	of fonts_dir altogether when we port librsvg to use pango
+	instead of using freetype directly.
+
+2001-09-15  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg-paint-server.c: (rsvg_paint_server_lin_grad_free),
+	(rsvg_paint_server_rad_grad_free): Fix some NULL dereferences.
+
+	* rsvg.c: (rsvg_handle_write), (rsvg_handle_close): Add FIXME
+	to places that have half-hearted attempt at handling GError.
+	(rsvg_pixbuf_from_file_at_zoom), (rsvg_pixbuf_from_file_at_size):
+	Handle case where fopen fails (but not the GError part).
+
+2001-09-10  Jonathan Blandford   <jrb@redhat.com>
+
+	* librsvg-features.c:
+	* rsvg.c: (rsvg_start_svg), (rsvg_parse_style_arg),
+	(rsvg_parse_style), (rsvg_parse_transform_attr),
+	(rsvg_parse_style_attrs), (rsvg_push_opacity_group),
+	(rsvg_pop_opacity_group), (rsvg_start_g), (rsvg_end_g),
+	(rsvg_render_svp), (rsvg_render_bpath), (rsvg_start_path),
+	(rsvg_text_handler_characters), (rsvg_start_text),
+	(rsvg_start_defs), (rsvg_gradient_stop_handler_new),
+	(rsvg_start_linear_gradient), (rsvg_start_radial_gradient),
+	(rsvg_start_element), (rsvg_end_element), (rsvg_characters),
+	(rsvg_get_entity), (rsvg_entity_decl), (rsvg_error_quark),
+	(rsvg_handle_new), (rsvg_handle_set_fonts_dir),
+	(rsvg_handle_set_size_callback), (rsvg_handle_write),
+	(rsvg_handle_close), (rsvg_handle_get_pixbuf), (rsvg_handle_free),
+	(rsvg_size_callback), (rsvg_pixbuf_from_file),
+	(rsvg_pixbuf_from_file_at_zoom), (rsvg_pixbuf_from_file_at_size):
+	* rsvg.h:
+	* TODO:
+	* test-rsvg.c: (main): Clean up API substantially.  Support
+	GError in API.  Remove FILE based API, and support pushing of data
+	similar to GdkPixbufLoader.  Support loading to a file size, and
+	to independent x/y zoom factors.  Robustify a little.  Add a
+	TODO.  Probably break eel a little.
+
+2001-08-31  Darin Adler  <darin@bentspoon.com>
+
+	* rsvg-paint-server.c: (rsvg_paint_server_parse):
+	* rsvg.c: (rsvg_parse_transform), (rsvg_text_handler_characters):
+	Get rid of all includes of <ctype.h> and use non-locale-specific
+	g_ascii_* calls from glib instead.
+
+2001-08-24  Darin Adler  <darin@bentspoon.com>
+
+	* Makefile.am: Need to export rsvg-ft.h for eel for now.
+
+2001-08-24  Darin Adler  <darin@bentspoon.com>
+
+	* test-ft-gtk.c: (scroll_to): gdk_draw_pixmap -> gdk_draw_drawable.
+
+2001-08-22  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Require newer libart.
+	* rsvg.c: (rsvg_render_bpath): Get rid of bug workaround for
+	old libart.
+
+2001-08-22  Darin Adler  <darin@bentspoon.com>
+
+	* Makefile.am: Remove things that are duplicates of stuff
+	already moved into libart. Only install public headers.
+
+	* art_render.c: Removed.
+	* art_render.h: Removed.
+	* art_render_gradient.c: Removed.
+	* art_render_gradient.h: Removed.
+	* art_render_svp.c: Removed.
+	* art_render_svp.h: Removed.
+	* art_rgba.c: Removed.
+	* art_rgba.h: Removed.
+
+	* configure.in: Update for autoconf 2.52. Sadly, the version is
+	now repeated twice, but I don't see how to avoid this.
+	
+	* librsvg-features.h.in: Use @PACKAGE_VERSION@ instead of
+	@LIBRSVG_VERSION@.
+
+	* art_render_mask.c:
+	* rsvg-ft.c:
+	* rsvg-paint-server.c:
+	* rsvg.c:
+	* test-ft-gtk.c:
+	* test-ft.c:
+	Fix includes.
+
+2001-08-13  Darin Adler  <darin@bentspoon.com>
+
+	* test-ft-gtk.c: (new_test_window): Use the new
+	gtk_widget_set_size_request instead of the deprecated
+	gtk_widget_set_usize.
+
+2001-08-08  Darin Adler  <darin@bentspoon.com>
+
+	* acinclude.m4: Move code for finding freetype here instead
+	of getting it from the hack-macros directory.
+	* autogen.sh: Don't use the hack-macros directory any more.
+
+2001-08-06  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Replace uses of GNOME_PKGCONFIG_CHECK_MODULES
+	with a single call to PKG_CHECK_MODULES.
+	* Makefile.am: Use a single set of CFLAGS and LIBS for all.
+
+2001-07-25  Ramiro Estrugo  <ramiro@fateware.com>
+
+	* librsvg.spec.in:
+	Add missing pkg-config file.
+	
+2001-07-25  Ramiro Estrugo  <ramiro@fateware.com>
+
+	* Makefile.am:
+	* librsvg.m4:
+	Retire this thing which is no longer relevant in the GNOME2
+	universe.
+	
+2001-07-25  Ramiro Estrugo  <ramiro@fateware.com>
+
+	* .cvsignore:
+	Im a dumbass.  Revert the last stupid change i made to ignore
+	files that arent made no more.
+	
+2001-07-25  Ramiro Estrugo  <ramiro@fateware.com>
+
+	* .cvsignore:
+	Add generated files, even though im not 100% sure where they are
+	coming from.
+
+	* Makefile.am:
+	Rename library to librsvg-2 so that it can cohabitate with librsvg
+	from the GNOME1 platform.
+	Change includedir to librsvg-2/librsvg for the same purpose.
+	
+	* librsvg-2.0.pc.in:
+	Change includedir to librsvg-2/librsvg.
+	Change link flags to '-lrsvg-2' instead of '-lrsvg'
+	
+	* librsvg.spec.in:
+	Update for library and includedir name changes, plus some extra
+	cleanup.
+	
+2001-07-25  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Use more warnings when compiling from CVS.
+	* CVSVERSION: Flag to tell configure.in that these are
+	CVS sources, not a tarball.
+
+	* Makefile.am: Set log domain to "librsvg", disable
+	deprecated stuff from glib, gdk, and gtk.
+
+	* rsvg-css.c: (rsvg_css_parse_color): Use new
+	g_string_ascii_down instead of deprecated g_string_down.
+	* test-ft-gtk.c: (new_test_window): Use gtk_widget_set_usize
+	instead of deprecated gtk_drawing_area_set_size.
+	(main): Remove unnecessary call to deprecated gdk_rgb_init.
+
+2001-07-24  Darin Adler  <darin@bentspoon.com>
+
+	* .cvsignore: Don't ignore files that aren't made any more.
+	* MAINTAINERS: Add myself.
+	* README.CVS: Removed unnecessary file.
+
+2001-07-13  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Remove xml-i18n-tools invocation so we don't
+	end up with a po directory.
+
+2001-07-09  Ramiro Estrugo  <ramiro@fateware.com>
+
+	* .cvsignore:
+	* Makefile.am:
+	* README:
+	* autogen.sh:
+	* configure.in:
+	* librsvg-1.0.pc.in:
+	* librsvg-2.0.pc.in:
+	* librsvg-config.in:
+	* librsvg.spec.in:
+	* librsvgConf.sh.in:
+	* rsvg.c: (rsvg_entity_decl):
+	* test-ft-gtk.c: (main):
+	* test-ft.c: (main):
+	* test-rsvg.c: (main):
+	Port to GNOME2.
+
+==== librsvg 1.0.1 ====
+
+2001-07-05  Darin Adler  <darin@bentspoon.com>
+
+	* configure.in: Bump version to 1.0.1
+	* NEWS: Tell about new features for 1.0.1
+
+2001-06-01  Darin Adler  <darin@bentspoon.com>
+
+	* Makefile.am:
+	* rsvg.h:
+	* rsvg.c: (rsvg_text_handler_characters), (rsvg_set_fonts_dir):
+	Add a call to set the fonts dir so it can work without eel, and
+	a future version of eel will work even if it's in a different
+	prefix from librsvg.
+	
+	* configure.in: Bump version to 1.0.0.1
+	* NEWS: Mention the possibility of a 1.0.1 release.
+
+2001-05-14  Darin Adler  <darin@eazel.com>
+
+	* Makefile.am:
+	* rsvg.c: (rsvg_text_handler_characters):
+	Change awful nasty Nautilus dependency into a slightly-less-awful
+	nasty Eel dependency. Also fix problem where not finding a font
+	would lead to a core dump instead of missing text.
+
+==== librsvg 1.0.0 ====
+
+2001-05-04  Robin * Slomkowski  <rslomkow@rslomkow.org>
+
+	* configure.in: upped version to 1.0.0
+
+2001-05-02  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* configure.in:
+	Add freetype dependency to LIBRSVG_LIBS and LIBRSVG_INCLUDEDIR.
+	
+2001-05-01  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* .cvsignore:
+	Ignore generated xml-i18n-tools droppings.
+	
+2001-05-01  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* autogen.sh:
+	* configure.in:
+	Simplify the freetype2 detection insanity by using autoconf macro
+	technology.  The new test should work with both FreeType2 RPMS as
+	well as freetype built from source in any prefix.
+	
+2001-05-01  Darin Adler  <darin@eazel.com>
+
+	* configure.in:
+	Fixed places that referred to Nautilus instead of librsvg.
+
+2001-04-30  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* autogen.sh:
+	Fix a typo in the module name.
+	
+2001-04-11  Darin Adler  <darin@eazel.com>
+
+	* rsvg.c: (rsvg_affine_expansion), (rsvg_render_bpath): Work
+	around bug in art_affine_expansion, which doesn't handle negative
+	numbers very well. This fixes a bug where librsvg would hang on
+	certain svg files.
+
+2001-04-08  Fatih Demir <kabalak@gtranslator.org>
+
+	* .cvsignore: Extended ignores to be right.
+
+2001-04-04  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* rsvg.c:
+	* rsvg.h:
+	Include dependency modules to make this header more self
+	contained.  In this case gdk-pixbuf and stdio.
+	
+2001-04-03  Darin Adler  <darin@eazel.com>
+
+	* Makefile.am: Change order of libraries in LDADD
+	as a workaround to problem where it finds the wrong
+	version of libxml.
+
+2001-04-03  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* .cvsignore:
+	Ignore generated files.
+	
+2001-04-03  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* COPYING.LIB:
+	* Makefile.am:
+	Add to make rpm happy.
+
+	* configure.in:
+	Bump gtk down to 1.2.9.
+	
+	* librsvg.spec.in:
+	Fix undefined requires.
+	
+2001-04-02  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* configure.in:
+	Add -lrsvg to LIBS.
+	
+	* librsvg.spec.in:
+	Fix the library name, "librsvg" not "rsvg."
+	
+2001-04-02  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* .cvsignore:
+	* Makefile.am:
+	* configure.in:
+	* librsvg.spec.in:
+	First try at a spec file.
+	
+2001-03-28  Ramiro Estrugo  <ramiro@eazel.com>
+
+	Started ChangeLog
+

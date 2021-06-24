@@ -1,0 +1,39 @@
+---------------------------------------------------------------
+| id3 mass tagger v0.80
+-------------------------------------------------------------
+
+the contents of the DOS/Win32 binary distribution:
+
+ copying        - license
+ files          - ... ? :)
+ readme         - program documentation
+ changes        - changelog
+
+ id3.exe        - program file
+
+---------------------------------------------------------------
+| (c) squell 2003-2015 - copyright notice
+-------------------------------------------------------------
+
+All files in this package are copyrighted. This is NOT public domain software.
+
+This software comes under a FreeBSD style license, which (in short) means you
+can pretty much do with it as you please (including redistribution under
+another license such as the GNU GPL), as long as copyright is acknowledged.
+
+It also means you can't sue me if anything terrible happens.
+
+For the actual licensing conditions you should read the file 'COPYING',
+which should be included in this source distribution.
+
+---------------------------------------------------------------
+| links
+-------------------------------------------------------------
+
+Program homepage:
+  https://squell.github.io/id3
+
+---------------------------------------------------------------
+| contact: squell@alumina.nl
+-------------------------------------------------------------
+

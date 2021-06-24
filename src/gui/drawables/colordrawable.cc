@@ -1,0 +1,132 @@
+#include <drawables/colordrawable.h>
+#include <drawables/colormatrix.h>
+#include <cdlog.h>
+
+
+namespace cdroid{
+
+ColorDrawable::ColorState::ColorState(){
+    mTint=nullptr;
+    mBaseColor=0xFF000000;
+    mUseColor=0xFF000000;
+    mTintMode=DEFAULT_TINT_MODE;
+}
+
+ColorDrawable::ColorState::ColorState(const ColorState& state){
+    mBaseColor = state.mBaseColor;
+    mUseColor = state.mUseColor;
+    mTint = state.mTint;
+    mTintMode=state.mTintMode;
+}
+
+Drawable* ColorDrawable::ColorState::newDrawable(){
+    return new ColorDrawable(shared_from_this());
+}
+
+int ColorDrawable::ColorState::getChangingConfigurations()const{
+    return 0;
+}
+
+ColorDrawable::ColorDrawable(int color){
+    mColorState=std::make_shared<ColorState>();
+	mMutated=false;
+    mTintFilter=nullptr;
+    setColor(color);
+}
+
+ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
+    mColorState = state;
+	mMutated=false;
+}
+
+std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
+    return std::dynamic_pointer_cast<ConstantState>(mColorState);
+}
+
+Drawable*ColorDrawable::mutate(){
+    if (!mMutated && Drawable::mutate() == this) {
+        mColorState=std::make_shared<ColorState>(*mColorState);
+        mMutated = true;
+    }
+    return this;    
+}
+
+void ColorDrawable::clearMutated(){
+    Drawable::clearMutated();
+    mMutated=false;
+}
+
+void ColorDrawable::setColor(int color){
+    if (mColorState->mBaseColor != color || mColorState->mUseColor != color) {
+        mColorState->mBaseColor = mColorState->mUseColor = color;
+        invalidateSelf();
+    }
+}
+
+int ColorDrawable::getColor()const{
+    return mColorState->mUseColor;
+}
+
+int ColorDrawable::getAlpha()const{
+    return mColorState->mUseColor >>24;
+}
+
+void ColorDrawable::setAlpha(int alpha){
+    alpha&=0xFF;
+    const int baseAlpha = (unsigned int)mColorState->mBaseColor >> 24;
+    const int useAlpha = baseAlpha * alpha >> 8;
+    const int useColor = ((unsigned int)mColorState->mBaseColor << 8 >> 8) | (useAlpha << 24);
+    if (mColorState->mUseColor != useColor) {
+        mColorState->mUseColor = useColor;
+        invalidateSelf();
+    }
+}
+
+bool ColorDrawable::onStateChange(const std::vector<int>&stateSet){
+    if (mColorState->mTint != nullptr/*& && state.mTintMode != null*/) {
+        mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, mColorState->mTintMode);
+        return true;
+    }
+    return mColorState->mTint!=nullptr;
+}
+
+int ColorDrawable::getChangingConfigurations()const{
+    return Drawable::getChangingConfigurations() | mColorState->getChangingConfigurations();
+}
+
+void ColorDrawable::setTintList(ColorStateList* tint){
+    mColorState->mTint = tint;
+    mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);
+    invalidateSelf();
+}
+
+void ColorDrawable::setTintMode(int tintMode) {
+    mColorState->mTintMode = tintMode;
+    mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, tintMode);
+    invalidateSelf();
+}
+bool ColorDrawable::isStateful()const{
+    return mColorState->mTint  && mColorState->mTint->isStateful();
+}
+
+bool ColorDrawable::hasFocusStateSpecified()const{
+    return mColorState->mTint  && mColorState->mTint->hasFocusStateSpecified();
+}
+
+void ColorDrawable::draw(Canvas&canvas){
+    LOGV("%p color=%x  bounds=%d,%d-%d,%d mTintFilter=%p",this,mColorState->mUseColor,
+	mBounds.x,mBounds.y,mBounds.width,mBounds.height,mTintFilter);
+    if(mColorState->mUseColor>>24){
+        canvas.set_color(mColorState->mUseColor);
+        canvas.rectangle(getBounds());
+        canvas.fill();
+    }
+    if(mTintFilter)
+        mTintFilter->apply(canvas,mBounds);
+}
+
+Drawable*ColorDrawable::inflate(Context*ctx,const AttributeSet&atts){
+    int color=atts.getColor("color");
+    return new ColorDrawable(color);
+}
+}

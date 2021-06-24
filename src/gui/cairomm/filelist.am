@@ -1,0 +1,52 @@
+## This file is part of cairomm.
+
+cairomm_cc =				\
+	context.cc			\
+	context_surface_quartz.cc	\
+	context_surface_win32.cc	\
+	context_surface_xlib.cc		\
+  device.cc \
+	exception.cc			\
+	fontface.cc			\
+	fontoptions.cc			\
+	matrix.cc			\
+	path.cc				\
+	pattern.cc			\
+	private.cc			\
+	quartz_font.cc			\
+	quartz_surface.cc		\
+	region.cc \
+	scaledfont.cc			\
+    script.cc       \
+	script_surface.cc		\
+	surface.cc			\
+	win32_font.cc			\
+	win32_surface.cc		\
+	xlib_surface.cc
+
+cairomm_public_h =			\
+	cairomm.h			\
+	context.h			\
+  device.h \
+	enums.h				\
+	exception.h			\
+	fontface.h			\
+	fontoptions.h			\
+	matrix.h path.h			\
+	pattern.h			\
+	quartz_font.h			\
+	quartz_surface.h		\
+	refptr.h			\
+	region.h \
+	scaledfont.h			\
+    script.h    \
+	script_surface.h    \
+	surface.h			\
+	types.h				\
+	win32_font.h			\
+	win32_surface.h			\
+	xlib_surface.h
+
+cairomm_private_h =			\
+	context_private.h		\
+	private.h

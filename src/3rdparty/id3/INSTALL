@@ -1,0 +1,173 @@
+---------------------------------------------------------------
+| id3 mass tagger v0.80
+-------------------------------------------------------------
+
+the contents of the source distribution:
+
+ COPYING        - license
+ INSTALL        - ... ? :)
+ README         - program documentation
+ CHANGES        - changelog
+
+ makefile       - generic (gnu) makefile
+ makefile.dj    - makefile for djgpp2
+ makefile.bcc   - makefile for borland c++
+ makefile.nmk   - makefile for microsoft c++
+
+ main.cpp       - main program file                             (C++)
+ id3-images.c   - auxiliary program to extract album art        (C)
+ pattern.*      - + automatic variables                         (C++)
+ dumptag.*      - + save/reading tag info                       (C++)
+ sedit.*        - string formatting                             (C++)
+ set_base.h     - abstract patch class                          (C++)
+ setid3.*       - + id3v1 implementation                        (C++)
+ getid3.*       - + id3v1 reader                                (C++)
+ setid3v2.*     - + id3v2 implementation                        (C++)
+ getid3v2.*     - + id3v2 reader                                (C++)
+ setlyr3.*      - + lyrics3 implementation                      (C++)
+ getlyr3.*      - + lyrics3 reader                              (C++)
+ setfname.*     - + file renamer/handler                        (C++)
+ setquery.*     - + stdout formatter                            (C++)
+ setgroup.h     - + combiner                                    (C++)
+ varexp.*       - wildcard/pattern matching class               (C++)
+ fileexp.*      - filefinder/matcher                            (C++)
+ mass_tag.*     - + tagging engine                              (C++)
+ charconv.*     - character conversion                          (C++)
+ char_ucs.*     - + utf16 encoding                              (C++)
+ char_utf8.*    - + utf8 encoding                               (C++)
+ utf8.h         - stand-alone utf8 encoder/decoder              (C++)
+ auto_dir.h     - smart dirent pointer class                    (C++)
+
+ id3v1.*        - definitions & data relevant to ID3v1 tag data (C)
+ id3v2.*        - basic ID3v2 reading/writing interface         (C)
+ fileops.*      - auxiliary file functions                      (C)
+ lyrics3.*      - Lyrics3v2 interface                           (C++)
+
+ id3.man        - raw man page                                  (troff -man)
+
+ debian/        - Debian files for creating a .deb package
+ rpm/           - RPM specfile for creating a .rpm package
+ bash/          - definitions for bash auto-completion
+
+---------------------------------------------------------------
+| (c) squell 2003-2015 - copyright notice
+-------------------------------------------------------------
+
+All files in this package are copyrighted. This is NOT public domain software.
+
+This software comes under a FreeBSD style license, which (in short) means you
+can pretty much do with it as you please (including redistribution under
+another license such as the GNU GPL), as long as copyright is acknowledged.
+
+It also means you can't sue me if anything terrible happens.
+
+For the actual licensing conditions you should read the file 'COPYING',
+which should be included in this source distribution.
+
+---------------------------------------------------------------
+| building and installing using a package manager
+-------------------------------------------------------------
+
+Files are included for building packages for .deb and .rpm-based Linux 
+distributions, and FreeBSD. The package will identify itself as `id3mtag'.
+
+* .deb (Debian/Ubuntu)
+
+From the source tree, run:
+> dpkg-buildpackage -b
+
+This should create a .deb file in the parent directory.
+
+* .rpm (Fedora/CentOS)
+
+The simplest way is to simply run:
+> rpmbuild -ta id3-0.80.tar.gz
+
+Then look in your RPM build area ($HOME/rpmbuild)
+
+* FreeBSD
+
+Install audio/id3mtag from the ports collection.
+
+---------------------------------------------------------------
+| building and installing manually
+-------------------------------------------------------------
+
+Successfully compiled with (non-exhaustive list):
+
+ - GCC 4.x, 5.0
+ - Clang 3.x
+ - Microsoft C/C++ 16.x/18.x
+ - Borland/Embarcadero C++ 5.5/6.90
+ - Oracle/Sun C++ 5.13, using STLport4
+ - Intel C++ 14.0.2
+
+This program is written to be portable, assuming at least a C90 and C++03
+compiler and a POSIX:2001 environment. Compilation shouldn't be hard.
+
+Notes for building under Windows:
+
+ * When using MSVC, the file 'dirent.h' is not included with the compiler. You
+   can use the open source replacement by Toni Ronkko, obtainable at 
+   https://github.com/tronkko/dirent/
+
+ * With MinGW, you need to add LDFLAGS="-static-libgcc -static-libstdc++" to
+   the mingw32-make commandline if you want to execute the resulting binary
+   on a machine without MinGW installed.
+
+===
+Makefiles
+
+Pick the makefile you need and rename it to 'makefile' or use 'make -f':
+
+  'makefile'  is meant for generic GNU/BSD systems. You can also use this
+  file for building with Cygwin or MinGW.
+
+  Please note that CFLAGS/CXXFLAGS/LDFLAGS set in your environment will
+  override the default (recommended) flags provided in this makefile.
+
+  'makefile.dj'  is for DOS systems using DJGPP v2
+
+  'makefile.nmk'  is for building a Win32 executable with VisualStudio `nmake'
+
+  'makefile.bcc'  is for building a Win32 executable with C++Builder `make'
+
+===
+Standard makefile targets:
+
+ make                 - builds the program
+ make clean           - removes all files produced by make
+
+Generic GNU/BSD makefile targets & variables:
+
+ make install         - installs the program
+ make install-strip   - like install, but strips executable of debug info
+ make install-full    - also installs the documentation in $(datadir)/doc
+ make uninstall       - uninstall (does not remove documentation)
+ make bash_completion - installs the bash completion support
+ make help            - lists all makefile targets and variables
+
+Because id3 does not have a configure script (yet), you can set
+these variables only on the 'make' commandline:
+
+ prefix               - the prefix directory       (def. "/usr/local")
+ bindir               - dir for binaries           (def. "$(prefix)/bin")
+ mandir               - dir for manpages           (def. "$(prefix)/man")
+ datadir              - dir for shared files       (def. "$(prefix)/share")
+ binary               - the binary to install      (def. "id3")
+ DESTDIR              - used for staged installs   (def. "")
+
+E.g: "make install prefix=$HOME" to install in $HOME/bin instead. See inside
+'makefile' or try `make help' for more details (and more variables).
+
+---------------------------------------------------------------
+| useful links
+-------------------------------------------------------------
+
+(Win32) Minimalist GNU for Windows:
+  http://www.mingw.org/
+
+---------------------------------------------------------------
+| contact: squell@alumina.nl
+-------------------------------------------------------------
+

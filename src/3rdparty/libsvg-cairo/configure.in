@@ -1,0 +1,88 @@
+AC_INIT(src/svg-cairo.h)
+
+dnl ===========================================================================
+
+# Package version number, (as distinct from shared library version)
+LIBSVG_CAIRO_MAJORMINOR=0.6
+LIBSVG_CAIRO_VERSION=$LIBSVG_CAIRO_MAJORMINOR.0
+AC_SUBST(LIBSVG_CAIRO_MAJORMINOR)
+
+# libtool shared library version
+
+# Increment if the interface has additions, changes, removals.
+m4_define(LT_CURRENT, 2)
+
+# Increment any time the source changes; set to
+# 0 if you increment CURRENT
+m4_define(LT_REVISION, 0)
+
+# Increment if any interfaces have been added; set to 0
+# if any interfaces have been removed. removal has
+# precedence over adding, so set to 0 if both happened.
+m4_define(LT_AGE, 0)
+
+VERSION_INFO="LT_CURRENT():LT_REVISION():LT_AGE()"
+AC_SUBST(VERSION_INFO)
+
+dnl ===========================================================================
+
+AM_INIT_AUTOMAKE(libsvg-cairo, $LIBSVG_CAIRO_VERSION)
+AM_CONFIG_HEADER(config.h)
+
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+AM_MAINTAINER_MODE
+
+AC_ISC_POSIX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_AWK
+AM_PROG_LIBTOOL
+AC_STDC_HEADERS
+
+dnl ===========================================================================
+
+AC_PATH_XTRA
+
+dnl ===========================================================================
+dnl Use lots of warning flags with GCC
+
+WARN_CFLAGS=""
+if test "x$GCC" = "xyes"; then
+	WARN_CFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes \
+	-Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs -fno-strict-aliasing"
+fi
+AC_SUBST(WARN_CFLAGS)
+
+dnl ===========================================================================
+
+LIBSVG_MAJORMINOR=0.6
+AC_SUBST(LIBSVG_MAJORMINOR)
+
+PKG_CHECK_MODULES(LIBSVG_CAIRO, libsvg-$LIBSVG_MAJORMINOR >= $LIBSVG_MAJORMINOR.0 cairo >= 0.5.0)
+AC_SUBST(LIBSVG_CAIRO_CFLAGS)
+AC_SUBST(LIBSVG_CAIRO_LIBS)
+
+AC_ARG_WITH([pango],
+            [AS_HELP_STRING([--without-pango],
+              [do not use pango to layout text elements])],
+            [with_pango=no],
+            [])
+
+if test "x$with_pango" != "xno"; then
+	PKG_CHECK_MODULES(PANGOCAIRO, pangocairo,
+		PANGOCAIRO_REQUIRES=pango
+		AC_DEFINE(HAVE_PANGOCAIRO,1,
+			[Define to 1 if you have the pango library]),:)
+fi
+AC_SUBST(PANGOCAIRO_REQUIRES)
+
+dnl ===========================================================================
+
+AC_OUTPUT([
+libsvg-cairo.pc
+src/svg-cairo-version.h
+Makefile
+src/Makefile
+])

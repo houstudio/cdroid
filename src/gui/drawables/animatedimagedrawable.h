@@ -1,0 +1,52 @@
+#ifndef __ANIMATED_IMAGE_DRAWABLE_H__
+#define __ANIMATED_IMAGE_DRAWABLE_H__
+#include <drawables/drawable.h>
+
+namespace cdroid{
+/*for drawing animated images (like GIF)*/
+class AnimatedImageDrawable:public Drawable,public Animatable2{
+private:
+    class State{
+    public:
+        bool mAutoMirrored = false;
+        int mRepeatCount;
+        int mCurrentFrame;
+        int mFrameCount;
+        void*mHandler;
+        RefPtr<ImageSurface>mImage;
+        State();
+        ~State();
+    };
+    int mIntrinsicWidth;
+    int mIntrinsicHeight;
+    bool mStarting;
+    State mState;
+    Runnable mRunnable;
+    ColorFilter* mColorFilter;
+    std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;
+    int loadGIF(std::istream&);
+    void postOnAnimationStart();
+    void postOnAnimationEnd();
+public:
+    static constexpr int REPEAT_INFINITE=-1;
+    static constexpr int LOOP_INFINITE = REPEAT_INFINITE;
+    static constexpr int REPEAT_UNDEFINED = -2;
+public:
+    AnimatedImageDrawable();
+    void setRepeatCount(int repeatCount);
+    int getRepeatCount()const;
+    int getIntrinsicWidth()const override;
+    int getIntrinsicHeight()const override;
+    void setAlpha(int alpha)override;
+    int getAlpha()const override;
+    void draw(Canvas& canvas)override;
+    bool isRunning()override;
+    void start()override;
+    void stop()override;
+    void registerAnimationCallback(Animatable2::AnimationCallback callback);
+    bool unregisterAnimationCallback(Animatable2::AnimationCallback callback);
+    void clearAnimationCallbacks();
+};
+
+}//end namespace
+#endif

@@ -1,0 +1,51 @@
+{
+   "keywidth": "10%p",
+   "keyheight":"20%p",
+   "rowgap":"2px",
+   "keygap":"2px",
+   "rows": [
+      [
+          {"label":"1","codes":"49"},
+          {"label":"2","codes":"50"},
+          {"label":"3","codes":"51"},
+          {"label":"4","codes":"52"},
+          {"label":"5","codes":"53"},
+          {"label":"6","codes":"54"},
+          {"label":"7","codes":"55"},
+          {"label":"8","codes":"56"},
+          {"label":"9","codes":"57"},
+          {"label":"0","codes":"48"}
+      ],[
+          {"label":"-","codes":"45"},
+          {"label":"/","codes":"47"},
+          {"label":":","codes":"58"},
+          {"label":";","codes":"59"},
+          {"label":"(","codes":"40"},
+          {"label":")","codes":"41"},
+          {"label":"_","codes":"95"},
+          {"label":"$","codes":"36"},
+          {"label":"&","codes":"38"},
+          {"label":"\"","codes":"34"}
+      ],[
+          {"label":"[","codes":"91"},
+          {"label":"]","codes":"93"},
+          {"label":"{","codes":"123"},
+          {"label":"}","codes":"125"},
+          {"label":"#","codes":"35"},
+          {"label":"%","codes":"37"},
+          {"label":"^","codes":"94"},
+          {"label":"*","codes":"42"},
+          {"label":"+","codes":"43"},
+          {"label":"=","codes":"61"}
+      ],[
+          {"label":"\\","codes":"92"},
+          {"label":"|","codes":"124"},
+          {"label":"<","codes":"60"},
+          {"label":">","codes":"62"},
+          {"label":".","codes":"46"},
+          {"label":"ABC","codes":"-2","modifier":true},
+          {"label":" ", "codes":"32", "width":"60%p"},
+          {"label":"Enter","codes":"28", "modifier":true}
+      ]
+   ]
+}

@@ -1,0 +1,136 @@
+#ifndef __DRAWABLE_H__
+#define __DRAWABLE_H__
+#include <canvas.h>
+#include <drawables/stateset.h>
+#include <drawables/colorstatelist.h>
+#include <drawables/colorfilters.h>
+#include <attributeset.h>
+#include <context.h>
+#include <gravity.h>
+#include <rect.h>
+#include <vector>
+#include <string>
+#include <functional>
+#include <iostream>
+
+namespace cdroid{
+class ColorStateList;
+class Context;
+typedef std::function<void()>Runnable;
+
+class Animatable {
+public:
+    /** Starts the drawable's animation.  */
+    virtual void start()=0;
+    /** Stops the drawable's animation.  */
+    virtual void stop()=0;
+    /* Indicates whether the animation is running.
+     * @return True if the animation is running, false otherwise.  */
+    virtual bool isRunning()=0;
+};
+
+class Animatable2:public Animatable{
+public:
+    /*startorend true for startcallback,false for end callback*/
+    typedef std::function<void (Drawable&,bool startorend)>AnimationCallback;
+    virtual void registerAnimationCallback(AnimationCallback callback)=0;
+    virtual bool unregisterAnimationCallback(AnimationCallback callback)=0;
+};
+
+class Drawable{
+public:
+    class Callback{
+    public:
+        virtual void invalidateDrawable(Drawable& who)=0;
+        virtual void scheduleDrawable(Drawable& who,Runnable what, long when)=0;
+        virtual void unscheduleDrawable(Drawable& who,Runnable what)=0;
+    };
+    class ConstantState{
+    public:
+        virtual Drawable* newDrawable()=0;
+        virtual int getChangingConfigurations()const=0;
+    };
+    enum{
+        DEFAULT_TINT_MODE=SRC_IN
+    };
+protected:
+    int mLevel;
+    bool mVisible;
+    int mLayoutDirection;
+    int mChangingConfigurations;
+    RECT mBounds;
+    ColorFilter*mColorFilter;
+    Callback*mCallback;
+    std::vector<int>mStateSet;
+    PorterDuffColorFilter *updateTintFilter(PorterDuffColorFilter* tintFilter,ColorStateList* tint,int tintMode);
+    virtual bool onStateChange(const std::vector<int>&) { return false;}
+    virtual bool onLevelChange(int level) { return false; }
+    virtual bool onLayoutDirectionChanged(int layoutDirection){return false;}
+    virtual void onBoundsChange(const RECT& bounds){}
+public:
+    enum Opacity{
+        UNKNOWN=0,
+        TRANSLUCENT=1,
+        TRANSPARENT=2,
+        OPAQUE=3
+    };
+    Drawable();
+    virtual ~Drawable();
+    void setBounds(int x,int y,int w,int h);
+    void setBounds(const RECT&r);
+    const RECT&getBounds()const;
+    virtual Drawable*mutate();
+    virtual void clearMutated();
+    virtual void setColorFilter(ColorFilter*);
+    void setColorFilter(int color,PorterDuffMode mode);
+    void setTint(int color);
+    virtual void setTintList(ColorStateList* tint);
+    virtual void setTintMode(int);
+    bool setState(const std::vector<int>&state);
+    const std::vector<int>& getState()const;
+    bool setLevel(int level);
+    int getLevel()const{return mLevel;}
+    virtual int getOpacity();
+
+    virtual bool getPadding(RECT&padding);
+    virtual bool isStateful()const;
+    virtual bool hasFocusStateSpecified()const;
+    virtual Drawable*getCurrent();
+    virtual void setAlpha(int alpha){};
+    virtual int getAlpha()const{return 0xFF;}
+    virtual std::shared_ptr<ConstantState>getConstantState();
+    virtual void setAutoMirrored(bool mirrored);
+    virtual bool isAutoMirrored();
+    virtual bool canApplyTheme(){return false;}
+    virtual void jumpToCurrentState();
+
+    int getLayoutDirection()const;
+    bool setLayoutDirection(int);
+
+    virtual int getIntrinsicWidth() const;
+    virtual int getIntrinsicHeight()const;
+    virtual int getMinimumWidth() const;
+    virtual int getMinimumHeight()const;
+
+    virtual bool setVisible(bool visible, bool restart);
+    virtual bool isVisible()const;
+    virtual int getChangingConfigurations()const;
+    virtual void setChangingConfigurations(int);
+    void setCallback(Callback*cbk);
+    Callback* getCallback()const;
+    void scheduleSelf(Runnable what, long when);
+    void unscheduleSelf(Runnable what);
+
+    void invalidateSelf();
+
+    virtual void draw(Canvas&ctx)=0;
+    static int resolveOpacity(int op1,int op2);
+    static float scaleFromDensity(float pixels, int sourceDensity, int targetDensity);
+    static int scaleFromDensity(int pixels, int sourceDensity, int targetDensity, bool isSize);
+    static Drawable*createItemDrawable(Context* ctx,const AttributeSet&atts);
+    static Drawable*fromStream(Context*ctx,std::istream&stream,const std::string& basePath="");
+    static Drawable*inflate(Context* ctx,const std::string& pathName);
+};
+
+}
+#endif

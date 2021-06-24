@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item id="0">
+        <shape shape="roundrect">
+            <corners radius="5dip" />
+            <gradient
+                    startColor="#ff9d9e9d"
+                    centerColor="#ff5a5d5a"
+                    centerY="0.75"
+                    endColor="#ff747674"
+                    angle="270"
+            />
+        </shape>
+    </item>
+    
+    <item id="1">
+        <clip>
+            <shape shape="roundrect">
+                <corners radius="5dip" />
+                <gradient
+                        startColor="#ffffd300"
+                        centerColor="#ffffb600"
+                        centerY="0.75"
+                        endColor="#ffffcb00"
+                        angle="270"
+                />
+            </shape>
+        </clip>
+    </item>
+    
+    <item id="2">
+        <clip>
+            <shape shape="roundrect">
+                <corners radius="5dip" />
+                <gradient
+                        startColor="#80ffd300"
+                        centerColor="#80ffb600"
+                        centerY="0.75"
+                        endColor="#a0ffcb00"
+                        angle="270"
+                />
+            </shape>
+        </clip>
+    </item>
+    
+</layer-list>
+

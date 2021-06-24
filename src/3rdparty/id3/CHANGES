@@ -1,0 +1,382 @@
+Changelog for 'id3'.
+
+2017-156 (W23):
+  id3-imges.c: prefix filenames of extract images with the path of the mp3
+    file they orginated from ("file.mp3:cover.jp3")
+  [gs]etid3v2.h: add support for POPM frames; referenced as POPM:email,
+    using the syntax <rating>[:playcounter]
+
+2017-121 (W18):
+  fileexp.cpp: [bugfix] files with [] in them were not being found
+  main.cpp: [cli change] added -X option for disabling wildcard handling
+
+2016-312 (W45):
+  main.cpp: [cli change] added --list-genres/-L switch (for ID3v1 genres)
+  id3v1.c: added genres introduced after the release of v0.78
+
+2015-364 (W52):
+  main.cpp: [cli change] -s/-u/-E also work without preceding -1/-2/-3;
+    these switches will then apply to all tags (where relevant).
+    note that -E is already the default for ID3v2/Lyrics3 in this case.
+
+2015-352 (W51):                                ---------[v0.80]-----------
+  dumptag.cpp: [CLI CHANGE] added a verbose tag viewing mode; if the
+    -v/--verbose flag is added to the commandline, a full listing of
+    the selected tags will be given
+
+2015-352 (W51):
+  fileexp.cpp: '?' will no langer match against / in --recursive mode;
+    -R was not working on UNC paths in Windows. optimized file access.
+  setid3v2.cpp: convert text encoded using v2.4-only encodings
+  charconv.cpp: fix issues with iconv: const char** vs char** change
+    in FreeBSD; fix faulty behaviour wrt. unconvertible characters
+
+2015-348 (W50):
+  main.cpp: %a variable substitution now will read from the first valid
+    tag selected on the commandline, instead of only the first
+
+2015-347 (W50):
+  main.cpp: [cli change] added --long-options; see `id3 --help'
+  fileexp.cpp: [bugfix] globbing failed if prefix contained a directory
+    without read access; also fixes a segfault if cwd wasn't readable
+
+2015-336 (W49):
+  ?etid3v2.cpp: [bugfixes] frames being written by -wCOMM:xxxx lacked a
+    language field, potentially producing invalidly formatted frames;
+    fixed behaviour in presence of multiple COMM frames;
+    fix behaviour with Unicode characters in TXXX/COMM:xxxx tags
+
+2015-335 (W49):
+  id3v2.c: [bugfix] fix check that prevented conversion of ID3v2.4 tags
+  set*.cpp: tighter error checking; should produce more warnings
+
+2015-332 (W48):
+  [cli change] added support for bash auto-completion; installed with
+    'make install-full' or 'make install bash_completion'
+
+2015-029 (W05):                                ---------[v0.79]-----------
+  main.cpp: [cli change] if no tags are selected (using -1, -2, -3), id3 will
+    select the best tag to read from; also, in this case ID3v2 will be
+    modified if already present (but not added)
+  main.cpp: [cli change] default operation (without options) is now to view
+    tag info, instead of `do nothing'.
+
+2015-024 (W04):
+  mass_tag.cpp: Unicode-escape sequences (\uXXXX, \UXXXXXXXX) added
+  fileexp.cpp: [bugfix] -R could match too many files in obscure cases
+
+2015-020 (W04):
+  [CLI CHANGE]: %##n now means 'pad embedded numbers in %n out to width two'
+  sedit.cpp: remove leading zeroes from numbers in %subsitution if # used
+  getid3v2.cpp/setid3v2.cpp: allow writing user-defined TXXX/COMM flags with
+    descriptors; for example with `id3 -2 -wTXXX:FMPS_Rating 42'
+  mass_tag.cpp: allow reading non-standard information with %{TAG}; e.g.
+    '%{TMOO}' to get the 'mood' information in ID3v2.3
+
+2015-019 (W04):
+  charconv.cpp: use iconv() on platforms that are not __STDC_ISO_10646__ to
+    support non-UTF8 locales on *BSD; disable with -DNO_ICONV
+  id3v2.c/getid3v2.cpp: minimalist ID3v2.4 support; upon write these will be
+    converted to ID3v2.3
+
+2015-016 (W03):
+  id3v2.c: some tweaks to be more accepting/attempt repair of invalid tags
+  added missing #include <cstring> to three files + compilation under MSVC
+
+2007-009 (W02):
+  charconv.h: should now compile out of the box in Cygwin without -mno-cygwin
+
+2006-287 (W41):
+  varexp.cpp: replaced inefficient wildcard matching
+
+2006-084 (W12):
+  fileexp.cpp: added support for unc pathnames
+
+2006-078 (W11):                                ---------[v0.78]-----------
+  main.cpp: integrated Lyrics3 support
+  setfname.cpp: renaming-to-self allowed
+
+2006-073 (W11):
+  main: [CLI CHANGE] -R has been made into a simple switch which enables the
+    matching of '/' against wildcards.
+  fileexp: integrated pattern() into glob()
+  main.cpp/set_base.h: code reorganisation
+  pattern.cpp: prefix gets copied now; making
+    `id3 -m "%+a - %||t.mp3"' equal to `id3 -a "%+1" -t "%||2" "* - *.mp3"'
+  sedit.cpp: added %* prefix to split "ThisIsATest" -> "This Is A Test"
+
+2006-040 (W06):
+  lyrics3.cpp/getlyr3.cpp created
+  getid3v2.cpp/id3v2.c: added/fixed check for silly id3v2 frames
+
+2006-039 (W06):
+  setid3.cpp: also writes id3v1.0 tags if possible.
+
+2006-035 (W05):
+  main.cpp/mass_tag.cpp: added -A, -T and %A, %T as quiet synonyms for -l, -n
+    this is for better CLI compatibility with other programs;
+  charconv.cpp: added an extra check whether there is nl_langinfo(CODESET)
+  setid3v2.cpp:251: [bug] "<empty>" could get written to ID3v2. fixed.
+
+2006-030 (W04):                                ---------[v0.77]-----------
+  main.cpp: user checks: ignore extra file arguments when using -m, ignore
+    options after first filename was given (regression)
+
+2006-027 (W04):
+  small portability fixes
+  mass_tag.cpp: split %x; %x is for autonumbering, %X for counting files,
+    added %p (path) to complement %f (filename)
+
+2006-025 (W04):
+  main.cpp: added -M (preserve time stamp)
+  main.cpp: added -D (replace tag by that from a different file)
+  other small tweaks, partial i18n outside of Linux
+
+2006-024 (W04):
+  adapted to use new replacement function; totally empty variables will not
+    clobber existing values now; also means -u will truly be 'update'.
+
+2005-362 (W52):
+  charconv.*: redesigned character conversion, support for win/dos
+  sedit: replacement written; added support for \n, \t, \r and other escape
+    sequences. added multiple fallbacks and "%| a || b || c |?" selection
+
+2005-342 (W49):
+  main.cpp: removed internal globbing on directory arguments to -R
+  main.cpp: fixed cases where tag was clobbered before values were read
+
+2005-308 (W44):
+  main.cpp: split up in mass_tag.cpp and pattern.cpp.
+  set_base.cpp: simplified set_tag::combined into set_tag::group
+  setfname.cpp: derived from group, fixes order of operation
+
+2005-305 (W44):
+  setid3v2.cpp: rewrote binarize (using shared categorisations)
+  getid3v2.cpp: rewrote unbinarize, and reading ID3v2.2
+  sedit.cpp: underscores prevented capitalization
+  fileops.c: added mvfile(), which honours hard and sym links
+  id3v2.c: replaced explicit code with calls to mvfile()
+
+2005-299 (W43):
+  id3v2.c: added transparant support for id3v2.2 tags (iTunes default)
+
+2005-198 (W28):                                ---------[v0.76]-----------
+  id3v2.c:177: [bug] fixed another class of id3v2 rejections (sigh)
+
+2005-187 (W27):
+  main.cpp:136: [bug] %x could get incremented more than once for each file
+  code cleanup/redesign
+
+2005-060 (W09):
+  id3v2.c:128:[bug] since v0.75, rejected id3v2 tags w/o padding
+
+2005-039 (W06):
+  sedit.cpp:89: [CLI] "#" prefixes in vars get processed better now: only
+    numbers found inside the string will get padded. E.g. [1/5] -> [01/05]
+  setid3[v2].cpp: regression: setting dupe fields overrides again
+  fileexp.cpp:110: optimized speed for cases where the shell has handled
+    wildcards (saves sorting and scanning a whole dir for each file)
+  fileexp.cpp:132: [CLI] added -R for recursive directory search
+  mp3file.c: wrote mp3 length checking
+
+2005-037 (W05):
+  main.cpp:326: [CLI] added -m switch for 'pattern' shorthand. For example,
+    id3 -m "%a - %t.mp3" is identical to id3 -a %1 -t %2 "* - *.mp3". Only
+    works on recognized variables, so for ex., id3 -m "%s.mp3" is illegal.
+
+2005-035 (W05):
+  code cleanup.
+
+2005-034 (W05):                                ---------[v0.75]-----------
+  updated documentation
+  getid3.cpp: fixed localization bug
+
+2005-033 (W05):
+  setid3[v2].cpp: setting genre by number now works through substitution
+  setid3[v2].cpp: setting a dupe field won't override an earlier one anymore
+  setfname.cpp: empty vars get substituted by 'Unknown' (by default)
+  id3v2.c:129: [BUGFIX] out of bounds access on illegal id3v2 tags
+    ironically, that routine was supposed to catch illegal id3v2 tags...
+  ffindexp.cpp:94: now sorts file list (wasn't necessary previously)
+  sedit.cpp: [CLI] added %||v fallback, and grouping (kept disabled)
+
+2005-031 (W05):
+  getid3[v2].cpp: added
+  main.cpp: [CLI] added substitution of %t, %a, %n, %l, %y, %c, %g, %x
+  main.cpp: [CLI] enabled -! and -f switch
+  sedit.cpp: removed substitutions that introduced null chars
+
+2005-025 (W04):
+  setid3v2.cpp: [BUGFIX] v2 tag contents weren't written if using a user
+    specified locale. Also -wPCNT listens to vars now.
+  setecho: [CLI] Added very primitive tag info display (-q switch)
+  charconv: Implemented cvtstring system for conversion.
+  sedit: string_parm adapted to use cvtstring
+  sedit: now filters control characters from substituted variables
+
+2004-196 (W27):
+  debian/*: automation of building .deb packages via dpkg-buildpackage -b
+  makefile: added 'wget-orig' and 'fetch-orig' (get latest source tarball)
+  makefile: deGNUified
+
+2004-183 (W27):
+  sedit.cpp: edit() overhauled + support for %a .. %z added
+
+2004-176 (W26):                                ---------[v0.74]-----------
+  main.cpp: [BUGFIX] ARGH! Since 0.72, id3 crashed on invalid %indexes. I
+    had carefully placed range checks in the original varexp, but due to
+    later mod's, the original varexp [] didn't get called anymore. #$()*#
+
+2004-171 (W25):
+  sedit.cpp: [BUGFIX] conversion to latin1 gets used correctly now
+  sedit.cpp: removed deprecated stuff
+
+2004-170 (W25):
+  setid3v2.cpp: [CLI] free form id3v2 tags get processed now
+    knows T???, W???, COMM, IPLS, USLT, USER and PCNT frames
+
+2004-167 (W25):
+  setfname: created file rename implementation
+  set_base.h: streamlining
+
+2004-162 (W24):
+  main.cpp: [CLI] added -s switch for suggesting tag size
+  id3v2.c:249:added size-hint recognition
+  main.cpp:278: [BUGFIX] -rXXXX didn't work anymore
+
+2004-148 (W22):                                ---------[v0.73]-----------
+  makefile deGNUified (mostly), some size optimizations
+
+2004-144 (W21):
+  charconv.cpp: hacked together a converion to latin1 on systems that are
+    fully unicode compliant (e.g. glibc2.2 and up)
+  setid3.cpp: now upgrades old ID3v1.0 tags
+  id3v2.c:186: fixed (rare) leak, added check to see if padding is zeroed
+  setid3v2.cpp:127: added checking and prevention against malformed tags
+  main.cpp: added "-V" version information, changed help screen
+
+2004-093 (W14):
+  main.cpp: Added "--" option (stops scanning for more options)
+
+2004-053 (W08):
+  Replaced smartID3 functionality with something more extensible.
+
+2004-030 (W05):
+  Added a lot of makefile fluff (install-full, dist, dist-zip)
+  main.cpp:178: made options case sensitive
+
+2004-029 (W05):
+  Created a unix manpage. (Whew!)
+
+2004-027 (W05):                                ---------[v0.72]-----------
+  [CLI] Now supports directory wildcards (e.g. "mp3root/*/*/*_*.mp3")
+    Be careful with this, mkay? ;)
+  sedit.cpp:capitalize: now handles punctuation properly
+    (so it will be "Love's" and "2nd", not "Love'S" and "2Nd")
+  sedit.cpp: Added a "%-" modifier (all characters lowercase), and added
+    removal of extraneous spaces (suppressed by the "%_" modifier)
+  main.cpp: now uses ffindexp for solving wildcard match (see above)
+
+2004-019 (W04):
+  (Resumed development)
+  varexp.h: added varexp::iterator class
+  ffindexp.cpp: fleshed out base algorithm
+
+2003-301 (W44):
+  setid3.cpp:clipped_compare: added a more intelligent ID3v1 genre-lookup,
+    so saying "alt" and "alternative", "prog.rock" and "progressive rock",
+    "fast fusion" and "fast-fusion", "humour" and "humor", "psyche/adelic",
+    etc, etc, will all resolve to the correct genre.
+  setid3.cpp<>sedit.cpp: made smartID3::edit an independent function
+
+2003-299 (W43):
+  main:cpp: error messages to stderr instead of stdout, program now gives
+    meaningful result codes.
+  id3v2.c:11: fixed copyright notice. :)
+  id3v2.c<>fileops.c: split into two components.
+  fileops.c: replaced fopentmp with something conceptually simpler.
+  makefile: made it somewhat more conformant. id3 is still too basic to
+    warrant using autoconf, imo.
+
+2003-296 (W43):                                ---------[v0.71]-----------
+  main.cpp:dirvector: reads directory as a whole to avoid order mangling
+  main.cpp: added version info to -h, and added verbose mode with timing
+  main.cpp:67: now uses posix constant
+  setid3:86: [CLI] added "%," as alternative to "%n", "%@" for "%:"
+  varexp.cpp:19: no longer copies vectors around.
+  Updated documentation
+
+2003-269 (W39):
+  main.cpp  : [CLI CHANGE!] -dFRAME is now -rFRAME to remove possible
+    confusion when -d is used as a stacked parameter.
+  id3v2.c:87: encapsulated tmpname handling in fopentmp(), added code that
+    uses mktemp() to make id3v2 tag handling _much_ faster.
+
+2003-267 (W39):
+  setid3.cpp:38: made freshly written ID3v1 tags have an empty genre.
+  id3v2.c:307  : don't rewrite files with no ID3v2 tags when removing
+    ID3v2 tags from files.
+
+2003-262 (W38):
+  (Resumed development)
+  main.cpp: [CLI CHANGE!] implemented command stacking, so
+    '-nat Track Artist Title' == '-n Track -a Artist -t Title'
+
+2003-218 (W32):                                ---------[v0.70]-----------
+  id3v2.c:ID3_writef: [BUGFIX] Serious. tmpnam() does not guarantee to
+    create filenames that can always be fed to rename() on all systems,
+    thus causing files to disappear / remain in your temp dir.
+    Fix: Added a copy routine/handler.
+  setid3.cpp & setid3v2.cpp: now throw exceptions on serious errors
+  varexp.h: better explanation of index-out-of-range error
+  main.cpp: handles all exceptions, more consistent help messages
+
+2003-216 (W32):
+  id3v2.c: added check on tmpnam(0) returning NULL
+  id3v2.c:66:  added safety to see if copyfile() halted because of eof
+  setid3v2.cpp: [BUGFIX] Harmless. w_ptr constructor sometimes got an
+    uninitialized allocation value (went by unnoticed because of
+    alloc-on-write?). Fix: Removed this feature - unnecessary anyway.
+  setid3v2.cpp: only read previous ID3v2 if necessary.
+
+2003-198 (W29):
+  added conditional stdint.h include, some dirent.h implementations need it
+
+2003-189 (W28):                                ---------[v0.60]-----------
+  First public release
+  setid3.cpp: removed silly packing check
+  setid3v2.cpp: added "&& src". Whoopsee! :)
+  id3v2.c: writef() now writes ID3v2 tags to files < 10 bytes. :)
+
+2003-185 (W27):
+  setid3v2.cpp: made w_ptr a live object + added bad_alloc checks
+  setid3v2.cpp: void* src + ID3_free -> voidp<> src (exception safety)
+  setid3.cpp: Now emits CR/LF pairs for %n, violating ID3v2, but
+    conforming to Winamp. I figure more people care about Winamp.
+
+2003-184 (W27):
+  Readme
+  Added specifying genre per number
+
+2003-183 (W27):
+  Started changelog.
+  Install
+  More code cleaning. Removed implementation-dependency with rename()
+
+2003-181 (W27):
+  Code clean up + minor improvements (e.g. added [] to wildcard match)
+  Bolted together (private) `id3' & (private) ID3v2 sources
+
+Todo list:
+
+  - Reading MP3 data (Bitrate, length, etc. Half done.)
+  - Cross-directory renaming/moving
+  - More things:
+    + Support for Ogg Vorbis
+    + Support for APEv2
+  - Enable multibyte encodings for varexp?
+  - Extend substitution capabilities (i/o? slice?)
+
+Thanks go out to everybody who has responded with questions, suggestions,
+and bug reports!
+
