@@ -31,6 +31,7 @@ void ViewPager::initViewPager(){
     mScroller = new Scroller(context, mInterpolator);
     mAdapter  = nullptr;
     mObserver = nullptr;
+    mFakeDragging =false;
     ViewConfiguration configuration = ViewConfiguration::get(context);
     float density = 2.65f;//context.getResources().getDisplayMetrics().density;
 
@@ -1482,7 +1483,7 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
             float xDiff = std::abs(dx);
             float y = ev.getY(pointerIndex);
             float yDiff = std::abs(y - mInitialMotionY);
-    
+
             if (dx != 0 && !isGutterDrag(mLastMotionX, dx)
                     && canScroll(this, false, (int) dx, (int) x, (int) y)) {
                 // Nested view has scrollable area under this point. Let it be handled there.
@@ -1595,8 +1596,7 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
          if (!mIsBeingDragged) {
              int pointerIndex = ev.findPointerIndex(mActivePointerId);
              if (pointerIndex == -1) {
-                 // A child has consumed some touch events and put us into an inconsistent
-                 // state.
+                 // A child has consumed some touch events and put us into an inconsistent state.
                  needsInvalidate = resetTouch();
                  break;
              }
@@ -1604,8 +1604,6 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
              float xDiff = std::abs(x - mLastMotionX);
              float y = ev.getY(pointerIndex);
              float yDiff = std::abs(y - mLastMotionY);
-	 
-             LOGV("Moved xy to %f,%f xydiff=%f,%f",x,y,xDiff, yDiff);
 	 
              if (xDiff > mTouchSlop && xDiff > yDiff) {
                  LOGV("Starting drag!");

@@ -2238,7 +2238,7 @@ void View::unscheduleDrawable(Drawable& who,Runnable what){
 }
 
 void View::unscheduleDrawable(Drawable& who){
-    LOGD(" %p ",&who);
+    LOGV(" %p ",&who);
 }
 
 ViewGroup*View::getParent()const{

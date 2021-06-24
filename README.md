@@ -3,12 +3,13 @@
 
 # **Features:**
 * Multi Layer/Multi Window 
-* Intigated with 30+ UI Components and 15+ Drawables(compatibal with android)  
+* Integrated with 30+ UI Components and 15+ Drawables(compatibal with android)  
 * Full compatible with Android
 * Smooth Scrolling
 * Scrolling with SpringBack Support
 # **Screen Shots**
 ![TextView](docs/images/screenshots/textviews.png)
+![ViewPager](docs/videos/viewpager.gif)
 # **UI Components:**
    * View
    * TextView 
