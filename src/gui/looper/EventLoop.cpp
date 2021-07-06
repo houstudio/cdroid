@@ -110,7 +110,7 @@ void Looper::iteration() {
     if (n_ready < 1 && impl->idle_sources.size() > 0)
         max_timeout = 0;
 
-    if (::poll(impl->poll_fds.data(), impl->poll_fds.size(), max_timeout) > 0) {
+    if (::poll(impl->poll_fds.data(), impl->poll_fds.size(), max_timeout) >0) {
         for (size_t i = 0; i < impl->pollable_sources.size(); i++)
             impl->pollable_sources[i]->revents = impl->poll_fds[i].revents;
     }

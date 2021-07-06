@@ -8,7 +8,6 @@
 #include <cdinput.h>
 #include <cdlog.h>
 #include <math.h>
-#define  NS_PER_MS 1000000
 
 namespace cdroid{
 // --- PointerCoords ---
@@ -126,7 +125,7 @@ KeyEvent* KeyEvent::obtain(){
     return PooledInputEventFactory::getInstance().createKeyEvent();
 }
 
-KeyEvent* KeyEvent::obtain(long downTime, long eventTime, int action,int code, int repeat, int metaState,
+KeyEvent* KeyEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
               int deviceId, int scancode, int flags, int source/*, std::string characters*/){
     KeyEvent* ev = obtain();
     ev->mDownTime = downTime;
@@ -429,19 +428,19 @@ MotionEvent*MotionEvent::obtain(){
     return PooledInputEventFactory::getInstance().createMotionEvent();
 }
 
-MotionEvent*MotionEvent::obtain(long downTime, long eventTime,
+MotionEvent*MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime,
             int action, int pointerCount, const PointerProperties* pointerProperties,
             const PointerCoords* pointerCoords, int metaState, int buttonState,
             float xPrecision, float yPrecision, int deviceId,
             int edgeFlags, int source, int flags){
     MotionEvent* ev = obtain();
     ev->initialize(deviceId, source, action,0/*actionbutton*/, flags, edgeFlags, metaState, buttonState,
-                0, 0, xPrecision, yPrecision, downTime * NS_PER_MS, eventTime * NS_PER_MS,
+                0, 0, xPrecision, yPrecision, downTime, eventTime,
                 pointerCount, pointerProperties, pointerCoords);
     return ev;
 }
 
-MotionEvent* MotionEvent::obtain(long downTime, long eventTime, int action,
+MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
             float x, float y, float pressure, float size, int metaState,
             float xPrecision, float yPrecision, int deviceId, int edgeFlags){
     MotionEvent* ev = obtain();
@@ -451,15 +450,12 @@ MotionEvent* MotionEvent::obtain(long downTime, long eventTime, int action,
 
     PointerCoords pc;
     pc.clear();
-    //pc.x = x;  pc.y = y;
-    //pc.pressure = pressure;
-    //pc.size = size;
     pc.setAxisValue(ABS_X,x);
     pc.setAxisValue(ABS_Y,y);
     pc.setAxisValue(AXIS_PRESSURE,pressure);
     pc.setAxisValue(AXIS_SIZE,size);
     ev->initialize(deviceId, InputEvent::SOURCE_UNKNOWN, action, 0/*actionButton*/,0/*flags*/, edgeFlags, metaState, 0,
-            0, 0, xPrecision, yPrecision, downTime * NS_PER_MS, eventTime * NS_PER_MS, 1, &pp,&pc);
+            0, 0, xPrecision, yPrecision, downTime , eventTime, 1, &pp,&pc);
     return ev;
 }
 
@@ -622,7 +618,7 @@ MotionEvent*MotionEvent::split(int idBits){
     return ev;
 }
 
-void MotionEvent::addSample(int64_t eventTime, const PointerCoords* pointerCoords) {
+void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords* pointerCoords) {
     mSampleEventTimes.push_back(eventTime);
 
     for(int i=0;i<getPointerCount();i++)

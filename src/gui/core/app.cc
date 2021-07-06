@@ -84,8 +84,8 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
 
     SignalSource*sigsource=new GenericSignalSource(false);
     addEventSource(sigsource,[this](EventSource&s){
-        LOGI("Sig interrupt");
-        this->exit(0);//looper->quit(0);
+        LOGI("Sig interrupt %d",((SignalSource&)s).signo);
+        this->exit(((SignalSource&)s).signo);
         return false;
     });
     sigsource->add(SIGABRT);

@@ -84,7 +84,7 @@ protected:
    int mDeviceId;
    int mSource;
    long mSeq;
-   nsecs_t mEventTime;//SystemClock#uptimeMillis
+   nsecs_t mEventTime;//SystemClock#uptimeMicros
 public:   
    enum{
      EVENT_TYPE_KEY = 1,
@@ -137,7 +137,7 @@ private:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
-    nsecs_t mDownTime;//SystemClock#uptimeMillis
+    nsecs_t mDownTime;//SystemClock#uptimeNanos
     static int metaStateFilterDirectionalModifiers(int metaState,int modifiers, int basic, int left, int right);
     static KeyEvent*obtain();
 public:
@@ -243,7 +243,7 @@ public:
             nsecs_t downTime,
             nsecs_t eventTime);
     void initialize(const KeyEvent& from);
-    static KeyEvent* obtain(long downTime, long eventTime, int action,int code, int repeat, int metaState,
+    static KeyEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
                    int deviceId, int scancode, int flags, int source/*,std::string characters*/);
     static KeyEvent* obtain(const KeyEvent& other);
     virtual int getType(){return EV_KEY;}
@@ -395,16 +395,16 @@ public:
             nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
             const PointerProperties* pointerProperties,const PointerCoords* pointerCoords);
    
-   static MotionEvent*obtain(long downTime, long eventTime, int action, 
+   static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action, 
             int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
 	    int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
             int edgeFlags, int source, int flags);
    
-   static MotionEvent* obtain(long downTime, long eventTime, int action,
+   static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,
             float x, float y, float pressure, float size, int metaState,
             float xPrecision, float yPrecision, int deviceId, int edgeFlags);
 
-   static MotionEvent* obtain(long downTime, long eventTime, int action, float x, float y, int metaState);
+   static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState);
    static MotionEvent* obtain(const MotionEvent& other);
    void copyFrom(const MotionEvent* other, bool keepHistory);
    MotionEvent*split(int idBits);

@@ -84,7 +84,7 @@ private:
     static constexpr int FLING_MODE = 1;
     int mMode;
     SplineOverScroller * mScrollerX;
-    SplineOverScroller* mScrollerY;
+    SplineOverScroller * mScrollerY;
 
     Interpolator* mInterpolator;
     bool mFlywheel;

@@ -115,7 +115,7 @@ private:
      void FLY_endFling();
      void FLY_wheelTouch();
      void FLY_Proc();
-     void FLY_CheclProc();
+     void FLY_CheckFlyWheelProc();
 private:
     constexpr static int FLYWHEEL_TIMEOUT =40;
     enum{
@@ -138,10 +138,11 @@ private:
     int mLastScrollState;
     bool mIsChildViewEnabled;
     bool mForceTranscriptScroll;
+    Runnable mTouchModeReset;
     bool mHasPerformedLongPress;
     static const bool PROFILE_SCROLLING = false;
     bool mScrollProfilingStarted = false;
-    static const bool PROFILE_FLINGING = false;
+    static const bool PROFILE_FLINGING = true;
     bool mFlingProfilingStarted =false;
     OnScrollListener mOnScrollListener;
     void initAbsListView();
@@ -180,6 +181,8 @@ protected:
     float mVelocityScale = 1.0f;
     int mOverscrollDistance;
     int mOverflingDistance;
+    View * mScrollUp ;
+    View * mScrollDown;
     EdgeEffect* mEdgeGlowTop;
     EdgeEffect* mEdgeGlowBottom;
     AbsPositionScroller* mPositionScroller;
@@ -223,8 +226,10 @@ protected:
     int computeVerticalScrollOffset()override;
     int computeVerticalScrollRange ()override;
     AbsPositionScroller*createPositionScroller();
-    bool trackMotionScroll(int deltaY, int incrementalDeltaY);
+    virtual bool trackMotionScroll(int deltaY, int incrementalDeltaY);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void updateScrollIndicators();
+    void setScrollIndicatorViews(View* up, View* down);
     bool touchModeDrawsInPressedState();
     bool shouldShowSelector();
     void updateSelectorState();

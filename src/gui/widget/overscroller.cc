@@ -129,6 +129,7 @@ void OverScroller::SplineOverScroller::extendDuration(int extend) {
     mDuration = elapsedTime + extend;
     mFinished = false;
 }
+
 bool OverScroller::SplineOverScroller::springback(int start, int min, int max) {
     mFinished = true;
 
@@ -160,6 +161,7 @@ void OverScroller::SplineOverScroller::startSpringback(int start, int end, int v
     mOver = std::abs(delta);
     mDuration = (int) (1000.0 * std::sqrt(-2.0 * delta / mDeceleration));
 }
+
 void OverScroller::SplineOverScroller::fling(int start, int velocity, int min, int max, int over){
     mOver = over;
     mFinished = false;

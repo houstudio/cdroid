@@ -25,10 +25,10 @@ namespace cdroid {
 
 struct TextWatcher{
     //void beforeTextChanged(CharSequence s,int start,int count, int after)
-    std::function<void(const std::string&,int,int,int)>beforeTextChanged;
+    std::function<void(const std::wstring&,int,int,int)>beforeTextChanged;
     //void onTextChanged(CharSequence s, int start, int before, int count);
-    std::function<void(const std::string&,int,int,int)>onTextChanged;
-    //void afterTextChanged(Editable s);;
+    std::function<void(const std::wstring&,int,int,int)>onTextChanged;
+    //void afterTextChanged(Editable s);
     std::function<void(std::wstring&)>afterTextChanged;
 };
 class TextView : public View{
@@ -92,9 +92,9 @@ private:
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
 
-    void sendBeforeTextChanged(const std::string& text, int start, int before, int after);
+    void sendBeforeTextChanged(const std::wstring& text, int start, int before, int after);
     void sendAfterTextChanged(std::wstring& text);
-    void sendOnTextChanged(const std::string& text, int start, int before, int after);
+    void sendOnTextChanged(const std::wstring& text, int start, int before, int after);
 protected:
     int mEditMode;//0--readonly 1--insert 2--replace
     int mCaretPos;
@@ -145,7 +145,9 @@ public:
     float getLineSpacingMultiplier()const;
     float getLineSpacingExtra()const;
 
-    int getEllipsize()const;
+    void setMarqueeRepeatLimit(int marqueeLimit);
+    int  getMarqueeRepeatLimit() const;
+    int  getEllipsize() const;
     void setEllipsize(int ellipsize);
 
     ColorStateList* getTextColors()const;
@@ -201,6 +203,9 @@ public:
                 const std::string& right,const std::string& bottom);
     int computeHorizontalScrollRange()override;
     int computeVerticalScrollRange()override;
+
+    void addTextChangedListener(TextWatcher watcher);
+    void removeTextChangedListener(TextWatcher watcher);
 };
 
 }  // namespace ui

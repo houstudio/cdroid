@@ -363,7 +363,7 @@ void ViewGroup::removeDetachedView(View* child, bool animate){
 
     if (child == mFocused) child->clearFocus();
     if (child == mDefaultFocus) clearDefaultFocus(child);
-    //if (child == mFocusedInCluster) clearFocusedInCluster(child);
+    if (child == mFocusedInCluster) clearFocusedInCluster(child);
 
     //child->clearAccessibilityFocus();
 

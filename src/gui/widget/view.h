@@ -58,9 +58,9 @@ public:
     }; 
 protected:
     enum{//PFLAGS in mPrivateFlags
-        PFLAG_WANTS_FOCUS=0x01,
-        PFLAG_FOCUSED    =0x02,
-        PFLAG_SELECTED   =0x04,
+        PFLAG_WANTS_FOCUS      =0x01,
+        PFLAG_FOCUSED          =0x02,
+        PFLAG_SELECTED         =0x04,
         PFLAG_IS_ROOT_NAMESPACE=0x08,
         PFLAG_HAS_BOUNDS =0x10,
         PFLAG_DRAWN      =0x20,
@@ -68,14 +68,17 @@ protected:
         PFLAG_REQUEST_TRANSPARENT_REGIONS=0x200,
         PFLAG_DRAWABLE_STATE_DIRTY=0x400,
         PFLAG_MEASURED_DIMENSION_SET=0x800,
-        PFLAG_FORCE_LAYOUT   =0x1000,
-        PFLAG_LAYOUT_REQUIRED=0x2000,
+        PFLAG_FORCE_LAYOUT     =0x1000,
+        PFLAG_LAYOUT_REQUIRED  =0x2000,
 
-        PFLAG_PRESSED    =0x4000,
-        PFLAG_DIRTY      = 0x00200000,
-        PFLAG_DIRTY_OPAQUE=0x00400000,
-        PFLAG_DIRTY_MASK = 0x00600000,
-        PFLAG_PREPRESSED = 0x02000000,
+        PFLAG_PRESSED          =0x4000,
+        PFLAG_DIRTY            = 0x00200000,
+        PFLAG_DIRTY_OPAQUE     =0x00400000,
+        PFLAG_DIRTY_MASK       = 0x00600000,
+        PFLAG_OPAQUE_BACKGROUND= 0x00800000,
+        PFLAG_OPAQUE_SCROLLBARS= 0x01000000,
+        PFLAG_OPAQUE_MASK      = 0x01800000,
+        PFLAG_PREPRESSED       = 0x02000000,
         PFLAG_CANCEL_NEXT_UP_EVENT=0x04000000,
         PFLAG_HOVERED    = 0x10000000,
         PFLAG_ACTIVATED  = 0x40000000,
@@ -301,6 +304,7 @@ protected:
     OnScrollChangeListener mOnScrollChangeListener;
     MessageListener mOnMessage;
 
+    void computeOpaqueFlags();
     virtual void resolveDrawables();
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
@@ -418,6 +422,7 @@ public:
     bool getDefaultFocusHighlightEnabled()const;
     bool isLayoutDirectionResolved()const;
     int getLayoutDirection()const;
+    bool isOpaque()const;
     View&setLayoutDirection(int layoutDirection);
     bool isLayoutRtl()const;
     bool isFocusableInTouchMode()const;
@@ -455,7 +460,7 @@ public:
     View& setVerticalScrollbarPosition(int position);
 
     int getScrollIndicators()const;
-    void setScrollIndicators(int indicators,int mask=SCROLL_INDICATORS_PFLAG3_MASK >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT);
+    virtual void setScrollIndicators(int indicators,int mask=SCROLL_INDICATORS_PFLAG3_MASK >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT);
     virtual void computeScroll();
     virtual int computeHorizontalScrollRange();
     virtual int computeHorizontalScrollOffset();
@@ -508,6 +513,7 @@ public:
     void dispatchFinishTemporaryDetach();
     virtual void onFinishTemporaryDetach();
     void dispatchStartTemporaryDetach();
+    virtual void onStartTemporaryDetach();
     virtual bool hasTransientState();
     void setHasTransientState(bool hasTransientState);
 

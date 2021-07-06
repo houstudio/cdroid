@@ -58,6 +58,7 @@ private:
     View* addViewAbove(View* theView, int position);
     View* addViewBelow(View* theView, int position);
 
+    View* moveSelection(View* oldSel, View* newSel, int delta, int childrenTop, int childrenBottom);
     int positionOfNewFocus(View* newFocus);
     int lookForSelectablePositionOnScreen(int direction);
     void measureItem(View* child);
@@ -99,6 +100,7 @@ protected:
     void fillGap(bool down)override;
     bool fullScroll(int direction);
     bool pageScroll(int direction);
+    bool trackMotionScroll(int deltaY, int incrementalDeltaY)override;
 
     int findMotionRow(int y)override;
     void setSelectionInt(int position);

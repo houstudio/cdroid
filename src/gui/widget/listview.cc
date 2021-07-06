@@ -45,10 +45,10 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
     bool drawDividers = dividerHeight > 0 && mDivider != nullptr;
 
     if (drawDividers) {
-        bool fillForMissingDividers = false;//isOpaque() && !AbsListView::isOpaque();
+        bool fillForMissingDividers = isOpaque() && !AbsListView::isOpaque();
         int itemCount = mItemCount;
         int headerCount = getHeaderViewsCount();
-        int footerLimit = (itemCount - 0);//mFooterViewInfos.size());
+        int footerLimit = (itemCount - mFooterViewInfos.size());
         bool isHeader = (itemIndex < headerCount);
         bool isFooter = (itemIndex >= footerLimit);
         bool headerDividers = mHeaderDividersEnabled;
@@ -166,6 +166,13 @@ void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where){
             break;
         }
     }
+}
+
+bool ListView::trackMotionScroll(int deltaY, int incrementalDeltaY){
+    bool result = AbsListView::trackMotionScroll(deltaY, incrementalDeltaY);
+    removeUnusedFixedViews(mHeaderViewInfos);
+    removeUnusedFixedViews(mFooterViewInfos);
+    return result;
 }
 
 void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList){
@@ -301,7 +308,7 @@ void ListView::setSelectionInt(int position) {
         }
     }
 
-    //if (mPositionScroller) mPositionScroller.stop();
+    if (mPositionScroller) mPositionScroller->stop();
 
     layoutChildren();
 
@@ -715,7 +722,7 @@ void ListView::fillGap(bool down) {
 }
 
 View* ListView::fillFromSelection(int selectedTop, int childrenTop, int childrenBottom) {
-    int fadingEdgeLength = 0;//getVerticalFadingEdgeLength();
+    int fadingEdgeLength = getVerticalFadingEdgeLength();
     int selectedPosition = mSelectedPosition;
 
     int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength,selectedPosition);
@@ -844,7 +851,7 @@ void ListView::layoutChildren() {
     mBlockLayoutRequests =true;
     if (mAdapter == nullptr) {
         resetList();
-        //invokeOnItemScrollListener();
+        invokeOnItemScrollListener();
         mBlockLayoutRequests=false;
         return;
     }
@@ -902,7 +909,7 @@ void ListView::layoutChildren() {
     // and calling it a day
     if (mItemCount == 0) {
         resetList();
-        //invokeOnItemScrollListener();
+        invokeOnItemScrollListener();
         mBlockLayoutRequests=false;
         return;
     } else if (mItemCount != mAdapter->getCount()) {
@@ -964,7 +971,7 @@ void ListView::layoutChildren() {
             focusLayoutRestoreView = findFocus();
             if (focusLayoutRestoreView != nullptr) {
                 // Tell it we are going to mess with it.
-                //focusLayoutRestoreView->dispatchStartTemporaryDetach();
+                focusLayoutRestoreView->dispatchStartTemporaryDetach();
             }
         }
         requestFocus();
@@ -1023,7 +1030,7 @@ void ListView::layoutChildren() {
         }*/
     break;
     case LAYOUT_MOVE_SELECTION:
-        //sel = moveSelection(oldSel, newSel, delta, childrenTop, childrenBottom);
+        sel = moveSelection(oldSel, newSel, delta, childrenTop, childrenBottom);
         break;
     default:
         if (childCount == 0) {
@@ -1155,12 +1162,114 @@ void ListView::layoutChildren() {
     mNeedSync = false;
     setNextSelectedPositionInt(mSelectedPosition);
 
-    //updateScrollIndicators();
+    updateScrollIndicators();
 
     if (mItemCount > 0)checkSelectionChanged();
 
-    //invokeOnItemScrollListener();
+    invokeOnItemScrollListener();
     mBlockLayoutRequests =false;
+}
+
+View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childrenTop, int childrenBottom){
+    int fadingEdgeLength = getVerticalFadingEdgeLength();
+    int selectedPosition = mSelectedPosition;
+
+    View* sel;
+
+    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, selectedPosition);
+    int bottomSelectionPixel = getBottomSelectionPixel(childrenTop, fadingEdgeLength,  selectedPosition);
+    LOGD("-----Scrolling %s  delta=%d childen top/bottom=%d/%d",(delta>0?"Down":"Up"),delta,childrenTop,childrenBottom);
+    if (delta > 0) {//Scrolling Down.
+        // Put oldSel (A) where it belongs
+        oldSel = makeAndAddView(selectedPosition - 1, oldSel->getTop(), true, mListPadding.x, false);
+
+        int dividerHeight = mDividerHeight;
+
+        // Now put the new selection (B) below that
+        sel = makeAndAddView(selectedPosition, oldSel->getBottom() + dividerHeight, true,  mListPadding.x, true);
+
+        // Some of the newly selected item extends below the bottom of the list
+        if (sel->getBottom() > bottomSelectionPixel) {
+
+            // Find space available above the selection into which we can scroll upwards
+            int spaceAbove = sel->getTop() - topSelectionPixel;
+
+            // Find space required to bring the bottom of the selected item fully into view
+            int spaceBelow = sel->getBottom() - bottomSelectionPixel;
+
+            // Don't scroll more than half the height of the list
+            int halfVerticalSpace = (childrenBottom - childrenTop) / 2;
+            int offset = std::min(spaceAbove, spaceBelow);
+            offset = std::min(offset, halfVerticalSpace);
+
+            // We placed oldSel, so offset that item
+            oldSel->offsetTopAndBottom(-offset);
+            // Now offset the selected item to get it into view
+            sel->offsetTopAndBottom(-offset);
+        }
+
+        // Fill in views above and below
+        if (!mStackFromBottom) {
+            fillUp(mSelectedPosition - 2, sel->getTop() - dividerHeight);
+            adjustViewsUpOrDown();
+            fillDown(mSelectedPosition + 1, sel->getBottom() + dividerHeight);
+        } else {
+            fillDown(mSelectedPosition + 1, sel->getBottom() + dividerHeight);
+            adjustViewsUpOrDown();
+            fillUp(mSelectedPosition - 2, sel->getTop() - dividerHeight);
+        }
+    } else if (delta < 0) {//Scrolling up.
+        if (newSel != nullptr) {
+            // Try to position the top of newSel (A) where it was before it was selected
+            sel = makeAndAddView(selectedPosition, newSel->getTop(), true, mListPadding.x,true);
+        } else {
+            // If (A) was not on screen and so did not have a view, position
+            // it above the oldSel (B)
+            sel = makeAndAddView(selectedPosition, oldSel->getTop(), false, mListPadding.x,true);
+        }
+
+        // Some of the newly selected item extends above the top of the list
+        if (sel->getTop() < topSelectionPixel) {
+            // Find space required to bring the top of the selected item fully into view
+            int spaceAbove = topSelectionPixel - sel->getTop();
+
+           // Find space available below the selection into which we can scroll downwards
+            int spaceBelow = bottomSelectionPixel - sel->getBottom();
+
+            // Don't scroll more than half the height of the list
+            int halfVerticalSpace = (childrenBottom - childrenTop) / 2;
+            int offset = std::min(spaceAbove, spaceBelow);
+            offset = std::min(offset, halfVerticalSpace);
+
+            // Offset the selected item to get it into view
+            sel->offsetTopAndBottom(offset);
+        }
+
+        // Fill in views above and below
+        fillAboveAndBelow(sel, selectedPosition);
+    } else {
+
+        int oldTop = oldSel->getTop();
+
+        // Case 3: Staying still
+        sel = makeAndAddView(selectedPosition, oldTop, true, mListPadding.x, true);
+
+        // We're staying still...
+        if (oldTop < childrenTop) {
+            // ... but the top of the old selection was off screen.
+            // (This can happen if the data changes size out from under us)
+            int newBottom = sel->getBottom();
+            if (newBottom < childrenTop + 20) {
+                // Not enough visible -- bring it onscreen
+                sel->offsetTopAndBottom(childrenTop - sel->getTop());
+            }
+        }
+
+        // Fill in views above and below
+        fillAboveAndBelow(sel, selectedPosition);
+    }
+
+    return sel;
 }
 
 void ListView::drawDivider(Canvas&canvas,const RECT&bounds, int childIndex) {
@@ -1829,8 +1938,8 @@ void ListView::scrollListItemsBy(int amount){
         }
     }
     mRecycler->fullyDetachScrapViews();
-    //removeUnusedFixedViews(mHeaderViewInfos);
-    //removeUnusedFixedViews(mFooterViewInfos);    
+    removeUnusedFixedViews(mHeaderViewInfos);
+    removeUnusedFixedViews(mFooterViewInfos);    
 }
 
 int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedPos, int direction){

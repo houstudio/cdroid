@@ -4,7 +4,6 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 
-
 namespace cdroid{
 
 // Nanoseconds per milliseconds.
@@ -36,38 +35,38 @@ static float vectorNorm(const float* a, uint32_t m) {
 
 #if DEBUG_STRATEGY || DEBUG_VELOCITY
 static std::string vectorToString(const float* a, uint32_t m) {
-    std::string str;
-    str += "[";
+    std::ostringstream ostr;
+    ostr << "[";
     for (size_t i = 0; i < m; i++) {
         if (i) {
-            str += ",";
+            ostr << ",";
         }
-        str += android::base::StringPrintf(" %f", *(a++));
+        ostr << *(a++);
     }
-    str += " ]";
-    return str;
+    ostr << " ]";
+    return ostr.str();
 }
 #endif
 
 #if DEBUG_STRATEGY
 static std::string matrixToString(const float* a, uint32_t m, uint32_t n, bool rowMajor) {
-    std::string str;
-    str = "[";
+    std::ostringstream ostr;
+    ostr << "[";
     for (size_t i = 0; i < m; i++) {
         if (i) {
-            str += ",";
+            ostr << ",";
         }
-        str += " [";
+        ostr << " [";
         for (size_t j = 0; j < n; j++) {
             if (j) {
-                str += ",";
+                ostr << ",";
             }
-            str += android::base::StringPrintf(" %f", a[rowMajor ? i * n + j : j * m + i]);
+            ostr << a[rowMajor ? i * n + j : j * m + i];
         }
-        str += " ]";
+        ostr << " ]";
     }
-    str += " ]";
-    return str;
+    ostr << " ]";
+    return ostr.str();
 }
 #endif
 
@@ -187,8 +186,8 @@ void VelocityTrackerCC::addMovement(nsecs_t eventTime, BitSet32 idBits, const Ve
     if ((mCurrentPointerIdBits.value & idBits.value)
             && eventTime >= mLastEventTime + ASSUME_POINTER_STOPPED_TIME) {
 #if DEBUG_VELOCITY
-        LOGD("VelocityTracker: stopped for %0.3f ms, clearing state.",
-                (eventTime - mLastEventTime) * 0.000001f);
+        LOGD("VelocityTracker: stopped for %0.3f ms, clearing state. eventTime=%lld mLastEventTime=%lld",
+                (eventTime - mLastEventTime) * 0.001f,eventTime,mLastEventTime);
 #endif
         // We have not received any movements for too long.  Assume that all pointers
         // have stopped.
@@ -204,18 +203,16 @@ void VelocityTrackerCC::addMovement(nsecs_t eventTime, BitSet32 idBits, const Ve
     mStrategy->addMovement(eventTime, idBits, positions);
 
 #if DEBUG_VELOCITY
-    LOGD("VelocityTracker: addMovement eventTime=%" PRId64 ", idBits=0x%08x, activePointerId=%d",
-            eventTime, idBits.value, mActivePointerId);
+    LOGD("VelocityTracker: addMovement eventTime=%lld, idBits=0x%08x, activePointerId=%d  xy=%f,%f",
+            eventTime, idBits.value, mActivePointerId,positions[0].x,positions[0].y);
     for (BitSet32 iterBits(idBits); !iterBits.isEmpty(); ) {
         uint32_t id = iterBits.firstMarkedBit();
         uint32_t index = idBits.getIndexOfBit(id);
         iterBits.clearBit(id);
-        Estimator estimator;
+        VelocityTracker::Estimator estimator;
         getEstimator(id, &estimator);
-        LOGD("  %d: position (%0.3f, %0.3f), "
-                "estimator (degree=%d, xCoeff=%s, yCoeff=%s, confidence=%f)",
-                id, positions[index].x, positions[index].y,
-                int(estimator.degree),
+        LOGD("  %d: position (%0.3f, %0.3f),time=%lld estimator (degree=%d, xCoeff=%s, yCoeff=%s, confidence=%f)",
+                id, positions[index].x, positions[index].y, eventTime,int(estimator.degree),
                 vectorToString(estimator.xCoeff, estimator.degree + 1).c_str(),
                 vectorToString(estimator.yCoeff, estimator.degree + 1).c_str(),
                 estimator.confidence);
@@ -299,7 +296,6 @@ bool VelocityTrackerCC::getVelocity(uint32_t id, float* outVx, float* outVy) con
     if (getEstimator(id, &estimator) && estimator.degree >= 1) {
         *outVx = estimator.xCoeff[1];
         *outVy = estimator.yCoeff[1];
-        LOGV("id=%d outxy=%f,%f",id,*outVx,*outVy);
         return true;
     }
     *outVx = 0;
@@ -314,7 +310,7 @@ bool VelocityTrackerCC::getEstimator(uint32_t id,VelocityTracker::Estimator* out
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 IntegratingVelocityTrackerStrategy::IntegratingVelocityTrackerStrategy(uint32_t degree) :
-        mDegree(degree) {
+   mDegree(degree) {
 }
 
 IntegratingVelocityTrackerStrategy::~IntegratingVelocityTrackerStrategy() {
@@ -542,7 +538,7 @@ bool ImpulseVelocityTrackerStrategy::getEstimator(uint32_t id,
     outEstimator->degree = 2; // similar results to 2nd degree fit
     outEstimator->confidence = 1;
 #if DEBUG_STRATEGY
-    ALOGD("velocity: (%f, %f)", outEstimator->xCoeff[1], outEstimator->yCoeff[1]);
+    LOGD("velocity: (%f, %f)", outEstimator->xCoeff[1], outEstimator->yCoeff[1]);
 #endif
     return true;
 }
@@ -586,7 +582,7 @@ void LeastSquaresVelocityTrackerStrategy::addMovement(nsecs_t eventTime, BitSet3
 static bool solveLeastSquares(const float* x, const float* y,
         const float* w, uint32_t m, uint32_t n, float* outB, float* outDet) {
 #if DEBUG_STRATEGY
-    ALOGD("solveLeastSquares: m=%d, n=%d, x=%s, y=%s, w=%s", int(m), int(n),
+    LOGD("solveLeastSquares: m=%d, n=%d, x=%s, y=%s, w=%s", int(m), int(n),
             vectorToString(x, m).c_str(), vectorToString(y, m).c_str(),
             vectorToString(w, m).c_str());
 #endif
@@ -600,7 +596,7 @@ static bool solveLeastSquares(const float* x, const float* y,
         }
     }
 #if DEBUG_STRATEGY
-    ALOGD("  - a=%s", matrixToString(&a[0][0], m, n, false /*rowMajor*/).c_str());
+    LOGD("  - a=%s", matrixToString(&a[0][0], m, n, false /*rowMajor*/).c_str());
 #endif
 
     // Apply the Gram-Schmidt process to A to obtain its QR decomposition.
@@ -621,7 +617,7 @@ static bool solveLeastSquares(const float* x, const float* y,
         if (norm < 0.000001f) {
             // vectors are linearly dependent or zero so no solution
 #if DEBUG_STRATEGY
-            ALOGD("  - no solution, norm=%f", norm);
+            LOGD("  - no solution, norm=%f", norm);
 #endif
             return false;
         }
@@ -635,8 +631,8 @@ static bool solveLeastSquares(const float* x, const float* y,
         }
     }
 #if DEBUG_STRATEGY
-    ALOGD("  - q=%s", matrixToString(&q[0][0], m, n, false /*rowMajor*/).c_str());
-    ALOGD("  - r=%s", matrixToString(&r[0][0], n, n, true /*rowMajor*/).c_str());
+    LOGD("  - q=%s", matrixToString(&q[0][0], m, n, false /*rowMajor*/).c_str());
+    LOGD("  - r=%s", matrixToString(&r[0][0], n, n, true /*rowMajor*/).c_str());
 
     // calculate QR, if we factored A correctly then QR should equal A
     float qr[n][m];
@@ -648,7 +644,7 @@ static bool solveLeastSquares(const float* x, const float* y,
             }
         }
     }
-    ALOGD("  - qr=%s", matrixToString(&qr[0][0], m, n, false /*rowMajor*/).c_str());
+    LOGD("  - qr=%s", matrixToString(&qr[0][0], m, n, false /*rowMajor*/).c_str());
 #endif
 
     // Solve R B = Qt W Y to find B.  This is easy because R is upper triangular.
@@ -666,7 +662,7 @@ static bool solveLeastSquares(const float* x, const float* y,
         outB[i] /= r[i][i];
     }
 #if DEBUG_STRATEGY
-    ALOGD("  - b=%s", vectorToString(outB, n).c_str());
+    LOGD("  - b=%s", vectorToString(outB, n).c_str());
 #endif
 
     // Calculate the coefficient of determination as 1 - (SSerr / SStot) where
@@ -878,6 +874,8 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
 std::queue<VelocityTracker*>VelocityTracker::sPool;
 VelocityTracker::VelocityTracker(const char* strategy):mActivePointerId(-1) {
     mVelocityTracker=new VelocityTrackerCC(strategy);
+    mCalculatedIdBits.clear();
+    bzero(mCalculatedVelocity,sizeof(mCalculatedVelocity));
 }
 
 void VelocityTracker::clear() {
@@ -894,7 +892,6 @@ void VelocityTracker::addMovement(const MotionEvent& event) {
 void VelocityTracker::computeCurrentVelocity(int32_t units, float maxVelocity) {
     BitSet32 idBits(mVelocityTracker->getCurrentPointerIdBits());
     mCalculatedIdBits = idBits;
-    LOGV("unit=%d maxVelocity=%f idBits.count=%d",units,maxVelocity,idBits.count());
     for (uint32_t index = 0; !idBits.isEmpty(); index++) {
         uint32_t id = idBits.clearFirstMarkedBit();
 
@@ -913,7 +910,6 @@ void VelocityTracker::computeCurrentVelocity(int32_t units, float maxVelocity) {
         Velocity& velocity = mCalculatedVelocity[index];
         velocity.vx = vx;
         velocity.vy = vy;
-        LOGV("index=%d id:%d vxy=%f,%f",index,id,vx,vy);
     }
 }
 
@@ -928,7 +924,6 @@ void VelocityTracker::getVelocity(int32_t id, float* outVx, float* outVy) {
         const Velocity& velocity = mCalculatedVelocity[index];
         vx = velocity.vx;
         vy = velocity.vy;
-        LOGV("index=%d id=%d vx=%f,vy=%f",index,id,vx,vy);
     } else {
         vx = 0;
         vy = 0;

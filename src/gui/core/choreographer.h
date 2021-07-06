@@ -22,6 +22,9 @@ private:
     static Choreographer *mInst;
     Choreographer();
     void removeCallbacksInternal(int callbackType,Runnable action, void* token);
+    void scheduleFrameLocked(long);
+protected:
+    void doCallbacks(int callbackType, long frameTimeNanos);
 public:
     static Choreographer& getInstance();
     long getFrameTimeNanos();

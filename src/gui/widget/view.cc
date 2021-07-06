@@ -277,6 +277,27 @@ void View::resolvePadding(){
     mPrivateFlags2 |= PFLAG2_PADDING_RESOLVED;
 }
 
+bool View::isOpaque()const{
+    return (mPrivateFlags & PFLAG_OPAQUE_MASK) == PFLAG_OPAQUE_MASK ;//&&  getFinalAlpha() >= 1.0f;
+}
+
+void View::computeOpaqueFlags(){
+    if (mBackground  && mBackground->getOpacity() == Drawable::OPAQUE) {
+        mPrivateFlags |= PFLAG_OPAQUE_BACKGROUND;
+    } else {
+        mPrivateFlags &= ~PFLAG_OPAQUE_BACKGROUND;
+    }
+
+    int flags = mViewFlags;
+    /*if (((flags & SCROLLBARS_VERTICAL) == 0 && (flags & SCROLLBARS_HORIZONTAL) == 0) ||
+            (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_INSIDE_OVERLAY ||
+            (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_OUTSIDE_OVERLAY) {
+        mPrivateFlags |= PFLAG_OPAQUE_SCROLLBARS;
+    } else {
+        mPrivateFlags &= ~PFLAG_OPAQUE_SCROLLBARS;
+    }*/
+}
+
 void View::setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled){
     mDefaultFocusHighlightEnabled = defaultFocusHighlightEnabled;
 }
@@ -354,9 +375,7 @@ void View::scrollTo(int x,int y){
 }
 
 void View::scrollBy(int dx,int dy){
-    mScrollX+=dx;
-    mScrollY+=dy;
-    if(dx||dy)invalidate(nullptr);
+    scrollTo(mScrollX+dx,mScrollY+dy);
 }
 
 int View::getScrollX()const{
@@ -1320,10 +1339,19 @@ void View::dispatchFinishTemporaryDetach(){
 }
 
 void View::onFinishTemporaryDetach(){
+    //NOTHING
 }
 
 void View::dispatchStartTemporaryDetach(){
+    mPrivateFlags3 |= PFLAG3_TEMPORARY_DETACH;
+    //notifyEnterOrExitForAutoFillIfNeeded(false);
+    onStartTemporaryDetach();
 }
+void View::onStartTemporaryDetach() {
+    removeUnsetPressCallback();
+    mPrivateFlags |= PFLAG_CANCEL_NEXT_UP_EVENT;
+}
+
 bool View::hasTransientState(){
     return (mPrivateFlags2 & PFLAG2_HAS_TRANSIENT_STATE) == PFLAG2_HAS_TRANSIENT_STATE;
 }

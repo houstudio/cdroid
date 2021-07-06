@@ -190,7 +190,7 @@ void RecycleBin::addScrapView(View* scrap, int position) {
         } else {
             mScrapViews[viewType].push_back(scrap);
         }
-        //if (mRecyclerListener)mRecyclerListener.onMovedToScrapHeap(scrap);
+        if (mRecyclerListener)mRecyclerListener(*scrap);
     }
 }
 
@@ -209,7 +209,6 @@ void RecycleBin::removeSkippedScrap() {
 
 void RecycleBin::scrapActiveViews() {
     std::vector<View*>& activeViews = mActiveViews;
-    bool hasListener = false;//mRecyclerListener != nullptr;
     bool multipleScraps = mViewTypeCount > 1;
 
     std::vector<View*>& scrapViews =mScrapViews[0];// mCurrentScrap;
@@ -250,7 +249,7 @@ void RecycleBin::scrapActiveViews() {
             removeDetachedView(victim, false);
             scrapViews.push_back(victim);//add(victim);
 
-            //if (hasListener) mRecyclerListener->onMovedToScrapHeap(victim);
+            if (mRecyclerListener) mRecyclerListener(*victim);
         }
     }
     pruneScrapViews();

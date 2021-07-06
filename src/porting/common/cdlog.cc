@@ -10,6 +10,7 @@
 #include <shared_queue.h>
 #include <iomanip>
 #include <unistd.h>
+#include <limits.h>
 #include <execinfo.h>
 #include <cxxabi.h>
 #if defined(__clang__) || defined(__APPLE__)
@@ -40,7 +41,8 @@ static void LogInit(){
         std::thread th([](){
             while(1){
                 std::string msg;
-                dbgMessages.wait_and_pop(msg);
+                if(dbgMessages.size()==0)dbgMessages.wait_and_pop(msg,INT_MAX);
+                else dbgMessages.try_and_pop(msg);
                 printf(msg.c_str());
             }
         });th.detach();

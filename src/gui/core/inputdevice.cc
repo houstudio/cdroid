@@ -66,9 +66,8 @@ int KeyDevice::putrawdata(const INPUTEVENT*e){
             repeatCount=0;
 
         key.initialize(getId(),getSource(),(e->value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
-                       keycode,e->code/*scancode*/,0/*metaState*/,repeatCount, downtime,SystemClock::uptimeMillis()/*eventtime*/);
-        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),e->code,keycode,
-             key.getLabel(),e->value,flags);
+                       keycode,e->code/*scancode*/,0/*metaState*/,repeatCount, downtime,SystemClock::uptimeNanos()/*eventtime*/);
+        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),e->code,keycode, key.getLabel(),e->value,flags);
         if(listener)listener(key); 
         break;
     case EV_SYN:
@@ -98,9 +97,9 @@ int MouseDevice::putrawdata(const INPUTEVENT*e){
     if(!isvalid_event(e))return -1;
     switch(e->type){
     case EV_KEY:
-        downtime=SystemClock::uptimeMillis();
+        downtime=SystemClock::uptimeNanos();
         buttonstats[act_btn]=e->code;
-        LOGV("Key %x /%d btn=%d",e->value,e->code,btnmap[act_btn]);
+        LOGV("Key %x /%d btn=%d %lld",e->value,e->code,btnmap[act_btn],downtime);
         mt.setAction(e->code?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
         mt.setActionButton(btnmap[act_btn]);
         if(listener)listener(mt);
@@ -114,7 +113,7 @@ int MouseDevice::putrawdata(const INPUTEVENT*e){
         mt.initialize(getId(),getSource(),mt.getAction()/*action*/,mt.getActionButton()/*actionbutton*/,
                0/*flags*/,  0/*edgeFlags*/,0/*metaState*/,0/*buttonState*/,
                0/*xOffset*/,0/*yOffset*/,0/*xPrecision*/,0/*yPrecision*/,
-               downtime,SystemClock::uptimeMillis(),1/*pointerCount*/,ptprops,coords);
+               downtime,SystemClock::uptimeNanos(),1/*pointerCount*/,ptprops,coords);
         if(listener)listener(mt);
         break;
     }

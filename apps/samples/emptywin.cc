@@ -74,47 +74,6 @@ public:
         canvas->fill();
         mDegrees=0;
     }
-    void onDraw(Canvas&canvas){
-    Canvas*ctx=&canvas;
-    int radius=20;
-    int w=400,h=200;
-    int flags=0x07;
-    ctx->set_source_rgb(0,1,0);
-
-    ctx->reset_clip();
-    float r=radius;
-    ctx->set_antialias(ANTIALIAS_DEFAULT); 
-    ctx->set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
-    ctx->move_to   ( 0,  radius);
-    ctx->line_to   ( 0, 0 + h - radius);
-    ctx->curve_to  ( 0, 0 + h - radius/2.0,
-			  0 + radius/2.0, 0 + h,
-			  0 + radius, 0 + h);
-    ctx->line_to   ( 0 + w - radius, 0 + h);
-    ctx->curve_to  ( 0 + w - radius/2.0, 0 + h,
-		          0 + w, 0 + h - radius/2.0,
-			  0 + w, 0 + h - radius);
-    ctx->line_to   ( 0 + w, 0 + radius);
-    ctx->curve_to  ( 0 + w, 0 + r/2.0,
-		          0 + w - r/2.0, 0,
-			  0 + w - r, 0);
-    ctx->line_to   ( 0 + r, 0);
-    ctx->curve_to  ( 0 + r/2.0, 0, 0, 0 + r/2.0, 0, 0 + r);
-    
-    ctx->close_path();
-    //ctx->stroke();
-    ctx->clip();//_preserve();
-    std::vector<Cairo::Rectangle>rects;
-    ctx->copy_clip_rectangle_list(rects);
-    LOGD("clipregion has  %d rects",rects.size());
-    for(auto r:rects){
-       LOGD("%4.2f   %4.2f",r.x,r.width);
-    }
-    ctx->set_source_rgb(0,1,0);
-    ctx->set_operator(Cairo::Context::Operator::OVER);
-    ctx->rectangle(0,0,1000,400);
-    ctx->fill();
-    } 
     bool onMessage(DWORD msg,DWORD wp,ULONG lp)override{
         if(msg==1000){
              invalidate(nullptr);
@@ -135,16 +94,16 @@ int main(int argc,const char*argv[]){
     w->setBackgroundColor(0xFFFF0000);
     AbsListView::OnScrollListener ons={nullptr,nullptr};
     ons.onScroll=[](AbsListView&lv,int firstVisibleItem,int visibleItemCount, int totalItemCount){
-        LOGD("firstVisibleItem=%d visibleItemCount=%d totalItemCount=%d",visibleItemCount,totalItemCount);
+        LOGV("firstVisibleItem=%d visibleItemCount=%d totalItemCount=%d",firstVisibleItem,visibleItemCount,totalItemCount);
     };
     ons.onScrollStateChanged=[](AbsListView& view, int scrollState){
-        LOGD("scrollState=%d",scrollState);
+        LOGV("scrollState=%d",scrollState);
     };
     switch(optionid){
     case 0:{
         ListView*lv=new ListView(550,400);
         lv->setTranscriptMode(2);
-	    lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
+	lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
         w->addView(lv).setBackgroundColor(0xFF881111);
         lv->setId(1010);
         lv->getDrawingRect(rect);
@@ -152,9 +111,15 @@ int main(int argc,const char*argv[]){
         //[](AbsListView&,int fist,int vc,int total){});
         //lv->setItemsCanFocus(true);
         lv->setVerticalScrollBarEnabled(true);
-        lv->setOnItemSelectedListener([](AdapterView&parent,View&v,int pos,long id){
-            LOGD("adapterview.itemselected=%p view=%p pos=%d,id=%ld",&parent,&v,pos,id);
-        });
+        ListView::OnItemSelectedListener listener={
+            .onItemSelected=[](AdapterView&parent,View&v,int pos,long id){
+                LOGD("adapterview.itemselected=%p view=%p pos=%d,id=%ld",&parent,&v,pos,id);
+            },
+            .onNothingSelected=[](AdapterView&parent){
+                LOGD("adapterview.onNothingSelected");
+            }
+        };
+        lv->setOnItemSelectedListener(listener);
         lv->setOnItemClickListener([](AdapterView&parent,View&v,int pos,long id){
             LOGD("adapterview.itemlick=%p view=%p pos=%d,id=%ld",&parent,&v,pos,id);
         });
@@ -165,14 +130,14 @@ int main(int argc,const char*argv[]){
         lv->setDivider(new ColorDrawable(0xFF0000FF));
         lv->setDividerHeight(1);
         lv->setAdapter(adapter);
-        lv->addHeaderView(new TextView("====================",400,20),nullptr,false);
+        //lv->addHeaderView(new TextView("====================",400,20),nullptr,false);
         lv->setSmoothScrollbarEnabled(true);
         adapter->notifyDataSetChanged(); 
     
         lv->setBackgroundColor(0xFFFF0000);
         lv->setSelector(new ColorDrawable(0x8800FF00));
-        lv->setSelection(8);
-        lv->smoothScrollBy(200,5000);
+        lv->setSelection(0);
+        //lv->smoothScrollBy(200,5000);
     }break;
     case 1:{
         GridView*gv=new GridView(0,0);
@@ -314,6 +279,13 @@ int main(int argc,const char*argv[]){
         w->addView(vp);
         w->requestLayout();
     }
+    case 11:
+       {
+            EditText*tv=new EditText("mChoreographer->postFrameCallbackDelayed(mRestartCallback, MARQUEE_DELAY);",300,40);
+            w->addView(tv);
+            tv->requestFocus();
+            tv->setEllipsize(Layout::ELLIPSIS_MARQUEE);
+       }break;
     default: break;
     }
     app.exec();

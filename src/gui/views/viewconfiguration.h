@@ -118,7 +118,7 @@ private:
     static constexpr int MINIMUM_FLING_VELOCITY = 50;
 
     /* Maximum velocity to initiate a fling, as measured in dips per second */
-    static constexpr int MAXIMUM_FLING_VELOCITY = 4000;
+    static constexpr int MAXIMUM_FLING_VELOCITY = 8000;
 
     /* Delay before dispatching a recurring accessibility event in milliseconds.
      * This delay guarantees that a recurring event will be send at most once

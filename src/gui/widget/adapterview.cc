@@ -13,7 +13,7 @@ AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
     mSelectedRowId=INVALID_ROW_ID;
     mEmptyView=nullptr;
     mDesiredFocusableState =FOCUSABLE_AUTO;
-    mOnItemSelectedListener=nullptr;
+    mOnItemSelectedListener={nullptr,nullptr};
     mOnItemClickListener=nullptr;
     mOnItemLongClickListener=nullptr;
     mNeedSync =false;
@@ -22,6 +22,8 @@ AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
     mAdapter=nullptr;
     setClickable(true);
     mBlockLayoutRequests=false;
+    mPendingSelectionNotifier =nullptr;
+    mSelectionNotifier =nullptr;
     mDesiredFocusableState = getFocusable();
     if (mDesiredFocusableState == FOCUSABLE_AUTO) {
         // Starts off without an adapter, so NOT_FOCUSABLE by default.
@@ -333,9 +335,9 @@ void AdapterView::checkSelectionChanged() {
 
     // If we have a pending selection notification -- and we won't if we
     // just fired one in selectionChanged() -- run it now.
-    /*if (mPendingSelectionNotifier != null) {
-        mPendingSelectionNotifier.run();
-    }*/
+    if (mPendingSelectionNotifier != nullptr) {
+        mPendingSelectionNotifier();
+    }
 }
 
 void AdapterView::checkFocus() {
@@ -378,19 +380,29 @@ void AdapterView::updateEmptyStatus(bool empty) {
 }
 
 void AdapterView::selectionChanged(){
-    if (mOnItemSelectedListener/*|| AccessibilityManager.getInstance(mContext).isEnabled()*/){
-        /*if (mInLayout || mBlockLayoutRequests) {
+    mPendingSelectionNotifier = nullptr;
+    if (mOnItemSelectedListener.onNothingSelected/*|| AccessibilityManager.getInstance(mContext).isEnabled()*/){
+        if (mInLayout || mBlockLayoutRequests) {
             // If we are in a layout traversal, defer notification
             // by posting. This ensures that the view tree is
             // in a consistent state and is able to accommodate
             // new layout or invalidate requests.
-            if (mSelectionNotifier == null) {
-                mSelectionNotifier = new SelectionNotifier();
+            if (mSelectionNotifier == nullptr) {
+                mSelectionNotifier =[this](){
+                    mPendingSelectionNotifier = nullptr;
+                    if (mDataChanged /*&& getViewRootImpl() && getViewRootImpl().isLayoutRequested()*/) {
+                        if (getAdapter() != nullptr) {
+                            mPendingSelectionNotifier = mSelectionNotifier;
+                        }
+                    } else {
+                        dispatchOnItemSelected();
+                    }
+               };
             } else {
                 removeCallbacks(mSelectionNotifier);
             }
             post(mSelectionNotifier);
-         } else */{
+         } else {
             dispatchOnItemSelected();
         }
     }
@@ -407,14 +419,13 @@ void AdapterView::dispatchOnItemSelected() {
 }
 
 void AdapterView::fireOnSelected() {
-    if (mOnItemSelectedListener == nullptr)
-        return;
     int selection = getSelectedItemPosition();
     if (selection >= 0) {
         View* v = getSelectedView();
-        mOnItemSelectedListener(*this, *v, selection,getAdapter()->getItemId(selection));
-    } else {
-        //mOnItemSelectedListener.onNothingSelected(this);
+        if(mOnItemSelectedListener.onItemSelected)
+            mOnItemSelectedListener.onItemSelected(*this, *v, selection,getAdapter()->getItemId(selection));
+    } else if(mOnItemSelectedListener.onNothingSelected){
+        mOnItemSelectedListener.onNothingSelected(*this);
     }
 }
 

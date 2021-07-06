@@ -15,7 +15,6 @@
  */
 #include <widget/textview.h>
 #include <widget/measurespec.h>
-#include <choreographer.h>
 #include <gravity.h>
 #include <app.h>
 #include <layout.h>
@@ -48,11 +47,11 @@ public:
     bool mHasTint, mHasTintMode;
     ColorStateList* mTintList;
     int mTintMode;
-    int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight,
-                mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
+    int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
+    int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
 
-    int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight,
-                mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
+    int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
+    int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
     int mDrawablePadding;
     RECT mCompoundRect;
 public:
@@ -82,7 +81,7 @@ class Marquee {
 private:
     static constexpr  float MARQUEE_DELTA_MAX = 0.07f;
     static constexpr  int MARQUEE_DELAY = 1200;
-    static constexpr  int MARQUEE_DP_PER_SECOND = 30;
+    static constexpr  int MARQUEE_DP_PER_SECOND = 10;//30;
 
     static constexpr  int MARQUEE_STOPPED = 0x0;
     static constexpr  int MARQUEE_STARTING= 0x1;
@@ -90,7 +89,6 @@ private:
 
     TextView* mView;
     Layout*mLayout;
-    Choreographer* mChoreographer;
     int mStatus ;//= MARQUEE_STOPPED;
     float mPixelsPerMs;
     float mMaxScroll;
@@ -102,37 +100,11 @@ private:
 
     float mScroll;
     long mLastAnimationMs;
-	Choreographer::FrameCallback mTickCallback;
-	Choreographer::FrameCallback mStartCallback;
-	Choreographer::FrameCallback mRestartCallback;
+    Runnable /*Choreographer::FrameCallback*/ mTickCallback;
+    Runnable /*Choreographer::FrameCallback*/ mStartCallback;
+    Runnable /*Choreographer::FrameCallback*/ mRestartCallback;
 	
 private:
-#if 0
-    Choreographer::FrameCallback mTickCallback = new Choreographer::FrameCallback() {
-        public void doFrame(long frameTimeNanos) {
-            tick();
-        }
-    };
-	
-    Choreographer::FrameCallback mStartCallback = new Choreographer::FrameCallback() {
-        public void doFrame(long frameTimeNanos) {
-            mStatus = MARQUEE_RUNNING;
-            mLastAnimationMs = mChoreographer->getFrameTime();
-            tick();
-        }
-    };
-	
-    Choreographer::FrameCallback mRestartCallback = new Choreographer::FrameCallback() {
-        public void doFrame(long frameTimeNanos) {
-            if (mStatus == MARQUEE_RUNNING) {
-                if (mRepeatLimit >= 0) {
-                    mRepeatLimit--;
-                }
-                start(mRepeatLimit);
-            }
-        }
-    };	
-#endif
     void resetScroll() {
         mScroll = 0.0f;
         if (mView ) mView->invalidate();
@@ -144,7 +116,18 @@ public:
         mPixelsPerMs = MARQUEE_DP_PER_SECOND * density / 1000.f;
         mView = v;
         mLayout=lt;
-        mChoreographer = &Choreographer::getInstance();
+        mTickCallback=[this](){tick();};
+        mStartCallback=[this]( ){
+            mStatus = MARQUEE_RUNNING;
+            mLastAnimationMs = SystemClock::uptimeMillis();//mChoreographer->getFrameTime();
+            tick();
+        };
+        mRestartCallback=[this](){
+            if (mStatus == MARQUEE_RUNNING) {
+                if (mRepeatLimit >= 0) mRepeatLimit--;
+                start(mRepeatLimit);
+            }
+        };
     }
 	
     void tick() {
@@ -152,19 +135,19 @@ public:
             return;
         }
 	
-        mChoreographer->removeFrameCallback(mTickCallback);
+        mView->removeCallbacks(mTickCallback);
 	
         if (mView  && (mView->isFocused() || mView->isSelected())) {
-            long currentMs = mChoreographer->getFrameTime();
+            long currentMs = SystemClock::uptimeMillis();
             long deltaMs = currentMs - mLastAnimationMs;
             mLastAnimationMs = currentMs;
             float deltaPx = deltaMs * mPixelsPerMs;
             mScroll += deltaPx;
             if (mScroll > mMaxScroll) {
                 mScroll = mMaxScroll;
-                mChoreographer->postFrameCallbackDelayed(mRestartCallback, MARQUEE_DELAY);
+                mView->postDelayed(mRestartCallback,MARQUEE_DELAY);
             } else {
-                mChoreographer->postFrameCallback(mTickCallback);
+                mView->postDelayed(mTickCallback,200);
             }
             mView->invalidate();
         }
@@ -172,9 +155,9 @@ public:
 	
     void stop() {
         mStatus = MARQUEE_STOPPED;
-        mChoreographer->removeFrameCallback(mStartCallback);
-        mChoreographer->removeFrameCallback(mRestartCallback);
-        mChoreographer->removeFrameCallback(mTickCallback);
+        mView->removeCallbacks(mStartCallback);
+        mView->removeCallbacks(mRestartCallback);
+        mView->removeCallbacks(mTickCallback);
         resetScroll();
     }
 	
@@ -198,7 +181,7 @@ public:
             mMaxFadeScroll = mGhostStart + lineWidth + lineWidth;
 	
             mView->invalidate();
-            mChoreographer->postFrameCallback(mStartCallback);
+            mView->postDelayed(mStartCallback,200);
         }
     }
     float getGhostOffset(){return mGhostOffset; }
@@ -275,6 +258,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
 
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
+    
+    setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
+    setEllipsize(attrs.getInt("ellipsize",Layout::ELLIPSIS_NONE));
     //Drawable*start =ctx->getDrawable(attrs.getString("drawableStart"));
     //Drawable* end  =ctx->getDrawable(attrs.getString("drawableEnd"));
 }
@@ -295,20 +281,22 @@ void TextView::initView(){
     mDrawables=nullptr;
     mMarquee=nullptr;
     mSavedMarqueeModeLayout=nullptr;
-    mMaxWidth=INT_MAX;
-    mMinWidth=0;
-    mMaximum=INT_MAX;
-    mMinimum =0;
+    mMaxWidth =INT_MAX;
+    mMinWidth =0;
+    mMaximum  =INT_MAX;
+    mMinimum  =0;
     mSpacingMult=1.0;
-    mSpacingAdd=0.f;
-    mBlinkOn=false;
-    mCaretPos=0;
+    mSpacingAdd =0.f;
+    mBlinkOn  =false;
+    mCaretPos =0;
     mCaretRect.set(0,0,0,0);
-    mMaxWidthMode=PIXELS;
-    mMinWidthMode= PIXELS;
-    mEllipsize=Layout::ELLIPSIS_NONE;
+    mMaxWidthMode =PIXELS;
+    mMinWidthMode = PIXELS;
+    mMarqueeRepeatLimit =3;
+    mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
+    mEllipsize =Layout::ELLIPSIS_NONE;
     mLayout=new Layout(18,1);
-    mHintLayout= new Layout(mLayout->getFontSize(),1);
+    mHintLayout = new Layout(mLayout->getFontSize(),1);
     mGravity=Gravity::NO_GRAVITY;
     setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     setTextAlignment(TEXT_ALIGNMENT_TEXT_START);
@@ -319,14 +307,14 @@ void TextView::initView(){
     mShadowDx = .0;
     mShadowDy = .0;
     mShadowColor = 0;
-    mSingleLine=true;
-    mEditMode=READONLY;
+    mSingleLine =true;
+    mEditMode =READONLY;
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
 
     TextAppearanceAttributes attributes;
     attributes.mTextColor = ColorStateList::valueOf(0xFFFFFFFF);
-    attributes.mTextSize = 18;
+    attributes.mTextSize  = 18;
     applyTextAppearance(&attributes);
 }
 
@@ -363,7 +351,7 @@ int TextView::getLayoutAlignment()const{
     case TEXT_ALIGNMENT_INHERIT:
                 // This should never happen as we have already resolved the text alignment
                 // but better safe than sorry so we just fall through
-    default:    alignment = Layout::Alignment::ALIGN_NORMAL;  break;
+    default: alignment = Layout::Alignment::ALIGN_NORMAL;  break;
     }
     return alignment;
 }
@@ -407,7 +395,23 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attributes){
     }*/    
 }
 
-void TextView::sendBeforeTextChanged(const std::string& text, int start, int before, int after){
+void TextView::addTextChangedListener(TextWatcher watcher){
+    mListeners.push_back(watcher);
+}
+
+void TextView::removeTextChangedListener(TextWatcher watcher){
+    for(auto i= mListeners.begin();i!= mListeners.end();i++){
+        TextWatcher w=(*i);
+        /*if( ( w.afterTextChanged.target==watcher.afterTextChanged.target)
+            &&(i.onTextChanged==watcher.onTextChanged)
+            &&(i.beforeTextChanged=watcher.beforeTextChanged) ){
+            mListeners.erase(i);
+            break;
+        }*/
+    } 
+}
+
+void TextView::sendBeforeTextChanged(const std::wstring& text, int start, int before, int after){
     for(auto l:mListeners){
         if(l.beforeTextChanged) l.beforeTextChanged(text, start, before, after);
     }
@@ -422,7 +426,7 @@ void TextView::sendAfterTextChanged(std::wstring& text){
     //notifyAutoFillManagerAfterTextChangedIfNeeded();
     //hideErrorIfUnchanged();
 }
-void TextView::sendOnTextChanged(const std::string& text, int start, int before, int after){
+void TextView::sendOnTextChanged(const std::wstring& text, int start, int before, int after){
     for(auto l:mListeners){
         if(l.onTextChanged) l.onTextChanged(text, start, before, after);
     }
@@ -957,6 +961,13 @@ void TextView::updateTextColors(){
     }
 }
 
+void TextView::setMarqueeRepeatLimit(int marqueeLimit) {
+    mMarqueeRepeatLimit = marqueeLimit;
+}
+int TextView::getMarqueeRepeatLimit()const{
+    return mMarqueeRepeatLimit;
+}
+
 int TextView::getEllipsize()const{
     return mEllipsize;
 }
@@ -1297,7 +1308,7 @@ bool TextView::isSingleLine()const{
 }
 
 bool TextView::isMarqueeFadeEnabled(){
-    return false;
+    return mEllipsize == Layout::ELLIPSIS_MARQUEE && mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
 }
 
 bool TextView::canMarquee(){
@@ -1339,7 +1350,7 @@ void TextView::stopMarquee(){
         Layout* tmp = mSavedMarqueeModeLayout;
         mSavedMarqueeModeLayout = mLayout;
         mLayout = tmp;
-        //setHorizontalFadingEdgeEnabled(false);
+        setHorizontalFadingEdgeEnabled(false);
         requestLayout();
         invalidate();
     }

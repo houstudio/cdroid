@@ -13,8 +13,6 @@ int main(int argc,const char*argv[]){
     LOGD("test LOGF %d",__LINE__);
     LOG(DEBUG)<<"Test Stream(DEBUG)";
 #if 10
-#if 1
-    FATAL("crashed");
     w->setIsRootNamespace(true);
     w->setKeyboardNavigationCluster(true);
     Button *btn=new Button("Button",120,60);
@@ -49,7 +47,6 @@ int main(int argc,const char*argv[]){
     clk->setClockDrawable(d,AnalogClock::SECOND);
     w->addView(clk).setPos(600,300);*/
 
-#endif
 #if 1 
     chk=new RadioButton(120,60);
     Drawable*dr=ctx->getDrawable("cdroid:drawable/btn_radio.xml");

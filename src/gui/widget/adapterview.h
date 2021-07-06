@@ -24,11 +24,16 @@ public:
         INVALID_POSITION =-1,
         SYNC_MAX_DURATION_MILLIS=100
     };
+    struct OnItemSelectedListener{
+        std::function<void(AdapterView&parent, View& view, int position, long id)>onItemSelected;
+        std::function<void(AdapterView&parent)>onNothingSelected;
+    };
     typedef std::function<void (AdapterView& parent,View& view, int position, long id)>OnItemClickListener;
-    typedef std::function<void (AdapterView& parent,View& view, int position, long id)>OnItemSelectedListener; 
     typedef std::function<bool (AdapterView& parent,View& view, int position, long id)>OnItemLongClickListener; 
 private:
     int mDesiredFocusableState;
+    Runnable mSelectionNotifier;
+    Runnable mPendingSelectionNotifier;
     bool mDesiredFocusableInTouchModeState;
     void updateEmptyStatus(bool empty);
     void dispatchOnItemSelected();
