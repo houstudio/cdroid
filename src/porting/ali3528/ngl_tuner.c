@@ -8,8 +8,6 @@
 #include <aui_common.h>
 #include <aui_gpio.h>
 
-NGL_MODULE(NIM);
-
 #define NB_TUNERS 1
 #define MAX_LISTENERS 32
 

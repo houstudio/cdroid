@@ -1,10 +1,8 @@
 #include<aui_dis.h>
 #include<aui_osd.h>
-#include<ngl_types.h>
-#include<ngl_log.h>
+#include<cdtypes.h>
+#include<cdlog.h>
 #include<ngl_disp.h>
-
-NGL_MODULE(DISP);
 
 static aui_hdl dis_hd=NULL;
 static aui_hdl dis_sd=NULL;
@@ -17,17 +15,17 @@ DWORD nglDispInit(){
     if (aui_find_dev_by_idx(AUI_MODULE_DIS, AUI_DIS_HD, &dis_hd)){
         attr_dis.uc_dev_idx = AUI_DIS_HD;
 	rc=aui_dis_open(&attr_dis, &dis_hd);
-	NGLOGD("aui_dis_open HD =%d",rc);
+	LOGD("aui_dis_open HD =%d",rc);
     }
 
-    NGLOGD("init_dis_handle(),222");	
+    LOGD("init_dis_handle(),222");	
 	
     if (aui_find_dev_by_idx(AUI_MODULE_DIS, AUI_DIS_SD, &dis_sd)){
 	attr_dis.uc_dev_idx = AUI_DIS_SD;
 	rc=aui_dis_open(&attr_dis, &dis_sd);
-   	NGLOGD(" aui_dis_open SD =%d",rc);
+   	LOGD(" aui_dis_open SD =%d",rc);
     }
-    NGLOGD("dis_hd=%p dis_sd=%p",dis_hd,dis_sd);
+    LOGD("dis_hd=%p dis_sd=%p",dis_hd,dis_sd);
     return E_OK;
 }
 
@@ -80,7 +78,7 @@ DWORD nglDispSetResolution(int res){
     aui_dis_dac_unreg(dis_sd, AUI_DIS_TYPE_UNREG_CVBS);
 
     rc = aui_dis_tv_system_set(dis_hd, tvsys, progressive);
-    NGLOGD("aui_dis_tv_system_set=%d ",rc);
+    LOGD("aui_dis_tv_system_set=%d ",rc);
 
     osd_param.input_width = 1280;
     osd_param.output_width = output_width;
@@ -89,7 +87,7 @@ DWORD nglDispSetResolution(int res){
     if(0!=aui_find_dev_by_idx(AUI_MODULE_GFX, AUI_OSD_LAYER_GMA0, &layer_hd))
         aui_gfx_layer_open(AUI_OSD_LAYER_GMA0,&layer_hd);
     rc= aui_gfx_layer_scale(layer_hd,&osd_param);
-    NGLOGD("aui_dis_tv_system_set ret = %d",rc); 
+    LOGD("aui_dis_tv_system_set ret = %d",rc); 
 	
     /** step 3, set HD TV encoder signal source**/
     /** HD TV encoder will be attached to DEN**/
@@ -113,7 +111,7 @@ DWORD nglDispSetResolution(int res){
     attrs[2] = AUI_DIS_TYPE_NONE;
     attrs[3] = AUI_DIS_TYPE_CVBS;
     rc=aui_dis_dac_reg(dis_sd, attrs, 4);
-    NGLOGD("aui_dis_dac_reg=%d",rc);
+    LOGD("aui_dis_dac_reg=%d",rc);
     return E_OK;
 }
 
@@ -123,10 +121,10 @@ DWORD nglDispSetAspectRatio(int ratio){
     case DISP_APR_AUTO:   ratio=AUI_DIS_AP_AUTO;break;
     case DISP_APR_4_3:    ratio=AUI_DIS_AP_4_3;break;
     case DISP_APR_16_9:   ratio=AUI_DIS_AP_16_9;break;
-    default:NGLOGD("Invalid value %d",ratio);return E_ERROR;
+    default:LOGD("Invalid value %d",ratio);return E_ERROR;
     }    
     rc=aui_dis_aspect_ratio_set(dis_hd,ratio);
-    NGLOGD("ratio=%d rc=%d",ratio,rc);
+    LOGD("ratio=%d rc=%d",ratio,rc);
     return rc;
 }
 
@@ -155,7 +153,7 @@ DWORD nglDispSetMatchMode(int md){
     return E_ERROR;
     }
     rc=aui_dis_match_mode_set(dis_hd,mm);
-    NGLOGD("md=%d rc=%d",md,rc);
+    LOGD("md=%d rc=%d",md,rc);
     return rc;
 }
 
@@ -163,20 +161,20 @@ DWORD nglDispSetBrightNess(int value){
     int rc;
     aui_dis_enhance_set(dis_sd,AUI_DIS_ENHANCE_BRIGHTNESS,value);
     rc=aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_BRIGHTNESS,value);
-    NGLOGD("rc=%d value=%d",rc,value);
+    LOGD("rc=%d value=%d",rc,value);
 }
 
 DWORD nglDispSetContrast(int value){
     int rc;
     aui_dis_enhance_set(dis_sd,AUI_DIS_ENHANCE_CONTRAST,value);
     rc=aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_CONTRAST,value);
-    NGLOGD("rc=%d value=%d",rc,value);
+    LOGD("rc=%d value=%d",rc,value);
 }
 
 DWORD nglDispSetSaturation(int value){
     int rc;
     aui_dis_enhance_set(dis_sd,AUI_DIS_ENHANCE_SATURATION,value);
     rc=aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_SATURATION,value);
-    NGLOGD("rc=%d value=%d ",value,rc);
+    LOGD("rc=%d value=%d ",value,rc);
 }
 

@@ -1,15 +1,14 @@
-#include <ngl_types.h>
+#include <cdtypes.h>
 #include <aui_dmx.h>
 #include <aui_common.h>
 #include <aui_av.h>
 #include <aui_snd.h>
 #include <aui_dis.h>
 #include <ngl_video.h>
-#include <ngl_log.h>
+#include <cdlog.h>
 #include <ngl_disp.h>
 #include <ngl_snd.h>
 #include <string.h>
-NGL_MODULE(AV);
 
 typedef struct{
     aui_hdl hdl_av;
@@ -80,7 +79,7 @@ INT nglAvInit(){
     aui_log_priority_set(AUI_MODULE_AV,AUI_LOG_PRIO_DEBUG);
     nglDispInit();
     nglSndInit();
-    NGLOGD("nglAvInit");
+    LOGD("nglAvInit");
     for(i=0;i<NB_DEMUX;i++){
         NGLAV*av=&sAvPlayers[i];
         av->hdl_av=NULL;
@@ -94,7 +93,7 @@ INT nglAvInit(){
              memset(&attr_dis, 0, sizeof(attr_dis));
              attr_dis.uc_dev_idx = AUI_DIS_HD;
              rc=aui_dis_open(&attr_dis, &av->attr.pv_hdl_dis_hd);
-             NGLOGD("aui_dis_open=%d",rc);
+             LOGD("aui_dis_open=%d",rc);
         }
     
         if(aui_find_dev_by_idx(AUI_MODULE_DIS,1,&av->attr.pv_hdl_dis_hd)){
@@ -102,9 +101,9 @@ INT nglAvInit(){
              memset(&attr_dis, 0, sizeof(attr_dis));
              attr_dis.uc_dev_idx = AUI_DIS_SD;
              rc=aui_dis_open(&attr_dis, &av->attr.pv_hdl_dis_sd);
-             NGLOGD("aui_dis_open=%d",rc);
+             LOGD("aui_dis_open=%d",rc);
         }
-         NGLOGD("attr.pv_hdl_dis_hd=%p  sd=%d",av->attr.pv_hdl_dis_hd,av->attr.pv_hdl_dis_hd);
+        LOGD("attr.pv_hdl_dis_hd=%p  sd=%d",av->attr.pv_hdl_dis_hd,av->attr.pv_hdl_dis_hd);
     }
     nglDispSetAspectRatio(DISP_APR_AUTO);
 }
@@ -113,7 +112,7 @@ INT nglAvPlay(int dmxid,int vid,int vtype,int aid,int atype,int pcr)
 {
      aui_hdl hdl_av;
      NGLAV *av=&sAvPlayers[dmxid];
- 
+#define NGL_INVALID_PID 0x1FFF 
      nglAvStop(dmxid);
      av->stream_info.st_av_info.b_audio_enable = aid!=NGL_INVALID_PID;
      av->stream_info.st_av_info.b_video_enable = vid!=NGL_INVALID_PID;
@@ -128,17 +127,17 @@ INT nglAvPlay(int dmxid,int vid,int vtype,int aid,int atype,int pcr)
      aui_av_init_attr(&av->attr, &av->stream_info);
      
      int rc=aui_av_open(&av->attr, &av->hdl_av);
-     NGLOGD_IF(rc,"aui_av_open=%d hdl_av=%p",rc,av->hdl_av);
+     LOGD_IF(rc,"aui_av_open=%d hdl_av=%p",rc,av->hdl_av);
 
      aui_dmx_data_path data_path_info;
      memset(&data_path_info, 0, sizeof(data_path_info));
      data_path_info.data_path_type = AUI_DMX_DATA_PATH_CLEAR_PLAY;
      rc=aui_dmx_data_path_set(av->attr.pv_hdl_dmx, &data_path_info);
-     NGLOGD("aui_dmx_data_path_set dmx=%p decv=%p rc=%d",av->attr.pv_hdl_dmx, av->attr.pv_hdl_decv,rc);
+     LOGD("aui_dmx_data_path_set dmx=%p decv=%p rc=%d",av->attr.pv_hdl_dmx, av->attr.pv_hdl_decv,rc);
 
      SetAVCallback(av);
      rc=aui_av_start(av->hdl_av);
-     NGLOGD("aui_av_start=%d video=%d/%d audio=%d/%d pcr=%d",rc,vid,vtype,aid,atype,pcr);
+     LOGD("aui_av_start=%d video=%d/%d audio=%d/%d pcr=%d",rc,vid,vtype,aid,atype,pcr);
 }
 
 INT nglAvStop(int dmxid){
@@ -146,15 +145,15 @@ INT nglAvStop(int dmxid){
      if(NULL!=av->hdl_av){
          aui_av_stop(av->hdl_av);
          aui_av_close(av->hdl_av);
-         NGLOGD("stop prev Player hdl_av=%p",av->hdl_av);
+         LOGD("stop prev Player hdl_av=%p",av->hdl_av);
      }
      return E_OK;
 }
 
-INT nglAvSetVideoWindow(int dmxid,const NGLRect*inRect,const NGLRect*outRect){
+INT nglAvSetVideoWindow(int dmxid,const GFXRect*inRect,const GFXRect*outRect){
      NGLAV*av=&sAvPlayers[dmxid];
-     NGLRect src={0,0,1280,720};
-     NGLRect dst={0,0,1280,720};    
+     GFXRect src={0,0,1280,720};
+     GFXRect dst={0,0,1280,720};    
      if(inRect)src=*inRect;
      if(outRect)dst=*outRect; 
      src.x=src.x*720/1280;
@@ -179,24 +178,24 @@ INT nglAvSetVideoWindow(int dmxid,const NGLRect*inRect,const NGLRect*outRect){
           rc=aui_dis_mode_set(dis_hdl,mode,NULL,NULL);
           rc=aui_dis_mode_set(dis_sd,mode,NULL,NULL);
      }
-     NGLOGD("aui_dis_mode_set(hd=%p/%p mode=%d %dx%d)=%d ",av->attr.pv_hdl_dis_hd,dis_hdl,mode,dst.w,dst.h,rc);
+     LOGD("aui_dis_mode_set(hd=%p/%p mode=%d %dx%d)=%d ",av->attr.pv_hdl_dis_hd,dis_hdl,mode,dst.w,dst.h,rc);
      return rc;
 }
 
 static void first_i_frame_deocded(void * p_user_hld, unsigned int parm1, unsigned parm2){
-    NGLOGD("p_user_hld=%p param1=%x param2=%x",p_user_hld,parm1,parm2);
+    LOGD("p_user_hld=%p param1=%x param2=%x",p_user_hld,parm1,parm2);
 }
 static void frame_rate_info_change(void * p_user_hld, unsigned int parm1, unsigned parm2){
     struct aui_decv_info_cb *new_info = (struct aui_decv_info_cb *)parm1;
-    NGLOGD("video_info_change_cb,width =%d,height =%d ,frame_rate =%d",new_info->pic_width,new_info->pic_height,new_info->frame_rate);
+    LOGD("video_info_change_cb,width =%d,height =%d ,frame_rate =%d",new_info->pic_width,new_info->pic_height,new_info->frame_rate);
 }
 
 static void play_status_info_change(void * p_user_hld, unsigned int parm1, unsigned parm2){
-    NGLOGV("New GOP arrivedp_user_hld=%p param1=%x,param2=%x",p_user_hld,parm1,parm2);	
+    LOGV("New GOP arrivedp_user_hld=%p param1=%x,param2=%x",p_user_hld,parm1,parm2);	
 }
 
 static void cb_first_frame(void *p1, void *p2, void *p_usr_data){
-    NGLOGD("p_usr_data=%p  p1=%p,p2=%p",p_usr_data,p1,p2);
+    LOGD("p_usr_data=%p  p1=%p,p2=%p",p_usr_data,p1,p2);
 }
 
 static void SetAVCallback(const NGLAV*av){ 
@@ -229,5 +228,5 @@ static void SetAVCallback(const NGLAV*av){
     play_status_callback.type = AUI_DECV_CB_MONITOR_GOP ;
     play_status_callback.puser_data=av;
     aui_decv_set(decv_hdl,AUI_DECV_SET_REG_CALLBACK,&play_status_callback); 
-    NGLOGD("deca_hdl=%p decv_hdl=%p",deca_hdl,decv_hdl);
+    LOGD("deca_hdl=%p decv_hdl=%p",deca_hdl,decv_hdl);
 }

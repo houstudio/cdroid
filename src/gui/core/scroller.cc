@@ -1,6 +1,7 @@
 #include <scroller.h>
 #include <systemclock.h>
 #include <viewconfiguration.h>
+#include <cdlog.h>
 
 namespace cdroid{
 

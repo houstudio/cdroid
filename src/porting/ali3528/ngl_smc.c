@@ -6,9 +6,7 @@
 #include "aui_smc.h"
 #include <stdio.h>
 #include <string.h>
-#include <ngl_log.h>
-
-NGL_MODULE(SMC);
+#include <cdlog.h>
 
 typedef struct{
   aui_hdl hdl;
@@ -30,6 +28,9 @@ static SMCNOTIFY sNotifiers[NB_NOTIFIERS]={0,NULL};
 static DWORD smc_msgq=0;
 #define CHECKSLOT(s) {if(s<0||s>=sizeof(CARDS)/sizeof(SMCCARD))return E_INVALID_PARA;}
 
+#define NGL_INSERT_CARD_FIRST -2
+#define NGL_RESET_CARD_FIRST -3
+#define NGL_RESOURCE_BUSY -4
 typedef struct{
    DWORD slot;
    char*cmd;
@@ -642,8 +643,8 @@ INT nglSmcRead(DWORD dwScSlot, BYTE *pCommand,UINT uiCommandSize)
    if(NULL==pCommand||uiCommandSize==0)
        return E_INVALID_PARA;
    switch(CARDS[dwScSlot].state){
-   case eSMCCARD_EXTRACTED:return NGL_INSERT_CARD_FIRST;
-   case eSMCCARD_INSERTED:return NGL_RESET_CARD_FIRST;
+   case eSMCCARD_EXTRACTED:return E_ERROR;//NGL_INSERT_CARD_FIRST;
+   case eSMCCARD_INSERTED:return E_ERROR;//NGL_RESET_CARD_FIRST;
    case eSMCCARD_READY://path through to default
    default:break;
    }

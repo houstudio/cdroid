@@ -1,4 +1,4 @@
-#include <ngl_input.h>
+#include <cdinput.h>
 #include <aui_input.h>
 #include <map>
 #include <iostream>
@@ -24,7 +24,7 @@ typedef struct{
 static IRDEV dev={nullptr,0};
 static void key_callback(aui_key_info*ki,void*d);
 
-INT nglInputInit(){
+INT InputInit(){
     struct epoll_event event;
     if(dev.epollfd>0)
        return E_OK;
@@ -58,7 +58,7 @@ static void key_callback(aui_key_info*ki,void*d){
 }
 
 
-INT nglInputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
+INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     switch(device){
     case DEVICE_IR:
          strcpy(devinfo->name,"3528ir");
@@ -83,7 +83,7 @@ INT nglInputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     return 0;
 }
 
-INT nglInputGetEvents(INPUTEVENT*outevents,UINT count,DWORD timeout){
+INT InputGetEvents(INPUTEVENT*outevents,UINT count,DWORD timeout){
     int ret=0;
     struct epoll_event events[32];
     int poll_count=epoll_wait(dev.epollfd, events,count, timeout);
@@ -99,7 +99,7 @@ INT nglInputGetEvents(INPUTEVENT*outevents,UINT count,DWORD timeout){
     return ret;
 }
 
-INT  nglInputInjectEvents(const INPUTEVENT*events,UINT count,DWORD timeout){
+INT InputInjectEvents(const INPUTEVENT*events,UINT count,DWORD timeout){
     write(dev.pipe[1],events,count*sizeof(INPUTEVENT));
     return count;
 }

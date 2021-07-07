@@ -1,6 +1,6 @@
 #include <cdtypes.h>
 #include <ngl_os.h>
-#include <ngl_graph.h>
+#include <cdgraph.h>
 #include <cdlog.h>
 #include <directfb.h>
 #include <directfb_util.h>
@@ -24,7 +24,7 @@ static void DFBDisplayLayerCBK(DFBDisplayLayerID layer_id, DFBDisplayLayerDescri
     LOGD("Layer %d[%s] type:%x surface.caps=%x accessor=%x",layer_id,desc.name,desc.type,desc.surface_caps,desc.surface_accessor);
 }
 
-DWORD nglGraphInit()
+DWORD GFXInit()
 {
 #ifdef USE_DIRECTFB
     if(directfb!=NULL)return E_OK;
@@ -48,18 +48,18 @@ DWORD nglGraphInit()
     return E_OK;
 }
 
-static void NGLRect2Aui(NGLRect*r,struct aui_osd_rect*ar){
+static void Rect2Aui(GFXRect*r,struct aui_osd_rect*ar){
     ar->uLeft=r->x;
     ar->uTop=r->y;
     ar->uWidth=r->w;
     ar->uHeight=r->h;
 }
 
-DWORD nglGetScreenSize(UINT*width,UINT*height){
+DWORD GFXGetScreenSize(UINT*width,UINT*height){
 #ifdef USE_DIRECTFB
     IDirectFBDisplayLayer *dispLayer;
     DFBDisplayLayerConfig dispCfg;
-    nglGraphInit();
+    GFXInit();
     directfb->GetDisplayLayer( directfb, DLID_PRIMARY, &dispLayer );
     dispLayer->GetConfiguration( dispLayer, &dispCfg );
     *width=dispCfg.width;
@@ -71,7 +71,7 @@ DWORD nglGetScreenSize(UINT*width,UINT*height){
     return E_OK;
 }
 
-DWORD nglLockSurface(HANDLE surface,void**buffer,UINT*pitch){
+DWORD GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Lock(surf,DSLF_READ | DSLF_WRITE,buffer,pitch);
@@ -87,7 +87,7 @@ DWORD nglLockSurface(HANDLE surface,void**buffer,UINT*pitch){
     return ret;
 }
 
-DWORD nglGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
+DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
 {
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
@@ -106,7 +106,7 @@ DWORD nglGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
     return ret==0?E_OK:E_ERROR;
 }
 
-DWORD nglUnlockSurface(HANDLE surface){
+DWORD GFXUnlockSurface(HANDLE surface){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Unlock(surf);
@@ -117,7 +117,7 @@ DWORD nglUnlockSurface(HANDLE surface){
     return ret;
 }
 
-DWORD nglSurfaceSetOpacity(HANDLE surface,BYTE alpha){
+DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
     LOGD("==setopacity=%x",alpha);
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
@@ -134,10 +134,10 @@ DWORD nglSurfaceSetOpacity(HANDLE surface,BYTE alpha){
 #endif
 }
 
-DWORD nglFillRect(HANDLE surface,const NGLRect*rec,UINT color){
+DWORD GFXFillRect(HANDLE surface,const GFXRect*rec,UINT color){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
-    NGLRect r={0,0,0,0};
+    GFXRect r={0,0,0,0};
     if(NULL==rec)
         surf->GetSize(surf,&r.w,&r.h);
     else
@@ -150,14 +150,14 @@ DWORD nglFillRect(HANDLE surface,const NGLRect*rec,UINT color){
     nglGetSurfaceInfo(surface,&w,&h,&f);
     if(rec==NULL){
         rc.uWidth=w;rc.uHeight=h;
-    }else NGLRect2Aui(rec,&rc);
+    }else Rect2Aui(rec,&rc);
     aui_gfx_surface_fill(surface,color,&rc);
     LOGD_IF((rc.uLeft+rc.uWidth>w)||(rc.uTop+rc.uHeight>h),"Filrect range error");
 #endif
     return E_OK;
 }
 
-DWORD nglFlip(HANDLE surface){
+DWORD GFXFlip(HANDLE surface){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Flip( surf, NULL, DSFLIP_NONE);//ONSYNC);
@@ -175,7 +175,7 @@ DWORD nglFlip(HANDLE surface){
     return ret;
 }
 
-DWORD nglCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface)
+DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface)
 {
 #ifdef USE_DIRECTFB
      int i,ret;
@@ -228,7 +228,7 @@ DWORD nglCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
 #endif
 }
 
-DWORD nglSetSurfaceColorKey(HANDLE surface,UINT color){
+DWORD GFXSetSurfaceColorKey(HANDLE surface,UINT color){
 #ifdef USE_DIRECTFB
       IDirectFBSurface*dfbsrc=(IDirectFBSurface*)surface;
 #else
@@ -237,11 +237,11 @@ DWORD nglSetSurfaceColorKey(HANDLE surface,UINT color){
 }
 
 #define MIN(x,y) ((x)>(y)?(y):(x))
-DWORD nglBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const NGLRect*srcrect)
+DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect)
 {
 #ifdef USE_DIRECTFB
      int ret,dw,dh;
-     NGLRect rs={0,0};
+     GFXRect rs={0,0};
      IDirectFBSurface*dfbsrc=(IDirectFBSurface*)srcsurface;
      IDirectFBSurface*dfbdst=(IDirectFBSurface*)dstsurface;
 
@@ -267,7 +267,7 @@ DWORD nglBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const NGLRect*sr
      aui_blit_operation blit_op;
      aui_blit_rect blit_rect;
      int dw,dh,fmt;
-     NGLRect rs={0,0};
+     GFXRect rs={0,0};
      nglGetSurfaceInfo(srcsurface,&rs.w,&rs.h,&fmt);
      nglGetSurfaceInfo(dstsurface,&dw,&dh,&fmt);
      if(srcrect)rs=*srcrect;
@@ -304,7 +304,7 @@ DWORD nglBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const NGLRect*sr
      return ret;
 }
 
-DWORD nglDestroySurface(HANDLE surface)
+DWORD GFXDestroySurface(HANDLE surface)
 {
 #ifdef USE_DIRECTFB
      destroyed_surface++;

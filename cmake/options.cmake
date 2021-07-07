@@ -67,10 +67,7 @@ if(ENABLE_PINYIN2HZ)
   list(APPEND OPTIONAL_LIBS pinyin)
 endif()
 
-find_file(HASDTV NAMES "epg" PATHS ${CMAKE_SOURCE_DIR}/src/modules)
-if ( NOT HASDTV )
-   set(ENABLE_DTV OFF)
-endif()
+
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/gui/gui_features.h.cmake")
 configure_file(src/gui/gui_features.h.cmake  ${CMAKE_BINARY_DIR}/include/gui/gui_features.h)

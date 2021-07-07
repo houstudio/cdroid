@@ -17,6 +17,7 @@ namespace cdroid{
 
 class ViewPager:public ViewGroup{
 public:
+    typedef std::function<void(View&v,float position)>PageTransformer; 
     struct OnPageChangeListener{
         std::function<void(int,float,int)>onPageScrolled;//void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
         std::function<void(int)>onPageSelected;//void onPageSelected(int position);
@@ -97,6 +98,7 @@ private:
     bool mInLayout;
     std::vector<OnPageChangeListener> mOnPageChangeListeners;
     OnPageChangeListener mInternalPageChangeListener;
+    PageTransformer mPageTransformer;
 
     bool mScrollingCacheEnabled;
 
@@ -201,6 +203,7 @@ public:
     int getCurrentItem();
     void setCurrentItem(int item);
     void setCurrentItem(int item, bool smoothScroll);
+    void setPageTransformer(bool reverseDrawingOrder, PageTransformer transformer);
     int getOffscreenPageLimit();
     void setOffscreenPageLimit(int limit);
     int getPageMargin();

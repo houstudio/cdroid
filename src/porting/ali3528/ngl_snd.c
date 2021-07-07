@@ -2,10 +2,8 @@
 #include <aui_decv.h>
 #include <aui_deca.h>
 #include <aui_snd.h>
-#include <ngl_types.h>
-#include <ngl_log.h>
-
-NGL_MODULE(AUDIO);
+#include <cdtypes.h>
+#include <cdlog.h>
 
 static aui_hdl snd_hdl=NULL;
 INT nglSndInit(){
@@ -15,7 +13,7 @@ INT nglSndInit(){
     aui_snd_init(NULL,NULL);
     if(aui_find_dev_by_idx(AUI_MODULE_SND, 0, &snd_hdl)) {
         if (aui_snd_open(&attr_snd,&snd_hdl)) {
-            NGLOGD("\n aui_snd_open fail\n");
+            LOGD("\n aui_snd_open fail\n");
             return -1;
         }
     }
@@ -24,14 +22,14 @@ INT nglSndInit(){
 
 INT nglSndSetVolume(int idx,int vol){
     int rc=aui_snd_vol_set(snd_hdl,vol);
-    NGLOGV("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
+    LOGV("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
     return E_OK;
 }
 
 INT nglSndGetColume(int idx){
     BYTE vol;
     int rc=aui_snd_vol_get(snd_hdl,&vol);
-    NGLOGV("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
+    LOGV("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
     return vol;
 } 
 INT nglSndSetMute(int idx,BOOL mute){
@@ -77,14 +75,14 @@ INT nglSndSetOutput(int ifc,int type){
          ret = aui_snd_out_data_type_set(snd_hdl,SndMode);
          break;
     }
-    NGLOGD("interface=%d outtype=%d ret=%d",ifc,type,ret);
+    LOGD("interface=%d outtype=%d ret=%d",ifc,type,ret);
 #else
     snd_out_type.uc_enabel = 1;
     switch(type){
     case 0://OFF:
          snd_out_type.snd_out_type=AUI_SND_OUT_I2SO;
          ret=aui_snd_out_interface_type_set(snd_hdl,snd_out_type);
-         NGLOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
+         LOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
          break;
     case 1://PCM:
          SndMode.snd_data_type = AUI_SND_OUT_MODE_DECODED;
@@ -92,14 +90,14 @@ INT nglSndSetOutput(int ifc,int type){
 	 snd_out_type.snd_out_type = AUI_SND_OUT_HDMI;
          ret = aui_snd_out_interface_type_set(snd_hdl,snd_out_type);
  	 ret = aui_snd_out_data_type_set(snd_hdl,SndMode);
-         NGLOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
+         LOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
   
   	 SndMode.snd_data_type = AUI_SND_OUT_MODE_DECODED;
          SndMode.snd_out_type =  AUI_SND_OUT_SPDIF;
 	 snd_out_type.snd_out_type = AUI_SND_OUT_SPDIF;
 	 ret = aui_snd_out_interface_type_set(snd_hdl,snd_out_type);
 	 ret = aui_snd_out_data_type_set(snd_hdl,SndMode);
-         NGLOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
+         LOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
          break;
     case 2://PASS:
  	 SndMode.snd_data_type = AUI_SND_OUT_MODE_ENCODED;
@@ -107,14 +105,14 @@ INT nglSndSetOutput(int ifc,int type){
 	 snd_out_type.snd_out_type = AUI_SND_OUT_HDMI;
 	 ret = aui_snd_out_interface_type_set(snd_hdl,snd_out_type);
 	 ret = aui_snd_out_data_type_set(snd_hdl,SndMode);
-         NGLOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
+         LOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
 	 
          SndMode.snd_data_type = AUI_SND_OUT_MODE_ENCODED;
 	 SndMode.snd_out_type =  AUI_SND_OUT_SPDIF;
 	 snd_out_type.snd_out_type = AUI_SND_OUT_SPDIF;
 	 ret = aui_snd_out_interface_type_set(snd_hdl,snd_out_type);
 	 ret = aui_snd_out_data_type_set(snd_hdl,SndMode);
-         NGLOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
+         LOGD("snd_hdl=%p ret=%d",snd_hdl,ret); 
          break;
     }
 #endif

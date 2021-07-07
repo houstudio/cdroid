@@ -2244,7 +2244,7 @@ void View::invalidate(const RECT*rect){
 }
 
 void View::postInvalidate(){
-    invalidate(nullptr);
+    postDelayed([this](){ invalidate(nullptr);},30);
 }
 
 void View::postInvalidateOnAnimation(){
@@ -3098,12 +3098,12 @@ void View::post(const Runnable what){
 
 void View::postDelayed(const Runnable what,DWORD delay){
     View*root=getRootView();
-    if(root!=this)root->post(this,what,delay);
+    if(root&&(root!=this))root->post(this,what,delay);
 }
 
 void View::removeCallbacks(const Runnable what){
     View*root=getRootView();
-    if(root!=this)root->removeCallbacks(what);
+    if(root&&(root!=this))root->removeCallbacks(what);
 }
 
 bool View::onMessage(DWORD msgid,DWORD wParam,ULONG lParam){

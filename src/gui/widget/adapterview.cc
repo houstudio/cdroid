@@ -381,7 +381,7 @@ void AdapterView::updateEmptyStatus(bool empty) {
 
 void AdapterView::selectionChanged(){
     mPendingSelectionNotifier = nullptr;
-    if (mOnItemSelectedListener.onNothingSelected/*|| AccessibilityManager.getInstance(mContext).isEnabled()*/){
+    if (mOnItemSelectedListener.onItemSelected){
         if (mInLayout || mBlockLayoutRequests) {
             // If we are in a layout traversal, defer notification
             // by posting. This ensures that the view tree is
@@ -397,7 +397,7 @@ void AdapterView::selectionChanged(){
                     } else {
                         dispatchOnItemSelected();
                     }
-               };
+                };
             } else {
                 removeCallbacks(mSelectionNotifier);
             }
@@ -441,6 +441,26 @@ bool AdapterView::performItemClick(View* view, int position, long id){
     return result;
 }
 
+
+void AdapterView::setOnItemClickListener(OnItemClickListener listener) {
+    mOnItemClickListener = listener;
+}
+AdapterView::OnItemClickListener AdapterView::getOnItemClickListener() const{
+    return mOnItemClickListener;
+}
+void AdapterView::setOnItemSelectedListener(OnItemSelectedListener listener) {
+    mOnItemSelectedListener = listener;
+}
+AdapterView::OnItemSelectedListener AdapterView::getOnItemSelectedListener()const {
+    return mOnItemSelectedListener;
+}
+void AdapterView::setOnItemLongClickListener(OnItemLongClickListener listener){
+    if (!isLongClickable()) setLongClickable(true);
+    mOnItemLongClickListener = listener;
+}
+AdapterView::OnItemLongClickListener AdapterView::getOnItemLongClickListener() const{
+    return mOnItemLongClickListener;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 AdapterDataSetObserver::AdapterDataSetObserver(AdapterView*lv){

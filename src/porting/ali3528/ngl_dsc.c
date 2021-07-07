@@ -4,8 +4,8 @@
 #include<aui_dsc.h>
 #include<aui_dmx.h>
 #include<aui_kl.h>
-#include <ngl_types.h>
-#include <ngl_log.h>
+#include <cdtypes.h>
+#include <cdlog.h>
 
 NGL_MODULE(DSCR);
 

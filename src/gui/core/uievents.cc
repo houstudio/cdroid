@@ -459,7 +459,7 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
     return ev;
 }
 
-MotionEvent* MotionEvent::obtain(long downTime, long eventTime, int action, float x, float y, int metaState){
+MotionEvent* MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState){
     return obtain(downTime, eventTime, action, x, y, 1.0f, 1.0f,
                 metaState, 1.0f, 1.0f, 0, 0);
 }

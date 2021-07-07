@@ -31,6 +31,7 @@ void ViewPager::initViewPager(){
     mScroller = new Scroller(context, mInterpolator);
     mAdapter  = nullptr;
     mObserver = nullptr;
+    mPageTransformer =nullptr;
     mFakeDragging =false;
     ViewConfiguration configuration = ViewConfiguration::get(context);
     float density = 2.65f;//context.getResources().getDisplayMetrics().density;
@@ -136,11 +137,11 @@ void ViewPager::setScrollState(int newState){
     }
 
     mScrollState = newState;
-    /*if (mPageTransformer != nullptr) {
+    if (mPageTransformer != nullptr) {
         // PageTransformers can do complex things that benefit from hardware layers.
-        enableLayers(newState != SCROLL_STATE_IDLE);
+        //enableLayers(newState != SCROLL_STATE_IDLE);
     }
-    dispatchOnScrollStateChanged(newState);*/
+    dispatchOnScrollStateChanged(newState);
 }
 
 void ViewPager::setAdapter(PagerAdapter* adapter){
@@ -985,6 +986,19 @@ void ViewPager::onLayout(bool changed, int l, int t, int width, int height){
     mFirstLayout = false;
 }
 
+void ViewPager::setPageTransformer(bool reverseDrawingOrder, PageTransformer transformer) {
+    bool hasTransformer = transformer != nullptr;
+    bool needsPopulate = hasTransformer != (mPageTransformer != nullptr);
+    mPageTransformer = transformer;
+    //setChildrenDrawingOrderEnabled(hasTransformer);
+    if (hasTransformer) {
+        mDrawingOrder = reverseDrawingOrder ? DRAW_ORDER_REVERSE : DRAW_ORDER_FORWARD;
+    } else {
+        mDrawingOrder = DRAW_ORDER_DEFAULT;
+    }
+    if (needsPopulate) populate();
+}
+
 int ViewPager::getChildDrawingOrder(int childCount, int i){
     int index = mDrawingOrder == DRAW_ORDER_REVERSE ? childCount - 1 - i : i;
     int result = ((LayoutParams*) mDrawingOrderedChildren.at(index)->getLayoutParams())->childIndex;
@@ -1086,7 +1100,7 @@ void ViewPager::onPageScrolled(int position, float offset, int offsetPixels){
 
     dispatchOnPageScrolled(position, offset, offsetPixels);
 
-    /*if (mPageTransformer != nullptr) {
+    if (mPageTransformer != nullptr) {
         int scrollX = getScrollX();
         int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
@@ -1095,9 +1109,9 @@ void ViewPager::onPageScrolled(int position, float offset, int offsetPixels){
 
              if (lp->isDecor) continue;
              float transformPos = (float) (child->getLeft() - scrollX) / getClientWidth();
-             mPageTransformer->transformPage(child, transformPos);
+             mPageTransformer(*child, transformPos);
         }
-    }*/
+    }
     mCalledSuper = true;
 }
 
@@ -1720,9 +1734,8 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
          break;
     case MotionEvent::ACTION_UP:
          if (mIsBeingDragged) {
-             VelocityTracker* velocityTracker = mVelocityTracker;
-             velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
-             int initialVelocity = (int) velocityTracker->getXVelocity(mActivePointerId);
+             mVelocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
+             int initialVelocity = (int) mVelocityTracker->getXVelocity(mActivePointerId);
              mPopulatePending = true;
              int width = getClientWidth();
              int scrollX = getScrollX();
@@ -1736,7 +1749,6 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
              int totalDelta = (int) (x - mInitialMotionX);
              int nextPage = determineTargetPage(currentPage, pageOffset, initialVelocity, totalDelta);
              setCurrentItemInternal(nextPage, true, true, initialVelocity);
-	 
              needsInvalidate = resetTouch();
          }
          break;

@@ -103,25 +103,12 @@ public:
     virtual void setSelection(int position)=0;
     virtual bool performItemClick(View* view, int position, long id);
     
-    void setOnItemClickListener(OnItemClickListener listener) {
-        mOnItemClickListener = listener;
-    }
-    OnItemClickListener getOnItemClickListener() const{
-        return mOnItemClickListener;
-    }
-    void setOnItemSelectedListener(OnItemSelectedListener listener) {
-        mOnItemSelectedListener = listener;
-    }
-    OnItemSelectedListener getOnItemSelectedListener()const {
-        return mOnItemSelectedListener;
-    }
-    void setOnItemLongClickListener(OnItemLongClickListener listener){
-        if (!isLongClickable()) setLongClickable(true);
-        mOnItemLongClickListener = listener;
-    }
-    OnItemLongClickListener getOnItemLongClickListener() const{
-        return mOnItemLongClickListener;
-    }
+    void setOnItemClickListener(OnItemClickListener listener);
+    OnItemClickListener getOnItemClickListener() const;
+    void setOnItemSelectedListener(OnItemSelectedListener listener);
+    OnItemSelectedListener getOnItemSelectedListener()const;
+    void setOnItemLongClickListener(OnItemLongClickListener listener);
+    OnItemLongClickListener getOnItemLongClickListener() const;
 };
 
 class AdapterDataSetObserver:public DataSetObserver{

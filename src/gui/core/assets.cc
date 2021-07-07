@@ -119,7 +119,7 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid,bool cache){
     void*zfile=pak?pak->getZipHandle(resname):nullptr;
     ZipInputStream zipis(zfile);
     RefPtr<ImageSurface>img;
-    LOGD("pak=%p %s zfile=%p ",pak,resname.c_str(),zfile);
+    LOGD_IF(zfile==nullptr,"pak=%p %s open failed ",pak,resname.c_str());
     if(!zipis.good())return img;
 
     img=loadImage(zipis);
@@ -182,11 +182,11 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
             std::ifstream fs(fullresid);
             d=Drawable::fromStream(nullptr,fs,resname);
         }
+        LOGD_IF(zfile==nullptr,"drawable %s load failed",fullresid.c_str());
     }
     if(d){
         mDrawables.insert(std::pair<const std::string,
-                std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-        LOGD("new drawable %s :%p is cached",fullresid.c_str(),d);
+            std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
     }
     return d;
 }

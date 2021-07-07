@@ -10,7 +10,7 @@
 #include <aui_tsi.h>
 #include <aui_nim.h>
 #include <strings.h>
-#include <ngl_log.h>
+#include <cdlog.h>
 #include <ngl_os.h>
 #include <mutex>
 #define MASK_LEN 16 
@@ -21,8 +21,6 @@
 #define MAX_FILTER  90 // ALi hardware only support max 96
 #define MAX_DMX_NUM  3 // ALi hardware only support max 96
 
-
-NGL_MODULE(DMX);
 
 #define CHECKDMX(x) {if((x)!=AUI_RTN_SUCCESS)LOGV("%s:%d %s=%d\n",__FUNCTION__,__LINE__,#x,(x));}
 typedef struct {
@@ -250,6 +248,7 @@ HANDLE nglAllocateSectionFilter(INT dmx_id,WORD  wPid,FILTER_NOTIFY cbk,void*use
     LOGV("TOTAL FILTER=%d pid %d'sfilter=%d ch=%p",GetCountByPid(0xFFFF),wPid,GetCountByPid(wPid),ch);
     if(ch==NULL){
         ch=GetFreeChannel();
+        if(ch==nullptr)return nullptr;
         ch->pid=wPid;
         ch->num_filt=0;
         if(AUI_RTN_SUCCESS!=aui_find_dev_by_idx(AUI_MODULE_DMX, dmx_id, &ch->dmx)){

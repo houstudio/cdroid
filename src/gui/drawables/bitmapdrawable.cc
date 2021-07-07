@@ -79,7 +79,7 @@ BitmapDrawable::BitmapDrawable(const std::string&resname){
     std::ifstream fs(resname);
     RefPtr<ImageSurface>b;
     mTintFilter=nullptr;
-    LOGD("%s",resname.c_str());
+    LOGV("%s",resname.c_str());
     if(fs.good())
         b=ImageSurface::create_from_stream(fs);
     else {
@@ -94,7 +94,7 @@ RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{
 
 void BitmapDrawable::setBitmap(RefPtr<ImageSurface>bmp){
     mBitmapState->mBitmap=bmp;
-    LOGD("setbitmap %p",bmp.get());
+    LOGV("setbitmap %p",bmp.get());
     mDstRectAndInsetsDirty=true;
     computeBitmapSize();
     invalidateSelf();
