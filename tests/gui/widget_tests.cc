@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <windows.h>
-#include <keyboardview.h>
+#include <widget/keyboardview.h>
 #include <ngl_os.h>
 #include<ngl_timer.h>
 

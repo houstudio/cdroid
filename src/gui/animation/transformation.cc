@@ -1,0 +1,95 @@
+#include <animation/transformation.h>
+
+namespace cdroid{
+
+Transformation::Transformation() {
+    clear();
+}
+
+void Transformation::clear(){
+    mMatrix=Cairo::identity_matrix();
+    mClipRect.setEmpty();
+    mHasClipRect = false;
+    mAlpha = 1.0f;
+    mTransformationType = TYPE_BOTH;
+}
+
+int Transformation::getTransformationType()const{
+    return mTransformationType;
+}
+
+void Transformation::setTransformationType(int transformationType) {
+    mTransformationType = transformationType;
+}
+
+void Transformation::set(const Transformation& t) {
+    mAlpha = t.getAlpha();
+    mMatrix=(Matrix)*t.getMatrix();//.set(t.getMatrix());
+    if (t.mHasClipRect) {
+        setClipRect(t.getClipRect());
+    } else {
+        mHasClipRect = false;
+        mClipRect.setEmpty();
+    }
+    mTransformationType = t.getTransformationType();
+}
+
+void Transformation::compose(Transformation t) {
+    mAlpha *= t.getAlpha();
+    //mMatrix.preConcat(t.getMatrix());
+    if (t.mHasClipRect) {
+        Rect bounds = t.getClipRect();
+        if (mHasClipRect) {
+            setClipRect(mClipRect.x + bounds.x, mClipRect.y + bounds.y,
+                    mClipRect.width + bounds.width, mClipRect.height + bounds.height);
+        } else {
+            setClipRect(bounds);
+        }
+    }
+}
+
+void Transformation::postCompose(Transformation t) {
+    mAlpha *= t.getAlpha();
+    //mMatrix.postConcat(t.getMatrix());
+    if (t.mHasClipRect) {
+        Rect bounds = t.getClipRect();
+        if (mHasClipRect) {
+            setClipRect(mClipRect.x + bounds.x, mClipRect.y + bounds.y,
+                    mClipRect.width + bounds.width, mClipRect.height + bounds.height);
+        } else {
+            setClipRect(bounds);
+        }
+    }
+}
+
+Matrix* Transformation::getMatrix(){
+    return &mMatrix;
+}
+const Matrix* Transformation::getMatrix()const{
+    return &mMatrix;
+}
+
+void Transformation::setAlpha(float alpha) {
+    mAlpha = alpha;
+}
+
+void Transformation::setClipRect(Rect r) {
+    setClipRect(r.x, r.y, r.width, r.height);
+}
+void Transformation::setClipRect(int l, int t, int w, int h) {
+    mClipRect.set(l, t, w, h);
+    mHasClipRect = true;
+}
+Rect Transformation::getClipRect()const{
+    return mClipRect;
+}
+bool Transformation::hasClipRect()const {
+    return mHasClipRect;
+}
+
+float Transformation::getAlpha()const {
+    return mAlpha;
+}
+
+}
+

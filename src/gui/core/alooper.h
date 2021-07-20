@@ -116,10 +116,8 @@ public:
     int addFd(int fd, int ident, int events, LooperCallback callback, void* data);
     int removeFd(int fd);
     void sendMessage(MessageHandler& handler, const Message& message);
-    void sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler& handler,
-            const Message& message);
-    void sendMessageAtTime(nsecs_t uptime, const MessageHandler& handler,
-            const Message& message);
+    void sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler& handler,const Message& message);
+    void sendMessageAtTime(nsecs_t uptime, const MessageHandler& handler,const Message& message);
     void removeMessages(const MessageHandler& handler);
     void removeMessages(const MessageHandler& handler, int what);
     bool isPolling() const;

@@ -183,6 +183,7 @@ void View::initView(){
     mScrollIndicatorDrawable=nullptr;
     mBackground=nullptr;
     mDefaultFocusHighlight=nullptr;
+    mCurrentAnimation=nullptr;
 }
 
 View::~View(){
@@ -195,6 +196,7 @@ View::~View(){
     delete mBackgroundTint;
     delete mLayoutParams;
     delete mRoundScrollbarRenderer;
+    delete mCurrentAnimation;
 }
 
 View*View::findViewById(int id)const{
@@ -298,6 +300,54 @@ void View::computeOpaqueFlags(){
     }*/
 }
 
+
+void View::onAnimationStart() {
+    mPrivateFlags |= PFLAG_ANIMATION_STARTED;
+}
+
+void View::onAnimationEnd() {
+    mPrivateFlags &= ~PFLAG_ANIMATION_STARTED;
+}
+
+bool View::onSetAlpha(int alpha) {
+    LOGD("");
+    return false;
+}
+
+Animation* View::getAnimation() {
+    return mCurrentAnimation;
+}
+
+void View::startAnimation(Animation* animation) {
+    animation->setStartTime(Animation::START_ON_FIRST_FRAME);
+    setAnimation(animation);
+    //invalidateParentCaches();
+    invalidate();
+}
+
+void View::clearAnimation() {
+    if (mCurrentAnimation ) {
+        mCurrentAnimation->detach();
+    }
+    mCurrentAnimation = nullptr;
+    //invalidateParentIfNeeded();
+    invalidate();
+}
+
+void View::setAnimation(Animation* animation) {
+    mCurrentAnimation = animation;
+
+    if (animation) {
+        // If the screen is off assume the animation start time is now instead of
+        // the next frame we draw. Keeping the START_ON_FIRST_FRAME start time
+        // would cause the animation to start when the screen turns back on
+        if (/*mAttachInfo != null && mAttachInfo.mDisplayState == Display.STATE_OFF
+                &&*/ animation->getStartTime() == Animation::START_ON_FIRST_FRAME) {
+            animation->setStartTime(SystemClock::uptimeMillis());//AnimationUtils.currentAnimationTimeMillis());
+        }
+        animation->reset();
+    }
+}
 void View::setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled){
     mDefaultFocusHighlightEnabled = defaultFocusHighlightEnabled;
 }
@@ -1151,9 +1201,19 @@ void View::setOnLongClickListener(OnLongClickListener l){
 void View::setOnFocusChangeListener(OnFocusChangeListener listtener){
     mOnFocusChangeListener=listtener;
 }
+
+void View::addOnLayoutChangeListener(OnLayoutChangeListener listener){
+    mOnLayoutChangeListeners.push_back(listener);
+}
+
+void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
+    //mOnLayoutChangeListeners.push_back(listener);
+}
+
 void View::setOnScrollChangeListener(OnScrollChangeListener l){
     mOnScrollChangeListener=l;
 }
+
 void View::setMessageListener(MessageListener ls){
     mOnMessage=ls;
 }
@@ -1263,14 +1323,85 @@ void View::onDrawForeground(Canvas& canvas){
     }
 }
 
+bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired) {
+    Transformation* invalidationTransform;
+    int flags = parent->mGroupFlags;
+    bool initialized = a->isInitialized();
+    if (!initialized) {
+        a->initialize(mWidth, mHeight, parent->getWidth(), parent->getHeight());
+        a->initializeInvalidateRegion(0, 0, mWidth, mHeight);
+        //if (mAttachInfo != null) a.setListenerHandler(mAttachInfo.mHandler);
+        onAnimationStart();
+    }
+
+    Transformation* t = parent->getChildTransformation();
+    bool more = a->getTransformation(drawingTime, *t, 1.f);
+    if (scalingRequired /*&& mAttachInfo.mApplicationScale != 1.f*/) {
+        if (parent->mInvalidationTransformation == nullptr) {
+            parent->mInvalidationTransformation = new Transformation();
+        }
+        invalidationTransform = parent->mInvalidationTransformation;
+        a->getTransformation(drawingTime, *invalidationTransform, 1.f);
+        Matrix*m=invalidationTransform->getMatrix();
+        LOGV("matrix=%f,%f,%f,%f,%f,%f",m->xx,m->yy,m->xy,m->yx,m->x0,m->y0);
+    } else {
+        invalidationTransform = t;
+    }
+
+    if (more) {
+        if (!a->willChangeBounds()) {
+            if ((flags & (ViewGroup::FLAG_OPTIMIZE_INVALIDATE | ViewGroup::FLAG_ANIMATION_DONE)) ==
+                        ViewGroup::FLAG_OPTIMIZE_INVALIDATE) {
+                parent->mGroupFlags |= ViewGroup::FLAG_INVALIDATE_REQUIRED;
+            } else if ((flags & ViewGroup::FLAG_INVALIDATE_REQUIRED) == 0) {
+                // The child need to draw an animation, potentially offscreen, so
+                // make sure we do not cancel invalidate requests
+                parent->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
+                parent->invalidate(mLeft, mTop, mWidth, mHeight);
+            }
+        } else {
+            //if (parent->mInvalidateRegion == nullptr) {
+            //    parent->mInvalidateRegion = new RectF();
+            //}
+            Rect region ;//= parent->mInvalidateRegion;
+            a->getInvalidateRegion(0, 0, mWidth, mHeight, region,*invalidationTransform);
+
+            // The child need to draw an animation, potentially offscreen, so
+            // make sure we do not cancel invalidate requests
+            parent->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
+            int left = mLeft + (int) region.x;
+            int top = mTop + (int) region.y;
+            parent->invalidate(left, top, region.width+1,region.height+1);
+       }
+    }
+    return more;
+}
+
 void View::draw(Canvas*context){
+    Transformation* transformToApply=nullptr;
     if(false==isShown())//||0==(mPrivateFlags&PFLAG_DIRTY_MASK))
         return;
     Canvas*canvas=context?context:getCanvas();
     if(canvas==nullptr)return;
 
     canvas->set_antialias(ANTIALIAS_GRAY);
-
+    Animation* a = getAnimation(); 
+    bool more=false;
+    bool concatMatrix = false;
+    if(a){
+        more=applyLegacyAnimation(mParent, /*drawingTime*/SystemClock::uptimeMillis(), a, /*scalingRequired*/true);
+        concatMatrix = a->willChangeTransformationMatrix(); 
+        if (concatMatrix) mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+        transformToApply = mParent->getChildTransformation();
+        Transformation at;
+        a->getTransformation(SystemClock::uptimeMillis(),at);
+        canvas->transform(*at.getMatrix());
+    }else{
+        mPrivateFlags3 &= ~PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+    }
+    if(transformToApply|| (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)){
+        //TODO:    
+    } 
     drawBackground(*canvas);
     if(mScrollX|mScrollY) canvas->translate(-mScrollX,-mScrollY);
     onDraw(*canvas);
@@ -1284,11 +1415,12 @@ void View::draw(Canvas*context){
     mPrivateFlags&=~PFLAG_DIRTY_MASK;
     if(mParent&&context==nullptr)delete canvas;
     if(getRootView()==this){
-         auto re=((ViewGroup*)this)->mInvalidRgn->get_extents();
-         LOGV("clip2dirty(%d,%d %d,%d)",re.x,re.y,re.width,re.height);
-         canvas->clip2dirty();
-         getRootView()->mInvalidRgn->subtract(getRootView()->mInvalidRgn);
+        auto re=((ViewGroup*)this)->mInvalidRgn->get_extents();
+        LOGV("clip2dirty(%d,%d %d,%d)",re.x,re.y,re.width,re.height);
+        canvas->clip2dirty();
+        getRootView()->mInvalidRgn->subtract(getRootView()->mInvalidRgn);
     }
+    if(more)postInvalidate();
 }
 
 void View::onDraw(Canvas&canvas){
@@ -1978,13 +2110,213 @@ void View::setDefaultFocusHighlight(Drawable* highlight){
     invalidate();
 }
 
+bool View::hasSize()const {
+    return mWidth>0 && mHeight>0;
+}
+
+bool View::canTakeFocus()const{
+    return ((mViewFlags & VISIBILITY_MASK) == VISIBLE)
+            && ((mViewFlags & FOCUSABLE) == FOCUSABLE)
+            && ((mViewFlags & ENABLED_MASK) == ENABLED)
+            && (/*sCanFocusZeroSized ||*/ !isLayoutValid() || hasSize());
+}
 
 View& View::setFlags(int flags,int mask) {
     int old = mViewFlags;
     mViewFlags = (mViewFlags & ~mask) | (flags & mask);
     int changed = mViewFlags ^ old;
-    if(changed)
-        invalidate(nullptr);
+    if(changed==0)return *this;
+
+    int privateFlags = mPrivateFlags;
+    bool shouldNotifyFocusableAvailable = false;
+
+    // If focusable is auto, update the FOCUSABLE bit.
+    int focusableChangedByAuto = 0;
+    if (((mViewFlags & FOCUSABLE_AUTO) != 0)
+            && (changed & (FOCUSABLE_MASK | CLICKABLE)) != 0) {
+        // Heuristic only takes into account whether view is clickable.
+        int newFocus=(mViewFlags & CLICKABLE)?FOCUSABLE:NOT_FOCUSABLE;
+        mViewFlags = (mViewFlags & ~FOCUSABLE) | newFocus;
+        focusableChangedByAuto = (old & FOCUSABLE) ^ (newFocus & FOCUSABLE);
+        changed = (changed & ~FOCUSABLE) | focusableChangedByAuto;
+    }
+
+    /* Check if the FOCUSABLE bit has changed */
+    if (((changed & FOCUSABLE) != 0) && ((privateFlags & PFLAG_HAS_BOUNDS) != 0)) {
+        if (((old & FOCUSABLE) == FOCUSABLE) && ((privateFlags & PFLAG_FOCUSED) != 0)) {
+            /* Give up focus if we are no longer focusable */
+            clearFocus();
+            mParent->clearFocusedInCluster();
+        } else if (((old & FOCUSABLE) == NOT_FOCUSABLE)
+                && ((privateFlags & PFLAG_FOCUSED) == 0)) {
+            /* Tell the view system that we are now available to take focus
+             * if no one else already has it.*/
+            /*if (mParent != null) {
+                ViewRootImpl viewRootImpl = getViewRootImpl();
+                if (!sAutoFocusableOffUIThreadWontNotifyParents
+                        || focusableChangedByAuto == 0
+                        || viewRootImpl == null
+                        || viewRootImpl.mThread == Thread.currentThread()) {
+                    shouldNotifyFocusableAvailable = canTakeFocus();
+                }
+            }*/
+        }
+    }
+
+    const int newVisibility = flags & VISIBILITY_MASK;
+    if (newVisibility == VISIBLE) {
+        if ((changed & VISIBILITY_MASK) != 0) {
+            /* If this view is becoming visible, invalidate it in case it changed while
+             * it was not visible. Marking it drawn ensures that the invalidation will
+             * go through.*/
+            mPrivateFlags |= PFLAG_DRAWN;
+            invalidate();
+
+            //needGlobalAttributesUpdate(true);
+
+            // a view becoming visible is worth notifying the parent about in case nothing has
+            // focus. Even if this specific view isn't focusable, it may contain something that
+            // is, so let the root view try to give this focus if nothing else does.
+            shouldNotifyFocusableAvailable = hasSize();
+        }
+    }
+
+    if ((changed & ENABLED_MASK) != 0) {
+        if ((mViewFlags & ENABLED_MASK) == ENABLED) {
+            // a view becoming enabled should notify the parent as long as the view is also
+            // visible and the parent wasn't already notified by becoming visible during this
+            // setFlags invocation.
+            shouldNotifyFocusableAvailable = canTakeFocus();
+        } else {
+            if (isFocused()) clearFocus();
+        }
+    }
+
+    if (shouldNotifyFocusableAvailable && mParent ) {
+        mParent->focusableViewAvailable(this);
+    }
+
+    /* Check if the GONE bit has changed */
+    if ((changed & GONE) != 0) {
+        //needGlobalAttributesUpdate(false);
+        requestLayout();
+
+        if (((mViewFlags & VISIBILITY_MASK) == GONE)) {
+            if (hasFocus()) {
+                clearFocus();
+                mParent->clearFocusedInCluster();
+            }
+            //clearAccessibilityFocus();
+            //destroyDrawingCache();
+            // GONE views noop invalidation, so invalidate the parent
+            mParent->invalidate();
+            // Mark the view drawn to ensure that it gets invalidated properly the next
+            // time it is visible and gets invalidated
+            mPrivateFlags |= PFLAG_DRAWN;
+        }
+        //if (mAttachInfo != null) mAttachInfo.mViewVisibilityChanged = true;
+    }
+
+    /* Check if the VISIBLE bit has changed */
+    if ((changed & INVISIBLE) != 0) {
+        //needGlobalAttributesUpdate(false);
+        /* If this view is becoming invisible, set the DRAWN flag so that
+         * the next invalidate() will not be skipped.*/
+        mPrivateFlags |= PFLAG_DRAWN;
+
+        if (((mViewFlags & VISIBILITY_MASK) == INVISIBLE)) {
+            // root view becoming invisible shouldn't clear focus and accessibility focus
+            if (getRootView() != this) {
+                if (hasFocus()) {
+                    clearFocus();
+                    mParent->clearFocusedInCluster();
+                }
+                //clearAccessibilityFocus();
+            }
+        }
+        //if (mAttachInfo != null)mAttachInfo.mViewVisibilityChanged = true;
+    }
+
+    if ((changed & VISIBILITY_MASK) != 0) {
+        // If the view is invisible, cleanup its display list to free up resources
+        if (newVisibility != VISIBLE /*&& mAttachInfo != null*/) {
+            //cleanupDraw();
+        }
+
+        if (mParent) {
+            mParent->onChildVisibilityChanged(this,(changed & VISIBILITY_MASK), newVisibility);
+            mParent->invalidate();
+        }
+
+        if (true/*mAttachInfo != null*/) {
+            dispatchVisibilityChanged(*this, newVisibility);
+
+            // Aggregated visibility changes are dispatched to attached views
+            // in visible windows where the parent is currently shown/drawn
+            // or the parent is not a ViewGroup (and therefore assumed to be a ViewRoot),
+            // discounting clipping or overlapping. This makes it a good place
+            // to change animation states.
+            if (mParent  && mParent->isShown()) {
+                //dispatchVisibilityAggregated(newVisibility == VISIBLE);
+            }
+            //notifySubtreeAccessibilityStateChangedIfNeeded();
+        }
+    }
+
+    /*if ((changed & WILL_NOT_CACHE_DRAWING) != 0) destroyDrawingCache();
+
+    if ((changed & DRAWING_CACHE_ENABLED) != 0) {
+        destroyDrawingCache();
+        mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+        invalidateParentCaches();
+    }
+
+    if ((changed & DRAWING_CACHE_QUALITY_MASK) != 0) {
+        destroyDrawingCache();
+        mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+    }*/
+
+    if ((changed & DRAW_MASK) != 0) {
+        if ((mViewFlags & WILL_NOT_DRAW) != 0) {
+            if (mBackground != nullptr || mDefaultFocusHighlight != nullptr
+                    || (mForegroundInfo != nullptr && mForegroundInfo->mDrawable != nullptr)) {
+                mPrivateFlags &= ~PFLAG_SKIP_DRAW;
+            } else {
+                mPrivateFlags |= PFLAG_SKIP_DRAW;
+            }
+        } else {
+            mPrivateFlags &= ~PFLAG_SKIP_DRAW;
+        }
+        requestLayout();
+        invalidate();
+    }
+#if 0
+    if ((changed & KEEP_SCREEN_ON) != 0) {
+        if (mParent != null && mAttachInfo != null && !mAttachInfo.mRecomputeGlobalAttributes) {
+            mParent.recomputeViewAttributes(this);
+        }
+    }
+
+    if (accessibilityEnabled) {
+        // If we're an accessibility pane and the visibility changed, we already have sent
+        // a state change, so we really don't need to report other changes.
+        if (isAccessibilityPane()) {
+            changed &= ~VISIBILITY_MASK;
+        }
+        if ((changed & FOCUSABLE) != 0 || (changed & VISIBILITY_MASK) != 0
+                || (changed & CLICKABLE) != 0 || (changed & LONG_CLICKABLE) != 0
+                || (changed & CONTEXT_CLICKABLE) != 0) {
+            if (oldIncludeForAccessibility != includeForAccessibility()) {
+                //notifySubtreeAccessibilityStateChangedIfNeeded();
+            } else {
+                //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+            }
+        } else if ((changed & ENABLED_MASK) != 0) {
+            //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+        }
+    }
+#endif
+    invalidate(nullptr);
     return *this;
 }
 
@@ -2070,13 +2402,8 @@ void View::setFocusedByDefault(bool isFocusedByDefault){
     }
 }
 
-View& View::setVisibility(int visable) {
-    mViewFlags&=(~VISIBILITY_MASK);
-    mViewFlags|=(VISIBILITY_MASK&visable);
-    if(mParent){
-        RECT r=getBound();
-        mParent->invalidate(&r);
-    }
+View& View::setVisibility(int visibility) {
+    setFlags(visibility, VISIBILITY_MASK);
     return *this;
 }
 
@@ -2203,6 +2530,13 @@ bool View::isPressed()const{
 void View::dispatchSetPressed(bool pressed){
 }
 
+void View::dispatchVisibilityChanged(View& changedView,int visibility){
+    onVisibilityChanged(changedView, visibility); 
+}
+
+void View::onVisibilityChanged(View& changedView,int visibility){
+}
+
 bool View::isDirty()const{
     return (mPrivateFlags&PFLAG_DIRTY_MASK)!=0;
 }
@@ -2241,6 +2575,12 @@ void View::invalidate(const RECT*rect){
     //LOGV("%p.%p:%d (%d,%d %d,%d)",mParent,this,mID,rcInvalid.x,rcInvalid.y,rcInvalid.width,rcInvalid.height);
     if(mParent)mParent->invalidateChild(this,&rcInvalid);
 #endif
+}
+
+void View::invalidate(int l,int t,int w,int h){
+    Rect rect;
+    rect.set(l,t,w,h);
+    invalidate(&rect);
 }
 
 void View::postInvalidate(){
@@ -2666,6 +3006,10 @@ void View::layout(int l, int t, int w, int h){
         onMeasure(mOldWidthMeasureSpec, mOldHeightMeasureSpec);
         mPrivateFlags3 &= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
     }
+    int oldL = mLeft;
+    int oldT = mTop;
+    int oldW = mWidth;
+    int oldH = mHeight;
     mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
     mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;
     bool changed=setFrame(l,t,w,h);
@@ -2677,6 +3021,9 @@ void View::layout(int l, int t, int w, int h){
             mRoundScrollbarRenderer = nullptr;
         }
         onLayout(true, l, t, w, h);
+        for(auto ls:mOnLayoutChangeListeners){
+            ls(this,l, t, w, h,oldL,oldT,oldW,oldH);
+        }
     }
 }
 
@@ -3197,6 +3544,12 @@ int View::getMinimumWidth() {
 void View::setMinimumWidth(int minWidth) {
     mMinWidth = minWidth;
     requestLayout();
+}
+
+void View::playSoundEffect(int soundConstant){
+}
+bool View::performHapticFeedback(int feedbackConstant, int flags){
+    return false;
 }
 
 void View::setMeasuredDimensionRaw(int measuredWidth, int measuredHeight) {

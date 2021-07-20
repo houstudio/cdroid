@@ -567,7 +567,7 @@ int SimpleMonthView::getDaysInMonth(int month, int year){
     case Calendar::SEPTEMBER:
     case Calendar::NOVEMBER: return 30;
     case Calendar::FEBRUARY: return (year % 4 == 0) ? 29 : 28;
-    default: LOGE("Invalid Month");break;
+    default: LOGE("Invalid Month");return 0;
     }
 }
 

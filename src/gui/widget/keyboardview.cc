@@ -1,4 +1,4 @@
-#include <keyboardview.h>
+#include <widget/keyboardview.h>
 #include <cdlog.h>
 #include <fstream>
 

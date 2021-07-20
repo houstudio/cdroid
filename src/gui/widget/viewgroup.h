@@ -33,8 +33,19 @@ public:
     enum{
         FLAG_CLIP_CHILDREN   = 0x01,
         FLAG_CLIP_TO_PADDING = 0x02,
+        FLAG_INVALIDATE_REQUIRED= 0x4,
+        FLAG_RUN_ANIMATION  = 0x8,
+        FLAG_ANIMATION_DONE = 0x10,
         FLAG_PADDING_NOT_NULL= 0x20,
         CLIP_TO_PADDING_MASK = FLAG_CLIP_TO_PADDING | FLAG_PADDING_NOT_NULL,
+
+        FLAG_ANIMATION_CACHE = 0x40,
+        FLAG_OPTIMIZE_INVALIDATE = 0x80,
+        FLAG_CLEAR_TRANSFORMATION = 0x100,
+        FLAG_NOTIFY_ANIMATION_LISTENER = 0x200,
+        FLAG_USE_CHILD_DRAWING_ORDER = 0x400,
+        FLAG_SUPPORT_STATIC_TRANSFORMATIONS = 0x800,
+
         FLAG_ADD_STATES_FROM_CHILDREN  = 0x2000,
         FLAG_ALWAYS_DRAWN_WITH_CACHE   = 0x4000,
         FLAG_CHILDREN_DRAWN_WITH_CACHE = 0x8000,
@@ -64,6 +75,9 @@ private:
     View* mFocused;
     View* mDefaultFocus;
     View* mFocusedInCluster;
+    class LayoutTransition*mTransition;
+    std::vector<View*>mTransitioningViews;
+    std::vector<View*>mVisibilityChangingChildren;
     int mChildCountWithTransientState;
     class TouchTarget* mFirstTouchTarget;
     RECT focusRectSrc;
@@ -71,6 +85,7 @@ private:
     RECT focusRect;
     POINT animateTo;//save window boundray  while animating
     POINT animateFrom;//window animate from boundary
+    Transformation* mChildTransformation;
     void initGroup();
     void setBooleanFlag(int flag, bool value);
     bool hasBooleanFlag(int flag)const;
@@ -97,11 +112,15 @@ private:
     void removeViewsInternal(int start, int count);
     void removeFromArray(int index);
     void removeFromArray(int start, int count);
+
     View&addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
+    void addDisappearingView(View* v);
 protected:
     int mGroupFlags;
     std::vector<View*> mChildren;
+    std::vector<View*>mDisappearingChildren;
     RefPtr<Region>mInvalidRgn;
+    Transformation*mInvalidationTransformation;
     LONGLONG time_lastframe;
     OnHierarchyChangeListener mOnHierarchyChangeListener;
     void setDefaultFocus(View* child);
@@ -145,6 +164,11 @@ protected:
     virtual void onDraw(Canvas& canvas) override;
     void dispatchSetPressed(bool pressed)override;
     virtual int getChildDrawingOrder(int childCount, int i);
+
+    Transformation* getChildTransformation();
+    void finishAnimatingView(View* view, Animation* animation);
+    bool isViewTransitioning(View* view);
+    void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
 public:
     ViewGroup(Context*ctx,const AttributeSet& attrs);
     ViewGroup(int w,int h);
@@ -170,6 +194,7 @@ public:
     virtual void requestChildFocus(View*child,View*focused);
     void unFocus(View* focused)override;
     void clearChildFocus(View* child);
+    void focusableViewAvailable(View*);
     void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool hasTransientState()override;
     void childHasTransientStateChanged(View* child, bool childHasTransientState);
@@ -196,6 +221,10 @@ public:
     virtual View& addView(View* child, int index);
     virtual View& addView(View* child, LayoutParams* params);
     virtual View& addView(View* child, int index, LayoutParams* params);
+    
+    void clearDisappearingChildren();
+    void startViewTransition(View* view);
+    void endViewTransition(View* view);
   
     virtual void onViewAdded(View* child);
     virtual void onViewRemoved(View* child);

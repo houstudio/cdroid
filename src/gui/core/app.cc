@@ -75,12 +75,12 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     }
 
     setOpacity(getArgAsInt("alpha",255));
-    InputEventSource*ies=new InputEventSource(getArg("record",""));
-    addEventSource(ies,[](EventSource&s){
+    InputEventSource*inputsource=new InputEventSource(getArg("record",""));
+    addEventSource(inputsource,[](EventSource&s){
         ((InputEventSource&)s).processKey();
         return true;
     });
-    ies->play(getArg("monkey",""));
+    inputsource->playback(getArg("monkey",""));
 
     SignalSource*sigsource=new GenericSignalSource(false);
     addEventSource(sigsource,[this](EventSource&s){

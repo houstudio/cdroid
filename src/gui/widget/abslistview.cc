@@ -546,7 +546,7 @@ void AbsListView::setItemChecked(int position, bool value) {
                 mCheckedItemCount--;
             }
         }
-        if (mChoiceActionMode != nullptr) {
+        if (mMultiChoiceModeCallback/*mChoiceActionMode != nullptr*/) {
             long id = mAdapter->getItemId(position);
             mMultiChoiceModeCallback(/*mChoiceActionMode*/ position, id, value);
             //mMultiChoiceModeCallback.onItemCheckedStateChanged

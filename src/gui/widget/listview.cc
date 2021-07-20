@@ -2005,7 +2005,6 @@ int ListView::lookForSelectablePositionAfter(int current, int position, bool loo
 }
 
 bool ListView::handleHorizontalFocusWithinListItem(int direction){
-    LOGD("");
     if (direction != View::FOCUS_LEFT && direction != View::FOCUS_RIGHT)  {
         LOGD("direction must be one of{View.FOCUS_LEFT, View.FOCUS_RIGHT}");
     }

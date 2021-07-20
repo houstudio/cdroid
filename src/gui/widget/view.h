@@ -7,6 +7,7 @@
 #include <systemclock.h>
 #include <widget/layoutparams.h>
 #include <widget/measurespec.h>
+#include <animation/animation.h>
 #include <set>
 #include <memory>
 #include <vector>
@@ -34,14 +35,14 @@ class ViewGroup;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
     enum{
-        TEXT_ALIGNMENT_INHERIT =0,
-        TEXT_ALIGNMENT_GRAVITY =1,
-        TEXT_ALIGNMENT_TEXT_START =2,
-        TEXT_ALIGNMENT_TEXT_END =3,
-        TEXT_ALIGNMENT_CENTER   =4,
-        TEXT_ALIGNMENT_VIEW_START=5,
-        TEXT_ALIGNMENT_VIEW_END  =6,
-        TEXT_ALIGNMENT_DEFAULT = TEXT_ALIGNMENT_GRAVITY,
+        TEXT_ALIGNMENT_INHERIT   = 0,
+        TEXT_ALIGNMENT_GRAVITY   = 1,
+        TEXT_ALIGNMENT_TEXT_START= 2,
+        TEXT_ALIGNMENT_TEXT_END  = 3,
+        TEXT_ALIGNMENT_CENTER    = 4,
+        TEXT_ALIGNMENT_VIEW_START= 5,
+        TEXT_ALIGNMENT_VIEW_END  = 6,
+        TEXT_ALIGNMENT_DEFAULT   = TEXT_ALIGNMENT_GRAVITY,
         TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_GRAVITY,
     };
     enum TextDirection{
@@ -58,22 +59,25 @@ public:
     }; 
 protected:
     enum{//PFLAGS in mPrivateFlags
-        PFLAG_WANTS_FOCUS      =0x01,
-        PFLAG_FOCUSED          =0x02,
-        PFLAG_SELECTED         =0x04,
-        PFLAG_IS_ROOT_NAMESPACE=0x08,
-        PFLAG_HAS_BOUNDS =0x10,
-        PFLAG_DRAWN      =0x20,
-        PFLAG_SKIP_DRAW  =0x80,
+        PFLAG_WANTS_FOCUS      = 0x01,
+        PFLAG_FOCUSED          = 0x02,
+        PFLAG_SELECTED         = 0x04,
+        PFLAG_IS_ROOT_NAMESPACE= 0x08,
+        PFLAG_HAS_BOUNDS       = 0x10,
+        PFLAG_DRAWN            = 0x20,
+        PFLAG_DRAW_ANIMATION   = 0x40,
+        PFLAG_SKIP_DRAW        = 0x80,
         PFLAG_REQUEST_TRANSPARENT_REGIONS=0x200,
-        PFLAG_DRAWABLE_STATE_DIRTY=0x400,
+        PFLAG_DRAWABLE_STATE_DIRTY  =0x400,
         PFLAG_MEASURED_DIMENSION_SET=0x800,
         PFLAG_FORCE_LAYOUT     =0x1000,
         PFLAG_LAYOUT_REQUIRED  =0x2000,
 
-        PFLAG_PRESSED          =0x4000,
+        PFLAG_PRESSED          = 0x4000,
+        PFLAG_DRAWING_CACHE_VALID= 0x8000,
+        PFLAG_ANIMATION_STARTED= 0x00010000,
         PFLAG_DIRTY            = 0x00200000,
-        PFLAG_DIRTY_OPAQUE     =0x00400000,
+        PFLAG_DIRTY_OPAQUE     = 0x00400000,
         PFLAG_DIRTY_MASK       = 0x00600000,
         PFLAG_OPAQUE_BACKGROUND= 0x00800000,
         PFLAG_OPAQUE_SCROLLBARS= 0x01000000,
@@ -86,20 +90,20 @@ protected:
     };
     enum{//PFLAG2
         PFLAG2_TEXT_DIRECTION_MASK_SHIFT =6,
-        PFLAG2_TEXT_DIRECTION_MASK     = 0x00000007<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
-        PFLAG2_TEXT_DIRECTION_RESOLVED = 0x00000008 << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+        PFLAG2_TEXT_DIRECTION_MASK      = 0x00000007<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+        PFLAG2_TEXT_DIRECTION_RESOLVED  = 0x00000008 << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
         PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT=10,
         PFLAG2_TEXT_DIRECTION_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT,
         PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT=13,
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT = 17,
-        PFLAG2_TEXT_ALIGNMENT_MASK     = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
-        PFLAG2_TEXT_ALIGNMENT_RESOLVED = 0x00000008 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+        PFLAG2_TEXT_ALIGNMENT_MASK      = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+        PFLAG2_TEXT_ALIGNMENT_RESOLVED  = 0x00000008 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_RESOLVED_DEFAULT << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
-        PFLAG2_ACCESSIBILITY_FOCUSED = 0x04000000,
-        PFLAG2_PADDING_RESOLVED      = 0x20000000,
-        PFLAG2_DRAWABLE_RESOLVED     = 0x40000000,
-        PFLAG2_HAS_TRANSIENT_STATE   = 0x80000000,
+        PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000,
+        PFLAG2_PADDING_RESOLVED        = 0x20000000,
+        PFLAG2_DRAWABLE_RESOLVED       = 0x40000000,
+        PFLAG2_HAS_TRANSIENT_STATE     = 0x80000000,
         PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT=2,
         PFLAG2_LAYOUT_DIRECTION_MASK =0x00000003 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
         PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL =4 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
@@ -107,21 +111,23 @@ protected:
         PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK= 0x0000000C<< PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
     };
     enum{
-        PFLAG3_IS_LAID_OUT                 =0x04,
-        PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT=0x08,
-        PFLAG3_NESTED_SCROLLING_ENABLED =0x80,
-        PFLAG3_SCROLL_INDICATOR_TOP   = 0x0100,
-        PFLAG3_SCROLL_INDICATOR_BOTTOM= 0x0200,
-        PFLAG3_SCROLL_INDICATOR_LEFT  = 0x0400,
-        PFLAG3_SCROLL_INDICATOR_RIGHT = 0x0800,
-        PFLAG3_SCROLL_INDICATOR_START = 0x1000,
-        PFLAG3_SCROLL_INDICATOR_END   = 0x2000,
+        PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x01,
+        PFLAG3_VIEW_IS_ANIMATING_ALPHA     = 0x2,
+        PFLAG3_IS_LAID_OUT                 = 0x04,
+        PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT= 0x08,
+        PFLAG3_NESTED_SCROLLING_ENABLED    = 0x80,
+        PFLAG3_SCROLL_INDICATOR_TOP    = 0x0100,
+        PFLAG3_SCROLL_INDICATOR_BOTTOM = 0x0200,
+        PFLAG3_SCROLL_INDICATOR_LEFT   = 0x0400,
+        PFLAG3_SCROLL_INDICATOR_RIGHT  = 0x0800,
+        PFLAG3_SCROLL_INDICATOR_START  = 0x1000,
+        PFLAG3_SCROLL_INDICATOR_END    = 0x2000,
 
-        PFLAG3_CLUSTER                = 0x08000,
-        PFLAG3_FINGER_DOWN            = 0x20000,
-        PFLAG3_FOCUSED_BY_DEFAULT     = 0x40000,
-        PFLAG3_TEMPORARY_DETACH       = 0x2000000,
-        PFLAG3_NO_REVEAL_ON_FOCUS     = 0x4000000
+        PFLAG3_CLUSTER                 = 0x08000,
+        PFLAG3_FINGER_DOWN             = 0x20000,
+        PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000,
+        PFLAG3_TEMPORARY_DETACH        = 0x2000000,
+        PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000
     };
 public:
     enum{
@@ -223,11 +229,13 @@ public:
         OVER_SCROLL_IF_CONTENT_SCROLLS =1,
         OVER_SCROLL_NEVER =2
     };
-DECLARE_UIEVENT(void,OnClickListener,View&);
-DECLARE_UIEVENT(bool,OnLongClickListener,View&);
-DECLARE_UIEVENT(bool,MessageListener,View&,DWORD,DWORD,ULONG);
-DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
-DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
+    DECLARE_UIEVENT(void,OnClickListener,View&);
+    DECLARE_UIEVENT(bool,OnLongClickListener,View&);
+    DECLARE_UIEVENT(bool,MessageListener,View&,DWORD,DWORD,ULONG);
+    DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
+    DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
+    DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
+            int oldLeft, int oldTop, int oldWidth, int oldHeight);
 private:
     int mMinWidth;
     int mMinHeight;
@@ -262,6 +270,8 @@ private:
     bool isOnVerticalScrollbarThumb(int x,int y);
     bool isOnHorizontalScrollbarThumb(int x,int y);
     bool isHoverable()const;
+    bool hasSize()const;
+    bool canTakeFocus()const;
     void getRoundVerticalScrollBarBounds(RECT* bounds);
     void getStraightVerticalScrollBarBounds(RECT*drawBounds,RECT*touchBounds=nullptr);
     void getVerticalScrollBarBounds(RECT*bounds,RECT*touchBounds=nullptr);
@@ -270,7 +280,7 @@ private:
     void setFocusedInCluster(View* cluster);
     void updateFocusedInCluster(View* oldFocus,int direction);
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
-
+    bool applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired);
 protected:
     int mID;
     int mScrollX;
@@ -294,6 +304,7 @@ protected:
     std::string mHint;
     LayoutParams*mLayoutParams;
     Context*mContext;
+    Animation* mCurrentAnimation;
     std::vector<int>mDrawableState;
 
     ViewGroup*mParent;
@@ -301,6 +312,7 @@ protected:
     OnClickListener mOnClick;
     OnLongClickListener mOnLongClick;
     OnFocusChangeListener mOnFocusChangeListener;
+    std::vector<OnLayoutChangeListener> mOnLayoutChangeListeners;
     OnScrollChangeListener mOnScrollChangeListener;
     MessageListener mOnMessage;
 
@@ -317,6 +329,8 @@ protected:
     virtual bool hasFlag(int flag) const;
     virtual void dispatchSetSelected(bool selected);
     virtual void dispatchSetPressed(bool pressed);
+    virtual void dispatchVisibilityChanged(View& changedView,int visiblity);
+    virtual void onVisibilityChanged(View& changedView,int visibility);
     virtual void onAttached();
     virtual void onDettached();
     virtual Canvas*getCanvas();
@@ -353,12 +367,14 @@ protected:
     bool hasDefaultFocus()const;
     int getSuggestedMinimumWidth();
     int getSuggestedMinimumHeight();
-    int getMinimumHeight();
-    void setMinimumHeight(int minHeight);
-    int getMinimumWidth();
-    void setMinimumWidth(int minWidth);
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
-    
+    void playSoundEffect(int soundConstant);
+    bool performHapticFeedback(int feedbackConstant, int flags=0);
+
+    void onAnimationStart();
+    void onAnimationEnd();
+    bool onSetAlpha(int alpha);
+
     bool isVerticalScrollBarHidden()const;
     bool shouldDrawRoundScrollbar()const;
 
@@ -382,6 +398,7 @@ public:
     virtual ~View();
     virtual void draw(Canvas*canvas=nullptr);
     virtual void invalidate(const RECT*rect=nullptr);
+    void invalidate(int l,int t,int w,int h);
     bool isDirty()const;
     void postInvalidate();
     void postInvalidateOnAnimation();
@@ -418,6 +435,16 @@ public:
     void setPadding(int left, int top, int right, int bottom);
     bool isPaddingResolved()const;
     virtual void resolvePadding();
+
+    int getMinimumHeight();
+    void setMinimumHeight(int minHeight);
+    int getMinimumWidth();
+    void setMinimumWidth(int minWidth);
+    Animation* getAnimation();
+    void startAnimation(Animation* animation);
+    void clearAnimation();
+    void setAnimation(Animation* animation);
+    
     void setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled);
     bool getDefaultFocusHighlightEnabled()const;
     bool isLayoutDirectionResolved()const;
@@ -482,6 +509,8 @@ public:
     virtual void setOnFocusChangeListener(OnFocusChangeListener listtener); 
     virtual void setOnScrollChangeListener(OnScrollChangeListener l);
     virtual void setMessageListener(MessageListener ls);
+    void addOnLayoutChangeListener(OnLayoutChangeListener listener);
+    void removeOnLayoutChangeListener(OnLayoutChangeListener listener);
     virtual bool performClick();
     virtual bool performLongClick();
     virtual bool performLongClick(int x,int y);

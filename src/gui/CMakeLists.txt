@@ -10,6 +10,7 @@ aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(dialogs SRCS_DIALOG)
 aux_source_directory(looper SRCS_LOOP)
+aux_source_directory(animation SRCS_ANIMATION)
 
 message("UI Lua script bindings is ${LUA_BINDINGS} guistatic=${GUI_STATIC}")
 
@@ -36,8 +37,10 @@ include_directories(
 
 add_definitions(-DRAPIDJSON_HAS_STDSTRING)
 
-set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} ${SRCS_WIDGET} 
-	${SRCS_DRAWABLES} ${SRCS_CAIROMM} ${SRCS_DIALOG} ${SRCS_LOOP})
+set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
+    ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
+    ${SRCS_CAIROMM} ${SRCS_DIALOG} 
+    ${SRCS_LOOP} ${SRCS_ANIMATION})
 
 add_library(gui_objs OBJECT ${SOURCES_GUI})
 add_library(gui_static STATIC $<TARGET_OBJECTS:gui_objs>)
@@ -59,7 +62,7 @@ file(GLOB DRAWABLEHEADERS  ${PROJECT_SOURCE_DIR}/drawables/*.h)
 file(GLOB WIDGETHEADERS  ${PROJECT_SOURCE_DIR}/widget/*.h)
 file(GLOB VIEWSHEADERS  ${PROJECT_SOURCE_DIR}/views/*.h)
 file(GLOB LOOPERHEADERS  ${PROJECT_SOURCE_DIR}/looper/*.h)
-
+file(GLOB ANIMHEADERS  ${PROJECT_SOURCE_DIR}/animation/*.h)
 message("=======OPTIONAL_LIBS=${OPTIONAL_LIBS}")
 
 target_link_libraries(gui pixman-1 png jpeg cairo unibreak zip jsoncpp tvhal ${OPTIONAL_LIBS})
@@ -73,7 +76,10 @@ file(COPY ${LOOPERHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/looper PATTER
 
 install (TARGETS gui  DESTINATION lib)
 install (TARGETS gui_static  DESTINATION lib)
-install (FILES ${MMHEADERS} DESTINATION include/gui/cairomm/)
+install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
+    PATTERN "views" EXCLUDE 
+    PATTERN "core" EXCLUDE)
+install (FILES ${MMHEADERS} DESTINATION include/gui/cairomm/ )
 install (FILES ${GUIHEADERS} windows.h drawables.h DESTINATION include/gui/)
 install (FILES ${WIDGETHEADERS} DESTINATION include/gui/widget)
 install (FILES ${DRAWABLEHEADERS} DESTINATION include/gui/drawables)

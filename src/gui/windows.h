@@ -6,6 +6,8 @@
 #include <widget/numberpicker.h>
 #include <widget/absolutelayout.h>
 #include <widget/framelayout.h>
+#include <widget/viewanimator.h>
+#include <widget/viewflipper.h>
 #include <widget/simplemonthview.h>
 #include <widget/tablelayout.h>
 #include <widget/tabwidget.h>

@@ -6,7 +6,8 @@
 #include <uievents.h>
 #include <thread>
 #include <chrono>
-#include <cstring>
+#include<tokenizer.h>
+#include <systemclock.h>
 #if ENABLED_GESTURE
 #include <GRT/GRT.h>
 #endif
@@ -14,11 +15,12 @@
 
 namespace cdroid{
 
-static int isplayingback=0;    
+
 InputEventSource::InputEventSource(const std::string&file){
     InputInit();
     frecord.open(file);
-    LOGD("%p Created",this);
+    isplayback=false;
+    lasteventTime=SystemClock::uptimeMillis();
 }
 
 InputEventSource::~InputEventSource(){
@@ -95,13 +97,14 @@ bool InputEventSource::processKey(){
     while(events.size()){
         InputEvent* e=events.front();
         WindowManager::getInstance().processEvent(*e);
-        if((isplayingback==0)&& frecord.is_open() &&(e->getType()==EV_KEY) ){
-            struct timespec ts;
-            clock_gettime(CLOCK_MONOTONIC,&ts);
-            frecord<<(ts.tv_sec*1000+ts.tv_nsec/1000000)<<",";
-            frecord<<KeyEvent::getLabel(((KeyEvent*)e)->getKeyCode());
-            frecord<<","<<((KeyEvent*)e)->getAction()<<std::endl;
-            LOGD("%lld key:%s",(ts.tv_sec*1000+ts.tv_nsec/1000000),KeyEvent::getLabel(((KeyEvent*)e)->getKeyCode()));
+        if((!isplayback)&& frecord.is_open() && dynamic_cast<KeyEvent*>(e) ){
+            nsecs_t eventTime=SystemClock::uptimeMillis();
+            const char*actname[]={"down","up","multi"};
+            KeyEvent*key=dynamic_cast<KeyEvent*>(e);
+            frecord<<"delay("<<eventTime-lasteventTime<<")"<<std::endl;
+            frecord<<"key("<<actname[key->getAction()]<<","
+                  <<KeyEvent::getLabel(key->getKeyCode())<<")"<<std::endl;
+            lasteventTime=eventTime;
         }
         e->recycle();
         events.pop();
@@ -114,42 +117,48 @@ int InputEventSource::pushEvent(InputEvent*evt){
     return events.size();
 }
 
-void InputEventSource::playBack(const std::string&file,InputEventSource*es){
-    std::ifstream fs;
-    char line[256]={0};
-    uint64_t last_event_time=0;
-    fs.open(file);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    isplayingback=fs.good();
-    LOGD("play macro %s  isplayingback=%d",file.c_str(),isplayingback);
-    while(fs){
-        char*ps=nullptr;
-        fs.getline(line,255);
-        uint64_t cur=strtoll(line,&ps,10);
-        int keyCode=KeyEvent::getKeyCodeFromLabel(ps+1);
-        ps=strchr(ps,',');
-        int action=strtoll(ps+1,&ps,10);
-        KeyEvent*evt=KeyEvent::obtain(cur,cur,action,keyCode,0,0,0,0,0,0);
-        LOGV("eventtime=%lld  key:%s/%x",cur,ps+1,evt->getKeyCode());
-        es->pushEvent(evt);
-        if(last_event_time!=0){
-            std::chrono::milliseconds dur(cur-last_event_time);
-            std::this_thread::sleep_for(dur);
-        }last_event_time=cur;
-        if(fs.eof()){
-            fs.close();
-            fs.open(file);
-            last_event_time=0;
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        }
-    }
-    fs.close();
-}
-void InputEventSource::play(const std::string&file){
-    if(file.empty())return;
-    std::thread th(playBack,std::ref(file),this);
+void InputEventSource::playback(const std::string&fname){
+    #define DELIMITERS "(),"
+    auto func=[this](const std::string&fname){
+         std::fstream in(fname);
+         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+         LOGD("stream.good=%d",in.good());
+         if(!in.good())return ;
+         isplayback=true;
+         while(1){
+             char *ps=nullptr;
+             char line[256]={0};
+             Tokenizer *tok;
+             in.getline(line,255);
+             Tokenizer::fromContents("",line,&tok);
+
+             std::string word=tok->nextToken(DELIMITERS);  
+             tok->skipDelimiters(DELIMITERS);
+             if(word.compare("delay")==0){
+                 word=tok->nextToken(DELIMITERS);
+                 std::chrono::milliseconds dur(strtoul(word.c_str(),&ps,10));
+                 std::this_thread::sleep_for(dur);
+             }else if(word.compare("key")==0){
+                 word =tok->nextToken(DELIMITERS);  
+                 int action =(word.find("down")!=std::string::npos)?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP;
+
+                 tok->skipDelimiters(DELIMITERS);
+                 word =tok->nextToken(DELIMITERS);
+                 nsecs_t evttime=SystemClock::uptimeMillis();  
+                 int keycode=KeyEvent::getKeyCodeFromLabel(word.c_str());
+                 KeyEvent*key=KeyEvent::obtain(evttime,evttime,action,keycode,1,0/*metastate*/,
+                       0/*deviceid*/,keycode/*scancode*/,0/*flags*/,0/*source*/);
+                 events.push(key);
+             }
+             if(in.gcount()==0){
+                 in.close();
+                 in.open(fname);
+             }
+             delete tok;
+         }
+    };
+    std::thread th(func,fname);
     th.detach();
 }
-
 }//end namespace
 

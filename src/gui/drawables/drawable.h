@@ -9,14 +9,10 @@
 #include <gravity.h>
 #include <rect.h>
 #include <vector>
-#include <string>
-#include <functional>
-#include <iostream>
 
 namespace cdroid{
 class ColorStateList;
 class Context;
-typedef std::function<void()>Runnable;
 
 class Animatable {
 public:

@@ -28,6 +28,17 @@ private:
     RECT mRectOfFocusedView;
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
+protected:
+    Canvas*canvas;
+    int window_type;/*window type*/
+    int mLayer;/*surface layer*/
+    std::string mText;
+    class UIEventSource*source;
+    void onFinishInflate()override;
+    virtual void post(View*v,const Runnable what,DWORD delay=0)override;
+    int processInputEvent(InputEvent&event);
+    int processKeyEvent(KeyEvent&event);
+    int processPointerEvent(MotionEvent&event);
 public:
     typedef enum{
         TYPE_WALLPAPER    =1,
@@ -66,13 +77,6 @@ public:
     static void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);
     void close();
 protected:
-    Canvas*canvas;
-    int window_type;/*window type*/
-    int mLayer;/*surface layer*/
-    std::string mText;
-    class UIEventSource*source;
-    void onFinishInflate()override;
-    virtual void post(View*v,const Runnable what,DWORD delay=0)override;
 };
 
 }  // namespace cdroid

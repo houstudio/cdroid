@@ -174,14 +174,8 @@ void WindowManager::onKeyEvent(KeyEvent&event) {
         if ( win->hasFlag(View::FOCUSABLE)&&(win->getVisibility()==View::VISIBLE) ) {
             int keyCode=event.getKeyCode();
             LOGV("Window:%p Key:%s[%x] action=%d",win,event.getLabel(keyCode),keyCode,event.getAction());
-            win->dispatchKeyEvent(event);return;
-            switch(event.getAction()){
-            case KeyEvent::ACTION_UP  :
-                win->onKeyUp(keyCode,event);break;
-            case KeyEvent::ACTION_DOWN:
-                win->onKeyDown(keyCode,event);break;
-            default:break;
-            }
+            win->processKeyEvent(event);
+            //dispatchKeyEvent(event);
             return;
         }
   }

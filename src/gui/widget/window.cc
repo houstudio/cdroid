@@ -25,6 +25,9 @@
 #include <fstream>
 
 namespace cdroid {
+constexpr int FORWARD = 0;
+constexpr int FINISH_HANDLED = 1;
+constexpr int FINISH_NOT_HANDLED = 2;
 
 Window::Window(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     canvas=nullptr;
@@ -141,6 +144,43 @@ void Window::onDeactive(){
     LOGV("%p[%s]",this,getText().c_str());
 }
 
+int Window::processInputEvent(InputEvent&event){
+    if(dynamic_cast<KeyEvent*>(&event))
+        return processKeyEvent((KeyEvent&)event);
+    else return processPointerEvent((MotionEvent&)event);
+}
+
+int Window::processPointerEvent(MotionEvent&event){
+    return 0;
+}
+
+int Window::processKeyEvent(KeyEvent&event){
+    int handled = FINISH_NOT_HANDLED;
+    int groupNavigationDirection = 0;
+    const int action=event.getAction();
+    LOGD_IF(action==KeyEvent::ACTION_DOWN,"key:0x%x %s %x",event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KEY_DPAD_DOWN);
+    if(dispatchKeyEvent(event))
+        return FINISH_HANDLED;
+    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KEY_TAB) {
+        if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON)) {
+            groupNavigationDirection = View::FOCUS_FORWARD;
+        } else if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
+              KeyEvent::META_META_ON | KeyEvent::META_SHIFT_ON)) {
+            groupNavigationDirection = View::FOCUS_BACKWARD;
+        }
+    }
+    if(action==KeyEvent::ACTION_DOWN){
+        if(groupNavigationDirection!=0){
+            if(performKeyboardGroupNavigation(groupNavigationDirection))
+                return FINISH_HANDLED;
+        }else {
+            if(performFocusNavigation(event)){
+                return FINISH_HANDLED;
+            }
+        }
+    }
+    return FORWARD;
+}
 
 bool Window::dispatchKeyEvent(KeyEvent&event){
     View* fv =getFocusedChild();
@@ -160,12 +200,12 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     if(action==KeyEvent::ACTION_DOWN){
         if(groupNavigationDirection!=0)
             return performKeyboardGroupNavigation(groupNavigationDirection);
-	    handled=performFocusNavigation(event);
+        handled=performFocusNavigation(event);
     }
     if(!handled){
         switch(action){
-        case KeyEvent::ACTION_UP  : handled=onKeyUp(event.getKeyCode(),event);  break;
-        case KeyEvent::ACTION_DOWN: handled=onKeyDown(event.getKeyCode(),event);break;
+        case KeyEvent::ACTION_UP  : handled = onKeyUp(event.getKeyCode(),event);  break;
+        case KeyEvent::ACTION_DOWN: handled = onKeyDown(event.getKeyCode(),event);break;
         default:break;
         }
     }
@@ -404,14 +444,14 @@ View*Window::inflate(Context*ctx,std::istream&stream){
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetNamespaceDeclHandler(parser,NamespaceStartHandler,NamespaceiEndHandler);
     do {
-       stream.read(buf,sizeof(buf));
-       len=stream.gcount();
-       if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-           const char*es=XML_ErrorString(XML_GetErrorCode(parser));
-           LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-           XML_ParserFree(parser);
-           return nullptr;
-       }
+        stream.read(buf,sizeof(buf));
+        len=stream.gcount();
+        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
+            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
+            XML_ParserFree(parser);
+            return nullptr;
+        }
     } while(len!=0);
     XML_ParserFree(parser);
     LOGD("usedtime %dms rootView=%p",SystemClock::uptimeMillis()-tstart,pd.rootView);

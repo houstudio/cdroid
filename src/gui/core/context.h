@@ -2,10 +2,14 @@
 #define __CONTEXT_H__
 #include <string>
 #include <iostream>
+#include <functional>
 #include <cairomm/refptr.h>
 #include <cairomm/surface.h>
+
 using namespace Cairo;
+
 namespace cdroid{
+typedef std::function<void()>Runnable;
 class Drawable;
 class ColorStateList;
 class Context{

@@ -1,7 +1,7 @@
 #ifndef __INPUT_METHOD_MANAGER_H__
 #define __INPUT_METHOD_MANAGER_H__
 #include <windows.h>
-#include <keyboardview.h>
+#include <widget/keyboardview.h>
 #include <inputmethod.h>
 #include <map>
 namespace cdroid{

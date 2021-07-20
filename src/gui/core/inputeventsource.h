@@ -21,6 +21,8 @@ namespace cdroid{
 class InputEventSource:public EventSource{
 protected:
     std::mutex mtxEvents;
+	bool isplayback;
+    nsecs_t lasteventTime;
     std::ofstream frecord;
     std::queue<InputEvent*>events;
 #if ENABLED_GESTURE
@@ -29,12 +31,11 @@ protected:
     std::unordered_map<int,std::shared_ptr<InputDevice>>devices;
     std::shared_ptr<InputDevice>getdevice(int fd);
     int pushEvent(InputEvent*evt);
-    static void playBack(const std::string&fname,InputEventSource*es);
 public:
     InputEventSource(const std::string&recordfile=std::string() );
     ~InputEventSource();
     bool initGesture(const std::string&fname);
-    void play(const std::string&);
+    void playback(const std::string&fname);
     bool prepare(int& max_timeout);
     bool check(){return events.size()>0;}
     bool dispatch(EventHandler &func) { return func(*this); }

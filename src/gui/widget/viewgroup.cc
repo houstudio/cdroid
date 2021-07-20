@@ -16,6 +16,7 @@
 
 #include <widget/viewgroup.h>
 #include <widget/measurespec.h>
+#include <animation/layouttransition.h>
 #include <cdlog.h>
 #include <uievents.h>
 #include <focusfinder.h>
@@ -95,6 +96,9 @@ void ViewGroup::initGroup(){
     mOnHierarchyChangeListener=nullptr;
     mChildCountWithTransientState=0;
     mInvalidRgn=Region::create();
+    mChildTransformation =nullptr;
+    mInvalidationTransformation =nullptr;
+    mTransition = nullptr;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
 }
 
@@ -103,6 +107,8 @@ ViewGroup::~ViewGroup() {
         delete v;
     });
     mChildren.clear();
+    delete mChildTransformation;
+    delete mInvalidationTransformation;
 }
 
 void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
@@ -370,12 +376,11 @@ void ViewGroup::removeDetachedView(View* child, bool animate){
     cancelTouchTarget(child);
     cancelHoverTarget(child);
 
-    /*if ((animate && child->getAnimation() != nullptr) ||
-          (mTransitioningViews != nullptr && mTransitioningViews.contains(child))) {
+    if ((animate && child->getAnimation()) ||isViewTransitioning(child)){
         addDisappearingView(child);
-    } else if (child->mAttachInfo != nullptr) {
-        child->dispatchDetachedFromWindow();
-    }*/
+    } else{// if (child->mAttachInfo != nullptr) {
+        //child->dispatchDetachedFromWindow();
+    }
 
     if (child->hasTransientState()) childHasTransientStateChanged(child, false);
 
@@ -389,9 +394,9 @@ void ViewGroup::detachViewsFromParent(int start, int count){
 }
 
 void ViewGroup::removeFromArray(int index){
-    /*if (!(mTransitioningViews != null && mTransitioningViews.contains(children[index]))) {
-        children[index].mParent = null;
-    }*/
+    if (isViewTransitioning(mChildren[index])){
+        mChildren[index]->mParent = nullptr;
+    }
     if (index>=0&&index<mChildren.size()) {
         mChildren.erase(mChildren.begin()+index);
     } else {
@@ -460,6 +465,96 @@ bool ViewGroup::addViewInLayout(View* child, int index,LayoutParams* params,bool
     addViewInner(child, index, params, preventRequestLayout);
     child->mPrivateFlags = (child->mPrivateFlags & ~PFLAG_DIRTY_MASK) | PFLAG_DRAWN;
     return true;
+}
+
+void ViewGroup::addDisappearingView(View* v) {
+    mDisappearingChildren.push_back(v);
+}
+
+void ViewGroup::clearDisappearingChildren() {
+    std::vector<View*> disappearingChildren = mDisappearingChildren;
+    int count = disappearingChildren.size();
+    for (int i = 0; i < count; i++) {
+        View* view = disappearingChildren.at(i);
+        //if (view.mAttachInfo != null)view.dispatchDetachedFromWindow();
+        view->clearAnimation();
+    }
+    disappearingChildren.clear();
+    invalidate();
+}
+
+void ViewGroup::startViewTransition(View* view){
+    if (view->mParent == this)
+        mTransitioningViews.push_back(view);
+}
+
+void ViewGroup::endViewTransition(View* view){
+    auto it= std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view);
+    if(it!=mTransitioningViews.end())mTransitioningViews.erase(it);
+
+    it= std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
+    if (it!=mDisappearingChildren.end()) {
+        mDisappearingChildren.erase(it);
+
+        it=std::find(mVisibilityChangingChildren.begin(),mVisibilityChangingChildren.end(),view);
+        if (it!=mVisibilityChangingChildren.end()) {
+            mVisibilityChangingChildren.erase(it);
+        } else {
+            //if (view.mAttachInfo != null) view.dispatchDetachedFromWindow();
+            if (view->mParent) view->mParent = nullptr;
+        }
+       invalidate();
+   }
+}
+
+void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
+    auto it=std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
+    if (it!=mDisappearingChildren.end()) {
+        mDisappearingChildren.erase(it);
+        //if (view.mAttachInfo != null) view->dispatchDetachedFromWindow();
+        view->clearAnimation();
+        mGroupFlags |= FLAG_INVALIDATE_REQUIRED;
+    }
+
+    if (animation && !animation->getFillAfter()) {
+        view->clearAnimation();
+    }
+
+    if ((view->mPrivateFlags & PFLAG_ANIMATION_STARTED) == PFLAG_ANIMATION_STARTED) {
+        view->onAnimationEnd();
+        // Should be performed by onAnimationEnd() but this avoid an infinite loop,
+        // so we'd rather be safe than sorry
+        view->mPrivateFlags &= ~PFLAG_ANIMATION_STARTED;
+        // Draw one more frame after the animation is done
+        mGroupFlags |= FLAG_INVALIDATE_REQUIRED;
+    }
+}
+
+bool ViewGroup::isViewTransitioning(View* view){
+    return  std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view)!= mTransitioningViews.end();
+}
+
+void ViewGroup::onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility){
+    LOGV("view %p visibility %d->%d",child,oldVisibility, newVisibility);
+    if (mTransition != nullptr) {
+        if (newVisibility == VISIBLE) {
+            mTransition->showChild(this, child, oldVisibility);
+        } else {
+            mTransition->hideChild(this, child, newVisibility);
+            if ( isViewTransitioning(child) ){
+                // Only track this on disappearing views - appearing views are already visible
+                // and don't need special handling during drawChild()
+                mVisibilityChangingChildren.push_back(child);
+                addDisappearingView(child);
+            }
+        }
+    }
+    // in all cases, for drags
+    /*if (newVisibility == VISIBLE && mCurrentDragStartEvent != null) {
+        if (!mChildrenInterestedInDrag.contains(child)) {
+            notifyChildOfDragStart(child);
+        }
+    }*/
 }
 
 void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params){
@@ -572,6 +667,11 @@ int ViewGroup::getChildDrawingOrder(int count,int i){
     return i;
 }
 
+Transformation* ViewGroup::getChildTransformation(){
+    if(mChildTransformation==nullptr)
+        mChildTransformation=new Transformation();
+    return mChildTransformation;
+}
 int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
 	int specMode = MeasureSpec::getMode(spec);
     int specSize = MeasureSpec::getSize(spec);
@@ -910,12 +1010,11 @@ void ViewGroup::removeViewInternal(int index, View* view){
     cancelTouchTarget(view);
     cancelHoverTarget(view);
 
-    /*if (view->getAnimation() != nullptr ||
-                (mTransitioningViews != nullptr && mTransitioningViews.contains(view))) {
+    if (view->getAnimation() ||isViewTransitioning(view)){
         addDisappearingView(view);
-    } else if (view.mAttachInfo != null) {
-       view->dispatchDetachedFromWindow();
-    }*/
+    } else {//if (view.mAttachInfo != null) {
+       //view->dispatchDetachedFromWindow();
+    }
 
     if (view->hasTransientState())childHasTransientStateChanged(view, false);
 
@@ -1182,6 +1281,25 @@ void ViewGroup::clearChildFocus(View* child){
          mFocused = nullptr;
          focused->clearFocus();
     }
+}
+
+void ViewGroup::focusableViewAvailable(View*v){
+    if (mParent 
+             // shortcut: don't report a new focusable view if we block our descendants from
+             // getting focus or if we're not visible
+             && (getDescendantFocusability() != FOCUS_BLOCK_DESCENDANTS)
+             && ((mViewFlags & VISIBILITY_MASK) == VISIBLE)
+             && (isFocusableInTouchMode() || !shouldBlockFocusForTouchscreen())
+             // shortcut: don't report a new focusable view if we already are focused
+             // (and we don't prefer our descendants)
+             //
+             // note: knowing that mFocused is non-null is not a good enough reason
+             // to break the traversal since in that case we'd actually have to find
+             // the focused view and make sure it wasn't FOCUS_AFTER_DESCENDANTS and
+             // an ancestor of v; this will get checked for at ViewAncestor
+             && !(isFocused() && getDescendantFocusability() != FOCUS_AFTER_DESCENDANTS)) {
+         mParent->focusableViewAvailable(v);
+     }
 }
 
 bool ViewGroup::getTouchscreenBlocksFocus()const{ 
