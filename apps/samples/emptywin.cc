@@ -6,6 +6,7 @@
 #include<widget/horizontalscrollview.h>
 #include<widget/simplemonthview.h>
 #include<widget/viewpager.h>
+#include<animations.h>
 #include<drawables.h>
 #include<cdlog.h>
 class MyAdapter:public ArrayAdapter<std::string>{
@@ -108,6 +109,10 @@ int main(int argc,const char*argv[]){
         lv->setId(1010);
         lv->getDrawingRect(rect);
         lv->setOnScrollListener(ons);
+        lv->setChoiceMode(ListView::CHOICE_MODE_MULTIPLE_MODAL);//CHOICE_MODE_SINGLE);//CHOICE_MODE_MULTIPLE
+        lv->setMultiChoiceModeListener([](int position, long id, bool checked){
+             LOGD("item %d checked:%d",position,checked );
+        });
         //[](AbsListView&,int fist,int vc,int total){});
         //lv->setItemsCanFocus(true);
         lv->setVerticalScrollBarEnabled(true);
@@ -220,28 +225,6 @@ int main(int argc,const char*argv[]){
       }
       break;
     case 5:{
-        POINT pt;
-        LinearLayout*ll=new LinearLayout(600,400);
-        Button*btn=new Button("Hello world",100,100);
-        btn->setId(101);
-        ll->setId(100);
-        w->setBackgroundColor(0xFF444444);
-        ll->addView(btn).setPos(-40,-40).setBackgroundColor(0xFFFF0000);
-        w->addView(ll).setPos(50,50).setBackgroundColor(0xFF00FF00);
-        ll->getLocationInWindow((int*)&pt);
-        LOGD("LineaLayout inWindowPos=%d,%d",pt.x,pt.y);
-    }break;
-    case 6:{
-        TextView*tv1=new TextView("Hello World",400,100);
-        tv1->setId(100);
-        tv1->setTextSize(80);
-        w->addView(tv1).setBackgroundColor(0xFFFF44AA);
-        TextView*tv2=new TextView("Hello Kitty",400,100);
-        tv2->setId(101);
-        tv2->setTextSize(80);
-        w->addView(tv2).setPos(50,50).setBackgroundColor(0xFF00FF00);
-    }
-    case 7:{
         TabWidget*tab=new TabWidget(600,80);
         for(int i=0;i<6;i++){
             const std::string tbnm="Tab"+std::to_string(i);
@@ -253,7 +236,7 @@ int main(int argc,const char*argv[]){
         w->addView(tab);
         w->requestLayout();
     }break;
-    case 8:{
+    case 6:{
         LinearLayout*ll=new LinearLayout(640,480);
         SimpleMonthView*mv=new SimpleMonthView(480,320);
         mv->setBackgroundDrawable(new ColorDrawable(0xFF111111));
@@ -262,7 +245,7 @@ int main(int argc,const char*argv[]){
         w->addView(ll);
         w->requestLayout();
     }break;
-    case 9:{
+    case 7:{
         NumberPicker*np=new NumberPicker(400,100);
         np->setMinValue(2000);
         np->setMaxValue(2100);
@@ -270,7 +253,7 @@ int main(int argc,const char*argv[]){
         w->addView(np).setPos(100,200);
         w->requestLayout();
     }break;
-    case 10:{
+    case 8:{
         ViewPager*vp=new ViewPager(800,400);
         vp->setOffscreenPageLimit(4);
         vp->setAdapter(gpAdapter);
@@ -278,15 +261,39 @@ int main(int argc,const char*argv[]){
         gpAdapter->notifyDataSetChanged();
         w->addView(vp);
         w->requestLayout();
-    }
-    case 11:
+    }break;
+    case 9:
        {
             EditText*tv=new EditText("mChoreographer->postFrameCallbackDelayed(mRestartCallback, MARQUEE_DELAY);",300,40);
             w->addView(tv);
             tv->requestFocus();
             tv->setEllipsize(Layout::ELLIPSIS_MARQUEE);
        }break;
-    default: break;
+    case 10:{
+           ViewFlipper*vfp=new ViewFlipper(400,600);
+           w->addView(vfp);
+           vfp->setFlipInterval(1500);
+           ScaleAnimation*sa=new ScaleAnimation(0,1.f,0.f,1.f,200,300);
+           sa->setDuration(1000);
+           vfp->setInAnimation(sa);
+           sa= new ScaleAnimation(0,1.f,0.f,1.f,200,300);
+           sa->setDuration(1000);
+           vfp->setOutAnimation(sa); 
+           for(int i=0;i<10;i++){
+               TextView*tv=new TextView(std::to_string(i),400,600);
+               tv->setTextSize(120);
+               tv->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);//setGravity(Gravity::CENTER);
+               tv->setTextColor(0xFFFFFFFF);
+               tv->setBackgroundColor(0xFF000000|(i*10)<<((i%2+1)*8));
+               vfp->addView(tv,i,new ViewFlipper::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
+           }
+           vfp->startFlipping(); 
+           w->requestLayout();
+           RotateAnimation*ra= new RotateAnimation(0,360,200,300);
+           ra->setDuration(30000);
+           vfp->startAnimation(ra);
+        }break;
+    default:    break;
     }
     app.exec();
 }

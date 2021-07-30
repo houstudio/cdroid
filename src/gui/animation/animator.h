@@ -2,6 +2,8 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <interpolators.h>
+
 namespace cdroid{
 
 template <class T>
@@ -11,7 +13,7 @@ public:
     virtual T newInstance()=0;
 };
 
-typedef std::function<float(float)>TimeInterpolator;
+typedef Interpolator* TimeInterpolator;
 
 class Animator{
 private:
@@ -65,13 +67,13 @@ protected:
     bool isInitialized();
     virtual void animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse);
 public:
-    void start();
-    void cancel();
-    void end();
-    void pause();
-    void resume();
+    virtual void start();
+    virtual void cancel();
+    virtual void end();
+    virtual void pause();
+    virtual void resume();
     bool isPaused();
-    Animator*clone();
+    virtual Animator*clone();
     virtual long getStartDelay()=0;
     virtual void setStartDelay(long startDelay)=0;
     Animator& setDuration(long duration);
@@ -80,7 +82,7 @@ public:
     virtual void setInterpolator(TimeInterpolator value)=0;
     TimeInterpolator getInterpolator();
     virtual bool isRunning()=0;
-    bool isStarted();
+    virtual bool isStarted();
     void addListener(AnimatorListener listener);
     void removeListener(AnimatorListener listener);
     std::vector<AnimatorListener> getListeners();
@@ -94,8 +96,8 @@ public:
     void setupStartValues();
     void setupEndValues();
     void setTarget(void*target);
-    bool canReverse();
-    void reverse(); 
+    virtual bool canReverse();
+    virtual void reverse(); 
 };
 
 }

@@ -409,14 +409,11 @@ void ProgressBar::drawTrack(Canvas&canvas){
 
     //const long time = getDrawingTime();
     if (mHasAnimation) {
-        /*mAnimation.getTransformation(time, mTransformation);
-        const float scale = mTransformation.getAlpha();
-        try {
-            mInDrawing = true;
-            d.setLevel((int) (scale * MAX_LEVEL));
-        } finally {
-            mInDrawing = false;
-        }
+        /*mAnimation->getTransformation(time, mTransformation);
+        const float scale = mTransformation->getAlpha();
+        mInDrawing = true;
+        d->setLevel((int) (scale * MAX_LEVEL));
+        mInDrawing = false;
         postInvalidateOnAnimation();*/
     }
     d->draw(canvas);

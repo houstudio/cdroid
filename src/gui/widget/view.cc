@@ -184,6 +184,8 @@ void View::initView(){
     mBackground=nullptr;
     mDefaultFocusHighlight=nullptr;
     mCurrentAnimation=nullptr;
+    mTransformationInfo=nullptr;
+    mMatrix=identity_matrix();
 }
 
 View::~View(){
@@ -197,6 +199,7 @@ View::~View(){
     delete mLayoutParams;
     delete mRoundScrollbarRenderer;
     delete mCurrentAnimation;
+    delete mTransformationInfo;
 }
 
 View*View::findViewById(int id)const{
@@ -528,17 +531,25 @@ void View::setFadingEdgeLength(int length){
     mScrollCache->fadingEdgeLength = length;
 }
 void View::transformFromViewToWindowSpace(int*inOutLocation){
-    int *position=inOutLocation;
     View* view = this;
+    double position[2]={inOutLocation[0],inOutLocation[1]};
+    if(!hasIdentityMatrix()){
+        mMatrix.transform_point(position[0],position[1]);
+    }
     while (view) {
         position[0] -= view->mScrollX;
         position[1] -= view->mScrollY;
+        if (!view->hasIdentityMatrix()) {
+             view->mMatrix.transform_point(position[0],position[1]);
+        }
         if(view->mParent){
             position[0] += view->mLeft;
             position[1] += view->mTop;
         }
         view = view->mParent;
     }
+    inOutLocation[0]=(int)position[0];
+    inOutLocation[1]=(int)position[1];
 }
 
 void View::getLocationInWindow(int* outLocation) {
@@ -1379,7 +1390,7 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
 
 void View::draw(Canvas*context){
     Transformation* transformToApply=nullptr;
-    if(false==isShown())//||0==(mPrivateFlags&PFLAG_DIRTY_MASK))
+    if(false==isShown()/*||0==(mPrivateFlags&PFLAG_DIRTY_MASK)*/)
         return;
     Canvas*canvas=context?context:getCanvas();
     if(canvas==nullptr)return;
@@ -2209,7 +2220,7 @@ View& View::setFlags(int flags,int mask) {
             //clearAccessibilityFocus();
             //destroyDrawingCache();
             // GONE views noop invalidation, so invalidate the parent
-            mParent->invalidate();
+            if(mParent)mParent->invalidate();
             // Mark the view drawn to ensure that it gets invalidated properly the next
             // time it is visible and gets invalidated
             mPrivateFlags |= PFLAG_DRAWN;
@@ -3631,6 +3642,101 @@ int View::resolveSizeAndState(int size, int measureSpec, int childMeasuredState)
     }
     return result | (childMeasuredState & MEASURED_STATE_MASK);
 }
+
+void View::ensureTransformationInfo(){
+    if (mTransformationInfo == nullptr) {
+        mTransformationInfo = new TransformationInfo();
+    }
+}
+
+bool View::hasIdentityMatrix(){
+    return (mMatrix.xx==1.f) && (mMatrix.yx==0) && (mMatrix.xy==0) && (mMatrix.yy==1.f) && (mMatrix.x0==0)&&(mMatrix.y0==0);
+}
+Matrix View::getMatrix() {
+    ensureTransformationInfo();
+    Matrix matrix = mTransformationInfo->mMatrix;
+    //mRenderNode.getMatrix(matrix);
+    return mMatrix;
+}
+
+Matrix View::getInverseMatrix() {
+    ensureTransformationInfo();
+    Matrix matrix = mTransformationInfo->mInverseMatrix;
+    //mRenderNode.getInverseMatrix(matrix);
+    return matrix;
+}
+
+float View::getRotation(){
+
+}
+
+void View::setRotation(float rotation){
+
+}
+
+float View::getRotationX(){
+
+}
+
+void View::setRotationX(float){
+
+}
+
+float View::getRotationY(){
+    return .0f;
+}
+
+void View::setRotationY(float){
+    
+}
+
+float View::getScaleX(){
+    return 1.f;
+}
+
+void View::setScaleX(float){
+
+}
+
+float View::getScaleY(){
+    return 1.f;
+}
+
+void View::setScaleY(float){
+}
+
+float View::getPivotX(){
+    return 1.f;
+}
+
+void View::setPivotX(float){
+
+}
+
+float View::getPivotY(){
+    return .0f;
+}
+
+void View::setPivotY(float){
+
+}
+
+bool View::isPivotSet(){
+    return false;
+}
+
+void View::resetPivot(){
+
+}
+
+float View::getAlpha(){
+    return mTransformationInfo  ? mTransformationInfo->mAlpha : 1.f;
+}
+
+void View::setAlpha(float){
+
+}
+
 
 LayoutParams*View::getLayoutParams(){
     return mLayoutParams;

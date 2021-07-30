@@ -57,6 +57,13 @@ public:
         TEXT_DIRECTION_DEFAULT = TEXT_DIRECTION_INHERIT,
         TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_FIRST_STRONG,
     }; 
+    class TransformationInfo{
+    public:
+        Matrix mMatrix;
+        Matrix mInverseMatrix;
+        float mAlpha = 1.f;
+        float mTransitionAlpha = 1.f;
+    };
 protected:
     enum{//PFLAGS in mPrivateFlags
         PFLAG_WANTS_FOCUS      = 0x01,
@@ -303,6 +310,8 @@ protected:
     int mUserPaddingBottom;
     std::string mHint;
     LayoutParams*mLayoutParams;
+    TransformationInfo* mTransformationInfo;
+    Matrix mMatrix;
     Context*mContext;
     Animation* mCurrentAnimation;
     std::vector<int>mDrawableState;
@@ -316,6 +325,7 @@ protected:
     OnScrollChangeListener mOnScrollChangeListener;
     MessageListener mOnMessage;
 
+    bool hasIdentityMatrix();
     void computeOpaqueFlags();
     virtual void resolveDrawables();
     void setDuplicateParentStateEnabled(bool);
@@ -381,7 +391,7 @@ protected:
     bool isOnScrollbar(int x,int y);
     bool isOnScrollbarThumb(int x,int y);
     bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, 
-            int scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
+    int scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
     virtual void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY);
     virtual float getTopFadingEdgeStrength();
     virtual float getBottomFadingEdgeStrength();
@@ -392,6 +402,8 @@ protected:
     virtual void onDrawScrollBars(Canvas& canvas);
     void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,int l, int t, int w, int h);
     void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,int l, int t, int w, int h);
+
+    void ensureTransformationInfo();
 public:
     View(Context*ctx,const AttributeSet&attrs);
     View(int w,int h);
@@ -685,6 +697,28 @@ public:
     int getMeasuredHeight()const;
     int getMeasuredState()const;
     int getMeasuredHeightAndState()const;
+
+    Matrix getMatrix();
+    Matrix getInverseMatrix();
+
+    float getRotation();
+    void setRotation(float rotation);
+    float getRotationX();
+    void setRotationX(float);
+    float getRotationY();
+    void setRotationY(float);
+    float getScaleX();
+    void setScaleX(float);
+    float getScaleY();
+    void setScaleY(float);
+    float getPivotX();
+    void setPivotX(float);
+    float getPivotY();
+    void setPivotY(float);
+    bool isPivotSet();
+    void resetPivot();
+    float getAlpha();
+    void setAlpha(float);
 
     LayoutParams*getLayoutParams();
     int getRawLayoutDirection()const;

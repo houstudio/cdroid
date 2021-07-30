@@ -52,6 +52,12 @@ typedef struct Rectangle{
     static constexpr Rectangle MakeLTRB(int l,int t,int r,int b){return Rectangle{l,t,r-l,b-t};}
     static constexpr Rectangle MakeSize(const SIZE&sz){return Rectangle{0,0,sz.x,sz.y};}
 }Rect,RECT;
+typedef struct RectFloat{
+    float x;
+    float y;
+    float width;
+    float height;
+}RectF;
 #define MAKERECT(x,y,w,h) RECT::Make(x,y,w,h)
 
 }

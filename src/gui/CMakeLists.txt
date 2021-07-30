@@ -56,33 +56,28 @@ add_custom_target(systempak
 CreatePAK(${PROJECT_SOURCE_DIR}/res  ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak)
 set_target_properties(gui_static PROPERTIES OUTPUT_NAME "gui")
 
-file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/cairomm/*.h)
-file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
-file(GLOB DRAWABLEHEADERS  ${PROJECT_SOURCE_DIR}/drawables/*.h)
-file(GLOB WIDGETHEADERS  ${PROJECT_SOURCE_DIR}/widget/*.h)
-file(GLOB VIEWSHEADERS  ${PROJECT_SOURCE_DIR}/views/*.h)
-file(GLOB LOOPERHEADERS  ${PROJECT_SOURCE_DIR}/looper/*.h)
-file(GLOB ANIMHEADERS  ${PROJECT_SOURCE_DIR}/animation/*.h)
+file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
+list(REMOVE_ITEM allfiles "private/*.h")
+foreach( each_file ${allfiles} )
+  STRING(REGEX REPLACE ".*/\(.*\)" "\\1" FILE_PATH ${each_file})
+  STRING(LENGTH ${each_file} LEN0)
+  STRING(LENGTH ${FILE_PATH} LEN1)
+  MATH(EXPR LEN0 "${LEN0}-${LEN1}")
+  STRING(SUBSTRING ${each_file} 0 ${LEN0} FILE_PATH)
+  message("${each_file}==>${FILE_PATH}")
+  file(COPY ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
+  install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
+endforeach(each_file)
+
 message("=======OPTIONAL_LIBS=${OPTIONAL_LIBS}")
 
 target_link_libraries(gui pixman-1 png jpeg cairo unibreak zip jsoncpp tvhal ${OPTIONAL_LIBS})
 target_link_libraries(gui_static pixman-1 png jpeg cairo_static unibreak  zip jsoncpp tvhal_static ${OPTIONAL_LIBS})
-
-file(COPY ${GUIHEADERS} ${VIEWSHEADERS} windows.h drawables.h  DESTINATION ${CMAKE_BINARY_DIR}/include/gui PATTERN "*.h")
-file(COPY ${MMHEADERS}     DESTINATION ${CMAKE_BINARY_DIR}/include/gui/cairomm PATTERN "*.h")
-file(COPY ${WIDGETHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/gui/widget PATTERN "*.h")
-file(COPY ${DRAWABLEHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/gui/drawables PATTERN "*.h")
-file(COPY ${LOOPERHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/looper PATTERN "*.h")
 
 install (TARGETS gui  DESTINATION lib)
 install (TARGETS gui_static  DESTINATION lib)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "views" EXCLUDE 
     PATTERN "core" EXCLUDE)
-install (FILES ${MMHEADERS} DESTINATION include/gui/cairomm/ )
-install (FILES ${GUIHEADERS} windows.h drawables.h DESTINATION include/gui/)
-install (FILES ${WIDGETHEADERS} DESTINATION include/gui/widget)
-install (FILES ${DRAWABLEHEADERS} DESTINATION include/gui/drawables)
-install (FILES ${VIEWSHEADERS} DESTINATION include/gui/)
 install (FILES ${LOOPERHEADERS} DESTINATION include/looper)
 

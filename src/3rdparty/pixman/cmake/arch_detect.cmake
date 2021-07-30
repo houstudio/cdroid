@@ -42,6 +42,8 @@ set(archdetect_c_code "
     #else
         #error cmake_ARCH ppc
     #endif
+#elif defined(__mips__)
+    #error cmake_ARCH mipsel
 #endif
 
 #error cmake_ARCH unknown
