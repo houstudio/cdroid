@@ -1,18 +1,20 @@
 #include <animation/layouttransition.h>
 #include <widget/viewgroup.h>
+#include <animation/objectanimator.h>
+
 namespace cdroid{
 
-TimeInterpolator* LayoutTransition::ACCEL_DECEL_INTERPOLATOR         = new AccelerateDecelerateInterpolator();
-TimeInterpolator* LayoutTransition::DECEL_INTERPOLATOR               = new DecelerateInterpolator();
-TimeInterpolator* LayoutTransition::sAppearingInterpolator           = ACCEL_DECEL_INTERPOLATOR;
-TimeInterpolator* LayoutTransition::sDisappearingInterpolator        = ACCEL_DECEL_INTERPOLATOR;
-TimeInterpolator* LayoutTransition::sChangingAppearingInterpolator   = DECEL_INTERPOLATOR;
-TimeInterpolator* LayoutTransition::sChangingDisappearingInterpolator= DECEL_INTERPOLATOR;
-TimeInterpolator* LayoutTransition::sChangingInterpolator            = DECEL_INTERPOLATOR;
+TimeInterpolator LayoutTransition::ACCEL_DECEL_INTERPOLATOR         = new AccelerateDecelerateInterpolator();
+TimeInterpolator LayoutTransition::DECEL_INTERPOLATOR               = new DecelerateInterpolator();
+TimeInterpolator LayoutTransition::sAppearingInterpolator           = ACCEL_DECEL_INTERPOLATOR;
+TimeInterpolator LayoutTransition::sDisappearingInterpolator        = ACCEL_DECEL_INTERPOLATOR;
+TimeInterpolator LayoutTransition::sChangingAppearingInterpolator   = DECEL_INTERPOLATOR;
+TimeInterpolator LayoutTransition::sChangingDisappearingInterpolator= DECEL_INTERPOLATOR;
+TimeInterpolator LayoutTransition::sChangingInterpolator            = DECEL_INTERPOLATOR;
 
-Animation* LayoutTransition::defaultChange   = nullptr ;
-Animation* LayoutTransition::defaultChangeIn = nullptr ;
-Animation* LayoutTransition::defaultChangeOut= nullptr ;
+Animator* LayoutTransition::defaultChange   = nullptr ;
+Animator* LayoutTransition::defaultChangeIn = nullptr ;
+Animator* LayoutTransition::defaultChangeOut= nullptr ;
 
 void LayoutTransition::setDuration(long duration) {
     mChangingAppearingDuration = duration;
@@ -180,7 +182,7 @@ long LayoutTransition::getStagger(int transitionType) {
     return 0;
 }
 
-void LayoutTransition::setInterpolator(int transitionType, TimeInterpolator* interpolator) {
+void LayoutTransition::setInterpolator(int transitionType, TimeInterpolator interpolator) {
     switch (transitionType) {
     case CHANGE_APPEARING:
         mChangingAppearingInterpolator = interpolator;
@@ -200,7 +202,7 @@ void LayoutTransition::setInterpolator(int transitionType, TimeInterpolator* int
     }
 }
 
-TimeInterpolator* LayoutTransition::getInterpolator(int transitionType) {
+TimeInterpolator LayoutTransition::getInterpolator(int transitionType) {
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingInterpolator;
@@ -217,7 +219,7 @@ TimeInterpolator* LayoutTransition::getInterpolator(int transitionType) {
     return nullptr;
 }
 
-void LayoutTransition::setAnimator(int transitionType, Animation* animator) {
+void LayoutTransition::setAnimator(int transitionType, Animator* animator) {
     switch (transitionType) {
     case CHANGE_APPEARING:
         mChangingAppearingAnim = animator;
@@ -237,7 +239,7 @@ void LayoutTransition::setAnimator(int transitionType, Animation* animator) {
     }
 }
 
-Animation* LayoutTransition::getAnimator(int transitionType){
+Animator* LayoutTransition::getAnimator(int transitionType){
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingAnim;
@@ -259,8 +261,8 @@ bool LayoutTransition::hasListeners()const{
 }
 
 void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int changeReason){
-    Animation* baseAnimator  = nullptr;
-    Animation* parentAnimator= nullptr;
+    Animator* baseAnimator  = nullptr;
+    Animator* parentAnimator= nullptr;
     long duration;
     switch (changeReason) {
     case APPEARING:
@@ -320,34 +322,36 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
     parent.addOnAttachStateChangeListener(callback);*/
 }
 
-void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animation* baseAnimator,long duration, View* child){
+void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,long duration, View* child){
     if(layoutChangeListenerMap.find(child) ==layoutChangeListenerMap.end()){
         return;
     }
     if (child->getWidth() == 0 && child->getHeight() == 0) {
         return;
     }
-    Animation* anim = baseAnimator;//->clone();
+    Animator* anim = baseAnimator;//->clone();
     auto ita=pendingAnimations.find(child);
     if (ita!=pendingAnimations.end()) {
-        Animation*currentAnimation=ita->second;
-        currentAnimation->cancel();
-        pendingAnimations.erase(ita);
+        Animator*currentAnimator=ita->second;
+        currentAnimator->cancel();
+       pendingAnimations.erase(ita);
     }
     // Cache the animation in case we need to cancel it later
-    pendingAnimations[child]=anim;
+   pendingAnimations[child]=anim;
 }
 
 void LayoutTransition::startChangingAnimations(){
     for (auto  ita : currentChangingAnimations) {
-        Animation*anim=ita.second;
-        anim->setStartTime(Animation::START_ON_FIRST_FRAME);//CurrentPlayTime(0);
+        Animator*anim=ita.second;
+        if(dynamic_cast<ObjectAnimator*>(anim)){
+            ((ObjectAnimator*)anim)->setCurrentPlayTime(0);
+        }
         anim->start();
     }
 }
 void LayoutTransition::endChangingAnimations(){ 
     for (auto ita : currentChangingAnimations) {
-        Animation*anim=ita.second;
+        Animator*anim=ita.second;
         anim->start();
         anim->cancel();//end
     }
@@ -422,23 +426,26 @@ void LayoutTransition::runAppearingTransition(ViewGroup* parent,View* child){
             if(l.endTransition)l.endTransition(*this, parent, child, APPEARING);
         return;
     }
-    Animation* anim = mAppearingAnim;//->clone();
-    //anim.setTarget(child);
-    //anim.setStartDelay(mAppearingDelay);
+    Animator* anim = mAppearingAnim->clone();
+    anim->setTarget(child);
+    anim->setStartDelay(mAppearingDelay);
     anim->setDuration(mAppearingDuration);
     if (mAppearingInterpolator != sAppearingInterpolator) {
         anim->setInterpolator(mAppearingInterpolator);
     }
-    /*if (anim instanceof ObjectAnimator) {
-        ((ObjectAnimator) anim).setCurrentPlayTime(0);
+    if (dynamic_cast<ObjectAnimator*>(anim)) {
+        ((ObjectAnimator*) anim)->setCurrentPlayTime(0);
     }
-    anim->addListener(new AnimatorListenerAdapter() {
-        public void onAnimationEnd(Animator anim) {
-            currentAppearingAnimations.remove(child);
-            for (auto l: mListeners)
-                if(l.endTransition)l.endTransition(*this, parent, child, APPEARING);
-        }
-    });*/
+    AnimatorListenerAdapter lis;
+    lis.onAnimationEnd=[&](Animator& anim,bool reverse){
+        auto it=currentAppearingAnimations.find(child);
+        if(it!=currentAppearingAnimations.end())
+            currentAppearingAnimations.erase(it);
+        for (auto l: mListeners)
+            if(l.endTransition)l.endTransition(*this, parent, child, APPEARING);
+    };
+    anim->addListener(lis);
+
     currentAppearingAnimations[child]= anim;
     anim->start();
 }
@@ -453,25 +460,28 @@ void LayoutTransition::runDisappearingTransition(ViewGroup* parent,View* child){
             if(l.endTransition)l.endTransition(*this, parent, child, DISAPPEARING);
         return;
     }
-    Animation* anim = mDisappearingAnim;//.clone();
-    //anim->setStartDelay(mDisappearingDelay);
+    Animator* anim = mDisappearingAnim->clone();
+    anim->setStartDelay(mDisappearingDelay);
     anim->setDuration(mDisappearingDuration);
     if (mDisappearingInterpolator != sDisappearingInterpolator) {
         anim->setInterpolator(mDisappearingInterpolator);
     }
-    //anim->setTarget(child);
-    float preAnimAlpha = 1.0f;//child->getAlpha();
-    /*anim->addListener(new AnimatorListenerAdapter() {
-        public void onAnimationEnd(Animator anim) {
-            currentDisappearingAnimations.remove(child);
-            child.setAlpha(preAnimAlpha);
-            for (TransitionListener l :mListeners)
-                if(l.endTransition)l.endTransition(*this, parent, child, DISAPPEARING);
-        }
-    });
-    if (anim instanceof ObjectAnimator) {
-        ((ObjectAnimator) anim).setCurrentPlayTime(0);
-    }*/
+    anim->setTarget(child);
+    float preAnimAlpha = child->getAlpha();
+    AnimatorListenerAdapter lis;
+    lis.onAnimationEnd=[&](Animator& anim,bool reverse){
+        auto it=currentDisappearingAnimations.find(child);
+        if(it!=currentDisappearingAnimations.end())
+            currentDisappearingAnimations.erase(it);
+        child->setAlpha(preAnimAlpha);
+        for (TransitionListener l :mListeners)
+            if(l.endTransition)l.endTransition(*this, parent, child, DISAPPEARING);
+    };
+    anim->addListener(lis);
+
+    if (dynamic_cast<ObjectAnimator*>(anim)) {
+        ((ObjectAnimator*) anim)->setCurrentPlayTime(0);
+    }
     currentDisappearingAnimations[child]= anim;
     anim->start();
 }

@@ -4,8 +4,12 @@ namespace cdroid{
 std::map<const std::string,std::map<const std::string,PropertyValuesHolder::PropertyGetter>>PropertyValuesHolder::sGetterPropertyMap;
 std::map<const std::string,std::map<const std::string,PropertyValuesHolder::PropertySetter>>PropertyValuesHolder::sSetterPropertyMap;
 
+static float FloatEvaluator(float fraction, float startValue, float endValue) {
+     return startValue + fraction * (endValue - startValue);
+}
 PropertyValuesHolder::PropertyValuesHolder(const std::string propertyName){
     mPropertyName = propertyName;
+    mEvaluator=FloatEvaluator;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(Property*prop){
@@ -32,8 +36,20 @@ PropertyValuesHolder* PropertyValuesHolder::ofInt(Property*prop,const std::vecto
     return pvh;
 }
 
+PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    pvh->setIntValues(values);
+    return pvh; 
+}
+
 PropertyValuesHolder* PropertyValuesHolder::ofFloat(Property*prop,const std::vector<float>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    pvh->setFloatValues(values);
+    return pvh; 
+}
+
+PropertyValuesHolder* ofFloat(const std::string&name,const std::vector<float>&values){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
     pvh->setFloatValues(values);
     return pvh; 
 }
@@ -46,6 +62,7 @@ void PropertyValuesHolder::setIntValues(const std::vector<int>&values){
         kf.value=values[i];
     }
 }
+
 void PropertyValuesHolder::setFloatValues(const std::vector<float>&values){
     mKeyFrames.resize(values.size());
     for(int i=0;i<values.size();i++){
@@ -54,6 +71,10 @@ void PropertyValuesHolder::setFloatValues(const std::vector<float>&values){
         kf.value=values[i];
     }
 }
+
+/*void PropertyValuesHolder::setConverter(TypeConverter converter){
+    mConverter=converter;
+}*/
 
 float PropertyValuesHolder::getValue(float fraction)const{
     const KeyFrame &first = mKeyFrames[0];
@@ -92,7 +113,11 @@ float PropertyValuesHolder::getValue(float fraction)const{
 }
 
 void PropertyValuesHolder::calculateValue(float fraction){
-    float value=getValue(fraction);
+    mAnimatedValue=getValue(fraction);
+}
+
+float PropertyValuesHolder::getAnimatedValue()const{
+    return mAnimatedValue;
 }
 
 }

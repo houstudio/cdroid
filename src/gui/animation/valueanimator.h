@@ -34,7 +34,7 @@ private:
     bool mSelfPulse = true;
     bool mSuppressSelfPulseRequested = false;
     float mDurationScale = -1.f;
-    TimeInterpolator mInterpolator=nullptr;
+    TimeInterpolator mInterpolator = nullptr;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
     std::map<const std::string,PropertyValuesHolder*>mValuesMap;
 protected:
@@ -85,8 +85,8 @@ public:
     void setStartDelay(long startDelay);
     static long getFrameDelay();
     static void setFrameDelay(long frameDelay);
-    void* getAnimatedValue();
-    void* getAnimatedValue(const std::string&propertyName);
+    float getAnimatedValue();
+    float getAnimatedValue(const std::string&propertyName);
     void setRepeatCount(int value);
     int getRepeatCount()const;
     void setRepeatMode(int value);

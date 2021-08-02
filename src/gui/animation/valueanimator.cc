@@ -2,6 +2,7 @@
 #include <systemclock.h>
 #include <cmath>
 #include <stdarg.h>
+#include <cdlog.h>
 
 namespace cdroid{
 
@@ -55,6 +56,7 @@ ValueAnimator* ValueAnimator::ofFloat(int count,...){
 void ValueAnimator::setIntValues(const std::vector<int>&values){
     PropertyValuesHolder*prop=new PropertyValuesHolder(std::string());
     prop->setIntValues(values);
+    setValues(1,prop);
 }
 
 void ValueAnimator::setFloatValues(const std::vector<float>&values){
@@ -208,12 +210,14 @@ long ValueAnimator::getFrameDelay(){
 void ValueAnimator::setFrameDelay(long frameDelay){
 }
 
-void* ValueAnimator::getAnimatedValue(){
-    return nullptr;
+float ValueAnimator::getAnimatedValue(){
+    if(mValuesMap.size())
+        return mValuesMap.begin()->second->getAnimatedValue();
+    return .0f;
 }
 
-void* ValueAnimator::getAnimatedValue(const std::string&propertyName){
-    return nullptr;
+float ValueAnimator::getAnimatedValue(const std::string&propertyName){
+    return .0f;
 }
 
 void ValueAnimator::setRepeatCount(int value) {

@@ -4,9 +4,10 @@
 #include <functional>
 #include <widget/viewgroup.h>
 #include <interpolators.h>
+#include <animation/animator.h>
 
 namespace cdroid{
-typedef Interpolator TimeInterpolator;
+
 class LayoutTransition{
 public:
     struct TransitionListener{
@@ -40,35 +41,35 @@ private:
     bool mAnimateParentHierarchy      = true;
     std::vector<TransitionListener>mListeners;
 
-    static TimeInterpolator* ACCEL_DECEL_INTERPOLATOR;
-    static TimeInterpolator* DECEL_INTERPOLATOR      ;
-    static TimeInterpolator* sAppearingInterpolator  ;
-    static TimeInterpolator* sDisappearingInterpolator;
-    static TimeInterpolator* sChangingAppearingInterpolator;
-    static TimeInterpolator* sChangingDisappearingInterpolator;
-    static TimeInterpolator* sChangingInterpolator;
+    static TimeInterpolator ACCEL_DECEL_INTERPOLATOR;
+    static TimeInterpolator DECEL_INTERPOLATOR      ;
+    static TimeInterpolator sAppearingInterpolator  ;
+    static TimeInterpolator sDisappearingInterpolator;
+    static TimeInterpolator sChangingAppearingInterpolator;
+    static TimeInterpolator sChangingDisappearingInterpolator;
+    static TimeInterpolator sChangingInterpolator;
 
-    TimeInterpolator* mAppearingInterpolator            = sAppearingInterpolator;
-    TimeInterpolator* mDisappearingInterpolator         = sDisappearingInterpolator;
-    TimeInterpolator* mChangingAppearingInterpolator    = sChangingAppearingInterpolator;
-    TimeInterpolator* mChangingDisappearingInterpolator = sChangingDisappearingInterpolator;
-    TimeInterpolator* mChangingInterpolator             = sChangingInterpolator;
+    TimeInterpolator mAppearingInterpolator            = sAppearingInterpolator;
+    TimeInterpolator mDisappearingInterpolator         = sDisappearingInterpolator;
+    TimeInterpolator mChangingAppearingInterpolator    = sChangingAppearingInterpolator;
+    TimeInterpolator mChangingDisappearingInterpolator = sChangingDisappearingInterpolator;
+    TimeInterpolator mChangingInterpolator             = sChangingInterpolator;
 
-    static Animation* defaultChange;
-    static Animation* defaultChangeIn;
-    static Animation* defaultChangeOut;
-    static Animation* defaultFadeIn;
-    static Animation* defaultFadeOut;
-    Animation* mDisappearingAnim = nullptr;
-    Animation* mAppearingAnim    = nullptr;
-    Animation* mChangingAppearingAnim = nullptr;
-    Animation* mChangingDisappearingAnim = nullptr;
-    Animation* mChangingAnim = nullptr;
+    static Animator* defaultChange;
+    static Animator* defaultChangeIn;
+    static Animator* defaultChangeOut;
+    static Animator* defaultFadeIn;
+    static Animator* defaultFadeOut;
+    Animator* mDisappearingAnim = nullptr;
+    Animator* mAppearingAnim    = nullptr;
+    Animator* mChangingAppearingAnim = nullptr;
+    Animator* mChangingDisappearingAnim = nullptr;
+    Animator* mChangingAnim = nullptr;
 
-    std::map<View*, Animation*> pendingAnimations;
-    std::map<View*, Animation*> currentChangingAnimations;
-    std::map<View*, Animation*> currentAppearingAnimations;
-    std::map<View*, Animation*> currentDisappearingAnimations;
+    std::map<View*, Animator*> pendingAnimations;
+    std::map<View*, Animator*> currentChangingAnimations;
+    std::map<View*, Animator*> currentAppearingAnimations;
+    std::map<View*, Animator*> currentDisappearingAnimations;
     std::map<View*, View::OnLayoutChangeListener> layoutChangeListenerMap;
 public :
     /**
@@ -100,7 +101,7 @@ public :
 private:
     bool hasListeners()const;
     void runChangeTransition(ViewGroup* parent, View* newView, int changeReason);
-    void setupChangeAnimation(ViewGroup* parent, int changeReason, Animation* baseAnimator,long duration, View* child);
+    void setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,long duration, View* child);
     void runAppearingTransition(ViewGroup* parent,View* child);
     void runDisappearingTransition(ViewGroup* parent,View* child);
     void addChild(ViewGroup* parent, View* child, bool changesLayout);
@@ -117,11 +118,11 @@ public:
     void setStagger(int transitionType, long duration);
     long getStagger(int transitionType);
 
-    void setInterpolator(int transitionType, TimeInterpolator* interpolator);
-    TimeInterpolator* getInterpolator(int transitionType);
+    void setInterpolator(int transitionType, TimeInterpolator interpolator);
+    TimeInterpolator getInterpolator(int transitionType);
 
-    void setAnimator(int transitionType, Animation* anim);
-    Animation* getAnimator(int transitionType);
+    void setAnimator(int transitionType, Animator* anim);
+    Animator* getAnimator(int transitionType);
     void startChangingAnimations();
     void endChangingAnimations();
     bool isChangingLayout();

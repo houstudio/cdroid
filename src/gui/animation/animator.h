@@ -76,7 +76,7 @@ public:
     virtual Animator*clone();
     virtual long getStartDelay()=0;
     virtual void setStartDelay(long startDelay)=0;
-    Animator& setDuration(long duration);
+    virtual Animator& setDuration(long duration)=0;
     virtual long getDuration()=0;
     long getTotalDuration();
     virtual void setInterpolator(TimeInterpolator value)=0;
@@ -100,4 +100,8 @@ public:
     virtual void reverse(); 
 };
 
+class AnimatorListenerAdapter:public Animator::AnimatorListener,Animator::AnimatorPauseListener{
+public:
+    AnimatorListenerAdapter();
+};
 }

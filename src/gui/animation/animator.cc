@@ -133,4 +133,8 @@ bool Animator::isInitialized() {
 void Animator::animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse) {
 }
 
+AnimatorListenerAdapter::AnimatorListenerAdapter(){
+    onAnimationCancel=onAnimationRepeat=onAnimationPause=onAnimationResume=[](Animator&anim){};
+    onAnimationEnd=onAnimationStart=[](Animator&aim,bool reverse){};
+}
 }//endof namespace

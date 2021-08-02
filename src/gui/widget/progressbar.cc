@@ -1,4 +1,5 @@
 #include <widget/progressbar.h>
+#include <animation/objectanimator.h>
 #include <cdlog.h>
 
 #define  MAX_LEVEL  10000
@@ -155,18 +156,30 @@ void ProgressBar::setVisualProgress(int id, float progress){
     onVisualProgressChanged(id, progress);
 }
 
+
+ProgressBar::ProgressProperty::ProgressProperty(const std::string&name):Property(name){}
+
+float ProgressBar::ProgressProperty::get(void* target){
+    return ((ProgressBar*)target)->mVisualProgress;
+}
+
+void ProgressBar::ProgressProperty::set(void*target, float value){
+    ((ProgressBar*)target)->mVisualProgress=value;
+}
+
+
 void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
     int range = mMax - mMin;
     const float scale = range > 0 ? (progress - mMin) / (float) range : 0;
     const bool isPrimary = id == ID_PRIMARY;//R.id.progress;
-
-    /*if (isPrimary && animate) {
-        ObjectAnimator animator = ObjectAnimator.ofFloat(this, VISUAL_PROGRESS, scale);
-        animator.setAutoCancel(true);
-        animator.setDuration(PROGRESS_ANIM_DURATION);
-        animator.setInterpolator(PROGRESS_ANIM_INTERPOLATOR);
-        animator.start();
-    } else*/ {
+    ProgressProperty*VISUAL_PROGRESS=new ProgressProperty("visual_progress");
+    if (isPrimary && animate) {
+        ObjectAnimator* animator = ObjectAnimator::ofFloat(this, VISUAL_PROGRESS, scale);
+        animator->setAutoCancel(true);
+        animator->setDuration(PROGRESS_ANIM_DURATION);
+        animator->setInterpolator(new  DecelerateInterpolator());//PROGRESS_ANIM_INTERPOLATOR);
+        animator->start();
+    } else {
         setVisualProgress(id, scale);
     }
 

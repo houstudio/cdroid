@@ -1,11 +1,14 @@
 #ifndef __PROGRESS_BAR_H__
 #define __PROGRESS_BAR_H__
 #include <widget/view.h>
+#include <animation/property.h>
 
 namespace cdroid{
 
 class ProgressBar:public View{
 private:
+    static constexpr int MAX_LEVEL = 10000;
+    static constexpr int PROGRESS_ANIM_DURATION = 80;
     struct RefreshData{
         int id;
         int progress;
@@ -17,8 +20,15 @@ private:
             fromUser=false;
         }
     };
+    class ProgressProperty:public Property{
+    public:
+        ProgressProperty(const std::string&);
+        float get(void*)override;
+        void set(void*,float)override;
+    };
+    friend class ProgressProperty;
     bool mAttached;
-    int mVisualProgress;
+    float mVisualProgress;
     int mDuration;
     bool mOnlyIndeterminate;
     bool mHasAnimation;
