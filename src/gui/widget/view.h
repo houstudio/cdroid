@@ -679,8 +679,8 @@ public:
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
 	
-    virtual void postDelayed(Runnable& what,uint32_t delay=0);
     void post(Runnable& what);
+    virtual void postDelayed(Runnable& what,uint32_t delay=0);
     virtual void removeCallbacks(const Runnable& what);
 
     virtual int getBaseline();
