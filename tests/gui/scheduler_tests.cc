@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <windows.h>
 #include <ngl_os.h>
-#include <scheduler.h>
+#include <core/scheduler.h>
 
 class SCHEDULER:public testing::Test{
 
@@ -32,8 +32,8 @@ TEST_F(SCHEDULER,Once){
    sch.schedule([&count](){count++;},system_clock::now()+std::chrono::seconds(10));
    sch.schedule(std::bind(&SubscribeItem::onTriggered,&itm),system_clock::now()+std::chrono::seconds(10));
    sleep(10);
-   sch.check(); 
-   sch.check();
+   //sch.check(); 
+   //sch.check();
    ASSERT_EQ(count,1);
 }
 
@@ -42,7 +42,7 @@ TEST_F(SCHEDULER,FromNow){
    int count=0;
    sch.scheduleFromNow([&count](){count++;},10);
    sleep(10);
-   sch.check();
+   //sch.check();
    ASSERT_EQ(count,1);
 }
 
@@ -56,7 +56,7 @@ TEST_F(SCHEDULER,Every){
    sch.scheduleEvery(std::bind(&SubscribeItem::onTriggered,&itm),5);
    for(int i=0;i<20;i++){
        sleep(1);
-       sch.check();
+       //sch.check();
    }
    ASSERT_EQ(count,4);
 }
@@ -66,7 +66,7 @@ TEST_F(SCHEDULER,Hourly){
    int count=0;
    sch.scheduleHourly([&count](){count++;},system_clock::now());
    sleep(10);
-   sch.check();
+   //sch.check();
    ASSERT_EQ(count,0);
 }
 
@@ -75,7 +75,7 @@ TEST_F(SCHEDULER,Hourly1){
    int count=0;
    sch.scheduleHourly([&count](){count++;},system_clock::now());
    sleep(3600);
-   sch.check();
+   //sch.check();
    ASSERT_EQ(count,1);
 }
 
@@ -84,7 +84,7 @@ TEST_F(SCHEDULER,Daily){
    int count=0;
    sch.scheduleDaily([&count](){count++;},system_clock::now());
    sleep(10);
-   sch.check();
+   //sch.check();
    ASSERT_EQ(count,0);
 }
 
@@ -93,7 +93,7 @@ TEST_F(SCHEDULER,Weekly){
    int count=0;
    sch.scheduleWeekly([&count](){count++;},system_clock::now());
    sleep(10);
-   sch.check();
+   //sch.check();
    ASSERT_EQ(count,0);
 }
 

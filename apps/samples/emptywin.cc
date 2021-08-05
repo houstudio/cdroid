@@ -75,12 +75,12 @@ public:
         canvas->fill();
         mDegrees=0;
     }
-    bool onMessage(DWORD msg,DWORD wp,ULONG lp)override{
+    /*bool onMessage(DWORD msg,DWORD wp,ULONG lp)override{
         if(msg==1000){
              invalidate(nullptr);
         }
         return Window::onMessage(msg,wp,lp);
-    }
+    }*/
 };
 int main(int argc,const char*argv[]){
     App app(argc,argv);

@@ -1,7 +1,6 @@
 #ifndef __SHAPE_H__
 #define __SHAPE_H__
-#include <rect.h>
-#include <canvas.h>
+#include <core/canvas.h>
 namespace cdroid{
 
 class Shape{

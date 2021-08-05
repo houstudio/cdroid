@@ -18,8 +18,8 @@
 #define __TEXTVIEW_H__
 
 #include <widget/view.h>
-#include <gravity.h>
-#include <layout.h>
+#include <core/gravity.h>
+#include <core/layout.h>
 
 namespace cdroid {
 

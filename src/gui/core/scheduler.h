@@ -1,14 +1,14 @@
 #ifndef __SHCEDULE_H__
 #define __SHCEDULE_H__
-#include<chrono>
-#include<functional>
-#include<map>
-#include <looper/looper.h>
+#include <chrono>
+#include <functional>
+#include <map>
+#include <core/looper.h>
 
 using namespace std::chrono;
 namespace cdroid{
 
-class Scheduler:public EventSource{
+class Scheduler:public MessageHandler{
 public:
 typedef std::function<void(void)> Function;
 private:
@@ -22,10 +22,8 @@ public:
     void scheduleDaily(Function f,system_clock::time_point t);
     void scheduleWeekly(Function f,system_clock::time_point t);
     void scheduleMonthly(Function f,system_clock::time_point t);/*TODO*/
-
     virtual void remove(system_clock::time_point t);
-    bool dispatch(EventHandler &func)override;
-    bool check()override;/*check schedulered item*/
+    void handleMessage(const Message&)override;
 };
 
 }

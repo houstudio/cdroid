@@ -58,8 +58,8 @@ bool Adapter::isEmpty()const{
     return getCount() == 0;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
+
 void PagerAdapter::startUpdate(ViewGroup* container){
     startUpdate((View*)container);
 }
@@ -68,10 +68,12 @@ void PagerAdapter::startUpdate(View*container){
 }
 
 void*PagerAdapter::instantiateItem(ViewGroup* container, int position){
-    instantiateItem((View*)container,position);
+    return instantiateItem((View*)container,position);
 }
 
 void* PagerAdapter::instantiateItem(View* container, int position){
+    throw "Required method instantiateItem was not overridden";
+    return nullptr;
 }
 
 void PagerAdapter::destroyItem(ViewGroup* container, int position, void* object){

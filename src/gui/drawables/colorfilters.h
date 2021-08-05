@@ -1,7 +1,7 @@
 #ifndef __COLOR_FILTERS_H__
 #define __COLOR_FILTERS_H__
 #include <drawables/colormatrix.h>
-#include <canvas.h>
+#include <core/canvas.h>
 namespace cdroid{
 enum TintMode{
     CLEAR =0,

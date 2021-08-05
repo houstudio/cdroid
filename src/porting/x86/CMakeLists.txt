@@ -42,6 +42,7 @@ list(APPEND X86LIBS pthread)
 
 include_directories(./
     ../include
+    ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${X11_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}

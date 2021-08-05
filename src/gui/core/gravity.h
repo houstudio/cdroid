@@ -1,6 +1,6 @@
 #ifndef __GRAVITY_H__
 #define __GRAVITY_H__
-#include <rect.h>
+#include <core/rect.h>
 #include <string>
 
 namespace cdroid{

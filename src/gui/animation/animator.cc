@@ -96,6 +96,7 @@ void Animator::appendChangingConfigurations(int configs) {
 
 void Animator::setupStartValues() {
 }
+
 void Animator::setupEndValues() {
 }
 
@@ -137,4 +138,5 @@ AnimatorListenerAdapter::AnimatorListenerAdapter(){
     onAnimationCancel=onAnimationRepeat=onAnimationPause=onAnimationResume=[](Animator&anim){};
     onAnimationEnd=onAnimationStart=[](Animator&aim,bool reverse){};
 }
+
 }//endof namespace

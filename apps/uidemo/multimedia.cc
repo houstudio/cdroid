@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <assets.h>
 #include <fstream>
 #include <string.h>
 #include <lyricsview.h>

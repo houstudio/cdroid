@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 #include <ngl_os.h>
-#include <preferences.h>
+#include <core/preferences.h>
 
 using namespace cdroid;
 

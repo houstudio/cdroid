@@ -1,7 +1,7 @@
 #ifndef __OVER_SCROLLER_H__
 #define __OVER_SCROLLER_H__
-#include <viewconfiguration.h>
-#include <interpolators.h>
+#include <core/context.h>
+#include <animation/interpolators.h>
 
 namespace cdroid{
 
@@ -47,7 +47,7 @@ public:
     // The allowed overshot distance before boundary is reached.
     int mOver;
     // Fling friction
-    float mFlingFriction = ViewConfiguration::getScrollFriction();
+    float mFlingFriction;
     // Current state of the animation.
     int mState = SPLINE;
     // A context-specific coefficient adjusted to physical values.

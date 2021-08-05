@@ -12,7 +12,7 @@ public:
    MWindow(int x,int y,int w,int h):Window(x,y,w,h){dx=dy=50;}
    virtual bool onMessage(DWORD msgid,DWORD wp,ULONG lp){
       if(1000==msgid){
-         sendMessage(msgid,wp,lp,lp);
+         //sendMessage(msgid,wp,lp,lp);
          int x=getX();
          int y=getY();
          if(x+getWidth()>1280)dx*=-1;
@@ -22,7 +22,7 @@ public:
          setPos(x+dx,y+dy);
          return true;
       }
-      return Window::onMessage(msgid,wp,lp);
+      return true;//Window::onMessage(msgid,wp,lp);
    }
    void onDraw(Canvas&c)override{
        srand(time(nullptr)*(long)this);
@@ -52,9 +52,9 @@ int main(int argc,const char*argv[]){
     w2->addView(lv2).setId(0);
     
     if(argc>5){
-        w1->sendMessage(1000,0,2000,100);w1->setDir(50,40);
-        w2->sendMessage(1000,0,1000,80);w2->setDir(66,53);
-        w3->sendMessage(1000,0,200,85);w3->setDir(23,13);
+        //w1->sendMessage(1000,0,2000,100);w1->setDir(50,40);
+        //w2->sendMessage(1000,0,1000,80);w2->setDir(66,53);
+        //w3->sendMessage(1000,0,200,85);w3->setDir(23,13);
     }
     return app.exec();
 }

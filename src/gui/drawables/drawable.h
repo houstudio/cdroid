@@ -1,13 +1,13 @@
 #ifndef __DRAWABLE_H__
 #define __DRAWABLE_H__
-#include <canvas.h>
+#include <core/canvas.h>
 #include <drawables/stateset.h>
 #include <drawables/colorstatelist.h>
 #include <drawables/colorfilters.h>
-#include <attributeset.h>
-#include <context.h>
-#include <gravity.h>
-#include <rect.h>
+#include <core/attributeset.h>
+#include <core/context.h>
+#include <core/gravity.h>
+#include <core/rect.h>
 #include <vector>
 
 namespace cdroid{

@@ -14,7 +14,7 @@
  */
 #ifndef _INPUT_EVENT_CODES_H
 #define _INPUT_EVENT_CODES_H
-#include <keycodes.h>
+#include <core/keycodes.h>
 /*
  * Device properties and quirks
  */

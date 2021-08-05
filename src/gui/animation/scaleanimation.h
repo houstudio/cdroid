@@ -1,7 +1,7 @@
 #ifndef __SCALEANIMATION_H__
 #define __SCALEANIMATION_H__
 #include <animation/animation.h>
-#include <typedvalue.h>
+#include <core/typedvalue.h>
 
 namespace cdroid{
 class ScaleAnimation:public Animation{

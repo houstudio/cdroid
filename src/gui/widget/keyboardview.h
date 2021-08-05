@@ -4,7 +4,7 @@
 #include <widget/view.h>
 #include <widget/edittext.h>
 #include <vector>
-#include <keyboard.h>
+#include <core/keyboard.h>
 
 namespace cdroid{
 

@@ -1,9 +1,9 @@
 #ifndef __TRANSFORMATION_H__
 #define __TRANSFORMATION_H__
-#include <rect.h>
+#include <core/rect.h>
 #include <cairomm/matrix.h>
-#include <interpolators.h>
-#include <attributeset.h>
+#include <animation/interpolators.h>
+#include <core/attributeset.h>
 
 typedef Cairo::Matrix Matrix;
 namespace cdroid{

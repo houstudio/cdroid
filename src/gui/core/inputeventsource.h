@@ -1,7 +1,7 @@
 #ifndef __INPUT_EVENT_SOURCE_H__
 #define __INPUT_EVENT_SOURCE_H__
 #include <cdinput.h>
-#include <looper/looper.h>
+#include <core/looper.h>
 #include <queue>
 #include <string>
 #include <fstream>
@@ -18,10 +18,10 @@ namespace GRT{
 
 namespace cdroid{
 
-class InputEventSource:public EventSource{
+class InputEventSource:public EventHandler{
 protected:
     std::mutex mtxEvents;
-	bool isplayback;
+    bool isplayback;
     nsecs_t lasteventTime;
     std::ofstream frecord;
     std::queue<InputEvent*>events;
@@ -36,12 +36,9 @@ public:
     ~InputEventSource();
     bool initGesture(const std::string&fname);
     void playback(const std::string&fname);
-    bool prepare(int& max_timeout);
-    bool check(){return events.size()>0;}
-    bool dispatch(EventHandler &func) { return func(*this); }
-    bool is_file_source() const override final { return false; }
+    int checkEvents()override;
+    int handleEvents()override;
     int process(const INPUTEVENT*es,int count);
-    bool processKey();
 };
 }
 #endif

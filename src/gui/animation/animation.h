@@ -1,6 +1,6 @@
 #ifndef __ANIMATION_H__
 #define __ANIMATION_H__
-#include <context.h>
+#include <core/context.h>
 
 #include <animation/transformation.h>
 

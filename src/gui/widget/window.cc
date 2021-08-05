@@ -269,10 +269,12 @@ bool Window::performFocusNavigation(KeyEvent& event){
 }
 
 bool Window::onKeyDown(int keyCode,KeyEvent& evt){
+    Runnable run;
     switch(keyCode){
     case KEY_ESCAPE:
         LOGD("recv %d %s",keyCode,evt.getLabel());
-        sendMessage((DWORD)WM_DESTROY,0,0,0);
+        run=[this](){WindowManager::getInstance().removeWindow(this);};
+        post(run);
         return true;
     default:
         //return performFocusNavigation(evt);
@@ -282,15 +284,12 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     return false;
 }
 
-void Window::sendMessage(View*v,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime){
-    if(source)source->sendMessage(v,msgid,wParam,lParam,delayedtime);
+
+void Window::postDelayed(Runnable& what,uint32_t delay){
+    if(source)source->post(what,delay);
 }
 
-void Window::post(View*v,const Runnable what,DWORD delay){
-    if(source)source->post(v,what,delay);
-}
-
-void Window::removeCallbacks(const Runnable what){
+void Window::removeCallbacks(const Runnable& what){
     if(source)source->removeCallbacks(what);
 }
 
@@ -329,7 +328,7 @@ void Window::broadcast(DWORD msgid,DWORD wParam,ULONG lParam){
 }
 
 void Window::close(){
-    sendMessage(View::WM_DESTROY,0,0);
+    //sendMessage(View::WM_DESTROY,0,0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
-#include<scheduler.h>
-#include<cdtypes.h>
-#include<cdlog.h>
+#include <core/scheduler.h>
+#include <cdtypes.h>
+#include <cdlog.h>
 
 namespace cdroid{
 
@@ -15,10 +15,6 @@ static void Repeat2(Scheduler* s, Scheduler::Function f,system_clock::time_point
     s->schedule(std::bind(&Repeat2,s,f,t,deltaSeconds),t);
 }
 
-bool Scheduler::dispatch(EventHandler &func){
-    /*check(),check will be called by looper*/;
-    return func(*this);
-}
 
 void Scheduler::schedule(Function f,system_clock::time_point t){
     if(t>system_clock::now())
@@ -63,6 +59,9 @@ void Scheduler::remove(system_clock::time_point t){
         taskQueue.erase(it);
 }
 
+void Scheduler::handleMessage(const Message&){
+}
+#if 0
 bool Scheduler::check(){
     auto task=taskQueue.begin();
     if(taskQueue.size()==0)return 0;
@@ -76,5 +75,6 @@ bool Scheduler::check(){
     }
     return 0;
 }
+#endif
 
 }/*namespace cdroid*/

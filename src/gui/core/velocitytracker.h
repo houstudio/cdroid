@@ -1,8 +1,8 @@
 #ifndef __VELOCITY_TRACKER_H__
 #define __VELOCITY_TRACKER_H__
 
-#include <uievents.h>
 #include <queue>
+#include <core/uievents.h>
 namespace cdroid{
 typedef int64_t nsecs_t;
 class VelocityTrackerStrategy;

@@ -9,7 +9,6 @@ aux_source_directory(widget SRCS_WIDGET)
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(dialogs SRCS_DIALOG)
-aux_source_directory(looper SRCS_LOOP)
 aux_source_directory(animation SRCS_ANIMATION)
 
 message("UI Lua script bindings is ${LUA_BINDINGS} guistatic=${GUI_STATIC}")
@@ -40,7 +39,7 @@ add_definitions(-DRAPIDJSON_HAS_STDSTRING)
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
     ${SRCS_CAIROMM} ${SRCS_DIALOG} 
-    ${SRCS_LOOP} ${SRCS_ANIMATION})
+    ${SRCS_ANIMATION})
 
 add_library(gui_objs OBJECT ${SOURCES_GUI})
 add_library(gui_static STATIC $<TARGET_OBJECTS:gui_objs>)

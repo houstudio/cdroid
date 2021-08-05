@@ -1,7 +1,7 @@
 #ifndef __TABLE_ROW_H__
 #define __TABLE_ROW_H__
 #include <widget/linearlayout.h>
-#include <sparsearray.h>
+#include <core/sparsearray.h>
 
 namespace cdroid{
 

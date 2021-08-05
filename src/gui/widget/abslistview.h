@@ -1,11 +1,10 @@
 #ifndef __ABS_LISTVIEW_H__
 #define __ABS_LISTVIEW_H__
-#include <sparsearray.h>
+#include <core/sparsearray.h>
 #include <widget/adapterview.h>
 #include <widget/recyclebin.h>
 #include <widget/overscroller.h>
 #include <widget/edgeeffect.h>
-#include <velocitytracker.h>
 namespace cdroid{
 
 #define OVERSCROLL_LIMIT_DIVISOR 3

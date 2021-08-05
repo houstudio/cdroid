@@ -27,7 +27,7 @@ public:
    AnalogClock(int w,int h);
    void setClockDrawable(Drawable*d,int id);
    Drawable*getClockDrawable(int id);
-   bool onMessage(DWORD msg,DWORD wp,ULONG lp);
+   //bool onMessage(DWORD msg,DWORD wp,ULONG lp);
 }; 
 
 }//namespace

@@ -108,7 +108,7 @@ private:
     Spinner*mLevelSelector;
     Button*mStartButton;
 protected:
-    bool onMessage(DWORD msgid,DWORD wp,ULONG lp)override;
+    bool onMessage(DWORD msgid,DWORD wp,ULONG lp);
     void onDraw(Canvas&canvas)override;
     bool onKeyUp(int keyCode,KeyEvent&event)override;
 public:
@@ -241,7 +241,7 @@ void TetrisWindow::ResetBlock(){
 }
 
 void TetrisWindow::StartGame(){
-    sendMessage(WM_REFRESH,0,0,speed_ms);
+    //sendMessage(WM_REFRESH,0,0,speed_ms);
     //产生初始下一个方块
     int block_id=rand()%7;
     CreateBlock(next_block,block_id);
@@ -279,9 +279,9 @@ bool TetrisWindow::onMessage(DWORD msgid,DWORD wp,ULONG lp){
     if((msgid==WM_REFRESH)&&(!mGameIsOver)){
          BlockMove(DOWN);
          invalidate(nullptr);
-         sendMessage(msgid,wp,lp,speed_ms);
+         //sendMessage(msgid,wp,lp,speed_ms);
     }else
-        return Window::onMessage(msgid,wp,lp);
+        return true;//Window::onMessage(msgid,wp,lp);
 }
 
 void TetrisWindow::GameOver(){

@@ -16,7 +16,6 @@
 #include <cdinput.h>
 #include <inputeventsource.h>
 #include <uieventsource.h>
-#include <looper/GenericSignalSource.h>
 #include <mutex>
 
 
@@ -76,13 +75,10 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
 
     setOpacity(getArgAsInt("alpha",255));
     InputEventSource*inputsource=new InputEventSource(getArg("record",""));
-    addEventSource(inputsource,[](EventSource&s){
-        ((InputEventSource&)s).processKey();
-        return true;
-    });
+    addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
 
-    SignalSource*sigsource=new GenericSignalSource(false);
+    /*SignalSource*sigsource=new GenericSignalSource(false);
     addEventSource(sigsource,[this](EventSource&s){
         LOGI("Sig interrupt %d",((SignalSource&)s).signo);
         this->exit(((SignalSource&)s).signo);
@@ -91,7 +87,7 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     sigsource->add(SIGABRT);
     sigsource->add(SIGINT);
     sigsource->add(SIGTERM);
-    sigsource->add(SIGKILL);
+    sigsource->add(SIGKILL);*/
 }
 
 App::~App(){
@@ -157,20 +153,20 @@ const std::string App::getAssetsPath(){
     return path;
 }
 
-int App::addEventSource(EventSource *source, EventHandler handler){
-    return Looper::getDefault()->add_event_source(source,handler);
+void App::addEventHandler(const EventHandler*handler){
+    Looper::getDefault()->addEventHandler(handler);
 }
 
-int App::removeEventSource(EventSource*source){
-    return  Looper::getDefault()->remove_event_source(source);
+void App::removeEventHandler(const EventHandler*handler){
+    //Looper::getDefault()->remove_event_source(source);
 }
 
 int App::exec(){
-    return  Looper::getDefault()->run();
+    while(1)Looper::getDefault()->pollAll(5);
 }
 
 void App::exit(int code){
-     Looper::getDefault()->quit(code);
+    //Looper::getDefault()->quit(code);
 }
 
 void App::setName(const std::string&appname){

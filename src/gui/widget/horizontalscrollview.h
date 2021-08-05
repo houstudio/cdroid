@@ -3,7 +3,6 @@
 #include <widget/framelayout.h>
 #include <widget/overscroller.h>
 #include <widget/edgeeffect.h>
-#include <velocitytracker.h>
 
 namespace cdroid{
 

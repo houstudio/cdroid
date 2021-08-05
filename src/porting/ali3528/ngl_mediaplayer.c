@@ -15,7 +15,7 @@ typedef struct{
    void *userdata;
 }NGL_PLAYER;
 static void MPCallbackFunc( enum aui_mp_message msg, void *data, void *user_data );
-
+#if 0
 HANDLE nglMPOpen(const char*fname){
     aui_hdl hdl;
     NGL_PLAYER *mp=(NGL_PLAYER*)malloc(sizeof(NGL_PLAYER));
@@ -36,46 +36,46 @@ HANDLE nglMPOpen(const char*fname){
     mp->attr.start_time = 0;
 
     int rc=aui_mp_open(&mp->attr,&mp->hplayer);
-    NGLOGD("mp_open=%d hdl=%p uri=%s",rc,hdl,mp->attr.uc_file_name);
+    LOGD("mp_open=%d hdl=%p uri=%s",rc,hdl,mp->attr.uc_file_name);
     return mp;
 }
 
 DWORD nglMPPlay(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
-    NGLOGD("hdl=%p",mp);
+    LOGD("hdl=%p",mp);
     int rc=aui_mp_set_buffering_time(mp->hplayer,10,5,30);
-    NGLOGD("_mp_set_buffering_time=%d hdl=%p",rc,mp);
+    LOGD("_mp_set_buffering_time=%d hdl=%p",rc,mp);
     rc=aui_mp_set_start2play_percent(mp->hplayer,3);
-    NGLOGD("mp_set_start2play_percent=%d hdl=%p",rc,mp);
+    LOGD("mp_set_start2play_percent=%d hdl=%p",rc,mp);
     rc=aui_mp_start(mp->hplayer);
-    NGLOGD("mp_start=%d hdl=%p",rc,mp);
+    LOGD("mp_start=%d hdl=%p",rc,mp);
     return E_OK;
 }
 
 DWORD nglMPStop(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_stop(mp->hplayer);
-    NGLOGD("rc=%d hdl=%p",rc,mp);
+    LOGD("rc=%d hdl=%p",rc,mp);
     return E_OK;
 }
 
 DWORD nglMPResume(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_resume(mp->hplayer);
-    NGLOGD("rc=%d hdl=%p",rc,mp);
+    LOGD("rc=%d hdl=%p",rc,mp);
     return E_OK;
 }
 DWORD nglMPPause(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_pause(mp->hplayer);
-    NGLOGD("rc=%d hdl=%p",rc,mp);
+    LOGD("rc=%d hdl=%p",rc,mp);
     return E_OK;
 }
 
 DWORD nglMPClose(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_close(&mp->attr,&mp->hplayer);
-    NGLOGD("rc=%d hdl=%p",rc,mp);
+    LOGD("rc=%d hdl=%p",rc,mp);
     free(mp);
     return E_OK;
 }
@@ -88,7 +88,7 @@ DWORD nglMPGetTime(HANDLE handle,UINT*curtime,UINT*timems){
     rc=aui_mp_total_time_get(hdl,&t2);
     if(curtime)*curtime=t1;
     if(timems)*timems=t2;
-    NGLOGD("rc=%d hdl=%p times=%d/%d",rc,hdl,t1,t2);
+    LOGD("rc=%d hdl=%p times=%d/%d",rc,hdl,t1,t2);
     return E_OK;
 }
 DWORD nglMPSeek(HANDLE handle,UINT timems){
@@ -101,75 +101,87 @@ DWORD nglMPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){
     mp->cbk=cbk;
     mp->userdata=userdata;
 }
+#else
+HANDLE nglMPOpen(const char*fname){}
+DWORD nglMPPlay(HANDLE handle){}
+DWORD nglMPStop(HANDLE handle){}
+DWORD nglMPResume(HANDLE handle){}
+DWORD nglMPPause(HANDLE handle){}
+DWORD nglMPClose(HANDLE handle){}
+DWORD nglMPSeek(HANDLE handle,UINT timems){}
+DWORD nglMPGetTime(HANDLE handle,UINT*curtime,UINT*timems){}
+DWORD nglMPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){}
+
+#endif
 static void MPCallbackFunc( enum aui_mp_message msg, void *data, void *user_data )
 {
     NGL_PLAYER*mp=(NGL_PLAYER*)user_data;
     #define MPCBK(msg,param) if(mp->cbk)mp->cbk(mp,msg,param,mp->userdata)
-    NGLOGD("callback msg:");
+    LOGD("callback msg:");
     switch ( msg ) {
     case AUI_MP_PLAY_BEGIN: {
-        NGLOGD("AUI_MP_PLAY_BEGIN");
+        LOGD("AUI_MP_PLAY_BEGIN");
         break;
         }
     case AUI_MP_PLAY_END: {
         MPCBK(MP_END,0);
-        NGLOGD( "AUI_MP_PLAY_END userdata=%p",user_data);
+        LOGD( "AUI_MP_PLAY_END userdata=%p",user_data);
         break;
        }
     case AUI_MP_VIDEO_CODEC_NOT_SUPPORT: {
         MPCBK(MP_ERROR,0);
-        NGLOGD("AUI_MP_VIDEO_CODEC_NOT_SUPPORT");
+        LOGD("AUI_MP_VIDEO_CODEC_NOT_SUPPORT");
         break;
         }
     case AUI_MP_AUDIO_CODEC_NOT_SUPPORT: {
         MPCBK(MP_ERROR,0);
-        NGLOGD("AUI_MP_AUDIO_CODEC_NOT_SUPPORT");
+        LOGD("AUI_MP_AUDIO_CODEC_NOT_SUPPORT");
         break;
     }
     case AUI_MP_RESOLUTION_NOT_SUPPORT: {
         MPCBK(MP_ERROR,0);
-        NGLOGD("AUI_MP_RESOLUTION_NOT_SUPPORT");
+        LOGD("AUI_MP_RESOLUTION_NOT_SUPPORT");
         break;
     }
     case AUI_MP_FRAMERATE_NOT_SUPPORT: {
         MPCBK(MP_ERROR,0);
-        NGLOGD("AUI_MP_FRAMERATE_NOT_SUPPORT");
+        LOGD("AUI_MP_FRAMERATE_NOT_SUPPORT");
         break;
     }
     case AUI_MP_NO_MEMORY: {
         MPCBK(MP_ERROR,0);
-        NGLOGD("AUI_MP_NO_MEMORY");
+        LOGD("AUI_MP_NO_MEMORY");
         break;
     }
     case AUI_MP_DECODE_ERROR: {
         MPCBK(MP_ERROR,0);
-        NGLOGD("AUI_MP_DECODE_ERROR");
+        LOGD("AUI_MP_DECODE_ERROR");
         break;
     }
     case AUI_MP_ERROR_UNKNOWN: {
         MPCBK(MP_ERROR,0);
-        NGLOGD("AUI_MP_ERROR_UNKNOWN%s", ( char * )data );
+        LOGD("AUI_MP_ERROR_UNKNOWN%s", ( char * )data );
         break;
     }
     case AUI_MP_BUFFERING: {
-        NGLOGD("AUI_MP_BUFFERING");
+        LOGD("AUI_MP_BUFFERING");
         break;
     }
     case AUI_MP_ERROR_SOUPHTTP: {
-        NGLOGD("AUI_MP_ERROR_SOUPHTTP");
+        LOGD("AUI_MP_ERROR_SOUPHTTP");
         break;
     }
     case AUI_MP_FRAME_CAPTURE: {
         char path[128], frameInfo[128];
         unsigned int h, w;
         sscanf( ( char * )data, "%[^;];h=%u,w=%u", path, &h, &w );
-        NGLOGD("frame captured path %s", path );
-        NGLOGD("frame width=%u, height=%u", w, h );
-        NGLOGD("AUI_MP_FRAME_CAPTURE" );
+        LOGD("frame captured path %s", path );
+        LOGD("frame width=%u, height=%u", w, h );
+        LOGD("AUI_MP_FRAME_CAPTURE" );
         break;
     }
     default:
-        NGLOGD("unkown callback message:%d", msg );
+        LOGD("unkown callback message:%d", msg );
         break;
     }
 }

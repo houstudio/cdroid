@@ -1,12 +1,10 @@
 #include <gtest/gtest.h>
 #include <windows.h>
-#include <gravity.h>
-#include <assets.h>
 #include <ngl_misc.h>
 #include <drawables.h>
 #include <fstream>
 #include <sstream>
-#include <systemclock.h>
+#include <core/systemclock.h>
 #define SLEEP(x) usleep((x)*1000)
 class DRAWABLE:public testing::Test{
 public:

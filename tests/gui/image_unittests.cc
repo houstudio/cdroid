@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <cdtypes.h>
 #include <cdgraph.h>
-#include <canvas.h>
-#include <gravity.h>
+#include <core/canvas.h>
+#include <core/gravity.h>
 #include <sys/time.h>
-#include <assets.h>
+#include <core/assets.h>
 #include <cdinput.h>
 #include <sys/types.h>
 #include <sys/stat.h>

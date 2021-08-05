@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include <cdtypes.h>
 #include <cdgraph.h>
-#include <canvas.h>
+#include <core/canvas.h>
 #include <sys/time.h>
-#include <assets.h>
+#include <core/assets.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <layout.h>
+#include <core/layout.h>
 #include <dirent.h>
 #include <svg-cairo.h>
 #include <fstream>

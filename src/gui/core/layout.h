@@ -1,6 +1,6 @@
 #ifndef __LAYOUT_H__
 #define __LAYOUT_H__
-#include <canvas.h>
+#include <core/canvas.h>
 namespace cdroid{
 class Layout{
 private:

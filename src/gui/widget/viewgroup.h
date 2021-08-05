@@ -18,7 +18,7 @@
 #define __NGLUI_GROUPVIEW_H__
 
 #include <widget/view.h>
-#include <scroller.h>
+#include <core/scroller.h>
 
 namespace cdroid {
 
@@ -80,9 +80,6 @@ private:
     std::vector<View*>mVisibilityChangingChildren;
     int mChildCountWithTransientState;
     class TouchTarget* mFirstTouchTarget;
-    RECT focusRectSrc;
-    RECT focusRectDest;
-    RECT focusRect;
     POINT animateTo;//save window boundray  while animating
     POINT animateFrom;//window animate from boundary
     Transformation* mChildTransformation;
@@ -104,8 +101,6 @@ private:
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
 
     void setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus);
-    void moveFocusTo(const RECT&r);
-    void invalidateChildrenInFocusRect();
     void addInArray(View* child, int index);
     bool removeViewInternal(View* view);
     void removeViewInternal(int index, View* view);
@@ -161,7 +156,6 @@ protected:
 
     void drawableStateChanged()override;
     std::vector<int> onCreateDrawableState()const override;
-    virtual void onDraw(Canvas& canvas) override;
     void dispatchSetPressed(bool pressed)override;
     virtual int getChildDrawingOrder(int childCount, int i);
 
@@ -257,7 +251,6 @@ public:
     bool dispatchUnhandledMove(View* focused, int direction)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& evt);
-    virtual void onDrawFocusRect(Canvas&,const RECT&);
 
     void jumpDrawablesToCurrentState()override;
     void setAddStatesFromChildren(bool addsStates);

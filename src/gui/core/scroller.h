@@ -1,7 +1,7 @@
 #ifndef __SCROLLER_H__
 #define __SCROLLER_H__
-#include <interpolators.h>
-#include <context.h>
+#include <animation/interpolators.h>
+#include <core/context.h>
 namespace cdroid{
 
 class Scroller  {

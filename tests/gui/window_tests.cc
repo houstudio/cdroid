@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <windows.h>
 #include <ngl_os.h>
-#include <looper/TimerFD.h>
 #include <fstream>
 static const char*texts[]={"Creates 中国智造"," the specified format and dimensions.",
             "Initially the surface contents"," are set to 0.","(Specifically, within each pixel,",
@@ -21,7 +20,7 @@ public:
    TestWindow(int x,int y,int w,int h):Window(x,y,w,h){}
    virtual bool onKeyRelease(KeyEvent& evt){
      App::getInstance().exit(0);
-     sendMessage(View::WM_DESTROY,0,0);
+     //sendMessage(View::WM_DESTROY,0,0);
      return true;
    }
 };
@@ -110,13 +109,13 @@ TEST_F(WINDOW,showhide){
        w[i]=new Window(80*i,50*i,480,320);
        w[i]->setBackgroundColor(cls[i]);
    }
-   TimerFD *tfd=new TimerFD(50,false);
+   /*TimerFD *tfd=new TimerFD(50,false);
    app.addEventSource(tfd,[&](EventSource&s)->bool{
       w[index]->show();
       index=(index+1)%wc;
       w[index]->hide();
       return true; 
-   });
+   });*/
    app.exec();
 }
 TEST_F(WINDOW,multilayer){
@@ -175,7 +174,7 @@ private:
    int dx,dy;
 public:
    MWindow(int x,int y,int w,int h):TestWindow(x,y,w,h){dx=dy=50;}
-   virtual bool onMessage(DWORD msgid,DWORD wp,ULONG lp){
+   /*virtual bool onMessage(DWORD msgid,DWORD wp,ULONG lp){
       if(View::WM_TIMER==msgid){
          sendMessage(msgid,wp,lp,lp);
          int x=getX();
@@ -188,7 +187,7 @@ public:
          return true;
       }
       return false;
-   }
+   }*/
    void setDir(int x,int y){dx=x;dy=y;}
 };
 
@@ -199,9 +198,9 @@ TEST_F(WINDOW,multiwindow){
     MWindow*w2=new MWindow(300,200,420,300);
     w1->setBackgroundColor(0xFFFF0000);
     w2->setBackgroundColor(0xFF00FF00);
-    w1->sendMessage(View::WM_TIMER,0,100,100);w1->setDir(50,40);
-    w2->sendMessage(View::WM_TIMER,0,100,80);w2->setDir(66,53);
-    w3->sendMessage(View::WM_TIMER,0,100,85);w3->setDir(69,57);
+    //w1->sendMessage(View::WM_TIMER,0,100,100);w1->setDir(50,40);
+    //w2->sendMessage(View::WM_TIMER,0,100,80);w2->setDir(66,53);
+    //w3->sendMessage(View::WM_TIMER,0,100,85);w3->setDir(69,57);
     app.exec();
 }
 
@@ -240,12 +239,12 @@ TEST_F(WINDOW,TOAST_MAKEWINDOW){
     for(int i=0;i<cnt;i++){
        createCustomToast(texts[i],300,80,10000-i*1000)->setPos(i*50,i*50);
     }
-    TimerFD *tfd=new TimerFD(800,false);
+    /*TimerFD *tfd=new TimerFD(800,false);
     app.addEventSource(tfd,[&](EventSource&s)->bool{
        createCustomToast(texts[index],300,80,1000-index*100)->setPos(index*50,index*50);
        index=(index+1)%cnt;
        return true;
-    });
+    });*/
     app.exec();
 }
 
@@ -283,12 +282,12 @@ public:
 TEST_F(WINDOW,TOAST_SINGLE){
    App app;
    int index=0;
-   TimerFD *tfd=new TimerFD(800,false);
+   /*TimerFD *tfd=new TimerFD(800,false);
    app.addEventSource(tfd,[&](EventSource&s)->bool{
         if(index%2)PopWindow::getInstance()->hide();
         else PopWindow::getInstance()->pop();
         index++;
         return true;
-   });
+   });*/
    app.exec();
 }

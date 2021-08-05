@@ -85,9 +85,6 @@ ViewGroup::ViewGroup(int x,int y,int w,int h)
 }
 
 void ViewGroup::initGroup(){
-    focusRectSrc.set(0,0,0,0);
-    focusRectDest.set(0,0,0,0);
-    focusRect.set(0,0,0,0);
     mFocused=nullptr;
     mDefaultFocus=nullptr;
     mFocusedInCluster=nullptr;
@@ -1470,20 +1467,6 @@ bool ViewGroup::isTransformedTouchPointInView(int x,int y, View& child,POINT*out
     return isInView;
 }
 
-void ViewGroup::onDraw(Canvas& canvas) {
-    // Draw the background color, if enabled
-    View::onDraw(canvas);
-    canvas.save();
-    onDrawFocusRect(canvas,focusRect);
-    canvas.restore();
-}
-
-void ViewGroup::onDrawFocusRect(Canvas&canvas,const RECT&r){
-    canvas.set_source_rgba(1,0,0,.5);
-    canvas.rectangle(r.x,r.y,r.width,r.height);
-    canvas.fill();
-}
-
 void ViewGroup::onSizeChanged(int w,int h,int ow,int oh){
 }
 
@@ -1768,25 +1751,6 @@ bool ViewGroup::performKeyboardGroupNavigation(int direction){
 
 static int isExcludedKeys(int key){
    return key==KEY_MENU||key==KEY_ESCAPE;//||key==KEY_EXIT;
-}
-
-void ViewGroup::moveFocusTo(const RECT&r){
-    focusRectSrc=focusRectDest;
-    focusRectDest=r;
-    time_lastframe=SystemClock::uptimeMillis();
-
-    if(hasFlag(ATTR_ANIMATE_FOCUS))
-       sendMessage(WM_TIMER,0,0,10);
-}
-
-void ViewGroup::invalidateChildrenInFocusRect(){
-    for(int i=0;i<getChildCount();i++){
-        View*v=getChildAt(i);
-        RECT r;
-        if(!r.intersect(v->getBound(),focusRect))continue;
-        r.offset(-v->getX(),-v->getY());
-        v->invalidate(&r);
-    }
 }
 
 void ViewGroup::drawableStateChanged(){

@@ -1,9 +1,9 @@
 #ifndef __NGL_UIEVENTS_H__
 #define __NGL_UIEVENTS_H__
 #include <string>
-#include <eventcodes.h>
-#include <sparsearray.h>
-#include <bitset.h>
+#include <core/eventcodes.h>
+#include <core/sparsearray.h>
+#include <core/bitset.h>
 #include <stdint.h>
 #include <vector>
 #include <queue>

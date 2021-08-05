@@ -2,8 +2,7 @@
 #include <windows.h>
 #include <ngl_os.h>
 #include <sys/time.h>
-#include <calendar.h>
-#include <inputeventlabels.h>
+#include <core/calendar.h>
 
 class CALENDAR:public testing::Test{
 

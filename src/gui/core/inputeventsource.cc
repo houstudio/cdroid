@@ -69,29 +69,15 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
     return itr->second;
 }
 
-bool InputEventSource::prepare(int& max_timeout){
+int InputEventSource::checkEvents(){
     INPUTEVENT es[32];
     if(events.size()>0)return TRUE;
     int count=InputGetEvents(es,32,1);
     process(es,count);
-    return count>0;
+    return count;
 }
 
-int  InputEventSource::process(const INPUTEVENT*inevents,int count){
-    LOGV_IF(count,"%p  recv %d events ",this,count);
-    for(int i=0;i<count;i++){
-        const INPUTEVENT*e=inevents+i;
-        std::shared_ptr<InputDevice>dev=getdevice(e->device);
-        if(dev==nullptr){
-            LOGD("%d,%d,%d device=%d ",e->type,e->code,e->value,e->device);
-            continue;
-        }
-        dev->putrawdata(e);
-    }
-    return 0;
-}
-
-bool InputEventSource::processKey(){
+int InputEventSource::handleEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     if(events.size()==0)return false;
     while(events.size()){
@@ -109,8 +95,23 @@ bool InputEventSource::processKey(){
         e->recycle();
         events.pop();
     }
-    return true;
+    return 0; 
 }
+
+int  InputEventSource::process(const INPUTEVENT*inevents,int count){
+    LOGV_IF(count,"%p  recv %d events ",this,count);
+    for(int i=0;i<count;i++){
+        const INPUTEVENT*e=inevents+i;
+        std::shared_ptr<InputDevice>dev=getdevice(e->device);
+        if(dev==nullptr){
+            LOGD("%d,%d,%d device=%d ",e->type,e->code,e->value,e->device);
+            continue;
+        }
+        dev->putrawdata(e);
+    }
+    return 0;
+}
+
 int InputEventSource::pushEvent(InputEvent*evt){
     std::lock_guard<std::mutex> lock(mtxEvents);
     events.push(evt);

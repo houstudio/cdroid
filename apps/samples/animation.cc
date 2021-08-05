@@ -21,7 +21,7 @@ public :
       canvas.stroke();
    }
 
-   virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override{
+   /*virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override{
        if(msg==1000){
            matrix.scale(cx,cx);cx+=0.01f;
            matrix.rotate(cx);
@@ -30,7 +30,7 @@ public :
            return true;
        }
        return Window::onMessage(msg,wp,lp);;
-   }
+   }*/
 };
 
 int main(int argc,const char*argv[]){
@@ -40,7 +40,7 @@ int main(int argc,const char*argv[]){
   
     w->addView(new TextView("HelloWorld",400,80));
     
-    w->sendMessage(1000,0,0,500);
+    //w->sendMessage(1000,0,0,500);
     return app.exec();
 }
 

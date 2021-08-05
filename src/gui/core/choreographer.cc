@@ -85,7 +85,7 @@ namespace cdroid{
             CallbackRecord* predecessor = nullptr;
             for (CallbackRecord* callback = mHead; callback != nullptr;) {
                 CallbackRecord* next = callback->next;
-                if ((action == nullptr || addr_of(callback->action) == addr_of(action))
+                if ((/*action == nullptr ||*/ callback->action.ID == action.ID)
                     && (token == 0 || callback->token == token)) {
                         if (predecessor != nullptr) {
                             predecessor->next = next;

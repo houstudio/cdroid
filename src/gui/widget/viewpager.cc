@@ -1144,7 +1144,9 @@ void ViewPager::completeScroll(bool postEvents){
         }
     }
     if (needPopulate) {
-        if (postEvents) postOnAnimation([this](){setScrollState(SCROLL_STATE_IDLE);populate();});//mEndScrollRunnable);
+        Runnable r;
+        r=[this](){setScrollState(SCROLL_STATE_IDLE);populate();};
+        if (postEvents) postOnAnimation(r);//mEndScrollRunnable);
         else {
             setScrollState(SCROLL_STATE_IDLE);
             populate();

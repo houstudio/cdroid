@@ -1,6 +1,6 @@
 #ifndef __GRAPH_DEVICE_H__
 #define __GRAPH_DEVICE_H__
-#include <rect.h>
+#include <core/rect.h>
 #include <cairomm/context.h>
 #include <map>
 

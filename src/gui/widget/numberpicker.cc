@@ -2,7 +2,6 @@
 #include <color.h>
 #include <textutils.h>
 #include <cdlog.h>
-#include <interpolators.h>
 
 //https://gitee.com/awang/WheelView/blob/master/src/com/wangjie/wheelview/WheelView.java
 

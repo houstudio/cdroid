@@ -4,9 +4,9 @@
 #include <map>
 #include <istream>
 #include <cairomm/surface.h>
-#include <looper/looper.h>
-#include <context.h>
-#include <assets.h>
+#include <core/looper.h>
+#include <core/context.h>
+#include <core/assets.h>
 struct option;
 using namespace Cairo;
 
@@ -32,8 +32,8 @@ public:
      virtual const std::string&getArg(const std::string&key,const std::string&def="")const;
 
      virtual int getArgAsInt(const std::string&key,int def)const;
-     virtual int addEventSource(EventSource *source, EventHandler handler);
-     virtual int removeEventSource(EventSource*source);
+     virtual void addEventHandler(const EventHandler* handler);
+     virtual void removeEventHandler(const EventHandler*handler);
      virtual int exec();
      virtual void exit(int code=0);
 };

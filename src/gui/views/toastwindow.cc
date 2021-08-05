@@ -11,7 +11,7 @@ ToastWindow::ToastWindow(int w,int h):Window(0,0,w,h,TYPE_TOAST){
     timeout_=-1;
     time_elapsed=0;
     setFocusable(false);
-    sendMessage((DWORD)WM_TIMER,(DWORD)TIMER_ID,0,500);
+    //sendMessage((DWORD)WM_TIMER,(DWORD)TIMER_ID,0,500);
     toasts_.push_back(this);
 }
 
@@ -19,7 +19,7 @@ ToastWindow::~ToastWindow(){
     toasts_.erase(std::find(toasts_.begin(),toasts_.end(),this));
 }
 
-bool ToastWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
+/*bool ToastWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
     if(msg==WM_TIMER && wp==TIMER_ID){
          time_elapsed+=500;
          if(time_elapsed>=timeout_){
@@ -30,7 +30,7 @@ bool ToastWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
          return true;
     }
     return Window::onMessage(msg,wp,lp);
-}
+}*/
 
 bool ToastWindow::onKeyUp(int keyCode,KeyEvent&evt){
     time_elapsed=0;

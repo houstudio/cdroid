@@ -48,7 +48,7 @@ WindowManager::~WindowManager() {
 void WindowManager::addWindow(Window*win){
     windows.push_back(win);
     std::sort(windows.begin(),windows.end(),[](Window*w1,Window*w2){
-       return (w2->window_type-w1->window_type)>0;
+        return (w2->window_type-w1->window_type)>0;
     });
     
     for(int idx=0,type_idx=0;idx<windows.size();idx++){
@@ -58,12 +58,15 @@ void WindowManager::addWindow(Window*win){
         w->mLayer=w->window_type*10000+(idx-type_idx)*5;
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
-    if(activeWindow)activeWindow->source->sendMessage(activeWindow,View::WM_ACTIVE,0,0);
-    win->source->sendMessage(win,View::WM_ACTIVE,1,0);
+    Runnable onact;
+    if(activeWindow){
+        onact=std::bind(&Window::onDeactive,activeWindow);
+        activeWindow->post(onact);
+    }
+    onact=std::bind(&Window::onActive,win);
+    win->post(onact);
     activeWindow=win;
-    Looper::getDefault()->add_event_source(win->source,[](EventSource&e)->bool{
-        return ((UIEventSource&)e).processEvents();
-    });
+    Looper::getDefault()->addEventHandler(win->source);
     resetVisibleRegion();
     LOGV("win=%p source=%p windows.size=%d",win,win->source,windows.size());
 }
@@ -76,13 +79,14 @@ void WindowManager::removeWindow(Window*w){
     const RECT wrect=w->getBound();
     windows.erase(itw);
     resetVisibleRegion();
-    for(auto itr=windows.begin();itr!=windows.end();itr++){//!=windows.end()){
+    for(auto itr=windows.begin();itr!=windows.end();itr++){
         Window*w1=(*itr);
         RECT rc=w1->getBound();
         rc.intersect(wrect);
 	rc.offset(-w1->getX(),-w1->getY());
         w1->invalidate(&rc);
     }
+    Looper::getDefault()->removeEventHandler(w->source);
     delete w;
     for(auto it=windows.rbegin();it!=windows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
@@ -116,7 +120,7 @@ void WindowManager::moveWindow(Window*w,int x,int y){
 
 void WindowManager::broadcast(DWORD msgid,DWORD wParam,ULONG lParam){
     for(auto win:windows)
-       win->sendMessage(msgid,wParam,lParam);
+       ;//win->sendMessage(msgid,wParam,lParam);
 }
 
 int WindowManager::enumWindows(WNDENUMPROC cbk){

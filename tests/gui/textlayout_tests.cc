@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <windows.h>
-#include <looper/TimerFD.h>
 #include <ngl_os.h>
 
 using namespace cdroid;

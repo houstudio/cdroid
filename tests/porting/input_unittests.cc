@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <cdinput.h>
 #include <fcntl.h>
-#include <eventcodes.h>
+#include <core/eventcodes.h>
 class INPUT:public testing::Test{
    public :
    virtual void SetUp(){

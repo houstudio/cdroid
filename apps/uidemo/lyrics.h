@@ -1,6 +1,6 @@
 #ifndef __ID3_LYRICS__H__
 #define __ID3_LYRICS__H__
-#include <canvas.h>
+#include <core/canvas.h>
 #include <string>
 #include <vector>
 #include <unordered_map>

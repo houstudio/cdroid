@@ -2,8 +2,8 @@
 #define __COLOR_STATE_LIST_H__
 #include <vector>
 #include <iostream>
-#include <context.h>
-#include <attributeset.h>
+#include <core/context.h>
+#include <core/attributeset.h>
 
 namespace cdroid{
 class ComplexColor{

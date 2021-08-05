@@ -1,9 +1,9 @@
 #ifndef __LAYOUT_PARAMS_H__
 #define __LAYOUT_PARAMS_H__
 #include <string>
-#include <attributeset.h>
-#include <context.h>
 #include <limits.h>
+#include <core/attributeset.h>
+#include <core/context.h>
 
 namespace cdroid{
 class View;

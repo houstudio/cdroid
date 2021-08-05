@@ -1,6 +1,5 @@
 #ifndef __ASSETS_H__
 #define __ASSETS_H__
-#include <context.h>
 #include <map>
 #include <memory>
 #include <string>

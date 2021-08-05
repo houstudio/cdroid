@@ -1,7 +1,7 @@
 #ifndef __INPUT_EVENT_LABE_H__
 #define __INPUT_EVENT_LABE_H__
 //#include <input.h>
-#include <keycodes.h>
+#include <core/keycodes.h>
 #include <string.h>
 #include <stdint.h>
 #define DEFINE_KEYCODE(key) { #key, KEY_##key }

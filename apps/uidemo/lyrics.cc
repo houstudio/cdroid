@@ -1,5 +1,5 @@
 #include <lyrics.h>
-#include <assets.h>
+#include <core/assets.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -14,8 +14,8 @@ using namespace tag;
 
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <iostreams.h>
-#include <textutils.h>
+#include <core/iostreams.h>
+#include <core/textutils.h>
 
 
 namespace priv{

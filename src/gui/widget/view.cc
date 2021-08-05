@@ -165,7 +165,6 @@ void View::initView(){
     mOnFocusChangeListener=nullptr;
     mOnScrollChangeListener=nullptr;
     mOverScrollMode=OVER_SCROLL_NEVER;
-    mOnMessage=nullptr;
     mVerticalScrollbarPosition=0;
     mUserPaddingLeft=mUserPaddingRight=0;
     mUserPaddingTop=mUserPaddingBottom=0;
@@ -532,7 +531,7 @@ void View::setFadingEdgeLength(int length){
 }
 void View::transformFromViewToWindowSpace(int*inOutLocation){
     View* view = this;
-    double position[2]={inOutLocation[0],inOutLocation[1]};
+    double position[2]={(double)inOutLocation[0],(double)inOutLocation[1]};
     if(!hasIdentityMatrix()){
         mMatrix.transform_point(position[0],position[1]);
     }
@@ -1223,10 +1222,6 @@ void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
 
 void View::setOnScrollChangeListener(OnScrollChangeListener l){
     mOnScrollChangeListener=l;
-}
-
-void View::setMessageListener(MessageListener ls){
-    mOnMessage=ls;
 }
 
 void View::clip(RefPtr<Region>rgn){
@@ -2595,7 +2590,9 @@ void View::invalidate(int l,int t,int w,int h){
 }
 
 void View::postInvalidate(){
-    postDelayed([this](){ invalidate(nullptr);},30);
+    Runnable r;
+    r=[this](){ invalidate(nullptr);};
+    postDelayed(r,30);
 }
 
 void View::postInvalidateOnAnimation(){
@@ -3311,7 +3308,7 @@ void View::checkForLongClick(int delayOffset,int x,int y){
         mHasPerformedLongPress = false;
         mOriginalPressedState=isPressed();
         mPendingCheckForLongPress=std::bind(&View::checkLongPressCallback,this,x,y);
-        post(this,mPendingCheckForLongPress,ViewConfiguration::getLongPressTimeout()-delayOffset);
+        postDelayed(mPendingCheckForLongPress,ViewConfiguration::getLongPressTimeout()-delayOffset);
     }
 }
 
@@ -3427,50 +3424,25 @@ bool View::onTouchEvent(MotionEvent& mt){
     return false;
 }
 
-void View::sendMessage(View*v,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime){
-    View*root=getRootView();
-    if(root!=this) 
-       root->sendMessage(v,msgid,wParam,lParam,delayedtime);
-    
-}
-
-void View::sendMessage(DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime){
-    sendMessage(this,msgid,wParam,lParam,delayedtime);
-}
-
 void View::postOnAnimation(Runnable action){
-    post(this,action,10);
+    postDelayed(action,10);
 }
 void View::postOnAnimationDelayed(Runnable action, long delayMillis){
-    post(this,action,delayMillis);
+    postDelayed(action,delayMillis);
 }
 
-void View::post(View*v,const Runnable what,DWORD delay){
-    View*root=getRootView();
-    if(root!=this)root->post(v,what,delay);
-}
-
-void View::post(const Runnable what){
+void View::post(Runnable& what){
     postDelayed(what,0);
 }
 
-void View::postDelayed(const Runnable what,DWORD delay){
+void View::postDelayed(Runnable& what,uint32_t delay){
     View*root=getRootView();
-    if(root&&(root!=this))root->post(this,what,delay);
+    if(root&&(root!=this))root->postDelayed(what,delay);
 }
 
-void View::removeCallbacks(const Runnable what){
+void View::removeCallbacks(const Runnable& what){
     View*root=getRootView();
     if(root&&(root!=this))root->removeCallbacks(what);
-}
-
-bool View::onMessage(DWORD msgid,DWORD wParam,ULONG lParam){
-    RECT r;
-    switch(msgid){
-    default:
-        if(mOnMessage)return mOnMessage(*this,msgid,wParam,lParam);
-        return false;   
-    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -3667,7 +3639,7 @@ Matrix View::getInverseMatrix() {
 }
 
 float View::getRotation(){
-
+    return .0f;
 }
 
 void View::setRotation(float rotation){
@@ -3675,7 +3647,7 @@ void View::setRotation(float rotation){
 }
 
 float View::getRotationX(){
-
+    return .0f;
 }
 
 void View::setRotationX(float){

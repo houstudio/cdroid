@@ -1,4 +1,4 @@
-#include <interpolators.h>
+#include <animation/interpolators.h>
 
 namespace cdroid{
 #if 0

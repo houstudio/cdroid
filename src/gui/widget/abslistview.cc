@@ -1246,7 +1246,8 @@ void AbsListView::keyPressed() {
             }
         }
         if (longClickable && !mDataChanged) {
-            postDelayed(std::bind(&AbsListView::CheckForKeyLongPress,this),ViewConfiguration::getLongPressTimeout());
+            Runnable mr(std::bind(&AbsListView::CheckForKeyLongPress,this));
+            postDelayed(mr,ViewConfiguration::getLongPressTimeout());
         }
     }
 }

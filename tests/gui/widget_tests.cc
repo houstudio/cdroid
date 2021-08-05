@@ -131,17 +131,16 @@ TEST_F(WIDGET,ProgressBar){
     pb->setIndeterminate(true);
     w->addView(ll);
 
-    w->sendMessage(View::WM_TIMER,0,0,500);
-    w->setMessageListener([&](View&v,DWORD msg,DWORD wp,ULONG lp)->bool{
-       if(msg==View::WM_TIMER){
-       ((ProgressBar*)v.findViewById(100))->setProgress(pos);
-       ((ProgressBar*)v.findViewById(101))->setProgress(pos);
-       ((ProgressBar*)v.findViewById(102))->setProgress(pos);
-       pos=(pos+1)%100;
-       v.sendMessage(View::WM_TIMER,0,0,100);printf("=========ProgressBar::timer\r\n");
-       return true;
-       }
-    });
+    //w->sendMessage(View::WM_TIMER,0,0,500);
+	Runnable run;
+	run=[&](){
+	       ((ProgressBar*)w->findViewById(100))->setProgress(pos);
+		   ((ProgressBar*)w->findViewById(101))->setProgress(pos);
+		   ((ProgressBar*)w->findViewById(102))->setProgress(pos);
+		   pos=(pos+1)%100;
+		   w->postDelayed(run,500);
+	};
+	w->postDelayed(run,500);
     app.exec();
 }
 

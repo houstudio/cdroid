@@ -1,10 +1,10 @@
 #ifndef __NGL_VIEW_H__
 #define __NGL_VIEW_H__
-#include <eventcodes.h>
-#include <uievents.h>
-#include <canvas.h>
-#include <viewconfiguration.h>
-#include <systemclock.h>
+#include <core/eventcodes.h>
+#include <core/uievents.h>
+#include <core/canvas.h>
+#include <core/viewconfiguration.h>
+#include <core/systemclock.h>
 #include <widget/layoutparams.h>
 #include <widget/measurespec.h>
 #include <animation/animation.h>
@@ -12,10 +12,12 @@
 #include <memory>
 #include <vector>
 #include <functional>
-#include <rect.h>
+#include <core/rect.h>
 #include <drawables.h>
-#include <attributeset.h>
-#include <context.h>
+#include <core/gravity.h>
+#include <core/attributeset.h>
+#include <core/context.h>
+#include <core/velocitytracker.h>
 
 #ifndef _GLIBCXX_FUNCTIONAL
 #define DECLARE_UIEVENT(type,name,...) typedef type(*name)(__VA_ARGS__)
@@ -238,7 +240,6 @@ public:
     };
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
-    DECLARE_UIEVENT(bool,MessageListener,View&,DWORD,DWORD,ULONG);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
@@ -323,7 +324,6 @@ protected:
     OnFocusChangeListener mOnFocusChangeListener;
     std::vector<OnLayoutChangeListener> mOnLayoutChangeListeners;
     OnScrollChangeListener mOnScrollChangeListener;
-    MessageListener mOnMessage;
 
     bool hasIdentityMatrix();
     void computeOpaqueFlags();
@@ -356,7 +356,6 @@ protected:
 
     void postOnAnimation(Runnable action);
     void postOnAnimationDelayed(Runnable action, long delayMillis);
-    virtual void post(View*v,const Runnable what,DWORD delay=0);
     virtual void onSizeChanged(int w,int h,int oldw,int oldh);
     virtual void onScrollChanged(int l, int t, int oldl, int oldt);
     virtual void onLayout(bool ,int,int,int,int);
@@ -520,7 +519,6 @@ public:
     virtual void setOnLongClickListener(OnLongClickListener l);
     virtual void setOnFocusChangeListener(OnFocusChangeListener listtener); 
     virtual void setOnScrollChangeListener(OnScrollChangeListener l);
-    virtual void setMessageListener(MessageListener ls);
     void addOnLayoutChangeListener(OnLayoutChangeListener listener);
     void removeOnLayoutChangeListener(OnLayoutChangeListener listener);
     virtual bool performClick();
@@ -680,12 +678,10 @@ public:
     virtual bool onHoverEvent(MotionEvent& evt);
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
-    virtual void sendMessage(DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0);
-    virtual void sendMessage(View*view,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0);
-    virtual bool onMessage(DWORD msgid,DWORD wParam,ULONG lParam);
-    virtual void removeCallbacks(const Runnable what);
-    virtual void post(const Runnable what);
-    virtual void postDelayed(const Runnable what,DWORD delay=0);
+	
+    virtual void postDelayed(Runnable& what,uint32_t delay=0);
+    void post(Runnable& what);
+    virtual void removeCallbacks(const Runnable& what);
 
     virtual int getBaseline();
     static bool isLayoutModeOptical(View*);

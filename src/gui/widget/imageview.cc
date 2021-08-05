@@ -317,7 +317,7 @@ void ImageView::configureBounds(){
     
 
     const bool fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
-    LOGD("drawables.setBounds(%d,%d) fits=%d mScaleType=%d",vwidth,vheight,fits,mScaleType);
+    LOGV("drawables.setBounds(%d,%d) fits=%d mScaleType=%d",vwidth,vheight,fits,mScaleType);
 
     mDrawable->setBounds(0, 0, vwidth, vheight);
     
@@ -387,8 +387,8 @@ void ImageView::configureBounds(){
             //mDrawMatrix.setRectToRect(mTempSrc, mTempDst, scaleTypeToScaleToFit(mScaleType));
         }
     }
-	LOGD("ScaleType=%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",mScaleType,
-			mDrawMatrix.xx,mDrawMatrix.yx,mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
+    LOGV("ScaleType=%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",mScaleType,
+	mDrawMatrix.xx,mDrawMatrix.yx,mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
 }
 
 void ImageView::invalidateDrawable(Drawable& dr){

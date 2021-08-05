@@ -1,7 +1,7 @@
 #ifndef __ABS_SPINNER_H__
 #define __ABS_SPINNER_H__
 #include <widget/adapterview.h>
-#include <sparsearray.h>
+#include <core/sparsearray.h>
 namespace cdroid{
 class AbsSpinner:public AdapterView{
 protected:

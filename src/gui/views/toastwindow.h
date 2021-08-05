@@ -13,7 +13,6 @@ DECLARE_UIEVENT(ToastWindow*,OnCreateContentListener);
 public:
     ToastWindow(int w,int h);
     ~ToastWindow();
-    virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override;
     virtual bool onKeyUp(int,KeyEvent&event)override;
     static ToastWindow*makeWindow(OnCreateContentListener oncreate,UINT timeout=LENGTH_SHORT);
     static ToastWindow*makeText(const std::string&txt,UINT timeout=LENGTH_SHORT);

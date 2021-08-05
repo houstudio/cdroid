@@ -1,8 +1,8 @@
 #ifndef __EDGE_EFFECT_H__
 #define __EDGE_EFFECT_H__
-#include <canvas.h>
-#include <context.h>
-#include <interpolators.h>
+#include <core/canvas.h>
+#include <core/context.h>
+#include <animation/interpolators.h>
 
 namespace cdroid{
 

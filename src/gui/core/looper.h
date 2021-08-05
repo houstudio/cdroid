@@ -4,10 +4,13 @@
 #include <sys/epoll.h>
 #include <map>
 #include <vector>
-namespace alooper{
+#include <mutex>
+#include <list>
+
+namespace cdroid{
 
 typedef int64_t nsecs_t;
-typedef std::function<int(int fd, int events, void* data)>LooperCallback;
+
 struct Message {
     Message() : what(0) { }
     Message(int w) : what(w) { }
@@ -16,15 +19,42 @@ struct Message {
     int what;
 };
 
+typedef int (*Looper_callbackFunc)(int fd, int events, void* data);
+
+class LooperCallback{
+protected:
+    virtual ~LooperCallback();
+public:
+    virtual int handleEvent(int fd, int events, void* data) = 0;
+};
+
+class SimpleLooperCallback : public LooperCallback {
+protected:
+    virtual ~SimpleLooperCallback();
+public:
+    SimpleLooperCallback(Looper_callbackFunc callback);
+    virtual int handleEvent(int fd, int events, void* data);
+private:
+    Looper_callbackFunc mCallback;
+};
+
 class MessageHandler{
 protected:
     virtual ~MessageHandler();
-
 public:
-    /* Handles a message. */
-    virtual void handleMessage(const Message& message) = 0;
+    virtual void handleMessage(const Message& message)=0;
 };
 
+class EventHandler{
+private:
+    int mRemoved=0;
+    friend class Looper;
+protected:
+    virtual ~EventHandler();
+public:
+    virtual int checkEvents()=0;
+    virtual int handleEvents()=0;
+};
 class Looper{
 private:
     struct Request {
@@ -32,7 +62,7 @@ private:
         int ident;
         int events;
         int seq;
-        LooperCallback callback;
+        LooperCallback* callback;
         void* data;
         void initEventItem(struct epoll_event* eventItem) const;
     };
@@ -54,10 +84,11 @@ private:
     bool mAllowNonCallbacks; // immutable
 
     int mWakeEventFd;  // immutable
-    //Mutex mLock;
+    std::mutex mLock;
 
-    std::vector<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
+    std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
     bool mSendingMessage; // guarded by mLock
+    std::list<EventHandler*> mEventHandlers;
 
     // Whether we are currently waiting for work.  Not protected by a lock,
     // any use of it is racy anyway.
@@ -75,14 +106,16 @@ private:
     std::vector<Response> mResponses;
     size_t mResponseIndex;
     nsecs_t mNextMessageUptime;
+    static Looper*mInst;
 private:
     int pollInner(int timeoutMillis);
     int removeFd(int fd, int seq);
     void awoken();
     void pushResponse(int events, const Request& request);
     void rebuildEpollLocked();
+    void scheduleEpollRebuildLocked();
+    void removeEventHandlers();
 protected:
-    virtual ~Looper(){};
 public:
     enum {
         POLL_WAKE = -1,
@@ -103,6 +136,8 @@ public:
     };
 public:
     Looper(bool allowNonCallbacks=false);
+    virtual ~Looper();
+    static Looper*getDefault();
     bool getAllowNonCallbacks() const;
     int pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollOnce(int timeoutMillis) {
@@ -113,13 +148,16 @@ public:
         return pollAll(timeoutMillis, NULL, NULL, NULL);
     }
     void wake();
-    int addFd(int fd, int ident, int events, LooperCallback callback, void* data);
+    int addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
+    int addFd(int fd, int ident, int events,const LooperCallback* callback, void* data);
     int removeFd(int fd);
-    void sendMessage(MessageHandler& handler, const Message& message);
-    void sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler& handler,const Message& message);
-    void sendMessageAtTime(nsecs_t uptime, const MessageHandler& handler,const Message& message);
-    void removeMessages(const MessageHandler& handler);
-    void removeMessages(const MessageHandler& handler, int what);
+    void sendMessage(const MessageHandler* handler, const Message& message);
+    void sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler* handler,const Message& message);
+    void sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,const Message& message);
+    void removeMessages(const MessageHandler* handler);
+    void removeMessages(const MessageHandler* handler, int what);
+    void addEventHandler(const EventHandler*handler);
+    void removeEventHandler(const EventHandler*handler);
     bool isPolling() const;
     
 };

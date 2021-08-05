@@ -2,7 +2,7 @@
 #define __STATESET_H__
 #include <string>
 #include <vector>
-#include <attributeset.h>
+#include <core/attributeset.h>
 namespace cdroid{
 class StateSet{
 private:

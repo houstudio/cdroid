@@ -54,9 +54,9 @@ Drawable*AnalogClock::getClockDrawable(int id){
 }
 
 void AnalogClock::onAttached(){
-    sendMessage(WM_TIMER,0,0,1000);
+    //sendMessage(WM_TIMER,0,0,1000);
 }
-bool AnalogClock::onMessage(DWORD msg,DWORD wp,ULONG lp){
+/*bool AnalogClock::onMessage(DWORD msg,DWORD wp,ULONG lp){
     if(msg==WM_TIMER){
         std::time_t t = std::time(NULL);
         struct std::tm when= *std::localtime(&t);
@@ -64,12 +64,12 @@ bool AnalogClock::onMessage(DWORD msg,DWORD wp,ULONG lp){
         mHour=when.tm_hour;
         mMinutes=when.tm_min;
         mSeconds=when.tm_sec;
-        sendMessage(msg,wp,lp,1000);
+        //sendMessage(msg,wp,lp,1000);
         invalidate(nullptr);
         return true;
     }
     return View::onMessage(msg,wp,lp);
-}
+}*/
 
 void AnalogClock::onDraw(Canvas&canvas){
     View::onDraw(canvas);

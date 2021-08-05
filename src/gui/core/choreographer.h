@@ -1,6 +1,6 @@
 #ifndef __CHOREO_GRAPHER_H__
 #define __CHOREO_GRAPHER_H__
-#include <looper/looper.h>
+#include <core/looper.h>
 #include <drawables/drawable.h>
 namespace cdroid{
 class Choreographer{

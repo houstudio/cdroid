@@ -1,7 +1,7 @@
 #ifndef __SIMPLE_MONTHVIEW_H__
 #define __SIMPLE_MONTHVIEW_H__
 #include <widget/view.h>
-#include <calendar.h>
+#include <core/calendar.h>
 namespace cdroid{
 
 class SimpleMonthView:public View{

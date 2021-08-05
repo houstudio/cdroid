@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
-#include <interpolators.h>
+#include <animation/interpolators.h>
 
 namespace cdroid{
 

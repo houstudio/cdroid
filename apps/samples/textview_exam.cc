@@ -10,7 +10,7 @@ protected:
     TextView*tv3;
 public:
     TestWindow(int w,int h);
-    bool onMessage(DWORD msg,DWORD wp,ULONG lp)override;
+    bool onMessage(DWORD msg,DWORD wp,ULONG lp);
 };
 
 TestWindow::TestWindow(int w,int h):Window(0,0,w,h){
@@ -78,16 +78,16 @@ bool TestWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
         if(flag>0){lvl+=200;if(lvl>=10000)flag=-1;}
         if(flag<0){lvl-=200;if(lvl<=0)flag=1;}
         tv3->getForeground()->setLevel(lvl);
-        sendMessage(msg,wp,lp,200);
+        //sendMessage(msg,wp,lp,200);
     }break;
-    default:return Window::onMessage(msg,wp,lp);
+    default:return true;//Window::onMessage(msg,wp,lp);
     }
 }
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new TestWindow(1080,720);
-    w->sendMessage(View::WM_TIMER,0,0,500);
+    //w->sendMessage(View::WM_TIMER,0,0,500);
     app.exec();
     return 0;
 }

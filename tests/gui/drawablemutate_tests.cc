@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 #include <windows.h>
-#include <gravity.h>
-#include <assets.h>
+#include <core/gravity.h>
+#include <core/assets.h>
 #include <ngl_os.h>
 #include <ngl_timer.h>
 #include <ngl_misc.h>
 #include <drawables.h>
 #include <fstream>
 #include <sstream>
-#include <systemclock.h>
+#include <core/systemclock.h>
 
 class MUTATE:public testing::Test{
 public:

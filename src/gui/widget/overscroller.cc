@@ -1,6 +1,7 @@
 #include <widget/overscroller.h>
-#include <systemclock.h>
-#include <scroller.h>
+#include <core/systemclock.h>
+#include <core/scroller.h>
+#include <core/viewconfiguration.h>
 #include <cdlog.h>
 
 
@@ -53,6 +54,7 @@ OverScroller::SplineOverScroller::SplineOverScroller(Context* context) {
             * 39.37f // inch/meter
             * ppi
             * 0.84f; // look and feel tuning
+    mFlingFriction = ViewConfiguration::getScrollFriction();
 }
 
 void OverScroller::SplineOverScroller::startScroll(int start, int distance, int duration) {

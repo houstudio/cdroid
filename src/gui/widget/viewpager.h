@@ -10,7 +10,6 @@
 #include <widget/viewgroup.h>
 #include <widget/adapter.h>
 #include <widget/edgeeffect.h>
-#include <velocitytracker.h>
 #include <math.h>
 #include <limits>
 namespace cdroid{
@@ -121,7 +120,7 @@ private:
     /**
      * Determines speed during touch scrolling
      */
-    VelocityTracker* mVelocityTracker;
+    class VelocityTracker* mVelocityTracker;
     int mMinimumVelocity;
     int mMaximumVelocity;
     int mFlingDistance;

@@ -3,7 +3,6 @@
 #include <map>
 #include <functional>
 #include <widget/viewgroup.h>
-#include <interpolators.h>
 #include <animation/animator.h>
 
 namespace cdroid{

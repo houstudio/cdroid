@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <ngl_os.h>
 #include <sys/time.h>
-#include <inputeventlabels.h>
+#include <core/inputeventlabels.h>
 
 class EVENT:public testing::Test{
 

@@ -35,7 +35,6 @@ protected:
     std::string mText;
     class UIEventSource*source;
     void onFinishInflate()override;
-    virtual void post(View*v,const Runnable what,DWORD delay=0)override;
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);
@@ -68,11 +67,12 @@ public:
     void invalidate(const RECT*r)override;
     bool dispatchKeyEvent(KeyEvent&event)override;
 
-    virtual void sendMessage(DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0){
+    /*virtual void sendMessage(DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0){
         sendMessage(this,msgid,wParam,lParam,delayedtime);
     }
-    virtual void sendMessage(View*v,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0)override;
-    virtual void removeCallbacks(const Runnable what)override;
+    virtual void sendMessage(View*v,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0)override;*/
+    void postDelayed(Runnable& what,uint32_t delay)override;
+    void removeCallbacks(const Runnable& what)override;
     void requestLayout()override;
     static void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);
     void close();

@@ -9,7 +9,35 @@
 using namespace Cairo;
 
 namespace cdroid{
-typedef std::function<void()>Runnable;
+class Runnable{
+public:
+   int ID;
+   std::function<void()>run;
+   Runnable(){
+       run=nullptr;
+   }
+   Runnable(const std::function<void()>&f){
+       run=f;
+   }
+   void operator=(const std::function<void()>&f){
+       run=f;
+   }
+   void operator=(nullptr_t){
+       run=nullptr;
+   }
+   bool operator==(nullptr_t)const{
+      return run==nullptr;
+   }
+   bool operator!=(nullptr_t)const{
+      return run!=nullptr;
+   }
+   explicit operator bool()const{
+      return run!=nullptr;
+   }
+   void operator()(){
+      run();
+   }
+};
 class Drawable;
 class ColorStateList;
 class Context{
