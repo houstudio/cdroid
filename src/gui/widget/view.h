@@ -680,6 +680,8 @@ public:
     virtual void onHoverChanged(bool hovered);
 	
     void post(Runnable& what);
+    void post(const std::function<void()>&what);
+    void postDelayed(const std::function<void()>&what,uint32_t delay=0);
     virtual void postDelayed(Runnable& what,uint32_t delay=0);
     virtual void removeCallbacks(const Runnable& what);
 

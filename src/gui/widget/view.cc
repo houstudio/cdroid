@@ -2590,9 +2590,7 @@ void View::invalidate(int l,int t,int w,int h){
 }
 
 void View::postInvalidate(){
-    Runnable r;
-    r=[this](){ invalidate(nullptr);};
-    postDelayed(r,30);
+    postDelayed([this](){ invalidate(nullptr);},30);
 }
 
 void View::postInvalidateOnAnimation(){
@@ -3438,6 +3436,18 @@ void View::post(Runnable& what){
 void View::postDelayed(Runnable& what,uint32_t delay){
     View*root=getRootView();
     if(root&&(root!=this))root->postDelayed(what,delay);
+}
+
+void View::post(const std::function<void()>&what){
+    Runnable r;
+    r=what;
+    post(r);
+}
+
+void View::postDelayed(const std::function<void()>&what,uint32_t delay){
+    Runnable r;
+    r=what;
+    postDelayed(r,delay);    
 }
 
 void View::removeCallbacks(const Runnable& what){

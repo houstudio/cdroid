@@ -91,6 +91,7 @@ void AbsListView::FLY_endFling() {
 void AbsListView::FLY_wheelTouch() {
     postDelayed(mCheckFlywheel, FLYWHEEL_TIMEOUT);
 }
+
 void AbsListView::FLY_Proc(){
     switch (mTouchMode) {
     default:  FLY_endFling(); return ;
@@ -1246,8 +1247,7 @@ void AbsListView::keyPressed() {
             }
         }
         if (longClickable && !mDataChanged) {
-            Runnable mr(std::bind(&AbsListView::CheckForKeyLongPress,this));
-            postDelayed(mr,ViewConfiguration::getLongPressTimeout());
+            postDelayed(std::bind(&AbsListView::CheckForKeyLongPress,this),ViewConfiguration::getLongPressTimeout());
         }
     }
 }

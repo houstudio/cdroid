@@ -58,13 +58,8 @@ void WindowManager::addWindow(Window*win){
         w->mLayer=w->window_type*10000+(idx-type_idx)*5;
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
-    Runnable onact;
-    if(activeWindow){
-        onact=std::bind(&Window::onDeactive,activeWindow);
-        activeWindow->post(onact);
-    }
-    onact=std::bind(&Window::onActive,win);
-    win->post(onact);
+    if(activeWindow)activeWindow->post(std::bind(&Window::onDeactive,activeWindow));
+    win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
     Looper::getDefault()->addEventHandler(win->source);
     resetVisibleRegion();

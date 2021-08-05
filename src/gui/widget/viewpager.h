@@ -120,7 +120,7 @@ private:
     /**
      * Determines speed during touch scrolling
      */
-    class VelocityTracker* mVelocityTracker;
+    VelocityTracker* mVelocityTracker;
     int mMinimumVelocity;
     int mMaximumVelocity;
     int mFlingDistance;

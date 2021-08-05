@@ -19,19 +19,41 @@ class MyRunner{
 public:
    int key;
    std::function<void()>run;
-   //MyRunner(){}
-   //MyRunner(const std::function<void()>&a){}
+   MyRunner(){}
+   MyRunner(const std::function<void()>a){}
    void operator=(const std::function<void()>&a){
        run=a;
    }
    void test(int i){
        printf("i=%d\r\n",i);
    }
+   virtual void post(Runnable&){
+      printf("post(Runnable&)\r\n");
+   }
+   void post(const Runnable&a){
+      printf("post(const Runnable&)\r\n");
+      Runnable aa=a;
+      post(aa);   
+   }
+   void post(const std::function<void()>&a){
+      printf("post(const const std::function<void()>&)\r\n");
+      Runnable aaa;
+      aaa=a;
+      post(aaa);
+   }
+};
+class YouRunner:public MyRunner{
+public:
+   YouRunner():MyRunner(){}
+   YouRunner(const std::function<void()>a):MyRunner(a){};
 };
 TEST_F(LOOPER,function){
-   MyRunner r;//=std::bind(&MyRunner::test,&r,100);
-   r=std::bind(&MyRunner::test,&r,100);
-   r.run();
+   YouRunner r(std::bind(&LOOPER::SetUp,this));
+   Runnable rrr;
+   r.post(Runnable([](){}));
+   r.post(Runnable([](){}));
+   r.post(std::bind(&LOOPER::SetUp,this));
+   typedef std::function<void()>aaaa;
 }
 
 class TestHandler:public MessageHandler{

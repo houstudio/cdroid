@@ -269,12 +269,10 @@ bool Window::performFocusNavigation(KeyEvent& event){
 }
 
 bool Window::onKeyDown(int keyCode,KeyEvent& evt){
-    Runnable run;
     switch(keyCode){
     case KEY_ESCAPE:
         LOGD("recv %d %s",keyCode,evt.getLabel());
-        run=[this](){WindowManager::getInstance().removeWindow(this);};
-        post(run);
+        post([this](){WindowManager::getInstance().removeWindow(this);} );
         return true;
     default:
         //return performFocusNavigation(evt);

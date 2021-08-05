@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <widget/keyboardview.h>
 #include <ngl_os.h>
-#include<ngl_timer.h>
+#include <cdlog.h>
 
 #define ID_OK 10
 #define ID_CANCEL 15
@@ -132,15 +132,16 @@ TEST_F(WIDGET,ProgressBar){
     w->addView(ll);
 
     //w->sendMessage(View::WM_TIMER,0,0,500);
-	Runnable run;
-	run=[&](){
-	       ((ProgressBar*)w->findViewById(100))->setProgress(pos);
-		   ((ProgressBar*)w->findViewById(101))->setProgress(pos);
-		   ((ProgressBar*)w->findViewById(102))->setProgress(pos);
-		   pos=(pos+1)%100;
-		   w->postDelayed(run,500);
-	};
-	w->postDelayed(run,500);
+    Runnable run;
+    run=[&](){
+       ((ProgressBar*)w->findViewById(100))->setProgress(pos);
+       ((ProgressBar*)w->findViewById(101))->setProgress(pos);
+       ((ProgressBar*)w->findViewById(102))->setProgress(pos);
+       pos=(pos+1)%100;
+       LOGD("pos=%d",pos);
+       w->postDelayed(run,50);
+    };
+    w->postDelayed(run,500);
     app.exec();
 }
 

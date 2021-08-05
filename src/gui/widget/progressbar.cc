@@ -216,15 +216,13 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     if(!mRefreshIsPosted){
         LOGD("setprogress %d=%d  bools=%d,%d",id,progress,mAttached,mRefreshIsPosted);
         if(mAttached&&!mRefreshIsPosted){
-            Runnable run;
-            run=[this](){
+            postDelayed([this](){
                 for(int i=ID_PRIMARY;i<=ID_SECONDARY;i++){
                     RefreshData&rd=mData[i];
                     doRefreshProgress(i, rd.progress, rd.fromUser, true, rd.animate);
                 }
                 mRefreshIsPosted=false;
-            };
-            postDelayed(run,10);
+            },10);
             mRefreshIsPosted=true;
         }
     }
