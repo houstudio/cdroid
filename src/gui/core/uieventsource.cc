@@ -29,10 +29,9 @@ int UIEventSource::handleEvents(){
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().ComposeSurfaces();
     if(hasDelayedRunners()){
-        size_t old=mRunnables.size();
         RUNNER runner=mRunnables.front();
         runner.run();
-        mRunnables.erase(mRunnables.begin());
+        mRunnables.pop_front(); 
     } 
     return 0;
 }
@@ -40,7 +39,7 @@ int UIEventSource::handleEvents(){
 void UIEventSource::post(Runnable& run,DWORD delayedtime){
     RUNNER runner;
     runner.time=SystemClock::uptimeMillis()+delayedtime;
-    runner.run.ID=mID++;
+    run.ID=mID++;
     runner.run=run;
     for(auto itr=mRunnables.begin();itr!=mRunnables.end();itr++){
         if(runner.time<itr->time){

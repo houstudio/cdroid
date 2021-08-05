@@ -5,6 +5,8 @@
 #include <core/systemclock.h>
 #include <cdlog.h>
 #include <functional>
+#include <core/uieventsource.h>
+
 class LOOPER:public testing::Test{
 
    public :
@@ -116,7 +118,14 @@ TEST_F(LOOPER,eventhandler){
 }
 TEST_F(LOOPER,loop){
    Looper loop(false);
-   loop.pollAll(1000);
-   loop.pollAll(1000);
-   loop.pollAll(1000);
+   UIEventSource*handler=new UIEventSource(nullptr);
+   loop.addEventHandler(handler);
+   Runnable run;
+   int count=0;
+   run=[&](){
+       printf("count=%d\r\n",count++);
+       handler->post(run,count++);
+   };
+   handler->post(run,10);
+   while(1)loop.pollAll(100);
 }

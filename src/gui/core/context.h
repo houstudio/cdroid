@@ -16,6 +16,10 @@ public:
    Runnable(){
        run=nullptr;
    }
+   Runnable(const Runnable&b){
+       run=b.run;
+       ID=b.ID;
+   }
    Runnable(const std::function<void()>&f){
        run=f;
    }
