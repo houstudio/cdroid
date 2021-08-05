@@ -233,7 +233,7 @@ Done: ;
             { // obtain handler
                 MessageHandler* handler = messageEnvelope.handler;
                 Message message = messageEnvelope.message;
-                mMessageEnvelopes.erase(mMessageEnvelopes.begin());//removeAt(0);
+                mMessageEnvelopes.pop_front();
                 mSendingMessage = true;
                 mLock.unlock();
 

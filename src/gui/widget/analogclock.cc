@@ -50,26 +50,22 @@ Drawable*AnalogClock::getClockDrawable(int id){
 	case MINUTE:return mMinuteHand;
 	case HOUR  :return mHourHand;
 	default:return nullptr;
-	}
+    }
 }
 
 void AnalogClock::onAttached(){
-    //sendMessage(WM_TIMER,0,0,1000);
-}
-/*bool AnalogClock::onMessage(DWORD msg,DWORD wp,ULONG lp){
-    if(msg==WM_TIMER){
+    mRunner=[&](){
         std::time_t t = std::time(NULL);
         struct std::tm when= *std::localtime(&t);
         std::get_time(&when,"%R");
         mHour=when.tm_hour;
         mMinutes=when.tm_min;
         mSeconds=when.tm_sec;
-        //sendMessage(msg,wp,lp,1000);
         invalidate(nullptr);
-        return true;
-    }
-    return View::onMessage(msg,wp,lp);
-}*/
+        postDelayed(mRunner,800);
+    };
+    postDelayed(mRunner,800);
+}
 
 void AnalogClock::onDraw(Canvas&canvas){
     View::onDraw(canvas);

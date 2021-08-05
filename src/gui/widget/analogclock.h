@@ -5,13 +5,14 @@ namespace cdroid{
 
 class AnalogClock:public View{
 private:
-	int mSeconds;
+    int mSeconds;
     int mMinutes;
     int mHour;
     Drawable* mHourHand;
     Drawable* mMinuteHand;
-	Drawable* mSecondHand;
+    Drawable* mSecondHand;
     Drawable* mDial;
+    Runnable mRunner;
 protected:
    void onAttached();
    void onDraw(Canvas&canvas)override;
