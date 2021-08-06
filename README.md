@@ -9,7 +9,7 @@
 * Scrolling with SpringBack Support
 # **Screen Shots**
 ![TextView](http://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/textviews.png)
-![ViewPager]((http://gitee.com/houstudio/cdroid/raw/master/docs/videos/viewpager.gif)
+![ViewPager](http://gitee.com/houstudio/cdroid/raw/master/docs/videos/viewpager.gif)
 # **UI Components:**
    * View
    * TextView 
