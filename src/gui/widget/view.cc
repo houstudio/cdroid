@@ -183,6 +183,7 @@ void View::initView(){
     mBackground=nullptr;
     mDefaultFocusHighlight=nullptr;
     mDefaultFocusHighlightCache=nullptr;
+    mDefaultFocusHighlightEnabled=false;
     mCurrentAnimation=nullptr;
     mTransformationInfo=nullptr;
     mMatrix=identity_matrix();
@@ -193,7 +194,6 @@ View::~View(){
     if(mBackground)mBackground->setCallback(nullptr);
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
-	delete mDefaultFocusHighlightCache;
     delete mScrollCache;
     delete mBackground;
     delete mBackgroundTint;
@@ -3083,7 +3083,7 @@ void View::onFinishInflate(){
 }
 
 bool View::dispatchKeyEvent(KeyEvent&event){
-    bool res=event.dispatch(this,nullptr,this);
+    bool res=event.dispatch(this,&mKeyDispatchState,this);
     LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),res);    
     return res;
 }

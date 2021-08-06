@@ -50,7 +50,7 @@ KeyDevice::KeyDevice(int fd)
 }
 
 int KeyDevice::putrawdata(const INPUTEVENT*e){
-    int flags;
+    int flags=0;
     int keycode=e->code;
     if(!isvalid_event(e)){
          LOGD("invalid event type %x source=%x",e->type,devinfo.getSources());

@@ -1523,7 +1523,7 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
             return true;
         }
     }
-    return event.dispatch(this,nullptr,this);
+    return View::dispatchKeyEvent(event);
 }
 
 bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){

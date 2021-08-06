@@ -407,16 +407,49 @@ int KeyEvent::normalizeMetaState(int metaState){
 }
 
 void KeyEvent::DispatcherState::reset(){
+    LOGV("Reset %p",this);
+    mDownKeyCode = 0;
+    mDownTarget = nullptr;
+    mActiveLongPresses.clear();
 }
 void KeyEvent::DispatcherState::reset(void* target){
+    if(mDownTarget==target){
+        LOGV("Reset in %p:%p",target,this);
+        mDownKeyCode=0;
+        mDownTarget=nullptr;
+    }
 }
 void KeyEvent::DispatcherState::startTracking(KeyEvent& event,void* target){
+    if (event.getAction() != ACTION_DOWN) {
+         throw "Can only start tracking on a down event";
+    }
+    LOGV("Start trackingt in %p:%p",target,this);
+    mDownKeyCode = event.getKeyCode();
+    mDownTarget = target;  
 }
+
 bool KeyEvent::DispatcherState::isTracking(KeyEvent& event){
+    return mDownKeyCode == event.getKeyCode();
 }
 void KeyEvent::DispatcherState::performedLongPress(KeyEvent& event){
+    mActiveLongPresses.put(event.getKeyCode(), 1);
 }
 void KeyEvent::DispatcherState::handleUpEvent(KeyEvent& event){
+    int keyCode = event.getKeyCode();
+    //LOGV("Handle key up %s:%p",event,this);
+    int index = mActiveLongPresses.indexOfKey(keyCode);
+    if (index >= 0) {
+        LOGV("  Index: %d",index);
+        event.mFlags |= FLAG_CANCELED | FLAG_CANCELED_LONG_PRESS;
+        mActiveLongPresses.removeAt(index);
+    }
+    if (mDownKeyCode == keyCode) {
+        LOGV("  Tracking!");
+        event.mFlags |= FLAG_TRACKING;
+        mDownKeyCode = 0;
+        mDownTarget = nullptr;
+    }
+   
 }
 
 //-------------------MotionEvent------------

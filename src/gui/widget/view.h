@@ -266,6 +266,7 @@ private:
     class RoundScrollbarRenderer* mRoundScrollbarRenderer;
     class TintInfo*mBackgroundTint;
     class ForegroundInfo*mForegroundInfo;
+    KeyEvent::DispatcherState mKeyDispatchState;
 private:
     Drawable* getDefaultFocusHighlightDrawable();
     void setDefaultFocusHighlight(Drawable* highlight);

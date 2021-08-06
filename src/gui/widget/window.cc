@@ -204,8 +204,9 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     }
     if(!handled){
         switch(action){
-        case KeyEvent::ACTION_UP  : handled = onKeyUp(event.getKeyCode(),event);  break;
-        case KeyEvent::ACTION_DOWN: handled = onKeyDown(event.getKeyCode(),event);break;
+        case KeyEvent::ACTION_UP  : 
+        case KeyEvent::ACTION_DOWN: 
+             handled = ViewGroup::dispatchKeyEvent(event);break;
         default:break;
         }
     }
@@ -271,8 +272,8 @@ bool Window::performFocusNavigation(KeyEvent& event){
 bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     switch(keyCode){
     case KEY_ESCAPE:
-        LOGD("recv %d %s",keyCode,evt.getLabel());
-        post([this](){WindowManager::getInstance().removeWindow(this);} );
+        evt.startTracking();
+        LOGD("recv %d %s flags=%x",keyCode,evt.getLabel(),evt.getFlags());
         return true;
     default:
         //return performFocusNavigation(evt);
@@ -282,6 +283,21 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     return false;
 }
 
+bool Window::onKeyUp(int keyCode,KeyEvent& evt){
+    switch(keyCode){
+    case KEY_ESCAPE:
+        LOGD("recv %d %s flags=%x track=%d cance=%d",keyCode,evt.getLabel(),evt.getFlags(),evt.isTracking(),evt.isCanceled());
+        if(evt.isTracking()&&!evt.isCanceled()){
+            onBackPressed();
+            return true;
+        }//pass throught return false;
+    default:return false;
+    }
+}
+
+void Window::onBackPressed(){
+    post([this](){WindowManager::getInstance().removeWindow(this);} );
+}
 
 void Window::postDelayed(const Runnable& what,uint32_t delay){
     if(source)source->post(what,delay);

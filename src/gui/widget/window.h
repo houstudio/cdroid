@@ -61,7 +61,9 @@ public:
     virtual Canvas*getCanvas()override;
     virtual View& setPos(int x,int y)override;
     virtual View& setSize(int cx,int cy)override;
+    virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
+    virtual void onBackPressed();
     virtual void onActive();
     virtual void onDeactive();
     void invalidate(const RECT*r)override;
