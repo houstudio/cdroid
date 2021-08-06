@@ -71,7 +71,7 @@ public:
         sendMessage(this,msgid,wParam,lParam,delayedtime);
     }
     virtual void sendMessage(View*v,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0)override;*/
-    void postDelayed(Runnable& what,uint32_t delay)override;
+    void postDelayed(const Runnable& what,uint32_t delay)override;
     void removeCallbacks(const Runnable& what)override;
     void requestLayout()override;
     static void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);

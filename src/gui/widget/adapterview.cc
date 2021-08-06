@@ -387,7 +387,7 @@ void AdapterView::selectionChanged(){
             // by posting. This ensures that the view tree is
             // in a consistent state and is able to accommodate
             // new layout or invalidate requests.
-            if (mSelectionNotifier == nullptr) {
+            if (mSelectionNotifier==nullptr) {
                 mSelectionNotifier =[this](){
                     mPendingSelectionNotifier = nullptr;
                     if (mDataChanged /*&& getViewRootImpl() && getViewRootImpl().isLayoutRequested()*/) {

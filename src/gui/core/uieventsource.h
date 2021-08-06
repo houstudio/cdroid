@@ -8,10 +8,10 @@ namespace cdroid{
 
 class UIEventSource:public EventHandler{
 private:
-    int mID;
     typedef struct{
-       nsecs_t  time;
-       Runnable run;
+        nsecs_t  time;
+        bool removed;
+        Runnable run;
     }RUNNER;
     std::list<RUNNER>mRunnables;
     View*mAttachedView;
@@ -22,7 +22,7 @@ public:
     bool processEvents();
     int checkEvents()override;
     int handleEvents()override;
-    void post(Runnable& run,DWORD delay=0);
+    void post(const Runnable& run,uint32_t delay=0);
     void removeCallbacks(const Runnable& what);
 };
 

@@ -3422,18 +3422,19 @@ bool View::onTouchEvent(MotionEvent& mt){
     return false;
 }
 
-void View::postOnAnimation(Runnable action){
+void View::postOnAnimation(const Runnable& action){
     postDelayed(action,10);
 }
-void View::postOnAnimationDelayed(Runnable action, long delayMillis){
+
+void View::postOnAnimationDelayed(const Runnable& action, uint32_t delayMillis){
     postDelayed(action,delayMillis);
 }
 
-void View::post(Runnable& what){
+void View::post(const Runnable& what){
     postDelayed(what,0);
 }
 
-void View::postDelayed(Runnable& what,uint32_t delay){
+void View::postDelayed(const Runnable& what,uint32_t delay){
     View*root=getRootView();
     if(root&&(root!=this))root->postDelayed(what,delay);
 }

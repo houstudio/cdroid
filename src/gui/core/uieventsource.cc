@@ -10,7 +10,6 @@ namespace cdroid{
 
 UIEventSource::UIEventSource(View*v){
     mAttachedView=v;
-    mID=0;
 }
 
 UIEventSource::~UIEventSource(){
@@ -28,18 +27,23 @@ int UIEventSource::handleEvents(){
     }
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().ComposeSurfaces();
+    for(auto it=mRunnables.begin();it!=mRunnables.end();it++){
+        LOGV_IF(it->removed,"remove %d",(int)it->run);
+        if(it->removed)it=mRunnables.erase(it);
+    }
     if(hasDelayedRunners()){
         RUNNER runner=mRunnables.front();
-        runner.run();
+        runner.run();//maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
+        LOGV("remove %d",(int)runner.run);
         mRunnables.pop_front(); 
     } 
     return 0;
 }
 
-void UIEventSource::post(Runnable& run,DWORD delayedtime){
+void UIEventSource::post(const Runnable& run,uint32_t delayedtime){
     RUNNER runner;
+    runner.removed=false;
     runner.time=SystemClock::uptimeMillis()+delayedtime;
-    run.ID=mID++;
     runner.run=run;
     for(auto itr=mRunnables.begin();itr!=mRunnables.end();itr++){
         if(runner.time<itr->time){
@@ -58,9 +62,9 @@ bool UIEventSource::hasDelayedRunners()const{
 }
 
 void UIEventSource::removeCallbacks(const Runnable& what){
-    mRunnables.remove_if([&](const RUNNER& m)->bool{
-        return (m.run.ID==what.ID);
-    });
+    for(auto it=mRunnables.begin();it!=mRunnables.end();it++){ 
+        if(it->run==what) it->removed=true;
+    }
 }
 
 }//end namespace

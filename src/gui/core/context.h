@@ -5,43 +5,12 @@
 #include <functional>
 #include <cairomm/refptr.h>
 #include <cairomm/surface.h>
-
+#include <core/callbackbase.h>
 using namespace Cairo;
 
 namespace cdroid{
-class Runnable{
-public:
-   int ID;
-   std::function<void()>run;
-   Runnable(){
-       run=nullptr;
-   }
-   Runnable(const Runnable&b){
-       run=b.run;
-       ID=b.ID;
-   }
-   Runnable(const std::function<void()>&f){
-       run=f;
-   }
-   void operator=(const std::function<void()>&f){
-       run=f;
-   }
-   void operator=(nullptr_t){
-       run=nullptr;
-   }
-   bool operator==(nullptr_t)const{
-      return run==nullptr;
-   }
-   bool operator!=(nullptr_t)const{
-      return run!=nullptr;
-   }
-   explicit operator bool()const{
-      return run!=nullptr;
-   }
-   void operator()(){
-      run();
-   }
-};
+
+typedef CallbackBase<void> Runnable;
 class Drawable;
 class ColorStateList;
 class Context{

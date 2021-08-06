@@ -354,8 +354,8 @@ protected:
     bool awakenScrollBars();
     bool awakenScrollBars(int startDelay, bool invalidate);
 
-    void postOnAnimation(Runnable action);
-    void postOnAnimationDelayed(Runnable action, long delayMillis);
+    void postOnAnimation(const Runnable& action);
+    void postOnAnimationDelayed(const Runnable& action, uint32_t delayMillis);
     virtual void onSizeChanged(int w,int h,int oldw,int oldh);
     virtual void onScrollChanged(int l, int t, int oldl, int oldt);
     virtual void onLayout(bool ,int,int,int,int);
@@ -679,10 +679,10 @@ public:
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
 	
-    void post(Runnable& what);
+    void post(const Runnable& what);
     void post(const std::function<void()>&what);
     void postDelayed(const std::function<void()>&what,uint32_t delay=0);
-    virtual void postDelayed(Runnable& what,uint32_t delay=0);
+    virtual void postDelayed(const Runnable& what,uint32_t delay=0);
     virtual void removeCallbacks(const Runnable& what);
 
     virtual int getBaseline();

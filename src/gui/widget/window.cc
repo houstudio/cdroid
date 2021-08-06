@@ -283,7 +283,7 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
 }
 
 
-void Window::postDelayed(Runnable& what,uint32_t delay){
+void Window::postDelayed(const Runnable& what,uint32_t delay){
     if(source)source->post(what,delay);
 }
 

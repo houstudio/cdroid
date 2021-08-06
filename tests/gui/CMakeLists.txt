@@ -1,8 +1,9 @@
 project(gui_test C CXX)
-
+set(CMAKE_CXX_STANDARD 11)
 aux_source_directory(./ SRCS_GUI_TESTS)
 
 include_directories(
+   ./
    ${DEPS_DIR}/include
    ${DEPS_DIR}/include/gui
    ${DEPS_DIR}/include/porting
