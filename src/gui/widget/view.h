@@ -269,6 +269,7 @@ private:
 private:
     Drawable* getDefaultFocusHighlightDrawable();
     void setDefaultFocusHighlight(Drawable* highlight);
+    void switchDefaultFocusHighlight();
     void drawDefaultFocusHighlight(Canvas& canvas);
 
     void clip(RefPtr<Region>rgn);
@@ -467,6 +468,7 @@ public:
     virtual void setFocusable(int focusable);
     virtual void setFocusableInTouchMode(bool focusableInTouchMode);
     void refreshDrawableState();
+    bool isDefaultFocusHighlightNeeded(const Drawable* background,const Drawable* foreground)const;
     virtual const std::vector<int>getDrawableState();
 
     int getNextFocusLeftId()const{return mNextFocusLeftId;}

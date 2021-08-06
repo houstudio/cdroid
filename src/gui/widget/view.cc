@@ -182,6 +182,7 @@ void View::initView(){
     mScrollIndicatorDrawable=nullptr;
     mBackground=nullptr;
     mDefaultFocusHighlight=nullptr;
+    mDefaultFocusHighlightCache=nullptr;
     mCurrentAnimation=nullptr;
     mTransformationInfo=nullptr;
     mMatrix=identity_matrix();
@@ -192,6 +193,7 @@ View::~View(){
     if(mBackground)mBackground->setCallback(nullptr);
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
+	delete mDefaultFocusHighlightCache;
     delete mScrollCache;
     delete mBackground;
     delete mBackgroundTint;
@@ -356,6 +358,29 @@ void View::setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled){
 
 bool View::getDefaultFocusHighlightEnabled()const{
     return mDefaultFocusHighlightEnabled;
+}
+
+bool View::isDefaultFocusHighlightNeeded(const Drawable* background,const Drawable* foreground)const{
+    bool lackFocusState = (background == nullptr || !background->isStateful()
+            || !background->hasFocusStateSpecified())
+            && (foreground == nullptr || !foreground->isStateful()
+            || !foreground->hasFocusStateSpecified());
+    return !isInTouchMode() && getDefaultFocusHighlightEnabled() 
+	           && lackFocusState;//&& isAttachedToWindow() && sUseDefaultFocusHighlight;
+}
+
+void View::switchDefaultFocusHighlight() {
+    if (isFocused()) {
+        bool needed = isDefaultFocusHighlightNeeded(mBackground,
+                mForegroundInfo == nullptr ? nullptr : mForegroundInfo->mDrawable);
+        bool active = mDefaultFocusHighlight != nullptr;
+        if (needed && !active) {
+            setDefaultFocusHighlight(getDefaultFocusHighlightDrawable());
+        } else if (!needed && active) {
+            // The highlight is no longer needed, so tear it down.
+            setDefaultFocusHighlight(nullptr);
+        }
+    }
 }
 
 void View::drawDefaultFocusHighlight(Canvas& canvas){
@@ -1941,10 +1966,13 @@ ColorStateList* View::getBackgroundTintList()const{
     return mBackgroundTint != nullptr ? mBackgroundTint->mTintList : nullptr;
 }
 
-void View::onFocusChanged(bool gained,int direct,const RECT*previouslyFocusedRect){
-    if(mOnFocusChangeListener)mOnFocusChangeListener(*this,gained);
-    if(!gained)
+void View::onFocusChanged(bool gainFocus,int direct,const RECT*previouslyFocusedRect){
+    if(mOnFocusChangeListener)mOnFocusChangeListener(*this,gainFocus);
+    switchDefaultFocusHighlight();
+    if(!gainFocus){
+        if(isPressed())setPressed(false);
         onFocusLost();
+    }
     refreshDrawableState();
 }
 
@@ -2088,9 +2116,9 @@ void View::applyForegroundTint() {
 Drawable* View::getDefaultFocusHighlightDrawable() {
     if (mDefaultFocusHighlightCache == nullptr) {
         if (mContext) {
-                //int[] attrs = new int[] { android.R.attr.selectableItemBackground };
-                mDefaultFocusHighlightCache;//todo loadresource;
-            }
+             //int[] attrs = new int[] { android.R.attr.selectableItemBackground };
+             mDefaultFocusHighlightCache=new ColorDrawable(0x80FF0000);//todo loadresource;
+        }
     }
     return mDefaultFocusHighlightCache;
 }
