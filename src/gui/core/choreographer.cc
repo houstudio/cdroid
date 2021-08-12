@@ -104,6 +104,7 @@ namespace cdroid{
 //////////////////////////////////////////////////////////////////////////////////////////
 
 Choreographer*Choreographer::mInst=nullptr;
+long Choreographer::sFrameDelay = DEFAULT_FRAME_DELAY;
 
 Choreographer::Choreographer(){
     mFrameScheduled=false;
@@ -119,6 +120,14 @@ Choreographer&Choreographer::getInstance(){
     mInst=new Choreographer();
     return *mInst;
 }   
+
+long Choreographer::getFrameDelay(){
+    return sFrameDelay;
+}
+
+void Choreographer::setFrameDelay(long frameDelay){
+    sFrameDelay = frameDelay;
+}
 
 long Choreographer::getFrameTime(){
     return SystemClock::uptimeMillis();
@@ -136,19 +145,45 @@ long Choreographer::getFrameIntervalNanos() {
     return mFrameIntervalNanos;
 }
 
-void Choreographer::removeCallbacksInternal(int callbackType,Runnable action, void* token){
+void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis){
+    LOGD("PostCallback: type=%d ,action=%d,token=%d ,delayMillis=%d",
+         callbackType,action,token,delayMillis);
+
+    long now = SystemClock::uptimeMillis();
+    long dueTime = now + delayMillis;
+    /*mCallbackQueues[callbackType]->addCallbackLocked(dueTime, action, token);
+    
+    if (dueTime <= now) {
+        scheduleFrameLocked(now);
+    } else {
+        Message msg = mHandler.obtainMessage(MSG_DO_SCHEDULE_CALLBACK, action);
+        msg.arg1 = callbackType;
+        msg.setAsynchronous(true);
+        mHandler.sendMessageAtTime(msg, dueTime);
+    }*/   
+}
+
+void Choreographer::removeCallbacksInternal(int callbackType,const Runnable& action, void* token){
     mCallbackQueues[callbackType]->removeCallbacksLocked(action,(long)token);
 }
 
-void Choreographer::removeFrameCallback(FrameCallback callback){
+void Choreographer::postCallback(int callbackType,const Runnable& action, void* token){
+     postCallbackDelayed(callbackType,action,token,0);
+}
+
+void Choreographer::postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis){
+     //postCallbackDelayedInternal(callbackType, action, token, delayMillis);
+}
+
+void Choreographer::removeFrameCallback(const FrameCallback& callback){
     //removeCallbacksInternal(CALLBACK_ANIMATION, callback,(void*)FRAME_CALLBACK_TOKEN);
 }
 
-void Choreographer::postFrameCallback(FrameCallback callback){
+void Choreographer::postFrameCallback(const FrameCallback& callback){
 
 }
 
-void Choreographer::postFrameCallbackDelayed(FrameCallback callback, long delayMillis){
+void Choreographer::postFrameCallbackDelayed(const FrameCallback& callback, long delayMillis){
 }
 
 void Choreographer::scheduleFrameLocked(long now){

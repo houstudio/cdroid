@@ -288,6 +288,7 @@ void TextView::initView(){
     mSpacingMult=1.0;
     mSpacingAdd =0.f;
     mBlinkOn  =false;
+    mRestartMarquee =true;
     mCaretPos =0;
     mCaretRect.set(0,0,0,0);
     mMaxWidthMode =PIXELS;
@@ -1368,6 +1369,7 @@ void TextView::startStopMarquee(bool start){
 
 void TextView::restartMarqueeIfNeeded(){
     if (mRestartMarquee && mEllipsize == Layout::ELLIPSIS_MARQUEE) {
+        mLayout->relayout();
         mRestartMarquee = false;
         startMarquee();
     }
@@ -1498,8 +1500,9 @@ void TextView::onDraw(Canvas& canvas) {
         }
     }
 
-    LOGV("text:%s maxlinewidth=%d lines=%d size=%dx%d",getText().c_str(),
-          layout->getMaxLineWidth(),layout->getLineCount(),clipRight-clipLeft, clipBottom-clipTop);
+    LOGV("text:%s maxlinewidth=%d lines=%d size=%dx%d marquee=%d mSingleLine=%d",getText().c_str(),
+          layout->getMaxLineWidth(),layout->getLineCount(),clipRight-clipLeft, clipBottom-clipTop,
+          isMarqueeFadeEnabled(),mSingleLine);
     canvas.set_color(color);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);

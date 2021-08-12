@@ -597,21 +597,21 @@ void ValueAnimator::addOneShotCommitCallback() {
     if (!mSelfPulse) {
         return;
     }
-    //getAnimationHandler().addOneShotCommitCallback(this);
+    getAnimationHandler().addOneShotCommitCallback(this);
 }
 
 void ValueAnimator::removeAnimationCallback() {
     if (!mSelfPulse) {
         return;
     }
-    //getAnimationHandler().removeCallback(this);
+    getAnimationHandler().removeCallback(this);
 }
 
 void ValueAnimator::addAnimationCallback(long delay) {
     if (!mSelfPulse) {
         return;
     }
-    //getAnimationHandler().addAnimationFrameCallback(this, delay);
+    getAnimationHandler().addAnimationFrameCallback(this, delay);
 }
 
 float ValueAnimator::getAnimatedFraction() {
@@ -627,6 +627,10 @@ void ValueAnimator::animateValue(float fraction) {
     for (auto l:mUpdateListeners) {
         l(*this);
     }
+}
+
+AnimationHandler& ValueAnimator::getAnimationHandler()const{
+    return AnimationHandler::getInstance();
 }
 
 }//endof namespace 

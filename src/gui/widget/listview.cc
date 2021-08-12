@@ -1023,7 +1023,7 @@ void ListView::layoutChildren() {
          * to directly request focus on the view after it is visible.
          */
         /*if (sel == nullptr && mFocusSelector != nullptr) {
-            Runnable focusRunnable = mFocusSelector.setupFocusIfValid(selectedPosition);
+            Runnable focusRunnable = mFocusSelector->setupFocusIfValid(selectedPosition);
             if (focusRunnable != nullptr) {
                 post(focusRunnable);
             }

@@ -18,14 +18,8 @@
  * along with GNU FriBidi; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  * 
- * For licensing issues, contact <license@farsiweb.info> or write to
+ * For licensing issues, contact <fribidi.license@gmail.com> or write to
  * Sharif FarsiWeb, Inc., PO Box 13445-389, Tehran, Iran.
- */
-/* $Id: fribidi-arabic.c,v 1.3 2007-04-05 16:14:39 behdad Exp $
- * $Author: behdad $
- * $Date: 2007-04-05 16:14:39 $
- * $Revision: 1.3 $
- * $Source: /home/behdad/src/fdo/fribidi/togit/git/../fribidi/fribidi2/lib/fribidi-arabic.c,v $
  *
  * Author(s):
  *   Behdad Esfahbod, 2005
@@ -33,7 +27,11 @@
 
 #include "common.h"
 
-#if HAVE_STDLIB_H+0
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
 
@@ -90,6 +88,26 @@ comp_PairMap (const void *pa, const void *pb)
 	   0;
 }
 
+static void *
+fribidi_bsearch (const void *key, const void *base,
+                 unsigned int nmemb, unsigned int size,
+                 int (*compar)(const void *_key, const void *_item))
+{
+  int min = 0, max = (int) nmemb - 1;
+  while (min <= max)
+  {
+    int mid = ((unsigned int) min + (unsigned int) max) / 2;
+    const void *p = (const void *) (((const char *) base) + (mid * size));
+    int c = compar (key, p);
+    if (c < 0)
+      max = mid - 1;
+    else if (c > 0)
+      min = mid + 1;
+    else
+      return (void *) p;
+  }
+  return NULL;
+}
 
 static FriBidiChar
 find_pair_match (const PairMap *table, int size, FriBidiChar first, FriBidiChar second)
@@ -99,7 +117,7 @@ find_pair_match (const PairMap *table, int size, FriBidiChar first, FriBidiChar 
   x.pair[0] = first;
   x.pair[1] = second;
   x.to = 0;
-  match = bsearch (&x, table, size, sizeof (table[0]), comp_PairMap);
+  match = fribidi_bsearch (&x, table, size, sizeof (table[0]), comp_PairMap);
   return match ? match->to : 0;
 }
 

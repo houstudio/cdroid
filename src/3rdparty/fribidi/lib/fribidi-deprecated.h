@@ -1,12 +1,6 @@
 /* FriBidi
  * fribidi-deprecated.h - Deprecated interfaces
  *
- * $Id: fribidi-deprecated.h,v 1.4 2009-03-27 16:14:33 behdad Exp $
- * $Author: behdad $
- * $Date: 2009-03-27 16:14:33 $
- * $Revision: 1.4 $
- * $Source: /home/behdad/src/fdo/fribidi/togit/git/../fribidi/fribidi2/lib/fribidi-deprecated.h,v $
- *
  * Author:
  *   Behdad Esfahbod, 2004, 2005
  *
@@ -28,7 +22,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA
  * 
- * For licensing issues, contact <license@farsiweb.info>.
+ * For licensing issues, contact <fribidi.license@gmail.com>.
  */
 #ifndef _FRIBIDI_DEPRECATED_H
 #define _FRIBIDI_DEPRECATED_H
@@ -43,22 +37,20 @@
 
 
 
-#define fribidi_mirroring_status FRIBIDI_NAMESPACE(mirroring_status)
 /* fribidi_mirroring_status - get current mirroring status
  *
  * This function is deprecated and only used with other deprecated functions.
  */
-     FRIBIDI_ENTRY fribidi_boolean fribidi_mirroring_status (
+FRIBIDI_ENTRY fribidi_boolean fribidi_mirroring_status (
   void
 ) FRIBIDI_GNUC_DEPRECATED;
 
-#define fribidi_set_mirroring FRIBIDI_NAMESPACE(set_mirroring)
 /* fribidi_set_mirroring - set mirroring on or off
  *
  * This function is used to turn character mirroring on or off.
  * Character mirroring is the act of replacing a mirrorable glyph
- * (character), eg. left paranthesis, with the matching glyph, 
- * eg. right paranthesis, in a right-to-left resolved context.
+ * (character), eg. left parenthesis, with the matching glyph, 
+ * eg. right parenthesis, in a right-to-left resolved context.
  * If your rendering engine does mirroring itself, you may want to 
  * turn it off here.
  *
@@ -67,21 +59,19 @@
  *
  * Returns: the new mirroring status.
  */
-     FRIBIDI_ENTRY fribidi_boolean fribidi_set_mirroring (
+FRIBIDI_ENTRY fribidi_boolean fribidi_set_mirroring (
   fribidi_boolean state		/* new state to set */
 ) FRIBIDI_GNUC_DEPRECATED;
 
 
-#define fribidi_reorder_nsm_status FRIBIDI_NAMESPACE(reorder_nsm_status)
 /* fribidi_reorder_nsm_status - get current marks reordering status
  *
  * This function is deprecated and only used with other deprecated functions.
  */
-     FRIBIDI_ENTRY fribidi_boolean fribidi_reorder_nsm_status (
+FRIBIDI_ENTRY fribidi_boolean fribidi_reorder_nsm_status (
   void
 ) FRIBIDI_GNUC_DEPRECATED;
 
-#define fribidi_set_reorder_nsm FRIBIDI_NAMESPACE(set_reorder_nsm)
 /* fribidi_set_reorder_nsm - set marks reordering on or off
  *
  * This function is used to turn non-spacing marks reordering on or
@@ -98,7 +88,7 @@
  *
  * Returns: the new marks reordering status.
  */
-     FRIBIDI_ENTRY fribidi_boolean fribidi_set_reorder_nsm (
+FRIBIDI_ENTRY fribidi_boolean fribidi_set_reorder_nsm (
   fribidi_boolean state		/* new state to set */
 ) FRIBIDI_GNUC_DEPRECATED;
 
@@ -107,9 +97,8 @@
 
 /* fribidi_log2vis_get_embedding_levels - get embedding levels
  *
- * Deprecated. Replaced by fribidi_get_par_embedding_levels.
+ * Deprecated. Replaced by fribidi_get_par_embedding_levels_ex.
  */
-#define fribidi_log2vis_get_embedding_levels FRIBIDI_NAMESPACE(log2vis_get_embedding_levels)
 FRIBIDI_ENTRY FriBidiLevel
 fribidi_log2vis_get_embedding_levels (
   const FriBidiCharType *bidi_types,	/* input list of bidi types as returned by
@@ -124,7 +113,6 @@ fribidi_log2vis_get_embedding_levels (
  *
  * Deprecated. Replaced by fribidi_get_bidi_type.
  */
-#define fribidi_get_type FRIBIDI_NAMESPACE(get_type)
 FRIBIDI_ENTRY FriBidiCharType
 fribidi_get_type (
   FriBidiChar ch		/* input character */
@@ -134,82 +122,26 @@ fribidi_get_type (
  *
  * Deprecated. Replaced by fribidi_get_bidi_type.
  */
-#define fribidi_get_type_internal FRIBIDI_NAMESPACE(get_type_internal)
 FRIBIDI_ENTRY FriBidiCharType
 fribidi_get_type_internal (
   FriBidiChar ch		/* input character */
 ) FRIBIDI_GNUC_DEPRECATED;
 
-#define fribidi_remove_bidi_marks FRIBIDI_NAMESPACE(remove_bidi_marks)
-/* fribidi_remove_bidi_marks - remove bidi marks out of an string
+/* fribidi_get_par_embedding_levels - get bidi embedding levels of a paragraph
  *
- * This function removes the bidi and boundary-neutral marks out of an string
- * and the accompanying lists.  It implements rule X9 of the Unicode
- * Bidirectional Algorithm available at
- * http://www.unicode.org/reports/tr9/#X9, with the exception that it removes
- * U+200E LEFT-TO-RIGHT MARK and U+200F RIGHT-TO-LEFT MARK too.
- *
- * If any of the input lists are NULL, the list is skipped.  If str is the
- * visual string, then positions_to_this is  positions_L_to_V and
- * position_from_this_list is positions_V_to_L;  if str is the logical
- * string, the other way. Moreover, the position maps should be filled with
- * valid entries.
- * 
- * A position map pointing to a removed character is filled with \-1. By the
- * way, you should not use embedding_levels if str is visual string.
- * 
- * For best results this function should be run on a whole paragraph, not
- * lines; but feel free to do otherwise if you know what you are doing.
- * Deprecated.  Use fribidi_remove_special_chars instead.
- *
- * Returns: New length of the string, or \-1 if an error occured (memory
- * allocation failure most probably).
+ * Deprecated interface to fribidi_get_par_embedding_levels_ex(). Refer to
+ * it for documentation.
  */
-FRIBIDI_ENTRY FriBidiStrIndex
-fribidi_remove_bidi_marks (
-  FriBidiChar *str,		/* input string to clean */
-  const FriBidiStrIndex len,	/* input string length */
-  FriBidiStrIndex *positions_to_this,	/* list mapping positions to the
-					   order used in str */
-  FriBidiStrIndex *position_from_this_list,	/* list mapping positions from the
-						   order used in str */
-  FriBidiLevel *embedding_levels	/* list of embedding levels */
-)
-     FRIBIDI_GNUC_WARN_UNUSED FRIBIDI_GNUC_DEPRECATED;
-
-
-#define fribidi_log2vis FRIBIDI_NAMESPACE(log2vis)
-/* fribidi_log2vis - get visual string
- *
- * This function converts the logical input string to the visual output
- * strings as specified by the Unicode Bidirectional Algorithm.  As a side
- * effect it also generates mapping lists between the two strings, and the
- * list of embedding levels as defined by the algorithm.
- *
- * If NULL is passed as any of the the lists, the list is ignored and not
- * filled.
- *
- * This function is obsolete because it only handles one-line paragraphs. 
- * Please consider using other functions instead.  Deprecated.
- *
- * Returns: Maximum level found plus one, or zero if any error occured
- * (memory allocation failure most probably).
- */
-     FRIBIDI_ENTRY FriBidiLevel fribidi_log2vis (
-  const FriBidiChar *str,	/* input logical string */
-  const FriBidiStrIndex len,	/* input string length */
+FRIBIDI_ENTRY FriBidiLevel
+fribidi_get_par_embedding_levels (
+  const FriBidiCharType *bidi_types,	/* input list of bidi types as returned by
+					   fribidi_get_bidi_types() */
+  const FriBidiStrIndex len,	/* input string length of the paragraph */
   FriBidiParType *pbase_dir,	/* requested and resolved paragraph
 				 * base direction */
-  FriBidiChar *visual_str,	/* output visual string */
-  FriBidiStrIndex *positions_L_to_V,	/* output mapping from logical to 
-					 * visual string positions */
-  FriBidiStrIndex *positions_V_to_L,	/* output mapping from visual string
-					 * back to the logical string
-					 * positions */
   FriBidiLevel *embedding_levels	/* output list of embedding levels */
-)
+) 
      FRIBIDI_GNUC_WARN_UNUSED FRIBIDI_GNUC_DEPRECATED;
-
 
 #define UNI_MAX_BIDI_LEVEL	FRIBIDI_BIDI_MAX_EXPLICIT_LEVEL
 #define UNI_LRM			FRIBIDI_CHAR_LRM

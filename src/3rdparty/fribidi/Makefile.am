@@ -1,19 +1,16 @@
 ##                                               -*- Automake -*-
 ## Process this file with automake to produce Makefile.in
-##############################################################################
-## $Id: Makefile.am,v 1.10 2005-08-25 18:35:34 behdad Exp $
-## $Author: behdad $
-## $Date: 2005-08-25 18:35:34 $
-## $Revision: 1.10 $
-## $Source: /home/behdad/src/fdo/fribidi/togit/git/../fribidi/fribidi2/Makefile.am,v $
-##############################################################################
 
 ACLOCAL_AMFLAGS = -I m4
 
 ## The order of subdirs is important, don't change without a reason.
-SUBDIRS = gen.tab charset lib bin doc test
+SUBDIRS = gen.tab lib bin doc test
 
-EXTRA_DIST = bootstrap ChangeLog.old
+EXTRA_DIST = autogen.sh ChangeLog.old \
+	meson.build meson_options.txt bin/meson.build doc/meson.build \
+	gen.tab/meson.build lib/meson.build test/meson.build \
+	test/test-runner.py test/unicode-conformance/meson.build \
+        README.md
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = @PACKAGE@.pc
@@ -23,26 +20,10 @@ lib/fribidi-unicode-version.h:
 	(cd lib && $(MAKE) $(AM_MAKEFLAGS) fribidi-unicode-version.h)
 
 MAINTAINERCLEANFILES = \
-		$(srcdir)/INSTALL \
-		$(srcdir)/aclocal.m4 \
-		$(srcdir)/autoscan.log \
-		$(srcdir)/compile \
-		$(srcdir)/config.guess \
-		$(srcdir)/config.h.in \
-		$(srcdir)/config.sub \
-		$(srcdir)/configure.scan \
-		$(srcdir)/depcomp \
-		$(srcdir)/install-sh \
-		$(srcdir)/ltmain.sh \
-		$(srcdir)/missing \
-		$(srcdir)/mkinstalldirs \
-		$(srcdir)/ChangeLog \
-		`find "$(srcdir)" -type f -name Makefile.in -print` \
-		`$(srcdir)/bootstrap --write-configure`
-# The last line above is a horrible hack.
-# GNU Coding Standards recommends that `make maintainer-clean' should not 
-# remove the configure script.
-# We instead make configure call bootstrap.
+	INSTALL \
+	$(GITIGNORE_MAINTAINERCLEANFILES_TOPLEVEL) \
+	$(GITIGNORE_MAINTAINERCLEANFILES_MAKEFILE_IN) \
+	$(GITIGNORE_MAINTAINERCLEANFILES_M4_LIBTOOL)
 
 # Indent all C source and header files, using indent(1):
 

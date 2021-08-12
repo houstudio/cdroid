@@ -247,7 +247,6 @@ endif ()
 file(WRITE "${PROJECT_BINARY_DIR}/include/freetype/config/ftconfig.h"
   "${FTCONFIG_H}")
 
-
 # Create the options file
 file(READ "${PROJECT_SOURCE_DIR}/include/freetype/config/ftoption.h"
   FTOPTION_H)
@@ -271,8 +270,8 @@ if (HARFBUZZ_FOUND AND FT_WITH_HARFBUZZ)
     "/\\* +(#define +FT_CONFIG_OPTION_USE_HARFBUZZ) +\\*/" "\\1"
     FTOPTION_H "${FTOPTION_H}")
 endif ()
-file(WRITE "${PROJECT_BINARY_DIR}/include/freetype/config/ftoption.h"
-  "${FTOPTION_H}")
+file(WRITE "${PROJECT_BINARY_DIR}/include/freetype/config/ftoption.h"  "${FTOPTION_H}")
+file(WRITE "${PROJECT_SOURCE_DIR}/include/freetype/config/ftoption.h"  "${FTOPTION_H}")
 
 
 file(GLOB PUBLIC_HEADERS "include/ft2build.h" "include/freetype/*.h")

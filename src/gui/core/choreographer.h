@@ -20,23 +20,27 @@ private:
     long mFrameIntervalNanos;
     class CallbackQueue* mCallbackQueues[CALLBACK_LAST];
     static Choreographer *mInst;
+    static long sFrameDelay;
     Choreographer();
-    void removeCallbacksInternal(int callbackType,Runnable action, void* token);
+    void removeCallbacksInternal(int callbackType,const Runnable& action, void* token);
+    void postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis);
     void scheduleFrameLocked(long);
 protected:
     void doCallbacks(int callbackType, long frameTimeNanos);
 public:
     static Choreographer& getInstance();
+    static long getFrameDelay();
+    static void setFrameDelay(long frameDelay);
     long getFrameTimeNanos();
     long getLastFrameTimeNanos();
     long getFrameTime();
     long getFrameIntervalNanos();
-
-    void postCallbackDelayed(int callbackType,Runnable action,long delayMillis);
-    void removeCallbacks(int callbackType, Runnable action);
-    void removeFrameCallback(FrameCallback callback);
-    void postFrameCallbackDelayed(FrameCallback callback, long delayMillis);
-    void postFrameCallback(FrameCallback callback);
+    void postCallback(int callbackType,const Runnable& action, void* token);
+    void postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis);
+    void removeCallbacks(int callbackType, const Runnable& action);
+    void removeFrameCallback(const FrameCallback& callback);
+    void postFrameCallbackDelayed(const FrameCallback& callback, long delayMillis);
+    void postFrameCallback(const FrameCallback& callback);
 };
 }
 

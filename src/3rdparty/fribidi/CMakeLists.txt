@@ -83,10 +83,10 @@ CONFIGURE_FILE(
     @ONLY)
 
 
-ADD_EXECUTABLE(fribidi-test bin/fribidi-main.c)
-ADD_EXECUTABLE(biditest bin/test.c)
-TARGET_LINK_LIBRARIES(fribidi-test fribidi_shared iconv)
-TARGET_LINK_LIBRARIES(biditest fribidi_shared)
+#ADD_EXECUTABLE(fribidi-test bin/fribidi-main.c)
+#ADD_EXECUTABLE(biditest bin/test.c)
+#TARGET_LINK_LIBRARIES(fribidi-test fribidi_shared iconv)
+#TARGET_LINK_LIBRARIES(biditest fribidi_shared)
 
 
 CHECK_INCLUDE_FILE(asm/page.h HAVE_ASM_PAGE_H) #var is not set if not found

@@ -30,6 +30,7 @@ private:
     static View*inflate(Context*ctx,std::istream&stream);
 protected:
     Canvas*canvas;
+    RefPtr<Region>mWindowRgn;	
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;
@@ -51,6 +52,8 @@ public:
     }WindowType;
     Window(Context*,const AttributeSet&);
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
+    void setRegion(const RefPtr<Region>&region);
+
     int inflate(const std::string&res);
     static View*inflate(Context*ctx,const std::string&res);
     virtual ~Window();

@@ -1,5 +1,7 @@
 SET(FRIBIDI_SRC
 	arabic-misc.tab.i
+	brackets.tab.i
+	brackets-type.tab.i
 	fribidi.c
 	fribidi-arabic.c
 	fribidi-bidi.c
@@ -7,12 +9,21 @@ SET(FRIBIDI_SRC
 	fribidi-deprecated.c
 	fribidi-joining.c
 	fribidi-joining-types.c
-	fribidi-mem.c
 	fribidi-mirroring.c
 	fribidi-run.c
 	fribidi-shape.c
+	fribidi-brackets.c
 )
-
+SET(FRIBIDI_CHARSET_SRC
+    fribidi-char-sets.c
+    fribidi-char-sets-cap-rtl.c
+    fribidi-char-sets-cp1255.c
+    fribidi-char-sets-cp1256.c
+    fribidi-char-sets-iso8859-6.c
+    fribidi-char-sets-iso8859-8.c 
+    fribidi-char-sets-utf8.c
+)
+ 
 IF(APPLE)
 #TODO: iOS
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.6")
@@ -24,6 +35,7 @@ IF(USE_FRIBIDI_CHARSETS)
   SET(DEF_CONTENT "fribidi_parse_charset\nfribidi_unicode_to_charset\nfribidi_charset_to_unicode\n${DEF_CONTENT}")
   FILE(WRITE "${PROJECT_BINARY_DIR}/${PROJECT_NAME}.def" "EXPORTS\n${DEF_CONTENT}")
 # $<TARGET_OBJECTS:xxx> can only be used in add_library & add_executable, not in set_target_properties(...link_libraries...)
+  ADD_LIBRARY(fribidi-charset OBJECT ${FRIBIDI_CHARSET_SRC})
   ADD_LIBRARY(fribidi_shared SHARED ${FRIBIDI_SRC} $<TARGET_OBJECTS:fribidi-charset> ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.def)
   ADD_LIBRARY(fribidi_static STATIC ${FRIBIDI_SRC} $<TARGET_OBJECTS:fribidi-charset>)
 ELSE()

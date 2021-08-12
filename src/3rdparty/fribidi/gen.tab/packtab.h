@@ -16,11 +16,13 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, 
  * Boston, MA 02110-1301, USA  
  * 
- * For licensing issues, contact <fwpg@sharif.edu>. 
+ * For licensing issues, contact <fribidi.license@gmail.com>.
  */
 
 #ifndef PACKTAB_H
 #define PACKTAB_H
+
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C"

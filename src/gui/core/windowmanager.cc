@@ -78,7 +78,7 @@ void WindowManager::removeWindow(Window*w){
         Window*w1=(*itr);
         RECT rc=w1->getBound();
         rc.intersect(wrect);
-	rc.offset(-w1->getX(),-w1->getY());
+	    rc.offset(-w1->getX(),-w1->getY());
         w1->invalidate(&rc);
     }
     Looper::getDefault()->removeEventHandler(w->source);
@@ -199,12 +199,21 @@ void WindowManager::resetVisibleRegion(){
         RefPtr<Region>newrgn=Region::create((RectangleInt&)rcw);
         if((*w)->getVisibility()!=View::VISIBLE)continue;
 
-        for(auto w1=w+1;w1!=windows.end();w1++){
-            RECT r=(*w1)->getBound();
-            if((*w1)->getVisibility()==View::VISIBLE)
+       for(auto w1=w+1;w1!=windows.end();w1++){
+           if((*w1)->getVisibility()!=View::VISIBLE)continue;
+           if((*w1)->mWindowRgn==nullptr || (*w1)->mWindowRgn->empty()){
+               RECT r=(*w1)->getBound();
                newrgn->subtract((const RectangleInt&)r);
-        }
-        newrgn->translate(-rcw.x,-rcw.y);
+           }else{
+               RefPtr<Region>tmp=(*w1)->mWindowRgn->copy();
+               tmp->translate((*w1)->getX(),(*w1)->getY());
+               newrgn->subtract(tmp);
+           }
+       }
+       newrgn->translate(-rcw.x,-rcw.y);
+       if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
+           newrgn->intersect((*w)->mWindowRgn); 
+       }
         (*w)->getCanvas()->set_layer((*w)->mLayer,newrgn);
         LOGV("window %p[%s] Layer=%d %d rects visible=%d",(*w),(*w)->getText().c_str(),(*w)->mLayer,
                    newrgn->get_num_rectangles(),(*w)->getVisibility());

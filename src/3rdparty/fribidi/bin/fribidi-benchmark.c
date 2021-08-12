@@ -1,12 +1,6 @@
 /* FriBidi
  * fribidi-benchmark.c - command line benchmark tool for libfribidi
  *
- * $Id: fribidi-benchmark.c,v 1.8 2009-04-14 03:49:52 behdad Exp $
- * $Author: behdad $
- * $Date: 2009-04-14 03:49:52 $
- * $Revision: 1.8 $
- * $Source: /home/behdad/src/fdo/fribidi/togit/git/../fribidi/fribidi2/bin/fribidi-benchmark.c,v $
- *
  * Authors:
  *   Behdad Esfahbod, 2001, 2002, 2004
  *   Dov Grobgeld, 1999, 2000
@@ -30,15 +24,21 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA
  * 
- * For licensing issues, contact <license@farsiweb.info>.
+ * For licensing issues, contact <fribidi.license@gmail.com>.
  */
 
 #include <common.h>
 
 #include <fribidi.h>
+#include <fribidi-deprecated.h>
 
 #include <stdio.h>
-#if STDC_HEADERS+0
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#ifdef STDC_HEADERS
 # include <stdlib.h>
 # include <stddef.h>
 #else
@@ -46,16 +46,16 @@
 #  include <stdlib.h>
 # endif
 #endif
-#if HAVE_STRING_H+0
+#ifdef HAVE_STRING_H
 # if !STDC_HEADERS && HAVE_MEMORY_H
 #  include <memory.h>
 # endif
 # include <string.h>
 #endif
-#if HAVE_STRINGS_H+0
+#ifdef HAVE_STRINGS_H
 # include <strings.h>
 #endif
-#if HAVE_SYS_TIMES_H+0
+#ifdef HAVE_SYS_TIMES_H
 # include <sys/times.h>
 #endif
 #ifdef _WIN32
@@ -138,7 +138,7 @@ utime (
   else
       return 0.0;
 #else /* !_WIN32 */
-#if HAVE_SYS_TIMES_H+0
+#ifdef HAVE_SYS_TIMES_H
   struct tms tb;
   times (&tb);
   return 0.01 * tb.tms_utime;
@@ -218,6 +218,7 @@ benchmark (
     {
       /* Create a bidi string */
       base = FRIBIDI_PAR_ON;
+FRIBIDI_BEGIN_IGNORE_DEPRECATIONS
       if (!fribidi_log2vis (us, len, &base,
 			    /* output */
 			    out_us, positionVtoL, positionLtoV,
@@ -225,6 +226,7 @@ benchmark (
 	die2
 	  ("something failed in fribidi_log2vis.\n"
 	   "perhaps memory allocation failure.", NULL);
+FRIBIDI_END_IGNORE_DEPRECATIONS
     }
 
   /* stop timer */

@@ -1,13 +1,14 @@
 #pragma once
 #include <animation/animator.h>
 #include <animation/propertyvaluesholder.h>
+#include <animation/animationhandler.h>
 #include <map>
 
 namespace cdroid{
 
 typedef std::function<float (float fraction, float startValue, float endValue)>TypeEvaluator; 
 
-class ValueAnimator:public Animator{
+class ValueAnimator:public Animator,public AnimationHandler::AnimationFrameCallback{
 public:
     static constexpr int RESTART = 1;
     static constexpr int REVERSE = 2;
@@ -110,6 +111,7 @@ public:
     void commitAnimationFrame(long frameTime);
     bool doAnimationFrame(long frameTime);
     float getAnimatedFraction();
+    AnimationHandler& getAnimationHandler()const;
 };
 
 }//endof namespace

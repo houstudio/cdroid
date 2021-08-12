@@ -4,8 +4,11 @@
 namespace cdroid{
 
 void ObjectAnimator::setAutoCancel(bool cancel){
+    mAutoCancel = cancel;
 }
 
+bool shouldAutoCancel(const AnimationHandler::AnimationFrameCallback&anim){
+}
 ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string& propertyName, int count,...){
     ObjectAnimator*anim=new ObjectAnimator();
     va_list ap;

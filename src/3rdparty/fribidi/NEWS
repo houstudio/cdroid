@@ -1,3 +1,85 @@
+Overview of changes between 1.0.9 and 1.0.10
+=============================================
+
+* Fixed various compilation problems and symbol exports necessary for proper compilation under windows.
+
+Overview of changes between 1.0.8 and 1.0.9
+=============================================
+
+* A bug fix in the fribidi unicode algorithm where isolate sequences were not really isolated.
+
+* Restored mistakenly removed deprecated function fribidi_log2vis_get_embedding_levels()
+
+* autotools now generates xz archives instead of bzip2 archives
+
+Overview of changes between 1.0.7 and 1.0.8
+=============================================
+
+* A bug fix in the fribidi unicode algorithm for multiple isolate sequences.
+
+* Fixed a potential buffer overflow for a long sequence of isolate overrides characters
+
+
+Overview of changes between 1.0.6 and 1.0.7
+=============================================
+
+* This is a minor bugfix that removes symlinks and updates the meson version.
+
+Overview of changes between 1.0.5 and 1.0.6
+=============================================
+
+* This is a minor bugfix release that fixes a list of minor issues that have turned up during the last year.
+
+* Various compilation and cross compilation issues.
+
+* Various minor header cleanups.
+
+* Removed libc's bsearch for performance and portability reasons
+
+Overview of changes between 1.0.4 and 1.0.5
+=============================================
+
+* This is a bugfix release that fixed a bug BidiCharacterTest.c due to which a large number of character tests were not run. Once run, it uncovered 18 test failures. These have all been fixed in this release.
+
+* The release also includes a small speedup due to small arrays being allocated on the stack instead of in dynamic memory.
+
+* Updated Unicode tables to version 11.
+
+Overview of changes between 1.0.3 and 1.0.4
+=============================================
+
+* Updated Unicode tables to version 11.
+
+Overview of changes between 1.0.2 and 1.0.3
+=============================================
+
+* Minor compilation issues.
+
+Overview of changes between 1.0.1 and 1.0.2
+=============================================
+
+* Added meson build system.
+* glib dependency was completely removed even for tests.
+* Tests now run on Visual Studio (through meson).
+* Cleanup of obsolete options
+* Travis support.
+
+Overview of changes between 1.0 and 1.0.1
+=============================================
+
+* Minor distribution related fixes.
+
+Overview of changes between 0.19.7 and 1.0
+=============================================
+
+* Full isolate and parenthesis support as per Unicode 6.3 to Unicode 10.0 . 
+* To get access to the new algorithm calls to the function
+  `fribidi_get_par_embedding_levels()` must be replaced with calls to
+  `fribidi_get_par_embedding_levels_ex()`. These function are not API
+  compatible. Calling the older function will use default values for
+  the new bracket properties and will sometimes yield non-compliant
+  results.
+
 Overview of changes between 0.19.6 and 0.19.7
 =============================================
 * Disable thread-unsafe memory pool by default. (bug #79385)

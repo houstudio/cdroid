@@ -2,28 +2,15 @@ EXTRA_DIST = fribidi.def
 
 lib_LTLIBRARIES = libfribidi.la
 
-AM_CPPFLAGS = $(MISC_CFLAGS)
+AM_CPPFLAGS =
 
 libfribidi_la_LDFLAGS = -no-undefined -version-info $(LT_VERSION_INFO)
-libfribidi_la_LIBADD = $(MISC_LIBS)
+libfribidi_la_LIBADD =
 libfribidi_la_DEPENDENCIES =
 
-if OS_WIN32
-libfribidi_la_LDFLAGS += -export-symbols $(srcdir)/fribidi.def
-else
+if !OS_WIN32
 libfribidi_la_LDFLAGS += -export-symbols-regex "^fribidi_.*"
 endif # OS_WIN32
-
-if FRIBIDI_CHARSETS
-
-AM_CPPFLAGS += -I$(top_srcdir)/charset
-libfribidi_la_LIBADD += $(top_builddir)/charset/libfribidi-char-sets.la
-libfribidi_la_DEPENDENCIES += $(top_builddir)/charset/libfribidi-char-sets.la
-
-$(top_builddir)/charset/libfribidi-char-sets.la:
-	cd $(top_builddir)/lib && $(MAKE) $(AM_MAKEFLAGS) libfribidi-char-sets.la
-
-endif # FRIBIDI_CHARSETS
 
 include Headers.mk
 pkginclude_HEADERS = $(libfribidi_la_headers)
@@ -40,25 +27,43 @@ libfribidi_la_SOURCES =	\
 		fribidi-arabic.c \
 		fribidi-bidi.c \
 		fribidi-bidi-types.c \
+		fribidi-char-sets.c \
+		fribidi-char-sets-cap-rtl.c \
+		fribidi-char-sets-cp1255.c \
+		fribidi-char-sets-cp1256.c \
+		fribidi-char-sets-iso8859-6.c \
+		fribidi-char-sets-iso8859-8.c \
+		fribidi-char-sets-utf8.c \
+		fribidi-char-sets-cap-rtl.h \
+		fribidi-char-sets-cp1255.h \
+		fribidi-char-sets-cp1256.h \
+		fribidi-char-sets-iso8859-6.h \
+		fribidi-char-sets-iso8859-8.h \
+		fribidi-char-sets-utf8.h \
 		fribidi-deprecated.c \
 		fribidi-joining.c \
 		fribidi-joining-types.c \
-		fribidi-mem.c \
 		fribidi-mirroring.c \
+		fribidi-brackets.c \
 		fribidi-run.c \
 		fribidi-shape.c \
 		joining-type.tab.i \
 		joining-types.h \
-		mem.h \
 		mirroring.tab.i \
+		brackets.tab.i \
+		brackets-type.tab.i \
 		run.h
+
+libfribidi_la_CPPFLAGS = @FRIBIDI_CPPFLAGS@ -DFRIBIDI_BUILD
 
 GENERATEDSOURCES = \
 		fribidi-unicode-version.h \
 		arabic-shaping.tab.i \
 		bidi-type.tab.i \
 		joining-type.tab.i \
-		mirroring.tab.i
+		mirroring.tab.i \
+		brackets.tab.i \
+		brackets-type.tab.i 
 
 BUILT_SOURCES = \
 		$(GENERATEDSOURCES) \

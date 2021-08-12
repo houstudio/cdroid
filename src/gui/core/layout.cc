@@ -510,22 +510,22 @@ void Layout::relayout(bool force){
     mLayout=0;
 }
 
-static const std::string processBidi(std::wstring&logstr){
+static const std::string processBidi(const std::wstring&logstr){
 #ifdef ENABLE_FRIBIDI
     size_t wsize=logstr.length()+1;
     FriBidiCharType base_dir=FRIBIDI_TYPE_ON;
-    FriBidiChar*visstr=new FriBidiChar[wsize] ;
-    FriBidiLevel*level=new FriBidiLevel[wsize];
-    FriBidiStrIndex *posLV=new FriBidiStrIndex[wsize];
-    FriBidiStrIndex *posVL=new FriBidiStrIndex[wsize];
+    FriBidiChar * visstr= new FriBidiChar[wsize] ;
+    FriBidiLevel* level = new FriBidiLevel[wsize];
+    FriBidiStrIndex *posLV= new FriBidiStrIndex[wsize];
+    FriBidiStrIndex *posVL= new FriBidiStrIndex[wsize];
 
     fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr,posLV,posVL,level);
-    std::string biditxt((const char*)visstr);
+    std::wstring biditxt((const wchar_t*)visstr);
     delete [] visstr;
     delete [] posLV;
     delete [] posVL;
     delete [] level;
-    return biditxt; 
+    return TextUtils::unicode2utf8(biditxt); 
 #else
     return TextUtils::unicode2utf8(logstr);
 #endif

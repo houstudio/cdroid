@@ -62,6 +62,9 @@ const std::string Window::getText()const{
     return mText;
 }
 
+void Window::setRegion(const RefPtr<Region>&rgn){
+    mWindowRgn=rgn->copy();
+}
 void Window::invalidate(const RECT*r){
     RECT rc=r?*r:getClientRect();
     mPrivateFlags|=PFLAG_DIRTY;

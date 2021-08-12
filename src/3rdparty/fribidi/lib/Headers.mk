@@ -5,6 +5,8 @@ libfribidi_la_headers = \
 		fribidi-bidi-types.h \
 		fribidi-bidi-types-list.h \
 		fribidi-common.h \
+		fribidi-char-sets.h \
+		fribidi-char-sets-list.h \
 		fribidi-deprecated.h \
 		fribidi-enddecls.h \
 		fribidi-flags.h \
@@ -12,6 +14,7 @@ libfribidi_la_headers = \
 		fribidi-joining-types.h \
 		fribidi-joining-types-list.h \
 		fribidi-mirroring.h \
+		fribidi-brackets.h \
 		fribidi-shape.h \
 		fribidi-types.h \
 		fribidi-unicode.h \
