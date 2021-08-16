@@ -7,6 +7,7 @@
 namespace cdroid{
 
 ValueAnimator::ValueAnimator(){
+    mReversing=false;
     mInterpolator=new AccelerateDecelerateInterpolator();
 }
 
@@ -14,68 +15,58 @@ ValueAnimator::~ValueAnimator(){
     delete mInterpolator;
 }
 
-ValueAnimator* ValueAnimator::ofInt(int count,...){
+ValueAnimator* ValueAnimator::ofInt(const std::vector<int>&values){
     ValueAnimator*anim=new ValueAnimator();
-    va_list ap;
-    std::vector<int>values;
-    va_start(ap,count);
-    for(int i=0;i<count;i++){
-        values.push_back(va_arg(ap,int));
-    }
-    va_end(ap);
     anim->setIntValues(values);
     return anim;
 }
 
-ValueAnimator* ValueAnimator::ofArgb(int count,...){
+ValueAnimator* ValueAnimator::ofArgb(const std::vector<int>&values){
     ValueAnimator*anim=new ValueAnimator();
-    va_list ap;
-    std::vector<int>values;
-    va_start(ap,count);
-    for(int i=0;i<count;i++){
-        values.push_back(va_arg(ap,int));
-    }
-    va_end(ap);
     anim->setIntValues(values);
     return anim;
 }
 
-ValueAnimator* ValueAnimator::ofFloat(int count,...){
+ValueAnimator* ValueAnimator::ofFloat(const std::vector<float>&values){
     ValueAnimator*anim=new ValueAnimator();
-    va_list ap;
-    va_start(ap,count);
-    std::vector<float>values;
-    for(int i=0;i<count;i++){
-        values.push_back((float)va_arg(ap,double));
-    }
-    va_end(ap);
     anim->setFloatValues(values);
     return anim;
 }
 
+ValueAnimator* ValueAnimator::ofPropertyValuesHolder(const std::vector<PropertyValuesHolder*>&values){
+    ValueAnimator*anim=new ValueAnimator();
+    anim->setValues(values);
+    return anim;
+}
+
 void ValueAnimator::setIntValues(const std::vector<int>&values){
-    PropertyValuesHolder*prop=new PropertyValuesHolder(std::string());
-    prop->setIntValues(values);
-    setValues(1,prop);
+    IntPropertyValuesHolder*prop=new IntPropertyValuesHolder();
+    prop->setValues(values);
+    setValues({prop});
 }
 
 void ValueAnimator::setFloatValues(const std::vector<float>&values){
-    PropertyValuesHolder*prop=new PropertyValuesHolder(std::string());
-    prop->setFloatValues(values);
-    setValues(1,prop);
+    FloatPropertyValuesHolder*prop=new FloatPropertyValuesHolder();
+    prop->setValues(values);
+    setValues({prop});
 }
 
-void ValueAnimator::setValues(int count,...){
-    va_list ap;
-    va_start(ap,count);
-    for(int i=0;i<count;i++){
-        PropertyValuesHolder* prop=va_arg(ap,PropertyValuesHolder*);
+void ValueAnimator::setValues(const std::vector<PropertyValuesHolder*>&values){
+    mValues=values;
+    for(auto prop:values){
         if(prop==nullptr)continue;
         if(mValuesMap.find(prop->getPropertyName())!=mValuesMap.end())
-            throw prop->getPropertyName()+" Has exists!";
+            LOG(ERROR)<< prop->getPropertyName()<<" Has exists!";
         if(prop)mValuesMap.insert(std::map<const std::string,PropertyValuesHolder*>::value_type(prop->getPropertyName(),prop));
     }
-    va_end(ap); 
+    mInitialized = false;
+}
+
+std::vector<PropertyValuesHolder*>&ValueAnimator::getValues(){
+    return mValues;
+}
+const std::vector<PropertyValuesHolder*>&ValueAnimator::getValues()const{
+    return mValues;
 }
 
 void ValueAnimator::initAnimation(){
@@ -120,7 +111,7 @@ void ValueAnimator::setCurrentFraction(float fraction) {
     mStartTimeCommitted = true; // do not allow start time to be compensated for jank
     if (isPulsingInternal()) {
         long seekTime = (long) (getScaledDuration() * fraction);
-        long currentTime =SystemClock::uptimeMillis();// AnimationUtils.currentAnimationTimeMillis();
+        long currentTime =SystemClock::uptimeMillis();
         // Only modify the start time when the animation is running. Seek fraction will ensure
         // non-running animations skip to the correct start time.
         mStartTime = currentTime - seekTime;
@@ -188,7 +179,7 @@ long ValueAnimator::getCurrentPlayTime() {
     if (durationScale == .0f) {
         durationScale = 1.f;
     }
-    return (long) ((SystemClock::uptimeMillis()/*AnimationUtils.currentAnimationTimeMillis()*/ - mStartTime) / durationScale);
+    return (long) ((SystemClock::uptimeMillis() - mStartTime) / durationScale);
 }
 
 long ValueAnimator::getStartDelay() {
@@ -211,8 +202,8 @@ void ValueAnimator::setFrameDelay(long frameDelay){
 }
 
 float ValueAnimator::getAnimatedValue(){
-    if(mValuesMap.size())
-        return mValuesMap.begin()->second->getAnimatedValue();
+    LOGD("getAnimatedValue is tobe done for variant type");
+    //if(mValues.size())return mValues[0]->getAnimatedValue();
     return .0f;
 }
 
@@ -386,7 +377,7 @@ bool ValueAnimator::isStarted() {
 
 void ValueAnimator::reverse() {
     if (isPulsingInternal()) {
-        long currentTime = SystemClock::uptimeMillis();//AnimationUtils.currentAnimationTimeMillis();
+        long currentTime = SystemClock::uptimeMillis();
         long currentPlayTime = currentTime - mStartTime;
         long timeLeft = getScaledDuration() - currentPlayTime;
         mStartTime = currentTime - timeLeft;
@@ -611,7 +602,7 @@ void ValueAnimator::addAnimationCallback(long delay) {
     if (!mSelfPulse) {
         return;
     }
-    getAnimationHandler().addAnimationFrameCallback(this, delay);
+    getAnimationHandler().addAnimationFrameCallback(this,delay);
 }
 
 float ValueAnimator::getAnimatedFraction() {
@@ -621,8 +612,8 @@ float ValueAnimator::getAnimatedFraction() {
 void ValueAnimator::animateValue(float fraction) {
     fraction = mInterpolator->getInterpolation(fraction);
     mCurrentFraction = fraction;
-    for (auto vm:mValuesMap) {
-        vm.second->calculateValue(fraction);
+    for (auto v:mValues) {
+        v->setFraction(this,fraction);
     }
     for (auto l:mUpdateListeners) {
         l(*this);

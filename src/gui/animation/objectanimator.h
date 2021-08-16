@@ -5,15 +5,29 @@ namespace cdroid{
 
 class ObjectAnimator:public ValueAnimator{
 private:
+    void* mTarget;
+    std::string mPropertyName;
+    Property* mProperty;
     bool mAutoCancel;
+    ObjectAnimator(void* target,const std::string& propertyName);
+    bool hasSameTargetAndProperties(const Animator*anim);
 public:
-    static ObjectAnimator*ofInt(void* target,const std::string& propertyName, int,...);
-    static ObjectAnimator*ofFloat(void* target,const std::string& propertyName, int,...);
-    static ObjectAnimator*ofInt(void*target,Property*prop,int,...);
-    static ObjectAnimator*ofFloat(void*target,Property*prop,int,...);
-
+    ObjectAnimator();
+    ~ObjectAnimator();
+	void setTarget(void*target);
+    void*getTarget();
+    void setPropertyName(const std::string&propertyName);
+    void setProperty(const Property& property);
+    const std::string getPropertyName();
+    void setIntValues(const std::vector<int>&)override;
+    void setFloatValues(const std::vector<float>&values)override;
+    static ObjectAnimator* ofInt(void* target,const std::string& propertyName, const std::vector<int>&);
+    static ObjectAnimator* ofFloat(void* target,const std::string& propertyName,const std::vector<float>&);
+    static ObjectAnimator* ofInt(void*target,Property*prop,const std::vector<int>&);
+    static ObjectAnimator* ofFloat(void*target,Property*prop,const std::vector<float>&);
+    static ObjectAnimator* ofPropertyValuesHolder(void*target,const std::vector< PropertyValuesHolder*>&values);
     void setAutoCancel(bool);
-    bool shouldAutoCancel(const AnimationHandler::AnimationFrameCallback&anim);
+    bool shouldAutoCancel(const AnimationHandler::AnimationFrameCallback*anim);
 };
 
 }

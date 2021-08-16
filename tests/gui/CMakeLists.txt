@@ -10,6 +10,8 @@ include_directories(
    ${DEPS_DIR}/include/cairo
    ${DEPS_DIR}/include/epg
    ${DEPS_DIR}/include/freetype2
+   ${DEPS_DIR}/include/harfbuzz
+   ${DEPS_DIR}/include/fribidi
    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src
    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/src
    ${DEPS_DIR}/include/uriparser
@@ -17,8 +19,7 @@ include_directories(
 link_directories(${DEPS_DIR}/lib)
 add_executable(gui_test ${SRCS_GUI_TESTS})
 
-target_link_libraries(gui_test gui_static gtest expat)
-target_link_libraries(gui_test gui_static gtest)
+target_link_libraries(gui_test gui_static gtest expat harfbuzz)
 
 install(TARGETS gui_test DESTINATION bin/tests)
 

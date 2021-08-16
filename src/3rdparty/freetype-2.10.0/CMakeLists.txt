@@ -265,13 +265,13 @@ if (PNG_FOUND)
     "/\\* +(#define +FT_CONFIG_OPTION_USE_PNG) +\\*/" "\\1"
     FTOPTION_H "${FTOPTION_H}")
 endif ()
+message("88888888888888888888888 FT_WITH_HARFBUZZ=${FT_WITH_HARFBUZZ}")
 if (HARFBUZZ_FOUND AND FT_WITH_HARFBUZZ)
   string(REGEX REPLACE
     "/\\* +(#define +FT_CONFIG_OPTION_USE_HARFBUZZ) +\\*/" "\\1"
     FTOPTION_H "${FTOPTION_H}")
 endif ()
 file(WRITE "${PROJECT_BINARY_DIR}/include/freetype/config/ftoption.h"  "${FTOPTION_H}")
-file(WRITE "${PROJECT_SOURCE_DIR}/include/freetype/config/ftoption.h"  "${FTOPTION_H}")
 
 
 file(GLOB PUBLIC_HEADERS "include/ft2build.h" "include/freetype/*.h")
@@ -296,7 +296,7 @@ if( FT_WITH_ZLIB )
 endif()
 
 ## for minimal size the following modules can be abandoned
-if( NOT MINIMAL_SIZE_OPTIMIZED)
+#if( NOT MINIMAL_SIZE_OPTIMIZED)
 list(APPEND BASE_SRCS
   src/autofit/autofit.c
   src/base/ftbbox.c
@@ -327,7 +327,7 @@ list(APPEND BASE_SRCS
   src/type42/type42.c
   src/winfonts/winfnt.c
   )
-endif(MINIMAL_SIZE_OPTIMIZED)
+#endif(MINIMAL_SIZE_OPTIMIZED)
 
 
 if (WIN32)

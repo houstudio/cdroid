@@ -520,7 +520,7 @@ static const std::string processBidi(const std::wstring&logstr){
     FriBidiStrIndex *posVL= new FriBidiStrIndex[wsize];
 
     fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr,posLV,posVL,level);
-    std::wstring biditxt((const wchar_t*)visstr);
+    std::wstring biditxt((const wchar_t*)visstr,wsize-1);
     delete [] visstr;
     delete [] posLV;
     delete [] posVL;

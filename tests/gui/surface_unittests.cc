@@ -10,7 +10,8 @@
 #include <dirent.h>
 #include <svg-cairo.h>
 #include <fstream>
-
+#include <core/textutils.h>
+#include <fribidi.h>
 using namespace cdroid;
 #define SLEEP(x) usleep((x)*1000)
 class CONTEXT:public testing::Test{
@@ -51,7 +52,7 @@ TEST_F(CONTEXT,SURFACE_CREATE_1){
             "Innovation in China","中国智造，惠及全球 0123456789"};
          ctx->set_font_size(i==j?40:28);
          ctx->save();
-         //ctx1->select_font_face("Khek Sangker",ToyFontFace::Slant::ITALIC,ToyFontFace::Weight::BOLD);
+         ctx->select_font_face("DejaVu Sans Mono",ToyFontFace::Slant::NORMAL,ToyFontFace::Weight::NORMAL);
          if(i==j){
              RECT rc={400,i*40,400,40};
              ctx->set_color(255,0,0);
@@ -393,3 +394,95 @@ TEST_F(CONTEXT,layout){
         printf("[%02d] offset=%d\r\n",i,off);
     }
 }
+
+#if 0
+void DrawBitmap(RefPtr<ImageSurface>img,FT_Bitmap*bmp,int x,int y){
+    uint8_t*pixels=(img->get_data()+img->get_stride()*y+x*4);
+    for(int y=0;y<bmp->rows;y++){
+        unsigned char*pc=bmp->buffer+y*bmp->pitch;
+        for(int x=0;x<bmp->width;x++)
+           if(pc[x]){pixels[x*4]=0xFF;pixels[x*4+1]=00;pixels[x*4+2]=0;pixels[x*4+3]=pc[x];}
+           else {pixels[x*4]=pixels[x*4+1]=pixels[x*4+2]=pixels[x*4+3]=0;}
+        pixels+=img->get_stride();
+    }
+}
+static const std::wstring processBidi(const std::wstring&logstr){
+#ifdef ENABLE_FRIBIDI
+    size_t wsize=logstr.length()+1;
+    FriBidiCharType base_dir=FRIBIDI_TYPE_ON;
+    FriBidiChar * visstr= new FriBidiChar[wsize] ;
+    FriBidiLevel* level = new FriBidiLevel[wsize];
+    FriBidiStrIndex *posLV= new FriBidiStrIndex[wsize];
+    FriBidiStrIndex *posVL= new FriBidiStrIndex[wsize];
+
+    fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr,posLV,posVL,level);
+    std::wstring biditxt((const wchar_t*)visstr);
+    delete [] visstr;
+    delete [] posLV;
+    delete [] posVL;
+    delete [] level;
+    return biditxt;
+#else
+    return TextUtils::unicode2utf8(logstr);
+#endif
+}
+#include <hb.h>
+#include <hb-ft.h>
+TEST_F(CONTEXT,hebrew){
+#define DOUBLE_FROM_26_6(t) ((double)(t) / 64.0)
+#define HBFixedToFloat(t)  ((double)(t)/64.0)
+    const wchar_t text[]={0xfb49,0x05d0,0x05ad,0x0020,0x05d0,0x059d,0x0020,0x05d0,0x0599,0x0020,
+             0x0020,0x05d0,0x05b6,0x0020,0xfb30,0x0020,0x05d0,0x0592,0x0020,0x05dc,
+             0x05ad,0x0020,0x05dc,0x059d,0x0020,0x05dc,0x0599,0x0020,0x05dc,0x05b6,
+             0x0020,0xfb3c,0x0020,0x05dc,0x0592,0x00};
+    RefPtr<ImageSurface>imgsurface=ImageSurface::create(Surface::Format::ARGB32,800,600);
+    RefPtr<Cairo::Context>ctx=Cairo::Context::create(imgsurface);
+    std::string u8text=TextUtils::unicode2utf8(text);
+    TextExtents extents;
+    const wchar_t *p=text;
+    FT_Vector kerning;
+
+    FT_Library library;
+    FT_Init_FreeType(&library);
+    FT_Face ftface;
+    FT_Error fterror;
+    fterror=FT_New_Face(library,"/home/houzh/Miniwin1/env/fonts/droidfallback.ttf",0,&ftface);
+
+    printf("fterror=%d ftface=%p\r\n",fterror,ftface);
+    hb_face_t* hbface=hb_ft_face_create(ftface,nullptr);
+    hb_font_t *hbfont=hb_font_create (hbface);
+    hb_buffer_t *buffer=hb_buffer_create();
+    hb_glyph_info_t *glyphinfos;
+    hb_glyph_position_t *positions;
+
+    hb_buffer_set_direction (buffer, HB_DIRECTION_LTR);
+    size_t len=sizeof(text)/sizeof(wchar_t);
+    std::wstring wtext=processBidi(text);
+    hb_buffer_add_utf32(buffer,(const uint32_t*)wtext.c_str(),len,0,len);
+    hb_font_set_ppem(hbfont,40,40);
+    hb_shape (hbfont, buffer, NULL, 0);
+    len = hb_buffer_get_length (buffer);
+    glyphinfos = hb_buffer_get_glyph_infos (buffer, NULL);
+    positions = hb_buffer_get_glyph_positions (buffer, NULL);
+
+    ctx->set_font_size(40);
+    ctx->set_source_rgb(0,1,0);
+
+
+    FT_Set_Char_Size(ftface, 40*64, 40*64, 96, 96);
+    float xx=20; 
+    for(int i=0;i<len;i++){
+        fterror=FT_Load_Glyph(ftface, glyphinfos[i].codepoint, FT_LOAD_DEFAULT|FT_LOAD_TARGET_LCD);
+        if (ftface->glyph->format != FT_GLYPH_FORMAT_BITMAP)
+	    fterror=FT_Render_Glyph(ftface->glyph, FT_RENDER_MODE_NORMAL);
+        xx+=DOUBLE_FROM_26_6(ftface->glyph->bitmap_left)+DOUBLE_FROM_26_6(ftface->glyph->advance.x);
+        printf("%d left=%f,%f,%f yadvance=%f\r\n",i,DOUBLE_FROM_26_6(ftface->glyph->bitmap_left),DOUBLE_FROM_26_6(ftface->glyph->advance.x),
+            DOUBLE_FROM_26_6(ftface->glyph->bitmap_top),HBFixedToFloat(positions[i].y_advance));
+        FT_Bitmap*bmp=&ftface->glyph->bitmap;
+        DrawBitmap(imgsurface,bmp,xx,100+HBFixedToFloat(positions[i].y_offset)+HBFixedToFloat(positions[i].y_advance)
+          +/*DOUBLE_FROM_26_6(ftface->size->metrics.ascender)+*/DOUBLE_FROM_26_6(ftface->glyph->bitmap_top));
+    }
+    cairo_stroke(ctx->cobj());
+    imgsurface->write_to_png("hebrew.png"); 
+}
+#endif

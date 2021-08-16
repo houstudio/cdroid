@@ -37,12 +37,13 @@ private:
     float mDurationScale = -1.f;
     TimeInterpolator mInterpolator = nullptr;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
-    std::map<const std::string,PropertyValuesHolder*>mValuesMap;
 protected:
     long mStartTime = -1;
     bool mStartTimeCommitted;
     float mSeekFraction = -1;
     bool mInitialized = false;
+    std::vector<PropertyValuesHolder*>mValues;
+    std::map<const std::string,PropertyValuesHolder*>mValuesMap;
 private:
     float resolveDurationScale();
     long getScaledDuration();
@@ -69,12 +70,15 @@ protected:
 public:
     ValueAnimator();
     ~ValueAnimator();
-    static ValueAnimator* ofInt(int,...);
-    static ValueAnimator* ofArgb(int,...);
-    static ValueAnimator* ofFloat(int,...);
-    void setValues(int count,...);
-    void setIntValues(const std::vector<int>&);
-    void setFloatValues(const std::vector<float>&);
+    static ValueAnimator* ofInt(const std::vector<int>&);
+    static ValueAnimator* ofArgb(const std::vector<int>&);
+    static ValueAnimator* ofFloat(const std::vector<float>&);
+    static ValueAnimator* ofPropertyValuesHolder(const std::vector<PropertyValuesHolder*>&);
+    virtual void setValues(const std::vector<PropertyValuesHolder*>&);
+    virtual void setIntValues(const std::vector<int>&);
+    virtual void setFloatValues(const std::vector<float>&);
+    std::vector<PropertyValuesHolder*>&getValues();
+    const std::vector<PropertyValuesHolder*>&getValues()const;
     void initAnimation();
     ValueAnimator& setDuration(long duration);
     long getDuration();
@@ -108,8 +112,8 @@ public:
     void reverse()override;
     bool canReverse()override;
 
-    void commitAnimationFrame(long frameTime);
-    bool doAnimationFrame(long frameTime);
+    void commitAnimationFrame(long frameTime)override;
+    bool doAnimationFrame(long frameTime)override;
     float getAnimatedFraction();
     AnimationHandler& getAnimationHandler()const;
 };

@@ -1,14 +1,15 @@
 #ifndef __ANIMATION_HANDLER__
 #define __ANIMATION_HANDLER__
 #include <core/choreographer.h>
+#include <core/looper.h>
 #include <map>
 namespace cdroid{
-
-class AnimationHandler{
+class ObjectAnimator;
+class AnimationHandler:EventHandler{
 public:
     struct AnimationFrameCallback{
-        std::function<bool(long)>doAnimationFrame;
-        std::function<void(long)>commitAnimationFrame;
+        virtual bool doAnimationFrame(long)=0;
+        virtual void commitAnimationFrame(long)=0;
     };
     class AnimationFrameCallbackProvider {
     public:
@@ -42,12 +43,20 @@ private:
     bool isCallbackDue(AnimationFrameCallback* callback, long currentTime);
     void commitAnimationFrame(AnimationFrameCallback* callback, long frameTime);
     void cleanUpList();
+    int getCallbackSize()const;
+protected:
+    int checkEvents()override;
+    int handleEvents()override;
 public:
     static AnimationHandler& getInstance();
     void setProvider(const AnimationFrameCallbackProvider* provider);
     void addAnimationFrameCallback(const AnimationFrameCallback* callback, long delay);
     void addOneShotCommitCallback(const AnimationFrameCallback* callback);
     void removeCallback(const AnimationFrameCallback* callback);
+    static int getAnimationCount();
+    static void setFrameDelay(long delay);
+    static long getFrameDelay();
+    void autoCancelBasedOn(ObjectAnimator* objectAnimator);
 };
 
 

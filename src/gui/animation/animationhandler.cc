@@ -1,4 +1,5 @@
 #include <animation/animationhandler.h>
+#include <animation/objectanimator.h>
 #include <core/choreographer.h>
 #include <core/systemclock.h>
 
@@ -30,7 +31,16 @@ void AnimationHandler::MyFrameCallbackProvider::setFrameDelay(long delay) {
 AnimationHandler*AnimationHandler::mInst=nullptr;
 
 AnimationHandler::AnimationHandler(){
+    mProvider=nullptr;
     mFrameCallback=std::bind(&AnimationHandler::doFrame,this,std::placeholders::_1);
+}
+
+int AnimationHandler::checkEvents(){
+    return  mAnimationCallbacks.size();
+}
+
+int AnimationHandler::handleEvents(){
+    doAnimationFrame(SystemClock::uptimeMillis());
 }
 
 void AnimationHandler::doFrame(long){
@@ -59,7 +69,7 @@ void AnimationHandler::doAnimationFrame(long frameTime){
 
 bool AnimationHandler::isCallbackDue(AnimationFrameCallback* callback, long currentTime){
     auto it=mDelayedCallbackStartTime.find(callback);
-    if(it==mDelayedCallbackStartTime.end())return false;
+    if(it==mDelayedCallbackStartTime.end())return true;
     if (it->second < currentTime) {
         mDelayedCallbackStartTime.erase(it);
         return true;
@@ -88,7 +98,10 @@ void AnimationHandler::cleanUpList(){
 }
 
 AnimationHandler&AnimationHandler::getInstance(){
-    if(mInst==nullptr)mInst=new AnimationHandler();
+    if(mInst==nullptr){
+        mInst=new AnimationHandler();
+        Looper::getDefault()->addEventHandler(mInst);
+    }
     return *mInst;
 }
 
@@ -113,7 +126,7 @@ void AnimationHandler::addAnimationFrameCallback(const AnimationFrameCallback* c
         mAnimationCallbacks.push_back((AnimationFrameCallback*)callback);
     if(delay>0)
         mDelayedCallbackStartTime.insert(std::pair<AnimationFrameCallback*,long>
-            ((AnimationFrameCallback*)callback,delay));
+            ((AnimationFrameCallback*)callback,SystemClock::uptimeMillis()+delay));
 }
 
 void AnimationHandler::addOneShotCommitCallback(const AnimationFrameCallback* callback){
@@ -126,8 +139,9 @@ void AnimationHandler::addOneShotCommitCallback(const AnimationFrameCallback* ca
 void AnimationHandler::removeCallback(const AnimationFrameCallback* callback){
     auto it1=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),(AnimationFrameCallback*)callback);
     auto it2=mDelayedCallbackStartTime.find((AnimationFrameCallback*)callback);
-    mCommitCallbacks.erase(it1);
-    mDelayedCallbackStartTime.erase(it2);
+
+    if(it1!=mCommitCallbacks.end())mCommitCallbacks.erase(it1);
+    if(it2!=mDelayedCallbackStartTime.end())mDelayedCallbackStartTime.erase(it2);
     
     auto it3=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),(AnimationFrameCallback*)callback);
     if (it3!=mAnimationCallbacks.end()) {
@@ -136,4 +150,30 @@ void AnimationHandler::removeCallback(const AnimationFrameCallback* callback){
     }
 }
 
+int AnimationHandler::getCallbackSize()const{
+    int count=0;
+    for(auto anim:mAnimationCallbacks)
+        if(anim)count++;
+    return count;
+}
+
+int AnimationHandler::getAnimationCount(){
+    return mInst?mInst->getCallbackSize():0;
+}    
+
+void AnimationHandler::setFrameDelay(long delay){
+    getInstance().getProvider()->setFrameDelay(delay);
+}
+
+long AnimationHandler::getFrameDelay() {
+    return getInstance().getProvider()->getFrameDelay();
+}
+
+void AnimationHandler::autoCancelBasedOn(ObjectAnimator* objectAnimator){
+    for(auto cb:mAnimationCallbacks){
+        if(cb==nullptr)continue;
+        if(objectAnimator->shouldAutoCancel(cb))
+            dynamic_cast<Animator*>(cb)->cancel();
+    }
+}
 }//endof namespace

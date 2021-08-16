@@ -13,7 +13,7 @@ public:
     }
     virtual float get(void* t){return .0;};
     virtual void set(void* object, float value){};
-    const std::string getName(){return mName;}
+    const std::string getName()const{return mName;}
 };
 
 }

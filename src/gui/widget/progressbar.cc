@@ -174,7 +174,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     const bool isPrimary = id == ID_PRIMARY;//R.id.progress;
     ProgressProperty*VISUAL_PROGRESS=new ProgressProperty("visual_progress");
     if (isPrimary && animate) {
-        ObjectAnimator* animator = ObjectAnimator::ofFloat(this, VISUAL_PROGRESS, scale);
+        ObjectAnimator* animator = ObjectAnimator::ofFloat(this, VISUAL_PROGRESS,{scale});
         animator->setAutoCancel(true);
         animator->setDuration(PROGRESS_ANIM_DURATION);
         animator->setInterpolator(new  DecelerateInterpolator());//PROGRESS_ANIM_INTERPOLATOR);
