@@ -14,7 +14,7 @@ private:
 public:
     ObjectAnimator();
     ~ObjectAnimator();
-	void setTarget(void*target);
+    void setTarget(void*target);
     void*getTarget();
     void setPropertyName(const std::string&propertyName);
     void setProperty(const Property& property);

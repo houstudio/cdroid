@@ -20,9 +20,6 @@ Button::Button(const std::string& text, int32_t w, int32_t h)
     setFocusable(true);
     setFocusableInTouchMode(true);
     setClickable(true);
-    if(w==0)w=text.size() * mLayout->getFontSize();
-    if(h==0)h=mLayout->getFontSize()*5/2;
-    setFrame(0, 0, w, h); 
 }
 
 Button::~Button() {

@@ -313,8 +313,6 @@ void Window::removeCallbacks(const Runnable& what){
 void Window::requestLayout(){
     LOGV("requestLayout(%dx%d)child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
                 getChildCount(),(mPrivateFlags&PFLAG_HAS_BOUNDS));
-    //if( (getChildCount()==1) && dynamic_cast<ViewGroup*>(getChildAt(0)) ){
-    int count=mChildren.size();
     for(auto c:mChildren){
 	int x=0,y=0;
 	int widthSpec,heightSpec;

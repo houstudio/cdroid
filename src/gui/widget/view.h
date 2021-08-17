@@ -103,6 +103,7 @@ protected:
         PFLAG2_TEXT_DIRECTION_RESOLVED  = 0x00000008 << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
         PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT=10,
         PFLAG2_TEXT_DIRECTION_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT,
+        PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_RESOLVED_DEFAULT << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT,
         PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT=13,
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT = 17,
         PFLAG2_TEXT_ALIGNMENT_MASK      = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
@@ -118,6 +119,9 @@ protected:
         PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL =4 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
         PFLAG2_LAYOUT_DIRECTION_RESOLVED     =8 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
         PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK= 0x0000000C<< PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
+        ALL_RTL_PROPERTIES_RESOLVED = PFLAG2_LAYOUT_DIRECTION_RESOLVED |
+              PFLAG2_TEXT_DIRECTION_RESOLVED | PFLAG2_TEXT_ALIGNMENT_RESOLVED |
+              PFLAG2_PADDING_RESOLVED | PFLAG2_DRAWABLE_RESOLVED
     };
     enum{
         PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x01,
@@ -291,6 +295,7 @@ private:
     void updateFocusedInCluster(View* oldFocus,int direction);
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
     bool applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired);
+    bool needRtlPropertiesResolution()const;
 protected:
     int mID;
     int mScrollX;
@@ -330,6 +335,7 @@ protected:
     bool hasIdentityMatrix();
     void computeOpaqueFlags();
     virtual void resolveDrawables();
+    bool areDrawablesResolved();
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
     virtual bool setFrame(int x,int y,int w,int h);
@@ -448,7 +454,10 @@ public:
     void setPadding(int left, int top, int right, int bottom);
     bool isPaddingResolved()const;
     virtual void resolvePadding();
-
+    virtual void onRtlPropertiesChanged(int layoutDirection);
+    bool resolveLayoutDirection();
+    bool canResolveTextDirection();
+    bool canResolveLayoutDirection();
     int getMinimumHeight();
     void setMinimumHeight(int minHeight);
     int getMinimumWidth();
@@ -578,6 +587,7 @@ public:
     int getHorizontalFadingEdgeLength();
     void setFadingEdgeLength(int length);
     void transformFromViewToWindowSpace(int*);
+    void mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent);
     void getLocationInWindow(int*);
     bool startNestedScroll(int axes);
     void stopNestedScroll();
@@ -589,6 +599,7 @@ public:
     bool dispatchNestedPreScroll(int dx, int dy,int* consumed,int* offsetInWindow);
     bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
     bool dispatchNestedPreFling(float velocityX, float velocityY);
+    int getRawTextDirection()const;
     void setTextDirection(int textDirection);
     int getTextDirection()const;
     bool canResolveTextAlignment()const;
@@ -692,6 +703,9 @@ public:
     static bool isLayoutModeOptical(View*);
     bool resolveRtlPropertiesIfNeeded();
     void resetRtlProperties();
+    void resetResolvedTextDirection();
+    void resetResolvedLayoutDirection();
+    void resetResolvedPadding();
     void measure(int widthMeasureSpec, int heightMeasureSpec);
     int getMeasuredWidth()const;
     int getMeasuredWidthAndState()const;
@@ -728,6 +742,10 @@ public:
     virtual bool isLayoutRequested()const;
     bool isLaidOut()const;
     bool isLayoutValid()const;
+    bool hasRtlSupport()const;
+    bool isTextDirectionInherited()const;
+    bool isTextDirectionResolved()const;
+    bool resolveTextDirection();
     virtual void requestLayout();
     void forceLayout();
     virtual void resolveLayoutParams();

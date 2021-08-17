@@ -27,37 +27,37 @@
 
     <item state_checked="true" state_pressed="true"
           state_enabled="true"
-          drawable="mipmap/btn_check_on_pressed.png" />
+          drawable="cdroid:mipmap/btn_check_on_pressed.png" />
     <item state_checked="false" state_pressed="true"
           state_enabled="true"
-          drawable="mipmap/btn_check_off_pressed.png" />
+          drawable="cdroid:mipmap/btn_check_off_pressed.png" />
 
     <item state_checked="true" state_focused="true"
           state_enabled="true"
-          drawable="mipmap/btn_check_on_selected.png" />
+          drawable="cdroid:mipmap/btn_check_on_selected.png" />
     <item state_checked="false" state_focused="true"
           state_enabled="true"
-          drawable="mipmap/btn_check_off_selected.png" />
+          drawable="cdroid:mipmap/btn_check_off_selected.png" />
 
     <item state_checked="false" state_enabled="true"
-          drawable="mipmap/btn_check_off.png" />
+          drawable="cdroid:mipmap/btn_check_off.png" />
     <item state_checked="true"  state_enabled="true"
-          drawable="mipmap/btn_check_on.png" />
+          drawable="cdroid:mipmap/btn_check_on.png" />
 
 
     <!-- Disabled states -->
 
     <item state_checked="true" state_window_focused="false"
-          drawable="mipmap/btn_check_on_disable.png" />
+          drawable="cdroid:mipmap/btn_check_on_disable.png" />
     <item state_checked="false" state_window_focused="false"
-          drawable="mipmap/btn_check_off_disable.png" />
+          drawable="cdroid:mipmap/btn_check_off_disable.png" />
 
     <item state_checked="true" state_focused="true"
-          drawable="mipmap/btn_check_on_disable_focused.png" />
+          drawable="cdroid:mipmap/btn_check_on_disable_focused.png" />
     <item state_checked="false" state_focused="true"
-          drawable="mipmap/btn_check_off_disable_focused.png" />
+          drawable="cdroid:mipmap/btn_check_off_disable_focused.png" />
 
-    <item state_checked="false" drawable="mipmap/btn_check_off_disable.png" />
-    <item state_checked="true" drawable="mipmap/btn_check_on_disable.png" />
+    <item state_checked="false" drawable="cdroid:mipmap/btn_check_off_disable.png" />
+    <item state_checked="true" drawable="cdroid:mipmap/btn_check_on_disable.png" />
 
 </selector>

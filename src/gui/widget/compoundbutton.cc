@@ -56,8 +56,7 @@ bool CompoundButton::performClick(){
 }
 
 void CompoundButton::setButtonDrawable(const std::string&resid){
-    Drawable* d=nullptr;
-    if (resid.empty())  d = Drawable::inflate(getContext(),resid);
+    Drawable* d= Drawable::inflate(getContext(),resid);
     setButtonDrawable(d);
 }
 

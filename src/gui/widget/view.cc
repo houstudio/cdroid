@@ -294,8 +294,8 @@ void View::computeOpaqueFlags(){
         mPrivateFlags &= ~PFLAG_OPAQUE_BACKGROUND;
     }
 
-    int flags = mViewFlags;
-    /*if (((flags & SCROLLBARS_VERTICAL) == 0 && (flags & SCROLLBARS_HORIZONTAL) == 0) ||
+    /*int flags = mViewFlags;
+    if (((flags & SCROLLBARS_VERTICAL) == 0 && (flags & SCROLLBARS_HORIZONTAL) == 0) ||
             (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_INSIDE_OVERLAY ||
             (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_OUTSIDE_OVERLAY) {
         mPrivateFlags |= PFLAG_OPAQUE_SCROLLBARS;
@@ -554,6 +554,7 @@ void View::setFadingEdgeLength(int length){
     initScrollCache();
     mScrollCache->fadingEdgeLength = length;
 }
+
 void View::transformFromViewToWindowSpace(int*inOutLocation){
     View* view = this;
     double position[2]={(double)inOutLocation[0],(double)inOutLocation[1]};
@@ -574,6 +575,10 @@ void View::transformFromViewToWindowSpace(int*inOutLocation){
     }
     inOutLocation[0]=(int)position[0];
     inOutLocation[1]=(int)position[1];
+}
+
+void View::mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent){
+
 }
 
 void View::getLocationInWindow(int* outLocation) {
@@ -1563,7 +1568,25 @@ void View::offsetLeftAndRight(int offset){
     mLeft+=offset;
 }
 
-void View::setTextDirection(int dir){
+int View::getRawTextDirection()const{
+    return (mPrivateFlags2 & PFLAG2_TEXT_DIRECTION_MASK) >> PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
+}
+
+void View::setTextDirection(int textDirection){
+    if (getRawTextDirection() != textDirection) {
+         // Reset the current text direction and the resolved one
+         mPrivateFlags2 &= ~PFLAG2_TEXT_DIRECTION_MASK;
+         resetResolvedTextDirection();
+         // Set the new text direction
+         mPrivateFlags2 |= ((textDirection << PFLAG2_TEXT_DIRECTION_MASK_SHIFT) & PFLAG2_TEXT_DIRECTION_MASK);
+         // Do resolution
+         resolveTextDirection();
+         // Notify change
+         onRtlPropertiesChanged(getLayoutDirection());
+         // Refresh
+         requestLayout();
+         invalidate(nullptr);
+    }
 }
 
 int View::getTextDirection()const{
@@ -1587,6 +1610,23 @@ void View::resetResolvedTextAlignment() {
     mPrivateFlags2 &= ~(PFLAG2_TEXT_ALIGNMENT_RESOLVED | PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK);
     // Set to default
     mPrivateFlags2 |= PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT;
+}
+
+bool View::canResolveTextDirection(){
+   switch (getRawTextDirection()) {
+   case TEXT_DIRECTION_INHERIT:
+       if (mParent != nullptr)
+           return mParent->canResolveTextDirection();
+       return false;   
+   default: return true;
+   }
+}
+
+void View::resetResolvedTextDirection() {
+    // Reset any previous text direction resolution
+    mPrivateFlags2 &= ~(PFLAG2_TEXT_DIRECTION_RESOLVED | PFLAG2_TEXT_DIRECTION_RESOLVED_MASK);
+    // Set to default value
+    mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT;
 }
 
 bool View::isTextAlignmentInherited()const{
@@ -1697,7 +1737,8 @@ View& View::setLayoutDirection(int layoutDirection){
 }
 
 int View::getLayoutDirection()const{
-    return LAYOUT_DIRECTION_LTR;
+    return ((mPrivateFlags2 & PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL) ==
+          PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL) ? LAYOUT_DIRECTION_RTL : LAYOUT_DIRECTION_LTR;
 }
 
 bool View::isLayoutRtl()const{
@@ -1806,6 +1847,10 @@ bool View::pointInView(int localX,int localY, int slop) {
 }
 
 void View::onResolveDrawables(int layoutDirection){
+}
+
+bool View::areDrawablesResolved(){
+    return (mPrivateFlags2 & PFLAG2_DRAWABLE_RESOLVED) == PFLAG2_DRAWABLE_RESOLVED;
 }
 
 void View::resolveDrawables(){
@@ -3514,6 +3559,82 @@ bool View::isLayoutRequested()const{
     return (mPrivateFlags & PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT;
 }
 
+bool View::hasRtlSupport()const{
+    return true;//mContext.getApplicationInfo().hasRtlSupport();
+}
+
+bool View::isTextDirectionInherited()const{
+    return (getRawTextDirection() == TEXT_DIRECTION_INHERIT);
+}
+
+bool View::isTextDirectionResolved()const{
+    return (mPrivateFlags2 & PFLAG2_TEXT_DIRECTION_RESOLVED) == PFLAG2_TEXT_DIRECTION_RESOLVED;
+}
+
+bool View::resolveTextDirection(){
+    // Reset any previous text direction resolution
+    mPrivateFlags2 &= ~(PFLAG2_TEXT_DIRECTION_RESOLVED | PFLAG2_TEXT_DIRECTION_RESOLVED_MASK);
+
+    if (hasRtlSupport()) {
+        // Set resolved text direction flag depending on text direction flag
+        int textDirection = getRawTextDirection();
+        int parentResolvedDirection;
+        switch(textDirection) {
+        case TEXT_DIRECTION_INHERIT:
+            if (!canResolveTextDirection()) {
+                // We cannot do the resolution if there is no parent, so use the default one
+                mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT;
+                // Resolution will need to happen again later
+                return false;
+            }
+
+            // Parent has not yet resolved, so we still return the default
+            if (!mParent->isTextDirectionResolved()) {
+                mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT;
+                // Resolution will need to happen again later
+                return false;
+            }
+            // Set current resolved direction to the same value as the parent's one
+            parentResolvedDirection = mParent->getTextDirection();
+            switch (parentResolvedDirection) {
+            case TEXT_DIRECTION_FIRST_STRONG:
+            case TEXT_DIRECTION_ANY_RTL:
+            case TEXT_DIRECTION_LTR:
+            case TEXT_DIRECTION_RTL:
+            case TEXT_DIRECTION_LOCALE:
+            case TEXT_DIRECTION_FIRST_STRONG_LTR:
+            case TEXT_DIRECTION_FIRST_STRONG_RTL:
+                mPrivateFlags2 |= (parentResolvedDirection << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT);
+                break;
+            default:
+                // Default resolved direction is "first strong" heuristic
+                mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT;
+            }
+            break;
+        case TEXT_DIRECTION_FIRST_STRONG:
+        case TEXT_DIRECTION_ANY_RTL:
+        case TEXT_DIRECTION_LTR:
+        case TEXT_DIRECTION_RTL:
+        case TEXT_DIRECTION_LOCALE:
+        case TEXT_DIRECTION_FIRST_STRONG_LTR:
+        case TEXT_DIRECTION_FIRST_STRONG_RTL:
+            // Resolved direction is the same as text direction
+            mPrivateFlags2 |= (textDirection << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT);
+            break;
+        default:
+            // Default resolved direction is "first strong" heuristic
+             mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT;
+        }
+    }else {
+        // Default resolved direction is "first strong" heuristic
+        mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT;
+    }
+
+    // Set to resolved
+    mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_RESOLVED;
+    return true;
+}
+
 bool View::isLayoutModeOptical(View*p){
     if(dynamic_cast<ViewGroup*>(p)){
         return ((ViewGroup*)p)->isLayoutModeOptical();
@@ -3521,11 +3642,99 @@ bool View::isLayoutModeOptical(View*p){
     return false;
 }
 
+bool View::needRtlPropertiesResolution()const{
+    return (mPrivateFlags2 & ALL_RTL_PROPERTIES_RESOLVED) != ALL_RTL_PROPERTIES_RESOLVED;
+}
+
+void View::onRtlPropertiesChanged(int layoutDirection){
+}
+
+bool View::resolveLayoutDirection(){
+    // Clear any previous layout direction resolution
+    mPrivateFlags2 &= ~PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK;
+
+    if (hasRtlSupport()) {
+        // Set resolved depending on layout direction
+        switch ((mPrivateFlags2 & PFLAG2_LAYOUT_DIRECTION_MASK) >> PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT) {
+        case LAYOUT_DIRECTION_INHERIT:
+            // We cannot resolve yet. LTR is by default and let the resolution happen again
+            // later to get the correct resolved value
+            if (!canResolveLayoutDirection()) return false;
+
+            // Parent has not yet resolved, LTR is still the default
+            if (!mParent->isLayoutDirectionResolved()) return false;
+            if (mParent->getLayoutDirection() == LAYOUT_DIRECTION_RTL) {
+                mPrivateFlags2 |= PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL;
+            }
+            break;
+        case LAYOUT_DIRECTION_RTL:
+            mPrivateFlags2 |= PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL;
+            break;
+        case LAYOUT_DIRECTION_LOCALE:
+            /*if((LAYOUT_DIRECTION_RTL ==
+                    TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()))) {
+                mPrivateFlags2 |= PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL;
+            }*/
+            break;
+        default:break;// Nothing to do, LTR by default
+        }
+    }
+
+    // Set to resolved
+    mPrivateFlags2 |= PFLAG2_LAYOUT_DIRECTION_RESOLVED;
+    return true;
+}
+
+bool View::canResolveLayoutDirection(){
+    switch (getRawLayoutDirection()) {
+    case LAYOUT_DIRECTION_INHERIT:
+        if (mParent != nullptr) {
+            return mParent->canResolveLayoutDirection();
+        }
+        return false;
+
+    default: return true;
+    }
+}
+
+void View::resetResolvedPadding(){
+    mPrivateFlags2 &= ~PFLAG2_PADDING_RESOLVED;
+}
+
 bool View::resolveRtlPropertiesIfNeeded(){
-    return false;
+    if (!needRtlPropertiesResolution()) return false;
+
+    // Order is important here: LayoutDirection MUST be resolved first
+    if (!isLayoutDirectionResolved()) {
+        resolveLayoutDirection();
+        resolveLayoutParams();
+    }
+    // ... then we can resolve the others properties depending on the resolved LayoutDirection.
+    if (!isTextDirectionResolved()) {
+        resolveTextDirection();
+    }
+    if (!isTextAlignmentResolved()) {
+        resolveTextAlignment();
+    }
+    // Should resolve Drawables before Padding because we need the layout direction of the
+    // Drawable to correctly resolve Padding.
+    if (!areDrawablesResolved()) {
+        resolveDrawables();
+    }
+    if (!isPaddingResolved()) {
+        resolvePadding();
+    }
+    onRtlPropertiesChanged(getLayoutDirection());
+    return true;
+
 }
 
 void View::resetRtlProperties(){
+    resetResolvedLayoutDirection();
+    resetResolvedTextDirection();
+    resetResolvedTextAlignment();
+    resetResolvedPadding();
+    resetResolvedDrawables();
 }
 
 int View::getDefaultSize(int size, int measureSpec) {
@@ -3702,18 +3911,21 @@ void View::setRotationY(float){
 }
 
 float View::getScaleX(){
-    return 1.f;
+    return mMatrix.xx;
 }
 
-void View::setScaleX(float){
-
+void View::setScaleX(float x){
+    mMatrix.xx=x;
+    invalidate(nullptr);
 }
 
 float View::getScaleY(){
-    return 1.f;
+    return mMatrix.yy;
 }
 
-void View::setScaleY(float){
+void View::setScaleY(float y){
+    mMatrix.yy=y;
+    invalidate(nullptr);
 }
 
 float View::getPivotX(){
@@ -3762,6 +3974,11 @@ void View::setLayoutParams(LayoutParams*params){
 
 int View::getRawLayoutDirection()const{
     return (mPrivateFlags2 & PFLAG2_LAYOUT_DIRECTION_MASK) >> PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
+}
+
+void View::resetResolvedLayoutDirection() {
+    // Reset the current resolved bits
+    mPrivateFlags2 &= ~PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK;
 }
 
 bool View::isLayoutDirectionInherited()const{
