@@ -13,7 +13,7 @@ private:
 protected:
     void drawableStateChanged()override;
 public:
-	ToggleButton(Context*ctx,const AttributeSet& attrs);
+    ToggleButton(Context*ctx,const AttributeSet& attrs);
     ToggleButton(int w,int h);
     const std::string getTextOn()const;
     void setTextOn(const std::string& textOn);

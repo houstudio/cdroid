@@ -131,7 +131,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
 
     if (thumb != nullptr) {
         thumb->setCallback(this);
-        //if (canResolveLayoutDirection()) thumb->setLayoutDirection(getLayoutDirection());
+        if (canResolveLayoutDirection()) thumb->setLayoutDirection(getLayoutDirection());
 
         // Assuming the thumb drawable is symmetric, set the thumb offset
         // such that the thumb will hang halfway off either edge of the
@@ -140,7 +140,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
         // If we're updating get the new states
         if (needUpdate && (thumb->getIntrinsicWidth() != mThumb->getIntrinsicWidth()
                 || thumb->getIntrinsicHeight() != mThumb->getIntrinsicHeight())) {
-            //requestLayout();
+            requestLayout();
         }
     }
     delete mThumb;

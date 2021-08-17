@@ -233,7 +233,7 @@ protected:
     bool shouldShowSelector();
     void updateSelectorState();
     void drawableStateChanged()override;
-    virtual  void layoutChildren();
+    virtual void layoutChildren();
     bool shouldDrawSelector();
     void dispatchDraw(Canvas& canvas)override;
     void dispatchSetPressed(bool pressed)override;

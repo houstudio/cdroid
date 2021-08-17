@@ -1641,7 +1641,7 @@ bool View::resolveTextAlignment() {
     // Reset any previous text alignment resolution
     mPrivateFlags2 &= ~(PFLAG2_TEXT_ALIGNMENT_RESOLVED | PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK);
 
-    if (true/*hasRtlSupport()*/) {
+    if (hasRtlSupport()) {
         // Set resolved text alignment flag depending on text alignment flag
         int textAlignment = getRawTextAlignment();
         int parentResolvedTextAlignment;
@@ -1948,7 +1948,7 @@ Drawable*View::getBackground()const{
 }
 
 View& View::setBackgroundResource(const std::string&resid){
-    Drawable*d=Drawable::inflate(mContext,resid);
+    Drawable*d=getContext()->getDrawable(resid);
     return setBackgroundDrawable(d);
 }
 

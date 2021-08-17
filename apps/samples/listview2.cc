@@ -2,37 +2,39 @@
 #include <cdlog.h>
 
 class MyAdapter:public ArrayAdapter<std::string>{
-private:
-    int itemType;
 public:
-    MyAdapter(int type=0):ArrayAdapter(){
-        itemType=type;
+    MyAdapter():ArrayAdapter(){
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
 
         TextView*tv=(TextView*)convertView;
         if(convertView==nullptr){
-            if(itemType==0) tv=new TextView("",600,20);
-            else tv=new CheckBox("",600,20);
+            tv=new TextView("",600,40);
+            tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
             tv->setPadding(20,0,0,0);
             tv->setFocusable(false);
         }
-        tv->setLayoutDirection(position<10?View::LAYOUT_DIRECTION_RTL:View::LAYOUT_DIRECTION_LTR);
+        tv->getBackground()->setLevel(0);
         tv->setId(position);
         tv->setText("position :"+std::to_string(position));
         tv->setTextColor(0xFFFFFFFF);
-        tv->setBackgroundColor(0x80002222);
-        tv->setTextSize(40);
+        tv->setTextSize(30);
         return tv;
     }
 };
 
 int main(int argc,const char*argv[]){
     App app;
-    Window*w=new Window(100,50,1200,620);
+    Window*w=new Window(50,50,1200,640);
     MyAdapter*adapter=new MyAdapter();
     ListView*lv=(ListView*)&w->addView(new ListView(460,500));
+    TextView*tv=new TextView("TextView with progressbar as background",500,50);
     lv->setPos(10,10);
+    lv->setDivider(new ColorDrawable(0x66008800));
+    lv->setDividerHeight(2);
+    w->addView(tv).setPos(10,530);
+    tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
+    tv->getBackground()->setLevel(2000);
     for(int i=0;i<56;i++){
         adapter->add("");
     }
@@ -43,23 +45,16 @@ int main(int argc,const char*argv[]){
     lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);
     });
-
-    MyAdapter*adapter2=new MyAdapter(1);
-    ListView*lstchk=(ListView*)&w->addView(new ListView(500,500));
-    lstchk->setPos(500,10);
-    lstchk->setAdapter(adapter2);
-    for(int i=0;i<56;i++){
-        adapter2->add("");
-    }
-    lstchk->setAdapter(adapter2);
-    lstchk->setSelector(new ColorDrawable(0x88FF0000));
-    lstchk->setChoiceMode(ListView::CHOICE_MODE_MULTIPLE_MODAL);
-    adapter2->notifyDataSetChanged();
-    lstchk->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
-        LOGD("clicked %d",pos);
-        ((CheckBox&)v).toggle();
+    int index=0;
+    Runnable run([&](){
+        View* v=lv->getChildAt(index);
+        Drawable*d=v->getBackground();
+        if(d->getLevel()<10000)
+           d->setLevel(d->getLevel()+1000);
+        else{d->setLevel(0); index=(index+1)%10;}
+        w->postDelayed(run,100);
     });
-
+    w->postDelayed(run,100);
     app.exec();
     return 0;
 };

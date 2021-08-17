@@ -1752,7 +1752,9 @@ void AbsListView::updateOnScreenCheckedViews() {
         View* child = getChildAt(i);
         int position = firstPos + i;
         if (dynamic_cast<Checkable*>(child)) {
-            ((Checkable*) child)->setChecked(mCheckStates.get(position));
+            const bool checked=mCheckStates.get(position);
+            dynamic_cast<Checkable*>(child)->setChecked(mCheckStates.get(position));
+            LOGV("setChecked %p[%d] ->%d",child,position,checked);
         } else {
             child->setActivated(mCheckStates.get(position));
         }

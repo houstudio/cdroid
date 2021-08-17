@@ -90,4 +90,21 @@ TEST_F(ANIMATOR,translate){
     anim->start();
     app.exec();
 }
-
+TEST_F(ANIMATOR,scale){
+    App app;
+    Window*w=new Window(0,0,800,600);
+    TextView*tv=new TextView("Hello World!",120,30);
+    tv->setBackgroundColor(0xFF111111);
+    w->addView(tv);
+    FloatPropertyValuesHolder fprop;
+    fprop.setPropertyName("scale");
+    fprop.setValues({0,2.0});
+    fprop.setPropertySetter([&](void*target,float fraction,float scale){
+        tv->setScaleX(scale);
+        tv->setScaleY(scale);
+    });
+    ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
+    anim->setDuration(5000);
+    anim->start();
+    app.exec();
+}
