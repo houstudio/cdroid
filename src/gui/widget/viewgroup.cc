@@ -1292,7 +1292,7 @@ void ViewGroup::invalidateChild(View*child,RECT&dirty){
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
     //LOGD_IF(mParent==nullptr,"child (%d,%d,%d,%d) location=%d,%d mPrivateFlags=%x ",dirty.x,dirty.y,dirty.width,dirty.height,location[0],location[1],mPrivateFlags);
-    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
+    if (1||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE))
                 != FLAG_OPTIMIZE_INVALIDATE) {

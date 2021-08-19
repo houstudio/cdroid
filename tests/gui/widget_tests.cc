@@ -26,14 +26,14 @@ static void onClick(View&v){
 
 TEST_F(WIDGET,View){
     View v(400,80);
-    v.setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-    ASSERT_EQ(v.getTextAlignment(),View::TEXT_ALIGNMENT_CENTER);
+    v.setTextAlignment((int)View::TEXT_ALIGNMENT_CENTER);//no (int) will caused link error
+    ASSERT_EQ(v.getTextAlignment(),(int)View::TEXT_ALIGNMENT_CENTER);
 
-    v.setTextAlignment(View::TEXT_ALIGNMENT_VIEW_START);
-    ASSERT_EQ(v.getTextAlignment(),View::TEXT_ALIGNMENT_VIEW_START);
+    v.setTextAlignment((int)View::TEXT_ALIGNMENT_VIEW_START);
+    ASSERT_EQ(v.getTextAlignment(),(int)View::TEXT_ALIGNMENT_VIEW_START);
 
-    v.setTextAlignment(View::TEXT_ALIGNMENT_VIEW_END);
-    ASSERT_EQ(v.getTextAlignment(),View::TEXT_ALIGNMENT_VIEW_END);
+    v.setTextAlignment((int)View::TEXT_ALIGNMENT_VIEW_END);
+    ASSERT_EQ(v.getTextAlignment(),(int)View::TEXT_ALIGNMENT_VIEW_END);
 }
 TEST_F(WIDGET,TextView){
     App app;
