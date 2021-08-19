@@ -71,12 +71,11 @@ bool Rectangle::intersect(const Rectangle&a,const Rectangle&b){
     return true;
 }
 
-bool Rectangle::intersect(int l, int t, int r, int b) {
-    if (this->x < r && l < this->right() && this->y < b && t < this->bottom()) {
-        if (this->x < l) this->x = l;
-        if (this->y < t) this->y = t;
-        if (this->right() > r) this->width = r-x;
-        if (this->bottom() > b) this->width = b-y;
+bool Rectangle::intersect(int l, int t, int w, int h) {
+    if (this->x < l+w && l < this->right() && this->y < t+h && t < this->bottom()) {
+        if (this->y < t) {this->y = t; height-=(t-y);}
+        if (this->right() > l+w) this->width = l+w-x;
+        if (this->bottom() > t+h) this->width = t+h-y;
         return true;
     }
     return false;

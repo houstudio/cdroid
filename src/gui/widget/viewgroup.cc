@@ -22,6 +22,8 @@
 #include <focusfinder.h>
 #include <systemclock.h>
 
+#define CHILD_LEFT_INDEX 0
+#define CHILD_TOP_INDEX  1
 
 namespace cdroid {
 class TouchTarget{
@@ -85,10 +87,14 @@ ViewGroup::ViewGroup(int x,int y,int w,int h)
 }
 
 void ViewGroup::initGroup(){
+    mGroupFlags = FLAG_CLIP_CHILDREN; 
+    mGroupFlags|= FLAG_CLIP_TO_PADDING;
+    mGroupFlags|= FLAG_ANIMATION_DONE;
+    mGroupFlags|= FLAG_ANIMATION_CACHE;
+    mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
     mFocused=nullptr;
     mDefaultFocus=nullptr;
     mFocusedInCluster=nullptr;
-    mGroupFlags=0;
     mFirstTouchTarget=nullptr;
     mOnHierarchyChangeListener=nullptr;
     mChildCountWithTransientState=0;
@@ -664,6 +670,9 @@ int ViewGroup::getChildDrawingOrder(int count,int i){
     return i;
 }
 
+bool ViewGroup::getChildStaticTransformation(View* child, Transformation* t){
+    return false;
+}
 Transformation* ViewGroup::getChildTransformation(){
     if(mChildTransformation==nullptr)
         mChildTransformation=new Transformation();
@@ -1101,35 +1110,216 @@ View*ViewGroup::findViewById(int id)const{
     return nullptr;
 }
 
-void ViewGroup::dispatchDraw(Canvas&canvas){
-    if(getClipChildren())return;
-    for(auto child : mChildren){
-        //if(mInvalidRgn->contains_rectangle((RectangleInt&)rc)==Region::Overlap::OUT)continue;
-        child->draw(nullptr);
-    }
+bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){
+    child->draw(canvas,this,drawingTime);
 }
 
-void ViewGroup::invalidateChild(View*child,const RECT*rect){
-    if(mParent==nullptr){
-	 RECT rc=rect?child->getClientRect():*rect;
-	 POINT pt;
-	 child->getLocationInWindow((int*)&pt);
-	 rc.offset(pt.x,pt.y);//offsetDescendantRectToMyCoords(child,rc);
-	 mInvalidRgn->do_union((const RectangleInt&)rc);
-    }else{
-	 mParent->invalidateChild(child,rect);
+void ViewGroup::dispatchDraw(Canvas&canvas){
+    bool usingRenderNodeProperties =false;// canvas.isRecordingFor(mRenderNode);
+    int flags = mGroupFlags;
+
+   /* if ((flags & FLAG_RUN_ANIMATION) != 0 && canAnimate()) {
+        bool buildCache = !isHardwareAccelerated();
+        for (auto child:mChildren){
+            if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
+                LayoutParams* params = child->getLayoutParams();
+                attachLayoutAnimationParameters(child, params, i, childrenCount);
+                bindLayoutAnimation(child);
+            }
+        }
+
+        LayoutAnimationController controller = mLayoutAnimationController;
+        if (controller.willOverlap()) {
+            mGroupFlags |= FLAG_OPTIMIZE_INVALIDATE;
+        }
+
+        controller.start();
+
+        mGroupFlags &= ~FLAG_RUN_ANIMATION;
+        mGroupFlags &= ~FLAG_ANIMATION_DONE;
+
+        if (mAnimationListener != null) {
+            mAnimationListener.onAnimationStart(controller.getAnimation());
+        }
+    }*/
+
+    int clipSaveCount = 0;
+    bool clipToPadding = (flags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK;
+    if (clipToPadding) {
+        canvas.save();
+        clipSaveCount++;
+        canvas.rectangle(mScrollX + mPaddingLeft, mScrollY + mPaddingTop,
+                mWidth-mPaddingLeft - mPaddingRight, mHeight -mPaddingTop- mPaddingBottom);
     }
-    if(dynamic_cast<ViewGroup*>(child)){
-	 ViewGroup*vg=(ViewGroup*)child;
-	 for(int i=0;i<vg->mChildren.size();i++){
-             View*v=vg->mChildren[i];
-	     RECT rc=v->getBound();
-	     if(((v->mPrivateFlags&PFLAG_DIRTY_MASK)==0)&&rc.intersect(*rect)){
-		v->mPrivateFlags|=PFLAG_DIRTY;
-	     }
-	 }
+
+    // We will draw our child's animation, let's reset the flag
+    mPrivateFlags &= ~PFLAG_DRAW_ANIMATION;
+    mGroupFlags &= ~FLAG_INVALIDATE_REQUIRED;
+
+    bool more = false;
+    const long drawingTime = SystemClock::uptimeMillis();
+
+    //if (usingRenderNodeProperties) canvas.insertReorderBarrier();
+    int transientCount = 0;//mTransientIndices == nullptr ? 0 : mTransientIndices.size();
+    int transientIndex = transientCount != 0 ? 0 : -1;
+    // Only use the preordered list if not HW accelerated, since the HW pipeline will do the
+    // draw reordering internally
+    //ArrayList<View> preorderedList = usingRenderNodeProperties  ? null : buildOrderedChildList();
+    //bool customOrder = preorderedList == nullptr && isChildrenDrawingOrderEnabled();
+    for (auto child:mChildren){//int i = 0; i < childrenCount; i++) {
+        /*while (transientIndex >= 0 && mTransientIndices.get(transientIndex) == i) {
+            View transientChild = mTransientViews.get(transientIndex);
+            if ((transientChild.mViewFlags & VISIBILITY_MASK) == VISIBLE ||
+                    transientChild.getAnimation() != null) {
+                more |= drawChild(canvas, transientChild, drawingTime);
+            }
+            transientIndex++;
+            if (transientIndex >= transientCount) {
+                transientIndex = -1;
+            }
+        }*/
+
+        //int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+        //View* child =mChildren[i];// getAndVerifyPreorderedView(preorderedList, children, childIndex);
+        if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE || child->getAnimation() != nullptr) {
+            more |= drawChild(canvas, child, drawingTime);
+        }
     }
-    mPrivateFlags|=PFLAG_DIRTY;
+    /*while (transientIndex >= 0) {
+        // there may be additional transient views after the normal views
+        View transientChild = mTransientViews.get(transientIndex);
+        if ((transientChild.mViewFlags & VISIBILITY_MASK) == VISIBLE ||
+                transientChild.getAnimation() != null) {
+            more |= drawChild(canvas, transientChild, drawingTime);
+        }
+        transientIndex++;
+        if (transientIndex >= transientCount) {
+            break;
+        }
+    }
+    if (preorderedList != null) preorderedList.clear();
+
+    // Draw any disappearing views that have animations
+    if (mDisappearingChildren != null) {
+        ArrayList<View> disappearingChildren = mDisappearingChildren;
+        int disappearingCount = disappearingChildren.size() - 1;
+        // Go backwards -- we may delete as animations finish
+        for (int i = disappearingCount; i >= 0; i--) {
+            View child = disappearingChildren.get(i);
+            more |= drawChild(canvas, child, drawingTime);
+        }
+    }
+    if (usingRenderNodeProperties) canvas.insertInorderBarrier();
+    */
+    //if (debugDraw())onDebugDraw(canvas);
+
+    if (clipToPadding) {
+        while(clipSaveCount--)canvas.restore();
+    }
+
+    // mGroupFlags might have been updated by drawChild()
+    flags = mGroupFlags;
+
+    if ((flags & FLAG_INVALIDATE_REQUIRED) == FLAG_INVALIDATE_REQUIRED) {
+        invalidate(true);
+    }
+
+    /*if ((flags & FLAG_ANIMATION_DONE) == 0 && (flags & FLAG_NOTIFY_ANIMATION_LISTENER) == 0 &&
+            mLayoutAnimationController.isDone() && !more) {
+        // We want to erase the drawing cache and notify the listener after the
+        // next frame is drawn because one extra invalidate() is caused by
+        // drawChild() after the animation is over
+        mGroupFlags |= FLAG_NOTIFY_ANIMATION_LISTENER;
+        post([](){notifyAnimationListener();});
+    }*/
+}
+
+void ViewGroup::invalidateChild(View*child,RECT&dirty){
+    int location[2]={child->mLeft,child->mTop};
+    const bool drawAnimation = (child->mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0;
+    const bool isOpaque = child->isOpaque() && !drawAnimation ;
+                    //&& child->getAnimation() == nullptr && childMatrix.isIdentity();
+    int opaqueFlag = isOpaque ? PFLAG_DIRTY_OPAQUE : PFLAG_DIRTY;
+
+    ViewGroup*parent=this;
+    do {
+        View* view = parent;
+
+        if (drawAnimation) {
+            if (view) {
+                 view->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
+            }/* else if (parent instanceof ViewRootImpl) {
+                 ((ViewRootImpl) parent).mIsAnimating = true;
+            }*/
+        }
+
+        // If the parent is dirty opaque or not dirty, mark it dirty with the opaque
+        // flag coming from the child that initiated the invalidate
+        if (view) {
+            if ((view->mViewFlags & FADING_EDGE_MASK) != 0 && view->getSolidColor() == 0) {
+                  opaqueFlag = PFLAG_DIRTY;
+            }
+            if ((view->mPrivateFlags & PFLAG_DIRTY_MASK) != PFLAG_DIRTY) {
+                view->mPrivateFlags = (view->mPrivateFlags & ~PFLAG_DIRTY_MASK) | opaqueFlag;
+            }
+        }
+
+        parent = parent->invalidateChildInParent(location, dirty);
+        /*if (view) {
+             // Account for transform on current parent
+            Matrix m = view.getMatrix();
+            if (!m.isIdentity()) {
+                RectF boundingRect = attachInfo.mTmpTransformRect;
+                boundingRect.set(dirty);
+                m.mapRect(boundingRect);
+                dirty.set((int) Math.floor(boundingRect.left),
+                        (int) Math.floor(boundingRect.top),
+                        (int) Math.ceil(boundingRect.right),
+                        (int) Math.ceil(boundingRect.bottom));
+            }
+        }*/
+        if(parent==nullptr)((ViewGroup*)view)->mInvalidRgn->do_union((const RectangleInt&)dirty);
+    } while (parent);
+}
+
+ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
+    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {
+        // either DRAWN, or DRAWING_CACHE_VALID
+        if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE))
+                != FLAG_OPTIMIZE_INVALIDATE) {
+            dirty.offset(location[CHILD_LEFT_INDEX] - mScrollX,
+                    location[CHILD_TOP_INDEX] - mScrollY);
+            if ((mGroupFlags & FLAG_CLIP_CHILDREN) == 0) {
+                //dirty.union(0, 0, mWidth,mHeight);
+            }
+
+            if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
+                if (!dirty.intersect(0, 0, mWidth, mHeight)) {
+                    dirty.setEmpty();
+                }
+            }
+
+            location[CHILD_LEFT_INDEX]= mParent?mLeft:0;
+            location[CHILD_TOP_INDEX] = mParent?mTop:0;
+        } else {
+            if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
+                dirty.set(0, 0, mWidth, mHeight);
+            } else {
+                // in case the dirty rect extends outside the bounds of this container
+                //dirty.union(0, 0, mWidth, mHeight);
+            }
+            location[CHILD_LEFT_INDEX] = mParent?mLeft:0;
+            location[CHILD_TOP_INDEX] = mParent?mTop:0;
+
+            mPrivateFlags &= ~PFLAG_DRAWN;
+        }
+        mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+        //if (mLayerType != LAYER_TYPE_NONE) 
+            mPrivateFlags |= PFLAG_INVALIDATED;
+
+        return mParent;
+    }
+    return nullptr;
 }
 
 bool ViewGroup::shouldDelayChildPressedState()const{

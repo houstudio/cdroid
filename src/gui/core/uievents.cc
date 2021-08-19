@@ -406,12 +406,17 @@ int KeyEvent::normalizeMetaState(int metaState){
     return metaState & META_ALL_MASK;
 }
 
+KeyEvent::DispatcherState::DispatcherState(){
+    reset();
+}
+
 void KeyEvent::DispatcherState::reset(){
     LOGV("Reset %p",this);
     mDownKeyCode = 0;
     mDownTarget = nullptr;
     mActiveLongPresses.clear();
 }
+
 void KeyEvent::DispatcherState::reset(void* target){
     if(mDownTarget==target){
         LOGV("Reset in %p:%p",target,this);

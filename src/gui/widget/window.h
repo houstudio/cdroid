@@ -39,6 +39,7 @@ protected:
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);
+    Canvas*getCanvas();
 public:
     typedef enum{
         TYPE_WALLPAPER    =1,
@@ -53,7 +54,7 @@ public:
     Window(Context*,const AttributeSet&);
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
     void setRegion(const RefPtr<Region>&region);
-
+    void draw();
     int inflate(const std::string&res);
     static View*inflate(Context*ctx,const std::string&res);
     virtual ~Window();
@@ -61,7 +62,6 @@ public:
     virtual void hide();
     virtual void setText(const std::string&);
     const std::string getText()const;
-    virtual Canvas*getCanvas()override;
     virtual View& setPos(int x,int y)override;
     virtual View& setSize(int cx,int cy)override;
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
@@ -69,7 +69,6 @@ public:
     virtual void onBackPressed();
     virtual void onActive();
     virtual void onDeactive();
-    void invalidate(const RECT*r)override;
     bool dispatchKeyEvent(KeyEvent&event)override;
 
     /*virtual void sendMessage(DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0){

@@ -10,12 +10,16 @@ namespace cdroid{
 
 Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mPopupContext=nullptr;
+    mGravity= Gravity::CENTER;
+    mDisableChildrenWhenDisabled=true;
     mPopup=new SpinnerPopup(this,mode);
 }
 
 Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     :AbsSpinner(ctx,atts){
     mPopupContext =ctx;
+    mGravity= Gravity::CENTER;
+    mDisableChildrenWhenDisabled=true;
 }
 
 Context* Spinner::getPopupContext()const{

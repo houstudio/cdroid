@@ -64,14 +64,14 @@ int EditText::commitText(const std::wstring&ws){
     }
     mLayout->relayout(true);
     setCaretPos(mCaretPos+ws.length());
-    invalidate(nullptr);
+    invalidate(true);
     return ws.length();
 }
 
 void EditText::setInputType(INPUTTYPE tp){
     if(tp!=mInputType){
        if(tp==TYPE_PASSWORD||mInputType==TYPE_PASSWORD)
-           invalidate(nullptr);
+           invalidate(true);
        switch(tp){
        case TYPE_IP:
            setPattern("^((25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))$");
@@ -110,14 +110,14 @@ void EditText::checkMatch(const std::wstring&ws){
         getEditable()=ws;
     }
     mLayout->relayout();
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void EditText::replace(size_t start,size_t len,const std::string&txt){
     std::wstring wtxt=TextUtils::utf8tounicode(txt);
     getEditable().replace(start,len,wtxt);
     mCaretPos=start+wtxt.size()-len;
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void EditText::setEditMode(EDITMODE mode){
@@ -126,7 +126,7 @@ void EditText::setEditMode(EDITMODE mode){
 
 View& EditText::setHint(const std::string&txt){
     View::setHint(txt);
-    if(getText().empty())invalidate(nullptr);
+    if(getText().empty())invalidate(true);
     return *this;
 }
 
@@ -195,7 +195,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
         }break;
     case KEY_INSERT:
          mEditMode=!mEditMode;
-         invalidate(nullptr);
+         invalidate(true);
          break;
     case KEY_OK:
          if(nullptr!=afterChanged)
@@ -208,7 +208,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
             if(mCaretPos<wText.length()) wText.insert(mCaretPos,1,'\n');
             else wText.append(1,'\n');
             mLayout->relayout(true);
-            invalidate(nullptr);
+            invalidate(true);
             return true;
         }
         return false;
@@ -224,7 +224,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     }
     if(changed){
         mLayout->relayout();  
-        invalidate(nullptr);
+        invalidate(true);
         if(nullptr!=afterChanged)
             afterChanged(*this);
     }
@@ -250,7 +250,7 @@ int EditText::getPasswordChar()const{
 void EditText::setPasswordChar(int ch){
     mPasswordChar = ch;
     if(mInputType==TYPE_PASSWORD)
-        invalidate(nullptr);
+        invalidate(true);
 }
 
 void EditText::onDraw(Canvas&canvas){

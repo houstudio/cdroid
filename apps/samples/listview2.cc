@@ -28,13 +28,10 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(50,50,1200,640);
     MyAdapter*adapter=new MyAdapter();
     ListView*lv=(ListView*)&w->addView(new ListView(460,500));
-    TextView*tv=new TextView("TextView with progressbar as background",500,50);
     lv->setPos(10,10);
     lv->setDivider(new ColorDrawable(0x66008800));
+    lv->setVerticalScrollBarEnabled(true);
     lv->setDividerHeight(2);
-    w->addView(tv).setPos(10,530);
-    tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
-    tv->getBackground()->setLevel(2000);
     for(int i=0;i<56;i++){
         adapter->add("");
     }

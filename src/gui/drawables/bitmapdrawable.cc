@@ -277,7 +277,8 @@ void BitmapDrawable::draw(Canvas&canvas){
 
     canvas.set_source(mBitmapState->mBitmap, dx, dy);
     cairo_pattern_set_filter(cairo_get_source(canvas.cobj()), CAIRO_FILTER_BEST);
-    cairo_pattern_set_extend(cairo_get_source(canvas.cobj()), CAIRO_EXTEND_NONE);
+    //canvas.get_source()->set_filter(Pattern::Filter::BEST);
+    canvas.get_source()->set_extend(Pattern::Extend::NONE);
     canvas.paint_with_alpha(alpha);
     canvas.scale(1./fx,1./fy);
     //canvas.restore();

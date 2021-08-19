@@ -12,11 +12,9 @@
 #include <cairomm/fontface.h>
 #include <windowmanager.h>
 #include <pixman.h>
-#include <chrono>
+#include <systemclock.h>
 
 using namespace Cairo;
-using namespace std::chrono;
-
 
 namespace cdroid{
 
@@ -36,7 +34,7 @@ GraphDevice::GraphDevice(int fmt){
 
     format=fmt<0?GPF_ARGB:fmt;
     GFXCreateSurface(&primarySurface,width,height,format,1);
-    last_compose_time=(std::chrono::steady_clock::now().time_since_epoch()).count();  
+    last_compose_time=SystemClock::uptimeMillis();
     LOGD("primarySurface=%p size=%dx%d",primarySurface,width,height);
 
     primaryContext=new Canvas(mInst,primarySurface);
@@ -81,8 +79,8 @@ void GraphDevice::flip(){
 
 bool GraphDevice::needCompose(){
     uint64_t tnow64;
-    tnow64=steady_clock::now().time_since_epoch().count();
-    return compose_event&&(tnow64-last_compose_time)>=30*milliseconds::period::den;
+    tnow64=SystemClock::uptimeMillis();
+    return compose_event&&(tnow64-last_compose_time)>=30;
 }
 
 Canvas*GraphDevice::getPrimaryContext(){
@@ -136,7 +134,7 @@ void GraphDevice::remove(Canvas*ctx){
 
 void GraphDevice::ComposeSurfaces(){
     int rects=0;
-    steady_clock::time_point t2,t1=steady_clock::now();
+    long t2,t1=SystemClock::uptimeMillis();
 
     std::sort(gSurfaces.begin(),gSurfaces.end(),[](Canvas*c1,Canvas*c2){
         return c2->mLayer-c1->mLayer>0;
@@ -149,16 +147,14 @@ void GraphDevice::ComposeSurfaces(){
     primaryContext->mInvalidRgn->do_xor(primaryContext->mInvalidRgn);
 
     for(auto s=gSurfaces.begin();s!=gSurfaces.end();s++){
-        if( (*s)->mInvalidRgn->empty() )
-            continue;
+        if( (*s)->mInvalidRgn->empty() )continue;
         rects+=(*s)->blit2Device(primarySurface);
     }
     GFXFlip(primarySurface);
     
-    t2=steady_clock::now();
-    duration<double>dur=duration_cast<duration<double>>(t2 - t1);
-    LOGV("ComposeSurfaces %d surfaces %d rects used %f s",gSurfaces.size(),rects,dur);
-    last_compose_time=t2.time_since_epoch().count();
+    t2=SystemClock::uptimeMillis();
+    LOGV("ComposeSurfaces %d surfaces %d rects used %d ms",gSurfaces.size(),rects,t2-t1);
+    last_compose_time=SystemClock::uptimeMillis();
     compose_event=0;
 }
 }//end namespace

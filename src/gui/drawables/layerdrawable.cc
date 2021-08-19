@@ -187,6 +187,7 @@ void LayerDrawable::LayerState::invalidateCache(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 LayerDrawable::LayerDrawable():LayerDrawable(nullptr){
+    mSuspendChildInvalidation=false;
 }
 
 LayerDrawable::LayerDrawable(const std::vector<Drawable*>&drawables)
@@ -569,7 +570,8 @@ bool LayerDrawable::onStateChange(const std::vector<int>& state){
 }
 
 void LayerDrawable::suspendChildInvalidation(){
-    mSuspendChildInvalidation = true;
+    mSuspendChildInvalidation = false;
+    mChildRequestedInvalidation=false;
 }
 
 void LayerDrawable::resumeChildInvalidation(){

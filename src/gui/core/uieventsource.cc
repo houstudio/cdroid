@@ -22,7 +22,7 @@ int UIEventSource::checkEvents(){
 
 int UIEventSource::handleEvents(){
     if (mAttachedView && mAttachedView->isDirty()){
-        mAttachedView->draw();
+        ((Window*)mAttachedView)->draw();
         GraphDevice::getInstance().flip();
     }
     if(GraphDevice::getInstance().needCompose())

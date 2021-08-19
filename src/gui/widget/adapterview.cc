@@ -6,6 +6,7 @@
 namespace cdroid{
 AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
     mFirstPosition=0;
+    mOldItemCount= mItemCount =0;
     mSelectedPosition=INVALID_POSITION;
     mNextSelectedPosition = INVALID_POSITION;
     mOldSelectedPosition = INVALID_POSITION;

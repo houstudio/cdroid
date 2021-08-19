@@ -44,33 +44,32 @@ LinearLayout::LayoutParams::LayoutParams(const LinearLayout::LayoutParams&source
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 LinearLayout::LinearLayout(int w,int h):LinearLayout(0,0,w,h){
-    mAllowInconsistentMeasurement=false;
+    initView();
 }
 
 LinearLayout::LinearLayout(int x,int y,int w,int h)
   :ViewGroup(x,y,w,h){
-    mWeightSum=-1.0;
-    mOrientation=HORIZONTAL;
-    mGravity=Gravity::NO_GRAVITY;
-    mTotalLength=0;
+    initView();
+}
+void LinearLayout::initView(){
+    mWeightSum  = -1.0;
+    mOrientation= HORIZONTAL;
+    mGravity    = Gravity::NO_GRAVITY;
+    mTotalLength =0;
     mDividerPadding=0;
+    mDivider =nullptr;
     mShowDividers=SHOW_DIVIDER_NONE;
     mDividerWidth= mDividerHeight=0;
     mUseLargestChild=false;
+    mBaselineAligned=false;
     mBaselineAlignedChildIndex=-1;
     mAllowInconsistentMeasurement=false;
 }
 
 LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context,attrs){
-    mWeightSum=-1.0;
+    initView();
     mUseLargestChild=attrs.getBoolean("measureWithLargestChild",false);
-    mBaselineAlignedChildIndex=-1;
-    mShowDividers=SHOW_DIVIDER_NONE;
-    mDividerPadding=0;
-    mAllowInconsistentMeasurement=false;
-    mTotalLength=0;
-    mDividerWidth= mDividerHeight=0;
 
     mOrientation=attrs.getInt("orientation",HORIZONTAL);
 
@@ -261,7 +260,7 @@ void LinearLayout::setDividerPadding(int padding){
 
     if (isShowingDividers()) {
         requestLayout();
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 

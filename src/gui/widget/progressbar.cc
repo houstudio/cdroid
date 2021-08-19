@@ -90,14 +90,14 @@ void ProgressBar::initProgressBar(){
 void ProgressBar::setMin(int value){
     if(mMin!=value){
         mMin=value;
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
 void ProgressBar::setMax(int value){
     if(mMax!=value){
         mMax=value;
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
@@ -105,7 +105,7 @@ void ProgressBar::setRange(int vmin,int vmax){
     if( (mMin!=vmin)||(mMax!=vmax)){
         mMin=vmin;
         mMax=vmax;
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
@@ -152,7 +152,7 @@ void ProgressBar::setVisualProgress(int id, float progress){
         }
     }
     if (d != nullptr) d->setLevel((progress * MAX_LEVEL));
-    invalidate(nullptr);
+    invalidate(true);
     onVisualProgressChanged(id, progress);
 }
 

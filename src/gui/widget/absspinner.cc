@@ -95,7 +95,7 @@ void AbsSpinner::resetList() {
 
     setSelectedPositionInt(INVALID_POSITION);
     setNextSelectedPositionInt(INVALID_POSITION);
-    invalidate(nullptr);
+    invalidate(true);
 }
 int AbsSpinner::getChildHeight(View* child) {
     return child->getMeasuredHeight();

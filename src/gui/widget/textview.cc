@@ -293,8 +293,11 @@ void TextView::initView(){
     mCaretRect.set(0,0,0,0);
     mMaxWidthMode =PIXELS;
     mMinWidthMode = PIXELS;
+    mMaxMode =LINES;
+    mMinMode =LINES;
     mMarqueeRepeatLimit =3;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
+    mHorizontallyScrolling =false;
     mEllipsize =Layout::ELLIPSIS_NONE;
     mLayout=new Layout(18,1);
     mHintLayout = new Layout(mLayout->getFontSize(),1);
@@ -308,6 +311,7 @@ void TextView::initView(){
     mShadowDx = .0;
     mShadowDy = .0;
     mShadowColor = 0;
+    mCurTextColor= mCurHintTextColor=0;
     mSingleLine =true;
     mEditMode =READONLY;
     setTextColor(0xFFFFFFFF);
@@ -474,7 +478,7 @@ void TextView::setText(const std::string&txt){
     mCaretPos=0;
     mLayout->setCaretPos(mCaretPos);
     std::wstring&wText=getEditable();
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 const std::string TextView::getText()const{
@@ -505,7 +509,7 @@ void TextView::setCaretPos(int pos){
     mCaretPos=pos;
     mBlinkOn=true;
     mLayout->setCaretPos(pos);
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 int TextView::getCaretPos()const{
@@ -570,7 +574,7 @@ void TextView::setGravity(int gravity){
         newLayout = true;
     }
 
-    if (gravity != mGravity)  invalidate(nullptr);
+    if (gravity != mGravity)  invalidate(true);
 
     mGravity = gravity;
     mLayout->setAlignment(getLayoutAlignment());
@@ -584,7 +588,7 @@ void TextView::setMinWidth(int minPixels){
     mMinWidth = minPixels;
     mMinWidthMode = PIXELS;
     requestLayout();
-    invalidate(nullptr);    
+    invalidate(true);    
 }
 int TextView::getMinWidth()const{
     return mMinWidthMode == PIXELS ? mMinWidth : -1;
@@ -593,7 +597,7 @@ void TextView::setMaxWidth(int maxPixels){
     mMaxWidth = maxPixels;
     mMaxWidthMode = PIXELS;
     requestLayout();
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 int TextView::getMaxWidth()const{
@@ -684,7 +688,7 @@ void TextView::setMinHeight(int minPixels){
     mMinimum = minPixels;
     mMinMode = PIXELS;
     requestLayout();
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 int TextView::getMaxHeight()const{
@@ -696,7 +700,7 @@ void TextView::setMaxHeight(int maxPixels){
     mMaxMode = PIXELS;
 
     requestLayout();
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 int TextView::desired(Layout*layout){
@@ -896,7 +900,7 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
     resetResolvedDrawables();
     resolveDrawables();
     applyCompoundDrawableTint();
-    invalidate(nullptr);
+    invalidate(true);
     requestLayout();
 }
 
@@ -958,7 +962,7 @@ void TextView::updateTextColors(){
     if (inval) {
         // Text needs to be redrawn with the new color
         //if (mEditor != null) mEditor.invalidateTextDisplayList();
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
@@ -1009,7 +1013,7 @@ int TextView::getCurrentTextColor()const{
 void TextView::setHighlightColor(int color){
     if(mHighlightColor != color){
         mHighlightColor = color;
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
@@ -1099,7 +1103,7 @@ void TextView::setCompoundDrawablePadding(int pad){
              mDrawables =new Drawables(getContext());
          mDrawables->mDrawablePadding = pad;
     }
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 int TextView::getCompoundDrawablePadding()const{
@@ -1296,7 +1300,7 @@ void TextView::setSingleLine(bool single){
     mSingleLine=single;
     mLayout->setMultiline(!single);
     mLayout->relayout();
-    invalidate(nullptr);
+    invalidate(true);
 }
 void TextView::setBreakStrategy(int breakStrategy){
     mLayout->setBreakStrategy(breakStrategy);

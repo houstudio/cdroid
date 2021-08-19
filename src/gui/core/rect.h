@@ -41,7 +41,7 @@ typedef struct Rectangle{
     void offset(int dx,int dy);
     bool intersect(const Rectangle&a,const Rectangle&b);
     bool intersect(const Rectangle&b);
-    bool intersect(int l, int t, int r, int b);
+    bool intersect(int l, int t, int w, int h);
     bool contains(int x,int y)const;
     bool contains(const Rectangle&a)const;
     bool operator==(const Rectangle&b)const;

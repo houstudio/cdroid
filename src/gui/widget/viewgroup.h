@@ -34,16 +34,16 @@ public:
         FLAG_CLIP_CHILDREN   = 0x01,
         FLAG_CLIP_TO_PADDING = 0x02,
         FLAG_INVALIDATE_REQUIRED= 0x4,
-        FLAG_RUN_ANIMATION  = 0x8,
-        FLAG_ANIMATION_DONE = 0x10,
+        FLAG_RUN_ANIMATION   = 0x8,
+        FLAG_ANIMATION_DONE  = 0x10,
         FLAG_PADDING_NOT_NULL= 0x20,
         CLIP_TO_PADDING_MASK = FLAG_CLIP_TO_PADDING | FLAG_PADDING_NOT_NULL,
 
         FLAG_ANIMATION_CACHE = 0x40,
-        FLAG_OPTIMIZE_INVALIDATE = 0x80,
+        FLAG_OPTIMIZE_INVALIDATE  = 0x80,
         FLAG_CLEAR_TRANSFORMATION = 0x100,
         FLAG_NOTIFY_ANIMATION_LISTENER = 0x200,
-        FLAG_USE_CHILD_DRAWING_ORDER = 0x400,
+        FLAG_USE_CHILD_DRAWING_ORDER   = 0x400,
         FLAG_SUPPORT_STATIC_TRANSFORMATIONS = 0x800,
 
         FLAG_ADD_STATES_FROM_CHILDREN  = 0x2000,
@@ -149,16 +149,17 @@ protected:
 
     virtual void measureChildWithMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
+    bool drawChild(Canvas& canvas, View* child, long drawingTime);
     void dispatchDraw(Canvas&)override;
     bool hasActiveAnimations();
     void transformPointToViewLocal(POINT&point,View&);
     bool isTransformedTouchPointInView(int x,int y,View& child,Point*outLocalPoint);
-
     void drawableStateChanged()override;
     std::vector<int> onCreateDrawableState()const override;
     void dispatchSetPressed(bool pressed)override;
     virtual int getChildDrawingOrder(int childCount, int i);
 
+    virtual bool getChildStaticTransformation(View* child, Transformation* t);
     Transformation* getChildTransformation();
     void finishAnimatingView(View* view, Animation* animation);
     bool isViewTransitioning(View* view);
@@ -177,7 +178,7 @@ public:
     void setClipChildren(bool clipChildren);
     bool getClipToPadding()const;
     void setClipToPadding(bool clipToPadding);
-
+	
     void dispatchSetSelected(bool selected)override;
     void dispatchSetActivated(bool activated)override;
 
@@ -222,7 +223,8 @@ public:
   
     virtual void onViewAdded(View* child);
     virtual void onViewRemoved(View* child);
-    void invalidateChild(View*child,const RECT*);
+    void invalidateChild(View*child,Rect&dirty);
+    ViewGroup*invalidateChildInParent(int* location,Rect& dirty);
 
     virtual LayoutParams* generateLayoutParams(const AttributeSet& attrs)const;
     static int getChildMeasureSpec(int spec, int padding, int childDimension);

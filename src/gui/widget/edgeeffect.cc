@@ -15,6 +15,15 @@ EdgeEffect::EdgeEffect(Context* context){
     mInterpolator = new DecelerateInterpolator();
     mDisplacement=0.5f;
     mBounds.set(0,0,0,0);
+    mPullDistance =0;
+    mState=STATE_IDLE;
+    mGlowAlpha=0;
+    mGlowAlphaStart=mGlowAlphaFinish=.0f;
+    mBaseGlowScale=0;
+    mGlowScaleY=0;
+    mGlowScaleYStart=mGlowScaleYFinish=.0f;
+    mStartTime=0;
+    mDuration =PULL_DECAY_TIME;
 }
 
 EdgeEffect::~EdgeEffect(){
@@ -129,7 +138,7 @@ int EdgeEffect::getColor()const{
 
 bool EdgeEffect::draw(Canvas& canvas){
     update();
-
+#if 0//thie will caused crash in new invalidate_api
     float centerX = mBounds.centerX();
     float centerY = mBounds.height - mRadius;
     canvas.save();
@@ -151,7 +160,7 @@ bool EdgeEffect::draw(Canvas& canvas){
     canvas.arc(centerX, centerY, mRadius,0,M_PI*2.f);
     canvas.fill();
     canvas.restore();
-
+#endif
     bool oneLastFrame = false;
     if (mState == STATE_RECEDE && mGlowScaleY == 0) {
         mState = STATE_IDLE;

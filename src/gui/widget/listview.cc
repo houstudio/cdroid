@@ -12,6 +12,7 @@ namespace cdroid {
 
 ListView::ListView(int w,int h):AbsListView(w,h) {
     mDividerHeight=0;
+    mItemsCanFocus=false;
     mDivider=nullptr;
     mOverScrollHeader=nullptr;
     mOverScrollFooter=nullptr;
@@ -113,7 +114,7 @@ void ListView::setDivider(Drawable* divider) {
     mDivider = divider;
     mDividerIsOpaque = divider == nullptr || divider->getOpacity() == Drawable::OPAQUE;
     if(mAdapter && mItemCount)requestLayout();
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 HeaderViewListAdapter* ListView::wrapHeaderListAdapterInternal(
@@ -250,14 +251,14 @@ int ListView::getFooterViewsCount()const{
 
 void ListView::setHeaderDividersEnabled(bool headerDividersEnabled) {
     mHeaderDividersEnabled = headerDividersEnabled;
-    invalidate(nullptr);
+    invalidate(true);
 }
 bool ListView::areHeaderDividersEnabled()const {
     return mHeaderDividersEnabled;
 }
 void ListView::setFooterDividersEnabled(bool footerDividersEnabled) {
     mFooterDividersEnabled = footerDividersEnabled;
-    invalidate(nullptr);
+    invalidate(true);
 }
 bool ListView::areFooterDividersEnabled()const {
     return mFooterDividersEnabled;
@@ -280,7 +281,7 @@ bool ListView::getItemsCanFocus()const{
 void ListView::setOverscrollHeader(Drawable* header) {
     mOverScrollHeader = header;
     if (mScrollY < 0) {
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 Drawable* ListView::getOverscrollHeader()const {
@@ -288,7 +289,7 @@ Drawable* ListView::getOverscrollHeader()const {
 }
 void ListView::setOverscrollFooter(Drawable* footer) {
     mOverScrollFooter = footer;
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 Drawable* ListView::getOverscrollFooter()const {

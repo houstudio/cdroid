@@ -8,6 +8,8 @@ namespace cdroid {
 
 RecycleBin::RecycleBin(AbsListView*lv){
     LV=lv;
+    mFirstActivePosition=0;
+    mViewTypeCount=0;
 }
 
 Adapter*RecycleBin::getAdapter(){

@@ -54,7 +54,8 @@ int HorizontalScrollView::getMaxScrollAmount() {
 void HorizontalScrollView::initScrollView() {
     mScroller = new OverScroller(getContext());
     mVelocityTracker = nullptr;
-    mEdgeGlowLeft = mEdgeGlowRight =nullptr;;
+    mEdgeGlowLeft = mEdgeGlowRight =nullptr;
+    mFillViewport = false;
     setFocusable(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
@@ -531,7 +532,7 @@ void HorizontalScrollView::onOverScrolled(int scrollX, int scrollY,bool clampedX
         }
     } else {
         FrameLayout::scrollTo(scrollX, scrollY);
-	if(mParent)mParent->invalidate(nullptr);
+	    if(mParent)mParent->invalidate(true);
     }
     awakenScrollBars();
 }

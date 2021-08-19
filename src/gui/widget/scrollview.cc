@@ -350,7 +350,7 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
         // Remember where the motion event started
         mLastMotionY = (int) ev.getY();
         mActivePointerId = ev.getPointerId(0);
-        LOGD("ACTION_DOWN mActivePointerId=%d",mActivePointerId);
+        LOGV("ACTION_DOWN mActivePointerId=%d",mActivePointerId);
         startNestedScroll(SCROLL_AXIS_VERTICAL);
         break;
     }

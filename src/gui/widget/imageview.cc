@@ -188,7 +188,7 @@ int ImageView::getScaleType()const{
 
 void ImageView::setScaleType(int st){
     mScaleType=st;
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 bool ImageView::getCropToPadding()const{
@@ -199,7 +199,7 @@ void ImageView::setCropToPadding(bool cropToPadding){
     if (mCropToPadding != cropToPadding) {
         mCropToPadding = cropToPadding;
         //requestLayout();
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
@@ -409,7 +409,7 @@ void ImageView::invalidateDrawable(Drawable& dr){
         * and run them through the transformation and offsets, but this
         * is probably not worth the effort.
         */
-        invalidate(nullptr);
+        invalidate(true);
     } else {
         View::invalidateDrawable(dr);
     }
@@ -428,7 +428,7 @@ void ImageView::setImageDrawable(Drawable*drawable){
         if (oldWidth != mDrawableWidth || oldHeight != mDrawableHeight) {
             requestLayout();
         }
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
@@ -455,7 +455,7 @@ void ImageView::setImageResource(const std::string& resId) {
     if (oldWidth != mDrawableWidth || oldHeight != mDrawableHeight) {
         requestLayout();
     }
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void ImageView::setImageTintList(ColorStateList*tint){

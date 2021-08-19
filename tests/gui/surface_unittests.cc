@@ -43,98 +43,6 @@ public :
 Canvas*CONTEXT::ctx=nullptr;
 Assets *CONTEXT::rm=nullptr;
 
-TEST_F(CONTEXT,SURFACE_CREATE_1){
-   const char *piaoyao="المعالجة الأولية Hello";
-   for(int j=0;j<10;j++){
-      for(int i=0;i<10;i++){
-         const char *txt[]={"Beijing","Sigapo","ShangHai","Shenzhen",
-            "The quick brown fox jumps over a lazy dog",
-            "Innovation in China","中国智造，惠及全球 0123456789"};
-         ctx->set_font_size(i==j?40:28);
-         ctx->save();
-         ctx->select_font_face("DejaVu Sans Mono",ToyFontFace::Slant::NORMAL,ToyFontFace::Weight::NORMAL);
-         if(i==j){
-             RECT rc={400,i*40,400,40};
-             ctx->set_color(255,0,0);
-             ctx->rectangle(0,i*40,800,40);
-             ctx->fill();
-             ctx->set_color(255,255,255);
-             ctx->draw_text(10,i*40,txt[i%(sizeof(txt)/sizeof(char*))]);
-         }else{
-             ctx->rectangle(0,i*40,800,40);
-             ctx->fill();
-             ctx->set_color(255,255,255);
-             ctx->draw_text(10,i*40,txt[i%(sizeof(txt)/sizeof(char*))]);
-         }
-      RECT rect={0,0,800,600};
-      ctx->set_font_size(40);
-      ctx->draw_text(100,480,piaoyao);//,DT_BOTTOM|DT_LEFT);
-      //GraphDevice::getInstance().invalidate(&rect);
-      ctx->restore();
-      ctx->dump2png("test2.png");
-      }
-      GraphDevice::getInstance().ComposeSurfaces();
-      SLEEP(500);
-   }
-   ctx->dump2png("test3.png");
-}
-
-TEST_F(CONTEXT,roundrect){
-	ctx->set_color(0xFFFF0000);
-	ctx->roundrect(50,50,500,400,20);
-	ctx->stroke();
-}
-
-TEST_F(CONTEXT,TextOutXY){
-    const char*str="jump over a dog";
-    char s2[2],*p=(char*)str;
-    RECT rect={100,100,800,120};
-    ctx->set_font_size(80);
-    ctx->set_color(0xFFFFFFFF);
-    ctx->rectangle(100,100,800,1);
-    ctx->fill();
-    for(int x=100;*p;p++,x+=55){
-       s2[0]=*p;s2[1]=0;
-       ctx->draw_text(x,100,s2);
-    }
-    SLEEP(10000);
-}
-
-TEST_F(CONTEXT,drawtext){
-    const char*str[]={"jump","over","a", "dog",nullptr};
-    const char*str1="jump over a dog";
-    int fmt[]={DT_TOP,DT_VCENTER,DT_BOTTOM};
-    int fmth[]={DT_LEFT,DT_CENTER,DT_RIGHT};
-    char s2[2],*p=(char*)str;
-    RECT rect={100,100,800,120};
-    ctx->set_font_size(80);
-    for(int i=0;i<3;i++){
-      rect.x=100;
-      rect.y=100+150*i;
-      ctx->set_color(0xFFFFFFFF);
-      ctx->rectangle(rect);
-      ctx->stroke();
-      for(int j=0;j<3;j++){ 
-         rect.x=100;
-         ctx->set_color(0xFF000000|(255<<j*8));
-         if(i)printf("%d,%d\r\n",rect.x,rect.y);
-         if(i)ctx->draw_text(rect,str1,fmt[j]|fmth[i]);
-         for(int k=0;i==0&&str[k];k++){
-            ctx->draw_text(rect,str[k],fmt[j]|fmth[i]);
-            rect.x+=strlen(str[k])*52;
-         }
-      }
-    }
-}
-
-
-TEST_F(CONTEXT,memleak1){
-    RECT rect={0,0,1000,80};
-    SLEEP(10000);
-    for(int i=0;i<1000000;i++){
-       ctx->draw_text(rect,"The quick brown fox jumps over a lazy dog",DT_CENTER|DT_VCENTER);
-    }
-}
 
 TEST_F(CONTEXT,TEXT_ALIGNMENT){
     const char*horz[]={"LEFT","CENTER","RIGHT"};
@@ -150,7 +58,7 @@ TEST_F(CONTEXT,TEXT_ALIGNMENT){
            sprintf(alignment,"%s_%s",horz[h],vert[v]);
            printf("test %s\r\n",alignment);
            ctx->set_color(0xFFFF0000);
-           ctx->draw_text(20,20,alignment);
+           //ctx->draw_text(20,20,alignment);
            ctx->rectangle(rect);ctx->fill();
            ctx->set_color(0xFF00FF00);
            ctx->draw_text(rect,"The quick brown fox jump sover the lazy dog.",(v<<4)|h);
@@ -164,20 +72,6 @@ TEST_F(CONTEXT,TEXT_ALIGNMENT){
     SLEEP(2000);
 }
 
-
-TEST_F(CONTEXT,subcanvas){
-    RefPtr<Canvas>ctx1(ctx->subContext(100,100,300,200));
-    RefPtr<Canvas>ctx2(ctx1->subContext(100,100,100,100));
-    RefPtr<Canvas>ctx3(ctx2->subContext(50,50,50,50));
-    ctx->set_color(0xFFFFFFFF);
-    ctx->rectangle(0,0,800,600);ctx->fill();
-    ctx1->set_color(0xFF00FF00);
-    ctx1->rectangle(0,0,300,200);ctx1->fill();
-    ctx2->set_color(0xFF0000FF);
-    ctx2->rectangle(0,0,100,100);ctx2->fill();
-    ctx3->set_color(0xFFFF0000);
-    ctx3->rectangle(0,0,50,50);ctx3->fill();
-}
 TEST_F(CONTEXT,circle){
     const int PTCOUNT=30;
     const double RADIUS=280;
@@ -240,6 +134,29 @@ TEST_F(CONTEXT,Clip){
     ctx->arc(400,300,100,0,M_PI*2);
     ctx->clip();
     ctx->draw_image(img,rect,nullptr);
+}
+
+TEST_F(CONTEXT,Clip1){
+    ctx->set_color(0xFF888888);
+    ctx->rectangle(0,0,1280,720);
+    ctx->fill();
+
+    ctx->rectangle(100,100,400,400);
+    ctx->clip();
+
+    ctx->save();
+    ctx->rectangle(200,200,200,200);
+    ctx->clip();
+    ctx->set_source_rgb(1,0,0);
+    ctx->rectangle(0,0,1280,720);
+    ctx->fill();
+    ctx->restore();
+ 
+    ctx->rectangle(0,0,1280,720);
+    ctx->set_source_rgba(0,1,0,.5);
+    ctx->fill();
+
+    ctx->get_target()->write_to_png("clip1.png");
 }
 
 TEST_F(CONTEXT,Mask){

@@ -40,7 +40,7 @@ void AnalogClock::setClockDrawable(Drawable*d,int id){
         break;
     default:return;
     }
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 Drawable*AnalogClock::getClockDrawable(int id){
@@ -61,7 +61,7 @@ void AnalogClock::onAttached(){
         mHour=when.tm_hour;
         mMinutes=when.tm_min;
         mSeconds=when.tm_sec;
-        invalidate(nullptr);
+        invalidate(true);
         postDelayed(mRunner,800);
     };
     postDelayed(mRunner,800);

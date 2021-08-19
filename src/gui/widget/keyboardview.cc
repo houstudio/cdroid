@@ -51,7 +51,7 @@ int KeyboardView::getKeyButton(int px,int py){
 void KeyboardView::setKeyboard(std::shared_ptr<Keyboard>k){
     kbd=k;
 	if(kbd) kbd->resize(getWidth(),getHeight());
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void KeyboardView::invalidateKey(int row,int col){

@@ -223,6 +223,7 @@ public:
        void* mDownTarget;
        SparseIntArray  mActiveLongPresses;
    public:
+       DispatcherState();
        void reset();
        void reset(void* target);
        void startTracking(KeyEvent& event,void* target);

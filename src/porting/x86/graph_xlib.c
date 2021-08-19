@@ -233,16 +233,15 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
 
 DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* srcrect)
 {
-    unsigned int x,y,sw,sh;
     XImage *ndst=(XImage*)dstsurface;
-    XImage*nsrc=(XImage*)srcsurface;
+    XImage *nsrc=(XImage*)srcsurface;
     GFXRect rs={0,0};
     BYTE*pbs=(BYTE*)nsrc->data;
     BYTE*pbd=(BYTE*)ndst->data;
     rs.w=nsrc->width;rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
-        LOGV("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
+        LOGD("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
         return E_INVALID_PARA;
     }
 
@@ -254,11 +253,13 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* s
     //LOGV_IF(ndst==mainSurface,"Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     pbs += rs.y*nsrc->bytes_per_line+rs.x*4;
     pbd += dy*ndst->bytes_per_line+dx*4;
-    for(y=0;y<rs.h;y++){
+    LOGV("rs(%dx%d)=copyarea(%d,%d,%d,%d)->(%d,%d)",nsrc->width,nsrc->height,rs.x,rs.y,rs.w,rs.h,dx,dy);
+    for(unsigned int y=0;y<rs.h;y++){
         memcpy(pbd,pbs,rs.w*4);
         pbs+=nsrc->bytes_per_line;
         pbd+=ndst->bytes_per_line;
     }
+    LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.x+rs.w,rs.y+rs.h,dx,dy,dx+rs.w,dy+rs.h);
     if(ndst==mainSurface){
         if(x11Display) X11Expose(dx,dy,rs.w,rs.h);
         #ifdef ENABLE_RFB

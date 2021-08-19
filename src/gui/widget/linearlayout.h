@@ -44,7 +44,7 @@ private:
     int mDividerPadding;
     int mLayoutDirection;
     Drawable*mDivider;
-
+    void initView();
     bool isShowingDividers()const;
     bool allViewsAreGoneBefore(int childIndex);
     View* getLastNonGoneChild();

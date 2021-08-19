@@ -271,14 +271,14 @@ bool TetrisWindow::onKeyUp(int keyCode,KeyEvent&event){
         break;
     default:return Window::onKeyUp(keyCode,event);
     }
-    invalidate(nullptr);
+    invalidate(true);
     return true;
 }
 
 bool TetrisWindow::onMessage(DWORD msgid,DWORD wp,ULONG lp){
     if((msgid==WM_REFRESH)&&(!mGameIsOver)){
          BlockMove(DOWN);
-         invalidate(nullptr);
+         invalidate(true);
          //sendMessage(msgid,wp,lp,speed_ms);
     }else
         return true;//Window::onMessage(msgid,wp,lp);

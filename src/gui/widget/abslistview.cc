@@ -241,7 +241,8 @@ void AbsListView::initAbsListView() {
     mVelocityTracker = nullptr;
     mPositionScroller= nullptr;
     mStackFromBottom = false;
-    
+    mIsChildViewEnabled =false;
+ 
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mOnScrollListener.onScroll = nullptr;
     mOnScrollListener.onScrollStateChanged = nullptr;
@@ -270,8 +271,9 @@ void AbsListView::initAbsListView() {
     mSelectionBottomPadding= 0;
     mSelectorPosition = INVALID_POSITION;
     mSelectedTop = 0;
-    mChoiceMode = CHOICE_MODE_NONE;
-    mLayoutMode = LAYOUT_NORMAL;
+    mChoiceMode  = CHOICE_MODE_NONE;
+    mLayoutMode  = LAYOUT_NORMAL;
+    mTranscriptMode=TRANSCRIPT_MODE_DISABLED;
     mRecycler=new RecycleBin(this);
     mScrollUp = mScrollDown = nullptr;
     //mDensityScale=2.65f;// = getContext().getResources().getDisplayMetrics().density;
@@ -2676,8 +2678,7 @@ void AbsListView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool c
     if (mScrollY != scrollY) {
         onScrollChanged(mScrollX, scrollY, mScrollX, mScrollY);
         mScrollY = scrollY;
-        if(mParent)mParent->invalidate(nullptr);
-
+        if(mParent)mParent->invalidate(true);
         awakenScrollBars();
     }
 }
@@ -3220,20 +3221,27 @@ void AbsListView::PositionScroller::operator()() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 AbsListView::LayoutParams::LayoutParams():ViewGroup::LayoutParams() {
+    init();
+}
+void AbsListView::LayoutParams::init(){
     itemId=-1;
+    viewType=0;
+    recycledHeaderFooter=false;
+    scrappedFromPosition=false;
+    forceAdd=false;
 }
 AbsListView::LayoutParams::LayoutParams(const ViewGroup::LayoutParams&p):ViewGroup::LayoutParams(p) {
-    itemId=-1;
+    init();
 }
 AbsListView::LayoutParams::LayoutParams(int w,int h):ViewGroup::LayoutParams(w,h) {
-    itemId=-1;
+    init();
 }
 AbsListView::LayoutParams::LayoutParams(int w, int h, int vt):ViewGroup::LayoutParams(w,h) {
+    init();
     viewType = vt;
-    itemId=-1;
 }
 AbsListView::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):ViewGroup::LayoutParams(ctx,atts){
-    itemId=-1;
+    init();
 }
 }//namespace
 

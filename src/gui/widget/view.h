@@ -85,6 +85,7 @@ protected:
         PFLAG_PRESSED          = 0x4000,
         PFLAG_DRAWING_CACHE_VALID= 0x8000,
         PFLAG_ANIMATION_STARTED= 0x00010000,
+        PFLAG_ALPHA_SET        = 0x00040000,
         PFLAG_DIRTY            = 0x00200000,
         PFLAG_DIRTY_OPAQUE     = 0x00400000,
         PFLAG_DIRTY_MASK       = 0x00600000,
@@ -111,6 +112,7 @@ protected:
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_RESOLVED_DEFAULT << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
         PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000,
+        PFLAG2_VIEW_QUICK_REJECTED     = 0x10000000,
         PFLAG2_PADDING_RESOLVED        = 0x20000000,
         PFLAG2_DRAWABLE_RESOLVED       = 0x40000000,
         PFLAG2_HAS_TRANSIENT_STATE     = 0x80000000,
@@ -296,6 +298,7 @@ private:
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
     bool applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
+    void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
     int mID;
     int mScrollX;
@@ -338,6 +341,15 @@ protected:
     bool areDrawablesResolved();
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
+
+    bool isPaddingOffsetRequired();
+    int getLeftPaddingOffset();
+    int getRightPaddingOffset();
+    int getTopPaddingOffset();
+    int getBottomPaddingOffset();
+    int getFadeTop(bool offsetRequired);
+    int getFadeHeight(bool offsetRequired);
+
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
     virtual bool verifyDrawable(Drawable*)const;
@@ -351,7 +363,6 @@ protected:
     virtual void onVisibilityChanged(View& changedView,int visibility);
     virtual void onAttached();
     virtual void onDettached();
-    virtual Canvas*getCanvas();
     virtual void  onMeasure(int widthMeasureSpec, int heightMeasureSpec);
     virtual void dispatchDraw(Canvas&);
     virtual void onFocusChanged(bool,int,const RECT*);
@@ -415,9 +426,11 @@ public:
     View(Context*ctx,const AttributeSet&attrs);
     View(int w,int h);
     virtual ~View();
-    virtual void draw(Canvas*canvas=nullptr);
-    virtual void invalidate(const RECT*rect=nullptr);
+    virtual void draw(Canvas&canvas);
+    bool draw(Canvas&canvas,ViewGroup*parent,long drawingTime);
+    void invalidate(const Rect&dirty);
     void invalidate(int l,int t,int w,int h);
+    void invalidate(bool invalidateCache=true);
     bool isDirty()const;
     void postInvalidate();
     void postInvalidateOnAnimation();
@@ -559,6 +572,7 @@ public:
     View& setBackgroundTintList(ColorStateList* tint);
     View& setBackgroundTintMode(int tintMode);
     ColorStateList* getBackgroundTintList()const;
+    virtual int getSolidColor()const;
 
     bool isTemporarilyDetached()const;
     void dispatchFinishTemporaryDetach();

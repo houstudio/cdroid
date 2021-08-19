@@ -63,7 +63,7 @@ void AbsSeekBar::onVisualProgressChanged(int id, float scale){
             // Since we draw translated, the drawable's bounds that it signals
             // for invalidation won't be the actual bounds we want invalidated,
             // so just invalidate this whole view.
-            invalidate(nullptr);
+            invalidate(true);
         }
     }
 }
@@ -146,7 +146,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
     delete mThumb;
     mThumb = thumb;
     applyThumbTint();
-    invalidate(nullptr);
+    invalidate(true);
 
     if (needUpdate) {
         updateThumbAndTrackPos(getWidth(), getHeight());
@@ -193,7 +193,7 @@ void AbsSeekBar::setTickMark(Drawable* tickMark){
         }
         //applyTickMarkTint();
     }
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 Drawable* AbsSeekBar::getTickMark()const{
@@ -202,7 +202,7 @@ Drawable* AbsSeekBar::getTickMark()const{
 
 void AbsSeekBar::setThumbOffset(int thumbOffset){
     mThumbOffset = thumbOffset;
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 int AbsSeekBar::getThumbOffset()const{
@@ -451,7 +451,7 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
         // ProgressBar doesn't know to repaint the thumb drawable
         // in its inactive state when the touch stops (because the
         // value has not apparently changed)
-        invalidate(nullptr);
+        invalidate(true);
         break;
 
     case MotionEvent::ACTION_CANCEL:
@@ -459,7 +459,7 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
             onStopTrackingTouch();
             setPressed(false);
         }
-        invalidate(nullptr); // see above explanation
+        invalidate(true); // see above explanation
         break;
         }
     return true;

@@ -27,6 +27,7 @@ Layout::Layout(int fontSize,int width,int ellipsis){
     mSpacingMult=1.0;
     mSpacingAdd=0;
     mLayout=0;
+    mCaretPos=0;
     mMultiline=false;
     mBreakStrategy=BREAK_STRATEGY_SIMPLE ;
     mEditable=false;
@@ -43,6 +44,7 @@ Layout::Layout(const Layout&l){
     mSpacingMult=l.mSpacingMult;
     mSpacingAdd=l.mSpacingAdd;
     mLayout=l.mLayout;
+    mCaretPos=l.mCaretPos;
     mMultiline=l.mMultiline;
     mBreakStrategy=l.mBreakStrategy;
     mEditable=l.mEditable;

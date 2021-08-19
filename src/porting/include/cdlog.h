@@ -65,11 +65,11 @@ public:
 #endif
 
 #ifndef DEBUG
-    #define LOGV
-    #define LOGD
-    #define LOGV_IF
-    #define LOGD_IF
-    #define LOG_DUMP
+    #define LOGV(...)
+    #define LOGD(...)
+    #define LOGV_IF(x,...)
+    #define LOGD_IF(x,...)
+    #define LOG_DUMP(tag,data,len)
 #else
     #define LOGV(...)  LOG_PRINTF(LOG_VERBOSE,__VA_ARGS__) 
     #define LOGD(...)  LOG_PRINTF(LOG_DEBUG,__VA_ARGS__)

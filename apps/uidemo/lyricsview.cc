@@ -51,7 +51,7 @@ const std::string LyricsView::getGenre()const{
 void LyricsView::setText(const std::string&txt){
     TextView::setText(txt);
     id3.setUrl(txt);
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void LyricsView::onDraw(Canvas& canvas){
@@ -65,10 +65,10 @@ void LyricsView::onDraw(Canvas& canvas){
              y=img->get_height()-getFontSize();
          }
          canvas.set_color(getCurrentTextColor());
-         canvas.draw_text(10,y,getTitle());  y+=26;
+         /*canvas.draw_text(10,y,getTitle());  y+=26;
          canvas.draw_text(10,y,getArtist()); y+=26;
          canvas.draw_text(10,y,getGenre()+std::string("  ")+getYear()); y+=26;
-         canvas.draw_text(10,y,getComment());
+         canvas.draw_text(10,y,getComment());*/
     }
 }
 

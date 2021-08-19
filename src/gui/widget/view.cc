@@ -2,6 +2,7 @@
 #include <widget/viewgroup.h>
 #include <widget/measurespec.h>
 #include <widget/roundscrollbarrenderer.h>
+#include <widget/edgeeffect.h>
 #include <cdlog.h>
 #include <string.h>
 #include <algorithm>
@@ -10,7 +11,6 @@
 #include <app.h>
 #include <color.h>
 #include <systemclock.h>
-
 
 namespace cdroid{
 
@@ -68,12 +68,15 @@ public:
     bool fadeScrollBars;
     ScrollBarDrawable*scrollBar;
 public:
-    ScrollabilityCache(int sz){
-        scrollBarSize=sz;
+    ScrollabilityCache(ViewConfiguration&configuration){//int sz){
+        fadingEdgeLength = configuration.getScaledFadingEdgeLength();
+        scrollBarSize = configuration.getScaledScrollBarSize();
+        scrollBarMinTouchTarget = configuration.getScaledMinScrollbarTouchTarget();
+        scrollBarDefaultDelayBeforeFade = ViewConfiguration::getScrollDefaultDelay();
+        scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
         fadeScrollBars=true;
         scrollBar=nullptr;
         mScrollBarDraggingPos=0;
-        scrollBarMinTouchTarget=8;
         mScrollBarBounds.set(0,0,0,0);
         mScrollBarTouchBounds.set(0,0,0,0);
     }
@@ -151,41 +154,43 @@ View::View(Context*ctx,const AttributeSet&attrs){
 }
 
 void View::initView(){
-    mContext=nullptr;
-    mID=NO_ID;
-    mParent=nullptr;
-    mScrollX=mScrollY=0;
-    mMinWidth=mMinHeight=0;
-    mViewFlags=ENABLED|VISIBLE|FOCUSABLE_AUTO;
+    mID       = NO_ID;
+    mContext  = nullptr;
+    mParent   = nullptr;
+    mScrollX  = mScrollY = 0;
+    mMinWidth = mMinHeight = 0;
+    mOldWidthMeasureSpec=mOldHeightMeasureSpec=INT_MIN;
+    mViewFlags = ENABLED|VISIBLE|FOCUSABLE_AUTO;
     mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 =0;
     mScrollCache=nullptr;
     mRoundScrollbarRenderer=nullptr;
-    mTop=mLeft=mWidth=mHeight=0;
-    mOnClick=mOnLongClick=nullptr;
-    mOnFocusChangeListener=nullptr;
-    mOnScrollChangeListener=nullptr;
-    mOverScrollMode=OVER_SCROLL_NEVER;
-    mVerticalScrollbarPosition=0;
-    mUserPaddingLeft=mUserPaddingRight=0;
-    mUserPaddingTop=mUserPaddingBottom=0;
-    mPrivateFlags=mPrivateFlags3=0;
-    mPrivateFlags|=PFLAG_DRAWABLE_STATE_DIRTY;
+    mTop = mLeft = mWidth = mHeight = 0;
+    mOnClick = mOnLongClick = nullptr;
+    mOnFocusChangeListener  = nullptr;
+    mOnScrollChangeListener = nullptr;
+    mOverScrollMode = OVER_SCROLL_NEVER;
+    mVerticalScrollbarPosition = 0;
+    mUserPaddingLeft = mUserPaddingRight  = 0;
+    mUserPaddingTop  = mUserPaddingBottom = 0;
+    mPrivateFlags = mPrivateFlags3 = 0;
+    mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     mNextFocusLeftId= mNextFocusRightId=NO_ID;
     mNextFocusUpId  = mNextFocusDownId=NO_ID;
     mNextFocusForwardId=mNextClusterForwardId=NO_ID;
-    mBackgroundTint=nullptr;
-    mMeasuredWidth=mMeasuredHeight=0;
-    mLayoutParams=nullptr;
-    mPaddingLeft=mPaddingTop=0;
-    mPaddingRight=mPaddingBottom=0;
+    mBackgroundTint =nullptr;
+    mMeasuredWidth = mMeasuredHeight = 0;
+    mLayoutParams = nullptr;
+    mPaddingLeft  = mPaddingTop = 0;
+    mPaddingRight = mPaddingBottom=0;
     mForegroundInfo=nullptr;
     mScrollIndicatorDrawable=nullptr;
-    mBackground=nullptr;
-    mDefaultFocusHighlight=nullptr;
-    mDefaultFocusHighlightCache=nullptr;
+    mBackground = nullptr;
+    mDefaultFocusHighlight = nullptr;
+    mDefaultFocusHighlightCache = nullptr;
     mDefaultFocusHighlightEnabled=false;
-    mCurrentAnimation=nullptr;
-    mTransformationInfo=nullptr;
+    mCurrentAnimation = nullptr;
+    mTransformationInfo = nullptr;
+    mNestedScrollingParent = nullptr;
     mMatrix=identity_matrix();
 }
 
@@ -446,7 +451,7 @@ void View::scrollTo(int x,int y){
         mScrollX=x;
         mScrollY=y;
         onScrollChanged(mScrollX, mScrollY, oX, oY);
-        invalidate(nullptr);
+        invalidate(true);
         awakenScrollBars(0,true);
     }
 }
@@ -710,7 +715,7 @@ bool View::dispatchNestedPreFling(float velocityX, float velocityY) {
 
 void View::initScrollCache(){
     if(mScrollCache==nullptr)
-        mScrollCache=new ScrollabilityCache(ViewConfiguration::get(mContext).getScaledScrollBarSize());
+        mScrollCache=new ScrollabilityCache(ViewConfiguration::get(mContext));
 }
 
 ScrollabilityCache*View::getScrollCache(){
@@ -1096,7 +1101,7 @@ void View::setScrollIndicators(int indicators,int mask) {
         if (indicators != 0) {
             initializeScrollIndicatorsInternal();
         }
-        invalidate(nullptr);
+        invalidate(true);
     }
 }
 
@@ -1179,7 +1184,7 @@ void View::onDrawScrollBars(Canvas& canvas){
             getVerticalScrollBarBounds(&bounds, nullptr);
             mRoundScrollbarRenderer->drawRoundScrollbars(
                 canvas, (float)mScrollCache->scrollBar->getAlpha() / 255.f, bounds);
-            //if (binvalidate) invalidate(nullptr);
+            //if (binvalidate) invalidate(true);
         }
         // Do not draw horizontal scroll bars for round wearable devices.
     } else if ( drawVerticalScrollBar || drawHorizontalScrollBar) {
@@ -1254,6 +1259,86 @@ void View::setOnScrollChangeListener(OnScrollChangeListener l){
     mOnScrollChangeListener=l;
 }
 
+bool View::isPaddingOffsetRequired() {
+    return false;
+}
+
+/**
+ * Amount by which to extend the left fading region. Called only when
+ * {@link #isPaddingOffsetRequired()} returns true.
+ *
+ * @return The left padding offset in pixels.
+ *
+ * @see #isPaddingOffsetRequired()
+ *
+ * @since CURRENT
+ */
+int View::getLeftPaddingOffset() {
+    return 0;
+}
+
+/**
+ * Amount by which to extend the right fading region. Called only when
+ * {@link #isPaddingOffsetRequired()} returns true.
+ *
+ * @return The right padding offset in pixels.
+ *
+ * @see #isPaddingOffsetRequired()
+ *
+ * @since CURRENT
+ */
+int View::getRightPaddingOffset() {
+    return 0;
+}
+
+/**
+ * Amount by which to extend the top fading region. Called only when
+ * {@link #isPaddingOffsetRequired()} returns true.
+ *
+ * @return The top padding offset in pixels.
+ *
+ * @see #isPaddingOffsetRequired()
+ *
+ * @since CURRENT
+ */
+int View::getTopPaddingOffset() {
+    return 0;
+}
+
+/**
+ * Amount by which to extend the bottom fading region. Called only when
+ * {@link #isPaddingOffsetRequired()} returns true.
+ *
+ * @return The bottom padding offset in pixels.
+ *
+ * @see #isPaddingOffsetRequired()
+ *
+ * @since CURRENT
+ */
+int View::getBottomPaddingOffset() {
+    return 0;
+}
+
+/**
+ * @hide
+ * @param offsetRequired
+ */
+int View::getFadeTop(bool offsetRequired) {
+    int top = mPaddingTop;
+    if (offsetRequired) top += getTopPaddingOffset();
+    return top;
+}
+
+/**
+ * @hide
+ * @param offsetRequired
+ */
+int View::getFadeHeight(bool offsetRequired) {
+    int padding = mPaddingTop;
+    if (offsetRequired) padding += getTopPaddingOffset();
+    return mHeight - mPaddingBottom - padding;
+}
+
 void View::clip(RefPtr<Region>rgn){
     if(mParent){//clip sliblings
         BOOL afterthis=FALSE;
@@ -1284,33 +1369,6 @@ void View::clip(RefPtr<Region>rgn){
         LOGV("%p:%d scrolled:%d,%d aftercliped(%d,%d,%d,%d)at:%d,%d",this,mID,mScrollX,mScrollY,
             rect.x,rect.y,rect.width,rect.height,mLeft,mTop); 
     }
-}
-
-Canvas*View::getCanvas(){
-    if(mParent){
-        Canvas*parentCanvas=getRootView()->getCanvas();
-        RECT rect=getClientRect();
-        RefPtr<Region>rgn=getRootView()->mInvalidRgn->copy();
-        
-        getLocationInWindow((int*)&rect);
-       
-        rgn->intersect((const RectangleInt&)rect);
-        rgn->translate(-rect.x,-rect.y);
-
-        Canvas*c=parentCanvas->subContext(rect.x,rect.y,mWidth,mHeight);
-        clip(rgn);//
-
-        int num=rgn->get_num_rectangles();
-        LOGV_IF(num==0,"%p:%d Location=%d,%d %d,%d num=%d",this,mID,rect.x,rect.y,rect.width,rect.height,num);
-        for(int i=0;i<num;i++){
-            RectangleInt r=rgn->get_rectangle(i);
-            c->rectangle(r.x,r.y,r.width,r.height);
-            LOGV("%p:%d clips(%d,%d %d,%d)",this,mID,r.x,r.y,r.width,r.height);
-        }
-        c->clip();
-        return c;
-    }
-    return nullptr;
 }
 
 void View::dispatchDraw(Canvas&){
@@ -1413,50 +1471,435 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
     return more;
 }
 
-void View::draw(Canvas*context){
-    Transformation* transformToApply=nullptr;
-    if(false==isShown()/*||0==(mPrivateFlags&PFLAG_DIRTY_MASK)*/)
+void View::draw(Canvas&canvas){
+    const int privateFlags = mPrivateFlags;
+    const bool dirtyOpaque = (privateFlags & PFLAG_DIRTY_MASK) == PFLAG_DIRTY_OPAQUE;
+            //&&(mAttachInfo == null || !mAttachInfo.mIgnoreDirtyState);
+    mPrivateFlags = (privateFlags & ~PFLAG_DIRTY_MASK) | PFLAG_DRAWN;
+
+    /*
+     * Draw traversal performs several drawing steps which must be executed
+     * in the appropriate order:
+     *
+     *      1. Draw the background
+     *      2. If necessary, save the canvas' layers to prepare for fading
+     *      3. Draw view's content
+     *      4. Draw children
+     *      5. If necessary, draw the fading edges and restore layers
+     *      6. Draw decorations (scrollbars for instance)
+     */
+
+    // Step 1, draw the background, if needed
+    int saveCount;
+
+    if (!dirtyOpaque) {
+        drawBackground(canvas);
+    }
+
+    // skip step 2 & 5 if possible (common case)
+    bool horizontalEdges = (mViewFlags & FADING_EDGE_HORIZONTAL) != 0;
+    bool verticalEdges = (mViewFlags & FADING_EDGE_VERTICAL) != 0;
+    if (!verticalEdges && !horizontalEdges) {
+        // Step 3, draw the content
+        if (!dirtyOpaque) onDraw(canvas);
+
+        // Step 4, draw the children
+        dispatchDraw(canvas);
+
+        //drawAutofilledHighlight(canvas);
+
+        // Overlay is part of the content and draws beneath Foreground
+        /*if (mOverlay != null && !mOverlay.isEmpty()) {
+            mOverlay.getOverlayView().dispatchDraw(canvas);
+        }*/
+
+        // Step 6, draw decorations (foreground, scrollbars)
+        onDrawForeground(canvas);
+
+        // Step 7, draw the default focus highlight
+        drawDefaultFocusHighlight(canvas);
+
+        //if (debugDraw()) debugDrawFocus(canvas);
+
+        // we're done...
         return;
-    Canvas*canvas=context?context:getCanvas();
-    if(canvas==nullptr)return;
+    }
 
-    canvas->set_antialias(ANTIALIAS_GRAY);
-    Animation* a = getAnimation(); 
-    bool more=false;
+    /*
+     * Here we do the full fledged routine...
+     * (this is an uncommon case where speed matters less,
+     * this is why we repeat some of the tests that have been
+     * done above)
+     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    bool drawTop = false;
+    bool drawBottom = false;
+    bool drawLeft = false;
+    bool drawRight = false;
+
+    float topFadeStrength = 0.0f;
+    float bottomFadeStrength = 0.0f;
+    float leftFadeStrength = 0.0f;
+    float rightFadeStrength = 0.0f;
+
+    // Step 2, save the canvas' layers
+    int paddingLeft = mPaddingLeft;
+
+    bool offsetRequired = isPaddingOffsetRequired();
+    if (offsetRequired) {
+        paddingLeft += getLeftPaddingOffset();
+    }
+
+    int left = mScrollX + paddingLeft;
+    int right = left + mWidth - mPaddingRight - paddingLeft;
+    int top = mScrollY + getFadeTop(offsetRequired);
+    int bottom = top + getFadeHeight(offsetRequired);
+
+    if (offsetRequired) {
+        right += getRightPaddingOffset();
+        bottom += getBottomPaddingOffset();
+    }
+
+    float fadeHeight = getScrollCache()->fadingEdgeLength;
+    int length = (int) fadeHeight;
+
+    // clip the fade length if top and bottom fades overlap
+    // overlapping fades produce odd-looking artifacts
+    if (verticalEdges && (top + length > bottom - length)) {
+        length = (bottom - top) / 2;
+    }
+
+    // also clip horizontal fades if necessary
+    if (horizontalEdges && (left + length > right - length)) {
+        length = (right - left) / 2;
+    }
+
+    if (verticalEdges) {
+        topFadeStrength = std::max(0.0f, std::min(1.0f, getTopFadingEdgeStrength()));
+        drawTop = topFadeStrength * fadeHeight > 1.0f;
+        bottomFadeStrength = std::max(0.0f, std::min(1.0f, getBottomFadingEdgeStrength()));
+        drawBottom = bottomFadeStrength * fadeHeight > 1.0f;
+    }
+
+    if (horizontalEdges) {
+        leftFadeStrength = std::max(0.0f, std::min(1.0f, getLeftFadingEdgeStrength()));
+        drawLeft = leftFadeStrength * fadeHeight > 1.0f;
+        rightFadeStrength = std::max(0.0f, std::min(1.0f, getRightFadingEdgeStrength()));
+        drawRight = rightFadeStrength * fadeHeight > 1.0f;
+    }   
+
+    // Step 3, draw the content
+    if (!dirtyOpaque) onDraw(canvas);
+
+    // Step 4, draw the children
+    dispatchDraw(canvas);
+
+    // Step 5, draw the fade effect and restore layers
+    /*if (drawTop) {
+        matrix.setScale(1, fadeHeight * topFadeStrength);
+        matrix.postTranslate(left, top);
+        fade.setLocalMatrix(matrix);
+        p.setShader(fade);
+        canvas.drawRect(left, top, right, top + length, p);
+    }
+
+    if (drawBottom) {
+        matrix.setScale(1, fadeHeight * bottomFadeStrength);
+        matrix.postRotate(180);
+        matrix.postTranslate(left, bottom);
+        fade.setLocalMatrix(matrix);
+        p.setShader(fade);
+        canvas.drawRect(left, bottom - length, right, bottom, p);
+    }
+
+    if (drawLeft) {
+        matrix.setScale(1, fadeHeight * leftFadeStrength);
+        matrix.postRotate(-90);
+        matrix.postTranslate(left, top);
+        fade.setLocalMatrix(matrix);
+        p.setShader(fade);
+        canvas.drawRect(left, top, left + length, bottom, p);
+    }
+
+    if (drawRight) {
+        matrix.setScale(1, fadeHeight * rightFadeStrength);
+        matrix.postRotate(90);
+        matrix.postTranslate(right, top);
+        fade.setLocalMatrix(matrix);
+        p.setShader(fade);
+        canvas.drawRect(right - length, top, right, bottom, p);
+    }*/
+    // Step 6, draw decorations (foreground, scrollbars)
+    onDrawForeground(canvas);
+    //if (debugDraw()) debugDrawFocus(canvas);
+}
+
+bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
+    bool hardwareAcceleratedCanvas=false;
+    bool drawingWithRenderNode=false;
+    bool more = false;
+    bool childHasIdentityMatrix = hasIdentityMatrix();
+    int parentFlags = parent->mGroupFlags;
+
+    if ((parentFlags & ViewGroup::FLAG_CLEAR_TRANSFORMATION) != 0) {
+        parent->getChildTransformation()->clear();
+        parent->mGroupFlags &= ~ViewGroup::FLAG_CLEAR_TRANSFORMATION;
+    }
+
+    Transformation* transformToApply = nullptr;
     bool concatMatrix = false;
-    if(a){
-        more=applyLegacyAnimation(mParent, /*drawingTime*/SystemClock::uptimeMillis(), a, /*scalingRequired*/true);
-        concatMatrix = a->willChangeTransformationMatrix(); 
-        if (concatMatrix) mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
-        transformToApply = mParent->getChildTransformation();
-        Transformation at;
-        a->getTransformation(SystemClock::uptimeMillis(),at);
-        canvas->transform(*at.getMatrix());
-    }else{
-        mPrivateFlags3 &= ~PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+    bool scalingRequired = false;//mAttachInfo != nullptr && mAttachInfo.mScalingRequired;
+    Animation* a = getAnimation();
+    if (a != nullptr) {
+        more = applyLegacyAnimation(parent, drawingTime, a, scalingRequired);
+        concatMatrix = a->willChangeTransformationMatrix();
+        if (concatMatrix) {
+            mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+        }
+        transformToApply = parent->getChildTransformation();
+    } else {
+        if ((mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_TRANSFORM) != 0) {
+            // No longer animating: clear out old animation matrix
+            //mRenderNode.setAnimationMatrix(nullptr);
+            mPrivateFlags3 &= ~PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+        }
+        if (!drawingWithRenderNode
+                && (parentFlags & ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+            Transformation* t = parent->getChildTransformation();
+            bool hasTransform = parent->getChildStaticTransformation(this, t);
+            if (hasTransform) {
+                int transformType = t->getTransformationType();
+                transformToApply = transformType != Transformation::TYPE_IDENTITY ? t : nullptr;
+                concatMatrix = (transformType & Transformation::TYPE_MATRIX) != 0;
+            }
+        }
     }
-    if(transformToApply|| (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)){
-        //TODO:    
-    } 
-    drawBackground(*canvas);
-    if(mScrollX|mScrollY) canvas->translate(-mScrollX,-mScrollY);
-    onDraw(*canvas);
-    dispatchDraw(*canvas);//draw children
-    onDrawForeground(*canvas);
-    // Step 7, draw the default focus highlight
-    drawDefaultFocusHighlight(*canvas);
-    if(mScrollX|mScrollY) canvas->translate(mScrollX,mScrollY);
 
+    concatMatrix |= !childHasIdentityMatrix;
 
-    mPrivateFlags&=~PFLAG_DIRTY_MASK;
-    if(mParent&&context==nullptr)delete canvas;
-    if(getRootView()==this){
-        auto re=((ViewGroup*)this)->mInvalidRgn->get_extents();
-        LOGV("clip2dirty(%d,%d %d,%d)",re.x,re.y,re.width,re.height);
-        canvas->clip2dirty();
-        getRootView()->mInvalidRgn->subtract(getRootView()->mInvalidRgn);
+    // Sets the flag as early as possible to allow draw() implementations
+    // to call invalidate() successfully when doing animations
+    mPrivateFlags |= PFLAG_DRAWN;
+
+    if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
+                    ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
+            false/*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW)*/ &&
+            (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
+        mPrivateFlags2 |= PFLAG2_VIEW_QUICK_REJECTED;
+        return more;
     }
-    if(more)postInvalidate();
+    mPrivateFlags2 &= ~PFLAG2_VIEW_QUICK_REJECTED;
+
+    if (hardwareAcceleratedCanvas) {
+        // Clear INVALIDATED flag to allow invalidation to occur during rendering, but
+        // retain the flag's value temporarily in the mRecreateDisplayList flag
+        //mRecreateDisplayList = (mPrivateFlags & PFLAG_INVALIDATED) != 0;
+        mPrivateFlags &= ~PFLAG_INVALIDATED;
+    }
+
+    RefPtr<ImageSurface> cache = nullptr;
+    /*RenderNode renderNode = nullptr;
+    int layerType = getLayerType(); // TODO: signify cache state with just 'cache' local
+    if (layerType == LAYER_TYPE_SOFTWARE || !drawingWithRenderNode) {
+         if (layerType != LAYER_TYPE_NONE) {
+             // If not drawing with RenderNode, treat HW layers as SW
+             layerType = LAYER_TYPE_SOFTWARE;
+             buildDrawingCache(true);
+        }
+        cache = getDrawingCache(true);
+    }
+
+    if (drawingWithRenderNode) {
+        // Delay getting the display list until animation-driven alpha values are
+        // set up and possibly passed on to the view
+        renderNode = updateDisplayListIfDirty();
+        if (!renderNode.isValid()) {
+            // Uncommon, but possible. If a view is removed from the hierarchy during the call
+            // to getDisplayList(), the display list will be marked invalid and we should not
+            // try to use it again.
+            renderNode = nullptr;
+            drawingWithRenderNode = false;
+        }
+    }*/
+    int sx = 0;
+    int sy = 0;
+    if (!drawingWithRenderNode) {
+        computeScroll();
+        sx = mScrollX;
+        sy = mScrollY;
+    }
+
+    bool drawingWithDrawingCache =cache != nullptr && !drawingWithRenderNode;
+    bool offsetForScroll = cache == nullptr && !drawingWithRenderNode;
+
+    int restoreTo =0 ;
+    if (!drawingWithRenderNode || transformToApply != nullptr) {
+        canvas.save();restoreTo++;
+    }
+    if (offsetForScroll) {
+        canvas.translate(mLeft - sx, mTop - sy);
+    } else {
+        if (!drawingWithRenderNode) {
+            canvas.translate(mLeft, mTop);
+        }
+        if (scalingRequired) {
+            if (drawingWithRenderNode) {
+                // TODO: Might not need this if we put everything inside the DL
+                canvas.save();restoreTo++;
+            }
+            // mAttachInfo cannot be null, otherwise scalingRequired == false
+            //float scale = 1.0f / mAttachInfo.mApplicationScale;
+            //canvas.scale(scale, scale);
+        }
+    }
+
+    float alpha = getAlpha();//drawingWithRenderNode ? 1 : (getAlpha() * getTransitionAlpha());
+    if (transformToApply != nullptr || alpha < 1 || !hasIdentityMatrix()
+            || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
+        if (transformToApply != nullptr || !childHasIdentityMatrix) {
+            int transX = 0;
+            int transY = 0;
+
+            if (offsetForScroll) {
+                transX = -sx;
+                transY = -sy;
+            }
+
+            if (transformToApply != nullptr) {
+                if (concatMatrix) {
+                    if (drawingWithRenderNode) {
+                        //renderNode.setAnimationMatrix(transformToApply.getMatrix());
+                    } else {
+                        // Undo the scroll translation, apply the transformation matrix,
+                        // then redo the scroll translate to get the correct result.
+                        canvas.translate(-transX, -transY);
+                        //canvas.concat(transformToApply.getMatrix());
+                        canvas.translate(transX, transY);
+                    }
+                    parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
+                }
+
+                float transformAlpha = transformToApply->getAlpha();
+                if (transformAlpha < 1) {
+                    alpha *= transformAlpha;
+                    parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
+                }
+            }
+
+            if (!childHasIdentityMatrix && !drawingWithRenderNode) {
+                canvas.translate(-transX, -transY);
+                //canvas.concat(getMatrix());
+                canvas.translate(transX, transY);
+            }
+        }
+
+        // Deal with alpha if it is or used to be <1
+        if (alpha < 1 || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
+            if (alpha < 1) {
+                mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_ALPHA;
+            } else {
+                mPrivateFlags3 &= ~PFLAG3_VIEW_IS_ANIMATING_ALPHA;
+            }
+            parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
+            if (!drawingWithDrawingCache) {
+                int multipliedAlpha = (int) (255 * alpha);
+                if (!onSetAlpha(multipliedAlpha)) {
+                    /*if (drawingWithRenderNode) {
+                        renderNode.setAlpha(alpha * getAlpha() * getTransitionAlpha());
+                    } else if (layerType == LAYER_TYPE_NONE) {
+                        canvas.saveLayerAlpha(sx, sy, sx + getWidth(), sy + getHeight(),multipliedAlpha);
+                    }*/
+                } else {
+                    // Alpha is handled by the child directly, clobber the layer's alpha
+                    mPrivateFlags |= PFLAG_ALPHA_SET;
+                }
+            }
+        }
+    } else if ((mPrivateFlags & PFLAG_ALPHA_SET) == PFLAG_ALPHA_SET) {
+        onSetAlpha(255);
+        mPrivateFlags &= ~PFLAG_ALPHA_SET;
+    }
+
+    if (!drawingWithRenderNode) {
+        // apply clips directly, since RenderNode won't do it for this draw
+        if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) != 0 && cache == nullptr) {
+            if (offsetForScroll) {
+                canvas.rectangle(sx,sy,getWidth(),getHeight());//canvas.clipRect(sx, sy, sx + getWidth(), sy + getHeight());
+            } else {
+                if (!scalingRequired || cache == nullptr) {
+                    canvas.rectangle(0,0,getWidth(), getHeight());//canvas.clipRect(0, 0, getWidth(), getHeight());
+                } else {
+                    //canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight());
+                }
+            }
+            canvas.clip();
+        }
+
+        /*if (mClipBounds != nullptr) {
+            // clip bounds ignore scroll
+            canvas.rectangle(mClipBounds);//clipRect(mClipBounds);
+        }*/
+    }
+
+    if (!drawingWithDrawingCache) {
+        if (drawingWithRenderNode) {
+            mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+            //((DisplayListCanvas) canvas).drawRenderNode(renderNode);
+        } else {
+            // Fast path for layouts with no backgrounds
+            if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
+                mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+                dispatchDraw(canvas);
+            } else {
+                draw(canvas);
+            }
+        }
+    } else if (cache != nullptr) {
+        mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+        /*if (layerType == LAYER_TYPE_NONE || mLayerPaint == nullptr) {
+            // no layer paint, use temporary paint to draw bitmap
+            Paint cachePaint = parent->mCachePaint;
+            if (cachePaint == nullptr) {
+                cachePaint = new Paint();
+                cachePaint.setDither(false);
+                parent->mCachePaint = cachePaint;
+            }
+            cachePaint.setAlpha((int) (alpha * 255));
+            canvas.drawBitmap(cache, 0.0f, 0.0f, cachePaint);
+        } else {
+            // use layer paint to draw the bitmap, merging the two alphas, but also restore
+            int layerPaintAlpha = mLayerPaint.getAlpha();
+            if (alpha < 1) {
+                mLayerPaint.setAlpha((int) (alpha * layerPaintAlpha));
+            }
+            canvas.drawBitmap(cache, 0.0f, 0.0f, mLayerPaint);
+            if (alpha < 1) {
+                mLayerPaint.setAlpha(layerPaintAlpha);
+            }
+        }*/
+        canvas.set_source(cache,0,0);
+        canvas.paint_with_alpha(alpha);
+    }
+    while(restoreTo>0) {
+        canvas.restore();restoreTo--;//ToCount(restoreTo);
+    }
+
+    if (a != nullptr && !more) {
+        if (!hardwareAcceleratedCanvas && !a->getFillAfter()) {
+            onSetAlpha(255);
+        }
+        parent->finishAnimatingView(this, a);
+    }
+
+    if (more && hardwareAcceleratedCanvas) {
+        if (a->hasAlpha() && (mPrivateFlags & PFLAG_ALPHA_SET) == PFLAG_ALPHA_SET) {
+            // alpha animations should cause the child to recreate its display list
+            invalidate(true);
+        }
+    }
+
+    //mRecreateDisplayList = false;
+    return more;
 }
 
 void View::onDraw(Canvas&canvas){
@@ -1487,7 +1930,7 @@ int View::getId() const{
 
 View& View::setHint(const std::string&hint){
     mHint=hint;
-    invalidate(nullptr);
+    invalidate(true);
     return *this;
 }
 const std::string&View::getHint()const{
@@ -1585,7 +2028,7 @@ void View::setTextDirection(int textDirection){
          onRtlPropertiesChanged(getLayoutDirection());
          // Refresh
          requestLayout();
-         invalidate(nullptr);
+         invalidate(true);
     }
 }
 
@@ -1731,7 +2174,7 @@ View& View::setLayoutDirection(int layoutDirection){
         // We need to resolve all RTL properties as they all depend on layout direction
         resolveRtlPropertiesIfNeeded();
         requestLayout();
-        invalidate(nullptr);
+        invalidate(true);
     }
     return *this;
 }
@@ -1758,7 +2201,7 @@ View& View::setBound(const RECT&b){
     mWidth=b.width;
     mHeight=b.height;
     mPrivateFlags |= PFLAG_HAS_BOUNDS;
-    invalidate(nullptr);
+    invalidate(true);
     return *this;
 }
 
@@ -1927,7 +2370,7 @@ void View::drawableStateChanged(){
         const std::vector<int>state=getDrawableState();
         mBackground->setState(state);
     }
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void View::refreshDrawableState(){
@@ -1941,6 +2384,10 @@ const std::vector<int>View::getDrawableState(){
     mDrawableState=onCreateDrawableState();
     mPrivateFlags &= ~PFLAG_DRAWABLE_STATE_DIRTY;
     return mDrawableState;
+}
+
+int View::getSolidColor()const{
+    return 0;
 }
 
 Drawable*View::getBackground()const{
@@ -2067,7 +2514,7 @@ View& View::setForeground(Drawable* foreground){
         mPrivateFlags |= PFLAG_SKIP_DRAW;
     }
     requestLayout();
-    invalidate(nullptr);
+    invalidate(true);
     return *this;
 }
 
@@ -2395,13 +2842,13 @@ View& View::setFlags(int flags,int mask) {
         }
     }
 #endif
-    invalidate(nullptr);
+    invalidate(true);
     return *this;
 }
 
 View& View::clearFlag(int flag) {
     mViewFlags&=(~flag);
-    invalidate(nullptr);
+    invalidate(true);
     return *this;
 }
 
@@ -2412,7 +2859,7 @@ bool View::hasFlag(int flag) const {
 void View::onAttached(){
     onSizeChanged(mWidth,mHeight,-1,-1);
     refreshDrawableState();
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void View::onDettached(){
@@ -2522,7 +2969,7 @@ bool View::isEnabled() const {
 void View::setActivated(bool activated){
      if (((mPrivateFlags & PFLAG_ACTIVATED) != 0) != activated) {
         mPrivateFlags = (mPrivateFlags & ~PFLAG_ACTIVATED) | (activated ? PFLAG_ACTIVATED : 0);
-        invalidate(nullptr);
+        invalidate(true);
         refreshDrawableState();
         dispatchSetActivated(activated);
      }
@@ -2619,60 +3066,58 @@ void View::onVisibilityChanged(View& changedView,int visibility){
 bool View::isDirty()const{
     return (mPrivateFlags&PFLAG_DIRTY_MASK)!=0;
 }
+
+void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){
+    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
+              || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
+              || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
+              || (fullInvalidate /*&& isOpaque() != mLastIsOpaque*/)) {
+        if (fullInvalidate) {
+            //mLastIsOpaque = isOpaque();
+            mPrivateFlags &= ~PFLAG_DRAWN;
+        }
+
+        mPrivateFlags |= PFLAG_DIRTY;
+
+        if (invalidateCache) {
+            mPrivateFlags |= PFLAG_INVALIDATED;
+            mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+        }
+
+        // Propagate the damage rectangle to the parent view.
+        if (mParent && w>0 && h>0) {
+            Rect damage;
+            damage.set(l, t, w, h);
+            mParent->invalidateChild(this,damage);
+        }
+    }
+}
+
 /*param:rect is views logical area,maybe it is large than views'bounds,function invalidate must convert it to bound area*/
-void View::invalidate(const RECT*rect){
-#if 1
-    RECT rcInvalid=rect?*rect:getDrawingRect();
-    ViewGroup*rv=getRootView();
-    if(rv){
-        rv->mPrivateFlags|=PFLAG_DIRTY;
-        rv->offsetDescendantRectToMyCoords(this,rcInvalid);
-        rv->mInvalidRgn->do_union((const RectangleInt&)rcInvalid);
-    }
-    mPrivateFlags|=PFLAG_DIRTY;
-#else
-    RECT rcInvalid=rect?*rect:getClientRect();
-
-    if(rect){
-	RECT rectw=*rect;
-        View*c=this;
-        getLocationInWindow((int*)&rectw);
-        rectw.offset(-mScrollX,-mScrollY);//convert logical coord to visual coord
-        do{
-            RECT rc=c->getClientRect();
-            c->getLocationInWindow((int*)&rc);
-            rectw.intersect(rc);
-            c=c->mParent;
-        }while(c);
-        getRootView()->offsetRectIntoDescendantCoords(this,rectw);
-        rcInvalid.intersect(rectw);
-    }
-    
-    if(rcInvalid.empty())return;
-
-    mPrivateFlags|=PFLAG_DIRTY;
-    //LOGV("%p.%p:%d (%d,%d %d,%d)",mParent,this,mID,rcInvalid.x,rcInvalid.y,rcInvalid.width,rcInvalid.height);
-    if(mParent)mParent->invalidateChild(this,&rcInvalid);
-#endif
+void View::invalidate(const Rect&dirty){
+    invalidateInternal(dirty.x - mScrollX, dirty.y - mScrollY,
+            dirty.width, dirty.height, true, false);
 }
 
 void View::invalidate(int l,int t,int w,int h){
-    Rect rect;
-    rect.set(l,t,w,h);
-    invalidate(&rect);
+    invalidateInternal(l - mScrollX, t - mScrollY, w, h, true, false);
 }
 
+void View::invalidate(bool invalidateCache){
+    invalidateInternal(0, 0, mWidth, mHeight, invalidateCache, true);
+}
+ 
 void View::postInvalidate(){
-    postDelayed([this](){ invalidate(nullptr);},30);
+    postDelayed([this](){ invalidate(true);},30);
 }
 
 void View::postInvalidateOnAnimation(){
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 void View::invalidateDrawable(Drawable& who){
     if(verifyDrawable(&who))
-        invalidate(nullptr);
+        invalidate(true);
 }
 
 void View::scheduleDrawable(Drawable& who,Runnable what, long when){
@@ -2810,7 +3255,7 @@ void View::clearFocusInternal(View* focused, bool propagate, bool refocus){
          }
 
          onFocusChanged(false, 0, nullptr);
-         invalidate(nullptr);
+         invalidate(true);
          refreshDrawableState();
 
          //if (propagate && (!refocus || !rootViewRequestFocus())) notifyGlobalFocusCleared(this);
@@ -2831,7 +3276,7 @@ void View::handleFocusGainInternal(int direction,const RECT*previouslyFocusedRec
         //if (mAttachInfo != null) mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, this);
 
         onFocusChanged(true, direction, previouslyFocusedRect);
-        invalidate(nullptr);
+        invalidate(true);
         refreshDrawableState();
     }
 }
@@ -3916,7 +4361,7 @@ float View::getScaleX(){
 
 void View::setScaleX(float x){
     mMatrix.xx=x;
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 float View::getScaleY(){
@@ -3925,7 +4370,7 @@ float View::getScaleY(){
 
 void View::setScaleY(float y){
     mMatrix.yy=y;
-    invalidate(nullptr);
+    invalidate(true);
 }
 
 float View::getPivotX(){

@@ -132,7 +132,7 @@ TEST_F(WINDOW,multilayer){
     w->setId(1);
     v2->setOnClickListener([&](View&v){
         w->scrollBy(10,10);
-        v1->invalidate(nullptr);
+        v1->invalidate(true);
     });
     app.exec();
 }
@@ -144,7 +144,7 @@ TEST_F(WINDOW,memleak){
    Button*btn=new Button("test",200,100);
    w->addView(btn);
    for(int i=0;i<1000000;i++){
-       btn->invalidate(nullptr);
+       btn->invalidate(true);
    }
 }
 TEST_F(WINDOW,LinearLayout){

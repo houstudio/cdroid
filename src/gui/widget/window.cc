@@ -65,17 +65,19 @@ const std::string Window::getText()const{
 void Window::setRegion(const RefPtr<Region>&rgn){
     mWindowRgn=rgn->copy();
 }
-void Window::invalidate(const RECT*r){
-    RECT rc=r?*r:getClientRect();
-    mPrivateFlags|=PFLAG_DIRTY;
-    mInvalidRgn->do_union((const RectangleInt&)rc);
+
+void Window::draw(){
+    getCanvas();
+    ViewGroup::draw(*canvas);
+    canvas->invalidate(mInvalidRgn);
+    mInvalidRgn->subtract(mInvalidRgn); 
 }
 
 void Window::show(){
     if(getVisibility()!=VISIBLE){
         setVisibility(VISIBLE);
         if(canvas==nullptr)
-            invalidate(nullptr);
+            invalidate(true);
         WindowManager::getInstance().resetVisibleRegion();
         if(canvas){
             GraphDevice::getInstance().add(canvas);
@@ -116,6 +118,7 @@ View& Window::setSize(int cx,int cy){
 void Window::onFinishInflate(){
     requestLayout(); 
 }
+
 Canvas*Window::getCanvas(){
 //for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
     if((canvas==nullptr)&&(getVisibility()==VISIBLE)){

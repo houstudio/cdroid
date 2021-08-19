@@ -44,12 +44,14 @@ public:
         LAYOUT_MOVE_SELECTION =6
     };
     class LayoutParams:public ViewGroup::LayoutParams{
+    private:
+        void init();
     public:
         int viewType;
         bool recycledHeaderFooter;
         bool forceAdd;
         int scrappedFromPosition;
-        long itemId = -1;
+        long itemId ;
         bool isEnabled;
         LayoutParams();
         LayoutParams(const ViewGroup::LayoutParams&);

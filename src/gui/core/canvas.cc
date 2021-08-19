@@ -19,7 +19,6 @@ namespace cdroid{
 
 Canvas::Canvas(GraphDevice*_dev,HANDLE surface)
    :Canvas(_dev,CDroidSurface::create(surface,false)){
-    //nglGetSurfaceInfo(surface,(UINT*)&screenRect.width,(UINT*)&screenRect.height,nullptr);
 }
 
 Canvas::Canvas(GraphDevice*_dev,const RefPtr<Surface>& target)
@@ -29,34 +28,17 @@ Canvas::Canvas(GraphDevice*_dev,const RefPtr<Surface>& target)
     mInvalidRgn=Region::create();
 }
 
-Canvas*Canvas::subContext(int x,int y,int w,int h){
-    auto suf=Surface::create(get_target(),x,y,w,h);
-    auto ctx=new Canvas(dev,suf);
-    ctx->mLeft=x;
-    ctx->mTop=y;
-    return ctx;
-}
-
-void Canvas::clip2dirty(){
-    std::vector<Cairo::Rectangle>clipsf;   //float regions
-    std::vector<Cairo::RectangleInt>clipsi;//integer regions
-    copy_clip_rectangle_list(clipsf);
-    for(auto c:clipsf){
-        RectangleInt r={(int)c.x,(int)c.y,(int)c.width,(int)c.height};
-        clipsi.push_back(r);
-    }
-    RefPtr<Region>rgn=Region::create(clipsi);
-    mInvalidRgn->do_union(rgn);
-    mInvalidRgn->intersect(mVisibleRgn);
-}
-
 void Canvas::invalidate(const Rect&r){
-   mInvalidRgn->do_union((RectangleInt&)r); 
+    mInvalidRgn->do_union((RectangleInt&)r); 
+    dev->flip();
+}
+void Canvas::invalidate(const RefPtr<Region>&rgn){
+    mInvalidRgn->do_union(rgn);
+    dev->flip();
 }
 int Canvas::blit2Device(HANDLE surface){
-    HANDLE cdsurface=cairo_cdroid_surface_get_surface(get_target()->cobj());
-
     int num=mInvalidRgn->get_num_rectangles();
+    HANDLE cdsurface=cairo_cdroid_surface_get_surface(get_target()->cobj());
     for(int i=0;i<num;i++){
         RectangleInt r=mInvalidRgn->get_rectangle(i);
         LOGV("blit %p (%d,%d-%d,%d)-->%d,%d",this,r.x,r.y,r.width,r.height,mLeft,mTop);
@@ -74,10 +56,12 @@ void Canvas::set_position(int x,int y){
     mTop=y;
     dev->flip();
 }
+
 void Canvas::set_layer(int l,RefPtr<Region>rgn){
     mLayer=l;
     mVisibleRgn=rgn;
 }
+
 void Canvas::set_color(UINT color){
     set_color((color>>16)&0xFF,(color>>8)&0xFF,color&0xFF,(color>>24));
 }
@@ -110,19 +94,6 @@ void Canvas::rotate(float degrees,float px,float py){
             sdot(fsin,py,1-fcos,px),   sdot(-fsin,px,1-fcos,py));
 #endif
     transform(mtx);
-}
-
-void Canvas::roundrect(int x,int y,int width,int height,int radius){
-    if(0==radius)
-        Context::rectangle(x,y,width,height);
-    else{
-        double from_degre = M_PI/180;
-        arc(x+width-radius, y+height-radius, radius, 0*from_degre, 90*from_degre);
-        arc(x+radius, y+height-radius, radius, 90*from_degre, 180*from_degre);
-        arc(x+radius, y+radius, radius, 180*from_degre, 270*from_degre);
-        arc(x+width-radius, y+radius, radius, 270*from_degre, 360*from_degre);
-        close_path();
-    }
 }
 
 void Canvas::get_text_size(const std::string&text,int*width,int *height){
@@ -171,7 +142,7 @@ void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment
     total_height+=extents.height;
     lines.push_back(line);
     total_height=lines.size()*ftext.height;
-    
+
     if((text_alignment&DT_MULTILINE)==0){
         get_text_extents(lines[0],te);
         y=rect.y;
@@ -207,14 +178,6 @@ void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment
         }
     }
 }
-
-void Canvas::draw_text(int x,int y,const std::string& text){
-    FontExtents fe;
-    get_font_extents(fe);
-    move_to(x,y-fe.descent);//-fe.descent);
-    show_text(text);
-}
-
 void Canvas::draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT*srcRect){
     Rect src=srcRect==nullptr?Rect::Make(0,0,img->get_width(),img->get_height()):*srcRect;
     
