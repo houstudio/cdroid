@@ -330,7 +330,7 @@ Animation* View::getAnimation() {
 void View::startAnimation(Animation* animation) {
     animation->setStartTime(Animation::START_ON_FIRST_FRAME);
     setAnimation(animation);
-    //invalidateParentCaches();
+    invalidateParentCaches();
     invalidate();
 }
 
@@ -2188,23 +2188,6 @@ bool View::isLayoutRtl()const{
     return getLayoutDirection() == LAYOUT_DIRECTION_RTL;
 }
 
-View& View::setBound(const RECT&b){
-    if(mParent){
-        RECT ro=getBound();
-        mParent->invalidate(&ro);
-        mParent->invalidate(&b);
-    }
-    if( (b.width!=mWidth) || (b.height!=mHeight) )
-        onSizeChanged(b.width,b.height,mWidth,mHeight);
-    mLeft=b.x;
-    mTop=b.y;
-    mWidth=b.width;
-    mHeight=b.height;
-    mPrivateFlags |= PFLAG_HAS_BOUNDS;
-    invalidate(true);
-    return *this;
-}
-
 bool View::setFrame(int left,int top,int width,int height){
     bool changed = false;
     if (mLeft != left || mWidth != width || mTop != top || mHeight != height) {
@@ -2220,7 +2203,7 @@ bool View::setFrame(int left,int top,int width,int height){
         bool sizeChanged = (newWidth != oldWidth) || (newHeight != oldHeight);
 
         // Invalidate our old position
-        invalidate();
+        invalidate(sizeChanged);
 
         mLeft = left;
         mTop = top;
@@ -2242,10 +2225,10 @@ bool View::setFrame(int left,int top,int width,int height){
             // before this call to setFrame came in, thereby clearing
             // the DRAWN bit.
             mPrivateFlags |= PFLAG_DRAWN;
-            invalidate();//sizeChanged);
+            invalidate(sizeChanged);
             // parent display list may need to be recreated based on a change in the bounds
             // of any child
-            //invalidateParentCaches();
+            invalidateParentCaches();
         }
 
         // Reset drawn bit to original value (invalidate turns it off)
@@ -2677,15 +2660,12 @@ View& View::setFlags(int flags,int mask) {
                 && ((privateFlags & PFLAG_FOCUSED) == 0)) {
             /* Tell the view system that we are now available to take focus
              * if no one else already has it.*/
-            /*if (mParent != null) {
-                ViewRootImpl viewRootImpl = getViewRootImpl();
-                if (!sAutoFocusableOffUIThreadWontNotifyParents
-                        || focusableChangedByAuto == 0
-                        || viewRootImpl == null
-                        || viewRootImpl.mThread == Thread.currentThread()) {
+            if (mParent) {
+                //ViewRootImpl viewRootImpl = getViewRootImpl();
+                if (//!sAutoFocusableOffUIThreadWontNotifyParents||
+                         focusableChangedByAuto == 0)
                     shouldNotifyFocusableAvailable = canTakeFocus();
-                }
-            }*/
+            }
         }
     }
 
@@ -2696,7 +2676,7 @@ View& View::setFlags(int flags,int mask) {
              * it was not visible. Marking it drawn ensures that the invalidation will
              * go through.*/
             mPrivateFlags |= PFLAG_DRAWN;
-            invalidate();
+            invalidate(true);
 
             //needGlobalAttributesUpdate(true);
 
@@ -2733,7 +2713,7 @@ View& View::setFlags(int flags,int mask) {
                 mParent->clearFocusedInCluster();
             }
             //clearAccessibilityFocus();
-            //destroyDrawingCache();
+            destroyDrawingCache();
             // GONE views noop invalidation, so invalidate the parent
             if(mParent)mParent->invalidate();
             // Mark the view drawn to ensure that it gets invalidated properly the next
@@ -2789,7 +2769,7 @@ View& View::setFlags(int flags,int mask) {
         }
     }
 
-    /*if ((changed & WILL_NOT_CACHE_DRAWING) != 0) destroyDrawingCache();
+    if ((changed & WILL_NOT_CACHE_DRAWING) != 0) destroyDrawingCache();
 
     if ((changed & DRAWING_CACHE_ENABLED) != 0) {
         destroyDrawingCache();
@@ -2800,7 +2780,7 @@ View& View::setFlags(int flags,int mask) {
     if ((changed & DRAWING_CACHE_QUALITY_MASK) != 0) {
         destroyDrawingCache();
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
-    }*/
+    }
 
     if ((changed & DRAW_MASK) != 0) {
         if ((mViewFlags & WILL_NOT_DRAW) != 0) {
@@ -3067,7 +3047,25 @@ bool View::isDirty()const{
     return (mPrivateFlags&PFLAG_DIRTY_MASK)!=0;
 }
 
+bool View::skipInvalidate()const{
+    return (mViewFlags & VISIBILITY_MASK) != VISIBLE && mCurrentAnimation == nullptr;
+           //&& (!mParent->isViewTransitioning(this));
+}
+
+RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){
+}
+
+void View::destroyDrawingCache(){
+}
+
+void View::invalidateParentCaches(){
+    if(mParent)mParent->mPrivateFlags |= PFLAG_INVALIDATED;
+}
+
 void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){
+
+    if (skipInvalidate())   return;
+
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
@@ -3196,7 +3194,7 @@ void View::clearParentsWantFocus(){
 
 bool View::requestFocusNoSearch(int direction,const RECT*previouslyFocusedRect) {
     // need to be focusable
-    //if (!canTakeFocus())  return false;
+    if (!canTakeFocus())  return false;
     // need to be focusable in touch mode if in touch mode
     if (isInTouchMode() && (FOCUSABLE_IN_TOUCH_MODE != (mViewFlags & FOCUSABLE_IN_TOUCH_MODE))) {
         return false;

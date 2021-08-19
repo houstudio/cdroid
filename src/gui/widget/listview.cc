@@ -24,6 +24,8 @@ ListView::ListView(int w,int h):AbsListView(w,h) {
 ListView::~ListView(){
     delete mDivider;
     delete mDataSetObserver;
+    delete mOverScrollHeader;
+    delete mOverScrollFooter;
     for_each(mHeaderViewInfos.begin(),mHeaderViewInfos.end(),[](const FixedViewInfo*f){delete f;});
     for_each(mFooterViewInfos.begin(),mFooterViewInfos.end(),[](const FixedViewInfo*f){delete f;});
     mHeaderViewInfos.clear();

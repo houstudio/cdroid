@@ -10,7 +10,7 @@ protected:
     TextView*tv3;
 public:
     TestWindow(int w,int h);
-    bool onMessage(DWORD msg,DWORD wp,ULONG lp);
+    void doFresh();
 };
 
 TestWindow::TestWindow(int w,int h):Window(0,0,w,h){
@@ -66,28 +66,23 @@ TestWindow::TestWindow(int w,int h):Window(0,0,w,h){
     requestLayout();
 }
 
-bool TestWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
-    switch(msg){
-    case WM_TIMER:{
-        srand(time(nullptr));
-        tv2->getBackground()->setLevel(rand()%10000);
-        int lvl=tv2->getCompoundDrawables()[0]->getLevel();
-        tv2->getCompoundDrawables()[0]->setLevel((lvl+200)%10000);
+void TestWindow::doFresh(){
+    srand(time(nullptr));
+    tv2->getBackground()->setLevel(rand()%10000);
+    int lvl=tv2->getCompoundDrawables()[0]->getLevel();
+    tv2->getCompoundDrawables()[0]->setLevel((lvl+200)%10000);
 
-        lvl=tv3->getForeground()->getLevel();
-        if(flag>0){lvl+=200;if(lvl>=10000)flag=-1;}
-        if(flag<0){lvl-=200;if(lvl<=0)flag=1;}
-        tv3->getForeground()->setLevel(lvl);
-        //sendMessage(msg,wp,lp,200);
-    }break;
-    default:return true;//Window::onMessage(msg,wp,lp);
-    }
+    lvl=tv3->getForeground()->getLevel();
+    if(flag>0){lvl+=200;if(lvl>=10000)flag=-1;}
+    if(flag<0){lvl-=200;if(lvl<=0)flag=1;}
+    tv3->getForeground()->setLevel(lvl);
 }
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new TestWindow(1080,720);
-    //w->sendMessage(View::WM_TIMER,0,0,500);
+    //Runnable=std::bind(TestWindow::doFresh,(TestWindow*)w);
+    //w->postDelayed(run,500);
     app.exec();
     return 0;
 }

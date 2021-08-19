@@ -785,7 +785,10 @@ void ViewGroup::cleanupLayoutState(View* child)const{
 }
 
 View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout){
-    if (!checkLayoutParams(params))params = generateLayoutParams(params);
+    if (!checkLayoutParams(params)){
+        LOGD("checkLayoutParams(%p) failed",params);
+        params = generateLayoutParams(params);
+    }
 
     if(child->mParent){
         throw "The specified child already has a parent. you must call removeView() on the child's parent first.";
@@ -1240,7 +1243,11 @@ void ViewGroup::invalidateChild(View*child,RECT&dirty){
     const bool isOpaque = child->isOpaque() && !drawAnimation ;
                     //&& child->getAnimation() == nullptr && childMatrix.isIdentity();
     int opaqueFlag = isOpaque ? PFLAG_DIRTY_OPAQUE : PFLAG_DIRTY;
-
+    //if (child->mLayerType != LAYER_TYPE_NONE)
+    {
+        mPrivateFlags |= PFLAG_INVALIDATED;
+        mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+    }
     ViewGroup*parent=this;
     do {
         View* view = parent;
@@ -1278,12 +1285,14 @@ void ViewGroup::invalidateChild(View*child,RECT&dirty){
                         (int) Math.ceil(boundingRect.bottom));
             }
         }*/
+        //LOGD_IF(dirty.height>=400,"child %p (%d,%d,%d,%d)",child,dirty.x,dirty.y,dirty.width,dirty.height);
         if(parent==nullptr)((ViewGroup*)view)->mInvalidRgn->do_union((const RectangleInt&)dirty);
     } while (parent);
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
-    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {
+    //LOGD_IF(mParent==nullptr,"child (%d,%d,%d,%d) location=%d,%d mPrivateFlags=%x ",dirty.x,dirty.y,dirty.width,dirty.height,location[0],location[1],mPrivateFlags);
+    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE))
                 != FLAG_OPTIMIZE_INVALIDATE) {
@@ -1299,8 +1308,8 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
                 }
             }
 
-            location[CHILD_LEFT_INDEX]= mParent?mLeft:0;
-            location[CHILD_TOP_INDEX] = mParent?mTop:0;
+            location[CHILD_LEFT_INDEX]= mLeft;
+            location[CHILD_TOP_INDEX] = mTop;
         } else {
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
                 dirty.set(0, 0, mWidth, mHeight);
@@ -1308,8 +1317,8 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
                 // in case the dirty rect extends outside the bounds of this container
                 //dirty.union(0, 0, mWidth, mHeight);
             }
-            location[CHILD_LEFT_INDEX] = mParent?mLeft:0;
-            location[CHILD_TOP_INDEX] = mParent?mTop:0;
+            location[CHILD_LEFT_INDEX]= mLeft;
+            location[CHILD_TOP_INDEX] = mTop;
 
             mPrivateFlags &= ~PFLAG_DRAWN;
         }

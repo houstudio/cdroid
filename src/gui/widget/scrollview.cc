@@ -46,11 +46,13 @@ int ScrollView::getMaxScrollAmount() {
 }
 
 void ScrollView::initScrollView() {
-    mScroller = new OverScroller(getContext());;
+    mScroller = new OverScroller(getContext());
     setFocusable(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     mFillViewport=false;
+    mVelocityTracker =nullptr;
+    mEdgeGlowTop = mEdgeGlowBottom =nullptr;
     ViewConfiguration& configuration = ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
@@ -58,6 +60,8 @@ void ScrollView::initScrollView() {
     mOverscrollDistance= configuration.getScaledOverscrollDistance();
     mOverflingDistance = configuration.getScaledOverflingDistance();
     mVerticalScrollFactor= configuration.getScaledVerticalScrollFactor();
+    mScrollOffset[0]   = mScrollOffset[1] = 0;
+    mScrollConsumed[0] = mScrollConsumed[1] = 0;
 }
 
 View& ScrollView::addView(View* child) {

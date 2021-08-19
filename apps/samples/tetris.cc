@@ -11,7 +11,7 @@ static constexpr int BLOCK_SIZE=25; //单个方块单元的边长
 static constexpr int MARGIN=5; //场景边距
 static constexpr int AREA_ROW=25; //场景行数
 static constexpr int AREA_COL=15; //场景列数
-#define WM_REFRESH (View::WM_USER+100)
+#define WM_REFRESH (21100)
 //方向
 enum Direction{
     UP,

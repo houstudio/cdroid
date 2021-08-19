@@ -39,8 +39,13 @@ int main(int argc,const char*argv[]){
     }
     lv->setAdapter(adapter);
     adapter->notifyDataSetChanged();
+    lv->setVerticalScrollBarEnabled(true);    
+    lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
+    lv->setSmoothScrollbarEnabled(true);
     lv->setSelector(new ColorDrawable(0x8800FF00));
     lv->setSelection(2);
+    lv->setDivider(new ColorDrawable(0x80224422));
+    lv->setDividerHeight(1);
     lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);
     });
@@ -54,6 +59,8 @@ int main(int argc,const char*argv[]){
     for(int i=0;i<56;i++){
         adapter2->add("");
     }
+    lv2->setDivider(new ColorDrawable(0x80224422));
+    lv2->setDividerHeight(1);
     lv2->setVerticalScrollBarEnabled(true);
     lv2->setAdapter(adapter2);
     lv2->setSelector(new ColorDrawable(0x88FF0000));

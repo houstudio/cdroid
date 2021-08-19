@@ -36,29 +36,29 @@ namespace cdroid{
 class ViewGroup;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
-    enum{
-        TEXT_ALIGNMENT_INHERIT   = 0,
-        TEXT_ALIGNMENT_GRAVITY   = 1,
-        TEXT_ALIGNMENT_TEXT_START= 2,
-        TEXT_ALIGNMENT_TEXT_END  = 3,
-        TEXT_ALIGNMENT_CENTER    = 4,
-        TEXT_ALIGNMENT_VIEW_START= 5,
-        TEXT_ALIGNMENT_VIEW_END  = 6,
-        TEXT_ALIGNMENT_DEFAULT   = TEXT_ALIGNMENT_GRAVITY,
-        TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_GRAVITY,
-    };
-    enum TextDirection{
-        TEXT_DIRECTION_INHERIT =0,
-        TEXT_DIRECTION_FIRST_STRONG=1,
-        TEXT_DIRECTION_ANY_RTL =2,
-        TEXT_DIRECTION_LTR  =3,
-        TEXT_DIRECTION_RTL =4,
-        TEXT_DIRECTION_LOCALE =5,
-        TEXT_DIRECTION_FIRST_STRONG_LTR =6,
-        TEXT_DIRECTION_FIRST_STRONG_RTL =7,
-        TEXT_DIRECTION_DEFAULT = TEXT_DIRECTION_INHERIT,
-        TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_FIRST_STRONG,
-    }; 
+    //TEXT Alignment
+    constexpr static int TEXT_ALIGNMENT_INHERIT   = 0;
+    constexpr static int TEXT_ALIGNMENT_GRAVITY   = 1;
+    constexpr static int TEXT_ALIGNMENT_TEXT_START= 2;
+    constexpr static int TEXT_ALIGNMENT_TEXT_END  = 3;
+    constexpr static int TEXT_ALIGNMENT_CENTER    = 4;
+    constexpr static int TEXT_ALIGNMENT_VIEW_START= 5;
+    constexpr static int TEXT_ALIGNMENT_VIEW_END  = 6;
+    constexpr static int TEXT_ALIGNMENT_DEFAULT   = TEXT_ALIGNMENT_GRAVITY;
+    constexpr static int TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_GRAVITY;
+
+    //TextDirection{
+    constexpr static int TEXT_DIRECTION_INHERIT =0;
+    constexpr static int TEXT_DIRECTION_FIRST_STRONG=1;
+    constexpr static int TEXT_DIRECTION_ANY_RTL =2;
+    constexpr static int TEXT_DIRECTION_LTR     =3;
+    constexpr static int TEXT_DIRECTION_RTL     =4;
+    constexpr static int TEXT_DIRECTION_LOCALE  =5;
+    constexpr static int TEXT_DIRECTION_FIRST_STRONG_LTR =6;
+    constexpr static int TEXT_DIRECTION_FIRST_STRONG_RTL =7;
+    constexpr static int TEXT_DIRECTION_DEFAULT = TEXT_DIRECTION_INHERIT;
+    constexpr static int TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_FIRST_STRONG;
+
     class TransformationInfo{
     public:
         Matrix mMatrix;
@@ -67,183 +67,175 @@ public:
         float mTransitionAlpha = 1.f;
     };
 protected:
-    enum{//PFLAGS in mPrivateFlags
-        PFLAG_WANTS_FOCUS      = 0x01,
-        PFLAG_FOCUSED          = 0x02,
-        PFLAG_SELECTED         = 0x04,
-        PFLAG_IS_ROOT_NAMESPACE= 0x08,
-        PFLAG_HAS_BOUNDS       = 0x10,
-        PFLAG_DRAWN            = 0x20,
-        PFLAG_DRAW_ANIMATION   = 0x40,
-        PFLAG_SKIP_DRAW        = 0x80,
-        PFLAG_REQUEST_TRANSPARENT_REGIONS=0x200,
-        PFLAG_DRAWABLE_STATE_DIRTY  =0x400,
-        PFLAG_MEASURED_DIMENSION_SET=0x800,
-        PFLAG_FORCE_LAYOUT     =0x1000,
-        PFLAG_LAYOUT_REQUIRED  =0x2000,
+    //PFLAGS in mPrivateFlags
+    constexpr static int PFLAG_WANTS_FOCUS      = 0x01;
+    constexpr static int PFLAG_FOCUSED          = 0x02;
+    constexpr static int PFLAG_SELECTED         = 0x04;
+    constexpr static int PFLAG_IS_ROOT_NAMESPACE= 0x08;
+    constexpr static int PFLAG_HAS_BOUNDS       = 0x10;
+    constexpr static int PFLAG_DRAWN            = 0x20;
+    constexpr static int PFLAG_DRAW_ANIMATION   = 0x40;
+    constexpr static int PFLAG_SKIP_DRAW        = 0x80;
+    constexpr static int PFLAG_REQUEST_TRANSPARENT_REGIONS=0x200;
+    constexpr static int PFLAG_DRAWABLE_STATE_DIRTY  =0x400;
+    constexpr static int PFLAG_MEASURED_DIMENSION_SET=0x800;
+    constexpr static int PFLAG_FORCE_LAYOUT     =0x1000;
+    constexpr static int PFLAG_LAYOUT_REQUIRED  =0x2000;
 
-        PFLAG_PRESSED          = 0x4000,
-        PFLAG_DRAWING_CACHE_VALID= 0x8000,
-        PFLAG_ANIMATION_STARTED= 0x00010000,
-        PFLAG_ALPHA_SET        = 0x00040000,
-        PFLAG_DIRTY            = 0x00200000,
-        PFLAG_DIRTY_OPAQUE     = 0x00400000,
-        PFLAG_DIRTY_MASK       = 0x00600000,
-        PFLAG_OPAQUE_BACKGROUND= 0x00800000,
-        PFLAG_OPAQUE_SCROLLBARS= 0x01000000,
-        PFLAG_OPAQUE_MASK      = 0x01800000,
-        PFLAG_PREPRESSED       = 0x02000000,
-        PFLAG_CANCEL_NEXT_UP_EVENT=0x04000000,
-        PFLAG_HOVERED    = 0x10000000,
-        PFLAG_ACTIVATED  = 0x40000000,
-        PFLAG_INVALIDATED= 0x80000000, 
-    };
-    enum{//PFLAG2
-        PFLAG2_TEXT_DIRECTION_MASK_SHIFT =6,
-        PFLAG2_TEXT_DIRECTION_MASK      = 0x00000007<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
-        PFLAG2_TEXT_DIRECTION_RESOLVED  = 0x00000008 << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
-        PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT=10,
-        PFLAG2_TEXT_DIRECTION_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT,
-        PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_RESOLVED_DEFAULT << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT,
-        PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT=13,
-        PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT = 17,
-        PFLAG2_TEXT_ALIGNMENT_MASK      = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
-        PFLAG2_TEXT_ALIGNMENT_RESOLVED  = 0x00000008 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
-        PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
-        PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_RESOLVED_DEFAULT << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
-        PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000,
-        PFLAG2_VIEW_QUICK_REJECTED     = 0x10000000,
-        PFLAG2_PADDING_RESOLVED        = 0x20000000,
-        PFLAG2_DRAWABLE_RESOLVED       = 0x40000000,
-        PFLAG2_HAS_TRANSIENT_STATE     = 0x80000000,
-        PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT=2,
-        PFLAG2_LAYOUT_DIRECTION_MASK =0x00000003 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
-        PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL =4 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
-        PFLAG2_LAYOUT_DIRECTION_RESOLVED     =8 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
-        PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK= 0x0000000C<< PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
-        ALL_RTL_PROPERTIES_RESOLVED = PFLAG2_LAYOUT_DIRECTION_RESOLVED |
-              PFLAG2_TEXT_DIRECTION_RESOLVED | PFLAG2_TEXT_ALIGNMENT_RESOLVED |
-              PFLAG2_PADDING_RESOLVED | PFLAG2_DRAWABLE_RESOLVED
-    };
-    enum{
-        PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x01,
-        PFLAG3_VIEW_IS_ANIMATING_ALPHA     = 0x2,
-        PFLAG3_IS_LAID_OUT                 = 0x04,
-        PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT= 0x08,
-        PFLAG3_NESTED_SCROLLING_ENABLED    = 0x80,
-        PFLAG3_SCROLL_INDICATOR_TOP    = 0x0100,
-        PFLAG3_SCROLL_INDICATOR_BOTTOM = 0x0200,
-        PFLAG3_SCROLL_INDICATOR_LEFT   = 0x0400,
-        PFLAG3_SCROLL_INDICATOR_RIGHT  = 0x0800,
-        PFLAG3_SCROLL_INDICATOR_START  = 0x1000,
-        PFLAG3_SCROLL_INDICATOR_END    = 0x2000,
+    constexpr static int PFLAG_PRESSED          = 0x4000;
+    constexpr static int PFLAG_DRAWING_CACHE_VALID= 0x8000;
+    constexpr static int PFLAG_ANIMATION_STARTED= 0x00010000;
+    constexpr static int PFLAG_ALPHA_SET        = 0x00040000;
+    constexpr static int PFLAG_DIRTY            = 0x00200000;
+    constexpr static int PFLAG_DIRTY_OPAQUE     = 0x00400000;
+    constexpr static int PFLAG_DIRTY_MASK       = 0x00600000;
+    constexpr static int PFLAG_OPAQUE_BACKGROUND= 0x00800000;
+    constexpr static int PFLAG_OPAQUE_SCROLLBARS= 0x01000000;
+    constexpr static int PFLAG_OPAQUE_MASK      = 0x01800000;
+    constexpr static int PFLAG_PREPRESSED       = 0x02000000;
+    constexpr static int PFLAG_CANCEL_NEXT_UP_EVENT=0x04000000;
+    constexpr static int PFLAG_HOVERED    = 0x10000000;
+    constexpr static int PFLAG_ACTIVATED  = 0x40000000;
+    constexpr static int PFLAG_INVALIDATED= 0x80000000;
 
-        PFLAG3_CLUSTER                 = 0x08000,
-        PFLAG3_FINGER_DOWN             = 0x20000,
-        PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000,
-        PFLAG3_TEMPORARY_DETACH        = 0x2000000,
-        PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000
-    };
+    //PFLAG2 in mPrivateFlag2
+    constexpr static int PFLAG2_TEXT_DIRECTION_MASK_SHIFT =6;
+    constexpr static int PFLAG2_TEXT_DIRECTION_MASK      = 0x00000007<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
+    constexpr static int PFLAG2_TEXT_DIRECTION_RESOLVED  = 0x00000008 << PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
+    constexpr static int PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT=10;
+    constexpr static int PFLAG2_TEXT_DIRECTION_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT;
+    constexpr static int PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_RESOLVED_DEFAULT << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT;
+    constexpr static int PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT = 13;
+    constexpr static int PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT = 17;
+    constexpr static int PFLAG2_TEXT_ALIGNMENT_MASK          = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT;
+    constexpr static int PFLAG2_TEXT_ALIGNMENT_RESOLVED      = 0x00000008 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT;
+    constexpr static int PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT;
+    constexpr static int PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_RESOLVED_DEFAULT << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT;
+    constexpr static int PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000;
+    constexpr static int PFLAG2_VIEW_QUICK_REJECTED     = 0x10000000;
+    constexpr static int PFLAG2_PADDING_RESOLVED        = 0x20000000;
+    constexpr static int PFLAG2_DRAWABLE_RESOLVED       = 0x40000000;
+    constexpr static int PFLAG2_HAS_TRANSIENT_STATE     = 0x80000000;
+    constexpr static int PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT   = 0x02;
+    constexpr static int PFLAG2_LAYOUT_DIRECTION_MASK         = 0x00000003 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
+    constexpr static int PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL = 4 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
+    constexpr static int PFLAG2_LAYOUT_DIRECTION_RESOLVED     = 8 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
+    constexpr static int PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK= 0x0000000C<< PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
+    constexpr static int ALL_RTL_PROPERTIES_RESOLVED = PFLAG2_LAYOUT_DIRECTION_RESOLVED |  PFLAG2_TEXT_DIRECTION_RESOLVED 
+               | PFLAG2_TEXT_ALIGNMENT_RESOLVED | PFLAG2_PADDING_RESOLVED | PFLAG2_DRAWABLE_RESOLVED;
+    
+    //FLAGS in mPrivateFlags3
+    constexpr static int PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x0001;
+    constexpr static int PFLAG3_VIEW_IS_ANIMATING_ALPHA     = 0x0002;
+    constexpr static int PFLAG3_IS_LAID_OUT                 = 0x0004;
+    constexpr static int PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT= 0x0008;
+    constexpr static int PFLAG3_NESTED_SCROLLING_ENABLED    = 0x0080;
+    constexpr static int PFLAG3_SCROLL_INDICATOR_TOP        = 0x0100;
+    constexpr static int PFLAG3_SCROLL_INDICATOR_BOTTOM     = 0x0200;
+    constexpr static int PFLAG3_SCROLL_INDICATOR_LEFT       = 0x0400;
+    constexpr static int PFLAG3_SCROLL_INDICATOR_RIGHT      = 0x0800;
+    constexpr static int PFLAG3_SCROLL_INDICATOR_START      = 0x1000;
+    constexpr static int PFLAG3_SCROLL_INDICATOR_END        = 0x2000;
+
+    constexpr static int PFLAG3_CLUSTER                 = 0x08000;
+    constexpr static int PFLAG3_FINGER_DOWN             = 0x20000;
+    constexpr static int PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000;
+    constexpr static int PFLAG3_TEMPORARY_DETACH        = 0x2000000;
+    constexpr static int PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000;
 public:
-    enum{
-        ENABLED  =0x00,
-        DISABLED =0x01,
-        ENABLED_MASK=0x1,
+    constexpr static int ENABLED        = 0x00;
+    constexpr static int DISABLED       = 0x01;
+    constexpr static int ENABLED_MASK   = 0x01;
+    constexpr static int VISIBLE        = 0x02;
+    constexpr static int INVISIBLE      = 0x04;
+    constexpr static int GONE           = 0x08;
+    constexpr static int VISIBILITY_MASK= 0x0E;
+    constexpr static int NOT_FOCUSABLE  = 0x00;
+    constexpr static int FOCUSABLE      = 0x10;
+    constexpr static int FOCUSABLE_AUTO = 0x20;
+    constexpr static int FOCUSABLE_MASK = 0x30;
+    constexpr static int FOCUSABLE_IN_TOUCH_MODE=0x40;
 
-        VISIBLE  =0x02,
-        INVISIBLE=0x04,
-        GONE     =0x08,
-        VISIBILITY_MASK=0x0E,
+    constexpr static int WILL_NOT_DRAW  = 0x80;
+    constexpr static int DRAW_MASK      = 0x80;
 
-        NOT_FOCUSABLE=0,
-        FOCUSABLE=0x10,
-        FOCUSABLE_AUTO=0x20,
-        FOCUSABLE_MASK=0x30,
-        FOCUSABLE_IN_TOUCH_MODE=0x40,
+    constexpr static int SCROLLBARS_NONE= 0;
+    constexpr static int SCROLLBARS_HORIZONTAL= 0x100;
+    constexpr static int SCROLLBARS_VERTICAL  = 0x200;
+    constexpr static int SCROLLBARS_MASK      = 0x300;
 
-        WILL_NOT_DRAW=0x80,
-        DRAW_MASK    =0x80,
+    constexpr static int CLIPCHILDREN = 0x400;
+    constexpr static int TRANSPARENT  = 0x800;
 
-        SCROLLBARS_NONE=0,
-        SCROLLBARS_HORIZONTAL=0x100,
-        SCROLLBARS_VERTICAL=0x200,
-        SCROLLBARS_MASK =0x300,
+    constexpr static int FADING_EDGE_NONE =0x000000;
+    constexpr static int FADING_EDGE_HORIZONTAL= 0x1000;
+    constexpr static int FADING_EDGE_VERTICAL  = 0x2000;
+    constexpr static int FADING_EDGE_MASK      = 0x3000;
 
-        CLIPCHILDREN=0x400,
-        TRANSPARENT =0x800,
+    constexpr static int CLICKABLE       = 0x4000;
+    constexpr static int DRAWING_CACHE_ENABLED = 0x8000;
+    constexpr static int WILL_NOT_CACHE_DRAWING = 0x000020000;
+        
+    constexpr static int LONG_CLICKABLE = 0x200000;
+    constexpr static int DUPLICATE_PARENT_STATE=0x10000;
+    constexpr static int CONTEXT_CLICKABLE=0x20000;
+    constexpr static int TOOLTIP =0x40000;
 
-        FADING_EDGE_NONE =0x000000,
-        FADING_EDGE_HORIZONTAL =0x1000,
-        FADING_EDGE_VERTICAL =0x2000,
-        FADING_EDGE_MASK =0x3000,
+    constexpr static int DRAWING_CACHE_QUALITY_LOW  = 0x00080000;
+    constexpr static int DRAWING_CACHE_QUALITY_HIGH = 0x00100000;
+    constexpr static int DRAWING_CACHE_QUALITY_AUTO = 0x00000000;
+    constexpr static int DRAWING_CACHE_QUALITY_MASK = 0x00180000;
 
-        CLICKABLE      = 0x4000,
-        LONG_CLICKABLE =0x8000,
-        DUPLICATE_PARENT_STATE=0x10000,
-        CONTEXT_CLICKABLE=0x20000,
-        TOOLTIP =0x40000,
-        MEASURED_HEIGHT_STATE_SHIFT=16,
-        MEASURED_STATE_TOO_SMALL=0x1000000,
-        MEASURED_SIZE_MASK =0x00ffffff,
-        MEASURED_STATE_MASK=0xff000000
-    };
-    enum {
-        WM_CREATE    =0,
-        WM_ACTIVE    =1,/*wp:0-->Active,1-->Deactive*/
-        WM_DESTROY   =2,//no param
-        WM_INVALIDATE=3,
-        WM_TIMER     =4,//wParam it timerid lParam unused
-        WM_CLICK     =5,//wParam is view's id
-        WM_CHAR      =6,//wparam is unicode char
-        WM_FOCUSRECT =7,//move focus rect wParam(x/y)lParam(width,height)
-        WM_USER      =0x1000,/*the 1st user defined MESSAGE*/
-    };
-    enum FocusDirection{
-        FOCUS_BACKWARD,
-        FOCUS_FORWARD,
-        FOCUS_LEFT,
-        FOCUS_RIGHT,
-        FOCUS_UP,
-        FOCUS_DOWN
-    };
-    enum FocusableMode{
-        FOCUSABLES_ALL=0,
-        FOCUSABLES_TOUCH_MODE=1
-    };
-    enum {
-        LAYOUT_DIRECTION_LTR=0,
-        LAYOUT_DIRECTION_RTL=1,
-        LAYOUT_DIRECTION_INHERIT=2,
-        LAYOUT_DIRECTION_LOCALE=3
-    };
-    enum ScrollBarPosition{
-        SCROLLBAR_POSITION_DEFAULT=0,
-        SCROLLBAR_POSITION_LEFT=1,
-        SCROLLBAR_POSITION_RIGHT=2
-    };
-    enum ScrollIndicators{
-        SCROLL_INDICATORS_NONE        = 0x0000,
-        SCROLL_INDICATORS_PFLAG3_MASK = PFLAG3_SCROLL_INDICATOR_TOP
-             | PFLAG3_SCROLL_INDICATOR_BOTTOM | PFLAG3_SCROLL_INDICATOR_LEFT
-             | PFLAG3_SCROLL_INDICATOR_RIGHT | PFLAG3_SCROLL_INDICATOR_START
-             | PFLAG3_SCROLL_INDICATOR_END,
-        SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT =8,
+    constexpr static int MEASURED_HEIGHT_STATE_SHIFT=16;
+    constexpr static int MEASURED_STATE_TOO_SMALL=0x1000000;
+    constexpr static int MEASURED_SIZE_MASK =0x00ffffff;
+    constexpr static int MEASURED_STATE_MASK=0xff000000;
+
+    //FocusDirection{
+    constexpr static int FOCUS_BACKWARD=0x01;
+    constexpr static int FOCUS_FORWARD =0x02;
+    constexpr static int FOCUS_LEFT    =0x11;
+    constexpr static int FOCUS_UP      =0x21;
+    constexpr static int FOCUS_RIGHT   =0x42;
+    constexpr static int FOCUS_DOWN    =0x82;
+
+    //FocusableMode
+    constexpr static int FOCUSABLES_ALL = 0;
+    constexpr static int FOCUSABLES_TOUCH_MODE=1;
   
-        SCROLL_INDICATOR_TOP    = PFLAG3_SCROLL_INDICATOR_TOP >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
-        SCROLL_INDICATOR_BOTTOM = PFLAG3_SCROLL_INDICATOR_BOTTOM >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
-        SCROLL_INDICATOR_LEFT   = PFLAG3_SCROLL_INDICATOR_LEFT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
-        SCROLL_INDICATOR_RIGHT  = PFLAG3_SCROLL_INDICATOR_RIGHT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
-    };
-    enum{
-        SCROLL_AXIS_NONE      =0,
-        SCROLL_AXIS_HORIZONTAL=1,
-        SCROLL_AXIS_VERTICAL  =2
-    };
-    enum OverScrollMode{
-        OVER_SCROLL_ALWAYS =0,
-        OVER_SCROLL_IF_CONTENT_SCROLLS =1,
-        OVER_SCROLL_NEVER =2
-    };
+    constexpr static int LAYOUT_DIRECTION_UNDEFINED = LayoutDirection::UNDEFINED;
+    constexpr static int LAYOUT_DIRECTION_LTR=LayoutDirection::LTR;
+    constexpr static int LAYOUT_DIRECTION_RTL=LayoutDirection::RTL;
+    constexpr static int LAYOUT_DIRECTION_INHERIT=LayoutDirection::INHERIT;
+    constexpr static int LAYOUT_DIRECTION_LOCALE=LayoutDirection::LOCAL;
+  
+    //ScrollBarPosition
+    constexpr static int SCROLLBAR_POSITION_DEFAULT= 0;
+    constexpr static int SCROLLBAR_POSITION_LEFT   = 1;
+    constexpr static int SCROLLBAR_POSITION_RIGHT  = 2;
+
+    //ScrollIndicators
+    constexpr static int SCROLL_INDICATORS_NONE        = 0x0000;
+    constexpr static int SCROLL_INDICATORS_PFLAG3_MASK = PFLAG3_SCROLL_INDICATOR_TOP | PFLAG3_SCROLL_INDICATOR_BOTTOM 
+             | PFLAG3_SCROLL_INDICATOR_LEFT  | PFLAG3_SCROLL_INDICATOR_RIGHT 
+             | PFLAG3_SCROLL_INDICATOR_START | PFLAG3_SCROLL_INDICATOR_END;
+    constexpr static int SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT =8;
+  
+    constexpr static int SCROLL_INDICATOR_TOP    = PFLAG3_SCROLL_INDICATOR_TOP >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
+    constexpr static int SCROLL_INDICATOR_BOTTOM = PFLAG3_SCROLL_INDICATOR_BOTTOM >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
+    constexpr static int SCROLL_INDICATOR_LEFT   = PFLAG3_SCROLL_INDICATOR_LEFT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
+    constexpr static int SCROLL_INDICATOR_RIGHT  = PFLAG3_SCROLL_INDICATOR_RIGHT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
+
+    //Indicates no axis of view scrolling.
+    constexpr static int SCROLL_AXIS_NONE      =0;
+    constexpr static int SCROLL_AXIS_HORIZONTAL=1;
+    constexpr static int SCROLL_AXIS_VERTICAL  =2;
+
+    //OverScrollMode of view
+    constexpr static int OVER_SCROLL_ALWAYS =0;
+    constexpr static int OVER_SCROLL_IF_CONTENT_SCROLLS =1;
+    constexpr static int OVER_SCROLL_NEVER =2;
+
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
@@ -298,6 +290,7 @@ private:
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
     bool applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
+    bool skipInvalidate()const;
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
     int mID;
@@ -349,6 +342,10 @@ protected:
     int getBottomPaddingOffset();
     int getFadeTop(bool offsetRequired);
     int getFadeHeight(bool offsetRequired);
+
+    void invalidateParentCaches();
+    void destroyDrawingCache();
+    RefPtr<ImageSurface>getDrawingCache(bool autoScale);
 
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
@@ -444,7 +441,6 @@ public:
     bool pointInView(int localX,int localY,int slop);
     const RECT getDrawingRect()const;
     virtual void getFocusedRect(RECT&r);
-    virtual View& setBound(const RECT&);
     virtual View& setPos(int x,int y);
     virtual View& setSize(int x,int y);
     int getX()const;//x pos to screen
