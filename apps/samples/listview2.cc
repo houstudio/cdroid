@@ -31,7 +31,8 @@ int main(int argc,const char*argv[]){
     lv->setPos(10,10);
     lv->setDivider(new ColorDrawable(0x66008800));
     lv->setVerticalScrollBarEnabled(true);
-    lv->setDividerHeight(2);
+    lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
+    lv->setDividerHeight(1);
     for(int i=0;i<56;i++){
         adapter->add("");
     }

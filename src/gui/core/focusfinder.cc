@@ -98,6 +98,8 @@ View* FocusFinder::findNextUserSpecifiedKeyboardNavigationCluster(View* root,Vie
 View* FocusFinder::findNextUserSpecifiedFocus(ViewGroup* root, View* focused, int direction) {
     // check for user specified next focus
     View* userSetNextFocus = focused->findUserSetNextFocus(root, direction);
+    View* cycleCheck = userSetNextFocus;
+    bool cycleStep = true; // we want the first toggle to yield false
     while (userSetNextFocus != nullptr) {
         if (userSetNextFocus->isFocusable()
                 && userSetNextFocus->getVisibility() == View::VISIBLE
@@ -106,6 +108,14 @@ View* FocusFinder::findNextUserSpecifiedFocus(ViewGroup* root, View* focused, in
             return userSetNextFocus;
         }
         userSetNextFocus = userSetNextFocus->findUserSetNextFocus(root, direction);
+        if (cycleStep = !cycleStep) {
+            cycleCheck = cycleCheck->findUserSetNextFocus(root, direction);
+            if (cycleCheck == userSetNextFocus) {
+                // found a cycle, user-specified focus forms a loop and none of the views
+                // are currently focusable.
+                break;
+            }
+        }
     }
     return nullptr;
 }
@@ -358,6 +368,11 @@ bool FocusFinder::beamBeats(int direction,const RECT& source,const RECT& rect1,c
             < majorAxisDistanceToFarEdge(direction, source, rect2));
 }
 
+int FocusFinder::getWeightedDistanceFor(int majorAxisDistance, int minorAxisDistance) {
+    return 13 * majorAxisDistance * majorAxisDistance
+            + minorAxisDistance * minorAxisDistance;
+}
+
 bool FocusFinder::isCandidate(const RECT& srcRect,const RECT& destRect, int direction) {
     switch (direction) {
     case View::FOCUS_LEFT:  return (srcRect.right() > destRect.right() || srcRect.x >= destRect.right()) && srcRect.x > destRect.x;
@@ -386,6 +401,14 @@ bool FocusFinder::isToDirectionOf(int direction,const RECT& src,const RECT&dest)
     case View::FOCUS_DOWN:  return src.bottom() <= dest.y;
     default:return false;
     }
+}
+
+int FocusFinder::majorAxisDistance(int direction,const RECT& source,const RECT& dest) {
+    return std::max(0, majorAxisDistanceRaw(direction, source, dest));
+}
+
+int FocusFinder::majorAxisDistanceToFarEdge(int direction,const RECT& source,const RECT& dest) {
+    return std::max(1, majorAxisDistanceToFarEdgeRaw(direction, source, dest));
 }
 
 int FocusFinder::majorAxisDistanceRaw(int direction,const RECT&source,const RECT&dest) {
@@ -428,7 +451,7 @@ View* FocusFinder::findNearestTouchable(ViewGroup* root, int x, int y, int direc
     root->addTouchables(touchables);
     numTouchables = touchables.size();
 
-    int edgeSlop = 10;//ViewConfiguration.get(root.mContext).getScaledEdgeSlop();
+    int edgeSlop =ViewConfiguration::get(root->getContext()).getScaledEdgeSlop();
 
     RECT closestBounds;
     RECT touchableBounds = mOtherRect;

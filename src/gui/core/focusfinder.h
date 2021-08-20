@@ -28,20 +28,13 @@ protected:
 protected: 
     bool isBetterCandidate(int direction,const RECT& source,const RECT& rect1,const RECT& rect2);
     bool beamBeats(int direction,const RECT& source,const RECT&rect1,const RECT& rect2);
-    int getWeightedDistanceFor(int majorAxisDistance, int minorAxisDistance) {
-        return 13 * majorAxisDistance * majorAxisDistance
-                + minorAxisDistance * minorAxisDistance;
-    }
+    int getWeightedDistanceFor(int majorAxisDistance, int minorAxisDistance);
     bool isCandidate(const RECT& srcRect,const RECT& destRect, int direction);
     bool beamsOverlap(int direction,const RECT& rect1,const RECT& rect2);
     bool isToDirectionOf(int direction,const RECT& src,const RECT& dest);
-    static int majorAxisDistance(int direction,const RECT& source,const RECT& dest) {
-        return std::max(0, majorAxisDistanceRaw(direction, source, dest));
-    }
+    static int majorAxisDistance(int direction,const RECT& source,const RECT& dest);
     static int majorAxisDistanceRaw(int direction,const RECT& source,const RECT& dest);
-    static int majorAxisDistanceToFarEdge(int direction,const RECT& source,const RECT& dest) {
-        return std::max(1, majorAxisDistanceToFarEdgeRaw(direction, source, dest));
-    }
+    static int majorAxisDistanceToFarEdge(int direction,const RECT& source,const RECT& dest);
     static int majorAxisDistanceToFarEdgeRaw(int direction,const RECT&source,const RECT& dest);
     static int minorAxisDistance(int direction,const RECT& source,const RECT& dest);
     View* findNextFocusInRelativeDirection(std::vector<View*>&focusables,ViewGroup*root,View*focused,const RECT*focusedRECT,int direction);

@@ -51,6 +51,7 @@ TEST_F(FOCUS,HALFFOCUS){
         View*tv;
         if(i%2==0)tv=new EditText("EditText_"+std::to_string(i),200,50);
         else tv=new TextView("TextView_"+std::to_string(i),200,50);
+        tv->setFocusable(i%2==0);
         w->addView(tv).setPos(10,i*55);
     }
     std::vector<View*>focus;
@@ -71,7 +72,7 @@ TEST_F(FOCUS,GROUP){
         tv=new EditText("EditText_"+std::to_string(i),200,50);
         l[i%2]->addView(tv);
         tv=new TextView("TextView_"+std::to_string(i),200,50);
-        l[i%2]->addView(tv);
+        l[i%2]->addView(tv).setFocusable(false);
     }
     w->addView(l[0]);
     w->addView(l[1]);
@@ -94,7 +95,7 @@ TEST_F(FOCUS,NAV_1_LAYER){
             w->addView(tv).setId(100+i/2).setPos(10,i*55);
         }else{ 
             tv=new TextView("TextView_"+std::to_string(i),200,50);
-            w->addView(tv).setId(200+i/2).setPos(10,i*55);
+            w->addView(tv).setId(200+i/2).setPos(10,i*55).setFocusable(false);;
         }
     }
     std::vector<View*>focus;
@@ -103,8 +104,8 @@ TEST_F(FOCUS,NAV_1_LAYER){
   
     const int vids[]={100,101,102};
     View*fv=nullptr;
-    for(int i=0;i<6;i++){
-        w->focusSearch(nullptr,View::FOCUS_DOWN);
+    for(int i=0;i<3;i++){
+        fv=w->focusSearch(fv,View::FOCUS_DOWN);
         ASSERT_EQ(vids[i%3],fv->getId()); 
     }
 }
@@ -121,7 +122,7 @@ TEST_F(FOCUS,NAV_2_LAYER){
         tv=new EditText("EditText_"+std::to_string(i),200,50);
         pl->addView(tv).setId(100-1+pl->getChildCount());
         tv=new TextView("TextView_"+std::to_string(i),200,50);
-        pl->addView(tv);
+        pl->addView(tv).setFocusable(false);
     }
     for(int i=0;i<3;i++){
         View*tv;
@@ -129,7 +130,7 @@ TEST_F(FOCUS,NAV_2_LAYER){
         tv=new EditText("EditText_"+std::to_string(i),200,50);
         pl->addView(tv).setId(200-1+pl->getChildCount());
         tv=new TextView("TextView_"+std::to_string(i),200,50);
-        pl->addView(tv);
+        pl->addView(tv).setFocusable(false);
     }
     w->addView(l[0]);
     w->addView(l[1]);
@@ -139,7 +140,7 @@ TEST_F(FOCUS,NAV_2_LAYER){
 
     View*fv=nullptr;
     const int vids[]={100,102,104,200,202,204}; 
-    for(int i=0;i<10;i++){
+    for(int i=0;i<6;i++){
         fv=w->focusSearch(fv,View::FOCUS_FORWARD);
         ASSERT_EQ(fv->getId(),vids[i%6]);
     }

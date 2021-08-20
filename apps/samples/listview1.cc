@@ -62,6 +62,8 @@ int main(int argc,const char*argv[]){
     lv2->setDivider(new ColorDrawable(0x80224422));
     lv2->setDividerHeight(1);
     lv2->setVerticalScrollBarEnabled(true);
+    lv2->setSmoothScrollbarEnabled(true);
+    lv2->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv2->setAdapter(adapter2);
     lv2->setSelector(new ColorDrawable(0x88FF0000));
     lv2->setChoiceMode(ListView::CHOICE_MODE_SINGLE);//MULTIPLE);
