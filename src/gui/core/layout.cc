@@ -16,13 +16,13 @@ namespace cdroid{
 #define COLUMNS_NORMAL  4
 #define COLUMNS_ELLIPSIZE 6
 
-Layout::Layout(int fontSize,int width,int ellipsis){
+Layout::Layout(int fontSize,int width){
     mFontSize=fontSize;
     mWidth=width;
     mLineCount=0;
     mAlignment=ALIGN_LEFT;
-    mColumns=(ellipsis==ELLIPSIS_NONE)?COLUMNS_NORMAL:COLUMNS_ELLIPSIZE;
-    mEllipsis=ellipsis;
+    mColumns=COLUMNS_NORMAL;
+    mEllipsis=ELLIPSIS_NONE;
     mEllipsizedWidth=0;
     mSpacingMult=1.0;
     mSpacingAdd=0;
@@ -75,6 +75,18 @@ void Layout::setEditable(bool b){
 
 bool Layout::isEditable()const{
     return mEditable;
+}
+
+int Layout::getEllipsis()const{
+    return mEllipsis;
+}
+
+void Layout::setEllipsis(int ellipsis){
+    if((mEllipsis!=ellipsis)&&(ellipsis>=ELLIPSIS_NONE)&&(ellipsis<=ELLIPSIS_MARQUEE)){
+        mEllipsis=ellipsis;
+        mColumns=(ellipsis==ELLIPSIS_NONE||ellipsis==ELLIPSIS_MARQUEE)?COLUMNS_NORMAL:COLUMNS_ELLIPSIZE;
+        mLayout++;
+    }
 }
 
 float Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{

@@ -3088,7 +3088,7 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
             damage.set(l, t, w, h);
             mParent->invalidateChild(this,damage);
         }
-        if( (mParent==nullptr) && getRootView()==this){
+        if( getRootView()==this && dynamic_cast<ViewGroup*>(this) &&(w>0)&&(h>0)){
             const RectangleInt damage={l,t,w,h};
             ((ViewGroup*)this)->mInvalidRgn->do_union(damage);
         }

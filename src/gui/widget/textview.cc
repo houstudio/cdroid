@@ -790,8 +790,10 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 std::vector<Drawable*>TextView::getCompoundDrawables(){
-    Drawable**ds=mDrawables->mShowing;
-    std::vector<Drawable*>ret(ds,ds+4);
+    std::vector<Drawable*>ret;
+    for(int i=0;i<4;i++){
+        ret.push_back(mDrawables->mShowing[i]);
+    }
     return ret;
 }
 
@@ -981,6 +983,7 @@ void TextView::setEllipsize(int where){
     if (mEllipsize != where) {
         mEllipsize = where;
         if (mLayout) {
+            mLayout->setEllipsis(where);
             //nullLayouts();
             requestLayout();
             invalidate();

@@ -8,8 +8,8 @@
 * Smooth Scrolling
 * Scrolling with SpringBack Support
 # **Screen Shots**
-![TextView](http://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/textviews.png)
-![ViewPager](http://gitee.com/houstudio/cdroid/raw/master/docs/videos/viewpager.gif)
+![ListView with SpringBack](docs/videos/listview_springback.gif)
+![ListView with Progress](docs/videos/list_with_progress.gif)
 # **UI Components:**
    * View
    * TextView 

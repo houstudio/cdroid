@@ -48,7 +48,7 @@ public:
         BREAK_STRATEGY_HIGH_QUALITY=1,
         BREAK_STRATEGY_BALANCED=2,
     };
-    Layout(int fontSize,int width,int ellipsis=ELLIPSIS_NONE);
+    Layout(int fontSize,int width);
     Layout(const Layout&l);
     void setAlignment(int alignment);
     void setWidth(int width);
@@ -58,6 +58,8 @@ public:
     void setText(const std::wstring&);
     void setEditable(bool);
     bool isEditable()const;
+    int getEllipsis()const;
+    void setEllipsis(int);
     const std::string getString()const;
     std::wstring & getText(); //for edit 
     void setMultiline(bool enabe);

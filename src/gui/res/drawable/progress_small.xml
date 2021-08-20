@@ -18,7 +18,7 @@
 */
 -->
 <animated-rotate xmlns:android="http://schemas.android.com/apk/res/android"
-    drawable="@cdroid:drawable/spinner_black_16"
+    drawable="cdroid:mipmap/spinner_black_16.png"
     pivotX="50%"
     pivotY="50%"
     framesCount="12"
