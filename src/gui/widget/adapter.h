@@ -52,7 +52,7 @@ namespace cdroid{
             if(std::is_class<T>::value)return (void*)&mObjects[position];
             else return  (void*)&mObjects[position];
         }
-        T& getItemAt(int position)const{
+        T& getItemAt(int position){
             return mObjects[position];
         }
         int getCount()const override {
