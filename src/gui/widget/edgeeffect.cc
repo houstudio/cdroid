@@ -138,35 +138,29 @@ int EdgeEffect::getColor()const{
 
 bool EdgeEffect::draw(Canvas& canvas){
     update();
-#if 0//thie will caused crash in new invalidate_api
     float centerX = mBounds.centerX();
     float centerY = mBounds.height - mRadius;
     canvas.save();
-
-    canvas.scale(1.f, std::min(mGlowScaleY, 1.f) * mBaseGlowScale);//, centerX, 0);
 
     float displacement = std::max(0.f, std::min(mDisplacement, 1.f)) - 0.5f;
     float translateX = mBounds.width * displacement / 2;
    
     mColor=0xFFFFFFFF;
-    LOGV("%p mPullDistance=%f,translateX=%f displacement=%f",this,mPullDistance,translateX,displacement); 
-    LOGV("mColor=%x bounds=(%d,%d %d,%d) xyr=%f,%f,%f",mColor,mBounds.x,mBounds.y,mBounds.width,mBounds.height,centerX,centerY,mRadius);
 
     canvas.rectangle(mBounds);
     canvas.clip();
-    //canvas.translate(translateX, 0);
     //mPaint.setAlpha((int) (0xff * mGlowAlpha));
     canvas.set_color(mColor);
-    canvas.arc(centerX, centerY, mRadius,0,M_PI*2.f);
+    canvas.curve_to(mBounds.x,mBounds.y,mBounds.width/2+translateX,mBounds.height*mGlowScaleY,mBounds.width,0);
     canvas.fill();
+
     canvas.restore();
-#endif
+
     bool oneLastFrame = false;
     if (mState == STATE_RECEDE && mGlowScaleY == 0) {
         mState = STATE_IDLE;
         oneLastFrame = true;
     }
-    LOGV("mState=%d/%d/%d",mState,mState,oneLastFrame);
     return mState != STATE_IDLE || oneLastFrame;
 }
 

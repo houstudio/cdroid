@@ -88,7 +88,7 @@ DWORD GFXInit(){
     #endif 
     XInitThreads(); 
     x11Display=XOpenDisplay(NULL);
-    LOGD("x11Display=%p ",x11Display);
+    LOGE_IF(x11Display==NULL,"x11Display init failed,RFB(VNC Viewer) is mandatoried ");
     if(x11Display){
         pthread_t tid;
         XSetWindowAttributes winattrs;

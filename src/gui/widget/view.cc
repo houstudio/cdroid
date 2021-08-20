@@ -3088,6 +3088,10 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
             damage.set(l, t, w, h);
             mParent->invalidateChild(this,damage);
         }
+        if( (mParent==nullptr) && getRootView()==this){
+            const RectangleInt damage={l,t,w,h};
+            ((ViewGroup*)this)->mInvalidRgn->do_union(damage);
+        }
     }
 }
 
@@ -3114,8 +3118,7 @@ void View::postInvalidateOnAnimation(){
 }
 
 void View::invalidateDrawable(Drawable& who){
-    if(verifyDrawable(&who))
-        invalidate(true);
+    if(verifyDrawable(&who)) invalidate(true);
 }
 
 void View::scheduleDrawable(Drawable& who,Runnable what, long when){

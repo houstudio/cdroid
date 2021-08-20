@@ -1227,31 +1227,37 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
         invalidate(true);
     }
 
-    /*if ((flags & FLAG_ANIMATION_DONE) == 0 && (flags & FLAG_NOTIFY_ANIMATION_LISTENER) == 0 &&
-            mLayoutAnimationController.isDone() && !more) {
+    if ((flags & FLAG_ANIMATION_DONE) == 0 && (flags & FLAG_NOTIFY_ANIMATION_LISTENER) == 0 &&
+           /* mLayoutAnimationController.isDone() &&*/ !more) {
         // We want to erase the drawing cache and notify the listener after the
         // next frame is drawn because one extra invalidate() is caused by
         // drawChild() after the animation is over
         mGroupFlags |= FLAG_NOTIFY_ANIMATION_LISTENER;
-        post([](){notifyAnimationListener();});
-    }*/
+        //post([](){notifyAnimationListener();});
+    }
 }
 
 void ViewGroup::invalidateChild(View*child,RECT&dirty){
-    int location[2]={child->mLeft,child->mTop};
+
     const bool drawAnimation = (child->mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0;
-    const bool isOpaque = child->isOpaque() && !drawAnimation ;
-                    //&& child->getAnimation() == nullptr && childMatrix.isIdentity();
+
+    const bool isOpaque = child->isOpaque() && !drawAnimation 
+                 && child->getAnimation() == nullptr ;//&& childMatrix.isIdentity();
+
     int opaqueFlag = isOpaque ? PFLAG_DIRTY_OPAQUE : PFLAG_DIRTY;
+
+    int location[2]={child->mLeft,child->mTop};
+
     //if (child->mLayerType != LAYER_TYPE_NONE)
     {
         mPrivateFlags |= PFLAG_INVALIDATED;
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
     }
-    ViewGroup*parent=this;
-    do {
-        View* view = parent;
 
+    ViewGroup*parent=this;
+    View* view = parent;
+    do {
+        view=parent;
         if (drawAnimation) {
             if (view) {
                  view->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
@@ -1272,8 +1278,7 @@ void ViewGroup::invalidateChild(View*child,RECT&dirty){
         }
 
         parent = parent->invalidateChildInParent(location, dirty);
-        /*if (view) {
-             // Account for transform on current parent
+        /*if (view) { // Account for transform on current parent
             Matrix m = view.getMatrix();
             if (!m.isIdentity()) {
                 RectF boundingRect = attachInfo.mTmpTransformRect;
@@ -1285,14 +1290,14 @@ void ViewGroup::invalidateChild(View*child,RECT&dirty){
                         (int) Math.ceil(boundingRect.bottom));
             }
         }*/
-        //LOGD_IF(dirty.height>=400,"child %p (%d,%d,%d,%d)",child,dirty.x,dirty.y,dirty.width,dirty.height);
-        if(parent==nullptr)((ViewGroup*)view)->mInvalidRgn->do_union((const RectangleInt&)dirty);
     } while (parent);
+
+    //set invalidate region to rootview
+    dynamic_cast<ViewGroup*>(view)->mInvalidRgn->do_union((const RectangleInt&)dirty);
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
-    //LOGD_IF(mParent==nullptr,"child (%d,%d,%d,%d) location=%d,%d mPrivateFlags=%x ",dirty.x,dirty.y,dirty.width,dirty.height,location[0],location[1],mPrivateFlags);
-    if (1||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
+    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE))
                 != FLAG_OPTIMIZE_INVALIDATE) {
