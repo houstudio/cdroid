@@ -341,13 +341,13 @@ void RecycleBin::setCacheColorHint(int color) {
 }
 
 View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position) {
-    int size = scrapViews.size();
+    const int size = scrapViews.size();
     if (size > 0) {
         // See if we still have a view for this position or ID.
         // Traverse backwards to find the most recently used scrap view
         for (int i = size - 1; i >= 0; i--) {
             View* view = scrapViews[i];
-	        AbsListView::LayoutParams* params =(AbsListView::LayoutParams*) view->getLayoutParams();
+            AbsListView::LayoutParams* params =(AbsListView::LayoutParams*) view->getLayoutParams();
 
             if (LV->mAdapterHasStableIds) {
                 long id = getAdapter()->getItemId(position);
@@ -358,7 +358,7 @@ View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position
                 }
             } else if (params->scrappedFromPosition == position) {
                 View* scrap = scrapViews[i];
-		        scrapViews.erase(scrapViews.begin()+i);
+                scrapViews.erase(scrapViews.begin()+i);
                 clearScrapForRebind(scrap);
                 return scrap;
             }

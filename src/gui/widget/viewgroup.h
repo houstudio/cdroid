@@ -149,7 +149,7 @@ protected:
 
     virtual void measureChildWithMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
-    bool drawChild(Canvas& canvas, View* child, long drawingTime);
+    virtual bool drawChild(Canvas& canvas, View* child, long drawingTime);
     void dispatchDraw(Canvas&)override;
     bool hasActiveAnimations();
     void transformPointToViewLocal(POINT&point,View&);

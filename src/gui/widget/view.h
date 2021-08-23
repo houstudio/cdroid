@@ -291,6 +291,7 @@ private:
     bool applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
     bool skipInvalidate()const;
+    bool hasParentWantsFocus()const;
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
     int mID;
@@ -751,6 +752,7 @@ public:
     bool isLayoutDirectionInherited()const;
     void setLayoutParams(LayoutParams*lp);
     virtual bool isLayoutRequested()const;
+    virtual bool isInLayout()const;
     bool isLaidOut()const;
     bool isLayoutValid()const;
     bool hasRtlSupport()const;

@@ -278,6 +278,7 @@ void AbsListView::initAbsListView() {
     mRecycler=new RecycleBin(this);
     mScrollUp = mScrollDown = nullptr;
     mCachingStarted = mCachingActive =false;
+    mIsScrap[0]=mIsScrap[1]=0;
     //mDensityScale=2.65f;// = getContext().getResources().getDisplayMetrics().density;
 }
 

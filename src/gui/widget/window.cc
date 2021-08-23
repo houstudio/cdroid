@@ -314,28 +314,35 @@ void Window::removeCallbacks(const Runnable& what){
 }
 
 void Window::requestLayout(){
+    if(layoutRunner==nullptr)
+      layoutRunner=std::bind(&Window::doLayout,this);
+    removeCallbacks(layoutRunner);
+    postDelayed(layoutRunner,20);
+}
+
+void Window::doLayout(){
     LOGV("requestLayout(%dx%d)child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
                 getChildCount(),(mPrivateFlags&PFLAG_HAS_BOUNDS));
     for(auto c:mChildren){
         int x=0,y=0;
-	    int widthSpec,heightSpec;
+        int widthSpec,heightSpec;
         ViewGroup*vg=dynamic_cast<ViewGroup*>(c);
-	    if(vg==nullptr)continue;
-	    LayoutParams*lp=vg->getLayoutParams();
-	    LOGV("lp=%p  layoutsize=%d,%d",lp,lp->width,lp->height);
+        if(vg==nullptr)continue;
+        LayoutParams*lp=vg->getLayoutParams();
+        LOGV("lp=%p  layoutsize=%d,%d",lp,lp->width,lp->height);
 
         if(vg->getWidth()>0) widthSpec =MeasureSpec::makeMeasureSpec(vg->getWidth(),MeasureSpec::EXACTLY);
-	    else if(vg->getWidth()<0)widthSpec=MeasureSpec::makeMeasureSpec(lp->width,MeasureSpec::AT_MOST);
+        else if(vg->getWidth()<0)widthSpec=MeasureSpec::makeMeasureSpec(lp->width,MeasureSpec::AT_MOST);
         else widthSpec=MeasureSpec::makeMeasureSpec(mWidth,MeasureSpec::EXACTLY);
     
         if(vg->getHeight()>0) heightSpec =MeasureSpec::makeMeasureSpec(vg->getHeight(),MeasureSpec::EXACTLY);
-	    else if(vg->getHeight()<0)heightSpec=MeasureSpec::makeMeasureSpec(lp->height,MeasureSpec::AT_MOST);
+        else if(vg->getHeight()<0)heightSpec=MeasureSpec::makeMeasureSpec(lp->height,MeasureSpec::AT_MOST);
         else heightSpec=MeasureSpec::makeMeasureSpec(mHeight,MeasureSpec::EXACTLY);
 
-	    if(vg->getHeight()>0&&vg->getWidth()>0){
-	        x=vg->getLeft();
-	        y=vg->getTop();
-	    }
+        if(vg->getHeight()>0&&vg->getWidth()>0){
+            x=vg->getLeft();
+            y=vg->getTop();
+        }
         vg->measure(widthSpec, heightSpec);
         vg->layout(x,y,vg->getMeasuredWidth(),vg->getMeasuredHeight());
     }

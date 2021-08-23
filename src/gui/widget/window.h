@@ -25,7 +25,9 @@ class Window : public ViewGroup {
     friend class WindowManager;
     friend class GraphDevice;
 private:
+    Runnable layoutRunner;
     RECT mRectOfFocusedView;
+    void doLayout();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
 protected:

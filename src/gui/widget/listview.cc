@@ -54,7 +54,7 @@ ListView::~ListView(){
 }
 
 int ListView::getMaxScrollAmount()const {
-    return (int) (MAX_SCROLL_FACTOR * mWidth);
+    return (int) (MAX_SCROLL_FACTOR * mHeight);
 }
 
 void ListView::adjustViewsUpOrDown() {
@@ -259,9 +259,8 @@ void ListView::resetList() {
 }
 
 void ListView::clearRecycledState(std::vector<FixedViewInfo*>& infos) {
-    int count = infos.size();
-    for (int i = 0; i < count; i++) {
-        View* child = infos[i]->view;
+    for (auto info:infos){//int i = 0; i < count; i++) {
+        View* child = info->view;
         ViewGroup::LayoutParams* params = child->getLayoutParams();
         if (checkLayoutParams(params)) {
             ((LayoutParams*) params)->recycledHeaderFooter = false;
@@ -270,7 +269,7 @@ void ListView::clearRecycledState(std::vector<FixedViewInfo*>& infos) {
 }
 
 bool ListView::showingTopFadingEdge() {
-    int listTop = mScrollY + mListPadding.y;
+    const int listTop = mScrollY + mListPadding.y;
     return (mFirstPosition > 0) || (getChildAt(0)->getTop() > listTop);
 }
 
@@ -460,6 +459,7 @@ View* ListView::fillFromMiddle(int childrenTop, int childrenBottom) {
     }
     return sel;
 }
+
 void ListView::fillAboveAndBelow(View* sel, int position) {
     if (!mStackFromBottom) {
         fillUp(position - 1, sel->getTop() - mDividerHeight);
@@ -791,6 +791,7 @@ int ListView::measureHeightOfChildren(int widthMeasureSpec, int startPosition, i
 
     // Include the padding of the list
     int returnedHeight = mListPadding.y + mListPadding.height;
+    const int dividerHeight = mDividerHeight;
     // The previous height value that was less than maxHeight and contained
     // no partial children
     int prevHeightWithoutPartialChild = 0;
@@ -809,7 +810,7 @@ int ListView::measureHeightOfChildren(int widthMeasureSpec, int startPosition, i
 
         if (i > 0) {
             // Count the divider for all but one child
-            returnedHeight += mDividerHeight;
+            returnedHeight += dividerHeight;
         }
 
         // Recycle the view before we possibly return from the method
@@ -870,7 +871,7 @@ View* ListView::fillSpecific(int position, int top) {
     mFirstPosition = position;
     View* above,* below;
 
-    int dividerHeight = mDividerHeight;
+    const int dividerHeight = mDividerHeight;
     if (!mStackFromBottom) {
         above = fillUp(position - 1, temp->getTop() - dividerHeight);
         // This will correct for the top of the first view not touching the top of the list
@@ -905,19 +906,19 @@ void ListView::correctTooHigh(int childCount) {
     if (lastPosition == mItemCount - 1 && childCount > 0) {
 
         // Get the last child ...
-        View* lastChild = getChildAt(childCount - 1);
+        const View* lastChild = getChildAt(childCount - 1);
 
         // ... and its bottom edge
-        int lastBottom = lastChild->getBottom();
+        const int lastBottom = lastChild->getBottom();
 
         // This is bottom of our drawable area
-        int end = getHeight()- mListPadding.height;//bottom;
+        const int end = getHeight()- mListPadding.height;//bottom;
 
         // This is how far the bottom edge of the last view is from the bottom of the
         // drawable area
         int bottomOffset = end - lastBottom;
         View* firstChild = getChildAt(0);
-        int firstTop = firstChild->getTop();
+        const int firstTop = firstChild->getTop();
 
         // Make sure we are 1) Too high, and 2) Either there are more rows above the
         // first row or the first row is scrolled off the top of the drawable area
@@ -944,22 +945,22 @@ void ListView::correctTooLow(int childCount) {
     if (mFirstPosition == 0 && childCount > 0) {
 
         // Get the first child ...
-        View* firstChild = getChildAt(0);
+        const View* firstChild = getChildAt(0);
 
         // ... and its top edge
-        int firstTop = firstChild->getTop();
+        const int firstTop = firstChild->getTop();
 
         // This is top of our drawable area
-        int start = mListPadding.y;//top;
+        const int start = mListPadding.y;//top;
 
         // This is bottom of our drawable area
-        int end = getHeight()- mListPadding.height;//bottom;
+        const int end = getHeight()- mListPadding.height;//bottom;
 
         // This is how far the top edge of the first view is from the top of the
         // drawable area
         int topOffset = firstTop - start;
         View* lastChild = getChildAt(childCount - 1);
-        int lastBottom = lastChild->getBottom();
+        const int lastBottom = lastChild->getBottom();
         int lastPosition = mFirstPosition + childCount - 1;
 
         // Make sure we are 1) Too low, and 2) Either there are more rows below the
@@ -986,80 +987,25 @@ void ListView::correctTooLow(int childCount) {
     }
 }
 
-bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
-    int dividerHeight = mDividerHeight;
-    Drawable* overscrollHeader = mOverScrollHeader;
-    Drawable* overscrollFooter = mOverScrollFooter;
-    bool drawOverscrollHeader = overscrollHeader != nullptr;
-    bool drawOverscrollFooter = overscrollFooter != nullptr;
-    bool drawDividers = dividerHeight > 0 && mDivider != nullptr;
-
-    if (drawDividers) {
-        bool fillForMissingDividers = isOpaque() && !AbsListView::isOpaque();
-        int itemCount = mItemCount;
-        int headerCount = getHeaderViewsCount();
-        int footerLimit = (itemCount - mFooterViewInfos.size());
-        bool isHeader = (itemIndex < headerCount);
-        bool isFooter = (itemIndex >= footerLimit);
-        bool headerDividers = mHeaderDividersEnabled;
-        bool footerDividers = mFooterDividersEnabled;
-        if ((headerDividers || !isHeader) && (footerDividers || !isFooter)) {
-            if (!mStackFromBottom) {
-                bool isLastItem = (itemIndex == (itemCount - 1));
-                if (!drawOverscrollFooter || !isLastItem) {
-                    int nextIndex = itemIndex + 1;
-                    // Draw dividers between enabled items, headers
-                    // and/or footers when enabled and requested, and
-                    // after the last enabled item.
-                    if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader
-                                    && (nextIndex >= headerCount)) && (isLastItem
-                                    || mAdapter->isEnabled(nextIndex) && (footerDividers || !isFooter
-                                    && (nextIndex < footerLimit)))) {
-                        return true;
-                    } else if (fillForMissingDividers) {
-                        return true;
-                    }
-                }
-            } else {
-                int start = drawOverscrollHeader ? 1 : 0;
-                bool isFirstItem = (itemIndex == start);
-                if (!isFirstItem) {
-                    int previousIndex = (itemIndex - 1);
-                    // Draw dividers between enabled items, headers
-                    // and/or footers when enabled and requested, and
-                    // before the first enabled item.
-                    if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader
-                                    && (previousIndex >= headerCount)) && (isFirstItem 
-                                    || mAdapter->isEnabled(previousIndex) && (footerDividers || !isFooter
-                                    && (previousIndex < footerLimit)))) {
-                        return true;
-                    } else if (fillForMissingDividers) {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
 void ListView::layoutChildren() {
-    bool blockLayoutRequests = mBlockLayoutRequests;
+    const bool blockLayoutRequests = mBlockLayoutRequests;
     if(mBlockLayoutRequests)return;
+
+    mBlockLayoutRequests = true;
+
     AbsListView::layoutChildren();
     invalidate();
 
-    mBlockLayoutRequests =true;
     if (mAdapter == nullptr) {
         resetList();
         invokeOnItemScrollListener();
         mBlockLayoutRequests=false;
         return;
     }
-    int childrenTop = mListPadding.y;
-    int childrenBottom = getHeight() - mListPadding.height;
-    int childCount = getChildCount();
+
+    const int childrenTop = mListPadding.y;
+    const int childrenBottom = getHeight() - mListPadding.height;
+    const int childCount = getChildCount();
 
     int index = 0;
     int delta = 0;
@@ -1181,7 +1127,7 @@ void ListView::layoutChildren() {
 
     // Pull all children into the RecycleBin.
     // These views will be reused if possible
-    int firstPosition = mFirstPosition;
+    const int firstPosition = mFirstPosition;
     if (dataChanged) {
         for (int i = 0; i < childCount; i++) {
             mRecycler->addScrapView(getChildAt(i), firstPosition+i);
@@ -2180,7 +2126,7 @@ int ListView::lookForSelectablePositionOnScreen(int direction){
 
 ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction){
     View* selectedView = getSelectedView();
-    View* newFocus;
+    View* newFocus=nullptr;
     RECT mTempRect;
     if (selectedView != nullptr && selectedView->hasFocus()) {
        View* oldFocus = selectedView->findFocus();
@@ -2669,6 +2615,64 @@ int ListView::getHeightForPosition(int position) {
         return height + mDividerHeight;
     }
     return height;
+}
+
+bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
+    int dividerHeight = mDividerHeight;
+    Drawable* overscrollHeader = mOverScrollHeader;
+    Drawable* overscrollFooter = mOverScrollFooter;
+    bool drawOverscrollHeader = overscrollHeader != nullptr;
+    bool drawOverscrollFooter = overscrollFooter != nullptr;
+    bool drawDividers = dividerHeight > 0 && mDivider != nullptr;
+
+    if (drawDividers) {
+        bool fillForMissingDividers = isOpaque() && !AbsListView::isOpaque();
+        int itemCount = mItemCount;
+        int headerCount = getHeaderViewsCount();
+        int footerLimit = (itemCount - mFooterViewInfos.size());
+        bool isHeader = (itemIndex < headerCount);
+        bool isFooter = (itemIndex >= footerLimit);
+        bool headerDividers = mHeaderDividersEnabled;
+        bool footerDividers = mFooterDividersEnabled;
+        if ((headerDividers || !isHeader) && (footerDividers || !isFooter)) {
+            if (!mStackFromBottom) {
+                bool isLastItem = (itemIndex == (itemCount - 1));
+                if (!drawOverscrollFooter || !isLastItem) {
+                    int nextIndex = itemIndex + 1;
+                    // Draw dividers between enabled items, headers
+                    // and/or footers when enabled and requested, and
+                    // after the last enabled item.
+                    if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader
+                                    && (nextIndex >= headerCount)) && (isLastItem
+                                    || mAdapter->isEnabled(nextIndex) && (footerDividers || !isFooter
+                                    && (nextIndex < footerLimit)))) {
+                        return true;
+                    } else if (fillForMissingDividers) {
+                        return true;
+                    }
+                }
+            } else {
+                int start = drawOverscrollHeader ? 1 : 0;
+                bool isFirstItem = (itemIndex == start);
+                if (!isFirstItem) {
+                    int previousIndex = (itemIndex - 1);
+                    // Draw dividers between enabled items, headers
+                    // and/or footers when enabled and requested, and
+                    // before the first enabled item.
+                    if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader
+                                    && (previousIndex >= headerCount)) && (isFirstItem 
+                                    || mAdapter->isEnabled(previousIndex) && (footerDividers || !isFooter
+                                    && (previousIndex < footerLimit)))) {
+                        return true;
+                    } else if (fillForMissingDividers) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 HeaderViewListAdapter* ListView::wrapHeaderListAdapterInternal(

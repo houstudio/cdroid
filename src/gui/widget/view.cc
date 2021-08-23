@@ -3523,6 +3523,23 @@ View*View::findKeyboardNavigationCluster()const{
     return nullptr;
 }
 
+bool View::hasParentWantsFocus()const{
+    ViewGroup* parent = mParent;
+    while (parent){
+        ViewGroup* pv = (ViewGroup*) parent;
+        if ((pv->mPrivateFlags & PFLAG_WANTS_FOCUS) != 0) {
+            return true;
+        }
+        parent = pv->mParent;
+    }
+    return false;
+}
+
+bool View::isInLayout()const{
+    ViewGroup* viewRoot = getRootView();
+    return (viewRoot && viewRoot->isInLayout());
+}
+
 void View::onLayout(bool change,int l,int t,int w,int h){
 }
 
@@ -3542,18 +3559,57 @@ void View::layout(int l, int t, int w, int h){
     mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
     mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;
     bool changed=setFrame(l,t,w,h);
-    if(changed||true){
+    if(changed|| ((mPrivateFlags & PFLAG_LAYOUT_REQUIRED) == PFLAG_LAYOUT_REQUIRED)){
+        onLayout(changed, l, t, w, h);
         if (shouldDrawRoundScrollbar()) {
             if(mRoundScrollbarRenderer == nullptr)
                 mRoundScrollbarRenderer = new RoundScrollbarRenderer(this);
         } else {
             mRoundScrollbarRenderer = nullptr;
         }
-        onLayout(true, l, t, w, h);
         for(auto ls:mOnLayoutChangeListeners){
             ls(this,l, t, w, h,oldL,oldT,oldW,oldH);
         }
     }
+
+    const bool wasLayoutValid = isLayoutValid();
+
+    mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
+    mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;
+
+    if (!wasLayoutValid && isFocused()) {
+        mPrivateFlags &= ~PFLAG_WANTS_FOCUS;
+        if (canTakeFocus()) {
+            // We have a robust focus, so parents should no longer be wanting focus.
+            clearParentsWantFocus();
+        } else if (getRootView() == nullptr || !getRootView()->isInLayout()) {
+            // This is a weird case. Most-likely the user, rather than ViewRootImpl, called
+            // layout. In this case, there's no guarantee that parent layouts will be evaluated
+            // and thus the safest action is to clear focus here.
+            clearFocusInternal(nullptr, /* propagate */ true, /* refocus */ false);
+            clearParentsWantFocus();
+        } else if (!hasParentWantsFocus()) {
+            // original requestFocus was likely on this view directly, so just clear focus
+            clearFocusInternal(nullptr, /* propagate */ true, /* refocus */ false);
+        }
+            // otherwise, we let parents handle re-assigning focus during their layout passes.
+    } else if ((mPrivateFlags & PFLAG_WANTS_FOCUS) != 0) {
+        mPrivateFlags &= ~PFLAG_WANTS_FOCUS;
+        View* focused = findFocus();
+        if (focused) {
+            // Try to restore focus as close as possible to our starting focus.
+            if (!restoreDefaultFocus() && !hasParentWantsFocus()) {
+                // Give up and clear focus once we've reached the top-most parent which wants
+                // focus.
+                focused->clearFocusInternal(nullptr, /* propagate */ true, /* refocus */ false);
+            }
+        }
+    }
+
+    /*if ((mPrivateFlags3 & PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT) != 0) {
+        mPrivateFlags3 &= ~PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT;
+        //notifyEnterOrExitForAutoFillIfNeeded(true);
+    }*/
 }
 
 void View::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
