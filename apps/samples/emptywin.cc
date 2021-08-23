@@ -75,12 +75,6 @@ public:
         canvas->fill();
         mDegrees=0;
     }
-    /*bool onMessage(DWORD msg,DWORD wp,ULONG lp)override{
-        if(msg==1000){
-             invalidate(nullptr);
-        }
-        return Window::onMessage(msg,wp,lp);
-    }*/
 };
 int main(int argc,const char*argv[]){
     App app(argc,argv);
@@ -113,8 +107,6 @@ int main(int argc,const char*argv[]){
         lv->setMultiChoiceModeListener([](int position, long id, bool checked){
              LOGD("item %d checked:%d",position,checked );
         });
-        //[](AbsListView&,int fist,int vc,int total){});
-        //lv->setItemsCanFocus(true);
         lv->setVerticalScrollBarEnabled(true);
         ListView::OnItemSelectedListener listener={
             .onItemSelected=[](AdapterView&parent,View&v,int pos,long id){

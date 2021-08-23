@@ -37,6 +37,12 @@ public:
     void setId(int idpos){
         id->setText(std::to_string(idpos));
     }
+    void startMarqueeIfNeed(bool enableMarquee){
+        name->setSingleLine(enableMarquee);
+        name->setEllipsize(enableMarquee?Layout::ELLIPSIS_MARQUEE:Layout::ELLIPSIS_NONE);
+        name->setSelected(enableMarquee);
+        requestLayout();
+    }
 };
 struct MyData{
     int id;
@@ -53,6 +59,7 @@ public:
             dv=new DataView();
         }
         dv->setId(dt.id);
+        dv->startMarqueeIfNeed(position==10);
         dv->setName(dt.name);
         return dv;
     }
@@ -71,6 +78,8 @@ int main(int argc,const char*argv[]){
         MyData dt;
         dt.id=i;
         dt.name=std::string("Name ")+std::to_string(i);
+        if(i==10||i==11)
+           dt.name="test line with marquee support ,the lie must be long enough";
         adapter->add(dt);
     }
     lv->setAdapter(adapter);

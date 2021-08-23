@@ -17,7 +17,7 @@ public:
             tv->setPadding(20,0,0,0);
             tv->setFocusable(false);
         }
-        tv->setLayoutDirection(position<10?View::LAYOUT_DIRECTION_RTL:View::LAYOUT_DIRECTION_LTR);
+        if(itemType==1)tv->setLayoutDirection(position<10?View::LAYOUT_DIRECTION_RTL:View::LAYOUT_DIRECTION_LTR);
         tv->setId(position);
         tv->setText("position :"+std::to_string(position));
         tv->setTextColor(0xFFFFFFFF);
@@ -30,7 +30,7 @@ public:
 int main(int argc,const char*argv[]){
     App app;
     Window*w=new Window(100,50,1200,620);
-    MyAdapter*adapter=new MyAdapter();
+    MyAdapter*adapter=new MyAdapter(0);
 
     ListView*lv=(ListView*)&w->addView(new ListView(460,500));
     lv->setPos(10,10);
@@ -43,7 +43,7 @@ int main(int argc,const char*argv[]){
     lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv->setSmoothScrollbarEnabled(true);
     lv->setSelector(new ColorDrawable(0x8800FF00));
-    lv->setSelection(2);
+    //lv->setSelection(2);
     lv->setDivider(new ColorDrawable(0x80224422));
     lv->setDividerHeight(1);
     lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){

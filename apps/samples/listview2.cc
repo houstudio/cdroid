@@ -14,7 +14,8 @@ public:
             tv->setPadding(20,0,0,0);
             tv->setFocusable(false);
         }
-        tv->getBackground()->setLevel(0);
+        if(tv->getBackground())
+            tv->getBackground()->setLevel(0);
         tv->setId(position);
         tv->setText("position :"+std::to_string(position));
         tv->setTextColor(0xFFFFFFFF);
@@ -47,6 +48,7 @@ int main(int argc,const char*argv[]){
     Runnable run([&](){
         View* v=lv->getChildAt(index);
         Drawable*d=v->getBackground();
+        if(d==nullptr)return;
         if(d->getLevel()<10000)
            d->setLevel(d->getLevel()+1000);
         else{d->setLevel(0); index=(index+1)%10;}
