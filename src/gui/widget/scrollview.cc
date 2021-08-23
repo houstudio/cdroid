@@ -488,7 +488,7 @@ void ScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool cl
         int oldY = mScrollY;
         mScrollX = scrollX;
         mScrollY = scrollY;
-        //invalidateParentIfNeeded();
+        invalidateParentIfNeeded();
         onScrollChanged(mScrollX, mScrollY, oldX, oldY);
         if (clampedY) {
             mScroller->springBack(mScrollX, mScrollY, 0, 0, 0, getScrollRange());

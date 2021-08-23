@@ -149,7 +149,6 @@ bool EdgeEffect::draw(Canvas& canvas){
 
     canvas.rectangle(mBounds);
     canvas.clip();
-    //mPaint.setAlpha((int) (0xff * mGlowAlpha));
     canvas.set_color(mColor);
     canvas.curve_to(mBounds.x,mBounds.y,mBounds.width/2+translateX,mBounds.height*mGlowScaleY,mBounds.width,0);
     canvas.fill();

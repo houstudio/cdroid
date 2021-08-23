@@ -1316,6 +1316,7 @@ void ListView::drawOverscrollFooter(Canvas&canvas, Drawable* drawable,RECT& boun
 bool ListView::recycleOnMeasure() {
     return true;
 }
+
 int ListView::measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
                                       int maxHeight, int disallowPartialChildPosition) {
     if (mAdapter == nullptr) {
@@ -1688,6 +1689,7 @@ ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction){
 int ListView::getArrowScrollPreviewLength(){
    return std::max(MIN_SCROLL_PREVIEW_PIXELS, getVerticalFadingEdgeLength());
 }
+
 int ListView::lookForSelectablePositionOnScreen(int direction){
     int firstPosition = mFirstPosition;
     if (direction == View::FOCUS_DOWN) {
@@ -1976,6 +1978,7 @@ int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedP
 static int constrain(int amount, int low, int high) {//get the 
     return amount < low ? low : (amount > high ? high : amount);
 }
+
 int ListView::lookForSelectablePositionAfter(int current, int position, bool lookDown){
     Adapter* adapter = mAdapter;
     if (adapter == nullptr || isInTouchMode()) {
@@ -2007,6 +2010,13 @@ int ListView::lookForSelectablePositionAfter(int current, int position, bool loo
     return position;
 }
 
+/**
+* To avoid horizontal focus searches changing the selected item, we
+* manually focus search within the selected item (as applicable), and
+* prevent focus from jumping to something within another item.
+* @param direction one of {View.FOCUS_LEFT, View.FOCUS_RIGHT}
+* @return Whether this consumes the key event.
+*/
 bool ListView::handleHorizontalFocusWithinListItem(int direction){
     if (direction != View::FOCUS_LEFT && direction != View::FOCUS_RIGHT)  {
         LOGD("direction must be one of{View.FOCUS_LEFT, View.FOCUS_RIGHT}");

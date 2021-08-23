@@ -142,14 +142,14 @@ View::View(Context*ctx,const AttributeSet&attrs){
         setScrollBarSize(attrs.getDimensionPixelSize("scrollBarSize",10));
 
         mScrollCache->scrollBar->setHorizontalThumbDrawable(
-            Drawable::inflate(mContext,attrs.getString("scrollbarThumbHorizontal")));
+            mContext->getDrawable(attrs.getString("scrollbarThumbHorizontal")));
         mScrollCache->scrollBar->setHorizontalTrackDrawable(
-            Drawable::inflate(mContext,attrs.getString("scrollbarTrackHorizontal")));
+            mContext->getDrawable(attrs.getString("scrollbarTrackHorizontal")));
         
         mScrollCache->scrollBar->setVerticalThumbDrawable(
-            Drawable::inflate(mContext,attrs.getString("scrollbarThumbVertical")));
+            mContext->getDrawable(attrs.getString("scrollbarThumbVertical")));
         mScrollCache->scrollBar->setVerticalTrackDrawable(
-            Drawable::inflate(mContext,attrs.getString("scrollbarTrackVertical")));
+            mContext->getDrawable(attrs.getString("scrollbarTrackVertical")));
     } 
 }
 
@@ -339,7 +339,7 @@ void View::clearAnimation() {
         mCurrentAnimation->detach();
     }
     mCurrentAnimation = nullptr;
-    //invalidateParentIfNeeded();
+    invalidateParentIfNeeded();
     invalidate();
 }
 
@@ -3060,6 +3060,10 @@ void View::destroyDrawingCache(){
 
 void View::invalidateParentCaches(){
     if(mParent)mParent->mPrivateFlags |= PFLAG_INVALIDATED;
+}
+
+void View::invalidateParentIfNeeded(){
+    if(mParent)mParent->invalidate(true);
 }
 
 void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){

@@ -771,7 +771,6 @@ void ViewGroup::removeView(View* view){
     }
 }
 View&ViewGroup::addView(View* child, int index,LayoutParams* params){
-    //requestLayout();
     return addViewInner(child, index, params, false);
 }
 void ViewGroup::addInArray(View* child, int index){

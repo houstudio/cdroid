@@ -1,6 +1,6 @@
 #include <cdtypes.h>
 #include <ngl_os.h>
-#include <ngl_graph.h>
+#include <cdgraph.h>
 #include <cdlog.h>
 #include <stdio.h>
 #include <stdlib.h> /* getenv(), etc. */
@@ -9,8 +9,7 @@
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
-#include <ngl_input.h>
-NGL_MODULE(GRAPH);
+#include <cdinput.h>
 
 typedef struct{
     unsigned int width;

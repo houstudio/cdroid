@@ -344,6 +344,7 @@ protected:
     int getFadeHeight(bool offsetRequired);
 
     void invalidateParentCaches();
+    void invalidateParentIfNeeded();
     void destroyDrawingCache();
     RefPtr<ImageSurface>getDrawingCache(bool autoScale);
 

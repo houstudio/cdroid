@@ -140,6 +140,7 @@ private:
     bool mIsChildViewEnabled;
     bool mForceTranscriptScroll;
     Runnable mTouchModeReset;
+    Runnable mClearScrollingCache;
     bool mHasPerformedLongPress;
     static const bool PROFILE_SCROLLING = false;
     bool mScrollProfilingStarted = false;
@@ -169,12 +170,15 @@ private:
     void invalidateTopGlow();
     void invalidateBottomGlow();
     void finishGlows();
+    void createScrollingCache();
+    void clearScrollingCache();
 protected:
     int mChoiceMode;
     int mCheckedItemCount;
     int mTouchSlop;
     int mSelectedTop;
     int mStackFromBottom;
+    bool mScrollingCacheEnabled;
     int mSelectorPosition;
     int mResurrectToPosition;
     int mMinimumVelocity;
@@ -184,6 +188,8 @@ protected:
     int mOverflingDistance;
     View * mScrollUp ;
     View * mScrollDown;
+    bool mCachingStarted;
+    bool mCachingActive;
     EdgeEffect* mEdgeGlowTop;
     EdgeEffect* mEdgeGlowBottom;
     AbsPositionScroller* mPositionScroller;
@@ -291,6 +297,8 @@ public:
     void setChoiceMode(int choiceMode);
     void setMultiChoiceModeListener(MultiChoiceModeListener listener);
     void setOnScrollListener(OnScrollListener);
+    bool isScrollingCacheEnabled()const;
+    void setScrollingCacheEnabled(bool enabled);
     void clearChoices();
     void setDrawSelectorOnTop(bool onTop);
     Drawable*getSelector();

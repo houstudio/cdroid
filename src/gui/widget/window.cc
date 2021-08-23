@@ -164,7 +164,7 @@ int Window::processKeyEvent(KeyEvent&event){
     int handled = FINISH_NOT_HANDLED;
     int groupNavigationDirection = 0;
     const int action=event.getAction();
-    LOGD_IF(action==KeyEvent::ACTION_DOWN,"key:0x%x %s %x",event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KEY_DPAD_DOWN);
+    LOGV_IF(action==KeyEvent::ACTION_DOWN,"key:0x%x %s %x",event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KEY_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
     if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KEY_TAB) {
@@ -317,25 +317,25 @@ void Window::requestLayout(){
     LOGV("requestLayout(%dx%d)child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
                 getChildCount(),(mPrivateFlags&PFLAG_HAS_BOUNDS));
     for(auto c:mChildren){
-	int x=0,y=0;
-	int widthSpec,heightSpec;
+        int x=0,y=0;
+	    int widthSpec,heightSpec;
         ViewGroup*vg=dynamic_cast<ViewGroup*>(c);
-	if(vg==nullptr)continue;
-	LayoutParams*lp=vg->getLayoutParams();
-	LOGV("lp=%p  layoutsize=%d,%d",lp,lp->width,lp->height);
+	    if(vg==nullptr)continue;
+	    LayoutParams*lp=vg->getLayoutParams();
+	    LOGV("lp=%p  layoutsize=%d,%d",lp,lp->width,lp->height);
 
         if(vg->getWidth()>0) widthSpec =MeasureSpec::makeMeasureSpec(vg->getWidth(),MeasureSpec::EXACTLY);
-	else if(vg->getWidth()<0)widthSpec=MeasureSpec::makeMeasureSpec(lp->width,MeasureSpec::AT_MOST);
+	    else if(vg->getWidth()<0)widthSpec=MeasureSpec::makeMeasureSpec(lp->width,MeasureSpec::AT_MOST);
         else widthSpec=MeasureSpec::makeMeasureSpec(mWidth,MeasureSpec::EXACTLY);
-
+    
         if(vg->getHeight()>0) heightSpec =MeasureSpec::makeMeasureSpec(vg->getHeight(),MeasureSpec::EXACTLY);
-	else if(vg->getHeight()<0)heightSpec=MeasureSpec::makeMeasureSpec(lp->height,MeasureSpec::AT_MOST);
+	    else if(vg->getHeight()<0)heightSpec=MeasureSpec::makeMeasureSpec(lp->height,MeasureSpec::AT_MOST);
         else heightSpec=MeasureSpec::makeMeasureSpec(mHeight,MeasureSpec::EXACTLY);
 
-	if(vg->getHeight()>0&&vg->getWidth()>0){
-	    x=vg->getLeft();
-	    y=vg->getTop();
-	}
+	    if(vg->getHeight()>0&&vg->getWidth()>0){
+	        x=vg->getLeft();
+	        y=vg->getTop();
+	    }
         vg->measure(widthSpec, heightSpec);
         vg->layout(x,y,vg->getMeasuredWidth(),vg->getMeasuredHeight());
     }
