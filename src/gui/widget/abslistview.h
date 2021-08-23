@@ -190,6 +190,7 @@ protected:
     View * mScrollDown;
     bool mCachingStarted;
     bool mCachingActive;
+    Runnable mPositionScrollAfterLayout;
     EdgeEffect* mEdgeGlowTop;
     EdgeEffect* mEdgeGlowBottom;
     AbsPositionScroller* mPositionScroller;

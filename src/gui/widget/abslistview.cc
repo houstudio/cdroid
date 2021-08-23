@@ -236,6 +236,7 @@ void AbsListView::initAbsListView() {
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
     //setAlwaysDrawnWithCacheEnabled(false);
+    mScrollingCacheEnabled=false;
     setScrollingCacheEnabled(true);
     mListPadding.set(0,0,0,0);
     mVelocityTracker = nullptr;
@@ -276,6 +277,7 @@ void AbsListView::initAbsListView() {
     mTranscriptMode=TRANSCRIPT_MODE_DISABLED;
     mRecycler=new RecycleBin(this);
     mScrollUp = mScrollDown = nullptr;
+    mCachingStarted = mCachingActive =false;
     //mDensityScale=2.65f;// = getContext().getResources().getDisplayMetrics().density;
 }
 
@@ -2825,11 +2827,9 @@ void AbsListView::PositionScroller::start(int position) {
 
     if (mLV->mDataChanged) {
         // Wait until we're back in a stable state to try this.
-        /*mPositionScrollAfterLayout = new Runnable() {
-            @Override public void run() {
-                start(position);
-            }
-        };*/
+        mLV->mPositionScrollAfterLayout =[this,position](){
+            start(position);
+        };
         return;
     }
 

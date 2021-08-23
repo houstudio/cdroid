@@ -11,6 +11,23 @@ namespace cdroid {
 #define NO_POSITION (-1)
 
 ListView::ListView(int w,int h):AbsListView(w,h) {
+    initListView();
+}
+
+ListView::ListView(Context* context,const AttributeSet& attrs):AbsListView(context,attrs){
+    initListView();
+    Drawable* d = getContext()->getDrawable(attrs.getString("divider"));
+    Drawable* osHeader = getContext()->getDrawable(attrs.getString("overScrollHeader"));
+    Drawable* osFooter = getContext()->getDrawable(attrs.getString("overScrollFooter"));
+
+    setOverscrollHeader(osHeader);
+    setOverscrollHeader(osFooter);
+    mHeaderDividersEnabled = attrs.getBoolean("headerDividersEnabled",true);
+    mFooterDividersEnabled = attrs.getBoolean("footerDividersEnabled", true);
+    setDividerHeight(attrs.getDimensionPixelSize("dividerHeight",0));
+}
+
+void ListView::initListView(){
     mDividerHeight=0;
     mItemsCanFocus=false;
     mDivider=nullptr;
@@ -19,6 +36,9 @@ ListView::ListView(int w,int h):AbsListView(w,h) {
     mDataSetObserver=nullptr;
     mHeaderDividersEnabled=true;
     mFooterDividersEnabled=true;
+    mFocusSelector =nullptr;
+    mIsCacheColorOpaque =true;
+    mDividerIsOpaque = true;
 }
 
 ListView::~ListView(){
@@ -26,17 +46,944 @@ ListView::~ListView(){
     delete mDataSetObserver;
     delete mOverScrollHeader;
     delete mOverScrollFooter;
+    delete mFocusSelector;
     for_each(mHeaderViewInfos.begin(),mHeaderViewInfos.end(),[](const FixedViewInfo*f){delete f;});
     for_each(mFooterViewInfos.begin(),mFooterViewInfos.end(),[](const FixedViewInfo*f){delete f;});
     mHeaderViewInfos.clear();
     mFooterViewInfos.clear();
 }
-void ListView::setDividerHeight(int h) {
-    mDividerHeight=h;
+
+int ListView::getMaxScrollAmount()const {
+    return (int) (MAX_SCROLL_FACTOR * mWidth);
 }
 
-int ListView::getDividerHeight()const {
-    return mDividerHeight;
+void ListView::adjustViewsUpOrDown() {
+    int delta;
+    int childCount=getChildCount();
+    if (childCount > 0) {
+        View* child;
+
+        if (!mStackFromBottom) {
+            // Uh-oh -- we came up short. Slide all views up to make them
+            // align with the top
+            child = getChildAt(0);
+            delta = child->getTop() - mListPadding.y;
+            if (mFirstPosition != 0) {
+                // It's OK to have some space above the first item if it is
+                // part of the vertical spacing
+                delta -= mDividerHeight;
+            }
+            if (delta < 0) {
+                // We only are looking to see if we are too low, not too high
+                delta = 0;
+            }
+        } else {
+            // we are too high, slide all views down to align with bottom
+            child = getChildAt(childCount - 1);
+            delta = child->getBottom() - (getHeight() - mListPadding.height);//bottom);
+
+            if (mFirstPosition + childCount < mItemCount) {
+                // It's OK to have some space below the last item if it is
+                // part of the vertical spacing
+                delta += mDividerHeight;
+            }
+
+            if (delta > 0) delta = 0;
+        }
+
+        if (delta != 0) offsetChildrenTopAndBottom(-delta);
+    }
+}
+
+void ListView::addHeaderView(View* v,void* data, bool isSelectable){
+     if (v->getParent() != nullptr && v->getParent() != this) {
+        throw "The specified child already has a parent.You must call removeView() on the child's parent first.";
+    }
+    FixedViewInfo* info=new FixedViewInfo();
+    info->view = v;
+    info->data = data;
+    info->isSelectable = isSelectable;
+    mHeaderViewInfos.push_back(info);
+    mAreAllItemsSelectable &= isSelectable;
+
+    // Wrap the adapter if it wasn't already wrapped.
+    if (mAdapter != nullptr) {
+        if (nullptr==dynamic_cast<HeaderViewListAdapter*>(mAdapter)) {
+            wrapHeaderListAdapterInternal();
+        }
+
+        // In the case of re-adding a header view, or adding one later on,
+        // we need to notify the observer.
+        if (mDataSetObserver ) mDataSetObserver->onChanged();
+    }
+}
+
+void ListView::addHeaderView(View* v){
+    addHeaderView(v, nullptr, true);
+}
+
+int ListView::getHeaderViewsCount()const{
+    return mHeaderViewInfos.size();
+}
+
+bool ListView::removeHeaderView(View* v){
+    if (mHeaderViewInfos.size()) {
+        bool result = false;
+        if (mAdapter != nullptr && ((HeaderViewListAdapter*) mAdapter)->removeHeader(v)) {
+            if (mDataSetObserver != nullptr) {
+                mDataSetObserver->onChanged();
+            }
+            result = true;
+        }
+        removeFixedViewInfo(v, mHeaderViewInfos);
+        return result;
+    }
+    return false;    
+}
+
+void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where){
+    int len = where.size();
+    for (int i = 0; i < len; ++i) {
+        FixedViewInfo* info = where[i];
+        if (info->view == v) {
+            where.erase(where.begin()+i);
+            break;
+        }
+    }
+}
+
+void ListView::addFooterView(View* v,void* data, bool isSelectable){
+    if (v->getParent() != nullptr && v->getParent() != this) {
+        throw "The specified child already has a parent.You must call removeView() on the child's parent first.";
+    }
+
+    FixedViewInfo* info = new FixedViewInfo();
+    info->view = v;
+    info->data = data;
+    info->isSelectable = isSelectable;
+    mFooterViewInfos.push_back(info);
+    mAreAllItemsSelectable &= isSelectable;
+
+    // Wrap the adapter if it wasn't already wrapped.
+    if (mAdapter != nullptr) {
+        if (nullptr==dynamic_cast<HeaderViewListAdapter*>(mAdapter)) {
+            wrapHeaderListAdapterInternal();
+        }
+
+        // In the case of re-adding a footer view, or adding one later on,
+        // we need to notify the observer.
+        if (mDataSetObserver)mDataSetObserver->onChanged();
+    }
+}
+
+void ListView::addFooterView(View* v){
+    addFooterView(v,nullptr,true);
+}
+
+int ListView::getFooterViewsCount()const{
+    return mFooterViewInfos.size();
+}
+
+bool ListView::removeFooterView(View* v) {
+    if (mFooterViewInfos.size() > 0) {
+        bool result = false;
+        if (mAdapter && ((HeaderViewListAdapter*) mAdapter)->removeFooter(v)) {
+            if (mDataSetObserver != nullptr) {
+                mDataSetObserver->onChanged();
+            }
+            result = true;
+        }
+        removeFixedViewInfo(v, mFooterViewInfos);
+        return result;
+    }
+    return false;
+}
+
+void ListView::setAdapter(Adapter* adapter) {
+    if (mAdapter  && mDataSetObserver ) {
+        mAdapter->unregisterDataSetObserver(mDataSetObserver);
+    }
+
+    resetList();
+    mRecycler->clear();
+    if (mHeaderViewInfos.size() > 0|| mFooterViewInfos.size() > 0) {
+        mAdapter = wrapHeaderListAdapterInternal(mHeaderViewInfos, mFooterViewInfos, adapter);
+    } else {
+        mAdapter = adapter;
+    }
+
+    mOldSelectedPosition = INVALID_POSITION;
+    mOldSelectedRowId = INVALID_ROW_ID;
+
+    // AbsListView#setAdapter will update choice mode states.
+    AbsListView::setAdapter(adapter);
+
+    if (mAdapter != nullptr) {
+        mAreAllItemsSelectable = mAdapter->areAllItemsEnabled();
+        mOldItemCount = mItemCount;
+        mItemCount = mAdapter->getCount();
+        checkFocus();
+
+        mDataSetObserver = new AdapterDataSetObserver(this);
+        mAdapter->registerDataSetObserver(mDataSetObserver);
+
+        mRecycler->setViewTypeCount(mAdapter->getViewTypeCount());
+
+        int position;
+        if (mStackFromBottom) {
+            position = lookForSelectablePosition(mItemCount - 1, false);
+        } else {
+            position = lookForSelectablePosition(0, true);
+        }
+        setSelectedPositionInt(position);
+        setNextSelectedPositionInt(position);
+
+        if (mItemCount == 0) {
+            // Nothing selected
+            checkSelectionChanged();
+        }
+    } else {
+        mAreAllItemsSelectable = true;
+        checkFocus();
+        // Nothing selected
+        checkSelectionChanged();
+    }
+    requestLayout();
+}
+
+void ListView::resetList() {
+    clearRecycledState(mHeaderViewInfos);
+    clearRecycledState(mFooterViewInfos);
+    AbsListView::resetList();
+    mLayoutMode = LAYOUT_NORMAL;
+}
+
+void ListView::clearRecycledState(std::vector<FixedViewInfo*>& infos) {
+    int count = infos.size();
+    for (int i = 0; i < count; i++) {
+        View* child = infos[i]->view;
+        ViewGroup::LayoutParams* params = child->getLayoutParams();
+        if (checkLayoutParams(params)) {
+            ((LayoutParams*) params)->recycledHeaderFooter = false;
+        }
+    }
+}
+
+bool ListView::showingTopFadingEdge() {
+    int listTop = mScrollY + mListPadding.y;
+    return (mFirstPosition > 0) || (getChildAt(0)->getTop() > listTop);
+}
+
+bool ListView::showingBottomFadingEdge(){
+    int childCount = getChildCount();
+    int bottomOfBottomChild = getChildAt(childCount - 1)->getBottom();
+    int lastVisiblePosition = mFirstPosition + childCount - 1;
+
+    int listBottom = mScrollY + getHeight() - mListPadding.height;
+
+    return (lastVisiblePosition < mItemCount - 1)|| (bottomOfBottomChild < listBottom);
+}
+
+bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate){
+    int rectTopWithinChild = rect.y;
+
+    // offset so rect is in coordinates of the this view
+    rect.offset(child->getLeft(), child->getTop());
+    rect.offset(-child->getScrollX(), -child->getScrollY());
+
+    int height = getHeight();
+    int listUnfadedTop = getScrollY();
+    int listUnfadedBottom = listUnfadedTop + height;
+    int fadingEdge = getVerticalFadingEdgeLength();
+
+    if (showingTopFadingEdge()) {
+        // leave room for top fading edge as long as rect isn't at very top
+        if ((mSelectedPosition > 0) || (rectTopWithinChild > fadingEdge)) {
+            listUnfadedTop += fadingEdge;
+        }
+    }
+
+    int childCount = getChildCount();
+    int bottomOfBottomChild = getChildAt(childCount - 1)->getBottom();
+
+    if (showingBottomFadingEdge()) {
+        // leave room for bottom fading edge as long as rect isn't at very bottom
+        if ((mSelectedPosition < mItemCount - 1)
+                || (rect.bottom() < (bottomOfBottomChild - fadingEdge))) {
+            listUnfadedBottom -= fadingEdge;
+        }
+    }
+
+    int scrollYDelta = 0;
+
+    if (rect.bottom() > listUnfadedBottom && rect.y > listUnfadedTop) {
+        // need to MOVE DOWN to get it in view: move down just enough so
+        // that the entire rectangle is in view (or at least the first
+        // screen size chunk).
+
+        if (rect.height > height) {
+            // just enough to get screen size chunk on
+            scrollYDelta += (rect.y - listUnfadedTop);
+        } else {
+            // get entire rect at bottom of screen
+             scrollYDelta += (rect.bottom() - listUnfadedBottom);
+        }
+
+        // make sure we aren't scrolling beyond the end of our children
+        int distanceToBottom = bottomOfBottomChild - listUnfadedBottom;
+        scrollYDelta = std::min(scrollYDelta, distanceToBottom);
+    } else if (rect.y < listUnfadedTop && rect.bottom() < listUnfadedBottom) {
+        // need to MOVE UP to get it in view: move up just enough so that
+        // entire rectangle is in view (or at least the first screen
+        // size chunk of it).
+
+        if (rect.height > height) {
+            // screen size chunk
+            scrollYDelta -= (listUnfadedBottom - rect.bottom());
+        } else {
+            // entire rect at top
+            scrollYDelta -= (listUnfadedTop - rect.y);
+        }
+
+        // make sure we aren't scrolling any further than the top our children
+        int top = getChildAt(0)->getTop();
+        int deltaToTop = top - listUnfadedTop;
+        scrollYDelta = std::max(scrollYDelta, deltaToTop);
+    }
+
+    bool scroll = scrollYDelta != 0;
+    if (scroll) {
+        scrollListItemsBy(-scrollYDelta);
+        positionSelector(INVALID_POSITION, child);
+        mSelectedTop = child->getTop();
+        invalidate();
+    }
+    return scroll;
+}
+
+void ListView::fillGap(bool down) {
+    int count = getChildCount();
+    if (down) {
+        int paddingTop = 0;
+        if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
+            paddingTop = getListPaddingTop();
+        }
+        int startOffset = count > 0 ? getChildAt(count - 1)->getBottom() + mDividerHeight :paddingTop;
+        fillDown(mFirstPosition + count, startOffset);
+        correctTooHigh(getChildCount());
+    } else {
+        int paddingBottom = 0;
+        if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
+            paddingBottom = getListPaddingBottom();
+        }
+        int startOffset = count > 0 ? getChildAt(0)->getTop() - mDividerHeight :getHeight() - paddingBottom;
+        fillUp(mFirstPosition - 1, startOffset);
+        correctTooLow(getChildCount());
+    }
+}
+
+View* ListView::fillDown(int pos, int nextTop) {
+    View* selectedView = nullptr;
+
+    int end = getHeight();//(mBottom - mTop);
+    if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
+        end -= mListPadding.height;
+    }
+
+    while (nextTop < end && pos < mItemCount) {
+        // is this the selected item?
+        bool selected = pos == mSelectedPosition;
+        View* child = makeAndAddView(pos, nextTop, true, mListPadding.x, selected);
+
+        nextTop = child->getBottom() + mDividerHeight;
+        if (selected) {
+            selectedView = child;
+        }
+        pos++;
+    }
+
+    setVisibleRangeHint(mFirstPosition, mFirstPosition + getChildCount() - 1);
+    return selectedView;
+}
+
+View* ListView::fillUp(int pos, int nextBottom) {
+    View* selectedView = nullptr;
+
+    int end = 0;
+    if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
+        end = mListPadding.y;
+    }
+    while (nextBottom > end && pos >= 0) {
+        // is this the selected item?
+        bool selected = pos == mSelectedPosition;
+        View* child = makeAndAddView(pos, nextBottom, false, mListPadding.x, selected);
+        nextBottom = child->getTop() - mDividerHeight;
+        if (selected) {
+            selectedView = child;
+        }
+        pos--;
+    }
+
+    mFirstPosition = pos + 1;
+    setVisibleRangeHint(mFirstPosition, mFirstPosition + getChildCount() - 1);
+    return selectedView;
+}
+
+View* ListView::fillFromTop(int nextTop) {
+    mFirstPosition = std::min(mFirstPosition, mSelectedPosition);
+    mFirstPosition = std::min(mFirstPosition, mItemCount - 1);
+    if (mFirstPosition < 0) {
+        mFirstPosition = 0;
+    }
+    return fillDown(mFirstPosition, nextTop);
+}
+
+View* ListView::fillFromMiddle(int childrenTop, int childrenBottom) {
+    int height = childrenBottom - childrenTop;
+
+    int position = reconcileSelectedPosition();
+
+    View* sel = makeAndAddView(position, childrenTop, true,mListPadding.x, true);
+    mFirstPosition = position;
+
+    int selHeight = sel->getMeasuredHeight();
+    if (selHeight <= height) {
+        sel->offsetTopAndBottom((height - selHeight) / 2);
+    }
+
+    fillAboveAndBelow(sel, position);
+
+    if (!mStackFromBottom) {
+        correctTooHigh(getChildCount());
+    } else {
+        correctTooLow(getChildCount());
+    }
+    return sel;
+}
+void ListView::fillAboveAndBelow(View* sel, int position) {
+    if (!mStackFromBottom) {
+        fillUp(position - 1, sel->getTop() - mDividerHeight);
+        adjustViewsUpOrDown();
+        fillDown(position + 1, sel->getBottom() + mDividerHeight);
+    } else {
+        fillDown(position + 1, sel->getBottom() + mDividerHeight);
+        adjustViewsUpOrDown();
+        fillUp(position - 1, sel->getTop() - mDividerHeight);
+    }
+}
+
+View* ListView::fillFromSelection(int selectedTop, int childrenTop, int childrenBottom) {
+    int fadingEdgeLength = getVerticalFadingEdgeLength();
+    int selectedPosition = mSelectedPosition;
+
+    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength,selectedPosition);
+    int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom, fadingEdgeLength,selectedPosition);
+
+    View* sel = makeAndAddView(selectedPosition, selectedTop, true, mListPadding.x, true);
+
+
+    // Some of the newly selected item extends below the bottom of the list
+    if (sel->getBottom() > bottomSelectionPixel) {
+        // Find space available above the selection into which we can scroll upwards
+        int spaceAbove = sel->getTop() - topSelectionPixel;
+
+        // Find space required to bring the bottom of the selected item
+        // fully into view
+        int spaceBelow = sel->getBottom() - bottomSelectionPixel;
+        int offset = std::min(spaceAbove, spaceBelow);
+
+        // Now offset the selected item to get it into view
+        sel->offsetTopAndBottom(-offset);
+    } else if (sel->getTop() < topSelectionPixel) {
+        // Find space required to bring the top of the selected item fully
+        // into view
+        int spaceAbove = topSelectionPixel - sel->getTop();
+
+        // Find space available below the selection into which we can scroll
+        // downwards
+        int spaceBelow = bottomSelectionPixel - sel->getBottom();
+        int offset = std::min(spaceAbove, spaceBelow);
+
+        // Offset the selected item to get it into view
+        sel->offsetTopAndBottom(offset);
+    }
+
+    // Fill in views above and below
+    fillAboveAndBelow(sel, selectedPosition);
+
+    if (!mStackFromBottom) {
+        correctTooHigh(getChildCount());
+    } else {
+        correctTooLow(getChildCount());
+    }
+    return sel;
+}
+
+int ListView::getBottomSelectionPixel(int childrenBottom, int fadingEdgeLength,int selectedPosition) {
+    int bottomSelectionPixel = childrenBottom;
+    if (selectedPosition != mItemCount - 1) {
+        bottomSelectionPixel -= fadingEdgeLength;
+    }
+    return bottomSelectionPixel;
+}
+
+int ListView::getTopSelectionPixel(int childrenTop, int fadingEdgeLength, int selectedPosition) {
+    int topSelectionPixel = childrenTop;
+    if (selectedPosition > 0) {
+        topSelectionPixel += fadingEdgeLength;
+    }
+    return topSelectionPixel;
+}
+
+View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childrenTop, int childrenBottom){
+    int fadingEdgeLength = getVerticalFadingEdgeLength();
+    int selectedPosition = mSelectedPosition;
+
+    View* sel;
+
+    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, selectedPosition);
+    int bottomSelectionPixel = getBottomSelectionPixel(childrenTop, fadingEdgeLength,  selectedPosition);
+    LOGD("-----Scrolling %s  delta=%d childen top/bottom=%d/%d",(delta>0?"Down":"Up"),delta,childrenTop,childrenBottom);
+    if (delta > 0) {//Scrolling Down.
+        // Put oldSel (A) where it belongs
+        oldSel = makeAndAddView(selectedPosition - 1, oldSel->getTop(), true, mListPadding.x, false);
+
+        int dividerHeight = mDividerHeight;
+
+        // Now put the new selection (B) below that
+        sel = makeAndAddView(selectedPosition, oldSel->getBottom() + dividerHeight, true,  mListPadding.x, true);
+
+        // Some of the newly selected item extends below the bottom of the list
+        if (sel->getBottom() > bottomSelectionPixel) {
+
+            // Find space available above the selection into which we can scroll upwards
+            int spaceAbove = sel->getTop() - topSelectionPixel;
+
+            // Find space required to bring the bottom of the selected item fully into view
+            int spaceBelow = sel->getBottom() - bottomSelectionPixel;
+
+            // Don't scroll more than half the height of the list
+            int halfVerticalSpace = (childrenBottom - childrenTop) / 2;
+            int offset = std::min(spaceAbove, spaceBelow);
+            offset = std::min(offset, halfVerticalSpace);
+
+            // We placed oldSel, so offset that item
+            oldSel->offsetTopAndBottom(-offset);
+            // Now offset the selected item to get it into view
+            sel->offsetTopAndBottom(-offset);
+        }
+
+        // Fill in views above and below
+        if (!mStackFromBottom) {
+            fillUp(mSelectedPosition - 2, sel->getTop() - dividerHeight);
+            adjustViewsUpOrDown();
+            fillDown(mSelectedPosition + 1, sel->getBottom() + dividerHeight);
+        } else {
+            fillDown(mSelectedPosition + 1, sel->getBottom() + dividerHeight);
+            adjustViewsUpOrDown();
+            fillUp(mSelectedPosition - 2, sel->getTop() - dividerHeight);
+        }
+    } else if (delta < 0) {//Scrolling up.
+        if (newSel != nullptr) {
+            // Try to position the top of newSel (A) where it was before it was selected
+            sel = makeAndAddView(selectedPosition, newSel->getTop(), true, mListPadding.x,true);
+        } else {
+            // If (A) was not on screen and so did not have a view, position
+            // it above the oldSel (B)
+            sel = makeAndAddView(selectedPosition, oldSel->getTop(), false, mListPadding.x,true);
+        }
+
+        // Some of the newly selected item extends above the top of the list
+        if (sel->getTop() < topSelectionPixel) {
+            // Find space required to bring the top of the selected item fully into view
+            int spaceAbove = topSelectionPixel - sel->getTop();
+
+           // Find space available below the selection into which we can scroll downwards
+            int spaceBelow = bottomSelectionPixel - sel->getBottom();
+
+            // Don't scroll more than half the height of the list
+            int halfVerticalSpace = (childrenBottom - childrenTop) / 2;
+            int offset = std::min(spaceAbove, spaceBelow);
+            offset = std::min(offset, halfVerticalSpace);
+
+            // Offset the selected item to get it into view
+            sel->offsetTopAndBottom(offset);
+        }
+
+        // Fill in views above and below
+        fillAboveAndBelow(sel, selectedPosition);
+    } else {
+
+        int oldTop = oldSel->getTop();
+
+        // Case 3: Staying still
+        sel = makeAndAddView(selectedPosition, oldTop, true, mListPadding.x, true);
+
+        // We're staying still...
+        if (oldTop < childrenTop) {
+            // ... but the top of the old selection was off screen.
+            // (This can happen if the data changes size out from under us)
+            int newBottom = sel->getBottom();
+            if (newBottom < childrenTop + 20) {
+                // Not enough visible -- bring it onscreen
+                sel->offsetTopAndBottom(childrenTop - sel->getTop());
+            }
+        }
+
+        // Fill in views above and below
+        fillAboveAndBelow(sel, selectedPosition);
+    }
+
+    return sel;
+}
+
+ListView::FocusSelector::FocusSelector(ListView*lv){
+    mLV=lv;
+}
+
+ListView::FocusSelector&ListView::FocusSelector::setupForSetSelection(int position, int top){
+    mPosition = position;
+    mPositionTop = top;
+    mAction = STATE_SET_SELECTION;
+    return *this;
+}
+
+void ListView::FocusSelector::operator()(){
+    if (mAction == STATE_SET_SELECTION) {
+        mLV->setSelectionFromTop(mPosition, mPositionTop);
+        mAction = STATE_WAIT_FOR_LAYOUT;
+    } else if (mAction == STATE_REQUEST_FOCUS) {
+        int childIndex = mPosition - mLV->mFirstPosition;
+        View* child = mLV->getChildAt(childIndex);
+        if (child) child->requestFocus();
+        mAction = -1;
+    }
+}
+
+bool ListView::FocusSelector::setupFocusIfValid(int position) {
+    if (mAction != STATE_WAIT_FOR_LAYOUT || position != mPosition) {
+        return false;
+    }
+    mAction = STATE_REQUEST_FOCUS;
+    return true;
+}
+
+void ListView::FocusSelector::onLayoutComplete() {
+    if (mAction == STATE_WAIT_FOR_LAYOUT) {
+        mAction = -1;
+    }
+}
+
+void ListView::onDettached(){
+    if (mFocusSelector) {
+        removeCallbacks(*mFocusSelector);
+        delete mFocusSelector;
+        mFocusSelector = nullptr;
+    }
+    AbsListView::onDettached();
+}
+
+void ListView::onSizeChanged(int w, int h, int oldw, int oldh){
+    if (getChildCount() > 0) {
+        View* focusedChild = getFocusedChild();
+        if (focusedChild) {
+            int childPosition = mFirstPosition + indexOfChild(focusedChild);
+            int childBottom = focusedChild->getBottom();
+            int offset = std::max(0, childBottom - (h - mPaddingTop));
+            int top = focusedChild->getTop() - offset;
+            
+            if (mFocusSelector == nullptr)  mFocusSelector = new FocusSelector(this);
+
+            post(mFocusSelector->setupForSetSelection(childPosition, top));
+        }
+    }
+    AbsListView::onSizeChanged(w, h, oldw, oldh);
+}
+
+void ListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    AbsListView::onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+    int widthMode = MeasureSpec::getMode(widthMeasureSpec);
+    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    int widthSize = MeasureSpec::getSize(widthMeasureSpec);
+    int heightSize = MeasureSpec::getSize(heightMeasureSpec);
+
+    int childWidth = 0;
+    int childHeight = 0;
+    int childState = 0;
+
+    mItemCount = mAdapter ?mAdapter->getCount():0;
+    if (mItemCount > 0 && (widthMode == MeasureSpec::UNSPECIFIED
+                           || heightMode == MeasureSpec::UNSPECIFIED)) {
+        View* child = obtainView(0, mIsScrap);
+
+        // Lay out child directly against the parent measure spec so that
+        // we can obtain exected minimum width and height.
+        measureScrapChild(child, 0, widthMeasureSpec, heightSize);
+
+        childWidth = child->getMeasuredWidth();
+        childHeight = child->getMeasuredHeight();
+        childState = combineMeasuredStates(childState, child->getMeasuredState());
+
+        if (recycleOnMeasure() && mRecycler->shouldRecycleViewType(
+                    ((LayoutParams*) child->getLayoutParams())->viewType)) {
+            mRecycler->addScrapView(child, 0);
+        }
+    }
+
+    if (widthMode == MeasureSpec::UNSPECIFIED) {
+        widthSize = mListPadding.x + mListPadding.width + childWidth +
+                    getVerticalScrollbarWidth();
+    } else {
+        widthSize |= (childState & MEASURED_STATE_MASK);
+    }
+
+    if (heightMode == MeasureSpec::UNSPECIFIED) {
+        heightSize = mListPadding.y + mListPadding.height + childHeight +
+                       getVerticalFadingEdgeLength() * 2;
+    }
+
+    if (heightMode == MeasureSpec::AT_MOST) {
+        // TODO: after first layout we should maybe start at the first visible position, not 0
+        heightSize = measureHeightOfChildren(widthMeasureSpec, 0, NO_POSITION, heightSize, -1);
+    }
+
+    setMeasuredDimension(widthSize, heightSize);
+
+    mWidthMeasureSpec = widthMeasureSpec;
+}
+
+void ListView::measureScrapChild(View* child, int position, int widthMeasureSpec, int heightHint) {
+    LayoutParams* p = (LayoutParams*) child->getLayoutParams();
+    if (p == nullptr) {
+        p = (AbsListView::LayoutParams*) generateDefaultLayoutParams();
+        child->setLayoutParams(p);
+    }
+    p->viewType = mAdapter->getItemViewType(position);
+    p->isEnabled = mAdapter->isEnabled(position);
+    p->forceAdd = true;
+
+    int childWidthSpec = ViewGroup::getChildMeasureSpec(widthMeasureSpec,
+                         mListPadding.x + mListPadding.width, p->width);
+    int lpHeight = p->height;
+    int childHeightSpec;
+    if (lpHeight > 0) {
+        childHeightSpec = MeasureSpec::makeMeasureSpec(lpHeight, MeasureSpec::EXACTLY);
+    } else {
+        childHeightSpec = MeasureSpec::makeSafeMeasureSpec(heightHint, MeasureSpec::UNSPECIFIED);
+    }
+    child->measure(childWidthSpec, childHeightSpec);
+
+    // Since this view was measured directly aginst the parent measure
+    // spec, we must measure it again before reuse.
+    child->forceLayout();
+}
+
+bool ListView::recycleOnMeasure() {
+    return true;
+}
+
+int ListView::measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
+                                      int maxHeight, int disallowPartialChildPosition) {
+    if (mAdapter == nullptr) {
+        return mListPadding.y + mListPadding.height;
+    }
+
+    // Include the padding of the list
+    int returnedHeight = mListPadding.y + mListPadding.height;
+    // The previous height value that was less than maxHeight and contained
+    // no partial children
+    int prevHeightWithoutPartialChild = 0;
+    int i;
+    View* child;
+
+    // mItemCount - 1 since endPosition parameter is inclusive
+    endPosition = (endPosition == NO_POSITION) ? mAdapter->getCount() - 1 : endPosition;
+    bool recyle = recycleOnMeasure();
+    bool* isScrap = mIsScrap;
+
+    for (i = startPosition; i <= endPosition; ++i) {
+        child = obtainView(i, isScrap);
+
+        measureScrapChild(child, i, widthMeasureSpec, maxHeight);
+
+        if (i > 0) {
+            // Count the divider for all but one child
+            returnedHeight += mDividerHeight;
+        }
+
+        // Recycle the view before we possibly return from the method
+        if (recyle && mRecycler->shouldRecycleViewType(
+                    ((LayoutParams*) child->getLayoutParams())->viewType)) {
+            mRecycler->addScrapView(child, -1);
+        }
+
+        returnedHeight += child->getMeasuredHeight();
+
+        if (returnedHeight >= maxHeight) {
+            // We went over, figure out which height to return.  If returnedHeight > maxHeight,
+            // then the i'th position did not fit completely.
+            LOGV("returnedHeight=%d",returnedHeight);
+            return (disallowPartialChildPosition >= 0) // Disallowing is enabled (> -1)
+                   && (i > disallowPartialChildPosition) // We've past the min pos
+                   && (prevHeightWithoutPartialChild > 0) // We have a prev height
+                   && (returnedHeight != maxHeight) // i'th child did not fit completely
+                   ? prevHeightWithoutPartialChild : maxHeight;
+        }
+
+        if ((disallowPartialChildPosition >= 0) && (i >= disallowPartialChildPosition)) {
+            prevHeightWithoutPartialChild = returnedHeight;
+        }
+    }
+    LOGV("returnedHeight=%d",returnedHeight);
+    // At this point, we went through the range of children, and they each
+    // completely fit, so return the returnedHeight
+    return returnedHeight;
+}
+
+int ListView::findMotionRow(int y) {
+    int childCount = getChildCount();
+    if (childCount > 0) {
+        if (!mStackFromBottom) {
+            for (int i = 0; i < childCount; i++) {
+                View* v = getChildAt(i);
+                if (y <= v->getBottom()) {
+                    return mFirstPosition + i;
+                }
+            }
+        } else {
+            for (int i = childCount - 1; i >= 0; i--) {
+                View* v = getChildAt(i);
+                if (y >= v->getTop()) {
+                    return mFirstPosition + i;
+                }
+            }
+        }
+    }
+    return INVALID_POSITION;
+}
+
+View* ListView::fillSpecific(int position, int top) {
+    bool tempIsSelected = position == mSelectedPosition;
+    View* temp = makeAndAddView(position, top, true, mListPadding.x, tempIsSelected);
+    // Possibly changed again in fillUp if we add rows above this one.
+    mFirstPosition = position;
+    View* above,* below;
+
+    int dividerHeight = mDividerHeight;
+    if (!mStackFromBottom) {
+        above = fillUp(position - 1, temp->getTop() - dividerHeight);
+        // This will correct for the top of the first view not touching the top of the list
+        adjustViewsUpOrDown();
+        below = fillDown(position + 1, temp->getBottom() + dividerHeight);
+        int childCount = getChildCount();
+        if (childCount > 0) {
+            correctTooHigh(childCount);
+        }
+    } else {
+        below = fillDown(position + 1, temp->getBottom() + dividerHeight);
+        // This will correct for the bottom of the last view not touching the bottom of the list
+        adjustViewsUpOrDown();
+        above = fillUp(position - 1, temp->getTop() - dividerHeight);
+        int childCount = getChildCount();
+        if (childCount > 0) {
+            correctTooLow(childCount);
+        }
+    }
+
+    if (tempIsSelected) {
+        return temp;
+    } else if (above != nullptr) {
+        return above;
+    } else {
+        return below;
+    }
+}
+
+void ListView::correctTooHigh(int childCount) {
+    int lastPosition = mFirstPosition + childCount - 1;
+    if (lastPosition == mItemCount - 1 && childCount > 0) {
+
+        // Get the last child ...
+        View* lastChild = getChildAt(childCount - 1);
+
+        // ... and its bottom edge
+        int lastBottom = lastChild->getBottom();
+
+        // This is bottom of our drawable area
+        int end = getHeight()- mListPadding.height;//bottom;
+
+        // This is how far the bottom edge of the last view is from the bottom of the
+        // drawable area
+        int bottomOffset = end - lastBottom;
+        View* firstChild = getChildAt(0);
+        int firstTop = firstChild->getTop();
+
+        // Make sure we are 1) Too high, and 2) Either there are more rows above the
+        // first row or the first row is scrolled off the top of the drawable area
+        if (bottomOffset > 0 && (mFirstPosition > 0 || firstTop < mListPadding.y))  {
+            if (mFirstPosition == 0) {
+                // Don't pull the top too far down
+                bottomOffset = std::min(bottomOffset, mListPadding.y - firstTop);
+            }
+            // Move everything down
+            offsetChildrenTopAndBottom(bottomOffset);
+            if (mFirstPosition > 0) {
+                // Fill the gap that was opened above mFirstPosition with more rows, if
+                // possible
+                fillUp(mFirstPosition - 1, firstChild->getTop() - mDividerHeight);
+                // Close up the remaining gap
+                adjustViewsUpOrDown();
+            }
+
+        }
+    }
+}
+
+void ListView::correctTooLow(int childCount) {
+    if (mFirstPosition == 0 && childCount > 0) {
+
+        // Get the first child ...
+        View* firstChild = getChildAt(0);
+
+        // ... and its top edge
+        int firstTop = firstChild->getTop();
+
+        // This is top of our drawable area
+        int start = mListPadding.y;//top;
+
+        // This is bottom of our drawable area
+        int end = getHeight()- mListPadding.height;//bottom;
+
+        // This is how far the top edge of the first view is from the top of the
+        // drawable area
+        int topOffset = firstTop - start;
+        View* lastChild = getChildAt(childCount - 1);
+        int lastBottom = lastChild->getBottom();
+        int lastPosition = mFirstPosition + childCount - 1;
+
+        // Make sure we are 1) Too low, and 2) Either there are more rows below the
+        // last row or the last row is scrolled off the bottom of the drawable area
+        if (topOffset > 0) {
+            if (lastPosition < mItemCount - 1 || lastBottom > end)  {
+                if (lastPosition == mItemCount - 1) {
+                    // Don't pull the bottom too far up
+                    topOffset = std::min(topOffset, lastBottom - end);
+                }
+                // Move everything up
+                offsetChildrenTopAndBottom(-topOffset);
+                if (lastPosition < mItemCount - 1) {
+                    // Fill the gap that was opened below the last position with more rows, if
+                    // possible
+                    fillDown(lastPosition + 1, lastChild->getBottom() + mDividerHeight);
+                    // Close up the remaining gap
+                    adjustViewsUpOrDown();
+                }
+            } else if (lastPosition == mItemCount - 1) {
+                adjustViewsUpOrDown();
+            }
+        }
+    }
 }
 
 bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
@@ -96,757 +1043,9 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
 
     return false;
 }
-int ListView::getMaxScrollAmount()const {
-    return (int) (MAX_SCROLL_FACTOR * mWidth);
-}
-
-int ListView::getHeightForPosition(int position) {
-    int height = AbsListView::getHeightForPosition(position);
-    if (shouldAdjustHeightForDivider(position)) {
-        return height + mDividerHeight;
-    }
-    return height;
-}
-void ListView::setDivider(Drawable* divider) {
-    if (divider != nullptr) {
-        mDividerHeight = divider->getIntrinsicHeight();
-    } else {
-        mDividerHeight = 0;
-    }
-    mDivider = divider;
-    mDividerIsOpaque = divider == nullptr || divider->getOpacity() == Drawable::OPAQUE;
-    if(mAdapter && mItemCount)requestLayout();
-    invalidate(true);
-}
-
-HeaderViewListAdapter* ListView::wrapHeaderListAdapterInternal(
-         const std::vector<FixedViewInfo*>& headerViewInfos,
-         const std::vector<FixedViewInfo*>& footerViewInfos,Adapter* adapter){
-     return new HeaderViewListAdapter(headerViewInfos, footerViewInfos, adapter);
-}
-
-void ListView::wrapHeaderListAdapterInternal(){
-    mAdapter = wrapHeaderListAdapterInternal(mHeaderViewInfos, mFooterViewInfos, mAdapter);
-}
-
-void ListView::addHeaderView(View* v,void* data, bool isSelectable){
-     if (v->getParent() != nullptr && v->getParent() != this) {
-        throw "The specified child already has a parent.You must call removeView() on the child's parent first.";
-    }
-    FixedViewInfo* info=new FixedViewInfo();
-    info->view = v;
-    info->data = data;
-    info->isSelectable = isSelectable;
-    mHeaderViewInfos.push_back(info);
-    mAreAllItemsSelectable &= isSelectable;
-
-    // Wrap the adapter if it wasn't already wrapped.
-    if (mAdapter != nullptr) {
-        if (nullptr==dynamic_cast<HeaderViewListAdapter*>(mAdapter)) {
-            wrapHeaderListAdapterInternal();
-        }
-
-        // In the case of re-adding a header view, or adding one later on,
-        // we need to notify the observer.
-        if (mDataSetObserver ) mDataSetObserver->onChanged();
-    }
-}
-
-void ListView::addHeaderView(View* v){
-    addHeaderView(v, nullptr, true);
-}
-
-int ListView::getHeaderViewsCount()const{
-    return mHeaderViewInfos.size();
-}
-
-void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where){
-    int len = where.size();
-    for (int i = 0; i < len; ++i) {
-        FixedViewInfo* info = where[i];
-        if (info->view == v) {
-            where.erase(where.begin()+i);
-            break;
-        }
-    }
-}
-
-bool ListView::trackMotionScroll(int deltaY, int incrementalDeltaY){
-    bool result = AbsListView::trackMotionScroll(deltaY, incrementalDeltaY);
-    removeUnusedFixedViews(mHeaderViewInfos);
-    removeUnusedFixedViews(mFooterViewInfos);
-    return result;
-}
-
-void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList){
-    for (int i = infoList.size() - 1; i >= 0; i--) {
-        FixedViewInfo* fixedViewInfo = infoList[i];
-        View* view = fixedViewInfo->view;
-        LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
-        if (view->getParent() == nullptr && lp != nullptr && lp->recycledHeaderFooter) {
-            removeDetachedView(view, false);
-            lp->recycledHeaderFooter = false;
-        }
-    }
-}
-
-bool ListView::isDirectChildHeaderOrFooter(View* child){
-    for (auto h:mHeaderViewInfos) {
-        if (child == h->view) {
-            return true;
-        }
-    }
-    for (auto f:mFooterViewInfos) {
-        if (child == f->view) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool ListView::removeHeaderView(View* v){
-    if (mHeaderViewInfos.size()) {
-        bool result = false;
-        if (mAdapter != nullptr && ((HeaderViewListAdapter*) mAdapter)->removeHeader(v)) {
-            if (mDataSetObserver != nullptr) {
-                mDataSetObserver->onChanged();
-            }
-            result = true;
-        }
-        removeFixedViewInfo(v, mHeaderViewInfos);
-        return result;
-    }
-    return false;    
-}
-
-void ListView::addFooterView(View* v,void* data, bool isSelectable){
-    if (v->getParent() != nullptr && v->getParent() != this) {
-        throw "The specified child already has a parent.You must call removeView() on the child's parent first.";
-    }
-
-    FixedViewInfo* info = new FixedViewInfo();
-    info->view = v;
-    info->data = data;
-    info->isSelectable = isSelectable;
-    mFooterViewInfos.push_back(info);
-    mAreAllItemsSelectable &= isSelectable;
-
-    // Wrap the adapter if it wasn't already wrapped.
-    if (mAdapter != nullptr) {
-        if (nullptr==dynamic_cast<HeaderViewListAdapter*>(mAdapter)) {
-            wrapHeaderListAdapterInternal();
-        }
-
-        // In the case of re-adding a footer view, or adding one later on,
-        // we need to notify the observer.
-        if (mDataSetObserver)mDataSetObserver->onChanged();
-    }
-}
-
-void ListView::addFooterView(View* v){
-    addFooterView(v,nullptr,true);
-}
-
-int ListView::getFooterViewsCount()const{
-    return mFooterViewInfos.size();
-}
-
-void ListView::setHeaderDividersEnabled(bool headerDividersEnabled) {
-    mHeaderDividersEnabled = headerDividersEnabled;
-    invalidate(true);
-}
-bool ListView::areHeaderDividersEnabled()const {
-    return mHeaderDividersEnabled;
-}
-void ListView::setFooterDividersEnabled(bool footerDividersEnabled) {
-    mFooterDividersEnabled = footerDividersEnabled;
-    invalidate(true);
-}
-bool ListView::areFooterDividersEnabled()const {
-    return mFooterDividersEnabled;
-}
-
-void ListView::setSelection(int position) {
-    setSelectionFromTop(position, 0);
-}
-
-void ListView::setItemsCanFocus(bool itemsCanFocus){
-    mItemsCanFocus = itemsCanFocus;
-    if (!itemsCanFocus) {
-        setDescendantFocusability(ViewGroup::FOCUS_BLOCK_DESCENDANTS);
-    }
-}
-
-bool ListView::getItemsCanFocus()const{
-    return mItemsCanFocus;
-}
-void ListView::setOverscrollHeader(Drawable* header) {
-    mOverScrollHeader = header;
-    if (mScrollY < 0) {
-        invalidate(true);
-    }
-}
-Drawable* ListView::getOverscrollHeader()const {
-    return mOverScrollHeader;
-}
-void ListView::setOverscrollFooter(Drawable* footer) {
-    mOverScrollFooter = footer;
-    invalidate(true);
-}
-
-Drawable* ListView::getOverscrollFooter()const {
-    return mOverScrollFooter;
-}
-
-void ListView::setSelectionInt(int position) {
-    bool awakeScrollbars = false;
-    setNextSelectedPositionInt(position);
-
-    int selectedPosition = mSelectedPosition;
-    if (selectedPosition >= 0) {
-        if (position == selectedPosition - 1) {
-            awakeScrollbars = true;
-        } else if (position == selectedPosition + 1) {
-            awakeScrollbars = true;
-        }
-    }
-
-    if (mPositionScroller) mPositionScroller->stop();
-
-    layoutChildren();
-
-    if (awakeScrollbars) awakenScrollBars();
-}
-
-int ListView::findMotionRow(int y) {
-    int childCount = getChildCount();
-    if (childCount > 0) {
-        if (!mStackFromBottom) {
-            for (int i = 0; i < childCount; i++) {
-                View* v = getChildAt(i);
-                if (y <= v->getBottom()) {
-                    return mFirstPosition + i;
-                }
-            }
-        } else {
-            for (int i = childCount - 1; i >= 0; i--) {
-                View* v = getChildAt(i);
-                if (y >= v->getTop()) {
-                    return mFirstPosition + i;
-                }
-            }
-        }
-    }
-    return INVALID_POSITION;
-}
-
-void ListView::clearRecycledState(std::vector<FixedViewInfo*>& infos) {
-    int count = infos.size();
-    for (int i = 0; i < count; i++) {
-        View* child = infos[i]->view;
-        ViewGroup::LayoutParams* params = child->getLayoutParams();
-        if (checkLayoutParams(params)) {
-            ((LayoutParams*) params)->recycledHeaderFooter = false;
-        }
-    }
-}
-void ListView::resetList() {
-    clearRecycledState(mHeaderViewInfos);
-    clearRecycledState(mFooterViewInfos);
-    AbsListView::resetList();
-    mLayoutMode = LAYOUT_NORMAL;
-}
-void ListView::setAdapter(Adapter* adapter) {
-    if (mAdapter  && mDataSetObserver ) {
-        mAdapter->unregisterDataSetObserver(mDataSetObserver);
-    }
-
-    resetList();
-    mRecycler->clear();
-    if (mHeaderViewInfos.size() > 0|| mFooterViewInfos.size() > 0) {
-        mAdapter = wrapHeaderListAdapterInternal(mHeaderViewInfos, mFooterViewInfos, adapter);
-    } else {
-        mAdapter = adapter;
-    }
-
-    mOldSelectedPosition = INVALID_POSITION;
-    mOldSelectedRowId = INVALID_ROW_ID;
-
-    // AbsListView#setAdapter will update choice mode states.
-    AbsListView::setAdapter(adapter);
-
-    if (mAdapter != nullptr) {
-        mAreAllItemsSelectable = mAdapter->areAllItemsEnabled();
-        mOldItemCount = mItemCount;
-        mItemCount = mAdapter->getCount();
-        checkFocus();
-
-        mDataSetObserver = new AdapterDataSetObserver(this);
-        mAdapter->registerDataSetObserver(mDataSetObserver);
-
-        mRecycler->setViewTypeCount(mAdapter->getViewTypeCount());
-
-        int position;
-        if (mStackFromBottom) {
-            position = lookForSelectablePosition(mItemCount - 1, false);
-        } else {
-            position = lookForSelectablePosition(0, true);
-        }
-        setSelectedPositionInt(position);
-        setNextSelectedPositionInt(position);
-
-        if (mItemCount == 0) {
-            // Nothing selected
-            checkSelectionChanged();
-        }
-    } else {
-        mAreAllItemsSelectable = true;
-        checkFocus();
-        // Nothing selected
-        checkSelectionChanged();
-    }
-    requestLayout();
-}
-
-int ListView::getTopSelectionPixel(int childrenTop, int fadingEdgeLength, int selectedPosition) {
-    int topSelectionPixel = childrenTop;
-    if (selectedPosition > 0) {
-        topSelectionPixel += fadingEdgeLength;
-    }
-    return topSelectionPixel;
-}
-
-int ListView::getBottomSelectionPixel(int childrenBottom, int fadingEdgeLength,int selectedPosition) {
-    int bottomSelectionPixel = childrenBottom;
-    if (selectedPosition != mItemCount - 1) {
-        bottomSelectionPixel -= fadingEdgeLength;
-    }
-    return bottomSelectionPixel;
-}
-
-void ListView::setupChild(View* child, int position, int y, bool flowDown, int childrenLeft,
-                          bool selected, bool isAttachedToWindow) {
-
-    bool isSelected = selected && shouldShowSelector();
-    bool updateChildSelected = isSelected != child->isSelected();
-    int mode = mTouchMode;
-    bool isPressed = mode > TOUCH_MODE_DOWN && mode < TOUCH_MODE_SCROLL && mMotionPosition == position;
-    bool updateChildPressed = isPressed != child->isPressed();
-    bool needToMeasure = !isAttachedToWindow || updateChildSelected
-                         || child->isLayoutRequested();
-
-    // Respect layout params that are already in the view. Otherwise make
-    // some up...
-    AbsListView::LayoutParams* p = (LayoutParams*) child->getLayoutParams();
-    if (p == nullptr) p = (LayoutParams*) generateDefaultLayoutParams();
-
-    p->viewType = mAdapter->getItemViewType(position);
-    p->isEnabled = mAdapter->isEnabled(position);
-
-    // Set up view state before attaching the view, since we may need to
-    // rely on the jumpDrawablesToCurrentState() call that occurs as part
-    // of view attachment.
-    if (updateChildSelected)child->setSelected(isSelected);
-    if (updateChildPressed) child->setPressed(isPressed);
-
-    if (mChoiceMode != CHOICE_MODE_NONE && mCheckStates.size()) {
-        if (dynamic_cast<Checkable*>(child)) {
-            ((Checkable*)child)->setChecked(mCheckStates.get(position));
-        } else {
-            child->setActivated(mCheckStates.get(position));
-        }
-    }
-
-    if ((isAttachedToWindow && !p->forceAdd) || (p->recycledHeaderFooter
-            && p->viewType == AdapterView::ITEM_VIEW_TYPE_HEADER_OR_FOOTER)) {
-        attachViewToParent(child, flowDown ? -1 : 0, p);
-        // If the view was previously attached for a different position,
-        // then manually jump the drawables.
-        if (isAttachedToWindow
-                && (((AbsListView::LayoutParams*) child->getLayoutParams())->scrappedFromPosition)
-                != position) {
-            child->jumpDrawablesToCurrentState();
-        }
-    } else {
-        p->forceAdd = false;
-        if (p->viewType == AdapterView::ITEM_VIEW_TYPE_HEADER_OR_FOOTER) {
-            p->recycledHeaderFooter = true;
-        }
-        addViewInLayout(child, flowDown ? -1 : 0, p, true);
-        // add view in layout will reset the RTL properties. We have to re-resolve them
-        child->resolveRtlPropertiesIfNeeded();
-    }
-
-    if (needToMeasure) {
-        int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,mListPadding.x + mListPadding.width, p->width);
-        int lpHeight = p->height;
-        int childHeightSpec;
-        if (lpHeight > 0) {
-            childHeightSpec = MeasureSpec::makeMeasureSpec(lpHeight, MeasureSpec::EXACTLY);
-        } else {
-            childHeightSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(),MeasureSpec::UNSPECIFIED);
-        }
-        child->measure(childWidthSpec, childHeightSpec);
-    } else {
-        cleanupLayoutState(child);
-    }
-
-    int w = child->getMeasuredWidth();
-    int h = child->getMeasuredHeight();
-    int childTop = flowDown ? y : y - h;
-
-    if (needToMeasure) {
-        int childRight = childrenLeft + w;
-        int childBottom = childTop + h;
-        child->layout(childrenLeft, childTop, w, h);
-    } else {
-        child->offsetLeftAndRight(childrenLeft - child->getLeft());
-        child->offsetTopAndBottom(childTop - child->getTop());
-    }
-
-    //if (mCachingStarted && !child->isDrawingCacheEnabled()) child->setDrawingCacheEnabled(true);
-}
-View* ListView::makeAndAddView(int position, int y, bool flow, int childrenLeft,bool selected) {
-    if (!mDataChanged) {
-        // Try to use an existing view for this position.
-        View* activeView = mRecycler->getActiveView(position);
-        if (activeView != nullptr) {
-            // Found it. We're reusing an existing child, so it just needs
-            // to be positioned like a scrap view.
-            setupChild(activeView, position, y, flow, childrenLeft, selected, true);
-            return activeView;
-        }
-    }
-
-    // Make a new view for this position, or convert an unused view if
-    // possible.
-    View* child = obtainView(position, mIsScrap);
-
-    // This needs to be positioned and measured.
-    setupChild(child, position, y, flow, childrenLeft, selected, mIsScrap[0]);
-    return child;
-}
-
-void ListView::correctTooLow(int childCount) {
-    if (mFirstPosition == 0 && childCount > 0) {
-
-        // Get the first child ...
-        View* firstChild = getChildAt(0);
-
-        // ... and its top edge
-        int firstTop = firstChild->getTop();
-
-        // This is top of our drawable area
-        int start = mListPadding.y;//top;
-
-        // This is bottom of our drawable area
-        int end = getHeight()- mListPadding.height;//bottom;
-
-        // This is how far the top edge of the first view is from the top of the
-        // drawable area
-        int topOffset = firstTop - start;
-        View* lastChild = getChildAt(childCount - 1);
-        int lastBottom = lastChild->getBottom();
-        int lastPosition = mFirstPosition + childCount - 1;
-
-        // Make sure we are 1) Too low, and 2) Either there are more rows below the
-        // last row or the last row is scrolled off the bottom of the drawable area
-        if (topOffset > 0) {
-            if (lastPosition < mItemCount - 1 || lastBottom > end)  {
-                if (lastPosition == mItemCount - 1) {
-                    // Don't pull the bottom too far up
-                    topOffset = std::min(topOffset, lastBottom - end);
-                }
-                // Move everything up
-                offsetChildrenTopAndBottom(-topOffset);
-                if (lastPosition < mItemCount - 1) {
-                    // Fill the gap that was opened below the last position with more rows, if
-                    // possible
-                    fillDown(lastPosition + 1, lastChild->getBottom() + mDividerHeight);
-                    // Close up the remaining gap
-                    adjustViewsUpOrDown();
-                }
-            } else if (lastPosition == mItemCount - 1) {
-                adjustViewsUpOrDown();
-            }
-        }
-    }
-}
-
-void ListView::correctTooHigh(int childCount) {
-    int lastPosition = mFirstPosition + childCount - 1;
-    if (lastPosition == mItemCount - 1 && childCount > 0) {
-
-        // Get the last child ...
-        View* lastChild = getChildAt(childCount - 1);
-
-        // ... and its bottom edge
-        int lastBottom = lastChild->getBottom();
-
-        // This is bottom of our drawable area
-        int end = getHeight()- mListPadding.height;//bottom;
-
-        // This is how far the bottom edge of the last view is from the bottom of the
-        // drawable area
-        int bottomOffset = end - lastBottom;
-        View* firstChild = getChildAt(0);
-        int firstTop = firstChild->getTop();
-
-        // Make sure we are 1) Too high, and 2) Either there are more rows above the
-        // first row or the first row is scrolled off the top of the drawable area
-        if (bottomOffset > 0 && (mFirstPosition > 0 || firstTop < mListPadding.y))  {
-            if (mFirstPosition == 0) {
-                // Don't pull the top too far down
-                bottomOffset = std::min(bottomOffset, mListPadding.y - firstTop);
-            }
-            // Move everything down
-            offsetChildrenTopAndBottom(bottomOffset);
-            if (mFirstPosition > 0) {
-                // Fill the gap that was opened above mFirstPosition with more rows, if
-                // possible
-                fillUp(mFirstPosition - 1, firstChild->getTop() - mDividerHeight);
-                // Close up the remaining gap
-                adjustViewsUpOrDown();
-            }
-
-        }
-    }
-}
-
-View* ListView::fillFromTop(int nextTop) {
-    mFirstPosition = std::min(mFirstPosition, mSelectedPosition);
-    mFirstPosition = std::min(mFirstPosition, mItemCount - 1);
-    if (mFirstPosition < 0) {
-        mFirstPosition = 0;
-    }
-    return fillDown(mFirstPosition, nextTop);
-}
-
-View* ListView::fillUp(int pos, int nextBottom) {
-    View* selectedView = nullptr;
-
-    int end = 0;
-    if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-        end = mListPadding.y;
-    }
-    while (nextBottom > end && pos >= 0) {
-        // is this the selected item?
-        bool selected = pos == mSelectedPosition;
-        View* child = makeAndAddView(pos, nextBottom, false, mListPadding.x, selected);
-        nextBottom = child->getTop() - mDividerHeight;
-        if (selected) {
-            selectedView = child;
-        }
-        pos--;
-    }
-
-    mFirstPosition = pos + 1;
-    setVisibleRangeHint(mFirstPosition, mFirstPosition + getChildCount() - 1);
-    return selectedView;
-}
-
-View* ListView::fillDown(int pos, int nextTop) {
-    View* selectedView = nullptr;
-
-    int end = getHeight();//(mBottom - mTop);
-    if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-        end -= mListPadding.height;
-    }
-
-    while (nextTop < end && pos < mItemCount) {
-        // is this the selected item?
-        bool selected = pos == mSelectedPosition;
-        View* child = makeAndAddView(pos, nextTop, true, mListPadding.x, selected);
-
-        nextTop = child->getBottom() + mDividerHeight;
-        if (selected) {
-            selectedView = child;
-        }
-        pos++;
-    }
-
-    setVisibleRangeHint(mFirstPosition, mFirstPosition + getChildCount() - 1);
-    return selectedView;
-}
-
-View* ListView::fillFromMiddle(int childrenTop, int childrenBottom) {
-    int height = childrenBottom - childrenTop;
-
-    int position = reconcileSelectedPosition();
-
-    View* sel = makeAndAddView(position, childrenTop, true,mListPadding.x, true);
-    mFirstPosition = position;
-
-    int selHeight = sel->getMeasuredHeight();
-    if (selHeight <= height) {
-        sel->offsetTopAndBottom((height - selHeight) / 2);
-    }
-
-    fillAboveAndBelow(sel, position);
-
-    if (!mStackFromBottom) {
-        correctTooHigh(getChildCount());
-    } else {
-        correctTooLow(getChildCount());
-    }
-    return sel;
-}
-void ListView::fillAboveAndBelow(View* sel, int position) {
-    if (!mStackFromBottom) {
-        fillUp(position - 1, sel->getTop() - mDividerHeight);
-        adjustViewsUpOrDown();
-        fillDown(position + 1, sel->getBottom() + mDividerHeight);
-    } else {
-        fillDown(position + 1, sel->getBottom() + mDividerHeight);
-        adjustViewsUpOrDown();
-        fillUp(position - 1, sel->getTop() - mDividerHeight);
-    }
-}
-
-void ListView::fillGap(bool down) {
-    int count = getChildCount();
-    if (down) {
-        int paddingTop = 0;
-        if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-            paddingTop = getListPaddingTop();
-        }
-        int startOffset = count > 0 ? getChildAt(count - 1)->getBottom() + mDividerHeight :paddingTop;
-        fillDown(mFirstPosition + count, startOffset);
-        correctTooHigh(getChildCount());
-    } else {
-        int paddingBottom = 0;
-        if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-            paddingBottom = getListPaddingBottom();
-        }
-        int startOffset = count > 0 ? getChildAt(0)->getTop() - mDividerHeight :getHeight() - paddingBottom;
-        fillUp(mFirstPosition - 1, startOffset);
-        correctTooLow(getChildCount());
-    }
-}
-
-View* ListView::fillFromSelection(int selectedTop, int childrenTop, int childrenBottom) {
-    int fadingEdgeLength = getVerticalFadingEdgeLength();
-    int selectedPosition = mSelectedPosition;
-
-    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength,selectedPosition);
-    int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom, fadingEdgeLength,selectedPosition);
-
-    View* sel = makeAndAddView(selectedPosition, selectedTop, true, mListPadding.x, true);
-
-
-    // Some of the newly selected item extends below the bottom of the list
-    if (sel->getBottom() > bottomSelectionPixel) {
-        // Find space available above the selection into which we can scroll upwards
-        int spaceAbove = sel->getTop() - topSelectionPixel;
-
-        // Find space required to bring the bottom of the selected item
-        // fully into view
-        int spaceBelow = sel->getBottom() - bottomSelectionPixel;
-        int offset = std::min(spaceAbove, spaceBelow);
-
-        // Now offset the selected item to get it into view
-        sel->offsetTopAndBottom(-offset);
-    } else if (sel->getTop() < topSelectionPixel) {
-        // Find space required to bring the top of the selected item fully
-        // into view
-        int spaceAbove = topSelectionPixel - sel->getTop();
-
-        // Find space available below the selection into which we can scroll
-        // downwards
-        int spaceBelow = bottomSelectionPixel - sel->getBottom();
-        int offset = std::min(spaceAbove, spaceBelow);
-
-        // Offset the selected item to get it into view
-        sel->offsetTopAndBottom(offset);
-    }
-
-    // Fill in views above and below
-    fillAboveAndBelow(sel, selectedPosition);
-
-    if (!mStackFromBottom) {
-        correctTooHigh(getChildCount());
-    } else {
-        correctTooLow(getChildCount());
-    }
-    return sel;
-}
-
-View* ListView::fillSpecific(int position, int top) {
-    bool tempIsSelected = position == mSelectedPosition;
-    View* temp = makeAndAddView(position, top, true, mListPadding.x, tempIsSelected);
-    // Possibly changed again in fillUp if we add rows above this one.
-    mFirstPosition = position;
-    View* above,* below;
-
-    int dividerHeight = mDividerHeight;
-    if (!mStackFromBottom) {
-        above = fillUp(position - 1, temp->getTop() - dividerHeight);
-        // This will correct for the top of the first view not touching the top of the list
-        adjustViewsUpOrDown();
-        below = fillDown(position + 1, temp->getBottom() + dividerHeight);
-        int childCount = getChildCount();
-        if (childCount > 0) {
-            correctTooHigh(childCount);
-        }
-    } else {
-        below = fillDown(position + 1, temp->getBottom() + dividerHeight);
-        // This will correct for the bottom of the last view not touching the bottom of the list
-        adjustViewsUpOrDown();
-        above = fillUp(position - 1, temp->getTop() - dividerHeight);
-        int childCount = getChildCount();
-        if (childCount > 0) {
-            correctTooLow(childCount);
-        }
-    }
-
-    if (tempIsSelected) {
-        return temp;
-    } else if (above != nullptr) {
-        return above;
-    } else {
-        return below;
-    }
-}
-
-void ListView::adjustViewsUpOrDown() {
-    int delta;
-    int childCount=getChildCount();
-    if (childCount > 0) {
-        View* child;
-
-        if (!mStackFromBottom) {
-            // Uh-oh -- we came up short. Slide all views up to make them
-            // align with the top
-            child = getChildAt(0);
-            delta = child->getTop() - mListPadding.y;
-            if (mFirstPosition != 0) {
-                // It's OK to have some space above the first item if it is
-                // part of the vertical spacing
-                delta -= mDividerHeight;
-            }
-            if (delta < 0) {
-                // We only are looking to see if we are too low, not too high
-                delta = 0;
-            }
-        } else {
-            // we are too high, slide all views down to align with bottom
-            child = getChildAt(childCount - 1);
-            delta = child->getBottom() - (getHeight() - mListPadding.height);//bottom);
-
-            if (mFirstPosition + childCount < mItemCount) {
-                // It's OK to have some space below the last item if it is
-                // part of the vertical spacing
-                delta += mDividerHeight;
-            }
-
-            if (delta > 0) delta = 0;
-        }
-
-        if (delta != 0) offsetChildrenTopAndBottom(-delta);
-    }
-}
 
 void ListView::layoutChildren() {
+    bool blockLayoutRequests = mBlockLayoutRequests;
     if(mBlockLayoutRequests)return;
     AbsListView::layoutChildren();
     invalidate();
@@ -1018,19 +1217,17 @@ void ListView::layoutChildren() {
     case LAYOUT_SPECIFIC: {
         int selectedPosition = reconcileSelectedPosition();
         sel = fillSpecific(selectedPosition, mSpecificTop);
-    }
         /**
          * When ListView is resized, FocusSelector requests an async selection for the
          * previously focused item to make sure it is still visible. If the item is not
          * selectable, it won't regain focus so instead we call FocusSelector
          * to directly request focus on the view after it is visible.
          */
-        /*if (sel == nullptr && mFocusSelector != nullptr) {
-            Runnable focusRunnable = mFocusSelector->setupFocusIfValid(selectedPosition);
-            if (focusRunnable != nullptr) {
-                post(focusRunnable);
-            }
-        }*/
+        if (sel == nullptr && mFocusSelector != nullptr) {
+            if(mFocusSelector->setupFocusIfValid(selectedPosition))
+                post(*mFocusSelector);
+        }
+        }
     break;
     case LAYOUT_MOVE_SELECTION:
         sel = moveSelection(oldSel, newSel, delta, childrenTop, childrenBottom);
@@ -1158,10 +1355,10 @@ void ListView::layoutChildren() {
 
     mLayoutMode = LAYOUT_NORMAL;
     mDataChanged = false;
-    /*if (mPositionScrollAfterLayout != nullptr) {
+    if (mPositionScrollAfterLayout != nullptr) {
         post(mPositionScrollAfterLayout);
         mPositionScrollAfterLayout = nullptr;
-    }*/
+    }
     mNeedSync = false;
     setNextSelectedPositionInt(mSelectedPosition);
 
@@ -1170,115 +1367,1069 @@ void ListView::layoutChildren() {
     if (mItemCount > 0)checkSelectionChanged();
 
     invokeOnItemScrollListener();
-    mBlockLayoutRequests =false;
+    if (mFocusSelector) mFocusSelector->onLayoutComplete();
+    if (!blockLayoutRequests) mBlockLayoutRequests =false;
 }
 
-View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childrenTop, int childrenBottom){
-    int fadingEdgeLength = getVerticalFadingEdgeLength();
-    int selectedPosition = mSelectedPosition;
+bool ListView::trackMotionScroll(int deltaY, int incrementalDeltaY){
+    bool result = AbsListView::trackMotionScroll(deltaY, incrementalDeltaY);
+    removeUnusedFixedViews(mHeaderViewInfos);
+    removeUnusedFixedViews(mFooterViewInfos);
+    return result;
+}
 
-    View* sel;
-
-    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, selectedPosition);
-    int bottomSelectionPixel = getBottomSelectionPixel(childrenTop, fadingEdgeLength,  selectedPosition);
-    LOGD("-----Scrolling %s  delta=%d childen top/bottom=%d/%d",(delta>0?"Down":"Up"),delta,childrenTop,childrenBottom);
-    if (delta > 0) {//Scrolling Down.
-        // Put oldSel (A) where it belongs
-        oldSel = makeAndAddView(selectedPosition - 1, oldSel->getTop(), true, mListPadding.x, false);
-
-        int dividerHeight = mDividerHeight;
-
-        // Now put the new selection (B) below that
-        sel = makeAndAddView(selectedPosition, oldSel->getBottom() + dividerHeight, true,  mListPadding.x, true);
-
-        // Some of the newly selected item extends below the bottom of the list
-        if (sel->getBottom() > bottomSelectionPixel) {
-
-            // Find space available above the selection into which we can scroll upwards
-            int spaceAbove = sel->getTop() - topSelectionPixel;
-
-            // Find space required to bring the bottom of the selected item fully into view
-            int spaceBelow = sel->getBottom() - bottomSelectionPixel;
-
-            // Don't scroll more than half the height of the list
-            int halfVerticalSpace = (childrenBottom - childrenTop) / 2;
-            int offset = std::min(spaceAbove, spaceBelow);
-            offset = std::min(offset, halfVerticalSpace);
-
-            // We placed oldSel, so offset that item
-            oldSel->offsetTopAndBottom(-offset);
-            // Now offset the selected item to get it into view
-            sel->offsetTopAndBottom(-offset);
+void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList){
+    for (int i = infoList.size() - 1; i >= 0; i--) {
+        FixedViewInfo* fixedViewInfo = infoList[i];
+        View* view = fixedViewInfo->view;
+        LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
+        if (view->getParent() == nullptr && lp != nullptr && lp->recycledHeaderFooter) {
+            removeDetachedView(view, false);
+            lp->recycledHeaderFooter = false;
         }
+    }
+}
 
-        // Fill in views above and below
-        if (!mStackFromBottom) {
-            fillUp(mSelectedPosition - 2, sel->getTop() - dividerHeight);
-            adjustViewsUpOrDown();
-            fillDown(mSelectedPosition + 1, sel->getBottom() + dividerHeight);
+bool ListView::isDirectChildHeaderOrFooter(View* child){
+    for (auto h:mHeaderViewInfos) {
+        if (child == h->view) {
+            return true;
+        }
+    }
+    for (auto f:mFooterViewInfos) {
+        if (child == f->view) {
+            return true;
+        }
+    }
+    return false;
+}
+
+View* ListView::makeAndAddView(int position, int y, bool flow, int childrenLeft,bool selected) {
+    if (!mDataChanged) {
+        // Try to use an existing view for this position.
+        View* activeView = mRecycler->getActiveView(position);
+        if (activeView != nullptr) {
+            // Found it. We're reusing an existing child, so it just needs
+            // to be positioned like a scrap view.
+            setupChild(activeView, position, y, flow, childrenLeft, selected, true);
+            return activeView;
+        }
+    }
+
+    // Make a new view for this position, or convert an unused view if
+    // possible.
+    View* child = obtainView(position, mIsScrap);
+
+    // This needs to be positioned and measured.
+    setupChild(child, position, y, flow, childrenLeft, selected, mIsScrap[0]);
+    return child;
+}
+
+void ListView::setupChild(View* child, int position, int y, bool flowDown, int childrenLeft,
+                          bool selected, bool isAttachedToWindow) {
+
+    bool isSelected = selected && shouldShowSelector();
+    bool updateChildSelected = isSelected != child->isSelected();
+    int mode = mTouchMode;
+    bool isPressed = mode > TOUCH_MODE_DOWN && mode < TOUCH_MODE_SCROLL && mMotionPosition == position;
+    bool updateChildPressed = isPressed != child->isPressed();
+    bool needToMeasure = !isAttachedToWindow || updateChildSelected
+                         || child->isLayoutRequested();
+
+    // Respect layout params that are already in the view. Otherwise make
+    // some up...
+    AbsListView::LayoutParams* p = (LayoutParams*) child->getLayoutParams();
+    if (p == nullptr) p = (LayoutParams*) generateDefaultLayoutParams();
+
+    p->viewType = mAdapter->getItemViewType(position);
+    p->isEnabled = mAdapter->isEnabled(position);
+
+    // Set up view state before attaching the view, since we may need to
+    // rely on the jumpDrawablesToCurrentState() call that occurs as part
+    // of view attachment.
+    if (updateChildSelected)child->setSelected(isSelected);
+    if (updateChildPressed) child->setPressed(isPressed);
+
+    if (mChoiceMode != CHOICE_MODE_NONE && mCheckStates.size()) {
+        if (dynamic_cast<Checkable*>(child)) {
+            ((Checkable*)child)->setChecked(mCheckStates.get(position));
         } else {
-            fillDown(mSelectedPosition + 1, sel->getBottom() + dividerHeight);
-            adjustViewsUpOrDown();
-            fillUp(mSelectedPosition - 2, sel->getTop() - dividerHeight);
+            child->setActivated(mCheckStates.get(position));
         }
-    } else if (delta < 0) {//Scrolling up.
-        if (newSel != nullptr) {
-            // Try to position the top of newSel (A) where it was before it was selected
-            sel = makeAndAddView(selectedPosition, newSel->getTop(), true, mListPadding.x,true);
-        } else {
-            // If (A) was not on screen and so did not have a view, position
-            // it above the oldSel (B)
-            sel = makeAndAddView(selectedPosition, oldSel->getTop(), false, mListPadding.x,true);
+    }
+
+    if ((isAttachedToWindow && !p->forceAdd) || (p->recycledHeaderFooter
+            && p->viewType == AdapterView::ITEM_VIEW_TYPE_HEADER_OR_FOOTER)) {
+        attachViewToParent(child, flowDown ? -1 : 0, p);
+        // If the view was previously attached for a different position,
+        // then manually jump the drawables.
+        if (isAttachedToWindow
+                && (((AbsListView::LayoutParams*) child->getLayoutParams())->scrappedFromPosition)
+                != position) {
+            child->jumpDrawablesToCurrentState();
         }
-
-        // Some of the newly selected item extends above the top of the list
-        if (sel->getTop() < topSelectionPixel) {
-            // Find space required to bring the top of the selected item fully into view
-            int spaceAbove = topSelectionPixel - sel->getTop();
-
-           // Find space available below the selection into which we can scroll downwards
-            int spaceBelow = bottomSelectionPixel - sel->getBottom();
-
-            // Don't scroll more than half the height of the list
-            int halfVerticalSpace = (childrenBottom - childrenTop) / 2;
-            int offset = std::min(spaceAbove, spaceBelow);
-            offset = std::min(offset, halfVerticalSpace);
-
-            // Offset the selected item to get it into view
-            sel->offsetTopAndBottom(offset);
-        }
-
-        // Fill in views above and below
-        fillAboveAndBelow(sel, selectedPosition);
     } else {
+        p->forceAdd = false;
+        if (p->viewType == AdapterView::ITEM_VIEW_TYPE_HEADER_OR_FOOTER) {
+            p->recycledHeaderFooter = true;
+        }
+        addViewInLayout(child, flowDown ? -1 : 0, p, true);
+        // add view in layout will reset the RTL properties. We have to re-resolve them
+        child->resolveRtlPropertiesIfNeeded();
+    }
 
-        int oldTop = oldSel->getTop();
+    if (needToMeasure) {
+        int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,mListPadding.x + mListPadding.width, p->width);
+        int lpHeight = p->height;
+        int childHeightSpec;
+        if (lpHeight > 0) {
+            childHeightSpec = MeasureSpec::makeMeasureSpec(lpHeight, MeasureSpec::EXACTLY);
+        } else {
+            childHeightSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(),MeasureSpec::UNSPECIFIED);
+        }
+        child->measure(childWidthSpec, childHeightSpec);
+    } else {
+        cleanupLayoutState(child);
+    }
 
-        // Case 3: Staying still
-        sel = makeAndAddView(selectedPosition, oldTop, true, mListPadding.x, true);
+    int w = child->getMeasuredWidth();
+    int h = child->getMeasuredHeight();
+    int childTop = flowDown ? y : y - h;
 
-        // We're staying still...
-        if (oldTop < childrenTop) {
-            // ... but the top of the old selection was off screen.
-            // (This can happen if the data changes size out from under us)
-            int newBottom = sel->getBottom();
-            if (newBottom < childrenTop + 20) {
-                // Not enough visible -- bring it onscreen
-                sel->offsetTopAndBottom(childrenTop - sel->getTop());
+    if (needToMeasure) {
+        int childRight = childrenLeft + w;
+        int childBottom = childTop + h;
+        child->layout(childrenLeft, childTop, w, h);
+    } else {
+        child->offsetLeftAndRight(childrenLeft - child->getLeft());
+        child->offsetTopAndBottom(childTop - child->getTop());
+    }
+
+    //if (mCachingStarted && !child->isDrawingCacheEnabled()) child->setDrawingCacheEnabled(true);
+}
+
+/*bool ListView::canAnimate() {
+    return super.canAnimate() && mItemCount > 0;
+}*/
+
+void ListView::setSelection(int position) {
+    setSelectionFromTop(position, 0);
+}
+
+void ListView::setSelectionInt(int position) {
+    bool awakeScrollbars = false;
+    setNextSelectedPositionInt(position);
+
+    int selectedPosition = mSelectedPosition;
+    if (selectedPosition >= 0) {
+        if (position == selectedPosition - 1) {
+            awakeScrollbars = true;
+        } else if (position == selectedPosition + 1) {
+            awakeScrollbars = true;
+        }
+    }
+
+    if (mPositionScroller) mPositionScroller->stop();
+
+    layoutChildren();
+
+    if (awakeScrollbars) awakenScrollBars();
+}
+
+static int constrain(int amount, int low, int high) {//get the 
+    return amount < low ? low : (amount > high ? high : amount);
+}
+
+int ListView::lookForSelectablePositionAfter(int current, int position, bool lookDown){
+    Adapter* adapter = mAdapter;
+    if (adapter == nullptr || isInTouchMode()) {
+        return INVALID_POSITION;
+    }
+
+    // First check after the starting position in the specified direction.
+    int after = lookForSelectablePosition(position, lookDown);
+    if (after != INVALID_POSITION) {
+        return after;
+    }
+
+    // Then check between the starting position and the current position.
+    int count = adapter->getCount();
+    current = constrain(current, -1, count - 1);
+    if (lookDown) {
+        position = std::min(position - 1, count - 1);
+        while ((position > current) && !adapter->isEnabled(position)) {
+            position--;
+        }
+        if (position <= current) return INVALID_POSITION;
+    } else {
+        position = std::max(0, position + 1);
+        while ((position < current) && !adapter->isEnabled(position)) {
+            position++;
+        }
+        if (position >= current) return INVALID_POSITION;
+    }
+    return position;
+}
+
+void ListView::setSelectionAfterHeaderView() {
+    int count = getHeaderViewsCount();
+    if (count > 0) {
+        mNextSelectedPosition = 0;
+        return;
+    }
+
+    if (mAdapter) {
+        setSelection(count);
+    } else {
+        mNextSelectedPosition = count;
+        mLayoutMode = LAYOUT_SET_SELECTION;
+    }
+}
+
+bool ListView::dispatchKeyEvent(KeyEvent& event) {
+    bool handled = AbsListView::dispatchKeyEvent(event);
+    if (!handled) {// If we didn't handle it...
+        View* focused = getFocusedChild();
+        if (focused && event.getAction() == KeyEvent::ACTION_DOWN) {
+            // ... and our focused child didn't handle it
+            // ... give it to ourselves so we can scroll if necessary
+            handled = onKeyDown(event.getKeyCode(), event);
+        }
+    }
+    return handled;
+}
+
+bool ListView::onKeyDown(int keyCode,KeyEvent& event) {
+    return commonKey(keyCode, 1, event);
+}
+
+bool ListView::onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event){
+    return commonKey(keyCode, repeatCount, event);
+}
+
+bool ListView::commonKey(int keyCode, int count, KeyEvent& event) {
+    if (mAdapter == nullptr/* || !isAttachedToWindow()*/) {
+        return false;
+    }
+
+    if (mDataChanged) layoutChildren();
+
+    bool handled = false;
+    int action = event.getAction();
+    if (KeyEvent::isConfirmKey(keyCode)
+            && event.hasNoModifiers() && action != KeyEvent::ACTION_UP) {
+        handled = resurrectSelectionIfNeeded();
+        if (!handled && event.getRepeatCount() == 0 && getChildCount() > 0) {
+            keyPressed();
+            handled = true;
+        }
+    }
+
+    LOGV("%s action=%d handled=%d",KeyEvent::getLabel(keyCode),action,handled);
+    if (!handled && action != KeyEvent::ACTION_UP) {
+        switch (keyCode) {
+        case KEY_DPAD_UP:
+            if (event.hasNoModifiers()) {
+                handled = resurrectSelectionIfNeeded();
+                if (!handled) {
+                    while (count-- > 0) {
+                        if (arrowScroll(FOCUS_UP)) {
+                            handled = true;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
+                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_UP);
+            }
+            break;
+
+        case KEY_DPAD_DOWN:
+            if (event.hasNoModifiers()) {
+                handled = resurrectSelectionIfNeeded();
+                if (!handled) {
+                    while (count-- > 0) {
+                        if (arrowScroll(FOCUS_DOWN)) {
+                            handled = true;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
+                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
+            }
+            break;
+
+        case KEY_DPAD_LEFT:
+            if (event.hasNoModifiers()) {
+                handled = handleHorizontalFocusWithinListItem(FOCUS_LEFT);
+            }
+            break;
+
+        case KEY_DPAD_RIGHT:
+            if (event.hasNoModifiers()) {
+                handled = handleHorizontalFocusWithinListItem(View::FOCUS_RIGHT);
+            }
+            break;
+
+        case KEY_PAGE_UP:
+            if (event.hasNoModifiers()) {
+                handled = resurrectSelectionIfNeeded() || pageScroll(FOCUS_UP);
+            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
+                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_UP);
+            }
+            break;
+
+        case KEY_PAGE_DOWN:
+            if (event.hasNoModifiers()) {
+                handled = resurrectSelectionIfNeeded() || pageScroll(FOCUS_DOWN);
+            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
+                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
+            }
+            break;
+
+        case KEY_MOVE_HOME:
+            if (event.hasNoModifiers()) {
+                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_UP);
+            }
+            break;
+
+        case KEY_MOVE_END:
+            if (event.hasNoModifiers()) {
+                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
+            }
+            break;
+
+        case KEY_TAB:
+            // This creates an asymmetry in TAB navigation order. At some
+            // point in the future we may decide that it's preferable to
+            // force the list selection to the top or bottom when receiving
+            // TAB focus from another widget, but for now this is adequate.
+            if (event.hasNoModifiers()) {
+                handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_DOWN);
+            } else if (event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
+                handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_UP);
+            }
+            break;
+        }
+    }
+
+    if (handled) {
+        return true;
+    }
+
+    //if (sendToTextFilter(keyCode, count, event)) return true;
+
+    switch (action) {
+    case KeyEvent::ACTION_DOWN: return AbsListView::onKeyDown(keyCode, event);
+    case KeyEvent::ACTION_UP:   return AbsListView::onKeyUp(keyCode, event);
+    case KeyEvent::ACTION_MULTIPLE:
+        return AbsListView::onKeyMultiple(keyCode, count, event);
+    default: return false;// shouldn't happen
+    }
+}
+
+bool ListView::pageScroll(int direction){
+   int nextPage;
+   bool down;
+
+   if (direction == FOCUS_UP) {
+       nextPage = std::max(0, mSelectedPosition - getChildCount() - 1);
+       down = false;
+   } else if (direction == FOCUS_DOWN) {
+       nextPage = std::min(mItemCount - 1, mSelectedPosition + getChildCount() - 1);
+       down = true;
+   } else {
+       return false;
+   }
+
+   if (nextPage >= 0) {
+       int position = lookForSelectablePositionAfter(mSelectedPosition, nextPage, down);
+       if (position >= 0) {
+           mLayoutMode = LAYOUT_SPECIFIC;
+           mSpecificTop = mPaddingTop + getVerticalFadingEdgeLength();
+           if (down && (position > (mItemCount - getChildCount()))) {
+               mLayoutMode = LAYOUT_FORCE_BOTTOM;
+           }
+
+           if (!down && (position < getChildCount())) {
+               mLayoutMode = LAYOUT_FORCE_TOP;
+           }
+
+           setSelectionInt(position);
+           invokeOnItemScrollListener();
+           if (!awakenScrollBars()) {
+               invalidate();
+           }
+
+           return true;
+       }
+   }
+   return false;
+}
+
+bool ListView::fullScroll(int direction) {
+    bool moved = false;
+    if (direction == FOCUS_UP) {
+        if (mSelectedPosition != 0) {
+            int position = lookForSelectablePositionAfter(mSelectedPosition, 0, true);
+            if (position >= 0) {
+                mLayoutMode = LAYOUT_FORCE_TOP;
+                setSelectionInt(position);
+                invokeOnItemScrollListener();
+            }
+            moved = true;
+        }
+    } else if (direction == FOCUS_DOWN) {
+        int lastItem = (mItemCount - 1);
+        if (mSelectedPosition < lastItem) {
+            int position = lookForSelectablePositionAfter(mSelectedPosition, lastItem, false);
+            if (position >= 0) {
+                mLayoutMode = LAYOUT_FORCE_BOTTOM;
+                setSelectionInt(position);
+                invokeOnItemScrollListener();
+            }
+            moved = true;
+        }
+    }
+
+    if (moved && !awakenScrollBars()) {
+        awakenScrollBars();
+        invalidate();
+    }
+    return moved;
+}
+
+/**
+* To avoid horizontal focus searches changing the selected item, we
+* manually focus search within the selected item (as applicable), and
+* prevent focus from jumping to something within another item.
+* @param direction one of {View.FOCUS_LEFT, View.FOCUS_RIGHT}
+* @return Whether this consumes the key event.
+*/
+bool ListView::handleHorizontalFocusWithinListItem(int direction){
+    if (direction != View::FOCUS_LEFT && direction != View::FOCUS_RIGHT)  {
+        LOGD("direction must be one of{View.FOCUS_LEFT, View.FOCUS_RIGHT}");
+    }
+
+    int numChildren = getChildCount();
+    if (mItemsCanFocus && numChildren > 0 && mSelectedPosition != INVALID_POSITION) {
+        View* selectedView = getSelectedView();
+        if (selectedView && selectedView->hasFocus() &&
+                 dynamic_cast<ViewGroup*>(selectedView)) {
+
+            View* currentFocus = selectedView->findFocus();
+            View* nextFocus = FocusFinder::getInstance().findNextFocus(
+                        (ViewGroup*) selectedView, currentFocus, direction);
+            if (nextFocus != nullptr) {
+                // do the math to get interesting rect in next focus' coordinates
+                RECT focusedRect ;
+                if (currentFocus != nullptr) {
+                    currentFocus->getFocusedRect(focusedRect);
+                    offsetDescendantRectToMyCoords(currentFocus, focusedRect);
+                    offsetRectIntoDescendantCoords(nextFocus, focusedRect);
+                } else {
+                    focusedRect.set(0,0,0,0);
+                }
+                if (nextFocus->requestFocus(direction, focusedRect.empty()?nullptr:&focusedRect)) {
+                    return true;
+                }
+            }
+            // we are blocking the key from being handled (by returning true)
+            // if the global result is going to be some other view within this
+            // list.  this is to acheive the overall goal of having
+            // horizontal d-pad navigation remain in the current item.
+            View* globalNextFocus = FocusFinder::getInstance().findNextFocus(
+                        (ViewGroup*) getRootView(), currentFocus, direction);
+            if (globalNextFocus != nullptr) {
+                return isViewAncestorOf(globalNextFocus, this);
+            }
+        }
+    }
+    return false;
+}
+
+
+bool  ListView::arrowScroll(int direction){
+   mInLayout = true;
+   bool handled=arrowScrollImpl(direction);
+   mInLayout=false;
+   return handled;
+}
+
+int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedPos, int direction){
+    int nextSelected;
+
+    if (direction == View::FOCUS_DOWN) {
+        int listBottom = getHeight() - mListPadding.height;
+        if (selectedView && selectedView->getBottom() <= listBottom) {
+            nextSelected = selectedPos != INVALID_POSITION && selectedPos >= mFirstPosition ?
+                selectedPos + 1 :mFirstPosition;
+        } else {
+            return INVALID_POSITION;
+        }
+    } else {
+        int listTop = mListPadding.y;
+        if (selectedView && selectedView->getTop() >= listTop) {
+            int lastPos = mFirstPosition + getChildCount() - 1;
+            nextSelected = selectedPos != INVALID_POSITION && selectedPos <= lastPos ?
+                        selectedPos - 1 :lastPos;
+        } else {
+            return INVALID_POSITION;
+        }
+    }
+
+    if (nextSelected < 0 || nextSelected >= mAdapter->getCount()) {
+        return INVALID_POSITION;
+    }
+    return lookForSelectablePosition(nextSelected, direction == View::FOCUS_DOWN);
+}
+
+bool  ListView::arrowScrollImpl(int direction) {
+    if (getChildCount() <= 0) {
+        return false;
+    }
+
+    View* selectedView = getSelectedView();
+    int selectedPos = mSelectedPosition;
+
+    int nextSelectedPosition = nextSelectedPositionForDirection(selectedView, selectedPos, direction);
+    int amtToScroll = amountToScroll(direction, nextSelectedPosition);
+    
+    // if we are moving focus, we may OVERRIDE the default behavior
+    ArrowScrollFocusResult* focusResult = mItemsCanFocus ? arrowScrollFocused(direction) : nullptr;
+    if (focusResult != nullptr) {
+        nextSelectedPosition = focusResult->getSelectedPosition();
+        amtToScroll = focusResult->getAmountToScroll();
+    }
+
+    bool needToRedraw = focusResult != nullptr;
+    if (nextSelectedPosition != INVALID_POSITION) {
+        handleNewSelectionChange(selectedView, direction, nextSelectedPosition, focusResult != nullptr);
+        setSelectedPositionInt(nextSelectedPosition);
+        setNextSelectedPositionInt(nextSelectedPosition);
+        selectedView = getSelectedView();
+        selectedPos = nextSelectedPosition;
+        if (mItemsCanFocus && focusResult == nullptr) {
+            // there was no new view found to take focus, make sure we
+            // don't leave focus with the old selection
+            View* focused = getFocusedChild();
+            if (focused != nullptr) {
+                focused->clearFocus();
+            }
+        }
+        needToRedraw = true;
+        checkSelectionChanged();
+    }
+
+    if (amtToScroll > 0) {
+        scrollListItemsBy((direction == View::FOCUS_UP) ? amtToScroll : -amtToScroll);
+        needToRedraw = true;
+    }
+
+    // if we didn't find a new focusable, make sure any existing focused
+    // item that was panned off screen gives up focus.
+    if (mItemsCanFocus && (focusResult == nullptr)
+            && selectedView != nullptr && selectedView->hasFocus()) {
+        View* focused = selectedView->findFocus();
+        if (focused != nullptr) {
+            if (!isViewAncestorOf(focused, this) || distanceToView(focused) > 0) {
+                focused->clearFocus();
+            }
+        }
+    }
+
+    // if  the current selection is panned off, we need to remove the selection
+    if (nextSelectedPosition == INVALID_POSITION && selectedView != nullptr
+            && !isViewAncestorOf(selectedView, this)) {
+        selectedView = nullptr;
+        hideSelector();
+
+        // but we don't want to set the ressurect position (that would make subsequent
+        // unhandled key events bring back the item we just scrolled off!)
+        mResurrectToPosition = INVALID_POSITION;
+    }
+
+    if (needToRedraw) {
+        if (selectedView != nullptr) {
+            positionSelectorLikeFocus(selectedPos, selectedView);
+            mSelectedTop = selectedView->getTop();
+        }
+        if (!awakenScrollBars()) {
+            invalidate();
+        }
+        invokeOnItemScrollListener();
+        return true;
+    }
+
+    return false;
+}
+
+void ListView::handleNewSelectionChange(View* selectedView, int direction, int newSelectedPosition, bool newFocusAssigned){
+    if (newSelectedPosition == INVALID_POSITION) {
+        LOGE("newSelectedPosition %d needs to be valid",newSelectedPosition);
+    }
+
+    // whether or not we are moving down or up, we want to preserve the
+    // top of whatever view is on top:
+    // - moving down: the view that had selection
+    // - moving up: the view that is getting selection
+    View* topView;
+    View* bottomView;
+    int topViewIndex, bottomViewIndex;
+    bool topSelected = false;
+    int selectedIndex = mSelectedPosition - mFirstPosition;
+    int nextSelectedIndex = newSelectedPosition - mFirstPosition;
+    if (direction == View::FOCUS_UP) {
+        topViewIndex = nextSelectedIndex;
+        bottomViewIndex = selectedIndex;
+        topView = getChildAt(topViewIndex);
+        bottomView = selectedView;
+        topSelected = true;
+    } else {
+        topViewIndex = selectedIndex;
+        bottomViewIndex = nextSelectedIndex;
+        topView = selectedView;
+        bottomView = getChildAt(bottomViewIndex);
+    }
+
+    int numChildren = getChildCount();
+
+    // start with top view: is it changing size?
+    if (topView != nullptr) {
+        topView->setSelected(!newFocusAssigned && topSelected);
+        measureAndAdjustDown(topView, topViewIndex, numChildren);
+    }
+
+    // is the bottom view changing size?
+    if (bottomView != nullptr) {
+        bottomView->setSelected(!newFocusAssigned && !topSelected);
+        measureAndAdjustDown(bottomView, bottomViewIndex, numChildren);
+    }
+}
+
+void ListView::measureAndAdjustDown(View* child, int childIndex, int numChildren) {
+    int oldHeight = child->getHeight();
+    measureItem(child);
+    if (child->getMeasuredHeight() != oldHeight) {
+        // lay out the view, preserving its top
+        relayoutMeasuredItem(child);
+
+        // adjust views below appropriately
+        int heightDelta = child->getMeasuredHeight() - oldHeight;
+        for (int i = childIndex + 1; i < numChildren; i++) {
+            getChildAt(i)->offsetTopAndBottom(heightDelta);
+        }
+    }
+}
+
+void ListView::measureItem(View* child) {
+    ViewGroup::LayoutParams* p = child->getLayoutParams();
+    if (p == nullptr) {
+        p = new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+    }
+
+    int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,
+            mListPadding.x + mListPadding.width, p->width);
+    int lpHeight = p->height;
+    int childHeightSpec;
+    if (lpHeight > 0) {
+        childHeightSpec = MeasureSpec::makeMeasureSpec(lpHeight, MeasureSpec::EXACTLY);
+    } else {
+        childHeightSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(),
+                                                          MeasureSpec::UNSPECIFIED);
+    }
+    child->measure(childWidthSpec, childHeightSpec);
+}
+
+void ListView::relayoutMeasuredItem(View* child) {
+    int w = child->getMeasuredWidth();
+    int h = child->getMeasuredHeight();
+    int childLeft = mListPadding.x;
+    int childRight = childLeft + w;
+    int childTop = child->getTop();
+    int childBottom = childTop + h;
+    child->layout(childLeft, childTop, childRight, childBottom);
+}
+
+int ListView::getArrowScrollPreviewLength(){
+   return std::max(MIN_SCROLL_PREVIEW_PIXELS, getVerticalFadingEdgeLength());
+}
+
+int ListView::amountToScroll(int direction, int nextSelectedPosition){
+    const int listBottom = getHeight() - mListPadding.height;
+    const int listTop = mListPadding.y;
+
+    int numChildren = getChildCount();
+
+    if (direction == View::FOCUS_DOWN) {
+        int indexToMakeVisible = numChildren - 1;
+        if (nextSelectedPosition != INVALID_POSITION) {
+            indexToMakeVisible = nextSelectedPosition - mFirstPosition;
+        }
+        while (numChildren <= indexToMakeVisible) {
+            // Child to view is not attached yet.
+            addViewBelow(getChildAt(numChildren - 1), mFirstPosition + numChildren - 1);
+            numChildren++;
+        }
+        int positionToMakeVisible = mFirstPosition + indexToMakeVisible;
+        View* viewToMakeVisible = getChildAt(indexToMakeVisible);
+
+        int goalBottom = listBottom;
+        if (positionToMakeVisible < mItemCount - 1) {
+            goalBottom -= getArrowScrollPreviewLength();
+        }
+
+        if (viewToMakeVisible->getBottom() <= goalBottom) {
+            // item is fully visible.
+            return 0;
+        }
+
+        if (nextSelectedPosition != INVALID_POSITION
+                && (goalBottom - viewToMakeVisible->getTop()) >= getMaxScrollAmount()) {
+            // item already has enough of it visible, changing selection is good enough
+            return 0;
+        }
+
+        int amtToScroll = (viewToMakeVisible->getBottom() - goalBottom);
+
+        if ((mFirstPosition + numChildren) == mItemCount) {
+            // last is last in list -> make sure we don't scroll past it
+            int max = getChildAt(numChildren - 1)->getBottom() - listBottom;
+            amtToScroll = std::min(amtToScroll, max);
+        }
+
+        return std::min(amtToScroll, getMaxScrollAmount());
+    } else {
+        int indexToMakeVisible = 0;
+        if (nextSelectedPosition != INVALID_POSITION) {
+            indexToMakeVisible = nextSelectedPosition - mFirstPosition;
+        }
+        while (indexToMakeVisible < 0) {
+            // Child to view is not attached yet.
+            addViewAbove(getChildAt(0), mFirstPosition);
+            mFirstPosition--;
+            indexToMakeVisible = nextSelectedPosition - mFirstPosition;
+        }
+        int positionToMakeVisible = mFirstPosition + indexToMakeVisible;
+        View* viewToMakeVisible = getChildAt(indexToMakeVisible);
+        int goalTop = listTop;
+        if (positionToMakeVisible > 0) {
+            goalTop += getArrowScrollPreviewLength();
+        }
+        if (viewToMakeVisible->getTop() >= goalTop) {
+            // item is fully visible.
+            return 0;
+        }
+        if (nextSelectedPosition != INVALID_POSITION &&
+                (viewToMakeVisible->getBottom() - goalTop) >= getMaxScrollAmount()) {
+            // item already has enough of it visible, changing selection is good enough
+            return 0;
+        }
+
+        int amtToScroll = (goalTop - viewToMakeVisible->getTop());
+        if (mFirstPosition == 0) {
+            // first is first in list -> make sure we don't scroll past it
+            int max = listTop - getChildAt(0)->getTop();
+            amtToScroll = std::min(amtToScroll,  max);
+        }
+        return std::min(amtToScroll, getMaxScrollAmount());
+    }
+}
+
+int ListView::lookForSelectablePositionOnScreen(int direction){
+    int firstPosition = mFirstPosition;
+    if (direction == View::FOCUS_DOWN) {
+        int startPos = (mSelectedPosition != INVALID_POSITION) ? mSelectedPosition + 1 :firstPosition;
+        if (startPos >= mAdapter->getCount()) {
+            return INVALID_POSITION;
+        }
+        if (startPos < firstPosition) {
+            startPos = firstPosition;
+        }
+
+        int lastVisiblePos = getLastVisiblePosition();
+        for (int pos = startPos; pos <= lastVisiblePos; pos++) {
+            if (mAdapter->isEnabled(pos)
+                        && getChildAt(pos - firstPosition)->getVisibility() == View::VISIBLE) {
+                return pos;
+            }
+        }
+    } else {
+        int last = firstPosition + getChildCount() - 1;
+        int startPos = (mSelectedPosition != INVALID_POSITION) ?
+                    mSelectedPosition - 1 :firstPosition + getChildCount() - 1;
+        if (startPos < 0 || startPos >= mAdapter->getCount()) {
+            return INVALID_POSITION;
+        }
+        if (startPos > last) {
+            startPos = last;
+        }
+
+        for (int pos = startPos; pos >= firstPosition; pos--) {
+            if (mAdapter->isEnabled(pos)
+                    && getChildAt(pos - firstPosition)->getVisibility() == View::VISIBLE) {
+                return pos;
+            }
+        }
+    }
+    return INVALID_POSITION;
+}
+
+ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction){
+    View* selectedView = getSelectedView();
+    View* newFocus;
+    RECT mTempRect;
+    if (selectedView != nullptr && selectedView->hasFocus()) {
+       View* oldFocus = selectedView->findFocus();
+       newFocus = FocusFinder::getInstance().findNextFocus(this, oldFocus, direction);
+    } else {
+       if (direction == View::FOCUS_DOWN) {
+           bool topFadingEdgeShowing = (mFirstPosition > 0);
+           int listTop = mListPadding.y + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
+           int ySearchPoint =(selectedView != nullptr  && selectedView->getTop() > listTop) ?
+                                selectedView->getTop() : listTop;
+                mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+       } else {
+           bool bottomFadingEdgeShowing = (mFirstPosition + getChildCount() - 1) < mItemCount;
+           int listBottom = getHeight() - mListPadding.height -
+                    (bottomFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
+           int ySearchPoint = (selectedView != nullptr && selectedView->getBottom() < listBottom) ?
+                                selectedView->getBottom() : listBottom;
+           mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+       }
+       newFocus = FocusFinder::getInstance().findNextFocusFromRect(this, &mTempRect, direction);
+    }
+
+    if (newFocus != nullptr) {
+       int posOfNewFocus = positionOfNewFocus(newFocus);
+
+       // if the focus change is in a different new position, make sure
+       // we aren't jumping over another selectable position
+       if (mSelectedPosition != INVALID_POSITION && posOfNewFocus != mSelectedPosition) {
+           int selectablePosition = lookForSelectablePositionOnScreen(direction);
+           if (selectablePosition != INVALID_POSITION &&
+                   ((direction == View::FOCUS_DOWN && selectablePosition < posOfNewFocus) ||
+                   (direction == View::FOCUS_UP && selectablePosition > posOfNewFocus))) {
+               return nullptr;
+           }
+       }
+
+       int focusScroll = amountToScrollToNewFocus(direction, newFocus, posOfNewFocus);
+
+       int maxScrollAmount = getMaxScrollAmount();
+       if (focusScroll < maxScrollAmount) {
+           // not moving too far, safe to give next view focus
+           newFocus->requestFocus(direction);
+           mArrowScrollFocusResult.populate(posOfNewFocus, focusScroll);
+           return &mArrowScrollFocusResult;
+       } else if (distanceToView(newFocus) < maxScrollAmount){
+           // Case to consider:
+           // too far to get entire next focusable on screen, but by going
+           // max scroll amount, we are getting it at least partially in view,
+           // so give it focus and scroll the max ammount.
+           newFocus->requestFocus(direction);
+           mArrowScrollFocusResult.populate(posOfNewFocus, maxScrollAmount);
+           return &mArrowScrollFocusResult;
+        }
+    }
+    return nullptr;
+}
+
+int ListView::positionOfNewFocus(View* newFocus){
+    int numChildren = getChildCount();
+    for (int i = 0; i < numChildren; i++) {
+        View* child = getChildAt(i);
+        if (isViewAncestorOf(newFocus, child)) {
+            return mFirstPosition + i;
+        }
+    }
+    LOGE("newFocus is not a child of any of the children of the list!");
+    return 0;
+}
+
+bool ListView::isViewAncestorOf(View* child, View* parent){
+    if (child == parent) return true;
+
+    ViewGroup* theParent = child->getParent();
+    return theParent&&isViewAncestorOf(theParent, parent);
+}
+
+int ListView::amountToScrollToNewFocus(int direction, View* newFocus, int positionOfNewFocus){
+    int amountToScroll = 0;
+    RECT mTempRect; 
+    newFocus->getDrawingRect(mTempRect);
+    offsetDescendantRectToMyCoords(newFocus, mTempRect);
+    if (direction == View::FOCUS_UP) {
+        if (mTempRect.y < mListPadding.y) {
+            amountToScroll = mListPadding.y - mTempRect.y;
+            if (positionOfNewFocus > 0) {
+                amountToScroll += getArrowScrollPreviewLength();
+            }
+        }
+    } else {
+        int listBottom = getHeight() - mListPadding.height;
+        if (mTempRect.bottom() > listBottom) {
+            amountToScroll = mTempRect.bottom() - listBottom;
+            if (positionOfNewFocus < mItemCount - 1) {
+                amountToScroll += getArrowScrollPreviewLength();
+            }
+        }
+    }
+    return amountToScroll;
+}
+
+int ListView::distanceToView(View* descendant) {
+    int distance = 0;
+    RECT tmpRect;
+    descendant->getDrawingRect(tmpRect);
+    offsetDescendantRectToMyCoords(descendant, tmpRect);
+    int listBottom = mHeight - mListPadding.height;
+    if (tmpRect.bottom() < mListPadding.y) {
+        distance = mListPadding.y - tmpRect.bottom();
+    } else if (tmpRect.y > listBottom) {
+        distance = tmpRect.y - listBottom;
+    }
+    return distance;
+}
+
+void ListView::scrollListItemsBy(int amount){
+    offsetChildrenTopAndBottom(amount);
+
+    int listBottom = getHeight() - mListPadding.height;
+    int listTop = mListPadding.y;
+
+    if (amount < 0) {
+        // shifted items up
+
+        // may need to pan views into the bottom space
+        int numChildren = getChildCount();
+        View* last = getChildAt(numChildren - 1);
+        while (last->getBottom() < listBottom) {
+            int lastVisiblePosition = mFirstPosition + numChildren - 1;
+            if (lastVisiblePosition < mItemCount - 1) {
+                last = addViewBelow(last, lastVisiblePosition);
+                numChildren++;
+            } else {
+                break;
             }
         }
 
-        // Fill in views above and below
-        fillAboveAndBelow(sel, selectedPosition);
+        // may have brought in the last child of the list that is skinnier
+        // than the fading edge, thereby leaving space at the end.  need
+        // to shift back
+        if (last->getBottom() < listBottom) {
+            offsetChildrenTopAndBottom(listBottom - last->getBottom());
+        }
+
+        // top views may be panned off screen
+        View* first = getChildAt(0);
+        while (first->getBottom() < listTop) {
+            LayoutParams* layoutParams = (LayoutParams*) first->getLayoutParams();
+            if (mRecycler->shouldRecycleViewType(layoutParams->viewType)) {
+                mRecycler->addScrapView(first, mFirstPosition);
+            }
+            detachViewFromParent(first);
+            first = getChildAt(0);
+            mFirstPosition++;
+        }
+    } else {
+        // shifted items down
+        View* first = getChildAt(0);
+
+        // may need to pan views into top
+        while ((first->getTop() > listTop) && (mFirstPosition > 0)) {
+            first = addViewAbove(first, mFirstPosition);
+            mFirstPosition--;
+        }
+
+        // may have brought the very first child of the list in too far and
+        // need to shift it back
+        if (first->getTop() > listTop) {
+            offsetChildrenTopAndBottom(listTop - first->getTop());
+        }
+
+        int lastIndex = getChildCount() - 1;
+        View* last = getChildAt(lastIndex);
+
+        // bottom view may be panned off screen
+        while (last->getTop() > listBottom) {
+            LayoutParams* layoutParams = (LayoutParams*) last->getLayoutParams();
+            if (mRecycler->shouldRecycleViewType(layoutParams->viewType)) {
+                mRecycler->addScrapView(last, mFirstPosition+lastIndex);
+            }
+            detachViewFromParent(last);
+            last = getChildAt(--lastIndex);
+        }
     }
-
-    return sel;
+    mRecycler->fullyDetachScrapViews();
+    removeUnusedFixedViews(mHeaderViewInfos);
+    removeUnusedFixedViews(mFooterViewInfos);    
 }
 
-void ListView::drawDivider(Canvas&canvas,const RECT&bounds, int childIndex) {
-    mDivider->setBounds(bounds);
-    mDivider->draw(canvas);
+View* ListView::addViewAbove(View* theView, int position){
+    int abovePosition = position - 1;
+    View* view = obtainView(abovePosition, mIsScrap);
+    int edgeOfNewChild = theView->getTop() - mDividerHeight;
+    setupChild(view, abovePosition, edgeOfNewChild, false, mListPadding.x,
+             false, mIsScrap[0]);
+    return view;
 }
+
+View* ListView::addViewBelow(View* theView, int position){
+    int belowPosition = position + 1;
+    View* view = obtainView(belowPosition, mIsScrap);
+    int edgeOfNewChild = theView->getBottom() + mDividerHeight;
+    setupChild(view, belowPosition, edgeOfNewChild, true, mListPadding.x,
+            false, mIsScrap[0]);
+    return view;
+}
+
+void ListView::setItemsCanFocus(bool itemsCanFocus){
+    mItemsCanFocus = itemsCanFocus;
+    if (!itemsCanFocus) {
+        setDescendantFocusability(ViewGroup::FOCUS_BLOCK_DESCENDANTS);
+    }
+}
+
+bool ListView::getItemsCanFocus()const{
+    return mItemsCanFocus;
+}
+
+bool ListView::isOpaque()const {
+    bool retValue = (mCachingActive && mIsCacheColorOpaque && mDividerIsOpaque 
+           /*&&hasOpaqueScrollbars()*/) || AbsListView::isOpaque();
+    if (retValue) {
+        // only return true if the list items cover the entire area of the view
+        /*int listTop = mListPadding != null ? mListPadding.top : mPaddingTop;
+        View* first = getChildAt(0);
+        if (first == nullptr || first->getTop() > listTop) {
+            return false;
+        }
+        int listBottom = getHeight() -
+                (mListPadding != null ? mListPadding.bottom : mPaddingBottom);
+        View* last = getChildAt(getChildCount() - 1);
+        if (last == nullptr || last.getBottom() < listBottom) {
+            return false;
+        }*/
+    }
+    return retValue;
+}
+
+/*void ListView::setCacheColorHint(int color) {
+    final boolean opaque = (color >>> 24) == 0xFF;
+    mIsCacheColorOpaque = opaque;
+    if (opaque) {
+        if (mDividerPaint == null) {
+            mDividerPaint = new Paint();
+        }
+        mDividerPaint.setColor(color);
+    }
+    super.setCacheColorHint(color);
+}*/
+
 
 void ListView::drawOverscrollHeader(Canvas&canvas, Drawable* drawable,RECT& bounds) {
     int height = drawable->getMinimumHeight();
@@ -1311,147 +2462,6 @@ void ListView::drawOverscrollFooter(Canvas&canvas, Drawable* drawable,RECT& boun
     drawable->draw(canvas);
 
     canvas.restore();
-}
-
-bool ListView::recycleOnMeasure() {
-    return true;
-}
-
-int ListView::measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
-                                      int maxHeight, int disallowPartialChildPosition) {
-    if (mAdapter == nullptr) {
-        return mListPadding.y + mListPadding.height;
-    }
-
-    // Include the padding of the list
-    int returnedHeight = mListPadding.y + mListPadding.height;
-    // The previous height value that was less than maxHeight and contained
-    // no partial children
-    int prevHeightWithoutPartialChild = 0;
-    int i;
-    View* child;
-
-    // mItemCount - 1 since endPosition parameter is inclusive
-    endPosition = (endPosition == NO_POSITION) ? mAdapter->getCount() - 1 : endPosition;
-    bool recyle = recycleOnMeasure();
-    bool* isScrap = mIsScrap;
-
-    for (i = startPosition; i <= endPosition; ++i) {
-        child = obtainView(i, isScrap);
-
-        measureScrapChild(child, i, widthMeasureSpec, maxHeight);
-
-        if (i > 0) {
-            // Count the divider for all but one child
-            returnedHeight += mDividerHeight;
-        }
-
-        // Recycle the view before we possibly return from the method
-        if (recyle && mRecycler->shouldRecycleViewType(
-                    ((LayoutParams*) child->getLayoutParams())->viewType)) {
-            mRecycler->addScrapView(child, -1);
-        }
-
-        returnedHeight += child->getMeasuredHeight();
-
-        if (returnedHeight >= maxHeight) {
-            // We went over, figure out which height to return.  If returnedHeight > maxHeight,
-            // then the i'th position did not fit completely.
-            LOGV("returnedHeight=%d",returnedHeight);
-            return (disallowPartialChildPosition >= 0) // Disallowing is enabled (> -1)
-                   && (i > disallowPartialChildPosition) // We've past the min pos
-                   && (prevHeightWithoutPartialChild > 0) // We have a prev height
-                   && (returnedHeight != maxHeight) // i'th child did not fit completely
-                   ? prevHeightWithoutPartialChild : maxHeight;
-        }
-
-        if ((disallowPartialChildPosition >= 0) && (i >= disallowPartialChildPosition)) {
-            prevHeightWithoutPartialChild = returnedHeight;
-        }
-    }
-    LOGV("returnedHeight=%d",returnedHeight);
-    // At this point, we went through the range of children, and they each
-    // completely fit, so return the returnedHeight
-    return returnedHeight;
-}
-
-void ListView::measureScrapChild(View* child, int position, int widthMeasureSpec, int heightHint) {
-    LayoutParams* p = (LayoutParams*) child->getLayoutParams();
-    if (p == nullptr) {
-        p = (AbsListView::LayoutParams*) generateDefaultLayoutParams();
-        child->setLayoutParams(p);
-    }
-    p->viewType = mAdapter->getItemViewType(position);
-    p->isEnabled = mAdapter->isEnabled(position);
-    p->forceAdd = true;
-
-    int childWidthSpec = ViewGroup::getChildMeasureSpec(widthMeasureSpec,
-                         mListPadding.x + mListPadding.width, p->width);
-    int lpHeight = p->height;
-    int childHeightSpec;
-    if (lpHeight > 0) {
-        childHeightSpec = MeasureSpec::makeMeasureSpec(lpHeight, MeasureSpec::EXACTLY);
-    } else {
-        childHeightSpec = MeasureSpec::makeSafeMeasureSpec(heightHint, MeasureSpec::UNSPECIFIED);
-    }
-    child->measure(childWidthSpec, childHeightSpec);
-
-    // Since this view was measured directly aginst the parent measure
-    // spec, we must measure it again before reuse.
-    child->forceLayout();
-}
-
-void ListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    AbsListView::onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-    int widthMode = MeasureSpec::getMode(widthMeasureSpec);
-    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
-    int widthSize = MeasureSpec::getSize(widthMeasureSpec);
-    int heightSize = MeasureSpec::getSize(heightMeasureSpec);
-
-    int childWidth = 0;
-    int childHeight = 0;
-    int childState = 0;
-
-    mItemCount = mAdapter ?mAdapter->getCount():0;
-    if (mItemCount > 0 && (widthMode == MeasureSpec::UNSPECIFIED
-                           || heightMode == MeasureSpec::UNSPECIFIED)) {
-        View* child = obtainView(0, mIsScrap);
-
-        // Lay out child directly against the parent measure spec so that
-        // we can obtain exected minimum width and height.
-        measureScrapChild(child, 0, widthMeasureSpec, heightSize);
-
-        childWidth = child->getMeasuredWidth();
-        childHeight = child->getMeasuredHeight();
-        childState = combineMeasuredStates(childState, child->getMeasuredState());
-
-        if (recycleOnMeasure() && mRecycler->shouldRecycleViewType(
-                    ((LayoutParams*) child->getLayoutParams())->viewType)) {
-            mRecycler->addScrapView(child, 0);
-        }
-    }
-
-    if (widthMode == MeasureSpec::UNSPECIFIED) {
-        widthSize = mListPadding.x + mListPadding.width + childWidth +
-                    getVerticalScrollbarWidth();
-    } else {
-        widthSize |= (childState & MEASURED_STATE_MASK);
-    }
-
-    if (heightMode == MeasureSpec::UNSPECIFIED) {
-        heightSize = mListPadding.y + mListPadding.height + childHeight +
-                       getVerticalFadingEdgeLength() * 2;
-    }
-
-    if (heightMode == MeasureSpec::AT_MOST) {
-        // TODO: after first layout we should maybe start at the first visible position, not 0
-        heightSize = measureHeightOfChildren(widthMeasureSpec, 0, NO_POSITION, heightSize, -1);
-    }
-
-    setMeasuredDimension(widthSize, heightSize);
-
-    mWidthMeasureSpec = widthMeasureSpec;
 }
 
 void ListView::dispatchDraw(Canvas&canvas) {
@@ -1615,831 +2625,97 @@ void ListView::dispatchDraw(Canvas&canvas) {
     // Draw the indicators (these should be drawn above the dividers) and children
     AbsListView::dispatchDraw(canvas);
 }
-int ListView::positionOfNewFocus(View* newFocus){
-    int numChildren = getChildCount();
-    for (int i = 0; i < numChildren; i++) {
-        View* child = getChildAt(i);
-        if (isViewAncestorOf(newFocus, child)) {
-            return mFirstPosition + i;
-        }
+
+bool ListView::drawChild(Canvas& canvas, View* child, long drawingTime) {
+    bool more = AbsListView::drawChild(canvas, child, drawingTime);
+    if (mCachingActive /*&& child->mCachingFailed*/) {
+        mCachingActive = false;
     }
-    LOGE("newFocus is not a child of any of the children of the list!");
-    return 0;
+    return more;
 }
-ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction){
-    View* selectedView = getSelectedView();
-    View* newFocus;
-    RECT mTempRect;
-    if (selectedView != nullptr && selectedView->hasFocus()) {
-       View* oldFocus = selectedView->findFocus();
-       newFocus = FocusFinder::getInstance().findNextFocus(this, oldFocus, direction);
+
+void ListView::drawDivider(Canvas&canvas,const RECT&bounds, int childIndex) {
+    mDivider->setBounds(bounds);
+    mDivider->draw(canvas);
+}
+
+Drawable*ListView::getDevider(){
+    return mDivider;
+}
+
+void ListView::setDivider(Drawable* divider) {
+    if (divider != nullptr) {
+        mDividerHeight = divider->getIntrinsicHeight();
     } else {
-       if (direction == View::FOCUS_DOWN) {
-           bool topFadingEdgeShowing = (mFirstPosition > 0);
-           int listTop = mListPadding.y + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
-           int ySearchPoint =(selectedView != nullptr  && selectedView->getTop() > listTop) ?
-                                selectedView->getTop() : listTop;
-                mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
-       } else {
-           bool bottomFadingEdgeShowing = (mFirstPosition + getChildCount() - 1) < mItemCount;
-           int listBottom = getHeight() - mListPadding.height -
-                    (bottomFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
-           int ySearchPoint = (selectedView != nullptr && selectedView->getBottom() < listBottom) ?
-                                selectedView->getBottom() : listBottom;
-           mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
-       }
-       newFocus = FocusFinder::getInstance().findNextFocusFromRect(this, &mTempRect, direction);
+        mDividerHeight = 0;
     }
-
-    if (newFocus != nullptr) {
-       int posOfNewFocus = positionOfNewFocus(newFocus);
-
-       // if the focus change is in a different new position, make sure
-       // we aren't jumping over another selectable position
-       if (mSelectedPosition != INVALID_POSITION && posOfNewFocus != mSelectedPosition) {
-           int selectablePosition = lookForSelectablePositionOnScreen(direction);
-           if (selectablePosition != INVALID_POSITION &&
-                   ((direction == View::FOCUS_DOWN && selectablePosition < posOfNewFocus) ||
-                   (direction == View::FOCUS_UP && selectablePosition > posOfNewFocus))) {
-               return nullptr;
-           }
-       }
-
-       int focusScroll = amountToScrollToNewFocus(direction, newFocus, posOfNewFocus);
-
-       int maxScrollAmount = getMaxScrollAmount();
-       if (focusScroll < maxScrollAmount) {
-           // not moving too far, safe to give next view focus
-           newFocus->requestFocus(direction);
-           mArrowScrollFocusResult.populate(posOfNewFocus, focusScroll);
-           return &mArrowScrollFocusResult;
-       } else if (distanceToView(newFocus) < maxScrollAmount){
-           // Case to consider:
-           // too far to get entire next focusable on screen, but by going
-           // max scroll amount, we are getting it at least partially in view,
-           // so give it focus and scroll the max ammount.
-           newFocus->requestFocus(direction);
-           mArrowScrollFocusResult.populate(posOfNewFocus, maxScrollAmount);
-           return &mArrowScrollFocusResult;
-        }
-    }
-    return nullptr;
+    mDivider = divider;
+    mDividerIsOpaque = divider == nullptr || divider->getOpacity() == Drawable::OPAQUE;
+    if(mAdapter && mItemCount)requestLayout();
+    invalidate(true);
 }
 
-int ListView::getArrowScrollPreviewLength(){
-   return std::max(MIN_SCROLL_PREVIEW_PIXELS, getVerticalFadingEdgeLength());
+void ListView::setDividerHeight(int h) {
+    mDividerHeight=h;
 }
 
-int ListView::lookForSelectablePositionOnScreen(int direction){
-    int firstPosition = mFirstPosition;
-    if (direction == View::FOCUS_DOWN) {
-        int startPos = (mSelectedPosition != INVALID_POSITION) ? mSelectedPosition + 1 :firstPosition;
-        if (startPos >= mAdapter->getCount()) {
-            return INVALID_POSITION;
-        }
-        if (startPos < firstPosition) {
-            startPos = firstPosition;
-        }
+int ListView::getDividerHeight()const {
+    return mDividerHeight;
+}
 
-        int lastVisiblePos = getLastVisiblePosition();
-        for (int pos = startPos; pos <= lastVisiblePos; pos++) {
-            if (mAdapter->isEnabled(pos)
-                        && getChildAt(pos - firstPosition)->getVisibility() == View::VISIBLE) {
-                return pos;
-            }
-        }
-    } else {
-        int last = firstPosition + getChildCount() - 1;
-        int startPos = (mSelectedPosition != INVALID_POSITION) ?
-                    mSelectedPosition - 1 :firstPosition + getChildCount() - 1;
-        if (startPos < 0 || startPos >= mAdapter->getCount()) {
-            return INVALID_POSITION;
-        }
-        if (startPos > last) {
-            startPos = last;
-        }
-
-        for (int pos = startPos; pos >= firstPosition; pos--) {
-            if (mAdapter->isEnabled(pos)
-                    && getChildAt(pos - firstPosition)->getVisibility() == View::VISIBLE) {
-                return pos;
-            }
-        }
+int ListView::getHeightForPosition(int position) {
+    int height = AbsListView::getHeightForPosition(position);
+    if (shouldAdjustHeightForDivider(position)) {
+        return height + mDividerHeight;
     }
-    return INVALID_POSITION;
+    return height;
 }
 
-int ListView::amountToScroll(int direction, int nextSelectedPosition){
-    int listBottom = getHeight() - mListPadding.height;
-    int listTop = mListPadding.y;
+HeaderViewListAdapter* ListView::wrapHeaderListAdapterInternal(
+         const std::vector<FixedViewInfo*>& headerViewInfos,
+         const std::vector<FixedViewInfo*>& footerViewInfos,Adapter* adapter){
+     return new HeaderViewListAdapter(headerViewInfos, footerViewInfos, adapter);
+}
 
-    int numChildren = getChildCount();
+void ListView::wrapHeaderListAdapterInternal(){
+    mAdapter = wrapHeaderListAdapterInternal(mHeaderViewInfos, mFooterViewInfos, mAdapter);
+}
 
-    if (direction == View::FOCUS_DOWN) {
-        int indexToMakeVisible = numChildren - 1;
-        if (nextSelectedPosition != INVALID_POSITION) {
-            indexToMakeVisible = nextSelectedPosition - mFirstPosition;
-        }
-        while (numChildren <= indexToMakeVisible) {
-            // Child to view is not attached yet.
-            addViewBelow(getChildAt(numChildren - 1), mFirstPosition + numChildren - 1);
-            numChildren++;
-        }
-        int positionToMakeVisible = mFirstPosition + indexToMakeVisible;
-        View* viewToMakeVisible = getChildAt(indexToMakeVisible);
+void ListView::setHeaderDividersEnabled(bool headerDividersEnabled) {
+    mHeaderDividersEnabled = headerDividersEnabled;
+    invalidate(true);
+}
 
-        int goalBottom = listBottom;
-        if (positionToMakeVisible < mItemCount - 1) {
-            goalBottom -= getArrowScrollPreviewLength();
-        }
+bool ListView::areHeaderDividersEnabled()const {
+    return mHeaderDividersEnabled;
+}
 
-        if (viewToMakeVisible->getBottom() <= goalBottom) {
-            // item is fully visible.
-            return 0;
-        }
+void ListView::setFooterDividersEnabled(bool footerDividersEnabled) {
+    mFooterDividersEnabled = footerDividersEnabled;
+    invalidate(true);
+}
 
-        if (nextSelectedPosition != INVALID_POSITION
-                && (goalBottom - viewToMakeVisible->getTop()) >= getMaxScrollAmount()) {
-            // item already has enough of it visible, changing selection is good enough
-            return 0;
-        }
+bool ListView::areFooterDividersEnabled()const {
+    return mFooterDividersEnabled;
+}
 
-        int amtToScroll = (viewToMakeVisible->getBottom() - goalBottom);
-
-        if ((mFirstPosition + numChildren) == mItemCount) {
-            // last is last in list -> make sure we don't scroll past it
-            int max = getChildAt(numChildren - 1)->getBottom() - listBottom;
-            amtToScroll = std::min(amtToScroll, max);
-        }
-
-        return std::min(amtToScroll, getMaxScrollAmount());
-    } else {
-        int indexToMakeVisible = 0;
-        if (nextSelectedPosition != INVALID_POSITION) {
-            indexToMakeVisible = nextSelectedPosition - mFirstPosition;
-        }
-        while (indexToMakeVisible < 0) {
-            // Child to view is not attached yet.
-            addViewAbove(getChildAt(0), mFirstPosition);
-            mFirstPosition--;
-            indexToMakeVisible = nextSelectedPosition - mFirstPosition;
-        }
-        int positionToMakeVisible = mFirstPosition + indexToMakeVisible;
-        View* viewToMakeVisible = getChildAt(indexToMakeVisible);
-        int goalTop = listTop;
-        if (positionToMakeVisible > 0) {
-            goalTop += getArrowScrollPreviewLength();
-        }
-        if (viewToMakeVisible->getTop() >= goalTop) {
-            // item is fully visible.
-            return 0;
-        }
-        if (nextSelectedPosition != INVALID_POSITION &&
-                (viewToMakeVisible->getBottom() - goalTop) >= getMaxScrollAmount()) {
-            // item already has enough of it visible, changing selection is good enough
-            return 0;
-        }
-
-        int amtToScroll = (goalTop - viewToMakeVisible->getTop());
-        if (mFirstPosition == 0) {
-            // first is first in list -> make sure we don't scroll past it
-            int max = listTop - getChildAt(0)->getTop();
-            amtToScroll = std::min(amtToScroll,  max);
-        }
-        return std::min(amtToScroll, getMaxScrollAmount());
+void ListView::setOverscrollHeader(Drawable* header) {
+    mOverScrollHeader = header;
+    if (mScrollY < 0) {
+        invalidate(true);
     }
 }
 
-int ListView::amountToScrollToNewFocus(int direction, View* newFocus, int positionOfNewFocus){
-    int amountToScroll = 0;
-    RECT mTempRect; 
-    newFocus->getDrawingRect(mTempRect);
-    offsetDescendantRectToMyCoords(newFocus, mTempRect);
-    if (direction == View::FOCUS_UP) {
-        if (mTempRect.y < mListPadding.y) {
-            amountToScroll = mListPadding.y - mTempRect.y;
-            if (positionOfNewFocus > 0) {
-                amountToScroll += getArrowScrollPreviewLength();
-            }
-        }
-    } else {
-        int listBottom = getHeight() - mListPadding.height;
-        if (mTempRect.bottom() > listBottom) {
-            amountToScroll = mTempRect.bottom() - listBottom;
-            if (positionOfNewFocus < mItemCount - 1) {
-                amountToScroll += getArrowScrollPreviewLength();
-            }
-        }
-    }
-    return amountToScroll;
+Drawable* ListView::getOverscrollHeader()const {
+    return mOverScrollHeader;
+}
+void ListView::setOverscrollFooter(Drawable* footer) {
+    mOverScrollFooter = footer;
+    invalidate(true);
 }
 
-int ListView::distanceToView(View* descendant) {
-    int distance = 0;
-    RECT tmpRect;
-    descendant->getDrawingRect(tmpRect);
-    offsetDescendantRectToMyCoords(descendant, tmpRect);
-    int listBottom = mHeight - mListPadding.height;
-    if (tmpRect.bottom() < mListPadding.y) {
-        distance = mListPadding.y - tmpRect.bottom();
-    } else if (tmpRect.y > listBottom) {
-        distance = tmpRect.y - listBottom;
-    }
-    return distance;
-}
-
-bool ListView::isViewAncestorOf(View* child, View* parent){
-    if (child == parent) return true;
-
-    ViewGroup* theParent = child->getParent();
-    return theParent&&isViewAncestorOf(theParent, parent);
-}
-
-View* ListView::addViewAbove(View* theView, int position){
-    int abovePosition = position - 1;
-    View* view = obtainView(abovePosition, mIsScrap);
-    int edgeOfNewChild = theView->getTop() - mDividerHeight;
-    setupChild(view, abovePosition, edgeOfNewChild, false, mListPadding.x,
-             false, mIsScrap[0]);
-    return view;
-}
-
-View* ListView::addViewBelow(View* theView, int position){
-    int belowPosition = position + 1;
-    View* view = obtainView(belowPosition, mIsScrap);
-    int edgeOfNewChild = theView->getBottom() + mDividerHeight;
-    setupChild(view, belowPosition, edgeOfNewChild, true, mListPadding.x,
-            false, mIsScrap[0]);
-    return view;
-}
-
-void ListView::scrollListItemsBy(int amount){
-    offsetChildrenTopAndBottom(amount);
-
-    int listBottom = getHeight() - mListPadding.height;
-    int listTop = mListPadding.y;
-
-    if (amount < 0) {
-        // shifted items up
-
-        // may need to pan views into the bottom space
-        int numChildren = getChildCount();
-        View* last = getChildAt(numChildren - 1);
-        while (last->getBottom() < listBottom) {
-            int lastVisiblePosition = mFirstPosition + numChildren - 1;
-            if (lastVisiblePosition < mItemCount - 1) {
-                last = addViewBelow(last, lastVisiblePosition);
-                numChildren++;
-            } else {
-                break;
-            }
-        }
-
-        // may have brought in the last child of the list that is skinnier
-        // than the fading edge, thereby leaving space at the end.  need
-        // to shift back
-        if (last->getBottom() < listBottom) {
-            offsetChildrenTopAndBottom(listBottom - last->getBottom());
-        }
-
-        // top views may be panned off screen
-        View* first = getChildAt(0);
-        while (first->getBottom() < listTop) {
-            LayoutParams* layoutParams = (LayoutParams*) first->getLayoutParams();
-            if (mRecycler->shouldRecycleViewType(layoutParams->viewType)) {
-                mRecycler->addScrapView(first, mFirstPosition);
-            }
-            detachViewFromParent(first);
-            first = getChildAt(0);
-            mFirstPosition++;
-        }
-    } else {
-        // shifted items down
-        View* first = getChildAt(0);
-
-        // may need to pan views into top
-        while ((first->getTop() > listTop) && (mFirstPosition > 0)) {
-            first = addViewAbove(first, mFirstPosition);
-            mFirstPosition--;
-        }
-
-        // may have brought the very first child of the list in too far and
-        // need to shift it back
-        if (first->getTop() > listTop) {
-            offsetChildrenTopAndBottom(listTop - first->getTop());
-        }
-
-        int lastIndex = getChildCount() - 1;
-        View* last = getChildAt(lastIndex);
-
-        // bottom view may be panned off screen
-        while (last->getTop() > listBottom) {
-            LayoutParams* layoutParams = (LayoutParams*) last->getLayoutParams();
-            if (mRecycler->shouldRecycleViewType(layoutParams->viewType)) {
-                mRecycler->addScrapView(last, mFirstPosition+lastIndex);
-            }
-            detachViewFromParent(last);
-            last = getChildAt(--lastIndex);
-        }
-    }
-    mRecycler->fullyDetachScrapViews();
-    removeUnusedFixedViews(mHeaderViewInfos);
-    removeUnusedFixedViews(mFooterViewInfos);    
-}
-
-int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedPos, int direction){
-    int nextSelected;
-
-    if (direction == View::FOCUS_DOWN) {
-        int listBottom = getHeight() - mListPadding.height;
-        if (selectedView && selectedView->getBottom() <= listBottom) {
-            nextSelected = selectedPos != INVALID_POSITION && selectedPos >= mFirstPosition ?
-                selectedPos + 1 :mFirstPosition;
-        } else {
-            return INVALID_POSITION;
-        }
-    } else {
-        int listTop = mListPadding.y;
-        if (selectedView && selectedView->getTop() >= listTop) {
-            int lastPos = mFirstPosition + getChildCount() - 1;
-            nextSelected = selectedPos != INVALID_POSITION && selectedPos <= lastPos ?
-                        selectedPos - 1 :lastPos;
-        } else {
-            return INVALID_POSITION;
-        }
-    }
-
-    if (nextSelected < 0 || nextSelected >= mAdapter->getCount()) {
-        return INVALID_POSITION;
-    }
-    return lookForSelectablePosition(nextSelected, direction == View::FOCUS_DOWN);
-}
-
-static int constrain(int amount, int low, int high) {//get the 
-    return amount < low ? low : (amount > high ? high : amount);
-}
-
-int ListView::lookForSelectablePositionAfter(int current, int position, bool lookDown){
-    Adapter* adapter = mAdapter;
-    if (adapter == nullptr || isInTouchMode()) {
-        return INVALID_POSITION;
-    }
-
-    // First check after the starting position in the specified direction.
-    int after = lookForSelectablePosition(position, lookDown);
-    if (after != INVALID_POSITION) {
-        return after;
-    }
-
-    // Then check between the starting position and the current position.
-    int count = adapter->getCount();
-    current = constrain(current, -1, count - 1);
-    if (lookDown) {
-        position = std::min(position - 1, count - 1);
-        while ((position > current) && !adapter->isEnabled(position)) {
-            position--;
-        }
-        if (position <= current) return INVALID_POSITION;
-    } else {
-        position = std::max(0, position + 1);
-        while ((position < current) && !adapter->isEnabled(position)) {
-            position++;
-        }
-        if (position >= current) return INVALID_POSITION;
-    }
-    return position;
-}
-
-/**
-* To avoid horizontal focus searches changing the selected item, we
-* manually focus search within the selected item (as applicable), and
-* prevent focus from jumping to something within another item.
-* @param direction one of {View.FOCUS_LEFT, View.FOCUS_RIGHT}
-* @return Whether this consumes the key event.
-*/
-bool ListView::handleHorizontalFocusWithinListItem(int direction){
-    if (direction != View::FOCUS_LEFT && direction != View::FOCUS_RIGHT)  {
-        LOGD("direction must be one of{View.FOCUS_LEFT, View.FOCUS_RIGHT}");
-    }
-
-    int numChildren = getChildCount();
-    if (mItemsCanFocus && numChildren > 0 && mSelectedPosition != INVALID_POSITION) {
-        View* selectedView = getSelectedView();
-        if (selectedView && selectedView->hasFocus() &&
-                 dynamic_cast<ViewGroup*>(selectedView)) {
-
-            View* currentFocus = selectedView->findFocus();
-            View* nextFocus = FocusFinder::getInstance().findNextFocus(
-                        (ViewGroup*) selectedView, currentFocus, direction);
-            if (nextFocus != nullptr) {
-                // do the math to get interesting rect in next focus' coordinates
-                RECT focusedRect ;
-                if (currentFocus != nullptr) {
-                    currentFocus->getFocusedRect(focusedRect);
-                    offsetDescendantRectToMyCoords(currentFocus, focusedRect);
-                    offsetRectIntoDescendantCoords(nextFocus, focusedRect);
-                } else {
-                    focusedRect.set(0,0,0,0);
-                }
-                if (nextFocus->requestFocus(direction, focusedRect.empty()?nullptr:&focusedRect)) {
-                    return true;
-                }
-            }
-            // we are blocking the key from being handled (by returning true)
-            // if the global result is going to be some other view within this
-            // list.  this is to acheive the overall goal of having
-            // horizontal d-pad navigation remain in the current item.
-            View* globalNextFocus = FocusFinder::getInstance().findNextFocus(
-                        (ViewGroup*) getRootView(), currentFocus, direction);
-            if (globalNextFocus != nullptr) {
-                return isViewAncestorOf(globalNextFocus, this);
-            }
-        }
-    }
-    return false;
-}
-
-void ListView::measureItem(View* child) {
-    ViewGroup::LayoutParams* p = child->getLayoutParams();
-    if (p == nullptr) {
-        p = new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
-    }
-
-    int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,
-            mListPadding.x + mListPadding.width, p->width);
-    int lpHeight = p->height;
-    int childHeightSpec;
-    if (lpHeight > 0) {
-        childHeightSpec = MeasureSpec::makeMeasureSpec(lpHeight, MeasureSpec::EXACTLY);
-    } else {
-        childHeightSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(),
-                                                          MeasureSpec::UNSPECIFIED);
-    }
-    child->measure(childWidthSpec, childHeightSpec);
-}
-void ListView::relayoutMeasuredItem(View* child) {
-    int w = child->getMeasuredWidth();
-    int h = child->getMeasuredHeight();
-    int childLeft = mListPadding.x;
-    int childRight = childLeft + w;
-    int childTop = child->getTop();
-    int childBottom = childTop + h;
-    child->layout(childLeft, childTop, childRight, childBottom);
-}
-void ListView::measureAndAdjustDown(View* child, int childIndex, int numChildren) {
-    int oldHeight = child->getHeight();
-    measureItem(child);
-    if (child->getMeasuredHeight() != oldHeight) {
-        // lay out the view, preserving its top
-        relayoutMeasuredItem(child);
-
-        // adjust views below appropriately
-        int heightDelta = child->getMeasuredHeight() - oldHeight;
-        for (int i = childIndex + 1; i < numChildren; i++) {
-            getChildAt(i)->offsetTopAndBottom(heightDelta);
-        }
-    }
-}
-void ListView::handleNewSelectionChange(View* selectedView, int direction, int newSelectedPosition, bool newFocusAssigned){
-    if (newSelectedPosition == INVALID_POSITION) {
-        LOGE("newSelectedPosition %d needs to be valid",newSelectedPosition);
-    }
-
-    // whether or not we are moving down or up, we want to preserve the
-    // top of whatever view is on top:
-    // - moving down: the view that had selection
-    // - moving up: the view that is getting selection
-    View* topView;
-    View* bottomView;
-    int topViewIndex, bottomViewIndex;
-    bool topSelected = false;
-    int selectedIndex = mSelectedPosition - mFirstPosition;
-    int nextSelectedIndex = newSelectedPosition - mFirstPosition;
-    if (direction == View::FOCUS_UP) {
-        topViewIndex = nextSelectedIndex;
-        bottomViewIndex = selectedIndex;
-        topView = getChildAt(topViewIndex);
-        bottomView = selectedView;
-        topSelected = true;
-    } else {
-        topViewIndex = selectedIndex;
-        bottomViewIndex = nextSelectedIndex;
-        topView = selectedView;
-        bottomView = getChildAt(bottomViewIndex);
-    }
-
-    int numChildren = getChildCount();
-
-    // start with top view: is it changing size?
-    if (topView != nullptr) {
-        topView->setSelected(!newFocusAssigned && topSelected);
-        measureAndAdjustDown(topView, topViewIndex, numChildren);
-    }
-
-    // is the bottom view changing size?
-    if (bottomView != nullptr) {
-        bottomView->setSelected(!newFocusAssigned && !topSelected);
-        measureAndAdjustDown(bottomView, bottomViewIndex, numChildren);
-    }
-}
-bool  ListView::arrowScroll(int direction){
-   mInLayout = true;
-   bool handled=arrowScrollImpl(direction);
-   mInLayout=false;
-   return handled;
-}
-bool  ListView::arrowScrollImpl(int direction) {
-    if (getChildCount() <= 0) {
-        return false;
-    }
-
-    View* selectedView = getSelectedView();
-    int selectedPos = mSelectedPosition;
-
-    int nextSelectedPosition = nextSelectedPositionForDirection(selectedView, selectedPos, direction);
-    int amtToScroll = amountToScroll(direction, nextSelectedPosition);
-    
-    // if we are moving focus, we may OVERRIDE the default behavior
-    ArrowScrollFocusResult* focusResult = mItemsCanFocus ? arrowScrollFocused(direction) : nullptr;
-    if (focusResult != nullptr) {
-        nextSelectedPosition = focusResult->getSelectedPosition();
-        amtToScroll = focusResult->getAmountToScroll();
-    }
-
-    bool needToRedraw = focusResult != nullptr;
-    if (nextSelectedPosition != INVALID_POSITION) {
-        handleNewSelectionChange(selectedView, direction, nextSelectedPosition, focusResult != nullptr);
-        setSelectedPositionInt(nextSelectedPosition);
-        setNextSelectedPositionInt(nextSelectedPosition);
-        selectedView = getSelectedView();
-        selectedPos = nextSelectedPosition;
-        if (mItemsCanFocus && focusResult == nullptr) {
-            // there was no new view found to take focus, make sure we
-            // don't leave focus with the old selection
-            View* focused = getFocusedChild();
-            if (focused != nullptr) {
-                focused->clearFocus();
-            }
-        }
-        needToRedraw = true;
-        checkSelectionChanged();
-    }
-
-    if (amtToScroll > 0) {
-        scrollListItemsBy((direction == View::FOCUS_UP) ? amtToScroll : -amtToScroll);
-        needToRedraw = true;
-    }
-
-    // if we didn't find a new focusable, make sure any existing focused
-    // item that was panned off screen gives up focus.
-    if (mItemsCanFocus && (focusResult == nullptr)
-            && selectedView != nullptr && selectedView->hasFocus()) {
-        View* focused = selectedView->findFocus();
-        if (focused != nullptr) {
-            if (!isViewAncestorOf(focused, this) || distanceToView(focused) > 0) {
-                focused->clearFocus();
-            }
-        }
-    }
-
-    // if  the current selection is panned off, we need to remove the selection
-    if (nextSelectedPosition == INVALID_POSITION && selectedView != nullptr
-            && !isViewAncestorOf(selectedView, this)) {
-        selectedView = nullptr;
-        hideSelector();
-
-        // but we don't want to set the ressurect position (that would make subsequent
-        // unhandled key events bring back the item we just scrolled off!)
-        mResurrectToPosition = INVALID_POSITION;
-    }
-
-    if (needToRedraw) {
-        if (selectedView != nullptr) {
-            positionSelectorLikeFocus(selectedPos, selectedView);
-            mSelectedTop = selectedView->getTop();
-        }
-        if (!awakenScrollBars()) {
-            invalidate();
-        }
-        invokeOnItemScrollListener();
-        return true;
-    }
-
-    return false;
-}
-
-bool ListView::pageScroll(int direction){
-   int nextPage;
-   bool down;
-
-   if (direction == FOCUS_UP) {
-       nextPage = std::max(0, mSelectedPosition - getChildCount() - 1);
-       down = false;
-   } else if (direction == FOCUS_DOWN) {
-       nextPage = std::min(mItemCount - 1, mSelectedPosition + getChildCount() - 1);
-       down = true;
-   } else {
-       return false;
-   }
-
-   if (nextPage >= 0) {
-       int position = lookForSelectablePositionAfter(mSelectedPosition, nextPage, down);
-       if (position >= 0) {
-           mLayoutMode = LAYOUT_SPECIFIC;
-           mSpecificTop = mPaddingTop + getVerticalFadingEdgeLength();
-           if (down && (position > (mItemCount - getChildCount()))) {
-               mLayoutMode = LAYOUT_FORCE_BOTTOM;
-           }
-
-           if (!down && (position < getChildCount())) {
-               mLayoutMode = LAYOUT_FORCE_TOP;
-           }
-
-           setSelectionInt(position);
-           invokeOnItemScrollListener();
-           if (!awakenScrollBars()) {
-               invalidate();
-           }
-
-           return true;
-       }
-   }
-   return false;
-}
-
-bool ListView::fullScroll(int direction) {
-    bool moved = false;
-    if (direction == FOCUS_UP) {
-        if (mSelectedPosition != 0) {
-            int position = lookForSelectablePositionAfter(mSelectedPosition, 0, true);
-            if (position >= 0) {
-                mLayoutMode = LAYOUT_FORCE_TOP;
-                setSelectionInt(position);
-                invokeOnItemScrollListener();
-            }
-            moved = true;
-        }
-    } else if (direction == FOCUS_DOWN) {
-        int lastItem = (mItemCount - 1);
-        if (mSelectedPosition < lastItem) {
-            int position = lookForSelectablePositionAfter(mSelectedPosition, lastItem, false);
-            if (position >= 0) {
-                mLayoutMode = LAYOUT_FORCE_BOTTOM;
-                setSelectionInt(position);
-                invokeOnItemScrollListener();
-            }
-            moved = true;
-        }
-    }
-
-    if (moved && !awakenScrollBars()) {
-        awakenScrollBars();
-        invalidate();
-    }
-    return moved;
-}
-
-bool ListView::commonKey(int keyCode, int count, KeyEvent& event) {
-    if (mAdapter == nullptr/* || !isAttachedToWindow()*/) {
-        return false;
-    }
-
-    if (mDataChanged) layoutChildren();
-
-    bool handled = false;
-    int action = event.getAction();
-    if (KeyEvent::isConfirmKey(keyCode)
-            && event.hasNoModifiers() && action != KeyEvent::ACTION_UP) {
-        handled = resurrectSelectionIfNeeded();
-        if (!handled && event.getRepeatCount() == 0 && getChildCount() > 0) {
-            keyPressed();
-            handled = true;
-        }
-    }
-
-    LOGV("%s action=%d handled=%d",KeyEvent::getLabel(keyCode),action,handled);
-    if (!handled && action != KeyEvent::ACTION_UP) {
-        switch (keyCode) {
-        case KEY_DPAD_UP:
-            if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded();
-                if (!handled) {
-                    while (count-- > 0) {
-                        if (arrowScroll(FOCUS_UP)) {
-                            handled = true;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
-                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_UP);
-            }
-            break;
-
-        case KEY_DPAD_DOWN:
-            if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded();
-                if (!handled) {
-                    while (count-- > 0) {
-                        if (arrowScroll(FOCUS_DOWN)) {
-                            handled = true;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
-                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
-            }
-            break;
-
-        case KEY_DPAD_LEFT:
-            if (event.hasNoModifiers()) {
-                handled = handleHorizontalFocusWithinListItem(FOCUS_LEFT);
-            }
-            break;
-
-        case KEY_DPAD_RIGHT:
-            if (event.hasNoModifiers()) {
-                handled = handleHorizontalFocusWithinListItem(View::FOCUS_RIGHT);
-            }
-            break;
-
-        case KEY_PAGE_UP:
-            if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded() || pageScroll(FOCUS_UP);
-            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
-                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_UP);
-            }
-            break;
-
-        case KEY_PAGE_DOWN:
-            if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded() || pageScroll(FOCUS_DOWN);
-            } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
-                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
-            }
-            break;
-
-        case KEY_MOVE_HOME:
-            if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_UP);
-            }
-            break;
-
-        case KEY_MOVE_END:
-            if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
-            }
-            break;
-
-        case KEY_TAB:
-            // This creates an asymmetry in TAB navigation order. At some
-            // point in the future we may decide that it's preferable to
-            // force the list selection to the top or bottom when receiving
-            // TAB focus from another widget, but for now this is adequate.
-            if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_DOWN);
-            } else if (event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
-                handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_UP);
-            }
-            break;
-        }
-    }
-
-    if (handled) {
-        return true;
-    }
-
-    //if (sendToTextFilter(keyCode, count, event)) return true;
-
-    switch (action) {
-    case KeyEvent::ACTION_DOWN: return AbsListView::onKeyDown(keyCode, event);
-    case KeyEvent::ACTION_UP:   return AbsListView::onKeyUp(keyCode, event);
-    case KeyEvent::ACTION_MULTIPLE:
-        return AbsListView::onKeyMultiple(keyCode, count, event);
-    default: return false;// shouldn't happen
-    }
-}
-bool ListView::onKeyDown(int keyCode,KeyEvent& event) {
-    return commonKey(keyCode, 1, event);
-}
-bool ListView::onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event){
-    return commonKey(keyCode, repeatCount, event);
-}
-
-bool ListView::dispatchKeyEvent(KeyEvent& event) {
-    bool handled = AbsListView::dispatchKeyEvent(event);
-    if (!handled) {// If we didn't handle it...
-        View* focused = getFocusedChild();
-        if (focused && event.getAction() == KeyEvent::ACTION_DOWN) {
-            // ... and our focused child didn't handle it
-            // ... give it to ourselves so we can scroll if necessary
-            handled = onKeyDown(event.getKeyCode(), event);
-        }
-    }
-    return handled;
+Drawable* ListView::getOverscrollFooter()const {
+    return mOverScrollFooter;
 }
 
 }//namespace

@@ -481,7 +481,7 @@ public:
     bool getDefaultFocusHighlightEnabled()const;
     bool isLayoutDirectionResolved()const;
     int getLayoutDirection()const;
-    bool isOpaque()const;
+    virtual bool isOpaque()const;
     View&setLayoutDirection(int layoutDirection);
     bool isLayoutRtl()const;
     bool isFocusableInTouchMode()const;

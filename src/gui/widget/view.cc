@@ -3983,7 +3983,6 @@ void View::removeCallbacks(const Runnable& what){
 //   For Layout support
 
 void View::requestLayout(){
-    LOGV("%p:%d parent requested=%d",this,mID,(mParent&&mParent->isLayoutRequested()));
     mPrivateFlags |= PFLAG_FORCE_LAYOUT;
     mPrivateFlags |= PFLAG_INVALIDATED;
     if (mParent != nullptr && !mParent->isLayoutRequested()) {

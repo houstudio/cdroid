@@ -26,7 +26,27 @@ private:
         int getSelectedPosition(){return mSelectedPosition;}
         int getAmountToScroll() { return mAmountToScroll; }
     };
-	
+    class FocusSelector:public Runnable {
+    private:
+        // the selector is waiting to set selection on the list view
+        static constexpr int STATE_SET_SELECTION = 1;
+        // the selector set the selection on the list view, waiting for a layoutChildren pass
+        static constexpr int STATE_WAIT_FOR_LAYOUT = 2;
+        // the selector's selection has been honored and it is waiting to request focus on the
+        // target child.
+        static constexpr int STATE_REQUEST_FOCUS = 3;
+
+        int mAction;
+        int mPosition;
+        int mPositionTop;
+        ListView*mLV;
+    public:
+        FocusSelector(ListView*lv);
+        FocusSelector& setupForSetSelection(int position, int top);
+        void operator()(); 
+        bool setupFocusIfValid(int position);
+        void onLayoutComplete();
+    };	
     bool mIsCacheColorOpaque;
     bool mDividerIsOpaque;
     bool mHeaderDividersEnabled;
@@ -34,8 +54,12 @@ private:
     bool mItemsCanFocus;
     bool mAreAllItemsSelectable;
     ArrowScrollFocusResult mArrowScrollFocusResult;
+    FocusSelector* mFocusSelector;
 
+    void initListView();
     void clearRecycledState(std::vector<FixedViewInfo*>& infos);
+    bool showingTopFadingEdge();
+    bool showingBottomFadingEdge();
     void removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where);
     void removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList);
 
@@ -91,6 +115,7 @@ protected:
         Adapter* adapter);
     void wrapHeaderListAdapterInternal();
     void resetList()override;
+    void onDettached()override;
     void layoutChildren()override;
     int getHeightForPosition(int position)override;
     View* fillFromTop(int nextTop);
@@ -113,16 +138,21 @@ protected:
     int measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
             int maxHeight, int disallowPartialChildPosition);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void onSizeChanged(int w, int h, int oldw, int oldh)override;
+    bool drawChild(Canvas&,View*,long)override;
     void dispatchDraw(Canvas&)override;
 public:
     ListView(int w,int h);
+    ListView(Context* context,const AttributeSet& attrs);
     ~ListView();
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position);
     bool getItemsCanFocus()const;
     void setItemsCanFocus(bool itemsCanFocus);
+    bool isOpaque()const override;
     void setDividerHeight(int);
     int getDividerHeight()const;
+    Drawable*getDevider();
     void setDivider(Drawable*d);
     int getMaxScrollAmount()const;
     void setOverscrollHeader(Drawable*);
@@ -141,8 +171,10 @@ public:
     bool areHeaderDividersEnabled()const;
     void setFooterDividersEnabled(bool footerDividersEnabled);
     bool areFooterDividersEnabled()const;
+    bool requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate);
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event)override;
+    void setSelectionAfterHeaderView();
     bool dispatchKeyEvent(KeyEvent& event)override;
 };
 
