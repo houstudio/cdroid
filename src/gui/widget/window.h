@@ -26,6 +26,7 @@ class Window : public ViewGroup {
     friend class GraphDevice;
 private:
     Runnable layoutRunner;
+    bool mInLayout;
     RECT mRectOfFocusedView;
     void doLayout();
     bool performFocusNavigation(KeyEvent& event);
@@ -72,11 +73,7 @@ public:
     virtual void onActive();
     virtual void onDeactive();
     bool dispatchKeyEvent(KeyEvent&event)override;
-
-    /*virtual void sendMessage(DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0){
-        sendMessage(this,msgid,wParam,lParam,delayedtime);
-    }
-    virtual void sendMessage(View*v,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0)override;*/
+    bool isInLayout()const override;
     void postDelayed(const Runnable& what,uint32_t delay)override;
     void removeCallbacks(const Runnable& what)override;
     void requestLayout()override;

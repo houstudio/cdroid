@@ -64,11 +64,12 @@ void LyricsView::onDraw(Canvas& canvas){
              canvas.draw_image(img,rect,nullptr);
              y=img->get_height()-getFontSize();
          }
+         canvas.set_font_size(28);
          canvas.set_color(getCurrentTextColor());
-         /*canvas.draw_text(10,y,getTitle());  y+=26;
-         canvas.draw_text(10,y,getArtist()); y+=26;
-         canvas.draw_text(10,y,getGenre()+std::string("  ")+getYear()); y+=26;
-         canvas.draw_text(10,y,getComment());*/
+         canvas.move_to(10,y);   canvas.show_text(getTitle());  y+=26;
+         canvas.move_to(10,y);   canvas.show_text(getArtist()); y+=26;
+         canvas.move_to(10,y);   canvas.show_text(getGenre()+std::string("  ")+getYear()); y+=26;
+         canvas.move_to(10,y);   canvas.show_text(getComment());
     }
 }
 

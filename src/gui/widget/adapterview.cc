@@ -391,7 +391,8 @@ void AdapterView::selectionChanged(){
             if (mSelectionNotifier==nullptr) {
                 mSelectionNotifier =[this](){
                     mPendingSelectionNotifier = nullptr;
-                    if (mDataChanged /*&& getViewRootImpl() && getViewRootImpl().isLayoutRequested()*/) {
+                    ViewGroup*root=getRootView();
+                    if (mDataChanged && root && root->isLayoutRequested() ) {
                         if (getAdapter() != nullptr) {
                             mPendingSelectionNotifier = mSelectionNotifier;
                         }

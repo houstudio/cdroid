@@ -34,6 +34,7 @@ Window::Window(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     source=new UIEventSource(this);
     setFrame(0,0,1280,720);
     setFocusable(true);
+    mInLayout=false;
     setKeyboardNavigationCluster(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     WindowManager::getInstance().addWindow(this);
@@ -46,6 +47,7 @@ Window::Window(int x,int y,int width,int height,int type)
     source=new UIEventSource(this);
     mContext=&App::getInstance();
     canvas=nullptr;
+    mInLayout=false;
     LOGV("%p source=%p visible=%d size=%dx%d",this,source,hasFlag(VISIBLE),width,height);
     setFrame(x, y, width, height);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
@@ -313,10 +315,16 @@ void Window::removeCallbacks(const Runnable& what){
     if(source)source->removeCallbacks(what);
 }
 
+bool Window::isInLayout()const{
+    return mInLayout;
+}
+
 void Window::requestLayout(){
     if(layoutRunner==nullptr)
       layoutRunner=std::bind(&Window::doLayout,this);
     removeCallbacks(layoutRunner);
+    LOGD("mInLayout=%d",mInLayout);
+    mInLayout=true;
     postDelayed(layoutRunner,20);
 }
 
@@ -346,6 +354,7 @@ void Window::doLayout(){
         vg->measure(widthSpec, heightSpec);
         vg->layout(x,y,vg->getMeasuredWidth(),vg->getMeasuredHeight());
     }
+    mInLayout=false;
 }
 
 void Window::broadcast(DWORD msgid,DWORD wParam,ULONG lParam){

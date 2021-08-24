@@ -9,44 +9,72 @@
 #include <fstream>
 #include <string.h>
 #include <lyricsview.h>
-#include <ntvutils.h>
+#include <core/textutils.h>
 
 class MediaItem{
 public:
-    std::string path;
+    bool isDir;
+    std::string name;
+    std::string fullpath;
+    MediaItem(){
+    }
+    MediaItem(const MediaItem&o){
+        isDir=o.isDir;
+        name=o.name;
+        fullpath=o.fullpath;
+    }
 };
 class MediaAdapter:public ArrayAdapter<MediaItem>{
 public:
     View*getView(int position, View* convertView, ViewGroup* parent)override{
-        const MediaItem* mi=(MediaItem*)getItem(position);
+        const MediaItem& mi=getItemAt(position);
         TextView*tv=(TextView*)convertView;
         if(convertView==nullptr){
             tv=new TextView("",600,20);
             tv->setPadding(20,3,0,3);
         }
         tv->setId(position);
-        tv->setText(mi->path);
-        tv->setTextColor(0xFFFFFFFF);
-        tv->setBackgroundColor(0x80002222);
-        tv->setTextSize(24);
+        tv->setText(mi.name);
+        tv->setTextColor(mi.isDir?0xFFFFFFFF:0xFF88FF00);
+        tv->setBackgroundColor(0x80111111);
+        tv->setTextSize(28);
         return tv;
     }
     int loadMedias(const std::string&path);
 };
+std::string SimplifyPath(const std::string & path) {
+    char rpath[1024];
+    realpath(path.c_str(),rpath);
+    return std::string(rpath);
+}
+
+static int file_filter(const struct dirent*ent){
+    return (ent->d_type==DT_REG)||(ent->d_type==DT_DIR);
+}
+
 int MediaAdapter::loadMedias(const std::string&filepath){
-    int count=0;
     std::string path=SimplifyPath(filepath);
-    DIR *dir=opendir(path.c_str());
-    struct dirent **namelist;
-    int n=scandir(filepath.c_str(),&namelist,NULL/*filter*/,alphasort);
-    for(int i=0;i<n;i++){
+    DIR*dir=opendir(filepath.c_str());
+    struct dirent*ent;
+    int count=0;
+    LOGD("%s scaned=%d",filepath.c_str(),count);
+    while((ent=readdir(dir))!=nullptr){
         MediaItem mi;
-        LOGD("%d: %s",i,namelist[i]->d_name);
-        mi.path=namelist[i]->d_name;
-        add(mi);
+        mi.name=ent->d_name;
+        mi.fullpath=path+"/";
+        mi.fullpath+=mi.name;
+        LOGV("%s",mi.fullpath.c_str());
+        switch(ent->d_type){
+        case DT_DIR:
+        case DT_REG:
+            mi.isDir=(ent->d_type==DT_DIR);
+            add(mi);
+            count++;
+            break;
+        default:break;
+        }
     }
-    LOGD("%s loaded %d",filepath.c_str(),n);
-    free(namelist);
+    if(dir)closedir(dir);
     return count;
 }
 
@@ -55,6 +83,7 @@ protected:
     //ToolBar*mdtype;
     //ToolBar*header;
     ListView*mdlist;
+    TextView*mFilePath;
     MediaAdapter*mAdapter;
     AnalogClock*clock;
     LyricsView*lyrics;
@@ -74,11 +103,9 @@ public:
 public:
     MediaWindow(int x,int y,int w,int h);
     ~MediaWindow(){
-        //if(player)nglMPClose(player);
         player=nullptr;
     }
-    int loadMedia(const std::string&path,int filter);
-    int processMedia(MediaItem&itm);
+    int processMedia(const MediaItem itm);
     virtual bool onKeyDown(int,KeyEvent&k)override;
     std::string filename2URL(const std::string&name){
         std::string url;
@@ -113,44 +140,48 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
        
     mdlist=new ListView(600,520);
     mdlist->setPos(40,130);
-    mdlist->setSelector(new ColorDrawable(0xFF800000));
+    mdlist->setSelector(new ColorDrawable(0x8000ff00));
+    mdlist->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     mdlist->setVerticalScrollBarEnabled(true);
-    mdlist->setDrawSelectorOnTop(false);
+    mdlist->setDrawSelectorOnTop(true);
+    mdlist->setDivider(new ColorDrawable(0x40FFFFFF));
+    mdlist->setDividerHeight(1);
     addView(mdlist);
+
+    mFilePath=new TextView("",600,30);
+    mFilePath->setSingleLine(true);
+    mFilePath->setEllipsize(Layout::ELLIPSIS_MIDDLE);
+    mFilePath->setTextSize(28);
+    addView(mFilePath).setPos(40,660);
+
     mAdapter=new MediaAdapter();
     mAdapter->loadMedias("/");
     mdlist->setAdapter(mAdapter);
     mAdapter->notifyDataSetChanged();
-
-    clock=new AnalogClock(227,227); 
-    addView(clock).setPos(1000,100).setBackgroundColor(0x80123456);
+    mdlist->setOnItemClickListener([&](AdapterView&lv,View&v,int pos,long id){
+        const MediaItem mdi=mAdapter->getItemAt(pos);
+        processMedia(mdi);
+        mFilePath->setText(SimplifyPath(mdi.fullpath));
+    });
     lyrics=new LyricsView("",440,mdlist->getHeight()+30);
-    lyrics->setVisibility(INVISIBLE);
-    addView(lyrics).setPos(840,330).setBackgroundColor(0x80000000);
+    lyrics->setVisibility(VISIBLE);
+    addView(lyrics).setPos(750,130).setBackgroundColor(0x80000000);
 
 }
-int MediaWindow::loadMedia(const std::string&path,int filter){
+
+int MediaWindow::processMedia(const MediaItem mdi){
+    if(mdi.isDir){
+        LOGD("%s [%s]",mdi.fullpath.c_str(),mdi.name.c_str());
+        mAdapter->clear();
+        mAdapter->loadMedias(mdi.fullpath);
+        mAdapter->notifyDataSetChanged();
+    }else{
+        if(TextUtils::endWith(mdi.fullpath,"mp3")){
+             lyrics->setText(mdi.fullpath);
+             lyrics->invalidate(); 
+        }
+    }
     return 0;
-}
-int MediaWindow::processMedia(MediaItem&item){
-   switch(filter_type){
-   case VIDEO: 
-   case MUSIC: 
-        if(player){
-             //nglMPStop(player);
-             //nglMPClose(player);
-        }
-        player=nullptr;
-        if(filter_type==MUSIC){
-           //lyrics->setText(url);
-        }
-        break;
-   case PICTURE:{
-        }break;
-   case FOLDERS:
-        break;
-   }
-   return 0;
 }
 
 bool MediaWindow::onKeyDown(int keyCode,KeyEvent&k){
