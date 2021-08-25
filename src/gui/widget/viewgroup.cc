@@ -912,7 +912,7 @@ void ViewGroup::removeViews(int start, int count){
 void ViewGroup::removeViewInLayout(View* view){
     removeViewInternal(view);
 }
-void ViewGroup::removeViewInLayout(int start,int count){
+void ViewGroup::removeViewsInLayout(int start,int count){
     removeViewsInternal(start, count);
 }
 

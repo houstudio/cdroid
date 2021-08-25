@@ -230,9 +230,9 @@ public:
     virtual void removeView(View* view);/*only remove view from children,no deleteion*/
     virtual void removeViewAt(int idx);
     virtual void removeAllViews();
-    void removeViews(int start, int count);
-    void removeViewInLayout(View* view);
-    void removeViewInLayout(int start,int count);
+    virtual void removeViews(int start, int count);
+    virtual void removeViewInLayout(View* view);
+    virtual void removeViewsInLayout(int start,int count);
     void removeAllViewsInLayout();
     virtual View* findViewById(int id)const;
     virtual bool shouldDelayChildPressedState()const;

@@ -27,9 +27,9 @@ public:
     void removeAllViews()override;
     void removeView(View* view)override;
     void removeViewAt(int index)override;
-    void removeViewInLayout(View* view);//override;
-    void removeViews(int start, int count);//override;
-    void removeViewsInLayout(int start, int count);//override;
+    void removeViewInLayout(View* view) override;
+    void removeViews(int start, int count) override;
+    void removeViewsInLayout(int start, int count) override;
     View* getCurrentView();
     Animation* getInAnimation();
     void setInAnimation(Animation* inAnimation);
