@@ -1,7 +1,7 @@
 #ifndef __PROGRESS_BAR_H__
 #define __PROGRESS_BAR_H__
 #include <widget/view.h>
-#include <animation/property.h>
+#include <animation/objectanimator.h>
 
 namespace cdroid{
 
@@ -20,13 +20,7 @@ private:
             fromUser=false;
         }
     };
-    class ProgressProperty:public Property{
-    public:
-        ProgressProperty(const std::string&);
-        float get(void*)override;
-        void set(void*,float)override;
-    };
-    friend class ProgressProperty;
+    
     bool mAttached;
     float mVisualProgress;
     int mDuration;
@@ -36,6 +30,8 @@ private:
     std::vector<RefreshData>mData;
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
+    ObjectAnimator*mAnimator;
+
     void initProgressBar();
     void swapCurrentDrawable(Drawable*d);
     void updateDrawableBounds(int width,int height);

@@ -65,7 +65,7 @@ int Lyrics::loadImages(){
 #ifdef ENABLE_MP3ID3
     void *tag = ID3_readf(url.c_str(), 0);
     ID3FRAME f;
-    LOGD("%s",url.c_str());
+    LOGV("%s",url.c_str());
     if(tag==nullptr)return 0;
     if(ID3_start(f,tag) >= 2) {
         while(ID3_frame(f)) {
@@ -137,7 +137,7 @@ int Lyrics::parseID3(const std::string&txt){
        id3genre=priv::W2S((*id3tag)[tag::genre]); 
     }
 #endif
-    LOGD("title:%s\r\nartist:%s\r\nalbum:%s\r\nyear:%s\r\ngenre:%s",id3title.c_str(),
+    LOGV("title:%s\r\nartist:%s\r\nalbum:%s\r\nyear:%s\r\ngenre:%s",id3title.c_str(),
         id3artist.c_str(),id3album.c_str(),id3year.c_str(),id3genre.c_str());
 }
 
@@ -175,7 +175,7 @@ int Lyrics::parseLyrics(const std::string&txt){
 #ifdef ENABLE_MP3ID3
     if(stat(txt.c_str(),&stbuf)==0){
         tag::read::Lyrics3 ly(txt.c_str());
-        LOGD("getlyrics from %s %d",txt.c_str(),(bool)ly);
+        LOGV("getlyrics from %s %d",txt.c_str(),(bool)ly);
         if(ly){
            auto lst=ly.listing();//typedef std::vector< std::pair<std::string, value_string> > array
            for(auto l:lst)
@@ -186,7 +186,6 @@ int Lyrics::parseLyrics(const std::string&txt){
 
     void *tag = ID3_readf(txt.c_str(), 0);
     ID3FRAME f;
-    LOGD("%s",txt.c_str());
     if(tag==nullptr)return 0;
     if(ID3_start(f,tag) >= 2) {
         int counter=0;

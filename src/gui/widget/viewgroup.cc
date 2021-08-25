@@ -439,22 +439,6 @@ void ViewGroup::detachAllViewsFromParent(){
     mChildren.clear();
 }
 
-void ViewGroup::requestDisallowInterceptTouchEvent(bool disallowIntercept){
-    if (disallowIntercept == ((mGroupFlags & FLAG_DISALLOW_INTERCEPT) != 0)) {
-        // We're already in this state, assume our ancestors are too
-        return;
-    }
-    if (disallowIntercept) {
-        mGroupFlags |= FLAG_DISALLOW_INTERCEPT;
-    } else {
-        mGroupFlags &= ~FLAG_DISALLOW_INTERCEPT;
-    }
-    // Pass it up to our parent
-    if (mParent ) {
-        mParent->requestDisallowInterceptTouchEvent(disallowIntercept);
-    }
-}
-
 bool ViewGroup::addViewInLayout(View* child, int index,LayoutParams* params){
     return addViewInLayout(child, index, params, false);
 }
@@ -1707,6 +1691,22 @@ bool ViewGroup::onNestedPreFling(View* target, float velocityX, float velocityY)
     return true;
 }
 
+void ViewGroup::requestDisallowInterceptTouchEvent(bool disallowIntercept){
+    if (disallowIntercept == ((mGroupFlags & FLAG_DISALLOW_INTERCEPT) != 0)) {
+        // We're already in this state, assume our ancestors are too
+        return;
+    }
+
+    if (disallowIntercept) {
+        mGroupFlags |= FLAG_DISALLOW_INTERCEPT;
+    } else {
+        mGroupFlags &= ~FLAG_DISALLOW_INTERCEPT;
+    }
+
+    // Pass it up to our parent
+    if (mParent) mParent->requestDisallowInterceptTouchEvent(disallowIntercept);
+}
+
 bool ViewGroup::onInterceptTouchEvent(MotionEvent& ev){
     if( (ev.getAction() == MotionEvent::ACTION_DOWN)
         && isOnScrollbarThumb(ev.getX(), ev.getY()) )
@@ -1737,6 +1737,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     float scrolledXFloat = xf + mScrollX;
     float scrolledYFloat = yf + mScrollY;
 
+    const bool upordown=(actionMasked == MotionEvent::ACTION_DOWN)||(actionMasked == MotionEvent::ACTION_UP);
     if (ev.isTargetAccessibilityFocus() && isAccessibilityFocusedViewOrHost()) {
          ev.setTargetAccessibilityFocus(false);
     }
@@ -1815,6 +1816,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
         }
     }
 
+    //LOGD_IF(upordown,"mFirstTouchTarget=%p newTouchTarget=%p",mFirstTouchTarget,newTouchTarget);
     // Dispatch to touch targets.
     if (mFirstTouchTarget == nullptr){
         handled = dispatchTransformedTouchEvent(ev, canceled, nullptr,TouchTarget::ALL_POINTER_IDS);

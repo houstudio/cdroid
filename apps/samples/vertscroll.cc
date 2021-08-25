@@ -53,7 +53,7 @@ int main(int argc,const char*argv[]){
     ListView*lv=new ListView(0,300);
     MyAdapter*adapter=new MyAdapter();
     lv->setAdapter(adapter);
-    lv->setSelector(new ColorDrawable(0xFF00FF00));
+    lv->setSelector(new ColorDrawable(0x8000FF00));
     lv->setDivider(new ColorDrawable(0x40FFFFFF));
     lv->setDividerHeight(1);
     layout->addView(lv,new LinearLayoutParams(LayoutParams::MATCH_PARENT,300));

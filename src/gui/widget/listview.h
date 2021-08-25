@@ -139,6 +139,7 @@ protected:
             int maxHeight, int disallowPartialChildPosition);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
+    void onFocusChanged(bool gainFocus, int direction,const RECT* previouslyFocusedRect)override;
     bool drawChild(Canvas&,View*,long)override;
     void dispatchDraw(Canvas&)override;
 public:

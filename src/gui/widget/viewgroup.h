@@ -190,7 +190,6 @@ public:
     void unFocus(View* focused)override;
     void clearChildFocus(View* child);
     void focusableViewAvailable(View*);
-    void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool hasTransientState()override;
     void childHasTransientStateChanged(View* child, bool childHasTransientState);
 
@@ -252,6 +251,7 @@ public:
     bool dispatchKeyEvent(KeyEvent&)override;
     bool dispatchUnhandledMove(View* focused, int direction)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
+    void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt);
 
     void jumpDrawablesToCurrentState()override;

@@ -64,6 +64,7 @@ ProgressBar::~ProgressBar(){
     if(mIndeterminateDrawable)mIndeterminateDrawable->setCallback(nullptr);
     delete mProgressDrawable;
     delete mIndeterminateDrawable;
+    delete mAnimator;
 }
 
 void ProgressBar::initProgressBar(){
@@ -83,6 +84,7 @@ void ProgressBar::initProgressBar(){
     mCurrentDrawable=nullptr;
     mProgressDrawable=nullptr;
     mIndeterminateDrawable=nullptr;
+    mAnimator=nullptr;
     mData.push_back(RefreshData());
     mData.push_back(RefreshData());
 }
@@ -156,29 +158,26 @@ void ProgressBar::setVisualProgress(int id, float progress){
     onVisualProgressChanged(id, progress);
 }
 
-
-ProgressBar::ProgressProperty::ProgressProperty(const std::string&name):Property(name){}
-
-float ProgressBar::ProgressProperty::get(void* target){
-    return ((ProgressBar*)target)->mVisualProgress;
-}
-
-void ProgressBar::ProgressProperty::set(void*target, float value){
-    ((ProgressBar*)target)->mVisualProgress=value;
-}
-
-
 void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
     int range = mMax - mMin;
-    const float scale = range > 0 ? (progress - mMin) / (float) range : 0;
+    const float scale = range > 0 ? (float)(progress - mMin) / (float) range : 0;
     const bool isPrimary = id == ID_PRIMARY;//R.id.progress;
-    ProgressProperty*VISUAL_PROGRESS=new ProgressProperty("visual_progress");
+
     if (isPrimary && animate) {
-        ObjectAnimator* animator = ObjectAnimator::ofFloat(this, VISUAL_PROGRESS,{scale});
-        animator->setAutoCancel(true);
-        animator->setDuration(PROGRESS_ANIM_DURATION);
-        animator->setInterpolator(new  DecelerateInterpolator());//PROGRESS_ANIM_INTERPOLATOR);
-        animator->start();
+        FloatPropertyValuesHolder*prop=nullptr;
+        if(mAnimator==nullptr){
+            prop=new FloatPropertyValuesHolder();  
+            prop->setPropertySetter([&](void*target,float fraction,float v){
+                setVisualProgress(ID_PRIMARY, v);
+                LOGV("setVisualProgress(%d)->%f",ID_PRIMARY,v);
+            });
+            mAnimator = ObjectAnimator::ofPropertyValuesHolder(this,{prop});
+            mAnimator->setAutoCancel(true);
+            mAnimator->setDuration(PROGRESS_ANIM_DURATION);
+            mAnimator->setInterpolator(new  DecelerateInterpolator());
+        }else prop=(FloatPropertyValuesHolder*)mAnimator->getValues()[0];
+        prop->setValues({scale});
+        mAnimator->start();
     } else {
         setVisualProgress(id, scale);
     }
@@ -211,14 +210,13 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     rd.progress=progress;
     rd.fromUser=fromUser;
     rd.animate=animate;
-    doRefreshProgress(id, progress, fromUser, true, animate);
-    return ;
+    //doRefreshProgress(id, progress, fromUser, true, animate);
+    //return ;
     if(!mRefreshIsPosted){
-        LOGD("setprogress %d=%d  bools=%d,%d",id,progress,mAttached,mRefreshIsPosted);
         if(mAttached&&!mRefreshIsPosted){
             postDelayed([this](){
                 for(int i=ID_PRIMARY;i<=ID_SECONDARY;i++){
-                    RefreshData&rd=mData[i];
+                    RefreshData&rd=mData[i-1];
                     doRefreshProgress(i, rd.progress, rd.fromUser, true, rd.animate);
                 }
                 mRefreshIsPosted=false;

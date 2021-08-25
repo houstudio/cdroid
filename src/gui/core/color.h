@@ -1,5 +1,5 @@
 #ifndef __COLOR_H__
-#define __COLOR_H_
+#define __COLOR_H__
 #include <string>
 
 namespace cdroid{

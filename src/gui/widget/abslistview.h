@@ -249,6 +249,7 @@ protected:
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void confirmCheckedPositionsById();
     void handleDataChanged()override;
+    static int getDistance(const Rect& source,const Rect& dest, int direction);
     View* obtainView(int position, bool*outMetadata);
     void positionSelector(int position, View* sel);
     void hideSelector();
@@ -290,7 +291,9 @@ public:
     void setOverScrollMode(int mode)override;
     void setAdapter(Adapter*adapter)override;
     int getCheckedItemCount()const;
+    int getCheckedItemPositions(SparseBooleanArray&array);
     bool isItemChecked(int position)const;
+    int getCheckedItemIds(std::vector<long>&ids)const;
     //Returns the currently checked item. The result is only valid forCHOICE_MODE_SINGLE
     int getCheckedItemPosition()const;
     void setItemChecked(int position, bool value);
@@ -315,7 +318,7 @@ public:
     void jumpDrawablesToCurrentState()override;
     int pointToPosition(int x, int y);
     long pointToRowId(int x, int y);
-    bool performItemClick(View* view, int position, long id);
+    bool performItemClick(View* view, int position, long id)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
@@ -342,6 +345,7 @@ public:
     void smoothScrollBy(int distance, int duration);
     void smoothScrollBy(int distance, int duration, bool linear,bool suppressEndFlingStateChangeCall);
     void smoothScrollByOffset(int position);
+    void reclaimViews(std::vector<View*>& views);
 };
 
 }//namespace

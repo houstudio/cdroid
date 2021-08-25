@@ -13,12 +13,20 @@ private:
     float mTouchDownX;
     int mScaledTouchSlop;
     bool mIsDragging;
+
+    ColorStateList* mTickMarkTintList;
+    int mTickMarkTintMode;
+    bool mHasTickMarkTint = false;
+    bool mHasTickMarkTintMode = false;
+
     void initSeekBar();
     float getScale()const;
     void startDrag(MotionEvent& event);
+    void attemptClaimDrag();
     void applyThumbTint();
     void updateThumbAndTrackPos(int w, int h);
     void setThumbPos(int w, Drawable* thumb, float scale, int offset);
+    void applyTickMarkTint();
 protected:
     int mKeyProgressIncrement;
     int mThumbOffset;

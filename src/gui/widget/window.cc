@@ -321,11 +321,12 @@ bool Window::isInLayout()const{
 
 void Window::requestLayout(){
     if(layoutRunner==nullptr)
-      layoutRunner=std::bind(&Window::doLayout,this);
-    removeCallbacks(layoutRunner);
-    LOGD("mInLayout=%d",mInLayout);
-    mInLayout=true;
-    postDelayed(layoutRunner,20);
+        layoutRunner=std::bind(&Window::doLayout,this);
+    if(mInLayout==false){
+        mInLayout=true;
+        removeCallbacks(layoutRunner);
+        postDelayed(layoutRunner,20);
+    }
 }
 
 void Window::doLayout(){

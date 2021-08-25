@@ -1,4 +1,5 @@
 #include <widget/absseekbar.h>
+#include <widget/viewgroup.h>
 #include <math.h>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -93,6 +94,7 @@ bool AbsSeekBar::verifyDrawable(Drawable* who)const{
 
 void AbsSeekBar::onProgressRefresh(float scale, bool fromUser, int progress){
 }
+
 void AbsSeekBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     Drawable* d = getCurrentDrawable();
     int thumbHeight = mThumb == nullptr ? 0 : mThumb->getIntrinsicHeight();
@@ -109,6 +111,27 @@ void AbsSeekBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(resolveSizeAndState(dw, widthMeasureSpec, 0),
         resolveSizeAndState(dh, heightMeasureSpec, 0));
 }
+
+void AbsSeekBar::applyTickMarkTint(){
+    if (mTickMark && (mHasTickMarkTint || mHasTickMarkTintMode)) {
+        mTickMark = mTickMark->mutate();
+
+        if (mHasTickMarkTint) {
+            mTickMark->setTintList(mTickMarkTintList);
+        }
+
+        if (mHasTickMarkTintMode) {
+            mTickMark->setTintMode(mTickMarkTintMode);
+        }
+
+        // The drawable (or one of its children) may not have been
+        // stateful before applying the tint, so let's try again.
+        if (mTickMark->isStateful()) {
+            mTickMark->setState(getDrawableState());
+        }
+    }
+}
+
 void AbsSeekBar::setKeyProgressIncrement(int increment){
     mKeyProgressIncrement=increment;
 }
@@ -343,6 +366,12 @@ void AbsSeekBar::onStartTrackingTouch(){
      mIsDragging = true;
 }
 
+void AbsSeekBar::attemptClaimDrag() {
+    if (mParent) {
+        mParent->requestDisallowInterceptTouchEvent(true);
+    }
+}
+
 void AbsSeekBar::onStopTrackingTouch(){
      mIsDragging = false;
 }
@@ -374,7 +403,7 @@ void AbsSeekBar::startDrag(MotionEvent& event){
     }
     onStartTrackingTouch();
     trackTouchEvent(event);
-    //attemptClaimDrag();
+    attemptClaimDrag();
 }
 
 void AbsSeekBar::trackTouchEvent(MotionEvent&event){
@@ -402,14 +431,15 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
         } else {
             scale = (x - mPaddingLeft) / (float) availableWidth;
                 progress = mTouchProgressOffset;
-            }
         }
+    }
 
-        int range = getMax() - getMin();
-        progress += scale * range + getMin();
+    int range = getMax() - getMin();
+    progress += scale * range + getMin();
 
-        //setHotspot(x, y);
-        setProgressInternal((int)progress, true, false);    
+    //setHotspot(x, y);
+        
+    setProgressInternal((int)progress, true, false);
 }
 
 bool AbsSeekBar::onTouchEvent(MotionEvent& event){
@@ -461,7 +491,7 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
         }
         invalidate(true); // see above explanation
         break;
-        }
+    }
     return true;
-}
+    }
 }//namespace

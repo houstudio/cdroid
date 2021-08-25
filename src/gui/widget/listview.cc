@@ -2609,6 +2609,93 @@ int ListView::getDividerHeight()const {
     return mDividerHeight;
 }
 
+void ListView::setHeaderDividersEnabled(bool headerDividersEnabled) {
+    mHeaderDividersEnabled = headerDividersEnabled;
+    invalidate(true);
+}
+
+bool ListView::areHeaderDividersEnabled()const {
+    return mHeaderDividersEnabled;
+}
+
+void ListView::setFooterDividersEnabled(bool footerDividersEnabled) {
+    mFooterDividersEnabled = footerDividersEnabled;
+    invalidate(true);
+}
+
+bool ListView::areFooterDividersEnabled()const {
+    return mFooterDividersEnabled;
+}
+
+void ListView::setOverscrollHeader(Drawable* header) {
+    mOverScrollHeader = header;
+    if (mScrollY < 0) {
+        invalidate(true);
+    }
+}
+
+Drawable* ListView::getOverscrollHeader()const {
+    return mOverScrollHeader;
+}
+
+void ListView::setOverscrollFooter(Drawable* footer) {
+    mOverScrollFooter = footer;
+    invalidate(true);
+}
+
+Drawable* ListView::getOverscrollFooter()const {
+    return mOverScrollFooter;
+}
+
+void ListView::onFocusChanged(bool gainFocus, int direction,const Rect* previouslyFocusedRect){
+    ListView::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+
+    ListAdapter* adapter = mAdapter;
+    int closetChildIndex = -1;
+    int closestChildTop = 0;
+    if (adapter && gainFocus && previouslyFocusedRect ) {
+        //previouslyFocusedRect.offset(mScrollX, mScrollY);
+
+        // Don't cache the result of getChildCount or mFirstPosition here,
+        // it could change in layoutChildren.
+        if (adapter->getCount() < getChildCount() + mFirstPosition) {
+            mLayoutMode = LAYOUT_NORMAL;
+            layoutChildren();
+        }
+
+        // figure out which item should be selected based on previously
+        // focused rect
+        Rect otherRect;
+        int minDistance = INT_MAX;
+        int childCount = getChildCount();
+        int firstPosition = mFirstPosition;
+
+        for (int i = 0; i < childCount; i++) {
+            // only consider selectable views
+            if (!adapter->isEnabled(firstPosition + i)) {
+                continue;
+            }
+
+            View* other = getChildAt(i);
+            other->getDrawingRect(otherRect);
+            offsetDescendantRectToMyCoords(other, otherRect);
+            int distance = getDistance(*previouslyFocusedRect, otherRect, direction);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closetChildIndex = i;
+                closestChildTop = other->getTop();
+            }
+        }
+    }
+
+    if (closetChildIndex >= 0) {
+        setSelectionFromTop(closetChildIndex + mFirstPosition, closestChildTop);
+    } else {
+        requestLayout();
+    }
+}
+
 int ListView::getHeightForPosition(int position) {
     int height = AbsListView::getHeightForPosition(position);
     if (shouldAdjustHeightForDivider(position)) {
@@ -2685,42 +2772,7 @@ void ListView::wrapHeaderListAdapterInternal(){
     mAdapter = wrapHeaderListAdapterInternal(mHeaderViewInfos, mFooterViewInfos, mAdapter);
 }
 
-void ListView::setHeaderDividersEnabled(bool headerDividersEnabled) {
-    mHeaderDividersEnabled = headerDividersEnabled;
-    invalidate(true);
-}
 
-bool ListView::areHeaderDividersEnabled()const {
-    return mHeaderDividersEnabled;
-}
-
-void ListView::setFooterDividersEnabled(bool footerDividersEnabled) {
-    mFooterDividersEnabled = footerDividersEnabled;
-    invalidate(true);
-}
-
-bool ListView::areFooterDividersEnabled()const {
-    return mFooterDividersEnabled;
-}
-
-void ListView::setOverscrollHeader(Drawable* header) {
-    mOverScrollHeader = header;
-    if (mScrollY < 0) {
-        invalidate(true);
-    }
-}
-
-Drawable* ListView::getOverscrollHeader()const {
-    return mOverScrollHeader;
-}
-void ListView::setOverscrollFooter(Drawable* footer) {
-    mOverScrollFooter = footer;
-    invalidate(true);
-}
-
-Drawable* ListView::getOverscrollFooter()const {
-    return mOverScrollFooter;
-}
 
 }//namespace
 

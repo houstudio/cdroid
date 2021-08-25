@@ -454,6 +454,7 @@ void AbsListView::setSelectionFromTop(int position, int y) {
 int AbsListView::getCheckedItemCount()const {
     return mCheckedItemCount;
 }
+
 bool AbsListView::isItemChecked(int position)const {
     if (mChoiceMode != CHOICE_MODE_NONE) {
         return mCheckStates.get(position);
@@ -467,6 +468,25 @@ int AbsListView::getCheckedItemPosition()const {
     }
     return INVALID_POSITION;
 }
+
+int AbsListView::getCheckedItemPositions(SparseBooleanArray&array){
+    if (mChoiceMode != CHOICE_MODE_NONE) {
+        return mCheckStates.size();
+    }
+    return 0;
+}
+
+int AbsListView::getCheckedItemIds(std::vector<long>&ids)const{
+    if (mChoiceMode == CHOICE_MODE_NONE || mCheckedIdStates.size() == 0 || mAdapter == nullptr) {
+        return 0;
+    }
+    const int count = mCheckedIdStates.size();
+    for (int i = 0; i < count; i++) {
+        ids.push_back(mCheckedIdStates.keyAt(i));
+    }
+    return ids.size();
+}
+
 
 void AbsListView::positionSelector(int position, View* sel, bool manageHotspot, float x, float y) {
     bool positionChanged = position != mSelectorPosition;
@@ -1408,6 +1428,72 @@ void AbsListView::handleDataChanged() {
     checkSelectionChanged();
 }
 
+int AbsListView::getDistance(const Rect& source,const Rect& dest, int direction){
+    int sX, sY; // source x, y
+    int dX, dY; // dest x, y
+    switch (direction) {
+    case View::FOCUS_RIGHT:
+        sX = source.right();
+        sY = source.y + source.height / 2;
+        dX = dest.x;
+        dY = dest.y + dest.height / 2;
+        break;
+    case View::FOCUS_DOWN:
+        sX = source.x + source.width / 2;
+        sY = source.bottom();
+        dX = dest.x + dest.width / 2;
+        dY = dest.y;
+        break;
+    case View::FOCUS_LEFT:
+        sX = source.x;
+        sY = source.y + source.height / 2;
+        dX = dest.right();
+        dY = dest.y + dest.height / 2;
+        break;
+    case View::FOCUS_UP:
+        sX = source.x + source.width / 2;
+        sY = source.y;
+        dX = dest.x + dest.width / 2;
+        dY = dest.y;
+        break;
+    case View::FOCUS_FORWARD:
+    case View::FOCUS_BACKWARD:
+        sX = source.right() + source.width / 2;
+        sY = source.y + source.height / 2;
+        dX = dest.x + dest.width / 2;
+        dY = dest.y + dest.height / 2;
+        break;
+    default:
+        throw "direction must be one of {FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, "
+                    "FOCUS_FORWARD, FOCUS_BACKWARD}.";
+    }
+    int deltaX = dX - sX;
+    int deltaY = dY - sY;
+    return deltaY * deltaY + deltaX * deltaX;
+}
+
+void AbsListView::reclaimViews(std::vector<View*>& views){
+    const int childCount = getChildCount();
+    //RecycleBin::RecyclerListener listener = mRecycler->mRecyclerListener;
+
+    // Reclaim views on screen
+    for (int i = 0; i < childCount; i++) {
+        View* child = getChildAt(i);
+        AbsListView::LayoutParams* lp = (AbsListView::LayoutParams*) child->getLayoutParams();
+        // Don't reclaim header or footer views, or views that should be ignored
+        if (lp  && mRecycler->shouldRecycleViewType(lp->viewType)) {
+            views.push_back(child);
+            //child.setAccessibilityDelegate(null);
+            /*if (listener != nullptr) {
+                // Pretend they went through the scrap heap
+                listener.onMovedToScrapHeap(child);
+            }*/
+        }
+    }
+    mRecycler->reclaimScrapViews(views);
+    removeAllViewsInLayout();
+}
+
 View*AbsListView::obtainView(int position, bool*outMetadata) {
 
     outMetadata[0] = false;
@@ -2007,7 +2093,7 @@ void AbsListView::onTouchModeChanged(bool isInTouchMode){
             // touch mode). Force an initial layout to get rid of the selection.
             layoutChildren();
         }
-            updateSelectorState();
+        updateSelectorState();
     } else {
         int touchMode = mTouchMode;
         if (touchMode == TOUCH_MODE_OVERSCROLL || touchMode == TOUCH_MODE_OVERFLING) {
