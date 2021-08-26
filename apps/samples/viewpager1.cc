@@ -14,7 +14,7 @@ public:
     void destroyItem(ViewGroup* container, int position,void* object){
         container->removeView((View*)object);
     }
-    float getPageWidth(int position){return 1.f;}
+    float getPageWidth(int position){return 1.f;}//if returned calue <1 OffscreenPageLimit must be larger to workfine 
 };
 
 int main(int argc,const char*argv[]){

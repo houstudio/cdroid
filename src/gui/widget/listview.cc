@@ -2648,7 +2648,7 @@ Drawable* ListView::getOverscrollFooter()const {
 }
 
 void ListView::onFocusChanged(bool gainFocus, int direction,const Rect* previouslyFocusedRect){
-    ListView::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+    AbsListView::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 
     ListAdapter* adapter = mAdapter;
     int closetChildIndex = -1;
