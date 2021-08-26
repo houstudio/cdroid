@@ -55,26 +55,38 @@ public:
 };
 
 class ScrollabilityCache:public Runnable{
+private:
+    static constexpr float OPAQUE[] = { 255 };
+    static constexpr float TRANSPARENT[] = { 0.0f };
 public:
     static constexpr int OFF =0;
     static constexpr int ON  =1;
     static constexpr int FADING=2;
-    int scrollBarSize;
-    int mScrollBarDraggingPos;
-    int scrollBarMinTouchTarget;
-    int fadingEdgeLength;
 
+    static constexpr int NOT_DRAGGING = 0;
+    static constexpr int DRAGGING_VERTICAL_SCROLL_BAR = 1;
+    static constexpr int DRAGGING_HORIZONTAL_SCROLL_BAR = 2;
+
+    bool fadeScrollBars;
+    int fadingEdgeLength;
     int scrollBarDefaultDelayBeforeFade;
     int scrollBarFadeDuration;
-    RECT mScrollBarBounds;
-    RECT mScrollBarTouchBounds;
-    bool fadeScrollBars;
+
+    int scrollBarSize;
+    int scrollBarMinTouchTarget;
+
     ScrollBarDrawable*scrollBar;
     float interpolatorValues[1];
     View*host;
     Interpolator* scrollBarInterpolator;
     long fadeStartTime;
     int state = OFF;
+    int mLastColor;
+    RECT mScrollBarBounds;
+    RECT mScrollBarTouchBounds;
+
+    int mScrollBarDraggingState = NOT_DRAGGING;
+    int mScrollBarDraggingPos;
 public:
     ScrollabilityCache(ViewConfiguration&configuration,View*host){//int sz){
         fadingEdgeLength = configuration.getScaledFadingEdgeLength();

@@ -378,6 +378,7 @@ void Window::cancelInvalidate(View* view){
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
     mOwner=w;
 }
+
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
     mViews.push_back(view);
     postIfNeededLocked();
@@ -420,11 +421,13 @@ void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
     if (!mPosted) {
         //mChoreographer.postCallback(Choreographer.CALLBACK_ANIMATION, this, null);
         Runnable run;run=std::bind(&InvalidateOnAnimationRunnable::run,this);
-        mOwner->postDelayed(run,30);
+        mOwner->postDelayed(run,AnimationHandler::getFrameDelay());
         mPosted = true;
     }
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 typedef std::function<View*(Context*ctx, const AttributeSet&attrs)>ViewParser;
 #define DECLAREPARSER(component) { #component ,[](Context*ctx,const AttributeSet&atts)->View*{return new component(ctx,atts);}} 
 static std::map<const std::string,ViewParser>viewParsers={
