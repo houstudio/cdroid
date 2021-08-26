@@ -65,6 +65,8 @@ ProgressBar::~ProgressBar(){
     delete mProgressDrawable;
     delete mIndeterminateDrawable;
     delete mAnimator;
+    delete mAnimation;
+	delete mTransformation;
 }
 
 void ProgressBar::initProgressBar(){
@@ -85,6 +87,11 @@ void ProgressBar::initProgressBar(){
     mProgressDrawable=nullptr;
     mIndeterminateDrawable=nullptr;
     mAnimator=nullptr;
+    mAnimation=nullptr;
+	mTransformation=nullptr;
+    mHasAnimation=false;
+    mInDrawing =false;
+    mRefreshIsPosted =false;
     mData.push_back(RefreshData());
     mData.push_back(RefreshData());
 }
@@ -392,6 +399,27 @@ void ProgressBar::startAnimation() {
         mHasAnimation=false;
     }else{
         mHasAnimation = true;
+        if (mInterpolator == nullptr) {
+            mInterpolator = new LinearInterpolator();
+        }
+
+        if (mTransformation == nullptr) {
+            mTransformation = new Transformation();
+        } else {
+            mTransformation->clear();
+        }
+
+        if (mAnimation == nullptr) {
+            mAnimation = new AlphaAnimation(0.0f, 1.0f);
+        } else {
+            mAnimation->reset();
+        }
+
+        mAnimation->setRepeatMode(mBehavior);
+        mAnimation->setRepeatCount(Animation::INFINITE);
+        mAnimation->setDuration(mDuration);
+        mAnimation->setInterpolator(mInterpolator);
+        mAnimation->setStartTime(Animation::START_ON_FIRST_FRAME);
     }
     LOGD("mIndeterminateDrawable=%p",mIndeterminateDrawable);
     postInvalidate();
@@ -419,14 +447,14 @@ void ProgressBar::drawTrack(Canvas&canvas){
         canvas.translate(mPaddingLeft, mPaddingTop);
     }
 
-    //const long time = getDrawingTime();
+    const long time = SystemClock::uptimeMillis();//getDrawingTime();
     if (mHasAnimation) {
-        /*mAnimation->getTransformation(time, mTransformation);
+        mAnimation->getTransformation(time, *mTransformation);
         const float scale = mTransformation->getAlpha();
         mInDrawing = true;
         d->setLevel((int) (scale * MAX_LEVEL));
         mInDrawing = false;
-        postInvalidateOnAnimation();*/
+        postInvalidateOnAnimation();
     }
     d->draw(canvas);
     canvas.restore();
@@ -442,6 +470,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
     h -= mPaddingTop + mPaddingBottom;
     int right = w;
     int bottom = h;
+
     LOGV("mIndeterminateDrawable=%p,mOnlyIndeterminate=%d",mIndeterminateDrawable,mOnlyIndeterminate);
     if (mIndeterminateDrawable) {
         int top = 0;

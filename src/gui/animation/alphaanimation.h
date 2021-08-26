@@ -1,5 +1,5 @@
 #ifndef __ALPHA_ANIMAION_H__
-#define __ALPHAA_NIMAION_H__
+#define __ALPHA_ANIMAION_H__
 #include <animation/animation.h>
 namespace cdroid{
 
@@ -17,4 +17,4 @@ public:
     bool hasAlpha()const override;
 };
 }
-#endif
+#endif//__ALPHA_ANIMAION_H__

@@ -23,14 +23,21 @@ private:
     
     bool mAttached;
     float mVisualProgress;
+    int mBehavior;
     int mDuration;
     bool mOnlyIndeterminate;
+    Transformation* mTransformation;
+    AlphaAnimation* mAnimation;
     bool mHasAnimation;
+    bool mInDrawing;
     bool mRefreshIsPosted;
     std::vector<RefreshData>mData;
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
     ObjectAnimator*mAnimator;
+
+    bool mNoInvalidate;
+    Interpolator* mInterpolator;
 
     void initProgressBar();
     void swapCurrentDrawable(Drawable*d);
