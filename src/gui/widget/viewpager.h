@@ -27,7 +27,7 @@ private:
     static constexpr bool USE_CACHE = false;
     static constexpr int DEFAULT_OFFSCREEN_PAGES = 1;
     static constexpr int MAX_SETTLE_DURATION = 600; // ms
-    static constexpr int MIN_DISTANCE_FOR_FLING =1; // dips
+    static constexpr int MIN_DISTANCE_FOR_FLING =25; // dips
     static constexpr int DEFAULT_GUTTER_SIZE = 16; // dips
     static constexpr int MIN_FLING_VELOCITY = 400; // dips
     static constexpr int INVALID_POINTER = -1;
@@ -66,6 +66,7 @@ public:
 protected:
     struct ItemInfo {
         void* object;
+        //Logical position of the item within the pager adapter
         int position;
         bool scrolling;
         float widthFactor;
@@ -87,6 +88,7 @@ private:
     int mTopPageBounds;
     int mBottomPageBounds;
 
+    int mLeftIncr = -1;
     // Offsets of the first and last items, if known.
     // Set during population, used to determine if we are at the beginning
     // or end of the pager data set during touch scrolling.
@@ -222,6 +224,7 @@ public:
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode);
     void addTouchables(std::vector<View*>& views);
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs);
+    void onRtlPropertiesChanged(int layoutDirection)override;
     bool beginFakeDrag();
     void endFakeDrag();
     void fakeDragBy(float xOffset);

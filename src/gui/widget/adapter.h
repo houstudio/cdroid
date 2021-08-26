@@ -112,6 +112,8 @@ public:
     void unregisterDataSetObserver(DataSetObserver* observer);
     void setViewPagerObserver(DataSetObserver* observer);
     virtual std::string getPageTitle(int position){return std::string();}
+    /*Returns the proportional width of a given page as a percentage of the
+     * ViewPager's measured width from (0.f-1.f]*/
     virtual float getPageWidth(int position){return 1.f;};
 };
 

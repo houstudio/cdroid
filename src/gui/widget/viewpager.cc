@@ -3,7 +3,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 
-
+//https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/base/core/java/com/android/internal/widget/ViewPager.java
 namespace cdroid{
 class VPInterpolator:public Interpolator{
 public:
@@ -247,7 +247,8 @@ void ViewPager::setCurrentItemInternal(int item, bool smoothScroll, bool always,
     } else if (item >= mAdapter->getCount()) {
         item = mAdapter->getCount() - 1;
     }
-    int pageLimit = mOffscreenPageLimit;
+
+    const int pageLimit = mOffscreenPageLimit;
     if (item > (mCurItem + pageLimit) || item < (mCurItem - pageLimit)) {
         // We are doing a jump by more than one page.  To avoid
         // glitches, we want to keep all current pages in the view
@@ -256,7 +257,8 @@ void ViewPager::setCurrentItemInternal(int item, bool smoothScroll, bool always,
             mItems[i]->scrolling = true;
         }
     }
-    bool dispatchSelected = mCurItem != item;
+
+    const bool dispatchSelected = mCurItem != item;
 
     if (mFirstLayout) {
         // We don't have any idea how big we are yet and shouldn't have any pages either.
@@ -269,6 +271,24 @@ void ViewPager::setCurrentItemInternal(int item, bool smoothScroll, bool always,
     } else {
         populate(item);
         scrollToItem(item, smoothScroll, velocity, dispatchSelected);
+    }
+}
+
+void ViewPager::scrollToItem(int item, bool smoothScroll, int velocity, bool dispatchSelected){
+    int destX = getLeftEdgeForItem(item);
+     
+    if (smoothScroll) {
+        smoothScrollTo(destX, 0, velocity);
+        if (dispatchSelected) {
+            dispatchOnPageSelected(item);
+        }
+    } else {
+        if (dispatchSelected) {
+            dispatchOnPageSelected(item);
+        }
+        completeScroll(false);
+        scrollTo(destX, 0);
+        pageScrolled(destX);
     }
 }
 
@@ -288,23 +308,6 @@ int ViewPager::getLeftEdgeForItem(int position){
         return MAX_SCROLL_X - itemWidth - scaledOffset;
     } else {
         return scaledOffset;
-    }
-}
-
-void ViewPager::scrollToItem(int item, bool smoothScroll, int velocity, bool dispatchSelected){
-    int destX = getLeftEdgeForItem(item);
-    if (smoothScroll) {
-        smoothScrollTo(destX, 0, velocity);
-        if (dispatchSelected) {
-            dispatchOnPageSelected(item);
-        }
-    } else {
-        if (dispatchSelected) {
-            dispatchOnPageSelected(item);
-        }
-        completeScroll(false);
-        scrollTo(destX, 0);
-        pageScrolled(destX);
     }
 }
 
@@ -525,11 +528,14 @@ void ViewPager::populate(int newCurrentItem){
 
     mAdapter->startUpdate(this);
 
-    int pageLimit = mOffscreenPageLimit;
-    int startPos = std::max(0, mCurItem - pageLimit);
-    int N = mAdapter->getCount();
-    int endPos = std::min(N - 1, mCurItem + pageLimit);
+    const int pageLimit = mOffscreenPageLimit;
+    const int startPos = std::max(0, mCurItem - pageLimit);
+    const int N = mAdapter->getCount();
+    const int endPos = std::min(N - 1, mCurItem + pageLimit);
 
+    LOGE_IF(N != mExpectedAdapterCount,"The application's PagerAdapter changed the adapter's contents without "
+                    "calling PagerAdapter#notifyDataSetChanged! Expected adapter item count: %d , found: %d",
+                    mExpectedAdapterCount,N);
 
     // Locate the currently focused item or add it if needed.
     int curIndex = -1;
@@ -562,6 +568,7 @@ void ViewPager::populate(int newCurrentItem){
                 if (pos == ii->position && !ii->scrolling) {
                     mItems.erase(mItems.begin()+itemIndex);//remove(itemIndex);
                     mAdapter->destroyItem(this, pos, ii->object);
+                    LOGD("populate()- destroyItem() with pos:%d view:%p",pos,ii->object);
                     itemIndex--;
                     curIndex--;
                     ii = itemIndex >= 0 ? mItems[itemIndex] : nullptr;
@@ -591,6 +598,7 @@ void ViewPager::populate(int newCurrentItem){
                     if (pos == ii->position && !ii->scrolling) {
                         mItems.erase(mItems.begin()+itemIndex);//remove(itemIndex);
                         mAdapter->destroyItem(this, pos, ii->object);
+                        LOGD("populate()- destroyItem() with pos:%d view:%p",pos,ii->object);
                         ii = itemIndex < mItems.size() ? mItems[itemIndex] : nullptr;
                     }
                 } else if (ii != nullptr && pos == ii->position) {
@@ -601,7 +609,7 @@ void ViewPager::populate(int newCurrentItem){
                     ii = addNewItem(pos, itemIndex);
                     itemIndex++;
                     extraWidthRight += ii->widthFactor;
-                    ii = itemIndex < mItems.size() ? mItems.at(itemIndex) : nullptr;
+                   ii = itemIndex < mItems.size() ? mItems.at(itemIndex) : nullptr;
                 }
             }
         }
@@ -609,11 +617,14 @@ void ViewPager::populate(int newCurrentItem){
         calculatePageOffsets(curItem, curIndex, oldCurInfo);
     }
 
+    for (int i=0;i<mItems.size(); i++) 
+        LOGV("#%d :page %d offset:%f",i, mItems[i]->position,mItems[i]->offset);
 
     mAdapter->setPrimaryItem(this, mCurItem, curItem != nullptr ? curItem->object : nullptr);
 
     mAdapter->finishUpdate(this);
 
+    
     // Check width measurement of current pages and drawing sort order.
     // Update LayoutParams as needed.
     for (int i=0;i<getChildCount();i++){
@@ -665,9 +676,9 @@ void ViewPager::sortChildDrawingOrder(){
    }
 }
 void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* oldCurInfo){
-     int N = mAdapter->getCount();
-     int width = getClientWidth();
-     float marginOffset = width > 0 ? (float) mPageMargin / width : 0;
+     const int N = mAdapter->getCount();
+     const int width = getClientWidth();
+     const float marginOffset = width > 0 ? (float) mPageMargin / width : 0;
      // Fix up offsets for later layout.
      if (oldCurInfo != nullptr) {
          int oldCurPosition = oldCurInfo->position;
@@ -987,10 +998,10 @@ void ViewPager::onLayout(bool changed, int l, int t, int width, int height){
 }
 
 void ViewPager::setPageTransformer(bool reverseDrawingOrder, PageTransformer transformer) {
-    bool hasTransformer = transformer != nullptr;
-    bool needsPopulate = hasTransformer != (mPageTransformer != nullptr);
+    const bool hasTransformer = transformer != nullptr;
+    const bool needsPopulate = hasTransformer != (mPageTransformer != nullptr);
     mPageTransformer = transformer;
-    //setChildrenDrawingOrderEnabled(hasTransformer);
+    setChildrenDrawingOrderEnabled(hasTransformer);
     if (hasTransformer) {
         mDrawingOrder = reverseDrawingOrder ? DRAW_ORDER_REVERSE : DRAW_ORDER_FORWARD;
     } else {
@@ -1184,7 +1195,7 @@ void ViewPager::dispatchOnScrollStateChanged(int state){
 int ViewPager::determineTargetPage(int currentPage, float pageOffset, int velocity, int deltaX){
     int targetPage;
     if (std::abs(deltaX) > mFlingDistance && std::abs(velocity) > mMinimumVelocity) {
-        targetPage = velocity > 0 ? currentPage : currentPage + 1;
+        targetPage = currentPage - (velocity < 0 ? mLeftIncr : 0);
     } else {
         float truncator = currentPage >= mCurItem ? 0.4f : 0.6f;
         targetPage = currentPage + (int) (pageOffset + truncator);
@@ -1276,7 +1287,7 @@ bool  ViewPager::executeKeyEvent(KeyEvent& event){
 }
 bool ViewPager::pageLeft() {
     if (mCurItem > 0) {
-        setCurrentItem(mCurItem - 1, true);
+        setCurrentItem(mCurItem + mLeftIncr, true);
         return true;
     }
     return false;
@@ -1284,10 +1295,15 @@ bool ViewPager::pageLeft() {
 
 bool ViewPager::pageRight() {
     if (mAdapter != nullptr && mCurItem < (mAdapter->getCount() - 1)) {
-        setCurrentItem(mCurItem + 1, true);
+        setCurrentItem(mCurItem - mLeftIncr, true);
         return true;
     }
     return false;
+}
+
+void ViewPager::onRtlPropertiesChanged(int layoutDirection){
+    ViewGroup::onRtlPropertiesChanged(layoutDirection);
+    mLeftIncr = (layoutDirection == LAYOUT_DIRECTION_LTR)?-1:1;
 }
 
 bool ViewPager::arrowScroll(int direction){
@@ -1750,6 +1766,7 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
              float x = ev.getX(activePointerIndex);
              int totalDelta = (int) (x - mInitialMotionX);
              int nextPage = determineTargetPage(currentPage, pageOffset, initialVelocity, totalDelta);
+             LOGV("currentPage=%d nextPage=%d",currentPage,nextPage);
              setCurrentItemInternal(nextPage, true, true, initialVelocity);
              needsInvalidate = resetTouch();
          }

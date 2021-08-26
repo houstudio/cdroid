@@ -366,6 +366,64 @@ void Window::close(){
     //sendMessage(View::WM_DESTROY,0,0);
 }
 
+void Window::dispatchInvalidateOnAnimation(View*v){
+    mInvalidateOnAnimationRunnable.setOwner(this);
+    mInvalidateOnAnimationRunnable.addView(v);
+}
+
+void Window::cancelInvalidate(View* view){
+    mInvalidateOnAnimationRunnable.removeView(view);
+}
+
+void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
+    mOwner=w;
+}
+void Window::InvalidateOnAnimationRunnable::addView(View* view){
+    mViews.push_back(view);
+    postIfNeededLocked();
+}
+
+void Window::InvalidateOnAnimationRunnable::removeView(View* view){
+    auto it=std::find(mViews.begin(),mViews.end(),view);
+    if(it!=mViews.end())mViews.erase(it);
+    if(mViews.size()==0){
+        mPosted = false;
+    }
+}
+
+void Window::InvalidateOnAnimationRunnable::run(){
+    int viewCount;
+    int viewRectCount;
+    mPosted = false;
+
+    std::vector<View*>tempViews=mViews; 
+    mViews.clear();
+    /*viewRectCount = mViewRects.size();
+    if (viewRectCount != 0) {
+        mTempViewRects = mViewRects.toArray(mTempViewRects != null
+                ? mTempViewRects : new AttachInfo.InvalidateInfo[viewRectCount]);
+        mViewRects.clear();
+    }*/
+
+    for (auto view:tempViews){
+        view->invalidate();
+    }
+
+    /*for (int i = 0; i < viewRectCount; i++) {
+        View.AttachInfo.InvalidateInfo info = mTempViewRects[i];
+        info.target.invalidate(info.left, info.top, info.right, info.bottom);
+        info.recycle();
+    }*/
+}
+
+void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
+    if (!mPosted) {
+        //mChoreographer.postCallback(Choreographer.CALLBACK_ANIMATION, this, null);
+        Runnable run;run=std::bind(&InvalidateOnAnimationRunnable::run,this);
+        mOwner->postDelayed(run,30);
+        mPosted = true;
+    }
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef std::function<View*(Context*ctx, const AttributeSet&attrs)>ViewParser;
 #define DECLAREPARSER(component) { #component ,[](Context*ctx,const AttributeSet&atts)->View*{return new component(ctx,atts);}} 

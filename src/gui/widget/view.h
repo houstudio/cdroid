@@ -447,6 +447,7 @@ public:
     virtual View& setSize(int x,int y);
     int getX()const;//x pos to screen
     int getY()const;//y pos to screen
+    int getZ()const;
     void getDrawingRect(RECT& outRect);
     void offsetTopAndBottom(int offset);
     void offsetLeftAndRight(int offset);

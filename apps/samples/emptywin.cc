@@ -36,6 +36,7 @@ public:
             SimpleMonthView*sm=new  SimpleMonthView(100,100);
             sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
             container->addView(sm);
+            sm->setId(position);
             return sm;
         }else{
             ListView*lv=new  ListView(100,100);
@@ -45,6 +46,7 @@ public:
             lv->setAdapter(ma);
             lv->setSelector(new ColorDrawable(0x8800FF00));
             ma->notifyDataSetChanged();
+            lv->setId(position);
             return lv;
         }
     }
@@ -247,10 +249,11 @@ int main(int argc,const char*argv[]){
     }break;
     case 8:{
         ViewPager*vp=new ViewPager(800,400);
-        vp->setOffscreenPageLimit(4);
+        //vp->setOffscreenPageLimit(3);
         vp->setAdapter(gpAdapter);
         vp->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
         gpAdapter->notifyDataSetChanged();
+        vp->setCurrentItem(0);//must setcurrentitem
         w->addView(vp);
         w->requestLayout();
     }break;

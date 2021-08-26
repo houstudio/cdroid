@@ -517,6 +517,12 @@ void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
     }
 }
 
+void ViewGroup::dispatchInvalidateOnAnimation(View* view){
+}
+
+void ViewGroup::cancelInvalidate(View* view){
+}
+
 bool ViewGroup::isViewTransitioning(View* view){
     return  std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view)!= mTransitioningViews.end();
 }
@@ -574,6 +580,14 @@ int ViewGroup::getDescendantFocusability()const{
 void ViewGroup::setDescendantFocusability(int focusability){
     mGroupFlags &= ~FLAG_MASK_FOCUSABILITY;
     mGroupFlags |= (focusability & FLAG_MASK_FOCUSABILITY);
+}
+
+bool ViewGroup::isChildrenDrawingOrderEnabled()const{
+    return (mGroupFlags & FLAG_USE_CHILD_DRAWING_ORDER) == FLAG_USE_CHILD_DRAWING_ORDER;
+}
+
+void ViewGroup::setChildrenDrawingOrderEnabled(bool enabled) {
+    setBooleanFlag(FLAG_USE_CHILD_DRAWING_ORDER, enabled);
 }
 
 void ViewGroup::setBooleanFlag(int flag, bool value) {
@@ -654,14 +668,71 @@ int ViewGroup::getChildDrawingOrder(int count,int i){
     return i;
 }
 
+bool ViewGroup::hasChildWithZ()const{
+    for (auto child:mChildren) {
+        if (child->getZ() != 0) return true;
+    }
+    return false;
+}
+
+int ViewGroup::buildOrderedChildList(std::vector<View*>&preSortedChildren) {
+    const int childrenCount =  mChildren.size();
+    if (childrenCount <= 1 || !hasChildWithZ()) return 0;
+
+    preSortedChildren.clear();
+    preSortedChildren.resize(childrenCount);
+
+    const bool customOrder = isChildrenDrawingOrderEnabled();
+    for (int i = 0; i < childrenCount; i++) {
+        // add next child (in child order) to end of list
+        const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+        const View* nextChild = mChildren[childIndex];
+        const float currentZ = nextChild->getZ();
+
+        // insert ahead of any Views with greater Z
+        int insertIndex = i;
+        while (insertIndex > 0 && preSortedChildren.at(insertIndex - 1)->getZ() > currentZ) {
+            insertIndex--;
+        }
+        //preSortedChildren.insert(insertIndex, nextChild);
+    }
+    return preSortedChildren.size();
+}
+
+int ViewGroup::getAndVerifyPreorderedIndex(int childrenCount, int i, bool customOrder){
+    int childIndex;
+    if (customOrder) {
+        int childIndex1 = getChildDrawingOrder(childrenCount, i);
+        LOGE_IF(childIndex1 >= childrenCount,"getChildDrawingOrder() returned invalid index %d (child count is %d)",childIndex1,childrenCount);
+        childIndex = childIndex1;
+    } else {
+        childIndex = i;
+    }
+    return childIndex;
+}
+
+View* ViewGroup::getAndVerifyPreorderedView(const std::vector<View*>& preorderedList,const std::vector<View*> children,
+            int childIndex) {
+    View* child;
+    if (preorderedList.size()) {
+        child = preorderedList.at(childIndex);
+        LOGE_IF(child == nullptr,"Invalid preorderedList contained null child at index %d",childIndex);
+    } else {
+        child = children[childIndex];
+    }
+    return child;
+}
+
 bool ViewGroup::getChildStaticTransformation(View* child, Transformation* t){
     return false;
 }
+
 Transformation* ViewGroup::getChildTransformation(){
     if(mChildTransformation==nullptr)
         mChildTransformation=new Transformation();
     return mChildTransformation;
 }
+
 int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
 	int specMode = MeasureSpec::getMode(spec);
     int specSize = MeasureSpec::getSize(spec);
@@ -1102,6 +1173,7 @@ bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){
 
 void ViewGroup::dispatchDraw(Canvas&canvas){
     bool usingRenderNodeProperties =false;// canvas.isRecordingFor(mRenderNode);
+    const int childrenCount = mChildren.size();
     int flags = mGroupFlags;
 
    /* if ((flags & FLAG_RUN_ANIMATION) != 0 && canAnimate()) {
@@ -1146,36 +1218,37 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     const long drawingTime = SystemClock::uptimeMillis();
 
     //if (usingRenderNodeProperties) canvas.insertReorderBarrier();
-    int transientCount = 0;//mTransientIndices == nullptr ? 0 : mTransientIndices.size();
+    const int transientCount = mTransientIndices.size();
     int transientIndex = transientCount != 0 ? 0 : -1;
     // Only use the preordered list if not HW accelerated, since the HW pipeline will do the
     // draw reordering internally
-    //ArrayList<View> preorderedList = usingRenderNodeProperties  ? null : buildOrderedChildList();
-    //bool customOrder = preorderedList == nullptr && isChildrenDrawingOrderEnabled();
-    for (auto child:mChildren){//int i = 0; i < childrenCount; i++) {
-        /*while (transientIndex >= 0 && mTransientIndices.get(transientIndex) == i) {
-            View transientChild = mTransientViews.get(transientIndex);
-            if ((transientChild.mViewFlags & VISIBILITY_MASK) == VISIBLE ||
-                    transientChild.getAnimation() != null) {
+    std::vector<View*> preorderedList;
+    if(usingRenderNodeProperties)buildOrderedChildList(preorderedList);
+    const bool customOrder = preorderedList.size() && isChildrenDrawingOrderEnabled();
+    for (int i = 0; i < childrenCount; i++) {
+        while (transientIndex >= 0 && mTransientIndices.at(transientIndex) == i) {
+            View* transientChild = mTransientViews.at(transientIndex);
+            if ((transientChild->mViewFlags & VISIBILITY_MASK) == VISIBLE ||
+                    transientChild->getAnimation() != nullptr) {
                 more |= drawChild(canvas, transientChild, drawingTime);
             }
             transientIndex++;
             if (transientIndex >= transientCount) {
                 transientIndex = -1;
             }
-        }*/
+        }
 
-        //int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
-        //View* child =mChildren[i];// getAndVerifyPreorderedView(preorderedList, children, childIndex);
+        int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+        View* child = getAndVerifyPreorderedView(preorderedList, mChildren, childIndex);
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE || child->getAnimation() != nullptr) {
             more |= drawChild(canvas, child, drawingTime);
         }
     }
-    /*while (transientIndex >= 0) {
+    while (transientIndex >= 0) {
         // there may be additional transient views after the normal views
-        View transientChild = mTransientViews.get(transientIndex);
-        if ((transientChild.mViewFlags & VISIBILITY_MASK) == VISIBLE ||
-                transientChild.getAnimation() != null) {
+        View* transientChild = mTransientViews.at(transientIndex);
+        if ((transientChild->mViewFlags & VISIBILITY_MASK) == VISIBLE ||
+                transientChild->getAnimation() != nullptr) {
             more |= drawChild(canvas, transientChild, drawingTime);
         }
         transientIndex++;
@@ -1183,20 +1256,20 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
             break;
         }
     }
-    if (preorderedList != null) preorderedList.clear();
+    preorderedList.clear();
 
     // Draw any disappearing views that have animations
-    if (mDisappearingChildren != null) {
-        ArrayList<View> disappearingChildren = mDisappearingChildren;
+    if (mDisappearingChildren.size())  {
+        std::vector<View*>&disappearingChildren = mDisappearingChildren;
         int disappearingCount = disappearingChildren.size() - 1;
         // Go backwards -- we may delete as animations finish
         for (int i = disappearingCount; i >= 0; i--) {
-            View child = disappearingChildren.get(i);
+            View* child = disappearingChildren.at(i);
             more |= drawChild(canvas, child, drawingTime);
         }
     }
-    if (usingRenderNodeProperties) canvas.insertInorderBarrier();
-    */
+    //if (usingRenderNodeProperties) canvas.insertInorderBarrier();
+    
     //if (debugDraw())onDebugDraw(canvas);
 
     if (clipToPadding) {

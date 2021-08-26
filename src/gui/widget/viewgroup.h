@@ -78,6 +78,8 @@ private:
     class LayoutTransition*mTransition;
     std::vector<View*>mTransitioningViews;
     std::vector<View*>mVisibilityChangingChildren;
+    std::vector<View*>mTransientViews;
+    std::vector<int>mTransientIndices;
     int mChildCountWithTransientState;
     class TouchTarget* mFirstTouchTarget;
     POINT animateTo;//save window boundray  while animating
@@ -86,21 +88,28 @@ private:
     void initGroup();
     void setBooleanFlag(int flag, bool value);
     bool hasBooleanFlag(int flag)const;
+    bool hasChildWithZ()const;
+    int getAndVerifyPreorderedIndex(int childrenCount, int i, bool customOrder);
+    static View*getAndVerifyPreorderedView(const std::vector<View*>& preorderedList,const std::vector<View*> children,
+            int childIndex);
     TouchTarget* getTouchTarget(View* child);
     TouchTarget* addTouchTarget(View* child, int pointerIdBits);
     void resetTouchState();
     static bool resetCancelNextUpFlag(View* view);
     void clearTouchTargets();
+
     static bool canViewReceivePointerEvents(View& child);
     void cancelAndClearTouchTargets(MotionEvent*);
     void removePointersFromTouchTargets(int pointerIdBits);
     void cancelTouchTarget(View* view);
     void cancelHoverTarget(View*view);
+
     bool dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
             View* child, int desiredPointerIdBits);
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
 
     void setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus);
+
     void addInArray(View* child, int index);
     bool removeViewInternal(View* view);
     void removeViewInternal(int index, View* view);
@@ -126,6 +135,9 @@ protected:
     virtual bool onRequestFocusInDescendants(int direction,const RECT* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,RECT& rectangle, bool immediate);
     bool performKeyboardGroupNavigation(int direction);
+
+    bool isChildrenDrawingOrderEnabled()const;
+    void setChildrenDrawingOrderEnabled(bool enabled);
 
     bool addViewInLayout(View* child, int index,LayoutParams* params);
     bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
@@ -158,6 +170,7 @@ protected:
     std::vector<int> onCreateDrawableState()const override;
     void dispatchSetPressed(bool pressed)override;
     virtual int getChildDrawingOrder(int childCount, int i);
+    int buildOrderedChildList(std::vector<View*>&preSortedChildren);
 
     virtual bool getChildStaticTransformation(View* child, Transformation* t);
     Transformation* getChildTransformation();
@@ -258,6 +271,9 @@ public:
     void setAddStatesFromChildren(bool addsStates);
     bool addStatesFromChildren();
     virtual void childDrawableStateChanged(View* child);
+
+    virtual void dispatchInvalidateOnAnimation(View* view);
+    virtual void cancelInvalidate(View* view);
 };
 
 }  // namespace ui

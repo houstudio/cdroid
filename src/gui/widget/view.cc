@@ -54,8 +54,11 @@ public:
     }
 };
 
-class ScrollabilityCache{
+class ScrollabilityCache:public Runnable{
 public:
+    static constexpr int OFF =0;
+    static constexpr int ON  =1;
+    static constexpr int FADING=2;
     int scrollBarSize;
     int mScrollBarDraggingPos;
     int scrollBarMinTouchTarget;
@@ -67,21 +70,53 @@ public:
     RECT mScrollBarTouchBounds;
     bool fadeScrollBars;
     ScrollBarDrawable*scrollBar;
+    float interpolatorValues[1];
+    View*host;
+    Interpolator* scrollBarInterpolator;
+    long fadeStartTime;
+    int state = OFF;
 public:
-    ScrollabilityCache(ViewConfiguration&configuration){//int sz){
+    ScrollabilityCache(ViewConfiguration&configuration,View*host){//int sz){
         fadingEdgeLength = configuration.getScaledFadingEdgeLength();
         scrollBarSize = configuration.getScaledScrollBarSize();
         scrollBarMinTouchTarget = configuration.getScaledMinScrollbarTouchTarget();
         scrollBarDefaultDelayBeforeFade = ViewConfiguration::getScrollDefaultDelay();
         scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
+        scrollBarInterpolator = nullptr;//new Interpolator(1, 2);
         fadeScrollBars=true;
         scrollBar=nullptr;
         mScrollBarDraggingPos=0;
         mScrollBarBounds.set(0,0,0,0);
         mScrollBarTouchBounds.set(0,0,0,0);
+        this->host=host;
     }
     virtual ~ScrollabilityCache(){
+        delete scrollBarInterpolator;
         delete scrollBar;
+    }
+    void run(){
+        long now = SystemClock::uptimeMillis();
+        if (now >= fadeStartTime) {
+
+            // the animation fades the scrollbars out by changing
+            // the opacity (alpha) from fully opaque to fully
+            // transparent
+            int nextFrame = (int) now;
+            int framesCount = 0;
+
+            /*Interpolator* interpolator = scrollBarInterpolator;
+
+            // Start opaque
+            interpolator->setKeyFrame(framesCount++, nextFrame, OPAQUE);
+
+            // End transparent
+            nextFrame += scrollBarFadeDuration;
+            interpolator->setKeyFrame(framesCount, nextFrame, TRANSPARENT);*/
+
+            state = FADING;
+            // Kick off the fade animation
+            host->invalidate(true);
+        }
     }
 };
 
@@ -419,7 +454,7 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
             postInvalidateOnAnimation();
         }
 
-        /*if (scrollCache.state == ScrollabilityCache.OFF) {
+        if (mScrollCache->state == ScrollabilityCache::OFF) {
             // FIXME: this is copied from WindowManagerService.
             // We should get this value from the system when it
             // is possible to do so.
@@ -430,11 +465,11 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
         // Tell mScrollCache when we should start fading. This may
         // extend the fade start time if one was already scheduled
         long fadeStartTime = SystemClock::uptimeMillis() + startDelay;
-        scrollCache->fadeStartTime = fadeStartTime;
-        scrollCache->state = ScrollabilityCache.ON;
+        mScrollCache->fadeStartTime = fadeStartTime;
+        mScrollCache->state = ScrollabilityCache::ON;
 
         // Schedule our fader to run, unscheduling any old ones first
-        if (mAttachInfo != null) {
+        /*if (mAttachInfo != null) {
             mAttachInfo.mHandler.removeCallbacks(scrollCache);
             mAttachInfo.mHandler.postAtTime(scrollCache, fadeStartTime);
         }*/
@@ -452,7 +487,8 @@ void View::scrollTo(int x,int y){
         mScrollY=y;
         onScrollChanged(mScrollX, mScrollY, oX, oY);
         invalidate(true);
-        awakenScrollBars(0,true);
+        if(!awakenScrollBars(0,true))
+            postInvalidateOnAnimation();
     }
 }
 
@@ -715,7 +751,7 @@ bool View::dispatchNestedPreFling(float velocityX, float velocityY) {
 
 void View::initScrollCache(){
     if(mScrollCache==nullptr)
-        mScrollCache=new ScrollabilityCache(ViewConfiguration::get(mContext));
+        mScrollCache=new ScrollabilityCache(ViewConfiguration::get(mContext),this);
 }
 
 ScrollabilityCache*View::getScrollCache(){
@@ -1172,11 +1208,37 @@ void View::onDrawScrollIndicators(Canvas& canvas){
 }
 
 void View::onDrawScrollBars(Canvas& canvas){
+    ScrollabilityCache* cache = mScrollCache;
+    if(cache == nullptr) return;
+
+    int state = cache->state;
+    if (state == ScrollabilityCache::OFF) return;
+    bool bInvalidate = false;
+    if (state == ScrollabilityCache::FADING){
+        // We're fading -- get our fade interpolation
+
+        float* values = cache->interpolatorValues;
+
+        // Stops the animation if we're done
+        /*if (cache->scrollBarInterpolator->timeToValues(values) ==
+                Interpolator::Result::FREEZE_END) {
+            cache->state = ScrollabilityCache::OFF;
+        } else {
+            cache->scrollBar->mutate()->setAlpha(std::round(values[0]));
+        }*/
+
+        // This will make the scroll bars inval themselves after drawing. We only 
+        // want this when we're fading so that we prevent excessive redraws
+        bInvalidate = true;
+    }else {
+        // We're just on -- but we may have been fading before so
+        // reset alpha
+        cache->scrollBar->mutate()->setAlpha(255);
+    }
+
     bool drawHorizontalScrollBar = isHorizontalScrollBarEnabled();
     bool drawVerticalScrollBar = isVerticalScrollBarEnabled() && !isVerticalScrollBarHidden();
     
-    if(mScrollCache == nullptr) return;
-
     // Fork out the scroll bar drawing for round wearable devices.
     if (mRoundScrollbarRenderer != nullptr) {
         if (drawVerticalScrollBar) {
@@ -1184,7 +1246,7 @@ void View::onDrawScrollBars(Canvas& canvas){
             getVerticalScrollBarBounds(&bounds, nullptr);
             mRoundScrollbarRenderer->drawRoundScrollbars(
                 canvas, (float)mScrollCache->scrollBar->getAlpha() / 255.f, bounds);
-            //if (binvalidate) invalidate(true);
+            if (bInvalidate) invalidate(true);
         }
         // Do not draw horizontal scroll bars for round wearable devices.
     } else if ( drawVerticalScrollBar || drawHorizontalScrollBar) {
@@ -2001,6 +2063,10 @@ int View::getX()const{
 
 int View::getY()const{
     return mTop;
+}
+
+int View::getZ()const{
+    return 0;
 }
 
 void View::offsetTopAndBottom(int offset){
@@ -3119,6 +3185,8 @@ void View::postInvalidate(){
 
 void View::postInvalidateOnAnimation(){
     invalidate(true);
+    ViewGroup*root=getRootView();
+    if(root)root->dispatchInvalidateOnAnimation(this);
 }
 
 void View::invalidateDrawable(Drawable& who){

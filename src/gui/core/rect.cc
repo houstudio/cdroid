@@ -1,4 +1,6 @@
 #include <rect.h>
+#include <algorithm>
+
 namespace cdroid{
 void Point::set(int x_,int y_){
     x=x_;
@@ -73,9 +75,10 @@ bool Rectangle::intersect(const Rectangle&a,const Rectangle&b){
 
 bool Rectangle::intersect(int l, int t, int w, int h) {
     if (this->x < l+w && l < this->right() && this->y < t+h && t < this->bottom()) {
-        if (this->y < t) {this->y = t; height-=(t-y);}
-        if (this->right() > l+w) this->width = l+w-x;
-        if (this->bottom() > t+h) this->width = t+h-y;
+        this->width =std::min(l+w,this->right())-this->x;
+        this->height=std::min(t+h,this->bottom())-this->y;
+        this->x=std::max(this->x,l);
+        this->y=std::max(this->y,t);
         return true;
     }
     return false;

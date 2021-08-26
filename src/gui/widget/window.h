@@ -22,8 +22,21 @@
 
 namespace cdroid {
 class Window : public ViewGroup {
+protected:
     friend class WindowManager;
     friend class GraphDevice;
+    class InvalidateOnAnimationRunnable:public Runnable{
+    private:
+        bool mPosted;
+        Window*mOwner;
+        std::vector<View*>mViews;
+        void postIfNeededLocked();
+    public:
+        void setOwner(Window*w);
+        void addView(View* view);
+        void removeView(View* view);
+        void run();
+    };
 private:
     Runnable layoutRunner;
     bool mInLayout;
@@ -37,6 +50,7 @@ protected:
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;
+    InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
     class UIEventSource*source;
     void onFinishInflate()override;
     int processInputEvent(InputEvent&event);
@@ -77,6 +91,8 @@ public:
     void postDelayed(const Runnable& what,uint32_t delay)override;
     void removeCallbacks(const Runnable& what)override;
     void requestLayout()override;
+    void dispatchInvalidateOnAnimation(View* view)override;
+    void cancelInvalidate(View* view)override;
     static void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);
     void close();
 protected:
