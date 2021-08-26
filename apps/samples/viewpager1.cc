@@ -14,6 +14,7 @@ public:
     void destroyItem(ViewGroup* container, int position,void* object){
         container->removeView((View*)object);
     }
+    float getPageWidth(int position){return 1.f;}
 };
 
 int main(int argc,const char*argv[]){
@@ -39,7 +40,7 @@ int main(int argc,const char*argv[]){
     }
     ViewPager*pager=new ViewPager(800,560);
     MyPageAdapter*gpAdapter=new MyPageAdapter();
-    pager->setOffscreenPageLimit(4);
+    pager->setOffscreenPageLimit(3);
     pager->setAdapter(gpAdapter);
     ViewPager::OnPageChangeListener listener={nullptr,nullptr,nullptr};
     listener.onPageSelected=[&](int position){

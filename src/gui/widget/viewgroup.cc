@@ -815,6 +815,13 @@ View& ViewGroup::addView(View* child, int index){
     return addView(child, index, params);
 }
 
+View& ViewGroup::addView(View* child, int width, int height){
+    LayoutParams* params = generateDefaultLayoutParams();
+    params->width = width;
+    params->height = height;
+    return addView(child, -1, params);
+}
+
 View& ViewGroup::addView(View* child, LayoutParams* params){
     return  addView(child, -1, params);
 }
@@ -825,15 +832,22 @@ void ViewGroup::removeView(View* view){
         invalidate();
     }
 }
+
 View&ViewGroup::addView(View* child, int index,LayoutParams* params){
+    if(child==nullptr)
+         throw "Cannot add a null child view to a ViewGroup";
+    requestLayout();
+    invalidate(true);
     return addViewInner(child, index, params, false);
 }
+
 void ViewGroup::addInArray(View* child, int index){
     if(index>=mChildren.size())
         mChildren.push_back(child);
     else
         mChildren.insert(mChildren.begin()+index,child);
 }
+
 void ViewGroup::cleanupLayoutState(View* child)const{
     child->mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
 }

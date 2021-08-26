@@ -763,11 +763,12 @@ void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* 
 
 View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params){
     if (!checkLayoutParams(params)) {
+        delete params;
         params = generateLayoutParams(params);
     }
     LayoutParams* lp = (LayoutParams*) params;
-        // Any views added via inflation should be classed as part of the decor
-    lp->isDecor =false;//|= isDecorView(child);
+    // Any views added via inflation should be classed as part of the decor
+    lp->isDecor = false;//|= isDecorView(child);
     if (mInLayout) {
         if (lp != nullptr && lp->isDecor) {
             throw "Cannot add pager decor view during layout";
@@ -1321,14 +1322,13 @@ bool ViewPager::arrowScroll(int direction){
         }
         if (!isChild) {
             // This would cause the focus search down below to fail in fun ways.
-            /*StringBuilder sb = new StringBuilder();
-            sb.append(currentFocused.getClass().getSimpleName());
-            for (ViewParent parent = currentFocused.getParent(); parent instanceof ViewGroup;
-                    parent = parent.getParent()) {
-                sb.append(" => ").append(parent.getClass().getSimpleName());
+            std::ostringstream sb;
+            sb<<typeid(currentFocused).name();
+            for (ViewGroup* parent = currentFocused->getParent(); parent;parent = parent->getParent()) {
+                sb<<" => "<<typeid(parent).name();
             }
-            Log.e(TAG, "arrowScroll tried to find focus based on non-child "
-                    + "current focused view " + sb.toString());*/
+            LOGD("arrowScroll tried to find focus based on non-child "
+                  "current focused view ",sb.str());
             currentFocused = nullptr;
         }
     }
@@ -1944,7 +1944,7 @@ ViewGroup::LayoutParams* ViewPager::generateLayoutParams(ViewGroup::LayoutParams
     return generateDefaultLayoutParams();
 }
 bool ViewPager::checkLayoutParams(ViewGroup::LayoutParams* p){
-    return dynamic_cast<LayoutParams*>(p);
+    return dynamic_cast<LayoutParams*>(p) && ViewGroup::checkLayoutParams(p);
 }
 
 ViewGroup::LayoutParams* ViewPager::generateLayoutParams(const AttributeSet& attrs){

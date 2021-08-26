@@ -224,10 +224,11 @@ public:
     bool isLayoutModeOptical()const;
     void cleanupLayoutState(View* child)const;
 
-    virtual View&addView(View* view);
+    virtual View& addView(View* view);
     virtual View& addView(View* child, int index);
     virtual View& addView(View* child, LayoutParams* params);
     virtual View& addView(View* child, int index, LayoutParams* params);
+    View& addView(View* child, int width, int height);
     
     void clearDisappearingChildren();
     void startViewTransition(View* view);
