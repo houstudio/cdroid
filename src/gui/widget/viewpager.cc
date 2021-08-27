@@ -45,6 +45,8 @@ void ViewPager::initViewPager(){
 
     mCurItem =-1;
     mPageMargin =0;
+    mFirstOffset=-std::numeric_limits<float>::max();
+    mLastOffset = std::numeric_limits<float>::max();
     mTempItem=new ItemInfo();
 
     mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
@@ -232,8 +234,8 @@ int ViewPager::getLeftEdgeForItem(int position){
     ItemInfo* info = infoForPosition(position);
     if (info == nullptr) return 0;
 
-    int width = getPaddedWidth();
-    int scaledOffset = (int) (width * constrain(info->offset, mFirstOffset, mLastOffset));
+    const int width = getPaddedWidth();
+    const int scaledOffset = (int) (width * constrain(info->offset, mFirstOffset, mLastOffset));
 
     if (isLayoutRtl()) {
         int itemWidth = (int) (width * info->widthFactor + 0.5f);
@@ -514,8 +516,8 @@ void ViewPager::populate(int newCurrentItem){
         float extraWidthLeft = 0.f;
         int itemIndex = curIndex - 1;
         ItemInfo* ii = itemIndex >= 0 ? mItems[itemIndex] : nullptr;
-        int clientWidth = getPaddedWidth();
-        float leftWidthNeeded = clientWidth <= 0 ? 0 :
+        const int clientWidth = getPaddedWidth();
+        const float leftWidthNeeded = clientWidth <= 0 ? 0 :
                 2.f - curItem->widthFactor + (float) getPaddingLeft() / (float) clientWidth;
         for (int pos = mCurItem - 1; pos >= 0; pos--) {
             if (extraWidthLeft >= leftWidthNeeded && pos < startPos) {
@@ -523,7 +525,7 @@ void ViewPager::populate(int newCurrentItem){
                 if (pos == ii->position && !ii->scrolling) {
                     mItems.erase(mItems.begin()+itemIndex);//remove(itemIndex);
                     mAdapter->destroyItem(this, pos, ii->object);
-                    LOGD("populate()- destroyItem() with pos:%d view:%p",pos,ii->object);
+                    LOGD("populate()- destroyItem() with pos:%d/%d view:%p curitem=%d",pos,ii->position,ii->object,mCurItem);
                     itemIndex--;
                     curIndex--;
                     ii = itemIndex >= 0 ? mItems[itemIndex] : nullptr;
@@ -544,7 +546,7 @@ void ViewPager::populate(int newCurrentItem){
         itemIndex = curIndex + 1;
         if (extraWidthRight < 2.f) {
             ii = itemIndex < mItems.size() ? mItems[itemIndex] : nullptr;
-            float rightWidthNeeded = clientWidth <= 0 ? 0 :
+            const float rightWidthNeeded = clientWidth <= 0 ? 0 :
                     (float) getPaddingRight() / (float) clientWidth + 2.f;
             for (int pos = mCurItem + 1; pos < N; pos++) {
                 if (extraWidthRight >= rightWidthNeeded && pos > endPos) {
@@ -553,7 +555,7 @@ void ViewPager::populate(int newCurrentItem){
                     if (pos == ii->position && !ii->scrolling) {
                         mItems.erase(mItems.begin()+itemIndex);//remove(itemIndex);
                         mAdapter->destroyItem(this, pos, ii->object);
-                        LOGD("populate()- destroyItem() with pos:%d view:%p",pos,ii->object);
+                        LOGD("populate()- destroyItem() with pos:%d/%d view:%p curitem=%d",pos,ii->position,ii->object,mCurItem);
                         ii = itemIndex < mItems.size() ? mItems[itemIndex] : nullptr;
                     }
                 } else if (ii != nullptr && pos == ii->position) {
@@ -688,9 +690,9 @@ void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* 
      const int itemCount = mItems.size();
      float offset = curItem->offset;
      int pos = curItem->position - 1;
-     mFirstOffset = curItem->position == 0 ? curItem->offset : -std::numeric_limits<float>::max();
-     mLastOffset = curItem->position == N - 1
-             ? curItem->offset + curItem->widthFactor - 1 : std::numeric_limits<float>::max();
+     mFirstOffset= (curItem->position == 0) ? curItem->offset : (-std::numeric_limits<float>::max());
+     mLastOffset = (curItem->position == N - 1)
+             ? (curItem->offset + curItem->widthFactor - 1) : std::numeric_limits<float>::max();
 
      // Previous pages
      for (int i = curIndex - 1; i >= 0; i--, pos--) {
@@ -712,14 +714,13 @@ void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* 
          while (pos < ii->position) {
              offset += mAdapter->getPageWidth(pos++) + marginOffset;
          }
-         if (ii->position == N - 1) {
+         if ((ii->position == N - 1)||(ii->position==itemCount-1)) {
+             //(ii->position==itemCount-1): is diffrent from android,without this scrolling will be crazy
              mLastOffset = offset + ii->widthFactor - 1;
          }
          ii->offset = offset;
          offset += ii->widthFactor + marginOffset;
      }
-     
-     mNeedCalculatePageOffsets = false;
 }
 
 View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params){
@@ -1540,7 +1541,7 @@ int ViewPager::determineTargetPage(int currentPage, float pageOffset, int veloci
         ItemInfo* lastItem = mItems.at(mItems.size() - 1);
 
         // Only let the user target pages we have items for
-        targetPage = std::max(firstItem->position, std::min(targetPage, lastItem->position));
+        targetPage=constrain(targetPage, firstItem->position, lastItem->position);
     }
     return targetPage;
 }
@@ -1697,9 +1698,9 @@ bool ViewPager::canScrollHorizontally(int direction) {
 bool ViewPager::canScroll(View* v, bool checkV, int dx, int x, int y) {
     if (dynamic_cast<ViewGroup*>(v)) {
         ViewGroup* group = (ViewGroup*) v;
-        int scrollX = v->getScrollX();
-        int scrollY = v->getScrollY();
-        int count = group->getChildCount();
+        const int scrollX = v->getScrollX();
+        const int scrollY = v->getScrollY();
+        const int count = group->getChildCount();
         // Count backwards - let topmost views consume scroll distance first.
         for (int i = count - 1; i >= 0; i--) {
             // TODO: Add support for transformed views.

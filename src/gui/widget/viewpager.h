@@ -92,8 +92,8 @@ private:
     // Offsets of the first and last items, if known.
     // Set during population, used to determine if we are at the beginning
     // or end of the pager data set during touch scrolling.
-    float mFirstOffset =- std::numeric_limits<float>::max();// -float::max();//MAXFLOAT;//Float.MAX_VALUE;
-    float mLastOffset =  std::numeric_limits<float>::max();//MAXFLOAT;//Float.MAX_VALUE;
+    float mFirstOffset;//Float.MAX_VALUE;
+    float mLastOffset ;//Float.MAX_VALUE;
     int mChildWidthMeasureSpec;
     int mChildHeightMeasureSpec;
     bool mInLayout;
@@ -135,7 +135,6 @@ private:
     EdgeEffect* mRightEdge;
 
     bool mFirstLayout = true;
-    bool mNeedCalculatePageOffsets = false;
     bool mCalledSuper;
     int mDecorChildCount;
     int mDrawingOrder;
