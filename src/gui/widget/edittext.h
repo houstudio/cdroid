@@ -18,7 +18,7 @@ protected:
     bool match();
     void blinkCaret();
     virtual void onDrawCaret(Canvas&canvas,const RECT&r);
-    virtual void onFocusChanged(bool,int,const RECT*)override;
+    virtual void onFocusChanged(bool,int,Rect*)override;
     virtual void onDraw(Canvas&ctx)override;
     int commitText(const std::wstring&ws)override;
 public:

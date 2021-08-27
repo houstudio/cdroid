@@ -88,7 +88,7 @@ private:
     int getDayAtLocation(int x, int y);
     bool onDayClicked(int day);
 protected:
-    void onFocusChanged(bool gainFocus,int direction,const RECT* previouslyFocusedRect)override;
+    void onFocusChanged(bool gainFocus,int direction,Rect* previouslyFocusedRect)override;
     void onFocusLost()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int left, int top, int width, int height)override;

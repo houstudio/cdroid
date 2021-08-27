@@ -229,7 +229,7 @@ bool SimpleMonthView::moveOneDay(bool positive){
     return focusChanged;
 }
 
-void SimpleMonthView::onFocusChanged(bool gainFocus,int direction,const RECT* previouslyFocusedRect){
+void SimpleMonthView::onFocusChanged(bool gainFocus,int direction,Rect* previouslyFocusedRect){
     if (gainFocus) {
         // If we've gained focus through arrow keys, we should find the day closest
         // to the focus rect. If we've gained focus through forward/back, we should

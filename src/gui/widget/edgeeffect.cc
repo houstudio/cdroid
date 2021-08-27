@@ -23,6 +23,7 @@ EdgeEffect::EdgeEffect(Context* context){
     mGlowScaleY=0;
     mGlowScaleYStart=mGlowScaleYFinish=.0f;
     mStartTime=0;
+    mColor=0x4000FF00;
     mDuration =PULL_DECAY_TIME;
 }
 
@@ -145,8 +146,6 @@ bool EdgeEffect::draw(Canvas& canvas){
     float displacement = std::max(0.f, std::min(mDisplacement, 1.f)) - 0.5f;
     float translateX = mBounds.width * displacement / 2;
    
-    mColor=0xFFFFFFFF;
-
     canvas.rectangle(mBounds);
     canvas.clip();
     canvas.set_color(mColor);

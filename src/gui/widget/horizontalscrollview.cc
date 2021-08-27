@@ -959,7 +959,7 @@ void HorizontalScrollView::requestChildFocus(View* child, View* focused){
     FrameLayout::requestChildFocus(child, focused);
 }
 
-bool HorizontalScrollView::onRequestFocusInDescendants(int direction,const RECT*previouslyFocusedRect){
+bool HorizontalScrollView::onRequestFocusInDescendants(int direction,Rect*previouslyFocusedRect){
     if (direction == View::FOCUS_FORWARD) {
         direction = View::FOCUS_RIGHT;
     } else if (direction == View::FOCUS_BACKWARD) {
@@ -1122,8 +1122,8 @@ void HorizontalScrollView::setOverScrollMode(int mode) {
     FrameLayout::setOverScrollMode(mode);
 }
 
-void HorizontalScrollView::onDraw(Canvas& canvas){
-    FrameLayout::onDraw(canvas);
+void HorizontalScrollView::draw(Canvas& canvas){
+    FrameLayout::draw(canvas);
     if (mEdgeGlowLeft != nullptr) {
         int scrollX = mScrollX;
         if (!mEdgeGlowLeft->isFinished()) {

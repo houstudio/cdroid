@@ -2519,7 +2519,7 @@ ColorStateList* View::getBackgroundTintList()const{
     return mBackgroundTint != nullptr ? mBackgroundTint->mTintList : nullptr;
 }
 
-void View::onFocusChanged(bool gainFocus,int direct,const RECT*previouslyFocusedRect){
+void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){
     if(mOnFocusChangeListener)mOnFocusChangeListener(*this,gainFocus);
     switchDefaultFocusHighlight();
     if(!gainFocus){
@@ -3268,7 +3268,7 @@ View*View::findFocus(){
     return (mPrivateFlags & PFLAG_FOCUSED) != 0 ? this : nullptr;
 }
 
-bool View::requestFocus(int direction,const RECT* previouslyFocusedRect){
+bool View::requestFocus(int direction,Rect* previouslyFocusedRect){
     return requestFocusNoSearch(direction, previouslyFocusedRect);
 }
 
@@ -3279,7 +3279,7 @@ void View::clearParentsWantFocus(){
     }
 }
 
-bool View::requestFocusNoSearch(int direction,const RECT*previouslyFocusedRect) {
+bool View::requestFocusNoSearch(int direction,Rect*previouslyFocusedRect) {
     // need to be focusable
     if (!canTakeFocus())  return false;
     // need to be focusable in touch mode if in touch mode
@@ -3348,7 +3348,7 @@ void View::clearFocusInternal(View* focused, bool propagate, bool refocus){
     }
 }
 
-void View::handleFocusGainInternal(int direction,const RECT*previouslyFocusedRect){
+void View::handleFocusGainInternal(int direction,Rect*previouslyFocusedRect){
     if ((mPrivateFlags & PFLAG_FOCUSED) == 0) {
         mPrivateFlags |= PFLAG_FOCUSED;
         View* oldFocus =getRootView()?getRootView()->findFocus():nullptr;

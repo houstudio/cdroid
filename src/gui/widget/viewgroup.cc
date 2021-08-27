@@ -1498,7 +1498,7 @@ void ViewGroup::clearDefaultFocus(View* child){
     if (mParent)mParent->clearDefaultFocus(this);
 }
 
-bool ViewGroup::onRequestFocusInDescendants(int direction,const RECT* previouslyFocusedRect){
+bool ViewGroup::onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect){
     int index;
     int increment;
     int end;
@@ -1945,7 +1945,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     return handled;
 }
 
-bool ViewGroup::requestFocus(int direction,const RECT*previouslyFocusedRect){
+bool ViewGroup::requestFocus(int direction,Rect*previouslyFocusedRect){
     int descendantFocusability = getDescendantFocusability();
 
     bool result,took;

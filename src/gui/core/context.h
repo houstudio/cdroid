@@ -6,6 +6,8 @@
 #include <cairomm/refptr.h>
 #include <cairomm/surface.h>
 #include <core/callbackbase.h>
+#include <core/attributeset.h>
+
 using namespace Cairo;
 
 namespace cdroid{
@@ -24,6 +26,7 @@ public:
      virtual RefPtr<Cairo::ImageSurface> getImage(const std::string&resname,bool cache=true)=0;
      virtual Drawable* getDrawable(const std::string&resid)=0;
      virtual ColorStateList* getColorStateList(const std::string&resid)=0;
+     virtual AttributeSet obtainStyledAttributes(const std::string&resid)=0;
 };
 
 }

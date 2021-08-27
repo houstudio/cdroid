@@ -758,7 +758,7 @@ void AbsListView::setStackFromBottom(bool stackFromBottom) {
         requestLayoutIfNecessary();
     }
 }
-void AbsListView::onFocusChanged(bool gainFocus, int direction,const RECT* previouslyFocusedRect) {
+void AbsListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect) {
     AdapterView::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
     if (gainFocus && mSelectedPosition < 0 && !isInTouchMode()) {
         if (/*!isAttachedToWindow() &&*/ mAdapter != nullptr) {
@@ -1549,8 +1549,8 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
     return child;
 }
 
-void AbsListView::onDraw(Canvas& canvas) {
-    AdapterView::onDraw(canvas);
+void AbsListView::draw(Canvas& canvas) {
+    AdapterView::draw(canvas);
     if (mEdgeGlowTop != nullptr) {
         int scrollY = mScrollY;
         bool clipToPadding = getClipToPadding();

@@ -1,9 +1,9 @@
 #include <windows.h>
 #include <widget/simplemonthview.h>
-
+static int mPageCount=5;
 class MyPageAdapter:public PagerAdapter{
 public:
-    int getCount(){return 5;}
+    int getCount(){return mPageCount;}
     bool isViewFromObject(View* view, void*object) { return view==object;}
     void* instantiateItem(ViewGroup* container, int position) {
         SimpleMonthView*sm=new  SimpleMonthView(100,100);
@@ -28,6 +28,7 @@ int main(int argc,const char*argv[]){
     hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(hs).setId(1);
 
+    if(argc>1)mPageCount=std::max(5L,std::strtol(argv[1],nullptr,10));
     for(int i=0;i<16;i++){
         Button*btn=new Button("Hello Button"+std::to_string(i),150,30);
         btn->setPadding(5,5,5,5);
@@ -49,7 +50,7 @@ int main(int argc,const char*argv[]){
     listener.onPageScrolled=[&](int position, float positionOffset, int positionOffsetPixels){
         hs->scrollTo(position*pager->getWidth()+positionOffsetPixels,0);
     };
-    pager->addOnPageChangeListener(listener);
+    pager->setOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(pager).setPos(0,40);
     gpAdapter->notifyDataSetChanged();

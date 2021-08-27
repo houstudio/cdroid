@@ -364,11 +364,11 @@ protected:
     virtual void onDettached();
     virtual void  onMeasure(int widthMeasureSpec, int heightMeasureSpec);
     virtual void dispatchDraw(Canvas&);
-    virtual void onFocusChanged(bool,int,const RECT*);
+    virtual void onFocusChanged(bool,int,Rect*);
     virtual void onFocusLost();
     virtual void clearParentsWantFocus();
     virtual void clearFocusInternal(View* focused, bool propagate, bool refocus);
-    virtual void handleFocusGainInternal(int direction,const RECT*previouslyFocusedRect);
+    virtual void handleFocusGainInternal(int direction,Rect*previouslyFocusedRect);
     bool awakenScrollBars();
     bool awakenScrollBars(int startDelay, bool invalidate);
 
@@ -667,7 +667,7 @@ public:
     void clearFocus();
     virtual View*findFocus();
     bool requestFocus(int direction=FOCUS_DOWN);
-    virtual bool requestFocus(int direction,const RECT* previouslyFocusedRect);
+    virtual bool requestFocus(int direction,Rect* previouslyFocusedRect);
     bool hasFocusable()const{ return hasFocusable(true, false); }
     virtual bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const;
     bool hasExplicitFocusable()const;
@@ -803,7 +803,7 @@ private:
     void applyBackgroundTint();
     void applyForegroundTint();
     View* findViewInsideOutShouldExist(View* root, int id)const;
-    bool requestFocusNoSearch(int direction,const RECT*previouslyFocusedRect);
+    bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
     bool requestFocusFromTouch();
     bool hasAncestorThatBlocksDescendantFocus();
     View(const View&)=delete;

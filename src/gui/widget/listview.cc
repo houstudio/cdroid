@@ -2647,14 +2647,14 @@ Drawable* ListView::getOverscrollFooter()const {
     return mOverScrollFooter;
 }
 
-void ListView::onFocusChanged(bool gainFocus, int direction,const Rect* previouslyFocusedRect){
+void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect){
     AbsListView::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 
     ListAdapter* adapter = mAdapter;
     int closetChildIndex = -1;
     int closestChildTop = 0;
     if (adapter && gainFocus && previouslyFocusedRect ) {
-        //previouslyFocusedRect.offset(mScrollX, mScrollY);
+        previouslyFocusedRect->offset(mScrollX, mScrollY);
 
         // Don't cache the result of getChildCount or mFirstPosition here,
         // it could change in layoutChildren.

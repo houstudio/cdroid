@@ -132,8 +132,8 @@ protected:
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
-    virtual bool onRequestFocusInDescendants(int direction,const RECT* previouslyFocusedRect);
-    virtual bool requestChildRectangleOnScreen(View* child,RECT& rectangle, bool immediate);
+    virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
+    virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
     bool performKeyboardGroupNavigation(int direction);
 
     bool isChildrenDrawingOrderEnabled()const;
@@ -216,7 +216,7 @@ public:
     void setOnHierarchyChangeListener(OnHierarchyChangeListener listener);
     bool restoreFocusNotInCluster();
     View*keyboardNavigationClusterSearch(View* currentCluster,int direction)override;
-    bool requestFocus(int direction=FOCUS_DOWN,const RECT*previouslyFocusedRect=nullptr)override;
+    bool requestFocus(int direction=FOCUS_DOWN,Rect*previouslyFocusedRect=nullptr)override;
 
     int getChildCount()const;
     View*getChildAt(int idx)const;

@@ -67,9 +67,10 @@ protected:
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
     int computeScrollDeltaToGetChildRectOnScreen(RECT& rect);
-    bool onRequestFocusInDescendants(int direction,const RECT* previouslyFocusedRect)override;
+    bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     bool requestChildRectangleOnScreen(View* child,RECT& rectangle, bool immediate)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
+    void draw(Canvas& canvas)override;
 public:
     ScrollView(int w,int h);
     ScrollView(Context*ctx,const AttributeSet&atts);
@@ -102,7 +103,6 @@ public:
             int dxUnconsumed, int dyUnconsumed);
     bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
     void fling(int velocityY);
-    void onDraw(Canvas& canvas)override;
 };
 
 }

@@ -205,5 +205,13 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
     return nullptr;
 }
 
+AttributeSet Assets::obtainStyledAttributes(const std::string&fullresid){
+    std::string resname;
+    ZIPArchive*pak=getResource(fullresid,&resname);
+    void*zfile=pak?pak->getZipHandle(resname):nullptr;
+    AttributeSet attr;
+    return attr;
+}
+
 }//namespace
 

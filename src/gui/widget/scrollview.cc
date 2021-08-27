@@ -927,7 +927,7 @@ void ScrollView::requestChildFocus(View* child, View* focused){
     FrameLayout::requestChildFocus(child, focused);
 }
 
-bool ScrollView::onRequestFocusInDescendants(int direction,const RECT* previouslyFocusedRect){
+bool ScrollView::onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect){
     if (direction == View::FOCUS_FORWARD) {
         direction = View::FOCUS_DOWN;
     } else if (direction == View::FOCUS_BACKWARD) {
@@ -1049,8 +1049,8 @@ void ScrollView::scrollTo(int x, int y){
     }
 }
 
-void ScrollView::onDraw(Canvas& canvas){
-    FrameLayout::onDraw(canvas);
+void ScrollView::draw(Canvas& canvas){
+    FrameLayout::draw(canvas);
     if (mEdgeGlowTop != nullptr) {
         int scrollY = mScrollY;
         bool clipToPadding = getClipToPadding();

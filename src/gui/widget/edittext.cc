@@ -130,7 +130,7 @@ View& EditText::setHint(const std::string&txt){
     return *this;
 }
 
-void EditText::onFocusChanged(bool focus,int direction,const RECT*prevfocusrect){
+void EditText::onFocusChanged(bool focus,int direction,Rect*prevfocusrect){
     InputMethodManager&imm=InputMethodManager::getInstance();
     if(focus){
 	imm.setInputType(mInputType);

@@ -30,6 +30,7 @@ public:
     std::unique_ptr<std::istream> getInputStream(const std::string&resname)override;
     Drawable * getDrawable(const std::string&resid)override;
     ColorStateList* getColorStateList(const std::string&resid)override;
+    AttributeSet obtainStyledAttributes(const std::string&)override;
 };
 
 }//namespace

@@ -281,9 +281,9 @@ protected:
     ViewGroup::LayoutParams*generateDefaultLayoutParams()const override;
     ViewGroup::LayoutParams*generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    void onFocusChanged(bool gainFocus, int direction,const RECT* previouslyFocusedRect)override;
+    void onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect)override;
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
-    void onDraw(Canvas&canvas)override;
+    void draw(Canvas&canvas)override;
 public:
     AbsListView(int w,int h);
     AbsListView(Context*,const AttributeSet&atts);

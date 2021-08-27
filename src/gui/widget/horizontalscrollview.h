@@ -63,9 +63,10 @@ protected:
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
     int computeScrollDeltaToGetChildRectOnScreen(RECT& rect);
-    bool onRequestFocusInDescendants(int direction,const RECT* previouslyFocusedRect)override;
+    bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void onSizeChanged(int w, int h, int oldw, int oldh);
+    void draw(Canvas& canvas);
 public:
     HorizontalScrollView(int w,int h);
     HorizontalScrollView(Context*ctx,const AttributeSet&atts);
@@ -98,7 +99,6 @@ public:
     void fling(int velocityX);
     void scrollTo(int x, int y);
     void setOverScrollMode(int mode);
-    void onDraw(Canvas& canvas);
 };
 
 }
