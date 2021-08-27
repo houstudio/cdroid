@@ -333,9 +333,7 @@ void ImageView::configureBounds(){
 
         if (MATRIX == mScaleType) {
             // Use the specified matrix as-is.
-            if (IsIdentity(mMatrix)){//.isIdentity()) {
-                //mDrawMatrix = nullptr;
-            } else {
+            if (!IsIdentity(mMatrix)){
                 mDrawMatrix = mMatrix;
             }
         } else if (fits) {
@@ -629,9 +627,10 @@ void ImageView::setSelected(bool selected){
 void ImageView::onDraw(Canvas& canvas) {
     View::onDraw(canvas);
     const int mPaddingLeft=0,mPaddingTop=0,mPaddingRight=0,mPaddingBottom=0;
-    LOGV("mDrawable %p Size=%dx%d",mDrawable,mDrawableWidth,mDrawableHeight);
+    LOGV("%p'mDrawable %p pos:%d,%d Size=%dx%d",this,mDrawable,mLeft,mTop,mDrawableWidth,mDrawableHeight);
     if (mDrawable == nullptr||mDrawableWidth == 0 || mDrawableHeight == 0) return;
-	if (0&&/*mDrawMatrix == nullptr &&*/ mPaddingTop == 0 && mPaddingLeft == 0) {
+
+    if (IsIdentity(mDrawMatrix) && mPaddingTop == 0 && mPaddingLeft == 0) {
         mDrawable->draw(canvas);
     } else {
         canvas.save();

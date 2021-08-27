@@ -120,6 +120,11 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid,bool cache){
     ZipInputStream zipis(zfile);
     RefPtr<ImageSurface>img;
     LOGD_IF(zfile==nullptr,"pak=%p %s open failed ",pak,resname.c_str());
+    if(zfile==nullptr){
+        std::ifstream fi(fullresid);
+        img=loadImage(fi);
+        return img;
+    }
     if(!zipis.good())return img;
 
     img=loadImage(zipis);

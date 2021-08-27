@@ -27,62 +27,11 @@ public:
        return tv;
    }
 };
-class MyPageAdapter:public PagerAdapter{
-public:
-    int getCount(){return 5;}
-    bool isViewFromObject(View* view, void*object) { return view==object;}
-    void* instantiateItem(ViewGroup* container, int position) {
-        if(position!=2){
-            SimpleMonthView*sm=new  SimpleMonthView(100,100);
-            sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
-            container->addView(sm);
-            sm->setId(position);
-            return sm;
-        }else{
-            ListView*lv=new  ListView(100,100);
-            MyAdapter*ma=new MyAdapter();
-            for(int i=0;i<50;i++)ma->add("");
-            container->addView(lv);
-            lv->setAdapter(ma);
-            lv->setSelector(new ColorDrawable(0x8800FF00));
-            ma->notifyDataSetChanged();
-            lv->setId(position);
-            return lv;
-        }
-    }
-    void destroyItem(ViewGroup* container, int position,void* object){
-        container->removeView((View*)object);
-    }
-};
-class TestWindow:public Window{
-private:
-    RefPtr<ImageSurface>imgSurface;
-    float mDegrees;
-    int mLevel;
-public:
-    float sdot(float a,float b,float c,float d) {
-       return a * b + c * d;
-    }
-    TestWindow(int x,int y,int w,int h):Window(x,y,w,h){
-        imgSurface=ImageSurface::create(Surface::Format::ARGB32,160,160);
-        RefPtr<Cairo::Context>canvas=Cairo::Context::create(imgSurface);
-        FontExtents fe;
-        canvas->set_source_rgb(1,1,1);
-        canvas->rectangle(0,0,160,160);
-        canvas->fill_preserve();
-        canvas->set_source_rgb(0,1,0);
-        canvas->set_line_width(5);
-        canvas->stroke();
-        canvas->arc(5,5,10,0,2.f*M_PI);
-        canvas->fill();
-        mDegrees=0;
-    }
-};
+
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new TestWindow(0,0,1280,640);
+    Window*w=new Window(0,0,1280,640);
     MyAdapter* adapter=new MyAdapter();
-    MyPageAdapter*gpAdapter=new MyPageAdapter();
     w->setId(0);
     for(int i=0;i<50;i++)adapter->add(""); 
     int optionid=0;
@@ -247,47 +196,6 @@ int main(int argc,const char*argv[]){
         w->addView(np).setPos(100,200);
         w->requestLayout();
     }break;
-    case 8:{
-        ViewPager*vp=new ViewPager(800,400);
-        //vp->setOffscreenPageLimit(3);
-        vp->setAdapter(gpAdapter);
-        vp->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-        gpAdapter->notifyDataSetChanged();
-        vp->setCurrentItem(0);//must setcurrentitem
-        w->addView(vp);
-        w->requestLayout();
-    }break;
-    case 9:
-       {
-            EditText*tv=new EditText("mChoreographer->postFrameCallbackDelayed(mRestartCallback, MARQUEE_DELAY);",300,40);
-            w->addView(tv);
-            tv->requestFocus();
-            tv->setEllipsize(Layout::ELLIPSIS_MARQUEE);
-       }break;
-    case 10:{
-           ViewFlipper*vfp=new ViewFlipper(400,600);
-           w->addView(vfp);
-           vfp->setFlipInterval(1500);
-           ScaleAnimation*sa=new ScaleAnimation(0,1.f,0.f,1.f,200,300);
-           sa->setDuration(1000);
-           vfp->setInAnimation(sa);
-           sa= new ScaleAnimation(0,1.f,0.f,1.f,200,300);
-           sa->setDuration(1000);
-           vfp->setOutAnimation(sa); 
-           for(int i=0;i<10;i++){
-               TextView*tv=new TextView(std::to_string(i),400,600);
-               tv->setTextSize(120);
-               tv->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);//setGravity(Gravity::CENTER);
-               tv->setTextColor(0xFFFFFFFF);
-               tv->setBackgroundColor(0xFF000000|(i*10)<<((i%2+1)*8));
-               vfp->addView(tv,i,new ViewFlipper::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
-           }
-           vfp->startFlipping(); 
-           w->requestLayout();
-           RotateAnimation*ra= new RotateAnimation(0,360,200,300);
-           ra->setDuration(30000);
-           vfp->startAnimation(ra);
-        }break;
     default:    break;
     }
     app.exec();

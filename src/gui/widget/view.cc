@@ -1564,7 +1564,6 @@ void View::draw(Canvas&canvas){
      */
 
     // Step 1, draw the background, if needed
-    int saveCount;
 
     if (!dirtyOpaque) {
         drawBackground(canvas);

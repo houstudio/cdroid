@@ -1,15 +1,33 @@
 #include <windows.h>
-#include <widget/simplemonthview.h>
-static int mPageCount=5;
+#include <dirent.h>
+
 class MyPageAdapter:public PagerAdapter{
+    std::vector<std::string>urls;
+    std::map< int,RefPtr<Cairo::ImageSurface> >imgs;
 public:
-    int getCount(){return 12;}
+    MyPageAdapter(const std::string&path){
+        DIR*dir=opendir(path.c_str());
+        struct dirent*ent;
+        while(ent=readdir(dir)){
+            std::string fullpath=path+"/"+ent->d_name;
+            if(ent->d_type==DT_REG)
+                urls.push_back(fullpath);
+        }
+        if(dir)closedir(dir);
+    }
+    int getCount(){return urls.size();}
     bool isViewFromObject(View* view, void*object) { return view==object;}
     void* instantiateItem(ViewGroup* container, int position) {
-        SimpleMonthView*sm=new  SimpleMonthView(100,100);
-        sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
-        container->addView(sm);
-        return sm;
+        ImageView*iv=new  ImageView(100,100);
+        container->addView(iv,new ViewPager::LayoutParams());
+        iv->setScaleType(FIT_XY);
+        RefPtr<Cairo::ImageSurface>img;
+        if(imgs.find(position)==imgs.end()){
+            img=container->getContext()->getImage(urls[position]);
+            imgs[position]=img;
+        }else img=imgs[position];
+        iv->setImageBitmap(img);
+        return iv;
     }
     void destroyItem(ViewGroup* container, int position,void* object){
         container->removeView((View*)object);
@@ -28,8 +46,8 @@ int main(int argc,const char*argv[]){
     hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(hs).setId(1);
 
-    if(argc>1)mPageCount=std::max(5L,std::strtol(argv[1],nullptr,10));
-    for(int i=0;i<16;i++){
+    MyPageAdapter*gpAdapter=new MyPageAdapter(argc==1?std::string("/home/houzh/images"):argv[1]);
+    for(int i=0;i<gpAdapter->getCount();i++){
         Button*btn=new Button("Hello Button"+std::to_string(i),150,30);
         btn->setPadding(5,5,5,5);
         btn->setTextColor(cl);
@@ -40,7 +58,6 @@ int main(int argc,const char*argv[]){
         layout->addView(btn,new LinearLayout::LayoutParams(800,LayoutParams::WRAP_CONTENT));
     }
     ViewPager*pager=new ViewPager(800,560);
-    MyPageAdapter*gpAdapter=new MyPageAdapter();
     pager->setOffscreenPageLimit(3);
     pager->setAdapter(gpAdapter);
     ViewPager::OnPageChangeListener listener={nullptr,nullptr,nullptr};
