@@ -406,12 +406,11 @@ void TextView::addTextChangedListener(TextWatcher watcher){
 void TextView::removeTextChangedListener(TextWatcher watcher){
     for(auto i= mListeners.begin();i!= mListeners.end();i++){
         TextWatcher w=(*i);
-        /*if( ( w.afterTextChanged.target==watcher.afterTextChanged.target)
-            &&(i.onTextChanged==watcher.onTextChanged)
-            &&(i.beforeTextChanged=watcher.beforeTextChanged) ){
+        if( (w.onTextChanged==watcher.onTextChanged)
+            &&(w.beforeTextChanged==watcher.beforeTextChanged) ){
             mListeners.erase(i);
             break;
-        }*/
+        }
     } 
 }
 

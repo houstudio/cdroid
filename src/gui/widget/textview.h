@@ -25,11 +25,11 @@ namespace cdroid {
 
 struct TextWatcher{
     //void beforeTextChanged(CharSequence s,int start,int count, int after)
-    std::function<void(const std::wstring&,int,int,int)>beforeTextChanged;
+    CallbackBase<void,const std::wstring&,int,int,int>beforeTextChanged;
     //void onTextChanged(CharSequence s, int start, int before, int count);
-    std::function<void(const std::wstring&,int,int,int)>onTextChanged;
+    CallbackBase<void,const std::wstring&,int,int,int>onTextChanged;
     //void afterTextChanged(Editable s);
-    std::function<void(std::wstring&)>afterTextChanged;
+    CallbackBase<void,std::wstring&>afterTextChanged;
 };
 class TextView : public View{
 private:
