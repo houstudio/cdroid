@@ -116,6 +116,28 @@ TEST_F(DRAWABLE,ninepatch2){
     delete d;
 }
 
+TEST_F(DRAWABLE,picture){
+    Cairo::Rectangle rc={0,0,400,50};
+    RefPtr<RecordingSurface>picture= RecordingSurface::create(rc);
+    RefPtr<Cairo::Context>ctxpic=Cairo::Context::create(picture);
+    ctxpic->set_source_rgba(1,1,1,1);
+    ctxpic->rectangle(0,0,400,50);
+    ctxpic->fill();
+    ctxpic->set_source_rgba(1,0,0,1);
+    ctxpic->move_to(50,20);
+    ctxpic->set_font_size(32);
+    ctxpic->show_text("PictureDrawable");
+    ctxpic->fill();
+    ctxpic->set_source_rgba(0,1,0,.5);
+    ctxpic->arc(200,25,50,0,M_PI*2.f);
+    ctxpic->fill();
+    PictureDrawable*pd=new PictureDrawable(picture);
+    pd->setBounds(100,100,400,50);
+    
+    pd->draw(*ctx);
+    delete pd;
+}
+
 TEST_F(DRAWABLE,transition){
     std::vector<Drawable*>ds;
     ds.push_back(new ColorDrawable(0x80FF0000));
