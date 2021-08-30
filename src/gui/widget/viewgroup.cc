@@ -168,7 +168,7 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     // Otherwise we need to make a copy.
     MotionEvent* transformedEvent;
     if (newPointerIdBits == oldPointerIdBits) {
-        if (child == nullptr /*|| child->hasIdentityMatrix()*/) {
+        if (child == nullptr || child->hasIdentityMatrix()) {
             if (child == nullptr) {
                 handled = View::dispatchTouchEvent(event);
             } else {
@@ -296,7 +296,7 @@ void ViewGroup::cancelHoverTarget(View*view){
 }
 
 bool ViewGroup::canViewReceivePointerEvents(View& child) {
-    return (child.mViewFlags & VISIBILITY_MASK) == VISIBLE;//|| child->getAnimation() != null;
+    return (child.mViewFlags & VISIBILITY_MASK) == VISIBLE || child.getAnimation();
 }
 void ViewGroup::setOnHierarchyChangeListener(OnHierarchyChangeListener listener){
     mOnHierarchyChangeListener =listener;
@@ -1715,12 +1715,12 @@ void ViewGroup::clearFocusedInCluster(View* child) {
 void ViewGroup::addKeyboardNavigationClusters(std::vector<View*>&views,int drection)const{
 }
 
-void ViewGroup::transformPointToViewLocal(POINT&point,View&child) {
-     point.x += mScrollX - child.getX();
-     point.y += mScrollY - child.getY();
-     /*if (!child.hasIdentityMatrix()) {
-         child.getInverseMatrix().mapPoints(point);
-     }*/
+void ViewGroup::transformPointToViewLocal(float point[2],View&child) {
+     point[0] += mScrollX - child.getX();
+     point[1] += mScrollY - child.getY();
+     if (!child.hasIdentityMatrix()) {
+         //child.getInverseMatrix().mapPoints(point);
+     }
 }
 
 void ViewGroup::setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus) {
@@ -1732,9 +1732,9 @@ void ViewGroup::setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus) 
 }
 
 bool ViewGroup::isTransformedTouchPointInView(int x,int y, View& child,POINT*outLocalPoint) {
-    POINT point ={x,y};
+    float point[2] ={(float)x,(float)y};
     transformPointToViewLocal(point,child);
-    bool isInView=child.getBound().contains(x,y);
+    const bool isInView=child.pointInView(point[0],point[1],0);
     if(isInView && outLocalPoint != nullptr) {
         outLocalPoint->set(x, y);
     }
@@ -1817,14 +1817,13 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
 }
 
 bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
-    int action = ev.getAction();
-    int actionMasked=ev.getActionMasked();
-    float xf = ev.getX();
-    float yf = ev.getY();
-    float scrolledXFloat = xf + mScrollX;
-    float scrolledYFloat = yf + mScrollY;
+    const int action = ev.getAction();
+    const int actionMasked=ev.getActionMasked();
+    const float xf = ev.getX();
+    const float yf = ev.getY();
+    const float scrolledXFloat = xf + mScrollX;
+    const float scrolledYFloat = yf + mScrollY;
 
-    const bool upordown=(actionMasked == MotionEvent::ACTION_DOWN)||(actionMasked == MotionEvent::ACTION_UP);
     if (ev.isTargetAccessibilityFocus() && isAccessibilityFocusedViewOrHost()) {
          ev.setTargetAccessibilityFocus(false);
     }
@@ -1855,7 +1854,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     bool split=false;
     TouchTarget* newTouchTarget = nullptr;
     bool alreadyDispatchedToNewTouchTarget = false;
-    
+
     if(!canceled && !intercepted){
         int actionIndex = ev.getActionIndex(); // always 0 for down
         int idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex): TouchTarget::ALL_POINTER_IDS;
@@ -1883,8 +1882,8 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                 if(dispatchTransformedTouchEvent(ev, false, child, idBitsToAssign)){
                     mLastTouchDownTime = ev.getDownTime();
                     mLastTouchDownIndex=i;
-                    mLastTouchDownX = x ;
-                    mLastTouchDownY = y ;
+                    mLastTouchDownX = ev.getX() ;
+                    mLastTouchDownY = ev.getY() ;
                     newTouchTarget=addTouchTarget(child,idBitsToAssign);
                     alreadyDispatchedToNewTouchTarget = true;
                     break;
@@ -1903,7 +1902,6 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
         }
     }
 
-    //LOGD_IF(upordown,"mFirstTouchTarget=%p newTouchTarget=%p",mFirstTouchTarget,newTouchTarget);
     // Dispatch to touch targets.
     if (mFirstTouchTarget == nullptr){
         handled = dispatchTransformedTouchEvent(ev, canceled, nullptr,TouchTarget::ALL_POINTER_IDS);

@@ -8,16 +8,16 @@ public:
     MyPageAdapter(const std::string&path){
         DIR*dir=opendir(path.c_str());
         struct dirent*ent;
-        while(ent=readdir(dir)){
+        while(dir&&(ent=readdir(dir))){
             std::string fullpath=path+"/"+ent->d_name;
             if(ent->d_type==DT_REG)
                 urls.push_back(fullpath);
         }
         if(dir)closedir(dir);
     }
-    int getCount(){return urls.size();}
-    bool isViewFromObject(View* view, void*object) { return view==object;}
-    void* instantiateItem(ViewGroup* container, int position) {
+    int getCount()override{return urls.size();}
+    bool isViewFromObject(View* view, void*object)override{ return view==object;}
+    void* instantiateItem(ViewGroup* container, int position)override {
         ImageView*iv=new  ImageView(100,100);
         container->addView(iv,new ViewPager::LayoutParams());
         iv->setScaleType(FIT_XY);
@@ -29,10 +29,11 @@ public:
         iv->setImageBitmap(img);
         return iv;
     }
-    void destroyItem(ViewGroup* container, int position,void* object){
+    void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
     }
-    float getPageWidth(int position){return 1.f;}//if returned calue <1 OffscreenPageLimit must be larger to workfine 
+    float getPageWidth(int position)override{return 1.f;}
+    //if returned calue <1 OffscreenPageLimit must be larger to workfine 
 };
 
 int main(int argc,const char*argv[]){

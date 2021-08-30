@@ -28,13 +28,12 @@ int UIEventSource::handleEvents(){
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().ComposeSurfaces();
     for(auto it=mRunnables.begin();it!=mRunnables.end();it++){
-        LOGV_IF(it->removed,"remove %d",(int)it->run);
         if(it->removed)it=mRunnables.erase(it);
     }
+
     if(hasDelayedRunners()){
         RUNNER runner=mRunnables.front();
-        runner.run();//maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
-        LOGV("remove %d",(int)runner.run);
+        if(runner.run)runner.run();//maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
         mRunnables.pop_front(); 
     } 
     return 0;

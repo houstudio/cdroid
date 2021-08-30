@@ -943,8 +943,10 @@ void View::getStraightVerticalScrollBarBounds(RECT*drawBounds,RECT*touchBounds){
 void View::getRoundVerticalScrollBarBounds(RECT* bounds){
     // Do not take padding into account as we always want the scrollbars
     // to hug the screen for round wearable devices.
-    *bounds=getBound();
-    bounds->offset(mScrollX,mScrollY);
+    bounds->x = mScrollX;
+    bounds->y = mScrollY;
+    bounds->width =  mWidth;
+    bounds->height = mHeight;
 }
 
 int View::getHorizontalScrollbarHeight()const{
@@ -1411,38 +1413,6 @@ int View::getFadeHeight(bool offsetRequired) {
     int padding = mPaddingTop;
     if (offsetRequired) padding += getTopPaddingOffset();
     return mHeight - mPaddingBottom - padding;
-}
-
-void View::clip(RefPtr<Region>rgn){
-    if(mParent){//clip sliblings
-        BOOL afterthis=FALSE;
-        RECT rect=getBound();
-        for(int i=0;i<mParent->getChildCount();i++){
-            View*s=mParent->getChildAt(i);
-            RECT rc,r=s->getBound();
-            if( afterthis==FALSE ){
-                afterthis=(s==this);
-                continue;
-            }
-            if(s->hasFlag(VISIBLE)==false)continue;
-            if(false==rc.intersect(rect,r))continue;
-            rc.offset(-rect.x,-rect.y);
-            rgn->subtract((const RectangleInt&)rc);
-        }
-        rect=getDrawingRect();
-        getLocationInWindow((int*)&rect);
-        View*c=mParent;
-        do{
-            RECT rc=c->getDrawingRect();
-            c->getLocationInWindow((int*)&rc);
-            rect.intersect(rc);
-            c=c->mParent;
-        }while(c);
-        getRootView()->offsetRectIntoDescendantCoords(this,rect);
-        rgn->intersect((const RectangleInt&)rect);
-        LOGV("%p:%d scrolled:%d,%d aftercliped(%d,%d,%d,%d)at:%d,%d",this,mID,mScrollX,mScrollY,
-            rect.x,rect.y,rect.width,rect.height,mLeft,mTop); 
-    }
 }
 
 void View::dispatchDraw(Canvas&){
@@ -2345,8 +2315,8 @@ void View::getHitRect(RECT& outRect){
 }
 
 bool View::pointInView(int localX,int localY, int slop) {
-    return localX >= -slop && localY >= -slop && localX < (getWidth() + slop) &&
-            localY < (getHeight() + slop);
+    return localX >= -slop && localY >= -slop && localX < (mWidth + slop) &&
+            localY < (mHeight + slop);
 }
 
 void View::onResolveDrawables(int layoutDirection){
@@ -3855,7 +3825,15 @@ bool View::dispatchGenericMotionEvent(MotionEvent&event){
 }
 
 bool View::dispatchTouchEvent(MotionEvent&event){
-    return onTouchEvent(event);
+    bool result = false;
+    const int actionMasked = event.getActionMasked();
+    result=onTouchEvent(event);
+    if (actionMasked == MotionEvent::ACTION_UP ||
+            actionMasked == MotionEvent::ACTION_CANCEL ||
+            (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
+        stopNestedScroll();
+    }
+    return result;
 }
 
 bool View::onInterceptTouchEvent(MotionEvent&event){
@@ -3949,8 +3927,17 @@ bool View::performContextClick() {
     return handled;
 }
 
+bool View::performButtonActionOnTouchDown(MotionEvent& event) {
+    /*if (event.isFromSource(InputDevice.SOURCE_MOUSE) &&
+        (event.getButtonState() & MotionEvent::BUTTON_SECONDARY) != 0) {
+        showContextMenu(event.getX(), event.getY());
+        mPrivateFlags |= PFLAG_CANCEL_NEXT_UP_EVENT;
+        return true;
+    }*/
+    return false;
+}
+
 void View::checkLongPressCallback(int x,int y){
-    LOGV("checkLongPressCallback(%d,%d)  pressstate=%d,%d",x,y,mOriginalPressedState,isPressed());
     if(mOriginalPressedState==isPressed()){
         if (performLongClick(x, y)) {
             mHasPerformedLongPress = true;
@@ -3959,7 +3946,7 @@ void View::checkLongPressCallback(int x,int y){
 }
 
 void View::checkForLongClick(int delayOffset,int x,int y){
-    LOGV("checkForLongClick longclickable=%d",(mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE );
+    LOGV("%p:%d checkForLongClick longclickable=%d",this,mID,(mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE );
     if ((mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE || (mViewFlags & TOOLTIP) == TOOLTIP) {
         mHasPerformedLongPress = false;
         mOriginalPressedState=isPressed();
@@ -4007,10 +3994,10 @@ void View::removeUnsetPressCallback() {
     }
 }
 
-bool View::onTouchEvent(MotionEvent& mt){
-    const int x=mt.getX();
-    const int y=mt.getY();
-    const int action=mt.getAction();
+bool View::onTouchEvent(MotionEvent& event){
+    const int x = event.getX();
+    const int y = event.getY();
+    const int action=event.getAction();
     const bool prepressed = (mPrivateFlags & PFLAG_PREPRESSED) != 0;
     const bool clickable=((mViewFlags&CLICKABLE) == CLICKABLE  || (mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE);
 
@@ -4023,7 +4010,9 @@ bool View::onTouchEvent(MotionEvent& mt){
         // events, it just doesn't respond to them.
         return clickable;
     }
-    //if(!clickable)return false;
+
+    if (!(clickable || (mViewFlags & TOOLTIP) == TOOLTIP))return false; 
+
     switch(action){
     case MotionEvent::ACTION_UP:
         if(mPrivateFlags&PFLAG_PRESSED);
@@ -4034,6 +4023,7 @@ bool View::onTouchEvent(MotionEvent& mt){
             mIgnoreNextUpEvent=false;
             break;
         }
+
         if ((mPrivateFlags & PFLAG_PRESSED) != 0 || prepressed) {
             bool focusTaken = false;
             if (isFocusable() && isFocusableInTouchMode() && !isFocused()) {
@@ -4041,8 +4031,7 @@ bool View::onTouchEvent(MotionEvent& mt){
             }
 
             if (prepressed)setPressed(true);
-
-            if(!mHasPerformedLongPress ){//&& !mIgnoreNextUpEvent){
+            if(!mHasPerformedLongPress && !mIgnoreNextUpEvent){
                 removeLongPressCallback();
                 if (!focusTaken){
                     performClickInternal();
@@ -4064,6 +4053,9 @@ bool View::onTouchEvent(MotionEvent& mt){
             checkForLongClick(0, x, y);
             break;
         }
+
+        if(performButtonActionOnTouchDown(event))break;
+
         if(isInScrollingContainer()){
             mPrivateFlags |= PFLAG_PREPRESSED;
             mPendingCheckForTap=std::bind(&View::checkForTapCallback,this,x,y);
@@ -4077,7 +4069,7 @@ bool View::onTouchEvent(MotionEvent& mt){
         break;
     case MotionEvent::ACTION_CANCEL:break;
     }
-    return false;
+    return true;
 }
 
 void View::postOnAnimation(const Runnable& action){

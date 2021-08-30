@@ -1164,7 +1164,7 @@ void AbsListView::checkTap(int x,int y) {
             mLayoutMode = LAYOUT_NORMAL;
 
             if (!mDataChanged) {
-                POINT point={x,y};
+                float point[2]={(float)x,(float)y};
                 transformPointToViewLocal(point,*child);
                 //child->drawableHotspotChanged(point[0], point[1]);
                 child->setPressed(true);
@@ -1928,7 +1928,7 @@ bool AbsListView::onKeyDown(int keyCode, KeyEvent& event) {
 
 bool AbsListView::onKeyUp(int keyCode, KeyEvent& event) {
     if (KeyEvent::isConfirmKey(keyCode)) {
-        LOGD("isClickable=%d pressed=%d mSelectedPosition=%d",isClickable(),isPressed(),mSelectedPosition);
+        LOGV("%p:%d isClickable=%d pressed=%d mSelectedPosition=%d",this,mID,isClickable(),isPressed(),mSelectedPosition);
         if (!isEnabled()) return true;
         if (isClickable() && isPressed() &&  (mSelectedPosition >= 0)
                 && mAdapter && (mSelectedPosition < mAdapter->getCount()) ) {
@@ -2527,7 +2527,7 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
         mLastY = INT_MIN;
     }
     if (mTouchMode == TOUCH_MODE_DOWN && mMotionPosition != INVALID_POSITION
-            /*&& performButtonActionOnTouchDown(ev)*/) {
+            && performButtonActionOnTouchDown(ev)) {
         removeCallbacks(mPendingCheckForTap);
     }
 }
@@ -2573,7 +2573,7 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
             updateSelectorState();
         } else if (motionView != nullptr) {
             // Still within bounds, update the hotspot.
-            POINT point= {x,y};
+            float point[2]= {(float)x,(float)y};
             transformPointToViewLocal(point, *motionView);
             //motionView->drawableHotspotChanged(point[0], point[1]);
         }

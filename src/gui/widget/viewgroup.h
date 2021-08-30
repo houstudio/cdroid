@@ -164,7 +164,7 @@ protected:
     virtual bool drawChild(Canvas& canvas, View* child, long drawingTime);
     void dispatchDraw(Canvas&)override;
     bool hasActiveAnimations();
-    void transformPointToViewLocal(POINT&point,View&);
+    void transformPointToViewLocal(float pint[2],View&);
     bool isTransformedTouchPointInView(int x,int y,View& child,Point*outLocalPoint);
     void drawableStateChanged()override;
     std::vector<int> onCreateDrawableState()const override;

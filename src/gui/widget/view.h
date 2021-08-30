@@ -271,7 +271,6 @@ private:
     void switchDefaultFocusHighlight();
     void drawDefaultFocusHighlight(Canvas& canvas);
 
-    void clip(RefPtr<Region>rgn);
     void setMeasuredDimensionRaw(int measuredWidth, int measuredHeight);
     void initScrollCache();
     ScrollabilityCache* getScrollCache();
@@ -397,6 +396,7 @@ protected:
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
     void playSoundEffect(int soundConstant);
     bool performHapticFeedback(int feedbackConstant, int flags=0);
+    bool performButtonActionOnTouchDown(MotionEvent&);
 
     void onAnimationStart();
     void onAnimationEnd();

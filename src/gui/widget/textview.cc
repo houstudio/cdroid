@@ -305,7 +305,6 @@ void TextView::initView(){
     setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     setTextAlignment(TEXT_ALIGNMENT_TEXT_START);
     mTextColor =mHintTextColor =mLinkTextColor =nullptr;
-    setClickable(true);
     mHighlightColor=0x6633B5E5;
     mShadowRadius = .0;
     mShadowDx = .0;

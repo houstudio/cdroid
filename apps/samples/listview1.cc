@@ -49,6 +49,12 @@ int main(int argc,const char*argv[]){
     lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);
     });
+
+    ListView::OnItemSelectedListener listener={nullptr,nullptr};
+    listener.onItemSelected=[](AdapterView&lv,View&v,int pos,long id){
+        LOGD("selected position %d",pos);
+    }; 
+    lv->setOnItemSelectedListener(listener);
 ////////////////////////////////////////////////////////////////////////////////////////
     MyAdapter*adapter2=new MyAdapter(1);
     ListView*lv2=(ListView*)&w->addView(new ListView(500,500));

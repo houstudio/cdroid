@@ -153,8 +153,8 @@ void WindowManager::onBtnRelease(MotionEvent&event) {
 
 void WindowManager::onMotion(MotionEvent&event) {
    // Notify the focused child
-   int x=event.getX();
-   int y=event.getY();
+   const int x=event.getX();
+   const int y=event.getY();
    for (auto itr=windows.rbegin();itr!=windows.rend();itr++) {
        auto w=(*itr);
        if ((w->getVisibility()==View::VISIBLE)&&w->getBound().contains(x,y)) {

@@ -7,7 +7,6 @@ Button::Button(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
     setTextAlignment(TEXT_ALIGNMENT_CENTER);
     setFocusable(true);
     setFocusableInTouchMode(true);
-    setClickable(true);
 }
 
 Button::Button(int32_t w, int32_t h):Button(std::string(),w,h){
@@ -19,7 +18,6 @@ Button::Button(const std::string& text, int32_t w, int32_t h)
     setTextAlignment(TEXT_ALIGNMENT_CENTER);
     setFocusable(true);
     setFocusableInTouchMode(true);
-    setClickable(true);
 }
 
 Button::~Button() {

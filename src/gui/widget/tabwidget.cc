@@ -162,7 +162,7 @@ void TabWidget::dispatchDraw(Canvas& canvas){
     LinearLayout::dispatchDraw(canvas);
 
     // Do nothing if there are no tabs.
-    if (getTabCount() == 0) return;
+    if (getTabCount() == 0||mSelectedTab<0) return;
 
     // If the user specified a custom view for the tab indicators, then
     // do not draw the bottom strips.
@@ -173,22 +173,25 @@ void TabWidget::dispatchDraw(Canvas& canvas){
 
     View* selectedChild = getChildTabViewAt(mSelectedTab);
 
-    mLeftStrip->setState(selectedChild->getDrawableState());
-    mRightStrip->setState(selectedChild->getDrawableState());
+    if(mLeftStrip)
+        mLeftStrip->setState(selectedChild->getDrawableState());
+    if(mRightStrip)
+        mRightStrip->setState(selectedChild->getDrawableState());
 
     if (mStripMoved) {
         RECT bounds = mBounds;
         bounds.x = selectedChild->getLeft();
         bounds.width = selectedChild->getWidth();
         int myHeight = getHeight();
-        mLeftStrip->setBounds(std::min(0, bounds.x - mLeftStrip->getIntrinsicWidth()),
-            myHeight - mLeftStrip->getIntrinsicHeight(), bounds.x, myHeight);
-        mRightStrip->setBounds(bounds.right(), myHeight - mRightStrip->getIntrinsicHeight(),
+        if(mLeftStrip)
+            mLeftStrip->setBounds(std::min(0, bounds.x - mLeftStrip->getIntrinsicWidth()),
+                myHeight - mLeftStrip->getIntrinsicHeight(), bounds.x, myHeight);
+        if(mRightStrip)mRightStrip->setBounds(bounds.right(), myHeight - mRightStrip->getIntrinsicHeight(),
                 std::max(getWidth(), bounds.width + mRightStrip->getIntrinsicWidth()), myHeight);
         mStripMoved = false;
     }
-    mLeftStrip->draw(canvas);
-    mRightStrip->draw(canvas);    
+    if(mLeftStrip )mLeftStrip->draw(canvas);
+    if(mRightStrip)mRightStrip->draw(canvas);    
 }
 
 void TabWidget::setCurrentTab(int index) {
