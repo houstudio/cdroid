@@ -2,6 +2,8 @@
 #include <functional>
 #include <type_traits>
 #include <atomic>
+#include <memory>
+
 namespace cdroid{
 
 extern std::atomic_int mCallbackID;
@@ -11,26 +13,31 @@ class CallbackBase{
 private:
     using Functor=std::function<R(Args...)>;
     Functor fun;
-    long mID;
+    std::shared_ptr<int>mState;
 public:
-    CallbackBase(){fun=nullptr_t();mID=mCallbackID++;}
+    CallbackBase(){fun=nullptr_t();
+        mState=std::make_shared<int>(0);
+    }
     CallbackBase(const Functor&a):CallbackBase(){
         fun=a;
+    }
+    CallbackBase(const CallbackBase&b){
+        mState=b.mState;
+        fun=b.fun;
     }
     CallbackBase&operator=(const Functor&a){
         fun=a;
         return *this;
     }
     CallbackBase&operator=(const CallbackBase&b){
-        mID=b.mID;
+        mState=b.mState;
         fun=b.fun;
         return *this;
     }
     bool operator==(const CallbackBase&b)const{
-        return mID==b.mID;
+        return mState.get()==b.mState.get();
     }
     operator bool()const{ return fun!=nullptr;  }
-    operator int() const{ return mID; }
     bool operator==(nullptr_t)const{
        return fun==nullptr;
     }

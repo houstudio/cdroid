@@ -117,8 +117,7 @@ TEST_F(DRAWABLE,ninepatch2){
 }
 
 TEST_F(DRAWABLE,picture){
-    Cairo::Rectangle rc={0,0,400,50};
-    RefPtr<RecordingSurface>picture= RecordingSurface::create(rc);
+    RefPtr<RecordingSurface>picture= RecordingSurface::create();
     RefPtr<Cairo::Context>ctxpic=Cairo::Context::create(picture);
     ctxpic->set_source_rgba(1,1,1,1);
     ctxpic->rectangle(0,0,400,50);
@@ -131,6 +130,7 @@ TEST_F(DRAWABLE,picture){
     ctxpic->set_source_rgba(0,1,0,.5);
     ctxpic->arc(200,25,50,0,M_PI*2.f);
     ctxpic->fill();
+	
     PictureDrawable*pd=new PictureDrawable(picture);
     pd->setBounds(100,100,400,50);
     
