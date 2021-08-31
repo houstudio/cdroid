@@ -27,10 +27,10 @@ int UIEventSource::handleEvents(){
     }
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().ComposeSurfaces();
-    for(auto it=mRunnables.begin();it!=mRunnables.end();it++){
-        if(it->removed)it=mRunnables.erase(it);
-    }
 
+    mRunnables.remove_if([](const RUNNER&r)->bool{
+         return r.removed;
+    });
     if(hasDelayedRunners()){
         RUNNER runner=mRunnables.front();
         if(runner.run)runner.run();//maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
@@ -44,6 +44,7 @@ void UIEventSource::post(const Runnable& run,uint32_t delayedtime){
     runner.removed=false;
     runner.time=SystemClock::uptimeMillis()+delayedtime;
     runner.run=run;
+	
     for(auto itr=mRunnables.begin();itr!=mRunnables.end();itr++){
         if(runner.time<itr->time){
             mRunnables.insert(itr,runner);

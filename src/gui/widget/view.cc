@@ -394,7 +394,6 @@ void View::onAnimationEnd() {
 }
 
 bool View::onSetAlpha(int alpha) {
-    LOGD("");
     return false;
 }
 
@@ -3458,7 +3457,7 @@ bool View::isKeyboardNavigationCluster()const{
 }
 
 bool View::isInTouchMode()const{
-    return false;
+    return true;
 }
 
 bool View::isFocusable()const{
@@ -4061,15 +4060,13 @@ bool View::onTouchEvent(MotionEvent& event){
                     performClickInternal();
                 }
             }
-            if(prepressed){
+            if(mUnsetPressedState==nullptr)
                 mUnsetPressedState=std::bind(&View::unsetPressedCallback,this);
-                postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
-            }else{
-                postDelayed(mUnsetPressedState,10);
-            }
+            postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
+
             removeTapCallback();
         }
-        mIgnoreNextUpEvent=true;
+        mIgnoreNextUpEvent=false;
         break; 
     case MotionEvent::ACTION_DOWN:
         mHasPerformedLongPress=false;
