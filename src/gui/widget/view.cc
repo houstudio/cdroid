@@ -3850,12 +3850,23 @@ bool View::dispatchGenericMotionEvent(MotionEvent&event){
 bool View::dispatchTouchEvent(MotionEvent&event){
     bool result = false;
     const int actionMasked = event.getActionMasked();
-    result=onTouchEvent(event);
     if (actionMasked == MotionEvent::ACTION_UP ||
             actionMasked == MotionEvent::ACTION_CANCEL ||
             (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
         stopNestedScroll();
     }
+
+    if ((mViewFlags & ENABLED_MASK) == ENABLED && handleScrollBarDragging(event)) {
+        result = true;
+    }
+    result = (!result) && onTouchEvent(event);
+
+    if (actionMasked == MotionEvent::ACTION_UP ||
+         actionMasked == MotionEvent::ACTION_CANCEL ||
+         (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
+        stopNestedScroll();
+    }
+
     return result;
 }
 
@@ -4017,12 +4028,107 @@ void View::removeUnsetPressCallback() {
     }
 }
 
+bool View::handleScrollBarDragging(MotionEvent& event) {
+    if (mScrollCache == nullptr)  return false;
+    float x = event.getX();
+    float y = event.getY();
+    int action = event.getAction();
+    if ((mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING
+            && action != MotionEvent::ACTION_DOWN)
+            //|| !event.isFromSource(InputDevice.SOURCE_MOUSE)
+            || !event.isButtonPressed(MotionEvent::BUTTON_PRIMARY)) {
+        mScrollCache->mScrollBarDraggingState = ScrollabilityCache::NOT_DRAGGING;
+        return false;
+    }
+
+    switch (action) {
+    case MotionEvent::ACTION_MOVE:
+        if (mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING) {
+            return false;
+        }
+        if (mScrollCache->mScrollBarDraggingState
+                == ScrollabilityCache::DRAGGING_VERTICAL_SCROLL_BAR) {
+            Rect bounds = mScrollCache->mScrollBarBounds;
+            getVerticalScrollBarBounds(&bounds, nullptr);
+            int range = computeVerticalScrollRange();
+            int offset = computeVerticalScrollOffset();
+            int extent = computeVerticalScrollExtent();
+
+            int thumbLength = ViewConfiguration::getThumbLength(
+                    bounds.height, bounds.width, extent, range);
+            int thumbOffset = ViewConfiguration::getThumbOffset(
+                            bounds.height, thumbLength, extent, range, offset);
+
+            float diff = y - mScrollCache->mScrollBarDraggingPos;
+            float maxThumbOffset = bounds.height - thumbLength;
+            float newThumbOffset =std::min(std::max(thumbOffset + diff, 0.0f), maxThumbOffset);
+            int height = getHeight();
+            if (std::round(newThumbOffset) != thumbOffset && maxThumbOffset > 0
+                    && height > 0 && extent > 0) {
+                int newY = std::round((range - extent)
+                        / ((float)extent / height) * (newThumbOffset / maxThumbOffset));
+                if (newY != getScrollY()) {
+                    mScrollCache->mScrollBarDraggingPos = y;
+                    setScrollY(newY);
+                }
+            }
+            return true;
+        }
+        if (mScrollCache->mScrollBarDraggingState
+                == ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR) {
+            Rect bounds = mScrollCache->mScrollBarBounds;
+                    getHorizontalScrollBarBounds(&bounds, nullptr);
+            int range = computeHorizontalScrollRange();
+            int offset = computeHorizontalScrollOffset();
+            int extent = computeHorizontalScrollExtent();
+
+            int thumbLength = ViewConfiguration::getThumbLength(
+                    bounds.width, bounds.height, extent, range);
+            int thumbOffset = ViewConfiguration::getThumbOffset(
+                            bounds.width, thumbLength, extent, range, offset);
+
+            float diff = x - mScrollCache->mScrollBarDraggingPos;
+            float maxThumbOffset = bounds.width - thumbLength;
+            float newThumbOffset = std::min(std::max(thumbOffset + diff, 0.0f), maxThumbOffset);
+            int width = getWidth();
+            if (std::round(newThumbOffset) != thumbOffset && maxThumbOffset > 0
+                    && width > 0 && extent > 0) {
+                int newX = std::round((range - extent)
+                        / ((float)extent / width) * (newThumbOffset / maxThumbOffset));
+                if (newX != getScrollX()) {
+                    mScrollCache->mScrollBarDraggingPos = x;
+                    setScrollX(newX);
+                }
+            }
+            return true;
+        }
+    case MotionEvent::ACTION_DOWN:
+        if (mScrollCache->state == ScrollabilityCache::OFF) {
+            return false;
+        }
+        if (isOnVerticalScrollbarThumb(x, y)) {
+            mScrollCache->mScrollBarDraggingState =
+                   ScrollabilityCache::DRAGGING_VERTICAL_SCROLL_BAR;
+            mScrollCache->mScrollBarDraggingPos = y;
+            return true;
+        }
+        if (isOnHorizontalScrollbarThumb(x, y)) {
+            mScrollCache->mScrollBarDraggingState =
+                  ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR;
+            mScrollCache->mScrollBarDraggingPos = x;
+            return true;
+        }
+    }
+    mScrollCache->mScrollBarDraggingState = ScrollabilityCache::NOT_DRAGGING;
+    return false;
+}
+
 bool View::onTouchEvent(MotionEvent& event){
     const int x = event.getX();
     const int y = event.getY();
     const int action=event.getAction();
-    const bool prepressed = (mPrivateFlags & PFLAG_PREPRESSED) != 0;
     const bool clickable=((mViewFlags&CLICKABLE) == CLICKABLE  || (mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE);
+    bool prepressed;
 
     if ((mViewFlags & ENABLED_MASK) == DISABLED) {
         if (action == MotionEvent::ACTION_UP && (mPrivateFlags & PFLAG_PRESSED) != 0) {
@@ -4038,6 +4144,7 @@ bool View::onTouchEvent(MotionEvent& event){
 
     switch(action){
     case MotionEvent::ACTION_UP:
+        mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
         if(mPrivateFlags&PFLAG_PRESSED);
         if (!clickable){
             removeTapCallback();
@@ -4047,6 +4154,7 @@ bool View::onTouchEvent(MotionEvent& event){
             break;
         }
 
+        prepressed = (mPrivateFlags & PFLAG_PREPRESSED) != 0;
         if ((mPrivateFlags & PFLAG_PRESSED) != 0 || prepressed) {
             bool focusTaken = false;
             if (isFocusable() && isFocusableInTouchMode() && !isFocused()) {
@@ -4113,19 +4221,19 @@ bool View::onTouchEvent(MotionEvent& event){
     return true;
 }
 
-void View::postOnAnimation(const Runnable& action){
-    postDelayed(action,10);
+void View::postOnAnimation(Runnable& action){
+    postDelayed(action,0);
 }
 
-void View::postOnAnimationDelayed(const Runnable& action, uint32_t delayMillis){
+void View::postOnAnimationDelayed(Runnable& action, uint32_t delayMillis){
     postDelayed(action,delayMillis);
 }
 
-void View::post(const Runnable& what){
+void View::post(Runnable& what){
     postDelayed(what,0);
 }
 
-void View::postDelayed(const Runnable& what,uint32_t delay){
+void View::postDelayed(Runnable& what,uint32_t delay){
     View*root=getRootView();
     if(root&&(root!=this))root->postDelayed(what,delay);
 }

@@ -382,8 +382,8 @@ protected:
     bool awakenScrollBars();
     bool awakenScrollBars(int startDelay, bool invalidate);
 
-    void postOnAnimation(const Runnable& action);
-    void postOnAnimationDelayed(const Runnable& action, uint32_t delayMillis);
+    void postOnAnimation(Runnable& action);
+    void postOnAnimationDelayed(Runnable& action, uint32_t delayMillis);
     virtual void onSizeChanged(int w,int h,int oldw,int oldh);
     virtual void onScrollChanged(int l, int t, int oldl, int oldt);
     virtual void onLayout(bool ,int,int,int,int);
@@ -405,6 +405,7 @@ protected:
     int getSuggestedMinimumWidth();
     int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
+    bool handleScrollBarDragging(MotionEvent& event);
     void playSoundEffect(int soundConstant);
     bool performHapticFeedback(int feedbackConstant, int flags=0);
     bool performButtonActionOnTouchDown(MotionEvent&);
@@ -720,10 +721,10 @@ public:
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
 	
-    void post(const Runnable& what);
+    void post(Runnable& what);
     void post(const std::function<void()>&what);
     void postDelayed(const std::function<void()>&what,uint32_t delay=0);
-    virtual void postDelayed(const Runnable& what,uint32_t delay=0);
+    virtual void postDelayed(Runnable& what,uint32_t delay=0);
     virtual void removeCallbacks(const Runnable& what);
 
     virtual int getBaseline();

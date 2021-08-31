@@ -656,6 +656,10 @@ MotionEvent*MotionEvent::split(int idBits){
     return ev;
 }
 
+bool MotionEvent::isButtonPressed(int button)const{
+    return (button!=0)&&((getButtonState() & button) == button);
+}
+
 void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords* pointerCoords) {
     mSampleEventTimes.push_back(eventTime);
 

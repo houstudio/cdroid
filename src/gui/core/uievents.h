@@ -426,6 +426,7 @@ public:
    inline void setMetaState(int32_t metaState) { mMetaState = metaState; }
    inline int32_t getButtonState() const { return mButtonState; }
    inline void setButtonState(int32_t buttonState) { mButtonState = buttonState; }
+   bool isButtonPressed(int button)const;
    inline int32_t getActionButton() const { return mActionButton; }
    inline void setActionButton(int32_t button) { mActionButton = button; }
    inline float getXOffset() const { return mXOffset; }

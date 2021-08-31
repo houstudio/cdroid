@@ -307,7 +307,7 @@ void Window::onBackPressed(){
     post([this](){WindowManager::getInstance().removeWindow(this);} );
 }
 
-void Window::postDelayed(const Runnable& what,uint32_t delay){
+void Window::postDelayed(Runnable& what,uint32_t delay){
     if(source)source->post(what,delay);
 }
 

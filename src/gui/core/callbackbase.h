@@ -18,6 +18,9 @@ public:
     CallbackBase(){fun=nullptr_t();
         mState=std::make_shared<int>(0);
     }
+    void newInstance(){//called by uieventsource
+        mState=std::make_shared<int>(0);
+    }
     CallbackBase(const Functor&a):CallbackBase(){
         fun=a;
     }

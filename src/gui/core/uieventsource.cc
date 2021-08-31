@@ -39,10 +39,11 @@ int UIEventSource::handleEvents(){
     return 0;
 }
 
-void UIEventSource::post(const Runnable& run,uint32_t delayedtime){
+void UIEventSource::post(Runnable& run,uint32_t delayedtime){
     RUNNER runner;
     runner.removed=false;
     runner.time=SystemClock::uptimeMillis()+delayedtime;
+    run.newInstance();
     runner.run=run;
 	
     for(auto itr=mRunnables.begin();itr!=mRunnables.end();itr++){
