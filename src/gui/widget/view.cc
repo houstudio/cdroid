@@ -4087,8 +4087,28 @@ bool View::onTouchEvent(MotionEvent& event){
         }
         break;
     case MotionEvent::ACTION_MOVE:
+        //if (clickable)drawableHotspotChanged(x, y);
+
+        // Be lenient about moving outside of buttons
+        if (!pointInView(x, y,ViewConfiguration::get(mContext).getScaledTouchSlop())) {
+            // Outside button Remove any future long press/tap checks
+            removeTapCallback();
+            removeLongPressCallback();
+            if ((mPrivateFlags & PFLAG_PRESSED) != 0) {
+                setPressed(false);
+            }
+            mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
+        }
         break;
-    case MotionEvent::ACTION_CANCEL:break;
+    case MotionEvent::ACTION_CANCEL:
+        if (clickable) setPressed(false);
+        removeTapCallback();
+        removeLongPressCallback();
+        mInContextButtonPress = false;
+        mHasPerformedLongPress = false;
+        mIgnoreNextUpEvent = false;
+        mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
+        break;
     }
     return true;
 }
