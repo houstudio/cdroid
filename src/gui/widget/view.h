@@ -226,6 +226,17 @@ public:
     constexpr static int SCROLL_INDICATOR_LEFT   = PFLAG3_SCROLL_INDICATOR_LEFT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
     constexpr static int SCROLL_INDICATOR_RIGHT  = PFLAG3_SCROLL_INDICATOR_RIGHT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
 
+    /*The scrollbar style to display the scrollbars at the edge of the view,
+     * increasing the padding of the view. The scrollbars will only overlap the
+     * background, if any*/
+    constexpr static int SCROLLBARS_INSIDE_OVERLAY = 0;
+    constexpr static int SCROLLBARS_INSIDE_INSET   = 0x01000000;
+    constexpr static int SCROLLBARS_OUTSIDE_OVERLAY= 0x02000000;
+    constexpr static int SCROLLBARS_OUTSIDE_INSET  = 0x03000000;
+    constexpr static int SCROLLBARS_INSET_MASK     = 0x01000000;
+    constexpr static int SCROLLBARS_OUTSIDE_MASK   = 0x02000000;
+    constexpr static int SCROLLBARS_STYLE_MASK     = 0x03000000;
+
     //Indicates no axis of view scrolling.
     constexpr static int SCROLL_AXIS_NONE      =0;
     constexpr static int SCROLL_AXIS_HORIZONTAL=1;
@@ -677,6 +688,9 @@ public:
     ViewGroup*getRootView()const;
     virtual View& setParent(ViewGroup*p);
     virtual View*findViewById(int id)const;
+    virtual View* findViewByPredicateTraversal(std::function<bool(const View*)>,View* childToSkip)const;
+    View* findViewByPredicate(std::function<bool(const View*)>)const;
+    View* findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>)const;
 
     virtual View*focusSearch(int direction)const;
     View*findUserSetNextFocus(View*root,int direction)const;

@@ -1174,6 +1174,25 @@ void ViewGroup::removeViewsInternal(int start, int count){
     }
 }
 
+View* ViewGroup::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const{
+    if (predicate(this)) {
+        return (View*)this;
+    }
+
+    for (auto v:mChildren) {
+
+        if (v != childToSkip && (v->mPrivateFlags & PFLAG_IS_ROOT_NAMESPACE) == 0) {
+            v = v->findViewByPredicate(predicate);
+
+            if (v != nullptr) {
+                return  v;
+            }
+        }
+    }
+    return nullptr;
+
+}
+
 View*ViewGroup::findViewById(int id)const{
     for(auto v:mChildren){
        if(v->findViewById(id))return v;

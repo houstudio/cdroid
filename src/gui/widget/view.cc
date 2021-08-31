@@ -255,14 +255,42 @@ View::~View(){
     delete mTransformationInfo;
 }
 
-View*View::findViewById(int id)const{
+View* View::findViewById(int id)const{
     if(id==mID)return (View*)this;
     return nullptr;
 }
 
-View*View::findViewInsideOutShouldExist(View* root, int id)const{
-    
-    return nullptr;
+View* View::findViewInsideOutShouldExist(View* root, int id)const{
+    View* result = root->findViewByPredicateInsideOut((View*)this,[id](const View*v)->bool{
+        return v->mID==id;
+    }); 
+    return result;
+}
+
+View* View::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const{
+    return predicate(this)?(View*)this:nullptr;
+}
+
+View* View::findViewByPredicate(std::function<bool(const View*)>predicate)const{
+    return findViewByPredicateTraversal(predicate,nullptr);
+}
+
+
+View* View::findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>predicate)const{
+    View* childToSkip = nullptr;
+    for (;;) {
+        View*view = start->findViewByPredicateTraversal(predicate, childToSkip);
+        if (view || start == this) {
+            return view;
+        }
+
+        ViewGroup* parent = start->getParent();
+        if (parent == nullptr){
+            return nullptr;
+        }
+        childToSkip = start;
+        start = (View*) parent;
+    }
 }
 
 int View::getLeft()const{
@@ -346,14 +374,14 @@ void View::computeOpaqueFlags(){
         mPrivateFlags &= ~PFLAG_OPAQUE_BACKGROUND;
     }
 
-    /*int flags = mViewFlags;
+    int flags = mViewFlags;
     if (((flags & SCROLLBARS_VERTICAL) == 0 && (flags & SCROLLBARS_HORIZONTAL) == 0) ||
             (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_INSIDE_OVERLAY ||
             (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_OUTSIDE_OVERLAY) {
         mPrivateFlags |= PFLAG_OPAQUE_SCROLLBARS;
     } else {
         mPrivateFlags &= ~PFLAG_OPAQUE_SCROLLBARS;
-    }*/
+    }
 }
 
 
@@ -795,7 +823,7 @@ View& View::setHorizontalScrollBarEnabled(bool horizontalScrollBarEnabled){
     getScrollCache();
     if (isHorizontalScrollBarEnabled() != horizontalScrollBarEnabled) {
         mViewFlags ^= SCROLLBARS_HORIZONTAL;
-        //computeOpaqueFlags();
+        computeOpaqueFlags();
         resolvePadding();
         awakenScrollBars(0,false);
     }
@@ -824,7 +852,7 @@ View& View::setVerticalScrollBarEnabled(bool verticalScrollBarEnabled){
     getScrollCache();
     if (isVerticalScrollBarEnabled() != verticalScrollBarEnabled) {
         mViewFlags ^= SCROLLBARS_VERTICAL;
-        //computeOpaqueFlags();
+        computeOpaqueFlags();
         resolvePadding();
         awakenScrollBars(0,false);
     }
@@ -988,7 +1016,7 @@ int View::getVerticalScrollbarPosition()const{
 View& View::setVerticalScrollbarPosition(int position){
     if (mVerticalScrollbarPosition != position) {
         mVerticalScrollbarPosition = position;
-        //computeOpaqueFlags();
+        computeOpaqueFlags();
         resolvePadding();
     }
     return *this;
@@ -1603,7 +1631,7 @@ void View::draw(Canvas&canvas){
         bottom += getBottomPaddingOffset();
     }
 
-    float fadeHeight = getScrollCache()->fadingEdgeLength;
+    const float fadeHeight = getScrollCache()->fadingEdgeLength;
     int length = (int) fadeHeight;
 
     // clip the fade length if top and bottom fades overlap
@@ -1638,6 +1666,7 @@ void View::draw(Canvas&canvas){
     dispatchDraw(canvas);
 
     // Step 5, draw the fade effect and restore layers
+    LOGV("drawTB=%d,%d drawLR=%d,%d fadeHeight=%f length=%d",drawTop,drawBottom,drawLeft,drawRight,fadeHeight,length);
     /*if (drawTop) {
         matrix.setScale(1, fadeHeight * topFadeStrength);
         matrix.postTranslate(left, top);
@@ -3532,16 +3561,11 @@ View* View::findUserSetNextFocus(View*root,int direction)const{
     case FOCUS_FORWARD:
          if (mNextFocusForwardId==NO_ID) return nullptr;
             return findViewInsideOutShouldExist(root, mNextFocusForwardId);
-    /*case FOCUS_BACKWARD: {
-         if (mID == -1) return nullptr;
-              int id = mID;
-              return root.findViewByPredicateInsideOut(this, new Predicate<View>() {
-                    @Override
-                    public boolean test(View t) {
-                        return t.mNextFocusForwardId == id;
-                    }
-                });
-            }*/
+    case FOCUS_BACKWARD: 
+         if (mID == NO_ID) return nullptr;
+         return root->findViewByPredicateInsideOut((View*)this,[this](const View*v) {
+               return v->mNextFocusForwardId == mID;
+         });
      }
      return nullptr;
 }
@@ -3551,11 +3575,11 @@ View*View::findUserSetNextKeyboardNavigationCluster(View*root,int direction)cons
     case FOCUS_FORWARD:
         if (mNextClusterForwardId == NO_ID) return nullptr;
             return findViewInsideOutShouldExist(root, mNextClusterForwardId);
-    case FOCUS_BACKWARD: {
+    case FOCUS_BACKWARD: 
         if (mID == NO_ID) return nullptr;
-            //const int id = mID;
-        return nullptr;//root->findViewByPredicateInsideOut(this,(Predicate<View>) t -> t.mNextClusterForwardId == id);
-       }
+        return root->findViewByPredicateInsideOut((View*)this,[this](const View*v){ 
+            return v->mNextClusterForwardId == mID;
+        });
     }
     return nullptr;
 }
