@@ -137,7 +137,7 @@ int DrawableWrapper::getChangingConfigurations()const{
                 | mDrawable->getChangingConfigurations();
 }
 
-void DrawableWrapper::onBoundsChange(const RECT&bounds){
+void DrawableWrapper::onBoundsChange(const Rect&bounds){
     if(mDrawable)
         mDrawable->setBounds(bounds);
 }

@@ -41,7 +41,7 @@ int KeyboardView::getKeyButton(int px,int py){
         Keyboard::KeyRow& row=kbd->getKeyRow(i);
         for(int j=0;j<row.size();j++){
             Keyboard::Key&k=row[j];
-            RECT r=RECT::Make(k.x,k.y,k.width,k.height);
+            Rect r=Rect::Make(k.x,k.y,k.width,k.height);
             if(r.contains(px,py))return (i<<16)|j;
         } 
     }
@@ -59,7 +59,7 @@ void KeyboardView::invalidateKey(int row,int col){
     Keyboard::KeyRow&keyrow=kbd->getKeyRow(row);
     if(col<0||col>=keyrow.size())return;
     Keyboard::Key&k=keyrow[col];
-    RECT r=RECT::Make(k.x,k.y,k.width,k.height);
+    Rect r=Rect::Make(k.x,k.y,k.width,k.height);
     LOGV("====btn[%d,%d](%d,%d,%d,%d)",row,col,r.x,r.y,r.width,r.height);
     invalidate(&r);
 }
@@ -81,7 +81,7 @@ void KeyboardView::onDraw(Canvas&canvas){
          for(int j=0;j<row.size();j++){
              const Keyboard::Key& k=row[j];
              canvas.set_color((kcol==j&&krow==i)?0xFF444444:0xFFAAAAAA);
-             RECT rect=RECT::Make(k.x,k.y,k.width,k.height);
+             Rect rect=Rect::Make(k.x,k.y,k.width,k.height);
              canvas.rectangle(rect);
              canvas.fill();
              LOGV("btn[%d,%d]=(%d,%d,%d,%d) %s  textColor=%x",i,j,k.x,k.y,k.width,k.height,k.label.c_str());

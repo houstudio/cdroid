@@ -876,7 +876,7 @@ void HorizontalScrollView::computeScroll(){
         }
 }
 
-bool HorizontalScrollView::scrollToChildRect(RECT rect, bool immediate){
+bool HorizontalScrollView::scrollToChildRect(Rect rect, bool immediate){
     int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
     bool scroll = delta != 0;
     if (scroll) {
@@ -889,7 +889,7 @@ bool HorizontalScrollView::scrollToChildRect(RECT rect, bool immediate){
     return scroll;
 }
 
-int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(RECT& rect){
+int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
     if (getChildCount() == 0) return 0;
 
     int width = getWidth();
@@ -981,7 +981,7 @@ bool HorizontalScrollView::onRequestFocusInDescendants(int direction,Rect*previo
     return nextFocus->requestFocus(direction,previouslyFocusedRect);
 }
 
-bool HorizontalScrollView::requestChildRectangleOnScreen(View* child, RECT rectangle,bool immediate){
+bool HorizontalScrollView::requestChildRectangleOnScreen(View* child, Rect rectangle,bool immediate){
      rectangle.offset(child->getLeft() - child->getScrollX(),
             child->getTop() - child->getScrollY());
 

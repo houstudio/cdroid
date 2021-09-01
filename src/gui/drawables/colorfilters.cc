@@ -6,7 +6,7 @@ ColorMatrixColorFilter::ColorMatrixColorFilter(const float(&v)[20]){
     mCM.set(v);
 }
 
-void ColorMatrixColorFilter::apply(Canvas&canvas,const RECT&rect){
+void ColorMatrixColorFilter::apply(Canvas&canvas,const Rect&rect){
 }
 
 PorterDuffColorFilter::PorterDuffColorFilter(int color,int mode){
@@ -14,7 +14,7 @@ PorterDuffColorFilter::PorterDuffColorFilter(int color,int mode){
     mMode=mode;
 }
 
-void PorterDuffColorFilter::apply(Canvas&canvas,const RECT&rect){
+void PorterDuffColorFilter::apply(Canvas&canvas,const Rect&rect){
     canvas.set_operator((Cairo::Context::Operator)mMode);//2,5(6,7),8,9
     canvas.set_color(mColor);
     canvas.rectangle(rect.x,rect.y,rect.width,rect.height);
@@ -36,7 +36,7 @@ int PorterDuffColorFilter::getMode()const{
     return mMode;
 }
 
-void LightingColorFilter::apply(Canvas&canvas,const RECT&rect){
+void LightingColorFilter::apply(Canvas&canvas,const Rect&rect){
 
 }
 

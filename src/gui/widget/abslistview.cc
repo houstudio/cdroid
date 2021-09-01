@@ -494,7 +494,7 @@ void AbsListView::positionSelector(int position, View* sel, bool manageHotspot, 
         mSelectorPosition = position;
     }
 
-    RECT&selectorRect = mSelectorRect;
+    Rect&selectorRect = mSelectorRect;
     selectorRect.set(sel->getLeft(), sel->getTop(), sel->getWidth(), sel->getHeight());
     /*if (sel instanceof SelectionBoundsAdjuster) {
         ((SelectionBoundsAdjuster)sel).adjustListItemSelectionBounds(selectorRect);
@@ -542,7 +542,7 @@ void AbsListView::positionSelectorLikeTouch(int position, View* sel, float x, fl
 
 void AbsListView::positionSelectorLikeFocus(int position, View* sel) {
     if (mSelector != nullptr && mSelectorPosition != position && position != INVALID_POSITION) {
-        RECT bounds = mSelectorRect;
+        Rect bounds = mSelectorRect;
         float x = (bounds.x+bounds.width)/2;//exactCenterX();
         float y = (bounds.y+bounds.height)/2;//exactCenterY();
         positionSelector(position, sel, true, x, y);
@@ -793,7 +793,7 @@ void AbsListView::setSelector(Drawable*sel) {
         unscheduleDrawable(*mSelector);
     }
     mSelector = sel;
-    RECT padding;
+    Rect padding;
     sel->getPadding(padding);
     mSelectionLeftPadding = padding.x;
     mSelectionTopPadding = padding.y;
@@ -807,7 +807,7 @@ void AbsListView::setSelector(const std::string&resid) {
 
 }
 
-void AbsListView::getFocusedRect(RECT& r){
+void AbsListView::getFocusedRect(Rect& r){
     View* view = getSelectedView();
     if (view && view->getParent() == this) {
         // the focused rectangle of the selected view offset into the
@@ -901,7 +901,7 @@ void AbsListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     if (mSelector == nullptr) {
         useDefaultSelector();
     }
-    RECT& listPadding = mListPadding;
+    Rect& listPadding = mListPadding;
     listPadding.x = mSelectionLeftPadding + mPaddingLeft;
     listPadding.y = mSelectionTopPadding + mPaddingTop;
     listPadding.width = mSelectionRightPadding + mPaddingRight;
@@ -1260,7 +1260,7 @@ void AbsListView::keyPressed() {
     }
 
     Drawable* selector = mSelector;
-    RECT selectorRect = mSelectorRect;
+    Rect selectorRect = mSelectorRect;
     LOGD("focused=%d touchModeDrawsInPressedState=%d",isFocused(),touchModeDrawsInPressedState());
     if (selector != nullptr && (isFocused() || touchModeDrawsInPressedState())
             && !selectorRect.empty()) {
@@ -1657,7 +1657,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     int firstTop = getChildAt(0)->getTop();
     int lastBottom = getChildAt(childCount - 1)->getBottom();
 
-    RECT listPadding = mListPadding;
+    Rect listPadding = mListPadding;
 
     // "effective padding" In this case is the amount of padding that affects
     // how much space should not be filled by items. If we don't clip to padding
@@ -1948,7 +1948,7 @@ void AbsListView::dispatchSetPressed(bool pressed) {
 }
 
 int AbsListView::pointToPosition(int x, int y) {
-    RECT frame;
+    Rect frame;
     int count = getChildCount();
     for (int i = count - 1; i >= 0; i--) {
         View* child = getChildAt(i);
@@ -2452,7 +2452,7 @@ void AbsListView::invalidateTopGlow() {
     int top = clipToPadding ? mPaddingTop : 0;
     int left = clipToPadding ? mPaddingLeft : 0;
     int width = clipToPadding ? getWidth() - mPaddingRight-mPaddingLeft : getWidth();
-    RECT rect=RECT::Make(left,top,width,mEdgeGlowTop->getMaxHeight());
+    Rect rect=Rect::Make(left,top,width,mEdgeGlowTop->getMaxHeight());
     invalidate(&rect);
 }
 
@@ -2463,7 +2463,7 @@ void AbsListView::invalidateBottomGlow() {
     int bottom = clipToPadding ? getHeight() - mPaddingBottom : getHeight();
     int left = clipToPadding ? mPaddingLeft : 0;
     int width = clipToPadding ? getWidth() - mPaddingRight-mPaddingLeft : getWidth();
-    RECT rect=RECT::Make(left,bottom-mEdgeGlowBottom->getMaxHeight(),width,mEdgeGlowBottom->getMaxHeight());
+    Rect rect=Rect::Make(left,bottom-mEdgeGlowBottom->getMaxHeight(),width,mEdgeGlowBottom->getMaxHeight());
     invalidate(&rect);
 }
 

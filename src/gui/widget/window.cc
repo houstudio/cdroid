@@ -249,7 +249,7 @@ bool Window::performFocusNavigation(KeyEvent& event){
     if (direction != -1){
         ViewGroup*mView=(ViewGroup*)this;
         View* focused = mView->findFocus();
-	RECT& mTempRect=mRectOfFocusedView;
+        Rect& mTempRect=mRectOfFocusedView;
         if (focused != nullptr) {
             View* v = mView->focusSearch(focused,direction);
             LOGV("mView=%p focused=%p:%d v=%p",mView,focused,focused->getId(),v);

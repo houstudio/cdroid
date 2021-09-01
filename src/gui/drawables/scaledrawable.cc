@@ -55,9 +55,9 @@ bool ScaleDrawable::onLevelChange(int level) {
     return true;
 }
 
-void ScaleDrawable::onBoundsChange(const RECT& bounds){
+void ScaleDrawable::onBoundsChange(const Rect& bounds){
     Drawable*d = getDrawable();
-    RECT r;
+    Rect r;
     const bool min = mState->mUseIntrinsicSizeAsMin;
     const int level = getLevel();
 

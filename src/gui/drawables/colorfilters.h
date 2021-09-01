@@ -27,7 +27,7 @@ typedef TintMode PorterDuffMode;
 
 class ColorFilter{
 public:
-    virtual void apply(Canvas&canvas,const RECT&)=0;
+    virtual void apply(Canvas&canvas,const Rect&)=0;
 };
 
 class ColorMatrixColorFilter:public ColorFilter{
@@ -35,7 +35,7 @@ protected:
     ColorMatrix mCM;
 public:    
     ColorMatrixColorFilter(const float(&v)[20]);
-    void apply(Canvas&canvas,const RECT&)override;
+    void apply(Canvas&canvas,const Rect&)override;
 };
 
 class PorterDuffColorFilter:public ColorFilter{
@@ -44,7 +44,7 @@ protected:
     int mMode;
 public:
     PorterDuffColorFilter(int color,int mode);
-    void apply(Canvas&canvas,const RECT&)override;
+    void apply(Canvas&canvas,const Rect&)override;
     void setColor(int c);
     void setMode(int m);
     int getColor()const;
@@ -61,7 +61,7 @@ protected:
     int mAdd;
 public:
     LightingColorFilter(int mul,int add);
-    void apply(Canvas&canvas,const RECT&)override;
+    void apply(Canvas&canvas,const Rect&)override;
 };
 }//end namespace
 

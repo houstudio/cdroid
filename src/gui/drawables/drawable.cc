@@ -24,7 +24,7 @@ Drawable::~Drawable(){
     delete mColorFilter;
 }
 
-void Drawable::setBounds(const RECT&r){
+void Drawable::setBounds(const Rect&r){
     setBounds(r.x,r.y,r.width,r.height); 
 }
 
@@ -35,12 +35,16 @@ void Drawable::setBounds(int x,int y,int w,int h){
     }
 }
 
-bool Drawable::getPadding(RECT&padding){
+bool Drawable::getPadding(Rect&padding){
     padding.set(0,0,0,0);
     return false;
 }
 
-const RECT&Drawable::getBounds()const{
+const Rect&Drawable::getBounds()const{
+    return mBounds;
+}
+
+Rect Drawable::getDirtyBounds(){
     return mBounds;
 }
 

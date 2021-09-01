@@ -8,7 +8,7 @@ class TabWidget:public LinearLayout{
 public:
     DECLARE_UIEVENT(void,OnTabSelectionChanged,int,bool);
 private:
-    RECT mBounds;
+    Rect mBounds;
     OnTabSelectionChanged mSelectionChangedListener;
     int mSelectedTab = -1;
 

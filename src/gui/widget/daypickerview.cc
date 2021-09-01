@@ -96,7 +96,7 @@ long DayPickerView::getDate() {
     return mSelectedDay.getTimeInMillis();
 }
 
-bool DayPickerView::getBoundsForDate(long timeInMillis,RECT& outBounds) {
+bool DayPickerView::getBoundsForDate(long timeInMillis,Rect& outBounds) {
     int position = getPositionFromDay(timeInMillis);
     if (position != mViewPager->getCurrentItem()) {
         return false;

@@ -27,7 +27,7 @@ private:
     std::shared_ptr<DrawableWrapperState>mState;
     void updateLocalState();
 protected:
-    void onBoundsChange(const RECT& bounds)override;
+    void onBoundsChange(const Rect& bounds)override;
     bool onLevelChange(int level)override;
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
     DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);

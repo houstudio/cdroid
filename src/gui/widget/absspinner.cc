@@ -215,7 +215,7 @@ View* AbsSpinner::getSelectedView() {
 int AbsSpinner::pointToPosition(int x, int y) {
     int count = getChildCount();
     for (int i = count - 1; i >= 0; i--) {
-        RECT frame;
+        Rect frame;
         View* child = getChildAt(i);
         if (child->getVisibility() == View::VISIBLE) {
             child->getHitRect(frame);

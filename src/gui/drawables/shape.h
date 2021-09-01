@@ -18,10 +18,10 @@ protected:
     bool bUseLevel;
     std::vector<int>mGradientColors;//size 0:nofill, 1:solid fill 2,3:gradient fill
     RefPtr<Pattern>mPaint;//used to fill
-    void rebuildPattern(const RECT&r);
+    void rebuildPattern(const Rect&r);
     virtual void onResize(int width,int height){}
     void fill_stroke(Canvas&canvas);
-    virtual const RECT&rect()const=0;
+    virtual const Rect&rect()const=0;
     Shape(const Shape&o);
 public:
     Shape();
@@ -46,10 +46,10 @@ public:
 
 class RectShape:public Shape{
 private:
-    RECT mRect;
+    Rect mRect;
 protected:
     RectShape(const RectShape&o);
-    const RECT& rect()const override{return mRect;}
+    const Rect& rect()const override{return mRect;}
     void onResize(int width,int height)override;
 public:
     RectShape();
@@ -79,14 +79,14 @@ class RoundRectShape:public RectShape{
 private:
     std::vector<int>mOuterRadii;
     std::vector<int>mInnerRadii;
-    RECT mInset;
-    RECT mInnerRect;
+    Rect mInset;
+    Rect mInnerRect;
 protected:
     RoundRectShape(const RoundRectShape&o);
     void onResize(int w, int h)override;
 public:
     RoundRectShape();
-    RoundRectShape(const std::vector<int>&outRadii,const RECT&inset,const std::vector<int>&innerRadii);
+    RoundRectShape(const std::vector<int>&outRadii,const Rect&inset,const std::vector<int>&innerRadii);
     void setRadius(int radius);
     void draw(Canvas&canvas)override;
     Shape*clone()const override;

@@ -31,7 +31,7 @@ private:
 
     float mHorizontalScrollFactor;
     int mActivePointerId;
-    RECT mTempRect;
+    Rect mTempRect;
 private:
     static constexpr float MAX_SCROLL_FACTOR =0.5f;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
@@ -50,7 +50,7 @@ private:
     bool isWithinDeltaOfScreen(View* descendant, int delta);
     void doScrollX(int delta);
     void scrollToChild(View* child);
-    bool scrollToChildRect(RECT rect, bool immediate);
+    bool scrollToChildRect(Rect rect, bool immediate);
     bool isViewDescendantOf(View* child, View* parent);
 protected:
     float getLeftFadingEdgeStrength();
@@ -62,7 +62,7 @@ protected:
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
-    int computeScrollDeltaToGetChildRectOnScreen(RECT& rect);
+    int computeScrollDeltaToGetChildRectOnScreen(Rect& rect);
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void onSizeChanged(int w, int h, int oldw, int oldh);
@@ -94,7 +94,7 @@ public:
     void smoothScrollTo(int x, int y);
     void computeScroll();
     void requestChildFocus(View* child, View* focused)override;
-    bool requestChildRectangleOnScreen(View* child, RECT rectangle,bool immediate);
+    bool requestChildRectangleOnScreen(View* child, Rect rectangle,bool immediate);
     void requestLayout();
     void fling(int velocityX);
     void scrollTo(int x, int y);

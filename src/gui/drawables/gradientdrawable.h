@@ -56,7 +56,7 @@ private:
        float mStrokeDashGap = 0.0f;
        float mRadius = 0.0f;
        std::vector<float>mRadiusArray;/**/
-       RECT mPadding;
+       Rect mPadding;
        int mWidth=-1;
        int mHeight=-1;
        float mInnerRadiusRatio;
@@ -64,7 +64,7 @@ private:
        int mInnerRadius=-1;
        int mThickness;
        bool mDither = false;
-       RECT mOpticalInsets;
+       Rect mOpticalInsets;
        float mCenterX,mCenterY;
        float mGradientRadius = 0.5f;
        int mGradientRadiusType;
@@ -102,8 +102,8 @@ private:
        void computeOpacity();
     };
     int mAlpha;
-    RECT mRect;
-    RECT mPadding;
+    Rect mRect;
+    Rect mPadding;
     bool mPathIsDirty;
     bool mGradientIsDirty;
     bool mMutated;
@@ -118,14 +118,14 @@ private:
     GradientDrawable(std::shared_ptr<GradientState>state);
     void updateLocalState();
 protected:
-    void onBoundsChange(const RECT& r)override;
+    void onBoundsChange(const Rect& r)override;
     bool onLevelChange(int level)override;
     bool onStateChange(const std::vector<int>& stateSet);
 public:
     GradientDrawable();
     GradientDrawable(Orientation orientation,const std::vector<int>&colors);
     static bool isOpaque(int color){return ((color>>24)&0xFF)==0xFF;}
-    bool getPadding(RECT& padding);
+    bool getPadding(Rect& padding);
     void setCornerRadii(const std::vector<float>& radii);
     const std::vector<float>&getCornerRadii()const;
     void setCornerRadius(float radius);

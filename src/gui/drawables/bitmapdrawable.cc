@@ -227,7 +227,7 @@ void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
     mDstRectAndInsetsDirty = false;
 }
 
-void BitmapDrawable::onBoundsChange(const RECT&r){
+void BitmapDrawable::onBoundsChange(const Rect&r){
     mDstRectAndInsetsDirty = true;
 }
 

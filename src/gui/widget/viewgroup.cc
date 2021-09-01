@@ -1326,7 +1326,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     }
 }
 
-void ViewGroup::invalidateChild(View*child,RECT&dirty){
+void ViewGroup::invalidateChild(View*child,Rect&dirty){
 
     const bool drawAnimation = (child->mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0;
 
@@ -1542,7 +1542,7 @@ bool ViewGroup::onRequestFocusInDescendants(int direction,Rect* previouslyFocuse
     return false;
 }
 
-bool ViewGroup::requestChildRectangleOnScreen(View* child,RECT& rectangle, bool immediate) {
+bool ViewGroup::requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate) {
     return false;
 }
 
@@ -1612,15 +1612,15 @@ View* ViewGroup::focusSearch(View* focused, int direction)const{
     return nullptr;
 }
 
-void ViewGroup::offsetDescendantRectToMyCoords(View* descendant,RECT& rect)const{
+void ViewGroup::offsetDescendantRectToMyCoords(View* descendant,Rect& rect)const{
     offsetRectBetweenParentAndChild(descendant, rect, true, false);
 }
 
-void ViewGroup::offsetRectIntoDescendantCoords(View* descendant, RECT& rect)const{
+void ViewGroup::offsetRectIntoDescendantCoords(View* descendant, Rect& rect)const{
     offsetRectBetweenParentAndChild(descendant, rect, false, false);
 }
 
-void ViewGroup::offsetRectBetweenParentAndChild(View* descendant,RECT&rect,bool offsetFromChildToParent, bool clipToBounds)const{
+void ViewGroup::offsetRectBetweenParentAndChild(View* descendant,Rect&rect,bool offsetFromChildToParent, bool clipToBounds)const{
     // already in the same coord system :)
     if (descendant == this) return;
 

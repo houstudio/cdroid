@@ -128,7 +128,7 @@ static inline float sdot(float a,float b,float c,float d){
 
 void RotateDrawable::draw(Canvas& canvas) {
     Drawable*d = getDrawable();
-    const RECT& bounds = getBounds();
+    const Rect& bounds = getBounds();
     int w = bounds.width;
     int h = bounds.height;
     float px = mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX;

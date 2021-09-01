@@ -4,7 +4,7 @@ namespace cdroid{
 class RoundScrollbarRenderer{
 private:
     View* mParent;
-    RECT mRect;
+    Rect mRect;
     int mThumbColor;
     int mTrackColor;
     static float clamp(float val, float min, float max);
@@ -13,7 +13,7 @@ private:
     void setTrackColor(int trackColor);
 public:
     RoundScrollbarRenderer(View* parent);
-    void drawRoundScrollbars(Canvas& canvas, float alpha,const RECT& bounds);
+    void drawRoundScrollbars(Canvas& canvas, float alpha,const Rect& bounds);
 };
 }//namespace
 #define __ROUND_SCROLLBAR_RENDERER__

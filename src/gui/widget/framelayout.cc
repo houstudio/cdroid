@@ -25,7 +25,7 @@ void FrameLayout::setForegroundGravity(int foregroundGravity){
         // calling get* again here because the set above may apply default constraints
         Drawable* foreground = getForeground();
         if (getForegroundGravity() == Gravity.FILL && foreground != null) {
-            RECT padding;
+            Rect padding;
             if (foreground.getPadding(padding)) {
                 mForegroundPaddingLeft = padding.x;
                 mForegroundPaddingTop = padding.y;

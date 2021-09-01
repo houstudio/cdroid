@@ -23,8 +23,8 @@ protected:
     int mSelectionTopPadding;
     int mSelectionRightPadding;
     int mSelectionBottomPadding;
-    RECT mSpinnerPadding;
-    RECT mTouchFrame;
+    Rect mSpinnerPadding;
+    Rect mTouchFrame;
     void initAbsSpinner();
     void resetList();
     void recycleAllViews();

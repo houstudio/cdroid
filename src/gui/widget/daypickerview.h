@@ -52,7 +52,7 @@ public:
     void setDate(long timeInMillis);
     void setDate(long timeInMillis, bool animate);
     long getDate();
-    bool getBoundsForDate(long timeInMillis,RECT& outBounds);
+    bool getBoundsForDate(long timeInMillis,Rect& outBounds);
     void setFirstDayOfWeek(int firstDayOfWeek);
     int getFirstDayOfWeek();
     void setMinDate(long timeInMillis);
@@ -97,7 +97,7 @@ public:
     void setSelectedDay(Calendar&);
     int getFirstDayOfWeek();
     void setFirstDayOfWeek(int);
-    bool getBoundsForDate(Calendar&,RECT&);
+    bool getBoundsForDate(Calendar&,Rect&);
     bool isViewFromObject(View* view, void* object)override;
     void* instantiateItem(ViewGroup*container, int position)override;
     void destroyItem(ViewGroup* container, int position, void* object);

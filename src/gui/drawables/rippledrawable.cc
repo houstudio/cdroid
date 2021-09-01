@@ -212,7 +212,7 @@ int RippleDrawable::getRadius()const{
 
 bool RippleDrawable::setDrawableByLayerId(int id, Drawable* drawable){
     if (LayerDrawable::setDrawableByLayerId(id, drawable)) {
-        if (id == 0/*R.id.mask*/) {
+        if (id == MASK_LAYER_ID/*R.id.mask*/) {
             mMask = drawable;
             mHasValidMask = false;
         }
@@ -237,17 +237,9 @@ void RippleDrawable::tryRippleEnter(){
     }
 
     if (mRipple == nullptr) {
-        float x;
-        float y;
-        if (mHasPending) {
-            mHasPending = false;
-            x = mPendingX;
-            y = mPendingY;
-        } else {
-            x = mHotspotBounds.centerX();
-            y = mHotspotBounds.centerY();
-        }
-
+        const float x = mHasPending ? mPendingX:mHotspotBounds.centerX();
+        const float y = mHasPending ? mPendingY:mHotspotBounds.centerY();
+        mHasPending = false;
         mRipple = new RippleForeground(this, mHotspotBounds, x, y, mForceSoftware);
     }
 
@@ -267,7 +259,20 @@ void RippleDrawable::clearHotspots(){
 }
 
 void RippleDrawable::draw(Canvas& canvas){
+    pruneRipples();
 
+    // Clip to the dirty bounds, which will be the drawable bounds if we
+    // have a mask or content and the ripple bounds if we're projecting.
+    Rect bounds = getDirtyBounds();
+    canvas.save();
+    if (isBounded()) {
+        canvas.rectangle(bounds.x,bounds.y,bounds.width,bounds.height);
+        canvas.clip();
+    }
+
+    drawContent(canvas);
+    drawBackgroundAndRipples(canvas);
+    canvas.restore();
 }
 
 void RippleDrawable::invalidateSelf() {
@@ -282,6 +287,96 @@ void RippleDrawable::invalidateSelf(bool invalidateMask) {
     }
 }
 
+void RippleDrawable::pruneRipples() {
+    int remaining = 0;
+
+    // Move remaining entries into pruned spaces.
+    std::vector<RippleForeground*>&ripples = mExitingRipples;
+    const int count = mExitingRipples.size();
+    for (int i = 0; i < count; i++) {
+         if (!ripples[i]->hasFinishedExit()) {
+            ripples[remaining++] = ripples[i];
+        }
+    }
+    
+    // Null out the remaining entries.
+    for (int i = remaining; i < count; i++) {
+        delete ripples[i];
+        ripples[i] = nullptr;
+    }
+}
+
+void RippleDrawable::drawContent(Canvas& canvas) {
+    // Draw everything except the mask.
+    std::vector<ChildDrawable*> &array = mLayerState->mChildren;
+    const int count = mLayerState->mChildren.size();
+    for (int i = 0; i < count; i++) {
+        if (array[i]->mId != MASK_LAYER_ID) {
+            array[i]->mDrawable->draw(canvas);
+        }
+    }
+}
+
+void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
+    RippleForeground* active = mRipple;
+    if (active == nullptr && mExitingRipples.size() <= 0 && (mBackground == nullptr || !mBackground->isVisible())) {
+        // Move along, nothing to draw here.
+        return;
+    }
+
+    const float x = mHotspotBounds.centerX();
+    const float y = mHotspotBounds.centerY();
+    canvas.translate(x, y);
+
+    if (mBackground  && mBackground->isVisible()) {
+        mBackground->draw(canvas, 1.f);
+    }
+
+    for (auto ripple:mExitingRipples) {
+        ripple->draw(canvas,1.f);
+    }
+
+    if (active) active->draw(canvas,1.f);
+
+    canvas.translate(-x, -y);
+}
+
+void RippleDrawable::drawMask(Canvas& canvas) {
+    mMask->draw(canvas);
+}
+
+Rect RippleDrawable::getDirtyBounds() {
+    if (!isBounded()) {
+        Rect drawingBounds = mDrawingBounds;
+        Rect dirtyBounds = mDirtyBounds;
+        dirtyBounds=drawingBounds;
+        drawingBounds.set(0,0,0,0);
+
+        int cX = (int) mHotspotBounds.centerX();
+        int cY = (int) mHotspotBounds.centerY();
+        Rect rippleBounds;
+
+        std::vector<RippleForeground*>& activeRipples = mExitingRipples;
+        const int N = mExitingRipples.size();
+        for (int i = 0; i < N; i++) {
+            activeRipples[i]->getBounds(rippleBounds);
+            rippleBounds.offset(cX, cY);
+            drawingBounds.Union(rippleBounds);
+        }
+
+        if (mBackground) {
+            mBackground->getBounds(rippleBounds);
+            rippleBounds.offset(cX, cY);
+            drawingBounds.Union(rippleBounds);
+        }
+
+        dirtyBounds.Union(drawingBounds);
+        dirtyBounds.Union(LayerDrawable::getDirtyBounds());
+        return dirtyBounds;
+    } else {
+        return getBounds();
+    }
+}
 Drawable*RippleDrawable::inflate(Context*ctx,const AttributeSet&atts){
     RippleDrawable*rd=nullptr;
     return rd;
@@ -289,6 +384,6 @@ Drawable*RippleDrawable::inflate(Context*ctx,const AttributeSet&atts){
 
 void RippleDrawable::updateLocalState() {
     // Initialize from constant state.
-    mMask = findDrawableByLayerId(0);//R.id.mask);
+    mMask = findDrawableByLayerId(MASK_LAYER_ID);//R.id.mask);
 }
 }

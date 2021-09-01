@@ -844,7 +844,7 @@ bool ScrollView::onNestedFling(View* target, float velocityX, float velocityY, b
     return false;
 }
 
-bool ScrollView::scrollToChildRect(RECT& rect, bool immediate){
+bool ScrollView::scrollToChildRect(Rect& rect, bool immediate){
     int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
      bool scroll = delta != 0;
     if (scroll) {
@@ -857,7 +857,7 @@ bool ScrollView::scrollToChildRect(RECT& rect, bool immediate){
     return scroll;
 }
 
-int ScrollView::computeScrollDeltaToGetChildRectOnScreen(RECT& rect){
+int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
      if (getChildCount() == 0) return 0;
 
         int height = getHeight();
@@ -948,7 +948,7 @@ bool ScrollView::onRequestFocusInDescendants(int direction,Rect* previouslyFocus
     return nextFocus->requestFocus(direction, previouslyFocusedRect);
 }
 
-bool ScrollView::requestChildRectangleOnScreen(View* child, RECT& rectangle, bool immediate){
+bool ScrollView::requestChildRectangleOnScreen(View* child, Rect& rectangle, bool immediate){
     rectangle.offset(child->getLeft() - child->getScrollX(),
             child->getTop() - child->getScrollY());
     return scrollToChildRect(rectangle, immediate);

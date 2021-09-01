@@ -37,8 +37,8 @@ public:
     int mGravity;
     bool mInsidePadding;
     bool mBoundsChanged;
-    RECT mSelfBounds;
-    RECT mOverlayBounds;
+    Rect mSelfBounds;
+    Rect mOverlayBounds;
 public:
     ForegroundInfo(){
         mInsidePadding=mBoundsChanged=true;
@@ -82,8 +82,8 @@ public:
     long fadeStartTime;
     int state = OFF;
     int mLastColor;
-    RECT mScrollBarBounds;
-    RECT mScrollBarTouchBounds;
+    Rect mScrollBarBounds;
+    Rect mScrollBarTouchBounds;
 
     int mScrollBarDraggingState = NOT_DRAGGING;
     int mScrollBarDraggingPos;
@@ -865,7 +865,7 @@ View& View::setVerticalScrollBarEnabled(bool verticalScrollBarEnabled){
     return *this;
 }
 
-void View::getVerticalScrollBarBounds(RECT*bounds,RECT*touchBounds){
+void View::getVerticalScrollBarBounds(Rect*bounds,Rect*touchBounds){
     if (mRoundScrollbarRenderer == nullptr) {
         getStraightVerticalScrollBarBounds(bounds,touchBounds);
     } else {
@@ -873,8 +873,8 @@ void View::getVerticalScrollBarBounds(RECT*bounds,RECT*touchBounds){
     }
 }
 
-void View::getHorizontalScrollBarBounds(RECT*drawBounds,RECT*touchBounds){
-    RECT* bounds = drawBounds != nullptr ? drawBounds : touchBounds;
+void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
+    Rect* bounds = drawBounds != nullptr ? drawBounds : touchBounds;
     if (bounds == nullptr)return;
 
     int inside =~0;// (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
@@ -930,8 +930,8 @@ void View::setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled){
     }
 }
 
-void View::getStraightVerticalScrollBarBounds(RECT*drawBounds,RECT*touchBounds){
-    RECT*bounds = drawBounds != nullptr ? drawBounds : touchBounds;
+void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
+    Rect*bounds = drawBounds != nullptr ? drawBounds : touchBounds;
     if (bounds == nullptr) return;
     int inside =~0;// (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
     int size = getVerticalScrollbarWidth();
@@ -974,7 +974,7 @@ void View::getStraightVerticalScrollBarBounds(RECT*drawBounds,RECT*touchBounds){
     }
 }
 
-void View::getRoundVerticalScrollBarBounds(RECT* bounds){
+void View::getRoundVerticalScrollBarBounds(Rect* bounds){
     // Do not take padding into account as we always want the scrollbars
     // to hug the screen for round wearable devices.
     bounds->x = mScrollX;
@@ -1079,14 +1079,14 @@ bool View::isOnScrollbar(int x,int y){
     x += getScrollX();
     y += getScrollY();
     if (isVerticalScrollBarEnabled() && !isVerticalScrollBarHidden()) {
-        RECT& touchBounds = mScrollCache->mScrollBarTouchBounds;
+        Rect& touchBounds = mScrollCache->mScrollBarTouchBounds;
         getVerticalScrollBarBounds(nullptr,&touchBounds);
         if (touchBounds.contains(x,y)) {
             return true;
         }
     }
     if (isHorizontalScrollBarEnabled()) {
-        RECT& touchBounds = mScrollCache->mScrollBarTouchBounds;
+        Rect& touchBounds = mScrollCache->mScrollBarTouchBounds;
         getHorizontalScrollBarBounds(nullptr, &touchBounds);
         if (touchBounds.contains( x, y)) {
             return true;
@@ -1105,8 +1105,8 @@ bool View::isOnVerticalScrollbarThumb(int x,int y){
     if (isVerticalScrollBarEnabled() && !isVerticalScrollBarHidden()) {
         x += getScrollX();
         y += getScrollY();
-        RECT bounds = mScrollCache->mScrollBarBounds;
-        RECT touchBounds = mScrollCache->mScrollBarTouchBounds;
+        Rect bounds = mScrollCache->mScrollBarBounds;
+        Rect touchBounds = mScrollCache->mScrollBarTouchBounds;
         getVerticalScrollBarBounds(&bounds, &touchBounds);
         int range = computeVerticalScrollRange();
         int offset = computeVerticalScrollOffset();
@@ -1129,8 +1129,8 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
     if (isHorizontalScrollBarEnabled()) {
         x += getScrollX();
         y += getScrollY();
-        RECT bounds = mScrollCache->mScrollBarBounds;
-        RECT touchBounds = mScrollCache->mScrollBarTouchBounds;
+        Rect bounds = mScrollCache->mScrollBarBounds;
+        Rect touchBounds = mScrollCache->mScrollBarTouchBounds;
         getHorizontalScrollBarBounds(&bounds, &touchBounds);
         int range = computeHorizontalScrollRange();
         int offset = computeHorizontalScrollOffset();
@@ -1189,7 +1189,7 @@ void View::setScrollIndicators(int indicators,int mask) {
     }
 }
 
-void View::getScrollIndicatorBounds(RECT&out) {
+void View::getScrollIndicatorBounds(Rect&out) {
     out.x     = mScrollX;
     out.width = getWidth();
     out.y     = mScrollY;
@@ -1204,7 +1204,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
     if (dr == nullptr)
         return;// Scroll indicators aren't supported here.
 
-    RECT rect ;
+    Rect rect ;
     int h = dr->getIntrinsicHeight();
     int w = dr->getIntrinsicWidth();
 
@@ -1290,7 +1290,7 @@ void View::onDrawScrollBars(Canvas& canvas){
     // Fork out the scroll bar drawing for round wearable devices.
     if (mRoundScrollbarRenderer != nullptr) {
         if (drawVerticalScrollBar) {
-            RECT bounds = mScrollCache->mScrollBarBounds;
+            Rect bounds = mScrollCache->mScrollBarBounds;
             getVerticalScrollBarBounds(&bounds, nullptr);
             mRoundScrollbarRenderer->drawRoundScrollbars(
                 canvas, (float)mScrollCache->scrollBar->getAlpha() / 255.f, bounds);
@@ -1298,7 +1298,7 @@ void View::onDrawScrollBars(Canvas& canvas){
         }
         // Do not draw horizontal scroll bars for round wearable devices.
     } else if ( drawVerticalScrollBar || drawHorizontalScrollBar) {
-        RECT bounds;
+        Rect bounds;
         ScrollBarDrawable* scrollBar = mScrollCache->scrollBar;
         if (drawHorizontalScrollBar) {
             scrollBar->setParameters(computeHorizontalScrollRange(),
@@ -1476,8 +1476,8 @@ void View::onDrawForeground(Canvas& canvas){
     if(foreground){
         if (mForegroundInfo->mBoundsChanged) {
             mForegroundInfo->mBoundsChanged = false;
-            RECT& selfBounds = mForegroundInfo->mSelfBounds;
-            RECT& overlayBounds = mForegroundInfo->mOverlayBounds;
+            Rect& selfBounds = mForegroundInfo->mSelfBounds;
+            Rect& overlayBounds = mForegroundInfo->mOverlayBounds;
 
             if (mForegroundInfo->mInsidePadding) {
                 selfBounds.set(0, 0, getWidth(), getHeight());
@@ -1983,17 +1983,17 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
 void View::onDraw(Canvas&canvas){
 }
 
-const RECT View::getBound()const{
-    return RECT::Make(mLeft,mTop,mWidth,mHeight);
+const Rect View::getBound()const{
+    return Rect::Make(mLeft,mTop,mWidth,mHeight);
 }
 
-const RECT View::getDrawingRect()const{
-    RECT ret;
+const Rect View::getDrawingRect()const{
+    Rect ret;
     ret.set(mScrollX,mScrollY,mScrollX+getWidth(),mScrollY+getHeight());
     return ret;
 }
 
-void View::getFocusedRect(RECT&r){
+void View::getFocusedRect(Rect&r){
     r.set(mLeft,mTop,mWidth,mHeight);
 }
 
@@ -2341,11 +2341,11 @@ View& View::setSize(int w,int h){
     return *this;
 }
 
-const RECT View::getClientRect()const{
-    return RECT::Make(0,0,mWidth,mHeight);
+const Rect View::getClientRect()const{
+    return Rect::Make(0,0,mWidth,mHeight);
 }
 
-void View::getHitRect(RECT& outRect){
+void View::getHitRect(Rect& outRect){
     outRect.set(mLeft,mTop,mWidth,mHeight);
 }
 
@@ -2471,7 +2471,7 @@ View& View::setBackgroundDrawable(Drawable*background){
     }
     mBackground = background;
     if(mBackground!=nullptr){
-        RECT padding;
+        Rect padding;
         if(background->getPadding(padding)){
             setPadding(padding.x,padding.y,padding.width,padding.height);
         }
@@ -4543,7 +4543,7 @@ int View::getBaseline(){
     return 0;
 }
 
-void View::getDrawingRect(RECT& outRect) {
+void View::getDrawingRect(Rect& outRect) {
     outRect.x = mScrollX;
     outRect.y = mScrollY;
     outRect.width=mWidth;

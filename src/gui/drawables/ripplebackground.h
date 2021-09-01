@@ -16,7 +16,7 @@ protected:
 
     void invalidateSelf();
     void onHotspotBoundsChanged();
-    void onTargetRadiusChanged(float targetRadius);
+    virtual void onTargetRadiusChanged(float targetRadius);
 public:
     RippleComponent(RippleDrawable* owner,const Rect& bounds);
     void onBoundsChange();

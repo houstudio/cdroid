@@ -53,7 +53,7 @@ public:
     int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
     int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
     int mDrawablePadding;
-    RECT mCompoundRect;
+    Rect mCompoundRect;
 public:
     bool hasMetadata() {   return mDrawablePadding != 0 || mHasTintMode || mHasTint; }
     Drawables(Context*ctx){
@@ -604,7 +604,7 @@ int TextView::getMaxWidth()const{
 int TextView::getLineCount()const{
     return mLayout? mLayout->getLineCount() : 0;
 }
-int TextView::getLineBounds(int line, RECT&bounds) {
+int TextView::getLineBounds(int line, Rect&bounds) {
     int baseline = mLayout->getLineBounds(line, bounds);
 
     int voffset = getExtendedPaddingTop();
@@ -849,7 +849,7 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
             dr->mShowing[Drawables::BOTTOM]->setCallback(nullptr);
         }
         dr->mShowing[Drawables::BOTTOM] = bottom;
-        RECT compoundRect = dr->mCompoundRect;
+        Rect compoundRect = dr->mCompoundRect;
         std::vector<int>state = getDrawableState();
         if (left != nullptr) {
             left->setState(state);
@@ -1383,7 +1383,7 @@ void TextView::restartMarqueeIfNeeded(){
 void TextView::onDraw(Canvas& canvas) {
     restartMarqueeIfNeeded();
     View::onDraw(canvas);
-    RECT rcimg,rect=getClientRect();
+    Rect rcimg,rect=getClientRect();
     const int compoundPaddingLeft = getCompoundPaddingLeft();
     const int compoundPaddingTop = getCompoundPaddingTop();
     const int compoundPaddingRight = getCompoundPaddingRight();

@@ -26,7 +26,7 @@ namespace cdroid{
         mTrackColor=0xFF00FF00;
         mParent = parent;
     }
-    void RoundScrollbarRenderer::drawRoundScrollbars(Canvas&canvas, float alpha,const RECT&bounds) {
+    void RoundScrollbarRenderer::drawRoundScrollbars(Canvas&canvas, float alpha,const Rect&bounds) {
         alpha=0.5;
         if (alpha == 0)return;
         // Get information about the current scroll state of the parent view.

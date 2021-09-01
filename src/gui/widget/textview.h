@@ -99,7 +99,7 @@ protected:
     int mEditMode;//0--readonly 1--insert 2--replace
     int mCaretPos;
     bool mBlinkOn;
-    RECT mCaretRect;
+    Rect mCaretRect;
     Layout* mLayout;
     Layout* mHintLayout;
     std::wstring& getEditable();
@@ -171,7 +171,7 @@ public:
     int getMaxHeight()const;
     void setMaxHeight(int maxPixels);
     int getLineCount()const;
-    int getLineBounds(int line, RECT&bounds);
+    int getLineBounds(int line, Rect&bounds);
 
     void setCaretPos(int pos);
     bool moveCaret2Line(int line);

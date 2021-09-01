@@ -54,8 +54,8 @@ protected:
     };
     bool mSuspendChildInvalidation;
     bool mChildRequestedInvalidation;
-    void updateLayerBounds(const RECT& bounds);
-    void updateLayerBoundsInternal(const RECT& bounds);
+    void updateLayerBounds(const Rect& bounds);
+    void updateLayerBoundsInternal(const Rect& bounds);
     void suspendChildInvalidation();
     void resumeChildInvalidation();
     static int resolveGravity(int gravity, int width, int height,
@@ -69,12 +69,12 @@ private:
     std::vector<int>mPaddingB;
     bool refreshChildPadding(int i, ChildDrawable* r);
     void setLayerInsetInternal(int index, int l, int t, int r, int b, int s, int e);
-    void computeNestedPadding(RECT& padding);
-    void computeStackedPadding(RECT& padding);
+    void computeNestedPadding(Rect& padding);
+    void computeStackedPadding(Rect& padding);
     ChildDrawable* createLayer(Drawable* dr);
 protected:
     virtual LayerState* createConstantState(LayerState* state);
-    void onBoundsChange(const RECT& bounds)override;
+    void onBoundsChange(const Rect& bounds)override;
     bool onLevelChange(int level)override;
     bool onStateChange(const std::vector<int>& state)override;
 
@@ -128,7 +128,7 @@ public:
     int findIndexByLayerId(int id)const;
     Drawable* getDrawable(int index);
     void setDrawable(int index, Drawable* drawable);
-    bool getPadding(RECT& padding)override;
+    bool getPadding(Rect& padding)override;
     void setPadding(int left, int top, int right, int bottom);
     virtual void setPaddingMode(int mode);
     int getPaddingMode()const;

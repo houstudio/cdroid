@@ -38,8 +38,16 @@ private:
     long mEnterStartedAtMillis;
     bool mForceSoftware;
     float mStartRadius = 0;
+    std::vector<Animator*> mRunningSwAnimators;
+private:
+    float getCurrentX();
+    float getCurrentY();
+    void startSoftwareExit();
+    void startSoftwareEnter();
+    float getCurrentRadius();
 protected:
     void onTargetRadiusChanged(float targetRadius);
+    void clampStartingPosition();
 public:
     RippleForeground(RippleDrawable* owner,const Rect& bounds, float startingX, float startingY,
             bool forceSoftware);
@@ -50,6 +58,7 @@ public:
     void enter();
     void exit();
     void end();
+    void draw(Canvas&,float alpha);
 };
 
 }

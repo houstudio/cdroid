@@ -129,9 +129,9 @@ protected:
 
     int findMotionRow(int y)override;
     void setSelectionInt(int position);
-    void drawDivider(Canvas&canvas,const RECT&bounds, int childIndex);
-    void drawOverscrollHeader(Canvas&canvas, Drawable* drawable,RECT& bounds);
-    void drawOverscrollFooter(Canvas&canvas, Drawable* drawable,RECT& bounds);
+    void drawDivider(Canvas&canvas,const Rect&bounds, int childIndex);
+    void drawOverscrollHeader(Canvas&canvas, Drawable* drawable,Rect& bounds);
+    void drawOverscrollFooter(Canvas&canvas, Drawable* drawable,Rect& bounds);
 
     bool recycleOnMeasure();
     int lookForSelectablePositionAfter(int current, int position, bool lookDown);

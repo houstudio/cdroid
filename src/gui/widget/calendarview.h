@@ -25,7 +25,7 @@ public:
     void setDate(long date);
     /*get selected Date*/
     long getDate();
-    bool getBoundsForDate(long date,RECT& outBounds);
+    bool getBoundsForDate(long date,Rect& outBounds);
 };
 
 }//namespace

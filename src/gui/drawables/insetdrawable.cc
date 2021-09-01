@@ -45,9 +45,9 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> InsetDrawable::mutateCons
     return mState;
 }
 
-void InsetDrawable::onBoundsChange(const RECT&bounds){
-    RECT r=bounds;
-    RECT&mInset=mState->mInset;
+void InsetDrawable::onBoundsChange(const Rect&bounds){
+    Rect r=bounds;
+    Rect&mInset=mState->mInset;
     r.x += mInset.x;
     r.y += mInset.y;
     r.width -=(mInset.x + mInset.width);

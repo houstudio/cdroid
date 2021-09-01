@@ -423,7 +423,7 @@ void LayerDrawable::setDrawable(int index, Drawable* drawable){
     LayerDrawable::ChildDrawable* childDrawable =mLayerState->mChildren.at(index);
     if (childDrawable->mDrawable != nullptr) {
        if (drawable != nullptr) {
-           RECT bounds = childDrawable->mDrawable->getBounds();
+           Rect bounds = childDrawable->mDrawable->getBounds();
            drawable->setBounds(bounds);
        }
        childDrawable->mDrawable->setCallback(nullptr);
@@ -437,7 +437,7 @@ void LayerDrawable::setDrawable(int index, Drawable* drawable){
     refreshChildPadding(index, childDrawable);    
 }
 
-void LayerDrawable::computeNestedPadding(RECT& padding){
+void LayerDrawable::computeNestedPadding(Rect& padding){
     padding.set(0,0,0,0);
 
     // Add all the padding.
@@ -452,7 +452,7 @@ void LayerDrawable::computeNestedPadding(RECT& padding){
     }
 }
 
-void LayerDrawable::computeStackedPadding(RECT& padding){
+void LayerDrawable::computeStackedPadding(Rect& padding){
     const int N = mLayerState->mChildren.size();
     padding.set(0,0,0,0);
     for (int i = 0; i < N; i++) {
@@ -466,7 +466,7 @@ void LayerDrawable::computeStackedPadding(RECT& padding){
     }
 }
 
-bool LayerDrawable::getPadding(RECT& padding){
+bool LayerDrawable::getPadding(Rect& padding){
     if (mLayerState->mPaddingMode == PADDING_MODE_NEST) {
         computeNestedPadding(padding);
     } else {
@@ -521,7 +521,7 @@ void LayerDrawable::refreshPadding() {
 
 bool LayerDrawable::refreshChildPadding(int i, ChildDrawable* r) {
     if (r->mDrawable != nullptr) {
-        RECT rect={0,0,0,0};
+        Rect rect={0,0,0,0};
         r->mDrawable->getPadding(rect);
         if (rect.x != mPaddingL[i] || rect.y != mPaddingT[i]
                 || rect.width != mPaddingR[i] || rect.height != mPaddingB[i]) {
@@ -545,7 +545,7 @@ int LayerDrawable::getPaddingMode()const{
   return mLayerState->mPaddingMode;
 }
 
-void LayerDrawable::onBoundsChange(const RECT& bounds){
+void LayerDrawable::onBoundsChange(const Rect& bounds){
     updateLayerBounds(bounds);
 }
 
@@ -592,7 +592,7 @@ void LayerDrawable::resumeChildInvalidation(){
     }
 }
 
-void LayerDrawable::updateLayerBounds(const RECT& bounds) {
+void LayerDrawable::updateLayerBounds(const Rect& bounds) {
     suspendChildInvalidation();
     updateLayerBoundsInternal(bounds);
     resumeChildInvalidation();
@@ -610,13 +610,13 @@ bool LayerDrawable::onLayoutDirectionChanged(int layoutDirection){
     return changed;
 }
 
-void LayerDrawable::updateLayerBoundsInternal(const RECT& bounds){
+void LayerDrawable::updateLayerBoundsInternal(const Rect& bounds){
     int paddingL = 0;
     int paddingT = 0;
     int paddingR = 0;
     int paddingB = 0;
 
-    RECT outRect;
+    Rect outRect;
     const int layoutDirection = getLayoutDirection();
     const bool isLayoutRtl = layoutDirection == LayoutDirection::RTL;
     const bool isPaddingNested = mLayerState->mPaddingMode == PADDING_MODE_NEST;
@@ -637,7 +637,7 @@ void LayerDrawable::updateLayerBoundsInternal(const RECT& bounds){
 
         // Establish containing region based on aggregate padding and
         // requested insets for the current layer.
-        RECT container;
+        Rect container;
         container.set(bounds.x + insetL + paddingL, bounds.y + insetT + paddingT,
                     bounds.width - insetL -insetR - paddingL -paddingR, bounds.height - insetT -insetB -paddingT -paddingB);
 

@@ -13,6 +13,7 @@ public:
     static constexpr int MASK_CONTENT = 1;
     static constexpr int MASK_EXPLICIT = 2;
     static constexpr int MAX_RIPPLES = 10;
+    static constexpr int MASK_LAYER_ID=0;
 private:
     class RippleState:public LayerDrawable::LayerState{
     public:
@@ -53,6 +54,9 @@ private:
     void tryRippleExit();
     void clearHotspots();
     void updateLocalState();
+    void drawContent(Canvas& canvas);
+    void drawBackgroundAndRipples(Canvas& canvas);
+    void drawMask(Canvas& canvas);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
@@ -73,6 +77,8 @@ public:
     void draw(Canvas& canvas);
     void invalidateSelf()override;
     void invalidateSelf(bool invalidateMask);
+    void pruneRipples();
+    Rect getDirtyBounds();
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 

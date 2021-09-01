@@ -36,10 +36,10 @@ private:
     BitmapDrawable(std::shared_ptr<BitmapState>state);
 protected:
     bool mMutated;
-    RECT mDstRect;
-    RECT mOpticalInsets;
+    Rect mDstRect;
+    Rect mOpticalInsets;
     bool mDstRectAndInsetsDirty;
-    void onBoundsChange(const RECT&r)override;
+    void onBoundsChange(const Rect&r)override;
     bool onStateChange(const std::vector<int>&)override;
 public:
     BitmapDrawable(RefPtr<ImageSurface>img);

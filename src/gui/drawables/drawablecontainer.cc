@@ -210,7 +210,7 @@ bool DrawableContainer::DrawableContainerState::setLayoutDirection(int layoutDir
     return changed;    
 }
 
-bool DrawableContainer::DrawableContainerState::getConstantPadding(RECT&rect) {
+bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
     if (mVariablePadding)return false;
 
     if (!mConstantPadding.empty()|| mCheckedPadding) {
@@ -219,8 +219,8 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(RECT&rect) {
 
     createAllFutures();
 
-    RECT r ={0,0,0,0};
-    RECT t ={0,0,0,0};
+    Rect r ={0,0,0,0};
+    Rect t ={0,0,0,0};
     for (auto dr:mDrawables) {
        if (dr->getPadding(t)) {
            if (t.x > r.x) r.x = t.x;
@@ -355,8 +355,8 @@ bool DrawableContainer::needsMirroring(){
     return isAutoMirrored() && getLayoutDirection() ==LayoutDirection::RTL;
 }
 
-bool DrawableContainer::getPadding(RECT&padding){
-    RECT r={0,0,0,0};
+bool DrawableContainer::getPadding(Rect&padding){
+    Rect r={0,0,0,0};
     bool result;
     if (mDrawableContainerState->getConstantPadding(r)){//r!=null) {
        padding=r;
@@ -382,7 +382,7 @@ int DrawableContainer::getChangingConfigurations()const{
                 | mDrawableContainerState->getChangingConfigurations();
 }
 
-void DrawableContainer::onBoundsChange(const RECT&bounds){
+void DrawableContainer::onBoundsChange(const Rect&bounds){
     if (mLastDrawable != nullptr) {
         mLastDrawable->setBounds(bounds);
         }

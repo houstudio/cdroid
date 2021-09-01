@@ -278,7 +278,7 @@ std::vector<int> ImageView::onCreateDrawableState()const{
 //ref: https://github.com/google/skia/blob/master/src/core/SkMatrix.cpp
 //SkMatrix::setRectToRect(const SkRect& src, const SkRect& dst, ScaleToFit align)
 //ScaleToFit { kFill_ScaleToFit, kStart_ScaleToFit, kCenter_ScaleToFit, kEnd_ScaleToFit, }
-static void SetRect2Rect(Matrix&m,const RECT&src,const RECT&dst,int align){
+static void SetRect2Rect(Matrix&m,const Rect&src,const Rect&dst,int align){
 	float tx, sx = (float)dst.width/ src.width;
     float ty, sy = (float)dst.height / src.height;
     bool  xLarger = false;
@@ -378,8 +378,8 @@ void ImageView::configureBounds(){
             mDrawMatrix.translate(dx, dy);
         } else {
             // Generate the required transform.
-            RECT src={0, 0, dwidth, dheight};
-            RECT dst={0, 0, vwidth, vheight};
+            Rect src={0, 0, dwidth, dheight};
+            Rect dst={0, 0, vwidth, vheight};
             mDrawMatrix = mMatrix;
 	    SetRect2Rect(mDrawMatrix,src,dst,mScaleType);
             //mDrawMatrix.setRectToRect(mTempSrc, mTempDst, scaleTypeToScaleToFit(mScaleType));

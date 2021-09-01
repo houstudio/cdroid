@@ -1771,7 +1771,7 @@ bool ListView::handleHorizontalFocusWithinListItem(int direction){
                         (ViewGroup*) selectedView, currentFocus, direction);
             if (nextFocus != nullptr) {
                 // do the math to get interesting rect in next focus' coordinates
-                RECT focusedRect ;
+                Rect focusedRect ;
                 if (currentFocus != nullptr) {
                     currentFocus->getFocusedRect(focusedRect);
                     offsetDescendantRectToMyCoords(currentFocus, focusedRect);
@@ -2127,7 +2127,7 @@ int ListView::lookForSelectablePositionOnScreen(int direction){
 ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction){
     View* selectedView = getSelectedView();
     View* newFocus=nullptr;
-    RECT mTempRect;
+    Rect mTempRect;
     if (selectedView != nullptr && selectedView->hasFocus()) {
        View* oldFocus = selectedView->findFocus();
        newFocus = FocusFinder::getInstance().findNextFocus(this, oldFocus, direction);
@@ -2205,7 +2205,7 @@ bool ListView::isViewAncestorOf(View* child, View* parent){
 
 int ListView::amountToScrollToNewFocus(int direction, View* newFocus, int positionOfNewFocus){
     int amountToScroll = 0;
-    RECT mTempRect; 
+    Rect mTempRect; 
     newFocus->getDrawingRect(mTempRect);
     offsetDescendantRectToMyCoords(newFocus, mTempRect);
     if (direction == View::FOCUS_UP) {
@@ -2229,7 +2229,7 @@ int ListView::amountToScrollToNewFocus(int direction, View* newFocus, int positi
 
 int ListView::distanceToView(View* descendant) {
     int distance = 0;
-    RECT tmpRect;
+    Rect tmpRect;
     descendant->getDrawingRect(tmpRect);
     offsetDescendantRectToMyCoords(descendant, tmpRect);
     int listBottom = mHeight - mListPadding.height;
@@ -2377,7 +2377,7 @@ bool ListView::isOpaque()const {
 }*/
 
 
-void ListView::drawOverscrollHeader(Canvas&canvas, Drawable* drawable,RECT& bounds) {
+void ListView::drawOverscrollHeader(Canvas&canvas, Drawable* drawable,Rect& bounds) {
     int height = drawable->getMinimumHeight();
 
     canvas.save();
@@ -2394,7 +2394,7 @@ void ListView::drawOverscrollHeader(Canvas&canvas, Drawable* drawable,RECT& boun
     canvas.restore();
 }
 
-void ListView::drawOverscrollFooter(Canvas&canvas, Drawable* drawable,RECT& bounds) {
+void ListView::drawOverscrollFooter(Canvas&canvas, Drawable* drawable,Rect& bounds) {
     int height = drawable->getMinimumHeight();
 
     canvas.save();
@@ -2423,7 +2423,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
 
     if (drawDividers || bdrawOverscrollHeader || bdrawOverscrollFooter) {
         // Only modify the top and bottom in the loop, we set the left and right here
-        RECT bounds;
+        Rect bounds;
         bounds.x = mPaddingLeft;
         bounds.width = mWidth - mPaddingRight-mPaddingLeft;
 
@@ -2580,7 +2580,7 @@ bool ListView::drawChild(Canvas& canvas, View* child, long drawingTime) {
     return more;
 }
 
-void ListView::drawDivider(Canvas&canvas,const RECT&bounds, int childIndex) {
+void ListView::drawDivider(Canvas&canvas,const Rect&bounds, int childIndex) {
     mDivider->setBounds(bounds);
     mDivider->draw(canvas);
 }

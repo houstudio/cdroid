@@ -203,8 +203,8 @@ protected:
     int mSelectionBottomPadding;
     int mOverscrollMax;
     bool mIsScrap[2]; 
-    RECT mSelectorRect;
-    RECT mListPadding;/*The view's padding*/
+    Rect mSelectorRect;
+    Rect mListPadding;/*The view's padding*/
     int mWidthMeasureSpec;
     float mVerticalScrollFactor;
     int mLayoutMode;
@@ -308,7 +308,7 @@ public:
     Drawable*getSelector();
     void setSelector(Drawable*drawable);
     void setSelector(const std::string&resid);
-    void getFocusedRect(RECT& r)override;
+    void getFocusedRect(Rect& r)override;
     void setSmoothScrollbarEnabled(bool);
     bool isSmoothScrollbarEnabled()const;
     void setStackFromBottom(bool stackFromBottom);

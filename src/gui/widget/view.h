@@ -439,7 +439,7 @@ protected:
     virtual float getBottomFadingEdgeStrength();
     virtual float getLeftFadingEdgeStrength();
     virtual float getRightFadingEdgeStrength();
-    virtual void getScrollIndicatorBounds(RECT&);
+    virtual void getScrollIndicatorBounds(Rect&);
     virtual void onDrawScrollIndicators(Canvas& canvas);
     virtual void onDrawScrollBars(Canvas& canvas);
     void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,int l, int t, int w, int h);
@@ -463,17 +463,17 @@ public:
     void unscheduleDrawable(Drawable& who,Runnable what)override;
     virtual void unscheduleDrawable(Drawable& who);
 
-    const RECT getBound()const;
-    void getHitRect(RECT&);
+    const Rect getBound()const;
+    void getHitRect(Rect&);
     bool pointInView(int localX,int localY,int slop);
-    const RECT getDrawingRect()const;
-    virtual void getFocusedRect(RECT&r);
+    const Rect getDrawingRect()const;
+    virtual void getFocusedRect(Rect&r);
     virtual View& setPos(int x,int y);
     virtual View& setSize(int x,int y);
     int getX()const;//x pos to screen
     int getY()const;//y pos to screen
     int getZ()const;
-    void getDrawingRect(RECT& outRect);
+    void getDrawingRect(Rect& outRect);
     void offsetTopAndBottom(int offset);
     void offsetLeftAndRight(int offset);
     int getLeft()const;
@@ -562,7 +562,7 @@ public:
     bool getRevealOnFocusHint()const;
     bool willNotDraw()const;
     void setWillNotDraw(bool willNotDraw);
-    const RECT getClientRect()const;
+    const Rect getClientRect()const;
     bool hasClickListener()const;
     virtual void setOnClickListener(OnClickListener ls);
     virtual void setOnLongClickListener(OnLongClickListener l);

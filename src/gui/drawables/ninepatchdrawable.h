@@ -10,8 +10,8 @@ private:
         float mBaseAlpha;// = 1.0f;
         bool mDither;// = DEFAULT_DITHER;
         bool mAutoMirrored;// = false;
-        RECT mPadding;
-        RECT mOpticalInsets;
+        Rect mPadding;
+        Rect mOpticalInsets;
         int mTintMode;
 		int mChangingConfigurations;
         std::vector<NinePatchBlock> mHorz;
@@ -20,7 +20,7 @@ private:
         RefPtr<ImageSurface>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
-        NinePatchState(RefPtr<ImageSurface>bitmap,const RECT*padding=nullptr);
+        NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding=nullptr);
         Drawable*newDrawable()override;
 		int getChangingConfigurations()const override;
     };
@@ -28,8 +28,8 @@ private:
     int mBitmapWidth;
     int mBitmapHeight;
     int mTargetDensity;
-    RECT mOpticalInsets;
-    RECT mPadding;
+    Rect mOpticalInsets;
+    Rect mPadding;
     bool mMutated;
     bool needsMirroring();
     void computeBitmapSize();
@@ -44,7 +44,7 @@ public:
     ~NinePatchDrawable();
     void setTargetDensity(int density);
     void setAlpha(int alpha)override;
-    bool getPadding(RECT& padding) override;
+    bool getPadding(Rect& padding) override;
     int getAlpha()const override;
     void setTintList(ColorStateList* tint)override;
     void setTintMode(int mode)override;

@@ -10,7 +10,7 @@ private:
     private:
         void applyDensityScaling(int sourceDensity, int targetDensity);
     public:
- 	    RECT mInset;
+ 	    Rect mInset;
         InsetState();
         InsetState(const InsetState& orig);
         void onDensityChanged(int sourceDensity, int targetDensity)override;
@@ -19,7 +19,7 @@ private:
     std::shared_ptr<InsetState>mState;
     InsetDrawable(std::shared_ptr<InsetState>state);
 protected:
-	void onBoundsChange(const RECT&)override;
+	void onBoundsChange(const Rect&)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:
 	InsetDrawable();

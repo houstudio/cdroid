@@ -73,8 +73,8 @@ bool ClipDrawable::onLevelChange(int level){
 void ClipDrawable::draw(Canvas& canvas){
     Drawable* dr = getDrawable();
     if (dr->getLevel() == 0) return;
-    RECT r ={0,0,0,0};
-    RECT bounds = getBounds();
+    Rect r ={0,0,0,0};
+    Rect bounds = getBounds();
     const int level = getLevel();
 
     int w = bounds.width;

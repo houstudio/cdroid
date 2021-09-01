@@ -151,7 +151,7 @@ static inline float sdot(float a,float b,float c,float d){
 
 void AnimatedRotateDrawable::draw(Canvas& canvas) {
     Drawable* drawable = getDrawable();
-    const RECT bounds = drawable->getBounds();
+    const Rect bounds = drawable->getBounds();
     const int w = bounds.width;
     const int h = bounds.height;
 

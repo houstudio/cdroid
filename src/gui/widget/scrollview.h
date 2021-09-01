@@ -31,7 +31,7 @@ private:
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
     int mNestedYOffset;
-    RECT mTempRect;
+    Rect mTempRect;
 
     void initScrollView();
     bool canScroll();
@@ -45,7 +45,7 @@ private:
     void doScrollY(int delta);
     void smoothScrollBy(int dx, int dy);
     void scrollToChild(View* child);
-    bool scrollToChildRect(RECT& rect, bool immediate);
+    bool scrollToChildRect(Rect& rect, bool immediate);
     static bool isViewDescendantOf(View* child, View* parent);
     static int clamp(int n, int my, int child);
     void flingWithNestedDispatch(int velocityY);
@@ -66,9 +66,9 @@ protected:
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
-    int computeScrollDeltaToGetChildRectOnScreen(RECT& rect);
+    int computeScrollDeltaToGetChildRectOnScreen(Rect& rect);
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
-    bool requestChildRectangleOnScreen(View* child,RECT& rectangle, bool immediate)override;
+    bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void draw(Canvas& canvas)override;
 public:

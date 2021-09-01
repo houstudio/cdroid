@@ -270,7 +270,7 @@ static int constrain(int amount, int low, int high) {//get the
      return amount < low ? low : (amount > high ? high : amount);
 }
 
-int SimpleMonthView::findClosestRow(const RECT* previouslyFocusedRect){
+int SimpleMonthView::findClosestRow(const Rect* previouslyFocusedRect){
     if (previouslyFocusedRect == nullptr) {
         return 3;
     } else if (mDayHeight == 0) {
@@ -296,7 +296,7 @@ int SimpleMonthView::findClosestRow(const RECT* previouslyFocusedRect){
     }
 }
 
-int SimpleMonthView::findClosestColumn(const RECT*previouslyFocusedRect){
+int SimpleMonthView::findClosestColumn(const Rect*previouslyFocusedRect){
     if (previouslyFocusedRect == nullptr) {
         return DAYS_IN_WEEK / 2;
     } else if (mCellWidth == 0) {
@@ -308,7 +308,7 @@ int SimpleMonthView::findClosestColumn(const RECT*previouslyFocusedRect){
     }
 }
 
-void SimpleMonthView::getFocusedRect(RECT& r){
+void SimpleMonthView::getFocusedRect(Rect& r){
     if (mHighlightedDay > 0) {
         getBoundsForDay(mHighlightedDay, r);
     } else {
@@ -368,7 +368,7 @@ void SimpleMonthView::drawMonth(Canvas& canvas){
     float x = mPaddedWidth / 2.f;
     // Vertically centered within the month header height.
     canvas.set_color(0xFFFFFFFF);
-    RECT rctxt={0,0,mPaddedWidth,mMonthHeight};
+    Rect rctxt={0,0,mPaddedWidth,mMonthHeight};
     canvas.draw_text(rctxt,mMonthYearLabel,DT_CENTER|DT_VCENTER);
 }
 
@@ -388,7 +388,7 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
     canvas.move_to(0,headerHeight);
     canvas.line_to(mWidth,headerHeight);
     canvas.stroke();
-    RECT rctxt={0,headerHeight,mCellWidth,rowHeight};
+    Rect rctxt={0,headerHeight,mCellWidth,rowHeight};
     for (int col = 0; col < DAYS_IN_WEEK; col++) {
         int colCenter = colWidth * col + colWidth / 2;
         int colCenterRtl;
@@ -414,7 +414,7 @@ void SimpleMonthView::drawDays(Canvas& canvas){
 
     // Text is vertically centered within the row height.
     int rowCenter = headerHeight + rowHeight / 2;
-    RECT rctxt={0,headerHeight,mCellWidth,mDayHeight};
+    Rect rctxt={0,headerHeight,mCellWidth,mDayHeight};
     canvas.set_color(0xFFFFFFFF);
     for (int day = 1, col = findDayOffset(); day <= mDaysInMonth; day++) {
         int colCenter = colWidth * col + colWidth / 2;
@@ -667,7 +667,7 @@ int SimpleMonthView::getDayAtLocation(int x, int y) {
     return day;
 }
 
-bool SimpleMonthView::getBoundsForDay(int id,RECT&outBounds){
+bool SimpleMonthView::getBoundsForDay(int id,Rect&outBounds){
     if (!isValidDayOfMonth(id)) {
         return false;
     }

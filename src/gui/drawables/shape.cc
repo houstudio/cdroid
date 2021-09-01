@@ -97,7 +97,7 @@ void Shape::setGradientCenterY(float y){
     mCenterY=y;
 }
 
-void Shape::rebuildPattern(const RECT&r){
+void Shape::rebuildPattern(const Rect&r){
     mRebuildGradient=false;
     Color*cls[3]={nullptr,nullptr,nullptr};
     for(int i=0;i<mGradientColors.size();i++)
@@ -194,7 +194,7 @@ Shape*ArcShape::clone()const{
     return new ArcShape(*this);
 }
 void ArcShape::draw(Canvas&canvas){
-    const RECT r=rect();
+    const Rect r=rect();
     canvas.save();
     canvas.scale(1.0 , (float)r.height/r.width);
     canvas.arc(r.x+r.width/2 , r.y+r.height/2, r.width/2, mStartAngle,mSweepAngle);
@@ -206,7 +206,7 @@ void ArcShape::draw(Canvas&canvas){
 }
 
 void OvalShape::draw(Canvas&canvas){
-    RECT r=rect();
+    Rect r=rect();
 
     canvas.translate(r.x+r.width/2,r.y+r.height/2);
     canvas.scale(1.,(float)r.height/r.width);
@@ -223,7 +223,7 @@ RoundRectShape::RoundRectShape():RectShape(){
     for(int i=0;i<8;i++)mOuterRadii[i]=5;
     for(int i=0;i<8;i++)mInnerRadii[i]=5;
 }
-RoundRectShape::RoundRectShape(const std::vector<int>&outRadii,const RECT&inset,const std::vector<int>&innerRadii){
+RoundRectShape::RoundRectShape(const std::vector<int>&outRadii,const Rect&inset,const std::vector<int>&innerRadii){
     mOuterRadii=outRadii;
     mInnerRadii=innerRadii;
     mInset=inset;
@@ -245,14 +245,14 @@ void RoundRectShape::setRadius(int radius){
 
 void RoundRectShape::onResize(int w, int h){
     RectShape::onResize(w,h);
-    RECT r=rect();
+    Rect r=rect();
     mInnerRect.set(r.x+mInset.x,r.y+mInset.y,
                 r.right()-mInset.x-mInset.width,r.bottom()-mInset.y-mInset.height);
 }
 
 void RoundRectShape::draw(Canvas&canvas){
     const double degree = M_PI/180;
-    const RECT r=rect();
+    const Rect r=rect();
     const int *radius=mOuterRadii.data();
     const float pts[8]={
         (float)r.x+radius[0]        ,  (float)r.y+radius[1],           

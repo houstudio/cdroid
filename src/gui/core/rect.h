@@ -24,7 +24,7 @@ typedef struct Size{
 }SIZE;
 #define MAKESIZE(x,y) SIZE::Make(x,y)
 
-typedef struct Rectangle{
+typedef struct Rect{
     int x;
     int y;
     int width;
@@ -39,19 +39,20 @@ typedef struct Rectangle{
     bool empty()const;
     void setEmpty();
     void offset(int dx,int dy);
-    bool intersect(const Rectangle&a,const Rectangle&b);
-    bool intersect(const Rectangle&b);
+    bool intersect(const Rect&a,const Rect&b);
+    bool intersect(const Rect&b);
     bool intersect(int l, int t, int w, int h);
     bool contains(int x,int y)const;
-    bool contains(const Rectangle&a)const;
-    bool operator==(const Rectangle&b)const;
-    bool operator!=(const Rectangle&b)const;
-    static constexpr Rectangle Make(int x,int y,int w,int h){return Rectangle{x,y,w,h};}
-    static constexpr Rectangle MakeEmpty(){return Rectangle{0,0,0,0};};
-    static constexpr Rectangle MakeWH(int w,int h){return Rectangle{0,0,w,h};}
-    static constexpr Rectangle MakeLTRB(int l,int t,int r,int b){return Rectangle{l,t,r-l,b-t};}
-    static constexpr Rectangle MakeSize(const SIZE&sz){return Rectangle{0,0,sz.x,sz.y};}
-}Rect,RECT;
+    bool contains(const Rect&a)const;
+    bool operator==(const Rect&b)const;
+    bool operator!=(const Rect&b)const;
+    void Union(const Rect&b);
+    static constexpr Rect Make(int x,int y,int w,int h){return Rect{x,y,w,h};}
+    static constexpr Rect MakeEmpty(){return Rect{0,0,0,0};};
+    static constexpr Rect MakeWH(int w,int h){return Rect{0,0,w,h};}
+    static constexpr Rect MakeLTRB(int l,int t,int r,int b){return Rect{l,t,r-l,b-t};}
+    static constexpr Rect MakeSize(const SIZE&sz){return Rect{0,0,sz.x,sz.y};}
+}RECT;
 typedef struct RectFloat{
     float x;
     float y;

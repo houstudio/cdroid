@@ -67,8 +67,8 @@ private:
     void updateDayOfWeekLabels();
     ColorStateList*applyTextAppearance(const std::string& resId);
     bool moveOneDay(bool positive);
-    int findClosestRow(const RECT* previouslyFocusedRect);
-    int findClosestColumn(const RECT*previouslyFocusedRect);
+    int findClosestRow(const Rect* previouslyFocusedRect);
+    int findClosestColumn(const Rect*previouslyFocusedRect);
     void ensureFocusedDay();
     bool isFirstDayOfWeek(int day);
     bool isLastDayOfWeek(int day);
@@ -111,12 +111,12 @@ public:
     void setOnDayClickListener(OnDayClickListener listener);
     bool onTouchEvent(MotionEvent& event)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
-    void getFocusedRect(RECT& r)override;
+    void getFocusedRect(Rect& r)override;
     const std::string getMonthYearLabel();
     void setSelectedDay(int dayOfMonth);
     void setFirstDayOfWeek(int weekStart);
     void setMonthParams(int selectedDay,int month,int year,int weekStart,int enabledDayStart, int enabledDayEnd);
-    bool getBoundsForDay(int id,RECT&outBounds);
+    bool getBoundsForDay(int id,Rect&outBounds);
 };
 
 }//namespace

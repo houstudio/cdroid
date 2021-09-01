@@ -19,7 +19,7 @@ private:
     std::shared_ptr<ScaleState>mState;
     ScaleDrawable(std::shared_ptr<ScaleState> state);
 protected:
-    void onBoundsChange(const RECT& bounds)override;
+    void onBoundsChange(const Rect& bounds)override;
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:

@@ -70,7 +70,7 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
         bdrawThumb = false;
     }
 
-    RECT r = getBounds();
+    Rect r = getBounds();
     //if (canvas.quickReject(r.left, r.top, r.right, r.bottom, Canvas.EdgeType.AA))  return;
 
     if (bdrawTrack)drawTrack(canvas, r, vertical);
@@ -84,7 +84,7 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
     }
 }
 
-void ScrollBarDrawable::onBoundsChange(const RECT& bounds) {
+void ScrollBarDrawable::onBoundsChange(const Rect& bounds) {
     Drawable::onBoundsChange(bounds);
     mBoundsChanged = true;
 }
@@ -106,7 +106,7 @@ bool ScrollBarDrawable::onStateChange(const std::vector<int>&state) {
     return changed;
 }
 
-void ScrollBarDrawable::drawTrack(Canvas&canvas,const RECT& bounds, bool vertical) {
+void ScrollBarDrawable::drawTrack(Canvas&canvas,const Rect& bounds, bool vertical) {
     Drawable* track=vertical?mVerticalTrack:mHorizontalTrack;
     if ( track ) {
         if (mBoundsChanged) 
@@ -115,7 +115,7 @@ void ScrollBarDrawable::drawTrack(Canvas&canvas,const RECT& bounds, bool vertica
     }
 }
 
-void ScrollBarDrawable::drawThumb(Canvas& canvas,const RECT& bounds, int offset, int length, bool vertical) {
+void ScrollBarDrawable::drawThumb(Canvas& canvas,const Rect& bounds, int offset, int length, bool vertical) {
     bool changed = mRangeChanged || mBoundsChanged;
     if (vertical) {
         if (mVerticalThumb != nullptr) {

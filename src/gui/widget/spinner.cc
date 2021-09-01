@@ -274,7 +274,7 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
 
     // Add background padding to measured width
     if (background) {
-        RECT rctmp;
+        Rect rctmp;
         background->getPadding(rctmp);
         width += rctmp.x + rctmp.right();
     }
@@ -341,7 +341,7 @@ Drawable* SpinnerPopup::getBackground(){
 void SpinnerPopup::computeContentWidth() {
     Drawable* background = getBackground();
     int hOffset = 0;
-    RECT mTempRect;
+    Rect mTempRect;
     if (background != nullptr) {
         background->getPadding(mTempRect);
         hOffset = mSpinner->isLayoutRtl() ? mTempRect.right() : -mTempRect.x;
@@ -377,7 +377,7 @@ void SpinnerPopup::computeContentWidth() {
 void SpinnerPopup::setContentWidth(int width){
     Drawable* popupBackground = getBackground();
     if (popupBackground ) {
-	RECT rect;
+	Rect rect;
         popupBackground->getPadding(rect);
         mDropDownWidth = rect.x + rect.width + width;
     } else {

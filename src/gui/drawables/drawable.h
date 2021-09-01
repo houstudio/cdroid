@@ -54,7 +54,7 @@ protected:
     bool mVisible;
     int mLayoutDirection;
     int mChangingConfigurations;
-    RECT mBounds;
+    Rect mBounds;
     ColorFilter*mColorFilter;
     Callback*mCallback;
     std::vector<int>mStateSet;
@@ -62,7 +62,7 @@ protected:
     virtual bool onStateChange(const std::vector<int>&) { return false;}
     virtual bool onLevelChange(int level) { return false; }
     virtual bool onLayoutDirectionChanged(int layoutDirection){return false;}
-    virtual void onBoundsChange(const RECT& bounds){}
+    virtual void onBoundsChange(const Rect& bounds){}
 public:
     enum Opacity{
         UNKNOWN=0,
@@ -73,8 +73,9 @@ public:
     Drawable();
     virtual ~Drawable();
     void setBounds(int x,int y,int w,int h);
-    void setBounds(const RECT&r);
-    const RECT&getBounds()const;
+    void setBounds(const Rect&r);
+    const Rect&getBounds()const;
+    virtual Rect getDirtyBounds();
     virtual Drawable*mutate();
     virtual void clearMutated();
     virtual void setColorFilter(ColorFilter*);
@@ -88,7 +89,7 @@ public:
     int getLevel()const{return mLevel;}
     virtual int getOpacity();
 
-    virtual bool getPadding(RECT&padding);
+    virtual bool getPadding(Rect&padding);
     virtual bool isStateful()const;
     virtual bool hasFocusStateSpecified()const;
     virtual Drawable*getCurrent();

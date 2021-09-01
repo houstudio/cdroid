@@ -601,7 +601,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
     float x = mWidth / 2;
     float y = mCurrentScrollOffset;
-    RECT rc=mInputText->getBound();
+    Rect rc=mInputText->getBound();
     // draw the virtual buttons pressed state if needed
     if (showSelectorWheel && mVirtualButtonPressedDrawable != nullptr
             && mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
@@ -623,7 +623,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     int selectorWheelColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
-    RECT rctxt={0,mCurrentScrollOffset,mWidth,mSelectorElementHeight};
+    Rect rctxt={0,mCurrentScrollOffset,mWidth,mSelectorElementHeight};
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];

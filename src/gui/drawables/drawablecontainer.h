@@ -15,7 +15,7 @@ protected:
         int mChildrenChangingConfigurations;
         bool mVariablePadding;
         bool mCheckedPadding;
-        RECT mConstantPadding;
+        Rect mConstantPadding;
         bool mConstantSize;
         bool mCheckedConstantSize;
         int mConstantWidth,mConstantHeight;
@@ -51,7 +51,7 @@ protected:
         bool canConstantState();
         int getChangingConfigurations()const override;
         bool setLayoutDirection(int layoutDirection, int currentIndex);
-        bool getConstantPadding(RECT&rect);
+        bool getConstantPadding(Rect&rect);
         void setConstantSize(bool constant){mConstantSize=constant;}
         bool isConstantSize()const {return mConstantSize;}
         void setVariablePadding(bool variable){mVariablePadding=variable;}
@@ -77,7 +77,7 @@ protected:
     bool needsMirroring();
     virtual std::shared_ptr<DrawableContainerState> cloneConstantState();
     virtual void setConstantState(std::shared_ptr<DrawableContainerState>state);
-    void onBoundsChange(const RECT&bounds)override;
+    void onBoundsChange(const Rect&bounds)override;
     bool onStateChange(const std::vector<int>&state)override;
     bool onLevelChange(int level)override;
 public:
@@ -89,7 +89,7 @@ public:
     int addChild(Drawable*);
     int getChildCount()const;
     Drawable*getChild(int index);
-    bool getPadding(RECT&padding)override;
+    bool getPadding(Rect&padding)override;
     int getChangingConfigurations()const override;
 
     int getIntrinsicWidth() const override;

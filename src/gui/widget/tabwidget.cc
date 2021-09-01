@@ -179,7 +179,7 @@ void TabWidget::dispatchDraw(Canvas& canvas){
         mRightStrip->setState(selectedChild->getDrawableState());
 
     if (mStripMoved) {
-        RECT bounds = mBounds;
+        Rect bounds = mBounds;
         bounds.x = selectedChild->getLeft();
         bounds.width = selectedChild->getWidth();
         int myHeight = getHeight();

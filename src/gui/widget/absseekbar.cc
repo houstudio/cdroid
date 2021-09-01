@@ -286,7 +286,7 @@ void AbsSeekBar::setThumbPos(int w, Drawable* thumb, float scale, int offset){
 
     int top, bottom;
     if (offset == INT_MIN) {
-        const RECT oldBounds = thumb->getBounds();
+        const Rect oldBounds = thumb->getBounds();
         top = oldBounds.y;
         bottom = oldBounds.bottom();
     } else {
@@ -311,7 +311,7 @@ void AbsSeekBar::setThumbPos(int w, Drawable* thumb, float scale, int offset){
 
 void AbsSeekBar::drawThumb(Canvas&canvas) {
     if (mThumb != nullptr) {
-        RECT r=mThumb->getBounds();
+        Rect r=mThumb->getBounds();
         canvas.save();
         // Translate the padding. For the x, we need to allow the thumb to
         // draw in its extra space
@@ -346,7 +346,7 @@ void AbsSeekBar::drawTrack(Canvas&canvas){
     const int mPaddingTop=0,mPaddingLeft=0;
     if (thumbDrawable != nullptr && mSplitTrack) {
         //const Insets insets = thumbDrawable.getOpticalInsets();
-        RECT tempRect = thumbDrawable->getBounds();
+        Rect tempRect = thumbDrawable->getBounds();
         tempRect.offset(mPaddingLeft - mThumbOffset, mPaddingTop);
         //tempRect.left += insets.left;
         //tempRect.right -= insets.right;

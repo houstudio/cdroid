@@ -10,7 +10,7 @@ private:
     class ShapeState:public std::enable_shared_from_this<ShapeState>,public ConstantState{
     public:
         Shape*mShape;
-        RECT mPadding;
+        Rect mPadding;
         int mChangingConfigurations;
         int mIntrinsicWidth;
         int mIntrinsicHeight;
@@ -27,14 +27,14 @@ private:
     ShapeDrawable(std::shared_ptr<ShapeState>state);
     void updateLocalState();
 protected:
-    void onBoundsChange(const RECT&bounds)override;
+    void onBoundsChange(const Rect&bounds)override;
 public:
     ShapeDrawable();
 
     void setShape(Shape*shape);
     Shape*getShape()const;
-    bool getPadding(RECT&rect)override;
-    void setPadding(const RECT& padding);
+    bool getPadding(Rect&rect)override;
+    void setPadding(const Rect& padding);
     void setPadding(int left, int top, int right, int bottom);
 
     int getIntrinsicWidth()const;

@@ -58,7 +58,7 @@ private:
 
     float mPullDistance;
 
-    RECT mBounds;
+    Rect mBounds;
     int mColor;
     float mRadius;
     float mBaseGlowScale;

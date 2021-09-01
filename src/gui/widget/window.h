@@ -40,7 +40,7 @@ protected:
 private:
     Runnable layoutRunner;
     bool mInLayout;
-    RECT mRectOfFocusedView;
+    Rect mRectOfFocusedView;
     void doLayout();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);

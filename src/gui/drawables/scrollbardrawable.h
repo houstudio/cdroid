@@ -25,11 +25,11 @@ private:
     //ColorFilter mColorFilter;
     bool mHasSetColorFilter;
 
-    void drawTrack(Canvas&canvas,const RECT& bounds, bool vertical);
-    void drawThumb(Canvas& canvas,const RECT& bounds, int offset, int length, bool vertical);
+    void drawTrack(Canvas&canvas,const Rect& bounds, bool vertical);
+    void drawThumb(Canvas& canvas,const Rect& bounds, int offset, int length, bool vertical);
     void propagateCurrentState(Drawable* d);
 protected:
-    void onBoundsChange(const RECT& bounds)override;
+    void onBoundsChange(const Rect& bounds)override;
     bool onStateChange(const std::vector<int>&state)override;
 public:
     ScrollBarDrawable();

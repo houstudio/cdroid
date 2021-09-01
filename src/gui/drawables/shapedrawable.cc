@@ -48,7 +48,7 @@ void ShapeDrawable::setShape(Shape*shape){
     updateShape();
 }
 
-void ShapeDrawable::onBoundsChange(const RECT&bounds){
+void ShapeDrawable::onBoundsChange(const Rect&bounds){
     Drawable::onBoundsChange(bounds);
     updateShape();
 }
@@ -59,18 +59,18 @@ Shape*ShapeDrawable::getShape()const{
 
 void ShapeDrawable::updateShape(){
     if (mShapeState->mShape != nullptr) {
-        const RECT& r = getBounds();
+        const Rect& r = getBounds();
         mShapeState->mShape->resize(r.width,r.height);
     }
     invalidateSelf();
 }
 
-bool ShapeDrawable::getPadding(RECT&padding){
+bool ShapeDrawable::getPadding(Rect&padding){
     padding=mShapeState->mPadding;
     return true;
 }
 
-void ShapeDrawable::setPadding(const RECT& padding){
+void ShapeDrawable::setPadding(const Rect& padding){
     mShapeState->mPadding=padding;
 }
 
@@ -119,7 +119,7 @@ void ShapeDrawable::clearMutated(){
 }
 
 void ShapeDrawable::draw(Canvas&canvas){
-    const RECT&r = getBounds();
+    const Rect&r = getBounds();
     if(mShapeState->mShape!=nullptr){
         canvas.translate(r.x,r.y);
         mShapeState->mShape->draw(canvas);

@@ -17,7 +17,7 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mOpticalInsets.set(0,0,0,0);
 }
 
-NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const RECT*padding){
+NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding){
     bitmap->get_ninepatch(mHorz,mVert);
     if(padding)
        mPadding=*padding;
@@ -76,7 +76,7 @@ void NinePatchDrawable::computeBitmapSize(){
     const int sourceDensity =160;// ninePatch.getDensity();
     const int targetDensity =160;// mTargetDensity;
 
-    /*const RECT sourceOpticalInsets = mNinePatchState->mOpticalInsets;
+    /*const Rect sourceOpticalInsets = mNinePatchState->mOpticalInsets;
     if (sourceOpticalInsets.empty()){// != Insets.NONE) {
         const int left = Drawable::scaleFromDensity( sourceOpticalInsets.x    , sourceDensity, targetDensity, true);
         const int top  = Drawable::scaleFromDensity( sourceOpticalInsets.y    , sourceDensity, targetDensity, true);
@@ -87,7 +87,7 @@ void NinePatchDrawable::computeBitmapSize(){
         mOpticalInsets.set(0,0,0,0);// = Insets.NONE;
     }
 
-    const RECT sourcePadding = mNinePatchState->mPadding;
+    const Rect sourcePadding = mNinePatchState->mPadding;
     if (1/*sourcePadding != nullptr*/) {
         
         mPadding.x     = Drawable::scaleFromDensity( sourcePadding.x    , sourceDensity, targetDensity, false);
@@ -101,7 +101,7 @@ void NinePatchDrawable::computeBitmapSize(){
 
     /*const NinePatch.InsetStruct insets = ninePatch.getBitmap().getNinePatchInsets();
     if (insets != null) {
-        RECT outlineRect = insets.outlineRect;
+        Rect outlineRect = insets.outlineRect;
         mOutlineInsets = NinePatch.InsetStruct.scaleInsets(outlineRect.left, outlineRect.top,
                     outlineRect.right, outlineRect.bottom, targetDensity / (float) sourceDensity);
         mOutlineRadius = Drawable::scaleFromDensity(insets.outlineRadius, sourceDensity, targetDensity);
@@ -129,7 +129,7 @@ void NinePatchDrawable::setAlpha(int alpha) {
     }
 }
 
-bool NinePatchDrawable::getPadding(RECT& padding){
+bool NinePatchDrawable::getPadding(Rect& padding){
     padding=mPadding;
     return (padding.x | padding.y | padding.width | padding.height) != 0;
 }

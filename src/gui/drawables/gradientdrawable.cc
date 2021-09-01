@@ -242,7 +242,7 @@ void GradientDrawable::clearMutated() {
     mMutated = false;
 }
 
-bool GradientDrawable::getPadding(RECT& padding) {
+bool GradientDrawable::getPadding(Rect& padding) {
     if (1){//mPadding != null) {
         padding=mPadding;
         return true;
@@ -489,7 +489,7 @@ int GradientDrawable::getOpacity()const{
             OPAQUE : TRANSLUCENT;
 }
 
-void GradientDrawable::onBoundsChange(const RECT& r) {
+void GradientDrawable::onBoundsChange(const Rect& r) {
     Drawable::onBoundsChange(r);
     //mRingPath = null;
     mPathIsDirty = true;
@@ -507,7 +507,7 @@ bool GradientDrawable::onLevelChange(int level) {
 bool GradientDrawable::ensureValidRect(){
     if (mGradientIsDirty) {
         mGradientIsDirty = false;
-        RECT bounds = getBounds();
+        Rect bounds = getBounds();
         float inset = 0;
 
         //if (mStrokePaint != nullptr)inset = mStrokePaint.getStrokeWidth() * 0.5f;
@@ -517,7 +517,7 @@ bool GradientDrawable::ensureValidRect(){
 
         std::vector<int>&gradientColors = st.mGradientColors;
         if (gradientColors.size()) {
-             const RECT r = mRect;
+             const Rect r = mRect;
              float x0, x1, y0, y1;
 
              if (st.mGradient == LINEAR_GRADIENT) {

@@ -238,7 +238,7 @@ void EditText::blinkCaret(){
     }
 }
 
-void EditText::onDrawCaret(Canvas&canvas,const RECT&r){
+void EditText::onDrawCaret(Canvas&canvas,const Rect&r){
     canvas.rectangle(r);
     canvas.fill();
 }
