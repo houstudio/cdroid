@@ -117,7 +117,7 @@ public:
     void scheduleSelf(Runnable what, long when);
     void unscheduleSelf(Runnable what);
 
-    void invalidateSelf();
+    virtual void invalidateSelf();
 
     virtual void draw(Canvas&ctx)=0;
     static int resolveOpacity(int op1,int op2);

@@ -102,21 +102,44 @@ private:
 
 class InputDevice{
 public:
-   typedef std::function<void(const InputEvent&)>EventListener;
+    static constexpr int SOURCE_CLASS_MASK     = 0x000000ff;
+    static constexpr int SOURCE_CLASS_NONE     = 0x00000000;
+    static constexpr int SOURCE_CLASS_BUTTON   = 0x00000001;
+    static constexpr int SOURCE_CLASS_POINTER  = 0x00000002;
+    static constexpr int SOURCE_CLASS_TRACKBALL= 0x00000004;
+    static constexpr int SOURCE_CLASS_POSITION = 0x00000008;
+    static constexpr int SOURCE_CLASS_JOYSTICK = 0x00000010;
+    static constexpr int SOURCE_UNKNOWN  = 0x00000000;
+    static constexpr int SOURCE_KEYBOARD = 0x00000100 | SOURCE_CLASS_BUTTON;
+    static constexpr int SOURCE_DPAD = 0x00000200 | SOURCE_CLASS_BUTTON;
+    static constexpr int SOURCE_GAMEPAD = 0x00000400 | SOURCE_CLASS_BUTTON;
+    static constexpr int SOURCE_TOUCHSCREEN = 0x00001000 | SOURCE_CLASS_POINTER;
+    static constexpr int SOURCE_MOUSE = 0x00002000 | SOURCE_CLASS_POINTER;
+    static constexpr int SOURCE_STYLUS = 0x00004000 | SOURCE_CLASS_POINTER;
+    static constexpr int SOURCE_BLUETOOTH_STYLUS =   0x00008000 | SOURCE_STYLUS;
+    static constexpr int SOURCE_TRACKBALL = 0x00010000 | SOURCE_CLASS_TRACKBALL;
+    static constexpr int SOURCE_MOUSE_RELATIVE = 0x00020000 | SOURCE_CLASS_TRACKBALL;
+    static constexpr int SOURCE_TOUCHPAD = 0x00100000 | SOURCE_CLASS_POSITION;
+    static constexpr int SOURCE_TOUCH_NAVIGATION = 0x00200000 | SOURCE_CLASS_NONE;
+    static constexpr int SOURCE_ROTARY_ENCODER = 0x00400000 | SOURCE_CLASS_NONE;
+    static constexpr int SOURCE_JOYSTICK = 0x01000000 | SOURCE_CLASS_JOYSTICK;
+    static constexpr int SOURCE_HDMI = 0x02000000 | SOURCE_CLASS_BUTTON;
+    static constexpr int SOURCE_ANY = 0xffffff00;    
+    typedef std::function<void(const InputEvent&)>EventListener;
 protected:
-   InputDeviceInfo devinfo;
-   EventListener listener;
-   class KeyLayoutMap*kmap;
-   int isvalid_event(const INPUTEVENT*e);
+    InputDeviceInfo devinfo;
+    EventListener listener;
+    class KeyLayoutMap*kmap;
+    int isvalid_event(const INPUTEVENT*e);
 public:
-   InputDevice(int fdev);
-   virtual int putrawdata(const INPUTEVENT*){return 0;}//PENDING need more rawevent OK,wecan getevent now
-   void setEventConsumeListener(EventListener ls){listener=ls;}
-   int getId()const;
-   int getSource()const;
-   int getVendor()const;
-   int getProduct()const;
-   const std::string&getName()const;
+    InputDevice(int fdev);
+    virtual int putrawdata(const INPUTEVENT*){return 0;}//PENDING need more rawevent OK,wecan getevent now
+    void setEventConsumeListener(EventListener ls){listener=ls;}
+    int getId()const;
+    int getSource()const;
+    int getVendor()const;
+    int getProduct()const;
+    const std::string&getName()const;
 };
 
 class KeyDevice:public InputDevice{
@@ -124,30 +147,30 @@ private:
     int lastDownKey;
     int repeatCount;
 protected:
-   int msckey;
-   KeyEvent key;
-   nsecs_t downtime;
+    int msckey;
+    KeyEvent key;
+    nsecs_t downtime;
 public:
-   KeyDevice(int fd);
-   virtual int putrawdata(const INPUTEVENT*);
+    KeyDevice(int fd);
+    virtual int putrawdata(const INPUTEVENT*);
 };
 
 class TouchDevice:public InputDevice{
 protected:
-   MotionEvent mt;
-   nsecs_t downtime;
-   BYTE buttonstats[16];
-   PointerCoords coords[32];
-   PointerProperties ptprops[32];
+    MotionEvent mt;
+    nsecs_t downtime;
+    BYTE buttonstats[16];
+    PointerCoords coords[32];
+    PointerProperties ptprops[32];
 public:
-   TouchDevice(int fd);
-   virtual int putrawdata(const INPUTEVENT*);
+    TouchDevice(int fd);
+    virtual int putrawdata(const INPUTEVENT*);
 };
 
 class MouseDevice:public TouchDevice{
 public:
-   MouseDevice(int fd):TouchDevice(fd){}
-   virtual int putrawdata(const INPUTEVENT*);
+    MouseDevice(int fd):TouchDevice(fd){}
+    virtual int putrawdata(const INPUTEVENT*);
 };
 }//namespace
 #endif 

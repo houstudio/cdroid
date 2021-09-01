@@ -67,8 +67,6 @@ private:
     std::vector<int>mPaddingT;
     std::vector<int>mPaddingR;
     std::vector<int>mPaddingB;
-    void ensurePadding();
-    void refreshPadding();
     bool refreshChildPadding(int i, ChildDrawable* r);
     void setLayerInsetInternal(int index, int l, int t, int r, int b, int s, int e);
     void computeNestedPadding(RECT& padding);
@@ -79,6 +77,10 @@ protected:
     void onBoundsChange(const RECT& bounds)override;
     bool onLevelChange(int level)override;
     bool onStateChange(const std::vector<int>& state)override;
+
+    void ensurePadding();
+    void refreshPadding();
+
     int addLayer(ChildDrawable* layer);
     LayerDrawable(std::shared_ptr<LayerState>state);
     ChildDrawable* addLayer(Drawable* dr,const std::vector<int>&themeAttrs,int id,int left,int top,int right,int bottom);
@@ -122,12 +124,15 @@ public:
 
     int addLayer(Drawable* dr); 
     Drawable*findDrawableByLayerId(int id);
-    bool setDrawableByLayerId(int id, Drawable* drawable);
+    virtual bool setDrawableByLayerId(int id, Drawable* drawable);
     int findIndexByLayerId(int id)const;
     Drawable* getDrawable(int index);
     void setDrawable(int index, Drawable* drawable);
     bool getPadding(RECT& padding)override;
     void setPadding(int left, int top, int right, int bottom);
+    virtual void setPaddingMode(int mode);
+    int getPaddingMode()const;
+
     Drawable*mutate()override;
     void clearMutated()override;
     bool onLayoutDirectionChanged(int layoutDirection)override;

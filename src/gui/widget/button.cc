@@ -6,7 +6,6 @@ Button::Button(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
     setGravity(Gravity::CENTER_VERTICAL);
     setTextAlignment(TEXT_ALIGNMENT_CENTER);
     setFocusable(true);
-    setFocusableInTouchMode(true);
 }
 
 Button::Button(int32_t w, int32_t h):Button(std::string(),w,h){
@@ -17,7 +16,6 @@ Button::Button(const std::string& text, int32_t w, int32_t h)
     setGravity(Gravity::CENTER);//_VERTICAL);
     setTextAlignment(TEXT_ALIGNMENT_CENTER);
     setFocusable(true);
-    setFocusableInTouchMode(true);
 }
 
 Button::~Button() {

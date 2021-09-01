@@ -259,7 +259,20 @@ private:
     int mOldWidthMeasureSpec;
     int mOldHeightMeasureSpec;
     int mVerticalScrollbarPosition;
+    int mLongClickX ,mLongClickY;
+    int mNextFocusLeftId;
+    int mNextFocusRightId;
+    int mNextFocusUpId;
+    int mNextFocusDownId;
+    int mNextFocusForwardId;
+    int mNextClusterForwardId;
+    
+    Runnable mPendingCheckForTap;
     bool mInContextButtonPress;
+    bool mHasPerformedLongPress;
+    bool mIgnoreNextUpEvent;
+    bool mOriginalPressedState;
+
     ViewGroup*mNestedScrollingParent;
     std::map<int,int>mMeasureCache;
     class ScrollabilityCache*mScrollCache;
@@ -721,11 +734,11 @@ public:
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
 	
-    void post(Runnable& what);
-    void post(const std::function<void()>&what);
-    void postDelayed(const std::function<void()>&what,uint32_t delay=0);
-    virtual void postDelayed(Runnable& what,uint32_t delay=0);
-    virtual void removeCallbacks(const Runnable& what);
+    bool post(Runnable& what);
+    bool post(const std::function<void()>&what);
+    bool postDelayed(const std::function<void()>&what,uint32_t delay=0);
+    virtual bool postDelayed(Runnable& what,uint32_t delay=0);
+    virtual bool removeCallbacks(const Runnable& what);
 
     virtual int getBaseline();
     static bool isLayoutModeOptical(View*);
@@ -783,18 +796,6 @@ private:
     friend  ViewGroup;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
-    int mLongClickX ,mLongClickY;
-    int mNextFocusLeftId;
-    int mNextFocusRightId;
-    int mNextFocusUpId;
-    int mNextFocusDownId;
-    int mNextFocusForwardId;
-    int mNextClusterForwardId;
-    bool mHasPerformedLongPress;
-    bool mIgnoreNextUpEvent;
-    bool mOriginalPressedState;
-
-    Runnable mPendingCheckForTap;
     void checkForTapCallback(int x,int y);//for mPendingCheckForTap
 
     Runnable mPendingCheckForLongPress;

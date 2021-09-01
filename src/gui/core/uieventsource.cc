@@ -39,7 +39,7 @@ int UIEventSource::handleEvents(){
     return 0;
 }
 
-void UIEventSource::post(Runnable& run,uint32_t delayedtime){
+bool UIEventSource::post(Runnable& run,uint32_t delayedtime){
     RUNNER runner;
     runner.removed=false;
     runner.time=SystemClock::uptimeMillis()+delayedtime;
@@ -49,7 +49,7 @@ void UIEventSource::post(Runnable& run,uint32_t delayedtime){
     for(auto itr=mRunnables.begin();itr!=mRunnables.end();itr++){
         if(runner.time<itr->time){
             mRunnables.insert(itr,runner);
-            return;
+            return true;
         }
     }
     mRunnables.push_back(runner);
@@ -62,10 +62,14 @@ bool UIEventSource::hasDelayedRunners()const{
     return runner.time<nowms;
 }
 
-void UIEventSource::removeCallbacks(const Runnable& what){
+bool UIEventSource::removeCallbacks(const Runnable& what){
     for(auto it=mRunnables.begin();it!=mRunnables.end();it++){ 
-        if(it->run==what) it->removed=true;
+        if(it->run==what){
+            it->removed=true;
+            return true;
+        }
     }
+    return false;
 }
 
 }//end namespace

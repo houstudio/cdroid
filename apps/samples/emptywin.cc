@@ -161,7 +161,6 @@ int main(int argc,const char*argv[]){
           Button*btn=new Button("Test Button"+std::to_string(i),180,50);
           btn->setTextColor(cl);
           btn->setBackgroundColor(0xFF222222);
-          btn->setFocusableInTouchMode(true);
           w->addView(btn).setPos(20+200*i,50).setId(100+i);
           btn->setNextFocusRightId(100+(i+1)%5);
           btn->setNextFocusDownId(100+(i+1)%5);

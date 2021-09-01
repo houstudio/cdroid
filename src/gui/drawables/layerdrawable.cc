@@ -535,6 +535,16 @@ bool LayerDrawable::refreshChildPadding(int i, ChildDrawable* r) {
     return false;
 }
 
+void LayerDrawable::setPaddingMode(int mode) {
+    if (mLayerState->mPaddingMode != mode) {
+        mLayerState->mPaddingMode = mode;
+    }
+}
+
+int LayerDrawable::getPaddingMode()const{
+  return mLayerState->mPaddingMode;
+}
+
 void LayerDrawable::onBoundsChange(const RECT& bounds){
     updateLayerBounds(bounds);
 }

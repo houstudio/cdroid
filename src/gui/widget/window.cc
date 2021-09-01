@@ -307,12 +307,12 @@ void Window::onBackPressed(){
     post([this](){WindowManager::getInstance().removeWindow(this);} );
 }
 
-void Window::postDelayed(Runnable& what,uint32_t delay){
-    if(source)source->post(what,delay);
+bool Window::postDelayed(Runnable& what,uint32_t delay){
+    return source && source->post(what,delay);
 }
 
-void Window::removeCallbacks(const Runnable& what){
-    if(source)source->removeCallbacks(what);
+bool Window::removeCallbacks(const Runnable& what){
+    return source && source->removeCallbacks(what);
 }
 
 bool Window::isInLayout()const{

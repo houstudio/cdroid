@@ -20,3 +20,4 @@
 #include <drawables/statelistdrawable.h>
 #include <drawables/gradientdrawable.h>
 #include <drawables/scrollbardrawable.h>
+#include <drawables/rippledrawable.h>

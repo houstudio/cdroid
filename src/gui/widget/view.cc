@@ -206,6 +206,14 @@ void View::initView(){
     mParent   = nullptr;
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
+
+    mHasPerformedLongPress = false;
+    mInContextButtonPress  = false;
+    mIgnoreNextUpEvent     = false;
+    mDefaultFocusHighlightEnabled = false;
+    mDefaultFocusHighlightSizeChanged=false;
+    mBoundsChangedmDefaultFocusHighlightSizeChanged=false;
+
     mOldWidthMeasureSpec=mOldHeightMeasureSpec=INT_MIN;
     mViewFlags = ENABLED|VISIBLE|FOCUSABLE_AUTO;
     mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 =0;
@@ -219,22 +227,21 @@ void View::initView(){
     mVerticalScrollbarPosition = 0;
     mUserPaddingLeft = mUserPaddingRight  = 0;
     mUserPaddingTop  = mUserPaddingBottom = 0;
-    mPrivateFlags = mPrivateFlags3 = 0;
+    mPrivateFlags  = mPrivateFlags3 = 0;
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     mNextFocusLeftId= mNextFocusRightId=NO_ID;
     mNextFocusUpId  = mNextFocusDownId=NO_ID;
     mNextFocusForwardId=mNextClusterForwardId=NO_ID;
-    mBackgroundTint =nullptr;
+    mBackgroundTint= nullptr;
     mMeasuredWidth = mMeasuredHeight = 0;
-    mLayoutParams = nullptr;
-    mPaddingLeft  = mPaddingTop = 0;
-    mPaddingRight = mPaddingBottom=0;
-    mForegroundInfo=nullptr;
+    mLayoutParams  = nullptr;
+    mPaddingLeft   = mPaddingTop = 0;
+    mPaddingRight  = mPaddingBottom=0;
+    mForegroundInfo= nullptr;
     mScrollIndicatorDrawable=nullptr;
     mBackground = nullptr;
     mDefaultFocusHighlight = nullptr;
     mDefaultFocusHighlightCache = nullptr;
-    mDefaultFocusHighlightEnabled=false;
     mCurrentAnimation = nullptr;
     mTransformationInfo = nullptr;
     mNestedScrollingParent = nullptr;
@@ -3962,12 +3969,12 @@ bool View::performContextClick() {
 }
 
 bool View::performButtonActionOnTouchDown(MotionEvent& event) {
-    /*if (event.isFromSource(InputDevice.SOURCE_MOUSE) &&
+    if (//event.isFromSource(InputDevice::SOURCE_MOUSE) &&
         (event.getButtonState() & MotionEvent::BUTTON_SECONDARY) != 0) {
-        showContextMenu(event.getX(), event.getY());
+        //showContextMenu(event.getX(), event.getY());
         mPrivateFlags |= PFLAG_CANCEL_NEXT_UP_EVENT;
         return true;
-    }*/
+    }
     return false;
 }
 
@@ -4035,7 +4042,7 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
     int action = event.getAction();
     if ((mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING
             && action != MotionEvent::ACTION_DOWN)
-            //|| !event.isFromSource(InputDevice.SOURCE_MOUSE)
+            //|| !event.isFromSource(InputDevice::SOURCE_MOUSE)
             || !event.isButtonPressed(MotionEvent::BUTTON_PRIMARY)) {
         mScrollCache->mScrollBarDraggingState = ScrollabilityCache::NOT_DRAGGING;
         return false;
@@ -4157,6 +4164,7 @@ bool View::onTouchEvent(MotionEvent& event){
         prepressed = (mPrivateFlags & PFLAG_PREPRESSED) != 0;
         if ((mPrivateFlags & PFLAG_PRESSED) != 0 || prepressed) {
             bool focusTaken = false;
+            LOGV("%p:%d focusable=%d,%d,%d longpress=%d",this,mID,isFocusable(),isFocusableInTouchMode(),isFocused(),mHasPerformedLongPress);
             if (isFocusable() && isFocusableInTouchMode() && !isFocused()) {
                 focusTaken = requestFocus();
             }
@@ -4229,30 +4237,34 @@ void View::postOnAnimationDelayed(Runnable& action, uint32_t delayMillis){
     postDelayed(action,delayMillis);
 }
 
-void View::post(Runnable& what){
-    postDelayed(what,0);
+bool View::post(Runnable& what){
+    return postDelayed(what,0);
 }
 
-void View::postDelayed(Runnable& what,uint32_t delay){
+bool  View::postDelayed(Runnable& what,uint32_t delay){
     View*root=getRootView();
-    if(root&&(root!=this))root->postDelayed(what,delay);
+    if(root&&(root!=this))
+        return root->postDelayed(what,delay);
+    return false;
 }
 
-void View::post(const std::function<void()>&what){
+bool View::post(const std::function<void()>&what){
     Runnable r;
     r=what;
-    post(r);
+    return post(r);
 }
 
-void View::postDelayed(const std::function<void()>&what,uint32_t delay){
+bool View::postDelayed(const std::function<void()>&what,uint32_t delay){
     Runnable r;
     r=what;
-    postDelayed(r,delay);    
+    return postDelayed(r,delay);    
 }
 
-void View::removeCallbacks(const Runnable& what){
+bool View::removeCallbacks(const Runnable& what){
     View*root=getRootView();
-    if(root&&(root!=this))root->removeCallbacks(what);
+    if(root&&(root!=this))
+        return root->removeCallbacks(what);
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
