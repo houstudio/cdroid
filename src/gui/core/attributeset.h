@@ -20,6 +20,7 @@ public:
     const std::string getAttributeValue(const std::string&key)const;
     bool getBoolean(const std::string&key,bool def=false)const;
     int getInt(const std::string&key,int def=0)const;
+    int getResourceId(const std::string&key,int def=0)const;
     int getColor(const std::string&key,int def=0xFFFFFFFF)const;
     float getFloat(const std::string&key,float def=.0)const;
     const std::string getString(const std::string&key,const std::string&def=std::string())const;

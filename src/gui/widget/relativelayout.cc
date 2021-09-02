@@ -779,6 +779,36 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
 
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
 
+    alignWithParent = atts.getBoolean("alignWithParentIfMissing",false);
+
+    mRules[LEFT_OF] = atts.getResourceId("layout_toLeftOf",0);
+    mRules[RIGHT_OF]= atts.getResourceId("layout_toRightOf",0);
+    mRules[ABOVE]   = atts.getResourceId("layout_above",0);
+    mRules[BELOW]   = atts.getResourceId("layot_below",0);
+    mRules[ALIGN_BASELINE]= atts.getResourceId("layout_alignBaseline",0);
+    mRules[ALIGN_LEFT]    = atts.getResourceId("layout_alignLeft",0);
+    mRules[ALIGN_TOP]     = atts.getResourceId("layout_alignTop",0);
+    mRules[ALIGN_RIGHT]   = atts.getResourceId("layout_alignRight",0);
+    mRules[ALIGN_BOTTOM]  = atts.getResourceId("layout_alignBottom",0);
+
+    mRules[ALIGN_PARENT_LEFT]  = atts.getBoolean("layout_alignParentLeft"  , false) ? LTRUE : 0;
+    mRules[ALIGN_PARENT_TOP]   = atts.getBoolean("layout_alignParentTop"   , false) ? LTRUE : 0;    
+    mRules[ALIGN_PARENT_RIGHT] = atts.getBoolean("layout_alignParentRight" , false) ? LTRUE : 0;    
+    mRules[ALIGN_PARENT_BOTTOM]= atts.getBoolean("layout_alignParentBottom", false) ? LTRUE : 0;    
+    
+    mRules[CENTER_IN_PARENT] = atts.getBoolean("layout_centerInParent"  , false) ? LTRUE : 0;
+    mRules[CENTER_HORIZONTAL]= atts.getBoolean("layout_centerHorizontal", false) ? LTRUE : 0;
+    mRules[CENTER_VERTICAL]  = atts.getBoolean("layout_centerVertical"  , false) ? LTRUE : 0;
+
+    mRules[START_OF]   = atts.getResourceId("layout_toStartOf",0);
+    mRules[END_OF]     = atts.getResourceId("layout_toEndOf",0);
+    mRules[ALIGN_START]= atts.getResourceId("layout_alignStart",0); 
+    mRules[ALIGN_END]  = atts.getResourceId("layout_alignEnd",0); 
+
+    mRules[ALIGN_PARENT_START] = atts.getBoolean("layout_alignParentStart", false) ? LTRUE : 0;
+    mRules[ALIGN_PARENT_END]   = atts.getBoolean("layout_alignParentEnd"  , false) ? LTRUE : 0;
+    mRulesChanged = true;
+    memcpy(mInitialRules,mRules,sizeof(mRules));
 }
 
 void RelativeLayout::LayoutParams::addRule(int verb) {
@@ -1058,9 +1088,9 @@ std::list<RelativeLayout::DependencyGraph::Node*> RelativeLayout::DependencyGrap
 
     // Finds all the roots in the graph: all nodes with no dependencies
     for (Node*node:mNodes) {
-        LOGD("Roots::node %p:%8d  depends=%8d %8d %s",node->view,node->view->getId(),
-           node->dependents.size(),node->dependencies.size(),
-           (rulesCount==sizeof(RULES_VERTICAL)/sizeof(RULES_VERTICAL[0]))?"Vertical":"Horizontal");
+        LOGV("Roots::node %p:%8d  depends=%8d %8d %s",node->view,node->view->getId(),
+            node->dependents.size(),node->dependencies.size(),
+            (rulesCount==sizeof(RULES_VERTICAL)/sizeof(RULES_VERTICAL[0]))?"Vertical":"Horizontal");
         if (node->dependencies.size() == 0)
             roots.push_back(node);
     }

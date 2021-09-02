@@ -103,6 +103,10 @@ int AttributeSet::getInt(const std::string&key,int def)const{
 	return std::strtol(v.c_str(),nullptr,10);
 }
 
+int AttributeSet::getResourceId(const std::string&key,int def)const{
+    return getInt(key,def);
+}
+
 int AttributeSet::getColor(const std::string&key,int def)const{
     const std::string v=getAttributeValue(key);
     if(v.empty())return def;
