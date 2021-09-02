@@ -995,6 +995,19 @@ RelativeLayout::DependencyGraph::Node::Node(View*v){
     view=v;
 }
 
+RelativeLayout::DependencyGraph::Node::~Node(){
+    for(auto d:dependents){
+        delete d.second;
+    }
+}
+
+RelativeLayout::DependencyGraph::~DependencyGraph(){
+    for(int i=0;i<mKeyNodes.size();i++){
+         Node* nd=mKeyNodes.get(i);
+         delete nd;
+    }
+    mKeyNodes.clear();
+}
 void RelativeLayout::DependencyGraph::clear(){
     for (auto nd:mNodes) {
         delete nd;//nd->release();

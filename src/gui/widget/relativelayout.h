@@ -71,10 +71,12 @@ private:
             /** The list of dependencies for this node.*/
             SparseArray<Node*,nullptr> dependencies;
             Node(View*v);
+            ~Node();
         };
         std::vector<Node*>mNodes;
         SparseArray<Node*,nullptr> mKeyNodes;
         std::list<Node*>mRoots;
+        ~DependencyGraph();
         void clear();
         void add(View* view);
         void getSortedViews(std::vector<View*>&sorted,const int* rules,size_t ruleCount);
