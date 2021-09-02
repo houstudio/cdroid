@@ -94,7 +94,7 @@ public:
     void setVerticalGravity(int verticalGravity);
     void setOrientation(int orientation);
     int getOrientation()const;
-    bool shouldDelayChildPressedState();//override
+    bool shouldDelayChildPressedState()const override;
     void setWeightSum(float weightSum);
     float getWeightSum()const;
 

@@ -3,6 +3,7 @@
 #include <widget/viewpager.h>
 #include <widget/simplemonthview.h>
 #include <widget/linearlayout.h>
+#include <widget/relativelayout.h>
 #include <widget/numberpicker.h>
 #include <widget/absolutelayout.h>
 #include <widget/framelayout.h>
