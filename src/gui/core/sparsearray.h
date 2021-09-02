@@ -51,10 +51,10 @@ public:
     }
     void remove(int key){
         int idx=indexOfKey(key);
-        if(idx>0){
+        if(idx>=0){
             mKeys.erase(mKeys.begin()+idx);
 	        mValues.erase(mValues.begin()+idx);
-	    }	
+        }	
     }
     void removeAt(int idx){
 	mKeys.erase(mKeys.begin()+idx);

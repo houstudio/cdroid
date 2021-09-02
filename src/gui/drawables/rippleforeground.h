@@ -6,9 +6,9 @@ class RippleForeground:public RippleComponent{
 private:
     static constexpr int RIPPLE_ENTER_DURATION = 225;
     // Time it takes for the ripple to slide from the touch to the center point
-    static constexpr int RIPPLE_ORIGIN_DURATION = 225;
+    static constexpr int RIPPLE_ORIGIN_DURATION= 225;
 
-    static constexpr int OPACITY_ENTER_DURATION = 75;
+    static constexpr int OPACITY_ENTER_DURATION= 75;
     static constexpr int OPACITY_EXIT_DURATION = 150;
     static constexpr int OPACITY_HOLD_DURATION = OPACITY_ENTER_DURATION + 150;
 
@@ -17,7 +17,6 @@ private:
     float mStartingY;
     float mClampedStartingX;
     float mClampedStartingY;
-
     float mTargetX = 0;
     float mTargetY = 0;
 
@@ -42,9 +41,12 @@ private:
 private:
     float getCurrentX();
     float getCurrentY();
+    void drawSoftware(Canvas& c,float origAlpha);
     void startSoftwareExit();
     void startSoftwareEnter();
     float getCurrentRadius();
+    void onAnimationPropertyChanged();
+    void pruneSwFinished();
 protected:
     void onTargetRadiusChanged(float targetRadius);
     void clampStartingPosition();

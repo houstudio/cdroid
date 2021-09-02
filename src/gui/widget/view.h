@@ -31,11 +31,10 @@
 
 namespace cdroid{
 
-#define NO_ID (-1) 
-
 class ViewGroup;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
+    constexpr static int NO_ID =-1;
     //TEXT Alignment
     constexpr static int TEXT_ALIGNMENT_INHERIT   = 0;
     constexpr static int TEXT_ALIGNMENT_GRAVITY   = 1;

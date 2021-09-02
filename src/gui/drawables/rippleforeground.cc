@@ -15,8 +15,27 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
 }
 
 void RippleForeground::onTargetRadiusChanged(float targetRadius){
-    //clampStartingPosition();
+    clampStartingPosition();
     //switchToUiThreadAnimation();
+}
+
+void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
+    int alpha = (int) (origAlpha * mOpacity + 0.5f);
+    float radius = getCurrentRadius();
+    if (alpha > 0 && radius > 0) {
+        const float x = getCurrentX();
+        const float y = getCurrentY();
+        c.arc(x, y, radius,0,M_PI*2);
+    }
+}
+
+void RippleForeground::pruneSwFinished() {
+    /*for (auto anim:mRunningSwAnimators.size() - 1; i >= 0; i--) {
+        if (!mRunningSwAnimators.get(i).isRunning()) {
+            mRunningSwAnimators.remove(i);
+        }
+    }*/
+    //mRunningSwAnimators.remove_if([](const Animator*anim){return !anim->isRunning();});
 }
 
 void RippleForeground::getBounds(Rect& bounds) {
@@ -104,9 +123,32 @@ float RippleForeground::getCurrentRadius() {
 }
 
 void RippleForeground::end(){
+    for (auto anim:mRunningSwAnimators) {
+        anim->end();
+    }
+    mRunningSwAnimators.clear();
+    /*for (auto animhw:mRunningHwAnimators;) {
+        animhw->end();
+    }
+    mRunningHwAnimators.clear();*/
+}
+
+void RippleForeground::onAnimationPropertyChanged() {
+    if (!mUsingProperties) {
+        invalidateSelf();
+    }
 }
 
 void RippleForeground::draw(Canvas&canvas,float alpha){
+    pruneSwFinished();
+    drawSoftware(canvas,alpha);
+    /*const bool hasDisplayListCanvas = !mForceSoftware && c instanceof DisplayListCanvas;
+    if (hasDisplayListCanvas) {
+        DisplayListCanvas hw = (DisplayListCanvas) c;
+        drawHardware(hw, p);
+    } else {
+        drawSoftware(c, p);
+    }*/
 }
 
 void RippleForeground::clampStartingPosition(){

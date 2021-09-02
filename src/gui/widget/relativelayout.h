@@ -65,7 +65,10 @@ private:
         class Node{
         public:
             View*view;
+            /*The list of dependents for this node; a dependent is a node
+             * that needs this node to be processed first.*/
             std::map<Node*,DependencyGraph*>dependents;
+            /** The list of dependencies for this node.*/
             SparseArray<Node*,nullptr> dependencies;
             Node(View*v);
         };
@@ -75,7 +78,7 @@ private:
         void clear();
         void add(View* view);
         void getSortedViews(std::vector<View*>&sorted,const int* rules,size_t ruleCount);
-        std::list<Node*>& findRoots(const int* rulesFilter,size_t ruleCount);
+        std::list<Node*> findRoots(const int* rulesFilter,size_t ruleCount);
     };
 private:
 

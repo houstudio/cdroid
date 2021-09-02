@@ -1,4 +1,5 @@
 #include <widget/relativelayout.h>
+#include <string.h>
 namespace cdroid{
 
 static constexpr int RULES_VERTICAL[] = {
@@ -21,6 +22,7 @@ static constexpr int RULES_HORIZONTAL[] = {
 };
 
 RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
+    mIgnoreGravity=NO_ID;
 }
 
 RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
@@ -37,18 +39,18 @@ int RelativeLayout::getGravity()const{
 }
 
 void RelativeLayout::setGravity(int gravity) {
-    if (mGravity != gravity) {
-        if ((gravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) == 0) {
-            gravity |= Gravity::START;
-        }
+    if (mGravity == gravity)return;
 
-        if ((gravity & Gravity::VERTICAL_GRAVITY_MASK) == 0) {
-            gravity |= Gravity::TOP;
-        }
-
-        mGravity = gravity;
-        requestLayout();
+    if ((gravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) == 0) {
+        gravity |= Gravity::START;
     }
+
+    if ((gravity & Gravity::VERTICAL_GRAVITY_MASK) == 0) {
+        gravity |= Gravity::TOP;
+    }
+
+    mGravity = gravity;
+    requestLayout();
 }
 
 void RelativeLayout::setHorizontalGravity(int horizontalGravity) {
@@ -150,7 +152,6 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
     std::vector<View*>&views = mSortedHorizontalChildren;
     int count = views.size();
-
     for (int i = 0; i < count; i++) {
         View* child = views[i];
         if (child->getVisibility() != GONE) {
@@ -753,6 +754,8 @@ RelativeLayout::LayoutParams::LayoutParams(int w, int h)
     alignWithParent=false;
     mRulesChanged=false;
     mIsRtlCompatibilityMode=false;
+    memset(mRules,0,sizeof(mRules));
+    memset(mInitialRules,0,sizeof(mInitialRules));
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
@@ -771,8 +774,7 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
     mRulesChanged = source.mRulesChanged;
     alignWithParent= source.alignWithParent;
     memcpy(mRules,source.mRules,sizeof(mRules));
-    memcpy(mInitialRules,source.mInitialRules,sizeof(mInitialRules));
-    
+    memcpy(mInitialRules,source.mInitialRules,sizeof(mInitialRules)); 
 }
 
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
@@ -973,7 +975,7 @@ void RelativeLayout::DependencyGraph::clear(){
 }
 
 void RelativeLayout::DependencyGraph::add(View* view) {
-    int id = view->getId();
+    const int id = view->getId();
     Node* node = new Node(view);//Node::acquire(view);
     if (id != NO_ID) {
         mKeyNodes.put(id, node);
@@ -991,35 +993,33 @@ void RelativeLayout::DependencyGraph::add(View* view) {
  *        be equal to getChildCount().
  * @param rules The list of rules to take into account.
  */
-void RelativeLayout::DependencyGraph::getSortedViews(std::vector<View*>&sorted,const int* rules,size_t ruleCount){
-    std::list<Node*> roots = findRoots(rules,ruleCount);
+void RelativeLayout::DependencyGraph::getSortedViews(std::vector<View*>&sorted,const int* rules,size_t rulesCount){
+    std::list<Node*> roots = findRoots(rules,rulesCount);
     int index = 0;
     int count=roots.size();
  
     Node* node;
-    while ((node = roots.back()) != nullptr) {
+    while ((roots.empty()==false)&&(node = roots.back()) != nullptr) {
         View* view = node->view;
         const int key = view->getId();
         sorted[index++] = view;
+        roots.pop_back();
 
         std::map<Node*, DependencyGraph*>& dependents = node->dependents;
-        LOGD("%p:%d dependents.size=%d ",view,key,dependents.size());
         for (auto dep:dependents) {
             Node* dependent = dep.first;//dependents.keyAt(i);
             SparseArray<Node*,nullptr>& dependencies = dependent->dependencies;
-
+            
             dependencies.remove(key);
             if (dependencies.size() == 0) {
                 roots.push_back(dependent);
             }
         }
-        roots.pop_back();
-        if(roots.empty())break;
     }
     LOGE_IF(index < sorted.size(),"Circular dependencies cannot exist in RelativeLayout %d,%d",index,sorted.size());
 }
 
-std::list<RelativeLayout::DependencyGraph::Node*>& RelativeLayout::DependencyGraph::findRoots(const int* rulesFilter,size_t ruleCount){
+std::list<RelativeLayout::DependencyGraph::Node*> RelativeLayout::DependencyGraph::findRoots(const int* rulesFilter,size_t rulesCount){
 
     // Find roots can be invoked several times, so make sure to clear
     // all dependents and dependencies before running the algorithm
@@ -1036,7 +1036,7 @@ std::list<RelativeLayout::DependencyGraph::Node*>& RelativeLayout::DependencyGra
 
         // Look only the the rules passed in parameter, this way we build only the
         // dependencies for a specific set of rules
-        for (int j = 0; j < ruleCount; j++) {
+        for (int j = 0; j < rulesCount; j++) {
             int rule = rules[rulesFilter[j]];
             if (rule > 0) {
                 // The node this node depends on
@@ -1049,8 +1049,6 @@ std::list<RelativeLayout::DependencyGraph::Node*>& RelativeLayout::DependencyGra
                 dependency->dependents.emplace(node, this);
                 // Add a dependency to the current node
                 node->dependencies.put(rule, dependency);
-                LOGD("Node %p:%d  rule=%d node->dependencies.size=%d  %d %d",node->view,node->view->getId(),rule,
-                   node->dependencies.size(),dependency->dependencies.size(),dependency->dependents.size());
             }
         }
     }
@@ -1060,12 +1058,13 @@ std::list<RelativeLayout::DependencyGraph::Node*>& RelativeLayout::DependencyGra
 
     // Finds all the roots in the graph: all nodes with no dependencies
     for (Node*node:mNodes) {
-        LOGD("Roots::node %p:%d  dependencies=%d",node->view,node->view->getId(),node->dependencies.size());
+        LOGD("Roots::node %p:%8d  depends=%8d %8d %s",node->view,node->view->getId(),
+           node->dependents.size(),node->dependencies.size(),
+           (rulesCount==sizeof(RULES_VERTICAL)/sizeof(RULES_VERTICAL[0]))?"Vertical":"Horizontal");
         if (node->dependencies.size() == 0)
             roots.push_back(node);
     }
-    LOGD("roots.size=%d",roots.size());
-    return mRoots;
+    return roots;
 }
 
 }//endof namespace
