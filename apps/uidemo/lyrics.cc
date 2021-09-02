@@ -93,7 +93,7 @@ int Lyrics::loadImages(){
                 counter++;
                 RefPtr<ImageSurface>image=cdroid::Context::loadImage(stm);
                 images[picture_types[type[1]&0xFF]]=image;
-                LOGD("%s:imagesize=%dx%d",picture_types[type[1]&0xFF],image->get_width(),image->get_height());
+                LOGV("%s:imagesize=%dx%d",picture_types[type[1]&0xFF],image->get_width(),image->get_height());
            }
        }//while
        ID3_free(tag);

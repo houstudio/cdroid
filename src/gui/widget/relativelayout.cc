@@ -996,9 +996,7 @@ RelativeLayout::DependencyGraph::Node::Node(View*v){
 }
 
 RelativeLayout::DependencyGraph::Node::~Node(){
-    for(auto d:dependents){
-        delete d.second;
-    }
+
 }
 
 RelativeLayout::DependencyGraph::~DependencyGraph(){

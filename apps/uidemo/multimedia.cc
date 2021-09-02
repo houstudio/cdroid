@@ -133,26 +133,31 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     filter_type=VIDEO;
     sort_revert=false;
     setBackgroundColor(0x000000);
+
+    RelativeLayout*layout=new RelativeLayout(w,h);//LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
+    RelativeLayout::LayoutParams*lp=new RelativeLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+    lp->addRule(RelativeLayout::ALIGN_PARENT_BOTTOM);
+    mFilePath=new TextView("",600,30);
+    mFilePath->setSingleLine(true);
+    mFilePath->setEllipsize(Layout::ELLIPSIS_MIDDLE);
+    mFilePath->setTextSize(28);
+    layout->addView(mFilePath,lp).setId(100);
     //mdtype=new ToolBar(1280,30);
 
 
     //header=new ToolBar(1280,30);
-       
+    
     mdlist=new ListView(600,520);
-    mdlist->setPos(40,130);
+    lp=new RelativeLayout::LayoutParams(600,LayoutParams::MATCH_PARENT);
+    lp->addRule(RelativeLayout::ABOVE,100);
     mdlist->setSelector(new ColorDrawable(0x8000ff00));
     mdlist->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     mdlist->setVerticalScrollBarEnabled(true);
     mdlist->setDrawSelectorOnTop(true);
     mdlist->setDivider(new ColorDrawable(0x40FFFFFF));
     mdlist->setDividerHeight(1);
-    addView(mdlist);
+    layout->addView(mdlist,lp).setId(1);
 
-    mFilePath=new TextView("",600,30);
-    mFilePath->setSingleLine(true);
-    mFilePath->setEllipsize(Layout::ELLIPSIS_MIDDLE);
-    mFilePath->setTextSize(28);
-    addView(mFilePath).setPos(40,660);
 
     mAdapter=new MediaAdapter();
     mAdapter->loadMedias("/");
@@ -163,10 +168,15 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
         processMedia(mdi);
         mFilePath->setText(SimplifyPath(mdi.fullpath));
     });
-    lyrics=new LyricsView("",440,mdlist->getHeight()+30);
-    lyrics->setVisibility(VISIBLE);
-    addView(lyrics).setPos(750,130).setBackgroundColor(0x80000000);
 
+    lyrics=new LyricsView("",440,mdlist->getHeight()+30);
+    lp=new RelativeLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
+    lp->addRule(RelativeLayout::RIGHT_OF,1);
+    lp->addRule(RelativeLayout::ABOVE,100);
+    lyrics->setVisibility(VISIBLE);
+    layout->addView(lyrics,lp).setBackgroundColor(0x80000000);
+    addView(layout);
+    requestLayout();
 }
 
 int MediaWindow::processMedia(const MediaItem mdi){
