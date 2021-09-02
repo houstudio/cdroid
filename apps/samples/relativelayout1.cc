@@ -33,6 +33,16 @@ int main(int argc,const char*argv[]){
     lp->addRule(RelativeLayout::LEFT_OF,20);
     lp->addRule(RelativeLayout::CENTER_HORIZONTAL);
     layout->addView(tvab2,lp);
+   
+    TextView*tvcent=new TextView("Center Text with multi line support.\n"
+    "can you find the second line?",0,0);
+    tvcent->setSingleLine(false);
+    tvcent->setTextSize(32);
+    lp=new RelativeLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
+    lp->addRule(RelativeLayout::CENTER_HORIZONTAL);
+    lp->addRule(RelativeLayout::CENTER_VERTICAL);
+    tvcent->setBackgroundColor(0xFF00FF00);
+    layout->addView(tvcent,lp).setId(1000);
 
 
     TextView*tvleft=new TextView("ParentLeft",0,0);

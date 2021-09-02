@@ -733,13 +733,15 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (widthMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         width = widthSize;
+        mLayout->setWidth(width);
     } else {
         int txtWidth,txtHeight;
+        mLayout->setWidth(INT_MAX);
         mLayout->relayout();
         mHintLayout->relayout();
         txtWidth=desired(mLayout);
         txtHeight=mLayout->getHeight();
-        LOGV("%p Measuredsize=%dx%d fontsize=%d",this,txtWidth,txtHeight);
+        LOGV("%p Measuredsize=%dx%d fontsize=%d",this,txtWidth,txtHeight,getFontSize());
         width=txtWidth+getPaddingLeft()+getPaddingRight();;
         Drawables* dr = mDrawables;
         if (dr != nullptr) {
