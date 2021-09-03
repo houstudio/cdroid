@@ -35,8 +35,9 @@ protected:
     Drawable*mThumb;
     Drawable*mTickMark;
     void trackTouchEvent(MotionEvent& event);
-    void onStartTrackingTouch();
-    void onStopTrackingTouch();
+    virtual void onStartTrackingTouch();
+    virtual void onStopTrackingTouch();
+    virtual void onKeyChange();
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     bool verifyDrawable(Drawable* who)const override;
     virtual void drawThumb(Canvas&canvas);
@@ -46,6 +47,10 @@ protected:
     virtual void onProgressRefresh(float scale, bool fromUser, int progress);
     void onVisualProgressChanged(int id, float scale)override;
     void drawableStateChanged()override;
+
+    void onDraw(Canvas&canvas);
+    bool onKeyDown(int keycode,KeyEvent&event)override;
+    bool onTouchEvent(MotionEvent& event)override;
 public:
     AbsSeekBar(Context*ctx,const AttributeSet&attrs);
     AbsSeekBar(int w,int h);
@@ -57,11 +62,10 @@ public:
     void setThumb(Drawable*thumb);
     void setTickMark(Drawable* tickMark);
     Drawable* getTickMark()const;
-    void setMin(int min);
-    void setMax(int max);
-    void onDraw(Canvas&canvas);
-    bool onKeyDown(int keycode,KeyEvent&event)override;
-    bool onTouchEvent(MotionEvent& event)override;
+    virtual void setMin(int min);
+    virtual void setMax(int max);
+    virtual bool canUserSetProgress()const;
+    void onRtlPropertiesChanged(int layoutDirection)override;
 };
 
 }//namespace

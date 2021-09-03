@@ -74,6 +74,7 @@ void ProgressBar::initProgressBar(){
     mMax = 100;
     mProgress = 0;
     mSecondaryProgress = 0;
+    mSampleWidth = 0;
     mIndeterminate = false;
     mOnlyIndeterminate = false;
     mDuration = 4000;
@@ -88,7 +89,7 @@ void ProgressBar::initProgressBar(){
     mIndeterminateDrawable=nullptr;
     mAnimator=nullptr;
     mAnimation=nullptr;
-	mTransformation=nullptr;
+    mTransformation=nullptr;
     mHasAnimation=false;
     mInDrawing =false;
     mRefreshIsPosted =false;

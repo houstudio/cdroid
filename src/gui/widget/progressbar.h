@@ -36,7 +36,6 @@ private:
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
     ObjectAnimator*mAnimator;
-
     bool mNoInvalidate;
     Interpolator* mInterpolator;
 
@@ -65,6 +64,7 @@ protected:
     int mProgress;
     int mSecondaryProgress;
     int  indeterminatePos;
+    int mSampleWidth;
     bool mIndeterminate;
     bool mMirrorForRtl;
     Drawable*mCurrentDrawable;

@@ -9,8 +9,19 @@ namespace cdroid{
 
 AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,attrs){
     initSeekBar();
+
     setThumb(ctx->getDrawable(attrs.getString("thumb")));
     setTickMark(ctx->getDrawable(attrs.getString("tickMark")));
+    const int thumbOffset=attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
+    setThumbOffset(thumbOffset);
+
+    const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
+    mDisabledAlpha = useDisabledAlpha?attrs.getFloat("disabledAlpha", 0.5f):1.f;
+
+    applyThumbTint();
+    applyTickMarkTint();
+
+    mScaledTouchSlop = ViewConfiguration::get(ctx).getScaledTouchSlop();
 }
 
 AbsSeekBar::AbsSeekBar(int w,int h):ProgressBar(w,h){
@@ -26,6 +37,7 @@ void AbsSeekBar::initSeekBar(){
     mIsUserSeekable=true;
     mIsDragging=false;
     mTouchDownX=.0;
+    mDisabledAlpha=1.f;
     mScaledTouchSlop=ViewConfiguration::get(mContext).getScaledTouchSlop();
     setFocusable(true);
 }
@@ -40,6 +52,7 @@ void AbsSeekBar::setMin(int min) {
         setKeyProgressIncrement(std::max(1.f,round((float) range / 20)));
     }
 }
+
 void AbsSeekBar::setMax(int max) {
     ProgressBar::setMax(max);
     int range = getMax() - getMin();
@@ -376,6 +389,9 @@ void AbsSeekBar::onStopTrackingTouch(){
      mIsDragging = false;
 }
 
+void AbsSeekBar::onKeyChange(){
+}
+
 void AbsSeekBar::onDraw(Canvas&canvas){
     ProgressBar::onDraw(canvas);
     drawThumb(canvas);
@@ -493,5 +509,21 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
         break;
     }
     return true;
+}
+
+bool AbsSeekBar::canUserSetProgress()const{
+    return !isIndeterminate() && isEnabled();
+}
+
+void AbsSeekBar::onRtlPropertiesChanged(int layoutDirection) {
+    AbsSeekBar::onRtlPropertiesChanged(layoutDirection);
+
+    if (mThumb) {
+        setThumbPos(getWidth(), mThumb, getScale(), INT_MIN);//Integer.MIN_VALUE);
+        // Since we draw translated, the drawable's bounds that it signals
+        // for invalidation won't be the actual bounds we want invalidated,
+        // so just invalidate this whole view.
+        invalidate();
     }
+}
 }//namespace
