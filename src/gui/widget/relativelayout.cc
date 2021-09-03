@@ -30,7 +30,7 @@ RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
 
 }
 
-bool RelativeLayout::shouldDelayChildPressedState()const{
+bool RelativeLayout::shouldDelayChildPressedState(){
     return false;
 }
 

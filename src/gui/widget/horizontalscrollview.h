@@ -86,7 +86,7 @@ public:
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool onGenericMotionEvent(MotionEvent& event);
-    bool shouldDelayChildPressedState()const override;
+    bool shouldDelayChildPressedState()override;
     bool pageScroll(int direction);
     bool fullScroll(int direction);
     bool arrowScroll(int direction);

@@ -689,6 +689,18 @@ void TextView::setMinHeight(int minPixels){
     invalidate(true);
 }
 
+void TextView::setMaxLines(int maxLines){
+    mMaximum = maxLines;
+    mMaxMode = LINES;
+
+    requestLayout();
+    invalidate();
+}
+
+int TextView::getMaxLines()const{
+    return mMaxMode == LINES ? mMaximum : -1;
+}
+
 int TextView::getMaxHeight()const{
     return mMaxMode == PIXELS ? mMaximum : -1;
 }
@@ -1011,6 +1023,15 @@ ColorStateList* TextView::getTextColors()const{
 
 int TextView::getCurrentTextColor()const{
     return mCurTextColor;
+}
+
+Layout* TextView::getLayout()const{
+    return mLayout;
+}
+
+
+Layout* TextView::getHintLayout()const{
+    return mHintLayout;
 }
 
 void TextView::setHighlightColor(int color){

@@ -515,7 +515,7 @@ bool HorizontalScrollView::onGenericMotionEvent(MotionEvent& event){
    return FrameLayout::onGenericMotionEvent(event);
 }
 
-bool HorizontalScrollView::shouldDelayChildPressedState()const{
+bool HorizontalScrollView::shouldDelayChildPressedState(){
     return true;
 }
 

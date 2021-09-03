@@ -369,7 +369,7 @@ int LinearLayout::getDividerPadding()const{
     return mDividerPadding;
 }
 
-bool LinearLayout::shouldDelayChildPressedState()const{
+bool LinearLayout::shouldDelayChildPressedState(){
     return false;
 }
 

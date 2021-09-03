@@ -1425,7 +1425,7 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
     return nullptr;
 }
 
-bool ViewGroup::shouldDelayChildPressedState()const{
+bool ViewGroup::shouldDelayChildPressedState(){
     return true;
 }
 

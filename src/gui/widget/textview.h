@@ -136,6 +136,8 @@ public:
     float getTextSize()const;
     void setTextColor(int color);
     void setTextColor(ColorStateList* colors);
+    Layout* getLayout()const;
+    Layout* getHintLayout()const;
     void setShadowLayer(float radius, float dx, float dy, int color);
     float getShadowRadius()const;
     float getShadowDx()const;
@@ -168,6 +170,8 @@ public:
 
     int getMinHeight()const;
     void setMinHeight(int minPixels);
+    void setMaxLines(int maxLines);
+    int getMaxLines()const;
     int getMaxHeight()const;
     void setMaxHeight(int maxPixels);
     int getLineCount()const;

@@ -250,7 +250,7 @@ public:
     void removeAllViewsInLayout();
     virtual View* findViewById(int id)const;
     View*findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const;
-    virtual bool shouldDelayChildPressedState()const;
+    virtual bool shouldDelayChildPressedState();
 
     virtual void onSizeChanged(int w,int h,int ow,int oh) override;
     
