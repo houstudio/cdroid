@@ -18,19 +18,17 @@ protected:
     std::string mPropertyName;
     Property*mProperty;
 public:
-    PropertyValuesHolder(){
-        mProperty=nullptr;
-    }
-    void setPropertyName(const std::string& propertyName){
-        mPropertyName=propertyName;
-    }
-    const std::string getPropertyName()const{
-        return mPropertyName;
-    }
+    PropertyValuesHolder();
+    PropertyValuesHolder(Property*prop);
+    PropertyValuesHolder(const std::string&name);
+    void setPropertyName(const std::string& propertyName);
+    const std::string getPropertyName()const;
     virtual void setFraction(void*target,float fraction)=0;
-    virtual ~PropertyValuesHolder(){
-        delete mProperty;
-    }
+    virtual ~PropertyValuesHolder();
+    static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
+    static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);
+    static PropertyValuesHolder*ofFloat(const std::string&name,const std::vector<float>&);
+    static PropertyValuesHolder*ofFloat(Property*prop,const std::vector<float>&);
 };
 
 template <typename T>
@@ -76,20 +74,18 @@ public:
 
 template<typename T>
 class PropertyValuesHolderImpl:public PropertyValuesHolder{
-public:
-    typedef std::function < void(void*target,float fraction,const T&value) > PropertySetter;
 protected:
     Evaluator<T>* mEvaluator;
     std::vector<T>mDataSource;
     T mStartValue;
     T mEndValue;
     T mAnimateValue;
-    PropertySetter mPropSetter;
 public: 
     PropertyValuesHolderImpl(){
         mEvaluator=nullptr;
-        mPropSetter=nullptr;
     }
+    PropertyValuesHolderImpl(const std::string&name):PropertyValuesHolder(name){}
+    PropertyValuesHolderImpl(Property*prop):PropertyValuesHolder(prop){}
     PropertyValuesHolderImpl(const T& startValue, const T& endValue)
          : mStartValue(startValue), mEndValue(endValue) {}
     void setValues(const T* dataSource, int length) {
@@ -97,9 +93,6 @@ public:
     }
     void setValues(const std::vector<T>&values){
          mDataSource=values; 
-    }
-    void setPropertySetter(PropertySetter setter){
-        mPropSetter=setter;
     }
     void setFraction(void*target,float fraction)override{
         if (mDataSource.size()==0) mEvaluator->evaluate(&mAnimateValue, mStartValue, mEndValue, fraction);
@@ -111,7 +104,6 @@ public:
             fraction -= lowIndex;
             mEvaluator->evaluate(&mAnimateValue, mDataSource[lowIndex], mDataSource[lowIndex + 1], fraction);
         }
-        if(mPropSetter)mPropSetter(target,fraction,mAnimateValue);
     }
     T getAnimatedValue()const{return mAnimateValue;}
 };
@@ -119,16 +111,16 @@ public:
 #if 1
 class IntPropertyValuesHolder:public PropertyValuesHolderImpl<int>{
 public:
-   IntPropertyValuesHolder():PropertyValuesHolderImpl<int>(){
-      mEvaluator=new IntEvaluator();
-   }
+   IntPropertyValuesHolder();
+   IntPropertyValuesHolder(const std::string&);
+   IntPropertyValuesHolder(Property*);
 };
 
 class FloatPropertyValuesHolder:public PropertyValuesHolderImpl<float>{
 public:
-   FloatPropertyValuesHolder():PropertyValuesHolderImpl<float>(){
-      mEvaluator=new FloatEvaluator();
-   }
+   FloatPropertyValuesHolder();
+   FloatPropertyValuesHolder(const std::string&);
+   FloatPropertyValuesHolder(Property*);
 };
 class ColorPropertyValuesHolder:public PropertyValuesHolderImpl<uint32_t>{
 public:

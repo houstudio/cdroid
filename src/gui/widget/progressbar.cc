@@ -174,16 +174,16 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     if (isPrimary && animate) {
         FloatPropertyValuesHolder*prop=nullptr;
         if(mAnimator==nullptr){
-            prop=new FloatPropertyValuesHolder();  
-            prop->setPropertySetter([&](void*target,float fraction,float v){
-                setVisualProgress(ID_PRIMARY, v);
-                LOGV("setVisualProgress(%d)->%f",ID_PRIMARY,v);
-            });
-            mAnimator = ObjectAnimator::ofPropertyValuesHolder(this,{prop});
+            mAnimator = ObjectAnimator::ofFloat(this,"progress",{scale});
             mAnimator->setAutoCancel(true);
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
             mAnimator->setInterpolator(new  DecelerateInterpolator());
-        }else prop=(FloatPropertyValuesHolder*)mAnimator->getValues()[0];
+            mAnimator->addUpdateListener([this](ValueAnimator&anim){
+                FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
+                setVisualProgress(ID_PRIMARY,fp->getAnimatedValue());
+            });
+        }
+        prop=(FloatPropertyValuesHolder*)mAnimator->getValues(0);
         prop->setValues({scale});
         mAnimator->start();
     } else {

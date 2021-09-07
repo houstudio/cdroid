@@ -71,9 +71,9 @@ void ObjectAnimator::setIntValues(const std::vector<int>&values){
         // No values yet - this animator is being constructed piecemeal. Init the values with
         // whatever the current propertyName is
         if (mProperty) {
-            //setValues({PropertyValuesHolder::ofInt(mProperty, values)});
+            setValues({PropertyValuesHolder::ofInt(mProperty, values)});
         } else {
-            //setValues({PropertyValuesHolder::ofInt(mPropertyName, values)});
+            setValues({PropertyValuesHolder::ofInt(mPropertyName, values)});
         }
     } else {
         ValueAnimator::setIntValues(values);
@@ -85,9 +85,9 @@ void ObjectAnimator::setFloatValues(const std::vector<float>&values){
         // No values yet - this animator is being constructed piecemeal. Init the values with
         // whatever the current propertyName is
         if (mProperty) {
-            //setValues({PropertyValuesHolder::ofFloat(mProperty, values)});
+            setValues({PropertyValuesHolder::ofFloat(mProperty, values)});
         } else {
-            //setValues({PropertyValuesHolder::ofFloat(mPropertyName, values)});
+            setValues({PropertyValuesHolder::ofFloat(mPropertyName, values)});
         }
     } else {
         ValueAnimator::setFloatValues(values);
