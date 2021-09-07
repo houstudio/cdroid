@@ -252,7 +252,7 @@ void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool 
 
         // Now we'll add a tab selected listener to set ViewPager's current item
         mCurrentVpSelectedListener.onTabSelected=[this](Tab&tab){
-            LOGD("selectTab %d/%d",tab.getPosition(),getTabCount());
+            LOGV("selectTab %d/%d",tab.getPosition(),getTabCount());
             mViewPager->setCurrentItem(tab.getPosition());
         };
         addOnTabSelectedListener(mCurrentVpSelectedListener);

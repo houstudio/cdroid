@@ -1375,7 +1375,6 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
              float x = ev.getX(activePointerIndex);
              int totalDelta = (int) (x - mInitialMotionX);
              int nextPage = determineTargetPage(currentPage, pageOffset, initialVelocity, totalDelta);
-             LOGD("currentPage=%d nextPage=%d totalDelta=%d",currentPage,nextPage,totalDelta);
              setCurrentItemInternal(nextPage, true, true, initialVelocity);
              needsInvalidate = resetTouch();
          }

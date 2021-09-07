@@ -33,31 +33,25 @@ public:
         container->removeView((View*)object);
     }
     float getPageWidth(int position)override{return 1.f;}
+
+    std::string getPageTitle(int position){
+        std::string url=urls[position];
+        size_t pos=url.find_last_of('/');
+        return url.substr(pos+1);
+    }
+
     //if returned calue <1 OffscreenPageLimit must be larger to workfine 
 };
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,800,600);
-    HorizontalScrollView* hs=new HorizontalScrollView(800,400);
-    LinearLayout*layout=new LinearLayout(400,100);
-    ColorStateList*cl=ColorStateList::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/color/textview.xml");
-    layout->setId(10);
-    hs->addView(layout);
-    hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    w->addView(hs).setId(1);
-
+    LinearLayout*layout=new LinearLayout(800,600);
+    layout->setOrientation(LinearLayout::VERTICAL);
+    TabLayout* tab=new TabLayout(1280,36);
+    layout->addView(tab);
+    
     MyPageAdapter*gpAdapter=new MyPageAdapter(argc==1?std::string("/home/houzh/images"):argv[1]);
-    for(int i=0;i<gpAdapter->getCount();i++){
-        Button*btn=new Button("Hello Button"+std::to_string(i),150,30);
-        btn->setPadding(5,5,5,5);
-        btn->setTextColor(cl);
-        btn->setTextSize(30);
-        btn->setBackgroundColor(0xFF000000|i*20<<8|i*8);
-        btn->setId(100+i);
-        btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        layout->addView(btn,new LinearLayout::LayoutParams(800,LayoutParams::WRAP_CONTENT));
-    }
     ViewPager*pager=new ViewPager(800,560);
     pager->setOffscreenPageLimit(3);
     pager->setAdapter(gpAdapter);
@@ -65,14 +59,12 @@ int main(int argc,const char*argv[]){
     listener.onPageSelected=[&](int position){
         //hs->
     };
-    listener.onPageScrolled=[&](int position, float positionOffset, int positionOffsetPixels){
-        hs->scrollTo(position*pager->getWidth()+positionOffsetPixels,0);
-    };
     pager->addOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    w->addView(pager).setPos(0,40);
+    layout->addView(pager);
+    tab->setupWithViewPager(pager);
+    w->addView(layout);
     gpAdapter->notifyDataSetChanged();
-    pager->setCurrentItem(0);
     w->requestLayout();
     app.exec();
 }
