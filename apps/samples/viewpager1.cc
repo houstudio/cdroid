@@ -43,7 +43,7 @@ int main(int argc,const char*argv[]){
     MyPageAdapter*gpAdapter=new MyPageAdapter();
     pager->setOffscreenPageLimit(3);
     pager->setAdapter(gpAdapter);
-    ViewPager::OnPageChangeListener listener={nullptr,nullptr,nullptr};
+    ViewPager::OnPageChangeListener listener;
     listener.onPageSelected=[&](int position){
         //hs->
     };

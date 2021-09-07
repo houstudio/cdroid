@@ -58,6 +58,9 @@ public:
 inline constexpr float lerp(float fromValue, float toValue, float fraction) {
     return float(fromValue * (1.f - fraction) + toValue * fraction);
 }
+inline int lerp(int startValue, int endValue, float fraction) {
+    return startValue + std::round(fraction * (endValue - startValue));
+}
 
 class ColorEvaluator : public Evaluator<uint32_t> {
 public:

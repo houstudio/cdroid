@@ -18,9 +18,9 @@ class ViewPager:public ViewGroup{
 public:
     typedef std::function<void(View&v,float position)>PageTransformer; 
     struct OnPageChangeListener{
-        std::function<void(int,float,int)>onPageScrolled;//void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
-        std::function<void(int)>onPageSelected;//void onPageSelected(int position);
-        std::function<void(int)>onPageScrollStateChanged;//void onPageScrollStateChanged(int state);
+        CallbackBase<void,int,float,int>onPageScrolled;//void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
+        CallbackBase<void,int>onPageSelected;//void onPageSelected(int position);
+        CallbackBase<void,int>onPageScrollStateChanged;//void onPageScrollStateChanged(int state);
     };
 private:
     static constexpr int MAX_SCROLL_X =2<<23;
@@ -82,6 +82,8 @@ private:
     ItemInfo* mTempItem;
     int mRestoredCurItem = -1;
     Scroller* mScroller;
+    bool mIsScrollStarted;
+    int mScrollState;
     PagerObserver * mObserver;
     int mPageMargin;
     Drawable* mMarginDrawable;
@@ -97,7 +99,7 @@ private:
     int mChildWidthMeasureSpec;
     int mChildHeightMeasureSpec;
     bool mInLayout;
-    OnPageChangeListener mOnPageChangeListener;
+    std::vector<OnPageChangeListener> mOnPageChangeListeners;
     OnPageChangeListener mInternalPageChangeListener;
     PageTransformer mPageTransformer;
 
@@ -135,16 +137,16 @@ private:
     EdgeEffect* mRightEdge;
 
     bool mFirstLayout = true;
+    bool mNeedCalculatePageOffsets =false;
     bool mCalledSuper;
     int mDecorChildCount;
     int mDrawingOrder;
     std::vector<View*>mDrawingOrderedChildren;
-    int mScrollState = SCROLL_STATE_IDLE;
     PagerAdapter* mAdapter;
-    OnAdapterChangeListener mAdapterChangeListener;
+    std::vector<OnAdapterChangeListener> mAdapterChangeListeners;
 private:
     void removeNonDecorViews();
-    int getPaddedWidth();
+    int getClientWidth();
     bool isGutterDrag(float x, float dx);
     void scrollToItem(int item, bool smoothScroll, int velocity, bool dispatchSelected);
     void completeScroll(bool postEvents);
@@ -158,12 +160,15 @@ private:
     bool canScroll();
     bool canScroll(View* v, bool checkV, int dx, int x, int y);
     bool performDrag(float x);
-    ItemInfo* infoForFirstVisiblePage();
-    int getScrollStart();
+    ItemInfo* infoForCurrentScrollPosition();
     void endDrag();
+    bool resetTouch();
     void requestParentDisallowInterceptTouchEvent(bool disallowIntercept);
     void setScrollingCacheEnabled(bool enabled);
-    int getLeftEdgeForItem(int position);
+
+    void dispatchOnPageScrolled(int position, float offset, int offsetPixels);
+    void dispatchOnPageSelected(int position);
+    void dispatchOnScrollStateChanged(int state);
 protected:
     ItemInfo* infoForChild(View* child);
     ItemInfo* infoForAnyChild(View* child);
@@ -195,11 +200,14 @@ public:
     ViewPager(Context* context,const AttributeSet& attrs);
     void setAdapter(PagerAdapter* adapter);
     PagerAdapter* getAdapter();
-    void setOnAdapterChangeListener(OnAdapterChangeListener listener);
-    void setOnPageChangeListener(OnPageChangeListener listener);
+    void addOnAdapterChangeListener(OnAdapterChangeListener listener);
+    void removeOnAdapterChangeListener(OnAdapterChangeListener listener);
+
+    void addOnPageChangeListener(OnPageChangeListener listener);
+    void removeOnPageChangeListener(OnPageChangeListener listener);
+    void clearOnPageChangeListeners();
     OnPageChangeListener setInternalPageChangeListener(OnPageChangeListener listener);
     int getCurrentItem();
-    void*getCurrent();
     void setCurrentItem(int item);
     void setCurrentItem(int item, bool smoothScroll);
     void setPageTransformer(bool reverseDrawingOrder, PageTransformer transformer);

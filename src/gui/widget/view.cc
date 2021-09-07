@@ -1369,6 +1369,17 @@ void View::setOnScrollChangeListener(OnScrollChangeListener l){
     mOnScrollChangeListener=l;
 }
 
+
+void View::setDrawingCacheEnabled(bool enabled) {
+    mCachingFailed = false;
+    setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
+}
+
+bool View::isDrawingCacheEnabled()const{
+    return (mViewFlags & DRAWING_CACHE_ENABLED) == DRAWING_CACHE_ENABLED;
+}
+
+
 bool View::isPaddingOffsetRequired() {
     return false;
 }
@@ -3135,9 +3146,41 @@ bool View::skipInvalidate()const{
 }
 
 RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){
+    if ((mViewFlags & WILL_NOT_CACHE_DRAWING) == WILL_NOT_CACHE_DRAWING) {
+        return nullptr;
+    }
+    if ((mViewFlags & DRAWING_CACHE_ENABLED) == DRAWING_CACHE_ENABLED) {
+        buildDrawingCache(autoScale);
+    }
+    return autoScale ? mDrawingCache : mUnscaledDrawingCache;
 }
 
 void View::destroyDrawingCache(){
+    mDrawingCache =nullptr;
+    mUnscaledDrawingCache =nullptr;
+}
+
+void View::buildDrawingCache(bool autoScale){
+    RefPtr<ImageSurface>bmp;
+    bmp=ImageSurface::create(Surface::Format::ARGB32,mWidth,mHeight);
+    Canvas canvas(nullptr,bmp);
+    computeScroll();
+    canvas.translate(-mScrollX, -mScrollY);
+    mPrivateFlags |= PFLAG_DRAWN;
+    mPrivateFlags |= PFLAG_DRAWING_CACHE_VALID;
+    LOGD("%p:%d",this,mID);
+    if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
+        mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+        dispatchDraw(canvas);
+        /*drawAutofilledHighlight(canvas);
+        if (mOverlay != null && !mOverlay.isEmpty()) {
+            mOverlay.getOverlayView().draw(canvas);
+        }*/
+    } else {
+        draw(canvas);
+    }
+    if(autoScale)mDrawingCache=bmp;
+    else mUnscaledDrawingCache =bmp;
 }
 
 void View::invalidateParentCaches(){

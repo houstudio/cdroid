@@ -75,8 +75,19 @@ void ValueAnimator::setValues(const std::vector<PropertyValuesHolder*>&values){
 std::vector<PropertyValuesHolder*>&ValueAnimator::getValues(){
     return mValues;
 }
+
 const std::vector<PropertyValuesHolder*>&ValueAnimator::getValues()const{
     return mValues;
+}
+
+PropertyValuesHolder* ValueAnimator::getValues(int idx){
+    return mValues.at(idx);
+}
+
+PropertyValuesHolder* ValueAnimator::getValues(const std::string&propName){
+    auto itr=mValuesMap.find(propName);
+    if(itr==mValuesMap.end())return nullptr;
+    return itr->second;
 }
 
 void ValueAnimator::initAnimation(){
@@ -267,7 +278,7 @@ void ValueAnimator::setEvaluator(TypeEvaluator value){
 void ValueAnimator::notifyStartListeners() {
     if (mListeners.size() && !mStartListenersCalled) {
         for (auto l:mListeners){
-            l.onAnimationStart(*this, mReversing);
+            if(l.onAnimationStart)l.onAnimationStart(*this, mReversing);
         }
     }
     mStartListenersCalled = true;
@@ -339,8 +350,8 @@ void ValueAnimator::cancel(){
         if (!mRunning) {// If it's not yet running, then start listeners weren't called. Call them now.
             notifyStartListeners();
         }
-        for (AnimatorListener listener : mListeners) {
-            listener.onAnimationCancel(*this);
+        for (AnimatorListener ls : mListeners) {
+            if(ls.onAnimationCancel)ls.onAnimationCancel(*this);
         }
     }
     endAnimation();
@@ -438,7 +449,7 @@ void ValueAnimator::endAnimation(){
     mStartTime = -1;
     if (notify && mListeners.size()) {
         for (AnimatorListener l:mListeners) {
-            l.onAnimationEnd(*this, mReversing);
+            if(l.onAnimationEnd)l.onAnimationEnd(*this, mReversing);
         }
     }
     // mReversing needs to be reset *after* notifying the listeners for the end callbacks.
@@ -496,7 +507,7 @@ void ValueAnimator::animateBasedOnPlayTime(long currentPlayTime, long lastPlayTi
 
         if (iteration != lastIteration) {
             for (AnimatorListener l:mListeners) {
-                l.onAnimationRepeat(*this);
+                if(l.onAnimationRepeat)l.onAnimationRepeat(*this);
             }
         }
     }
@@ -506,7 +517,6 @@ void ValueAnimator::animateBasedOnPlayTime(long currentPlayTime, long lastPlayTi
     } else {
         // Find the current fraction:
         float fraction = currentPlayTime / (float) mDuration;
-        LOGD("fraction=%f",fraction);
         fraction = getCurrentIterationFraction(fraction, inReverse);
         animateValue(fraction);
     }

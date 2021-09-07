@@ -313,6 +313,7 @@ private:
     bool applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
     bool skipInvalidate()const;
+    void buildDrawingCache(bool autoScale);
     bool hasParentWantsFocus()const;
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
@@ -336,6 +337,9 @@ protected:
     int mUserPaddingTop;
     int mUserPaddingBottom;
     std::string mHint;
+    bool mCachingFailed;
+    RefPtr<ImageSurface>mDrawingCache;
+    RefPtr<ImageSurface>mUnscaledDrawingCache;
     LayoutParams*mLayoutParams;
     TransformationInfo* mTransformationInfo;
     Matrix mMatrix;
@@ -502,6 +506,9 @@ public:
     void startAnimation(Animation* animation);
     void clearAnimation();
     void setAnimation(Animation* animation);
+
+    void setDrawingCacheEnabled(bool);
+    bool isDrawingCacheEnabled()const;
     
     void setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled);
     bool getDefaultFocusHighlightEnabled()const;

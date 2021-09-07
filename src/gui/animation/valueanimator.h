@@ -79,6 +79,8 @@ public:
     virtual void setFloatValues(const std::vector<float>&);
     std::vector<PropertyValuesHolder*>&getValues();
     const std::vector<PropertyValuesHolder*>&getValues()const;
+    PropertyValuesHolder*getValues(int idx);
+    PropertyValuesHolder*getValues(const std::string&propname);
     void initAnimation();
     ValueAnimator& setDuration(long duration);
     long getDuration();

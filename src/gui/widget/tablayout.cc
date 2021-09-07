@@ -536,7 +536,6 @@ void TabLayout::setSelectedTabView(int position){
 
 void TabLayout::selectTab(TabLayout::Tab* tab,bool updateIndicator){
     Tab* currentTab = mSelectedTab;
-    LOGD("position=%d updateIndicator=%d",tab->getPosition(),updateIndicator);
     if (currentTab == tab) {
         if (currentTab) {
             dispatchTabReselected(tab);
@@ -804,7 +803,6 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*p
 bool TabLayout::TabView::performClick(){
     bool handled = LinearLayout::performClick();
 
-    LOGD("tab:%p:%d",mTab,mTab?mTab->getPosition():-1);
     if (mTab) {
         //if (!handled)playSoundEffect(SoundEffectConstants::CLICK);
         mTab->select();
@@ -1035,6 +1033,8 @@ float TabLayout::TabView::approximateLineWidth(Layout* layout, int line, float t
 TabLayout::SlidingTabStrip::SlidingTabStrip(Context* context,const AttributeSet&atts,TabLayout*parent)
  :LinearLayout(context,atts){
     mParent=parent;
+    mIndicatorLeft =-1;
+    mIndicatorRight=-1;
     mIndicatorAnimator=nullptr;
     mSelectedIndicatorHeight=4;
     mSelectedIndicatorColor=0x60FF0000;
@@ -1084,7 +1084,7 @@ void TabLayout::SlidingTabStrip::onRtlPropertiesChanged(int layoutDirection) {
 
     // Workaround for a bug before Android M where LinearLayout did not relayout itself when
     // layout direction changed.
-    if (false){//Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+    if (true){//Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
         //noinspection WrongConstant
         if (mLayoutDirection != layoutDirection) {
             requestLayout();
@@ -1225,45 +1225,36 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
         int offset = dpToPx(MOTION_NON_ADJACENT_OFFSET);
         if (position < mSelectedPosition) {
             // We're going end-to-start
-            if (isRtl) {
-                startLeft = startRight = targetLeft - offset;
-            } else {
-                startLeft = startRight = targetRight + offset;
-            }
+            startLeft = startRight = isRtl ?(targetLeft - offset ):(targetRight + offset);
         } else {
             // We're going start-to-end
-            if (isRtl) {
-                startLeft = startRight = targetRight + offset;
-            } else {
-                startLeft = startRight = targetLeft - offset;
-            }
+            startLeft = startRight = isRtl ?(targetRight + offset):(targetLeft - offset);
         }
     }
-#if 0
-    if (startLeft != targetLeft || startRight != targetRight) {
-        ValueAnimator animator = mIndicatorAnimator = new ValueAnimator();
-        animator.setInterpolator(AnimationUtils.FAST_OUT_SLOW_IN_INTERPOLATOR);
-        animator.setDuration(duration);
-        animator.setFloatValues(0, 1);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animator) {
-                final float fraction = animator.getAnimatedFraction();
-                setIndicatorPosition(
-                        AnimationUtils.lerp(startLeft, targetLeft, fraction),
-                        AnimationUtils.lerp(startRight, targetRight, fraction));
-            }
-        });
-        animator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animator) {
-                mSelectedPosition = position;
-                mSelectionOffset = 0f;
-            }
-        });
-        animator.start();
+
+    if( mIndicatorAnimator==nullptr){
+        mIndicatorAnimator = new ValueAnimator();
+        mIndicatorAnimator->setInterpolator(new FastOutSlowInInterpolator());
+        mIndicatorAnimator->setFloatValues({.0f,1.f});
     }
-#endif
+    if (startLeft != targetLeft || startRight != targetRight) {
+        ValueAnimator* animator = mIndicatorAnimator;
+        animator->setDuration(duration);
+        animator->removeAllListeners();
+        animator->addUpdateListener([this,startLeft,targetLeft,startRight,targetRight](ValueAnimator&anim) {
+            const float fraction = anim.getAnimatedFraction();
+            setIndicatorPosition(lerp(startLeft, targetLeft, fraction),lerp(startRight, targetRight, fraction));
+        });
+        Animator::AnimatorListener al;
+        al.onAnimationEnd=[this,position](Animator&anim,bool reverse){
+            mSelectedPosition = position;
+            mSelectionOffset = .0f;
+        };
+
+        animator->addListener(al);
+        animator->start();
+    }
+
 }
 
 void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
@@ -1310,7 +1301,6 @@ void TabLayout::TabLayoutOnPageChangeListener::doPageScrolled(int position,float
         bool updateIndicator = !(mScrollState == ViewPager::SCROLL_STATE_SETTLING
                 && mPreviousScrollState == ViewPager::SCROLL_STATE_IDLE);
         mTabLayout->setScrollPosition(position, positionOffset, updateText, updateIndicator);
-        LOGD_IF(positionOffsetPixels==0,"PageScrolled to %d  positionOffset=%f ,%d",position,positionOffset,positionOffsetPixels);
     }
 }
 

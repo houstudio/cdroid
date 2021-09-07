@@ -61,14 +61,14 @@ int main(int argc,const char*argv[]){
     ViewPager*pager=new ViewPager(800,560);
     pager->setOffscreenPageLimit(3);
     pager->setAdapter(gpAdapter);
-    ViewPager::OnPageChangeListener listener={nullptr,nullptr,nullptr};
+    ViewPager::OnPageChangeListener listener;
     listener.onPageSelected=[&](int position){
         //hs->
     };
     listener.onPageScrolled=[&](int position, float positionOffset, int positionOffsetPixels){
         hs->scrollTo(position*pager->getWidth()+positionOffsetPixels,0);
     };
-    pager->setOnPageChangeListener(listener);
+    pager->addOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(pager).setPos(0,40);
     gpAdapter->notifyDataSetChanged();
