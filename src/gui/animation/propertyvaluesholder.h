@@ -110,6 +110,7 @@ public:
         }
         if(mPropSetter)mPropSetter(target,fraction,mAnimateValue);
     }
+    T getAnimatedValue()const{return mAnimateValue;}
 };
 
 #if 1

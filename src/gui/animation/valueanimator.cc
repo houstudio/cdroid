@@ -40,15 +40,25 @@ ValueAnimator* ValueAnimator::ofPropertyValuesHolder(const std::vector<PropertyV
 }
 
 void ValueAnimator::setIntValues(const std::vector<int>&values){
-    IntPropertyValuesHolder*prop=new IntPropertyValuesHolder();
-    prop->setValues(values);
-    setValues({prop});
+    if(mValues.size()==0){
+        IntPropertyValuesHolder*prop=new IntPropertyValuesHolder();
+        prop->setValues(values);
+        setValues({prop});
+    }else{
+        IntPropertyValuesHolder*prop=(IntPropertyValuesHolder*)mValues[0];
+        prop->setValues(values);
+    }
 }
 
 void ValueAnimator::setFloatValues(const std::vector<float>&values){
-    FloatPropertyValuesHolder*prop=new FloatPropertyValuesHolder();
-    prop->setValues(values);
-    setValues({prop});
+    if(mValues.size()==0){
+        FloatPropertyValuesHolder*prop=new FloatPropertyValuesHolder();
+        prop->setValues(values);
+        setValues({prop});
+    }else{
+        FloatPropertyValuesHolder*prop=(FloatPropertyValuesHolder*)mValues[0];
+        prop->setValues(values);
+    }
 }
 
 void ValueAnimator::setValues(const std::vector<PropertyValuesHolder*>&values){
@@ -238,12 +248,12 @@ void ValueAnimator::removeAllUpdateListeners(){
     mUpdateListeners.clear();
 }
 
-void ValueAnimator::setInterpolator(TimeInterpolator value){
+void ValueAnimator::setInterpolator(Interpolator* value){
     delete mInterpolator;
     mInterpolator=value?value:new LinearInterpolator();
 }
 
-TimeInterpolator ValueAnimator::getInterpolator(){
+Interpolator* ValueAnimator::getInterpolator(){
     return mInterpolator;
 }
 
@@ -496,6 +506,7 @@ void ValueAnimator::animateBasedOnPlayTime(long currentPlayTime, long lastPlayTi
     } else {
         // Find the current fraction:
         float fraction = currentPlayTime / (float) mDuration;
+        LOGD("fraction=%f",fraction);
         fraction = getCurrentIterationFraction(fraction, inReverse);
         animateValue(fraction);
     }

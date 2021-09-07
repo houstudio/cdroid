@@ -12,6 +12,7 @@
 #include <widget/simplemonthview.h>
 #include <widget/tablelayout.h>
 #include <widget/tabwidget.h>
+#include <widget/tablayout.h>
 #include <widget/textview.h>
 #include <widget/edittext.h>
 #include <widget/button.h>

@@ -40,19 +40,19 @@ private:
     bool mAnimateParentHierarchy      = true;
     std::vector<TransitionListener>mListeners;
 
-    static TimeInterpolator ACCEL_DECEL_INTERPOLATOR;
-    static TimeInterpolator DECEL_INTERPOLATOR      ;
-    static TimeInterpolator sAppearingInterpolator  ;
-    static TimeInterpolator sDisappearingInterpolator;
-    static TimeInterpolator sChangingAppearingInterpolator;
-    static TimeInterpolator sChangingDisappearingInterpolator;
-    static TimeInterpolator sChangingInterpolator;
+    static Interpolator* ACCEL_DECEL_INTERPOLATOR;
+    static Interpolator* DECEL_INTERPOLATOR      ;
+    static Interpolator* sAppearingInterpolator  ;
+    static Interpolator* sDisappearingInterpolator;
+    static Interpolator* sChangingAppearingInterpolator;
+    static Interpolator* sChangingDisappearingInterpolator;
+    static Interpolator* sChangingInterpolator;
 
-    TimeInterpolator mAppearingInterpolator            = sAppearingInterpolator;
-    TimeInterpolator mDisappearingInterpolator         = sDisappearingInterpolator;
-    TimeInterpolator mChangingAppearingInterpolator    = sChangingAppearingInterpolator;
-    TimeInterpolator mChangingDisappearingInterpolator = sChangingDisappearingInterpolator;
-    TimeInterpolator mChangingInterpolator             = sChangingInterpolator;
+    Interpolator* mAppearingInterpolator            = sAppearingInterpolator;
+    Interpolator* mDisappearingInterpolator         = sDisappearingInterpolator;
+    Interpolator* mChangingAppearingInterpolator    = sChangingAppearingInterpolator;
+    Interpolator* mChangingDisappearingInterpolator = sChangingDisappearingInterpolator;
+    Interpolator* mChangingInterpolator             = sChangingInterpolator;
 
     static Animator* defaultChange;
     static Animator* defaultChangeIn;
@@ -117,8 +117,8 @@ public:
     void setStagger(int transitionType, long duration);
     long getStagger(int transitionType);
 
-    void setInterpolator(int transitionType, TimeInterpolator interpolator);
-    TimeInterpolator getInterpolator(int transitionType);
+    void setInterpolator(int transitionType, Interpolator* interpolator);
+    Interpolator* getInterpolator(int transitionType);
 
     void setAnimator(int transitionType, Animator* anim);
     Animator* getAnimator(int transitionType);

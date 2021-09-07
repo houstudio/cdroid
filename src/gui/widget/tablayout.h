@@ -78,7 +78,8 @@ public:
         Tab* getTab();
     };
 
-    struct OnTabSelectedListener{
+    class  OnTabSelectedListener{
+    public:
        CallbackBase<void,Tab&>onTabSelected;
        CallbackBase<void,Tab&>onTabUnselected;
        CallbackBase<void,Tab&>onTabReselected;
@@ -92,7 +93,33 @@ public:
        TabItem();
        TabItem(Context* context,const AttributeSet& attrs);
     };
+
+    class TabLayoutOnPageChangeListener:public ViewPager::OnPageChangeListener{
+    protected:
+        friend class TabLayout;
+        TabLayout*mTabLayout;
+        int mPreviousScrollState;
+        int mScrollState;
+        void doPageScrollStateChanged(int);
+        void doPageScrolled(int position,float positionOffset,int positionOffsetPixels);
+        void doPageSelected(int position);
+    public:
+        TabLayoutOnPageChangeListener();
+        void reset();
+    };
 private:
+    class AdapterChangeListener:public ViewPager::OnAdapterChangeListener{
+
+    };
+    class PagerAdapterObserver:public DataSetObserver{
+    protected:
+        TabLayout*mTabLayout;
+    public:
+        PagerAdapterObserver(TabLayout*tab);
+        void onChanged()override;
+        void onInvalidated()override;
+        void clearSavedState()override;
+    };
     class SlidingTabStrip:public LinearLayout{
     private:
         int mSelectedIndicatorHeight;
@@ -183,6 +210,10 @@ protected:
     bool unboundedRipple;
     ViewPager* mViewPager;
     std::vector<Tab*>mTabs;
+    PagerAdapter* mPagerAdapter;
+    DataSetObserver* mPagerAdapterObserver;
+    AdapterChangeListener* mAdapterChangeListener;
+    TabLayoutOnPageChangeListener mPageChangeListener;
 
     void setScrollPosition(int position, float positionOffset, bool updateSelectedText, bool updateIndicatorPosition);
 

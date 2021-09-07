@@ -158,6 +158,31 @@ private:
     float getInterpolation(float t);
 #endif
 };
+
+class LookupTableInterpolator:public Interpolator{
+private:
+    std::vector<float> mValues;
+    float mStepSize;
+protected:
+    LookupTableInterpolator(const std::vector<float>&values);
+public:
+    float getInterpolation(float input);
+};
+
+class FastOutSlowInInterpolator :public LookupTableInterpolator{
+public:
+    FastOutSlowInInterpolator();
+};
+
+class LinearOutSlowInInterpolator:public LookupTableInterpolator{
+public:
+    LinearOutSlowInInterpolator();
+};
+
+class FastOutLinearInInterpolator:public LookupTableInterpolator{
+public:
+    FastOutLinearInInterpolator();
+};
 }//namespace 
 
 #endif

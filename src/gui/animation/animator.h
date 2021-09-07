@@ -13,8 +13,6 @@ public:
     virtual T newInstance()=0;
 };
 
-typedef Interpolator* TimeInterpolator;
-
 class Animator{
 private:
     class AnimatorConstantState:public ConstantState<Animator*> {
@@ -79,8 +77,8 @@ public:
     virtual Animator& setDuration(long duration)=0;
     virtual long getDuration()=0;
     long getTotalDuration();
-    virtual void setInterpolator(TimeInterpolator value)=0;
-    TimeInterpolator getInterpolator();
+    virtual void setInterpolator(Interpolator* value)=0;
+    Interpolator* getInterpolator();
     virtual bool isRunning()=0;
     virtual bool isStarted();
     void addListener(AnimatorListener listener);

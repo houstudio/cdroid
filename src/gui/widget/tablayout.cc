@@ -24,11 +24,14 @@ void TabLayout::initTabLayout(){
     mTabPaddingStart= mTabPaddingTop = 0;
     mTabPaddingEnd = mTabPaddingBottom=0;
     mTabTextSize = 20;
+    mTabTextColors  = nullptr;
     mSelectedTab    = nullptr;
-    mScrollAnimator =nullptr;
+    mScrollAnimator = nullptr;
     mViewPager = nullptr;
-    mRequestedTabMinWidth =160;//INVALID_WIDTH;
-    mRequestedTabMaxWidth =200;//INVALID_WIDTH;
+    mPagerAdapter =nullptr;
+	mAdapterChangeListener = nullptr;
+    mRequestedTabMinWidth = INVALID_WIDTH;
+    mRequestedTabMaxWidth = INVALID_WIDTH;
     mTabTextMultiLineSize =2;
     mScrollableTabMinWidth =100;
     mTabStrip = new SlidingTabStrip(getContext(),atts,this);
@@ -223,37 +226,38 @@ void TabLayout::setTabTextColors(int normalColor, int selectedColor){
 
 void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool implicitSetup){
     LOGD("viewPager=%p autoRefresh=%d implicitSetup=%d",viewPager,autoRefresh,implicitSetup);
-#if 0
+
     if (mViewPager) {
         // If we've already been setup with a ViewPager, remove us from it
-        if (mPageChangeListener != nullptr) {
+        //if (mPageChangeListener != nullptr) 
             mViewPager->removeOnPageChangeListener(mPageChangeListener);
-        }
-        if (mAdapterChangeListener != nullptr) {
-            mViewPager->removeOnAdapterChangeListener(mAdapterChangeListener);
-        }
+        
+        //if (mAdapterChangeListener != nullptr)
+        //mViewPager->removeOnAdapterChangeListener(mAdapterChangeListener);
+    
     }
 
-    if (mCurrentVpSelectedListener != nullptr) {
-        // If we already have a tab selected listener for the ViewPager, remove it
-        removeOnTabSelectedListener(mCurrentVpSelectedListener);
-        mCurrentVpSelectedListener = nullptr;
-    }
+    // If we already have a tab selected listener for the ViewPager, remove it
+    removeOnTabSelectedListener(mCurrentVpSelectedListener);
 
     if (viewPager) {
         mViewPager = viewPager;
 
         // Add our custom OnPageChangeListener to the ViewPager
-        if (mPageChangeListener == nullptr) {
-            mPageChangeListener = new TabLayoutOnPageChangeListener(this);
-        }
+        //if (mPageChangeListener == nullptr)
+            mPageChangeListener.mTabLayout=this;// = new TabLayoutOnPageChangeListener(this);
+        
         mPageChangeListener.reset();
         viewPager->addOnPageChangeListener(mPageChangeListener);
 
         // Now we'll add a tab selected listener to set ViewPager's current item
-        mCurrentVpSelectedListener = new ViewPagerOnTabSelectedListener(viewPager);
+        mCurrentVpSelectedListener.onTabSelected=[this](Tab&tab){
+            LOGD("selectTab %d/%d",tab.getPosition(),getTabCount());
+            mViewPager->setCurrentItem(tab.getPosition());
+        };
         addOnTabSelectedListener(mCurrentVpSelectedListener);
 
+        
         PagerAdapter* adapter = viewPager->getAdapter();
         if (adapter != nullptr) {
             // Now we'll populate ourselves from the pager adapter, adding an observer if
@@ -265,8 +269,8 @@ void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool 
         if (mAdapterChangeListener == nullptr) {
             mAdapterChangeListener = new AdapterChangeListener();
         }
-        mAdapterChangeListener.setAutoRefresh(autoRefresh);
-        viewPager->addOnAdapterChangeListener(mAdapterChangeListener);
+        //mAdapterChangeListener.setAutoRefresh(autoRefresh);
+        viewPager->addOnAdapterChangeListener(*mAdapterChangeListener);
 
         // Now update the scroll position to match the ViewPager's current item
         setScrollPosition(viewPager->getCurrentItem(), .0f, true);
@@ -276,7 +280,7 @@ void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool 
         mViewPager = nullptr;
         setPagerAdapter(nullptr, false);
     }
-#endif
+
     mSetupViewPagerImplicitly = implicitSetup;
 }
 
@@ -294,6 +298,47 @@ bool TabLayout::shouldDelayChildPressedState(){
 int TabLayout::getTabScrollRange(){
     return std::max(0, mTabStrip->getWidth() - getWidth() - getPaddingLeft()
             - getPaddingRight());
+}
+
+void TabLayout::setPagerAdapter(PagerAdapter* adapter,bool addObserver){
+    if (mPagerAdapter  && mPagerAdapterObserver) {
+        // If we already have a PagerAdapter, unregister our observer
+        mPagerAdapter->unregisterDataSetObserver(mPagerAdapterObserver);
+    }
+
+    mPagerAdapter = adapter;
+
+    if (addObserver && adapter != nullptr) {
+        // Register our observer on the new adapter
+        if (mPagerAdapterObserver == nullptr) {
+            mPagerAdapterObserver = new PagerAdapterObserver(this);
+        }
+        adapter->registerDataSetObserver(mPagerAdapterObserver);
+    }
+
+    // Finally make sure we reflect the new adapter
+    populateFromPagerAdapter();
+}
+
+void TabLayout::populateFromPagerAdapter(){
+    removeAllTabs();
+
+    if (mPagerAdapter) {
+        int adapterCount = mPagerAdapter->getCount();
+        for (int i = 0; i < adapterCount; i++) {
+            Tab*tab=newTab();
+            tab->setText(mPagerAdapter->getPageTitle(i));
+            addTab(tab, false);
+        }
+
+        // Make sure we reflect the currently set ViewPager item
+        if (mViewPager && adapterCount > 0) {
+            int curItem = mViewPager->getCurrentItem();
+            if (curItem != getSelectedTabPosition() && curItem < getTabCount()) {
+                selectTab(getTabAt(curItem),true);
+            }
+        }
+    }
 }
 
 void TabLayout::updateAllTabs(){
@@ -438,14 +483,45 @@ void TabLayout::removeTabViewAt(int position){
 }
 
 void TabLayout::animateToTab(int newPosition){
+    if (newPosition == Tab::INVALID_POSITION) {
+        return;
+    }
 
+    if ( false==isLaidOut()  || mTabStrip->childrenNeedLayout()) {
+        // If we don't have a window token, or we haven't been laid out yet just draw the new
+        // position now
+        setScrollPosition(newPosition, .0f, true);
+        return;
+    }
+
+    int startScrollX = getScrollX();
+    int targetScrollX = calculateScrollXForTab(newPosition, 0);
+
+    if (startScrollX != targetScrollX) {
+        ensureScrollAnimator();
+        mScrollAnimator->setIntValues({startScrollX, targetScrollX});
+        mScrollAnimator->start();
+    }
+
+    // Now animate the indicator
+    mTabStrip->animateIndicatorToPosition(newPosition, ANIMATION_DURATION);
 }
 
 void TabLayout::ensureScrollAnimator(){
-
+     if (mScrollAnimator == nullptr) {
+        mScrollAnimator = new ValueAnimator();
+        mScrollAnimator->setInterpolator(new FastOutSlowInInterpolator());
+        mScrollAnimator->setDuration(ANIMATION_DURATION);
+        mScrollAnimator->addUpdateListener([this](ValueAnimator&anim) {
+           IntPropertyValuesHolder*ip=(IntPropertyValuesHolder*)anim.getValues()[0]; 
+           scrollTo(ip->getAnimatedValue(), 0);
+        });
+    }
 }
 
 void TabLayout::setScrollAnimatorListener(Animator::AnimatorListener listener){
+    ensureScrollAnimator();
+    mScrollAnimator->addListener(listener);
 }
 
 void TabLayout::setSelectedTabView(int position){
@@ -460,7 +536,7 @@ void TabLayout::setSelectedTabView(int position){
 
 void TabLayout::selectTab(TabLayout::Tab* tab,bool updateIndicator){
     Tab* currentTab = mSelectedTab;
-
+    LOGD("position=%d updateIndicator=%d",tab->getPosition(),updateIndicator);
     if (currentTab == tab) {
         if (currentTab) {
             dispatchTabReselected(tab);
@@ -541,7 +617,7 @@ void TabLayout::applyModeAndGravity(){
         mTabStrip->setGravity(Gravity::CENTER_HORIZONTAL);
         break;
     case MODE_SCROLLABLE:
-        //mTabStrip->setGravity(GravityCompat.START);
+        mTabStrip->setGravity(Gravity::START);
         break;
     }
     updateTabViews(true);
@@ -728,6 +804,7 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*p
 bool TabLayout::TabView::performClick(){
     bool handled = LinearLayout::performClick();
 
+    LOGD("tab:%p:%d",mTab,mTab?mTab->getPosition():-1);
     if (mTab) {
         //if (!handled)playSoundEffect(SoundEffectConstants::CLICK);
         mTab->select();
@@ -959,7 +1036,7 @@ TabLayout::SlidingTabStrip::SlidingTabStrip(Context* context,const AttributeSet&
  :LinearLayout(context,atts){
     mParent=parent;
     mIndicatorAnimator=nullptr;
-    mSelectedIndicatorHeight=32;
+    mSelectedIndicatorHeight=4;
     mSelectedIndicatorColor=0x60FF0000;
     setWillNotDraw(false);
 }
@@ -1199,4 +1276,71 @@ void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
         canvas.fill();
     }
 }
+
+/*----------------------------------------------------------------*/
+
+TabLayout::TabLayoutOnPageChangeListener::TabLayoutOnPageChangeListener(){
+    mTabLayout = nullptr;
+    onPageSelected=std::bind(&TabLayoutOnPageChangeListener::doPageSelected,this,std::placeholders::_1);
+    onPageScrolled=std::bind(&TabLayoutOnPageChangeListener::doPageScrolled,this,std::placeholders::_1,
+                            std::placeholders::_2,std::placeholders::_3);
+    onPageScrollStateChanged=std::bind(&TabLayoutOnPageChangeListener::doPageScrollStateChanged,
+          this,std::placeholders::_1);
+}
+
+
+void TabLayout::TabLayoutOnPageChangeListener::reset(){
+    mPreviousScrollState = mScrollState = ViewPager::SCROLL_STATE_IDLE;
+}
+
+void TabLayout::TabLayoutOnPageChangeListener::doPageScrollStateChanged(int state){
+    mPreviousScrollState = mScrollState;
+    mScrollState = state;
+}
+
+void TabLayout::TabLayoutOnPageChangeListener::doPageScrolled(int position,float positionOffset,int positionOffsetPixels){
+    if (mTabLayout) {
+        // Only update the text selection if we're not settling, or we are settling after
+        // being dragged
+        bool updateText = mScrollState != ViewPager::SCROLL_STATE_SETTLING ||
+               mPreviousScrollState == ViewPager::SCROLL_STATE_DRAGGING;
+        // Update the indicator if we're not settling after being idle. This is caused
+        // from a setCurrentItem() call and will be handled by an animation from
+        // onPageSelected() instead.
+        bool updateIndicator = !(mScrollState == ViewPager::SCROLL_STATE_SETTLING
+                && mPreviousScrollState == ViewPager::SCROLL_STATE_IDLE);
+        mTabLayout->setScrollPosition(position, positionOffset, updateText, updateIndicator);
+        LOGD_IF(positionOffsetPixels==0,"PageScrolled to %d  positionOffset=%f ,%d",position,positionOffset,positionOffsetPixels);
+    }
+}
+
+void TabLayout::TabLayoutOnPageChangeListener::doPageSelected(int position){
+    if (mTabLayout  && mTabLayout->getSelectedTabPosition() != position
+                    && position < mTabLayout->getTabCount()) {
+        // Select the tab, only updating the indicator if we're not being dragged/settled
+        // (since onPageScrolled will handle that).
+        const bool updateIndicator = mScrollState == ViewPager::SCROLL_STATE_IDLE
+                || (mScrollState == ViewPager::SCROLL_STATE_SETTLING
+                && mPreviousScrollState == ViewPager::SCROLL_STATE_IDLE);
+        mTabLayout->selectTab(mTabLayout->getTabAt(position), updateIndicator);
+    }
+}
+
+TabLayout::PagerAdapterObserver::PagerAdapterObserver(TabLayout*tab){
+    mTabLayout = tab;
+}
+
+void TabLayout::PagerAdapterObserver::onChanged(){
+    mTabLayout->populateFromPagerAdapter();
+}
+
+void TabLayout::PagerAdapterObserver::onInvalidated(){
+    mTabLayout->populateFromPagerAdapter();
+}
+
+void TabLayout::PagerAdapterObserver::clearSavedState(){
+    mTabLayout->populateFromPagerAdapter();
+}
+
+/*------------------------------------------------------------------------------*/
 }//endof namespace

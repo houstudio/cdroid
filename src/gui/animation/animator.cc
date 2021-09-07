@@ -45,7 +45,7 @@ long Animator::getTotalDuration() {
     }
 }
 
-TimeInterpolator Animator::getInterpolator() {
+Interpolator* Animator::getInterpolator() {
     return nullptr;
 }
 

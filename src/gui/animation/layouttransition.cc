@@ -4,13 +4,13 @@
 
 namespace cdroid{
 
-TimeInterpolator LayoutTransition::ACCEL_DECEL_INTERPOLATOR         = new AccelerateDecelerateInterpolator();
-TimeInterpolator LayoutTransition::DECEL_INTERPOLATOR               = new DecelerateInterpolator();
-TimeInterpolator LayoutTransition::sAppearingInterpolator           = ACCEL_DECEL_INTERPOLATOR;
-TimeInterpolator LayoutTransition::sDisappearingInterpolator        = ACCEL_DECEL_INTERPOLATOR;
-TimeInterpolator LayoutTransition::sChangingAppearingInterpolator   = DECEL_INTERPOLATOR;
-TimeInterpolator LayoutTransition::sChangingDisappearingInterpolator= DECEL_INTERPOLATOR;
-TimeInterpolator LayoutTransition::sChangingInterpolator            = DECEL_INTERPOLATOR;
+Interpolator* LayoutTransition::ACCEL_DECEL_INTERPOLATOR         = new AccelerateDecelerateInterpolator();
+Interpolator* LayoutTransition::DECEL_INTERPOLATOR               = new DecelerateInterpolator();
+Interpolator* LayoutTransition::sAppearingInterpolator           = ACCEL_DECEL_INTERPOLATOR;
+Interpolator* LayoutTransition::sDisappearingInterpolator        = ACCEL_DECEL_INTERPOLATOR;
+Interpolator* LayoutTransition::sChangingAppearingInterpolator   = DECEL_INTERPOLATOR;
+Interpolator* LayoutTransition::sChangingDisappearingInterpolator= DECEL_INTERPOLATOR;
+Interpolator* LayoutTransition::sChangingInterpolator            = DECEL_INTERPOLATOR;
 
 Animator* LayoutTransition::defaultChange   = nullptr ;
 Animator* LayoutTransition::defaultChangeIn = nullptr ;
@@ -182,7 +182,7 @@ long LayoutTransition::getStagger(int transitionType) {
     return 0;
 }
 
-void LayoutTransition::setInterpolator(int transitionType, TimeInterpolator interpolator) {
+void LayoutTransition::setInterpolator(int transitionType, Interpolator* interpolator) {
     switch (transitionType) {
     case CHANGE_APPEARING:
         mChangingAppearingInterpolator = interpolator;
@@ -202,7 +202,7 @@ void LayoutTransition::setInterpolator(int transitionType, TimeInterpolator inte
     }
 }
 
-TimeInterpolator LayoutTransition::getInterpolator(int transitionType) {
+Interpolator* LayoutTransition::getInterpolator(int transitionType) {
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingInterpolator;
