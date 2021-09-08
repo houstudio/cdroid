@@ -119,14 +119,12 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid,bool cache){
     void*zfile=pak?pak->getZipHandle(resname):nullptr;
     ZipInputStream zipis(zfile);
     RefPtr<ImageSurface>img;
-    LOGD_IF(zfile==nullptr,"pak=%p %s open failed ",pak,resname.c_str());
-    if(zfile==nullptr){
+    if(!zipis.good()){
         std::ifstream fi(fullresid);
         img=loadImage(fi);
+        LOGD_IF(zfile==nullptr&&fi.good()==false,"pak=%p %s open failed ",pak,resname.c_str());
         return img;
     }
-    if(!zipis.good())return img;
-
     img=loadImage(zipis);
     if(cache && (img!=nullptr)){
         images.insert(std::pair<const std::string,RefPtr<ImageSurface> >(fullresid,img));

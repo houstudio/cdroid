@@ -63,7 +63,7 @@ float LookupTableInterpolator::getInterpolation(float input){
 
     // Calculate index - We use min with length - 2 to avoid IndexOutOfBoundsException when
     // we lerp (linearly interpolate) in the return statement
-    int position = std::min((size_t) (input * (mValues.size() - 1)), mValues.size() - 2);
+    int position = std::min((unsigned int) (input * (mValues.size() - 1)), mValues.size() - 2);
 
     // Calculate values to account for small offsets as the lookup table has discrete values
     float quantized = position * mStepSize;

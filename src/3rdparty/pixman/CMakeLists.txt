@@ -1,7 +1,7 @@
 project(pixman)
 set(PACKAGE pixman)
 cmake_minimum_required(VERSION 2.8.8)
-
+enable_language( C CXX ASM )
 set(CMAKE_BUILD_TYPE Release)
 
 # detect version

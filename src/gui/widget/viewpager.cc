@@ -436,7 +436,7 @@ void ViewPager::dataSetChanged(){
         }
 
         if (newPos == PagerAdapter::POSITION_NONE) {
-            mItems.erase(mItems.begin()+i);//remove(i);
+            mItems.erase(mItems.begin()+i);
             i--;
 
             if (!isUpdating) {
@@ -447,8 +447,7 @@ void ViewPager::dataSetChanged(){
             mAdapter->destroyItem(this, ii->position, ii->object);
             needPopulate = true;
 
-            if (mCurItem == ii->position) {
-                // Keep the current item in the valid range
+            if (mCurItem == ii->position) { // Keep the current item in the valid range
                 newCurrItem = std::max(0, std::min(mCurItem, adapterCount - 1));
                 needPopulate = true;
             }
@@ -456,8 +455,7 @@ void ViewPager::dataSetChanged(){
         }
 
         if (ii->position != newPos) {
-            if (ii->position == mCurItem) {
-                // Our current item changed position. Follow it.
+            if (ii->position == mCurItem) {// Our current item changed position. Follow it.
                 newCurrItem = newPos;
             }
             ii->position = newPos;
@@ -469,8 +467,7 @@ void ViewPager::dataSetChanged(){
 
     std::sort(mItems.begin(),mItems.end(),[](ItemInfo*a,ItemInfo*b)->bool{return a->position-b->position;});
 
-    if (needPopulate) {
-        // Reset our known page widths; populate will recompute them.
+    if (needPopulate) {  // Reset our known page widths; populate will recompute them.
         for (auto child:mChildren){
             LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
             if (!lp->isDecor) lp->widthFactor = 0.f;
@@ -549,7 +546,7 @@ void ViewPager::populate(int newCurrentItem){
             if (extraWidthLeft >= leftWidthNeeded && pos < startPos) {
                 if (ii == nullptr)  break;
                 if (pos == ii->position && !ii->scrolling) {
-                    mItems.erase(mItems.begin()+itemIndex);//remove(itemIndex);
+                    mItems.erase(mItems.begin()+itemIndex);
                     mAdapter->destroyItem(this, pos, ii->object);
                     LOGD("populate()- destroyItem() with pos:%d/%d view:%p curitem=%d",pos,ii->position,ii->object,mCurItem);
                     itemIndex--;
@@ -580,7 +577,7 @@ void ViewPager::populate(int newCurrentItem){
                     if (ii == nullptr)  break;
 
                     if (pos == ii->position && !ii->scrolling) {
-                        mItems.erase(mItems.begin()+itemIndex);//remove(itemIndex);
+                        mItems.erase(mItems.begin()+itemIndex);
                         mAdapter->destroyItem(this, pos, ii->object);
                         LOGD("populate()- destroyItem() with pos:%d/%d view:%p curitem=%d",pos,ii->position,ii->object,mCurItem);
                         ii = itemIndex < mItems.size() ? mItems[itemIndex] : nullptr;
@@ -824,7 +821,7 @@ void ViewPager::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     /* Make sure all children have been properly measured. Decor views first.
      * Right now we cheat and make this less complicated by assuming decor
      * views won't intersect. We will pin to edges based on gravity.*/
-    //int size = getChildCount();
+
     for (auto child:mChildren){
         if (child->getVisibility() != GONE) {
             LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
@@ -1156,14 +1153,12 @@ void ViewPager::completeScroll(bool postEvents){
         }
     }
     if (needPopulate) {
-        Runnable r;
-        r=[this](){setScrollState(SCROLL_STATE_IDLE);populate();};
-        if (postEvents) postOnAnimation(r);//mEndScrollRunnable);
-        else {
-            setScrollState(SCROLL_STATE_IDLE);
-            populate();
-            //mEndScrollRunnable.run();
-        }
+        Runnable endScrollRunnable;
+        endScrollRunnable=[this](){setScrollState(SCROLL_STATE_IDLE);populate();};
+        if (postEvents) 
+            postOnAnimation(endScrollRunnable);
+        else
+            endScrollRunnable();
     }
 }
 
@@ -1178,7 +1173,6 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
     // Always take care of the touch gesture being complete.
     if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_UP) {
         // Release the drag.
-        LOGD("Intercept done!");
         resetTouch();
         return false;
     }
@@ -1186,14 +1180,8 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
     // Nothing more to do here if we have decided whether or not we
     // are dragging.
     if (action != MotionEvent::ACTION_DOWN) {
-        if (mIsBeingDragged) {
-            LOGD("Intercept returning true!");
-            return true;
-        }
-        if (mIsUnableToDrag) {
-            LOGD("Intercept returning false!");
-            return false;
-        }
+        if (mIsBeingDragged) return true;
+        if (mIsUnableToDrag) return false;
     }
     
     switch (action) {
@@ -1783,7 +1771,7 @@ bool ViewPager::arrowScroll(int direction){
             } else {
                 handled = nextFocused->requestFocus();
             }
-            }
+        }
     } else if (direction == FOCUS_LEFT || direction == FOCUS_BACKWARD) {
         // Trying to move left and nothing there; try to page.
         handled = pageLeft();

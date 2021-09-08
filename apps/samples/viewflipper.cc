@@ -1,13 +1,5 @@
 #include<windows.h>
-#include<widget/listview.h>
-#include<widget/gridview.h>
-#include<widget/scrollview.h>
-#include<widget/spinner.h>
-#include<widget/horizontalscrollview.h>
-#include<widget/simplemonthview.h>
-#include<widget/viewpager.h>
 #include<animations.h>
-#include<drawables.h>
 #include<cdlog.h>
 
 int main(int argc,const char*argv[]){

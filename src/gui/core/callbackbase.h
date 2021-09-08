@@ -15,7 +15,8 @@ private:
     Functor fun;
     std::shared_ptr<int>mState;
 public:
-    CallbackBase(){fun=nullptr_t();
+    CallbackBase(){
+        fun=std::nullptr_t();
         mState=std::make_shared<int>(0);
     }
     void newInstance(){//called by uieventsource
@@ -41,10 +42,10 @@ public:
         return mState.get()==b.mState.get();
     }
     operator bool()const{ return fun!=nullptr;  }
-    bool operator==(nullptr_t)const{
+    bool operator==(std::nullptr_t)const{
        return fun==nullptr;
     }
-    bool operator!=(nullptr_t)const{
+    bool operator!=(std::nullptr_t)const{
        return fun!=nullptr;
     }
     R operator()(Args...args)const{

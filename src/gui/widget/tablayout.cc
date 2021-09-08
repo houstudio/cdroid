@@ -225,15 +225,14 @@ void TabLayout::setTabTextColors(int normalColor, int selectedColor){
 }
 
 void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool implicitSetup){
-    LOGD("viewPager=%p autoRefresh=%d implicitSetup=%d",viewPager,autoRefresh,implicitSetup);
 
     if (mViewPager) {
         // If we've already been setup with a ViewPager, remove us from it
         //if (mPageChangeListener != nullptr) 
             mViewPager->removeOnPageChangeListener(mPageChangeListener);
         
-        //if (mAdapterChangeListener != nullptr)
-        //mViewPager->removeOnAdapterChangeListener(mAdapterChangeListener);
+        if (mAdapterChangeListener != nullptr)
+            mViewPager->removeOnAdapterChangeListener(*mAdapterChangeListener);
     
     }
 
@@ -419,7 +418,6 @@ int dpToPx(int dps) {
 }
 
 void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    LOGD("%x,%x",widthMeasureSpec,heightMeasureSpec);
     int idealHeight = dpToPx(getDefaultHeight()) + getPaddingTop() + getPaddingBottom();
     switch (MeasureSpec::getMode(heightMeasureSpec)) {
     case MeasureSpec::AT_MOST:

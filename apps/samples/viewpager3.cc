@@ -10,8 +10,7 @@ public:
         struct dirent*ent;
         while(dir&&(ent=readdir(dir))){
             std::string fullpath=path+"/"+ent->d_name;
-            if(ent->d_type==DT_REG)
-                urls.push_back(fullpath);
+            if(ent->d_type==DT_REG)  urls.push_back(fullpath);
         }
         if(dir)closedir(dir);
     }
@@ -29,6 +28,8 @@ public:
         iv->setImageBitmap(img);
         return iv;
     }
+    void setPrimaryItem(ViewGroup* container, int position, void* object)override{
+    }
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
     }
@@ -39,8 +40,6 @@ public:
         size_t pos=url.find_last_of('/');
         return url.substr(pos+1);
     }
-
-    //if returned calue <1 OffscreenPageLimit must be larger to workfine 
 };
 
 int main(int argc,const char*argv[]){
@@ -53,18 +52,17 @@ int main(int argc,const char*argv[]){
     
     MyPageAdapter*gpAdapter=new MyPageAdapter(argc==1?std::string("/home/houzh/images"):argv[1]);
     ViewPager*pager=new ViewPager(800,560);
-    pager->setOffscreenPageLimit(3);
+    pager->setOffscreenPageLimit(gpAdapter->getCount());
     pager->setAdapter(gpAdapter);
     ViewPager::OnPageChangeListener listener;
     listener.onPageSelected=[&](int position){
-        //hs->
+        LOGD("Page %d Selected",position);
     };
     pager->addOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     layout->addView(pager);
     tab->setupWithViewPager(pager);
     w->addView(layout);
-    gpAdapter->notifyDataSetChanged();
     w->requestLayout();
     app.exec();
 }
