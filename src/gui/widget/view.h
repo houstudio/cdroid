@@ -349,6 +349,10 @@ protected:
 
     ViewGroup*mParent;
     int mTop,mLeft,mWidth,mHeight;
+    float mX,mY,mZ,mScaleX,mScaleY;
+    float mRotationX,mRotationY,mRotation;
+    float mPivotX,mPivotY,mAlpha;
+    float mTranslationX,mTranslationY,mTranslationZ;
     OnClickListener mOnClick;
     OnLongClickListener mOnLongClick;
     OnFocusChangeListener mOnFocusChangeListener;
@@ -372,6 +376,7 @@ protected:
 
     void invalidateParentCaches();
     void invalidateParentIfNeeded();
+    void invalidateParentIfNeededAndWasQuickRejected();
     void destroyDrawingCache();
     RefPtr<ImageSurface>getDrawingCache(bool autoScale);
 
@@ -473,9 +478,6 @@ public:
     virtual void getFocusedRect(Rect&r);
     virtual View& setPos(int x,int y);
     virtual View& setSize(int x,int y);
-    int getX()const;//x pos to screen
-    int getY()const;//y pos to screen
-    int getZ()const;
     void getDrawingRect(Rect& outRect);
     void offsetTopAndBottom(int offset);
     void offsetLeftAndRight(int offset);
@@ -763,24 +765,38 @@ public:
     Matrix getMatrix();
     Matrix getInverseMatrix();
 
-    float getRotation();
-    void setRotation(float rotation);
-    float getRotationX();
-    void setRotationX(float);
-    float getRotationY();
-    void setRotationY(float);
-    float getScaleX();
+    void setX(float);
+    void setY(float);
+    void setZ(float);
+    float getX()const;//x pos to screen
+    float getY()const;//y pos to screen
+    float getZ()const;
+    float getTranslationX()const;
+    float getTranslationY()const;
+    float getTranslationZ()const;
+    void setTranslationX(float x);
+    void setTranslationY(float y);
+    void setTranslationZ(float z);
+
+    float getScaleX()const;
     void setScaleX(float);
-    float getScaleY();
+    float getScaleY()const;
     void setScaleY(float);
-    float getPivotX();
+    float getPivotX()const;
     void setPivotX(float);
-    float getPivotY();
+    float getPivotY()const;
     void setPivotY(float);
-    bool isPivotSet();
+    bool isPivotSet()const;
     void resetPivot();
-    float getAlpha();
+    float getAlpha()const;
     void setAlpha(float);
+
+    float getRotation()const;
+    void setRotation(float rotation);
+    float getRotationX()const;
+    void setRotationX(float);
+    float getRotationY()const;
+    void setRotationY(float);
 
     LayoutParams*getLayoutParams();
     int getRawLayoutDirection()const;

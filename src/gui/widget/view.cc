@@ -135,9 +135,11 @@ public:
 View::View(int w,int h){
     initView();
     mContext=&App::getInstance();
-    mWidth=w;
-    mHeight=h;
-    mLeft=mTop=0;
+
+    mWidth  = w;
+    mHeight = h;
+    mLeft = mTop =0;
+
     setBackgroundColor(0xFF000000);
     if(ViewConfiguration::isScreenRound())
        mRoundScrollbarRenderer=new RoundScrollbarRenderer(this);
@@ -206,6 +208,11 @@ void View::initView(){
     mParent   = nullptr;
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
+
+    mX = mY = mZ =.0f;
+    mAlpha = mScaleX = mScaleY=1.f;
+    mTranslationX = mTranslationY =.0f; 
+
 
     mHasPerformedLongPress = false;
     mInContextButtonPress  = false;
@@ -1724,10 +1731,10 @@ void View::draw(Canvas&canvas){
 }
 
 bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
-    bool hardwareAcceleratedCanvas=false;
-    bool drawingWithRenderNode=false;
+    const bool hardwareAcceleratedCanvas=false;
+    const bool drawingWithRenderNode=false;
     bool more = false;
-    bool childHasIdentityMatrix = hasIdentityMatrix();
+    const bool childHasIdentityMatrix = hasIdentityMatrix();
     int parentFlags = parent->mGroupFlags;
 
     if ((parentFlags & ViewGroup::FLAG_CLEAR_TRANSFORMATION) != 0) {
@@ -1874,10 +1881,9 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                     parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
                 }
             }
-
             if (!childHasIdentityMatrix && !drawingWithRenderNode) {
                 canvas.translate(-transX, -transY);
-                //canvas.concat(getMatrix());
+                canvas.transform(getMatrix());//concat(getMatrix());
                 canvas.translate(transX, transY);
             }
         }
@@ -2082,18 +2088,6 @@ int View::getWidth()const{
 
 int View::getHeight()const{
     return mHeight;
-}
-
-int View::getX()const{
-    return mLeft;
-}
-
-int View::getY()const{
-    return mTop;
-}
-
-int View::getZ()const{
-    return 0;
 }
 
 void View::offsetTopAndBottom(int offset){
@@ -3141,8 +3135,8 @@ bool View::isDirty()const{
 }
 
 bool View::skipInvalidate()const{
-    return (mViewFlags & VISIBILITY_MASK) != VISIBLE && mCurrentAnimation == nullptr;
-           //&& (!mParent->isViewTransitioning(this));
+    return (mViewFlags & VISIBILITY_MASK) != VISIBLE && (mCurrentAnimation == nullptr)
+           && (!mParent->isViewTransitioning((View*)this));
 }
 
 RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){
@@ -3189,6 +3183,13 @@ void View::invalidateParentCaches(){
 
 void View::invalidateParentIfNeeded(){
     if(mParent)mParent->invalidate(true);
+}
+
+void View::invalidateParentIfNeededAndWasQuickRejected() {
+    if ((mPrivateFlags2 & PFLAG2_VIEW_QUICK_REJECTED) != 0) {
+        // View was rejected last time it was drawn by its parent; this may have changed
+        invalidateParentIfNeeded();
+    }
 }
 
 void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){
@@ -4650,13 +4651,24 @@ void View::ensureTransformationInfo(){
 }
 
 bool View::hasIdentityMatrix(){
-    return (mMatrix.xx==1.f) && (mMatrix.yx==0) && (mMatrix.xy==0) && (mMatrix.yy==1.f) && (mMatrix.x0==0)&&(mMatrix.y0==0);
+    const bool rc= (mX==.0f) && (mY==.0f) && (mZ==.0f) &&
+       (mTranslationX==.0f) && (mTranslationY==.0f) &&
+       (mScaleX ==1.f) && (mScaleY==1.f);
+    LOGV_IF(rc==false,"mXYZ=%f,%f,%f  translation=%f,%f scale=%f,%f",mX,mY,mZ,mTranslationX,mTranslationY,mScaleX,mScaleY);
+    return rc;
 }
+
 Matrix View::getMatrix() {
     ensureTransformationInfo();
-    Matrix matrix = mTransformationInfo->mMatrix;
     //mRenderNode.getMatrix(matrix);
-    return mMatrix;
+    Matrix matrix=identity_matrix();
+    matrix.translate(mX,mY);
+    matrix.scale(mScaleX,mScaleY);
+    matrix.translate(mPivotX,mPivotY);
+    matrix.rotate(mRotation);
+    matrix.translate(-mPivotX,-mPivotY);
+    LOGE_IF(mScaleX==.0f||mScaleY==.0f,"scalexy=%f,%f scaled value cant be zero!!!",mScaleX,mScaleY);
+    return matrix;
 }
 
 Matrix View::getInverseMatrix() {
@@ -4666,78 +4678,130 @@ Matrix View::getInverseMatrix() {
     return matrix;
 }
 
-float View::getRotation(){
-    return .0f;
+float View::getX()const{
+    return mLeft+getTranslationX();
 }
 
-void View::setRotation(float rotation){
-
+float View::getY()const{
+    return mTop+getTranslationY();
 }
 
-float View::getRotationX(){
-    return .0f;
+float View::getZ()const{
+    return 0;
+}
+void View::setZ(float){
 }
 
-void View::setRotationX(float){
-
+void View::setX(float x){
+    setTranslationX(x-mLeft);
 }
 
-float View::getRotationY(){
-    return .0f;
-}
-
-void View::setRotationY(float){
-    
-}
-
-float View::getScaleX(){
-    return mMatrix.xx;
+void View::setY(float y){
+    setTranslationY(y-mTop);
 }
 
 void View::setScaleX(float x){
-    mMatrix.xx=x;
-    invalidate(true);
+    mScaleX = x;
 }
 
-float View::getScaleY(){
-    return mMatrix.yy;
+float View::getScaleX()const{
+    return mScaleX;
 }
 
 void View::setScaleY(float y){
-    mMatrix.yy=y;
-    invalidate(true);
+    mScaleY = y;
 }
 
-float View::getPivotX(){
-    return 1.f;
+float View::getScaleY()const{
+    return mScaleY;
 }
 
-void View::setPivotX(float){
-
+void View::setTranslationX(float x){
+    mTranslationX=x;
+    invalidateParentIfNeededAndWasQuickRejected();
 }
 
-float View::getPivotY(){
-    return .0f;
+float View::getTranslationX()const{
+    return mTranslationX;
 }
 
-void View::setPivotY(float){
-
+void View::setTranslationY(float y){
+    mTranslationY=y; 
+    invalidateParentIfNeededAndWasQuickRejected();
 }
 
-bool View::isPivotSet(){
+float View::getTranslationY()const{
+    return mTranslationY;
+}
+
+void View::setTranslationZ(float z){
+    mTranslationZ=z; 
+    invalidateParentIfNeededAndWasQuickRejected();
+}
+
+float View::getTranslationZ()const{
+    return mTranslationZ;
+}
+
+float View::getRotation()const{
+    return mRotation;
+}
+
+void View::setRotation(float rotation){
+    mRotation=rotation;
+    invalidateParentIfNeededAndWasQuickRejected();
+}
+
+float View::getRotationX()const{
+    return mRotationX;
+}
+
+void View::setRotationX(float x){
+    mRotationX=x;
+    invalidateParentIfNeededAndWasQuickRejected();
+}
+
+float View::getRotationY()const{
+    return mRotationY;
+}
+
+void View::setRotationY(float y){
+     mRotationY=y; 
+}
+
+float View::getPivotX()const{
+    return mPivotX;
+}
+
+void View::setPivotX(float x){
+    mPivotX=x;
+    invalidateParentIfNeededAndWasQuickRejected();
+}
+
+float View::getPivotY()const{
+    return mPivotY;
+}
+
+void View::setPivotY(float y){
+    mPivotY=y;
+    invalidateParentIfNeededAndWasQuickRejected();
+}
+
+bool View::isPivotSet()const{
     return false;
 }
 
 void View::resetPivot(){
-
+    mPivotX=mWidth/2.f;
+    mPivotY=mHeight/2.f;
 }
 
-float View::getAlpha(){
-    return mTransformationInfo  ? mTransformationInfo->mAlpha : 1.f;
+float View::getAlpha()const{
+    return mAlpha;//mTransformationInfo  ? mTransformationInfo->mAlpha : 1.f;
 }
 
-void View::setAlpha(float){
-
+void View::setAlpha(float a){
+    mAlpha= a;
 }
 
 

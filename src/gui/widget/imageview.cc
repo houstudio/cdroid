@@ -627,10 +627,11 @@ void ImageView::setSelected(bool selected){
 void ImageView::onDraw(Canvas& canvas) {
     View::onDraw(canvas);
     const int mPaddingLeft=0,mPaddingTop=0,mPaddingRight=0,mPaddingBottom=0;
-    LOGV("%p'mDrawable %p pos:%d,%d Size=%dx%d",this,mDrawable,mLeft,mTop,mDrawableWidth,mDrawableHeight);
+    LOGV("%p'mDrawable %p pos:%d,%d Size=%dx%d alpha=%f",this,mDrawable,mLeft,mTop,mDrawableWidth,mDrawableHeight,getAlpha());
     if (mDrawable == nullptr||mDrawableWidth == 0 || mDrawableHeight == 0) return;
 
     if (IsIdentity(mDrawMatrix) && mPaddingTop == 0 && mPaddingLeft == 0) {
+        mDrawable->setAlpha(getAlpha()*255);
         mDrawable->draw(canvas);
     } else {
         canvas.save();

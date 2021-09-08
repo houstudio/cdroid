@@ -160,6 +160,8 @@ int main(int argc,const char*argv[]){
           ColorStateList*cl=ColorStateList::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/color/textview.xml");
           Button*btn=new Button("Test Button"+std::to_string(i),180,50);
           btn->setTextColor(cl);
+          btn->setScaleX(1.f-i*.1f);
+          btn->setScaleY(1.f-i*.1f);
           btn->setBackgroundColor(0xFF222222);
           w->addView(btn).setPos(20+200*i,50).setId(100+i);
           btn->setNextFocusRightId(100+(i+1)%5);
