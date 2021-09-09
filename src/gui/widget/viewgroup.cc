@@ -17,6 +17,7 @@
 #include <widget/viewgroup.h>
 #include <widget/measurespec.h>
 #include <animation/layouttransition.h>
+#include <animation/layoutanimationcontroller.h>
 #include <cdlog.h>
 #include <uievents.h>
 #include <focusfinder.h>
@@ -92,11 +93,12 @@ void ViewGroup::initGroup(){
     mGroupFlags|= FLAG_ANIMATION_DONE;
     mGroupFlags|= FLAG_ANIMATION_CACHE;
     mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
-    mFocused=nullptr;
-    mDefaultFocus=nullptr;
-    mFocusedInCluster=nullptr;
-    mFirstTouchTarget=nullptr;
-    mOnHierarchyChangeListener=nullptr;
+    mFocused = nullptr;
+    mDefaultFocus = nullptr;
+    mFocusedInCluster = nullptr;
+    mFirstTouchTarget = nullptr;
+    mOnHierarchyChangeListener = nullptr;
+    mLayoutAnimationController = nullptr;
     mChildCountWithTransientState=0;
     mInvalidRgn=Region::create();
     mChildTransformation =nullptr;
@@ -112,6 +114,7 @@ ViewGroup::~ViewGroup() {
     mChildren.clear();
     delete mChildTransformation;
     delete mInvalidationTransformation;
+    delete mLayoutAnimationController;
 }
 
 void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
@@ -680,13 +683,12 @@ int ViewGroup::buildOrderedChildList(std::vector<View*>&preSortedChildren) {
     if (childrenCount <= 1 || !hasChildWithZ()) return 0;
 
     preSortedChildren.clear();
-    preSortedChildren.resize(childrenCount);
 
     const bool customOrder = isChildrenDrawingOrderEnabled();
     for (int i = 0; i < childrenCount; i++) {
         // add next child (in child order) to end of list
         const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
-        const View* nextChild = mChildren[childIndex];
+        View* nextChild = mChildren[childIndex];
         const float currentZ = nextChild->getZ();
 
         // insert ahead of any Views with greater Z
@@ -694,7 +696,7 @@ int ViewGroup::buildOrderedChildList(std::vector<View*>&preSortedChildren) {
         while (insertIndex > 0 && preSortedChildren.at(insertIndex - 1)->getZ() > currentZ) {
             insertIndex--;
         }
-        //preSortedChildren.insert(insertIndex, nextChild);
+        preSortedChildren.insert(preSortedChildren.begin()+insertIndex, nextChild);
     }
     return preSortedChildren.size();
 }
@@ -1205,13 +1207,13 @@ bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){
 }
 
 void ViewGroup::dispatchDraw(Canvas&canvas){
-    bool usingRenderNodeProperties =false;// canvas.isRecordingFor(mRenderNode);
     const int childrenCount = mChildren.size();
     int flags = mGroupFlags;
 
-   /* if ((flags & FLAG_RUN_ANIMATION) != 0 && canAnimate()) {
-        bool buildCache = !isHardwareAccelerated();
-        for (auto child:mChildren){
+    if ((flags & FLAG_RUN_ANIMATION) != 0 && canAnimate()) {
+        bool buildCache = false;//!isHardwareAccelerated();
+        for (int i=0;i<mChildren.size();i++){
+            View* child=mChildren[i];
             if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
                 LayoutParams* params = child->getLayoutParams();
                 attachLayoutAnimationParameters(child, params, i, childrenCount);
@@ -1219,20 +1221,18 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
             }
         }
 
-        LayoutAnimationController controller = mLayoutAnimationController;
-        if (controller.willOverlap()) {
-            mGroupFlags |= FLAG_OPTIMIZE_INVALIDATE;
-        }
+        LayoutAnimationController* controller = mLayoutAnimationController;
+        if (controller->willOverlap())  mGroupFlags |= FLAG_OPTIMIZE_INVALIDATE;
 
-        controller.start();
+        controller->start();
 
         mGroupFlags &= ~FLAG_RUN_ANIMATION;
         mGroupFlags &= ~FLAG_ANIMATION_DONE;
 
-        if (mAnimationListener != null) {
-            mAnimationListener.onAnimationStart(controller.getAnimation());
+        if (mAnimationListener.onAnimationStart) {
+            mAnimationListener.onAnimationStart(*controller->getAnimation());
         }
-    }*/
+    }
 
     int clipSaveCount = 0;
     bool clipToPadding = (flags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK;
@@ -1256,7 +1256,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     // Only use the preordered list if not HW accelerated, since the HW pipeline will do the
     // draw reordering internally
     std::vector<View*> preorderedList;
-    if(usingRenderNodeProperties)buildOrderedChildList(preorderedList);
+    buildOrderedChildList(preorderedList);
     const bool customOrder = preorderedList.size() && isChildrenDrawingOrderEnabled();
     for (int i = 0; i < childrenCount; i++) {
         while (transientIndex >= 0 && mTransientIndices.at(transientIndex) == i) {
@@ -1317,12 +1317,12 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     }
 
     if ((flags & FLAG_ANIMATION_DONE) == 0 && (flags & FLAG_NOTIFY_ANIMATION_LISTENER) == 0 &&
-           /* mLayoutAnimationController.isDone() &&*/ !more) {
+            mLayoutAnimationController->isDone() && !more) {
         // We want to erase the drawing cache and notify the listener after the
         // next frame is drawn because one extra invalidate() is caused by
         // drawChild() after the animation is over
         mGroupFlags |= FLAG_NOTIFY_ANIMATION_LISTENER;
-        //post([](){notifyAnimationListener();});
+        post([this](){notifyAnimationListener();});
     }
 }
 
@@ -1670,6 +1670,69 @@ void ViewGroup::offsetChildrenTopAndBottom(int offset){
     for (auto v:mChildren) {
         v->setPos(v->mLeft,v->mTop+offset);
     }
+}
+
+bool ViewGroup::canAnimate(){
+    return mLayoutAnimationController!=nullptr;
+}
+
+void ViewGroup::startLayoutAnimation() {
+    if (mLayoutAnimationController) {
+        mGroupFlags |= FLAG_RUN_ANIMATION;
+        requestLayout();
+    }
+}
+
+void ViewGroup::scheduleLayoutAnimation() {
+    mGroupFlags |= FLAG_RUN_ANIMATION;
+}
+
+void ViewGroup::setLayoutAnimation(LayoutAnimationController* controller) {
+    mLayoutAnimationController = controller;
+    if (mLayoutAnimationController) {
+        mGroupFlags |= FLAG_RUN_ANIMATION;
+    }
+}
+
+LayoutAnimationController*ViewGroup::getLayoutAnimation() {
+    return mLayoutAnimationController;
+}
+
+void ViewGroup::setLayoutAnimationListener(Animation::AnimationListener animationListener){
+    mAnimationListener = animationListener;
+}
+
+Animation::AnimationListener ViewGroup::getLayoutAnimationListener(){
+    return mAnimationListener;
+}
+
+void ViewGroup::bindLayoutAnimation(View* child){
+    Animation* a = mLayoutAnimationController->getAnimationForView(child);
+    child->setAnimation(a);
+}
+
+void ViewGroup::attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count) {
+    LayoutAnimationController::AnimationParameters* animationParams =
+               params->layoutAnimationParameters;
+    if (animationParams == nullptr) {
+        animationParams = new LayoutAnimationController::AnimationParameters();
+        params->layoutAnimationParameters = animationParams;
+    }
+
+    animationParams->count = count;
+    animationParams->index = index;
+}
+
+void ViewGroup::notifyAnimationListener(){
+    mGroupFlags &= ~FLAG_NOTIFY_ANIMATION_LISTENER;
+    mGroupFlags |= FLAG_ANIMATION_DONE;
+
+    if (mAnimationListener.onAnimationEnd){
+        post([this](){
+            mAnimationListener.onAnimationEnd(*mLayoutAnimationController->getAnimation());
+        });
+    }
+    invalidate(true);
 }
 
 void ViewGroup::addFocusables(std::vector<View*>& views, int direction, int focusableMode)const{

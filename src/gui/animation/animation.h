@@ -61,7 +61,6 @@ protected:
     Transformation mTransformation;
     Transformation mPreviousTransformation;
 protected:
-    virtual Animation* clone();
     float getScaleFactor()const;
     void ensureInterpolator();
     virtual void applyTransformation(float interpolatedTime, Transformation& t);
@@ -75,6 +74,7 @@ public:
     void detach();
     bool isInitialized()const;
     virtual void initialize(int width, int height, int parentWidth, int parentHeight);
+    virtual Animation* clone();
     //void setListenerHandler(Handler handler);
     void setInterpolator(Context* context,const std::string& resID) ;
     void setInterpolator(Interpolator* i);

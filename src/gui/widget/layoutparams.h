@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <core/attributeset.h>
 #include <core/context.h>
+#include <animation/layoutanimationcontroller.h>
 
 namespace cdroid{
 class View;
@@ -20,11 +21,12 @@ protected:
 public:
     int width;
     int height;
+    LayoutAnimationController::AnimationParameters* layoutAnimationParameters;
     LayoutParams();
     LayoutParams(Context* c,const AttributeSet& attrs);
     LayoutParams(int width, int height);
     LayoutParams(const LayoutParams& source);
-    virtual ~LayoutParams(){}
+    virtual ~LayoutParams();
     virtual void resolveLayoutDirection(int layoutDirection);
     virtual void onDebugDraw(View&view, Canvas&canvas);
 };

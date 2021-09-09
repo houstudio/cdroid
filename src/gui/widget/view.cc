@@ -3,6 +3,7 @@
 #include <widget/measurespec.h>
 #include <widget/roundscrollbarrenderer.h>
 #include <widget/edgeeffect.h>
+#include <animation/animationutils.h>
 #include <cdlog.h>
 #include <string.h>
 #include <algorithm>
@@ -440,7 +441,7 @@ void View::setAnimation(Animation* animation) {
         // would cause the animation to start when the screen turns back on
         if (/*mAttachInfo != null && mAttachInfo.mDisplayState == Display.STATE_OFF
                 &&*/ animation->getStartTime() == Animation::START_ON_FIRST_FRAME) {
-            animation->setStartTime(SystemClock::uptimeMillis());//AnimationUtils.currentAnimationTimeMillis());
+            animation->setStartTime(AnimationUtils::currentAnimationTimeMillis());
         }
         animation->reset();
     }
@@ -4687,9 +4688,11 @@ float View::getY()const{
 }
 
 float View::getZ()const{
-    return 0;
+    return mZ;
 }
-void View::setZ(float){
+
+void View::setZ(float z){
+    mZ=z;
 }
 
 void View::setX(float x){

@@ -9,17 +9,26 @@ LayoutParams::LayoutParams(){
 LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs){
     width =attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
     height=attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
+    layoutAnimationParameters=nullptr;
 }
 
 LayoutParams::LayoutParams(int w, int h):width(w),height(h){
+    layoutAnimationParameters=nullptr;
 }
 
 LayoutParams::LayoutParams(const LayoutParams& source){
     width=source.width;
-	height=source.height;
+    height=source.height;
+    layoutAnimationParameters=nullptr;
+}
+
+LayoutParams::~LayoutParams(){
+    delete layoutAnimationParameters;
 }
 
 void LayoutParams::setBaseAttributes(const AttributeSet& a, int widthAttr, int heightAttr){
+    //width = a.getLayoutDimension(widthAttr, "layout_width");
+    //height= a.getLayoutDimension(heightAttr, "layout_height");
 }
 
 void LayoutParams::resolveLayoutDirection(int layoutDirection){
@@ -30,7 +39,7 @@ void LayoutParams::onDebugDraw(View&view, Canvas&canvas){
 
 const std::string LayoutParams::sizeToString(int size) {
     switch(size){
-	case WRAP_CONTENT: return "wrap-content";
+    case WRAP_CONTENT: return "wrap-content";
     case MATCH_PARENT: return "match-parent";
     default:return std::to_string(size);
     }

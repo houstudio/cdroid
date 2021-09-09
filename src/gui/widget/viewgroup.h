@@ -81,6 +81,8 @@ private:
     std::vector<View*>mTransientViews;
     std::vector<int>mTransientIndices;
     int mChildCountWithTransientState;
+    Animation::AnimationListener mAnimationListener;
+    class LayoutAnimationController* mLayoutAnimationController;
     class TouchTarget* mFirstTouchTarget;
     POINT animateTo;//save window boundray  while animating
     POINT animateFrom;//window animate from boundary
@@ -117,6 +119,8 @@ private:
     void removeFromArray(int index);
     void removeFromArray(int start, int count);
 
+    void bindLayoutAnimation(View* child);
+    void notifyAnimationListener();
     View&addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addDisappearingView(View* v);
 protected:
@@ -127,6 +131,7 @@ protected:
     Transformation*mInvalidationTransformation;
     LONGLONG time_lastframe;
     OnHierarchyChangeListener mOnHierarchyChangeListener;
+    bool canAnimate();
     void setDefaultFocus(View* child);
     void clearDefaultFocus(View* child);
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
@@ -176,6 +181,7 @@ protected:
     Transformation* getChildTransformation();
     void finishAnimatingView(View* view, Animation* animation);
     bool isViewTransitioning(View* view);
+    void attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count);
     void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
 public:
     ViewGroup(Context*ctx,const AttributeSet& attrs);
@@ -229,7 +235,13 @@ public:
     virtual View& addView(View* child, LayoutParams* params);
     virtual View& addView(View* child, int index, LayoutParams* params);
     View& addView(View* child, int width, int height);
-    
+   
+    void startLayoutAnimation(); 
+    void scheduleLayoutAnimation();
+    void setLayoutAnimation(LayoutAnimationController*);
+    LayoutAnimationController* getLayoutAnimation();
+    void setLayoutAnimationListener(Animation::AnimationListener animationListener);
+    Animation::AnimationListener getLayoutAnimationListener();
     void clearDisappearingChildren();
     void startViewTransition(View* view);
     void endViewTransition(View* view);
