@@ -16,15 +16,24 @@ LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,
 }
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){
-    return nullptr;
+    Animation*a=loadAnimation(c,fromLeft?"cdroid:anim/slide_in_left.xml":"cdroid:anim/slide_in_right.xml");
+    a->setInterpolator(new DecelerateInterpolator());
+    a->setStartTime(currentAnimationTimeMillis());
+    return a;
 }
 
 Animation* AnimationUtils::makeOutAnimation(Context* c, bool toRight){
-    return nullptr;
+    Animation*a=loadAnimation(c,toRight?"cdroid:anim/slide_out_right.xml":"cdroid:anim/slide_out_left.xml");
+    a->setInterpolator(new AccelerateInterpolator());
+    a->setStartTime(currentAnimationTimeMillis());
+    return a;
 }
 
 Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
-    return nullptr;
+    Animation*a = loadAnimation(c,"cdroid:anim/slide_in_child_bottom.xml");
+    a->setInterpolator(new AccelerateInterpolator());
+    a->setStartTime(currentAnimationTimeMillis());
+    return a;
 }
 
 Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::string&id){

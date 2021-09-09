@@ -14,7 +14,7 @@ public:
     AlphaAnimation(float fromAlpha, float toAlpha);
     bool willChangeTransformationMatrix()const override;
     bool willChangeBounds()const override;
-    bool hasAlpha()const override;
+    bool hasAlpha() override;
 };
 }
 #endif//__ALPHA_ANIMAION_H__

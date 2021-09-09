@@ -23,7 +23,7 @@ bool AlphaAnimation::willChangeBounds()const{
     return false;
 }
 
-bool AlphaAnimation::hasAlpha()const{
+bool AlphaAnimation::hasAlpha(){
     return true;
 }
 }

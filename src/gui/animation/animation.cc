@@ -406,7 +406,7 @@ void Animation::finalize(){
     }*/
 }
 
-bool Animation::hasAlpha()const{
+bool Animation::hasAlpha(){
     return false;
 }
 
