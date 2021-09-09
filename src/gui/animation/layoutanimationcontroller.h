@@ -26,11 +26,12 @@ protected:
     Animation* mAnimation;
     Interpolator* mInterpolator;
 
-    long getDelayForView(View* view);
-    int getTransformedIndex(AnimationParameters& params);
+    virtual long getDelayForView(View* view);
+    int getTransformedIndex(const AnimationParameters* params);
 public:
     LayoutAnimationController(Context* context, const AttributeSet& attrs);
     LayoutAnimationController(Animation* animation,float delay);
+    LayoutAnimationController(Animation* animation);
     int getOrder()const;
     void setOrder(int);
     void setAnimation(Context* context,const std::string&resourceID);
@@ -41,7 +42,7 @@ public:
     Interpolator* getInterpolator();
     float getDelay()const;
     void setDelay(float);
-    bool willOverlap();
+    virtual bool willOverlap();
     void start();
     Animation* getAnimationForView(View* view);
     bool isDone()const;

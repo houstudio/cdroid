@@ -11,6 +11,10 @@ LayoutAnimationController::LayoutAnimationController(Animation* animation,float 
     setAnimation(animation);
 }
 
+LayoutAnimationController::LayoutAnimationController(Animation* animation)
+ :LayoutAnimationController(animation,.5f){
+}
+
 int LayoutAnimationController::getOrder()const{
     return mOrder;
 }
@@ -82,7 +86,7 @@ long LayoutAnimationController::getDelayForView(View* view){
     if (params == nullptr) return 0;
 
     float delay = mDelay * mAnimation->getDuration();
-    long viewDelay = (long) (getTransformedIndex(*params) * delay);
+    long viewDelay = (long) (getTransformedIndex(params) * delay);
     float totalDelay = delay * params->count;
 
     if (mInterpolator == nullptr) {
@@ -95,17 +99,15 @@ long LayoutAnimationController::getDelayForView(View* view){
     return (long) (normalizedDelay * totalDelay);
 }
 
-int LayoutAnimationController::getTransformedIndex(AnimationParameters& params){
+int LayoutAnimationController::getTransformedIndex(const AnimationParameters* params){
     switch (getOrder()) {
     case ORDER_REVERSE:
-        return params.count - 1 - params.index;
+        return params->count - 1 - params->index;
     case ORDER_RANDOM:
-        return (int) (params.count * drand48());
+        return (int) (params->count * drand48());
     case ORDER_NORMAL:
-    default:
-        return params.index;
+    default: return params->index;
     }
 }
-
 
 }
