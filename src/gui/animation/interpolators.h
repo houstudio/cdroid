@@ -2,146 +2,108 @@
 #define __INTERPOLATOR_H__
 #include <math.h>
 #include <vector>
+#include <core/attributeset.h>
 
 namespace cdroid{
-
-class Interpolator{
+class Context;
+class TimeInterpolator{
 public:
     virtual float getInterpolation(float input)=0;
 };
 
-class LinearInterpolator:public Interpolator{
+class Interpolator:public TimeInterpolator{
+public:
+};
+
+class BaseInterpolator:public Interpolator{
+private:
+    int mChangingConfiguration;
+public:
+    int getChangingConfiguration();
+    void setChangingConfiguration(int changingConfiguration);
+};
+
+class LinearInterpolator:public BaseInterpolator{
 public:
     float getInterpolation(float input){return input;}
 };
 
-class AccelerateInterpolator:public Interpolator{
+class AccelerateInterpolator:public BaseInterpolator{
 private:
     float mFactor;
     double mDoubleFactor;
 public:
-    AccelerateInterpolator(double f=1.){
-       mFactor=f;
-       mDoubleFactor=f*2;
-    }
-    float getInterpolation(float input) {
-        if (mFactor == 1.0f) {
-            return input * input;
-        } else {
-            return (float)pow(input, mDoubleFactor);
-        }
-    }
+    AccelerateInterpolator(Context*ctx,const AttributeSet&);
+    AccelerateInterpolator(double f=1.);
+    float getInterpolation(float input)override;
 };
 
-class DecelerateInterpolator:public Interpolator{
+class DecelerateInterpolator:public BaseInterpolator{
 private:
     float mFactor;
 public:
-    DecelerateInterpolator(float factor=1.0) {
-        mFactor = factor;
-    }
-    float getInterpolation(float input) {
-        float result;
-        if (mFactor == 1.0f) {
-            result = (float)(1.0f - (1.0f - input) * (1.0f - input));
-        } else {
-            result = (float)(1.0f - pow((1.0f - input), 2 * mFactor));
-        }
-        return result;
-    }
+    DecelerateInterpolator(Context*ctx,const AttributeSet&);
+    DecelerateInterpolator(float factor=1.0);
+    float getInterpolation(float input)override;
 };
 
-class AnticipateInterpolator:public Interpolator{
+class AnticipateInterpolator:public BaseInterpolator{
 private:
     float mTension;
 public:
-    AnticipateInterpolator(float tension=2.0) {
-        mTension = tension;
-    }
-    float getInterpolation(float t) {
-        return t * t * ((mTension + 1) * t - mTension);
-    }
+    AnticipateInterpolator(Context*ctx,const AttributeSet&);
+    AnticipateInterpolator(float tension=2.0);
+    float getInterpolation(float t)override;
 };
 
-class CycleInterpolator:public Interpolator{
+class CycleInterpolator:public BaseInterpolator{
 private:
     float mCycles;
 public:
-    CycleInterpolator(float cycles) {
-        mCycles = cycles;
-    }
-     float getInterpolation(float input) {
-        return (float)(sin(2 * mCycles * M_PI * input));
-    }
+    CycleInterpolator(Context*ctx,const AttributeSet&);
+    CycleInterpolator(float cycles);
+    float getInterpolation(float input)override;
 };
 
-class OvershootInterpolator:public Interpolator{
+class OvershootInterpolator:public BaseInterpolator{
 private:
     float mTension;
 public:
-    OvershootInterpolator(float tension=2.0f) {
-        mTension = tension;
-    }
-    float getInterpolation(float t) {
-        t -= 1.0f;
-        return t * t * ((mTension + 1) * t + mTension) + 1.0f;
-    }
+    OvershootInterpolator(Context*ctx,const AttributeSet&);
+    OvershootInterpolator(float tension=2.0f);
+    float getInterpolation(float t)override;
 };
 
 /**
  * An interpolator where the change starts backward then flings forward and overshoots
  * the target value and finally goes back to the final value.
  */
-class AnticipateOvershootInterpolator:public Interpolator{
+class AnticipateOvershootInterpolator:public BaseInterpolator{
 private:
     float mTension;
-    static float a(float t, float s) {
-        return t * t * ((s + 1) * t - s);
-    }
-    static float o(float t, float s) {
-        return t * t * ((s + 1) * t + s);
-    }
+    static float a(float t, float s);
+    static float o(float t, float s);
 public:
-    AnticipateOvershootInterpolator(float tension=2.5, float extraTension=1.5) {
-        mTension = tension * extraTension;
-    }
+    AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&);
+    AnticipateOvershootInterpolator(float tension=2.5, float extraTension=1.5);
 
-    float getInterpolation(float t) {
-        if (t < 0.5f) return 0.5f * a(t * 2.0f, mTension);
-        else return 0.5f * (o(t * 2.0f - 2.0f, mTension) + 2.0f);
-    }
+    float getInterpolation(float t)override;
 };
 
-class BounceInterpolator:public Interpolator{
+class BounceInterpolator:public BaseInterpolator{
 private:
-    static float bounce(float t) {
-        return t * t * 8.0f;
-    }
+    static float bounce(float t);
 public:
-     float getInterpolation(float t) {
-        // _b(t) = t * t * 8
-        // bs(t) = _b(t) for t < 0.3535
-        // bs(t) = _b(t - 0.54719) + 0.7 for t < 0.7408
-        // bs(t) = _b(t - 0.8526) + 0.9 for t < 0.9644
-        // bs(t) = _b(t - 1.0435) + 0.95 for t <= 1.0
-        // b(t) = bs(t * 1.1226)
-        t *= 1.1226f;
-        if (t < 0.3535f) return bounce(t);
-        else if (t < 0.7408f) return bounce(t - 0.54719f) + 0.7f;
-        else if (t < 0.9644f) return bounce(t - 0.8526f) + 0.9f;
-        else return bounce(t - 1.0435f) + 0.95f;
-    }
+    float getInterpolation(float t)override;
 };
 
-class AccelerateDecelerateInterpolator:public Interpolator{
+class AccelerateDecelerateInterpolator:public BaseInterpolator{
 public:
-    float getInterpolation(float input) {
-        return (float)(cos((input + 1) * M_PI) / 2.0f) + 0.5f;
-    }
+    float getInterpolation(float input)override;
 };
 
 
-class PathInterpolator:public Interpolator{
+class PathInterpolator:public BaseInterpolator{
 private:
     std::vector<float>mX;
     std::vector<float>mY;
@@ -155,11 +117,13 @@ private:
     }
     void initQuad(float controlX, float controlY);
     void initCubic(float x1, float y1, float x2, float y2);
-    float getInterpolation(float t);
 #endif
+public:
+    PathInterpolator(Context*,const AttributeSet&);
+    float getInterpolation(float t)override;
 };
 
-class LookupTableInterpolator:public Interpolator{
+class LookupTableInterpolator:public BaseInterpolator{
 private:
     std::vector<float> mValues;
     float mStepSize;

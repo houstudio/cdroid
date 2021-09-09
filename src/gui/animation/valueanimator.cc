@@ -259,12 +259,12 @@ void ValueAnimator::removeAllUpdateListeners(){
     mUpdateListeners.clear();
 }
 
-void ValueAnimator::setInterpolator(Interpolator* value){
+void ValueAnimator::setInterpolator(TimeInterpolator* value){
     delete mInterpolator;
     mInterpolator=value?value:new LinearInterpolator();
 }
 
-Interpolator* ValueAnimator::getInterpolator(){
+TimeInterpolator* ValueAnimator::getInterpolator(){
     return mInterpolator;
 }
 

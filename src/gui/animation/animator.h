@@ -77,8 +77,8 @@ public:
     virtual Animator& setDuration(long duration)=0;
     virtual long getDuration()=0;
     long getTotalDuration();
-    virtual void setInterpolator(Interpolator* value)=0;
-    Interpolator* getInterpolator();
+    virtual void setInterpolator(TimeInterpolator* value)=0;
+    virtual TimeInterpolator* getInterpolator();
     virtual bool isRunning()=0;
     virtual bool isStarted();
     void addListener(AnimatorListener listener);

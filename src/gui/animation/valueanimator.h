@@ -35,7 +35,7 @@ private:
     bool mSelfPulse = true;
     bool mSuppressSelfPulseRequested = false;
     float mDurationScale = -1.f;
-    Interpolator* mInterpolator = nullptr;
+    TimeInterpolator* mInterpolator = nullptr;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
 protected:
     long mStartTime = -1;
@@ -101,8 +101,8 @@ public:
     void addUpdateListener(AnimatorUpdateListener listener);
     void removeUpdateListener(AnimatorUpdateListener listener);
     void removeAllUpdateListeners();
-    void setInterpolator(Interpolator* value);
-    Interpolator* getInterpolator();
+    void setInterpolator(TimeInterpolator* value)override;
+    TimeInterpolator* getInterpolator()override;
     void setEvaluator(TypeEvaluator value);
     void start()override;
     void cancel()override;
