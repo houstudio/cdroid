@@ -1844,8 +1844,8 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         sy = mScrollY;
     }
 
-    bool drawingWithDrawingCache =cache != nullptr && !drawingWithRenderNode;
-    bool offsetForScroll = cache == nullptr && !drawingWithRenderNode;
+    const bool drawingWithDrawingCache =cache != nullptr && !drawingWithRenderNode;
+    const bool offsetForScroll = cache == nullptr && !drawingWithRenderNode;
 
     int restoreTo =0 ;
     if (!drawingWithRenderNode || transformToApply != nullptr) {

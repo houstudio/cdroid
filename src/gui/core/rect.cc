@@ -103,4 +103,13 @@ void Rect::Union(const Rect&b){
     left=my;
 }
 
+void Rect::Union(int x,int y,int w,int h){
+    const int mx=std::min(left,x);
+    const int my=std::min(top,y);
+    width=std::max(right(),x+w)-mx;
+    height=std::max(bottom(),y+h)-my;
+    left=mx;
+    left=my;
+}
+
 }//end namespace

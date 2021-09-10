@@ -47,6 +47,7 @@ typedef struct Rect{
     bool operator==(const Rect&b)const;
     bool operator!=(const Rect&b)const;
     void Union(const Rect&b);
+    void Union(int x,int y,int w,int h);
     static constexpr Rect Make(int x,int y,int w,int h){return Rect{x,y,w,h};}
     static constexpr Rect MakeEmpty(){return Rect{0,0,0,0};};
     static constexpr Rect MakeWH(int w,int h){return Rect{0,0,w,h};}

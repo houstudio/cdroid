@@ -1421,8 +1421,8 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         if (drawAnimation) {
             if (view) {
                  view->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
-            }/* else if (parent instanceof ViewRootImpl) {
-                 ((ViewRootImpl) parent).mIsAnimating = true;
+            }/* else if (parent) {
+                 parent->mIsAnimating = true;
             }*/
         }
 
@@ -1464,7 +1464,7 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
             dirty.offset(location[CHILD_LEFT_INDEX] - mScrollX,
                     location[CHILD_TOP_INDEX] - mScrollY);
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == 0) {
-                //dirty.union(0, 0, mWidth,mHeight);
+                dirty.Union(0, 0, mWidth,mHeight);
             }
 
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
@@ -1480,7 +1480,7 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
                 dirty.set(0, 0, mWidth, mHeight);
             } else {
                 // in case the dirty rect extends outside the bounds of this container
-                //dirty.union(0, 0, mWidth, mHeight);
+                dirty.Union(0, 0, mWidth, mHeight);
             }
             location[CHILD_LEFT_INDEX]= mLeft;
             location[CHILD_TOP_INDEX] = mTop;
