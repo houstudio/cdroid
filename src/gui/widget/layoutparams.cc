@@ -1,5 +1,5 @@
 #include <widget/layoutparams.h>
-#include <widget/view.h>
+#include <widget/viewgroup.h>
 #include <cdlog.h>
 namespace cdroid{
 
@@ -228,8 +228,35 @@ bool MarginLayoutParams::isLayoutRtl()const{
     return ((mMarginFlags & LAYOUT_DIRECTION_MASK) == View::LAYOUT_DIRECTION_RTL);
 }
 
-void MarginLayoutParams::onDebugDraw(View&view, Canvas&canvas){
+static void fillRect(Canvas& canvas,int x1, int y1, int x2, int y2) {
+    if (x1 == x2 || y1 == y2) return;
+    if (x1 > x2) {
+        int tmp = x1; x1 = x2; x2 = tmp;
+    }
+    if (y1 > y2) {
+        int tmp = y1; y1 = y2; y2 = tmp;
+    }
+    canvas.rectangle(x1, y1, x2, y2);
+}
 
+static void fillDifference(Canvas& canvas, int x2, int y2, int x3, int y3,
+        int dx1, int dy1, int dx2, int dy2) {
+    int x1 = x2 - dx1;
+    int y1 = y2 - dy1;
+    int x4 = x3 + dx2;
+    int y4 = y3 + dy2;
+
+    fillRect(canvas, x1, y1, x4, y2);
+    fillRect(canvas, x1, y2, x2, y3);
+    fillRect(canvas, x3, y2, x4, y3);
+    fillRect(canvas, x1, y3, x4, y4);
+}
+
+void MarginLayoutParams::onDebugDraw(View&view, Canvas&canvas){
+    Insets oi = (view.getParent() && view.getParent()->isLayoutModeOptical()) ? view.getOpticalInsets() : Insets::NONE;
+    fillDifference(canvas, view.getLeft() + oi.left,  view.getTop() + oi.top,
+        view.getRight() - oi.right,  view.getBottom() - oi.bottom ,
+        leftMargin, topMargin, rightMargin, bottomMargin);
 }
 
 void MarginLayoutParams::doResolveMargins(){

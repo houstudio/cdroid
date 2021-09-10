@@ -24,7 +24,7 @@ void Transformation::setTransformationType(int transformationType) {
 
 void Transformation::set(const Transformation& t) {
     mAlpha = t.getAlpha();
-    mMatrix=(Matrix)*t.getMatrix();//.set(t.getMatrix());
+    mMatrix= t.getMatrix();
     if (t.mHasClipRect) {
         setClipRect(t.getClipRect());
     } else {
@@ -62,11 +62,11 @@ void Transformation::postCompose(Transformation t) {
     }
 }
 
-Matrix* Transformation::getMatrix(){
-    return &mMatrix;
+Matrix& Transformation::getMatrix(){
+    return mMatrix;
 }
-const Matrix* Transformation::getMatrix()const{
-    return &mMatrix;
+const Matrix& Transformation::getMatrix()const{
+    return mMatrix;
 }
 
 void Transformation::setAlpha(float alpha) {

@@ -35,7 +35,7 @@ static void startAnimation(void *userData, const XML_Char *xname, const XML_Char
     }  else if (0==name.compare("translate")) {
         anim = new TranslateAnimation(c, attrs);
     } else if (0==name.compare("cliprect")) {
-        //anim = new ClipRectAnimation(c, attrs);
+        anim = new ClipRectAnimation(c, attrs);
     } else {
         LOGE("Unknown animation name: %s" ,xname);
     }

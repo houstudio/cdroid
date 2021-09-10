@@ -42,7 +42,7 @@ void TranslateAnimation::applyTransformation(float interpolatedTime, Transformat
     if (mFromYDelta != mToYDelta) {
         dy = mFromYDelta + ((mToYDelta - mFromYDelta) * interpolatedTime);
     }
-    t.getMatrix()->translate(dx, dy);
+    t.getMatrix().translate(dx, dy);
     LOGD("dx/dy=%f,%f",dx,dy);
 }
 
@@ -65,9 +65,9 @@ TranslateXAnimation::TranslateXAnimation(int fromXType, float fromXValue, int to
 }
 
 void TranslateXAnimation::applyTransformation(float interpolatedTime, Transformation& t) {
-    Matrix*m = t.getMatrix();
+    Matrix&m = t.getMatrix();
     float dx = mFromYDelta + ((mToXDelta - mFromXDelta) * interpolatedTime);
-    m->translate(dx,/*mTmpValues[Matrix.MTRANS_X]*/m->y0);
+    m.translate(dx,/*mTmpValues[Matrix.MTRANS_X]*/m.y0);
 }
 
 TranslateYAnimation::TranslateYAnimation(float fromYDelta, float toYDelta)
@@ -81,9 +81,9 @@ TranslateYAnimation::TranslateYAnimation(int fromYType, float fromYValue, int to
 }
 
 void TranslateYAnimation::applyTransformation(float interpolatedTime, Transformation& t) {
-    Matrix* m = t.getMatrix();
+    Matrix& m = t.getMatrix();
     float dy = mFromYDelta + ((mToYDelta - mFromYDelta) * interpolatedTime);
-    m->translate(/*mTmpValues[Matrix.MTRANS_X]*/m->x0, dy);
+    m.translate(/*mTmpValues[Matrix.MTRANS_X]*/m.x0, dy);
 }
 
 }

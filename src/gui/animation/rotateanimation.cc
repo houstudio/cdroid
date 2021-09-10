@@ -60,12 +60,12 @@ void RotateAnimation::applyTransformation(float interpolatedTime, Transformation
     float scale = getScaleFactor();
         
     if (mPivotX == 0.0f && mPivotY == 0.0f) {
-        t.getMatrix()->rotate(degrees);
+        t.getMatrix().rotate(degrees);
     } else {
-        //t.getMatrix()->rotate(degrees, mPivotX * scale, mPivotY * scale);
-        t.getMatrix()->translate(mPivotX * scale, mPivotY * scale);
-        t.getMatrix()->rotate(degrees); 
-        t.getMatrix()->translate(-mPivotX * scale, -mPivotY * scale);
+        //t.getMatrix().rotate(degrees, mPivotX * scale, mPivotY * scale);
+        t.getMatrix().translate(mPivotX * scale, mPivotY * scale);
+        t.getMatrix().rotate(degrees); 
+        t.getMatrix().translate(-mPivotX * scale, -mPivotY * scale);
     }
 }
 

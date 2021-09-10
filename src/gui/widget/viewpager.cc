@@ -830,8 +830,8 @@ void ViewPager::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
                 int vgrav = lp->gravity & Gravity::VERTICAL_GRAVITY_MASK;
                 int widthMode = MeasureSpec::AT_MOST;
                 int heightMode = MeasureSpec::AT_MOST;
-                bool consumeVertical = vgrav == Gravity::TOP || vgrav == Gravity::BOTTOM;
-                bool consumeHorizontal= hgrav == Gravity::LEFT || hgrav == Gravity::RIGHT;
+                const bool consumeVertical  = vgrav == Gravity::TOP || vgrav == Gravity::BOTTOM;
+                const bool consumeHorizontal= hgrav == Gravity::LEFT || hgrav == Gravity::RIGHT;
 
                 if (consumeVertical) {
                     widthMode = MeasureSpec::EXACTLY;
@@ -937,11 +937,10 @@ void ViewPager::onLayout(bool changed, int l, int t, int width, int height){
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
         if (child->getVisibility() == GONE || lp->isDecor==false)
             continue;
-        int childLeft = 0;
-        int childTop = 0;
+        int childLeft = 0, childTop = 0;
                 
-        int hgrav = lp->gravity & Gravity::HORIZONTAL_GRAVITY_MASK;
-        int vgrav = lp->gravity & Gravity::VERTICAL_GRAVITY_MASK;
+        const int hgrav = lp->gravity & Gravity::HORIZONTAL_GRAVITY_MASK;
+        const int vgrav = lp->gravity & Gravity::VERTICAL_GRAVITY_MASK;
         switch (hgrav) {
         default:childLeft = paddingLeft; break;
         case Gravity::LEFT:
@@ -991,10 +990,8 @@ void ViewPager::onLayout(bool changed, int l, int t, int width, int height){
             // This was added during layout and needs measurement.
             // Do it now that we know what we're working with.
             lp->needsMeasure = false;
-            int widthSpec = MeasureSpec::makeMeasureSpec(
-                    (int) (childWidth * lp->widthFactor),MeasureSpec::EXACTLY);
-            int heightSpec = MeasureSpec::makeMeasureSpec(
-                    (int) (height - paddingTop - paddingBottom),MeasureSpec::EXACTLY);
+            int widthSpec = MeasureSpec::makeMeasureSpec( (int) (childWidth * lp->widthFactor),MeasureSpec::EXACTLY);
+            int heightSpec= MeasureSpec::makeMeasureSpec( (int) (height - paddingTop - paddingBottom),MeasureSpec::EXACTLY);
             child->measure(widthSpec, heightSpec);
         }
 
@@ -1926,7 +1923,7 @@ bool ViewPager::canScroll() {
 ViewPager::LayoutParams::LayoutParams()
   :ViewGroup::LayoutParams(MATCH_PARENT, MATCH_PARENT){
     isDecor = false;
-    gravity = Gravity::TOP;
+    gravity = Gravity::NO_GRAVITY;
     widthFactor = .0f;//.0f wil ask adapter for this value
     needsMeasure= true;
     position   =-1;

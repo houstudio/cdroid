@@ -1214,9 +1214,14 @@ void ViewGroup::onDebugDrawMargins(Canvas& canvas){
 }
 
 void ViewGroup::fillRect(Canvas& canvas,int x1, int y1, int x2, int y2) {
-    if (x1 != x2 && y1 != y2) {
-        canvas.rectangle(x1, y1,std::abs(x2-x1), std::abs(y2-y1));
+    if (x1 == x2 || y1 == y2) return;
+    if (x1 > x2) {
+        int tmp = x1; x1 = x2; x2 = tmp;
     }
+    if (y1 > y2) {
+        int tmp = y1; y1 = y2; y2 = tmp;
+    }
+    canvas.rectangle(x1, y1, x2-x1, y2-y1);
 }
 
 void ViewGroup::drawRect(Canvas& canvas,int x1, int y1, int x2, int y2){

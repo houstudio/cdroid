@@ -1551,8 +1551,8 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
         }
         invalidationTransform = parent->mInvalidationTransformation;
         a->getTransformation(drawingTime, *invalidationTransform, 1.f);
-        Matrix*m=invalidationTransform->getMatrix();
-        LOGV("matrix=%f,%f,%f,%f,%f,%f",m->xx,m->yy,m->xy,m->yx,m->x0,m->y0);
+        const Matrix&m=invalidationTransform->getMatrix();
+        LOGV("matrix=%f,%f,%f,%f,%f,%f",m.xx,m.yy,m.xy,m.yx,m.x0,m.y0);
     } else {
         invalidationTransform = t;
     }
@@ -1888,7 +1888,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                         // Undo the scroll translation, apply the transformation matrix,
                         // then redo the scroll translate to get the correct result.
                         canvas.translate(-transX, -transY);
-                        //canvas.concat(transformToApply.getMatrix());
+                        canvas.transform(transformToApply->getMatrix());
                         canvas.translate(transX, transY);
                     }
                     parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
@@ -3155,7 +3155,7 @@ bool View::isDirty()const{
 
 bool View::skipInvalidate()const{
     return (mViewFlags & VISIBILITY_MASK) != VISIBLE && (mCurrentAnimation == nullptr)
-           && (!mParent->isViewTransitioning((View*)this));
+           && mParent && (!mParent->isViewTransitioning((View*)this));
 }
 
 RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){

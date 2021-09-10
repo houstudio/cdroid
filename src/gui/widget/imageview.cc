@@ -31,7 +31,7 @@ void ImageView::initImageView(){
     mDrawMatrix=identity_matrix();
     mMatrix=identity_matrix();
     mRecycleableBitmapDrawable=nullptr;
-    mMaxWidth =mMaxHeight=INT_MAX;
+    mMaxWidth = mMaxHeight = INT_MAX;
     mDrawableTintList=nullptr;
     mColorFilter=nullptr;
     mDrawableTintMode=-1;
@@ -89,8 +89,8 @@ void ImageView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     // We are allowed to change the view's height
     bool resizeHeight = false;
 
-    int widthSpecMode = MeasureSpec::getMode(widthMeasureSpec);
-    int heightSpecMode = MeasureSpec::getMode(heightMeasureSpec);
+    const int widthSpecMode = MeasureSpec::getMode(widthMeasureSpec);
+    const int heightSpecMode = MeasureSpec::getMode(heightMeasureSpec);
 
     if (mDrawable == nullptr) {
         // If no drawable, its intrinsic size is 0.

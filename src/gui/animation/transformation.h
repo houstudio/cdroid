@@ -28,8 +28,8 @@ public:
     void set(const Transformation& t);
     void compose(Transformation t);
     void postCompose(Transformation t);
-    const Matrix* getMatrix()const;
-    Matrix* getMatrix();
+    const Matrix& getMatrix()const;
+    Matrix& getMatrix();
     void setAlpha(/*from=0.0, to=1.0)*/float alpha);
     void setClipRect(Rect r);
     void setClipRect(int l, int t, int w, int h);

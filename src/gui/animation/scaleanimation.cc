@@ -67,12 +67,12 @@ void ScaleAnimation::applyTransformation(float interpolatedTime, Transformation&
         sy = mFromY + ((mToY - mFromY) * interpolatedTime);
     }
     if (mPivotX == 0 && mPivotY == 0) {
-        t.getMatrix()->scale(sx, sy);
+        t.getMatrix().scale(sx, sy);
     } else {
         //t.getMatrix()->scale(sx, sy, scale * mPivotX, scale * mPivotY);
-        t.getMatrix()->translate( scale * mPivotX, scale * mPivotY);
-        t.getMatrix()->scale(sx, sy);
-        t.getMatrix()->translate( -scale * mPivotX, -scale * mPivotY);
+        t.getMatrix().translate( scale * mPivotX, scale * mPivotY);
+        t.getMatrix().scale(sx, sy);
+        t.getMatrix().translate( -scale * mPivotX, -scale * mPivotY);
     }
 }
 
