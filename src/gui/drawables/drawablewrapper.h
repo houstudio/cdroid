@@ -27,10 +27,11 @@ private:
     std::shared_ptr<DrawableWrapperState>mState;
     void updateLocalState();
 protected:
-    void onBoundsChange(const Rect& bounds)override;
-    bool onLevelChange(int level)override;
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
     DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);
+    bool onStateChange(const std::vector<int>& state)override;
+    bool onLevelChange(int level)override;
+    void onBoundsChange(const Rect& bounds)override;
 public:
     DrawableWrapper(Drawable*d=nullptr);
     ~DrawableWrapper();
@@ -46,6 +47,13 @@ public:
     void scheduleDrawable(Drawable&who,Runnable what, long when)override;
     void unscheduleDrawable(Drawable& who,Runnable what)override;
     void draw(Canvas&canvas)override;
+    bool getPadding(Rect& padding)override;
+    Insets getOpticalInsets()override;
+    bool setVisible(bool visible, bool restart)override;
+    void setAlpha(int alpha)override;
+    int getAlpha()const override;
+    bool isStateful()const override;
+    bool hasFocusStateSpecified()const override;
 };
 
 }

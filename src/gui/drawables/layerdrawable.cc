@@ -765,6 +765,24 @@ bool LayerDrawable::hasFocusStateSpecified()const{
     return mLayerState->hasFocusStateSpecified();
 }
 
+void LayerDrawable::setAutoMirrored(bool mirrored){
+    mLayerState->mAutoMirrored = mirrored;
+
+    for (ChildDrawable*dr:mLayerState->mChildren) {
+         if (dr->mDrawable) dr->mDrawable->setAutoMirrored(mirrored);
+    }
+}
+
+bool LayerDrawable::isAutoMirrored(){
+    return mLayerState->mAutoMirrored;
+}
+
+void LayerDrawable::jumpToCurrentState(){
+    for (ChildDrawable*dr:mLayerState->mChildren) {
+        if (dr->mDrawable) dr->mDrawable->jumpToCurrentState();
+    }
+}
+
 std::shared_ptr<Drawable::ConstantState>LayerDrawable::getConstantState(){
     if (mLayerState->canConstantState()) {
         mLayerState->mChangingConfigurations = getChangingConfigurations();

@@ -92,9 +92,13 @@ private:
     void setBooleanFlag(int flag, bool value);
     bool hasBooleanFlag(int flag)const;
     bool hasChildWithZ()const;
+    static void drawRect(Canvas& canvas,int x1, int y1, int x2, int y2);
+    static void fillRect(Canvas& canvas,int x1, int y1, int x2, int y2);
+    static void drawCorner(Canvas& c,int x1, int y1, int dx, int dy, int lw);
+    static void drawRectCorners(Canvas& canvas, int x1, int y1, int x2, int y2,int lineLength, int lineWidth);
+
     int getAndVerifyPreorderedIndex(int childrenCount, int i, bool customOrder);
-    static View*getAndVerifyPreorderedView(const std::vector<View*>& preorderedList,const std::vector<View*> children,
-            int childIndex);
+    static View*getAndVerifyPreorderedView(const std::vector<View*>&,const std::vector<View*>&, int childIndex);
     TouchTarget* getTouchTarget(View* child);
     TouchTarget* addTouchTarget(View* child, int pointerIdBits);
     void resetTouchState();

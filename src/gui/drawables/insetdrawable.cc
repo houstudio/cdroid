@@ -2,6 +2,10 @@
 #include <cdlog.h>
 namespace cdroid{
 
+int InsetDrawable::InsetValue::getDimension(int boundSize)const{
+    return (int) (boundSize * mFraction) + mDimension;
+}
+
 InsetDrawable::InsetState::InsetState():DrawableWrapperState(){
     mInset.set(0,0,0,0);
 }
@@ -45,15 +49,55 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> InsetDrawable::mutateCons
     return mState;
 }
 
+void InsetDrawable::getInsets(Rect& out) {
+    Rect b = getBounds();
+    out.left  = mState->mInsetLeft.getDimension(b.width);
+    out.width = mState->mInsetRight.getDimension(b.width);
+    out.top   = mState->mInsetTop.getDimension(b.height);
+    out.height= mState->mInsetBottom.getDimension(b.height);
+}
+
+bool InsetDrawable::getPadding(Rect& padding) {
+    bool pad = DrawableWrapper::getPadding(padding);
+    Rect tmp;
+    getInsets(tmp);
+    padding.left  += tmp.left;
+    padding.width += tmp.width;
+    padding.top   += tmp.top;
+    padding.height+= tmp.height;
+
+    return pad || (tmp.left | tmp.width | tmp.top | tmp.height) != 0;
+}
+
+Insets InsetDrawable::getOpticalInsets() {
+    const Insets contentInsets = DrawableWrapper::getOpticalInsets();
+    Rect tmp;
+    getInsets(tmp);
+    return Insets::of(
+            contentInsets.left + tmp.left,
+            contentInsets.top + tmp.top,
+            contentInsets.right + tmp.width,
+            contentInsets.bottom + tmp.height);
+}
+
+int InsetDrawable::getOpacity() {
+    int opacity = getDrawable()->getOpacity();
+    Rect tmp;
+    getInsets(tmp);
+    if (opacity == OPAQUE && (tmp.left > 0 || tmp.top > 0 || tmp.width > 0 || tmp.height > 0)) {
+        return TRANSLUCENT;
+    }
+    return opacity;
+}
+
 void InsetDrawable::onBoundsChange(const Rect&bounds){
     Rect r=bounds;
-    Rect&mInset=mState->mInset;
-    r.left += mInset.left;
-    r.top += mInset.top;
-    r.width -=(mInset.left + mInset.width);
-    r.height-=(mInset.top + mInset.height);
+  
+    r.left  += mState->mInsetLeft.getDimension(bounds.width);
+    r.top   += mState->mInsetTop.getDimension(bounds.height);
+    r.width -= mState->mInsetRight.getDimension(bounds.width);
+    r.height-= mState->mInsetBottom.getDimension(bounds.height);
     DrawableWrapper::onBoundsChange(r);
-    LOGD("inset=%d,%d,%d,%d",mInset.left,mInset.top,mInset.width,mInset.height);
 }
 
 std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){

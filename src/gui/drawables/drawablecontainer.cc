@@ -377,6 +377,11 @@ bool DrawableContainer::getPadding(Rect&padding){
     return result;
 }
 
+Insets DrawableContainer::getOpticalInsets(){
+
+    return  mCurrDrawable?mCurrDrawable->getOpticalInsets():Insets();
+}
+
 int DrawableContainer::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations()
                 | mDrawableContainerState->getChangingConfigurations();
@@ -405,6 +410,60 @@ bool DrawableContainer::onLevelChange(int level) {
     if (mCurrDrawable != nullptr)
         return mCurrDrawable->setLevel(level);
     return false;
+}
+
+bool DrawableContainer::isStateful()const{
+    return mDrawableContainerState->isStateful();
+}
+
+bool DrawableContainer::hasFocusStateSpecified()const{
+    if (mCurrDrawable) {
+        return mCurrDrawable->hasFocusStateSpecified();
+    }
+    if (mLastDrawable) {
+        return mLastDrawable->hasFocusStateSpecified();
+    }
+    return false;
+}
+
+void DrawableContainer::setAutoMirrored(bool mirrored){
+    if (mDrawableContainerState->mAutoMirrored != mirrored) {
+        mDrawableContainerState->mAutoMirrored = mirrored;
+        if (mCurrDrawable ) {
+            mCurrDrawable->setAutoMirrored(mDrawableContainerState->mAutoMirrored);
+        }
+    }
+}
+
+bool DrawableContainer::isAutoMirrored(){
+    return mDrawableContainerState->mAutoMirrored;
+}
+
+void DrawableContainer::jumpToCurrentState(){
+    bool changed = false;
+    if (mLastDrawable ) {
+        mLastDrawable->jumpToCurrentState();
+        mLastDrawable = nullptr;
+        mLastIndex = -1;
+        changed = true;
+    }
+    if (mCurrDrawable) {
+        mCurrDrawable->jumpToCurrentState();
+        if (mHasAlpha) {
+            mCurrDrawable->setAlpha(mAlpha);
+        }
+    }
+    if (mExitAnimationEnd != 0) {
+        mExitAnimationEnd = 0;
+        changed = true;
+     }
+    if (mEnterAnimationEnd != 0) {
+        mEnterAnimationEnd = 0;
+        changed = true;
+    }
+    if (changed) {
+        invalidateSelf();
+    }
 }
 
 int DrawableContainer::getIntrinsicWidth()const {

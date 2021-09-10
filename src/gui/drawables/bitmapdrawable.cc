@@ -285,6 +285,11 @@ void BitmapDrawable::draw(Canvas&canvas){
     if(mTintFilter)mTintFilter->apply(canvas,mBounds);
 }
 
+Insets BitmapDrawable::getOpticalInsets() {
+    updateDstRectAndInsetsIfDirty();
+    return mOpticalInsets;
+}
+
 Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const std::string src=atts.getString("src");
     bool antialias=atts.getBoolean("antialias",true);

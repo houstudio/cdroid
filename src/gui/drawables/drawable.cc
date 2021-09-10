@@ -40,6 +40,10 @@ bool Drawable::getPadding(Rect&padding){
     return false;
 }
 
+Insets Drawable::getOpticalInsets(){
+    return Insets();
+}
+
 const Rect&Drawable::getBounds()const{
     return mBounds;
 }

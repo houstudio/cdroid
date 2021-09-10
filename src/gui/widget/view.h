@@ -3,6 +3,7 @@
 #include <core/eventcodes.h>
 #include <core/uievents.h>
 #include <core/canvas.h>
+#include <core/insets.h>
 #include <core/viewconfiguration.h>
 #include <core/systemclock.h>
 #include <widget/layoutparams.h>
@@ -265,7 +266,8 @@ private:
     int mNextFocusDownId;
     int mNextFocusForwardId;
     int mNextClusterForwardId;
-    
+    Insets mLayoutInsets;
+ 
     Runnable mPendingCheckForTap;
     bool mInContextButtonPress;
     bool mHasPerformedLongPress;
@@ -336,6 +338,15 @@ protected:
     int mUserPaddingRight;
     int mUserPaddingTop;
     int mUserPaddingBottom;
+    /* Cache the paddingStart set by the user to append to the scrollbar's size. */
+    int mUserPaddingStart;
+    /* Cache the paddingEnd set by the user to append to the scrollbar's size.*/
+    int mUserPaddingEnd;
+    /* Cache initial left padding*/
+    int mUserPaddingLeftInitial;
+    /* Cache initial right padding*/
+    int mUserPaddingRightInitial;
+
     std::string mHint;
     bool mCachingFailed;
     RefPtr<ImageSurface>mDrawingCache;
@@ -493,6 +504,10 @@ public:
     int getPaddingStart();
     int getPaddingRight();
     int getPaddingEnd();
+    bool isPaddingRelative()const;
+    Insets computeOpticalInsets();
+    Insets getOpticalInsets();
+    void setOpticalInsets(const Insets& insets);
     void setPadding(int left, int top, int right, int bottom);
     bool isPaddingResolved()const;
     virtual void resolvePadding();

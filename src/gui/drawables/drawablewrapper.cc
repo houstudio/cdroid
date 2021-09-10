@@ -67,10 +67,6 @@ DrawableWrapper::~DrawableWrapper(){
     delete mDrawable;
 }
 
-bool DrawableWrapper::onLevelChange(int level){
-    return mDrawable != nullptr && mDrawable->setLevel(level);
-}
-
 void DrawableWrapper::setDrawable(Drawable*dr){
     if (mDrawable != nullptr)
         mDrawable->setCallback(nullptr);
@@ -90,6 +86,33 @@ void DrawableWrapper::setDrawable(Drawable*dr){
 
 Drawable*DrawableWrapper::getDrawable(){
     return mDrawable;
+}
+
+bool DrawableWrapper::isStateful()const{
+    return mDrawable  && mDrawable->isStateful();
+}
+
+bool DrawableWrapper::hasFocusStateSpecified()const{
+    return mDrawable  && mDrawable->hasFocusStateSpecified();
+}
+
+bool DrawableWrapper::onStateChange(const std::vector<int>& state) {
+    if (mDrawable  && mDrawable->isStateful()) {
+        bool changed = mDrawable->setState(state);
+        if (changed)  onBoundsChange(getBounds());
+        return changed;
+    }
+    return false;
+}
+
+bool DrawableWrapper::onLevelChange(int level) {
+    return mDrawable  && mDrawable->setLevel(level);
+}
+
+void DrawableWrapper::onBoundsChange(const Rect& bounds) {
+    if (mDrawable ) {
+        mDrawable->setBounds(bounds);
+    }
 }
 
 int DrawableWrapper::getIntrinsicWidth()const {
@@ -137,11 +160,6 @@ int DrawableWrapper::getChangingConfigurations()const{
                 | mDrawable->getChangingConfigurations();
 }
 
-void DrawableWrapper::onBoundsChange(const Rect&bounds){
-    if(mDrawable)
-        mDrawable->setBounds(bounds);
-}
-
 void DrawableWrapper::invalidateDrawable(Drawable& who){
     Drawable::Callback* callback = getCallback();
     if (callback != nullptr) {
@@ -161,6 +179,29 @@ void DrawableWrapper::unscheduleDrawable(Drawable& who,Runnable what){
     if (callback != nullptr) {
         callback->unscheduleDrawable(*this, what);
     }
+}
+
+bool DrawableWrapper::getPadding(Rect& padding){
+    return mDrawable  && mDrawable->getPadding(padding);
+}
+
+Insets DrawableWrapper::getOpticalInsets(){
+    return mDrawable ? mDrawable->getOpticalInsets() : Insets();
+}
+
+bool DrawableWrapper::setVisible(bool visible, bool restart){
+    const bool superChanged = Drawable::setVisible(visible, restart);
+    const bool changed = mDrawable && mDrawable->setVisible(visible, restart);
+    return superChanged | changed;
+}
+
+
+void DrawableWrapper::setAlpha(int alpha){
+    if (mDrawable)mDrawable->setAlpha(alpha);
+}
+
+int DrawableWrapper::getAlpha()const{
+    return mDrawable ? mDrawable->getAlpha() : 255;
 }
 
 void DrawableWrapper::draw(Canvas&canvas){

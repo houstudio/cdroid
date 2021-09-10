@@ -94,11 +94,11 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
 
     if (mThickness > 0)  mThickness = Drawable::scaleFromDensity(mThickness, sourceDensity, targetDensity, true);
 
-    if (mOpticalInsets.left==0&&mOpticalInsets.top==0&&mOpticalInsets.width==0&&mOpticalInsets.height) {
+    if (mOpticalInsets.left!=0||mOpticalInsets.top!=0||mOpticalInsets.right!=0||mOpticalInsets.right!=0) {
         const int left  = Drawable::scaleFromDensity(mOpticalInsets.left, sourceDensity, targetDensity, true);
         const int top   = Drawable::scaleFromDensity( mOpticalInsets.top, sourceDensity, targetDensity, true);
-        const int right = Drawable::scaleFromDensity(mOpticalInsets.width, sourceDensity, targetDensity, true);
-        const int bottom= Drawable::scaleFromDensity(mOpticalInsets.height, sourceDensity, targetDensity, true);
+        const int right = Drawable::scaleFromDensity(mOpticalInsets.right, sourceDensity, targetDensity, true);
+        const int bottom= Drawable::scaleFromDensity(mOpticalInsets.bottom, sourceDensity, targetDensity, true);
         mOpticalInsets.set(left, top, right, bottom);
     }
     if (mPadding.empty()) {
@@ -327,7 +327,11 @@ int GradientDrawable::getIntrinsicWidth()const{
 }
 
 int GradientDrawable::getIntrinsicHeight()const{
-   return mGradientState->mHeight;
+    return mGradientState->mHeight;
+}
+
+Insets GradientDrawable::getOpticalInsets(){
+    return mGradientState->mOpticalInsets;
 }
 
 void GradientDrawable::setSize(int width, int height) {

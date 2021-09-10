@@ -29,6 +29,7 @@ private:
     };
     int mBitmapWidth;
     int mBitmapHeight;
+    Insets mOpticalInsets;
     std::shared_ptr<BitmapState>mBitmapState;
     PorterDuffColorFilter*mTintFilter;
     void computeBitmapSize();
@@ -37,7 +38,6 @@ private:
 protected:
     bool mMutated;
     Rect mDstRect;
-    Rect mOpticalInsets;
     bool mDstRectAndInsetsDirty;
     void onBoundsChange(const Rect&r)override;
     bool onStateChange(const std::vector<int>&)override;
@@ -60,7 +60,8 @@ public:
     void clearMutated()override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;
-	static Drawable*inflate(Context*,const AttributeSet&atts);
+    Insets getOpticalInsets()override;
+    static Drawable*inflate(Context*,const AttributeSet&atts);
 };
 
 }

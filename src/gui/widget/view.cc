@@ -13,6 +13,7 @@
 #include <color.h>
 #include <systemclock.h>
 
+#define UNDEFINED_PADDING INT_MIN
 namespace cdroid{
 
 class TintInfo{
@@ -356,6 +357,23 @@ int View::getPaddingEnd() {
    if (!isPaddingResolved())resolvePadding();
    
    return (getLayoutDirection() == LAYOUT_DIRECTION_RTL) ?mPaddingLeft : mPaddingRight;
+}
+
+bool View::isPaddingRelative()const{
+    return (mUserPaddingStart != UNDEFINED_PADDING || mUserPaddingEnd != UNDEFINED_PADDING);
+}
+
+Insets View::computeOpticalInsets() {
+    return (mBackground == nullptr) ? Insets() : mBackground->getOpticalInsets();
+}
+
+Insets View::getOpticalInsets() {
+    mLayoutInsets = computeOpticalInsets();
+    return mLayoutInsets;
+}
+
+void View::setOpticalInsets(const Insets& insets) {
+    mLayoutInsets = insets;
 }
 
 void View::setPadding(int left, int top, int right, int bottom){
@@ -4572,7 +4590,7 @@ void View::setMeasuredDimensionRaw(int measuredWidth, int measuredHeight) {
 }
 
 void View::setMeasuredDimension(int measuredWidth, int measuredHeight) {
-    /*bool optical = isLayoutModeOptical(this);
+    bool optical = isLayoutModeOptical(this);
     if (optical != isLayoutModeOptical(mParent)) {
         Insets insets = getOpticalInsets();
         int opticalWidth  = insets.left + insets.right;
@@ -4580,7 +4598,7 @@ void View::setMeasuredDimension(int measuredWidth, int measuredHeight) {
 
         measuredWidth  += optical ? opticalWidth  : -opticalWidth;
         measuredHeight += optical ? opticalHeight : -opticalHeight;
-    }*/
+    }
     setMeasuredDimensionRaw(measuredWidth, measuredHeight);
 }
 
@@ -4840,11 +4858,11 @@ void View::resolveLayoutParams() {
 void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     bool optical = isLayoutModeOptical(this);
     if (optical != isLayoutModeOptical(mParent)) {
-        /*Insets insets = getOpticalInsets();
+        Insets insets = getOpticalInsets();
         int oWidth  = insets.left + insets.right;
         int oHeight = insets.top  + insets.bottom;
         widthMeasureSpec  = MeasureSpec::adjust(widthMeasureSpec,  optical ? -oWidth  : oWidth);
-        heightMeasureSpec = MeasureSpec::adjust(heightMeasureSpec, optical ? -oHeight : oHeight);*/
+        heightMeasureSpec = MeasureSpec::adjust(heightMeasureSpec, optical ? -oHeight : oHeight);
     }
 
     // Suppress sign extension for the low bytes

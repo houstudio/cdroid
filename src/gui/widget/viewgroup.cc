@@ -715,8 +715,7 @@ int ViewGroup::getAndVerifyPreorderedIndex(int childrenCount, int i, bool custom
     return childIndex;
 }
 
-View* ViewGroup::getAndVerifyPreorderedView(const std::vector<View*>& preorderedList,const std::vector<View*> children,
-            int childIndex) {
+View* ViewGroup::getAndVerifyPreorderedView(const std::vector<View*>& preorderedList,const std::vector<View*>& children,int childIndex) {
     View* child;
     if (preorderedList.size()) {
         child = preorderedList.at(childIndex);
@@ -1205,7 +1204,7 @@ View*ViewGroup::findViewById(int id)const{
 }
 
 bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){
-    child->draw(canvas,this,drawingTime);
+    return child->draw(canvas,this,drawingTime);
 }
 
 void ViewGroup::onDebugDrawMargins(Canvas& canvas){
@@ -1214,14 +1213,42 @@ void ViewGroup::onDebugDrawMargins(Canvas& canvas){
     }
 }
 
+void ViewGroup::fillRect(Canvas& canvas,int x1, int y1, int x2, int y2) {
+    if (x1 != x2 && y1 != y2) {
+        canvas.rectangle(x1, y1,std::abs(x2-x1), std::abs(y2-y1));
+    }
+}
+
+void ViewGroup::drawRect(Canvas& canvas,int x1, int y1, int x2, int y2){
+    canvas.move_to(x1,y1);
+    canvas.line_to(x2,y1);
+    canvas.line_to(x2,y2);
+    canvas.line_to(x1,y2);
+    canvas.line_to(x1,y1);
+}
+
+void ViewGroup::drawCorner(Canvas& c,int x1, int y1, int dx, int dy, int lw) {
+#define SIGN(x) ((x)>=0?1:-1)
+    fillRect(c, x1, y1, x1 + dx, y1 + lw * SIGN(dy));
+    fillRect(c, x1, y1, x1 + lw * SIGN(dx), y1 + dy);
+}
+
+void ViewGroup::drawRectCorners(Canvas& canvas, int x1, int y1, int x2, int y2,int lineLength, int lineWidth) {
+    drawCorner(canvas, x1, y1, lineLength, lineLength, lineWidth);
+    drawCorner(canvas, x1, y2, lineLength, -lineLength, lineWidth);
+    drawCorner(canvas, x2, y1, -lineLength, lineLength, lineWidth);
+    drawCorner(canvas, x2, y2, -lineLength, -lineLength, lineWidth);
+}
+
 void ViewGroup::onDebugDraw(Canvas& canvas){
     // Draw optical bounds
     canvas.set_color(Color::RED);
+    canvas.set_line_width(.5f);
     for (View*c :mChildren){
         if (c->getVisibility() != View::GONE) {
-            //Insets insets = c.getOpticalInsets();
-            //drawRect(canvas,c->getLeft() + insets.left, c->getTop() + insets.top,
-            //        c->getRight() - insets.right - 1,  c->getBottom() - insets.bottom - 1);
+            Insets insets = c->getOpticalInsets();
+            drawRect(canvas,c->getLeft() + insets.left,c->getTop() + insets.top,
+			   c->getRight() - insets.right - 1,c->getBottom() - insets.bottom - 1);
         }
     }
     canvas.stroke();
@@ -1229,20 +1256,20 @@ void ViewGroup::onDebugDraw(Canvas& canvas){
     // Draw margins
     canvas.set_color(0x70FF00FF);
     onDebugDrawMargins(canvas);//fill
-#if 0
-    // Draw clip bounds
-    paint.setColor(DEBUG_CORNERS_COLOR);
-    paint.setStyle(Paint.Style.FILL);
 
-    int lineLength = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
-    int lineWidth = dipsToPixels(1);
-    for (View*v c:mChildren){
+    // Draw clip bounds
+    //paint.setColor(DEBUG_CORNERS_COLOR);
+    //paint.setStyle(Paint.Style.FILL);
+    canvas.set_color(0xFF4080ff); 
+    int lineLength = 8;//dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
+    int lineWidth = 1;//dipsToPixels(1);
+    for (View* c:mChildren){
         if (c->getVisibility() != View::GONE) {
-            drawRectCorners(canvas, c->getLeft(), c->getTop(), c->getRight(), c->getBottom(),
-                    paint, lineLength, lineWidth);
+            drawRectCorners(canvas, c->getLeft(), c->getTop(), c->getRight(), c->getBottom(),lineLength, lineWidth);
         }
     }
-#endif
+    canvas.fill();
+
 }
 
 void ViewGroup::dispatchDraw(Canvas&canvas){

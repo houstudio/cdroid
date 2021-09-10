@@ -1,4 +1,5 @@
 #include <animation/animationset.h>
+#include <limits.h>
 namespace cdroid{
 
 static constexpr int PROPERTY_FILL_AFTER_MASK         = 0x1;

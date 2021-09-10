@@ -69,9 +69,14 @@ protected:
     void initializeDrawableForDisplay(Drawable*d);
     std::shared_ptr<DrawableContainerState>mDrawableContainerState;
 protected:
+    int mAlpha = 0xFF;
+    bool mHasAlpha;
     int mCurIndex;
     int mLastIndex;
     bool mMutated;
+    long mEnterAnimationEnd;
+    long mExitAnimationEnd;
+
     Drawable* mCurrDrawable;
     Drawable* mLastDrawable;
     bool needsMirroring();
@@ -90,12 +95,19 @@ public:
     int getChildCount()const;
     Drawable*getChild(int index);
     bool getPadding(Rect&padding)override;
+    Insets getOpticalInsets()override;
     int getChangingConfigurations()const override;
 
     int getIntrinsicWidth() const override;
     int getIntrinsicHeight()const override;
     int getMinimumWidth() const override;
     int getMinimumHeight()const override;
+
+    bool isStateful()const override;
+    bool hasFocusStateSpecified()const override;
+    void setAutoMirrored(bool mirrored)override;
+    bool isAutoMirrored()override;
+    void jumpToCurrentState()override;
 
     void invalidateDrawable(Drawable& who)override;
     void scheduleDrawable(Drawable&who,Runnable what, long when)override;

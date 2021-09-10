@@ -7,7 +7,7 @@
 #include <core/attributeset.h>
 #include <core/context.h>
 #include <core/gravity.h>
-#include <core/rect.h>
+#include <core/insets.h>
 #include <vector>
 
 namespace cdroid{
@@ -90,6 +90,7 @@ public:
     virtual int getOpacity();
 
     virtual bool getPadding(Rect&padding);
+    virtual Insets getOpticalInsets();
     virtual bool isStateful()const;
     virtual bool hasFocusStateSpecified()const;
     virtual Drawable*getCurrent();

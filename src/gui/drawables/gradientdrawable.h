@@ -64,7 +64,7 @@ private:
        int mInnerRadius=-1;
        int mThickness;
        bool mDither = false;
-       Rect mOpticalInsets;
+       Insets mOpticalInsets;
        float mCenterX,mCenterY;
        float mGradientRadius = 0.5f;
        int mGradientRadiusType;
@@ -138,6 +138,7 @@ public:
     int getShape()const;
     int getIntrinsicWidth()const;
     int getIntrinsicHeight()const;
+    Insets getOpticalInsets()override;
     void setSize(int width, int height);
     void setGradientType(int gradient);
     int getGradientType()const;
@@ -167,7 +168,7 @@ public:
     Drawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
-	static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 
 }

@@ -121,6 +121,9 @@ public:
     int getIntrinsicHeight()const override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
+    void setAutoMirrored(bool mirrored)override;
+    bool isAutoMirrored()override;
+    void jumpToCurrentState()override;
 
     int addLayer(Drawable* dr); 
     Drawable*findDrawableByLayerId(int id);

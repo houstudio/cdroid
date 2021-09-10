@@ -35,7 +35,7 @@ NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
     mDither = orig.mDither;
     mHorz =orig.mHorz;
     mVert =orig.mVert;
-	mChangingConfigurations=orig.mChangingConfigurations;
+    mChangingConfigurations=orig.mChangingConfigurations;
     mAutoMirrored = orig.mAutoMirrored;
     //mThemeAttrs = orig.mThemeAttrs;
 }
@@ -70,34 +70,33 @@ NinePatchDrawable::~NinePatchDrawable(){
 }
 
 void NinePatchDrawable::computeBitmapSize(){
-#if 1
     const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch;
     if (ninePatch == nullptr) return;
     const int sourceDensity =160;// ninePatch.getDensity();
     const int targetDensity =160;// mTargetDensity;
 
-    /*const Rect sourceOpticalInsets = mNinePatchState->mOpticalInsets;
-    if (sourceOpticalInsets.empty()){// != Insets.NONE) {
-        const int left = Drawable::scaleFromDensity( sourceOpticalInsets.left   , sourceDensity, targetDensity, true);
-        const int top  = Drawable::scaleFromDensity( sourceOpticalInsets.top    , sourceDensity, targetDensity, true);
-        const int right= Drawable::scaleFromDensity( sourceOpticalInsets.width, sourceDensity, targetDensity, true);
-        const int bottom=Drawable::scaleFromDensity( sourceOpticalInsets.height,sourceDensity, targetDensity, true);
+    const Insets sourceOpticalInsets = mNinePatchState->mOpticalInsets;
+    if (sourceOpticalInsets != Insets::NONE) {
+        const int left  = Drawable::scaleFromDensity( sourceOpticalInsets.left   , sourceDensity, targetDensity, true);
+        const int top   = Drawable::scaleFromDensity( sourceOpticalInsets.top    , sourceDensity, targetDensity, true);
+        const int right = Drawable::scaleFromDensity( sourceOpticalInsets.right  , sourceDensity, targetDensity, true);
+        const int bottom= Drawable::scaleFromDensity( sourceOpticalInsets.bottom , sourceDensity, targetDensity, true);
         mOpticalInsets.set(left, top, right, bottom);// = Insets.of(left, top, right, bottom);
-    } else*/ {
+    } else {
         mOpticalInsets.set(0,0,0,0);// = Insets.NONE;
     }
 
     const Rect sourcePadding = mNinePatchState->mPadding;
     if (1/*sourcePadding != nullptr*/) {
         
-        mPadding.left  = Drawable::scaleFromDensity( sourcePadding.left , sourceDensity, targetDensity, false);
-        mPadding.top   = Drawable::scaleFromDensity( sourcePadding.top  , sourceDensity, targetDensity, false);
-        mPadding.width = Drawable::scaleFromDensity( sourcePadding.width, sourceDensity, targetDensity, false);
-        mPadding.height= Drawable::scaleFromDensity( sourcePadding.height,sourceDensity, targetDensity, false);
+        mPadding.left  = Drawable::scaleFromDensity( sourcePadding.left  , sourceDensity, targetDensity, false);
+        mPadding.top   = Drawable::scaleFromDensity( sourcePadding.top   , sourceDensity, targetDensity, false);
+        mPadding.width = Drawable::scaleFromDensity( sourcePadding.width , sourceDensity, targetDensity, false);
+        mPadding.height= Drawable::scaleFromDensity( sourcePadding.height, sourceDensity, targetDensity, false);
     }
 
     mBitmapHeight= Drawable::scaleFromDensity( ninePatch->get_height(), sourceDensity, targetDensity, true);
-    mBitmapWidth = Drawable::scaleFromDensity( ninePatch->get_width(), sourceDensity, targetDensity, true);
+    mBitmapWidth = Drawable::scaleFromDensity( ninePatch->get_width() , sourceDensity, targetDensity, true);
 
     /*const NinePatch.InsetStruct insets = ninePatch.getBitmap().getNinePatchInsets();
     if (insets != null) {
@@ -108,7 +107,6 @@ void NinePatchDrawable::computeBitmapSize(){
     } else {
         mOutlineInsets = null;
     }*/
-#endif
 }
 
 void NinePatchDrawable::setTargetDensity(int density){
@@ -119,6 +117,16 @@ void NinePatchDrawable::setTargetDensity(int density){
         mTargetDensity = density;
         computeBitmapSize();
         invalidateSelf();
+    }
+}
+
+Insets NinePatchDrawable::getOpticalInsets(){
+    Insets&opticalInsets = mOpticalInsets; 
+    if (needsMirroring()) {
+        return Insets::of(opticalInsets.right, opticalInsets.top,
+                opticalInsets.left, opticalInsets.bottom);
+    } else {
+        return opticalInsets;
     }
 }
 
