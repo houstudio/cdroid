@@ -75,7 +75,7 @@ void Canvas::rectangle(int x,int y,int w,int h){
 }
 
 void Canvas::rectangle(const RECT &r){
-    rectangle((double)r.x,(double)r.y,(double)r.width,(double)r.height);
+    rectangle((double)r.left,(double)r.top,(double)r.width,(double)r.height);
 }
 
 static inline float sdot(float a,float b,float c,float d){
@@ -145,32 +145,32 @@ void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment
 
     if((text_alignment&DT_MULTILINE)==0){
         get_text_extents(lines[0],te);
-        y=rect.y;
+        y=rect.top;
         switch(text_alignment&0xF0){
-        case DT_TOP:y=rect.y+ftext.ascent-ftext.descent;break;
-        case DT_VCENTER:y=rect.y+rect.height/2+(ftext.ascent-ftext.descent)/2;break;
-        case DT_BOTTOM:y=rect.y+rect.height;break;
+        case DT_TOP:y=rect.top + ftext.ascent-ftext.descent;break;
+        case DT_VCENTER:y=rect.top+rect.height/2+(ftext.ascent-ftext.descent)/2;break;
+        case DT_BOTTOM:y=rect.top+rect.height;break;
         }
         switch(text_alignment&0x0F){
-        case DT_LEFT:x=rect.x;break;
-        case DT_CENTER:x=rect.x+(rect.width-te.x_advance)/2;break;
-        case DT_RIGHT:x=rect.x+rect.width-te.x_advance;break;
+        case DT_LEFT:x=rect.left;break;
+        case DT_CENTER:x=rect.left+(rect.width-te.x_advance)/2;break;
+        case DT_RIGHT:x=rect.left+rect.width-te.x_advance;break;
         }
         move_to(x,y);
         show_text(text);
     }else {
-        y=rect.y;
+        y=rect.top;
         switch(text_alignment&0xF0){
-        case DT_TOP:y=rect.y+ftext.descent;break;
-        case DT_VCENTER:y=rect.y+(rect.height-total_height)/2+ftext.descent;break;
-        case DT_BOTTOM:y=rect.y+rect.height-total_height+ftext.descent;break;
+        case DT_TOP:y=rect.top + ftext.descent;break;
+        case DT_VCENTER:y=rect.top +(rect.height-total_height)/2+ftext.descent;break;
+        case DT_BOTTOM:y=rect.top+rect.height-total_height+ftext.descent;break;
         }
         for(auto line:lines){
             get_text_extents(line,te);
             switch(text_alignment&0x0F){
-            case DT_LEFT:x=rect.x;break;
-            case DT_CENTER:x=rect.x+(rect.width-te.x_advance)/2;break;
-            case DT_RIGHT:x=rect.x+rect.width-te.x_advance;break;
+            case DT_LEFT:x=rect.left ; break;
+            case DT_CENTER:x=rect.left + (rect.width-te.x_advance)/2;break;
+            case DT_RIGHT:x=rect.left + rect.width-te.x_advance;break;
             }
             move_to(x,y-te.y_bearing);
             y+=ftext.height;
@@ -181,9 +181,9 @@ void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment
 void Canvas::draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT*srcRect){
     Rect src=srcRect==nullptr?Rect::Make(0,0,img->get_width(),img->get_height()):*srcRect;
     
-    const float sx=src.x    , sy=src.y;
-    const float sw=src.width, sh=src.height;
-    float dx =dst.x     , dy = dst.y;
+    const float sx=src.left  , sy=src.top;
+    const float sw=src.width , sh=src.height;
+    float dx =dst.left     , dy = dst.top;
     float dw =dst.width , dh = dst.height;
     float fx = dw / sw  , fy = dh / sh;
 
@@ -247,7 +247,7 @@ void Canvas::draw_ninepatch(const RefPtr<ImageSurface>img,const RECT& rect,const
             }
             RECT rd={dx0,dy0,dx1-dx0,dy1-dy0};
             RECT rs={sx0+1, sy0+1,horz[j].len,vert[i].len};
-            rd.offset(rect.x,rect.y);
+            rd.offset(rect.left,rect.top);
             draw_image(img,rd,&rs);
             dx0=dx1;
         }

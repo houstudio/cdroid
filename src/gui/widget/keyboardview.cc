@@ -60,7 +60,7 @@ void KeyboardView::invalidateKey(int row,int col){
     if(col<0||col>=keyrow.size())return;
     Keyboard::Key&k=keyrow[col];
     Rect r=Rect::Make(k.x,k.y,k.width,k.height);
-    LOGV("====btn[%d,%d](%d,%d,%d,%d)",row,col,r.x,r.y,r.width,r.height);
+    LOGV("====btn[%d,%d](%d,%d,%d,%d)",row,col,r.left,r.top,r.width,r.height);
     invalidate(&r);
 }
 

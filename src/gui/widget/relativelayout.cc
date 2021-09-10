@@ -289,8 +289,8 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         Gravity::apply(mGravity, right - left, bottom - top, selfBounds, contentBounds,
                 layoutDirection);
 
-        int horizontalOffset = contentBounds.x - left;
-        int verticalOffset = contentBounds.y - top;
+        int horizontalOffset = contentBounds.left - left;
+        int verticalOffset = contentBounds.top - top;
         if (horizontalOffset != 0 || verticalOffset != 0) {
             for (int i = 0; i < count; i++) {
                 View* child = views[i];

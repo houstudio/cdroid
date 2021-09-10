@@ -121,9 +121,9 @@ void AbsSpinner::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int heightSize;
     int widthMode = MeasureSpec::getMode(widthMeasureSpec);
 
-    mSpinnerPadding.x = mPaddingLeft > mSelectionLeftPadding ? mPaddingLeft
+    mSpinnerPadding.left = mPaddingLeft > mSelectionLeftPadding ? mPaddingLeft
             : mSelectionLeftPadding;
-    mSpinnerPadding.y = mPaddingTop > mSelectionTopPadding ? mPaddingTop
+    mSpinnerPadding.top  = mPaddingTop > mSelectionTopPadding ? mPaddingTop
             : mSelectionTopPadding;
     mSpinnerPadding.width = mPaddingRight > mSelectionRightPadding ? mPaddingRight
             : mSelectionRightPadding;
@@ -158,16 +158,16 @@ void AbsSpinner::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
                 mBlockLayoutRequests = false;
             }
             measureChild(view, widthMeasureSpec, heightMeasureSpec);
-            preferredHeight = getChildHeight(view) + mSpinnerPadding.y + mSpinnerPadding.height;
-            preferredWidth = getChildWidth(view) + mSpinnerPadding.x + mSpinnerPadding.width;
+            preferredHeight = getChildHeight(view) + mSpinnerPadding.top + mSpinnerPadding.height;
+            preferredWidth = getChildWidth(view) + mSpinnerPadding.left + mSpinnerPadding.width;
             needsMeasuring = false;
         }
     }
     if (needsMeasuring) {
          // No views -- just use padding
-         preferredHeight = mSpinnerPadding.y + mSpinnerPadding.height;
+         preferredHeight = mSpinnerPadding.top + mSpinnerPadding.height;
          if (widthMode == MeasureSpec::UNSPECIFIED) {
-              preferredWidth = mSpinnerPadding.x + mSpinnerPadding.width;
+              preferredWidth = mSpinnerPadding.left + mSpinnerPadding.width;
          }
     }
 

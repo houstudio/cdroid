@@ -1474,7 +1474,7 @@ void TextView::onDraw(Canvas& canvas) {
     int clipRight = getWidth() - compoundPaddingRight+ mScrollX;
     int clipBottom= getHeight() + mScrollY - ((mScrollY == maxScrollY) ? 0 : extendedPaddingBottom);
     LOGV_IF(dr!=nullptr,"%p rect=%d,%d-%d,%d ==>%d,%d-%d,%d paddings=%d,%d,%d,%d",this,
-                  rect.x,rect.y,rect.width,rect.height, clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop,
+                  rect.left,rect.top,rect.width,rect.height, clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop,
                 compoundPaddingLeft,compoundPaddingTop,compoundPaddingRight,compoundPaddingBottom);
 
 

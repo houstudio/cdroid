@@ -300,7 +300,7 @@ void AbsSeekBar::setThumbPos(int w, Drawable* thumb, float scale, int offset){
     int top, bottom;
     if (offset == INT_MIN) {
         const Rect oldBounds = thumb->getBounds();
-        top = oldBounds.y;
+        top = oldBounds.top;
         bottom = oldBounds.bottom();
     } else {
         top = offset;

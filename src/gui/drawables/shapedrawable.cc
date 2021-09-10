@@ -121,9 +121,9 @@ void ShapeDrawable::clearMutated(){
 void ShapeDrawable::draw(Canvas&canvas){
     const Rect&r = getBounds();
     if(mShapeState->mShape!=nullptr){
-        canvas.translate(r.x,r.y);
+        canvas.translate(r.left,r.top);
         mShapeState->mShape->draw(canvas);
-        canvas.translate(-r.x,-r.y);
+        canvas.translate(-r.left,-r.top);
     }
 }
 

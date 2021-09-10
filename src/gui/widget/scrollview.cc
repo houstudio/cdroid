@@ -570,41 +570,41 @@ bool ScrollView::pageScroll(int direction) {
     int height = getHeight();
 
     if (down) {
-        mTempRect.y = getScrollY() + height;
+        mTempRect.top = getScrollY() + height;
         int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(count - 1);
-            if (mTempRect.y + height > view->getBottom()) {
-                mTempRect.y = view->getBottom() - height;
+            if (mTempRect.top + height > view->getBottom()) {
+                mTempRect.top = view->getBottom() - height;
             }
         }
     } else {
-        mTempRect.y = getScrollY() - height;
-        if (mTempRect.y < 0) {
-            mTempRect.y = 0;
+        mTempRect.top = getScrollY() - height;
+        if (mTempRect.top < 0) {
+            mTempRect.top = 0;
         }
     }
     mTempRect.height = height;
 
-    return scrollAndFocus(direction, mTempRect.y, mTempRect.bottom());
+    return scrollAndFocus(direction, mTempRect.top, mTempRect.bottom());
 }
 
 bool ScrollView::fullScroll(int direction) {
     bool down = direction == View::FOCUS_DOWN;
     int height = getHeight();
 
-    mTempRect.y = 0;
+    mTempRect.top = 0;
     mTempRect.height = height;
 
     if (down) {
         int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(count - 1);
-            mTempRect.y = mTempRect.bottom() - height;
-            mTempRect.height = view->getBottom() + mPaddingBottom-mTempRect.y;
+            mTempRect.top = mTempRect.bottom() - height;
+            mTempRect.height = view->getBottom() + mPaddingBottom-mTempRect.top;
         }
     }
-    return scrollAndFocus(direction, mTempRect.y, mTempRect.bottom());
+    return scrollAndFocus(direction, mTempRect.top, mTempRect.bottom());
 }
 
 bool ScrollView::scrollAndFocus(int direction, int top, int bottom) {
@@ -688,7 +688,7 @@ bool ScrollView::isWithinDeltaOfScreen(View* descendant, int delta, int height) 
     descendant->getDrawingRect(mTempRect);
     offsetDescendantRectToMyCoords(descendant, mTempRect);
     return (mTempRect.bottom() + delta) >= getScrollY()
-           && (mTempRect.y - delta) <= (getScrollY() + height);
+           && (mTempRect.top - delta) <= (getScrollY() + height);
 }
 
 void ScrollView::doScrollY(int delta) {
@@ -867,7 +867,7 @@ int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
         int fadingEdge = getVerticalFadingEdgeLength();
 
         // leave room for top fading edge as long as rect isn't at very top
-        if (rect.y > 0) {
+        if (rect.top > 0) {
             screenTop += fadingEdge;
         }
 
@@ -878,14 +878,14 @@ int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
 
         int scrollYDelta = 0;
 
-        if (rect.bottom() > screenBottom && rect.y > screenTop) {
+        if (rect.bottom() > screenBottom && rect.top > screenTop) {
             // need to move down to get it in view: move down just enough so
             // that the entire rectangle is in view (or at least the first
             // screen size chunk).
 
             if (rect.height > height) {
                 // just enough to get screen size chunk on
-                scrollYDelta += (rect.y - screenTop);
+                scrollYDelta += (rect.top - screenTop);
             } else {
                 // get entire rect at bottom of screen
                 scrollYDelta += (rect.bottom() - screenBottom);
@@ -896,7 +896,7 @@ int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
             int distanceToBottom = bottom - screenBottom;
             scrollYDelta = std::min(scrollYDelta, distanceToBottom);
 
-        } else if (rect.y < screenTop && rect.bottom() < screenBottom) {
+        } else if (rect.top < screenTop && rect.bottom() < screenBottom) {
             // need to move up to get it in view: move up just enough so that
             // entire rectangle is in view (or at least the first screen
             // size chunk of it).
@@ -906,7 +906,7 @@ int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
                 scrollYDelta -= (screenBottom - rect.bottom());
             } else {
                 // entire rect at top
-                scrollYDelta -= (screenTop - rect.y);
+                scrollYDelta -= (screenTop - rect.top);
             }
 
             // make sure we aren't scrolling any further than the top our content

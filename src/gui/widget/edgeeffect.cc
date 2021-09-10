@@ -41,7 +41,7 @@ void EdgeEffect::setSize(int width, int height){
 
     mRadius = r;
     mBaseGlowScale = h > 0 ? std::min(oh / h, 1.f) : 1.f;
-    mBounds.set(mBounds.x, mBounds.y, width, (int) std::min((float)height, h));
+    mBounds.set(mBounds.left, mBounds.top, width, (int) std::min((float)height, h));
 }
 bool EdgeEffect::isFinished()const{
     return mState == STATE_IDLE;
@@ -149,7 +149,7 @@ bool EdgeEffect::draw(Canvas& canvas){
     canvas.rectangle(mBounds);
     canvas.clip();
     canvas.set_color(mColor);
-    canvas.curve_to(mBounds.x,mBounds.y,mBounds.width/2+translateX,mBounds.height*mGlowScaleY,mBounds.width,0);
+    canvas.curve_to(mBounds.left,mBounds.top,mBounds.width/2+translateX,mBounds.height*mGlowScaleY,mBounds.width,0);
     canvas.fill();
 
     canvas.restore();

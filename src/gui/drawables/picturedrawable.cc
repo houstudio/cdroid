@@ -18,8 +18,8 @@ void PictureDrawable::draw(Canvas& canvas){
     if (mPicture) {
         Rect bounds = getBounds();
         canvas.save();
-        canvas.set_source(mPicture,bounds.x, bounds.y);
-        canvas.rectangle(bounds.x, bounds.y,bounds.width, bounds.height);
+        canvas.set_source(mPicture,bounds.left, bounds.top);
+        canvas.rectangle(bounds.left, bounds.top,bounds.width, bounds.height);
         canvas.clip();
         canvas.paint();
         canvas.restore();

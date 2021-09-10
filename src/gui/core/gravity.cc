@@ -20,75 +20,75 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
     int tmp=0;
     switch (gravity&((AXIS_PULL_BEFORE|AXIS_PULL_AFTER)<<AXIS_X_SHIFT)) {
     case 0:
-            outRect.x = container.x + ((container.width - w)/2) + xAdj;
+            outRect.left = container.left + ((container.width - w)/2) + xAdj;
             outRect.width=w;//outRect.right = outRect.left + w;
             if ((gravity&(AXIS_CLIP<<AXIS_X_SHIFT)) == (AXIS_CLIP<<AXIS_X_SHIFT)) {
-                if (outRect.x < container.x) {
-                    outRect.x = container.x;//outRect.left = container.left;
+                if (outRect.left < container.left) {
+                    outRect.left = container.left;//outRect.left = container.left;
                 }
                 if (outRect.right() > container.right()) {
-                    outRect.width = container.right()-outRect.x;//outRect.right = container.right;
+                    outRect.width = container.right()-outRect.left;//outRect.right = container.right;
                 }
             }
             break;
     case AXIS_PULL_BEFORE<<AXIS_X_SHIFT:
-            outRect.x = container.x + xAdj;
+            outRect.left = container.left + xAdj;
             outRect.width=w;//outRect.right = outRect.left + w;
             if ((gravity&(AXIS_CLIP<<AXIS_X_SHIFT)) == (AXIS_CLIP<<AXIS_X_SHIFT)) {
                 if (outRect.right() > container.right()) {
-                    outRect.width=container.right()-outRect.x;//outRect.right = container.right;
+                    outRect.width=container.right()-outRect.left;//outRect.right = container.right;
                 }
             }
             break;
     case AXIS_PULL_AFTER<<AXIS_X_SHIFT:
             outRect.width=container.width-xAdj;//outRect.right = container.right - xAdj;
-            outRect.x=outRect.right()-w;//outRect.left = outRect.right - w;
+            outRect.left=outRect.right()-w;//outRect.left = outRect.right - w;
             if ((gravity&(AXIS_CLIP<<AXIS_X_SHIFT))== (AXIS_CLIP<<AXIS_X_SHIFT)) {
-                if (outRect.x < container.x) {
-                    outRect.x = container.x;
+                if (outRect.left < container.left) {
+                    outRect.left = container.left;
                 }
             }
             break;
     default:
-            outRect.x = container.x + xAdj;
+            outRect.left = container.left + xAdj;
             outRect.width=container.width+xAdj;//outRect.right = container.right + xAdj;
             break;
     }
         
     switch (gravity&((AXIS_PULL_BEFORE|AXIS_PULL_AFTER)<<AXIS_Y_SHIFT)) {
     case 0:
-            outRect.y = container.y + ((container.height - h)/2) + yAdj;
+            outRect.top = container.top + ((container.height - h)/2) + yAdj;
             outRect.height=h;//outRect.bottom = outRect.top + h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
-                if (outRect.y < container.y) {
-                    outRect.y = container.y;
+                if (outRect.top < container.top) {
+                    outRect.top = container.top;
                 }
                 if (outRect.bottom() > container.bottom()) {
-                    outRect.height=container.bottom()-outRect.y;//outRect.bottom = container.bottom;
+                    outRect.height=container.bottom()-outRect.top;//outRect.bottom = container.bottom;
                 }
             }
             break;
     case AXIS_PULL_BEFORE<<AXIS_Y_SHIFT:
-            outRect.y = container.y + yAdj;
+            outRect.top = container.top + yAdj;
             outRect.width=h;//outRect.bottom = outRect.top + h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
                 if (outRect.bottom() > container.bottom()) {
-                    outRect.width=container.bottom()-outRect.y;//outRect.bottom = container.bottom;
+                    outRect.width=container.bottom()-outRect.top;//outRect.bottom = container.bottom;
                 }
             }
             break;
     case AXIS_PULL_AFTER<<AXIS_Y_SHIFT:
             outRect.height=container.bottom() - yAdj;//outRect.bottom = container.bottom - yAdj;
-            outRect.y=outRect.height-h;//outRect.top = outRect.bottom - h;
+            outRect.top=outRect.height-h;//outRect.top = outRect.bottom - h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
-                if (outRect.y < container.y) {
-                    outRect.y = container.y;
+                if (outRect.top < container.top) {
+                    outRect.top = container.top;
                 }
             }
             break;
     default:
-            outRect.y = container.y + yAdj;
-            outRect.height=container.bottom() + yAdj-outRect.y;//outRect.bottom = container.bottom + yAdj;
+            outRect.top = container.top + yAdj;
+            outRect.height=container.bottom() + yAdj-outRect.top;//outRect.bottom = container.bottom + yAdj;
             break;
     }
 }
@@ -100,36 +100,36 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
 
 void Gravity::applyDisplay(int gravity,const RECT& display,RECT& inoutObj){
     if ((gravity&DISPLAY_CLIP_VERTICAL) != 0) {
-        if (inoutObj.y < display.y) inoutObj.y = display.y;
-        if (inoutObj.bottom() > display.bottom()) inoutObj.width=display.bottom()-inoutObj.y;//inoutObj.bottom = display.bottom;
+        if (inoutObj.top < display.top) inoutObj.top = display.top;
+        if (inoutObj.bottom() > display.bottom()) inoutObj.width=display.bottom()-inoutObj.top;//inoutObj.bottom = display.bottom;
     } else {
         int off = 0;
-        if (inoutObj.y < display.y) off = display.y-inoutObj.y;
+        if (inoutObj.top < display.top) off = display.top-inoutObj.top;
         else if (inoutObj.bottom() > display.bottom()) off = display.bottom()-inoutObj.bottom();
         if (off != 0) {
             if (inoutObj.height > display.height) {
-                inoutObj.y = display.y;
+                inoutObj.top = display.top;
                 inoutObj.height = display.height;//bottom;
             } else {
-                inoutObj.y+=off;//inoutObj.top += off;inoutObj.bottom += off;
+                inoutObj.top+=off;//inoutObj.top += off;inoutObj.bottom += off;
             }
         }
     }
         
     if ((gravity&DISPLAY_CLIP_HORIZONTAL) != 0) {
-        if (inoutObj.x < display.x) inoutObj.x = display.x;
-        if (inoutObj.right() > display.right()) inoutObj.width=display.right()-inoutObj.x;//inoutObj.right = display.right;
+        if (inoutObj.left < display.left) inoutObj.left = display.left;
+        if (inoutObj.right() > display.right()) inoutObj.width=display.right()-inoutObj.left;//inoutObj.right = display.right;
     } else {
         int off = 0;
-        if (inoutObj.x < display.x) off = display.x-inoutObj.x;
+        if (inoutObj.left < display.left) off = display.left-inoutObj.left;
         else if (inoutObj.right() > display.right()) off = display.right()-inoutObj.right();
         if (off != 0) {
             if (inoutObj.width > display.width) {
-                inoutObj.x = display.x;
+                inoutObj.left = display.left;
                 inoutObj.width=display.width;//inoutObj.right = display.right;
             } else {
                 //inoutObj.left += off;  inoutObj.right += off;
-                inoutObj.x+=off;
+                inoutObj.left+=off;
             }
         }
     }

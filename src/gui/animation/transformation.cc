@@ -40,7 +40,7 @@ void Transformation::compose(Transformation t) {
     if (t.mHasClipRect) {
         Rect bounds = t.getClipRect();
         if (mHasClipRect) {
-            setClipRect(mClipRect.x + bounds.x, mClipRect.y + bounds.y,
+            setClipRect(mClipRect.left + bounds.left, mClipRect.top + bounds.top,
                     mClipRect.width + bounds.width, mClipRect.height + bounds.height);
         } else {
             setClipRect(bounds);
@@ -54,7 +54,7 @@ void Transformation::postCompose(Transformation t) {
     if (t.mHasClipRect) {
         Rect bounds = t.getClipRect();
         if (mHasClipRect) {
-            setClipRect(mClipRect.x + bounds.x, mClipRect.y + bounds.y,
+            setClipRect(mClipRect.left + bounds.left, mClipRect.top + bounds.top,
                     mClipRect.width + bounds.width, mClipRect.height + bounds.height);
         } else {
             setClipRect(bounds);
@@ -74,7 +74,7 @@ void Transformation::setAlpha(float alpha) {
 }
 
 void Transformation::setClipRect(Rect r) {
-    setClipRect(r.x, r.y, r.width, r.height);
+    setClipRect(r.left, r.top, r.width, r.height);
 }
 void Transformation::setClipRect(int l, int t, int w, int h) {
     mClipRect.set(l, t, w, h);

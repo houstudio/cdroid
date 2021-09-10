@@ -156,7 +156,7 @@ View* GridView::makeRow(int startPos, int y, bool flow) {
         nextLeft = getWidth() - mListPadding.width/*right*/ - columnWidth -
                    ((mStretchMode == STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
     } else {
-        nextLeft = mListPadding.x + ((mStretchMode == STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
+        nextLeft = mListPadding.left + ((mStretchMode == STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
     }
 
     if (!mStackFromBottom) {
@@ -210,7 +210,7 @@ View* GridView::fillUp(int pos, int nextBottom) {
 
     int end = 0;
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-        end = mListPadding.y;//top;
+        end = mListPadding.top;
     }
 
     while (nextBottom > end && pos >= 0) {
@@ -418,10 +418,10 @@ void GridView::correctTooHigh(int numColumns, int verticalSpacing, int childCoun
 
         // Make sure we are 1) Too high, and 2) Either there are more rows above the
         // first row or the first row is scrolled off the top of the drawable area
-        if (bottomOffset > 0 && (mFirstPosition > 0 || firstTop < mListPadding.y))  {
+        if (bottomOffset > 0 && (mFirstPosition > 0 || firstTop < mListPadding.top))  {
             if (mFirstPosition == 0) {
                 // Don't pull the top too far down
-                bottomOffset = std::min(bottomOffset, mListPadding.y - firstTop);
+                bottomOffset = std::min(bottomOffset, mListPadding.top - firstTop);
             }
 
             // Move everything down
@@ -446,7 +446,7 @@ void GridView::correctTooLow(int numColumns, int verticalSpacing, int childCount
         int firstTop = firstChild->getTop();
 
         // This is top of our drawable area
-        int start = mListPadding.y;//top;
+        int start = mListPadding.top;
 
         // This is bottom of our drawable area
         int end = mHeight - mListPadding.height;//bottom;
@@ -733,14 +733,14 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
     if (widthMode == MeasureSpec::UNSPECIFIED) {
         if (mColumnWidth > 0) {
-            widthSize = mColumnWidth + mListPadding.x + mListPadding.width;//right;
+            widthSize = mColumnWidth + mListPadding.left + mListPadding.width;//right;
         } else {
-            widthSize = mListPadding.x + mListPadding.width;//right;
+            widthSize = mListPadding.left + mListPadding.width;//right;
         }
         widthSize += getVerticalScrollbarWidth();
     }
 
-    int childWidth = widthSize - mListPadding.x - mListPadding.width;//right;
+    int childWidth = widthSize - mListPadding.left - mListPadding.width;//right;
     bool didNotInitiallyFit = determineColumns(childWidth);
 
     int childHeight = 0;
@@ -776,12 +776,12 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     }
 
     if (heightMode == MeasureSpec::UNSPECIFIED) {
-        heightSize = mListPadding.y + mListPadding.height + childHeight +
+        heightSize = mListPadding.top + mListPadding.height + childHeight +
                      getVerticalFadingEdgeLength() * 2;
     }
 
     if (heightMode == MeasureSpec::AT_MOST) {
-        int ourSize =  mListPadding.y + mListPadding.height;
+        int ourSize =  mListPadding.top + mListPadding.height;
 
         int numColumns = mNumColumns;
         for (int i = 0; i < count; i += numColumns) {
@@ -800,7 +800,7 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     if (widthMode == MeasureSpec::AT_MOST && mRequestedNumColumns != AUTO_FIT) {
         int ourSize = (mRequestedNumColumns*mColumnWidth)
                       + ((mRequestedNumColumns-1)*mHorizontalSpacing)
-                      + mListPadding.x + mListPadding.width;
+                      + mListPadding.left + mListPadding.width;
         if (ourSize > widthSize || didNotInitiallyFit) {
             widthSize |= MEASURED_STATE_TOO_SMALL;
         }
@@ -827,7 +827,7 @@ void GridView::layoutChildren() {
         return;
     }
 
-    int childrenTop = mListPadding.y;
+    int childrenTop = mListPadding.top;
     int childrenBottom = mHeight - mListPadding.height;
 
     int childCount = getChildCount();
@@ -1577,7 +1577,7 @@ void GridView::adjustViewsUpOrDown(){
             // Uh-oh -- we came up short. Slide all views up to make them
             // align with the top
             child = getChildAt(0);
-            delta = child->getTop() - mListPadding.y;
+            delta = child->getTop() - mListPadding.top;
             if (mFirstPosition != 0) {
                 // It's OK to have some space above the first item if it is
                 // part of the vertical spacing

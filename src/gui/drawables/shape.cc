@@ -111,15 +111,15 @@ void Shape::rebuildPattern(const Rect&r){
            float cx=mCenterX*mWidth;
            float cy=mCenterY*mHeight;
            float pd=mAngle*M_PI*2/360.;
-           RefPtr<Gradient>g=LinearGradient::create(r.x*sin(pd),r.y*cos(pd),r.right()*sin(pd),r.right()*cos(pd));
+           RefPtr<Gradient>g=LinearGradient::create(r.left*sin(pd),r.top*cos(pd),r.right()*sin(pd),r.right()*cos(pd));
            g->add_color_stop_rgba(.0,cls[0]->red(),cls[0]->green(),cls[0]->blue(),cls[0]->alpha());
            g->add_color_stop_rgba(.5,cls[1]->red(),cls[1]->green(),cls[1]->blue(),cls[1]->alpha());
            g->add_color_stop_rgba(1.,cls[2]->red(),cls[2]->green(),cls[2]->blue(),cls[2]->alpha());
            mPaint=g;
         }break;
     case 2:{
-           float cx=mCenterX*mWidth+r.x;
-           float cy=mCenterY*mHeight+r.y;
+           float cx=mCenterX*mWidth+r.left;
+           float cy=mCenterY*mHeight+r.top;
            float pd=mAngle*M_PI*2/360.;
            LOGV("center=%.2f,%.2f cx,cy=%.2f,%.2f mRadius=%f mAngle=%.2d",mCenterX,mCenterY,cx,cy,mRadius,mAngle);
            RefPtr<Gradient>g=RadialGradient::create(cx,cy,0,cx,cy,mRadius);
@@ -197,9 +197,9 @@ void ArcShape::draw(Canvas&canvas){
     const Rect r=rect();
     canvas.save();
     canvas.scale(1.0 , (float)r.height/r.width);
-    canvas.arc(r.x+r.width/2 , r.y+r.height/2, r.width/2, mStartAngle,mSweepAngle);
+    canvas.arc(r.left+r.width/2 , r.top+r.height/2, r.width/2, mStartAngle,mSweepAngle);
     canvas.scale(1.0 , (float)r.width/r.height);
-    canvas.line_to(r.x+r.width/2,r.x+r.height/2);
+    canvas.line_to(r.left+r.width/2,r.left+r.height/2);
     canvas.close_path();
     fill_stroke(canvas);
     canvas.restore();
@@ -208,13 +208,13 @@ void ArcShape::draw(Canvas&canvas){
 void OvalShape::draw(Canvas&canvas){
     Rect r=rect();
 
-    canvas.translate(r.x+r.width/2,r.y+r.height/2);
+    canvas.translate(r.left+r.width/2,r.top+r.height/2);
     canvas.scale(1.,(float)r.height/r.width);
     canvas.arc(0,0,r.width/2,0,M_PI*2);
     canvas.scale(1.,(float)r.width/r.height);
 
     fill_stroke(canvas);
-    canvas.translate(-(r.x+r.width)/2,-(r.y+r.height/2));
+    canvas.translate(-(r.left+r.width)/2,-(r.top+r.height/2));
 }
 
 RoundRectShape::RoundRectShape():RectShape(){
@@ -246,8 +246,8 @@ void RoundRectShape::setRadius(int radius){
 void RoundRectShape::onResize(int w, int h){
     RectShape::onResize(w,h);
     Rect r=rect();
-    mInnerRect.set(r.x+mInset.x,r.y+mInset.y,
-                r.right()-mInset.x-mInset.width,r.bottom()-mInset.y-mInset.height);
+    mInnerRect.set(r.left+mInset.left,r.top+mInset.top,
+                r.right()-mInset.left-mInset.width,r.bottom()-mInset.top-mInset.height);
 }
 
 void RoundRectShape::draw(Canvas&canvas){
@@ -255,10 +255,10 @@ void RoundRectShape::draw(Canvas&canvas){
     const Rect r=rect();
     const int *radius=mOuterRadii.data();
     const float pts[8]={
-        (float)r.x+radius[0]        ,  (float)r.y+radius[1],           
-        (float)r.x+mWidth-radius[2] ,  (float)r.y+radius[3],
-        (float)r.x+mWidth-radius[4] ,  (float)r.y+mHeight-radius[5],     
-        (float)r.x+radius[6]        ,  (float)r.y+mHeight-radius[7] 
+        (float)r.left+radius[0]        ,  (float)r.top+radius[1],           
+        (float)r.left+mWidth-radius[2] ,  (float)r.top+radius[3],
+        (float)r.left+mWidth-radius[4] ,  (float)r.top+mHeight-radius[5],     
+        (float)r.left+radius[6]        ,  (float)r.top+mHeight-radius[7] 
     };
 
     float db=180;

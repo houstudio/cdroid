@@ -180,12 +180,12 @@ void TabWidget::dispatchDraw(Canvas& canvas){
 
     if (mStripMoved) {
         Rect bounds = mBounds;
-        bounds.x = selectedChild->getLeft();
+        bounds.left = selectedChild->getLeft();
         bounds.width = selectedChild->getWidth();
         int myHeight = getHeight();
         if(mLeftStrip)
-            mLeftStrip->setBounds(std::min(0, bounds.x - mLeftStrip->getIntrinsicWidth()),
-                myHeight - mLeftStrip->getIntrinsicHeight(), bounds.x, myHeight);
+            mLeftStrip->setBounds(std::min(0, bounds.left - mLeftStrip->getIntrinsicWidth()),
+                myHeight - mLeftStrip->getIntrinsicHeight(), bounds.left, myHeight);
         if(mRightStrip)mRightStrip->setBounds(bounds.right(), myHeight - mRightStrip->getIntrinsicHeight(),
                 std::max(getWidth(), bounds.width + mRightStrip->getIntrinsicWidth()), myHeight);
         mStripMoved = false;

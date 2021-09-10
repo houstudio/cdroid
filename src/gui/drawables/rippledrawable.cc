@@ -266,7 +266,7 @@ void RippleDrawable::draw(Canvas& canvas){
     Rect bounds = getDirtyBounds();
     canvas.save();
     if (isBounded()) {
-        canvas.rectangle(bounds.x,bounds.y,bounds.width,bounds.height);
+        canvas.rectangle(bounds.left,bounds.top,bounds.width,bounds.height);
         canvas.clip();
     }
 

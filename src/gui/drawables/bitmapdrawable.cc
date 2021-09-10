@@ -214,8 +214,8 @@ void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
             mDstRect.set(0,0,0,0);
             Gravity::apply(mBitmapState->mGravity,mBitmapWidth,mBitmapHeight,mBounds, mDstRect, layoutDir);
 
-            const int left  = mDstRect.x - mBounds.x;
-            const int top   = mDstRect.y - mBounds.y;
+            const int left  = mDstRect.left - mBounds.left;
+            const int top   = mDstRect.top - mBounds.top;
             const int right = mBounds.right() - mDstRect.right();
             const int bottom= mBounds.bottom()- mDstRect.bottom();
             mOpticalInsets.set(left, top, right, bottom);
@@ -256,12 +256,12 @@ void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mBitmap==nullptr) return;
     updateDstRectAndInsetsIfDirty();
     LOGV("BitmapSize=%dx%d bounds=%d,%d-%d,%d dst=%d,%d-%d,%d alpha=%d mColorFilter=%p",mBitmapWidth,mBitmapHeight,
-            mBounds.x,mBounds.y,mBounds.width,mBounds.height, mDstRect.x,mDstRect.y,
+            mBounds.left,mBounds.top,mBounds.width,mBounds.height, mDstRect.left,mDstRect.top,
 	    mDstRect.width,mDstRect.height,mBitmapState->mAlpha,mTintFilter);
     updateDstRectAndInsetsIfDirty();
 
     const float sw=mBitmapWidth, sh=mBitmapHeight;
-    float dx =mBounds.x     , dy = mBounds.y;
+    float dx =mBounds.left     , dy = mBounds.top;
     float dw =mBounds.width , dh = mBounds.height;
     float fx = dw / sw  , fy = dh / sh;
     const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;

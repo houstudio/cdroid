@@ -111,8 +111,8 @@ void Spinner::onLayout(bool changed, int x, int y, int w, int h) {
 }
 
 void Spinner::layout(int delta, bool animate){
-    int childrenLeft = mSpinnerPadding.x;
-    int childrenWidth = mWidth - mSpinnerPadding.x - mSpinnerPadding.width;
+    int childrenLeft = mSpinnerPadding.left;
+    int childrenWidth = mWidth - mSpinnerPadding.left - mSpinnerPadding.width;
 
     if (mDataChanged) {
         handleDataChanged();
@@ -222,17 +222,17 @@ void Spinner::setUpChild(View* child, bool addChild) {
 
     // Get measure specs
     int childHeightSpec = ViewGroup::getChildMeasureSpec(mHeightMeasureSpec,
-            mSpinnerPadding.y + mSpinnerPadding.height, lp->height);
+            mSpinnerPadding.top + mSpinnerPadding.height, lp->height);
     int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,
-            mSpinnerPadding.x + mSpinnerPadding.width, lp->width);
+            mSpinnerPadding.left + mSpinnerPadding.width, lp->width);
 
     // Measure child
     child->measure(childWidthSpec, childHeightSpec);
 
     int childLeft;
     // Position vertically based on gravity setting
-    int childTop = mSpinnerPadding.y  + ((getMeasuredHeight() - mSpinnerPadding.height -
-                    mSpinnerPadding.y - child->getMeasuredHeight()) / 2);
+    int childTop = mSpinnerPadding.top  + ((getMeasuredHeight() - mSpinnerPadding.height -
+                    mSpinnerPadding.top - child->getMeasuredHeight()) / 2);
     int height =child->getMeasuredHeight();
     int width = child->getMeasuredWidth();
     childLeft = 0;
@@ -276,7 +276,7 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
     if (background) {
         Rect rctmp;
         background->getPadding(rctmp);
-        width += rctmp.x + rctmp.right();
+        width += rctmp.left + rctmp.right();
     }
     return width;
 }
@@ -344,9 +344,9 @@ void SpinnerPopup::computeContentWidth() {
     Rect mTempRect;
     if (background != nullptr) {
         background->getPadding(mTempRect);
-        hOffset = mSpinner->isLayoutRtl() ? mTempRect.right() : -mTempRect.x;
+        hOffset = mSpinner->isLayoutRtl() ? mTempRect.right() : -mTempRect.left;
     } else {
-        mTempRect.x = mTempRect.width = 0;
+        mTempRect.left = mTempRect.width = 0;
     }
 
     int spinnerPaddingLeft = mSpinner->getPaddingLeft();
@@ -379,7 +379,7 @@ void SpinnerPopup::setContentWidth(int width){
     if (popupBackground ) {
 	Rect rect;
         popupBackground->getPadding(rect);
-        mDropDownWidth = rect.x + rect.width + width;
+        mDropDownWidth = rect.left + rect.width + width;
     } else {
         mDropDownWidth=width;
     }

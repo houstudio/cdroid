@@ -445,10 +445,10 @@ void LayerDrawable::computeNestedPadding(Rect& padding){
     for (int i = 0; i < N; i++) {
         LayerDrawable::ChildDrawable*child=mLayerState->mChildren.at(i);
         refreshChildPadding(i, child);
-        padding.x += mPaddingL[i];
-        padding.y += mPaddingT[i];
+        padding.left  += mPaddingL[i];
+        padding.top   += mPaddingT[i];
         padding.width += mPaddingR[i];
-        padding.height += mPaddingB[i];
+        padding.height+= mPaddingB[i];
     }
 }
 
@@ -459,10 +459,10 @@ void LayerDrawable::computeStackedPadding(Rect& padding){
         LayerDrawable::ChildDrawable*child=mLayerState->mChildren.at(i);
         refreshChildPadding(i, child);
 
-        padding.x = std::max(padding.x, mPaddingL[i]);
-        padding.y = std::max(padding.y, mPaddingT[i]);
+        padding.left  = std::max(padding.left, mPaddingL[i]);
+        padding.top   = std::max(padding.top, mPaddingT[i]);
         padding.width = std::max(padding.width, mPaddingR[i]);
-        padding.height = std::max(padding.height, mPaddingB[i]);
+        padding.height= std::max(padding.height, mPaddingB[i]);
     }
 }
 
@@ -485,11 +485,11 @@ bool LayerDrawable::getPadding(Rect& padding){
 
         // If padding was explicitly specified (e.g. not -1) then override the
         // computed padding in that dimension.
-    if (paddingL >= 0) padding.x = paddingL;
-    if (paddingT >= 0) padding.y = paddingT;
+    if (paddingL >= 0) padding.left = paddingL;
+    if (paddingT >= 0) padding.top  = paddingT;
     if (paddingR >= 0) padding.width = paddingR;
     if (paddingB >= 0) padding.height = paddingB;
-    return padding.x != 0 || padding.y != 0 || padding.width != 0 || padding.height != 0;
+    return padding.left != 0 || padding.top != 0 || padding.width != 0 || padding.height != 0;
 }
 
 void LayerDrawable::setPadding(int left, int top, int right, int bottom){
@@ -523,10 +523,10 @@ bool LayerDrawable::refreshChildPadding(int i, ChildDrawable* r) {
     if (r->mDrawable != nullptr) {
         Rect rect={0,0,0,0};
         r->mDrawable->getPadding(rect);
-        if (rect.x != mPaddingL[i] || rect.y != mPaddingT[i]
+        if (rect.left != mPaddingL[i] || rect.top != mPaddingT[i]
                 || rect.width != mPaddingR[i] || rect.height != mPaddingB[i]) {
-            mPaddingL[i] = rect.x;
-            mPaddingT[i] = rect.y;
+            mPaddingL[i] = rect.left;
+            mPaddingT[i] = rect.top;
             mPaddingR[i] = rect.width;
             mPaddingB[i] = rect.height;
             return true;
@@ -638,7 +638,7 @@ void LayerDrawable::updateLayerBoundsInternal(const Rect& bounds){
         // Establish containing region based on aggregate padding and
         // requested insets for the current layer.
         Rect container;
-        container.set(bounds.x + insetL + paddingL, bounds.y + insetT + paddingT,
+        container.set(bounds.left + insetL + paddingL, bounds.top + insetT + paddingT,
                     bounds.width - insetL -insetR - paddingL -paddingR, bounds.height - insetT -insetB -paddingT -paddingB);
 
         // Compute a reasonable default gravity based on the intrinsic and
@@ -656,10 +656,10 @@ void LayerDrawable::updateLayerBoundsInternal(const Rect& bounds){
         Gravity::apply(gravity, resolvedW, resolvedH, container, outRect, layoutDirection);
         d->setBounds(outRect);
         LOGV("paddingLTRB=%d,%d-%d,%d container=%d,%d-%d,%d resolvedSize=%dx%d",paddingL,paddingT,paddingR,paddingB,
-                container.x,container.y,container.width,container.height,resolvedW,resolvedH);
+                container.left,container.top,container.width,container.height,resolvedW,resolvedH);
         LOGV("r.mInsetLTRB=%d,%d-%d,%d insetLTRB=%d,%d-%d,%d r->mGravity=%d size=%dx%d",r->mInsetL,r->mInsetT,r->mInsetR,r->mInsetB,
                 insetL,insetT,insetR,insetB,r->mGravity,r->mWidth,r->mHeight);
-        LOGV("child[%d] bounds=%d,%d-%d,%d isPaddingNested=%d mPaddingLTRB=%d,%d-%d,%d",i, outRect.x,outRect.y,
+        LOGV("child[%d] bounds=%d,%d-%d,%d isPaddingNested=%d mPaddingLTRB=%d,%d-%d,%d",i, outRect.left,outRect.top,
                 outRect.width,outRect.height,isPaddingNested,mPaddingL[i], mPaddingT[i],mPaddingR[i],mPaddingB[i]);
         if (isPaddingNested) {
             paddingL += mPaddingL[i];

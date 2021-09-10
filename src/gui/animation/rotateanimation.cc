@@ -1,6 +1,21 @@
 #include <animation/rotateanimation.h>
 namespace cdroid{
 
+RotateAnimation::RotateAnimation(Context* context,const AttributeSet& attrs){
+    mFromDegrees = attrs.getFloat("fromDegrees", 0.0f);
+    mToDegrees = attrs.getFloat("toDegrees", 0.0f);
+#if 0
+    Description d = Description.parseValue(a.peekValue("pivotX"));
+    mPivotXType = d.type;
+    mPivotXValue = d.value;
+
+    d = Description.parseValue(a.peekValue("pivotY"));
+    mPivotYType = d.type;
+    mPivotYValue = d.value;
+#endif
+    initializePivotPoint();
+}
+
 RotateAnimation::RotateAnimation(float fromDegrees, float toDegrees){
     mFromDegrees = fromDegrees;
     mToDegrees = toDegrees;

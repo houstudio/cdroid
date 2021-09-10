@@ -67,7 +67,7 @@ void ListView::adjustViewsUpOrDown() {
             // Uh-oh -- we came up short. Slide all views up to make them
             // align with the top
             child = getChildAt(0);
-            delta = child->getTop() - mListPadding.y;
+            delta = child->getTop() - mListPadding.top;
             if (mFirstPosition != 0) {
                 // It's OK to have some space above the first item if it is
                 // part of the vertical spacing
@@ -269,7 +269,7 @@ void ListView::clearRecycledState(std::vector<FixedViewInfo*>& infos) {
 }
 
 bool ListView::showingTopFadingEdge() {
-    const int listTop = mScrollY + mListPadding.y;
+    const int listTop = mScrollY + mListPadding.top;
     return (mFirstPosition > 0) || (getChildAt(0)->getTop() > listTop);
 }
 
@@ -284,7 +284,7 @@ bool ListView::showingBottomFadingEdge(){
 }
 
 bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate){
-    int rectTopWithinChild = rect.y;
+    int rectTopWithinChild = rect.top;
 
     // offset so rect is in coordinates of the this view
     rect.offset(child->getLeft(), child->getTop());
@@ -315,14 +315,14 @@ bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immed
 
     int scrollYDelta = 0;
 
-    if (rect.bottom() > listUnfadedBottom && rect.y > listUnfadedTop) {
+    if (rect.bottom() > listUnfadedBottom && rect.top > listUnfadedTop) {
         // need to MOVE DOWN to get it in view: move down just enough so
         // that the entire rectangle is in view (or at least the first
         // screen size chunk).
 
         if (rect.height > height) {
             // just enough to get screen size chunk on
-            scrollYDelta += (rect.y - listUnfadedTop);
+            scrollYDelta += (rect.top - listUnfadedTop);
         } else {
             // get entire rect at bottom of screen
              scrollYDelta += (rect.bottom() - listUnfadedBottom);
@@ -331,7 +331,7 @@ bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immed
         // make sure we aren't scrolling beyond the end of our children
         int distanceToBottom = bottomOfBottomChild - listUnfadedBottom;
         scrollYDelta = std::min(scrollYDelta, distanceToBottom);
-    } else if (rect.y < listUnfadedTop && rect.bottom() < listUnfadedBottom) {
+    } else if (rect.top < listUnfadedTop && rect.bottom() < listUnfadedBottom) {
         // need to MOVE UP to get it in view: move up just enough so that
         // entire rectangle is in view (or at least the first screen
         // size chunk of it).
@@ -341,7 +341,7 @@ bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immed
             scrollYDelta -= (listUnfadedBottom - rect.bottom());
         } else {
             // entire rect at top
-            scrollYDelta -= (listUnfadedTop - rect.y);
+            scrollYDelta -= (listUnfadedTop - rect.top);
         }
 
         // make sure we aren't scrolling any further than the top our children
@@ -392,7 +392,7 @@ View* ListView::fillDown(int pos, int nextTop) {
     while (nextTop < end && pos < mItemCount) {
         // is this the selected item?
         bool selected = pos == mSelectedPosition;
-        View* child = makeAndAddView(pos, nextTop, true, mListPadding.x, selected);
+        View* child = makeAndAddView(pos, nextTop, true, mListPadding.left, selected);
 
         nextTop = child->getBottom() + mDividerHeight;
         if (selected) {
@@ -410,12 +410,12 @@ View* ListView::fillUp(int pos, int nextBottom) {
 
     int end = 0;
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-        end = mListPadding.y;
+        end = mListPadding.top;
     }
     while (nextBottom > end && pos >= 0) {
         // is this the selected item?
         bool selected = pos == mSelectedPosition;
-        View* child = makeAndAddView(pos, nextBottom, false, mListPadding.x, selected);
+        View* child = makeAndAddView(pos, nextBottom, false, mListPadding.left, selected);
         nextBottom = child->getTop() - mDividerHeight;
         if (selected) {
             selectedView = child;
@@ -442,7 +442,7 @@ View* ListView::fillFromMiddle(int childrenTop, int childrenBottom) {
 
     int position = reconcileSelectedPosition();
 
-    View* sel = makeAndAddView(position, childrenTop, true,mListPadding.x, true);
+    View* sel = makeAndAddView(position, childrenTop, true,mListPadding.left, true);
     mFirstPosition = position;
 
     int selHeight = sel->getMeasuredHeight();
@@ -479,7 +479,7 @@ View* ListView::fillFromSelection(int selectedTop, int childrenTop, int children
     int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength,selectedPosition);
     int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom, fadingEdgeLength,selectedPosition);
 
-    View* sel = makeAndAddView(selectedPosition, selectedTop, true, mListPadding.x, true);
+    View* sel = makeAndAddView(selectedPosition, selectedTop, true, mListPadding.left, true);
 
 
     // Some of the newly selected item extends below the bottom of the list
@@ -546,12 +546,12 @@ View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childre
     LOGD("-----Scrolling %s  delta=%d childen top/bottom=%d/%d",(delta>0?"Down":"Up"),delta,childrenTop,childrenBottom);
     if (delta > 0) {//Scrolling Down.
         // Put oldSel (A) where it belongs
-        oldSel = makeAndAddView(selectedPosition - 1, oldSel->getTop(), true, mListPadding.x, false);
+        oldSel = makeAndAddView(selectedPosition - 1, oldSel->getTop(), true, mListPadding.left, false);
 
         int dividerHeight = mDividerHeight;
 
         // Now put the new selection (B) below that
-        sel = makeAndAddView(selectedPosition, oldSel->getBottom() + dividerHeight, true,  mListPadding.x, true);
+        sel = makeAndAddView(selectedPosition, oldSel->getBottom() + dividerHeight, true,  mListPadding.left, true);
 
         // Some of the newly selected item extends below the bottom of the list
         if (sel->getBottom() > bottomSelectionPixel) {
@@ -586,11 +586,11 @@ View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childre
     } else if (delta < 0) {//Scrolling up.
         if (newSel != nullptr) {
             // Try to position the top of newSel (A) where it was before it was selected
-            sel = makeAndAddView(selectedPosition, newSel->getTop(), true, mListPadding.x,true);
+            sel = makeAndAddView(selectedPosition, newSel->getTop(), true, mListPadding.left,true);
         } else {
             // If (A) was not on screen and so did not have a view, position
             // it above the oldSel (B)
-            sel = makeAndAddView(selectedPosition, oldSel->getTop(), false, mListPadding.x,true);
+            sel = makeAndAddView(selectedPosition, oldSel->getTop(), false, mListPadding.left,true);
         }
 
         // Some of the newly selected item extends above the top of the list
@@ -617,7 +617,7 @@ View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childre
         int oldTop = oldSel->getTop();
 
         // Case 3: Staying still
-        sel = makeAndAddView(selectedPosition, oldTop, true, mListPadding.x, true);
+        sel = makeAndAddView(selectedPosition, oldTop, true, mListPadding.left, true);
 
         // We're staying still...
         if (oldTop < childrenTop) {
@@ -732,14 +732,14 @@ void ListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     }
 
     if (widthMode == MeasureSpec::UNSPECIFIED) {
-        widthSize = mListPadding.x + mListPadding.width + childWidth +
+        widthSize = mListPadding.left + mListPadding.width + childWidth +
                     getVerticalScrollbarWidth();
     } else {
         widthSize |= (childState & MEASURED_STATE_MASK);
     }
 
     if (heightMode == MeasureSpec::UNSPECIFIED) {
-        heightSize = mListPadding.y + mListPadding.height + childHeight +
+        heightSize = mListPadding.top + mListPadding.height + childHeight +
                        getVerticalFadingEdgeLength() * 2;
     }
 
@@ -764,7 +764,7 @@ void ListView::measureScrapChild(View* child, int position, int widthMeasureSpec
     p->forceAdd = true;
 
     int childWidthSpec = ViewGroup::getChildMeasureSpec(widthMeasureSpec,
-                         mListPadding.x + mListPadding.width, p->width);
+                         mListPadding.left + mListPadding.width, p->width);
     int lpHeight = p->height;
     int childHeightSpec;
     if (lpHeight > 0) {
@@ -786,11 +786,11 @@ bool ListView::recycleOnMeasure() {
 int ListView::measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
                                       int maxHeight, int disallowPartialChildPosition) {
     if (mAdapter == nullptr) {
-        return mListPadding.y + mListPadding.height;
+        return mListPadding.top + mListPadding.height;
     }
 
     // Include the padding of the list
-    int returnedHeight = mListPadding.y + mListPadding.height;
+    int returnedHeight = mListPadding.top + mListPadding.height;
     const int dividerHeight = mDividerHeight;
     // The previous height value that was less than maxHeight and contained
     // no partial children
@@ -866,7 +866,7 @@ int ListView::findMotionRow(int y) {
 
 View* ListView::fillSpecific(int position, int top) {
     bool tempIsSelected = position == mSelectedPosition;
-    View* temp = makeAndAddView(position, top, true, mListPadding.x, tempIsSelected);
+    View* temp = makeAndAddView(position, top, true, mListPadding.left, tempIsSelected);
     // Possibly changed again in fillUp if we add rows above this one.
     mFirstPosition = position;
     View* above,* below;
@@ -922,10 +922,10 @@ void ListView::correctTooHigh(int childCount) {
 
         // Make sure we are 1) Too high, and 2) Either there are more rows above the
         // first row or the first row is scrolled off the top of the drawable area
-        if (bottomOffset > 0 && (mFirstPosition > 0 || firstTop < mListPadding.y))  {
+        if (bottomOffset > 0 && (mFirstPosition > 0 || firstTop < mListPadding.top))  {
             if (mFirstPosition == 0) {
                 // Don't pull the top too far down
-                bottomOffset = std::min(bottomOffset, mListPadding.y - firstTop);
+                bottomOffset = std::min(bottomOffset, mListPadding.top - firstTop);
             }
             // Move everything down
             offsetChildrenTopAndBottom(bottomOffset);
@@ -951,7 +951,7 @@ void ListView::correctTooLow(int childCount) {
         const int firstTop = firstChild->getTop();
 
         // This is top of our drawable area
-        const int start = mListPadding.y;//top;
+        const int start = mListPadding.top;
 
         // This is bottom of our drawable area
         const int end = getHeight()- mListPadding.height;//bottom;
@@ -1003,7 +1003,7 @@ void ListView::layoutChildren() {
         return;
     }
 
-    const int childrenTop = mListPadding.y;
+    const int childrenTop = mListPadding.top;
     const int childrenBottom = getHeight() - mListPadding.height;
     const int childCount = getChildCount();
 
@@ -1425,7 +1425,7 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
     }
 
     if (needToMeasure) {
-        int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,mListPadding.x + mListPadding.width, p->width);
+        int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,mListPadding.left + mListPadding.width, p->width);
         int lpHeight = p->height;
         int childHeightSpec;
         if (lpHeight > 0) {
@@ -1817,7 +1817,7 @@ int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedP
             return INVALID_POSITION;
         }
     } else {
-        int listTop = mListPadding.y;
+        int listTop = mListPadding.top;
         if (selectedView && selectedView->getTop() >= listTop) {
             int lastPos = mFirstPosition + getChildCount() - 1;
             nextSelected = selectedPos != INVALID_POSITION && selectedPos <= lastPos ?
@@ -1978,7 +1978,7 @@ void ListView::measureItem(View* child) {
     }
 
     int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,
-            mListPadding.x + mListPadding.width, p->width);
+            mListPadding.left + mListPadding.width, p->width);
     int lpHeight = p->height;
     int childHeightSpec;
     if (lpHeight > 0) {
@@ -1993,7 +1993,7 @@ void ListView::measureItem(View* child) {
 void ListView::relayoutMeasuredItem(View* child) {
     int w = child->getMeasuredWidth();
     int h = child->getMeasuredHeight();
-    int childLeft = mListPadding.x;
+    int childLeft = mListPadding.left;
     int childRight = childLeft + w;
     int childTop = child->getTop();
     int childBottom = childTop + h;
@@ -2006,7 +2006,7 @@ int ListView::getArrowScrollPreviewLength(){
 
 int ListView::amountToScroll(int direction, int nextSelectedPosition){
     const int listBottom = getHeight() - mListPadding.height;
-    const int listTop = mListPadding.y;
+    const int listTop = mListPadding.top;
 
     int numChildren = getChildCount();
 
@@ -2134,7 +2134,7 @@ ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction){
     } else {
        if (direction == View::FOCUS_DOWN) {
            bool topFadingEdgeShowing = (mFirstPosition > 0);
-           int listTop = mListPadding.y + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
+           int listTop = mListPadding.top + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
            int ySearchPoint =(selectedView != nullptr  && selectedView->getTop() > listTop) ?
                                 selectedView->getTop() : listTop;
                 mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
@@ -2209,8 +2209,8 @@ int ListView::amountToScrollToNewFocus(int direction, View* newFocus, int positi
     newFocus->getDrawingRect(mTempRect);
     offsetDescendantRectToMyCoords(newFocus, mTempRect);
     if (direction == View::FOCUS_UP) {
-        if (mTempRect.y < mListPadding.y) {
-            amountToScroll = mListPadding.y - mTempRect.y;
+        if (mTempRect.top < mListPadding.top) {
+            amountToScroll = mListPadding.top - mTempRect.top;
             if (positionOfNewFocus > 0) {
                 amountToScroll += getArrowScrollPreviewLength();
             }
@@ -2233,10 +2233,10 @@ int ListView::distanceToView(View* descendant) {
     descendant->getDrawingRect(tmpRect);
     offsetDescendantRectToMyCoords(descendant, tmpRect);
     int listBottom = mHeight - mListPadding.height;
-    if (tmpRect.bottom() < mListPadding.y) {
-        distance = mListPadding.y - tmpRect.bottom();
-    } else if (tmpRect.y > listBottom) {
-        distance = tmpRect.y - listBottom;
+    if (tmpRect.bottom() < mListPadding.top) {
+        distance = mListPadding.top - tmpRect.bottom();
+    } else if (tmpRect.top > listBottom) {
+        distance = tmpRect.top - listBottom;
     }
     return distance;
 }
@@ -2245,7 +2245,7 @@ void ListView::scrollListItemsBy(int amount){
     offsetChildrenTopAndBottom(amount);
 
     int listBottom = getHeight() - mListPadding.height;
-    int listTop = mListPadding.y;
+    int listTop = mListPadding.top;
 
     if (amount < 0) {
         // shifted items up
@@ -2319,7 +2319,7 @@ View* ListView::addViewAbove(View* theView, int position){
     int abovePosition = position - 1;
     View* view = obtainView(abovePosition, mIsScrap);
     int edgeOfNewChild = theView->getTop() - mDividerHeight;
-    setupChild(view, abovePosition, edgeOfNewChild, false, mListPadding.x,
+    setupChild(view, abovePosition, edgeOfNewChild, false, mListPadding.left,
              false, mIsScrap[0]);
     return view;
 }
@@ -2328,7 +2328,7 @@ View* ListView::addViewBelow(View* theView, int position){
     int belowPosition = position + 1;
     View* view = obtainView(belowPosition, mIsScrap);
     int edgeOfNewChild = theView->getBottom() + mDividerHeight;
-    setupChild(view, belowPosition, edgeOfNewChild, true, mListPadding.x,
+    setupChild(view, belowPosition, edgeOfNewChild, true, mListPadding.left,
             false, mIsScrap[0]);
     return view;
 }
@@ -2386,7 +2386,7 @@ void ListView::drawOverscrollHeader(Canvas&canvas, Drawable* drawable,Rect& boun
 
     int span = bounds.height;//bottom - bounds.top;
     if (span < height) {
-        bounds.y = bounds.bottom() - height;
+        bounds.top = bounds.bottom() - height;
     }
     drawable->setBounds(bounds);
     drawable->draw(canvas);
@@ -2424,7 +2424,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
     if (drawDividers || bdrawOverscrollHeader || bdrawOverscrollFooter) {
         // Only modify the top and bottom in the loop, we set the left and right here
         Rect bounds;
-        bounds.x = mPaddingLeft;
+        bounds.left = mPaddingLeft;
         bounds.width = mWidth - mPaddingRight-mPaddingLeft;
 
         int count = getChildCount();
@@ -2445,7 +2445,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
         int effectivePaddingTop = 0;
         int effectivePaddingBottom = 0;
         if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-            effectivePaddingTop = mListPadding.y;//top;
+            effectivePaddingTop = mListPadding.top;
             effectivePaddingBottom = mListPadding.height;//bottom;
         }
 
@@ -2457,11 +2457,11 @@ void ListView::dispatchDraw(Canvas&canvas) {
             // Draw top divider or header for overscroll
             if (count > 0 && scrollY < 0) {
                 if (bdrawOverscrollHeader) {
-                    bounds.y = 0;
+                    bounds.top = 0;
                     bounds.height = scrollY;
                     drawOverscrollHeader(canvas, overscrollHeader, bounds);
                 } else if (drawDividers) {
-                    bounds.y = 0;
+                    bounds.top = 0;
                     bounds.height = dividerHeight;
                     drawDivider(canvas, bounds, -1);
                 }
@@ -2486,11 +2486,11 @@ void ListView::dispatchDraw(Canvas&canvas) {
                                                               && (nextIndex >= headerCount)) && (isLastItem
                                                                       || adapter->isEnabled(nextIndex) && (footerDividers || !isFooter
                                                                               && (nextIndex < footerLimit)))) {
-                            bounds.y = bottom;
+                            bounds.top = bottom;
                             bounds.height = dividerHeight;
                             drawDivider(canvas, bounds, i);
                         } else if (fillForMissingDividers) {
-                            bounds.y = bottom;
+                            bounds.top = bottom;
                             bounds.height = dividerHeight;
                             canvas.set_color(getCacheColorHint());
                             canvas.rectangle(bounds);
@@ -2503,7 +2503,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
             int overFooterBottom = getBottom() + mScrollY;
             if (bdrawOverscrollFooter && first + count == itemCount &&
                     overFooterBottom > bottom) {
-                bounds.y = bottom;
+                bounds.top = bottom;
                 bounds.height = overFooterBottom-bottom;
                 drawOverscrollFooter(canvas, overscrollFooter, bounds);
             }
@@ -2512,7 +2512,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
             int scrollY = mScrollY;
 
             if (count > 0 && bdrawOverscrollHeader) {
-                bounds.y = scrollY;
+                bounds.top = scrollY;
                 bounds.height = getChildAt(0)->getTop()-scrollY;
                 drawOverscrollHeader(canvas, overscrollHeader, bounds);
             }
@@ -2535,7 +2535,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
                                                               && (previousIndex >= headerCount)) && (isFirstItem ||
                                                                       adapter->isEnabled(previousIndex) && (footerDividers || !isFooter
                                                                               && (previousIndex < footerLimit)))) {
-                            bounds.y = top - dividerHeight;
+                            bounds.top = top - dividerHeight;
                             bounds.height = dividerHeight;
                             // Give the method the child ABOVE the divider,
                             // so we subtract one from our child position.
@@ -2543,7 +2543,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
                             // divider.
                             drawDivider(canvas, bounds, i - 1);
                         } else if (fillForMissingDividers) {
-                            bounds.y = top - dividerHeight;
+                            bounds.top = top - dividerHeight;
                             bounds.height = dividerHeight;
                             canvas.set_color(getCacheColorHint());
                             canvas.rectangle(bounds);
@@ -2556,11 +2556,11 @@ void ListView::dispatchDraw(Canvas&canvas) {
             if (count > 0 && scrollY > 0) {
                 if (bdrawOverscrollFooter) {
                     int absListBottom = getBottom();
-                    bounds.y = absListBottom;
+                    bounds.top = absListBottom;
                     bounds.height =  scrollY;
                     drawOverscrollFooter(canvas, overscrollFooter, bounds);
                 } else if (drawDividers) {
-                    bounds.y = listBottom;
+                    bounds.top = listBottom;
                     bounds.height = dividerHeight;
                     drawDivider(canvas, bounds, -1);
                 }

@@ -69,8 +69,10 @@ public:
         child = nullptr;
     }
 };
+
 TouchTarget*TouchTarget::sRecycleBin=nullptr;
 int TouchTarget::sRecycledCount=0;
+bool ViewGroup::DEBUG_DRAW = false;
 
 ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
     initGroup();
@@ -1206,6 +1208,43 @@ bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){
     child->draw(canvas,this,drawingTime);
 }
 
+void ViewGroup::onDebugDrawMargins(Canvas& canvas){
+    for (View*c:mChildren){
+        c->getLayoutParams()->onDebugDraw(*c, canvas);
+    }
+}
+
+void ViewGroup::onDebugDraw(Canvas& canvas){
+    // Draw optical bounds
+    canvas.set_color(Color::RED);
+    for (View*c :mChildren){
+        if (c->getVisibility() != View::GONE) {
+            //Insets insets = c.getOpticalInsets();
+            //drawRect(canvas,c->getLeft() + insets.left, c->getTop() + insets.top,
+            //        c->getRight() - insets.right - 1,  c->getBottom() - insets.bottom - 1);
+        }
+    }
+    canvas.stroke();
+
+    // Draw margins
+    canvas.set_color(0x70FF00FF);
+    onDebugDrawMargins(canvas);//fill
+#if 0
+    // Draw clip bounds
+    paint.setColor(DEBUG_CORNERS_COLOR);
+    paint.setStyle(Paint.Style.FILL);
+
+    int lineLength = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
+    int lineWidth = dipsToPixels(1);
+    for (View*v c:mChildren){
+        if (c->getVisibility() != View::GONE) {
+            drawRectCorners(canvas, c->getLeft(), c->getTop(), c->getRight(), c->getBottom(),
+                    paint, lineLength, lineWidth);
+        }
+    }
+#endif
+}
+
 void ViewGroup::dispatchDraw(Canvas&canvas){
     const int childrenCount = mChildren.size();
     int flags = mGroupFlags;
@@ -1303,7 +1342,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     }
     //if (usingRenderNodeProperties) canvas.insertInorderBarrier();
     
-    //if (debugDraw())onDebugDraw(canvas);
+    if (DEBUG_DRAW)onDebugDraw(canvas);
 
     if (clipToPadding) {
         while(clipSaveCount--)canvas.restore();

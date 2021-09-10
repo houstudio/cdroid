@@ -106,7 +106,7 @@ void WindowManager::moveWindow(Window*w,int x,int y){
 	r.offset(-w1->getX(),-w1->getY());
 	c->mInvalidRgn->do_union((const RectangleInt&)r);
 	r=w1->getBound();
-	rcw.x=x;rcw.y=y;
+	rcw.left=x;rcw.top=y;
 	r.intersect(rcw);
 	r.offset(-w1->getX(),-w1->getY());
 	c->mInvalidRgn->subtract((const RectangleInt&)r);
@@ -185,7 +185,7 @@ void WindowManager::clip(Window*win){
     for (auto wind=windows.rbegin() ;wind!= windows.rend();wind++){
         if( (*wind)==win )break;
         if( (*wind)->getVisibility()!=View::VISIBLE)continue;
-        RECT rc=rcw;
+        Rect rc=rcw;
         rc.intersect((*wind)->getBound());
         if(rc.empty())continue;
         rc.offset(-win->getX(),-win->getY());
@@ -195,7 +195,7 @@ void WindowManager::clip(Window*win){
 
 void WindowManager::resetVisibleRegion(){
     for (auto w=windows.begin() ;w!= windows.end();w++){
-        RECT rcw=(*w)->getBound();
+        Rect rcw=(*w)->getBound();
         RefPtr<Region>newrgn=Region::create((RectangleInt&)rcw);
         if((*w)->getVisibility()!=View::VISIBLE)continue;
 
@@ -210,7 +210,7 @@ void WindowManager::resetVisibleRegion(){
                newrgn->subtract(tmp);
            }
        }
-       newrgn->translate(-rcw.x,-rcw.y);
+       newrgn->translate(-rcw.left,-rcw.top);
        if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
            newrgn->intersect((*w)->mWindowRgn); 
        }

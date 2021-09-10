@@ -259,7 +259,7 @@ bool Window::performFocusNavigation(KeyEvent& event){
                     mView->offsetDescendantRectToMyCoords(focused, mTempRect);
                     mView->offsetRectIntoDescendantCoords(v, mTempRect);
                 }
-		LOGV("request focus at rect(%d,%d-%d,%d)",mTempRect.x,mTempRect.y,mTempRect.width,mTempRect.height);
+		LOGV("request focus at rect(%d,%d-%d,%d)",mTempRect.left,mTempRect.top,mTempRect.width,mTempRect.height);
                 if (v->requestFocus(direction, &mTempRect)) {
                     return true;
                 }

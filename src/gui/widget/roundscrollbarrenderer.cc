@@ -52,7 +52,7 @@ namespace cdroid{
                 SCROLLBAR_ANGLE_RANGE / 2 - sweepAngle);
 
         // Draw the track and the scroll bar.
-        mRect.set( bounds.x - thumbWidth / 2,  bounds.y,
+        mRect.set( bounds.left - thumbWidth / 2,  bounds.top,
                 bounds.width - thumbWidth / 2, bounds.height);
 
         LOGD("===alpha=%f thumbWidth=%f angle=%f/%f bounds=(%d,%d)",alpha,thumbWidth,
@@ -61,12 +61,12 @@ namespace cdroid{
         canvas.set_color(mThumbColor);
         canvas.set_antialias(Cairo::ANTIALIAS_SUBPIXEL);
         canvas.set_line_cap(Cairo::Context::LineCap::ROUND);
-        canvas.arc(mRect.x+mRect.width/2,mRect.y+mRect.height/2,mRect.width,
+        canvas.arc(mRect.left+mRect.width/2,mRect.top+mRect.height/2,mRect.width,
                    -M_PI/180.*SCROLLBAR_ANGLE_RANGE/2, M_PI*SCROLLBAR_ANGLE_RANGE/180.);
         canvas.stroke();
 
         canvas.set_color(mTrackColor);
-        canvas.arc(mRect.x+mRect.width/2,mRect.y+mRect.height/2,mRect.width,
+        canvas.arc(mRect.left+mRect.width/2,mRect.top+mRect.height/2,mRect.width,
             startAngle*M_PI/180.,sweepAngle*M_PI/180.);
         canvas.stroke();
     }    

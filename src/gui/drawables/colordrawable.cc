@@ -115,7 +115,7 @@ bool ColorDrawable::hasFocusStateSpecified()const{
 
 void ColorDrawable::draw(Canvas&canvas){
     LOGV("%p color=%x  bounds=%d,%d-%d,%d mTintFilter=%p",this,mColorState->mUseColor,
-	mBounds.x,mBounds.y,mBounds.width,mBounds.height,mTintFilter);
+	mBounds.left,mBounds.top,mBounds.width,mBounds.height,mTintFilter);
     if(mColorState->mUseColor>>24){
         canvas.set_color(mColorState->mUseColor);
         canvas.rectangle(getBounds());
@@ -129,4 +129,5 @@ Drawable*ColorDrawable::inflate(Context*ctx,const AttributeSet&atts){
     int color=atts.getColor("color");
     return new ColorDrawable(color);
 }
+
 }

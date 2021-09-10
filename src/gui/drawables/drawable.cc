@@ -25,11 +25,11 @@ Drawable::~Drawable(){
 }
 
 void Drawable::setBounds(const Rect&r){
-    setBounds(r.x,r.y,r.width,r.height); 
+    setBounds(r.left,r.top,r.width,r.height); 
 }
 
 void Drawable::setBounds(int x,int y,int w,int h){
-    if((mBounds.x!=x)||(mBounds.y!=y)||(mBounds.width!=w)||(mBounds.height!=h)){
+    if((mBounds.left!=x)||(mBounds.top!=y)||(mBounds.width!=w)||(mBounds.height!=h)){
         mBounds.set(x,y,w,h);
         onBoundsChange(mBounds);
     }

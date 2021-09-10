@@ -102,8 +102,8 @@ Canvas*GraphDevice::createContext(int width,int height){
 
 Canvas*GraphDevice::createContext(const RECT&rect){
     Canvas*ctx=createContext(rect.width,rect.height);
-    ctx->mLeft=rect.x;
-    ctx->mTop=rect.y;
+    ctx->mLeft=rect.left;
+    ctx->mTop=rect.top;
     return ctx;
 }
 

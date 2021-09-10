@@ -20,6 +20,7 @@ private:
 protected:
     void applyTransformation(float interpolatedTime, Transformation& t)override;
 public:
+    RotateAnimation(Context* context,const AttributeSet& attrs);
     RotateAnimation(float fromDegrees, float toDegrees);
     RotateAnimation(float fromDegrees, float toDegrees, float pivotX, float pivotY);
     RotateAnimation(float fromDegrees, float toDegrees, int pivotXType, float pivotXValue,

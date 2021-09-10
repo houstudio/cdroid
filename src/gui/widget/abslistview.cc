@@ -377,13 +377,13 @@ void AbsListView::setScrollingCacheEnabled(bool enabled){
 }
 
 int AbsListView::getListPaddingTop()const {
-    return mListPadding.y;
+    return mListPadding.top;
 }
 int AbsListView::getListPaddingBottom()const {
     return mListPadding.height;
 }
 int AbsListView::getListPaddingLeft()const {
-    return mListPadding.x;
+    return mListPadding.left;
 }
 int AbsListView::getListPaddingRight()const {
     return mListPadding.width;
@@ -439,7 +439,7 @@ void AbsListView::setSelectionFromTop(int position, int y) {
 
     if (position >= 0) {
         mLayoutMode = LAYOUT_SPECIFIC;
-        mSpecificTop = mListPadding.y + y;
+        mSpecificTop = mListPadding.top + y;
 
         if (mNeedSync) {
             mSyncPosition = position;
@@ -501,8 +501,8 @@ void AbsListView::positionSelector(int position, View* sel, bool manageHotspot, 
     }*/
 
     // Adjust for selection padding.
-    selectorRect.x -= mSelectionLeftPadding;
-    selectorRect.y -= mSelectionTopPadding;
+    selectorRect.left -= mSelectionLeftPadding;
+    selectorRect.top -= mSelectionTopPadding;
     selectorRect.width += mSelectionLeftPadding+mSelectionRightPadding;
     selectorRect.height+= mSelectionTopPadding+mSelectionBottomPadding;
 
@@ -543,8 +543,8 @@ void AbsListView::positionSelectorLikeTouch(int position, View* sel, float x, fl
 void AbsListView::positionSelectorLikeFocus(int position, View* sel) {
     if (mSelector != nullptr && mSelectorPosition != position && position != INVALID_POSITION) {
         Rect bounds = mSelectorRect;
-        float x = (bounds.x+bounds.width)/2;//exactCenterX();
-        float y = (bounds.y+bounds.height)/2;//exactCenterY();
+        float x = (bounds.left+bounds.width)/2;//exactCenterX();
+        float y = (bounds.top +bounds.height)/2;//exactCenterY();
         positionSelector(position, sel, true, x, y);
     } else {
         positionSelector(position, sel);
@@ -795,10 +795,10 @@ void AbsListView::setSelector(Drawable*sel) {
     mSelector = sel;
     Rect padding;
     sel->getPadding(padding);
-    mSelectionLeftPadding = padding.x;
-    mSelectionTopPadding = padding.y;
+    mSelectionLeftPadding  = padding.left;
+    mSelectionTopPadding   = padding.top;
     mSelectionRightPadding = padding.width;
-    mSelectionBottomPadding = padding.height;
+    mSelectionBottomPadding= padding.height;
     sel->setCallback(this);
     updateSelectorState();
 }
@@ -901,9 +901,9 @@ void AbsListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     if (mSelector == nullptr) {
         useDefaultSelector();
     }
-    Rect& listPadding = mListPadding;
-    listPadding.x = mSelectionLeftPadding + mPaddingLeft;
-    listPadding.y = mSelectionTopPadding + mPaddingTop;
+    Rect& listPadding= mListPadding;
+    listPadding.left = mSelectionLeftPadding + mPaddingLeft;
+    listPadding.top  = mSelectionTopPadding + mPaddingTop;
     listPadding.width = mSelectionRightPadding + mPaddingRight;
     listPadding.height= mSelectionBottomPadding + mPaddingBottom;
 
@@ -1020,7 +1020,7 @@ bool AbsListView::resurrectSelection() {
 
     int selectedTop = 0;
     int selectedPos;
-    int childrenTop = mListPadding.y;
+    int childrenTop = mListPadding.top;
     int childrenBottom = mHeight - mListPadding.height;
     int firstPosition = mFirstPosition;
     int toPosition = mResurrectToPosition;
@@ -1434,34 +1434,34 @@ int AbsListView::getDistance(const Rect& source,const Rect& dest, int direction)
     switch (direction) {
     case View::FOCUS_RIGHT:
         sX = source.right();
-        sY = source.y + source.height / 2;
-        dX = dest.x;
-        dY = dest.y + dest.height / 2;
+        sY = source.top + source.height / 2;
+        dX = dest.left;
+        dY = dest.top + dest.height / 2;
         break;
     case View::FOCUS_DOWN:
-        sX = source.x + source.width / 2;
+        sX = source.left + source.width / 2;
         sY = source.bottom();
-        dX = dest.x + dest.width / 2;
-        dY = dest.y;
+        dX = dest.left + dest.width / 2;
+        dY = dest.top;
         break;
     case View::FOCUS_LEFT:
-        sX = source.x;
-        sY = source.y + source.height / 2;
+        sX = source.left;
+        sY = source.top + source.height / 2;
         dX = dest.right();
-        dY = dest.y + dest.height / 2;
+        dY = dest.top + dest.height / 2;
         break;
     case View::FOCUS_UP:
-        sX = source.x + source.width / 2;
-        sY = source.y;
-        dX = dest.x + dest.width / 2;
-        dY = dest.y;
+        sX = source.left + source.width / 2;
+        sY = source.top;
+        dX = dest.left + dest.width / 2;
+        dY = dest.top;
         break;
     case View::FOCUS_FORWARD:
     case View::FOCUS_BACKWARD:
         sX = source.right() + source.width / 2;
-        sY = source.y + source.height / 2;
-        dX = dest.x + dest.width / 2;
-        dY = dest.y + dest.height / 2;
+        sY = source.top + source.height / 2;
+        dX = dest.left + dest.width / 2;
+        dY = dest.top + dest.height / 2;
         break;
     default:
         throw "direction must be one of {FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, "
@@ -1628,7 +1628,7 @@ bool AbsListView::canScrollUp() {
     if (!canScrollUp) {
         if (getChildCount() > 0) {
             View* child = getChildAt(0);
-            canScrollUp = child->getTop() < mListPadding.y;
+            canScrollUp = child->getTop() < mListPadding.top;
         }
     }
     return canScrollUp;
@@ -1665,7 +1665,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     int effectivePaddingTop = 0;
     int effectivePaddingBottom = 0;
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-        effectivePaddingTop = listPadding.y;//top;
+        effectivePaddingTop = listPadding.top;
         effectivePaddingBottom = listPadding.height;//bottom;
     }
 
@@ -1691,7 +1691,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
 
     // Update our guesses for where the first and last views are
     if (firstPosition == 0) {
-        mFirstPositionDistanceGuess = firstTop - listPadding.y;//top;
+        mFirstPositionDistanceGuess = firstTop - listPadding.top;
     } else {
         mFirstPositionDistanceGuess += incrementalDeltaY;
     }
@@ -1702,7 +1702,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     }
 
     bool cannotScrollDown = (firstPosition == 0 &&
-                firstTop >= listPadding.y && incrementalDeltaY >= 0);
+                firstTop >= listPadding.top && incrementalDeltaY >= 0);
     bool cannotScrollUp = (firstPosition + childCount == mItemCount &&
                 lastBottom <= getHeight() - listPadding.height && incrementalDeltaY <= 0);
     if (cannotScrollDown || cannotScrollUp) {
@@ -1725,7 +1725,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     if (down) {
         int top = -incrementalDeltaY;
         if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-            top += listPadding.y;//top;
+            top += listPadding.top;
         }
         for (int i = 0; i < childCount; i++) {
             View* child = getChildAt(i);
@@ -2202,7 +2202,7 @@ bool AbsListView::contentFits() {
     if (childCount == 0) return true;
     if (childCount != mItemCount) return false;
 
-    return getChildAt(0)->getTop() >= mListPadding.y &&
+    return getChildAt(0)->getTop() >= mListPadding.top &&
            getChildAt(childCount - 1)->getBottom() <= getHeight() - mListPadding.height;
 }
 
@@ -2603,7 +2603,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
             }
 
             float x = ev.getX();
-            bool inList = x > mListPadding.x && x < getWidth() - mListPadding.width;
+            bool inList = x > mListPadding.left && x < getWidth() - mListPadding.width;
             if (inList && !child->hasExplicitFocusable()) {
 
                 mResurrectToPosition = mMotionPosition;
@@ -2656,7 +2656,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
         if (childCount > 0) {
             int firstChildTop = getChildAt(0)->getTop();
             int lastChildBottom = getChildAt(childCount - 1)->getBottom();
-            int contentTop = mListPadding.y;
+            int contentTop = mListPadding.top;
             int contentBottom = getHeight() - mListPadding.width;
             if (mFirstPosition == 0 && firstChildTop >= contentTop &&
                     mFirstPosition + childCount < mItemCount &&
@@ -3096,7 +3096,7 @@ void AbsListView::PositionScroller::scrollToVisible(int targetPos, int boundPos,
     int firstPos = mLV->mFirstPosition;
     int childCount = mLV->getChildCount();
     int lastPos = firstPos + childCount - 1;
-    int paddedTop = mLV->mListPadding.y;
+    int paddedTop = mLV->mListPadding.top;
     int paddedBottom = mLV->getHeight() - mLV->mListPadding.bottom();
 
     if (targetPos < firstPos || targetPos > lastPos) {
@@ -3231,7 +3231,7 @@ void AbsListView::PositionScroller::operator()() {
         }
         int firstViewTop = firstView->getTop();
         int extraScroll = firstPos > 0 ?
-              std::max(mExtraScroll, mLV->mListPadding.y) : mLV->mListPadding.y;
+              std::max(mExtraScroll, mLV->mListPadding.top) : mLV->mListPadding.top;
 
         mLV->smoothScrollBy(firstViewTop - extraScroll, mScrollDuration, true,
                 firstPos > mTargetPos);
@@ -3261,7 +3261,7 @@ void AbsListView::PositionScroller::operator()() {
         int lastViewHeight = lastView->getHeight();
         int lastViewTop = lastView->getTop();
         int lastViewPixelsShowing = listHeight - lastViewTop;
-        int extraScroll = std::max(mLV->mListPadding.y, mExtraScroll);
+        int extraScroll = std::max(mLV->mListPadding.top, mExtraScroll);
         mLastSeenPos = lastPos;
         if (lastPos > mBoundPos) {
             mLV->smoothScrollBy(-(lastViewPixelsShowing - extraScroll), mScrollDuration, true,

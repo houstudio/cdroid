@@ -78,8 +78,8 @@ void NinePatchDrawable::computeBitmapSize(){
 
     /*const Rect sourceOpticalInsets = mNinePatchState->mOpticalInsets;
     if (sourceOpticalInsets.empty()){// != Insets.NONE) {
-        const int left = Drawable::scaleFromDensity( sourceOpticalInsets.x    , sourceDensity, targetDensity, true);
-        const int top  = Drawable::scaleFromDensity( sourceOpticalInsets.y    , sourceDensity, targetDensity, true);
+        const int left = Drawable::scaleFromDensity( sourceOpticalInsets.left   , sourceDensity, targetDensity, true);
+        const int top  = Drawable::scaleFromDensity( sourceOpticalInsets.top    , sourceDensity, targetDensity, true);
         const int right= Drawable::scaleFromDensity( sourceOpticalInsets.width, sourceDensity, targetDensity, true);
         const int bottom=Drawable::scaleFromDensity( sourceOpticalInsets.height,sourceDensity, targetDensity, true);
         mOpticalInsets.set(left, top, right, bottom);// = Insets.of(left, top, right, bottom);
@@ -90,8 +90,8 @@ void NinePatchDrawable::computeBitmapSize(){
     const Rect sourcePadding = mNinePatchState->mPadding;
     if (1/*sourcePadding != nullptr*/) {
         
-        mPadding.x     = Drawable::scaleFromDensity( sourcePadding.x    , sourceDensity, targetDensity, false);
-        mPadding.y     = Drawable::scaleFromDensity( sourcePadding.y    , sourceDensity, targetDensity, false);
+        mPadding.left  = Drawable::scaleFromDensity( sourcePadding.left , sourceDensity, targetDensity, false);
+        mPadding.top   = Drawable::scaleFromDensity( sourcePadding.top  , sourceDensity, targetDensity, false);
         mPadding.width = Drawable::scaleFromDensity( sourcePadding.width, sourceDensity, targetDensity, false);
         mPadding.height= Drawable::scaleFromDensity( sourcePadding.height,sourceDensity, targetDensity, false);
     }
@@ -131,7 +131,7 @@ void NinePatchDrawable::setAlpha(int alpha) {
 
 bool NinePatchDrawable::getPadding(Rect& padding){
     padding=mPadding;
-    return (padding.x | padding.y | padding.width | padding.height) != 0;
+    return (padding.left | padding.top | padding.width | padding.height) != 0;
 }
 
 int NinePatchDrawable::getAlpha()const{

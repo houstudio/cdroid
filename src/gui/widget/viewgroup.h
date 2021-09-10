@@ -65,6 +65,7 @@ public:
         LAYOUT_MODE_OPTICAL_BOUNDS=1,
         LAYOUT_MODE_DEFAULT = LAYOUT_MODE_CLIP_BOUNDS
     };
+    static bool DEBUG_DRAW;
 private:
     friend class View;
     int mLayoutMode;
@@ -155,6 +156,7 @@ protected:
     void detachAllViewsFromParent();
     void clearFocusedInCluster(View* child);
     void clearFocusedInCluster();
+
     virtual LayoutParams* generateLayoutParams(const LayoutParams* p)const;
     virtual LayoutParams* generateDefaultLayoutParams()const;
     virtual bool checkLayoutParams(const LayoutParams* p)const;
@@ -167,7 +169,11 @@ protected:
     virtual void measureChildWithMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
     virtual bool drawChild(Canvas& canvas, View* child, long drawingTime);
+
+    void onDebugDrawMargins(Canvas& canvas);
+    void onDebugDraw(Canvas& canvas);
     void dispatchDraw(Canvas&)override;
+
     bool hasActiveAnimations();
     void transformPointToViewLocal(float pint[2],View&);
     bool isTransformedTouchPointInView(int x,int y,View& child,Point*outLocalPoint);

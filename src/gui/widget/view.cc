@@ -891,8 +891,8 @@ void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     int verticalScrollBarGap = drawVerticalScrollBar ? getVerticalScrollbarWidth() : 0;
     int width = getWidth();
     int height=getHeight();
-    bounds->y = mScrollY + height - size - (mUserPaddingBottom & inside);
-    bounds->x = mScrollX + (mPaddingLeft & inside);
+    bounds->top = mScrollY + height - size - (mUserPaddingBottom & inside);
+    bounds->left = mScrollX + (mPaddingLeft & inside);
     bounds->width =  width - (mUserPaddingRight & inside) - verticalScrollBarGap;
     bounds->height=  size;
 
@@ -904,14 +904,14 @@ void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     if (touchBounds->height < minTouchTarget) {
         int adjust = (minTouchTarget - touchBounds->height) / 2;
         touchBounds->height = std::min(touchBounds->height + adjust,height);
-        touchBounds->y = touchBounds->bottom() - minTouchTarget;
+        touchBounds->top = touchBounds->bottom() - minTouchTarget;
     }
     if (touchBounds->width < minTouchTarget) {
         int adjust = (minTouchTarget - touchBounds->width) / 2;
-        touchBounds->x -= adjust;
+        touchBounds->left -= adjust;
         touchBounds->width =  minTouchTarget;
     }
-    LOGD("scrollbar's drawbound=%d,%d-%d,%d",bounds->x,bounds->y,bounds->width,bounds->height);
+    LOGD("scrollbar's drawbound=%d,%d-%d,%d",bounds->left,bounds->top,bounds->width,bounds->height);
 }
 
 bool View::isHorizontalFadingEdgeEnabled()const{
@@ -950,13 +950,13 @@ void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     switch (verticalScrollbarPosition) {
     default:
     case SCROLLBAR_POSITION_RIGHT:
-        bounds->x = mScrollX + getWidth() - size - (mUserPaddingRight & inside);
+        bounds->left = mScrollX + getWidth() - size - (mUserPaddingRight & inside);
         break;
     case SCROLLBAR_POSITION_LEFT:
-        bounds->x = mScrollX + (mUserPaddingLeft & inside);
+        bounds->left = mScrollX + (mUserPaddingLeft & inside);
         break;
     }
-    bounds->y = mScrollY+ (mPaddingTop & inside);
+    bounds->top = mScrollY+ (mPaddingTop & inside);
     bounds->width =  size;
     bounds->height= getHeight() - (mUserPaddingBottom & inside);
 
@@ -969,24 +969,24 @@ void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
         int adjust = (minTouchTarget - touchBounds->width) / 2;
         if (verticalScrollbarPosition == SCROLLBAR_POSITION_RIGHT) {
             touchBounds->width= std::min(touchBounds->width + adjust, getWidth());
-            touchBounds->x = touchBounds->width - minTouchTarget;
+            touchBounds->left = touchBounds->width - minTouchTarget;
         } else {
-            touchBounds->x = std::max(touchBounds->x+ adjust, mScrollX);
-            touchBounds->width= touchBounds->x + minTouchTarget;
+            touchBounds->left = std::max(touchBounds->left+ adjust, mScrollX);
+            touchBounds->width= touchBounds->left + minTouchTarget;
         }
     }
     if (touchBounds->height < minTouchTarget) {
         int adjust = (minTouchTarget - touchBounds->height) / 2;
-        touchBounds->y -= adjust;
-        touchBounds->height = touchBounds->y + minTouchTarget;
+        touchBounds->top -= adjust;
+        touchBounds->height = touchBounds->top + minTouchTarget;
     }
 }
 
 void View::getRoundVerticalScrollBarBounds(Rect* bounds){
     // Do not take padding into account as we always want the scrollbars
     // to hug the screen for round wearable devices.
-    bounds->x = mScrollX;
-    bounds->y = mScrollY;
+    bounds->left = mScrollX;
+    bounds->top = mScrollY;
     bounds->width =  mWidth;
     bounds->height = mHeight;
 }
@@ -1121,9 +1121,9 @@ bool View::isOnVerticalScrollbarThumb(int x,int y){
         int extent = computeVerticalScrollExtent();
         int thumbLength = ViewConfiguration::getThumbLength(bounds.height, bounds.width,extent, range);
         int thumbOffset = ViewConfiguration::getThumbOffset(bounds.height, thumbLength, extent, range, offset);
-        int thumbTop = bounds.y + thumbOffset;
+        int thumbTop = bounds.top + thumbOffset;
         int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
-        if (x >= touchBounds.x && x <= touchBounds.right()
+        if (x >= touchBounds.left && x <= touchBounds.right()
                 && y >= thumbTop - adjust && y <= thumbTop + thumbLength + adjust) {
             return true;
         }
@@ -1145,10 +1145,10 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
         int extent = computeHorizontalScrollExtent();
         int thumbLength = ViewConfiguration::getThumbLength(bounds.width, bounds.height,extent, range);
         int thumbOffset = ViewConfiguration::getThumbOffset(bounds.width, thumbLength,extent, range, offset);
-        int thumbLeft = bounds.x + thumbOffset;
+        int thumbLeft = bounds.left + thumbOffset;
         int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
         if (x >= thumbLeft - adjust && x <= thumbLeft + thumbLength + adjust
-                && y >= touchBounds.y && y <= touchBounds.bottom()) {
+                && y >= touchBounds.top && y <= touchBounds.bottom()) {
             return true;
         }
     }
@@ -1198,9 +1198,9 @@ void View::setScrollIndicators(int indicators,int mask) {
 }
 
 void View::getScrollIndicatorBounds(Rect&out) {
-    out.x     = mScrollX;
+    out.left     = mScrollX;
     out.width = getWidth();
-    out.y     = mScrollY;
+    out.top     = mScrollY;
     out.height= getHeight();
 }
 
@@ -1220,7 +1220,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
     if ((mPrivateFlags3 & PFLAG3_SCROLL_INDICATOR_TOP) != 0) {
         bool canScrollUp = canScrollVertically(-1);
         if (canScrollUp) {
-            dr->setBounds(rect.x, rect.y, rect.width,h);
+            dr->setBounds(rect.left, rect.top, rect.width,h);
             dr->draw(canvas);
         }
     }
@@ -1228,7 +1228,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
     if ((mPrivateFlags3 & PFLAG3_SCROLL_INDICATOR_BOTTOM) != 0) {
         bool canScrollDown = canScrollVertically(1);
         if (canScrollDown) {
-            dr->setBounds(rect.x, rect.bottom() - h, rect.width, rect.height);
+            dr->setBounds(rect.left, rect.bottom() - h, rect.width, rect.height);
             dr->draw(canvas);
         }
     }
@@ -1247,7 +1247,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
     if ((mPrivateFlags3 & leftMask) != 0) {
         bool canScrollLeft = canScrollHorizontally(-1);
         if (canScrollLeft) {
-            dr->setBounds(rect.x, rect.y, w, rect.height);
+            dr->setBounds(rect.left, rect.top, w, rect.height);
             dr->draw(canvas);
         }
     }
@@ -1256,7 +1256,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
     if ((mPrivateFlags3 & rightMask) != 0) {
         bool canScrollRight = canScrollHorizontally(1);
         if (canScrollRight) {
-            dr->setBounds(rect.right() - w, rect.y,w, rect.height);
+            dr->setBounds(rect.right() - w, rect.top,w, rect.height);
             dr->draw(canvas);
         }
     }
@@ -1313,13 +1313,13 @@ void View::onDrawScrollBars(Canvas& canvas){
                     computeHorizontalScrollOffset(),
                     computeHorizontalScrollExtent(), false);
             getHorizontalScrollBarBounds(&bounds, nullptr);
-            onDrawHorizontalScrollBar(canvas,scrollBar, bounds.x, bounds.y,bounds.width, bounds.height);
+            onDrawHorizontalScrollBar(canvas,scrollBar, bounds.left, bounds.top,bounds.width, bounds.height);
         }
         if (drawVerticalScrollBar) {
             scrollBar->setParameters(computeVerticalScrollRange(),
                     computeVerticalScrollOffset(),computeVerticalScrollExtent(), true);
             getVerticalScrollBarBounds(&bounds, nullptr);
-            onDrawVerticalScrollBar(canvas, scrollBar, bounds.x, bounds.y,bounds.width, bounds.height);
+            onDrawVerticalScrollBar(canvas, scrollBar, bounds.left, bounds.top,bounds.width, bounds.height);
         }
     }
 }
@@ -1560,8 +1560,8 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
             // The child need to draw an animation, potentially offscreen, so
             // make sure we do not cancel invalidate requests
             parent->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
-            int left = mLeft + (int) region.x;
-            int top = mTop + (int) region.y;
+            int left = mLeft + (int) region.left;
+            int top = mTop + (int) region.top;
             parent->invalidate(left, top, region.width+1,region.height+1);
        }
     }
@@ -2479,7 +2479,7 @@ View& View::setBackgroundDrawable(Drawable*background){
     if(mBackground!=nullptr){
         Rect padding;
         if(background->getPadding(padding)){
-            setPadding(padding.x,padding.y,padding.width,padding.height);
+            setPadding(padding.left,padding.top,padding.width,padding.height);
         }
         if(background->isStateful())
             background->setState(getDrawableState());
@@ -3228,7 +3228,7 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
 
 /*param:rect is views logical area,maybe it is large than views'bounds,function invalidate must convert it to bound area*/
 void View::invalidate(const Rect&dirty){
-    invalidateInternal(dirty.x - mScrollX, dirty.y - mScrollY,
+    invalidateInternal(dirty.left - mScrollX, dirty.top - mScrollY,
             dirty.width, dirty.height, true, false);
 }
 
@@ -4589,8 +4589,8 @@ int View::getBaseline(){
 }
 
 void View::getDrawingRect(Rect& outRect) {
-    outRect.x = mScrollX;
-    outRect.y = mScrollY;
+    outRect.left = mScrollX;
+    outRect.top = mScrollY;
     outRect.width=mWidth;
     outRect.height=mHeight;
 }

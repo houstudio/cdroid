@@ -142,14 +142,14 @@ void RotateDrawable::draw(Canvas& canvas) {
 #else//Clockwise
     Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
     canvas.save();
-    canvas.translate(bounds.x,bounds.y);
+    canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
     d->setBounds(0,0,w,h);
     d->draw(canvas);
     d->setBounds(bounds);
-    canvas.translate(-bounds.x,-bounds.y);
+    canvas.translate(-bounds.left,-bounds.top);
     canvas.restore();
-    LOGV("Bounds(%d,%d,%d,%d) pxy=%f,%f degrees=%f",bounds.x,bounds.y,bounds.width,bounds.height,px,py,mState->mCurrentDegrees);
+    LOGV("Bounds(%d,%d,%d,%d) pxy=%f,%f degrees=%f",bounds.left,bounds.top,bounds.width,bounds.height,px,py,mState->mCurrentDegrees);
 #endif
 }
 

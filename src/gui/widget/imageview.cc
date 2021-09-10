@@ -286,8 +286,8 @@ static void SetRect2Rect(Matrix&m,const Rect&src,const Rect&dst,int align){
         if (sx > sy) {  xLarger = true;  sx = sy; }
 	 else { sy = sx;  }
     }
-    tx = dst.x - src.x * sx;
-    ty = dst.y - src.y * sy;
+    tx = dst.left - src.left * sx;
+    ty = dst.top - src.top * sy;
     if (align ==FIT_CENTER||align==FIT_END){// kCenter_ScaleToFit || align == kEnd_ScaleToFit) {
         float diff;
         if (xLarger) diff = dst.width - src.width * sy;

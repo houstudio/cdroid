@@ -1,4 +1,5 @@
 #include <animation/animationutils.h>
+#include <animations.h>
 #include <core/systemclock.h>
 #include <expat.h>
 #include <cdlog.h>
@@ -9,28 +10,52 @@ long AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();
 }
 
-Animation* AnimationUtils::loadAnimation(Context* context,const std::string&id){
-    return nullptr;
-}
-
-struct{
+typedef struct{
    Animation*anim;
    AttributeSet attr;
 }ANIMDATA;
 
-static void startAnimation(void *userData, const XML_Char *name, const XML_Char **satts){
-     AttributeSet atts=AttributeSet(satts);
+static void startAnimation(void *userData, const XML_Char *xname, const XML_Char **satts){
+    void** parseParams=(void**)userData;
+    int*index=(int*)parseParams[0];
+    ANIMDATA*ads=(ANIMDATA*)parseParams[1];
+    Context*c=(Context*)parseParams[2];
+    AttributeSet attrs=AttributeSet(satts);
+    std::string name=xname;
+    Animation*anim=nullptr;
+    if (0==name.compare("set")) {
+        anim = new AnimationSet(c, attrs);
+        //createAnimationFromXml(c, parser, (AnimationSet)anim, attrs);
+    } else if (0==name.compare("alpha")) {
+        anim = new AlphaAnimation(c, attrs);
+    } else if (0==name.compare("scale")) {
+        anim = new ScaleAnimation(c, attrs);
+    }  else if (0==name.compare("rotate")) {
+        anim = new RotateAnimation(c, attrs);
+    }  else if (0==name.compare("translate")) {
+        anim = new TranslateAnimation(c, attrs);
+    } else if (0==name.compare("cliprect")) {
+        //anim = new ClipRectAnimation(c, attrs);
+    } else {
+        LOGE("Unknown animation name: %s" ,xname);
+    }
 }
 
 static void endAnimation(void *userData, const XML_Char *name){
 }
 
-LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
+Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
     int rdlen;
     char buf[256];
+    int index=0;
+    ANIMDATA ads[8];
+    void*parseParams[2];
+    parseParams[0]=&index;
+    parseParams[1]=(void*)ads;
+    parseParams[2]=context;
     XML_Parser parser=XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startAnimation, endAnimation);
-    //XML_SetUserData(parser,&ad);
+    XML_SetUserData(parser,(void*)parseParams);
     std::unique_ptr<std::istream>stream=context->getInputStream(resid);
     do {
         stream->read(buf,sizeof(buf));
@@ -44,6 +69,9 @@ LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,
     } while(rdlen);
     XML_ParserFree(parser);
     return nullptr;
+}
+
+LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
 }
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){

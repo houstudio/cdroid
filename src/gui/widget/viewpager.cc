@@ -1754,8 +1754,8 @@ bool ViewPager::arrowScroll(int direction){
         if (direction == View::FOCUS_LEFT) {
             // If there is nothing to the left, or this is causing us to
             // jump to the right, then what we really want to do is page left.
-            int nextLeft = getChildRectInPagerCoordinates(mTempRect, nextFocused).x;
-            int currLeft = getChildRectInPagerCoordinates(mTempRect, currentFocused).x;
+            int nextLeft = getChildRectInPagerCoordinates(mTempRect, nextFocused).left;
+            int currLeft = getChildRectInPagerCoordinates(mTempRect, currentFocused).left;
             if (currentFocused != nullptr && nextLeft >= currLeft) {
                 handled = pageLeft();
             } else {
@@ -1764,8 +1764,8 @@ bool ViewPager::arrowScroll(int direction){
         } else if (direction == View::FOCUS_RIGHT) {
             // If there is nothing to the right, or this is causing us to
             // jump to the left, then what we really want to do is page right.
-            int nextLeft = getChildRectInPagerCoordinates(mTempRect, nextFocused).x;
-            int currLeft = getChildRectInPagerCoordinates(mTempRect, currentFocused).x;
+            int nextLeft = getChildRectInPagerCoordinates(mTempRect, nextFocused).left;
+            int currLeft = getChildRectInPagerCoordinates(mTempRect, currentFocused).left;
             if (currentFocused != nullptr && nextLeft <= currLeft) {
                 handled = pageRight();
             } else {
@@ -1790,17 +1790,17 @@ Rect ViewPager::getChildRectInPagerCoordinates(Rect& outRect, View* child){
         outRect.set(0, 0, 0, 0);
         return outRect;
     }
-    outRect.x = child->getLeft();
+    outRect.left  = child->getLeft();
     outRect.width = child->getWidth();;
-    outRect.y = child->getTop();
-    outRect.height = child->getHeight();
+    outRect.top   = child->getTop();
+    outRect.height= child->getHeight();
 
     ViewGroup* parent = child->getParent();
     while (/*parent instanceof ViewGroup &&*/ parent != this) {
         ViewGroup* group = (ViewGroup*) parent;
-        outRect.x += group->getLeft();
+        outRect.left += group->getLeft();
         outRect.width += group->getWidth();
-        outRect.y += group->getTop();
+        outRect.top+= group->getTop();
         outRect.height += group->getHeight();
 
         parent = group->getParent();

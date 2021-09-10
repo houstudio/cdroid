@@ -17,7 +17,7 @@ PorterDuffColorFilter::PorterDuffColorFilter(int color,int mode){
 void PorterDuffColorFilter::apply(Canvas&canvas,const Rect&rect){
     canvas.set_operator((Cairo::Context::Operator)mMode);//2,5(6,7),8,9
     canvas.set_color(mColor);
-    canvas.rectangle(rect.x,rect.y,rect.width,rect.height);
+    canvas.rectangle(rect.left,rect.top,rect.width,rect.height);
     canvas.fill();
 }
 void PorterDuffColorFilter::setColor(int c){

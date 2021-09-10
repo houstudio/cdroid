@@ -25,15 +25,15 @@ typedef struct Size{
 #define MAKESIZE(x,y) SIZE::Make(x,y)
 
 typedef struct Rect{
-    int x;
-    int y;
+    int left;
+    int top;
     int width;
     int height;
 
-    int bottom()const{return y+height;}
-    int right()const{return x+width;}
-    int centerX()const{return x+width/2;}
-    int centerY()const{return y+height/2;}
+    int bottom()const{return top+height;}
+    int right()const{return left+width;}
+    int centerX()const{return left+width/2;}
+    int centerY()const{return top+height/2;}
     void set(int x_,int y_,int w,int h);
     void inflate(int dx,int dy);
     bool empty()const;

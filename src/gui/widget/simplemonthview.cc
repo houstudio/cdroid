@@ -291,7 +291,7 @@ int SimpleMonthView::findClosestRow(const Rect* previouslyFocusedRect){
         int maxRows = (maxDay / DAYS_IN_WEEK) - ((maxDay % DAYS_IN_WEEK == 0) ? 1 : 0);
 
         row = constrain(row, 0, maxRows);
-        LOGD("(%d,%d %d,%d) row=%d",previouslyFocusedRect->x,previouslyFocusedRect->y,previouslyFocusedRect->width,previouslyFocusedRect->height,row);
+        LOGD("(%d,%d %d,%d) row=%d",previouslyFocusedRect->left,previouslyFocusedRect->top,previouslyFocusedRect->width,previouslyFocusedRect->height,row);
         return row;
     }
 }
@@ -459,14 +459,14 @@ void SimpleMonthView::drawDays(Canvas& canvas){
             dayTextColor =0xFFFFFFFF;// mDayTextColor->getColorForState(stateSet, 0);
         }
         canvas.set_color(dayTextColor);
-        rctxt.x=colWidth * col;
+        rctxt.left=colWidth * col;
         canvas.draw_text(rctxt,std::to_string(day),DT_CENTER|DT_VCENTER);
         col++;
 
         if (col == DAYS_IN_WEEK) {
             col = 0;
             rowCenter += rowHeight;
-            rctxt.y += rowHeight;
+            rctxt.top += rowHeight;
         }
     }
     canvas.set_color(0xFF00FF00);

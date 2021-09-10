@@ -214,7 +214,7 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
     if (mVariablePadding)return false;
 
     if (!mConstantPadding.empty()|| mCheckedPadding) {
-        return mConstantPadding.x>=0&&mConstantPadding.y>=0&&mConstantPadding.width>=0&&mConstantPadding.height>=0;
+        return mConstantPadding.left>=0&&mConstantPadding.top>=0&&mConstantPadding.width>=0&&mConstantPadding.height>=0;
     }
 
     createAllFutures();
@@ -223,10 +223,10 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
     Rect t ={0,0,0,0};
     for (auto dr:mDrawables) {
        if (dr->getPadding(t)) {
-           if (t.x > r.x) r.x = t.x;
-           if (t.y > r.y) r.y = t.y;
-           if (t.right() > r.right()) r.width = t.right()-r.x;
-           if (t.bottom() > r.bottom()) r.height = t.bottom()-r.y;
+           if (t.left > r.left) r.left = t.left;
+           if (t.top > r.top) r.top = t.top;
+           if (t.right() > r.right()) r.width = t.right()-r.left;
+           if (t.bottom() > r.bottom()) r.height = t.bottom()-r.top;
        }
     }
     mCheckedPadding = true;
@@ -360,7 +360,7 @@ bool DrawableContainer::getPadding(Rect&padding){
     bool result;
     if (mDrawableContainerState->getConstantPadding(r)){//r!=null) {
        padding=r;
-       result = (r.x | r.y | r.width | r.height) != 0;
+       result = (r.left | r.top | r.width | r.height) != 0;
     } else {
        if (mCurrDrawable != nullptr) {
            result = mCurrDrawable->getPadding(padding);
@@ -369,10 +369,10 @@ bool DrawableContainer::getPadding(Rect&padding){
        }
     }
     if (needsMirroring()) {
-        const int left = padding.x;
-        const int right = padding.y;
-        padding.x = right;
-        padding.y = left;
+        const int left = padding.left;
+        const int right = padding.top;
+        padding.left = right;
+        padding.top = left;
     }
     return result;
 }

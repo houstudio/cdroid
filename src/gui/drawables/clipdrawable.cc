@@ -92,10 +92,10 @@ void ClipDrawable::draw(Canvas& canvas){
     const int layoutDirection = getLayoutDirection();
     Gravity::apply(mState->mGravity, w, h, bounds, r, layoutDirection);
     LOGV("%p lvl=%d rect=%d,%d-%d,%d gravity=%d orient=%d bounds=%d,%d-%d,%d  wh=%d,%d",
-            this,level,r.x,r.y,r.width,r.height, mState->mGravity,mState->mOrientation,bounds.x,bounds.y,bounds.width,bounds.height,w,h);
+            this,level,r.left,r.top,r.width,r.height, mState->mGravity,mState->mOrientation,bounds.left,bounds.top,bounds.width,bounds.height,w,h);
     if (w > 0 && h > 0) {
         canvas.save();
-        canvas.rectangle(r.x,r.y,r.width,r.height);
+        canvas.rectangle(r.left,r.top,r.width,r.height);
         canvas.clip();
         dr->draw(canvas);
         canvas.restore();

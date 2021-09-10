@@ -375,10 +375,10 @@ int FocusFinder::getWeightedDistanceFor(int majorAxisDistance, int minorAxisDist
 
 bool FocusFinder::isCandidate(const RECT& srcRect,const RECT& destRect, int direction) {
     switch (direction) {
-    case View::FOCUS_LEFT:  return (srcRect.right() > destRect.right() || srcRect.x >= destRect.right()) && srcRect.x > destRect.x;
-    case View::FOCUS_RIGHT: return (srcRect.x < destRect.x || srcRect.right() <= destRect.x) && srcRect.right() < destRect.right();
-    case View::FOCUS_UP:    return (srcRect.bottom() > destRect.bottom() || srcRect.y >= destRect.bottom()) && srcRect.y > destRect.y;
-    case View::FOCUS_DOWN:  return (srcRect.y < destRect.y || srcRect.bottom() <= destRect.y) && srcRect.bottom() < destRect.bottom();
+    case View::FOCUS_LEFT:  return (srcRect.right() > destRect.right() || srcRect.left >= destRect.right()) && srcRect.left > destRect.left;
+    case View::FOCUS_RIGHT: return (srcRect.left < destRect.left || srcRect.right() <= destRect.left) && srcRect.right() < destRect.right();
+    case View::FOCUS_UP:    return (srcRect.bottom() > destRect.bottom() || srcRect.top >= destRect.bottom()) && srcRect.top > destRect.top;
+    case View::FOCUS_DOWN:  return (srcRect.top < destRect.top || srcRect.bottom() <= destRect.top) && srcRect.bottom() < destRect.bottom();
     default:  return false;
     }
 }
@@ -386,19 +386,19 @@ bool FocusFinder::isCandidate(const RECT& srcRect,const RECT& destRect, int dire
 bool FocusFinder::beamsOverlap(int direction,const RECT& rect1,const RECT&rect2) {
     switch (direction) {
     case View::FOCUS_LEFT:
-    case View::FOCUS_RIGHT: return (rect2.bottom() >= rect1.y) && (rect2.y <= rect1.bottom());
+    case View::FOCUS_RIGHT: return (rect2.bottom() >= rect1.top) && (rect2.top <= rect1.bottom());
     case View::FOCUS_UP:
-    case View::FOCUS_DOWN:  return (rect2.right() >= rect1.x) && (rect2.x <= rect1.right());
+    case View::FOCUS_DOWN:  return (rect2.right() >= rect1.left) && (rect2.left <= rect1.right());
     default:  return false;
     }
 }
 
 bool FocusFinder::isToDirectionOf(int direction,const RECT& src,const RECT&dest) {
     switch (direction) {
-    case View::FOCUS_LEFT:  return src.x >= dest.right();
-    case View::FOCUS_RIGHT: return src.right() <= dest.x;
-    case View::FOCUS_UP:    return src.y >= dest.bottom();
-    case View::FOCUS_DOWN:  return src.bottom() <= dest.y;
+    case View::FOCUS_LEFT:  return src.left >= dest.right();
+    case View::FOCUS_RIGHT: return src.right() <= dest.left;
+    case View::FOCUS_UP:    return src.top >= dest.bottom();
+    case View::FOCUS_DOWN:  return src.bottom() <= dest.top;
     default:return false;
     }
 }
@@ -413,19 +413,19 @@ int FocusFinder::majorAxisDistanceToFarEdge(int direction,const RECT& source,con
 
 int FocusFinder::majorAxisDistanceRaw(int direction,const RECT&source,const RECT&dest) {
     switch (direction) {
-    case View::FOCUS_LEFT:  return source.x - dest.right();
-    case View::FOCUS_RIGHT: return dest.x - source.right();
-    case View::FOCUS_UP:    return source.y - dest.bottom();
-    case View::FOCUS_DOWN:  return dest.y - source.bottom();
+    case View::FOCUS_LEFT:  return source.left - dest.right();
+    case View::FOCUS_RIGHT: return dest.left - source.right();
+    case View::FOCUS_UP:    return source.top - dest.bottom();
+    case View::FOCUS_DOWN:  return dest.top - source.bottom();
     default:return false;
     }
 }
 
 int FocusFinder::majorAxisDistanceToFarEdgeRaw(int direction,const RECT& source,const RECT& dest) {
     switch (direction) {
-    case View::FOCUS_LEFT:  return source.x - dest.x;
+    case View::FOCUS_LEFT:  return source.left - dest.left;
     case View::FOCUS_RIGHT: return dest.right() - source.right();
-    case View::FOCUS_UP:    return source.y - dest.y;
+    case View::FOCUS_UP:    return source.top - dest.top;
     case View::FOCUS_DOWN:  return dest.bottom() - source.bottom();
     default:return false;
     }
@@ -435,10 +435,10 @@ int FocusFinder::minorAxisDistance(int direction,const RECT& source,const RECT&d
     switch (direction) {
     case View::FOCUS_LEFT:
     case View::FOCUS_RIGHT: // the distance between the center verticals
-        return std::abs(((source.y + source.height / 2)- ((dest.y + dest.height / 2))));
+        return std::abs(((source.top + source.height / 2)- ((dest.top + dest.height / 2))));
     case View::FOCUS_UP:
     case View::FOCUS_DOWN:  // the distance between the center horizontals
-        return std::abs(((source.x + source.width / 2) - ((dest.x + dest.width / 2))));
+        return std::abs(((source.left + source.width / 2) - ((dest.left + dest.width / 2))));
     default:return false;
     }
 }
@@ -472,9 +472,9 @@ View* FocusFinder::findNearestTouchable(ViewGroup* root, int x, int y, int direc
 
         switch (direction) {
         case View::FOCUS_LEFT: distance = x - touchableBounds.right() + 1;  break;
-        case View::FOCUS_RIGHT:distance = touchableBounds.x;                break;
+        case View::FOCUS_RIGHT:distance = touchableBounds.left;             break;
         case View::FOCUS_UP:   distance = y - touchableBounds.bottom() + 1; break;
-        case View::FOCUS_DOWN: distance = touchableBounds.y;                break;
+        case View::FOCUS_DOWN: distance = touchableBounds.top;              break;
         }
 
         if (distance < edgeSlop) {
@@ -499,10 +499,10 @@ View* FocusFinder::findNearestTouchable(ViewGroup* root, int x, int y, int direc
 
 bool FocusFinder::isTouchCandidate(int x, int y,const RECT&destRect, int direction)const{
     switch (direction) {
-    case View::FOCUS_LEFT:  return destRect.x <= x && destRect.y <= y && y <= destRect.bottom();
-    case View::FOCUS_RIGHT: return destRect.x >= x && destRect.y <= y && y <= destRect.bottom();
-    case View::FOCUS_UP:    return destRect.y <= y && destRect.x <= x && x <= destRect.right();
-    case View::FOCUS_DOWN:  return destRect.y >= y && destRect.x <= x && x <= destRect.right();
+    case View::FOCUS_LEFT:  return destRect.left <= x && destRect.top <= y && y <= destRect.bottom();
+    case View::FOCUS_RIGHT: return destRect.left >= x && destRect.top <= y && y <= destRect.bottom();
+    case View::FOCUS_UP:    return destRect.top <= y && destRect.left <= x && x <= destRect.right();
+    case View::FOCUS_DOWN:  return destRect.top >= y && destRect.left <= x && x <= destRect.right();
     default:  return false;
     }
 }

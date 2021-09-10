@@ -569,8 +569,8 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         canvas.show_text(processBidi(line));
         if(mCaretPos>=lineStart&&mCaretPos<lineEnd){
             measureSize(line.substr(0,mCaretPos-lineStart),te,nullptr);
-            mCaretRect.x = x+te.x_advance;
-            mCaretRect.y = lineNum*mLineHeight;
+            mCaretRect.left = x+te.x_advance;
+            mCaretRect.top = lineNum*mLineHeight;
             mCaretRect.height= mLineHeight;
             measureSize(line.substr(mCaretPos-lineStart,1),te,nullptr);
             mCaretRect.width = te.x_advance;

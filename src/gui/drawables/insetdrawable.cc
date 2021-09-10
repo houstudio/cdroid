@@ -48,12 +48,12 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> InsetDrawable::mutateCons
 void InsetDrawable::onBoundsChange(const Rect&bounds){
     Rect r=bounds;
     Rect&mInset=mState->mInset;
-    r.x += mInset.x;
-    r.y += mInset.y;
-    r.width -=(mInset.x + mInset.width);
-    r.height-=(mInset.y + mInset.height);
+    r.left += mInset.left;
+    r.top += mInset.top;
+    r.width -=(mInset.left + mInset.width);
+    r.height-=(mInset.top + mInset.height);
     DrawableWrapper::onBoundsChange(r);
-    LOGD("inset=%d,%d,%d,%d",mInset.x,mInset.y,mInset.width,mInset.height);
+    LOGD("inset=%d,%d,%d,%d",mInset.left,mInset.top,mInset.width,mInset.height);
 }
 
 std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){

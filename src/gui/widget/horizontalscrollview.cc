@@ -618,30 +618,30 @@ bool HorizontalScrollView::pageScroll(int direction) {
     int width = getWidth();
 
     if (right) {
-        mTempRect.x = getScrollX() + width;
+        mTempRect.left = getScrollX() + width;
         int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(0);
-            if (mTempRect.x + width > view->getRight()) {
-                mTempRect.x = view->getRight() - width;
+            if (mTempRect.left + width > view->getRight()) {
+                mTempRect.left = view->getRight() - width;
             }
         }
     } else {
-        mTempRect.x = getScrollX() - width;
-        if (mTempRect.x < 0) {
-            mTempRect.x = 0;
+        mTempRect.left = getScrollX() - width;
+        if (mTempRect.left < 0) {
+            mTempRect.left = 0;
         }
     }
     mTempRect.width =  width;
 
-    return scrollAndFocus(direction, mTempRect.x, mTempRect.right());
+    return scrollAndFocus(direction, mTempRect.left, mTempRect.right());
 }
 
 bool HorizontalScrollView::fullScroll(int direction) {
     bool right = direction == View::FOCUS_RIGHT;
     int width = getWidth();
 
-    mTempRect.x = 0;
+    mTempRect.left = 0;
     mTempRect.width = width;
 
     if (right) {
@@ -649,11 +649,11 @@ bool HorizontalScrollView::fullScroll(int direction) {
         if (count > 0) {
             View* view = getChildAt(0);
             mTempRect.width = width;//view->getRight();
-            mTempRect.x = view->getRight()-width;//mTempRect.right - width;
+            mTempRect.left = view->getRight()-width;//mTempRect.right - width;
         }
     }
 
-    return scrollAndFocus(direction, mTempRect.x, mTempRect.right());
+    return scrollAndFocus(direction, mTempRect.left, mTempRect.right());
 }
 
 bool HorizontalScrollView::scrollAndFocus(int direction, int left, int right){
@@ -740,7 +740,7 @@ bool HorizontalScrollView::isWithinDeltaOfScreen(View* descendant, int delta){
     offsetDescendantRectToMyCoords(descendant, mTempRect);
 
     return (mTempRect.right() + delta) >= getScrollX()
-            && (mTempRect.x - delta) <= (getScrollX() + getWidth());
+            && (mTempRect.left - delta) <= (getScrollX() + getWidth());
 }
 
 void HorizontalScrollView::doScrollX(int delta) {
@@ -899,7 +899,7 @@ int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
     int fadingEdge = getHorizontalFadingEdgeLength();
 
     // leave room for left fading edge as long as rect isn't at very left
-    if (rect.x > 0) {
+    if (rect.left > 0) {
         screenLeft += fadingEdge;
     }
 
@@ -910,14 +910,14 @@ int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
 
     int scrollXDelta = 0;
 
-    if (rect.right() > screenRight && rect.x > screenLeft) {
+    if (rect.right() > screenRight && rect.left > screenLeft) {
         // need to move right to get it in view: move right just enough so
         // that the entire rectangle is in view (or at least the first
         // screen size chunk).
 
         if (rect.width > width) {
             // just enough to get screen size chunk on
-            scrollXDelta += (rect.x - screenLeft);
+            scrollXDelta += (rect.left - screenLeft);
         } else {
             // get entire rect at right of screen
             scrollXDelta += (rect.right() - screenRight);
@@ -928,7 +928,7 @@ int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
         int distanceToRight = right - screenRight;
         scrollXDelta = std::min(scrollXDelta, distanceToRight);
 
-    } else if (rect.x < screenLeft && rect.right() < screenRight) {
+    } else if (rect.left < screenLeft && rect.right() < screenRight) {
         // need to move right to get it in view: move right just enough so that
         // entire rectangle is in view (or at least the first screen
         // size chunk of it).
@@ -938,7 +938,7 @@ int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
             scrollXDelta -= (screenRight - rect.right());
         } else {
             // entire rect at left
-            scrollXDelta -= (screenLeft - rect.x);
+            scrollXDelta -= (screenLeft - rect.left);
         }
 
         // make sure we aren't scrolling any further than the left our content

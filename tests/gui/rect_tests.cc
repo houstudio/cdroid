@@ -18,11 +18,11 @@ TEST_F(RECTTEST,intersect){
     RECT rc1={0,0,100,100};
     RECT rc2={-40,-40,100,100};
     rc2.intersect(rc1);
-    printf("%d,%d %d,%d\r\n",rc2.x,rc2.y,rc2.width,rc2.height);
+    printf("%d,%d %d,%d\r\n",rc2.left,rc2.top,rc2.width,rc2.height);
 }
 TEST_F(RECTTEST,intersect2){
     RECT rc1={0,0,100,100};
     RECT rc2={-40,-40,100,100};
     rc1.intersect(rc2);
-    printf("%d,%d %d,%d\r\n",rc1.x,rc1.y,rc1.width,rc1.height);
+    printf("%d,%d %d,%d\r\n",rc1.left,rc1.top,rc1.width,rc1.height);
 }

@@ -94,16 +94,16 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
 
     if (mThickness > 0)  mThickness = Drawable::scaleFromDensity(mThickness, sourceDensity, targetDensity, true);
 
-    if (mOpticalInsets.x==0&&mOpticalInsets.y==0&&mOpticalInsets.width==0&&mOpticalInsets.height) {
-        const int left  = Drawable::scaleFromDensity(mOpticalInsets.x, sourceDensity, targetDensity, true);
-        const int top   = Drawable::scaleFromDensity( mOpticalInsets.y, sourceDensity, targetDensity, true);
+    if (mOpticalInsets.left==0&&mOpticalInsets.top==0&&mOpticalInsets.width==0&&mOpticalInsets.height) {
+        const int left  = Drawable::scaleFromDensity(mOpticalInsets.left, sourceDensity, targetDensity, true);
+        const int top   = Drawable::scaleFromDensity( mOpticalInsets.top, sourceDensity, targetDensity, true);
         const int right = Drawable::scaleFromDensity(mOpticalInsets.width, sourceDensity, targetDensity, true);
         const int bottom= Drawable::scaleFromDensity(mOpticalInsets.height, sourceDensity, targetDensity, true);
         mOpticalInsets.set(left, top, right, bottom);
     }
     if (mPadding.empty()) {
-        mPadding.x     = Drawable::scaleFromDensity(mPadding.x, sourceDensity, targetDensity, false);
-        mPadding.y     = Drawable::scaleFromDensity(mPadding.y, sourceDensity, targetDensity, false);
+        mPadding.left  = Drawable::scaleFromDensity(mPadding.left, sourceDensity, targetDensity, false);
+        mPadding.top   = Drawable::scaleFromDensity(mPadding.top, sourceDensity, targetDensity, false);
         mPadding.width = Drawable::scaleFromDensity(mPadding.width, sourceDensity, targetDensity, false);
         mPadding.height= Drawable::scaleFromDensity(mPadding.height, sourceDensity, targetDensity, false);
     }
@@ -513,7 +513,7 @@ bool GradientDrawable::ensureValidRect(){
         //if (mStrokePaint != nullptr)inset = mStrokePaint.getStrokeWidth() * 0.5f;
 
         GradientState&st =*mGradientState;
-        mRect.set(bounds.x + inset, bounds.y + inset, bounds.width - 2*inset, bounds.height - 2*inset);
+        mRect.set(bounds.left + inset, bounds.top + inset, bounds.width - 2*inset, bounds.height - 2*inset);
 
         std::vector<int>&gradientColors = st.mGradientColors;
         if (gradientColors.size()) {
@@ -523,19 +523,19 @@ bool GradientDrawable::ensureValidRect(){
              if (st.mGradient == LINEAR_GRADIENT) {
                  const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
                  switch (st.mOrientation) {
-                 case TOP_BOTTOM: x0 = r.x;     y0 = r.y;      x1 = x0;                y1 = level *r.height; break;
-                 case TR_BL:      x0 = r.width; y0 = r.y;      x1 = level * r.x;       y1 = level *r.height; break;
-                 case RIGHT_LEFT: x0 = r.width; y0 = r.y;      x1 = level * r.x;       y1 = y0;              break;
-                 case BR_TL:      x0 = r.width; y0 = r.height; x1 = level * r.x;       y1 = level * r.y;     break;
-                 case BOTTOM_TOP: x0 = r.x;     y0 = r.height; x1 = x0;                y1 = level * r.y;     break;
-                 case BL_TR:      x0 = r.x;     y0 = r.height; x1 = level * r.width;   y1 = level * r.y;     break;
-                 case LEFT_RIGHT: x0 = r.x;     y0 = r.y;      x1 = level * r.width;   y1 = y0;              break;
-                 default:/*TL_BR*/x0 = r.x;     y0 = r.y;      x1 = level * r.width;   y1 = level *r.height; break;
+                 case TOP_BOTTOM: x0 = r.left;  y0 = r.top;    x1 = x0;                y1 = level *r.height; break;
+                 case TR_BL:      x0 = r.width; y0 = r.top;    x1 = level * r.left;    y1 = level *r.height; break;
+                 case RIGHT_LEFT: x0 = r.width; y0 = r.top;    x1 = level * r.left;    y1 = y0;              break;
+                 case BR_TL:      x0 = r.width; y0 = r.height; x1 = level * r.left;    y1 = level * r.top;   break;
+                 case BOTTOM_TOP: x0 = r.left;  y0 = r.height; x1 = x0;                y1 = level * r.top;   break;
+                 case BL_TR:      x0 = r.left;  y0 = r.height; x1 = level * r.width;   y1 = level * r.top;   break;
+                 case LEFT_RIGHT: x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = y0;              break;
+                 default:/*TL_BR*/x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = level *r.height; break;
                  }
                  //mFillPaint.setShader(new LinearGradient(x0, y0, x1, y1, gradientColors, st.mPositions, Shader.TileMode.CLAMP));
             } else if (st.mGradient == RADIAL_GRADIENT) {
-                x0 = r.x + r.width* st.mCenterX;
-                y0 = r.y + r.height * st.mCenterY;
+                x0 = r.left + r.width* st.mCenterX;
+                y0 = r.top + r.height * st.mCenterY;
 
                 float radius = st.mGradientRadius;
                 if (st.mGradientRadiusType == RADIUS_TYPE_FRACTION) {
