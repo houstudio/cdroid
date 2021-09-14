@@ -737,7 +737,7 @@ Transformation* ViewGroup::getChildTransformation(){
 }
 
 int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
-	int specMode = MeasureSpec::getMode(spec);
+    int specMode = MeasureSpec::getMode(spec);
     int specSize = MeasureSpec::getSize(spec);
 
     int size = std::max(0, specSize - padding);
@@ -747,7 +747,7 @@ int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
 
     switch (specMode) {
     // Parent has imposed an exact size on us
-	case MeasureSpec::EXACTLY:
+    case MeasureSpec::EXACTLY:
         if (childDimension >= 0) {
             resultSize = childDimension;
             resultMode = MeasureSpec::EXACTLY;
@@ -764,7 +764,7 @@ int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
         break;
 
     // Parent has imposed a maximum size on us
-	case MeasureSpec::AT_MOST:
+    case MeasureSpec::AT_MOST:
         if (childDimension >= 0) {
             // Child wants a specific size... so be it
             resultSize = childDimension;
@@ -783,7 +783,7 @@ int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
         break;
 
     // Parent asked to see how big we want to be
-	case MeasureSpec::UNSPECIFIED:
+    case MeasureSpec::UNSPECIFIED:
         if (childDimension >= 0) {
             // Child wants a specific size... let him have it
             resultSize = childDimension;
@@ -1806,7 +1806,7 @@ void ViewGroup::notifyAnimationListener(){
     invalidate(true);
 }
 
-void ViewGroup::addFocusables(std::vector<View*>& views, int direction, int focusableMode)const{
+void ViewGroup::addFocusables(std::vector<View*>& views, int direction, int focusableMode){
     int focusableCount = views.size();
 
     const int descendantFocusability = getDescendantFocusability();

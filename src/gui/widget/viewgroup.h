@@ -227,7 +227,7 @@ public:
     void offsetRectBetweenParentAndChild(View* descendant,Rect& rect,bool offsetFromChildToParent, bool clipToBounds)const;
     void offsetChildrenTopAndBottom(int offset);
 
-    void addFocusables(std::vector<View*>& views, int direction, int focusableMode)const override;
+    void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)const override;
     void setOnHierarchyChangeListener(OnHierarchyChangeListener listener);
     bool restoreFocusNotInCluster();
@@ -288,8 +288,8 @@ public:
     bool dispatchKeyEvent(KeyEvent&)override;
     bool dispatchUnhandledMove(View* focused, int direction)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
-    void requestDisallowInterceptTouchEvent(bool disallowIntercept);
-    bool onInterceptTouchEvent(MotionEvent& evt);
+    virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
+    bool onInterceptTouchEvent(MotionEvent& evt)override;
 
     void jumpDrawablesToCurrentState()override;
     void setAddStatesFromChildren(bool addsStates);

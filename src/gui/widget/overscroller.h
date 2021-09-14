@@ -90,7 +90,7 @@ private:
     bool mFlywheel;
 public:
     OverScroller(Context* context);
-    OverScroller(Context* context, Interpolator* interpolator, bool flywheel);
+    OverScroller(Context* context, Interpolator* interpolator, bool flywheel=true);
     ~OverScroller();
     void setInterpolator(Interpolator* interpolator);
     void setFriction(float friction);

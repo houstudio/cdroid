@@ -2964,6 +2964,10 @@ bool View::isFocused()const {
     return (mPrivateFlags & PFLAG_FOCUSED) != 0;
 }
 
+bool View::isInEditMode()const{
+    return false;
+}
+
 bool View::isFocusedByDefault()const{
     return (mPrivateFlags3 & PFLAG3_FOCUSED_BY_DEFAULT) != 0;
 }
@@ -3499,11 +3503,11 @@ void View::addTouchables(std::vector<View*>& views)const {
     }
 }
 
-void View::addFocusables(std::vector<View*>& views,int direction)const{
+void View::addFocusables(std::vector<View*>& views,int direction){
     addFocusables(views, direction, isInTouchMode() ? FOCUSABLES_TOUCH_MODE : FOCUSABLES_ALL);
 }
 
-void View::addFocusables(std::vector<View*>& views,int direction,int focusableMode)const{
+void View::addFocusables(std::vector<View*>& views,int direction,int focusableMode){
     if (!isFocusable()) {
         return;
     }
@@ -3562,7 +3566,7 @@ void View::addKeyboardNavigationClusters(std::vector<View*>&views,int drection)c
     
 }
 
-std::vector<View*>View::getFocusables(int direction)const{
+std::vector<View*>View::getFocusables(int direction){
     std::vector<View*> result;
     addFocusables(result, direction);
     return result;
@@ -4681,7 +4685,7 @@ Matrix View::getMatrix() {
     ensureTransformationInfo();
     //mRenderNode.getMatrix(matrix);
     Matrix matrix=identity_matrix();
-    matrix.translate(mX,mY);
+    matrix.translate(mTranslationX,mTranslationY);
     matrix.scale(mScaleX,mScaleY);
     matrix.translate(mPivotX,mPivotY);
     matrix.rotate(mRotation);
@@ -4711,6 +4715,13 @@ float View::getZ()const{
 
 void View::setZ(float z){
     mZ=z;
+}
+
+float View::getElevation()const{
+    return .0f;
+}
+
+void View::setElevation(float elevation){
 }
 
 void View::setX(float x){

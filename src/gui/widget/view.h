@@ -678,6 +678,7 @@ public:
     bool requestAccessibilityFocus();
     bool isAccessibilityFocusedViewOrHost();
     virtual bool isFocused()const;
+    virtual bool isInEditMode()const;
     bool isFocusedByDefault()const;
     void setFocusedByDefault(bool isFocusedByDefault);
     // Enable & Visible
@@ -734,10 +735,10 @@ public:
     View*findUserSetNextKeyboardNavigationCluster(View*root,int direction)const;
     View*findKeyboardNavigationCluster()const;
     void addTouchables(std::vector<View*>& views)const;
-    virtual void addFocusables(std::vector<View*>& views,int direction)const;
-    virtual void addFocusables(std::vector<View*>& views,int direction,int focusableMode)const;
+    virtual void addFocusables(std::vector<View*>& views,int direction);
+    virtual void addFocusables(std::vector<View*>& views,int direction,int focusableMode);
 
-    std::vector<View*>getFocusables(int direction)const;
+    std::vector<View*>getFocusables(int direction);
     void setKeyboardNavigationCluster(bool);
     bool isKeyboardNavigationCluster()const;
     virtual void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)const;
@@ -786,6 +787,8 @@ public:
     float getX()const;//x pos to screen
     float getY()const;//y pos to screen
     float getZ()const;
+    float getElevation()const;
+    void setElevation(float elevation);
     float getTranslationX()const;
     float getTranslationY()const;
     float getTranslationZ()const;

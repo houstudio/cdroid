@@ -36,7 +36,7 @@ void Transformation::set(const Transformation& t) {
 
 void Transformation::compose(Transformation t) {
     mAlpha *= t.getAlpha();
-    //mMatrix.preConcat(t.getMatrix());
+    mMatrix.multiply(mMatrix,t.getMatrix());//preConcat(t.getMatrix());
     if (t.mHasClipRect) {
         Rect bounds = t.getClipRect();
         if (mHasClipRect) {
@@ -50,7 +50,7 @@ void Transformation::compose(Transformation t) {
 
 void Transformation::postCompose(Transformation t) {
     mAlpha *= t.getAlpha();
-    //mMatrix.postConcat(t.getMatrix());
+    mMatrix.multiply(mMatrix,t.getMatrix());//postConcat(t.getMatrix());
     if (t.mHasClipRect) {
         Rect bounds = t.getClipRect();
         if (mHasClipRect) {
