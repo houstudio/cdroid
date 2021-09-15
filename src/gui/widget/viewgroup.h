@@ -185,7 +185,7 @@ protected:
     std::vector<int> onCreateDrawableState()const override;
     void dispatchSetPressed(bool pressed)override;
     virtual int getChildDrawingOrder(int childCount, int i);
-    int buildOrderedChildList(std::vector<View*>&preSortedChildren);
+    std::vector<View*> buildOrderedChildList();
 
     virtual bool getChildStaticTransformation(View* child, Transformation* t);
     Transformation* getChildTransformation();
@@ -210,6 +210,7 @@ public:
 	
     void dispatchSetSelected(bool selected)override;
     void dispatchSetActivated(bool activated)override;
+    virtual std::vector<View*> buildTouchDispatchChildList();
 
     View*focusSearch(View*focused,int direction)const;
     View*getFocusedChild(){return mFocused;}
@@ -285,6 +286,8 @@ public:
     int getNestedScrollAxes()const;
     bool onNestedPreFling(View* target, float velocityX, float velocityY);
 
+    void setMotionEventSplittingEnabled(bool split);
+    bool isMotionEventSplittingEnabled()const; 
     bool dispatchKeyEvent(KeyEvent&)override;
     bool dispatchUnhandledMove(View* focused, int direction)override;
     bool dispatchTouchEvent(MotionEvent& event)override;

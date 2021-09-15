@@ -1,4 +1,4 @@
-add_subdirectory(freetype-2.10.0)
+add_subdirectory(freetype-2.11.0)
 add_subdirectory(libpng)
 add_subdirectory(libjpeg-turbo)
 add_subdirectory(pixman)

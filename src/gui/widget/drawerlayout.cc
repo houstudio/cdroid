@@ -31,6 +31,9 @@ void DrawerLayout::initView(){
 
     // So that we can catch the back button
     setFocusableInTouchMode(true);
+
+    setMotionEventSplittingEnabled(false);
+    mDrawerElevation = DRAWER_ELEVATION * density;
 }
 
 DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)

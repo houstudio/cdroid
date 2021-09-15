@@ -213,7 +213,8 @@ void View::initView(){
 
     mX = mY = mZ =.0f;
     mAlpha = mScaleX = mScaleY=1.f;
-    mTranslationX = mTranslationY =.0f; 
+    mTranslationX = mTranslationY =.0f;
+    mRotation =.0f; 
 
 
     mHasPerformedLongPress = false;
@@ -2944,6 +2945,8 @@ bool View::hasFlag(int flag) const {
 
 void View::onAttached(){
     onSizeChanged(mWidth,mHeight,-1,-1);
+    mPivotX =(float)mWidth/2.f;
+    mPivotY =(float)mHeight/2.f;
     refreshDrawableState();
     invalidate(true);
 }
@@ -4676,9 +4679,13 @@ void View::ensureTransformationInfo(){
 bool View::hasIdentityMatrix(){
     const bool rc= (mX==.0f) && (mY==.0f) && (mZ==.0f) &&
        (mTranslationX==.0f) && (mTranslationY==.0f) &&
-       (mScaleX ==1.f) && (mScaleY==1.f);
+       (mScaleX ==1.f) && (mScaleY==1.f) && (mRotation==.0f);
     LOGV_IF(rc==false,"mXYZ=%f,%f,%f  translation=%f,%f scale=%f,%f",mX,mY,mZ,mTranslationX,mTranslationY,mScaleX,mScaleY);
     return rc;
+}
+
+static inline float sdot(float a,float b,float c,float d){
+    return a * b + c * d;
 }
 
 Matrix View::getMatrix() {
@@ -4687,10 +4694,14 @@ Matrix View::getMatrix() {
     Matrix matrix=identity_matrix();
     matrix.translate(mTranslationX,mTranslationY);
     matrix.scale(mScaleX,mScaleY);
-    matrix.translate(mPivotX,mPivotY);
-    matrix.rotate(mRotation);
-    matrix.translate(-mPivotX,-mPivotY);
-    LOGE_IF(mScaleX==.0f||mScaleY==.0f,"scalexy=%f,%f scaled value cant be zero!!!",mScaleX,mScaleY);
+
+    const float radians=mRotation*M_PI*2/360.f;
+    const float fsin=sin(radians);
+    const float fcos=cos(radians);
+    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1-fcos,mPivotX), sdot(fsin,mPivotX,1-fcos,mPivotY));
+    matrix.multiply(matrix,rt);
+
+    LOGV_IF(mRotation!=.0f||mScaleX==.0f||mScaleY==.0f,"scalexy=%f,%f rotation=%f",mScaleX,mScaleY,mRotation);
     return matrix;
 }
 
@@ -4779,6 +4790,8 @@ float View::getRotation()const{
     return mRotation;
 }
 
+/* Sets the degrees that the view is rotated around the pivot point. Increasing values
+ * result in clockwise rotation.*/
 void View::setRotation(float rotation){
     mRotation=rotation;
     invalidateParentIfNeededAndWasQuickRejected();
