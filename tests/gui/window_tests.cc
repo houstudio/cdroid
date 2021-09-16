@@ -292,23 +292,14 @@ TEST_F(WINDOW,TOAST_SINGLE){
    app.exec();
 }
 
-class OrderWindow:public Window{
-public:
-    OrderWindow(int w,int h):Window(0,0,w,h){
-    }
-    std::vector<View*>getOrderedChilden(){
-        std::vector<View*>vs;
-        buildOrderedChildList(vs);
-        return vs;
-    }
-};
+
 
 TEST_F(WINDOW,OrderedChildList){
     App app;
-    OrderWindow*ow=new OrderWindow(640,480);
+    Window*ow=new Window(0,0,640,480);
     for(int i=0;i<4;i++)
         ow->addView(new TextView(std::string("textview")+std::to_string(i),100,40)).setId(i).setZ(4-i);
-    std::vector<View*>views=ow->getOrderedChilden();
+    std::vector<View*>views=ow->buildTouchDispatchChildList();
     ASSERT_EQ(views[0]->getId(),3);
     ASSERT_EQ(views[3]->getId(),0);
     app.exec();

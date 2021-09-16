@@ -96,6 +96,24 @@ void Canvas::rotate(float degrees,float px,float py){
     transform(mtx);
 }
 
+Rect Canvas::mapRect(const Matrix& mtx,const Rect& r){
+    double pt[8];
+    pt[0]=r.left ;   pt[1]=r.top;
+    pt[2]=r.right(); pt[3]=r.top;
+    pt[4]=r.right(); pt[5]=r.bottom();
+    pt[6]=r.left;    pt[7]=r.bottom();
+    double x1=INT_MAX,y1=INT_MAX;
+    double x2=INT_MIN,y2=INT_MIN;
+    for(int i=0;i<8;i+=2){
+       mtx.transform_point(pt[i],pt[i+1]);
+       x1 = std::min(x1,pt[i]);
+       y1 = std::min(y1,pt[i+1]);
+       x2 = std::max(x2,pt[i]);
+       y2 = std::max(y2,pt[i+1]);
+    }
+    return Rect::MakeLTRB((int)std::floor(x1),(int)std::floor(y1),(int)std::ceil(x2),(int)std::ceil(y2));
+}
+
 void Canvas::get_text_size(const std::string&text,int*width,int *height){
     TextExtents te;
     get_text_extents(text,te);

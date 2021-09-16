@@ -1410,12 +1410,32 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 
     int location[2]={child->mLeft,child->mTop};
 
+    Matrix childMatrix = child->getMatrix();
     //if (child->mLayerType != LAYER_TYPE_NONE)
     {
         mPrivateFlags |= PFLAG_INVALIDATED;
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
     }
 
+    if(!child->hasIdentityMatrix()||(mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0){
+         Matrix transformMatrix;
+         if((mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS)!=0){
+             Transformation t;
+             bool transformed = getChildStaticTransformation(child,&t);
+             if(transformed){
+                  transformMatrix=t.getMatrix();
+                  if(!child->hasIdentityMatrix())
+                       transformMatrix.multiply(transformMatrix,childMatrix);
+             }else
+                  transformMatrix=childMatrix;
+         }else{
+             transformMatrix=childMatrix;
+         }
+         Rect boundingRect =dirty;
+         dirty= Canvas::mapRect(transformMatrix,dirty);
+         LOGV("(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
+                dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation());
+    }
     ViewGroup*parent=this;
     View* view = parent;
     do {
@@ -1443,19 +1463,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         parent = parent->invalidateChildInParent(location, dirty);
         if ( view && !view->hasIdentityMatrix() ) { // Account for transform on current parent
             Matrix m = view->getMatrix();
-            Rect boundingRect = dirty;//attachInfo.mTmpTransformRect;
-            double x = dirty.left;
-            double y = dirty.top;
-            m.transform_point(x,y);
-            dirty.left= (int)x;
-            dirty.top = (int)y;
-            x = dirty.width;
-            y = dirty.height;
-            m.transform_distance(x,y);
-            dirty.width = (int)x;
-            dirty.height= (int)y;//m.mapRect(boundingRect);
-            LOGV("(%d,%d,%d,%d)-->(%d,%d,%d,%d)",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
-                dirty.left,dirty.top,dirty.width,dirty.height);
+            dirty= Canvas::mapRect(m,dirty);
         }
     } while (parent);
 

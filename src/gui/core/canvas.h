@@ -50,6 +50,7 @@ public:
     void draw_ninepatch(const RefPtr<ImageSurface>img,const RECT& rect,const std::vector<NinePatchBlock>&horz,
             const std::vector<NinePatchBlock>&vert);
     void rotate(float degrees,float px,float py);
+    static Rect mapRect(const Matrix& mtx,const Rect& r);
     void dump2png(const char*fname);
     void invalidate(const Rect&r);
     void invalidate(const RefPtr<Region>&rgn);
