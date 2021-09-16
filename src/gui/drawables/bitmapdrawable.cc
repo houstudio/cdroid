@@ -261,26 +261,28 @@ void BitmapDrawable::draw(Canvas&canvas){
     updateDstRectAndInsetsIfDirty();
 
     const float sw=mBitmapWidth, sh=mBitmapHeight;
-    float dx =mBounds.left     , dy = mBounds.top;
-    float dw =mBounds.width , dh = mBounds.height;
+    float dx = mBounds.left    , dy = mBounds.top;
+    float dw = mBounds.width   , dh = mBounds.height;
     float fx = dw / sw  , fy = dh / sh;
     const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
 
     //canvas.save();
-    canvas.rectangle(dx,dy,dw,dh);
+    canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
     canvas.clip();
-    if (mBounds.width !=mBitmapWidth  || mBounds.height != mBitmapHeight) {
+    const bool scaled=(mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight);
+    if (scaled) {
        canvas.scale(fx,fy);
        dx /= fx;       dy /= fy;
        dw /= fx;       dh /= fy;
     }
 
-    canvas.set_source(mBitmapState->mBitmap, dx, dy);
+    canvas.set_source(mBitmapState->mBitmap, dx, dy );
+    
     cairo_pattern_set_filter(cairo_get_source(canvas.cobj()), CAIRO_FILTER_BEST);
     //canvas.get_source()->set_filter(Pattern::Filter::BEST);
     canvas.get_source()->set_extend(Pattern::Extend::NONE);
     canvas.paint_with_alpha(alpha);
-    canvas.scale(1./fx,1./fy);
+    if(scaled)canvas.scale(1./fx,1./fy);
     //canvas.restore();
     if(mTintFilter)mTintFilter->apply(canvas,mBounds);
 }

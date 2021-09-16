@@ -78,10 +78,10 @@ bool Rect::intersect(const Rect&a,const Rect&b){
 
 bool Rect::intersect(int l, int t, int w, int h) {
     if (this->left < l+w && l < this->right() && this->top < t+h && t < this->bottom()) {
-        this->width =std::min(l+w,this->right())-this->left;
-        this->height=std::min(t+h,this->bottom())-this->top;
-        this->left=std::max(this->left,l);
-        this->top=std::max(this->top,t);
+        this->width = std::min(l+w,this->right())-this->left;
+        this->height= std::min(t+h,this->bottom())-this->top;
+        this->left  = std::max(this->left,l);
+        this->top   = std::max(this->top,t);
         return true;
     }
     return false;
@@ -97,19 +97,19 @@ bool Rect::contains(const Rect&a)const{
 void Rect::Union(const Rect&b){
     const int mx=std::min(left,b.left);
     const int my=std::min(top,b.top);
-    width=std::max(right(),b.right())-mx;
-    height=std::max(bottom(),b.bottom())-my;
-    left=mx;
-    left=my;
+    width = std::max(right(),b.right())-mx;
+    height= std::max(bottom(),b.bottom())-my;
+    left= mx;
+    top = my;
 }
 
 void Rect::Union(int x,int y,int w,int h){
     const int mx=std::min(left,x);
     const int my=std::min(top,y);
-    width=std::max(right(),x+w)-mx;
-    height=std::max(bottom(),y+h)-my;
-    left=mx;
-    left=my;
+    width = std::max(right(),x+w)-mx;
+    height= std::max(bottom(),y+h)-my;
+    left= mx;
+    top = my;
 }
 
 }//end namespace
