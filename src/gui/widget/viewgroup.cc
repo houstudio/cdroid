@@ -1232,7 +1232,6 @@ void ViewGroup::onDebugDrawMargins(Canvas& canvas){
 void ViewGroup::drawInvalidateRegion(Canvas&canvas){
     int num=mInvalidRgn->get_num_rectangles();
     canvas.set_source_rgb(0,1,0);
-    canvas.rectangle(0,0,mWidth,mHeight);
     for(int i=0;i<num;i++){
         RectangleInt r=mInvalidRgn->get_rectangle(i);
         canvas.rectangle(r.x,r.y,r.width,r.height);
@@ -1399,9 +1398,9 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     }
     //if (usingRenderNodeProperties) canvas.insertInorderBarrier();
     
-    if (DEBUG_DRAW)onDebugDraw(canvas);
+    if (DEBUG_DRAW) onDebugDraw(canvas);
 
-    drawInvalidateRegion(canvas);
+    if (DEBUG_DRAW) drawInvalidateRegion(canvas);
 
     if (clipToPadding) {
         while(clipSaveCount--)canvas.restore();
@@ -1426,7 +1425,9 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
 
 void ViewGroup::invalidateChild(View*child,Rect&dirty){
     if(mAttachInfo==nullptr) return;
-
+    
+    ViewGroup* parent=this;
+    
     const bool drawAnimation = (child->mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0;
 
     const bool isOpaque = child->isOpaque() && !drawAnimation 
@@ -1437,8 +1438,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
     int location[2]={child->mLeft,child->mTop};
 
     Matrix childMatrix = child->getMatrix();
-    //if (child->mLayerType != LAYER_TYPE_NONE)
-    {
+    if (true){//child->mLayerType != LAYER_TYPE_NONE){
         mPrivateFlags |= PFLAG_INVALIDATED;
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
     }
@@ -1462,7 +1462,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
          LOGV("(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
                 dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation());
     }
-    ViewGroup*parent=this;
+	
     View* view = parent;
     do {
         view=parent;
@@ -1497,7 +1497,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
-    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
+    if (1||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE))
                 != FLAG_OPTIMIZE_INVALIDATE) {

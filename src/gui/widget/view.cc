@@ -1600,6 +1600,7 @@ void View::drawBackground(Canvas&canvas){
     if(mBackground==nullptr)
         return ;
     mBackground->setBounds(0, 0,getWidth(),getHeight());
+    mBackgroundSizeChanged =false;
     if(mScrollX||mScrollY){
         canvas.translate(mScrollX,mScrollY);
         mBackground->draw(canvas);
@@ -2599,20 +2600,59 @@ View& View::setBackgroundResource(const std::string&resid){
 }
 
 View& View::setBackgroundDrawable(Drawable*background){
+    computeOpaqueFlags();
+    if(background==mBackground) return*this;
+
+    bool bRequestLayout = false;
     if(mBackground!=nullptr){
-        mBackground->setCallback(nullptr);
-        delete mBackground;
+        if(isAttachedToWindow()) mBackground->setVisible(false,false);
+        mBackground->setCallback(this);
+        unscheduleDrawable(*mBackground);
     }
-    mBackground = background;
-    if(mBackground!=nullptr){
+    if(background){        
         Rect padding;
+        resetResolvedDrawables();//Internal();
+        background->setLayoutDirection(getLayoutDirection());  
+       
         if(background->getPadding(padding)){
+            resetResolvedDrawables();//Internal();
+            //switch(background->getLayoutDirection()){
             setPadding(padding.left,padding.top,padding.width,padding.height);
         }
+        bRequestLayout= mBackground==nullptr||mBackground->getMinimumWidth()!=background->getMinimumWidth()||
+               mBackground->getMinimumHeight()!=background->getMinimumHeight();
+
+        mBackground=background; 
         if(background->isStateful())
             background->setState(getDrawableState());
+        if(isAttachedToWindow())
+            background->setVisible(getVisibility()==VISIBLE,false);
+        applyBackgroundTint();
         background->setCallback(this);
+        if( (mPrivateFlags & PFLAG_SKIP_DRAW)!=0 ){
+            mPrivateFlags &= ~PFLAG_SKIP_DRAW;
+            bRequestLayout=true;
+        }
+    }else{
+        mBackground =nullptr;
+        if ((mViewFlags & WILL_NOT_DRAW) != 0  && (mDefaultFocusHighlight == nullptr)
+              && (mForegroundInfo == nullptr || mForegroundInfo->mDrawable == nullptr)) {
+          mPrivateFlags |= PFLAG_SKIP_DRAW;
+        }
+
+        /* When the background is set, we try to apply its padding to this
+         * View. When the background is removed, we don't touch this View's
+         * padding. This is noted in the Javadocs. Hence, we don't need to
+         * requestLayout(), the invalidate() below is sufficient.*/
+
+        // The old background's minimum size could have affected this
+        // View's layout, so let's requestLayout
+        bRequestLayout = true;
     }
+    computeOpaqueFlags();
+    if(bRequestLayout) requestLayout();
+    mBackgroundSizeChanged = true;
+    invalidate(true);
     return *this;
 }
 
@@ -3059,8 +3099,6 @@ void View::onAttachedToWindow(){
     onSizeChanged(mWidth,mHeight,-1,-1);
     mPivotX =(float)mWidth/2.f;
     mPivotY =(float)mHeight/2.f;
-    refreshDrawableState();
-    invalidate(true);
 }
 
 void View::onDetachedFromWindow(){
@@ -5125,6 +5163,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
 View::AttachInfo::AttachInfo(){
     mHardwareAccelerated =false;
+    mWindowVisibility =VISIBLE;
     mApplicationScale =1.0f;
     mDrawingTime  = 0;
     mKeepScreenOn = true;
