@@ -134,6 +134,8 @@ public:
     }
 };
 
+bool View::DEBUG_DRAW = false;
+
 View::View(int w,int h){
     initView();
     mContext=&App::getInstance();
@@ -208,6 +210,7 @@ void View::initView(){
     mID       = NO_ID;
     mContext  = nullptr;
     mParent   = nullptr;
+    mAttachInfo = nullptr;
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
 
@@ -215,7 +218,6 @@ void View::initView(){
     mAlpha = mScaleX = mScaleY=1.f;
     mTranslationX = mTranslationY =.0f;
     mRotation =.0f; 
-
 
     mHasPerformedLongPress = false;
     mInContextButtonPress  = false;
@@ -259,7 +261,7 @@ void View::initView(){
 }
 
 View::~View(){
-    if(mParent)onDettached();
+    if(mParent)onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
@@ -270,6 +272,15 @@ View::~View(){
     delete mRoundScrollbarRenderer;
     delete mCurrentAnimation;
     delete mTransformationInfo;
+}
+
+bool View::debugDraw()const {
+    return DEBUG_DRAW|| (mAttachInfo && mAttachInfo->mDebugLayout);
+}
+
+int View::dipsToPixels(int dips)const{
+    float scale=1.f;
+    return (int)(dips*scale+0.5f); 
 }
 
 View* View::findViewById(int id)const{
@@ -479,7 +490,7 @@ bool View::isDefaultFocusHighlightNeeded(const Drawable* background,const Drawab
             && (foreground == nullptr || !foreground->isStateful()
             || !foreground->hasFocusStateSpecified());
     return !isInTouchMode() && getDefaultFocusHighlightEnabled() 
-	           && lackFocusState;//&& isAttachedToWindow() && sUseDefaultFocusHighlight;
+	           && lackFocusState && isAttachedToWindow();// && sUseDefaultFocusHighlight;
 }
 
 void View::switchDefaultFocusHighlight() {
@@ -494,6 +505,31 @@ void View::switchDefaultFocusHighlight() {
             setDefaultFocusHighlight(nullptr);
         }
     }
+}
+
+void View::debugDrawFocus(Canvas&canvas){
+    if (!isFocused()) return;
+    const int cornerSquareSize = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
+    const int l = mScrollX;
+    const int r = l + mWidth;
+    const int t = mScrollY;
+    const int b = t + mHeight;
+
+    canvas.set_color(DEBUG_CORNERS_COLOR);
+
+    // Draw squares in corners.
+    canvas.rectangle(l, t, cornerSquareSize , cornerSquareSize);
+    canvas.rectangle(r - cornerSquareSize, t, cornerSquareSize,cornerSquareSize);
+    canvas.rectangle(l, b - cornerSquareSize, cornerSquareSize, cornerSquareSize);
+    canvas.rectangle(r - cornerSquareSize, b - cornerSquareSize, cornerSquareSize, cornerSquareSize);
+    canvas.fill();
+
+    // Draw big X across the view.
+    canvas.move_to(l, t);
+    canvas.line_to(r, b);
+    canvas.move_to(l, b);
+    canvas.line_to(r, t);
+    canvas.stroke();
 }
 
 void View::drawDefaultFocusHighlight(Canvas& canvas){
@@ -743,6 +779,71 @@ void View::setNestedScrollingEnabled(bool benabled) {
 bool View::isNestedScrollingEnabled()const{
     return (mPrivateFlags3 & PFLAG3_NESTED_SCROLLING_ENABLED) ==
                 PFLAG3_NESTED_SCROLLING_ENABLED;
+}
+
+int View::combineVisibility(int vis1, int vis2) {
+    // This works because VISIBLE < INVISIBLE < GONE.
+    return std::max(vis1, vis2);
+}
+
+void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
+    mAttachInfo = info;
+    mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
+    onAttachedToWindow();
+    int vis = info->mWindowVisibility;
+    if (vis != GONE) {
+        onWindowVisibilityChanged(vis);
+        if (isShown()) {
+            // Calling onVisibilityAggregated directly here since the subtree will also
+            // receive dispatchAttachedToWindow and this same call
+            onVisibilityAggregated(vis == VISIBLE);
+        }
+    }
+
+    // Send onVisibilityChanged directly instead of dispatchVisibilityChanged.
+    // As all views in the subtree will already receive dispatchAttachedToWindow
+    // traversing the subtree again here is not desired.
+    onVisibilityChanged(*this, visibility);
+
+    if ((mPrivateFlags&PFLAG_DRAWABLE_STATE_DIRTY) != 0) {
+        // If nobody has evaluated the drawable state yet, then do it now.
+        refreshDrawableState();
+    }
+}
+
+void View::dispatchDetachedFromWindow(){
+    onDetachedFromWindow();
+    mAttachInfo = nullptr;
+}
+
+void View::onWindowVisibilityChanged(int visibility) {
+    if (visibility == VISIBLE) {
+        //initialAwakenScrollBars();
+        if(mScrollCache)awakenScrollBars(mScrollCache->scrollBarDefaultDelayBeforeFade*4,true);
+    }
+}
+
+void View::onVisibilityAggregated(bool isVisible) {
+    // Update our internal visibility tracking so we can detect changes
+    bool oldVisible = (mPrivateFlags3 & PFLAG3_AGGREGATED_VISIBLE) != 0;
+    mPrivateFlags3 = isVisible ? (mPrivateFlags3 | PFLAG3_AGGREGATED_VISIBLE)
+            : (mPrivateFlags3 & ~PFLAG3_AGGREGATED_VISIBLE);
+    if (isVisible && mAttachInfo != nullptr) {
+        if(mScrollCache)awakenScrollBars(mScrollCache->scrollBarDefaultDelayBeforeFade*4,true);
+    }
+
+    Drawable*dr= mBackground;
+    if (dr && isVisible != dr->isVisible()) {
+        dr->setVisible(isVisible, false);
+    }
+    dr = mDefaultFocusHighlight;
+    if (dr && isVisible != dr->isVisible()) {
+        dr->setVisible(isVisible, false);
+    }
+    dr = mForegroundInfo ? mForegroundInfo->mDrawable : nullptr;
+    if (dr && isVisible != dr->isVisible()) {
+        dr->setVisible(isVisible, false);
+    }
 }
 
 bool View::dispatchNestedScroll(int dxConsumed, int dyConsumed,
@@ -1487,6 +1588,10 @@ int View::getFadeHeight(bool offsetRequired) {
     return mHeight - mPaddingBottom - padding;
 }
 
+bool View::isHardwareAccelerated()const{
+    return mAttachInfo && mAttachInfo->mHardwareAccelerated;
+}
+
 void View::dispatchDraw(Canvas&){
     //for inherited view(container) to draw children...
 }
@@ -1546,7 +1651,7 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
 
     Transformation* t = parent->getChildTransformation();
     bool more = a->getTransformation(drawingTime, *t, 1.f);
-    if (scalingRequired /*&& mAttachInfo.mApplicationScale != 1.f*/) {
+    if (scalingRequired && mAttachInfo->mApplicationScale != 1.f) {
         if (parent->mInvalidationTransformation == nullptr) {
             parent->mInvalidationTransformation = new Transformation();
         }
@@ -1634,7 +1739,7 @@ void View::draw(Canvas&canvas){
         // Step 7, draw the default focus highlight
         drawDefaultFocusHighlight(canvas);
 
-        //if (debugDraw()) debugDrawFocus(canvas);
+        if (debugDraw()) debugDrawFocus(canvas);
 
         // we're done...
         return;
@@ -1747,7 +1852,7 @@ void View::draw(Canvas&canvas){
     }*/
     // Step 6, draw decorations (foreground, scrollbars)
     onDrawForeground(canvas);
-    //if (debugDraw()) debugDrawFocus(canvas);
+    if (debugDraw()) debugDrawFocus(canvas);
 }
 
 bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
@@ -1764,7 +1869,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
 
     Transformation* transformToApply = nullptr;
     bool concatMatrix = false;
-    bool scalingRequired = false;//mAttachInfo != nullptr && mAttachInfo.mScalingRequired;
+    bool scalingRequired = mAttachInfo && mAttachInfo->mApplicationScale!=1.f;//mScalingRequired;
     Animation* a = getAnimation();
     if (a != nullptr) {
         more = applyLegacyAnimation(parent, drawingTime, a, scalingRequired);
@@ -1864,8 +1969,8 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                 canvas.save();restoreTo++;
             }
             // mAttachInfo cannot be null, otherwise scalingRequired == false
-            //float scale = 1.0f / mAttachInfo.mApplicationScale;
-            //canvas.scale(scale, scale);
+            float scale = 1.0f / mAttachInfo->mApplicationScale;
+            canvas.scale(scale, scale);
         }
     }
 
@@ -1988,7 +2093,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                 mLayerPaint.setAlpha((int) (alpha * layerPaintAlpha));
             }
             canvas.drawBitmap(cache, 0.0f, 0.0f, mLayerPaint);
-            if (alpha < 1) {
+            if (alpha < 1){
                 mLayerPaint.setAlpha(layerPaintAlpha);
             }
         }*/
@@ -2141,6 +2246,10 @@ void View::setTextDirection(int textDirection){
 
 int View::getTextDirection()const{
     return (mPrivateFlags2 & PFLAG2_TEXT_DIRECTION_RESOLVED_MASK) >> PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT;
+}
+
+bool View::isAttachedToWindow()const{
+    return mAttachInfo!=nullptr; 
 }
 
 void View::setWillNotDraw(bool willNotDraw) {
@@ -2577,7 +2686,7 @@ View& View::setForeground(Drawable* foreground){
     }
 
     if (mForegroundInfo->mDrawable != nullptr) {
-        if (true/*isAttachedToWindow()*/) {
+        if (isAttachedToWindow()) {
             mForegroundInfo->mDrawable->setVisible(false, false);
         }
         mForegroundInfo->mDrawable->setCallback(nullptr);
@@ -2595,7 +2704,7 @@ View& View::setForeground(Drawable* foreground){
             foreground->setState(getDrawableState());
         }
         applyForegroundTint();
-        if (true/*isAttachedToWindow()*/) {
+        if (isAttachedToWindow()) {
             foreground->setVisible(isShown(), false);
         }
             // Set callback last, since the view may still be initializing.
@@ -2716,7 +2825,7 @@ void View::setDefaultFocusHighlight(Drawable* highlight){
         if (highlight->isStateful()) {
             highlight->setState(getDrawableState());
         }
-        /*if (isAttachedToWindow())*/highlight->setVisible(isShown(), false);
+        if (isAttachedToWindow()) highlight->setVisible(isShown(), false);
         // Set callback last, since the view may still be initializing.
         highlight->setCallback(this);
     } else if ((mViewFlags & WILL_NOT_DRAW) != 0 && mBackground == nullptr
@@ -2827,7 +2936,7 @@ View& View::setFlags(int flags,int mask) {
             // time it is visible and gets invalidated
             mPrivateFlags |= PFLAG_DRAWN;
         }
-        //if (mAttachInfo != null) mAttachInfo.mViewVisibilityChanged = true;
+        if (mAttachInfo) mAttachInfo->mViewVisibilityChanged = true;
     }
 
     /* Check if the VISIBLE bit has changed */
@@ -2847,12 +2956,12 @@ View& View::setFlags(int flags,int mask) {
                 //clearAccessibilityFocus();
             }
         }
-        //if (mAttachInfo != null)mAttachInfo.mViewVisibilityChanged = true;
+        if(mAttachInfo)mAttachInfo->mViewVisibilityChanged = true;
     }
 
     if ((changed & VISIBILITY_MASK) != 0) {
         // If the view is invisible, cleanup its display list to free up resources
-        if (newVisibility != VISIBLE /*&& mAttachInfo != null*/) {
+        if (newVisibility != VISIBLE && mAttachInfo ) {
             //cleanupDraw();
         }
 
@@ -2861,7 +2970,7 @@ View& View::setFlags(int flags,int mask) {
             mParent->invalidate();
         }
 
-        if (true/*mAttachInfo != null*/) {
+        if (mAttachInfo != nullptr) {
             dispatchVisibilityChanged(*this, newVisibility);
 
             // Aggregated visibility changes are dispatched to attached views
@@ -2943,7 +3052,10 @@ bool View::hasFlag(int flag) const {
     return (mViewFlags&flag)==flag;
 }
 
-void View::onAttached(){
+void View::onAttachedToWindow(){
+    mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
+    jumpDrawablesToCurrentState();
+    
     onSizeChanged(mWidth,mHeight,-1,-1);
     mPivotX =(float)mWidth/2.f;
     mPivotY =(float)mHeight/2.f;
@@ -2951,7 +3063,7 @@ void View::onAttached(){
     invalidate(true);
 }
 
-void View::onDettached(){
+void View::onDetachedFromWindow(){
     InputMethodManager::getInstance().onViewDetachedFromWindow((View*)this); 
 }
 
@@ -3149,11 +3261,44 @@ bool View::isPressed()const{
 void View::dispatchSetPressed(bool pressed){
 }
 
+void View::dispatchWindowFocusChanged(bool hasFocus){
+    onWindowFocusChanged(hasFocus);
+}
+
+void View::onWindowFocusChanged(bool hasWindowFocus){
+    //InputMethodManager imm = InputMethodManager.peekInstance();
+    if (!hasWindowFocus) {
+       if (isPressed()) {
+           setPressed(false);
+       }
+       mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
+       /*if (imm != null && (mPrivateFlags & PFLAG_FOCUSED) != 0) {
+           imm.focusOut(this);
+       }*/
+       removeLongPressCallback();
+       removeTapCallback();
+       onFocusLost();
+    }/* else if (imm != null && (mPrivateFlags & PFLAG_FOCUSED) != 0) {
+        imm.focusIn(this);
+    }*/
+    refreshDrawableState();
+
+}
+
+bool View::hasWindowFocus()const{
+    return mAttachInfo && mAttachInfo->mHasWindowFocus;
+}
+
+int View::getWindowVisibility()const{
+    return mAttachInfo  ? mAttachInfo->mWindowVisibility : GONE;
+}
+
 void View::dispatchVisibilityChanged(View& changedView,int visibility){
     onVisibilityChanged(changedView, visibility); 
 }
 
 void View::onVisibilityChanged(View& changedView,int visibility){
+    //nothing
 }
 
 bool View::isDirty()const{
@@ -3203,6 +3348,22 @@ void View::buildDrawingCache(bool autoScale){
     else mUnscaledDrawingCache =bmp;
 }
 
+void View::invalidateViewProperty(bool invalidateParent, bool forceRedraw) {
+    if (!isHardwareAccelerated()
+             //|| !mRenderNode.isValid()
+             || (mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0) {
+        if (invalidateParent) {
+             invalidateParentCaches();
+        }
+        if (forceRedraw) {
+             mPrivateFlags |= PFLAG_DRAWN; // force another invalidation with the new orientation
+        }
+        invalidate(false);
+    } else {
+        //damageInParent();
+    }
+}
+
 void View::invalidateParentCaches(){
     if(mParent)mParent->mPrivateFlags |= PFLAG_INVALIDATED;
 }
@@ -3239,12 +3400,12 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
         }
 
         // Propagate the damage rectangle to the parent view.
-        if (mParent && w>0 && h>0) {
+        if ( mAttachInfo && mParent && w>0 && h>0) {
             Rect damage;
             damage.set(l, t, w, h);
             mParent->invalidateChild(this,damage);
         }
-        if( getRootView()==this && dynamic_cast<ViewGroup*>(this) &&(w>0)&&(h>0)){
+        if( mAttachInfo && getRootView()==this && dynamic_cast<ViewGroup*>(this) &&(w>0)&&(h>0)){
             const RectangleInt damage={l,t,w,h};
             ((ViewGroup*)this)->mInvalidRgn->do_union(damage);
         }
@@ -3298,11 +3459,13 @@ ViewGroup*View::getParent()const{
 
 View& View::setParent(ViewGroup*p){
     mParent=p;
-    onAttached();
+    onAttachedToWindow();
     return *this;
 }
 
 ViewGroup*View::getRootView()const{
+    if( mAttachInfo && mAttachInfo->mRootView)
+        return dynamic_cast<ViewGroup*>(mAttachInfo->mRootView);
     View* parent = (View*)this;
     while (parent->mParent != nullptr) {
         parent =parent->mParent;
@@ -3315,6 +3478,7 @@ View*View::focusSearch(int direction)const{
         mParent->focusSearch((View*)this,direction);
     return nullptr;
 }
+
 bool View::requestFocus(int direction){
     return requestFocus(direction,nullptr);
 }
@@ -3534,7 +3698,7 @@ bool View::isKeyboardNavigationCluster()const{
 }
 
 bool View::isInTouchMode()const{
-    return true;
+    return mAttachInfo && mAttachInfo->mInTouchMode;
 }
 
 bool View::isFocusable()const{
@@ -4354,12 +4518,15 @@ void View::forceLayout(){
     mPrivateFlags |= PFLAG_INVALIDATED;
 }
 
+/**Returns true if this view has been through at least one layout since it
+   * was last attached to or detached from a window. */
 bool View::isLaidOut()const{
     return (mPrivateFlags3 & PFLAG3_IS_LAID_OUT) == PFLAG3_IS_LAID_OUT;
 }
 
+/** @return {@code true} if laid-out and not about to do another layout.*/
 bool View::isLayoutValid()const{
-    return isLaidOut() && ((mPrivateFlags & PFLAG_FORCE_LAYOUT) == 0);
+     return isLaidOut() && ((mPrivateFlags & PFLAG_FORCE_LAYOUT) == 0);
 }
 
 bool View::isLayoutRequested()const{
@@ -4744,7 +4911,9 @@ void View::setY(float y){
 }
 
 void View::setScaleX(float x){
+    invalidateViewProperty(true,false);
     mScaleX = x;
+    invalidateViewProperty(false,true);
 }
 
 float View::getScaleX()const{
@@ -4752,7 +4921,9 @@ float View::getScaleX()const{
 }
 
 void View::setScaleY(float y){
+    invalidateViewProperty(true,false);
     mScaleY = y;
+    invalidateViewProperty(false,true);
 }
 
 float View::getScaleY()const{
@@ -4760,7 +4931,9 @@ float View::getScaleY()const{
 }
 
 void View::setTranslationX(float x){
+    invalidateViewProperty(true,false);
     mTranslationX=x;
+    invalidateViewProperty(false,true);
     invalidateParentIfNeededAndWasQuickRejected();
 }
 
@@ -4769,7 +4942,9 @@ float View::getTranslationX()const{
 }
 
 void View::setTranslationY(float y){
+    invalidateViewProperty(true,false);
     mTranslationY=y; 
+    invalidateViewProperty(false,true);
     invalidateParentIfNeededAndWasQuickRejected();
 }
 
@@ -4778,7 +4953,9 @@ float View::getTranslationY()const{
 }
 
 void View::setTranslationZ(float z){
-    mTranslationZ=z; 
+    invalidateViewProperty(true,false);
+    mTranslationZ=z;
+    invalidateViewProperty(false,true);
     invalidateParentIfNeededAndWasQuickRejected();
 }
 
@@ -4793,7 +4970,9 @@ float View::getRotation()const{
 /* Sets the degrees that the view is rotated around the pivot point. Increasing values
  * result in clockwise rotation.*/
 void View::setRotation(float rotation){
+    invalidateViewProperty(true,false);
     mRotation=rotation;
+    invalidateViewProperty(false,true);
     invalidateParentIfNeededAndWasQuickRejected();
 }
 
@@ -4819,7 +4998,9 @@ float View::getPivotX()const{
 }
 
 void View::setPivotX(float x){
+    invalidateViewProperty(true,false);
     mPivotX=x;
+    invalidateViewProperty(false,true);
     invalidateParentIfNeededAndWasQuickRejected();
 }
 
@@ -4828,7 +5009,9 @@ float View::getPivotY()const{
 }
 
 void View::setPivotY(float y){
+    invalidateViewProperty(true,false);
     mPivotY=y;
+    invalidateViewProperty(false,true);
     invalidateParentIfNeededAndWasQuickRejected();
 }
 
@@ -4938,6 +5121,16 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
     //mMeasureCache.put(key, ((long) mMeasuredWidth) << 32 |
     //        (long) mMeasuredHeight & 0xffffffffL); // suppress sign extension
+}
+
+View::AttachInfo::AttachInfo(){
+    mHardwareAccelerated =false;
+    mApplicationScale =1.0f;
+    mDrawingTime  = 0;
+    mKeepScreenOn = true;
+    mRootView =nullptr;
+    mCanvas = nullptr;
+    mTooltipHost =nullptr;
 }
 
 }//endof namespace

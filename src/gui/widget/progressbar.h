@@ -80,7 +80,7 @@ protected:
     void doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate);
     void onSizeChanged(int w,int h,int ow,int oh)override;
     virtual bool setProgressInternal(int progress, bool fromUser=false,bool animate=false);
-    void onAttached()override;
+    void onAttachedToWindow()override;
 	void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual void onProgressRefresh(float scale, bool fromUser, int progress){};
     virtual void onVisualProgressChanged(int id, float progress);

@@ -317,6 +317,19 @@ bool ViewGroup::hasTransientState(){
     return mChildCountWithTransientState > 0 || View::hasTransientState();
 }
 
+void ViewGroup::dispatchAttachedToWindow(AttachInfo* info, int visibility){
+     mGroupFlags |= FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;
+     View::dispatchAttachedToWindow(info, visibility);
+     mGroupFlags &= ~FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;
+
+     for (View*child:mChildren){
+         child->dispatchAttachedToWindow(info, combineVisibility(visibility, child->getVisibility()));
+     }
+     for (View*view:mTransientViews){
+         view->dispatchAttachedToWindow(info, combineVisibility(visibility, view->getVisibility()));
+     }
+}
+
 bool ViewGroup::dispatchGenericFocusedEvent(MotionEvent&event){
     if ((mPrivateFlags & (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS))
             == (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS)) {
@@ -578,6 +591,7 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
 bool ViewGroup::isLayoutModeOptical()const{
     return mLayoutMode == LAYOUT_MODE_OPTICAL_BOUNDS;
 }
+
 int ViewGroup::getDescendantFocusability()const{
     return mGroupFlags&FLAG_MASK_FOCUSABILITY;
 }
@@ -885,23 +899,22 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
         child->setParent(this);
     } else {
         child->mParent = this;
-        child->onAttached();
     }
     //if (child->hasUnhandledKeyListener()) incrementChildUnhandledKeyListeners();
 
     bool childHasFocus = child->hasFocus();
     if (childHasFocus) requestChildFocus(child, child->findFocus());
 
-    /*AttachInfo ai = mAttachInfo;
-    if (ai != null && (mGroupFlags & FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0) {
-        bool lastKeepOn = ai.mKeepScreenOn;
-        ai.mKeepScreenOn = false;
-        child.dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
-        if (ai.mKeepScreenOn) {
-            needGlobalAttributesUpdate(true);
+    AttachInfo* ai = mAttachInfo;
+    if (ai  && (mGroupFlags & FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0) {
+        bool lastKeepOn = ai->mKeepScreenOn;
+        ai->mKeepScreenOn = false;
+        child->dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
+        if (ai->mKeepScreenOn) {
+            //needGlobalAttributesUpdate(true);
         }
-        ai.mKeepScreenOn = lastKeepOn;
-    }*/
+        ai->mKeepScreenOn = lastKeepOn;
+    }
 
     if (child->isLayoutDirectionInherited()) child->resetRtlProperties();
 
@@ -1216,6 +1229,17 @@ void ViewGroup::onDebugDrawMargins(Canvas& canvas){
     }
 }
 
+void ViewGroup::drawInvalidateRegion(Canvas&canvas){
+    int num=mInvalidRgn->get_num_rectangles();
+    canvas.set_source_rgb(0,1,0);
+    canvas.rectangle(0,0,mWidth,mHeight);
+    for(int i=0;i<num;i++){
+        RectangleInt r=mInvalidRgn->get_rectangle(i);
+        canvas.rectangle(r.x,r.y,r.width,r.height);
+    }
+    canvas.stroke();
+}
+
 void ViewGroup::fillRect(Canvas& canvas,int x1, int y1, int x2, int y2) {
     if (x1 == x2 || y1 == y2) return;
     if (x1 > x2) {
@@ -1268,16 +1292,15 @@ void ViewGroup::onDebugDraw(Canvas& canvas){
     // Draw clip bounds
     //paint.setColor(DEBUG_CORNERS_COLOR);
     //paint.setStyle(Paint.Style.FILL);
-    canvas.set_color(0xFF4080ff); 
-    int lineLength = 8;//dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
-    int lineWidth = 1;//dipsToPixels(1);
+    canvas.set_color(DEBUG_CORNERS_COLOR); 
+    int lineLength = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
+    int lineWidth  = dipsToPixels(1);
     for (View* c:mChildren){
         if (c->getVisibility() != View::GONE) {
             drawRectCorners(canvas, c->getLeft(), c->getTop(), c->getRight(), c->getBottom(),lineLength, lineWidth);
         }
     }
     canvas.fill();
-
 }
 
 void ViewGroup::dispatchDraw(Canvas&canvas){
@@ -1378,6 +1401,8 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     
     if (DEBUG_DRAW)onDebugDraw(canvas);
 
+    drawInvalidateRegion(canvas);
+
     if (clipToPadding) {
         while(clipSaveCount--)canvas.restore();
     }
@@ -1400,6 +1425,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
 }
 
 void ViewGroup::invalidateChild(View*child,Rect&dirty){
+    if(mAttachInfo==nullptr) return;
 
     const bool drawAnimation = (child->mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0;
 
@@ -1459,7 +1485,6 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
             }
         }
 
-        LOGV_IF(view&&view->getId()>0,"view %p:%d identity=%d rotation=%f",view,view->getId(),view->hasIdentityMatrix(),view->getRotation());
         parent = parent->invalidateChildInParent(location, dirty);
         if ( view && !view->hasIdentityMatrix() ) { // Account for transform on current parent
             Matrix m = view->getMatrix();

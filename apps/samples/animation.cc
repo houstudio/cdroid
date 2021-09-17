@@ -46,7 +46,7 @@ int main(int argc,const char*argv[]){
     //lv->setSelection(2);
     lv->setDivider(new ColorDrawable(0x80224422));
     lv->setDividerHeight(1);
-    lv->setRotation(90);
+    lv->setRotation(30);
 
     TextView*tv=new TextView("HelloWorld",200,40);
     w->addView(tv).setPos(600,400);

@@ -138,26 +138,27 @@ TEST_F(CONTEXT,Clip){
 
 TEST_F(CONTEXT,Clip1){
     ctx->set_color(0xFF888888);
-    ctx->rectangle(0,0,1280,720);
+    ctx->rectangle(-100,-100,1280,720);
     ctx->fill();
-
+    ctx->rectangle(10,10,60,60);
     ctx->rectangle(100,100,400,400);
     ctx->clip();
 
     ctx->save();
-    ctx->rectangle(200,200,200,200);
-    ctx->clip();
-    ctx->set_source_rgb(1,0,0);
+    ctx->rectangle(200,200,400,200);
+    ctx->clip();//clipregion is set to the intersection of(100,100,400,400) & (200,200,400,200)
+    ctx->set_source_rgba(1,0,0,.5f);
     ctx->rectangle(0,0,1280,720);
     ctx->fill();
-    ctx->restore();
+    ctx->restore();//here clipregion restored to (100,100,400,400)
  
-    ctx->rectangle(0,0,1280,720);
-    ctx->set_source_rgba(0,1,0,.5);
+    ctx->rectangle(-100,-100,1280,720);
+    ctx->set_source_rgba(0,0,1,0.5f);
     ctx->fill();
 
     ctx->get_target()->write_to_png("clip1.png");
 }
+
 
 TEST_F(CONTEXT,Mask){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");

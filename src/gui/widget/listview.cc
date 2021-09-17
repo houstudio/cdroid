@@ -674,13 +674,13 @@ void ListView::FocusSelector::onLayoutComplete() {
     }
 }
 
-void ListView::onDettached(){
+void ListView::onDetachedFromWindow(){
     if (mFocusSelector) {
         removeCallbacks(*mFocusSelector);
         delete mFocusSelector;
         mFocusSelector = nullptr;
     }
-    AbsListView::onDettached();
+    AbsListView::onDetachedFromWindow();
 }
 
 void ListView::onSizeChanged(int w, int h, int oldw, int oldh){

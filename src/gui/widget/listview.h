@@ -115,7 +115,7 @@ protected:
         Adapter* adapter);
     void wrapHeaderListAdapterInternal();
     void resetList()override;
-    void onDettached()override;
+    void onDetachedFromWindow()override;
     void layoutChildren()override;
     int getHeightForPosition(int position)override;
     View* fillFromTop(int nextTop);

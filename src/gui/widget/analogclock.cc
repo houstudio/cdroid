@@ -53,7 +53,7 @@ Drawable*AnalogClock::getClockDrawable(int id){
     }
 }
 
-void AnalogClock::onAttached(){
+void AnalogClock::onAttachedToWindow(){
     mRunner=[&](){
         std::time_t t = std::time(NULL);
         struct std::tm when= *std::localtime(&t);

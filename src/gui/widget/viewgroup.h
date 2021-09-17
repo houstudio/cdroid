@@ -58,6 +58,9 @@ public:
         FLAG_MASK_FOCUSABILITY  = 0x60000,
         FLAG_DISALLOW_INTERCEPT = 0x80000,
         FLAG_SPLIT_MOTION_EVENTS= 0x200000,
+        FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW =0x400000,
+        FLAGS_IS_TRANSITION_GROUP    = 0x1000000,
+        FLAGS_IS_TRANSITION_GROUP_SET= 0x2000000,
     };
     enum{
         LAYOUT_MODE_UNDEFINED  =-1,
@@ -141,6 +144,7 @@ protected:
     void clearDefaultFocus(View* child);
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
+    void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
@@ -176,6 +180,7 @@ protected:
 
     void onDebugDrawMargins(Canvas& canvas);
     void onDebugDraw(Canvas& canvas);
+    void drawInvalidateRegion(Canvas&canvas);
     void dispatchDraw(Canvas&)override;
 
     bool hasActiveAnimations();

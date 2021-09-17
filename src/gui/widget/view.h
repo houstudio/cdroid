@@ -35,6 +35,9 @@ namespace cdroid{
 class ViewGroup;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
+    static bool DEBUG_DRAW;
+    constexpr static int DEBUG_CORNERS_COLOR    = 0xFF3f7fff;
+    constexpr static int DEBUG_CORNERS_SIZE_DIP = 8;
     constexpr static int NO_ID =-1;
     //TEXT Alignment
     constexpr static int TEXT_ALIGNMENT_INHERIT   = 0;
@@ -142,6 +145,31 @@ protected:
     constexpr static int PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000;
     constexpr static int PFLAG3_TEMPORARY_DETACH        = 0x2000000;
     constexpr static int PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000;
+    constexpr static int PFLAG3_AGGREGATED_VISIBLE      = 0x20000000;
+    class AttachInfo{
+    public:
+        View*mRootView;
+        bool mHardwareAccelerated;
+        float mApplicationScale;
+        int mWindowLeft;
+        int mWindowTop;
+        Rect mOverscanInsets;
+        Rect mContentInsets;
+        Rect mVisibleInsets;
+        Rect mStableInsets;
+        Rect mOutsets;
+        bool mAlwaysConsumeNavBar;
+        bool mHasWindowFocus;
+        bool mViewVisibilityChanged;
+        int mWindowVisibility;
+        long mDrawingTime;
+        bool mInTouchMode;
+        bool mKeepScreenOn;
+        bool mDebugLayout;
+        Canvas* mCanvas;
+        View* mTooltipHost;
+        AttachInfo(); 
+    };
 public:
     constexpr static int ENABLED        = 0x00;
     constexpr static int DISABLED       = 0x01;
@@ -291,6 +319,7 @@ private:
     class ForegroundInfo*mForegroundInfo;
     KeyEvent::DispatcherState mKeyDispatchState;
 private:
+    void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
     void setDefaultFocusHighlight(Drawable* highlight);
     void switchDefaultFocusHighlight();
@@ -359,6 +388,7 @@ protected:
     std::vector<int>mDrawableState;
 
     ViewGroup*mParent;
+    AttachInfo* mAttachInfo;
     int mTop,mLeft,mWidth,mHeight;
     float mX,mY,mZ,mScaleX,mScaleY;
     float mRotationX,mRotationY,mRotation;
@@ -370,6 +400,8 @@ protected:
     std::vector<OnLayoutChangeListener> mOnLayoutChangeListeners;
     OnScrollChangeListener mOnScrollChangeListener;
 
+    bool debugDraw()const;
+    int dipsToPixels(int dips)const;
     bool hasIdentityMatrix();
     void computeOpaqueFlags();
     virtual void resolveDrawables();
@@ -384,12 +416,16 @@ protected:
     int getBottomPaddingOffset();
     int getFadeTop(bool offsetRequired);
     int getFadeHeight(bool offsetRequired);
+    bool isHardwareAccelerated()const;
 
+    void invalidateViewProperty(bool invalidateParent, bool forceRedraw);
     void invalidateParentCaches();
     void invalidateParentIfNeeded();
     void invalidateParentIfNeededAndWasQuickRejected();
     void destroyDrawingCache();
     RefPtr<ImageSurface>getDrawingCache(bool autoScale);
+    bool hasWindowFocus()const;
+    int getWindowVisibility()const;
 
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
@@ -401,9 +437,11 @@ protected:
     virtual void dispatchSetSelected(bool selected);
     virtual void dispatchSetPressed(bool pressed);
     virtual void dispatchVisibilityChanged(View& changedView,int visiblity);
+    virtual void dispatchWindowFocusChanged(bool);
+    virtual void onWindowFocusChanged(bool hasWindowFocus);
     virtual void onVisibilityChanged(View& changedView,int visibility);
-    virtual void onAttached();
-    virtual void onDettached();
+    virtual void onAttachedToWindow();
+    virtual void onDetachedFromWindow();
     virtual void  onMeasure(int widthMeasureSpec, int heightMeasureSpec);
     virtual void dispatchDraw(Canvas&);
     virtual void onFocusChanged(bool,int,Rect*);
@@ -416,6 +454,7 @@ protected:
 
     void postOnAnimation(Runnable& action);
     void postOnAnimationDelayed(Runnable& action, uint32_t delayMillis);
+    static int combineVisibility(int vis1, int vis2);
     virtual void onSizeChanged(int w,int h,int oldw,int oldh);
     virtual void onScrollChanged(int l, int t, int oldl, int oldt);
     virtual void onLayout(bool ,int,int,int,int);
@@ -423,6 +462,8 @@ protected:
     virtual void onDrawForeground(Canvas& canvas);
     virtual void onFinishInflate();
     virtual void dispatchSetActivated(bool activated);
+    virtual void dispatchAttachedToWindow(AttachInfo*info,int visibility);
+    virtual void dispatchDetachedFromWindow();
 
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
@@ -572,32 +613,34 @@ public:
     int getScrollIndicators()const;
     virtual void setScrollIndicators(int indicators,int mask=SCROLL_INDICATORS_PFLAG3_MASK >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT);
     virtual void computeScroll();
-    virtual int computeHorizontalScrollRange();
-    virtual int computeHorizontalScrollOffset();
-    virtual int computeHorizontalScrollExtent();
-    virtual int computeVerticalScrollRange();
-    virtual int computeVerticalScrollOffset();
-    virtual int computeVerticalScrollExtent();
+    virtual int  computeHorizontalScrollRange();
+    virtual int  computeHorizontalScrollOffset();
+    virtual int  computeHorizontalScrollExtent();
+    virtual int  computeVerticalScrollRange();
+    virtual int  computeVerticalScrollOffset();
+    virtual int  computeVerticalScrollExtent();
     virtual bool canScrollHorizontally(int direction);
     virtual bool canScrollVertically(int direction);
 
-    void setRevealOnFocusHint(bool revealOnFocus);
-    bool getRevealOnFocusHint()const;
-    bool willNotDraw()const;
-    void setWillNotDraw(bool willNotDraw);
+    void  setRevealOnFocusHint(bool revealOnFocus);
+    bool  getRevealOnFocusHint()const;
+    bool  isAttachedToWindow()const;
+    bool  isLaidOut()const;
+    bool  willNotDraw()const;
+    void  setWillNotDraw(bool willNotDraw);
     const Rect getClientRect()const;
-    bool hasClickListener()const;
+    bool  hasClickListener()const;
     virtual void setOnClickListener(OnClickListener ls);
     virtual void setOnLongClickListener(OnLongClickListener l);
     virtual void setOnFocusChangeListener(OnFocusChangeListener listtener); 
     virtual void setOnScrollChangeListener(OnScrollChangeListener l);
-    void addOnLayoutChangeListener(OnLayoutChangeListener listener);
-    void removeOnLayoutChangeListener(OnLayoutChangeListener listener);
+    void  addOnLayoutChangeListener(OnLayoutChangeListener listener);
+    void  removeOnLayoutChangeListener(OnLayoutChangeListener listener);
     virtual bool performClick();
     virtual bool performLongClick();
     virtual bool performLongClick(int x,int y);
-    bool performContextClick(int x, int y);
-    bool performContextClick();
+    bool  performContextClick(int x, int y);
+    bool  performContextClick();
     // Foreground color
 
     //foreground/background
@@ -660,17 +703,17 @@ public:
     bool dispatchNestedPreScroll(int dx, int dy,int* consumed,int* offsetInWindow);
     bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
     bool dispatchNestedPreFling(float velocityX, float velocityY);
-    int getRawTextDirection()const;
+    int  getRawTextDirection()const;
     void setTextDirection(int textDirection);
-    int getTextDirection()const;
+    int  getTextDirection()const;
     bool canResolveTextAlignment()const;
     void resetResolvedTextAlignment();
     bool isTextAlignmentInherited()const;
     bool isTextAlignmentResolved()const;
     virtual bool resolveTextAlignment();
-    int getRawTextAlignment()const;
+    int  getRawTextAlignment()const;
     void setTextAlignment(int textAlignment);
-    int getTextAlignment()const;
+    int  getTextAlignment()const;
 
    // Attribute
     virtual View& clearFlag(int flag);
@@ -752,6 +795,8 @@ public:
     bool onKeyLongPress(int keyCode, KeyEvent& event)override;
     bool onKeyMultiple(int keyCode, int count, KeyEvent& event)override;
     virtual int commitText(const std::wstring&);
+    virtual void onWindowVisibilityChanged(int);
+    virtual void onVisibilityAggregated(bool isVisible);
     virtual bool onInterceptTouchEvent(MotionEvent& evt);
     virtual bool onTouchEvent(MotionEvent& evt);
     virtual bool onHoverEvent(MotionEvent& evt);
@@ -772,11 +817,11 @@ public:
     void resetResolvedLayoutDirection();
     void resetResolvedPadding();
     void measure(int widthMeasureSpec, int heightMeasureSpec);
-    int getMeasuredWidth()const;
-    int getMeasuredWidthAndState()const;
-    int getMeasuredHeight()const;
-    int getMeasuredState()const;
-    int getMeasuredHeightAndState()const;
+    int  getMeasuredWidth()const;
+    int  getMeasuredWidthAndState()const;
+    int  getMeasuredHeight()const;
+    int  getMeasuredState()const;
+    int  getMeasuredHeightAndState()const;
 
     Matrix getMatrix();
     Matrix getInverseMatrix();
@@ -822,7 +867,6 @@ public:
     void setLayoutParams(LayoutParams*lp);
     virtual bool isLayoutRequested()const;
     virtual bool isInLayout()const;
-    bool isLaidOut()const;
     bool isLayoutValid()const;
     bool hasRtlSupport()const;
     bool isTextDirectionInherited()const;

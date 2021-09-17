@@ -61,6 +61,8 @@ void WindowManager::addWindow(Window*win){
     if(activeWindow)activeWindow->post(std::bind(&Window::onDeactive,activeWindow));
     win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
+    win->mAttachInfo=new View::AttachInfo();
+	win->mAttachInfo->mRootView=win;
     Looper::getDefault()->addEventHandler(win->source);
     resetVisibleRegion();
     LOGV("win=%p source=%p windows.size=%d",win,win->source,windows.size());

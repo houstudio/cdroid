@@ -45,7 +45,6 @@ private:
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
 protected:
-    Canvas*canvas;
     RefPtr<Region>mWindowRgn;	
     int window_type;/*window type*/
     int mLayer;/*surface layer*/

@@ -30,7 +30,6 @@ constexpr int FINISH_HANDLED = 1;
 constexpr int FINISH_NOT_HANDLED = 2;
 
 Window::Window(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
-    canvas=nullptr;
     source=new UIEventSource(this);
     setFrame(0,0,1280,720);
     setFocusable(true);
@@ -41,12 +40,11 @@ Window::Window(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
 }
 
 Window::Window(int x,int y,int width,int height,int type)
-  : ViewGroup(width,height),source(nullptr),canvas(nullptr),window_type(type){
+  : ViewGroup(width,height),source(nullptr),window_type(type){
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
     source=new UIEventSource(this);
     mContext=&App::getInstance();
-    canvas=nullptr;
     mInLayout=false;
     LOGV("%p source=%p visible=%d size=%dx%d",this,source,hasFlag(VISIBLE),width,height);
     setFrame(x, y, width, height);
@@ -70,19 +68,19 @@ void Window::setRegion(const RefPtr<Region>&rgn){
 
 void Window::draw(){
     getCanvas();
-    ViewGroup::draw(*canvas);
-    canvas->invalidate(mInvalidRgn);
+    ViewGroup::draw(*mAttachInfo->mCanvas);
+    mAttachInfo->mCanvas->invalidate(mInvalidRgn);
     mInvalidRgn->subtract(mInvalidRgn); 
 }
 
 void Window::show(){
     if(getVisibility()!=VISIBLE){
         setVisibility(VISIBLE);
-        if(canvas==nullptr)
+        if(mAttachInfo->mCanvas==nullptr)
             invalidate(true);
         WindowManager::getInstance().resetVisibleRegion();
-        if(canvas){
-            GraphDevice::getInstance().add(canvas);
+        if(mAttachInfo->mCanvas){
+            GraphDevice::getInstance().add(mAttachInfo->mCanvas);
         }
     }
 }
@@ -90,7 +88,7 @@ void Window::show(){
 void Window::hide(){
     if(getVisibility()==VISIBLE){
         setVisibility(INVISIBLE);
-        GraphDevice::getInstance().remove(canvas);
+        GraphDevice::getInstance().remove(mAttachInfo->mCanvas);
         WindowManager::getInstance().resetVisibleRegion();
     }
 }
@@ -101,8 +99,8 @@ View& Window::setPos(int x,int y){
         WindowManager::getInstance().moveWindow(this,x,y);
         mLeft=x;
         mTop=y;
-        if(canvas){
-           canvas->set_position(x,y);
+        if(mAttachInfo->mCanvas){
+           mAttachInfo->mCanvas->set_position(x,y);
         }
     }
     return *this;
@@ -123,8 +121,10 @@ void Window::onFinishInflate(){
 
 Canvas*Window::getCanvas(){
 //for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
+    Canvas *canvas=mAttachInfo->mCanvas;
     if((canvas==nullptr)&&(getVisibility()==VISIBLE)){
         canvas=GraphDevice::getInstance().createContext(getBound());
+        mAttachInfo->mCanvas=canvas;
     }
     int num=mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
@@ -137,11 +137,13 @@ Canvas*Window::getCanvas(){
 }
 
 Window::~Window() {
+    Canvas*canvas=mAttachInfo->mCanvas;
     LOGV("%p source=%p canvas=%p",this,source,canvas);
-    if(canvas!=GraphDevice::getInstance().getPrimaryContext()){
+    if(mAttachInfo->mCanvas!=GraphDevice::getInstance().getPrimaryContext()){
         GraphDevice::getInstance().remove(canvas);
         delete canvas;
     }
+    delete mAttachInfo;
 }
 
 void Window::onActive(){

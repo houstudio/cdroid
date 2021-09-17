@@ -135,8 +135,8 @@ bool ProgressBar::verifyDrawable(Drawable* who)const{
 void ProgressBar::onVisualProgressChanged(int id, float progress){
 }
 
-void ProgressBar::onAttached(){
-    View::onAttached();
+void ProgressBar::onAttachedToWindow(){
+    View::onAttachedToWindow();
     mAttached = true;
     if (mIndeterminate) startAnimation();
 

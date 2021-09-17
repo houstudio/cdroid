@@ -206,11 +206,12 @@ if (BUILD_FRAMEWORK)
   set(BUILD_SHARED_LIBS ON)
 endif ()
 
-
 # Find dependencies
 set(HARFBUZZ_MIN_VERSION "2.0.0")
 if (FT_WITH_HARFBUZZ)
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
+  find_package(HarfBuzz 1.3.0)
+  set(HARFBUZZ_LIBRARIES harfbuzz)
+  set(HARFBUZZ_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/harfbuzz)
 else ()
   find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
 endif ()
@@ -585,4 +586,7 @@ set(CPACK_COMPONENT_HEADERS_DEPENDS libraries)
 set(CPACK_COMPONENT_LIBRARIES_GROUP "Development")
 set(CPACK_COMPONENT_HEADERS_GROUP "Development")
 
-include(CPack)
+#include(CPack)
+
+file(COPY ${PROJECT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_BINARY_DIR}/include/freetype2)
+

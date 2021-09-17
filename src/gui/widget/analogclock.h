@@ -14,7 +14,7 @@ private:
     Drawable* mDial;
     Runnable mRunner;
 protected:
-   void onAttached();
+   void onAttachedToWindow()override;
    void onDraw(Canvas&canvas)override;
 public:
    enum{

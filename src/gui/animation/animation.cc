@@ -373,7 +373,7 @@ void Animation::getInvalidateRegion(int left, int top, int width, int height,
     // Enlarge the invalidate region to account for rounding errors
     invalidate.inflate(-1,-1);//inset(-1.0f, -1.0f);
     tempRegion=invalidate;//.set(invalidate);
-    //invalidate.union(previousRegion);
+    invalidate.Union(previousRegion);
 
     previousRegion=tempRegion;//.set(tempRegion);
 
