@@ -50,41 +50,35 @@ bool Rect::contains(int xx,int yy)const{
 }
 
 bool Rect::intersect(const Rect&a,const Rect&b){
-    if(a.empty()||b.empty()){
-        set(0,0,0,0);
+    int x1, y1, x2, y2;
+
+    x1 = std::max (a.left, b.left);
+    y1 = std::max (a.top , b.top);
+    /* Beware the unsigned promotion, fortunately we have bits to spare
+     * as (CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN) < UINT_MAX
+     */
+    x2 = std::min (a.left + (int) a.width, b.left + (int) b.width);
+    y2 = std::min (a.top + (int) a.height, b.top + (int) b.height);
+
+    if (x1 >= x2 || y1 >= y2) {
+        left = 0;
+        top = 0;
+        width  = 0;
+        height = 0;
+
         return false;
+    } else {
+        left = x1;
+        top = y1;
+        width  = x2 - x1;
+        height = y2 - y1;
+        return true;
     }
-    //check if the 2 Rect intersect
-    if( a.left + a.width <= b.left || b.left + b.width <= a.left || a.top + a.height <= b.top || b.top + b.height <= a.top ){
-          // No intersection
-          set(0,0,0,0);
-          return false ;//Rect::emptyRect;
-    }
-
-    //calculate the coordinates of the intersection
-    int i_x = a.left > b.left ? a.left : b.left;
-    int i_y = a.top > b.top ? a.top : b.top;
-
-    int thisWBorder  = a.left + a.width;
-    int otherWBorder = b.left + b.width;
-    int thisHBorder  = a.top + a.height;
-    int otherHBorder = b.top + b.height;
-
-    int i_w = thisWBorder > otherWBorder ? otherWBorder - i_x : thisWBorder - i_x;
-    int i_h = thisHBorder > otherHBorder ? otherHBorder - i_y : thisHBorder - i_y;
-    set(i_x,i_y,i_w,i_h);
     return true;
 }
 
 bool Rect::intersect(int l, int t, int w, int h) {
-    if (this->left < l+w && l < this->right() && this->top < t+h && t < this->bottom()) {
-        this->width = std::min(l+w,this->right())-this->left;
-        this->height= std::min(t+h,this->bottom())-this->top;
-        this->left  = std::max(this->left,l);
-        this->top   = std::max(this->top,t);
-        return true;
-    }
-    return false;
+    return intersect(*this,Make(l,t,w,h));
 }
 
 bool Rect::contains(const Rect&a)const{
@@ -95,21 +89,24 @@ bool Rect::contains(const Rect&a)const{
 }
 
 void Rect::Union(const Rect&b){
-    const int mx=std::min(left,b.left);
-    const int my=std::min(top,b.top);
-    width = std::max(right(),b.right())-mx;
-    height= std::max(bottom(),b.bottom())-my;
-    left= mx;
-    top = my;
+    int x1, y1, x2, y2;
+    x1 = std::min (left, b.left);
+    y1 = std::min (top, b.top);
+    /* Beware the unsigned promotion, fortunately we have bits to spare
+     * as (CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN) < UINT_MAX
+     */
+    x2 = std::max (b.left + (int) b.width,  left + width);
+    y2 = std::max (b.top + (int) b.height, top + height);
+
+    left = x1;
+    top = y1;
+    width  = x2 - x1;
+    height = y2 - y1;
+
 }
 
 void Rect::Union(int x,int y,int w,int h){
-    const int mx=std::min(left,x);
-    const int my=std::min(top,y);
-    width = std::max(right(),x+w)-mx;
-    height= std::max(bottom(),y+h)-my;
-    left= mx;
-    top = my;
+    Union(Make(x,y,w,h));
 }
 
 }//end namespace

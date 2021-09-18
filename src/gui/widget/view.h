@@ -527,6 +527,7 @@ public:
     void getHitRect(Rect&);
     bool pointInView(int localX,int localY,int slop);
     const Rect getDrawingRect()const;
+    long getDrawingTime()const;
     virtual void getFocusedRect(Rect&r);
     virtual View& setPos(int x,int y);
     virtual View& setSize(int x,int y);

@@ -19,7 +19,7 @@
 #define __CAIROMM_MATRIX_H
 
 #include <cairomm/cairommconfig.h>
-
+#include <cairomm/types.h>
 #include <cairo.h>
 
 namespace Cairo
@@ -159,6 +159,10 @@ public:
    * @param y Y position. An in/out parameter
    */
   void transform_point(double& x, double& y) const;
+
+  /*added by zhhou*/
+  void transform_rectangle(const RectangleInt& from,Rectangle&to)const;
+  void transform_rectangle(const RectangleInt& from,RectangleInt&to)const;
 };
 
 /** Returns a Matrix initialized to the identity matrix

@@ -159,6 +159,17 @@ TEST_F(CONTEXT,Clip1){
     ctx->get_target()->write_to_png("clip1.png");
 }
 
+TEST_F(CONTEXT,Clip2){
+
+    ctx->reset_clip();
+    ctx->arc(100,100,50,0,M_PI*2.f);
+    ctx->clip();
+    double x1=0,y1=0,x2=0,y2=0;
+    ctx->get_clip_extents(x1,y1,x2,y2);
+    std::vector<Rectangle>lst;
+    ctx->copy_clip_rectangle_list(lst);
+    printf("CLIPS(%f,%f,%f,%f) lst.size=%d\r\n",x1,y1,x2,y2,lst.size());
+}
 
 TEST_F(CONTEXT,Mask){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");

@@ -1902,10 +1902,12 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     // Sets the flag as early as possible to allow draw() implementations
     // to call invalidate() successfully when doing animations
     mPrivateFlags |= PFLAG_DRAWN;
-
+    double cx1,cy1,cx2,cy2;
+    canvas.get_clip_extents(cx1,cy1,cx2,cy2);
+    Rect rcc=Rect::MakeLTRB(cx1,cy1,cx2,cy2);
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
                     ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
-            false/*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW)*/ &&
+            rcc.intersect(mLeft, mTop, mWidth, mHeight)&& /*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
             (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
         mPrivateFlags2 |= PFLAG2_VIEW_QUICK_REJECTED;
         return more;
@@ -2050,7 +2052,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                 if (!scalingRequired || cache == nullptr) {
                     canvas.rectangle(0,0,getWidth(), getHeight());//canvas.clipRect(0, 0, getWidth(), getHeight());
                 } else {
-                    //canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight());
+                    //canvas.rectangle(0, 0, cache->getWidth(), cache->getHeight());
                 }
             }
             canvas.clip();
@@ -4823,6 +4825,10 @@ void View::getDrawingRect(Rect& outRect) {
     outRect.top = mScrollY;
     outRect.width=mWidth;
     outRect.height=mHeight;
+}
+
+long View::getDrawingTime() const{
+    return mAttachInfo ? mAttachInfo->mDrawingTime : 0;
 }
 
 int View::getMeasuredWidth()const{

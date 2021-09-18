@@ -1235,6 +1235,7 @@ void ViewGroup::drawInvalidateRegion(Canvas&canvas){
     for(int i=0;i<num;i++){
         RectangleInt r=mInvalidRgn->get_rectangle(i);
         canvas.rectangle(r.x,r.y,r.width,r.height);
+        LOGV("%p:%d(%d,%d,%d,%d)%d",this,mID,r.x,r.y,r.width,r.height,DEBUG_DRAW);
     }
     canvas.stroke();
 }
@@ -1307,7 +1308,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     int flags = mGroupFlags;
 
     if ((flags & FLAG_RUN_ANIMATION) != 0 && canAnimate()) {
-        bool buildCache = false;//!isHardwareAccelerated();
+        bool buildCache = !isHardwareAccelerated();
         for (int i=0;i<mChildren.size();i++){
             View* child=mChildren[i];
             if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
@@ -1341,10 +1342,10 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
 
     // We will draw our child's animation, let's reset the flag
     mPrivateFlags &= ~PFLAG_DRAW_ANIMATION;
-    mGroupFlags &= ~FLAG_INVALIDATE_REQUIRED;
+    mGroupFlags   &= ~FLAG_INVALIDATE_REQUIRED;
 
     bool more = false;
-    const long drawingTime = SystemClock::uptimeMillis();
+    const long drawingTime = getDrawingTime();
 
     //if (usingRenderNodeProperties) canvas.insertReorderBarrier();
     const int transientCount = mTransientIndices.size();
@@ -1399,8 +1400,6 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     //if (usingRenderNodeProperties) canvas.insertInorderBarrier();
     
     if (DEBUG_DRAW) onDebugDraw(canvas);
-
-    if (DEBUG_DRAW) drawInvalidateRegion(canvas);
 
     if (clipToPadding) {
         while(clipSaveCount--)canvas.restore();
@@ -1457,15 +1456,15 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
          }else{
              transformMatrix=childMatrix;
          }
-         Rect boundingRect =dirty;
-         dirty= Canvas::mapRect(transformMatrix,dirty);
-         LOGV("(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
+         
+         transformMatrix.transform_rectangle((const RectangleInt&)dirty,(RectangleInt&)dirty);
+         LOGV("(1.%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
                 dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation());
+          
     }
 	
-    View* view = parent;
     do {
-        view=parent;
+        View*view=parent;
         if (drawAnimation) {
             if (view) {
                  view->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
@@ -1488,21 +1487,20 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         parent = parent->invalidateChildInParent(location, dirty);
         if ( view && !view->hasIdentityMatrix() ) { // Account for transform on current parent
             Matrix m = view->getMatrix();
-            dirty= Canvas::mapRect(m,dirty);
+            m.transform_rectangle((const RectangleInt&)dirty,(RectangleInt&)dirty);
         }
     } while (parent);
 
     //set invalidate region to rootview
-    dynamic_cast<ViewGroup*>(view)->mInvalidRgn->do_union((const RectangleInt&)dirty);
+    getRootView()->mInvalidRgn->do_union((const RectangleInt&)dirty);
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
     if (1||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
-        if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE))
-                != FLAG_OPTIMIZE_INVALIDATE) {
-            dirty.offset(location[CHILD_LEFT_INDEX] - mScrollX,
-                    location[CHILD_TOP_INDEX] - mScrollY);
+        //mGroupFlags &=~ FLAG_CLIP_CHILDREN;
+        if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
+            dirty.offset(location[CHILD_LEFT_INDEX]-mScrollX,location[CHILD_TOP_INDEX]-mScrollY);
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == 0) {
                 dirty.Union(0, 0, mWidth,mHeight);
             }

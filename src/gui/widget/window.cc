@@ -67,9 +67,11 @@ void Window::setRegion(const RefPtr<Region>&rgn){
 }
 
 void Window::draw(){
-    getCanvas();
-    ViewGroup::draw(*mAttachInfo->mCanvas);
-    mAttachInfo->mCanvas->invalidate(mInvalidRgn);
+    Canvas*canvas=getCanvas();
+    mAttachInfo->mDrawingTime=SystemClock::uptimeMillis();
+    ViewGroup::draw(*canvas);
+    if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
+    canvas->invalidate(mInvalidRgn);
     mInvalidRgn->subtract(mInvalidRgn); 
 }
 
@@ -555,4 +557,4 @@ View*Window::inflate(Context*ctx,std::istream&stream){
     return pd.rootView;
 }
 
-}  // namespace ui
+}  //endof namespace

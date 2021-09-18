@@ -644,7 +644,7 @@ void ImageView::onDraw(Canvas& canvas) {
         LOGV("DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",mDrawMatrix.xx,mDrawMatrix.yx,
 		mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
         canvas.translate(mPaddingLeft, mPaddingTop);
-        canvas.set_matrix(mDrawMatrix);
+        canvas.transform(mDrawMatrix);
     
         mDrawable->draw(canvas);
         canvas.restore();

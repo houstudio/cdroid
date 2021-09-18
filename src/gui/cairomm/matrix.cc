@@ -17,6 +17,7 @@
  */
 #include <cairomm/matrix.h>
 #include <cairomm/private.h>
+#include <cmath>
 
 namespace Cairo
 {
@@ -100,6 +101,36 @@ Matrix operator*(const Matrix& a, const Matrix& b)
   Matrix m;
   cairo_matrix_multiply(&m, &a, &b);
   return m;
+}
+
+void Matrix::transform_rectangle(const RectangleInt& from,Rectangle&to)const{
+    double pt[8];
+    pt[0] = pt[6] = from.x ;  
+    pt[1] = pt[3] = from.y ;
+    pt[2] = pt[4] = from.x + from.width; 
+    pt[5] = pt[7] = from.x + from.height;
+    double x1=INT_MAX,y1=INT_MAX;
+    double x2=INT_MIN,y2=INT_MIN;
+    for(int i=0;i<8;i+=2){
+       transform_point(pt[i],pt[i+1]);
+       x1 = std::min(x1,pt[i]);
+       y1 = std::min(y1,pt[i+1]);
+       x2 = std::max(x2,pt[i]);
+       y2 = std::max(y2,pt[i+1]);
+    }
+    to.x = (int)std::floor(x1);
+    to.y = (int)std::floor(y1);
+    to.width = (int)std::ceil(x2) - to.x;
+    to.height= (int)std::ceil(y2) - to.y; 
+}
+
+void Matrix::transform_rectangle(const RectangleInt& from,RectangleInt&to)const{
+    Rectangle tof;
+    transform_rectangle(from,tof);
+    to.x= std::floor(tof.x);
+    to.y = (int)std::floor(tof.y);
+    to.width = (int)std::ceil(tof.width);
+    to.height= (int)std::ceil(tof.height);  
 }
 
 } // namespace Cairo

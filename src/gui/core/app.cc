@@ -32,6 +32,7 @@ static struct option app_options[]={
    {"language",required_argument,0,0},
    {"record"  ,required_argument,0,0},
    {"monkey"  ,required_argument,0,0},
+   {"debug"   ,no_argument      ,0,0},
    {0,0,0,0}
 };
 
@@ -77,17 +78,6 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     InputEventSource*inputsource=new InputEventSource(getArg("record",""));
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
-
-    /*SignalSource*sigsource=new GenericSignalSource(false);
-    addEventSource(sigsource,[this](EventSource&s){
-        LOGI("Sig interrupt %d",((SignalSource&)s).signo);
-        this->exit(((SignalSource&)s).signo);
-        return false;
-    });
-    sigsource->add(SIGABRT);
-    sigsource->add(SIGINT);
-    sigsource->add(SIGTERM);
-    sigsource->add(SIGKILL);*/
 }
 
 App::~App(){
