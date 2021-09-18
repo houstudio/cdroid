@@ -1442,6 +1442,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
     }
 
+    Rect boundingRect=dirty;
     if(!child->hasIdentityMatrix()||(mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0){
          Matrix transformMatrix;
          if((mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS)!=0){
@@ -1491,6 +1492,8 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         }
     } while (parent);
 
+    LOGV("2.(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
+                dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation());
     //set invalidate region to rootview
     getRootView()->mInvalidRgn->do_union((const RectangleInt&)dirty);
 }

@@ -18,7 +18,7 @@
 #include <cairomm/matrix.h>
 #include <cairomm/private.h>
 #include <cmath>
-
+#include <climits>
 namespace Cairo
 {
 
