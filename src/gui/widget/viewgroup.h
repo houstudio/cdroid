@@ -145,6 +145,8 @@ protected:
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
+    bool dispatchVisibilityAggregated(bool isVisible);
+    void dispatchDetachedFromWindow()override;
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);

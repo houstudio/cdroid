@@ -325,6 +325,7 @@ private:
     void switchDefaultFocusHighlight();
     void drawDefaultFocusHighlight(Canvas& canvas);
 
+    void sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight);
     void setMeasuredDimensionRaw(int measuredWidth, int measuredHeight);
     void initScrollCache();
     ScrollabilityCache* getScrollCache();
@@ -389,7 +390,7 @@ protected:
 
     ViewGroup*mParent;
     AttachInfo* mAttachInfo;
-    int mTop,mLeft,mWidth,mHeight;
+    int mTop,mLeft,mRight,mBottom;
     float mX,mY,mZ,mScaleX,mScaleY;
     float mRotationX,mRotationY,mRotation;
     float mPivotX,mPivotY,mAlpha;
@@ -399,7 +400,7 @@ protected:
     OnFocusChangeListener mOnFocusChangeListener;
     std::vector<OnLayoutChangeListener> mOnLayoutChangeListeners;
     OnScrollChangeListener mOnScrollChangeListener;
-
+    void assignParent(ViewGroup*p);
     bool debugDraw()const;
     int dipsToPixels(int dips)const;
     bool hasIdentityMatrix();
@@ -437,11 +438,13 @@ protected:
     virtual void dispatchSetSelected(bool selected);
     virtual void dispatchSetPressed(bool pressed);
     virtual void dispatchVisibilityChanged(View& changedView,int visiblity);
+    virtual bool dispatchVisibilityAggregated(bool isVisible);
     virtual void dispatchWindowFocusChanged(bool);
     virtual void onWindowFocusChanged(bool hasWindowFocus);
     virtual void onVisibilityChanged(View& changedView,int visibility);
     virtual void onAttachedToWindow();
     virtual void onDetachedFromWindow();
+    void onDetachedFromWindowInternal();
     virtual void  onMeasure(int widthMeasureSpec, int heightMeasureSpec);
     virtual void dispatchDraw(Canvas&);
     virtual void onFocusChanged(bool,int,Rect*);
@@ -534,6 +537,10 @@ public:
     void getDrawingRect(Rect& outRect);
     void offsetTopAndBottom(int offset);
     void offsetLeftAndRight(int offset);
+    void setLeft(int left);
+    void setTop(int top);
+    void setRight(int right);
+    void setBottom(int bottom);
     int getLeft()const;
     int getTop()const;
     int getRight()const;
@@ -768,7 +775,7 @@ public:
     // Parent and children views
     virtual ViewGroup*getParent()const;
     ViewGroup*getRootView()const;
-    virtual View& setParent(ViewGroup*p);
+
     virtual View*findViewById(int id)const;
     virtual View* findViewByPredicateTraversal(std::function<bool(const View*)>,View* childToSkip)const;
     View* findViewByPredicate(std::function<bool(const View*)>)const;

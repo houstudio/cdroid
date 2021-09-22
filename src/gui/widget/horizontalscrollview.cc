@@ -48,7 +48,7 @@ float HorizontalScrollView::getRightFadingEdgeStrength() {
 }
 
 int HorizontalScrollView::getMaxScrollAmount() {
-    return (int) (MAX_SCROLL_FACTOR * mWidth);
+    return (int) (MAX_SCROLL_FACTOR * (mRight-mLeft));
 }
 
 void HorizontalScrollView::initScrollView() {
@@ -1047,7 +1047,7 @@ void HorizontalScrollView::onSizeChanged(int w, int h, int oldw, int oldh) {
     if (nullptr == currentFocused || this == currentFocused)
         return;
 
-    int maxJump = mWidth;//Right - mLeft;
+    int maxJump = mRight - mLeft;
 
     if (isWithinDeltaOfScreen(currentFocused, maxJump)) {
         currentFocused->getDrawingRect(mTempRect);

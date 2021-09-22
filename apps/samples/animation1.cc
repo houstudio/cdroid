@@ -7,10 +7,10 @@ public:
     }
     void onDraw(Canvas&canvas)override{
         canvas.set_color(SystemClock::uptimeMillis());
-        canvas.rectangle(0,0,mWidth,mHeight);
+        canvas.rectangle(0,0,getWidth(),getHeight());
         canvas.fill_preserve();
         canvas.set_color(0xFFFFFFFF);
-        canvas.arc(mWidth/2,mHeight/2,mWidth/2,.0f,M_PI/3.f);
+        canvas.arc(getWidth()/2,getHeight()/2,getWidth()/2,.0f,M_PI/3.f);
         canvas.stroke();
        
 

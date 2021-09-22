@@ -110,9 +110,7 @@ View& Window::setPos(int x,int y){
 
 View& Window::setSize(int cx,int cy){
     if(cx!=getWidth()||cy!=getHeight()){
-        onSizeChanged(cx,cy,mWidth,mHeight);
-        mWidth=cx;
-        mHeight=cy;
+        ViewGroup::setSize(cx,cy); 
         WindowManager::getInstance().resetVisibleRegion();
     }
     return *this;
@@ -346,11 +344,11 @@ void Window::doLayout(){
 
         if(vg->getWidth()>0) widthSpec =MeasureSpec::makeMeasureSpec(vg->getWidth(),MeasureSpec::EXACTLY);
         else if(vg->getWidth()<0)widthSpec=MeasureSpec::makeMeasureSpec(lp->width,MeasureSpec::AT_MOST);
-        else widthSpec=MeasureSpec::makeMeasureSpec(mWidth,MeasureSpec::EXACTLY);
+        else widthSpec=MeasureSpec::makeMeasureSpec(mRight-mLeft,MeasureSpec::EXACTLY);
     
         if(vg->getHeight()>0) heightSpec =MeasureSpec::makeMeasureSpec(vg->getHeight(),MeasureSpec::EXACTLY);
         else if(vg->getHeight()<0)heightSpec=MeasureSpec::makeMeasureSpec(lp->height,MeasureSpec::AT_MOST);
-        else heightSpec=MeasureSpec::makeMeasureSpec(mHeight,MeasureSpec::EXACTLY);
+        else heightSpec=MeasureSpec::makeMeasureSpec(mBottom-mTop,MeasureSpec::EXACTLY);
 
         if(vg->getHeight()>0&&vg->getWidth()>0){
             x=vg->getLeft();

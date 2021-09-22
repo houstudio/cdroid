@@ -399,8 +399,8 @@ void ViewGroup::removeDetachedView(View* child, bool animate){
 
     if ((animate && child->getAnimation()) ||isViewTransitioning(child)){
         addDisappearingView(child);
-    } else{// if (child->mAttachInfo != nullptr) {
-        //child->dispatchDetachedFromWindow();
+    } else if (child->mAttachInfo != nullptr) {
+        child->dispatchDetachedFromWindow();
     }
 
     if (child->hasTransientState()) childHasTransientStateChanged(child, false);
@@ -481,7 +481,7 @@ void ViewGroup::clearDisappearingChildren() {
     int count = disappearingChildren.size();
     for (int i = 0; i < count; i++) {
         View* view = disappearingChildren.at(i);
-        //if (view.mAttachInfo != null)view.dispatchDetachedFromWindow();
+        if (view->mAttachInfo)view->dispatchDetachedFromWindow();
         view->clearAnimation();
     }
     disappearingChildren.clear();
@@ -505,7 +505,7 @@ void ViewGroup::endViewTransition(View* view){
         if (it!=mVisibilityChangingChildren.end()) {
             mVisibilityChangingChildren.erase(it);
         } else {
-            //if (view.mAttachInfo != null) view.dispatchDetachedFromWindow();
+            if (view->mAttachInfo) view->dispatchDetachedFromWindow();
             if (view->mParent) view->mParent = nullptr;
         }
        invalidate();
@@ -516,7 +516,7 @@ void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
     auto it=std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
     if (it!=mDisappearingChildren.end()) {
         mDisappearingChildren.erase(it);
-        //if (view.mAttachInfo != null) view->dispatchDetachedFromWindow();
+        if (view->mAttachInfo) view->dispatchDetachedFromWindow();
         view->clearAnimation();
         mGroupFlags |= FLAG_INVALIDATE_REQUIRED;
     }
@@ -578,13 +578,13 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     addInArray(child, index);
 
     child->mParent = this;
-    child->mPrivateFlags = (child->mPrivateFlags & ~PFLAG_DIRTY_MASK /*& ~PFLAG_DRAWING_CACHE_VALID*/)
+    child->mPrivateFlags = (child->mPrivateFlags & ~PFLAG_DIRTY_MASK & ~PFLAG_DRAWING_CACHE_VALID)
          | PFLAG_DRAWN|PFLAG_INVALIDATED;
     this->mPrivateFlags |= PFLAG_INVALIDATED;
     if (child->hasFocus()) {
         requestChildFocus(child, child->findFocus());
     }
-    //dispatchVisibilityAggregated(isAttachedToWindow() && getWindowVisibility() == VISIBLE&& isShown());
+    dispatchVisibilityAggregated(isAttachedToWindow() && getWindowVisibility() == VISIBLE&& isShown());
     //notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
@@ -896,7 +896,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
 
     // tell our children
     if (preventRequestLayout) {
-        child->setParent(this);
+        child->assignParent(this);
     } else {
         child->mParent = this;
     }
@@ -1052,14 +1052,14 @@ void ViewGroup::removeAllViewsInLayout() {
         cancelTouchTarget(view);
         cancelHoverTarget(view);
 
-        /*if (view.getAnimation() != nullptr ||
+        /*if (view->getAnimation() != nullptr ||
             (mTransitioningViews != nullptr && mTransitioningViews.contains(view))) {
             addDisappearingView(view);
-        } else if (detach) {
+        } else*/ if (detach) {
            view->dispatchDetachedFromWindow();
         }
 
-        if (view->hasTransientState()) {
+        /*if (view->hasTransientState()) {
             childHasTransientStateChanged(view, false);
         }*/
 
@@ -1108,8 +1108,8 @@ void ViewGroup::removeViewInternal(int index, View* view){
 
     if (view->getAnimation() ||isViewTransitioning(view)){
         addDisappearingView(view);
-    } else {//if (view.mAttachInfo != null) {
-       //view->dispatchDetachedFromWindow();
+    } else if (view->mAttachInfo) {
+        view->dispatchDetachedFromWindow();
     }
 
     if (view->hasTransientState())childHasTransientStateChanged(view, false);
@@ -1172,7 +1172,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
             (mTransitioningViews != nullptr && mTransitioningViews->contains(view))) {
             addDisappearingView(view);
         } else */if (detach) {
-           //view->dispatchDetachedFromWindow();
+            view->dispatchDetachedFromWindow();
         }
 
         if (view->hasTransientState()) childHasTransientStateChanged(view, false);
@@ -1337,7 +1337,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
         canvas.save();
         clipSaveCount++;
         canvas.rectangle(mScrollX + mPaddingLeft, mScrollY + mPaddingTop,
-                mWidth-mPaddingLeft - mPaddingRight, mHeight -mPaddingTop- mPaddingBottom);
+                mRight-mLeft-mPaddingLeft - mPaddingRight, mBottom-mTop -mPaddingTop- mPaddingBottom);
     }
 
     // We will draw our child's animation, let's reset the flag
@@ -1505,11 +1505,11 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
             dirty.offset(location[CHILD_LEFT_INDEX]-mScrollX,location[CHILD_TOP_INDEX]-mScrollY);
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == 0) {
-                dirty.Union(0, 0, mWidth,mHeight);
+                dirty.Union(0, 0, mRight-mLeft,mBottom-mTop);
             }
 
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
-                if (!dirty.intersect(0, 0, mWidth, mHeight)) {
+                if (!dirty.intersect(0, 0, mRight-mLeft,mBottom-mTop)) {
                     dirty.setEmpty();
                 }
             }
@@ -1518,10 +1518,10 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
             location[CHILD_TOP_INDEX] = mTop;
         } else {
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
-                dirty.set(0, 0, mWidth, mHeight);
+                dirty.set(0, 0, mRight-mLeft,mBottom-mTop);
             } else {
                 // in case the dirty rect extends outside the bounds of this container
-                dirty.Union(0, 0, mWidth, mHeight);
+                dirty.Union(0, 0, mRight-mLeft,mBottom-mTop);
             }
             location[CHILD_LEFT_INDEX]= mLeft;
             location[CHILD_TOP_INDEX] = mTop;
@@ -2170,6 +2170,54 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     } 
 
     return handled;
+}
+
+void ViewGroup::dispatchDetachedFromWindow(){
+    // If we still have a touch target, we are still in the process of
+    // dispatching motion events to a child; we need to get rid of that
+    // child to avoid dispatching events to it after the window is torn
+    // down. To make sure we keep the child in a consistent state, we
+    // first send it an ACTION_CANCEL motion event.
+    cancelAndClearTouchTargets(nullptr);
+
+    // Similarly, set ACTION_EXIT to all hover targets and clear them.
+    /*exitHoverTargets();
+    exitTooltipHoverTargets();
+
+    // In case view is detached while transition is running
+    mLayoutCalledWhileSuppressed = false;
+
+    // Tear down our drag tracking
+    mChildrenInterestedInDrag = null;
+    mIsInterestedInDrag = false;
+    if (mCurrentDragStartEvent != null) {
+        mCurrentDragStartEvent.recycle();
+        mCurrentDragStartEvent = null;
+    }*/
+
+    for (View*child:mChildren) {
+        child->dispatchDetachedFromWindow();
+    }
+    clearDisappearingChildren();
+    //final int transientCount = mTransientViews == null ? 0 : mTransientIndices.size();
+    for (View*view:mTransientViews){//int i = 0; i < transientCount; ++i) {
+        //View view = mTransientViews.get(i);
+        view->dispatchDetachedFromWindow();
+    }
+    View::dispatchDetachedFromWindow();
+}
+
+bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {
+    isVisible = View::dispatchVisibilityAggregated(isVisible);
+    for (View*child:mChildren){
+        // Only dispatch to visible children. Not visible children and their subtrees already
+        // know that they aren't visible and that's not going to change as a result of
+        // whatever triggered this dispatch.
+        if (child->getVisibility() == VISIBLE) {
+            child->dispatchVisibilityAggregated(isVisible);
+        }
+    }
+    return isVisible;
 }
 
 bool ViewGroup::requestFocus(int direction,Rect*previouslyFocusedRect){

@@ -54,7 +54,7 @@ ListView::~ListView(){
 }
 
 int ListView::getMaxScrollAmount()const {
-    return (int) (MAX_SCROLL_FACTOR * mHeight);
+    return (int) (MAX_SCROLL_FACTOR * (mBottom-mTop));
 }
 
 void ListView::adjustViewsUpOrDown() {
@@ -2232,7 +2232,7 @@ int ListView::distanceToView(View* descendant) {
     Rect tmpRect;
     descendant->getDrawingRect(tmpRect);
     offsetDescendantRectToMyCoords(descendant, tmpRect);
-    int listBottom = mHeight - mListPadding.height;
+    int listBottom = mBottom-mTop - mListPadding.height;
     if (tmpRect.bottom() < mListPadding.top) {
         distance = mListPadding.top - tmpRect.bottom();
     } else if (tmpRect.top > listBottom) {
@@ -2244,7 +2244,7 @@ int ListView::distanceToView(View* descendant) {
 void ListView::scrollListItemsBy(int amount){
     offsetChildrenTopAndBottom(amount);
 
-    int listBottom = getHeight() - mListPadding.height;
+    int listBottom = mBottom-mTop - mListPadding.height;
     int listTop = mListPadding.top;
 
     if (amount < 0) {
@@ -2425,7 +2425,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
         // Only modify the top and bottom in the loop, we set the left and right here
         Rect bounds;
         bounds.left = mPaddingLeft;
-        bounds.width = mWidth - mPaddingRight-mPaddingLeft;
+        bounds.width = mRight-mLeft - mPaddingRight-mPaddingLeft;
 
         int count = getChildCount();
         int headerCount = getHeaderViewsCount();
@@ -2449,7 +2449,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
             effectivePaddingBottom = mListPadding.height;//bottom;
         }
 
-        int listBottom = mWidth - effectivePaddingBottom + mScrollY;
+        int listBottom = mRight-mLeft - effectivePaddingBottom + mScrollY;
         if (!mStackFromBottom) {
             int bottom = 0;
             int scrollY = mScrollY;

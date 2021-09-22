@@ -140,8 +140,8 @@ View::View(int w,int h){
     initView();
     mContext=&App::getInstance();
 
-    mWidth  = w;
-    mHeight = h;
+    mRight  = w;
+    mBottom = h;
     mLeft = mTop =0;
 
     setBackgroundColor(0xFF000000);
@@ -231,7 +231,7 @@ void View::initView(){
     mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 =0;
     mScrollCache=nullptr;
     mRoundScrollbarRenderer=nullptr;
-    mTop = mLeft = mWidth = mHeight = 0;
+    mTop = mLeft = mRight = mBottom = 0;
     mOnClick = mOnLongClick = nullptr;
     mOnFocusChangeListener  = nullptr;
     mOnScrollChangeListener = nullptr;
@@ -321,6 +321,180 @@ View* View::findViewByPredicateInsideOut(View*start,std::function<bool(const Vie
     }
 }
 
+void View::setLeft(int left){
+    if (left == mLeft)return;
+    const bool matrixIsIdentity = hasIdentityMatrix();
+    if (matrixIsIdentity) {
+        if (mAttachInfo != nullptr) {
+            int minLeft;
+            int xLoc;
+            if (left < mLeft) {
+                minLeft = left;
+                xLoc = left - mLeft;
+            } else {
+                minLeft = mLeft;
+                xLoc = 0;
+            }
+            invalidate(xLoc, 0, mRight - minLeft, mBottom - mTop);
+        }
+    } else {
+        // Double-invalidation is necessary to capture view's old and new areas
+        invalidate(true);
+    }
+
+    int oldWidth = mRight - mLeft;
+    int height = mBottom - mTop;
+
+    mLeft = left;
+    //mRenderNode.setLeft(left);
+
+    sizeChange(mRight - mLeft, height, oldWidth, height);
+
+    if (!matrixIsIdentity) {
+        mPrivateFlags |= PFLAG_DRAWN; // force another invalidation with the new orientation
+        invalidate(true);
+    }
+    mBackgroundSizeChanged = true;
+    mDefaultFocusHighlightSizeChanged = true;
+    if (mForegroundInfo) {
+        mForegroundInfo->mBoundsChanged = true;
+    }
+    invalidateParentIfNeeded();
+    if ((mPrivateFlags2 & PFLAG2_VIEW_QUICK_REJECTED) == PFLAG2_VIEW_QUICK_REJECTED) {
+        // View was rejected last time it was drawn by its parent; this may have changed
+        invalidateParentIfNeeded();
+    }
+}
+
+void View::setTop(int top){
+    if (top == mTop) return;
+    const bool matrixIsIdentity = hasIdentityMatrix();
+    if (matrixIsIdentity) {
+        if (mAttachInfo != nullptr) {
+            int minTop;
+            int yLoc;
+            if (top < mTop) {
+                 minTop = top;
+                yLoc = top - mTop;
+            } else {
+                minTop = mTop;
+                yLoc = 0;
+            }
+            invalidate(0, yLoc, mRight - mLeft, mBottom - minTop);
+        }
+    } else {
+        // Double-invalidation is necessary to capture view's old and new areas
+        invalidate(true);
+    }
+
+    int width = mRight - mLeft;
+    int oldHeight = mBottom - mTop;
+
+    mTop = top;
+    //mRenderNode.setTop(mTop);
+
+    sizeChange(width, mBottom - mTop, width, oldHeight);
+
+    if (!matrixIsIdentity) {
+        mPrivateFlags |= PFLAG_DRAWN; // force another invalidation with the new orientation
+        invalidate(true);
+    }
+    mBackgroundSizeChanged = true;
+    mDefaultFocusHighlightSizeChanged = true;
+    if (mForegroundInfo) {
+        mForegroundInfo->mBoundsChanged = true;
+    }
+    invalidateParentIfNeeded();
+    if ((mPrivateFlags2 & PFLAG2_VIEW_QUICK_REJECTED) == PFLAG2_VIEW_QUICK_REJECTED) {
+        // View was rejected last time it was drawn by its parent; this may have changed
+        invalidateParentIfNeeded();
+    }
+}
+
+void View::setRight(int right){
+    if(mRight==right)return;
+    const bool matrixIsIdentity = hasIdentityMatrix();
+    if (matrixIsIdentity) {
+        if (mAttachInfo != nullptr) {
+            int maxRight;
+            if (right < mRight) {
+                maxRight = mRight;
+            } else {
+                maxRight = right;
+            }
+            invalidate(0, 0, maxRight - mLeft, mBottom - mTop);
+        }
+    } else {
+        // Double-invalidation is necessary to capture view's old and new areas
+        invalidate(true);
+    }
+
+    int oldWidth = mRight - mLeft;
+    int height = mBottom - mTop;
+
+    mRight = right;
+    //mRenderNode.setRight(mRight);
+
+    sizeChange(mRight - mLeft, height, oldWidth, height);
+
+    if (!matrixIsIdentity) {
+        mPrivateFlags |= PFLAG_DRAWN; // force another invalidation with the new orientation
+        invalidate(true);
+    }
+    mBackgroundSizeChanged = true;
+    mDefaultFocusHighlightSizeChanged = true;
+    if (mForegroundInfo != nullptr) {
+        mForegroundInfo->mBoundsChanged = true;
+    }
+    invalidateParentIfNeeded();
+    if ((mPrivateFlags2 & PFLAG2_VIEW_QUICK_REJECTED) == PFLAG2_VIEW_QUICK_REJECTED) {
+        // View was rejected last time it was drawn by its parent; this may have changed
+        invalidateParentIfNeeded();
+    }
+}
+
+void View::setBottom(int bottom){
+    if (bottom == mBottom)return;
+    bool matrixIsIdentity = hasIdentityMatrix();
+    if (matrixIsIdentity) {
+        if (mAttachInfo) {
+            int maxBottom;
+            if (bottom < mBottom) {
+                maxBottom = mBottom;
+            } else {
+                maxBottom = bottom;
+            }
+            invalidate(0, 0, mRight - mLeft, maxBottom - mTop);
+        }
+    } else {
+        // Double-invalidation is necessary to capture view's old and new areas
+        invalidate(true);
+    }
+    
+    int width = mRight - mLeft;
+    int oldHeight = mBottom - mTop;
+    
+    mBottom = bottom;
+    //mRenderNode.setBottom(mBottom);
+    
+    sizeChange(width, mBottom - mTop, width, oldHeight);
+    
+    if (!matrixIsIdentity) {
+        mPrivateFlags |= PFLAG_DRAWN; // force another invalidation with the new orientation
+        invalidate(true);
+    }
+    mBackgroundSizeChanged = true;
+    mDefaultFocusHighlightSizeChanged = true;
+    if (mForegroundInfo) {
+        mForegroundInfo->mBoundsChanged = true;
+    }
+    invalidateParentIfNeeded();
+    if ((mPrivateFlags2 & PFLAG2_VIEW_QUICK_REJECTED) == PFLAG2_VIEW_QUICK_REJECTED) {
+        // View was rejected last time it was drawn by its parent; this may have changed
+        invalidateParentIfNeeded();
+    }
+}
+
 int View::getLeft()const{
     return mLeft;
 }
@@ -330,11 +504,11 @@ int View::getTop()const{
 }
 
 int View::getRight()const{
-    return mLeft+mWidth;
+    return mRight;
 }
 
 int View::getBottom()const{
-    return mTop+mHeight;
+    return mBottom;
 }
 
 int View::getPaddingTop() {
@@ -511,9 +685,9 @@ void View::debugDrawFocus(Canvas&canvas){
     if (!isFocused()) return;
     const int cornerSquareSize = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
     const int l = mScrollX;
-    const int r = l + mWidth;
+    const int r = l + mRight-mLeft;
     const int t = mScrollY;
-    const int b = t + mHeight;
+    const int b = t + mBottom-mTop;
 
     canvas.set_color(DEBUG_CORNERS_COLOR);
 
@@ -536,7 +710,7 @@ void View::drawDefaultFocusHighlight(Canvas& canvas){
     if (mDefaultFocusHighlight != nullptr) {
         if (mDefaultFocusHighlightSizeChanged) {
             mDefaultFocusHighlightSizeChanged = false;
-            mDefaultFocusHighlight->setBounds(mScrollX, mScrollY,mWidth,mHeight);
+            mDefaultFocusHighlight->setBounds(mScrollX, mScrollY,mRight-mLeft,mBottom-mTop);
         }
         mDefaultFocusHighlight->draw(canvas);
     }
@@ -813,7 +987,33 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
 
 void View::dispatchDetachedFromWindow(){
     onDetachedFromWindow();
+    onDetachedFromWindowInternal();
     mAttachInfo = nullptr;
+}
+
+void View::onDetachedFromWindowInternal() {
+    mPrivateFlags &= ~PFLAG_CANCEL_NEXT_UP_EVENT;
+    mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
+    mPrivateFlags3 &= ~PFLAG3_TEMPORARY_DETACH;
+
+    removeUnsetPressCallback();
+    removeLongPressCallback();
+    removePerformClickCallback();
+    cancel(mSendViewScrolledAccessibilityEvent);
+    stopNestedScroll();
+
+    // Anything that started animating right before detach should already
+    // be in its final state when re-attached.
+    jumpDrawablesToCurrentState();
+
+    destroyDrawingCache();
+
+    cleanupDraw();
+    mCurrentAnimation = nullptr;
+
+    if ((mViewFlags & TOOLTIP) == TOOLTIP) {
+        hideTooltip();
+    }
 }
 
 void View::onWindowVisibilityChanged(int visibility) {
@@ -821,6 +1021,15 @@ void View::onWindowVisibilityChanged(int visibility) {
         //initialAwakenScrollBars();
         if(mScrollCache)awakenScrollBars(mScrollCache->scrollBarDefaultDelayBeforeFade*4,true);
     }
+}
+
+bool View::dispatchVisibilityAggregated(bool isVisible) {
+    bool thisVisible = getVisibility() == VISIBLE;
+    // If we're not visible but something is telling us we are, ignore it.
+    if (thisVisible || !isVisible) {
+        onVisibilityAggregated(isVisible);
+    }
+    return thisVisible && isVisible;
 }
 
 void View::onVisibilityAggregated(bool isVisible) {
@@ -1107,8 +1316,8 @@ void View::getRoundVerticalScrollBarBounds(Rect* bounds){
     // to hug the screen for round wearable devices.
     bounds->left = mScrollX;
     bounds->top = mScrollY;
-    bounds->width =  mWidth;
-    bounds->height = mHeight;
+    bounds->width =  mRight-mLeft;
+    bounds->height = mBottom -mTop;
 }
 
 int View::getHorizontalScrollbarHeight()const{
@@ -1585,7 +1794,7 @@ int View::getFadeTop(bool offsetRequired) {
 int View::getFadeHeight(bool offsetRequired) {
     int padding = mPaddingTop;
     if (offsetRequired) padding += getTopPaddingOffset();
-    return mHeight - mPaddingBottom - padding;
+    return (mBottom-mTop) - mPaddingBottom - padding;
 }
 
 bool View::isHardwareAccelerated()const{
@@ -1644,8 +1853,8 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
     int flags = parent->mGroupFlags;
     bool initialized = a->isInitialized();
     if (!initialized) {
-        a->initialize(mWidth, mHeight, parent->getWidth(), parent->getHeight());
-        a->initializeInvalidateRegion(0, 0, mWidth, mHeight);
+        a->initialize(mRight-mLeft, mBottom-mTop, parent->getWidth(), parent->getHeight());
+        a->initializeInvalidateRegion(0, 0, mRight-mLeft, mBottom-mTop);
         //if (mAttachInfo != null) a.setListenerHandler(mAttachInfo.mHandler);
         onAnimationStart();
     }
@@ -1673,14 +1882,14 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
                 // The child need to draw an animation, potentially offscreen, so
                 // make sure we do not cancel invalidate requests
                 parent->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
-                parent->invalidate(mLeft, mTop, mWidth, mHeight);
+                parent->invalidate(mLeft, mTop, mRight-mLeft, mBottom-mTop);
             }
         } else {
             //if (parent->mInvalidateRegion == nullptr) {
             //    parent->mInvalidateRegion = new RectF();
             //}
             Rect region ;//= parent->mInvalidateRegion;
-            a->getInvalidateRegion(0, 0, mWidth, mHeight, region,*invalidationTransform);
+            a->getInvalidateRegion(0, 0, mRight-mLeft, mBottom-mTop, region,*invalidationTransform);
 
             // The child need to draw an animation, potentially offscreen, so
             // make sure we do not cancel invalidate requests
@@ -1772,7 +1981,7 @@ void View::draw(Canvas&canvas){
     }
 
     int left = mScrollX + paddingLeft;
-    int right = left + mWidth - mPaddingRight - paddingLeft;
+    int right = left + (mRight-mLeft) - mPaddingRight - paddingLeft;
     int top = mScrollY + getFadeTop(offsetRequired);
     int bottom = top + getFadeHeight(offsetRequired);
 
@@ -1907,7 +2116,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     Rect rcc=Rect::MakeLTRB(cx1,cy1,cx2,cy2);
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
                     ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
-            false==rcc.intersect(mLeft, mTop, mWidth, mHeight)&& /*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
+            false/*==rcc.intersect(mLeft, mTop, mWidth, mHeight)*/&& /*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
             (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
         mPrivateFlags2 |= PFLAG2_VIEW_QUICK_REJECTED;
         return more;
@@ -2129,7 +2338,7 @@ void View::onDraw(Canvas&canvas){
 }
 
 const Rect View::getBound()const{
-    return Rect::Make(mLeft,mTop,mWidth,mHeight);
+    return Rect::MakeLTRB(mLeft,mTop,mRight,mBottom);
 }
 
 const Rect View::getDrawingRect()const{
@@ -2139,7 +2348,7 @@ const Rect View::getDrawingRect()const{
 }
 
 void View::getFocusedRect(Rect&r){
-    r.set(mLeft,mTop,mWidth,mHeight);
+    r.set(mLeft,mTop,mRight-mLeft,mBottom-mTop);
 }
 
 View& View::setId(int id){
@@ -2211,11 +2420,11 @@ Context*View::getContext()const{
 }
 
 int View::getWidth()const{
-    return mWidth;
+    return mRight-mLeft;
 }
 
 int View::getHeight()const{
-    return mHeight;
+    return mBottom-mTop;
 }
 
 void View::offsetTopAndBottom(int offset){
@@ -2409,15 +2618,15 @@ bool View::isLayoutRtl()const{
 
 bool View::setFrame(int left,int top,int width,int height){
     bool changed = false;
-    if (mLeft != left || mWidth != width || mTop != top || mHeight != height) {
+    if (mLeft != left || getWidth() != width || mTop != top || getHeight() != height) {
         changed = true;
 
         // Remember our drawn bit
         int drawn = mPrivateFlags & PFLAG_DRAWN;
 
-        int oldWidth = mWidth;
-        int oldHeight = mHeight;
-        int newWidth = width;
+        int oldWidth  = mRight-mLeft;
+        int oldHeight = mBottom-mTop;
+        int newWidth  = width;
         int newHeight = height;
         bool sizeChanged = (newWidth != oldWidth) || (newHeight != oldHeight);
 
@@ -2426,16 +2635,14 @@ bool View::setFrame(int left,int top,int width,int height){
 
         mLeft = left;
         mTop = top;
-        mWidth = width;
-        mHeight = height;
+        mRight  = left+width;
+        mBottom = top+height;
 
         LOGV("%p:%d (%d,%d %d,%d)",this,mID,left,top,width,height);
         mPrivateFlags |= PFLAG_HAS_BOUNDS;
 
-        if (sizeChanged) {
-            onSizeChanged(newWidth, newHeight, oldWidth, oldHeight);
-            //sizeChange(newWidth, newHeight, oldWidth, oldHeight);
-        }
+        if (sizeChanged)
+            sizeChange(newWidth, newHeight, oldWidth, oldHeight);
 
         if ((mViewFlags & VISIBILITY_MASK) == VISIBLE/*|| mGhostView != null*/) {
             // If we are visible, force the DRAWN bit to on so that
@@ -2464,31 +2671,28 @@ bool View::setFrame(int left,int top,int width,int height){
 }
 
 View& View::setPos(int x,int y){
-    setFrame(x,y,mWidth,mHeight);
+    setFrame(x,y,getWidth(),getHeight());
     return *this;
 }
 
 View& View::setSize(int w,int h){
-    if( (mWidth!=w)|| (mHeight!=h) ){
+    if( (getWidth()!=w)|| (getHeight()!=h) ){
         setFrame(mLeft,mTop,w,h);
-        mWidth=w;
-        mHeight=h;
-        onSizeChanged(w,h,mWidth,mHeight);
     }
     return *this;
 }
 
 const Rect View::getClientRect()const{
-    return Rect::Make(0,0,mWidth,mHeight);
+    return Rect::Make(0,0,getWidth(),getHeight());
 }
 
 void View::getHitRect(Rect& outRect){
-    outRect.set(mLeft,mTop,mWidth,mHeight);
+    outRect.set(mLeft,mTop,getWidth(),getHeight());
 }
 
 bool View::pointInView(int localX,int localY, int slop) {
-    return localX >= -slop && localY >= -slop && localX < (mWidth + slop) &&
-            localY < (mHeight + slop);
+    return localX >= -slop && localY >= -slop && localX < (mRight-mLeft + slop) &&
+            localY < (mBottom-mTop + slop);
 }
 
 void View::onResolveDrawables(int layoutDirection){
@@ -2878,7 +3082,7 @@ void View::setDefaultFocusHighlight(Drawable* highlight){
 }
 
 bool View::hasSize()const {
-    return mWidth>0 && mHeight>0;
+    return mRight-mLeft>0 && mBottom-mTop>0;
 }
 
 bool View::canTakeFocus()const{
@@ -3021,7 +3225,7 @@ View& View::setFlags(int flags,int mask) {
             // discounting clipping or overlapping. This makes it a good place
             // to change animation states.
             if (mParent  && mParent->isShown()) {
-                //dispatchVisibilityAggregated(newVisibility == VISIBLE);
+                dispatchVisibilityAggregated(newVisibility == VISIBLE);
             }
             //notifySubtreeAccessibilityStateChangedIfNeeded();
         }
@@ -3097,10 +3301,9 @@ bool View::hasFlag(int flag) const {
 void View::onAttachedToWindow(){
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     jumpDrawablesToCurrentState();
-    
-    onSizeChanged(mWidth,mHeight,-1,-1);
-    mPivotX =(float)mWidth/2.f;
-    mPivotY =(float)mHeight/2.f;
+     
+    mPivotX =(float)getWidth()/2.f;
+    mPivotY =(float)getHeight()/2.f;
 }
 
 void View::onDetachedFromWindow(){
@@ -3367,7 +3570,7 @@ void View::destroyDrawingCache(){
 
 void View::buildDrawingCache(bool autoScale){
     RefPtr<ImageSurface>bmp;
-    bmp=ImageSurface::create(Surface::Format::ARGB32,mWidth,mHeight);
+    bmp=ImageSurface::create(Surface::Format::ARGB32,getWidth(),getHeight());
     Canvas canvas(nullptr,bmp);
     computeScroll();
     canvas.translate(-mScrollX, -mScrollY);
@@ -3463,7 +3666,7 @@ void View::invalidate(int l,int t,int w,int h){
 }
 
 void View::invalidate(bool invalidateCache){
-    invalidateInternal(0, 0, mWidth, mHeight, invalidateCache, true);
+    invalidateInternal(0, 0, mRight-mLeft, mBottom-mTop, invalidateCache, true);
 }
  
 void View::postInvalidate(){
@@ -3497,10 +3700,12 @@ ViewGroup*View::getParent()const{
     return mParent;
 }
 
-View& View::setParent(ViewGroup*p){
-    mParent=p;
-    onAttachedToWindow();
-    return *this;
+void View::assignParent(ViewGroup*parent){
+    if(mParent ==nullptr)mParent=parent;
+    else if(parent==nullptr)mParent=nullptr;
+    else{
+        LOGE("View %p:%d being added but it already has a parent",this,mID);
+    }
 }
 
 ViewGroup*View::getRootView()const{
@@ -3907,8 +4112,8 @@ void View::layout(int l, int t, int w, int h){
     }
     int oldL = mLeft;
     int oldT = mTop;
-    int oldW = mWidth;
-    int oldH = mHeight;
+    int oldW = mRight-mLeft;
+    int oldH = mBottom-mTop;
     mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
     mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;
     bool changed=setFrame(l,t,w,h);
@@ -3968,6 +4173,21 @@ void View::layout(int l, int t, int w, int h){
 void View::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),
                 getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));
+}
+
+void View::sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight){
+    onSizeChanged(newWidth,newHeight,oldWidth,oldHeight);
+    if(isLayoutValid()){
+        if(newWidth<=0||newHeight<=0){
+            if(hasFocus()){
+                clearFocus();
+                if(mParent)mParent->clearFocusedInCluster(); 
+            }  
+        }else if(oldWidth<=0||oldHeight<=0){
+            if(mParent && canTakeFocus())
+                 mParent->focusableViewAvailable(this);
+        }
+    } 
 }
 
 void View::onSizeChanged(int w,int h,int ow,int oh){
@@ -4821,10 +5041,10 @@ int View::getBaseline(){
 }
 
 void View::getDrawingRect(Rect& outRect) {
-    outRect.left = mScrollX;
-    outRect.top = mScrollY;
-    outRect.width=mWidth;
-    outRect.height=mHeight;
+    outRect.left  = mScrollX;
+    outRect.top   = mScrollY;
+    outRect.width = getWidth();
+    outRect.height=getHeight();
 }
 
 long View::getDrawingTime() const{
@@ -5064,8 +5284,8 @@ bool View::isPivotSet()const{
 }
 
 void View::resetPivot(){
-    mPivotX=mWidth/2.f;
-    mPivotY=mHeight/2.f;
+    mPivotX=getWidth()/2.f;
+    mPivotY=getHeight()/2.f;
 }
 
 float View::getAlpha()const{

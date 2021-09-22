@@ -121,7 +121,7 @@ void GridView::fillGap(bool down) {
 View* GridView::fillDown(int pos, int nextTop) {
     View* selectedView = nullptr;
 
-    int end = mHeight;//(mBottom - mTop);
+    int end = (mBottom - mTop);
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
         end -= mListPadding.height;//bottom;
     }
@@ -147,12 +147,12 @@ View* GridView::makeRow(int startPos, int y, bool flow) {
     int columnWidth = mColumnWidth;
     int horizontalSpacing = mHorizontalSpacing;
 
-    bool isLayoutRtl = false;//isLayoutRtl();
+    bool bIsLayoutRtl = isLayoutRtl();
 
     int last;
     int nextLeft;
 
-    if (isLayoutRtl) {
+    if (bIsLayoutRtl) {
         nextLeft = getWidth() - mListPadding.width/*right*/ - columnWidth -
                    ((mStretchMode == STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
     } else {
@@ -167,7 +167,7 @@ View* GridView::makeRow(int startPos, int y, bool flow) {
 
         if (last - startPos < mNumColumns) {
             int deltaLeft = (mNumColumns - (last - startPos)) * (columnWidth + horizontalSpacing);
-            nextLeft += (isLayoutRtl ? -1 : +1) * deltaLeft;
+            nextLeft += (bIsLayoutRtl ? -1 : +1) * deltaLeft;
         }
     }
 
@@ -178,7 +178,7 @@ View* GridView::makeRow(int startPos, int y, bool flow) {
     int selectedPosition = mSelectedPosition;
 
     View* child = nullptr;
-    int nextChildDir = isLayoutRtl ? -1 : +1;
+    int nextChildDir = bIsLayoutRtl ? -1 : +1;
     for (int pos = startPos; pos < last; pos++) {
         // is this the selected item?
         bool selected = pos == selectedPosition;
@@ -407,7 +407,7 @@ void GridView::correctTooHigh(int numColumns, int verticalSpacing, int childCoun
         // ... and its bottom edge
         int lastBottom = lastChild->getBottom();
         // This is bottom of our drawable area
-        int end = mHeight - mListPadding.height;//bottom;
+        int end = mBottom-mTop - mListPadding.height;//bottom;
 
         // This is how far the bottom edge of the last view is from the bottom of the
         // drawable area
@@ -449,7 +449,7 @@ void GridView::correctTooLow(int numColumns, int verticalSpacing, int childCount
         int start = mListPadding.top;
 
         // This is bottom of our drawable area
-        int end = mHeight - mListPadding.height;//bottom;
+        int end = mBottom-mTop - mListPadding.height;//bottom;
 
         // This is how far the top edge of the first view is from the top of the
         // drawable area
@@ -828,7 +828,7 @@ void GridView::layoutChildren() {
     }
 
     int childrenTop = mListPadding.top;
-    int childrenBottom = mHeight - mListPadding.height;
+    int childrenBottom = mBottom-mTop - mListPadding.height;
 
     int childCount = getChildCount();
     int index;

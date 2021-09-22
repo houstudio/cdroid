@@ -1341,7 +1341,7 @@ bool TextView::isMarqueeFadeEnabled(){
 }
 
 bool TextView::canMarquee(){
-    int width = mWidth - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    int width = mRight-mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
     return width > 0 && (mLayout->getLineWidth(0) > width);
         /*|| (mMarqueeFadeMode != MARQUEE_FADE_NORMAL && mSavedMarqueeModeLayout != nullptr
                     && mSavedMarqueeModeLayout->getLineWidth(0) > width));*/
@@ -1490,7 +1490,7 @@ void TextView::onDraw(Canvas& canvas) {
 
     // translate in by our padding
     /* shortcircuit calling getVerticaOffset() */
-    LOGV("%p height=%d voffsetText=%d %s gravity=%x alignment=%x",this,mHeight,voffsetText,getText().c_str(),
+    LOGV("%p height=%d voffsetText=%d %s gravity=%x alignment=%x",this,getHeight(),voffsetText,getText().c_str(),
            (mGravity & Gravity::VERTICAL_GRAVITY_MASK),getTextAlignment());
     if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
         voffsetText = getVerticalOffset(false);
@@ -1516,7 +1516,7 @@ void TextView::onDraw(Canvas& canvas) {
     if (isMarqueeFadeEnabled()) {
         if (!mSingleLine && getLineCount() == 1 && canMarquee()
             && (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) != Gravity::LEFT) {
-            const int width = mWidth;
+            const int width = mRight-mLeft;
             const int padding = getCompoundPaddingLeft() + getCompoundPaddingRight();
             const float dx = layout->getLineRight(0) - (width - padding);
             canvas.translate(layout->getParagraphDirection(0) * dx, 0.0f);

@@ -42,7 +42,7 @@ float ScrollView::getBottomFadingEdgeStrength() {
 }
 
 int ScrollView::getMaxScrollAmount() {
-    return (int) (MAX_SCROLL_FACTOR * mHeight);
+    return (int) (MAX_SCROLL_FACTOR * (mBottom-mTop));
 }
 
 void ScrollView::initScrollView() {

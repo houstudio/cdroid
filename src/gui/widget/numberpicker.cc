@@ -599,7 +599,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         return;
     }
     bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
-    float x = mWidth / 2;
+    float x = (mRight-mLeft) / 2;
     float y = mCurrentScrollOffset;
     Rect rc=mInputText->getBound();
     // draw the virtual buttons pressed state if needed
@@ -607,12 +607,12 @@ void NumberPicker::onDraw(Canvas&canvas){
             && mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
         if (mDecrementVirtualButtonPressed) {
             mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
-            mVirtualButtonPressedDrawable->setBounds(0, 0, mWidth, mTopSelectionDividerTop);
+            mVirtualButtonPressedDrawable->setBounds(0, 0, mRight-mLeft, mTopSelectionDividerTop);
             mVirtualButtonPressedDrawable->draw(canvas);
         }
         if (mIncrementVirtualButtonPressed) {
             mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
-            mVirtualButtonPressedDrawable->setBounds(0, mBottomSelectionDividerBottom, mWidth,mHeight);
+            mVirtualButtonPressedDrawable->setBounds(0, mBottomSelectionDividerBottom, mRight-mLeft,mBottom-mTop);
             mVirtualButtonPressedDrawable->draw(canvas);
         }
     }
@@ -623,7 +623,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     int selectorWheelColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
-    Rect rctxt={0,mCurrentScrollOffset,mWidth,mSelectorElementHeight};
+    Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight};
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
@@ -645,13 +645,13 @@ void NumberPicker::onDraw(Canvas&canvas){
         // draw the top divider
         int topOfTopDivider = mTopSelectionDividerTop;
         int bottomOfTopDivider = topOfTopDivider + mSelectionDividerHeight;
-        mSelectionDivider->setBounds(0, topOfTopDivider, mWidth, mSelectionDividerHeight);
+        mSelectionDivider->setBounds(0, topOfTopDivider, mRight-mLeft, mSelectionDividerHeight);
         mSelectionDivider->draw(canvas);
 
         // draw the bottom divider
         int bottomOfBottomDivider = mBottomSelectionDividerBottom;
         int topOfBottomDivider = bottomOfBottomDivider - mSelectionDividerHeight;
-        mSelectionDivider->setBounds(0, topOfBottomDivider, mWidth, mSelectionDividerHeight);
+        mSelectionDivider->setBounds(0, topOfBottomDivider, mRight-mLeft, mSelectionDividerHeight);
         mSelectionDivider->draw(canvas);
     }
 }
@@ -741,7 +741,7 @@ void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
     std::vector<int>&selectorIndices = mSelectorIndices;
     int totalTextHeight = selectorIndices.size() * mTextSize;
-    float totalTextGapHeight = mHeight - totalTextHeight;
+    float totalTextGapHeight = mBottom-mTop - totalTextHeight;
     float textGapCount = selectorIndices.size();
     mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount + 0.5f);
     mSelectorElementHeight = mTextSize + mSelectorTextGapHeight;
@@ -754,7 +754,7 @@ void NumberPicker::initializeSelectorWheel(){
 
 void NumberPicker::initializeFadingEdges(){
     setVerticalFadingEdgeEnabled(true);
-    setFadingEdgeLength((mHeight - mTextSize) / 2);
+    setFadingEdgeLength((mRight-mLeft - mTextSize) / 2);
 }
 
 void NumberPicker::onScrollerFinished(Scroller* scroller) {

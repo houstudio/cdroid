@@ -386,7 +386,7 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
     
     canvas.set_color(0xFFFFFFFF);
     canvas.move_to(0,headerHeight);
-    canvas.line_to(mWidth,headerHeight);
+    canvas.line_to(mRight-mLeft,headerHeight);
     canvas.stroke();
     Rect rctxt={0,headerHeight,mCellWidth,rowHeight};
     for (int col = 0; col < DAYS_IN_WEEK; col++) {
@@ -403,7 +403,7 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
         rctxt.offset(mCellWidth,0);
     }
     canvas.move_to(0,headerHeight+rowHeight);
-    canvas.line_to(mWidth,headerHeight+rowHeight);
+    canvas.line_to(mRight-mLeft,headerHeight+rowHeight);
     canvas.stroke();
 }
 
@@ -472,7 +472,7 @@ void SimpleMonthView::drawDays(Canvas& canvas){
     canvas.set_color(0xFF00FF00);
     for(int i=0;i<5;i++){
         canvas.move_to(0,headerHeight+i*rowHeight);
-        canvas.line_to(mWidth,headerHeight+i*rowHeight);
+        canvas.line_to(mRight-mLeft,headerHeight+i*rowHeight);
         canvas.stroke();
     }
 }

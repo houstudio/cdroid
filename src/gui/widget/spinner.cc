@@ -112,7 +112,7 @@ void Spinner::onLayout(bool changed, int x, int y, int w, int h) {
 
 void Spinner::layout(int delta, bool animate){
     int childrenLeft = mSpinnerPadding.left;
-    int childrenWidth = mWidth - mSpinnerPadding.left - mSpinnerPadding.width;
+    int childrenWidth = getWidth() - mSpinnerPadding.left - mSpinnerPadding.width;
 
     if (mDataChanged) {
         handleDataChanged();

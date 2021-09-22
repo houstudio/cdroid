@@ -1021,7 +1021,7 @@ bool AbsListView::resurrectSelection() {
     int selectedTop = 0;
     int selectedPos;
     int childrenTop = mListPadding.top;
-    int childrenBottom = mHeight - mListPadding.height;
+    int childrenBottom = mBottom-mTop - mListPadding.height;
     int firstPosition = mFirstPosition;
     int toPosition = mResurrectToPosition;
     bool down = true;
