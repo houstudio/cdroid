@@ -29,6 +29,8 @@ GraphDevice&GraphDevice::GraphDevice::getInstance(){
 GraphDevice::GraphDevice(int fmt){
     mInst=this;
     compose_event=0;
+    mFpsStartTime=mFpsPrevTime=0;
+    mFpsNumFrames=0;
     GFXInit();
     GFXGetScreenSize((UINT*)&width,(UINT*)&height);
 
@@ -47,17 +49,25 @@ GraphDevice::~GraphDevice(){
     LOGD("%p Destroied",this);
 }
 
-void GraphDevice::getTextExtens(const std::string&txt,int fontsize,TextExtents&te){
-    primaryContext->save();
-    primaryContext->set_font_size(fontsize);
-    primaryContext->get_text_extents(txt,te);
-    primaryContext->restore();
-}
-void GraphDevice::getFontExtents(int fontsize,FontExtents&fe){
-    primaryContext->save();
-    primaryContext->set_font_size(fontsize);
-    primaryContext->get_font_extents(fe);
-    primaryContext->restore();
+void GraphDevice::trackFPS() {
+    // Tracks frames per second drawn. First value in a series of draws may be bogus
+    // because it down not account for the intervening idle time
+    long nowTime = SystemClock::currentTimeMillis();
+    if (mFpsStartTime <= 0) {
+        mFpsStartTime = mFpsPrevTime = nowTime;
+        mFpsNumFrames = 0;
+    } else {
+        ++mFpsNumFrames;
+        long frameTime = nowTime - mFpsPrevTime;
+        long totalTime = nowTime - mFpsStartTime;
+        mFpsPrevTime = nowTime;
+        if (totalTime > 1000) {
+            float fps = (float) mFpsNumFrames * 1000 / totalTime;
+            LOGD("\tFPS:%f",fps);
+            mFpsStartTime = nowTime;
+            mFpsNumFrames = 0;
+        }
+    }
 }
 
 void GraphDevice::getScreenSize(int &w,int&h){
@@ -135,7 +145,7 @@ void GraphDevice::remove(Canvas*ctx){
 void GraphDevice::ComposeSurfaces(){
     int rects=0;
     long t2,t1=SystemClock::uptimeMillis();
-
+    trackFPS();
     std::sort(gSurfaces.begin(),gSurfaces.end(),[](Canvas*c1,Canvas*c2){
         return c2->mLayer-c1->mLayer>0;
     });

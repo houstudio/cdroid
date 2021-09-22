@@ -12,20 +12,22 @@ private:
     int height;
     int format;
     uint64_t last_compose_time;
+    uint64_t mFpsStartTime;
+    uint64_t mFpsPrevTime;
+    uint64_t mFpsNumFrames;
     class Canvas*primaryContext;//
     DWORD compose_event;
     HANDLE primarySurface;
     std::vector<class Canvas*>gSurfaces;
     static GraphDevice*mInst;
     GraphDevice(int format=-1);
+    void trackFPS();
 public:
    static GraphDevice&getInstance();
    ~GraphDevice();
    void getScreenSize(int &w,int&h);
    int getScreenWidth();
    int getScreenHeight();
-   void getTextExtens(const std::string&,int fontsize,TextExtents&te); 
-   void getFontExtents(int fontsize,FontExtents&fe);
    void flip();
    void ComposeSurfaces();
    bool needCompose();

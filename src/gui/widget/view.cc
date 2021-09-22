@@ -1907,7 +1907,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     Rect rcc=Rect::MakeLTRB(cx1,cy1,cx2,cy2);
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
                     ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
-            rcc.intersect(mLeft, mTop, mWidth, mHeight)&& /*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
+            false==rcc.intersect(mLeft, mTop, mWidth, mHeight)&& /*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
             (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
         mPrivateFlags2 |= PFLAG2_VIEW_QUICK_REJECTED;
         return more;
