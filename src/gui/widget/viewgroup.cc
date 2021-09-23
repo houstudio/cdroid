@@ -1874,7 +1874,7 @@ void ViewGroup::addFocusables(std::vector<View*>& views, int direction, int focu
         if(c->getVisibility()==View::VISIBLE)
            children.push_back(c);
     });
-    //FocusFinder::sort(children, 0, children.size(), this, isLayoutRtl());
+    FocusFinder::sort(children, 0, children.size(), this, isLayoutRtl());
     for (int i = 0; i < children.size(); ++i) {
         children[i]->addFocusables(views, direction, focusableMode);
     }
@@ -1906,7 +1906,40 @@ void ViewGroup::clearFocusedInCluster(View* child) {
     clearFocusedInCluster();
 }
 
-void ViewGroup::addKeyboardNavigationClusters(std::vector<View*>&views,int drection)const{
+void ViewGroup::addKeyboardNavigationClusters(std::vector<View*>&views,int direction){
+    int focusableCount = views.size();
+
+    if (isKeyboardNavigationCluster()) {
+        // Cluster-navigation can enter a touchscreenBlocksFocus cluster, so temporarily
+        // disable touchscreenBlocksFocus to evaluate whether it contains focusables.
+        bool blockedFocus = getTouchscreenBlocksFocus();
+        setTouchscreenBlocksFocusNoRefocus(false);
+        View::addKeyboardNavigationClusters(views, direction);
+        setTouchscreenBlocksFocusNoRefocus(blockedFocus);
+    } else {
+        View::addKeyboardNavigationClusters(views, direction);
+    }
+
+    if (focusableCount != views.size()) {
+        // No need to look for groups inside a group.
+        return;
+    }
+
+    if (getDescendantFocusability() == FOCUS_BLOCK_DESCENDANTS) {
+        return;
+    }
+
+    int count = 0;
+    std::vector<View*>visibleChildren;
+    for (View*child:mChildren){//int i = 0; i < mChildrenCount; ++i) {
+        if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
+            visibleChildren.push_back(child);//[count++] = child;
+        }
+    }
+    FocusFinder::sort(visibleChildren, 0, count, this, isLayoutRtl());
+    for (int i = 0; i < count; ++i) {
+        visibleChildren[i]->addKeyboardNavigationClusters(views, direction);
+    }
 }
 
 void ViewGroup::transformPointToViewLocal(float point[2],View&child) {

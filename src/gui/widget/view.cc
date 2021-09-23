@@ -3974,8 +3974,10 @@ void View::setFocusableInTouchMode(bool focusableInTouchMode){
     }
 }
 
-void View::addKeyboardNavigationClusters(std::vector<View*>&views,int drection)const{
-    
+void View::addKeyboardNavigationClusters(std::vector<View*>&views,int drection){
+    if(!isKeyboardNavigationCluster()) return;
+    if(!hasFocusable())return;
+    views.push_back((View*)this);
 }
 
 std::vector<View*>View::getFocusables(int direction){

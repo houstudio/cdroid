@@ -507,5 +507,60 @@ bool FocusFinder::isTouchCandidate(int x, int y,const RECT&destRect, int directi
     }
 }
 
+void FocusFinder::sort(std::vector<View*>&views, int start, int end, ViewGroup* root, bool isRtl){
+    const int count = end - start;
+    std::map<View*,Rect>mRectByView;
+    if (count < 2) {
+        return;
+    }
+    const int mRtlMult = isRtl ? -1 : 1;
+    for (int i = start; i < end; ++i) {
+        Rect next;
+        views[i]->getDrawingRect(next);
+        root->offsetDescendantRectToMyCoords(views[i], next);
+        mRectByView.insert(std::map<View*,Rect>::value_type(views[i], next));
+    }
+
+    // Sort top-to-bottom
+    std::sort(views.begin()+start,views.begin()+count,[&mRectByView](View*first,View*second)->bool{
+        if(first==second)return 0;
+        Rect firstRect = mRectByView[first];
+        Rect secondRect= mRectByView[second];
+        int result =firstRect.top -secondRect.top;
+        return result?result:(firstRect.bottom() -secondRect.bottom());
+    });// mTopsComparator);
+    // Sweep top-to-bottom to identify rows
+    int sweepBottom = mRectByView[views[start]].bottom();
+    int rowStart = start;
+    int sweepIdx = start + 1;
+
+    auto mSidesComparator=[mRtlMult,&mRectByView](View*first,View*second)->bool{
+        if(first == second)return 0;
+        Rect firstRect = mRectByView[first];
+        Rect secondRect= mRectByView[second];
+        int result = firstRect.left -secondRect.left;
+        if(result ==0 ) return firstRect.right() -secondRect.right(); 
+        return mRtlMult*result;
+    };
+    for (; sweepIdx < end; ++sweepIdx) {
+        Rect currRect = mRectByView[views[sweepIdx]];
+        if (currRect.top >= sweepBottom) {
+            // Next view is on a new row, sort the row we've just finished left-to-right.
+            if ((sweepIdx - rowStart) > 1) {
+                std::sort(views.begin()+rowStart, views.begin()+sweepIdx, mSidesComparator);
+            }
+            sweepBottom = currRect.bottom();
+            rowStart = sweepIdx;
+        } else {
+            // Next view vertically overlaps, we need to extend our "row height"
+            sweepBottom = std::max(sweepBottom, currRect.bottom());
+        }
+    }
+    // Sort whatever's left (final row) left-to-right
+    if ((sweepIdx - rowStart) > 1) {
+        std::sort(views.begin()+rowStart,views.begin()+sweepIdx, mSidesComparator);
+    }
+}
+
 }//namespace
 

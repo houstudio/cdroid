@@ -49,6 +49,7 @@ public:
      * @return The next focusable view, or null if none exists.
      */
     static FocusFinder&getInstance();
+    static void sort(std::vector<View*>&views, int start, int end, ViewGroup* root, bool isRtl);
     View* findNextFocus(ViewGroup* root, View* focused, int direction);
     View* findNextFocus(ViewGroup* root, View* focused,RECT* focusedRect, int direction);
     View* findNextFocusFromRect(ViewGroup* root,const RECT* focusedRect, int direction);

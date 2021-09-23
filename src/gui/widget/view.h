@@ -792,7 +792,7 @@ public:
     std::vector<View*>getFocusables(int direction);
     void setKeyboardNavigationCluster(bool);
     bool isKeyboardNavigationCluster()const;
-    virtual void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)const;
+    virtual void addKeyboardNavigationClusters(std::vector<View*>&views,int drection);
     virtual bool dispatchTouchEvent(MotionEvent& event);
     virtual bool dispatchGenericMotionEvent(MotionEvent& event);
 
