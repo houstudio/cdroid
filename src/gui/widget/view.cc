@@ -998,8 +998,8 @@ void View::onDetachedFromWindowInternal() {
 
     removeUnsetPressCallback();
     removeLongPressCallback();
-    removePerformClickCallback();
-    cancel(mSendViewScrolledAccessibilityEvent);
+    //removePerformClickCallback();
+    //cancel(mSendViewScrolledAccessibilityEvent);
     stopNestedScroll();
 
     // Anything that started animating right before detach should already
@@ -1008,11 +1008,11 @@ void View::onDetachedFromWindowInternal() {
 
     destroyDrawingCache();
 
-    cleanupDraw();
+    //cleanupDraw();
     mCurrentAnimation = nullptr;
 
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {
-        hideTooltip();
+        //hideTooltip();
     }
 }
 

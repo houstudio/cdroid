@@ -243,6 +243,7 @@ void AbsListView::initAbsListView() {
     mPositionScroller= nullptr;
     mStackFromBottom = false;
     mIsChildViewEnabled =false;
+    mIsDetaching =false;
  
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mOnScrollListener.onScroll = nullptr;
@@ -761,7 +762,7 @@ void AbsListView::setStackFromBottom(bool stackFromBottom) {
 void AbsListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect) {
     AdapterView::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
     if (gainFocus && mSelectedPosition < 0 && !isInTouchMode()) {
-        if (/*!isAttachedToWindow() &&*/ mAdapter != nullptr) {
+        if (!isAttachedToWindow() && mAdapter != nullptr) {
             // Data may have changed while we were detached and it's valid
             // to change focus while detached. Refresh so we don't die.
             mDataChanged = true;
@@ -1474,7 +1475,7 @@ int AbsListView::getDistance(const Rect& source,const Rect& dest, int direction)
 
 void AbsListView::reclaimViews(std::vector<View*>& views){
     const int childCount = getChildCount();
-    //RecycleBin::RecyclerListener listener = mRecycler->mRecyclerListener;
+    RecycleBin::RecyclerListener listener = mRecycler->mRecyclerListener;
 
     // Reclaim views on screen
     for (int i = 0; i < childCount; i++) {
@@ -1484,10 +1485,10 @@ void AbsListView::reclaimViews(std::vector<View*>& views){
         if (lp  && mRecycler->shouldRecycleViewType(lp->viewType)) {
             views.push_back(child);
             //child.setAccessibilityDelegate(null);
-            /*if (listener != nullptr) {
+            if (listener != nullptr) {
                 // Pretend they went through the scrap heap
-                listener.onMovedToScrapHeap(child);
-            }*/
+                listener(*child);//.onMovedToScrapHeap(child);
+            }
         }
     }
     mRecycler->reclaimScrapViews(views);
@@ -1847,6 +1848,87 @@ void AbsListView::jumpDrawablesToCurrentState() {
     if (mSelector) mSelector->jumpToCurrentState();
 }
 
+void AbsListView::onAttachedToWindow() {
+    AdapterView::onAttachedToWindow();
+
+    /*ViewTreeObserver treeObserver = getViewTreeObserver();
+    treeObserver.addOnTouchModeChangeListener(this);
+    if (mTextFilterEnabled && mPopup != null && !mGlobalLayoutListenerAddedFilter) {
+        treeObserver.addOnGlobalLayoutListener(this);
+    }*/
+
+    if (mAdapter && mDataSetObserver) {
+        mDataSetObserver = new AdapterDataSetObserver(this);
+        mAdapter->registerDataSetObserver(mDataSetObserver);
+
+        // Data may have changed while we were detached. Refresh.
+        mDataChanged = true;
+        mOldItemCount = mItemCount;
+        mItemCount = mAdapter->getCount();
+    }
+}
+
+void AbsListView::onDetachedFromWindow() {
+    AdapterView::onDetachedFromWindow();
+
+    mIsDetaching = true;
+
+    // Dismiss the popup in case onSaveInstanceState() was not invoked
+    dismissPopup();
+
+    // Detach any view left in the scrap heap
+    mRecycler->clear();
+
+    /*ViewTreeObserver treeObserver = getViewTreeObserver();
+    treeObserver.removeOnTouchModeChangeListener(this);
+    if (mTextFilterEnabled && mPopup != nullptr) {
+        treeObserver.removeOnGlobalLayoutListener(this);
+        mGlobalLayoutListenerAddedFilter = false;
+    }*/
+
+    if (mAdapter && mDataSetObserver) {
+        mAdapter->unregisterDataSetObserver(mDataSetObserver);
+        mDataSetObserver = nullptr;
+    }
+
+    /*if (mScrollStrictSpan != nullptr) {
+        mScrollStrictSpan.finish();
+        mScrollStrictSpan = nullptr;
+    }
+
+    if (mFlingStrictSpan != nullptr) {
+        mFlingStrictSpan.finish();
+        mFlingStrictSpan = nullptr;
+    }*/
+
+    removeCallbacks(mFlingRunnable);
+
+    /*if (mPositionScroller != nullptr) {
+        mPositionScroller->stop();
+    }
+
+    if (mClearScrollingCache != nullptr) {
+        removeCallbacks(mClearScrollingCache);
+    }
+
+    if (mPerformClick != nullptr) {
+        removeCallbacks(mPerformClick);
+    }
+
+    if (mTouchModeReset != nullptr) {
+        removeCallbacks(mTouchModeReset);
+        mTouchModeReset->run();
+    }*/
+
+    mIsDetaching = false;
+}
+
+void AbsListView::dismissPopup(){
+}
+
+void AbsListView::showPopup(){
+}
+
 void AbsListView::updateOnScreenCheckedViews() {
     int firstPos = mFirstPosition;
     int count = getChildCount();
@@ -1986,13 +2068,13 @@ bool AbsListView::onInterceptTouchEvent(MotionEvent& ev) {
     int actionMasked = ev.getActionMasked();
     if (mPositionScroller)  mPositionScroller->stop();
 
-    /*if (mIsDetaching || !isAttachedToWindow()) {
+    if (mIsDetaching || !isAttachedToWindow()) {
         // Something isn't right.
         // Since we rely on being attached to get data set change notifications,
         // don't risk doing anything where we might try to resync and find things
         // in a bogus state.
         return false;
-    }*/
+    }
 
     //if (mFastScroll && mFastScroll->onInterceptTouchEvent(ev)) return true;
     switch (actionMasked) {
@@ -2120,13 +2202,13 @@ bool AbsListView::onTouchEvent(MotionEvent& ev) {
     if (mPositionScroller)  mPositionScroller->stop();
 
 
-    /*if (mIsDetaching || !isAttachedToWindow()) {
+    if (mIsDetaching || !isAttachedToWindow()) {
         // Something isn't right.
         // Since we rely on being attached to get data set change notifications,
         // don't risk doing anything where we might try to resync and find things
         // in a bogus state.
         return false;
-    }*/
+    }
 
     startNestedScroll(SCROLL_AXIS_VERTICAL);
 
@@ -2633,7 +2715,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                              mTouchMode = TOUCH_MODE_REST;
                              child->setPressed(false);
                              setPressed(false);
-                             if (!mDataChanged /*&& !mIsDetaching && isAttachedToWindow()*/) {
+                             if (!mDataChanged && !mIsDetaching && isAttachedToWindow()) {
                                  doClick(mMotionPosition);//performClick.run();
                              }
                         };

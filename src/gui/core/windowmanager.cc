@@ -59,11 +59,14 @@ void WindowManager::addWindow(Window*win){
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
     if(activeWindow)activeWindow->post(std::bind(&Window::onDeactive,activeWindow));
+    win->post([win](){
+        View::AttachInfo*info=new View::AttachInfo();
+        info->mRootView=win;
+        win->dispatchAttachedToWindow(info,win->getVisibility());
+    });
+    Looper::getDefault()->addEventHandler(win->source);
     win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
-    win->mAttachInfo=new View::AttachInfo();
-	win->mAttachInfo->mRootView=win;
-    Looper::getDefault()->addEventHandler(win->source);
     resetVisibleRegion();
     LOGV("win=%p source=%p windows.size=%d",win,win->source,windows.size());
 }
@@ -199,23 +202,23 @@ void WindowManager::resetVisibleRegion(){
     for (auto w=windows.begin() ;w!= windows.end();w++){
         Rect rcw=(*w)->getBound();
         RefPtr<Region>newrgn=Region::create((RectangleInt&)rcw);
-        if((*w)->getVisibility()!=View::VISIBLE)continue;
+        if((*w)->getVisibility()!=View::VISIBLE||(*w)->isAttachedToWindow()==false)continue;
 
-       for(auto w1=w+1;w1!=windows.end();w1++){
-           if((*w1)->getVisibility()!=View::VISIBLE)continue;
-           if((*w1)->mWindowRgn==nullptr || (*w1)->mWindowRgn->empty()){
-               RECT r=(*w1)->getBound();
-               newrgn->subtract((const RectangleInt&)r);
-           }else{
-               RefPtr<Region>tmp=(*w1)->mWindowRgn->copy();
-               tmp->translate((*w1)->getX(),(*w1)->getY());
-               newrgn->subtract(tmp);
-           }
-       }
-       newrgn->translate(-rcw.left,-rcw.top);
-       if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
-           newrgn->intersect((*w)->mWindowRgn); 
-       }
+        for(auto w1=w+1;w1!=windows.end();w1++){
+            if((*w1)->getVisibility()!=View::VISIBLE)continue;
+            if((*w1)->mWindowRgn==nullptr || (*w1)->mWindowRgn->empty()){
+                RECT r=(*w1)->getBound();
+                newrgn->subtract((const RectangleInt&)r);
+            }else{
+                RefPtr<Region>tmp=(*w1)->mWindowRgn->copy();
+                tmp->translate((*w1)->getX(),(*w1)->getY());
+                newrgn->subtract(tmp);
+            }
+        }
+        newrgn->translate(-rcw.left,-rcw.top);
+        if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
+            newrgn->intersect((*w)->mWindowRgn); 
+        }
         (*w)->getCanvas()->set_layer((*w)->mLayer,newrgn);
         LOGV("window %p[%s] Layer=%d %d rects visible=%d",(*w),(*w)->getText().c_str(),(*w)->mLayer,
                    newrgn->get_num_rectangles(),(*w)->getVisibility());

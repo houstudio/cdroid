@@ -566,7 +566,7 @@ void ImageView::updateDrawable(Drawable*d){
         sameDrawable = mDrawable == d;
         mDrawable->setCallback(nullptr);
         unscheduleDrawable(*mDrawable);
-        if ( !sameDrawable ){//&& isAttachedToWindow()) {
+        if ( !sameDrawable && isAttachedToWindow()) {
             mDrawable->setVisible(false, false);
         }
     }

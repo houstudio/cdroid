@@ -172,6 +172,8 @@ private:
     void finishGlows();
     void createScrollingCache();
     void clearScrollingCache();
+    void dismissPopup();
+    void showPopup();
 protected:
     int mChoiceMode;
     int mCheckedItemCount;
@@ -203,6 +205,7 @@ protected:
     int mSelectionBottomPadding;
     int mOverscrollMax;
     bool mIsScrap[2]; 
+    bool mIsDetaching;
     Rect mSelectorRect;
     Rect mListPadding;/*The view's padding*/
     int mWidthMeasureSpec;
@@ -259,7 +262,9 @@ protected:
     void requestLayoutIfNecessary();
  
     bool resurrectSelection(); 
-    bool resurrectSelectionIfNeeded(); 
+    bool resurrectSelectionIfNeeded();
+    void onAttachedToWindow()override;
+    void onDetachedFromWindow()override;
     virtual void setSelectionInt(int position)=0; 
     virtual int getHeightForPosition(int position);
     virtual int getHeaderViewsCount()const;

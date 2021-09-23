@@ -14,8 +14,8 @@ namespace cdroid{
 class RecycleBin{
 public:
     DECLARE_UIEVENT(void,RecyclerListener,View&);
-private:
     RecyclerListener mRecyclerListener;
+private:
     class AbsListView*LV;
     int mFirstActivePosition;
     std::vector<View*>mActiveViews;

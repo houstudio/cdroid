@@ -128,6 +128,7 @@ protected:
     bool trackMotionScroll(int deltaY, int incrementalDeltaY)override;
 
     int findMotionRow(int y)override;
+    bool canAnimate()const override;
     void setSelectionInt(int position);
     void drawDivider(Canvas&canvas,const Rect&bounds, int childIndex);
     void drawOverscrollHeader(Canvas&canvas, Drawable* drawable,Rect& bounds);

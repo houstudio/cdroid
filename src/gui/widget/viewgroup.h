@@ -139,7 +139,7 @@ protected:
     Transformation*mInvalidationTransformation;
     LONGLONG time_lastframe;
     OnHierarchyChangeListener mOnHierarchyChangeListener;
-    bool canAnimate();
+    virtual bool canAnimate()const;
     void setDefaultFocus(View* child);
     void clearDefaultFocus(View* child);
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;

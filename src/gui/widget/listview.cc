@@ -384,7 +384,7 @@ void ListView::fillGap(bool down) {
 View* ListView::fillDown(int pos, int nextTop) {
     View* selectedView = nullptr;
 
-    int end = getHeight();//(mBottom - mTop);
+    int end = (mBottom - mTop);
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
         end -= mListPadding.height;
     }
@@ -1294,10 +1294,9 @@ void ListView::layoutChildren() {
 
     // Tell focus view we are done mucking with it, if it is still in
     // our view hierarchy.
-    /*if (focusLayoutRestoreView != nullptr
-            && focusLayoutRestoreView.getWindowToken() != nullptr) {
+    if (focusLayoutRestoreView != nullptr/*&& focusLayoutRestoreView.getWindowToken() != nullptr*/) {
         focusLayoutRestoreView->dispatchFinishTemporaryDetach();
-    }*/
+    }
 
     mLayoutMode = LAYOUT_NORMAL;
     mDataChanged = false;
@@ -1379,8 +1378,7 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
     int mode = mTouchMode;
     bool isPressed = mode > TOUCH_MODE_DOWN && mode < TOUCH_MODE_SCROLL && mMotionPosition == position;
     bool updateChildPressed = isPressed != child->isPressed();
-    bool needToMeasure = !isAttachedToWindow || updateChildSelected
-                         || child->isLayoutRequested();
+    bool needToMeasure = !isAttachedToWindow || updateChildSelected || child->isLayoutRequested();
 
     // Respect layout params that are already in the view. Otherwise make
     // some up...
@@ -1454,9 +1452,9 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
     //if (mCachingStarted && !child->isDrawingCacheEnabled()) child->setDrawingCacheEnabled(true);
 }
 
-/*bool ListView::canAnimate() {
-    return super.canAnimate() && mItemCount > 0;
-}*/
+bool ListView::canAnimate()const{
+    return AbsListView::canAnimate() && mItemCount > 0;
+}
 
 void ListView::setSelection(int position) {
     setSelectionFromTop(position, 0);
@@ -1554,7 +1552,7 @@ bool ListView::onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event){
 }
 
 bool ListView::commonKey(int keyCode, int count, KeyEvent& event) {
-    if (mAdapter == nullptr/* || !isAttachedToWindow()*/) {
+    if (mAdapter == nullptr || !isAttachedToWindow()) {
         return false;
     }
 
@@ -1914,9 +1912,7 @@ bool  ListView::arrowScrollImpl(int direction) {
 }
 
 void ListView::handleNewSelectionChange(View* selectedView, int direction, int newSelectedPosition, bool newFocusAssigned){
-    if (newSelectedPosition == INVALID_POSITION) {
-        LOGE("newSelectedPosition %d needs to be valid",newSelectedPosition);
-    }
+    LOGE_IF(newSelectedPosition == INVALID_POSITION,"newSelectedPosition %d needs to be valid",newSelectedPosition);
 
     // whether or not we are moving down or up, we want to preserve the
     // top of whatever view is on top:
@@ -2440,7 +2436,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
         // fill a rect where the dividers would be for non-selectable items
         // If the list is opaque and the background is also opaque, we don't
         // need to draw anything since the background will do it for us
-        bool fillForMissingDividers = true;//isOpaque() && !AbsListView::isOpaque();
+        bool fillForMissingDividers = isOpaque() && !AbsListView::isOpaque();
 
         int effectivePaddingTop = 0;
         int effectivePaddingBottom = 0;
@@ -2726,9 +2722,8 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
                 bool isLastItem = (itemIndex == (itemCount - 1));
                 if (!drawOverscrollFooter || !isLastItem) {
                     int nextIndex = itemIndex + 1;
-                    // Draw dividers between enabled items, headers
-                    // and/or footers when enabled and requested, and
-                    // after the last enabled item.
+                    /* Draw dividers between enabled items, headers and/or footers 
+                     *when enabled and requested, and after the last enabled item.*/
                     if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader
                                     && (nextIndex >= headerCount)) && (isLastItem
                                     || mAdapter->isEnabled(nextIndex) && (footerDividers || !isFooter
@@ -2771,8 +2766,6 @@ HeaderViewListAdapter* ListView::wrapHeaderListAdapterInternal(
 void ListView::wrapHeaderListAdapterInternal(){
     mAdapter = wrapHeaderListAdapterInternal(mHeaderViewInfos, mFooterViewInfos, mAdapter);
 }
-
-
 
 }//namespace
 

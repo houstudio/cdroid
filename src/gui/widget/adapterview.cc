@@ -380,6 +380,17 @@ void AdapterView::updateEmptyStatus(bool empty) {
     }
 }
 
+void AdapterView::doSectionNotify(){
+    mPendingSelectionNotifier = nullptr;
+    ViewGroup*root=getRootView();
+    if(mDataChanged && root && root->isLayoutRequested()){
+        if(getAdapter())
+            mPendingSelectionNotifier = std::bind(&AdapterView::doSectionNotify,this);
+    }else{
+        dispatchOnItemSelected();
+    }
+}
+
 void AdapterView::selectionChanged(){
     mPendingSelectionNotifier = nullptr;
     if (mOnItemSelectedListener.onItemSelected){
@@ -389,17 +400,7 @@ void AdapterView::selectionChanged(){
             // in a consistent state and is able to accommodate
             // new layout or invalidate requests.
             if (mSelectionNotifier==nullptr) {
-                mSelectionNotifier =[this](){
-                    mPendingSelectionNotifier = nullptr;
-                    ViewGroup*root=getRootView();
-                    if (mDataChanged && root && root->isLayoutRequested() ) {
-                        if (getAdapter() != nullptr) {
-                            mPendingSelectionNotifier = mSelectionNotifier;
-                        }
-                    } else {
-                        dispatchOnItemSelected();
-                    }
-                };
+                mSelectionNotifier = std::bind(&AdapterView::doSectionNotify,this);
             } else {
                 removeCallbacks(mSelectionNotifier);
             }

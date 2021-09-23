@@ -38,6 +38,7 @@ private:
     void updateEmptyStatus(bool empty);
     void dispatchOnItemSelected();
     void fireOnSelected();
+    void doSectionNotify();
 protected:
     bool mDataChanged;
     bool mInLayout;

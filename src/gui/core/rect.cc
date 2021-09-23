@@ -102,7 +102,6 @@ void Rect::Union(const Rect&b){
     top = y1;
     width  = x2 - x1;
     height = y2 - y1;
-
 }
 
 void Rect::Union(int x,int y,int w,int h){

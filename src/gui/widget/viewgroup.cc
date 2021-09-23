@@ -1784,7 +1784,7 @@ void ViewGroup::offsetChildrenTopAndBottom(int offset){
     }
 }
 
-bool ViewGroup::canAnimate(){
+bool ViewGroup::canAnimate()const{
     return mLayoutAnimationController!=nullptr;
 }
 
