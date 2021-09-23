@@ -236,7 +236,7 @@ public:
     void offsetChildrenTopAndBottom(int offset);
 
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
-    void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)const override;
+    void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)override;
     void setOnHierarchyChangeListener(OnHierarchyChangeListener listener);
     bool restoreFocusNotInCluster();
     View*keyboardNavigationClusterSearch(View* currentCluster,int direction)override;
@@ -253,6 +253,8 @@ public:
     virtual View& addView(View* child, LayoutParams* params);
     virtual View& addView(View* child, int index, LayoutParams* params);
     View& addView(View* child, int width, int height);
+    void addTransientView(View*view,int index);
+    void removeTransientView(View*);
    
     void startLayoutAnimation(); 
     void scheduleLayoutAnimation();
@@ -282,8 +284,6 @@ public:
     View*findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const;
     virtual bool shouldDelayChildPressedState();
 
-    virtual void onSizeChanged(int w,int h,int ow,int oh) override;
-    
     virtual bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
     virtual void onNestedScrollAccepted(View* child, View* target, int axes);
     virtual void onStopNestedScroll(View* child);

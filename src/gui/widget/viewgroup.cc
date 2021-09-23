@@ -472,6 +472,43 @@ bool ViewGroup::addViewInLayout(View* child, int index,LayoutParams* params,bool
     return true;
 }
 
+void ViewGroup::addTransientView(View*view,int index){
+    if (index < 0) {
+        return;
+    }
+    int oldSize = mTransientIndices.size();
+    if (oldSize > 0) {
+        int insertionIndex;
+        for (insertionIndex = 0; insertionIndex < oldSize; ++insertionIndex) {
+            if (index < mTransientIndices.at(insertionIndex)) {
+                break;
+            }
+        }
+        mTransientIndices.insert(mTransientIndices.begin()+insertionIndex, index);
+        mTransientViews.insert(mTransientViews.begin()+insertionIndex, view);
+    } else {
+        mTransientIndices.push_back(index);
+        mTransientViews.push_back(view);
+    }
+    view->mParent = this;
+    view->dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
+    invalidate(true);
+}
+
+void ViewGroup::removeTransientView(View*view){
+    int size = mTransientViews.size();
+    for (int i = 0; i < size; ++i) {
+        if (view == mTransientViews.at(i)) {
+            mTransientViews.erase(mTransientViews.begin()+i);
+            mTransientIndices.erase(mTransientIndices.begin()+i);
+            view->mParent = nullptr;
+            view->dispatchDetachedFromWindow();
+            invalidate(true);
+            return;
+        }
+    }
+}
+
 void ViewGroup::addDisappearingView(View* v) {
     mDisappearingChildren.push_back(v);
 }
@@ -1931,14 +1968,14 @@ void ViewGroup::addKeyboardNavigationClusters(std::vector<View*>&views,int direc
 
     int count = 0;
     std::vector<View*>visibleChildren;
-    for (View*child:mChildren){//int i = 0; i < mChildrenCount; ++i) {
+    for (View*child:mChildren){
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
-            visibleChildren.push_back(child);//[count++] = child;
+            visibleChildren.push_back(child);
         }
     }
     FocusFinder::sort(visibleChildren, 0, count, this, isLayoutRtl());
-    for (int i = 0; i < count; ++i) {
-        visibleChildren[i]->addKeyboardNavigationClusters(views, direction);
+    for (View*view:visibleChildren){
+        view->addKeyboardNavigationClusters(views, direction);
     }
 }
 
@@ -1968,12 +2005,10 @@ bool ViewGroup::isTransformedTouchPointInView(int x,int y, View& child,POINT*out
     return isInView;
 }
 
-void ViewGroup::onSizeChanged(int w,int h,int ow,int oh){
-}
-
 bool ViewGroup::onStartNestedScroll(View* child, View* target, int nestedScrollAxes){
     return false;
 }
+
 void ViewGroup::onNestedScrollAccepted(View* child, View* target, int axes){
     mNestedScrollAxes = axes;
 }
