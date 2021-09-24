@@ -1249,6 +1249,18 @@ View* ViewGroup::findViewByPredicateTraversal(std::function<bool(const View*)>pr
 
 }
 
+View* ViewGroup::findViewWithTagTraversal(void*tag)const{
+    //if (tag  && tag.equals(mTag)) return (View*)this;
+
+    for (View*v:mChildren){
+        if ((v->mPrivateFlags & PFLAG_IS_ROOT_NAMESPACE) == 0) {
+            v = v->findViewWithTag(tag);
+            if (v != nullptr) return v;
+        }
+    }
+    return nullptr;
+}
+
 View*ViewGroup::findViewById(int id)const{
     for(auto v:mChildren){
        if(v->findViewById(id))return v;

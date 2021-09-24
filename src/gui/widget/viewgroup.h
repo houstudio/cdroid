@@ -281,7 +281,8 @@ public:
     virtual void removeViewsInLayout(int start,int count);
     void removeAllViewsInLayout();
     virtual View* findViewById(int id)const;
-    View*findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const;
+    View* findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const override;
+    View* findViewWithTagTraversal(void*tag)const override;
     virtual bool shouldDelayChildPressedState();
 
     virtual bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);

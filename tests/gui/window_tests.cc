@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <ngl_os.h>
 #include <fstream>
+#include <widget/layoutinflater.h>
+
 static const char*texts[]={"Creates 中国智造"," the specified format and dimensions.",
             "Initially the surface contents"," are set to 0.","(Specifically, within each pixel,",
             " each color or alpha channel","belonging to format will be 0.","The contents","of bits within a pixel,",
@@ -95,7 +97,7 @@ TEST_F(WINDOW,inflate){
     App app;
     Window*w=new Window(0,0,800,600);
     app.setName("system");
-    w->inflate("layout/window.xml");
+    LayoutInflater::from(&app)->inflate("layout/window.xml");
     app.exec();
 }
 

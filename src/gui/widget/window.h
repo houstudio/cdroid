@@ -71,8 +71,6 @@ public:
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
     void setRegion(const RefPtr<Region>&region);
     void draw();
-    int inflate(const std::string&res);
-    static View*inflate(Context*ctx,const std::string&res);
     virtual ~Window();
     virtual void show();
     virtual void hide();

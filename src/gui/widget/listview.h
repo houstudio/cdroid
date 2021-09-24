@@ -117,6 +117,10 @@ protected:
     void resetList()override;
     void onDetachedFromWindow()override;
     void layoutChildren()override;
+    View*findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const override;
+    View* findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
+            std::function<bool(const View*)>predicate, View* childToSkip)const;
+    View* findViewWithTagInHeadersOrFooters(std::vector<FixedViewInfo*>& where, void* tag);
     int getHeightForPosition(int position)override;
     View* fillFromTop(int nextTop);
     View* fillDown(int pos, int nextTop);

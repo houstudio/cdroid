@@ -288,6 +288,10 @@ View* View::findViewById(int id)const{
     return nullptr;
 }
 
+View* View::findViewWithTag(void*tag)const{
+    return findViewWithTagTraversal(tag);
+}
+
 View* View::findViewInsideOutShouldExist(View* root, int id)const{
     View* result = root->findViewByPredicateInsideOut((View*)this,[id](const View*v)->bool{
         return v->mID==id;
@@ -303,6 +307,9 @@ View* View::findViewByPredicate(std::function<bool(const View*)>predicate)const{
     return findViewByPredicateTraversal(predicate,nullptr);
 }
 
+View* View::findViewWithTagTraversal(void* tag)const{
+    return nullptr;
+}
 
 View* View::findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>predicate)const{
     View* childToSkip = nullptr;

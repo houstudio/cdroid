@@ -12,7 +12,7 @@ Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mPopupContext=nullptr;
     mGravity= Gravity::CENTER;
     mDisableChildrenWhenDisabled=true;
-    mPopup=new SpinnerPopup(this,mode);
+    mPopup=new DialogPopup(this);
 }
 
 Spinner::Spinner(Context*ctx,const AttributeSet&atts)
@@ -286,59 +286,58 @@ bool Spinner::onTouchEvent(MotionEvent& event){
     return AbsSpinner::onTouchEvent(event);
 }
 
-/////////////////////////////SpinnerPopup////////////////////////////////////
-SpinnerPopup::SpinnerPopup(Spinner*sp,int mode){
+/////////////////////////////////SpinnerPopup//////////////////////////////////////////
+Spinner::DropdownPopup::DropdownPopup(Spinner*sp){
     mDropDownWidth = LayoutParams::WRAP_CONTENT;
     mSpinner=sp;
-    mMode=mode;
     mAdapter=nullptr;
     mListView=nullptr;
 }
 
-SpinnerPopup::~SpinnerPopup(){
+Spinner::DropdownPopup::~DropdownPopup(){
 }
 
-void SpinnerPopup::setAdapter(Adapter* adapter){
+void Spinner::DropdownPopup::setAdapter(Adapter* adapter){
     mAdapter = adapter;
 }
 
-void SpinnerPopup::dismiss(){
+void Spinner::DropdownPopup::dismiss(){
 }
 
-bool SpinnerPopup::isShowing(){
+bool Spinner::DropdownPopup::isShowing(){
     return true;
 }
 
-void SpinnerPopup::setPromptText(const std::string& hintText){
+void Spinner::DropdownPopup::setPromptText(const std::string& hintText){
 }
 
-const std::string SpinnerPopup::getHintText(){
+const std::string Spinner::DropdownPopup::getHintText(){
     return "";
 }
 
-int SpinnerPopup::getVerticalOffset(){
+int Spinner::DropdownPopup::getVerticalOffset(){
     return 0;
 }
 
-void SpinnerPopup::setVerticalOffset(int px){
+void Spinner::DropdownPopup::setVerticalOffset(int px){
 }
 
-int SpinnerPopup::getHorizontalOffset(){
+int Spinner::DropdownPopup::getHorizontalOffset(){
     return 0;
 }
 
-void SpinnerPopup::setHorizontalOffset(int px){
+void Spinner::DropdownPopup::setHorizontalOffset(int px){
 }
 
-void SpinnerPopup::setBackgroundDrawable(Drawable* bg){
+void Spinner::DropdownPopup::setBackgroundDrawable(Drawable* bg){
     
 }
 
-Drawable* SpinnerPopup::getBackground(){
+Drawable* Spinner::DropdownPopup::getBackground(){
     return nullptr;
 }
 
-void SpinnerPopup::computeContentWidth() {
+void Spinner::DropdownPopup::computeContentWidth() {
     Drawable* background = getBackground();
     int hOffset = 0;
     Rect mTempRect;
@@ -374,7 +373,7 @@ void SpinnerPopup::computeContentWidth() {
     setHorizontalOffset(hOffset);
 }
 
-void SpinnerPopup::setContentWidth(int width){
+void Spinner::DropdownPopup::setContentWidth(int width){
     Drawable* popupBackground = getBackground();
     if (popupBackground ) {
 	Rect rect;
@@ -385,11 +384,11 @@ void SpinnerPopup::setContentWidth(int width){
     }
 }
 
-ListView*SpinnerPopup::getListView()const{
+ListView*Spinner::DropdownPopup::getListView()const{
     return mListView;
 }
 
-void SpinnerPopup::show(int textDirection, int textAlignment) {
+void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
     bool wasShowing = isShowing();
 
     computeContentWidth();
@@ -442,5 +441,60 @@ void SpinnerPopup::show(int textDirection, int textAlignment) {
     }*/
 }
 //int SpinnerPopup::measureContentWidth(Adapter*,Drawable*){}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+Spinner::DialogPopup::DialogPopup(Spinner*spinner){
+    mSpinner=spinner;
 }
+
+void Spinner::DialogPopup::setAdapter(Adapter*adapter){
+    mAdapter=adapter;
+}
+
+void Spinner::DialogPopup::show(int textDirection, int textAlignment){
+}
+
+void Spinner::DialogPopup::dismiss(){
+    mPopup->close();
+    mPopup=nullptr;
+}
+
+bool Spinner::DialogPopup::isShowing(){
+    return mPopup && (mPopup->getVisibility()==View::VISIBLE);
+}
+
+void Spinner::DialogPopup::setPromptText(const std::string& hintText){
+    mPrompt = hintText;
+}
+
+const std::string Spinner::DialogPopup::getHintText(){
+    return mPrompt;
+}
+
+int Spinner::DialogPopup::getVerticalOffset(){
+}
+
+void Spinner::DialogPopup::setVerticalOffset(int px){
+}
+
+int Spinner::DialogPopup::getHorizontalOffset(){
+}
+
+void Spinner::DialogPopup::setHorizontalOffset(int px){
+}
+
+void Spinner::DialogPopup::setBackgroundDrawable(Drawable* bg){
+}
+
+Drawable* Spinner::DialogPopup::getBackground(){
+    return nullptr;
+}
+
+void Spinner::DialogPopup::computeContentWidth(){
+}
+
+void Spinner::DialogPopup::setContentWidth(int width){
+}
+
+}//endof namespace
 

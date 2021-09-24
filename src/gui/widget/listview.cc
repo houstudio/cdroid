@@ -2692,6 +2692,48 @@ void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocu
     }
 }
 
+View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const{
+    View* v = AbsListView::findViewByPredicateTraversal(predicate, childToSkip);
+    if (v == nullptr) {
+        v = findViewByPredicateInHeadersOrFooters(mHeaderViewInfos, predicate, childToSkip);
+        if (v)return v;
+        v = findViewByPredicateInHeadersOrFooters(mFooterViewInfos, predicate, childToSkip);
+        if (v)return v;
+    }
+    return v;
+}
+
+View* ListView::findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
+    std::function<bool(const View*)>predicate, View* childToSkip)const{
+    const int len = where.size();
+    View* v;
+
+    for (int i = 0; i < len; i++) {
+        v = where.at(i)->view;
+
+        if (v != childToSkip && !v->isRootNamespace()) {
+            v = v->findViewByPredicate(predicate);
+            if (v) return v;
+        }
+    }
+    return nullptr;
+}
+
+View* ListView::findViewWithTagInHeadersOrFooters(std::vector<FixedViewInfo*>& where, void* tag) {
+    // Look in the passed in list of headers or footers for the view with the tag.
+    const int len = where.size();
+    View* v;
+
+    for (int i = 0; i < len; i++) {
+       v = where.at(i)->view;
+
+        if (!v->isRootNamespace()) {
+            v = v->findViewWithTag(tag);
+            if (v)return v;
+        }
+    }
+    return nullptr;
+}
 int ListView::getHeightForPosition(int position) {
     int height = AbsListView::getHeightForPosition(position);
     if (shouldAdjustHeightForDivider(position)) {
