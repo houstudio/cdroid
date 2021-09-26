@@ -1,5 +1,7 @@
 #ifndef __ALERT_CONTROLLER_H__
 #define __ALERT_CONTROLLER_H__
+#include <windows.h>
+#include <app/dialoginterface.h>
 
 namespace cdroid{
 
@@ -38,7 +40,7 @@ private:
 
     ImageView* mIconView;
     TextView* mTitleView;
-    MovementMethod mMessageMovementMethod;
+    //MovementMethod mMessageMovementMethod;
     int  mMessageHyphenationFrequency;
     View* mCustomTitleView;
 
@@ -59,14 +61,14 @@ private:
 private:
     static bool shouldCenterSingleButton(Context* context);
     static AlertController* create(Context* context, DialogInterface* di, Window* window);
-    int selectContentView();
+    const std::string& selectContentView();
     void setupView();
     void setupCustomContent(ViewGroup* customPanel);
 protected:
     std::string mMessage;
-    ListView* mListView;
-    ScrollView mScrollView;
-    TextView mMessageView;
+    ListView *  mListView;
+    ScrollView* mScrollView;
+    TextView *  mMessageView;
     AlertController(Context* context, DialogInterface* di, Window* window);
     static bool canTextInput(View* v);
     void setupTitle(ViewGroup* topPanel);

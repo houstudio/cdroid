@@ -1,4 +1,6 @@
-#include <widget/alertcontroller.h>
+#include <app/alertcontroller.h>
+#include <app/alertdialog.h>
+#include <widget/layoutinflater.h>
 
 namespace cdroid{
 
@@ -48,7 +50,7 @@ bool AlertController::canTextInput(View* v) {
         return true;
     }
 
-    if ((dynamic_cast<ViewGroup*>(v)==nullptr) {
+    if (dynamic_cast<ViewGroup*>(v)==nullptr) {
         return false;
     }
 
@@ -75,8 +77,8 @@ void AlertController::installContent() {
     setupView();
 }
 
-int AlertController::selectContentView() {
-    if (mButtonPanelSideLayout == 0) {
+const std::string& AlertController::selectContentView() {
+    if (mButtonPanelSideLayout.empty()) {
         return mAlertDialogLayout;
     }
     if (mButtonPanelLayoutHint == AlertDialog::LAYOUT_HINT_SIDE) {
@@ -94,9 +96,7 @@ void AlertController::setTitle(const std::string& title) {
     }
 }
 
-/**
-  * @see AlertDialog.Builder#setCustomTitle(View)
-  */
+/**@see AlertDialog.Builder#setCustomTitle(View)*/
 void AlertController::setCustomTitle(View* customTitleView) {
     mCustomTitleView = customTitleView;
 }
@@ -136,17 +136,17 @@ void AlertController::setView(View* view, int viewSpacingLeft, int viewSpacingTo
 void AlertController::setButton(int whichButton,const std::string&text,DialogInterface::OnClickListener listener, Message msg){
     switch (whichButton) {
 
-    case DialogInterface.BUTTON_POSITIVE:
+    case DialogInterface::BUTTON_POSITIVE:
          mButtonPositiveText = text;
          mButtonPositiveMessage = msg;
          break;
 
-    case DialogInterface.BUTTON_NEGATIVE:
+    case DialogInterface::BUTTON_NEGATIVE:
          mButtonNegativeText = text;
          mButtonNegativeMessage = msg;
          break;
 
-    case DialogInterface.BUTTON_NEUTRAL:
+    case DialogInterface::BUTTON_NEUTRAL:
          mButtonNeutralText = text;
          mButtonNeutralMessage = msg;
          break;
@@ -160,7 +160,7 @@ void AlertController::setIcon(const std::string& resId){
     mIconId = resId;
 
     if (mIconView != nullptr) {
-        if (resId != 0) {
+        if (resId.size()) {
             mIconView->setVisibility(View::VISIBLE);
             mIconView->setImageResource(mIconId);
         } else {
@@ -243,7 +243,7 @@ void AlertController::setupView() {
                 spacer->setVisibility(View::VISIBLE);
             }
         }
-        mWindow.setCloseOnTouchOutsideIfNotSet(true);
+        mWindow->setCloseOnTouchOutsideIfNotSet(true);
     }
 
     if (hasTopPanel) {
@@ -254,7 +254,7 @@ void AlertController::setupView() {
 
         // Only show the divider if we have a title.
         View* divider = nullptr;
-        if (mMessage != nullptr || mListView != nullptr || hasCustomPanel) {
+        if (mMessage.size() || mListView != nullptr || hasCustomPanel) {
             if (!hasCustomPanel) {
                 divider = topPanel->findViewById(R.id.titleDividerNoCustom);
             }
@@ -278,17 +278,17 @@ void AlertController::setupView() {
         }
     }
 
-    if (dynamic_cast<RecycleListView*>(mListView)) {
-        ((RecycleListView*)mListView)->setHasDecor(hasTopPanel, hasButtonPanel);
+    if (dynamic_cast<ListView*>(mListView)) {
+        ((ListView*)mListView)->setHasDecor(hasTopPanel, hasButtonPanel);
     }
 
     // Update scroll indicators as needed.
     if (!hasCustomPanel) {
         View* content = mListView != nullptr ? mListView : mScrollView;
         if (content != nullptr) {
-            int indicators = (hasTopPanel ? View.SCROLL_INDICATOR_TOP : 0)
-                    | (hasButtonPanel ? View.SCROLL_INDICATOR_BOTTOM : 0);
-            content.setScrollIndicators(indicators,View.SCROLL_INDICATOR_TOP | View.SCROLL_INDICATOR_BOTTOM);
+            int indicators = (hasTopPanel ? View::SCROLL_INDICATOR_TOP : 0)
+                    | (hasButtonPanel ? View::SCROLL_INDICATOR_BOTTOM : 0);
+            content->setScrollIndicators(indicators,View::SCROLL_INDICATOR_TOP | View::SCROLL_INDICATOR_BOTTOM);
         }
     }
 
@@ -303,19 +303,19 @@ void AlertController::setupCustomContent(ViewGroup* customPanel){
     View* customView=nullptr;
     if (mView != nullptr) {
         customView = mView;
-    } else if (mViewLayoutResId != 0) {
-        LayoutInflater inflater = LayoutInflater.from(mContext);
-        customView = inflater.inflate(mViewLayoutResId, customPanel, false);
+    } else if (mViewLayoutResId.size()) {
+        LayoutInflater* inflater = LayoutInflater::from(mContext);
+        customView = inflater->inflate(mViewLayoutResId, customPanel, false);
+        delete inflater;
     } 
     bool hasCustomView = customView != nullptr;
     if (!hasCustomView || !canTextInput(customView)) {
-        mWindow.setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
-                WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        //mWindow->setFlags(WindowManager::LayoutParams::FLAG_ALT_FOCUSABLE_IM,WindowManager::LayoutParams::FLAG_ALT_FOCUSABLE_IM);
     }
 
     if (hasCustomView) {
         FrameLayout* custom = (FrameLayout*) mWindow->findViewById(R.id.custom);
-        custom->addView(customView, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        custom->addView(customView, new LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT));
 
         if (mViewSpacingSpecified) {
             custom->setPadding(mViewSpacingLeft, mViewSpacingTop, mViewSpacingRight, mViewSpacingBottom);

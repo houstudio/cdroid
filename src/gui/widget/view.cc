@@ -1179,16 +1179,20 @@ View& View::setHorizontalScrollBarEnabled(bool horizontalScrollBarEnabled){
     }
     return *this;
 }
+
 float View::getTopFadingEdgeStrength(){
     return computeVerticalScrollOffset() > 0 ? 1.0f : 0.0f;
 }
+
 float View::getBottomFadingEdgeStrength(){
     return computeVerticalScrollOffset() + computeVerticalScrollExtent() <
              computeVerticalScrollRange() ? 1.0f : 0.0f;
 }
+
 float View::getLeftFadingEdgeStrength(){
     return computeHorizontalScrollOffset() > 0 ? 1.0f : 0.0f;
 }
+
 float View::getRightFadingEdgeStrength(){
     return computeHorizontalScrollOffset() + computeHorizontalScrollExtent() <
              computeHorizontalScrollRange() ? 1.0f : 0.0f;
@@ -1221,16 +1225,16 @@ void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     Rect* bounds = drawBounds != nullptr ? drawBounds : touchBounds;
     if (bounds == nullptr)return;
 
-    int inside =~0;// (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
+    int inside = (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
     bool drawVerticalScrollBar = isVerticalScrollBarEnabled()&& !isVerticalScrollBarHidden();
-    int size = getHorizontalScrollbarHeight();
+    int size   = getHorizontalScrollbarHeight();
     int verticalScrollBarGap = drawVerticalScrollBar ? getVerticalScrollbarWidth() : 0;
-    int width = getWidth();
-    int height=getHeight();
-    bounds->top = mScrollY + height - size - (mUserPaddingBottom & inside);
-    bounds->left = mScrollX + (mPaddingLeft & inside);
-    bounds->width =  width - (mUserPaddingRight & inside) - verticalScrollBarGap;
-    bounds->height=  size;
+    int width  = getWidth();
+    int height =getHeight();
+    bounds->top   = mScrollY + height - size - (mUserPaddingBottom & inside);
+    bounds->left  = mScrollX + (mPaddingLeft & inside);
+    bounds->width = width - (mPaddingLeft & inside) - (mUserPaddingRight & inside) - verticalScrollBarGap;
+    bounds->height= size;
 
     if (touchBounds == nullptr)return;
     if (*touchBounds != *bounds) {
@@ -1253,6 +1257,7 @@ void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
 bool View::isHorizontalFadingEdgeEnabled()const{
     return (mViewFlags & FADING_EDGE_HORIZONTAL) == FADING_EDGE_HORIZONTAL;
 }
+
 void View::setHorizontalFadingEdgeEnabled(bool horizontalFadingEdgeEnabled){
     if (isHorizontalFadingEdgeEnabled() != horizontalFadingEdgeEnabled) {
         if (horizontalFadingEdgeEnabled) {
@@ -1261,9 +1266,11 @@ void View::setHorizontalFadingEdgeEnabled(bool horizontalFadingEdgeEnabled){
         mViewFlags ^= FADING_EDGE_HORIZONTAL;
     }
 }
+
 bool View::isVerticalFadingEdgeEnabled()const{
     return (mViewFlags & FADING_EDGE_VERTICAL) == FADING_EDGE_VERTICAL;
 }
+
 void View::setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled){
     if (isVerticalFadingEdgeEnabled() != verticalFadingEdgeEnabled) {
         if (verticalFadingEdgeEnabled) {
@@ -1277,7 +1284,7 @@ void View::setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled){
 void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     Rect*bounds = drawBounds != nullptr ? drawBounds : touchBounds;
     if (bounds == nullptr) return;
-    int inside =~0;// (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
+    int inside = (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
     int size = getVerticalScrollbarWidth();
     int verticalScrollbarPosition = mVerticalScrollbarPosition;
     if (verticalScrollbarPosition ==SCROLLBAR_POSITION_DEFAULT) {
@@ -1292,13 +1299,13 @@ void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
         bounds->left = mScrollX + (mUserPaddingLeft & inside);
         break;
     }
-    bounds->top = mScrollY+ (mPaddingTop & inside);
-    bounds->width =  size;
-    bounds->height= getHeight() - (mUserPaddingBottom & inside);
+    bounds->top   = mScrollY+ (mPaddingTop & inside);
+    bounds->width = size;
+    bounds->height= getHeight() - (mUserPaddingBottom & inside) -(mPaddingTop & inside);
 
     if (touchBounds == nullptr) return;
     if (touchBounds != bounds) {
-        *touchBounds=*bounds;
+        *touchBounds = *bounds;
     }
     int minTouchTarget = mScrollCache->scrollBarMinTouchTarget;
     if (touchBounds->width < minTouchTarget) {
@@ -1308,13 +1315,13 @@ void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
             touchBounds->left = touchBounds->width - minTouchTarget;
         } else {
             touchBounds->left = std::max(touchBounds->left+ adjust, mScrollX);
-            touchBounds->width= touchBounds->left + minTouchTarget;
+            touchBounds->width= minTouchTarget;
         }
     }
     if (touchBounds->height < minTouchTarget) {
         int adjust = (minTouchTarget - touchBounds->height) / 2;
         touchBounds->top -= adjust;
-        touchBounds->height = touchBounds->top + minTouchTarget;
+        touchBounds->height = minTouchTarget;
     }
 }
 

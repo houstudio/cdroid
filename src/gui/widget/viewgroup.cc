@@ -1284,7 +1284,6 @@ void ViewGroup::drawInvalidateRegion(Canvas&canvas){
     for(int i=0;i<num;i++){
         RectangleInt r=mInvalidRgn->get_rectangle(i);
         canvas.rectangle(r.x,r.y,r.width,r.height);
-        LOGV("%p:%d(%d,%d,%d,%d)%d",this,mID,r.x,r.y,r.width,r.height,DEBUG_DRAW);
     }
     canvas.stroke();
 }

@@ -1,31 +1,16 @@
 #ifndef __ALERT_DIALOG_H__
 #define __ALERT_DIALOG_H__
-#include <alertcontroller.h>
+#include <app/dialoginterface.h>
+#include <widget/button.h>
+#include <widget/listview.h>
 
 namespace cdroid{
 	
-class DialogInterface{
-public:
-    enum{
-       /** The identifier for the positive button. */
-       BUTTON_POSITIVE = -1,
-       /** The identifier for the negative button. */
-       BUTTON_NEGATIVE = -2,
-       /** The identifier for the neutral button. */
-       BUTTON_NEUTRAL  = -3
-    };
-    DECLARE_UIEVENT(void,OnCancelListener,DialogInterface&);
-    DECLARE_UIEVENT(void,OnDismissListener,DialogInterface&);
-    DECLARE_UIEVENT(void,OnShowListener,DialogInterface&);
-    DECLARE_UIEVENT(void,OnClickListener,DialogInterface&,int);
-    DECLARE_UIEVENT(void,OnMultiChoiceClickListener,DialogInterface&,int ,bool);
-    DECLARE_UIEVENT(void,OnKeyListener,DialogInterface&,int, KeyEvent&);     
-public:
-    virtual void cancel()=0;
-    virtual void dismiss()=0;
-};
-
-class AlertDialog :public:DialogInterface{
+class AlertDialog :public DialogInterface{
+protected:
+    class AlertController* mAlert;
+    static constexpr int LAYOUT_HINT_NONE = 0;
+    static constexpr int LAYOUT_HINT_SIDE = 1;
 public:
     AlertDialog(Context*ctx,const std::string&resid);
     Button*getButton(int whichButton);
