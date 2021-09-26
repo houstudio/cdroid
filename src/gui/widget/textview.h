@@ -51,6 +51,7 @@ private:
     int mDesiredHeightAtMeasure;
     int mShadowColor;
     bool mSingleLine;
+    int mDeferScroll;
     float mShadowRadius, mShadowDx, mShadowDy;
     float mSpacingMult;
     float mSpacingAdd;

@@ -1541,10 +1541,13 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         }
     } while (parent);
 
-    LOGV("2.(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
-                dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation());
+    ViewGroup*root= getRootView();
+    dirty.intersect(0,0,root->getWidth(),root->getHeight());
     //set invalidate region to rootview
-    getRootView()->mInvalidRgn->do_union((const RectangleInt&)dirty);
+    root->mInvalidRgn->do_union((const RectangleInt&)dirty);
+    LOGV("%p:%d root=%p %drects 2.(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f attached=%p",this,mID,root,root->mInvalidRgn->get_num_rectangles(),
+           boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
+           dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation(),getRootView()->mAttachInfo);
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){

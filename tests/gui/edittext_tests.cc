@@ -53,8 +53,8 @@ TEST_F(EDITTEXT,hebrew){
     app.exec();
 
 }
-TEST_F(EDITTEXT,hindi){//ӡ����
-    const char*text="?? ???? ?? ??????? ??? ??";
+TEST_F(EDITTEXT,hindi){//印地语
+    const char*text="आज सुबह एक ट्रैफिक जैम था";
     App app;
     Window*w=new Window(100,50,800,640);
     EditText*edt=new EditText(text,400,200);

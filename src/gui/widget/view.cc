@@ -2123,7 +2123,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     Rect rcc=Rect::MakeLTRB(cx1,cy1,cx2,cy2);
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
                     ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
-            false/*==rcc.intersect(mLeft, mTop, mWidth, mHeight)*/&& /*canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
+            false==rcc.intersect(mLeft, mTop, mRight-mLeft, mBottom-mTop) && //canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
             (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
         mPrivateFlags2 |= PFLAG2_VIEW_QUICK_REJECTED;
         return more;
@@ -2188,7 +2188,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                 canvas.save();restoreTo++;
             }
             // mAttachInfo cannot be null, otherwise scalingRequired == false
-            float scale = 1.0f / mAttachInfo->mApplicationScale;
+            const float scale = 1.0f / mAttachInfo->mApplicationScale;
             canvas.scale(scale, scale);
         }
     }
@@ -2436,10 +2436,12 @@ int View::getHeight()const{
 
 void View::offsetTopAndBottom(int offset){
     mTop+=offset;
+    mBottom+=offset;
 }
 
 void View::offsetLeftAndRight(int offset){
     mLeft+=offset;
+    mRight+=offset;
 }
 
 int View::getRawTextDirection()const{

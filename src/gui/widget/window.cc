@@ -101,7 +101,7 @@ View& Window::setPos(int x,int y){
         WindowManager::getInstance().moveWindow(this,x,y);
         mLeft=x;
         mTop=y;
-        if(mAttachInfo->mCanvas){
+        if(mAttachInfo && mAttachInfo->mCanvas){
            mAttachInfo->mCanvas->set_position(x,y);
         }
     }
@@ -126,13 +126,13 @@ Canvas*Window::getCanvas(){
         canvas=GraphDevice::getInstance().createContext(getBound());
         mAttachInfo->mCanvas=canvas;
     }
-    int num=mInvalidRgn->get_num_rectangles();
+    const int num=mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
     for(int i=0;i<num;i++){
         RectangleInt r=mInvalidRgn->get_rectangle(i);
         canvas->rectangle(r.x,r.y,r.width,r.height);
     }
-    canvas->clip();
+    if(num>0)canvas->clip();
     return canvas;
 }
 
@@ -357,6 +357,7 @@ void Window::doLayout(){
         vg->measure(widthSpec, heightSpec);
         vg->layout(x,y,vg->getMeasuredWidth(),vg->getMeasuredHeight());
     }
+    mPrivateFlags&=~PFLAG_FORCE_LAYOUT;
     mInLayout=false;
 }
 

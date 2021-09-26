@@ -171,6 +171,18 @@ TEST_F(CONTEXT,Clip2){
     printf("CLIPS(%f,%f,%f,%f) lst.size=%d\r\n",x1,y1,x2,y2,lst.size());
 }
 
+TEST_F(CONTEXT,Clip3){
+    ctx->reset_clip();
+    ctx->rectangle(0,0,200,200);
+    ctx->clip();
+    double cx1,cy1,cx2,cy2;
+    ctx->get_clip_extents(cx1,cy1,cx2,cy2);
+    printf("clip region before translate(%.f,%.f,%.f,%.f)\r\n",cx1,cy1,cx2,cy2);
+    ctx->translate(100,100);
+    ctx->get_clip_extents(cx1,cy1,cx2,cy2);
+    printf("clip region after  translate(%.f,%.f,%.f,%.f)\r\n",cx1,cy1,cx2,cy2);
+}
+
 TEST_F(CONTEXT,Mask){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
     RefPtr<Pattern>pat1=SurfacePattern::create(img);

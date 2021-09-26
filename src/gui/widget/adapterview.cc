@@ -313,13 +313,14 @@ void AdapterView::setFocusableInTouchMode(bool focusable) {
 }
 
 void AdapterView::setNextSelectedPositionInt(int position){
+     LOGV("%d->%d",mNextSelectedPosition,position);
      mNextSelectedPosition = position;
      mNextSelectedRowId = getItemIdAtPosition(position);
      // If we are trying to sync to the selection, update that too
      if (mNeedSync && mSyncMode == SYNC_SELECTED_POSITION && position >= 0) {
          mSyncPosition = position;
          mSyncRowId = mNextSelectedRowId;
-     }    
+     }
 }
 
 void AdapterView::setSelectedPositionInt(int position) {

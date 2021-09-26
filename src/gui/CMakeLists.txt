@@ -8,7 +8,7 @@ aux_source_directory(views SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
-aux_source_directory(dialogs SRCS_DIALOG)
+#aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 
 message("UI Lua script bindings is ${LUA_BINDINGS} guistatic=${GUI_STATIC}")

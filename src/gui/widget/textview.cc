@@ -550,11 +550,17 @@ void TextView::onSizeChanged(int w,int h,int ow,int oh){
     View::onSizeChanged(w,h,ow,oh);
     mLayout->setWidth(w-mPaddingLeft-mPaddingRight);
     mHintLayout->setWidth(w-mPaddingLeft-mPaddingRight);
-    LOGV("(%d,%d)->(%d,%d)",ow,oh,w,h);
 }
 
-void TextView::onLayout(bool changed, int left, int top, int w, int h){
-
+void TextView::onLayout(bool changed, int left, int top, int width, int height){
+   View::onLayout(changed, left, top, width, height);
+   if (mDeferScroll >= 0) {
+      int curs = mDeferScroll;
+      mDeferScroll = -1;
+      //bringPointIntoView(std::min(curs, mText.length()));
+   }
+   // Call auto-size after the width and height have been calculated.
+   //autoSizeText();
 }
 
 void TextView::setGravity(int gravity){
@@ -1490,7 +1496,7 @@ void TextView::onDraw(Canvas& canvas) {
 
     // translate in by our padding
     /* shortcircuit calling getVerticaOffset() */
-    LOGV("%p height=%d voffsetText=%d %s gravity=%x alignment=%x",this,getHeight(),voffsetText,getText().c_str(),
+    LOGV("%p:%d height=%d voffsetText=%d %s gravity=%x alignment=%x",this,mID,getHeight(),voffsetText,getText().c_str(),
            (mGravity & Gravity::VERTICAL_GRAVITY_MASK),getTextAlignment());
     if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
         voffsetText = getVerticalOffset(false);

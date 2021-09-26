@@ -117,7 +117,7 @@ void Spinner::layout(int delta, bool animate){
     if (mDataChanged) {
         handleDataChanged();
     }
-
+    
     // Handle the empty set by removing all views
     if (mItemCount == 0) {
         resetList();
