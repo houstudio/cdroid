@@ -673,9 +673,9 @@ public:
     virtual int getSolidColor()const;
 
     bool isTemporarilyDetached()const;
-    void dispatchFinishTemporaryDetach();
+    virtual void dispatchStartTemporaryDetach();
+    virtual void dispatchFinishTemporaryDetach();
     virtual void onFinishTemporaryDetach();
-    void dispatchStartTemporaryDetach();
     virtual void onStartTemporaryDetach();
     virtual bool hasTransientState();
     void setHasTransientState(bool hasTransientState);

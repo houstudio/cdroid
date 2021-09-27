@@ -681,6 +681,20 @@ bool ViewGroup::getClipToPadding()const{
    return hasBooleanFlag(FLAG_CLIP_TO_PADDING);
 }
 
+void ViewGroup::dispatchStartTemporaryDetach() {
+    View::dispatchStartTemporaryDetach();
+    for (View*child:mChildren){
+        child->dispatchStartTemporaryDetach();
+    }
+}
+
+void ViewGroup::dispatchFinishTemporaryDetach(){
+    View::dispatchFinishTemporaryDetach();
+    for (View*child:mChildren){
+        child->dispatchFinishTemporaryDetach();
+    }
+}
+
 void ViewGroup::dispatchSetSelected(bool selected) {
     for (auto child:mChildren){
         child->setSelected(selected);
@@ -1540,13 +1554,12 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         }
     } while (parent);
 
-    ViewGroup*root= getRootView();
-    dirty.intersect(0,0,root->getWidth(),root->getHeight());
     //set invalidate region to rootview
-    root->mInvalidRgn->do_union((const RectangleInt&)dirty);
-    LOGV("%p:%d root=%p %drects 2.(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f attached=%p",this,mID,root,root->mInvalidRgn->get_num_rectangles(),
-           boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
-           dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation(),getRootView()->mAttachInfo);
+    if(child->isTemporarilyDetached()==false){
+        ViewGroup*root= getRootView();
+        dirty.intersect(0,0,root->getWidth(),root->getHeight());
+        root->mInvalidRgn->do_union((const RectangleInt&)dirty);
+    }
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
@@ -2283,7 +2296,6 @@ void ViewGroup::dispatchDetachedFromWindow(){
     clearDisappearingChildren();
     //final int transientCount = mTransientViews == null ? 0 : mTransientIndices.size();
     for (View*view:mTransientViews){//int i = 0; i < transientCount; ++i) {
-        //View view = mTransientViews.get(i);
         view->dispatchDetachedFromWindow();
     }
     View::dispatchDetachedFromWindow();

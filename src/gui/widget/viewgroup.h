@@ -214,7 +214,8 @@ public:
     void setClipChildren(bool clipChildren);
     bool getClipToPadding()const;
     void setClipToPadding(bool clipToPadding);
-	
+    void dispatchStartTemporaryDetach() override;
+    void dispatchFinishTemporaryDetach()override;
     void dispatchSetSelected(bool selected)override;
     void dispatchSetActivated(bool activated)override;
     virtual std::vector<View*> buildTouchDispatchChildList();

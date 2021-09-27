@@ -999,7 +999,7 @@ void View::dispatchDetachedFromWindow(){
 }
 
 void View::onDetachedFromWindowInternal() {
-    mPrivateFlags &= ~PFLAG_CANCEL_NEXT_UP_EVENT;
+    mPrivateFlags  &= ~PFLAG_CANCEL_NEXT_UP_EVENT;
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     mPrivateFlags3 &= ~PFLAG3_TEMPORARY_DETACH;
 
@@ -2130,7 +2130,8 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     Rect rcc=Rect::MakeLTRB(cx1,cy1,cx2,cy2);
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
                     ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
-            false==rcc.intersect(mLeft, mTop, mRight-mLeft, mBottom-mTop) && //canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&*/
+            false ==rcc.intersect(mLeft, mTop, mRight-mLeft, mBottom-mTop) && 
+            //canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&
             (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
         mPrivateFlags2 |= PFLAG2_VIEW_QUICK_REJECTED;
         return more;
@@ -2269,7 +2270,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     if (!drawingWithRenderNode) {
         // apply clips directly, since RenderNode won't do it for this draw
         if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) != 0 && cache == nullptr) {
-            if (offsetForScroll) {
+            /*if (offsetForScroll){
                 canvas.rectangle(sx,sy,getWidth(),getHeight());//canvas.clipRect(sx, sy, sx + getWidth(), sy + getHeight());
             } else {
                 if (!scalingRequired || cache == nullptr) {
@@ -2278,7 +2279,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                     //canvas.rectangle(0, 0, cache->getWidth(), cache->getHeight());
                 }
             }
-            canvas.clip();
+            //canvas.clip();//cant clip here ,rotating view will be cutted*/
         }
 
         /*if (mClipBounds != nullptr) {
@@ -5129,7 +5130,6 @@ bool View::hasIdentityMatrix(){
     const bool rc= (mX==.0f) && (mY==.0f) && (mZ==.0f) &&
        (mTranslationX==.0f) && (mTranslationY==.0f) &&
        (mScaleX ==1.f) && (mScaleY==1.f) && (mRotation==.0f);
-    LOGV_IF(rc==false,"mXYZ=%f,%f,%f  translation=%f,%f scale=%f,%f",mX,mY,mZ,mTranslationX,mTranslationY,mScaleX,mScaleY);
     return rc;
 }
 
@@ -5144,13 +5144,11 @@ Matrix View::getMatrix() {
     matrix.translate(mTranslationX,mTranslationY);
     matrix.scale(mScaleX,mScaleY);
 
-    const float radians=mRotation*M_PI*2/360.f;
+    const float radians=mRotation*M_PI/180.f;
     const float fsin=sin(radians);
     const float fcos=cos(radians);
     Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1-fcos,mPivotX), sdot(fsin,mPivotX,1-fcos,mPivotY));
     matrix.multiply(matrix,rt);
-
-    LOGV_IF(mRotation!=.0f||mScaleX==.0f||mScaleY==.0f,"scalexy=%f,%f rotation=%f",mScaleX,mScaleY,mRotation);
     return matrix;
 }
 
