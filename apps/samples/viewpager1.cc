@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <widget/simplemonthview.h>
+#include <widget/pagetransformers.h>
 static int mPageCount=5;
 class MyPageAdapter:public PagerAdapter{
 public:
@@ -56,18 +57,8 @@ int main(int argc,const char*argv[]){
     gpAdapter->notifyDataSetChanged();
     pager->setCurrentItem(0);
     w->requestLayout();
-    const float MIN_SCALE=0.5f;
     if(argc>1)
-    pager->setPageTransformer(true,[&](View&view,float position){
-        float scaleFactor=1.f;
-        float translationX=(float)view.getWidth()*.8f+20.f*std::abs(position);
-        view.setTranslationX(translationX);
-        scaleFactor=std::max(.1f,1.f-std::max(.1f,std::abs(position)*0.5f));
-        view.setScaleX(scaleFactor);
-        view.setScaleY(scaleFactor);
-        LOGD("view at %f size=%dx%d scale=%f transx=%f",position,view.getWidth(),view.getHeight(),scaleFactor,translationX);
-    });
-   
+    pager->setPageTransformer(true,new RotateUpTransformer());
 
     app.exec();
 }

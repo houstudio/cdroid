@@ -27,12 +27,12 @@ public:
 int main(int argc,const char*argv[]){
 
     App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
+    Window*w=new Window(0,0,1280,720);
   
     MyAdapter*adapter=new MyAdapter();
     w->setBackgroundColor(0xFF111111);
     ListView*lv=(ListView*)&w->addView(new ListView(320,480));
-    lv->setPos(10,10);
+    lv->setPos(150,100);
     lv->setId(1000);
     for(int i=0;i<56;i++){
         adapter->add("");
@@ -43,18 +43,18 @@ int main(int argc,const char*argv[]){
     lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv->setSmoothScrollbarEnabled(true);
     lv->setSelector(new ColorDrawable(0x8800FF00));
-    //lv->setSelection(2);
+    lv->setSelection(2);
     lv->setDivider(new ColorDrawable(0x80224422));
     lv->setDividerHeight(1);
-    lv->setRotation(30);
+    //lv->setRotation(30);
 
     TextView*tv=new TextView("HelloWorld",200,40);
     w->addView(tv).setPos(600,400);
     tv->setBackgroundColor(0xFF00FF00);
     float rotation=.0f;
     Runnable r([&](){
-        lv->setRotation(rotation); lv->invalidate();
-        tv->setRotation(rotation); tv->invalidate();
+        lv->setRotation(rotation);
+        tv->setRotation(rotation);
         rotation+=5;
         w->postDelayed(r,80);
     });

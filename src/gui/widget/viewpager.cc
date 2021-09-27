@@ -17,6 +17,13 @@ ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
     initViewPager();    
 }
 
+ViewPager::~ViewPager(){
+    delete mLeftEdge;
+	delete mRightEdge;
+	delete mMarginDrawable;
+	delete mScroller;
+}
+
 ViewPager::ViewPager(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
     initViewPager();
 }
@@ -54,7 +61,7 @@ void ViewPager::initViewPager(){
     mTempItem=new ItemInfo();
 
     mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
-    mCloseEnough = (int) (CLOSE_ENOUGH * density);
+    mCloseEnough   = (int) (CLOSE_ENOUGH * density);
     mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
 }
 
@@ -270,7 +277,7 @@ void ViewPager::dispatchOnScrollStateChanged(int state) {
     }
 }
 
-void ViewPager::setPageTransformer(bool reverseDrawingOrder, PageTransformer transformer) {
+void ViewPager::setPageTransformer(bool reverseDrawingOrder, PageTransformer* transformer) {
     const bool hasTransformer = transformer != nullptr;
     const bool needsPopulate = hasTransformer != (mPageTransformer != nullptr);
     mPageTransformer = transformer;
@@ -1118,7 +1125,7 @@ void ViewPager::onPageScrolled(int position, float offset, int offsetPixels){
 
              if (lp->isDecor) continue;
              float transformPos = (float) (child->getLeft() - scrollX) / getClientWidth();
-             mPageTransformer(*child, transformPos);
+             mPageTransformer->transformPage(*child, transformPos);
         }
     }
     mCalledSuper = true;

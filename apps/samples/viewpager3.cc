@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <dirent.h>
+#include <widget/pagetransformers.h>
 
 class MyPageAdapter:public PagerAdapter{
     std::vector<std::string>urls;
@@ -17,8 +18,11 @@ public:
     int getCount()override{return urls.size();}
     bool isViewFromObject(View* view, void*object)override{ return view==object;}
     void* instantiateItem(ViewGroup* container, int position)override {
-        ImageView*iv=new  ImageView(100,100);
-        container->addView(iv,new ViewPager::LayoutParams());
+        ImageView*iv=new  ImageView(200,200);
+        ViewPager::LayoutParams*lp=new ViewPager::LayoutParams();
+        //lp->isDecor=true;
+        lp->gravity=Gravity::LEFT;
+        container->addView(iv,lp).setId(position);
         iv->setScaleType(FIT_XY);
         RefPtr<Cairo::ImageSurface>img;
         if(imgs.find(position)==imgs.end()){
@@ -60,43 +64,8 @@ int main(int argc,const char*argv[]){
     };
     pager->addOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    constexpr float CENTER_PAGE_SCALE=.8f; 
-    constexpr int pagerWidth=800;
-    const float MIN_SCALE = 0.5f;
-    const float MIN_ALPHA = 0.5f;
     if(argc>1)
-    pager->setPageTransformer(true,[&](View&view,float position){
-         int pageWidth = view.getWidth();
-	 int pageHeight = view.getHeight();
-
-         if (position < -1){ // [-Infinity,-1)
-   	     // This page is way off-screen to the left.
-	     view.setAlpha(0);
-         } else if (position <= 1){ //a页滑动至b页 ； a页从 0.0 -1 ；b页从1 ~ 0.0
-	     // [-1,1]
-	     // Modify the default slide transition to shrink the page as well
-	     float scaleFactor = std::max(MIN_SCALE, 1 - std::abs(position));
-	     float vertMargin = pageHeight * (1 - scaleFactor) / 2;
-	     float horzMargin = pageWidth * (1 - scaleFactor) / 2;
-	    if (position < 0){
-		view.setTranslationX(horzMargin - vertMargin / 2);
-	    } else{
-		view.setTranslationX(-horzMargin + vertMargin / 2);
-	    }
- 
-	    // Scale the page down (between MIN_SCALE and 1)
-	    view.setScaleX(scaleFactor);
-	    view.setScaleY(scaleFactor);
- 
-	    // Fade the page relative to its size.
-	    view.setAlpha(MIN_ALPHA + (scaleFactor - MIN_SCALE)
-		/ (1 - MIN_SCALE) * (1 - MIN_ALPHA));
- 
-	} else{ // (1,+Infinity]
-	    // This page is way off-screen to the right.
-	    view.setAlpha(0);
-	}
-    });
+    pager->setPageTransformer(true,new ParallaxTransformer());
     layout->addView(pager);
     tab->setupWithViewPager(pager);
     w->addView(layout);
