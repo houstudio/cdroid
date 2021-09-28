@@ -169,6 +169,7 @@ protected:
         bool mDisplayState;/*true display is on*/
         Canvas* mCanvas;
         View* mTooltipHost;
+        View* mViewRequestingLayout;
         AttachInfo(); 
     };
 public:

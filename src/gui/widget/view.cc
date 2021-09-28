@@ -4784,10 +4784,20 @@ bool View::removeCallbacks(const Runnable& what){
 //   For Layout support
 
 void View::requestLayout(){
+    if(mAttachInfo && mAttachInfo->mViewRequestingLayout==nullptr){
+        ViewGroup*viewRoot= getRootView();
+        if(viewRoot && viewRoot->isInLayout()){
+            //if(!viewRoot->requesLayoutDuringLayout(this))return ;
+        }
+        mAttachInfo->mViewRequestingLayout = this;
+    }
     mPrivateFlags |= PFLAG_FORCE_LAYOUT;
     mPrivateFlags |= PFLAG_INVALIDATED;
     if (mParent != nullptr && !mParent->isLayoutRequested()) {
         mParent->requestLayout();
+    }
+    if (mAttachInfo && mAttachInfo->mViewRequestingLayout == this) {
+         mAttachInfo->mViewRequestingLayout = nullptr;
     }
 }
 
@@ -5409,9 +5419,10 @@ View::AttachInfo::AttachInfo(){
     mApplicationScale =1.0f;
     mDrawingTime  = 0;
     mKeepScreenOn = true;
-    mRootView =nullptr;
-    mCanvas = nullptr;
-    mTooltipHost =nullptr;
+    mRootView     = nullptr;
+    mCanvas       = nullptr;
+    mTooltipHost  =nullptr;
+    mViewRequestingLayout =nullptr;
 }
 
 }//endof namespace

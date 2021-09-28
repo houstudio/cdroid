@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <cdlog.h>
-
+#include <animation/translateanimation.h>
 class MyAdapter:public ArrayAdapter<std::string>{
 private:
     int itemType;
@@ -32,13 +32,19 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(100,50,1200,620);
     MyAdapter*adapter=new MyAdapter(0);
 
-    ListView*lv=(ListView*)&w->addView(new ListView(460,500));
+    Animation *anim= new TranslateXAnimation(-460,0);
+    anim->setDuration(3000);
+    w->setId(10);
+    LayoutAnimationController*lac = new LayoutAnimationController(anim,200);
+    ListView*lv=(ListView*)&w->addView(new ListView(460,500)).setId(100);
     lv->setPos(10,10);
-    for(int i=0;i<56;i++){
-        adapter->add("");
-    }
+    adapter->setNotifyOnChange(true);
     lv->setAdapter(adapter);
+    for(int i=0;i<56;i++) adapter->add("");
+
+    lv->setLayoutAnimation(lac);
     adapter->notifyDataSetChanged();
+    lv->startLayoutAnimation();
     lv->setVerticalScrollBarEnabled(true);    
     lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv->setSmoothScrollbarEnabled(true);
@@ -57,14 +63,13 @@ int main(int argc,const char*argv[]){
     lv->setOnItemSelectedListener(listener);
 ////////////////////////////////////////////////////////////////////////////////////////
     MyAdapter*adapter2=new MyAdapter(1);
-    ListView*lv2=(ListView*)&w->addView(new ListView(500,500));
+    ListView*lv2=(ListView*)&w->addView(new ListView(500,500)).setId(200);
     ToggleButton *toggle=new ToggleButton(300,40);
     w->addView(toggle).setPos(500,520);
     lv2->setPos(500,10);
     lv2->setAdapter(adapter2);
-    for(int i=0;i<56;i++){
-        adapter2->add("");
-    }
+    for(int i=0;i<56;i++)  adapter2->add("");
+   
     lv2->setDivider(new ColorDrawable(0x80224422));
     lv2->setDividerHeight(1);
     lv2->setVerticalScrollBarEnabled(true);
@@ -88,6 +93,14 @@ int main(int argc,const char*argv[]){
     toggle->setOnCheckedChangeListener([&](CompoundButton&view,bool check){
         lv2->setChoiceMode(check?ListView::CHOICE_MODE_SINGLE:ListView::CHOICE_MODE_MULTIPLE);
     });
+    Runnable rd;
+    rd=[&rd,lv,w,adapter](){
+        lv->startLayoutAnimation();
+        for(int i=0;i<10;i++)adapter->add("");
+        //w->postDelayed(rd,1000);
+    };
+    lv->startLayoutAnimation();
+    w->postDelayed(rd,2000);
     app.exec();
     return 0;
 };
