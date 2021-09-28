@@ -4787,7 +4787,7 @@ void View::requestLayout(){
     if(mAttachInfo && mAttachInfo->mViewRequestingLayout==nullptr){
         ViewGroup*viewRoot= getRootView();
         if(viewRoot && viewRoot->isInLayout()){
-            //if(!viewRoot->requesLayoutDuringLayout(this))return ;
+            if(!viewRoot->requestLayoutDuringLayout(this))return ;
         }
         mAttachInfo->mViewRequestingLayout = this;
     }

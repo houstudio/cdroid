@@ -2311,6 +2311,10 @@ bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {
     return isVisible;
 }
 
+bool ViewGroup::requestLayoutDuringLayout(View* view){
+    return true;
+}
+
 bool ViewGroup::requestFocus(int direction,Rect*previouslyFocusedRect){
     int descendantFocusability = getDescendantFocusability();
 

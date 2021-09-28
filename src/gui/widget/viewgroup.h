@@ -242,6 +242,7 @@ public:
     bool restoreFocusNotInCluster();
     View*keyboardNavigationClusterSearch(View* currentCluster,int direction)override;
     bool requestFocus(int direction=FOCUS_DOWN,Rect*previouslyFocusedRect=nullptr)override;
+    virtual bool requestLayoutDuringLayout(View* view);
 
     int getChildCount()const;
     View*getChildAt(int idx)const;

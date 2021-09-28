@@ -40,12 +40,14 @@ protected:
 private:
     Runnable layoutRunner;
     bool mInLayout;
+    bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
     void doLayout();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
 protected:
-    RefPtr<Region>mWindowRgn;	
+    std::vector<View*>mLayoutRequesters;
+    RefPtr<Region>mWindowRgn;
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;
@@ -88,6 +90,7 @@ public:
     bool postDelayed(Runnable& what,uint32_t delay)override;
     bool removeCallbacks(const Runnable& what)override;
     void requestLayout()override;
+    bool requestLayoutDuringLayout(View*)override;
     void dispatchInvalidateOnAnimation(View* view)override;
     void cancelInvalidate(View* view)override;
     static void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);

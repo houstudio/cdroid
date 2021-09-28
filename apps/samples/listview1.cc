@@ -33,9 +33,9 @@ int main(int argc,const char*argv[]){
     MyAdapter*adapter=new MyAdapter(0);
 
     Animation *anim= new TranslateXAnimation(-460,0);
-    anim->setDuration(3000);
+    anim->setDuration(1000);
     w->setId(10);
-    LayoutAnimationController*lac = new LayoutAnimationController(anim,200);
+    LayoutAnimationController*lac = new LayoutAnimationController(anim,0.1);
     ListView*lv=(ListView*)&w->addView(new ListView(460,500)).setId(100);
     lv->setPos(10,10);
     adapter->setNotifyOnChange(true);
@@ -62,6 +62,7 @@ int main(int argc,const char*argv[]){
     }; 
     lv->setOnItemSelectedListener(listener);
 ////////////////////////////////////////////////////////////////////////////////////////
+
     MyAdapter*adapter2=new MyAdapter(1);
     ListView*lv2=(ListView*)&w->addView(new ListView(500,500)).setId(200);
     ToggleButton *toggle=new ToggleButton(300,40);
@@ -93,14 +94,14 @@ int main(int argc,const char*argv[]){
     toggle->setOnCheckedChangeListener([&](CompoundButton&view,bool check){
         lv2->setChoiceMode(check?ListView::CHOICE_MODE_SINGLE:ListView::CHOICE_MODE_MULTIPLE);
     });
+
     Runnable rd;
     rd=[&rd,lv,w,adapter](){
-        lv->startLayoutAnimation();
         for(int i=0;i<10;i++)adapter->add("");
+        lv->startLayoutAnimation();
         //w->postDelayed(rd,1000);
     };
-    lv->startLayoutAnimation();
-    w->postDelayed(rd,2000);
+    w->postDelayed(rd,10000);
     app.exec();
     return 0;
 };

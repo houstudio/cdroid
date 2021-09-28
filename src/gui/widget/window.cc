@@ -331,6 +331,14 @@ void Window::requestLayout(){
     }
 }
 
+bool Window::requestLayoutDuringLayout(View*view){
+    if(view->getParent()==nullptr || view->isAttachedToWindow()==false)
+        return true;
+    if(std::find(mLayoutRequesters.begin(),mLayoutRequesters.end(),view)==mLayoutRequesters.end())
+        mLayoutRequesters.push_back(view);
+    return !mHandingLayoutInLayoutRequest;
+}
+
 void Window::doLayout(){
     LOGV("requestLayout(%dx%d)child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
                 getChildCount(),(mPrivateFlags&PFLAG_HAS_BOUNDS));
