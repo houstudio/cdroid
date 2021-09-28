@@ -650,8 +650,8 @@ void View::setAnimation(Animation* animation) {
         // If the screen is off assume the animation start time is now instead of
         // the next frame we draw. Keeping the START_ON_FIRST_FRAME start time
         // would cause the animation to start when the screen turns back on
-        if (/*mAttachInfo != null && mAttachInfo.mDisplayState == Display.STATE_OFF
-                &&*/ animation->getStartTime() == Animation::START_ON_FIRST_FRAME) {
+        if (mAttachInfo != nullptr && mAttachInfo->mDisplayState //== Display.STATE_OFF
+                && animation->getStartTime() == Animation::START_ON_FIRST_FRAME) {
             animation->setStartTime(AnimationUtils::currentAnimationTimeMillis());
         }
         animation->reset();
@@ -5140,14 +5140,14 @@ static inline float sdot(float a,float b,float c,float d){
 Matrix View::getMatrix() {
     ensureTransformationInfo();
     //mRenderNode.getMatrix(matrix);
-    Matrix matrix=identity_matrix();
+    Matrix matrix=mTransformationInfo->mMatrix;//identity_matrix();
     matrix.translate(mTranslationX,mTranslationY);
     matrix.scale(mScaleX,mScaleY);
 
     const float radians=mRotation*M_PI/180.f;
     const float fsin=sin(radians);
     const float fcos=cos(radians);
-    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1-fcos,mPivotX), sdot(fsin,mPivotX,1-fcos,mPivotY));
+    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1.f-fcos,mPivotX),sdot(fsin,mPivotX,1.f-fcos,mPivotY));
     matrix.multiply(matrix,rt);
     return matrix;
 }

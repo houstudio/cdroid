@@ -3,6 +3,17 @@
 #include <cdlog.h>
 namespace cdroid{
 
+TranslateAnimation::TranslateAnimation(const TranslateAnimation&o):Animation(o){
+    mFromXValue= o.mFromXValue;
+    mToXValue  = o.mToXValue;
+    mFromYValue= o.mFromYValue;
+    mToYValue  = o.mToYValue;
+    mFromXType = o.mFromXType;
+    mToXType   = o.mToXType;
+    mFromYType = o.mFromYType;
+    mToYType   = o.mToYType;
+}
+
 TranslateAnimation::TranslateAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context,attrs){
 }
@@ -43,7 +54,7 @@ void TranslateAnimation::applyTransformation(float interpolatedTime, Transformat
         dy = mFromYDelta + ((mToYDelta - mFromYDelta) * interpolatedTime);
     }
     t.getMatrix().translate(dx, dy);
-    LOGD("dx/dy=%f,%f",dx,dy);
+    LOGV("x:%.2f(%.2f,%.2f) y:%.2f(%.2f,%.2f) interpolatedTime=%.4f",dx,mFromXDelta,mToXDelta,dy,mFromYDelta,mToYDelta,interpolatedTime);
 }
 
 void TranslateAnimation::initialize(int width, int height, int parentWidth, int parentHeight) {
@@ -54,6 +65,10 @@ void TranslateAnimation::initialize(int width, int height, int parentWidth, int 
     mToYDelta = resolveSize(mToYType, mToYValue, height, parentHeight);
 }
 
+Animation*TranslateAnimation::clone(){
+    TranslateAnimation*anim=new TranslateAnimation(*this);
+    return anim;     
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 TranslateXAnimation::TranslateXAnimation(float fromXDelta, float toXDelta)
@@ -68,6 +83,7 @@ void TranslateXAnimation::applyTransformation(float interpolatedTime, Transforma
     Matrix&m = t.getMatrix();
     float dx = mFromYDelta + ((mToXDelta - mFromXDelta) * interpolatedTime);
     m.translate(dx,/*mTmpValues[Matrix.MTRANS_X]*/m.y0);
+    LOGV("x:%.2f(%.2f,%.2f)interpolatedTime=%.4f",dx,mFromXDelta,mToXDelta,interpolatedTime);
 }
 
 TranslateYAnimation::TranslateYAnimation(float fromYDelta, float toYDelta)

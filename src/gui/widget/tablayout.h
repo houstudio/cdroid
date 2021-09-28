@@ -23,7 +23,7 @@ public:
         Drawable* mIcon;
         std::string mText;
         std::string  mContentDesc;
-        int mPosition = INVALID_POSITION;
+        int  mPosition = INVALID_POSITION;
         View* mCustomView;
     public:
         static constexpr int INVALID_POSITION = -1;
@@ -38,7 +38,7 @@ public:
         Tab& setCustomView(View*);
         Drawable* getIcon()const;
         Tab& setIcon(Drawable* icon);
-        int getPosition()const;
+        int  getPosition()const;
         void setPosition(int position);
         std::string getText()const;
         Tab& setText(const std::string&text);
@@ -122,16 +122,16 @@ private:
     };
     class SlidingTabStrip:public LinearLayout{
     private:
-        int mSelectedIndicatorHeight;
-        int mSelectedIndicatorColor;
+        int  mSelectedIndicatorHeight;
+        int  mSelectedIndicatorColor;
 
-        int mSelectedPosition= -1;
+        int  mSelectedPosition= -1;
         float mSelectionOffset;
 
-        int mLayoutDirection = -1;
+        int  mLayoutDirection = -1;
 
-        int mIndicatorLeft  = -1;
-        int mIndicatorRight = -1;
+        int  mIndicatorLeft  = -1;
+        int  mIndicatorRight = -1;
         TabLayout*mParent;
         ValueAnimator* mIndicatorAnimator;
         void updateIndicatorPosition();
@@ -150,10 +150,10 @@ private:
         void animateIndicatorToPosition(int position, int duration);
         void draw(Canvas& canvas)override;
     };
-    int mRequestedTabMinWidth;
-    int mRequestedTabMaxWidth;
-    int mScrollableTabMinWidth;
-    int mContentInsetStart;
+    int  mRequestedTabMinWidth;
+    int  mRequestedTabMaxWidth;
+    int  mScrollableTabMinWidth;
+    int  mContentInsetStart;
 
     ValueAnimator* mScrollAnimator;
     Tab* mSelectedTab;
@@ -176,7 +176,7 @@ private:
     void dispatchTabSelected(Tab* tab);
     void dispatchTabUnselected(Tab* tab);
     void dispatchTabReselected(Tab* tab);
-    int calculateScrollXForTab(int position, float positionOffset);
+    int  calculateScrollXForTab(int position, float positionOffset);
     void applyModeAndGravity();
 
     static ColorStateList* createColorStateList(int defaultColor, int selectedColor);
@@ -185,24 +185,24 @@ private:
 protected:
     static constexpr int FIXED_WRAP_GUTTER_MIN = 16; //dps
     static constexpr int MOTION_NON_ADJACENT_OFFSET = 24;
-    int mTabPaddingStart;
-    int mTabPaddingTop;
-    int mTabPaddingEnd;
-    int mTabPaddingBottom;
-    int mTabTextAppearance;
+    int  mTabPaddingStart;
+    int  mTabPaddingTop;
+    int  mTabPaddingEnd;
+    int  mTabPaddingBottom;
+    int  mTabTextAppearance;
     ColorStateList* mTabTextColors;
     ColorStateList* mTabIconTint;
     ColorStateList* mTabRippleColorStateList;
     Drawable* mTabSelectedIndicator;
     float mTabTextSize;
     float mTabTextMultiLineSize;
-    int mTabBackgroundResId;
-    int mTabMaxWidth;
+    int  mTabBackgroundResId;
+    int  mTabMaxWidth;
 
-    int mTabGravity;
-    int mTabIndicatorAnimationDuration;
-    int mTabIndicatorGravity;
-    int mMode;
+    int  mTabGravity;
+    int  mTabIndicatorAnimationDuration;
+    int  mTabIndicatorGravity;
+    int  mMode;
     std::vector<OnTabSelectedListener> mSelectedListeners;
     OnTabSelectedListener mCurrentVpSelectedListener;
     bool inlineLabel;
@@ -225,7 +225,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void selectTab(Tab* tab,bool updateIndicator);
     void updateTabViews(bool requestLayout);
-    int getTabMaxWidth();
+    int  getTabMaxWidth();
 public:
     TabLayout(int w,int h);
     TabLayout(Context*context,const AttributeSet&atts);
@@ -242,16 +242,16 @@ public:
     void removeOnTabSelectedListener(OnTabSelectedListener listener);
     void clearOnTabSelectedListeners();
     Tab* newTab();
-    int getTabCount()const;
+    int  getTabCount()const;
     Tab* getTabAt(int index);
-    int getSelectedTabPosition()const;
+    int  getSelectedTabPosition()const;
     void removeTab(Tab* tab);
     void removeTabAt(int position);
     void removeAllTabs();
     void setTabMode(int mode);
-    int getTabMode()const;
+    int  getTabMode()const;
     void setTabGravity(int gravity);
-    int getTabGravity()const;
+    int  getTabGravity()const;
     void setTabTextColors(ColorStateList* textColor);
     ColorStateList* getTabTextColors()const;
     void setTabTextColors(int normalColor, int selectedColor);
@@ -259,7 +259,7 @@ public:
     void setupWithViewPager(ViewPager* viewPager, bool autoRefresh);
     bool shouldDelayChildPressedState()override;
 
-    View& addView(View* child)override;
+    View& addView(View* child) override;
     View& addView(View* child, int index)override;
     View& addView(View* child, ViewGroup::LayoutParams* params)override;
     View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;

@@ -63,7 +63,7 @@ void GraphDevice::trackFPS() {
         mFpsPrevTime = nowTime;
         if (totalTime > 1000) {
             float fps = (float) mFpsNumFrames * 1000 / totalTime;
-            LOGD("\tFPS:%f",fps);
+            LOGV("\tFPS:%f",fps);
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
         }

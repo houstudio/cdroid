@@ -660,7 +660,7 @@ void AbsListView::resetList() {
     removeAllViewsInLayout();
     mFirstPosition = 0;
     mDataChanged = false;
-    //mPositionScrollAfterLayout = null;
+    mPositionScrollAfterLayout = nullptr;
     mNeedSync = false;
     //mPendingSync = null;
     mOldSelectedPosition = INVALID_POSITION;
@@ -3046,11 +3046,9 @@ void AbsListView::PositionScroller::start(int position, int boundPosition) {
 
     if (mLV->mDataChanged) {
         // Wait until we're back in a stable state to try this.
-        /*mPositionScrollAfterLayout = new Runnable() {
-            public void run() {
-                start(position, boundPosition);
-            }
-        };*/
+        mLV->mPositionScrollAfterLayout =[this,position,boundPosition](){
+            start(position, boundPosition);
+        };
         return;
     }
 
@@ -3123,12 +3121,9 @@ void AbsListView::PositionScroller::startWithOffset(int position, int offset, in
 
     if (mLV->mDataChanged) {
         // Wait until we're back in a stable state to try this.
-        int postOffset = offset;
-        /*mPositionScrollAfterLayout = new Runnable() {
-            public void run() {
-                startWithOffset(position, postOffset, duration);
-            }
-        };*/
+        mLV->mPositionScrollAfterLayout =[this,position,offset,duration](){
+            startWithOffset(position, offset, duration);
+        };
         return;
     }
 

@@ -4,10 +4,12 @@
 namespace cdroid{
 
 LayoutAnimationController::LayoutAnimationController(Context* context, const AttributeSet& attrs){
+
 }
 
 LayoutAnimationController::LayoutAnimationController(Animation* animation,float delay){
     mDelay = delay;
+    mInterpolator =nullptr;
     setAnimation(animation);
 }
 
@@ -101,12 +103,9 @@ long LayoutAnimationController::getDelayForView(View* view){
 
 int LayoutAnimationController::getTransformedIndex(const AnimationParameters* params){
     switch (getOrder()) {
-    case ORDER_REVERSE:
-        return params->count - 1 - params->index;
-    case ORDER_RANDOM:
-        return (int) (params->count * drand48());
-    case ORDER_NORMAL:
-    default: return params->index;
+    case ORDER_REVERSE: return params->count - 1 - params->index;
+    case ORDER_RANDOM : return (int) (params->count * drand48());
+    case ORDER_NORMAL : default: return params->index;
     }
 }
 

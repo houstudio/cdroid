@@ -166,6 +166,7 @@ protected:
         bool mInTouchMode;
         bool mKeepScreenOn;
         bool mDebugLayout;
+        bool mDisplayState;/*true display is on*/
         Canvas* mCanvas;
         View* mTooltipHost;
         AttachInfo(); 

@@ -6,6 +6,14 @@ Transformation::Transformation() {
     clear();
 }
 
+void Transformation::operator=(const Transformation&o){
+    mMatrix  = o.mMatrix;
+    mClipRect= o.mClipRect;
+    mAlpha   = o.mAlpha;
+    mHasClipRect=o.mHasClipRect;
+    mTransformationType=o.mTransformationType;
+}
+
 void Transformation::clear(){
     mMatrix=Cairo::identity_matrix();
     mClipRect.setEmpty();

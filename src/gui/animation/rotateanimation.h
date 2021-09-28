@@ -18,6 +18,7 @@ private:
 private:
     void initializePivotPoint();
 protected:
+    RotateAnimation(const RotateAnimation&);
     void applyTransformation(float interpolatedTime, Transformation& t)override;
 public:
     RotateAnimation(Context* context,const AttributeSet& attrs);
@@ -26,6 +27,7 @@ public:
     RotateAnimation(float fromDegrees, float toDegrees, int pivotXType, float pivotXValue,
             int pivotYType, float pivotYValue);
     void initialize(int width, int height, int parentWidth, int parentHeight);
+    Animation*clone()override;
 };
 
 }

@@ -930,7 +930,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
     }
 
     if(child->mParent){
-        throw "The specified child already has a parent. you must call removeView() on the child's parent first.";
+        LOGE("The specified child already has a parent. you must call removeView() on the child's parent first.");
     }
     if (!checkLayoutParams(params)) {
         params = generateLayoutParams(params);
@@ -979,17 +979,15 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
 
     //if (child->getVisibility() !=GONE) notifySubtreeAccessibilityStateChangedIfNeeded();
 
-    /*if (mTransientIndices != nullptr) {
-        int transientCount = mTransientIndices.size();
-        for (int i = 0; i < transientCount; ++i) {
-            int oldIndex = mTransientIndices.get(i);
-            if (index <= oldIndex) {
-                mTransientIndices.set(i, oldIndex + 1);
-            }
+    int transientCount = mTransientIndices.size();
+    for (int i = 0; i < transientCount; ++i) {
+        int oldIndex = mTransientIndices.at(i);
+        if (index <= oldIndex) {
+            mTransientIndices[i]= oldIndex + 1;
         }
     }
 
-    if (mCurrentDragStartEvent != nullptr && child->getVisibility() == VISIBLE) {
+    /*if (mCurrentDragStartEvent != nullptr && child->getVisibility() == VISIBLE) {
         notifyChildOfDragStart(child);
     }*/
 
@@ -1888,8 +1886,7 @@ void ViewGroup::bindLayoutAnimation(View* child){
 }
 
 void ViewGroup::attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count) {
-    LayoutAnimationController::AnimationParameters* animationParams =
-               params->layoutAnimationParameters;
+    LayoutAnimationController::AnimationParameters* animationParams = params->layoutAnimationParameters;
     if (animationParams == nullptr) {
         animationParams = new LayoutAnimationController::AnimationParameters();
         params->layoutAnimationParameters = animationParams;

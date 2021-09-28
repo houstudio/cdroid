@@ -22,6 +22,7 @@ protected:
     Rect mClipRect ;
 public:
     Transformation();
+    void operator=(const Transformation&);
     void clear();
     int getTransformationType()const;
     void setTransformationType(int transformationType);

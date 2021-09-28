@@ -28,6 +28,7 @@ protected:
     Rect mFromRect;
     Rect mToRect;
     void applyTransformation(float it, Transformation& tr)override;
+    ClipRectAnimation(const ClipRectAnimation&);
 public:
     ClipRectAnimation(Context* context, const AttributeSet& attrs);
     ClipRectAnimation(const Rect& fromClip,const Rect& toClip);
@@ -35,6 +36,7 @@ public:
             int toL, int toT, int toR, int toB);
     bool willChangeTransformationMatrix()const override;
     void initialize(int width, int height, int parentWidth, int parentHeight)override;
+    Animation*clone()override;
 };
 
 }//endif namespace

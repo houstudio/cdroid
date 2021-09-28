@@ -62,6 +62,7 @@ protected:
     Transformation mTransformation;
     Transformation mPreviousTransformation;
 protected:
+    Animation(const Animation&other);
     float getScaleFactor()const;
     void ensureInterpolator();
     virtual void applyTransformation(float interpolatedTime, Transformation& t);

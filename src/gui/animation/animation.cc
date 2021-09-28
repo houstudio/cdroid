@@ -7,21 +7,50 @@
 namespace cdroid{
 
 Animation::Animation() {
-    mStartTime =-1;
-    mStartOffset=0;
+    mStartTime    =-1;
+    mStartOffset  =0;
     mInterpolator =nullptr;
+    mStarted  = false;
+    mEnded    = false;
+    mCycleFlip=false;
+    mInitialized= false;
+    mFillBefore = true;
+    mFillAfter  = false;
+    mFillEnabled= false;
+    mRepeatMode = RESTART;
+    mMore = mOneMoreTime = true;
     ensureInterpolator();
+}
+
+Animation::Animation(const Animation&o){
+    mStartTime  = -1;//o.mStartTime;
+    mStartOffset= 0;//o.mStartOffset;
+    mDuration   = o.mDuration;
+    mRepeatCount= o.mRepeatCount;
+    mRepeatMode = o.mRepeatMode;
+    mCycleFlip  = o.mCycleFlip;
+    mFillEnabled= o.mFillEnabled;
+    mFillBefore = o.mFillBefore;
+    mFillAfter  = o.mFillAfter;
+    mZAdjustment= o.mZAdjustment;
+    mMore       = o.mMore;
+    mOneMoreTime= o.mOneMoreTime;
+    mRepeated   = 0;
+    mStarted = mEnded = false;
+    mBackgroundColor = o.mBackgroundColor;
+    mInterpolator=nullptr;
+    ensureInterpolator(); 
 }
 
 Animation::Animation(Context* context, const AttributeSet& attrs){
 }
 
 Animation* Animation::clone(){
-    Animation* animation = new Animation();
-    /*animation->mPreviousRegion = new RectF();
-    animation->mRegion = new RectF();
-    animation->mTransformation = new Transformation();
-    animation->mPreviousTransformation = new Transformation();*/
+    Animation* animation = new Animation(*this);
+    //animation->mPreviousRegion = new RectF();
+    //animation->mRegion = new RectF();
+    //animation->mTransformation = new Transformation();
+    //animation->mPreviousTransformation = new Transformation();
     return animation;
 }
 
@@ -56,7 +85,7 @@ void Animation::detach() {
 }
 
 bool Animation::isInitialized()const{
-        return mInitialized;
+    return mInitialized;
 }
 
 void Animation::initialize(int width, int height, int parentWidth, int parentHeight) {
@@ -124,9 +153,9 @@ void Animation::scaleCurrentDuration(float scale) {
 
 void Animation::setStartTime(long startTimeMillis) {
     mStartTime = startTimeMillis;
-    mStarted = mEnded = false;
+    mStarted   = mEnded = false;
     mCycleFlip = false;
-    mRepeated = 0;
+    mRepeated  = 0;
     mMore = true;
 }
 
@@ -378,7 +407,7 @@ void Animation::getInvalidateRegion(int left, int top, int width, int height,
     previousRegion=tempRegion;//.set(tempRegion);
 
     Transformation tempTransformation = mTransformation;
-    Transformation previousTransformation = mPreviousTransformation;
+    Transformation& previousTransformation = mPreviousTransformation;
 
     tempTransformation.set(transformation);
     transformation.set(previousTransformation);

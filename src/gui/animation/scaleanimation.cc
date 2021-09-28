@@ -3,6 +3,18 @@
 #include <cdlog.h>
 namespace cdroid{
 
+ScaleAnimation::ScaleAnimation(const ScaleAnimation&o):Animation(o){
+    mFromX  = o.mFromX;
+    mToX    = o.mToX;
+    mFromY  = o.mFromY;
+    mToY    = o.mToY;
+    mPivotXValue = o.mPivotXValue;
+    mPivotXType  = o.mPivotXType;
+    mPivotYValue = o.mPivotYValue;
+    mPivotYType  = o.mPivotYType;
+    initializePivotPoint();
+}
+
 ScaleAnimation::ScaleAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context,attrs){
 }
@@ -44,6 +56,10 @@ ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY,
     mPivotYValue = pivotYValue;
     mPivotYType  = pivotYType;
     initializePivotPoint();
+}
+
+Animation* ScaleAnimation::clone(){
+    return new ScaleAnimation(*this);
 }
 
 void ScaleAnimation::initializePivotPoint() {

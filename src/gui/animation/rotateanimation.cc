@@ -1,6 +1,17 @@
 #include <animation/rotateanimation.h>
 namespace cdroid{
 
+RotateAnimation::RotateAnimation(const RotateAnimation&o){
+    mFromDegrees = o.mFromDegrees;
+    mToDegrees   = o.mToDegrees;
+
+    mPivotXValue = o.mPivotXValue;
+    mPivotXType  = o.mPivotXType;
+    mPivotYValue = o.mPivotYValue;
+    mPivotYType  = o.mPivotYType;
+    initializePivotPoint();
+}
+
 RotateAnimation::RotateAnimation(Context* context,const AttributeSet& attrs){
     mFromDegrees = attrs.getFloat("fromDegrees", 0.0f);
     mToDegrees = attrs.getFloat("toDegrees", 0.0f);
@@ -44,6 +55,10 @@ RotateAnimation::RotateAnimation(float fromDegrees, float toDegrees, int pivotXT
     mPivotYValue = pivotYValue;
     mPivotYType = pivotYType;
     initializePivotPoint();
+}
+
+Animation*RotateAnimation::clone(){
+    return new RotateAnimation(*this);
 }
 
 void RotateAnimation::initializePivotPoint() {

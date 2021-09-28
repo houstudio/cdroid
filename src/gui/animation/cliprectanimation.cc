@@ -2,6 +2,17 @@
 #include <core/rect.h>
 namespace cdroid{
 
+ClipRectAnimation::ClipRectAnimation(const ClipRectAnimation&o):Animation(o){
+    mFromLeftValue  = o.mFromLeftValue;
+    mFromTopValue   = o.mFromTopValue;
+    mFromRightValue = o.mFromRightValue;
+    mFromBottomValue= o.mFromBottomValue;
+    mToLeftValue    = o.mToLeftValue;
+    mToTopValue     = o.mToTopValue;
+    mToRightValue   = o.mToRightValue;
+    mToBottomValue  = o.mToBottomValue;
+}
+
 ClipRectAnimation::ClipRectAnimation(Context* context, const AttributeSet& attrs)
 :Animation(context,attrs){
 }
@@ -22,6 +33,10 @@ ClipRectAnimation::ClipRectAnimation(const Rect& fromClip,const Rect& toClip)
 ClipRectAnimation::ClipRectAnimation(int fromL, int fromT, int fromR, int fromB,
         int toL, int toT, int toR, int toB)
 : ClipRectAnimation(Rect::MakeLTRB(fromL, fromT, fromR, fromB),Rect::MakeLTRB(toL, toT, toR, toB)){
+}
+
+Animation* ClipRectAnimation::clone(){
+    return new ClipRectAnimation(*this);
 }
 
 void ClipRectAnimation::applyTransformation(float it, Transformation& tr){
