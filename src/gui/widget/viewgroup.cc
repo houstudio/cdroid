@@ -95,7 +95,7 @@ void ViewGroup::initGroup(){
     mGroupFlags|= FLAG_ANIMATION_DONE;
     mGroupFlags|= FLAG_ANIMATION_CACHE;
     mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
-    mFocused = nullptr;
+    mFocused    = nullptr;
     mDefaultFocus = nullptr;
     mFocusedInCluster = nullptr;
     mFirstTouchTarget = nullptr;

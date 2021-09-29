@@ -141,7 +141,7 @@ static std::map<const std::string,int>gravitykvs={
     {"center", Gravity::CENTER},
     {"fill"  , Gravity::FILL}  ,
     {"clip_vertical"  , Gravity::CLIP_VERTICAL},
-    {"clip_horizontal", Gravity::CLIP_HORIZONTAL},
+    {"clip_horizontal", Gravity::CLIP_HORIZONTAL}
 };
 
 int AttributeSet::getGravity(const std::string&key,int defvalue)const{

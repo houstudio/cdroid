@@ -6,6 +6,7 @@ DrawerLayout::DrawerLayout(int w,int h):ViewGroup(w,h){
 }
 
 void DrawerLayout::initView(){
+    mInLayout = false;
     mStatusBarBackground = nullptr;
     mShadowLeftResolved  = nullptr;
     mShadowRightResolved = nullptr;

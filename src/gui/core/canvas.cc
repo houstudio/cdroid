@@ -87,11 +87,9 @@ void Canvas::rotate(float degrees,float px,float py){
     const float fsin=sin(radians);
     const float fcos=cos(radians);
 #if 0//Anti clockwise
-    Matrix mtx(fcos,-fsin, fsin,fcos,
-            sdot(-fsin,py,1-fcos,px),   sdot(fsin,px,1-fcos,py));
+    Matrix mtx(fcos,-fsin, fsin,fcos, sdot(-fsin,py,1-fcos,px), sdot(fsin,px,1-fcos,py));
 #else//Clockwise
-    Matrix mtx(fcos,fsin, -fsin,fcos,
-            sdot(fsin,py,1-fcos,px),   sdot(-fsin,px,1-fcos,py));
+    Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px),  sdot(-fsin,px,1-fcos,py));
 #endif
     transform(mtx);
 }

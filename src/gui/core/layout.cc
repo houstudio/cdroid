@@ -91,7 +91,13 @@ void Layout::setEllipsis(int ellipsis){
 
 float Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
     std::string utext=TextUtils::unicode2utf8(text);
+#if 1
     Cairo::Context*ctx=GraphDevice::getInstance().getPrimaryContext();
+#else
+    unsigned char data[128];
+    RefPtr<ImageSurface>surf=ImageSurface::create(data,Surface::Format::ARGB32,16,2,64);
+    RefPtr<Cairo::Context>ctx=Cairo::Context::create(surf);
+#endif
     ctx->save();
     ctx->set_font_size(mFontSize);
     ctx->get_text_extents(utext,te);

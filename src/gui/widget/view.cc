@@ -5133,6 +5133,7 @@ int View::resolveSizeAndState(int size, int measureSpec, int childMeasuredState)
 void View::ensureTransformationInfo(){
     if (mTransformationInfo == nullptr) {
         mTransformationInfo = new TransformationInfo();
+        mTransformationInfo->mMatrix =identity_matrix();
     }
 }
 
