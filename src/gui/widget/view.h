@@ -428,7 +428,6 @@ protected:
     void destroyDrawingCache();
     RefPtr<ImageSurface>getDrawingCache(bool autoScale);
     bool hasWindowFocus()const;
-    int getWindowVisibility()const;
 
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
@@ -737,6 +736,7 @@ public:
     // Enable & Visible
     virtual View& setVisibility(int visable);
     virtual int getVisibility() const;
+    int  getWindowVisibility()const;
     bool isShown()const;
     virtual View& setEnabled(bool enable);
     virtual bool isEnabled() const;
@@ -760,7 +760,7 @@ public:
     virtual bool isInTouchMode()const;
     bool isFocusable()const;
     void setFocusable(bool);
-    int getFocusable()const;
+    int  getFocusable()const;
     virtual void unFocus(View*);
     bool hasFocus()const;
     virtual bool restoreFocusInCluster(int direction);
@@ -806,7 +806,7 @@ public:
     bool onKeyDown(int keycode,KeyEvent& evt)override;
     bool onKeyLongPress(int keyCode, KeyEvent& event)override;
     bool onKeyMultiple(int keyCode, int count, KeyEvent& event)override;
-    virtual int commitText(const std::wstring&);
+    virtual int  commitText(const std::wstring&);
     virtual void onWindowVisibilityChanged(int);
     virtual void onVisibilityAggregated(bool isVisible);
     virtual bool onInterceptTouchEvent(MotionEvent& evt);
@@ -854,24 +854,24 @@ public:
     void setTranslationZ(float z);
 
     float getScaleX()const;
-    void setScaleX(float);
+    void  setScaleX(float);
     float getScaleY()const;
-    void setScaleY(float);
+    void  setScaleY(float);
     float getPivotX()const;
-    void setPivotX(float);
+    void  setPivotX(float);
     float getPivotY()const;
-    void setPivotY(float);
-    bool isPivotSet()const;
-    void resetPivot();
+    void  setPivotY(float);
+    bool  isPivotSet()const;
+    void  resetPivot();
     float getAlpha()const;
-    void setAlpha(float);
+    void  setAlpha(float);
 
     float getRotation()const;
-    void setRotation(float rotation);
+    void  setRotation(float rotation);
     float getRotationX()const;
-    void setRotationX(float);
+    void  setRotationX(float);
     float getRotationY()const;
-    void setRotationY(float);
+    void  setRotationY(float);
 
     LayoutParams*getLayoutParams();
     int getRawLayoutDirection()const;

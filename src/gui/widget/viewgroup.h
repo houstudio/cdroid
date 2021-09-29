@@ -19,7 +19,7 @@
 
 #include <widget/view.h>
 #include <core/scroller.h>
-
+#include <animations.h>
 namespace cdroid {
 
 #define ATTR_ANIMATE_FOCUS (0x2000) /*flag to open animate focus*/
@@ -85,7 +85,9 @@ private:
     std::vector<View*>mTransientViews;
     std::vector<int>mTransientIndices;
     int mChildCountWithTransientState;
+    bool mLayoutCalledWhileSuppressed;
     Animation::AnimationListener mAnimationListener;
+    LayoutTransition::TransitionListener mLayoutTransitionListener;
     class LayoutAnimationController* mLayoutAnimationController;
     class TouchTarget* mFirstTouchTarget;
     POINT animateTo;//save window boundray  while animating
@@ -264,6 +266,8 @@ public:
     LayoutAnimationController* getLayoutAnimation();
     void setLayoutAnimationListener(Animation::AnimationListener animationListener);
     Animation::AnimationListener getLayoutAnimationListener();
+    void setLayoutTransition(LayoutTransition*);
+    LayoutTransition*getLayoutTransition()const; 
     void clearDisappearingChildren();
     void startViewTransition(View* view);
     void endViewTransition(View* view);

@@ -66,12 +66,17 @@ void LinearLayout::initView(){
     mAllowInconsistentMeasurement=false;
 }
 
+static std::map<const std::string,int>orientationkvs={
+    {"horizontal",LinearLayout::HORIZONTAL},
+    {"vertical",LinearLayout::VERTICAL}//
+};
+
 LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context,attrs){
     initView();
     mUseLargestChild=attrs.getBoolean("measureWithLargestChild",false);
 
-    mOrientation=attrs.getInt("orientation",HORIZONTAL);
+    mOrientation=attrs.getInt("orientation",orientationkvs,HORIZONTAL);
 
     mGravity=attrs.getGravity("gravity",Gravity::NO_GRAVITY);
 }

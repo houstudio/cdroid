@@ -363,7 +363,7 @@ bool LayoutTransition::isChangingLayout() {
 }
 
 void LayoutTransition::layoutChange(ViewGroup *parent){
-    //if (parent.getWindowVisibility() != View::VISIBLE)  return;
+    if (parent->getWindowVisibility() != View::VISIBLE)  return;
 
     if ((mTransitionTypes & FLAG_CHANGING) == FLAG_CHANGING  && !isRunning()) {
         // This method is called for all calls to layout() in the container, including
@@ -510,7 +510,7 @@ void LayoutTransition::addChild(ViewGroup* parent, View* child, bool changesLayo
 }
 
 void LayoutTransition::removeChild(ViewGroup* parent, View* child, bool changesLayout){
-    //if (parent->getWindowVisibility() != View::VISIBLE) return;
+    if (parent->getWindowVisibility() != View::VISIBLE) return;
    
     if ((mTransitionTypes & FLAG_DISAPPEARING) == FLAG_DISAPPEARING) {
         // Want appearing animations to finish up before proceeding
@@ -554,4 +554,17 @@ void LayoutTransition::showChild(ViewGroup* parent, View* child, int oldVisibili
     addChild(parent, child, oldVisibility == View::GONE);
 }
 
+void LayoutTransition::addTransitionListener(TransitionListener& listener){
+    mListeners.push_back(listener);
 }
+
+void LayoutTransition::removeTransitionListener(TransitionListener& listener){
+    for(auto it=mListeners.begin();it!=mListeners.end();it++){
+        if(it->startTransition==listener.startTransition && it->endTransition==listener.endTransition){
+            mListeners.erase(it);
+            break;
+        }
+    }
+}
+
+}//endof namespace

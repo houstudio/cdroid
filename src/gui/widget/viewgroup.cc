@@ -107,6 +107,18 @@ void ViewGroup::initGroup(){
     mInvalidationTransformation =nullptr;
     mTransition = nullptr;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
+    mLayoutTransitionListener.startTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
+         if(transitionType==LayoutTransition::DISAPPEARING)
+             startViewTransition(view);
+    };
+    mLayoutTransitionListener.endTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
+         if(mLayoutCalledWhileSuppressed && !transition.isChangingLayout()){
+              requestLayout();
+              mLayoutCalledWhileSuppressed=false;
+         }
+         if(transitionType==LayoutTransition::DISAPPEARING && mTransitioningViews.size())
+              endViewTransition(view);
+    };
 }
 
 ViewGroup::~ViewGroup() {
@@ -1878,6 +1890,17 @@ void ViewGroup::setLayoutAnimationListener(Animation::AnimationListener animatio
 
 Animation::AnimationListener ViewGroup::getLayoutAnimationListener(){
     return mAnimationListener;
+}
+
+void ViewGroup::setLayoutTransition(LayoutTransition* transition) {
+    if (mTransition != nullptr) {
+        mTransition->cancel();
+        mTransition->removeTransitionListener(mLayoutTransitionListener);
+    }
+    mTransition = transition;
+    if (mTransition != nullptr) {
+        mTransition->addTransitionListener(mLayoutTransitionListener);
+    }
 }
 
 void ViewGroup::bindLayoutAnimation(View* child){

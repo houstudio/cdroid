@@ -168,8 +168,8 @@ int MarginLayoutParams::getMarginStart(){
        doResolveMargins();
     }
     switch(mMarginFlags & LAYOUT_DIRECTION_MASK) {
-	case View::LAYOUT_DIRECTION_RTL:return rightMargin;
-	case View::LAYOUT_DIRECTION_LTR:
+    case View::LAYOUT_DIRECTION_RTL:return rightMargin;
+    case View::LAYOUT_DIRECTION_LTR:
     default:return leftMargin;
     }
 }
@@ -276,13 +276,13 @@ void MarginLayoutParams::doResolveMargins(){
         // them and override what has been defined for left and right margins. If either start
         // or end margin is not defined, just set it to default "0".
         switch(mMarginFlags & LAYOUT_DIRECTION_MASK) {
-		case View::LAYOUT_DIRECTION_RTL:
+        case View::LAYOUT_DIRECTION_RTL:
              leftMargin = (endMargin > DEFAULT_MARGIN_RELATIVE) ?
                      endMargin : DEFAULT_MARGIN_RESOLVED;
              rightMargin = (startMargin > DEFAULT_MARGIN_RELATIVE) ?
                      startMargin : DEFAULT_MARGIN_RESOLVED;
              break;
-		case View::LAYOUT_DIRECTION_LTR:
+        case View::LAYOUT_DIRECTION_LTR:
         default:
              leftMargin = (startMargin > DEFAULT_MARGIN_RELATIVE) ?
                      startMargin : DEFAULT_MARGIN_RESOLVED;

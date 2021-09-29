@@ -7,7 +7,6 @@ class AttributeSet{
 private:
     std::string basePath;//only for path file 
     std::map<const std::string,const std::string>mAttrs;
-    static std::map<const std::string,int>mIntAttrs;
 public:
     AttributeSet();
     AttributeSet(const char*atts[],int size=0);
@@ -20,6 +19,7 @@ public:
     const std::string getAttributeValue(const std::string&key)const;
     bool getBoolean(const std::string&key,bool def=false)const;
     int getInt(const std::string&key,int def=0)const;
+    int getInt(const std::string&key,const std::map<const std::string,int>&keyvaluemaps,int def=0)const;
     int getResourceId(const std::string&key,int def=0)const;
     int getColor(const std::string&key,int def=0xFFFFFFFF)const;
     float getFloat(const std::string&key,float def=.0)const;

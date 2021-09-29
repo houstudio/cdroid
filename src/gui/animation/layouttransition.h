@@ -2,16 +2,16 @@
 #define __LAYOUT_TRANSITION_H__
 #include <map>
 #include <functional>
-#include <widget/viewgroup.h>
+#include <widget/view.h>
 #include <animation/animator.h>
 
 namespace cdroid{
-
+class ViewGroup;
 class LayoutTransition{
 public:
     struct TransitionListener{
-       std::function<void(LayoutTransition& transition, ViewGroup* container,View* view, int transitionType)>startTransition;
-       std::function<void(LayoutTransition& transition, ViewGroup* container,View* view, int transitionType)>endTransition;
+       CallbackBase<void,LayoutTransition&, ViewGroup*/*container*/,View* /*view*/, int/*transitionType*/> startTransition;
+       CallbackBase<void,LayoutTransition&, ViewGroup*/*container*/,View* /*view*/, int/*transitionType*/> endTransition;
     };
 private:
     static constexpr int FLAG_APPEARING             = 0x01;
@@ -36,7 +36,7 @@ private:
     long mChangingDisappearingStagger = 0;
     long mChangingStagger             = 0;
     long staggerDelay;
-    int mTransitionTypes = FLAG_CHANGE_APPEARING | FLAG_CHANGE_DISAPPEARING | FLAG_APPEARING | FLAG_DISAPPEARING;
+    int  mTransitionTypes = FLAG_CHANGE_APPEARING | FLAG_CHANGE_DISAPPEARING | FLAG_APPEARING | FLAG_DISAPPEARING;
     bool mAnimateParentHierarchy      = true;
     std::vector<TransitionListener>mListeners;
 
@@ -134,6 +134,8 @@ public:
     void hideChild(ViewGroup* parent, View* child);
     void hideChild(ViewGroup* parent, View* child, int newVisibility);
     void showChild(ViewGroup* parent, View* child, int oldVisibility);
+    void addTransitionListener(TransitionListener& listener);
+    void removeTransitionListener(TransitionListener& listener);
 };
 
 }

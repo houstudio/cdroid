@@ -32,6 +32,7 @@ public:
     LayoutAnimationController(Context* context, const AttributeSet& attrs);
     LayoutAnimationController(Animation* animation,float delay);
     LayoutAnimationController(Animation* animation);
+    virtual ~LayoutAnimationController();
     int getOrder()const;
     void setOrder(int);
     void setAnimation(Context* context,const std::string&resourceID);

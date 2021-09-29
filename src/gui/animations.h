@@ -9,4 +9,8 @@
 
 #include <animation/animator.h>
 #include <animation/objectanimator.h>
+#include <animation/animationutils.h>
 #include <animation/layouttransition.h>
+#include <animation/layoutanimationcontroller.h>
+#include <animation/gridlayoutanimationcontroller.h>
+

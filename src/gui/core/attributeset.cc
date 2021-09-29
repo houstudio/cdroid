@@ -8,28 +8,6 @@
 
 namespace cdroid{
 
-std::map<const std::string,int>AttributeSet::mIntAttrs={
-    {"top",Gravity::TOP}    ,   
-    {"bottom",Gravity::BOTTOM},    
-    {"left",Gravity::LEFT}  ,   
-    {"right",Gravity::RIGHT},
-    {"center_vertical",Gravity::CENTER_VERTICAL}    ,
-    {"fill_vertical",Gravity::FILL_VERTICAL},
-    {"center_horizontal",Gravity::CENTER_HORIZONTAL}  ,
-    {"fill_horizontal",Gravity::FILL_HORIZONTAL}    ,
-    {"center",Gravity::CENTER}  ,
-    {"fill",Gravity::FILL},
-    {"clip_vertical",Gravity::CLIP_VERTICAL},
-    {"clip_horizontal",Gravity::CLIP_HORIZONTAL},
-
-    {"horizontal",LinearLayout::HORIZONTAL},
-    {"vertical",LinearLayout::VERTICAL},//for Layout Orientation
-
-    {"fill_parent",LayoutParams::MATCH_PARENT},
-    {"match_parent",LayoutParams::MATCH_PARENT},
-    {"wrap_content",LayoutParams::WRAP_CONTENT}
-};
-
 static std::vector<std::string> split(const std::string & path) {
     std::vector<std::string> vec;
     size_t begin, end;
@@ -95,12 +73,30 @@ bool AttributeSet::getBoolean(const std::string&key,bool def)const{
 
 int AttributeSet::getInt(const std::string&key,int def)const{
     const std::string v=getAttributeValue(key);
-	if(v.empty())return def;
-    if(v[0]>='a'&&v[0]<='z'){
-        auto it=mIntAttrs.find(v);
-        return it==mIntAttrs.end()?def:it->second;
+    if(v.empty()||((v[0]>='a')&&(v[0]<='z'))){
+        return def;
     }
-	return std::strtol(v.c_str(),nullptr,10);
+    return std::strtol(v.c_str(),nullptr,10);
+}
+
+int AttributeSet::getInt(const std::string&key,const std::map<const std::string,int>&kvs,int def)const{
+    const std::string vstr=getAttributeValue(key);
+    if(vstr.size()&&vstr.find('|')!=std::string::npos){
+        std::vector<std::string>gs=split(vstr);
+        int result=0;
+        int count=0;
+        for(std::string s:gs){
+            auto it=kvs.find(s);
+            if(it!=kvs.end()){
+                result|=it->second;
+                count++;
+            }
+        }
+        return count?result:def;
+    }else{
+        auto it=kvs.find(vstr);
+        return it==kvs.end()?def:it->second;
+    }
 }
 
 int AttributeSet::getResourceId(const std::string&key,int def)const{
@@ -133,13 +129,29 @@ const std::string AttributeSet::getString(const std::string&key,const std::strin
     return v;
 }
 
+static std::map<const std::string,int>gravitykvs={
+    {"top"   , Gravity::TOP}   ,
+    {"bottom", Gravity::BOTTOM},    
+    {"left"  , Gravity::LEFT}  ,   
+    {"right" , Gravity::RIGHT} ,
+    {"center_vertical"  , Gravity::CENTER_VERTICAL},
+    {"fill_vertical"    , Gravity::FILL_VERTICAL}  ,
+    {"center_horizontal", Gravity::CENTER_HORIZONTAL},
+    {"fill_horizontal"  , Gravity::FILL_HORIZONTAL}  ,
+    {"center", Gravity::CENTER},
+    {"fill"  , Gravity::FILL}  ,
+    {"clip_vertical"  , Gravity::CLIP_VERTICAL},
+    {"clip_horizontal", Gravity::CLIP_HORIZONTAL},
+};
+
 int AttributeSet::getGravity(const std::string&key,int defvalue)const{
+    //return getInt(key,gravitykvs,defvalue);
     int gravity=0;
     const std::string prop=getString(key);
     std::vector<std::string>gs=split(prop);
     for(auto s:gs){
-        auto it=mIntAttrs.find(s);
-        if(it!=mIntAttrs.end()){
+        auto it=gravitykvs.find(s);
+        if(it!=gravitykvs.end()){
             gravity|=it->second;
         }
     }

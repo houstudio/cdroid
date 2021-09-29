@@ -6,6 +6,10 @@ namespace cdroid{
 
 GridLayoutAnimationController::GridLayoutAnimationController(Context* context,const AttributeSet& attrs)
   :LayoutAnimationController(context,attrs){
+    mColumnDelay = attrs.getFloat("columnDelay");
+    mRowDelay    = attrs.getFloat("rowDelay");
+    mDirection   = attrs.getInt("direction");
+    mDirectionPriority = attrs.getInt("directionPriority");
 }
 
 GridLayoutAnimationController::GridLayoutAnimationController(Animation* animation)

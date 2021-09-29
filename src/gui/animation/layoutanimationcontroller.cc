@@ -1,10 +1,17 @@
 #include <stdlib.h>
 #include <widget/viewgroup.h>
+#include <animation/animationutils.h>
 #include <animation/layoutanimationcontroller.h>
+
 namespace cdroid{
 
 LayoutAnimationController::LayoutAnimationController(Context* context, const AttributeSet& attrs){
-
+    mDelay = attrs.getFloat("delay");
+    mOrder = attrs.getInt("animationOrder",ORDER_NORMAL);
+    std::string resource = attrs.getString("animation");
+    mAnimation = AnimationUtils::loadAnimation(context,resource);
+    resource   = attrs.getString("interpolator");
+    mInterpolator = AnimationUtils::loadInterpolator(context,resource);
 }
 
 LayoutAnimationController::LayoutAnimationController(Animation* animation,float delay){
@@ -17,6 +24,11 @@ LayoutAnimationController::LayoutAnimationController(Animation* animation)
  :LayoutAnimationController(animation,.5f){
 }
 
+LayoutAnimationController::~LayoutAnimationController(){
+    delete mAnimation;
+    delete mInterpolator;
+}
+
 int LayoutAnimationController::getOrder()const{
     return mOrder;
 }
@@ -26,10 +38,11 @@ void LayoutAnimationController::setOrder(int order){
 }
 
 void LayoutAnimationController::setAnimation(Context* context,const std::string&resourceID){
-
+    setAnimation(AnimationUtils::loadAnimation(context,resourceID));
 }
 
 void LayoutAnimationController::setAnimation(Animation* animation){
+    if(mAnimation)delete mAnimation;
     mAnimation = animation;
     mAnimation->setFillBefore(true);
 }
@@ -39,9 +52,11 @@ Animation* LayoutAnimationController::getAnimation(){
 }
 
 void LayoutAnimationController::setInterpolator(Context* context,const std::string&resourceID){
+    setInterpolator(AnimationUtils::loadInterpolator(context,resourceID));
 }
 
 void LayoutAnimationController::setInterpolator(Interpolator* interpolator){
+    if(mInterpolator)delete mInterpolator;
     mInterpolator = interpolator;
 }
 
@@ -87,7 +102,7 @@ long LayoutAnimationController::getDelayForView(View* view){
 
     if (params == nullptr) return 0;
 
-    float delay = mDelay * mAnimation->getDuration();
+    float delay = mDelay * (float)mAnimation->getDuration();
     long viewDelay = (long) (getTransformedIndex(params) * delay);
     float totalDelay = delay * params->count;
 
@@ -97,7 +112,7 @@ long LayoutAnimationController::getDelayForView(View* view){
 
     float normalizedDelay = viewDelay / totalDelay;
     normalizedDelay = mInterpolator->getInterpolation(normalizedDelay);
-
+    LOGV("%p:%d totalDelay=%.2f %d/%d mDelay=%.2f dur=%d",view,view->getId(),totalDelay,params->index,params->count,mDelay,mAnimation->getDuration());
     return (long) (normalizedDelay * totalDelay);
 }
 
