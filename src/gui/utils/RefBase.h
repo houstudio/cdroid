@@ -219,38 +219,36 @@ public:
 
 // ---------------------------------------------------------------------------
 
-class RefBase
-{
+class RefBase{
 public:
-            void            incStrong(const void* id) const;
-            void            decStrong(const void* id) const;
+     void  incStrong(const void* id) const;
+     void  decStrong(const void* id) const;
     
-            void            forceIncStrong(const void* id) const;
+     void  forceIncStrong(const void* id) const;
 
-            //! DEBUGGING ONLY: Get current strong ref count.
-            int32_t         getStrongCount() const;
+     //! DEBUGGING ONLY: Get current strong ref count.
+     int32_t getStrongCount() const;
 
-    class weakref_type
-    {
+    class weakref_type{
     public:
-        RefBase*            refBase() const;
+        RefBase* refBase() const;
 
-        void                incWeak(const void* id);
-        void                decWeak(const void* id);
+        void incWeak(const void* id);
+        void decWeak(const void* id);
 
         // acquires a strong reference if there is already one.
-        bool                attemptIncStrong(const void* id);
+        bool attemptIncStrong(const void* id);
 
         // acquires a weak reference if there is already one.
         // This is not always safe. see ProcessState.cpp and BpBinder.cpp
         // for proper use.
-        bool                attemptIncWeak(const void* id);
+        bool attemptIncWeak(const void* id);
 
         //! DEBUGGING ONLY: Get current weak ref count.
-        int32_t             getWeakCount() const;
+        int32_t getWeakCount() const;
 
         //! DEBUGGING ONLY: Print references held on object.
-        void                printRefs() const;
+        void  printRefs() const;
 
         //! DEBUGGING ONLY: Enable tracking for this object.
         // enable -- enable/disable tracking
@@ -259,27 +257,26 @@ public:
         //           match up references and dereferences and keep only the
         //           outstanding ones.
 
-        void                trackMe(bool enable, bool retain);
+        void trackMe(bool enable, bool retain);
     };
 
-            weakref_type*   createWeak(const void* id) const;
+    weakref_type* createWeak(const void* id) const;
             
-            weakref_type*   getWeakRefs() const;
+    weakref_type* getWeakRefs() const;
 
-            //! DEBUGGING ONLY: Print references held on object.
-    inline  void            printRefs() const { getWeakRefs()->printRefs(); }
+    //! DEBUGGING ONLY: Print references held on object.
+    inline  void printRefs() const { getWeakRefs()->printRefs(); }
 
-            //! DEBUGGING ONLY: Enable tracking of object.
-    inline  void            trackMe(bool enable, bool retain)
-    { 
+    //! DEBUGGING ONLY: Enable tracking of object.
+    inline  void trackMe(bool enable, bool retain){ 
         getWeakRefs()->trackMe(enable, retain); 
     }
 
     typedef RefBase basetype;
 
 protected:
-                            RefBase();
-    virtual                 ~RefBase();
+    RefBase();
+    virtual  ~RefBase();
     
     //! Flags for extendObjectLifetime()
     enum {
@@ -288,7 +285,7 @@ protected:
         OBJECT_LIFETIME_MASK    = 0x0001
     };
     
-            void            extendObjectLifetime(int32_t mode);
+    void extendObjectLifetime(int32_t mode);
             
     //! Flags for onIncStrongAttempted()
     enum {
@@ -296,26 +293,26 @@ protected:
     };
     
     // Invoked after creation of initial strong pointer/reference.
-    virtual void            onFirstRef();
+    virtual void onFirstRef();
     // Invoked when either the last strong reference goes away, or we need to undo
     // the effect of an unnecessary onIncStrongAttempted.
-    virtual void            onLastStrongRef(const void* id);
+    virtual void onLastStrongRef(const void* id);
     // Only called in OBJECT_LIFETIME_WEAK case.  Returns true if OK to promote to
     // strong reference. May have side effects if it returns true.
     // The first flags argument is always FIRST_INC_STRONG.
     // TODO: Remove initial flag argument.
-    virtual bool            onIncStrongAttempted(uint32_t flags, const void* id);
+    virtual bool onIncStrongAttempted(uint32_t flags, const void* id);
     // Invoked in the OBJECT_LIFETIME_WEAK case when the last reference of either
     // kind goes away.  Unused.
     // TODO: Remove.
-    virtual void            onLastWeakRef(const void* id);
+    virtual void onLastWeakRef(const void* id);
 
 private:
     friend class weakref_type;
     class weakref_impl;
     
-                            RefBase(const RefBase& o);
-            RefBase&        operator=(const RefBase& o);
+    RefBase(const RefBase& o);
+    RefBase& operator=(const RefBase& o);
 
 private:
     friend class ReferenceMover;
@@ -328,14 +325,13 @@ private:
     static void renameRefId(RefBase* ref,
             const void* old_id, const void* new_id);
 
-        weakref_impl* const mRefs;
+    weakref_impl* const mRefs;
 };
 
 // ---------------------------------------------------------------------------
 
 template <typename T>
-class wp
-{
+class wp{
 public:
     typedef typename RefBase::weakref_type weakref_type;
 

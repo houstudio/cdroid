@@ -29,8 +29,7 @@ namespace cdroid {
 class ReferenceRenamer;
 
 template <class T>
-class LightRefBase
-{
+class LightRefBase{
 public:
     inline LightRefBase() : mCount(0) { }
     inline void incStrong(__attribute__((unused)) const void* id) const {
