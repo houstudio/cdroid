@@ -3,7 +3,7 @@
 
 namespace cdroid{
 
-class GridLayoutAnimationController:LayoutAnimationController{
+class GridLayoutAnimationController:public LayoutAnimationController{
 public:
     /* Animates the children starting from the left of the grid to the right.*/
     static constexpr int DIRECTION_LEFT_TO_RIGHT = 0x0;

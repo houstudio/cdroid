@@ -60,10 +60,10 @@ private:
     void removeAnimationCallback();
     void addAnimationCallback(long delay);
 protected:
-    void animateValue(float fraction);
+    virtual void animateValue(float fraction);
     void startWithoutPulsing(bool inReverse);
-    bool animateBasedOnTime(long currentTime);
-    void animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse);
+    virtual bool animateBasedOnTime(long currentTime);
+    virtual void animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse);
     void skipToEndValue(bool inReverse);
     bool isInitialized();
     bool pulseAnimationFrame(long frameTime);
@@ -81,11 +81,11 @@ public:
     const std::vector<PropertyValuesHolder*>&getValues()const;
     PropertyValuesHolder*getValues(int idx);
     PropertyValuesHolder*getValues(const std::string&propname);
-    void initAnimation();
+    virtual void initAnimation();
     ValueAnimator& setDuration(long duration);
     long getDuration();
     long getTotalDuration();
-    void setCurrentPlayTime(long playTime);
+    virtual void setCurrentPlayTime(long playTime);
     void setCurrentFraction(float fraction);
     long getCurrentPlayTime();
     long getStartDelay();

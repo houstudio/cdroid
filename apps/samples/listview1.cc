@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <cdlog.h>
-#include <animation/translateanimation.h>
+#include <animations.h>
 class MyAdapter:public ArrayAdapter<std::string>{
 private:
     int itemType;
