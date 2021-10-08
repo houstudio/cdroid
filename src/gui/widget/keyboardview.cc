@@ -1,147 +1,552 @@
 #include <widget/keyboardview.h>
 #include <cdlog.h>
 #include <fstream>
-
+#include <string.h>
 
 namespace cdroid{
 
 KeyboardView::KeyboardView(int w,int h):View(w,h){
-    kcol=krow=0;
-    setFocusable(true);
-    onButton=nullptr;
-    onAction=nullptr;
-    mTextColor=0xFFFFFFFF;
+    mLabelTextSize= 20;
+    mKeyTextSize  = 28;
+    mKeyTextColor = 0xFFFFFFFF;
+    mInMultiTap   = false;
+    mMiniKeyboardOnScreen = false;
+    mDistances.resize(MAX_NEARBY_KEYS);
+    mKeyIndices.resize(MAX_NEARBY_KEYS);
+    memset(&mKeyboardActionListener,0,sizeof(mKeyboardActionListener));
+    mKeyBackground =new ColorDrawable(0xFF111111);
 }
 
-void KeyboardView::setButtonListener(ButtonListener listener){
-    onButton=listener; 
+KeyboardView::~KeyboardView(){
+    delete mKeyBackground;
+	delete mKeyboard;
 }
 
-void KeyboardView::setActionListener(ActionListener listener){
-    onAction=listener;
+Keyboard* KeyboardView::getKeyboard() {
+    return mKeyboard;
 }
 
-void KeyboardView::setKeyBgColor(UINT cl){
-    //key_bg_color=cl;
-}
-
-UINT KeyboardView::getKeyBgColor(){
-    return 0;//key_bg_color;
-}
-
-UINT KeyboardView::getButtons(){
-    int count=0;
-    for(int i=0;i<kbd->getRows();i++)
-        count+=kbd->getKeyRow(i).size();
-    return count;
-}
-
-int KeyboardView::getKeyButton(int px,int py){
-    for(int i=0;i<kbd->getRows();i++){
-        Keyboard::KeyRow& row=kbd->getKeyRow(i);
-        for(int j=0;j<row.size();j++){
-            Keyboard::Key&k=row[j];
-            Rect r=Rect::Make(k.x,k.y,k.width,k.height);
-            if(r.contains(px,py))return (i<<16)|j;
-        } 
+void KeyboardView::setKeyboard(Keyboard*keyboard){
+    if ( mKeyboard ) {
+        showPreview(NOT_A_KEY);
     }
-    return -1;
+    // Remove any pending messages
+    //removeMessages();
+    mKeyboard = keyboard;
+    mKeys = mKeyboard->getKeys();
+    requestLayout();
+    // Hint to reallocate the buffer if the size changed
+    mKeyboardChanged = true;
+    invalidateAllKeys();
+    computeProximityThreshold(keyboard);
+    //mMiniKeyboardCache.clear(); // Not really necessary to do every time, but will free up views
+    // Switching to a different keyboard should abort any pending keys so that the key up
+    // doesn't get delivered to the old or new keyboard
+    mAbortKey = true; // Until the next ACTION_DOWN
 }
 
-void KeyboardView::setKeyboard(std::shared_ptr<Keyboard>k){
-    kbd=k;
-	if(kbd) kbd->resize(getWidth(),getHeight());
-    invalidate(true);
+bool KeyboardView::setShifted(bool shifted) {
+    if (mKeyboard ) {
+        if (mKeyboard->setShifted(shifted)) {
+            // The whole keyboard probably needs to be redrawn
+            invalidateAllKeys();
+            return true;
+        }
+    }
+    return false;
 }
 
-void KeyboardView::invalidateKey(int row,int col){
-    if(row<0||row>=kbd->getRows())return;
-    Keyboard::KeyRow&keyrow=kbd->getKeyRow(row);
-    if(col<0||col>=keyrow.size())return;
-    Keyboard::Key&k=keyrow[col];
-    Rect r=Rect::Make(k.x,k.y,k.width,k.height);
-    LOGV("====btn[%d,%d](%d,%d,%d,%d)",row,col,r.left,r.top,r.width,r.height);
-    invalidate(&r);
+bool KeyboardView::isShifted()const{
+    return mKeyboard && mKeyboard->isShifted();
 }
 
-void KeyboardView::onSizeChanged(int w,int h,int ow,int oh){
-    View::onSizeChanged(w,h,ow,oh);
-    if(kbd)kbd->resize(w,h);
+void KeyboardView::setPreviewEnabled(bool previewEnabled) {
+    mShowPreview = previewEnabled;
 }
 
-void KeyboardView::onDraw(Canvas&canvas){
+/**Returns the enabled state of the key feedback popup.
+ * @return whether or not the key feedback popup is enabled
+ * @see #setPreviewEnabled(boolean)*/
+bool KeyboardView::isPreviewEnabled()const{
+    return mShowPreview;
+}
+
+void KeyboardView::setVerticalCorrection(int verticalOffset) {
+
+}
+void KeyboardView::setPopupParent(View* v) {
+    mPopupParent = v;
+}
+
+void KeyboardView::setPopupOffset(int x, int y) {
+    mMiniKeyboardOffsetX = x;
+    mMiniKeyboardOffsetY = y;
+    /*if (mPreviewPopup.isShowing()) {
+        mPreviewPopup.dismiss();
+    }*/
+}
+
+/* When enabled, calls to {@link OnKeyboardActionListener#onKey} will include key
+ * codes for adjacent keys.  When disabled, only the primary key code will be
+ * reported.
+ * @param enabled whether or not the proximity correction is enabled*/
+void KeyboardView::setProximityCorrectionEnabled(bool enabled) {
+    mProximityCorrectOn = enabled;
+}
+
+/* Returns true if proximity correction is enabled. */
+bool KeyboardView::isProximityCorrectionEnabled()const{
+    return mProximityCorrectOn;
+}
+
+void KeyboardView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
+    if (mKeyboard == nullptr) {
+        setMeasuredDimension(mPaddingLeft + mPaddingRight, mPaddingTop + mPaddingBottom);
+    } else {
+        int width = mKeyboard->getMinWidth() + mPaddingLeft + mPaddingRight;
+        if (MeasureSpec::getSize(widthMeasureSpec) < width + 10) {
+            width = MeasureSpec::getSize(widthMeasureSpec);
+        }
+        setMeasuredDimension(width, mKeyboard->getHeight() + mPaddingTop + mPaddingBottom);
+    }
+}
+
+void KeyboardView::computeProximityThreshold(Keyboard* keyboard){
+    if ((keyboard == nullptr) || (mKeys.size() == 0)) return;
+    const int length = mKeys.size();
+    int dimensionSum = 0;
+    for (Keyboard::Key*key:mKeys){
+        dimensionSum += std::min(key->width, key->height) + key->gap;
+    }
+    if (dimensionSum < 0 || length == 0) return;
+    mProximityThreshold = (int) (dimensionSum * 1.4f / length);
+    mProximityThreshold *= mProximityThreshold; // Square it
+}
+
+void KeyboardView::onSizeChanged(int w, int h, int oldw, int oldh) {
+    View::onSizeChanged(w, h, oldw, oldh);
+    if (mKeyboard) mKeyboard->resize(w, h);
+    // Release the buffer, if any and it will be reallocated on the next draw
+}
+
+void KeyboardView::onDraw(Canvas& canvas) {
     View::onDraw(canvas);
-    canvas.set_color(getKeyBgColor());
-    canvas.set_font_size(18);
-	if(kbd==nullptr)
-		return;
-    for(int i=0; i<kbd->getRows() ;i++){
-         const Keyboard::KeyRow& row=kbd->getKeyRow(i);
-         LOGV("      ROW[%d]btns=%d",i,row.size());
-         for(int j=0;j<row.size();j++){
-             const Keyboard::Key& k=row[j];
-             canvas.set_color((kcol==j&&krow==i)?0xFF444444:0xFFAAAAAA);
-             Rect rect=Rect::Make(k.x,k.y,k.width,k.height);
-             canvas.rectangle(rect);
-             canvas.fill();
-             LOGV("btn[%d,%d]=(%d,%d,%d,%d) %s  textColor=%x",i,j,k.x,k.y,k.width,k.height,k.label.c_str());
-             canvas.set_color(mTextColor);
-             canvas.draw_text(rect,k.label,DT_VCENTER|DT_CENTER);
-         }
+    canvas.rectangle(mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
+    canvas.clip();//canvas.clipRect(mDirtyRect);
+    LOGD("dirty=(%d,%d,%d,%d)",mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
+
+    Drawable* keyBackground = mKeyBackground;
+    Rect clipRegion = mClipRegion;
+    Rect padding = mPadding;
+    int kbdPaddingLeft = mPaddingLeft;
+    int kbdPaddingTop = mPaddingTop;
+    Keyboard::Key* invalidKey = mInvalidatedKey;
+
+    canvas.set_color(mKeyTextColor);
+    bool drawSingleKey = false;
+    double cx1,cy1,cx2,cy2;
+    canvas.get_clip_extents(cx1,cy1,cx2,cy2);
+      // Is clipRegion completely contained within the invalidated key?
+    if ( invalidKey&& (invalidKey->x + kbdPaddingLeft - 1 <= cx1) && (invalidKey->y + kbdPaddingTop - 1 <= cy1 )&&
+          (invalidKey->x + invalidKey->width + kbdPaddingLeft + 1 >= cx2) &&
+          (invalidKey->y + invalidKey->height + kbdPaddingTop + 1 >= cy2) ) {
+        drawSingleKey = true;
+    }
+    //canvas.drawColor(0x00000000, PorterDuff.Mode.CLEAR);
+    LOGD("==== Keys=%d ====",mKeys.size());
+    for (Keyboard::Key*key:mKeys){
+        if (drawSingleKey && invalidKey != key) {
+            continue;
+        }
+        std::vector<int> drawableState = key->getCurrentDrawableState();
+        keyBackground->setState(drawableState);
+
+        // Switch the character to uppercase if shift is pressed
+        std::string label = key->label;//adjustCase(key->label);
+
+        Rect bounds = keyBackground->getBounds();
+        if (key->width != bounds.right() ||  key->height != bounds.bottom()) {
+            keyBackground->setBounds(0, 0, key->width, key->height);
+        }
+        canvas.translate(key->x + kbdPaddingLeft, key->y + kbdPaddingTop);
+        keyBackground->draw(canvas);
+
+        LOGD("Key.label=%s icon=%p pos:%d,%d size=%d,%d",label.c_str(),key->icon,key->x,key->y,key->width,key->height);
+        if (label.empty()==false) {
+            // For characters, use large font. For labels like "Done", use small font.
+            canvas.set_color(mKeyTextColor);
+            if( (label.length() > 1 ) && (key->codes.size() < 2)) {
+                canvas.set_font_size(mLabelTextSize);
+            } else {
+                canvas.set_font_size(mKeyTextSize);
+                //paint.setTypeface(Typeface.DEFAULT);
+            }
+            // Draw a drop shadow for the text
+            //paint.setShadowLayer(mShadowRadius, 0, 0, mShadowColor);
+            // Draw the text
+            Rect rctxt={padding.left,padding.top,key->width-padding.left - padding.width,key->height-padding.top - padding.height};
+            canvas.draw_text(rctxt,label,DT_CENTER|DT_VCENTER);
+            // Turn off drop shadow
+        } else if (key->icon) {
+            const int drawableX = (key->width - padding.left - padding.width
+                            - key->icon->getIntrinsicWidth()) / 2 + padding.left;
+            const int drawableY = (key->height - padding.top - padding.height
+                    - key->icon->getIntrinsicHeight()) / 2 + padding.top;
+            key->icon->setBounds(drawableX, drawableY, key->icon->getIntrinsicWidth(), key->icon->getIntrinsicHeight());
+            key->icon->draw(canvas);
+            LOGD("iconsize=%dx%d %d,%d",key->icon->getIntrinsicWidth(), key->icon->getIntrinsicHeight(),drawableX,drawableY);
+        }
+        canvas.translate(-key->x - kbdPaddingLeft, -key->y - kbdPaddingTop);
+    }
+    mInvalidatedKey = nullptr;
+    // Overlay a dark rectangle to dim the keyboard
+    if (mMiniKeyboardOnScreen) {
+        canvas.set_color((int) (mBackgroundDimAmount * 0xFF) << 24);
+        canvas.rectangle(0, 0, getWidth(), getHeight());
+        canvas.fill();
+    }
+
+    canvas.restore();
+    mDrawPending = false;
+    mDirtyRect.setEmpty();
+}
+
+void KeyboardView::invalidateAllKeys() {
+    mDirtyRect.Union(0, 0, getWidth(), getHeight());
+    mDrawPending = true;
+    invalidate();
+}
+
+void KeyboardView::invalidateKey(int keyIndex) {
+    if (keyIndex < 0 || keyIndex >= mKeys.size()) {
+        return;
+    }
+    Keyboard::Key* key = mKeys[keyIndex];
+    mInvalidatedKey = key;
+    mDirtyRect.Union(key->x + mPaddingLeft, key->y + mPaddingTop,key->width, key->height);
+            //key.x + key.width + mPaddingLeft, key.y + key.height + mPaddingTop);
+    invalidate(key->x + mPaddingLeft, key->y + mPaddingTop,key->width, key->height);
+            //key.x + key.width + mPaddingLeft, key.y + key.height + mPaddingTop);
+}
+
+int KeyboardView::getKeyIndices(int x, int y, std::vector<int>* allKeys){
+    std::vector<Keyboard::Key*>& keys = mKeys;
+    int primaryIndex = NOT_A_KEY;
+    int closestKey = NOT_A_KEY;
+    int closestKeyDist = mProximityThreshold + 1;
+     //mDistances, Integer.MAX_VALUE);
+    std::vector<int> nearestKeyIndices = mKeyboard->getNearestKeys(x, y);
+    const int keyCount = nearestKeyIndices.size();
+    for (int i = 0; i < keyCount; i++) {
+        Keyboard::Key* key = keys[nearestKeyIndices[i]];
+        int dist = 0;
+        bool isInside = key->isInside(x,y);
+        if (isInside) {
+            primaryIndex = nearestKeyIndices[i];
+        }
+
+        if (((mProximityCorrectOn && (dist = key->squaredDistanceFrom(x, y)) < mProximityThreshold)
+                || isInside) && key->codes[0] > 32) {
+            // Find insertion point
+            const int nCodes = key->codes.size();
+            if (dist < closestKeyDist) {
+                closestKeyDist = dist;
+                closestKey = nearestKeyIndices[i];
+            }
+
+            if (allKeys == nullptr) continue;
+
+            for (int j = 0; j < mDistances.size(); j++) {
+                if (mDistances[j] > dist) {
+                    // Make space for nCodes codes.//arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+                    //System.arraycopy(mDistances, j, mDistances, j + nCodes, mDistances.size() - j - nCodes);
+                    //System.arraycopy(allKeys, j, allKeys, j + nCodes, allKeys.size() - j - nCodes);
+                    for (int c = 0; c < nCodes; c++) {
+                        (*allKeys)[j + c] = key->codes[c];
+                        mDistances[j + c] = dist;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    if (primaryIndex == NOT_A_KEY) {
+        primaryIndex = closestKey;
+    }
+    return primaryIndex;
+}
+
+void KeyboardView::detectAndSendKey(int index, int x, int y, long eventTime){
+    if (index != NOT_A_KEY && index < mKeys.size()) {
+        Keyboard::Key* key = mKeys[index];
+        if (key->text.size()) {
+            mKeyboardActionListener.onText(key->text);
+            mKeyboardActionListener.onRelease(NOT_A_KEY);
+        } else {
+            int code = key->codes[0];
+            //TextEntryState.keyPressedAt(key, x, y);
+            std::vector<int>codes;// = new int[MAX_NEARBY_KEYS];
+            //Arrays.fill(codes, NOT_A_KEY);
+            getKeyIndices(x, y,&codes);
+            // Multi-tap
+            if (mInMultiTap) {
+                if (mTapCount != -1) {
+                    mKeyboardActionListener.onKey(Keyboard::KEYCODE_DELETE, {KEY_DELETE});//KEY_DELETE);
+                } else {
+                    mTapCount = 0;
+                }
+                code = key->codes[mTapCount];
+            }
+            if(mKeyboardActionListener.onKey)
+                mKeyboardActionListener.onKey(code, codes);
+            if(mKeyboardActionListener.onRelease)
+                mKeyboardActionListener.onRelease(code);
+        }
+        mLastSentIndex = index;
+        mLastTapTime = eventTime;
     }
 }
 
-void KeyboardView::ButtonClick(const Keyboard::Key&k){
-    if(onButton)onButton(k); 
+void KeyboardView::showPreview(int){
 }
 
-bool KeyboardView::onKeyDown(int keyCode,KeyEvent&k){
-    int rows=kbd?kbd->getRows():0;
-    if(rows==0)return false;
-    Keyboard::KeyRow row=kbd->getKeyRow(krow);
-    invalidateKey(krow,kcol);
-    switch(keyCode){
-    case KEY_LEFT: 
-             kcol=(kcol-1+row.size())%row.size();
-             break;
-    case KEY_RIGHT:
-             kcol=(kcol+1)%row.size();
-             break;
-    case KEY_UP:   
-             krow=(krow-1+rows)%rows;
-             row=kbd->getKeyRow(krow);
-             if(row.size()<=kcol) kcol=row.size()-1;
-             break;
-    case KEY_DOWN: 
-             krow=(krow+1)%rows;
-             row=kbd->getKeyRow(krow);
-             if(row.size()<=kcol) kcol=row.size()-1;      
-             break;
-    case KEY_ENTER:
-             ButtonClick(row[kcol]);             
-             break; 
-    default: return false;
-    }
-    invalidateKey(krow,kcol);
+void KeyboardView::showKey(int keyIndex){
+}
+
+bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
+    return false;
+}
+
+bool KeyboardView::onHoverEvent(MotionEvent& event){
     return true;
 }
 
-bool KeyboardView::onTouchEvent(MotionEvent&event){
-    int cell;
-    switch(event.getActionMasked()){
-    case MotionEvent::ACTION_UP:
-         cell=getKeyButton((int)event.getX(),(int)event.getY()); 
-         LOGD("touch(%.f,%.f)action=%d from %d,%d-->%d,%d",event.getX(),event.getY(),event.getActionMasked(),krow,kcol,cell>>16,cell&0xFFFF);
-         if(cell==-1)return false;
-         invalidateKey(krow,kcol);
-         krow=cell>>16;
-         kcol=cell&0xFFFF;
-         ButtonClick(kbd->getKeyRow(krow).at(kcol));
-         invalidateKey(krow,kcol);
-         break;
-    case MotionEvent::ACTION_DOWN:break;
+bool KeyboardView::onTouchEvent(MotionEvent& me){
+    const int pointerCount = me.getPointerCount();
+    const int action = me.getAction();
+    bool result = false;
+    const long now = me.getEventTime();
+
+    if (pointerCount != mOldPointerCount) {
+        if (pointerCount == 1) {
+            // Send a down event for the latest pointer
+            MotionEvent* down = MotionEvent::obtain(now, now, MotionEvent::ACTION_DOWN,
+                    me.getX(), me.getY(), me.getMetaState());
+            result = onModifiedTouchEvent(*down, false);
+            down->recycle();
+            // If it's an up action, then deliver the up as well.
+            if (action == MotionEvent::ACTION_UP) {
+                result = onModifiedTouchEvent(me, true);
+            }
+        } else {
+            // Send an up event for the last pointer
+            MotionEvent* up = MotionEvent::obtain(now, now, MotionEvent::ACTION_UP,
+                    mOldPointerX, mOldPointerY, me.getMetaState());
+            result = onModifiedTouchEvent(*up, true);
+            up->recycle();
+        }
+    } else {
+        if (pointerCount == 1) {
+            result = onModifiedTouchEvent(me, false);
+            mOldPointerX = me.getX();
+            mOldPointerY = me.getY();
+        } else {
+            // Don't do anything when 2 pointers are down and moving.
+            result = true;
+        }
     }
-    return false;  
+    mOldPointerCount = pointerCount;
+
+    return result;
 }
 
+bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
+    int touchX = (int) me.getX() - mPaddingLeft;
+    int touchY = (int) me.getY() - mPaddingTop;
+    if (touchY >= -mVerticalCorrection)
+        touchY += mVerticalCorrection;
+    const int action = me.getAction();
+    const long eventTime = me.getEventTime();
+    int keyIndex = getKeyIndices(touchX, touchY, nullptr);
+    mPossiblePoly = possiblePoly;
+
+    // Track the last few movements to look for spurious swipes.
+    //if (action == MotionEvent::ACTION_DOWN) mSwipeTracker.clear();
+    //mSwipeTracker.addMovement(me);
+
+    // Ignore all motion events until a DOWN.
+    if (mAbortKey && action != MotionEvent::ACTION_DOWN && action != MotionEvent::ACTION_CANCEL) {
+        return true;
+    }
+
+    /*if (mGestureDetector.onTouchEvent(me)) {
+        showPreview(NOT_A_KEY);
+        mHandler.removeMessages(MSG_REPEAT);
+        mHandler.removeMessages(MSG_LONGPRESS);
+        return true;
+    }*/
+
+    // Needs to be called after the gesture detector gets a turn, as it may have
+    // displayed the mini keyboard
+    if (mMiniKeyboardOnScreen && action != MotionEvent::ACTION_CANCEL) {
+        return true;
+    }
+    bool continueLongPress=false;
+    switch (action) {
+    case MotionEvent::ACTION_DOWN:
+        mAbortKey = false;
+        mStartX = touchX;
+        mStartY = touchY;
+        mLastCodeX = touchX;
+        mLastCodeY = touchY;
+        mLastKeyTime = 0;
+        mCurrentKeyTime = 0;
+        mLastKey = NOT_A_KEY;
+        mCurrentKey = keyIndex;
+        mDownKey = keyIndex;
+        mDownTime = me.getEventTime();
+        mLastMoveTime = mDownTime;
+        checkMultiTap(eventTime, keyIndex);
+        if(mKeyboardActionListener.onPress)
+            mKeyboardActionListener.onPress(keyIndex != NOT_A_KEY ?  mKeys[keyIndex]->codes[0] : 0);
+        if (mCurrentKey >= 0 && mKeys[mCurrentKey]->repeatable) {
+            mRepeatKeyIndex = mCurrentKey;
+            //Message msg = mHandler.obtainMessage(MSG_REPEAT);
+            //mHandler.sendMessageDelayed(msg, REPEAT_START_DELAY);
+            repeatKey();
+            // Delivering the key could have caused an abort
+            if (mAbortKey) {
+                mRepeatKeyIndex = NOT_A_KEY;
+                break;
+            }
+        }
+        /*if (mCurrentKey != NOT_A_KEY) {
+            Message msg = mHandler.obtainMessage(MSG_LONGPRESS, me);
+            mHandler.sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
+        }*/
+        showPreview(keyIndex);
+        break;
+
+    case MotionEvent::ACTION_MOVE:
+        if (keyIndex != NOT_A_KEY) {
+            if (mCurrentKey == NOT_A_KEY) {
+                mCurrentKey = keyIndex;
+                mCurrentKeyTime = eventTime - mDownTime;
+            } else {
+                if (keyIndex == mCurrentKey) {
+                    mCurrentKeyTime += eventTime - mLastMoveTime;
+                    continueLongPress = true;
+                } else if (mRepeatKeyIndex == NOT_A_KEY) {
+                    resetMultiTap();
+                    mLastKey = mCurrentKey;
+                    mLastCodeX = mLastX;
+                    mLastCodeY = mLastY;
+                    mLastKeyTime = mCurrentKeyTime + eventTime - mLastMoveTime;
+                    mCurrentKey = keyIndex;
+                    mCurrentKeyTime = 0;
+                }
+            }
+        }
+        /*if (!continueLongPress) {
+            // Cancel old longpress
+            mHandler.removeMessages(MSG_LONGPRESS);
+            // Start new longpress if key has changed
+            if (keyIndex != NOT_A_KEY) {
+                Message msg = mHandler.obtainMessage(MSG_LONGPRESS, me);
+                mHandler.sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
+            }
+        }*/
+        showPreview(mCurrentKey);
+        mLastMoveTime = eventTime;
+        break;
+
+    case MotionEvent::ACTION_UP:
+        //removeMessages();
+        if (keyIndex == mCurrentKey) {
+            mCurrentKeyTime += eventTime - mLastMoveTime;
+        } else {
+            resetMultiTap();
+            mLastKey = mCurrentKey;
+            mLastKeyTime = mCurrentKeyTime + eventTime - mLastMoveTime;
+            mCurrentKey = keyIndex;
+            mCurrentKeyTime = 0;
+        }
+        if (mCurrentKeyTime < mLastKeyTime && mCurrentKeyTime < DEBOUNCE_TIME
+                && mLastKey != NOT_A_KEY) {
+            mCurrentKey = mLastKey;
+            touchX = mLastCodeX;
+            touchY = mLastCodeY;
+        }
+        showPreview(NOT_A_KEY);
+        for(int i=0;i<mKeyIndices.size();i++)
+            mKeyIndices[i]=NOT_A_KEY;//Arrays.fill(mKeyIndices, NOT_A_KEY);
+        // If we're not on a repeating key (which sends on a DOWN event)
+        if (mRepeatKeyIndex == NOT_A_KEY && !mMiniKeyboardOnScreen && !mAbortKey) {
+            detectAndSendKey(mCurrentKey, touchX, touchY, eventTime);
+        }
+        invalidateKey(keyIndex);
+        mRepeatKeyIndex = NOT_A_KEY;
+        break;
+    case MotionEvent::ACTION_CANCEL:
+        //removeMessages();
+        dismissPopupKeyboard();
+        mAbortKey = true;
+        showPreview(NOT_A_KEY);
+        invalidateKey(mCurrentKey);
+        break;
+    }
+    mLastX = touchX;
+    mLastY = touchY;
+    return true;
+}
+
+bool KeyboardView::repeatKey() {
+    Keyboard::Key* key = mKeys[mRepeatKeyIndex];
+    detectAndSendKey(mCurrentKey, key->x, key->y, mLastTapTime);
+    return true;
+}
+
+void KeyboardView::resetMultiTap() {
+    mLastSentIndex = NOT_A_KEY;
+    mTapCount = 0;
+    mLastTapTime = -1;
+    mInMultiTap = false;
+}
+
+void KeyboardView::checkMultiTap(long eventTime, int keyIndex){
+    if (keyIndex == NOT_A_KEY) return;
+    Keyboard::Key* key = mKeys[keyIndex];
+    if (key->codes.size() > 1) {
+        mInMultiTap = true;
+        if (eventTime < mLastTapTime + MULTITAP_INTERVAL
+                && keyIndex == mLastSentIndex) {
+            mTapCount = (mTapCount + 1) % key->codes.size();
+            return;
+        } else {
+            mTapCount = -1;
+            return;
+        }
+    }
+    if (eventTime > mLastTapTime + MULTITAP_INTERVAL || keyIndex != mLastSentIndex) {
+        resetMultiTap();
+    }
+}
+
+void KeyboardView::closing(){
+    
+    dismissPopupKeyboard();
+}
+
+void KeyboardView::onDetachedFromWindow(){
+    View::onDetachedFromWindow();
+    closing();
+}
+
+void KeyboardView::dismissPopupKeyboard(){
+    /*if (mPopupKeyboard.isShowing()) {
+         mPopupKeyboard.dismiss();
+         mMiniKeyboardOnScreen = false;
+         invalidateAllKeys();
+    }*/
+}
 }//namespace

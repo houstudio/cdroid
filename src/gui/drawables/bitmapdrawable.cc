@@ -266,7 +266,7 @@ void BitmapDrawable::draw(Canvas&canvas){
     float fx = dw / sw  , fy = dh / sh;
     const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
 
-    //canvas.save();
+    canvas.save();
     canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
     canvas.clip();
     const bool scaled=(mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight);
@@ -283,7 +283,7 @@ void BitmapDrawable::draw(Canvas&canvas){
     canvas.get_source()->set_extend(Pattern::Extend::NONE);
     canvas.paint_with_alpha(alpha);
     if(scaled)canvas.scale(1./fx,1./fy);
-    //canvas.restore();
+    canvas.restore();
     if(mTintFilter)mTintFilter->apply(canvas,mBounds);
 }
 

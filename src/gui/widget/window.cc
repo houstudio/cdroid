@@ -324,8 +324,11 @@ bool Window::isInLayout()const{
 void Window::requestLayout(){
     if(layoutRunner==nullptr)
         layoutRunner=std::bind(&Window::doLayout,this);
+    LOGE_IF(mInLayout,"%p:%d receive layoutRequest during Layout",this,mID);
     if(mInLayout==false){
         mInLayout=true;
+        doLayout();
+    }else{
         removeCallbacks(layoutRunner);
         postDelayed(layoutRunner,20);
     }

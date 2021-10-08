@@ -9,31 +9,175 @@
 namespace cdroid{
 
 class KeyboardView:public View{
-DECLARE_UIEVENT(void,ButtonListener,const Keyboard::Key&k);
-DECLARE_UIEVENT(void,ActionListener,UINT action);
-private:
-   INT kcol,krow;
-   std::shared_ptr<Keyboard> kbd;
-   ButtonListener onButton;
-   ActionListener onAction;
-   int mTextColor;
-   void ButtonClick(const Keyboard::Key&k);
-protected:
-   void invalidateKey(int row,int col);
-   int getKeyButton(int px,int py);
 public:
-   KeyboardView(int w,int h);
-   void setKeyBgColor(UINT cl);
-   UINT getKeyBgColor();
-   void onSizeChanged(int w,int h,int ow ,int oh)override;
-   UINT getButtons();
-   Keyboard&getKeyboard(){return *kbd;}
-   void setKeyboard(std::shared_ptr<Keyboard>k);
-   virtual void setButtonListener(ButtonListener listener);
-   virtual void setActionListener(ActionListener listener);
-   virtual void onDraw(Canvas&canvas)override;
-   virtual bool onKeyDown(int keyCode,KeyEvent&k)override;
-   virtual bool onTouchEvent(MotionEvent&event)override;
+    class  OnKeyboardActionListener {
+    public:
+        /**Called when the user presses a key. This is sent before the {@link #onKey} is called.
+         * For keys that repeat, this is only called once.
+         * @param primaryCode the unicode of the key being pressed. If the touch is not on a valid
+         * key, the value will be zero.*/
+        std::function<void(int primaryCode)>onPress;
+
+        /**Called when the user releases a key. This is sent after the {@link #onKey} is called.
+         * For keys that repeat, this is only called once.
+         * @param primaryCode the code of the key that was released */
+        std::function<void(int primaryCode)>onRelease;
+
+        /**Send a key press to the listener.
+         * @param primaryCode this is the key that was pressed
+         * @param keyCodes the codes for all the possible alternative keys
+         * with the primary code being the first. If the primary key code is
+         * a single character such as an alphabet or number or symbol, the alternatives
+         * will include other characters that may be on the same key or adjacent keys.
+         * These codes are useful to correct for accidental presses of a key adjacent to
+         * the intended key.*/
+        std::function<void(int primaryCode,const std::vector<int>&keyCodes)>onKey;
+
+        /* Sends a sequence of characters to the listener.
+         * @param text the sequence of characters to be displayed. */
+        std::function<void(std::string&text)>onText;
+
+        /* Called when the user quickly moves the finger from right to left. */
+        std::function<void()>swipeLeft;
+
+        /* Called when the user quickly moves the finger from left to right. */
+        std::function<void()>swipeRight;
+
+        /* Called when the user quickly moves the finger from up to down. */
+        std::function<void()>swipeDown;
+
+        /* Called when the user quickly moves the finger from down to up. */
+        std::function<void()>swipeUp;
+    };
+private:
+    static constexpr int NOT_A_KEY = -1;
+    static constexpr int MSG_SHOW_PREVIEW = 1;
+    static constexpr int MSG_REMOVE_PREVIEW = 2;
+    static constexpr int MSG_REPEAT = 3;
+    static constexpr int MSG_LONGPRESS = 4;
+
+    static constexpr int DELAY_BEFORE_PREVIEW= 0;
+    static constexpr int DELAY_AFTER_PREVIEW = 70;
+    static constexpr int DEBOUNCE_TIME  = 70;
+    static constexpr int REPEAT_INTERVAL= 50;
+    static constexpr int REPEAT_START_DELAY = 400;
+    static constexpr int MAX_NEARBY_KEYS= 12;
+    static constexpr int MULTITAP_INTERVAL =800;
+    Keyboard* mKeyboard;
+    int  mCurrentKeyIndex = NOT_A_KEY;
+    int  mLabelTextSize;
+    int  mKeyTextSize;
+    int  mKeyTextColor;
+    float mShadowRadius;
+    int  mShadowColor;
+    float mBackgroundDimAmount;
+
+    TextView* mPreviewText;
+    //PopupWindow mPreviewPopup;
+    int  mPreviewTextSizeLarge;
+    int  mPreviewOffset;
+    int  mPreviewHeight;
+    int  mCoordinates[2];
+    View* mPopupParent;
+    bool mMiniKeyboardOnScreen;
+    int  mMiniKeyboardOffsetX;
+    int  mMiniKeyboardOffsetY;
+    std::vector<Keyboard::Key*>mKeys;
+    OnKeyboardActionListener mKeyboardActionListener;
+    int  mVerticalCorrection;
+    int  mProximityThreshold;
+
+    bool mPreviewCentered = false;
+    bool mShowPreview = true;
+    bool mShowTouchPoints = true;
+    int  mPopupPreviewX;
+    int  mPopupPreviewY;
+
+    int  mLastX;
+    int  mLastY;
+    int  mStartX;
+    int  mStartY;
+
+    bool mProximityCorrectOn;
+
+    Rect mPadding;
+
+    long mDownTime;
+    long mLastMoveTime;
+    int  mLastKey;
+    int  mLastCodeX;
+    int  mLastCodeY;
+    int  mCurrentKey = NOT_A_KEY;
+    int  mDownKey = NOT_A_KEY;
+    long mLastKeyTime;
+    long mCurrentKeyTime;
+
+    std::vector<int>  mKeyIndices;
+    int  mPopupX;
+    int  mPopupY;
+    int  mRepeatKeyIndex = NOT_A_KEY;
+    int  mPopupLayout;
+    bool mAbortKey;
+    Keyboard::Key* mInvalidatedKey;
+    Rect mClipRegion;
+    bool mPossiblePoly;
+    //SwipeTracker mSwipeTracker = new SwipeTracker();
+    int  mSwipeThreshold;
+    bool mDisambiguateSwipe;
+
+    // Variables for dealing with multiple pointers
+    int  mOldPointerCount = 1;
+    float mOldPointerX;
+    float mOldPointerY;
+
+    Drawable* mKeyBackground;
+    std::vector<int> mDistances;//[MAX_NEARBY_KEYS];
+
+    // For multi-tap
+    int  mLastSentIndex;
+    int  mTapCount;
+    long mLastTapTime;
+    bool mInMultiTap;
+    bool mDrawPending;
+    bool mKeyboardChanged;
+    Rect mDirtyRect;
+private:
+    void computeProximityThreshold(Keyboard* keyboard);
+    void showPreview(int keyIndex);
+    void showKey(int keyIndex);
+    int getKeyIndices(int x, int y, std::vector<int>* allKeys);
+    void detectAndSendKey(int index, int x, int y, long eventTime) ;
+    bool onModifiedTouchEvent(MotionEvent& me, bool possiblePoly);
+    bool repeatKey();
+    void resetMultiTap();
+    void checkMultiTap(long eventTime, int keyIndex);
+    void dismissPopupKeyboard();
+protected:
+    bool onLongPress(Keyboard::Key* popupKey);
+public:
+    KeyboardView(int w,int h);
+	~KeyboardView();
+    Keyboard*getKeyboard();
+    void setKeyboard(Keyboard*k);
+    bool setShifted(bool shifted);
+    bool isShifted()const;
+    void setPreviewEnabled(bool previewEnabled);
+    bool isPreviewEnabled()const;
+    void setVerticalCorrection(int verticalOffset);
+    void setPopupParent(View* v);
+    void setPopupOffset(int x, int y);
+    void setProximityCorrectionEnabled(bool enabled);
+    bool isProximityCorrectionEnabled()const;
+
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void onSizeChanged(int w, int h, int oldw, int oldh)override;
+    void onDraw(Canvas& canvas)override;
+    void invalidateAllKeys();
+    void invalidateKey(int keyIndex);
+    bool onHoverEvent(MotionEvent& event)override;
+    bool onTouchEvent(MotionEvent& me)override;
+    void closing();
+    void onDetachedFromWindow()override;
 };
 }//namespace
 #endif

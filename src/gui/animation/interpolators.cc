@@ -10,12 +10,14 @@ int BaseInterpolator::getChangingConfiguration(){
     return mChangingConfiguration;
 }
 
-AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&){
+AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&atts){
+    mFactor = atts.getFloat("factor",1.f);
+    mDoubleFactor = mFactor*2.f;   
 }
 
 AccelerateInterpolator::AccelerateInterpolator(double f){
-   mFactor=f;
-   mDoubleFactor=f*2;
+    mFactor=f;
+    mDoubleFactor=f*2;
 }
 
 float AccelerateInterpolator::getInterpolation(float input){
@@ -26,7 +28,8 @@ float AccelerateInterpolator::getInterpolation(float input){
     }
 }
 
-DecelerateInterpolator::DecelerateInterpolator(Context*ctx,const AttributeSet&){
+DecelerateInterpolator::DecelerateInterpolator(Context*ctx,const AttributeSet&atts){
+    mFactor = atts.getFloat("factor",1.f);
 }
 
 DecelerateInterpolator::DecelerateInterpolator(float factor) {
@@ -43,7 +46,8 @@ float DecelerateInterpolator::getInterpolation(float input){
     return result;
 }
 
-AnticipateInterpolator::AnticipateInterpolator(Context*ctx,const AttributeSet&){
+AnticipateInterpolator::AnticipateInterpolator(Context*ctx,const AttributeSet&atts){
+    mTension = atts.getFloat("tension",2.f);
 }
 
 AnticipateInterpolator::AnticipateInterpolator(float tension){
@@ -54,7 +58,8 @@ float AnticipateInterpolator::getInterpolation(float t){
     return t * t * ((mTension + 1) * t - mTension);
 }
 
-CycleInterpolator::CycleInterpolator(Context*ctx,const AttributeSet&){
+CycleInterpolator::CycleInterpolator(Context*ctx,const AttributeSet&atts){
+    mCycles = atts.getFloat("cycles",1.f);
 }
 
 CycleInterpolator::CycleInterpolator(float cycles) {
@@ -65,7 +70,8 @@ float CycleInterpolator::getInterpolation(float input){
     return (float)(sin(2 * mCycles * M_PI * input));
 }
 
-OvershootInterpolator::OvershootInterpolator(Context*ctx,const AttributeSet&){
+OvershootInterpolator::OvershootInterpolator(Context*ctx,const AttributeSet&atts){
+    mTension = atts.getFloat("tension",2.f);
 }
 
 OvershootInterpolator::OvershootInterpolator(float tension) {
@@ -77,7 +83,8 @@ float OvershootInterpolator::getInterpolation(float t){
     return t * t * ((mTension + 1) * t + mTension) + 1.0f;
 }
 
-AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&){
+AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&atts){
+    mTension = atts.getFloat("tension",2.f)*atts.getFloat("extraTension",1.5f);
 }
 
 AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(float tension, float extraTension) {

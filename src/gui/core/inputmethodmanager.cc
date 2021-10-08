@@ -37,15 +37,15 @@ public:
        }
    }
    void changeCapital(){
-       Keyboard&keyboard=kbdView->getKeyboard();
+       /*Keyboard&keyboard=kbdView->getKeyboard();
        for(int i=0;i<keyboard.getRows();i++){
            Keyboard::KeyRow&row=keyboard.getKeyRow(i);
            for(int j=0;j<row.size();j++){
                Keyboard::Key&k=row[j];
-               if((isalpha(k.codes[0])==false)||k.isModifier||k.isSticky)continue;
+               if((isalpha(k.codes[0])==false)||k.modifier||k.sticky)continue;
                k.codes[0]=islower(k.codes[0])?toupper(k.codes[0]):tolower(k.codes[0]);
            }
-       }
+       }*/
    }
 };
 
@@ -57,11 +57,12 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     //addView(candidateView).setPos(0,1);
     addView(kbdView).setPos(0,30);
     setVisibility(INVISIBLE);
+#if 0
     kbdView->setButtonListener([&](const Keyboard::Key&k){
         std::vector<std::string>candidates;
         InputMethod*im=InputMethodManager::getInstance().im;
-        LOGV("key %d modifer=%d sticky=%d im=%p",k.codes[0],k.isModifier,k.isSticky,im);
-        if((k.isModifier|k.isSticky)==0){
+        LOGV("key %d modifer=%d sticky=%d im=%p",k.codes[0],k.modifier,k.sticky,im);
+        if((k.modifier|k.sticky)==0){
             text2IM.append(1,k.codes[0]);
             std::string u8txt=TextUtils::unicode2utf8(text2IM);
             int rc=im->search(u8txt,candidates);
@@ -81,7 +82,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
                 updatePredicts(candidates);
                 im->close_search();*/
             }
-        }else if(k.isModifier|k.isSticky){
+        }else if(k.modifier|k.sticky){
             KeyEvent keyEvent;
             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,
                 KEY_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
@@ -95,7 +96,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
             }
         }
     });
-
+#endif
     /*candidateView->setItemClickListener([&](AbsListView&lv,const ListView::ListItem&itm,int index){
         std::wstring wtext;
         std::vector<std::string>candidates;
@@ -225,7 +226,7 @@ void InputMethodManager::setInputType(int inputType){
         mInst->imeWindow->setPos(0,420);
     }
     if(mInst->imeWindow){
-        imeWindow->kbdView->setKeyboard(kbd);
+        //imeWindow->kbdView->setKeyboard(kbd);
         imeWindow->mBuddy=nullptr;
     }
 }
@@ -253,7 +254,7 @@ int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name
     std::string layout;
     im=method;
     layout =method->getKeyboardLayout(mInputType);
-    kbd=Keyboard::loadFrom(layout);
+    //kbd=Keyboard::loadFrom(layout);
     LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd.get());
     return 0;
 }
