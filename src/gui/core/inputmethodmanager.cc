@@ -51,12 +51,20 @@ public:
 
 IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     InputMethodManager&imm=InputMethodManager::getInstance();
+    KeyboardView::OnKeyboardActionListener listener;
     //candidateView=new ToolBar(w,28);
     kbdView=new KeyboardView(w,h-30);
     setText("IME");
     //addView(candidateView).setPos(0,1);
     addView(kbdView).setPos(0,30);
     setVisibility(INVISIBLE);
+    listener.onPress=[](int primaryCode){
+        LOGD("primaryCode=%x",primaryCode);
+    };
+    listener.onRelease=[](int primaryCode){
+        LOGD("primaryCode=%x",primaryCode);
+    };
+    kbdView->setOnKeyboardActionListener(listener);
 #if 0
     kbdView->setButtonListener([&](const Keyboard::Key&k){
         std::vector<std::string>candidates;
@@ -133,13 +141,11 @@ std::vector<std::string>InputMethodManager::getInputMethods(std::vector<InputMet
 InputMethodManager::InputMethodManager(){
     im=nullptr;
     kcm=nullptr;
-    kbd=nullptr;
     imeWindow=nullptr;
 }
 
 InputMethodManager::~InputMethodManager(){
     mInst=nullptr;
-    kbd=nullptr;
     delete kcm;
     LOGD("InputMethodManager Destroied!");
     if(imeWindow)WindowManager::getInstance().removeWindow(imeWindow);
@@ -169,7 +175,7 @@ InputMethodManager&InputMethodManager::getInstance(){
             mInst->setKeyCharacterMap("qwerty.kcm");
     }
     if(imemethods.size()==0){
-        InputMethod*m=new InputMethod("qwerty.json");
+        InputMethod*m=new InputMethod("cdroid:xml/qwerty.xml");
         //InputMethod*m=new ChinesePinyin("qwerty.json");
         m->load_dicts("dict_pinyin.dat","userdict.dat");
         registeMethod("ChinesePinyin26",m);
@@ -207,9 +213,12 @@ void InputMethodManager::sendKeyEvent(KeyEvent&k){
 
 void InputMethodManager::setInputType(int inputType){
     LOGV("type=%d",inputType);
+    if( mInst->imeWindow==nullptr){
+        mInst->imeWindow=new IMEWindow(1280,300);
+        mInst->imeWindow->setPos(0,420);
+    }
     if(mInputType!=inputType){
         mInputType=inputType;
-        kbd=nullptr;
     }
     switch(mInputType){
     case EditText::TYPE_NONE:
@@ -220,10 +229,6 @@ void InputMethodManager::setInputType(int inputType){
             auto it=imemethods.begin();
             setInputMethod(it->second,it->first);
         }break;
-    }
-    if( mInst->imeWindow==nullptr){
-        mInst->imeWindow=new IMEWindow(1280,300);
-        mInst->imeWindow->setPos(0,420);
     }
     if(mInst->imeWindow){
         //imeWindow->kbdView->setKeyboard(kbd);
@@ -251,11 +256,12 @@ void InputMethodManager::commitText(const std::wstring&text,int newCursorPos){
 }
 
 int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name){
-    std::string layout;
     im=method;
-    layout =method->getKeyboardLayout(mInputType);
+    std::string layout =method->getKeyboardLayout(mInputType);
     //kbd=Keyboard::loadFrom(layout);
-    LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd.get());
+    Keyboard*kbd=new Keyboard(imeWindow->getContext(),layout,1280,240);
+    imeWindow->kbdView->setKeyboard(kbd);
+    LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd);
     return 0;
 }
 

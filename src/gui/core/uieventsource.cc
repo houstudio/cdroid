@@ -21,7 +21,8 @@ int UIEventSource::checkEvents(){
 }
 
 int UIEventSource::handleEvents(){
-    if (mAttachedView && mAttachedView->isAttachedToWindow() && mAttachedView->isDirty()){
+    if (mAttachedView && mAttachedView->isAttachedToWindow() && mAttachedView->isDirty() 
+           && mAttachedView->getVisibility()==View::VISIBLE){
         ((Window*)mAttachedView)->draw();
         GraphDevice::getInstance().flip();
     }

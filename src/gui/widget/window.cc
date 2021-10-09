@@ -76,7 +76,7 @@ void Window::draw(){
 }
 
 void Window::show(){
-    if(getVisibility()!=VISIBLE){
+    if(isAttachedToWindow()&&getVisibility()!=VISIBLE){
         setVisibility(VISIBLE);
         if(mAttachInfo->mCanvas==nullptr)
             invalidate(true);
@@ -96,7 +96,8 @@ void Window::hide(){
 }
 
 View& Window::setPos(int x,int y){
-    if(x!=mLeft || y!=mTop){
+    ViewGroup::setPos(x,y);
+    if( ((x!=mLeft) || (y!=mTop) ) && isAttachedToWindow()){
         //WindowManager::getInstance().resetVisibleRegion();
         WindowManager::getInstance().moveWindow(this,x,y);
         mLeft=x;
@@ -109,25 +110,28 @@ View& Window::setPos(int x,int y){
 }
 
 View& Window::setSize(int cx,int cy){
-    if(cx!=getWidth()||cy!=getHeight()){
-        ViewGroup::setSize(cx,cy); 
+    ViewGroup::setSize(cx,cy); 
+    if(((cx!=getWidth())||(cy!=getHeight())) && isAttachedToWindow()){
         WindowManager::getInstance().resetVisibleRegion();
     }
     return *this;
 }
+
 void Window::onFinishInflate(){
     requestLayout(); 
 }
 
 Canvas*Window::getCanvas(){
 //for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
+    if(mAttachInfo==nullptr)return nullptr;
     Canvas *canvas=mAttachInfo->mCanvas;
     if((canvas==nullptr)&&(getVisibility()==VISIBLE)){
         canvas=GraphDevice::getInstance().createContext(getBound());
-        mAttachInfo->mCanvas=canvas;
+        mAttachInfo->mCanvas=canvas;		
     }
     const int num=mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
+	canvas->set_position(mLeft,mTop);
     for(int i=0;i<num;i++){
         RectangleInt r=mInvalidRgn->get_rectangle(i);
         canvas->rectangle(r.x,r.y,r.width,r.height);

@@ -59,11 +59,11 @@ void WindowManager::addWindow(Window*win){
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
     if(activeWindow)activeWindow->post(std::bind(&Window::onDeactive,activeWindow));
-    win->post([win](){
+    //win->post([win](){
         View::AttachInfo*info=new View::AttachInfo();
         info->mRootView=win;
         win->dispatchAttachedToWindow(info,win->getVisibility());
-    });
+    //});
     Looper::getDefault()->addEventHandler(win->source);
     win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
@@ -101,20 +101,21 @@ void WindowManager::removeWindow(Window*w){
 
 void WindowManager::moveWindow(Window*w,int x,int y){
     auto itw=std::find(windows.begin(),windows.end(),w);
+    if(w->isAttachedToWindow()==false)return;
     for(auto itr=windows.begin();itr!=itw;itr++){
         RECT rcw=w->getBound();
         Window*w1=(*itr);
-	Canvas*c=w1->getCanvas();
-	RECT r=w1->getBound();
-	if(w1->getVisibility()!=View::VISIBLE)continue;
-	r.intersect(rcw);
-	r.offset(-w1->getX(),-w1->getY());
-	c->mInvalidRgn->do_union((const RectangleInt&)r);
-	r=w1->getBound();
-	rcw.left=x;rcw.top=y;
-	r.intersect(rcw);
-	r.offset(-w1->getX(),-w1->getY());
-	c->mInvalidRgn->subtract((const RectangleInt&)r);
+        Canvas*c=w1->getCanvas();
+        RECT r=w1->getBound();
+        if(w1->getVisibility()!=View::VISIBLE)continue;
+        r.intersect(rcw);
+        r.offset(-w1->getX(),-w1->getY());
+        c->mInvalidRgn->do_union((const RectangleInt&)r);
+        r=w1->getBound();
+        rcw.left=x;rcw.top=y;
+        r.intersect(rcw);
+        r.offset(-w1->getX(),-w1->getY());
+        c->mInvalidRgn->subtract((const RectangleInt&)r);
     }
 }
 
@@ -138,23 +139,6 @@ void WindowManager::processEvent(InputEvent&e){
    }
 }
 
-void WindowManager::onBtnPress(MotionEvent&event) {
-  // Notify the focused child
-  for (auto& wind : windows) {
-    if (wind->isFocused() == true) {
-       //wind->onMousePress(event);
-    }
-  }
-}
-
-void WindowManager::onBtnRelease(MotionEvent&event) {
-  // Notify the focused child
-  for (auto& wind : windows) {
-    if (wind->isFocused() == true) {
-       //wind->onMouseRelease(event);
-    }
-  }
-}
 
 void WindowManager::onMotion(MotionEvent&event) {
    // Notify the focused child

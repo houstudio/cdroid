@@ -2177,8 +2177,8 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         sy = mScrollY;
     }
 
-    const bool drawingWithDrawingCache =cache != nullptr && !drawingWithRenderNode;
-    const bool offsetForScroll = cache == nullptr && !drawingWithRenderNode;
+    const bool drawingWithDrawingCache = (cache != nullptr) && (false==drawingWithRenderNode);
+    const bool offsetForScroll = (cache == nullptr) && (false==drawingWithRenderNode);
 
     int restoreTo =0 ;
     if (!drawingWithRenderNode || transformToApply != nullptr) {
@@ -2256,8 +2256,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                     } else if (layerType == LAYER_TYPE_NONE) {
                         canvas.saveLayerAlpha(sx, sy, sx + getWidth(), sy + getHeight(),multipliedAlpha);
                     }*/
-                } else {
-                    // Alpha is handled by the child directly, clobber the layer's alpha
+                } else {//Alpha is handled by the child directly,clobber the layer's alpha
                     mPrivateFlags |= PFLAG_ALPHA_SET;
                 }
             }
@@ -2270,30 +2269,29 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     if (!drawingWithRenderNode) {
         // apply clips directly, since RenderNode won't do it for this draw
         if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) != 0 && cache == nullptr) {
-            /*if (offsetForScroll){
-                canvas.rectangle(sx,sy,getWidth(),getHeight());//canvas.clipRect(sx, sy, sx + getWidth(), sy + getHeight());
+            if (offsetForScroll){
+                canvas.rectangle(sx,sy,getWidth(),getHeight());
             } else {
                 if (!scalingRequired || cache == nullptr) {
-                    canvas.rectangle(0,0,getWidth(), getHeight());//canvas.clipRect(0, 0, getWidth(), getHeight());
+                    canvas.rectangle(0,0,getWidth(), getHeight());
                 } else {
-                    //canvas.rectangle(0, 0, cache->getWidth(), cache->getHeight());
+                    canvas.rectangle(0, 0, cache->get_width(), cache->get_height());
                 }
             }
-            //canvas.clip();//cant clip here ,rotating view will be cutted*/
         }
 
         /*if (mClipBounds != nullptr) {
             // clip bounds ignore scroll
             canvas.rectangle(mClipBounds);//clipRect(mClipBounds);
         }*/
+        canvas.clip();//cant clip here ,for rotation animator(the view will be cutted)*/
     }
 
     if (!drawingWithDrawingCache) {
         if (drawingWithRenderNode) {
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
             //((DisplayListCanvas) canvas).drawRenderNode(renderNode);
-        } else {
-            // Fast path for layouts with no backgrounds
+        } else {// Fast path for layouts with no backgrounds
             if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
                 dispatchDraw(canvas);

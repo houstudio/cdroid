@@ -1511,8 +1511,10 @@ void TextView::onDraw(Canvas& canvas) {
     }
     
     canvas.save();
-    //canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
-    //canvas.clip();the content will be cutted in rotation 
+    if(mRotation==.0f){
+        canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
+        canvas.clip();//the content will be cutted in rotation 
+    }
 
     canvas.translate(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
 

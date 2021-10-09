@@ -41,8 +41,6 @@ public:
     void shutDown(){delete instance;}
 protected:
     virtual void onKeyEvent(KeyEvent&key);
-    virtual void onBtnPress(MotionEvent&event);
-    virtual void onBtnRelease(MotionEvent&event);
     virtual void onMotion(MotionEvent&event);
 private:
     WindowManager();

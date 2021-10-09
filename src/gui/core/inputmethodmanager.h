@@ -11,7 +11,6 @@ private:
     friend class IMEWindow;
     int mInputType;
     std::wstring text2IM;
-    std::shared_ptr<Keyboard>kbd;
     static std::map<std::string,InputMethod*>imemethods;
     int setInputMethod(InputMethod*,const std::string&name);
 protected:

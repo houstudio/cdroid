@@ -10,6 +10,12 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
     mKeyTextSize  = 28;
     mKeyTextColor = 0xFFFFFFFF;
     mInMultiTap   = false;
+    mInvalidatedKey =nullptr;
+    mVerticalCorrection  = 0;
+    mMiniKeyboardOffsetX = 0;
+    mMiniKeyboardOffsetY = 0;
+    mProximityThreshold  = 0;
+    mPadding.set(0,0,0,0);
     mMiniKeyboardOnScreen = false;
     mDistances.resize(MAX_NEARBY_KEYS);
     mKeyIndices.resize(MAX_NEARBY_KEYS);
@@ -19,7 +25,11 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
 
 KeyboardView::~KeyboardView(){
     delete mKeyBackground;
-	delete mKeyboard;
+    delete mKeyboard;
+}
+
+void KeyboardView::setOnKeyboardActionListener(OnKeyboardActionListener listener){
+    mKeyboardActionListener=listener;
 }
 
 Keyboard* KeyboardView::getKeyboard() {
@@ -153,7 +163,6 @@ void KeyboardView::onDraw(Canvas& canvas) {
         drawSingleKey = true;
     }
     //canvas.drawColor(0x00000000, PorterDuff.Mode.CLEAR);
-    LOGD("==== Keys=%d ====",mKeys.size());
     for (Keyboard::Key*key:mKeys){
         if (drawSingleKey && invalidKey != key) {
             continue;
@@ -207,13 +216,11 @@ void KeyboardView::onDraw(Canvas& canvas) {
     }
 
     canvas.restore();
-    mDrawPending = false;
     mDirtyRect.setEmpty();
 }
 
 void KeyboardView::invalidateAllKeys() {
     mDirtyRect.Union(0, 0, getWidth(), getHeight());
-    mDrawPending = true;
     invalidate();
 }
 
@@ -229,14 +236,23 @@ void KeyboardView::invalidateKey(int keyIndex) {
             //key.x + key.width + mPaddingLeft, key.y + key.height + mPaddingTop);
 }
 
+static void arrayCopy(std::vector<int>&src,int srcPos,std::vector<int>&dst,int destPos,int length){
+    for(int i=0;i<length;i++){
+        dst[destPos+i]=src[srcPos+i];
+    }
+}
+
 int KeyboardView::getKeyIndices(int x, int y, std::vector<int>* allKeys){
-    std::vector<Keyboard::Key*>& keys = mKeys;
     int primaryIndex = NOT_A_KEY;
     int closestKey = NOT_A_KEY;
     int closestKeyDist = mProximityThreshold + 1;
-     //mDistances, Integer.MAX_VALUE);
+    std::vector<Keyboard::Key*>& keys = mKeys;
+
     std::vector<int> nearestKeyIndices = mKeyboard->getNearestKeys(x, y);
     const int keyCount = nearestKeyIndices.size();
+
+    std::fill(mDistances.begin(),mDistances.end(),INT_MAX);//for(int i=0;i<mDistances.size();i++)mDistances[i]=INT_MAX;
+
     for (int i = 0; i < keyCount; i++) {
         Keyboard::Key* key = keys[nearestKeyIndices[i]];
         int dist = 0;
@@ -259,8 +275,9 @@ int KeyboardView::getKeyIndices(int x, int y, std::vector<int>* allKeys){
             for (int j = 0; j < mDistances.size(); j++) {
                 if (mDistances[j] > dist) {
                     // Make space for nCodes codes.//arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-                    //System.arraycopy(mDistances, j, mDistances, j + nCodes, mDistances.size() - j - nCodes);
-                    //System.arraycopy(allKeys, j, allKeys, j + nCodes, allKeys.size() - j - nCodes);
+                    arrayCopy(mDistances, j, mDistances, j + nCodes, mDistances.size() - j - nCodes);
+                    arrayCopy(*allKeys, j, *allKeys, j + nCodes, allKeys->size() - j - nCodes);
+                     
                     for (int c = 0; c < nCodes; c++) {
                         (*allKeys)[j + c] = key->codes[c];
                         mDistances[j + c] = dist;
@@ -285,8 +302,9 @@ void KeyboardView::detectAndSendKey(int index, int x, int y, long eventTime){
         } else {
             int code = key->codes[0];
             //TextEntryState.keyPressedAt(key, x, y);
-            std::vector<int>codes;// = new int[MAX_NEARBY_KEYS];
-            //Arrays.fill(codes, NOT_A_KEY);
+            std::vector<int>codes;
+            codes.resize(MAX_NEARBY_KEYS);
+            std::fill(codes.begin(),codes.end(),(int)NOT_A_KEY);//for(int i=0;i<codes.size();i++)codes[i]=NOT_A_KEY;
             getKeyIndices(x, y,&codes);
             // Multi-tap
             if (mInMultiTap) {
@@ -420,10 +438,10 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
                 break;
             }
         }
-        /*if (mCurrentKey != NOT_A_KEY) {
-            Message msg = mHandler.obtainMessage(MSG_LONGPRESS, me);
-            mHandler.sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
-        }*/
+        if (mCurrentKey != NOT_A_KEY) {
+            //Message msg = mHandler.obtainMessage(MSG_LONGPRESS, me);
+            //mHandler.sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
+        }
         showPreview(keyIndex);
         break;
 

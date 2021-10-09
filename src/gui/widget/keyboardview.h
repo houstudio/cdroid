@@ -58,10 +58,10 @@ private:
 
     static constexpr int DELAY_BEFORE_PREVIEW= 0;
     static constexpr int DELAY_AFTER_PREVIEW = 70;
-    static constexpr int DEBOUNCE_TIME  = 70;
-    static constexpr int REPEAT_INTERVAL= 50;
+    static constexpr int DEBOUNCE_TIME   = 70;
+    static constexpr int REPEAT_INTERVAL = 50;
     static constexpr int REPEAT_START_DELAY = 400;
-    static constexpr int MAX_NEARBY_KEYS= 12;
+    static constexpr int MAX_NEARBY_KEYS = 12;
     static constexpr int MULTITAP_INTERVAL =800;
     Keyboard* mKeyboard;
     int  mCurrentKeyIndex = NOT_A_KEY;
@@ -138,7 +138,6 @@ private:
     int  mTapCount;
     long mLastTapTime;
     bool mInMultiTap;
-    bool mDrawPending;
     bool mKeyboardChanged;
     Rect mDirtyRect;
 private:
@@ -156,7 +155,8 @@ protected:
     bool onLongPress(Keyboard::Key* popupKey);
 public:
     KeyboardView(int w,int h);
-	~KeyboardView();
+    ~KeyboardView();
+    void setOnKeyboardActionListener(OnKeyboardActionListener listener);
     Keyboard*getKeyboard();
     void setKeyboard(Keyboard*k);
     bool setShifted(bool shifted);
