@@ -120,14 +120,12 @@ void ScrollBarDrawable::drawThumb(Canvas& canvas,const Rect& bounds, int offset,
     if (vertical) {
         if (mVerticalThumb != nullptr) {
             if (changed)
-                mVerticalThumb->setBounds(bounds.left, bounds.top + offset,bounds.width, offset + length);
-
+                mVerticalThumb->setBounds(bounds.left, bounds.top + offset,bounds.width, length);
             mVerticalThumb->draw(canvas);
         }
     } else if ( mHorizontalThumb ) {
         if (changed) 
-            mHorizontalThumb->setBounds(bounds.left+ offset, bounds.top,offset + length, bounds.height);
-
+            mHorizontalThumb->setBounds(bounds.left+ offset, bounds.top,length, bounds.height);:wq
         mHorizontalThumb->draw(canvas);
     }
 }
