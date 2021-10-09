@@ -1,16 +1,43 @@
 #include <widget/keyboardview.h>
+#include <core/textutils.h>
 #include <cdlog.h>
 #include <fstream>
 #include <string.h>
+#include <limits.h>
 
 namespace cdroid{
 
 KeyboardView::KeyboardView(int w,int h):View(w,h){
+    init();
+    mKeyBackground = new ColorDrawable(0xFF112211);
+    resetMultiTap();
+}
+
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
+    init();
+    std::string resid  = atts.getString("keyBackground");
+    mKeyBackground     = ctx->getDrawable(resid);
+    mVerticalCorrection= atts.getDimensionPixelOffset("verticalCoreection",0);
+    mPreviewOffset     = atts.getDimensionPixelOffset("keyPreviewOffset",0);
+    mPreviewHeight     = atts.getDimensionPixelOffset("keyPreviewHeight",0);
+    mKeyTextSize       = atts.getDimensionPixelOffset("keyTextSize",0);
+    mKeyTextColor      = atts.getColor("keyTextColor",0xFF000000);
+    mLabelTextSize     = atts.getDimensionPixelOffset("labelTextSize",14);
+    resetMultiTap();
+}
+
+void KeyboardView::init(){
     mLabelTextSize= 20;
     mKeyTextSize  = 28;
     mKeyTextColor = 0xFFFFFFFF;
     mInMultiTap   = false;
-    mInvalidatedKey =nullptr;
+    mShowPreview  = false;
+
+    mKeyboard      = nullptr;
+    mInvalidatedKey= nullptr;
+    mKeyBackground = nullptr;
+    //mSwipeTracker = nullptr;
+
     mVerticalCorrection  = 0;
     mMiniKeyboardOffsetX = 0;
     mMiniKeyboardOffsetY = 0;
@@ -20,7 +47,6 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
     mDistances.resize(MAX_NEARBY_KEYS);
     mKeyIndices.resize(MAX_NEARBY_KEYS);
     memset(&mKeyboardActionListener,0,sizeof(mKeyboardActionListener));
-    mKeyBackground =new ColorDrawable(0xFF111111);
 }
 
 KeyboardView::~KeyboardView(){
@@ -82,8 +108,9 @@ bool KeyboardView::isPreviewEnabled()const{
 }
 
 void KeyboardView::setVerticalCorrection(int verticalOffset) {
-
+    mVerticalCorrection = verticalOffset;
 }
+
 void KeyboardView::setPopupParent(View* v) {
     mPopupParent = v;
 }
@@ -107,6 +134,19 @@ void KeyboardView::setProximityCorrectionEnabled(bool enabled) {
 /* Returns true if proximity correction is enabled. */
 bool KeyboardView::isProximityCorrectionEnabled()const{
     return mProximityCorrectOn;
+}
+
+void KeyboardView::onClick(View&v){
+    dismissPopupKeyboard();
+}
+
+std::string KeyboardView::adjustCase(const std::string& label){
+    if( mKeyboard->isShifted() && (label.size()<3) && islower(label[0]) ){
+        std::string ups=label;
+        std::transform(ups.begin(),ups.end(),ups.begin(),tolower);
+        return ups;
+    }
+    return label;
 }
 
 void KeyboardView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -142,8 +182,7 @@ void KeyboardView::onSizeChanged(int w, int h, int oldw, int oldh) {
 void KeyboardView::onDraw(Canvas& canvas) {
     View::onDraw(canvas);
     canvas.rectangle(mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
-    canvas.clip();//canvas.clipRect(mDirtyRect);
-    LOGD("dirty=(%d,%d,%d,%d)",mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
+    canvas.clip();
 
     Drawable* keyBackground = mKeyBackground;
     Rect clipRegion = mClipRegion;
@@ -171,7 +210,7 @@ void KeyboardView::onDraw(Canvas& canvas) {
         keyBackground->setState(drawableState);
 
         // Switch the character to uppercase if shift is pressed
-        std::string label = key->label;//adjustCase(key->label);
+        std::string label = adjustCase(key->label);
 
         Rect bounds = keyBackground->getBounds();
         if (key->width != bounds.right() ||  key->height != bounds.bottom()) {
@@ -180,7 +219,6 @@ void KeyboardView::onDraw(Canvas& canvas) {
         canvas.translate(key->x + kbdPaddingLeft, key->y + kbdPaddingTop);
         keyBackground->draw(canvas);
 
-        LOGD("Key.label=%s icon=%p pos:%d,%d size=%d,%d",label.c_str(),key->icon,key->x,key->y,key->width,key->height);
         if (label.empty()==false) {
             // For characters, use large font. For labels like "Done", use small font.
             canvas.set_color(mKeyTextColor);
@@ -203,7 +241,7 @@ void KeyboardView::onDraw(Canvas& canvas) {
                     - key->icon->getIntrinsicHeight()) / 2 + padding.top;
             key->icon->setBounds(drawableX, drawableY, key->icon->getIntrinsicWidth(), key->icon->getIntrinsicHeight());
             key->icon->draw(canvas);
-            LOGD("iconsize=%dx%d %d,%d",key->icon->getIntrinsicWidth(), key->icon->getIntrinsicHeight(),drawableX,drawableY);
+            LOGV("iconsize=%dx%d %d,%d",key->icon->getIntrinsicWidth(), key->icon->getIntrinsicHeight(),drawableX,drawableY);
         }
         canvas.translate(-key->x - kbdPaddingLeft, -key->y - kbdPaddingTop);
     }
@@ -231,12 +269,23 @@ void KeyboardView::invalidateKey(int keyIndex) {
     Keyboard::Key* key = mKeys[keyIndex];
     mInvalidatedKey = key;
     mDirtyRect.Union(key->x + mPaddingLeft, key->y + mPaddingTop,key->width, key->height);
-            //key.x + key.width + mPaddingLeft, key.y + key.height + mPaddingTop);
     invalidate(key->x + mPaddingLeft, key->y + mPaddingTop,key->width, key->height);
-            //key.x + key.width + mPaddingLeft, key.y + key.height + mPaddingTop);
 }
 
-static void arrayCopy(std::vector<int>&src,int srcPos,std::vector<int>&dst,int destPos,int length){
+bool KeyboardView::openPopupIfRequired(MotionEvent& me){
+    if ((mPopupLayout == 0)||(mCurrentKey < 0) || (mCurrentKey >= mKeys.size())) {
+        return false;
+    }
+    Keyboard::Key* popupKey = mKeys[mCurrentKey];
+    const bool result = onLongPress(popupKey);
+    if (result) {
+        mAbortKey = true;
+        showPreview(NOT_A_KEY);
+    }
+    return result;
+}
+template<class T>
+static void arrayCopy(std::vector<T>&src,int srcPos,std::vector<T>&dst,int destPos,int length){
     for(int i=0;i<length;i++){
         dst[destPos+i]=src[srcPos+i];
     }
@@ -322,6 +371,17 @@ void KeyboardView::detectAndSendKey(int index, int x, int y, long eventTime){
         }
         mLastSentIndex = index;
         mLastTapTime = eventTime;
+    }
+}
+
+std::string KeyboardView::getPreviewText(Keyboard::Key* key){
+    if (mInMultiTap) {
+       std::wstring label; 
+       label.append(1,key->codes[mTapCount < 0 ? 0 : mTapCount]);
+       std::string u8label=TextUtils::unicode2utf8(label);
+       return adjustCase(u8label);
+    } else {
+       return adjustCase(key->label);
     }
 }
 
@@ -567,4 +627,100 @@ void KeyboardView::dismissPopupKeyboard(){
          invalidateAllKeys();
     }*/
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void  KeyboardView::SwipeTracker::clear(){
+    mPastTime[0] = 0;
+}
+
+void  KeyboardView::SwipeTracker::addMovement(MotionEvent&ev){
+    long time = ev.getEventTime();
+    /*int N = ev.getHistorySize();
+    for (int i=0; i<N; i++) {
+        addPoint(ev.getHistoricalX(i), ev.getHistoricalY(i),
+                ev.getHistoricalEventTime(i));
+    }*/
+    addPoint(ev.getX(), ev.getY(), time);
+}
+
+void  KeyboardView::SwipeTracker::addPoint(float x,float y,long time){
+    int drop = -1;
+    int i;
+    //final long[] pastTime = mPastTime;
+    for (i=0; i<NUM_PAST; i++) {
+        if (mPastTime[i] == 0) {
+            break;
+        } else if (mPastTime[i] < time-LONGEST_PAST_TIME) {
+            drop = i;
+        }
+    }
+    if (i == NUM_PAST && drop < 0) {
+        drop = 0;
+    }
+    if (drop == i) drop--;
+    //final float[] pastX = mPastX;
+    //final float[] pastY = mPastY;
+    if (drop >= 0) {
+        int start = drop+1;
+        int count = NUM_PAST-drop-1;
+        /*arrayCopy(mPastX, start, mPastX, 0, count);
+        arrayCopy(mPastY, start, mPastY, 0, count);
+        arrayCopy(mPastTime, start, mPastTime, 0, count);*/
+        i -= (drop+1);
+    }
+    mPastX[i] = x;
+    mPastY[i] = y;
+    mPastTime[i] = time;
+    i++;
+    if (i < NUM_PAST) {
+        mPastTime[i] = 0;
+    }    
+}
+
+void  KeyboardView::SwipeTracker::computeCurrentVelocity(int units){
+    //computeCurrentVelocity(units,FLT_MAX);
+}
+
+void  KeyboardView::SwipeTracker::computeCurrentVelocity(int units,float maxVelocity){
+    float oldestX = mPastX[0];//pastX[0];
+    float oldestY = mPastY[0];//pastY[0];
+    long oldestTime = mPastTime[0];//pastTime[0];
+    float accumX = 0;
+    float accumY = 0;
+    int N=0;
+    while (N < NUM_PAST) {
+        if (mPastTime[N] == 0) {
+            break;
+        }
+        N++;
+    }
+
+    for (int i=1; i < N; i++) {
+        int dur = (int)(mPastTime[i] - oldestTime);
+        if (dur == 0) continue;
+        float dist = mPastX[i] - oldestX;
+        float vel = (dist/dur) * units;   // pixels/frame.
+        if (accumX == 0) accumX = vel;
+        else accumX = (accumX + vel) * .5f;
+
+        dist = mPastY[i] - oldestY;
+        vel = (dist/dur) * units;   // pixels/frame.
+        if (accumY == 0) accumY = vel;
+        else accumY = (accumY + vel) * .5f;
+    }
+    mXVelocity = accumX < 0.0f ? std::max(accumX, -maxVelocity)
+            : std::min(accumX, maxVelocity);
+    mYVelocity = accumY < 0.0f ? std::max(accumY, -maxVelocity)
+            : std::min(accumY, maxVelocity);
+}
+
+float KeyboardView::SwipeTracker::getXVelocity()const{
+    return mXVelocity;
+}
+
+float KeyboardView::SwipeTracker::getYVelocity()const{
+    return mYVelocity;
+}
+
 }//namespace

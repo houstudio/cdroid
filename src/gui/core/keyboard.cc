@@ -40,6 +40,7 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
     std::string resicon=attrs.getString("keyIcon");
     icon  = resicon.empty()?nullptr:context->getDrawable(resicon);
     label = attrs.getString("keyLabel");
+    text  = attrs.getString("keyOutputText");
     parseCSV(attrs.getString("codes"),codes);
     repeatable= attrs.getBoolean("isRepeatable",false);
     sticky    = attrs.getBoolean("isSticky",false);
@@ -161,7 +162,7 @@ Keyboard::Row::Row(Keyboard*p,Context*ctx,const AttributeSet&attrs){
 Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,int height){
     mDisplayWidth = width;
     mDisplayHeight = height;
-
+    mShifted =false;
     mDefaultHorizontalGap = 0;
     mDefaultWidth = mDisplayWidth / 10;
     mDefaultVerticalGap = 0;

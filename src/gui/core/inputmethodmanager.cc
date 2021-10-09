@@ -64,6 +64,9 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     listener.onRelease=[](int primaryCode){
         LOGD("primaryCode=%x",primaryCode);
     };
+    listener.onText=[](std::string&text){
+        LOGD("onText(%s)",text.c_str());
+    };
     kbdView->setOnKeyboardActionListener(listener);
 #if 0
     kbdView->setButtonListener([&](const Keyboard::Key&k){

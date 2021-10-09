@@ -63,6 +63,26 @@ private:
     static constexpr int REPEAT_START_DELAY = 400;
     static constexpr int MAX_NEARBY_KEYS = 12;
     static constexpr int MULTITAP_INTERVAL =800;
+
+    class SwipeTracker{
+    protected:
+        static constexpr int NUM_PAST =4 ;
+        static constexpr int LONGEST_PAST_TIME = 200;
+        float mPastX[NUM_PAST];
+        float mPastY[NUM_PAST];
+        long mPastTime[NUM_PAST]; 
+        float mXVelocity;
+        float mYVelocity;
+    public:
+        void clear();
+        void addMovement(MotionEvent&ev);
+        void addPoint(float x,float y,long time);
+        void computeCurrentVelocity(int units);
+        void computeCurrentVelocity(int units,float maxVelocity);
+        float getXVelocity()const;
+        float getYVelocity()const;
+    };
+ 
     Keyboard* mKeyboard;
     int  mCurrentKeyIndex = NOT_A_KEY;
     int  mLabelTextSize;
@@ -121,7 +141,7 @@ private:
     Keyboard::Key* mInvalidatedKey;
     Rect mClipRegion;
     bool mPossiblePoly;
-    //SwipeTracker mSwipeTracker = new SwipeTracker();
+    //SwipeTracker *mSwipeTracker;
     int  mSwipeThreshold;
     bool mDisambiguateSwipe;
 
@@ -141,11 +161,15 @@ private:
     bool mKeyboardChanged;
     Rect mDirtyRect;
 private:
+    void init();
+    std::string adjustCase(const std::string& label);
     void computeProximityThreshold(Keyboard* keyboard);
+    std::string getPreviewText(Keyboard::Key* key);
     void showPreview(int keyIndex);
     void showKey(int keyIndex);
-    int getKeyIndices(int x, int y, std::vector<int>* allKeys);
-    void detectAndSendKey(int index, int x, int y, long eventTime) ;
+    int  getKeyIndices(int x, int y, std::vector<int>* allKeys);
+    void detectAndSendKey(int index, int x, int y, long eventTime);
+    bool openPopupIfRequired(MotionEvent& me);
     bool onModifiedTouchEvent(MotionEvent& me, bool possiblePoly);
     bool repeatKey();
     void resetMultiTap();
@@ -155,6 +179,7 @@ protected:
     bool onLongPress(Keyboard::Key* popupKey);
 public:
     KeyboardView(int w,int h);
+    KeyboardView(Context*context,const AttributeSet&atts);
     ~KeyboardView();
     void setOnKeyboardActionListener(OnKeyboardActionListener listener);
     Keyboard*getKeyboard();
@@ -168,7 +193,7 @@ public:
     void setPopupOffset(int x, int y);
     void setProximityCorrectionEnabled(bool enabled);
     bool isProximityCorrectionEnabled()const;
-
+    void onClick(View&v);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void onDraw(Canvas& canvas)override;
