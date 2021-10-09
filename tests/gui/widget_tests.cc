@@ -178,7 +178,8 @@ TEST_F(WIDGET,Keyboard){
     Window*w=new Window(100,100,800,400);
     KeyboardView*kbv=new KeyboardView(800,300);
     kbv->setBackgroundColor(0xFFEEEEEE);
-    kbv->setKeyboard(Keyboard::loadFrom("qwerty.json"));
+    Keyboard*kbd = new Keyboard(&app,"cdroid:xml/qwerty.xml",800,200);
+    kbv->setKeyboard(kbd);
     w->addView(kbv).setPos(20,10);
     app.exec();
 }
