@@ -20,7 +20,12 @@ public:
         std::function<void(NumberPicker&,int)>onScrollStateChange;
     };
 private:
+    static constexpr int BUTTON_INCREMENT =1;
+    static constexpr int BUTTON_DECREMENT =2;
+    static constexpr int MODE_PRESS =1;
+    static constexpr int MODE_TAPPED=2;
     static constexpr int SELECTOR_WHEEL_ITEM_COUNT =3;
+    static constexpr int DEFAULT_LONG_PRESS_UPDATE_INTERVAL =300;
     static constexpr int SELECTOR_MIDDLE_ITEM_INDEX = SELECTOR_WHEEL_ITEM_COUNT / 2;
     static constexpr int SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT =8;
     static constexpr int SELECTOR_ADJUSTMENT_DURATION_MILLIS =800;
@@ -32,6 +37,7 @@ private:
     ImageButton* mIncrementButton;
     ImageButton* mDecrementButton;
     EditText* mInputText;
+    Runnable mChangeCurrentByOneFromLongPressCommand;
     int mSelectionDividersDistance;
     int mMinHeight;
     int mMaxHeight;
@@ -80,6 +86,16 @@ private:
     int mLastHandledDownDpadKeyCode = -1;
     bool mHideWheelUntilFocused; 
     bool mWrapSelectorWheelPreferred=true;
+
+
+    //PressedStateHelper's members
+    Runnable mPressedStateHelpers;
+    int mPSHManagedButton;
+    int mPSHMode;
+    void pshCancel();
+    void pshButtonPressDelayed(int);
+    void pshButtonTapped(int);
+    void pshRun();
 private:
     void initView();
     int makeMeasureSpec(int measureSpec, int maxSize);
@@ -129,7 +145,7 @@ public:
     bool onTouchEvent(MotionEvent& event)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
     bool dispatchKeyEvent(KeyEvent& event)override;
-    void computeScroll();
+    void computeScroll()override;
     View& setEnabled(bool enabled)override;
     void scrollBy(int x, int y)override;
     int getSolidColor()const;

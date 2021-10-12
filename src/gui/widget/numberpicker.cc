@@ -10,21 +10,27 @@ namespace cdroid{
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
     setOrientation(VERTICAL);//HORIZONTAL);
-    
-    /*mDecrementButton=new ImageButton(30,20);
-    addView(mDecrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
-    mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
-    mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));*/
+   
+    if(!mHasSelectorWheel){
+        mDecrementButton=new ImageButton(30,20);
+        mDecrementButton->setMinimumHeight(20);
+        addView(mDecrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
+        mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
+        mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
+    }
    
     mInputText =new EditText("123",20,20);
     mInputText->setGravity(Gravity::CENTER);
     mInputText->setTextSize(24);
     addView(mInputText,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
 
-    /*mIncrementButton=new ImageButton(30,20);
-    addView(mIncrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
-    mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
-    mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));*/
+    if(!mHasSelectorWheel){
+        mIncrementButton=new ImageButton(30,20);
+        mIncrementButton->setMinimumHeight(20);
+        addView(mIncrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
+        mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
+        mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
+    }
 }
 
 NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):LinearLayout(context,atts){
@@ -81,6 +87,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):LinearLayo
 
 void NumberPicker::onIncDecClick(View&v){
     hideSoftInput();
+    LOGD("onclick %p",&v);
     mInputText->clearFocus();
     if (&v == mIncrementButton) {
         changeValueByOne(true);
@@ -115,8 +122,13 @@ void NumberPicker::initView(){
     mVirtualButtonPressedDrawable =nullptr;
     mLastHandledDownDpadKeyCode =-1;
     mHasSelectorWheel = true;
+    mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred =true;
     mSelectionDividerHeight =1;
+    mPreviousScrollerY   =0;
+    mCurrentScrollOffset =0;
+    mInitialScrollOffset =0;
+    mLongPressUpdateInterval = DEFAULT_LONG_PRESS_UPDATE_INTERVAL;
     mMinHeight = SIZE_UNSPECIFIED;
     mMaxHeight = SIZE_UNSPECIFIED;
     mMinWidth  = SIZE_UNSPECIFIED;
@@ -210,16 +222,16 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
         hideSoftInput();
         mLastDownOrMoveEventY = mLastDownEventY = event.getY();
         mLastDownEventTime = event.getEventTime();
-        mIgnoreMoveEvents = false;
+        mIgnoreMoveEvents  = false;
         mPerformClickOnTap = false;
         // Handle pressed state before any state change.
         if (mLastDownEventY < mTopSelectionDividerTop) {
             if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-                //mPressedStateHelper.buttonPressDelayed(PressedStateHelper.BUTTON_DECREMENT);
+                pshButtonPressDelayed(BUTTON_DECREMENT);
             }
         } else if (mLastDownEventY > mBottomSelectionDividerBottom) {
             if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-                //mPressedStateHelper.buttonPressDelayed(PressedStateHelper.BUTTON_INCREMENT);
+                pshButtonPressDelayed(BUTTON_INCREMENT);
             }
         }
         // Make sure we support flinging inside scrollables.
@@ -277,7 +289,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
     case MotionEvent::ACTION_UP: {
             removeBeginSoftInputCommand();
             removeChangeCurrentByOneFromLongPress();
-            //mPressedStateHelper.cancel();
+            pshCancel();//mPressedStateHelper.cancel();
             //VelocityTracker* velocityTracker = mVelocityTracker;
             mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
             int initialVelocity = (int) mVelocityTracker->getYVelocity();
@@ -298,10 +310,10 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                                 - SELECTOR_MIDDLE_ITEM_INDEX;
                         if (selectorIndexOffset > 0) {
                             changeValueByOne(true);
-                            //mPressedStateHelper.buttonTapped(PressedStateHelper.BUTTON_INCREMENT);
+                            pshButtonTapped(BUTTON_INCREMENT);
                         } else if (selectorIndexOffset < 0) {
                             changeValueByOne(false);
-                            //mPressedStateHelper.buttonTapped(PressedStateHelper.BUTTON_DECREMENT);
+                            pshButtonTapped(BUTTON_DECREMENT);
                         }
                     }
                 } else {
@@ -715,7 +727,7 @@ void NumberPicker::setValueInternal(int current, bool notifyChng){
 }
 
 void NumberPicker::changeValueByOne(bool increment){
-    LOGD("mHasSelectorWheel=%d",mHasSelectorWheel);
+    LOGV("mHasSelectorWheel=%d",mHasSelectorWheel);
     if (mHasSelectorWheel) {
         hideSoftInput();
         if (!moveToFinalScrollerPosition(mFlingScroller)) {
@@ -873,19 +885,32 @@ void NumberPicker::notifyChange(int previous, int current){
 }
 
 void NumberPicker::postChangeCurrentByOneFromLongPress(bool increment, long delayMillis){
+    if(mChangeCurrentByOneFromLongPressCommand!=nullptr)
+        removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
 
+    mChangeCurrentByOneFromLongPressCommand=[this,increment](){
+        changeValueByOne(increment);
+        postDelayed(mChangeCurrentByOneFromLongPressCommand, mLongPressUpdateInterval);
+    };
+    postDelayed(mChangeCurrentByOneFromLongPressCommand, delayMillis);
 }
 
 void NumberPicker::removeChangeCurrentByOneFromLongPress(){
-    /*if (mChangeCurrentByOneFromLongPressCommand != nullptr) {
+    if (mChangeCurrentByOneFromLongPressCommand != nullptr) {
         removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
-    }*/
+        mChangeCurrentByOneFromLongPressCommand =nullptr;
+    }
 }
 
 void NumberPicker::removeBeginSoftInputCommand(){
 }
 
 void NumberPicker::removeAllCallbacks(){
+    if (mChangeCurrentByOneFromLongPressCommand != nullptr) {
+        removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
+        mChangeCurrentByOneFromLongPressCommand =nullptr;
+    }
+    pshCancel();
 }
 
 int NumberPicker::getSelectedPos(const std::string& value){
@@ -919,4 +944,69 @@ bool NumberPicker::ensureScrollWheelAdjusted() {
     }
     return false;
 }
+
+void NumberPicker::pshCancel(){
+    mPSHMode =0; 
+    mPSHManagedButton=0;
+    if(mPressedStateHelpers!=nullptr){
+         removeCallbacks(mPressedStateHelpers);
+         invalidate(0, mBottomSelectionDividerBottom, mRight-mLeft, mBottom-mTop);
+    }
+    mPressedStateHelpers =[this](){
+        pshRun();
+    };
+    mDecrementVirtualButtonPressed =false;
+    if(mDecrementVirtualButtonPressed)
+         invalidate(0,0,mRight-mLeft,mTopSelectionDividerTop);
+}
+
+void NumberPicker::pshButtonPressDelayed(int button){
+    pshCancel();
+    mPSHMode =MODE_PRESS;
+    mPSHManagedButton =button;
+    
+    postDelayed(mPressedStateHelpers,ViewConfiguration::getTapTimeout());
+}
+
+void NumberPicker::pshButtonTapped(int button){
+    pshCancel();
+    mPSHMode =MODE_TAPPED;
+    mPSHManagedButton=button;
+    post(mPressedStateHelpers);
+}
+
+void NumberPicker::pshRun(){
+    switch (mPSHMode) {
+    case MODE_PRESS:
+        switch (mPSHManagedButton) {
+        case BUTTON_INCREMENT:
+             mIncrementVirtualButtonPressed = true;
+             invalidate(0, mBottomSelectionDividerBottom, mRight, mBottom);
+             break;
+        case BUTTON_DECREMENT:
+             mDecrementVirtualButtonPressed = true;
+             invalidate(0, 0, mRight, mTopSelectionDividerTop);
+             break;
+        }
+        break;
+    case MODE_TAPPED:
+        switch (mPSHManagedButton) {
+        case BUTTON_INCREMENT:
+            if (!mIncrementVirtualButtonPressed) {
+                postDelayed(mPressedStateHelpers,ViewConfiguration::getPressedStateDuration());
+            }
+            mIncrementVirtualButtonPressed ^= true;
+            invalidate(0, mBottomSelectionDividerBottom, mRight, mBottom);
+             break;
+        case BUTTON_DECREMENT:
+            if (!mDecrementVirtualButtonPressed) {
+                postDelayed(mPressedStateHelpers,ViewConfiguration::getPressedStateDuration());
+            }
+            mDecrementVirtualButtonPressed ^= true;
+            invalidate(0, 0, mRight, mTopSelectionDividerTop);
+        }//endof switch (mManagedButton)
+        break;/*endof case MODE_TAPPED*/
+    }
+}
+
 }//namespace
