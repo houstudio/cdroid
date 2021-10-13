@@ -251,7 +251,7 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
                 true, ViewConfiguration::getLongPressTimeout());
         } else {
             mPerformClickOnTap = true;
-            //postBeginSoftInputOnLongPressCommand();
+            postBeginSoftInputOnLongPressCommand();
         }
         return true;
     }//endswitch action
@@ -727,7 +727,7 @@ void NumberPicker::setValueInternal(int current, bool notifyChng){
 }
 
 void NumberPicker::changeValueByOne(bool increment){
-    LOGV("mHasSelectorWheel=%d",mHasSelectorWheel);
+    LOGD("mHasSelectorWheel=%d mValue=%d increment=%d",mHasSelectorWheel,mValue,increment);
     if (mHasSelectorWheel) {
         hideSoftInput();
         if (!moveToFinalScrollerPosition(mFlingScroller)) {
@@ -888,7 +888,7 @@ void NumberPicker::postChangeCurrentByOneFromLongPress(bool increment, long dela
     if(mChangeCurrentByOneFromLongPressCommand!=nullptr)
         removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
 
-    mChangeCurrentByOneFromLongPressCommand=[this,increment](){
+        mChangeCurrentByOneFromLongPressCommand=[this,increment](){
         changeValueByOne(increment);
         postDelayed(mChangeCurrentByOneFromLongPressCommand, mLongPressUpdateInterval);
     };
@@ -903,13 +903,28 @@ void NumberPicker::removeChangeCurrentByOneFromLongPress(){
 }
 
 void NumberPicker::removeBeginSoftInputCommand(){
+    if(mBeginSoftInputOnLongPressCommand!=nullptr){
+        removeCallbacks(mBeginSoftInputOnLongPressCommand);
+        mBeginSoftInputOnLongPressCommand=nullptr;
+    }
 }
+
+void NumberPicker::postBeginSoftInputOnLongPressCommand(){
+    if(mBeginSoftInputOnLongPressCommand!=nullptr)
+        removeCallbacks(mBeginSoftInputOnLongPressCommand);
+    mBeginSoftInputOnLongPressCommand=[this](){
+        performLongClick();
+    };
+    postDelayed(mBeginSoftInputOnLongPressCommand,ViewConfiguration::getLongPressTimeout());
+}
+
 
 void NumberPicker::removeAllCallbacks(){
     if (mChangeCurrentByOneFromLongPressCommand != nullptr) {
         removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
         mChangeCurrentByOneFromLongPressCommand =nullptr;
     }
+    removeBeginSoftInputCommand();
     pshCancel();
 }
 

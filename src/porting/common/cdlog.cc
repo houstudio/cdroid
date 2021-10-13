@@ -11,7 +11,9 @@
 #include <iomanip>
 #include <unistd.h>
 #include <limits.h>
+#ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
 #include <cxxabi.h>
 #if defined(__clang__) || defined(__APPLE__)
 #include <sys/ucontext.h>
@@ -184,6 +186,7 @@ FatalMessage::FatalMessage(const std::string& file, const int line, const std::s
  :LogMessage(file,line,function,LOG_FATAL),signal_(signal){
    const size_t max_dump_size = 50;
    void* dump[max_dump_size];
+#ifdef HAVE_EXECINFO_H
    size_t size = backtrace(dump, max_dump_size);
    char** messages = backtrace_symbols(dump, size); // overwrite sigaction with caller's address
 
@@ -197,6 +200,7 @@ FatalMessage::FatalMessage(const std::string& file, const int line, const std::s
    } // END: for(size_t idx = 1; idx < size && messages != nullptr; ++idx)
    free(messages);
    stream_<<oss.str();
+#endif
    //std::cout<<log_entry_<<std::endl;
 }
 FatalMessage::~FatalMessage(){

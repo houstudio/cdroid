@@ -1165,6 +1165,7 @@ bool View::isVerticalScrollBarHidden()const{
 
 void View::computeScroll(){
 }
+
 bool View::isHorizontalScrollBarEnabled()const{
     return (mViewFlags & SCROLLBARS_HORIZONTAL) == SCROLLBARS_HORIZONTAL;
 }

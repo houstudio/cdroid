@@ -18,12 +18,12 @@ Scroller::Scroller(Context* context):Scroller(context,nullptr,true){
 Scroller::Scroller(Context* context, Interpolator* interpolator, bool flywheel) {
     if( (SPLINE_POSITION[NB_SAMPLES]!=1.f) || (SPLINE_TIME[NB_SAMPLES]!=1.f) )
         sInit();
-    mStartX =  mStartY =0;
-    mFinalX =  mFinalY =0;
-    mMinX = mMinY = 0;
-    mMaxX = mMaxY = 0;
+    mStartX= mStartY =0;
+    mFinalX= mFinalY =0;
+    mMinX  = mMinY = 0;
+    mMaxX  = mMaxY = 0;
     mCurrX = mCurrY = 0;
-    mDeltaX = mDeltaY =.0f;
+    mDeltaX= mDeltaY=.0f;
     mStartTime= 0;
     mDuration = 1;
     mDistance = 0;
@@ -169,7 +169,6 @@ bool Scroller::computeScrollOffset() {
             if (mCurrX == mFinalX && mCurrY == mFinalY) {
                 mFinished = true;
             }
-
             break;
         }
     }else {

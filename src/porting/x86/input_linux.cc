@@ -1,4 +1,24 @@
+#ifndef HAVE_INPUT_H
 #include<linux/input.h>
+#else
+#define EV_SYN                  0x00
+#define EV_KEY                  0x01
+#define EV_REL                  0x02
+#define EV_ABS                  0x03
+#define EV_MSC                  0x04
+#define EV_SW                   0x05
+#define EV_LED                  0x11
+#define EV_SND                  0x12
+#define EV_REP                  0x14
+#define EV_FF                   0x15
+#endif
+#ifdef HAVE_POLL_H
+#include<poll.h>
+#endif
+#ifdef HAVE_EPOLL_H
+#include<sys/epoll.h>
+#endif
+#include<cdtypes.h>
 #include<cdinput.h>
 #include<map>
 #include<iostream>
@@ -15,8 +35,6 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
-#include <sys/epoll.h>
-#include <sys/inotify.h>
 
 typedef struct{
    int maxfd;
@@ -29,7 +47,7 @@ typedef struct{
 }INPUTDEVICE;
 
 static INPUTDEVICE dev={0,0};
-
+#ifdef HAVE_INPUT_H
 static int test_bit(int nr, uint32_t * addr){
     int mask;
     addr += nr >> 5;
@@ -56,7 +74,7 @@ static int getfeatures(int fd){
    LOGD("fd:%d feature:%s source=%x",fd,features,source);
    return source;
 }
-
+#endif
 INT InputInit(){
     if(dev.pipe[0]>0)
         return 0;
@@ -65,9 +83,8 @@ INT InputInit(){
     dev.fds[dev.nfd++]=dev.pipe[0];
     dev.maxfd=dev.pipe[0];
     int rc=fcntl(dev.pipe[0],F_SETFL,O_NONBLOCK);
-    dev.inotify=inotify_init();
     LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d",__cplusplus,dev.nfd,rc,dev.fds[0]);
-
+#ifdef HAVE_INPUT_H
     struct dirent **namelist=nullptr;
     int nf=scandir("/dev/input",&namelist,[&dev](const struct dirent * ent)->int{
         char fname[256];
@@ -86,19 +103,22 @@ INT InputInit(){
     },nullptr);
     free(namelist);
     LOGD(".....end nglInputInit maxfd=%d numfd=%d\r\n",dev.maxfd,nf);
+#endif
     return 0;
 }
 
 INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
-    struct input_id id;
     int rc1,rc2;
     memset(devinfo->name,0,sizeof(devinfo->name));
+#ifdef HAVE_INPUT_H
+    struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
     LOGD_IF(rc2,"fd=%d[%s] rc1=%d,rc2=%d",device,devinfo->name,rc1,rc2);
     devinfo->source=getfeatures(device);
     devinfo->product=id.product;
     devinfo->vendor=id.vendor;
+#endif
     switch(device){
     case INJECTDEV_PTR:
          strcpy(devinfo->name,"Mouse-Inject");
@@ -119,13 +139,14 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
 
 INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout){
     const char*evtnames[]={"SYN","KEY","REL","ABS","MSC","SW"};
-    struct timeval tv;
+    struct timespec tv;
     INPUTEVENT*events=(INPUTEVENT*)malloc(count*sizeof(INPUTEVENT));
     memcpy(events,es,count*sizeof(INPUTEVENT));
-    gettimeofday(&tv,NULL);
+    //gettimeofday(&tv,NULL);
+    clock_gettime(CLOCK_MONOTONIC,&tv);
     for(int i=0;i<count;i++){
         events[i].tv_sec=tv.tv_sec;
-        events[i].tv_usec=tv.tv_usec;
+        events[i].tv_usec=tv.tv_nsec/1000;
     }
     if(dev.pipe[1]>0){
        int rc=write(dev.pipe[1],events,count*sizeof(INPUTEVENT));
@@ -138,7 +159,9 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout){
 INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
     int rc,ret=0;
     struct timeval tv;
+#ifdef HAVE_INPUT_H
     struct input_event events[64];
+#endif
     INPUTEVENT*e=outevents;
     fd_set rfds;
     static const char*type2name[]={"SYN","KEY","REL","ABS","MSC","SW"};
@@ -155,6 +178,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
     }
     for(int i=0;i<dev.nfd;i++){
         if(!FD_ISSET(dev.fds[i],&rfds))continue;
+#ifdef HAVE_INPUT_H
         if(dev.fds[i]!=dev.pipe[0]){
            rc=read(dev.fds[i],events, (max-ret)*sizeof(struct input_event));
            for(int j=0;j<rc/sizeof(struct input_event);j++,e++){
@@ -163,7 +187,9 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%x,%x,%x ",dev.fds[i],
                   type2name[e->type],e->type,e->code,e->value);
            }
-        }else{//for pipe
+        }else
+#endif
+	{//for pipe
            rc=read(dev.fds[i],e, (max-ret)*sizeof(INPUTEVENT));
            e+=rc/sizeof(INPUTEVENT);
         }

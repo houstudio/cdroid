@@ -1,7 +1,29 @@
 #ifndef __ALOOPER_H__
 #define __ALOOPER_H__
 #include <functional>
+#define NOPOLL 0
+#define POLL   1
+#define EPOLL  2
+#define USED_POLL 0//POLL
+#if USED_POLL!=EPOLL
+typedef union epoll_data{
+  void *ptr;
+  int fd;
+  uint32_t u32;
+  uint64_t u64;
+} epoll_data_t;
+
+struct epoll_event{
+  uint32_t events;      /* Epoll events */
+  epoll_data_t data;    /* User data variable */
+};
+#endif
+#if USED_POLL == POLL
+#include <poll.h>
+#elif USED_POLL ==EPOLL
 #include <sys/epoll.h>
+#endif
+
 #include <map>
 #include <vector>
 #include <mutex>

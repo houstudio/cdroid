@@ -1,5 +1,6 @@
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <textutils.h>
 #include <keyboard.h>
 #include <tokenizer.h>
 #include <json/json.h>
@@ -45,6 +46,10 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
     repeatable= attrs.getBoolean("isRepeatable",false);
     sticky    = attrs.getBoolean("isSticky",false);
     modifier  = attrs.getBoolean("isModifier",false);
+    if(codes.size()==0&&label.empty()==false){
+        std::wstring ws=TextUtils::utf8tounicode(label);
+        codes.push_back(ws[0]);
+    }
 }
 
 Keyboard::Key::Key(void*p){

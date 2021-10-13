@@ -38,6 +38,7 @@ private:
     ImageButton* mDecrementButton;
     EditText* mInputText;
     Runnable mChangeCurrentByOneFromLongPressCommand;
+    Runnable mBeginSoftInputOnLongPressCommand;
     int mSelectionDividersDistance;
     int mMinHeight;
     int mMaxHeight;
@@ -120,6 +121,7 @@ private:
     void postChangeCurrentByOneFromLongPress(bool increment, long delayMillis);
     void removeChangeCurrentByOneFromLongPress();
     void removeBeginSoftInputCommand();
+    void postBeginSoftInputOnLongPressCommand();
     void removeAllCallbacks();
     int getSelectedPos(const std::string& value);
     void showSoftInput();

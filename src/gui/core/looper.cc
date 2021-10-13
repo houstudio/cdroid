@@ -10,6 +10,17 @@
 #define DEBUG_POLL_AND_WAKE 0
 #define DEBUG_CALLBACKS 0
 
+#if USED_POLL == NOPOLL
+#define EPOLLIN  1
+#define EPOLLOUT 4
+#define EPOLLERR 8
+#define EPOLLHUP 0x10
+#elif USED_POLL==POLL
+#define EPOLLIN  POLLIN
+#define EPOLLOUT POLLOUT
+#define EPOLLERR POLLERR
+#define EPOLLHUP POLLHUP
+#endif
 namespace cdroid{
 
 static constexpr int EPOLL_SIZE_HINT = 8;
@@ -17,16 +28,10 @@ static constexpr int EPOLL_SIZE_HINT = 8;
 static constexpr int EPOLL_MAX_EVENTS = 16;
 #define toMillisecondTimeoutDelay(n,p) ((n)-(p))
 
-template<class T>
-static const void * addr_of(T &&obj) noexcept{
-   struct A {};
-   return &reinterpret_cast<const A &>(obj);
-}
-
 void Looper::Looper::Request::initEventItem(struct epoll_event* eventItem) const{
     int epollEvents = 0;
     if (events & EVENT_INPUT) epollEvents |= EPOLLIN;
-    if (events & EVENT_OUTPUT) epollEvents |= EPOLLOUT;
+    if (events & EVENT_OUTPUT)epollEvents |= EPOLLOUT;
 
     memset(eventItem, 0, sizeof(epoll_event)); // zero out unused members of data field union
     eventItem->events = epollEvents;
@@ -62,6 +67,7 @@ bool Looper::getAllowNonCallbacks() const {
 
 void Looper::rebuildEpollLocked() {
     // Close old epoll instance if we have one.
+#if USED_POLL == EPOLL
     if (mEpollFd >= 0) {
         LOGV("%p ~ rebuildEpollLocked - rebuilding epoll set", this);
         close(mEpollFd);
@@ -70,23 +76,25 @@ void Looper::rebuildEpollLocked() {
     // Allocate the new epoll instance and register the wake pipe.
     mEpollFd = epoll_create(EPOLL_SIZE_HINT);
     LOGE_IF(mEpollFd < 0, "Could not create epoll instance: %s", strerror(errno));
-
+#endif
     struct epoll_event eventItem;
     memset(& eventItem, 0, sizeof(epoll_event)); // zero out unused members of data field union
-    eventItem.events = EPOLLIN;
+    eventItem.events  = EPOLLIN;
     eventItem.data.fd = mWakeEventFd;
+#if USED_POLL == EPOLL
     int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, & eventItem);
     LOGE_IF(result != 0, "Could not add wake event fd to epoll instance: %s",strerror(errno));
-
+#endif
     for (auto it=mRequests.begin();it!=mRequests.end(); it++) {
         const Request& request = it->second;
         struct epoll_event eventItem;
         request.initEventItem(&eventItem);
-
+#if USED_POLL == EPOLL
         int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
         if (epollResult < 0) {
             LOGE("Error adding epoll events for fd %d while rebuilding epoll set: %s",request.fd, strerror(errno));
         }
+#endif
     }
 }
 
@@ -133,7 +141,7 @@ int Looper::pollInner(int timeoutMillis) {
 
     // Adjust the timeout based on when the next message is due.
     if (timeoutMillis != 0 && mNextMessageUptime != LLONG_MAX) {
-        nsecs_t now = SystemClock::uptimeMillis();//systemTime(SYSTEM_TIME_MONOTONIC);
+        nsecs_t now = SystemClock::uptimeMillis();
         int messageTimeoutMillis = toMillisecondTimeoutDelay(now, mNextMessageUptime);
         if (messageTimeoutMillis >= 0
                 && (timeoutMillis < 0 || messageTimeoutMillis < timeoutMillis)) {
@@ -156,10 +164,27 @@ int Looper::pollInner(int timeoutMillis) {
     removeEventHandlers();
     // We are about to idle.
     mPolling = true;
-
+    int j,eventCount; 
     struct epoll_event eventItems[EPOLL_MAX_EVENTS];
-    int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);
-
+#if USED_POLL == EPOLL
+    eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);
+#elif USED_POLL == POLL
+    std::vector<struct pollfd>pollfds;
+    for (auto r:mRequests){
+        struct pollfd pfd;
+        pfd.fd=r.second.fd;
+        pfd.events=r.second.events;
+        pollfds.push_back(pfd);
+    }
+    eventCount=poll(pollfds.data(),pollfds.size(),timeoutMillis);
+    j=0;
+    for(auto f:pollfds){
+        if(f.revents==0)continue;
+        eventItems[j].data.fd=f.fd;
+        eventItems[j].events=f.revents;
+		j++;
+    }
+#endif
     // No longer idling.
     mPolling = false;
 
@@ -203,14 +228,14 @@ int Looper::pollInner(int timeoutMillis) {
                 LOGW("Ignoring unexpected epoll events 0x%x on wake event fd.", epollEvents);
             }
         } else {
-            auto it= mRequests.find(fd);//indexOfKey(fd);
-            if (it!=mRequests.end()){//requestIndex >= 0) {
+            auto it= mRequests.find(fd);
+            if (it!=mRequests.end()){
                 int events = 0;
                 if (epollEvents & EPOLLIN) events |= EVENT_INPUT;
                 if (epollEvents & EPOLLOUT) events |= EVENT_OUTPUT;
                 if (epollEvents & EPOLLERR) events |= EVENT_ERROR;
                 if (epollEvents & EPOLLHUP) events |= EVENT_HANGUP;
-                pushResponse(events, it->second);//mRequests.at(requestIndex));
+                pushResponse(events, it->second);
             } else {
                 LOGW("Ignoring unexpected epoll events 0x%x on fd %d that is "
                         "no longer registered.", epollEvents, fd);
@@ -289,7 +314,7 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
         } while (result == POLL_CALLBACK);
         return result;
     } else {
-        nsecs_t endTime =SystemClock::uptimeMillis()+timeoutMillis;// systemTime(SYSTEM_TIME_MONOTONIC)  + milliseconds_to_nanoseconds(timeoutMillis);
+        nsecs_t endTime =SystemClock::uptimeMillis()+timeoutMillis;
 
         for (;;) {
             int result = pollOnce(timeoutMillis, outFd, outEvents, outData);
@@ -297,7 +322,7 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
                 return result;
             }
 
-            nsecs_t now = SystemClock::uptimeMillis();//systemTime(SYSTEM_TIME_MONOTONIC);
+            nsecs_t now = SystemClock::uptimeMillis();
             timeoutMillis = toMillisecondTimeoutDelay(now, endTime);
             if (timeoutMillis == 0) {
                 return POLL_TIMEOUT;
@@ -368,13 +393,16 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
 
         auto itfd = mRequests.find(fd);//indexOfKey(fd);
         if (itfd==mRequests.end()) {
+#if USED_POLL ==EPOLL     
             int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, & eventItem);
             if (epollResult < 0) {
                 LOGE("Error adding epoll events for fd %d: %s", fd, strerror(errno));
                 return -1;
             }
+#endif
             mRequests[fd]=request;//.add(fd, request);
         } else {
+#if USED_POLL ==EPOLL
             int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
             if (epollResult < 0) {
                 if (errno == ENOENT) {
@@ -404,6 +432,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
                     return -1;
                 }
             }
+#endif
             itfd->second=request;//mRequests.replaceValueAt(requestIndex, request);
         }
     } // release lock
@@ -432,8 +461,8 @@ int Looper::removeFd(int fd, int seq) {
 
         // Always remove the FD from the request map even if an error occurs while
         // updating the epoll set so that we avoid accidentally leaking callbacks.
-        mRequests.erase(itr);//removeItemsAt(requestIndex);
-
+        mRequests.erase(itr);
+#if USED_POLL ==EPOLL
         int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, NULL);
         if (epollResult < 0) {
             if (seq != -1 && (errno == EBADF || errno == ENOENT)) {
@@ -461,6 +490,7 @@ int Looper::removeFd(int fd, int seq) {
                 return -1;
             }
         }
+#endif
     } // release lock
     return 1;
 }
@@ -547,7 +577,7 @@ void Looper::removeMessages(const MessageHandler* handler, int what) {
     { // acquire lock
         std::lock_guard<std::mutex>_l(mLock);
         for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
-            LOGD("addr=%p,%p what=%d,%d",addr_of(it->handler),addr_of(handler),it->message.what,what);
+            LOGD("what=%d,%d",it->message.what,what);
             if((it->handler==handler) && (it->message.what==what)){
                 it=mMessageEnvelopes.erase(it);
             }
