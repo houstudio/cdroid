@@ -97,7 +97,7 @@ TEST_F(WINDOW,inflate){
     App app;
     Window*w=new Window(0,0,800,600);
     app.setName("system");
-    LayoutInflater::from(&app)->inflate("layout/window.xml");
+    LayoutInflater::from(&app)->inflate("layout/window.xml",nullptr);
     app.exec();
 }
 
