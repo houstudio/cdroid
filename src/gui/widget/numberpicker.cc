@@ -87,7 +87,6 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):LinearLayo
 
 void NumberPicker::onIncDecClick(View&v){
     hideSoftInput();
-    LOGD("onclick %p",&v);
     mInputText->clearFocus();
     if (&v == mIncrementButton) {
         changeValueByOne(true);
@@ -293,7 +292,6 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
             //VelocityTracker* velocityTracker = mVelocityTracker;
             mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
             int initialVelocity = (int) mVelocityTracker->getYVelocity();
-            LOGD("initialVelocity=%d mMinimumFlingVelocity=%d",initialVelocity,mMinimumFlingVelocity);
             if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
                 fling(initialVelocity);
                 onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
@@ -429,6 +427,7 @@ void NumberPicker::scrollBy(int x, int y){
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
+
     while (mCurrentScrollOffset - mInitialScrollOffset < -mSelectorTextGapHeight) {
         mCurrentScrollOffset += mSelectorElementHeight;
         incrementSelectorIndices(selectorIndices);
@@ -727,7 +726,6 @@ void NumberPicker::setValueInternal(int current, bool notifyChng){
 }
 
 void NumberPicker::changeValueByOne(bool increment){
-    LOGD("mHasSelectorWheel=%d mValue=%d increment=%d",mHasSelectorWheel,mValue,increment);
     if (mHasSelectorWheel) {
         hideSoftInput();
         if (!moveToFinalScrollerPosition(mFlingScroller)) {
@@ -794,7 +792,6 @@ void NumberPicker::fling(int velocityY) {
     } else {
         mFlingScroller->fling(0, INT_MAX, 0, velocityY, 0, 0, 0,INT_MAX);
     }
-    LOGV("velocityY=%d",velocityY);
     invalidate();
 }
 

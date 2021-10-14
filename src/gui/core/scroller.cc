@@ -1,6 +1,7 @@
 #include <scroller.h>
 #include <systemclock.h>
 #include <viewconfiguration.h>
+#include <animation/animationutils.h>
 #include <cdlog.h>
 
 namespace cdroid{
@@ -132,7 +133,7 @@ bool Scroller::computeScrollOffset() {
     float x,t,distanceCoef,velocityCoef;
     if (mFinished)     return false;
 
-    int timePassed = (int)(SystemClock::uptimeMillis() - mStartTime);
+    int timePassed = (int)(AnimationUtils::currentAnimationTimeMillis() - mStartTime);
     
     if (timePassed < mDuration) {
         switch (mMode) {
@@ -157,12 +158,14 @@ bool Scroller::computeScrollOffset() {
 
             mCurrVelocity = velocityCoef * mDistance / mDuration * 1000.0f;
                 
-            mCurrX = mStartX + std::round(distanceCoef * (mFinalX - mStartX));
+            mCurrX = mStartX + (int)(distanceCoef * (mFinalX - mStartX));//std::round(distanceCoef * (mFinalX - mStartX));
             // Pin to mMinX <= mCurrX <= mMaxX
             mCurrX = std::min(mCurrX, mMaxX);
             mCurrX = std::max(mCurrX, mMinX);
                 
-            mCurrY = mStartY + std::round(distanceCoef * (mFinalY - mStartY));
+            mCurrY = mStartY + (int)(distanceCoef * (mFinalY - mStartY));//std::round(distanceCoef * (mFinalY - mStartY));
+			//std::round willcause NumberPicker::scrollBy enter infinity in its while loop
+            // Pin to mMinX <= mCurrX <= mMaxX
             // Pin to mMinY <= mCurrY <= mMaxY
             mCurrY = std::min(mCurrY, mMaxY);
             mCurrY = std::max(mCurrY, mMinY);
@@ -187,7 +190,7 @@ void Scroller::startScroll(int startX, int startY, int dx, int dy, int duration)
     mMode = SCROLL_MODE;
     mFinished = false;
     mDuration = duration;
-    mStartTime = SystemClock::uptimeMillis();//AnimationUtils.currentAnimationTimeMillis();
+    mStartTime = AnimationUtils::currentAnimationTimeMillis();
     mStartX = startX;
     mStartY = startY;
     mFinalX = startX + dx;
@@ -245,7 +248,7 @@ void Scroller::fling(int startX, int startY, int velocityX, int velocityY,
      
     mVelocity = velocity;
     mDuration = getSplineFlingDuration(velocity);
-    mStartTime = SystemClock::uptimeMillis();//AnimationUtils.currentAnimationTimeMillis();
+    mStartTime = AnimationUtils::currentAnimationTimeMillis();
     mStartX = startX;
     mStartY = startY;
 
@@ -303,8 +306,7 @@ void Scroller::extendDuration(int extend) {
  *
  * @return The elapsed time in milliseconds.*/
 int Scroller::timePassed()const{
-    //AnimationUtils.currentAnimationTimeMillis() 
-    return (int)(SystemClock::uptimeMillis()- mStartTime);
+    return (int)(AnimationUtils::currentAnimationTimeMillis()- mStartTime);
 }
 
 /**

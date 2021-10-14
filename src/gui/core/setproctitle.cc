@@ -40,7 +40,7 @@
 #define HAVE_SETPROCTITLE (defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__)
 #endif
 #if !HAVE_SETPROCTITLE
-#if (defined __linux || defined __APPLE__)
+#if (defined __linux || defined __APPLE__ || defined __CYGWIN__)
 
 extern char **environ;
 static struct {
@@ -76,7 +76,7 @@ static int spt_clearenv(void) {
 #else
   extern char **environ;
   static char **tmp;
-  if (!(tmp = malloc(sizeof *tmp)))
+  if (!(tmp = (char**)malloc(sizeof *tmp)))
     return errno;
   tmp[0] = NULL;
   environ = tmp;
@@ -189,4 +189,7 @@ error:
   SPT.error = error;
 } /* setproctitle() */
 #endif /* __linux || __APPLE__ */
+#else //if !HAVE_SETPROCTITLE
+void spt_init(int,char*[]){
+}
 #endif /* !HAVE_SETPROCTITLE */
