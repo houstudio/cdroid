@@ -13,10 +13,9 @@ private:
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getViewInflater(const std::string&);
+    View* inflate(std::istream&stream,ViewGroup*root);
     View* inflate(const std::string&resource,ViewGroup* root);
     View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot);
-    View* inflate(std::istream&stream);
-    View* inflate(const std::string&res);
 };
 
 }//endof namespace

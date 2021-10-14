@@ -24,9 +24,8 @@ private:
     static constexpr int BUTTON_DECREMENT =2;
     static constexpr int MODE_PRESS =1;
     static constexpr int MODE_TAPPED=2;
-    static constexpr int SELECTOR_WHEEL_ITEM_COUNT =3;
+    static constexpr int DEFAULT_SELECTOR_WHEEL_ITEM_COUNT =3;
     static constexpr int DEFAULT_LONG_PRESS_UPDATE_INTERVAL =300;
-    static constexpr int SELECTOR_MIDDLE_ITEM_INDEX = SELECTOR_WHEEL_ITEM_COUNT / 2;
     static constexpr int SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT =8;
     static constexpr int SELECTOR_ADJUSTMENT_DURATION_MILLIS =800;
     static constexpr int SNAP_SCROLL_DURATION =300;
@@ -54,7 +53,8 @@ private:
     OnValueChangeListener mOnValueChangeListener;
     Formatter mFormatter;
     OnScrollListener mOnScrollListener;
-    std::vector<int>mSelectorIndices;//[SELECTOR_WHEEL_ITEM_COUNT];
+    int mMiddleItemIndex;
+    std::vector<int>mSelectorIndices;
     long mLongPressUpdateInterval;
     std::map<int,std::string> mSelectorIndexToStringCache;
     int mSelectorElementHeight;
@@ -152,7 +152,7 @@ public:
     void scrollBy(int x, int y)override;
     int getSolidColor()const;
     void setOnValueChangedListener(OnValueChangeListener onValueChangedListener);
-    //void setOnScrollListener(OnScrollListener onScrollListener);
+    void setOnScrollListener(const OnScrollListener& onScrollListener);
     void setFormatter(Formatter formatter);
     void setValue(int value);
     int getValue()const;
@@ -171,6 +171,7 @@ public:
     bool getWrapSelectorWheel()const;
     void setWrapSelectorWheel(bool);
     void setOnLongPressUpdateInterval(long);
+    void setSelector(int items,int focused=-1);
 };
     
 }//namespace

@@ -9,6 +9,7 @@ namespace cdroid{
 #define DECLAREPARSER(component) { #component ,[](Context*ctx,const AttributeSet&atts)->View*{return new component(ctx,atts);}}
 std::map<const std::string,LayoutInflater::ViewInflater>LayoutInflater::mViewInflaters={
     DECLAREPARSER(View),
+    DECLAREPARSER(ViewGroup),
     DECLAREPARSER(TextView),
     DECLAREPARSER(ProgressBar),
     DECLAREPARSER(SeekBar),
@@ -24,6 +25,7 @@ std::map<const std::string,LayoutInflater::ViewInflater>LayoutInflater::mViewInf
     DECLAREPARSER(AbsoluteLayout),
     DECLAREPARSER(FrameLayout),
     DECLAREPARSER(TableLayout),
+    
     DECLAREPARSER(TableRow),
     DECLAREPARSER(Window),
 };
@@ -41,24 +43,20 @@ LayoutInflater::ViewInflater LayoutInflater::getViewInflater(const std::string&n
     return (it!=mViewInflaters.end())?it->second:nullptr;
 }
 
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root){
-    return inflate(resource,root,root!=nullptr);
-}
-
 View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot){
-    View*v=inflate(resource);
+    View*v=inflate(resource,root);
     if(root && attachToRoot) root->addView(v);
     return v;
 }
 
-View* LayoutInflater::inflate(const std::string&res){
+View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root){
     View*v=nullptr;
     if(mContext){
-        std::unique_ptr<std::istream>stream=mContext->getInputStream(res);
-        if(stream && stream->good()) v=inflate(*stream);
+        std::unique_ptr<std::istream>stream=mContext->getInputStream(resource);
+        if(stream && stream->good()) v=inflate(*stream,root);
     }else{
-        std::ifstream fin(res);
-        v=inflate(fin);
+        std::ifstream fin(resource);
+        v=inflate(fin,root);
     }
     return v;
 }
@@ -66,23 +64,19 @@ View* LayoutInflater::inflate(const std::string&res){
 typedef struct{
     Context*ctx;
     XML_Parser parser;
-    std::string ns;
-    std::string nsuri;
-    std::vector<View*>views;//the first element is rootviewsetted by inflate
+    std::vector<View*>views;//the first element is rootview setted by inflate
     View*rootView;
     AttributeSet rootAttrs;
 }WindowParserData;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     WindowParserData*pd=(WindowParserData*)userData;
-    AttributeSet atts;//(satts);
+    AttributeSet atts(satts);
     LayoutInflater::ViewInflater inflater=LayoutInflater::getViewInflater(name);
-    for(int i=0;satts[i];i+=2){
-        atts.add(satts[i]+pd->nsuri.length()+1,satts[i+1]);
-    }
     ViewGroup*parent=nullptr;
     if(pd->views.size())
         parent=dynamic_cast<ViewGroup*>(pd->views.back());
+    if(strcmp(name,"merge")==0)return;
     if(inflater==nullptr){
         XML_StopParser(pd->parser,false);
         LOGE("Unknown Parser for %s",name);
@@ -104,30 +98,20 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 static void endElement(void *userData, const XML_Char *name){
     WindowParserData*pd=(WindowParserData*)userData;
     ViewGroup*p=dynamic_cast<ViewGroup*>(pd->views.back());
+    if(strcmp(name,"merge")==0)return;
     pd->views.pop_back();
     pd->rootView=p;
 }
 
-static void NamespaceStartHandler(void *userData,const XML_Char *prefix,const XML_Char *uri){
-    LOGD("prefix=%s,uri=%s",prefix,uri);
-    WindowParserData*pd=(WindowParserData*)userData;
-    pd->ns=prefix;
-    pd->nsuri=uri;
-}
-
-static void NamespaceEndHandler (void *userData,const XML_Char *prefix){
-    LOGD("prefix=%s",prefix);
-}
-
-View* LayoutInflater::inflate(std::istream&stream){
+View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
     int len=0;
     char buf[256];
-    XML_Parser parser=XML_ParserCreateNS(NULL,':');
+    XML_Parser parser=XML_ParserCreate(nullptr);
     WindowParserData pd={mContext,parser};
     ULONGLONG tstart=SystemClock::uptimeMillis();
+    pd.rootView=root;
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startElement, endElement);
-    XML_SetNamespaceDeclHandler(parser,NamespaceStartHandler,NamespaceEndHandler);
     do {
         stream.read(buf,sizeof(buf));
         len=stream.gcount();

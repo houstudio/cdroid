@@ -4,7 +4,7 @@
 #define NOPOLL 0
 #define POLL   1
 #define EPOLL  2
-#define USED_POLL 0//POLL
+#define USED_POLL EPOLL
 #if USED_POLL!=EPOLL
 typedef union epoll_data{
   void *ptr;

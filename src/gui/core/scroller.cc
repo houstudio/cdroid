@@ -158,13 +158,13 @@ bool Scroller::computeScrollOffset() {
 
             mCurrVelocity = velocityCoef * mDistance / mDuration * 1000.0f;
                 
-            mCurrX = mStartX + (int)(distanceCoef * (mFinalX - mStartX));//std::round(distanceCoef * (mFinalX - mStartX));
+            mCurrX = mStartX + (int)std::round(distanceCoef * (mFinalX - mStartX));
             // Pin to mMinX <= mCurrX <= mMaxX
             mCurrX = std::min(mCurrX, mMaxX);
             mCurrX = std::max(mCurrX, mMinX);
                 
-            mCurrY = mStartY + (int)(distanceCoef * (mFinalY - mStartY));//std::round(distanceCoef * (mFinalY - mStartY));
-			//std::round willcause NumberPicker::scrollBy enter infinity in its while loop
+            mCurrY = mStartY + (int)std::round(distanceCoef * (mFinalY - mStartY));
+            //std::round must converto int ,otherwise willcause NumberPicker::scrollBy enter infinity in its while loop
             // Pin to mMinX <= mCurrX <= mMaxX
             // Pin to mMinY <= mCurrY <= mMaxY
             mCurrY = std::min(mCurrY, mMaxY);

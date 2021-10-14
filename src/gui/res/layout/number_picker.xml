@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageButton id="1@+id/increment"
+        layout_width="fill_parent"
+        layout_height="wrap_content"
+        background="cdroid:drawable/numberpicker_up_btn.xml"
+        paddingTop="22dip"
+        paddingBottom="22dip"
+        contentDescription="@string/number_picker_increment_button" />
+    <EditText
+        id="0@+id/numberpicker_input"
+        layout_width="fill_parent"
+        layout_height="wrap_content"
+        textAppearance="@style/TextAppearance.Large.Inverse.NumberPickerInputText"
+        gravity="center"
+        singleLine="true"
+        background="cdroid:drawable/numberpicker_input.xml" />
+    <ImageButton id="2@+id/decrement"
+        layout_width="fill_parent"
+        layout_height="wrap_content"
+        background="cdroid:drawable/numberpicker_down_btn.xml"
+        paddingTop="22dip"
+        paddingBottom="22dip"
+        contentDescription="@string/number_picker_decrement_button" />
+</merge>

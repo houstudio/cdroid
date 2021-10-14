@@ -1,4 +1,5 @@
 #include <widget/numberpicker.h>
+#include <widget/layoutinflater.h>
 #include <color.h>
 #include <textutils.h>
 #include <cdlog.h>
@@ -10,22 +11,28 @@ namespace cdroid{
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
     setOrientation(VERTICAL);//HORIZONTAL);
+
+    LayoutInflater*inflater=LayoutInflater::from(mContext);
+    inflater->inflate("cdroid:layout/number_picker.xml",this);
+    delete inflater;
    
     if(!mHasSelectorWheel){
-        mDecrementButton=new ImageButton(30,20);
+        mDecrementButton=(ImageButton*)findViewById(BUTTON_DECREMENT);
         mDecrementButton->setMinimumHeight(20);
         addView(mDecrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
         mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     }
    
-    mInputText =new EditText("123",20,20);
-    mInputText->setGravity(Gravity::CENTER);
-    mInputText->setTextSize(24);
-    addView(mInputText,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
+    mInputText =(EditText*)findViewById(0);//new EditText("123",20,20);
+    if(mInputText){
+        mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
+        mInputText->setTextSize(24);
+        addView(mInputText,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
+    }
 
     if(!mHasSelectorWheel){
-        mIncrementButton=new ImageButton(30,20);
+        mIncrementButton=(ImageButton*)findViewById(BUTTON_INCREMENT);
         mIncrementButton->setMinimumHeight(20);
         addView(mIncrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
         mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
@@ -57,12 +64,14 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):LinearLayo
                 && mMinWidth > mMaxWidth) {
         throw "minWidth > maxWidth";
     }
-
+    LayoutInflater*inflater=LayoutInflater::from(mContext);
+    inflater->inflate("cdroid:layout/number_picker.xml",this);
+    delete inflater;
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     setWillNotDraw(!mHasSelectorWheel);
 
     if (!mHasSelectorWheel) {
-        mIncrementButton = nullptr;//findViewById(R.id.increment);
+        mIncrementButton = (ImageButton*)findViewById(BUTTON_INCREMENT);//R.id.increment);
         mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     } else {
@@ -71,13 +80,14 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):LinearLayo
 
     // decrement button
     if (!mHasSelectorWheel) {
-        mDecrementButton = nullptr;//findViewById(R.id.decrement);
+        mDecrementButton = (ImageButton*)findViewById(BUTTON_DECREMENT);//R.id.decrement);
         mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     } else {
         mDecrementButton = nullptr;
     }
 
+    mInputText =(EditText*)findViewById(0);//R.id.numberpicker_input
     ViewConfiguration configuration = ViewConfiguration::get(context);
     mTextSize = (int) mInputText->getTextSize();
 
@@ -117,13 +127,13 @@ void NumberPicker::initView(){
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mTextSize = 24;
     mSolidColor =0xFF222222;
-    mSelectionDivider = new ColorDrawable(0xFF886644);
+    mSelectionDivider = nullptr;
     mVirtualButtonPressedDrawable =nullptr;
     mLastHandledDownDpadKeyCode =-1;
     mHasSelectorWheel = true;
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred =true;
-    mSelectionDividerHeight =1;
+    mSelectionDividerHeight = UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
     mPreviousScrollerY   =0;
     mCurrentScrollOffset =0;
     mInitialScrollOffset =0;
@@ -132,7 +142,7 @@ void NumberPicker::initView(){
     mMaxHeight = SIZE_UNSPECIFIED;
     mMinWidth  = SIZE_UNSPECIFIED;
     mMaxWidth  = SIZE_UNSPECIFIED;
-    mSelectionDividersDistance =26;
+    mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
     mVelocityTracker=nullptr;
 
     mTouchSlop = config.getScaledTouchSlop();
@@ -141,7 +151,7 @@ void NumberPicker::initView(){
     mFlingScroller = new Scroller(getContext(), nullptr, true);
     mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    mSelectorIndices.resize(SELECTOR_WHEEL_ITEM_COUNT);
+    setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT,-1);
 }
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
     if (!mHasSelectorWheel) {
@@ -304,8 +314,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                         mPerformClickOnTap = false;
                         performClick();
                     } else {
-                        int selectorIndexOffset = (eventY / mSelectorElementHeight)
-                                - SELECTOR_MIDDLE_ITEM_INDEX;
+                        int selectorIndexOffset = (eventY / mSelectorElementHeight) - mMiddleItemIndex;
                         if (selectorIndexOffset > 0) {
                             changeValueByOne(true);
                             pshButtonTapped(BUTTON_INCREMENT);
@@ -409,12 +418,12 @@ void NumberPicker::scrollBy(int x, int y){
     std::vector<int>&selectorIndices = mSelectorIndices;
     int startScrollOffset = mCurrentScrollOffset;
     if (!mWrapSelectorWheel && y > 0
-            && selectorIndices[SELECTOR_MIDDLE_ITEM_INDEX] <= mMinValue) {
+            && selectorIndices[mMiddleItemIndex] <= mMinValue) {
         mCurrentScrollOffset = mInitialScrollOffset;
         return;
     }
     if (!mWrapSelectorWheel && y < 0
-            && selectorIndices[SELECTOR_MIDDLE_ITEM_INDEX] >= mMaxValue) {
+            && selectorIndices[mMiddleItemIndex] >= mMaxValue) {
         mCurrentScrollOffset = mInitialScrollOffset;
         return;
     }
@@ -422,8 +431,8 @@ void NumberPicker::scrollBy(int x, int y){
     while (mCurrentScrollOffset - mInitialScrollOffset > mSelectorTextGapHeight) {
         mCurrentScrollOffset -= mSelectorElementHeight;
         decrementSelectorIndices(selectorIndices);
-        setValueInternal(selectorIndices[SELECTOR_MIDDLE_ITEM_INDEX], true);
-        if (!mWrapSelectorWheel && selectorIndices[SELECTOR_MIDDLE_ITEM_INDEX] <= mMinValue) {
+        setValueInternal(selectorIndices[mMiddleItemIndex], true);
+        if (!mWrapSelectorWheel && selectorIndices[mMiddleItemIndex] <= mMinValue) {
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
@@ -431,8 +440,8 @@ void NumberPicker::scrollBy(int x, int y){
     while (mCurrentScrollOffset - mInitialScrollOffset < -mSelectorTextGapHeight) {
         mCurrentScrollOffset += mSelectorElementHeight;
         incrementSelectorIndices(selectorIndices);
-        setValueInternal(selectorIndices[SELECTOR_MIDDLE_ITEM_INDEX], true);
-        if (!mWrapSelectorWheel && selectorIndices[SELECTOR_MIDDLE_ITEM_INDEX] >= mMaxValue) {
+        setValueInternal(selectorIndices[mMiddleItemIndex], true);
+        if (!mWrapSelectorWheel && selectorIndices[mMiddleItemIndex] >= mMaxValue) {
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
@@ -461,7 +470,10 @@ void NumberPicker::setOnValueChangedListener(OnValueChangeListener onValueChange
     mOnValueChangeListener=onValueChangedListener;
 }
 
-//void NumberPicker::setOnScrollListener(OnScrollListener onScrollListener){}
+void NumberPicker::setOnScrollListener(const OnScrollListener& onScrollListener){
+    mOnScrollListener = onScrollListener;
+}
+
 void NumberPicker::setFormatter(Formatter formatter){
     mFormatter = formatter;
     initializeSelectorWheelIndices();
@@ -518,6 +530,17 @@ void NumberPicker::updateWrapSelectorWheel() {
 void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
     mLongPressUpdateInterval = intervalMillis;
 }
+
+void NumberPicker::setSelector(int items,int focused){
+    mSelectorIndices.resize(items);
+    if(focused<0)focused=items/2;
+    mMiddleItemIndex=focused;
+    updateWrapSelectorWheel();
+    initializeSelectorWheelIndices();
+    //updateInputTextView();
+    invalidate();
+}
+
 int NumberPicker::getValue()const{
     return mValue;
 }
@@ -634,36 +657,32 @@ void NumberPicker::onDraw(Canvas&canvas){
     int selectorWheelColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
-    Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight};
+    Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
+    Layout txtlayout(mTextSize,mRight-mLeft);
+    //txtlayout.setAlignment(mInputText->getLayoutAlignment());
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
-        // Do not draw the middle item if input is visible since the input
-        // is shown only if the wheel is static and it covers the middle
-        // item. Otherwise, if the user starts editing the text via the
-        // IME he may see a dimmed version of the old value intermixed
-        // with the new one.
-        if ((showSelectorWheel && i != SELECTOR_MIDDLE_ITEM_INDEX) ||
-            (i == SELECTOR_MIDDLE_ITEM_INDEX && mInputText->getVisibility() != VISIBLE)) {
-            //canvas.draw_text(x,y,scrollSelectorValue);//, mSelectorWheelPaint);
+        // Do not draw the middle item if input is visible since the input is shown only if the wheel
+        // is static and it covers the middle item. Otherwise, if the user starts editing the text 
+        // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
+        if ((showSelectorWheel && i != mMiddleItemIndex) ||
+            (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
             canvas.draw_text(rctxt,scrollSelectorValue,DT_CENTER|DT_VCENTER);
         }
         rctxt.offset(0,mSelectorElementHeight);
+        // draw the selector dividers
+        if(mSelectionDivider && (mSelectorTextGapHeight>0) && (i!=selectorIndices.size()-1)){
+             canvas.save();
+             int alpha=255;
+             if((i!=mMiddleItemIndex-1)&&(i!=mMiddleItemIndex))
+                 alpha=(255-500.*std::abs(i-mMiddleItemIndex+(i>mMiddleItemIndex?1:0))/(selectorIndices.size()+1));
+             mSelectionDivider->setAlpha(alpha);
+             mSelectionDivider->setBounds(0,y+mTextSize-mCurrentScrollOffset+mSelectorTextGapHeight,mRight-mLeft,std::min(mSelectorTextGapHeight,mSelectionDividerHeight));
+             mSelectionDivider->draw(canvas);
+             canvas.restore();
+        }
         y += mSelectorElementHeight;
-    }
-    // draw the selection dividers
-    if (showSelectorWheel && mSelectionDivider != nullptr) {
-        // draw the top divider
-        int topOfTopDivider = mTopSelectionDividerTop;
-        int bottomOfTopDivider = topOfTopDivider + mSelectionDividerHeight;
-        mSelectionDivider->setBounds(0, topOfTopDivider, mRight-mLeft, mSelectionDividerHeight);
-        mSelectionDivider->draw(canvas);
-
-        // draw the bottom divider
-        int bottomOfBottomDivider = mBottomSelectionDividerBottom;
-        int topOfBottomDivider = bottomOfBottomDivider - mSelectionDividerHeight;
-        mSelectionDivider->setBounds(0, topOfBottomDivider, mRight-mLeft, mSelectionDividerHeight);
-        mSelectionDivider->draw(canvas);
     }
 }
 
@@ -695,7 +714,7 @@ void NumberPicker::initializeSelectorWheelIndices(){
     std::vector<int>& selectorIndices = mSelectorIndices;
     int current = getValue();
     for (int i = 0; i < mSelectorIndices.size(); i++) {
-        int selectorIndex = current + (i - SELECTOR_MIDDLE_ITEM_INDEX);
+        int selectorIndex = current + (i - mMiddleItemIndex);
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
@@ -757,7 +776,7 @@ void NumberPicker::initializeSelectorWheel(){
     mSelectorElementHeight = mTextSize + mSelectorTextGapHeight;
     // Ensure that the middle item is positioned the same as the text in mInputText
     int editTextTextPosition = mInputText->getBaseline() + mInputText->getTop();
-    mInitialScrollOffset = editTextTextPosition  - (mSelectorElementHeight * SELECTOR_MIDDLE_ITEM_INDEX);
+    mInitialScrollOffset = editTextTextPosition  - (mSelectorElementHeight * mMiddleItemIndex);
     mCurrentScrollOffset = mInitialScrollOffset;
     updateInputTextView();
 }
