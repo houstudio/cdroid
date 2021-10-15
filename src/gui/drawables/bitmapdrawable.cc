@@ -36,7 +36,6 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mTargetDensity = bitmapState.mTargetDensity;
     mBaseAlpha = bitmapState.mBaseAlpha;
     mAlpha=bitmapState.mAlpha;
-    //mPaint = new Paint(bitmapState.mPaint);
     //mRebuildShader = bitmapState.mRebuildShader;
     mAutoMirrored = bitmapState.mAutoMirrored;
 }
@@ -263,7 +262,7 @@ void BitmapDrawable::draw(Canvas&canvas){
     const float sw=mBitmapWidth, sh=mBitmapHeight;
     float dx = mBounds.left    , dy = mBounds.top;
     float dw = mBounds.width   , dh = mBounds.height;
-    float fx = dw / sw  , fy = dh / sh;
+    const float fx = dw / sw  , fy = dh / sh;
     const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
 
     canvas.save();
@@ -271,18 +270,16 @@ void BitmapDrawable::draw(Canvas&canvas){
     canvas.clip();
     const bool scaled=(mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight);
     if (scaled) {
-       canvas.scale(fx,fy);
+       canvas.scale(dw/sw,dh/sh);
        dx /= fx;       dy /= fy;
        dw /= fx;       dh /= fy;
     }
 
     canvas.set_source(mBitmapState->mBitmap, dx, dy );
     
-    cairo_pattern_set_filter(cairo_get_source(canvas.cobj()), CAIRO_FILTER_BEST);
-    //canvas.get_source()->set_filter(Pattern::Filter::BEST);
-    canvas.get_source()->set_extend(Pattern::Extend::NONE);
+    canvas.get_source_for_surface()->set_filter(SurfacePattern::Filter::BEST);
     canvas.paint_with_alpha(alpha);
-    if(scaled)canvas.scale(1./fx,1./fy);
+    if(scaled)canvas.scale(sw/dw,sh/dh);
     canvas.restore();
     if(mTintFilter)mTintFilter->apply(canvas,mBounds);
 }

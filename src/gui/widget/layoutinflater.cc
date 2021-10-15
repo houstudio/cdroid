@@ -3,7 +3,9 @@
 #include <windows.h>
 #include <expat.h>
 #include <cdlog.h>
+#include <string.h>
 #include <fstream>
+
 namespace cdroid{
 
 #define DECLAREPARSER(component) { #component ,[](Context*ctx,const AttributeSet&atts)->View*{return new component(ctx,atts);}}
