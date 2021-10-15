@@ -6,8 +6,6 @@
 
 namespace cdroid{
 
-extern std::atomic_int mCallbackID;
-
 template<typename R,typename... Args>
 class CallbackBase{
 private:
