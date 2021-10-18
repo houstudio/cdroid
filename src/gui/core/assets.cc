@@ -176,7 +176,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
     }else if (TextUtils::endWith(resname,".png")){
 	    d=new BitmapDrawable(fullresid);
     }
-    if(d==nullptr){
+    if( (d==nullptr) && (!fullresid.empty()) ){
         void*zfile=pak?pak->getZipHandle(resname):nullptr;
         if(zfile){
             ZipInputStream zs(zfile);

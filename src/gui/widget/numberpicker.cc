@@ -38,6 +38,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
         mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     }
+    updateInputTextView();
 }
 
 NumberPicker::NumberPicker(Context* context,const AttributeSet& atts,const std::string&defstyle)

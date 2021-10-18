@@ -67,7 +67,6 @@ typedef struct{
     Context*ctx;
     XML_Parser parser;
     std::vector<View*>views;//the first element is rootview setted by inflate
-    View*rootView;
     AttributeSet rootAttrs;
 }WindowParserData;
 
@@ -102,7 +101,6 @@ static void endElement(void *userData, const XML_Char *name){
     ViewGroup*p=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0)return;
     pd->views.pop_back();
-    pd->rootView=p;
 }
 
 View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
@@ -111,7 +109,8 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
     XML_Parser parser=XML_ParserCreate(nullptr);
     WindowParserData pd={mContext,parser};
     ULONGLONG tstart=SystemClock::uptimeMillis();
-    pd.rootView=root;
+    if(root)
+        pd.views.push_back(root);
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startElement, endElement);
     do {
@@ -125,8 +124,8 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    LOGD("usedtime %dms rootView=%p",SystemClock::uptimeMillis()-tstart,pd.rootView);
-    return pd.rootView;
+    LOGD("usedtime %dms rootView=%p",SystemClock::uptimeMillis()-tstart,pd.views.at(0));
+    return pd.views.at(0);
 }
 
 }//endof namespace
