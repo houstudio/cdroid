@@ -2844,7 +2844,8 @@ View& View::setBackgroundDrawable(Drawable*background){
         bRequestLayout= mBackground==nullptr||mBackground->getMinimumWidth()!=background->getMinimumWidth()||
                mBackground->getMinimumHeight()!=background->getMinimumHeight();
 
-        mBackground=background; 
+        delete mBackground;
+        mBackground = background; 
         if(background->isStateful())
             background->setState(getDrawableState());
         if(isAttachedToWindow())
@@ -3705,11 +3706,15 @@ void View::scheduleDrawable(Drawable& who,Runnable what, long when){
 }
 
 void View::unscheduleDrawable(Drawable& who,Runnable what){
-    //LOGV(" %p unschedule %p",&who,addr_of(what));
+    if(verifyDrawable(&who)&&what!=nullptr){
+        Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what,&who); 
+        removeCallbacks(what);
+    }
 }
 
 void View::unscheduleDrawable(Drawable& who){
     LOGV(" %p ",&who);
+    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,&who);
 }
 
 ViewGroup*View::getParent()const{
@@ -5417,10 +5422,13 @@ View::AttachInfo::AttachInfo(){
     mHardwareAccelerated =false;
     mWindowVisibility =VISIBLE;
     mApplicationScale =1.0f;
+    mDebugLayout  = false;
     mDrawingTime  = 0;
+    mInTouchMode  = true;
     mKeepScreenOn = true;
     mRootView     = nullptr;
     mCanvas       = nullptr;
+    mDisplayState = true;
     mTooltipHost  =nullptr;
     mViewRequestingLayout =nullptr;
 }

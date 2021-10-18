@@ -14,7 +14,7 @@ public:
     class AnimationFrameCallbackProvider {
     public:
         virtual void postFrameCallback(const Choreographer::FrameCallback& callback)=0;
-        virtual void postCommitCallback(const Runnable& runnable)=0;
+        virtual void postCommitCallback(Runnable& runnable)=0;
         virtual long getFrameTime()=0;
         virtual long getFrameDelay()=0;
         virtual void setFrameDelay(long delay)=0;
@@ -23,7 +23,7 @@ private:
     class MyFrameCallbackProvider :public AnimationFrameCallbackProvider {
     public:
         void postFrameCallback(const Choreographer::FrameCallback& callback)override;
-        void postCommitCallback(const Runnable& runnable)override;
+        void postCommitCallback(Runnable& runnable)override;
         long getFrameTime()override;
         long getFrameDelay()override;
         void setFrameDelay(long delay)override;

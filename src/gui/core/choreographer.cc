@@ -5,100 +5,95 @@
 namespace cdroid{
     #define DEFAULT_FRAME_DELAY 30
     #define FRAME_CALLBACK_TOKEN 1
-    class CallbackRecord {
-        public:
-        CallbackRecord* next;
-        long dueTime;
-        Runnable action; // Runnable or FrameCallback
-        long token;
-        CallbackRecord(long dtm,Runnable r,long tk){
-            dueTime=dtm;
-            action=r;
-            token=tk;
-            next=nullptr;
+class CallbackRecord {
+public:
+    CallbackRecord* next;
+    long dueTime;
+    Runnable action; // Runnable or FrameCallback
+    long token;
+    CallbackRecord(long dtm,Runnable& r,long tk){
+        dueTime=dtm;
+        action=r;
+        token=tk;
+        next=nullptr;
+    }
+    void run(long frameTimeNanos) {
+        if (token == FRAME_CALLBACK_TOKEN) {
+            //((FrameCallback)action).doFrame(frameTimeNanos);
+        } else {
+            //((Runnable)action).run();
         }
-        void run(long frameTimeNanos) {
-            if (token == FRAME_CALLBACK_TOKEN) {
-                //((FrameCallback)action).doFrame(frameTimeNanos);
-            } else {
-                //((Runnable)action).run();
-            }
-        }
-    };
-    template<class T>
-    static const void * addr_of(T &&obj) noexcept{
-        struct A {};
-        return &reinterpret_cast<const A &>(obj);
+    }
+};
+
+class CallbackQueue {
+private:
+    CallbackRecord* mHead=nullptr;
+public:
+    bool hasDueCallbacksLocked(long now) {
+        return mHead != nullptr && mHead->dueTime <= now;
     }
 
-    class CallbackQueue {
-        private:
-        CallbackRecord* mHead;
-        public:
-        bool hasDueCallbacksLocked(long now) {
-            return mHead != nullptr && mHead->dueTime <= now;
+    CallbackRecord* extractDueCallbacksLocked(long now) {
+        CallbackRecord* callbacks = mHead;
+        if (callbacks == nullptr || callbacks->dueTime > now) {
+            return nullptr;
         }
 
-        CallbackRecord* extractDueCallbacksLocked(long now) {
-            CallbackRecord* callbacks = mHead;
-            if (callbacks == nullptr || callbacks->dueTime > now) {
-                return nullptr;
+        CallbackRecord* last = callbacks;
+        CallbackRecord* next = last->next;
+        while (next != nullptr) {
+            if (next->dueTime > now) {
+                last->next = nullptr;
+                break;
             }
-
-            CallbackRecord* last = callbacks;
-            CallbackRecord* next = last->next;
-            while (next != nullptr) {
-                if (next->dueTime > now) {
-                    last->next = nullptr;
-                    break;
-                }
-                last = next;
-                next = next->next;
-            }
-            mHead = next;
-            return callbacks;
+            last = next;
+            next = next->next;
         }
+        mHead = next;
+        return callbacks;
+    }
 
-        void addCallbackLocked(long dueTime, Runnable action, long token) {
-            CallbackRecord* callback = new CallbackRecord(dueTime,action,token);//obtainCallbackLocked(dueTime, action, token);
-            CallbackRecord* entry = mHead;
-            if (entry == nullptr) {
-                mHead = callback;
-                return;
-            }
-            if (dueTime < entry->dueTime) {
-                callback->next = entry;
-                mHead = callback;
-                return;
-            }
-            while (entry->next != nullptr) {
-                if (dueTime < entry->next->dueTime) {
-                    callback->next = entry->next;
-                    break;
-                }
-                entry = entry->next;
-            }
-            entry->next = callback;
+    void addCallbackLocked(long dueTime, Runnable& action, long token) {
+        CallbackRecord* callback = new CallbackRecord(dueTime,action,token);//obtainCallbackLocked(dueTime, action, token);
+        CallbackRecord* entry = mHead;
+        if (entry == nullptr) {
+            mHead = callback;
+            return;
         }
+        if (dueTime < entry->dueTime) {
+            callback->next = entry;
+            mHead = callback;
+            return;
+        }
+        while (entry->next != nullptr) {
+            if (dueTime < entry->next->dueTime) {
+                callback->next = entry->next;
+                break;
+            }
+            entry = entry->next;
+        }
+        entry->next = callback;
+    }
 
-        void removeCallbacksLocked(Runnable action, long token) {
-            CallbackRecord* predecessor = nullptr;
-            for (CallbackRecord* callback = mHead; callback != nullptr;) {
-                CallbackRecord* next = callback->next;
-                if ((/*action == nullptr ||*/ callback->action == action)
-                    && (token == 0 || callback->token == token)) {
-                        if (predecessor != nullptr) {
-                            predecessor->next = next;
-                        } else {
-                            mHead = next;
-                        }
-                        delete callback;//recycleCallbackLocked(callback);
+    void removeCallbacksLocked(const Runnable* action, long token) {
+        CallbackRecord* predecessor = nullptr;
+        for (CallbackRecord* callback = mHead; callback != nullptr;) {
+            CallbackRecord* next = callback->next;
+            if ((action == nullptr || callback->action == *action)
+                && (token == 0 || callback->token == token)) {
+                    if (predecessor != nullptr) {
+                        predecessor->next = next;
                     } else {
-                        predecessor = callback;
+                        mHead = next;
                     }
-                callback = next;
-            }
+                    delete callback;//recycleCallbackLocked(callback);
+                } else {
+                    predecessor = callback;
+                }
+            callback = next;
         }
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -163,15 +158,19 @@ void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, v
     }*/   
 }
 
-void Choreographer::removeCallbacksInternal(int callbackType,const Runnable& action, void* token){
+void Choreographer::removeCallbacks(int callbackType,const Runnable* action, void* token){
+    removeCallbacksInternal(callbackType,action,token);
+}
+
+void Choreographer::removeCallbacksInternal(int callbackType,const Runnable* action, void* token){
     mCallbackQueues[callbackType]->removeCallbacksLocked(action,(long)token);
 }
 
-void Choreographer::postCallback(int callbackType,const Runnable& action, void* token){
+void Choreographer::postCallback(int callbackType,Runnable& action, void* token){
      postCallbackDelayed(callbackType,action,token,0);
 }
 
-void Choreographer::postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis){
+void Choreographer::postCallbackDelayed(int callbackType,Runnable& action,void*token,long delayMillis){
      //postCallbackDelayedInternal(callbackType, action, token, delayMillis);
 }
 

@@ -417,27 +417,15 @@ void Window::InvalidateOnAnimationRunnable::run(){
 
     std::vector<View*>tempViews=mViews; 
     mViews.clear();
-    /*viewRectCount = mViewRects.size();
-    if (viewRectCount != 0) {
-        mTempViewRects = mViewRects.toArray(mTempViewRects != null
-                ? mTempViewRects : new AttachInfo.InvalidateInfo[viewRectCount]);
-        mViewRects.clear();
-    }*/
 
     for (auto view:tempViews){
         view->invalidate();
     }
-
-    /*for (int i = 0; i < viewRectCount; i++) {
-        View.AttachInfo.InvalidateInfo info = mTempViewRects[i];
-        info.target.invalidate(info.left, info.top, info.right, info.bottom);
-        info.recycle();
-    }*/
 }
 
 void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
     if (!mPosted) {
-        //mChoreographer.postCallback(Choreographer.CALLBACK_ANIMATION, this, null);
+        //Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,nullptr,this);
         Runnable run;run=std::bind(&InvalidateOnAnimationRunnable::run,this);
         mOwner->postDelayed(run,AnimationHandler::getFrameDelay());
         mPosted = true;

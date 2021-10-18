@@ -10,7 +10,7 @@ void AnimationHandler::MyFrameCallbackProvider::postFrameCallback(const Choreogr
     Choreographer::getInstance().postFrameCallback(callback);
 }
 
-void AnimationHandler::MyFrameCallbackProvider::postCommitCallback(const Runnable& runnable) {
+void AnimationHandler::MyFrameCallbackProvider::postCommitCallback(Runnable& runnable) {
     Choreographer::getInstance().postCallback(Choreographer::CALLBACK_COMMIT, runnable, nullptr);
 }
 

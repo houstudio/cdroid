@@ -22,7 +22,7 @@ private:
     static Choreographer *mInst;
     static long sFrameDelay;
     Choreographer();
-    void removeCallbacksInternal(int callbackType,const Runnable& action, void* token);
+    void removeCallbacksInternal(int callbackType,const Runnable* action, void* token);
     void postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis);
     void scheduleFrameLocked(long);
 protected:
@@ -35,9 +35,9 @@ public:
     long getLastFrameTimeNanos();
     long getFrameTime();
     long getFrameIntervalNanos();
-    void postCallback(int callbackType,const Runnable& action, void* token);
-    void postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis);
-    void removeCallbacks(int callbackType, const Runnable& action);
+    void postCallback(int callbackType, Runnable& action, void* token);
+    void postCallbackDelayed(int callbackType,Runnable& action,void*token,long delayMillis);
+    void removeCallbacks(int callbackType, const Runnable* action,void*token);
     void removeFrameCallback(const FrameCallback& callback);
     void postFrameCallbackDelayed(const FrameCallback& callback, long delayMillis);
     void postFrameCallback(const FrameCallback& callback);

@@ -90,7 +90,7 @@ int main(int argc,const char*argv[]){
     tv->setTextSize(40);
     right->addView(tv);
     right->setBackgroundColor(0x80222222);
-    lp=new  DrawerLayout::LayoutParams(320,LayoutParams::MATCH_PARENT);
+    lp=new DrawerLayout::LayoutParams(320,LayoutParams::MATCH_PARENT);
     lp->gravity=Gravity::END;
     dl->addView(right,2,lp);
 
