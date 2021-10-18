@@ -141,7 +141,7 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
     RelativeLayout(int w,int h);
-    RelativeLayout(Context* context,const AttributeSet& attrs);
+    RelativeLayout(Context* context,const AttributeSet& attrs,const std::string&defstyle=nullptr);
     bool shouldDelayChildPressedState()override; 
     int getGravity()const;
     void setGravity(int);

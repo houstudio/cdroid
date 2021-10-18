@@ -23,9 +23,8 @@ public:
        MINUTE,
        SECOND
    };
-
-   AnalogClock(Context*ctx,const AttributeSet& attrs);
    AnalogClock(int w,int h);
+   AnalogClock(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr);
    void setClockDrawable(Drawable*d,int id);
    Drawable*getClockDrawable(int id);
    //bool onMessage(DWORD msg,DWORD wp,ULONG lp);

@@ -48,7 +48,7 @@ protected:
 
 public:
     FrameLayout(int w,int h);
-    FrameLayout(Context* context,const AttributeSet& attrs);
+    FrameLayout(Context* context,const AttributeSet& attrs,const std::string&defstyle=nullptr);
     void setForegroundGravity(int foregroundGravity);
     void setMeasureAllChildren(bool measureAll);
     bool getMeasureAllChildren()const;

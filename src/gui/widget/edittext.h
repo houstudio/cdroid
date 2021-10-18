@@ -30,9 +30,9 @@ public:
         TYPE_PASSWORD,
         TYPE_IP
     }INPUTTYPE;
-    EditText(Context*ctx,const AttributeSet&attrs);
     EditText(int w,int h);
     EditText(const std::string&txt,int w,int h);
+    EditText(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
     ~EditText();
     void setText(const std::string&txt)override;
     void setLabelColor(int color);

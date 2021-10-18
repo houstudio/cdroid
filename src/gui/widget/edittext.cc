@@ -9,7 +9,8 @@
 
 namespace cdroid{
 
-EditText::EditText(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
+EditText::EditText(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
+  :TextView(ctx,attrs,defstyle){
     mHint=ctx->getString(attrs.getString("hint"));
     setEditable(true);
 }

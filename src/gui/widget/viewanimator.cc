@@ -6,7 +6,8 @@ namespace cdroid{
 ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
 }
 
-ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs):FrameLayout(context,attrs){
+ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs,const std::string&defstyle)
+  :FrameLayout(context,attrs,defstyle){
    
 }
 ViewAnimator::~ViewAnimator(){

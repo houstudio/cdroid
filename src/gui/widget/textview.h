@@ -118,7 +118,7 @@ public:
        INSERT,
        REPLACE
     };
-    TextView(Context*ctx,const AttributeSet&attrs);
+    TextView(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
     TextView(int width, int height);
     TextView(const std::string& text, int width, int height);
     virtual ~TextView();

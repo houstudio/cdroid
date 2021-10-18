@@ -3,7 +3,8 @@
 #include<app.h>
 namespace cdroid{
 
-ImageButton::ImageButton(Context*ctx,const AttributeSet& attrs):ImageView(ctx,attrs){
+ImageButton::ImageButton(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
+  :ImageView(ctx,attrs,defstyle){
    setFocusable(true);
 }
 

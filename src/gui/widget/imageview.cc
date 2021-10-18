@@ -4,7 +4,8 @@
 #include <cdlog.h>
 namespace cdroid{
 
-ImageView::ImageView(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
+ImageView::ImageView(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
+  :View(ctx,attrs,defstyle){
     initImageView();
     setImageResource(attrs.getString("src"));
 }

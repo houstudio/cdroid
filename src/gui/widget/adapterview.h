@@ -77,7 +77,7 @@ protected:
     virtual int lookForSelectablePosition(int position, bool lookDown);
 public:
     AdapterView(int w,int h);
-    AdapterView(Context*ctx,const AttributeSet&atts);
+    AdapterView(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr);
     virtual ~AdapterView();
     virtual Adapter*getAdapter();
     virtual void setAdapter(Adapter*)=0;

@@ -30,7 +30,9 @@ void AbsSpinner::RecycleBin::clear() {
 AbsSpinner::AbsSpinner(int w,int h):AdapterView(w,h){
     initAbsSpinner();
 }
-AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet&atts):AdapterView(ctx,atts){
+
+AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :AdapterView(ctx,atts,defstyle){
     initAbsSpinner();
 }
 

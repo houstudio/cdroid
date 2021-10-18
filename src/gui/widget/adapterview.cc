@@ -32,7 +32,8 @@ AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
     }
 }
 
-AdapterView::AdapterView(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
+AdapterView::AdapterView(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :ViewGroup(ctx,atts,defstyle){
 }
 
 AdapterView::~AdapterView(){

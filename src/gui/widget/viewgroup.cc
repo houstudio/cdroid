@@ -74,7 +74,7 @@ TouchTarget*TouchTarget::sRecycleBin=nullptr;
 int TouchTarget::sRecycledCount=0;
 bool ViewGroup::DEBUG_DRAW = false;
 
-ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs,const std::string&defstyle):View(ctx,attrs,defstyle){
     initGroup();
 }
 
@@ -129,6 +129,7 @@ ViewGroup::~ViewGroup() {
     delete mChildTransformation;
     delete mInvalidationTransformation;
     delete mLayoutAnimationController;
+    delete mTransition;
 }
 
 void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){

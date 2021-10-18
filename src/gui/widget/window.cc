@@ -29,7 +29,8 @@ constexpr int FORWARD = 0;
 constexpr int FINISH_HANDLED = 1;
 constexpr int FINISH_NOT_HANDLED = 2;
 
-Window::Window(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
+Window::Window(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :ViewGroup(ctx,atts,defstyle){
     source=new UIEventSource(this);
     setFrame(0,0,1280,720);
     setFocusable(true);

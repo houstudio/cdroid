@@ -8,7 +8,7 @@
 
 namespace cdroid{
 
-#define DECLAREPARSER(component) { #component ,[](Context*ctx,const AttributeSet&atts)->View*{return new component(ctx,atts);}}
+#define DECLAREPARSER(component) { #component ,[](Context*ctx,const AttributeSet&atts,const std::string&defstyle)->View*{return new component(ctx,atts,defstyle);}}
 std::map<const std::string,LayoutInflater::ViewInflater>LayoutInflater::mViewInflaters={
     DECLAREPARSER(View),
     DECLAREPARSER(ViewGroup),
@@ -85,7 +85,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         return;
     }
 
-    View*v=inflater(pd->ctx,atts);
+    View*v=inflater(pd->ctx,atts,""/*defaultStyle*/);
     pd->views.push_back(v);
     if(parent){
         LayoutParams*lp=parent->generateLayoutParams(atts);

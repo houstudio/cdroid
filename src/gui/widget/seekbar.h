@@ -10,8 +10,8 @@ protected:
    OnSeekBarChangeListener  mOnSeekBarChangeListener;
    void onProgressRefresh(float scale, bool fromUser, int progress)override;
 public:
-   SeekBar(Context*ctx,const AttributeSet& attrs);
    SeekBar(int w,int h);
+   SeekBar(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr);
    void setOnSeekBarChangeListener(OnSeekBarChangeListener l) {
         mOnSeekBarChangeListener = l;
    }

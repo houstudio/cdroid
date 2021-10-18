@@ -1,7 +1,8 @@
 #include <widget/seekbar.h>
 namespace cdroid{
 
-SeekBar::SeekBar(Context*ctx,const AttributeSet& attrs):AbsSeekBar(ctx,attrs){
+SeekBar::SeekBar(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
+  :AbsSeekBar(ctx,attrs,defstyle){
 }
 
 SeekBar::SeekBar(int w,int h):AbsSeekBar(w,h){

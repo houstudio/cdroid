@@ -9,8 +9,8 @@ RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
     init();
 }
 
-RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
-    :LinearLayout(context,attrs){
+RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs,const std::string&defstyle)
+    :LinearLayout(context,attrs,defstyle){
     mCheckedId = attrs.getInt("checkedButton",NO_ID);
 
     setOrientation(attrs.getInt("orientation",VERTICAL));

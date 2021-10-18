@@ -149,7 +149,7 @@ protected:
     void dispatchDraw(Canvas&)override;
 public:
     ListView(int w,int h);
-    ListView(Context* context,const AttributeSet& attrs);
+    ListView(Context* context,const AttributeSet& attrs,const std::string&defstyle=nullptr);
     ~ListView();
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position);

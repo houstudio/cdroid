@@ -25,8 +25,8 @@ RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
     mIgnoreGravity=NO_ID;
 }
 
-RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
- :ViewGroup(context,attrs){
+RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs,const std::string&defstyle)
+ :ViewGroup(context,attrs,defstyle){
 
 }
 

@@ -6,7 +6,8 @@ Chronometer::Chronometer(int w,int h):TextView(std::string(),w,h){
     mTickRunnable=nullptr;
 }
 
-Chronometer::Chronometer(Context*ctx,const AttributeSet&atts):TextView(ctx,atts){
+Chronometer::Chronometer(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :TextView(ctx,atts,defstyle){
     mTickRunnable=nullptr;
 }
     

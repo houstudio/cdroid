@@ -4,13 +4,14 @@
 namespace cdroid{
 class RadioButton:public ToggleButton{
 public:
-	RadioButton(int w,int h):ToggleButton(w,h){
-	}
-    RadioButton(Context*ctx,const AttributeSet& attrs):ToggleButton(ctx,attrs){
+    RadioButton(int w,int h):ToggleButton(w,h){
+    }
+    RadioButton(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr)
+	  :ToggleButton(ctx,attrs,defstyle){
     }
     void toggle()override{
         if (!isChecked()) ToggleButton::toggle();
-	}
+    }
 };
 }//namespace
 

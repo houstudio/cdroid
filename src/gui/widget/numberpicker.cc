@@ -40,7 +40,8 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     }
 }
 
-NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):LinearLayout(context,atts){
+NumberPicker::NumberPicker(Context* context,const AttributeSet& atts,const std::string&defstyle)
+  :LinearLayout(context,atts,defstyle){
     initView();
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mSolidColor =atts.getColor("solidColor",0);

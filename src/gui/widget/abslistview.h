@@ -291,7 +291,7 @@ protected:
     void draw(Canvas&canvas)override;
 public:
     AbsListView(int w,int h);
-    AbsListView(Context*,const AttributeSet&atts);
+    AbsListView(Context*,const AttributeSet&atts,const std::string&defstyle=nullptr);
     ~AbsListView();
     void setOverScrollMode(int mode)override;
     void setAdapter(Adapter*adapter)override;

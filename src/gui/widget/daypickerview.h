@@ -48,7 +48,7 @@ protected:
     void onLayout(bool changed, int left, int top, int width, int height)override;
 
 public:
-    DayPickerView(Context* context,const AttributeSet&atts);
+    DayPickerView(Context* context,const AttributeSet&atts,const std::string&defstyle=nullptr);
     void setDate(long timeInMillis);
     void setDate(long timeInMillis, bool animate);
     long getDate();

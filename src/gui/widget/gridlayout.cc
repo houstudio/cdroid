@@ -36,8 +36,8 @@ GridLayout::GridLayout(int w,int h)
     childWidth=0;
 }
 
-GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
-    :ViewGroup(ctx,attrs){
+GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs,const std::string&defstyle)
+    :ViewGroup(ctx,attrs,defstyle){
 }
 
 void GridLayout::refreshNotGoneChildList() {

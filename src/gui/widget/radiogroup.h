@@ -28,8 +28,8 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
 public:
-    RadioGroup(Context* context,const AttributeSet& attrs);
     RadioGroup(int w,int h);
+    RadioGroup(Context* context,const AttributeSet& attrs,const std::string&defstyle=nullptr);
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     int getCheckedRadioButtonId()const;

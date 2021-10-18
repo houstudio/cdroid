@@ -20,8 +20,8 @@ protected:
     bool verifyDrawable(Drawable* who)const override;
     void onDraw(Canvas&canvas)override;
 public:
-    CompoundButton(Context*ctx,const AttributeSet&attrs);
     CompoundButton(const std::string&txt,int width,int height);
+    CompoundButton(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
     void setButtonDrawable(const std::string&resid);
     void setButtonDrawable(Drawable*d);
     bool performClick()override;

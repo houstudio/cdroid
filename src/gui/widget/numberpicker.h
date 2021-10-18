@@ -142,7 +142,7 @@ protected:
     void onDraw(Canvas&canvas)override;
 public:
     NumberPicker(int w,int h);
-    NumberPicker(Context* context,const AttributeSet& attrs);
+    NumberPicker(Context* context,const AttributeSet& attrs,const std::string&defstyle=nullptr);
     bool onInterceptTouchEvent(MotionEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;
     bool dispatchTouchEvent(MotionEvent& event)override;

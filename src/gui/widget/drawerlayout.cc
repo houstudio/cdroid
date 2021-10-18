@@ -37,8 +37,8 @@ void DrawerLayout::initView(){
     mDrawerElevation = DRAWER_ELEVATION * density;
 }
 
-DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
-:ViewGroup(ctx,atts){
+DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :ViewGroup(ctx,atts,defstyle){
     initView();
 }
 

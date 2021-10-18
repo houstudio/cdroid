@@ -203,9 +203,9 @@ protected:
     void attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count);
     void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
 public:
-    ViewGroup(Context*ctx,const AttributeSet& attrs);
     ViewGroup(int w,int h);
     ViewGroup(int x,int y,int w,int h);
+    ViewGroup(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr);
     virtual ~ViewGroup();
     bool getTouchscreenBlocksFocus()const;
     bool shouldBlockFocusForTouchscreen()const;

@@ -31,7 +31,7 @@ protected:
     void onLayout(bool changed, int left, int top, int w, int h)override;
 public:
     GridLayout(int w,int h);
-    GridLayout(Context*ctx,const AttributeSet&attrs);
+    GridLayout(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
     int getVerticalSpace()const;
     void setVerticalSpace(int verticalSpace);
     int getHorizontalSpace()const;

@@ -21,7 +21,7 @@ protected:
     bool canUserSetProgress()const override;
 public:
     RatingBar(int w,int h);
-    RatingBar(Context*ctx,const AttributeSet&atts);
+    RatingBar(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr);
     void setOnRatingBarChangeListener(OnRatingBarChangeListener listener);
     OnRatingBarChangeListener getOnRatingBarChangeListener();
     void setIsIndicator(bool isIndicator);

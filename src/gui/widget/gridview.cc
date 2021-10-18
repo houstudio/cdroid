@@ -9,7 +9,8 @@ GridView::GridView(int w,int h):AbsListView(w,h){
     initGridView();
 }
 
-GridView::GridView(Context*ctx,const AttributeSet&atts):AbsListView(ctx,atts){
+GridView::GridView(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :AbsListView(ctx,atts,defstyle){
     initGridView();
 }
 

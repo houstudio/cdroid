@@ -15,8 +15,8 @@ Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mPopup=new DialogPopup(this);
 }
 
-Spinner::Spinner(Context*ctx,const AttributeSet&atts)
-    :AbsSpinner(ctx,atts){
+Spinner::Spinner(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :AbsSpinner(ctx,atts,defstyle){
     mPopupContext =ctx;
     mGravity= Gravity::CENTER;
     mDisableChildrenWhenDisabled=true;

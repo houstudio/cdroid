@@ -12,7 +12,7 @@ private:
     View*obtainView();
 public:
     ViewSwitcher(int w,int h);
-    ViewSwitcher(Context*ctx,const AttributeSet&atts);
+    ViewSwitcher(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr);
     View& addView(View* child, int index, ViewGroup::LayoutParams* params);
     View* getNextView();
     void setFactory(ViewFactory factory);

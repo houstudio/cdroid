@@ -7,8 +7,9 @@ ViewFlipper::ViewFlipper(int w,int h):ViewAnimator(w,h){
     mFlipRunnable=std::bind(&ViewFlipper::doFlip,this);
     mVisible =true;
 }
-ViewFlipper::ViewFlipper(Context* context,const AttributeSet& attrs)
-    :ViewAnimator(context,attrs){
+
+ViewFlipper::ViewFlipper(Context* context,const AttributeSet& attrs,const std::string&defstyle)
+  :ViewAnimator(context,attrs,defstyle){
     mFlipRunnable=std::bind(&ViewFlipper::doFlip,this);
 }
 

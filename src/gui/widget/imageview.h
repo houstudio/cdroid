@@ -58,8 +58,8 @@ protected:
     virtual void onDraw(Canvas& canvas) override;
 public:
 public:
-    ImageView(Context*ctx,const AttributeSet&attrs);
     explicit ImageView(int w, int h);
+    ImageView(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
     virtual ~ImageView();
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState();

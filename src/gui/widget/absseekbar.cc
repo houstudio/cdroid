@@ -7,7 +7,7 @@
 #define NO_ALPHA 0xFF
 namespace cdroid{
 
-AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,attrs){
+AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs,const std::string&defstyle):ProgressBar(ctx,attrs,defstyle){
     initSeekBar();
 
     setThumb(ctx->getDrawable(attrs.getString("thumb")));

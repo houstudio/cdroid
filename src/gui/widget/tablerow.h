@@ -51,7 +51,7 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
 public:
     TableRow(int w,int h);
-    TableRow(Context* context,const AttributeSet&attrs);
+    TableRow(Context* context,const AttributeSet&attrs,const std::string&defstyle=nullptr);
     void setColumnCollapsed(int columnIndex, bool collapsed);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     View* getVirtualChildAt(int i) override;

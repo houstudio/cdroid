@@ -43,7 +43,7 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
 public:
     TableLayout(int w,int h);
-    TableLayout(Context*,const AttributeSet&atts);
+    TableLayout(Context*,const AttributeSet&atts,const std::string&defstyle=nullptr);
     void requestLayout()override;
 
     bool isShrinkAllColumns()const;

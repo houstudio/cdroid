@@ -175,7 +175,7 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 public:
     DrawerLayout(int w,int h);
-    DrawerLayout(Context*ctx,const AttributeSet&atts); 
+    DrawerLayout(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr); 
     void setDrawerElevation(float elevation);
     float getDrawerElevation()const;
     void setDrawerShadow(Drawable* shadowDrawable,int gravity);

@@ -6,7 +6,8 @@ namespace cdroid{
 #define TOGGLE 1
 #define NO_ALPHA 0xFF
 
-ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs):CompoundButton(ctx,attrs){
+ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
+  :CompoundButton(ctx,attrs,defstyle){
     mIndicatorDrawable=nullptr;
     setTextOn(ctx->getString(attrs.getString("textOn")));
     setTextOff(ctx->getString(attrs.getString("textOff")));

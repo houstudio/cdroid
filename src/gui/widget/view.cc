@@ -149,8 +149,9 @@ View::View(int w,int h){
        mRoundScrollbarRenderer=new RoundScrollbarRenderer(this);
 }
 
-View::View(Context*ctx,const AttributeSet&attrs){
+View::View(Context*ctx,const AttributeSet&attrs,const std::string&style){
     initView();
+
     mContext=ctx;
     mID=attrs.getInt("id",NO_ID);
     mMinWidth = attrs.getDimensionPixelSize("minWidth",0);

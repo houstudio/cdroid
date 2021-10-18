@@ -38,8 +38,8 @@ TableLayout::TableLayout(int w,int h):LinearLayout(w,h){
     initTableLayout();
 }
 
-TableLayout::TableLayout(Context*ctx,const AttributeSet&atts)
-    :LinearLayout(ctx,atts){
+TableLayout::TableLayout(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
+  :LinearLayout(ctx,atts,defstyle){
     initTableLayout();
 }
 

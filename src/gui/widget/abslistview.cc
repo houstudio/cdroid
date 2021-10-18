@@ -227,7 +227,7 @@ AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
     initAbsListView();
 }
 
-AbsListView::AbsListView(Context*ctx,const AttributeSet&atts):AdapterView(ctx,atts) {
+AbsListView::AbsListView(Context*ctx,const AttributeSet&atts,const std::string&defstyle):AdapterView(ctx,atts,defstyle) {
     initAbsListView();
 }
 

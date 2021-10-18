@@ -99,7 +99,7 @@ protected:
     void computeContentWidth();
 public:
     Spinner(int w,int h,int mode=0);
-    Spinner(Context*ctx,const AttributeSet&atts);
+    Spinner(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr);
     Context* getPopupContext()const;
     int measureContentWidth(Adapter* adapter, Drawable* background);
     void setPopupBackgroundDrawable(Drawable* background);

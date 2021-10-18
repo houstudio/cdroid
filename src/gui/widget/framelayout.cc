@@ -11,8 +11,9 @@ FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
     mForegroundPaddingLeft=mForegroundPaddingRight=0;
     mForegroundPaddingTop =mForegroundPaddingBottom=0;
 }
-FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context,attrs){
+
+FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs,const std::string&defstyle)
+    :ViewGroup(context,attrs,defstyle){
     mMeasureAllChildren=false;
     mForegroundPaddingLeft=mForegroundPaddingRight=0;
     mForegroundPaddingTop =mForegroundPaddingBottom=0;
