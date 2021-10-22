@@ -3,16 +3,17 @@
 #include <fstream>
 #include <app.h>
 #include <cdlog.h>
-extern "C" int  _cairo_image_analyze_transparency (void*image);
+
 namespace cdroid{
 
 BitmapDrawable::BitmapState::BitmapState(){
-    mGravity = Gravity::FILL;
-    mBaseAlpha=1.0f;
-    mAlpha=255;
-    mTint=nullptr;
-    mTintMode=DEFAULT_TINT_MODE;
-    mAutoMirrored=false;
+    mGravity  = Gravity::FILL;
+    mBaseAlpha= 1.0f;
+    mAlpha = 255;
+    mTint  = nullptr;
+    mTransparency= -1;
+    mTintMode    = DEFAULT_TINT_MODE;
+    mAutoMirrored= false;
     mSrcDensityOverride=0;
     mTargetDensity=160;
     mChangingConfigurations=0;
@@ -20,22 +21,24 @@ BitmapDrawable::BitmapState::BitmapState(){
 
 BitmapDrawable::BitmapState::BitmapState(RefPtr<ImageSurface>bitmap)
     :BitmapState(){
-    mBitmap=bitmap;
+    mBitmap = bitmap;
+    mTransparency = computeTransparency(bitmap);
 }
 
 BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mBitmap = bitmapState.mBitmap;
-    mTint = bitmapState.mTint;
-    mTintMode = bitmapState.mTintMode;
+    mTint   = bitmapState.mTint;
+    mTintMode   = bitmapState.mTintMode;
     mThemeAttrs = bitmapState.mThemeAttrs;
     mChangingConfigurations = bitmapState.mChangingConfigurations;
     mGravity = bitmapState.mGravity;
+    mTransparency= bitmapState.mTransparency;
     //mTileModeX = bitmapState.mTileModeX;
     //mTileModeY = bitmapState.mTileModeY;
     mSrcDensityOverride = bitmapState.mSrcDensityOverride;
     mTargetDensity = bitmapState.mTargetDensity;
     mBaseAlpha = bitmapState.mBaseAlpha;
-    mAlpha=bitmapState.mAlpha;
+    mAlpha = bitmapState.mAlpha;
     //mRebuildShader = bitmapState.mRebuildShader;
     mAutoMirrored = bitmapState.mAutoMirrored;
 }
@@ -93,6 +96,7 @@ RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{
 
 void BitmapDrawable::setBitmap(RefPtr<ImageSurface>bmp){
     mBitmapState->mBitmap=bmp;
+    mBitmapState->mTransparency = computeTransparency(bmp);
     LOGV("setbitmap %p",bmp.get());
     mDstRectAndInsetsDirty=true;
     computeBitmapSize();
@@ -119,7 +123,7 @@ int BitmapDrawable::getIntrinsicHeight()const{
     return mBitmapHeight;
 }
 
-int ComputeTransparency(RefPtr<ImageSurface>bmp){
+int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
     if((bmp->get_content()&Cairo::Content::CONTENT_ALPHA)==0)
         return Drawable::OPAQUE;
     if(bmp->get_width()==0||bmp->get_height()==0)
@@ -160,14 +164,7 @@ int BitmapDrawable::getOpacity(){
     if(mBitmapState->mBitmap==nullptr)
         return TRANSPARENT;
 
-    int t=0;//_cairo_image_analyze_transparency(mBitmapState->mBitmap->cobj());
-    switch(t){
-    case 0:/*CAIRO_IMAGE_IS_OPAQUE,       */ return OPAQUE;
-    case 1:/*CAIRO_IMAGE_HAS_BILEVEL_ALPHA*/ return TRANSPARENT;
-    case 2:/*CAIRO_IMAGE_HAS_ALPHA        */ return TRANSLUCENT;
-    case 3:/*CAIRO_IMAGE_UNKNOWN          */ return UNKNOWN;
-    default:return OPAQUE;
-    }
+    return mBitmapState->mTransparency;
 }
 
 void BitmapDrawable::setTintList(ColorStateList*tint){

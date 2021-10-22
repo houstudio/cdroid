@@ -13,6 +13,7 @@ private:
         float mBaseAlpha;
         int mAlpha;
         int mGravity;
+        int mTransparency;
         bool mAutoMirrored;
         int mChangingConfigurations;
         std::vector<int>mThemeAttrs;
@@ -41,6 +42,7 @@ protected:
     bool mDstRectAndInsetsDirty;
     void onBoundsChange(const Rect&r)override;
     bool onStateChange(const std::vector<int>&)override;
+    static int computeTransparency(RefPtr<ImageSurface>bmp);
 public:
     BitmapDrawable(RefPtr<ImageSurface>img);
     BitmapDrawable(std::istream&is);
