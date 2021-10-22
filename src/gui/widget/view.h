@@ -619,6 +619,13 @@ public:
 
     View& setVerticalScrollbarPosition(int position);
 
+    void setScrollbarFadingEnabled(bool fadeScrollbars);
+    bool isScrollbarFadingEnabled();
+    int  getScrollBarDefaultDelayBeforeFade();
+    void setScrollBarDefaultDelayBeforeFade(int scrollBarDefaultDelayBeforeFade);
+    int  getScrollBarFadeDuration();
+    void setScrollBarFadeDuration(int scrollBarFadeDuration);
+
     int getScrollIndicators()const;
     virtual void setScrollIndicators(int indicators,int mask=SCROLL_INDICATORS_PFLAG3_MASK >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT);
     virtual void computeScroll();

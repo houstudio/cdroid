@@ -78,7 +78,6 @@ public:
     int scrollBarMinTouchTarget;
 
     ScrollBarDrawable*scrollBar;
-    float interpolatorValues[1];
     View* host;
     Interpolator* scrollBarInterpolator;
     Runnable mRunner;
@@ -753,7 +752,7 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
         if (mScrollCache->state == ScrollabilityCache::OFF) {
             // FIXME: this is copied from WindowManagerService. We should 
             // get this value from the system when it is possible to do so.
-            int KEY_REPEAT_FIRST_DELAY = 750;
+            const int KEY_REPEAT_FIRST_DELAY = 750;
             startDelay = std::max(KEY_REPEAT_FIRST_DELAY, startDelay);
         }
 
@@ -1168,6 +1167,38 @@ bool View::isVerticalScrollBarHidden()const{
     return false;
 }
 
+void View::setScrollbarFadingEnabled(bool fadeScrollbars) {
+    initScrollCache();
+    mScrollCache->fadeScrollBars = fadeScrollbars;
+    if (fadeScrollbars) {
+        mScrollCache->state = ScrollabilityCache::OFF;
+    } else {
+        mScrollCache->state = ScrollabilityCache::ON;
+    }
+}
+
+bool View::isScrollbarFadingEnabled() {
+    return mScrollCache  && mScrollCache->fadeScrollBars;
+}
+
+int View::getScrollBarDefaultDelayBeforeFade() {
+    return mScrollCache == nullptr ? ViewConfiguration::getScrollDefaultDelay() :
+            mScrollCache->scrollBarDefaultDelayBeforeFade;
+}
+
+void View::setScrollBarDefaultDelayBeforeFade(int scrollBarDefaultDelayBeforeFade) {
+    getScrollCache()->scrollBarDefaultDelayBeforeFade = scrollBarDefaultDelayBeforeFade;
+}
+
+int View::getScrollBarFadeDuration() {
+    return mScrollCache == nullptr ? ViewConfiguration::getScrollBarFadeDuration() :
+            mScrollCache->scrollBarFadeDuration;
+}
+
+void View::setScrollBarFadeDuration(int scrollBarFadeDuration) {
+    getScrollCache()->scrollBarFadeDuration = scrollBarFadeDuration;
+}
+
 void View::computeScroll(){
 }
 
@@ -1218,6 +1249,7 @@ View& View::setVerticalScrollBarEnabled(bool verticalScrollBarEnabled){
     }
     return *this;
 }
+
 
 void View::getVerticalScrollBarBounds(Rect*bounds,Rect*touchBounds){
     if (mRoundScrollbarRenderer == nullptr) {
@@ -1623,10 +1655,8 @@ void View::onDrawScrollBars(Canvas& canvas){
     if (state == ScrollabilityCache::FADING){
         // We're fading -- get our fade interpolation
 
-        float* values = cache->interpolatorValues;
-
         // Stops the animation if we're done
-        if (now-cache->fadeStartTime>=cache->scrollBarFadeDuration){//scrollBarInterpolator->timeToValues(values) == Interpolator::Result::FREEZE_END) {
+        if (now-cache->fadeStartTime>cache->scrollBarFadeDuration){
             cache->state = ScrollabilityCache::OFF;
         } else {
             const int alpha=255-255*(now-cache->fadeStartTime)/cache->scrollBarFadeDuration;
