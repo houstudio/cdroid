@@ -79,8 +79,9 @@ public:
 
     ScrollBarDrawable*scrollBar;
     float interpolatorValues[1];
-    View*host;
+    View* host;
     Interpolator* scrollBarInterpolator;
+    Runnable mRunner;
     long fadeStartTime;
     int state = OFF;
     int mLastColor;
@@ -96,20 +97,23 @@ public:
         scrollBarMinTouchTarget = configuration.getScaledMinScrollbarTouchTarget();
         scrollBarDefaultDelayBeforeFade = ViewConfiguration::getScrollDefaultDelay();
         scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
-        scrollBarInterpolator = nullptr;//new Interpolator(1, 2);
+        scrollBarInterpolator = nullptr;//new LinearInterpolator(1, 2);
         fadeScrollBars=true;
         scrollBar=nullptr;
         mScrollBarDraggingPos=0;
         mScrollBarBounds.set(0,0,0,0);
         mScrollBarTouchBounds.set(0,0,0,0);
         this->host=host;
+        mRunner =[this](){
+           run();
+        };
     }
     virtual ~ScrollabilityCache(){
         delete scrollBarInterpolator;
         delete scrollBar;
     }
     void run(){
-        long now = SystemClock::uptimeMillis();
+        long now = AnimationUtils::currentAnimationTimeMillis();
         if (now >= fadeStartTime) {
 
             // the animation fades the scrollbars out by changing
@@ -728,6 +732,7 @@ bool View::awakenScrollBars(){
     return mScrollCache != nullptr &&
            awakenScrollBars(mScrollCache->scrollBarDefaultDelayBeforeFade, true);
 }
+
 bool View::awakenScrollBars(int startDelay, bool invalidate){
     if (mScrollCache == nullptr || !mScrollCache->fadeScrollBars) {
         return false;
@@ -746,24 +751,23 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
         }
 
         if (mScrollCache->state == ScrollabilityCache::OFF) {
-            // FIXME: this is copied from WindowManagerService.
-            // We should get this value from the system when it
-            // is possible to do so.
+            // FIXME: this is copied from WindowManagerService. We should 
+            // get this value from the system when it is possible to do so.
             int KEY_REPEAT_FIRST_DELAY = 750;
             startDelay = std::max(KEY_REPEAT_FIRST_DELAY, startDelay);
         }
 
         // Tell mScrollCache when we should start fading. This may
         // extend the fade start time if one was already scheduled
-        long fadeStartTime = SystemClock::uptimeMillis() + startDelay;
+        long fadeStartTime = AnimationUtils::currentAnimationTimeMillis() + startDelay;
         mScrollCache->fadeStartTime = fadeStartTime;
         mScrollCache->state = ScrollabilityCache::ON;
 
         // Schedule our fader to run, unscheduling any old ones first
-        /*if (mAttachInfo != null) {
-            mAttachInfo.mHandler.removeCallbacks(scrollCache);
-            mAttachInfo.mHandler.postAtTime(scrollCache, fadeStartTime);
-        }*/
+        if (mAttachInfo) {
+            removeCallbacks(mScrollCache->mRunner);
+            postDelayed(mScrollCache->mRunner,startDelay);
+        }
 
         return true;
     }
@@ -1615,25 +1619,25 @@ void View::onDrawScrollBars(Canvas& canvas){
     int state = cache->state;
     if (state == ScrollabilityCache::OFF) return;
     bool bInvalidate = false;
+    long now = AnimationUtils::currentAnimationTimeMillis();
     if (state == ScrollabilityCache::FADING){
         // We're fading -- get our fade interpolation
 
         float* values = cache->interpolatorValues;
 
         // Stops the animation if we're done
-        /*if (cache->scrollBarInterpolator->timeToValues(values) ==
-                Interpolator::Result::FREEZE_END) {
+        if (now-cache->fadeStartTime>=cache->scrollBarFadeDuration){//scrollBarInterpolator->timeToValues(values) == Interpolator::Result::FREEZE_END) {
             cache->state = ScrollabilityCache::OFF;
         } else {
-            cache->scrollBar->mutate()->setAlpha(std::round(values[0]));
-        }*/
+            const int alpha=255-255*(now-cache->fadeStartTime)/cache->scrollBarFadeDuration;
+            cache->scrollBar->mutate()->setAlpha(alpha);
+        }
 
         // This will make the scroll bars inval themselves after drawing. We only 
         // want this when we're fading so that we prevent excessive redraws
         bInvalidate = true;
-    }else {
-        // We're just on -- but we may have been fading before so
-        // reset alpha
+    }else {//now < fadeStartTime
+        // We're just on -- but we may have been fading before so reset alpha
         cache->scrollBar->mutate()->setAlpha(255);
     }
 
@@ -2789,11 +2793,30 @@ std::vector<int>& View::mergeDrawableStates(std::vector<int>&baseState,const std
 }
 
 void View::drawableStateChanged(){
-    if(mBackground&&mBackground->isStateful()){
-        const std::vector<int>state=getDrawableState();
-        mBackground->setState(state);
+    bool changed = false;
+    const std::vector<int>state=getDrawableState(); 
+
+    Drawable*d = mBackground;
+    if(d && d->isStateful())
+        changed |= d->setState(state);
+
+    d = mDefaultFocusHighlight;
+    if(d && d->isStateful()){
+        changed|= d->setState(state);
     }
-    invalidate(true);
+
+    d=mForegroundInfo?mForegroundInfo->mDrawable:nullptr;
+    if(d && d->isStateful())
+        changed|= d->setState(state);
+
+    if(mScrollCache){
+        d= mScrollCache->scrollBar;
+        if(d && d->isStateful()){
+            changed |= d->setState(state) && mScrollCache->state!=ScrollabilityCache::OFF;
+        } 
+    }
+
+    if(changed)   invalidate(true);
 }
 
 void View::refreshDrawableState(){
