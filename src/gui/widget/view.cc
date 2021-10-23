@@ -79,7 +79,6 @@ public:
 
     ScrollBarDrawable*scrollBar;
     View* host;
-    Interpolator* scrollBarInterpolator;
     Runnable mRunner;
     long fadeStartTime;
     int state = OFF;
@@ -96,7 +95,6 @@ public:
         scrollBarMinTouchTarget = configuration.getScaledMinScrollbarTouchTarget();
         scrollBarDefaultDelayBeforeFade = ViewConfiguration::getScrollDefaultDelay();
         scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
-        scrollBarInterpolator = nullptr;//new LinearInterpolator(1, 2);
         fadeScrollBars=true;
         scrollBar=nullptr;
         mScrollBarDraggingPos=0;
@@ -108,28 +106,14 @@ public:
         };
     }
     virtual ~ScrollabilityCache(){
-        delete scrollBarInterpolator;
         delete scrollBar;
     }
     void run(){
         long now = AnimationUtils::currentAnimationTimeMillis();
         if (now >= fadeStartTime) {
-
             // the animation fades the scrollbars out by changing
             // the opacity (alpha) from fully opaque to fully
             // transparent
-            int nextFrame = (int) now;
-            int framesCount = 0;
-
-            /*Interpolator* interpolator = scrollBarInterpolator;
-
-            // Start opaque
-            interpolator->setKeyFrame(framesCount++, nextFrame, OPAQUE);
-
-            // End transparent
-            nextFrame += scrollBarFadeDuration;
-            interpolator->setKeyFrame(framesCount, nextFrame, TRANSPARENT);*/
-
             state = FADING;
             // Kick off the fade animation
             host->invalidate(true);
@@ -233,7 +217,7 @@ void View::initView(){
     mOldWidthMeasureSpec=mOldHeightMeasureSpec=INT_MIN;
     mViewFlags = ENABLED|VISIBLE|FOCUSABLE_AUTO;
     mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 =0;
-    mScrollCache=nullptr;
+    mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
     mTop = mLeft = mRight = mBottom = 0;
     mOnClick = mOnLongClick = nullptr;
@@ -767,7 +751,6 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
             removeCallbacks(mScrollCache->mRunner);
             postDelayed(mScrollCache->mRunner,startDelay);
         }
-
         return true;
     }
     return false;
@@ -867,7 +850,7 @@ void View::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY
 
 int View::getVerticalFadingEdgeLength(){
     if (isVerticalFadingEdgeEnabled()) {
-         ScrollabilityCache* cache = mScrollCache;
+        ScrollabilityCache* cache = mScrollCache;
         if (cache != nullptr) {
             return cache->fadingEdgeLength;
         }
@@ -1646,13 +1629,12 @@ void View::onDrawScrollIndicators(Canvas& canvas){
 
 void View::onDrawScrollBars(Canvas& canvas){
     ScrollabilityCache* cache = mScrollCache;
-    if(cache == nullptr) return;
+    if(cache == nullptr||cache->state==ScrollabilityCache::OFF) 
+        return;
 
-    int state = cache->state;
-    if (state == ScrollabilityCache::OFF) return;
     bool bInvalidate = false;
     long now = AnimationUtils::currentAnimationTimeMillis();
-    if (state == ScrollabilityCache::FADING){
+    if (cache->state == ScrollabilityCache::FADING){
         // We're fading -- get our fade interpolation
 
         // Stops the animation if we're done
@@ -1689,17 +1671,17 @@ void View::onDrawScrollBars(Canvas& canvas){
         ScrollBarDrawable* scrollBar = mScrollCache->scrollBar;
         if (drawHorizontalScrollBar) {
             scrollBar->setParameters(computeHorizontalScrollRange(),
-                    computeHorizontalScrollOffset(),
-                    computeHorizontalScrollExtent(), false);
+               computeHorizontalScrollOffset(),computeHorizontalScrollExtent(), false);
             getHorizontalScrollBarBounds(&bounds, nullptr);
             onDrawHorizontalScrollBar(canvas,scrollBar, bounds.left, bounds.top,bounds.width, bounds.height);
         }
         if (drawVerticalScrollBar) {
             scrollBar->setParameters(computeVerticalScrollRange(),
-                    computeVerticalScrollOffset(),computeVerticalScrollExtent(), true);
+                computeVerticalScrollOffset(),computeVerticalScrollExtent(), true);
             getVerticalScrollBarBounds(&bounds, nullptr);
             onDrawVerticalScrollBar(canvas, scrollBar, bounds.left, bounds.top,bounds.width, bounds.height);
         }
+        if (bInvalidate) invalidate(true);
     }
 }
 
@@ -1871,10 +1853,7 @@ void View::drawBackground(Canvas&canvas){
 
 void View::onDrawForeground(Canvas& canvas){
     onDrawScrollIndicators(canvas);
-    if(mScrollCache){
-        onDrawScrollBars(canvas);
-        return;
-    }
+    onDrawScrollBars(canvas);
     Drawable*foreground=mForegroundInfo != nullptr ? mForegroundInfo->mDrawable : nullptr;
     if(foreground){
         if (mForegroundInfo->mBoundsChanged) {
