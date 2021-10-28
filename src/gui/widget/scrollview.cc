@@ -9,7 +9,8 @@ ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
     mActivePointerId=INVALID_POINTER;
 }
 
-ScrollView::ScrollView(Context*ctx,const AttributeSet&atts,const std::string&defstyle):FrameLayout(ctx,atts,defstyle){
+ScrollView::ScrollView(Context*ctx,const AttributeSet&atts)
+  :FrameLayout(ctx,atts){
     initScrollView();
 }
 

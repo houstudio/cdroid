@@ -7,7 +7,7 @@ class Button : public TextView{
 public:
     Button(int w, int h);
     Button(const std::string& text, int w, int h);
-    Button(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr);
+    Button(Context*ctx,const AttributeSet& attrs);
     virtual ~Button();
 };
 }

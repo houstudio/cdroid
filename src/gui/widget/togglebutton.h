@@ -14,7 +14,7 @@ protected:
     void drawableStateChanged()override;
 public:
     ToggleButton(int w,int h);
-    ToggleButton(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr);
+    ToggleButton(Context*ctx,const AttributeSet& attrs);
     const std::string getTextOn()const;
     void setTextOn(const std::string& textOn);
     const std::string getTextOff()const;

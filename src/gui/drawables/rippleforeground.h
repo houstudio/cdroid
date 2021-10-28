@@ -38,6 +38,7 @@ private:
     bool mForceSoftware;
     float mStartRadius = 0;
     std::vector<Animator*> mRunningSwAnimators;
+    AnimatorListenerAdapter mAnimationListener;
 private:
     float getCurrentX();
     float getCurrentY();
@@ -51,8 +52,7 @@ protected:
     void onTargetRadiusChanged(float targetRadius);
     void clampStartingPosition();
 public:
-    RippleForeground(RippleDrawable* owner,const Rect& bounds, float startingX, float startingY,
-            bool forceSoftware);
+    RippleForeground(RippleDrawable* owner,const Rect& bounds, float startingX, float startingY, bool forceSoftware);
     void getBounds(Rect& bounds);
     void move(float x, float y);
     bool hasFinishedExit()const;

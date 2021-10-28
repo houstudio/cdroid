@@ -71,8 +71,8 @@ static std::map<const std::string,int>orientationkvs={
     {"vertical",LinearLayout::VERTICAL}//
 };
 
-LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs,const std::string&defstyle)
-  :ViewGroup(context,attrs,defstyle){
+LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
+  :ViewGroup(context,attrs){
     initView();
     mUseLargestChild=attrs.getBoolean("measureWithLargestChild",false);
 

@@ -14,7 +14,8 @@ TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
     initTabLayout();
 }
 
-TabLayout::TabLayout(Context*context,const AttributeSet&atts):HorizontalScrollView(context,atts){
+TabLayout::TabLayout(Context*context,const AttributeSet&atts)
+  :HorizontalScrollView(context,atts){
     initTabLayout();
 }
 
@@ -29,7 +30,7 @@ void TabLayout::initTabLayout(){
     mScrollAnimator = nullptr;
     mViewPager = nullptr;
     mPagerAdapter =nullptr;
-	mAdapterChangeListener = nullptr;
+    mAdapterChangeListener = nullptr;
     mRequestedTabMinWidth = INVALID_WIDTH;
     mRequestedTabMaxWidth = INVALID_WIDTH;
     mTabTextMultiLineSize =2;

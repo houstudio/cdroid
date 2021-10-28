@@ -511,7 +511,7 @@ protected:
 
     void ensureTransformationInfo();
 public:
-    View(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
+    View(Context*ctx,const AttributeSet&attrs);
     View(int w,int h);
     virtual ~View();
     virtual void draw(Canvas&canvas);

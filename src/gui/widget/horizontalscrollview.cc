@@ -11,8 +11,8 @@ HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();
 }
 
-HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
-  :FrameLayout(ctx,atts,defstyle){
+HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
+  :FrameLayout(ctx,atts){
     initScrollView();
 }
 

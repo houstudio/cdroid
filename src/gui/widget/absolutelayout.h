@@ -28,7 +28,7 @@ protected:
     void onLayout(bool changed, int l, int t,int w, int h)override;
 public:
     AbsoluteLayout(int w,int h);
-    AbsoluteLayout(Context* context,const AttributeSet& attrs,const std::string&defstyle=nullptr);
+    AbsoluteLayout(Context* context,const AttributeSet& attrs);
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 

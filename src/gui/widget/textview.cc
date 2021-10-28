@@ -233,8 +233,8 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mShadowRadius = atts.getInt("shadowRadius",mShadowRadius);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TextView::TextView(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
-  :View(ctx,attrs,defstyle){
+TextView::TextView(Context*ctx,const AttributeSet& attrs)
+  :View(ctx,attrs){
     initView();
     mTextColor =ctx->getColorStateList(attrs.getString("textColor"));
     mLayout=new Layout(20,50);

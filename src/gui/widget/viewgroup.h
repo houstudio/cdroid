@@ -205,7 +205,7 @@ protected:
 public:
     ViewGroup(int w,int h);
     ViewGroup(int x,int y,int w,int h);
-    ViewGroup(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr);
+    ViewGroup(Context*ctx,const AttributeSet& attrs);
     virtual ~ViewGroup();
     bool getTouchscreenBlocksFocus()const;
     bool shouldBlockFocusForTouchscreen()const;

@@ -53,7 +53,7 @@ protected:
     bool onTouchEvent(MotionEvent& event)override;
 public:
     AbsSeekBar(int w,int h);
-    AbsSeekBar(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
+    AbsSeekBar(Context*ctx,const AttributeSet&attrs);
     void setKeyProgressIncrement(int increment);
     int getKeyProgressIncrement()const;
     void setThumbOffset(int thumbOffset);

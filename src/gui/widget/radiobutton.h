@@ -6,8 +6,8 @@ class RadioButton:public ToggleButton{
 public:
     RadioButton(int w,int h):ToggleButton(w,h){
     }
-    RadioButton(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr)
-	  :ToggleButton(ctx,attrs,defstyle){
+    RadioButton(Context*ctx,const AttributeSet& attrs)
+	  :ToggleButton(ctx,attrs){
     }
     void toggle()override{
         if (!isChecked()) ToggleButton::toggle();

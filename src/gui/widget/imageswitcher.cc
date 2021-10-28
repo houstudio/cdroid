@@ -7,8 +7,8 @@ ImageSwicther::ImageSwicther(int w,int h)
     :ViewSwitcher(w,h){
 }
 
-ImageSwicther::ImageSwicther(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
-  :ViewSwitcher(ctx,atts,defstyle){
+ImageSwicther::ImageSwicther(Context*ctx,const AttributeSet&atts)
+  :ViewSwitcher(ctx,atts){
 }
 
 void ImageSwicther::setImageResource(const std::string&resid){

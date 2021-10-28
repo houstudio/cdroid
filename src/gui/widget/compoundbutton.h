@@ -21,7 +21,7 @@ protected:
     void onDraw(Canvas&canvas)override;
 public:
     CompoundButton(const std::string&txt,int width,int height);
-    CompoundButton(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
+    CompoundButton(Context*ctx,const AttributeSet&attrs);
     void setButtonDrawable(const std::string&resid);
     void setButtonDrawable(Drawable*d);
     bool performClick()override;

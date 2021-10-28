@@ -28,8 +28,8 @@ public:
     bool mHasSecondaryProgressTintMode;
 };
 
-ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
-  :View(ctx,attrs,defstyle){
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
+  :View(ctx,attrs){
     initProgressBar();
     mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);
     setIndeterminate(attrs.getBoolean("indeterminate",false));

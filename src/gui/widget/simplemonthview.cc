@@ -36,7 +36,8 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
     mDaySelectorRadius = std::min(mDesiredDaySelectorRadius,std::min(maxSelectorWidth, maxSelectorHeight));
 }
 
-SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
+SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
+   :View(ctx,atts){
     
 }
 

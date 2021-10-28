@@ -2,7 +2,7 @@
 #include <gravity.h>
 namespace cdroid{
 
-Button::Button(Context*ctx,const AttributeSet& attrs,const std::string&defstyle):TextView(ctx,attrs,defstyle){
+Button::Button(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
     setGravity(Gravity::CENTER_VERTICAL);
     setTextAlignment(TEXT_ALIGNMENT_CENTER);
     setFocusable(true);

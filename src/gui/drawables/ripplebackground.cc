@@ -85,9 +85,16 @@ void RippleBackground::onStateChanged(){
         mAnimator->cancel();
         mAnimator = nullptr;
     }
-    //mAnimator = ObjectAnimator::ofFloat(this, OPACITY, newOpacity);
+    mAnimator = ValueAnimator::ofFloat({mOpacity,newOpacity});//this, OPACITY, newOpacity);
     mAnimator->setDuration(OPACITY_DURATION);
-    //mAnimator->setInterpolator(LINEAR_INTERPOLATOR);
+    mAnimator->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
+    mAnimator->addUpdateListener([this](ValueAnimator&anim){
+        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
+        LOGD("mOpacity=%f",fp->getAnimatedValue());
+        mOpacity=fp->getAnimatedValue();
+        invalidateSelf();
+    });
+
     mAnimator->start();
 }
 

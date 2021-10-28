@@ -7,7 +7,8 @@ namespace cdroid{
 class ObjectAnimator;
 class AnimationHandler:EventHandler{
 public:
-    struct AnimationFrameCallback{
+    class AnimationFrameCallback{
+    public:
         virtual bool doAnimationFrame(long)=0;
         virtual void commitAnimationFrame(long)=0;
     };

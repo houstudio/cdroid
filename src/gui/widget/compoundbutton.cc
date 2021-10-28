@@ -2,8 +2,8 @@
 #include <cdlog.h>
 namespace cdroid{
 
-CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
-  :Button(ctx,attrs,defstyle){
+CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs)
+  :Button(ctx,attrs){
     mButtonDrawable=nullptr;
     mOnCheckedChangeListener=nullptr;
     mOnCheckedChangeWidgetListener=nullptr;

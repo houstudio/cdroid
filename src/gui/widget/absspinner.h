@@ -34,7 +34,7 @@ protected:
     virtual void layout(int delta, bool animate)=0;
 public:
     AbsSpinner(int w,int h);
-    AbsSpinner(Context*,const AttributeSet&atts,const std::string&defstyle=nullptr);
+    AbsSpinner(Context*,const AttributeSet&atts);
     virtual ~AbsSpinner();
     int getCount()override;
     View* getSelectedView()override;

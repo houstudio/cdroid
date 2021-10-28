@@ -74,7 +74,7 @@ TouchTarget*TouchTarget::sRecycleBin=nullptr;
 int TouchTarget::sRecycledCount=0;
 bool ViewGroup::DEBUG_DRAW = false;
 
-ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs,const std::string&defstyle):View(ctx,attrs,defstyle){
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
     initGroup();
 }
 
@@ -1052,7 +1052,7 @@ void ViewGroup::measureChild(View* child, int parentWidthMeasureSpec,int parentH
 
 void ViewGroup::measureChildWithMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed){
-	MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
+    MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
 
     int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
         mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin

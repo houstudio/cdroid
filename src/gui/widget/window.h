@@ -70,7 +70,7 @@ public:
         TYPE_TOAST        =2005,
     }WindowType;
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
-    Window(Context*,const AttributeSet&,const std::string&defstyle=nullptr);
+    Window(Context*,const AttributeSet&);
     void setRegion(const RefPtr<Region>&region);
     void draw();
     virtual ~Window();

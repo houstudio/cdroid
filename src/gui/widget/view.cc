@@ -136,7 +136,7 @@ View::View(int w,int h){
        mRoundScrollbarRenderer=new RoundScrollbarRenderer(this);
 }
 
-View::View(Context*ctx,const AttributeSet&attrs,const std::string&style){
+View::View(Context*ctx,const AttributeSet&attrs){
     initView();
 
     mContext=ctx;

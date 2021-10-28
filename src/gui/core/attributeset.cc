@@ -5,7 +5,6 @@
 #include <vector>
 #include <cdlog.h>
 
-
 namespace cdroid{
 
 static std::vector<std::string> split(const std::string & path) {
@@ -29,16 +28,16 @@ AttributeSet::AttributeSet(const char*atts[],int size){
 
 int AttributeSet::set(const char*atts[],int size){
     int rc=0;
-	for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1)
-		mAttrs.insert(std::make_pair<const std::string,const std::string>(atts[i],atts[i+1]));
+    for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1)
+        mAttrs.insert(std::make_pair<const std::string,const std::string>(atts[i],atts[i+1]));
     return mAttrs.size();
 }
 
 bool AttributeSet::add(const std::string&key,const std::string&value){
     if(mAttrs.find(key)!=mAttrs.end())
-		return false; 
-	mAttrs.insert(std::make_pair<const std::string,const std::string>(key.c_str(),value.c_str()));
-	return true;
+        return false; 
+    mAttrs.insert(std::make_pair<const std::string,const std::string>(key.c_str(),value.c_str()));
+    return true;
 }
 
 void AttributeSet::setBasePath(const std::string&path){
@@ -61,8 +60,8 @@ int AttributeSet::size()const{
 const std::string AttributeSet::getAttributeValue(const std::string&key)const{
     auto it=mAttrs.find(key);
     if(it!=mAttrs.end())
-		return it->second;
-	return std::string();
+        return it->second;
+    return std::string();
 }
 
 bool AttributeSet::getBoolean(const std::string&key,bool def)const{

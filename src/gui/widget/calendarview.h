@@ -10,7 +10,7 @@ public:
 private:
 public:
     CalendarView(int w,int h);
-    CalendarView(Context*,const AttributeSet&atts,const std::string&defstyle=nullptr);
+    CalendarView(Context*,const AttributeSet&atts);
     void setWeekDayTextAppearance(const std::string&resid);
     const std::string getWeekDayTextAppearance()const;
     void setDateTextAppearance(const std::string&resid);

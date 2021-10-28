@@ -8,7 +8,8 @@ TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
     initTab();
 }
 
-TabWidget::TabWidget(Context*ctx,const AttributeSet&atts):LinearLayout(ctx,atts){
+TabWidget::TabWidget(Context*ctx,const AttributeSet&atts)
+  :LinearLayout(ctx,atts){
     initTab();
 }
 

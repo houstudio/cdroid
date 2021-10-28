@@ -13,7 +13,8 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
     resetMultiTap();
 }
 
-KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
+  :View(ctx,atts){
     init();
     std::string resid  = atts.getString("keyBackground");
     mKeyBackground     = ctx->getDrawable(resid);

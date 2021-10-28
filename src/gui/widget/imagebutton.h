@@ -7,7 +7,7 @@ namespace cdroid{
 class ImageButton:public ImageView{
 public:
     ImageButton(int w,int h);
-    ImageButton(Context*ctx,const AttributeSet& attrs,const std::string&defstyle=nullptr);
+    ImageButton(Context*ctx,const AttributeSet& attrs);
 };
 
 }//namespace

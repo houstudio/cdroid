@@ -5,7 +5,7 @@
 namespace cdroid{
 class LayoutInflater{
 public:
-    typedef std::function<View*(Context*ctx, const AttributeSet&attrs,const std::string&defstyle)>ViewInflater;
+    typedef std::function<View*(Context*ctx, const AttributeSet&attrs)>ViewInflater;
 private:
     Context*mContext;
     LayoutInflater(Context*ctx);

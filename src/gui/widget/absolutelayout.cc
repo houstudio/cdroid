@@ -23,8 +23,8 @@ AbsoluteLayoutParams::AbsoluteLayoutParams(const LayoutParams& source)
 AbsoluteLayout::AbsoluteLayout(int w,int h):ViewGroup(w,h){
 }
 
-AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet& attrs,const std::string&defstyle)
-    :ViewGroup(context,attrs,defstyle){
+AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet& attrs)
+    :ViewGroup(context,attrs){
 }
 
 void AbsoluteLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){

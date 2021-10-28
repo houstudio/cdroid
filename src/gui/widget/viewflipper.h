@@ -20,7 +20,7 @@ private:
     void doFlip();
 public:
     ViewFlipper(int w,int h);
-    ViewFlipper(Context* context,const AttributeSet& attrs,const std::string&defstyle);
+    ViewFlipper(Context* context,const AttributeSet& attrs);
     void setFlipInterval(int milliseconds);
     void startFlipping();
     void stopFlipping();

@@ -8,7 +8,8 @@ Space::Space(int w,int h):View(w,h){
     }
 }
 
-Space::Space(Context*context,const AttributeSet& attrs):View(context,attrs){
+Space::Space(Context*context,const AttributeSet& attrs)
+  :View(context,attrs){
     if (getVisibility() == VISIBLE) {
         setVisibility(INVISIBLE);
     }

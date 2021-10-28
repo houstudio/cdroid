@@ -47,8 +47,8 @@ TableRow::TableRow(int w,int h):LinearLayout(w,h){
     initTableRow();
 }
 
-TableRow::TableRow(Context* context,const AttributeSet& attrs,const std::string&defstyle)
-  :LinearLayout(context, attrs,defstyle){
+TableRow::TableRow(Context* context,const AttributeSet& attrs)
+  :LinearLayout(context, attrs){
     initTableRow();
 }
 

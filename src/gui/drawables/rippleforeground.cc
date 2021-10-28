@@ -12,6 +12,10 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     // Take 60% of the maximum of the width and height, then divided half to get the radius.
     mStartRadius = std::max(bounds.width, bounds.height) * 0.3f;
     clampStartingPosition();
+    mAnimationListener.onAnimationEnd=[this](Animator&anim,bool isReverse){
+         mHasFinishedExit = true;
+         pruneSwFinished();
+    };
 }
 
 void RippleForeground::onTargetRadiusChanged(float targetRadius){
@@ -30,12 +34,11 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
 }
 
 void RippleForeground::pruneSwFinished() {
-    /*for (auto anim:mRunningSwAnimators.size() - 1; i >= 0; i--) {
-        if (!mRunningSwAnimators.get(i).isRunning()) {
-            mRunningSwAnimators.remove(i);
-        }
-    }*/
-    //mRunningSwAnimators.remove_if([](const Animator*anim){return !anim->isRunning();});
+    for (auto it=mRunningSwAnimators.begin();it!=mRunningSwAnimators.end();){
+        if ((*it)->isRunning()) {
+            it=mRunningSwAnimators.erase(it);
+        }else it++;
+    }
 }
 
 void RippleForeground::getBounds(Rect& bounds) {
@@ -68,37 +71,59 @@ void RippleForeground::startSoftwareEnter() {
          anim->cancel();
     }
     mRunningSwAnimators.clear();
-#if 0
-    ObjectAnimator* tweenRadius = ObjectAnimator.ofFloat(this, TWEEN_RADIUS, 1);
+
+    ValueAnimator* tweenRadius = ValueAnimator::ofFloat({.0f,1.f});//this, TWEEN_RADIUS, 1);
     tweenRadius->setDuration(RIPPLE_ENTER_DURATION);
-    tweenRadius->setInterpolator(DECELERATE_INTERPOLATOR);
+    tweenRadius->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
+    tweenRadius->addUpdateListener([this](ValueAnimator&anim){
+        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
+        LOGD("mTweenRadius=%f",fp->getAnimatedValue());
+        mTweenRadius=fp->getAnimatedValue();
+        onAnimationPropertyChanged();
+    });
     tweenRadius->start();
     mRunningSwAnimators.push_back(tweenRadius);
 
-    ObjectAnimator* tweenOrigin = ObjectAnimator.ofFloat(this, TWEEN_ORIGIN, 1);
+    ValueAnimator* tweenOrigin = ValueAnimator::ofFloat({.0f,1.f});//this, TWEEN_ORIGIN, 1);
     tweenOrigin->setDuration(RIPPLE_ORIGIN_DURATION);
-    tweenOrigin->setInterpolator(DECELERATE_INTERPOLATOR);
+    tweenOrigin->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
+    tweenOrigin->addUpdateListener([this](ValueAnimator&anim){
+        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
+        LOGD("mTweenX/Y=%f",fp->getAnimatedValue());
+        mTweenX=mTweenY=fp->getAnimatedValue();
+        onAnimationPropertyChanged();
+    });
     tweenOrigin->start();
     mRunningSwAnimators.push_back(tweenOrigin);
 
-    ObjectAnimator* opacity = ObjectAnimator.ofFloat(this, OPACITY, 1);
+    ValueAnimator* opacity = ValueAnimator::ofFloat({.0f,1.f});//this, OPACITY, 1);
     opacity->setDuration(OPACITY_ENTER_DURATION);
-    opacity->setInterpolator(LINEAR_INTERPOLATOR);
+    opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
+    opacity->addUpdateListener([this](ValueAnimator&anim){
+        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
+        LOGD("mOpacity=%f",fp->getAnimatedValue());
+        mOpacity=fp->getAnimatedValue();
+        onAnimationPropertyChanged();
+    });
     opacity->start();
     mRunningSwAnimators.push_back(opacity);
-#endif
 }
 
 void RippleForeground::startSoftwareExit() {
-#if 0
-    ObjectAnimator* opacity = ObjectAnimator.ofFloat(this, OPACITY, 0);
+
+    ValueAnimator* opacity = ValueAnimator::ofFloat({1.f,.0f});
     opacity->setDuration(OPACITY_EXIT_DURATION);
-    opacity->setInterpolator(LINEAR_INTERPOLATOR);
+    opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
     opacity->addListener(mAnimationListener);
     opacity->setStartDelay(computeFadeOutDelay());
+    opacity->addUpdateListener([this](ValueAnimator&anim){
+        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
+        LOGD("mOpacity=%f",fp->getAnimatedValue());
+        mOpacity=fp->getAnimatedValue();
+    });
+
     opacity->start();
     mRunningSwAnimators.push_back(opacity);
-#endif
 }
 
 void RippleForeground::enter(){

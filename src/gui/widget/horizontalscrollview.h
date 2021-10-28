@@ -69,7 +69,7 @@ protected:
     void draw(Canvas& canvas);
 public:
     HorizontalScrollView(int w,int h);
-    HorizontalScrollView(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr);
+    HorizontalScrollView(Context*ctx,const AttributeSet&atts);
     ~HorizontalScrollView();
     int getMaxScrollAmount();
     View& addView(View* child);

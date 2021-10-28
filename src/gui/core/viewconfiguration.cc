@@ -46,6 +46,7 @@ ViewConfiguration& ViewConfiguration::get(Context*context){
 bool ViewConfiguration::isScreenRound(){
     return false;
 }
+
 int ViewConfiguration::getThumbLength(int size, int thickness, int extent, int range) {
     // Avoid the tiny thumb.
     int minLength = thickness * 2;
@@ -64,409 +65,411 @@ int ViewConfiguration::getThumbOffset(int size, int thumbLength, int extent, int
     }
     return thumbOffset;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    int ViewConfiguration::getScaledScrollBarSize() {
-        return mScrollbarSize;
-    }
 
-    /**
-     * @return the minimum size of the scrollbar thumb's touch target in pixels
-     * @hide
-     */
-    int ViewConfiguration::getScaledMinScrollbarTouchTarget() {
-        return mMinScrollbarTouchTarget;
-    }
+int ViewConfiguration::getScaledScrollBarSize() {
+    return mScrollbarSize;
+}
 
-    /**
-     * @return Duration of the fade when scrollbars fade away in milliseconds
-     */
-    int ViewConfiguration::getScrollBarFadeDuration() {
-        return SCROLL_BAR_FADE_DURATION;
-    }
+/**
+ * @return the minimum size of the scrollbar thumb's touch target in pixels
+ * @hide
+ */
+int ViewConfiguration::getScaledMinScrollbarTouchTarget() {
+    return mMinScrollbarTouchTarget;
+}
 
-    /**
-     * @return Default delay before the scrollbars fade in milliseconds
-     */
-    int ViewConfiguration::getScrollDefaultDelay() {
-        return SCROLL_BAR_DEFAULT_DELAY;
-    }
+/**
+ * @return Duration of the fade when scrollbars fade away in milliseconds
+ */
+int ViewConfiguration::getScrollBarFadeDuration() {
+    return SCROLL_BAR_FADE_DURATION;
+}
 
-
-    /**
-     * @return the length of the fading edges in pixels
-     */
-    int ViewConfiguration::getScaledFadingEdgeLength() {
-        return mFadingEdgeLength;
-    }
-
-    /**
-     * @return the duration in milliseconds of the pressed state in child
-     * components.
-     */
-    int ViewConfiguration::getPressedStateDuration() {
-        return PRESSED_STATE_DURATION;
-    }
-
-    /**
-     * @return the duration in milliseconds before a press turns into
-     * a long press
-     */
-    int ViewConfiguration::getLongPressTimeout() {
-        return DEFAULT_LONG_PRESS_TIMEOUT;
-        //return AppGlobals.getIntCoreSetting(Settings.Secure.LONG_PRESS_TIMEOUT,DEFAULT_LONG_PRESS_TIMEOUT);
-    }
-
-    /**
-     * @return the duration in milliseconds between the first tap's up event and the second tap's
-     * down event for an interaction to be considered part of the same multi-press.
-     * @hide
-     */
-    int ViewConfiguration::getMultiPressTimeout() {
-        return DEFAULT_MULTI_PRESS_TIMEOUT;
-        //return AppGlobals.getIntCoreSetting(Settings.Secure.MULTI_PRESS_TIMEOUT, DEFAULT_MULTI_PRESS_TIMEOUT);
-    }
-
-    /**
-     * @return the time before the first key repeat in milliseconds.
-     */
-    int ViewConfiguration::getKeyRepeatTimeout() {
-        return getLongPressTimeout();
-    }
-
-    /**
-     * @return the time between successive key repeats in milliseconds.
-     */
-    int ViewConfiguration::getKeyRepeatDelay() {
-        return KEY_REPEAT_DELAY;
-    }
-
-    /**
-     * @return the duration in milliseconds we will wait to see if a touch event
-     * is a tap or a scroll. If the user does not move within this interval, it is
-     * considered to be a tap.
-     */
-    int ViewConfiguration::getTapTimeout() {
-        return TAP_TIMEOUT;
-    }
-
-    /**
-     * @return the duration in milliseconds we will wait to see if a touch event
-     * is a jump tap. If the user does not move within this interval, it is
-     * considered to be a tap.
-     */
-    int ViewConfiguration::getJumpTapTimeout() {
-        return JUMP_TAP_TIMEOUT;
-    }
-
-    /**
-     * @return the duration in milliseconds between the first tap's up event and
-     * the second tap's down event for an interaction to be considered a
-     * double-tap.
-     */
-    int ViewConfiguration::getDoubleTapTimeout() {
-        return DOUBLE_TAP_TIMEOUT;
-    }
-
-    /**
-     * @return the minimum duration in milliseconds between the first tap's
-     * up event and the second tap's down event for an interaction to be considered a
-     * double-tap.
-     *
-     * @hide
-     */
-    int ViewConfiguration::getDoubleTapMinTime() {
-        return DOUBLE_TAP_MIN_TIME;
-    }
-
-    /**
-     * @return the maximum duration in milliseconds between a touch pad
-     * touch and release for a given touch to be considered a tap (click) as
-     * opposed to a hover movement gesture.
-     * @hide
-     */
-    int ViewConfiguration::getHoverTapTimeout() {
-        return HOVER_TAP_TIMEOUT;
-    }
-
-    /**
-     * @return the maximum distance in pixels that a touch pad touch can move
-     * before being released for it to be considered a tap (click) as opposed
-     * to a hover movement gesture.
-     * @hide
-     */
-    int ViewConfiguration::getHoverTapSlop() {
-        return HOVER_TAP_SLOP;
-    }
-
-    /**
-     * @return Inset in pixels to look for touchable content when the user touches the edge of the
-     *         screen
-     */
-    int ViewConfiguration::getScaledEdgeSlop() {
-        return mEdgeSlop;
-    }
+/**
+ * @return Default delay before the scrollbars fade in milliseconds
+ */
+int ViewConfiguration::getScrollDefaultDelay() {
+    return SCROLL_BAR_DEFAULT_DELAY;
+}
 
 
-    /**
-     * @return Distance in pixels a touch can wander before we think the user is scrolling
-     */
-    int ViewConfiguration::getScaledTouchSlop() {
-        return mTouchSlop;
-    }
+/**
+ * @return the length of the fading edges in pixels
+ */
+int ViewConfiguration::getScaledFadingEdgeLength() {
+    return mFadingEdgeLength;
+}
 
-    /**
-     * @return Distance in pixels a hover can wander while it is still considered "stationary".
-     *
-     */
-    int ViewConfiguration::getScaledHoverSlop() {
-        return mHoverSlop;
-    }
+/**
+ * @return the duration in milliseconds of the pressed state in child
+ * components.
+ */
+int ViewConfiguration::getPressedStateDuration() {
+    return PRESSED_STATE_DURATION;
+}
 
-    /**
-     * @return Distance in pixels the first touch can wander before we do not consider this a
-     * potential double tap event
-     * @hide
-     */
-    int ViewConfiguration::getScaledDoubleTapTouchSlop() {
-        return mDoubleTapTouchSlop;
-    }
+/**
+ * @return the duration in milliseconds before a press turns into
+ * a long press
+ */
+int ViewConfiguration::getLongPressTimeout() {
+    return DEFAULT_LONG_PRESS_TIMEOUT;
+    //return AppGlobals.getIntCoreSetting(Settings.Secure.LONG_PRESS_TIMEOUT,DEFAULT_LONG_PRESS_TIMEOUT);
+}
 
-    /**
-     * @return Distance in pixels a touch can wander before we think the user is scrolling a full
-     * page
-     */
-    int ViewConfiguration::getScaledPagingTouchSlop() {
-        return mPagingTouchSlop;
-    }
+/**
+ * @return the duration in milliseconds between the first tap's up event and the second tap's
+ * down event for an interaction to be considered part of the same multi-press.
+ * @hide
+ */
+int ViewConfiguration::getMultiPressTimeout() {
+    return DEFAULT_MULTI_PRESS_TIMEOUT;
+    //return AppGlobals.getIntCoreSetting(Settings.Secure.MULTI_PRESS_TIMEOUT, DEFAULT_MULTI_PRESS_TIMEOUT);
+}
 
+/**
+ * @return the time before the first key repeat in milliseconds.
+ */
+int ViewConfiguration::getKeyRepeatTimeout() {
+    return getLongPressTimeout();
+}
 
-    /**
-     * @return Distance in pixels between the first touch and second touch to still be
-     *         considered a double tap
-     */
-    int ViewConfiguration::getScaledDoubleTapSlop() {
-        return mDoubleTapSlop;
-    }
+/**
+ * @return the time between successive key repeats in milliseconds.
+ */
+int ViewConfiguration::getKeyRepeatDelay() {
+    return KEY_REPEAT_DELAY;
+}
 
-    /**
-     * Interval for dispatching a recurring accessibility event in milliseconds.
-     * This interval guarantees that a recurring event will be send at most once
-     * during the {@link #getSendRecurringAccessibilityEventsInterval()} time frame.
-     *
-     * @return The delay in milliseconds.
-     *
-     * @hide
-     */
-    long ViewConfiguration::getSendRecurringAccessibilityEventsInterval() {
-        return SEND_RECURRING_ACCESSIBILITY_EVENTS_INTERVAL_MILLIS;
-    }
+/**
+ * @return the duration in milliseconds we will wait to see if a touch event
+ * is a tap or a scroll. If the user does not move within this interval, it is
+ * considered to be a tap.
+ */
+int ViewConfiguration::getTapTimeout() {
+    return TAP_TIMEOUT;
+}
 
+/**
+ * @return the duration in milliseconds we will wait to see if a touch event
+ * is a jump tap. If the user does not move within this interval, it is
+ * considered to be a tap.
+ */
+int ViewConfiguration::getJumpTapTimeout() {
+    return JUMP_TAP_TIMEOUT;
+}
 
-    /**
-     * @return Distance in pixels a touch must be outside the bounds of a window for it
-     * to be counted as outside the window for purposes of dismissing that window.
-     */
-    int ViewConfiguration::getScaledWindowTouchSlop() {
-        return mWindowTouchSlop;
-    }
+/**
+ * @return the duration in milliseconds between the first tap's up event and
+ * the second tap's down event for an interaction to be considered a
+ * double-tap.
+ */
+int ViewConfiguration::getDoubleTapTimeout() {
+    return DOUBLE_TAP_TIMEOUT;
+}
 
+/**
+ * @return the minimum duration in milliseconds between the first tap's
+ * up event and the second tap's down event for an interaction to be considered a
+ * double-tap.
+ *
+ * @hide
+ */
+int ViewConfiguration::getDoubleTapMinTime() {
+    return DOUBLE_TAP_MIN_TIME;
+}
 
-    /**
-     * @return Minimum velocity to initiate a fling, as measured in pixels per second.
-     */
-    int ViewConfiguration::getScaledMinimumFlingVelocity() {
-        return mMinimumFlingVelocity;
-    }
+/**
+ * @return the maximum duration in milliseconds between a touch pad
+ * touch and release for a given touch to be considered a tap (click) as
+ * opposed to a hover movement gesture.
+ * @hide
+ */
+int ViewConfiguration::getHoverTapTimeout() {
+    return HOVER_TAP_TIMEOUT;
+}
 
+/**
+ * @return the maximum distance in pixels that a touch pad touch can move
+ * before being released for it to be considered a tap (click) as opposed
+ * to a hover movement gesture.
+ * @hide
+ */
+int ViewConfiguration::getHoverTapSlop() {
+    return HOVER_TAP_SLOP;
+}
 
-    /**
-     * @return Maximum velocity to initiate a fling, as measured in pixels per second.
-     */
-    int ViewConfiguration::getScaledMaximumFlingVelocity() {
-        return mMaximumFlingVelocity;
-    }
-
-    /**
-     * @return Amount to scroll in response to a {@link MotionEvent#ACTION_SCROLL} event. Multiply
-     * this by the event's axis value to obtain the number of pixels to be scrolled.
-     *
-     * @removed
-     */
-    int ViewConfiguration::getScaledScrollFactor() {
-        return (int) mVerticalScrollFactor;
-    }
-
-    /**
-     * @return Amount to scroll in response to a horizontal {@link MotionEvent#ACTION_SCROLL} event.
-     * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
-     */
-    float ViewConfiguration::getScaledHorizontalScrollFactor() {
-        return mHorizontalScrollFactor;
-    }
-
-    /**
-     * @return Amount to scroll in response to a vertical {@link MotionEvent#ACTION_SCROLL} event.
-     * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
-     */
-    float ViewConfiguration::getScaledVerticalScrollFactor() {
-        return mVerticalScrollFactor;
-    }
-
-
-    /**
-     * The maximum drawing cache size expressed in bytes.
-     *
-     * @return the maximum size of View's drawing cache expressed in bytes
-     */
-    int ViewConfiguration::getScaledMaximumDrawingCacheSize() {
-        return mMaximumDrawingCacheSize;
-    }
-
-    /**
-     * @return The maximum distance a View should overscroll by when showing edge effects (in
-     * pixels).
-     */
-    int ViewConfiguration::getScaledOverscrollDistance() {
-        return mOverscrollDistance;
-    }
-
-    /**
-     * @return The maximum distance a View should overfling by when showing edge effects (in
-     * pixels).
-     */
-    int ViewConfiguration::getScaledOverflingDistance() {
-        return mOverflingDistance;
-    }
-
-    /**
-     * The amount of time that the zoom controls should be
-     * displayed on the screen expressed in milliseconds.
-     *
-     * @return the time the zoom controls should be visible expressed
-     * in milliseconds.
-     */
-    long ViewConfiguration::getZoomControlsTimeout() {
-        return ZOOM_CONTROLS_TIMEOUT;
-    }
+/**
+ * @return Inset in pixels to look for touchable content when the user touches the edge of the
+ *         screen
+ */
+int ViewConfiguration::getScaledEdgeSlop() {
+    return mEdgeSlop;
+}
 
 
-    /**
-     * The amount of time a user needs to press the relevant key to bring up
-     * the global actions dialog.
-     *
-     * @return how long a user needs to press the relevant key to bring up
-     *   the global actions dialog.
-     * @hide
-     */
-    long ViewConfiguration::getDeviceGlobalActionKeyTimeout() {
-        return mGlobalActionsKeyTimeout;
-    }
+/**
+ * @return Distance in pixels a touch can wander before we think the user is scrolling
+ */
+int ViewConfiguration::getScaledTouchSlop() {
+    return mTouchSlop;
+}
 
-    /**
-     * The amount of time a user needs to press the relevant keys to activate the accessibility
-     * shortcut.
-     *
-     * @return how long a user needs to press the relevant keys to activate the accessibility
-     *   shortcut.
-     * @hide
-     */
-    long ViewConfiguration::getAccessibilityShortcutKeyTimeout() {
-        return A11Y_SHORTCUT_KEY_TIMEOUT;
-    }
+/**
+ * @return Distance in pixels a hover can wander while it is still considered "stationary".
+ *
+ */
+int ViewConfiguration::getScaledHoverSlop() {
+    return mHoverSlop;
+}
 
-    /**
-     * @return The amount of time a user needs to press the relevant keys to activate the
-     *   accessibility shortcut after it's confirmed that accessibility shortcut is used.
-     * @hide
-     */
-    long ViewConfiguration::getAccessibilityShortcutKeyTimeoutAfterConfirmation() {
-        return A11Y_SHORTCUT_KEY_TIMEOUT_AFTER_CONFIRMATION;
-    }
+/**
+ * @return Distance in pixels the first touch can wander before we do not consider this a
+ * potential double tap event
+ * @hide
+ */
+int ViewConfiguration::getScaledDoubleTapTouchSlop() {
+    return mDoubleTapTouchSlop;
+}
 
-    /**
-     * The amount of friction applied to scrolls and flings.
-     *
-     * @return A scalar dimensionless value representing the coefficient of
-     *         friction.
-     */
-    float ViewConfiguration::getScrollFriction() {
-        return SCROLL_FRICTION;
-    }
+/**
+ * @return Distance in pixels a touch can wander before we think the user is scrolling a full
+ * page
+ */
+int ViewConfiguration::getScaledPagingTouchSlop() {
+    return mPagingTouchSlop;
+}
 
-    /**
-     * @return the default duration in milliseconds for {@link ActionMode#hide(long)}.
-     */
-    long ViewConfiguration::getDefaultActionModeHideDuration() {
-        return ACTION_MODE_HIDE_DURATION_DEFAULT;
-    }
 
-    /**
-     * Report if the device has a permanent menu key available to the user.
-     *
-     * <p>As of Android 3.0, devices may not have a permanent menu key available.
-     * Apps should use the action bar to present menu options to users.
-     * However, there are some apps where the action bar is inappropriate
-     * or undesirable. This method may be used to detect if a menu key is present.
-     * If not, applications should provide another on-screen affordance to access
-     * functionality.
-     *
-     * @return true if a permanent menu key is present, false otherwise.
-     */
-    bool ViewConfiguration::hasPermanentMenuKey() {
-        return sHasPermanentMenuKey;
-    }
+/**
+ * @return Distance in pixels between the first touch and second touch to still be
+ *         considered a double tap
+ */
+int ViewConfiguration::getScaledDoubleTapSlop() {
+    return mDoubleTapSlop;
+}
 
-    /**
-     * Check if shortcuts should be displayed in menus.
-     *
-     * @return {@code True} if shortcuts should be displayed in menus.
-     */
-    bool ViewConfiguration::shouldShowMenuShortcutsWhenKeyboardPresent() {
-        return mShowMenuShortcutsWhenKeyboardPresent;
-    }
+/**
+ * Interval for dispatching a recurring accessibility event in milliseconds.
+ * This interval guarantees that a recurring event will be send at most once
+ * during the {@link #getSendRecurringAccessibilityEventsInterval()} time frame.
+ *
+ * @return The delay in milliseconds.
+ *
+ * @hide
+ */
+long ViewConfiguration::getSendRecurringAccessibilityEventsInterval() {
+    return SEND_RECURRING_ACCESSIBILITY_EVENTS_INTERVAL_MILLIS;
+}
 
-    /**
-     * @hide
-     * @return Whether or not marquee should use fading edges.
-     */
-    bool ViewConfiguration::isFadingMarqueeEnabled() {
-        return mFadingMarqueeEnabled;
-    }
 
-    /**
-     * @return the duration in milliseconds before an end of a long press causes a tooltip to be
-     * hidden
-     * @hide
-     */
-    int ViewConfiguration::getLongPressTooltipHideTimeout() {
-        return LONG_PRESS_TOOLTIP_HIDE_TIMEOUT;
-    }
+/**
+ * @return Distance in pixels a touch must be outside the bounds of a window for it
+ * to be counted as outside the window for purposes of dismissing that window.
+ */
+int ViewConfiguration::getScaledWindowTouchSlop() {
+    return mWindowTouchSlop;
+}
 
-    /**
-     * @return the duration in milliseconds before a hover event causes a tooltip to be shown
-     * @hide
-     */
-    int ViewConfiguration::getHoverTooltipShowTimeout() {
-        return HOVER_TOOLTIP_SHOW_TIMEOUT;
-    }
 
-    /**
-     * @return the duration in milliseconds before mouse inactivity causes a tooltip to be hidden
-     * (default variant to be used when {@link View#SYSTEM_UI_FLAG_LOW_PROFILE} is not set).
-     * @hide
-     */
-    int ViewConfiguration::getHoverTooltipHideTimeout() {
-        return HOVER_TOOLTIP_HIDE_TIMEOUT;
-    }
+/**
+ * @return Minimum velocity to initiate a fling, as measured in pixels per second.
+ */
+int ViewConfiguration::getScaledMinimumFlingVelocity() {
+    return mMinimumFlingVelocity;
+}
 
-    /**
-     * @return the duration in milliseconds before mouse inactivity causes a tooltip to be hidden
-     * (shorter variant to be used when {@link View#SYSTEM_UI_FLAG_LOW_PROFILE} is set).
-     * @hide
-     */
-    int ViewConfiguration::getHoverTooltipHideShortTimeout() {
-        return HOVER_TOOLTIP_HIDE_SHORT_TIMEOUT;
-    }
+
+/**
+ * @return Maximum velocity to initiate a fling, as measured in pixels per second.
+ */
+int ViewConfiguration::getScaledMaximumFlingVelocity() {
+    return mMaximumFlingVelocity;
+}
+
+/**
+ * @return Amount to scroll in response to a {@link MotionEvent#ACTION_SCROLL} event. Multiply
+ * this by the event's axis value to obtain the number of pixels to be scrolled.
+ *
+ * @removed
+ */
+int ViewConfiguration::getScaledScrollFactor() {
+    return (int) mVerticalScrollFactor;
+}
+
+/**
+ * @return Amount to scroll in response to a horizontal {@link MotionEvent#ACTION_SCROLL} event.
+ * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
+ */
+float ViewConfiguration::getScaledHorizontalScrollFactor() {
+    return mHorizontalScrollFactor;
+}
+
+/**
+ * @return Amount to scroll in response to a vertical {@link MotionEvent#ACTION_SCROLL} event.
+ * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
+ */
+float ViewConfiguration::getScaledVerticalScrollFactor() {
+    return mVerticalScrollFactor;
+}
+
+
+/**
+ * The maximum drawing cache size expressed in bytes.
+ *
+ * @return the maximum size of View's drawing cache expressed in bytes
+ */
+int ViewConfiguration::getScaledMaximumDrawingCacheSize() {
+    return mMaximumDrawingCacheSize;
+}
+
+/**
+ * @return The maximum distance a View should overscroll by when showing edge effects (in
+ * pixels).
+ */
+int ViewConfiguration::getScaledOverscrollDistance() {
+    return mOverscrollDistance;
+}
+
+/**
+ * @return The maximum distance a View should overfling by when showing edge effects (in
+ * pixels).
+ */
+int ViewConfiguration::getScaledOverflingDistance() {
+    return mOverflingDistance;
+}
+
+/**
+ * The amount of time that the zoom controls should be
+ * displayed on the screen expressed in milliseconds.
+ *
+ * @return the time the zoom controls should be visible expressed
+ * in milliseconds.
+ */
+long ViewConfiguration::getZoomControlsTimeout() {
+    return ZOOM_CONTROLS_TIMEOUT;
+}
+
+
+/**
+ * The amount of time a user needs to press the relevant key to bring up
+ * the global actions dialog.
+ *
+ * @return how long a user needs to press the relevant key to bring up
+ *   the global actions dialog.
+ * @hide
+ */
+long ViewConfiguration::getDeviceGlobalActionKeyTimeout() {
+    return mGlobalActionsKeyTimeout;
+}
+
+/**
+ * The amount of time a user needs to press the relevant keys to activate the accessibility
+ * shortcut.
+ *
+ * @return how long a user needs to press the relevant keys to activate the accessibility
+ *   shortcut.
+ * @hide
+ */
+long ViewConfiguration::getAccessibilityShortcutKeyTimeout() {
+    return A11Y_SHORTCUT_KEY_TIMEOUT;
+}
+
+/**
+ * @return The amount of time a user needs to press the relevant keys to activate the
+ *   accessibility shortcut after it's confirmed that accessibility shortcut is used.
+ * @hide
+ */
+long ViewConfiguration::getAccessibilityShortcutKeyTimeoutAfterConfirmation() {
+    return A11Y_SHORTCUT_KEY_TIMEOUT_AFTER_CONFIRMATION;
+}
+
+/**
+ * The amount of friction applied to scrolls and flings.
+ *
+ * @return A scalar dimensionless value representing the coefficient of
+ *         friction.
+ */
+float ViewConfiguration::getScrollFriction() {
+    return SCROLL_FRICTION;
+}
+
+/**
+ * @return the default duration in milliseconds for {@link ActionMode#hide(long)}.
+ */
+long ViewConfiguration::getDefaultActionModeHideDuration() {
+    return ACTION_MODE_HIDE_DURATION_DEFAULT;
+}
+
+/**
+ * Report if the device has a permanent menu key available to the user.
+ *
+ * <p>As of Android 3.0, devices may not have a permanent menu key available.
+ * Apps should use the action bar to present menu options to users.
+ * However, there are some apps where the action bar is inappropriate
+ * or undesirable. This method may be used to detect if a menu key is present.
+ * If not, applications should provide another on-screen affordance to access
+ * functionality.
+ *
+ * @return true if a permanent menu key is present, false otherwise.
+ */
+bool ViewConfiguration::hasPermanentMenuKey() {
+    return sHasPermanentMenuKey;
+}
+
+/**
+ * Check if shortcuts should be displayed in menus.
+ *
+ * @return {@code True} if shortcuts should be displayed in menus.
+ */
+bool ViewConfiguration::shouldShowMenuShortcutsWhenKeyboardPresent() {
+    return mShowMenuShortcutsWhenKeyboardPresent;
+}
+
+/**
+ * @hide
+ * @return Whether or not marquee should use fading edges.
+ */
+bool ViewConfiguration::isFadingMarqueeEnabled() {
+    return mFadingMarqueeEnabled;
+}
+
+/**
+ * @return the duration in milliseconds before an end of a long press causes a tooltip to be
+ * hidden
+ * @hide
+ */
+int ViewConfiguration::getLongPressTooltipHideTimeout() {
+    return LONG_PRESS_TOOLTIP_HIDE_TIMEOUT;
+}
+
+/**
+ * @return the duration in milliseconds before a hover event causes a tooltip to be shown
+ * @hide
+ */
+int ViewConfiguration::getHoverTooltipShowTimeout() {
+    return HOVER_TOOLTIP_SHOW_TIMEOUT;
+}
+
+/**
+ * @return the duration in milliseconds before mouse inactivity causes a tooltip to be hidden
+ * (default variant to be used when {@link View#SYSTEM_UI_FLAG_LOW_PROFILE} is not set).
+ * @hide
+ */
+int ViewConfiguration::getHoverTooltipHideTimeout() {
+    return HOVER_TOOLTIP_HIDE_TIMEOUT;
+}
+
+/**
+ * @return the duration in milliseconds before mouse inactivity causes a tooltip to be hidden
+ * (shorter variant to be used when {@link View#SYSTEM_UI_FLAG_LOW_PROFILE} is set).
+ * @hide
+ */
+int ViewConfiguration::getHoverTooltipHideShortTimeout() {
+    return HOVER_TOOLTIP_HIDE_SHORT_TIMEOUT;
+}
 
 }//namespace
 

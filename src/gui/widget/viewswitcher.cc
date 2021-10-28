@@ -6,8 +6,8 @@ ViewSwitcher::ViewSwitcher(int w,int h)
    :ViewAnimator(w,h){
 }
 
-ViewSwitcher::ViewSwitcher(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
-  :ViewAnimator(ctx,atts,defstyle){
+ViewSwitcher::ViewSwitcher(Context*ctx,const AttributeSet&atts)
+  :ViewAnimator(ctx,atts){
 }
 
 View& ViewSwitcher::addView(View* child, int index, ViewGroup::LayoutParams* params){

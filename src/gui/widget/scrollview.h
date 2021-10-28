@@ -73,7 +73,7 @@ protected:
     void draw(Canvas& canvas)override;
 public:
     ScrollView(int w,int h);
-    ScrollView(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr);
+    ScrollView(Context*ctx,const AttributeSet&atts);
     int getMaxScrollAmount();
     View& addView(View* child)override;
     View& addView(View* child, int index)override;

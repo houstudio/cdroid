@@ -3,7 +3,7 @@
 #include <memory>
 #include <functional>
 #include <animation/interpolators.h>
-
+#include <core/callbackbase.h>
 namespace cdroid{
 
 template <class T>
@@ -41,15 +41,15 @@ public:
     
     class AnimatorListener{
     public:
-        std::function<void (Animator& animation, bool isReverse)>onAnimationStart;
-        std::function<void (Animator& animation, bool isReverse)>onAnimationEnd;
-        std::function<void (Animator& animation)>onAnimationCancel;
-        std::function<void (Animator& animation)>onAnimationRepeat;
+        CallbackBase<void,Animator& /*animation*/, bool/*isReverse*/>onAnimationStart;
+        CallbackBase<void,Animator& /*animation*/, bool/*isReverse*/>onAnimationEnd;
+        CallbackBase<void,Animator& /*animation*/>onAnimationCancel;
+        CallbackBase<void,Animator& /*animation*/>onAnimationRepeat;
     };
     class AnimatorPauseListener{
     public:
-         std::function<void(Animator&)> onAnimationPause;
-         std::function<void(Animator&)> onAnimationResume;
+         CallbackBase<void,Animator&> onAnimationPause;
+         CallbackBase<void,Animator&> onAnimationResume;
     };
 private:
     AnimatorConstantState* mConstantState;

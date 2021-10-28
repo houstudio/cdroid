@@ -68,7 +68,7 @@ protected:
     int computeVerticalScrollRange()override;
 public:
     GridView(int w,int h);
-    GridView(Context*ctx,const AttributeSet&atts,const std::string&defstyle=nullptr);
+    GridView(Context*ctx,const AttributeSet&atts);
     Adapter*getAdapter()override;
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position);

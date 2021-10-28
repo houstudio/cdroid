@@ -5,8 +5,8 @@ namespace cdroid{
 RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
 }
 
-RatingBar::RatingBar(Context*ctx,const AttributeSet&atts,const std::string&defstyle)
-    :AbsSeekBar(ctx,atts,defstyle){
+RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
+    :AbsSeekBar(ctx,atts){
 }
 
 void RatingBar::setOnRatingBarChangeListener(OnRatingBarChangeListener listener){

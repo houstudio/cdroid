@@ -28,7 +28,7 @@ public:
 class RippleBackground:public RippleComponent{
 private:
     static constexpr  int OPACITY_DURATION = 80;
-    ObjectAnimator* mAnimator;
+    ValueAnimator* mAnimator;
     float mOpacity = 0;
     bool mIsBounded;
     bool mFocused = false;

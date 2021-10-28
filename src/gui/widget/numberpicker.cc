@@ -27,6 +27,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     mInputText =(EditText*)findViewById(0);//new EditText("123",20,20);
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
+        mInputText->setText("123");
         mInputText->setTextSize(24);
         addView(mInputText,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
     }
@@ -38,11 +39,14 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
         mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     }
+    measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
+    layout(0,0,getMeasuredWidth(),getMeasuredHeight());
+    LOGD("%d,%d-%d,%d (%dx%d)",mInputText->getLeft(),mInputText->getTop(),mInputText->getWidth(),mInputText->getHeight(),w,h);
     updateInputTextView();
 }
 
-NumberPicker::NumberPicker(Context* context,const AttributeSet& atts,const std::string&defstyle)
-  :LinearLayout(context,atts,defstyle){
+NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
+  :LinearLayout(context,atts){
     initView();
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mSolidColor =atts.getColor("solidColor",0);
@@ -95,6 +99,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts,const std::
 
     updateInputTextView();
 
+}
+
+NumberPicker::~NumberPicker(){
+    LOGD("mChildren.size=%d",mChildren.size());
 }
 
 void NumberPicker::onIncDecClick(View&v){

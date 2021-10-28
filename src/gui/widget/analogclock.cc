@@ -7,8 +7,8 @@
 
 namespace cdroid{
 
-AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs,const std::string&defstyle)
-  :View(ctx,attrs,defstyle){
+AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
+  :View(ctx,attrs){
     mDial=mSecondHand=mMinuteHand=mHourHand=nullptr;
     mHour=mMinutes=mSeconds=0;
     setClockDrawable(ctx->getDrawable(attrs.getString("dial")) , DIAL);

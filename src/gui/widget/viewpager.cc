@@ -24,7 +24,8 @@ ViewPager::~ViewPager(){
 	delete mScroller;
 }
 
-ViewPager::ViewPager(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
+ViewPager::ViewPager(Context* context,const AttributeSet& attrs)
+  :ViewGroup(context,attrs){
     initViewPager();
 }
 

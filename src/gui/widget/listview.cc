@@ -14,8 +14,8 @@ ListView::ListView(int w,int h):AbsListView(w,h) {
     initListView();
 }
 
-ListView::ListView(Context* context,const AttributeSet& attrs,const std::string&defstyle)
-   :AbsListView(context,attrs,defstyle){
+ListView::ListView(Context* context,const AttributeSet& attrs)
+   :AbsListView(context,attrs){
     initListView();
     Drawable* d = getContext()->getDrawable(attrs.getString("divider"));
     Drawable* osHeader = getContext()->getDrawable(attrs.getString("overScrollHeader"));

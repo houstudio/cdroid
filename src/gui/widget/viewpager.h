@@ -201,7 +201,7 @@ protected:
 public:
     ViewPager(int w,int h);
     ViewPager(Context* context,const AttributeSet& attrs);
-	~ViewPager();
+    ~ViewPager();
     void setAdapter(PagerAdapter* adapter);
     PagerAdapter* getAdapter();
     void addOnAdapterChangeListener(OnAdapterChangeListener listener);

@@ -17,7 +17,7 @@ protected:
     void showOnly(int childIndex, bool animate);
 public:
     ViewAnimator(int w,int h);
-    ViewAnimator(Context* context,const AttributeSet& attrs,const std::string&defstyle=nullptr);
+    ViewAnimator(Context* context,const AttributeSet& attrs);
     ~ViewAnimator();
     void setDisplayedChild(int whichChild);
     int getDisplayedChild()const;

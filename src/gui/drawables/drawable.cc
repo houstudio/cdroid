@@ -7,7 +7,6 @@
 #include <string.h>
 #include <textutils.h>
 
-
 namespace cdroid{
 
 Drawable::Drawable(){
@@ -317,7 +316,8 @@ static std::map<const std::string,DrawableParser>drawableParsers={
     {"layer-list" , LayerDrawable::inflate},
     {"level-list" , LevelListDrawable::inflate} ,
     {"selector"   , StateListDrawable::inflate},
-    {"item"       , Drawable::createItemDrawable }     ,
+    {"item"       , Drawable::createItemDrawable },
+    {"ripple"     , RippleDrawable::inflate},
     {"animated-rotate",AnimatedRotateDrawable::inflate}
 };
 

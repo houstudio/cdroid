@@ -59,7 +59,7 @@ protected:
 public:
 public:
     explicit ImageView(int w, int h);
-    ImageView(Context*ctx,const AttributeSet&attrs,const std::string&defstyle=nullptr);
+    ImageView(Context*ctx,const AttributeSet&attrs);
     virtual ~ImageView();
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState();
