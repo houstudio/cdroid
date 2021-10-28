@@ -38,14 +38,21 @@ int main(int argc,const char*argv[]){
     tv->setTextSize(60);
     content->addView(tv).setId(100);
 
-    Button*btn=new Button("Open",100,32);
+    ShapeDrawable*sd=new ShapeDrawable();
+    sd->setShape(new ArcShape(0,360));
+    sd->getShape()->setSolidColor(0x800000FF);
+    RippleDrawable*rp=new RippleDrawable(ColorStateList::valueOf(0x80222222),
+       new ColorDrawable(0x8000FF00),sd);
+    Button*btn=new Button("Open",100,64);
+    btn->setMinimumHeight(128);
+    btn->setBackgroundDrawable(rp);
     content->addView(btn);
     btn->setOnClickListener([dl](View&){
         LOGD("openDrawer");
         dl->openDrawer(Gravity::START);
     });
 
-    btn=new Button("Close",100,32);
+    btn=new Button("Close",100,64);
     content->addView(btn);
     btn->setOnClickListener([dl](View&){
         LOGD("closeDrawer");

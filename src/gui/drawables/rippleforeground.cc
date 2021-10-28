@@ -29,7 +29,8 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
     if (alpha > 0 && radius > 0) {
         const float x = getCurrentX();
         const float y = getCurrentY();
-        c.arc(x, y, radius,0,M_PI*2);
+        c.arc(x, y, radius,0,M_PI*2.);
+        c.fill();
     }
 }
 
@@ -77,7 +78,7 @@ void RippleForeground::startSoftwareEnter() {
     tweenRadius->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
     tweenRadius->addUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        LOGD("mTweenRadius=%f",fp->getAnimatedValue());
+        LOGV("mTweenRadius=%f",fp->getAnimatedValue());
         mTweenRadius=fp->getAnimatedValue();
         onAnimationPropertyChanged();
     });
@@ -89,7 +90,6 @@ void RippleForeground::startSoftwareEnter() {
     tweenOrigin->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
     tweenOrigin->addUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        LOGD("mTweenX/Y=%f",fp->getAnimatedValue());
         mTweenX=mTweenY=fp->getAnimatedValue();
         onAnimationPropertyChanged();
     });
@@ -101,7 +101,6 @@ void RippleForeground::startSoftwareEnter() {
     opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
     opacity->addUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        LOGD("mOpacity=%f",fp->getAnimatedValue());
         mOpacity=fp->getAnimatedValue();
         onAnimationPropertyChanged();
     });
@@ -118,7 +117,6 @@ void RippleForeground::startSoftwareExit() {
     opacity->setStartDelay(computeFadeOutDelay());
     opacity->addUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        LOGD("mOpacity=%f",fp->getAnimatedValue());
         mOpacity=fp->getAnimatedValue();
     });
 

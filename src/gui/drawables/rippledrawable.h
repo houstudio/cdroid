@@ -61,7 +61,7 @@ protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
 public:
-    RippleDrawable(const ColorStateList& color,Drawable* content,Drawable* mask);
+    RippleDrawable(ColorStateList* color,Drawable* content,Drawable* mask);
     void jumpToCurrentState()override;
     int getOpacity()override;
     bool setVisible(bool visible, bool restart)override;

@@ -41,7 +41,7 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     mState.reset(new RippleState(state.get(), this));
     mLayerState = mState;
     mDensity = 160;//Drawable::resolveDensity(res, mState.mDensity);
-
+    mRipple = nullptr;
     if (mState->mChildren.size()) {
         ensurePadding();
         refreshPadding();
@@ -49,9 +49,14 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     updateLocalState();
 }
 
-RippleDrawable::RippleDrawable(const ColorStateList& color,Drawable* content,Drawable* mask)
-   :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
-
+RippleDrawable::RippleDrawable(ColorStateList* color,Drawable* content,Drawable* mask)
+  :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
+    if(content)addLayer(content,{0},0,0,0,0,0);
+    if(mask)addLayer(mask,{0},MASK_LAYER_ID,0,0,0,0); 
+    setColor(color);
+    ensurePadding();
+    refreshPadding();
+    updateLocalState();
 }
 
 void RippleDrawable::jumpToCurrentState(){
@@ -249,7 +254,7 @@ void RippleDrawable::tryRippleEnter(){
 
 void RippleDrawable::tryRippleExit(){
     if (mRipple != nullptr) {
-        mExitingRipples.push_back(mRipple);//[mExitingRipplesCount++] = mRipple;
+        mExitingRipples.push_back(mRipple);
         mRipple->exit();
         mRipple = nullptr;
     }
@@ -291,19 +296,18 @@ void RippleDrawable::pruneRipples() {
     int remaining = 0;
 
     // Move remaining entries into pruned spaces.
-    std::vector<RippleForeground*>&ripples = mExitingRipples;
     const int count = mExitingRipples.size();
     for (int i = 0; i < count; i++) {
-         if (!ripples[i]->hasFinishedExit()) {
-            ripples[remaining++] = ripples[i];
+         if (!mExitingRipples[i]->hasFinishedExit()) {
+            mExitingRipples[remaining++] = mExitingRipples[i];
         }
     }
     
     // Null out the remaining entries.
     for (int i = remaining; i < count; i++) {
-        delete ripples[i];
-        ripples[i] = nullptr;
+        delete mExitingRipples[i];
     }
+    mExitingRipples.clear();
 }
 
 void RippleDrawable::drawContent(Canvas& canvas) {
@@ -327,6 +331,10 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     const float x = mHotspotBounds.centerX();
     const float y = mHotspotBounds.centerY();
     canvas.translate(x, y);
+
+    int color=mState->mColor->getColorForState(getState(),0xFF000000);
+    if((color>>24)>0x80)color=(color&0x00FFFFFF)|0x80000000;
+    canvas.set_color(color);
 
     if (mBackground  && mBackground->isVisible()) {
         mBackground->draw(canvas, 1.f);
