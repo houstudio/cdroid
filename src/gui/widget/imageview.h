@@ -55,8 +55,8 @@ protected:
     void configureBounds();
     bool setFrame(int l, int t, int w, int h)override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void drawableStateChanged()override;
     virtual void onDraw(Canvas& canvas) override;
-public:
 public:
     explicit ImageView(int w, int h);
     ImageView(Context*ctx,const AttributeSet&attrs);
@@ -97,6 +97,7 @@ public:
     void setImageLevel(int level);
     void setSelected(bool selected)override;
     void setImageState(const std::vector<int>&state, bool merge);
+    void drawableHotspotChanged(float x, float y)override;
 };
 
 }

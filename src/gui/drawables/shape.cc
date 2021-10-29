@@ -2,7 +2,6 @@
 #include <color.h>
 #include <cdlog.h>
 
-
 namespace cdroid{
 
 Shape::Shape(){
@@ -62,7 +61,7 @@ int Shape::getStroke(int& color)const{
     return mStrokeWidth;
 }
 
-void Shape::setGradientColors(const std::vector<int>&cls){
+void Shape::setGradientColors(const std::vector<uint32_t>&cls){
     mGradientColors=cls;
     mRebuildGradient=true;
 }

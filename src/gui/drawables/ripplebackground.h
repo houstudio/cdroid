@@ -15,11 +15,11 @@ protected:
     float mDensityScale;
 
     void invalidateSelf();
-    void onHotspotBoundsChanged();
     virtual void onTargetRadiusChanged(float targetRadius);
 public:
     RippleComponent(RippleDrawable* owner,const Rect& bounds);
-    void onBoundsChange();
+    virtual void onHotspotBoundsChanged();
+    virtual void onBoundsChange();
     void setup(float maxRadius, int densityDpi);
     void getBounds(Rect& bounds);
 };

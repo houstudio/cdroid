@@ -193,6 +193,7 @@ protected:
     void drawableStateChanged()override;
     std::vector<int> onCreateDrawableState()const override;
     void dispatchSetPressed(bool pressed)override;
+    void dispatchDrawableHotspotChanged(float x,float y)override;
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();
 

@@ -939,6 +939,7 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, 
     setCompoundDrawablesWithIntrinsicBounds(context->getDrawable(left),context->getDrawable(top),
             context->getDrawable(right),context->getDrawable(bottom));    
 }
+
 void TextView::drawableStateChanged(){
     View::drawableStateChanged();
 
@@ -956,6 +957,14 @@ void TextView::drawableStateChanged(){
             }
         }
     }
+}
+
+void TextView::drawableHotspotChanged(float x,float y){
+    View::drawableHotspotChanged(x,y);
+    for(int i=0;mDrawables&&(i<4);i++){
+        Drawable* dr=mDrawables->mShowing[i];
+        if(dr)dr->setHotspot(x,y);
+    }    
 }
 
 void TextView::updateTextColors(){

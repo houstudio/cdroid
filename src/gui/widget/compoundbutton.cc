@@ -37,6 +37,11 @@ void CompoundButton::drawableStateChanged() {
     }
 }
 
+void CompoundButton::drawableHotspotChanged(float x,float y){
+    Button::drawableHotspotChanged(x,y);
+    if(mButtonDrawable)mButtonDrawable->setHotspot(x,y);
+}
+
 int CompoundButton::getHorizontalOffsetForDrawables()const{
     return (mButtonDrawable == nullptr) ?0: mButtonDrawable->getIntrinsicWidth();
 }

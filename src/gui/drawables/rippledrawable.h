@@ -41,7 +41,7 @@ private:
     float mPendingY;
     bool mHasPending;
     std::vector<RippleForeground*>mExitingRipples;
-    int mDensity;
+    int  mDensity;
     bool mOverrideBounds;
     bool mForceSoftware;
 private:
@@ -53,7 +53,9 @@ private:
     void tryRippleEnter();
     void tryRippleExit();
     void clearHotspots();
+    void onHotspotBoundsChanged();
     void updateLocalState();
+    int  getMaskType();
     void drawContent(Canvas& canvas);
     void drawBackgroundAndRipples(Canvas& canvas);
     void drawMask(Canvas& canvas);
@@ -63,17 +65,20 @@ protected:
 public:
     RippleDrawable(ColorStateList* color,Drawable* content,Drawable* mask);
     void jumpToCurrentState()override;
-    int getOpacity()override;
+    int  getOpacity()override;
     bool setVisible(bool visible, bool restart)override;
     bool isProjected();
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     void setColor(ColorStateList* color);
     void setRadius(int radius);
-    int getRadius()const;
+    int  getRadius()const;
     bool setDrawableByLayerId(int id, Drawable* drawable)override;
     void setPaddingMode(int mode);
     bool canApplyTheme()override;
+    void getHotspotBounds(Rect&out)override;
+    void setHotspot(float x,float y)override;
+    void setHotspotBounds(int left,int top,int w,int h)override;
     void draw(Canvas& canvas);
     void invalidateSelf()override;
     void invalidateSelf(bool invalidateMask);

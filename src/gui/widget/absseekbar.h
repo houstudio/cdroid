@@ -66,6 +66,7 @@ public:
     virtual void setMax(int max);
     virtual bool canUserSetProgress()const;
     void onRtlPropertiesChanged(int layoutDirection)override;
+    void drawableHotspotChanged(float x,float y)override;
 };
 
 }//namespace

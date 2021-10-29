@@ -101,6 +101,11 @@ void AbsSeekBar::drawableStateChanged(){
     }
 }
 
+void AbsSeekBar::drawableHotspotChanged(float x,float y){
+    ProgressBar::drawableHotspotChanged(x,y);
+    if(mThumb)mThumb->setHotspot(x,y);
+}
+
 bool AbsSeekBar::verifyDrawable(Drawable* who)const{
     return who == mThumb || who == mTickMark || ProgressBar::verifyDrawable(who);
 }

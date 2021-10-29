@@ -529,7 +529,7 @@ void AbsListView::positionSelector(int position, View* sel, bool manageHotspot, 
             }
             updateSelectorState();
         }
-        //if (manageHotspot) selector->setHotspot(x, y);
+        if (manageHotspot) selector->setHotspot(x, y);
     }
 }
 
@@ -1186,7 +1186,7 @@ void AbsListView::checkTap(int x,int y) {
                             ((TransitionDrawable*) d)->resetTransition();
                         }
                     }
-                    //mSelector->setHotspot(x, y);
+                    mSelector->setHotspot(x, y);
                 }
 
                 if (longClickable) {
@@ -2027,6 +2027,13 @@ bool AbsListView::onKeyUp(int keyCode, KeyEvent& event) {
 }
 
 void AbsListView::dispatchSetPressed(bool pressed) {
+    // Don't dispatch setPressed to our children. We call setPressed on ourselves to
+    // get the selector in the right state, but we don't want to press each child.
+}
+
+void AbsListView::dispatchDrawableHotspotChanged(float x, float y){
+    // Don't dispatch hotspot changes to children. We'll manually handle
+    // calling drawableHotspotChanged on the correct child.
 }
 
 int AbsListView::pointToPosition(int x, int y) {
@@ -2705,7 +2712,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                             if (d  && dynamic_cast<TransitionDrawable*>(d)) {
                                 ((TransitionDrawable*) d)->resetTransition();
                             }
-                            //mSelector->setHotspot(x, ev.getY());
+                            mSelector->setHotspot(x, ev.getY());
                         }
                         if (mTouchModeReset != nullptr) {
                             removeCallbacks(mTouchModeReset);

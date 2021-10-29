@@ -587,6 +587,8 @@ public:
     bool isFocusableInTouchMode()const;
     virtual void setFocusable(int focusable);
     virtual void setFocusableInTouchMode(bool focusableInTouchMode);
+    virtual void drawableHotspotChanged(float x, float y);
+    virtual void dispatchDrawableHotspotChanged(float x,float y);
     void refreshDrawableState();
     bool isDefaultFocusHighlightNeeded(const Drawable* background,const Drawable* foreground)const;
     virtual const std::vector<int>getDrawableState();

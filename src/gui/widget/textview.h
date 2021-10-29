@@ -199,6 +199,7 @@ public:
     std::vector<Drawable*>getCompoundDrawables();
     void setCompoundDrawableTintList(ColorStateList* tint);
     ColorStateList* getCompoundDrawableTintList();
+    void drawableHotspotChanged(float x,float y)override;
     void setCompoundDrawableTintMode(int tintMode);
     int getCompoundDrawableTintMode();
 

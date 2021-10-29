@@ -22,14 +22,25 @@ TEST_F(ANIMATOR,callback){
     app.exec();
 }
 
-TEST_F(ANIMATOR,ofInt){
+TEST_F(ANIMATOR,ofInt1){
+    ValueAnimator*anim=ValueAnimator::ofInt({0,100});
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
+        IntPropertyValuesHolder*ip=(IntPropertyValuesHolder*)anim.getValues(0);
+        LOGD("value=%d",ip->getAnimatedValue());
+    }));
+    for(int i=0;i<=10;i++){
+        anim->setCurrentFraction((float)i/10.f);
+    }
+}
+
+TEST_F(ANIMATOR,ofInt2){
     IntPropertyValuesHolder iprop;
     iprop.setValues({0,100});
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&iprop});
-    anim->addUpdateListener([this](ValueAnimator&anim){
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         IntPropertyValuesHolder*ip=(IntPropertyValuesHolder*)anim.getValues(0);
         LOGD("value=%d",ip->getAnimatedValue());
-    }); 
+    })); 
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
     }
@@ -39,10 +50,26 @@ TEST_F(ANIMATOR,ofFloat){
     FloatPropertyValuesHolder fprop;
     fprop.setValues({0,100});
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
-    anim->addUpdateListener([this](ValueAnimator&anim){
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
         LOGD("value=%f",fp->getAnimatedValue());
-    }); 
+    })); 
+    for(int i=0;i<=10;i++){
+        anim->setCurrentFraction((float)i/10.f);
+    }
+}
+
+class MyProperty: public Property{
+public:
+   MyProperty(const std::string&name):Property(name){
+   }
+   void set(void* object, float value)override{
+       LOGD("value=%f",value);
+   }
+};
+TEST_F(ANIMATOR,ofProperty){
+    MyProperty*myprop=new MyProperty("test");
+    ObjectAnimator*anim=ObjectAnimator::ofInt(nullptr,myprop,{0,100});
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
     }
@@ -54,10 +81,10 @@ TEST_F(ANIMATOR,loopdrivered){
     iprop.setValues({0,100});
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&iprop});
-    anim->addUpdateListener([this](ValueAnimator&anim){
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         IntPropertyValuesHolder*fp=(IntPropertyValuesHolder*)anim.getValues(0);
         LOGD("value=%d",fp->getAnimatedValue());
-    }); 
+    })); 
     anim->setDuration(2000);
     anim->start();
     app.exec();
@@ -82,14 +109,14 @@ TEST_F(ANIMATOR,translate){
     cprop.setValues({0xFF000000,0xFFFF8844});
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&xprop,&yprop,&cprop});
-    anim->addUpdateListener([tv](ValueAnimator&anim){
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([tv](ValueAnimator&anim){
         IntPropertyValuesHolder*xp=(IntPropertyValuesHolder*)anim.getValues(0);
         IntPropertyValuesHolder*yp=(IntPropertyValuesHolder*)anim.getValues(1);
         ColorPropertyValuesHolder*cp=(ColorPropertyValuesHolder*)anim.getValues(2);
         tv->setPos(xp->getAnimatedValue(),tv->getTop());
         tv->setPos(tv->getLeft(),yp->getAnimatedValue());
         tv->setBackgroundColor(cp->getAnimatedValue());
-    });
+    }));
 
     anim->setDuration(5000);
     anim->start();
@@ -107,12 +134,12 @@ TEST_F(ANIMATOR,scale){
     fprop.setValues({0,2.0});
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
-    anim->addUpdateListener([tv](ValueAnimator&anim){
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([tv](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
         float scale=fp->getAnimatedValue();
         tv->setScaleX(scale);
         tv->setScaleY(scale);
-    });
+    }));
     anim->setDuration(5000);
     anim->start();
     app.exec();

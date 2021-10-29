@@ -321,6 +321,7 @@ public:
 
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState()override;
+    void dispatchDrawableHotspotChanged(float x, float y)override;
     int pointToPosition(int x, int y);
     long pointToRowId(int x, int y);
     bool performItemClick(View* view, int position, long id)override;

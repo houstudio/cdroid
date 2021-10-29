@@ -511,10 +511,10 @@ void TabLayout::ensureScrollAnimator(){
         mScrollAnimator = new ValueAnimator();
         mScrollAnimator->setInterpolator(new FastOutSlowInInterpolator());
         mScrollAnimator->setDuration(ANIMATION_DURATION);
-        mScrollAnimator->addUpdateListener([this](ValueAnimator&anim) {
+        mScrollAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim) {
            IntPropertyValuesHolder*ip=(IntPropertyValuesHolder*)anim.getValues()[0]; 
            scrollTo(ip->getAnimatedValue(), 0);
-        });
+        }));
     }
 }
 
@@ -1240,10 +1240,10 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
         ValueAnimator* animator = mIndicatorAnimator;
         animator->setDuration(duration);
         animator->removeAllListeners();
-        animator->addUpdateListener([this,startLeft,targetLeft,startRight,targetRight](ValueAnimator&anim) {
+        animator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this,startLeft,targetLeft,startRight,targetRight](ValueAnimator&anim) {
             const float fraction = anim.getAnimatedFraction();
             setIndicatorPosition(lerp(startLeft, targetLeft, fraction),lerp(startRight, targetRight, fraction));
-        });
+        }));
         Animator::AnimatorListener al;
         al.onAnimationEnd=[this,position](Animator&anim,bool reverse){
             mSelectedPosition = position;

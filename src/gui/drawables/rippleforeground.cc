@@ -20,7 +20,7 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
 
 void RippleForeground::onTargetRadiusChanged(float targetRadius){
     clampStartingPosition();
-    //switchToUiThreadAnimation();
+    invalidateSelf();//switchToUiThreadAnimation();
 }
 
 void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
@@ -29,23 +29,24 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
     if (alpha > 0 && radius > 0) {
         const float x = getCurrentX();
         const float y = getCurrentY();
-        c.arc(x, y, radius,0,M_PI*2.);
+        c.arc(x,y, radius,0,M_PI*2.);
         c.fill();
     }
 }
 
 void RippleForeground::pruneSwFinished() {
     for (auto it=mRunningSwAnimators.begin();it!=mRunningSwAnimators.end();){
-        if ((*it)->isRunning()) {
+        if (!(*it)->isRunning()) {
+            Animator*anim=(*it);
             it=mRunningSwAnimators.erase(it);
         }else it++;
     }
 }
 
 void RippleForeground::getBounds(Rect& bounds) {
-    int outerX = (int) mTargetX;
-    int outerY = (int) mTargetY;
-    int r = (int) mTargetRadius + 1;
+    const int outerX = (int) mTargetX;
+    const int outerY = (int) mTargetY;
+    const int r = (int) mTargetRadius + 1;
     bounds.set(outerX - r, outerY - r, r+r,r + r);
 }
 
@@ -60,72 +61,76 @@ bool RippleForeground::hasFinishedExit()const{
 }
 
 long RippleForeground::computeFadeOutDelay() {
-    long timeSinceEnter = SystemClock::uptimeMillis() - mEnterStartedAtMillis;
+    long timeSinceEnter = AnimationUtils::currentAnimationTimeMillis() - mEnterStartedAtMillis;
     if (timeSinceEnter > 0 && timeSinceEnter < OPACITY_HOLD_DURATION) {
         return OPACITY_HOLD_DURATION - timeSinceEnter;
     }
     return 0;
 }
 
+float RippleForeground::getOpacity()const{
+    return mOpacity;
+}
+
 void RippleForeground::startSoftwareEnter() {
     for (auto anim:mRunningSwAnimators) {
-         anim->cancel();
+        anim->cancel();
+        delete anim;
     }
     mRunningSwAnimators.clear();
 
     ValueAnimator* tweenRadius = ValueAnimator::ofFloat({.0f,1.f});//this, TWEEN_RADIUS, 1);
     tweenRadius->setDuration(RIPPLE_ENTER_DURATION);
     tweenRadius->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
-    tweenRadius->addUpdateListener([this](ValueAnimator&anim){
+    tweenRadius->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        LOGV("mTweenRadius=%f",fp->getAnimatedValue());
+        LOGV("mTweenRadius=%f [%f,%f,%f] opacity=%f",fp->getAnimatedValue(),getCurrentRadius(),mStartRadius,mTargetRadius,mOpacity);
         mTweenRadius=fp->getAnimatedValue();
         onAnimationPropertyChanged();
-    });
+    }));
     tweenRadius->start();
     mRunningSwAnimators.push_back(tweenRadius);
 
     ValueAnimator* tweenOrigin = ValueAnimator::ofFloat({.0f,1.f});//this, TWEEN_ORIGIN, 1);
     tweenOrigin->setDuration(RIPPLE_ORIGIN_DURATION);
     tweenOrigin->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
-    tweenOrigin->addUpdateListener([this](ValueAnimator&anim){
+    tweenOrigin->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
         mTweenX=mTweenY=fp->getAnimatedValue();
         onAnimationPropertyChanged();
-    });
+    }));
     tweenOrigin->start();
     mRunningSwAnimators.push_back(tweenOrigin);
 
     ValueAnimator* opacity = ValueAnimator::ofFloat({.0f,1.f});//this, OPACITY, 1);
     opacity->setDuration(OPACITY_ENTER_DURATION);
     opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
-    opacity->addUpdateListener([this](ValueAnimator&anim){
+    opacity->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
         mOpacity=fp->getAnimatedValue();
         onAnimationPropertyChanged();
-    });
+    }));
     opacity->start();
     mRunningSwAnimators.push_back(opacity);
 }
 
 void RippleForeground::startSoftwareExit() {
-
-    ValueAnimator* opacity = ValueAnimator::ofFloat({1.f,.0f});
+    ValueAnimator* opacity = ValueAnimator::ofFloat({.0f,1.f});
     opacity->setDuration(OPACITY_EXIT_DURATION);
     opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
     opacity->addListener(mAnimationListener);
     opacity->setStartDelay(computeFadeOutDelay());
-    opacity->addUpdateListener([this](ValueAnimator&anim){
+    opacity->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
         mOpacity=fp->getAnimatedValue();
-    });
+    }));
 
     opacity->start();
     mRunningSwAnimators.push_back(opacity);
 }
 
 void RippleForeground::enter(){
-    mEnterStartedAtMillis = SystemClock::uptimeMillis();
+    mEnterStartedAtMillis = AnimationUtils::currentAnimationTimeMillis();
     startSoftwareEnter();
 }
 
@@ -150,10 +155,6 @@ void RippleForeground::end(){
         anim->end();
     }
     mRunningSwAnimators.clear();
-    /*for (auto animhw:mRunningHwAnimators;) {
-        animhw->end();
-    }
-    mRunningHwAnimators.clear();*/
 }
 
 void RippleForeground::onAnimationPropertyChanged() {
@@ -165,13 +166,6 @@ void RippleForeground::onAnimationPropertyChanged() {
 void RippleForeground::draw(Canvas&canvas,float alpha){
     pruneSwFinished();
     drawSoftware(canvas,alpha);
-    /*const bool hasDisplayListCanvas = !mForceSoftware && c instanceof DisplayListCanvas;
-    if (hasDisplayListCanvas) {
-        DisplayListCanvas hw = (DisplayListCanvas) c;
-        drawHardware(hw, p);
-    } else {
-        drawSoftware(c, p);
-    }*/
 }
 
 void RippleForeground::clampStartingPosition(){

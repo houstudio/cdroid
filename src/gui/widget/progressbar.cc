@@ -129,6 +129,12 @@ void ProgressBar::drawableStateChanged(){
     updateDrawableState();
 }
 
+void ProgressBar::drawableHotspotChanged(float x, float y){
+    View::drawableHotspotChanged(x,y);
+    if(mProgressDrawable)mProgressDrawable->setHotspot(x,y);
+    if(mIndeterminateDrawable)mIndeterminateDrawable->setHotspot(x,y); 
+}
+
 bool ProgressBar::verifyDrawable(Drawable* who)const{
     return who == mProgressDrawable || who == mIndeterminateDrawable|| View::verifyDrawable(who);
 }
@@ -179,10 +185,10 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator->setAutoCancel(true);
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
             mAnimator->setInterpolator(new  DecelerateInterpolator());
-            mAnimator->addUpdateListener([this](ValueAnimator&anim){
+            mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
                 FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
                 setVisualProgress(ID_PRIMARY,fp->getAnimatedValue());
-            });
+            }));
         }
         prop=(FloatPropertyValuesHolder*)mAnimator->getValues(0);
         prop->setValues({scale});

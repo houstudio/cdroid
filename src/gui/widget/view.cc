@@ -2828,6 +2828,18 @@ void View::drawableStateChanged(){
     if(changed)   invalidate(true);
 }
 
+void View::drawableHotspotChanged(float x, float y){
+    if(mBackground)mBackground->setHotspot(x,y);
+    if(mDefaultFocusHighlight)mDefaultFocusHighlight->setHotspot(x,y);
+    if(mForegroundInfo && mForegroundInfo->mDrawable)
+        mForegroundInfo->mDrawable->setHotspot(x,y);
+    dispatchDrawableHotspotChanged(x,y);
+}
+
+void View::dispatchDrawableHotspotChanged(float x,float y){
+     //NOTHING
+}
+
 void View::refreshDrawableState(){
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     drawableStateChanged();
@@ -3543,7 +3555,7 @@ void View::setPressed(bool pressed){
 }
 
 void View::setPressed(bool pressed,int x,int y){
-    //if(pressed)drawableHotspotChanged(x,y);
+    if(pressed)drawableHotspotChanged(x,y);
     setPressed(pressed);
 }
 
@@ -4753,7 +4765,7 @@ bool View::onTouchEvent(MotionEvent& event){
         }
         break;
     case MotionEvent::ACTION_MOVE:
-        //if (clickable)drawableHotspotChanged(x, y);
+        if (clickable)drawableHotspotChanged(x, y);
 
         // Be lenient about moving outside of buttons
         if (!pointInView(x, y,ViewConfiguration::get(mContext).getScaledTouchSlop())) {

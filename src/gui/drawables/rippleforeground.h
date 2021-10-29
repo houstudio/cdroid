@@ -1,5 +1,6 @@
 #pragma once
 #include <drawables/ripplebackground.h>
+#include <animation/animationutils.h>
 namespace cdroid{
 
 class RippleForeground:public RippleComponent{
@@ -57,6 +58,7 @@ public:
     void move(float x, float y);
     bool hasFinishedExit()const;
     long computeFadeOutDelay();
+    float getOpacity()const;
     void enter();
     void exit();
     void end();

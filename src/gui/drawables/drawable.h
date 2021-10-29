@@ -88,7 +88,9 @@ public:
     bool setLevel(int level);
     int getLevel()const{return mLevel;}
     virtual int getOpacity();
-
+    virtual void setHotspot(float x,float y);
+    virtual void setHotspotBounds(int left,int top,int width,int height);
+    virtual void getHotspotBounds(Rect&outRect);
     virtual bool getPadding(Rect&padding);
     virtual Insets getOpticalInsets();
     virtual bool isStateful()const;

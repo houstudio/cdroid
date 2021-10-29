@@ -51,7 +51,7 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
 
 RippleDrawable::RippleDrawable(ColorStateList* color,Drawable* content,Drawable* mask)
   :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
-    if(content)addLayer(content,{0},0,0,0,0,0);
+    if(content)addLayer(content,{0},-1,0,0,0,0);
     if(mask)addLayer(mask,{0},MASK_LAYER_ID,0,0,0,0); 
     setColor(color);
     ensurePadding();
@@ -134,7 +134,7 @@ void RippleDrawable::onBoundsChange(const Rect& bounds){
 
     if (!mOverrideBounds) {
         mHotspotBounds=bounds;
-        //onHotspotBoundsChanged();
+        onHotspotBoundsChanged();
     }
 
     for (auto ripple:mExitingRipples) {
@@ -261,6 +261,40 @@ void RippleDrawable::tryRippleExit(){
 }
 
 void RippleDrawable::clearHotspots(){
+    if(mRipple){
+        mRipple->end();
+        mRipple =nullptr;
+        mRippleActive =false;
+    }
+    if(mBackground)
+        mBackground->setState(false,false,false);
+    cancelExitingRipples();
+}
+
+void RippleDrawable::setHotspot(float x,float y){
+    mHasPending=(mRipple==nullptr)||(mBackground ==nullptr);
+    if (mHasPending){
+         mPendingX =x;
+         mPendingY = y;
+    }
+    if(mRipple)mRipple->move(x,y);
+}
+
+void RippleDrawable::setHotspotBounds(int left,int top,int w,int h){
+    mOverrideBounds = true;
+    mHotspotBounds.set(left,top,w,h);
+    onHotspotBoundsChanged();
+}
+
+void RippleDrawable::getHotspotBounds(Rect&out){
+    out=mHotspotBounds;
+}
+
+void RippleDrawable::onHotspotBoundsChanged(){
+    for(auto ripple:mExitingRipples)
+        ripple->onHotspotBoundsChanged();
+    if(mRipple)mRipple->onHotspotBoundsChanged();
+    if(mBackground)mBackground->onHotspotBoundsChanged(); 
 }
 
 void RippleDrawable::draw(Canvas& canvas){
@@ -307,7 +341,36 @@ void RippleDrawable::pruneRipples() {
     for (int i = remaining; i < count; i++) {
         delete mExitingRipples[i];
     }
-    mExitingRipples.clear();
+    mExitingRipples.resize(remaining);
+}
+
+int  RippleDrawable::getMaskType(){
+    if (mRipple == nullptr && mExitingRipples.size()<= 0
+            && (mBackground == nullptr || !mBackground->isVisible())) {
+        // We might need a mask later.
+        return MASK_UNKNOWN;
+    }
+
+    if (mMask) {
+        if (mMask->getOpacity() == OPAQUE) {
+            // Clipping handles opaque explicit masks.
+            return MASK_NONE;
+        } else {
+            return MASK_EXPLICIT;
+        }
+    }
+
+    // Check for non-opaque, non-mask content.
+    std::vector<ChildDrawable*>& array = mLayerState->mChildren;
+    int count = array.size();
+    for (int i = 0; i < count; i++) {
+        if (array[i]->mDrawable->getOpacity() != OPAQUE) {
+            return MASK_CONTENT;
+        }
+    }
+
+    // Clipping handles opaque content.
+    return MASK_NONE;
 }
 
 void RippleDrawable::drawContent(Canvas& canvas) {
@@ -331,9 +394,7 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     const float x = mHotspotBounds.centerX();
     const float y = mHotspotBounds.centerY();
     canvas.translate(x, y);
-
-    int color=mState->mColor->getColorForState(getState(),0xFF000000);
-    if((color>>24)>0x80)color=(color&0x00FFFFFF)|0x80000000;
+    int color=mState->mColor->getColorForState(getState(),0xFF888888);
     canvas.set_color(color);
 
     if (mBackground  && mBackground->isVisible()) {
@@ -341,6 +402,9 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     }
 
     for (auto ripple:mExitingRipples) {
+        int alpha=0x80*ripple->getOpacity();
+        color=(color&0x00FFFFFF)|(alpha<<24);
+        canvas.set_color(color);
         ripple->draw(canvas,1.f);
     }
 

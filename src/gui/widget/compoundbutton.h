@@ -35,6 +35,7 @@ public:
     void setOnCheckedChangeListener(OnCheckedChangeListener listener);
     /*OnCheckedChangeWidgetListener internal use(for radiogroup...)*/
     void setOnCheckedChangeWidgetListener(OnCheckedChangeListener listener);
+    void drawableHotspotChanged(float x,float y)override;
 };
 }
 #endif

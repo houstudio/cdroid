@@ -731,6 +731,18 @@ void ViewGroup::dispatchSetPressed(bool pressed) {
     }
 }
 
+void ViewGroup::dispatchDrawableHotspotChanged(float x,float y){
+    for(auto child:mChildren){
+        const bool nonActivationable = !child->isClickable()&&!child->isLongClickable();
+        const bool duplicateState    = (child->mViewFlags & DUPLICATE_PARENT_STATE)!=0;
+        if( nonActivationable||duplicateState){
+            float point[2]={x,y};
+            transformPointToViewLocal(point,*child);
+            child->drawableHotspotChanged(point[0],point[1]);
+        }
+    }
+}
+
 int ViewGroup::getChildCount()const{
     return mChildren.size();
 }

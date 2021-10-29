@@ -307,6 +307,7 @@ bool ImageView::setFrame(int l, int t, int w, int h){
     configureBounds();
     return changed;
 }
+
 void ImageView::configureBounds(){
     if (mDrawable == nullptr /*|| !mHaveFrame*/) return;
     const int mPaddingLeft=0,mPaddingRight=0,mPaddingTop=0,mPaddingBottom=0;
@@ -388,6 +389,19 @@ void ImageView::configureBounds(){
     }
     LOGV("ScaleType=%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",mScaleType,
 	mDrawMatrix.xx,mDrawMatrix.yx,mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
+}
+
+void ImageView::drawableStateChanged(){
+    View::drawableStateChanged();
+    if(mDrawable && mDrawable->isStateful() 
+        && mDrawable->setState(getDrawableState())){
+        invalidateDrawable(*mDrawable);
+    }
+}
+
+void ImageView::drawableHotspotChanged(float x, float y){
+    View::drawableHotspotChanged(x,y);
+    if(mDrawable)mDrawable->setHotspot(x,y);
 }
 
 void ImageView::invalidateDrawable(Drawable& dr){

@@ -16,7 +16,7 @@ protected:
     float mCenterX,mCenterY;
     bool mRebuildGradient;
     bool bUseLevel;
-    std::vector<int>mGradientColors;//size 0:nofill, 1:solid fill 2,3:gradient fill
+    std::vector<uint32_t>mGradientColors;//size 0:nofill, 1:solid fill 2,3:gradient fill
     RefPtr<Pattern>mPaint;//used to fill
     void rebuildPattern(const Rect&r);
     virtual void onResize(int width,int height){}
@@ -34,7 +34,7 @@ public:
     void setStrokeDash(int width,int gap);
     int getStroke(int &color)const;//return line width,color
     void setSolidColor(int color);
-    void setGradientColors(const std::vector<int>&cls);//gradient fill colors
+    void setGradientColors(const std::vector<uint32_t>&cls);//gradient fill colors
     void setGradientAngle(float angle);
     void setGradientRadius(float radius);
     void setGradientType(int gt);

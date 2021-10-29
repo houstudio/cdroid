@@ -124,6 +124,7 @@ public:
     int getSecondaryProgressTintMode()const;
     Drawable* getTintTarget(int layerId, bool shouldFallback);
     void setProgressDrawableTiled(Drawable* d);
+    void drawableHotspotChanged(float x, float y)override;
 };
 
 }

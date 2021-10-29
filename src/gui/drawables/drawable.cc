@@ -62,6 +62,14 @@ int Drawable::getOpacity(){
     return UNKNOWN;
 }
 
+void Drawable::setHotspot(float x,float y){
+}
+void Drawable::setHotspotBounds(int left,int top,int width,int height){
+}
+void Drawable::getHotspotBounds(Rect&outRect){
+    outRect=mBounds;
+}
+
 std::shared_ptr<Drawable::ConstantState>Drawable::getConstantState(){
     return nullptr;
 }
@@ -327,7 +335,7 @@ static int parseColor(const std::string&value){
 }
 
 static void parseShapeGradient(Shape*shape,const AttributeSet&atts){
-    std::vector<int>cls;
+    std::vector<uint32_t>cls;
 
     cls.push_back(atts.getColor("startColor"));
     if(atts.hasAttribute("centerColor"))
