@@ -205,7 +205,7 @@ void BitmapDrawable::computeBitmapSize() {
 
 void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
     if (mDstRectAndInsetsDirty) {
-        if (0/*mBitmapState.mTileModeX == null && mBitmapState.mTileModeY == null*/) {
+        if (true/*mBitmapState->mTileModeX == nullptr && mBitmapState->mTileModeY == nullptr*/) {
             const int layoutDir = getLayoutDirection();
             mDstRect.set(0,0,0,0);
             Gravity::apply(mBitmapState->mGravity,mBitmapWidth,mBitmapHeight,mBounds, mDstRect, layoutDir);
@@ -254,7 +254,6 @@ void BitmapDrawable::draw(Canvas&canvas){
     LOGV("BitmapSize=%dx%d bounds=%d,%d-%d,%d dst=%d,%d-%d,%d alpha=%d mColorFilter=%p",mBitmapWidth,mBitmapHeight,
             mBounds.left,mBounds.top,mBounds.width,mBounds.height, mDstRect.left,mDstRect.top,
 	    mDstRect.width,mDstRect.height,mBitmapState->mAlpha,mTintFilter);
-    updateDstRectAndInsetsIfDirty();
 
     const float sw=mBitmapWidth, sh=mBitmapHeight;
     float dx = mBounds.left    , dy = mBounds.top;
@@ -262,6 +261,8 @@ void BitmapDrawable::draw(Canvas&canvas){
     const float fx = dw / sw  , fy = dh / sh;
     const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
 
+    LOGD_IF(mBounds.empty(),"%p's bounds is empty,skip drawing,otherwise will caused crash");
+    if(mBounds.empty())return;
     canvas.save();
     canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
     canvas.clip();

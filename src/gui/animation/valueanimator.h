@@ -13,7 +13,7 @@ public:
     static constexpr int RESTART = 1;
     static constexpr int REVERSE = 2;
     static constexpr int INFINITE= -1;
-    typedef std::function<void(ValueAnimator&)>AnimatorUpdateListener;
+    typedef CallbackBase<void,ValueAnimator&>AnimatorUpdateListener;
 private:
     static constexpr float sDurationScale = 1.0f;
     //static TimeInterpolator sDefaultInterpolator = new AccelerateDecelerateInterpolator();

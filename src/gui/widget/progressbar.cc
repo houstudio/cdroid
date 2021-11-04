@@ -75,24 +75,24 @@ void ProgressBar::initProgressBar(){
     mMax = 100;
     mProgress = 0;
     mSecondaryProgress = 0;
-    mSampleWidth = 0;
+    mSampleWidth   = 0;
     mIndeterminate = false;
     mOnlyIndeterminate = false;
     mDuration = 4000;
     mProgressTintInfo=nullptr;
     //mBehavior = AlphaAnimation.RESTART;
-    mMinWidth = 48;
-    mMaxWidth = 96;
+    mMinWidth  = 48;
+    mMaxWidth  = 96;
     mMinHeight = 48;
     mMaxHeight = 96;
-    mCurrentDrawable=nullptr;
-    mProgressDrawable=nullptr;
+    mCurrentDrawable = nullptr;
+    mProgressDrawable= nullptr;
     mIndeterminateDrawable=nullptr;
-    mAnimator=nullptr;
-    mAnimation=nullptr;
+    mAnimator = nullptr;
+    mAnimation= nullptr;
     mTransformation=nullptr;
-    mHasAnimation=false;
-    mInDrawing =false;
+    mHasAnimation= false;
+    mInDrawing   = false;
     mRefreshIsPosted =false;
     mData.push_back(RefreshData());
     mData.push_back(RefreshData());
@@ -153,6 +153,17 @@ void ProgressBar::onAttachedToWindow(){
         doRefreshProgress(rd.id, rd.progress, rd.fromUser, true, rd.animate);
     }
 }
+
+void ProgressBar::onDetachedFromWindow(){
+    if(mIndeterminate)stopAnimation();
+    if(mRefreshProgressRunnable){
+        removeCallbacks(mRefreshProgressRunnable);
+        mRefreshIsPosted = false;
+    }
+    View::onDetachedFromWindow();
+    mAttached =false;
+}
+
 void ProgressBar::setVisualProgress(int id, float progress){
     mVisualProgress = progress;
 
@@ -201,6 +212,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
         onProgressRefresh(scale, fromUser, progress);
     }
 }
+
 void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int dw = 0;
     int dh = 0;
@@ -220,6 +232,7 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int measuredHeight = resolveSizeAndState(dh, heightMeasureSpec, 0);
     setMeasuredDimension(measuredWidth, measuredHeight);
 }
+
 void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate){
     RefreshData&rd=mData[id-1];
     rd.progress=progress;
@@ -229,13 +242,14 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     //return ;
     if(!mRefreshIsPosted){
         if(mAttached&&!mRefreshIsPosted){
-            postDelayed([this](){
+            mRefreshProgressRunnable =[this](){
                 for(int i=ID_PRIMARY;i<=ID_SECONDARY;i++){
                     RefreshData&rd=mData[i-1];
                     doRefreshProgress(i, rd.progress, rd.fromUser, true, rd.animate);
                 }
                 mRefreshIsPosted=false;
-            },10);
+            };
+            postDelayed(mRefreshProgressRunnable,10);
             mRefreshIsPosted=true;
         }
     }

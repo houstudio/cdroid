@@ -34,6 +34,7 @@ protected:
     float mTouchProgressOffset;
     Drawable*mThumb;
     Drawable*mTickMark;
+    void setHotspot(float x,float y);
     void trackTouchEvent(MotionEvent& event);
     virtual void onStartTrackingTouch();
     virtual void onStopTrackingTouch();
@@ -64,6 +65,7 @@ public:
     Drawable* getTickMark()const;
     virtual void setMin(int min);
     virtual void setMax(int max);
+    void jumpDrawablesToCurrentState()override;
     virtual bool canUserSetProgress()const;
     void onRtlPropertiesChanged(int layoutDirection)override;
     void drawableHotspotChanged(float x,float y)override;

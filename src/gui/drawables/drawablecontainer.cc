@@ -512,7 +512,7 @@ void DrawableContainer::initializeDrawableForDisplay(Drawable*d){
     d->setLevel(getLevel());
     d->setBounds(getBounds());
     d->setLayoutDirection(getLayoutDirection());
-    //d->setAutoMirrored(mDrawableContainerState.mAutoMirrored);    
+    d->setAutoMirrored(mDrawableContainerState->mAutoMirrored);    
     d->setCallback(mBlockInvalidateCallback->unwrap());
 }
 

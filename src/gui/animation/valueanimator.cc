@@ -253,6 +253,12 @@ void ValueAnimator::addUpdateListener(AnimatorUpdateListener listener){
 }
 
 void ValueAnimator::removeUpdateListener(AnimatorUpdateListener listener){
+    for(auto it=mUpdateListeners.begin();it!=mUpdateListeners.end();it++){
+        if((*it)==listener){
+             mUpdateListeners.erase(it);
+             break;
+        }
+    }
 }
 
 void ValueAnimator::removeAllUpdateListeners(){

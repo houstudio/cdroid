@@ -33,6 +33,7 @@ private:
     bool mInDrawing;
     bool mRefreshIsPosted;
     std::vector<RefreshData>mData;
+    Runnable mRefreshProgressRunnable;
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
     ObjectAnimator*mAnimator;
@@ -81,7 +82,8 @@ protected:
     void onSizeChanged(int w,int h,int ow,int oh)override;
     virtual bool setProgressInternal(int progress, bool fromUser=false,bool animate=false);
     void onAttachedToWindow()override;
-	void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void onDetachedFromWindow()override;
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual void onProgressRefresh(float scale, bool fromUser, int progress){};
     virtual void onVisualProgressChanged(int id, float progress);
     virtual void onDraw(Canvas&canvas)override;

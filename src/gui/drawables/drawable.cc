@@ -29,6 +29,8 @@ void Drawable::setBounds(const Rect&r){
 
 void Drawable::setBounds(int x,int y,int w,int h){
     if((mBounds.left!=x)||(mBounds.top!=y)||(mBounds.width!=w)||(mBounds.height!=h)){
+        if(!mBounds.empty())
+            invalidateSelf();
         mBounds.set(x,y,w,h);
         onBoundsChange(mBounds);
     }

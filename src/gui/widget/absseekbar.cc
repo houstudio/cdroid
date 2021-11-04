@@ -38,6 +38,7 @@ void AbsSeekBar::initSeekBar(){
     mIsDragging=false;
     mTouchDownX=.0;
     mDisabledAlpha=1.f;
+    mTouchProgressOffset =.0f;
     mScaledTouchSlop=ViewConfiguration::get(mContext).getScaledTouchSlop();
     setFocusable(true);
 }
@@ -79,6 +80,16 @@ void AbsSeekBar::onVisualProgressChanged(int id, float scale){
             // so just invalidate this whole view.
             invalidate(true);
         }
+    }
+}
+
+void AbsSeekBar::jumpDrawablesToCurrentState() {
+    ProgressBar::jumpDrawablesToCurrentState();
+    if (mThumb) {
+        mThumb->jumpToCurrentState();
+    }
+    if (mTickMark) {
+        mTickMark->jumpToCurrentState();
     }
 }
 
@@ -317,13 +328,13 @@ void AbsSeekBar::setThumbPos(int w, Drawable* thumb, float scale, int offset){
 
     Drawable* background = getBackground();
     if (background != nullptr) {
-        //const int offsetX = mPaddingLeft - mThumbOffset;
-        //const int offsetY = mPaddingTop;
-        //background->setHotspotBounds(left + offsetX, top + offsetY,right + offsetX, bottom + offsetY);
+        const int offsetX = mPaddingLeft - mThumbOffset;
+        const int offsetY = mPaddingTop;
+        background->setHotspotBounds(left + offsetX, top + offsetY,thumbWidth,thumbHeight);
     }
     LOGV("thumb.size=%dx%d (%d,%d-%d,%d)",thumbWidth,thumbHeight,left,right,top,bottom);
     // Canvas will be translated, so 0,0 is where we start drawing
-    thumb->setBounds(left, top,thumbWidth,thumbHeight);//right-left, bottom-top);
+    thumb->setBounds(left, top,thumbWidth,thumbHeight);
 }
 
 
@@ -427,6 +438,11 @@ void AbsSeekBar::startDrag(MotionEvent& event){
     attemptClaimDrag();
 }
 
+void AbsSeekBar::setHotspot(float x,float y){
+    Drawable*bg=getBackground();
+    if(bg)bg->setHotspot(x,y);
+}
+
 void AbsSeekBar::trackTouchEvent(MotionEvent&event){
     int x = event.getX();
     int y = event.getY();
@@ -458,9 +474,8 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
     int range = getMax() - getMin();
     progress += scale * range + getMin();
 
-    //setHotspot(x, y);
-        
-    setProgressInternal((int)progress, true, false);
+    setHotspot(x, y);
+    setProgressInternal((int)std::round(progress), true, false);
 }
 
 bool AbsSeekBar::onTouchEvent(MotionEvent& event){
