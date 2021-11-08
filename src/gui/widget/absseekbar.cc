@@ -374,11 +374,11 @@ void AbsSeekBar::drawTrack(Canvas&canvas){
     Drawable* thumbDrawable = mThumb;
     const int mPaddingTop=0,mPaddingLeft=0;
     if (thumbDrawable != nullptr && mSplitTrack) {
-        //const Insets insets = thumbDrawable.getOpticalInsets();
+        const Insets insets = thumbDrawable->getOpticalInsets();
         Rect tempRect = thumbDrawable->getBounds();
         tempRect.offset(mPaddingLeft - mThumbOffset, mPaddingTop);
-        //tempRect.left += insets.left;
-        //tempRect.right -= insets.right;
+        tempRect.left += insets.left;
+        tempRect.width-= (insets.left+insets.right);
 
         canvas.save();
         //canvas.clipRect(tempRect, Op.DIFFERENCE);

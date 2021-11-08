@@ -29,14 +29,25 @@ AttributeSet::AttributeSet(const char*atts[],int size){
 int AttributeSet::set(const char*atts[],int size){
     int rc=0;
     for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1)
-        mAttrs.insert(std::make_pair<const std::string,const std::string>(atts[i],atts[i+1]));
+        mAttrs.insert(std::make_pair<const std::string,std::string>(atts[i],atts[i+1]));
     return mAttrs.size();
+}
+
+int AttributeSet::inherit(const AttributeSet&other){
+    int inheritedCount=0;
+    for(auto it=other.mAttrs.begin();it!=other.mAttrs.end();it++){
+        if(mAttrs.find(it->first)==mAttrs.end()){
+           mAttrs.insert(std::make_pair<const std::string,std::string>(it->first.c_str(),it->second.c_str()));
+           inheritedCount++;
+        }
+    }
+    return inheritedCount;
 }
 
 bool AttributeSet::add(const std::string&key,const std::string&value){
     if(mAttrs.find(key)!=mAttrs.end())
         return false; 
-    mAttrs.insert(std::make_pair<const std::string,const std::string>(key.c_str(),value.c_str()));
+    mAttrs.insert(std::make_pair<const std::string,std::string>(key.c_str(),value.c_str()));
     return true;
 }
 
@@ -45,6 +56,7 @@ void AttributeSet::setBasePath(const std::string&path){
     if(path.back()!='/')
         basePath.append("/");
 }
+
 const std::string AttributeSet::getAbsolutePath(const std::string&file)const{
     return basePath+file;
 }

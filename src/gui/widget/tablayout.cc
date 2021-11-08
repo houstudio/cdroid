@@ -350,8 +350,7 @@ void TabLayout::updateAllTabs(){
 TabLayout::TabView*TabLayout::createTabView(TabLayout::Tab* tab){
     TabView* tabView =nullptr;// mTabViewPool != null ? mTabViewPool.acquire() : null;
     if (tabView == nullptr) {
-        AttributeSet atts;
-        tabView = new TabView(getContext(),atts,this);
+        tabView = new TabView(getContext(),AttributeSet(),this);
     }
     tabView->setTab(tab);
     tabView->setFocusable(true);

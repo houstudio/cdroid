@@ -29,6 +29,7 @@ int main(int argc,const char*argv[]){
     btn=new ToggleButton(120,40);
     d=ctx->getDrawable("cdroid:drawable/btn_toggle_bg.xml");
     btn->setBackgroundDrawable(d);
+    btn->setClickable(true);
     btn->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
     ((ToggleButton*)btn)->setTextOn("ON");
     ((ToggleButton*)btn)->setTextOff("Off");

@@ -15,7 +15,9 @@ private:
     std::map<const std::string,std::string>strings;
     std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
     std::map<const std::string,class ZIPArchive*>mResources;
+    std::map<const std::string,AttributeSet>mStyles;
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
+    int loadAttributes(std::map<const std::string,AttributeSet>&atts,const std::string&resid);
 protected:
     std::string mName;
     void loadStrings(const std::string&lan);
@@ -24,6 +26,8 @@ public:
     Assets();
     Assets(const std::string&path);
     ~Assets();
+    int loadStyles(const std::string&resid);
+    void clearStyles();
     const std::string& getString(const std::string&id,const std::string&lan="")override;
     RefPtr<Cairo::ImageSurface> getImage(const std::string&resname,bool cache=true)override;
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;

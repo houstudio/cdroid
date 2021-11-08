@@ -95,9 +95,9 @@ public:
     float getAnimatedValue();
     float getAnimatedValue(const std::string&propertyName);
     void setRepeatCount(int value);
-    int getRepeatCount()const;
+    int  getRepeatCount()const;
     void setRepeatMode(int value);
-    int getRepeatMode()const;
+    int  getRepeatMode()const;
     void addUpdateListener(AnimatorUpdateListener listener);
     void removeUpdateListener(AnimatorUpdateListener listener);
     void removeAllUpdateListeners();
