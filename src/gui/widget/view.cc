@@ -2403,10 +2403,10 @@ bool View::isTemporarilyDetached()const{
 void View::dispatchFinishTemporaryDetach(){
     mPrivateFlags3 &= ~PFLAG3_TEMPORARY_DETACH;
     onFinishTemporaryDetach();
-    /*if (hasWindowFocus() && hasFocus()) {
-        InputMethodManager.getInstance().focusIn(this);
+    if (hasWindowFocus() && hasFocus()) {
+        InputMethodManager::getInstance().focusIn(this);
     }
-    notifyEnterOrExitForAutoFillIfNeeded(true);*/
+    //notifyEnterOrExitForAutoFillIfNeeded(true);
 }
 
 void View::onFinishTemporaryDetach(){
@@ -3571,21 +3571,21 @@ void View::dispatchWindowFocusChanged(bool hasFocus){
 }
 
 void View::onWindowFocusChanged(bool hasWindowFocus){
-    //InputMethodManager imm = InputMethodManager.peekInstance();
+    InputMethodManager& imm = InputMethodManager::getInstance();
     if (!hasWindowFocus) {
        if (isPressed()) {
            setPressed(false);
        }
        mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
-       /*if (imm != null && (mPrivateFlags & PFLAG_FOCUSED) != 0) {
+       if ((mPrivateFlags & PFLAG_FOCUSED) != 0) {
            imm.focusOut(this);
-       }*/
+       }
        removeLongPressCallback();
        removeTapCallback();
        onFocusLost();
-    }/* else if (imm != null && (mPrivateFlags & PFLAG_FOCUSED) != 0) {
+    } else if ((mPrivateFlags & PFLAG_FOCUSED) != 0) {
         imm.focusIn(this);
-    }*/
+    }
     refreshDrawableState();
 
 }
@@ -4289,7 +4289,7 @@ bool View::dispatchUnhandledMove(View* focused,int direction){
 }
 
 bool View::onKeyDown(int keyCode,KeyEvent& evt){
-    //int mc=InputMethodManager::getInstance().getCharacter(keyCode,evt.getMetaState());
+    int mc=InputMethodManager::getInstance().getCharacter(keyCode,evt.getMetaState());
     if (KeyEvent::isConfirmKey(keyCode)) {
         if ((mViewFlags & ENABLED_MASK) == DISABLED)return true;
 

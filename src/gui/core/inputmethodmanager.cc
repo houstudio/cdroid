@@ -58,14 +58,36 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     //addView(candidateView).setPos(0,1);
     addView(kbdView).setPos(0,30);
     setVisibility(INVISIBLE);
-    listener.onPress=[](int primaryCode){
-        LOGD("primaryCode=%x",primaryCode);
+    listener.onPress=[this](int primaryCode){
+        LOGD("primaryCode=%d %x",primaryCode,primaryCode);
+        KeyEvent keyEvent;
+        switch(primaryCode){
+        case Keyboard::KEYCODE_SHIFT:
+        case Keyboard::KEYCODE_ALT:
+        case Keyboard::KEYCODE_DONE:
+        case Keyboard::KEYCODE_CANCEL:
+        case Keyboard::KEYCODE_MODE_CHANGE:break;
+        case Keyboard::KEYCODE_BACKSPACE:
+        case Keyboard::KEYCODE_DELETE:
+             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,
+             KEY_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
+             /*sendKeyEvent(keyEvent);*/break;
+        case -101:
+        default:
+            if(mBuddy){
+                const wchar_t text[2]={primaryCode,0};
+                mBuddy->commitText(text);
+            }break;
+        }
     };
     listener.onRelease=[](int primaryCode){
         LOGD("primaryCode=%x",primaryCode);
     };
     listener.onText=[](std::string&text){
         LOGD("onText(%s)",text.c_str());
+    };
+    listener.onKey=[](int primaryCode,const std::vector<int>&keyCodes){
+        LOGV("primaryCode=%x %d keys",primaryCode,keyCodes.size());
     };
     kbdView->setOnKeyboardActionListener(listener);
 #if 0
@@ -179,7 +201,6 @@ InputMethodManager&InputMethodManager::getInstance(){
     }
     if(imemethods.size()==0){
         InputMethod*m=new InputMethod("cdroid:xml/qwerty.xml");
-        //InputMethod*m=new ChinesePinyin("qwerty.json");
         m->load_dicts("dict_pinyin.dat","userdict.dat");
         registeMethod("ChinesePinyin26",m);
     }
@@ -261,7 +282,6 @@ void InputMethodManager::commitText(const std::wstring&text,int newCursorPos){
 int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name){
     im=method;
     std::string layout =method->getKeyboardLayout(mInputType);
-    //kbd=Keyboard::loadFrom(layout);
     Keyboard*kbd=new Keyboard(imeWindow->getContext(),layout,1280,240);
     imeWindow->kbdView->setKeyboard(kbd);
     LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd);

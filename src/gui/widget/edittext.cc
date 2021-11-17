@@ -135,9 +135,9 @@ void EditText::onFocusChanged(bool focus,int direction,Rect*prevfocusrect){
     InputMethodManager&imm=InputMethodManager::getInstance();
     if(focus){
 	imm.setInputType(mInputType);
-        InputMethodManager::getInstance().focusIn((View*)this);
+        imm.focusIn((View*)this);
     }else{
-        InputMethodManager::getInstance().focusOut((View*)this);
+        imm.focusOut((View*)this);
     }
 
     TextView::onFocusChanged(focus,direction,prevfocusrect);

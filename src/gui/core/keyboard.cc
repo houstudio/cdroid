@@ -174,6 +174,7 @@ Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,i
     mDefaultHeight = mDefaultWidth;
     mKeyboardMode = 0;//modeId;
     loadKeyboard(context,xmlLayoutResId);
+    resize(width,height);
 }
 
 Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId){
@@ -221,6 +222,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         pd->x+=key->width;
     }
 }
+
 static void endElement(void *userData, const XML_Char *name){
     KeyboardData*pd=(KeyboardData*)userData;
     Context*context=pd->context;
@@ -255,7 +257,10 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    LOGD("endof loadkeyboard %d rows parsed",rows.size());
+    mTotalHeight = pd.y-mDefaultVerticalGap;
+    mProximityThreshold =mDefaultWidth*.6f;//SEARCH_DISTANCE;
+    mProximityThreshold*=mProximityThreshold;
+    LOGD("endof loadkeyboard %d rows parsed mDefaultWidth=%d ",rows.size(),mDefaultWidth);
 }
 
 void Keyboard::resize(int newWidth,int newHeight){
@@ -381,7 +386,9 @@ void Keyboard::computeNearestNeighbors() {
                 }
             }
             //int [] cell = new int[count];    System.arraycopy(indices, 0, cell, 0, count);
-            mGridNeighbors[(y / mCellHeight) * GRID_WIDTH + (x / mCellWidth)] = std::vector<int>(indices,indices+count);
+            const int idx=(y / mCellHeight) * GRID_WIDTH + (x / mCellWidth);
+            mGridNeighbors[idx] = std::vector<int>(indices,indices+count);
+            LOGV("Key[%d] has %d neighbors",idx,mGridNeighbors[idx].size());
         }
     }
 }

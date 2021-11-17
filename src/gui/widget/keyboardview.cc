@@ -351,15 +351,14 @@ void KeyboardView::detectAndSendKey(int index, int x, int y, long eventTime){
             mKeyboardActionListener.onRelease(NOT_A_KEY);
         } else {
             int code = key->codes[0];
-            //TextEntryState.keyPressedAt(key, x, y);
             std::vector<int>codes;
             codes.resize(MAX_NEARBY_KEYS);
-            std::fill(codes.begin(),codes.end(),(int)NOT_A_KEY);//for(int i=0;i<codes.size();i++)codes[i]=NOT_A_KEY;
+            std::fill(codes.begin(),codes.end(),(int)NOT_A_KEY);
             getKeyIndices(x, y,&codes);
             // Multi-tap
             if (mInMultiTap) {
                 if (mTapCount != -1) {
-                    mKeyboardActionListener.onKey(Keyboard::KEYCODE_DELETE, {KEY_DELETE});//KEY_DELETE);
+                    mKeyboardActionListener.onKey(Keyboard::KEYCODE_DELETE, {KEY_DELETE});
                 } else {
                     mTapCount = 0;
                 }
