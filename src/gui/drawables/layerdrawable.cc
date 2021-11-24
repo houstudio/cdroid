@@ -810,6 +810,47 @@ void LayerDrawable::unscheduleDrawable(Drawable& who,Runnable what){
     unscheduleSelf(what);
 }
 
+bool LayerDrawable::setVisible(bool visible,bool restart){
+    bool changed=Drawable::setVisible(visible,restart);
+    for(auto child:mLayerState->mChildren){
+        Drawable*dr=child->mDrawable;
+        if(dr)dr->setVisible(visible,restart);
+    }
+    return changed;
+}
+
+void LayerDrawable::setAlpha(int alpha){
+    for(auto child:mLayerState->mChildren){
+        Drawable*dr=child->mDrawable;
+        if(dr)dr->setAlpha(alpha);    
+    }
+}
+
+int  LayerDrawable::getAlpha()const{
+    Drawable*dr=getFirstNonNullDrawable();
+    if(dr) return dr->getAlpha();
+    return Drawable::getAlpha();
+}
+
+void LayerDrawable::setOpacity(int opacity) {
+    mLayerState->mOpacityOverride = opacity;
+}
+
+int LayerDrawable::getOpacity() {
+    if (mLayerState->mOpacityOverride != UNKNOWN) {
+        return mLayerState->mOpacityOverride;
+    }
+    return mLayerState->mOpacity;//getOpacity();
+}
+
+Drawable* LayerDrawable::getFirstNonNullDrawable()const{
+    for(auto child:mLayerState->mChildren){
+        Drawable*dr=child->mDrawable;
+        if(dr)return dr;
+    }
+    return nullptr;
+}
+
 Drawable*LayerDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mLayerState=std::make_shared<LayerState>(createConstantState(mLayerState.get()),nullptr);

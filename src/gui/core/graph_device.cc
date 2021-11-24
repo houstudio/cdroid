@@ -88,9 +88,7 @@ void GraphDevice::flip(){
 }
 
 bool GraphDevice::needCompose(){
-    uint64_t tnow64;
-    tnow64=SystemClock::uptimeMillis();
-    return compose_event&&(tnow64-last_compose_time)>=30;
+    return compose_event;
 }
 
 Canvas*GraphDevice::getPrimaryContext(){
@@ -125,6 +123,7 @@ void GraphDevice::remove(Canvas*ctx){
     if(ctx==nullptr)return;
     const RECT rcw={ctx->mLeft,ctx->mTop,ctx->mWidth,ctx->mHeight};
     auto itw=std::find(gSurfaces.begin(),gSurfaces.end(),ctx);
+    GraphDevice::getInstance().getPrimaryContext()->invalidate(rcw);
     if(itw==gSurfaces.end()){
         LOGD_IF(itw==gSurfaces.end(),"context %p not found",ctx);
 	return ;

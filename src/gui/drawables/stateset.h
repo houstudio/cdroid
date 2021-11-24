@@ -20,8 +20,9 @@ public:
         VIEW_STATE_ACTIVATED      =1<<5 ,
         VIEW_STATE_HOVERED        =1<<6 ,
         VIEW_STATE_CHECKED        =1<<7 ,
-        VIEW_STATE_DRAG_CAN_ACCEPT=1<<8 ,
-        VIEW_STATE_DRAG_HOVERED   =1<<9 ,
+        VIEW_STATE_CHECKABLE      =1<<8 , 
+        VIEW_STATE_DRAG_CAN_ACCEPT=1<<9 ,
+        VIEW_STATE_DRAG_HOVERED   =1<<10,
     };
     enum{
         WINDOW_FOCUSED = 1 ,
@@ -32,8 +33,9 @@ public:
         ACTIVATED      = 6 ,
         HOVERED        = 7 ,
         CHECKED        = 8 ,
-        DRAG_ACCPETABLE= 9 ,
-        DRAG_HOVERED   =10
+        CHECKABLE      = 9 ,
+        DRAG_ACCPETABLE= 10,
+        DRAG_HOVERED   = 11
     };
     static std::vector<int>NOTHING;
 public:

@@ -72,6 +72,7 @@ private:
     void computeNestedPadding(Rect& padding);
     void computeStackedPadding(Rect& padding);
     ChildDrawable* createLayer(Drawable* dr);
+    Drawable*getFirstNonNullDrawable()const;
 protected:
     virtual LayerState* createConstantState(LayerState* state);
     void onBoundsChange(const Rect& bounds)override;
@@ -136,6 +137,11 @@ public:
     virtual void setPaddingMode(int mode);
     int getPaddingMode()const;
 
+    bool setVisible(bool visible,bool restart)override;
+    void setAlpha(int alpha)override;
+    int  getAlpha()const override;
+    void setOpacity(int opacity);
+    int  getOpacity()override;
     Drawable*mutate()override;
     void clearMutated()override;
     bool onLayoutDirectionChanged(int layoutDirection)override;

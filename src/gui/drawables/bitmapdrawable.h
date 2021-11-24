@@ -33,6 +33,7 @@ private:
     Insets mOpticalInsets;
     std::shared_ptr<BitmapState>mBitmapState;
     PorterDuffColorFilter*mTintFilter;
+    bool needMirroring();
     void computeBitmapSize();
     void updateDstRectAndInsetsIfDirty();
     BitmapDrawable(std::shared_ptr<BitmapState>state);
@@ -56,6 +57,8 @@ public:
     int getIntrinsicWidth()const override;
     int getIntrinsicHeight()const override;
     int getOpacity()override;
+    void setAutoMirrored(bool mirrored)override;
+    bool isAutoMirrored()override;
     void setTintList(ColorStateList*lst)override;
     void setTintMode(int mode)override;
     Drawable*mutate()override;

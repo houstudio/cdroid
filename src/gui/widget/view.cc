@@ -982,6 +982,8 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
 void View::dispatchDetachedFromWindow(){
     onDetachedFromWindow();
     onDetachedFromWindowInternal();
+    InputMethodManager&imm=InputMethodManager::getInstance();
+    imm.onViewDetachedFromWindow(this);
     mAttachInfo = nullptr;
 }
 
@@ -992,7 +994,7 @@ void View::onDetachedFromWindowInternal() {
 
     removeUnsetPressCallback();
     removeLongPressCallback();
-    //removePerformClickCallback();
+    removePerformClickCallback();
     //cancel(mSendViewScrolledAccessibilityEvent);
     stopNestedScroll();
 
@@ -3363,7 +3365,10 @@ bool View::hasFlag(int flag) const {
 void View::onAttachedToWindow(){
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     jumpDrawablesToCurrentState();
-     
+    if(isFocused()){
+        InputMethodManager&imm=InputMethodManager::getInstance();
+        imm.focusIn((View*)this);
+    } 
     mPivotX =(float)getWidth()/2.f;
     mPivotY =(float)getHeight()/2.f;
 }
@@ -4588,6 +4593,13 @@ void View::removeLongPressCallback() {
     }
 }
 
+void View::removePerformClickCallback(){
+    if(mPerformClick!=nullptr){
+        removeCallbacks(mPerformClick);
+        mPerformClick=nullptr;
+    } 
+}
+
 void View::removeUnsetPressCallback() {
     LOGV("removeUnsetPressCallback pressed=%d",mPrivateFlags & PFLAG_PRESSED);
     if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
@@ -4735,7 +4747,8 @@ bool View::onTouchEvent(MotionEvent& event){
             if(!mHasPerformedLongPress && !mIgnoreNextUpEvent){
                 removeLongPressCallback();
                 if (!focusTaken){
-                    performClickInternal();
+                    if(mPerformClick==nullptr)mPerformClick=[this](){performClickInternal();};
+                    if(!post(mPerformClick))performClickInternal();
                 }
             }
             if(mUnsetPressedState==nullptr)

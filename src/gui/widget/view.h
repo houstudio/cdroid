@@ -299,6 +299,7 @@ private:
     Insets mLayoutInsets;
  
     Runnable mPendingCheckForTap;
+    Runnable mPerformClick;
     bool mInContextButtonPress;
     bool mHasPerformedLongPress;
     bool mIgnoreNextUpEvent;
@@ -911,6 +912,7 @@ private:
 
     void removeTapCallback();
     void removeLongPressCallback();
+    void removePerformClickCallback();
     void removeUnsetPressCallback();
 
     void checkForLongClick(int delayOffset,int x,int y);

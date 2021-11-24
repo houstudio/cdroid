@@ -17,7 +17,8 @@ static std::map<const std::string,int>edgeFlagKVS={
    {"bottom",(int)Keyboard::EDGE_BOTTOM}
 };
 
-int getDimensionOrFraction(const AttributeSet&attrs,const std::string&value,int base,int def){
+int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def){
+    const std::string value=attrs.getAttributeValue(key);
     if(value.find("%p")!=std::string::npos){
         return base*std::stof(value)/100;
     }else if(value.find("px")!=std::string::npos){
@@ -36,9 +37,8 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
     height= getDimensionOrFraction(attrs,"keyHeight", keyboard->mDisplayHeight, row->defaultHeight);
     gap   = getDimensionOrFraction(attrs,"horizontalGap", keyboard->mDisplayWidth, row->defaultHorizontalGap);
     edgeFlags =row->rowEdgeFlags | attrs.getInt("keyEdgeFlags",edgeFlagKVS,0);
-
-    LOGV("xy=%d,%d defaultKeySize=%dx%d  %dx%d",x,y,row->defaultWidth,row->defaultHeight,keyboard->mDefaultWidth,keyboard->mDefaultHeight);
-    std::string resicon=attrs.getString("keyIcon");
+    this->x+=gap;
+    const std::string resicon=attrs.getString("keyIcon");
     icon  = resicon.empty()?nullptr:context->getDrawable(resicon);
     label = attrs.getString("keyLabel");
     text  = attrs.getString("keyOutputText");
@@ -55,12 +55,12 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
 Keyboard::Key::Key(void*p){
     parent =p;
     Row*row=(Row*)parent;
-    sticky=modifier=0;
-    x=y=gap=0;
+    sticky =modifier=0;
+    x=  y  = gap =0;
     width    = row->defaultWidth;
     height   = row->defaultHeight;
     edgeFlags= row->rowEdgeFlags;
-    on=false;
+    on = false;
     pressed=false;
 }
 
@@ -111,30 +111,30 @@ int Keyboard::Key::squaredDistanceFrom(int x, int y){
 }
 
 static std::vector<int> KEY_STATE_NORMAL_ON = { 
-     //StateSet::CHECKABLE,//StateSet::android.R.attr.state_checkable, 
+     StateSet::CHECKABLE,//StateSet::android.R.attr.state_checkable, 
      StateSet::CHECKED   //android.R.attr.state_checked
 };
         
 static std::vector<int> KEY_STATE_PRESSED_ON = { 
      StateSet::PRESSED  ,// android.R.attr.state_pressed, 
-     //StateSet::CHECKABLE,// android.R.attr.state_checkable, 
+     StateSet::CHECKABLE,// android.R.attr.state_checkable, 
      StateSet::CHECKED   // android.R.attr.state_checked 
 };
         
 static std::vector<int> KEY_STATE_NORMAL_OFF = { 
-      //StateSet::CHECKABLE//android.R.attr.state_checkable 
+     StateSet::CHECKABLE//android.R.attr.state_checkable 
 };
         
 static std::vector<int> KEY_STATE_PRESSED_OFF = { 
      StateSet::PRESSED,//android.R.attr.state_pressed, 
-     //StateSet::CHECKABLE//android.R.attr.state_checkable 
+     StateSet::CHECKABLE//android.R.attr.state_checkable 
 };
         
 static std::vector<int> KEY_STATE_NORMAL = {
 };
         
 static std::vector<int> KEY_STATE_PRESSED = {
-       StateSet::PRESSED//android.R.attr.state_pressed
+     StateSet::PRESSED//android.R.attr.state_pressed
 };
 
 std::vector<int>Keyboard::Key::getCurrentDrawableState()const{
@@ -158,31 +158,31 @@ Keyboard::Row::Row(Keyboard*p,Context*ctx,const AttributeSet&attrs){
     defaultHeight= getDimensionOrFraction(attrs,"keyHeight", parent->mDisplayHeight, parent->mDefaultHeight);
     defaultHorizontalGap = getDimensionOrFraction(attrs,"horizontalGap", parent->mDisplayWidth, parent->mDefaultHorizontalGap);
     verticalGap  = getDimensionOrFraction(attrs,"verticalGap", parent->mDisplayHeight, parent->mDefaultVerticalGap);
-    rowEdgeFlags = attrs.getInt("rowEdgeFlags", 0);
-    //mode = a.getResourceId(com.android.internal.R.styleable.Keyboard_Row_keyboardMode,
+    rowEdgeFlags = attrs.getInt("rowEdgeFlags", EDGE_TOP|EDGE_BOTTOM);
+    mode = attrs.getInt("keyboardMode",0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,int height){
+Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,int height,int modeId){
     mDisplayWidth = width;
-    mDisplayHeight = height;
+    mDisplayHeight= height;
     mShifted =false;
     mDefaultHorizontalGap = 0;
     mDefaultWidth = mDisplayWidth / 10;
     mDefaultVerticalGap = 0;
-    mDefaultHeight = mDefaultWidth;
-    mKeyboardMode = 0;//modeId;
+    mDefaultHeight= mDefaultWidth;
+    mKeyboardMode = modeId;
     loadKeyboard(context,xmlLayoutResId);
-    resize(width,height);
 }
 
-Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId){
-    loadKeyboard(context,xmlLayoutResId);
+Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId):Keyboard(context,xmlLayoutResId,0,0,modeId){
 }
 
 Keyboard::~Keyboard(){
-     
+    for(auto k:mKeys)
+       delete k;
+    mKeys.clear(); 
 }
 
 typedef struct{
@@ -193,9 +193,12 @@ typedef struct{
     Keyboard::Row*row;
     Keyboard::Key*key;
     int x,y;
+    int displayWidth,displayHeight;
+    int keyboardMode;
+    int minWidth;//min width for keyboard's key row
 }KeyboardData;
 
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
+static void startTag(void *userData, const XML_Char *name, const XML_Char **satts){
     KeyboardData*pd=(KeyboardData*)userData;
     AttributeSet atts(satts);
     Context*context=pd->context;
@@ -203,36 +206,47 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     Keyboard::Row*row =pd->row;
     int sz;
     if(0==strcmp(name,"Keyboard")){
-        sz= getDimensionOrFraction(atts,"horizontalGap",1280,0);//keyboard->mDisplayWidth,keyboard->mDefaultHorizontalGap);
+        sz= getDimensionOrFraction(atts,"horizontalGap",pd->displayWidth,keyboard->getHorizontalGap());
         keyboard->setHorizontalGap(sz);
-        sz= getDimensionOrFraction(atts,"verticalGap",720,0);
+        sz= getDimensionOrFraction(atts,"verticalGap",pd->displayHeight,keyboard->getVerticalGap());
         keyboard->setVerticalGap(sz);
-        sz= getDimensionOrFraction(atts,"keyHeight",720,60);
+        sz= getDimensionOrFraction(atts,"keyHeight",pd->displayHeight,0);
         keyboard->setKeyHeight(sz);
-        pd->y=0;
+        pd->minWidth=pd->y=0;
     }else if(0==strcmp(name,"Row")){
         pd->row=row=new Keyboard::Row(keyboard,context,atts);
         row->rowEdgeFlags = atts.getInt("rowEdgeFlags",0);
         pd->x=0;
     }else if(0==strcmp(name,"Key")){
-        Keyboard::Key*key=new Keyboard::Key(row,pd->x,pd->y,context,atts);
-        row->mKeys.push_back(key);
-        pd->key=key;
-        pd->keys->push_back(key);
-        pd->x+=key->width;
+        if(row->mode==pd->keyboardMode){
+            Keyboard::Key*key=new Keyboard::Key(row,pd->x,pd->y,context,atts);
+            if(row->mode==pd->keyboardMode)
+                row->mKeys.push_back(key);
+            pd->key=key;
+        }
     }
 }
 
-static void endElement(void *userData, const XML_Char *name){
+static void endTag(void *userData, const XML_Char *name){
     KeyboardData*pd=(KeyboardData*)userData;
     Context*context=pd->context;
     Keyboard* keyboard=pd->keyboard;
     Keyboard::Row*row =pd->row;
-    if(0==strcmp(name,"Row")){
-        pd->y+=keyboard->getKeyHeight();
+    if(0==strcmp(name,"Key")){
+        if(row->mode==pd->keyboardMode){
+            Keyboard::Key*key=pd->key;
+            pd->keys->push_back(key);
+            pd->x+=key->width+key->gap;
+            if(key->codes[0]==Keyboard::KEYCODE_SHIFT||key->codes[0]==Keyboard::KEYCODE_ALT)
+                keyboard->getModifierKeys().push_back(key);
+        }
+    }else if(0==strcmp(name,"Row")){
+        pd->y+=row->defaultHeight+row->verticalGap;
+        pd->minWidth=std::max(pd->x,pd->minWidth);
         pd->x=0;
-        pd->rows->push_back(pd->row);
-        LOGD("endof keyboard.row %d rows parsed keyheight=%d",pd->rows->size(),keyboard->getKeyHeight());
+        if(row->mode==pd->keyboardMode)
+            pd->rows->push_back(pd->row);
+        else delete pd->row;
     }
 }
 
@@ -242,8 +256,10 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     KeyboardData pd={&rows,&mKeys,context,this,nullptr,0,0};
     ULONGLONG tstart=SystemClock::uptimeMillis();
     XML_SetUserData(parser,&pd);
-    XML_SetElementHandler(parser, startElement, endElement);
-
+    XML_SetElementHandler(parser, startTag, endTag);
+    pd.displayWidth=mDisplayWidth;
+    pd.displayHeight=mDisplayHeight;
+    pd.keyboardMode=mKeyboardMode;
     int len = 0;
     do{
         char buf[256];
@@ -257,10 +273,11 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    mTotalHeight = pd.y-mDefaultVerticalGap;
+    mTotalHeight= pd.y-mDefaultVerticalGap;
+    mTotalWidth = pd.minWidth;
     mProximityThreshold =mDefaultWidth*.6f;//SEARCH_DISTANCE;
     mProximityThreshold*=mProximityThreshold;
-    LOGD("endof loadkeyboard %d rows parsed mDefaultWidth=%d ",rows.size(),mDefaultWidth);
+    LOGD("endof loadkeyboard %d rows %d keys parsed size=%dx%d",rows.size(),mKeys.size(),mTotalWidth,mTotalHeight);
 }
 
 void Keyboard::resize(int newWidth,int newHeight){
@@ -283,7 +300,7 @@ void Keyboard::resize(int newWidth,int newHeight){
             for (int keyIndex = 0; keyIndex < numKeys; ++keyIndex) {
                 Key* key = row->mKeys.at(keyIndex);
                 key->width *= scaleFactor;
-                key->x = x;
+                key->x = x+key->gap;
                 x += key->width + key->gap;
             }
         }
@@ -366,9 +383,9 @@ int Keyboard::getShiftKeyIndex()const{
 
 void Keyboard::computeNearestNeighbors() {
     // Round-up so we don't have any pixels outside the grid
-    mCellWidth = (getMinWidth() + GRID_WIDTH - 1) / GRID_WIDTH;
-    mCellHeight = (getHeight() + GRID_HEIGHT - 1) / GRID_HEIGHT;
-    mGridNeighbors.resize(GRID_SIZE);// = new int[GRID_SIZE][];
+    mCellWidth = (getMinWidth()+ GRID_WIDTH - 1) / GRID_WIDTH;
+    mCellHeight= (getHeight()  + GRID_HEIGHT- 1) / GRID_HEIGHT;
+    mGridNeighbors.resize(GRID_SIZE);
     int indices[256] ;//= new int[mKeys.size()];
     const int gridWidth  = GRID_WIDTH * mCellWidth;
     const int gridHeight = GRID_HEIGHT * mCellHeight;
@@ -385,10 +402,9 @@ void Keyboard::computeNearestNeighbors() {
                     indices[count++] = i;
                 }
             }
-            //int [] cell = new int[count];    System.arraycopy(indices, 0, cell, 0, count);
             const int idx=(y / mCellHeight) * GRID_WIDTH + (x / mCellWidth);
             mGridNeighbors[idx] = std::vector<int>(indices,indices+count);
-            LOGV("Key[%d] has %d neighbors",idx,mGridNeighbors[idx].size());
+            //LOGV("Key[%d] has %d neighbors",idx,mGridNeighbors[idx].size());
         }
     }
 }

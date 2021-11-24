@@ -37,7 +37,7 @@ void KeyboardView::init(){
     mKeyboard      = nullptr;
     mInvalidatedKey= nullptr;
     mKeyBackground = nullptr;
-    //mSwipeTracker = nullptr;
+    //mSwipeTracker= nullptr;
 
     mVerticalCorrection  = 0;
     mMiniKeyboardOffsetX = 0;
@@ -191,7 +191,7 @@ void KeyboardView::onDraw(Canvas& canvas) {
     int kbdPaddingLeft = mPaddingLeft;
     int kbdPaddingTop = mPaddingTop;
     Keyboard::Key* invalidKey = mInvalidatedKey;
-
+    LOGD("%d keys size=%dx%d",mKeys.size(),getWidth(),getHeight());
     canvas.set_color(mKeyTextColor);
     bool drawSingleKey = false;
     double cx1,cy1,cx2,cy2;
@@ -218,8 +218,8 @@ void KeyboardView::onDraw(Canvas& canvas) {
             keyBackground->setBounds(0, 0, key->width, key->height);
         }
         canvas.translate(key->x + kbdPaddingLeft, key->y + kbdPaddingTop);
+        LOGV("(%d,%d,%d,%d)-%d",key->x,key->y,key->width,key->height,key->gap);
         keyBackground->draw(canvas);
-
         if (label.empty()==false) {
             // For characters, use large font. For labels like "Done", use small font.
             canvas.set_color(mKeyTextColor);

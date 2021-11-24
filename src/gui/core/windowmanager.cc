@@ -83,7 +83,7 @@ void WindowManager::removeWindow(Window*w){
         Window*w1=(*itr);
         RECT rc=w1->getBound();
         rc.intersect(wrect);
-	    rc.offset(-w1->getX(),-w1->getY());
+        rc.offset(-w1->getX(),-w1->getY());
         w1->invalidate(&rc);
     }
     Looper::getDefault()->removeEventHandler(w->source);
@@ -95,6 +95,7 @@ void WindowManager::removeWindow(Window*w){
             break;
         } 
     }
+    GraphDevice::getInstance().getPrimaryContext()->invalidate(wrect);
     GraphDevice::getInstance().flip();
     LOGV("w=%p windows.size=%d",w,windows.size());
 }

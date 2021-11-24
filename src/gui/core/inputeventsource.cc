@@ -123,7 +123,7 @@ void InputEventSource::playback(const std::string&fname){
     auto func=[this](const std::string&fname){
          std::fstream in(fname);
          std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-         LOGD("stream.good=%d",in.good());
+         LOGD_IF(in.good(),"play key from %s",fname.c_str());
          if(!in.good())return ;
          isplayback=true;
          while(1){

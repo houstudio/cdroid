@@ -84,7 +84,7 @@ private:
     int  mTotalHeight;
     int  mDisplayWidth;
     int  mDisplayHeight;
-    int  mKeyboardMode;
+    int  mKeyboardMode;//diffrent keyboardmode means diffrent keyboard layout's keyrow
     int mCellWidth;
     int mCellHeight;
     int mProximityThreshold;
@@ -102,8 +102,8 @@ protected:
     int  keyboardHeight;
     Key* getKeyByCode(int code);
 public:
-    Keyboard(Context* context,const std::string&resid,int w,int h);
-    Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId);
+    Keyboard(Context* context,const std::string&resid,int w,int h,int modeId=0);
+    Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId=0);
     ~Keyboard();
     void loadKeyboard(Context*,const std::string&);
     void resize(int w,int h);

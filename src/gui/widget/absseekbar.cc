@@ -536,7 +536,7 @@ bool AbsSeekBar::canUserSetProgress()const{
 }
 
 void AbsSeekBar::onRtlPropertiesChanged(int layoutDirection) {
-    AbsSeekBar::onRtlPropertiesChanged(layoutDirection);
+    ProgressBar::onRtlPropertiesChanged(layoutDirection);
 
     if (mThumb) {
         setThumbPos(getWidth(), mThumb, getScale(), INT_MIN);//Integer.MIN_VALUE);

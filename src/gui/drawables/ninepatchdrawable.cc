@@ -207,8 +207,17 @@ std::shared_ptr<Drawable::ConstantState>NinePatchDrawable::getConstantState(){
 }
 
 void NinePatchDrawable::draw(Canvas&canvas){
-    if(mNinePatchState->mNinePatch)
+    if(mNinePatchState->mNinePatch){
+        canvas.save(); 
+        if(needsMirroring()||1){
+            const float cx=mBounds.left+mBounds.width/2.f;
+            const float cy=mBounds.left+mBounds.height/2.f;
+            canvas.scale(-1.f,1.f);
+            canvas.translate(cx,cy);
+        }
         canvas.draw_ninepatch(mNinePatchState->mNinePatch,mBounds,mNinePatchState->mHorz,mNinePatchState->mVert);
+        canvas.restore();
+    }
 }
 
 Drawable*NinePatchDrawable::inflate(Context*ctx,const AttributeSet&atts){

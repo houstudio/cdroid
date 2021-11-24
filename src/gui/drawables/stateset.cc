@@ -12,6 +12,7 @@ std::vector<int>StateSet::VIEW_STATE_IDS={
     ACTIVATED      , VIEW_STATE_ACTIVATED,
     HOVERED        , VIEW_STATE_HOVERED  ,
     CHECKED        , VIEW_STATE_CHECKED  ,
+    CHECKABLE      , VIEW_STATE_CHECKABLE,
     DRAG_ACCPETABLE, VIEW_STATE_DRAG_CAN_ACCEPT,
     DRAG_HOVERED   , VIEW_STATE_DRAG_HOVERED
 };
@@ -140,6 +141,7 @@ int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){
     appendState(states,atts.getString("state_focused") , FOCUSED );
     appendState(states,atts.getString("state_selected"), SELECTED);
     appendState(states,atts.getString("state_checked") , CHECKED );
+    appendState(states,atts.getString("state_checkable"),CHECKABLE);
     appendState(states,atts.getString("state_pressed") , PRESSED );
     appendState(states,atts.getString("state_hovered") , HOVERED );
     return states.size();

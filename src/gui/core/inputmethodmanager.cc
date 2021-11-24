@@ -30,9 +30,10 @@ public:
        kbdView->onSizeChanged(w,h,ow,oh);
        Window::onSizeChanged(w,h,ow,oh);
    }
-   bool onKeyDown(int keyCode,KeyEvent& evt)override{
+   bool onKeyUp(int keyCode,KeyEvent& evt)override{
+       LOGV("...%d flags=%x",keyCode,evt.getFlags());
        switch(keyCode){
-       case KEY_ESCAPE:hide();return false;
+       case KEY_ESCAPE:hide();return true;
        default: return Window::onKeyDown(keyCode,evt);
        }
    }
@@ -72,7 +73,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,
              KEY_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
              /*sendKeyEvent(keyEvent);*/break;
-        case -101:
+        case -101:break;
         default:
             if(mBuddy){
                 const wchar_t text[2]={primaryCode,0};

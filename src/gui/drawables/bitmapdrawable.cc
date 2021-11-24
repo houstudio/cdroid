@@ -123,6 +123,17 @@ int BitmapDrawable::getIntrinsicHeight()const{
     return mBitmapHeight;
 }
 
+void BitmapDrawable::setAutoMirrored(bool mirrored){
+    if(mBitmapState->mAutoMirrored!=mirrored){
+        mBitmapState->mAutoMirrored=mirrored;
+        invalidateSelf();
+    }
+}
+
+bool BitmapDrawable::isAutoMirrored(){
+    return mBitmapState->mAutoMirrored;
+}
+
 int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
     if((bmp->get_content()&Cairo::Content::CONTENT_ALPHA)==0)
         return Drawable::OPAQUE;
@@ -223,6 +234,10 @@ void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
     mDstRectAndInsetsDirty = false;
 }
 
+bool BitmapDrawable::needMirroring(){
+    return isAutoMirrored()&&getLayoutDirection()==LayoutDirection::RTL;
+}
+
 void BitmapDrawable::onBoundsChange(const Rect&r){
     mDstRectAndInsetsDirty = true;
 }
@@ -268,11 +283,15 @@ void BitmapDrawable::draw(Canvas&canvas){
     canvas.clip();
     const bool scaled=(mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight);
     if (scaled) {
-       canvas.scale(dw/sw,dh/sh);
-       dx /= fx;       dy /= fy;
-       dw /= fx;       dh /= fy;
+        canvas.scale(dw/sw,dh/sh);
+        dx /= fx;       dy /= fy;
+        dw /= fx;       dh /= fy;
     }
 
+    if(needMirroring()){
+        canvas.translate(mDstRect.width,0);
+        canvas.scale(-1.f,1.f);LOGD("mirrored....");
+    }
     canvas.set_source(mBitmapState->mBitmap, dx, dy );
     
     canvas.get_source_for_surface()->set_filter(SurfacePattern::Filter::BEST);
