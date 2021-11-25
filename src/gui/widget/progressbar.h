@@ -106,7 +106,8 @@ public:
     void incrementSecondaryProgressBy(int diff);
     bool isIndeterminate()const;
     void setIndeterminate(bool indeterminate);
-
+    void setMirrorForRtl(bool mirrorRtl);
+    bool getMirrorForRtl()const;
     void setProgressDrawable(Drawable*d);
     Drawable*getProgressDrawable()const;
     void setIndeterminateDrawable(Drawable*d);

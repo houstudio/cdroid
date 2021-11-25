@@ -39,11 +39,12 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     setProgress(attrs.getInt("progress",mProgress));
     setSecondaryProgress(attrs.getInt("secondaryProgress",mSecondaryProgress));
 
-    mDuration=attrs.getInt("indeterminateDuration",mDuration);
+    mDuration = attrs.getInt("indeterminateDuration",mDuration);
     mMinWidth = attrs.getDimensionPixelSize("minWidth", mMinWidth);
     mMaxWidth = attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
-    mMinHeight =attrs.getDimensionPixelSize("minHeight", mMinHeight);
-    mMaxHeight =attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
+    mMinHeight= attrs.getDimensionPixelSize("minHeight", mMinHeight);
+    mMaxHeight= attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
+    mMirrorForRtl =attrs.getBoolean("mirrorForRtl",false); 
 
     setMin(attrs.getInt("min",mMin));
     setMax(attrs.getInt("max",mMax));
@@ -540,6 +541,17 @@ void ProgressBar::onSizeChanged(int w,int h,int ow,int oh){
 void ProgressBar::onDraw(Canvas&canvas) {
     View::onDraw(canvas);
     drawTrack(canvas);
+}
+
+void ProgressBar::setMirrorForRtl(bool mirrorRtl){
+    if(mMirrorForRtl!=mirrorRtl){
+        mMirrorForRtl = mirrorRtl;
+        invalidate(true);
+    }
+}
+
+bool ProgressBar::getMirrorForRtl()const{
+    return mMirrorForRtl;
 }
 
 void ProgressBar::applyProgressTints() {
