@@ -14,6 +14,10 @@ PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mProperty=nullptr;
 }
 
+PropertyValuesHolder::~PropertyValuesHolder(){
+    delete mProperty;
+}
+
 void PropertyValuesHolder::setPropertyName(const std::string& propertyName){
     mPropertyName=propertyName;
 }
@@ -22,8 +26,12 @@ const std::string PropertyValuesHolder::getPropertyName()const{
     return mPropertyName;
 }
 
-PropertyValuesHolder::~PropertyValuesHolder(){
-    delete mProperty;
+void PropertyValuesHolder::setProperty(Property*p){
+    mProperty =p;
+}
+
+Property*PropertyValuesHolder::getProperty(){
+    return mProperty;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){

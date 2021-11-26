@@ -180,8 +180,8 @@ void ProgressBar::setVisualProgress(int id, float progress){
             d = mCurrentDrawable;
         }
     }
-    if (d != nullptr) d->setLevel((progress * MAX_LEVEL));
-    invalidate(true);
+    if (d) d->setLevel((progress * MAX_LEVEL));
+    else invalidate(true);
     onVisualProgressChanged(id, progress);
 }
 
@@ -208,7 +208,6 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     } else {
         setVisualProgress(id, scale);
     }
-
     if (isPrimary && callBackToApp) {
         onProgressRefresh(scale, fromUser, progress);
     }
@@ -250,7 +249,7 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
                 }
                 mRefreshIsPosted=false;
             };
-            postDelayed(mRefreshProgressRunnable,10);
+            post(mRefreshProgressRunnable);
             mRefreshIsPosted=true;
         }
     }

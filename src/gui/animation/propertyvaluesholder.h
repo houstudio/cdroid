@@ -19,12 +19,14 @@ protected:
     Property*mProperty;
 public:
     PropertyValuesHolder();
+    virtual ~PropertyValuesHolder();
     PropertyValuesHolder(Property*prop);
     PropertyValuesHolder(const std::string&name);
     void setPropertyName(const std::string& propertyName);
     const std::string getPropertyName()const;
+    void setProperty(Property*p);
+    Property*getProperty();
     virtual void setFraction(void*target,float fraction)=0;
-    virtual ~PropertyValuesHolder();
     static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
     static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);
     static PropertyValuesHolder*ofFloat(const std::string&name,const std::vector<float>&);

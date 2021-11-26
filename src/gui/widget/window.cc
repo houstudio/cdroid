@@ -201,7 +201,7 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     View* focused =getFocusedChild();
     bool handled=false;
     const int action=event.getAction();
-    if(focused && focus->dispatchKeyEvent(event))
+    if(focused && focused->dispatchKeyEvent(event))
         return true;
     int groupNavigationDirection = 0;
     if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KEY_TAB) {
@@ -230,20 +230,11 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
 
 bool Window::performFocusNavigation(KeyEvent& event){
     int direction = -1;
-    //从下面代码可以看出，switch语句在此的主要作用是判断焦点的方向
     switch (event.getKeyCode()) {
-    case KEY_DPAD_LEFT:
-        direction = View::FOCUS_LEFT;
-        break;
-    case KEY_DPAD_RIGHT:
-        direction = View::FOCUS_RIGHT;
-        break;
-    case KEY_DPAD_UP:
-        direction = View::FOCUS_UP;
-        break;
-    case KEY_DPAD_DOWN:
-        direction = View::FOCUS_DOWN;
-        break;
+    case KEY_DPAD_LEFT: direction = View::FOCUS_LEFT;    break;
+    case KEY_DPAD_RIGHT: direction = View::FOCUS_RIGHT;   break;
+    case KEY_DPAD_UP:    direction = View::FOCUS_UP;      break;
+    case KEY_DPAD_DOWN:   direction = View::FOCUS_DOWN;    break;
     case KEY_TAB:
         if (event.hasNoModifiers()) {
             direction = View::FOCUS_FORWARD;
@@ -266,7 +257,7 @@ bool Window::performFocusNavigation(KeyEvent& event){
                     mView->offsetDescendantRectToMyCoords(focused, mTempRect);
                     mView->offsetRectIntoDescendantCoords(v, mTempRect);
                 }
-		LOGV("request focus at rect(%d,%d-%d,%d)",mTempRect.left,mTempRect.top,mTempRect.width,mTempRect.height);
+                LOGV("request focus at rect(%d,%d-%d,%d)",mTempRect.left,mTempRect.top,mTempRect.width,mTempRect.height);
                 if (v->requestFocus(direction, &mTempRect)) {
                     return true;
                 }

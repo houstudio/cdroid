@@ -35,12 +35,15 @@ void ObjectAnimator::setPropertyName(const std::string&propertyName){
 }
 
 void ObjectAnimator::setProperty(const Property& property){
-    if (mValuesMap.size()) {
-        /*PropertyValuesHolder valuesHolder = mValues[0];
-        String oldName = valuesHolder.getPropertyName();
-        valuesHolder.setProperty(property);
-        mValuesMap.remove(oldName);
-        mValuesMap.put(mPropertyName, valuesHolder);*/
+    if (mValues.size()) {
+        PropertyValuesHolder* valuesHolder = mValues[0];
+        std::string oldName = valuesHolder->getPropertyName();
+        //valuesHolder->setProperty(property);
+        auto it=mValuesMap.find(oldName);
+        if(it!=mValuesMap.end()){
+            mValuesMap.erase(it);
+        }
+        mValuesMap.insert(std::map<const std::string,PropertyValuesHolder*>::value_type(mPropertyName,valuesHolder));
     }
     if (mProperty != nullptr) {
         mPropertyName = property.getName();
