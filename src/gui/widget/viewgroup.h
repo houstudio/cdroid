@@ -224,7 +224,7 @@ public:
     virtual std::vector<View*> buildTouchDispatchChildList();
 
     View*focusSearch(View*focused,int direction)const;
-    View*getFocusedChild(){return mFocused;}
+    View*getFocusedChild();
     View*findFocus()override;
     bool restoreDefaultFocus()override;
     virtual void requestChildFocus(View*child,View*focused);

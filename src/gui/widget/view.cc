@@ -137,6 +137,8 @@ View::View(int w,int h){
 }
 
 View::View(Context*ctx,const AttributeSet&attrs){
+    int viewFlagValues= 0;
+    int viewFlagMasks = 0;
     initView();
 
     mContext=ctx;
@@ -146,6 +148,41 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setClickable(attrs.getBoolean("clickable",false));
     setLongClickable(attrs.getBoolean("longclickable",false));
     setFocusableInTouchMode(attrs.getBoolean("focusableInTouchMode",false));
+    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster",false));
+    setOverScrollMode(attrs.getInt("overScrollMode",OVER_SCROLL_IF_CONTENT_SCROLLS));
+ 
+    if(attrs.getBoolean("focusableInTouchMode",false)){
+        viewFlagValues &= ~FOCUSABLE_AUTO;
+        viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
+        viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
+    }
+    if(attrs.getBoolean("clickable",false)){
+        viewFlagValues |= CLICKABLE;
+        viewFlagMasks  |= CLICKABLE;
+    }
+    if(attrs.getBoolean("longClickable",false)){
+        viewFlagValues |= LONG_CLICKABLE;
+        viewFlagMasks  |= LONG_CLICKABLE;
+    }
+    const int scrollbars=attrs.getInt("scrollBars",std::map<const std::string,int>({
+        {"none",0},{"horizontal",(int)SCROLLBARS_HORIZONTAL},{"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
+    if(scrollbars!=SCROLLBARS_NONE){
+        viewFlagValues |= scrollbars;
+        viewFlagMasks  |= SCROLLBARS_MASK;
+    }
+    const int scrollbarStyle=attrs.getInt("scrollbarStyle",std::map<const std::string,int>({ 
+        {"insideOverlay" ,(int)SCROLLBARS_INSIDE_OVERLAY },
+        {"insideInset"   ,(int)SCROLLBARS_INSIDE_OVERLAY },
+        {"outsideOverlay",(int)SCROLLBARS_OUTSIDE_OVERLAY},
+        {"outsideInset"  ,(int)SCROLLBARS_OUTSIDE_OVERLAY} }),SCROLLBARS_INSIDE_OVERLAY);
+    if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
+        viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
+        viewFlagMasks |= SCROLLBARS_STYLE_MASK;
+    }
+    if(viewFlagMasks)
+        setFlags(viewFlagValues, viewFlagMasks);
+
     std::string bgtxt=attrs.getString("background");
     if(!bgtxt.empty()){
         if(bgtxt[0]=='#')
@@ -174,24 +211,12 @@ View::View(Context*ctx,const AttributeSet&attrs){
             mPaddingBottom=attrs.getDimensionPixelSize("paddingBottom",0);
         }
     }
-    std::string scbars=attrs.getString("scrollbars","none");
-    if(scbars.compare("none")){
-        if(scbars.find("vert")!=std::string::npos)
-            setVerticalScrollBarEnabled(true);
-        if(scbars.find("horiz")!=std::string::npos)
-            setHorizontalScrollBarEnabled(true);
-        setScrollBarSize(attrs.getDimensionPixelSize("scrollBarSize",10));
-
-        mScrollCache->scrollBar->setHorizontalThumbDrawable(
-            mContext->getDrawable(attrs.getString("scrollbarThumbHorizontal")));
-        mScrollCache->scrollBar->setHorizontalTrackDrawable(
-            mContext->getDrawable(attrs.getString("scrollbarTrackHorizontal")));
-        
-        mScrollCache->scrollBar->setVerticalThumbDrawable(
-            mContext->getDrawable(attrs.getString("scrollbarThumbVertical")));
-        mScrollCache->scrollBar->setVerticalTrackDrawable(
-            mContext->getDrawable(attrs.getString("scrollbarTrackVertical")));
-    } 
+    const int x=attrs.getInt("scrollX",0);
+    const int y=attrs.getInt("scrollY",0);
+    if(x||y)scrollTo(x,y);
+    if(scrollbars!=SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
+    if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
+    computeOpaqueFlags();
 }
 
 void View::initView(){
@@ -201,6 +226,8 @@ void View::initView(){
     mAttachInfo = nullptr;
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
+
+    mLeftPaddingDefined = mRightPaddingDefined =false;
 
     mX = mY = mZ =.0f;
     mAlpha = mScaleX = mScaleY=1.f;
@@ -562,7 +589,66 @@ void View::setPadding(int left, int top, int right, int bottom){
     mPaddingRight=right;
     mPaddingTop=top;
     mPaddingBottom=bottom;
+    internalSetPadding(left,top,right,bottom);
     LOGV("%p padding=%d,%d-%d-%d",this,left,top,right,bottom);
+}
+
+void View::recomputePadding() {
+    internalSetPadding(mUserPaddingLeft, mPaddingTop, mUserPaddingRight, mUserPaddingBottom);
+}
+void View::internalSetPadding(int left, int top, int right, int bottom){
+    mUserPaddingLeft = left;
+    mUserPaddingRight = right;
+    mUserPaddingBottom = bottom;
+
+    bool changed = false;
+
+    // Common case is there are no scroll bars.
+    if ((mViewFlags & (SCROLLBARS_VERTICAL|SCROLLBARS_HORIZONTAL)) != 0) {
+        if ((mViewFlags & SCROLLBARS_VERTICAL) != 0) {
+            const  int offset = (mViewFlags & SCROLLBARS_INSET_MASK) == 0
+                    ? 0 : getVerticalScrollbarWidth();
+            switch (mVerticalScrollbarPosition) {
+            case SCROLLBAR_POSITION_DEFAULT:
+                 if (isLayoutRtl()) {
+                     left += offset;
+                 } else {
+                     right += offset;
+                 }
+                 break;
+             case SCROLLBAR_POSITION_RIGHT:
+                 right += offset;
+                 break;
+             case SCROLLBAR_POSITION_LEFT:
+                 left += offset;
+                 break;
+            }
+        }
+        if ((mViewFlags & SCROLLBARS_HORIZONTAL) != 0) {
+            bottom += (mViewFlags & SCROLLBARS_INSET_MASK) == 0
+                    ? 0 : getHorizontalScrollbarHeight();
+        }
+    }
+
+    if (mPaddingLeft != left) {
+        changed = true;
+        mPaddingLeft = left;
+    }
+    if (mPaddingTop != top) {
+        changed = true;
+        mPaddingTop = top;
+    }
+    if (mPaddingRight != right) {
+        changed = true;
+        mPaddingRight = right;
+    }
+    if (mPaddingBottom != bottom) {
+        changed = true;
+        mPaddingBottom = bottom;
+    }
+    if (changed) {
+        requestLayout();
+    }
 }
 
 bool View::isPaddingResolved()const{
@@ -574,6 +660,55 @@ bool View::isLayoutDirectionResolved()const{
 }
 
 void View::resolvePadding(){
+    int resolvedLayoutDirection = getLayoutDirection();
+
+    if (!hasRtlSupport()){//isRtlCompatibilityMode()) {
+        // Post Jelly Bean MR1 case: we need to take the resolved layout direction into account.
+        // If start / end padding are defined, they will be resolved (hence overriding) to
+        // left / right or right / left depending on the resolved layout direction.
+        // If start / end padding are not defined, use the left / right ones.
+        if (mBackground  && (!mLeftPaddingDefined || !mRightPaddingDefined)) {
+            Rect padding;
+            mBackground->getPadding(padding);
+            if (!mLeftPaddingDefined) {
+                mUserPaddingLeftInitial = padding.left;
+            }
+            if (!mRightPaddingDefined) {
+                mUserPaddingRightInitial = padding.width;
+            }
+        }
+        switch (resolvedLayoutDirection) {
+        case LAYOUT_DIRECTION_RTL:
+            if (mUserPaddingStart != UNDEFINED_PADDING) {
+                mUserPaddingRight = mUserPaddingStart;
+            } else {
+                mUserPaddingRight = mUserPaddingRightInitial;
+            }
+            if (mUserPaddingEnd != UNDEFINED_PADDING) {
+                mUserPaddingLeft = mUserPaddingEnd;
+            } else {
+                mUserPaddingLeft = mUserPaddingLeftInitial;
+            }
+            break;
+        case LAYOUT_DIRECTION_LTR:
+        default:
+            if (mUserPaddingStart != UNDEFINED_PADDING) {
+                mUserPaddingLeft = mUserPaddingStart;
+            } else {
+                mUserPaddingLeft = mUserPaddingLeftInitial;
+            }
+            if (mUserPaddingEnd != UNDEFINED_PADDING) {
+                mUserPaddingRight = mUserPaddingEnd;
+            } else {
+                mUserPaddingRight = mUserPaddingRightInitial;
+            }
+        }
+
+        mUserPaddingBottom = (mUserPaddingBottom >= 0) ? mUserPaddingBottom : mPaddingBottom;
+    }
+
+    internalSetPadding(mUserPaddingLeft, mPaddingTop, mUserPaddingRight, mUserPaddingBottom);
+    onRtlPropertiesChanged(resolvedLayoutDirection);
     mPrivateFlags2 |= PFLAG2_PADDING_RESOLVED;
 }
 
@@ -1126,6 +1261,68 @@ bool View::dispatchNestedPreFling(float velocityX, float velocityY) {
         return mNestedScrollingParent->onNestedPreFling(this, velocityX, velocityY);
     }
     return false;
+}
+
+void View::initializeScrollbarsInternal(const AttributeSet&a){
+    initScrollCache();
+
+    ScrollabilityCache* scrollabilityCache = mScrollCache;
+ 
+    if (scrollabilityCache->scrollBar == nullptr) {
+        scrollabilityCache->scrollBar = new ScrollBarDrawable();
+        scrollabilityCache->scrollBar->setState(getDrawableState());
+        scrollabilityCache->scrollBar->setCallback(this);
+    }
+ 
+    scrollabilityCache->fadeScrollBars = a.getBoolean("fadeScrollbars", true);
+ 
+    if (!scrollabilityCache->fadeScrollBars) {
+        scrollabilityCache->state = ScrollabilityCache::ON;
+    }
+ 
+    scrollabilityCache->scrollBarFadeDuration = a.getInt("scrollbarFadeDuration", ViewConfiguration::getScrollBarFadeDuration());
+    scrollabilityCache->scrollBarDefaultDelayBeforeFade = a.getInt("scrollbarDefaultDelayBeforeFade",ViewConfiguration::getScrollDefaultDelay());
+ 
+ 
+    scrollabilityCache->scrollBarSize = a.getDimensionPixelSize("scrollbarSize",ViewConfiguration::get(mContext).getScaledScrollBarSize());
+ 
+    Drawable* track = mContext->getDrawable(a.getString("scrollbarTrackHorizontal"));
+    scrollabilityCache->scrollBar->setHorizontalTrackDrawable(track);
+ 
+    Drawable* thumb = mContext->getDrawable(a.getString("scrollbarThumbHorizontal"));
+    if (thumb) {
+        scrollabilityCache->scrollBar->setHorizontalThumbDrawable(thumb);
+    }
+ 
+    bool alwaysDraw = a.getBoolean("scrollbarAlwaysDrawHorizontalTrack",false);
+    if (alwaysDraw) {
+        scrollabilityCache->scrollBar->setAlwaysDrawHorizontalTrack(true);
+    }
+ 
+    track = mContext->getDrawable(a.getString("scrollbarTrackVertical"));
+    scrollabilityCache->scrollBar->setVerticalTrackDrawable(track);
+ 
+    thumb = mContext->getDrawable(a.getString("View_scrollbarThumbVertical"));
+    if (thumb) {
+        scrollabilityCache->scrollBar->setVerticalThumbDrawable(thumb);
+    }
+ 
+    alwaysDraw = a.getBoolean("scrollbarAlwaysDrawVerticalTrack",false);
+    if (alwaysDraw) {
+        scrollabilityCache->scrollBar->setAlwaysDrawVerticalTrack(true);
+    }
+ 
+    // Apply layout direction to the new Drawables if needed
+    int layoutDirection = getLayoutDirection();
+    if (track) {
+        track->setLayoutDirection(layoutDirection);
+    }
+    if (thumb) {
+        thumb->setLayoutDirection(layoutDirection);
+    }
+ 
+    // Re-apply user/background padding so that scrollbar(s) get added
+    resolvePadding(); 
 }
 
 void View::initScrollCache(){

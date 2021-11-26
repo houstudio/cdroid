@@ -198,10 +198,10 @@ int Window::processKeyEvent(KeyEvent&event){
 }
 
 bool Window::dispatchKeyEvent(KeyEvent&event){
-    View* fv =getFocusedChild();
+    View* focused =getFocusedChild();
     bool handled=false;
     const int action=event.getAction();
-    if(fv && fv->dispatchKeyEvent(event))
+    if(focused && focus->dispatchKeyEvent(event))
         return true;
     int groupNavigationDirection = 0;
     if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KEY_TAB) {

@@ -322,6 +322,7 @@ private:
     class ForegroundInfo*mForegroundInfo;
     KeyEvent::DispatcherState mKeyDispatchState;
 private:
+    void internalSetPadding(int left, int top, int right, int bottom);
     void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
     void setDefaultFocusHighlight(Drawable* highlight);
@@ -330,6 +331,7 @@ private:
 
     void sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight);
     void setMeasuredDimensionRaw(int measuredWidth, int measuredHeight);
+    void initializeScrollbarsInternal(const AttributeSet&attrs);
     void initScrollCache();
     ScrollabilityCache* getScrollCache();
     bool isOnVerticalScrollbarThumb(int x,int y);
@@ -379,7 +381,8 @@ protected:
     int mUserPaddingLeftInitial;
     /* Cache initial right padding*/
     int mUserPaddingRightInitial;
-
+    bool mLeftPaddingDefined;
+    bool mRightPaddingDefined;
     std::string mHint;
     bool mCachingFailed;
     RefPtr<ImageSurface>mDrawingCache;
@@ -413,6 +416,7 @@ protected:
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
 
+    void recomputePadding();
     bool isPaddingOffsetRequired();
     int getLeftPaddingOffset();
     int getRightPaddingOffset();

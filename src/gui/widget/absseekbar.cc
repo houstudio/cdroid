@@ -170,15 +170,14 @@ int AbsSeekBar::getKeyProgressIncrement()const{
 }
 
 void AbsSeekBar::setThumb(Drawable*thumb){
-     bool needUpdate;
+     bool needUpdate = false;
     // This way, calling setThumb again with the same bitmap will result in
     // it recalcuating mThumbOffset (if for example it the bounds of the
     // drawable changed)
     if (mThumb != nullptr && thumb != mThumb) {
         mThumb->setCallback(nullptr);
         needUpdate = true;
-    } else {
-        needUpdate = false;
+
     }
 
     if (thumb != nullptr) {
@@ -200,9 +199,9 @@ void AbsSeekBar::setThumb(Drawable*thumb){
     applyThumbTint();
     invalidate(true);
 
-    if (needUpdate) {
+    if (needUpdate||thumb) {
         updateThumbAndTrackPos(getWidth(), getHeight());
-        if (thumb != nullptr && thumb->isStateful()) {
+        if (thumb && thumb->isStateful()) {
             // Note that if the states are different this won't work.
             // For now, let's consider that an app bug.
             const std::vector<int>&state = getDrawableState();
@@ -284,12 +283,12 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
         thumbOffset = offsetHeight + (trackHeight - thumbHeight) / 2;
     }
 
-    if (track != nullptr) {
+    if (track) {
         const int trackWidth = w - mPaddingRight - mPaddingLeft;
         track->setBounds(0, trackOffset, trackWidth, trackOffset + trackHeight);
     }
 
-    if (thumb != nullptr) {
+    if (thumb) {
         setThumbPos(w, thumb, getScale(), thumbOffset);
     }
 }

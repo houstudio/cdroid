@@ -1636,6 +1636,10 @@ void ViewGroup::unFocus(View* focused){
    }
 }
 
+View*ViewGroup::getFocusedChild(){
+    return mFocused;
+}
+
 View*ViewGroup::findFocus(){
     if (isFocused()) {
         return this;

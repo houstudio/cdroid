@@ -135,10 +135,10 @@ bool BitmapDrawable::isAutoMirrored(){
 }
 
 int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
+    if(bmp==nullptr||bmp->get_width()==0||bmp->get_height()==0)
+        return Drawable::TRANSPARENT;
     if((bmp->get_content()&Cairo::Content::CONTENT_ALPHA)==0)
         return Drawable::OPAQUE;
-    if(bmp->get_width()==0||bmp->get_height()==0)
-        return Drawable::TRANSPARENT;
 
     if(bmp->get_content()&CONTENT_COLOR==0){
         switch(bmp->get_format()){
@@ -220,7 +220,6 @@ void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
             const int layoutDir = getLayoutDirection();
             mDstRect.set(0,0,0,0);
             Gravity::apply(mBitmapState->mGravity,mBitmapWidth,mBitmapHeight,mBounds, mDstRect, layoutDir);
-
             const int left  = mDstRect.left - mBounds.left;
             const int top   = mDstRect.top - mBounds.top;
             const int right = mBounds.right() - mDstRect.right();
@@ -276,8 +275,7 @@ void BitmapDrawable::draw(Canvas&canvas){
     const float fx = dw / sw  , fy = dh / sh;
     const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
 
-    LOGD_IF(mBounds.empty(),"%p's bounds is empty,skip drawing,otherwise will caused crash");
-    if(mBounds.empty())return;
+    LOGD_IF(mBounds.empty(),"%p's bounds is empty,skip drawing,otherwise will caused crash",this);
     canvas.save();
     canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
     canvas.clip();
