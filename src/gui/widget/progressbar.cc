@@ -193,17 +193,17 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     if (isPrimary && animate) {
         FloatPropertyValuesHolder*prop=nullptr;
         if(mAnimator==nullptr){
-            mAnimator = ObjectAnimator::ofFloat(this,"progress",{scale});
+            mAnimator = ObjectAnimator::ofFloat(this,"progress",{0,scale});
             mAnimator->setAutoCancel(true);
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
             mAnimator->setInterpolator(new  DecelerateInterpolator());
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-                FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-                setVisualProgress(ID_PRIMARY,fp->getAnimatedValue());
+                PropertyValuesHolder*fp=anim.getValues(0);
+                setVisualProgress(ID_PRIMARY,fp->getAnimatedValue().get<float>());
             }));
         }
         prop=(FloatPropertyValuesHolder*)mAnimator->getValues(0);
-        prop->setValues({scale});
+        prop->setValues(std::vector<float>({scale}));
         mAnimator->start();
     } else {
         setVisualProgress(id, scale);

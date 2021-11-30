@@ -19,7 +19,7 @@ int main(int argc,const char*argv[]){
     pb2->setProgress(34);
     pb2->setMirrorForRtl(true);
     pb2->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
-    //pb->setSecondaryProgress(15);
+    pb->setSecondaryProgress(15);
     w->addView(pb).setPos(150,50);
     w->addView(pb2).setPos(150,100);
     Runnable progress;

@@ -511,8 +511,8 @@ void TabLayout::ensureScrollAnimator(){
         mScrollAnimator->setInterpolator(new FastOutSlowInInterpolator());
         mScrollAnimator->setDuration(ANIMATION_DURATION);
         mScrollAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim) {
-           IntPropertyValuesHolder*ip=(IntPropertyValuesHolder*)anim.getValues()[0]; 
-           scrollTo(ip->getAnimatedValue(), 0);
+           PropertyValuesHolder*ip=anim.getValues()[0]; 
+           scrollTo(ip->getAnimatedValue().get<int>(), 0);
         }));
     }
 }

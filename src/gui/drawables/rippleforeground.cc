@@ -83,9 +83,9 @@ void RippleForeground::startSoftwareEnter() {
     tweenRadius->setDuration(RIPPLE_ENTER_DURATION);
     tweenRadius->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
     tweenRadius->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
+        PropertyValuesHolder*fp=anim.getValues(0);
         LOGV("mTweenRadius=%f [%f,%f,%f] opacity=%f",fp->getAnimatedValue(),getCurrentRadius(),mStartRadius,mTargetRadius,mOpacity);
-        mTweenRadius=fp->getAnimatedValue();
+        mTweenRadius=fp->getAnimatedValue().get<float>();
         onAnimationPropertyChanged();
     }));
     tweenRadius->start();
@@ -95,8 +95,8 @@ void RippleForeground::startSoftwareEnter() {
     tweenOrigin->setDuration(RIPPLE_ORIGIN_DURATION);
     tweenOrigin->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
     tweenOrigin->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        mTweenX=mTweenY=fp->getAnimatedValue();
+        PropertyValuesHolder*fp=anim.getValues(0);
+        mTweenX=mTweenY=fp->getAnimatedValue().get<float>();
         onAnimationPropertyChanged();
     }));
     tweenOrigin->start();
@@ -106,8 +106,8 @@ void RippleForeground::startSoftwareEnter() {
     opacity->setDuration(OPACITY_ENTER_DURATION);
     opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
     opacity->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        mOpacity=fp->getAnimatedValue();
+        PropertyValuesHolder*fp=anim.getValues(0);
+        mOpacity=fp->getAnimatedValue().get<float>();
         onAnimationPropertyChanged();
     }));
     opacity->start();
@@ -121,8 +121,8 @@ void RippleForeground::startSoftwareExit() {
     opacity->addListener(mAnimationListener);
     opacity->setStartDelay(computeFadeOutDelay());
     opacity->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        mOpacity=fp->getAnimatedValue();
+        PropertyValuesHolder*fp=anim.getValues(0);
+        mOpacity=fp->getAnimatedValue().get<float>();
     }));
 
     opacity->start();
