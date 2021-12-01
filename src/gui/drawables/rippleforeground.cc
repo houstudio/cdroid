@@ -52,7 +52,6 @@ void RippleForeground::pruneSwFinished() {
         Animator*anim=mRunningSwAnimators[i];
         if (!anim->isRunning()) {
             mRunningSwAnimators.erase(mRunningSwAnimators.begin()+i);
-            delete anim;
         }
     }
 }

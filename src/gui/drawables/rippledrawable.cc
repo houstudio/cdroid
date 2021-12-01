@@ -331,7 +331,7 @@ void RippleDrawable::pruneRipples() {
     // Move remaining entries into pruned spaces.
     const int count = mExitingRipples.size();
     for (int i = 0; i < count; i++) {
-         if (!mExitingRipples[i]->hasFinishedExit()) {
+        if (!mExitingRipples[i]->hasFinishedExit()) {
             mExitingRipples[remaining++] = mExitingRipples[i];
         }
     }

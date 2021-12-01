@@ -209,28 +209,28 @@ long ValueAnimator::getStartDelay() {
 }
 
 void ValueAnimator::setStartDelay(long startDelay){
-    if (startDelay < 0) {
-        //LOGW("Start delay should always be non-negative");
-        startDelay = 0;
-    }
-    mStartDelay = startDelay;
+    LOGW_IF(startDelay<0,"Start delay should always be non-negative");
+    mStartDelay = startDelay>0?startDelay:0;
 }
 
 long ValueAnimator::getFrameDelay(){
-    return 50;
+    return AnimationHandler::getInstance().getFrameDelay();
 }
 
 void ValueAnimator::setFrameDelay(long frameDelay){
+    AnimationHandler::getInstance().setFrameDelay(frameDelay);
 }
 
-float ValueAnimator::getAnimatedValue(){
-    LOGD("getAnimatedValue is tobe done for variant type");
-    //if(mValues.size())return mValues[0]->getAnimatedValue();
-    return .0f;
+Variant ValueAnimator::getAnimatedValue(){
+    if(mValues.size())return mValues[0]->getAnimatedValue();
+    return Variant(0);
 }
 
-float ValueAnimator::getAnimatedValue(const std::string&propertyName){
-    return .0f;
+Variant ValueAnimator::getAnimatedValue(const std::string&propertyName){
+    auto it=mValuesMap.find(propertyName);
+    if(it!=mValuesMap.end())
+        return it->second->getAnimatedValue();
+    return Variant(0);
 }
 
 void ValueAnimator::setRepeatCount(int value) {
