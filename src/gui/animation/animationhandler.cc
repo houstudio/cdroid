@@ -139,7 +139,6 @@ void AnimationHandler::addOneShotCommitCallback(const AnimationFrameCallback* ca
 void AnimationHandler::removeCallback(const AnimationFrameCallback* callback){
     auto it1=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),(AnimationFrameCallback*)callback);
     auto it2=mDelayedCallbackStartTime.find((AnimationFrameCallback*)callback);
-
     if(it1!=mCommitCallbacks.end())mCommitCallbacks.erase(it1);
     if(it2!=mDelayedCallbackStartTime.end())mDelayedCallbackStartTime.erase(it2);
     

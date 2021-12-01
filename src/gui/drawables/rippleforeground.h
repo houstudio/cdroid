@@ -54,6 +54,7 @@ protected:
     void clampStartingPosition();
 public:
     RippleForeground(RippleDrawable* owner,const Rect& bounds, float startingX, float startingY, bool forceSoftware);
+    ~RippleForeground();
     void getBounds(Rect& bounds);
     void move(float x, float y);
     bool hasFinishedExit()const;

@@ -12,6 +12,7 @@ ValueAnimator::ValueAnimator(){
 }
 
 ValueAnimator::~ValueAnimator(){
+    removeAnimationCallback();
     delete mInterpolator;
 }
 

@@ -8,7 +8,8 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     mForceSoftware = forceSoftware;
     mStartingX = startingX;
     mStartingY = startingY;
-
+    mUsingProperties =false;
+    mHasFinishedExit =false;
     // Take 60% of the maximum of the width and height, then divided half to get the radius.
     mStartRadius = std::max(bounds.width, bounds.height) * 0.3f;
     clampStartingPosition();
@@ -18,8 +19,19 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     };
 }
 
+RippleForeground::~RippleForeground(){
+    mUsingProperties =true;
+    end();
+}
+
 void RippleForeground::onTargetRadiusChanged(float targetRadius){
     clampStartingPosition();
+    LOGD("radius=%.2f",targetRadius);
+    for (auto animator:mRunningSwAnimators) {
+        animator->removeListener(mAnimationListener);
+        animator->end();
+    }
+    mRunningSwAnimators.clear();
     invalidateSelf();//switchToUiThreadAnimation();
 }
 
@@ -35,11 +47,13 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
 }
 
 void RippleForeground::pruneSwFinished() {
-    for (auto it=mRunningSwAnimators.begin();it!=mRunningSwAnimators.end();){
-        if (!(*it)->isRunning()) {
-            Animator*anim=(*it);
-            it=mRunningSwAnimators.erase(it);
-        }else it++;
+    if( mRunningSwAnimators.size()==0)return;
+    for (int i=mRunningSwAnimators.size()-1;i>=0;i--){
+        Animator*anim=mRunningSwAnimators[i];
+        if (!anim->isRunning()) {
+            mRunningSwAnimators.erase(mRunningSwAnimators.begin()+i);
+            delete anim;
+        }
     }
 }
 
@@ -78,7 +92,6 @@ void RippleForeground::startSoftwareEnter() {
         delete anim;
     }
     mRunningSwAnimators.clear();
-
     ValueAnimator* tweenRadius = ValueAnimator::ofFloat({.0f,1.f});//this, TWEEN_RADIUS, 1);
     tweenRadius->setDuration(RIPPLE_ENTER_DURATION);
     tweenRadius->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
@@ -101,7 +114,7 @@ void RippleForeground::startSoftwareEnter() {
     }));
     tweenOrigin->start();
     mRunningSwAnimators.push_back(tweenOrigin);
-
+	
     ValueAnimator* opacity = ValueAnimator::ofFloat({.0f,1.f});//this, OPACITY, 1);
     opacity->setDuration(OPACITY_ENTER_DURATION);
     opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
@@ -153,6 +166,7 @@ float RippleForeground::getCurrentRadius() {
 void RippleForeground::end(){
     for (auto anim:mRunningSwAnimators) {
         anim->end();
+        delete anim;
     }
     mRunningSwAnimators.clear();
 }

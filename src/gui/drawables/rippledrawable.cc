@@ -65,7 +65,6 @@ void RippleDrawable::jumpToCurrentState(){
     if (mRipple) mRipple->end();
 
     if (mBackground) mBackground->jumpToFinal();
-
     cancelExitingRipples();
 }
 

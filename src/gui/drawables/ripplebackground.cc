@@ -6,6 +6,7 @@ namespace cdroid{
 RippleComponent::RippleComponent(RippleDrawable* owner,const Rect& bounds){
     mOwner=owner;
     mBounds = bounds;
+    mHasMaxRadius =false;
 }
 
 void RippleComponent::onBoundsChange() {

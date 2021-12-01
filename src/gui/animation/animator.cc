@@ -1,7 +1,8 @@
 #include <animation/animator.h>
 
 namespace cdroid{
-
+Animator::~Animator(){
+}
 Animator*Animator::clone(){
     return nullptr;
 }

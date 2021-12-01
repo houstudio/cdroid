@@ -65,6 +65,7 @@ protected:
     bool isInitialized();
     virtual void animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse);
 public:
+    virtual ~Animator();
     virtual void start();
     virtual void cancel();
     virtual void end();
