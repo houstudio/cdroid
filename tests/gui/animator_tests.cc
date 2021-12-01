@@ -25,8 +25,7 @@ TEST_F(ANIMATOR,callback){
 TEST_F(ANIMATOR,ofInt1){
     ValueAnimator*anim=ValueAnimator::ofInt({0,100});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        PropertyValuesHolder*ip=anim.getValues(0);
-        LOGD("value=%d",ip->getAnimatedValue().get<int>());
+        LOGD("value=%d",anim.getAnimatedValue().get<int>());
     }));
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
@@ -38,8 +37,7 @@ TEST_F(ANIMATOR,ofInt2){
     iprop.setValues(std::vector<int>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&iprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        PropertyValuesHolder*ip=anim.getValues(0);
-        LOGD("value=%d",ip->getAnimatedValue().get<int>());
+        LOGD("value=%d",anim.getAnimatedValue().get<int>());
     })); 
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
@@ -51,12 +49,39 @@ TEST_F(ANIMATOR,ofFloat){
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        PropertyValuesHolder*fp=anim.getValues(0);
-        LOGD("value=%f",fp->getAnimatedValue().get<float>());
+        LOGD("value=%f",anim.getAnimatedValue().get<float>());
     })); 
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
     }
+}
+
+TEST_F(ANIMATOR,start){
+    App app;
+    FloatPropertyValuesHolder fprop;
+    fprop.setValues(std::vector<float>({0,100}));
+    ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
+        LOGD("value=%f",anim.getAnimatedValue().get<float>());
+    }));
+    anim->setDuration(200);
+    anim->start();
+    LOGD("====");
+    app.exec();
+}
+TEST_F(ANIMATOR,startDelay){
+    App app;
+    FloatPropertyValuesHolder fprop;
+    fprop.setValues(std::vector<float>({0,100}));
+    ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
+    anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
+        LOGD("value=%f",anim.getAnimatedValue().get<float>());
+    }));
+    anim->setDuration(200);
+    anim->setStartDelay(1000);
+    anim->start();
+    LOGD("====");
+    app.exec();
 }
 
 class MyProperty: public Property{
@@ -82,8 +107,7 @@ TEST_F(ANIMATOR,loopdrivered){
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&iprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        PropertyValuesHolder*fp=anim.getValues(0);
-        LOGD("value=%d",fp->getAnimatedValue().get<int>());
+        LOGD("value=%d",anim.getAnimatedValue().get<int>());
     })); 
     anim->setDuration(2000);
     anim->start();
@@ -134,8 +158,7 @@ TEST_F(ANIMATOR,scale){
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([tv](ValueAnimator&anim){
-        FloatPropertyValuesHolder*fp=(FloatPropertyValuesHolder*)anim.getValues(0);
-        const float scale=fp->getAnimatedValue().get<float>();
+        const float scale=anim.getAnimatedValue().get<float>();
         tv->setScaleX(scale);
         tv->setScaleY(scale);
     }));

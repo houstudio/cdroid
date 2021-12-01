@@ -198,8 +198,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
             mAnimator->setInterpolator(new  DecelerateInterpolator());
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-                PropertyValuesHolder*fp=anim.getValues(0);
-                setVisualProgress(ID_PRIMARY,fp->getAnimatedValue().get<float>());
+                setVisualProgress(ID_PRIMARY,anim.getAnimatedValue().get<float>());
             }));
         }
         prop=(FloatPropertyValuesHolder*)mAnimator->getValues(0);
