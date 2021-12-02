@@ -433,7 +433,7 @@ protected:
     void invalidateParentIfNeededAndWasQuickRejected();
     void destroyDrawingCache();
     RefPtr<ImageSurface>getDrawingCache(bool autoScale);
-    bool hasWindowFocus()const;
+    virtual bool hasWindowFocus()const;
 
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
@@ -462,8 +462,6 @@ protected:
     bool awakenScrollBars();
     bool awakenScrollBars(int startDelay, bool invalidate);
 
-    void postOnAnimation(Runnable& action);
-    void postOnAnimationDelayed(Runnable& action, uint32_t delayMillis);
     static int combineVisibility(int vis1, int vis2);
     virtual void onSizeChanged(int w,int h,int oldw,int oldh);
     virtual void onScrollChanged(int l, int t, int oldl, int oldt);
@@ -777,7 +775,7 @@ public:
     void setFocusable(bool);
     int  getFocusable()const;
     virtual void unFocus(View*);
-    bool hasFocus()const;
+    virtual bool hasFocus()const;
     virtual bool restoreFocusInCluster(int direction);
     virtual bool restoreFocusNotInCluster();
     virtual bool restoreDefaultFocus();
@@ -830,6 +828,8 @@ public:
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
 	
+    void postOnAnimation(Runnable& action);
+    void postOnAnimationDelayed(Runnable& action, uint32_t delayMillis);
     bool post(Runnable& what);
     bool post(const std::function<void()>&what);
     bool postDelayed(const std::function<void()>&what,uint32_t delay=0);

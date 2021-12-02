@@ -15,22 +15,22 @@ private:
     static std::map<const std::string,ViewInflater>&getMap();
 public:
     static LayoutInflater*from(Context*context);
-    static ViewInflater getViewInflater(const std::string&);
     static bool registInflater(const std::string&name,ViewInflater fun);
+    static ViewInflater getInflater(const std::string&);
     View* inflate(std::istream&stream,ViewGroup*root);
     View* inflate(const std::string&resource,ViewGroup* root);
     View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot);
 };
 
 template<typename T>
-class InflateRegister{
+class InflaterRegister{
 public:
-    InflateRegister(const std::string&name){
+    InflaterRegister(const std::string&name){
         LayoutInflater::registInflater(name,[](Context*ctx,const AttributeSet&attr)->View*{return new T(ctx,attr);});
     }
 };
 
-#define DECLARE_WIDGET(T) static InflateRegister<T> widget_inflater_##T(#T);
+#define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T);
 
 }//endof namespace
 #endif

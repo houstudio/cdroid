@@ -1649,6 +1649,26 @@ bool AbsListView::canScrollDown() {
     return canScrollDown;
 }
 
+void AbsListView::scrollListBy(int y){
+    trackMotionScroll(-y,-y);
+}
+
+bool  AbsListView::canScrollList(int direction){
+    const int childCount = getChildCount();
+    if (childCount == 0) return false;
+
+    int firstPosition = mFirstPosition;
+    Rect listPadding = mListPadding;
+    if (direction > 0) {
+       const int lastBottom = getChildAt(childCount - 1)->getBottom();
+       const int lastPosition = firstPosition + childCount;
+       return lastPosition < mItemCount || lastBottom > getHeight() - listPadding.height;//bottom;
+   } else {
+       const int firstTop = getChildAt(0)->getTop();
+       return firstPosition > 0 || firstTop < listPadding.top;
+   }
+}
+
 bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     int childCount = getChildCount();
     if (childCount == 0) {

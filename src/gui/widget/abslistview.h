@@ -241,8 +241,8 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void updateScrollIndicators();
     void setScrollIndicatorViews(View* up, View* down);
-    bool touchModeDrawsInPressedState();
-    bool shouldShowSelector();
+    virtual bool touchModeDrawsInPressedState();
+    virtual bool shouldShowSelector();
     void updateSelectorState();
     void drawableStateChanged()override;
     virtual void layoutChildren();
@@ -253,7 +253,7 @@ protected:
     void confirmCheckedPositionsById();
     void handleDataChanged()override;
     static int getDistance(const Rect& source,const Rect& dest, int direction);
-    View* obtainView(int position, bool*outMetadata);
+    virtual View* obtainView(int position, bool*outMetadata);
     void positionSelector(int position, View* sel);
     void hideSelector();
     void reportScrollStateChange(int newState);
@@ -351,6 +351,8 @@ public:
     void smoothScrollBy(int distance, int duration);
     void smoothScrollBy(int distance, int duration, bool linear,bool suppressEndFlingStateChangeCall);
     void smoothScrollByOffset(int position);
+    void scrollListBy(int y);
+    bool canScrollList(int direction);
     void reclaimViews(std::vector<View*>& views);
 };
 

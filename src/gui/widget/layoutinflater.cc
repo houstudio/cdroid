@@ -17,7 +17,7 @@ LayoutInflater*LayoutInflater::from(Context*context){
     return new LayoutInflater(context);
 }
 
-LayoutInflater::ViewInflater LayoutInflater::getViewInflater(const std::string&name){
+LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name){
     std::map<const std::string,ViewInflater>&maps=LayoutInflater::getMap();
     auto it=maps.find(name);
     return (it!=maps.end())?it->second:nullptr;
@@ -64,7 +64,7 @@ typedef struct{
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     WindowParserData*pd=(WindowParserData*)userData;
     AttributeSet atts(satts);
-    LayoutInflater::ViewInflater inflater=LayoutInflater::getViewInflater(name);
+    LayoutInflater::ViewInflater inflater=LayoutInflater::getInflater(name);
     ViewGroup*parent=nullptr;
     if(pd->views.size())
         parent=dynamic_cast<ViewGroup*>(pd->views.back());
