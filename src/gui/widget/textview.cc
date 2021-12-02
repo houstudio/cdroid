@@ -26,6 +26,9 @@
 #define KEY_EVENT_HANDLED -1
 
 namespace cdroid {
+
+DECLARE_WIDGET(TextView)
+
 class Drawables{
 public:
     enum{

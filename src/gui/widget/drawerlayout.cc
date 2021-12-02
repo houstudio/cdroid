@@ -1,6 +1,9 @@
 #include <widget/drawerlayout.h>
 #include <cdlog.h>
 namespace cdroid{
+
+DECLARE_WIDGET(DrawerLayout)
+
 DrawerLayout::DrawerLayout(int w,int h):ViewGroup(w,h){
     initView();
 }

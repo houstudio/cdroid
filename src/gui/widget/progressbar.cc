@@ -28,6 +28,8 @@ public:
     bool mHasSecondaryProgressTintMode;
 };
 
+DECLARE_WIDGET(ProgressBar)
+
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initProgressBar();

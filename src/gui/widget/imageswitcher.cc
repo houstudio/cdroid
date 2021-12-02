@@ -3,6 +3,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(ImageSwicther)
+
 ImageSwicther::ImageSwicther(int w,int h)
     :ViewSwitcher(w,h){
 }

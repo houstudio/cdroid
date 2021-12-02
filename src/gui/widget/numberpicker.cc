@@ -8,6 +8,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(NumberPicker)
+
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
     setOrientation(VERTICAL);//HORIZONTAL);

@@ -1,33 +1,33 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    layout_width="fill_parent"
+    layout_height="wrap_content"
+    orientation="horizontal">
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity= "center_horizontal"
-            android:layout_weight="1"
-            android:background="#aa0000"
-            android:text="@string/red" />
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity= "center_horizontal"
+            layout_weight="1"
+            background="#aa0000"
+            text="@string/red" />
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="1"
-            android:background="#00aa00"
-            android:text="@string/green" />
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            layout_weight="1"
+            background="#00aa00"
+            text="@string/green" />
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="1"
-            android:background="#0000aa"
-            android:text="@string/blue" />
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            layout_weight="1"
+            background="#0000aa"
+            text="@string/blue" />
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="1"
-            android:background="#aaaa00"
-            android:text="@string/yellow" />
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            layout_weight="1"
+            background="#aaaa00"
+            text="@string/yellow" />
 </LinearLayout>

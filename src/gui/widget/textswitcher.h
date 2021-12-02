@@ -4,7 +4,7 @@
 
 namespace cdroid{
 
-class TextSwitcher:ViewSwitcher{
+class TextSwitcher:public ViewSwitcher{
 public:
     TextSwitcher(int w,int h);
     TextSwitcher(Context*ctx,const AttributeSet&atts);

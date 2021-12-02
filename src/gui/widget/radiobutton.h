@@ -13,6 +13,9 @@ public:
         if (!isChecked()) ToggleButton::toggle();
     }
 };
+
+DECLARE_WIDGET(RadioButton)
+
 }//namespace
 
 #endif

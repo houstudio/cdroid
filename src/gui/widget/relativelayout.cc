@@ -21,6 +21,8 @@ static constexpr int RULES_HORIZONTAL[] = {
     RelativeLayout::ALIGN_END
 };
 
+DECLARE_WIDGET(RelativeLayout)
+
 RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
     mIgnoreGravity=NO_ID;
 }

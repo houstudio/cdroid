@@ -3,6 +3,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(YearPickerView)
+
 class YearAdapter:public ArrayAdapter<int> {
 private:
     /*static int ITEM_LAYOUT = R.layout.year_label_text_view;
@@ -107,6 +109,8 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+YearPickerView::YearPickerView(Context*ctx,const AttributeSet&attrs):ListView(ctx,attrs){
+}
 
 void YearPickerView::setOnYearSelectedListener(OnYearSelectedListener listener) {
     mOnYearSelectedListener = listener;

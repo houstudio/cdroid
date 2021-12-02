@@ -8,6 +8,8 @@ namespace cdroid{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+DECLARE_WIDGET(Spinner)
+
 Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mPopupContext=nullptr;
     mGravity= Gravity::CENTER;

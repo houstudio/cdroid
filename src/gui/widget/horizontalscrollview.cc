@@ -6,6 +6,8 @@
 #define INVALID_POINTER (-1)
 
 namespace cdroid{
+
+DECLARE_WIDGET(HorizontalScrollView)
  
 HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();

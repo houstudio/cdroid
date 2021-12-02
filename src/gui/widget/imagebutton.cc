@@ -3,6 +3,8 @@
 #include<app.h>
 namespace cdroid{
 
+DECLARE_WIDGET(ImageButton)
+
 ImageButton::ImageButton(Context*ctx,const AttributeSet& attrs)
   :ImageView(ctx,attrs){
    setFocusable(true);

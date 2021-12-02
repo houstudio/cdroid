@@ -3,6 +3,8 @@
 #include <cdlog.h>
 namespace cdroid{
 
+DECLARE_WIDGET(TableRow)
+
 TableRow::LayoutParams::LayoutParams()
     :LinearLayoutParams(MATCH_PARENT, WRAP_CONTENT){
     column = -1;

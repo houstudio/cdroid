@@ -2,6 +2,8 @@
 #include <cdlog.h>
 namespace cdroid{
 
+DECLARE_WIDGET(CompoundButton)
+
 CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs)
   :Button(ctx,attrs){
     mButtonDrawable=nullptr;

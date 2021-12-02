@@ -9,6 +9,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(EditText)
+
 EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){
     mHint=ctx->getString(attrs.getString("hint"));

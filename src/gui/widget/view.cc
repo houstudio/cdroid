@@ -14,7 +14,10 @@
 #include <systemclock.h>
 
 #define UNDEFINED_PADDING INT_MIN
+
 namespace cdroid{
+
+DECLARE_WIDGET(View)
 
 class TintInfo{
 public:
@@ -142,7 +145,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     initView();
 
     mContext=ctx;
-    mID=attrs.getInt("id",NO_ID);
+    mID = attrs.getInt("id",NO_ID);
     mMinWidth = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight= attrs.getDimensionPixelSize("minHeight",0);
     setClickable(attrs.getBoolean("clickable",false));

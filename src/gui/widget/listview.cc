@@ -10,6 +10,8 @@ namespace cdroid {
 #define MIN_SCROLL_PREVIEW_PIXELS 2
 #define NO_POSITION (-1)
 
+DECLARE_WIDGET(ListView)
+
 ListView::ListView(int w,int h):AbsListView(w,h) {
     initListView();
 }

@@ -27,6 +27,9 @@
 #define CHILD_TOP_INDEX  1
 
 namespace cdroid {
+
+DECLARE_WIDGET(ViewGroup)
+
 class TouchTarget{
 private:
     static TouchTarget* sRecycleBin;

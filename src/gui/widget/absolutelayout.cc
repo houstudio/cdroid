@@ -1,6 +1,8 @@
 #include <widget/absolutelayout.h>
 namespace cdroid{
 
+DECLARE_WIDGET(AbsoluteLayout)
+
 AbsoluteLayoutParams::AbsoluteLayoutParams(int width, int height, int x, int y)
     :LayoutParams(width,height){
     this->x=x;

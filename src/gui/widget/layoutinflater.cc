@@ -1,5 +1,6 @@
 #include <widget/layoutinflater.h>
 #include <widget/viewgroup.h>
+#include <core/theme.h>
 #include <windows.h>
 #include <expat.h>
 #include <cdlog.h>
@@ -7,30 +8,6 @@
 #include <fstream>
 
 namespace cdroid{
-
-#define DECLAREPARSER(component) { #component ,[](Context*ctx,const AttributeSet&atts)->View*{return new component(ctx,atts);}}
-std::map<const std::string,LayoutInflater::ViewInflater>LayoutInflater::mViewInflaters={
-    DECLAREPARSER(View),
-    DECLAREPARSER(ViewGroup),
-    DECLAREPARSER(TextView),
-    DECLAREPARSER(ProgressBar),
-    DECLAREPARSER(SeekBar),
-    DECLAREPARSER(EditText),
-    DECLAREPARSER(ToggleButton),
-    DECLAREPARSER(RadioButton),
-    DECLAREPARSER(CheckBox),
-    DECLAREPARSER(Button),
-    DECLAREPARSER(RadioGroup),
-    DECLAREPARSER(ImageView),
-    DECLAREPARSER(ImageButton),
-    DECLAREPARSER(LinearLayout),
-    DECLAREPARSER(AbsoluteLayout),
-    DECLAREPARSER(FrameLayout),
-    DECLAREPARSER(TableLayout),
-    
-    DECLAREPARSER(TableRow),
-    DECLAREPARSER(Window),
-};
 
 LayoutInflater::LayoutInflater(Context*context){
     mContext=context;
@@ -41,8 +18,22 @@ LayoutInflater*LayoutInflater::from(Context*context){
 }
 
 LayoutInflater::ViewInflater LayoutInflater::getViewInflater(const std::string&name){
-    auto it=mViewInflaters.find(name);
-    return (it!=mViewInflaters.end())?it->second:nullptr;
+    std::map<const std::string,ViewInflater>&maps=LayoutInflater::getMap();
+    auto it=maps.find(name);
+    return (it!=maps.end())?it->second:nullptr;
+}
+
+std::map<const std::string,LayoutInflater::ViewInflater>&LayoutInflater::getMap(){
+    static std::map<const std::string,LayoutInflater::ViewInflater> maps;
+    return maps;
+}
+
+bool LayoutInflater::registInflater(const std::string&name,LayoutInflater::ViewInflater inflater){
+    std::map<const std::string,ViewInflater>&maps=LayoutInflater::getMap();
+    if(maps.find(name)!=maps.end())
+        return false;
+    maps.insert(std::map<const std::string,LayoutInflater::ViewInflater>::value_type(name,inflater)); 
+    return true;
 }
 
 View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot){
@@ -67,7 +58,7 @@ typedef struct{
     Context*ctx;
     XML_Parser parser;
     std::vector<View*>views;//the first element is rootview setted by inflate
-    AttributeSet rootAttrs;
+    ViewGroup*root;
 }WindowParserData;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
@@ -83,7 +74,11 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         LOGE("Unknown Parser for %s",name);
         return;
     }
-
+    const std::string stname=atts.getString("style");
+    if(stname.empty()){
+        AttributeSet style=Theme::getInstance().getStyle(stname);
+        atts.inherit(style);
+    }
     View*v=inflater(pd->ctx,atts);
     pd->views.push_back(v);
     if(parent){
@@ -100,6 +95,8 @@ static void endElement(void *userData, const XML_Char *name){
     WindowParserData*pd=(WindowParserData*)userData;
     ViewGroup*p=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0)return;
+	if((pd->views.size()==1)&&(pd->root==nullptr))
+	    pd->root=p; 
     pd->views.pop_back();
 }
 
@@ -109,8 +106,8 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
     XML_Parser parser=XML_ParserCreate(nullptr);
     WindowParserData pd={mContext,parser};
     ULONGLONG tstart=SystemClock::uptimeMillis();
-    if(root)
-        pd.views.push_back(root);
+
+    if(root){pd.root=root;pd.views.push_back(root);}
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startElement, endElement);
     do {
@@ -124,8 +121,8 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    LOGD("usedtime %dms rootView=%p",SystemClock::uptimeMillis()-tstart,pd.views.at(0));
-    return pd.views.at(0);
+    LOGD("usedtime %dms views.size=%d",SystemClock::uptimeMillis()-tstart,pd.views.size());
+    return pd.root;
 }
 
 }//endof namespace

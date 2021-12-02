@@ -3,6 +3,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(ViewAnimator)
+
 ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
 }
 

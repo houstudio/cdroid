@@ -2,6 +2,8 @@
 #include <gravity.h>
 namespace cdroid{
 
+DECLARE_WIDGET(Button)
+
 Button::Button(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
     setGravity(Gravity::CENTER_VERTICAL);
     setTextAlignment(TEXT_ALIGNMENT_CENTER);

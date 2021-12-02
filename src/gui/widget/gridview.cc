@@ -2,8 +2,9 @@
 #include <widget/checkable.h>
 #include <cdlog.h>
 
-
 namespace cdroid {
+
+DECLARE_WIDGET(GridView)
 
 GridView::GridView(int w,int h):AbsListView(w,h){
     initGridView();

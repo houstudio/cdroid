@@ -12,5 +12,7 @@ public:
     }
 };
 
+DECLARE_WIDGET(CheckBox)
+
 }
 #endif

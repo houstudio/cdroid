@@ -3,6 +3,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(ViewFlipper)
+
 ViewFlipper::ViewFlipper(int w,int h):ViewAnimator(w,h){
     mFlipRunnable=std::bind(&ViewFlipper::doFlip,this);
     mVisible =true;

@@ -3,6 +3,8 @@
 #include <cdlog.h>
 namespace cdroid {
 
+DECLARE_WIDGET(ScrollView)
+
 ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();
     mIsBeingDragged=false;

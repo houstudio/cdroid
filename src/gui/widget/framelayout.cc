@@ -6,6 +6,8 @@
 #define DEFAULT_CHILD_GRAVITY (Gravity::TOP | Gravity::START)
 namespace cdroid{
 
+DECLARE_WIDGET(FrameLayout)
+
 FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
     mMeasureAllChildren=false;
     mForegroundPaddingLeft=mForegroundPaddingRight=0;

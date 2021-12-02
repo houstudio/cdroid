@@ -8,6 +8,7 @@
 #include <core/systemclock.h>
 #include <widget/layoutparams.h>
 #include <widget/measurespec.h>
+#include <widget/layoutinflater.h>
 #include <animation/animation.h>
 #include <set>
 #include <memory>

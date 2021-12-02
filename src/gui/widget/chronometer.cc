@@ -2,6 +2,8 @@
 #include <systemclock.h>
 namespace cdroid{
 
+DECLARE_WIDGET(Chronometer)
+
 Chronometer::Chronometer(int w,int h):TextView(std::string(),w,h){
     mTickRunnable=nullptr;
 }

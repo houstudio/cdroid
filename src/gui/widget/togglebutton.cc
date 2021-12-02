@@ -6,6 +6,8 @@ namespace cdroid{
 #define TOGGLE 1
 #define NO_ALPHA 0xFF
 
+DECLARE_WIDGET(ToggleButton)
+
 ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs)
   :CompoundButton(ctx,attrs){
     mIndicatorDrawable=nullptr;

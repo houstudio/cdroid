@@ -2,6 +2,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(ViewSwitcher)
+
 ViewSwitcher::ViewSwitcher(int w,int h)
    :ViewAnimator(w,h){
 }

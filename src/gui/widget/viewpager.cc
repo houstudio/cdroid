@@ -12,7 +12,9 @@ public:
         return t * t * t * t * t + 1.0f;
     }
 };
-constexpr int ViewPager::MAX_SETTLE_DURATION ;
+
+DECLARE_WIDGET(ViewPager);
+
 ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
     initViewPager();    
 }
@@ -405,7 +407,7 @@ void ViewPager::smoothScrollTo(int x, int y, int velocity){
         float pageDelta = (float) std::abs(dx) / (pageWidth + mPageMargin);
         duration = (int) ((pageDelta + 1) * 100);
     }
-    duration = std::min(duration, MAX_SETTLE_DURATION);
+    duration = std::min(duration,(int)MAX_SETTLE_DURATION);
     mIsScrollStarted = false;
     // Reset the "scroll started" flag. It will be flipped to true in all places
     // where we call computeScrollOffset().

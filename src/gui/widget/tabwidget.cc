@@ -4,6 +4,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(TabWidget)
+
 TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
     initTab();
 }

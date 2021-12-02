@@ -7,6 +7,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(AnalogClock)
+
 AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     mDial=mSecondHand=mMinuteHand=mHourHand=nullptr;

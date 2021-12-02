@@ -5,6 +5,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(GridLayout)
+
 GridLayoutParams::GridLayoutParams()
     :MarginLayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT){
 }

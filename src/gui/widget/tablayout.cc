@@ -10,6 +10,8 @@ static constexpr int MIN_INDICATOR_WIDTH  = 24;
 static constexpr int INVALID_WIDTH = -1;
 static constexpr int ANIMATION_DURATION = 300;
 
+DECLARE_WIDGET(TabLayout)
+
 TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
     initTabLayout();
 }

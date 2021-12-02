@@ -1,116 +1,116 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:id="10"
-    android:orientation="vertical">
+    layout_width="fill_parent"
+    layout_height="fill_parent"
+    id="10"
+    orientation="vertical">
     <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1"
-        android:id="100"
-        android:measureWithLargestChild="false"
-        android:orientation="horizontal">
+        layout_width="fill_parent"
+        layout_height="fill_parent"
+        layout_weight="1"
+        id="100"
+        measureWithLargestChild="false"
+        orientation="horizontal">
         <TextView
-            android:id="101"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:background="#aa0000"
-            android:text="red" 
-            android:textSize="25pt"/>
+            id="101"
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            background="#aa0000"
+            text="red" 
+            textSize="25pt"/>
         <TextView
-            android:id="102"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:background="#00aa00"
-            android:text="green" 
-            android:textSize="25pt"/>
+            id="102"
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            background="#00aa00"
+            text="green" 
+            textSize="25pt"/>
         <TextView
-            android:id="103"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:background="#0000aa"
-            android:text="blue" />
+            id="103"
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            background="#0000aa"
+            text="blue" />
         <TextView
-            android:id="104"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:background="#aaaa00"
-            android:text="yellow" />
+            id="104"
+            layout_width="wrap_content"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            background="#aaaa00"
+            text="yellow" />
         <Button
-            android:id="105"
-            android:layout_width="match_parent"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="1"
-            android:minHeight="48"
-            android:background="@drawable/btn_default.xml"
-            android:text="Hello world!" />
+            id="105"
+            layout_width="match_parent"
+            layout_height="fill_parent"
+            layout_gravity="center_horizontal"
+            layout_weight="1"
+            minHeight="48"
+            background="cdroid:drawable/btn_default.xml"
+            text="Hello world!" />
     </LinearLayout>
     <LinearLayout
-        android:id="200"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        id="200"
+        layout_width="fill_parent"
+        layout_height="fill_parent"
+        layout_weight="1"
+        orientation="vertical">
         <TextView
-            android:id="201"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/row1"
-            android:textSize="25pt" />
+            id="201"
+            layout_width="fill_parent"
+            layout_height="wrap_content"
+            layout_weight="1"
+            text="cdroid:string/row1"
+            textSize="25pt" />
         <TextView
-            android:id="202"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/row2"
-            android:textSize="25pt" />
+            id="202"
+            layout_width="fill_parent"
+            layout_height="wrap_content"
+            layout_weight="1"
+            text="cdroid:string/row2"
+            textSize="25pt" />
         <TextView
-            android:id="203"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/row3"
-            android:textSize="25pt" />
+            id="203"
+            layout_width="fill_parent"
+            layout_height="wrap_content"
+            layout_weight="1"
+            text="cdroid:string/row3"
+            textSize="25pt" />
         <TextView
-            android:id="204"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/row4"
-            android:textSize="25pt" />
+            id="204"
+            layout_width="fill_parent"
+            layout_height="wrap_content"
+            layout_weight="1"
+            text="cdroid:string/row4"
+            textSize="25pt" />
         <ProgressBar
-            android:id="205"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:indeterminate="true"
-            android:indeterminateDrawable="@drawable/progress_large.xml"
+            id="205"
+            layout_width="wrap_content"
+            layout_height="wrap_content"
+            indeterminate="true"
+            indeterminateDrawable="cdroid:drawable/progress_large.xml"
             />
         <ProgressBar
-            android:id="206"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:progress="30"
-            android:progressDrawable="@drawable/progress_horizontal.xml"
+            id="206"
+            layout_width="fill_parent"
+            layout_height="wrap_content"
+            progress="30"
+            progressDrawable="cdroid:drawable/progress_horizontal.xml"
             />
         <SeekBar
-            android:id="210"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:progressDrawable="@drawable/progress_horizontal.xml"
-            android:thumb="@drawable/seek_thumb.xml"
+            id="210"
+            layout_width="fill_parent"
+            layout_height="wrap_content"
+            progressDrawable="cdroid:drawable/progress_horizontal.xml"
+            thumb="cdroid:drawable/seek_thumb.xml"
             />
         <SeekBar
-            android:id="211"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:progressDrawable="@drawable/progress_horizontal.xml"
-            android:thumb="@drawable/seek_thumb.xml"
+            id="211"
+            layout_width="fill_parent"
+            layout_height="wrap_content"
+            progressDrawable="cdroid:drawable/progress_horizontal.xml"
+            thumb="cdroid:drawable/seek_thumb.xml"
             />
     </LinearLayout>
 </LinearLayout>

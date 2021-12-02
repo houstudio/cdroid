@@ -8,6 +8,8 @@
 #define INDEX_FILL            3
 namespace cdroid {
 
+DECLARE_WIDGET(LinearLayout)
+
 LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
     weight = attrs.getFloat("layout_weight", 0);

@@ -4,6 +4,9 @@
 
 
 namespace cdroid{
+
+DECLARE_WIDGET(TableLayout)
+
 TableLayout::LayoutParams::LayoutParams()
     :LinearLayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT){
 }

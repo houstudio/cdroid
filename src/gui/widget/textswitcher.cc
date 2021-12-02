@@ -3,6 +3,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(TextSwitcher)
+
 TextSwitcher::TextSwitcher(int w,int h)
     :ViewSwitcher(w,h){
 }

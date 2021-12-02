@@ -7,6 +7,8 @@
 #define NO_ALPHA 0xFF
 namespace cdroid{
 
+DECLARE_WIDGET(AbsSeekBar)
+
 AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,attrs){
     initSeekBar();
 
