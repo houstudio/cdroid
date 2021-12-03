@@ -6,6 +6,12 @@
 using namespace Cairo;
 namespace cdroid{
 
+enum TileMode{
+    DISABLED=-1,
+    CLAMP =0,
+    REPEAT=1,
+    MIRROR=2
+};
 class BitmapDrawable:public Drawable{
 private:
     class BitmapState:public std::enable_shared_from_this<BitmapState>,public ConstantState{
@@ -19,6 +25,8 @@ private:
         std::vector<int>mThemeAttrs;
         ColorStateList* mTint;
         int mTintMode;
+        int mTileModeX;
+        int mTileModeY;
         int mSrcDensityOverride;
         int mTargetDensity;
         RefPtr<ImageSurface>mBitmap;
@@ -57,6 +65,11 @@ public:
     int getIntrinsicWidth()const override;
     int getIntrinsicHeight()const override;
     int getOpacity()override;
+    int getTileModeX()const;
+    int getTileModeY()const;
+    void setTileModeX(int);
+    void setTileModeY(int);
+    void setTileModeXY(int,int);
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()override;
     void setTintList(ColorStateList*lst)override;

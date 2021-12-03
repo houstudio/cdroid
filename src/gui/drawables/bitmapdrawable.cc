@@ -13,6 +13,7 @@ BitmapDrawable::BitmapState::BitmapState(){
     mTint  = nullptr;
     mTransparency= -1;
     mTintMode    = DEFAULT_TINT_MODE;
+    mTileModeX =mTileModeY=-1;
     mAutoMirrored= false;
     mSrcDensityOverride=0;
     mTargetDensity=160;
@@ -33,8 +34,8 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mChangingConfigurations = bitmapState.mChangingConfigurations;
     mGravity = bitmapState.mGravity;
     mTransparency= bitmapState.mTransparency;
-    //mTileModeX = bitmapState.mTileModeX;
-    //mTileModeY = bitmapState.mTileModeY;
+    mTileModeX = bitmapState.mTileModeX;
+    mTileModeY = bitmapState.mTileModeY;
     mSrcDensityOverride = bitmapState.mSrcDensityOverride;
     mTargetDensity = bitmapState.mTargetDensity;
     mBaseAlpha = bitmapState.mBaseAlpha;
@@ -121,6 +122,31 @@ int BitmapDrawable::getIntrinsicWidth()const{
 
 int BitmapDrawable::getIntrinsicHeight()const{
     return mBitmapHeight;
+}
+
+int BitmapDrawable::getTileModeX()const{
+    return mBitmapState->mTileModeX;
+}
+
+int BitmapDrawable::getTileModeY()const{
+    return mBitmapState->mTileModeY;
+}
+
+void BitmapDrawable::setTileModeX(int mode){
+    setTileModeXY(mode,mBitmapState->mTileModeY);
+}
+
+void BitmapDrawable::setTileModeY(int mode){
+    setTileModeXY(mBitmapState->mTileModeX,mode);
+}
+
+void BitmapDrawable::setTileModeXY(int xmode,int ymode){
+    if(mBitmapState->mTileModeX!=xmode||mBitmapState->mTileModeY!=ymode){
+        mBitmapState->mTileModeX=xmode;
+        mBitmapState->mTileModeY=ymode;
+        mDstRectAndInsetsDirty  =true;
+        invalidateSelf();
+    }
 }
 
 void BitmapDrawable::setAutoMirrored(bool mirrored){
@@ -278,23 +304,32 @@ void BitmapDrawable::draw(Canvas&canvas){
     LOGD_IF(mBounds.empty(),"%p's bounds is empty,skip drawing,otherwise will caused crash",this);
     canvas.save();
     canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-    canvas.clip();
-    const bool scaled=(mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight);
-    if (scaled) {
-        canvas.scale(dw/sw,dh/sh);
-        dx /= fx;       dy /= fy;
-        dw /= fx;       dh /= fy;
-    }
 
-    if(needMirroring()){
-        canvas.translate(mDstRect.width,0);
-        canvas.scale(-1.f,1.f);LOGD("mirrored....");
+    if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
+        RefPtr<SurfacePattern> pat=SurfacePattern::create(mBitmapState->mBitmap);
+        switch(mBitmapState->mTileModeX){
+        case TileMode::CLAMP : pat->set_extend(Pattern::Extend::PAD)   ; break;
+        case TileMode::REPEAT: pat->set_extend(Pattern::Extend::REPEAT); break;
+        case TileMode::MIRROR: pat->set_extend(Pattern::Extend::REFLECT);break;
+        }
+        canvas.set_source(pat);
+        canvas.fill();
+    }else{
+        canvas.clip();
+        if ( (mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight) ) {
+            canvas.scale(dw/sw,dh/sh);
+            dx /= fx;       dy /= fy;
+            dw /= fx;       dh /= fy;
+        }
+
+        if(needMirroring()){
+            canvas.translate(mDstRect.width,0);
+            canvas.scale(-1.f,1.f);
+        }
+        canvas.set_source(mBitmapState->mBitmap, dx, dy );
+        canvas.get_source_for_surface()->set_filter(SurfacePattern::Filter::BEST);
+        canvas.paint_with_alpha(alpha);
     }
-    canvas.set_source(mBitmapState->mBitmap, dx, dy );
-    
-    canvas.get_source_for_surface()->set_filter(SurfacePattern::Filter::BEST);
-    canvas.paint_with_alpha(alpha);
-    if(scaled)canvas.scale(sw/dw,sh/dh);
     canvas.restore();
     if(mTintFilter)mTintFilter->apply(canvas,mBounds);
 }
@@ -311,7 +346,12 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     bool filter=atts.getBoolean("filter",true);
     bool mipMap=atts.getBoolean("mipMap",true);
     int gravity=atts.getGravity("gravity",Gravity::CENTER);
-    int tileMode=0;//"disabled" | "clamp" | "repeat" | "mirror";
+    static std::map<const std::string,int>kvs={
+	      {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
+		  {"repeat",TileMode::REPEAT},  {"mirror",TileMode::MIRROR}};
+    const int tileMode = atts.getInt("tileMode",kvs,-1);
+    int tileModeX= atts.getInt("tileModeX",kvs,tileMode);
+    int tileModeY= atts.getInt("tileModeY",kvs,tileMode);
     std::string path=src;
     if(ctx==nullptr)path=atts.getAbsolutePath(src);
 
@@ -320,6 +360,7 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     BitmapDrawable*d=new BitmapDrawable(path);
     LOGD("bitmap=%p",d);
     d->setGravity(gravity);
+    d->setTileModeXY(tileModeX,tileModeY); 
     return d;
 }
 

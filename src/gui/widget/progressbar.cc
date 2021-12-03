@@ -154,7 +154,7 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
     if (dynamic_cast<BitmapDrawable*>(drawable)) {
         std::shared_ptr<Drawable::ConstantState> cs = drawable->getConstantState();
         BitmapDrawable* clone = (BitmapDrawable*) cs->newDrawable();
-        //clone->setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.CLAMP);
+        clone->setTileModeXY(TileMode::REPEAT, TileMode::CLAMP);
 
         if (mSampleWidth <= 0) {
             mSampleWidth = clone->getIntrinsicWidth();
