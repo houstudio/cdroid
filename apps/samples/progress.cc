@@ -24,9 +24,9 @@ int main(int argc,const char*argv[]){
     w->addView(pb2).setPos(150,100);
     Runnable progress;
     progress=[w,pb,pb2,&progress](){
-        pb->setProgress((pb->getProgress()+1)%100);
-        pb2->setProgress((pb->getProgress()+1)%100);
-        w->postDelayed(progress,300);
+        pb->setProgress((pb->getProgress()+23)%100);
+        pb2->setProgress((pb->getProgress()+13)%100);
+        w->postDelayed(progress,2000);
     };
     w->post(progress);
 

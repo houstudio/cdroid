@@ -171,7 +171,6 @@ void ProgressBar::setVisualProgress(int id, float progress){
     mVisualProgress = progress;
 
     Drawable* d = mCurrentDrawable;
-
     if (dynamic_cast<LayerDrawable*>(d)) {
         d = ((LayerDrawable*) d)->findDrawableByLayerId(id);
         if (d == nullptr) {
@@ -193,9 +192,8 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     const bool isPrimary = id == ID_PRIMARY;//R.id.progress;
 
     if (isPrimary && animate) {
-        FloatPropertyValuesHolder*prop=nullptr;
         if(mAnimator==nullptr){
-            mAnimator = ObjectAnimator::ofFloat(this,"progress",{0,scale});
+            mAnimator = ObjectAnimator::ofFloat(this,"progress",{mVisualProgress,scale});
             mAnimator->setAutoCancel(true);
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
             mAnimator->setInterpolator(new  DecelerateInterpolator());
@@ -203,8 +201,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
                 setVisualProgress(ID_PRIMARY,anim.getAnimatedValue().get<float>());
             }));
         }
-        prop=(FloatPropertyValuesHolder*)mAnimator->getValues(0);
-        prop->setValues(std::vector<float>({scale}));
+        mAnimator->getValues(0)->setValues(std::vector<float>({mVisualProgress,scale}));
         mAnimator->start();
     } else {
         setVisualProgress(id, scale);

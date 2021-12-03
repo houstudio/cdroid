@@ -48,7 +48,7 @@ void PropertyValuesHolder::evaluate(Variant& out, const Variant& from, const Var
         out=((uint32_t)(a*255.f)<<24)|((uint32_t)(r*255)<<16)|((uint32_t)(g*255)<<8)|((uint32_t)(b*255));
         }break;
     case 2:
-        out = from.get<float>() * (1 - fraction) + to.get<float>() * fraction;
+        out = from.get<float>() * (1.f - fraction) + to.get<float>() * fraction;
         break;
     }
 }
