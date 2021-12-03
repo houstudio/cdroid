@@ -46,7 +46,11 @@ private:
     void updateDrawableState();
     void setVisualProgress(int id, float progress);
 
+    static bool needsTileify(Drawable* dr);
+    Drawable* tileify(Drawable* drawable, bool clip);
+    Drawable* tileifyIndeterminate(Drawable* drawable);
     void applyProgressTints();
+    void applyIndeterminateTint();
     void applyPrimaryProgressTint();
     void applyProgressBackgroundTint();
     void applySecondaryProgressTint();
@@ -111,6 +115,7 @@ public:
     void setProgressDrawable(Drawable*d);
     Drawable*getProgressDrawable()const;
     void setIndeterminateDrawable(Drawable*d);
+    void setIndeterminateDrawableTiled(Drawable* d);
     Drawable*getIndeterminateDrawable()const;
 
     void setProgressTintList(ColorStateList*tint);

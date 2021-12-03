@@ -33,8 +33,6 @@ DECLARE_WIDGET(ProgressBar)
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initProgressBar();
-    mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);
-    setIndeterminate(attrs.getBoolean("indeterminate",false));
     setProgressDrawable(ctx->getDrawable(attrs.getString("progressDrawable")));
     setIndeterminateDrawable(ctx->getDrawable(attrs.getString("indeterminateDrawable")));
 
@@ -46,10 +44,19 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     mMaxWidth = attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
     mMinHeight= attrs.getDimensionPixelSize("minHeight", mMinHeight);
     mMaxHeight= attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
+    mBehavior = attrs.getInt("inteterminateBehavior",std::map<const std::string,int>{
+       {"none",0},{"repeat",(int)Animation::RESTART},{"cycle",(int)Animation::INFINITE} },mBehavior);
+
+    mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);
+    mNoInvalidate = false;
+    setIndeterminate(mOnlyIndeterminate||attrs.getBoolean("indeterminate",false));
     mMirrorForRtl =attrs.getBoolean("mirrorForRtl",false); 
 
     setMin(attrs.getInt("min",mMin));
     setMax(attrs.getInt("max",mMax));
+    
+    applyProgressTints();
+    applyIndeterminateTint();
 }
 
 ProgressBar::ProgressBar(int width, int height):View(width,height){
@@ -73,6 +80,111 @@ ProgressBar::~ProgressBar(){
     delete mTransformation;
 }
 
+bool ProgressBar::needsTileify(Drawable* dr){
+    if (dynamic_cast<LayerDrawable*>(dr)) {
+        LayerDrawable* orig = (LayerDrawable*) dr;
+        const int N = orig->getNumberOfLayers();
+        for (int i = 0; i < N; i++) {
+            if (needsTileify(orig->getDrawable(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (dynamic_cast<StateListDrawable*>(dr)) {
+        StateListDrawable* in = (StateListDrawable*) dr;
+        const int N = in->getStateCount();
+        for (int i = 0; i < N; i++) {
+            if (needsTileify(in->getStateDrawable(i))) {
+                return true;
+             }
+        }
+        return false;
+    }
+    // If there's a bitmap that's not wrapped with a ClipDrawable or
+    // ScaleDrawable, we'll need to wrap it and apply tiling.
+    if (dynamic_cast<BitmapDrawable*>(dr)) {
+        return true;
+    }
+}
+
+Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
+    // TODO: This is a terrible idea that potentially destroys any drawable
+    // that extends any of these classes. We *really* need to remove this.
+
+    if (dynamic_cast<LayerDrawable*>(drawable)) {
+        LayerDrawable* orig = (LayerDrawable*) drawable;
+        const int N = orig->getNumberOfLayers();
+        std::vector<Drawable*> outDrawables;
+
+        for (int i = 0; i < N; i++) {
+            const int id = orig->getId(i);
+            Drawable*dr=tileify(orig->getDrawable(i),(id == ID_PRIMARY || id == ID_SECONDARY));
+            outDrawables.push_back(dr); 
+        }
+
+        LayerDrawable* clone = new LayerDrawable(outDrawables);
+        for (int i = 0; i < N; i++) {
+            clone->setId(i, orig->getId(i));
+            clone->setLayerGravity(i, orig->getLayerGravity(i));
+            clone->setLayerWidth(i, orig->getLayerWidth(i));
+            clone->setLayerHeight(i, orig->getLayerHeight(i));
+            clone->setLayerInsetLeft(i, orig->getLayerInsetLeft(i));
+            clone->setLayerInsetRight(i, orig->getLayerInsetRight(i));
+            clone->setLayerInsetTop(i, orig->getLayerInsetTop(i));
+            clone->setLayerInsetBottom(i, orig->getLayerInsetBottom(i));
+            clone->setLayerInsetStart(i, orig->getLayerInsetStart(i));
+            clone->setLayerInsetEnd(i, orig->getLayerInsetEnd(i));
+        }
+        return clone;
+    }
+
+    if (dynamic_cast<StateListDrawable*>(drawable)) {
+        StateListDrawable* in = (StateListDrawable*) drawable;
+        StateListDrawable* out = new StateListDrawable();
+        const int N = in->getStateCount();
+        for (int i = 0; i < N; i++) {
+            out->addState(in->getStateSet(i), tileify(in->getStateDrawable(i), clip));
+        }
+
+        return out;
+    }
+
+    if (dynamic_cast<BitmapDrawable*>(drawable)) {
+        std::shared_ptr<Drawable::ConstantState> cs = drawable->getConstantState();
+        BitmapDrawable* clone = (BitmapDrawable*) cs->newDrawable();
+        //clone->setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.CLAMP);
+
+        if (mSampleWidth <= 0) {
+            mSampleWidth = clone->getIntrinsicWidth();
+        }
+        if (clip) {
+            return new ClipDrawable(clone, Gravity::LEFT, ClipDrawable::HORIZONTAL);
+        } else {
+            return clone;
+        }
+    }
+    return drawable;
+}
+
+Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable){
+    if (dynamic_cast<AnimationDrawable*>(drawable)) {
+        AnimationDrawable* background = (AnimationDrawable*) drawable;
+        const int N = background->getNumberOfFrames();
+        AnimationDrawable* newBg = new AnimationDrawable();
+        newBg->setOneShot(background->isOneShot());
+        for (int i = 0; i < N; i++) {
+            Drawable* frame = tileify(background->getFrame(i), true);
+            frame->setLevel(10000);
+            newBg->addFrame(frame, background->getDuration(i));
+        }
+        newBg->setLevel(10000);
+        drawable = newBg;
+    }
+    return drawable;
+}
+
 void ProgressBar::initProgressBar(){
     mMin = 0;
     mMax = 100;
@@ -83,11 +195,12 @@ void ProgressBar::initProgressBar(){
     mOnlyIndeterminate = false;
     mDuration = 4000;
     mProgressTintInfo=nullptr;
-    //mBehavior = AlphaAnimation.RESTART;
+    mBehavior = AlphaAnimation::RESTART;
     mMinWidth  = 48;
     mMaxWidth  = 96;
     mMinHeight = 48;
     mMaxHeight = 96;
+    mNoInvalidate = true;
     mCurrentDrawable = nullptr;
     mProgressDrawable= nullptr;
     mIndeterminateDrawable=nullptr;
@@ -366,13 +479,12 @@ void ProgressBar::setIndeterminateDrawable(Drawable*d){
         mIndeterminateDrawable = d;
 
         if (d != nullptr) {
-            LOGD("drawable %p setcbk-->%p",d,this);
             d->setCallback(this);
             d->setLayoutDirection(getLayoutDirection());
             if (d->isStateful()) {
                 d->setState(getDrawableState());
             }
-            //applyIndeterminateTint();
+            applyIndeterminateTint();
         }
 
         if (mIndeterminate) {
@@ -384,6 +496,11 @@ void ProgressBar::setIndeterminateDrawable(Drawable*d){
 
 Drawable*ProgressBar::getIndeterminateDrawable()const{
     return mIndeterminateDrawable;
+}
+
+void ProgressBar::setIndeterminateDrawableTiled(Drawable* d){
+     if(d)d=tileifyIndeterminate(d);
+     setIndeterminateDrawable(d);
 }
 
 void ProgressBar::swapCurrentDrawable(Drawable*newDrawable){
@@ -442,7 +559,7 @@ void ProgressBar::startAnimation() {
         mAnimation->setInterpolator(mInterpolator);
         mAnimation->setStartTime(Animation::START_ON_FIRST_FRAME);
     }
-    LOGD("mIndeterminateDrawable=%p",mIndeterminateDrawable);
+    LOGV("mIndeterminateDrawable=%p",mIndeterminateDrawable);
     postInvalidate();
 }
 
@@ -481,8 +598,10 @@ void ProgressBar::drawTrack(Canvas&canvas){
     canvas.restore();
 
     if (mShouldStartAnimationDrawable && dynamic_cast<Animatable*>(d)){
-        if(dynamic_cast<AnimatedRotateDrawable*>(d)) ((AnimatedRotateDrawable*) d)->start();
-        if(dynamic_cast<AnimationDrawable*>(d))  ((AnimationDrawable*) d)->start();
+        if(dynamic_cast<AnimatedRotateDrawable*>(d)) 
+            ((AnimatedRotateDrawable*) d)->start();
+        else if(dynamic_cast<AnimationDrawable*>(d))
+            ((AnimationDrawable*) d)->start();
         mShouldStartAnimationDrawable = false;
     }
 }
@@ -517,14 +636,15 @@ void ProgressBar::updateDrawableBounds(int w,int h){
                     top = (h - height) / 2;
                     bottom = top + height;
                 }
-            }LOGV("intrinsicsize=%dx%d",intrinsicWidth,intrinsicHeight);
+            }
+            LOGD_IF(intrinsicWidth*intrinsicHeight==0,"intrinsicsize=%dx%d",intrinsicWidth,intrinsicHeight);
         }
         if (isLayoutRtl() && mMirrorForRtl) {
             int tempLeft = left;
             left = w - right;
             right = w - tempLeft;
         }
-        LOGD("%p setBounds(%d,%d-%d,%d) wh=%dx%d",this,left, top, right, bottom,w,h);
+        LOGV("%p setBounds(%d,%d-%d,%d) wh=%dx%d",this,left, top, right, bottom,w,h);
         mIndeterminateDrawable->setBounds(left, top, right-left, bottom-top);
     }
 
@@ -736,11 +856,15 @@ Drawable* ProgressBar::getTintTarget(int layerId, bool shouldFallback){
     return layer;
 }
 
+void ProgressBar::applyIndeterminateTint(){
+
+}
+
 void ProgressBar::setProgressDrawableTiled(Drawable* d) {
-    /*if (d != nullptr) {
+    if (d != nullptr) {
         d = tileify(d, false);
     }
-    setProgressDrawable(d);*/
+    setProgressDrawable(d);
 }
 
 }//end namespace

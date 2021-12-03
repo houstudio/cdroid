@@ -3,6 +3,8 @@
 namespace cdroid{
 
 AlphaAnimation::AlphaAnimation(Context* context,const AttributeSet& attrs):Animation(context,attrs){
+    mFromAlpha = attrs.getFloat("fromAlpha",1.f);
+    mToAlpha   = attrs.getFloat("toAlpha",1.f);
 }
 
 AlphaAnimation::AlphaAnimation(float fromAlpha, float toAlpha){
@@ -11,8 +13,7 @@ AlphaAnimation::AlphaAnimation(float fromAlpha, float toAlpha){
 }
 
 void AlphaAnimation::applyTransformation(float interpolatedTime, Transformation& t) {
-    float alpha = mFromAlpha;
-    t.setAlpha(alpha + ((mToAlpha - alpha) * interpolatedTime));
+    t.setAlpha(mFromAlpha + ((mToAlpha - mFromAlpha) * interpolatedTime));
 }
 
 bool AlphaAnimation::willChangeTransformationMatrix()const{
