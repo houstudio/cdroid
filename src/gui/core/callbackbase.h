@@ -46,7 +46,7 @@ public:
     bool operator!=(std::nullptr_t)const{
        return fun!=nullptr;
     }
-    R operator()(Args...args)const{
+    virtual R operator()(Args...args){
         return fun(std::forward<Args>(args)...);
     }
 };

@@ -70,7 +70,7 @@ ProgressBar::~ProgressBar(){
     delete mIndeterminateDrawable;
     delete mAnimator;
     delete mAnimation;
-	delete mTransformation;
+    delete mTransformation;
 }
 
 void ProgressBar::initProgressBar(){
@@ -93,6 +93,7 @@ void ProgressBar::initProgressBar(){
     mIndeterminateDrawable=nullptr;
     mAnimator = nullptr;
     mAnimation= nullptr;
+    mInterpolator  =nullptr;
     mTransformation=nullptr;
     mHasAnimation= false;
     mInDrawing   = false;
@@ -479,8 +480,9 @@ void ProgressBar::drawTrack(Canvas&canvas){
     d->draw(canvas);
     canvas.restore();
 
-    if (mShouldStartAnimationDrawable && dynamic_cast<Animatable*>(d)) {
-        ((AnimatedRotateDrawable*) d)->start();
+    if (mShouldStartAnimationDrawable && dynamic_cast<Animatable*>(d)){
+        if(dynamic_cast<AnimatedRotateDrawable*>(d)) ((AnimatedRotateDrawable*) d)->start();
+        if(dynamic_cast<AnimationDrawable*>(d))  ((AnimationDrawable*) d)->start();
         mShouldStartAnimationDrawable = false;
     }
 }
@@ -496,7 +498,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
         int top = 0;
         int left = 0;
         // Aspect ratio logic does not apply to AnimationDrawables
-        if (mOnlyIndeterminate /*&& !(mIndeterminateDrawable instanceof AnimationDrawable)*/) {
+        if (mOnlyIndeterminate && !(dynamic_cast<AnimationDrawable*>(mIndeterminateDrawable))) {
             // Maintain aspect ratio. Certain kinds of animated drawables
             // get very confused otherwise.
             const int intrinsicWidth = mIndeterminateDrawable->getIntrinsicWidth();

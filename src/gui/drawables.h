@@ -18,6 +18,7 @@
 #include <drawables/levellistdrawable.h>
 #include <drawables/layerdrawable.h>
 #include <drawables/statelistdrawable.h>
+#include <drawables/animationdrawable.h>
 #include <drawables/gradientdrawable.h>
 #include <drawables/scrollbardrawable.h>
 #include <drawables/rippledrawable.h>

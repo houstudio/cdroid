@@ -118,8 +118,8 @@ public:
     virtual void setChangingConfigurations(int);
     void setCallback(Callback*cbk);
     Callback* getCallback()const;
-    void scheduleSelf(Runnable what, long when);
-    void unscheduleSelf(Runnable what);
+    void scheduleSelf(Runnable& what, long when);
+    void unscheduleSelf(Runnable& what);
 
     virtual void invalidateSelf();
 

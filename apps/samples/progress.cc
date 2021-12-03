@@ -38,8 +38,16 @@ int main(int argc,const char*argv[]){
     pb3->setProgressDrawable(new ColorDrawable(0xFF112233));
     pb3->setIndeterminate(true);
 
+    ProgressBar*pb4=new ProgressBar(72,72);
+    AnimationDrawable*ad=new AnimationDrawable();
+    ad->addFrame(new ColorDrawable(0xFFFF0000),500);
+    ad->addFrame(new ColorDrawable(0xFF00FF00),500);
+    ad->addFrame(new ColorDrawable(0xFF0000FF),500);
+    w->addView(pb4).setId(105).setPos(880,60);
+    pb4->setIndeterminateDrawable(ad);
+    pb4->setIndeterminate(true);
+    pb4->setProgressDrawable(new ColorDrawable(0xFF111111));
 //////////////////////////////////////////////////////////    
-
     SeekBar*sb = new SeekBar(800,50);
     SeekBar*sb2= new SeekBar(800,50);
 

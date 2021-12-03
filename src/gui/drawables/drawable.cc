@@ -201,11 +201,11 @@ Drawable::Callback* Drawable::getCallback()const{
     return mCallback;
 }
 
-void Drawable::scheduleSelf(Runnable what, long when){
+void Drawable::scheduleSelf(Runnable& what, long when){
     if(mCallback)mCallback->scheduleDrawable(*this, what, when);
 }
 
-void Drawable::unscheduleSelf(Runnable what){
+void Drawable::unscheduleSelf(Runnable& what){
     if(mCallback)mCallback->unscheduleDrawable(*this, what);
 }
 
