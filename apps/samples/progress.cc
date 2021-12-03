@@ -38,11 +38,14 @@ int main(int argc,const char*argv[]){
     pb3->setProgressDrawable(new ColorDrawable(0xFF112233));
     pb3->setIndeterminate(true);
 
-    ProgressBar*pb4=new ProgressBar(72,72);
+    ProgressBar*pb4=new ProgressBar(128,128);
     AnimationDrawable*ad=new AnimationDrawable();
     ad->addFrame(new ColorDrawable(0xFFFF0000),500);
     ad->addFrame(new ColorDrawable(0xFF00FF00),500);
     ad->addFrame(new ColorDrawable(0xFF0000FF),500);
+    BitmapDrawable*bd=(BitmapDrawable*)ctx->getDrawable("cdroid:mipmap/seek_thumb_normal.png");
+    bd->setTileModeXY(TileMode::REPEAT,TileMode::REPEAT);
+    ad->addFrame(bd,1000);
     w->addView(pb4).setId(105).setPos(880,60);
     pb4->setIndeterminateDrawable(ad);
     pb4->setIndeterminate(true);

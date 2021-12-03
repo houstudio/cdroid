@@ -295,26 +295,33 @@ void BitmapDrawable::draw(Canvas&canvas){
             mBounds.left,mBounds.top,mBounds.width,mBounds.height, mDstRect.left,mDstRect.top,
 	    mDstRect.width,mDstRect.height,mBitmapState->mAlpha,mTintFilter);
 
-    const float sw=mBitmapWidth, sh=mBitmapHeight;
-    float dx = mBounds.left    , dy = mBounds.top;
-    float dw = mBounds.width   , dh = mBounds.height;
-    const float fx = dw / sw  , fy = dh / sh;
-    const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
-
     LOGD_IF(mBounds.empty(),"%p's bounds is empty,skip drawing,otherwise will caused crash",this);
     canvas.save();
-    canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
 
     if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
         RefPtr<SurfacePattern> pat=SurfacePattern::create(mBitmapState->mBitmap);
+        Rect rect={mBounds.left,mBounds.top,mBitmapWidth,mBitmapHeight};
+        if(mBitmapState->mTileModeX!=TileMode::DISABLED)
+            rect.width=mBounds.width;
+        LOGV("tilemode=%d,%d",mBitmapState->mTileModeX,mBitmapState->mTileModeY);
         switch(mBitmapState->mTileModeX){
         case TileMode::CLAMP : pat->set_extend(Pattern::Extend::PAD)   ; break;
         case TileMode::REPEAT: pat->set_extend(Pattern::Extend::REPEAT); break;
         case TileMode::MIRROR: pat->set_extend(Pattern::Extend::REFLECT);break;
         }
+        if(mBitmapState->mTileModeY!=TileMode::DISABLED)
+            rect.height=mBounds.height;
+        canvas.rectangle(rect.left,rect.top,rect.width,rect.height);
         canvas.set_source(pat);
         canvas.fill();
     }else{
+        const float sw=mBitmapWidth, sh = mBitmapHeight;
+        float dx = mBounds.left    , dy = mBounds.top;
+        float dw = mBounds.width   , dh = mBounds.height;
+        const float fx = dw / sw   , fy = dh / sh;
+        const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
+
+        canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
         if ( (mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight) ) {
             canvas.scale(dw/sw,dh/sh);
