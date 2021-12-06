@@ -55,7 +55,7 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
 }
 
 NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
-    mNinePatchState=std::make_shared<NinePatchState>(ctx->getImage(resid,false));
+    mNinePatchState=std::make_shared<NinePatchState>(ctx->getImage(resid));
     mAlpha=255;
     mTintFilter=nullptr;
     computeBitmapSize();

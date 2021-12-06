@@ -21,7 +21,6 @@ Assets::Assets(const std::string&path):Assets(){
     mName=path;
 }
 Assets::~Assets(){
-    images.clear();
     strings.clear();
     for(auto it=mResources.begin();it!=mResources.end();it++)
        delete it->second;
@@ -96,25 +95,10 @@ void Assets::loadStrings(const std::string&lan){
     delete zipis;
 }
 
-RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid,bool cache){
+RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid){
     size_t capacity=0;
     std::string resname;
     ZIPArchive*pak=getResource(fullresid,&resname);
-
-    auto it=images.find(fullresid);
-
-    std::for_each(images.begin(),images.end(),[&capacity](const std::map<std::string,RefPtr<ImageSurface>>::value_type&it){
-        RefPtr<ImageSurface>img=it.second;
-        size_t picsize=img->get_width()*img->get_height()*4;
-        capacity+=picsize;
-        LOGV("%dx%d %dK[%s]",img->get_width(),img->get_height(),picsize/1024,it.first.c_str());
-    });
-    LOGV("image cache size=%dK",capacity/1024);
-
-    if(it!=images.end()){
-        RefPtr<ImageSurface>refimg(it->second);
-        return refimg;
-    }
 
     void*zfile=pak?pak->getZipHandle(resname):nullptr;
     ZipInputStream zipis(zfile);
@@ -126,10 +110,7 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid,bool cache){
         return img;
     }
     img=loadImage(zipis);
-    if(cache && (img!=nullptr)){
-        images.insert(std::pair<const std::string,RefPtr<ImageSurface> >(fullresid,img));
-        LOGV("image %s size=%dx%d",fullresid.c_str(),img->get_width(),img->get_height());
-    }
+    LOGV_IF(img,"image %s size=%dx%d",fullresid.c_str(),img->get_width(),img->get_height());
     return img;
 }
 

@@ -11,7 +11,6 @@ class Assets:public Context{
 private:
     std::string mLanguage;
     std::string mDefault;//default resource
-    std::map<const std::string,RefPtr<ImageSurface>>images;
     std::map<const std::string,std::string>strings;
     std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
     std::map<const std::string,class ZIPArchive*>mResources;
@@ -29,7 +28,7 @@ public:
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string& getString(const std::string&id,const std::string&lan="")override;
-    RefPtr<Cairo::ImageSurface> getImage(const std::string&resname,bool cache=true)override;
+    RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)override;
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
     std::unique_ptr<std::istream> getInputStream(const std::string&resname)override;
     Drawable * getDrawable(const std::string&resid)override;

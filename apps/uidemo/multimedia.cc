@@ -164,7 +164,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
         const std::string fname=SimplifyPath(mdi.fullpath);
         processMedia(mdi);
         mFilePath->setText(fname);
-        auto image=getContext()->getImage(fname,false);
+        auto image=getContext()->getImage(fname);
         LOGD("getImage(%s) %p",fname.c_str(),image.get());
         if(image)drbmp->setBitmap(image);
     });
