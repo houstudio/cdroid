@@ -70,23 +70,16 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
     computeBitmapSize();
 }
 
-BitmapDrawable::BitmapDrawable(std::istream&is){
-    mTintFilter=nullptr;
-    mBitmapState=std::make_shared<BitmapState>();
-    RefPtr<ImageSurface>b=ImageSurface::create_from_stream(is);
-    setBitmap(b);
-}
-
-BitmapDrawable::BitmapDrawable(const std::string&resname){
+BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname){
     mBitmapState=std::make_shared<BitmapState>();
     std::ifstream fs(resname);
     RefPtr<ImageSurface>b;
     mTintFilter=nullptr;
     LOGV("%s",resname.c_str());
-    if(fs.good())
+    if((ctx==nullptr)||fs.good())
         b=ImageSurface::create_from_stream(fs);
     else {
-        b=App::getInstance().getImage(resname);
+        b=ctx->getImage(resname);
     }
     setBitmap(b);
 }
@@ -242,7 +235,7 @@ void BitmapDrawable::computeBitmapSize() {
 
 void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
     if (mDstRectAndInsetsDirty) {
-        if (true/*mBitmapState->mTileModeX == nullptr && mBitmapState->mTileModeY == nullptr*/) {
+        if (mBitmapState->mTileModeX == TileMode::DISABLED && mBitmapState->mTileModeY == TileMode::DISABLED) {
             const int layoutDir = getLayoutDirection();
             mDstRect.set(0,0,0,0);
             Gravity::apply(mBitmapState->mGravity,mBitmapWidth,mBitmapHeight,mBounds, mDstRect, layoutDir);
@@ -288,6 +281,15 @@ void BitmapDrawable::clearMutated() {
     mMutated = false;
 }
 
+static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
+    switch(tileMode){
+    case TileMode::DISABLED:break;
+    case TileMode::CLAMP : pat->set_extend(Pattern::Extend::PAD);     break;
+    case TileMode::REPEAT: pat->set_extend(Pattern::Extend::REPEAT);  break;
+    case TileMode::MIRROR: pat->set_extend(Pattern::Extend::REFLECT); break;
+    }
+}
+
 void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mBitmap==nullptr) return;
     updateDstRectAndInsetsIfDirty();
@@ -299,21 +301,39 @@ void BitmapDrawable::draw(Canvas&canvas){
     canvas.save();
 
     if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
-        RefPtr<SurfacePattern> pat=SurfacePattern::create(mBitmapState->mBitmap);
-        Rect rect={mBounds.left,mBounds.top,mBitmapWidth,mBitmapHeight};
-        if(mBitmapState->mTileModeX!=TileMode::DISABLED)
-            rect.width=mBounds.width;
-        LOGV("tilemode=%d,%d",mBitmapState->mTileModeX,mBitmapState->mTileModeY);
-        switch(mBitmapState->mTileModeX){
-        case TileMode::CLAMP : pat->set_extend(Pattern::Extend::PAD)   ; break;
-        case TileMode::REPEAT: pat->set_extend(Pattern::Extend::REPEAT); break;
-        case TileMode::MIRROR: pat->set_extend(Pattern::Extend::REFLECT);break;
-        }
-        if(mBitmapState->mTileModeY!=TileMode::DISABLED)
-            rect.height=mBounds.height;
-        canvas.rectangle(rect.left,rect.top,rect.width,rect.height);
-        canvas.set_source(pat);
-        canvas.fill();
+        RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
+        if(mBitmapState->mTileModeX!=TileMode::DISABLED){
+            RefPtr<Surface> subs=ImageSurface::create(Surface::Format::ARGB32,mBounds.width,mBitmapHeight);
+            RefPtr<Cairo::Context>subcanvas=Cairo::Context::create(subs);
+            subcanvas->rectangle(0,0,mBounds.width,mBitmapHeight);
+            setPatternByTileMode(pat,mBitmapState->mTileModeX); 
+            subcanvas->set_source(pat);
+            subcanvas->fill();
+
+            RefPtr<SurfacePattern>pats= SurfacePattern::create(subs); 
+            canvas.set_source(pats);
+            if(mBounds.height>mBitmapHeight&&mBitmapState->mTileModeY==TileMode::DISABLED)
+                 setPatternByTileMode(pats,TileMode::CLAMP);//mBitmapState->mTileModeY);
+            else setPatternByTileMode(pats,mBitmapState->mTileModeY);
+            canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+            canvas.fill();
+        }else{
+            RefPtr<Surface> subs=ImageSurface::create(Surface::Format::ARGB32,mBitmapWidth,mBounds.height);
+            RefPtr<Cairo::Context>subcanvas=Cairo::Context::create(subs);
+           
+            subcanvas->rectangle(0,0,mBitmapWidth,mBounds.height);
+            setPatternByTileMode(pat,mBitmapState->mTileModeY);
+            subcanvas->set_source(pat);
+            subcanvas->fill();
+
+            RefPtr<SurfacePattern>pats= SurfacePattern::create(subs); 
+            canvas.set_source(pats);
+            if(mBounds.width>mBitmapWidth&&mBitmapState->mTileModeX==TileMode::DISABLED)
+                setPatternByTileMode(pats,TileMode::CLAMP);
+            else setPatternByTileMode(pats,mBitmapState->mTileModeX);
+            canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+            canvas.fill();
+        } 
     }else{
         const float sw=mBitmapWidth, sh = mBitmapHeight;
         float dx = mBounds.left    , dy = mBounds.top;
@@ -364,7 +384,7 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
 
     LOGD("src=%s",src.c_str());
     if(src.empty())  return nullptr;
-    BitmapDrawable*d=new BitmapDrawable(path);
+    BitmapDrawable*d=new BitmapDrawable(ctx,path);
     LOGD("bitmap=%p",d);
     d->setGravity(gravity);
     d->setTileModeXY(tileModeX,tileModeY); 

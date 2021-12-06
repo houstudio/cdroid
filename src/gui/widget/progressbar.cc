@@ -477,7 +477,7 @@ void ProgressBar::setIndeterminateDrawable(Drawable*d){
         }
 
         mIndeterminateDrawable = d;
-
+        updateDrawableBounds(getWidth(), getHeight());
         if (d != nullptr) {
             d->setCallback(this);
             d->setLayoutDirection(getLayoutDirection());

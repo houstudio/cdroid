@@ -54,8 +54,7 @@ protected:
     static int computeTransparency(RefPtr<ImageSurface>bmp);
 public:
     BitmapDrawable(RefPtr<ImageSurface>img);
-    BitmapDrawable(std::istream&is);
-    BitmapDrawable(const std::string&resname);
+    BitmapDrawable(Context*ctx,const std::string&resname);
     RefPtr<ImageSurface> getBitmap()const;
     void setBitmap(RefPtr<ImageSurface>bmp);
     void setAlpha(int a)override;

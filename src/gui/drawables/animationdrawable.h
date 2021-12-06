@@ -25,6 +25,7 @@ private:
 protected:
     void setConstantState(std::shared_ptr<DrawableContainerState>state)override;
     void run();
+    std::shared_ptr<DrawableContainerState> cloneConstantState()override;
 public:
     AnimationDrawable();
     bool setVisible(bool visible,bool restart)override;
@@ -41,6 +42,7 @@ public:
     void nextFrame(bool unschedule);
     Drawable*mutate()override;
     void clearMutated()override;
+    static Drawable*inflate(Context*ctx,const AttributeSet&);
 };
 
 }

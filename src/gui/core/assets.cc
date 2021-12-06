@@ -172,9 +172,9 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
     }
     //wrap png to drawable,make app develop simply
     if(TextUtils::endWith(resname,".9.png")){
-	    d=new NinePatchDrawable(getImage(fullresid,false));
+        d=new NinePatchDrawable(this,fullresid);
     }else if (TextUtils::endWith(resname,".png")){
-	    d=new BitmapDrawable(fullresid);
+        d=new BitmapDrawable(this,fullresid);
     }
     if( (d==nullptr) && (!fullresid.empty()) ){
         void*zfile=pak?pak->getZipHandle(resname):nullptr;

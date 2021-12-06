@@ -20,8 +20,8 @@ int main(int argc,const char*argv[]){
     pb2->setMirrorForRtl(true);
     pb2->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
     pb->setSecondaryProgress(15);
-    w->addView(pb).setPos(150,50);
-    w->addView(pb2).setPos(150,100);
+    w->addView(pb).setPos(50,50);
+    w->addView(pb2).setPos(50,100);
     Runnable progress;
     progress=[w,pb,pb2,&progress](){
         pb->setProgress((pb->getProgress()+23)%100);
@@ -34,19 +34,19 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/progress_large.xml");
     pb3->setIndeterminateDrawable(d);
     LOGD("Indeterminate drawable=%p",d);
-    w->addView(pb3).setId(104).setPos(800,60);
+    w->addView(pb3).setId(104).setPos(680,60);
     pb3->setProgressDrawable(new ColorDrawable(0xFF112233));
     pb3->setIndeterminate(true);
 
-    ProgressBar*pb4=new ProgressBar(128,128);
+    ProgressBar*pb4=new ProgressBar(256,256);
     AnimationDrawable*ad=new AnimationDrawable();
     ad->addFrame(new ColorDrawable(0xFFFF0000),500);
     ad->addFrame(new ColorDrawable(0xFF00FF00),500);
     ad->addFrame(new ColorDrawable(0xFF0000FF),500);
-    BitmapDrawable*bd=(BitmapDrawable*)ctx->getDrawable("cdroid:mipmap/seek_thumb_normal.png");
-    bd->setTileModeXY(TileMode::REPEAT,TileMode::REPEAT);
+    BitmapDrawable*bd=(BitmapDrawable*)ctx->getDrawable("cdroid:mipmap/seek_thumb_normal.png");//ic_launcher.png");
+    bd->setTileModeXY(TileMode::MIRROR,TileMode::CLAMP);
     ad->addFrame(bd,1000);
-    w->addView(pb4).setId(105).setPos(880,60);
+    w->addView(pb4).setId(105).setPos(800,10);
     pb4->setIndeterminateDrawable(ad);
     pb4->setIndeterminate(true);
     pb4->setProgressDrawable(new ColorDrawable(0xFF111111));
@@ -65,7 +65,7 @@ int main(int argc,const char*argv[]){
     sb->setTickMark(d);
     sb2->setTickMark(d->getConstantState()->newDrawable());
     sb2->setMirrorForRtl(true);
-    w->addView(sb).setId(200).setPos(150,240).setKeyboardNavigationCluster(true);
-    w->addView(sb2).setId(201).setPos(150,300).setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+    w->addView(sb).setId(200).setPos(50,300).setKeyboardNavigationCluster(true);
+    w->addView(sb2).setId(201).setPos(50,380).setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
     return app.exec();
 }

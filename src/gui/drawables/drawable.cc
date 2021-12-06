@@ -328,7 +328,8 @@ static std::map<const std::string,DrawableParser>drawableParsers={
     {"selector"   , StateListDrawable::inflate},
     {"item"       , Drawable::createItemDrawable },
     {"ripple"     , RippleDrawable::inflate},
-    {"animated-rotate",AnimatedRotateDrawable::inflate}
+    {"animated-rotate",AnimatedRotateDrawable::inflate},
+    {"animation-list" ,AnimationDrawable::inflate}
 };
 
 static int parseColor(const std::string&value){
@@ -445,6 +446,12 @@ static void endElement(void *userData, const XML_Char *name){
             const std::string src=atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
             LOGV("add drawable %pi[%s] to LayerDrawable %p index=%d id=%d",topchild,src.c_str(),parent,idx,id);
+        }else if(dynamic_cast<AnimationDrawable*>(parent)){
+            AnimationDrawable*ad=(AnimationDrawable*)parent;
+            int duration=atts.getInt("duration",0);
+            const std::string src=atts.getString("drawable");
+            ad->addFrame(topchild,duration);
+            LOGV("add drawable %p[%s] to AnimationDrawable %p duration=%d",topchild,src.c_str(),parent,duration);
         }
     }else if(drawableParsers.find(name)!=drawableParsers.end()){//process shape element
         ParseItem citem=pd->items.back();//child item

@@ -73,7 +73,7 @@ TEST_F(WIDGET,ImageView){
    App app;
    Window*w=new Window(100,100,800,600);
    ImageView*iv=new ImageView(400,400);
-   Drawable*d=new BitmapDrawable("/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
+   Drawable*d=new BitmapDrawable(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
    iv->setImageDrawable(d);
    w->addView(iv).setPos(100,100);
    app.exec();

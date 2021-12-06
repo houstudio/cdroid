@@ -87,7 +87,7 @@ protected:
     MediaAdapter*mAdapter;
     AnalogClock*clock;
     LyricsView*lyrics;
-    RefPtr<ImageSurface>image;
+    BitmapDrawable*drbmp;
     std::string media_path;
     bool sort_revert;
     HANDLE player;
@@ -120,21 +120,16 @@ public:
         }
         return url;
     }
-    void onDraw(Canvas&canvas)override{
-        RECT rect=getClientRect();
-        if(image==nullptr)
-            Window::onDraw(canvas);
-        else canvas.draw_image(image,rect,nullptr); 
-    }
 };
 
 MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     player=nullptr;
     filter_type=VIDEO;
     sort_revert=false;
-    setBackgroundColor(0x000000);
-
+    drbmp=new BitmapDrawable(nullptr,"");
+    setBackgroundDrawable(drbmp);
     RelativeLayout*layout=new RelativeLayout(w,h);//LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
+    layout->setBackgroundColor(0x000000);
     RelativeLayout::LayoutParams*lp=new RelativeLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
     lp->addRule(RelativeLayout::ALIGN_PARENT_BOTTOM);
     mFilePath=new TextView("",600,30);
@@ -162,11 +157,16 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mAdapter=new MediaAdapter();
     mAdapter->loadMedias("/");
     mdlist->setAdapter(mAdapter);
+    mdlist->setBackgroundColor(0x000000);
     mAdapter->notifyDataSetChanged();
     mdlist->setOnItemClickListener([&](AdapterView&lv,View&v,int pos,long id){
         const MediaItem mdi=mAdapter->getItemAt(pos);
+        const std::string fname=SimplifyPath(mdi.fullpath);
         processMedia(mdi);
-        mFilePath->setText(SimplifyPath(mdi.fullpath));
+        mFilePath->setText(fname);
+        auto image=getContext()->getImage(fname,false);
+        LOGD("getImage(%s) %p",fname.c_str(),image.get());
+        if(image)drbmp->setBitmap(image);
     });
 
     lyrics=new LyricsView("",440,mdlist->getHeight()+30);

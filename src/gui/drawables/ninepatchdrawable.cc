@@ -11,7 +11,7 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mDither=true;
     mTint=nullptr;
     mTintMode=DEFAULT_TINT_MODE;
-	mChangingConfigurations=0;
+    mChangingConfigurations=0;
     mAutoMirrored=false;
     mPadding.set(0,0,0,0);
     mOpticalInsets.set(0,0,0,0);
@@ -50,13 +50,13 @@ int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{
 
 NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     mNinePatchState=state;
-	mAlpha=255;
+    mAlpha=255;
     computeBitmapSize();
 }
 
-NinePatchDrawable::NinePatchDrawable(){
-    mNinePatchState=std::make_shared<NinePatchState>();
-	mAlpha=255;
+NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
+    mNinePatchState=std::make_shared<NinePatchState>(ctx->getImage(resid,false));
+    mAlpha=255;
     mTintFilter=nullptr;
     computeBitmapSize();
 }

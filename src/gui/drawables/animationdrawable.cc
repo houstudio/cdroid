@@ -117,9 +117,19 @@ Drawable* AnimationDrawable::mutate(){
     return this;
 }
 
+std::shared_ptr<DrawableContainer::DrawableContainerState> AnimationDrawable::cloneConstantState(){
+    return std::make_shared<AnimationState>(mAnimationState.get(),this);
+}
+
 void AnimationDrawable::clearMutated(){
     DrawableContainer::clearMutated();
     mMutated = false;
+}
+
+Drawable*AnimationDrawable::inflate(Context*ctx,const AttributeSet&attrs){
+    AnimationDrawable*d=new AnimationDrawable();
+    d->setOneShot(attrs.getBoolean("oneshot",false));
+    return d;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////

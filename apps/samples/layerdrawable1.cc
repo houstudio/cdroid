@@ -4,12 +4,13 @@
 View* createClockView(const std::string&bgres,int num,...){
     View*v=new View(320,320);
     LayerDrawable*ld=new LayerDrawable();
-    ld->addLayer(new BitmapDrawable(bgres));//fixed background layer
+    cdroid::Context*ctx=&App::getInstance();
+    ld->addLayer(new BitmapDrawable(ctx,bgres));//fixed background layer
     va_list ap;
     va_start(ap,num);
     for(int i=0;i<num;i++){
         const char*s=va_arg(ap,const char*);
-        Drawable*d =new RotateDrawable(new BitmapDrawable(s));//add rotate drawable for other layers
+        Drawable*d =new RotateDrawable(new BitmapDrawable(ctx,s));//add rotate drawable for other layers
         LOGD("drawable %p:%s",d,s);
         ld->addLayer(d);
     }

@@ -39,7 +39,7 @@ private:
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:
-    NinePatchDrawable();
+    NinePatchDrawable(Context*,const std::string&resid);
     NinePatchDrawable(RefPtr<ImageSurface>bmp);
     ~NinePatchDrawable();
     void setTargetDensity(int density);
