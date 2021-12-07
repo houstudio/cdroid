@@ -53,15 +53,15 @@ void ClipDrawable::setOrientation(int orientation){
 
 int ClipDrawable::getOpacity(){
     Drawable* dr = getDrawable();
-    if (dr->getOpacity() == Drawable::TRANSPARENT || dr->getLevel() == 0) {
-        return Drawable::TRANSPARENT;
+    if (dr->getOpacity() == PixelFormat::TRANSPARENT || dr->getLevel() == 0) {
+        return PixelFormat::TRANSPARENT;
     }
 
     if (getLevel() >= MAX_LEVEL) {
         return dr->getOpacity();
     }
     // Some portion of non-transparent drawable is showing.
-    return Drawable::TRANSLUCENT;
+    return PixelFormat::TRANSLUCENT;
 }
 
 bool ClipDrawable::onLevelChange(int level){

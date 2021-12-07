@@ -2595,7 +2595,7 @@ void ListView::setDivider(Drawable* divider) {
         mDividerHeight = 0;
     }
     mDivider = divider;
-    mDividerIsOpaque = divider == nullptr || divider->getOpacity() == Drawable::OPAQUE;
+    mDividerIsOpaque = divider == nullptr || divider->getOpacity() == PixelFormat::OPAQUE;
     if(mAdapter && mItemCount)requestLayout();
     invalidate(true);
 }

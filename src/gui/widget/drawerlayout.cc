@@ -673,7 +673,7 @@ void DrawerLayout::computeScroll() {
 bool DrawerLayout::hasOpaqueBackground(View* v) {
     Drawable* bg = v->getBackground();
     if (bg != nullptr) {
-        return bg->getOpacity() == Drawable::OPAQUE;
+        return bg->getOpacity() == PixelFormat::OPAQUE;
     }
     return false;
 }

@@ -16,12 +16,13 @@ namespace cdroid{
 Assets::Assets(){
     addResource("cdroid.pak","cdroid");
 }
+
 Assets::Assets(const std::string&path):Assets(){
     addResource(path);
     mName=path;
 }
+
 Assets::~Assets(){
-    strings.clear();
     for(auto it=mResources.begin();it!=mResources.end();it++)
        delete it->second;
     mResources.clear();

@@ -10,6 +10,8 @@ private:
     class ShapeState:public std::enable_shared_from_this<ShapeState>,public ConstantState{
     public:
         Shape*mShape;
+        ColorStateList* mTint;
+        int mTintMode;
         Rect mPadding;
         int mChangingConfigurations;
         int mIntrinsicWidth;
@@ -22,12 +24,14 @@ private:
         int getChangingConfigurations()const override;
     };
     bool mMutated;
+    PorterDuffColorFilter*mTintFilter;
     std::shared_ptr<ShapeState>mShapeState;
     void updateShape();
     ShapeDrawable(std::shared_ptr<ShapeState>state);
     void updateLocalState();
 protected:
     void onBoundsChange(const Rect&bounds)override;
+    bool onStateChange(const std::vector<int>&stateset)override;
 public:
     ShapeDrawable();
 
@@ -36,11 +40,18 @@ public:
     bool getPadding(Rect&rect)override;
     void setPadding(const Rect& padding);
     void setPadding(int left, int top, int right, int bottom);
-
+    void setAlpha(int alpha)override;
+    int getAlpha()const override;
+    int getOpacity()override;
+    void setTintList(ColorStateList*)override;
+    void setTintMode(int tintMode)override;
+    void setColorFilter(ColorFilter*colorFilter)override;
     int getIntrinsicWidth()const;
     int getIntrinsicHeight()const;
     void setIntrinsicWidth(int width);
     void setIntrinsicHeight(int height);
+    bool isStateful()const override;
+    bool hasFocusStateSpecified()const override;
     std::shared_ptr<ConstantState>getConstantState()override;
     Drawable*mutate()override;
     void clearMutated()override;

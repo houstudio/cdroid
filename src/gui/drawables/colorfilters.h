@@ -4,9 +4,10 @@
 #include <core/canvas.h>
 namespace cdroid{
 enum TintMode{
-    CLEAR =0,
-    SRC   =1,
-    DST   =2,
+    NONOP =-1,
+    CLEAR = 0,
+    SRC   = 1,
+    DST   = 2,
     SRC_OVER=3,
     DST_OVER=4,
     SRC_IN  =5,

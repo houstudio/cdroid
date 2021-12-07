@@ -33,6 +33,13 @@ public:
     virtual bool unregisterAnimationCallback(AnimationCallback callback)=0;
 };
 
+enum PixelFormat{
+    UNKNOWN=0,
+    TRANSLUCENT=1,
+    TRANSPARENT=2,
+    OPAQUE=3
+};
+
 class Drawable{
 public:
     class Callback{
@@ -64,12 +71,6 @@ protected:
     virtual bool onLayoutDirectionChanged(int layoutDirection){return false;}
     virtual void onBoundsChange(const Rect& bounds){}
 public:
-    enum Opacity{
-        UNKNOWN=0,
-        TRANSLUCENT=1,
-        TRANSPARENT=2,
-        OPAQUE=3
-    };
     Drawable();
     virtual ~Drawable();
     void setBounds(int x,int y,int w,int h);

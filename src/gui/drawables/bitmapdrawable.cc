@@ -155,44 +155,44 @@ bool BitmapDrawable::isAutoMirrored(){
 
 int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
     if(bmp==nullptr||bmp->get_width()==0||bmp->get_height()==0)
-        return Drawable::TRANSPARENT;
+        return PixelFormat::TRANSPARENT;
     if((bmp->get_content()&Cairo::Content::CONTENT_ALPHA)==0)
-        return Drawable::OPAQUE;
+        return PixelFormat::OPAQUE;
 
     if(bmp->get_content()&CONTENT_COLOR==0){
         switch(bmp->get_format()){
-        case Surface::Format::A1: return Drawable::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+        case Surface::Format::A1: return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
         case Surface::Format::A8:
             for(int y=0;y<bmp->get_height();y++){
                 uint8_t*alpha=bmp->get_data()+bmp->get_stride()*y;
                 for(int x=0;x<bmp->get_width();x++,alpha++)
                     if(*alpha > 0 && *alpha < 255)
-                        return Drawable::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
+                        return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
             }
-            return Drawable::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
-        default:return Drawable::TRANSLUCENT; 
+            return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+        default:return PixelFormat::TRANSLUCENT; 
         }
     }
     if(bmp->get_format()==Surface::Format::RGB16_565||bmp->get_format()==Surface::Format::RGB24)
-        return Drawable::OPAQUE;
+        return PixelFormat::OPAQUE;
     if(bmp->get_format()!=Surface::Format::ARGB32)
-        return Drawable::TRANSLUCENT;
+        return PixelFormat::TRANSLUCENT;
     for(int y=0;y<bmp->get_height();y++){
         uint32_t*pixel=(uint32_t*)(bmp->get_data()+bmp->get_stride()*y);
         for (int x = 0; x < bmp->get_width(); x++, pixel++){
             int a = (*pixel & 0xff000000) >> 24;
-            if (a > 0 && a < 255)return Drawable::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
-            else if(a==0)return Drawable::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
+            if (a > 0 && a < 255)return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
+            else if(a==0)return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
         }
     }
-    return  Drawable::OPAQUE;
+    return  PixelFormat::OPAQUE;
 }
 
 int BitmapDrawable::getOpacity(){
     if(mBitmapState->mGravity != Gravity::FILL)
-        return TRANSLUCENT;
+        return PixelFormat::TRANSLUCENT;
     if(mBitmapState->mBitmap==nullptr)
-        return TRANSPARENT;
+        return PixelFormat::TRANSPARENT;
 
     return mBitmapState->mTransparency;
 }

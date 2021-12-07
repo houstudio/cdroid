@@ -33,10 +33,12 @@ int ShapeDrawable::ShapeState::getChangingConfigurations()const{
 
 ShapeDrawable::ShapeDrawable(std::shared_ptr<ShapeState>state){
     mShapeState=state;
+    mTintFilter=nullptr;
 }
 
 ShapeDrawable::ShapeDrawable(){
     mShapeState=std::make_shared<ShapeState>();
+    mTintFilter=nullptr;
 }
 
 std::shared_ptr<Drawable::ConstantState>ShapeDrawable::getConstantState(){
@@ -51,6 +53,22 @@ void ShapeDrawable::setShape(Shape*shape){
 void ShapeDrawable::onBoundsChange(const Rect&bounds){
     Drawable::onBoundsChange(bounds);
     updateShape();
+}
+
+bool ShapeDrawable::onStateChange(const std::vector<int>&stateset){
+    if(mShapeState->mTint&&mShapeState->mTintMode!=TintMode::NONOP){
+        mTintFilter= updateTintFilter(mTintFilter,mShapeState->mTint,mShapeState->mTintMode);
+        return true;
+    }
+    return false;
+}
+
+bool ShapeDrawable::isStateful()const{
+    return Drawable::isStateful()||(mShapeState->mTint&&mShapeState->mTint->isStateful());
+}
+
+bool ShapeDrawable::hasFocusStateSpecified()const{
+    return mShapeState->mTint&&mShapeState->mTint->hasFocusStateSpecified();
 }
 
 Shape*ShapeDrawable::getShape()const{
@@ -80,6 +98,39 @@ void ShapeDrawable::setPadding(int left, int top, int right, int bottom){
     } else {
         mShapeState->mPadding.set(left, top, right, bottom);
     }
+}
+
+void ShapeDrawable::setAlpha(int alpha){
+    mShapeState->mAlpha =alpha;
+    invalidateSelf();
+}
+
+int ShapeDrawable::ShapeDrawable::getAlpha()const{
+    return mShapeState->mAlpha;
+}
+
+int ShapeDrawable::getOpacity(){
+    switch(mShapeState->mAlpha){
+    case 255: return PixelFormat::OPAQUE;
+    case   0: return PixelFormat::TRANSPARENT;
+    default : return PixelFormat::TRANSLUCENT; 
+    }
+}
+
+void ShapeDrawable::setTintList(ColorStateList*tint){
+    mShapeState->mTint = tint;
+    mTintFilter=updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
+    invalidateSelf();
+}
+
+void ShapeDrawable::setTintMode(int tintMode){
+    mShapeState->mTintMode = tintMode;
+    mTintFilter=updateTintFilter(mTintFilter,mShapeState->mTint,tintMode);
+    invalidateSelf();
+}
+
+void ShapeDrawable::setColorFilter(ColorFilter*colorFilter){
+    invalidateSelf();
 }
 
 int ShapeDrawable::getIntrinsicWidth()const{
