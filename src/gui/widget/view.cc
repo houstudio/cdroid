@@ -59,6 +59,13 @@ public:
     }
 };
 
+View::TransformationInfo::TransformationInfo(){
+    mMatrix=identity_matrix();
+    mInverseMatrix=identity_matrix();
+    mAlpha=1.f;
+    mTransitionAlpha =1.f;
+}
+
 class ScrollabilityCache:public Runnable{
 private:
     static constexpr float OPAQUE[] = { 255 };
@@ -5395,7 +5402,6 @@ int View::resolveSizeAndState(int size, int measureSpec, int childMeasuredState)
 void View::ensureTransformationInfo(){
     if (mTransformationInfo == nullptr) {
         mTransformationInfo = new TransformationInfo();
-        mTransformationInfo->mMatrix =identity_matrix();
     }
 }
 
@@ -5413,7 +5419,7 @@ static inline float sdot(float a,float b,float c,float d){
 Matrix View::getMatrix() {
     ensureTransformationInfo();
     //mRenderNode.getMatrix(matrix);
-    Matrix matrix=mTransformationInfo->mMatrix;//identity_matrix();
+    Matrix matrix=mTransformationInfo->mMatrix;
     matrix.translate(mTranslationX,mTranslationY);
     matrix.scale(mScaleX,mScaleY);
 
@@ -5465,7 +5471,7 @@ void View::setY(float y){
 
 void View::setScaleX(float x){
     invalidateViewProperty(true,false);
-    mScaleX = x;
+    mScaleX = (x==.0f)?.00001f:x;//scale cant be zero
     invalidateViewProperty(false,true);
 }
 
@@ -5475,7 +5481,7 @@ float View::getScaleX()const{
 
 void View::setScaleY(float y){
     invalidateViewProperty(true,false);
-    mScaleY = y;
+    mScaleY = (y==.0f)?.00001f:y;//scale cant be zero
     invalidateViewProperty(false,true);
 }
 

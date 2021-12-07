@@ -69,6 +69,7 @@ public:
         Matrix mInverseMatrix;
         float mAlpha = 1.f;
         float mTransitionAlpha = 1.f;
+        TransformationInfo();
     };
 protected:
     //PFLAGS in mPrivateFlags

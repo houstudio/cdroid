@@ -66,7 +66,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig){
     mOpaqueOverBounds = orig.mOpaqueOverBounds;
     mOpaqueOverShape = orig.mOpaqueOverShape;
     mTint = orig.mTint;
-    //mTintMode = orig.mTintMode;
+    mTintMode = orig.mTintMode;
     //mThemeAttrs = orig.mThemeAttrs;
     mAttrSize = orig.mAttrSize;
     mAttrGradient = orig.mAttrGradient;

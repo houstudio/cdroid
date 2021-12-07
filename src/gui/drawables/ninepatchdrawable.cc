@@ -6,13 +6,13 @@ namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 
 NinePatchDrawable::NinePatchState::NinePatchState(){
-    mTint=nullptr;
+    mTint = nullptr;
     mBaseAlpha=1.0f;
-    mDither=true;
-    mTint=nullptr;
-    mTintMode=DEFAULT_TINT_MODE;
-    mChangingConfigurations=0;
-    mAutoMirrored=false;
+    mDither = true;
+    mTint = nullptr;
+    mTintMode = DEFAULT_TINT_MODE;
+    mChangingConfigurations = 0;
+    mAutoMirrored =false;
     mPadding.set(0,0,0,0);
     mOpticalInsets.set(0,0,0,0);
 }
@@ -187,19 +187,19 @@ Drawable* NinePatchDrawable::mutate() {
 }
 
 bool NinePatchDrawable::onStateChange(const std::vector<int>& stateSet){
-    if (mNinePatchState->mTint != nullptr ){//&& mNinePatchState->mTintMode != nullptr) {
-        //mTintFilter = updateTintFilter(mTintFilter, mNinePatchState->mTint, mNinePatchState->mTintMode);
+    if (mNinePatchState->mTint && mNinePatchState->mTintMode != TintMode::NONOP) {
+        mTintFilter = updateTintFilter(mTintFilter, mNinePatchState->mTint, mNinePatchState->mTintMode);
         return true;
     }
     return false;
 }
 
 bool NinePatchDrawable::isStateful()const{
-    return Drawable::isStateful() || (mNinePatchState->mTint != nullptr && mNinePatchState->mTint->isStateful());
+    return Drawable::isStateful() || (mNinePatchState->mTint && mNinePatchState->mTint->isStateful());
 }
 
 bool NinePatchDrawable::hasFocusStateSpecified()const {
-    return mNinePatchState->mTint != nullptr && mNinePatchState->mTint->hasFocusStateSpecified();
+    return mNinePatchState->mTint && mNinePatchState->mTint->hasFocusStateSpecified();
 }
 
 std::shared_ptr<Drawable::ConstantState>NinePatchDrawable::getConstantState(){

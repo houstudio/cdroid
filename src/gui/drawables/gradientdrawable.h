@@ -74,6 +74,7 @@ private:
        bool mOpaqueOverBounds;
        bool mOpaqueOverShape;
        ColorStateList*mTint;
+       int mTintMode;
        int mDensity;
        std::vector<int>mAttrSize;
        std::vector<int>mAttrGradient;

@@ -29,14 +29,14 @@ int ColorDrawable::ColorState::getChangingConfigurations()const{
 
 ColorDrawable::ColorDrawable(int color){
     mColorState=std::make_shared<ColorState>();
-	mMutated=false;
+    mMutated=false;
     mTintFilter=nullptr;
     setColor(color);
 }
 
 ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
     mColorState = state;
-	mMutated=false;
+    mMutated=false;
 }
 
 std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
@@ -83,7 +83,7 @@ void ColorDrawable::setAlpha(int alpha){
 }
 
 bool ColorDrawable::onStateChange(const std::vector<int>&stateSet){
-    if (mColorState->mTint != nullptr/*& && state.mTintMode != null*/) {
+    if (mColorState->mTint && mColorState->mTintMode != TintMode::NONOP) {
         mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, mColorState->mTintMode);
         return true;
     }
@@ -105,12 +105,13 @@ void ColorDrawable::setTintMode(int tintMode) {
     mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, tintMode);
     invalidateSelf();
 }
+
 bool ColorDrawable::isStateful()const{
-    return mColorState->mTint  && mColorState->mTint->isStateful();
+    return mColorState->mTint && mColorState->mTint->isStateful();
 }
 
 bool ColorDrawable::hasFocusStateSpecified()const{
-    return mColorState->mTint  && mColorState->mTint->hasFocusStateSpecified();
+    return mColorState->mTint && mColorState->mTint->hasFocusStateSpecified();
 }
 
 void ColorDrawable::draw(Canvas&canvas){

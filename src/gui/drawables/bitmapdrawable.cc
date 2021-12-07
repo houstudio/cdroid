@@ -261,7 +261,7 @@ void BitmapDrawable::onBoundsChange(const Rect&r){
 }
 
 bool BitmapDrawable::onStateChange(const std::vector<int>&){
-    if (mBitmapState->mTint  /*&& mBitmapState->mTintMode != nullptr*/) {
+    if (mBitmapState->mTint  && mBitmapState->mTintMode != TintMode::NONOP) {
         mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
         return true;
     }
@@ -313,7 +313,7 @@ void BitmapDrawable::draw(Canvas&canvas){
             RefPtr<SurfacePattern>pats= SurfacePattern::create(subs); 
             canvas.set_source(pats);
             if(mBounds.height>mBitmapHeight&&mBitmapState->mTileModeY==TileMode::DISABLED)
-                 setPatternByTileMode(pats,TileMode::CLAMP);//mBitmapState->mTileModeY);
+                 setPatternByTileMode(pats,TileMode::CLAMP);
             else setPatternByTileMode(pats,mBitmapState->mTileModeY);
             canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
             canvas.fill();
@@ -334,12 +334,12 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
             canvas.fill();
         } 
-    }else{
+    }else {
         const float sw=mBitmapWidth, sh = mBitmapHeight;
         float dx = mBounds.left    , dy = mBounds.top;
         float dw = mBounds.width   , dh = mBounds.height;
         const float fx = dw / sw   , fy = dh / sh;
-        const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255;
+        const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
@@ -377,12 +377,11 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
 	      {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
 		  {"repeat",TileMode::REPEAT},  {"mirror",TileMode::MIRROR}};
     const int tileMode = atts.getInt("tileMode",kvs,-1);
-    int tileModeX= atts.getInt("tileModeX",kvs,tileMode);
-    int tileModeY= atts.getInt("tileModeY",kvs,tileMode);
+    const int tileModeX= atts.getInt("tileModeX",kvs,tileMode);
+    const int tileModeY= atts.getInt("tileModeY",kvs,tileMode);
     std::string path=src;
     if(ctx==nullptr)path=atts.getAbsolutePath(src);
 
-    LOGD("src=%s",src.c_str());
     if(src.empty())  return nullptr;
     BitmapDrawable*d=new BitmapDrawable(ctx,path);
     LOGD("bitmap=%p",d);

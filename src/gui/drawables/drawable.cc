@@ -66,8 +66,10 @@ int Drawable::getOpacity(){
 
 void Drawable::setHotspot(float x,float y){
 }
+
 void Drawable::setHotspotBounds(int left,int top,int width,int height){
 }
+
 void Drawable::getHotspotBounds(Rect&outRect){
     outRect=mBounds;
 }
@@ -97,7 +99,7 @@ void Drawable::setTint(int color){
 }
 
 PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFilter,ColorStateList* tint,int tintMode){
-    if (tint == nullptr/*|| tintMode == nullptr*/) {
+    if (tint == nullptr|| tintMode == TintMode::NONOP) {
         return nullptr;
      }
 

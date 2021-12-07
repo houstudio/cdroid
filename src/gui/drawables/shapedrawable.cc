@@ -4,6 +4,8 @@ namespace cdroid{
 ShapeDrawable::ShapeState::ShapeState(){
     mAlpha=255;
     mShape=nullptr;
+    mTint =nullptr;
+    mTintMode =TintMode::NONOP;
     mIntrinsicWidth=0;
     mIntrinsicHeight=0;
     mPadding.set(0,0,0,0);
@@ -13,8 +15,10 @@ ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig){
     mIntrinsicWidth = orig.mIntrinsicWidth;
     mIntrinsicHeight = orig.mIntrinsicHeight;
     mPadding=orig.mPadding;
-    mAlpha = orig.mAlpha;
-    mShape =  orig.mShape?orig.mShape->clone():nullptr;
+    mAlpha  = orig.mAlpha;
+    mShape  = orig.mShape?orig.mShape->clone():nullptr;
+    mTint   = new ColorStateList(*orig.mTint);
+    mTintMode =orig.mTintMode;
 }
 
 Drawable* ShapeDrawable::ShapeState::newDrawable(){
@@ -23,6 +27,7 @@ Drawable* ShapeDrawable::ShapeState::newDrawable(){
 
 ShapeDrawable::ShapeState::~ShapeState(){
     delete mShape;
+    delete mTint;
 }
 
 int ShapeDrawable::ShapeState::getChangingConfigurations()const{
@@ -152,7 +157,7 @@ void ShapeDrawable::setIntrinsicHeight(int height){
 }
 
 void ShapeDrawable::updateLocalState(){
-    //mTintFilter = updateTintFilter(mTintFilter, mShapeState.mTint, mShapeState.mTintMode);
+    mTintFilter = updateTintFilter(mTintFilter, mShapeState->mTint, mShapeState->mTintMode);
 }
 
 Drawable*ShapeDrawable::mutate(){

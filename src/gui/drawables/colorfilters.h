@@ -29,6 +29,7 @@ typedef TintMode PorterDuffMode;
 class ColorFilter{
 public:
     virtual void apply(Canvas&canvas,const Rect&)=0;
+    static int tintMode2CairoOperator(int tintMode);
 };
 
 class ColorMatrixColorFilter:public ColorFilter{
