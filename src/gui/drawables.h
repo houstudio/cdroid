@@ -5,6 +5,7 @@
 #include <drawables/colordrawable.h>
 #include <drawables/bitmapdrawable.h>
 #include <drawables/ninepatchdrawable.h>
+#include <drawables/paintdrawable.h>
 #include <drawables/picturedrawable.h>
 #include <drawables/gradientdrawable.h>
 #include <drawables/transitiondrawable.h>

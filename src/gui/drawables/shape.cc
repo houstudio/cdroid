@@ -204,6 +204,9 @@ void ArcShape::draw(Canvas&canvas){
     canvas.restore();
 }
 
+OvalShape::OvalShape():RectShape(){
+}
+
 void OvalShape::draw(Canvas&canvas){
     Rect r=rect();
 
@@ -239,53 +242,61 @@ Shape*RoundRectShape::clone()const{
 }
 
 void RoundRectShape::setRadius(int radius){
-    
+    mOuterRadii.resize(8);
+    for(int i=0;i<8;i++)mOuterRadii[i]=radius; 
 }
 
 void RoundRectShape::onResize(int w, int h){
     RectShape::onResize(w,h);
     Rect r=rect();
     mInnerRect.set(r.left+mInset.left,r.top+mInset.top,
-                r.right()-mInset.left-mInset.width,r.bottom()-mInset.top-mInset.height);
+        r.right()-mInset.left-mInset.width,r.bottom()-mInset.top-mInset.height);
+}
+
+static void round2pts(const Rect&r,const int*radius,float*pts){
+    pts[0]=r.left+radius[0];     
+    pts[1]=r.top+radius[1];
+
+    pts[2]=r.right()-radius[2];
+    pts[3]=r.top+radius[3];
+
+    pts[4]=r.right()-radius[4];
+    pts[5]=r.bottom()-radius[5];
+
+    pts[6]=r.left+radius[6];
+    pts[7]=r.bottom()-radius[7];
+    LOGD("rect(%d,%d,%d,%d) radius=%d,%d;%d,%d;%d,%d;%d,%d",r.left,r.top,r.right(),r.bottom(),
+       radius[0],radius[1],radius[2],radius[3],
+       radius[4],radius[5],radius[6],radius[7]);
 }
 
 void RoundRectShape::draw(Canvas&canvas){
     const double degree = M_PI/180;
-    const Rect r=rect();
     const int *radius=mOuterRadii.data();
-    const float pts[8]={
-        (float)r.left+radius[0]        ,  (float)r.top+radius[1],           
-        (float)r.left+mWidth-radius[2] ,  (float)r.top+radius[3],
-        (float)r.left+mWidth-radius[4] ,  (float)r.top+mHeight-radius[5],     
-        (float)r.left+radius[6]        ,  (float)r.top+mHeight-radius[7] 
-    };
-
+    float pts[8];
     float db=180;
-    canvas.begin_new_sub_path();
-    for(int i=0;i<8;i+=2){
-        canvas.translate(pts[i],pts[i+1]);
-        canvas.scale(1,(float)radius[i+1]/radius[i]);
-        canvas.arc(0,0,radius[i],db*degree,(db+90)*degree);
-        canvas.scale(1,(float)radius[i]/radius[i+1]);
-        canvas.translate(-pts[i],-pts[i+1]);
-        db+=90.;
+
+    std::vector<int>*radiuss[2]={&mOuterRadii,&mInnerRadii};
+    Rect rects[2];
+    rects[0]=rects[1]=rect();
+    rects[1].inflate(-50,-50);//-mStrokeWidth,-mStrokeWidth);
+    for(int ii=0;ii<2;ii++){
+        if(radiuss[ii]->size()==0){
+            Rect r=rects[ii];
+            canvas.rectangle(r.left,r.top,r.width,r.height);
+        }else{ 
+            round2pts(rects[ii],radiuss[ii]->data(),pts);
+            for(int i=0;i<8;i+=2){
+                canvas.translate(pts[i],pts[i+1]);
+                canvas.scale(1,(float)radius[i+1]/radius[i]);
+                canvas.arc(0,0,radius[i],db*degree,(db+90)*degree);
+                canvas.scale(1,(float)radius[i]/radius[i+1]);
+                canvas.translate(-pts[i],-pts[i+1]);
+                db+=90.f;
+            }canvas.line_to(pts[0]-radius[0],pts[1]);
+        }
     }
-    canvas.line_to(pts[0]-radius[0],pts[1]);
-    canvas.close_path();
-#if 0
-    radius=mInnerRadii.data();
-    canvas.begin_new_sub_path();
-    for(int i=0;i<8;i+=2){
-        canvas.translate(pts[i],pts[i+1]);
-        canvas.scale(1,(float)radius[i+1]/radius[i]);
-        canvas.arc(0,0,radius[i],db*degree,(db+90)*degree);
-        canvas.scale(1,(float)radius[i]/radius[i+1]);
-        canvas.translate(-pts[i],-pts[i+1]);
-        db+=90.;
-    }
-    canvas.line_to(pts[0]-radius[0],pts[1]);
-    canvas.close_path();
-#endif
+    canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);//WINDING);//EVEN_ODD
     fill_stroke(canvas);
 }
 }

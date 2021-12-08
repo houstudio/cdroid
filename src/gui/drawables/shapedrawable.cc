@@ -51,6 +51,8 @@ std::shared_ptr<Drawable::ConstantState>ShapeDrawable::getConstantState(){
 }
 
 void ShapeDrawable::setShape(Shape*shape){
+    if(mShapeState->mShape)
+       delete mShapeState->mShape;
     mShapeState->mShape=shape;
     updateShape();
 }

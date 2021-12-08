@@ -72,6 +72,7 @@ public:
 
 class OvalShape:public RectShape{
 public:
+    OvalShape();
     void draw(Canvas&canvas)override;
 };
 
