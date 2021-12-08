@@ -5588,7 +5588,16 @@ float View::getAlpha()const{
 }
 
 void View::setAlpha(float a){
-    mAlpha= a;
+    ensureTransformationInfo();
+    if(mTransformationInfo->mAlpha != a){
+       mTransformationInfo->mAlpha= a;
+       if(onSetAlpha((int)(a*255))){
+           mPrivateFlags |= PFLAG_ALPHA_SET;
+       }else{
+           mPrivateFlags &= ~PFLAG_ALPHA_SET;
+       }
+       invalidate();
+    }
 }
 
 

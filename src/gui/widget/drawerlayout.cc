@@ -1234,7 +1234,7 @@ View& DrawerLayout::addView(View* child, int index, ViewGroup::LayoutParams* par
     if (!CAN_HIDE_DESCENDANTS) {
         //setAccessibilityDelegate(child, mChildAccessibilityDelegate);
     }
-    return *this;
+    return *child;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

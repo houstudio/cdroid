@@ -65,7 +65,7 @@ void CubeOutTransformer::onTransform(View& view, float position) {
 }
 
 bool CubeOutTransformer::isPagingEnabled() {
-   return true;
+    return true;
 }
 
 void DefaultTransformer::onTransform(View& view, float position){}
