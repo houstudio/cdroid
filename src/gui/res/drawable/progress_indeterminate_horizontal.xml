@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list
+       xmlns:android="http://schemas.android.com/apk/res/android"
+       oneshot="false">
+    <item drawable="cdroid:mipmap/progressbar_indeterminate1.png" duration="200" />
+    <item drawable="cdroid:mipmap/progressbar_indeterminate2.png" duration="200" />
+    <item drawable="cdroid:mipmap/progressbar_indeterminate3.png" duration="200" />
+</animation-list>

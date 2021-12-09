@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        oneshot="false">
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo1.png" duration="50" />
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo2.png" duration="50" />
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo3.png" duration="50" />
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo4.png" duration="50" />
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo5.png" duration="50" />
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo6.png" duration="50" />
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo7.png" duration="50" />
+    <item drawable="cdroid:drawable-mdpi/progressbar_indeterminate_holo8.png" duration="50" />
+</animation-list>

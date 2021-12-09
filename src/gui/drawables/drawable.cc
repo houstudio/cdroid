@@ -350,7 +350,10 @@ static void parseShapeGradient(Shape*shape,const AttributeSet&atts){
 
     shape->setGradientCenterX(atts.getFloat("centerX"));
     shape->setGradientCenterY(atts.getFloat("centerY"));
-    shape->setGradientAngle(90);//atts.getFloat("angle",.0));
+    shape->setGradientAngle(atts.getFloat("angle",.0));
+    shape->setGradientType(atts.getInt("type",std::map<const std::string,int>{
+         {"linear",Shape::Gradient::LINEAR},   {"radial",Shape::Gradient::RADIAL},
+         {"sweep",Shape::Gradient::SWEEP}},Shape::Gradient::LINEAR));
     if(atts.hasAttribute("gradientRadius"))
         shape->setGradientRadius(atts.getDimensionPixelSize("gradientRadius"));
 

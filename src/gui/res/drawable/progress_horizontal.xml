@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     
     <item id="0">
-        <shape shape="roundrect">
+        <shape shape="rectangle">
             <corners radius="5dip" />
             <gradient
                     startColor="#ff9d9e9d"
@@ -16,7 +16,7 @@
     
     <item id="1">
         <clip>
-            <shape shape="roundrect">
+            <shape shape="rectangle">
                 <corners radius="5dip" />
                 <gradient
                         startColor="#ffffd300"
@@ -31,7 +31,7 @@
     
     <item id="2">
         <clip>
-            <shape shape="roundrect">
+            <shape shape="rectangle">
                 <corners radius="5dip" />
                 <gradient
                         startColor="#80ffd300"

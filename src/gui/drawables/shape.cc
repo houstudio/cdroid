@@ -88,7 +88,6 @@ void Shape::setGradientAngle(float a){
 
 void Shape::setGradientType(int gt){
     mGradientType=gt;
-    LOGD("mGradientType=%d",mGradientType);
 }
 
 void Shape::setGradientCenterX(float x){
@@ -104,6 +103,7 @@ void Shape::applyGradients(){
     cls.resize(mGradientColors.size());
     for(int i=0;i<mGradientColors.size();i++){
         cls[i]=Color(mGradientColors[i]);
+        LOGV("gradient.colors[%d]=%x",i,mGradientColors[i]);
     }
     RefPtr<Cairo::Gradient> g=std::make_shared<Cairo::Gradient>(mPaint->cobj());
     switch(mGradientColors.size()){
