@@ -5,34 +5,42 @@ namespace cdroid{
 
 class Shape{
 protected:
-    int mWidth,mHeight;
+    Rect mRect;
     int mStrokeColor;
     float mStrokeWidth;
     int mDashWidth;
     int mDashGap;
     int mGradientType;//0-solid,1--linear,2--radial 3--sweep
-    float mRadius;
-    float mAngle;
-    float mCenterX,mCenterY;
-    bool mRebuildGradient;
-    bool bUseLevel;
+    float mGradientRadius;
+    float mGradientAngle;
+    float mGradientCenterX;
+    float mGradientCenterY;
+    bool  mRebuildGradient;
+    bool  bUseLevel;
     std::vector<uint32_t>mGradientColors;//size 0:nofill, 1:solid fill 2,3:gradient fill
     RefPtr<Pattern>mPaint;//used to fill
     void rebuildPattern(const Rect&r);
     virtual void onResize(int width,int height){}
     void fill_stroke(Canvas&canvas);
-    virtual const Rect&rect()const=0;
     Shape(const Shape&o);
+    const Rect& rect()const;
+    void applyGradients();
 public:
+    enum Gradient{
+        SOLID =0,
+        LINEAR=1,
+        RADIAL=2,
+        SWEEP =3
+    };
     Shape();
-    int getWidth()const{return mWidth;}
-    int getHeight()const{return mHeight;}
+    int getWidth()const;
+    int getHeight()const;
     void resize(int width, int height);
     void setUseLevel(bool);
     void setStrokeColor(int color);
     void setStrokeSize(float width);
     void setStrokeDash(int width,int gap);
-    int getStroke(int &color)const;//return line width,color
+    int  getStroke(int &color)const;//return line width,color
     void setSolidColor(int color);
     void setGradientColors(const std::vector<uint32_t>&cls);//gradient fill colors
     void setGradientAngle(float angle);
@@ -45,14 +53,19 @@ public:
 };
 
 class RectShape:public Shape{
-private:
-    Rect mRect;
+protected:
+    std::vector<float>mOuterRadii;
+    std::vector<float>mInnerRadii;
+    Rect mInset;
+    Rect mInnerRect;
 protected:
     RectShape(const RectShape&o);
-    const Rect& rect()const override{return mRect;}
     void onResize(int width,int height)override;
 public:
     RectShape();
+    void setOuterRadii(const std::vector<float>&);
+    void setInnerRadii(const std::vector<float>&);
+    void setRadius(float radius);
     void draw(Canvas&canvas)override;
     Shape*clone()const override;
 };
@@ -71,24 +84,33 @@ public:
 };
 
 class OvalShape:public RectShape{
+private:
+    float mInnerRadius;
+    float mInnerRadiusRatio;
+    float mThickness;
+    float mThicknessRatio;
 public:
     OvalShape();
+    void setInnerRadius(float);
+    float getInnerRadius()const;
+    void setInnerRadiusRatio(float);
+    float getInnerRadiusRatio()const;
+    void setThickness(float);
+    float getThickness()const;
+    void setThicknessRatio(float);
+    float getThicknessRatio()const;
     void draw(Canvas&canvas)override;
 };
 
 class RoundRectShape:public RectShape{
 private:
-    std::vector<int>mOuterRadii;
-    std::vector<int>mInnerRadii;
-    Rect mInset;
-    Rect mInnerRect;
+    void drawRound(Canvas&canvas,const Rect&r,const std::vector<float>&radii);
 protected:
     RoundRectShape(const RoundRectShape&o);
     void onResize(int w, int h)override;
 public:
     RoundRectShape();
-    RoundRectShape(const std::vector<int>&outRadii,const Rect&inset,const std::vector<int>&innerRadii);
-    void setRadius(int radius);
+    RoundRectShape(const std::vector<float>&outRadii,const Rect&inset,const std::vector<float>&innerRadii);
     void draw(Canvas&canvas)override;
     Shape*clone()const override;
 };

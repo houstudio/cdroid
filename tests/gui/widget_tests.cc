@@ -131,7 +131,6 @@ TEST_F(WIDGET,ProgressBar){
     pb->setIndeterminate(true);
     w->addView(ll);
 
-    //w->sendMessage(View::WM_TIMER,0,0,500);
     Runnable run;
     run=[&](){
        ((ProgressBar*)w->findViewById(100))->setProgress(pos);

@@ -16,7 +16,7 @@ void DrawerLayout::initView(){
     mShadowStart= mShadowEnd  = nullptr;
     mShadowLeft = mShadowRight= nullptr;
     setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
-    float density = 2.65;//getResources().getDisplayMetrics().density;
+    const float density = mContext->getDisplayMetrics().density;
     mMinDrawerMargin = (int) (MIN_DRAWER_MARGIN * density + 0.5f);
     float minVel = MIN_FLING_VELOCITY * density;
 

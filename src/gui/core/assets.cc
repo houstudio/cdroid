@@ -29,6 +29,10 @@ Assets::~Assets(){
     LOGD("%p Destroied",this);
 }
 
+const DisplayMetrics& Assets::getDisplayMetrics(){
+    return mDisplayMetrics;
+}
+
 int Assets::addResource(const std::string&path,const std::string&name){
     ZIPArchive*pak=new ZIPArchive(path);
     size_t pos=name.find_last_of('/');

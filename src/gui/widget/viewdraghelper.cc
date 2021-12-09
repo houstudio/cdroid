@@ -16,7 +16,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mParentView = forParent;
     mCallback = cb;
     ViewConfiguration vc = ViewConfiguration::get(context);
-    float density =2.65f;// context.getResources().getDisplayMetrics().density;
+    const float density =context->getDisplayMetrics().density;
     mEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
     mCapturedView = nullptr;
     mPointersDown = INVALID_POINTER;

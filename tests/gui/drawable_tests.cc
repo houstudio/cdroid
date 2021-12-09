@@ -173,14 +173,49 @@ TEST_F(DRAWABLE,rectshape){
 
 TEST_F(DRAWABLE,roundrectshape){
     RECT rect={2,2,2,2};
-    std::vector<int>out={40,30,50,30,50,30,40,30};
-    std::vector<int>in={30,20,30,20,30,20,30,20};
+    std::vector<float>out={40,30,50,30,50,30,40,30};
+    std::vector<float>in={30,20,30,20,30,20,30,20};
     RoundRectShape*rs=new RoundRectShape(out,rect,in);
+    rs->setStrokeColor(0xFFFF0000);
+    rs->setGradientColors(std::vector<uint32_t>{0xFFFF0000,0xFF00FF00,0xFF0000FF});
+    rs->setGradientType(Shape::Gradient::RADIAL);
+    rs->setGradientAngle(45);
+    rs->setStrokeSize(5);
     rs->resize(500,500);
     ctx->set_color(0xFF00FF00);
     ctx->translate(50,50);
     rs->draw(*ctx);
     ctx->fill();
+}
+
+TEST_F(DRAWABLE,ringshape){
+    OvalShape*rs=new OvalShape();
+    rs->setStrokeColor(0xFFFF0000);
+    rs->setSolidColor(0xFF00FF00);
+    rs->setStrokeSize(5);
+    rs->setThickness(80);
+    rs->setGradientType(Shape::Gradient::LINEAR);
+    rs->setGradientColors(std::vector<uint32_t>{0xFFFF0000,0xFF00FF00,0xFF0000FF});
+    rs->setGradientRadius(100);
+    rs->setGradientCenterX(.5f);
+    rs->setGradientCenterY(.5f);
+    rs->resize(500,500);
+    ctx->set_color(0xFF00FF00);
+    ctx->translate(50,50);
+    for(int i=0;i<8;i++){
+       rs->setGradientAngle(45*i);
+       rs->draw(*ctx);
+       ctx->save();
+       ctx->set_line_width(5);
+       ctx->rotate_degrees(45*i);
+       ctx->move_to(0,200);
+       ctx->line_to(500,200);
+       ctx->set_source_rgb(1,1,1);
+       ctx->stroke();
+       ctx->restore();
+       postCompose();
+       sleep(1);
+    }
 }
 
 TEST_F(DRAWABLE,insetdrawable){

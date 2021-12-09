@@ -356,7 +356,7 @@ void Spinner::DropdownPopup::computeContentWidth() {
 
     if (mDropDownWidth  == LayoutParams::WRAP_CONTENT) {
         int contentWidth =  mSpinner->measureContentWidth(mSpinner->getAdapter(), mSpinner->getBackground());
-        int contentWidthLimit = 1280-mTempRect.width;//mContext.getResources().getDisplayMetrics().widthPixels - mTempRect.width;
+        int contentWidthLimit = mSpinner->getContext()->getDisplayMetrics().widthPixels - mTempRect.width;
         if (contentWidth > contentWidthLimit) {
             contentWidth = contentWidthLimit;
         }

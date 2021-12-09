@@ -49,7 +49,7 @@ OverScroller::SplineOverScroller::SplineOverScroller(Context* context) {
     if(SPLINE_POSITION[NB_SAMPLES] !=1.0f || SPLINE_TIME[NB_SAMPLES]!=1.0f)
         sInit();
     mFinished = true;
-    const float ppi = 2.65f*160.f;//context.getResources().getDisplayMetrics().density * 160.0f;
+    const float ppi = context->getDisplayMetrics().density * 160.0f;
     mPhysicalCoeff = 9.80665f//SensorManager.GRAVITY_EARTH // g (m/s^2)
             * 39.37f // inch/meter
             * ppi

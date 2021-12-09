@@ -186,14 +186,16 @@ void ShapeDrawable::draw(Canvas&canvas){
 }
 
 Drawable*ShapeDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string type=atts.getString("shape");
+    const std::string type=atts.getString("shape");//rectangle,line,oval,ring
     Shape*shape=nullptr;
-    if(type.compare("rectangle")==0)  shape = new RectShape();
-    else if(type.compare("roundrect")==0)shape=new RoundRectShape();
-    else if(type.compare("oval")==0)  shape = new OvalShape();
-    else if(type.compare("ring")==0){
-        shape = new OvalShape();
-        shape->setStrokeSize(atts.getInt("thickness"));
+    if(type.compare("rectangle")==0)  shape = new RoundRectShape();
+    else if(type.compare("ring")==0||type.compare("oval")==0){
+        OvalShape*oval = new OvalShape();
+        shape =oval;
+        oval->setThickness(atts.getInt("thickness"));
+        oval->setThicknessRatio(atts.getFloat("thicknessRatio",.0f));
+        oval->setInnerRadius(atts.getInt("innerRadius",0)); 
+        oval->setInnerRadiusRatio(atts.getFloat("innerRadiusRatio",.0f));
     }else if(type.compare( "arc")==0)  shape = new ArcShape(0,0);
     ShapeDrawable*d=new ShapeDrawable();
     d->setShape(shape);

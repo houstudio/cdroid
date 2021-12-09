@@ -357,16 +357,23 @@ static void parseShapeGradient(Shape*shape,const AttributeSet&atts){
     std::string type=atts.getString("type");
     if(!type.empty()){
         switch(type[0]){
-        case 'l': shape->setGradientType(1); break; //linear gradient
-        case 'r': shape->setGradientType(2); break; //radial gradient
-        case 's': shape->setGradientType(3); break; //sweep  gradient(not support)
+        case 'l': shape->setGradientType(Shape::Gradient::LINEAR); break; //linear gradient
+        case 'r': shape->setGradientType(Shape::Gradient::RADIAL); break; //radial gradient
+        case 's': shape->setGradientType(Shape::Gradient::SWEEP);  break; //sweep  gradient(not support)
         }
     }
 }
 
 static void parseCorners(Shape*shape,const AttributeSet&atts){
     int radius=atts.getDimensionPixelSize("radius",-1);
-    
+    int topLeftRadius =atts.getDimensionPixelSize("topLeftRadius",radius);
+    int topRightRadius=atts.getDimensionPixelSize("topRightRadius",radius);
+    int bottomRightRadius=atts.getDimensionPixelSize("bottomRightRadius",radius);
+    int bottomLeftRadius =atts.getDimensionPixelSize("bottomLeftRadius",radius);
+    if(dynamic_cast<RoundRectShape*>(shape)){
+        RoundRectShape*rs=(RoundRectShape*)shape;
+        rs->setOuterRadii(std::vector<float>{topLeftRadius,topRightRadius,bottomRightRadius,bottomLeftRadius});
+    }
 }
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){

@@ -48,7 +48,7 @@ void ViewPager::initViewPager(){
     mPageTransformer =nullptr;
     mFakeDragging =false;
     ViewConfiguration configuration = ViewConfiguration::get(context);
-    float density = 2.65f;//context.getResources().getDisplayMetrics().density;
+    const float density = context->getDisplayMetrics().density;
 
     mTouchSlop = configuration.getScaledPagingTouchSlop();
     mMinimumVelocity = (int) (MIN_FLING_VELOCITY * density);

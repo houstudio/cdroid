@@ -35,7 +35,7 @@ Scroller::Scroller(Context* context, Interpolator* interpolator, bool flywheel) 
     } else {
         mInterpolator = interpolator;
     }
-    mPpi = 160.f;//context.getResources().getDisplayMetrics().density * 160.0f;
+    mPpi = context->getDisplayMetrics().density * 160.0f;
     mDeceleration = computeDeceleration(ViewConfiguration::getScrollFriction());
     mFlywheel = flywheel;
     mFlingFriction = ViewConfiguration::getScrollFriction();

@@ -178,6 +178,7 @@ protected:
     int mChoiceMode;
     int mCheckedItemCount;
     int mTouchSlop;
+    float mDensityScale;
     int mSelectedTop;
     int mStackFromBottom;
     bool mScrollingCacheEnabled;

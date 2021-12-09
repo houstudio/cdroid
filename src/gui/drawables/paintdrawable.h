@@ -9,7 +9,7 @@ public:
     PaintDrawable();
     PaintDrawable(int color);
     void setCornerRadius(float radius);
-    void setCornerRadii(const std::vector<int>& radius);
+    void setCornerRadii(const std::vector<float>& radius);
 };
 
 }

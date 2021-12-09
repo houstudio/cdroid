@@ -3,7 +3,7 @@ namespace cdroid{
 int DisplayMetrics::DENSITY_DEVICE=DENSITY_DEFAULT;
 int DisplayMetrics::DENSITY_DEVICEE_STABLE=DENSITY_DEFAULT;
 DisplayMetrics::DisplayMetrics(){
-
+    setToDefaults();
 }
 
 void DisplayMetrics::setTo(const DisplayMetrics& o) {
@@ -26,8 +26,8 @@ void DisplayMetrics::setTo(const DisplayMetrics& o) {
 }
 
 void DisplayMetrics::setToDefaults() {
-    widthPixels = 0;
-    heightPixels = 0;
+    widthPixels = 1280;
+    heightPixels = 720;
     density =  DENSITY_DEVICE / (float) DENSITY_DEFAULT;
     densityDpi =  DENSITY_DEVICE;
     scaledDensity = density;

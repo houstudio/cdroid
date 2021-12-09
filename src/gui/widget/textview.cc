@@ -115,7 +115,7 @@ private:
 public:
     Marquee(TextView* v,Layout*lt) {
         mStatus = MARQUEE_STOPPED;
-        float density = 2.65f;//v.getContext().getResources().getDisplayMetrics().density;
+        float density = v->getContext()->getDisplayMetrics().density;
         mPixelsPerMs = MARQUEE_DP_PER_SECOND * density / 1000.f;
         mView = v;
         mLayout=lt;

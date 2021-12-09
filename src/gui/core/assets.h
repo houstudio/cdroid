@@ -19,6 +19,7 @@ private:
     int loadAttributes(std::map<const std::string,AttributeSet>&atts,const std::string&resid);
 protected:
     std::string mName;
+    DisplayMetrics mDisplayMetrics;
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
 public:
@@ -27,6 +28,7 @@ public:
     ~Assets();
     int loadStyles(const std::string&resid);
     void clearStyles();
+    const DisplayMetrics&getDisplayMetrics()override;
     const std::string& getString(const std::string&id,const std::string&lan="")override;
     RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)override;
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
