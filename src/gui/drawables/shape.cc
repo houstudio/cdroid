@@ -159,7 +159,6 @@ void Shape::fill_stroke(Canvas&canvas,int x,int y){
     if(mGradientColors.size()){
         rebuildPattern(x,y);
         mPaint->set_matrix(canvas.get_matrix());
-        mPaint->set_matrix(mtx);
         canvas.set_source(mPaint);
         if(bstroke)
             canvas.fill_preserve();
