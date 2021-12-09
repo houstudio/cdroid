@@ -180,7 +180,7 @@ void ShapeDrawable::draw(Canvas&canvas){
     const Rect&r = getBounds();
     if(mShapeState->mShape!=nullptr){
         canvas.translate(r.left,r.top);
-        mShapeState->mShape->draw(canvas);
+        mShapeState->mShape->draw(canvas,r.left,r.top);
         canvas.translate(-r.left,-r.top);
     }
 }

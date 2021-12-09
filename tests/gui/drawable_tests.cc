@@ -56,7 +56,7 @@ public:
     virtual void TearDown(){
         ctx->restore();
         postCompose();
-        sleep(1);
+        sleep(65);
     }
 };
 
@@ -173,19 +173,39 @@ TEST_F(DRAWABLE,rectshape){
 
 TEST_F(DRAWABLE,roundrectshape){
     RECT rect={2,2,2,2};
-    std::vector<float>out={40,30,50,30,50,30,40,30};
-    std::vector<float>in={30,20,30,20,30,20,30,20};
+    std::vector<float>out={40,30,50,30};
+    std::vector<float>in={};//{30,20,30,20};
     RoundRectShape*rs=new RoundRectShape(out,rect,in);
     rs->setStrokeColor(0xFFFF0000);
-    rs->setGradientColors(std::vector<uint32_t>{0xFFFF0000,0xFF00FF00,0xFF0000FF});
+    rs->setGradientColors(std::vector<uint32_t>{0xFFFF0000,0xFF00FF00});//,0xFF0000FF});
     rs->setGradientType(Shape::Gradient::RADIAL);
-    rs->setGradientAngle(45);
+    rs->setGradientAngle(0);
     rs->setStrokeSize(5);
+    rs->setGradientCenterX(.5f);
+    rs->setGradientCenterY(.5f);
+    rs->setGradientRadius(250);
     rs->resize(500,500);
     ctx->set_color(0xFF00FF00);
     ctx->translate(50,50);
-    rs->draw(*ctx);
-    ctx->fill();
+    
+    for(int i=0;i<8;i++){
+       ctx->rectangle(0,0,500,500);
+       ctx->set_source_rgb(0,0,0);
+       ctx->fill();
+       rs->setGradientAngle(45*i);
+       rs->draw(*ctx,50,50);
+       ctx->save();
+       ctx->translate(250,250);
+       ctx->set_line_width(5);
+       ctx->rotate_degrees(45*i);
+       ctx->move_to(0,0);
+       ctx->line_to(200,0);
+       ctx->set_source_rgb(1,1,1);
+       ctx->stroke();
+       ctx->restore();
+       postCompose();
+       sleep(1);
+    }
 }
 
 TEST_F(DRAWABLE,ringshape){
@@ -203,13 +223,17 @@ TEST_F(DRAWABLE,ringshape){
     ctx->set_color(0xFF00FF00);
     ctx->translate(50,50);
     for(int i=0;i<8;i++){
+       ctx->rectangle(0,0,500,500);
+       ctx->set_source_rgb(0,0,0);
+       ctx->fill();
        rs->setGradientAngle(45*i);
-       rs->draw(*ctx);
+       rs->draw(*ctx,50,50);
        ctx->save();
+       ctx->translate(250,250);
        ctx->set_line_width(5);
        ctx->rotate_degrees(45*i);
-       ctx->move_to(0,200);
-       ctx->line_to(500,200);
+       ctx->move_to(0,0);
+       ctx->line_to(200,0);
        ctx->set_source_rgb(1,1,1);
        ctx->stroke();
        ctx->restore();

@@ -6,8 +6,7 @@ namespace cdroid{
 
 Shape::Shape(){
     mStrokeWidth=0;
-    mRect.set(0,0,0,0);
-    mRebuildGradient=false;
+    mWidth=mHeight=0;
     mGradientType=0;
     mGradientAngle=0;
     mGradientRadius=0;
@@ -20,38 +19,33 @@ Shape::Shape(){
 
 Shape::Shape(const Shape&o){
     mStrokeWidth=o.mStrokeWidth;
-    mRect=o.mRect;
-    mRebuildGradient=o.mRebuildGradient;
+    mWidth=o.mWidth;
+    mHeight=o.mHeight;
     mGradientType=o.mGradientType;
     mGradientAngle=o.mGradientAngle;
     mGradientRadius=o.mGradientRadius;
     mDashGap=o.mDashGap;
     mGradientColors=o.mGradientColors;
     mStrokeColor=o.mStrokeColor;
-    mRebuildGradient=true;
     mGradientCenterX=o.mGradientCenterX;
     mGradientCenterY=o.mGradientCenterY;
     mPaint=nullptr;
 }
 
 int Shape::getWidth()const{
-    return mRect.width;
+    return mWidth;
 }
 
 int Shape::getHeight()const{
-    return mRect.height;
-}
-
-const Rect&Shape::rect()const{
-    return mRect;
+    return mHeight;
 }
 
 void Shape::resize(int w,int h){
     if(w<0)w=0;
     if(h<0)h=0;
-    if(mRect.width!=w||mRect.height!=h){
-        mRect.width=w;
-        mRect.height=h;
+    if(mWidth!=w||mHeight!=h){
+        mWidth=w;
+        mHeight=h;
         onResize(w,h);
     }
 }
@@ -77,27 +71,22 @@ int Shape::getStroke(int& color)const{
 
 void Shape::setGradientColors(const std::vector<uint32_t>&cls){
     mGradientColors=cls;
-    mRebuildGradient=true;
 }
 
 void Shape::setSolidColor(int color){
     mGradientColors.resize(1);
     mGradientColors[0]=color;
-    mRebuildGradient=true;
 }
 
 void Shape::setGradientRadius(float r){
-    mRebuildGradient=(mGradientRadius!=r);
     mGradientRadius=r;
 }
 
 void Shape::setGradientAngle(float a){
-    mRebuildGradient=(mGradientAngle!=a);
     mGradientAngle=a;
 }
 
 void Shape::setGradientType(int gt){
-    mRebuildGradient=(mGradientType!=gt);
     mGradientType=gt;
     LOGD("mGradientType=%d",mGradientType);
 }
@@ -129,8 +118,7 @@ void Shape::applyGradients(){
         break;
     }
 }
-void Shape::rebuildPattern(const Rect&r){
-    mRebuildGradient=false;
+void Shape::rebuildPattern(int x,int y){
     switch(mGradientType){
     case Gradient::SOLID:{
            const Color c(mGradientColors[0]);
@@ -138,7 +126,7 @@ void Shape::rebuildPattern(const Rect&r){
         }break;
     case Gradient::LINEAR:{
            const int angleIndex=mGradientAngle/45;
-           const int wh=std::max(mRect.width,mRect.height);
+           const int wh=std::max(mWidth,mHeight);
            switch(angleIndex%8){
            case 0: mPaint=LinearGradient::create(0,0,wh,0) ; break;
            case 1: mPaint=LinearGradient::create(0,wh,wh,0); break;
@@ -152,11 +140,11 @@ void Shape::rebuildPattern(const Rect&r){
            applyGradients();
         }break;
     case Gradient::RADIAL:{
-           const float cx=mGradientCenterX*mRect.width+r.left;
-           const float cy=mGradientCenterY*mRect.height+r.top;
+           const float cx=mGradientCenterX*mWidth+x;
+           const float cy=mGradientCenterY*mHeight+y;
            const float pd=mGradientAngle*M_PI/180.f;
-           LOGV("center=%.2f,%.2f cx,cy=%.2f,%.2f mRadius=%f mAngle=%.2f",mGradientCenterX,mGradientCenterY,cx,cy,mGradientRadius,mGradientAngle);
-           mPaint=RadialGradient::create(cx,cy,mGradientRadius,cx,cy,mGradientRadius);//,cx,cy,std::max(mRect.width,mRect.height)/2.f);
+           LOGV("center=%.2f,%.2f cx,cy=%.2f,%.2f mRadius=%f mAngle=%.2f xy=%d,%d",mGradientCenterX,mGradientCenterY,cx,cy,mGradientRadius,mGradientAngle,x,y);
+           mPaint=RadialGradient::create(cx,cy,0,cx,cy,mGradientRadius);
            applyGradients();
         }break;
     case Gradient::SWEEP:
@@ -166,11 +154,12 @@ void Shape::rebuildPattern(const Rect&r){
     }
 }
 
-void Shape::fill_stroke(Canvas&canvas){
+void Shape::fill_stroke(Canvas&canvas,int x,int y){
     const bool bstroke=(mStrokeWidth>0) && (mStrokeColor&0x80000000);
     if(mGradientColors.size()){
-        rebuildPattern(rect());
+        rebuildPattern(x,y);
         mPaint->set_matrix(canvas.get_matrix());
+        mPaint->set_matrix(mtx);
         canvas.set_source(mPaint);
         if(bstroke)
             canvas.fill_preserve();
@@ -188,12 +177,10 @@ void Shape::fill_stroke(Canvas&canvas){
     }
 }
 
-RectShape::RectShape(){
-    mRect.set(0,0,0,0);
+RectShape::RectShape():Shape(){
 }
 
 RectShape::RectShape(const RectShape&o):Shape(o){
-    mRect=o.mRect;
 }
 
 void RectShape::setOuterRadii(const std::vector<float>&v){
@@ -204,8 +191,8 @@ void RectShape::setInnerRadii(const std::vector<float>&v){
 }
 
 void RectShape::setRadius(float radius){
-    mOuterRadii.resize(8);
-    for(int i=0;i<8;i++)mOuterRadii[i]=radius; 
+    mOuterRadii.resize(4);
+    for(int i=0;i<4;i++)mOuterRadii[i]=radius; 
 }
 
 Shape*RectShape::clone()const{
@@ -213,13 +200,12 @@ Shape*RectShape::clone()const{
 }
 
 void RectShape::onResize(int width,int height){
-    mRect.set(0,0,width,height);
 }
 
-void RectShape::draw(Canvas&canvas){
+void RectShape::draw(Canvas&canvas,int x,int y){
     if(mPaint)canvas.set_source(mPaint);
-    canvas.rectangle(0,0,mRect.width,mRect.height);
-    fill_stroke(canvas);
+    canvas.rectangle(0,0,mWidth,mHeight);
+    fill_stroke(canvas,x,y);
 }
 
 ArcShape::ArcShape(float startAngle,float sweepAngle):RectShape(){
@@ -236,15 +222,14 @@ Shape*ArcShape::clone()const{
     return new ArcShape(*this);
 }
 
-void ArcShape::draw(Canvas&canvas){
-    const Rect r=rect();
+void ArcShape::draw(Canvas&canvas,int x,int y){
     canvas.save();
-    canvas.scale(1.0 , (float)r.height/r.width);
-    canvas.arc(r.left+r.width/2 , r.top+r.height/2, r.width/2, mStartAngle,mSweepAngle);
-    canvas.scale(1.0 , (float)r.width/r.height);
-    canvas.line_to(r.left+r.width/2,r.left+r.height/2);
+    canvas.scale(1.0 , (float)mHeight/mWidth);
+    canvas.arc(mWidth/2 ,mHeight/2, mWidth/2, mStartAngle,mSweepAngle);
+    canvas.scale(1.0 , (float)mWidth/mHeight);
+    canvas.line_to(mWidth/2,mHeight/2);
     canvas.close_path();
-    fill_stroke(canvas);
+    fill_stroke(canvas,x,y);
     canvas.restore();
 }
 
@@ -287,38 +272,32 @@ float OvalShape::getThicknessRatio()const{
     return mThicknessRatio;
 }
 
-void OvalShape::draw(Canvas&canvas){
-    Rect r=rect();
+void OvalShape::draw(Canvas&canvas,int x,int y){
+    // outer     
+    canvas.translate(mWidth/2,mHeight/2);
+    canvas.scale(1.,(float)mHeight/mWidth);
+    canvas.arc(0,0,mWidth/2,0,M_PI*2);
+    canvas.scale(1.,(float)mWidth/mHeight);
+    canvas.translate(-mWidth/2,-mHeight/2);
 
-    //draw outer     
-    canvas.translate(r.left+r.width/2,r.top+r.height/2);
-    canvas.scale(1.,(float)r.height/r.width);
-    canvas.arc(0,0,r.width/2,0,M_PI*2);
-    canvas.scale(1.,(float)r.width/r.height);
-    canvas.translate(-r.left-r.width/2,-r.top-r.height/2);
-
-    //draw inner
+    //inner
     float innerRadius=mInnerRadius;
     if(mInnerRadius==.0f)
-       innerRadius=r.width/2.f-mThickness;
+       innerRadius=mWidth/2.f-mThickness;
     if(innerRadius>.0){
-        float ratio=(float)r.width/r.height;
+        float ratio=(float)mWidth/mHeight;
         if(mInnerRadiusRatio)ratio=mInnerRadiusRatio;
-        canvas.translate(r.left+r.width/2,r.top+r.height/2);
+        canvas.translate(mWidth/2,mHeight/2);
         canvas.scale(ratio,1.f);
         canvas.arc(0,0,innerRadius,0,M_PI*2);
         canvas.scale(1.f/ratio,1.f); 
         canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
     }
-    fill_stroke(canvas);
-    canvas.translate(-(r.left+r.width)/2,-(r.top+r.height/2));
+    fill_stroke(canvas,x,y);
+    canvas.translate(-mWidth/2,-mHeight/2);
 }
 
 RoundRectShape::RoundRectShape():RectShape(){
-    mOuterRadii.resize(8);
-    mInnerRadii.resize(8);
-    for(int i=0;i<8;i++)mOuterRadii[i]=5;
-    for(int i=0;i<8;i++)mInnerRadii[i]=5;
 }
 
 RoundRectShape::RoundRectShape(const std::vector<float>&outRadii,const Rect&inset,const std::vector<float>&innerRadii){
@@ -339,7 +318,7 @@ Shape*RoundRectShape::clone()const{
 
 void RoundRectShape::onResize(int w, int h){
     RectShape::onResize(w,h);
-    Rect r=rect();
+    Rect r={0,0,mWidth,mHeight};
     mInnerRect.set(r.left+mInset.left,r.top+mInset.top,
         r.right()-mInset.left-mInset.width,r.bottom()-mInset.top-mInset.height);
 }
@@ -351,29 +330,27 @@ void RoundRectShape::drawRound(Canvas&canvas,const Rect&r,const std::vector<floa
     else{
         float db=180.f;
         float pts[8];
-        pts[0]=r.left+radii[0];      pts[1]=r.top +radii[1];
-        pts[2]=r.right()-radii[2];   pts[3]=r.top+radii[3];
-        pts[4]=r.right()-radii[4];   pts[5]=r.bottom()-radii[5];
-        pts[6]=r.left+radii[6];      pts[7]=r.bottom()-radii[7];
-        for(int i=0;i<8;i+=2){
+        pts[0]=r.left+radii[0];      pts[1]=r.top +radii[0];
+        pts[2]=r.right()-radii[1];   pts[3]=r.top+radii[1];
+        pts[4]=r.right()-radii[2];   pts[5]=r.bottom()-radii[2];
+        pts[6]=r.left+radii[3];      pts[7]=r.bottom()-radii[3];
+        for(int i=0,j=0;i<8;i+=2,j++){
             canvas.translate(pts[i],pts[i+1]);
-            canvas.scale(1,(float)radii[i+1]/radii[i]);
-            canvas.arc(0,0,radii[i],db*degree,(db+90)*degree);
-            canvas.scale(1,(float)radii[i]/radii[i+1]);
+            canvas.arc(0,0,radii[j],db*degree,(db+90)*degree);
             canvas.translate(-pts[i],-pts[i+1]);
             db+=90.f;
         }canvas.line_to(pts[0]-radii[0],pts[1]);
     }
 }
 
-void RoundRectShape::draw(Canvas&canvas){
-    Rect r=rect();
+void RoundRectShape::draw(Canvas&canvas,int x,int y){
+    Rect r={0,0,mWidth,mHeight};
     drawRound(canvas,r,mOuterRadii);
     if(mInnerRadii.size()){
-        r.inflate(-50,-50);
         drawRound(canvas,r,mInnerRadii);
         canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
     }
-    fill_stroke(canvas);
+    fill_stroke(canvas,x,y);
 }
+
 }

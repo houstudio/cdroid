@@ -5,7 +5,7 @@ namespace cdroid{
 
 class Shape{
 protected:
-    Rect mRect;
+    int mWidth,mHeight;
     int mStrokeColor;
     float mStrokeWidth;
     int mDashWidth;
@@ -15,15 +15,13 @@ protected:
     float mGradientAngle;
     float mGradientCenterX;
     float mGradientCenterY;
-    bool  mRebuildGradient;
     bool  bUseLevel;
     std::vector<uint32_t>mGradientColors;//size 0:nofill, 1:solid fill 2,3:gradient fill
     RefPtr<Pattern>mPaint;//used to fill
-    void rebuildPattern(const Rect&r);
+    void rebuildPattern(int x,int y);
     virtual void onResize(int width,int height){}
-    void fill_stroke(Canvas&canvas);
+    void fill_stroke(Canvas&canvas,int x,int y);
     Shape(const Shape&o);
-    const Rect& rect()const;
     void applyGradients();
 public:
     enum Gradient{
@@ -48,7 +46,7 @@ public:
     void setGradientType(int gt);
     void setGradientCenterX(float x);
     void setGradientCenterY(float y);
-    virtual void draw(Canvas&canvas)=0;
+    virtual void draw(Canvas&canvas,int x,int y)=0;
     virtual Shape*clone()const=0;
 };
 
@@ -66,7 +64,7 @@ public:
     void setOuterRadii(const std::vector<float>&);
     void setInnerRadii(const std::vector<float>&);
     void setRadius(float radius);
-    void draw(Canvas&canvas)override;
+    void draw(Canvas&canvas,int x=0,int y=0)override;
     Shape*clone()const override;
 };
 
@@ -80,7 +78,7 @@ public:
     float getStartAngle()const{ return mStartAngle; }
     float getSweepAngle()const{ return mSweepAngle; }
     Shape*clone()const override;
-    void draw(Canvas&canvas)override;
+    void draw(Canvas&canvas,int x=0,int y=0)override;
 };
 
 class OvalShape:public RectShape{
@@ -99,7 +97,7 @@ public:
     float getThickness()const;
     void setThicknessRatio(float);
     float getThicknessRatio()const;
-    void draw(Canvas&canvas)override;
+    void draw(Canvas&canvas,int x=0,int y=0)override;
 };
 
 class RoundRectShape:public RectShape{
@@ -111,7 +109,7 @@ protected:
 public:
     RoundRectShape();
     RoundRectShape(const std::vector<float>&outRadii,const Rect&inset,const std::vector<float>&innerRadii);
-    void draw(Canvas&canvas)override;
+    void draw(Canvas&canvas,int x=0,int y=0)override;
     Shape*clone()const override;
 };
 }
