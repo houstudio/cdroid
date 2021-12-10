@@ -52,7 +52,7 @@ add_custom_target(systempak
    COMMENT "package system resource"
    )
 
-CreatePAK(${PROJECT_SOURCE_DIR}/res  ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak)
+CreatePAK(${PROJECT_SOURCE_DIR}/res  ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak gui)
 set_target_properties(gui_static PROPERTIES OUTPUT_NAME "gui")
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")

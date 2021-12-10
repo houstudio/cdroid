@@ -79,7 +79,8 @@ public:
       /**
        * The pattern is a radial gradient.
        */
-      RADIAL = CAIRO_PATTERN_TYPE_RADIAL
+      RADIAL = CAIRO_PATTERN_TYPE_RADIAL,
+      MESH   = CAIRO_PATTERN_TYPE_MESH /*added by zhhou*/
   };
 
   /**
@@ -543,6 +544,43 @@ public:
   static RefPtr<RadialGradient> create(double cx0, double cy0, double radius0, double cx1, double cy1, double radius1);
 };
 
+////////////////////////////////////////////////////////added by zhhou////////////////////////////////////////////////
+
+class CAIROMM_API MeshPattern:public Pattern{
+protected:
+   MeshPattern();
+public:
+   explicit MeshPattern(cairo_pattern_t* cobject, bool has_reference = false);
+   void begin_patch();
+   void end_patch();
+   void line_to(double x,double y);
+   void move_to(double x,double y);
+   void curve_to(double,double,double,double,double,double);
+   void set_control_point(uint32_t point_num,double x,double y);
+   void set_corner_color_rgb(uint32_t corner_num,double red,double green,double blue);
+   void set_corner_color_rgba(uint32_t corner_num,double red,double green,double blue,double alpha);
+   int get_patch_count()const;
+   int get_corner_color_rgba(uint32_t patch_num,uint32_t corner_num,double& red,double& green,double& blue,double&alpha);
+   int get_control_point(uint32_t patch_num,uint32_t corner_num,double&x,double&y);
+   static RefPtr<MeshPattern>create();
+};
+
+class CAIROMM_API SweepGradient : public MeshPattern{
+private:
+   double m_cx;
+   double m_cy;
+   double m_radius;
+protected:
+   SweepGradient(double,double,double);
+public:
+   explicit SweepGradient(cairo_pattern_t* cobject, bool has_reference = false);
+   void add_sector_patch( double angle_A,double A_r, double A_g, double A_b,double A_a,
+         double angle_B,double B_r, double B_g, double B_b,double B_a);
+   void add_sector_patch( double angle_A,double A_r, double A_g, double A_b,
+         double angle_B,double B_r, double B_g, double B_b);
+   void add_sector_patch(double angleA,uint32_t colorA,double angleB,uint32_t colorB);
+   static RefPtr<SweepGradient> create(double cx,double cy,double r);
+};
 } // namespace Cairo
 
 #endif //__CAIROMM_PATTERN_H

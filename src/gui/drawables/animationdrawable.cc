@@ -33,7 +33,6 @@ bool AnimationDrawable::setVisible(bool visible,bool restart){
 
 void AnimationDrawable::start(){
     mAnimating = true;
-    LOGD("mRunning=%d",mRunning);
     if(!isRunning())
         setFrame(0,false,mAnimationState->getChildCount()>1||!mAnimationState->mOneShot);
 }

@@ -103,22 +103,36 @@ void Shape::applyGradients(){
     cls.resize(mGradientColors.size());
     for(int i=0;i<mGradientColors.size();i++){
         cls[i]=Color(mGradientColors[i]);
-        LOGV("gradient.colors[%d]=%x",i,mGradientColors[i]);
+        LOGV("gradient.colors[%d/%d]=%x",i,mGradientColors.size(),cls[i].toArgb());
     }
-    RefPtr<Cairo::Gradient> g=std::make_shared<Cairo::Gradient>(mPaint->cobj());
-    switch(mGradientColors.size()){
-    case 2:
-        g->add_color_stop_rgba(.0f,cls[0].red(),cls[0].green(),cls[0].blue(),cls[0].alpha());
-        g->add_color_stop_rgba(1.f,cls[1].red(),cls[1].green(),cls[1].blue(),cls[1].alpha());
+    if(mPaint->get_type()!=Pattern::Type::MESH){
+        RefPtr<Cairo::Gradient>pat=std::make_shared<Cairo::Gradient>(mPaint->cobj(),false);
+        switch(mGradientColors.size()){
+        case 2:
+           pat->add_color_stop_rgba(.0f,cls[0].red(),cls[0].green(),cls[0].blue(),cls[0].alpha());
+           pat->add_color_stop_rgba(1.f,cls[1].red(),cls[1].green(),cls[1].blue(),cls[1].alpha());
+           break;
+        case 3:
+           pat->add_color_stop_rgba(.0f,cls[0].red(),cls[0].green(),cls[0].blue(),cls[0].alpha());
+           pat->add_color_stop_rgba(.5f,cls[1].red(),cls[1].green(),cls[1].blue(),cls[1].alpha());
+           pat->add_color_stop_rgba(1.f,cls[2].red(),cls[2].green(),cls[2].blue(),cls[2].alpha());
         break;
-    case 3:
-        g->add_color_stop_rgba(.0f,cls[0].red(),cls[0].green(),cls[0].blue(),cls[0].alpha());
-        g->add_color_stop_rgba(.5f,cls[1].red(),cls[1].green(),cls[1].blue(),cls[1].alpha());
-        g->add_color_stop_rgba(1.f,cls[2].red(),cls[2].green(),cls[2].blue(),cls[2].alpha());
-        break;
+       }
+    }else{
+        RefPtr<Cairo::SweepGradient>swp=std::dynamic_pointer_cast<Cairo::SweepGradient>(mPaint);
+        const uint32_t*cc=mGradientColors.data();
+        const size_t ccnum=mGradientColors.size();
+        double angle=0;
+        for(int i=0;i<ccnum;i++){
+            swp->add_sector_patch(angle,mGradientColors[i],angle+M_PI*2./ccnum,mGradientColors[(i+1)%ccnum]);
+            LOGV("add_sector_patch(%.2f) color:%x->%x",angle,mGradientColors[i],mGradientColors[(i+1)%ccnum]);
+            angle+=M_PI*2./ccnum;
+        }
     }
 }
 void Shape::rebuildPattern(int x,int y){
+    const float cx=mGradientCenterX*mWidth+x;
+    const float cy=mGradientCenterY*mHeight+y;
     switch(mGradientType){
     case Gradient::SOLID:{
            const Color c(mGradientColors[0]);
@@ -128,26 +142,29 @@ void Shape::rebuildPattern(int x,int y){
            const int angleIndex=mGradientAngle/45;
            const int wh=std::max(mWidth,mHeight);
            switch(angleIndex%8){
-           case 0: mPaint=LinearGradient::create(0,0,wh,0) ; break;
+           case 0: mPaint=LinearGradient::create(0,0,mWidth,0) ; break;
            case 1: mPaint=LinearGradient::create(0,wh,wh,0); break;
-           case 2: mPaint=LinearGradient::create(0,wh,0,0) ; break;
+           case 2: mPaint=LinearGradient::create(0,mHeight,0,0) ; break;
            case 3: mPaint=LinearGradient::create(wh,wh,0,0); break; 
-           case 4: mPaint=LinearGradient::create(wh,0,0,0) ; break;
+           case 4: mPaint=LinearGradient::create(mWidth,0,0,0) ; break;
            case 5: mPaint=LinearGradient::create(wh,0,0,wh); break;
-           case 6: mPaint=LinearGradient::create(0,0,0,wh) ; break;
+           case 6: mPaint=LinearGradient::create(0,0,0,mHeight) ; break;
            case 7: mPaint=LinearGradient::create(0,0,wh,wh); break;
            }
+           LOGV("angleIndex=%d size=%dx%d %d colors",angleIndex,mWidth,mHeight,mGradientColors.size());
            applyGradients();
         }break;
     case Gradient::RADIAL:{
-           const float cx=mGradientCenterX*mWidth+x;
-           const float cy=mGradientCenterY*mHeight+y;
            const float pd=mGradientAngle*M_PI/180.f;
            LOGV("center=%.2f,%.2f cx,cy=%.2f,%.2f mRadius=%f mAngle=%.2f xy=%d,%d",mGradientCenterX,mGradientCenterY,cx,cy,mGradientRadius,mGradientAngle,x,y);
            mPaint=RadialGradient::create(cx,cy,0,cx,cy,mGradientRadius);
            applyGradients();
         }break;
-    case Gradient::SWEEP:
+    case Gradient::SWEEP:{
+           mPaint=SweepGradient::create(mGradientCenterX*mWidth,mGradientCenterY*mHeight,mGradientRadius);
+           LOGV("SWEEP(%.2f,%.2f:%.2f",mGradientCenterX*mWidth,mGradientCenterY*mHeight,mGradientRadius);
+           applyGradients();
+        }break;
     default:  
         LOGE("unsupported gradient type %d",mGradientType);
         break;
@@ -158,7 +175,8 @@ void Shape::fill_stroke(Canvas&canvas,int x,int y){
     const bool bstroke=(mStrokeWidth>0) && (mStrokeColor&0x80000000);
     if(mGradientColors.size()){
         rebuildPattern(x,y);
-        mPaint->set_matrix(canvas.get_matrix());
+        if(mGradientType==Shape::Gradient::RADIAL)
+            mPaint->set_matrix(canvas.get_matrix());
         canvas.set_source(mPaint);
         if(bstroke)
             canvas.fill_preserve();
@@ -202,7 +220,7 @@ void RectShape::onResize(int width,int height){
 }
 
 void RectShape::draw(Canvas&canvas,int x,int y){
-    if(mPaint)canvas.set_source(mPaint);
+    rebuildPattern(x,y);
     canvas.rectangle(0,0,mWidth,mHeight);
     fill_stroke(canvas,x,y);
 }
@@ -292,8 +310,8 @@ void OvalShape::draw(Canvas&canvas,int x,int y){
         canvas.scale(1.f/ratio,1.f); 
         canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
     }
-    fill_stroke(canvas,x,y);
     canvas.translate(-mWidth/2,-mHeight/2);
+    fill_stroke(canvas,x,y);
 }
 
 RoundRectShape::RoundRectShape():RectShape(){
@@ -345,6 +363,7 @@ void RoundRectShape::drawRound(Canvas&canvas,const Rect&r,const std::vector<floa
 void RoundRectShape::draw(Canvas&canvas,int x,int y){
     Rect r={0,0,mWidth,mHeight};
     drawRound(canvas,r,mOuterRadii);
+    canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);
     if(mInnerRadii.size()){
         drawRound(canvas,r,mInnerRadii);
         canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);

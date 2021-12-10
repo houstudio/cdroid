@@ -196,7 +196,11 @@ Drawable*ShapeDrawable::inflate(Context*ctx,const AttributeSet&atts){
         oval->setThicknessRatio(atts.getFloat("thicknessRatio",.0f));
         oval->setInnerRadius(atts.getInt("innerRadius",0)); 
         oval->setInnerRadiusRatio(atts.getFloat("innerRadiusRatio",.0f));
-    }else if(type.compare( "arc")==0)  shape = new ArcShape(0,0);
+    }else if(type.compare( "arc")==0){
+        const float start=atts.getFloat("startAngle",0);
+        const float end  =atts.getFloat("endAngle",360);
+        shape= new ArcShape(start,end);
+    }
     ShapeDrawable*d=new ShapeDrawable();
     d->setShape(shape);
     return d;

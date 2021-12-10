@@ -356,15 +356,6 @@ static void parseShapeGradient(Shape*shape,const AttributeSet&atts){
          {"sweep",Shape::Gradient::SWEEP}},Shape::Gradient::LINEAR));
     if(atts.hasAttribute("gradientRadius"))
         shape->setGradientRadius(atts.getDimensionPixelSize("gradientRadius"));
-
-    std::string type=atts.getString("type");
-    if(!type.empty()){
-        switch(type[0]){
-        case 'l': shape->setGradientType(Shape::Gradient::LINEAR); break; //linear gradient
-        case 'r': shape->setGradientType(Shape::Gradient::RADIAL); break; //radial gradient
-        case 's': shape->setGradientType(Shape::Gradient::SWEEP);  break; //sweep  gradient(not support)
-        }
-    }
 }
 
 static void parseCorners(Shape*shape,const AttributeSet&atts){
@@ -515,7 +506,7 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
     } while(rdlen);
     XML_ParserFree(parser);
 
-    LOGD("parsed drawable [%p] from %s",pd.drawable,resname.c_str());
+    LOGV("parsed drawable [%p] from %s",pd.drawable,resname.c_str());
     return pd.drawable;
 }
 
