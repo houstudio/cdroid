@@ -1,4 +1,4 @@
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item id="0" drawable="cdroid:drawable/btn_default_small.xml" />
-    <item id="1" drawable="cdroid:drawable/btn_toggle.xml" />
+<layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:id="0" cdroid:drawable="cdroid:drawable/btn_default_small.xml" />
+    <item cdroid:id="1" cdroid:drawable="cdroid:drawable/btn_toggle.xml" />
 </layer-list>

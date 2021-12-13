@@ -34,7 +34,7 @@ typedef struct Rect{
     int right()const{return left+width;}
     int centerX()const{return left+width/2;}
     int centerY()const{return top+height/2;}
-    void set(int x_,int y_,int w,int h);
+    void set(int x,int y,int w,int h);
     void inflate(int dx,int dy);
     bool empty()const;
     void setEmpty();
@@ -54,11 +54,21 @@ typedef struct Rect{
     static constexpr Rect MakeLTRB(int l,int t,int r,int b){return Rect{l,t,r-l,b-t};}
     static constexpr Rect MakeSize(const SIZE&sz){return Rect{0,0,sz.x,sz.y};}
 }RECT;
-typedef struct RectFloat{
+
+typedef struct PointFloat{
     float x;
     float y;
+}FloatPoint,PointF;
+
+typedef struct RectFloat{
+    float left;
+    float top;
     float width;
     float height;
+    void set(float x,float y,float w,float h);
+    bool empty()const;
+    float bottom()const{return top+height;}
+    float right()const{return left+width;}
 }RectF;
 #define MAKERECT(x,y,w,h) RECT::Make(x,y,w,h)
 

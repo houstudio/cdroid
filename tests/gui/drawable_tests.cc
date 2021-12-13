@@ -423,11 +423,11 @@ TEST_F(DRAWABLE,statelist){
 }
 
 TEST_F(DRAWABLE,inflateshape){
-    const char*text="<shape shape=\"oval\" useLevel=\"true\">\
-      <size width=\"80dp\" height=\"80dp\" /> <stroke  width=\"20dp\" color=\"#ffff0000\"/>\
-      <gradient angle=\"180\"  centerX=\"0.5\" centerY=\"0.5\" startColor=\"#ffff0000\"\
-        centerColor=\"#ff00ff00\"  endColor=\"#ff0000ff\"  gradientRadius=\"200dp\" \
-        type=\"radial\"/></shape>";
+    const char*text="<shape xmlns:cdroid=\"http://schemas.android.com/apk/res/android\" shape=\"oval\" useLevel=\"true\">\
+      <size cdroid:width=\"80dp\" cdroid:height=\"80dp\" /> <stroke  cdroid:width=\"20dp\" cdroid:color=\"#ffff0000\"/>\
+      <gradient cdroid:angle=\"180\"  cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:startColor=\"#ffff0000\"\
+        cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
+        cdroid:type=\"radial\"/></shape>";
     LONGLONG t1=SystemClock::uptimeMillis();
     std::istringstream is(text);
     Drawable*d=Drawable::fromStream(nullptr,is);
@@ -438,11 +438,12 @@ TEST_F(DRAWABLE,inflateshape){
     printf("Usedtime=%lld\r\n",t2-t1);
 }
 TEST_F(DRAWABLE,inflateclip){
-    const char*text="<clip><shape shape=\"oval\" useLevel=\"true\">\
-      <size width=\"80dp\" height=\"80dp\" /> <stroke  width=\"20dp\" color=\"#ffff0000\"/>\
-      <gradient angle=\"180\"  centerX=\"0.5\" centerY=\"0.5\" startColor=\"#ffff0000\"\
-        centerColor=\"#ff00ff00\"  endColor=\"#ff0000ff\"  gradientRadius=\"200dp\" \
-        type=\"radial\"/></shape></clip>";
+    const char*text="<clip><shape xmlns:cdroid=\"http://schemas.android.com/apk/res/android\" \
+      cdroid:shape=\"oval\" cdroid:useLevel=\"true\">\
+      <size cdroid:width=\"80dp\" cdroid:height=\"80dp\" /> <stroke  cdroid:width=\"20dp\" cdroid:color=\"#ffff0000\"/>\
+      <gradient cdroid:angle=\"180\"  cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:startColor=\"#ffff0000\"\
+        cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
+        cdroid:type=\"radial\"/></shape></clip>";
     LONGLONG t1=SystemClock::uptimeMillis();
     std::istringstream is(text);
     Drawable*d=Drawable::fromStream(nullptr,is);
@@ -461,13 +462,13 @@ TEST_F(DRAWABLE,inflateclip){
     printf("Usedtime=%lld  clip=%p child=%p\r\n",t2-t1,dynamic_cast<ClipDrawable*>(d),((ClipDrawable*)d)->getDrawable());
 }
 TEST_F(DRAWABLE,inflatelayer){
-   const char*text="<layer-list> \
-        <item id=\"123\"> <shape shape=\"rectangle\"> <corners radius=\"5dip\" />\
-            <gradient type=\"linear\" startColor=\"#ff9d9e9d\"   centerColor=\"#ff5a5d5a\"\
-                centerY=\"0.75\"  endColor=\"#ff747674\"  angle=\"45\"/> </shape></item>\
-        <item id=\"456\"> <clip> <shape shape=\"rectangle\"> <corners radius=\"100dip\" />\
-        <gradient type=\"linear\" startColor=\"#80ffd300\"   centerColor=\"#8000ffb6\"\
-              centerX=\"0.5\" centerY=\"0.5\" endColor=\"#a0ff00ff\"  angle=\"90\"/>\
+   const char*text="<layer-list xmlns:cdroid=\"http://schemas.android.com/apk/res/android\"> \
+        <item cdroid:id=\"123\"> <shape cdroid:shape=\"rectangle\"> <corners cdroid:radius=\"5dip\" />\
+            <gradient cdroid:type=\"linear\" cdroid:startColor=\"#ff9d9e9d\" cdroid:centerColor=\"#ff5a5d5a\"\
+                cdroid:centerY=\"0.75\" cdroid:endColor=\"#ff747674\" cdroid:angle=\"45\"/> </shape></item>\
+        <item cdroid:id=\"456\"> <clip> <shape cdroid:shape=\"rectangle\"> <corners cdroid:radius=\"100dip\" />\
+        <gradient cdroid:type=\"linear\" cdroid:startColor=\"#80ffd300\" cdroid:centerColor=\"#8000ffb6\"\
+              cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:endColor=\"#a0ff00ff\" cdroid:angle=\"90\"/>\
             </shape> </clip> </item></layer-list>";
 
    std::istringstream is(text);
@@ -495,10 +496,10 @@ TEST_F(DRAWABLE,inflatelayer){
 }
 
 TEST_F(DRAWABLE,inflateselector){
-   const char*text="<selector>\
-	<item color=\"#ffff0000\" state_selected=\"true\"/>\
-        <item color=\"#ff00ff00\" state_focused=\"true\"/>\
-	<item color=\"#ff0000ff\" /></selector>";
+   const char*text="<selector xmlns:cdroid=\"http://schemas.android.com/apk/res/android\">\
+	<item cdroid:color=\"#ffff0000\" cdroid:state_selected=\"true\"/>\
+        <item cdroid:color=\"#ff00ff00\" cdroid:state_focused=\"true\"/>\
+	<item cdroid:color=\"#ff0000ff\" /></selector>";
    std::istringstream is(text);
    Drawable*d=Drawable::fromStream(nullptr,is);
    d->setBounds(100,100,400,400);
@@ -511,9 +512,9 @@ TEST_F(DRAWABLE,inflateselector){
    ASSERT_EQ(0xFFFF0000,(unsigned int)cd->getColor());
 }
 TEST_F(DRAWABLE,inflatetransition){
-   const char*text="<transition>\
-	<item color=\"#ffff0000\" state_selected=\"true\"/>\
-	<item color=\"#ff00ff00\" state_focused=\"true\"/>\
+   const char*text="<transition xmlns:cdroid=\"http://schemas.android.com/apk/res/android\">\
+	<item cdroid:color=\"#ffff0000\" cdroid:state_selected=\"true\"/>\
+	<item cdroid:color=\"#ff00ff00\" cdroid:state_focused=\"true\"/>\
 	</transition>";
    std::istringstream is(text);
    Drawable*d=Drawable::fromStream(nullptr,is);
@@ -542,12 +543,12 @@ TEST_F(DRAWABLE,inflatetransition){
 }
 
 TEST_F(DRAWABLE,inflatelevellist){
-   const char*text="<level-list>\
-	<item color=\"#ffff0000\" minLevel=\"0\" maxLevel=\"1\"/>\
-	<item color=\"#ff00ff00\" minLevel=\"1\" maxLevel=\"2\"/>\
-	<item color=\"#ff0000ff\" minLevel=\"2\" maxLevel=\"3\"/>\
-	<item minLevel=\"3\" maxLevel=\"4\">\
-	<shape shape=\"oval\"><solid color=\"#ffff00ff\"/></shape>\
+   const char*text="<level-list xmlns:cdroid=\"http://schemas.android.com/apk/res/android\">\
+	<item cdroid:color=\"#ffff0000\" cdroid:minLevel=\"0\" cdroid:maxLevel=\"1\"/>\
+	<item cdroid:color=\"#ff00ff00\" cdroid:minLevel=\"1\" cdroid:maxLevel=\"2\"/>\
+	<item cdroid:color=\"#ff0000ff\" cdroid:minLevel=\"2\" cdroid:maxLevel=\"3\"/>\
+	<item cdroid:minLevel=\"3\" cdroid:maxLevel=\"4\">\
+	<shape cdroid:shape=\"oval\"><solid cdroid:color=\"#ffff00ff\"/></shape>\
 	</item>	</level-list>";
    std::istringstream is(text);
    Drawable*d=Drawable::fromStream(nullptr,is);

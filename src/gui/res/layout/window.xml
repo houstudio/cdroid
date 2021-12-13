@@ -1,116 +1,116 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    layout_width="fill_parent"
-    layout_height="fill_parent"
-    id="10"
-    orientation="vertical">
+<LinearLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
+    cdroid:layout_width="fill_parent"
+    cdroid:layout_height="fill_parent"
+    cdroid:id="10"
+    cdroid:cdroid:orientation="vertical">
     <LinearLayout
-        layout_width="fill_parent"
-        layout_height="fill_parent"
-        layout_weight="1"
-        id="100"
-        measureWithLargestChild="false"
-        orientation="horizontal">
+        cdroid:layout_width="fill_parent"
+        cdroid:layout_height="fill_parent"
+        cdroid:layout_weight="1"
+        cdroid:id="100"
+        cdroid:measureWithLargestChild="false"
+        cdroid:orientation="horizontal">
         <TextView
-            id="101"
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            background="#aa0000"
-            text="red" 
-            textSize="25pt"/>
+            cdroid:id="101"
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:background="#aa0000"
+            cdroid:text="red" 
+            cdroid:textSize="25pt"/>
         <TextView
-            id="102"
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            background="#00aa00"
-            text="green" 
-            textSize="25pt"/>
+            cdroid:id="102"
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:background="#00aa00"
+            cdroid:text="green" 
+            cdroid:textSize="25pt"/>
         <TextView
-            id="103"
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            background="#0000aa"
-            text="blue" />
+            cdroid:id="103"
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:background="#0000aa"
+            cdroid:text="blue" />
         <TextView
-            id="104"
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            background="#aaaa00"
-            text="yellow" />
+            cdroid:id="104"
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:background="#aaaa00"
+            cdroid:text="yellow" />
         <Button
-            id="105"
-            layout_width="match_parent"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            layout_weight="1"
+            cdroid:id="105"
+            cdroid:layout_width="match_parent"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:layout_weight="1"
             minHeight="48"
-            background="cdroid:drawable/btn_default.xml"
-            text="Hello world!" />
+            cdroid:background="cdroid:drawable/btn_default.xml"
+            cdroid:text="Hello world!" />
     </LinearLayout>
     <LinearLayout
-        id="200"
-        layout_width="fill_parent"
-        layout_height="fill_parent"
-        layout_weight="1"
-        orientation="vertical">
+        cdroid:id="200"
+        cdroid:layout_width="fill_parent"
+        cdroid:layout_height="fill_parent"
+        cdroid:layout_weight="1"
+        cdroid:orientation="vertical">
         <TextView
-            id="201"
-            layout_width="fill_parent"
-            layout_height="wrap_content"
-            layout_weight="1"
-            text="cdroid:string/row1"
-            textSize="25pt" />
+            cdroid:id="201"
+            cdroid:layout_width="fill_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:layout_weight="1"
+            cdroid:text="cdroid:string/row1"
+            cdroid:textSize="25pt" />
         <TextView
-            id="202"
-            layout_width="fill_parent"
-            layout_height="wrap_content"
-            layout_weight="1"
-            text="cdroid:string/row2"
-            textSize="25pt" />
+            cdroid:id="202"
+            cdroid:layout_width="fill_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:layout_weight="1"
+            cdroid:text="cdroid:string/row2"
+            cdroid:textSize="25pt" />
         <TextView
-            id="203"
-            layout_width="fill_parent"
-            layout_height="wrap_content"
-            layout_weight="1"
-            text="cdroid:string/row3"
-            textSize="25pt" />
+            cdroid:id="203"
+            cdroid:layout_width="fill_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:layout_weight="1"
+            cdroid:text="cdroid:string/row3"
+            cdroid:textSize="25pt" />
         <TextView
-            id="204"
-            layout_width="fill_parent"
-            layout_height="wrap_content"
-            layout_weight="1"
-            text="cdroid:string/row4"
-            textSize="25pt" />
+            cdroid:id="204"
+            cdroid:layout_width="fill_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:layout_weight="1"
+            cdroid:text="cdroid:string/row4"
+            cdroid:textSize="25pt" />
         <ProgressBar
-            id="205"
-            layout_width="wrap_content"
-            layout_height="wrap_content"
-            indeterminate="true"
-            indeterminateDrawable="cdroid:drawable/progress_large.xml"
+            cdroid:id="205"
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="wrap_content"
+            cdroid:indeterminate="true"
+            cdroid:indeterminateDrawable="cdroid:drawable/progress_large.xml"
             />
         <ProgressBar
-            id="206"
-            layout_width="fill_parent"
-            layout_height="wrap_content"
-            progress="30"
-            progressDrawable="cdroid:drawable/progress_horizontal.xml"
+            cdroid:id="206"
+            cdroid:layout_width="fill_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:progress="30"
+            cdroid:progressDrawable="cdroid:drawable/progress_horizontal.xml"
             />
         <SeekBar
-            id="210"
-            layout_width="fill_parent"
-            layout_height="wrap_content"
-            progressDrawable="cdroid:drawable/progress_horizontal.xml"
-            thumb="cdroid:drawable/seek_thumb.xml"
+            cdroid:id="210"
+            cdroid:layout_width="fill_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:progressDrawable="cdroid:drawable/progress_horizontal.xml"
+            cdroid:thumb="cdroid:drawable/seek_thumb.xml"
             />
         <SeekBar
-            id="211"
-            layout_width="fill_parent"
-            layout_height="wrap_content"
-            progressDrawable="cdroid:drawable/progress_horizontal.xml"
-            thumb="cdroid:drawable/seek_thumb.xml"
+            cdroid:id="211"
+            cdroid:layout_width="fill_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:progressDrawable="cdroid:drawable/progress_horizontal.xml"
+            cdroid:thumb="cdroid:drawable/seek_thumb.xml"
             />
     </LinearLayout>
 </LinearLayout>

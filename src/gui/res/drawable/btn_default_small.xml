@@ -1,16 +1,16 @@
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item state_window_focused="false" state_enabled="true"
-        drawable="cdroid:mipmap/btn_default_small_normal.9.png" />
-    <item state_window_focused="false" state_enabled="false"
-        drawable="cdroid:mipmap/btn_default_small_normal_disable.9.png" />
-    <item state_pressed="true" 
-        drawable="cdroid:mipmap/btn_default_small_pressed.9.png" />
-    <item state_focused="true" state_enabled="true"
-        drawable="cdroid:mipmap/btn_default_small_selected.9.png" />
-    <item state_enabled="true"
-        drawable="cdroid:mipmap/btn_default_small_normal.9.png" />
-    <item state_focused="true"
-        drawable="cdroid:mipmap/btn_default_small_normal_disable_focused.9.png" />
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_window_focused="false" cdroid:state_enabled="true"
+        cdroid:drawable"cdroid:mipmap/btn_default_small_normal.9.png" />
+    <item cdroid:state_window_focused="false" cdroid:state_enabled="false"
+        cdroid:drawable"cdroid:mipmap/btn_default_small_normal_disable.9.png" />
+    <item cdroid:state_pressed="true" 
+        cdroid:drawable"cdroid:mipmap/btn_default_small_pressed.9.png" />
+    <item cdroid:state_focused="true" cdroid:state_enabled="true"
+        cdroid:drawable"cdroid:mipmap/btn_default_small_selected.9.png" />
+    <item cdroid:state_enabled="true"
+        cdroid:drawable"cdroid:mipmap/btn_default_small_normal.9.png" />
+    <item cdroid:state_focused="true"
+        cdroid:drawable"cdroid:mipmap/btn_default_small_normal_disable_focused.9.png" />
     <item
-         drawable="cdroid:mipmap/btn_default_small_normal_disable.9.png" />
+         cdroid:drawable"cdroid:mipmap/btn_default_small_normal_disable.9.png" />
 </selector>

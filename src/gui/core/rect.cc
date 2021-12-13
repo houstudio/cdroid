@@ -7,11 +7,21 @@ void Point::set(int x_,int y_){
     y=y_;
 }
 
-void Rect::set(int x_,int y_,int w,int h){
-   left = x_;
-   top=y_;
-   width=w;
+void Rect::set(int x,int y,int w,int h){
+   left= x;
+   top =y;
+   width =w;
    height=h;
+}
+
+void RectF::set(float x,float y,float w,float h){
+   left= x;
+   top =y;
+   width =w;
+   height=h;
+}
+bool RectF::empty()const{
+   return width==.0f||height==.0f;
 }
 
 bool Rect::empty()const{

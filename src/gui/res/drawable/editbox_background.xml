@@ -17,8 +17,8 @@
 ** limitations under the License.
 */
 -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item state_focused="true" drawable="cdroid:mipmap/editbox_background_focus_yellow.9.png" />
-    <item state_enabled="false" drawable="cdroid:mipmap/editbox_background_normal.9.png" />
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_focused="true" cdroid:drawable="cdroid:mipmap/editbox_background_focus_yellow.9.png" />
+    <item cdroid:state_enabled="false" cdroid:drawable="cdroid:mipmap/editbox_background_normal.9.png" />
 </selector>
 

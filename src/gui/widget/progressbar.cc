@@ -394,6 +394,10 @@ void ProgressBar::setSecondaryProgress(int secondaryProgress) {
     }
 }
 
+int ProgressBar::getSecondaryProgress()const{
+    return mIndeterminate ? 0 : mSecondaryProgress;
+}
+
 void ProgressBar::incrementProgressBy(int diff) {
     setProgress(mProgress + diff);
 }

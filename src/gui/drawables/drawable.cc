@@ -482,7 +482,7 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
     ParseData pd;
     int rdlen;
     char buf[256];
-    XML_Parser parser=XML_ParserCreate(nullptr);
+    XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
 
     std::string basePath=resname.substr(0,resname.find_last_of("/"));
     basePath=basePath.substr(0,basePath.find_last_of("/"));

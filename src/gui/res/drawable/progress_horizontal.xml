@@ -1,44 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
     
-    <item id="0">
-        <shape shape="rectangle">
-            <corners radius="5dip" />
+    <item cdroid:id="0">
+        <shape cdroid:shape="rectangle">
+            <corners cdroid:radius="5dip" />
             <gradient
-                    startColor="#ff9d9e9d"
-                    centerColor="#ff5a5d5a"
-                    centerY="0.75"
-                    endColor="#ff747674"
-                    angle="270"
+                    cdroid:startColor="#ff9d9e9d"
+                    cdroid:centerColor="#ff5a5d5a"
+                    cdroid:centerY="0.75"
+                    cdroid:endColor="#ff747674"
+                    cdroid:angle="270"
             />
         </shape>
     </item>
     
-    <item id="1">
+    <item cdroid:id="1">
         <clip>
-            <shape shape="rectangle">
-                <corners radius="5dip" />
+            <shape cdroid:shape="rectangle">
+                <corners cdroid:radius="5dip" />
                 <gradient
-                        startColor="#ffffd300"
-                        centerColor="#ffffb600"
-                        centerY="0.75"
-                        endColor="#ffffcb00"
-                        angle="270"
+                        cdroid:startColor="#ffffd300"
+                        cdroid:centerColor="#ffffb600"
+                        cdroid:centerY="0.75"
+                        cdroid:endColor="#ffffcb00"
+                        cdroid:angle="270"
                 />
             </shape>
         </clip>
     </item>
     
-    <item id="2">
+    <item cdroid:id="2">
         <clip>
-            <shape shape="rectangle">
-                <corners radius="5dip" />
+            <shape cdroid:shape="rectangle">
+                <corners cdroid:radius="5dip" />
                 <gradient
-                        startColor="#80ffd300"
-                        centerColor="#80ffb600"
-                        centerY="0.75"
-                        endColor="#a0ffcb00"
-                        angle="270"
+                        cdroid:startColor="#80ffd300"
+                        cdroid:centerColor="#80ffb600"
+                        cdroid:centerY="0.75"
+                        cdroid:endColor="#a0ffcb00"
+                        cdroid:angle="270"
                 />
             </shape>
         </clip>

@@ -103,7 +103,7 @@ static void endElement(void *userData, const XML_Char *name){
 View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
     int len=0;
     char buf[256];
-    XML_Parser parser=XML_ParserCreate(nullptr);
+    XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
     WindowParserData pd={mContext,parser};
     ULONGLONG tstart=SystemClock::uptimeMillis();
 

@@ -1,33 +1,33 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    layout_width="fill_parent"
-    layout_height="wrap_content"
-    orientation="horizontal">
+<LinearLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
+    cdroid:layout_width="fill_parent"
+    cdroid:layout_height="wrap_content"
+    cdroid:orientation="horizontal">
         <TextView
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity= "center_horizontal"
-            layout_weight="1"
-            background="#aa0000"
-            text="@string/red" />
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity= "center_horizontal"
+            cdroid:layout_weight="1"
+            cdroid:background="#aa0000"
+            cdroid:text="@string/red" />
         <TextView
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            layout_weight="1"
-            background="#00aa00"
-            text="@string/green" />
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:layout_weight="1"
+            cdroid:background="#00aa00"
+            cdroid:text="@string/green" />
         <TextView
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            layout_weight="1"
-            background="#0000aa"
-            text="@string/blue" />
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:layout_weight="1"
+            cdroid:background="#0000aa"
+            cdroid:text="@string/blue" />
         <TextView
-            layout_width="wrap_content"
-            layout_height="fill_parent"
-            layout_gravity="center_horizontal"
-            layout_weight="1"
-            background="#aaaa00"
-            text="@string/yellow" />
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="fill_parent"
+            cdroid:layout_gravity="center_horizontal"
+            cdroid:layout_weight="1"
+            cdroid:background="#aaaa00"
+            cdroid:text="@string/yellow" />
 </LinearLayout>

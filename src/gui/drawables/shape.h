@@ -1,6 +1,7 @@
 #ifndef __SHAPE_H__
 #define __SHAPE_H__
 #include <core/canvas.h>
+#include <core/path.h>
 namespace cdroid{
 
 class Shape{
@@ -56,6 +57,7 @@ protected:
     std::vector<float>mInnerRadii;
     Rect mInset;
     Rect mInnerRect;
+    RefPtr<cdroid::Path>mPath;
 protected:
     RectShape(const RectShape&o);
     void onResize(int width,int height)override;
