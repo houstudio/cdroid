@@ -17,7 +17,8 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mOpticalInsets.set(0,0,0,0);
 }
 
-NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding){
+NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding)
+  :NinePatchDrawable::NinePatchState(){
     bitmap->get_ninepatch(mHorz,mVert);
     if(padding)
        mPadding=*padding;
@@ -51,6 +52,7 @@ int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{
 NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     mNinePatchState=state;
     mAlpha=255;
+    mTintFilter=nullptr;
     computeBitmapSize();
 }
 
@@ -63,10 +65,13 @@ NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
 
 NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp){
     mNinePatchState=std::make_shared<NinePatchState>(bmp);
+    mAlpha=255;
+    mTintFilter=nullptr;
     computeBitmapSize();
 }
 
 NinePatchDrawable::~NinePatchDrawable(){
+    delete mTintFilter;
 }
 
 void NinePatchDrawable::computeBitmapSize(){
@@ -111,7 +116,7 @@ void NinePatchDrawable::computeBitmapSize(){
 
 void NinePatchDrawable::setTargetDensity(int density){
     if (density == 0) {
-        density =160; //DisplayMetrics.DENSITY_DEFAULT;
+        density =DisplayMetrics::DENSITY_DEFAULT;
     }
     if (mTargetDensity != density) {
         mTargetDensity = density;

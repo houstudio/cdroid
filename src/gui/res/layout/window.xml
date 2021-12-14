@@ -2,7 +2,7 @@
     cdroid:layout_width="fill_parent"
     cdroid:layout_height="fill_parent"
     cdroid:id="10"
-    cdroid:cdroid:orientation="vertical">
+    cdroid:orientation="vertical">
     <LinearLayout
         cdroid:layout_width="fill_parent"
         cdroid:layout_height="fill_parent"
@@ -46,7 +46,7 @@
             cdroid:layout_height="fill_parent"
             cdroid:layout_gravity="center_horizontal"
             cdroid:layout_weight="1"
-            minHeight="48"
+            cdroid:minHeight="48"
             cdroid:background="cdroid:drawable/btn_default.xml"
             cdroid:text="Hello world!" />
     </LinearLayout>

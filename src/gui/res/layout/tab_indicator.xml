@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    layout_width="0dip"
-    layout_height="64dip"
-    layout_weight="1"
-    layout_marginStart="-3dip"
-    layout_marginEnd="-3dip"
-    background="@cdroid:drawable/tab_indicator.xml">
-    <ImageView id="@+id/icon"
-        layout_width="wrap_content"
-        layout_height="wrap_content"
-        layout_centerHorizontal="true"
-    />
+<RelativeLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
+    cdroid:layout_width="0dip"
+    cdroid:layout_height="64dip"
+    cdroid:layout_weight="1"
+    cdroid:layout_marginStart="-3dip"
+    cdroi:layout_marginEnd="-3dip"
+    cdroid:background="@cdroid:drawable/tab_indicator.xml">
+    <ImageView cdroid:id="@+id/icon"
+        cdroid:layout_width="wrap_content"
+        cdroid:layout_height="wrap_content"
+        cdroid:layout_centerHorizontal="true"/>
     <TextView id="@+id/title"
-        layout_width="wrap_content"
-        layout_height="wrap_content"
-        layout_alignParentBottom="true"
-        layout_centerHorizontal="true"
-        style="?attr/tabWidgetStyle"
-    />
+        cdroid:layout_width="wrap_content"
+        cdroid:layout_height="wrap_content"
+        cdroid:layout_alignParentBottom="true"
+        cdroid:layout_centerHorizontal="true"
+        cdroid:style="?attr/tabWidgetStyle" />
 </RelativeLayout>
