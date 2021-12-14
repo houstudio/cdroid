@@ -1,0 +1,20 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Setting the Area Fill Pattern</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="line-attributes.html" title="Setting Line Attributes"><link rel="next" href="color.html" title="Setting Color"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Setting the Area Fill Pattern</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="line-attributes.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="color.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="fill-pattern"></a>Setting the Area Fill Pattern</h2></div></div></div><p>The routine <a class="link" href="plpsty.html" title="plpsty: Select area fill pattern"><code class="function">plpsty</code></a> may be used to select either a solid
+    fill or from 1 of 8 predefined area line fill patterns. Additional
+    area line fill patterns using one or two sets of parallel lines at
+    arbitrary inclinations and spacings can be specified with the routine
+    <a class="link" href="plpat.html" title="plpat: Set area line fill pattern"><code class="function">plpat</code></a> The (redacted) arguments to this routine are the integer
+    <em class="parameter"><code>inc</code></em> and <em class="parameter"><code>del</code></em> vectors
+    specifying the inclinations in tenths of a degree and the spacing in
+    micrometers of the pattern(s).  Thus to specify an area line fill
+    pattern consisting of horizontal lines spaced 2 mm apart the
+    <em class="parameter"><code>inc</code></em> vector should have single element set to 0,
+    and the <em class="parameter"><code>del</code></em> vector should have a single element
+    set to 2000.  And to specify an area line fill pattern consisting of a
+    symmetrical crosshatch with lines directed 30 degrees above and below
+    the horizontal and spaced 1.5 mm apart, the
+    <em class="parameter"><code>inc</code></em> vector should contain the elements 300 and
+    -300, and the <em class="parameter"><code>del</code></em> vector should contain the
+    elements 1500 and 1500.</p><p>N.B. Solid fills use the current (semitransparent) color
+    and line fills use the current line style, width, and
+    (semitransparent) color.  The result is PLplot users have a large
+    choice of different fill patterns.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="line-attributes.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="color.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Setting Line Attributes </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Setting Color</td></tr></table></div></body></html>

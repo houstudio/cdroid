@@ -1,0 +1,328 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>pllegend: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="pllab.html" title="pllab: Simple routine to write labels"><link rel="next" href="pllightsource.html" title="pllightsource: Sets the 3D position of the light source"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">pllegend</code>: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="pllab.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="pllightsource.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="pllegend"></a>
+      <code class="function">pllegend</code>: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">pllegend</b>
+	  (</code></td><td><var class="pdparam">p_legend_width</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_legend_height</var>, </td></tr><tr><td> </td><td><var class="pdparam">opt</var>, </td></tr><tr><td> </td><td><var class="pdparam">position</var>, </td></tr><tr><td> </td><td><var class="pdparam">x</var>, </td></tr><tr><td> </td><td><var class="pdparam">y</var>, </td></tr><tr><td> </td><td><var class="pdparam">plot_width</var>, </td></tr><tr><td> </td><td><var class="pdparam">bg_color</var>, </td></tr><tr><td> </td><td><var class="pdparam">bb_color</var>, </td></tr><tr><td> </td><td><var class="pdparam">bb_style</var>, </td></tr><tr><td> </td><td><var class="pdparam">nrow</var>, </td></tr><tr><td> </td><td><var class="pdparam">ncolumn</var>, </td></tr><tr><td> </td><td><var class="pdparam">nlegend</var>, </td></tr><tr><td> </td><td><var class="pdparam">opt_array</var>, </td></tr><tr><td> </td><td><var class="pdparam">text_offset</var>, </td></tr><tr><td> </td><td><var class="pdparam">text_scale</var>, </td></tr><tr><td> </td><td><var class="pdparam">text_spacing</var>, </td></tr><tr><td> </td><td><var class="pdparam">test_justification</var>, </td></tr><tr><td> </td><td><var class="pdparam">text_colors</var>, </td></tr><tr><td> </td><td><var class="pdparam">text</var>, </td></tr><tr><td> </td><td><var class="pdparam">box_colors</var>, </td></tr><tr><td> </td><td><var class="pdparam">box_patterns</var>, </td></tr><tr><td> </td><td><var class="pdparam">box_scales</var>, </td></tr><tr><td> </td><td><var class="pdparam">box_line_widths</var>, </td></tr><tr><td> </td><td><var class="pdparam">line_colors</var>, </td></tr><tr><td> </td><td><var class="pdparam">line_styles</var>, </td></tr><tr><td> </td><td><var class="pdparam">line_widths</var>, </td></tr><tr><td> </td><td><var class="pdparam">symbol_colors</var>, </td></tr><tr><td> </td><td><var class="pdparam">symbol_scales</var>, </td></tr><tr><td> </td><td><var class="pdparam">symbol_numbers</var>, </td></tr><tr><td> </td><td><var class="pdparam">symbols</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Routine for creating a discrete plot legend with a plotted
+      filled box, line, and/or line of symbols for each annotated legend
+      entry.  (See <a class="link" href="plcolorbar.html" title="plcolorbar: Plot color bar for image, shade or gradient plots"><code class="function">plcolorbar</code></a> for similar functionality for creating
+      continuous color bars.)  The arguments of pllegend provide control
+      over the location and size of the legend as well as the location and
+      characteristics of the elements (most of which are optional) within
+      that legend.  The resulting legend is clipped at the boundaries of the
+      current subpage.  (N.B. the adopted coordinate system used for some of
+      the parameters is defined in the documentation of the
+      <code class="literal"><em class="parameter"><code>position</code></em></code> parameter.)
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>p_legend_width</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the
+	    legend width in adopted coordinates. This quantity is
+	    calculated from <code class="literal"><em class="parameter"><code>plot_width</code></em></code>,
+	    <code class="literal"><em class="parameter"><code>text_offset</code></em></code>,
+	    <code class="literal"><em class="parameter"><code>ncolumn</code></em></code> (possibly modified
+	    inside the routine depending on
+	    <code class="literal"><em class="parameter"><code>nlegend</code></em></code> and
+	    <code class="literal"><em class="parameter"><code>nrow</code></em></code>), and the length
+	    (calculated internally) of the longest text string.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_legend_height</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the
+	    legend height in adopted coordinates. This quantity is
+	    calculated from <code class="literal"><em class="parameter"><code>text_scale</code></em></code>,
+	    <code class="literal"><em class="parameter"><code>text_spacing</code></em></code>, and
+	    <code class="literal"><em class="parameter"><code>nrow</code></em></code> (possibly modified
+	    inside the routine depending on
+	    <code class="literal"><em class="parameter"><code>nlegend</code></em></code> and
+	    <code class="literal"><em class="parameter"><code>nrow</code></em></code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>opt</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    <code class="literal"><em class="parameter"><code>opt</code></em></code> contains
+	    bits controlling the overall legend. If the
+	    <code class="literal">PL_LEGEND_TEXT_LEFT</code> bit is set, put the text area
+	    on the left of the legend and the plotted area on the
+	    right. Otherwise, put the text area on the right of the legend and the
+	    plotted area on the left. If the
+	    <code class="literal">PL_LEGEND_BACKGROUND</code> bit is set, plot a
+	    (semitransparent) background for the legend. If the
+	    <code class="literal">PL_LEGEND_BOUNDING_BOX</code> bit is set, plot a bounding
+	    box for the legend. If the <code class="literal">PL_LEGEND_ROW_MAJOR</code> bit
+	    is set and (both of the possibly internally transformed)
+	    <code class="literal"><em class="parameter"><code>nrow</code></em></code> &gt; 1 and
+	    <code class="literal"><em class="parameter"><code>ncolumn</code></em></code> &gt; 1, then plot
+	    the resulting array of legend entries in row-major order.
+	    Otherwise, plot the legend entries in column-major order.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>position</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    <code class="literal"><em class="parameter"><code>position</code></em></code>
+	    contains bits which control the overall position of the legend and the
+	    definition of the adopted coordinates used for positions just like
+	    what is done for the position argument for <a class="link" href="plcolorbar.html" title="plcolorbar: Plot color bar for image, shade or gradient plots"><code class="function">plcolorbar</code></a>. However,
+	    note that the defaults for the position bits (see below) are
+	    different than the <a class="link" href="plcolorbar.html" title="plcolorbar: Plot color bar for image, shade or gradient plots"><code class="function">plcolorbar</code></a> case.  The combination of the
+	    <code class="literal">PL_POSITION_LEFT</code>,
+	    <code class="literal">PL_POSITION_RIGHT</code>,
+	    <code class="literal">PL_POSITION_TOP</code>,
+	    <code class="literal">PL_POSITION_BOTTOM</code>,
+	    <code class="literal">PL_POSITION_INSIDE</code>, and
+	    <code class="literal">PL_POSITION_OUTSIDE</code> bits specifies one of the 16
+	    possible standard positions (the 4 corners and centers of the 4 sides
+	    for both the inside and outside cases) of the legend relative to the
+	    adopted coordinate system. The corner positions are specified by the
+	    appropriate combination of two of the
+	    <code class="literal">PL_POSITION_LEFT</code>,
+	    <code class="literal">PL_POSITION_RIGHT</code>,
+	    <code class="literal">PL_POSITION_TOP</code>, and
+	    <code class="literal">PL_POSITION_BOTTOM</code> bits while the sides are
+	    specified by a single value of one of those bits.  The adopted
+	    coordinates are normalized viewport coordinates if the
+	    <code class="literal">PL_POSITION_VIEWPORT</code> bit is set or normalized
+	    subpage coordinates if the <code class="literal">PL_POSITION_SUBPAGE</code> bit
+	    is set. Default position bits: If none of
+	    <code class="literal">PL_POSITION_LEFT</code>,
+	    <code class="literal">PL_POSITION_RIGHT</code>,
+	    <code class="literal">PL_POSITION_TOP</code>, or
+	    <code class="literal">PL_POSITION_BOTTOM</code> are set, then use the
+	    combination of <code class="literal">PL_POSITION_RIGHT</code> and
+	    <code class="literal">PL_POSITION_TOP</code>. If neither of
+	    <code class="literal">PL_POSITION_INSIDE</code> or
+	    <code class="literal">PL_POSITION_OUTSIDE</code> is set, use
+	    <code class="literal">PL_POSITION_INSIDE</code>. If neither of
+	    <code class="literal">PL_POSITION_VIEWPORT</code> or
+	    <code class="literal">PL_POSITION_SUBPAGE</code> is set, use
+	    <code class="literal">PL_POSITION_VIEWPORT</code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>x</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    X offset of the legend position in adopted coordinates
+	    from the specified standard position of the legend. For positive x,
+	    the direction of motion away from the standard position is
+	    inward/outward from the standard corner positions or
+	    standard left or right positions if the
+	    <code class="literal">PL_POSITION_INSIDE</code>/<code class="literal">PL_POSITION_OUTSIDE</code>
+	    bit is set in <code class="literal"><em class="parameter"><code>position</code></em></code>.  For
+	    the standard top or bottom positions, the direction of motion is
+	    toward positive X.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Y offset of the legend position in adopted coordinates
+	    from the specified standard position of the legend. For positive y,
+	    the direction of motion away from the standard position is
+	    inward/outward from the standard corner positions or standard
+	    top or bottom positions if the
+	    <code class="literal">PL_POSITION_INSIDE</code>/<code class="literal">PL_POSITION_OUTSIDE</code>
+	    bit is set in <code class="literal"><em class="parameter"><code>position</code></em></code>.
+	    For the standard left or right positions, the
+	    direction of motion is toward positive Y.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>plot_width</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Horizontal width in adopted coordinates of the plot area
+	    (where the colored boxes, lines, and/or lines of symbols are drawn) of
+	    the legend.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>bg_color</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The cmap0 color of the background for the legend
+	    (<code class="literal">PL_LEGEND_BACKGROUND</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>bb_color</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The cmap0 color of the bounding-box line for the legend
+	    (<code class="literal">PL_LEGEND_BOUNDING_BOX</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>bb_style</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The pllsty style number for the bounding-box line for the legend
+	    (<code class="literal">PL_LEGEND_BACKGROUND</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nrow</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The number of rows in the matrix used to render the
+	    <em class="parameter"><code>nlegend</code></em> legend entries. For internal
+	    transformations of <em class="parameter"><code>nrow</code></em>, see further remarks
+	    under <em class="parameter"><code>nlegend</code></em>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ncolumn</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The number of columns in the matrix used to render the
+	    <em class="parameter"><code>nlegend</code></em> legend entries. For internal
+	    transformations of <em class="parameter"><code>ncolumn</code></em>, see further remarks
+	    under <em class="parameter"><code>nlegend</code></em>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nlegend</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+            Number of legend entries. The above
+	    <em class="parameter"><code>nrow</code></em> and <em class="parameter"><code>ncolumn</code></em> values
+	    are transformed internally to be consistent with
+	    <em class="parameter"><code>nlegend</code></em>. If either <em class="parameter"><code>nrow</code></em>
+	    or <em class="parameter"><code>ncolumn</code></em> is non-positive it is replaced by
+	    1. If the resulting product of <em class="parameter"><code>nrow</code></em> and
+	    <em class="parameter"><code>ncolumn</code></em> is less than
+	    <em class="parameter"><code>nlegend</code></em>, the smaller of the two (or
+	    <em class="parameter"><code>nrow</code></em>, if <em class="parameter"><code>nrow</code></em> ==
+	    <em class="parameter"><code>ncolumn</code></em>) is increased so the product is &gt;=
+	    <em class="parameter"><code>nlegend</code></em>. Thus, for example, the common
+	    <em class="parameter"><code>nrow</code></em> = 0, <em class="parameter"><code>ncolumn</code></em> = 0
+	    case is transformed internally to <em class="parameter"><code>nrow</code></em> =
+	    <em class="parameter"><code>nlegend</code></em>, <em class="parameter"><code>ncolumn</code></em> = 1;
+	    i.e., the usual case of a legend rendered as a single column.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>opt_array</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of <em class="parameter"><code>nlegend</code></em> values of options to control each
+	    individual plotted area corresponding to a legend entry.  If the
+	    <em class="parameter"><code>PL_LEGEND_NONE</code></em> bit is set, then nothing is
+	    plotted in the plotted area.  If the
+	    <em class="parameter"><code>PL_LEGEND_COLOR_BOX</code></em>,
+	    <em class="parameter"><code>PL_LEGEND_LINE</code></em>, and/or
+	    <em class="parameter"><code>PL_LEGEND_SYMBOL</code></em> bits are set, the area
+	    corresponding to a legend entry is plotted with a colored box; a line;
+	    and/or a line of symbols.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>text_offset</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Offset of the text area from the plot area in units of
+	    character width.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>text_scale</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Character height scale for text annotations.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>text_spacing</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Vertical spacing in units of the character height from one
+	    legend entry to the next.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>text_justification</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Justification parameter used for text justification.  The most common
+	    values of text_justification are 0., 0.5, or 1. corresponding to a
+	    text that is left justified, centred, or right justified within the
+	    text area, but other values are allowed as well.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>text_colors</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> cmap0 text colors.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>text</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_MATRIX-type"><code class="function">PLCHAR_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of <em class="parameter"><code>nlegend</code></em> UTF-8 character strings containing
+	    the legend annotations.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>box_colors</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> cmap0 colors for the discrete colored boxes
+	    (<em class="parameter"><code>PL_LEGEND_COLOR_BOX</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>box_patterns</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> patterns (plpsty indices) for the discrete colored
+	    boxes (<em class="parameter"><code>PL_LEGEND_COLOR_BOX</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>box_scales</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> scales (units of fraction of character height) for
+	    the height of the discrete colored boxes
+	    (<em class="parameter"><code>PL_LEGEND_COLOR_BOX</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>box_line_widths</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> line widths for the patterns specified by
+            box_patterns (<em class="parameter"><code>PL_LEGEND_COLOR_BOX</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>line_colors</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> cmap0 line colors
+	    (<em class="parameter"><code>PL_LEGEND_LINE</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>line_styles</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> line styles (plsty indices)
+	    (<em class="parameter"><code>PL_LEGEND_LINE</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>line_widths</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> line widths
+	    (<em class="parameter"><code>PL_LEGEND_LINE</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>symbol_colors</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> cmap0 symbol colors
+	    (<em class="parameter"><code>PL_LEGEND_SYMBOL</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>symbol_scales</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> scale values for the symbol height
+	    (<em class="parameter"><code>PL_LEGEND_SYMBOL</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>symbol_numbers</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing <em class="parameter"><code>nlegend</code></em> numbers of symbols to be drawn across the width of
+	    the plotted area (<em class="parameter"><code>PL_LEGEND_SYMBOL</code></em>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>symbols</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_MATRIX-type"><code class="function">PLCHAR_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of <em class="parameter"><code>nlegend</code></em> UTF-8 character strings containing
+	    the legend symbols.
+	    (<em class="parameter"><code>PL_LEGEND_SYMBOL</code></em>).
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">pllegend(p_legend_width, p_legend_height,
+      opt, position, x, y, plot_width,
+      bg_color, bb_color, bb_style,
+      nrow, ncolumn,
+      opt_array,
+      text_offset, text_scale, text_spacing, test_justification,
+      text_colors, text,
+      box_colors, box_patterns,
+      box_scales, box_line_widths,
+      line_colors, line_styles, line_widths,
+      symbol_colors, symbol_scales,
+      symbol_numbers, symbols)</code>
+    </p><p>
+      This function is used in examples 4, 26, and 33.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="pllab.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="pllightsource.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">pllab</code>: Simple routine to write labels
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">pllightsource</code>: Sets the 3D position of the light
+      source
+    </td></tr></table></div></body></html>

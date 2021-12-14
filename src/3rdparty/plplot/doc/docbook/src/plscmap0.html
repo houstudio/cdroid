@@ -1,0 +1,61 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plscmap0: Set cmap0 colors by 8-bit RGB values</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plschr.html" title="plschr: Set character size"><link rel="next" href="plscmap0a.html" title="plscmap0a: Set cmap0 colors by 8-bit RGB values and PLFLT alpha transparency value"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plscmap0</code>: Set cmap0 colors by 8-bit RGB values
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plschr.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plscmap0a.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plscmap0"></a>
+      <code class="function">plscmap0</code>: Set cmap0 colors by 8-bit RGB values
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plscmap0</b>
+          (</code></td><td>
+            <var class="pdparam">r</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">g</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">b</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ncol0</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set cmap0 colors using 8-bit RGB values (see <a class="xref" href="color.html#color-map-0" title="Color Map0">the section called “Color Map0”</a>).  This sets the entire color
+      map – only as many colors as specified will be allocated.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>r</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing unsigned 8-bit integers (0-255)
+            representing the degree of red in the color.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>g</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing unsigned 8-bit integers (0-255)
+            representing the degree of green in the color.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>b</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing unsigned 8-bit integers (0-255)
+            representing the degree of blue in the color.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ncol0</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of items in the
+            <code class="literal">
+              <em class="parameter"><code>r</code></em>
+            </code>,
+            <code class="literal">
+              <em class="parameter"><code>g</code></em>
+            </code>, and
+            <code class="literal">
+              <em class="parameter"><code>b</code></em>
+            </code> vectors.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plscmap0(r, g, b)</code>
+    </p><p>
+      This function is used in examples 2 and 24.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plschr.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plscmap0a.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plschr</code>: Set character size
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plscmap0a</code>: Set cmap0 colors by 8-bit RGB values and
+      PLFLT alpha transparency value
+    </td></tr></table></div></body></html>

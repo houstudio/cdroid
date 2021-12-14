@@ -1,0 +1,30 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCPSTRM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplcpstrm\fP - Copy state parameters from the reference stream to the current stream
+.SH SYNOPSIS
+\fBplcpstrm\fP(\fIiplsr\fP, \fIflags\fP)
+.SH DESCRIPTION
+
+.P
+Copies state parameters from the reference stream to the current stream. Tell driver interface to map device coordinates unless \fIflags\fP == 1.
+.P
+This function is used for making save files of selected plots (e.g. from the TK driver).  After initializing, you can get a copy of the current plot to the specified device by switching to this stream and issuing a \fBplcpstrm\fP(3plplot) and a \fBplreplot\fP(3plplot), with calls to \fBplbop\fP(3plplot) and \fBpleop\fP(3plplot) as appropriate.  The plot buffer must have previously been enabled (done automatically by some display drivers, such as X).
+.P
+Redacted form: \fBplcpstrm(iplsr, flags)\fP
+.P
+This function is used in example 1,20.
+.SH ARGUMENTS
+.TP
+\fIiplsr\fP (\fBPLINT\fP(3plplot), input)
+Number of reference stream.
+.TP
+\fIflags\fP (\fBPLBOOL\fP(3plplot), input)
+If \fIflags\fP is set to true the device coordinates are not copied from the reference to current stream.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

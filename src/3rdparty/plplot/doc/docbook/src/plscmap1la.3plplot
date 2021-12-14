@@ -1,0 +1,46 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCMAP1LA 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplscmap1la\fP - Set cmap1 colors and alpha transparency using a piece-wise linear relationship
+.SH SYNOPSIS
+\fBplscmap1la\fP(\fIitype\fP, \fInpts\fP, \fIintensity\fP, \fIcoord1\fP, \fIcoord2\fP, \fIcoord3\fP, \fIalpha\fP, \fIalt_hue_path\fP)
+.SH DESCRIPTION
+
+.P
+This is a variant of \fBplscmap1l\fP(3plplot) that supports alpha channel transparency. It sets cmap1 colors using a piece-wise linear relationship between cmap1 intensity index (0.0-1.0) and position in HLS or RGB color space (see the PLplot documentation) with \fIalpha\fP transparency value (0.0-1.0). It may be called at any time.
+.P
+Redacted form: \fBplscmap1la(itype, intensity, coord1, coord2, coord3, alpha, alt_hue_path) \fP
+.P
+This function is used in example 30.
+.SH ARGUMENTS
+.TP
+\fIitype\fP (\fBPLBOOL\fP(3plplot), input)
+true: RGB, false: HLS.
+.TP
+\fInpts\fP (\fBPLINT\fP(3plplot), input)
+number of control points.
+.TP
+\fIintensity\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the cmap1 intensity index (0.0-1.0) in ascending order for each control point.
+.TP
+\fIcoord1\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the first coordinate (H or R) for each control point.
+.TP
+\fIcoord2\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the second coordinate (L or G) for each control point.
+.TP
+\fIcoord3\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the third coordinate (S or B) for each control point.
+.TP
+\fIalpha\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the alpha transparency value (0.0-1.0) for each control point.
+.TP
+\fIalt_hue_path\fP (\fBPLBOOL_VECTOR\fP(3plplot), input)
+A vector (with \fInpts - 1\fP elements) containing the alternative interpolation method Boolean value for each control point interval.  (alt_hue_path[i] refers to the interpolation interval between the i and i + 1 control points).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

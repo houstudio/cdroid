@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLADV 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBpladv\fP - Advance the (sub-)page
+.SH SYNOPSIS
+\fBpladv\fP(\fIpage\fP)
+.SH DESCRIPTION
+
+.P
+Advances to the next subpage if \fIsub\fP=0, performing a page advance if there are no remaining subpages on the current page.  If subpages aren't being used, \fBpladv\fP(3plplot)(0) will always advance the page.  If \fIpage\fP>0, PLplot switches to the specified subpage.  Note that this allows you to overwrite a plot on the specified subpage; if this is not what you intended, use \fBpleop\fP(3plplot) followed by \fBplbop\fP(3plplot) to first advance the page.  This routine is called automatically (with \fIpage\fP=0) by \fBplenv\fP(3plplot), but if \fBplenv\fP(3plplot) is not used, \fBpladv\fP(3plplot) must be called after initializing PLplot but before defining the viewport.
+.P
+Redacted form: \fBpladv(page)\fP
+.P
+This function is used in examples 1, 2, 4, 6-12, 14-18, 20, 21, 23-27, 29, and 31.
+.SH ARGUMENTS
+.TP
+\fIpage\fP (\fBPLINT\fP(3plplot), input)
+Specifies the subpage number (starting from 1 in the top left corner and increasing along the rows) to which to advance.  Set to zero to advance to the next subpage (or to the next page if subpages are not being used).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

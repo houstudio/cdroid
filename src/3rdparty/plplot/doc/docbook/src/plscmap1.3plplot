@@ -1,0 +1,34 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCMAP1 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplscmap1\fP - Set opaque RGB cmap1 colors values
+.SH SYNOPSIS
+\fBplscmap1\fP(\fIr\fP, \fIg\fP, \fIb\fP, \fIncol1\fP)
+.SH DESCRIPTION
+
+.P
+Set opaque cmap1 colors (see the PLplot documentation) using RGB vector values.  This function also sets the number of cmap1 colors.  N.B. Continuous cmap1 colors are indexed with a floating-point index in the range from 0.0-1.0 which is linearly transformed (e.g., by \fBplcol1\fP(3plplot)) to an integer index of these RGB vectors in the range from 0 to \fIncol1-1\fP.  So in order for this continuous color model to work properly, it is the responsibility of the user of \fBplscmap1\fP(3plplot) to insure that these RGB vectors are continuous functions of their integer indices.
+.P
+Redacted form: \fBplscmap1(r, g, b)\fP
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIr\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector that represents (using unsigned 8-bit integers in the range from 0-255) the degree of red in the color as a continuous function of the integer index of the vector.
+.TP
+\fIg\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector that represents (using unsigned 8-bit integers in the range from 0-255) the degree of green in the color as a continuous function of the integer index of the vector.
+.TP
+\fIb\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector that represents (using unsigned 8-bit integers in the range from 0-255) the degree of blue in the color as a continuous function of the integer index of the vector.
+.TP
+\fIncol1\fP (\fBPLINT\fP(3plplot), input)
+Number of items in the \fIr\fP, \fIg\fP, and \fIb\fP vectors.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,113 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plmesh: Plot surface mesh</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plmeridians.html" title="plmeridians: Plot latitude and longitude lines"><link rel="next" href="plmeshc.html" title="plmeshc: Magnitude colored plot surface mesh with contour"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plmesh</code>: Plot surface mesh
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plmeridians.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plmeshc.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plmesh"></a>
+      <code class="function">plmesh</code>: Plot surface mesh
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plmesh</b>
+          (</code></td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">z</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">nx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ny</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">opt</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plots a surface mesh within the environment set up by <a class="link" href="plw3d.html" title="plw3d: Configure the transformations required for projecting a 3D surface on a 2D window"><code class="function">plw3d</code></a>.  The
+      surface is defined by the matrix
+      <code class="literal">
+        <em class="parameter"><code>z</code></em>[<em class="parameter"><code>nx</code></em>][<em class="parameter"><code>ny</code></em>]
+      </code>,
+      the point <code class="literal"><em class="parameter"><code>z</code></em>[i][j]</code> being the
+      value of the function at
+      <code class="literal">(<em class="parameter"><code>x</code></em>[i], <em class="parameter"><code>y</code></em>[j])</code>.
+      Note that the points in vectors <code class="literal"><em class="parameter"><code>x</code></em></code> and
+      <code class="literal"><em class="parameter"><code>y</code></em></code> do not need to be equally
+      spaced, but must be stored in ascending order.  The parameter
+      <code class="literal"><em class="parameter"><code>opt</code></em></code> controls the way in
+      which the surface is displayed.  For further details see <a class="xref" href="tri-d-plots.html" title="Three-dimensional Plots">the section called “Three-dimensional Plots”</a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the x coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the y coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>z</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+        </span></dt><dd><p>
+	    A matrix containing function values to plot.  Should have
+	    dimensions of <em class="parameter"><code>nx</code></em> by <em class="parameter"><code>ny</code></em>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>nx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal"><em class="parameter"><code>x</code></em></code> values at
+            which function has been evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ny</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal"><em class="parameter"><code>y</code></em></code> values at
+            which function has been evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>opt</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Determines the way in which the surface is represented:
+            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEX
+                  </code>: Lines
+                  are drawn showing
+                  <code class="literal">
+                    <em class="parameter"><code>z</code></em>
+                  </code> as a function
+                  of <code class="literal">
+                    <em class="parameter"><code>x</code></em>
+                  </code> for each
+                  value of <code class="literal">
+                    <em class="parameter"><code>y</code></em>[j]
+                  </code>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEY
+                  </code>: Lines
+                  are drawn showing
+                  <code class="literal">
+                    <em class="parameter"><code>z</code></em>
+                  </code> as a function
+                  of <code class="literal">
+                    <em class="parameter"><code>y</code></em>
+                  </code> for each
+                  value of <code class="literal">
+                    <em class="parameter"><code>x</code></em>[i]
+                  </code>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEXY
+                  </code>: Network
+                  of lines is drawn connecting points at which function is
+                  defined.
+                </p></li></ul></div><p>
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plmesh(x, y, z, opt)</code>
+    </p><p>
+      This function is used in example 11.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plmeridians.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plmeshc.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plmeridians</code>: Plot latitude and longitude lines
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plmeshc</code>: Magnitude colored plot surface mesh with contour
+    </td></tr></table></div></body></html>

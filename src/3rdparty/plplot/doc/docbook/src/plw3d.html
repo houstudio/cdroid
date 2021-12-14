@@ -1,0 +1,139 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plw3d: Configure the transformations required for projecting a 3D surface on a 2D window</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plvsta.html" title="plvsta: Select standard viewport"><link rel="next" href="plwidth.html" title="plwidth: Set pen width"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plw3d</code>: Configure the transformations required for projecting a 3D surface on a 2D window
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plvsta.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plwidth.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plw3d"></a>
+      <code class="function">plw3d</code>: Configure the transformations required for projecting a 3D surface on a 2D window
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plw3d</b>
+          (</code></td><td>
+            <var class="pdparam">basex</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">basey</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">height</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xmin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xmax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">zmin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">zmax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">alt</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">az</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>Configure the transformations required for projecting a 3D
+    surface on an existing 2D window.  Those transformations (see <a class="xref" href="tri-d-plots.html#surface-plots" title="Surface Plots">the section called “Surface Plots”</a>) are done to a rectangular cuboid enclosing
+    the 3D surface which has its limits expressed in 3D world coordinates
+    and also normalized 3D coordinates (used for interpreting the altitude and
+    azimuth of the viewing angle).  The transformations consist of the
+    linear transform from 3D world coordinates to normalized 3D coordinates,
+    and the 3D rotation of normalized coordinates required to align the pole
+    of the new 3D coordinate system with the viewing direction specified
+    by altitude and azimuth so that x and y of the surface elements in
+    that transformed coordinate system are the projection of the 3D
+    surface with given viewing direction on the 2D window.</p><p>The enclosing rectangular cuboid for the surface plot is
+    defined by <code class="literal"><em class="parameter"><code>xmin</code></em></code>,
+    <code class="literal"><em class="parameter"><code>xmax</code></em></code>,
+    <code class="literal"><em class="parameter"><code>ymin</code></em></code>,
+    <code class="literal"><em class="parameter"><code>ymax</code></em></code>,
+    <code class="literal"><em class="parameter"><code>zmin</code></em></code> and
+    <code class="literal"><em class="parameter"><code>zmax</code></em></code> in 3D
+    world coordinates.  It is mapped into the same rectangular
+    cuboid with normalized 3D coordinate sizes of
+    <code class="literal"><em class="parameter"><code>basex</code></em></code> by
+    <code class="literal"><em class="parameter"><code>basey</code></em></code> by
+    <code class="literal"><em class="parameter"><code>height</code></em></code> so that
+    <code class="literal"><em class="parameter"><code>xmin</code></em></code> maps to
+    <code class="literal">-<em class="parameter"><code>basex</code></em>/2</code>,
+    <code class="literal"><em class="parameter"><code>xmax</code></em></code> maps to
+    <code class="literal"><em class="parameter"><code>basex</code></em>/2</code>,
+    <code class="literal"><em class="parameter"><code>ymin</code></em></code> maps to
+    <code class="literal">-<em class="parameter"><code>basey</code></em>/2</code>,
+    <code class="literal"><em class="parameter"><code>ymax</code></em></code> maps to
+    <code class="literal"><em class="parameter"><code>basey</code></em>/2</code>,
+    <code class="literal"><em class="parameter"><code>zmin</code></em></code> maps to
+    <code class="literal">0</code> and
+    <code class="literal"><em class="parameter"><code>zmax</code></em></code> maps to
+    <code class="literal"><em class="parameter"><code>height</code></em></code>.  The resulting
+    rectangular cuboid in normalized coordinates is then viewed by an observer at altitude
+    <code class="literal"><em class="parameter"><code>alt</code></em></code> and azimuth
+    <code class="literal"><em class="parameter"><code>az</code></em></code>.  This routine must be
+    called before <a class="link" href="plbox3.html" title="plbox3: Draw a box with axes, etc, in 3-d"><code class="function"> plbox3</code></a> or any of the 3D surface plotting routines;
+    <a class="link" href="plmesh.html" title="plmesh: Plot surface mesh"><code class="function">plmesh</code></a>, <a class="link" href="plmeshc.html" title="plmeshc: Magnitude colored plot surface mesh with contour"><code class="function">plmeshc</code></a>, <a class="link" href="plot3d.html" title="plot3d: Plot 3-d surface plot"><code class="function">plot3d</code></a>,
+    <a class="link" href="plot3dc.html" title="plot3dc: Magnitude colored plot surface with contour"><code class="function">plot3dc</code></a>, <a class="link" href="plot3dcl.html" title="plot3dcl: Magnitude colored plot surface with contour for z[x][y] with y index limits"><code class="function">plot3dcl</code></a>, <a class="link" href="plsurf3d.html" title="plsurf3d: Plot shaded 3-d surface plot"><code class="function">plsurf3d</code></a>, <a class="link" href="plsurf3dl.html" title="plsurf3dl: Plot shaded 3-d surface plot for z[x][y] with y index limits"><code class="function">plsurf3dl</code></a> or <a class="link" href="plfill3.html" title="plfill3: Draw filled polygon in 3D"><code class="function">plfill3</code></a>.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>basex</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The normalized x coordinate size of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>basey</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The normalized y coordinate size of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>height</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The normalized z coordinate size of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xmin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum x world coordinate of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xmax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum x world coordinate of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum y world coordinate of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum y world coordinate of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>zmin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum z world coordinate of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>zmax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum z world coordinate of the rectangular cuboid.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>alt</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The viewing altitude in degrees above the xy plane of the rectangular
+	    cuboid in normalized coordinates.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>az</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>The viewing azimuth in degrees of the rectangular
+	  cuboid in normalized coordinates.  When
+	  <code class="literal"><em class="parameter"><code>az</code></em>=0</code>, the observer is
+	  looking face onto the zx plane of the rectangular
+	  cuboid in normalized coordinates, and as
+	  <code class="literal"><em class="parameter"><code>az</code></em></code> is increased, the
+	  observer moves clockwise around that cuboid when viewed from above
+          the xy plane.</p></dd></dl></div><p>
+      Redacted form: <code class="function">plw3d(basex, basey, height, xmin, xmax, ymin, ymax, zmin, zmax, alt, az)</code>
+    </p><p>
+      This function is examples 8, 11, 18, and 21.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plvsta.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plwidth.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plvsta</code>: Select standard viewport
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plwidth</code>: Set pen width
+    </td></tr></table></div></body></html>

@@ -1,0 +1,124 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Overview of the Tcl Language Binding</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="tcl.html" title="Chapter 13. Using PLplot from Tcl"><link rel="prev" href="tcl-motivation.html" title="Motivation for the Tcl Interface to PLplot"><link rel="next" href="tcl-extension.html" title="The PLplot Tcl Matrix Extension"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Overview of the Tcl Language Binding</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="tcl-motivation.html">Prev</a> </td><th width="60%" align="center">Chapter 13. Using PLplot from Tcl</th><td width="20%" align="right"> <a accesskey="n" href="tcl-extension.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tcl-overview"></a>Overview of the Tcl Language Binding</h2></div></div></div><p>
+      Each of the PLplot calls available to the C or Fortran programmer are
+      also available from Tcl, with the same name and generally the same
+      arguments.  Thus for instance, whereas in C you can write:
+      
+    </p><pre class="programlisting">
+      plenv( 0., 1., 0., 1., 0, 0 );
+      pllab( "(x)", "(y)", "The title of the graph" );
+    </pre><p>
+      you can now write in Tcl:
+    </p><pre class="programlisting">
+      plenv 0 1 0 1 0 0
+      pllab "(x)" "(y)" "The title of the graph"
+    </pre><p>
+      All the normal Tcl rules apply, there is nothing special about the
+      PLplot extension commands.  So, you could write the above as:
+    </p><pre class="programlisting">
+      set xmin 0; set xmax 1; set ymin 0; set ymax 1
+      set just 0; set axis 0
+      set xlab (x)
+      set ylab (y)
+      set title "The title of the graph"
+      plenv $xmin $xmax $ymin $ymax $just $axis
+      pllab $xlab $ylab $title
+    </pre><p>
+      for example.  Not that there is any reason to be loquacious for its
+      own sake, of course.  The point is that you might have things like the
+      plot bounds or axis labels stored in Tcl variables for some other
+      reason (tied to a Tk entry widget maybe, or provided as the result of
+      one of your application specific Tcl extension commands, etc), and
+      just want to use standard Tcl substitution to make the PLplot calls.
+    </p><p>
+      Go ahead and try it!  Enter <code class="literal">pltcl</code> to start up the PLplot
+      extended Tcl shell, and type (or paste) in the commands.  Or put them
+      in a file and source it.  By this point it should be clear how
+      incredibly easy it is to use the PLplot Tcl language binding.
+    </p><p>
+      In order to accommodate the ubiquitous requirement for matrix oriented
+      data in scientific applications, and in the PLplot API in particular,
+      PLplot includes a Tcl extension for manipulating matrices in Tcl.
+      This Tcl Matrix Extension provides a straightforward and direct means
+      of representing one and two dimensional matrices in Tcl.  The Tcl
+      Matrix Extension is described in detail in the next section, but we
+      mention its existence now just so that we can show how the PLplot Tcl
+      API works.  Many of the PLplot Tcl API functions accept Tcl matrices
+      as arguments.  For instance, in C you might write:
+    </p><pre class="programlisting">
+      float x[100], y[100];
+
+      /* code to initialize x and y */
+
+      plline( 100, x, y );
+    </pre><p>
+      In Tcl you can write:
+    </p><pre class="programlisting">
+      matrix x f 100
+      matrix y f 100
+
+      # code to initialize x and y
+
+      plline x y
+    </pre><p>
+    N.B. Our Tcl binding uses a redacted API which is why the
+    redundant dimension of the x and y arrays must be dropped from the
+    plline call.
+    </p><p>
+      Some of the PLplot C function calls use pointer arguments to allow
+      retrieval of PLplot settings.  These are implemented in Tcl by
+      changing the value of the variable whose name you provide.  For
+      example:
+    </p><pre class="programlisting">
+      pltcl&gt; plgxax
+      wrong # args: should be "plgxax digmax digits  "
+      pltcl&gt; set digmax 0
+      0
+      pltcl&gt; set digits 0
+      0
+      pltcl&gt; plgxax digmax digits
+      pltcl&gt; puts "digmax=$digmax digits=$digits"
+      digmax=4 digits=0
+    </pre><p>
+      This example shows that each PLplot Tcl command is designed to issue
+      an error if you invoke it incorrectly, which in this case was used to
+      remind us of the correct arguments.  We then create two Tcl variables
+      to hold the results.  Then we invoke the PLplot <code class="literal">plgxax</code> function
+      to obtain the label formatting information for the x axis.  And
+      finally we print the results.
+    </p><p>
+      People familiar with Tcl culture may wonder why the <code class="literal">plg*</code> series
+      functions don't just pack their results into the standard Tcl result
+      string.  The reason is that the user would then have to extract the
+      desired field with either <code class="literal">lindex</code> or
+      <code class="literal">regexp</code>, which seems
+      messy.  So instead, we designed the PLplot Tcl API to look and feel as
+      much like the C API as could reasonably be managed.
+    </p><p>
+      In general then, you can assume that each C function is provided in
+      Tcl with the same name and same arguments (and one or two dimensional
+      arrays in C are replaced by Tcl matrices).  There are only a few
+      exceptions to this rule, generally resulting from the complexity of
+      the argument types which are passed to some functions in the C API.
+      Those exceptional functions are described below, all others work in
+      the obvious way (analogous to the examples above).
+    </p><p>
+      See the Tcl example programs for extensive demonstrations of the usage
+      of the PLplot Tcl API.  To run the Tcl demos:
+    </p><pre class="programlisting">
+      % pltcl
+      pltcl&gt; source tcldemos.tcl
+      pltcl&gt; 1
+      pltcl&gt; 2
+    </pre><p>
+      Alternatively, you can run <code class="literal">plserver</code> and source
+      <code class="filename">tkdemos.tcl</code>.
+    </p><p>
+      In any event, the Tcl demos provide very good coverage of the Tcl API,
+      and consequently serve as excellent examples of usage.  For the most
+      part they draw the same plots as their C counterpart.  Moreover, many
+      of them were constructed by literally inserting the C code into the
+      Tcl source file, and performing fairly mechanical transformations on
+      the source.  This should provide encouragement to anyone used to using
+      PLplot through one of the compiled interfaces, that they can easily
+      and rapidly become productive with PLplot in Tcl.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="tcl-motivation.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="tcl.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="tcl-extension.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Motivation for the Tcl Interface to PLplot </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> The PLplot Tcl Matrix Extension</td></tr></table></div></body></html>

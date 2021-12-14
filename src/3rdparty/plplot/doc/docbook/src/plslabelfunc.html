@@ -1,0 +1,60 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plslabelfunc: Assign a function to use for generating custom axis labels</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plshade.html" title="plshade: Shade individual region on the basis of value"><link rel="next" href="plsmaj.html" title="plsmaj: Set length of major ticks"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plslabelfunc</code>: Assign a function to use for generating custom axis labels
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plshade.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plsmaj.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plslabelfunc"></a>
+      <code class="function">plslabelfunc</code>: Assign a function to use for generating custom axis labels
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plslabelfunc</b>
+          (</code></td><td>
+            <var class="pdparam">label_func</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">label_data</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      This function allows a user to provide their own function to provide
+      axis label text.  The user function is given the numeric value for a
+      point on an axis and returns a string label to correspond with that
+      value.  Custom axis labels can be enabled by passing appropriate
+      arguments to <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a>, <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>, <a class="link" href="plbox3.html" title="plbox3: Draw a box with axes, etc, in 3-d"><code class="function"> plbox3</code></a> and similar functions.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>label_func</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLLABEL_FUNC_callback-type"><code class="function">PLLABEL_FUNC_callback</code></a></code>, input)
+        </span></dt><dd><p>
+            This is the custom label function.  In order to reset to the
+            default labelling, set this to <code class="literal">NULL</code>.
+            The labelling function parameters are, in order:
+            </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+                  <em class="parameter"><code>axis</code></em>
+                </span></dt><dd><p>
+                    This indicates which axis a label is being requested for.
+                    The value will be one of <code class="literal">PL_X_AXIS</code>,
+                    <code class="literal">PL_Y_AXIS</code> or
+                    <code class="literal">PL_Z_AXIS</code>.
+                  </p></dd><dt><span class="term">
+                  <em class="parameter"><code>value</code></em>
+                </span></dt><dd><p>
+                    This is the value along the axis which is being labelled.
+                  </p></dd><dt><span class="term">
+                  <em class="parameter"><code>label_text</code></em>
+                </span></dt><dd><p>
+                    The string representation of the label
+                    <code class="literal">value</code>.
+                  </p></dd><dt><span class="term">
+                  <em class="parameter"><code>length</code></em>
+                </span></dt><dd><p>
+                    The maximum length in characters allowed for
+                    <code class="literal">label_text</code>.
+                  </p></dd></dl></div><p>
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>label_data</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLPointer-type"><code class="function">PLPointer</code></a></code>, input)
+        </span></dt><dd><p>
+            This parameter may be used to pass data to the
+            <code class="literal">label_func</code> function.
+          </p></dd></dl></div><p>
+      This function is used in example 19.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plshade.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plsmaj.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plshade</code>:  Shade individual region on the basis of value
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plsmaj</code>: Set length of major ticks
+    </td></tr></table></div></body></html>

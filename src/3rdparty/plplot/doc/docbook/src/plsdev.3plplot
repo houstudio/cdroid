@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSDEV 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsdev\fP - Set the device (keyword) name
+.SH SYNOPSIS
+\fBplsdev\fP(\fIdevname\fP)
+.SH DESCRIPTION
+
+.P
+Set the device (keyword) name.
+.P
+Redacted form: \fBplsdev(devname)\fP
+.P
+This function is used in examples 1, 14, and 20.
+.SH ARGUMENTS
+.TP
+\fIdevname\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the device name keyword of the required output device.  If \fIdevname\fP is NULL or if the first character of the string is a ``?'', the normal (prompted) start up is used.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

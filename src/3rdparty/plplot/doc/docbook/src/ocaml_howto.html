@@ -1,0 +1,121 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>How to use the OCaml bindings</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="OCaml.html" title="Chapter 11. OCaml Language"><link rel="prev" href="ocaml_obtaining.html" title="Obtaining the Software"><link rel="next" href="ocaml_known_issues.html" title="Known Issues"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">How to use the OCaml bindings</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ocaml_obtaining.html">Prev</a> </td><th width="60%" align="center">Chapter 11. OCaml Language</th><td width="20%" align="right"> <a accesskey="n" href="ocaml_known_issues.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="ocaml_howto"></a>How to use the OCaml bindings</h2></div></div></div><p>
+      The three examples provided below illustrate the available methods for
+      generating plots with PLplot from OCaml.  They proceed in order from
+      lowest-level to highest-level.
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ocaml_findlib_setup"></a>How to setup findlib for use with the OCaml bindings</h3></div></div></div><p>
+        The following examples require that
+        <a class="ulink" href="http://projects.camlcity.org/projects/findlib.html" target="_top">
+          findlib
+        </a>
+        and its associated tools (i.e., ocamlfind) are installed in in your
+        <code class="literal">$PATH</code>.
+      </p><p>
+        If PLplot was installed under a non-standard prefix, or any prefix
+        where findlib does not check automatically for OCaml libraries, then
+        the following environment variables can be set to tell findlib where to
+        look for PLplot:
+      </p><pre class="programlisting">
+        export OCAMLPATH=$PLPLOT_INSTALL_PREFIX/lib/ocaml:$OCAMLPATH
+        export LD_LIBRARY_PATH=$PLPLOT_INSTALL_PREFIX/lib/ocaml/stublibs:$LD_LIBRARY_PATH
+      </pre></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ocaml_command_line_sample_project_core"></a>Sample command line project (core API)</h3></div></div></div><p>
+        Here is a simple example that can be compiled and run from the command
+        line.  The result will be a program that generates a plot of part of a
+        parabola using only the core PLplot API.
+      </p><pre class="programlisting">
+        (* Open the Plplot module to give access to all of the PLplot
+           values without the need to add the "Plplot." prefix. *)
+        open Plplot
+
+        let simple_example () =
+          (* Sample at 20 points, ranging from -10.0 to 10.0 *)
+          let xs = Array.init 21 (fun xi -&gt; float xi -. 10.0) in
+          let ys = Array.map (fun x -&gt; x**2.0) xs in
+
+          (* Initialize PLplot *)
+          plinit ();
+
+          (* Draw the plot window axes *)
+          plenv (-10.0) 10.0 0.0 100.0 0 0;
+
+          (* Draw the parabola points as a series of line segments *)
+          plline xs ys;
+
+          (* End the plotting session *)
+          plend ();
+          ()
+
+        let () = simple_example ()
+      </pre><p>
+        Save this code as <code class="literal">simple_example_core.ml</code>. The
+        following command can then be used to build the example:
+      </p><pre class="programlisting">
+        ocamlfind opt -package plplot -linkpkg -o simple_example_core simple_example_core.ml
+      </pre><p>
+        The resulting binary program can be run by typing
+        <code class="literal">./simple_example_core</code>
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ocaml_command_line_sample_project_ocaml"></a>Sample command line project (OCaml-specific API)</h3></div></div></div><p>
+        Here is another example that can be compiled and run from the command
+        line.  The result will be a program that generates a plot of part of a
+        parabola similar to the above example, but now using the
+        OCaml-specific PLplot API rather than the core PLplot API.
+      </p><pre class="programlisting">
+        (* Open the Plplot module to give access to all of the PLplot
+           values without the need to add the "Plplot." prefix.
+           Aliasing the module P to the module Plot will save some typing
+           without further namespace pollution. *)
+        open Plplot
+        module P = Plot
+
+        let simple_example () =
+          (* Initialize a new plot, using the windowed Cairo device
+             ("xcairo") *)
+          let p =
+            P.init (-10.0, 0.0) (10.0, 100.0) `greedy (`window `cairo)
+          in
+
+          (* Draw the parabola *)
+          P.plot ~stream:p [P.func `blue (fun x -&gt; x ** 2.0) (-10.0, 10.0)];
+
+          (* Draw the plot axes and close up the plot stream using the default
+             spacing between tick marks. *)
+          P.finish ~stream:p ();
+          ()
+
+        let () = simple_example ()
+      </pre><p>
+        Save this code as <code class="literal">simple_example_ocaml.ml</code>.  The
+        following command can then be used to build the example:
+      </p><pre class="programlisting">
+        ocamlfind opt -package plplot -linkpkg -o simple_example_ocaml simple_example_ocaml.ml
+      </pre><p>
+        The resulting binary program can be run by typing
+        <code class="literal">./simple_example_ocaml</code>
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ocaml_toplevel_sample_project"></a>Sample toplevel project</h3></div></div></div><p>
+        The OCaml interactive toplevel (<code class="literal">ocaml</code>) provides a
+        very useful tool for code testing, development and interactive data
+        analysis.
+      </p><p>
+        The <code class="literal">Quick_plot</code> module provides a set of functions
+        for producing quick, simple two-dimensional plots from both the
+        toplevel and stand-alone OCaml programs.  Here is a set of commands
+        which can be used in a toplevel session to produce a plot of a portion
+        of a parabola, similar to the compiled examples above.
+      </p><pre class="programlisting">
+        # #use "topfind";;
+        # #require "plplot";;
+        # open Plplot;;
+        # Quick_plot.func ~names:["Parabola"] [(fun x -&gt; x ** 2.0)] (-10.0, 10.0);;
+      </pre><p>
+        Conversely, the above <code class="literal">ocaml</code> session could be
+        expressed in a compiled OCaml program:
+      </p><pre class="programlisting">
+        Plplot.Quick_plot.func ~names:["Parabola"] [(fun x -&gt; x ** 2.0)] (-10.0, 10.0)
+      </pre><p>
+        Save this code as <code class="literal">simple_example_quick.ml</code>.  The
+        following command can then be used to build the example:
+      </p><pre class="programlisting">
+        ocamlfind opt -package plplot -linkpkg -o simple_example_quick simple_example_quick.ml
+      </pre><p>
+        The resulting binary program can be run by typing
+        <code class="literal">./simple_example_quick</code>
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ocaml_obtaining.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="OCaml.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ocaml_known_issues.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Obtaining the Software </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Known Issues</td></tr></table></div></body></html>

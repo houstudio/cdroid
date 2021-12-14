@@ -1,0 +1,41 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLHLSRGB 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplhlsrgb\fP - Convert HLS color to RGB
+.SH SYNOPSIS
+\fBplhlsrgb\fP(\fIh\fP, \fIl\fP, \fIs\fP, \fIp_r\fP, \fIp_g\fP, \fIp_b\fP)
+.SH DESCRIPTION
+
+.P
+Convert HLS color coordinates to RGB.
+.P
+Redacted form: General: \fBplhlsrgb(h, l, s, p_r, p_g, p_b)\fP
+
+.P
+This function is used in example 2.
+.SH ARGUMENTS
+.TP
+\fIh\fP (\fBPLFLT\fP(3plplot), input)
+Hue in degrees (0.0-360.0) on the color cylinder.
+.TP
+\fIl\fP (\fBPLFLT\fP(3plplot), input)
+Lightness expressed as a fraction (0.0-1.0) of the axis of the color cylinder.
+.TP
+\fIs\fP (\fBPLFLT\fP(3plplot), input)
+Saturation expressed as a fraction (0.0-1.0) of the radius of the color cylinder.
+.TP
+\fIp_r\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the red intensity (0.0-1.0) of the color.
+.TP
+\fIp_g\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the green intensity (0.0-1.0) of the color.
+.TP
+\fIp_b\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the blue intensity (0.0-1.0) of the color.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

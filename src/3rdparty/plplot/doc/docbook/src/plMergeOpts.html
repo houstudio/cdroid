@@ -1,0 +1,40 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plMergeOpts: Merge use option table into internal info structure</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot"><link rel="prev" href="plgfile.html" title="plgfile: Get output file handle"><link rel="next" href="plMinMax2dGrid.html" title="plMinMax2dGrid: Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plMergeOpts</code>: Merge use option table into
+      internal info structure
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plgfile.html">Prev</a> </td><th width="60%" align="center">Chapter 18. The Specialized C/C++ API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plMinMax2dGrid.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plMergeOpts"></a>
+      <code class="function">plMergeOpts</code>: Merge use option table into
+      internal info structure
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">PLINT
+	    <b class="fsfunc">plMergeOpts</b>
+	  (</code></td><td><var class="pdparam">options</var>, </td></tr><tr><td> </td><td><var class="pdparam">name</var>, </td></tr><tr><td> </td><td><var class="pdparam">notes</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Merges in a set of user-supplied command line options with the
+      internal options table. This allows such options to be used along
+      with the built-in PLplot options to set device driver, output file
+      etc. See <a class="link" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><code class="function">plparseopts</code></a> for details of how to parse these options in
+      a program.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>options</code></em>
+	  (<code class="literal">PLOptionTable *</code>, input)
+	</span></dt><dd><p>
+	    User option table to merge.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>name</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	  Label to preface the options in the program help.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>notes</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a> *</code>, input)
+	</span></dt><dd><p>
+	    A vector of character strings which appear after
+	    the options in the program help.
+	  </p></dd></dl></div><p>
+      This function is used in C examples 1, 8, 16, 20 and 21.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plgfile.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-C.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plMinMax2dGrid.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plgfile</code>: Get output file handle
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plMinMax2dGrid</code>: Find the minimum and
+    maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using <code class="function">plAlloc2dGrid</code>
+    </td></tr></table></div></body></html>

@@ -1,0 +1,31 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plGetCursor: Wait for graphics input event and translate to world coordinates.</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plfontld.html" title="plfontld: Load Hershey fonts"><link rel="next" href="plgchr.html" title="plgchr: Get character default height and current (scaled) height"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plGetCursor</code>: Wait for graphics input event and translate to world coordinates.
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plfontld.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plgchr.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plGetCursor"></a>
+      <code class="function">plGetCursor</code>: Wait for graphics input event and translate to world coordinates.
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">PLINT
+	    <b class="fsfunc">plGetCursor</b>
+	  (</code></td><td><var class="pdparam">gin</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Wait for graphics input event and translate to world coordinates.
+      Returns 0 if no translation to world coordinates is possible.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>gin</code></em>
+	  (<code class="literal"><a class="link" href="PLGraphicsIn.html" title="PLGraphicsIn: PLplot Graphics Input structure"><span class="structname">PLGraphicsIn</span></a> *</code>, output)
+	</span></dt><dd><p>
+	    Pointer to <a class="link" href="PLGraphicsIn.html" title="PLGraphicsIn: PLplot Graphics Input structure"><span class="structname">PLGraphicsIn</span></a> structure which will contain the
+	    output. The structure is not allocated by the routine
+	    and must exist before the function is called.
+	  </p></dd></dl></div><p>
+      This function returns 1 on success and 0 if no translation to world
+      coordinates is possible.
+    </p><p>
+      Redacted form: <code class="function">plGetCursor(gin)</code>
+    </p><p>
+      This function is used in examples 1 and 20.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plfontld.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plgchr.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plfontld</code>: Load Hershey fonts
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plgchr</code>: Get character default height and current
+      (scaled) height
+    </td></tr></table></div></body></html>

@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# --- Command line
+# Name of the ref being updated.
+refname="$1"
+# The old object name currently stored in the ref.
+oldrev="$2"
+# The new objectname to be stored in the ref.
+newrev="$3"
+
+# --- Safety check
+if [ -z "$GIT_DIR" ]; then
+    echo "Don't run this script from the command line." >&2
+    echo " (if you want, you could supply GIT_DIR then run" >&2
+    echo "  $0 <ref> <oldrev> <newrev>)" >&2
+    exit 1
+fi
+
+if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
+    echo "Usage: $0 <ref> <oldrev> <newrev>" >&2
+    exit 1
+fi
+
+if [ "$refname" = "refs/heads/master" ] ; then
+    # Don't allow merge commits on master
+    for rev in $(git rev-list $oldrev..$newrev) ; do
+	# $rev is one of a list of commits found by the above
+        # command that are in $newrev, but not $oldrev, i.e., the
+        # new commits being applied to master.
+	echo -n "Checking: commit $rev on master not a merge commit"
+        # Is there a second parent?
+        if git rev-parse --verify --quiet $rev^2 > /dev/null ; then
+            echo "\n$rev is a merge commit found on the master branch which is not allowed by the rebase workflow of the PLplot project.  To avoid this reject of your push, please consult the documentation of the PLplot workflow in the file README.developers."
+            exit 1
+        else
+            echo " (ok)"
+        fi
+    done
+elif [ "${refname#*refs/tags/}" != "$refname" ] ; then
+    # The above logic tests if "refs/tags/" is a substring of $refname
+    # for posix-compliant shells like dash (which is normally what
+    # bin/sh above refers to on Linux systems).
+
+    # Don't allow tag deletes or reusing an old tagname to point to a
+    # new commit ID.  These update hook ideas obtained from
+    # http://stackoverflow.com/questions/6390966/disable-tag-deletion
+
+    # exactly 40 zeros are required.
+    zero_id=0000000000000000000000000000000000000000
+    echo -n "Checking: $refname update with oldrev = $oldrev and newrev = $newrev"
+    if [ "$newrev" = "$zero_id" ] ; then
+	echo "\nThis is an attempt to delete a tag which is not allowed with PLplot"
+	exit 1
+    elif [ "$oldrev" != "$zero_id" ] ; then
+        # Normally $oldrev is $zero_id unless it is a reuse attempt.
+	echo "\nThis is an attempt to reuse an old tagname to point to a new commit ID which is not allowed with PLplot"
+	exit 1
+    else
+        echo " (ok)"
+    fi
+fi

@@ -1,0 +1,26 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>The xwin driver</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="interactive-drivers.html" title="Chapter 6. Drivers which implement interactive devices"><link rel="prev" href="interactive-cairo-driver.html" title="The cairo driver"><link rel="next" href="tk-driver.html" title="The tk driver"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">The xwin driver</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="interactive-cairo-driver.html">Prev</a> </td><th width="60%" align="center">Chapter 6. Drivers which implement interactive devices</th><td width="20%" align="right"> <a accesskey="n" href="tk-driver.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="xwin-driver"></a>The xwin driver</h2></div></div></div><p>
+      The xwin driver directly uses the X library to implement the
+      xwin device.  The graphical quality of this device is poor (e.g.,
+      there is no antialiasing of graphics or text, it uses Hershey fonts
+      rather than unicode-aware system fonts, and it has no complex text
+      layout capabilities).  Nevertheless its raw interactive capabilities
+      are the best of all our devices.  For example, the interactive parts
+      of standard example 20 work correctly with this device.
+    </p><p>
+      Plots are displayed one page at a time.  The pager is advanced by
+      pressing the Enter key, and may only be advanced in the forward
+      direction.
+    </p><p>
+      The available driver options are:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  sync: Synchronized X server operation (0|1)
+	</p></li><li class="listitem"><p>
+	  nobuffered: Sets unbuffered operation (0|1)
+	</p></li><li class="listitem"><p>
+	  noinitcolors: Sets cmap0 allocation (0|1)
+	</p></li><li class="listitem"><p>
+	  defvis: Use the Default Visual (0|1)
+	</p></li><li class="listitem"><p>
+	  usepth: Use pthreads (0|1)
+	</p></li></ul></div><p>
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="interactive-cairo-driver.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="interactive-drivers.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="tk-driver.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">The cairo driver </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> The tk driver</td></tr></table></div></body></html>

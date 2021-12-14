@@ -1,0 +1,132 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Unique Features of the Ada bindings</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="ada.html" title="Chapter 8. Ada Language"><link rel="prev" href="ada_howto.html" title="How to use the Ada bindings"><link rel="next" href="ada_c_flavor.html" title="Parts That Retain a C Flavor"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Unique Features of the Ada bindings</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ada_howto.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Ada Language</th><td width="20%" align="right"> <a accesskey="n" href="ada_c_flavor.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="ada_unique"></a>Unique Features of the Ada bindings</h2></div></div></div><p>The Ada bindings have been augmented with a number of features which
+    are intended to simplify the use of PLplot. They include high-level
+    features for simplified plotting (such as easy foreground-background
+    control, a collection of "simple plotters," and easy color map
+    manipulations), integer options which have been given meaningful names,
+    and a few other focused additions. Many users will find that they can do
+    most of their work using the "simple plotters".</p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_high_level"></a>High-level features for simplified plotting</h3></div></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="ada_foreground_background"></a>Foreground-background control</h4></div></div></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_draw_bw"></a>Draw_On_Black, Draw_On_White</h5></div></div></div><p>The default for PLplot is to draw its graphics on a black
+          background. A white background can be used instead with
+          <code class="literal">Draw_On_White</code> or reset to the original mode with
+          <code class="literal">Draw_On_Black</code>. Each of these manipulates color
+          map 0 by swapping black and white so that e.g.with
+          <code class="literal">Draw_On_White</code>, formerly white lines on a black
+          background automatically become black lines on a white
+          background.</p></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="ada_simple_plotters"></a>Simple Plotters</h4></div></div></div><p>Several high-level but flexible plotters are available and more
+        might be added in the future. It is expected that many users will find
+        that these high-level routines are adequate for most of their
+        day-to-day plotting.</p><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_multiple_pairs"></a>Multiplot_Pairs</h5></div></div></div><p>Plot up to five <span class="emphasis"><em>x-y</em></span> pairs with easy
+          labelling, coloring, line width and styles, justification, and
+          zooming.</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_plot"></a>Simple_Plot</h5></div></div></div><p>Plot up to five <span class="emphasis"><em>y</em></span>'s against a single
+          <span class="emphasis"><em>x</em></span> with easy labelling and automatic line colors
+          and styles.</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_plot_logx"></a>Simple_Plot_Log_X</h5></div></div></div><p>Same as <code class="literal">Simple_Plot</code> but with logarithmic
+          <span class="emphasis"><em>x</em></span>-axis.</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_plot_logy"></a>Simple_Plot_Log_Y</h5></div></div></div><p>Same as <code class="literal">Simple_Plot</code> but with logarithmic
+          <span class="emphasis"><em>y</em></span>-axis.</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_plot_logxy"></a>Simple_Plot_Log_XY</h5></div></div></div><p>Same as <code class="literal">Simple_Plot</code> but with logarithmic
+          <span class="emphasis"><em>x</em></span>- and <span class="emphasis"><em>y</em></span>-axes.</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_plot_pairs"></a>Simple_Plot_Pairs</h5></div></div></div><p>Plot up to five <span class="emphasis"><em>x</em></span>-<span class="emphasis"><em>y</em></span>
+          pairs with easy labelling and automatic line colors and
+          styles.</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_single_plot"></a>Single_Plot</h5></div></div></div><p>Plot a single <span class="emphasis"><em>x</em></span>-<span class="emphasis"><em>y</em></span>
+          pair with flexible labels, axis styles, colors, line width and
+          style, justification, and zooming.</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_contour"></a>Simple_Contour</h5></div></div></div><p>Make a contour plot with labels</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_mesh"></a>Simple_Mesh_3D</h5></div></div></div><p>Easy 3D mesh plot with labels, zooming, and perspective
+          controls</p></div><div class="sect4"><div class="titlepage"><div><div><h5 class="title"><a name="ada_simple_surface_3d"></a>Simple_Surface_3D</h5></div></div></div><p>Easy 3D surface plot with labels, zooming, and perspective
+          controls</p></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="ada_simple_color"></a>Simple color map manipulations</h4></div></div></div><p>PLplot provides extensive manipulation and control of two
+        separate color maps, color map 0 and color map 1. The Ada binding
+        makes basic manipulations easier and also adds facilities for making
+        snapshots of color map 0 so that any state of the map can easily be
+        restored later. An initial snapshot is taken when the package is
+        initialized so that the default color settings can always be restored
+        after having been changed.</p><p>Another set of features lets the user reset the 16 individual
+        colors in color map 0 after a color definition has been changed. It is
+        important to note that while <code class="literal">Set_Pen_Color(Red)</code>
+        (<code class="literal">plcol0</code> in the traditional binding) normally does
+        what it says, <code class="literal">Red</code> simply has the value
+        <code class="literal">1</code>. If the user changes the color map so that
+        <code class="literal">1</code> corresponds to another color, then
+        <code class="literal">Set_Pen_Color(Red)</code> will draw in that color instead
+        of red. To always assure that red is drawn even if the color map has
+        been changed for integer <code class="literal">1</code>, use
+        <code class="literal">Set_Pen_Color(Reset_Red)</code> instead. These 16 "reset"
+        functions return the appropriate default integer for the specified
+        color but also reset that slot in the color table so that a subsequent
+        call such as <code class="literal">Set_Pen_Color(Red)</code> will also cause
+        drawing in red.</p><p>Color map 1 also gets a easy-to-use makeover for Ada users.
+        There are several prebuilt color themes that are useful for quickly
+        making surface and mesh plots,
+        <code class="literal">Color_Themes_For_Map_1_Type</code>. These color themes can
+        be quickly applied with
+        <code class="literal">Quick_Set_Color_Map_1</code>.</p><p>Miscellaneous other Ada features include a prebuilt mask
+        function for <code class="literal">Shade_Regions</code> that does no masking;
+        perhaps the most useful purpose is to provide a template for writing
+        mask functions that do mask. And there is a handy function for
+        calculating the contour levels for making contour plots.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Color table snapshots</p><p><code class="literal">Make_Snapshot_Of_Color_Map_0</code></p><p><code class="literal">Restore_Snapshot_Of_Color_Map_0</code></p><p><code class="literal">Restore_Default_Snapshot_Of_Color_Map_0</code></p></li><li class="listitem"><p>Color resetting functions for the 16 colors of color map
+            0</p><p><code class="literal">Reset_Black, Reset_Red, ..., Reset_White</code></p></li><li class="listitem"><p>Easy manipulation of color map 1</p><p>Prebuilt color themes for color map 1:
+            <code class="literal">Color_Themes_For_Map_1_Type</code></p><p>Quick application of prebuilt color themes:
+            <code class="literal">Quick_Set_Color_Map_1</code></p></li><li class="listitem"><p>Other features</p><p>A prebuilt mask function for
+            <code class="literal">Shade_Regions</code> that does no masking:
+            <code class="literal">Mask_Function_No_Mask</code></p><p>An easy way to calculate an array of contour levels for
+            contour plots: <code class="literal">Calculate_Contour_Levels</code></p></li></ul></div></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_integer_options"></a>Integer Options Given Ada Names</h3></div></div></div><p>The C version of PLplot uses a number of integers to mean specific
+      things. Unfortunately, the meaning is lost when it it consigned to being
+      a mere integer with no name. The Ada binding partially rectifies this
+      situation by giving names to these integer constants. The integer can
+      still be used if desired. (A more complete and safer rectification would
+      use enumerated types.)</p><p>Below is a listing of at least the contexts in which these
+      "re-namings" have been applied. In some cases the entire range of values
+      is listed, but if there are more than about four such values for each
+      context, only a sampling is given.</p><p><span class="bold"><strong> Instances</strong></span></p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Colors: Plot_Color_Type</p><p><code class="literal"> 0</code> is Black, <code class="literal">1</code> is Red,
+            etc</p></li><li class="listitem"><p>Justification for plots:
+            <code class="literal">Justification_Type</code></p><p><code class="literal">User_Justified</code></p><p><code class="literal">Not_Justified</code></p><p><code class="literal">Justified</code></p><p><code class="literal">Justified_Square_Box</code></p></li><li class="listitem"><p>Axis styles: <code class="literal">Axis_Style_Type</code></p><p><code class="literal">Linear_Major_Grid</code></p><p><code class="literal">Linear_Minor_Grid</code></p><p>etc.</p></li><li class="listitem"><p>Font styles: <code class="literal">Font_Style_Type</code></p><p><code class="literal">Normal_Font</code></p><p><code class="literal">Roman_Font</code></p><p><code class="literal">Italic_Font</code></p><p><code class="literal">Script_Font</code></p></li><li class="listitem"><p>Character sets: <code class="literal">Character_Set_Type</code></p><p><code class="literal">Standard_Character_Set</code></p><p><code class="literal">Extended_Character_Set</code></p></li><li class="listitem"><p>Plot orientation: <code class="literal">Orientation_Type</code></p><p><code class="literal">Landscape</code></p><p><code class="literal">Portrait</code></p></li><li class="listitem"><p>Modes for parsing command line arguments:
+            <code class="literal">Parse_Mode_Type</code></p><p>E.g. <code class="literal">PL_PARSE_PARTIAL</code></p></li><li class="listitem"><p>Descriptions of map outlines (continents, states, etc.):
+            <code class="literal">Map_Type</code></p><p><code class="literal">Continents</code></p><p><code class="literal">USA_and_States</code></p><p><code class="literal">Continents_and_Countries</code></p><p><code class="literal">USA_States_and_Continents</code></p></li><li class="listitem"><p>Various style and view options for 3D and surface
+            plots</p><p>E.g. <code class="literal">Lines_Parallel_To_X</code></p></li><li class="listitem"><p>Kind of gridding algorithm for interpolating 2D data to a
+            grid: <code class="literal">Gridding_Algorithm_Type</code></p><p>E.g.
+            <code class="literal">Grid_Bivariate_Cubic_Spline_Approximation</code></p></li><li class="listitem"><p>Flags for histogram style</p><p>E.g. <code class="literal">Histogram_Default</code></p></li><li class="listitem"><p>Flags for histogram binning</p><p>E.g. <code class="literal">Bin_Default</code></p></li><li class="listitem"><p>Names for color space models</p><p>Hue, Lightness, Saturation: <code class="literal">HLS</code></p><p>Red, Green, Blue: <code class="literal">RGB</code></p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_one_offs"></a>One-offs</h3></div></div></div><p>To provide convenient string handling in a fashion that is
+      familiar to Ada programmers, function versions which return a
+      <code class="literal">String</code> type are provided of
+      <code class="literal">Get_Device_Name</code>,
+      <code class="literal">Get_Version_Number</code>, and
+      <code class="literal">Get_Output_File_Name</code> (<code class="literal">plgdev</code>,
+      <code class="literal">plgver</code>, and <code class="literal">plgfnam</code> in the
+      traditional binding). These functions replace the procedure-style
+      subprograms that are described in the C API documentation.</p><p>Overloaded <code class="literal">Set_Line_Style</code>
+      (<code class="literal">plstyl</code> in the traditional binding) with a version
+      that takes a single argument,
+      <code class="literal">Default_Continuous_Line</code>. This replaces the awkward
+      situation of calling the normal versions of these procedures with unused
+      arguments simply to set the line style to the default, continuous,
+      line.</p><p>The contour plotter <code class="literal">Contour_Plot_Irregular_Data</code>
+      (<code class="literal">plfcont</code> in the traditional binding) is provided for
+      making contour plots from irregularly spaced data. This feature is not
+      documented in the PLplot API documentation.</p><p>The custom label function <code class="literal">Set_Custom_Label</code>
+      (<code class="literal">plslabelfunc</code> in the traditional binding) can be
+      called with null arguments to revert to using the default labelling
+      scheme. Alternately, an Ada-only procedure with no arguments,
+      <code class="literal">Use_Default_Labels</code>, is provided. See Ada example 19
+      (<code class="literal">x19a.adb</code> or <code class="literal">xthick19a.adb</code>) for a
+      usage example.</p><p>The custom coordinate transform setter,
+      <code class="literal">Set_Custom_Coordinate_Transform</code>,
+      (<code class="literal">plstransform</code> in the traditional binding) can be
+      called with null arguments to clear any previous custom coordinate
+      transforms that the user has set, thus reverting to the default
+      coordinate transform. Alternately, an Ada-only procedure with no
+      arguments, <code class="literal">Clear_Custom_Coordinate_Transform</code>, is
+      provided. See Ada example 19 (<code class="literal">x19a.adb</code> or
+      <code class="literal">xthick19a.adb</code>) for a usage example.</p><p>The procedure <code class="literal">Set_Arrow_Style_For_Vector_Plots</code>
+      (<code class="literal">plsvect</code> in the traditional binding) normally is called
+      to define the shape of an arrow in vector plots. However, calling it with
+      null pointer arguments (<code class="literal">System.Null_Address</code>)  in place
+      of the <code class="literal">Real_Vector</code> arrays and <code class="literal">False</code>
+      for the <code class="literal">Fill_Arrow</code> argument causes the arrow shape to
+      be reset to the default shape; this is implemented in Ada as an overloaded
+      procedure in order to be consistent with the C API but is rather awkward.
+      So there are two additional procedures that are added for the convenience
+      of Ada programmers: Reset_Vector_Arrow_Style and plsvect, both without
+      arguments, both available in both bindings, and the latter an overload of
+      the normal arrow-setting procedure.</p><p>The procedures <code class="literal">Plot_Shapefile</code> and
+      <code class="literal">Plot_Shapefile_World</code> (<code class="literal">plmapfill
+      </code>) and <code class="literal">plmapline</code> in the traditional binding)
+      are each provided an overloaded version allowing either an array of
+      integers or a null pointer to be passed for the last argument, so that the
+      documentation makes sense. An additional related procedure is provided in
+      each case, <code class="literal">Plot_Shapefile_All</code> and <code class="literal">
+      Plot_Shapefile_World_All</code> (identically named in the traditional
+      binding) for the case when a null pointer would otherwise be passed, thus
+      allowing the Ada programmer a way to specify "plot all the Shapefile
+      elements" without having to conjure a null pointer. See Example 19.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ada_howto.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="ada.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ada_c_flavor.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">How to use the Ada bindings </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Parts That Retain a C Flavor</td></tr></table></div></body></html>

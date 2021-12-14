@@ -1,0 +1,152 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Setting Color</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="fill-pattern.html" title="Setting the Area Fill Pattern"><link rel="next" href="characters.html" title="Setting Character Attributes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Setting Color</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="fill-pattern.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="characters.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="color"></a>Setting Color</h2></div></div></div><p>Normally, color is used for all drivers and devices that support
+    it within PLplot subject to the condition that the user has the option
+    of globally turning off the color (and subsequently turning it on again
+    if so desired) using <a class="link" href="plscolor.html" title="plscolor: Used to globally turn color output on/off"><code class="function">plscolor</code></a>. </p><p>The PLplot color model allows the user to set the current
+    color from a wide range of colors using two distinct color maps.
+    Color map0 (called cmap0 and discussed in <a class="xref" href="color.html#color-map-0" title="Color Map0">the section called “Color Map0”</a>) has discrete colors arranged in no particular
+    order with regard to color index and is most suited to coloring
+    discrete elements of the plot.  Color map1 (called cmap1 and discussed
+    in <a class="xref" href="color.html#color-map-1" title="Color Map1">the section called “Color Map1”</a>) has colors which are a continuous
+    function of color index and is most suited to coloring continuous
+    elements of the plot. The user can change the current color (as
+    opposed to the background color which is a special case that is
+    discussed in <a class="xref" href="color.html#color-map-0" title="Color Map0">the section called “Color Map0”</a>) at any point in the PLplot
+    commands that are used to create a given plot by selecting any of the
+    colors from either cmap0 or cmap1 using calls to <a class="link" href="plcol0.html" title="plcol0: Set color, cmap0"><code class="function">plcol0</code></a> or
+    <a class="link" href="plcol1.html" title="plcol1: Set color, cmap1"><code class="function">plcol1</code></a>. When the current color is changed all subsequent drawing
+    actions will utilize that new color until it is changed again.</p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="color-map-0"></a>Color Map0</h3></div></div></div><p>Color map0 is most suited to coloring discrete elements of
+      the plot such as the background, axes, lines, and labels.  The cmap0
+      palette colors are stored using <a class="ulink" href="https://en.wikipedia.org/wiki/RGBA_color_space" target="_top">RGBA</a>
+      (i.e., red, green, blue, and alpha transparency) components (although
+      some drivers ignore the alpha transparency data and simply render
+      opaque colors corresponding to the semitransparent ones).  In the
+      discussion that follows all references to cmap0 API functions with a
+      trailing "a" in their names (e.g., <a class="link" href="plscol0a.html" title="plscol0a: Set 8-bit RGB values and PLFLT alpha transparency value for given cmap0 color index"><code class="function">plscol0a</code></a>) refers to setting RGBA
+      semitransparent colors while the equivalent function (e.g., <a class="link" href="plscol0.html" title="plscol0: Set 8-bit RGB values for given cmap0 color index"><code class="function">plscol0</code></a>)
+      without the trailing "a" in the name refers to setting RGB colors with
+      an assumed opaque alpha transparency of 1.0.</p><p>Page 1 of <a class="ulink" href="http://plplot.org/examples.php?demo=02" target="_top">our standard example
+      02</a> illustrates the default 16 colors in the cmap0 palette.
+      The background color is a special case to be discussed below, and the
+      current color of discrete elements of the plot other than the
+      background may be specified by cmap0 index (or cmap1 index, see <a class="xref" href="color.html#color-map-1" title="Color Map1">the section called “Color Map1”</a>).  The cmap0 index is 1 by default (and
+      corresponds to opaque red for the default cmap0 palette), but during
+      the course of plotting a page, the user can change that current color
+      as often as desired using <a class="link" href="plcol0.html" title="plcol0: Set color, cmap0"><code class="function">plcol0</code></a> to select the desired cmap0 color
+      index from the cmap0 color palette in existence at the time.</p><p>The advanced cmap0 use case includes a number of methods
+      for changing the cmap0 color palette.  It is possible to update one
+      index of the cmap0 palette using <a class="link" href="plscol0a.html" title="plscol0a: Set 8-bit RGB values and PLFLT alpha transparency value for given cmap0 color index"><code class="function">plscol0a</code></a> or <a class="link" href="plscol0.html" title="plscol0: Set 8-bit RGB values for given cmap0 color index"><code class="function">plscol0</code></a>, define a
+      complete cmap0 palette with an arbitrary number of colors using
+      <a class="link" href="plscmap0a.html" title="plscmap0a: Set cmap0 colors by 8-bit RGB values and PLFLT alpha transparency value"><code class="function">plscmap0a</code></a> or <a class="link" href="plscmap0.html" title="plscmap0: Set cmap0 colors by 8-bit RGB values"><code class="function">plscmap0</code></a>, or read in a complete cmap0 palette from a
+      special cmap0 palette file with the command-line
+      <code class="literal">cmap0</code> parameter or by calling <a class="link" href="plspal0.html" title="plspal0: Set the cmap0 palette using the specified cmap0*.pal format file"><code class="function">plspal0</code></a>.  Our
+      standard examples <a class="ulink" href="http://plplot.org/examples.php?demo=04" target="_top">04</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=19" target="_top">19</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=26" target="_top">26</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=30" target="_top">30</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=31" target="_top">31</a>, and <a class="ulink" href="http://plplot.org/examples.php?demo=33" target="_top">33</a> illustrate how
+      to use <a class="link" href="plscol0a.html" title="plscol0a: Set 8-bit RGB values and PLFLT alpha transparency value for given cmap0 color index"><code class="function">plscol0a</code></a> and <a class="link" href="plscol0.html" title="plscol0: Set 8-bit RGB values for given cmap0 color index"><code class="function">plscol0</code></a>.  Our standard examples <a class="ulink" href="http://plplot.org/examples.php?demo=02" target="_top">02</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=24" target="_top">24</a>, and <a class="ulink" href="http://plplot.org/examples.php?demo=30" target="_top">30</a> illustrate how
+      to use <a class="link" href="plscmap0a.html" title="plscmap0a: Set cmap0 colors by 8-bit RGB values and PLFLT alpha transparency value"><code class="function">plscmap0a</code></a> and <a class="link" href="plscmap0.html" title="plscmap0: Set cmap0 colors by 8-bit RGB values"><code class="function">plscmap0</code></a>.  Although the user can define and
+      use any cmap0 palette file they like, predefined cmap0 palette files
+      are given in <code class="filename">data/cmap0*.pal</code> within the source
+      tree and installed in
+      <code class="filename">&lt;install-prefix&gt;/share/plplot5.15.0/cmap0*.pal</code>
+      in the install tree.  By default the cmap0 palette is set using the
+      predefined <code class="filename">cmap0_default.pal</code> file, but <a class="ulink" href="http://plplot.org/examples.php?demo=16" target="_top">our standard example
+      16</a> demonstrates use of a number of our other predefined cmap0
+      palette files in the various pages of that example.  Many of the above
+      commands indirectly set the number of cmap0 colors, but it is also
+      possible for the user to specify that number directly with the
+      command-line <code class="literal">ncol0</code> parameter or by calling
+      <a class="link" href="plscmap0n.html" title="plscmap0n: Set number of colors in cmap0"><code class="function">plscmap0n</code></a>. For all methods of defining the cmap0 palette any number
+      of colors are allowed in any order, but it is not guaranteed that the
+      individual drivers will actually be able to use more than 16 colors
+      (although most drivers do support more than 16 colors).</p><p>The background color (which always corresponds to index 0
+      of the cmap0 palette) is a special case that must be discussed
+      separately.  The default cmap0 palette index 0 corresponds to opaque
+      black so by default the background is that color.  However, the user
+      may set that background color to something else by using the
+      command-line <code class="literal">bg</code> parameter, by calling <a class="link" href="plscolbga.html" title="plscolbga: Set the background color by 8-bit RGB value and PLFLT alpha transparency value."><code class="function">plscolbga</code></a>
+      or <a class="link" href="plscolbg.html" title="plscolbg: Set the background color by 8-bit RGB value"><code class="function">plscolbg</code></a>, or by calling <a class="link" href="plscol0a.html" title="plscol0a: Set 8-bit RGB values and PLFLT alpha transparency value for given cmap0 color index"><code class="function">plscol0a</code></a> or <a class="link" href="plscol0.html" title="plscol0: Set 8-bit RGB values for given cmap0 color index"><code class="function">plscol0</code></a> with a 0 index.
+      In addition, the background color is implicitly set when the whole
+      cmap0 color palette (including index 0) is changed with one of the
+      methods above.  However, since the background is painted at the start
+      of each page any of these methods of changing the background color
+      must be done <span class="emphasis"><em>before</em></span> that page start.  Note that
+      although our long-term goal is for each device driver that honors
+      semitransparent colors will also honor semitransparent background
+      requests from users the current status is only a few drivers (e.g.,
+      the svg device driver) do that and the rest fall back to replacing the
+      requested semitransparent background with the equivalent opaque
+      background.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="color-map-1"></a>Color Map1</h3></div></div></div><p>Color map1 is most suited to coloring elements of plots in
+      which continuous data values are represented by a continuous range of
+      colors.  The cmap1 palette colors are stored using <a class="ulink" href="https://en.wikipedia.org/wiki/RGBA_color_space" target="_top">RGBA</a>
+      (i.e., red, green, blue, and alpha transparency) components (although
+      some drivers ignore the alpha transparency data and simply render the
+      opaque colors corresponding to the requested semitransparent color).
+      In the discussion that follows all references to cmap1 API functions
+      with a trailing "a" in their names (e.g., <a class="link" href="plscmap1la.html" title="plscmap1la: Set cmap1 colors and alpha transparency using a piece-wise linear relationship"><code class="function">plscmap1la</code></a>) refers to
+      setting RGBA semitransparent colors, while the equivalent function
+      (e.g., <a class="link" href="plscmap1l.html" title="plscmap1l: Set cmap1 colors using a piece-wise linear relationship"><code class="function">plscmap1l</code></a>) without the trailing "a" in the name refers to
+      setting RGB colors with an assumed opaque alpha transparency of 1.0.
+      The cmap1 index is a floating-point number whose default range is
+      0.0-1.0, but to set and get that range use <a class="link" href="plscmap1_range.html" title="plscmap1_range: Set the cmap1 argument range for continuous color plots"><code class="function">plscmap1_range</code></a> and
+      <a class="link" href="plgcmap1_range.html" title="plgcmap1_range: Get the cmap1 argument range for continuous color plots"><code class="function">plgcmap1_range</code></a>.</p><p>Page 4 of <a class="ulink" href="http://plplot.org/examples.php?demo=16" target="_top">our standard example
+      16</a> illustrates use of our default cmap1 palette to represent
+      continuous data values as a continuous range of colors using
+      <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>.  For this case and also other PLplot API (e.g.,
+      <a class="link" href="plsurf3d.html" title="plsurf3d: Plot shaded 3-d surface plot"><code class="function">plsurf3d</code></a>) where continuous data are being plotted, the range of
+      continuous data are scaled to the cmap1 color index range which in
+      turn are mapped internally using <a class="link" href="plcol1.html" title="plcol1: Set color, cmap1"><code class="function">plcol1</code></a> to continuous colors using
+      the cmap1 color palette.  In addition, during the course of plotting a
+      page, the user can change the current color used for discrete objects
+      as often as desired by directly calling <a class="link" href="plcol1.html" title="plcol1: Set color, cmap1"><code class="function">plcol1</code></a> to select the desired
+      cmap1 color index from the cmap1 color palette in existence at the
+      time.  However, use of <a class="link" href="plcol0.html" title="plcol0: Set color, cmap0"><code class="function">plcol0</code></a> and the cmap0 palette (see <a class="xref" href="color.html#color-map-0" title="Color Map0">the section called “Color Map0”</a>) to set the current color for discrete objects
+      is more usual.</p><p>The advanced cmap1 use case includes a number of methods
+      of changing the cmap1 palette.  It is possible to define a complete
+      cmap1 palette by using <a class="link" href="plscmap1la.html" title="plscmap1la: Set cmap1 colors and alpha transparency using a piece-wise linear relationship"><code class="function">plscmap1la</code></a> or <a class="link" href="plscmap1l.html" title="plscmap1l: Set cmap1 colors using a piece-wise linear relationship"><code class="function">plscmap1l</code></a> (where linear
+      interpolation between control points of given alpha transparency and
+      either RGB or HLS color assures the palette is a continuous function
+      of its index); by using <a class="link" href="plscmap1a.html" title="plscmap1a: Set semitransparent cmap1 RGBA colors."><code class="function">plscmap1a</code></a> or <a class="link" href="plscmap1.html" title="plscmap1: Set opaque RGB cmap1 colors values"><code class="function">plscmap1</code></a> (where it is the
+      user's responsibility to makes sure that palette is a continuous
+      function of its index); or by reading in a complete cmap1 palette from
+      a special cmap1 palette file with the command-line
+      <code class="literal">cmap1</code> parameter or by calling <a class="link" href="plspal1.html" title="plspal1: Set the cmap1 palette using the specified cmap1*.pal format file"><code class="function">plspal1</code></a>.  Our
+      standard examples <a class="ulink" href="http://plplot.org/examples.php?demo=08" target="_top">08</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=11" target="_top">11</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=12" target="_top">12</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=15" target="_top">15</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=20" target="_top">20</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=21" target="_top">21</a>, and <a class="ulink" href="http://plplot.org/examples.php?demo=30" target="_top">30</a> illustrate how
+      to use <a class="link" href="plscmap1la.html" title="plscmap1la: Set cmap1 colors and alpha transparency using a piece-wise linear relationship"><code class="function">plscmap1la</code></a> and <a class="link" href="plscmap1l.html" title="plscmap1l: Set cmap1 colors using a piece-wise linear relationship"><code class="function">plscmap1l</code></a>.  Our standard example <a class="ulink" href="http://plplot.org/examples.php?demo=31" target="_top">31</a> illustrates how
+      to use <a class="link" href="plscmap1a.html" title="plscmap1a: Set semitransparent cmap1 RGBA colors."><code class="function">plscmap1a</code></a> and <a class="link" href="plscmap1.html" title="plscmap1: Set opaque RGB cmap1 colors values"><code class="function">plscmap1</code></a> (which are rarely used because of
+      the continuity concern).  Although the user can define and use any
+      cmap1 palette file they like, predefined cmap1 palette files are given
+      in <code class="filename">data/cmap1*.pal</code> within the source tree and
+      installed in
+      <code class="filename">&lt;install-prefix&gt;/share/plplot5.15.0/cmap1*.pal</code>
+      in the install tree.  By default the cmap1 palette is set using the
+      predefined <code class="filename">cmap1_default.pal</code> file, but <a class="ulink" href="http://plplot.org/examples.php?demo=16" target="_top">our standard example
+      16</a> demonstrates use of a number of our other predefined cmap1
+      palette files in the various pages of that example.  The default
+      number of cmap1 colors is 128 which supplies sufficient sampling of
+      the continuous cmap1 palette for most purposes, but that number can be
+      set to other values with the command-line <code class="literal">ncol1</code>
+      parameter or by calling <a class="link" href="plscmap1n.html" title="plscmap1n: Set number of colors in cmap1"><code class="function">plscmap1n</code></a>.  (That number is also updated by
+      calls to the rarely used <a class="link" href="plscmap1a.html" title="plscmap1a: Set semitransparent cmap1 RGBA colors."><code class="function">plscmap1a</code></a> or <a class="link" href="plscmap1.html" title="plscmap1: Set opaque RGB cmap1 colors values"><code class="function">plscmap1</code></a>.)</p><p>There is a one-to-one correspondence between <a class="ulink" href="https://en.wikipedia.org/wiki/RGB_color_model" target="_top">RGB</a> and
+      <a class="ulink" href="https://en.wikipedia.org/wiki/HLS_color_space" target="_top">HLS</a>
+      color spaces.  Plplot provides <a class="link" href="plrgbhls.html" title="plrgbhls: Convert RGB color to HLS"><code class="function">plrgbhls</code></a> to convert from RGB to HLS
+      and <a class="link" href="plhlsrgb.html" title="plhlsrgb: Convert HLS color to RGB"><code class="function">plhlsrgb</code></a> to convert from HLS to RGB.</p><p>RGB space is characterized by three 8-bit unsigned
+      integers corresponding to the intensity of the red, green, and blue
+      colors. Thus, in hexadecimal notation with the 3 bytes concatenated
+      together the RGB values of FF0000, FFFF00, 00FF00, 00FFFF, 0000FF,
+      FF00FF, 000000, and FFFFFF correspond to red, yellow, green, cyan,
+      blue, magenta, black, and white.</p><p>HLS (hue, lightness, and saturation) space is often
+      conceptually easier to use than RGB space.  One useful way to
+      visualize HLS space is as a volume made up by two cones with their
+      bases joined at the <span class="quote">“<span class="quote">equator</span>”</span>.  A given RGB point
+      corresponds to HLS point somewhere on or inside the double cones, and
+      vice versa. The hue corresponds to the <span class="quote">“<span class="quote">longitude</span>”</span> of the
+      point with 0, 60, 120, 180, 240, and 300 degrees corresponding to red,
+      yellow, green, cyan, blue, and magenta. The lightness corresponds to
+      the distance along the axis of the figure of a perpendicular dropped
+      from the HLS point to the axis. This values ranges from 0 at the
+      <span class="quote">“<span class="quote">south pole</span>”</span> to 1 at the <span class="quote">“<span class="quote">north pole</span>”</span>.  The
+      saturation corresponds to the distance of the HLS point from the axis
+      with the on-axis value being 0 and the surface value being 1. Full
+      saturation corresponds to full color while reducing the saturation
+      (moving toward the axis of the HLS figure) mixes more gray into the
+      color until at zero saturation on the axis of the figure you have only
+      shades of gray with the variation of lightness along the axis
+      corresponding to a gray scale.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="fill-pattern.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="characters.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Setting the Area Fill Pattern </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Setting Character Attributes</td></tr></table></div></body></html>

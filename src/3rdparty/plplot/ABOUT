@@ -1,0 +1,157 @@
+What is PLplot?
+
+PLplot is relatively small, portable, freely distributable plotting
+library, that is rich enough to satisfy most users.  It has a wide
+range of plot types including line (linear, log), contour, 3D, fill.
+It also supports unicode (UTF-8) text so that plots can include a very
+large range of mathematical symbols and be labeled in every human
+language.  The package is designed to make it easy to quickly get
+graphical output; only a handful of function calls are typically
+required. For more advanced use, virtually all aspects of plotting are
+configurable.
+
+
+Why and when did PLplot come to be?
+
+PLplot was originally developed by Sze Tan of the University of Auckland
+in Fortran-77 (in 1986). Many of the underlying concepts used in the
+PLplot package are based on ideas used in Tim Pearson's PGPLOT package.
+Sze Tan writes:
+
+    I'm rather amazed how far PLPLOT has traveled given its origins etc. I
+    first used PGPLOT on the Starlink VAX computers while I was a graduate
+    student at the Mullard Radio Astronomy Observatory in Cambridge from
+    1983-1987. At the beginning of 1986, I was to give a seminar within the
+    department at which I wanted to have a computer graphics demonstration on
+    an IBM PC which was connected to a completely non-standard graphics
+    card. Having about a week to do this and not having any drivers for the
+    card, I started from the back end and designed PLPLOT to be such that one
+    only needed to be able to draw a line or a dot on the screen in order to
+    do arbitrary graphics. The application programmer's interface was made as
+    similar as possible to PGPLOT so that I could easily port my programs from
+    the VAX to the PC. The kernel of PLPLOT was modeled on PGPLOT but the code
+    is not derived from it.
+
+Then Tony Richardson ported it to the Commodore Amiga, rewriting in C with
+additional improvements.
+
+While doing a post-doc fellowship in Japan Maurice LeBrun needed a free
+scientific graphics library for his plasma simulation code and came across
+PLplot on the Amiga "Fish disks" (disk 222).  Maurice ported it back to
+several varieties of Unix and took over maintenance from Tony. After
+returning to the Institute of Fusion Studies at University of Texas Maurice
+continued to develop the package, with Geoff Furnish joining him as a
+co-developer. In the early 90s's the new contributions were released under
+the LGPL.
+
+When Maurice left UT in '95 Geoff became sole maintainer for some years,
+and was responsible for getting it up at Sourceforge in the earliest days
+of that site's existence.  That made it easier to add collaborators & such,
+and starting with Alan Irwin & Rafael Laboissiere the core team gradually
+came to be.
+
+
+In which [language(s)|platform(s)] is PLplot developed?
+
+PLplot is developed in primarily C, with language bindings for Ada, C++,
+D, Fortran, Java, Lua, Python, OCaml, Octave and Tcl/Tk. Every effort
+is made to support the Linux, OS-X, and Windows platforms.
+
+Also answering the question from the human language perspective,
+PLplot is developed exclusively in English.  However, it has both a
+fine mathematical reputation and international reputation because of
+its complete support for unicode (UTF-8) for all text strings and
+symbols that are plotted by our modern device drivers.  We presume
+this is one of the reasons why PLplot usage is spread between 100
+different countries (see below).
+
+
+Does PLplot have sponsors (private, academic, other)?
+
+Virtually all of our developers have been unpaid volunteers.  The
+exception has been a recent important development contribution from
+the Cluster Science Centre QSAS team, Imperial College, London
+
+
+How are the sponsors supporting the project?
+
+QSAS donated the original version of the qt device driver along with ~two
+months of developer time to help with its integration into PLplot.
+
+
+How many users do you estimate PLplot has?
+
+16 000 binary and source users actively use it divided between Linux
+(73 per cent), Windows (22 per cent), and OS X (5 per cent).  Users
+are widely spread between about 100 countries with US users leading
+the pack but only with a 22 per cent share and with 18 countries in
+total having more than a 1 per cent share each.
+
+These estimates are necessarily extremely approximate, but here is how
+we arrived at these figures.  Statistics at
+http://qa.debian.org/popcon.php?package=iceweasel show roughly half of
+Debian users are desktop users.  Thus, multiplying the popularity
+contest statistics at http://qa.debian.org/popcon.php?package=plplot
+by a factor of two to obtain the desktop share for PLplot, 0.2 per
+cent of Debian desktop users, use it regularly.  Furthermore make the
+(conservative?)  assumption there are 5 million Linux desktop users in
+the world with similar needs to Debian desktop users.  Combining the
+above estimates leads to an estimate of 10 000 Linux desktop users who
+use a binary version of PLplot regularly.
+
+An additional type of PLplot user downloads and builds PLplot for
+themselves rather than using a binary package.  The result from
+http://sourceforge.net/projects/plplot/files/plplot/5.9.7%20Source/stats/timeline?dates=2009-10-01+to+2011-07-27
+is ~3500 Windows downloads, ~1700 Linux downloads, ~800 Mac OS X
+downloads, and ~500 downloads where the OS could not be identified.
+The total downloads for all OS's were ~6500.  Presumably most of these
+downloaders (say 6000 of them) will build PLplot for themselves and
+use it regularly.  When the unknown OS is split between the various
+OS's appropriately, and those splits adjusted for
+the 10 000 Linux binary package users we arrive at the final estimate
+given above.
+
+Note the above summary of the country statistics comes directly from
+SourceForge PLplot source download statistics site so these splits are
+likely distorted by lack of similar evidence from the binary package
+users of PLplot.
+
+
+Do you know where PLplot is used (corporations, universities, other)?
+
+No, although we assume it is used mostly for scientific plotting.
+
+
+How many team members does PLplot have?  (You can list their names)
+
+There are 10 PLplot developers who currently have write access to our
+subversion repository.  Their names are Alan W. Irwin, Andrew Ross,
+Arjen Markus, Geoffrey Furnish, Hazen Babcock, Hezekiah M. Carty, Doug
+Hunt, Jerry Bauck, Maurice LeBrun, and Werner Smekal.  For more information
+on the work of our current developers and historical developers see
+PLplot see http://www.ohloh.net/p/plplot/contributors.
+
+
+In what areas of PLplot development do you currently need help?
+
+This project is fairly mature, so we are primarily looking for help in
+documentation and testing on various platforms, particularly
+windows. Bug reports are also appreciated.
+
+
+How can people get involved with PLplot?
+
+The best way to start is by submitting suggestions and patches to the
+mailing list. Users who seem particularly enthusiastic and who have
+a history of contributions are often added to the project as developers
+with subversion repository write access.
+
+
+What features are in the roadmap?
+
+The PLplot project does not have a formal roadmap. Development
+operates primarily in a reactive mode, bugs are fixed as users
+discover them and features are added on request (if there is a
+consensus among the developers that the feature seems like a
+reasonable addition).
+

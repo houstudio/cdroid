@@ -1,0 +1,20 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLTEXT 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBpltext\fP - Switch to text screen
+.SH SYNOPSIS
+\fBpltext\fP()
+.SH DESCRIPTION
+
+.P
+Sets an interactive device to text mode, used in conjunction with \fBplgra\fP(3plplot) to allow graphics and text to be interspersed.  On a device which supports separate text and graphics windows, this command causes control to be switched to the text window.  This can be useful for printing diagnostic messages or getting user input, which would otherwise interfere with the plots.  The program must switch back to the graphics window before issuing plot commands, as the text (or console) device will probably become quite confused otherwise.  If already in text mode, this command is ignored.  It is also ignored on devices which only support a single window or use a different method for shifting focus (see also \fBplgra\fP(3plplot)).
+.P
+Redacted form: \fBpltext()\fP
+.P
+This function is used in example 1.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

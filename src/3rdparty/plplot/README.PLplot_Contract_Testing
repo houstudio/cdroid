@@ -1,0 +1,161 @@
+At Alan W. Irwin's request, CMake developers (namely Brad King) have
+added a built-in PLplot contract test to CMake.  (Brad has arranged
+this for several projects, see the Tests/Contracts subdirectory of the
+cmake source code.)  This extra CMake code allows any CMake user to
+add a build and install of PLplot to the normal tests used for testing
+CMake with ctest.  And the purpose of this document is to help PLplot
+users set up this contract test for themselves to insure the latest
+development version of CMake configures, builds, and installs Plplot with no issues on their platform.
+
+Note that such a contract test helps CMake developers discover
+regressions in the CMake source code, helps the PLplot project
+indirectly by avoiding such regressions in CMake releases, and helps
+the PLplot project directly in case the issue is a bug or some
+deficiency in the PLplot build system that is exposed by the latest
+development version of CMake.
+
+To set up the PLplot contract test you should follow the directions at
+<https://gitlab.kitware.com/cmake/cmake/blob/master/Help/dev/testing.rst>.
+The key part of those is
+
+git clone https://gitlab.kitware.com/cmake/dashboard-scripts.git Scripts/CMakeScripts
+
+The Scripts/CMakeScripts/cmake_common.cmake script contains comments at the top with
+instructions to set up a testing client. As it instructs, create a
+CTest script Scripts/CMakeScripts/my_dashboard.cmake with local settings and include cmake_common.cmake
+from that script.
+
+(For additional background information for setting up CTest scripts)
+see <https://cmake.org/Wiki/CMake_Scripting_Of_CTest>.
+
+Here is an example of Alan's version of this script.
+
+##########################################
+software@raven> cat Scripts/CMakeScripts/my_dashboard.cmake
+# Client maintainer: airwin@users.sourceforge.net
+
+# Brad King prefers an alphabetic string (with no
+# qualifiers) here to identify the computer.
+set(CTEST_SITE "merlin")
+set(CTEST_BUILD_NAME "Debian-Buster-gcc-8.2.0-x86_64")
+
+# Just in case this environment variable which I often set would affect
+# Fortran-related tests.
+unset(ENV{FFLAGS})
+
+# If CTEST_BUILD_CONFIGURATION is not DEFINED (i.e., unset or empty),
+# then cmake_common.cmake sets this variable to Debug.
+
+#set(CTEST_BUILD_CONFIGURATION None)
+set(CTEST_BUILD_CONFIGURATION Release)
+
+# Note, the bootstrap script ignores this variable
+# when building the preliminary version of CMake but pays attention
+# to it when configuring the build of the final version of CMake.
+# Thus, to make the compile flags when building the preliminary
+# version the same as the final version we set the following:
+
+set(ENV{CXXFLAGS} "-O3 -DNDEBUG")
+set(ENV{CFLAGS} "-O3 -DNDEBUG")
+
+# However, without the macro below these environment variables are
+# used for all tests which makes the complex, complexOneConfig,
+# Preprocess, and Qt4Deploy tests fail.
+
+# Brad's comment was "at least some of them may be testing per-config
+# behavior, so by adding `-DNDEBUG` to the all-config flags they get
+# confused."  So instead following a suggestion by Brad, we use the
+# above environment variables to set C and C++ compile flags for just
+# the "bootstrap and configuration steps", but we arrange those
+# environment variables are unset for tests using the following macro:
+
+macro(dashboard_hook_build)
+  unset(ENV{CXXFLAGS})
+  unset(ENV{CFLAGS})
+  # Attempt to work around X authentication issues for Experimental mode
+  set(ENV{XAUTHORITY} /home/software/.Xauthority)
+endmacro()
+
+set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
+
+# Additional variables to set before include:
+
+# Use Experimental each time you want an immediate test of any changes
+# to this file or some quick fix by Brad (which will not be
+# immediately accessible for Nightly ctests), but remember to switch
+# back to Nightly in time for the cron job!
+#set(dashboard_model Experimental)
+set(dashboard_model Nightly)
+
+# Parallel build level used when running bootstrap command
+set(dashboard_bootstrap 16)
+
+# Parallel build level when building CMake, CTest, etc.
+set(CTEST_BUILD_FLAGS -j16)
+
+# Parallel test level when running ctest
+set(CTEST_TEST_ARGS PARALLEL_LEVEL 16)
+
+set(dashboard_cache "
+//Use system-installed curl
+CMAKE_USE_SYSTEM_CURL:BOOL=ON
+//Do not build Qt dialog for CMake (for now because of
+//Debian Jessie Qt5 issue where COPYONLY was misspelled as COPY_ONLY)
+//BUILD_QtDialog:BOOL=0
+// Do configure, build and install of PLplot as a ctest of CMake.
+CMake_TEST_CONTRACT_PLplot:BOOL=ON
+// CMake configuration options for that build to add more to the all target
+// that is being built.
+CMake_TEST_CONTRACT_PLplot_CMAKE_FLAGS:STRING=-DBUILD_TEST=ON -DUSE_INCRTCL_VERSION_4=ON -DBUILD_DOC=ON -DBUILD_DOX_DOC=OFF
+// Working version of PLplot with Debian Buster as of 2018-02-13
+CMake_TEST_CONTRACT_PLplot_GIT_TAG:STRING=plplot-5.14.0
+")
+
+include(${CTEST_SCRIPT_DIRECTORY}/cmake_common.cmake)
+##########################################
+
+The CMake logic of this file is mostly either self-explanatory or is
+accompanied by commentary that documents it.  In particular, all
+variables that don't have "PLplot" in their name have to do with the
+general configuration of ctest for CMake.  And you will have to figure
+out from the directions above how you change those for your own
+platform such as the unique identification of your computer, what compile
+flags will be used to build CMake, what parallel build options you use
+for that build, whether ctest will be run in Experimental or Nightly
+configuration, etc.  The remaining variables with "PLplot" in their
+name that are set are CMake_TEST_CONTRACT_PLplot,
+CMake_TEST_CONTRACT_PLplot_CMAKE_FLAGS, and
+CMake_TEST_CONTRACT_PLplot_GIT_TAG.  Those variables obviously allow you to
+decide whether to include the PLplot contract test as part of the
+ctest test of CMake, what CMake flags will be used for the CMake
+configuration of PLplot, and what PLplot version will be used for the
+contract test.  N.B. The PLplot release manager will likely change the
+PLplot version that he tests more often than once per release cycle to
+insure the latest CMake works properly with modern PLplot, but other
+PLplot developers will likely only want to change the PLplot version
+in their own version of this script each time there is a new release.
+In any case, control of the PLplot version that is tested implies each
+user has a small maintenance burden for the version of this script
+that they use.
+
+Here is how I run the above script after changing the above script to
+the Experimental mode
+
+time (nice -19 /usr/bin/ctest -S ~/cmake/Dashboards/Scripts/CMakeScripts/my_dashboard.cmake -VV >| ctest.out 2>&1)
+
+The net result of this command is all ordinary ctests of CMake (and KWSys) are run plus the extra
+PLplot contract test of CMake for the latest experimental version of CMake (and KWSys) with dashboards
+of the results submitted to <https://open.cdash.org/index.php?project=CMake>
+and <https://open.cdash.org/index.php?project=KWSys>.
+
+N.B. Brad King tells me the above ctest used to launch the script
+must be version 3.12.3 or later to avoid
+errors in some of the KWSys dashboard results.
+
+Once the Experimental version works correctly, then you will want to
+change the configuration in your my_dashboard.cmake script from
+Experimental to Nightly and run the equivalent of the above command
+automatically each night.  Consult the above documentation about how
+you set up such automatic nightly tasks on each platform, but on my Linux
+(Debian Testing) platform it boiled down to simply
+configuring a cron job.

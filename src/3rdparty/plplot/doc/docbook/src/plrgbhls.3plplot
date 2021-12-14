@@ -1,0 +1,41 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLRGBHLS 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplrgbhls\fP - Convert RGB color to HLS
+.SH SYNOPSIS
+\fBplrgbhls\fP(\fIr\fP, \fIg\fP, \fIb\fP, \fIp_h\fP, \fIp_l\fP, \fIp_s\fP)
+.SH DESCRIPTION
+
+.P
+Convert RGB color coordinates to HLS
+.P
+Redacted form: General: \fBplrgbhls(r, g, b, p_h, p_l, p_s)\fP
+
+.P
+This function is used in example 2.
+.SH ARGUMENTS
+.TP
+\fIr\fP (\fBPLFLT\fP(3plplot), input)
+Red intensity (0.0-1.0) of the color.
+.TP
+\fIg\fP (\fBPLFLT\fP(3plplot), input)
+Green intensity (0.0-1.0) of the color.
+.TP
+\fIb\fP (\fBPLFLT\fP(3plplot), input)
+Blue intensity (0.0-1.0) of the color.
+.TP
+\fIp_h\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the hue in degrees (0.0-360.0) on the color cylinder.
+.TP
+\fIp_l\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the lightness expressed as a fraction (0.0-1.0) of the axis of the color cylinder.
+.TP
+\fIp_s\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the saturation expressed as a fraction (0.0-1.0) of the radius of the color cylinder.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

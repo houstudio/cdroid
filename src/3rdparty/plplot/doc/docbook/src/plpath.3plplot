@@ -1,0 +1,37 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLPATH 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplpath\fP - Draw a line between two points, accounting for coordinate transforms
+.SH SYNOPSIS
+\fBplpath\fP(\fIn\fP, \fIx1\fP, \fIy1\fP, \fIx2\fP, \fIy2\fP)
+.SH DESCRIPTION
+
+.P
+Joins the point (\fIx1\fP, \fIy1\fP)  to (\fIx2\fP, \fIy2\fP) .  If a global coordinate transform is defined then the line is broken in to \fIn\fP segments to approximate the path.  If no transform is defined then this simply acts like a call to \fBpljoin\fP(3plplot).
+.P
+Redacted form: \fBplpath(n,x1,y1,x2,y2)\fP
+.P
+This function is used in example 22.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+number of points to use to approximate the path.
+.TP
+\fIx1\fP (\fBPLFLT\fP(3plplot), input)
+x coordinate of first point.
+.TP
+\fIy1\fP (\fBPLFLT\fP(3plplot), input)
+y coordinate of first point.
+.TP
+\fIx2\fP (\fBPLFLT\fP(3plplot), input)
+x coordinate of second point.
+.TP
+\fIy2\fP (\fBPLFLT\fP(3plplot), input)
+y coordinate of second point.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,361 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Setting Character Attributes</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="color.html" title="Setting Color"><link rel="next" href="tri-d-plots.html" title="Three-dimensional Plots"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Setting Character Attributes</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="color.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="tri-d-plots.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="characters"></a>Setting Character Attributes</h2></div></div></div><p>
+      Plplot uses two separate font systems to display characters. The
+      Hershey font system gives access to Hershey fonts that come with
+      PLplot.  All of our older devices and most of our modern devices allow
+      use of the Hershey font system.  The unicode font system gives access
+      to unicode-aware system fonts.  Some of our older devices and most of
+      our modern devices allow use of the unicode font system.  The
+      advantages of the unicode font system over the Hershey font system are
+      discussed in <a class="xref" href="characters.html#unicodefont" title="Unicode font system">the section called “Unicode font system”</a>.
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="hersheyfont"></a>Hershey font system</h3></div></div></div><p>
+	There are two Hershey font character sets included with
+	PLplot.  These are known as the standard and extended character sets.
+	The standard character set is a subset of the extended set.  It
+	contains 177 characters including the ascii characters in a normal
+	style font, the Greek alphabet and several plotter symbols.  The
+	extended character set contains almost 1000 characters, including four
+	font styles, and several math, musical and plotter symbols.
+      </p><p>
+	The extended character set is loaded into memory automatically
+	when PLplot is initialized.  The standard character set is loaded by
+	calling <a class="link" href="plfontld.html" title="plfontld: Load Hershey fonts"><code class="function">plfontld</code></a>.  The extended character set requires about 50
+	KBytes of memory, versus about 5 KBytes for the standard set.
+	<a class="link" href="plfontld.html" title="plfontld: Load Hershey fonts"><code class="function">plfontld</code></a> can be used to switch between the extended and standard
+	sets (one set is unloaded before the next is loaded).  <a class="link" href="plfontld.html" title="plfontld: Load Hershey fonts"><code class="function">plfontld</code></a> can
+	be called before <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a>.
+      </p><p>
+	When the extended character set is loaded there are four
+	different font styles to choose from.  In this case, the routine
+	<a class="link" href="plfont.html" title="plfont: Set font"><code class="function">plfont</code></a> sets up the default Hershey font for all character strings.
+	It may be overridden for any portion of a string by using an escape
+	sequence within the text, as described in <a class="xref" href="characters.html#escape-sequences" title="Escape sequences in text">the section called “Escape sequences in text”</a>.  For the Hershey font
+	system (but not the unicode font system, see below) this routine has
+	no practical effect when the standard font set is loaded.  The default
+	font (1) is simple and fastest to draw; the others are useful for
+	presentation plots on a high-resolution device.
+      </p><p>
+	The font codes are interpreted as follows:
+
+	</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	      <code class="literal">font = 1</code>: normal (sans-serif) font
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">font = 2</code>: roman (serif) font
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">font = 3</code>: italic font
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">font = 4</code>: script font
+	    </p></li></ul></div><p>
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="unicodefont"></a>Unicode font system</h3></div></div></div><p>
+	The advantages of the unicode fonts over the more traditional
+	PLplot Hershey fonts are the availability of many additional glyphs
+	(including mathematical symbols and glyphs from other than
+	western-European languages); support of complex text layout languages
+	for a substantial subset (see <a class="xref" href="characters.html#svg_device_driver" title="The svg device driver">the section called “The svg device driver”</a> and
+	<a class="xref" href="characters.html#psttf_cairo_qt_wxwidgets_device_drivers" title="The psttf, cairo, qt, and wxwidgets device drivers">the section called “The psttf, cairo, qt, and wxwidgets device drivers”</a>) of the
+	devices that support the Unicode font system; and much better display
+	of characters on computer screens using anti-aliasing and hinting.
+      </p><p>
+	The unicode font system can use font specification methods
+	that were designed for the Hershey fonts to specify the unicode font.
+	For this case <a class="link" href="plfont.html" title="plfont: Set font"><code class="function">plfont</code></a> internally calls <a class="link" href="plsfci.html" title="plsfci: Set FCI (font characterization integer)"><code class="function">plsfci</code></a> using four different
+	FCI values to choose unicode font attributes similar to the 4 kinds of
+	Hershey fonts, and the corresponding Hershey text escape-sequences
+	(see <a class="xref" href="characters.html#escape-sequences" title="Escape sequences in text">the section called “Escape sequences in text”</a>) designed to override the
+	Hershey font selection are treated similarly.  However, for the
+	unicode font system the preferred and much more flexible methods of
+	specifying the unicode font are calling the <a class="link" href="plsfci.html" title="plsfci: Set FCI (font characterization integer)"><code class="function">plsfci</code></a>
+	routine, calling the <a class="link" href="plsfont.html" title="plsfont: Set family, style and weight of the current font"><code class="function">plsfont</code></a> routine which provides a
+	user-friendly interface to <a class="link" href="plsfci.html" title="plsfci: Set FCI (font characterization integer)"><code class="function">plsfci</code></a>, or using unicode text
+	escape-sequences to override unicode font attributes in the middle of
+	strings (see <a class="xref" href="characters.html#fci" title="FCI">the section called “FCI”</a>).
+      </p><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="ps_device_driver"></a>The ps device driver</h4></div></div></div><p>
+	  The ps and psc devices that are implemented with the ps
+	  device driver are only unicode-aware in a technical sense because they
+	  use a fixed relationship between the FCI (font characterization
+	  integer, see <a class="xref" href="characters.html#fci" title="FCI">the section called “FCI”</a>) and the actual Type 1 system fonts
+	  that are being used which unlike typical TTF system fonts have
+	  extremely limited glyphs available. This fixed relationship is
+	  specified in the Type1Lookup array in include/plfci.h.  This array
+	  maps the FCI font-family attributes of sans-serif, serif, monotype,
+	  script, and symbol to the standard PostScript font families called
+	  Helvetica, Times-Roman, Courier, Times-Roman, and Symbol.  (There is
+	  no script font family amongst the 35 standard Type 1 postscript fonts
+	  so that is why we map the font-family attribute of script to
+	  Times-Roman.)  Similarly, this array maps the FCI font-style
+	  attributes of upright, italic or oblique and the FCI font-weight
+	  attributes of medium or bold to the appropriate variety of the
+	  Helvetica, Times-Roman, Courier, and Symbol font families that are
+	  part of the 35 standard Type 1 PostScript fonts.  These fonts are
+	  normally available on all platforms (e.g., with the gsfonts package on
+	  Linux systems).
+	</p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="gd_wingcc_device_drivers"></a>The gd and wingcc device drivers</h4></div></div></div><p>
+	  For the png, jpeg, and gif devices (implemented with the gd
+	  device driver) and the wingcc device (implemented with the wingcc
+	  device driver), the deprecated plfreetype approach is used for accessing
+	  unicode-aware system fonts.  This approach is deprecated because of its
+	  two major drawbacks.  (1)
+	  text layout is only left-to-right so that complex text layout
+	  languages (such as those used in <a class="ulink" href="http://plplot.org/examples.php?demo=24" target="_top">our standard example
+	  24</a>) are not correctly rendered.  (2) System fonts are only
+	  accessed by file name rather than using the fontconfig approach or
+	  something similar to select the best system font to render the given
+	  unicode glyph.  Because of this latter drawback a configurable
+	  relationship must be established between the FCI (font
+	  characterization integer, see <a class="xref" href="characters.html#fci" title="FCI">the section called “FCI”</a>) and the TrueType
+	  font name that is actually used for rendering a unicode glyph.  This
+	  can be a considerable inconvenience for the user if they want to
+	  specify anything other than a default set of font names.
+	</p><p>
+	  The TrueType font names corresponding to the 30 possible
+	  valid FCIs can be specified using cmake options. The defaults for the
+	  30 cmake variables PL_FREETYPE_FONT[_MODIFIER] (where FONT is one of
+	  MONO, SANS, SCRIPT, SERIF or SYMBOL and the optional MODIFIER is one
+	  of BOLD, BOLD_ITALIC, BOLD_OBLIQUE, ITALIC or OBLIQUE) are documented
+	  in cmake/modules/freetype.cmake. On Windows these defaults use standard
+	  Windows font files. On all other platforms default font file names
+	  are taken from fonts available from the ttf-freefont font
+	  package.  We recommend this font package because it has a rather
+	  complete set of glyphs for most unicode blocks.  (We also recommend
+	  the gucharmap application for determining other unicode font
+	  possibilities on your system that are available via the FreeType
+	  library.)
+	</p><p>
+	  For all platforms, the 30 possible TrueType font files can be specified at run
+	  time using the following environment variables:
+	  </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+		PLPLOT_FREETYPE_SANS_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SERIF_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_MONO_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SCRIPT_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SYMBOL_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SANS_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SERIF_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_MONO_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SCRIPT_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SYMBOL_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SANS_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SERIF_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_MONO_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SCRIPT_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SYMBOL_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SANS_BOLD_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SERIF_BOLD_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_MONO_BOLD_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SCRIPT_BOLD_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SYMBOL_BOLD_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SANS_BOLD_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SERIF_BOLD_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_MONO_BOLD_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SCRIPT_BOLD_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SYMBOL_BOLD_ITALIC_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SANS_BOLD_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SERIF_BOLD_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_MONO_BOLD_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SCRIPT_BOLD_OBLIQUE_FONT
+	      </p></li><li class="listitem"><p>
+		PLPLOT_FREETYPE_SYMBOL_BOLD_OBLIQUE_FONT
+	      </p></li></ul></div><p>
+	  On Unix/Linux systems if these environment variables are not specified
+	  with an absolute path starting with "/", then the absolute path is
+	  specified by the cmake variable PL_FREETYPE_FONT_PATH or at
+	  run time with the environment variable PLPLOT_FREETYPE_FONT_DIR.
+	</p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="svg_device_driver"></a>The svg device driver</h4></div></div></div><p>
+	  The svg device (which is implemented with the svg device
+	  driver) is a device that implements the unicode font method by mapping
+	  FCI attributes (see <a class="xref" href="characters.html#fci" title="FCI">the section called “FCI”</a>) to corresponding
+	  combinations of the SVG attributes font-family, font-style, and
+	  font-weight.  Since these attributes are generic ones, (e.g., FCI
+	  font-family "sans-serif", "serif", "monospace", "script", and "symbol"
+	  correspond to SVG font-family "sans-serif", "serif", "mono-space",
+	  "cursive", and "sans-serif") the SVG viewer applications that render
+	  the SVG files produced by the svg device have a large degree of
+	  freedom within these generic guidelines for choosing which system font
+	  to use to render a given unicode glyph.  Note that unlike devices that
+	  use the plfreetype approach (see <a class="xref" href="characters.html#gd_wingcc_device_drivers" title="The gd and wingcc device drivers">the section called “The gd and wingcc device drivers”</a>) this device requires no user
+	  intervention to set up the correct mapping between FCI and font, and
+	  complex text layout languages are rendered correctly (assuming the SVG
+	  viewer does that).
+	</p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="psttf_cairo_qt_wxwidgets_device_drivers"></a>The psttf, cairo, qt, and wxwidgets device drivers</h4></div></div></div><p>
+	  The large number of unicode-aware devices that are implemented by the
+	  psttf, cairo, qt, and wxwidgets device drivers implement the unicode
+	  font method using PLplot FCI values (see <a class="xref" href="characters.html#fci" title="FCI">the section called “FCI”</a>) to
+	  characterize the generic fonts that are needed by the associated
+	  libLASi (psttf), pango/cairo (cairo), Qt (qt), and wxWidgets
+	  (wxwidgets) library dependencies of these device drivers. Note that
+	  unlike devices that use the plfreetype approach (see <a class="xref" href="characters.html#gd_wingcc_device_drivers" title="The gd and wingcc device drivers">the section called “The gd and wingcc device drivers”</a>) these devices require no
+	  user intervention to set up the correct mapping between FCI and font, and
+	  complex text layout languages are rendered correctly (assuming the
+	  associated library dependency of the device driver does that).
+	</p></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="fci"></a>FCI</h3></div></div></div><p>
+	We specify the properties of unicode fonts with the FCI (font
+	characterization integer).  The FCI is a 32-bit unsigned integer whose
+	most significant hexadecimal digit is set (by ORing 0x80000000 with the
+	FCI value) to distinguish it from a unicode (UCS4) integer
+	(whose maximum value is 0x7fffffff). Users obtain the current FCI by
+	calling <a class="link" href="plgfci.html" title="plgfci: Get FCI (font characterization integer)"><code class="function">plgfci</code></a> and store a new FCI to be used at the start of each
+	subsequent string using <a class="link" href="plsfci.html" title="plsfci: Set FCI (font characterization integer)"><code class="function">plsfci</code></a>. The FCI contains three independent
+	hexadecimal values corresponding to font family, font-style, and font
+	weight.  These three values can also be obtained and set in a user-friendly
+	way using <a class="link" href="plgfont.html" title="plgfont: Get family, style and weight of the current font"><code class="function">plgfont</code></a> and <a class="link" href="plsfont.html" title="plsfont: Set family, style and weight of the current font"><code class="function">plsfont</code></a>.  These values are also
+	characterized by "hexdigit" (defined as the actual hexadecimal value
+	used for one of the hexadecimal digits) and "hexpower" (defined as the
+	power of 16 or number of hexadecimal places to the left of the
+	"decimal place" in the FCI where the hexdigit is stored).  The
+	interpretation of the hexdigit and hexpower values in the FCI are
+        given in <a class="xref" href="characters.html#fci-table" title="Table 3.3. FCI interpretation">Table 3.3, “FCI interpretation”</a>.
+      </p><div class="table"><a name="fci-table"></a><p class="title"><b>Table 3.3. FCI interpretation</b></p><div class="table-contents"><table class="table" summary="FCI interpretation" style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col><col><col><col><col><col><col></colgroup><tbody valign="top"><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top"> </td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">hexdigit --&gt;</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">0</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">1</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">2</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">3</td><td style="border-bottom: 10px solid white; " align="center" valign="top">4</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Font attribute</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">hexpower</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top"> </td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top"> </td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top"> </td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top"> </td><td style="border-bottom: 10px solid white; " align="center" valign="top"> </td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">font-family</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">0</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">sans-serif</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">serif</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">monospace</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">script</td><td style="border-bottom: 10px solid white; " align="center" valign="top">symbol</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">font-style</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">1</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">upright</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">italic</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">oblique</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top"> </td><td style="border-bottom: 10px solid white; " align="center" valign="top"> </td></tr><tr><td style="border-right: 10px solid white; " align="center" valign="top">font-weight</td><td style="border-right: 10px solid white; " align="center" valign="top">2</td><td style="border-right: 10px solid white; " align="center" valign="top">medium</td><td style="border-right: 10px solid white; " align="center" valign="top">bold</td><td style="border-right: 10px solid white; " align="center" valign="top"> </td><td style="border-right: 10px solid white; " align="center" valign="top"> </td><td style="" align="center" valign="top"> </td></tr></tbody></table></div></div><br class="table-break"><p>
+	Note the maximum value of hexdigit is 7 and the maximum value of
+	hexpower is 6 so there is substantial room for expansion of this
+	scheme.  On the other hand, since each font attribute is independent
+	of the rest, what is implemented now gives us a maximum of 30
+	different font possibilities which is probably more than enough for
+	most plotting purposes.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="escape-sequences"></a>Escape sequences in text</h3></div></div></div><p>
+	The routines which draw text all allow you to include escape
+	sequences in the text to be plotted.  These are character sequences
+	that are interpreted as instructions to change fonts, draw
+	superscripts and subscripts, draw non-ASCII (e.g. Greek), and so on.
+	All escape sequences start with a number symbol
+	(<code class="literal">#</code>) by default.  Some language interfaces have
+	the capability of changing this default, but we will assume
+	(<code class="literal">#</code>) in the remaining documentation of the escape
+	sequences.
+      </p><p>
+	The following escape sequences are defined:
+
+	</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	      <code class="literal">#u</code>: move up to the superscript position
+	      (ended with <code class="literal">#d</code>)
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#d</code>: move down to subscript position
+	      (ended with <code class="literal">#u</code>)
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#b</code>: backspace (to allow overprinting)
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">##</code>: number symbol
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#+</code>: toggle overline mode
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#-</code>: toggle underline mode
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#gx</code>: Greek letter corresponding to Roman
+	      letter <code class="literal">x</code> (see below)
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#fn</code>: switch to normal (sans-serif) font
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#fr</code>: switch to Roman (serif) font
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#fi</code>: switch to italic font
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#fs</code>: switch to script font
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#(nnn)</code>: Hershey character nnn (1 to 4
+	      decimal digits)
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#[nnn]</code>: unicode character nnn (nnn can
+	      be decimal or hexadecimal [e.g., starting with 0x]) (UNICODE ONLY).
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#&lt;0x8nnnnnnn&gt;</code>: absolute FCI to be used to
+	      change fonts in mid-string.  (nnnnnnn must be exactly 7
+	      digits). (UNICODE ONLY).
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#&lt;0xmn&gt;</code>: change just one attribute
+	      of the FCI in mid-string where m is the hexdigit and n is
+	      the hexpower.  If more than two digits are given (so long
+	      as the eighth digit does not mark this as an absolute FCI, see
+	      above) they
+	      are ignored. (UNICODE ONLY).
+	    </p></li><li class="listitem"><p>
+	      <code class="literal">#&lt;FCI COMMAND STRING/&gt;</code>: the FCI COMMAND
+	      STRING is currently one of "sans-serif", "serif", "monospace",
+	      "script", "symbol", "upright", "italic", "oblique" "medium",
+	      or "bold" (without the surrounding quotes).  These FCI
+	      COMMAND STRINGS change one attribute of the FCI according to
+	      their name. (UNICODE ONLY).
+	    </p></li></ul></div><p>
+      </p><p>
+	Sections of text can have an underline or overline appended.  For
+	example, the string S̅(f̲r̲e̲q̲) is obtained by specifying
+	<code class="literal">"#+S#+(#-freq#-)"</code>.
+      </p><p>
+	Greek letters are obtained by <code class="literal">#g</code> followed by a
+	Roman letter.  <a class="xref" href="characters.html#greek" title="Table 3.4. Roman Characters Corresponding to Greek Characters">Table 3.4, “Roman Characters Corresponding to Greek Characters”</a> shows how these letters map
+	into Greek characters.
+      </p><div class="table"><a name="greek"></a><p class="title"><b>Table 3.4. Roman Characters Corresponding to Greek Characters</b></p><div class="table-contents"><table class="table" summary="Roman Characters Corresponding to Greek Characters" style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col align="center"><col><col><col><col><col><col><col><col><col><col><col><col></colgroup><tbody valign="top"><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Roman</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">A</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">B</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">G</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">D</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">E</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Z</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Y</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">H</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">I</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">K</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">L</td><td style="border-bottom: 10px solid white; " align="center" valign="top">M</td></tr><tr><td style="border-right: 10px solid white; " align="center" valign="top">Greek</td><td style="border-right: 10px solid white; " align="center" valign="top">Α</td><td style="border-right: 10px solid white; " align="center" valign="top">Β</td><td style="border-right: 10px solid white; " align="center" valign="top">Γ</td><td style="border-right: 10px solid white; " align="center" valign="top">Δ</td><td style="border-right: 10px solid white; " align="center" valign="top">Ε</td><td style="border-right: 10px solid white; " align="center" valign="top">Ζ</td><td style="border-right: 10px solid white; " align="center" valign="top">Η</td><td style="border-right: 10px solid white; " align="center" valign="top">Θ</td><td style="border-right: 10px solid white; " align="center" valign="top">Ι</td><td style="border-right: 10px solid white; " align="center" valign="top">Κ</td><td style="border-right: 10px solid white; " align="center" valign="top">Λ</td><td style="" align="center" valign="top">Μ</td></tr></tbody></table><table class="table" summary="Roman Characters Corresponding to Greek Characters" style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col align="center"><col><col><col><col><col><col><col><col><col><col><col><col></colgroup><tbody><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Roman</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">N</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">C</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">O</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">P</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">R</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">S</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">T</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">U</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">F</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">X</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Q</td><td style="border-bottom: 10px solid white; " align="center">W</td></tr><tr><td style="border-right: 10px solid white; " align="center">Greek</td><td style="border-right: 10px solid white; " align="center">Ν</td><td style="border-right: 10px solid white; " align="center">Ξ</td><td style="border-right: 10px solid white; " align="center">Ο</td><td style="border-right: 10px solid white; " align="center">Π</td><td style="border-right: 10px solid white; " align="center">Ρ</td><td style="border-right: 10px solid white; " align="center">Σ</td><td style="border-right: 10px solid white; " align="center">Τ</td><td style="border-right: 10px solid white; " align="center">Υ</td><td style="border-right: 10px solid white; " align="center">Φ</td><td style="border-right: 10px solid white; " align="center">Χ</td><td style="border-right: 10px solid white; " align="center">Ψ</td><td style="" align="center">Ω</td></tr></tbody></table><table class="table" summary="Roman Characters Corresponding to Greek Characters" style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col align="center"><col><col><col><col><col><col><col><col><col><col><col><col></colgroup><tbody><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Roman</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">a</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">b</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">g</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">d</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">e</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">z</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">y</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">h</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">i</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">k</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">l</td><td style="border-bottom: 10px solid white; " align="center">m</td></tr><tr><td style="border-right: 10px solid white; " align="center">Greek</td><td style="border-right: 10px solid white; " align="center">α</td><td style="border-right: 10px solid white; " align="center">β</td><td style="border-right: 10px solid white; " align="center">γ</td><td style="border-right: 10px solid white; " align="center">δ</td><td style="border-right: 10px solid white; " align="center">ε</td><td style="border-right: 10px solid white; " align="center">ζ</td><td style="border-right: 10px solid white; " align="center">η</td><td style="border-right: 10px solid white; " align="center">θ</td><td style="border-right: 10px solid white; " align="center">ι</td><td style="border-right: 10px solid white; " align="center">κ</td><td style="border-right: 10px solid white; " align="center">λ</td><td style="" align="center">μ</td></tr></tbody></table><table class="table" summary="Roman Characters Corresponding to Greek Characters" style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col align="center"><col><col><col><col><col><col><col><col><col><col><col><col></colgroup><tbody><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Roman</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">n</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">c</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">o</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">p</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">r</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">s</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">t</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">u</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">f</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">x</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">q</td><td style="border-bottom: 10px solid white; " align="center">w</td></tr><tr><td style="border-right: 10px solid white; " align="center">Greek</td><td style="border-right: 10px solid white; " align="center">ν</td><td style="border-right: 10px solid white; " align="center">ξ</td><td style="border-right: 10px solid white; " align="center">ο</td><td style="border-right: 10px solid white; " align="center">π</td><td style="border-right: 10px solid white; " align="center">ρ</td><td style="border-right: 10px solid white; " align="center">σ</td><td style="border-right: 10px solid white; " align="center">τ</td><td style="border-right: 10px solid white; " align="center">υ</td><td style="border-right: 10px solid white; " align="center">φ</td><td style="border-right: 10px solid white; " align="center">χ</td><td style="border-right: 10px solid white; " align="center">ψ</td><td style="" align="center">ω</td></tr></tbody></table></div></div><br class="table-break"><p>
+	The escape sequences <code class="literal">#fn</code>,
+	<code class="literal">#fr</code>, <code class="literal">#fi</code>,
+	<code class="literal">#fs</code>, and <code class="literal">#(nnn)</code> are designed for
+	the four Hershey fonts, but an effort has been made to allow some
+	limited forward compatibility so these escape sequences have a
+	reasonable result when unicode fonts are being used.  However, for
+	maximum flexibility when using unicode fonts, these 5 Hershey escape
+	sequences should be replaced by using the 4 unicode escape sequences
+	<code class="literal">#&lt;0x8nnnnnnn&gt;</code>,
+	<code class="literal">#&lt;0xmn&gt;</code>, <code class="literal">#&lt;FCI COMMAND
+	STRING/&gt;</code>, and <code class="literal">#[nnn]</code> as appropriate.
+      </p><p>
+	It should be emphasized that the unicode escape sequences
+	above only work properly for modern unicode-aware devices such as the
+	svg and wxwidgets devices or the very large set of cairo and qt
+	devices.  And for those devices the alternative of directly specifying
+	the unicode symbols using UTF-8 encoding of PLplot input strings is
+	much more convenient for users than using the above
+	<code class="literal">#[nnn]</code> type of escape sequence.  For example, we
+	use UTF-8 strings rather than escape sequences in <a class="ulink" href="http://plplot.org/examples.php?demo=24" target="_top">our standard example
+	24</a> to render the word "Peace" in several different languages.
+      </p><div class="table"><a name="peace"></a><p class="title"><b>Table 3.5. The word "peace" expressed in several different languages in example 24 using UTF-8</b></p><div class="table-contents"><table class="table" summary='The word "peace" expressed in several different languages in example 24 using UTF-8' style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col align="center"><col></colgroup><tbody valign="top"><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Hebrew</td><td style="border-bottom: 10px solid white; " align="center" valign="top">שלום</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">French</td><td style="border-bottom: 10px solid white; " align="center" valign="top">Paix</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Kurdish</td><td style="border-bottom: 10px solid white; " align="center" valign="top">Hasîtî</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">English</td><td style="border-bottom: 10px solid white; " align="center" valign="top">Peace</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Korean</td><td style="border-bottom: 10px solid white; " align="center" valign="top">평화</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Turkish</td><td style="border-bottom: 10px solid white; " align="center" valign="top">Barış</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Hindi</td><td style="border-bottom: 10px solid white; " align="center" valign="top">शांति</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">German</td><td style="border-bottom: 10px solid white; " align="center" valign="top">Friede</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Arabic</td><td style="border-bottom: 10px solid white; " align="center" valign="top">ﺳﻼم</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Mandarin</td><td style="border-bottom: 10px solid white; " align="center" valign="top">和平</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center" valign="top">Russian</td><td style="border-bottom: 10px solid white; " align="center" valign="top">Мир</td></tr><tr><td style="border-right: 10px solid white; " align="center" valign="top">Spanish</td><td style="" align="center" valign="top">Paz</td></tr></tbody></table></div></div><br class="table-break"><p>
+	For unicode-aware devices it is possible as well to specify
+	mathematical glyphs (such as ∂, ∇, ∑, ∫, and ∰) using UTF-8 encoding
+	of PLplot input strings.  A typical input method in this case is
+	simply to cut and paste the desired mathematical glyph from, e.g.,
+	gucharmap to source code being edited by a unicode-aware editor such
+	as emacs.  Such input methods may be conveniently used, for example,
+	to specify the very wide range of mathematical symbols that are
+	typically desired for scientific plots.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="character-size"></a>Character size adjustment</h3></div></div></div><p>
+	The routine <a class="link" href="plschr.html" title="plschr: Set character size"><code class="function">plschr</code></a> is used to set up the size of subsequent
+	characters drawn.  The actual height of a character is the product of
+	the default character size and a scaling factor.  If no call is made
+	to <a class="link" href="plschr.html" title="plschr: Set character size"><code class="function">plschr</code></a>, the default character size is set up depending on the
+	number of subpages defined in the call to <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a> or <a class="link" href="plstart.html" title="plstart: Initialization"><code class="function">plstart</code></a>, and
+	the scale is set to 1.0.  Under normal circumstances, it is
+	recommended that the user does not alter the default height, but
+	simply use the scale parameter.  This can be done by calling <a class="link" href="plschr.html" title="plschr: Set character size"><code class="function">plschr</code></a>
+	with <code class="literal">def = 0.0</code> and <code class="literal">scale</code> set to
+	the desired multiple of the default height.  If the default height is
+	to be changed, <code class="literal">def</code> is set to the new default
+	height in millimeters, and the new character height is again set to
+	<code class="literal">def</code> multiplied by <code class="literal">scale</code>.
+      </p><p>
+	The routine <a class="link" href="plssym.html" title="plssym: Set symbol size"><code class="function">plssym</code></a> sets up the size of all subsequent characters drawn
+	by calls to <a class="link" href="plpoin.html" title="plpoin: Plot a glyph at the specified points"><code class="function">plpoin</code></a> and <a class="link" href="plsym.html" title="plsym: Plot a glyph at the specified points"><code class="function">plsym</code></a>.  It operates analogously to
+	<a class="link" href="plschr.html" title="plschr: Set character size"><code class="function">plschr</code></a> as described above.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="color.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="tri-d-plots.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Setting Color </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Three-dimensional Plots</td></tr></table></div></body></html>

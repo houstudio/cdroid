@@ -1,0 +1,68 @@
+We have implemented a number of simple python standalone scripts to test for
+rendering issues with our PLplot device drivers.
+
+N.B. these tests should not be propagated to other languages.  python is
+ideal for rapid development and evaluation.  Given this, it is expected
+these tests will change substantially over time and more tests will be
+added. Thus, propagating those expected changes to other languages is
+largely pointless.
+
+N.B. the SVG test results for "firefox", "konqueror", and "display" reported
+below at this time of writing (2009-08-12) are for Debian Lenny where
+firefox is iceweasel Version 2.0.0.14-2, konqueror is Version
+4:3.5.9.dfsg.1-6, and by default display (Version 7:6.3.7.9.dfsg2-1~lenny1)
+uses the rsvg2 GNOME library to render svg files. Your SVG viewing results
+will differ for other versions of firefox, konqueror, and display.  They
+will also differ for other SVG-aware applications because SVG viewing and
+rendering within Linux is still a bit problematic, even though Linux is
+probably in better SVG shape than other platforms.
+
+* test_circle.py (only useful for testing unicode-aware devices) renders a
+series of "LARGE CIRCLE" and "BOX DRAWINGS LIGHT DIAGONAL CROSS" unicode
+characters from (very) large sizes to small sizes to check there is no
+vertical drift in the alignment of the characters, and also to check that
+very large versions of characters are rendered correctly.  -dev xcairo
+results have good alignment and good character rendering. -dev svg results
+validate correctly at http://validator.w3.org/,
+have good alignment and good character rendering according to the
+ImageMagick "display" application and firefox, but those same results cannot
+be rendered by konqueror because it cannot find the appropriate system
+fonts. -dev qtwidget results have good alignment, but the large character
+rendering is not reliable ("squashed" left edge of "LARGE CIRCLE" for the
+three largest sizes, but no squashing at the smaller sizes).
+
+* testh.py renders a vertical line at the left edge of the window, a
+horizontal line marking the center of the vertical line, and a centred
+string of 7 "H" characters superimposed on top of the vertical line so the
+horizontal bar of the "H" is very close to the vertical line and parallel
+with it.  All drivers we have tested generate correct interactive or file
+results for this figure.  Also, the -dev svg output file validates at
+http://validator.w3.org/, and I get good rendering results for both firefox
+and konqueror for that output file.  However, those output file results are
+_not_ rendered correctly by the GNOME library, librsvg2, which is used in a
+number of applications (e.g., all GNOME text rendering applications which
+are svg aware such as eog and (depending on how ImageMagick is compiled) the
+ImageMagick "display" application).  See
+http://bugzilla.gnome.org/show_bug.cgi?id=525023 for more details.
+
+* test_superscript_subscript.py renders a series of nested superscripts and
+subscripts for single numbers from 0 to 9 and also tries some simple
+superscripts and subscripts for Greek letters and ordinary (Roman) letters.
+Devices that use our traditional Hershey fonts (e.g., -dev xwin) have
+good results for this example, but there is work to do to get similar
+good results for our more modern devices that use other means of
+superscripting and subscripting.
+
+The one current exception to this is -dev svg where the resulting output
+file validates at http://validator.w3.org/, and the dy attribute of the
+nested span tags is written correctly. Furthermore, I get good rendering
+results for this output file using the ImageMagick "display" application.
+However, in this case the vertical positioning after the Greek superscript
+or subscript letters in the output svg file is not rendered correctly by
+mozilla and konqueror.  On the other hand, those applications have no
+trouble rendering the text after superscript/subscript Roman (ordinary)
+letters.  It appears those applications are having trouble dealing with a
+nested series of span tags when there is a font change (e.g., for Greek
+letters) in the middle of the series.  The results for the pdf, cairo, and
+qt devices for this example are poor (e.g., do not agree with the good
+-dev xwin results), but it is planned to deal with those issues soon.

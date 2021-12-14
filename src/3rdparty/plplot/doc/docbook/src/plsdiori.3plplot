@@ -1,0 +1,27 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSDIORI 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsdiori\fP - Set plot orientation
+.SH SYNOPSIS
+\fBplsdiori\fP(\fIrot\fP)
+.SH DESCRIPTION
+
+.P
+Set plot orientation parameter which is multiplied by 90 degrees to obtain the angle of rotation.  Note, arbitrary rotation parameters such as 0.2 (corresponding to 18 degrees) are possible, but the usual values for the rotation parameter are 0., 1., 2., and 3. corresponding to 0 degrees (landscape mode), 90 degrees (portrait mode), 180 degrees (seascape mode), and 270 degrees (upside-down mode).  If \fBplsdiori\fP(3plplot) is not called the default value of \fIrot\fP is 0.
+.P
+N.B. aspect ratio is unaffected by calls to \fBplsdiori\fP(3plplot).  So you will probably want to change the aspect ratio to a value suitable for the plot orientation using a call to \fBplsdidev\fP(3plplot) or the command-line options \fI-a\fP or \fI-freeaspect\fP.  For more documentation of those options see the PLplot documentation.  Such command-line options can be set internally using \fBplsetopt\fP(3plplot) or set directly using the command line and parsed using a call to \fBplparseopts\fP(3plplot).
+.P
+Redacted form: \fBplsdiori(rot)\fP
+.P
+This function is not used in any examples.
+.SH ARGUMENTS
+.TP
+\fIrot\fP (\fBPLFLT\fP(3plplot), input)
+Plot orientation parameter.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

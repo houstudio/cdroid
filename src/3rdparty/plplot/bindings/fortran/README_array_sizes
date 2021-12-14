@@ -1,0 +1,155 @@
+This file presents the complete list of rules for arrays sizes that
+are enforced in a user-friendly way for the Fortran bindings by
+emitting a warning message when these rules are not followed.  These
+rules were derived from the rules implied for our swig-generated
+bindings in bindings/swig-support/plplotcapi.i (i.e., anything to do
+with a "Ck" argument such as the Array and ArrayCk arguments).
+
+plbin( x, y, center )
+-- x and y must have identical sizes;
+
+plcolorbar(colorbar_width, colorbar_height,
+     opt, position, x, y,
+     x_length, y_length, bg_color, bb_color, bb_style,
+     low_cap_color, high_cap_color,
+     cont_color, cont_width,
+     label_opts, labels,
+     axis_opts, ticks, sub_ticks, n_values, values )
+-- label_opts and labels must have identical sizes and axis_opts,
+   ticks, sub_ticks, nvalues, and the first dimension of values must
+   have identical sizes.
+
+plerrx( xmin, xmax, y )
+-- xmin, xmax, and y must have identical sizes;
+
+plerry( x, ymin, ymax )
+-- x, ymin, and ymax must have identical sizes;
+
+plfill3( x, y, z )
+-- x, y, and z must have identical sizes;
+
+plfill( x, y )
+-- x and y must have identical sizes;
+
+plgradient( x, y, angle )
+-- x and y must have identical sizes;
+
+plgriddata( x, y, z, xg, yg, zg, type, data )
+-- x, y, and z must have identical sizes, and the first dimension of z
+   must be identical with the size of xg, and the second dimension
+   of z must be identical with the size of yg;
+
+pllegend( legend_width, legend_height,
+     opt, position, x, y,
+     plot_width, bg_color, bb_color, bb_style,
+     nrow, ncolumn, opt_array,
+     text_offset, text_scale, text_spacing,
+     text_justification, text_colors, text,
+     box_colors, box_patterns, box_scales, box_line_widths,
+     line_colors, line_styles, line_widths,
+     symbol_colors, symbol_scales, symbol_numbers, symbols )
+-- opt_array, text_colors, text, box_colors, box_patterns, box_scales,
+   box_line_widths, line_colors, line_styles, line_widths,
+   symbol_colors, symbol_scales, symbol_numbers and symbols must all
+   have the same sizes;
+
+plmesh( x, y, z, opt )
+-- The size of x must be identical with the size of the first
+   dimension of z and the size of y must be identical with the size of
+   the second dimension of z;
+
+plmeshc( x, y, z, opt, clevel )
+-- The size of x must be identical with the size of the first
+   dimension of z and the size of y must be identical with the size of
+   the second dimension of z;
+
+plot3d( x, y, z, opt, side)
+-- The size of x must be identical with the size of the first
+   dimension of z and the size of y must be identical with the size of
+   the second dimension of z;
+
+plot3dc( x, y, z, opt, clevel )
+-- The size of x must be identical with the size of the first
+   dimension of z and the size of y must be identical with the size of
+   the second dimension of z;
+
+plot3dcl( x, y, z, opt, clevel, indexxmin, indexymin, indexymax )
+-- The size of x must be identical with the size of the first
+   dimension of z, the size of y must be identical with the size of
+   the second dimension of z, and indexymin and indexymax must have
+   identical sizes;
+
+plpat( inc, del )
+-- inc and del must have identical sizes;
+
+plpoin3( x, y, z, code )
+-- x, y, and z must have identical sizes;
+
+plpoin( x, y, code )
+-- x and y must have identical sizes;
+
+plpoly3( x, y, z, draw, ifcc )
+-- x, y, and z must have identical sizes and the size of draw
+   must be one less than the size of x, y, and z;
+
+plscmap0( r, g, b )
+-- r, g, and b must have identical sizes;
+
+plscmap0a( r, g, b, a )
+-- r, g, b, and a must have identical sizes;
+
+plscmap1( r, g, b )
+-- r, g, and b must have identical sizes;
+
+plscmap1a( r, g, b, a )
+-- r, g, b, and a must have identical sizes;
+
+plscmap1la_impl( rgbtype, intensity, coord1, coord2, coord3, alpha, alt_hue_path)
+-- intensity, coord1, coord2, coord3, and alpha must have identical
+   sizes and the size of alt_hue_path must be one less than the size
+   of intensity, coord1, coord2, coord3, and alpha;
+
+plscmap1l_impl( rgbtype, intensity, coord1, coord2, coord3, alt_hue_path)
+-- intensity, coord1, coord2, and coord3 must have identical sizes and
+   the size of alt_hue_path must be one less than the size of
+   intensity, coord1, coord2, and coord3;
+
+plstring3( x, y, z, string )
+-- x, y, and z must have identical sizes;
+
+plstring( x, y, string )
+-- x and y must have identical sizes;
+
+plstripc( id, xspec, yspec, xmin, xmax, xjump, ymin, ymax,
+     xlpos, ylpos, y_ascl, acc, colbox, collab,
+     colline, styline, legline, labx, laby, labtop )
+-- colline, styline, and legline must all have sizes of 4.
+
+plsurf3d( x, y, z, opt, clevel )
+-- The size of x must be identical with the size of the first
+   dimension of z and the size of y must be identical with the size of
+   the second dimension of z;
+
+plsurf3dl( x, y, z, opt, clevel, indexxmin, indexymin, indexymax )
+-- The size of x must be identical with the size of the first
+   dimension of z, the size of y must be identical with the size of
+   the second dimension of z, and indexymin and indexymax must have
+   identical sizes;
+
+plsvect( arrowx, arrowy, fill )
+-- arrowx and arrowy must have identical sizes;
+
+plsym( x, y, code )
+-- x and y must have identical sizes;
+
+plvect( u, v, scale )
+plvect( u, v, scale, xg1, yg1 )
+plvect( u, v, scale, xg2, yg2 )
+plvect( u, v, scale, tr )
+-- u and v must have identical sizes for their first dimension and identical
+   sizes for their second dimension, the xg1 size must be identical to the
+   size of the first dimension of u and v, the yg1 size must be identical
+   to the size of the second dimension of u and v, and xg2 and yg2 must
+   have first dimension sizes that are identical to the sizes of the first
+   dimension of u and v, and second dimension sizes that are identical to the
+   sizes of the second dimension of u and v.

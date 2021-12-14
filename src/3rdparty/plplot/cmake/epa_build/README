@@ -1,0 +1,468 @@
+This file contains directions for epa_build users.  If you are
+interested in helping to develop that project, you should look at
+README.developers as well.
+
+The epa_build project provides a coherent and internally consistent
+method for building software packages on Windows and Unix (including
+Linux and Mac OS X).  The epa_build is implemented in the CMake
+language and is fundamentally based on CMake's ExternalProject_Add
+command.  The fundamental advantage of this extra layer of indirection
+for building software is it makes it easy to implement software
+package dependencies (so that packages that depend on other packages
+will be built after those other packages) and to establish the correct
+software package configurations (e.g., locations of dependent
+packages) so the set of built packages work well together.  The extra
+layer of indirection is quite light and there are no limitations on
+the tools and build systems that can be used to build packages.
+Therefore, if you already know how to build a software package (i.e.,
+by downloading, and optionally checking the download, updating the
+download (e.g., by applying patches) and configuring, building,
+testing, and installing the software package represented by that
+download) it is extremely straightforward to do exactly the same thing
+with epa_build while at the same time taking advantage of the
+epa_build advantages listed above.
+
+The epa_build project has two fundamental modes of operation with
+-DBUILD_THE_BUILDTOOLS=ON or OFF (see the details below).  The two
+cases have completely independent dependency chains and completely
+independent build and install locations.  When that variable is ON,
+epa_build configures the build of buildtools (e.g., swig, and
+pkg-config) that are useful for building the software dependency chain
+that is available when that variable is OFF.  The decision about classifying
+a given software package as a buildtool or an ordinary package is somewhat
+arbitrary.  For example, I have decided that software packages that
+implement computer languages (e.g., all the Tcl-related software packages)
+are classified as part of the buildtools dependency chain.
+
+From the description above it is obvious that the epa_build idea could
+be used to bootstrap the build of essentially any free software
+package starting with just a C compiler.  So it could be used as the
+basis of a source-based distribution of an extremely comprehensive set
+of free software on _any_ platform. But currently that is just a dream
+for the future, and for now the epa_build project is focussed just on
+building and testing PLplot _and_ its fairly comprehensive set of
+software package dependencies.
+
+The advantage of using epa_build on Linux and Mac OS X is it gives
+PLplot developers and users access to the latest versions of dependent
+software that might not be available yet for their platform.  This
+Unix advantage is especially important for users of enterprise class
+Linux distributions which often are missing important PLplot
+dependencies or which have such ancient versions of PLplot
+dependencies, that PLplot does not work correctly with them.
+
+The advantage of using epa_build on Windows is it gives PLplot
+developers and users access to the free software dependencies of
+PLplot which are normally not installed on Windows.  This allows
+Windows users of PLplot to take advantage of the extra PLplot
+capabilities that become available when all (soft) PLplot dependencies
+are built and installed which in turn implies Windows users are no
+longer second-class citizens of the PLplot empire.  :-)
+
+The epa_build project should work out of the box for Linux or Mac OS X
+systems with a full development tool-chain installed including
+relevant compilers (gcc, g++, gfortran, Ada in the suite of gcc
+compilers), relevant scripting languages (Python, Lua, etc.), make,
+and cmake (at least version 2.8.11.2).
+
+But the situation is different on Windows where you have to download
+and install specific toolchain software before you start.
+
+===============================================================================
+Installing the Required Windows Toolchain:
+
+N.B. There is a good possibility that epa_build will work with the
+Microsoft proprietary toolchain, and I (which refers to Alan W. Irwin
+throughout this file) would be happy to accept patches to make that so
+(including a patch for this file), but my only experience is with free
+software so until I receive such patches, the instructions below refer
+only to free software toolchains.
+
+1. Install MinGW/MSYS using the automatic installer
+
+(These notes are for my ancient 4.7.2 version snapshot of MinGW/MSYS.  Later versions
+did not work so well for me so I stuck with this snapshot, but others may want to
+try the latest MinGW/MSYS.)  I downloaded
+http://sourceforge.net/projects/mingw/files/Installer/mingw-get-inst/mingw-get-inst-20120426/).
+Specify obtaining the latest updates, all relevant compilers,
+(everythiing except objc) and also specify the MSYS development
+software.  This installed version 4.7.2 of gcc,
+g++, Ada, and gfortran.
+
+2. Downgrade one component of MSYS.
+N.B. This must be done from the cmd environment since
+if you run this from bash.exe, that executable's use of MSYS
+libraries will screw up the downgrade.
+
+MinGW-4.7.2\bin\mingw-get.exe upgrade msys-core-bin=1.0.17-1
+
+This downgrade is necessary and quite important, see
+http://sourceforge.net/p/mingw/bugs/1950.  Otherwise, you
+will get an infinite hang from any attempt to do parallel
+builds (which epa_build automatically uses for many
+of its builds) using the MSYS make.exe command.
+
+N.B. Arjen Markus reports that for some versions of the automatic
+installer msys-core-bin=1.0.17-1 is no longer available.  For this
+case use the epa_build cmake option -DNUMBER_PARALLEL_JOBS:STRING=1
+which forces all builds to be non-parallel.  For hardware with more
+than one cpu this choice obviously leads to considerably less
+efficient builds than when the default value of 4 is used for this
+CMake variable.
+
+3. Install additional needed MSYS software that is not installed by
+the automatic installer.
+
+mingw-get.exe --recursive install msys-unzip
+
+4. Download a recent cmake.exe version from Kitware.
+I am currently using
+export CMAKE_MAJOR_VERSION=3.8
+export CMAKE_VERSION=3.8.2
+
+"http://www.cmake.org/files/v$CMAKE_MAJOR_VERSION/cmake-$CMAKE_VERSION-win32-x86.zip"
+Unpack this using the unzip
+command you just installed and put cmake.exe on your PATH.
+
+5. [OPTIONAL] Copy the MinGW-4.7.2/msys/1.0/bin directory to
+MinGW-4.7.2/msys/1.0/bin_without_sh and remove sh.exe from that latter
+PATH (This works around an issue with the "MinGW Makefiles" generator
+which apparently processes path names differently if sh.exe is in the
+PATH.  Hopefully, that "MinGW Makefiles" kludge will disappear in the
+future.)
+
+6. Put both MinGW-4.7.2/bin and either MinGW-4.7.2/msys/1.0/bin (for
+any Windows CMake generator you are going to use other than "MinGW
+Makefiles) or [OPTIONAL] MinGW-4.7.2/msys/1.0/bin_without_sh (for the case of
+"MinGW Makefiles") on your PATH.
+
+7. [OPTIONAL} If you are going to try the "NMake Makefiles JOM"
+generator, download the latest jom_VERSION.zip from
+http://releases.qt-project.org/jom, unpack it with unzip.exe just just
+installed and put jom.exe on your PATH.
+
+8. [OPTIONAL] If you are going to try the "Ninja" generator, then
+follow the build instructions for that tool at
+http://www.cmake.org/pipermail/cmake/2013-June/055038.html + one
+correction in a following post in that thread.
+
+===============================================================================
+Set up instructions for epa_build
+
+Setup consists of setting the following environment variables
+in a way that is appropriate for your particular system.
+
+INSTALL_PREFIX
+EPA_BUILD_SOURCE_PATH
+CFLAGS
+CXXFLAGS
+FFLAGS
+CMAKE_INCLUDE_PATH
+CMAKE_LIBRARY_PATH
+PATH
+PKG_CONFIG_PATH
+LD_LIBRARY_PATH (only required on Unix so far)
+BUILD_COMMAND
+GENERATOR_STRING
+
+These environment variables are normally set by using
+the source command from bash.  See how this is done for
+various platforms below.
+
+I. Unix platforms:
+
+* Linux
+
+Tailor the indicated values (which are appropriate for my particular
+Linux system) in setup/setup_linux_makefiles for your own system, then
+source that file, i.e.,
+
+source <Top directory of PLplot source tree>/cmake/epa_build/setup/setup_linux_makefiles
+
+* Mac OS X
+
+This has not been tried yet, but a tailored version of
+setup_linux_makefiles should do the job.
+
+* Cygwin on Windows
+
+Some experiments with this have just been started with nothing written
+down with regards to setup.  But ultimately it should be similar
+to a tailored form of the Linux case.
+
+II. Non-Cygwin Windows platforms:
+
+* MinGW/MSYS for the Wine version of Windows
+
+Tailor the indicated values (which are appropriate for my particular
+Wine system) in setup/setup_mingw_msys_wine_toolchain and
+setup/setup_msys_makefiles for your own system.  Then execute
+something similar to the following from Linux to get into the bash.exe
+shell on Wine:
+
+wineserver -p
+nice -19 wineconsole --backend=curses MinGW-4.7.2/msys/1.0/bin/bash.exe
+
+Then from that bash.exe shell execute
+
+bash.exe-3.1$ pushd /z/home/software/plplot/HEAD/plplot.git/cmake/epa_build/setup;source setup_msys_makefiles;popd
+
+You need to pushd to the setup directory to run the source command on
+this platform, then popd back to the original directory as above.  The
+reason for this minor complication is setup_msys_makefiles excecutes "source
+setup_mingw_msys_wine_toolchain", and that only works if it is done
+from the setup directory (the location of that file).
+
+* MinGW/MSYS for the Microsoft version of Windows
+
+This has not been tried yet but the setup should work very similarly
+to the MinGW/MSYS/Wine case above.
+
+* Other non-Cygwin Windows platforms:
+
+Non-Cygwin windows epa_builds absolutely rely on MSYS tools such as
+bash.exe.  But so long as Windows users download MSYS and put it on
+the PATH, then in theory epa_build should work.  For example, I have
+tried epa_build on Wine with some success for the "MSYS Makefiles"
+CMake generator (those results are referred to above) as well as the
+"MinGW Makefiles", "Ninja", and "NMake Makefiles JOM" generators.  All
+of these results were with the gcc compiler suite from the MinGW
+project.  I see no reason why that success could not be extended to
+other command-line generators as well such as "NMake Makefiles" and
+other compilers such as MSVC/Ifort, but the epa_build project needs
+more volunteers to debug the platforms that interest them.
+
+===============================================================================
+Build directions for epa_build
+
+I. Unix platforms
+
+* Linux
+
+N.B. setup/setup_linux_makefiles (which needs to be tailored by each
+individual who uses epa_build) sets up all the important environment
+variables used below.
+
+Follow the generic build instructions below for the optional buildtools
+and one of the ordinary (non buildtool) packages.
+
+* Mac OS X and Cygwin
+
+These epa_builds should be very similar to the Linux case.  I suggest
+you use system versions of build tools (i.e., skip the
+-DBUILD_THE_BUILDTOOLS=ON case above) to start until you start having
+success with ordinary epa_builds.  And I would start small there with,
+e.g., attempting to build shapelib, then plplot_lite before moving on
+to a full plplot build (including builds of all its dependencies).
+
+II. Non-Cygwin Windows platforms
+
+Note that setup_msys_makefiles and setup_mingw_makefiles (which need
+to be tailored by each individual who uses epa_build) for these
+platforms are designed to set up for the "MSYS Makefiles" generator
+and the "MinGW Makefiles generator all the environment variables
+listed above.  Similarly, other setup files should be created for
+other Windows generators that I (AWI) have tried so far by hand such
+as "NMake Makefiles JOM" and "Ninja".
+
+For the MinGW/MSYS/Wine case, I (AWI) essentially followed the same
+instructions as above for the Linux case, including building all the
+buildtools.  The run-time results for all those buildtools are fine
+except for cmake.  Although the epa_build of cmake has no build
+errors, the result does not have the power (supplied only by a fully
+configured curl library and not by the internal curl alternative that
+the cmake epa_build on Windows currently uses as a backup) to download
+from "https" archives which is essential for some of the epa_builds.
+The Linux and Cygwin platforms do give the required access to a
+full-featured Curl library for the cmake epa_build to link to, but on
+MinGW/MSYS the only alternative is to build your own curl library, and
+the epa_build configuration for that has not been implemented yet
+(although it is on my ToDo list).  The net result of these
+considerations is I placed (via the above setup files) the pre-built
+(and fully powered) binary version of CMake downloaded from Kitware
+higher on my PATH than the epa_build version of that buildtool.  Also,
+for ordinary epa_builds (with -DBUILD_THE_BUILDTOOLS=OFF), I only had
+success with plplot_lite and not plplot on MinGW/MSYS.  The reason was the extra
+pango and qt dependencies of plplot which had dependent packages of
+their own that have build errors on MinGW/MSYS.
+
+N.B. The epa_build system sets the CMake cache variable
+NUMBER_PARALLEL_JOBS to 4 by default which is suitable for most
+entry-level PC's.  However, MSYS users who are unable to downgrade
+(see above) may need to set this value to 1 using the cmake option
+-DNUMBER_PARALLEL_JOBS:STRING=1
+
+N.B. the epa_build configuration tweaks required to make all
+epa_builds work on MinGW/MSYS (and other Windows platforms) should be
+few per project since many others have had success building all
+projects on Windows that are covered by epa_build.  But there are a
+lot of such projects in, for example, the dependency list for pango,
+and often the Windows build tweaks are not well publicized.  Thus,
+some substantial and sustained effort (but not an inherently difficult
+effort) will be required to get all of the epa_build configurations to
+work for the Windows case, and the success I have achieved with a
+limited group of projects for the plplot_lite case on MinGW/MSYS/Wine
+is a promising start.
+
+Generic epa_build instructions:
+
+A. [OPTIONAL] build necessary additional buildtools whose versions you
+prefer compared to the versions available on your Linux distro.
+
+# Insure you start with an empty build tree and vacant install tree
+# for the buildtools case.
+# Verify these environment variables are set properly since you are
+# using a dangerous command (rm -rf) with them.
+echo ${BUILD_PREFIX}
+echo ${INSTALL_PREFIX}
+mkdir -p ${BUILD_PREFIX}_buildtools
+rm -rf ${BUILD_PREFIX}_buildtools/* ${INSTALL_PREFIX}_buildtools
+cd  ${BUILD_PREFIX}_buildtools
+
+# N.B. The epa_build system sets the CMake cache variable
+# NUMBER_PARALLEL_JOBS to 4 by default which is suitable for most
+# entry-level PC's.  However, users with a high-level computer with
+# more than say 2 cpu's may wish to increase this cache value by,
+# e.g., setting the cmake option
+# -DNUMBER_PARALLEL_JOBS:STRING=<some integer value larger than 4>
+# to make efficient use of all those different cpu's.
+
+cmake -DCMAKE_VERBOSE_MAKEFILE=ON -G"$GENERATOR_STRING" -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_PREFIX}_buildtools -DBUILD_THE_BUILDTOOLS=ON $EPA_BUILD_SOURCE_PATH >& cmake.out
+
+# Check cmake.out for any errors
+less cmake.out
+
+# Figure out which buildtools you want to build
+${BUILD_COMMAND} help
+
+# For most platforms I recommend building all build tools.
+${BUILD_COMMAND} build_all >& build_all.out
+
+# Check build_all.out for any errors
+less build_all.out
+
+B. Build and test a lite version of PLplot (without building or using
+major soft dependencies such as pango/cairo, Qt4, and wxwidgets)
+and [OPTIONAL] a fully configured PLplot version (where currently
+pango/cairo, wxwidgets, and Qt4 are built and used and the system
+version of octave is used).
+
+# Insure you start with an empty build tree and vacant install tree.
+# Verify these environment variables are set properly since you are
+# using a dangerous command (rm -rf) with them.
+echo ${BUILD_PREFIX}
+echo ${INSTALL_PREFIX}
+mkdir -p ${BUILD_PREFIX}
+rm -rf ${BUILD_PREFIX}/* ${INSTALL_PREFIX}
+cd  ${BUILD_PREFIX}
+
+# N.B. the -DCOMPREHENSIVE_PLPLOT_TEST_INTERACTIVE=ON and
+# -DCOMPREHENSIVE_PLPLOT_TEST_NONINTERACTIVE=ON options below
+# configure runs of the comprehensive test script (either for the
+# interactive case, the noninteractive case, or both) just after the
+# PLplot source tree is copied.  This test script (familiar to PLplot
+# developers) requires substantial interaction from the user for the
+# interactive case and substantial extra CPU time and ~4GB of extra
+# disk space to run for the noninteractive case.  If you prefer only
+# to build and install PLplot without doing any run-time testing of
+# the results do not set these options or else use
+# -DCOMPREHENSIVE_PLPLOT_TEST_INTERACTIVE=OFF and
+# -DCOMPREHENSIVE_PLPLOT_TEST_NONINTERACTIVE=OFF
+
+# N.B. The epa_build system sets the CMake cache variable
+# NUMBER_PARALLEL_JOBS to 4 by default which is suitable for most
+# entry-level PC's.  However, users with a high-level computer with
+# more than say 2 cpu's may wish to increase this cache value by,
+# e.g., setting the cmake option
+# -DNUMBER_PARALLEL_JOBS:STRING=<some integer value larger than 4>
+# to make efficient use of all those different cpu's.  On the
+# other hand parallel builds have issues on every Windows platform
+# we have tried (Cygwin, MinGW/MSYS, and MinGW-w64/MSYS2) so for
+# those casees set -DNUMBER_PARALLEL_JOBS:STRING=1
+
+cmake -DCMAKE_VERBOSE_MAKEFILE=ON -G"$GENERATOR_STRING" -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX -DCOMPREHENSIVE_PLPLOT_TEST_INTERACTIVE=ON -DCOMPREHENSIVE_PLPLOT_TEST_NONINTERACTIVE=ON $EPA_BUILD_SOURCE_PATH >& cmake.out
+
+# Check cmake.out for any errors
+less cmake.out
+
+# Figure out which packages you want to build
+${BUILD_COMMAND} help
+
+# Build and test the "lite" version of PLplot.
+
+# Comprehensive interactive checks of PLplot will be performed if
+# you have set -DCOMPREHENSIVE_PLPLOT_TEST_INTERACTIVE=ON above, but
+# that will require substantial interaction from you with those interactive
+# tests that are run.
+
+# Comprehensive noninteractive checks of PLplot will be performed if
+# you have set -DCOMPREHENSIVE_PLPLOT_TEST_NONINTERACTIVE=ON above, but
+# that will take substantial time and disk space to complete this
+# comprehensive check.
+
+${BUILD_COMMAND} build_plplot_lite >& build_plplot_lite.out
+
+# Check build_plplot_lite.out for any errors
+less build_plplot_lite.out
+
+# Check detailed results from comprehensive tests by looking at the *.out
+# files in
+# epa_build/Source/comprehensive_test_disposeable/shared/output_tree,
+# epa_build/Source/comprehensive_test_disposeable/nondynamic/output_tree, and
+# epa_build/Source/comprehensive_test_disposeable/static/output_tree,
+
+# [OPTIONAL] Build and test the complete version of PLplot.
+${BUILD_COMMAND} build_plplot >& build_plplot.out
+
+# Check build_plplot.out for any errors
+less build_plplot.out
+
+===============================================================================
+Making good bug reports for epa_build
+
+Good bug reports need to include lots of details so that the developers
+of epa_build can figure out what is wrong.  Those details include the
+following:
+
+1. The modified setup files you sourced above to establish the environment
+variables needed by epa_build.
+
+2. The actual environment variables resulting from source(-ing) those files.
+You obtain such a list by executing the following command from bash
+
+printenv >printenv.out
+
+and including printenv.out in your bug report.
+
+3. For the -DBUILD_THE_BUILD_TOOLS=ON case that is started with an initially
+empty build tree that is kept separate from the -DBUILD_THE_BUILD_TOOLS=OFF
+build tree:
+
+a. The exact command you used to invoke cmake
+b. The resulting cmake.out
+c. The resulting CMakeCache.txt file
+d. The build_all.out file you get from
+
+make -k build_all >& build_all.out
+
+The -k option attempts to keep building every build tool possible even
+if there is an error for one or more of them.
+
+4. For the -DBUILD_THE_BUILD_TOOLS=OFF case that is started with an initially
+empty build tree that is kept separate from the -DBUILD_THE_BUILD_TOOLS=ON
+build tree:
+
+(Note this case should work even if no buildtools were successfully
+built for the -DBUILD_THE_BUILD_TOOLS=ON case since the PLplot build
+should simply adjust to the missing build tools by reducing what is
+built.  Of course, the result is a less powerful PLplot so ultimately
+you do want all the buildtools to build, but those buildtools are not
+a necessity.)
+
+a. The exact command you used to invoke cmake
+b. The resulting cmake.out
+c. The resulting CMakeCache.txt file
+d. The build_plplot_lite.out file you get from
+
+make build_plplot_lite >& build_plplot_lite.out
+

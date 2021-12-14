@@ -1,0 +1,44 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLPOLY3 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplpoly3\fP - Draw a polygon in 3 space
+.SH SYNOPSIS
+\fBplpoly3\fP(\fIn\fP, \fIx\fP, \fIy\fP, \fIz\fP, \fIdraw\fP, \fIifcc\fP)
+.SH DESCRIPTION
+
+.P
+Draws a polygon in 3 space defined by \fIn\fP points in \fIx\fP, \fIy\fP, and \fIz\fP. Setup like \fBplline3\fP(3plplot), but differs from that function in that \fBplpoly3\fP(3plplot) attempts to determine if the polygon is viewable depending on the order of the points within the vector and the value of \fIifcc\fP.  If the back of polygon is facing the viewer, then it isn't drawn.  If this isn't what you want, then use \fBplline3\fP(3plplot) instead.
+.P
+The points are assumed to be in a plane, and the directionality of the plane is determined from the first three points.  Additional points do not have to lie on the plane defined by the first three, but if they do not, then the determination of visibility obviously can't be 100% accurate... So if you're 3 space polygons are too far from planar, consider breaking them into smaller polygons.  3 points define a plane :-).
+.P
+Bugs:  If one of the first two segments is of zero length, or if they are co-linear, the calculation of visibility has a 50/50 chance of being correct.  Avoid such situations :-).  See x18c.c for an example of this problem. (Search for 20.1).
+.P
+Redacted form: \fBplpoly3(x, y, z, code)\fP
+.P
+This function is used in example 18.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of points defining line.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing \fIn\fP x coordinates of points.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing \fIn\fP y coordinates of points.
+.TP
+\fIz\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing \fIn\fP z coordinates of points.
+.TP
+\fIdraw\fP (\fBPLBOOL_VECTOR\fP(3plplot), input)
+A vector containing \fIn-1\fP Boolean values which control drawing the segments of the polygon.  If \fIdraw[i]\fP is true, then the polygon segment from index \fI[i]\fP to \fI[i+1]\fP is drawn, otherwise, not.
+.TP
+\fIifcc\fP (\fBPLBOOL\fP(3plplot), input)
+If \fIifcc\fP is true the directionality of the polygon is determined by assuming the points are laid out in a counter-clockwise order.  Otherwise, the directionality of the polygon is determined by assuming the points are laid out in a clockwise order.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

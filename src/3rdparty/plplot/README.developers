@@ -1,0 +1,395 @@
+Information about version control
+---------------------------------
+
+PLplot uses git for version control.  The fundamental git
+documentation we refer to most often is the freely downloadable
+[Pro Git Book](http://git-scm.com/book).
+
+There is excellent advice about commit messages and how to organize
+commits at <http://who-t.blogspot.be/2009/12/on-commit-messages.html>
+as well.  In particular, the fundamental advice there is to always
+include a short description paragraph at the top of your commit
+message giving a general description of your commit.  That description
+is used throughout git when summarizing commits so it should be kept
+as short as reasonable (i.e., there is typically just one line in the
+description paragraph).
+
+Installation of git is straightforward as described at
+<http://git-scm.com/book/en/Getting-Started-Installing-Git>
+
+In all cases, it is highly recommended that git is run from the
+command line rather than from a GUI because the git command line is
+powerful, extremely well documented, and is the standard way most git users
+(including PLplot developers) use git.
+
+Command-line versions of git are readily available on all platforms.
+The Linux packages for git, the Mac OS X free software repository
+packages for git, and the Cygwin and MinGW-w64/MSYS2 Windows packages
+for git all include command-line versions.  In addition, the Xcode
+version of git on Mac OS X and the Git for Windows version of git can
+both be used from the command line (see
+<http://www.appcoda.com/git-source-control-in-xcode/> and
+<https://git-for-windows.github.io/>).
+
+Continuing with the git theme that "simpler is better", our general
+advice is to ignore non-standard extensions to git such as github
+versions or git-lfs since they are not needed, and use of standard git
+means there is less to go wrong.  In fact, before we formulated this
+advice one of our developers installed and used git-lfs (from
+Macports) inadvertently with the result that a .git/hooks/pre-push
+shell script was run to execute git-lfs before each of his pushes, and
+he ran into trouble with that complication.  He reverted back to the
+lean git that is also available from Macports by the following
+measures (which may be useful to others who have inadvertently
+installed git-lfs):
+
+"I did git lfs uninstall and it cleaned up the lines it had added to
+~/.gitconfig. I also uninstalled git-lfs from my MacPorts stuff.  Then
+I got a fresh clone."
+
+As expected (since git-lfs adds nothing that is truly needed for PLplot git
+needs) that lean git command-line environment has been working well for him
+ever since.
+
+Local configuration of git
+--------------------------
+
+That is covered in the Pro Git book referenced above.  But the fundamental
+thing you should do is identify yourself in the way you want to be identified
+in your commit messages.
+
+# To change/set the relevant values use, e.g.,
+
+git config --global user.name "Alan W. Irwin"
+git config --global user.email airwin@users.sourceforge.net
+
+Workflow
+--------
+
+PLplot currently uses the rebase git workflow
+[described here](http://kevinold.com/2013/04/17/my-git-workflow.html).
+
+And summarized here:
+1. *ALWAYS* develop on a branch:
+
+git checkout -b new_branch
+
+   Develop followed by tests of that development followed by
+
+git commit
+
+   to create commits in new_branch.  If you create a commit and
+   realize before you make additional commits that there is an error
+   in the commit, please use the --amend option to the subsequent
+   commit that fixes the error.  What this option does is squash the
+   two commits together, i.e., it replace the old commit with the
+   error by the combined old commit and fix.  This approach minimizes
+   errors in the commits that will eventually be merged to master (see
+   below), and this cleaner master history will make subsequent use of
+   git-bisect (a killer-app typically used to find which commit first
+   caused a regression) much easier.
+
+2. Updating the master branch:
+
+git checkout master
+git fetch
+# (optional) review newly downloaded changes
+git log origin/master
+git merge --ff-only origin/master
+
+   Make sure that you are on the master branch before doing the
+   merge. Failure to do so will mean having to undo the merge as
+   merging master into your branch is bad and attempts to push
+   your work back to official repo will be rejected.
+
+3. Updating your working branch so that it is a sequential
+   continuation of the work on the master branch:
+
+git checkout new_branch
+git rebase master
+
+   Note that there is some possibility for headaches here. If one
+   of the files that you are working on is changed in the master
+   branch you may have to deal with merge conflicts. Unless you
+   really need some new feature in master (and you probably
+   should not if your branch is really a self-contained topic)
+   then it is probably best to do this once just before you want
+   to push your work back to the official repo.
+
+   Also, git rebase is not suitable if you are right in the
+   middle of work on a topic with a dirty tree with uncommitted
+   changes.  For this case use
+
+git checkout new_branch # (checkout the dirty tree with uncommitted changes)
+git stash save # (save that dirty tree to make new_branch clean
+               # i.e., all uncommitted changes disappear).
+git rebase master # (update that clean branch)
+git stash pop # (restore your uncommitted changes)
+# ... keep working.... until you are ready to commit (and ultimately
+# merge back to master and push).
+
+4. Incorporate changes back into master:
+
+git checkout master
+git fetch
+# Note, you are now in a race to get your changes pushed before someone
+# else does so work quickly from now on until that push.
+# Only if above fetch showed something downloaded
+git merge --ff-only origin/master
+git merge --ff-only new_branch
+
+   At this point you should see a message like "Fast-forward". If
+   instead you see "Merge made by the 'recursive' strategy" this
+   is bad and means that your changes will be rejected when you
+   try to push them to the official repo. You can inspect the
+   history with gitk and possibly collapse the offending commits
+   into a single commit (using git rebase --interactive) that makes
+   the history sequential again.
+
+5. Push changes to the official repo:
+
+# Check first:
+git push --dry-run origin master
+# Actual Push:
+git push origin master
+
+This is a rebase work flow. The sequential nature of the master branch is
+enforced by server side hooks and by only allowing fast-forward
+merges with the merge flag --ff-only. You can make this the
+default option for your repository using the command:
+
+git config merge.ff only
+
+This will add these two lines:
+[merge]
+	ff = only
+
+To the .git/config file in your local repository of the PLplot project.
+
+Development Collaboration
+-------------------------
+
+Note one drawback of a rebase workflow like adopted here is care must
+be used in sharing development branches with others.  One such method
+is to publish an experimental branch using some public repository like
+those at github and asking others to have a look and make suggestions,
+as long as everyone else understands that it is a "read only" branch
+whose series of commits will disappear and be replaced by other
+commits whenever that branch is rebased on the official master version
+(which must occur, for example, before it is ff-merged with the master
+branch).  Another method which has no such concerns at all is simply
+to use patches generated by "git format-patch" to share development
+branches on the plplot-devel mailing list.  Developers who subscribe
+to that list can easily apply those patches with the "git am" command
+on some private branch to evaluate them (unless there are explicit
+file conflicts with the HEAD of master in which case the developer of
+those series of patches would need to bring them up to date with
+master by rebasing his private development branch before regenerating
+the patch series).
+
+For those new to git, here is the simple cookbook for using "git format-patch"
+(but use "git help format-patch" to learn a lot more).
+
+1. Develop your topic on a private branch as indicated above.  Suppose
+you have made 2 commits to that topic branch that you would like to
+share with others for their evaluation.  Then use
+
+git format-patch -2
+
+to create two formatted patch files corresponding to your two commits, e.g.,
+
+0001-Build-system-Fix-test_python_psc-dependency-issue.patch
+0002-Build-system-Implement-version-check-on-libharu-libh.patch
+
+Review each of those files to make sure your commit name and e-mail
+address are the way you like them (see the "git config" command above
+for changing those).  Also make sure your description (see comments
+on the description paragraph above) is the way you like it for
+each of the commits.  Then
+store those files in a compressed tarball, e.g.,
+
+tar zcf my_topic.tar.gz 000*.patch
+
+send those compressed results as an e-mail attachment to, e.g., the plplot-devel
+mailing list; and then cleanup afterward as follows:
+
+rm 000*.patch
+rm my_topic.tar.gz
+
+Those receiving such a tarball should unpack it, and then use git am
+_on a private topic branch_ to commit those changes for further
+collaboration until the collaborative yet private topic is matured
+enough to be merged with the master branch and pushed.
+
+Updating our wiki pages
+-----------------------
+
+The definitive markdown source for our wiki pages is located in
+doc/wiki_source.  While working on a topic branch (see advice above)
+do the following steps:
+
+Case I (when you prefer to use your own file editor):
+
+* Edit an existing file at doc/wiki_source (or if you are creating a
+  new wiki page edit a new file there).
+
+* Use the
+
+git diff --word-diff
+
+  command to evaluate the changes (the --word-diff option is essential
+  to allow humans to isolate the changes in the generally long
+  markdown format lines);
+
+* Transmit those changes to SF by cutting and pasting them with ctrl-c
+  and ctrl-v from the git working directory file edit to the SF GUI
+  editor for the wiki page in question.  On the SF GUI editor side, the
+  old text that is being replaced can be selected and deleted.
+
+* Test the resulting changed wiki page (e.g., check the diff available
+  in the history GUI to make sure there were no cut and paste or
+  deletion failures, check the new links, check the rendering of the
+  updated markdown format looks good).
+
+* Commit the markdown source file for the wiki changes on the git
+  topic branch.
+
+* Push your commit following the above directions.
+
+(END OF CASE I)
+
+Case II (when you prefer to use the SF wiki editor):
+
+* Click on the SF GUI for the wiki page to edit the markdown source for that
+  page.
+
+* Test the resulting changed wiki page (e.g., check the diff available
+  in the history GUI to make sure there were no cut and paste or
+  deletion failures, check the new links, check the rendering of the
+  updated markdown format looks good);
+
+* Transmit those changes to the git working directory doc/wiki_source
+  by cutting and pasting them from the SF GUI editor session to a file
+  edit of the appropriate file in that directory using ctrl-c to
+  select and ctrl-v to paste and ordinary file editing capability to
+  delete the text that is being replaced.
+
+* Use the
+
+git diff --word-diff
+
+  command to evaluate the changes (the --word-diff option is essential
+  to allow humans to isolate the changes in the generally long
+  markdown format lines);
+
+* Commit the markdown source file for the wiki changes on the git
+  topic branch.
+
+* Push your commit following the above directions.
+
+(END OF CASE II)
+
+Configuring the build system
+----------------------------
+
+The PLplot build system now requires CMake to configure the build on
+all build platforms (Linux, Mac OS X, traditional Unix, and
+Windows). The latest instructions for building PLplot with cmake can
+be found on the PLplot wiki.
+
+http://sourceforge.net/p/plplot/wiki/
+
+Coding standards for PLplot
+---------------------------
+
+Adherence to coding standards should help make code more portable.
+Therefore when writing / contributing code for PLplot the following standards
+should be followed:
+
+C: ISO C99 standards with POSIX.1-2001 base specification (required
+for a number of functions)
+
+C++: ISO C++ 1998 standard plus amendments
+
+Fortran: Fortran 2003 standard (especially including support for
+the ISO_C_BINDING module that we use to implement the new fortran
+binding).
+
+To check code conforms to standards it is recommended to try compiling with suitable compiler
+flags to enforce these standards and to enable compiler warnings to check
+for dubious code.
+
+For gcc / g++ / gfortran the following flags can be used
+
+export CFLAGS="-O3 -fvisibility=hidden -std=c99 -D_POSIX_C_SOURCE=200112L -pedantic -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -Wnested-externs -Wconversion -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings"
+
+export CXXFLAGS="-O3 -fvisibility=hidden -std=c++98 -pedantic -Wall -Wextra"
+
+export FFLAGS="-O3 -Wall -Wextra"
+
+N.B. adding the options -std=f2003 -pedantic to FFLAGS would normally
+be used to check compliance with the Fortran 2003 standard, but those
+gfortran options do not currently work for our new Fortran binding
+because that compiler generates build errors in that case where the
+associated message is
+
+Error: Fortran 2008: Array of interoperable type at (1) to C_LOC which is nonallocatable and neither assumed size nor explicit size
+
+A google check for that error message found
+<https://gcc.gnu.org/ml/gcc-patches/2013-04/msg00110.html> where
+apparently the interoperability concern was that an assumed shape
+array might not be continuous.  But we feel that should not be a
+concern for this singly dimensioned case, and the NAG compiler
+(notorious for its ability to check for standards compliance) builds
+our fortran binding and examples without any errors or warnings.  So
+for now we can only avoid what we believe is this spurious gfortran
+build error by dropping the -std=f2003 -pedantic options.  Which means
+we cannot check compliance with Fortran 2003 with that compiler and
+must rely on a different Fortran compiler (NAG) to do that.
+
+Some notes and recommendations
+------------------------------
+
+- Use C++ style // comments rather than the older /* */ style comments.
+The only exception to this where a comment is embeded in a line of code,
+e.g. to comment out a parameter name in a function definition in C++.
+
+- To mark function parameters as unused and to suppress at least gcc
+warnings about these, mark the parameter names with the PL_UNUSED( )
+macro.
+
+Styling of code
+---------------
+
+The uncrustify code beautifying program is used to style the source
+code consistently and in a readable manner. Running the
+
+scripts/style_source.sh
+
+shell script can be used the check the
+source code and optionally apply any styling changes required.
+
+Use the --help option for this script to find out what options
+you have to run it.
+
+In order for this script to work, you must have the correct version
+(currently that is version 0.60) of uncrustify installed and
+on your PATH.  You must also have PYTHON and other Unix tools
+installed.  So typically this script is only run on Unix
+systems (or Unix-like systems such as Cygwin and MinGW-w64/MSYS2).
+
+Since this script can potentially make intrusive changes (if you use
+the --apply option), always run the "git diff" command afterward to
+review those changes before committing the result.
+
+Another important code styling script available on Unix or Unix-like
+systems is
+
+scripts/remove_trailing_blanks.sh
+
+which unconditionally removes trailing blanks from
+essentially all text files in the source tree.
+
+Since this script can potentially make intrusive changes, always run
+the "git diff" command afterward to review the changes before
+committing the result.

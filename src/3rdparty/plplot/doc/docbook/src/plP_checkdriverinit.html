@@ -1,0 +1,31 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plP_checkdriverinit: Checks to see if any of the specified drivers have been initialized</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-Internal.html" title="Chapter 22. Internal C functions in PLplot"><link rel="prev" href="API-Internal.html" title="Chapter 22. Internal C functions in PLplot"><link rel="next" href="plP_getinitdriverlist.html" title="plP_getinitdriverlist: Get the initialized-driver list"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plP_checkdriverinit</code>: Checks to see if any
+      of the specified drivers have been initialized
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="API-Internal.html">Prev</a> </td><th width="60%" align="center">Chapter 22. Internal C functions in PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plP_getinitdriverlist.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plP_checkdriverinit"></a>
+      <code class="function">plP_checkdriverinit</code>: Checks to see if any
+      of the specified drivers have been initialized
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plP_checkdriverinit</b>
+	  (</code></td><td><var class="pdparam">list</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p> Checks to see if any of the specified drivers have been
+    initialized. Function tests a space-delimited list of driver names to
+    see how many of the given drivers have been initialized, and how often.
+    The return code of the function is: <code class="literal">0</code> if no matching
+    drivers were found to have been initialized; <code class="literal">-1</code> if
+    an error occurred allocating the internal buffer; or, a positive number
+    indicating the number of streams encountered that belong to drivers on
+    the provided list. This function invokes <a class="link" href="plP_getinitdriverlist.html" title="plP_getinitdriverlist: Get the initialized-driver list"><code class="function">plP_getinitdriverlist</code></a>
+    internally to get a <span class="emphasis"><em>complete</em></span> list of drivers that have been initialized
+    in order to compare with the driver names specified in the argument list
+    to <a class="link" href="plP_checkdriverinit.html" title="plP_checkdriverinit: Checks to see if any of the specified drivers have been initialized"><code class="function">plP_checkdriverinit</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>list</code></em>
+	  (<code class="literal">char *</code>, input)
+	</span></dt><dd><p>
+	    Pointer to character string specifying a space-delimited
+	    list of driver names, e.g., <code class="literal">"bmp jpeg tiff"</code>.
+	  </p></dd></dl></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="API-Internal.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-Internal.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plP_getinitdriverlist.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 22. Internal C functions in PLplot </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plP_getinitdriverlist</code>: Get the initialized-driver
+      list
+    </td></tr></table></div></body></html>

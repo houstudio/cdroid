@@ -1,0 +1,69 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plpath: Draw a line between two points, accounting for coordinate transforms</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plpat.html" title="plpat: Set area line fill pattern"><link rel="next" href="plpoin.html" title="plpoin: Plot a glyph at the specified points"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plpath</code>: Draw a line between two points, accounting
+      for coordinate transforms
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plpat.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plpoin.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plpath"></a>
+      <code class="function">plpath</code>: Draw a line between two points, accounting
+      for coordinate transforms
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plpath</b>
+          (</code></td><td>
+            <var class="pdparam">n</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">x1</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y1</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">x2</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y2</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Joins the point <code class="literal">
+        (<em class="parameter"><code>x1</code></em>,
+        <em class="parameter"><code>y1</code></em>)
+      </code> to
+      <code class="literal">
+        (<em class="parameter"><code>x2</code></em>,
+        <em class="parameter"><code>y2</code></em>)
+      </code>.  If a global coordinate transform
+      is defined then the line is broken in to
+      <code class="literal">
+        <em class="parameter"><code>n</code></em>
+      </code> segments to approximate the
+      path.  If no transform is defined then this simply acts like a call to
+      <a class="link" href="pljoin.html" title="pljoin: Draw a line between two points"><code class="function">pljoin</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>n</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            number of points to use to approximate the path.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>x1</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            x coordinate of first point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y1</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            y coordinate of first point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>x2</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            x coordinate of second point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y2</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            y coordinate of second point.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plpath(n,x1,y1,x2,y2)</code>
+    </p><p>
+      This function is used in example 22.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plpat.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plpoin.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plpat</code>: Set area line fill pattern
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plpoin</code>: Plot a glyph at the specified points
+    </td></tr></table></div></body></html>

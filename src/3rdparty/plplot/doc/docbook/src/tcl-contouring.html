@@ -1,0 +1,120 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Contouring and Shading from Tcl</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="tcl.html" title="Chapter 13. Using PLplot from Tcl"><link rel="prev" href="tcl-extension.html" title="The PLplot Tcl Matrix Extension"><link rel="next" href="tcl-understanding.html" title="Understanding the Performance Characteristics of Tcl"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Contouring and Shading from Tcl</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="tcl-extension.html">Prev</a> </td><th width="60%" align="center">Chapter 13. Using PLplot from Tcl</th><td width="20%" align="right"> <a accesskey="n" href="tcl-understanding.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tcl-contouring"></a>Contouring and Shading from Tcl</h2></div></div></div><p>
+      Contouring and shading has traditionally been one of the
+      messier things to do in PLplot.  The C API has many parameters, with
+      complex setup and tear down properties.  Of special concern is that
+      some of the parameters do not have a natural representation in script
+      languages like Tcl.  In this section we describe how the Tcl
+      interface to these facilities is provided, and how to use it.
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="tcl-drawing-contour"></a>Drawing a Contour Plot from Tcl</h3></div></div></div><p>
+	By way of reference, the primary C function call for contouring is:
+      </p><pre class="programlisting">
+	void plcont( PLFLT **f, PLINT nx, PLINT ny, PLINT kx, PLINT lx,
+	PLINT ky, PLINT ly, PLFLT *clevel, PLINT nlevel,
+	void (*pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
+	PLPointer pltr_data);
+      </pre><p>
+      </p><p>
+	This is a fairly complex argument list, and so for this function (and
+	for plshade, described below) we dispense with trying to exactly
+	mirror the C API, and just concentrate on capturing the functionality
+	within a Tcl context.  To begin with, the data is provided through a
+	2-d Tcl matrix.  The Tcl matrix carries along its size information
+	with it, so <code class="literal">nx</code> and <code class="literal">ny</code> are no longer needed.  The
+	<code class="literal">kx</code>, <code class="literal">lx</code>, <code class="literal">ky</code> and
+	<code class="literal">ly</code> variables are
+	potentially still  useful for plotting a subdomain of the full data
+	set, so they may be specified in the natural way, but we make this
+	optional since they are frequently not used to convey anything more
+	than what could be inferred from <code class="literal">nx</code> and
+	<code class="literal">ny</code>.  However, to
+	simplify processing, they must be supplied or omitted as a set (all of
+	them, or none of them).  <code class="literal">clevel</code> is supplied as a 1-d Tcl
+	matrix, and so <code class="literal">nlevel</code> can be omitted.
+      </p><p>
+	Finally, we have no way to support function pointers from Tcl, so
+	instead we provide token based support for accessing the three
+	coordinate transformation routines which are provided by PLplot, and
+	which many PLplot users use.  There are thus three courses of action:
+	</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	      Provide no pltr specification.  In this case, <code class="literal">pltr0</code> is
+	      used by default.
+	    </p></li><li class="listitem"><p>
+	      Specify <code class="literal">pltr1 x y</code> where x and y are 1-d Tcl matrices.
+	      In this case <code class="literal">pltr1</code> will be used, and the 1-d arrays which it
+	      needs will be supplied from the Tcl matrices <code class="literal">x</code> and
+	      <code class="literal">y</code>.
+	    </p></li><li class="listitem"><p>
+	      Specify <code class="literal">pltr2 x y</code> where x and y are 2-d Tcl matrices.
+	      In this case <code class="literal">pltr2</code> will be used, and the 2-d arrays which it
+	      needs will be supplied from the Tcl matrices <code class="literal">x</code> and
+	      <code class="literal">y</code>.
+	    </p></li></ul></div><p>
+
+      </p><p>
+	Now, there can be no question that this is both more concise and less
+	powerful than what you could get in C.  The loss of the ability to
+	provide a user specified transformation function is regrettable.  If
+	you really do need that functionality, you will have to implement your
+	own Tcl extension command to do pretty much the same thing as the
+	provided Tcl extension command <code class="literal">plcont</code> (which is in
+	<code class="filename">tclAPI.c</code> in function <code class="literal">plcontCmd()</code>), except specify the C
+	transformation function of your choice.
+      </p><p>
+	However, that having been said, we recognize that one common use for
+	this capability is to provide a special version of <code class="literal">pltr2</code> which
+	knows how to implement a periodic boundary condition, so that polar
+	plots, for example, can be implemented cleanly.  That is, if you want
+	to draw contours of a polar data set defined on a 64 x 64 grid,
+	ensuring that contour lines would actually go all the way around the
+	origin rather than breaking off like a silly pacman figure, then you
+	had basically two choices in C.  You could copy the data to a 65 x 64
+	grid, and replicate one row of data into the spare slot, and then plot
+	the larger data set (taking care to replicate the coordinate arrays
+	you passed to pltr2 in the same way), <span class="emphasis"><em>or</em></span> you could make a
+	special version of <code class="literal">pltr2</code> which would understand that one of the
+	coordinates was wrapped, and perform transformations accordingly
+	without actually making you replicate the data.
+      </p><p>
+	Since the former option is ugly in general, and hard to do in Tcl in
+	particular, and since the second option is even more difficult to do
+	in Tcl (requiring you do make a special Tcl extension command as
+	described above), we provide special, explicit support for this common
+	activity.  This is provided through the use of a new, optional
+	parameter <code class="literal">wrap</code> which may be specified as the last parameter to
+	the Tcl command, only if you are using <code class="literal">pltr2</code>.  Supplying
+	<code class="literal">1</code> will wrap in the first coordinate, <code class="literal">2</code> will wrap in the
+	second coordinate.
+      </p><p>
+	The resultant Tcl command is:
+      </p><pre class="programlisting">
+	plcont f [kx lx ky ly] clev [pltr x y] [wrap]
+      </pre><p>
+	Note that the brackets here are used to signify optional arguments,
+	<span class="emphasis"><em>not</em></span> to represent Tcl command substitution!
+      </p><p>
+	The Tcl demo <code class="filename">x09.tcl</code> provides examples of all the capabilities
+	of this interface to contouring from Tcl.  Note in particular,
+	<code class="literal">x09_polar</code> which does a polar contour without doing anything
+	complicated in the way of setup, and without getting a pacman as the
+	output.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="tcl-drawing-shaded"></a>Drawing a Shaded Plot from Tcl</h3></div></div></div><p>
+	The Tcl interface to shading works very much like the one for
+	contouring.  The command is:
+      </p><pre class="programlisting">
+	plshade z xmin xmax ymin ymax \
+	sh_min sh_max sh_cmap sh_color sh_width \
+	min_col min_wid max_col max_wid \
+	rect [pltr x y] [wrap]
+      </pre><p>
+	where <code class="literal">nx</code> and <code class="literal">ny</code> were dropped since they are inferred
+	from the Tcl matrix <code class="literal">z</code>, <code class="literal">defined</code> was dropped since it
+	isn't supported anyway, and <code class="literal">plfill</code> was dropped since it was the
+	only valid choice anyway.  The <code class="literal">pltr</code> spec and
+	<code class="literal">wrap</code> work
+	exactly as described for the Tcl <code class="literal">plcont</code> described above.
+      </p><p>
+	The Tcl demo <code class="filename">x16.tcl</code> contains extensive demonstrations of use,
+	including a shaded polar plot which connects in the desirable way
+	without requiring special data preparation, again just like for
+	<code class="literal">plcont</code> described previously.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="tcl-extension.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="tcl.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="tcl-understanding.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">The PLplot Tcl Matrix Extension </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Understanding the Performance Characteristics of Tcl</td></tr></table></div></body></html>

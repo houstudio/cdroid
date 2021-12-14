@@ -1,0 +1,26 @@
+The official PLplot wiki home page is located at
+<https://sourceforge.net/p/plplot/wiki/Home/>.
+
+As of 2014-10-05 (see mailing-list post with subject line "I have
+completed moving our Wiki to SourceForge" for all the details) pandoc
+(to convert from mediawiki format to markdown), sed scripts, and some
+hand editing were used to propagate our old wiki (at
+<http://www.miscdebris.net/plplot_wiki/> to the above SF site.  At
+that time date tags were applied to all our SF wiki pages to indicate
+when they had last been updated.  Since that propagation quite a few
+of those SF wiki pages have been further updated (along with their
+date tags) using the SF GUI editor for wiki pages.
+
+But I have now (2018-11-01) decided that instead of relying on that
+GUI editor it is a much better procedure to put the Markdown source
+for all those ~50 wiki pages under git control in this directory.  Accordingly
+I have copied the Markdown source of all our SF wiki pages here (using ctrl-c
+in a SF GUI editor selection for a selection of the entire page there, and paste within
+a file edit session to copy that text to a file in this directory.
+
+So from now on to update a wiki page follow the steps in the "Updating
+our wiki pages" section of README.developers in the top directory of
+the PLplot source tree.  The advantages of this method are it gives us
+version control of wiki pages, it gives us an automatic backup of our
+wiki pages, and it allows our developers to use their favorite editor
+to update the wiki.

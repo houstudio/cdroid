@@ -1,0 +1,67 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Python2 is the high-level language of choice for many scientific programmers so the PLplot developers have made sure their Python2 bindings and their standard set of 33 Python examples to test and illustrate those bindings are supported in a first-class way. To make this powerful component of PLplot available on Windows, it is necessary to download a Windows version of Python and NumPy (the subset of SciPy that allows arithmetic operations on scientific arrays at C speeds from Python).
+
+To obtain the latest version of Python2 for Windows, download the Python installer from <http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi>. (These instructions assume you have a 32-bit Windows platform which, e.g., is the standard choice for the wine platform even on 64-bit machines. If you prefer the 64-bit choice for Python, then explore the parent directory of the above URL for MSI files with "amd64" in their name.) Run the MSI installer. On Microsoft Windows this is simply an executable file, on wine you need to use the command "wine msiexec /i python-2.7.3.msi". After the installer GUI comes up, I recommend making all default choices _except_ for the installation prefix where I suggest you choose something unique which allows you to easily remove and replace Python installations when you need to without interfering with other downloaded software packages. From here on I assume that prefix is called \$PYTHON_PREFIX.
+
+To obtain the latest version of NumPy. download the NumPy installer from <http://prdownloads.sourceforge.net/numpy/NumPy/1.5.1/numpy-1.5.1-win32-superpack-python2.7.exe> and run it. (For example, on wine you run that installer with the "wine numpy-1.5.1-win32-superpack-python2.7.exe" command, and I assume you do the same on the Microsoft Windows command-line by dropping "wine" from the command. When the NumPy installer GUI comes up, my experience is it automatically finds the Python2 installation above for whatever you have chosen for \$PYTHON_PREFIX so that I was able to use the default choice in all cases.
+
+After installation of Python2 and Numpy, the remaining steps are to inform CMake (the build system software used by PLplot) of the location of those installs. To do that prepend the following data to the indicated environment variables which are assumed to be set already. That assumption is correct in the PATH case, but if CMAKE_LIBRARY_PATH and/or CMAKE_INCLUDE_PATH have not been set up before then drop ":\$CMAKE_LIBRARY_PATH" and/or \$CMAKE_INCLUDE_PATH from the following commands and use the "export CMAKE_LIBRARY_PATH" and "export CMAKE_INCLUDE_PATH" commands as appropriate.
+
+PATH=\$PYTHON_PREFIX:\$PATH
+
+CMAKE_LIBRARY_PATH=\$PYTHON_PREFIX/libs:\$CMAKE_LIBRARY_PATH
+
+CMAKE_INCLUDE_PATH=\$PYTHON_PREFIX/Lib/site-packages/numpy/core/include/numpy:\$CMAKE_INCLUDE_PATH
+
+CMAKE_INCLUDE_PATH=\$PYTHON_PREFIX/include:\$CMAKE_INCLUDE_PATH
+
+Note on using the MS Visual C/C++ compiler with the Python bindings
+-------------------------------------------------------------------
+
+Because of some specific details in the Python-C interfacing, you need to add the option
+
+`  -DCMAKE_BUILD_TYPE=Release`
+
+when running CMake in combination with the MicroSoft Visual C/C++ compiler and linker.
+
+If you are not interested in the technical details, this is all you need to read.
+
+**Technical details**
+
+The Python header file "pyconfig.h", at least since version 2.7.3 contains the following code:
+
+`  /* For an MSVC DLL, we can nominate the .lib files used by extensions */`
+`  #ifdef MS_COREDLL`
+`  #       ifndef Py_BUILD_CORE /* not building the core - must be an ext */`
+`  #               if defined(_MSC_VER)`
+`                         /* So MSVC users need not specify the .lib file in`
+`                          their Makefile (other compilers are generally`
+`                          taken care of by distutils.) */`
+`  #                       ifdef _DEBUG`
+`  #                               pragma comment(lib,"python27_d.lib")`
+`  #                       else`
+`  #                               pragma comment(lib,"python27.lib")`
+`  #                       endif /* _DEBUG */`
+`  #               endif /* _MSC_VER */`
+`  #       endif /* Py_BUILD_CORE */`
+`  #endif /* MS_COREDLL */       `
+
+This introduces a dependency to the python27_d.lib library - which is, however, not part of the ordinary release. As a consequence, the default "Debug" configuration of CMake will fail as this library can not be found.
+
+The CMake FindPython module has similar code to handle this debug library in the context of generating the makefiles.
+
+The short story, as indicated above, is: use CMake's Release configuration/build type in this combination of MSVC/C++ and Python.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

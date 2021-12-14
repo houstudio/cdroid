@@ -1,0 +1,68 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plstring3: Plot a glyph at the specified 3D points</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plstring.html" title="plstring: Plot a glyph at the specified points"><link rel="next" href="plstripa.html" title="plstripa: Add a point to a strip chart"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plstring3</code>: Plot a glyph at the specified 3D points
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plstring.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plstripa.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plstring3"></a>
+      <code class="function">plstring3</code>: Plot a glyph at the specified 3D points
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plstring3</b>
+          (</code></td><td>
+            <var class="pdparam">n</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">z</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">string</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plot a glyph at the specified 3D points. (Supersedes <a class="link" href="plpoin3.html" title="plpoin3: Plot a glyph at the specified 3D points"><code class="function">plpoin3</code></a>
+      because many[!] more glyphs are accessible with <a class="link" href="plstring3.html" title="plstring3: Plot a glyph at the specified 3D points"><code class="function">plstring3</code></a>.)
+      Set up the call to this function similar to what is done for <a class="link" href="plline3.html" title="plline3: Draw a line in 3 space"><code class="function">plline3</code></a>.
+      The glyph is specified with a PLplot user string.  Note that the user
+      string is not actually limited to one glyph so it is possible (but not
+      normally useful) to plot more than one glyph at the specified points
+      with this function.  As with <a class="link" href="plmtex.html" title="plmtex: Write text relative to viewport boundaries"><code class="function">plmtex</code></a> and <a class="link" href="plptex.html" title="plptex: Write text inside the viewport"><code class="function">plptex</code></a>, the user string
+      can contain FCI escapes to determine the font, UTF-8 code to determine
+      the glyph or else PLplot escapes for Hershey or unicode text to
+      determine the glyph.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>n</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of points in the <code class="literal"><em class="parameter"><code>x</code></em></code>,
+            <code class="literal"><em class="parameter"><code>y</code></em></code>, and
+            <code class="literal"><em class="parameter"><code>z</code></em></code> vectors.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the x coordinates of the points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the y coordinates of the points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>z</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the z coordinates of the points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>string</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A UTF-8 character string containing the
+	    glyph(s) to be plotted at each of the
+	    <code class="literal"><em class="parameter"><code>n</code></em></code> points.
+            points.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plstring3(x, y, z, string)</code>
+    </p><p>
+      This function is used in example 18.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plstring.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plstripa.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plstring</code>: Plot a glyph at the specified points
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plstripa</code>: Add a point to a strip chart
+    </td></tr></table></div></body></html>

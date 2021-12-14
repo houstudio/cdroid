@@ -1,0 +1,82 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plbin: Plot a histogram from binned data</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plaxes.html" title="plaxes: Draw a box with axes, etc. with arbitrary origin"><link rel="next" href="plbop.html" title="plbop: Begin a new page"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plbin</code>: Plot a histogram from binned data
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plaxes.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plbop.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plbin"></a>
+      <code class="function">plbin</code>: Plot a histogram from binned data
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plbin</b>
+	  (</code></td><td><var class="pdparam">nbin</var>, </td></tr><tr><td> </td><td><var class="pdparam">x</var>, </td></tr><tr><td> </td><td><var class="pdparam">y</var>, </td></tr><tr><td> </td><td><var class="pdparam">opt</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plots a histogram consisting of
+      <code class="literal"><em class="parameter"><code>nbin</code></em></code> bins.  The value
+      associated with the <code class="literal">i</code>'th bin is placed in
+      <code class="literal"><em class="parameter"><code>x</code></em>[i]</code>, and the number of
+      points in the bin is placed in
+      <code class="literal"><em class="parameter"><code>y</code></em>[i]</code>.  For proper
+      operation, the values in
+      <code class="literal"><em class="parameter"><code>x</code></em>[i]</code> must form a strictly
+      increasing sequence.  By default,
+      <code class="literal"><em class="parameter"><code>x</code></em>[i]</code> is the left-hand edge
+      of the <code class="literal">i</code>'th bin. If
+      <code class="literal"><em class="parameter"><code>opt</code></em>=PL_BIN_CENTRED</code> is
+      used, the bin boundaries are placed midway between the values in the
+      <code class="literal"><em class="parameter"><code>x</code></em></code> vector.  Also see <a class="link" href="plhist.html" title="plhist: Plot a histogram from unbinned data"><code class="function">plhist</code></a>
+      for drawing histograms from unbinned data.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>nbin</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of bins (i.e., number of values in
+	    <code class="literal"><em class="parameter"><code>x</code></em></code> and
+	    <code class="literal"><em class="parameter"><code>y</code></em></code> vectors.)
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>x</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing values associated with bins.  These
+	    must form a strictly increasing sequence.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing a number which is proportional
+	    to the number of points in each bin.  This is a
+	    <code class="literal">PLFLT</code> (instead of <code class="literal">PLINT</code>) vector
+	    so as to allow histograms of probabilities, etc.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>opt</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Is a combination of several flags:
+	    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+		  <code class="literal"><em class="parameter"><code>opt</code></em>=PL_BIN_DEFAULT</code>:
+		  The <code class="literal"><em class="parameter"><code>x</code></em></code> represent the lower
+		  bin boundaries, the outer bins are expanded to fill up the
+		  entire x-axis and bins of zero height are simply drawn.
+		</p></li><li class="listitem"><p>
+		  <code class="literal"><em class="parameter"><code>opt</code></em>=PL_BIN_CENTRED|...</code>:
+		  The bin boundaries are to be midway between the
+		  <code class="literal"><em class="parameter"><code>x</code></em></code> values. If the
+		  values in <code class="literal"><em class="parameter"><code>x</code></em></code> are
+		  equally spaced, the values are the center values of the bins.
+		</p></li><li class="listitem"><p>
+		  <code class="literal"><em class="parameter"><code>opt</code></em>=PL_BIN_NOEXPAND|...</code>:
+		  The outer bins are drawn with equal size as the ones inside.
+		</p></li><li class="listitem"><p>
+		  <code class="literal"><em class="parameter"><code>opt</code></em>=PL_BIN_NOEMPTY|...</code>:
+		  Bins with zero height are not drawn (there is a gap for
+		  such bins).
+		</p></li></ul></div><p>
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plbin(x, y, opt)</code>
+	  </p></li><li class="listitem"><p>
+	    Python: <code class="function">plbin(nbin, x, y, opt)</code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is not used in any examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plaxes.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plbop.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plaxes</code>: Draw a box with axes, etc. with arbitrary
+      origin
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> <code class="function">plbop</code>: Begin a new page</td></tr></table></div></body></html>

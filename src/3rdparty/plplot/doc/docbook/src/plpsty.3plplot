@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLPSTY 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplpsty\fP - Select area fill pattern
+.SH SYNOPSIS
+\fBplpsty\fP(\fIpatt\fP)
+.SH DESCRIPTION
+
+.P
+If \fIpatt\fP is zero or less use either a hardware solid fill if the drivers have that capability (virtually all do) or fall back to a software emulation of a solid fill using the eighth area line fill pattern.  If 0 < \fIpatt\fP <= 8, then select one of eight predefined area line fill patterns to use (see \fBplpat\fP(3plplot) if you desire other patterns).
+.P
+Redacted form: \fBplpsty(patt)\fP
+.P
+This function is used in examples 12, 13, 15, 16, and 25.
+.SH ARGUMENTS
+.TP
+\fIpatt\fP (\fBPLINT\fP(3plplot), input)
+The desired pattern index. If \fIpatt\fP is zero or less, then a solid fill is (normally, see qualifiers above) used.  For \fIpatt\fP in the range from 1 to 8 and assuming the driver has not supplied line fill capability itself (most deliberately do not so that line fill patterns look identical for those drivers), the patterns consist of (1) horizontal lines, (2) vertical lines, (3) lines at 45 degrees, (4) lines at -45 degrees, (5) lines at 30 degrees, (6) lines at -30 degrees, (7) both vertical and horizontal lines, and (8) lines at both 45 degrees and -45 degrees.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

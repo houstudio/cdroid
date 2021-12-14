@@ -1,0 +1,43 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+The MinGW-w64/MSYS2 Windows platform consists of a set of POSIX tools provided by MSYS2, the 64-bit mingw-w64-x86_64 and 32-bit mingw-w64-i686 tool chains provided by MinGW-w64, and repositories of native Windows software built with each of those tool chains.  Those repositories provide most of the free software libraries that are prerequisites of various PLplot components (unlike the MinGW/MSYS repositories which only provide a small subset of PLplot component prerequisites).  This platform has recently been spun-off from Cygwin and is a modern and completely independent reincarnation of the MinGW/MSYS platform idea. Thus, like Cygwin, MinGW-w64/MSYS2 provides an excellent platform for building and testing free software such as PLplot with the important distinction that those built results are native Windows software with no dependence on the MSYS2 dll (unlike Cygwin-built software which depends on the Cygwin dll).  Because of these characteristics MinGW-w64/MSYS2 is one of the more important Windows platforms for PLplot, and we are happy to [report](Testing_Reports "wikilink") that Greg Jung has established essentially complete comprehensive test success with this platform.
+
+We strongly advise those wishing to build PLplot on MinGW-w64/MSYS2 to read [the introduction to MSYS2](https://github.com/msys2/msys2/wiki/MSYS2-introduction) and [the install instructions for MSYS2](https://github.com/msys2/msys2/wiki/MSYS2-installation) which shows how to choose either the mingw-w64-x86_64 or mingw-w64-i686 tool chains.
+
+Useful notes on building software like PLplot with CMake-based build systems on MinGW-w64/MSYS2 are given by [the OpenWalnut](https://bsvgit.informatik.uni-leipzig.de/openwalnut/openwalnut/wikis/InstallMSYS2) and [Allegro](https://wiki.allegro.cc/index.php?title=Building_with_msys2) projects.  The principal difference between those notes is that the OpenWalnut project recommends using the "Unix Makefiles" cmake generator while the Allegro project recommends using the "MSYS Makefiles" cmake generator.  Greg's experience is that both generators work essentially equally well for building PLplot on MinGW-w64/MSYS2 with the only real difference being there are different deficiencies in each case concerning finding and using the wxWidgets software for the PLplot wxwidgets device driver.  (There is an on-going investigation to fix the deficiencies in both cases.)
+
+An important addition to the above notes is the following list of packages that should be installed for the PLplot case where this list is taken from [the full list of MinGW-w64/MSYS2 packages](https://github.com/msys2/msys2/wiki/Packages):
+
+* mingw-w64-x86_64-cmake
+* mingw-w64-x86_64-gcc
+* mingw-w64-x86_64-gcc-ada
+* mingw-w64-x86_64-gcc-fortran
+* mingw-w64-x86_64-swig
+* mingw-w64-x86_64-lua
+* mingw-w64-x86_64-python2
+* mingw-w64-x86_64-python2-numpy
+* mingw-w64-x86_64-tcl
+* mingw-w64-x86_64-tk
+* mingw-w64-x86_64-gtk2
+* mingw-w64-x86_64-qt5
+* mingw-w64-x86_64-wxWidgets
+* mingw-w64-x86_64-pkg-config
+* mingw-w64-x86_64-freetype
+
+Note the above list of packages is for the mingw-w64-x86_64 tool chain, and if you prefer results built with the mingw-w64-i686 tool chain instead, use that prefix for all the above package names.
+
+The above list of packages supplies prerequisites for most of the PLplot language bindings, language examples, and device drivers.  However, There are no gcd D compiler; Java-related (such as gcj, gij, or jar); camlidl; or octave packages for MinGW-w64/MSYS2 so the D; Java; ocaml; and octave bindings and examples for PLplot are not currently supported by that platform.  There is no Tcl/Tk object orientation or widgets (i.e., Itcl, Itk, and Iwidgets) packages for MinGW-w64/MSYS2 so these (minor) components of the Tcl/Tk bindings and examples are not supported by that platform.  There is no libharu or libLASi packages for MinGW-w64/MSYS2 so the pdf and psttf device drivers are not currently supported by that platform.  MinGW-w64/MSYS2 is a fairly new platform that is far from mature so we expect most or all of these current limitations of the software repositories for this platform to disappear as packaging activity for free software expands on this platform.
+
+We have listed the mingw-w64-x86_64-qt5 rather than mingw-w64-x86_64-qt4 package above because the mingw-w64-x86_64-cmake package depends on the mingw-w64-x86_64-qt5 package which conflicts with the mingw-w64-x86_64-qt4 package.  N.B. For this case where the installed platform libraries are Qt5 it is necessary to use the cmake option -DPLPLOT_USE_QT5=ON for the PLplot build.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

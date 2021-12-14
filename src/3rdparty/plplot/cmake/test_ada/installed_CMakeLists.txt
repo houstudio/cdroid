@@ -1,0 +1,32 @@
+# Top-level CMakeLists.txt for the installed version of a simple project consisting of an
+# installed "Hello, world" library and an executable to be built to test CMake language support
+# for Ada.
+
+# MAINTENANCE
+# Use same minimum version for all platforms as the Linux platform minimum adopted for
+# the PLplot project.
+cmake_minimum_required(VERSION 3.7.2 FATAL_ERROR)
+
+# Before the project command must specify the location where
+# the test_ada project looks for CMake Ada language support files.
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+
+# Add C to list of languages enabled to work around some issues with
+# CMake language support for Ada.  CMake uses compiler introspection
+# to determine some system information such as the principal library
+# location for the system, and that part of Ada language support is
+# not implemented.  Also, I have discovered one other issue (probably
+# related to compiler introspection) when C is not enabled which is
+# that the POSITION_INDEPENDENT_CODE ON target property for the Ada
+# library disappears if cmake is rerun.
+
+project(installed_test_ada C Ada)
+
+# Define key variables that are configured by the core build.
+include(test_ada_configure)
+
+# Find installed project
+find_package(test_ada)
+
+# Build Ada executable that links to the "hello" Ada library that is installed by test_ada
+add_subdirectory(ada)

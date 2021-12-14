@@ -1,0 +1,39 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plpsty: Select area fill pattern</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plprec.html" title="plprec: Set precision in numeric labels"><link rel="next" href="plptex.html" title="plptex: Write text inside the viewport"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plpsty</code>: Select area fill pattern
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plprec.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plptex.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plpsty"></a>
+      <code class="function">plpsty</code>: Select area fill pattern
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plpsty</b>
+          (</code></td><td>
+            <var class="pdparam">patt</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      If <em class="parameter"><code>patt</code></em> is zero or less use either a
+      hardware solid fill if the drivers have that capability (virtually all do) or
+      fall back to a software emulation of a solid fill using the
+      eighth area line fill pattern.  If 0 &lt; <em class="parameter"><code>patt</code></em> ≤ 8, then
+      select one of eight predefined area line fill patterns to use (see
+      <a class="link" href="plpat.html" title="plpat: Set area line fill pattern"><code class="function">plpat</code></a> if you desire other patterns).
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>patt</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            The desired pattern index. If <em class="parameter"><code>patt</code></em>
+	    is zero or less, then a solid fill is (normally, see qualifiers above)
+	    used.  For <em class="parameter"><code>patt</code></em> in the range from 1 to 8 and
+	    assuming the driver has not supplied line fill capability itself (most
+	    deliberately do not so that line fill patterns look identical for
+	    those drivers), the patterns consist of (1) horizontal lines, (2)
+	    vertical lines, (3) lines at 45 degrees, (4) lines at -45 degrees, (5)
+	    lines at 30 degrees, (6) lines at -30 degrees, (7) both vertical and
+	    horizontal lines, and (8) lines at both 45 degrees and -45 degrees.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plpsty(patt)</code>
+    </p><p>
+      This function is used in examples 12, 13, 15, 16, and 25.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plprec.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plptex.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plprec</code>: Set precision in numeric labels
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plptex</code>: Write text inside the viewport
+    </td></tr></table></div></body></html>

@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGXAX 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgxax\fP - Get x axis parameters
+.SH SYNOPSIS
+\fBplgxax\fP(\fIp_digmax\fP, \fIp_digits\fP)
+.SH DESCRIPTION
+
+.P
+Returns current values of the \fIp_digmax\fP and \fIp_digits\fP flags for the x axis.  \fIp_digits\fP is updated after the plot is drawn, so this routine should only be called after the call to \fBplbox\fP(3plplot) (or \fBplbox3\fP(3plplot)) is complete.  See the PLplot documentation for more information.
+.P
+Redacted form: \fBplgxax(p_digmax, p_digits)\fP
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIp_digmax\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the maximum number of digits for the x axis.  If nonzero, the printed label has been switched to a floating-point representation when the number of digits exceeds this value.
+.TP
+\fIp_digits\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the actual number of digits for the numeric labels (x axis) from the last plot.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

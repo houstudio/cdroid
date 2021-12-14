@@ -1,0 +1,96 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plparseopts: Parse command-line arguments</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plot3dcl.html" title="plot3dcl: Magnitude colored plot surface with contour for z[x][y] with y index limits"><link rel="next" href="plpat.html" title="plpat: Set area line fill pattern"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plparseopts</code>: Parse command-line arguments
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plot3dcl.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plpat.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plparseopts"></a>
+      <code class="function">plparseopts</code>: Parse command-line arguments
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            PLINT
+            <b class="fsfunc">plparseopts</b>
+          (</code></td><td>
+            <var class="pdparam">p_argc</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">argv</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">mode</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Parse command-line arguments.
+    </p><p>
+      <a class="link" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><code class="function">plparseopts</code></a> removes all recognized flags
+      (decreasing argc accordingly), so that invalid input may be readily
+      detected.  It can also be used to process user command line flags.  The
+      user can merge an option table of type PLOptionTable into the internal
+      option table info structure using <a class="link" href="plMergeOpts.html" title="plMergeOpts: Merge use option table into internal info structure"><code class="function">plMergeOpts</code></a>.  Or, the user can
+      specify that ONLY the external table(s) be parsed by calling
+      <a class="link" href="plClearOpts.html" title="plClearOpts: Clear internal option table info structure"><code class="function">plClearOpts</code></a> before <a class="link" href="plMergeOpts.html" title="plMergeOpts: Merge use option table into internal info structure"><code class="function">plMergeOpts</code></a>.
+    </p><p>
+      The default action taken by <a class="link" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><code class="function">plparseopts</code></a> is as follows:
+      </p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+          Returns with an error if an unrecognized option or badly formed
+          option-value pair are encountered.
+        </td></tr><tr><td>
+          Returns immediately (return code 0) when the first non-option
+          command line argument is found.
+        </td></tr><tr><td>
+          Returns with the return code of the option handler, if one
+          was called.
+        </td></tr><tr><td>
+          Deletes command line arguments from argv list as they are found,
+          and decrements argc accordingly.
+        </td></tr><tr><td>
+          Does not show "invisible" options in usage or help messages.
+        </td></tr><tr><td>
+          Assumes the program name is contained in argv[0].
+        </td></tr></table><p>
+    </p><p>
+      These behaviors may be controlled through the
+      <em class="parameter"><code>mode</code></em> argument.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>p_argc</code></em>
+          (<code class="literal">int *</code>, input/output)
+        </span></dt><dd><p>
+            Number of arguments.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>argv</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_NC_MATRIX-type"><code class="function">PLCHAR_NC_MATRIX</code></a></code>, input/output)
+        </span></dt><dd><p>
+            A vector of character strings containing
+            <code class="literal"><em class="parameter"><code>*p_argc</code></em></code> command-line
+            arguments.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>mode</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Parsing mode with the following possibilities:
+            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  PL_PARSE_FULL (1) -- Full parsing of command line and all error messages
+                  enabled, including program exit when an error occurs.  Anything on the
+                  command line that isn't recognized as a valid option or option argument is
+                  flagged as an error.
+                </p></li><li class="listitem"><p>
+                  PL_PARSE_QUIET (2) -- Turns off all output except in the case of errors.
+                </p></li><li class="listitem"><p>
+                  PL_PARSE_NODELETE (4) -- Turns off deletion of processed arguments.
+                </p></li><li class="listitem"><p>
+                  PL_PARSE_SHOWALL (8) -- Show invisible options
+                </p></li><li class="listitem"><p>
+                  PL_PARSE_NOPROGRAM (32) -- Specified if argv[0] is NOT a pointer to the
+                  program name.
+                </p></li><li class="listitem"><p>
+                  PL_PARSE_NODASH (64) -- Set if leading dash is NOT required.
+                </p></li><li class="listitem"><p>
+                  PL_PARSE_SKIP (128) -- Set to quietly skip over any unrecognized arguments.
+                </p></li></ul></div><p>
+          </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            General: <code class="function">plparseopts(argv, mode)</code>
+          </p></li></ul></div><p>
+    </p><p>
+      This function is used in all of the examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plot3dcl.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plpat.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plot3dcl</code>: Magnitude colored plot surface
+      with contour for z[x][y] with y index limits
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plpat</code>: Set area line fill pattern
+    </td></tr></table></div></body></html>

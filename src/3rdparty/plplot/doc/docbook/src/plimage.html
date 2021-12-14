@@ -1,0 +1,61 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plimage: Plot a 2D matrix using cmap1 with automatic color adjustment</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plimagefr.html" title="plimagefr: Plot a 2D matrix using cmap1"><link rel="next" href="plinit.html" title="plinit: Initialize PLplot"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plimage</code>: Plot a 2D matrix using cmap1 with
+      automatic color adjustment
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plimagefr.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plinit.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plimage"></a>
+      <code class="function">plimage</code>: Plot a 2D matrix using cmap1 with
+      automatic color adjustment
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plimage</b>
+	  (</code></td><td><var class="pdparam">idata</var>, </td></tr><tr><td> </td><td><var class="pdparam">nx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ny</var>, </td></tr><tr><td> </td><td><var class="pdparam">xmin</var>, </td></tr><tr><td> </td><td><var class="pdparam">xmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymin</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymax</var>, </td></tr><tr><td> </td><td><var class="pdparam">zmin</var>, </td></tr><tr><td> </td><td><var class="pdparam">zmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">Dxmin</var>, </td></tr><tr><td> </td><td><var class="pdparam">Dxmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">Dymin</var>, </td></tr><tr><td> </td><td><var class="pdparam">Dymax</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plot a 2D matrix using the cmap1 palette.  The color scale is
+      automatically adjusted to use the maximum and minimum values in
+      idata as valuemin and valuemax in a call to <a class="link" href="plimagefr.html" title="plimagefr: Plot a 2D matrix using cmap1"><code class="function">plimagefr</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>idata</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A matrix containing function values to plot.  Should have
+	    dimensions of <em class="parameter"><code>nx</code></em> by <em class="parameter"><code>ny</code></em>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nx, ny</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Dimensions of idata
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>xmin, xmax, ymin, ymax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The <code class="literal">x</code> and <code class="literal">y</code> index ranges are
+	    linearly transformed to these world coordinate ranges such that
+	    <code class="literal">idata[0][0]</code> corresponds to <code class="literal">(xmin,
+	    ymin)</code> and <code class="literal">idata[nx - 1][ny - 1]</code>
+	    corresponds to <code class="literal">(xmax, ymax)</code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>zmin, zmax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Only data between zmin and zmax (inclusive) will be plotted.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>Dxmin, Dxmax, Dymin, Dymax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Plot only the window of points whose plot coordinates fall inside
+	    the window of (Dxmin, Dymin) to (Dxmax, Dymax).
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General:
+	    <code class="function">
+	      plimage(idata, xmin, xmax, ymin, ymax,
+	      zmin, zmax, Dxmin, Dxmax, Dymin, Dymax)
+	    </code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 20.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plimagefr.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plinit.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plimagefr</code>: Plot a 2D matrix using cmap1
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plinit</code>: Initialize PLplot
+    </td></tr></table></div></body></html>

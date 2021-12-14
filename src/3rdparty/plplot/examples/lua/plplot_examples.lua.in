@@ -1,0 +1,23 @@
+-- initialise Lua bindings for PLplot examples.
+--[[
+The Lua 5.0 stanza below was temporarily tested for Lua 5.2 by
+changing "Lua 5.0" to Lua 5.2 and converting all loadlib calls to
+package.loadlib.  That test was a success (as was a test for the
+non-Lua-5.0 stanza below when these temporary changes were removed)
+when WRITEABLE_TARGET was non-null (which occurs when the user
+uses the -DUSE_WRITEABLE_TARGET_TEST_PREFIX=ON option).  So
+likely a real Lua 5.0 environment will work, but that has not
+been explicitly tested.
+--]]
+if string.sub(_VERSION,1,7)=='Lua 5.0' then
+	lib=
+	          loadlib('@lua_lib_location@/@WRITEABLE_TARGET@plplotluac.so','luaopen_@WRITEABLE_TARGET@plplotluac') or
+                  loadlib('@lua_lib_location@/@WRITEABLE_TARGET@plplotluac.dll','luaopen_@WRITEABLE_TARGET@plplotluac') or
+                  loadlib('@lua_lib_location@/@WRITEABLE_TARGET@plplotluac.dylib','luaopen_@WRITEABLE_TARGET@plplotluac')
+	assert(lib)()
+else
+	package.cpath = '@lua_lib_location@/?.so;' ..
+                  '@lua_lib_location@/?.dll;' ..
+                  '@lua_lib_location@/?.dylib;' ..package.cpath
+	require('@WRITEABLE_TARGET@plplotluac')
+end

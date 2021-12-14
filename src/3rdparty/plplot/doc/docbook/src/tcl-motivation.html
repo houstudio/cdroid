@@ -1,0 +1,83 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Motivation for the Tcl Interface to PLplot</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="tcl.html" title="Chapter 13. Using PLplot from Tcl"><link rel="prev" href="tcl.html" title="Chapter 13. Using PLplot from Tcl"><link rel="next" href="tcl-overview.html" title="Overview of the Tcl Language Binding"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Motivation for the Tcl Interface to PLplot</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="tcl.html">Prev</a> </td><th width="60%" align="center">Chapter 13. Using PLplot from Tcl</th><td width="20%" align="right"> <a accesskey="n" href="tcl-overview.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tcl-motivation"></a>Motivation for the Tcl Interface to PLplot</h2></div></div></div><p>
+      The recent emergence of several high quality VHLL script languages
+      such as Tcl, Perl, Python and arguably even some Lisp variants, is
+      having a profound effect upon the art of computer programming.  Tasks
+      which have traditionally been handled by C or Fortran, are beginning
+      to be seen in a new light.  With relatively fast processors now widely
+      available, many programming jobs are no longer bound by execution
+      time, but by <span class="quote">“<span class="quote">human time</span>”</span>.  Rapidity of initial development and
+      continued maintenance, for a surprisingly wide class of applications,
+      is far more important than execution time.  Result: in a very short
+      period of time, say from 1993 to 1995, script languages have exploded
+      onto the scene, becoming essential tools for any serious programmer.
+    </p><p>
+      Moreover, the entire concept of <span class="quote">“<span class="quote">speed of execution</span>”</span> needs revising
+      in the face of the gains made in computer hardware in recent years.
+      Saying that script language processing is slower than compiled
+      language processing may be undeniable and simultaneously irrelevant.
+      If the script language processing is fast enough, then it is fast
+      enough.  Increasingly, computational researchers are finding that
+      script based tools are indeed fast enough.  And if their run time is
+      fast enough, and their development and maintenance time is much much
+      better, then why indeed should they not be used?
+    </p><p>
+      Even in a field with several high visibility players, Tcl has
+      distinguished itself as a leading contender.  There are many reasons
+      for this, but perhaps the most important, at least as it relates to
+      the PLplot user community, is that Tcl was designed to be extensible
+      and embeddable.  The whole purpose of Tcl, as it name (Tool Command
+      Language) indicates, is to be a command language for other tools.  In
+      other words, the fact that Tcl is capable of being a standalone shell
+      is interesting, even useful, but nonetheless incidental.  The real
+      attraction of Tcl is that it can be the shell language for
+      <span class="emphasis"><em>your</em></span>
+      code.  Tcl can easily be embedded into your code, endowing it
+      immediately with a full featured, consistent and well documented
+      script programming language, providing all the core features you need
+      in a programming language: variables, procedures, control structures,
+      error trapping and recovery, tracing, etc.  But that is only the
+      beginning!  After that, you can easily extend Tcl by adding commands
+      to the core language, which invoke the capabilities of your tool.  It
+      is in this sense that Tcl is a tool command language.  It is a command
+      language which you can augment to provide access to the facilities of
+      your tool.
+    </p><p>
+      But Tcl is more than just an embeddable, extensible script language
+      for personal use.  Tcl is an industry, an internet phenomenon.  There
+      are currently at least two high quality books, with more on the way.
+      There is an industry of service providers and educators.  Furthermore,
+      literally hundreds of Tcl extensions exist, and are readily available
+      over the net.  Perhaps the most notable extension, Tk, provides a
+      fantastic interface to X Windows widget programming, permitting the
+      construction of Motif like user interfaces, with none of the hassles
+      of actually using Motif.  Some of these extensions endow Tcl with
+      object oriented facilities philosophically similar to C++ or other
+      object oriented languages.  Other extensions provide script level
+      access to system services.  Others provide a script interface to
+      sockets, RPC, and other network programming protocols.  The list goes
+      on and on.  Dive into the Tcl archive, and see what it has for you!
+    </p><p>
+      So, the answer to the question <span class="quote">“<span class="quote">Why do we want a Tcl interface to
+      PLplot?</span>”</span> is very simple.  <span class="quote">“<span class="quote">Because we we are using Tcl anyway, as
+      the command language for our project, and would like to be able to do
+      plotting in the command language just as we do so many other things.</span>”</span>
+    </p><p>
+      But there is more than just the aesthetics of integration to consider.
+      There are also significant pragmatic considerations.  If you generate
+      your PLplot output via function calls from a compiled language, then
+      in order to add new diagnostics to your code, or to refine or
+      embellish existing ones, you have to edit the source, recompile,
+      relink, and rerun the code.  If many iterations are required to get
+      the plot right, significant time can be wasted.  This can be
+      especially true in the case of C++ code making heavy use of templates,
+      for which many C++ compilers will have program link times measured in
+      minutes rather than seconds, even for trivial program changes.
+    </p><p>
+      In contrast, if the diagnostic plot is generated from Tcl, the
+      development cycle looks more like: start the shell (command line or
+      windowing), source a Tcl script, issue the command to generate the
+      plot, notice a bug, edit the Tcl script, resource the script, and
+      regenerate the plot.   Notice that compiling, linking, and restarting
+      the program, have all been dropped from the development cycle.  The
+      time savings from such a development cycle can be amazing!
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="tcl.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="tcl.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="tcl-overview.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 13. Using PLplot from Tcl </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Overview of the Tcl Language Binding</td></tr></table></div></body></html>

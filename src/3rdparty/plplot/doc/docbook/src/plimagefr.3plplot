@@ -1,0 +1,44 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLIMAGEFR 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplimagefr\fP - Plot a 2D matrix using cmap1
+.SH SYNOPSIS
+\fBplimagefr\fP(\fIidata\fP, \fInx\fP, \fIny\fP, \fIxmin\fP, \fIxmax\fP, \fIymin\fP, \fIymax\fP, \fIzmin\fP, \fIzmax\fP, \fIvaluemin\fP, \fIvaluemax\fP, \fIpltr\fP, \fIpltr_data\fP)
+.SH DESCRIPTION
+
+.P
+Plot a 2D matrix using cmap1.
+.P
+Redacted form: General: \fBplimagefr(idata, xmin, xmax, ymin, ymax, zmin, zmax, valuemin, valuemax, pltr, pltr_data) \fP
+
+.P
+This function is used in example 20.
+.SH ARGUMENTS
+.TP
+\fIidata\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix of values (intensities) to plot.  Should have dimensions of \fInx\fP by \fIny\fP.
+.TP
+\fInx, ny\fP (\fBPLINT\fP(3plplot), input)
+Dimensions of idata
+.TP
+\fIxmin, xmax, ymin, ymax\fP (\fBPLFLT\fP(3plplot), input)
+See the discussion of \fIpltr\fP below for how these arguments are used (only for the special case when the callback function \fIpltr\fP is not supplied).
+.TP
+\fIzmin, zmax\fP (\fBPLFLT\fP(3plplot), input)
+Only data between zmin and zmax (inclusive) will be plotted.
+.TP
+\fIvaluemin, valuemax\fP (\fBPLFLT\fP(3plplot), input)
+The minimum and maximum data values to use for value to color mappings.  A datum equal to or less than valuemin will be plotted with color 0.0, while a datum equal to or greater than valuemax will be plotted with color 1.0.  Data between valuemin and valuemax map linearly to colors in the range (0.0-1.0).
+.TP
+\fIpltr\fP (\fBPLTRANSFORM_callback\fP(3plplot), input)
+A callback function that defines the transformation between the zero-based indices of the matrix \fIidata\fP and world coordinates. If \fIpltr\fP is not supplied (e.g., is set to NULL in the C case), then the x indices of \fIidata\fP are mapped to the range \fIxmin\fP through \fIxmax\fP and the y indices of \fIidata\fP are mapped to the range \fIymin\fP through \fIymax\fP.For the C case, transformation functions are provided in the PLplot library: \fBpltr0\fP(3plplot) for the identity mapping, and \fBpltr1\fP(3plplot) and \fBpltr2\fP(3plplot) for arbitrary mappings respectively defined by vectors and matrices.  In addition, C callback routines for the transformation can be supplied by the user such as the mypltr function in examples/c/x09c.c which provides a general linear transformation between index coordinates and world coordinates.For languages other than C you should consult the PLplot documentation for the details concerning how \fBPLTRANSFORM_callback\fP(3plplot) arguments are interfaced. However, in general, a particular pattern of callback-associated arguments such as a tr vector with 6 elements; xg and yg vectors; or xg and yg matrices are respectively interfaced to a linear-transformation routine similar to the above mypltr function; \fBpltr1\fP(3plplot); and \fBpltr2\fP(3plplot). Furthermore, some of our more sophisticated bindings (see, e.g., the PLplot documentation) support native language callbacks for handling index to world-coordinate transformations.  Examples of these various approaches are given in examples/<language>x09*, examples/<language>x16*, examples/<language>x20*, examples/<language>x21*, and examples/<language>x22*, for all our supported languages.
+.TP
+\fIpltr_data\fP (\fBPLPointer\fP(3plplot), input)
+Extra parameter to help pass information to \fBpltr0\fP(3plplot), \fBpltr1\fP(3plplot), \fBpltr2\fP(3plplot), or whatever routine is externally supplied.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

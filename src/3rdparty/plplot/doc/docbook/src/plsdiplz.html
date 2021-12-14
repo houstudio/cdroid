@@ -1,0 +1,59 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plsdiplz: Set parameters incrementally (zoom mode) that define current plot-space window</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plsdiplt.html" title="plsdiplt: Set parameters that define current plot-space window"><link rel="next" href="plsdrawmode.html" title="plsdrawmode: Set drawing mode (depends on device support!)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plsdiplz</code>: Set parameters incrementally (zoom mode)
+      that define current plot-space window
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plsdiplt.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plsdrawmode.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plsdiplz"></a>
+      <code class="function">plsdiplz</code>: Set parameters incrementally (zoom mode)
+      that define current plot-space window
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plsdiplz</b>
+          (</code></td><td>
+            <var class="pdparam">xmin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xmax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymax</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set relative minima and maxima incrementally (zoom mode)
+      that define the current plot-space window.  This function has
+      the same effect as <a class="link" href="plsdiplt.html" title="plsdiplt: Set parameters that define current plot-space window"><code class="function">plsdiplt</code></a> if that function has not been previously
+      called.  Otherwise, this function implements zoom mode using the
+      transformation <code class="literal">min_used = old_min + old_length*min </code>
+      and <code class="literal">max_used = old_min + old_length*max </code> for
+      each axis.  For example, if <code class="literal">min = 0.05</code> and
+      <code class="literal">max = 0.95</code> for each axis, repeated calls to
+      <a class="link" href="plsdiplz.html" title="plsdiplz: Set parameters incrementally (zoom mode) that define current plot-space window"><code class="function">plsdiplz</code></a> will zoom in by 10 per cent for each call.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>xmin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Relative (incremental) minimum in x.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Relative (incremental) minimum in y.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xmax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Relative (incremental) maximum in x.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Relative (incremental) maximum in y.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plsdiplz(xmin, ymin, xmax, ymax)</code>
+    </p><p>
+      This function is used in example 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plsdiplt.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plsdrawmode.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plsdiplt</code>: Set parameters that define current
+      plot-space window
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plsdrawmode</code>: Set drawing mode (depends on
+      device support!)
+    </td></tr></table></div></body></html>

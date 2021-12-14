@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGYAX 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgyax\fP - Get y axis parameters
+.SH SYNOPSIS
+\fBplgyax\fP(\fIp_digmax\fP, \fIp_digits\fP)
+.SH DESCRIPTION
+
+.P
+Identical to \fBplgxax\fP(3plplot), except that arguments are flags for y axis. See the description of \fBplgxax\fP(3plplot) for more detail.
+.P
+Redacted form: \fBplgyax(p_digmax, p_digits)\fP
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIp_digmax\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the maximum number of digits for the y axis.  If nonzero, the printed label has been switched to a floating-point representation when the number of digits exceeds this value.
+.TP
+\fIp_digits\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the actual number of digits for the numeric labels (y axis) from the last plot.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,20 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLEND1 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplend1\fP - End plotting session for current stream
+.SH SYNOPSIS
+\fBplend1\fP()
+.SH DESCRIPTION
+
+.P
+Ends a plotting session for the current output stream only.  See \fBplsstrm\fP(3plplot) for more info.
+.P
+Redacted form: \fBplend1()\fP
+.P
+This function is used in examples 1 and 20.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

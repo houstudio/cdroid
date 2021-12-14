@@ -1,0 +1,29 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSTRANSFORM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplstransform\fP - Set a global coordinate transform function
+.SH SYNOPSIS
+\fBplstransform\fP(\fIcoordinate_transform\fP, \fIcoordinate_transform_data\fP)
+.SH DESCRIPTION
+
+.P
+This function can be used to define a coordinate transformation which affects all elements drawn within the current plot window.  The \fIcoordinate_transform\fP callback function is similar to that provided for the \fBplmap\fP(3plplot) and \fBplmeridians\fP(3plplot) functions.  The \fIcoordinate_transform_data\fP parameter may be used to pass extra data to \fIcoordinate_transform\fP.
+.P
+Redacted form: General: \fBplstransform(coordinate_transform, coordinate_transform_data)\fP
+
+.P
+This function is used in examples 19 and 22.
+.SH ARGUMENTS
+.TP
+\fIcoordinate_transform\fP (\fBPLTRANSFORM_callback\fP(3plplot), input)
+A callback function that defines the transformation from the input (x, y) world coordinates to new PLplot world coordinates.  If \fIcoordinate_transform\fP is not supplied (e.g., is set to NULL in the C case), then no transform is applied.
+.TP
+\fIcoordinate_transform_data\fP (\fBPLPointer\fP(3plplot), input)
+Optional extra data for \fIcoordinate_transform\fP.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

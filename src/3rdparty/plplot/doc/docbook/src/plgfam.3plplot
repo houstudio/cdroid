@@ -1,0 +1,31 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGFAM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgfam\fP - Get family file parameters
+.SH SYNOPSIS
+\fBplgfam\fP(\fIp_fam\fP, \fIp_num\fP, \fIp_bmax\fP)
+.SH DESCRIPTION
+
+.P
+Gets information about current family file, if familying is enabled.  See the PLplot documentation for more information.
+.P
+Redacted form: \fBplgfam(p_fam, p_num, p_bmax)\fP
+.P
+This function is used in examples 14 and 31.
+.SH ARGUMENTS
+.TP
+\fIp_fam\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the current family flag value.  If nonzero, familying is enabled for the current device.
+.TP
+\fIp_num\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the current family file number.
+.TP
+\fIp_bmax\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the maximum file size (in bytes) for a family file.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

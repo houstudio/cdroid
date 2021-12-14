@@ -1,0 +1,54 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plhlsrgb: Convert HLS color to RGB</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plhist.html" title="plhist: Plot a histogram from unbinned data"><link rel="next" href="plimagefr.html" title="plimagefr: Plot a 2D matrix using cmap1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plhlsrgb</code>: Convert HLS color to RGB
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plhist.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plimagefr.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plhlsrgb"></a>
+      <code class="function">plhlsrgb</code>: Convert HLS color to RGB
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plhlsrgb</b>
+	  (</code></td><td><var class="pdparam">h</var>, </td></tr><tr><td> </td><td><var class="pdparam">l</var>, </td></tr><tr><td> </td><td><var class="pdparam">s</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_r</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_g</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_b</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Convert HLS color coordinates to RGB.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>h</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Hue in degrees (0.0-360.0) on the color cylinder.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>l</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Lightness expressed as a fraction (0.0-1.0) of the axis of the color
+	    cylinder.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>s</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Saturation expressed as a fraction (0.0-1.0) of the radius of the
+	    color cylinder.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_r</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the red intensity (0.0-1.0) of the color.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_g</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the green intensity (0.0-1.0) of the color.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_b</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the blue intensity (0.0-1.0) of the color.
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plhlsrgb(h, l, s, p_r, p_g, p_b)</code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 2.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plhist.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plimagefr.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plhist</code>: Plot a histogram from unbinned data
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plimagefr</code>: Plot a 2D matrix using cmap1
+    </td></tr></table></div></body></html>

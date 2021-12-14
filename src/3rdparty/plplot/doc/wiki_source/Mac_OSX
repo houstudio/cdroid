@@ -1,0 +1,43 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Once you have installed cmake and downloaded plplot, the following commands should get you up and running:
+
+`cd plplot-working-directory`
+`mkdir plplot-build`
+`cd plplot-build`
+`ccmake /path/to/cvs-plplot/directory`
+`make`
+`make install   (possibly as root)`
+
+ccmake is a command-line interface to the cmake command which presents an annotated list of the possible PLplot build options that can be set. (More experienced users may want to use the cmake command directly where all build options are set using -D options.)
+
+The following specific options are recommended at this time:
+
+`1. Set CMAKE_INSTALL_PREFIX to your installation prefix.`
+`2. Set PLD_wxwidgets to OFF, unless you have a more recent version than that which comes standard with OS-X.`
+`3. Depending on the location of swig, you may have to specify SWIG_DIR.`
+
+Things to watch out for:
+
+`1. cmake is really good at finding libraries, but not so good at using the same library when multiple `
+`   options are present. For example, I found that I had no less than 4 versions of Python on my `
+`   system, and cmake was trying to use all of them for different purposes (library from one, executable `
+`   from another, etc...). This also a problem for Tcl/Tk where cmake will try really hard to use`
+`   Tk.framework and Tcl.framework instead of the fink equivalents.`
+`2. Once you have specified the location of swig (i.e. SWIG_DIR), you will need to configure again, `
+`   then set ENABLE_python to ON, then configure again to get python setup properly.`
+
+Please see that [status](Mac_OSX_Status "wikilink") page for what is known to work on OS-X.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

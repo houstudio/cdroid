@@ -1,0 +1,100 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plimagefr: Plot a 2D matrix using cmap1</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plhlsrgb.html" title="plhlsrgb: Convert HLS color to RGB"><link rel="next" href="plimage.html" title="plimage: Plot a 2D matrix using cmap1 with automatic color adjustment"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plimagefr</code>: Plot a 2D matrix using cmap1
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plhlsrgb.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plimage.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plimagefr"></a>
+      <code class="function">plimagefr</code>: Plot a 2D matrix using cmap1
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plimagefr</b>
+	  (</code></td><td><var class="pdparam">idata</var>, </td></tr><tr><td> </td><td><var class="pdparam">nx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ny</var>, </td></tr><tr><td> </td><td><var class="pdparam">xmin</var>, </td></tr><tr><td> </td><td><var class="pdparam">xmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymin</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymax</var>, </td></tr><tr><td> </td><td><var class="pdparam">zmin</var>, </td></tr><tr><td> </td><td><var class="pdparam">zmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">valuemin</var>, </td></tr><tr><td> </td><td><var class="pdparam">valuemax</var>, </td></tr><tr><td> </td><td><var class="pdparam">pltr</var>, </td></tr><tr><td> </td><td><var class="pdparam">pltr_data</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plot a 2D matrix using cmap1.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>idata</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A matrix of values (intensities) to plot.  Should have
+	    dimensions of <em class="parameter"><code>nx</code></em> by <em class="parameter"><code>ny</code></em>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nx, ny</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Dimensions of idata
+	  </p></dd><dt><span class="term">
+          <em class="parameter"><code>xmin, xmax, ymin, ymax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>See the discussion of <em class="parameter"><code>pltr</code></em>
+	  below for how these arguments are used (only for the special case when
+	  the callback function <em class="parameter"><code>pltr</code></em> is not
+	  supplied).</p></dd><dt><span class="term">
+	  <em class="parameter"><code>zmin, zmax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Only data between zmin and zmax (inclusive) will be plotted.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>valuemin, valuemax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The minimum and maximum data values to use for value to color
+	    mappings.  A datum equal to or less than valuemin will be
+	    plotted with color 0.0, while a datum equal to or greater than
+	    valuemax will be plotted with color 1.0.  Data between valuemin
+	    and valuemax map linearly to colors in the range (0.0-1.0).
+	  </p></dd><dt><span class="term">
+          <em class="parameter"><code>pltr</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLTRANSFORM_callback-type"><code class="function">PLTRANSFORM_callback</code></a></code>, input)
+        </span></dt><dd><p> A callback function that defines the transformation
+	  between the zero-based indices of the matrix
+	  <code class="literal"><em class="parameter"><code>idata</code></em></code> and world coordinates.
+	  If <em class="parameter"><code>pltr</code></em> is not supplied (e.g., is set to NULL
+	  in the C case), then the x indices of
+	  <code class="literal"><em class="parameter"><code>idata</code></em></code> are mapped to the range
+	  <em class="parameter"><code>xmin</code></em> through <em class="parameter"><code>xmax</code></em> and
+	  the y indices of <code class="literal"><em class="parameter"><code>idata</code></em></code> are
+	  mapped to the range <em class="parameter"><code>ymin</code></em> through
+	  <em class="parameter"><code>ymax</code></em>.</p><p>For the C case, transformation functions are provided
+	  in the PLplot library: <a class="link" href="pltr0.html" title="pltr0: Identity transformation for matrix index to world coordinate mapping"><code class="function">pltr0</code></a> for the identity mapping, and <a class="link" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"><code class="function">pltr1</code></a>
+	  and <a class="link" href="pltr2.html" title="pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)"><code class="function">pltr2</code></a> for arbitrary mappings respectively defined by vectors and
+	  matrices.  In addition, C callback routines for the transformation can
+	  be supplied by the user such as the <code class="literal">mypltr</code> function
+	  in <code class="filename">examples/c/x09c.c</code> which provides a general
+	  linear transformation between index coordinates and world
+	  coordinates.</p><p>For languages other than C you should consult <a class="xref" href="part_bindings.html" title="Part III.  Supported computer languages">Part III, “ Supported computer languages ”</a> for the details concerning how
+	  <a class="link" href="c.html#PLTRANSFORM_callback-type"><code class="function">PLTRANSFORM_callback</code></a> arguments are interfaced.
+	  However, in general, a particular pattern of
+	  callback-associated arguments such as a <code class="literal">tr</code> vector
+	  with 6 elements; <code class="literal">xg</code> and <code class="literal">yg</code>
+	  vectors; or <code class="literal">xg</code> and <code class="literal">yg</code> matrices
+	  are respectively interfaced to a linear-transformation routine similar
+	  to the above <code class="literal">mypltr</code> function; <a class="link" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"><code class="function">pltr1</code></a>; and <a class="link" href="pltr2.html" title="pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)"><code class="function">pltr2</code></a>.
+	  Furthermore, some of our more sophisticated bindings (see, e.g., <a class="xref" href="fortran.html" title="Chapter 10. Fortran Language">Chapter 10, <i>Fortran Language</i></a>) support native language callbacks for handling
+	  index to world-coordinate transformations.  Examples of these various
+	  approaches are given in
+	  <code class="filename">examples/&lt;language&gt;x09*</code>,
+	  <code class="filename">examples/&lt;language&gt;x16*</code>,
+	  <code class="filename">examples/&lt;language&gt;x20*</code>,
+	  <code class="filename">examples/&lt;language&gt;x21*</code>, and
+	  <code class="filename">examples/&lt;language&gt;x22*</code>, for all our
+	  supported languages.</p></dd><dt><span class="term">
+	  <em class="parameter"><code>pltr_data</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLPointer-type"><code class="function">PLPointer</code></a></code>, input)
+	</span></dt><dd><p>
+	    Extra parameter to help
+	    pass information to <a class="link" href="pltr0.html" title="pltr0: Identity transformation for matrix index to world coordinate mapping"><code class="function">pltr0</code></a>, <a class="link" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"><code class="function">pltr1</code></a>, <a class="link" href="pltr2.html" title="pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)"><code class="function">pltr2</code></a>, or whatever routine
+	    is externally supplied.
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General:
+	    <code class="function">
+	      plimagefr(idata, xmin, xmax, ymin, ymax,
+	      zmin, zmax, valuemin, valuemax, pltr, pltr_data)
+	    </code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 20.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plhlsrgb.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plimage.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plhlsrgb</code>: Convert HLS color to RGB
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plimage</code>: Plot a 2D matrix using cmap1 with
+      automatic color adjustment
+    </td></tr></table></div></body></html>

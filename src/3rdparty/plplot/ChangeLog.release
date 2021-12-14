@@ -1,0 +1,2376 @@
+commit 4f88e45dbd85468a96364548f8d06a9b52dac14a
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sat Jun 1 16:10:17 2019 -0700
+
+    Prepend README.release for 5.15.0 to README.cumulated_release
+
+M	README.cumulated_release
+
+commit 3f343c78072b0a8567434f0eb5ce41cb947a66c6
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sat Jun 1 16:08:00 2019 -0700
+
+    Update README.Release_Manager_Cookbook to reflect what has occurred during the PLplot-5.15.0 release process
+
+M	README.Release_Manager_Cookbook
+
+commit ae52e0496603d9cb63433b6baf54a82d5deb6b33
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sat Jun 1 16:05:59 2019 -0700
+
+    Update website for plplot-5.15.0
+    
+    Fix a broken Homebrew link and update the version to 5.15.0.
+
+M	doc/docbook/src/CMakeLists.txt
+M	www/downloads.php
+
+commit d9755e1210ba41bc692fbcbe43c62bfb8310e823
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sat Jun 1 11:53:27 2019 -0700
+
+    Fix the -DBUILD_DOX_DOC=ON case for the _plplotc -> plplotc target name change
+    
+    Recent versions of CMake including 3.13.2 and above (where 3.13.2 is
+    our minimum acceptable version) have dropped the leading underscore in
+    the target names for swig-generated target names for Python modules.
+    I have previously corrected our build system for this change, but I
+    had missed the -DBUILD_DOX_DOC=ON case which is now fixed in this
+    commit.
+    
+    I also took this opportunity to impose the PLPLOT:: namespace prefix
+    (e.g., plplotc => PLPLOT::plplotc) on all read-only target names used
+    in doc/CMakeLists.txt since that is the preferred modern CMake style
+    for referring to read-only target names.  (I had previously run a test
+    to detect all instances in our build-system logic of references to
+    read-only target names which did not have a namespace prefix, but that
+    test did not cover the -DBUILD_DOX_DOC=ON case.)
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by successfully building and testing the doxygen documentation
+    following the procedure in doc/README.doxygen.
+
+M	doc/CMakeLists.txt
+M	doc/README.doxygen
+
+commit b2530e3ca4b047f1db2e30d25c15a247bf090afc
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri May 31 15:15:01 2019 -0700
+
+    Style bindings/swig-support/plplotcapi.i after its recent #defines update commit, and document why this styling is necessary.
+    
+    The check_plplotcapi_defines target collects all the numerical
+    #defines in include/plplot.h in a generated file and then compares
+    that file with the collected numerical #defines in
+    swig-support/plplotcapi.i and complains if there is a non-whitespace
+    difference.  The reason we have to ignore whitespace differences is
+    that uncrustify's algorithm for styling alignment takes account of the
+    different context lines around the lines that are being aligned.  So
+    as a result the whitespace of the #defines in those styled files is
+    necessarily different.  So after inserting (typically by replacing the
+    #defines section of swig-support/plplotcapi.i with the above generated
+    file) #defines that have been aligned in a variety of ways depending
+    on context lines for include/plplot.h into swig-support/plplotcapi.i,
+    it is necessary to run
+    
+    scripts/style_source.sh --apply
+    
+    and follow the directions emitted by that script to smooth out the
+    variable alignment issues for the unified #defines section of
+    swig-support/plplotcapi.i.
+    
+    Document this change in procedure!
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the above check_plplotcapi_defines target
+    (which demonstrated there are no #defines inconsistencies [other than
+    tahe necessary whitespace differences] between include/plplot.h and
+    swig-support/plplotcapi.i), and running scripts/style_source.sh (which
+    verifies no styling is necessary for swig-support/plplotcapi.i).
+
+M	bindings/swig-support/CMakeLists.txt
+M	bindings/swig-support/plplotcapi.i
+
+commit 41bff5992c3cdb0b44a551d748c5ca64aa477224
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri May 31 14:41:15 2019 -0700
+
+    Remove trailing white space from recently created documentation file
+
+M	README.PLplot_Contract_Testing
+
+commit 7fd04b611ed7d7009f51f298dcac5bf53278f849
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri May 31 12:44:31 2019 -0700
+
+    Update PLplot version to 5.15.0 and update PLplot library version numbers
+    
+    I use semantic library versioning rules (see
+    cmake/modules/plplot_version.cmake for the details of how this is
+    implemented for PLplot) to determine a separate version number (and
+    associated SONAME) for each of our versioned libraries.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by simply looking at
+    
+    git diff www
+    
+    to check the version change in that subdirectory and
+    
+    git diff cmake/modules/plplot_version.cmake |grep '^[+-]' |sort --key=1.2 |less
+    
+    to summarize all version changes known to the build system..
+    
+    I used these simple tests to look just for obvious typographical
+    errors in this commit because PLplot will be tested by a final
+    comprehensive test just prior to the release.
+
+M	cmake/modules/plplot_version.cmake
+M	www/examples.php
+
+commit 361c6bef52eadd61783404dfe4a4093f8c686b0c
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri May 31 00:03:33 2019 -0700
+
+    Propagate new cmap0 and cmap1 symbolic constants to most of our bindings
+    
+    These new symbolic constants (implemented in this release cycle in
+    include/plplot.h) are
+    
+    #define PL_DEFAULT_NCOL0    16
+    #define PL_DEFAULT_NCOL1    128
+    #define MIN_PLINT_RGB       0
+    #define MAX_PLINT_RGB       255
+    #define MIN_PLFLT_CMAP1     0.
+    #define MAX_PLFLT_CMAP1     1.
+    #define MIN_PLFLT_ALPHA     0.
+    #define MAX_PLFLT_ALPHA     1.
+    
+    This commit propates these new symbolic constants from our core C
+    library and also (automatically since C++ includes plplot.h) our C++
+    binding to our swig-generated bindings (Java, Python, Octave, and Lua)
+    and our Fortran and Tcl bindings.  These changes to improve internal
+    consistency are essential to the forthcoming release of PLplot-5.15.0
+    and were implemented by building the "check_all" target, and
+    when any of those subtargets which are dependencies of that target
+    errored out due to a detected internal inconsistency, I took the
+    appropriate action (usually copying a generated file back to the
+    source tree) to resolve that issue.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by configuring PLplot with the
+    -DADD_SPECIAL_CONSISTENCY_CHECKING=ON option, putting the golang
+    program plplot-doc-check (see comments in
+    doc/docbook/src/CMakeLists.txt for how to build that programme) on the
+    PATH and building the check_all and check_api_xml_consistency targets.
+    There were no build errors for those targets which shows PLplot
+    currently passes *all* our internal consistency checks (this result is
+    essential to the forthcoming release of PLplot-5.15.0) including the
+    ones that demand consistency (established by this commit) for symbolic
+    constants defined in plplot.h for our core C library (and therefore
+    our C++ binding which also includes plplot.h) and the six
+    swig-generated, Fortran, and Tcl bindings.
+
+M	bindings/fortran/included_plplot_parameters.f90
+M	bindings/swig-support/plplotcapi.i
+M	bindings/tcl/plplot_parameters.h
+
+commit 4baf2b49a8ab61ef5b6922ab6cb96963fa5da1f7
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu May 30 18:03:16 2019 -0700
+
+    Finalize release notes for the forthcoming PLplot-5.15.0 release
+    
+    I used a preliminary Changelog for all commits in this release cycle
+    to determine the major changes for this release, and I
+    updated the release notes for the forthcoming
+    PLplot-5.15.0 accordingly.
+
+M	README.release
+
+commit 4ae06fd6c498a3e4e59ae67bbe4d3ce049a72a14
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sun May 26 13:54:10 2019 -0700
+
+    Summarize my (Alan W. Irwin's) recent Linux (Debian Testing) comprehensive test result in our wiki (part II)
+    
+    Part I of this change was a previous commit (with the same core title
+    as this commit) which summarized my (good) comprehensive test results
+    for CMake-3.13.2 (our minimum allowed CMake version) in our
+    "Testing_Reports" wiki page.  This commit (Part II) does the same
+    thing for my (good) comprehensive test results for CMake-3.14.4 (the
+    latest release of CMake that is available at this time).  So these two
+    commits document in our wiki that the current development version of
+    PLplot works well on Linux (Debian Testing) for the range of CMake
+    versions from 3.13.2 to 3.14.4.
+
+M	doc/wiki_source/Testing_Reports
+
+commit e8888b193205fa12e5fbde7eb8b3783cd128af05
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sat May 25 13:43:22 2019 -0700
+
+    Document the PLplot contract test that is available as part of CMake
+    
+    Note that this contract test helps CMake developers discover
+    regressions in the CMake source code, helps the PLplot project
+    indirectly by avoiding such regressions in CMake releases, and helps
+    the PLplot project directly in case the issue is a bug or some
+    deficiency in the PLplot build system that is exposed by the latest
+    development version of CMake.
+    
+    Therefore, I strongly encourage all PLplot developers to
+    configure the PLplot contract test for their platform following
+    this documentation.
+    
+    Note I (AWI) have been running this contract test on a nightly basis
+    for both my previous Debian Jessie system and my current Debian Buster
+    system, and I have discovered both CMake regressions and PLplot
+    build system issues this way.
+
+A	README.PLplot_Contract_Testing
+
+commit 9c113444cc9a0ddfe49b675da972647dd4b1edfb
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu May 23 11:59:22 2019 -0700
+
+    Summarize my (Alan W. Irwin's) recent Linux (Debian Testing) comprehensive test result in our wiki
+
+M	doc/wiki_source/Testing_Reports
+
+commit 15ffb9d106958690e754246a7280635a0c80cec3
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed May 22 22:12:24 2019 -0700
+
+    Summarize Arjen's recent MinGW-w64/MSYS2 comprehensive test result in our wiki
+    
+    N.B.  I made consistent changes in our git copy of the wiki markdown
+    source and the SourceForge version of the same following the file edit
+    and subsequent cut and paste method described in README.developers.
+
+M	doc/wiki_source/Testing_Reports
+
+commit b766e84b408fb4ae37e86f4e3a4864dbddeb8547
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Apr 3 12:32:52 2019 -0700
+
+    Build System: fix recently introduced PLPLOT::plfortrandemolib target bug on Windows platforms
+    
+    This bug causes CMake errors concerning a missing
+    PLPLOT::plfortrandemolib target on Arjen's Cygwin platform.
+    
+    The issue was that PLPLOT::plfortrandemolib was created inside a
+    
+    if(USE_RPATH AND NOT WIN32_OR_CYGWIN)
+    
+    if block which is true on Unix platforms (which explains why
+    PLPLOT::plfortrandemolib has been created properly on my Debian
+    Testing platform for all my recent tests) but false otherwise (as
+    Arjen discovered on Cygwin).  This commit fixes this bug by moving the
+    relevant CMake code outside this if block.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by configuring a PLplot build with cmake.  There were
+    no CMake errors created by a missing PLPLOT::plfortrandemolib target so
+    it appears all continues to be well on this platform.  However, this
+    fix does need to be checked by Arjen to confirm it completely settles
+    the issue he discovered on Cygwin.
+
+M	examples/CMakeLists.txt
+
+commit ad53c055d066d731f077a6ab8daa82e92e409300
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Apr 3 12:08:42 2019 -0700
+
+    Build system: set CMP0086 to NEW if that policy exists to suppress CMake warnings concerning this policy
+    
+    CMP0086 is implemented for CMake-3.14.0, and to suppress the warnings issued
+    by CMake-3.14.0 when this policy is not set, set CMP0086 to NEW when this policy exists.
+    
+    This policy substantially affects the UseSWIG module and therefore our Python, Java, Octave, and Lua
+    bindings.  Therefore, it needs extensive testing (see below).
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the test_noninteractive target in the
+    (shared) core build tree for both CMake-3.13.2 and CMake-3.14.0.  For each
+    of these CMake versions, the resulting cmake.out and
+    test_noninteractive.out files were evaluated as follows:
+    
+    # Check for errors
+    grep -i error *.out
+    
+    # Check for regressions in configuration warnings:
+    
+    grep -i warning cmake.out |grep -Ev 'Octave-4|Suitable Qt4|PLPLOT_USE_QT5|PLD_pdf|PLplot OCaml|spurious|PRIVATE|gfortran Fortran compiler|It appears these warnings|The test_.*target|requires shared libraries'
+    
+    # Check for regressions in the distinct run-time warning labelled by 'PLPLOT WARNING'
+    # Currently on Cygwin systems you get a mixture of Unix and Windows line endings so
+    # make those equivalent with the "tr" stanza (which does not harm on other platforms).
+    
+    grep -A1 --no-filename "PLPLOT WARNING" *.out |tr --delete $'\r' |sort -u
+    
+    # Check for build or run-time warnings where the trailing stanza is to
+    # remove the "PLPLOT WARNING" and cmake.out warnings investigated
+    # above, spurious gfortran warnings, and warnings concerning test_diff differences:
+    
+    grep -i warning *.out|grep -vE 'PLPLOT WARNING|cmake.out|PRIVATE|argv_dynamic|Some graphical' |less
+    
+    # Check for any file device (which defaults to the svg device, see below) or stdout
+    # differences between all non-C languages and the corresponding C results:
+    
+    grep -B1 -A3 "Missing examples" *.out |less
+    
+    For both versions of CMake, these evaluations showed there were no
+    configuration, build, or run-time issues with the results, and the
+    difference report (for the default svg device) was perfect.
+
+M	CMakeLists.txt
+M	examples/CMakeLists.txt
+
+commit d1c621d028f192b6efd67467e7460e82ffec83dc
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sat Mar 30 16:42:36 2019 -0700
+
+    Build system: implement ctest for installed examples tree
+    
+    Prior to this commit, ctest was only implemented for the core build
+    tree, but now it has been implemented for the installed examples tree
+    as well.  This change required a substantial rewrite of the CMake
+    logic in plplot_test/CMakeLists.txt to divide that logic into two
+    blocks (one for CORE_BUILD only and one for both CORE_BUILD and the
+    build of the installed examples).  That file is now used in two
+    contexts (once for the core build and once for the installed examples
+    build).  Because of the rewrite of that file, the comprehensive test
+    below was done with no constraints to skip any part of it.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) with the following steps:
+    
+    # Choose these prefixes to assure that the source, build, and install tree have
+    # blanks in their pathname (to test that case during this comprehensive test)
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+    
+    # Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to
+    # avoid important bugs in the Debian Testing versions of those
+    # packages.  Also access a local version of libqhull to test
+    # that additional rpath possibility.
+    
+    # Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+    # build system for our new minimum version of CMake.
+    
+    # Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk
+    # components. (This step will not be necessary as soon as the PLplot
+    # build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets finding
+    # more robust.)
+    
+    # Use -DSWIG_EXECUTABLE=/home/software/swig/install/bin/swig to test a pre-release version
+    # of swig-4.0.0.
+    
+    # Apply no constraints to limit the tests.
+    
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install:/home/software/qhull/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON -DSWIG_EXECUTABLE=/home/software/swig/install/bin/swig" --build_command "make -j16" --ctest_command "ctest -j16")
+    
+    This command ran without issues (e.g., hangs or other obvious errors)
+    and was followed up by the evaluation procedure documented in
+    doc/wiki_source/Testing_PLplot.  That evaluation showed no configure,
+    build, or obvious run-time errors (i.e., no non-zero return codes for
+    any of the steps in this comprehensive test), and the difference test
+    results (done with the default svg device) were perfect. Finally, since
+    the script itself was changed for this test, I confirmed that the
+    script did all steps it was supposed to in the correct order, e.g.,
+    the new execution of ctest in the installed examples tree after the "all"
+    target was built there.
+
+M	CMakeLists.txt
+R100	CTestCustom.ctest.in	CTestCustom.cmake.in
+M	examples/CMakeLists.txt
+M	plplot_test/CMakeLists.txt
+M	scripts/comprehensive_test.sh
+
+commit ae398a4e64a4bbe4bb78f40a6a20334fc29530a1
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Mar 27 16:31:41 2019 -0700
+
+    Fix bug in octave binding
+    
+    For octave 4.4, I was obtaining the following result when building the
+    test_octave_xwin target.
+    
+    Testing interactive octave examples for device xwin
+    p1
+    p2
+    p3
+    p8
+    p9
+    p12
+    error: string(1): out of bound 0
+    error: called from
+        ginput at line 56 column 11
+        p12 at line 27 column 9
+    
+    where line 56 of  bindings/octave/PLplot/ginput.m
+    was
+    
+    str = double(string(1));
+    
+    and the issue was string was empty (which apparently it always is if
+    you click with a mouse button).  I fixed this issue by making sure
+    that string(1) was not converted by double unless string had a
+    non-zero length.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by successfully building the test_octave_xwin target.
+
+M	bindings/octave/PLplot/ginput.m
+
+commit 6b00b9717a6c98ee16e49f991957f91cb5b76c1f
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Mon Mar 18 15:47:21 2019 -0700
+
+    Future-proof PLplot against changes in a pre-release version of swig-4.0.0
+    
+    This commit is a response to the swig bug report at  <https://sourceforge.net/p/swig/mailman/message/36603481/> where it is shown that a pre-release version of swig-4.0.0 does not work correctly with
+    plplot-5.14.0.  I verified this issue for myself with swig git version rel-3.0.12-1639-gd3ae85ee7
+    (i.e., 1639 commits beyond the 3.0.12 release of swig) and fixed the issue in PLplot corresponding
+    to William Fulton's advice in the above mailing-list discussion, i.e., replaced
+    
+    -            if ( strcmp( str, "<built-in function pltr0>" ) == 0 )
+    +            if ( strstr( str, "function pltr0" ) != 0 )
+    
+    etc., for pltr0, pltr1, and pltr2 where he stated this change
+    should work both for swig3 (which implements these functions as build-ins) and swig4
+    (which implements these functions in raw form rather than as build-ins).
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) as part of the unconstrained comprehensive test used
+    for the previous commit (that test was done with the current change in
+    the working directory).  That comprehensively tested the current
+    change for only the system version of swig (i.e., swig-3.0.12 from
+    Debian Testing).
+    
+    In addition I tested the current change for a pre-release version of
+    swig-4.0.0 (swig git version rel-3.0.12-1639-gd3ae85ee7) by
+    configuring PLplot using
+    -DSWIG_EXECUTABLE=/home/software/swig/install/bin/swig (to access that
+    locally built and installed version) and building the
+    test_noninteractive target in the (shared) core build tree.  The
+    resulting cmake.out and test_noninteractive.out files were evaluated
+    as follows:
+    
+    # Check for errors
+    grep -i error *.out
+    
+    # Check for regressions in configuration warnings:
+    
+    grep -i warning cmake.out |grep -Ev 'Octave-4|Suitable Qt4|PLPLOT_USE_QT5|PLD_pdf|PLplot OCaml|spurious|PRIVATE|gfortran Fortran compiler|It appears these warnings|The test_.*target|requires shared libraries'
+    
+    # Check for regressions in the distinct run-time warning labelled by 'PLPLOT WARNING'
+    # Currently on Cygwin systems you get a mixture of Unix and Windows line endings so
+    # make those equivalent with the "tr" stanza (which does not harm on other platforms).
+    
+    grep -A1 --no-filename "PLPLOT WARNING" *.out |tr --delete $'\r' |sort -u
+    
+    # Check for build or run-time warnings where the trailing stanza is to
+    # remove the "PLPLOT WARNING" and cmake.out warnings investigated
+    # above, spurious gfortran warnings, and warnings concerning test_diff differences:
+    
+    grep -i warning *.out|grep -vE 'PLPLOT WARNING|cmake.out|PRIVATE|argv_dynamic|Some graphical' |less
+    
+    # Check for any file device (which defaults to the svg device, see below) or stdout
+    # differences between all non-C languages and the corresponding C results:
+    
+    grep -B1 -A3 "Missing examples" *.out |less
+    
+    These evaluations demonstrated that William Fulton's suggested PLplot
+    fix of the Python binding issue was backwards compatible with swig3 and
+    fixed the swig4 issue (as he expected).  Furthermore, there were no
+    other PLplot issues introduced by this pre-release version of
+    swig-4.0.0.  That is, for both the octave3 case tested previously and
+    the current octave4 test there were no configuration, build, or
+    run-time issues with these results and the difference report (for the
+    default svg device) was perfect.
+
+M	bindings/python/plplotc.i
+
+commit daafa7b60a8eedfad9084dbf703a6a3954489c6f
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Mon Mar 18 15:00:19 2019 -0700
+
+    Drop our own version of UseSWIG.cmake so that users access the upstream CMake version of this file
+    
+    Our own version of this file that this commit drops corresponds to the
+    upstream version for CMake-3.9.1, but since our own minimum version of
+    CMake (3.13.2) is far beyond that version it is better to allow our users to
+    take advantage of all the upstream development that has gone into
+    UseSWIG.cmake since 3.9.1.
+    
+    That said, it appears our build-system logic was relying on internal details of version 3.9.1 of
+    UseSWIG.cmake because the new version replaces all swig target names with leading
+    underscores with that same name without the underscore.  As a result we
+    had to make the following changes throughout our build system to be consistent
+    with the new version(s) of UseSWIG.cmake for CMake-3.13.2 (our minimum version)
+    and beyond:
+    
+    -         PLPLOT::_plplotc
+    +         PLPLOT::plplotc
+    
+    -         PLPLOT::_Pltk_init
+    +         PLPLOT::Pltk_init
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by the following steps:
+    
+    # Choose these prefixes to assure that the source, build, and install tree have
+    # blanks in their pathname (to test that case during this comprehensive test)
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+    
+    # Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to
+    # avoid important bugs in the Debian Testing versions of those
+    # packages.  Also access a local version of libqhull to test
+    # that additional rpath possibility.
+    
+    # Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+    # build system for our new minimum version of CMake.
+    
+    # Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk
+    # components. (This step will not be necessary as soon as the PLplot
+    # build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets finding
+    # more robust.)
+    
+    # Apply no constraints to limit the tests.
+    
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install:/home/software/qhull/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON" --build_command "make -j16" --ctest_command "ctest -j16")
+    
+    This command ran without issues (e.g., hangs or other obvious errors)
+    and was followed up by the evaluation procedure documented in
+    doc/wiki_source/Testing_PLplot.  That evaluation showed no configure,
+    build, or obvious run-time errors (i.e., no non-zero return codes for
+    any of the steps in this comprehensive test), and the difference test
+    results (done with the default svg device) were perfect.
+
+D	cmake/modules/UseSWIG.cmake
+M	examples/CMakeLists.txt
+M	examples/python/CMakeLists.txt
+
+commit 902c8882bc3ba98aeecac37f23bfd492fc736887
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri Mar 8 17:28:53 2019 -0800
+
+    Core library bug fixes: Substantial upgrade to the opt_bg logic for parsing the -bg command-line option
+    
+    These bug fixes were motivated by a fairly recent adventure where I
+    specified the -bg 00F0.3 option when trying to debug a transparency
+    "issue".  Because I forgot the underscore delimiter (i.e., I should
+    have specified -bg 00F_0.3 instead) it *silently* gave me the
+    equivalent of -bg 00F which wasted a lot of my time and the time of
+    others I was communicating with about esoteric reasons why that 0.3
+    was being ignored.
+    
+    To deal with this and other "non-robust" bugs when parsing the -bg
+    command-line option I rewrote the opt_bg logic.
+    
+    That logic is now implemented as follows:
+    
+    1. Split the argument string at the first "_" delimiter, with
+       color_field being a pointer to the (now null-terminated at the
+       position of the delimiter) string before the delimiter and
+       alpha_field being a pointer to the string after the delimiter.  But
+       if no delimiter exists then color_field points to the whole
+       argument string and alpha_pointer points to the string constant
+       "1.0".
+    
+    2. Parse color_field as hexadecimal using strtol with base 16 with
+       full checking of possible error conditions with appropriate response
+       (warning message + corrective action of setting color to (warning)
+       red) for integer overflow and invalid string conditions
+       detected by strtol, and appropriate action (just a warning message)
+       when there was a non-hexadecimal garbage suffix detected by strtol.
+    
+       N.B. According to the strtol man page, "The string may begin with
+       an arbitrary amount of white space (as determined by isspace(3))
+       followed by a single optional '+' or '-' sign.  If base is [...]
+       16, the string may then include a "0x" or "0X" prefix, and the
+       number will be read in base 16".
+    
+    3. Convert those signed hexadecimal characters stored in a long result
+       to r, g, b with evaluation of a possible error condition (i.e.,
+       color_field without isspace, sign, and 0x or 0X optional prefixes
+       and without trailing non-hex digits is not either exactly 3 or 6
+       hex digits) with appropriate response (warning message + corrective
+       action of set color to (warning) red) for this error condition.
+       Note in the case of 3 hex digits the result is "doubled", e.g.,
+       "001" ==> 000011 and "fab" ==> "ffaabb" before the final r,g,b
+       results are determined for the background colour.  Also note that
+       negative signs are interpreted as the hexadecimal two's complement,
+       i.e., "-fff" ==> "001" (before the "doubling" to "000011") and
+       "-ffffff " ==> "000001".
+    
+    4. Parse alpha_field as double using strtod with full evaluation of
+       possible error conditions with appropriate action (warning message
+       + corrective action of set alpha to 1. = opaque) for
+       floating overflow and invalid string to parse conditions
+       detected by strtod, and appropriate action (just a warning message)
+       when there was a non-floating-point garbage suffix detected by strtod.
+    
+       N.B. According to the strtod man page, "The expected form of the
+       (initial portion of the) string is optional leading white space as
+       recognized by isspace(3), an optional plus ('+') or minus sign
+       ('-') and then either (i) a decimal number, or (ii) a hexadecimal
+       number, or (iii) an infinity, or (iv) a NAN (not-a-number).
+    
+       Thus, opt_bg simply propagates certain invalid alpha values which
+       the user might specify such as several different variants of signed
+       upper or lower-case versions of "nan" and "inf" strings or ordinary
+       floating point numbers that are out of the valid alpha range from
+       0. to 1. (MIN_PLFLT_ALPHA to MAX_PLFLT_ALPHA) to the function
+       plscolbga which it calls, and that function is responsible for
+       handling all such out-of-range alpha issues.  Which it does by
+       issuing a warning message and using the appropriate substituted
+       value, i.e, for +/- inf or ordinary out of range the substituted
+       value is MIN_PLFLT_ALPHA or MAX_PLFLT_ALPHA (whichever is closest
+       to the user-specified value) while for +/- nan the substituted
+       value is MAX_PLFLT_ALPHA = 1., i.e., opaque.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the x00c and svg targets for a locally
+    modified version of src/plargs.c that printed out derived
+    r, g, b, and alpha values and by running
+    
+    valgrind examples/c/x00c -dev svg -o test.svg -bg "<some string>"
+    
+    In all <some string> cases, the valgrind
+    results were perfect ("All heap blocks were freed -- no leaks are
+    possible" and "ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0
+    from 0)"), and the derived r, g, b, and alpha values as expected.
+    
+    To summarize these tests for various <some string> values, the "_"
+    delimiter appears to work properly; strtol (color field) and strtod
+    (alpha field) appear to work properly with correct detection and
+    warning of certain issues (i.e., invalid strings that cannot be
+    converted, trailing garbage, integer [strol] or floating [strtod]
+    overflow) with warning messages and appropriate corrective action as
+    described above; detection of either 3 hex or 6 hex digits in the
+    color field appears to work correctly with the 3-digit case correctly
+    "doubled" as described above; and for the alpha field case floating
+    point strings corresponding to positive and negative Inf and NaN
+    values are silently accepted without strtod error, but those invalid
+    alpha values are then detected, warned, and substituted for in the
+    plscolbga routine as described above.
+
+M	src/plargs.c
+
+commit e59bc623794e26430da331be474bce340ebcf936
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu Mar 7 14:07:57 2019 -0800
+
+    Core library: Improve range checks and use of symbolic constants for the color map routines
+    
+    The following symbolic constants are now used extensively in our colour map routines.
+    
+    +// Color limits:
+    +
+    +// Default number of colors for cmap0 and cmap1.
+    +#define PL_DEFAULT_NCOL0    16
+    +#define PL_DEFAULT_NCOL1    128
+    +// minimum and maximum PLINT RGB values.
+    +#define MIN_PLINT_RGB       0
+    +#define MAX_PLINT_RGB       255
+    +// minimum and maximum PLFLT cmap1 color index values.
+    +#define MIN_PLFLT_CMAP1     0.
+    +#define MAX_PLFLT_CMAP1     1.
+    +// minimum and maximum PLFLT alpha values.
+    +#define MIN_PLFLT_ALPHA     0.
+    +#define MAX_PLFLT_ALPHA     1.
+    
+    Furthermore, those colour map routines now use these symbolic
+    constants to do much more extensive checking of the validity of cmap1
+    index values and cmap0 and cmap1 colours that are specified by the
+    user using the above limits.  And this is now done for RGB(A) colours
+    in a standardized way using the new static routine limit_rgba_range.
+    As implemented in that routine when the user does specify an invalid
+    RGB(A) color the recovery is now a much smoother one (plwarn + fixup)
+    rather than the prior plabort and return.  That same "soft landing"
+    approach is also now used in several places in src/plctrl.c when an
+    invalid cmap1 index is specified by the user.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the test_noninteractive and
+    test_interactive targets in the (shared) core build tree.  The
+    resulting cmake.out, test_noninteractive.out and test_interactive.out
+    files were evaluated as follows:
+    
+    # Check for errors
+    grep -i error *.out
+    
+    # Check for regressions in configuration warnings:
+    
+    grep -i warning cmake.out |grep -Ev 'Octave-4|Suitable Qt4|PLPLOT_USE_QT5|PLD_pdf|PLplot OCaml|spurious|PRIVATE|gfortran Fortran compiler|It appears these warnings|The test_.*target|requires shared libraries'
+    
+    # Check for regressions in the distinct run-time warning labelled by 'PLPLOT WARNING'
+    # Currently on Cygwin systems you get a mixture of Unix and Windows line endings so
+    # make those equivalent with the "tr" stanza (which does not harm on other platforms).
+    
+    grep -A1 --no-filename "PLPLOT WARNING" *.out |tr --delete $'\r' |sort -u
+    
+    # Check for build or run-time warnings where the trailing stanza is to
+    # remove the "PLPLOT WARNING" and cmake.out warnings investigated
+    # above, spurious gfortran warnings, and warnings concerning test_diff differences:
+    
+    grep -i warning *.out|grep -vE 'PLPLOT WARNING|cmake.out|PRIVATE|argv_dynamic|Some graphical' |less
+    
+    # Check for any file device (which defaults to the svg device, see below) or stdout
+    # differences between all non-C languages and the corresponding C results:
+    
+    grep -B1 -A3 "Missing examples" *.out |less
+    
+    In addition I viewed examples that used cmap0 and cmap1 colours extensively as follows:
+    
+    pqiv -i examples/test_examples_output_dir/x02c0[12].svg
+    pqiv -i examples/test_examples_output_dir/x12c01.svg
+    pqiv -i examples/test_examples_output_dir/x15c0[1-9].svg
+    pqiv -i examples/test_examples_output_dir/x16c0[1-9].svg
+    
+    In sum, the above evaluations of the *.out results showed there were
+    no concerns with any configuration, build, or run-time issues with
+    these results and the difference report (for the default svg device)
+    was perfect.  Furthermore, the above rendering of the svg results
+    showed no obvious colour rendering bugs.
+
+M	include/plplot.h
+M	src/plctrl.c
+
+commit 3d00e8ddc85ec3068d148493dd771288fa7df429
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Mar 6 15:22:16 2019 -0800
+
+    Core library: check hershey_to_unicode_lookup_table array access for index out of range conditions
+    
+    For those occasions when the index is out of range, substitute
+    (PLUNICODE) 0x00 ("unknown" unicode character) for the unicode value
+    and 0 (apparently unknown font face according to notes in the
+    generated include/plhershey-unicode.h file) for the font face.  Note,
+    however, that I looked through our source code for all instances of
+    font_face, and I could not find any place where it was actually used.
+    Therefore, it may just be a place holder where the actual value
+    does not matter.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the test_noninteractive and test_interactive
+    targets in the (shared) core build tree.  The resulting cmake.out, test_noninteractive.out and
+    test_interactive.out files were evaluated as follows:
+    
+    # Check for errors
+    grep -i error *.out
+    
+    # Check for regressions in configuration warnings:
+    
+    grep -i warning cmake.out |grep -Ev 'Octave-4|Suitable Qt4|PLPLOT_USE_QT5|PLD_pdf|PLplot OCaml|spurious|PRIVATE|gfortran Fortran compiler|It appears these warnings|The test_.*target|requires shared libraries'
+    
+    # Check for regressions in the distinct run-time warning labelled by 'PLPLOT WARNING'
+    # Currently on Cygwin systems you get a mixture of Unix and Windows line endings so
+    # make those equivalent with the "tr" stanza (which does not harm on other platforms).
+    
+    grep -A1 --no-filename "PLPLOT WARNING" *.out |tr --delete $'\r' |sort -u
+    
+    # Check for build or run-time warnings where the trailing stanza is to
+    # remove the "PLPLOT WARNING" and cmake.out warnings investigated
+    # above, spurious gfortran warnings, and warnings concerning test_diff differences:
+    
+    grep -i warning *.out|grep -vE 'PLPLOT WARNING|cmake.out|PRIVATE|argv_dynamic|Some graphical' |less
+    
+    # Check for any file device (which defaults to the svg device, see below) or stdout
+    # differences between all non-C languages and the corresponding C results:
+    
+    grep -B1 -A3 "Missing examples" *.out |less
+    
+    The above evaluations of the *.out results showed there were no
+    concerns with configuration, build, or run-time issues with these
+    results and the difference report (for the default svg device) was
+    perfect.
+
+M	src/plcore.c
+M	src/plsym.c
+
+commit d19b7f06d90ae327bab32483517d769e50acb398
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Tue Mar 5 20:43:58 2019 -0800
+
+    Remove unneeded libplplot dependency on qhull headers
+    
+    Before this commit, libplplot (via src/plgridd.c) implemented a
+    run-time check concerning the size of the realT type used by libqhull
+    which forced this library be dependent on qhull headers even though
+    (unlike the csironn library) libplplot is not directly dependent on
+    the qhull library.  This commit removes this unnecessary complication
+    by implementing a CMake-based configuration check concerning the size
+    of the realT type used by libqhull.  If that check is not satisfied,
+    then our build system now simply drops use of qhull by dropping the
+    build and use of the csironn library.
+    
+    N.B. src/plgridd.c now does include source code that depends directly
+    on both the qhull headers and qhull library.  However, this code is
+    protected by by the conditional compilation macro PLPLOT_NONN.  This
+    macro (previously named NONN) has not been #defined in our official
+    source tree for more than a decade which is why our build system
+    currently ignores the PLPLOT_NONN possibility and simply directly
+    links libplplot to the csironn library instead of using this internal
+    functionality.  Of course, if someone wants to try out use of this
+    internal functionality, the required build system changes would nearly
+    be trivial.  That is, the build system would need changes to provide
+    the PLPLOT_NONN cmake option, convert it to a C macro of the same name
+    which is #defined or not depending on whether the option is true or
+    not, and if the option is true drop the build of the csironn library
+    and drop the libplplot dependency on that library.
+    
+    This commit also provides a change (preferring the libqhull form of
+    includes over the old qhull form) so that the headers for a local
+    build of upstream qhull (which always uses the libqhull form now)
+    can be found consistently with the library for
+    that local build that is found.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) using the same extensive tests described for
+    the prior commit which used all these qhull-related changes
+    to PLplot that were in the working directory but not committed
+    at that time.
+
+M	cmake/modules/FindQHULL.cmake
+M	cmake/modules/csiro.cmake
+M	src/CMakeLists.txt
+M	src/plgridd.c
+
+commit 03e06049d828cb817df163ee8c1f980efebef0be
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Tue Mar 5 19:27:55 2019 -0800
+
+    Build system: Rewrite the rpath configuration of the traditionally built examples
+    
+    This commit follows the same rigourous rpath method for the
+    traditionally built examples that was used previously to set the
+    INSTALL_RPATH property of installed targets.  See the README.release
+    file for full details concerning this change.  Note this commit solves
+    an ocaml rpath bug that was not exposed for my tests of the earlier
+    INSTALL_RPATH commit because those earlier tests were constrained too
+    much.  So as far as I know the combination of this commit and the
+    INSTALL_RPATH changes described in the earlier commit eliminates the
+    last known regression against the good unconstrained comprehensive
+    test results I historically achieved for the Debian Jessie platform.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by the following steps:
+    
+    # Choose these prefixes to assure that the source, build, and install tree have
+    # blanks in their pathname (to test that case during this comprehensive test)
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+    
+    # Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to
+    # avoid important bugs in the Debian Testing versions of those
+    # packages.  Also access a local version of libqhull to test
+    # that additional rpath possibility.  (This only works because of additional
+    # qhull configuration changes for our build system that are in my working
+    # directory but not commmitted yet.  However, if I had used the system
+    # version of qhull instead, the test would have been weaker and therefore
+    # would very likely also succeed as well.)
+    
+    # Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+    # build system for our new minimum version of CMake.
+    
+    # Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk
+    # components. (This step will not be necessary as soon as the PLplot
+    # build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets finding
+    # more robust.)
+    
+    # Apply no constraints to limit the tests.
+    
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install:/home/software/qhull/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON" --build_command "make -j16" --ctest_command "ctest -j16")
+    
+    N.B. the above command is a convenient summary of what I actually
+    tested in a piece-meal way due to typographical errors in the ocaml
+    rpath configuration that were fixed between when the interactive part
+    (with failing noninteractive part) and noninteractive part
+    (constrained by --do_interactive_testing no) of the above test were
+    done.
+    
+    The interactive part of the first attempt and the (noninteractive)
+    second attempt of the above command ran without issues (e.g., hangs or
+    other obvious errors) and was followed up by the evaluation procedure
+    documented in doc/wiki_source/Testing_PLplot.  That evaluation showed
+    no configure, build, or obvious run-time errors (i.e., no non-zero
+    return codes for any of the steps in this comprehensive test), and the
+    difference test results (done with the default svg device) were
+    perfect.
+    
+    In addition I checked all installed targets (for the noninteractive
+    case, but the interactive case should be identical) with readelf as
+    follows:
+    
+    pushd "$COMPREHENSIVE_TEST_PREFIX/nondynamic/noninteractive/install_tree/lib"
+    (for SO in $(find . -name "*.so") ; do echo $SO; readelf -d $SO |grep -E 'NEEDED|PATH'; done) |less
+    (for SO in $(find ../bin -type f) ; do echo $SO; readelf -d $SO |grep -E 'NEEDED|PATH'; done) |less
+    readelf -d octave/plplot_octave.oct |grep -E 'NEEDED|PATH'
+    
+    I also used "readelf -d" to check the traditionally built nondynamic examples as follows:
+    
+    # 1. OCaml example in the CMake-based build tree for the core build:
+    cd ../../build_tree/
+    # Need to remake because script cleans up all these results
+    make target_x00ocaml
+    readelf -d examples/ocaml/x00ocaml |grep -E 'NEEDED|PATH' |less
+    
+    # 2. OCaml example in the CMake-based build tree for the installed examples:
+    cd ../install_build_tree/
+    # Need to remake because script cleans up all these results
+    make target_x00ocaml
+    readelf -d ocaml/x00ocaml |grep -E 'NEEDED|PATH' |less
+    
+    # 3. All *00* compiled examples in the traditionally built installed examples:
+    cd ../install_tree/share/plplot5.14.0/examples
+    # Rebuild everything because script cleans up all these results
+    make -j16
+    # Drop source code and some scripts by eliminating all file names with a "." in them.
+    # Drop tcl and python "00" examples since those are not compiled.
+    (for example in $(\ls */*00* |grep -vE "\\.|tcl|python") ; do echo $example; readelf -d $example|grep -E 'NEEDED|PATH'; done) |less
+    
+    # 4. All "special" traditionally built executables.
+    (for example in c/ext-cairo-test c++/qt_example c++/wxPLplotDemo tk/xtk0[124] ; do echo $example; readelf -d $example|grep -E 'NEEDED|PATH'; done) |less
+    
+    I also repeated all the above readelf checks for the shared
+    
+    cd "$COMPREHENSIVE_TEST_PREFIX/shared/noninteractive/install_tree/lib"
+    ...
+    
+    and static
+    
+    cd "$COMPREHENSIVE_TEST_PREFIX/static/noninteractive/install_tree/lib"
+    ...
+    
+    cases.  Note that in the static case there are no *.so (or *.oct)
+    results to analyze but the runpath results for installed executable
+    targets and traditionally built examples are larger due to the
+    transitive rpath method that must be used for this case.
+    
+    These readelf results showed the expected NEEDED and RUNPATH results in all cases.
+    
+    In sum, this set of *unconstrained* comprehensive tests and follow-up
+    readelf tests appears to confirm that the new rigourous rpath method
+    is working properly for both the installed targets AND traditionally
+    built examples for the (modern DT_RUNPATH) Debian Testing = Buster
+    platform.
+
+M	README.release
+M	cmake/modules/plplot_functions.cmake
+M	examples/CMakeLists.txt
+M	examples/ada/Makefile.examples.in
+M	examples/c++/Makefile.examples.in
+M	examples/c/Makefile.examples.in
+M	examples/d/Makefile.examples.in
+M	examples/fortran/CMakeLists.txt
+M	examples/fortran/Makefile.examples.in
+M	examples/ocaml/CMakeLists.txt
+M	examples/ocaml/Makefile.examples.in
+M	examples/plplot_configure.cmake_installed_examples.in
+M	examples/tk/Makefile.examples.in
+
+commit c99bc660f3edd7262ce8148a21b23aad4ae879f7
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri Mar 1 09:51:10 2019 -0800
+
+    Tweak the wording of the discussion of the recent INSTALL_RPATH configuration rewrite
+
+M	README.release
+
+commit fc0ba06b8db38c477a055b605cd186861b2bcf36
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu Feb 28 12:44:16 2019 -0800
+
+    Add discussion of recent INSTALL_RPATH configuration rewrite to our (future) release notes
+    
+    This discussion was copied from what I recently wrote to the plplot-devel mailing list
+    concerning these recent changes.
+
+M	README.release
+
+commit 3b140b22f7c8e038c16369d3612327b22bef3dd9
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu Feb 28 03:06:40 2019 -0800
+
+    Build system: Implement transitive treatment for rpath which is used for the static case
+    
+    In addition, implement the NON_TRANSITIVE_RPATH option which defaults to ON (except when
+    ignored for the static case), but which can be set to OFF if there is a system out there
+    where transitive rpath works, but non-transitive rpath does not.
+    
+    Note this change was almost trivial to implement because of the previous work
+    to collect most INSTALL_RPATH-relevant code in the CMake functions
+    configure_executable_build and configure_library_build.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by the following steps:
+    
+    # Choose these prefixes to assure that the source, build, and install tree have
+    # blanks in their pathname (to test that case during this comprehensive test)
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+    
+    # Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to
+    # avoid important bugs in the Debian Testing versions of those
+    # packages.
+    
+    # Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+    # build system for our new minimum version of CMake.
+    
+    # Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk components. (This step
+    # will not be necessary as soon as the PLplot build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets
+    # finding much more robust.
+    
+    # Use the -DPLPLOT_TEST_DEVICE=psttfc option to do all diff tests
+    # using that device (which depends on libLASi).  So this checks that
+    # RUNPATH property is set properly so that the local version of
+    # libLASi is found by the run-time loader in a large number of ways
+    # (which are very likely all redundant, but you never know....)
+    
+    # Constrain the tests to nothing other than interactive and
+    # noninteractive tests of the traditional build (since that build is
+    # the only place that the above INSTALL_RPATH changes are tested).  Do
+    # these tests (by default) for our 3 major configurations (shared,
+    # nondynamic, and static).
+    
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON -DPLPLOT_TEST_DEVICE=psttfc" --build_command "make -j16" --ctest_command "ctest -j16" --do_static no --do_ctest no --do_test_install_tree no)
+    
+    The above command ran without issues (e.g., hangs or other obvious
+    errors) and was followed up by the evaluation procedure documented in
+    doc/wiki_source/Testing_PLplot.  That evaluation showed this
+    comprehensive test had no configure, build, or obvious run-time errors
+    (i.e., no non-zero return codes for any of the steps in this
+    comprehensive test), and the difference test results (done with the
+    psttfc device) were perfect.
+    
+    In addition I comprehensive checked all installed targets (for the interactive case, but
+    the noninteractive case should be identical) with readelf as follows:
+    
+    pushd "$COMPREHENSIVE_TEST_PREFIX/nondynamic/interactive/install_tree/lib"
+    (for SO in $(find . -name "*.so") ; do echo $SO; readelf -d $SO |grep -E 'NEEDED|PATH'; done) |less
+    (for SO in $(find ../bin -type f) ; do echo $SO; readelf -d $SO |grep -E 'NEEDED|PATH'; done) |less
+    readelf -d octave/plplot_octave.oct |grep -E 'NEEDED|PATH'
+    
+    and similarly for
+    
+    pushd "$COMPREHENSIVE_TEST_PREFIX/shared/interactive/install_tree/lib"
+    
+    and
+    
+    pushd "$COMPREHENSIVE_TEST_PREFIX/static/interactive/install_tree/lib"
+    
+    except in that last case only test the $(find ../bin -type f) executables.
+    
+    The results showed the expected NEEDED and RUNPATH results in all cases.
+    
+    In sum, this set of tests appears to confirm that this new model for
+    how INSTALL_RPATH should be configured (minimalist non-transitive
+    rpath for the shared and nondynamic cases, transitive rpath for the
+    static case) for installed targets is working properly on Debian
+    Testing = Buster (a modern DT_RUNPATH platform) for the first time
+    ever.  So this commit eliminates the last known regression against the
+    test results I achieved with the old sloppy rpath method on the Debian
+    Jessie platform with its old-fashioned but nevertheless working
+    DT_RPATH capability.
+    
+    N.B. the transitive rpath part of these current tests is fairly weak
+    because only one external library (libLASi) is installed in a
+    non-standard location.  So the present work is essentially a
+    proof-of-concept that shows the new method works in this case (for the
+    first time for Debian Testing).  We have also made an effort to
+    transform the old rpath implementation details to the new method
+    (e.g., setting the correct non-transitive rpath variable for each
+    installed PLplot target).  But essentially all those details (except
+    in the libLASi case) need testing so there may be some bugs in the
+    present details that will only be exposed when additional external
+    libraries are installed in non-standard locations.
+
+M	cmake/modules/plplot_functions.cmake
+M	cmake/modules/rpath.cmake
+M	examples/CMakeLists.txt
+
+commit cc5e68b37a5749badc82b5415550010717e592f4
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Feb 27 12:41:31 2019 -0800
+
+    Build system: add capabilities to configure_executable_build and configure_library_build functions
+    
+    The capabilities we have added are to call configure_target_install from inside these functions
+    and set the properties INSTALL_RPATH or INSTALL_NAME_DIR inside configure_executable_build
+    and inside configure_library_build for the swig module, module, and static library cases.
+    (Previously for configure_library_build we set these properties for just the shared library case.)
+    
+    As a result, installed executables and installed swig and non-swig modules are now treated in a much
+    more standardized way.  Furthermore, the build system logic is simplified.  That is, the
+    only calls to configure_target_install in our build system logic are now inside these two functions,
+    and the use of USE_RPATH and setting the properties INSTALL_RPATH or INSTALL_NAME_DIR are
+    now mostly limited to just these two functions.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by the following steps:
+    
+    # Choose these prefixes to assure that the source, build, and install tree have
+    # blanks in their pathname (to test that case during this comprehensive test)
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+    
+    # Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to
+    # avoid important bugs in the Debian Testing versions of those
+    # packages.
+    
+    # Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+    # build system for our new minimum version of CMake.
+    
+    # Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk components. (This step
+    # will not be necessary as soon as the PLplot build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets
+    # finding much more robust.
+    
+    # Use the -DPLPLOT_TEST_DEVICE=psttfc option to do all diff tests
+    # using that device (which depends on libLASi).  So this checks that
+    # RUNPATH property is set properly so that the local version of
+    # libLASi is found by the run-time loader in a large number of ways
+    # (which are very likely all redundant, but you never know....)
+    
+    # Constrain the tests to nothing other than interactive and
+    # noninteractive tests of the traditional build (since that build is
+    # the only place that the above INSTALL_RPATH changes are tested).
+    # And constrain the tests to avoid the static case since the needed
+    # transitive variant of how INSTALL_RPATH is populated for that case
+    # is not implemented yet.
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON -DPLPLOT_TEST_DEVICE=psttfc" --build_command "make -j16" --ctest_command "ctest -j16" --do_static no --do_ctest no --do_test_install_tree no --do_test_build_tree no)
+    
+    The above command ran without issues (e.g., hangs or other obvious
+    errors) and was followed up by the evaluation procedure documented in
+    doc/wiki_source/Testing_PLplot.  That evaluation showed this
+    comprehensive test had no configure, build, or obvious run-time errors
+    (i.e., no non-zero return codes for any of the steps in this
+    comprehensive test), and the difference test results (done with the
+    psttfc device) were perfect.
+    
+    In addition I comprehensive checked all installed targets (for the interactive case, but
+    the noninteractive case should be identical) with readelf as follows:
+    
+    pushd "$COMPREHENSIVE_TEST_PREFIX/nondynamic/interactive/install_tree/lib"
+    (for SO in $(find . -name "*.so") ; do echo $SO; readelf -d $SO |grep -E 'NEEDED|PATH'; done) |less
+    (for SO in $(find ../bin -type f) ; do echo $SO; readelf -d $SO |grep -E 'NEEDED|PATH'; done) |less
+    readelf -d octave/plplot_octave.oct |grep -E 'NEEDED|PATH'
+    
+    and similarly for
+    
+    pushd "$COMPREHENSIVE_TEST_PREFIX/shared/interactive/install_tree/lib"
+    
+    The results showed the expected NEEDED and RUNPATH results in all cases.
+    
+    In sum, this set of tests appears to confirm that this new
+    minimalistic model for how INSTALL_RPATH should be configured for
+    installed targets is working properly on Debian Buster for the shared
+    build (with or without dynamic devices) of PLplot.
+    
+    N.B. The above tests have deliberately avoided the static case because
+    I have not yet implemented the transitive INSTALL_RPATH properties
+    that are needed for that case.
+
+M	bindings/ada/CMakeLists.txt
+M	bindings/c++/CMakeLists.txt
+M	bindings/d/CMakeLists.txt
+M	bindings/fortran/CMakeLists.txt
+M	bindings/java/CMakeLists.txt
+M	bindings/lua/CMakeLists.txt
+M	bindings/octave/CMakeLists.txt
+M	bindings/python/CMakeLists.txt
+M	bindings/qt_gui/CMakeLists.txt
+M	bindings/qt_gui/pyqt4/CMakeLists.txt
+M	bindings/qt_gui/pyqt5/CMakeLists.txt
+M	bindings/qt_gui/smoke/CMakeLists.txt
+M	bindings/tcl/CMakeLists.txt
+M	bindings/tk/CMakeLists.txt
+M	bindings/wxwidgets/CMakeLists.txt
+M	cmake/modules/plplot_functions.cmake
+M	drivers/CMakeLists.txt
+M	examples/fortran/CMakeLists.txt
+M	lib/csa/CMakeLists.txt
+M	lib/nistcd/CMakeLists.txt
+M	lib/nn/CMakeLists.txt
+M	lib/qsastime/CMakeLists.txt
+M	src/CMakeLists.txt
+M	utils/CMakeLists.txt
+
+commit abf81a98caed1f86a4135c0ebfa6fefbf58373b8
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu Feb 21 16:42:08 2019 -0800
+
+    Drop trailing blank from wiki source for Configure_PLplot_for_the_Visual_Studio_IDE
+    
+    This issue was discovered and fixed by running
+    scripts/remove_trailing_whitespace.sh.
+    
+    Note this change to the git version of
+    Configure_PLplot_for_the_Visual_Studio_IDE was accompanied by the same
+    one-character change to the (edited) SF version to keep them
+    identical.  Furthermore, the tag on the SF version was changed from
+    2014 to 2019 to reflect the year when the page was last extensively
+    edited (by Phil in this case).
+
+M	doc/wiki_source/Configure_PLplot_for_the_Visual_Studio_IDE
+
+commit 6a40178541937d80a37a83ac806e5537aec3b125
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu Feb 21 13:30:36 2019 -0800
+
+    Clean up how the INSTALL_RPATH property is set for installed targets for the shared build case
+    
+    Modern Linux distributions such as Debian now convert linker -rpath
+    options (which are the result of the CMake INSTALL_RPATH property) to
+    the DT_RUNPATH (rather than DT_RPATH) entry for the executable or
+    shared object that is being built.  This turns out to be an important
+    change since from
+    <https://refspecs.linuxfoundation.org/elf/gabi4+/ch5.dynamic.html>
+    there is the following constraint on the use of DT_RUNPATH:
+    
+      "The set of directories specified by a given DT_RUNPATH entry is
+      used to find only the immediate dependencies of the executable or
+      shared object containing the DT_RUNPATH entry. That is, it is used
+      only for those dependencies contained in the DT_NEEDED entries of
+      the dynamic structure containing the DT_RUNPATH entry, itself. One
+      object's DT_RUNPATH entry does not affect the search for any other
+      object's dependencies."
+    
+    As a result of this change, the way we currently set the INSTALL_RPATH
+    property does not work correctly any more, and, for example, the
+    run-time loader for the C examples in the static build case cannot
+    find the shared LASi library if it is installed in a non-standard
+    location.
+    
+    This commit implements a first step toward fixing this issue which is
+    to clean up much of the INSTALL_RPATH logic so that setting that
+    property corresponds exactly to DT_NEEDED entries *in the shared
+    case*, i.e., corresponds to the PRIVATE (non-transitive) libraries
+    that are linked in that case.  A later commit will deal with the
+    static case that will actually fix the above issue, but this current
+    cleanup is essential because our previous INSTALL_RPATH logic "grew
+    like Topsy" and has no coherent model concerning whether that property
+    is set for installed targets and exactly what paths are included in
+    the install_RPATH list.
+    
+    Here is a list of the non-transitive (i.e., direct) dependencies of
+    all installed targets.  As a result of the current commit the
+    install_RPATH list for these installed targets now simply reflect
+    the install locations of these dependencies alone.
+    
+    * lib subdirectory libraries
+      Most of these depend on no other internal or external libraries (other than the C library).
+      The one exception is csironn which depends on qhull.
+    
+    * plplot core library
+      This library depends on the lib subdirectory libraries and the
+      shapelib.  For the dynamic devices case it depends on the ltdl
+      library, and the the nondynamic devices case depends on several
+      additional external libraries required by device driver code such as
+      libLASi.
+    
+    * dynamic device drivers
+    
+      Each such driver depends on libplplot and may depend on external libraries (e.g., libLASi
+      for the psttf device driver).
+    
+    * Bindings libraries/modules
+    
+      Each such library/module depends on libplplot and usually some
+      external library (e.g., the tcl binding depends on libtcl).  For
+      most cases it has been assumed that the external library is located
+      in a system location, but for some cases (e.g., tcl) we determine
+      rpath information for those external libraries and use it for the
+      bindings library/module.
+    
+    * Installed executables
+    
+      + pltcl depends on the plplot and Tcl/Tk/Itcl/Itk libraries.
+      + plserver depends on the plplot and Tcl/Tk/Itcl/Itk libraries.
+      + plrender depends on the plplot library.
+      + pltek depends on the plplot librarie
+      + wxPLViewer depends on the plplotwxwidgets and plplotcxx libraries.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by the following steps:
+    
+    # Choose these prefixes to assure that the source, build, and install tree have
+    # blanks in their pathname (to test that case during this comprehensive test)
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+    
+    # Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to
+    # avoid important bugs in the Debian Testing versions of those
+    # packages.
+    
+    # Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+    # build system for our new minimum version of CMake.
+    
+    # Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk components. (This step
+    # will not be necessary as soon as the PLplot build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets
+    # finding much more robust.
+    
+    # Use the -DPLPLOT_TEST_DEVICE=psttfc option to do all diff tests
+    # using that device (which depends on libLASi).  So this checks that
+    # RUNPATH property is set properly so that the local version of
+    # libLASi is found by the run-time loader in a large number of ways
+    # (which are very likely all redundant, but you never know....)
+    
+    # Constrain the tests to nothing other than interactive and
+    # noninteractive tests of the traditional build (since that build is
+    # the only place that the above INSTALL_RPATH changes are tested).
+    # And constrain the tests to avoid the static case since the needed
+    # transitive variant of how INSTALL_RPATH is populated for that case
+    # is not implemented yet.
+    
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON -DPLPLOT_TEST_DEVICE=psttfc" --build_command "make -j16" --ctest_command "ctest -j16" --do_static no --do_ctest no --do_test_install_tree no --do_test_build_tree no)
+    
+    The above command ran without issues (e.g., hangs or other obvious
+    errors) and was followed up by the evaluation procedure documented in
+    doc/wiki_source/Testing_PLplot.  That evaluation showed this
+    comprehensive test had no configure, build, or obvious run-time errors
+    (i.e., no non-zero return codes for any of the steps in this
+    comprehensive test), and the difference test results (done with the
+    psttfc device) were perfect.
+    
+    In addition I spot checked with
+    
+    readelf -d <full path to installed shared object or executable> |grep -E 'NEEDED|PATH'
+    
+    that all NEEDED libraries were as documented above, and RUNPATH was
+    normally just set to the PLplot library install location with the
+    libLASi install location added only when absolutely necessary (for the
+    psttf device driver when that was compiled dynamically and for
+    libplplot for nondynamic devices).
+    
+    In sum, this set of tests appears to confirm that this new
+    minimalistic model for how INSTALL_RPATH should be configured for
+    installed targets is working properly on Debian Buster for the shared
+    build (with or without dynamic devices) of PLplot.
+
+M	bindings/ada/CMakeLists.txt
+M	bindings/c++/CMakeLists.txt
+M	bindings/d/CMakeLists.txt
+M	bindings/fortran/CMakeLists.txt
+M	bindings/java/CMakeLists.txt
+M	bindings/lua/CMakeLists.txt
+M	bindings/octave/CMakeLists.txt
+M	bindings/python/CMakeLists.txt
+M	bindings/qt_gui/CMakeLists.txt
+M	bindings/tcl/CMakeLists.txt
+M	bindings/tk/CMakeLists.txt
+M	bindings/wxwidgets/CMakeLists.txt
+M	cmake/modules/plplot_functions.cmake
+M	drivers/CMakeLists.txt
+M	examples/CMakeLists.txt
+M	lib/nn/CMakeLists.txt
+M	src/CMakeLists.txt
+M	utils/CMakeLists.txt
+
+commit 518232d4097fe589fdec11405a75fe12a231a415
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri Feb 15 18:57:28 2019 -0800
+
+    Build system: drop unnecessary BUILD_WITH_INSTALL_RPATH ON logic for test-drv-info target
+    
+    Our experience is that for well-supported computer languages, modern
+    CMake handles all rpath issues in build trees without issues by
+    default.  Thus, there is apparently no point to setting the
+    INSTALL_RPATH and BUILD_WITH_INSTALL_RPATH properties for the C
+    language test-drv-info target (which is only used in the build tree,
+    i.e., this target is not installed) to bypass this standard CMake
+    rpath capability.  (Note, the bypass occurs because setting
+    BUILD_WITH_INSTALL_RPATH to ON uses the INSTALL_RPATH property of the
+    target rather than CMake default capability to set rpath for the
+    target in the build tree).  As a result of this commit this single
+    instance of use of the BUILD_WITH_INSTALL_RPATH property in our entire
+    source tree has now been removed.
+    
+    I first introduced this peculiar logic in 2006, and my best guess is
+    it may have been needed then to work around some CMake bug.  But as
+    the tests show below, this logic is no longer needed so I have removed
+    it.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing).  All tests were done in the core build tree for
+    the case of shared PLplot libraries and dynamic
+    PLplot devices.  The following tests were done:
+    
+    I. Build test_dyndrivers target (which
+    executes the test-drv-info target for all dynamic devices).
+    There were no build or run-time issues.
+    
+    II. Check readelf results:
+    
+    software@merlin> readelf -d drivers/test-drv-info |grep -E 'PATH|NEEDED'
+     0x0000000000000001 (NEEDED)             Shared library: [libplplot.so.16]
+     0x0000000000000001 (NEEDED)             Shared library: [libltdl.so.7]
+     0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+     0x000000000000001d (RUNPATH)            Library runpath: [/home/software/plplot/HEAD/build_dir/src]
+    
+    i.e., CMake does the right thing here, i.e., it sets the RUNPATH
+    property (via the -Wl,-rpath,<PATHNAME> option to gcc) to the
+    non-standard location of libplplot, but does not set RUNPATH
+    components for the other libraries because they are located in
+    standard locations.  Note for this particular test case (shared PLplot libraries and dynamic
+    PLplot devices) the psttf device driver does have RUNPATH set (again by CMake) because
+    both its libplplot and libLASi dependencies  are located in non-standard locations, i.e.,
+    
+    software@merlin> readelf -d drivers/psttf.so |grep -E 'PATH|NEEDED'
+     0x0000000000000001 (NEEDED)             Shared library: [libplplot.so.16]
+     0x0000000000000001 (NEEDED)             Shared library: [libLASi.so.2]
+     0x0000000000000001 (NEEDED)             Shared library: [libpangoft2-1.0.so.0]
+     0x0000000000000001 (NEEDED)             Shared library: [libpango-1.0.so.0]
+     0x0000000000000001 (NEEDED)             Shared library: [libgobject-2.0.so.0]
+     0x0000000000000001 (NEEDED)             Shared library: [libglib-2.0.so.0]
+     0x0000000000000001 (NEEDED)             Shared library: [libfontconfig.so.1]
+     0x0000000000000001 (NEEDED)             Shared library: [libfreetype.so.6]
+     0x0000000000000001 (NEEDED)             Shared library: [libstdc++.so.6]
+     0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]
+     0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]
+     0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+     0x000000000000001d (RUNPATH)            Library runpath: [/home/software/plplot/HEAD/build_dir/src:/home/software/lasi_svn/install/lib:]
+    
+    Note that test-drv-info dynamically loads psttf.so (and other dynamic
+    devices when the test_dyndrivers target is build above) but it does
+    not link to those shared objects so there is no need to set the
+    libLASi RUNPATH component of test-drv-info.  But psttf.so does link to
+    libLASi so in that case the libLASi RUNPATH component is set.
+    
+    III. Build the test_noninteractive target.  There were
+    no build, run-time, or difference report issues.
+
+M	drivers/CMakeLists.txt
+
+commit e418008c888a4e8d2fd7c32ba64689a578c826e3
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri Feb 15 17:13:59 2019 -0800
+
+    Build system: change CMake variable name from libplplot_RPATH to LTDL_LIBRARY_RPATH
+    
+    This corrects a misnomer that was confusing me.
+    
+    This change was done by a comprehensive sed script approach, i.e.,
+    
+    sed -i -e 's?libplplot_RPATH?LTDL_LIBRARY_RPATH?' $(find . -type f |grep -ivE '\.git|test_fortran|test_ada|epa_build' |xargs grep -l libplplot_RPATH)
+    
+    so that this change has been made consistently throughout the PLplot source tree.
+
+M	bindings/qt_gui/CMakeLists.txt
+M	cmake/modules/drivers.cmake
+M	drivers/CMakeLists.txt
+M	src/CMakeLists.txt
+
+commit f8cf13ad0c476e5bd03c288f43fe842bde554229
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Fri Feb 8 12:06:01 2019 -0800
+
+    Update instructions for wiki changes
+    
+    The previous instructions were for the case where changes were
+    made in the wiki markdown source in the local git working directory
+    and propagated to the appropriate SF wiki edit session.
+    
+    I have now documented a second case where changes are made to the
+    appropriate SF wiki edit session of the markdown wiki source
+    and propagated to the local git working directory.
+
+M	README.developers
+
+commit 7bc23f14479fdd42e32ed3847e18e389a717b5a8
+Author: Phil Rosenberg <p.d.rosenberg@gmail.com>
+Date:   Fri Feb 8 12:13:19 2019 +0000
+
+    Updated wiki for building with visual studio
+    
+    The wiki was out of date recommending using libraries which we
+    no longer recommend and needed updating to reflect changes in
+    finding the wxwidgets library.
+
+M	doc/wiki_source/Configure_PLplot_for_the_Visual_Studio_IDE
+
+commit c67d153a5a10bbd4f33790e6723c6e3a3672f11f
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sun Feb 3 14:34:38 2019 -0800
+
+    Use the CMake upstream version rather than our own version of FindwxWidgets.cmake
+    
+    Our own version corresponds to the upstream CMake version 3.9.0-rc3 with the following
+    additional patch
+    
+    software@merlin> git diff 59344dc51a25 HEAD cmake/modules/FindwxWidgets.cmake diff --git
+    a/cmake/modules/FindwxWidgets.cmake b/cmake/modules/FindwxWidgets.cmake
+    index 82f34ec32..4d3a2d115 100644
+    --- a/cmake/modules/FindwxWidgets.cmake
+    +++ b/cmake/modules/FindwxWidgets.cmake
+    @@ -915,8 +915,17 @@ if (_wx_lib_missing)
+     endif()
+     unset(_wx_lib_missing)
+    
+    -# Check if a specfic version was requested by find_package().
+    +# Check if a specific version was requested by find_package().
+     if(wxWidgets_FOUND)
+    +  # On at least one Windows platform (MinGW/MSYS) find_file fails
+    +  # unless convert from /<drive_letter>/ form to <drive_letter>:/
+    +  # form.  So use both forms to be sure on that platform without
+    +  # disrupting other platforms.
+    +  string(REGEX REPLACE ";/([a-zA-z])/" ";\\1:/" wxWidgets_search_path ";${wxWidgets_INCLUDE_DIRS}")
+    +  list(REMOVE_AT wxWidgets_search_path 0)
+    +  if(NOT "${wxWidgets_search_path}" STREQUAL "${wxWidgets_INCLUDE_DIRS}")
+    +    list(APPEND wxWidgets_INCLUDE_DIRS ${wxWidgets_search_path})
+    +  endif(NOT "${wxWidgets_search_path}" STREQUAL "${wxWidgets_INCLUDE_DIRS}")
+       find_file(_filename wx/version.h PATHS ${wxWidgets_INCLUDE_DIRS} NO_DEFAULT_PATH)
+       dbg_msg("_filename:  ${_filename}")
+    
+    That change was to help support the legacy MinGW/MSYS system which is
+    now likely of zero interest to us (since its successor MinGW-w64/MSYS2
+    is so much better).
+    
+    Meanwhile, CMake upstream has kept improving the upstream version of
+    this file with 10 commits since 3.9.0-rc3.  Furthermore Phil Rosenberg
+    recently found the upstream version worked for his Windows platform
+    (not identified further) while our own version did not.
+    
+    So to take advantage of those upstream improvements (now from 3.13.2
+    and later because of our recent minimum CMake version bump) we now
+    have dropped our own version of FindwxWidgets.cmake.  And we can
+    always ask for the above patch to be applied to the upstream version
+    if that issue ever impacts any of the Windows platforms of interest to
+    us.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by the same comprehensive test reported for my
+    (AWI's) last commit, i.e., that comprehensive test was done with
+    the  deletion of cmake/modules/FindwxWidgets.cmake in the working
+    directory that is now being committed.
+
+D	cmake/modules/FindwxWidgets.cmake
+
+commit ec2a3d5edcf707793a32162448b5bb7f48b2786c
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sun Feb 3 13:42:55 2019 -0800
+
+    Bump minimum CMake version to 3.13.2 for all platforms
+    
+    Previously this minimum version was 3.7.2 for Linux platforms
+    and 3.11.0 for non-Linux platforms.
+    
+    The fundamental purpose of keeping the minimum CMake version as close
+    as possible to the latest CMake version (currently 3.13.3) is to take
+    advantage of CMake improvements (bug fixes, improved policies, and
+    improved software finding) that tend to occur for later versions of
+    CMake.  But we normally hold back some from the lastest version so
+    that the majority of our users can use the version of CMake provided
+    by their distribution rather than having to build CMake themselves.
+    For Linux distributions, Debian Stable is normally a good guide for
+    the version to adopt.  Debian Buster currently provides 3.13.2 and
+    will likely be released as Debian Stable by the time our next version
+    of PLplot is released with the current change.  So I am confident the
+    latest versions of most Linux distributions will supply CMake-3.13.2
+    or higher by that time as well.
+    
+    The situation for non-Linux distributions is as follows:
+    
+    Cygwin: 3.13.1 from <https://cygwin.com/cgi-bin2/package-grep.cgi>
+    MinGW-w64/MSYS2: 3.12.4 from <http://repo.msys2.org/mingw/x86_64/>
+    Fink: 3.11.0 from <http://pdb.finkproject.org/pdb/index.php?phpLang=en>
+    MacPorts: 3.13.3 from <https://www.macports.org/ports.php>
+    HomeBrew:3.13.3 from <http://brewformulas.org/>
+    
+    So as a result of this change, Cygwin, MinGW-w64/MSYS2, and Fink users
+    will have to build the latest version of CMake before they build the
+    git version of PLplot.  But it is completely straightforward to do
+    that using either an earlier version of CMake or the bootstrap method
+    on these Unix (or Unix-like) platforms.  In any case, all of these
+    non-Linux distributions are rolling releases which are designed to
+    keep up with the latest software versions so it is likely that by the
+    time of the next PLplot release, Cygwin, MinGW-w64/MSYS2, and Fink
+    users will have distribution access to CMake-3.13.2 or above.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by running
+    
+    # Choose these prefixes to assure that the source, build, and install tree have
+    # blanks in their pathname (to test that case during this comprehensive test)
+    SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    
+    # Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to avoid showstopping
+    # errors in the Debian Testing versions of those packages.
+    
+    # Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+    # build system for our new minimum version of CMake.
+    
+    # Set LD_LIBRARY_PATH so the run time loader can find the local
+    # libLASi version.  (This step will not be necessary as soon as the
+    # PLplot build system is modified to implement rpath logic for
+    # libLASi.)
+    
+    # Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk components. (This step
+    # will not be necessary as soon as the PLplot build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets
+    # finding much more robust.
+    
+    # Apply no constraints to limit the reach of this test to give our build system the maximum possible
+    # testing on Linux for our minimum CMake version (3.13.2).
+    
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" LD_LIBRARY_PATH=/home/software/lasi_svn/install/lib "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON" --build_command "make -j16" --ctest_command "ctest -j16" --do_submit_dashboard yes)
+    
+    The above command ran without issues (e.g., hangs or other obvious
+    errors) and was followed up by the evaluation procedure documented in
+    doc/wiki_source/Testing_PLplot.  That evaluation showed this
+    comprehensive test had no configure, build, or obvious run-time errors
+    (i.e., no non-zero return codes for any of the steps in this
+    comprehensive test), and the difference test results (done by default
+    by the svg device) were perfect.  In addition the dashboard results
+    at <https://my.cdash.org/index.php?project=PLplot_git> for this test
+    were perfect other than the usual spurious warning messages for the
+    configure step.
+
+M	CMakeLists.txt
+M	examples/CMakeLists.txt
+
+commit 223dff54af4cd13d12c50b26ceb8f8aa67dc6f84
+Author: Phil Rosenberg <p.d.rosenberg@gmail.com>
+Date:   Tue Jan 15 11:32:06 2019 +0000
+
+    Exported two functions from plstream.cc into the plplotcxx lib/dll for dll builds
+    
+    The functions Contourable_Data_evaluator() and Coord_Xform_evaluator()
+    were not prefixed by PLDLLIMPEXP_CXX. This means that for dll builds of
+    the library they were not available to the users (although code compiled
+    it would not link). The Coord_Xform_evaluator() function is for use at
+    least in the plstream::vect method for mapping between the Coord_Xformer
+    class and the void * input required for the API.
+    Contourable_Data_evaluator() similarly mapps between the Contourable_Data
+    class and void * for ingestion into the API.
+    
+    Both the functions should be available to the user, hence the need for
+    the export.
+
+M	bindings/c++/plstream.h
+
+commit ba952042a56c8c36c5c9e39163f8cde93056c730
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sun Jan 6 14:07:49 2019 -0800
+
+    Core library: Some changes to our C typedefs in plplot.h
+    
+    We have removed the typedefs for PL_NC_GENERIC_POINTER and
+    PL_GENERIC_POINTER.  Those typedefs were introduced in 5.12.0 (as the
+    start of a plan which we soon after decided not to implement) and officially
+    deprecated as of 5.13.0 (where all references to these typedefs were
+    replaced by PLPointer everywhere in our code other than in plplot.h).
+    This current change removes these typedefs from plplot.h as well.
+    
+    We have changed the PLINT_NC_VECTOR typedef (first defined as of 5.12.0) as follows:
+    
+    -typedef int *                 PLINT_NC_VECTOR;
+    +typedef PLINT *               PLINT_NC_VECTOR;
+    
+    to fix an inconsistency that was incorrectly and inadvertently created
+    for 5.12.0 between this typedef and all other PLINT* typedefs which
+    I noticed just now.
+    
+    For details about the (somewhat limited) backwards-incompatibilities introduced
+    by these changes see README.release.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the "all" target without any warnings
+    concerning the above typedefs or errors of any kind.  This was the
+    expected result for the above changes to PL_NC_GENERIC_POINTER and
+    PL_GENERIC_POINTER since those typedefs no longer appear anywhere in
+    our code.  Furthermore, many previous build and run-time tests on this
+    AMD 64-bit platform (Ryzen 7 1700) and my prior Intel 64-bit platform
+    (g33) showed no ill effects due to the above inconsistency between the
+    prior typedef for PLINT_NC_VECTOR and all other PLINT* types, and this
+    current test shows (as expected) that removing this inconsistency
+    continues to show no ill effects on my current AMD platform.
+
+M	README.release
+M	include/plplot.h
+
+commit 9edbba4bd40ab03d229c123795abd41c088499cc
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sun Jan 6 01:17:39 2019 -0800
+
+    Implement bash script that finds the git commit year range for each individual author of a file
+    
+    These year ranges are output in useful sorted copyright form with
+    specified comment prefix.
+    
+    Here is typical output for this script where the first argument is the
+    filename and the second argument is the comment prefix used for the
+    copyright line.
+    
+    software@merlin> scripts/find_commit_date_ranges.sh src/plctrl.c "//"
+    // Copyright (C) 1993-2005 Maurice LeBrun
+    // Copyright (C) 1995-2002 Geoffrey Furnish
+    // Copyright (C) 1996 Rady Shouman
+    // Copyright (C) 2000-2018 Alan W. Irwin
+    // Copyright (C) 2001-2003 Joao Cardoso
+    // Copyright (C) 2001-2005 Rafael Laboissiere
+    // Copyright (C) 2002 Vince Darley
+    // Copyright (C) 2002-2007 Andrew Roach
+    // Copyright (C) 2004-2013 Andrew Ross
+    // Copyright (C) 2005 Thomas Duck
+    // Copyright (C) 2006-2011 Arjen Markus
+    // Copyright (C) 2006-2011 Hazen Babcock
+    // Copyright (C) 2008-2009 Werner Smekal
+    // Copyright (C) 2009-2011 Hezekiah M. Carty
+    // Copyright (C) 2015-2018 Phil Rosenberg
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) as above.
+
+A	scripts/find_commit_date_ranges.sh
+
+commit 02652c9a422d6f2258d073a7211940699e937046
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Jan 2 04:45:38 2019 -0800
+
+    Fix memory management for qt_example and associated PlotWindow class
+    
+    The qt_example changes were as follows:
+    
+    * Moved back to the 5.13.0 cleanup style (where the code stanza to do
+      cleanup is executed after the a.exec() call).  This style is
+      problematic (see bad comprehensive test result below) since
+      sometimes it is possible there is no return from a.exec().  But when
+      it works it allows deleting the win PlotWindow instance.  The plan
+      for later is to fix the problematic nature of this cleanup by using
+      the [recommended procedure](<http://doc.qt.io/qt-5/qapplication.html#exec)
+      for cleanup associated with any such call to the qApp exec() method.
+    
+    * Deleted the win PlotWindow instance in that cleanup stanza.
+    
+    * Added an experimental code stanza to test creation and destruction
+      of PlotWindow for the simplified case where it is not used by the
+      qApp.  Normally this stanza is ignored because of preprocessing
+      logic, but a convenient single change to the code will make this
+      stanza available for testing.
+    
+    * Emitted "Completed cleanup of qt_example" message to help verify
+      if cleanup is actually done.
+    
+    The PlotWindow class changes were as follows:
+    
+    * Followed net advice (i.e.,
+    <https://stackoverflow.com/questions/3153155/when-setting-the-wa-deleteonclose-attribute-on-a-qt-mainwindow-the-program-cras>
+      by commenting out
+    
+    setAttribute( Qt::WA_DeleteOnClose );
+    
+      in the PlotWindow constructor.  This change very likely avoids double-free issues since
+      we are deleting an automatically allocated qApp on exit from the qt_example main
+      routine in any case.
+    
+    * Dropped all PLplot dynamic stream stuff (i.e., use default PLplot
+      static stream) from PlotWindow constructor and destructor
+      since qt_example does not need that complication.
+    
+    * Inserted
+    
+    plend();
+    
+      in the PlotWindow destructor.  According to valgrind this saved 70KB of
+      memory that would otherwise have been still accessible on exit.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the qt_example and qt targets and
+    running
+    
+    valgrind --leak-check=full --num-callers=500 --leak-check-heuristics=all examples/c++/qt_example >| valgrind.out 2>&1
+    
+    These results all emitted the "Completed cleanup of qt_example" message and showed "definitely lost"
+    memory leaks and "still allocated" memory leaks that were quite similar to those obtained from
+    using one of the qt devices, e.g.,
+    
+    valgrind --leak-check=full --num-callers=500 --leak-check-heuristics=all examples/c/x01c -dev pngqt -o test.png >| valgrind.out 2>&1
+    
+    In each case the quantity of "still allocated" memory was roughly
+    ~400KB, and since that roughly agrees for each case (within the
+    uncertainties of which components of Qt5 are being used by x01c and
+    -dev pngqt and which components of Qt5 are being used by qt_example
+    and the extqt device) it is likely due to Qt5 issues rather than
+    PLplot issues.  Also, all but one of the "definitely lost" memory
+    leaks could be attributed to Qt rather than PLplot, and that PLplot
+    "definitely lost" memory leak (with all qt devices and not just extqt)
+    ideally needs attention but is apparently harmless from the many
+    successful comprehensive tests that have been completed for all qt
+    devices other than extqt.
+    
+    So the conclusion I draw from these valgrind results is our memory
+    management for qt_example and the associated PlotWindow class is in
+    just as good shape as it is for ordinary, well-tested non-extqt qt
+    devices.
+    
+    However, when I performed an interactive* comprehensive test using
+    
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5 PATH="/home/software/cmake/install-3.7.2/bin:$PATH" "../plplot blank .git"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON" --build_command "make -j16" --ctest_command "ctest -j16" --do_test_noninteractive no --do_ctest no)
+    
+    my usual evaluation procedure for such tests (see
+    doc/wiki_source/Testing_PLplot) showed all was well except for one
+    issue, namely, qt_example intermittently (one instance corresponding
+    to the traditional make interactive test for the installed examples
+    for the static libraries/static devices case which I could not
+    replicate later) hung on exit.  For this case alone there was no
+    "Completed cleanup of qt_example" message.  Thus, it appears when I
+    hit the exit button on the qt_example GUI, a.exec() never returned so
+    the main routine of qt_example apparently could not complete.  It
+    also turns out that pyqt[45]_example.py has a similar
+    style of cleanup after the qApp .exec() method is executed, i.e.,
+    
+    app = QtWidgets.QApplication(sys.argv)
+    plot = QPlot()
+    plot.show()
+    app.exec_()
+    plot.cleanup()
+    
+    which is also problematic according to
+    <http://pyqt.sourceforge.net/Docs/PyQt4/qapplication.html#exec> and
+    therefore the likely cause for why I recently got a hang out of
+    pyqt5_example during comprehensive testing (in December although not this time).
+    N.B. app.exec_() is a python2 backwards-compatible wrapper for
+    QApplication.exec(), but as soon as we drop support for python2 and
+    stick strictly with python3 we can use app.exec() (without the
+    underscore) in our python3 scripts.
+    
+    Anyhow, very likely the fix for these problamatic hang issues is to
+    use the recommended cleanup for both qt_example and pyqt[45] which is
+    to "connect clean-up code to the aboutToQuit() signal".  A working
+    example of how to do that with signals and slots is given by
+    <https://stackoverflow.com/questions/21408675/is-the-abouttoquit-signal-of-the-qcoreapplication-still-supported-in-qt-5-1-0>.
+    Note also there is a nice introduction to signals and slots at
+    <http://doc.qt.io/qt-5/signalsandslots.html>.
+
+M	examples/c++/qt_PlotWindow.cpp
+M	examples/c++/qt_example.cpp
+
+commit 790754f35db9f797d5153005c199a1329e34583f
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sun Dec 30 12:03:42 2018 -0800
+
+    Clean up logic for creation and destruction of internal qApp
+    
+    The previous implementation of this logic was being made unnecessarily
+    complicated and non-robust by not distinguishing clearly between the
+    case where initQtApp creates an internal qApp and the case where the
+    qApp is created externally.  Because of this issue, appCounter counted
+    users of qApp regardless of whether that qApp had been created
+    internally or externally; in one case (qt application using the extqt
+    device) we were relying on that counter being negative in closeQtApp
+    (the routine used to delete qApp if that was created internally by
+    initQtApp) in order to not destroy the external qApp always used in
+    that case, and in another case (qt application using non-extqt qt
+    devices) we were adding 1 to appCounter to avoid incorrect destruction
+    of the external qApp by closeQtApp.  Also as a result of this issue,
+    the case of a qt application using both extqt and a non-exqt qt device
+    would not work (since appCounter then ends up as zero so that the
+    external qApp used for this case gets incorrectly destroyed).
+    
+    So for this cleanup I keep track of whether qApp is externally created
+    or internally created with the bool internal_qApp global variable,
+    rename appCounter to internal_qAppCounter, and consistent with that
+    name change make sure that variable
+    is only changed if internal_qApp is true.  This change allows us to
+    not have special conditions on the initial value of what is now called
+    internal_qAppCounter, and if an internal qApp is created, the last-use
+    case is unequivocally signalled by internal_qAppCounter == 0 *so long
+    as for each qt device that happens to use an internal qApp each initQtApp call in plD_init_* is
+    matched by a corresponding call to closeQtApp in plD_tidy_*.
+    
+    That condition was previously met. And since extqt is the one qt
+    device that never uses an internal qApp, calls to initQtApp and
+    closeQtApp for that device would effectively become no-ops with the
+    new more robust version of the code.  But to keep the code as simple as
+    possible we continue as before not calling initQtApp from
+    plD_init_extqt, but we change from calling closeQtApp in
+    plD_tidy_extqt to dropping that call.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian testing) by building the test_noninteractive, test_interactive,
+    and test_qt_example targets without configure, build, run-time, or
+    difference report issues. (The test_qt_example target is currently
+    not run as part of test_interactive because of occasional segfault issues
+    on exit from qt_example, but for this test we did not encounter
+    one of those, and qt_example appeared to work well despite the
+    known memory management issues it has.)
+    
+    N.B. Our current suite of tests does not include the case of a qt
+    application that uses non-extqt qt devices.  However, António R. Tomé
+    has developed such applications so we request that he tests the
+    current commit with those applications.
+
+M	drivers/qt.cpp
+
+commit c8ccc5520b9e041c064b57fce8007466d320c9c3
+Author: António R. Tomé <antoniortome@users.sourceforge.net>
+Date:   Mon Dec 24 15:01:53 2018 +0000
+
+    Allow all qt devices to be used from a qt application
+    
+    All qt devices need a qApp in order to work and the purpose of
+    initQtApp (which is called from all plD_init* routines *other than
+    plD_init_extqt* that are implemented in drivers/qt.cpp) is to create a
+    qApp (and the associated argv memory it needs) if a qApp doesn't exist
+    already (either created by a previous call to initQtApp or created
+    independently in an external qt application).  And the purpose of
+    closeQtApp (which is called from all the plD_tidy_* routines
+    implemented in drivers/qt.cpp) is to delete the qApp and associated
+    (argv) memory if this is the last use of the qApp that was initially
+    created in initQtApp, but not delete qApp if it was created
+    independently.  The static variable appCounter (protected by a mutex
+    to make it thread-safe if qt devices are being used in multiple threads)
+    is used to keep track of last use where appCounter will be zero.
+    
+    This logic should work fine for non-qt applications that simply rely
+    on the PLplot C library to provide the qt devices (dynamically or as
+    part of the library) since for the last use case appCounter is zero
+    and therefore the internally created qApp and associated argv are
+    correctly deleted.  And it also works fine for qt applications (those
+    which depend on libplplotqt and which must necessarily create their
+    own qApp) if those applications only use the extqt device because in
+    that case initQtApp is never called so that when extqt is tidied up
+    appCounter ends up as -1 so the qApp created independently by that qt
+    application is (rightly) not deleted.  That leaves the problem of a qt
+    application that use non-extqt qt devices where prior to the present
+    change appCounter ends up as zero on last-use case, and the
+    independent qApp created by that qt application gets incorrectly
+    deleted.  To fix that case, this commit simply adds 1 to appCounter
+    in initQtApp when on first use case an external qApp is detected.
+    
+    Tested by: António R. Tomé <antoniortome@users.sourceforge.net> on Linux
+    (openSUSE leap 15.0) by building an running his own qt application that
+    uses qt devices other than extqt without issues.
+
+M	drivers/qt.cpp
+
+commit 50b61e5214d9d88b2e235885dcb837db30930d09
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu Dec 27 16:58:02 2018 -0800
+
+    Warn if the Qt installation does not support a requested image format
+    
+    I recently ran some tiffqt tests and that silently generated empty
+    output files because I did not (at that time) have the Debian package
+    qt5-image-formats-plugins installed which supplies the desired Qt
+    plugin for TIFF (and a few other formats which PLplot doesn't support
+    yet).  This commit changes that silence to a warning message
+    concerning not supporting a given format.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the x30c and qt targets and running
+    
+    examples/c/x30c -dev tiffqt -o test.tiff -fam -bg 00F_0.3
+    
+    both without and with the qt5-image-formats-plugins Debian package
+    installed.  In the former case the desired warning message was issued
+    along with the expected generation of an empty output file.  As
+    expected in the latter case there was no warning message and non-empty
+    test.tiff.[12] files were produced.  Both the "display" and "pqiv"
+    image viewers rendered test.tiff.1 with an incorrect opaque blue
+    background but correct translucent blocks in front of that background.
+    (This badly rendered translucent background issue also occurs for all
+    other qt raster devices other than pngqt as discussed for the previous
+    commit.)
+
+M	bindings/qt_gui/plqt.cpp
+
+commit aa0dd85fceaa0c94eaea443cdeac464a0749cc81
+Author: António R. Tomé <antoniortome@users.sourceforge.net>
+Date:   Mon Dec 24 14:58:00 2018 +0000
+
+    Fix background transparency bug in the qt raster devices
+    
+    We found experimentally that QtRasterDevice::QtRasterDevice required
+    the following two changes to solve a long-standing bug where the alpha
+    value of the background was being completely ignored by qt raster
+    devices (so semi-transparent backgrounds were being rendered as
+    completely opaque):
+    
+    1. Change the QImage format of results for raster devices from
+    QImage::Format_RGB32 to QImage::Format_ARGB32.  This change (or
+    possibly changing to the QImage::Format_ARGB32_Premultiplied format in
+    the future for efficiency reasons) is required because the
+    QImage::Format_RGB32 documentation at
+    <http://doc.qt.io/qt-5/qimage.html#Format-enum> states "The image is
+    stored using a 32-bit RGB format (0xffRRGGBB)" i.e., the alpha channel
+    is completely fixed at opaque. So this previously adopted opaque
+    format was not correct.
+    
+    2. Insert a transparent fill canvas (with color Qt::transparent which
+    is transparent black according to
+    <http://doc.qt.io/qt-5/qt.html#GlobalColor-enum> as the first layer of
+    the image.  Transparent black is essential since the normal "over"
+    compositing rule (see the compositing formula in
+    <https://en.wikipedia.org/wiki/Alpha_compositing> which composites the
+    semi-transparent PLplot background on top of that transparent black
+    canvas gives a result which is exactly the PLplot background, with
+    unchanged ARGB values.
+    
+    Tested by: António R. Tomé <antoniortome@users.sourceforge.net> and
+    Alan W. Irwin <airwin@users.sourceforge.net> on two different Linux
+    platforms (António: openSUSE leap 15.0 and Alan: Debian Testing).
+    Both testers built the x30c and qt targets and ran
+    
+    examples/c/x30c -dev pngqt -o test3_qt.png -fam -bg 00F_0.3
+    
+    under valgrind with good valgrind results for this case where a blue
+    background with 70 per cent transparency is specified.
+    
+    For Alan the valgrind report showed "ERROR SUMMARY: 0 errors from 0
+    contexts (suppressed: 64975 from 1)" which is a good memory management
+    report aside from the memory leaks which were also mentioned.  The
+    memory leak details reported by valgrind were different for António
+    and Alan (likely because of different versions of Qt), and António persued those
+    further with the valgrind --leak-check=full option to discover most of them were
+    due to Qt but a few of them appear to be due to memory management issues
+    for the Qt components of PLplot which will warrant further investigation.
+    
+    For Alan when the PNG file was viewed with either the "display" or
+    "pqiv" image viewer applications the results showed the above
+    semi-transparent blue background imposed by PLplot composited with a
+    black and white checkerboard canvas.  Those canvases were rendered by
+    the two different applications (as proved by the different sized
+    squares in the two cases) as the traditional means of marking a
+    semitransparent background.  Previous to this fix, the checkerboards
+    were not present indicating an incorrect opaque blue background.
+    
+    António also tested this change with his own Qt GUI application with
+    a variety of different transparencies, and all was well (checkerboard when
+    results viewed with an image viewer, proper semi-transparent rendering when
+    those PNG plot results were imported into LibreOffice Impress).
+    
+    Alan also tested this change for all raster qt devices as follows:
+    
+    (for RASTER in bmp jpg png ppm tiff; do valgrind examples/c/x30c -dev ${RASTER}qt -o test.${RASTER} -bg 00F_0.3; done) >& valgrind.report
+    
+    As expected (since the PLplot qt device driver uses code that is
+    virtually identical for all these formats) the valgrind reports from
+    these tests did not differ significantly from the earlier valgrind
+    result mentioned above for the pngqt device.  A subsequent attempt to
+    view these test.* plot results with both "display" and "pqiv" showed
+    the expected good semi-transparent results (checkerboard background,
+    translucent foreground images) for pngqt.  However, when that test was
+    used for for raster formats bmp, jpg, ppm, and tiff, the foreground
+    images were translucent as expected, but the background was rendered
+    opaque blue.
+    
+    It is not clear at this stage whether this continued non-transparent
+    background issue for all qt raster devices other than pngqt is a Qt
+    issue, a PLplot issue, or an image viewer issue with displaying
+    backgrounds.  My guess is the latter possibility is the correct one
+    (i.e., PLplot and Qt are producing valid semi-transparent background
+    results for all the above raster formats), but I don't know how to
+    prove that.
+
+M	bindings/qt_gui/plqt.cpp
+
+commit c7b078afaa79201fa2bacee1f366fc5dc3091e6f
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Tue Dec 18 12:27:13 2018 -0800
+
+    Exclude ChangeLog.release from trailing whitespace removal script
+    
+    This file should be excluded to preserve the exact output of the
+    "git log" command that produced this file.  Right now, for example,
+    that command gives indented results which necessarily means that
+    empty lines in the commit message are indented with whitespace
+    which would be removed by this script.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by running
+    
+    scripts/remove_trailing_whitespace.sh
+    
+    without ChangeLog.release being modified.
+
+M	scripts/remove_trailing_whitespace.sh
+
+commit 66d68d93ecf8f1b2cde13d98c42069607733d3c7
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Tue Dec 18 12:19:58 2018 -0800
+
+    Factor the PLplot export files
+    
+    This change was implemented by a new CMake function, configure_target_install, which is now
+    used to install all exported targets in a consistent way.
+    
+    N.B. part of that consistency is modules are now installed without the unnecessary
+    LIBRARY qualifier for install(TARGETS...) whereas before some module targets used
+    that qualifier and some did not.
+    
+    As a result of this change each exported target (which can be a
+    library, module, or executable) is now described by two files <target
+    name>_export.cmake and <target name>_export-noconfig.cmake.
+    Furthermore, plplotConfig.cmake now includes the plplot_exports.cmake
+    file which in turn *optionally* includes all the export files.
+    
+    As a result, it should be possible for software packagers to factor
+    PLplot binary packages so that each installed library, module, or
+    executable in a binary package is accompanied by its two export files.
+    Then if a user installs the fundamental binary PLplot package (which
+    should include plplotConfig.cmake and plplot_exports.cmake) but only
+    part of the additional binary packages so that some export files are
+    missing) then other software (such as our own installed examples)
+    which uses the
+    
+    find_package(plplot)
+    
+    CMake command to import plplot targets should continue to work fine so
+    long as that other software checks for the existence of imported
+    PLplot targets before using them.  (Note I have not made that change
+    yet to our installed examples project, but the comprehensive test
+    below shows that project continues to work fine when all PLplot
+    exported targets are available for import as in that test case.)
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by running
+    
+    COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5 PATH="/home/software/cmake/install-3.7.2/bin:$PATH" "../plplot blank .git"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON" --build_command "make -j16" --ctest_command "ctest -j16")
+    
+    This command was run with cmake (and ctest) 3.7.2 in such a way that
+    the source, build, and install trees all had a blank character in
+    their prefixes.  CMake option -DUSE_INCRTCL_VERSION_4=ON is currently
+    necessary to find Tcl/Tk components on my Debian Testing platform.  No
+    script options were used to skip any part of this test since this intrusive
+    commit needed thorough testing.
+    
+    The above command ran without issues (e.g., hangs or other obvious
+    errors) and was followed up by the evaluation procedure documented in
+    doc/wiki_source/Testing_PLplot.  That evaluation showed this
+    comprehensive test had no configure, build, or obvious run-time errors
+    (i.e., no non-zero return codes for any of the steps in this
+    comprehensive test), and the difference test results were perfect.
+
+M	CMakeLists.txt
+M	bindings/ada/CMakeLists.txt
+M	bindings/c++/CMakeLists.txt
+M	bindings/d/CMakeLists.txt
+M	bindings/fortran/CMakeLists.txt
+M	bindings/lua/CMakeLists.txt
+M	bindings/octave/CMakeLists.txt
+M	bindings/python/CMakeLists.txt
+M	bindings/qt_gui/CMakeLists.txt
+M	bindings/qt_gui/pyqt4/CMakeLists.txt
+M	bindings/qt_gui/pyqt5/CMakeLists.txt
+M	bindings/qt_gui/smoke/CMakeLists.txt
+M	bindings/tcl/CMakeLists.txt
+M	bindings/tk/CMakeLists.txt
+M	bindings/wxwidgets/CMakeLists.txt
+M	cmake/modules/plplot_functions.cmake
+M	drivers/CMakeLists.txt
+M	examples/fortran/CMakeLists.txt
+M	lib/csa/CMakeLists.txt
+M	lib/nistcd/CMakeLists.txt
+M	lib/nn/CMakeLists.txt
+M	lib/qsastime/CMakeLists.txt
+R096	src/plplotConfig.cmake	plplotConfig.cmake
+M	src/CMakeLists.txt
+M	utils/CMakeLists.txt
+
+commit 9397c935fed795a6baca90b2108d008d11622871
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Tue Dec 18 11:00:01 2018 -0800
+
+    Reduce testing of pyqt5_example.py and (in the Qt5 case) qt_example
+    
+    In recent Qt5 comprehensive tests these examples sometimes hung (once for
+    pyqt5_example.py) and sometimes segfaulted (once for qt_example)
+    demonstrating they still have memory management issues.  Therefore,
+    although these tests continue to exist, I have removed them as
+    dependencies of higher-level tests such as the various
+    test_interactive targets that are built by the comprehensive test
+    script.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by successfully running a comprehensive test.  (There
+    will be more details about that test in my next commit message.)
+
+M	examples/CMakeLists.txt
+M	plplot_test/CMakeLists.txt
+
+commit db9d90d0b4e3562d45e09715d4b0f65b13af8d87
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Sun Dec 16 16:50:56 2018 -0800
+
+    Crucial font fix for the qt device driver
+    
+    António Rodrigues Tomé discovered a number of qt device font issues
+    were fixed for opensuse Qt-5.12.0 by calling the QFont setFamily
+    method with a bogus non-empty string rather than an empty string.  I
+    also confirmed this fix solved some long-standing qt device driver
+    issues (missing glphys in example 24 were found and qt started
+    responding with the correct Sans, Serif, or Monotype generic fonts
+    when PLplot asked for those (e.g., in example 23) rather than always
+    responding with Serif fonts.
+    
+    So from this evidence for two different Linux platforms it appears an
+    empty string is not the correct way to specify a bogus font to the
+    setFamily method and this commit corrects that issue.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the test_c_pngqt target and confirming
+    the example 23 and 24 results were made perfect (i.e., the exact
+    equivalent other than size with the corresponding pngcairo results).
+    So this appears to be a big step forward for our qt device driver, and
+    my thanks to António for discovering this simple but crucial font fix
+    for the qt device driver.
+
+M	bindings/qt_gui/plqt.cpp
+
+commit 5f32f47365515bf35659a35c32882e6875587a15
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Thu Dec 13 23:46:24 2018 -0800
+
+    More tweaks to instructions for the release manager
+
+M	README.Release_Manager_Cookbook
+
+commit 3cc01dca4ee7ada907f4d26b0db4f3c672c3bb73
+Author: Arjen Markus <arjenmarkus@users.sourceforge.net>
+Date:   Sun Dec 16 12:19:06 2018 +0100
+
+    Limited adjustments to the page on testing PLplot.
+    
+    The edits consist mostly of splitting up the long paragraphs into smaller ones. Also adding an example on how to use the comprehensive testing script in the most minimal fashion. This prepares for a further reorganisation of the page.
+    
+    Tested by Arjen Markus, via visual inspection of the wiki page.
+
+M	doc/wiki_source/Testing_PLplot
+
+commit 95162643c22076c38e8a2c45d9ca98c9852f1c78
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Dec 12 20:14:47 2018 -0800
+
+    Tentative bug fix for qt_example
+    
+    This fix is motivated by <http://doc.qt.io/qt-5/qapplication.html#exec> which states
+    
+    "[...T]here is no guarantee that the application will have time to exit its event loop and execute code at the end of the main() function, after the QApplication::exec() call."
+    
+    So they recommend that call should always be at the end of main
+    routines.  I made that change to qt_example and extensive interactive
+    testing since shows the segfaults in qt_example for the Qt5 case are
+    either hidden or completely gone.  So if this is a real fix (i.e.,
+    they are completely gone), my working hypothesis to explain it is the
+    delete[] calls after exec() was called previously left potentially
+    dangling pointers ==> segfault if those delete[] calls are ignored as
+    seems possible from the above reference.  Anyhow, we will keep
+    automatically testing both qt_example and pyqt5_example in a variety
+    of contexts (e.g., like below) to see if any more segfault issues pop
+    up, but so far so good.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by running
+    
+    time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5 PATH="/home/software/cmake/install-3.13.1/bin:$PATH" "../plplot blank .git"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON -DDEFAULT_NO_BINDINGS=ON -DENABLE_cxx=ON -DENABLE_qt=ON -DENABLE_python=ON -DENABLE_pyqt5=ON -DDEFAULT_NO_DEVICES=ON -DPLD_extqt=ON" --build_command "make -j16" --ctest_command "ctest -j16" --do_test_noninteractive no --do_ctest no)
+    
+    That is, this is a comprehensive test that is limited to testing just
+    qt_example and pyqt5_example in the Qt5 case for a variety of
+    configurations/contexts.  Those were for our 3 major build
+    configurations (shared library/dynamic devices, shared
+    library/nondynamic devices, and static library/nondynamic devices) the
+    above test built all dependencies of qt_example and pyqt5_example.py
+    executed both those GUIs for our CMake-based core build and installed
+    examples build and also executed qt_example for our traditional build
+    of the installed examples.  So this test exercised the qt_example GUI
+    9 times and the pyqt5_example GUI 6 times.
+    
+    For each such GUI execution, we clicked on the plot==>curves,
+    histogram, interactive selection in that order, and for the last of
+    those moved the resulting cursor into the upper corner of the window and
+    left-clicked to determine the position with results reported in a
+    position GUI where I hit the exit button.  Afterwards, I exited by
+    hitting the upper left corner of the GUI ==> close.  I am documenting
+    all these details because that pattern of GUI use generated
+    intermittent segfaults at some time in the comprehensive test for
+    several repeats of the above test before the tentative fix that is
+    committed here.  But since the fix, two tries of the above
+    comprehensive test has found no such segfaults.  So this fix is
+    looking promising for qt_example, and pyqt5_example.py is looking
+    good already on its own, but we need to continue to test both of them.
+
+M	examples/c++/qt_example.cpp
+
+commit a0e029141cfc7aa2831f6218118cef237e35add9
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Dec 12 19:22:25 2018 -0800
+
+    Test systems consistency tweak: for the Qt5 case test qt_example for the traditional test of the installed examples
+    
+    This change makes the traditional test consistent with the CMake-based test system where
+    as of commit plplot-5.13.0-111-gdc217017d and for the Qt5 case, test_qt_example and test_pyqt5_example
+    were reinstated as dependencies of the test_interactive target, i.e., they became part of
+    general interactive testing.
+    
+    N.B. Presently we have extensive evidence in the Qt5 case of
+    qt_example segfaulting during comprehensive interactive testing so we
+    had to specifically drop that test (and we also dropped the
+    pyqt5_example test) from the interactive component of our recent
+    comprehensive tests using -DPLD_extqt=OFF.  However, I have a
+    tentative fix for qt_example which I am about to commit so making sure
+    qt_example gets full testing treatment (e.g., for the traditional
+    test of the installed examples) makes sense.
+
+M	plplot_test/CMakeLists.txt
+
+commit 9943508755506f7cd95dd2e7af74d4ad4e1adc68
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Wed Dec 12 04:01:53 2018 -0800
+
+    Drop some additional symbols when generating comparison for bindings/fortran/plplotfortran_ifort.def
+    
+    The extra line in the sed script is
+    
+    /^.*MOD___/ d
+    
+    which deletes every line with that pattern in it.  As a result the
+    following raw symbols (directly from the nm --defined-only command)
+    are dropped
+    
+    000000000004B840 T __PLPLOT_GRAPHICS_MOD___COPY_PLPLOT_GRAPHICS_PLGRAPHICSIN
+    000000000004F9A0 R __PLPLOT_GRAPHICS_MOD___DEF_INIT_PLPLOT_GRAPHICS_PLGRAPHICSIN
+    0000000000057C80 D __PLPLOT_GRAPHICS_MOD___VTAB_PLPLOT_GRAPHICS_PLGRAPHICSIN
+    000000000004B820 T __PLPLOT_TYPES_MOD___COPY_PLPLOT_TYPES_PLCGRID
+    000000000004B810 T __PLPLOT_TYPES_MOD___COPY_PLPLOT_TYPES_PLFGRID
+    000000000004FA20 R __PLPLOT_TYPES_MOD___DEF_INIT_PLPLOT_TYPES_PLCGRID
+    000000000004F9F0 R __PLPLOT_TYPES_MOD___DEF_INIT_PLPLOT_TYPES_PLFGRID
+    0000000000057D00 D __PLPLOT_TYPES_MOD___VTAB_PLPLOT_TYPES_PLCGRID
+    0000000000057CC0 D __PLPLOT_TYPES_MOD___VTAB_PLPLOT_TYPES_PLFGRID
+    
+    I could modify the sed script to process these symbols, but Arjen
+    seems content with the current
+    bindings/fortran/plplotfortran_ifort.def file that does not have the
+    processed version of these files.  So this one-line sed script change
+    means the generated comparison for that file is identical with the
+    original with the result that building the
+    check_ifort_definitions_file target succeeds.
+    
+    Tested by: Alan W. Irwin <airwin@users.sourceforge.net> on Linux
+    (Debian Testing) by building the check_ifort_definitions_file target
+    with success.
+
+M	bindings/fortran/generate_ifort_deffile.sed
+
+commit 7b9c86a9ca86ae47572d772c32ebc0afa0c2a956
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Tue Dec 11 19:38:51 2018 -0800
+
+    Create template for the Release Notes for the next release after 5.14.0
+
+M	README.release
+
+commit 4909eaf1083d041419406e9d9aef7831d7e6d064
+Author: Alan W. Irwin <airwin@users.sourceforge.net>
+Date:   Tue Dec 11 19:27:18 2018 -0800
+
+    Last-minute tweaks in the Release Manager instructions that did not make it into 5.14.0
+
+M	README.Release_Manager_Cookbook

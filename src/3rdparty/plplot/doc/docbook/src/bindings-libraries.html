@@ -1,0 +1,40 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Bindings Libraries</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="libraries.html" title="Chapter 23. The PLplot Libraries"><link rel="prev" href="libraries.html" title="Chapter 23. The PLplot Libraries"><link rel="next" href="core-library.html" title="The PLplot Core Library"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Bindings Libraries</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="libraries.html">Prev</a> </td><th width="60%" align="center">Chapter 23. The PLplot Libraries</th><td width="20%" align="right"> <a accesskey="n" href="core-library.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="bindings-libraries"></a>Bindings Libraries</h2></div></div></div><p>
+      The purpose of the PLplot bindings is to make the PLplot API
+      documented in <a class="xref" href="API.html" title="Chapter 17. The Common API for PLplot">Chapter 17, <i>The Common API for PLplot</i></a> accessible from various computer
+      languages and GUI environments.  Some bindings (e.g., qt and cairo)
+      are implemented by a special form of "external" device.  Other
+      bindings (e.g., python) are implemented as shared objects which are
+      dynamically loaded by the language in question.  However, the majority
+      of our bindings are implemented as bindings libraries which
+      must be specifically linked by the application.  (See the Makefiles in
+      the installed examples tree for comprehensive examples of how we use
+      <span class="command"><strong>pkg-config</strong></span> to supply the necessary linking
+      information.)  In turn these bindings libraries are linked to the
+      PLplot core library described in <a class="xref" href="core-library.html" title="The PLplot Core Library">the section called “The PLplot Core Library”</a>.  We
+      tabulate below the bindings library or libraries associated with the
+      compiled languages and GUI environments we support in this specific way.
+    </p><div class="table"><a name="tab_bindings_libraries"></a><p class="title"><b>Table 23.1. Bindings Libraries</b></p><div class="table-contents"><table class="table" summary="Bindings Libraries" style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col><col></colgroup><thead><tr><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">
+	    Bindings
+	  </th><th style="border-bottom: 10px solid white; " align="center">
+	    Libraries
+	  </th></tr></thead><tbody><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">
+	    Ada
+	  </td><td style="border-bottom: 10px solid white; " align="center">
+	    libplplotada
+	  </td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">
+	    C++
+	  </td><td style="border-bottom: 10px solid white; " align="center">
+	    libplplotcxx
+	  </td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">
+	    Fortran
+	  </td><td style="border-bottom: 10px solid white; " align="center">
+	    libplplotfortran
+	  </td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">
+	    Tk GUI
+	  </td><td style="border-bottom: 10px solid white; " align="center">
+	    libplplottcltk, libtclmatrix
+	  </td></tr><tr><td style="border-right: 10px solid white; " align="center">
+	    wxWidgets GUI
+	  </td><td style="" align="center">
+	    libplplotwxwidgets
+	  </td></tr></tbody></table></div></div><br class="table-break"></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="libraries.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="libraries.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="core-library.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 23. The PLplot Libraries </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> The PLplot Core Library</td></tr></table></div></body></html>

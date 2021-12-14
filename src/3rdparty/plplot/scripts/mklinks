@@ -1,0 +1,271 @@
+#!/bin/sh
+
+#*************************************************************************
+#
+# mklinks - makes (or removes) soft-links from distribution directory to
+#           more appropriate places (typically under /usr/local).
+#
+# Maurice LeBrun (mjl@dino.ph.utexas.edu)
+# IFS, University of Texas at Austin
+# May 17, 1994
+#
+# Arguments:
+#	-a	Add soft links
+#	-n	Print commands without executing
+#	-r	Remove soft links
+#
+# Anything else results in a short help message being printed.
+#
+# I wrote this script to simplify the business of installing software
+# distributions.  With a lot of packages continuing to evolve at a pretty
+# good clip, it helps to be able to update without too much hassle.  Also,
+# it is best to provide a fairly consistent organization of the files on
+# disk, one that fits into just about anyone's system management scheme.
+# The method I use works whether you are system manager or just some poor
+# slob user :-).
+#
+# The idea is to type "make install" in the build directory, with the
+# install target set to some empty directory.  A good choice is
+# /usr/local/<pkg><ver>, where <pkg> is the software package name and
+# <ver> is the version.  This way you can have multiple versions of the
+# package installed, with only one of them easily accessible.  Or you can
+# leave out the version number.
+#
+# By softlinking the package distribution files into the usual /usr/local
+# areas you (a) avoid requiring a change in PATH to get at the binaries,
+# (b) avoid requiring changes to makefiles to get include and lib
+# settings, (c) avoid requiring changes to MANPATH settings to allow
+# access to the man pages, and (d) have an easy way to do upgrades or
+# degrades.
+#
+# The main difficulty as I see it with using softlinks from /usr/local
+# areas into /usr/local/bin, /usr/local/lib, /usr/local/include, and
+# /usr/local/man, is that once created, the softlinks are hard to get rid
+# of.  If you decide to delete the package, you must manually delete the
+# softlinks as well.  Switching between versions is an onerous task,
+# especially if you want to back down to a previous revision.  Therefore,
+# a fundamental capability of this script is to allow easy removal of all
+# created softlinks (-r option).
+#
+# Note: the default is to only link librarys under lib into the target
+# dir, since some packages store lots of data files under lib/.
+#
+#*************************************************************************
+
+# Miscellaneous settings
+
+NAME=$0			# Name of script
+CWD=`pwd`		# Current directory
+LINK_MAN=1		# Install man pages (set to null to disable)
+LINK_LIB_ALL=0		# Link lib/* rather than just lib/lib*
+
+# Infer package name from directory name
+# Not all systems have "basename" so use sed for this.
+
+PKG=`echo $CWD | sed 's%/.*/%%'`
+
+# Get base target directory -- the links will go into $INSTALL_DIR/bin,
+# $INSTALL_DIR/lib, etc.  Since the package is typically in
+# /usr/local/<pkg>, INSTALL_DIR is just one directory up.  Use an absolute
+# path name rather than relative (..) since it's less confusing.
+
+INSTALL_DIR=`echo $CWD | sed 's%/[^/][^/]*$%%'`
+
+# Per-package defaults:
+#    PKG_NAME		Name of package, for help/error messages
+#    REFERENCE_FILE	Name of an installed file to assist internal logic
+
+case "$PKG" in
+
+    perl* )
+	PKG_NAME="perl"
+	REFERENCE_FILE="$INSTALL_DIR/bin/perl"
+    ;;
+
+    plplot* )
+	PKG_NAME="PLplot"
+	REFERENCE_FILE="$INSTALL_DIR/bin/plrender"
+    ;;
+
+    python* )
+	PKG_NAME="Python"
+	REFERENCE_FILE="$INSTALL_DIR/bin/python"
+	LINK_LIB_ALL=1
+    ;;
+
+    tcl*|tk* )
+	PKG_NAME="Tcl/TK/etc"
+	REFERENCE_FILE="$INSTALL_DIR/bin/tclsh"
+	LINK_LIB_ALL=1
+    ;;
+
+    * )
+	echo "Unrecognized package; aborting"
+	exit
+    ;;
+esac
+
+# Account for differences in /bin/sh semantics wrt soft links.
+
+IF_SOFT="-h"
+if test `uname` = "AIX"; then
+    IF_SOFT="-L"
+fi
+
+# Define a symbol for echo to save a little bit of space.
+
+e=echo
+
+#*************************************************************************
+
+# Spits out help message, then exits
+
+help () {
+
+$e "Usage: $NAME [-n] [-a | -r]"
+$e "       Creates (-a) or removes (-r) soft links to $PKG_NAME files."
+$e "       Currently configured to put soft links under $INSTALL_DIR."
+$e ""
+$e "       If -n is specified, commands are printed with no action taken."
+$e "       The -n flag must come first, if specified."
+    exit 1
+}
+
+#*************************************************************************
+
+# Adds one or many soft-links.  Creates directory if necessary.
+# $1 - subdir name
+# $2 - file spec
+
+add_link () {
+
+    if test -d "$CWD/$1"; then
+
+	if test ! -d "$INSTALL_DIR/$1"; then
+	    if test "$DO_NOTHING"; then
+		echo "mkdir -p $INSTALL_DIR/$1"
+	    else
+		mkdir -p $INSTALL_DIR/$1
+	    fi
+	fi
+
+	# Do filename globbing here so we can catch cases where no
+	# filenames match.
+
+	for file in $CWD/$1/$2; do
+	    if test -r $file; then
+		if test "$DO_NOTHING"; then
+		    echo "ln -s $file  $INSTALL_DIR/$1"
+		else
+		    ln -s $file $INSTALL_DIR/$1
+		fi
+	    fi
+	done
+    fi
+}
+
+#*************************************************************************
+
+# Removes a single soft-link
+# $1 - link name (relative to $INSTALL_DIR)
+
+rm_link () {
+
+    if test $IF_SOFT "$INSTALL_DIR/$1"; then
+	if test "$DO_NOTHING"; then
+	    echo "rm $INSTALL_DIR/$1"
+	else
+	    rm $INSTALL_DIR/$1
+	fi
+    fi
+}
+
+#*************************************************************************
+
+# Removes multiple soft-links
+# $1 through $# - link specs (relative to $INSTALL_DIR)
+
+rm_links () {
+    for file in $*; do
+	rm_link $file
+    done
+}
+
+#*************************************************************************
+
+# Add links
+
+Add () {
+
+# Bomb out if we're not starting clean
+
+    if test $IF_SOFT "$REFERENCE_FILE"; then
+	echo "Must remove old links first -- use \"$NAME -r\"."
+	exit 1
+    fi
+
+# Set up links
+
+    echo "Adding links from $CWD to $INSTALL_DIR"
+
+    add_link "bin"	"*"
+    add_link "include"	"*.h"
+
+    if test "$LINK_LIB_ALL" = 1; then
+	add_link "lib"	"*"
+    else
+	add_link "lib"	"lib*"
+    fi
+
+    if test "$LINK_MAN"; then
+	add_link "man/man1" "*.1"
+	add_link "man/man3" "*.3"
+	add_link "man/mann" "*.n"
+    fi
+}
+
+#*************************************************************************
+
+# Remove links
+
+Remove () {
+
+# Bomb out if links already removed.
+
+    if test ! $IF_SOFT "$REFERENCE_FILE"; then
+	echo 'Soft links already removed.'
+	exit 1
+    fi
+
+# Delete links
+# Here we reglob to determine what links need deleting.  Note that in each
+# case, we check to make sure it really is a soft link.
+
+    echo "Removing links from $CWD to $INSTALL_DIR"
+
+    rm_links bin/* lib/* include/*.h
+
+    if test "$LINK_MAN"; then
+	rm_links man/man1/*.1 man/man3/*.3 man/mann/*.n
+    fi
+}
+
+#*************************************************************************
+
+# Call the necessary function to do the job.
+
+if test "$1" = "-n"; then
+    DO_NOTHING=1
+    shift
+fi
+
+if test "$1" = '-a'; then
+    Add
+
+elif test "$1" = '-r'; then
+    Remove
+
+else
+    help
+fi
+exit 0

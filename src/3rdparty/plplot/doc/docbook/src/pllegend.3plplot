@@ -1,0 +1,115 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLLEGEND 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBpllegend\fP - Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols
+.SH SYNOPSIS
+\fBpllegend\fP(\fIp_legend_width\fP, \fIp_legend_height\fP, \fIopt\fP, \fIposition\fP, \fIx\fP, \fIy\fP, \fIplot_width\fP, \fIbg_color\fP, \fIbb_color\fP, \fIbb_style\fP, \fInrow\fP, \fIncolumn\fP, \fInlegend\fP, \fIopt_array\fP, \fItext_offset\fP, \fItext_scale\fP, \fItext_spacing\fP, \fItest_justification\fP, \fItext_colors\fP, \fItext\fP, \fIbox_colors\fP, \fIbox_patterns\fP, \fIbox_scales\fP, \fIbox_line_widths\fP, \fIline_colors\fP, \fIline_styles\fP, \fIline_widths\fP, \fIsymbol_colors\fP, \fIsymbol_scales\fP, \fIsymbol_numbers\fP, \fIsymbols\fP)
+.SH DESCRIPTION
+
+.P
+Routine for creating a discrete plot legend with a plotted filled box, line, and/or line of symbols for each annotated legend entry.  (See \fBplcolorbar\fP(3plplot) for similar functionality for creating continuous color bars.)  The arguments of pllegend provide control over the location and size of the legend as well as the location and characteristics of the elements (most of which are optional) within that legend.  The resulting legend is clipped at the boundaries of the current subpage.  (N.B. the adopted coordinate system used for some of the parameters is defined in the documentation of the \fIposition\fP parameter.)
+.P
+Redacted form: \fBpllegend(p_legend_width, p_legend_height, opt, position, x, y, plot_width, bg_color, bb_color, bb_style, nrow, ncolumn, opt_array, text_offset, text_scale, text_spacing, test_justification, text_colors, text, box_colors, box_patterns, box_scales, box_line_widths, line_colors, line_styles, line_widths, symbol_colors, symbol_scales, symbol_numbers, symbols)\fP
+.P
+This function is used in examples 4, 26, and 33.
+.SH ARGUMENTS
+.TP
+\fIp_legend_width\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the legend width in adopted coordinates. This quantity is calculated from \fIplot_width\fP, \fItext_offset\fP, \fIncolumn\fP (possibly modified inside the routine depending on \fInlegend\fP and \fInrow\fP), and the length (calculated internally) of the longest text string.
+.TP
+\fIp_legend_height\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the legend height in adopted coordinates. This quantity is calculated from \fItext_scale\fP, \fItext_spacing\fP, and \fInrow\fP (possibly modified inside the routine depending on \fInlegend\fP and \fInrow\fP).
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+\fIopt\fP contains bits controlling the overall legend. If the PL_LEGEND_TEXT_LEFT bit is set, put the text area on the left of the legend and the plotted area on the right. Otherwise, put the text area on the right of the legend and the plotted area on the left. If the PL_LEGEND_BACKGROUND bit is set, plot a (semitransparent) background for the legend. If the PL_LEGEND_BOUNDING_BOX bit is set, plot a bounding box for the legend. If the PL_LEGEND_ROW_MAJOR bit is set and (both of the possibly internally transformed) \fInrow\fP > 1 and \fIncolumn\fP > 1, then plot the resulting array of legend entries in row-major order. Otherwise, plot the legend entries in column-major order.
+.TP
+\fIposition\fP (\fBPLINT\fP(3plplot), input)
+\fIposition\fP contains bits which control the overall position of the legend and the definition of the adopted coordinates used for positions just like what is done for the position argument for \fBplcolorbar\fP(3plplot). However, note that the defaults for the position bits (see below) are different than the \fBplcolorbar\fP(3plplot) case.  The combination of the PL_POSITION_LEFT, PL_POSITION_RIGHT, PL_POSITION_TOP, PL_POSITION_BOTTOM, PL_POSITION_INSIDE, and PL_POSITION_OUTSIDE bits specifies one of the 16 possible standard positions (the 4 corners and centers of the 4 sides for both the inside and outside cases) of the legend relative to the adopted coordinate system. The corner positions are specified by the appropriate combination of two of the PL_POSITION_LEFT, PL_POSITION_RIGHT, PL_POSITION_TOP, and PL_POSITION_BOTTOM bits while the sides are specified by a single value of one of those bits.  The adopted coordinates are normalized viewport coordinates if the PL_POSITION_VIEWPORT bit is set or normalized subpage coordinates if the PL_POSITION_SUBPAGE bit is set. Default position bits: If none of PL_POSITION_LEFT, PL_POSITION_RIGHT, PL_POSITION_TOP, or PL_POSITION_BOTTOM are set, then use the combination of PL_POSITION_RIGHT and PL_POSITION_TOP. If neither of PL_POSITION_INSIDE or PL_POSITION_OUTSIDE is set, use PL_POSITION_INSIDE. If neither of PL_POSITION_VIEWPORT or PL_POSITION_SUBPAGE is set, use PL_POSITION_VIEWPORT.
+.TP
+\fIx\fP (\fBPLFLT\fP(3plplot), input)
+X offset of the legend position in adopted coordinates from the specified standard position of the legend. For positive x, the direction of motion away from the standard position is inward/outward from the standard corner positions or standard left or right positions if the PL_POSITION_INSIDE/PL_POSITION_OUTSIDE bit is set in \fIposition\fP.  For the standard top or bottom positions, the direction of motion is toward positive X.
+.TP
+\fIy\fP (\fBPLFLT\fP(3plplot), input)
+Y offset of the legend position in adopted coordinates from the specified standard position of the legend. For positive y, the direction of motion away from the standard position is inward/outward from the standard corner positions or standard top or bottom positions if the PL_POSITION_INSIDE/PL_POSITION_OUTSIDE bit is set in \fIposition\fP. For the standard left or right positions, the direction of motion is toward positive Y.
+.TP
+\fIplot_width\fP (\fBPLFLT\fP(3plplot), input)
+Horizontal width in adopted coordinates of the plot area (where the colored boxes, lines, and/or lines of symbols are drawn) of the legend.
+.TP
+\fIbg_color\fP (\fBPLINT\fP(3plplot), input)
+The cmap0 color of the background for the legend (PL_LEGEND_BACKGROUND).
+.TP
+\fIbb_color\fP (\fBPLINT\fP(3plplot), input)
+The cmap0 color of the bounding-box line for the legend (PL_LEGEND_BOUNDING_BOX).
+.TP
+\fIbb_style\fP (\fBPLINT\fP(3plplot), input)
+The pllsty style number for the bounding-box line for the legend (PL_LEGEND_BACKGROUND).
+.TP
+\fInrow\fP (\fBPLINT\fP(3plplot), input)
+The number of rows in the matrix used to render the \fInlegend\fP legend entries. For internal transformations of \fInrow\fP, see further remarks under \fInlegend\fP.
+.TP
+\fIncolumn\fP (\fBPLINT\fP(3plplot), input)
+The number of columns in the matrix used to render the \fInlegend\fP legend entries. For internal transformations of \fIncolumn\fP, see further remarks under \fInlegend\fP.
+.TP
+\fInlegend\fP (\fBPLINT\fP(3plplot), input)
+Number of legend entries. The above \fInrow\fP and \fIncolumn\fP values are transformed internally to be consistent with \fInlegend\fP. If either \fInrow\fP or \fIncolumn\fP is non-positive it is replaced by 1. If the resulting product of \fInrow\fP and \fIncolumn\fP is less than \fInlegend\fP, the smaller of the two (or \fInrow\fP, if \fInrow\fP == \fIncolumn\fP) is increased so the product is >= \fInlegend\fP. Thus, for example, the common \fInrow\fP = 0, \fIncolumn\fP = 0 case is transformed internally to \fInrow\fP = \fInlegend\fP, \fIncolumn\fP = 1; i.e., the usual case of a legend rendered as a single column.
+.TP
+\fIopt_array\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector of \fInlegend\fP values of options to control each individual plotted area corresponding to a legend entry.  If the \fIPL_LEGEND_NONE\fP bit is set, then nothing is plotted in the plotted area.  If the \fIPL_LEGEND_COLOR_BOX\fP, \fIPL_LEGEND_LINE\fP, and/or \fIPL_LEGEND_SYMBOL\fP bits are set, the area corresponding to a legend entry is plotted with a colored box; a line; and/or a line of symbols.
+.TP
+\fItext_offset\fP (\fBPLFLT\fP(3plplot), input)
+Offset of the text area from the plot area in units of character width.
+.TP
+\fItext_scale\fP (\fBPLFLT\fP(3plplot), input)
+Character height scale for text annotations.
+.TP
+\fItext_spacing\fP (\fBPLFLT\fP(3plplot), input)
+Vertical spacing in units of the character height from one legend entry to the next.
+.TP
+\fItext_justification\fP (\fBPLFLT\fP(3plplot), input)
+Justification parameter used for text justification.  The most common values of text_justification are 0., 0.5, or 1. corresponding to a text that is left justified, centred, or right justified within the text area, but other values are allowed as well.
+.TP
+\fItext_colors\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP cmap0 text colors.
+.TP
+\fItext\fP (\fBPLCHAR_MATRIX\fP(3plplot), input)
+A vector of \fInlegend\fP UTF-8 character strings containing the legend annotations.
+.TP
+\fIbox_colors\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP cmap0 colors for the discrete colored boxes (\fIPL_LEGEND_COLOR_BOX\fP).
+.TP
+\fIbox_patterns\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP patterns (plpsty indices) for the discrete colored boxes (\fIPL_LEGEND_COLOR_BOX\fP).
+.TP
+\fIbox_scales\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP scales (units of fraction of character height) for the height of the discrete colored boxes (\fIPL_LEGEND_COLOR_BOX\fP).
+.TP
+\fIbox_line_widths\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP line widths for the patterns specified by box_patterns (\fIPL_LEGEND_COLOR_BOX\fP).
+.TP
+\fIline_colors\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP cmap0 line colors (\fIPL_LEGEND_LINE\fP).
+.TP
+\fIline_styles\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP line styles (plsty indices) (\fIPL_LEGEND_LINE\fP).
+.TP
+\fIline_widths\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP line widths (\fIPL_LEGEND_LINE\fP).
+.TP
+\fIsymbol_colors\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP cmap0 symbol colors (\fIPL_LEGEND_SYMBOL\fP).
+.TP
+\fIsymbol_scales\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP scale values for the symbol height (\fIPL_LEGEND_SYMBOL\fP).
+.TP
+\fIsymbol_numbers\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fInlegend\fP numbers of symbols to be drawn across the width of the plotted area (\fIPL_LEGEND_SYMBOL\fP).
+.TP
+\fIsymbols\fP (\fBPLCHAR_MATRIX\fP(3plplot), input)
+A vector of \fInlegend\fP UTF-8 character strings containing the legend symbols. (\fIPL_LEGEND_SYMBOL\fP).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

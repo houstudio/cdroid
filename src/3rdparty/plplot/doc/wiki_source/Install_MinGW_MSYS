@@ -1,0 +1,20 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+MinGW consists mostly of a port of gcc (the GNU compiler collection) to Windows. The languages of interest to PLplot that are currently supported by the latest MinGW are C, C++, Fortran, and Ada. (Java has historically been supported by MinGW, but there currently is no Java support for the modern version of MinGW.) MinGW also includes some minimal additional build tools such as a special form of make (mingw32-make) which relies internally mostly on standard Windows capabilities to help build software but which externally provides "make" functionality. Thus, it is possible to build software with mingw32-make without reference to any additional build tools other than the remainder of MinGW and standard Windows (either the Microsoft or wine version) platform capabilities. To use MinGW alone to build software, specify the CMake "MinGW Makefiles" generator. Just like gcc (and wine), MinGW is free and open source software.
+
+MSYS is a port of many additional Unix build tools to Windows beyond the minimal set associated with MinGW. For example, MSYS includes an MSYS version of GNU make which uses bash and many other MSYS tools internally to provide make-like functionality. To use the combined capabilities of MinGW and MSYS to build software, specify the CMake "MSYS Makefiles" generator. Just like MinGW, MSYS is free and open source software.
+
+To install both MinGW and MSYS on Windows or wine use [the automated modern installer](http://sourceforge.net/projects/mingw/files/Automated%20MinGW%20Installer/mingw-get-inst/). That installer requires about 5 minutes to download and install all the components of MinGW and MSYS that you need. The bin directories for MinGW and MSYS are kept entirely separate by the automatic installer so with some PATH manipulations you can access any combination of MinGW and/or MSYS that you like from a Windows (either the Microsoft or wine version) platform.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

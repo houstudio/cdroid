@@ -1,0 +1,18 @@
+The files in this directory originated with Joao Cardoso's 2003
+download of Pavel Sakov's csa library which was immediately stripped
+down by Joao to just the parts he needed to help implement the
+plgriddata API for the 'plplot' C library.  The PLplot development
+team have been maintaining that stripped version of the csa library
+ever since with no further contribution (except for the new LICENSE
+text referred to below) from Pavel Sakov.
+
+As of 2017-07-11 Pavel Sakov gave us permission to update the license
+of our stripped version of csa to be the same as the current licence
+of his modern csa version which we cut and pasted on that date from
+<https://github.com/sakov/csa-c/blob/master/csa/LICENSE> and stored in
+the LICENSE file in this directory.  The only additional changes we
+have made to that file are to add additional lines to the copyright
+notice at the top reflecting Joao Cardoso's initial commit in 2003 and
+the further commits since then (as recorded in our software repository
+log) to this stripped version of the csa library by him and other
+members of the PLplot development team.

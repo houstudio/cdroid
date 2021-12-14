@@ -1,0 +1,28 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+PLplot provides some functions to help you debug the core code or driver code. You can find these function declarations in include/pldebug.h. I'll provide a short summary on this page.
+
+### Macro definitions
+
+-   <tt>DEBUG</tt>: If set the function pldebug() will produce output, otherwise the code in pldebug() will be skipped. In addition must run your program with the option <tt>-debug</tt> to produce output.
+-   <tt>NEED_PLDEBUG</tt>: The function <tt>pldebug()</tt> is only defined if <tt>NEED_PLDEBUG</tt> is set. Otherwise this function is not known.
+-   <tt>DEBUG_ENTER</tt>: The function <tt>dbug_enter( message )</tt> will produce output.
+-   <tt>DEBUGGING_MALLOC</tt>: ???
+
+### Debugging functions
+
+-   <tt>pldebug( label, format \[, arg1, arg2, ...\] )</tt> : This functions creates an output message defined by the format string <tt>format</tt> and the arguments <tt>arg1, arg2, ...</tt> (equivalent to <tt>printf()</tt>) where the string <tt>label</tt> is prepended. To enable printing of debugging output, you must <tt>\#define DEBUG</tt> before including plplotP.h or specify -DDEBUG in the compile line, for each file that you want to have debug output enabled. When running the program you must in addition specify <tt>-debug</tt>. This allows debugging output to tailored to many different circumstances but otherwise be fairly unobtrusive. Note, any file that actually uses <tt>pldebug()</tt> must also define <tt>NEED_PLDEBUG</tt> before the <tt>plplotP.h</tt> include. This is to eliminate warnings caused by those files in which this is defined but never referenced.
+-   <tt>dbug_enter(a)</tt> : This function will put the string <pre> entered a (__FILE__, line __LINE__)\\n</pre> to <tt>stderr</tt> if the macro <tt>DEBUG_ENTER</tt> is set.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

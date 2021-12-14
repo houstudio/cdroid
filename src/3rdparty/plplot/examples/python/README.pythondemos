@@ -1,0 +1,21 @@
+The Status of the Python Examples
+
+For details of how we build PLplot access from Python please consult
+../../bindings/python/README.pythonbuild.  The principal module is
+plplot.py. This make all the common PLplot API available to python in a
+user-friendly way.  plplot.py wraps the swig-generated plplotc.py which in
+turn wraps the _plplotc extension module (built with the aid of swig). The
+extension module, plplot_widget contains support for loading Plframe
+from python.  This functionality is demonstrated with pytkdemo which
+supplies GUI access to python standard examples 0 through 18 (except
+for 14, 15, and 17).
+
+To try out the x??.py examples without a widget simply run pythondemos.py
+to run all of them (0-33) in numerical order (except for 14, 17, and 31 which
+are standalone, and 32 which does not exist). Alternatively run them
+one at at time by executing x??.
+
+These pytkdemo, pythondemos.py, and x?? tests should be run in the python
+subdirectory of the examples directory of the build tree (after python
+prequisites have been built) or the equivalent directory for the installed
+examples build.

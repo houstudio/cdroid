@@ -1,0 +1,31 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSVECT 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsvect\fP - Set arrow style for vector plots
+.SH SYNOPSIS
+\fBplsvect\fP(\fIarrowx\fP, \fIarrowy\fP, \fInpts\fP, \fIfill\fP)
+.SH DESCRIPTION
+
+.P
+Set the style for the arrow used by \fBplvect\fP(3plplot) to plot vectors.
+.P
+Redacted form: \fBplsvect(arrowx, arrowy, fill)\fP
+.P
+This function is used in example 22.
+.SH ARGUMENTS
+.TP
+\fIarrowx, arrowy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A pair of vectors containing the x and y points which make up the arrow. The arrow is plotted by joining these points to form a polygon. The scaling assumes that the x and y points in the arrow lie in the range -0.5 <= x,y <= 0.5. If both \fIarrowx\fP and \fIarrowy\fP are NULL then the arrow style will be reset to its default.
+.TP
+\fInpts\fP (\fBPLINT\fP(3plplot), input)
+Number of points in the vectors \fIarrowx\fP and \fIarrowy\fP.
+.TP
+\fIfill\fP (\fBPLBOOL\fP(3plplot), input)
+If \fIfill\fP is true then the arrow is closed, if \fIfill\fP is false then the arrow is open.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

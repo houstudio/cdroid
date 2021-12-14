@@ -1,0 +1,115 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plmap: Plot continental outline or shapefile data in world coordinates</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="pllsty.html" title="pllsty: Select line style"><link rel="next" href="plmapfill.html" title="plmapfill: Plot all or a subset of Shapefile data, filling the polygons"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plmap</code>: Plot continental outline or shapefile
+      data in world coordinates
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="pllsty.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plmapfill.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plmap"></a>
+      <code class="function">plmap</code>: Plot continental outline or shapefile
+      data in world coordinates
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plmap</b>
+          (</code></td><td>
+            <var class="pdparam">mapform</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">name</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">minx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">maxx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">miny</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">maxy</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plots continental outlines or shapefile data in world coordinates.
+      A demonstration of how to use this function to create different
+      projections can be found in examples/c/x19c. PLplot is provided with
+      basic coastal outlines and USA state borders. To use the map functionality
+      PLplot must be compiled with the shapelib library. Shapefiles have become a popular standard for
+      geographical data and data in this format can be easily found from
+      a number of online sources. Shapefile data is actually provided as
+      three or more files with the same filename, but different extensions.
+      The .shp and .shx files are required for plotting Shapefile data with
+      PLplot.
+    </p><p>
+      PLplot currently supports the point, multipoint, polyline and polygon
+      objects within shapefiles. However holes in polygons are not supported.
+      When plmap is used the type of object is derived from the shapefile, if
+      you wish to override the type then use one of the other plmap
+      variants. The built in maps have line data only.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>mapform</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLMAPFORM_callback-type"><code class="function">PLMAPFORM_callback</code></a></code>, input)
+        </span></dt><dd><p>
+            A user supplied function to transform the original map data
+            coordinates to a new coordinate system. The PLplot-supplied
+            map data is provided as latitudes and longitudes; other
+            Shapefile data may be provided in other coordinate systems
+            as can be found in their .prj plain text files. For example,
+            by using this transform we can change from a longitude,
+            latitude coordinate to a polar stereographic projection.
+            Initially, x[0]..[n-1] are the original x coordinates (longitudes
+            for the PLplot-supplied data) and y[0]..y[n-1]
+            are the corresponding y coordinates (latitudes for the PLplot
+            supplied data).  After the call to mapform(), x[]
+            and y[] should be replaced by the corresponding plot coordinates.
+            If no transform is desired, mapform can be replaced by NULL.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>name</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            An ascii character string specifying the type of map plotted. This is
+            either one of the PLplot built-in maps or the file name of a set of
+            Shapefile files without the file extensions. For the PLplot built-in
+            maps the possible values are:
+            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  <code class="literal">"globe"</code> -- continental outlines
+                </p></li><li class="listitem"><p>
+                  <code class="literal">"usa"</code> -- USA and state boundaries
+                </p></li><li class="listitem"><p>
+                  <code class="literal">"cglobe"</code> -- continental outlines and countries
+                </p></li><li class="listitem"><p>
+                  <code class="literal">"usaglobe"</code> -- USA, state boundaries and continental outlines
+                </p></li></ul></div><p>
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>minx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum x value of map elements to be drawn. The units must match
+            the shapefile (built in maps are degrees lat/lon). Objects in the file
+            which do not encroach on the box defined by minx, maxx, miny, maxy will
+            not be rendered. But note this is simply an optimisation, not a clipping
+            so for objects with some points inside the box and some points outside
+            the box all the points will be rendered. These parameters also define
+            latitude and longitude wrapping for shapefiles using these units. Longitude points
+            will be wrapped by integer multiples of 360 degrees to place them in the box.
+            This allows the same data to be used on plots from -180-180 or 0-360 longitude
+            ranges. In fact if you plot from -180-540 you will get two cycles of data drawn.
+            The value of minx must be less than the value of maxx. Passing in a nan, max/-max
+            floating point number or +/-infinity will case the bounding box from the shapefile
+            to be used.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>maxx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum x value of map elements to be drawn - see minx.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>miny</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum y value of map elements to be drawn - see minx.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>maxy</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum y value of map elements to be drawn - see minx.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plmap(mapform, name, minx, maxx, miny, maxy)</code>
+    </p><p>
+      This function is used in example 19.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="pllsty.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plmapfill.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">pllsty</code>: Select line style
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plmapfill</code>: Plot all or a subset of
+      Shapefile data, filling the polygons
+    </td></tr></table></div></body></html>

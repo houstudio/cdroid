@@ -1,0 +1,22 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 12. Using PLplot from Python</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="part_bindings.html" title="Part III.  Supported computer languages"><link rel="prev" href="ocaml_known_issues.html" title="Known Issues"><link rel="next" href="tcl.html" title="Chapter 13. Using PLplot from Tcl"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 12. Using PLplot from Python</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ocaml_known_issues.html">Prev</a> </td><th width="60%" align="center">Part III.  Supported computer languages </th><td width="20%" align="right"> <a accesskey="n" href="tcl.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="python"></a>Chapter 12. Using PLplot from Python</h2></div></div></div><p>
+    NEEDS DOCUMENTATION, but here is the short story.  We currently (February,
+    2001) have
+    switched to dynamic loading of plplot following the generic method given
+    in the python documentation.  Most (???) of the PLplot common API
+    has been implemented.  (For a complete list see plmodules.c and plmodules2.c).
+    With this dynamic method all the xw??.py examples
+    work fine and should be consulted for the best way to use PLplot from python.
+    You may have to set PYTHONPATH to the path where plmodule.so is located
+    (or eventually installed).  For more information see examples/python/README
+  </p><p>
+    pytkdemo and the x??.py examples it loads use the plframe widget.  Thus,
+    this method does not currently work under
+    dynamic loading.  They have only worked in the past using the static method
+    with much hacking and rebuilding of python itself.  We plan to try dynamic
+    loading of all of PLplot (not just the plmodule.c and plmodule2.c wrappers)
+    including plframe (or a python-variant of this widget) into python at some
+    future date to see whether it is possible to get pytkdemo and the
+    x??.py examples working
+    under dynamic loading, but only the individual stand-alone xw??.py demos
+    work at the moment.
+  </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ocaml_known_issues.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="part_bindings.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="tcl.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Known Issues </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 13. Using PLplot from Tcl</td></tr></table></div></body></html>

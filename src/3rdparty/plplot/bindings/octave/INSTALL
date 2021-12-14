@@ -1,0 +1,169 @@
+Read also the USAGE file.
+
+Build and install:
+
+The Octave binding for PLplot is now automatically generated with swig.
+
+Simply use the normal cmake command to configure PLplot, then
+
+<build_tool> install
+
+to build PLplot including its Octave binding, and install PLplot including
+its Octave binding and associated Octave examples.
+
+N.B. <build_tool> is typically the make command, but CMake allows for
+many others.
+
+Automatic Testing:
+
+In the build tree anytime after the cmake command is executed with
+the -DBUILD_TEST=ON option execute
+
+<build_tool> help |grep octave
+
+to find all test targets associated with octave.  Generally, those targets
+have names which remind what they do.  So, e.g., test_octave_psc tests
+all our standard Octave examples using -dev psc and
+test_octave_xwin tests some special interactive Octave examples using
+-dev xwin.
+
+Hand Testing (these direction may be out of date because automatic testing is
+so convenient):
+
+'cd' to the directory bindings/octave within the build tree.
+
+Invoke octave, (the path is automatically set by the configured
+.octaverc file which exists in that directory).
+
+Load the octave binding of PLplot.
+
+plplot_stub;
+
+Check the plplot version by typing "plgver".  You should get the same
+version that you have just compiled, not some other version that might
+be installed.
+
+There are several Octave demos, 'p1' up to 'p20'. Try them:
+
+octave> for i=[1:15 19:20]; feval(sprintf("p%d",i));kbhit;endfor;oneplot
+
+and a set of script files that emulate the well known x??c plplot demos. Try:
+
+octave> plplot_octave_demo
+
+Demo x14c might fail, if you have problems with tk.
+
+You can set some preferences in the file 'pldef.m'
+
+Don't worry if you see the following warning:
+
+	warning: empty matrix found in matrix list
+
+You can avoid it setting "empty_list_elements_ok = 1;" in your
+~/.octaverc Octave startup file (see below). This is being corrected
+in plplot_octave, meanwhile keep remembering me :-).
+
+Using:
+
+After testing, type "make install". The default path to installation
+is <installation prefix>/share/share/plplot_octave. If you don't like
+the default <installation prefix> which is /usr/local, reconfigure
+PLplot using your preferred -DCMAKE_INSTALL_PREFIX=<installation
+prefix> option for CMake.
+
+There are three paths that you can add to LOADPATH:
+
+1-The *needed* path is <installation prefix>/share/plplot_octave//
+2-The demos path is <installation prefix>/lib/plplotx.y.z/examples/octave//
+3-The path to switch between PLplot and gnuplot is <installation prefix>/share/octave//
+
+Note: If you are using octave2.9 then LOADPATH is obsolete and you must
+use addpath instead. Note also that a trailing // no longer includes
+all subdirectories. You must explicitly add them. In particular you need
+the support subdirectory of plplot_octave.
+
+If you want to test the installation with the demos, call octave and
+set the LOADPATH as in
+
+LOADPATH ="<installation prefix>/lib/plplotx.y.z/examples/octave//:\
+<installation prefix>/share/plplot_octave//:"
+
+You can now repeat the demos you already tried. Or just type 'p1'<CR>,
+'p2'<CR> ... my preferred test is "plot(sin(1:10),'-o')". As usual,
+'help command' gives you some help.
+
+For everyday usage, you must setup your LOADPATH to include the install
+path *before* the standard Octave LOADPATH. The best way of doing it
+is to use the file ~/.octaverc to set it up. Add the following line to
+it, using of course the real install prefix:
+
+LOADPATH="<installation prefix>/share/plplot_octave//:<other path>:<other path>";
+
+You can use the standard Octave plot commands if in the LOADPATH a
+":" appears *before* the plplot_octave path, as in
+
+LOADPATH=":<installation prefix>/share/plplot_octave//:<other path>:<other path>";
+
+You can use the command toggle_plplot_use to change between the two
+sets of commands, but for this you must set an additional path in LOADPATH.
+It must be set as:
+
+LOADPATH="<installation prefix>/share/plplot_octave//:<installation prefix>/share/octave//:"
+
+You are done. You can now use almost all the standard Octave plot
+commands plus a whole bunch of new ones.
+
+If you want to use another driver othen than the "xwin" one, which is
+the defaul, you must first open a new plot window using "figure", e.g.
+
+	figure(1,"tk")
+	p1
+	fig(2,"xwin")	# fig() is an alias to figure()
+	p2
+
+To print or save a plot, use
+	save_fig("foo.ps")
+	save_fig("|lp","ps")
+
+Use `lp_setup' to setup your printer.
+
+If you just want to use the PLplot API, use it as you would from a C
+program, with the exception that you don't need to specify matrices
+dimensions; e.g., for plline(n,x,y) you just need to call it as
+plline(x,y), where x and y are column vectors. Look at the various
+x??c.m examples in the demos directory.
+
+You can't call API functions whose arguments are pointers to
+functions. Some wrappers for common situations are however available.
+
+What you get:
+
+You have a 'demo' directory, with the equivalent octave script files
+x??c.m of PLplot C demos, and some new demos, p??.m.
+
+You have a 'PLplot' directory with modified versions of the standard
+octave plot command, plus a lot of new ones ready for Octave usage. You
+must have it on your LOADPATH before the standard octave/gnuplot plot
+scripts. If you install it in the default directory, use the octave
+command `octave_plplot_path' to setup the path. You can change between
+the default gnuplot plotter and octave_plplot using the octave command
+`use_plplot'.
+
+You have a misc directory with some other octave demos/utilities.
+
+You have an etc directory where the "documentation" is (not anymore,
+documentation is built from the main documentation file, api.xml.
+
+You have the directory where the README, INSTALL, PROBLEMS,
+BUGS, ToDo, are, plus 'plplot_octave_org.h', etc.
+
+As with every program, except D. Knuth ones, the programs in this
+package are not finished nor bug free. Please report bugs and send
+patches. I will not send checks for each bug discovered :-)
+
+Enjoy,
+
+Joao
+
+Update for octave 2.9 by Andrew Ross.
+Update for CMake by Alan W. Irwin.

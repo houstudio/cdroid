@@ -1,0 +1,46 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLMAPFILL 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplmapfill\fP - Plot all or a subset of Shapefile data, filling the polygons
+.SH SYNOPSIS
+\fBplmapfill\fP(\fImapform\fP, \fIname\fP, \fIminx\fP, \fImaxx\fP, \fIminy\fP, \fImaxy\fP, \fIplotentries\fP, \fInplotentries\fP)
+.SH DESCRIPTION
+
+.P
+As per \fBplmapline\fP(3plplot), however the items are filled in the same way as \fBplfill\fP(3plplot).
+.P
+Redacted form: \fBplmapfill(mapform, name, minx, maxx, miny, maxy, plotentries)\fP
+.P
+This function is used in example 19.
+.SH ARGUMENTS
+.TP
+\fImapform\fP (\fBPLMAPFORM_callback\fP(3plplot), input)
+A user supplied function to transform the coordinates given in the shapefile into a plot coordinate system. By using this transform, we can change from a longitude, latitude coordinate to a polar stereographic project, for example.  Initially, x[0]..[n-1] are the longitudes and y[0]..y[n-1] are the corresponding latitudes.  After the call to mapform(), x[] and y[] should be replaced by the corresponding plot coordinates. If no transform is desired, mapform can be replaced by NULL.
+.TP
+\fIname\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying the file name of a set of Shapefile files without the file extension.
+.TP
+\fIminx\fP (\fBPLFLT\fP(3plplot), input)
+The minimum x value to be plotted. This must be in the same units as used by the Shapefile. You could use a very large negative number to plot everything, but you can improve performance by limiting the area drawn. The units must match those of the Shapefile projection, which may be for example longitude or distance. The value of minx must be less than the value of maxx.
+.TP
+\fImaxx\fP (\fBPLFLT\fP(3plplot), input)
+The maximum x value to be plotted. You could use a very large number to plot everything, but you can improve performance by limiting the area drawn.
+.TP
+\fIminy\fP (\fBPLFLT\fP(3plplot), input)
+The minimum y value to be plotted. This must be in the same units as used by the Shapefile. You could use a very large negative number to plot everything, but you can improve performance by limiting the area drawn. The units must match those of the Shapefile projection, which may be for example latitude or distance. The value of miny must be less than the value of maxy.
+.TP
+\fImaxy\fP (\fBPLFLT\fP(3plplot), input)
+The maximum y value to be plotted. You could use a very large number to plot everything, but you can improve performance by limiting the area drawn.
+.TP
+\fIplotentries\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the zero-based indices of the Shapefile elements which will be drawn. Setting \fIplotentries\fP to NULL will plot all elements of the Shapefile.
+.TP
+\fInplotentries\fP (\fBPLINT\fP(3plplot), input)
+The number of items in \fIplotentries\fP. Ignored if \fIplotentries\fP is NULL.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

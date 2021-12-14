@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLMKSTRM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplmkstrm\fP - Creates a new stream and makes it the default
+.SH SYNOPSIS
+\fBplmkstrm\fP(\fIp_strm\fP)
+.SH DESCRIPTION
+
+.P
+Creates a new stream and makes it the default.  Differs from using \fBplsstrm\fP(3plplot), in that a free stream number is found, and returned. Unfortunately, I have to start at stream 1 and work upward, since stream 0 is preallocated.  One of the big flaws in the PLplot API is that no initial, library-opening call is required.  So stream 0 must be preallocated, and there is no simple way of determining whether it is already in use or not.
+.P
+Redacted form: \fBplmkstrm(p_strm)\fP
+.P
+This function is used in examples 1 and 20.
+.SH ARGUMENTS
+.TP
+\fIp_strm\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the stream number of the created stream.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

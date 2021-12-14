@@ -1,0 +1,55 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Description
+-----------
+
+Qt is a cross-platform application and UI framework. Using Qt, you can write applications once and deploy them across many desktop and embedded operating systems without rewriting the source code.
+
+Instructions for Windows
+------------------------
+
+### MinGW
+
+-   Download [QT 4.5 Framework only for MinGW](http://www.qtsoftware.com/downloads/windows-cpp)
+-   Run the exe and install QT 4.5. Depending on your MinGW version the installer may complain about a wrong w32api.h header file - proceed still.
+-   set environment variables (for MinGW and Visual C++) and add the bin directory to PATH
+
+`set QTDIR=C:\QT\4.5.0`
+`set PATH=%SQTDIR%\bin;%PATH%`
+
+If you can run 'qmake' then everything is set up for CMake to find Qt.
+
+Instructions for Linux
+----------------------
+
+### Using the system version of Qt
+
+Make sure the binary version of the development package for libqt4 and all its dependencies have been installed for your distribution, and our CMake-based build system should do the rest. The libqt4 development package name varies from distribution to distribution, but on Debian it is called libqt4-dev, and on Fedora 10 it is called qt-devel-4.4.3-2.fc10.x86_64.rpm
+
+### Using a downloaded version of Qt
+
+For convenience most Linux users will want to use the system version of Qt (see above), which for many distributions at this time of writing (2009-03) is version 4.4. However, we have noticed that Qt-4.5 has some bug fixes (e.g., better text placement results for SVG output) and new features (e.g., a viewBox capability for SVG output files). You can download a binary + source version of Qt-4.5 for either [32-bit Linux systems](http://www.qtsoftware.com/downloads/sdk-linux-x11-32bit-cpp) or [64-bit Linux systems](http://www.qtsoftware.com/downloads/sdk-linux-x11-64bit-cpp). Once downloaded, change permissions on the installer to executable, and execute it to install the Qt4 software development kit at a location that you specify in answer to a question from the installer. Suppose, for example, that location prefix is /home/software/qtsdk-2009.01/. Then make the PLplot CMake-based build system aware of that location by putting qmake from that version on your path, for example, using
+
+`PATH='/home/software/qtsdk-2009.01/qt/bin:'$PATH`
+
+Then the PLplot CMake-based build system should do the rest.
+
+Instructions for Mac OS X
+-------------------------
+
+-   Download [Qt for Open Source C++ development on Mac OS X (Carbon 32-bit)](http://www.qtsoftware.com/downloads/mac-os-cpp). The Cocoa package should also work.
+-   Open the dmg-file and run the Qt.mpkg file which installs the Qt SDK.
+-   If you can run 'qmake' in a terminal then everything is set up for CMake to find Qt.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

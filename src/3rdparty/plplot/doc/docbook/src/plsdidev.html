@@ -1,0 +1,70 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plsdidev: Set parameters that define current device-space window</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plsdev.html" title="plsdev: Set the device (keyword) name"><link rel="next" href="plsdimap.html" title="plsdimap: Set up transformation from metafile coordinates"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plsdidev</code>: Set parameters that define current
+      device-space window
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plsdev.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plsdimap.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plsdidev"></a>
+      <code class="function">plsdidev</code>: Set parameters that define current
+      device-space window
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plsdidev</b>
+          (</code></td><td>
+            <var class="pdparam">mar</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">aspect</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">jx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">jy</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set relative margin width, aspect ratio, and relative
+      justification that define current device-space window.  If you want to just use the previous value for any of
+      these, just pass in the magic value PL_NOTSET. It is unlikely that one
+      should ever need to change the aspect ratio but it's in there for
+      completeness.
+      If <a class="link" href="plsdidev.html" title="plsdidev: Set parameters that define current device-space window"><code class="function">plsdidev</code></a> is not called the default values
+      of <code class="literal">
+        <em class="parameter"><code>mar</code></em>
+      </code>,
+      <code class="literal">
+        <em class="parameter"><code>jx</code></em>
+      </code>, and
+      <code class="literal">
+        <em class="parameter"><code>jy</code></em>
+      </code>
+      are all 0. <code class="literal">
+        <em class="parameter"><code>aspect</code></em>
+      </code>
+      is set to a device-specific value.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>mar</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Relative margin width.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>aspect</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Aspect ratio.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>jx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Relative justification in x. Value must lie in the
+            range -0.5 to 0.5.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>jy</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Relative justification in y. Value must lie in the
+            range -0.5 to 0.5.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plsdidev(mar, aspect, jx, jy)</code>
+    </p><p>
+      This function is used in example 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plsdev.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plsdimap.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plsdev</code>: Set the device (keyword) name
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plsdimap</code>: Set up transformation from metafile
+      coordinates
+    </td></tr></table></div></body></html>

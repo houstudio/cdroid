@@ -1,0 +1,66 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+CMake Options
+-------------
+
+The following options let you specify to the CMake build system what options you used to compile your wxWidgets libraries:
+
+-   <tt>-DwxWidgets_LIB_DIR=%WXWIN%\\lib\\gcc_lib</tt>: correct for your wxWidgets root directory and static vs. dynamic libraries
+-   <tt>-DwxWidgets_CONFIGURATION=mswu</tt>: msw -> MicroSoft Windows; u -> Unicode; d -> Debug
+-   <tt>-DwxWidgets_MONOLITHIC=ON</tt>: monolithic as opposed to individual libraries
+-   <tt>-DwxWidgets_USE_UNICODE=ON</tt>: compiled with Unicode support
+
+For more options refer to FindwxWidgets.cmake in your CMake installation.
+
+More may be required for a successful Unicode build. Depending, incorrect Unicode configuration may result in errors during PLplot compilation or may not show up until later when compiling your actual application. Example errors are as follows:
+
+`[ 60%] Building CXX object bindings/wxwidgets/CMakeFiles/plplotwxwidgetsd.dir/wx`
+`PLplotwindow.obj`
+`Linking CXX shared library ..\..\dll\libplplotwxwidgetsd.dll`
+`Creating library file: ..\..\dll\libplplotwxwidgetsd.dll.a`
+`CMakeFiles\plplotwxwidgetsd.dir\wxPLplotwindow.obj:wxPLplotwindow.cpp:(.text$_ZN`
+`12wxStringBaseC2EPKc[wxStringBase::wxStringBase(char const*)]+0x27): undefined r`
+`` eference to `_imp___ZN12wxStringBase8InitWithEPKcjj' ``
+`collect2: ld returned 1 exit status`
+
+`D:\Projects\wxWidgetsTest\Libraries\plplot-5.9.2\buildmingw\install\lib/libplplotd.a(wxwidgets.obj):wxwidgets.cpp:(.text+0xd2a):`
+`` undefined reference to `wxStringBase::InitWith(char const*, unsigned ``
+`int, unsigned int)'`
+`D:\Projects\wxWidgetsTest\Libraries\plplot-5.9.2\buildmingw\install\lib/libplplotd.a(wxwidgets.obj):wxwidgets.cpp:(.text+0xd6e):`
+`` undefined reference to `wxStringBase::InitWith(char const*, unsigned ``
+`int, unsigned int)'`
+`- followed by a bunch more undefined references`
+
+Note that in both cases the errors do not specify a Unicode error but are string or character related. The follow was mentioned on the maillist and worked for me:
+
+`This is due a bug FindwxWidgets.cmake, either add`
+\
+`add_definitions(-D_UNICODE)`
+\
+`to CMakeLists.txt in the plplot main file. Or look for wxUNICODE in gcc_dll/mswu/setup.h`
+`(or similar) and set it to 1. This flag is always 0 even if you compiled wxWidgets with `
+`UNICODE=1, you have to do it on your own, or set the _UNICODE flag on the command line.`
+
+If this still doesn't work (it didn't seem to have any effect for me), try editing the file flags.make in bindings/wxwidgets/CMakeFiles/plplotwxwidgetsd.dir and add <tt>/D_UNICODE /DUNICODE</tt> to the definition of <tt>CXX_FLAGS</tt> there.
+
+Antialiasing
+------------
+
+The wxwidgets driver provides antialzing support, which can be turned on with the option antialized=1.
+
+Output of example 1 with antializing OFF: [[img src=Non_antialized.png]]
+
+Output of example 1 with antializing ON: [[img src=Antialized.png]]
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

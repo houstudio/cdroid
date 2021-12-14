@@ -1,0 +1,40 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLPTEX 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplptex\fP - Write text inside the viewport
+.SH SYNOPSIS
+\fBplptex\fP(\fIx\fP, \fIy\fP, \fIdx\fP, \fIdy\fP, \fIjust\fP, \fItext\fP)
+.SH DESCRIPTION
+
+.P
+Writes text at a specified position and inclination within the viewport.  Text is clipped at the viewport boundaries.  The reference point of a string lies along a line passing through the string at half the height of a capital letter.  The position of the reference point along this line is determined by \fIjust\fP, the reference point is placed at world coordinates (\fIx\fP, \fIy\fP)  within the viewport.  The inclination of the string is specified in terms of differences of world coordinates making it easy to write text parallel to a line in a graph.
+.P
+Redacted form: \fBplptex(x, y, dx, dy, just, text)\fP
+.P
+This function is used in example 2-4,10,12-14,20,23,24,26.
+.SH ARGUMENTS
+.TP
+\fIx\fP (\fBPLFLT\fP(3plplot), input)
+x coordinate of reference point of string.
+.TP
+\fIy\fP (\fBPLFLT\fP(3plplot), input)
+y coordinate of reference point of string.
+.TP
+\fIdx\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIdy\fP, this specifies the inclination of the string.  The baseline of the string is parallel to a line joining (\fIx\fP, \fIy\fP)  to (\fIx\fP+\fIdx\fP, \fIy\fP+\fIdy\fP) .
+.TP
+\fIdy\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIdx\fP, this specifies the inclination of the string.
+.TP
+\fIjust\fP (\fBPLFLT\fP(3plplot), input)
+Specifies the position of the string relative to its reference point.  If \fIjust\fP=0. , the reference point is at the left and if \fIjust\fP=1. , it is at the right of the string.  Other values of \fIjust\fP give intermediate justifications.
+.TP
+\fItext\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string to be written out.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

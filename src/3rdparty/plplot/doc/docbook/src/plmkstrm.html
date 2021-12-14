@@ -1,0 +1,34 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plmkstrm: Creates a new stream and makes it the default</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plmeshc.html" title="plmeshc: Magnitude colored plot surface mesh with contour"><link rel="next" href="plmtex.html" title="plmtex: Write text relative to viewport boundaries"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plmkstrm</code>: Creates a new stream and makes it the
+      default
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plmeshc.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plmtex.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plmkstrm"></a>
+      <code class="function">plmkstrm</code>: Creates a new stream and makes it the
+      default
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plmkstrm</b>
+          (</code></td><td>
+            <var class="pdparam">p_strm</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Creates a new stream and makes it the default.  Differs from using
+      <a class="link" href="plsstrm.html" title="plsstrm: Set current output stream"><code class="function">plsstrm</code></a>, in that a free stream number is found, and returned.
+      Unfortunately, I <span class="emphasis"><em>have</em></span> to start at stream 1 and work upward, since
+      stream 0 is preallocated.  One of the <span class="emphasis"><em>big</em></span> flaws in the PLplot API is
+      that no initial, library-opening call is required.  So stream 0 must
+      be preallocated, and there is no simple way of determining whether it
+      is already in use or not.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>p_strm</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_NC_SCALAR-type"><code class="function">PLINT_NC_SCALAR</code></a></code>, output)
+        </span></dt><dd><p>
+            Returned value of the stream number of the created stream.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plmkstrm(p_strm)</code>
+    </p><p>
+      This function is used in examples 1 and 20.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plmeshc.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plmtex.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plmeshc</code>: Magnitude colored plot surface mesh with contour
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plmtex</code>: Write text relative to viewport boundaries
+    </td></tr></table></div></body></html>

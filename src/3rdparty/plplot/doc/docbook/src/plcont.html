@@ -1,0 +1,104 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plcont: Contour plot</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plconfigtime.html" title="plconfigtime: Configure the transformation between continuous and broken-down time for the current stream"><link rel="next" href="plcpstrm.html" title="plcpstrm: Copy state parameters from the reference stream to the current stream"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plcont</code>: Contour plot
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plconfigtime.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plcpstrm.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plcont"></a>
+      <code class="function">plcont</code>: Contour plot
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plcont</b>
+	  (</code></td><td><var class="pdparam">f</var>, </td></tr><tr><td> </td><td><var class="pdparam">nx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ny</var>, </td></tr><tr><td> </td><td><var class="pdparam">kx</var>, </td></tr><tr><td> </td><td><var class="pdparam">lx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ky</var>, </td></tr><tr><td> </td><td><var class="pdparam">ly</var>, </td></tr><tr><td> </td><td><var class="pdparam">clevel</var>, </td></tr><tr><td> </td><td><var class="pdparam">nlevel</var>, </td></tr><tr><td> </td><td><var class="pdparam">pltr</var>, </td></tr><tr><td> </td><td><var class="pdparam">pltr_data</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>Draws a contour plot of the data in
+    <code class="literal"><em class="parameter"><code>f</code></em>[<em class="parameter"><code>nx</code></em>][<em class="parameter"><code>ny</code></em>]</code>,
+    using the <code class="literal"><em class="parameter"><code>nlevel</code></em></code> contour
+    levels specified by <code class="literal"><em class="parameter"><code>clevel</code></em></code>.
+    Only the region of the matrix from
+    <code class="literal"><em class="parameter"><code>kx</code></em></code> to
+    <code class="literal"><em class="parameter"><code>lx</code></em></code> and from
+    <code class="literal"><em class="parameter"><code>ky</code></em></code> to
+    <code class="literal"><em class="parameter"><code>ly</code></em></code> is plotted out where all
+    these index ranges are interpreted as one-based for historical
+    reasons.  A transformation routine pointed to by
+    <code class="literal"><em class="parameter"><code>pltr</code></em></code> with a generic pointer
+    <code class="literal"><em class="parameter"><code>pltr_data</code></em></code> for additional
+    data required by the transformation routine is used to map indices
+    within the matrix to the world coordinates.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>f</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A matrix containing data to be contoured.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nx, ny</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The dimensions of the matrix
+	    <code class="literal"><em class="parameter"><code>f</code></em></code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>kx, lx</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>Range of <code class="literal">x</code> indices to consider where
+	  <code class="literal">0 ≤ kx-1 &lt; lx-1 &lt; nx</code>.  Values of
+	  <code class="literal">kx</code> and <code class="literal">lx</code> are one-based rather
+	  than zero-based for historical backwards-compatibility reasons.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ky, ly</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>Range of <code class="literal">y</code> indices to consider where
+	  <code class="literal">0 ≤ ky-1 &lt; ly-1 &lt; ny</code>.  Values of
+	  <code class="literal">ky</code> and <code class="literal">ly</code> are one-based rather
+	  than zero-based for historical backwards-compatibility reasons.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>clevel</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector specifying the levels at which to draw contours.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nlevel</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of contour levels to draw.
+	  </p></dd><dt><span class="term">
+          <em class="parameter"><code>pltr</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLTRANSFORM_callback-type"><code class="function">PLTRANSFORM_callback</code></a></code>, input)
+        </span></dt><dd><p> A callback function that defines the transformation
+	  between the zero-based indices of the matrix
+	  <code class="literal"><em class="parameter"><code>f</code></em></code> and the world coordinates.</p><p>For the C case, transformation functions are provided
+	  in the PLplot library: <a class="link" href="pltr0.html" title="pltr0: Identity transformation for matrix index to world coordinate mapping"><code class="function">pltr0</code></a> for the identity mapping, and <a class="link" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"><code class="function">pltr1</code></a>
+	  and <a class="link" href="pltr2.html" title="pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)"><code class="function">pltr2</code></a> for arbitrary mappings respectively defined by vectors and
+	  matrices.  In addition, C callback routines for the transformation can
+	  be supplied by the user such as the <code class="literal">mypltr</code> function
+	  in <code class="filename">examples/c/x09c.c</code> which provides a general
+	  linear transformation between index coordinates and world
+	  coordinates.</p><p>For languages other than C you should consult <a class="xref" href="part_bindings.html" title="Part III.  Supported computer languages">Part III, “ Supported computer languages ”</a> for the details concerning how
+	  <a class="link" href="c.html#PLTRANSFORM_callback-type"><code class="function">PLTRANSFORM_callback</code></a> arguments are interfaced.
+	  However, in general, a particular pattern of
+	  callback-associated arguments such as a <code class="literal">tr</code> vector
+	  with 6 elements; <code class="literal">xg</code> and <code class="literal">yg</code>
+	  vectors; or <code class="literal">xg</code> and <code class="literal">yg</code> matrices
+	  are respectively interfaced to a linear-transformation routine similar
+	  to the above <code class="literal">mypltr</code> function; <a class="link" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"><code class="function">pltr1</code></a>; and <a class="link" href="pltr2.html" title="pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)"><code class="function">pltr2</code></a>.
+	  Furthermore, some of our more sophisticated bindings (see, e.g., <a class="xref" href="fortran.html" title="Chapter 10. Fortran Language">Chapter 10, <i>Fortran Language</i></a>) support native language callbacks for handling
+	  index to world-coordinate transformations.  Examples of these various
+	  approaches are given in
+	  <code class="filename">examples/&lt;language&gt;x09*</code>,
+	  <code class="filename">examples/&lt;language&gt;x16*</code>,
+	  <code class="filename">examples/&lt;language&gt;x20*</code>,
+	  <code class="filename">examples/&lt;language&gt;x21*</code>, and
+	  <code class="filename">examples/&lt;language&gt;x22*</code>, for all our
+	  supported languages.</p></dd><dt><span class="term">
+	  <em class="parameter"><code>pltr_data</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLPointer-type"><code class="function">PLPointer</code></a></code>, input)
+	</span></dt><dd><p>Extra parameter to help pass information to <a class="link" href="pltr0.html" title="pltr0: Identity transformation for matrix index to world coordinate mapping"><code class="function">pltr0</code></a>, <a class="link" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"><code class="function">pltr1</code></a>,
+	  <a class="link" href="pltr2.html" title="pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)"><code class="function">pltr2</code></a>, or whatever callback routine that is externally
+	  supplied.</p></dd></dl></div><p> Redacted form: <code class="function">plcont(f, kx, lx, ky, ly, clevel,
+    pltr, pltr_data)</code> where (see above discussion) the
+    <code class="literal">pltr, pltr_data</code> callback arguments are sometimes replaced
+    by a <code class="literal">tr</code> vector with 6 elements; <code class="literal">xg</code>
+    and <code class="literal">yg</code> vectors; or <code class="literal">xg</code>
+    and <code class="literal">yg</code> matrices.</p><p>
+      This function is used in examples 9, 14, 16, and 22.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plconfigtime.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plcpstrm.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plconfigtime</code>: Configure the transformation
+        between continuous and broken-down time for the current stream
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plcpstrm</code>: Copy state parameters from the
+      reference stream to the current stream
+    </td></tr></table></div></body></html>

@@ -1,0 +1,38 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Introduction to [incr Tcl]</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="extended-wish.html" title="Chapter 14. Building an Extended WISH"><link rel="prev" href="introduction-tk.html" title="Introduction to Tk"><link rel="next" href="extensions-tcl.html" title="PLplot Extensions to Tcl"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Introduction to [incr Tcl]</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="introduction-tk.html">Prev</a> </td><th width="60%" align="center">Chapter 14. Building an Extended WISH</th><td width="20%" align="right"> <a accesskey="n" href="extensions-tcl.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introduction-itcl"></a>Introduction to [incr Tcl]</h2></div></div></div><p>
+      Another extremely powerful and popular extension to Tcl is [incr
+      Tcl].  [incr Tcl] is to Tcl what C++ is to C.  The analogy is very
+      extensive.  Itcl provides an object oriented extension to Tcl
+      supporting clustering of procedures and data into what is called an
+      <code class="literal">itcl_class</code>.  An <code class="literal">itcl_class</code> can
+      have methods as well as instance data.  And they support inheritance.
+      Essentially if you know how C++ relates to C, and if you know Tcl,
+      then you understand the programming model provided by Itcl.
+    </p><p>
+      In particular, you can use Itcl to implement new widgets which are
+      composed of more basic Tk widgets.  A file selector is an example.
+      Using Tk, one can build up a very nice file selector comprised of
+      more basic Tk widgets such as entries, listboxes, scrollbars, etc.
+    </p><p>
+      But what if you need two file selectors?  You have to do it all
+      again.  Or what if you need two different kinds of file selectors,
+      you get to do it again and add some incremental code.
+    </p><p>
+      This is exactly the sort of thing object orientation is intended to
+      assist.  Using Itcl you can create an <code class="literal">itcl_class
+      FileSelector</code> and then you can instantiate them freely as
+      easily as:
+    </p><p>
+      </p><pre class="programlisting">
+	FileSelector .fs1
+	.fs1 -dir . -find "*.cc"</pre><p>
+    </p><p>
+      and so forth.
+    </p><p>
+      These high level widgets composed of smaller Tk widgets, are known as
+      <span class="quote">“<span class="quote">megawidgets</span>”</span>.  There is a developing subculture of the
+      Tcl/Tk community for designing and implementing megawidgets, and
+      [incr Tcl] is the most popular enabling technology.
+    </p><p>
+      In particular, it is the enabling technology which is employed for
+      the construction of the PLplot Tcl extensions, described below.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="introduction-tk.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="extended-wish.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="extensions-tcl.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Introduction to Tk </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> PLplot Extensions to Tcl</td></tr></table></div></body></html>

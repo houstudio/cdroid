@@ -1,0 +1,352 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    ocaml.xml: "OCaml Language" chapter
+
+Copyright (C) 2008 Jerry Bauck (original Ada version used as base)
+Copyright (C) 2008, 2009 Hezekiah M. Carty
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+<chapter id="OCaml">
+  <title>OCaml Language</title>
+  <para>
+    This document describes the OCaml bindings to the PLplot technical
+    plotting software, how to obtain the necessary software components and
+    how to use them together.
+  </para>
+
+  <sect1 id="ocaml_overview">
+    <title>Overview</title>
+    <para>
+      The OCaml bindings for PLplot provide a way for OCaml programmers to
+      access the powerful PLplot technical plotting facilities directly from
+      OCaml programs while working completely in OCaml&#8212;the OCaml
+      programmer never needs to know or worry that PLplot itself is written in
+      another language.
+    </para>
+  </sect1>
+
+  <sect1 id="ocaml_bindings">
+    <title>The Bindings</title>
+    <para>
+      The OCaml bindings for PLplot provide an interface to the PLplot C API.
+      In addition to providing access to the core functions of the C API, the
+      OCaml PLplot interface also includes a set of higher-level plotting
+      functions which, while built on top of the core PLplot API, retain more
+      of an OCaml flavor.
+    </para>
+    <para>
+      The OCaml PLplot API is defined within the Plplot module.  In general,
+      it is suggested to include the line <literal>open Plplot</literal> in
+      OCaml code using PLplot.  The function and constant definitions are
+      named such that they should avoid namespace collisions with other
+      libraries.  Core PLplot functions have a <literal>pl</literal> prefix,
+      while constant constructors/variant types have a <literal>PL_</literal>
+      prefix.
+    </para>
+    <para>
+      The core binding provides a close to direct mapping to the underlying C
+      library. It follows the C API very closely, with the exception of a few
+      parameters which become redundant under OCaml (ex. array lengths are
+      determined automatically by OCaml and function callbacks which are
+      handled slightly differently than in C).  An OCaml user of PLplot does
+      not need to worry about memory management issues as they are handled
+      automatically by the bindings.
+    </para>
+    <para>
+      There are also a selection of functions which provide support for
+      operations outside of the base C API.  These higher level functions are
+      defined within the <literal>Plplot.Plot</literal> and
+      <literal>Plplot.Quick_plot</literal> modules.
+    </para>
+    <sect2 id="ocaml_core">
+      <title>Core Binding</title>
+      <para>
+        The core binding is mostly a direct and obvious mapping of the C
+        application programming interface (API) to OCaml. Thus, for example,
+        where a C function such as <literal>plcol0</literal> requires a single
+        integer argument, there is a corresponding OCaml function also called
+        <literal>plcol0</literal> which also requires a single integer
+        argument. (<literal>plcol0</literal> happens to set the drawing color
+        using a number which is associated with a set of colors).  Various
+        constants from the C API are also included here as OCaml variant types
+        with a <literal>PL_</literal> prefix to avoid namespace clashes when
+        the <literal>Plplot</literal> module is opened.  For example, where
+        the C PLplot API uses <literal>GRID_*</literal> to select between the
+        data gridding methods, the OCaml API uses
+        <literal>PL_GRID_*</literal>.
+      </para>
+    </sect2>
+    <sect2 id="ocaml_specific">
+      <title>OCaml-specific variations to the core PLplot API</title>
+      <para>
+        Several of the PLplot core functions allow the user to provide a
+        transformation callback function to adjust the location of the plotted
+        data.  This is handled differently in the OCaml bindings than in order
+        to keep the interface between C and OCaml as simple as possible.
+        Rather than passing transformation functions directly to each PLplot
+        function which supports a coordinate transformation, the coordinate
+        transform functions are set globally using the
+        <literal>plset_pltr</literal> and <literal>plset_mapform</literal>
+        functions.  Similarly, the functions <literal>plunset_pltr</literal>
+        and <literal>plunset_mapform</literal> can be used to clear the
+        globally defined coordinate transformation function.  Note that the
+        transform functions are only used in the functions which support them
+        in the C API (ex. <literal>plmap</literal>)- they are not
+        automatically applied to plotted data in other function calls (ex.
+        <literal>plline</literal>).  For demonstrations of their use, see
+        OCaml PLplot examples 16 and 20 for <literal>plset_pltr</literal> and
+        example 19 for <literal>plset_mapform</literal>.
+      </para>
+    </sect2>
+    <sect2 id="ocaml_high_level">
+      <title>OCaml high level 2D plotting API</title>
+      <para>
+        In addition to the core PLplot API, the OCaml bindings provide two
+        modules which provide a more OCaml-like interface:
+        <literal>Plplot.Plot</literal> and
+        <literal>Plplot.Quick_plot</literal>.  <literal>Plplot.Plot</literal>
+        provides a simplified naming scheme for plotting functions, as well as
+        the means to more easily track multiple plot streams at once.
+        <literal>Plplot.Quick_plot</literal> provides functions to quickly
+        plot points, lines, data arrays (images) and functions without the
+        need for any plot setup or boilerplate.
+      </para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="ocaml_examples">
+    <title> The Examples</title>
+    <para>
+      An important part of the OCaml bindings is the examples, some 31 of
+      which demonstrate how to use many of the features of the PLplot package.
+      These examples also serve as a test bed for the bindings in OCaml and
+      other languages by checking the Postscript files that are generated by
+      each example against those generated by the C versions. These examples
+      have been completely re-written in OCaml (but retain a C flavor in their
+      structure and the names that are given to objects). All of the OCaml
+      examples generate exactly the same Postscript as the C versions.
+    </para>
+  </sect1>
+
+  <sect1 id="ocaml_obtaining">
+    <title>Obtaining the Software</title>
+    <para>
+      There are three software components that you will need: the OCaml
+      compiler, the PLplot library, and the camlidl stub code generator for
+      OCaml bindings to C libraries.
+    </para>
+    <sect2 id="ocaml_obtaining_ocaml">
+      <title>Obtaining the OCaml compiler</title>
+      <para>
+        You will need the OCaml compiler in order to build and use the OCaml
+        PLplot bindings. OCaml includes both a byte code compiler (ocamlc) and
+        a native code compiler (ocamlopt).  Both of these are supported by
+        PLplot.
+      </para>
+      <para>
+        Your computer may already have OCaml installed, or you can download it
+        from <ulink url="http://caml.inria.fr/">caml.inria.fr</ulink>. Several
+        Linux distributions including Debian, Ubuntu and Fedora have OCaml
+        binary packages available.  Another route to obtaining OCaml is by
+        using opam, a source-based distribution of OCaml and a number of OCaml
+        libraries.  opam can be retrieved from
+        <ulink url="http://opam.ocaml.org/">opam.ocaml.org</ulink>.
+      </para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="ocaml_howto">
+    <title>How to use the OCaml bindings</title>
+    <para>
+      The three examples provided below illustrate the available methods for
+      generating plots with PLplot from OCaml.  They proceed in order from
+      lowest-level to highest-level.
+    </para>
+    <sect2 id="ocaml_findlib_setup">
+      <title>How to setup findlib for use with the OCaml bindings</title>
+      <para>
+        The following examples require that
+        <ulink url="http://projects.camlcity.org/projects/findlib.html">
+          findlib
+        </ulink>
+        and its associated tools (i.e., ocamlfind) are installed in in your
+        <literal>$PATH</literal>.
+      </para>
+      <para>
+        If PLplot was installed under a non-standard prefix, or any prefix
+        where findlib does not check automatically for OCaml libraries, then
+        the following environment variables can be set to tell findlib where to
+        look for PLplot:
+      </para>
+      <programlisting>
+        export OCAMLPATH=$PLPLOT_INSTALL_PREFIX/lib/ocaml:$OCAMLPATH
+        export LD_LIBRARY_PATH=$PLPLOT_INSTALL_PREFIX/lib/ocaml/stublibs:$LD_LIBRARY_PATH
+      </programlisting>
+    </sect2>
+    <sect2 id="ocaml_command_line_sample_project_core">
+      <title>Sample command line project (core API)</title>
+      <para>
+        Here is a simple example that can be compiled and run from the command
+        line.  The result will be a program that generates a plot of part of a
+        parabola using only the core PLplot API.
+      </para>
+      <programlisting>
+        (* Open the Plplot module to give access to all of the PLplot
+           values without the need to add the "Plplot." prefix. *)
+        open Plplot
+
+        let simple_example () =
+          (* Sample at 20 points, ranging from -10.0 to 10.0 *)
+          let xs = Array.init 21 (fun xi -> float xi -. 10.0) in
+          let ys = Array.map (fun x -> x**2.0) xs in
+
+          (* Initialize PLplot *)
+          plinit ();
+
+          (* Draw the plot window axes *)
+          plenv (-10.0) 10.0 0.0 100.0 0 0;
+
+          (* Draw the parabola points as a series of line segments *)
+          plline xs ys;
+
+          (* End the plotting session *)
+          plend ();
+          ()
+
+        let () = simple_example ()
+      </programlisting>
+      <para>
+        Save this code as <literal>simple_example_core.ml</literal>. The
+        following command can then be used to build the example:
+      </para>
+      <programlisting>
+        ocamlfind opt -package plplot -linkpkg -o simple_example_core simple_example_core.ml
+      </programlisting>
+      <para>
+        The resulting binary program can be run by typing
+        <literal>./simple_example_core</literal>
+      </para>
+    </sect2>
+    <sect2 id="ocaml_command_line_sample_project_ocaml">
+      <title>Sample command line project (OCaml-specific API)</title>
+      <para>
+        Here is another example that can be compiled and run from the command
+        line.  The result will be a program that generates a plot of part of a
+        parabola similar to the above example, but now using the
+        OCaml-specific PLplot API rather than the core PLplot API.
+      </para>
+      <programlisting>
+        (* Open the Plplot module to give access to all of the PLplot
+           values without the need to add the "Plplot." prefix.
+           Aliasing the module P to the module Plot will save some typing
+           without further namespace pollution. *)
+        open Plplot
+        module P = Plot
+
+        let simple_example () =
+          (* Initialize a new plot, using the windowed Cairo device
+             ("xcairo") *)
+          let p =
+            P.init (-10.0, 0.0) (10.0, 100.0) `greedy (`window `cairo)
+          in
+
+          (* Draw the parabola *)
+          P.plot ~stream:p [P.func `blue (fun x -> x ** 2.0) (-10.0, 10.0)];
+
+          (* Draw the plot axes and close up the plot stream using the default
+             spacing between tick marks. *)
+          P.finish ~stream:p ();
+          ()
+
+        let () = simple_example ()
+      </programlisting>
+      <para>
+        Save this code as <literal>simple_example_ocaml.ml</literal>.  The
+        following command can then be used to build the example:
+      </para>
+      <programlisting>
+        ocamlfind opt -package plplot -linkpkg -o simple_example_ocaml simple_example_ocaml.ml
+      </programlisting>
+      <para>
+        The resulting binary program can be run by typing
+        <literal>./simple_example_ocaml</literal>
+      </para>
+    </sect2>
+    <sect2 id="ocaml_toplevel_sample_project">
+      <title>Sample toplevel project</title>
+      <para>
+        The OCaml interactive toplevel (<literal>ocaml</literal>) provides a
+        very useful tool for code testing, development and interactive data
+        analysis.
+      </para>
+      <para>
+        The <literal>Quick_plot</literal> module provides a set of functions
+        for producing quick, simple two-dimensional plots from both the
+        toplevel and stand-alone OCaml programs.  Here is a set of commands
+        which can be used in a toplevel session to produce a plot of a portion
+        of a parabola, similar to the compiled examples above.
+      </para>
+      <programlisting>
+        # #use "topfind";;
+        # #require "plplot";;
+        # open Plplot;;
+        # Quick_plot.func ~names:["Parabola"] [(fun x -> x ** 2.0)] (-10.0, 10.0);;
+      </programlisting>
+      <para>
+        Conversely, the above <literal>ocaml</literal> session could be
+        expressed in a compiled OCaml program:
+      </para>
+      <programlisting>
+        Plplot.Quick_plot.func ~names:["Parabola"] [(fun x -> x ** 2.0)] (-10.0, 10.0)
+      </programlisting>
+      <para>
+        Save this code as <literal>simple_example_quick.ml</literal>.  The
+        following command can then be used to build the example:
+      </para>
+      <programlisting>
+        ocamlfind opt -package plplot -linkpkg -o simple_example_quick simple_example_quick.ml
+      </programlisting>
+      <para>
+        The resulting binary program can be run by typing
+        <literal>./simple_example_quick</literal>
+      </para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="ocaml_known_issues">
+    <title>Known Issues</title>
+    <para>
+      There are currently no known issues with the OCaml PLplot bindings.  If
+      you discover any problems with PLplot or the OCaml bindings, please
+      report them to the PLplot development mailing list.
+    </para>
+  </sect1>
+</chapter>

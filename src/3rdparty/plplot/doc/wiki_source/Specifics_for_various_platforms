@@ -1,0 +1,48 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Before reading this section you should consult [Building_PLplot](Building_PLplot "wikilink") to obtain generic build instructions.
+
+#### Linux
+
+-   [Linux](Linux "wikilink")
+-   [List of Debian/Ubuntu packages](List_of_Debian_Ubuntu_packages "wikilink") - in order to be able to configure and compile the PLplot library this page contains a list of Debian/Ubuntu packages needed.
+-   [Additional notes for ifort users](Additional_notes_for_ifort_users "wikilink")
+
+#### Mac OSX
+
+-   [Mac OSX](Mac_OSX "wikilink") instructions
+
+<a name="Windows"></a>#### Windows
+
+##### Free and open-source tools to help build a powerful version of PLplot on Windows
+
+-   [Install MinGW/MSYS](Install_MinGW_MSYS "wikilink")
+-   [Install SWIG](Install_SWIG "wikilink")
+-   [Install Python](Install_Python "wikilink")
+-   [Install Lua](Install_Lua "wikilink")
+-   [Install Tcl](Install_Tcl "wikilink")
+-   [Install Octave](Install_Octave "wikilink")
+-   [Install 3rd party libraries](Install_3rd_party_libraries "wikilink")
+
+##### Instructions per Windows platform
+
+-   [Configure PLplot for the Visual Studio IDE](Configure_PLplot_for_the_Visual_Studio_IDE "wikilink")
+-   [Configure PLplot for Visual CXX CLI](Configure_PLplot_for_Visual_CXX_CLI "wikilink")
+-   [Configure PLplot for MinGW/CLI](Configure_PLplot_for_MinGW_CLI "wikilink")
+-   [Configure PLplot for cygwin](Configure_PLplot_for_cygwin "wikilink")
+-   [Configure PLplot for MSYS2](Configure_PLplot_for_msys2 "wikilink")
+-   [Configure PLplot for Borland CXX 5.5 (free command line tools)](Configure_PLplot_for_Borland_CXX_5.5_(free_command_line_tools)) "wikilink")
+-   [Configure PLplot for Borland Turbo C++ Explorer Edition (free IDE and compiler)](Configure_PLplot_for_Borland_Turbo_C++_Explorer_Edition_(free_IDE_and_compiler) "wikilink")
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

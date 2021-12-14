@@ -1,0 +1,13 @@
+Begin3
+Title:		CGMDraw
+Version:	1.3
+Entered-date:	17JAN97
+Description:	C Library for creating CGM vector graphics files.
+Keywords:	Computer Graphics Metafile vector CGM library
+Author: 	lorax@nist.gov (G. Edward Johnson)
+Maintained-by:	lorax@nist.gov (G. Edward Johnson)
+Primary-site:	zing.ncsl.nist.gov /cgm/cd1.3.tar.gz
+		44kb 
+Platforms:	Sun, Linux, Ultrix, IRIX, AIX, DOS
+Copying-policy:	Freely Redistributable
+End

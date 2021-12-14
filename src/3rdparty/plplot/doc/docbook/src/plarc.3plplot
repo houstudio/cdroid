@@ -1,0 +1,47 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLARC 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplarc\fP - Draw a circular or elliptical arc
+.SH SYNOPSIS
+\fBplarc\fP(\fIx\fP, \fIy\fP, \fIa\fP, \fIb\fP, \fIangle1\fP, \fIangle2\fP, \fIrotate\fP, \fIfill\fP)
+.SH DESCRIPTION
+
+.P
+Draw a possibly filled arc centered at \fIx\fP, \fIy\fP with semimajor axis \fIa\fP and semiminor axis \fIb\fP, starting at \fIangle1\fP and ending at \fIangle2\fP.
+.P
+Redacted form: General: \fBplarc(x, y, a, b, angle1, angle2, rotate, fill)\fP
+
+.P
+This function is used in examples 3 and 27.
+.SH ARGUMENTS
+.TP
+\fIx\fP (\fBPLFLT\fP(3plplot), input)
+X coordinate of arc center.
+.TP
+\fIy\fP (\fBPLFLT\fP(3plplot), input)
+Y coordinate of arc center.
+.TP
+\fIa\fP (\fBPLFLT\fP(3plplot), input)
+Length of the semimajor axis of the arc.
+.TP
+\fIb\fP (\fBPLFLT\fP(3plplot), input)
+Length of the semiminor axis of the arc.
+.TP
+\fIangle1\fP (\fBPLFLT\fP(3plplot), input)
+Starting angle of the arc relative to the semimajor axis.
+.TP
+\fIangle2\fP (\fBPLFLT\fP(3plplot), input)
+Ending angle of the arc relative to the semimajor axis.
+.TP
+\fIrotate\fP (\fBPLFLT\fP(3plplot), input)
+Angle of the semimajor axis relative to the X-axis.
+.TP
+\fIfill\fP (\fBPLBOOL\fP(3plplot), input)
+Draw a filled arc.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

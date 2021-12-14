@@ -1,0 +1,20 @@
+# This configured file (whose configured pathname is
+# @CMAKE_BINARY_DIR@/bindings/octave/.octaverc)
+# is only used as a convenience if you are running octave by hand.  It
+# is not used by any of our automated tests of our octave binding and
+# examples.  Those automated tests are configured similarly to this
+# file (but differently for the build tree and install tree) and use
+# the octave -f option to be independent of any octave setup file such
+# as this one.
+
+# Disable warnings about shadowed functions - PLplot is _supposed_ to shadow the core functions
+warning("off","Octave:shadowed-function");
+
+addpath("@CMAKE_SOURCE_DIR@/bindings/octave/PLplot","@CMAKE_SOURCE_DIR@/bindings/octave/PLplot/support","@CMAKE_SOURCE_DIR@/bindings/octave/misc","@CMAKE_SOURCE_DIR@/examples/octave","@CMAKE_BINARY_DIR@/bindings/octave","@CMAKE_BINARY_DIR@/bindings/octave/PLplot");
+
+if (strcmp("@USE_DLL_SUBDIRECTORY@", "ON"))
+  addpath("@CMAKE_BINARY_DIR@/dll");
+endif
+
+global pl_automatic_replot
+pl_automatic_replot=1;

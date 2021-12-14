@@ -1,0 +1,24 @@
+diff -Naur libharu-2.2.1_pristine/include/hpdf_consts.h libharu-2.2.1/include/hpdf_consts.h
+--- libharu-2.2.1_pristine/include/hpdf_consts.h	2010-11-22 01:57:44.000000000 -0800
++++ libharu-2.2.1/include/hpdf_consts.h	2013-10-21 09:55:26.093664806 -0700
+@@ -142,7 +142,7 @@
+ #define HPDF_MAX_WORDSPACE          300
+ #define HPDF_MIN_CHARSPACE          -30
+ #define HPDF_MAX_CHARSPACE          300
+-#define HPDF_MAX_FONTSIZE           300
++#define HPDF_MAX_FONTSIZE           600
+ #define HPDF_MAX_ZOOMSIZE           10
+ #define HPDF_MAX_LEADING            300
+ #define HPDF_MAX_LINEWIDTH          100
+diff -Naur libharu-2.2.1_pristine/src/hpdf_page_operator.c libharu-2.2.1/src/hpdf_page_operator.c
+--- libharu-2.2.1_pristine/src/hpdf_page_operator.c	2010-02-01 02:26:13.000000000 -0800
++++ libharu-2.2.1/src/hpdf_page_operator.c	2013-10-21 09:55:26.093664806 -0700
+@@ -1162,7 +1162,7 @@
+         return HPDF_RaiseError (page->error, HPDF_PAGE_INVALID_FONT, 0);
+ 
+     if (size <= 0 || size > HPDF_MAX_FONTSIZE)
+-        return HPDF_RaiseError (page->error, HPDF_PAGE_INVALID_FONT_SIZE, 0);
++        return HPDF_RaiseError (page->error, HPDF_PAGE_INVALID_FONT_SIZE, size);
+ 
+     if (page->mmgr != font->mmgr)
+         return HPDF_RaiseError (page->error, HPDF_PAGE_INVALID_FONT, 0);

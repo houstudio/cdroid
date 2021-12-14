@@ -1,0 +1,37 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plMinMax2dGrid: Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot"><link rel="prev" href="plMergeOpts.html" title="plMergeOpts: Merge use option table into internal info structure"><link rel="next" href="plOptUsage.html" title="plOptUsage: Print usage and syntax message"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plMinMax2dGrid</code>: Find the minimum and
+    maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using <code class="function">plAlloc2dGrid</code>
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plMergeOpts.html">Prev</a> </td><th width="60%" align="center">Chapter 18. The Specialized C/C++ API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plOptUsage.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plMinMax2dGrid"></a>
+      <code class="function">plMinMax2dGrid</code>: Find the minimum and
+    maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using <a class="link" href="plAlloc2dGrid.html" title="plAlloc2dGrid: Allocate a block of memory for use as a matrix of type PLFLT_MATRIX"><code class="function">plAlloc2dGrid</code></a>
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plMinMax2dGrid</b>
+	  (</code></td><td><var class="pdparam">f</var>, </td></tr><tr><td> </td><td><var class="pdparam">nx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ny</var>, </td></tr><tr><td> </td><td><var class="pdparam">fmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">fmin</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+    Find the minimum and maximum of a PLFLT matrix of type
+    PLFLT_MATRIX allocated using <a class="link" href="plAlloc2dGrid.html" title="plAlloc2dGrid: Allocate a block of memory for use as a matrix of type PLFLT_MATRIX"><code class="function">plAlloc2dGrid</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>f</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A matrix to find the maximum / minimum of.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nx, ny</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	  Dimensions of <code class="literal">f</code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>fmax, fmin</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	  Returned maximum and minimum values of the matrix
+	  <code class="literal">f</code>.
+	  </p></dd></dl></div><p>
+      This function is used in C examples 8, 11, 20 and 21.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plMergeOpts.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-C.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plOptUsage.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plMergeOpts</code>: Merge use option table into
+      internal info structure
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plOptUsage</code>: Print usage and syntax message
+    </td></tr></table></div></body></html>

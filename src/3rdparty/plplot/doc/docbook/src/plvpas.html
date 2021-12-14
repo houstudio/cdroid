@@ -1,0 +1,63 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plvpas: Specify viewport using coordinates and aspect ratio</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plvect.html" title="plvect: Vector plot"><link rel="next" href="plvpor.html" title="plvpor: Specify viewport using normalized subpage coordinates"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plvpas</code>: Specify viewport using coordinates and aspect ratio
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plvect.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plvpor.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plvpas"></a>
+      <code class="function">plvpas</code>: Specify viewport using coordinates and aspect ratio
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plvpas</b>
+          (</code></td><td>
+            <var class="pdparam">xmin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xmax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">aspect</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Device-independent routine for setting up the viewport.  The viewport
+      is chosen to be the largest with the given aspect ratio that fits
+      within the specified region (in terms of normalized subpage
+      coordinates).  This routine is functionally equivalent to <a class="link" href="plvpor.html" title="plvpor: Specify viewport using normalized subpage coordinates"><code class="function">plvpor</code></a>
+      when a ``natural'' aspect ratio (0.0) is chosen.  Unlike <a class="link" href="plvasp.html" title="plvasp: Specify viewport using aspect ratio only"><code class="function">plvasp</code></a>,
+      this routine reserves no extra space at the edges for labels.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>xmin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The normalized subpage coordinate of the left-hand edge of the
+            viewport.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xmax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The normalized subpage coordinate of the right-hand edge of the
+            viewport.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The normalized subpage coordinate of the bottom edge of the
+            viewport.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The normalized subpage coordinate of the top edge of the
+            viewport.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>aspect</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Ratio of length of y axis to length of x axis.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plvpas(xmin, xmax, ymin, ymax, aspect)</code>
+    </p><p>
+      This function is used in example 9.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plvect.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plvpor.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plvect</code>: Vector plot
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plvpor</code>: Specify viewport using normalized subpage coordinates
+    </td></tr></table></div></body></html>

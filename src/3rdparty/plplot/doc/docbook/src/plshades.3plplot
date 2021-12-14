@@ -1,0 +1,65 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSHADES 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplshades\fP - Shade regions on the basis of value
+.SH SYNOPSIS
+\fBplshades\fP(\fIa\fP, \fInx\fP, \fIny\fP, \fIdefined\fP, \fIxmin\fP, \fIxmax\fP, \fIymin\fP, \fIymax\fP, \fIclevel\fP, \fInlevel\fP, \fIfill_width\fP, \fIcont_color\fP, \fIcont_width\fP, \fIfill\fP, \fIrectangular\fP, \fIpltr\fP, \fIpltr_data\fP)
+.SH DESCRIPTION
+
+.P
+Shade regions on the basis of value.  This is the high-level routine for making continuous color shaded plots with cmap1 while \fBplshade\fP(3plplot) should be used to plot individual shaded regions using either cmap0 or cmap1. examples/;<language>/x16* shows how to use \fBplshades\fP(3plplot) for each of our supported languages.
+.P
+Redacted form: General: \fBplshades(a, defined, xmin, xmax, ymin, ymax, clevel, fill_width, cont_color, cont_width, fill, rectangular, pltr, pltr_data)\fP
+
+.P
+This function is used in examples 16, 21, and 22.
+.SH ARGUMENTS
+.TP
+\fIa\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing function values to plot.  Should have dimensions of \fInx\fP by \fIny\fP.
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+First dimension of matrix "a".
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Second dimension of matrix "a".
+.TP
+\fIdefined\fP (\fBPLDEFINED_callback\fP(3plplot), input)
+Callback function specifying the region that should be plotted in the shade plot.  This function accepts x and y coordinates as input arguments and must return 1 if the point is to be included in the shade plot and 0 otherwise.  If you want to plot the entire shade plot (the usual case), this argument should be set to NULL.
+.TP
+\fIxmin, xmax, ymin, ymax\fP (\fBPLFLT\fP(3plplot), input)
+See the discussion of \fIpltr\fP below for how these arguments are used (only for the special case when the callback function \fIpltr\fP is not supplied).
+.TP
+\fIclevel\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the data levels corresponding to the edges of each shaded region that will be plotted by this function.  To work properly the levels should be monotonic.
+.TP
+\fInlevel\fP (\fBPLINT\fP(3plplot), input)
+Number of shades plus 1 (i.e., the number of shade edge values in \fIclevel\fP).
+.TP
+\fIfill_width\fP (\fBPLFLT\fP(3plplot), input)
+Defines the line width used by the fill pattern.
+.TP
+\fIcont_color\fP (\fBPLINT\fP(3plplot), input)
+Defines cmap0 pen color used for contours defining edges of shaded regions.  The pen color is only temporary set for the contour drawing.  Set this value to zero or less if no shade edge contours are wanted.
+.TP
+\fIcont_width\fP (\fBPLFLT\fP(3plplot), input)
+Defines line width used for contours defining edges of shaded regions.  This value may not be honored by all drivers. The pen width is only temporary set for the contour drawing.  Set this value to zero or less if no shade edge contours are wanted.
+.TP
+\fIfill\fP (\fBPLFILL_callback\fP(3plplot), input)
+Callback routine used to fill the region.  Use \fBplfill\fP(3plplot) for this purpose.
+.TP
+\fIrectangular\fP (\fBPLBOOL\fP(3plplot), input)
+Set \fIrectangular\fP to true if rectangles map to rectangles after coordinate transformation with \fIpltrl\fP.  Otherwise, set \fIrectangular\fP to false. If \fIrectangular\fP is set to true, plshade tries to save time by filling large rectangles.  This optimization fails if the coordinate transformation distorts the shape of rectangles.  For example a plot in polar coordinates has to have \fIrectangular\fP set to false.
+.TP
+\fIpltr\fP (\fBPLTRANSFORM_callback\fP(3plplot), input)
+A callback function that defines the transformation between the zero-based indices of the matrix \fIa\fP and world coordinates. If \fIpltr\fP is not supplied (e.g., is set to NULL in the C case), then the x indices of \fIa\fP are mapped to the range \fIxmin\fP through \fIxmax\fP and the y indices of \fIa\fP are mapped to the range \fIymin\fP through \fIymax\fP.For the C case, transformation functions are provided in the PLplot library: \fBpltr0\fP(3plplot) for the identity mapping, and \fBpltr1\fP(3plplot) and \fBpltr2\fP(3plplot) for arbitrary mappings respectively defined by vectors and matrices.  In addition, C callback routines for the transformation can be supplied by the user such as the mypltr function in examples/c/x09c.c which provides a general linear transformation between index coordinates and world coordinates.For languages other than C you should consult the PLplot documentation for the details concerning how \fBPLTRANSFORM_callback\fP(3plplot) arguments are interfaced. However, in general, a particular pattern of callback-associated arguments such as a tr vector with 6 elements; xg and yg vectors; or xg and yg matrices are respectively interfaced to a linear-transformation routine similar to the above mypltr function; \fBpltr1\fP(3plplot); and \fBpltr2\fP(3plplot). Furthermore, some of our more sophisticated bindings (see, e.g., the PLplot documentation) support native language callbacks for handling index to world-coordinate transformations.  Examples of these various approaches are given in examples/<language>x09*, examples/<language>x16*, examples/<language>x20*, examples/<language>x21*, and examples/<language>x22*, for all our supported languages.
+.TP
+\fIpltr_data\fP (\fBPLPointer\fP(3plplot), input)
+Extra parameter to help pass information to \fBpltr0\fP(3plplot), \fBpltr1\fP(3plplot), \fBpltr2\fP(3plplot), or whatever routine that is externally supplied.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

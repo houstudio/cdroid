@@ -1,0 +1,48 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>pltr0: Identity transformation for matrix index to world coordinate mapping</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot"><link rel="prev" href="plStatic2dGrid.html" title="plStatic2dGrid: Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT's that is statically allocated"><link rel="next" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">pltr0</code>: Identity transformation for matrix index to world
+      coordinate mapping
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plStatic2dGrid.html">Prev</a> </td><th width="60%" align="center">Chapter 18. The Specialized C/C++ API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="pltr1.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="pltr0"></a>
+      <code class="function">pltr0</code>: Identity transformation for matrix index to world
+      coordinate mapping
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">pltr0</b>
+	  (</code></td><td><var class="pdparam">x</var>, </td></tr><tr><td> </td><td><var class="pdparam">y</var>, </td></tr><tr><td> </td><td><var class="pdparam">tx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ty</var>, </td></tr><tr><td> </td><td><var class="pdparam">pltr_data</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>Identity transformation for matrix index to world coordinate mapping.  This routine
+    can be used for the <a class="link" href="c.html#PLTRANSFORM_callback-type"><code class="function">PLTRANSFORM_callback</code></a> argument of <a class="link" href="plcont.html" title="plcont: Contour plot"><code class="function">plcont</code></a>,
+    <a class="link" href="plshade.html" title="plshade: Shade individual region on the basis of value"><code class="function">plshade</code></a>, <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>, <a class="link" href="plimagefr.html" title="plimagefr: Plot a 2D matrix using cmap1"><code class="function">plimagefr</code></a>, or <a class="link" href="plvect.html" title="plvect: Vector plot"><code class="function">plvect</code></a>.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>x</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    X index of matrix.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Y index of matrix.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>tx</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Transformed x value in world coordinates corresponding to x index of matrix.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ty</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Transformed y value in world coordinates corresponding to y index of matrix.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>pltr_data</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLPointer-type"><code class="function">PLPointer</code></a></code>, input)
+	</span></dt><dd><p>A pointer to additional data that is passed as an
+	  argument to PLplot routines that potentially could use the <a class="link" href="pltr0.html" title="pltr0: Identity transformation for matrix index to world coordinate mapping"><code class="function">pltr0</code></a>
+	  callback (i.e., <a class="link" href="plcont.html" title="plcont: Contour plot"><code class="function">plcont</code></a>, <a class="link" href="plimagefr.html" title="plimagefr: Plot a 2D matrix using cmap1"><code class="function">plimagefr</code></a>, <a class="link" href="plshade.html" title="plshade: Shade individual region on the basis of value"><code class="function">plshade</code></a>,
+	  <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>, and <a class="link" href="plvect.html" title="plvect: Vector plot"><code class="function">plvect</code></a>); which then internally pass that argument on
+	  to this callback.</p></dd></dl></div><p>
+      This function is not used in any of our C examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plStatic2dGrid.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-C.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="pltr1.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plStatic2dGrid</code>: Determine the Iliffe column vector of pointers to PLFLT row
+      vectors corresponding to a 2D matrix of PLFLT's that is statically allocated
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">pltr1</code>: Linear interpolation for matrix index to world
+      coordinate mapping using singly dimensioned coordinate arrays
+    </td></tr></table></div></body></html>

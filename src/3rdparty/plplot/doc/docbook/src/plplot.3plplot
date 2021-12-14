@@ -1,0 +1,366 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH plplot 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+PLplot - Advanced 2D and 3D scientific plotting library
+.SH DESCRIPTION
+Available API man pages:
+.nr PD 0
+
+.TP
+\fBpl_setcontlabelformat\fP: Set format of numerical label for contours
+.TP
+\fBpl_setcontlabelparam\fP: Set parameters of contour labelling other than format of numerical label
+.TP
+\fBpladv\fP: Advance the (sub-)page
+.TP
+\fBplarc\fP: Draw a circular or elliptical arc
+.TP
+\fBplaxes\fP: Draw a box with axes, etc. with arbitrary origin
+.TP
+\fBplbin\fP: Plot a histogram from binned data
+.TP
+\fBplbop\fP: Begin a new page
+.TP
+\fBplbox\fP: Draw a box with axes, etc
+.TP
+\fBplbox3\fP: Draw a box with axes, etc, in 3-d
+.TP
+\fBplbtime\fP: Calculate broken-down time from continuous time for the current stream
+.TP
+\fBplcalc_world\fP: Calculate world coordinates and corresponding window index from relative device coordinates
+.TP
+\fBplclear\fP: Clear current (sub)page
+.TP
+\fBplcol0\fP: Set color, cmap0
+.TP
+\fBplcol1\fP: Set color, cmap1
+.TP
+\fBplcolorbar\fP: Plot color bar for image, shade or gradient plots
+.TP
+\fBplconfigtime\fP: Configure the transformation between continuous and broken-down time for the current stream
+.TP
+\fBplcont\fP: Contour plot
+.TP
+\fBplcpstrm\fP: Copy state parameters from the reference stream to the current stream
+.TP
+\fBplctime\fP: Calculate continuous time from broken-down time for the current stream
+.TP
+\fBplend\fP: End plotting session
+.TP
+\fBplend1\fP: End plotting session for current stream
+.TP
+\fBplenv0\fP: Same as \fBplenv\fP(3plplot) but if in multiplot mode does not advance the subpage, instead clears it
+.TP
+\fBplenv\fP: Set up standard window and draw box
+.TP
+\fBpleop\fP: Eject current page
+.TP
+\fBplerrx\fP: Draw error bars in x direction
+.TP
+\fBplerry\fP: Draw error bars in the y direction
+.TP
+\fBplfamadv\fP: Advance to the next family file on the next new page
+.TP
+\fBplfill\fP: Draw filled polygon
+.TP
+\fBplfill3\fP: Draw filled polygon in 3D
+.TP
+\fBplflush\fP: Flushes the output stream
+.TP
+\fBplfont\fP: Set font
+.TP
+\fBplfontld\fP: Load Hershey fonts
+.TP
+\fBplGetCursor\fP: Wait for graphics input event and translate to world coordinates.
+.TP
+\fBplgchr\fP: Get character default height and current (scaled) height
+.TP
+\fBplgcmap1_range\fP: Get the cmap1 argument range for continuous color plots
+.TP
+\fBplgcol0\fP: Returns 8-bit RGB values for given color index from cmap0
+.TP
+\fBplgcol0a\fP: Returns 8-bit RGB values and PLFLT alpha transparency value for given color index from cmap0
+.TP
+\fBplgcolbg\fP:  Returns the background color (cmap0[0]) by 8-bit RGB value
+.TP
+\fBplgcolbga\fP:  Returns the background color (cmap0[0]) by 8-bit RGB value and PLFLT alpha transparency value
+.TP
+\fBplgcompression\fP: Get the current device-compression setting
+.TP
+\fBplgdev\fP: Get the current device (keyword) name
+.TP
+\fBplgdidev\fP: Get parameters that define current device-space window
+.TP
+\fBplgdiori\fP: Get plot orientation
+.TP
+\fBplgdiplt\fP: Get parameters that define current plot-space window
+.TP
+\fBplgdrawmode\fP: Get drawing mode (depends on
+device support!)
+.TP
+\fBplgfam\fP: Get family file parameters
+.TP
+\fBplgfci\fP: Get FCI (font characterization integer)
+.TP
+\fBplgfnam\fP: Get output file name
+.TP
+\fBplgfont\fP: Get family, style and weight of the current font
+.TP
+\fBplglevel\fP: Get the (current) run level
+.TP
+\fBplgpage\fP: Get page parameters
+.TP
+\fBplgra\fP: Switch to graphics screen
+.TP
+\fBplgradient\fP: Draw linear gradient inside polygon
+.TP
+\fBplgriddata\fP: Grid data from irregularly sampled data
+.TP
+\fBplgspa\fP: Get current subpage parameters
+.TP
+\fBplgstrm\fP: Get current stream number
+.TP
+\fBplgver\fP: Get the current library version number
+.TP
+\fBplgvpd\fP: Get viewport limits in normalized device coordinates
+.TP
+\fBplgvpw\fP: Get viewport limits in world coordinates
+.TP
+\fBplgxax\fP: Get x axis parameters
+.TP
+\fBplgyax\fP: Get y axis parameters
+.TP
+\fBplgzax\fP: Get z axis parameters
+.TP
+\fBplhist\fP: Plot a histogram from unbinned data
+.TP
+\fBplhlsrgb\fP: Convert HLS color to RGB
+.TP
+\fBplimagefr\fP: Plot a 2D matrix using cmap1
+.TP
+\fBplimage\fP: Plot a 2D matrix using cmap1 with automatic color adjustment
+.TP
+\fBplinit\fP: Initialize PLplot
+.TP
+\fBpljoin\fP: Draw a line between two points
+.TP
+\fBpllab\fP: Simple routine to write labels
+.TP
+\fBpllegend\fP: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols
+.TP
+\fBpllightsource\fP: Sets the 3D position of the light source
+.TP
+\fBplline\fP: Draw a line
+.TP
+\fBplline3\fP: Draw a line in 3 space
+.TP
+\fBpllsty\fP: Select line style
+.TP
+\fBplmap\fP: Plot continental outline or shapefile data in world coordinates
+.TP
+\fBplmapfill\fP: Plot all or a subset of Shapefile data, filling the polygons
+.TP
+\fBplmapline\fP: Plot all or a subset of Shapefile data using lines in world coordinates
+.TP
+\fBplmapstring\fP: Plot all or a subset of Shapefile data using strings or points in world coordinates
+.TP
+\fBplmaptex\fP: Draw text at points defined by Shapefile data in world coordinates
+.TP
+\fBplmeridians\fP: Plot latitude and longitude lines
+.TP
+\fBplmesh\fP: Plot surface mesh
+.TP
+\fBplmeshc\fP: Magnitude colored plot surface mesh with contour
+.TP
+\fBplmkstrm\fP: Creates a new stream and makes it the default
+.TP
+\fBplmtex\fP: Write text relative to viewport boundaries
+.TP
+\fBplmtex3\fP: Write text relative to viewport boundaries in 3D plots
+.TP
+\fBplot3d\fP: Plot 3-d surface plot
+.TP
+\fBplot3dc\fP: Magnitude colored plot surface with contour
+.TP
+\fBplot3dcl\fP: Magnitude colored plot surface with contour for z[x][y] with y index limits
+.TP
+\fBplparseopts\fP: Parse command-line arguments
+.TP
+\fBplpat\fP: Set area line fill pattern
+.TP
+\fBplpath\fP: Draw a line between two points, accounting for coordinate transforms
+.TP
+\fBplpoin\fP: Plot a glyph at the specified points
+.TP
+\fBplpoin3\fP: Plot a glyph at the specified 3D points
+.TP
+\fBplpoly3\fP: Draw a polygon in 3 space
+.TP
+\fBplprec\fP: Set precision in numeric labels
+.TP
+\fBplpsty\fP: Select area fill pattern
+.TP
+\fBplptex\fP: Write text inside the viewport
+.TP
+\fBplptex3\fP: Write text inside the viewport of a 3D plot
+.TP
+\fBplrandd\fP: Random number generator returning a real random number in the range [0,1]
+.TP
+\fBplreplot\fP: Replays contents of plot buffer to current device/file
+.TP
+\fBplrgbhls\fP: Convert RGB color to HLS
+.TP
+\fBplschr\fP: Set character size
+.TP
+\fBplscmap0\fP: Set cmap0 colors by 8-bit RGB values
+.TP
+\fBplscmap0a\fP: Set cmap0 colors by 8-bit RGB values and PLFLT alpha transparency value
+.TP
+\fBplscmap0n\fP: Set number of colors in cmap0
+.TP
+\fBplscmap1_range\fP: Set the cmap1 argument range for continuous color plots
+.TP
+\fBplscmap1\fP: Set opaque RGB cmap1 colors values
+.TP
+\fBplscmap1a\fP: Set semitransparent cmap1 RGBA colors.
+.TP
+\fBplscmap1l\fP: Set cmap1 colors using a piece-wise linear relationship
+.TP
+\fBplscmap1la\fP: Set cmap1 colors and alpha transparency using a piece-wise linear relationship
+.TP
+\fBplscmap1n\fP: Set number of colors in cmap1
+.TP
+\fBplscol0\fP:  Set 8-bit RGB values for given cmap0 color index
+.TP
+\fBplscol0a\fP:  Set 8-bit RGB values and PLFLT alpha transparency value for given cmap0 color index
+.TP
+\fBplscolbg\fP: Set the background color by 8-bit RGB value
+.TP
+\fBplscolbga\fP: Set the background color by 8-bit RGB value and PLFLT alpha transparency value.
+.TP
+\fBplscolor\fP: Used to globally turn color output on/off
+.TP
+\fBplscompression\fP: Set device-compression level
+.TP
+\fBplsdev\fP: Set the device (keyword) name
+.TP
+\fBplsdidev\fP: Set parameters that define current device-space window
+.TP
+\fBplsdimap\fP: Set up transformation from metafile coordinates
+.TP
+\fBplsdiori\fP: Set plot orientation
+.TP
+\fBplsdiplt\fP: Set parameters that define current plot-space window
+.TP
+\fBplsdiplz\fP: Set parameters incrementally (zoom mode) that define current plot-space window
+.TP
+\fBplsdrawmode\fP: Set drawing mode (depends on device support!)
+.TP
+\fBplseed\fP: Set seed for internal random number generator.
+.TP
+\fBplsesc\fP: Set the escape character for text strings
+.TP
+\fBplsetopt\fP: Set any command-line option
+.TP
+\fBplsfam\fP: Set family file parameters
+.TP
+\fBplsfci\fP: Set FCI (font characterization integer)
+.TP
+\fBplsfnam\fP: Set output file name
+.TP
+\fBplsfont\fP: Set family, style and weight of the current font
+.TP
+\fBplshades\fP: Shade regions on the basis of value
+.TP
+\fBplshade\fP:  Shade individual region on the basis of value
+.TP
+\fBplslabelfunc\fP: Assign a function to use for generating custom axis labels
+.TP
+\fBplsmaj\fP: Set length of major ticks
+.TP
+\fBplsmem\fP: Set the memory area to be plotted (RGB)
+.TP
+\fBplsmema\fP: Set the memory area to be plotted (RGBA)
+.TP
+\fBplsmin\fP: Set length of minor ticks
+.TP
+\fBplsori\fP: Set orientation
+.TP
+\fBplspage\fP: Set page parameters
+.TP
+\fBplspal0\fP: Set the cmap0 palette using the specified cmap0*.pal format file
+.TP
+\fBplspal1\fP: Set the cmap1 palette using the specified cmap1*.pal format file
+.TP
+\fBplspause\fP: Set the pause (on end-of-page) status
+.TP
+\fBplsstrm\fP: Set current output stream
+.TP
+\fBplssub\fP: Set the number of subpages in x and y
+.TP
+\fBplssym\fP: Set symbol size
+.TP
+\fBplstar\fP: Initialization
+.TP
+\fBplstart\fP: Initialization
+.TP
+\fBplstransform\fP: Set a global coordinate transform function
+.TP
+\fBplstring\fP: Plot a glyph at the specified points
+.TP
+\fBplstring3\fP: Plot a glyph at the specified 3D points
+.TP
+\fBplstripa\fP: Add a point to a strip chart
+.TP
+\fBplstripc\fP: Create a 4-pen strip chart
+.TP
+\fBplstripd\fP: Deletes and releases memory used by a strip chart
+.TP
+\fBplstyl\fP: Set line style
+.TP
+\fBplsurf3d\fP: Plot shaded 3-d surface plot
+.TP
+\fBplsurf3dl\fP: Plot shaded 3-d surface plot for z[x][y] with y index limits
+.TP
+\fBplsvect\fP: Set arrow style for vector plots
+.TP
+\fBplsvpa\fP: Specify viewport in absolute coordinates
+.TP
+\fBplsxax\fP: Set x axis parameters
+.TP
+\fBplsyax\fP: Set y axis parameters
+.TP
+\fBplsym\fP: Plot a glyph at the specified points
+.TP
+\fBplszax\fP: Set z axis parameters
+.TP
+\fBpltext\fP: Switch to text screen
+.TP
+\fBpltimefmt\fP: Set format for date / time labels
+.TP
+\fBplvasp\fP: Specify viewport using aspect ratio only
+.TP
+\fBplvect\fP: Vector plot
+.TP
+\fBplvpas\fP: Specify viewport using coordinates and aspect ratio
+.TP
+\fBplvpor\fP: Specify viewport using normalized subpage coordinates
+.TP
+\fBplvsta\fP: Select standard viewport
+.TP
+\fBplw3d\fP: Configure the transformations required for projecting a 3D surface on a 2D window
+.TP
+\fBplwidth\fP: Set pen width
+.TP
+\fBplwind\fP: Specify window
+.TP
+\fBplxormod\fP: Enter or leave xor mode
+.nr PD 10
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.
+

@@ -1,0 +1,129 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plconfigtime: Configure the transformation between continuous and broken-down time for the current stream</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plcolorbar.html" title="plcolorbar: Plot color bar for image, shade or gradient plots"><link rel="next" href="plcont.html" title="plcont: Contour plot"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plconfigtime</code>: Configure the transformation
+        between continuous and broken-down time for the current stream
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plcolorbar.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plcont.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plconfigtime"></a>
+      <code class="function">plconfigtime</code>: Configure the transformation
+        between continuous and broken-down time for the current stream
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plconfigtime</b>
+	  (</code></td><td><var class="pdparam">scale</var>, </td></tr><tr><td> </td><td><var class="pdparam">offset1</var>, </td></tr><tr><td> </td><td><var class="pdparam">offset2</var>, </td></tr><tr><td> </td><td><var class="pdparam">ccontrol</var>, </td></tr><tr><td> </td><td><var class="pdparam">ifbtime_offset</var>, </td></tr><tr><td> </td><td><var class="pdparam">year</var>, </td></tr><tr><td> </td><td><var class="pdparam">month</var>, </td></tr><tr><td> </td><td><var class="pdparam">day</var>, </td></tr><tr><td> </td><td><var class="pdparam">hour</var>, </td></tr><tr><td> </td><td><var class="pdparam">min</var>, </td></tr><tr><td> </td><td><var class="pdparam">sec</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Configure the transformation
+      between continuous and broken-down time
+      for the current stream.  This transformation is
+      used by both <a class="link" href="plbtime.html" title="plbtime: Calculate broken-down time from continuous time for the current stream"><code class="function"> plbtime</code></a> and <a class="link" href="plctime.html" title="plctime: Calculate continuous time from broken-down time for the current stream"><code class="function">plctime</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>scale</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The number of days per continuous time unit.  As a special
+	    case, if <em class="parameter"><code>scale</code></em> is 0., then all
+	    other arguments are ignored, and the result (the default
+	    used by PLplot) is the equivalent of a call to
+	    plconfigtime(1./86400., 0., 0., 0x0, 1, 1970, 0, 1, 0, 0, 0.).
+	    That is, for this special case broken-down time is
+	    calculated with the proleptic Gregorian calendar with no
+	    leap seconds inserted, and the continuous time is defined
+            as the number of seconds since the Unix epoch of
+	    1970-01-01T00:00:00Z.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>offset1</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+            If <em class="parameter"><code>ifbtime_offset</code></em> is true, the
+	    parameters <em class="parameter"><code>offset1</code></em> and
+	    <em class="parameter"><code>offset2</code></em> are completely ignored.
+	    Otherwise, the sum of these parameters (with units in
+	    days) specify the epoch of the continuous time relative to
+	    the MJD epoch corresponding to the Gregorian calendar date
+	    of 1858-11-17T00:00:00Z or JD = 2400000.5.  Two PLFLT numbers
+	    are used to specify the origin to allow users (by
+	    specifying <em class="parameter"><code>offset1</code></em> as an integer
+	    that can be exactly represented by a
+	    floating-point variable and specifying
+	    <em class="parameter"><code>offset2</code></em> as a number in the range
+	    from 0. to 1) the chance to minimize the numerical errors of
+	    the continuous time representation.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>offset2</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    See documentation of <em class="parameter"><code>offset1</code></em>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ccontrol</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+            <em class="parameter"><code>ccontrol</code></em> contains bits controlling
+	    the transformation.  If the 0x1 bit is set, then the
+	    proleptic Julian calendar is used for broken-down time
+	    rather than the proleptic Gregorian calendar.  If the 0x2
+	    bit is set, then leap seconds that have been historically
+	    used to define UTC are inserted into the broken-down time.
+	    Other possibilities for additional control bits for
+	    ccontrol exist such as making the historical time
+	    corrections in the broken-down time corresponding to ET
+	    (ephemeris time) or making the (slightly non-constant)
+	    corrections from international atomic time (TAI) to what
+	    astronomers define as terrestrial time (TT).  But those
+	    additional possibilities have not been implemented yet in
+	    the qsastime library (one of the PLplot utility
+	    libraries).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ifbtime_offset</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+	</span></dt><dd><p>
+            <em class="parameter"><code>ifbtime_offset</code></em> controls how the
+	    epoch of the continuous time scale is specified by the
+	    user. If <em class="parameter"><code>ifbtime_offset</code></em> is false,
+	    then <em class="parameter"><code>offset1</code></em> and
+	    <em class="parameter"><code>offset2</code></em> are used to specify the
+	    epoch, and the following broken-down time parameters are
+	    completely ignored.  If
+	    <em class="parameter"><code>ifbtime_offset</code></em> is true, then
+	    <em class="parameter"><code>offset1</code></em> and
+	    <em class="parameter"><code>offset2</code></em> are completely ignored, and
+	    the following broken-down time parameters are used to
+	    specify the epoch.
+          </p></dd><dt><span class="term">
+	  <em class="parameter"><code>year</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Year of epoch.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>month</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Month of epoch in range from 0 (January) to 11 (December).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>day</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Day of epoch in range from 1 to 31.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>hour</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Hour of epoch in range from 0 to 23
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>min</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Minute of epoch in range from 0 to 59.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>sec</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Second of epoch in range from 0. to 60.
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plconfigtime(scale, offset1, offset2, ccontrol, ifbtime_offset, year, month, day, hour, min, sec)</code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 29.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plcolorbar.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plcont.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plcolorbar</code>: Plot color bar for image, shade or gradient plots
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plcont</code>: Contour plot
+    </td></tr></table></div></body></html>

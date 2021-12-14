@@ -1,0 +1,123 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Setup Cygwin
+------------
+
+Cygwin ([Cygwin Homepage](http://www.cygwin.com/)) is a Linux-like environment for Windows. It consists of two parts:
+
+-   A DLL (cygwin1.dll) which acts as a Linux API emulation layer providing substantial Linux API functionality.
+-   A collection of tools which provide Linux look and feel.
+
+The Cygwin DLL currently works with all recent, commercially released x86 32 bit and 64 bit versions of Windows, with the exception of Windows CE.
+
+### Download and install
+
+Download the [Cygwin installer](http://www.cygwin.com/setup.exe) and execute it. This installer allows you to download and install the Cygwin environment and tools. In order to make Plplot compile on Cygwin you need the following packages:
+
+-   Devel/gcc or Devel/gcc4
+-   Devel/g++ or Devel/g++4 (for C++ bindings)
+-   Devel/gada or Devel/gada4 (for Ada bindings)
+-   Devel/gfortran (for f95 bindings)
+-   Devel/libqhull-devel
+-   Devel/swig
+-   Devel/cmake
+-   Devel/libtool
+-   Devel/make
+
+Recommended packages:
+
+-   X11/fontconfig - used by the cairo plotting library, among others
+-   development packages for various optional components (cairo, Qt4, ...)
+
+### Setup
+
+To configure and compile PLplot with Cygwin you need to use the Cygwin-specific version of CMake. Some environment variables need to be set: the path to the shared libraries of PLplot and possibly to LAPACK. Use, for instance, a shell script like:
+
+`  # set up the PATH`
+`  set PLPLOTSRC=path_to_PLplot_source_directory`
+`  set BUILDDIR=path_to_build_directory_plplot`
+`  set PATH=$BUILDDIR/dll:$PATH`
+`  `
+`  # If you require our Python bindings they require numpy which requires lapack.`
+`  # So for this case you must do the following:`
+`  set PATH=/usr/lib/lapack:$PATH`
+`  `
+`  # run CMake and make`
+`  cmake $PLPLOTSRC -G "Unix Makefiles" ... further options ...`
+`  make`
+
+To run the examples (built with -DBUILD_TEST=ON) you need to add the path to the PLplot shared libraries, for instance the directory \$BUILDDIR/dll from above. As environment variables behave in the same way under Cygwin as they do under Linux, you need to have them set in the current process.
+
+### Experiences (PLplot 5.9.9) under Cygwin
+
+Below is a short report on recent (september 2013) experiences with PLplot under Cygwin.
+
+The following configuration was tested:
+
+-   MS Windows 7, 64 bits
+-   Cygwin, installed using setup.exe version 2.819 (also 64 bits)
+
+To build PLPlot under Cygwin you need to use the version of CMake that comes with Cygwin. Other packages that are required are:
+
+-   fontconfig: without this not all drivers can function (notably the cairo-based but also the X Window based drivers)
+-   libltdl: for dynamic drivers and shared libraries
+
+The build process requires that you extend the path with the directory to the DLLs that will be created:
+
+`   export PATH=/cygdrive/d/plplot-build/dll:$PATH`
+
+assuming you build PLplot in the directory d:\\plplot-build - the prefix "/cygdrive/d" and the forward slashes are used to reflexct the UNIX syntax, where the disks are not indicated separately.
+
+Below follow specific remarks about the various components of PLplot:
+
+-   *Python:*
+
+If you want to use PLplot with Python, you need to install version 2.7 and remove any references to Python 3 (it may be that version 3 also works, but if you have both installed, some mixture is used in CMake and that does not lead to a successful build.)
+
+You need to install numpy and LAPACK as well. Because the LAPACK libraries are installed in a separate directory you need to add that directory to the PATH too:
+
+`   export PATH=/usr/lib/lapack:$PATH`
+
+-   *Java:*
+
+There does not seem to be a Java package in this version of Cygwin. An older version did have one as part of the GNU compiler suite, but CMake could not recognise it.
+
+-   *cairo:*
+
+If you want to use the cairo device drivers, then you need to build PLplot with static libraries and static drivers, as currently a strange error occurs during the loading of the cairo driver.
+
+The wincairo device driver is currently turned off, because this depends on a component of the cairo libraries that is not supported by Cygwin. All other drivers work fine.
+
+-   *Qt:*
+
+You need to install the development libraries, as the build process requires several development utilities, among which **qmake**.
+
+The **qtwindow** device driver currently terminates with an error message that would indicate a programming error in the initialisation. As it works fine under Linux, this seems related to Cygwin rather than PLplot.
+
+-   *X Window:*
+
+The X Window based device drivers (xwin, xqt) work fine, but they are very slow. It is not practical to actually use them.
+
+*This is something that requires further investigation, as this slowness is not inherent to X Window under Cygwin*
+
+-   *wingcc:*
+
+The wingcc device driver (which uses the native windowing capacities of MS Windows 7) works fine and quickly, just as under Windows itself.
+
+-   *Perl:*
+
+The Perl-bindings for PLplot are part of PDL. Only when this port has been completed can this be tested.
+
+All language components that were tested (C, C++, Fortran, Python, Tcl and Tcl/Tk) work fine. The non-interactive tests gave clean results.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

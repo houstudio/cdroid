@@ -1,0 +1,31 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLLINE 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplline\fP - Draw a line
+.SH SYNOPSIS
+\fBplline\fP(\fIn\fP, \fIx\fP, \fIy\fP)
+.SH DESCRIPTION
+
+.P
+Draws line defined by \fIn\fP points in \fIx\fP and \fIy\fP.
+.P
+Redacted form: \fBplline(x, y)\fP
+.P
+This function is used in examples 1, 3, 4, 9, 12-14, 16, 18, 20, 22, 25-27, and 29.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of points defining line.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates of points.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of points.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSFNAM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsfnam\fP - Set output file name
+.SH SYNOPSIS
+\fBplsfnam\fP(\fIfnam\fP)
+.SH DESCRIPTION
+
+.P
+Sets the current output file name, if applicable.  If the file name has not been specified and is required by the driver, the user will be prompted for it.  If using the X-windows output driver, this sets the display name.  This routine, if used, must be called before initializing PLplot.
+.P
+Redacted form: \fBplsfnam(fnam)\fP
+.P
+This function is used in examples 1 and 20.
+.SH ARGUMENTS
+.TP
+\fIfnam\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the file name.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

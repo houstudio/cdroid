@@ -1,0 +1,62 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Description
+-----------
+
+Cairo is a 2D graphics library with support for multiple output devices. Currently supported output targets include the X Window System, Quartz, Win32, image buffers, PostScript, PDF, and SVG file output. Experimental backends include OpenGL (through glitz), XCB, BeOS, OS/2, and DirectFB.
+
+Pango is a library for laying out and rendering of text, with an emphasis on internationalization. Pango can be used anywhere that text layout is needed, though most of the work on Pango so far has been done in the context of the GTK+ widget toolkit.
+
+Instructions for Windows
+------------------------
+
+### MinGW
+
+For the MinGW toolset it's best to download the provided Windows binaries form the GTK+ project.
+
+-   Download the all-in-one bundle of the [Windows GTK+ stack](http://www.gtk.org/download-windows.html) including 3rd-party dependencies for windows: [GTK+ 2.20](http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.20/gtk+-bundle_2.20.0-20100406_win32.zip) or [GTK+ 2.16](http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.16/gtk+-bundle_2.16.6-20100207_win32.zip)
+-   Unzip the package to a directory, e.g. C:\\Development\\gtk
+-   Set environment variables so that CMake can find pkf-config
+
+`  set PKG_CONFIG_PATH=C:\Development\gtk\lib\pkgconfig`
+`  set PATH=C:\Development\gtk\bin;%PATH%`
+
+CMake will find pkg-config and all the libraries necessary to build the pdfcairo, pscairo, pngcairo, svgcairo and wincairo devices. xcairo will not be built since the X-Headers are not present on Windows.
+
+### Visual C++
+
+If you use the MicroSoft Visual C/C++ (MSVC) compiler (with any compatible additional compilers like Intel Fortran), then the receipe remains the same as for MinGW with the GCC compilers: the binaries from the GTK+ project include the libraries required by MSVC and the build system automatically finds them if you set the environment as above.
+
+(Note: this was tested for MSVC 9.0 and Intel Fortran 11.1, it may not work with older versions of MSVC, as at some point the calling conventions for DLLs were changed.)
+
+Instructions for Linux
+----------------------
+
+Usually the cairo/pango libraries are already installed on your Linux distribution, but the developer packages might be missing. E.g. for Ubuntu Linux just install the pango developer package:
+
+` sudo apt-get install libpango1.0-dev`
+
+Since pango depends on cairo all the necessary developer packages are installed with this command. Similar instructions apply to other Linux distributions.
+
+Instructions for Mac OS X
+-------------------------
+
+-   Download the [GTK_2.18.5-X11.pkg](http://r.research.att.com/libs/GTK_2.18.5-X11.pkg) package from [<http://r.research.att.com/>](http://r.research.att.com/) and install it
+-   Add to your .profile file in the home directory:
+
+`export PATH=/Library/Frameworks/GTK+.framework/Resources/bin:$PATH`
+
+cmake is now able to find the cairo/pango libraries via pkg-config.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

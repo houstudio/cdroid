@@ -1,0 +1,57 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLW3D 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplw3d\fP - Configure the transformations required for projecting a 3D surface on a 2D window
+.SH SYNOPSIS
+\fBplw3d\fP(\fIbasex\fP, \fIbasey\fP, \fIheight\fP, \fIxmin\fP, \fIxmax\fP, \fIymin\fP, \fIymax\fP, \fIzmin\fP, \fIzmax\fP, \fIalt\fP, \fIaz\fP)
+.SH DESCRIPTION
+
+.P
+Configure the transformations required for projecting a 3D surface on an existing 2D window.  Those transformations (see the PLplot documentation) are done to a rectangular cuboid enclosing the 3D surface which has its limits expressed in 3D world coordinates and also normalized 3D coordinates (used for interpreting the altitude and azimuth of the viewing angle).  The transformations consist of the linear transform from 3D world coordinates to normalized 3D coordinates, and the 3D rotation of normalized coordinates required to align the pole of the new 3D coordinate system with the viewing direction specified by altitude and azimuth so that x and y of the surface elements in that transformed coordinate system are the projection of the 3D surface with given viewing direction on the 2D window.
+.P
+The enclosing rectangular cuboid for the surface plot is defined by \fIxmin\fP, \fIxmax\fP, \fIymin\fP, \fIymax\fP, \fIzmin\fP and \fIzmax\fP in 3D world coordinates.  It is mapped into the same rectangular cuboid with normalized 3D coordinate sizes of \fIbasex\fP by \fIbasey\fP by \fIheight\fP so that \fIxmin\fP maps to -\fIbasex\fP/2, \fIxmax\fP maps to \fIbasex\fP/2, \fIymin\fP maps to -\fIbasey\fP/2, \fIymax\fP maps to \fIbasey\fP/2, \fIzmin\fP maps to 0 and \fIzmax\fP maps to \fIheight\fP.  The resulting rectangular cuboid in normalized coordinates is then viewed by an observer at altitude \fIalt\fP and azimuth \fIaz\fP.  This routine must be called before \fBplbox3\fP(3plplot) or any of the 3D surface plotting routines; \fBplmesh\fP(3plplot), \fBplmeshc\fP(3plplot), \fBplot3d\fP(3plplot), \fBplot3dc\fP(3plplot), \fBplot3dcl\fP(3plplot), \fBplsurf3d\fP(3plplot), \fBplsurf3dl\fP(3plplot) or \fBplfill3\fP(3plplot).
+.P
+Redacted form: \fBplw3d(basex, basey, height, xmin, xmax, ymin, ymax, zmin, zmax, alt, az)\fP
+.P
+This function is examples 8, 11, 18, and 21.
+.SH ARGUMENTS
+.TP
+\fIbasex\fP (\fBPLFLT\fP(3plplot), input)
+The normalized x coordinate size of the rectangular cuboid.
+.TP
+\fIbasey\fP (\fBPLFLT\fP(3plplot), input)
+The normalized y coordinate size of the rectangular cuboid.
+.TP
+\fIheight\fP (\fBPLFLT\fP(3plplot), input)
+The normalized z coordinate size of the rectangular cuboid.
+.TP
+\fIxmin\fP (\fBPLFLT\fP(3plplot), input)
+The minimum x world coordinate of the rectangular cuboid.
+.TP
+\fIxmax\fP (\fBPLFLT\fP(3plplot), input)
+The maximum x world coordinate of the rectangular cuboid.
+.TP
+\fIymin\fP (\fBPLFLT\fP(3plplot), input)
+The minimum y world coordinate of the rectangular cuboid.
+.TP
+\fIymax\fP (\fBPLFLT\fP(3plplot), input)
+The maximum y world coordinate of the rectangular cuboid.
+.TP
+\fIzmin\fP (\fBPLFLT\fP(3plplot), input)
+The minimum z world coordinate of the rectangular cuboid.
+.TP
+\fIzmax\fP (\fBPLFLT\fP(3plplot), input)
+The maximum z world coordinate of the rectangular cuboid.
+.TP
+\fIalt\fP (\fBPLFLT\fP(3plplot), input)
+The viewing altitude in degrees above the xy plane of the rectangular cuboid in normalized coordinates.
+.TP
+\fIaz\fP (\fBPLFLT\fP(3plplot), input)
+The viewing azimuth in degrees of the rectangular cuboid in normalized coordinates.  When \fIaz\fP=0, the observer is looking face onto the zx plane of the rectangular cuboid in normalized coordinates, and as \fIaz\fP is increased, the observer moves clockwise around that cuboid when viewed from above the xy plane.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

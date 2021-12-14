@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGSTRM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgstrm\fP - Get current stream number
+.SH SYNOPSIS
+\fBplgstrm\fP(\fIp_strm\fP)
+.SH DESCRIPTION
+
+.P
+Gets the number of the current output stream. See also \fBplsstrm\fP(3plplot).
+.P
+Redacted form: \fBplgstrm(p_strm)\fP
+.P
+This function is used in example 1,20.
+.SH ARGUMENTS
+.TP
+\fIp_strm\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the current stream value.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

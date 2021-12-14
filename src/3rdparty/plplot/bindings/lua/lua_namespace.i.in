@@ -1,0 +1,5 @@
+// Assign the module a shorter name
+%luacode {
+    pl = @WRITEABLE_TARGET@plplotluac
+}
+

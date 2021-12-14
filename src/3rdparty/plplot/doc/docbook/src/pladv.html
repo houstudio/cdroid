@@ -1,0 +1,34 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>pladv: Advance the (sub-)page</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="pl_setcontlabelparam.html" title="pl_setcontlabelparam: Set parameters of contour labelling other than format of numerical label"><link rel="next" href="plarc.html" title="plarc: Draw a circular or elliptical arc"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center"><code class="function">pladv</code>: Advance the (sub-)page</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="pl_setcontlabelparam.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plarc.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="pladv"></a><code class="function">pladv</code>: Advance the (sub-)page</h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">pladv</b>
+	  (</code></td><td><var class="pdparam">page</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Advances to the next subpage if
+      <code class="literal"><em class="parameter"><code>sub</code></em>=0</code>, performing a page
+      advance if there are no remaining subpages on the current page.  If
+      subpages aren't being used, <code class="literal"><a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a>(0)</code> will
+      always advance the page.  If
+      <code class="literal"><em class="parameter"><code>page</code></em>&gt;0</code>, PLplot switches
+      to the specified subpage.  Note that this allows you to overwrite a
+      plot on the specified subpage; if this is not what you intended, use
+      <a class="link" href="pleop.html" title="pleop: Eject current page"><code class="function">pleop</code></a> followed by <a class="link" href="plbop.html" title="plbop: Begin a new page"><code class="function">plbop</code></a> to first advance the page.  This routine
+      is called automatically (with
+      <code class="literal"><em class="parameter"><code>page</code></em>=0</code>) by <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a>, but if
+      <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a> is not used, <a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a> must be called after initializing PLplot
+      but before defining the viewport.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>page</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Specifies the subpage number (starting from 1 in the top left
+	    corner and increasing along the rows) to which to advance.  Set
+	    to zero to advance to the next subpage (or to the next page
+            if subpages are not being used).
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">pladv(page)</code>
+    </p><p>
+      This function is used in examples 1, 2, 4, 6-12, 14-18, 20, 21, 23-27, 29, and 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="pl_setcontlabelparam.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plarc.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top"><code class="function">pl_setcontlabelparam</code>: Set parameters of
+    contour labelling other than format of numerical label </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plarc</code>: Draw a circular or elliptical arc
+    </td></tr></table></div></body></html>

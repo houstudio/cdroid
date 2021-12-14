@@ -1,0 +1,121 @@
+#!@xtk04_LOCATION@ -f
+#                     -*-tcl-*-
+# Maurice LeBrun
+# 30 Jun 1994
+#
+# @> A script illustrating use of 2-d tcl api (plframe).
+###############################################################################
+
+package require Pltk
+eval package require $pl_itk_package_name
+wm title . "tk04"
+plstdwin .
+
+###############################################################################
+# Set up the menubar and message widgets.
+
+frame .menu -relief raised -borderwidth 3
+
+button .menu.comp -text "Compute Function" -command "compute"
+button .menu.contour -text "Line Contour" -command "contour"
+button .menu.shade -text "Color Fill Contour" -command "shade"
+pack .menu.comp .menu.contour .menu.shade -side left
+
+button .menu.exit -text "Exit" -command "destroy ."
+pack .menu.exit -side right
+
+message .msg \
+	-font -Adobe-helvetica-medium-r-normal--*-240* -aspect 200 \
+	 -width 500 -borderwidth 1 \
+	-text "TK04: 2-d Tcl API"
+
+pack .menu .msg -fill x
+
+tk_menuBar .menu .menu.comp .menu.contour .menu.shade .menu.exit
+
+PLXWin .plw
+pack .plw -side bottom -expand 1 -fill both
+
+matrix x f 64 64
+
+# This is the front end to the data computation.  Initially we just
+# create the matrix to hold the data, and then vector down to the C
+# side to set the data.  However, one could easily embellish this to
+# accept specifications from the user (via Tk entries), and act on
+# them.  For instance, choosing the size of the matrix, passing
+# paramaters to the compiled side, etc.
+
+proc compute {} {
+
+    global x
+
+    get_data x
+}
+
+# Draw a contour of the data.
+
+proc contour {} {
+
+    global x
+
+    .plw pladv
+    .plw plvpor 0.1 0.9 0.1 0.9
+    .plw plwind 1. 64. 1. 64.
+
+    .plw plcol0 6
+    .plw pllab "(x)" "(y)" "#frPLplot Example Tk04"
+
+    # plot the data points
+
+    .plw plcol0 9
+
+    matrix clev f 10
+
+    set max [x max]
+    set min [x min]
+
+    for {set i 0} {$i < 10} {incr i} {
+	clev $i = [expr $min + ($max-$min)*($i+.5)/10 ]
+    }
+
+    .plw plcont x clev
+
+    .plw plcol0 1
+    .plw plbox "bcnst" 0.0 0 "bcnstv" 0.0 0
+}
+
+proc shade {} {
+
+    global x
+
+    .plw pladv
+    .plw plvpor 0.1 0.9 0.1 0.9
+    .plw plwind 0. 1. 0. 1.
+
+    .plw plcol0 6
+    .plw pllab "(x)" "(y)" "Cool shade plot example from Tcl"
+
+    set max [x max]
+    set min [x min]
+
+    set xmin 0
+    set xmax 1
+    set ymin 0
+    set ymax 1
+
+    for {set i 0} {$i < 20} {incr i} {
+	set sh_min [expr $min + ($max-$min)*$i/20.]
+	set sh_max [expr $min + ($max-$min)*($i+1)/20.]
+	set sh_col [expr $i/20.]
+
+	.plw plshade x $xmin $xmax $ymin $ymax $sh_min $sh_max 1 $sh_col 0 \
+	    1 0 0 0 \
+	    1 "NULL"
+
+    }
+
+    .plw plcol0 1
+    .plw plbox "bcnst" 0.0 0 "bcnstv" 0.0 0
+}
+
+###############################################################################

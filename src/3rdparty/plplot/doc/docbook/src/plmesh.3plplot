@@ -1,0 +1,43 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLMESH 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplmesh\fP - Plot surface mesh
+.SH SYNOPSIS
+\fBplmesh\fP(\fIx\fP, \fIy\fP, \fIz\fP, \fInx\fP, \fIny\fP, \fIopt\fP)
+.SH DESCRIPTION
+
+.P
+Plots a surface mesh within the environment set up by \fBplw3d\fP(3plplot).  The surface is defined by the matrix \fIz\fP[\fInx\fP][\fIny\fP] , the point \fIz\fP[i][j] being the value of the function at (\fIx\fP[i], \fIy\fP[j]). Note that the points in vectors \fIx\fP and \fIy\fP do not need to be equally spaced, but must be stored in ascending order.  The parameter \fIopt\fP controls the way in which the surface is displayed.  For further details see the PLplot documentation.
+.P
+Redacted form: \fBplmesh(x, y, z, opt)\fP
+.P
+This function is used in example 11.
+.SH ARGUMENTS
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates at which the function is evaluated.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates at which the function is evaluated.
+.TP
+\fIz\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing function values to plot.  Should have dimensions of \fInx\fP by \fIny\fP.
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIx\fP values at which function has been evaluated.
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIy\fP values at which function has been evaluated.
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+Determines the way in which the surface is represented: \fIopt\fP=DRAW_LINEX : Lines are drawn showing \fIz\fP as a function of \fIx\fP for each value of \fIy\fP[j] .
+\fIopt\fP=DRAW_LINEY : Lines are drawn showing \fIz\fP as a function of \fIy\fP for each value of \fIx\fP[i] .
+\fIopt\fP=DRAW_LINEXY : Network of lines is drawn connecting points at which function is defined.
+
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

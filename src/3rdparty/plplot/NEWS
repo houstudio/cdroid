@@ -1,0 +1,22 @@
+This file contains no PLplot news.  Instead it points to the places where
+you can find such news.
+
+For short news items about PLplot stretching back to
+2001 look at http://sourceforge.net/p/plplot/news/?source=navbar
+
+For current release notes see README.release
+
+For older release notes stretching back to 5.5.0 see README.cumulated_release.
+
+For still older release announcements, see
+
+http://plplot.org/announce/announce-plplot-5.3.1.xhtml
+http://plplot.org/announce/announce-plplot-5.3.0.xhtml
+http://plplot.org/announce/announce-plplot-5.2.1.html
+http://plplot.org/announce/announce-plplot-5.1.0.html
+
+For release notes for 4.99j (some also covered in slightly different
+format in OLDER-NEWS) through PLplot-5.1.0, see OLD-NEWS.
+
+For key e-mails from 1993 to the release announcement for 5.0.2 see
+OLDER-NEWS.

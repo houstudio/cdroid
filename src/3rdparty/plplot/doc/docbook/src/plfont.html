@@ -1,0 +1,41 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plfont: Set font</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plflush.html" title="plflush: Flushes the output stream"><link rel="next" href="plfontld.html" title="plfontld: Load Hershey fonts"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plfont</code>: Set font
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plflush.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plfontld.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plfont"></a>
+      <code class="function">plfont</code>: Set font
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plfont</b>
+	  (</code></td><td><var class="pdparam">ifont</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Sets the font used for subsequent text and symbols.  For devices
+      that still use Hershey fonts this routine has no effect unless the
+      Hershey fonts with extended character set are loaded (see <a class="link" href="plfontld.html" title="plfontld: Load Hershey fonts"><code class="function">plfontld</code></a>).
+      For unicode-aware devices that use system fonts instead of
+      Hershey fonts, this routine calls the <a class="link" href="plsfci.html" title="plsfci: Set FCI (font characterization integer)"><code class="function">plsfci</code></a> routine with argument set up
+      appropriately for the various cases below.  However, this method of
+      specifying the font for unicode-aware devices is deprecated, and the much
+      more flexible method of calling <a class="link" href="plsfont.html" title="plsfont: Set family, style and weight of the current font"><code class="function">plsfont</code></a> directly is recommended
+      instead (where <a class="link" href="plsfont.html" title="plsfont: Set family, style and weight of the current font"><code class="function">plsfont</code></a> provides a user-friendly interface to <a class="link" href="plsfci.html" title="plsfci: Set FCI (font characterization integer)"><code class="function">plsfci</code></a>),
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>ifont</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Specifies the font:
+	    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+		  <code class="literal">1</code>: Sans serif font (simplest and fastest)
+		</p></li><li class="listitem"><p>
+		  <code class="literal">2</code>: Serif font
+		</p></li><li class="listitem"><p>
+		  <code class="literal">3</code>: Italic font
+		</p></li><li class="listitem"><p>
+		  <code class="literal">4</code>: Script font
+		</p></li></ul></div><p>
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plfont(ifont)</code>
+    </p><p>
+      This function is used in examples 1, 2, 4, 7, 13, 24, and 26.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plflush.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plfontld.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plflush</code>: Flushes the output stream
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plfontld</code>: Load Hershey fonts
+    </td></tr></table></div></body></html>

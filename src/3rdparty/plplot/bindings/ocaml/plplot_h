@@ -1,0 +1,1343 @@
+// Simplified and modified version of ../../include/plplot.h
+// which is processed by touchup.ml to create (indirectly)
+// plplot_h.inc.
+
+// Use #defines to recreate the PLplot API typedefs.
+
+//typedef double PLFLT;
+// This assumes the PL_DOUBLE macro is #defined for the PLplot core
+// library.
+#define PLFLT double
+
+//typedef unsigned int PLUNICODE;
+// Use long long rather than unsigned int here because according to
+// <http://ocaml.org/learn/tutorials/basics.html>, OCaml has no basic
+// unsigned integer type, and, in any case, the most significant bit
+// of its integer types are used for something else internally (managing
+// garbage collection).
+#define PLUNICODE long long
+//typedef int PLINT;
+#define PLINT int
+
+//typedef PLINT PLBOOL;
+#define PLBOOL boolean
+
+// Note the const attributes must be dropped from all of these that
+// require dimensions (i.e., everything but PL_CHAR_VECTOR which is
+// NULL-terminated rather than requiring a dimension) since camlidl
+// creates interface code that allocates and modifies all dimensioned
+// arrays.
+
+#define PLCHAR_VECTOR const char *
+#define PLCHAR_NC_VECTOR char *
+#define PLFLT_NC_SCALAR double *
+#define PLFLT_VECTOR double *
+#define PLFLT_MATRIX double **
+#define PLUNICODE_NC_SCALAR long long *
+#define PLINT_NC_SCALAR int *
+#define PLINT_VECTOR int *
+// Make visibility attribute invisible.
+#define PLDLLIMPEXP
+#define PLBOOL_NC_SCALAR boolean *
+#define PLBOOL_VECTOR boolean *
+
+// These function declarations for the common PLplot API are all
+// copied directly from ../../include/plplot.h.  Note that the common
+// API that cannot be processed by touchup.ml is skipped using
+// inserted "#if 0 ... #endif" stanzas.
+
+// set the format of the contour labels
+
+PLDLLIMPEXP void
+c_pl_setcontlabelformat( PLINT lexp, PLINT sigdig );
+
+// set offset and spacing of contour labels
+
+PLDLLIMPEXP void
+c_pl_setcontlabelparam( PLFLT offset, PLFLT size, PLFLT spacing, PLINT active );
+
+// Advance to subpage "page", or to the next one if "page" = 0.
+
+PLDLLIMPEXP void
+c_pladv( PLINT page );
+
+// Plot an arc
+
+PLDLLIMPEXP void
+c_plarc( PLFLT x, PLFLT y, PLFLT a, PLFLT b, PLFLT angle1, PLFLT angle2,
+         PLFLT rotate, PLBOOL fill );
+
+// This functions similarly to plbox() except that the origin of the axes
+// is placed at the user-specified point (x0, y0).
+
+PLDLLIMPEXP void
+c_plaxes( PLFLT x0, PLFLT y0, PLCHAR_VECTOR xopt, PLFLT xtick, PLINT nxsub,
+          PLCHAR_VECTOR yopt, PLFLT ytick, PLINT nysub );
+
+// Plot a histogram using x to store data values and y to store frequencies
+
+#if 0 //drop this section
+// Flags for plbin() - opt argument
+#define PL_BIN_DEFAULT     0x0
+#define PL_BIN_CENTRED     0x1
+#define PL_BIN_NOEXPAND    0x2
+#define PL_BIN_NOEMPTY     0x4
+#endif
+
+PLDLLIMPEXP void
+// Change from plplot.h
+// c_plbin( PLINT nbin, PLFLT_VECTOR x, PLFLT_VECTOR y, PLINT opt );
+c_plbin( PLINT nbin, PLFLT_VECTOR x, PLFLT_VECTOR y, plplot_bin_style opt );
+
+// Calculate broken-down time from continuous time for current stream.
+PLDLLIMPEXP void
+c_plbtime( PLINT_NC_SCALAR year, PLINT_NC_SCALAR month, PLINT_NC_SCALAR day, PLINT_NC_SCALAR hour, PLINT_NC_SCALAR min, PLFLT_NC_SCALAR sec, PLFLT ctime );
+
+// Start new page.  Should only be used with pleop().
+
+PLDLLIMPEXP void
+c_plbop( void );
+
+// This draws a box around the current viewport.
+
+PLDLLIMPEXP void
+c_plbox( PLCHAR_VECTOR xopt, PLFLT xtick, PLINT nxsub,
+         PLCHAR_VECTOR yopt, PLFLT ytick, PLINT nysub );
+
+// This is the 3-d analogue of plbox().
+
+PLDLLIMPEXP void
+c_plbox3( PLCHAR_VECTOR xopt, PLCHAR_VECTOR xlabel, PLFLT xtick, PLINT nxsub,
+          PLCHAR_VECTOR yopt, PLCHAR_VECTOR ylabel, PLFLT ytick, PLINT nysub,
+          PLCHAR_VECTOR zopt, PLCHAR_VECTOR zlabel, PLFLT ztick, PLINT nzsub );
+
+// Calculate world coordinates and subpage from relative device coordinates.
+
+PLDLLIMPEXP void
+c_plcalc_world( PLFLT rx, PLFLT ry, PLFLT_NC_SCALAR wx, PLFLT_NC_SCALAR wy, PLINT_NC_SCALAR window );
+
+// Clear current subpage.
+
+PLDLLIMPEXP void
+c_plclear( void );
+
+// Set color, map 0.  Argument is integer between 0 and 15.
+
+PLDLLIMPEXP void
+c_plcol0( PLINT icol0 );
+
+// Set color, map 1.  Argument is a float between 0. and 1.
+
+PLDLLIMPEXP void
+c_plcol1( PLFLT col1 );
+
+// Configure transformation between continuous and broken-down time (and
+// vice versa) for current stream.
+PLDLLIMPEXP void
+c_plconfigtime( PLFLT scale, PLFLT offset1, PLFLT offset2, PLINT ccontrol, PLBOOL ifbtime_offset, PLINT year, PLINT month, PLINT day, PLINT hour, PLINT min, PLFLT sec );
+
+// Draws a contour plot from data in f(nx,ny).  Is just a front-end to
+// plfcont, with a particular choice for f2eval and f2eval_data.
+//
+
+#if 0 //drop this section
+PLDLLIMPEXP void
+c_plcont( PLFLT_MATRIX f, PLINT nx, PLINT ny, PLINT kx, PLINT lx,
+          PLINT ky, PLINT ly, PLFLT_VECTOR clevel, PLINT nlevel,
+          PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+// Draws a contour plot using the function evaluator f2eval and data stored
+// by way of the f2eval_data pointer.  This allows arbitrary organizations
+// of 2d array data to be used.
+//
+
+PLDLLIMPEXP void
+plfcont( PLF2EVAL_callback f2eval, PLPointer f2eval_data,
+         PLINT nx, PLINT ny, PLINT kx, PLINT lx,
+         PLINT ky, PLINT ly, PLFLT_VECTOR clevel, PLINT nlevel,
+         PLTRANSFORM_callback pltr, PLPointer pltr_data );
+#endif
+
+// Copies state parameters from the reference stream to the current stream.
+
+PLDLLIMPEXP void
+c_plcpstrm( PLINT iplsr, PLBOOL flags );
+
+// Calculate continuous time from broken-down time for current stream.
+PLDLLIMPEXP void
+c_plctime( PLINT year, PLINT month, PLINT day, PLINT hour, PLINT min, PLFLT sec, PLFLT_NC_SCALAR ctime );
+
+// Converts input values from relative device coordinates to relative plot
+// coordinates.
+
+#if 0 //drop this section
+PLDLLIMPEXP void
+pldid2pc( PLFLT_NC_SCALAR xmin, PLFLT_NC_SCALAR ymin, PLFLT_NC_SCALAR xmax, PLFLT_NC_SCALAR ymax );
+
+// Converts input values from relative plot coordinates to relative
+// device coordinates.
+
+PLDLLIMPEXP void
+pldip2dc( PLFLT_NC_SCALAR xmin, PLFLT_NC_SCALAR ymin, PLFLT_NC_SCALAR xmax, PLFLT_NC_SCALAR ymax );
+#endif
+
+// End a plotting session for all open streams.
+
+PLDLLIMPEXP void
+c_plend( void );
+
+// End a plotting session for the current stream only.
+
+PLDLLIMPEXP void
+c_plend1( void );
+
+// Simple interface for defining viewport and window.
+
+PLDLLIMPEXP void
+c_plenv( PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+         PLINT just, PLINT axis );
+
+
+// similar to plenv() above, but in multiplot mode does not advance the subpage,
+// instead the current subpage is cleared
+
+PLDLLIMPEXP void
+c_plenv0( PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+          PLINT just, PLINT axis );
+
+// End current page.  Should only be used with plbop().
+
+PLDLLIMPEXP void
+c_pleop( void );
+
+// Plot horizontal error bars (xmin(i),y(i)) to (xmax(i),y(i))
+
+PLDLLIMPEXP void
+c_plerrx( PLINT n, PLFLT_VECTOR xmin, PLFLT_VECTOR xmax, PLFLT_VECTOR y );
+
+// Plot vertical error bars (x,ymin(i)) to (x(i),ymax(i))
+
+PLDLLIMPEXP void
+c_plerry( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR ymin, PLFLT_VECTOR ymax );
+
+// Advance to the next family file on the next new page
+
+PLDLLIMPEXP void
+c_plfamadv( void );
+
+// Pattern fills the polygon bounded by the input points.
+
+PLDLLIMPEXP void
+c_plfill( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y );
+
+// Pattern fills the 3d polygon bounded by the input points.
+
+PLDLLIMPEXP void
+c_plfill3( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_VECTOR z );
+
+// Flushes the output stream.  Use sparingly, if at all.
+
+PLDLLIMPEXP void
+c_plflush( void );
+
+// Sets the global font flag to 'ifont'.
+
+PLDLLIMPEXP void
+c_plfont( PLINT ifont );
+
+// Load specified font set.
+
+PLDLLIMPEXP void
+c_plfontld( PLINT fnt );
+
+// Get character default height and current (scaled) height
+
+PLDLLIMPEXP void
+c_plgchr( PLFLT_NC_SCALAR p_def, PLFLT_NC_SCALAR p_ht );
+
+// Get the color map 1 range used in continuous plots
+
+PLDLLIMPEXP void
+c_plgcmap1_range( PLFLT_NC_SCALAR min_color, PLFLT_NC_SCALAR max_color );
+
+// Returns 8 bit RGB values for given color from color map 0
+
+PLDLLIMPEXP void
+c_plgcol0( PLINT icol0, PLINT_NC_SCALAR r, PLINT_NC_SCALAR g, PLINT_NC_SCALAR b );
+
+// Returns 8 bit RGB values for given color from color map 0 and alpha value
+
+PLDLLIMPEXP void
+c_plgcol0a( PLINT icol0, PLINT_NC_SCALAR r, PLINT_NC_SCALAR g, PLINT_NC_SCALAR b, PLFLT_NC_SCALAR alpha );
+
+// Returns the background color by 8 bit RGB value
+
+PLDLLIMPEXP void
+c_plgcolbg( PLINT_NC_SCALAR r, PLINT_NC_SCALAR g, PLINT_NC_SCALAR b );
+
+// Returns the background color by 8 bit RGB value and alpha value
+
+PLDLLIMPEXP void
+c_plgcolbga( PLINT_NC_SCALAR r, PLINT_NC_SCALAR g, PLINT_NC_SCALAR b, PLFLT_NC_SCALAR alpha );
+
+// Returns the current compression setting
+
+PLDLLIMPEXP void
+c_plgcompression( PLINT_NC_SCALAR compression );
+
+// Get the current device (keyword) name
+
+PLDLLIMPEXP void
+c_plgdev( PLCHAR_NC_VECTOR p_dev );
+
+// Retrieve current window into device space
+
+PLDLLIMPEXP void
+c_plgdidev( PLFLT_NC_SCALAR p_mar, PLFLT_NC_SCALAR p_aspect, PLFLT_NC_SCALAR p_jx, PLFLT_NC_SCALAR p_jy );
+
+// Get plot orientation
+
+PLDLLIMPEXP void
+c_plgdiori( PLFLT_NC_SCALAR p_rot );
+
+// Retrieve current window into plot space
+
+PLDLLIMPEXP void
+c_plgdiplt( PLFLT_NC_SCALAR p_xmin, PLFLT_NC_SCALAR p_ymin, PLFLT_NC_SCALAR p_xmax, PLFLT_NC_SCALAR p_ymax );
+
+// Get the drawing mode
+
+// Change from plplot.h
+// PLDLLIMPEXP PLINT
+PLDLLIMPEXP enum plplot_draw_mode_enum
+c_plgdrawmode( void );
+
+// Get FCI (font characterization integer)
+
+PLDLLIMPEXP void
+c_plgfci( PLUNICODE_NC_SCALAR p_fci );
+
+// Get family file parameters
+
+PLDLLIMPEXP void
+c_plgfam( PLINT_NC_SCALAR p_fam, PLINT_NC_SCALAR p_num, PLINT_NC_SCALAR p_bmax );
+
+// Get the (current) output file name.  Must be preallocated to >80 bytes
+
+PLDLLIMPEXP void
+c_plgfnam( PLCHAR_NC_VECTOR fnam );
+
+// Get the current font family, style and weight
+
+PLDLLIMPEXP void
+c_plgfont( PLINT_NC_SCALAR p_family, PLINT_NC_SCALAR p_style, PLINT_NC_SCALAR p_weight );
+
+// Get the (current) run level.
+
+PLDLLIMPEXP void
+// Change from plplot.h
+//c_plglevel( PLINT_NC_SCALAR p_level );
+c_plglevel( plplot_run_level * p_level );
+
+// Get output device parameters.
+
+PLDLLIMPEXP void
+c_plgpage( PLFLT_NC_SCALAR p_xp, PLFLT_NC_SCALAR p_yp,
+           PLINT_NC_SCALAR p_xleng, PLINT_NC_SCALAR p_yleng, PLINT_NC_SCALAR p_xoff, PLINT_NC_SCALAR p_yoff );
+
+// Switches to graphics screen.
+
+PLDLLIMPEXP void
+c_plgra( void );
+
+// Draw gradient in polygon.
+
+PLDLLIMPEXP void
+c_plgradient( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT angle );
+
+#if 0 //drop this section
+// grid irregularly sampled data
+
+PLDLLIMPEXP void
+c_plgriddata( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_VECTOR z, PLINT npts,
+              PLFLT_VECTOR xg, PLINT nptsx, PLFLT_VECTOR yg, PLINT nptsy,
+              PLFLT_NC_MATRIX zg, PLINT type, PLFLT data );
+
+PLDLLIMPEXP void
+plfgriddata( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_VECTOR z, PLINT npts,
+             PLFLT_VECTOR xg, PLINT nptsx, PLFLT_VECTOR yg, PLINT nptsy,
+             PLF2OPS zops, PLPointer zgp, PLINT type, PLFLT data );
+
+// type of gridding algorithm for plgriddata()
+
+#define GRID_CSA       1 // Bivariate Cubic Spline approximation
+#define GRID_DTLI      2 // Delaunay Triangulation Linear Interpolation
+#define GRID_NNI       3 // Natural Neighbors Interpolation
+#define GRID_NNIDW     4 // Nearest Neighbors Inverse Distance Weighted
+#define GRID_NNLI      5 // Nearest Neighbors Linear Interpolation
+#define GRID_NNAIDW    6 // Nearest Neighbors Around Inverse Distance Weighted
+
+#endif
+// Get subpage boundaries in absolute coordinates
+
+PLDLLIMPEXP void
+c_plgspa( PLFLT_NC_SCALAR xmin, PLFLT_NC_SCALAR xmax, PLFLT_NC_SCALAR ymin, PLFLT_NC_SCALAR ymax );
+
+// Get current stream number.
+
+PLDLLIMPEXP void
+c_plgstrm( PLINT_NC_SCALAR p_strm );
+
+// Get the current library version number
+
+PLDLLIMPEXP void
+c_plgver( PLCHAR_NC_VECTOR p_ver );
+
+// Get viewport boundaries in normalized device coordinates
+
+PLDLLIMPEXP void
+c_plgvpd( PLFLT_NC_SCALAR p_xmin, PLFLT_NC_SCALAR p_xmax, PLFLT_NC_SCALAR p_ymin, PLFLT_NC_SCALAR p_ymax );
+
+// Get viewport boundaries in world coordinates
+
+PLDLLIMPEXP void
+c_plgvpw( PLFLT_NC_SCALAR p_xmin, PLFLT_NC_SCALAR p_xmax, PLFLT_NC_SCALAR p_ymin, PLFLT_NC_SCALAR p_ymax );
+
+// Get x axis labeling parameters
+
+PLDLLIMPEXP void
+c_plgxax( PLINT_NC_SCALAR p_digmax, PLINT_NC_SCALAR p_digits );
+
+// Get y axis labeling parameters
+
+PLDLLIMPEXP void
+c_plgyax( PLINT_NC_SCALAR p_digmax, PLINT_NC_SCALAR p_digits );
+
+// Get z axis labeling parameters
+
+PLDLLIMPEXP void
+c_plgzax( PLINT_NC_SCALAR p_digmax, PLINT_NC_SCALAR p_digits );
+
+// Draws a histogram of n values of a variable in array data[0..n-1]
+
+#if 0 //drop this section
+// Flags for plhist() - opt argument; note: some flags are passed to
+// plbin() for the actual plotting
+#define PL_HIST_DEFAULT            0x00
+#define PL_HIST_NOSCALING          0x01
+#define PL_HIST_IGNORE_OUTLIERS    0x02
+#define PL_HIST_NOEXPAND           0x08
+#define PL_HIST_NOEMPTY            0x10
+#endif
+
+PLDLLIMPEXP void
+c_plhist( PLINT n, PLFLT_VECTOR data, PLFLT datmin, PLFLT datmax,
+// Change from plplot.h
+//          PLINT nbin, PLINT opt );
+          PLINT nbin, plplot_hist_style opt );
+
+// Functions for converting between HLS and RGB color space
+
+PLDLLIMPEXP void
+c_plhlsrgb( PLFLT h, PLFLT l, PLFLT s, PLFLT_NC_SCALAR p_r, PLFLT_NC_SCALAR p_g, PLFLT_NC_SCALAR p_b );
+
+// Initializes PLplot, using preset or default options
+
+PLDLLIMPEXP void
+c_plinit( void );
+
+// Draws a line segment from (x1, y1) to (x2, y2).
+
+PLDLLIMPEXP void
+c_pljoin( PLFLT x1, PLFLT y1, PLFLT x2, PLFLT y2 );
+
+// Simple routine for labelling graphs.
+
+PLDLLIMPEXP void
+c_pllab( PLCHAR_VECTOR xlabel, PLCHAR_VECTOR ylabel, PLCHAR_VECTOR tlabel );
+
+#if 0 //drop this section
+//flags used for position argument of both pllegend and plcolorbar
+#define PL_POSITION_NULL             0x0
+#define PL_POSITION_LEFT             0x1
+#define PL_POSITION_RIGHT            0x2
+#define PL_POSITION_TOP              0x4
+#define PL_POSITION_BOTTOM           0x8
+#define PL_POSITION_INSIDE           0x10
+#define PL_POSITION_OUTSIDE          0x20
+#define PL_POSITION_VIEWPORT         0x40
+#define PL_POSITION_SUBPAGE          0x80
+
+// Flags for pllegend.
+#define PL_LEGEND_NULL               0x0
+#define PL_LEGEND_NONE               0x1
+#define PL_LEGEND_COLOR_BOX          0x2
+#define PL_LEGEND_LINE               0x4
+#define PL_LEGEND_SYMBOL             0x8
+#define PL_LEGEND_TEXT_LEFT          0x10
+#define PL_LEGEND_BACKGROUND         0x20
+#define PL_LEGEND_BOUNDING_BOX       0x40
+#define PL_LEGEND_ROW_MAJOR          0x80
+
+// Flags for plcolorbar
+#define PL_COLORBAR_NULL             0x0
+#define PL_COLORBAR_LABEL_LEFT       0x1
+#define PL_COLORBAR_LABEL_RIGHT      0x2
+#define PL_COLORBAR_LABEL_TOP        0x4
+#define PL_COLORBAR_LABEL_BOTTOM     0x8
+#define PL_COLORBAR_IMAGE            0x10
+#define PL_COLORBAR_SHADE            0x20
+#define PL_COLORBAR_GRADIENT         0x40
+#define PL_COLORBAR_CAP_NONE         0x80
+#define PL_COLORBAR_CAP_LOW          0x100
+#define PL_COLORBAR_CAP_HIGH         0x200
+#define PL_COLORBAR_SHADE_LABEL      0x400
+#define PL_COLORBAR_ORIENT_RIGHT     0x800
+#define PL_COLORBAR_ORIENT_TOP       0x1000
+#define PL_COLORBAR_ORIENT_LEFT      0x2000
+#define PL_COLORBAR_ORIENT_BOTTOM    0x4000
+#define PL_COLORBAR_BACKGROUND       0x8000
+#define PL_COLORBAR_BOUNDING_BOX     0x10000
+
+// Flags for drawing mode
+#define PL_DRAWMODE_UNKNOWN          0x0
+#define PL_DRAWMODE_DEFAULT          0x1
+#define PL_DRAWMODE_REPLACE          0x2
+#define PL_DRAWMODE_XOR              0x4
+
+// Routine for drawing discrete line, symbol, or cmap0 legends
+PLDLLIMPEXP void
+c_pllegend( PLFLT_NC_SCALAR p_legend_width, PLFLT_NC_SCALAR p_legend_height,
+            PLINT opt, PLINT position, PLFLT x, PLFLT y, PLFLT plot_width,
+            PLINT bg_color, PLINT bb_color, PLINT bb_style,
+            PLINT nrow, PLINT ncolumn,
+            PLINT nlegend, PLINT_VECTOR opt_array,
+            PLFLT text_offset, PLFLT text_scale, PLFLT text_spacing,
+            PLFLT text_justification,
+            PLINT_VECTOR text_colors, PLCHAR_MATRIX text,
+            PLINT_VECTOR box_colors, PLINT_VECTOR box_patterns,
+            PLFLT_VECTOR box_scales, PLFLT_VECTOR box_line_widths,
+            PLINT_VECTOR line_colors, PLINT_VECTOR line_styles,
+            PLFLT_VECTOR line_widths,
+            PLINT_VECTOR symbol_colors, PLFLT_VECTOR symbol_scales,
+            PLINT_VECTOR symbol_numbers, PLCHAR_MATRIX symbols );
+
+// Routine for drawing continuous colour legends
+PLDLLIMPEXP void
+c_plcolorbar( PLFLT_NC_SCALAR p_colorbar_width, PLFLT_NC_SCALAR p_colorbar_height,
+              PLINT opt, PLINT position, PLFLT x, PLFLT y,
+              PLFLT x_length, PLFLT y_length,
+              PLINT bg_color, PLINT bb_color, PLINT bb_style,
+              PLFLT low_cap_color, PLFLT high_cap_color,
+              PLINT cont_color, PLFLT cont_width,
+              PLINT n_labels, PLINT_VECTOR label_opts, PLCHAR_MATRIX labels,
+              PLINT n_axes, PLCHAR_MATRIX axis_opts,
+              PLFLT_VECTOR ticks, PLINT_VECTOR sub_ticks,
+              PLINT_VECTOR n_values, PLFLT_MATRIX values );
+#endif
+
+// Sets position of the light source
+PLDLLIMPEXP void
+c_pllightsource( PLFLT x, PLFLT y, PLFLT z );
+
+// Draws line segments connecting a series of points.
+
+PLDLLIMPEXP void
+c_plline( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y );
+
+// Draws a line in 3 space.
+
+PLDLLIMPEXP void
+c_plline3( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_VECTOR z );
+
+// Set line style.
+
+PLDLLIMPEXP void
+c_pllsty( PLINT lin );
+
+// Plot continental outline in world coordinates
+
+#if 0 //drop this section
+PLDLLIMPEXP void
+c_plmap( PLMAPFORM_callback mapform, PLCHAR_VECTOR name,
+         PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy );
+
+// Plot map outlines
+
+PLDLLIMPEXP void
+c_plmapline( PLMAPFORM_callback mapform, PLCHAR_VECTOR name,
+             PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+             PLINT_VECTOR plotentries, PLINT nplotentries );
+
+// Plot map points
+
+PLDLLIMPEXP void
+c_plmapstring( PLMAPFORM_callback mapform,
+               PLCHAR_VECTOR name, PLCHAR_VECTOR string,
+               PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+               PLINT_VECTOR plotentries, PLINT nplotentries );
+
+// Plot map text
+
+PLDLLIMPEXP void
+c_plmaptex( PLMAPFORM_callback mapform,
+            PLCHAR_VECTOR name, PLFLT dx, PLFLT dy, PLFLT just, PLCHAR_VECTOR text,
+            PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+            PLINT plotentry );
+
+// Plot map fills
+
+PLDLLIMPEXP void
+c_plmapfill( PLMAPFORM_callback mapform,
+             PLCHAR_VECTOR name, PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+             PLINT_VECTOR plotentries, PLINT nplotentries );
+
+// Plot the latitudes and longitudes on the background.
+
+PLDLLIMPEXP void
+c_plmeridians( PLMAPFORM_callback mapform,
+               PLFLT dlong, PLFLT dlat,
+               PLFLT minlong, PLFLT maxlong, PLFLT minlat, PLFLT maxlat );
+#endif
+
+// Plots a mesh representation of the function z[x][y].
+
+PLDLLIMPEXP void
+// Change from plplot.h
+//c_plmesh( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z, PLINT nx, PLINT ny, PLINT opt );
+c_plmesh( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z, PLINT nx, PLINT ny, plplot3d_style opt );
+
+#if 0 //drop this section
+// Like plmesh, but uses an evaluator function to access z data from zp
+
+PLDLLIMPEXP void
+plfmesh( PLFLT_VECTOR x, PLFLT_VECTOR y, PLF2OPS zops, PLPointer zp,
+         PLINT nx, PLINT ny, PLINT opt );
+#endif
+
+// Plots a mesh representation of the function z[x][y] with contour
+
+PLDLLIMPEXP void
+// Change from plplot.h
+//c_plmeshc( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z, PLINT nx, PLINT ny, PLINT opt,
+c_plmeshc( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z, PLINT nx, PLINT ny, plplot3d_style opt,
+           PLFLT_VECTOR clevel, PLINT nlevel );
+
+#if 0 //drop this section
+// Like plmeshc, but uses an evaluator function to access z data from zp
+
+PLDLLIMPEXP void
+plfmeshc( PLFLT_VECTOR x, PLFLT_VECTOR y, PLF2OPS zops, PLPointer zp,
+          PLINT nx, PLINT ny, PLINT opt, PLFLT_VECTOR clevel, PLINT nlevel );
+#endif
+
+// Creates a new stream and makes it the default.
+
+PLDLLIMPEXP void
+c_plmkstrm( PLINT_NC_SCALAR p_strm );
+
+// Prints out "text" at specified position relative to viewport
+
+PLDLLIMPEXP void
+c_plmtex( PLCHAR_VECTOR side, PLFLT disp, PLFLT pos, PLFLT just,
+          PLCHAR_VECTOR text );
+
+// Prints out "text" at specified position relative to viewport (3D)
+
+PLDLLIMPEXP void
+c_plmtex3( PLCHAR_VECTOR side, PLFLT disp, PLFLT pos, PLFLT just,
+           PLCHAR_VECTOR text );
+
+// Plots a 3-d representation of the function z[x][y].
+
+PLDLLIMPEXP void
+c_plot3d( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z,
+// Change from plplot.h
+//          PLINT nx, PLINT ny, PLINT opt, PLBOOL side );
+          PLINT nx, PLINT ny, plplot3d_style opt, PLBOOL side );
+
+#if 0 //drop this section
+// Like plot3d, but uses an evaluator function to access z data from zp
+
+PLDLLIMPEXP void
+plfplot3d( PLFLT_VECTOR x, PLFLT_VECTOR y, PLF2OPS zops, PLPointer zp,
+           PLINT nx, PLINT ny, PLINT opt, PLBOOL side );
+#endif
+
+// Plots a 3-d representation of the function z[x][y] with contour.
+
+PLDLLIMPEXP void
+c_plot3dc( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z,
+// Change from plplot.h
+//           PLINT nx, PLINT ny, PLINT opt,
+           PLINT nx, PLINT ny, plplot3d_style opt,
+           PLFLT_VECTOR clevel, PLINT nlevel );
+
+#if 0 //drop this section
+// Like plot3dc, but uses an evaluator function to access z data from zp
+
+PLDLLIMPEXP void
+plfplot3dc( PLFLT_VECTOR x, PLFLT_VECTOR y, PLF2OPS zops, PLPointer zp,
+            PLINT nx, PLINT ny, PLINT opt, PLFLT_VECTOR clevel, PLINT nlevel );
+#endif
+
+// Plots a 3-d representation of the function z[x][y] with contour and
+// y index limits.
+
+PLDLLIMPEXP void
+c_plot3dcl( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z,
+// Change from plplot.h
+//            PLINT nx, PLINT ny, PLINT opt,
+            PLINT nx, PLINT ny, plplot3d_style opt,
+            PLFLT_VECTOR clevel, PLINT nlevel,
+            PLINT indexxmin, PLINT indexxmax, PLINT_VECTOR indexymin, PLINT_VECTOR indexymax );
+
+#if 0 //drop this section
+// Like plot3dcl, but uses an evaluator function to access z data from zp
+
+PLDLLIMPEXP void
+plfplot3dcl( PLFLT_VECTOR x, PLFLT_VECTOR y, PLF2OPS zops, PLPointer zp,
+             PLINT nx, PLINT ny, PLINT opt,
+             PLFLT_VECTOR clevel, PLINT nlevel,
+             PLINT indexxmin, PLINT indexxmax, PLINT_VECTOR indexymin, PLINT_VECTOR indexymax );
+
+//
+// definitions for the opt argument in plot3dc() and plsurf3d()
+//
+// DRAW_LINEX *must* be 1 and DRAW_LINEY *must* be 2, because of legacy code!
+//
+
+#define DRAW_LINEX     0x001  // draw lines parallel to the X axis
+#define DRAW_LINEY     0x002  // draw lines parallel to the Y axis
+#define DRAW_LINEXY    0x003  // draw lines parallel to both the X and Y axis
+#define MAG_COLOR      0x004  // draw the mesh with a color dependent of the magnitude
+#define BASE_CONT      0x008  // draw contour plot at bottom xy plane
+#define TOP_CONT       0x010  // draw contour plot at top xy plane
+#define SURF_CONT      0x020  // draw contour plot at surface
+#define DRAW_SIDES     0x040  // draw sides
+#define FACETED        0x080  // draw outline for each square that makes up the surface
+#define MESH           0x100  // draw mesh
+
+//
+//  valid options for plot3dc():
+//
+//  DRAW_SIDES, BASE_CONT, TOP_CONT (not yet),
+//  MAG_COLOR, DRAW_LINEX, DRAW_LINEY, DRAW_LINEXY.
+//
+//  valid options for plsurf3d():
+//
+//  MAG_COLOR, BASE_CONT, SURF_CONT, FACETED, DRAW_SIDES.
+//
+#endif
+
+// Set fill pattern directly.
+
+PLDLLIMPEXP void
+c_plpat( PLINT nlin, PLINT_VECTOR inc, PLINT_VECTOR del );
+
+// Draw a line connecting two points, accounting for coordinate transforms
+
+PLDLLIMPEXP void
+c_plpath( PLINT n, PLFLT x1, PLFLT y1, PLFLT x2, PLFLT y2 );
+
+// Plots array y against x for n points using ASCII code "code".
+
+PLDLLIMPEXP void
+c_plpoin( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLINT code );
+
+// Draws a series of points in 3 space.
+
+PLDLLIMPEXP void
+c_plpoin3( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_VECTOR z, PLINT code );
+
+// Draws a polygon in 3 space.
+
+#if 0 //drop this section
+PLDLLIMPEXP void
+c_plpoly3( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_VECTOR z, PLBOOL_VECTOR draw, PLBOOL ifcc );
+#endif
+
+// Set the floating point precision (in number of places) in numeric labels.
+
+PLDLLIMPEXP void
+c_plprec( PLINT setp, PLINT prec );
+
+// Set fill pattern, using one of the predefined patterns.
+
+PLDLLIMPEXP void
+c_plpsty( PLINT patt );
+
+// Prints out "text" at world cooordinate (x,y).
+
+PLDLLIMPEXP void
+c_plptex( PLFLT x, PLFLT y, PLFLT dx, PLFLT dy, PLFLT just, PLCHAR_VECTOR text );
+
+// Prints out "text" at world cooordinate (x,y,z).
+
+PLDLLIMPEXP void
+c_plptex3( PLFLT wx, PLFLT wy, PLFLT wz, PLFLT dx, PLFLT dy, PLFLT dz,
+           PLFLT sx, PLFLT sy, PLFLT sz, PLFLT just, PLCHAR_VECTOR text );
+
+// Random number generator based on Mersenne Twister.
+// Obtain real random number in range [0,1].
+
+PLDLLIMPEXP PLFLT
+c_plrandd( void );
+
+// Replays contents of plot buffer to current device/file.
+
+PLDLLIMPEXP void
+c_plreplot( void );
+
+// Functions for converting between HLS and RGB color space
+
+PLDLLIMPEXP void
+c_plrgbhls( PLFLT r, PLFLT g, PLFLT b, PLFLT_NC_SCALAR p_h, PLFLT_NC_SCALAR p_l, PLFLT_NC_SCALAR p_s );
+
+// Set character height.
+
+PLDLLIMPEXP void
+c_plschr( PLFLT def, PLFLT scale );
+
+// Set color map 0 colors by 8 bit RGB values
+
+PLDLLIMPEXP void
+c_plscmap0( PLINT_VECTOR r, PLINT_VECTOR g, PLINT_VECTOR b, PLINT ncol0 );
+
+// Set color map 0 colors by 8 bit RGB values and alpha values
+
+PLDLLIMPEXP void
+c_plscmap0a( PLINT_VECTOR r, PLINT_VECTOR g, PLINT_VECTOR b, PLFLT_VECTOR alpha, PLINT ncol0 );
+
+// Set number of colors in cmap 0
+
+PLDLLIMPEXP void
+c_plscmap0n( PLINT ncol0 );
+
+// Set color map 1 colors by 8 bit RGB values
+
+PLDLLIMPEXP void
+c_plscmap1( PLINT_VECTOR r, PLINT_VECTOR g, PLINT_VECTOR b, PLINT ncol1 );
+
+// Set color map 1 colors by 8 bit RGB and alpha values
+
+PLDLLIMPEXP void
+c_plscmap1a( PLINT_VECTOR r, PLINT_VECTOR g, PLINT_VECTOR b, PLFLT_VECTOR alpha, PLINT ncol1 );
+
+// Set color map 1 colors using a piece-wise linear relationship between
+// intensity [0,1] (cmap 1 index) and position in HLS or RGB color space.
+
+PLDLLIMPEXP void
+c_plscmap1l( PLBOOL itype, PLINT npts, PLFLT_VECTOR intensity,
+             PLFLT_VECTOR coord1, PLFLT_VECTOR coord2, PLFLT_VECTOR coord3, PLBOOL_VECTOR alt_hue_path );
+
+// Set color map 1 colors using a piece-wise linear relationship between
+// intensity [0,1] (cmap 1 index) and position in HLS or RGB color space.
+// Will also linear interpolate alpha values.
+
+PLDLLIMPEXP void
+c_plscmap1la( PLBOOL itype, PLINT npts, PLFLT_VECTOR intensity,
+              PLFLT_VECTOR coord1, PLFLT_VECTOR coord2, PLFLT_VECTOR coord3, PLFLT_VECTOR alpha, PLBOOL_VECTOR alt_hue_path );
+
+// Set number of colors in cmap 1
+
+PLDLLIMPEXP void
+c_plscmap1n( PLINT ncol1 );
+
+// Set the color map 1 range used in continuous plots
+
+PLDLLIMPEXP void
+c_plscmap1_range( PLFLT min_color, PLFLT max_color );
+
+// Set a given color from color map 0 by 8 bit RGB value
+
+PLDLLIMPEXP void
+c_plscol0( PLINT icol0, PLINT r, PLINT g, PLINT b );
+
+// Set a given color from color map 0 by 8 bit RGB value
+
+PLDLLIMPEXP void
+c_plscol0a( PLINT icol0, PLINT r, PLINT g, PLINT b, PLFLT alpha );
+
+// Set the background color by 8 bit RGB value
+
+PLDLLIMPEXP void
+c_plscolbg( PLINT r, PLINT g, PLINT b );
+
+// Set the background color by 8 bit RGB value and alpha value
+
+PLDLLIMPEXP void
+c_plscolbga( PLINT r, PLINT g, PLINT b, PLFLT alpha );
+
+// Used to globally turn color output on/off
+
+PLDLLIMPEXP void
+c_plscolor( PLINT color );
+
+// Set the compression level
+
+PLDLLIMPEXP void
+c_plscompression( PLINT compression );
+
+// Set the device (keyword) name
+
+PLDLLIMPEXP void
+c_plsdev( PLCHAR_VECTOR devname );
+
+// Set window into device space using margin, aspect ratio, and
+// justification
+
+PLDLLIMPEXP void
+c_plsdidev( PLFLT mar, PLFLT aspect, PLFLT jx, PLFLT jy );
+
+// Set up transformation from metafile coordinates.
+
+PLDLLIMPEXP void
+c_plsdimap( PLINT dimxmin, PLINT dimxmax, PLINT dimymin, PLINT dimymax,
+            PLFLT dimxpmm, PLFLT dimypmm );
+
+// Set plot orientation, specifying rotation in units of pi/2.
+
+PLDLLIMPEXP void
+c_plsdiori( PLFLT rot );
+
+// Set window into plot space
+
+PLDLLIMPEXP void
+c_plsdiplt( PLFLT xmin, PLFLT ymin, PLFLT xmax, PLFLT ymax );
+
+// Set window into plot space incrementally (zoom)
+
+PLDLLIMPEXP void
+c_plsdiplz( PLFLT xmin, PLFLT ymin, PLFLT xmax, PLFLT ymax );
+
+// Set the drawing mode
+PLDLLIMPEXP void
+// Change from plplot.h
+// c_plsdrawmode( PLINT mode );
+c_plsdrawmode( enum plplot_draw_mode_enum mode );
+
+// Set seed for internal random number generator
+
+PLDLLIMPEXP void
+c_plseed( unsigned int seed );
+
+// Set the escape character for text strings.
+
+PLDLLIMPEXP void
+c_plsesc( char esc );
+
+// Set family file parameters
+
+PLDLLIMPEXP void
+c_plsfam( PLINT fam, PLINT num, PLINT bmax );
+
+// Set FCI (font characterization integer)
+
+PLDLLIMPEXP void
+c_plsfci( PLUNICODE fci );
+
+// Set the output file name.
+
+PLDLLIMPEXP void
+c_plsfnam( PLCHAR_VECTOR fnam );
+
+// Set the current font family, style and weight
+
+PLDLLIMPEXP void
+// Change from plplot.h
+//c_plsfont( PLINT family, PLINT style, PLINT weight );
+c_plsfont( enum plplot_fci_family_enum family, enum plplot_fci_style_enum style, enum plplot_fci_weight_enum weight);
+
+#if 0 //drop this section
+// Shade region.
+
+PLDLLIMPEXP void
+c_plshade( PLFLT_MATRIX a, PLINT nx, PLINT ny, PLDEFINED_callback defined,
+           PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+           PLFLT shade_min, PLFLT shade_max,
+           PLINT sh_cmap, PLFLT sh_color, PLFLT sh_width,
+           PLINT min_color, PLFLT min_width,
+           PLINT max_color, PLFLT max_width,
+           PLFILL_callback fill, PLBOOL rectangular,
+           PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+#ifdef PL_DEPRECATED
+PLDLLIMPEXP void
+c_plshade1( PLFLT_FE_POINTER a, PLINT nx, PLINT ny, PLDEFINED_callback defined,
+            PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+            PLFLT shade_min, PLFLT shade_max,
+            PLINT sh_cmap, PLFLT sh_color, PLFLT sh_width,
+            PLINT min_color, PLFLT min_width,
+            PLINT max_color, PLFLT max_width,
+            PLFILL_callback fill, PLBOOL rectangular,
+            PLTRANSFORM_callback pltr, PLPointer pltr_data );
+#endif // PL_DEPRECATED
+
+PLDLLIMPEXP void
+c_plshades( PLFLT_MATRIX a, PLINT nx, PLINT ny, PLDEFINED_callback defined,
+            PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+            PLFLT_VECTOR clevel, PLINT nlevel, PLFLT fill_width,
+            PLINT cont_color, PLFLT cont_width,
+            PLFILL_callback fill, PLBOOL rectangular,
+            PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+PLDLLIMPEXP void
+plfshades( PLF2OPS zops, PLPointer zp, PLINT nx, PLINT ny,
+           PLDEFINED_callback defined,
+           PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+           PLFLT_VECTOR clevel, PLINT nlevel, PLFLT fill_width,
+           PLINT cont_color, PLFLT cont_width,
+           PLFILL_callback fill, PLINT rectangular,
+           PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+PLDLLIMPEXP void
+plfshade( PLF2EVAL_callback f2eval, PLPointer f2eval_data,
+          PLF2EVAL_callback c2eval, PLPointer c2eval_data,
+          PLINT nx, PLINT ny,
+          PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
+          PLFLT shade_min, PLFLT shade_max,
+          PLINT sh_cmap, PLFLT sh_color, PLFLT sh_width,
+          PLINT min_color, PLFLT min_width,
+          PLINT max_color, PLFLT max_width,
+          PLFILL_callback fill, PLBOOL rectangular,
+          PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+PLDLLIMPEXP void
+plfshade1( PLF2OPS zops, PLPointer zp, PLINT nx, PLINT ny,
+           PLDEFINED_callback defined,
+           PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+           PLFLT shade_min, PLFLT shade_max,
+           PLINT sh_cmap, PLFLT sh_color, PLFLT sh_width,
+           PLINT min_color, PLFLT min_width,
+           PLINT max_color, PLFLT max_width,
+           PLFILL_callback fill, PLINT rectangular,
+           PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+// Setup a user-provided custom labeling function
+
+PLDLLIMPEXP void
+c_plslabelfunc( PLLABEL_FUNC_callback label_func, PLPointer label_data );
+#endif
+
+// Set up lengths of major tick marks.
+
+PLDLLIMPEXP void
+c_plsmaj( PLFLT def, PLFLT scale );
+
+#if 0 //drop this section
+// Set the RGB memory area to be plotted (with the 'mem' or 'memcairo' drivers)
+
+PLDLLIMPEXP void
+c_plsmem( PLINT maxx, PLINT maxy, PLPointer plotmem );
+
+// Set the RGBA memory area to be plotted (with the 'memcairo' driver)
+
+PLDLLIMPEXP void
+c_plsmema( PLINT maxx, PLINT maxy, PLPointer plotmem );
+
+#endif
+// Set up lengths of minor tick marks.
+
+PLDLLIMPEXP void
+c_plsmin( PLFLT def, PLFLT scale );
+
+// Set orientation.  Must be done before calling plinit.
+
+PLDLLIMPEXP void
+c_plsori( PLINT ori );
+
+// Set output device parameters.  Usually ignored by the driver.
+
+PLDLLIMPEXP void
+c_plspage( PLFLT xp, PLFLT yp, PLINT xleng, PLINT yleng,
+           PLINT xoff, PLINT yoff );
+
+// Set the colors for color table 0 from a cmap0 file
+
+PLDLLIMPEXP void
+c_plspal0( PLCHAR_VECTOR filename );
+
+// Set the colors for color table 1 from a cmap1 file
+
+PLDLLIMPEXP void
+c_plspal1( PLCHAR_VECTOR filename, PLBOOL interpolate );
+
+// Set the pause (on end-of-page) status
+
+PLDLLIMPEXP void
+c_plspause( PLBOOL pause );
+
+// Set stream number.
+
+PLDLLIMPEXP void
+c_plsstrm( PLINT strm );
+
+// Set the number of subwindows in x and y
+
+PLDLLIMPEXP void
+c_plssub( PLINT nx, PLINT ny );
+
+// Set symbol height.
+
+PLDLLIMPEXP void
+c_plssym( PLFLT def, PLFLT scale );
+
+// Initialize PLplot, passing in the windows/page settings.
+
+PLDLLIMPEXP void
+c_plstar( PLINT nx, PLINT ny );
+
+// Initialize PLplot, passing the device name and windows/page settings.
+
+PLDLLIMPEXP void
+c_plstart( PLCHAR_VECTOR devname, PLINT nx, PLINT ny );
+
+#if 0 //drop this section
+// Set the coordinate transform
+
+PLDLLIMPEXP void
+c_plstransform( PLTRANSFORM_callback coordinate_transform, PLPointer coordinate_transform_data );
+#endif
+
+// Prints out the same string repeatedly at the n points in world
+// coordinates given by the x and y arrays.  Supersedes plpoin and
+// plsymbol for the case where text refers to a unicode glyph either
+// directly as UTF-8 or indirectly via the standard text escape
+// sequences allowed for PLplot input strings.
+
+PLDLLIMPEXP void
+c_plstring( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLCHAR_VECTOR string );
+
+// Prints out the same string repeatedly at the n points in world
+// coordinates given by the x, y, and z arrays.  Supersedes plpoin3
+// for the case where text refers to a unicode glyph either directly
+// as UTF-8 or indirectly via the standard text escape sequences
+// allowed for PLplot input strings.
+
+PLDLLIMPEXP void
+c_plstring3( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_VECTOR z, PLCHAR_VECTOR string );
+
+// Add a point to a stripchart.
+
+PLDLLIMPEXP void
+c_plstripa( PLINT id, PLINT pen, PLFLT x, PLFLT y );
+
+#if 0 //drop this section
+// Create 1d stripchart
+
+PLDLLIMPEXP void
+c_plstripc( PLINT_NC_SCALAR id, PLCHAR_VECTOR xspec, PLCHAR_VECTOR yspec,
+            PLFLT xmin, PLFLT xmax, PLFLT xjump, PLFLT ymin, PLFLT ymax,
+            PLFLT xlpos, PLFLT ylpos,
+            PLBOOL y_ascl, PLBOOL acc,
+            PLINT colbox, PLINT collab,
+            PLINT_VECTOR colline, PLINT_VECTOR styline, PLCHAR_MATRIX legline,
+            PLCHAR_VECTOR labx, PLCHAR_VECTOR laby, PLCHAR_VECTOR labtop );
+
+#endif
+// Deletes and releases memory used by a stripchart.
+
+PLDLLIMPEXP void
+c_plstripd( PLINT id );
+
+#if 0 //drop this section
+// plots a 2d image (or a matrix too large for plshade() )
+
+PLDLLIMPEXP void
+c_plimagefr( PLFLT_MATRIX idata, PLINT nx, PLINT ny,
+             PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin, PLFLT zmax,
+             PLFLT valuemin, PLFLT valuemax,
+             PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+//
+// Like plimagefr, but uses an evaluator function to access image data from
+// idatap.  getminmax is only used if zmin == zmax.
+//
+
+PLDLLIMPEXP void
+plfimagefr( PLF2OPS idataops, PLPointer idatap, PLINT nx, PLINT ny,
+            PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin, PLFLT zmax,
+            PLFLT valuemin, PLFLT valuemax,
+            PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+#endif
+// plots a 2d image (or a matrix too large for plshade() ) - colors
+// automatically scaled
+
+PLDLLIMPEXP void
+c_plimage( PLFLT_MATRIX idata, PLINT nx, PLINT ny,
+           PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin, PLFLT zmax,
+           PLFLT Dxmin, PLFLT Dxmax, PLFLT Dymin, PLFLT Dymax );
+
+#if 0 //drop this section
+//
+// Like plimage, but uses an operator functions to access image data from
+// idatap.
+//
+
+PLDLLIMPEXP void
+plfimage( PLF2OPS idataops, PLPointer idatap, PLINT nx, PLINT ny,
+          PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin, PLFLT zmax,
+          PLFLT Dxmin, PLFLT Dxmax, PLFLT Dymin, PLFLT Dymax );
+#endif
+
+// Set up a new line style
+
+PLDLLIMPEXP void
+c_plstyl( PLINT nms, PLINT_VECTOR mark, PLINT_VECTOR space );
+
+// Plots the 3d surface representation of the function z[x][y].
+
+PLDLLIMPEXP void
+c_plsurf3d( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z, PLINT nx, PLINT ny,
+// Change from plplot.h
+//            PLINT opt, PLFLT_VECTOR clevel, PLINT nlevel );
+            plplot3d_style opt, PLFLT_VECTOR clevel, PLINT nlevel );
+
+#if 0 //drop this section
+// Like plsurf3d, but uses an evaluator function to access z data from zp
+
+PLDLLIMPEXP void
+plfsurf3d( PLFLT_VECTOR x, PLFLT_VECTOR y, PLF2OPS zops, PLPointer zp,
+           PLINT nx, PLINT ny, PLINT opt, PLFLT_VECTOR clevel, PLINT nlevel );
+#endif
+
+// Plots the 3d surface representation of the function z[x][y] with y
+// index limits.
+
+PLDLLIMPEXP void
+c_plsurf3dl( PLFLT_VECTOR x, PLFLT_VECTOR y, PLFLT_MATRIX z, PLINT nx, PLINT ny,
+// Change from plplot.h
+//             PLINT opt, PLFLT_VECTOR clevel, PLINT nlevel,
+             plplot3d_style opt, PLFLT_VECTOR clevel, PLINT nlevel,
+             PLINT indexxmin, PLINT indexxmax, PLINT_VECTOR indexymin, PLINT_VECTOR indexymax );
+
+#if 0 //drop this section
+// Like plsurf3dl, but uses an evaluator function to access z data from zp
+
+PLDLLIMPEXP void
+plfsurf3dl( PLFLT_VECTOR x, PLFLT_VECTOR y, PLF2OPS zops, PLPointer zp, PLINT nx, PLINT ny,
+            PLINT opt, PLFLT_VECTOR clevel, PLINT nlevel,
+            PLINT indexxmin, PLINT indexxmax, PLINT_VECTOR indexymin, PLINT_VECTOR indexymax );
+#endif
+
+// Set arrow style for vector plots.
+PLDLLIMPEXP void
+c_plsvect( PLFLT_VECTOR arrowx, PLFLT_VECTOR arrowy, PLINT npts, PLBOOL fill );
+
+// Sets the edges of the viewport to the specified absolute coordinates
+
+PLDLLIMPEXP void
+c_plsvpa( PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax );
+
+// Set x axis labeling parameters
+
+PLDLLIMPEXP void
+c_plsxax( PLINT digmax, PLINT digits );
+
+// Set inferior X window
+
+PLDLLIMPEXP void
+plsxwin( PLINT window_id );
+
+// Set y axis labeling parameters
+
+PLDLLIMPEXP void
+c_plsyax( PLINT digmax, PLINT digits );
+
+// Plots array y against x for n points using Hershey symbol "code"
+
+PLDLLIMPEXP void
+c_plsym( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y, PLINT code );
+
+// Set z axis labeling parameters
+
+PLDLLIMPEXP void
+c_plszax( PLINT digmax, PLINT digits );
+
+// Switches to text screen.
+
+PLDLLIMPEXP void
+c_pltext( void );
+
+// Set the format for date / time labels for current stream.
+
+PLDLLIMPEXP void
+c_pltimefmt( PLCHAR_VECTOR fmt );
+
+// Sets the edges of the viewport with the given aspect ratio, leaving
+// room for labels.
+
+PLDLLIMPEXP void
+c_plvasp( PLFLT aspect );
+
+// Creates the largest viewport of the specified aspect ratio that fits
+// within the specified normalized subpage coordinates.
+
+#if 0 //drop this section
+// simple arrow plotter.
+
+PLDLLIMPEXP void
+c_plvect( PLFLT_MATRIX u, PLFLT_MATRIX v, PLINT nx, PLINT ny, PLFLT scale,
+          PLTRANSFORM_callback pltr, PLPointer pltr_data );
+
+//
+// Routine to plot a vector array with arbitrary coordinate
+// and vector transformations
+//
+PLDLLIMPEXP void
+plfvect( PLF2EVAL_callback getuv, PLPointer up, PLPointer vp,
+         PLINT nx, PLINT ny, PLFLT scale,
+         PLTRANSFORM_callback pltr, PLPointer pltr_data );
+#endif
+
+PLDLLIMPEXP void
+c_plvpas( PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT aspect );
+
+// Creates a viewport with the specified normalized subpage coordinates.
+
+PLDLLIMPEXP void
+c_plvpor( PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax );
+
+// Defines a "standard" viewport with seven character heights for
+// the left margin and four character heights everywhere else.
+
+PLDLLIMPEXP void
+c_plvsta( void );
+
+// Set up a window for three-dimensional plotting.
+
+PLDLLIMPEXP void
+c_plw3d( PLFLT basex, PLFLT basey, PLFLT height, PLFLT xmin,
+         PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin,
+         PLFLT zmax, PLFLT alt, PLFLT az );
+
+// Set pen width.
+
+PLDLLIMPEXP void
+c_plwidth( PLFLT width );
+
+// Set up world coordinates of the viewport boundaries (2d plots).
+
+PLDLLIMPEXP void
+c_plwind( PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax );
+
+// Set xor mode; mode = 1-enter, 0-leave, status = 0 if not interactive device
+
+PLDLLIMPEXP void
+c_plxormod( PLBOOL mode, PLBOOL_NC_SCALAR status );
+
+// Process input strings, treating them as an option and argument pair.
+// The first is for the external API, the second the work routine declared
+// here for backward compatibilty.
+
+// Change from plplot.h
+// PLDLLIMPEXP PLINT
+PLDLLIMPEXP nonzero_error_int
+c_plsetopt( PLCHAR_VECTOR opt, PLCHAR_VECTOR optarg );
+
+// Find the maximum and minimum of a 2d matrix allocated with plAllc2dGrid().
+
+PLDLLIMPEXP void
+plMinMax2dGrid( PLFLT_MATRIX f, PLINT nx, PLINT ny, PLFLT_NC_SCALAR fmax, PLFLT_NC_SCALAR fmin );

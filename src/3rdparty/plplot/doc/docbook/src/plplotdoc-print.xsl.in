@@ -1,0 +1,54 @@
+<?xml version='1.0'?>
+<!--
+    plplotdoc-print.xsl.in: XSL customization for the HTML PLplot docs
+
+    Copyright (C) 2013 Alan W. Irwin
+
+    Redistribution and use in source (XML DocBook) and "compiled" forms
+    (HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+       1. Redistributions of source code (XML DocBook) must retain the
+          above copyright notice, this list of conditions and the following
+          disclaimer as the first lines of this file unmodified.
+
+       2. Redistributions in compiled form (transformed to other DTDs,
+          converted to HTML, PDF, PostScript, and other formats) must
+          reproduce the above copyright notice, this list of conditions and
+          the following disclaimer in the documentation and/or other
+          materials provided with the distribution.
+
+    Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+    PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+    BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+    OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+    EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!--
+These ideas for customizing the PLplot html documentation are adapted
+from
+http://www.sagehill.net/docbookxsl/CustomMethods.html#CustomizationLayer
+http://www.sagehill.net/docbookxsl/SettingParams.html
+http://www.sagehill.net/docbookxsl/Chunking.html#ChunkFilenames
+http://www.sagehill.net/docbookxsl/UsingCSS.html
+http://www.sagehill.net/docbookxsl/Parameters.html
+http://docbook.sourceforge.net/release/xsl/current/doc/html/
+....
+-->
+<xsl:stylesheet
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:fo="http://www.w3.org/1999/XSL/Format"
+    version="1.0">
+
+<xsl:import href="http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl"/>
+
+<xsl:param name="funcsynopsis.style" select="'ansi'"/>
+
+</xsl:stylesheet>

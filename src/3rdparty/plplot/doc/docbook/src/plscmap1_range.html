@@ -1,0 +1,42 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plscmap1_range: Set the cmap1 argument range for continuous color plots</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plscmap0n.html" title="plscmap0n: Set number of colors in cmap0"><link rel="next" href="plscmap1.html" title="plscmap1: Set opaque RGB cmap1 colors values"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plscmap1_range</code>: Set the cmap1 argument
+      range for continuous color plots
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plscmap0n.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plscmap1.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plscmap1_range"></a>
+      <code class="function">plscmap1_range</code>: Set the cmap1 argument
+      range for continuous color plots
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plscmap1_range</b>
+          (</code></td><td>
+            <var class="pdparam">min_color</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">max_color</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>Set the cmap1 argument range for continuous color plots that
+    corresponds to the range of data values.  The maximum range
+    corresponding to the entire cmap1 palette is 0.0-1.0, and the smaller
+    the cmap1 argument range that is specified with this routine, the
+    smaller the subset of the cmap1 color palette that is used to
+    represent the continuous data being plotted.  If
+    <em class="parameter"><code>min_color</code></em> is greater than
+    <em class="parameter"><code>max_color</code></em> or <em class="parameter"><code>max_color</code></em>
+    is greater than 1.0 or <em class="parameter"><code>min_color</code></em> is less than
+    0.0 then no change is made to the cmap1 argument range.  (Use
+    <a class="link" href="plgcmap1_range.html" title="plgcmap1_range: Get the cmap1 argument range for continuous color plots"><code class="function">plgcmap1_range</code></a> to get the cmap1 argument range.)</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>min_color</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>The minimum cmap1 argument.  If less than 0.0, then
+	  0.0 is used instead.</p></dd><dt><span class="term">
+          <em class="parameter"><code>max_color</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>The maximum cmap1 argument.  If greater than 1.0,
+	  then 1.0 is used instead.</p></dd></dl></div><p>
+      Redacted form: <code class="function">plscmap1_range(min_color, max_color)</code>
+    </p><p>
+      This function is currently used in example 33.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plscmap0n.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plscmap1.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plscmap0n</code>: Set number of colors in cmap0
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plscmap1</code>: Set opaque RGB cmap1 colors
+      values
+    </td></tr></table></div></body></html>

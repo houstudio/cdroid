@@ -1,0 +1,85 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plcalc_world: Calculate world coordinates and corresponding window index from relative device coordinates</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plbtime.html" title="plbtime: Calculate broken-down time from continuous time for the current stream"><link rel="next" href="plclear.html" title="plclear: Clear current (sub)page"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plcalc_world</code>: Calculate world coordinates and
+      corresponding window index from relative device coordinates
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plbtime.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plclear.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plcalc_world"></a>
+      <code class="function">plcalc_world</code>: Calculate world coordinates and
+      corresponding window index from relative device coordinates
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plcalc_world</b>
+	  (</code></td><td><var class="pdparam">rx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ry</var>, </td></tr><tr><td> </td><td><var class="pdparam">wx</var>, </td></tr><tr><td> </td><td><var class="pdparam">wy</var>, </td></tr><tr><td> </td><td><var class="pdparam">window</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Calculate world coordinates,
+      <code class="literal"><em class="parameter"><code>wx</code></em></code> and
+      <code class="literal"><em class="parameter"><code>wy</code></em></code>, and corresponding
+      <code class="literal"><em class="parameter"><code>window</code></em></code> index
+      from relative device coordinates,
+      <code class="literal"><em class="parameter"><code>rx</code></em></code> and
+      <code class="literal"><em class="parameter"><code>ry</code></em></code>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>rx</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Input relative device coordinate (0.0-1.0) for the
+	    x coordinate.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ry</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Input relative device coordinate (0.0-1.0) for the
+	    y coordinate.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>wx</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the x world coordinate corresponding
+	    to the relative device coordinates
+	    <code class="literal"><em class="parameter"><code>rx</code></em></code> and
+	    <code class="literal"><em class="parameter"><code>ry</code></em></code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>wy</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the y world coordinate corresponding
+	    to the relative device coordinates
+	    <code class="literal"><em class="parameter"><code>rx</code></em></code> and
+	    <code class="literal"><em class="parameter"><code>ry</code></em></code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>window</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_NC_SCALAR-type"><code class="function">PLINT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the last defined window index that corresponds to the
+	    input relative device coordinates (and the returned world
+	    coordinates).  To give some background on the window index,
+	    for each page the initial window index is set to
+	    zero, and each time <a class="link" href="plwind.html" title="plwind: Specify window"><code class="function">plwind</code></a> is called within the page, world
+	    and device coordinates are stored for the window and the window
+	    index is incremented.  Thus, for a simple page layout with
+	    non-overlapping viewports and one window per viewport,
+	    <code class="literal"><em class="parameter"><code>window</code></em></code> corresponds to
+	    the viewport index (in the order which the viewport/windows
+	    were created) of the only viewport/window corresponding to
+	    <code class="literal"><em class="parameter"><code>rx</code></em></code> and
+	    <code class="literal"><em class="parameter"><code>ry</code></em></code>.  However, for
+	    more complicated layouts with potentially overlapping viewports
+	    and possibly more than one window (set of world coordinates) per
+	    viewport, <code class="literal"><em class="parameter"><code>window</code></em></code>
+	    and the corresponding output world coordinates
+	    corresponds to the last window created that fulfills the criterion
+	    that the relative device coordinates are inside it.  Finally, in
+	    all cases where the input relative device coordinates are not
+	    inside any viewport/window, then the returned value of the last
+	    defined window index is set to -1.
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plcalc_world(rx, ry, wx, wy, window)</code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plbtime.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plclear.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plbtime</code>: Calculate broken-down time from
+      continuous time for the current stream
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plclear</code>: Clear current (sub)page
+    </td></tr></table></div></body></html>

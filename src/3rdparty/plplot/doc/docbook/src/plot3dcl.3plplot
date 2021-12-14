@@ -1,0 +1,65 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLOT3DCL 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplot3dcl\fP - Magnitude colored plot surface with contour for z[x][y] with y index limits
+.SH SYNOPSIS
+\fBplot3dcl\fP(\fIx\fP, \fIy\fP, \fIz\fP, \fInx\fP, \fIny\fP, \fIopt\fP, \fIclevel\fP, \fInlevel\fP, \fIindexxmin\fP, \fIindexxmax\fP, \fIindexymin\fP, \fIindexymax\fP)
+.SH DESCRIPTION
+
+.P
+When the implementation is completed this variant of \fBplot3dc\fP(3plplot) (see that function's documentation for more details) should be suitable for the case where the area of the \fIx\fP, \fIy\fP coordinate grid where \fIz\fP is defined can be non-rectangular. The implementation is incomplete so the last 4 parameters of plot3dcl; \fIindexxmin\fP, \fIindexxmax\fP, \fIindexymin\fP, and \fIindexymax\fP; are currently ignored and the functionality is otherwise identical to that of \fBplot3dc\fP(3plplot).
+.P
+Redacted form: General: \fBplot3dcl(x, y, z, opt, clevel, indexxmin, indexymin, indexymax) \fP
+
+.P
+This function is not used in any example.
+.SH ARGUMENTS
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates at which the function is evaluated.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates at which the function is evaluated.
+.TP
+\fIz\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing function values to plot.  Should have dimensions of \fInx\fP by \fIny\fP.
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIx\fP values at which the function is evaluated.
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIy\fP values at which the function is evaluated.
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+Determines the way in which the surface is represented. To specify more than one option just add the options, e.g. DRAW_LINEXY + MAG_COLOR \fIopt\fP=DRAW_LINEX : Lines are drawn showing \fIz\fP as a function of \fIx\fP for each value of \fIy\fP[j] .
+\fIopt\fP=DRAW_LINEY : Lines are drawn showing \fIz\fP as a function of \fIy\fP for each value of \fIx\fP[i] .
+\fIopt\fP=DRAW_LINEXY : Network of lines is drawn connecting points at which function is defined.
+\fIopt\fP=MAG_COLOR : Each line in the mesh is colored according to the z value being plotted. The color is used from the current cmap1.
+\fIopt\fP=BASE_CONT : A contour plot is drawn at the base XY plane using parameters \fInlevel\fP and \fIclevel\fP.
+\fIopt\fP=DRAW_SIDES : draws a curtain between the base XY plane and the borders of the plotted function.
+
+.TP
+\fIclevel\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the contour levels.
+.TP
+\fInlevel\fP (\fBPLINT\fP(3plplot), input)
+Number of elements in the clevel vector.
+.TP
+\fIindexxmin\fP (\fBPLINT\fP(3plplot), input)
+The index value (which must be ≥ 0) that corresponds to the first \fIx\fP index where \fIz\fP is defined.
+.TP
+\fIindexxmax\fP (\fBPLINT\fP(3plplot), input)
+The index value (which must be ≤ \fInx\fP) which corresponds (by convention) to one more than the last \fIx\fP index value where \fIz\fP is defined.
+.TP
+\fIindexymin\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fIy\fP index values which all must be ≥ 0.  These values are the first \fIy\fP index where \fIz\fP is defined for a particular \fIx\fP index in the range from \fIindexxmin\fP to \fIindexxmax - 1\fP. The dimension of \fIindexymin\fP is \fIindexxmax\fP.
+.TP
+\fIindexymax\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing \fIy\fP index values which all must be ≤ \fIny\fP. These values correspond (by convention) to one more than the last \fIy\fP index where \fIz\fP is defined for a particular \fIx\fP index in the range from \fIindexxmin\fP to \fIindexxmax - 1\fP.  The dimension of \fIindexymax\fP is \fIindexxmax\fP.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

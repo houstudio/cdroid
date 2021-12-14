@@ -1,0 +1,20 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLFAMADV 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplfamadv\fP - Advance to the next family file on the next new page
+.SH SYNOPSIS
+\fBplfamadv\fP()
+.SH DESCRIPTION
+
+.P
+Advance to the next family file on the next new page.
+.P
+Redacted form: \fBplfamadv()\fP
+.P
+This function is not used in any examples.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

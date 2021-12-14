@@ -1,0 +1,51 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Setup Open Watcom compiler suite
+--------------------------------
+
+[Open Watcom](http://www.openwatcom.org) is a project of the open source community to maintain and enhance the Watcom C, C++, and Fortran cross compilers and tools. An Open Source license from Sybase allows free commercial and non-commercial use of Open Watcom. More about Open Watcom's features. Details about Open Watcom's history. Work in progress includes Linux and FreeBSD ports, support for new processors, support for new language features and standards, a C++ STL implementation and more.
+
+### Download and install
+
+-   Download the packages <tt>open-watcom-c-win32-1.7a.exe</tt> and <tt>open-watcom-f77-win32-1.7a.exe</tt> from one of the mirrors listed here: <http://www.openwatcom.org/index.php/Download>. The <tt>open-watcom-f77</tt> is only needed if you are interested in Fortran development.
+-   Install both packages by double-clicking the exe files. For both packages choose the same directory (without a space in the name), e.g. <tt>C:\\Development\\WATCOM</tt> or <tt>C:\\WATCOM</tt>. There is no need to change any other settings, if you want to develop for the Windows platform. At the end of the installations process choose the option, where you set the environment variables yourself. In that way you have more control over the setup and it allows you to have more than one C/C++ compiler installed on your Windows box.
+
+### Setup
+
+An IDE is provided by Open Watcom, but to configure and compile plplot it is best to use the Windows CLI. Please follow the instructions in [setup_cli|Setup CLI] to get the Windows Command Line Interface ready for development. We need to set some environment variables in order for Open Watcom to work correctly. Go to Start->System Preferences->System->Advanced->Environment Variables. Add the following environment variables for your user:
+
+`set 'WATCOM' to C:\DevZone\WATCOM`
+`set 'EDPATH' to C:\DevZone\WATCOM\EDDAT`
+
+where <tt>C:\\DevZone\\WATCOM</tt> is the path to your Open Watcom installation. This information is also provided in the file <tt>C:\\DevZone\\WATCOM\\CHANGES.ENV</tt>. Than open your [favorite text editor](http://www.scintilla.org/SciTE.html) and enter the following CLI commands
+
+@echo off
+
+`rem setup Open Watcom compiler`
+`set WATCOM=C:\\DevZone\\WATCOM`
+`set PATH=%WATCOM%\\BINNT;%WATCOM%\\BINW;%PATH%`
+`set INCLUDE=%WATCOM%\\H;%WATCOM%\\H\\NT`
+
+`rem setup PLplot library`
+`set PLPLOTDIR=%USER_ROOTDIR%\\PLDev\\plplot\\buildwatcom`
+`echo Set PLPLOT working directory to %PLPLOTDIR%.`
+`set PLPLOT_LIB=%PLPLOTDIR%\\..\\data`
+`set PATH=%PLPLOTDIR%\\dll;%PATH%`
+
+### Links
+
+-   Homepage: <http://www.openwatcom.org>
+-   Download: <http://www.openwatcom.org/index.php/Download>
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

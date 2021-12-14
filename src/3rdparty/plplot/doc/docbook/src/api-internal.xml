@@ -1,0 +1,147 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    api-internal.xml: "Internal C function in PLplot" chapter
+
+Copyright (C) 1994  Geoffrey Furnish and Maurice LeBrun
+Copyright (C) 1999, 2000, 2001, 2002, 2003  Alan W. Irwin
+Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004  Rafael Laboissiere
+Copyright (C) 2003  Joao Cardoso
+Copyright (C) 2008  Andrew Ross
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<chapter id="API-Internal">
+  <title>Internal C functions in PLplot</title>
+
+  <para>
+    The purpose of this chapter is to document the API for every internal
+    C function in PLplot (other than language bindings) that
+    is <emphasis>not</emphasis> part of the common API that has already been
+    documented in <xref linkend="API"/> or elsewhere. The functions documented
+    here are internal plplot functions. They are not intended for external use
+    and may change between releases.
+  </para>
+
+  <para>
+    This chapter is a work that is just starting.  There are many C functions
+    in the code base that are not part of the common API, and we haven't even
+    gotten to the point of listing them all.  What gets documented here now
+    is whatever C-explicit code we are trying to understand at the time.
+  </para>
+
+  <sect1 id="plP_checkdriverinit" renderas="sect3">
+    <title>
+      <function>plP_checkdriverinit</function>: Checks to see if any
+      of the specified drivers have been initialized
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plP_checkdriverinit</function>
+	  </funcdef>
+	  <paramdef><parameter>list</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para> Checks to see if any of the specified drivers have been
+    initialized. Function tests a space-delimited list of driver names to
+    see how many of the given drivers have been initialized, and how often.
+    The return code of the function is: <literal>0</literal> if no matching
+    drivers were found to have been initialized; <literal>-1</literal> if
+    an error occurred allocating the internal buffer; or, a positive number
+    indicating the number of streams encountered that belong to drivers on
+    the provided list. This function invokes &plP_getinitdriverlist;
+    internally to get a <emphasis>complete</emphasis> list of drivers that have been initialized
+    in order to compare with the driver names specified in the argument list
+    to &plP_checkdriverinit;.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>list</parameter>
+	  (<literal>char *</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Pointer to character string specifying a space-delimited
+	    list of driver names, e.g., <literal>"bmp jpeg tiff"</literal>.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+  </sect1>
+
+  <sect1 id="plP_getinitdriverlist" renderas="sect3">
+    <title>
+      <function>plP_getinitdriverlist</function>: Get the initialized-driver
+      list
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plP_getinitdriverlist</function>
+	  </funcdef>
+	  <paramdef><parameter>text_buffer</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para> Get the initialized-driver list. Function returns a
+    space-delimited list of the currently initialized drivers or streams. If more
+    than one stream is using the same driver, then its name will be returned
+    more than once. The function can be analogously thought of as also
+    returning the names of the active streams.  Invoked internally by
+    &plP_checkdriverinit;. </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>text_buffer</parameter>
+	  (<literal>char *</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    Pointer to a user-allocated buffer to hold the result. The user
+	    must ensure the buffer is big enough to hold the result.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+  </sect1>
+
+
+</chapter>

@@ -1,0 +1,48 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Intro
+-----
+
+The [OCaml](http://caml.inria.fr) bindings for PLplot provide three means of accessing PLplot's functionality through three modules, Plplot, Plplot.Plot and Plplot.Quick_plot. In versions 5.9.6 and later the OCaml sections of the [PLplot documentation](http://plplot.sourceforge.net/documentation.php) includes a tutorial which introduces each of these modules. This tutorial is meant to expand on that material and allow for a simpler process for contributing improvements.
+
+Using the Quick_plot module
+----------------------------
+
+The main OCaml PLplot module is meant to be open'd:
+
+` open Plplot`
+
+From here, one can try out a quick plot of sin and cos:
+
+` Quick_plot.func [sin; cos] (-3.14, 3.14)`
+
+which gives output which looks something like this:
+
+[[img src=Quick_plot_bare.png alt=Quick_plot_bare.png]]
+
+That's great, but it would be even better if there were labels so that we know what the axes mean and a legend to show which line corresponds with which function. We can do that:
+
+` Quick_plot.func`
+`   ~labels:("Angle (radians)", "f(x)", "A few functions")`
+`   ~names:["sin"; "cos"]`
+`   [sin; cos] (-3.15, 3.15)`
+
+with output which looks something like this:
+
+[[img src=Quick_plot_labels.png alt=Quick_plot_labels.png]]
+
+
+Much better, and much easier to interpret!
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

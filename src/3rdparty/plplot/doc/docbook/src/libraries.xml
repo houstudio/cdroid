@@ -1,0 +1,250 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    libraries.xml: "The PLplot Libraries" chapter
+
+Copyright (C) 2009, 2010  Alan W. Irwin
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<chapter id="libraries">
+  <title>The PLplot Libraries</title>
+
+  <para>
+    The purpose of this chapter is give an overview of the libraries that
+    are created as part of a PLplot build.  These consist of bindings
+    libraries to make the PLplot API accessible for various computer
+    languages or GUI environments, the PLplot core library which
+    implements the PLplot API in C, enhancement libraries which add
+    essential functionality the PLplot core library, and device-driver
+    libraries which help to implement some of our device drivers.
+  </para>
+
+  <sect1 id="bindings-libraries">
+    <title>Bindings Libraries</title>
+    <para>
+      The purpose of the PLplot bindings is to make the PLplot API
+      documented in <xref linkend="API"/> accessible from various computer
+      languages and GUI environments.  Some bindings (e.g., qt and cairo)
+      are implemented by a special form of "external" device.  Other
+      bindings (e.g., python) are implemented as shared objects which are
+      dynamically loaded by the language in question.  However, the majority
+      of our bindings are implemented as bindings libraries which
+      must be specifically linked by the application.  (See the Makefiles in
+      the installed examples tree for comprehensive examples of how we use
+      <command>pkg-config</command> to supply the necessary linking
+      information.)  In turn these bindings libraries are linked to the
+      PLplot core library described in <xref linkend="core-library"/>.  We
+      tabulate below the bindings library or libraries associated with the
+      compiled languages and GUI environments we support in this specific way.
+    </para>
+    <table id="tab_bindings_libraries">
+      <title>Bindings Libraries</title>
+      <tgroup cols="2" align="center">
+      <thead>
+	<row>
+	  <entry>
+	    Bindings
+	  </entry>
+	  <entry>
+	    Libraries
+	  </entry>
+	</row>
+      </thead>
+      <tbody>
+	<row>
+	  <entry>
+	    Ada
+	  </entry>
+	  <entry>
+	    libplplotada
+	  </entry>
+	</row>
+	<row>
+	  <entry>
+	    C++
+	  </entry>
+	  <entry>
+	    libplplotcxx
+	  </entry>
+	</row>
+	<row>
+	  <entry>
+	    Fortran
+	  </entry>
+	  <entry>
+	    libplplotfortran
+	  </entry>
+	</row>
+	<row>
+	  <entry>
+	    Tk GUI
+	  </entry>
+	  <entry>
+	    libplplottcltk, libtclmatrix
+	  </entry>
+	</row>
+	<row>
+	  <entry>
+	    wxWidgets GUI
+	  </entry>
+	  <entry>
+	    libplplotwxwidgets
+	  </entry>
+	</row>
+      </tbody>
+      </tgroup>
+    </table>
+  </sect1>
+
+  <sect1 id="core-library">
+    <title>The PLplot Core Library</title>
+    <para>
+      The PLplot core library is written in C and implements the PLplot API
+      documented in <xref linkend="API"/>.  The name of that core
+      library is libplplot.  libplplot links to the enhancement libraries
+      documented in <xref linkend="enhancement-libraries"/>.  libplplot
+      also normally dynamically loads devices (a build mode is also available
+      to put the driver code right into the core library) which in
+      turn can potentially link to device-driver libraries that are
+      described in <xref linkend="device-driver-libraries"/>.
+    </para>
+  </sect1>
+
+  <sect1 id="enhancement-libraries">
+    <title>Enhancement Libraries</title>
+    <para>
+      The enhancement libraries add essential functionality to the PLplot core
+      library (see <xref linkend="core-library"/>).  They consist of a
+      cubic spline approximation library, libcsirocsa; a natural neighbours
+      interpolation library, libcsironn; and a time format conversion library
+      libqsastime.
+    </para>
+    <sect2 id="csirocsa-library">
+      <title>The CSIRO Cubic Spline Approximation Library</title>
+      <para>
+	libcsirocsa NEEDS DOCUMENTATION.
+      </para>
+    </sect2>
+    <sect2 id="csironn-library">
+      <title>The CSIRO Natural Neighbours Interpolation Library</title>
+      <para>
+	libcsironn NEEDS DOCUMENTATION.
+      </para>
+    </sect2>
+    <sect2 id="qsastime-library">
+      <title>The QSAS Time Format Conversion Library</title>
+      <para>
+	This library grew out of a discussion with Steve Schwartz of the QSAS
+	Support Team, Cluster Science Centre, Imperial College and our mutual
+	frustrations with the poor time conversion capabilities of
+	POSIX-compliant computer operating systems.  For such systems, the
+	continuous time variable is often stored internally as a 32-bit
+	integer containing the number of seconds since 1970.  This gives a
+	limited date range of only 136 years, and a limited numerical
+	precision of only a second.  Furthermore, although the POSIX standard
+	includes gmtime which provides a conversion between broken-down time
+	(year, month, day, hour, min, sec), and the continuous time variable,
+	the inverse of gmtime (called timegm on Linux) is not a POSIX
+	standard.  Finally, the POSIX standard ignores leap seconds.  All
+	these limitations are not acceptable for plotting of scientific time
+	series and are addressed by the qsastime library which was originally
+	donated under the LGPL to the PLplot project in early 2009 by Anthony
+	J. Allen of the QSAS team and substantially modified after that by a
+	PLplot developer, Alan W. Irwin (e.g., to add leap-second
+	functionality).
+      </para>
+      <para>
+	The qsastime library uses MJD (modified Julian Date = Julian Date -
+	2400000.5) for the internal continuous time variable.  This variable
+	is stored as a signed int (to hold the integer part) and a double (to
+	hold the seconds since midnight).  On 32-bit systems, this combination
+	gives an effective date range of roughly +/- 6 million years
+	from the MJD epoch in late 1858 and an effective numerical time
+	precision of 0.01 ns.  This should cover most range and precision
+	requirements of those doing plots of scientific time series.
+      </para>
+      <para>
+	The qsastime library provides internal routines to convert between the
+	broken-down time representation and the internal continuous time
+	variable and vice versa using the formal rules of either the Gregorian
+	or Julian calendars.  These routines have been tested extensively for
+	the internal consistency of the routines both for the Gregorian and
+	Julian calendars and also by comparing the Gregorian results against the
+	equivalent Linux C library gmtime and timegm routines on a 64-bit
+	platform.  These tests were done for a number of epochs including every
+	year from -5000000 to 5000000 for critical dates in the year (January
+	1, February 28, February 29, March 1, and December 31).  These extensive
+	tests give some confidence that the formal conversion from broken-down
+	to continuous time (and vice versa) should be reliable for the
+	qsastime library on all 32-bit and 64-bit platforms.
+      </para>
+      <para>
+	The qsastime library also provides an internal routine that gives
+	formatted time results as a function of continuous time.  This routine
+	has been lightly tested against the results of the C library strftime
+	routine on Linux.
+      </para>
+      <para>
+	The three internal routines described above are wrapped by functions
+	that provide the externally visible API for the qsastime library.
+	This API is described below.
+      </para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="device-driver-libraries">
+    <title>Device-driver Libraries</title>
+    <para>
+      Device-driver libraries are libraries which are built as part to the
+      PLplot build and which are linked by PLplot device drivers.  At this
+      time we only have one example of this, the NIST cd library which makes
+      it easy to create files in CGM format.  The original name of this
+      library was libcd, but we call it libnistcd to distinguish it from all
+      other "cd" libraries out there.  This library is linked by our cgm
+      device driver.
+    </para>
+    <para>
+      CGM format is a long-established (since 1987) open standard for vector
+      graphics (see http://www.w3.org/Graphics/WebCGM/).  The libnistcd
+      software was developed by G. Edward Johnson at NIST to provide
+      convenient access to the CGM format.  The library is no longer
+      maintained (the last official release was in 1997), but the software
+      is mature and works well.  Furthermore, it is in the public domain
+      except for the small part licensed under the libgd open-source license
+      (see lib/nistcd/cd.html in the PLplot source tree).  PLplot developers
+      have added a modern CMake-based build system for libnistcd and also
+      have done some visibility support so the code builds properly
+      under Windows and also under Linux with gcc when the
+      -fvisibility=hidden option for gcc is used.  Otherwise, the code is
+      identical to the 1997 version.  For documentation of the libnistcd API
+      see lib/nistcd/cd.html in the PLplot source tree.
+    </para>
+  </sect1>
+
+</chapter>

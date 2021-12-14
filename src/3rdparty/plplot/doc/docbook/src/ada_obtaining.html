@@ -1,0 +1,30 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Obtaining the Software</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="ada.html" title="Chapter 8. Ada Language"><link rel="prev" href="ada_examples.html" title="The Examples"><link rel="next" href="ada_howto.html" title="How to use the Ada bindings"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Obtaining the Software</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ada_examples.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Ada Language</th><td width="20%" align="right"> <a accesskey="n" href="ada_howto.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="ada_obtaining"></a>Obtaining the Software</h2></div></div></div><p>There are three software components that you will need: an Ada
+    compiler, the PLplot library, and the Ada bindings.</p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_obtaining_ada"></a>Obtaining an Ada compiler</h3></div></div></div><p>You will need an Ada compiler in order to use the Ada PLplot
+      bindings. There are several compilers available. Here, we will focus on
+      the free, open source compiler that is included with the GNU Compiler
+      Collection, (gcc) which is at the center of much of the open source
+      software movement. The gcc Ada compiler is known as GNAT, for GNU NYU
+      Ada Translator, where NYU stands for New York University. (Although GNAT
+      was originally developed at NYU, it has for many years been developed
+      and supported commercially by AdaCore with academic and pro versions
+      available.)</p><p>Your computer may already have GNAT installed, or you can download
+      it from <a class="ulink" href="http://gcc.gnu.org/" target="_top">gcc.gnu.org</a>. Another
+      route to obtaining GNAT is from the AdaCore page, <a class="ulink" href="https://libre2.adacore.com/" target="_top">libre2.adacore.com</a>. There are
+      versions for many operating systems and processors including Apple's OS
+      X or its open source version Darwin, Linux, and Windows. The gcc and
+      AdaCore versions differ in their licenses. Download the version that you
+      need and follow the installation instructions.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_obtaining_plplot"></a>Download and install PLplot</h3></div></div></div><p>PLplot can be downloaded from the PLplot project page at <a class="ulink" href="http://sourceforge.net/projects/plplot" target="_top">sourceforge.net</a>.
+      Follow the installation instructions after downloading. The installation
+      process requires that your computer has CMake installed. OS X users can
+      try installing PLplot in its entirety from MacPorts. The advantage of
+      using MacPorts is that all installation dependencies are automatically
+      installed for you.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_obtaining_bindings"></a>The Ada bindings to PLplot</h3></div></div></div><p>The third major software component is the bindings themselves;
+      they are included with the PLplot software itself.</p><p>The bindings themselves are six Ada source files named (using GNAT
+      filename extensions) <code class="literal">plplot.ads</code>,
+      <code class="literal">plplot.adb</code>,
+      <code class="literal">plplot_traditional.ads</code>,
+      <code class="literal">plplot_traditional.adb</code>,
+      <code class="literal">plplothin.ads</code>, and <code class="literal">plplotthin.adb</code>.
+      There are two additional files, <code class="literal">plplot_auxiliary.ads</code>
+      and <code class="literal">plplot_auxiliary.adb</code> which will be discussed
+      later, in Section 9.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ada_examples.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="ada.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ada_howto.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">The Examples </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> How to use the Ada bindings</td></tr></table></div></body></html>

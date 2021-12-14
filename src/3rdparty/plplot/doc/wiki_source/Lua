@@ -1,0 +1,60 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Description
+-----------
+
+[LUA](http://www.lua.org/) is a powerful, fast, lightweight, embeddable scripting language.
+
+Lua combines simple procedural syntax with powerful data description constructs based on associative arrays and extensible semantics. Lua is dynamically typed, runs by interpreting bytecode for a register-based virtual machine, and has automatic memory management with incremental garbage collection, making it ideal for configuration, scripting, and rapid prototyping.
+
+Instructions for Mac OS X
+-------------------------
+
+-   [swig](swig "wikilink") must already be installed.
+-   Download [Lua 5.0.3](http://www.lua.org/ftp/lua-5.0.3.tar.gz)
+-   Untar lua-5.0.3.tar.gz into a folder of your choice
+-   Edit the file *config*. In particular you need to uncomment the following lines to enable dynamic loading of libraries.
+
+`LOADLIB= -DUSE_DLOPEN=1`
+`DLLIB= -ldl`
+
+-   Further set the installation prefix in *config* if you don't like the standard path.
+-   Run
+
+`make && make install`
+
+-   Lua executable, libraries and headers are now installed.
+
+### Set CMake paths
+
+-   Set environment variables if you didn't use the standard path, e.g add the following lines to the *.profile* file in your home directory, if you installed Lua to *$HOME/local/lua-5.0.3*
+
+`# add lua to PATH`
+`export PATH=$HOME/local/lua-5.0.3/bin:$PATH `
+`export CMAKE_LIBRARY_PATH=$HOME/local/lua-5.0.3/lib:$CMAKE_LIBRARY_PATH `
+`export CMAKE_INCLUDE_PATH=$HOME/local/lua-5.0.3/include:$CMAKE_INCLUDE_PATH`
+
+CMake is now able to find Lua.
+
+Instructions for Linux
+----------------------
+
+N/A
+
+Instructions for Windows
+------------------------
+
+N/A
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

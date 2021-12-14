@@ -1,0 +1,79 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCOL0 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplcol0\fP - Set color, cmap0
+.SH SYNOPSIS
+\fBplcol0\fP(\fIicol0\fP)
+.SH DESCRIPTION
+
+.P
+Sets the color index for cmap0 (see the PLplot documentation).
+.P
+Redacted form: \fBplcol0(icol0)\fP
+.P
+This function is used in examples 1-9, 11-16, 18-27, and 29.
+.SH ARGUMENTS
+.TP
+\fIicol0\fP (\fBPLINT\fP(3plplot), input)
+Integer representing the color.  The defaults at present are (these may change):
+.RS
+.P
+.PD 0
+.P
+0
+black (default background)
+.P
+1
+red (default foreground)
+.P
+2
+yellow
+.P
+3
+green
+.P
+4
+aquamarine
+.P
+5
+pink
+.P
+6
+wheat
+.P
+7
+grey
+.P
+8
+brown
+.P
+9
+blue
+.P
+10
+BlueViolet
+.P
+11
+cyan
+.P
+12
+turquoise
+.P
+13
+magenta
+.P
+14
+salmon
+.P
+15
+white
+.PD
+.P
+ Use \fBplscmap0\fP(3plplot) to change the entire cmap0 color palette and \fBplscol0\fP(3plplot) to change an individual color in the cmap0 color palette.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

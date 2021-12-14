@@ -1,0 +1,271 @@
+This file is to show what I did to convert the plplot
+svn SourceForge repo to a SourceForge git repo following closely
+what I did for a similar conversion of timeephem.  This is
+a preliminary conversion, and it is likely that if I can get
+it to work, Hazen will do the final conversion.
+
+* Create local directory corresponding to the complete SF svn repo.
+
+svn checkout https://svn.code.sf.net/p/plplot/code plplot_complete_SF_svn
+
+* [Not done by AWI.  Should be done by Hazen.] Turn off write permissions for
+  subversions repo and change the display name for that repo from
+  "Code" to "Old Code".  To do this, login to SF, --> project page for
+  plplot --> admin --> tools.  Then click on the permissions button
+  for "Code" to not allow anyone write access.  Then click on the
+  label button for "Code" to change that to "Old Code".  N.B. MAKE
+  ABSOLUTELY POSITIVE YOU DO NOT HIT THE DELETE BUTTON.  That would
+  destroy our subversion repository which we would like to keep
+  available at SourceForge for some time in a readonly status
+
+* [Not done by AWI.  Should be done by Hazen.] While in the same location create
+  an empty git repo.  Click on the git button, and choose a label of
+  "Code" and a mount point of "plplot".  This will create a "Code"
+  area at the end.  Drag and drop that area to place "Code" before
+  "Old Code" to affect the order of the menus at the SF project page.
+
+  N.B. If you make a mistake with the git repo (like I did with the
+  airwin user name for the timeephem case) you can always hit the
+  delete button for the git repo to completely remove it from
+  SourceForge.  Then start over with an empty repo as above.  But be
+  extremely careful which delete button you hit since you could also
+  completely remove the subversion repository this way if you do that
+  on "Old Code".
+
+* Copy SourceForge svn repo to local disk.
+
+rsync -av --delete svn.code.sf.net::p/plplot/code/* plplot_svn_repository
+
+* Compare a local directory corresponding to this local repo with a
+local directory corresponding to the SF repo. Note, for final
+comparisons between git and svn we will do much more extensive check
+of various revisions
+
+svn checkout file:///home/software/plplot_svn/svn2git_conversion/plplot_svn_repository plplot_complete_local_svn
+
+# Confirm empty differences
+diff -Naur --exclude=.svn plplot_complete_SF_svn plplot_complete_local_svn
+
+svn log --verbose plplot_complete_SF_svn >| ChangeLog_complete_SF_svn.log
+svn log --verbose plplot_complete_local_svn >| ChangeLog_complete_local_svn.log
+
+# Empty differences except for slight formatting difference (mentioned
+# "Changed paths:" for empty tags).  I don't know why there is this formatting
+# difference since repos are identical via above rsync, but svn may just
+# use slightly different code path for local file repo than it does for remote
+# repo.  In any case, differences are slight so I won't worry further about it.
+diff ChangeLog_complete_SF_svn.log ChangeLog_complete_local_svn.log
+
+* Analyze overall directory structure of svn repo.
+
+grep "A /" ChangeLog_complete_local_svn.log | grep -v "A /trunk" | grep -v "A /tags" | grep -v "A /branches" | less
+
+Shows that top level directories are branches, tags, trunk, and www, and
+within www there are branches, tags, and trunk as well, but only www/trunk is
+used. Furthermore,
+
+grep "A /branches" ChangeLog_complete_local_svn.log| grep www
+
+shows no directory called branches/www.
+
+Therefore, I agree with Hazen's decision to treat all of www as a branch.
+
+* Analyze tags.
+
+svn log --verbose plplot_complete_local_svn/tags >| ChangeLog_complete_local_svn_tags.log
+
+grep 'A /' ChangeLog_complete_local_svn_tags.log |less
+
+Shows tags actually appear as subdirectories of tags AND tags/debian.  So
+change Hazen rules so that tags/debian/whatever ends up as the git
+tag "debian/whatever"
+
+* Prepare files to help conversion
+
+Sources:
+http://www.midwesternmac.com/blogs/jeff-geerling/switching-svn-repository-git2svn
+http://blog.smartbear.com/software-quality/migrating-from-subversion-to-git-lessons-learned/
+
+  + Find list of author names:
+
+svn log --quiet plplot_complete_local_svn/tags | awk '/^r/ {print $3}' | sort -u
+
+    The above command generated a list that was equivalent to what Hazen
+    had already collected in his old authors.txt file.  N.B. Hazen has now
+    updated that authors.txt file using real names (such as Alan W. Irwin),
+    and it was that rules.txt file I used for my final testing.
+
+  + Update plplot.rules file provided by Hazen for
+    PLplot to deal with tags/debian issue.  (Hazen had
+    already dealt with /www issue noted above.)
+
+  + Cut and paste from first source above to create the
+    svn_tag2git_tag.sh script to be sourced (below) to convert special
+    marking of tag-style svn branches to real git tags.
+
+* Do conversion with marked tags as branches.
+
+rm -rf plplot.git  # This removes prior conversion attempts.
+time svn-all-fast-export --identity-map=authors.txt --rules=plplot.rules --stats --add-metadata plplot_svn_repository >| svn-all-fast-export.log 2>&1
+
+The time stats were
+
+real    1m0.064s
+user    1m11.676s
+sys     0m6.760s
+
+  ==> blindingly fast!
+
+  This result took 15 times the time required for the timeephem case
+  which seems reasonable since this PLplot svn repository is 15 times
+  larger than the timeephem svn repository.
+
+* Check svn-all-fast.log for any error or warning messages.  Some of the tag creations generated warning messages, but as far as I know there is nothing there that looks serious.
+
+* Transform svn branch-style tags to git tags following script given by source 1 above.
+
+pushd plplot.git
+source ../svn_tag2git_tag.sh >| ../svn_tag2git_tag.sh.log
+popd
+
+ The resulting output file looked reasonable.
+
+* Create clone of local git repo
+
+rm -rf plplot_local_clone.git
+git clone /home/software/plplot_svn/svn2git_conversion/plplot.git plplot_local_clone.git
+
+* Tailor script to refer to plplot_local_clone.git and run that script
+  to check the PLplot working directory for the local svn repo against
+  plplot_local_clone.git
+
+time ./diff_git_versus_svn_tree.sh >| diff_git_versus_svn_tree.sh.out 2>&1
+
+* Create complete git log and check that it looks reasonable.
+
+pushd plplot_local_clone.git
+git checkout master
+git log --name-status --all >| ../git.log 2>&1
+popd
+
+grep '^Author' git.log |sort -u |less
+
+  The results were as expected (i.e. consistent with the authors.txt file
+  used for the conversion).
+
+  Also, check which svn revision numbers are in the log.
+
+grep "svn path" git.log |sort --field-separator='=' --key=3 -n |less
+
+  This shows that only 23 are missing, but I think that is reasonable since
+
+grep '^Exporting' svn-all-fast-export.log |grep -v modifications |grep done |less
+
+  (which picks out revisions that created no modifications to git corresponding,
+  e.g., to creations of empty directories on svn) had 16 lines leaving
+  only 7 svn revisions unaccounted for due to other issues which I didn't bother
+  to try and figure out.
+
+[AWI did nothing further in this file so the rest is taken from AWI
+experience with timeephem conversion project with all references to
+that project replaced by plplot, and all references to airwin replaced
+by Hazen's SF username, hbabcock.  Hazen should take each of these
+further steps.]
+
+* Configure git with the same information so that the Author lines will
+  continue to be consistent in the log for new commits to the git repo.
+
+git config --global user.name "Hazen Babcock"
+git config --global user.email "hbabcock@users.sourceforge.net"
+
+* Prepare bare repo for pushing to SF following directions at
+  <https://sourceforge.net/p/forge/documentation/Git/>
+
+pushd plplot.git
+git remote add origin ssh://hbabcock@git.code.sf.net/p/plplot/plplot
+git config branch.master.remote origin
+git config branch.master.merge refs/heads/master
+popd
+
+* Check remote result:
+
+pushd plplot.git
+git remote --verbose
+popd
+
+  Which yielded (as expected)
+origin  ssh://hbabcock@git.code.sf.net/p/plplot/plplot (fetch)
+origin  ssh://hbabcock@git.code.sf.net/p/plplot/plplot (push)
+
+* Push local branches and tags to SF
+
+pushd plplot.git
+git push origin master
+git push --all origin
+git push --tags origin
+popd
+
+* Check SF git repo by cloning it than comparing in detail with subversion
+  results by using the test script with name of directory
+  tailored appropriately in script.
+
+git clone ssh://hbabcock@git.code.sf.net/p/plplot/plplot plplot_sf_clone.git
+
+time ./diff_git_versus_svn_tree.sh >| diff_git_versus_svn_tree_SF_clone.sh.out
+less diff_git_versus_svn_tree._SF_clonesh.out
+
+* Enforce workflow with update hook
+
+mkdir git_hooks
+cd git_hooks
+# edit README file to explain our update hook and
+# the workflow policy it enforces.
+
+# This needed to give shell access for 240 minutes before your
+# SourceForge shell access disappears again.
+ssh airwin,plplot@shell.sourceforge.net create
+# Backup original SF updates hook
+scp -p airwin,plplot@shell.sourceforge.net:/home/git/p/plplot/plplot.git/hooks/update update_original
+cp -p update_original update
+# Check permissions (which should be -rwxrwxr-x)
+ls -l update
+# Edit update file to enforce policy as discussed in detail on the mailing list.
+# edit update
+.....
+# Upload the new version
+scp -p update airwin,plplot@shell.sourceforge.net:/home/git/p/plplot/plplot.git/hooks
+
+# Check permissions:
+ssh airwin,plplot@shell.sourceforge.net "ls -l /home/git/p/plplot/plplot.git/hooks/update"
+# Fix permissions (if required)
+ssh airwin,plplot@shell.sourceforge.net "chmod a+x /home/git/p/plplot/plplot.git/hooks/update"
+
+* Tag and remove all branches except master
+
+# List branches
+git branch -a
+
+# Tag the branch called branch_name
+git tag archive/branch_name origin/branch_name
+
+# Push tags to SF
+git push --tags origin
+
+# Delete branches at SF
+git push origin :branch-name
+
+# Branch resurrection:
+git branch branch_name archive/branch_name
+
+# To get a complete list of remote tags:
+
+git ls-remote --tags origin
+
+# For those who want to make tags and branches on their local repo
+# consistent with the remote repo.  (The following command definitely
+# gets rid of the local branches that were deleted at SF, but I am not
+# sure whether this is sufficient to propagate the tag creations as
+# well or whether a subsequent ff-only merge (done as part of the
+# normal workflow) of origin/master to master is also required.
+
+git fetch --prune

@@ -1,0 +1,83 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLBOX3 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplbox3\fP - Draw a box with axes, etc, in 3-d
+.SH SYNOPSIS
+\fBplbox3\fP(\fIxopt\fP, \fIxlabel\fP, \fIxtick\fP, \fInxsub\fP, \fIyopt\fP, \fIylabel\fP, \fIytick\fP, \fInysub\fP, \fIzopt\fP, \fIzlabel\fP, \fIztick\fP, \fInzsub\fP)
+.SH DESCRIPTION
+
+.P
+Draws axes, numeric and text labels for a three-dimensional surface plot.  For a more complete description of three-dimensional plotting see the PLplot documentation.
+.P
+Redacted form: General: \fBplbox3(xopt, xlabel, xtick, nxsub, yopt, ylabel, ytick, nysub, zopt, zlabel, ztick, nzsub)\fP
+
+.P
+This function is used in examples 8, 11, 18, and 21.
+.SH ARGUMENTS
+.TP
+\fIxopt\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying options for the x axis.  The string can include any combination of the following letters (upper or lower case) in any order: b: Draws axis at base, at height z=\fIzmin\fP where \fIzmin\fP is defined by call to \fBplw3d\fP(3plplot).  This character must be specified in order to use any of the other options.
+d: Plot labels as date / time. Values are assumed to be seconds since the epoch (as used by gmtime).
+f: Always use fixed point numeric labels.
+i: Inverts tick marks, so they are drawn downwards, rather than upwards.
+l: Labels axis logarithmically.  This only affects the labels, not the data, and so it is necessary to compute the logarithms of data points before passing them to any of the drawing routines.
+n: Writes numeric labels at major tick intervals.
+o: Use custom labelling function to generate axis label text.  The custom labelling function can be defined with the \fBplslabelfunc\fP(3plplot) command.
+s: Enables subticks between major ticks, only valid if t is also specified.
+t: Draws major ticks.
+u: If this is specified, the text label for the axis is written under the axis.
+
+.TP
+\fIxlabel\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string specifying the text label for the x axis.  It is only drawn if u is in the \fIxopt\fP string.
+.TP
+\fIxtick\fP (\fBPLFLT\fP(3plplot), input)
+World coordinate interval between major ticks on the x axis. If it is set to zero, PLplot automatically generates a suitable tick interval.
+.TP
+\fInxsub\fP (\fBPLINT\fP(3plplot), input)
+Number of subintervals between major x axis ticks for minor ticks.  If it is set to zero, PLplot automatically generates a suitable minor tick interval.
+.TP
+\fIyopt\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying options for the y axis. The string is interpreted in the same way as \fIxopt\fP.
+.TP
+\fIylabel\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string specifying the text label for the y axis.  It is only drawn if u is in the \fIyopt\fP string.
+.TP
+\fIytick\fP (\fBPLFLT\fP(3plplot), input)
+World coordinate interval between major ticks on the y axis. If it is set to zero, PLplot automatically generates a suitable tick interval.
+.TP
+\fInysub\fP (\fBPLINT\fP(3plplot), input)
+Number of subintervals between major y axis ticks for minor ticks.  If it is set to zero, PLplot automatically generates a suitable minor tick interval.
+.TP
+\fIzopt\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying options for the z axis. The string can include any combination of the following letters (upper or lower case) in any order: b: Draws z axis to the left of the surface plot.
+c: Draws z axis to the right of the surface plot.
+d: Draws grid lines parallel to the x-y plane behind the figure.  These lines are not drawn until after \fBplot3d\fP(3plplot) or \fBplmesh\fP(3plplot) are called because of the need for hidden line removal.
+e: Plot labels as date / time. Values are assumed to be seconds since the epoch (as used by gmtime).  Note this suboption is interpreted the same as the d suboption for \fIxopt\fP and \fIyopt\fP, but it has to be identified as e for \fIzopt\fP since d has already been used for the different purpose above.
+f: Always use fixed point numeric labels.
+i: Inverts tick marks, so they are drawn away from the center.
+l: Labels axis logarithmically.  This only affects the labels, not the data, and so it is necessary to compute the logarithms of data points before passing them to any of the drawing routines.
+m: Writes numeric labels at major tick intervals on the right-hand z axis.
+n: Writes numeric labels at major tick intervals on the left-hand z axis.
+o: Use custom labelling function to generate axis label text.  The custom labelling function can be defined with the \fBplslabelfunc\fP(3plplot) command.
+s: Enables subticks between major ticks, only valid if t is also specified.
+t: Draws major ticks.
+u: If this is specified, the text label is written beside the left-hand axis.
+v: If this is specified, the text label is written beside the right-hand axis.
+
+.TP
+\fIzlabel\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string specifying the text label for the z axis.  It is only drawn if u or v are in the \fIzopt\fP string.
+.TP
+\fIztick\fP (\fBPLFLT\fP(3plplot), input)
+World coordinate interval between major ticks on the z axis. If it is set to zero, PLplot automatically generates a suitable tick interval.
+.TP
+\fInzsub\fP (\fBPLINT\fP(3plplot), input)
+Number of subintervals between major z axis ticks for minor ticks.  If it is set to zero, PLplot automatically generates a suitable minor tick interval.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,27 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plclear: Clear current (sub)page</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plcalc_world.html" title="plcalc_world: Calculate world coordinates and corresponding window index from relative device coordinates"><link rel="next" href="plcol0.html" title="plcol0: Set color, cmap0"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plclear</code>: Clear current (sub)page
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plcalc_world.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plcol0.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plclear"></a>
+      <code class="function">plclear</code>: Clear current (sub)page
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plclear</b>
+	  (</code></td><td><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Clears the current page, effectively erasing everything that have
+      been drawn.  This command only works with interactive drivers; if the driver
+      does not support this, the page is filled with the background color in use.
+      If the current page is divided into subpages, only the current subpage
+      is erased.  The nth subpage can be selected with <a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a>(n).
+    </p><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plclear()</code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is not used in any examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plcalc_world.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plcol0.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plcalc_world</code>: Calculate world coordinates and
+      corresponding window index from relative device coordinates
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plcol0</code>: Set color, cmap0
+    </td></tr></table></div></body></html>

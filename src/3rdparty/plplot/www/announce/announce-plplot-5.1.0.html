@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html>
+<head>
+  <title>Announcement of PLplot-5.1.0</title>
+</head>
+<body>
+<h1>Announcement of PLplot-5.1.0</h1>
+  <p>7 months and 500+ CVS commits after PLplot-5.0.4 it is time for another
+stable release of this publication-quality scientific plotting package.</p>
+<p>
+<ul>
+  <li>What: PLplot-5.1.0 release (source tarball and RedHat 7.1 and Mandrake 8.1 source and binary rpm's).</li>
+  <li>Where: <a href="http://sourceforge.net/project/showfiles.php?group_id=2915">http://sourceforge.net/project/showfiles.php?group_id=2915</a>.</li>
+  <li>When: 2002 January 31.</li>
+  <li>Why: New features, improved features, and bug fixing.</li>
+  <li>Who: The PLplot core development <a href="http://sourceforge.net/project/memberlist.php?group_id=2915">team</a>
+  with additional help from
+  <a href="mailto:svensson@esrf.fr">Olof Svensson</a> and
+  <a href="mailto:mirone@esrf.fr">Alessandro Mirone</a>
+</ul>
+</p>
+<h2>Important Changes to Existing Features</h2>
+ <p>
+ <ol>
+   <li>
+     The Windows port of PLplot has been completely refurbished.  PLplot now
+runs on Windows 98 (and perhaps even Windows 95 although that is untested),
+Windows NT, and Windows 2000.  See plplot/sys/win32/msdev/README.TXT and
+plplot/sys/win32/msdev/INSTALL.TXT for details.  Please direct all
+questions about this Windows port to Olof Svensson.
+   </li>
+   <li>
+     The examples were extensively expanded for each front end to be the
+union of the previous results for all front ends. For example, you should
+now expect to get the same results for the 10 pages of the contouring
+(ninth) example regardless of whether you are running that example from Tcl,
+C, Python, Java (and eventually C++, Fortran, and Perl).
+   </li>
+   <li>
+     We have finished converting all Python examples to use the Numeric module (from
+the Numpy project) wherever possible.  This module allows high-level array
+manipulations at C speeds that are quite useful in preparing data to be
+plotted.  The xw??.py examples are no longer stand-alone scripts.  Instead,
+they are now organized as modules that are imported into python scripts such
+as pythondemos.py or prova.py.
+   </li>
+   <li>
+    API change: plxormod now returns a status.
+   </li>
+   <li>
+   plssub now no longer has a forced page advance inside it (which was
+confusing some drivers).  More specific page initialization is used inside
+of plssub instead.  If this change causes you some problems, see the
+examples for the proper way to terminate pages and sub-pages.
+   </li>
+   <li>
+    We no longer support the variety of make commands on the
+non-GNU/Linux unices.  Instead, we now only
+support the GNU version of make which
+is well <a href="http://www.gnu.org/software/make/make.html">documented</a> and which
+can be downloaded from <a href="ftp://ftp.gnu.org/pub/gnu/make">ftp://ftp.gnu.org/pub/gnu/make</a>.
+   </li>
+   <li>
+   The DocBook API chapter (and the man pages and Octave help
+   built from that chapter) now
+have complete documentation of the meaning of the function parameters.
+The overall documentation
+and our <a href="http://plplot.sourceforge.net">website</a> content have been improved as
+well.
+   </li>
+ </ol>
+ </p>
+ <h2>Important New Features</h2>
+ <p>
+ <ol>
+
+   <li>
+     A new cgm (Computer Graphics Metafile) driver has been added.  This relies on libcd.a which is not
+maintained any more.  Nevertheless libcd.a is a free library that works well
+and does its job so for our cgm user's convenience we have put a copy of the
+cd1.3.tar.gz tarball for building this library from source in our
+<a href="http://sourceforge.net/project/showfiles.php?group_id=2915">
+file release area</a>.  Our tests indicate
+the cgm driver is now stable.
+   </li>
+   <li>
+
+     Dynamical loading of device drivers.  We have 29 (!) different devices
+for output plots, but only one of those is selected by the user for a given
+plot.  Thus, dynamic loading of device drivers makes your executables
+substantially smaller. Caveats: Your Unix must support shared libraries (this
+happens automatically for most Linux distributions), xwin and tk drivers are
+static-only for now (until we arrange for the PLplot library itself to be
+dynamically loaded from the Tcl/Tk front-end).  Use the
+--enable-dyndrivers configure option to get access to dynamic loading of device drivers.
+   </li>
+ <li>
+   We now have an experimental Java front end.  The PLplot API accessible
+from Java is still incomplete, but it is large enough currently to do all
+planned examples other than x16.java and x18.java. See
+plplot/examples/java/README.javademos for directions about how to get access
+to the Java front end for PLplot.
+ </li>
+ <li>
+   We now have a new tk (ntk) driver (--enable-ntk) whose goal is to
+provide the tk driver functionality using a simpler, cleaner design.
+This is "a work in progress" because its functionality, although working, is
+still quite limited compared to the traditional tk driver.
+ </li>
+ <li>
+   We now have the beginnings of a Pyqt GUI for PLplot thanks to Alessandro
+Mirone. See examples/python/README.pythondemos for directions about how to
+access it.
+ </li>
+ <li>
+  We now have an experimental plimage function for PLplot thanks (again)
+to Alessandro Mirone.  Try the experimental x20c example to see how to work
+with images in PLplot at the moment, but note the plimage API may change in
+the future.
+ </li>
+  </ol>
+ </p>
+ <h2>Important Bug fixes</h2>
+ <p>
+ <ol>
+  <li>
+   Interactive color palettes now work for the plframe Tk GUI.  This
+important feature allows you to interactively adjust the cmap0 (discrete)
+and cmap1 (continuous) colors for a particular plot.
+  </li>
+ </ol>
+ </p>
+ <h2>Remaining Important Bugs</h2>
+ <p>
+ <ol>
+   <li>
+    The shaded 3D plots (see Example 8) have problems with the edges of
+hidden shaded regions.  Our judgement is this donated plotsh3d code is too difficult
+to fix and should be completely replaced.  Any volunteers?  Meanwhile, with Example 8
+we do get a taste of the nice effects you can have with 3D shaded plots.
+   </li>
+   <li>
+     There is no page control for the plframe widget for multi-page plots in
+5.1.0. This has now been fixed in CVS and will get into the next release.
+   </li>
+ </ol>
+ </p>
+ <h2>Tests Performed for this Release</h2>
+ <p>
+  I ran a number of interactive tests on both the Linux Debian woody and Linux RedHat 7.1
+systems that were available to me.  In particular extensive Tk plframe
+widget tests were performed including the refurbished color palette
+functionality.  All results were good except for the page control problem
+mentioned above.
+ </p>
+ <p>
+     The test script, plplot-test.sh, generates 285 pages of non-interactive
+plots from the C, Fortran, C++, Python, Tcl, and Octave
+front-end examples.  I ran this script with the psc, png, jpeg, and cgm
+drivers for a total of 1140 plot pages on a Linux Debian woody system. There
+were no error messages when generating these results, and the results looked
+good.  I also ran this same script on a Linux RH 7.1 system (with more
+limited test results since the octave front end and cgm driver are
+unavailable on that system) with good results. I also ran this same script
+(with quite limited results since only the psc driver was available for the
+C, Fortran, and C++ front ends) on a Solaris 5.8 computer configured
+--with-gcc.  Those results were good as well.  Note all tests were done for
+plplot configured --with-double.
+ </p>
+ <p>
+ I have also heard good reports of extensive tests of PLplot on other Linux
+systems (SuSE 7.0 and 7.2), Unix systems (OSF1 4.0/alpha, IRIX64 6.5/mips,
+SCO-3.2v5.0.4, and Solaris-5.7 with native compiler), and Windows 98, NT,
+and 2000 systems.  I have obviously had a good report of a build on Linux
+Mandrake 8.1 (that's how our donated Mandrake 8.1 rpm's were generated), but
+as far as I know no extensive tests have been done on that system as yet.
+Finally, one user reports good success building and running PLplot with GNU
+tools on Mac OS X.  To summarize, it is safe to say our cross-platform
+capability has never been better!
+ </p>
+ <h2>General Notes</h2>
+ <p>
+      We hoped to include the new automake and libtool configuration scheme in
+this release, but merging that effort from a CVS branch to CVS head has been
+delayed until a later release.  Meanwhile, a substantial fraction of our
+commits have been concerned with improvements to the present configuration
+system so we should have a good basis for comparison when the
+automake/libtool configuration scheme is finally merged.
+ </p>
+ <p>We have increased the minor number for this release (5.0.4 --> 5.1.0)
+because it does include the important new feature of dynamic drivers.
+However, from our good test results (see above) we judge this release to be
+as stable (if not more stable) than 5.0.4 so we will only support 5.1.0 from
+now on.
+</p>
+<p>Have fun with this latest stable release of PLplot!</p>
+
+<p>Alan W. Irwin for the PLplot core team, 2002 January 31</p>
+</body>
+</html>

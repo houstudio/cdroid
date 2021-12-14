@@ -1,0 +1,37 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plwidth: Set pen width</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plw3d.html" title="plw3d: Configure the transformations required for projecting a 3D surface on a 2D window"><link rel="next" href="plwind.html" title="plwind: Specify window"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plwidth</code>: Set pen width
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plw3d.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plwind.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plwidth"></a>
+      <code class="function">plwidth</code>: Set pen width
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plwidth</b>
+          (</code></td><td>
+            <var class="pdparam">width</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Sets the pen width.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>width</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The desired pen width.  If <code class="literal">
+              <em class="parameter"><code>width</code></em>
+            </code>
+            is negative or the same as the previous value no action is taken.
+            <code class="literal">
+              <em class="parameter"><code>width</code></em> = 0.
+            </code> should be interpreted as
+            as the minimum valid pen width for the device.  The interpretation of positive
+            <code class="literal">
+              <em class="parameter"><code>width</code></em>
+            </code> values is also device
+            dependent.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plwidth(width)</code>
+    </p><p>
+      This function is used in examples 1 and 2.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plw3d.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plwind.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plw3d</code>: Configure the transformations required for projecting a 3D surface on a 2D window
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plwind</code>: Specify window
+    </td></tr></table></div></body></html>

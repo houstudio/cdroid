@@ -1,0 +1,313 @@
+MJDtime Routines
+
+QSAS Support Team
+Cluster Science Centre, Imperial College
+csc-support-dl@imperial.ac.uk
+Provided under library gnu public licence (LGPL).
+
+	
+These routines convert between various date and time formats. The date and time is stored internally as a structure , MJDtime, containing an integer, as the integer part of the MJD date, and a double representing the seconds offset from the start of this day. Routines exist to also set and get MJD, JD, formatted date/time strings and NASA CDF epoch date/times from this structure.
+
+Modified Julian Date (MJD) measures days (and fractional days) since the start of 17 Nov 1858 CE in Universal Time (UTC). Julian Date (JD) measures days (and fractional days) since noon on 1 January, 4713 BCE in Universal Time (UTC).
+
+Modified Julian Date (MJD) = Julian Date (JD) - 2400000.5
+
+Common Era (CE) and Before Common Era (BCE) are also often called AD and BC respectively.
+
+These utilities use the Gregorian calendar after 4 Oct 1582 (Julian) i.e. from 15 Oct 1582 (Gregorian). In some routines the forceJulian flag can be set to 1 to override this and explicitly use the Julian calendar in conversions. The default value for forceJulian is 0 (do not force use of Julian Calendar). Note C libraries use Gregorian only from 14 Sept 1752 and will yield different results between years 1582 and 1752.
+
+ More detailed discussion can be found at http://aa.usno.navy.mil/data/docs/JulianDate.php
+These routines have been compared with the results of the US Naval Observatory online converter.
+	 
+ In all routines, specifying a day, hour, minute or second field greater than would be valid is
+ handled with modulo arithmetic and is safe. 
+Thus 2006-12-32 00:62:00.0 will be safely, and correctly, treated as 2007-01-01 01:02:00.0 
+	 
+MJD starts at 0h, so truncating MJD always gives the same day whatever the time of day (unlike JD). The seconds offset may take any value, so that any date/time may be expressed in terms of an offset from the same MJD day. The seconds field thus may exceed a single day, and may also be negative.
+
+typedef struct MJDtimeStruct
+{ 
+	int base_day; /* integer part of MJD  */
+	double time_sec; /* seconds from start of base_day */
+	
+}MJDtime;
+
+
+
+
+Routines
+
+void setFromUT  (int year, int month, int day, int hour, int min, double sec, MJDtime *MJD, int  forceJulian);
+
+void setFromDOY (int year, int doy, int hour, int min, double sec, MJDtime *MJD, int forceJulian);
+
+void setFromBCE  (int yearBCE, int month, int day, int hour, int min, double sec, MJDtime *MJD);
+
+void setFromMJD  (double ModifiedJulianDate, MJDtime *MJD);
+
+void setFromJD  (double JulianDate, MJDtime *MJD);
+
+int setFromISOstring(const char* ISOstring, MJDtime *MJD);
+
+void setFromCDFepoch  (double cdfepoch, MJDtime *MJD);
+
+void breakDownMJD  (int *year, int *month, int *day, int *hour, int *min, double *sec,  const MJDtime *MJD, int forceJulian);
+
+double getMJD  (MJDtime *MJD);
+
+double getJD  (MJDtime *MJD);
+
+double getDiffDays  (MJDtime *MJD1, MJDtime *MJD2);
+
+double getDiffSecs  (MJDtime *MJD1, MJDtime *MJD2);
+
+double getCDFepoch  (MJDtime *MJD);
+
+const char * getISOString  (MJDtime *MJD, int delim);
+
+const char * getDayOfWeek  (const MJDtime *MJD);
+
+const char * getLongDayOfWeek  (const MJDtime *MJD);
+
+const char * getMonth  (int m);
+
+const char * getLongMonth  (int m);
+
+int getDOY  (const MJDtime *MJD, int Julian);
+
+size_t strfMJD  (char * buf, size_t len, const char *format, const MJDtime *MJD, int forceJulian);
+
+
+
+
+
+
+
+
+
+
+
+Detailed Descriptions
+
+#include <MJDtime.h>
+
+void setFromUT  (int year, int month, int day, int hour, int min, double sec, MJDtime *MJD, int  forceJulian);
+
+DESCRIPTION
+The setFromUT() function constructs an MJDtime structure from the broken down year, month, day, hour, minute and seconds. If the forceJulian flag is 1 the Julian Calendar is used whatever the date, otherwise the Gregorian calendar is used from the day following  4 Oct 1582 (Julian) i.e. from 15 Oct 1582 (Gregorian).  Note C libraries use Gregorian only from 14 Sept 1752 onwards.
+
+
+void setFromDOY (int year, int doy, int hour, int min, double sec, MJDtime *MJD, int forceJulian);
+
+DESCRIPTION
+The setFromDOY() function constructs an MJDtime structure from the broken down year,  day of year, hour, minute and seconds. If the forceJulian flag is 1 the Julian Calendar is used whatever the date, otherwise the Gregorian calendar is used from the day following  4 Oct 1582 (Julian) i.e. from 15 Oct 1582 (Gregorian).  Note C libraries use the Gregorian calendar only from 14 Sept 1752 onwards.
+
+
+void setFromBCE  (int yearBCE, int month, int day, int hour, int min, double sec, MJDtime *MJD);
+
+DESCRIPTION
+The setFromBCE() function constructs an MJDtime structure from the broken down year (BCE),  month, day, hour, minute and seconds. Note BCE years start from 0 CE, so year CE = 1 – year BCE. Julian Calendar is always used in setFromBCE().
+
+void setFromMJD  (double ModifiedJulianDate, MJDtime *MJD);
+
+DESCRIPTION
+The setFromMJD() function constructs an MJDtime structure from Modified Julian Date as a double. MJD is calendar independent and forms a continuous sequence of days and fractions of days. Time is measured in UTC.
+
+void setFromJD  (double JulianDate, MJDtime *MJD);
+
+DESCRIPTION
+The setFromJD() function constructs an MJDtime structure from Julian Date as a double. JD is calendar independent and forms a continuous sequence of days and fractions of days. Time is measured in UTC. MJD = JD – 2400000.5 since JD starts at noon.
+
+int setFromISOstring(const char* ISOstring, MJDtime *MJD);
+
+
+DESCRIPTION
+The setFromISOstring() function constructs an MJDtime structure from an ISO standard format Date and time string in UTC. Gregorian Calendar is assumed from 15 Oct 1582.
+The ISO format is of the form "1995-01-23 02:33:17.235" or "1995-01-23T02:33:17.235Z". Both the ‘T’ separator and the trailing ‘Z’ are optional, and any number of decimal places after the seconds field are allowed.
+
+void setFromCDFepoch  (double cdfepoch, MJDtime *MJD);
+
+DESCRIPTION
+The setFromCDFepoch() function constructs an MJDtime structure from the NASA CDF Epoch as a double. CDF Epoch measures milliseconds from 0 CE (1 BCE) on the Gregorian Calendar. It is intended for use with space missions in the Common Era and will give misleading dates on the Julian Calendar. Much faster routines exist for handling conversion of CDF epochs to time strings in the modern restricted interval of applicability, but the algorithm here is consistent with the rest of the routines at all dates.
+
+void breakDownMJD  (int *year, int *month, int *day, int *hour, int *min, double *sec,  const MJDtime *MJD, int forceJulian);
+
+DESCRIPTION
+The brteakDownMJD() function converts an MJDtime structure into the broken down year, month, day, hour, minute and seconds. If the forceJulian flag is 1 the Julian Calendar is used whatever the date, otherwise the Gregorian calendar is used from the day following  4 Oct 1582 (Julian) i.e. from 15 Oct 1582 (Gregorian).  Note C libraries use Gregorian only from 14 Sept 1752 onwards.
+
+double getMJD  (MJDtime *MJD);
+
+DESCRIPTION
+The getMJD() function converts an MJDtime structure into a Modified Julian Date as a double. MJD is calendar independent and forms a continuous sequence of days and fractions of days. Time is measured in UTC.
+
+double getJD  (MJDtime *MJD);
+
+DESCRIPTION
+The getJD() function converts an MJDtime structure into a Julian Date as a double. JD is calendar independent and forms a continuous sequence of days and fractions of days. Time is measured in UTC.
+
+double getCDFepoch  (MJDtime *MJD);
+
+DESCRIPTION
+The getCDFepoch() function converts an MJDtime structure into the NASA CDF Epoch as a double. CDF Epoch measures milliseconds from 0 CE (1 BCE) on the Gregorian Calendar. It is intended for use with space missions in the Common Era and will give misleading dates on the Julian Calendar. Much faster routines exist for handling conversion of CDF epochs to time strings in the modern restricted interval of applicability, but the algorithm here is consistent with the rest of the routines at all dates.
+
+const char * getISOString  (MJDtime *MJD, int delim);
+
+DESCRIPTION
+The getISOString() function converts an MJDtime structure into an ISO date/time string measured in UTC. Uses the default change over date for Julian to Gregorian calendars, 15 Oct 1582. If delim is 1 then the ‘T’ and ‘Z’ delimiters are used, otherwise the date and time part are space separated. The resulting string is of the form 
+"1995-01-23 02:33:17.235" or "1995-01-23T02:33:17.235Z".  
+It returns a pointer to a static string and is therefore not thread safe. The returned string must be copied if it is to be retained beyond a repeat call, for example :
+printf("%s Julian =  %s Gregorian \n" , getISOString(&MJD1,1), getISOString(&MJD1,0));
+will use the same string twice rather than distinct strings.
+
+This is only a convenience utility for quick testing and simple use, and is equivalent to the (thread safe) strfMJD() call which is preferred for robust coding. The equivalent call would be …
+   char buf[360];
+   strfMJD(&(buf[0]), 360, "%Y-%m-%dT%H:%M:%S%.Z",  &MJD2, 0);
+(note the decimal point before the final Z gives all available accuracy for the seconds fraction). 
+Also, for a specific accuracy, e.g. microseconds, use strfMJD() as in…
+strfMJD(&(buf[0]), 360, "%Y-%m-%d %H:%M:%S%6",  &MJD2, 0);
+
+double getDiffDays  (MJDtime *MJD1, MJDtime *MJD2);
+
+DESCRIPTION
+The getDiffDays() function returns the difference between two MJDtime structures measured in days as a double. The MJDtime structures do not need to have the same base day.
+
+double getDiffSecs  (MJDtime *MJD1, MJDtime *MJD2);
+
+DESCRIPTION
+The getDiffSecs() function returns the difference between two MJDtime structures measured in seconds as a double. The MJDtime structures do not need to have the same base day.
+
+const char * getDayOfWeek  (const MJDtime *MJD);
+
+DESCRIPTION
+The getDayOfWeek() function returns a char * pointer to a static null terminated string holding the short (3 character) text name for the day, in English, e.g. Mon, Tue, etc.
+
+const char * getLongDayOfWeek  (const MJDtime *MJD);
+
+DESCRIPTION 
+The getLongDayOfWeek() function returns a char * pointer to a static null terminated string holding the full text name for the day, in English, e.g. Monday, Tuesday, etc.
+
+const char * getMonth  (int m);
+
+DESCRIPTION
+The getMonth() function returns a char * pointer to a static null terminated string holding the short (3 character) text name for the month, in English, e.g. Jan, Feb, etc.
+
+const char * getLongMonth  (int m);
+
+DESCRIPTION
+The getLongMonth() function returns a char * pointer to a static null terminated string holding the full text name for the month, in English, e.g. January, February, etc.
+
+int getDOY  (const MJDtime *MJD, int forceJulian);
+
+DESCRIPTION
+The getDOY() function returns the day of year as an int for the current day in the MJDtime structure MJD. If seconds are negative or hold more than one day the day is adjusted accordingly, thus it is not simply the doy for the integer part of the MJDtime structure. If the forceJulian flag is set to 1 the Julian calendar is used, otherwise the Gregorian calendar is used from the day following  4 Oct, 1582 (Julian) i.e. from 15 Oct, 1582 (Gregorian).  Note C libraries use Gregorian only from 14 Sept, 1752 onwards.
+
+size_t  strfMJD  (char * buf, size_t len,  const char * format, const MJDtime MJD);
+
+DESCRIPTION
+The strfMJD () function formats the information from MJD into the
+buffer buf according to the string pointed to by format using the formatting conventions of strftime();
+
+The format string consists of zero or more conversion specifications and
+ordinary characters.  All ordinary characters are copied directly into
+the buffer.  A conversion specification consists of a percent sign
+`%' and one other character.
+
+No more than len characters will be placed into the array, including the terminating NULL. strfMJD () returns the number of characters written into the array, not counting the terminating NULL. The output is truncated when len - 1 characters is reached.
+
+This routine differs from strftime() in that all date/times are in UTC and no locale or national variations in names are used. All names are returned in English.
+
+The conversion specifications are copied to the buffer after expansion as
+follows:-
+
+%A   is replaced by a representation of the full weekday name.
+
+%a    is replaced by a representation of the abbreviated weekday name.
+
+%B    is replaced by a representation of the full month name.
+
+%b    is replaced by a representation of the abbreviated month name.
+
+%C   is replaced by (year / 100) as decimal number; single digits are preceded by a zero.
+
+%c    is replaced by a representation of time and date.
+
+%D   is equivalent to ``%m/%d/%y''.
+
+%d    is replaced by the day of the month as a decimal number (01-31).
+
+%e    is replaced by the day of month as a decimal number (1-31); single digits are preceded by a blank.
+
+%F    is equivalent to ``%Y-%m-%d''.
+
+%G   is replaced by a year as a decimal number with century.  This year is the one that contains the greater part of the week (Monday as the first day of the week).
+
+%g    is replaced by the same year as in ``%G'', but as a decimal number without century (00-99).
+
+%H    is replaced by the hour (24-hour clock) as a decimal number (00-23).
+
+%h    the same as %b.
+
+%I    is replaced by the hour (12-hour clock) as a decimal number (01-12).
+
+%j    is replaced by the day of the year as a decimal number (001-366).
+
+%k    is replaced by the hour (24-hour clock) as a decimal number (0-23); single digits are preceded by a blank.
+
+%l    is replaced by the hour (12-hour clock) as a decimal number (1-12); single digits are preceded by a blank.
+
+%M   is replaced by the minute as a decimal number (00-59).
+
+%m    is replaced by the month as a decimal number (01-12).
+
+%n    is replaced by a newline.
+
+%p    is replaced by ‘AM’ or ‘PM’ as appropriate.
+
+%R    is equivalent to ‘%H:%M’.
+
+%r    is equivalent to ‘%I:%M:%S %p’.
+
+%S    is replaced by the second as a decimal number (00-60).
+
+%s    is replaced by the number of seconds since 1 Jan 1970, UTC.
+
+%T    is equivalent to ‘%H:%M:%S’.
+
+%t    is replaced by a tab.
+
+%U   is replaced by the week number of the year (Sunday as the first day of the week) as a decimal number (00-53).
+
+%u    is replaced by the weekday (Monday as the first day of the week) as a decimal number (1-7).
+
+%V   is replaced by the week number of the year (Monday as the first day of the week) as a decimal number (01-53).  If the week containing January 1 has four or more days in the new year, then it is week 1; otherwise it is the last week of the previous year, and the next week is week 1.
+
+%v    is equivalent to ‘%e-%b-%Y’.
+
+%W  is replaced by the week number of the year (Monday as the first day of the week) as a decimal number (00-53).
+
+%w   is replaced by the weekday (Sunday as the first day of the week) as a decimal number (0-6).
+
+%X   is replaced by a representation of the time.
+
+%x   is replaced by a representation of the date.
+
+%Y   is replaced by the year with century as a decimal number.
+
+%y    is replaced by the year without century as a decimal number (00-99).
+
+%Z    is replaced by the time zone name.
+
+%z    is replaced by the time zone offset from UTC; a leading plus sign stands for east of UTC, a minus sign for west of UTC, hours and minutes follow with two digits each and no delimiter between them (always gives ‘+0000’).
+
+%+    is replaced by a representation of the date and time of the form 
+Fri Jan 23 15:06:10 UTC 2009
+
+%%    is replaced by ‘%’.
+
+The following extra two option flags are also provided although they are not available in the strftime() routines.
+
+%(0-9)      is replaced by the fractional part of the seconds field to the specified accuracy. Thus %S%3 would give seconds to millisecond accuracy (00.000).
+
+%.     (decimal point) is replaced by the fractional part of the seconds field to available accuracy. Thus %S%. would give seconds with fractional part up to 9 decimal places if available. Spaces are removed from the end of the string but zeros are left. This may behave slightly differently on different platforms.
+
+All other flags are silently ignored and not printed.

@@ -1,0 +1,37 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLPOIN3 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplpoin3\fP - Plot a glyph at the specified 3D points
+.SH SYNOPSIS
+\fBplpoin3\fP(\fIn\fP, \fIx\fP, \fIy\fP, \fIz\fP, \fIcode\fP)
+.SH DESCRIPTION
+
+.P
+Plot a glyph at the specified 3D points.  (This function is largely superseded by \fBplstring3\fP(3plplot) which gives access to many[!] more glyphs.) Set up the call to this function similar to what is done for \fBplline3\fP(3plplot). \fIcode\fP=-1  means try to just draw a point.  Right now it's just a move and a draw at the same place.  Not ideal, since a sufficiently intelligent output device may optimize it away, or there may be faster ways of doing it.  This is OK for now, though, and offers a 4X speedup over drawing a Hershey font "point" (which is actually diamond shaped and therefore takes 4 strokes to draw).  If 0 < code < 32, then a useful (but small subset) of Hershey symbols is plotted.  If 32 <= code <= 127 the corresponding printable ASCII character is plotted.
+.P
+Redacted form: \fBplpoin3(x, y, z, code)\fP
+.P
+This function is not used in any example.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of points in the \fIx\fP and \fIy\fP vectors.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates of points.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of points.
+.TP
+\fIz\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the z coordinates of points.
+.TP
+\fIcode\fP (\fBPLINT\fP(3plplot), input)
+Hershey symbol code (in "ascii-indexed" form with -1 <= code <= 127) corresponding to a glyph to be plotted at each of the \fIn\fP points.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

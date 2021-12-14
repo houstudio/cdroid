@@ -1,0 +1,59 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Setup MinGW command line tools
+------------------------------
+
+MinGW ([MinGW Homepage](http://www.mingw.org)) a collection of freely available and freely distributable Windows specific header files and import libraries, augmenting the GNU Compiler Collection, (GCC), and its associated tools, (GNU binutils). MinGW provides a complete Open Source programming tool set which is suitable for the development of native Windows programs that do not depend on any 3rd-party C runtime DLLs.
+
+### Download and install
+
+#### Official MinGW 4.4
+
+Recently a new version (4.4) of the MinGW command line tools were released. Since the MinGW installer only installs the old version (3.4.5) here are the instructions to install version 4.4 manually.
+
+-   Download from [1](http://sourceforge.net/project/showfiles.php?group_id=2435):
+    -   GNU Binutils (binutils-2.19.1-mingw32-bin.tar.gz)
+    -   GCC Version 4 (gcc-core-4.4.0-mingw32-bin.tar.gz, gcc-core-4.4.0-mingw32-dll.tar.gz, gcc-c++-4.4.0-mingw32-bin.tar.gz, gcc-c++-4.4.0-mingw32-dll.tar.gz, gmp-4.2.4-mingw32-dll.tar.gz, mpfr-2.4.1-mingw32-dll.tar.gz)
+    -   MINGW Runtime (mingwrt-3.16-mingw32-dev.tar.gz, mingwrt-3.16-mingw32-dll.tar.gz)
+    -   Windows 32 API (w32api-3.13-mingw32-dev.tar.gz)
+    -   GNU Make (mingw32-make-3.81-20080326-3.tar.gz)
+    -   MinGW Utilities (mingw-utils-0.3.tar.gz)
+    -   GNU Source-Level Debugger (gdb-6.8-mingw-3.tar.bz2) - optional
+
+#### Alternative - TDM's experimental builds
+
+-   The easiest way is to download the latest [On demand TDM/MinGW Installer](http://sourceforge.net/projects/tdm-gcc/files/TDM-MinGW%20Installer/) ([TDM's Experimental GCC/MinGW32 Builds](http://www.tdragon.net/recentgcc/)) and run it. This installer allows you to download and install the official MinGW command line tools 3.4.5 and the unofficial TDM's experimental GCC/MinGW32 builds (gcc 4.4.1).
+-   Run the installer and press 'Create'. As installation directory I chose <tt>c:\\MinGW-3.4.5</tt> or <tt>c:\\MinGW-4.4.1</tt> depending on the gcc version I selected. To install gcc 4.4.1 choose the 'TDM-GCC Recommended, C/C++' type of install for gcc 3.4.5 choose 'MinGW stable, C/C++'. In addtion you can choose a fortran, ada, objc and objc++ language extension. After clicking 'Install' the packages will be downloaded and installed in the given directory.
+-   The only thing which is not installed is the make tool. Therefore go to the [file release site of MinGW](http://sourceforge.net/project/showfiles.php?group_id=2435&package_id=23918&release_id=587379) and download <tt>mingw32-make-3.81-20080326-3.tar.gz</tt> and extract the content with [your favorite zip tool](http://www.7-zip.org/) in to the MinGW installation directory.
+
+### Setup
+
+To configure and compile plplot with MinGW it is best to use the Windows CLI. Please follow the instructions in [Setup Windows CLI](Setup_Windows_CLI) to get the Windows Command Line Interface ready for development. Then open your [favorite text editor](http://www.scintilla.org/SciTE.html) and enter the following CLI commands
+
+`@echo off`
+
+`rem setup MinGW compiler`
+`set MINGWDIR=C:\\MinGW-4.3.1`
+`set PATH=%MINGWDIR%\\bin;%PATH%`
+
+`rem add Ada support if you installed the ada package`
+`set CMAKE_LIBRARY_PATH=%MINGWDIR%\\lib\\gcc\\mingw32\\4.3.1\\adalib;%CMAKE_LIBRARY_PATH%`
+
+`rem setup PLplot library`
+`set PLPLOTDIR=path_to_plplot`
+`set PLPLOT_LIB=%PLPLOTDIR%\\data`
+`set PATH=%PLPLOTDIR%\\dll;%PATH%`
+
+and save this to e.g. <tt>mingwvars.bat</tt>. If you installed the MinGW 3.4.5 command line tools, exchange in the script <tt>4.3.1</tt> with <tt>3.4.5</tt> (twice). Start you Windows CLI, cd into the directory where the batch file was saved and run <tt>mingwvars.bat</tt>. Run <tt>gcc --version</tt>, <tt>gfortran --version</tt> and <tt>gnat</tt> to see if everything works. Your MinGW developing environment is now ready.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

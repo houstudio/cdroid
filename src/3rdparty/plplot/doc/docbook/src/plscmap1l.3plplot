@@ -1,0 +1,53 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCMAP1L 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplscmap1l\fP - Set cmap1 colors using a piece-wise linear relationship
+.SH SYNOPSIS
+\fBplscmap1l\fP(\fIitype\fP, \fInpts\fP, \fIintensity\fP, \fIcoord1\fP, \fIcoord2\fP, \fIcoord3\fP, \fIalt_hue_path\fP)
+.SH DESCRIPTION
+
+.P
+Set cmap1 colors using a piece-wise linear relationship between the cmap1 intensity index (0.0-1.0) and position in HLS or RGB color space (see the PLplot documentation).  May be called at any time.
+.P
+The idea here is to specify a number of control points that define the mapping between input cmap1 intensity indices and HLS or RGB.  Between these points, linear interpolation is used which gives a smooth variation of color with intensity index.  Any number of control points may be specified, located at arbitrary positions, although typically 2 - 4 are enough. Another way of stating this is that we are traversing a given number of lines through HLS or RGB space as we move through cmap1 intensity indices.  The control points at the minimum and maximum position (0 and 1) must always be specified.  By adding more control points you can get more variation.  One good technique for plotting functions that vary about some expected average is to use an additional 2 control points in the center (position ~= 0.5) that are the same lightness as the background (typically white for paper output, black for crt), and same hue as the boundary control points.  This allows the highs and lows to be very easily distinguished.
+.P
+Each control point must specify the cmap1 intensity index and the associated three coordinates in HLS or RGB space.  The first point must correspond to position = 0, and the last to position = 1.
+.P
+If RGB colors are provided then the interpolation takes place in RGB space and is trivial. However if HLS colors are provided then, because of the circular nature of the color wheel for the hue coordinate, the interpolation could be performed in either direction around the color wheel. The default behaviour is for the hue to be linearly interpolated ignoring this circular property of hue. So for example, the hues 0 (red) and 240 (blue) will get interpolated via yellow, green and cyan. If instead you wish to interpolate the other way around the color wheel you have two options. You may provide hues outside the range [0, 360), so by using a hue of -120 for blue or 360 for red the interpolation will proceed via magenta. Alternatively you can utilise the alt_hue_path variable to reverse the direction of interpolation if you need to provide hues within the [0-360) range.
+.P
+Examples of interpolation Huealt_hue_pathcolor scheme[120 240]falsegreen-cyan-blue[240 120]falseblue-cyan-green[120 -120]falsegreen-yellow-red-magenta-blue[240 480]falseblue-magenta-red-yellow-green[120 240]truegreen-yellow-red-magenta-blue[240 120]trueblue-magenta-red-yellow-green
+.P
+Bounds on coordinatesRGBR[0, 1]magnitudeRGBG[0, 1]magnitudeRGBB[0, 1]magnitudeHLShue[0, 360]degreesHLSlightness[0, 1]magnitudeHLSsaturation[0, 1]magnitude
+.P
+Redacted form: \fBplscmap1l(itype, intensity, coord1, coord2, coord3, alt_hue_path)\fP
+.P
+This function is used in examples 8, 11, 12, 15, 20, and 21.
+.SH ARGUMENTS
+.TP
+\fIitype\fP (\fBPLBOOL\fP(3plplot), input)
+true: RGB, false: HLS.
+.TP
+\fInpts\fP (\fBPLINT\fP(3plplot), input)
+number of control points
+.TP
+\fIintensity\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the cmap1 intensity index (0.0-1.0) in ascending order for each control point.
+.TP
+\fIcoord1\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the first coordinate (H or R) for each control point.
+.TP
+\fIcoord2\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the second coordinate (L or G) for each control point.
+.TP
+\fIcoord3\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the third coordinate (S or B) for each control point.
+.TP
+\fIalt_hue_path\fP (\fBPLBOOL_VECTOR\fP(3plplot), input)
+A vector (with \fInpts - 1\fP elements), each containing either true to use the reversed HLS interpolation or false to use the regular HLS interpolation.  (alt_hue_path[i] refers to the interpolation interval between the i and i + 1 control points). This parameter is not used for RGB colors (\fIitype = true\fP).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

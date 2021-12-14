@@ -1,0 +1,26 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Some versions of ifort may need additional command line options to ensure all examples work correctly. To set options for the fortran compiler you need to set the FC environment variable before running cmake. The syntax depends on which shell you are using, e.g.
+
+export FC="ifort --assume byterecl" (bash / sh)
+
+setenv FC "ifort --assume byterecl" (csh / tcsh)
+
+### Useful command line options
+
+--assume byterecl
+:   Assume fortran records are 1 byte long when reading in unformatted files. The default for ifort is 4 bytes (as for v8.1) however example 20 currently assumes 1 byte records. This option will ensure example 20 works correctly. It is not necessary for building the core plplot library and fortran bindings.
+
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

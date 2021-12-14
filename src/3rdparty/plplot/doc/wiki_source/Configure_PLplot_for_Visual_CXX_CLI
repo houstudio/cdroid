@@ -1,0 +1,111 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+This page describes how to build PLplot using Visual Studio from the command line. If you wish to use the Integrated Development Environment see [Configure PLplot for the Visual Studio IDE](Configure_PLplot_for_the_Visual_Studio_IDE "wikilink").
+
+You need a working Visual C++ and CMake installation.
+
+Start a DOS window (command window) - for instance via the Start menu item "Visual Studio Tools/Visual Studio 2008 command prompt". CMake must be able to run the Visual C/C++ compiler. (You can also use the batch file vcvarsall.bat in the directory "<MSVC++ isntall directory>\\VC" to take care of all settings).
+
+Create a new directory for building PLplot (say: d:\\build-plplot) and change to that directory. Add the directory "d:\\build-plplot\\dll" to the path.
+
+So the commands are:
+
+`d:`
+`mkdir build-plplot`
+`cd build-plplot`
+`set path=d:\build-plplot\dll;%path%`
+
+Now run CMake (assuming CMake is already in the path and sources for PLplot are in "d:\\plplot":
+
+`cmake d:\plplot -G "NMake Makefiles" -DBUILD_TEST=ON`
+
+(The latter option ensures that the examples are built. Many more options are available)
+
+Once CMake has generated all the makefiles, you can build the PLplot libraries and examples via the nmake command:
+
+`nmake`
+
+To install the libraries:
+
+`nmake install`
+
+*Note:* The above assumes you are *not* using wxWidgets.
+
+*Note:* With the above receipe you get one single build. You should get into the habit of using separate directories for different builds, even for the "Visual Studio" generator (see below), as this avoids any possibility of clashes and separate build directories are much easier to handle.
+
+**Using Python**
+
+If you want to use the Python bindings, please note that the MSVC compiler triggers some special handling within the Python interfacing. To avoid problems, it is best to add the following option to the CMake command:
+
+`  -DCMAKE_BUILD_TYPE=Release `
+
+The background for this is described in the [Install Python](Install_Python "wikilink") page.
+
+**Using wxWidgets**
+
+If you do use wxWidgets, here is a slightly adjusted receipe:
+
+(Depending upon how you built wxWidgets you may need to specify additional parameters to the cmake call. Check [Configuration of wxWidgets driver](Configuration_of_wxWidgets_driver "wikilink") for more details.)
+
+Start a DOS window like before. Now (note the added commands and command options):
+
+`d:`
+`mkdir build-plplot`
+`cd build-plplot`
+`set path=d:\build-plplot\dll;%path%`
+
+`set WXWINDLL=%WXWIN%\lib\vc_lib`
+
+`cmake d:\plplot -G "NMake Makefiles" -DwxWidgets_LIB_DIR=%WXWINDLL% `
+`nmake`
+`nmake install`
+
+For those who are not familiar with NMake and CMake here is an explanation of what we have just done. Nmake is a command line compiler included with Microsoft VC++ which can be used to build from source. Instead of project files it uses make files. To avoid creating make files for multiple compilers plplot includes CMake files. These are interpreted by CMake, along with the variables specified on the command line, to generate make files for many different compilers. So, in order, we performed the following actions:
+
+`Set up needed paths including MSVC++ paths using vcvarsall`
+`Called CMake to generate make files for a specific build`
+`Called "Nmake" to build PLplot`
+`Called "Nmake install" to move the libraries and header files to the install folder`
+
+*Note*: during the build the various DLLs are put in the subdirectory "dll" under the build directory. It is important that this directory is contained in the path during the build if you use the dynamic drivers facility as otherwise calls to get-drv-info will fail and the drivers won't be installed successfully. In addition, if you use wxWidgets driver you also must ensure that the wxWidgets DLL itself is in the path as well.
+
+Alternatively you can use the GUI version of CMake, an easy-to-use user-interface that presents the available build options and lets you set them. It is mostly a matter of taste, but:
+
+-   The GUI version provides an overview of the build opions that are available
+-   The command-line version is particularly useful if you are experimenting with these options, as it can be run from a batchfile
+
+Some of the options that are available for CMake:
+
+-   <tt>-DCMAKE_VERBOSE_MAKEFILE=ON</tt>: makefiles provide verbose informations
+-   <tt>-DBUILD_TEST=ON</tt>: all examples will be built also (for test purposes)
+-   [Configuration of wxWidgets driver](Configuration_of_wxWidgets_driver "wikilink")
+
+If you used the <tt>-DBUILD_TEST=ON</tt> option, you may need to copy some files in order to run the examples:
+
+`cd examples\c`
+`copy ..\..\..\data\*.fnt .`
+
+and additionally some dlls for a shared plplot built:
+
+`copy ..\..\dll\plplotd.dll .`
+`copy ..\..\dll\plplotcxxd.dll . (for c++ examples)`
+`copy ..\..\dll\csirocsa.dll . (if library was built)`
+
+and for the wxWidgets driver (if wxWidgets library is shared):
+
+`copy %WXWIN%\lib\gcc_dll\wxmsw26d_vc_custom.dll .`
+
+if this dll is not in the path.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

@@ -1,0 +1,31 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLLAB 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBpllab\fP - Simple routine to write labels
+.SH SYNOPSIS
+\fBpllab\fP(\fIxlabel\fP, \fIylabel\fP, \fItlabel\fP)
+.SH DESCRIPTION
+
+.P
+Routine for writing simple labels. Use \fBplmtex\fP(3plplot) for more complex labels.
+.P
+Redacted form: \fBpllab(xlabel, ylabel, tlabel)\fP
+.P
+This function is used in examples 1, 5, 9, 12, 14-16, 20-22, and 29.
+.SH ARGUMENTS
+.TP
+\fIxlabel\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string specifying the label for the x axis.
+.TP
+\fIylabel\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string specifying the label for the y axis.
+.TP
+\fItlabel\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string specifying the title of the plot.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

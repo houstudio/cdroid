@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLFONTLD 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplfontld\fP - Load Hershey fonts
+.SH SYNOPSIS
+\fBplfontld\fP(\fIfnt\fP)
+.SH DESCRIPTION
+
+.P
+Loads the Hershey fonts used for text and symbols.  This routine may be called before or after initializing PLplot.  If not explicitly called before PLplot initialization, then by default that initialization loads Hershey fonts with the extended character set. This routine only has a practical effect for devices that still use Hershey fonts (as opposed to modern devices that use unicode-aware system fonts instead of Hershey fonts).
+.P
+Redacted form: \fBplfontld(fnt)\fP
+.P
+This function is used in examples 1 and 7.
+.SH ARGUMENTS
+.TP
+\fIfnt\fP (\fBPLINT\fP(3plplot), input)
+Specifies the type of Hershey fonts to load.  A zero value specifies Hershey fonts with the standard character set and a non-zero value (the default assumed if \fBplfontld\fP(3plplot) is never called) specifies Hershey fonts with the extended character set.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

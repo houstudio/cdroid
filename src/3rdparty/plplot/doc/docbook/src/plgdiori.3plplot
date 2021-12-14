@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGDIORI 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgdiori\fP - Get plot orientation
+.SH SYNOPSIS
+\fBplgdiori\fP(\fIp_rot\fP)
+.SH DESCRIPTION
+
+.P
+Get plot orientation parameter which is multiplied by 90 degrees to obtain the angle of rotation.  Note, arbitrary rotation parameters such as 0.2 (corresponding to 18 degrees) are possible, but the usual values for the rotation parameter are 0., 1., 2., and 3. corresponding to 0 degrees (landscape mode), 90 degrees (portrait mode), 180 degrees (seascape mode), and 270 degrees (upside-down mode). If \fBplsdiori\fP(3plplot) has not been called the default value pointed to by \fIp_rot\fP will be 0.
+.P
+Redacted form: \fBplgdiori(p_rot)\fP
+.P
+This function is not used in any examples.
+.SH ARGUMENTS
+.TP
+\fIp_rot\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the orientation parameter.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,34 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLLINE3 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplline3\fP - Draw a line in 3 space
+.SH SYNOPSIS
+\fBplline3\fP(\fIn\fP, \fIx\fP, \fIy\fP, \fIz\fP)
+.SH DESCRIPTION
+
+.P
+Draws line in 3 space defined by \fIn\fP points in \fIx\fP, \fIy\fP, and \fIz\fP. You must first set up the viewport, the 2d viewing window (in world coordinates), and the 3d normalized coordinate box.  See x18c.c for more info.
+.P
+Redacted form: \fBplline3(x, y, z)\fP
+.P
+This function is used in example 18.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of points defining line.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates of points.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of points.
+.TP
+\fIz\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the z coordinates of points.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,531 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    api-fortran.xml: "The Specialized Fortran API for PLplot" chapter
+
+Copyright (C) 1994 Geoffrey Furnish and Maurice LeBrun
+Copyright (C) 1999, 2000, 2001, 2002, 2003 Rafael Laboissiere
+Copyright (C) 1999-2017 Alan W. Irwin
+Copyright (C) 2003 Joao Cardoso
+Copyright (C) 2004 Andrew Ross
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<chapter id="API-FORTRAN">
+  <title>The Specialized Fortran API for PLplot</title>
+
+  <para>
+    The purpose of this Chapter is to document the API for each Fortran function
+    in PLplot that differs substantially (usually in argument lists)
+    from the common API that has already been
+    documented in <xref linkend="API"/>.
+  </para>
+
+  <para>
+    Normally, the common API is wrapped in such a way for Fortran that there is
+    and one-to-one correspondence between each Fortran and C argument
+    with the exception of arguments that indicate array sizes
+    (see <xref linkend="fortran"/>
+    for discussion).  However, for certain routines documented in this
+    chapter the Fortran argument lists
+    necessarily differ substantially from the C versions.
+  </para>
+
+  <para>
+    This chapter is incomplete and NEEDS DOCUMENTATION.
+  </para>
+
+  <sect1 id="plcontfortran" renderas="sect3">
+    <title>
+      <function>plcont</function>: Contour plot for Fortran
+    </title>
+
+    <para>
+      This is an overloaded function with a variety of argument lists:
+
+      <programlisting>
+	interface plcont
+	subroutine plcontour_0(z,kx,lx,ky,ly,clevel)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	end subroutine plcontour_0
+
+	subroutine plcontour_1(z,kx,lx,ky,ly,clevel,xg,yg)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:)   :: xg
+	real(kind=plflt), dimension(:)   :: yg
+	end subroutine plcontour_1
+
+	subroutine plcontour_2(z,kx,lx,ky,ly,clevel,xg,yg)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:,:) :: xg
+	real(kind=plflt), dimension(:,:) :: yg
+	end subroutine plcontour_2
+
+	subroutine plcontour_tr(z,kx,lx,ky,ly,clevel,tr)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(6)   :: tr
+	end subroutine plcontour_tr
+
+	subroutine plcontour_0_all(z,clevel)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	end subroutine plcontour_0_all
+
+	subroutine plcontour_1_all(z,clevel,xg,yg)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:)   :: xg
+	real(kind=plflt), dimension(:)   :: yg
+	end subroutine plcontour_1_all
+
+	subroutine plcontour_2_all(z,clevel,xg,yg)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:,:) :: xg
+	real(kind=plflt), dimension(:,:) :: yg
+	end subroutine plcontour_2_all
+
+	subroutine plcontour_tr_all(z,clevel,tr)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(6)   :: tr
+	end subroutine plcontour_tr_all
+	end interface
+      </programlisting>
+    </para>
+
+    <para>
+      When called from Fortran, this overloaded routine has the same
+      effect as when invoked from C.  See
+      <filename>examples/fortran/x??f.f90</filename> for various ways to call
+      plcont from Fortran.
+    </para>
+
+    <para>
+      The meaning of the various arguments is as follows:
+      <variablelist>
+	<varlistentry>
+	  <term>
+	    <parameter>z</parameter>
+	    (<literal>real(kind=plflt), dimension(:,:)</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      Matrix containing the values to be plotted.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>
+	    <parameter>kx, lx</parameter>
+	    (<literal>integer</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      Range for the first index in the matrix <literal>z</literal> to consider.
+	      If not given, then the whole first index is considered.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>
+	    <parameter>clevel</parameter>
+	    (<literal>real(kind=plflt), dimension(:)</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      Levels at which the contours are computed and drawn.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>
+	    <parameter>kx, lx</parameter>
+	    (<literal>integer</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      Range for the first index in the matrix <literal>z</literal> to consider.
+	      If not given, then the whole first index is considered.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>
+	    <parameter>ky, ly</parameter>
+	    (<literal>integer</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      Range for the second index in the matrix <literal>z</literal> to consider.
+	      If not given, then the whole second index is considered.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>
+	    <parameter>xg</parameter>
+	    (<literal>real(kind=plft), dimension(:)</literal> or
+	    <literal>real(kind=plft), dimension(:,:)</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      The x-coordinates for the grid lines (if one-dimensional)
+	      or the x-coordinates of the grid vertices (if two-dimensional).
+	      The values in the matrix are plotted at these coordinates.
+	      If not given, implicit coordinates are used (equal to the
+	      indices in the matrix).
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>
+	    <parameter>yg</parameter>
+	    (<literal>real(kind=plft), dimension(:)</literal> or
+	    <literal>real(kind=plft), dimension(:,:)</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      The y-coordinates for the grid lines (if one-dimensional)
+	      or the x-coordinates of the grid vertices (if two-dimensional).
+	      The values in the matrix are plotted at these coordinates.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>
+	    <parameter>tr</parameter>
+	    (<literal>real(kind=plft), dimension(6)</literal>, input)
+	  </term>
+	  <listitem>
+	    <para>
+	      The coefficients of an affine transformation:
+
+	      <programlisting>
+		x = tr(1) * ix + tr(2) * iy + tr(3)
+		y = tr(4) * ix + tr(5) * iy + tr(6)
+	      </programlisting>
+
+	      The indices of the matrix element are used to compute the
+	      "actual" coordinates according to the above formulae.
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    </para>
+  </sect1>
+
+  <sect1 id="plshadefortran" renderas="sect3">
+    <title>
+      <function>plshade</function>: Shaded plot for Fortran
+    </title>
+
+    <para>
+      This is an overloaded function with a variety of argument lists
+      which NEED DOCUMENTATION.
+    </para>
+
+    <para>
+      When called from Fortran, this overloaded routine has the same
+      effect as when invoked from C.  See
+      <filename>examples/fortran/x??f.f90</filename> for various ways to call
+      plshade from Fortran.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plshadesfortran" renderas="sect3">
+    <title>
+      <function>plshades</function>: Continuously shaded plot for Fortran
+    </title>
+
+    <para>
+      This is an overloaded function with a variety of argument lists
+      which NEED DOCUMENTATION.
+    </para>
+
+    <para>
+      When called from Fortran, this overloaded routine has the same
+      effect as when invoked from C.  See
+      <filename>examples/fortran/x??f.f90</filename> for various ways to call
+      plshades from Fortran.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plvectfortran" renderas="sect3">
+    <title>
+      <function>plvect</function>: Vector plot for Fortran
+    </title>
+
+    <para>
+      This is an overloaded function with a variety of argument lists
+      which NEED DOCUMENTATION.
+    </para>
+
+    <para>
+      When called from Fortran, this overloaded routine has the same
+      effect as when invoked from C.  See
+      <filename>examples/fortran/x??f.f90</filename> for various ways to call
+      plvect from Fortran.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plmeshfortran" renderas="sect3">
+    <title>
+      <function>plmesh</function>: Plot surface mesh for Fortran
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plmesh</function>
+	  </funcdef>
+	  <paramdef><parameter>x</parameter></paramdef>
+	  <paramdef><parameter>y</parameter></paramdef>
+	  <paramdef><parameter>z</parameter></paramdef>
+	  <paramdef><parameter>nx</parameter></paramdef>
+	  <paramdef><parameter>ny</parameter></paramdef>
+	  <paramdef><parameter>opt</parameter></paramdef>
+	  <paramdef><parameter>mx</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      When called from Fortran, this routine has the same effect as when
+      invoked from C.  The interpretation of all parameters (see &plmesh;)
+      is also the same except there is an additional parameter given by:
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>mx</parameter>
+	  (<literal>&PLINT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Length of array in x direction, for plotting subarrays.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+  </sect1>
+
+  <sect1 id="plot3dfortran" renderas="sect3">
+    <title>
+      <function>plot3d</function>: Plot 3-d surface plot for Fortran
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plot3d</function>
+	  </funcdef>
+	  <paramdef><parameter>x</parameter></paramdef>
+	  <paramdef><parameter>y</parameter></paramdef>
+	  <paramdef><parameter>z</parameter></paramdef>
+	  <paramdef><parameter>nx</parameter></paramdef>
+	  <paramdef><parameter>ny</parameter></paramdef>
+	  <paramdef><parameter>opt</parameter></paramdef>
+	  <paramdef><parameter>side</parameter></paramdef>
+	  <paramdef><parameter>mx</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      When called from Fortran, this routine has the same effect as when
+      invoked from C.  The interpretation of all parameters (see &plot3d;)
+      is also the same except there is an additional parameter given by:
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>mx</parameter>
+	  (<literal>&PLINT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Length of array in x direction, for plotting subarrays.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+  </sect1>
+
+  <sect1 id="plparseoptsfortran" renderas="sect3">
+    <title>
+      <function>plparseopts</function>: parse arguments for Fortran
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plparseopts</function>
+	  </funcdef>
+	  <paramdef><parameter>mode</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para> When called from Fortran, this routine has the same effect as
+    when invoked from C (see &plparseopts;) except that the argument list
+    just contains the parsing mode and the Fortran system routines
+    <function>iargc</function> and <function>getarg</function>
+    are used internally to obtain the number of arguments and
+    argument values.  (Note, during configuration, the user's
+    Fortran compiler
+    is checked to see whether it supports
+    <function>iargc</function> and <function>getarg</function>.  If it
+    does not, the Fortran plparseopts simply writes a warning message
+    and returns.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>mode</parameter>
+	  (<literal>&PLINT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Parsing mode; see &plparseopts; for details.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+  </sect1>
+
+  <sect1 id="plsescfortran" renderas="sect3">
+    <title>
+      <function>plsesc</function>: Set the escape character for text strings
+      for Fortran
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plsesc</function>
+	  </funcdef>
+	  <paramdef><parameter>esc</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Set the escape character for text strings.  From
+      Fortran it needs to be the decimal ASCII value.  Only
+      selected characters are allowed to prevent the user from shooting
+      himself in the foot (For example, a <quote>\</quote> isn't allowed since it conflicts with C's use
+      of backslash as a character escape).  Here are the allowed escape
+      characters and their corresponding decimal ASCII values:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <quote>!</quote>, ASCII 33
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>#</quote>, ASCII 35
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>$</quote>, ASCII 36
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>%</quote>, ASCII 37
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>&amp;</quote>, ASCII 38
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>*</quote>, ASCII 42
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>@</quote>, ASCII 64
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>^</quote>, ASCII 94
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <quote>~</quote>, ASCII 126
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>esc</parameter>
+	  (<literal>char</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    NEEDS DOCUMENTATION
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+  </sect1>
+
+</chapter>

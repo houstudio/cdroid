@@ -1,0 +1,21 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCLEAR 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplclear\fP - Clear current (sub)page
+.SH SYNOPSIS
+\fBplclear\fP()
+.SH DESCRIPTION
+
+.P
+Clears the current page, effectively erasing everything that have been drawn.  This command only works with interactive drivers; if the driver does not support this, the page is filled with the background color in use. If the current page is divided into subpages, only the current subpage is erased.  The nth subpage can be selected with \fBpladv\fP(3plplot)(n).
+.P
+Redacted form: General: \fBplclear()\fP
+
+.P
+This function is not used in any examples.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

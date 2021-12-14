@@ -1,0 +1,373 @@
+// Copyright 2007, 2008, 2009, 2010, 2011 Hezekiah M. Carty
+// Copyright 2018 Alan W. Irwin
+
+// This file is part of ocaml-plplot.
+
+// ocaml-plplot is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2 of the License, or
+// (at your option) any later version.
+
+// ocaml-plplot is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with ocaml-plplot.  If not, see <http://www.gnu.org/licenses/>.
+
+
+// Taken from the plplot.h 3D plot style definitions
+enum plplot3d_style_enum {
+    PL_DIFFUSE = 0,
+    PL_DRAW_LINEX = 1,
+    PL_DRAW_LINEY = 2,
+    PL_DRAW_LINEXY = 3,
+    PL_MAG_COLOR = 4,
+    PL_BASE_CONT = 8,
+    PL_TOP_CONT = 16,
+    PL_SURF_CONT = 32,
+    PL_DRAW_SIDES = 64,
+    PL_FACETED = 128,
+    PL_MESH = 256
+};
+typedef [set] enum plplot3d_style_enum plplot3d_style;
+
+enum plplot_bin_enum {
+    PL_BIN_DEFAULT = 0,
+    PL_BIN_CENTRED = 1,
+    PL_BIN_NOEXPAND = 2,
+    PL_BIN_NOEMPTY = 4,
+};
+typedef [set] enum plplot_bin_enum plplot_bin_style;
+
+enum plplot_hist_enum {
+    PL_HIST_DEFAULT = 0,
+    PL_HIST_NOSCALING = 1,
+    PL_HIST_IGNORE_OUTLIERS = 2,
+    PL_HIST_NOEXPAND = 8,
+    PL_HIST_NOEMPTY = 16,
+};
+typedef [set] enum plplot_hist_enum plplot_hist_style;
+
+enum plplot_run_level_enum {
+    PL_UNINITIALIZED = 0,
+    PL_INITIALIZED = 1,
+    PL_VIEWPORT_DEFINED = 2,
+    PL_WORLD_COORDINATES_DEFINED = 3,
+};
+typedef enum plplot_run_level_enum plplot_run_level;
+
+enum plplot_position_enum {
+    PL_POSITION_NULL = 0x0,
+    PL_POSITION_LEFT = 0x1,
+    PL_POSITION_RIGHT = 0x2,
+    PL_POSITION_TOP = 0x4,
+    PL_POSITION_BOTTOM = 0x8,
+    PL_POSITION_INSIDE = 0x10,
+    PL_POSITION_OUTSIDE = 0x20,
+    PL_POSITION_VIEWPORT = 0x40,
+    PL_POSITION_SUBPAGE = 0x80,
+};
+typedef [set] enum plplot_position_enum plplot_position_opt;
+
+enum plplot_legend_enum {
+    PL_LEGEND_NULL = 0x0,
+    PL_LEGEND_NONE = 0x1,
+    PL_LEGEND_COLOR_BOX = 0x2,
+    PL_LEGEND_LINE = 0x4,
+    PL_LEGEND_SYMBOL = 0x8,
+    PL_LEGEND_TEXT_LEFT = 0x10,
+    PL_LEGEND_BACKGROUND = 0x20,
+    PL_LEGEND_BOUNDING_BOX = 0x40,
+    PL_LEGEND_ROW_MAJOR = 0x80,
+};
+typedef [set] enum plplot_legend_enum plplot_legend_opt;
+
+enum plplot_colorbar_enum {
+    PL_COLORBAR_NULL = 0x0,
+    PL_COLORBAR_LABEL_LEFT = 0x1,
+    PL_COLORBAR_LABEL_RIGHT = 0x2,
+    PL_COLORBAR_LABEL_TOP = 0x4,
+    PL_COLORBAR_LABEL_BOTTOM = 0x8,
+    PL_COLORBAR_IMAGE = 0x10,
+    PL_COLORBAR_SHADE = 0x20,
+    PL_COLORBAR_GRADIENT = 0x40,
+    PL_COLORBAR_CAP_NONE = 0x80,
+    PL_COLORBAR_CAP_LOW = 0x100,
+    PL_COLORBAR_CAP_HIGH = 0x200,
+    PL_COLORBAR_SHADE_LABEL = 0x400,
+    PL_COLORBAR_ORIENT_RIGHT = 0x800,
+    PL_COLORBAR_ORIENT_TOP = 0x1000,
+    PL_COLORBAR_ORIENT_LEFT = 0x2000,
+    PL_COLORBAR_ORIENT_BOTTOM = 0x4000,
+    PL_COLORBAR_BACKGROUND = 0x8000,
+    PL_COLORBAR_BOUNDING_BOX = 0x10000,
+};
+typedef [set] enum plplot_colorbar_enum plplot_colorbar_opt;
+
+enum plplot_fci_family_enum {
+    // = These are legal values for font family attribute
+    PL_FCI_FAMILY_UNCHANGED = -1,
+    PL_FCI_SANS = 0x0,
+    PL_FCI_SERIF = 0x1,
+    PL_FCI_MONO = 0x2,
+    PL_FCI_SCRIPT = 0x3,
+    PL_FCI_SYMBOL = 0x4
+};
+enum plplot_fci_style_enum {
+    // = These are legal values for font style attribute
+    PL_FCI_STYLE_UNCHANGED = -1,
+    PL_FCI_UPRIGHT = 0x0,
+    PL_FCI_ITALIC = 0x1,
+    PL_FCI_OBLIQUE = 0x2
+};
+enum plplot_fci_weight_enum {
+    // = These are legal values for font weight attribute
+    PL_FCI_WEIGHT_UNCHANGED = -1,
+    PL_FCI_MEDIUM = 0x0,
+    PL_FCI_BOLD = 0x1
+};
+
+enum plplot_draw_mode_enum {
+    // Flags for drawing mode
+    PL_DRAWMODE_UNKNOWN = 0x0,
+    PL_DRAWMODE_DEFAULT = 0x1,
+    PL_DRAWMODE_REPLACE = 0x2,
+    PL_DRAWMODE_XOR = 0x4
+};
+
+// Any function which has a nonzero_error_int return type will raise
+// an Invalid_argument error if the return value is <> 0.
+typedef [errorcheck(plplot_check_nonzero_result), errorcode] int nonzero_error_int;
+
+// Include the prototype for this to avoid implicit declaration warnings
+quote(h, "void plplot_check_nonzero_result(int result);");
+
+// This is a simplified and modified version of the plplot.h file.
+#include "plplot_h.inc"
+
+// MAINTENANCE 2017-10: These argument #defines are copied from plplot_h.
+// Not all of them are used below.
+#define PLFLT double
+#define PLUNICODE long long
+#define PLINT int
+#define PLBOOL boolean
+#define PLCHAR_VECTOR const char *
+#define PLCHAR_NC_VECTOR char *
+#define PLFLT_NC_SCALAR double *
+#define PLFLT_VECTOR double *
+#define PLFLT_MATRIX double **
+#define PLUNICODE_NC_SCALAR long long *
+#define PLINT_NC_SCALAR int *
+#define PLINT_VECTOR int *
+#define PLDLLIMPEXP
+#define PLBOOL_NC_SCALAR boolean *
+#define PLBOOL_VECTOR boolean *
+
+
+// These functions require(d) some manual assistance to get them to work
+// properly
+
+[mlname(plcont)] void ml_plcont(
+    [size_is(nx,ny)] PLFLT_MATRIX f, PLINT nx, PLINT ny,
+    PLINT kx, PLINT lx, PLINT ky, PLINT ly,
+    [size_is(nlevel)] PLFLT_VECTOR clevel, PLINT nlevel);
+
+[mlname(plshade)] void ml_plshade(
+    [size_is(nx,ny)] PLFLT_MATRIX a, PLINT nx, PLINT ny,
+    PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
+    PLFLT shade_min, PLFLT shade_max,
+    PLINT sh_cmap, PLFLT sh_color, PLFLT sh_width,
+    PLINT min_color, PLFLT min_width,
+    PLINT max_color, PLFLT max_width,
+    PLBOOL rectangular);
+
+[mlname(plshades)] void ml_plshades(
+    [size_is(nx,ny)] PLFLT_MATRIX a, PLINT nx, PLINT ny,
+    PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+    [size_is(nlevel)] PLFLT_VECTOR clevel, PLINT nlevel, PLFLT fill_width,
+    PLINT cont_color, PLFLT cont_width,
+    PLBOOL rectangular);
+
+[mlname(plimagefr)] void ml_plimagefr(
+    [size_is(nx, ny)] PLFLT_MATRIX idata, PLINT nx, PLINT ny,
+    PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+    PLFLT zmin, PLFLT zmax,
+    PLFLT valuemin, PLFLT valuemax);
+
+[mlname(plvect)] void ml_plvect(
+    [size_is(nx,ny)] PLFLT_MATRIX u, [size_is(nx,ny)] PLFLT_MATRIX v,
+    PLINT nx, PLINT ny, PLFLT scale);
+
+[mlname(plmap)] void ml_plmap(
+    [string] PLCHAR_VECTOR name,
+    PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy);
+
+[mlname(plmapline)] void ml_plmapline(
+    [string] PLCHAR_VECTOR name,
+    PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+    [size_is(nplotentries)] PLINT_VECTOR plotentries, PLINT nplotentries);
+
+[mlname(plmapstring)] void ml_plmapstring(
+    [string] PLCHAR_VECTOR name,  [string] PLCHAR_VECTOR string,
+    PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+    [size_is(nplotentries)] PLINT_VECTOR plotentries, PLINT nplotentries);
+
+[mlname(plmaptex)] void ml_plmaptex(
+    [string] PLCHAR_VECTOR name, PLFLT dx, PLFLT dy, PLFLT just, [string] PLCHAR_VECTOR text,
+    PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+    PLINT plotentry);
+
+[mlname(plmapfill)] void ml_plmapfill(
+    [string] PLCHAR_VECTOR name,
+    PLFLT minx, PLFLT maxx, PLFLT miny, PLFLT maxy,
+    [size_is(nplotentries)] PLINT_VECTOR plotentries, PLINT nplotentries);
+
+[mlname(plmeridians)] void ml_plmeridians(
+    PLFLT dlong, PLFLT dlat,
+    PLFLT minlong, PLFLT maxlong, PLFLT minlat, PLFLT maxlat);
+
+[mlname(plpoly3)] void ml_plpoly3(
+    PLINT n, [size_is(n)] PLFLT_VECTOR x, [size_is(n)] PLFLT_VECTOR y, [size_is(n)] PLFLT_VECTOR z,
+    PLINT ndraw, [size_is(ndraw)] PLBOOL_VECTOR draw, PLBOOL ifcc);
+
+// The following are for the pltr functions
+[mlname(pltr0)] void ml_pltr0(
+    PLFLT x, PLFLT y, [out] PLFLT_VECTOR tx, [out] PLFLT_VECTOR ty);
+
+// XXX The following are non-standard functions
+[mlname(plsvect_reset)] void ml_plsvect_reset(void);
+int plg_current_col0(void);
+PLFLT plg_current_col1(void);
+PLFLT plgwidth(void);
+PLFLT plgchrht(void);
+
+#define QUOTEME(x) #x
+#define RAW_ML(x) quote(mlmli, QUOTEME(x));
+
+// plstripc function
+quote(mlmli,
+    "external plstripc : string -> string -> float -> float -> float -> float -> \
+                         float -> float -> float -> bool -> bool -> int -> int -> \
+                         int array -> int array -> string array -> string -> \
+                         string -> string -> int = \"ml_plstripc_byte\" \"ml_plstripc\"");
+
+// pltr callback functions, hand-wrapped
+quote(mlmli,
+    "external pltr1 : float array -> float array -> float -> float -> float * float \
+    = \"ml_pltr1\"");
+quote(mlmli,
+    "external pltr2 : float array array -> float array array -> float -> float -> float * float \
+    = \"ml_pltr2\"");
+
+// Setting the translation function for the contouring and plotting functions
+quote(ml,
+    "let plset_pltr (f : float -> float -> (float * float)) =\
+     Callback.register \"caml_plplot_plotter\" f");
+quote(mli, "val plset_pltr : (float -> float -> (float * float)) -> unit");
+quote(ml, "let plunset_pltr () = Callback.register \"caml_plplot_plotter\" 0");
+quote(mli, "val plunset_pltr : unit -> unit");
+
+// Setting the translation function for the map drawing functions
+quote(ml,
+    "let plset_mapform (f : float -> float -> (float * float)) =\
+     Callback.register \"caml_plplot_mapform\" f");
+quote(mli, "val plset_mapform : (float -> float -> (float * float)) -> unit");
+quote(ml,
+    "let plunset_mapform () = Callback.register \"caml_plplot_mapform\" 0");
+quote(mli, "val plunset_mapform : unit -> unit");
+
+// Setting the "defined" function for the shading functions
+quote(ml,
+"let plset_defined (f : float -> float -> int) =\
+  Callback.register \"caml_plplot_defined\" f");
+quote(mli, "val plset_defined : (float -> float -> int) -> unit");
+quote(ml,
+    "let plunset_defined () = Callback.register \"caml_plplot_defined\" 0");
+quote(mli, "val plunset_defined : unit -> unit");
+
+// Setting the translation function for the global coordinate transform
+quote(ml, "external ml_plstransform : unit -> unit = \"ml_plstransform\"");
+quote(ml,
+    "let plstransform (f : float -> float -> (float * float)) =\
+     Callback.register \"caml_plplot_transform\" f;\
+     ml_plstransform ()");
+quote(mli, "val plstransform : (float -> float -> (float * float)) -> unit");
+quote(ml,
+    "let plunset_transform () =\
+    Callback.register \"caml_plplot_transform\" 0;\
+    ml_plstransform ()");
+quote(mli, "val plunset_transform : unit -> unit");
+
+// Hand-translated PL_GRID_* flags for use with plgriddata
+quote(mlmli, "type plplot_grid_method_type = \
+                PL_GRID_CSA | \
+                PL_GRID_DTLI | \
+                PL_GRID_NNI | \
+                PL_GRID_NNIDW | \
+                PL_GRID_NNLI | \
+                PL_GRID_NNAIDW");
+
+// Hand-translated PL_PARSE_* flags for use with plparseopts
+quote(mlmli, "type plplot_parse_method_type = \
+                PL_PARSE_PARTIAL | \
+                PL_PARSE_FULL | \
+                PL_PARSE_QUIET | \
+                PL_PARSE_NODELETE | \
+                PL_PARSE_SHOWALL | \
+                PL_PARSE_OVERRIDE | \
+                PL_PARSE_NOPROGRAM | \
+                PL_PARSE_NODASH | \
+                PL_PARSE_SKIP");
+
+// Data type to reference axes
+quote(mlmli, "type plplot_axis_type = \
+                PL_X_AXIS | \
+                PL_Y_AXIS | \
+                PL_Z_AXIS");
+
+// Custom axis labeling
+quote(ml, "external ml_plslabelfunc : unit -> unit = \"ml_plslabelfunc\"");
+quote(ml,
+"let plslabelfunc (f : plplot_axis_type -> float -> string) =\
+  Callback.register \"caml_plplot_customlabel\" f;\
+  ml_plslabelfunc ()");
+quote(mli, "val plslabelfunc : (plplot_axis_type -> float -> string) -> unit");
+quote(ml,
+"let plunset_labelfunc () =\
+  Callback.register \"caml_plplot_customlabel\" 0;\
+  ml_plslabelfunc ()");
+quote(mli, "val plunset_labelfunc : unit -> unit");
+
+// Custom plabort handling
+quote(ml, "external ml_plsabort : unit -> unit = \"ml_plsabort\"");
+quote(ml,
+"let plsabort (f : string -> unit) =\
+  Callback.register \"caml_plplot_abort\" f;\
+  ml_plsabort ()");
+quote(mli, "val plsabort : (string -> unit) -> unit");
+quote(ml,
+"let plunset_abort () =\
+  Callback.register \"caml_plplot_abort\" 0;\
+  ml_plsabort ()");
+quote(mli, "val plunset_abort : unit -> unit");
+
+// Custom plexit handling
+quote(ml, "external ml_plsexit : unit -> unit = \"ml_plsexit\"");
+quote(ml,
+"let plsexit (f : string -> int) =\
+  Callback.register \"caml_plplot_exit\" f;\
+  ml_plsexit ()");
+quote(mli, "val plsexit : (string -> int) -> unit");
+quote(ml,
+"let plunset_exit () =\
+  Callback.register \"caml_plplot_exit\" 0;\
+  ml_plsexit ()");
+quote(mli, "val plunset_exit : unit -> unit");
+
+RAW_ML(external plgriddata : float array -> float array -> float array -> float array -> float array -> plplot_grid_method_type -> float -> float array array = "ml_plgriddata_bytecode" "ml_plgriddata")
+RAW_ML(external plparseopts : string array -> plplot_parse_method_type list -> unit = "ml_plparseopts")
+RAW_ML(external pllegend : plplot_legend_opt -> plplot_position_opt -> float -> float -> float -> int -> int -> int -> int -> int -> plplot_legend_opt array -> float -> float -> float -> float -> int array -> string array -> int array -> int array -> float array -> float array -> int array -> int array -> float array -> int array -> float array -> int array -> string array -> float * float = "ml_pllegend_byte" "ml_pllegend")
+RAW_ML(external plcolorbar : plplot_colorbar_opt -> plplot_position_opt -> float -> float -> float -> float -> int -> int -> int -> float -> float -> int -> float -> plplot_colorbar_opt array -> string array -> string array -> float array -> int array -> float array array -> float * float = "ml_plcolorbar_byte" "ml_plcolorbar")
+

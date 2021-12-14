@@ -1,0 +1,170 @@
+<?xml version='1.0' encoding='us-ascii'?>
+<!DOCTYPE sect1 PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY examples '<ulink
+   url="http://plplot.sourceforge.net/examples/index.html">example
+   web page</ulink>'>
+]>
+
+<sect1>
+  <title>Announcement of PLplot-5.3.1</title>
+
+  <sect2>
+    <title>Release Notes</title>
+
+    <para>This release comes five months after the previous one with
+    relatively few user-visible changes.  However, a big amount work was
+    done to improve the internals of the distribution, in particular as
+    regards the Autotools (Autoconf, Automake, Libtool) support.  The Java,
+    C++, and Octave bindings and examples have been improved, and new
+    vector plotting functions added to the API.  For the detailed list of
+    changes, see the <ulink url="ChangeLog-5.3.0-5.3.1">ChangeLog</ulink>
+    of CVS activity.</para>
+
+  </sect2>
+
+  <sect2>
+    <title>Changes</title>
+
+    <sect3>
+      <title>API</title>
+      <itemizedlist>
+        <listitem>
+          <para>New <function>plvect</function> function to plot arrows
+          using the function evaluator approach and new
+          <function>plsvect</function> function to set the style of the
+          arrow used by plarrows. Examples <filename>x22*</filename>
+          illustrate the use of these new functions.</para>
+        </listitem>
+        <listitem>
+          <para>Add non-rectangular x-y limits to plsurf (plsurf3dl) and
+          plot3d (plot3dcl).</para>
+         </listitem>
+      </itemizedlist>
+    </sect3>
+
+    <sect3>
+      <title>Language Bindings</title>
+      <itemizedlist>
+        <listitem>
+          <para>The library libplplotf77 is split, such that there is a
+          pure fortran source library (still called libplplotf77) which
+          wraps a pure C source library (libplplotf77c) which in turn wraps
+          libplplot.  This change means an end to worrying about using
+          FLIBS to specify how to link a library with combined fortran and
+          C source code, improving the portability.</para>
+        </listitem>
+        <listitem>
+          <para>The Java and Python bindings have now a common Swig
+          interface definition.</para>
+        </listitem>
+        <listitem>
+          <para>Dropped the requirement for Matwrap for building the Octave
+          bindings from the distribution tarball.  The Octave binding
+          requires Octave version 2.1.57 or later to work</para>
+        </listitem>
+        <listitem>
+          <para>There are now two different Perl bindings for PLplot:
+          <filename>Graphics::PLplot</filename> and
+          <filename>PDL::Graphics::PLplot</filename>.  All the example
+          files have been ported to the later module (files
+          <filename>examples/perl/x*.pl</filename>).</para>
+        </listitem>
+      </itemizedlist>
+    </sect3>
+
+    <sect3>
+      <title>Drivers</title>
+      <itemizedlist>
+        <listitem>
+          <para>Added FreeType support to the wingcc driver.</para>
+        </listitem>
+      </itemizedlist>
+    </sect3>
+
+    <sect3>
+      <title>Config/Build/Install</title>
+      <itemizedlist>
+        <listitem>
+          <para>The configuration system has undergone a total overhaul.
+          The configure.ac script, together with sysloc.in, have been
+          broken into logical pieces and put under the
+          <filename>cf/</filename> directory.  The Autoconf code has been
+          modernized and its maintainability improved.</para>
+        </listitem>
+        <listitem>
+          <para>Building from CVS sources requires Automake version
+          1.8.2 or later.</para>
+        </listitem>
+        <listitem>
+          <para>The reconfig script does not exist anymore, because the
+          command <command>./config.status --recheck</command> provides the
+          same functionality.</para>
+        </listitem>
+        <listitem>
+          <para>Building the DocBook documentation (info and man page
+          forms) requires the docbook2x version 0.8.2 or later.</para>
+        </listitem>
+
+      </itemizedlist>
+    </sect3>
+
+    <sect3>
+      <title>Library core</title>
+      <itemizedlist>
+        <listitem>
+          <para>Several memory leak problems are fixed both in the core and
+          in the examples.  We are heading towards a valgrind-clean code
+          base for PLplot.</para>
+        </listitem>
+      </itemizedlist>
+    </sect3>
+
+    <sect3>
+      <title>Documentation</title>
+      <itemizedlist>
+        <listitem>
+          <para>New chapter <quote>Deploying programs that use
+          PLplot</quote>, containing information on the issue of delivering
+          programs that use PLplot.</para>
+        </listitem>
+        <listitem>
+           <para>New chapter <quote>API compatibility definition</quote>,
+           which presents the formal definition of what is considered to be
+           in the PLplot library API.</para>
+         </listitem>
+      </itemizedlist>
+    </sect3>
+
+    <sect3>
+      <title>Examples and Tests</title>
+      <itemizedlist>
+        <listitem>
+          <para>Example x14 works identically in C, C++, Python, Java and
+          Tcl bindings.</para>
+        </listitem>
+        <listitem>
+          <para>The tests can be exercised with the <command>make
+          check</command> command.</para>
+        </listitem>
+      </itemizedlist>
+    </sect3>
+
+  </sect2>
+
+  <sect2>
+    <title></title>
+    <para role="signature">
+      Rafael Laboissiere, 2004-06-25
+    </para>
+
+    <para role="foot">
+      <ulink url="../index.html">PLplot home page</ulink> | <ulink
+      url="announce-plplot-5.3.1.txt">Text version</ulink> |
+      <ulink url="announce-plplot-5.3.1.xml">XML source</ulink> |
+      <ulink url="Makefile">Makefile</ulink>
+    </para>
+
+  </sect2>
+
+</sect1>

@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSTRIPD 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplstripd\fP - Deletes and releases memory used by a strip chart
+.SH SYNOPSIS
+\fBplstripd\fP(\fIid\fP)
+.SH DESCRIPTION
+
+.P
+Deletes and releases memory used by a strip chart.
+.P
+Redacted form: \fBplstripd(id)\fP
+.P
+This function is used in example 17.
+.SH ARGUMENTS
+.TP
+\fIid\fP (\fBPLINT\fP(3plplot), input)
+Identification number of strip chart to delete.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

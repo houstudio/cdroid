@@ -1,0 +1,17 @@
+TAI is one realization of TT that must be determined instantly from a
+world-wide network of atomic clocks.  As expected, after-the-fact
+analysis of the world-wide atomic clock data allows determination of better
+realizations of TT, and the ttbipm.dat file contains one such corrected
+realization.  This file is obtained by, e.g.,
+
+wget ftp://ftp2.bipm.fr/pub/tai/scale/ttbipm.08
+mv ttbipm.08 ttbipm.dat
+
+The files ttbipm.nn tend to be published early in the year nn+1, (i.e., the
+year 2009 for the ttbipm.08 file) so yearly downloads are required to keep
+ttbipm.dat up to date.  For each ttbipm.nn file, there exists some header
+lines (30 of them for ttbipm.08) that must be skipped before actual data
+appear in the file. Thus, the NSKIP_LINES variable that appears in
+CMakeLists.dat must be confirmed/reviewed each year after the download of
+ttbipm.nn.
+

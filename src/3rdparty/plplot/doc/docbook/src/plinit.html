@@ -1,0 +1,31 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plinit: Initialize PLplot</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plimage.html" title="plimage: Plot a 2D matrix using cmap1 with automatic color adjustment"><link rel="next" href="pljoin.html" title="pljoin: Draw a line between two points"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plinit</code>: Initialize PLplot
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plimage.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="pljoin.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plinit"></a>
+      <code class="function">plinit</code>: Initialize PLplot
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plinit</b>
+	  (</code></td><td><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Initializing the plotting package.  The program prompts for the
+      device keyword or number of the desired output device.  Hitting a
+      RETURN in response to the prompt is the same as selecting the first
+      device.  <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> will issue no prompt if either the device was
+      specified previously (via command line flag, the <a class="link" href="plsetopt.html" title="plsetopt: Set any command-line option"><code class="function">plsetopt</code></a> function,
+      or the <a class="link" href="plsdev.html" title="plsdev: Set the device (keyword) name"><code class="function">plsdev</code></a> function), or if only one device is
+      enabled when PLplot is installed.  If subpages have been specified,
+      the output device is divided into <code class="literal">nx</code> by
+      <code class="literal">ny</code> subpages, each of which may be used
+      independently.  If <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> is called again during a program, the
+      previously opened file will be closed.  The subroutine <a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a> is
+      used to advance from one subpage to the next.
+    </p><p>
+      Redacted form: <code class="function">plinit()</code>
+    </p><p>
+      This function is used in all of the examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plimage.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="pljoin.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plimage</code>: Plot a 2D matrix using cmap1 with
+      automatic color adjustment
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">pljoin</code>: Draw a line between two points
+    </td></tr></table></div></body></html>

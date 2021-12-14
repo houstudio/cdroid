@@ -1,0 +1,94 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCOLORBAR 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplcolorbar\fP - Plot color bar for image, shade or gradient plots
+.SH SYNOPSIS
+\fBplcolorbar\fP(\fIp_colorbar_width\fP, \fIp_colorbar_height\fP, \fIopt\fP, \fIposition\fP, \fIx\fP, \fIy\fP, \fIx_length\fP, \fIy_length\fP, \fIbg_color\fP, \fIbb_color\fP, \fIbb_style\fP, \fIlow_cap_color\fP, \fIhigh_cap_color\fP, \fIcont_color\fP, \fIcont_width\fP, \fIn_labels\fP, \fIlabel_opts\fP, \fIlabels\fP, \fInaxes\fP, \fIaxis_opts\fP, \fIticks\fP, \fIsub_ticks\fP, \fIn_values\fP, \fIvalues\fP)
+.SH DESCRIPTION
+
+.P
+Routine for creating a continuous color bar for image, shade, or gradient plots. (See \fBpllegend\fP(3plplot) for similar functionality for creating legends with discrete elements). The arguments of plcolorbar provide control over the location and size of the color bar as well as the location and characteristics of the elements (most of which are optional) within that color bar.  The resulting color bar is clipped at the boundaries of the current subpage. (N.B. the adopted coordinate system used for some of the parameters is defined in the documentation of the \fIposition\fP parameter.)
+.P
+Redacted form: \fBplcolorbar(p_colorbar_width, p_colorbar_height, opt, position, x, y, x_length, y_length, bg_color, bb_color, bb_style, low_cap_color, high_cap_color, cont_color, cont_width, label_opts, labels, axis_opts, ticks, sub_ticks, values)\fP
+.P
+This function is used in examples 16 and 33.
+.SH ARGUMENTS
+.TP
+\fIp_colorbar_width\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the labelled and decorated color bar width in adopted coordinates.
+.TP
+\fIp_colorbar_height\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the labelled and decorated color bar height in adopted coordinates.
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+\fIopt\fP contains bits controlling the overall color bar.  The orientation (direction of the maximum value) of the color bar is specified with PL_ORIENT_RIGHT, PL_ORIENT_TOP, PL_ORIENT_LEFT, or PL_ORIENT_BOTTOM.  If none of these bits are specified, the default orientation is toward the top if the colorbar is placed on the left or right of the viewport or toward the right if the colorbar is placed on the top or bottom of the viewport. If the PL_COLORBAR_BACKGROUND bit is set, plot a (semitransparent) background for the color bar. If the PL_COLORBAR_BOUNDING_BOX bit is set, plot a bounding box for the color bar. The type of color bar must be specified with one of PL_COLORBAR_IMAGE, PL_COLORBAR_SHADE, or PL_COLORBAR_GRADIENT. If more than one of those bits is set only the first one in the above list is honored. The position of the (optional) label/title can be specified with PL_LABEL_RIGHT, PL_LABEL_TOP, PL_LABEL_LEFT, or PL_LABEL_BOTTOM.  If no label position bit is set then no label will be drawn. If more than one of this list of bits is specified, only the first one on the list is honored. End-caps for the color bar can added with PL_COLORBAR_CAP_LOW and PL_COLORBAR_CAP_HIGH. If a particular color bar cap option is not specified then no cap will be drawn for that end. As a special case for PL_COLORBAR_SHADE, the option PL_COLORBAR_SHADE_LABEL can be specified. If this option is provided then any tick marks and tick labels will be placed at the breaks between shaded segments. TODO: This should be expanded to support custom placement of tick marks and tick labels at custom value locations for any color bar type.
+.TP
+\fIposition\fP (\fBPLINT\fP(3plplot), input)
+\fIposition\fP contains bits which control the overall position of the color bar and the definition of the adopted coordinates used for positions just like what is done for the position argument for \fBpllegend\fP(3plplot). However, note that the defaults for the position bits (see below) are different than the \fBpllegend\fP(3plplot) case. The combination of the PL_POSITION_LEFT, PL_POSITION_RIGHT, PL_POSITION_TOP, PL_POSITION_BOTTOM, PL_POSITION_INSIDE, and PL_POSITION_OUTSIDE bits specifies one of the 16 possible standard positions (the 4 corners and centers of the 4 sides for both the inside and outside cases) of the color bar relative to the adopted coordinate system. The corner positions are specified by the appropriate combination of two of the PL_POSITION_LEFT, PL_POSITION_RIGHT, PL_POSITION_TOP, and PL_POSITION_BOTTOM bits while the sides are specified by a single value of one of those bits.  The adopted coordinates are normalized viewport coordinates if the PL_POSITION_VIEWPORT bit is set or normalized subpage coordinates if the PL_POSITION_SUBPAGE bit is set. Default position bits: If none of PL_POSITION_LEFT, PL_POSITION_RIGHT, PL_POSITION_TOP, or PL_POSITION_BOTTOM are set, then use PL_POSITION_RIGHT. If neither of PL_POSITION_INSIDE or PL_POSITION_OUTSIDE is set, use PL_POSITION_OUTSIDE. If neither of PL_POSITION_VIEWPORT or PL_POSITION_SUBPAGE is set, use PL_POSITION_VIEWPORT.
+.TP
+\fIx\fP (\fBPLFLT\fP(3plplot), input)
+X offset of the color bar position in adopted coordinates from the specified standard position of the color bar. For positive x, the direction of motion away from the standard position is inward/outward from the standard corner positions or standard left or right positions if the PL_POSITION_INSIDE/PL_POSITION_OUTSIDE bit is set in \fIposition\fP.  For the standard top or bottom positions, the direction of motion is toward positive X.
+.TP
+\fIy\fP (\fBPLFLT\fP(3plplot), input)
+Y offset of the color bar position in adopted coordinates from the specified standard position of the color bar. For positive y, the direction of motion away from the standard position is inward/outward from the standard corner positions or standard top or bottom positions if the PL_POSITION_INSIDE/PL_POSITION_OUTSIDE bit is set in \fIposition\fP.  For the standard left or right positions, the direction of motion is toward positive Y.
+.TP
+\fIx_length\fP (\fBPLFLT\fP(3plplot), input)
+Length of the body of the color bar in the X direction in adopted coordinates.
+.TP
+\fIy_length\fP (\fBPLFLT\fP(3plplot), input)
+Length of the body of the color bar in the Y direction in adopted coordinates.
+.TP
+\fIbg_color\fP (\fBPLINT\fP(3plplot), input)
+The cmap0 color of the background for the color bar (PL_COLORBAR_BACKGROUND).
+.TP
+\fIbb_color\fP (\fBPLINT\fP(3plplot), input)
+The cmap0 color of the bounding-box line for the color bar (PL_COLORBAR_BOUNDING_BOX).
+.TP
+\fIbb_style\fP (\fBPLINT\fP(3plplot), input)
+The \fBpllsty\fP(3plplot) style number for the bounding-box line for the color bar (PL_COLORBAR_BACKGROUND).
+.TP
+\fIlow_cap_color\fP (\fBPLFLT\fP(3plplot), input)
+The cmap1 color of the low-end color bar cap, if it is drawn (PL_COLORBAR_CAP_LOW).
+.TP
+\fIhigh_cap_color\fP (\fBPLFLT\fP(3plplot), input)
+The cmap1 color of the high-end color bar cap, if it is drawn (PL_COLORBAR_CAP_HIGH).
+.TP
+\fIcont_color\fP (\fBPLINT\fP(3plplot), input)
+The cmap0 contour color for PL_COLORBAR_SHADE plots. This is passed directly to \fBplshades\fP(3plplot), so it will be interpreted according to the design of \fBplshades\fP(3plplot).
+.TP
+\fIcont_width\fP (\fBPLFLT\fP(3plplot), input)
+Contour width for PL_COLORBAR_SHADE plots. This is passed directly to \fBplshades\fP(3plplot), so it will be interpreted according to the design of \fBplshades\fP(3plplot).
+.TP
+\fIn_labels\fP (\fBPLINT\fP(3plplot), input)
+Number of labels to place around the color bar.
+.TP
+\fIlabel_opts\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector of options for each of \fIn_labels\fP labels.
+.TP
+\fIlabels\fP (\fBPLCHAR_MATRIX\fP(3plplot), input)
+A vector of \fIn_labels\fP UTF-8 character strings containing the labels for the color bar.  Ignored if no label position is specified with one of the PL_COLORBAR_LABEL_RIGHT, PL_COLORBAR_LABEL_TOP, PL_COLORBAR_LABEL_LEFT, or PL_COLORBAR_LABEL_BOTTOM bits in the corresponding label_opts field.
+.TP
+\fIn_axes\fP (\fBPLINT\fP(3plplot), input)
+Number of axis definitions provided. This value must be greater than 0. It is typically 1 (numerical axis labels are provided for one of the long edges of the color bar), but it can be larger if multiple numerical axis labels for the long edges of the color bar are desired.
+.TP
+\fIaxis_opts\fP (\fBPLCHAR_MATRIX\fP(3plplot), input)
+A vector of \fIn_axes\fP ascii character strings containing options (interpreted as for \fBplbox\fP(3plplot)) for the color bar's axis definitions.
+.TP
+\fIticks\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector of n_axes values of the spacing of the major tick marks (interpreted as for \fBplbox\fP(3plplot)) for the color bar's axis definitions.
+.TP
+\fIsub_ticks\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector of n_axes values of the number of subticks (interpreted as for \fBplbox\fP(3plplot)) for the color bar's axis definitions.
+.TP
+\fIn_values\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the number of elements in each of the \fIn_axes\fP rows of the \fIvalues\fP matrix.
+.TP
+\fIvalues\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing the numeric values for the data range represented by the color bar. For a row index of \fIi_axis\fP (where 0 < \fIi_axis\fP < \fIn_axes\fP), the number of elements in the row is specified by \fIn_values\fP[\fIi_axis\fP]. For PL_COLORBAR_IMAGE and PL_COLORBAR_GRADIENT the number of elements is 2, and the corresponding row elements of the \fIvalues\fP matrix are the minimum and maximum value represented by the colorbar.  For PL_COLORBAR_SHADE, the number and values of the elements of a row of the \fIvalues\fP matrix is interpreted the same as the \fInlevel\fP and \fIclevel\fP arguments of \fBplshades\fP(3plplot).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

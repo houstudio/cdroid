@@ -1,0 +1,51 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Drawing the Graph</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="simple.html" title="Chapter 2. Simple Use of PLplot"><link rel="prev" href="labelling.html" title="Labelling the Graph"><link rel="next" href="finishing.html" title="Finishing Up"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Drawing the Graph</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="labelling.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Simple Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="finishing.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="drawing"></a>Drawing the Graph</h2></div></div></div><p>
+      PLplot can draw graphs consisting of points with optional error bars,
+      line segments or histograms.  Functions which perform each of these
+      actions may be called after setting up the plotting environment using
+      <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a>.  All of the following functions draw within the box defined
+      by <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a>, and any lines crossing the boundary are clipped.
+      Functions are also provided for drawing surface and contour
+      representations of multi-dimensional functions.  See <a class="xref" href="advanced.html" title="Chapter 3. Advanced Use of PLplot">Chapter 3, <i>Advanced Use of PLplot</i></a> for discussion of finer control of plot
+      generation.
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="points"></a>Drawing Points</h3></div></div></div><p><a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a>, <a class="link" href="plpoin.html" title="plpoin: Plot a glyph at the specified points"><code class="function">plpoin</code></a>, and <a class="link" href="plsym.html" title="plsym: Plot a glyph at the specified points"><code class="function">plsym</code></a> plot
+      <code class="literal">n</code> points <code class="literal">(x[i], y[i])</code> using the
+      specified symbol.  The routines differ only in how the plotted symbol
+      is specified.  <a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a> is now the preferred way of drawing points
+      for unicode-aware devices because it gives users full access via a
+      UTF-8 string to any unicode glyph they prefer for the symbol that is
+      is available via system fonts. <a class="link" href="plpoin.html" title="plpoin: Plot a glyph at the specified points"><code class="function">plpoin</code></a> and <a class="link" href="plsym.html" title="plsym: Plot a glyph at the specified points"><code class="function">plsym</code></a> are limited to
+      Hershey glyphs and are therefore more suitable for device drivers that
+      only use Hershey fonts.  For both of these functions the Hershey glyph
+      is indicated by a code value.  <a class="link" href="plpoin.html" title="plpoin: Plot a glyph at the specified points"><code class="function">plpoin</code></a> uses an extended ASCII index
+      of Hershey glyphs for that code value, with the printable ASCII codes
+      mapping to the respective characters in the current Hershey font, and
+      the codes from 0–31 mapping to various useful Hershey glyphs for
+      symbols.  In <a class="link" href="plsym.html" title="plsym: Plot a glyph at the specified points"><code class="function">plsym</code></a> however, the code is a Hershey font code number.
+      Standard examples <a class="ulink" href="http://plplot.org/examples.php?demo=04" target="_top">04</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=21" target="_top">21</a>, and <a class="ulink" href="http://plplot.org/examples.php?demo=26" target="_top">26</a>, demonstrate
+      use of <a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a> while <a class="ulink" href="http://plplot.org/examples.php?demo=06" target="_top">standard example
+      06</a> demonstrates all the Hershey symbols available with
+      <a class="link" href="plpoin.html" title="plpoin: Plot a glyph at the specified points"><code class="function">plpoin</code></a> and <a class="ulink" href="http://plplot.org/examples.php?demo=07" target="_top">standard example
+      07</a> demonstrates all the Hershey symbols available with
+      <a class="link" href="plsym.html" title="plsym: Plot a glyph at the specified points"><code class="function">plsym</code></a>.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="lines"></a>Drawing Lines or Curves</h3></div></div></div><p>
+	PLplot provides two functions for drawing line graphs.  All lines are
+	drawn in the currently selected color, style and width.  See <a class="xref" href="line-attributes.html" title="Setting Line Attributes">the section called “Setting Line Attributes”</a> for information about changing these
+	parameters.
+      </p><p>
+	<a class="link" href="plline.html" title="plline: Draw a line"><code class="function">plline</code></a> draws a line or curve.  The curve consists of
+	<code class="literal">n-1</code> line segments joining the <code class="literal">n</code>
+	points in the input arrays.  For single line segments, <a class="link" href="pljoin.html" title="pljoin: Draw a line between two points"><code class="function">pljoin</code></a> is
+	used to join two points.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="text"></a>Writing Text on a Graph</h3></div></div></div><p>
+	The <a class="link" href="plptex.html" title="plptex: Write text inside the viewport"><code class="function">plptex</code></a> API allows UTF-* text to be written anywhere within the limits set by <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a>
+	with justification and text angle set by the user.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="fills"></a>Area Fills</h3></div></div></div><p>
+	Area fills are done in the currently selected color, line style, line
+	width and pattern style.
+      </p><p>
+	<a class="link" href="plfill.html" title="plfill: Draw filled polygon"><code class="function">plfill</code></a> fills a polygon.  The polygon consists of
+	<code class="literal">n</code> vertices which define the polygon.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="complex"></a>More Complex Graphs</h3></div></div></div><p>
+	Functions <a class="link" href="plbin.html" title="plbin: Plot a histogram from binned data"><code class="function">plbin</code></a> and <a class="link" href="plhist.html" title="plhist: Plot a histogram from unbinned data"><code class="function">plhist</code></a> are provided for drawing histograms,
+	and functions <a class="link" href="plerrx.html" title="plerrx: Draw error bars in x direction"><code class="function">plerrx</code></a> and <a class="link" href="plerry.html" title="plerry: Draw error bars in the y direction"><code class="function">plerry</code></a> draw error bars about specified
+	points.  There are lots more too (see <a class="xref" href="API.html" title="Chapter 17. The Common API for PLplot">Chapter 17, <i>The Common API for PLplot</i></a>).
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="labelling.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="simple.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="finishing.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Labelling the Graph </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Finishing Up</td></tr></table></div></body></html>

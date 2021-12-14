@@ -1,0 +1,165 @@
+We have implemented a number of applications to test the qsastime library.
+In general, if you want to build any of these test applications you specify
+the cmake option -DTEST_QSASTIME=ON (but an additional option has to be
+set for the qsastime_testlib case discussed below in III).
+
+(I) lib/qsastime/qsastime_test is automatically built in the build tree if
+-DTEST_QSASTIME=ON.  This test routine does some minimal tests of the
+qsastime library using the C library.  Because the date range is so small, I
+believe this test builds and runs on every platform without running into C
+library limitations.  Note some of the results of this test depend on C
+library routines whose results depend on the local time zone.
+
+Run this test as follows from the top of the build tree
+
+lib/qsastime/qsastime_test >qsastime_test.out
+
+Then compare these output results with those at
+lib/qsastime/qsastime_test.out_standard in the source tree.  Your results
+will differ in some respects if you have a different time zone than the PST
+(7 hours west of Greenwich) time zone where the
+lib/qsastime/qsastime_test.out_standard result was produced.
+
+(II) lib/qsastime/bhunt_search_test is automatically built in the build tree
+if -DTEST_QSASTIME=ON. Depending on input, this test routine is capable of
+severe testing of the bhunt_search routine in the qsastime library.
+
+The point of bhunt_search is to avoid scanning through the whole leap second
+table every time you are dealing with a broken-down or continuous time.  So
+this algorithm follows the general idea in Numerical Recipes of first having
+a hunt phase where the increment (or decrement) in index is doubled until
+the value is bracketed, and then bisection is used to find the index such
+that
+
+x[index] <= value < x[index+1],           (1)
+
+This has been implemented as a completely generalized routine so "<=" and
+"<" stand for a generalized comparison of anything that can be stuffed into
+a struct, with the comparisons provided by a callback routine.
+
+bhunt_search_test tests bhunt_search as follows:
+
+ntable, offset, and multiplier values are provided via stdin.
+bhunt_search_test then creates a table of ntable double values (of 0.
+through (double) ntable-1) and searches that table at a set of
+
+ntest = (ntable-1)*multiplier +1         (2)
+
+points which are offset from the table range by offset.  (Thus, large
+positive or negative offset values allow you to test repeated searches for
+data beyond the ends of the table.) An offset of zero and a multiplier of 1
+mean you search the table for the exact table values rather than something
+in between the table values.  For each of the ntest values, bhunt_search
+returns an index which the test routine then tests to make sure it
+satisfies condition 1 above.
+
+Here are some typical results for a table with 64 values (somewhat larger
+than the current TAI-UTC offset table which has 38 values.)
+
+software@raven> echo '64 0 1000'| lib/qsastime/bhunt_search_test
+ntable, offset, multiplier, ntest = 64, 0, 1000, 63001
+Average number of gedouble calls per bhunt_search call = 6.015889 for
+ifhunt, ifrandom = 0,0
+Average number of gedouble calls per bhunt_search call = 6.016444 for
+ifhunt, ifrandom = 0,1
+Average number of gedouble calls per bhunt_search call = 2.002016 for
+ifhunt, ifrandom = 1,0
+Average number of gedouble calls per bhunt_search call = 8.502754 for
+ifhunt, ifrandom = 1,1
+Successful completion of bhunt_search test
+software@raven> echo '64 -64 1000'| lib/qsastime/bhunt_search_test
+ntable, offset, multiplier, ntest = 64, -64, 1000, 63001
+Average number of gedouble calls per bhunt_search call = 6.000000 for
+ifhunt, ifrandom = 0,0
+Average number of gedouble calls per bhunt_search call = 6.000000 for
+ifhunt, ifrandom = 0,1
+Average number of gedouble calls per bhunt_search call = 1.000079 for
+ifhunt, ifrandom = 1,0
+Average number of gedouble calls per bhunt_search call = 1.000079 for
+ifhunt, ifrandom = 1,1
+Successful completion of bhunt_search test
+software@raven> echo '64 64 1000'| lib/qsastime/bhunt_search_test
+ntable, offset, multiplier, ntest = 64, 64, 1000, 63001
+Average number of gedouble calls per bhunt_search call = 7.000000 for
+ifhunt, ifrandom = 0,0
+Average number of gedouble calls per bhunt_search call = 7.000000 for
+ifhunt, ifrandom = 0,1
+Average number of gedouble calls per bhunt_search call = 1.000095 for
+ifhunt, ifrandom = 1,0
+Average number of gedouble calls per bhunt_search call = 1.000095 for
+ifhunt, ifrandom = 1,1
+Successful completion of bhunt_search test
+
+Here are results for a table with one million values.
+
+software@raven> echo '1000000 0 10'| lib/qsastime/bhunt_search_test
+ntable, offset, multiplier, ntest = 1000000, 0, 10, 9999991
+Average number of gedouble calls per bhunt_search call = 19.951426 for ifhunt, ifrandom = 0,0
+Average number of gedouble calls per bhunt_search call = 19.951496 for ifhunt, ifrandom = 0,1
+Average number of gedouble calls per bhunt_search call = 2.200001 for ifhunt, ifrandom = 1,0
+Average number of gedouble calls per bhunt_search call = 35.978823 for ifhunt, ifrandom = 1,1
+Successful completion of bhunt_search test
+
+As expected for a table with 2^6 = 64 entries, bhunt_search requires only an
+average of 6 calls to gedouble (my simple callback test code inside
+bhunt_search_test.c which compares two floating point numbers) to search per
+bhunt_search call if you turn off the hunt phase part of the routine.  That
+number drops down close to 2 if the hunt phase is turned on and the
+successive numbers tend to be correlated (as happens quite often with time
+variables, for example).  The number drops close to unity if you are beyond
+the end of the table (which also happens often for time variables).  The
+hunt phase actually slows down the search for completely uncorrelated (i.e.,
+random) variables, but that is a rare case for time variables so within the
+qsastime library, the the hunt phase is always turned on when using
+bhunt_search to determine the offset between TAI and UTC.
+
+For fun, I also showed a test above for a large table of one million values
+(near 2^20).  As expected bhunt_search scales well for this case requiring
+an average of only 20 calls to gedouble if the hunt phase is turned off and
+only 2 calls to geodouble if the hunt phase is turned on for correlated
+data.
+
+(III) lib/qsastime/qsastime_testlib is automatically built in the build tree
+if _both_ -DTEST_QSASTIME=ON and -DBUILD_QSASTIME_TESTLIB=ON.  This test
+routine tests the qsastime library over essentially the complete range of
+possible dates that can be represented internally without integer overflow
+by the qsastime library continuous time variable which stores the integer
+part of the MJD as a signed int.  This works out to a range of +/-5.9
+million years from the (Gregorian and Julian) calendar epoch.  The actual
+tests in lib/qsastime/qsastime_testlib range over +/- 5 million years from
+the calendar epoch.
+
+Internally our build system forces BUILD_QSASTIME_TESTLIB to OFF for the
+Windows (WIN32) case because we have found in practice that the Windows C
+library time function limitations are so severe (e.g., dates prior to 1970
+give incorrect results) that this test of a large date range is worthless on
+Windows.  Also, once we acknowledged that Windows was never going to give
+good results for this test because of limitations in the Windows C library,
+it greatly simplified the programming of qsastime_testlib to ignore the
+Windows case completely.  N.B. This is just an issue with the
+qsastime_testlib routine. The qsastime library itself works fine on Windows
+because it specifically avoids using any C library time routines.
+
+For 32-bit Linux platforms qsastime_testlib is also worthless because of
+limitations in the 32-bit C Linux library (e.g., the date range is limited
+to just 1902 through 2038).  However, qsastime_testlib gives excellent
+results for the 64-bit Linux C library. To avoid wasting time on a
+32-bit test, we have installed a check in qsastime_testlib which refuses to
+run the test if (sizeof(time_t) < 8).  N.B. The sizeof(time_t) issue is only
+relevant for the qsastime_testlib routine.  The qsastime library itself
+works fine on 32-bit platforms because it specifically avoids using any C
+library time routines.
+
+On 64-bit Linux (and possibly Mac OS X) platforms run this test as follows:
+
+echo 0xffff |lib/qsastime/qsastime_testlib > qsastime_testlib.out
+
+Then compare these output results with those at
+lib/qsastime/qsastime_testlib.out_standard in the source tree.  They should
+be identical in all cases because the C library time routines that
+qsastime_testlib calls are made independent of time zone issues by forcing a
+zero time zone.  (The qsastime library itself is, of course, independent of
+time zone issues.)
+
+N.B. this comprehensive test of the qsastime library takes 12
+minutes to run on a 2.4GHz PC.

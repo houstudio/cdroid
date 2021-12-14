@@ -1,0 +1,85 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Introduction to Tcl</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="extended-wish.html" title="Chapter 14. Building an Extended WISH"><link rel="prev" href="extended-wish.html" title="Chapter 14. Building an Extended WISH"><link rel="next" href="introduction-tk.html" title="Introduction to Tk"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Introduction to Tcl</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="extended-wish.html">Prev</a> </td><th width="60%" align="center">Chapter 14. Building an Extended WISH</th><td width="20%" align="right"> <a accesskey="n" href="introduction-tk.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="intro-tcl"></a>Introduction to Tcl</h2></div></div></div><p>
+      The Tool Command Language, or just Tcl (pronounced
+      <span class="quote">“<span class="quote">tickle</span>”</span>) is an embeddable script language which can be
+      used to control a wide variety of applications.  Designed by John
+      Ousterhout of UC Berkeley, Tcl is freely available under the standard
+      Berkeley copyright.  Tcl and Tk (described below) are extensively
+      documented in a new book published by Addison Wesley, entitled
+      <span class="quote">“<span class="quote">Tcl and the Tk toolkit</span>”</span> by John Ousterhout.  This book
+      is a must have for those interested in developing powerful extensible
+      applications with high quality X Windows user interfaces.  The
+      discussion in this chapter cannot hope to approach the level of
+      introduction provided by that book.  Rather we will concentrate on
+      trying to convey some of the excitement, and show the nuts and bolts
+      of using Tcl and some extensions to provide a powerful and flexible
+      interface to the PLplot library within your application.
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="motivation-tcl"></a>Motivation for Tcl</h3></div></div></div><p>
+	The central observation which led Ousterhout to create Tcl was the
+	realization that many applications require the use of some sort of
+	a special purpose, application specific, embedded <span class="quote">“<span class="quote">macro
+	language</span>”</span>.  Application programmers cobble these <span class="quote">“<span class="quote">tiny
+	languages</span>”</span> into their codes in order to provide flexibility
+	and some modicum of high level control.  But the end result is
+	frequently a quirky and fragile language.  And each application has
+	a different <span class="quote">“<span class="quote">tiny language</span>”</span> associated with it.  The
+	idea behind Tcl, then, was to create a single <span class="quote">“<span class="quote">core
+	language</span>”</span> which could be easily embedded into a wide variety
+	of applications.  Further, it should be easily extensible so that
+	individual applications can easily provide application specific
+	capabilities available in the macro language itself, while still
+	providing a robust, uniform syntax across a variety of
+	applications.  To say that Tcl satisfies these requirements would
+	be a spectacular understatement.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="capabilities-tcl"></a>Capabilities of Tcl</h3></div></div></div><p>
+	The mechanics of using Tcl are very straightforward.  Basically you
+	just have to include the file <code class="filename">tcl.h</code>, issue
+	some API calls to create a Tcl interpreter, and then evaluate a
+	script file or perform other operations supported by the Tcl API.
+	Then just link against <code class="filename">libtcl.a</code> and off you
+	go.
+      </p><p>
+	Having done this, you have essentially created a shell.  That is, your
+	program can now execute shell scripts in the Tcl language.  Tcl
+	provides support for basic control flow, variable substitution file
+	i/o and subroutines.  In addition to the built in Tcl commands, you can
+	define your own subroutines as Tcl procedures which effectively
+	become new keywords.
+      </p><p>
+	But the real power of this approach is to add new commands to the
+	interpreter which are realized by compiled C code in your
+	application.  Tcl provides a straightforward API call which allows
+	you to register a function in your code to be called whenever the
+	interpreter comes across a specific keyword of your choosing in
+	the shell scripts it executes.
+      </p><p>
+	This facility allows you with tremendous ease, to endow your
+	application with a powerful, robust and full featured macro
+	language, trivially extend that macro language with new keywords
+	which trigger execution of compiled application specific commands,
+	and thereby raise the level of interaction with your code to one of
+	essentially shell programming via script editing.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="acquiring-tcl"></a>Acquiring Tcl</h3></div></div></div><p>
+	There are several important sources of info and code for Tcl.
+	Definitely get the book mentioned above, and the source code for the
+	Tcl and Tk toolkits can be downloaded from <a class="ulink" href="http://www.tcl.tk/software/tcltk/download.html" target="_top">The Tcl developer
+	Xchange</a>.
+      </p><p>
+	Additionally there is a newsgroup, <code class="literal">comp.lang.tcl</code>
+	which is well read, and an excellent place for people to get
+	oriented, find help, etc.  Highly recommended.
+      </p><p> In any event, in order to use the Tk driver in PLplot, you will
+      need Tcl-8.2 and Tk-8.2 (or higher versions). Additionally, in order
+      to use the extended WISH paradigm (described below) you will need
+      iTcl-3.1 (or a higher version).
+      </p><p>
+	However, you will quite likely find Tcl/Tk to be very addictive,
+	and the great plethora of add-ons available at
+	<code class="literal">harbor</code> will undoubtedly attract no small amount
+	of your attention.  It has been our experience that all of these
+	extensions fit together very well.  You will find that there are
+	large sectors of the Tcl user community which create so-called
+	<span class="quote">“<span class="quote">MegaWishes</span>”</span> which combine many of the available
+	extensions into a single, heavily embellished, shell interpreter.
+	The benefits of this approach will become apparent as you gain
+	experience with Tcl and Tk.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="extended-wish.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="extended-wish.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="introduction-tk.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 14. Building an Extended WISH </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Introduction to Tk</td></tr></table></div></body></html>

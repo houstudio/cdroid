@@ -1,0 +1,16 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>The cairo driver</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="interactive-drivers.html" title="Chapter 6. Drivers which implement interactive devices"><link rel="prev" href="interactive-qt-driver.html" title="The qt driver"><link rel="next" href="xwin-driver.html" title="The xwin driver"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">The cairo driver</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="interactive-qt-driver.html">Prev</a> </td><th width="60%" align="center">Chapter 6. Drivers which implement interactive devices</th><td width="20%" align="right"> <a accesskey="n" href="xwin-driver.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="interactive-cairo-driver"></a>The cairo driver</h2></div></div></div><p>
+      The cairo driver uses the Pango/Cairo subset of the <a class="ulink" href="https://www.gtk.org/" target="_top">GTK+ suite of libraries </a> to
+      implement the xcairo interactive device on platforms with X and the
+      wincairo interactive device on Windows platforms.  Text and graphics
+      are antialised, font selection is done automatically for any given
+      unicode glyph requested using the recommended fontconfig approach, and
+      complex text layout is used to render text.  As a result these devices
+      are two of our three best (the other one is described in <a class="xref" href="interactive-qt-driver.html" title="The qt driver">the section called “The qt driver”</a>) interactive devices in terms of
+      graphical and text rendering quality.  However, the xcairo and
+      wincairo raw interactive capabilities are still immature compared to
+      those described in <a class="xref" href="xwin-driver.html" title="The xwin driver">the section called “The xwin driver”</a>.  For example, the
+      interactive parts of standard example 20 do not yet work correctly
+      with these devices.  Furthermore, the GUI capability of these
+      devices needs enhancing, e.g., to reorient or zoom plots or to
+      provide a cmap0 and cmap1 palette editor.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="interactive-qt-driver.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="interactive-drivers.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="xwin-driver.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">The qt driver </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> The xwin driver</td></tr></table></div></body></html>

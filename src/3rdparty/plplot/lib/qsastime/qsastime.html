@@ -1,0 +1,1560 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta name=Title content=SYNOPSIS>
+<meta name=Keywords content="">
+<meta http-equiv=Content-Type content="text/html; charset=macintosh">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List href="MJDtime_files/filelist.xml">
+<title>SYNOPSIS</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Anthony Allen</o:Author>
+  <o:Template>Normal</o:Template>
+  <o:LastAuthor>Anthony Allen</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:Created>2009-01-29T17:22:00Z</o:Created>
+  <o:LastSaved>2009-01-29T17:22:00Z</o:LastSaved>
+  <o:Pages>9</o:Pages>
+  <o:Words>2365</o:Words>
+  <o:Characters>13485</o:Characters>
+  <o:Company>Imperial College</o:Company>
+  <o:Lines>112</o:Lines>
+  <o:Paragraphs>26</o:Paragraphs>
+  <o:CharactersWithSpaces>16560</o:CharactersWithSpaces>
+  <o:Version>10.260</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:Zoom>150</w:Zoom>
+  <w:DisplayHorizontalDrawingGridEvery>0</w:DisplayHorizontalDrawingGridEvery>
+  <w:DisplayVerticalDrawingGridEvery>0</w:DisplayVerticalDrawingGridEvery>
+  <w:UseMarginsForDrawingGridOrigin/>
+ </w:WordDocument>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+@font-face
+	{font-family:"Times New Roman";
+	panose-1:0 2 2 6 3 5 4 5 2 3;
+	mso-font-charset:0;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:50331648 0 0 0 1 0;}
+@font-face
+	{font-family:Monaco;
+	panose-1:0 2 0 5 0 0 0 0 0 0;
+	mso-font-charset:0;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:50331648 0 0 0 1 0;}
+ /* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:EN-GB;}
+@page Section1
+	{size:595.0pt 842.0pt;
+	margin:72.0pt 70.9pt 2.0cm 70.9pt;
+	mso-header-margin:35.45pt;
+	mso-footer-margin:35.45pt;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+</head>
+
+<body bgcolor=white lang=EN-GB style='tab-interval:36.0pt'>
+
+<div class=Section1>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:14.0pt'><b>MJDtime Routines<o:p></o:p></b></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal align=center style='text-align:center'>QSAS Support Team</p>
+
+<p class=MsoNormal align=center style='text-align:center'>Cluster Science
+Centre, Imperial College</p>
+
+<p class=MsoNormal align=center style='text-align:center'>csc-support-dl@imperial.ac.uk</p>
+
+<p class=MsoNormal align=center style='text-align:center'>Provided under
+the library gnu public licence (LGPL).</p>
+
+<p class=MsoNormal align=center style='text-align:center'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>These routines convert between various date and
+time formats. The date and time is stored internally as a structure , MJDtime,
+containing an integer, as the integer part of the MJD date, and a double
+representing the seconds offset from the start of this day. Routines exist to
+also set and get MJD, JD, formatted date/time strings and NASA CDF epoch
+date/times from this structure.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>Modified Julian Date (MJD) measures days (and
+fractional days) since the start of 17 Nov 1858 CE in Universal Time (UTC).
+Julian Date (JD) measures days (and fractional days) since noon on 1 January,
+4713 BCE in Universal Time (UTC).<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>Modified Julian Date (MJD) = Julian Date (JD) -
+2400000.5<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>Common Era (CE) and Before Common Era (BCE) are
+also often called AD and BC respectively.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>These utilities use the Gregorian calendar
+after 4 Oct 1582 (Julian) i.e. from 15 Oct 1582 (Gregorian). In some routines
+the forceJulian flag can be set to 1 to override this and explicitly use the
+Julian calendar in conversions. The default value for forceJulian is 0 (do not
+force use of Julian Calendar). Note C libraries use Gregorian only from 14 Sept
+1752 and will yield different results between years 1582 and 1752.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes">&nbsp;</span>More detailed discussion can be found at </span><span
+lang=EN-US style='font-family:Monaco;mso-ansi-language:EN-US'><a
+href="http://aa.usno.navy.mil/data/docs/JulianDate.php"><span style='font-family:
+"Times New Roman";color:windowtext'>http://aa.usno.navy.mil/data/docs/JulianDate.php</span></a></span><span
+lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>These routines have been compared with the results
+of the US Naval Observatory online converter.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style="mso-spacerun: yes">&nbsp;</span><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style="mso-spacerun: yes">&nbsp;</span>In
+all routines, specifying a day, hour, minute or second field greater than would
+be valid is<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style="mso-spacerun:
+yes">&nbsp;</span>handled with modulo arithmetic and is safe. <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>Thus 2006-12-32 00:62:00.0 will be safely, and
+correctly, treated as 2007-01-01 01:02:00.0 <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style="mso-spacerun: yes">&nbsp;</span><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>MJD starts at 0h, so truncating MJD always
+gives the same day whatever the time of day (unlike JD). The seconds offset may
+take any value, so that any date/time may be expressed in terms of an offset
+from the same MJD day. The seconds field thus may exceed a single day, and may
+also be negative.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>typedef struct MJDtimeStruct<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>{ <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>int
+base_day; /* integer part of MJD<span style="mso-spacerun: yes">&nbsp;
+</span>*/<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>double
+time_sec; /* seconds from start of base_day */<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>}MJDtime;<o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal align=center style='text-align:center'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal align=center style='text-align:center'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal align=center style='text-align:center'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:14.0pt;mso-ansi-language:EN-US'><u>Routines<o:p></o:p></u></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:14.0pt;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;mso-ansi-language:EN-US'>void setFromUT<span
+style="mso-spacerun: yes">&nbsp; </span>(int year, int month, int day, int
+hour, int min, double sec, MJDtime *MJD, int<span style='color:black'><span
+style="mso-spacerun: yes">&nbsp; </span>forceJulian);<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>void</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+setFromDOY (</span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> year, </span><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> doy, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> hour, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> min, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> sec,
+MJDtime *MJD, </span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> forceJulian);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>void</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+setFromBCE<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+yearBCE, </span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> month, </span><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> day, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> hour, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> min, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> sec,
+MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>void</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+setFromMJD<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+ModifiedJulianDate, MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>void</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+setFromJD<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+JulianDate, MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+setFromISOstring(</span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>const</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> </span><span lang=EN-US style='font-size:
+11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>* ISOstring,
+MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>void</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+setFromCDFepoch<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+cdfepoch, MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>void</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+breakDownMJD<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *year,
+</span><span lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:
+EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;color:black;
+mso-ansi-language:EN-US'> *month, </span><span lang=EN-US style='font-size:
+11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *day, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *hour,
+</span><span lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:
+EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;color:black;
+mso-ansi-language:EN-US'> *min, </span><span lang=EN-US style='font-size:11.0pt;
+color:#760F50;mso-ansi-language:EN-US'>double</span><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *sec,<span
+style="mso-spacerun: yes">&nbsp; </span></span><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+MJDtime *MJD, </span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> forceJulian);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+getMJD<span style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+getJD<span style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+getDiffDays<span style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD1,
+MJDtime *MJD2);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> getDiffSecs<span
+style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD1, MJDtime *MJD2);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>double</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+getCDFepoch<span style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *
+getISOString<span style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD, int
+delim);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *
+getDayOfWeek<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *
+getLongDayOfWeek<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+MJDtime *MJD);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> * getMonth<span
+style="mso-spacerun: yes">&nbsp; </span>(</span><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> m);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *
+getLongMonth<span style="mso-spacerun: yes">&nbsp; </span>(</span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> m);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>int</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+getDOY<span style="mso-spacerun: yes">&nbsp; </span>(</span><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+MJDtime *MJD, </span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> Julian);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>size_t
+strfMJD<span style="mso-spacerun: yes">&nbsp; </span>(</span><span lang=EN-US
+style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> * buf,
+size_t len, </span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>const</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> </span><span lang=EN-US style='font-size:
+11.0pt;color:#760F50;mso-ansi-language:EN-US'>char</span><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'> *format, </span><span
+lang=EN-US style='font-size:11.0pt;color:#760F50;mso-ansi-language:EN-US'>const</span><span
+lang=EN-US style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'>
+MJDtime *MJD, </span><span lang=EN-US style='font-size:11.0pt;color:#760F50;
+mso-ansi-language:EN-US'>int</span><span lang=EN-US style='font-size:11.0pt;
+color:black;mso-ansi-language:EN-US'> forceJulian);</span><span
+style='font-size:11.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;tab-stops:1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal><span style='font-size:14.0pt'><u>Detailed Descriptions<o:p></o:p></u></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>#include &lt;MJDtime.h&gt;</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><b>void setFromUT<span style="mso-spacerun:
+yes">&nbsp; </span>(int year, int month, int day, int hour, int min, double
+sec, MJDtime *MJD, int<span style='color:black'><span style="mso-spacerun:
+yes">&nbsp; </span>forceJulian);<o:p></o:p></span></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The setFromUT() function
+constructs an MJDtime structure from the broken down year, month, day, hour,
+minute and seconds. If the <i>forceJulian</i><span style='font-style:normal'>
+flag is 1 the Julian Calendar is used whatever the date, otherwise </span><span
+lang=EN-US style='mso-ansi-language:EN-US'>the Gregorian calendar is used from
+the day following<span style="mso-spacerun: yes">&nbsp; </span>4 Oct 1582
+(Julian) i.e. from 15 Oct 1582 (Gregorian).<span style="mso-spacerun:
+yes">&nbsp; </span>Note C libraries use Gregorian only from 14 Sept 1752 onwards.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>void</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> setFromDOY (</b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> year, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> doy, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> hour, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> min, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> sec, MJDtime *MJD, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> forceJulian);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The setFromDOY() function
+constructs an MJDtime structure from the broken down year,<span
+style="mso-spacerun: yes">&nbsp; </span>day of year, hour, minute and seconds.
+If the <i>forceJulian</i><span style='font-style:normal'> flag is 1 the Julian
+Calendar is used whatever the date, otherwise </span><span lang=EN-US
+style='mso-ansi-language:EN-US'>the Gregorian calendar is used from the day
+following<span style="mso-spacerun: yes">&nbsp; </span>4 Oct 1582 (Julian) i.e.
+from 15 Oct 1582 (Gregorian).<span style="mso-spacerun: yes">&nbsp; </span>Note
+C libraries use the Gregorian calendar only from 14 Sept 1752 onwards.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>void</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> setFromBCE<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> yearBCE, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> month, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> day, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> hour, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> min, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> sec, MJDtime *MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The setFromBCE() function
+constructs an MJDtime structure from the broken down year (BCE),<span
+style="mso-spacerun: yes">&nbsp; </span>month, day, hour, minute and seconds.
+Note BCE years start from 0 CE, so year CE = 1 – year BCE. Julian Calendar is
+always used in setFromBCE().<span lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>void</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> setFromMJD<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> ModifiedJulianDate,
+MJDtime *MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The setFromMJD() function
+constructs an MJDtime structure from Modified Julian Date as a double. MJD is
+calendar independent and forms a continuous sequence of days and fractions of
+days. Time is measured in UTC.<span lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>void</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> setFromJD<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> JulianDate, MJDtime
+*MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The setFromJD() function
+constructs an MJDtime structure from Julian Date as a double. JD is calendar
+independent and forms a continuous sequence of days and fractions of days. Time
+is measured in UTC. MJD = JD – 2400000.5 since JD starts at noon.<span
+lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='font-size:11.0pt;color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> setFromISOstring(</b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>char</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b>* ISOstring, MJDtime
+*MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The setFromISOstring() function
+constructs an MJDtime structure from an ISO standard format Date and time
+string in UTC. Gregorian Calendar is assumed <span lang=EN-US style='mso-ansi-language:
+EN-US'>from 15 Oct 1582.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>The ISO format is of the form &quot;1995-01-23
+02:33:17.235&quot; or &quot;1995-01-23T02:33:17.235Z&quot;. Both the ‘T’
+separator and the trailing ‘Z’ are optional, and any number of decimal places
+after the seconds field are allowed.</span><span lang=EN-US style='font-size:
+11.0pt;color:black;mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>void</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> setFromCDFepoch<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> cdfepoch, MJDtime
+*MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal>The setFromCDFepoch() function constructs an MJDtime
+structure from the NASA CDF Epoch as a double. CDF Epoch measures milliseconds
+from 0 CE (1 BCE) on the Gregorian Calendar. It is intended for use with space
+missions in the Common Era and will give misleading dates on the Julian
+Calendar. Much faster routines exist for handling conversion of CDF epochs to
+time strings in the modern restricted interval of applicability, but the
+algorithm here is consistent with the rest of the routines at all dates.<span
+lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>void</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> breakDownMJD<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> *year, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> *month, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> *day, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> *hour, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> *min, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> *sec,<span
+style="mso-spacerun: yes">&nbsp; </span></b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> MJDtime *MJD, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> forceJulian);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The brteakDownMJD() function
+converts an MJDtime structure into the broken down year, month, day, hour,
+minute and seconds. If the <i>forceJulian</i><span style='font-style:normal'>
+flag is 1 the Julian Calendar is used whatever the date, otherwise </span><span
+lang=EN-US style='mso-ansi-language:EN-US'>the Gregorian calendar is used from
+the day following<span style="mso-spacerun: yes">&nbsp; </span>4 Oct 1582
+(Julian) i.e. from 15 Oct 1582 (Gregorian).<span style="mso-spacerun:
+yes">&nbsp; </span>Note C libraries use Gregorian only from 14 Sept 1752 onwards.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> getMJD<span
+style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getMJD() function converts
+an MJDtime structure into a Modified Julian Date as a double. MJD is calendar
+independent and forms a continuous sequence of days and fractions of days. Time
+is measured in UTC.<span lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> getJD<span
+style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getJD() function converts
+an MJDtime structure into a Julian Date as a double. JD is calendar independent
+and forms a continuous sequence of days and fractions of days. Time is measured
+in UTC.<span lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> getCDFepoch<span
+style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal>The getCDFepoch() function converts an MJDtime structure
+into the NASA CDF Epoch as a double. CDF Epoch measures milliseconds from 0 CE
+(1 BCE) on the Gregorian Calendar. It is intended for use with space missions
+in the Common Era and will give misleading dates on the Julian Calendar. Much
+faster routines exist for handling conversion of CDF epochs to time strings in
+the modern restricted interval of applicability, but the algorithm here is
+consistent with the rest of the routines at all dates.<span lang=EN-US
+style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>char</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> * getISOString<span
+style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD, int delim);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getISOString() function
+converts an MJDtime structure into an ISO date/time string measured in UTC.
+Uses the default change over date for Julian to Gregorian calendars, <span
+lang=EN-US style='mso-ansi-language:EN-US'>15 Oct 1582</span>. If delim is 1
+then the ‘T’ and ‘Z’ delimiters are used, otherwise the date and time part are
+space separated. The resulting string is <span lang=EN-US style='mso-ansi-language:
+EN-US'>of the form <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>&quot;1995-01-23 02:33:17.235&quot; or
+&quot;1995-01-23T02:33:17.235Z&quot;. </span><span style="mso-spacerun:
+yes">&nbsp;</span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>It returns a pointer to a
+static string and is therefore not thread safe. The returned string must be
+copied if it is to be retained beyond a repeat call, for example :</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'>printf(</span><span lang=EN-US
+style='color:#891315;mso-ansi-language:EN-US'>&quot;%s Julian =<span
+style="mso-spacerun: yes">&nbsp; </span>%s Gregorian \n&quot;</span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'> ,
+getISOString(&amp;MJD1,</span><span lang=EN-US style='color:blue;mso-ansi-language:
+EN-US'>1</span><span lang=EN-US style='color:black;mso-ansi-language:EN-US'>),
+getISOString(&amp;MJD1,</span><span lang=EN-US style='color:blue;mso-ansi-language:
+EN-US'>0</span><span lang=EN-US style='color:black;mso-ansi-language:EN-US'>));<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'>will use the same string twice
+rather than distinct strings.</span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>This is only a convenience
+utility for quick testing and simple use, and is equivalent to the (thread
+safe) strfMJD() call which is preferred for robust coding. The equivalent call
+would be …</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span style="mso-spacerun:
+yes">&nbsp;&nbsp; </span>char <span lang=EN-US style='mso-ansi-language:EN-US'>buf[360];</span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'><span style="mso-spacerun: yes">&nbsp;&nbsp;
+</span>strfMJD(&amp;(buf[0]), 360, &quot;%Y-%m-%dT%H:%M:%S%</span><span
+lang=EN-US style='font-size:16.0pt;mso-ansi-language:EN-US'>.</span><span
+lang=EN-US style='mso-ansi-language:EN-US'>Z&quot;,<span style="mso-spacerun:
+yes">&nbsp; </span>&amp;MJD2, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>(note the decimal point before the final Z
+gives all available accuracy for the seconds fraction). <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>Also, for a specific accuracy, e.g.
+microseconds, use strfMJD() as in…<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='mso-ansi-language:EN-US'>strfMJD(&amp;(buf[0]), 360, &quot;%Y-%m-%d
+%H:%M:%S%6&quot;,<span style="mso-spacerun: yes">&nbsp; </span>&amp;MJD2, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> getDiffDays<span
+style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD1, MJDtime *MJD2);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getDiffDays() function
+returns the difference between two MJDtime structures measured in days as a
+double. The MJDtime structures do not need to have the same base day.<span
+lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>double</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> getDiffSecs<span
+style="mso-spacerun: yes">&nbsp; </span>(MJDtime *MJD1, MJDtime *MJD2);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getDiffSecs() function
+returns the difference between two MJDtime structures measured in seconds as a
+double. The MJDtime structures do not need to have the same base day.<span
+lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>char</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> * getDayOfWeek<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> MJDtime *MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getDayOfWeek() function
+returns a char * pointer to a static null terminated string holding the short
+(3 character) text name for the day, in English, e.g. Mon, Tue, etc.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>char</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> *
+getLongDayOfWeek<span style="mso-spacerun: yes">&nbsp; </span>(</b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> MJDtime *MJD);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION </p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getLongDayOfWeek() function
+returns a char * pointer to a static null terminated string holding the full
+text name for the day, in English, e.g. Monday, Tuesday, etc.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>char</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> * getMonth<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> m);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getMonth() function returns
+a char * pointer to a static null terminated string holding the short (3
+character) text name for the month, in English, e.g. Jan, Feb, etc.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>char</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> * getLongMonth<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> m);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getLongMonth() function
+returns a char * pointer to a static null terminated string holding the full
+text name for the month, in English, e.g. January, February, etc.</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:black;mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm;mso-pagination:
+none;tab-stops:1.0cm 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> getDOY<span
+style="mso-spacerun: yes">&nbsp; </span>(</b></span><span lang=EN-US
+style='color:#760F50;mso-ansi-language:EN-US'><b>const</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> MJDtime *MJD, </b></span><span
+lang=EN-US style='color:#760F50;mso-ansi-language:EN-US'><b>int</b></span><span
+lang=EN-US style='color:black;mso-ansi-language:EN-US'><b> forceJulian);<o:p></o:p></b></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal style='mso-pagination:none;tab-stops:24.0pt 48.0pt 72.0pt 96.0pt 120.0pt 144.0pt 168.0pt 192.0pt 216.0pt 240.0pt 264.0pt 288.0pt 312.0pt 336.0pt 360.0pt 384.0pt 408.0pt 432.0pt 456.0pt 480.0pt 504.0pt 528.0pt 552.0pt 576.0pt 600.0pt 624.0pt 648.0pt 672.0pt 696.0pt 720.0pt 744.0pt 768.0pt 792.0pt 816.0pt 840.0pt 864.0pt 888.0pt 912.0pt 936.0pt 960.0pt 984.0pt 1008.0pt 1032.0pt 1056.0pt 1080.0pt 1104.0pt 1128.0pt 1152.0pt 1176.0pt 1200.0pt 1224.0pt 1248.0pt 1272.0pt 1296.0pt 1320.0pt 1344.0pt 1368.0pt 1392.0pt 1416.0pt 1440.0pt 1464.0pt 1488.0pt 1512.0pt 1536.0pt;
+mso-layout-grid-align:none;text-autospace:none'>The getDOY() function returns
+the day of year as an int for the current day in the MJDtime structure <i>MJD</i><span
+style='font-style:normal'>. If seconds are negative or hold more than one day
+the day is adjusted accordingly, thus it is not simply the doy for the integer
+part of the MJDtime structure. If the forceJulian flag is set to 1 the Julian
+calendar is used, otherwise the Gregorian calendar </span><span lang=EN-US
+style='mso-ansi-language:EN-US'>is used from the day following<span
+style="mso-spacerun: yes">&nbsp; </span>4 Oct, 1582 (Julian) i.e. from 15 Oct,
+1582 (Gregorian).<span style="mso-spacerun: yes">&nbsp; </span>Note C libraries
+use Gregorian only from 14 Sept, 1752 onwards.<o:p></o:p></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal><b>size_t<span style="mso-spacerun: yes">&nbsp;
+</span>strfMJD<span style="mso-spacerun: yes">&nbsp; </span>(char * buf, size_t
+len,<span style="mso-spacerun: yes">&nbsp; </span>const char * format, const
+MJDtime MJD);<o:p></o:p></b></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>DESCRIPTION</p>
+
+<p class=MsoNormal>The strfMJD () function formats the information from MJD
+into the</p>
+
+<p class=MsoNormal>buffer <i>buf</i><span style='font-style:normal'> according
+to the string pointed to by format using the formatting conventions of
+strftime();</span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>The format string consists of zero or more conversion
+specifications and</p>
+
+<p class=MsoNormal>ordinary characters.<span style="mso-spacerun: yes">&nbsp;
+</span>All ordinary characters are copied directly into</p>
+
+<p class=MsoNormal>the buffer.<span style="mso-spacerun: yes">&nbsp; </span>A
+conversion specification consists of a percent sign</p>
+
+<p class=MsoNormal>`%' and one other character.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>No more than <i>len</i><span style='font-style:normal'>
+characters will be placed into the array, including the terminating NULL.
+strfMJD () returns the number of characters written into the array, not
+counting the terminating NULL. The output is truncated when </span><i>len - 1</i><span
+style='font-style:normal'> characters is reached.</span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>This routine differs from strftime() in that all date/times
+are in UTC and no locale or national variations in names are used. All names
+are returned in English.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>The conversion specifications are copied to the buffer after
+expansion as</p>
+
+<p class=MsoNormal>follows:-</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%A<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by a representation
+of the full weekday name.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%a<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by a
+representation of the abbreviated weekday name.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%B<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by a
+representation of the full month name.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%b<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by a
+representation of the abbreviated month name.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%C<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by (year / 100) as
+decimal number; single digits are preceded by a zero.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%c<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by a
+representation of time and date.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%D<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is equivalent to ``%m/%d/%y''.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%d<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the day of
+the month as a decimal number (01-31).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%e<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the day of
+month as a decimal number (1-31); single digits are preceded by a blank.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%F<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is equivalent to
+``%Y-%m-%d''.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%G<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by a year as a
+decimal number with century.<span style="mso-spacerun: yes">&nbsp; </span>This
+year is the one that contains the greater part of the week (Monday as the first
+day of the week).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%g<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the same
+year as in ``%G'', but as a decimal number without century (00-99).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%H<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the hour
+(24-hour clock) as a decimal number (00-23).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%h<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>the same as %b.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%I<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the hour
+(12-hour clock) as a decimal number (01-12).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%j<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the day of
+the year as a decimal number (001-366).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%k<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the hour
+(24-hour clock) as a decimal number (0-23); single digits are preceded by a
+blank.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%l<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the hour
+(12-hour clock) as a decimal number (1-12); single digits are preceded by a
+blank.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%M<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by the minute as a
+decimal number (00-59).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%m<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the month as
+a decimal number (01-12).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%n<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by a newline.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%p<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by ‘AM’ or ‘PM’
+as appropriate.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%R<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is equivalent to ‘%H:%M’.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%r<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is equivalent to ‘%I:%M:%S
+%p’.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%S<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the second
+as a decimal number (00-60).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%s<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the number
+of seconds since 1 Jan 1970, UTC.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%T<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is equivalent to
+‘%H:%M:%S’.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%t<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by a tab.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%U<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by the week number of
+the year (Sunday as the first day of the week) as a decimal number (00-53).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%u<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the weekday
+(Monday as the first day of the week) as a decimal number (1-7).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%V<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by the week number of
+the year (Monday as the first day of the week) as a decimal number
+(01-53).<span style="mso-spacerun: yes">&nbsp; </span>If the week containing
+January 1 has four or more days in the new year, then it is week 1; otherwise
+it is the last week of the previous year, and the next week is week 1.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%v<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is equivalent to ‘%e-%b-%Y’.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%W<span
+style="mso-spacerun: yes">&nbsp; </span>is replaced by the week number of the
+year (Monday as the first day of the week) as a decimal number (00-53).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%w<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by the weekday
+(Sunday as the first day of the week) as a decimal number (0-6).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%X<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by a representation
+of the time.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%x<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by a representation
+of the date.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%Y<span
+style="mso-spacerun: yes">&nbsp;&nbsp; </span>is replaced by the year with
+century as a decimal number.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%y<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the year
+without century as a decimal number (00-99).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%Z<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the time
+zone name.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%z<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by the time
+zone offset from UTC; a leading plus sign stands for east of UTC, a minus sign
+for west of UTC, hours and minutes follow with two digits each and no delimiter
+between them (always gives ‘+0000’).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%+<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by a
+representation of the date and time of the form </p>
+
+<p class=MsoNormal style='margin-left:64.35pt;text-indent:-1.0cm'>Fri Jan 23
+15:06:10 UTC 2009</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%%<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp; </span>is replaced by ‘%’.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>The following
+extra two option flags are also provided although they are not available in the
+strftime() routines.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%(0-9)<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>is replaced by
+the fractional part of the seconds field to the specified accuracy. Thus %S%3
+would give seconds to millisecond accuracy (00.000).</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>%.<span
+style="mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp; </span>(decimal point) is
+replaced by the fractional part of the seconds field to available accuracy.
+Thus %S%. would give seconds with fractional part up to 9 decimal places if
+available. Spaces are removed from the end of the string but zeros are left.
+This may behave slightly differently on different platforms.</p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal style='margin-left:1.0cm;text-indent:-1.0cm'>All other flags
+are silently ignored and not printed.</p>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,48 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Motivation for the C++ Interface</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="cplusplus.html" title="Chapter 9. A C++ Interface for PLplot"><link rel="prev" href="cplusplus.html" title="Chapter 9. A C++ Interface for PLplot"><link rel="next" href="cpluscplus-design.html" title="Design of the PLplot C++ Interface"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Motivation for the C++ Interface</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="cplusplus.html">Prev</a> </td><th width="60%" align="center">Chapter 9. A C++ Interface for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="cpluscplus-design.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="cplusplus-motivation"></a>Motivation for the C++ Interface</h2></div></div></div><p>
+      PLplot has a fairly complex C API.  There are lots of functions, and
+      several facilities have multiple entry points with similar names but
+      different argument lists.  (Think contouring, shading).  Often these
+      differing argument lists are to accommodate a variety of data storage
+      paradigms, one of which you are expected to be using!
+    </p><p>
+      Especially in the case of the 2-d API's for contouring and shading,
+      sophisticated C++ users may feel a special sense of exasperation with
+      the data layout prescriptions, since they are extremely primitive,
+      pointer rich, and prone to a wide class of memory leaks and other
+      sorts of programming errors.  Many C++ users know good and well that
+      better ways exist (templated matrix classes, etc), but historically
+      have not been able to use these more sophisticated techniques if the
+      contained data ever needed to get plotted.
+    </p><p>
+      Besides the 2-d API functions, there is also the multiple output
+      stream capability of PLplot.  Anyone who knows C++ well, and who has
+      used multiple output streams in PLplot, has probably noticed striking
+      similarities between the PLplot <code class="literal">PLStream</code> pointer and the C++
+      <code class="literal">this</code> pointer.  Although multiple output streams have not been
+      widely used in PLplot applications in the past, the availability of
+      the plframe Tk widget, and the extended wish concept, is making it
+      much more attractive to use multiple output streams.
+    </p><p>
+      Unfortunately, if you do write a Tk extended wish application, and
+      endow your interface with multiple plframes, the event driven
+      character of X applications makes it difficult to ensure that PLplot
+      output shows up in the right plframe window.  If a plot is generated
+      to one plframe, the PLplot <code class="literal">PLStream</code> pointer is directed to that
+      stream.  If a user then pushes a Tk button which should generate a
+      plot to a different plframe, the plot goes to the old plframe instead!
+      Schemes for controlling this can be imagined, but the logic can be
+      complex, especially in the face of the ability to /also/ make plots to
+      the same plframe from either Tcl or C++.
+    </p><p>
+      Beyond this, the C API is downright "ugly" for a significant number of
+      the functions, particularly those which return values by accepting
+      pointers to variables in their argument lists, and then changing them
+      in that way.  Sophisticated C++ users generally take considerable
+      pride in banishing the offensive bare pointer from their code, and
+      consider it disgusting to have to insert &amp;'s just in order to make a
+      call to an API function.
+    </p><p>
+      In order to address these issues (and more), I have begun constructing
+      a C++ interface to PLplot.  The purpose of this missive is to describe
+      its architecture and usage.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="cplusplus.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="cplusplus.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="cpluscplus-design.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 9. A C++ Interface for PLplot </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Design of the PLplot C++ Interface</td></tr></table></div></body></html>

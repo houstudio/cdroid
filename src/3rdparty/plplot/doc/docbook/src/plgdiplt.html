@@ -1,0 +1,50 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plgdiplt: Get parameters that define current plot-space window</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plgdiori.html" title="plgdiori: Get plot orientation"><link rel="next" href="plgdrawmode.html" title="plgdrawmode: Get drawing mode (depends on device support!)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plgdiplt</code>: Get parameters that define current
+      plot-space window
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plgdiori.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plgdrawmode.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plgdiplt"></a>
+      <code class="function">plgdiplt</code>: Get parameters that define current
+      plot-space window
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plgdiplt</b>
+	  (</code></td><td><var class="pdparam">p_xmin</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_ymin</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_xmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_ymax</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Get relative minima and maxima that define current
+      plot-space window.
+      If <a class="link" href="plsdiplt.html" title="plsdiplt: Set parameters that define current plot-space window"><code class="function">plsdiplt</code></a> has not been called the default values pointed to by
+      <code class="literal"><em class="parameter"><code>p_xmin</code></em></code>,
+      <code class="literal"><em class="parameter"><code>p_ymin</code></em></code>,
+      <code class="literal"><em class="parameter"><code>p_xmax</code></em></code>, and
+      <code class="literal"><em class="parameter"><code>p_ymax</code></em></code>
+      will be 0., 0., 1., and 1.
+
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>p_xmin</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the relative minimum in x.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_ymin</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the relative minimum in y.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_xmax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the relative maximum in x.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_ymax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the relative maximum in y.
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plgdiplt(p_xmin, p_ymin, p_xmax, p_ymax)</code>
+    </p><p>
+      This function is used in example 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plgdiori.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plgdrawmode.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plgdiori</code>: Get plot orientation
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plgdrawmode</code>: Get drawing mode (depends on
+device support!)
+    </td></tr></table></div></body></html>

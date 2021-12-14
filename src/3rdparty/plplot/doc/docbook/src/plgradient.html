@@ -1,0 +1,59 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plgradient: Draw linear gradient inside polygon</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plgra.html" title="plgra: Switch to graphics screen"><link rel="next" href="plgriddata.html" title="plgriddata: Grid data from irregularly sampled data"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plgradient</code>: Draw linear gradient inside polygon
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plgra.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plgriddata.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plgradient"></a>
+      <code class="function">plgradient</code>: Draw linear gradient inside polygon
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plgradient</b>
+	  (</code></td><td><var class="pdparam">n</var>, </td></tr><tr><td> </td><td><var class="pdparam">x</var>, </td></tr><tr><td> </td><td><var class="pdparam">y</var>, </td></tr><tr><td> </td><td><var class="pdparam">angle</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Draw a linear gradient using cmap1 inside the polygon
+      defined by the <code class="literal"><em class="parameter"><code>n</code></em></code> points
+      <code class="literal">(<em class="parameter"><code>x</code></em>[i],
+      <em class="parameter"><code>y</code></em>[i])</code>.  Interpretation of the polygon
+      is the same as for <a class="link" href="plfill.html" title="plfill: Draw filled polygon"><code class="function">plfill</code></a>.  The polygon coordinates and the gradient
+      angle are all expressed in world coordinates.  The angle from the
+      <code class="literal"><em class="parameter"><code>x</code></em></code> axis for both the rotated
+      coordinate system and the gradient vector is specified by
+      <code class="literal"><em class="parameter"><code>angle</code></em></code>.  The magnitude of the
+      gradient vector is the difference between the maximum and minimum
+      values of <code class="literal"><em class="parameter"><code>x</code></em></code> for the vertices
+      in the rotated coordinate system.  The origin of the gradient vector
+      can be interpreted as being anywhere on the line corresponding to the
+      minimum <code class="literal"><em class="parameter"><code>x</code></em></code> value for the
+      vertices in the rotated coordinate system.  The distance along the gradient
+      vector is linearly transformed to the independent variable of color
+      map 1 which ranges from 0. at the tail of the gradient vector to 1. at
+      the head of the gradient vector.  What is drawn is the RGBA color
+      corresponding to the independent variable of cmap1.  For more
+      information about cmap1 (see <a class="xref" href="color.html#color-map-1" title="Color Map1">the section called “Color Map1”</a>).
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>n</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of vertices in polygon.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>x</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing the x coordinates of vertices.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing the y coordinates of vertices.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>angle</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Angle (degrees) of gradient vector from x axis.
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plgradient(x,y,angle)</code>
+    </p><p>
+      This function is used in examples 25 and 30.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plgra.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plgriddata.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plgra</code>: Switch to graphics screen
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plgriddata</code>: Grid data from irregularly sampled
+      data
+    </td></tr></table></div></body></html>

@@ -1,0 +1,31 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSTYL 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplstyl\fP - Set line style
+.SH SYNOPSIS
+\fBplstyl\fP(\fInms\fP, \fImark\fP, \fIspace\fP)
+.SH DESCRIPTION
+
+.P
+This sets up the line style for all lines subsequently drawn.  A line consists of segments in which the pen is alternately down and up. The lengths of these segments are passed in the vectors \fImark\fP and \fIspace\fP respectively.  The number of mark-space pairs is specified by \fInms\fP.  In order to return the line style to the default continuous line, \fBplstyl\fP(3plplot) should be called with \fInms\fP =0 .(see also \fBpllsty\fP(3plplot))
+.P
+Redacted form: \fBplstyl(mark, space)\fP
+.P
+This function is used in examples 1, 9, and 14.
+.SH ARGUMENTS
+.TP
+\fInms\fP (\fBPLINT\fP(3plplot), input)
+The number of \fImark\fP and \fIspace\fP elements in a line.  Thus a simple broken line can be obtained by setting \fInms\fP=1 .  A continuous line is specified by setting \fInms\fP=0 .
+.TP
+\fImark\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the lengths of the segments during which the pen is down, measured in micrometers.
+.TP
+\fIspace\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the lengths of the segments during which the pen is up, measured in micrometers.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

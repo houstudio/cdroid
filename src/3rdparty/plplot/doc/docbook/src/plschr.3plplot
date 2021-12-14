@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCHR 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplschr\fP - Set character size
+.SH SYNOPSIS
+\fBplschr\fP(\fIdef\fP, \fIscale\fP)
+.SH DESCRIPTION
+
+.P
+This sets up the size of all subsequent characters drawn.  The actual height of a character is the product of the default character size and a scaling factor.
+.P
+Redacted form: \fBplschr(def, scale)\fP
+.P
+This function is used in examples 2, 13, 23, and 24.
+.SH ARGUMENTS
+.TP
+\fIdef\fP (\fBPLFLT\fP(3plplot), input)
+The default height of a character in millimeters, should be set to zero if the default height is to remain unchanged. For rasterized drivers the dx and dy values specified in \fBplspage\fP(3plplot) are used to convert from mm to pixels (note the different unit systems used).  This dpi aware scaling is not implemented for all drivers yet.
+.TP
+\fIscale\fP (\fBPLFLT\fP(3plplot), input)
+Scale factor to be applied to default to get actual character height.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

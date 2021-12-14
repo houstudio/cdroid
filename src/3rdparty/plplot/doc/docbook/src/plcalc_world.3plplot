@@ -1,0 +1,38 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCALC_WORLD 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplcalc_world\fP - Calculate world coordinates and corresponding window index from relative device coordinates
+.SH SYNOPSIS
+\fBplcalc_world\fP(\fIrx\fP, \fIry\fP, \fIwx\fP, \fIwy\fP, \fIwindow\fP)
+.SH DESCRIPTION
+
+.P
+Calculate world coordinates, \fIwx\fP and \fIwy\fP, and corresponding \fIwindow\fP index from relative device coordinates, \fIrx\fP and \fIry\fP.
+.P
+Redacted form: General: \fBplcalc_world(rx, ry, wx, wy, window)\fP
+
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIrx\fP (\fBPLFLT\fP(3plplot), input)
+Input relative device coordinate (0.0-1.0) for the x coordinate.
+.TP
+\fIry\fP (\fBPLFLT\fP(3plplot), input)
+Input relative device coordinate (0.0-1.0) for the y coordinate.
+.TP
+\fIwx\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the x world coordinate corresponding to the relative device coordinates \fIrx\fP and \fIry\fP.
+.TP
+\fIwy\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the y world coordinate corresponding to the relative device coordinates \fIrx\fP and \fIry\fP.
+.TP
+\fIwindow\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the last defined window index that corresponds to the input relative device coordinates (and the returned world coordinates).  To give some background on the window index, for each page the initial window index is set to zero, and each time \fBplwind\fP(3plplot) is called within the page, world and device coordinates are stored for the window and the window index is incremented.  Thus, for a simple page layout with non-overlapping viewports and one window per viewport, \fIwindow\fP corresponds to the viewport index (in the order which the viewport/windows were created) of the only viewport/window corresponding to \fIrx\fP and \fIry\fP.  However, for more complicated layouts with potentially overlapping viewports and possibly more than one window (set of world coordinates) per viewport, \fIwindow\fP and the corresponding output world coordinates corresponds to the last window created that fulfills the criterion that the relative device coordinates are inside it.  Finally, in all cases where the input relative device coordinates are not inside any viewport/window, then the returned value of the last defined window index is set to -1.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

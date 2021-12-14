@@ -1,0 +1,128 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plmaptex: Draw text at points defined by Shapefile data in world coordinates</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plmapstring.html" title="plmapstring: Plot all or a subset of Shapefile data using strings or points in world coordinates"><link rel="next" href="plmeridians.html" title="plmeridians: Plot latitude and longitude lines"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plmaptex</code>: Draw text at points defined by
+      Shapefile data in world coordinates
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plmapstring.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plmeridians.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plmaptex"></a>
+      <code class="function">plmaptex</code>: Draw text at points defined by
+      Shapefile data in world coordinates
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plmaptex</b>
+          (</code></td><td>
+            <var class="pdparam">mapform</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">name</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">dx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">dy</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">just</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">text</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">minx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">maxx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">miny</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">maxy</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">plotentry</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      As per <a class="link" href="plmapline.html" title="plmapline: Plot all or a subset of Shapefile data using lines in world coordinates"><code class="function">plmapline</code></a>, however the items are plotted as text in the
+      same way as <a class="link" href="plptex.html" title="plptex: Write text inside the viewport"><code class="function">plptex</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>mapform</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLMAPFORM_callback-type"><code class="function">PLMAPFORM_callback</code></a></code>, input)
+        </span></dt><dd><p>
+            A user supplied function to transform the coordinates
+            given in the shapefile into a plot coordinate system.
+            By using this transform, we can change from a longitude,
+            latitude coordinate to a polar stereographic project, for
+            example.  Initially, x[0]..[n-1] are the longitudes and y[0]..y[n-1]
+            are the corresponding latitudes.  After the call to mapform(), x[]
+            and y[] should be replaced by the corresponding plot coordinates.
+            If no transform is desired, mapform can be replaced by NULL.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>name</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            An ascii character string specifying the file name
+	    of a set of Shapefile files without the file extension.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>dx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Used to define the slope of the texts which is dy/dx.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>dy</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Used to define the slope of the texts which is dy/dx.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>just</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Set the justification of the text. The value given will be the
+            fraction of the distance along the string that sits at the given
+            point. 0.0 gives left aligned text, 0.5 gives centralized text
+            and 1.0 gives right aligned text.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>text</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A UTF-8 character string to be drawn.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>minx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum x value to be plotted. This must be in the same
+            units as used by the Shapefile. You could use a very large
+            negative number to plot everything, but you can improve
+            performance by limiting the area drawn. The units must match
+            those of the Shapefile projection, which may be for example
+            longitude or distance. The value of minx must be less than
+            the value of maxx.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>maxx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum x value to be plotted. You could use a very large
+            number to plot everything, but you can improve
+            performance by limiting the area drawn.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>miny</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum y value to be plotted. This must be in the same
+            units as used by the Shapefile. You could use a very large
+            negative number to plot everything, but you can improve
+            performance by limiting the area drawn. The units must match
+            those of the Shapefile projection, which may be for example
+            latitude or distance. The value of miny must be less than
+            the value of maxy.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>maxy</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum y value to be plotted. You could use a very large
+            number to plot everything, but you can improve
+            performance by limiting the area drawn.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>plotentry</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            An integer indicating which text string of the
+            Shapefile (zero indexed) will be drawn.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plmaptex(mapform, name, dx, dy, just, text, minx, maxx, miny, maxy, plotentry)</code>
+    </p><p>
+      This function is used in example 19.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plmapstring.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plmeridians.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plmapstring</code>: Plot all or a subset of
+      Shapefile data using strings or points in world coordinates
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plmeridians</code>: Plot latitude and longitude lines
+    </td></tr></table></div></body></html>

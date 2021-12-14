@@ -1,0 +1,62 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Enhancement Libraries</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="libraries.html" title="Chapter 23. The PLplot Libraries"><link rel="prev" href="core-library.html" title="The PLplot Core Library"><link rel="next" href="device-driver-libraries.html" title="Device-driver Libraries"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Enhancement Libraries</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="core-library.html">Prev</a> </td><th width="60%" align="center">Chapter 23. The PLplot Libraries</th><td width="20%" align="right"> <a accesskey="n" href="device-driver-libraries.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="enhancement-libraries"></a>Enhancement Libraries</h2></div></div></div><p>
+      The enhancement libraries add essential functionality to the PLplot core
+      library (see <a class="xref" href="core-library.html" title="The PLplot Core Library">the section called “The PLplot Core Library”</a>).  They consist of a
+      cubic spline approximation library, libcsirocsa; a natural neighbours
+      interpolation library, libcsironn; and a time format conversion library
+      libqsastime.
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="csirocsa-library"></a>The CSIRO Cubic Spline Approximation Library</h3></div></div></div><p>
+	libcsirocsa NEEDS DOCUMENTATION.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="csironn-library"></a>The CSIRO Natural Neighbours Interpolation Library</h3></div></div></div><p>
+	libcsironn NEEDS DOCUMENTATION.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="qsastime-library"></a>The QSAS Time Format Conversion Library</h3></div></div></div><p>
+	This library grew out of a discussion with Steve Schwartz of the QSAS
+	Support Team, Cluster Science Centre, Imperial College and our mutual
+	frustrations with the poor time conversion capabilities of
+	POSIX-compliant computer operating systems.  For such systems, the
+	continuous time variable is often stored internally as a 32-bit
+	integer containing the number of seconds since 1970.  This gives a
+	limited date range of only 136 years, and a limited numerical
+	precision of only a second.  Furthermore, although the POSIX standard
+	includes gmtime which provides a conversion between broken-down time
+	(year, month, day, hour, min, sec), and the continuous time variable,
+	the inverse of gmtime (called timegm on Linux) is not a POSIX
+	standard.  Finally, the POSIX standard ignores leap seconds.  All
+	these limitations are not acceptable for plotting of scientific time
+	series and are addressed by the qsastime library which was originally
+	donated under the LGPL to the PLplot project in early 2009 by Anthony
+	J. Allen of the QSAS team and substantially modified after that by a
+	PLplot developer, Alan W. Irwin (e.g., to add leap-second
+	functionality).
+      </p><p>
+	The qsastime library uses MJD (modified Julian Date = Julian Date -
+	2400000.5) for the internal continuous time variable.  This variable
+	is stored as a signed int (to hold the integer part) and a double (to
+	hold the seconds since midnight).  On 32-bit systems, this combination
+	gives an effective date range of roughly +/- 6 million years
+	from the MJD epoch in late 1858 and an effective numerical time
+	precision of 0.01 ns.  This should cover most range and precision
+	requirements of those doing plots of scientific time series.
+      </p><p>
+	The qsastime library provides internal routines to convert between the
+	broken-down time representation and the internal continuous time
+	variable and vice versa using the formal rules of either the Gregorian
+	or Julian calendars.  These routines have been tested extensively for
+	the internal consistency of the routines both for the Gregorian and
+	Julian calendars and also by comparing the Gregorian results against the
+	equivalent Linux C library gmtime and timegm routines on a 64-bit
+	platform.  These tests were done for a number of epochs including every
+	year from -5000000 to 5000000 for critical dates in the year (January
+	1, February 28, February 29, March 1, and December 31).  These extensive
+	tests give some confidence that the formal conversion from broken-down
+	to continuous time (and vice versa) should be reliable for the
+	qsastime library on all 32-bit and 64-bit platforms.
+      </p><p>
+	The qsastime library also provides an internal routine that gives
+	formatted time results as a function of continuous time.  This routine
+	has been lightly tested against the results of the C library strftime
+	routine on Linux.
+      </p><p>
+	The three internal routines described above are wrapped by functions
+	that provide the externally visible API for the qsastime library.
+	This API is described below.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="core-library.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="libraries.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="device-driver-libraries.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">The PLplot Core Library </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Device-driver Libraries</td></tr></table></div></body></html>

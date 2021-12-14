@@ -1,0 +1,33 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSMEMA 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsmema\fP - Set the memory area to be plotted (RGBA)
+.SH SYNOPSIS
+\fBplsmema\fP(\fImaxx\fP, \fImaxy\fP, \fIplotmem\fP)
+.SH DESCRIPTION
+
+.P
+Set the memory area to be plotted (with the memcairo driver) as the dev member of the stream structure. Also set the number of pixels in the memory passed in \fIplotmem\fP, which is a block of memory \fImaxy\fP by \fImaxx\fP by 4 bytes long, say: 480 x 640 x 4 (Y, X, RGBA)
+.P
+This memory will have to be freed by the user!
+.P
+Redacted form: \fBplsmema(maxx, maxy, plotmem)\fP
+.P
+This function is not used in any examples.
+.SH ARGUMENTS
+.TP
+\fImaxx\fP (\fBPLINT\fP(3plplot), input)
+Size of memory area in the X coordinate.
+.TP
+\fImaxy\fP (\fBPLINT\fP(3plplot), input)
+Size of memory area in the Y coordinate.
+.TP
+\fIplotmem\fP (\fBPLPointer\fP(3plplot), input)
+Pointer to the beginning of a user-supplied writeable memory area.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,67 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plrgbhls: Convert RGB color to HLS</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plreplot.html" title="plreplot: Replays contents of plot buffer to current device/file"><link rel="next" href="plschr.html" title="plschr: Set character size"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plrgbhls</code>: Convert RGB color to HLS
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plreplot.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plschr.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plrgbhls"></a>
+      <code class="function">plrgbhls</code>: Convert RGB color to HLS
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plrgbhls</b>
+          (</code></td><td>
+            <var class="pdparam">r</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">g</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">b</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">p_h</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">p_l</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">p_s</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Convert RGB color coordinates to HLS
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>r</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Red intensity (0.0-1.0) of the color.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>g</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Green intensity (0.0-1.0) of the color.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>b</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Blue intensity (0.0-1.0) of the color.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>p_h</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+        </span></dt><dd><p>
+            Returned value of the hue in degrees (0.0-360.0) on the color cylinder.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>p_l</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+        </span></dt><dd><p>
+            Returned value of the lightness expressed as a fraction (0.0-1.0) of the axis of the color
+            cylinder.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>p_s</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+        </span></dt><dd><p>
+            Returned value of the saturation expressed as a fraction (0.0-1.0) of the radius of the
+            color cylinder.
+          </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            General: <code class="function">plrgbhls(r, g, b, p_h, p_l, p_s)</code>
+          </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 2.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plreplot.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plschr.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plreplot</code>: Replays contents of plot buffer to
+      current device/file
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plschr</code>: Set character size
+    </td></tr></table></div></body></html>

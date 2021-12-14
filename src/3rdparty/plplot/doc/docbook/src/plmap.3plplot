@@ -1,0 +1,46 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLMAP 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplmap\fP - Plot continental outline or shapefile data in world coordinates
+.SH SYNOPSIS
+\fBplmap\fP(\fImapform\fP, \fIname\fP, \fIminx\fP, \fImaxx\fP, \fIminy\fP, \fImaxy\fP)
+.SH DESCRIPTION
+
+.P
+Plots continental outlines or shapefile data in world coordinates. A demonstration of how to use this function to create different projections can be found in examples/c/x19c. PLplot is provided with basic coastal outlines and USA state borders. To use the map functionality PLplot must be compiled with the shapelib library. Shapefiles have become a popular standard for geographical data and data in this format can be easily found from a number of online sources. Shapefile data is actually provided as three or more files with the same filename, but different extensions. The .shp and .shx files are required for plotting Shapefile data with PLplot.
+.P
+PLplot currently supports the point, multipoint, polyline and polygon objects within shapefiles. However holes in polygons are not supported. When plmap is used the type of object is derived from the shapefile, if you wish to override the type then use one of the other plmap variants. The built in maps have line data only.
+.P
+Redacted form: \fBplmap(mapform, name, minx, maxx, miny, maxy)\fP
+.P
+This function is used in example 19.
+.SH ARGUMENTS
+.TP
+\fImapform\fP (\fBPLMAPFORM_callback\fP(3plplot), input)
+A user supplied function to transform the original map data coordinates to a new coordinate system. The PLplot-supplied map data is provided as latitudes and longitudes; other Shapefile data may be provided in other coordinate systems as can be found in their .prj plain text files. For example, by using this transform we can change from a longitude, latitude coordinate to a polar stereographic projection. Initially, x[0]..[n-1] are the original x coordinates (longitudes for the PLplot-supplied data) and y[0]..y[n-1] are the corresponding y coordinates (latitudes for the PLplot supplied data).  After the call to mapform(), x[] and y[] should be replaced by the corresponding plot coordinates. If no transform is desired, mapform can be replaced by NULL.
+.TP
+\fIname\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying the type of map plotted. This is either one of the PLplot built-in maps or the file name of a set of Shapefile files without the file extensions. For the PLplot built-in maps the possible values are: "globe" -- continental outlines
+"usa" -- USA and state boundaries
+"cglobe" -- continental outlines and countries
+"usaglobe" -- USA, state boundaries and continental outlines
+
+.TP
+\fIminx\fP (\fBPLFLT\fP(3plplot), input)
+The minimum x value of map elements to be drawn. The units must match the shapefile (built in maps are degrees lat/lon). Objects in the file which do not encroach on the box defined by minx, maxx, miny, maxy will not be rendered. But note this is simply an optimisation, not a clipping so for objects with some points inside the box and some points outside the box all the points will be rendered. These parameters also define latitude and longitude wrapping for shapefiles using these units. Longitude points will be wrapped by integer multiples of 360 degrees to place them in the box. This allows the same data to be used on plots from -180-180 or 0-360 longitude ranges. In fact if you plot from -180-540 you will get two cycles of data drawn. The value of minx must be less than the value of maxx. Passing in a nan, max/-max floating point number or +/-infinity will case the bounding box from the shapefile to be used.
+.TP
+\fImaxx\fP (\fBPLFLT\fP(3plplot), input)
+The maximum x value of map elements to be drawn - see minx.
+.TP
+\fIminy\fP (\fBPLFLT\fP(3plplot), input)
+The minimum y value of map elements to be drawn - see minx.
+.TP
+\fImaxy\fP (\fBPLFLT\fP(3plplot), input)
+The maximum y value of map elements to be drawn - see minx.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

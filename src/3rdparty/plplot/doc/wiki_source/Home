@@ -1,0 +1,70 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+This is the official Wiki for [PLplot](http://plplot.sourceforge.net). It should provide additional information to complement the PLplot [documentation](http://plplot.sourceforge.net/documentation.php).
+
+-   [PLplot Homepage](http://plplot.sf.net)
+-   [PLplot sourceforge project page](http://sourceforge.net/projects/plplot/)
+-   [Download file releases](http://sourceforge.net/projects/plplot/files/)
+-   [Browse git repository](http://sourceforge.net/p/plplot/plplot/ci/master/tree/)
+
+
+<h5>Configure and build PLplot</h5>
+
+-   [Generic instructions for the CMake-based build system](Building_PLplot "wikilink")
+-   [Specific instructions for Linux, Mac OS X and Windows](Specifics_for_various_platforms "wikilink")
+-   [CMake options specific for PLplot](CMake_options_for_PLplot "wikilink")
+-   [Building PLplot with a cross-compiler](Building_PLplot_with_a_cross-compiler "wikilink")
+-   [Third-party libraries](Third-party_libraries "wikilink")
+
+<h5>Test PLplot</h5>
+
+-   [How to test PLplot](Testing_PLplot "wikilink")
+-   [Table of test reports for all platforms](Testing_Reports "wikilink")
+
+<h5>Using PLplot</h5>
+
+-   Tutorials for C, C++, Python, [OCaml](OCaml_tutorial "wikilink")
+-   [Specific instructions for Linux, Mac OS X and Windows](Using_PLplot "wikilink")
+-   Templates C, C++, Python
+-   [Frequently Asked Questions](Frequently_Asked_Questions "wikilink")
+-   [User supplied Screenshots and examples](User supplied_Screenshots_and_examples "wikilink")
+
+<h5>Available Drivers and Language Bindings</h5>
+
+-   Drivers: svg, pdf, cairo, qt4, ...
+-   Language Bindings: C, C++, D, Python, Tcl/Tk, OCaml, Ada, Fortran, Perl, ...
+-   [Driver/Binding status on Windows](Overview_of_the_status_on_Windows "wikilink")
+-   [Driver/Binding status on Mac OS X](Mac_OSX_Status "wikilink")
+
+<h5>Documentation and Support</h5>
+
+-   [Official PLplot Documentation](http://plplot.sourceforge.net/documentation.php)
+-   [Screenshots and examples](http://plplot.sourceforge.net/examples.php)
+-   [User mailing list](http://sourceforge.net/mailarchive/forum.php?forum_name=plplot-general) ([Search](http://www.mail-archive.com/plplot-general@lists.sourceforge.net/))
+-   [Developer mailing list](http://sourceforge.net/mailarchive/forum.php?forum_name=plplot-devel) ([Search](http://www.mail-archive.com/plplot-devel@lists.sourceforge.net/))
+
+<h5>Developer sections</h5>
+
+-   [git miscellanea](git_miscellanea "wikilink")
+-   [Submit a patch](Submit_a_patch "wikilink"), [Apply a patch](Apply a patch "wikilink")
+-   [Debugging code](Debugging_code "wikilink")
+-   [Documenting the undocumented](Documenting_the_undocumented "wikilink")
+-   [Todo List](Todo_List "wikilink")
+
+<h5>Miscellaneous</h5>
+
+-   Setup Compiler Suites:[Mingw-w64](Setup_mingw-w64 "wikilink"), [MinGW](Setup_mingw "wikilink"), [Open Watcom](Setup_watcom "wikilink"), [Visual C++](Setup_visualc "wikilink"), [Cygwin](Setup_cygwin "wikilink")
+
+[[members]]
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

@@ -1,0 +1,89 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Configure, build, and install PLplot from source</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="prev" href="acquiring-plplot.html" title="Obtaining Access to PLplot"><link rel="next" href="copyrights.html" title="PLplot Copyright Licensing"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Configure, build, and install PLplot from source</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="acquiring-plplot.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="copyrights.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="plplot_configure_build_install"></a>Configure, build, and install PLplot from source</h2></div></div></div><p>After the source code for PLplot <a class="ulink" href="http://plplot.org/downloads.php" target="_top">has been obtained</a> the generic
+    steps to configure, build, and install PLplot are as follows:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Optionally set environment variables to force
+      CMake's find commands to locate any of PLplot's software dependencies
+      that are installed in non-standard locations.  See the CMake
+      documentation for the <a class="ulink" href="https://cmake.org/cmake/help/latest/command/find_file.html" target="_top"><code class="literal">find_file</code></a>
+      and <a class="ulink" href="https://cmake.org/cmake/help/latest/command/find_library.html" target="_top"><code class="literal">find_library</code></a>
+      commands for the list of such variables which includes
+      <code class="literal">CMAKE_INCLUDE_PATH</code>,
+      <code class="literal">CMAKE_LIBRARY_PATH</code>, and <code class="literal">PATH</code>.
+      In addition, the <code class="literal">PKG_CONFIG_PATH</code> environment
+      variable forces CMake to find certain software packages which specify
+      their (non-standard) install locations using <code class="literal">pkg-config</code>.
+      </p></li><li class="listitem"><p>Optionally set environment variables that force CMake
+      to use specific compilers to override the (normally good) default
+      choice of compilers that CMake uses.  The environment variables that
+      CMake recognizes for this purpose are <code class="literal">ADA</code> to
+      specify the Ada compiler, <code class="literal">CC</code> to specify the C
+      compiler, <code class="literal">CXX</code> to specify the C++ compiler,
+      <code class="literal">DC</code> to specify the D compiler, and
+      <code class="literal">FC</code> to specify the Fortran compiler.
+      </p></li><li class="listitem"><p>Optionally set environment variables that force CMake
+      to use specific compiler flags.  The environment variables that CMake recognizes for this
+      purpose are <code class="literal">ADAFLAGS</code> to specify the Ada compiler flags,
+      <code class="literal">CCFLAGS</code> to specify the C compiler flags,
+      <code class="literal">CXXFLAGS</code> to specify the C++ compiler flags,
+      <code class="literal">DFLAGS</code> to specify the D compiler flags, and
+      <code class="literal">FFLAGS</code> to specify the Fortran compiler flags.
+      </p></li><li class="listitem"><p>Prepare for running the <code class="literal">cmake</code> command
+      by removing the stale PLplot install tree (if it exists) that corresponds to
+      the <code class="literal">-DCMAKE_INSTALL_PREFIX</code> option for the
+      <code class="literal">cmake</code> command (see below), creating an empty build directory, and
+      changing directories to that build directory (which will become the top-level directory
+      of the build tree).
+      </p></li><li class="listitem"><p>Configure the PLplot build and install by running
+      </p><pre class="programlisting">
+	cmake &lt;cmake options&gt; &lt;top-level directory of the source tree&gt;
+      </pre><p>
+      on the command line. Many <code class="literal">cmake</code> options are possible.  Two common ones that are
+      often sufficient for most purposes are
+      <code class="literal">-DCMAKE_INSTALL_PREFIX=&lt;installation prefix&gt;</code> (to specify the
+      top-level directory of the soon-to-be created install tree) and <code class="literal">-G &lt;generator identification string&gt;</code>
+      (to identify the <code class="literal">cmake</code> backend generator to use such as "Unix Makefiles").  However, there are also
+      many other <code class="literal">cmake</code> options that are
+      specific to the PLplot build system that
+      are documented in the <code class="filename">CMakeCache.txt</code> file that
+      is created by the <code class="literal">cmake</code> command.
+      </p></li><li class="listitem"><p>Build PLplot by building the "all" target.  For example, that would
+      be done for the "Unix Makefiles" generator case by
+      </p><pre class="programlisting">
+	make all
+      </pre><p>
+      </p></li><li class="listitem"><p>Install PLplot by building the "install" target.  For example, that would
+      be done for the "Unix Makefiles" generator case by
+      </p><pre class="programlisting">
+	make install
+      </pre><p>
+      </p></li><li class="listitem"><p>Determine the list of additional targets that are available for the
+      PLplot build by building the "help" target.  For example, that would
+      be done for the "Unix Makefiles" generator case by
+      </p><pre class="programlisting">
+	make help
+      </pre><p>
+      </p></li></ul></div><p>
+    For additional platform-specific details beyond the above generic
+    steps, please consult <a class="ulink" href="http://sourceforge.net/p/plplot/wiki/Home" target="_top">our wiki</a>.
+    </p><p> After PLplot has been configured, built, and installed, you can
+    write code in C or any of the languages that have PLplot bindings to
+    make the desired PLplot calls.  Standard example programs in all
+    supported languages are included with the PLplot software package.
+    The installation of those examples includes both a CMake-based build
+    system (see <code class="filename">&lt;installation
+    prefix&gt;/share/plplot5.15.0/examples/CMakelists.txt</code>)
+    and a more traditional (Makefile + pkg-config) build system (see
+    <code class="filename">&lt;installation
+    prefix&gt;/share/plplot5.15.0/examples/Makefile</code>)
+    for building and linking the examples.  Either of these two build
+    systems can be adapted by users to build and link their own
+    PLplot-related code for compiled languages or to test PLplot related
+    code that is compiled or which is written in a scripting language
+    where PLplot capability is dynamically loaded.  However, note the
+    CMake-based build system for the installed examples should work on all
+    platforms where PLplot can be built while the traditional build system
+    for the installed examples will only work on platforms (e.g., Linux)
+    which have <code class="literal">make</code> (only with GNU extensions),
+    <code class="literal">pkg-config</code>, and <code class="literal">bash</code> (required
+    for testing targets) installed.  Plots generated from these example
+    programs as well as the source code for those examples in all our
+    supported languages are available from links given <a class="ulink" href="http://plplot.org/examples.php" target="_top">here</a>.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="acquiring-plplot.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="intro.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="copyrights.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Obtaining Access to PLplot </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> PLplot Copyright Licensing</td></tr></table></div></body></html>

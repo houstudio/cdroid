@@ -1,0 +1,44 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSPAGE 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplspage\fP - Set page parameters
+.SH SYNOPSIS
+\fBplspage\fP(\fIxp\fP, \fIyp\fP, \fIxleng\fP, \fIyleng\fP, \fIxoff\fP, \fIyoff\fP)
+.SH DESCRIPTION
+
+.P
+Sets the page configuration (optional).  If an individual parameter is zero then that parameter value is not updated.  Not all parameters are recognized by all drivers and the interpretation is device-dependent. The X-window driver uses the length and offset parameters to determine the window size and location.  The length and offset values are expressed in units that are specific to the current driver.  For instance: screen drivers will usually interpret them as number of pixels, whereas printer drivers will usually use mm.
+.P
+This routine, if used, must be called before initializing PLplot.  It may be called at later times for interactive drivers to change only the dpi for subsequent redraws which you can force via a call to \fBplreplot\fP(3plplot).  If this function is not called then the page size defaults to landscape A4 for drivers which use real world page sizes and 744 pixels wide by 538 pixels high for raster drivers. The default value for dx and dy is 90 pixels per inch for raster drivers.
+.P
+
+.P
+Redacted form: \fBplspage(xp, yp, xleng, yleng, xoff, yoff)\fP
+.P
+This function is used in examples 14 and 31.
+.SH ARGUMENTS
+.TP
+\fIxp\fP (\fBPLFLT\fP(3plplot), input)
+Number of pixels per inch (DPI), x. Used only by raster drivers, ignored by drivers which use "real world" units (e.g. mm).
+.TP
+\fIyp\fP (\fBPLFLT\fP(3plplot), input)
+Number of pixels per inch (DPI), y.  Used only by raster drivers, ignored by drivers which use "real world" units (e.g. mm).
+.TP
+\fIxleng\fP (\fBPLINT\fP(3plplot), input)
+Page length, x.
+.TP
+\fIyleng\fP (\fBPLINT\fP(3plplot), input)
+Page length, y.
+.TP
+\fIxoff\fP (\fBPLINT\fP(3plplot), input)
+Page offset, x.
+.TP
+\fIyoff\fP (\fBPLINT\fP(3plplot), input)
+Page offset, y.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

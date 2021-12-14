@@ -1,0 +1,43 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLMERIDIANS 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplmeridians\fP - Plot latitude and longitude lines
+.SH SYNOPSIS
+\fBplmeridians\fP(\fImapform\fP, \fIdlong\fP, \fIdlat\fP, \fIminlong\fP, \fImaxlong\fP, \fIminlat\fP, \fImaxlat\fP)
+.SH DESCRIPTION
+
+.P
+Displays latitude and longitude on the current plot.  The lines are plotted in the current color and line style.
+.P
+Redacted form: \fBplmeridians(mapform, dlong, dlat, minlong, maxlong, minlat, maxlat)\fP
+.P
+This function is used in example 19.
+.SH ARGUMENTS
+.TP
+\fImapform\fP (\fBPLMAPFORM_callback\fP(3plplot), input)
+A user supplied function to transform the coordinate longitudes and latitudes to a plot coordinate system. By using this transform, we can change from a longitude, latitude coordinate to a polar stereographic project, for example.  Initially, x[0]..[n-1] are the longitudes and y[0]..y[n-1] are the corresponding latitudes.  After the call to mapform(), x[] and y[] should be replaced by the corresponding plot coordinates. If no transform is desired, mapform can be replaced by NULL.
+.TP
+\fIdlong\fP (\fBPLFLT\fP(3plplot), input)
+The interval in degrees at which the longitude lines are to be plotted.
+.TP
+\fIdlat\fP (\fBPLFLT\fP(3plplot), input)
+The interval in degrees at which the latitude lines are to be plotted.
+.TP
+\fIminlong\fP (\fBPLFLT\fP(3plplot), input)
+The value of the longitude on the left side of the plot. The value of minlong must be less than the value of maxlong, and the quantity maxlong-minlong must be less than or equal to 360.
+.TP
+\fImaxlong\fP (\fBPLFLT\fP(3plplot), input)
+The value of the longitude on the right side of the plot.
+.TP
+\fIminlat\fP (\fBPLFLT\fP(3plplot), input)
+The minimum latitude to be plotted on the background. One can always use -90.0 as the boundary outside the plot window will be automatically eliminated.  However, the program will be faster if one can reduce the size of the background plotted.
+.TP
+\fImaxlat\fP (\fBPLFLT\fP(3plplot), input)
+The maximum latitudes to be plotted on the background. One can always use 90.0 as the boundary outside the plot window will be automatically eliminated.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

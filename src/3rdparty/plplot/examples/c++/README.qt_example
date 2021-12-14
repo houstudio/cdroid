@@ -1,0 +1,16 @@
+The files qt_example.cpp, qt_PlotWindow.cpp, and qt_PlotWindow.h contain
+source code for a simple example demonstrating how to access the PLplot API
+from a Qt GUI application.
+
+For all our build systems (cmake in the build tree, cmake in the
+installed examples build tree, and the traditional pkg-config+Makefile
+build system for the installed examples tree), you build this simple
+Qt example (with all dependencies taken care of automatically) by
+running
+
+make qt_example
+
+For our two CMake-based build systems you can run this example (with
+all dependencies taken care of automatically) by running
+
+make test_qt_example

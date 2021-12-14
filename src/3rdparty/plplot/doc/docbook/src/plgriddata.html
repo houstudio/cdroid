@@ -1,0 +1,137 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plgriddata: Grid data from irregularly sampled data</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plgradient.html" title="plgradient: Draw linear gradient inside polygon"><link rel="next" href="plgspa.html" title="plgspa: Get current subpage parameters"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plgriddata</code>: Grid data from irregularly sampled
+      data
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plgradient.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plgspa.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plgriddata"></a>
+      <code class="function">plgriddata</code>: Grid data from irregularly sampled
+      data
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plgriddata</b>
+	  (</code></td><td><var class="pdparam">x</var>, </td></tr><tr><td> </td><td><var class="pdparam">y</var>, </td></tr><tr><td> </td><td><var class="pdparam">z</var>, </td></tr><tr><td> </td><td><var class="pdparam">npts</var>, </td></tr><tr><td> </td><td><var class="pdparam">xg</var>, </td></tr><tr><td> </td><td><var class="pdparam">nptsx</var>, </td></tr><tr><td> </td><td><var class="pdparam">yg</var>, </td></tr><tr><td> </td><td><var class="pdparam">nptsy</var>, </td></tr><tr><td> </td><td><var class="pdparam">zg</var>, </td></tr><tr><td> </td><td><var class="pdparam">type</var>, </td></tr><tr><td> </td><td><var class="pdparam">data</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Real world data is frequently irregularly sampled, but PLplot 3D
+      plots require data organized as a grid, i.e., with x sample point values independent
+      of y coordinate and vice versa.  This function takes
+      irregularly sampled data from the
+      <code class="literal">x[npts]</code>, <code class="literal">y[npts]</code>, and
+      <code class="literal">z[npts]</code> vectors; reads the desired grid location from
+      the input vectors <code class="literal">xg[nptsx]</code> and
+      <code class="literal">yg[nptsy]</code>; and returns the interpolated result on that grid
+      using the output matrix <code class="literal">zg[nptsx][nptsy]</code>.  The algorithm used
+      to interpolate the data to the grid is specified with the argument
+      <code class="literal">type</code> which can have one parameter specified in
+      argument <code class="literal">data</code>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>x</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    The input <code class="literal">x</code> vector.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    The input <code class="literal">y</code> vector.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>z</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    The input <code class="literal">z</code> vector. Each triple
+	    <code class="literal">x[i]</code>, <code class="literal">y[i]</code>,
+	    <code class="literal">z[i]</code> represents one data sample coordinate.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>npts</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The number of data samples in the <code class="literal">x</code>,
+	    <code class="literal">y</code> and <code class="literal">z</code> vectors.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>xg</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector that specifies the grid spacing in the x
+	    direction. Usually <code class="literal">xg</code> has
+	    <code class="literal">nptsx</code> equally spaced values from the minimum
+	    to the maximum values of the <code class="literal">x</code> input vector.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nptsx</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The number of points in the <code class="literal">xg</code> vector.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>yg</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector that specifies the grid spacing in the y
+	    direction. Similar to the <code class="literal">xg</code> parameter.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nptsy</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The number of points in the <code class="literal">yg</code> vector.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>zg</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_MATRIX-type"><code class="function">PLFLT_NC_MATRIX</code></a></code>, output)
+	</span></dt><dd><p>
+	    The matrix of interpolated results where data lies in the grid
+	    specified by <code class="literal">xg</code> and <code class="literal">yg</code>.
+	    Therefore the <code class="literal">zg</code> matrix must be dimensioned
+	    <em class="parameter"><code>nptsx</code></em> by <em class="parameter"><code>nptsy</code></em>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>type</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The type of grid interpolation algorithm to use, which can be:
+	  </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+		<code class="literal">GRID_CSA</code>: Bivariate Cubic Spline
+		approximation
+	      </p></li><li class="listitem"><p>
+		<code class="literal">GRID_DTLI</code>: Delaunay Triangulation Linear
+		Interpolation
+	      </p></li><li class="listitem"><p>
+		<code class="literal">GRID_NNI</code>: Natural Neighbors Interpolation
+	      </p></li><li class="listitem"><p>
+		<code class="literal">GRID_NNIDW</code>: Nearest Neighbors Inverse
+		Distance Weighted
+	      </p></li><li class="listitem"><p>
+		<code class="literal">GRID_NNLI</code>: Nearest Neighbors Linear
+		Interpolation
+	      </p></li><li class="listitem"><p>
+		<code class="literal">GRID_NNAIDW</code>:  Nearest Neighbors Around
+		Inverse Distance Weighted
+	      </p></li></ul></div><p>
+	    For details of the algorithms read the source file
+	    <code class="filename">plgridd.c</code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>data</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Some gridding algorithms require extra data, which can be
+	    specified through this argument. Currently, for algorithm:
+	  </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+		<code class="literal">GRID_NNIDW</code>, <code class="literal">data</code>
+		specifies the number of neighbors to use, the lower the
+		value, the noisier (more local) the approximation is.
+	      </p></li><li class="listitem"><p>
+		<code class="literal">GRID_NNLI</code>, <code class="literal">data</code>
+		specifies what a thin triangle is, in the range
+		[1. .. 2.]. High values enable the usage of very thin
+		triangles for interpolation, possibly resulting in error in
+		the approximation.
+	      </p></li><li class="listitem"><p>
+		<code class="literal">GRID_NNI</code>, only weights greater than
+		<code class="literal">data</code> will be accepted. If 0, all weights
+		will be accepted.
+	      </p></li></ul></div></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plgriddata(x, y, z, xg, yg, zg, type, data)</code>
+	  </p></li><li class="listitem"><p>
+	    Python: <code class="literal"><em class="parameter"><code>zg</code></em>=<code class="function">plgriddata(x, y, z, xg, yg, type, data)</code></code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 21.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plgradient.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plgspa.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plgradient</code>: Draw linear gradient inside polygon
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plgspa</code>: Get current subpage parameters
+    </td></tr></table></div></body></html>

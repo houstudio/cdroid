@@ -1,0 +1,84 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plmeridians: Plot latitude and longitude lines</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plmaptex.html" title="plmaptex: Draw text at points defined by Shapefile data in world coordinates"><link rel="next" href="plmesh.html" title="plmesh: Plot surface mesh"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plmeridians</code>: Plot latitude and longitude lines
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plmaptex.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plmesh.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plmeridians"></a>
+      <code class="function">plmeridians</code>: Plot latitude and longitude lines
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plmeridians</b>
+          (</code></td><td>
+            <var class="pdparam">mapform</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">dlong</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">dlat</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">minlong</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">maxlong</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">minlat</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">maxlat</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Displays latitude and longitude on the current plot.  The lines
+      are plotted in the current color and line style.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>mapform</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLMAPFORM_callback-type"><code class="function">PLMAPFORM_callback</code></a></code>, input)
+        </span></dt><dd><p>
+            A user supplied function to transform the coordinate
+            longitudes and latitudes to a plot coordinate system.
+            By using this transform, we can change from a longitude,
+            latitude coordinate to a polar stereographic project, for
+            example.  Initially, x[0]..[n-1] are the longitudes and y[0]..y[n-1]
+            are the corresponding latitudes.  After the call to mapform(), x[]
+            and y[] should be replaced by the corresponding plot coordinates.
+            If no transform is desired, mapform can be replaced by NULL.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>dlong</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The interval in degrees at which the longitude lines are to be plotted.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>dlat</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The interval in degrees at which the latitude lines are to be plotted.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>minlong</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The value of the longitude on the left side of the plot.
+            The value of minlong must be less than the value of maxlong, and the
+            quantity maxlong-minlong must be less than or equal to 360.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>maxlong</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The value of the longitude on the right side of the plot.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>minlat</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The minimum latitude to be plotted on the background.
+            One can always use -90.0 as the boundary outside the plot window
+            will be automatically eliminated.  However, the program will be
+            faster if one can reduce the size of the background plotted.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>maxlat</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            The maximum latitudes to be plotted on the background.
+            One can always use 90.0 as the boundary outside the plot window
+            will be automatically eliminated.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plmeridians(mapform, dlong, dlat, minlong, maxlong, minlat, maxlat)</code>
+    </p><p>
+      This function is used in example 19.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plmaptex.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plmesh.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plmaptex</code>: Draw text at points defined by
+      Shapefile data in world coordinates
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plmesh</code>: Plot surface mesh
+    </td></tr></table></div></body></html>

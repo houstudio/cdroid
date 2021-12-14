@@ -1,0 +1,78 @@
+# examples/ocaml/Makefile.examples.in for PLplot
+
+# Copyright (C) 2002 Maurice LeBrun
+# Copyright (C) 2002-2019 Alan W. Irwin
+# Copyright (C) 2003-2005 Rafael Laboissiere
+# Copyright (C) 2008-2012 Andrew Ross
+# Copyright (C) 2009 Hezekiah M. Carty
+#
+# This file is part of PLplot.
+#
+# PLplot is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# PLplot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with the file PLplot; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+SHELL = @SH_EXECUTABLE@
+OCAMLC = @OCAML_EXAMPLE_COMPILER@
+EXEEXT = @EXEEXT@
+
+PKG_CONFIG_ENV = @PKG_CONFIG_ENV@
+install_tree_ocaml_RPATHCMD = @install_tree_ocaml_RPATHCMD@
+
+OCAML_CFLAGS = -g -I "@OCAML_INSTALL_DIR@/plplot"
+OCAML_LIBS = $(install_tree_ocaml_RPATHCMD) -ccopt "-L@CMAKE_INSTALL_LIBDIR_ESCAPED@" plplot.@OCAML_EXAMPLE_LIBEXT@ unix.@OCAML_EXAMPLE_LIBEXT@
+
+EXECUTABLES_list = \
+		 x00ocaml$(EXEEXT) \
+		 x01ocaml$(EXEEXT) \
+		 x02ocaml$(EXEEXT) \
+		 x03ocaml$(EXEEXT) \
+		 x04ocaml$(EXEEXT) \
+		 x05ocaml$(EXEEXT) \
+		 x06ocaml$(EXEEXT) \
+		 x07ocaml$(EXEEXT) \
+		 x08ocaml$(EXEEXT) \
+		 x09ocaml$(EXEEXT) \
+		 x10ocaml$(EXEEXT) \
+		 x11ocaml$(EXEEXT) \
+		 x12ocaml$(EXEEXT) \
+		 x13ocaml$(EXEEXT) \
+		 x14ocaml$(EXEEXT) \
+		 x15ocaml$(EXEEXT) \
+		 x16ocaml$(EXEEXT) \
+		 x17ocaml$(EXEEXT) \
+		 x18ocaml$(EXEEXT) \
+		 x19ocaml$(EXEEXT) \
+		 x20ocaml$(EXEEXT) \
+		 x21ocaml$(EXEEXT) \
+		 x22ocaml$(EXEEXT) \
+		 x23ocaml$(EXEEXT) \
+		 x24ocaml$(EXEEXT) \
+		 x25ocaml$(EXEEXT) \
+		 x26ocaml$(EXEEXT) \
+		 x27ocaml$(EXEEXT) \
+		 x28ocaml$(EXEEXT) \
+		 x29ocaml$(EXEEXT) \
+		 x30ocaml$(EXEEXT) \
+		 x31ocaml$(EXEEXT) \
+		 x33ocaml$(EXEEXT)
+
+all: $(EXECUTABLES_list)
+
+clean:
+	rm -f $(EXECUTABLES_list) @OCAML_EXAMPLE_CLEAN@
+
+
+.mlocaml$(EXEEXT):
+	$(OCAMLC) $(OCAML_CFLAGS) $(OCAML_LIBS) -o $@ $<
+
+.SUFFIXES: .ml ocaml$(EXEEXT)

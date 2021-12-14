@@ -1,0 +1,37 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCMAP0A 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplscmap0a\fP - Set cmap0 colors by 8-bit RGB values and PLFLT alpha transparency value
+.SH SYNOPSIS
+\fBplscmap0a\fP(\fIr\fP, \fIg\fP, \fIb\fP, \fIalpha\fP, \fIncol0\fP)
+.SH DESCRIPTION
+
+.P
+Set cmap0 colors using 8-bit RGB values (see the PLplot documentation) and PLFLT alpha transparency value.  This sets the entire color map -- only as many colors as specified will be allocated.
+.P
+Redacted form: \fBplscmap0a(r, g, b, alpha)\fP
+.P
+This function is used in examples 30.
+.SH ARGUMENTS
+.TP
+\fIr\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing unsigned 8-bit integers (0-255) representing the degree of red in the color.
+.TP
+\fIg\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing unsigned 8-bit integers (0-255) representing the degree of green in the color.
+.TP
+\fIb\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing unsigned 8-bit integers (0-255) representing the degree of blue in the color.
+.TP
+\fIalpha\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing values (0.0-1.0) representing the alpha transparency of the color.
+.TP
+\fIncol0\fP (\fBPLINT\fP(3plplot), input)
+Number of items in the \fIr\fP, \fIg\fP, \fIb\fP, and \fIalpha\fP vectors.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

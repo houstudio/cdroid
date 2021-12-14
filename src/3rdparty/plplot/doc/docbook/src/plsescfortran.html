@@ -1,0 +1,44 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plsesc: Set the escape character for text strings for Fortran</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-FORTRAN.html" title="Chapter 19. The Specialized Fortran API for PLplot"><link rel="prev" href="plparseoptsfortran.html" title="plparseopts: parse arguments for Fortran"><link rel="next" href="api-compat.html" title="Chapter 20. API compatibility definition"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plsesc</code>: Set the escape character for text strings
+      for Fortran
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plparseoptsfortran.html">Prev</a> </td><th width="60%" align="center">Chapter 19. The Specialized Fortran API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="api-compat.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plsescfortran"></a>
+      <code class="function">plsesc</code>: Set the escape character for text strings
+      for Fortran
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plsesc</b>
+	  (</code></td><td><var class="pdparam">esc</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set the escape character for text strings.  From
+      Fortran it needs to be the decimal ASCII value.  Only
+      selected characters are allowed to prevent the user from shooting
+      himself in the foot (For example, a <span class="quote">“<span class="quote">\</span>”</span> isn't allowed since it conflicts with C's use
+      of backslash as a character escape).  Here are the allowed escape
+      characters and their corresponding decimal ASCII values:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">!</span>”</span>, ASCII 33
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">#</span>”</span>, ASCII 35
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">$</span>”</span>, ASCII 36
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">%</span>”</span>, ASCII 37
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">&amp;</span>”</span>, ASCII 38
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">*</span>”</span>, ASCII 42
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">@</span>”</span>, ASCII 64
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">^</span>”</span>, ASCII 94
+	  </p></li><li class="listitem"><p>
+	    <span class="quote">“<span class="quote">~</span>”</span>, ASCII 126
+	  </p></li></ul></div><p>
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>esc</code></em>
+	  (<code class="literal">char</code>, input)
+	</span></dt><dd><p>
+	    NEEDS DOCUMENTATION
+	  </p></dd></dl></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plparseoptsfortran.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-FORTRAN.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="api-compat.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plparseopts</code>: parse arguments for Fortran
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 20. API compatibility definition</td></tr></table></div></body></html>

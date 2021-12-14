@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLXORMOD 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplxormod\fP - Enter or leave xor mode
+.SH SYNOPSIS
+\fBplxormod\fP(\fImode\fP, \fIstatus\fP)
+.SH DESCRIPTION
+
+.P
+Enter (when \fImode\fP is true) or leave (when \fImode\fP is false) xor mode for those drivers (e.g., the xwin driver) that support it.  Enables erasing plots by drawing twice the same line, symbol, etc.  If driver is not capable of xor operation it returns a \fIstatus\fP of false.
+.P
+Redacted form: \fBplxormod(mode, status)\fP
+.P
+This function is used in examples 1 and 20.
+.SH ARGUMENTS
+.TP
+\fImode\fP (\fBPLBOOL\fP(3plplot), input)
+\fImode\fP is true means enter xor mode and \fImode\fP is false means leave xor mode.
+.TP
+\fIstatus\fP (\fBPLBOOL_NC_SCALAR\fP(3plplot), output)
+Returned value of the status. \fImode\fPstatus of true (false) means driver is capable (incapable) of xor mode.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

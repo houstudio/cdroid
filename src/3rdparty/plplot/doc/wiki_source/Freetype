@@ -1,0 +1,68 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Description
+-----------
+
+FreeType 2 is a software font engine that is designed to be small, efficient, highly customizable, and portable while capable of producing high-quality output (glyph images). It can be used in graphics libraries, display servers, font conversion tools, text image generation tools, and many other products as well. <http://www.freetype.org> reveals more information.
+
+Instructions for Mac OS X
+-------------------------
+
+PLplot uses either fonts provided by the Free UCS Outline Fonts project (http://savannah.gnu.org/projects/freefont/) or Windows fonts (Arial, etc.). Both are not installed on Mac OS X by default. You can download the FreeFonts from <http://download.savannah.gnu.org/releases/freefont/> and copy the ttf files into the User's Library/Fonts directory. In order cmake can find these fonts, we need to set the PL_FREETYPE_FONT_PATH option, e.g.
+
+`cmake -DPL_FREETYPE_FONT_PATH=/Users/smekal/Library/Fonts/ ..`
+
+### Macports
+
+freetype is also available via Macports. To install the freetype library open the terminal and enter
+
+`sudo port install freetype`
+
+Instructions for Windows
+------------------------
+
+-   Download the [Freetype library](http://download.savannah.gnu.org/releases/freetype/ft237.zip)
+-   Unzip the ft237.zip package in a suitable place
+-   Cd into the new directory
+
+### MinGW compiler
+
+-   Then for MinGW (call <tt>mingw32.make</tt> twice!):
+
+`mingw32-make`
+`mingw32-make`
+`copy objs\freetype.a objs\libfreetype.a`
+
+### Visual C++ compiler
+
+-   Or for Visual C++ (you need to use GNU-Make not nmake - download it from <http://prdownloads.sf.net/mingw/mingw32-make-3.80.0-3.tar.gz?download> or <http://gnuwin32.sourceforge.net/packages/make.htm>):
+
+`path_to_gnu_make\mingw32-make setup visualc`
+`path_to_gnu_make\mingw32-make`
+
+-   For Visual C++ 2005 you need to change line 69 of <tt>freetype-2.2.1\\builds\\compiler\\visualc.mk</tt> to
+
+`   CFLAGS ?= /nologo /c /Ox /W3 /WX /D_CRT_SECURE_NO_DEPRECATE`
+
+### Set CMake paths
+
+-   set environment variables (for MinGW and Visual C++)
+
+`set FREETYPEDIR=C:\freetype-2.2.1`
+`set CMAKE_INCLUDE_PATH=%FREETYPEDIR%\include`
+`set CMAKE_LIBRARY_PATH=%FREETYPEDIR%\objs`
+
+CMake is now able to find the freetype library and headers.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

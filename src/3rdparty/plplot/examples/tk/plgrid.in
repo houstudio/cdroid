@@ -1,0 +1,10 @@
+#!/bin/sh
+# Run plserver example for plgrid.tcl.  N.B. must be run in ../tcl directory.
+"@plserver_LOCATION@" <<EOF
+plstdwin .
+plxframe .plw
+pack append . .plw {left expand fill}
+source plgrid.tcl
+proc 1 {} "plgrid .plw.plwin"
+1
+EOF

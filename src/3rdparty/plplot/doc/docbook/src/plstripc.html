@@ -1,0 +1,184 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plstripc: Create a 4-pen strip chart</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plstripa.html" title="plstripa: Add a point to a strip chart"><link rel="next" href="plstripd.html" title="plstripd: Deletes and releases memory used by a strip chart"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plstripc</code>: Create a 4-pen strip chart
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plstripa.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plstripd.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plstripc"></a>
+      <code class="function">plstripc</code>: Create a 4-pen strip chart
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plstripc</b>
+          (</code></td><td>
+            <var class="pdparam">id</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xspec</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">yspec</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xmin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xmax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xjump</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ymax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xlpos</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ylpos</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y_ascl</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">acc</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">colbox</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">collab</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">colline</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">styline</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">legline[]</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">labx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">laby</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">labtop</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Create a 4-pen strip chart, to be used afterwards by <a class="link" href="plstripa.html" title="plstripa: Add a point to a strip chart"><code class="function">plstripa</code></a>
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>id</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_NC_SCALAR-type"><code class="function">PLINT_NC_SCALAR</code></a></code>, output)
+        </span></dt><dd><p>
+            Returned value of the identification number of
+	    the strip chart to use on <a class="link" href="plstripa.html" title="plstripa: Add a point to a strip chart"><code class="function">plstripa</code></a> and <a class="link" href="plstripd.html" title="plstripd: Deletes and releases memory used by a strip chart"><code class="function">plstripd</code></a>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xspec</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            An ascii character string containing the
+            x-axis specification as in <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>yspec</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            An ascii character string containing the
+            y-axis specification as in <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xmin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Initial coordinates of plot box; they will change as data are
+            added.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xmax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Initial coordinates of plot box; they will change as data are
+            added.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xjump</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            When x attains <code class="literal">
+              <em class="parameter"><code>xmax</code></em>
+            </code>,
+            the length of the plot is multiplied by the
+            factor <code class="literal">
+              (1 + <em class="parameter"><code>xjump</code></em>)
+            </code>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Initial coordinates of plot box; they will change as data are
+            added.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ymax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Initial coordinates of plot box; they will change as data are
+            added.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xlpos</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            X legend box position (range from 0 to 1).
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ylpos</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Y legend box position (range from 0 to 1).
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y_ascl</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+        </span></dt><dd><p>
+            Autoscale y between x jumps if
+            <code class="literal">
+              <em class="parameter"><code>y_ascl</code></em>
+            </code> is true,
+            otherwise not.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>acc</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+        </span></dt><dd><p>
+            Accumulate strip plot if
+            <code class="literal">
+              <em class="parameter"><code>acc</code></em>
+            </code> is true,
+            otherwise slide display.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>colbox</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Plot box color index (cmap0).
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>collab</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Legend color index (cmap0).
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>colline</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the cmap0 color indices for the 4 pens.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>styline</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the line style indices for the 4 pens.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>legline</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_MATRIX-type"><code class="function">PLCHAR_MATRIX</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector of UTF-8 character strings containing legends for the 4 pens.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>labx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A UTF-8 character string containing the label for the x axis.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>laby</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A UTF-8 character string containing the label for the y axis.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>labtop</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+           A UTF-8 character string containing the plot title.
+          </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            General: <code class="function">plstripc(id, xspec, yspec, xmin, xmax, xjump, ymin, ymax, xlpos, ylpos, y_ascl, acc, colbox, collab, colline, styline, legline, labx, laby, labz)</code>
+          </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 17.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plstripa.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plstripd.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plstripa</code>: Add a point to a strip chart
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plstripd</code>: Deletes and releases memory used by a
+      strip chart
+    </td></tr></table></div></body></html>

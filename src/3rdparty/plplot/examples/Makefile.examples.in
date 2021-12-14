@@ -1,0 +1,289 @@
+# examples/Makefile.examples.in for PLplot
+# configured by our CMake-based build system to examples/Makefile.examples
+# in the build tree and installed as examples/Makefile in the install tree.
+
+# Copyright (C) 2004-2018 Alan W. Irwin
+#
+# This file is part of PLplot.
+#
+# PLplot is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# PLplot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with the file PLplot; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+# This Makefile should not be used in the build tree.  It is meant for use
+# only in the install tree.  It is first configured, then installed
+# (with the name Makefile) in the _installed_ examples directory
+# It combines building all the examples that need to be built along
+# with testing all examples.
+
+SHELL = @SH_EXECUTABLE@
+all: c/x01c@EXEEXT@
+c/x01c@EXEEXT@:
+	cd c; $(MAKE)
+c_clean:
+	cd c; $(MAKE) clean
+.PHONY: c_clean
+clean: c_clean
+@DEVICE_C_COMMENT@x01c@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: c/x01c@EXEEXT@
+@DEVICE_C_COMMENT@	@echo Generate C results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_C_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_C_COMMENT@test_noninteractive: x01c@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_C_COMMENT@@COMPARE_COMMENT@compare: x01c@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+# Just for c, c++, and tk directories
+test_interactive: c/x01c@EXEEXT@
+
+@DEVICE_ADA_COMMENT@all: ada/x01a@EXEEXT@
+@DEVICE_ADA_COMMENT@ada/x01a@EXEEXT@:
+@DEVICE_ADA_COMMENT@	cd ada; $(MAKE)
+@DEVICE_ADA_COMMENT@ada_clean:
+@DEVICE_ADA_COMMENT@	cd ada; $(MAKE) clean
+@DEVICE_ADA_COMMENT@.PHONY: ada_clean
+@DEVICE_ADA_COMMENT@clean: ada_clean
+@DEVICE_ADA_COMMENT@x01a@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: ada/x01a@EXEEXT@
+@DEVICE_ADA_COMMENT@	@echo Generate Ada results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_ADA_COMMENT@	./plplot-test.sh --verbose --front-end=ada --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_ADA_COMMENT@test_noninteractive: x01a@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_ADA_COMMENT@@COMPARE_COMMENT@compare: x01a@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@CXX_COMMENT@all: c++/x01@EXEEXT@
+@CXX_COMMENT@c++/x01@EXEEXT@:
+@CXX_COMMENT@	cd c++; $(MAKE)
+@CXX_COMMENT@cxx_clean:
+@CXX_COMMENT@	cd c++; $(MAKE) clean
+@CXX_COMMENT@.PHONY: cxx_clean
+@CXX_COMMENT@clean: cxx_clean
+@DEVICE_CXX_COMMENT@x01cxx@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: c++/x01@EXEEXT@
+@DEVICE_CXX_COMMENT@	@echo Generate C++ results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_CXX_COMMENT@	./plplot-test.sh --verbose --front-end=cxx --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_CXX_COMMENT@test_noninteractive: x01cxx@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_CXX_COMMENT@@COMPARE_COMMENT@compare: x01cxx@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+# Just for c, c++, and tk directories
+@CXX_COMMENT@test_interactive: c++/x01@EXEEXT@
+
+@DEVICE_D_COMMENT@all: d/x01d@EXEEXT@
+@DEVICE_D_COMMENT@d/x01d@EXEEXT@:
+@DEVICE_D_COMMENT@	cd d; $(MAKE)
+@DEVICE_D_COMMENT@d_clean:
+@DEVICE_D_COMMENT@	cd d; $(MAKE) clean
+@DEVICE_D_COMMENT@.PHONY: d_clean
+@DEVICE_D_COMMENT@clean: d_clean
+@DEVICE_D_COMMENT@x01d@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: d/x01d@EXEEXT@
+@DEVICE_D_COMMENT@	@echo Generate d results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_D_COMMENT@	./plplot-test.sh --verbose --front-end=d --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_D_COMMENT@test_noninteractive: x01d@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_D_COMMENT@@COMPARE_COMMENT@compare: x01d@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@DEVICE_FORTRAN_COMMENT@all: fortran/x01f@EXEEXT@
+@DEVICE_FORTRAN_COMMENT@fortran/x01f@EXEEXT@:
+@DEVICE_FORTRAN_COMMENT@	cd fortran; $(MAKE)
+@DEVICE_FORTRAN_COMMENT@fortran_clean:
+@DEVICE_FORTRAN_COMMENT@	cd fortran; $(MAKE) clean
+@DEVICE_FORTRAN_COMMENT@.PHONY: fortran_clean
+@DEVICE_FORTRAN_COMMENT@clean: fortran_clean
+@DEVICE_FORTRAN_COMMENT@x01f@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: fortran/x01f@EXEEXT@
+@DEVICE_FORTRAN_COMMENT@	@echo Generate Fortran results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_FORTRAN_COMMENT@	./plplot-test.sh --verbose --front-end=fortran --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_FORTRAN_COMMENT@test_noninteractive: x01f@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_FORTRAN_COMMENT@@COMPARE_COMMENT@compare: x01f@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@DEVICE_JAVA_COMMENT@all: java/x01.class
+@DEVICE_JAVA_COMMENT@java/x01.class:
+@DEVICE_JAVA_COMMENT@	cd java; $(MAKE)
+@DEVICE_JAVA_COMMENT@java_clean:
+@DEVICE_JAVA_COMMENT@	cd java; $(MAKE) clean
+@DEVICE_JAVA_COMMENT@.PHONY: java_clean
+@DEVICE_JAVA_COMMENT@clean: java_clean
+@DEVICE_JAVA_COMMENT@x01j@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: java/x01.class
+@DEVICE_JAVA_COMMENT@	@echo Generate Java results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_JAVA_COMMENT@	env PLPLOT_JAVA_WRAP_DIR="@LIB_DIR@/" ./plplot-test.sh --verbose --front-end=java --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_JAVA_COMMENT@test_noninteractive: x01j@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_JAVA_COMMENT@@COMPARE_COMMENT@compare: x01j@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@DEVICE_OCAML_COMMENT@all: ocaml/x01ocaml@EXEEXT@
+@DEVICE_OCAML_COMMENT@ocaml/x01ocaml@EXEEXT@:
+@DEVICE_OCAML_COMMENT@	cd ocaml; $(MAKE)
+@DEVICE_OCAML_COMMENT@ocaml_clean:
+@DEVICE_OCAML_COMMENT@	cd ocaml; $(MAKE) clean
+@DEVICE_OCAML_COMMENT@.PHONY: ocaml_clean
+@DEVICE_OCAML_COMMENT@clean: ocaml_clean
+@DEVICE_OCAML_COMMENT@x01ocaml@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: ocaml/x01ocaml@EXEEXT@
+@DEVICE_OCAML_COMMENT@	@echo Generate OCaml results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_OCAML_COMMENT@	./plplot-test.sh --verbose --front-end=ocaml --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_OCAML_COMMENT@test_noninteractive: x01ocaml@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_OCAML_COMMENT@@COMPARE_COMMENT@compare: x01ocaml@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@DEVICE_OCTAVE_COMMENT@x01o@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: octave/x01c.m
+@DEVICE_OCTAVE_COMMENT@	@echo Generate Octave results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_OCTAVE_COMMENT@	./plplot-test.sh --verbose --front-end=octave --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_OCTAVE_COMMENT@test_noninteractive: x01o@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_OCTAVE_COMMENT@@COMPARE_COMMENT@compare: x01o@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@DEVICE_PYTHON_COMMENT@x01p@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: python/x01
+@DEVICE_PYTHON_COMMENT@	@echo Generate Python results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_PYTHON_COMMENT@	./plplot-test.sh --verbose --front-end=python --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_PYTHON_COMMENT@test_noninteractive: x01p@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_PYTHON_COMMENT@@COMPARE_COMMENT@compare: x01p@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@DEVICE_TCL_COMMENT@x01t@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: tcl/x01
+@DEVICE_TCL_COMMENT@	@echo Generate Tcl results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_TCL_COMMENT@	./plplot-test.sh --verbose --front-end=tcl --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_TCL_COMMENT@test_noninteractive: x01t@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_TCL_COMMENT@@COMPARE_COMMENT@compare: x01t@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@DEVICE_LUA_COMMENT@x01lua@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@: lua/x01.lua
+@DEVICE_LUA_COMMENT@	@echo Generate Lua results for @PLPLOT_TEST_DEVICE@ device
+@DEVICE_LUA_COMMENT@	./plplot-test.sh --verbose --front-end=lua --device=@PLPLOT_TEST_DEVICE@
+@DEVICE_LUA_COMMENT@test_noninteractive: x01lua@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+@DEVICE_LUA_COMMENT@@COMPARE_COMMENT@compare: x01lua@FAMILIED_FIRST_PAGE@.@PLPLOT_TEST_DEVICE@
+
+@PDFCAIRO_COMMENT@x01c.pdfcairo: c/x01c@EXEEXT@
+@PDFCAIRO_COMMENT@	@echo Generate C results for pdfcairo device
+@PDFCAIRO_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=pdfcairo
+@PDFCAIRO_COMMENT@test_noninteractive: x01c.pdfcairo
+
+@PNGCAIRO_COMMENT@x01c01.pngcairo: c/x01c@EXEEXT@
+@PNGCAIRO_COMMENT@	@echo Generate C results for pngcairo device
+@PNGCAIRO_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=pngcairo
+@PNGCAIRO_COMMENT@test_noninteractive: x01c01.pngcairo
+
+@PSCAIRO_COMMENT@x01c.pscairo: c/x01c@EXEEXT@
+@PSCAIRO_COMMENT@	@echo Generate C results for pscairo device
+@PSCAIRO_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=pscairo
+@PSCAIRO_COMMENT@test_noninteractive: x01c.pscairo
+
+@SVGCAIRO_COMMENT@x01c01.svgcairo: c/x01c@EXEEXT@
+@SVGCAIRO_COMMENT@	@echo Generate C results for svgcairo device
+@SVGCAIRO_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=svgcairo
+@SVGCAIRO_COMMENT@test_noninteractive: x01c01.svgcairo
+
+@GIF_COMMENT@x01c01.gif : c/x01c@EXEEXT@
+@GIF_COMMENT@	@echo Generate C results for gif device
+@GIF_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=gif
+@GIF_COMMENT@test_noninteractive: x01c01.gif
+
+@JPEG_COMMENT@x01c01.jpeg: c/x01c@EXEEXT@
+@JPEG_COMMENT@	@echo Generate C results for jpeg device
+@JPEG_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=jpeg
+@JPEG_COMMENT@test_noninteractive: x01c01.jpeg
+
+@PNG_COMMENT@x01c01.png: c/x01c@EXEEXT@
+@PNG_COMMENT@	@echo Generate C results for png device
+@PNG_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=png
+@PNG_COMMENT@test_noninteractive: x01c01.png
+
+@PS_COMMENT@x01c.ps: c/x01c@EXEEXT@
+@PS_COMMENT@	@echo Generate C results for ps device
+@PS_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=ps
+@PS_COMMENT@test_noninteractive: x01c.ps
+
+@PSC_COMMENT@x01c.psc: c/x01c@EXEEXT@
+@PSC_COMMENT@	@echo Generate C results for psc device
+@PSC_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=psc
+@PSC_COMMENT@test_noninteractive: x01c.psc
+
+@PSTTF_COMMENT@x01c.psttf: c/x01c@EXEEXT@
+@PSTTF_COMMENT@	@echo Generate C results for psttf device
+@PSTTF_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=psttf
+@PSTTF_COMMENT@test_noninteractive: x01c.psttf
+
+@PSTTFC_COMMENT@x01c.psttfc: c/x01c@EXEEXT@
+@PSTTFC_COMMENT@	@echo Generate C results for psttfc device
+@PSTTFC_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=psttfc
+@PSTTFC_COMMENT@test_noninteractive: x01c.psttfc
+
+@SVG_COMMENT@x01c01.svg: c/x01c@EXEEXT@
+@SVG_COMMENT@	@echo Generate C results for svg device
+@SVG_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=svg
+@SVG_COMMENT@test_noninteractive: x01c01.svg
+
+@XFIG_COMMENT@x01c01.xfig: c/x01c@EXEEXT@
+@XFIG_COMMENT@	@echo Generate C results for xfig device
+@XFIG_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=xfig
+@XFIG_COMMENT@test_noninteractive: x01c01.xfig
+
+@PSTEX_COMMENT@x01c.pstex: c/x01c@EXEEXT@
+@PSTEX_COMMENT@	@echo Generate C results for pstex device
+@PSTEX_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=pstex
+@PSTEX_COMMENT@test_noninteractive: x01c.pstex
+
+@CGM_COMMENT@x01c.cgm : c/x01c@EXEEXT@
+@CGM_COMMENT@	@echo Generate C results for cgm device
+@CGM_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=cgm
+@CGM_COMMENT@test_noninteractive: x01c.cgm
+
+@BMPQT_COMMENT@x01c01.bmpqt : c/x01c@EXEEXT@
+@BMPQT_COMMENT@	@echo Generate C results for bmpqt device
+@BMPQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=bmpqt
+@BMPQT_COMMENT@test_noninteractive: x01c01.bmpqt
+
+@JPGQT_COMMENT@x01c01.jpgqt : c/x01c@EXEEXT@
+@JPGQT_COMMENT@	@echo Generate C results for jpgqt device
+@JPGQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=jpgqt
+@JPGQT_COMMENT@test_noninteractive: x01c01.jpgqt
+
+@PNGQT_COMMENT@x01c01.pngqt : c/x01c@EXEEXT@
+@PNGQT_COMMENT@	@echo Generate C results for pngqt device
+@PNGQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=pngqt
+@PNGQT_COMMENT@test_noninteractive: x01c01.pngqt
+
+@PPMQT_COMMENT@x01c01.ppmqt : c/x01c@EXEEXT@
+@PPMQT_COMMENT@	@echo Generate C results for ppmqt device
+@PPMQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=ppmqt
+@PPMQT_COMMENT@test_noninteractive: x01c01.ppmqt
+
+@TIFFQT_COMMENT@x01c01.tiffqt : c/x01c@EXEEXT@
+@TIFFQT_COMMENT@	@echo Generate C results for tiffqt device
+@TIFFQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=tiffqt
+@TIFFQT_COMMENT@test_noninteractive: x01c01.tiffqt
+
+@SVGQT_COMMENT@x01c01.svgqt : c/x01c@EXEEXT@
+@SVGQT_COMMENT@	@echo Generate C results for svgqt device
+@SVGQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=svgqt
+@SVGQT_COMMENT@test_noninteractive: x01c01.svgqt
+
+@EPSQT_COMMENT@x01c01.epsqt : c/x01c@EXEEXT@
+@EPSQT_COMMENT@	@echo Generate C results for epsqt device
+@EPSQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=epsqt
+@EPSQT_COMMENT@test_noninteractive: x01c01.epsqt
+
+@PDFQT_COMMENT@x01c01.pdfqt : c/x01c@EXEEXT@
+@PDFQT_COMMENT@	@echo Generate C results for pdfqt device
+@PDFQT_COMMENT@	./plplot-test.sh --verbose --front-end=c --device=pdfqt
+@PDFQT_COMMENT@test_noninteractive: x01c01.pdfqt
+
+@COMPARE_COMMENT@compare:
+@COMPARE_COMMENT@	@echo "Compare non-C language and corresponding C plot (for the @PLPLOT_TEST_DEVICE@ device) and stdout results"
+@COMPARE_COMMENT@	-./test_diff.sh --device=@PLPLOT_TEST_DEVICE@ --familied_device=@FAMILIED_PLPLOT_TEST_DEVICE@
+@COMPARE_COMMENT@	touch compare
+@COMPARE_COMMENT@test_noninteractive: compare
+
+@TK_COMMENT@all: tk/xtk01$(EXEEXT)
+@TK_COMMENT@tk/xtk01$(EXEEXT):
+@TK_COMMENT@	cd tk; $(MAKE)
+@TK_COMMENT@tk_clean:
+@TK_COMMENT@	cd tk; $(MAKE) clean
+@TK_COMMENT@.PHONY: tk_clean
+@TK_COMMENT@clean: tk_clean
+@TK_COMMENT@test_interactive: tk/xtk01$(EXEEXT)
+
+test_interactive:
+	./plplot-test-interactive.sh
+
+test_clean:
+	rm -f *.psc *.pdfcairo *.pngcairo *.pscairo *.svgcairo \
+	*.gif *.jpeg *.png *.psttfc *.svg *.xfig *.pstex* *.*qt *.cgm \
+	*_*.txt test.error \
+	compare
+
+clean: test_clean
+
+.PHONY : all clean test_noninteractive test_clean test_interactive

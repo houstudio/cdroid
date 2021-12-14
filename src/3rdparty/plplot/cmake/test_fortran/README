@@ -1,0 +1,107 @@
+The purpose of this complete project is to provide a simple Fortran test case
+consisting of a Fortran executable calling a single routine in an Fortran library
+which prints out the classic "hello, world" phrase.
+
+Here is how to test this project by hand.
+
+1. Select Fortran compiler (gfortran in this case, but it could be any other Fortran
+compiler with CMake support such as ifort or nagfor).
+
+export FC=gfortran
+
+2. By hand, build and test the project (with default shared library) in an initially empty build tree.
+
+# Create and use an initially empty build tree.
+mkdir build_dir
+cd build_dir
+
+# Following PATH change needed for Windows platforms only for the
+# build-tree case.  (On such platforms, the library dll's are
+# collected in the dll directory for the build-tree case.  If you test
+# an installed version, the PATH manipulation should be different.
+# See scripts/comprehensive_test.sh.)
+PATH=$(pwd)/dll:$PATH
+
+# Configure the test_fortran project with cmake.
+cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_tree -DBUILD_TEST=ON ..
+
+# build Fortran library and executable that links to that library.
+make hello
+
+# Test the executable by running it.
+# This should return the "hello, world" phrase
+src_executable/hello
+
+# This should supply a clean valgrind report
+valgrind src_executable/hello
+
+# Test linking of library and executable
+
+# Most Unix-like platforms (including MinGW-w64/MSYS2? and definitely Cygwin, but excluding Mac OS X)
+ldd -r src_lib/libhello.so >& ldd_lib.out
+ldd -r src_executable/hello >& ldd_executable.out
+
+# On Mac OS X
+otool -L src_lib/libhello.so >& otool_lib.out
+otool -L src_executable/hello >& otool_executable.out
+
+Look through the generated *.out files for any error conditions.
+
+N.B. on at least one platform (Cygwin) the -r option (which checks for
+any undefined symbols) is not implemented yet (as of 2015-11) so you
+will have to drop it for that special case until the Cygwin
+ldd -r option is implemented.
+
+3. Make more comprehensive test of this project with an automated script.
+Note, for Windows platforms this script manipulates the PATH so that
+the build-tree library dll will be found in the build-tree case, and the
+installed library dll will be found in the install-tree case.
+
+Check documentation of this comprehensive test script:
+
+scripts/comprehensive_test.sh --help
+
+This script is similar in concept but quite different (note its
+different location) than the corresponding script in
+../../scripts/comprehensive_test.sh which comprehensively tests all of
+PLplot so do not confuse the two.
+
+Actually do comprehensive test of Fortran language support (after
+following step 1 above to select the compiler).  Normally this is done
+as follows without any script options:
+
+scripts/comprehensive_test.sh
+
+For our two principal build configurations (shared libraries and
+static libraries) this script (if executed without options) builds the
+test_noninteractive target (which builds the "hello" executable and
+all its prerequisites, runs that executable, and compares the output
+of that executable with the expected output) in the build tree and in
+the installed examples tree.
+
+You check for errors in the above comprehensive test using
+
+grep -i error ../../../comprehensive_test_fortran_disposeable/*/*/output_tree/*.out
+
+and send whoever asked you to test CMake Fortran support with this
+project the tarball of information that is collected by that script at
+../../../comprehensive_test_fortran_disposeable/comprehensive_test.tar.gz
+
+(4, optional) Debug result:
+If (3) shows any errors than you can optionally debug the result as follows:
+
+scripts/comprehensive_test.sh --do_trace yes
+
+This produces voluminous results and buried (deeply) in those is
+typically enough information to find out what is going wrong with the
+CMake Fortran language support.  These voluminous results are automatically
+included in the tarball report so please send that report (as well
+as the one created without the --do_trace yes option in step 3) to whoever
+asked you to test CMake Fortran support with this project.
+
+In sum, this project provides a simple demonstration of how to use the
+CMake Fortran language support with Fortran libraries that are either static
+or shared. At the same time, this project tests the quality of CMake
+Fortran support for various user's platforms.  If any user is having
+trouble with CMake Fortran language support, they should run at least step
+3 and step 4 above.

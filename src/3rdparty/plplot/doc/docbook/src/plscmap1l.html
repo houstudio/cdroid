@@ -1,0 +1,121 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plscmap1l: Set cmap1 colors using a piece-wise linear relationship</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plscmap1a.html" title="plscmap1a: Set semitransparent cmap1 RGBA colors."><link rel="next" href="plscmap1la.html" title="plscmap1la: Set cmap1 colors and alpha transparency using a piece-wise linear relationship"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plscmap1l</code>: Set cmap1 colors using a
+      piece-wise linear relationship
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plscmap1a.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plscmap1la.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plscmap1l"></a>
+      <code class="function">plscmap1l</code>: Set cmap1 colors using a
+      piece-wise linear relationship
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plscmap1l</b>
+          (</code></td><td>
+            <var class="pdparam">itype</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">npts</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">intensity</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">coord1</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">coord2</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">coord3</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">alt_hue_path</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set cmap1 colors using a piece-wise linear relationship
+      between the cmap1 intensity index (0.0-1.0) and position in HLS or
+      RGB color space (see <a class="xref" href="color.html#color-map-1" title="Color Map1">the section called “Color Map1”</a>).  May be called at
+      any time.
+    </p><p>
+      The idea here is to specify a number of control points that define
+      the mapping between input cmap1 intensity indices and
+      HLS or RGB.  Between
+      these points, linear interpolation is used which
+      gives a smooth variation of
+      color with intensity index.  Any number of control points may be specified,
+      located at arbitrary positions, although typically 2 - 4
+      are enough. Another way of stating this is that we are traversing a
+      given number of lines through HLS or RGB space as we move through
+      cmap1 intensity indices.  The control points at the minimum and maximum
+      position (0 and 1) must always be specified.  By adding more control
+      points you can get more variation.  One good technique for plotting
+      functions that vary about some expected average is to use an
+      additional 2 control points in the center (position ~= 0.5) that are
+      the same lightness as the background (typically white for paper output,
+      black for crt), and same hue as the boundary control points.  This
+      allows the highs and lows to be very easily distinguished.
+    </p><p>
+      Each control point must specify the cmap1 intensity index and
+      the associated
+      three coordinates in HLS or RGB space.  The first point
+      <span class="emphasis"><em>must</em></span> correspond to position = 0, and the last to
+      position = 1.
+    </p><p>
+      If RGB colors are provided then the interpolation takes place in RGB space
+      and is trivial. However if HLS colors are provided then, because of the
+      circular nature of the color wheel for the hue coordinate, the interpolation
+      could be performed in either direction around the color wheel. The default
+      behaviour is for the hue to be linearly interpolated ignoring this circular
+      property of hue. So for example, the hues 0 (red) and 240 (blue) will get
+      interpolated via yellow, green and cyan. If instead you wish to interpolate
+      the other way around the color wheel you have two options. You may provide hues
+      outside the range [0, 360), so by using a hue of -120 for blue or 360 for red
+      the interpolation will proceed via magenta. Alternatively you can utilise the
+      alt_hue_path variable to reverse the direction of interpolation if you need
+      to provide hues within the [0-360) range.
+    </p><p>
+      </p><div class="table"><a name="idm12267"></a><p class="title"><b>Table 17.1.  Examples of interpolation </b></p><div class="table-contents"><table class="table" summary=" Examples of interpolation " style="border: none;"><colgroup><col><col><col></colgroup><thead><tr><th style="" align="center">Hue</th><th style="" align="center">alt_hue_path</th><th style="" align="center">color scheme</th></tr></thead><tbody><tr><td style="" align="center">[120 240]</td><td style="" align="center">false</td><td style="" align="center">green-cyan-blue</td></tr><tr><td style="" align="center">[240 120]</td><td style="" align="center">false</td><td style="" align="center">blue-cyan-green</td></tr><tr><td style="" align="center">[120 -120]</td><td style="" align="center">false</td><td style="" align="center">green-yellow-red-magenta-blue</td></tr><tr><td style="" align="center">[240 480]</td><td style="" align="center">false</td><td style="" align="center">blue-magenta-red-yellow-green</td></tr><tr><td style="" align="center">[120 240]</td><td style="" align="center">true</td><td style="" align="center">green-yellow-red-magenta-blue</td></tr><tr><td style="" align="center">[240 120]</td><td style="" align="center">true</td><td style="" align="center">blue-magenta-red-yellow-green</td></tr></tbody></table></div></div><p><br class="table-break">
+    </p><p>
+      </p><div class="table"><a name="idm12301"></a><p class="title"><b>Table 17.2.  Bounds on coordinates</b></p><div class="table-contents"><table class="table" summary=" Bounds on coordinates" style="border: none;"><colgroup><col><col><col><col></colgroup><tbody><tr><td style="" align="center">RGB</td><td style="" align="center">R</td><td style="" align="center">[0, 1]</td><td style="" align="center">magnitude</td></tr><tr><td style="" align="center">RGB</td><td style="" align="center">G</td><td style="" align="center">[0, 1]</td><td style="" align="center">magnitude</td></tr><tr><td style="" align="center">RGB</td><td style="" align="center">B</td><td style="" align="center">[0, 1]</td><td style="" align="center">magnitude</td></tr><tr><td style="" align="center">HLS</td><td style="" align="center">hue</td><td style="" align="center">[0, 360]</td><td style="" align="center">degrees</td></tr><tr><td style="" align="center">HLS</td><td style="" align="center">lightness</td><td style="" align="center">[0, 1]</td><td style="" align="center">magnitude</td></tr><tr><td style="" align="center">HLS</td><td style="" align="center">saturation</td><td style="" align="center">[0, 1]</td><td style="" align="center">magnitude</td></tr></tbody></table></div></div><p><br class="table-break">
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>itype</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+        </span></dt><dd><p>
+            true: RGB, false: HLS.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>npts</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            number of control points
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>intensity</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+           A vector containing the cmap1 intensity index
+           (0.0-1.0) in ascending order for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>coord1</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the first coordinate (H or R) for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>coord2</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the second coordinate (L or G) for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>coord3</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the third coordinate (S or B) for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>alt_hue_path</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL_VECTOR-type"><code class="function">PLBOOL_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector (with <em class="parameter"><code>npts - 1</code></em> elements), each containing
+            either true to use the reversed HLS interpolation or false to use the regular
+            HLS interpolation.  (<code class="literal">alt_hue_path[i]</code> refers to the
+            interpolation interval between the <code class="literal">i</code> and
+            <code class="literal">i + 1</code> control points). This parameter is not used for RGB
+            colors (<em class="parameter"><code>itype = true</code></em>).
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plscmap1l(itype, intensity, coord1, coord2, coord3, alt_hue_path)</code>
+    </p><p>
+      This function is used in examples 8, 11, 12, 15, 20, and 21.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plscmap1a.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plscmap1la.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plscmap1a</code>: Set semitransparent cmap1 RGBA colors.
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plscmap1la</code>: Set cmap1 colors and alpha
+      transparency using a piece-wise linear relationship
+    </td></tr></table></div></body></html>

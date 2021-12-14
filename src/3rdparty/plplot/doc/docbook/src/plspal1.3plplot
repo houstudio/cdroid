@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSPAL1 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplspal1\fP - Set the cmap1 palette using the specified cmap1*.pal format file
+.SH SYNOPSIS
+\fBplspal1\fP(\fIfilename\fP, \fIinterpolate\fP)
+.SH DESCRIPTION
+
+.P
+Set the cmap1 palette using the specified cmap1*.pal format file.
+.P
+Redacted form: \fBplspal1(filename, interpolate)\fP
+.P
+This function is used in example 16.
+.SH ARGUMENTS
+.TP
+\fIfilename\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the name of the cmap1*.pal file.  If this string is empty, use the default cmap1*.pal file.
+.TP
+\fIinterpolate\fP (\fBPLBOOL\fP(3plplot), input)
+If this parameter is true, the columns containing the intensity index, r, g, b, alpha and alt_hue_path in the cmap1*.pal file are used to set the cmap1 palette with a call to \fBplscmap1la\fP(3plplot). (The cmap1*.pal header contains a flag which controls whether the r, g, b data sent to \fBplscmap1la\fP(3plplot) are interpreted as HLS or RGB.) If this parameter is false, the intensity index and alt_hue_path columns are ignored and the r, g, b (interpreted as RGB), and alpha columns of the cmap1*.pal file are used instead to set the cmap1 palette directly with a call to \fBplscmap1a\fP(3plplot).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

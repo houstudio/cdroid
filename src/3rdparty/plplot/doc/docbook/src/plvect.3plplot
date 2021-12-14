@@ -1,0 +1,37 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLVECT 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplvect\fP - Vector plot
+.SH SYNOPSIS
+\fBplvect\fP(\fIu\fP, \fIv\fP, \fInx\fP, \fIny\fP, \fIscale\fP, \fIpltr\fP, \fIpltr_data\fP)
+.SH DESCRIPTION
+
+.P
+Draws a plot of vector data contained in the matrices (\fIu\fP[\fInx\fP][\fIny\fP],\fIv\fP[\fInx\fP][\fIny\fP]) . The scaling factor for the vectors is given by \fIscale\fP. A transformation routine pointed to by \fIpltr\fP with a pointer \fIpltr_data\fP for additional data required by the transformation routine to map indices within the matrices to the world coordinates. The style of the vector arrow may be set using \fBplsvect\fP(3plplot).
+.P
+Redacted form: \fBplvect(u, v, scale, pltr, pltr_data)\fP where (see above discussion) the pltr, pltr_data callback arguments are sometimes replaced by a tr vector with 6 elements, or xg and yg array arguments with either one or two dimensions.
+.P
+This function is used in example 22.
+.SH ARGUMENTS
+.TP
+\fIu, v\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A pair of matrices containing the x and y components of the vector data to be plotted.
+.TP
+\fInx, ny\fP (\fBPLINT\fP(3plplot), input)
+Dimensions of the matrices \fIu\fP and \fIv\fP.
+.TP
+\fIscale\fP (\fBPLFLT\fP(3plplot), input)
+Parameter to control the scaling factor of the vectors for plotting. If \fIscale\fP = 0  then the scaling factor is automatically calculated for the data. If \fIscale\fP < 0 then the scaling factor is automatically calculated for the data and then multiplied by -\fIscale\fP. If \fIscale\fP > 0 then the scaling factor is set to \fIscale\fP.
+.TP
+\fIpltr\fP (\fBPLTRANSFORM_callback\fP(3plplot), input)
+A callback function that defines the transformation between the zero-based indices of the matrices \fIu\fP and \fIv\fP and world coordinates.For the C case, transformation functions are provided in the PLplot library: \fBpltr0\fP(3plplot) for the identity mapping, and \fBpltr1\fP(3plplot) and \fBpltr2\fP(3plplot) for arbitrary mappings respectively defined by vectors and matrices.  In addition, C callback routines for the transformation can be supplied by the user such as the mypltr function in examples/c/x09c.c which provides a general linear transformation between index coordinates and world coordinates.For languages other than C you should consult the PLplot documentation for the details concerning how \fBPLTRANSFORM_callback\fP(3plplot) arguments are interfaced. However, in general, a particular pattern of callback-associated arguments such as a tr vector with 6 elements; xg and yg vectors; or xg and yg matrices are respectively interfaced to a linear-transformation routine similar to the above mypltr function; \fBpltr1\fP(3plplot); and \fBpltr2\fP(3plplot). Furthermore, some of our more sophisticated bindings (see, e.g., the PLplot documentation) support native language callbacks for handling index to world-coordinate transformations.  Examples of these various approaches are given in examples/<language>x09*, examples/<language>x16*, examples/<language>x20*, examples/<language>x21*, and examples/<language>x22*, for all our supported languages.
+.TP
+\fIpltr_data\fP (\fBPLPointer\fP(3plplot), input)
+Extra parameter to help pass information to \fBpltr0\fP(3plplot), \fBpltr1\fP(3plplot), \fBpltr2\fP(3plplot), or whatever callback routine that is externally supplied.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

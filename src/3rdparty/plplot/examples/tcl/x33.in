@@ -1,0 +1,42 @@
+#!/bin/sh
+#--------------------------------*- Tcl -*------------------------------------#
+# Arjen Markus
+# 08/18/08
+#
+# A front-end to run x26.tcl directly from the command line with
+# a configured location for pltcl.
+# Handles all usual plplot command arguments.  See "@pltcl_LOCATION@ -h" for info.
+#-----------------------------------------------------------------------------#
+#\
+exec "@pltcl_LOCATION@" -f "$0" ${1+"$@"}
+
+#
+# This example uses UTF-8 characters, placeddirectly in the source code
+#
+if { [encoding system] != "utf-8" } {
+    if { [package vsatisfies [info patch] 8.5] } {
+
+        source -encoding utf-8 x33.tcl
+
+    } else {
+
+        #
+        # Pre-Tcl 8.5
+        #
+        set infile [open "x33.tcl"]
+        set contents [read $infile]
+        close $infile
+        eval [encoding convertfrom utf-8 \
+            [encoding convertto [encoding system] $contents]]
+    }
+} else {
+
+    #
+    # Plain source will do
+    #
+    source x33.tcl
+}
+
+plinit
+x33
+plend

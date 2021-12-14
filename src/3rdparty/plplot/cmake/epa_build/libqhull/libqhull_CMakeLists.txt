@@ -1,0 +1,11 @@
+project(qhull C)
+
+message(STATUS "CMake version = ${CMAKE_VERSION}")
+message(STATUS "CMAKE_SYSTEM = ${CMAKE_SYSTEM}")
+message(STATUS "CMAKE_GENERATOR = ${CMAKE_GENERATOR}")
+message(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
+
+cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
+
+add_subdirectory(src)
+

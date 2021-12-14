@@ -1,0 +1,34 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Regression test for backwards compatibility</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="api-compat.html" title="Chapter 20. API compatibility definition"><link rel="prev" href="api_definition.html" title="What is in the API?"><link rel="next" href="API-OBSOLETE.html" title="Chapter 21. Obsolete/Deprecated API for PLplot"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      Regression test for backwards compatibility
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="api_definition.html">Prev</a> </td><th width="60%" align="center">Chapter 20. API compatibility definition</th><td width="20%" align="right"> <a accesskey="n" href="API-OBSOLETE.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="api_regression_tests"></a>
+      Regression test for backwards compatibility
+    </h2></div></div></div><p>
+      Since PLplot is developed by so many people, the task of checking for
+      backwards compatibility of the library is very hard.  As for the 5.3.1
+      release, we do not have any rigorous regression test for check
+      whether the library is really backwards compatible.
+    </p><p>
+      However, here are some rules to be followed by the Release Manager
+      prior to releasing a new version of PLplot:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    Check if there are any changes in
+	    <code class="filename">plplot.h</code>.  If no prototype is changed,
+	    then the chances are high that no backwards incompatibilities
+	    have been introduced.  If new functions has been added, then
+	    the library soname will be kept, although the soversion
+	    strings in <code class="filename">cmake/module/plplot_version.cmake</code>
+	    must be changed following the instructions in that file.
+	  </p></li><li class="listitem"><p>
+	    A necessary, but not sufficient test consists of the following:
+	    first, install the previous released version of PLplot in the
+	    system and compile all the examples
+	    <code class="filename">examples/c/x??c.</code>.  After that, install the
+	    to-be-released version of PLplot and try to run the previously
+	    compiled examples.  If they either link or run incorrectly,
+	    then backwards incompatibilities have been introduced and the
+	    soversion string must be upgraded from <code class="literal">x:y:z</code>
+	    to <code class="literal">(x+1):0:0</code>.
+	  </p></li></ul></div><p>
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="api_definition.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="api-compat.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="API-OBSOLETE.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      What is in the API?
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 21. Obsolete/Deprecated API for PLplot</td></tr></table></div></body></html>

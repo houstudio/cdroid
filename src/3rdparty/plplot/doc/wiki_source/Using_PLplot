@@ -1,0 +1,54 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+`if you installed PLplot in the standard location.`
+
+Linux
+-----
+
+### C/C++
+
+If the <tt>pkg-config</tt> is available and CMake found it during the configuration stage than programs might be compiled for C via:
+
+`` gcc `pkg-config --cflags --libs plplotd` prog.c -o prog ``
+
+For C++:
+
+`` g++ `pkg-config --cflags --libs plplotd-c++` prog.cpp -o prog ``
+
+Windows
+-------
+
+### C/C++
+
+Although <tt>pkg-config</tt> is not a standard Windows utility, there is a win32 binary available from [GTK](http://www.gtk.org/download-windows.html) [(Direct link)](http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config-0.23-2.zip). Be sure to set the PKG_CONFIG_PATH variable to the `<PLplot install>`\\lib\\pkgconfig directory so it can find the PLplot files. You will still not be able to call <tt>pkg-config</tt> directly from the gcc/g++ command since the Windows CLI does not support \`\` (backticks), but at least you can copy and paste the options.
+
+If you built PLplot with the wxWidgets driver, a win32 binary of [wx-config](http://wxconfig.googlepages.com/) [(Direct link)](http://wx-config-win.googlecode.com/svn/binary/wx-config.exe) may also be useful.
+
+### Localization
+
+PLplot supports the use of so-called locales (under Windows also known as *regional settings*) via, for instance the command-line option <tt>-locale</tt>. If you give this option, then numeric labels along the axes will be drawn using the decimal separator of the locale.
+
+There is a difference with the way locale settings work under Windows compared to Linux:
+
+- Under Windows the regional settings from the *Control Panel* are used. There is apparently no effect from environment variables like LC_NUMERIC - The names of locales (you can set them in a C program via the function setlocale()) are different: <tt>Dutch_Netherlands</tt> for instance, instead of <tt>nl_NL</tt> under Linux. For other languages there may or may not be direct support. - On input a period is used, not the regional character. On output, it *is* used.
+
+*Note:* the statements above are based on experiments with MicroSoft Visual C/C++ 6.0 and MicroSoft Visual C/C++ 2008 compilers. It is not clear at the moment if other compilers available under Windows behave in the same way.
+
+The simplest method of using localization on Windows is presumably the use of the *Regional Settings* utility from the *Control Panel*.
+
+Mac OS X
+--------
+
+### C/C++
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

@@ -1,0 +1,29 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLFONT 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplfont\fP - Set font
+.SH SYNOPSIS
+\fBplfont\fP(\fIifont\fP)
+.SH DESCRIPTION
+
+.P
+Sets the font used for subsequent text and symbols.  For devices that still use Hershey fonts this routine has no effect unless the Hershey fonts with extended character set are loaded (see \fBplfontld\fP(3plplot)). For unicode-aware devices that use system fonts instead of Hershey fonts, this routine calls the \fBplsfci\fP(3plplot) routine with argument set up appropriately for the various cases below.  However, this method of specifying the font for unicode-aware devices is deprecated, and the much more flexible method of calling \fBplsfont\fP(3plplot) directly is recommended instead (where \fBplsfont\fP(3plplot) provides a user-friendly interface to \fBplsfci\fP(3plplot)),
+.P
+Redacted form: \fBplfont(ifont)\fP
+.P
+This function is used in examples 1, 2, 4, 7, 13, 24, and 26.
+.SH ARGUMENTS
+.TP
+\fIifont\fP (\fBPLINT\fP(3plplot), input)
+Specifies the font: 1: Sans serif font (simplest and fastest)
+2: Serif font
+3: Italic font
+4: Script font
+
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

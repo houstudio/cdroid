@@ -1,0 +1,488 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 17. The Common API for PLplot</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="part_reference.html" title="Part IV.  Reference"><link rel="prev" href="BIBLIOGRAPHY.html" title="Chapter 16. Bibliography"><link rel="next" href="pl_setcontlabelformat.html" title="pl_setcontlabelformat: Set format of numerical label for contours"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 17. The Common API for PLplot</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="BIBLIOGRAPHY.html">Prev</a> </td><th width="60%" align="center">Part IV.  Reference </th><td width="20%" align="right"> <a accesskey="n" href="pl_setcontlabelformat.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="API"></a>Chapter 17. The Common API for PLplot</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl class="toc"><dt><span class="sect1"><a href="pl_setcontlabelformat.html"><code class="function">pl_setcontlabelformat</code>: Set
+    format of numerical label for contours</a></span></dt><dt><span class="sect1"><a href="pl_setcontlabelparam.html"><code class="function">pl_setcontlabelparam</code>: Set parameters of
+    contour labelling other than format of numerical label</a></span></dt><dt><span class="sect1"><a href="pladv.html"><code class="function">pladv</code>: Advance the (sub-)page</a></span></dt><dt><span class="sect1"><a href="plarc.html">
+      <code class="function">plarc</code>: Draw a circular or elliptical arc
+    </a></span></dt><dt><span class="sect1"><a href="plaxes.html">
+      <code class="function">plaxes</code>: Draw a box with axes, etc. with arbitrary
+      origin
+    </a></span></dt><dt><span class="sect1"><a href="plbin.html">
+      <code class="function">plbin</code>: Plot a histogram from binned data
+    </a></span></dt><dt><span class="sect1"><a href="plbop.html"><code class="function">plbop</code>: Begin a new page</a></span></dt><dt><span class="sect1"><a href="plbox.html"><code class="function">plbox</code>: Draw a box with axes, etc</a></span></dt><dt><span class="sect1"><a href="plbox3.html">
+      <code class="function">plbox3</code>: Draw a box with axes, etc, in 3-d
+    </a></span></dt><dt><span class="sect1"><a href="plbtime.html">
+      <code class="function">plbtime</code>: Calculate broken-down time from
+      continuous time for the current stream
+    </a></span></dt><dt><span class="sect1"><a href="plcalc_world.html">
+      <code class="function">plcalc_world</code>: Calculate world coordinates and
+      corresponding window index from relative device coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plclear.html">
+      <code class="function">plclear</code>: Clear current (sub)page
+    </a></span></dt><dt><span class="sect1"><a href="plcol0.html">
+      <code class="function">plcol0</code>: Set color, cmap0
+    </a></span></dt><dt><span class="sect1"><a href="plcol1.html">
+      <code class="function">plcol1</code>: Set color, cmap1
+    </a></span></dt><dt><span class="sect1"><a href="plcolorbar.html">
+      <code class="function">plcolorbar</code>: Plot color bar for image, shade or gradient plots
+    </a></span></dt><dt><span class="sect1"><a href="plconfigtime.html">
+      <code class="function">plconfigtime</code>: Configure the transformation
+        between continuous and broken-down time for the current stream
+    </a></span></dt><dt><span class="sect1"><a href="plcont.html">
+      <code class="function">plcont</code>: Contour plot
+    </a></span></dt><dt><span class="sect1"><a href="plcpstrm.html">
+      <code class="function">plcpstrm</code>: Copy state parameters from the
+      reference stream to the current stream
+    </a></span></dt><dt><span class="sect1"><a href="plctime.html">
+      <code class="function">plctime</code>: Calculate continuous time from
+      broken-down time for the current stream
+    </a></span></dt><dt><span class="sect1"><a href="plend.html">
+      <code class="function">plend</code>: End plotting session
+    </a></span></dt><dt><span class="sect1"><a href="plend1.html">
+      <code class="function">plend1</code>: End plotting session for current stream
+    </a></span></dt><dt><span class="sect1"><a href="plenv0.html">
+      <code class="function">plenv0</code>: Same as <code class="function">plenv</code> but if in multiplot
+      mode does not advance the subpage, instead clears it
+    </a></span></dt><dt><span class="sect1"><a href="plenv.html">
+      <code class="function">plenv</code>: Set up standard window and draw box
+    </a></span></dt><dt><span class="sect1"><a href="pleop.html">
+      <code class="function">pleop</code>: Eject current page
+    </a></span></dt><dt><span class="sect1"><a href="plerrx.html">
+      <code class="function">plerrx</code>: Draw error bars in x direction
+    </a></span></dt><dt><span class="sect1"><a href="plerry.html">
+      <code class="function">plerry</code>: Draw error bars in the y direction
+    </a></span></dt><dt><span class="sect1"><a href="plfamadv.html">
+      <code class="function">plfamadv</code>: Advance to the next family file on the
+      next new page
+    </a></span></dt><dt><span class="sect1"><a href="plfill.html">
+      <code class="function">plfill</code>: Draw filled polygon
+    </a></span></dt><dt><span class="sect1"><a href="plfill3.html">
+      <code class="function">plfill3</code>: Draw filled polygon in 3D
+    </a></span></dt><dt><span class="sect1"><a href="plflush.html">
+      <code class="function">plflush</code>: Flushes the output stream
+    </a></span></dt><dt><span class="sect1"><a href="plfont.html">
+      <code class="function">plfont</code>: Set font
+    </a></span></dt><dt><span class="sect1"><a href="plfontld.html">
+      <code class="function">plfontld</code>: Load Hershey fonts
+    </a></span></dt><dt><span class="sect1"><a href="plGetCursor.html">
+      <code class="function">plGetCursor</code>: Wait for graphics input event and translate to world coordinates.
+    </a></span></dt><dt><span class="sect1"><a href="plgchr.html">
+      <code class="function">plgchr</code>: Get character default height and current
+      (scaled) height
+    </a></span></dt><dt><span class="sect1"><a href="plgcmap1_range.html">
+      <code class="function">plgcmap1_range</code>: Get the cmap1 argument
+      range for continuous color plots
+    </a></span></dt><dt><span class="sect1"><a href="plgcol0.html">
+      <code class="function">plgcol0</code>: Returns 8-bit RGB values for given color
+      index from cmap0
+    </a></span></dt><dt><span class="sect1"><a href="plgcol0a.html">
+      <code class="function">plgcol0a</code>: Returns 8-bit RGB values and PLFLT alpha
+      transparency value for given color index from cmap0
+    </a></span></dt><dt><span class="sect1"><a href="plgcolbg.html">
+      <code class="function">plgcolbg</code>:  Returns the background color
+      (cmap0[0]) by 8-bit RGB value
+    </a></span></dt><dt><span class="sect1"><a href="plgcolbga.html">
+      <code class="function">plgcolbga</code>:  Returns the background color (cmap0[0])
+      by 8-bit RGB value and PLFLT alpha transparency value
+    </a></span></dt><dt><span class="sect1"><a href="plgcompression.html">
+      <code class="function">plgcompression</code>: Get the current
+      device-compression setting
+    </a></span></dt><dt><span class="sect1"><a href="plgdev.html">
+      <code class="function">plgdev</code>: Get the current device (keyword) name
+    </a></span></dt><dt><span class="sect1"><a href="plgdidev.html">
+      <code class="function">plgdidev</code>: Get parameters that define current
+      device-space window
+    </a></span></dt><dt><span class="sect1"><a href="plgdiori.html">
+      <code class="function">plgdiori</code>: Get plot orientation
+    </a></span></dt><dt><span class="sect1"><a href="plgdiplt.html">
+      <code class="function">plgdiplt</code>: Get parameters that define current
+      plot-space window
+    </a></span></dt><dt><span class="sect1"><a href="plgdrawmode.html">
+      <code class="function">plgdrawmode</code>: Get drawing mode (depends on
+device support!)
+    </a></span></dt><dt><span class="sect1"><a href="plgfam.html">
+      <code class="function">plgfam</code>: Get family file parameters
+    </a></span></dt><dt><span class="sect1"><a href="plgfci.html">
+      <code class="function">plgfci</code>: Get FCI (font characterization integer)
+    </a></span></dt><dt><span class="sect1"><a href="plgfnam.html">
+      <code class="function">plgfnam</code>: Get output file name
+    </a></span></dt><dt><span class="sect1"><a href="plgfont.html">
+      <code class="function">plgfont</code>: Get family, style and weight of the
+      current font
+    </a></span></dt><dt><span class="sect1"><a href="plglevel.html">
+      <code class="function">plglevel</code>: Get the (current) run level
+    </a></span></dt><dt><span class="sect1"><a href="plgpage.html">
+      <code class="function">plgpage</code>: Get page parameters
+    </a></span></dt><dt><span class="sect1"><a href="plgra.html">
+      <code class="function">plgra</code>: Switch to graphics screen
+    </a></span></dt><dt><span class="sect1"><a href="plgradient.html">
+      <code class="function">plgradient</code>: Draw linear gradient inside polygon
+    </a></span></dt><dt><span class="sect1"><a href="plgriddata.html">
+      <code class="function">plgriddata</code>: Grid data from irregularly sampled
+      data
+    </a></span></dt><dt><span class="sect1"><a href="plgspa.html">
+      <code class="function">plgspa</code>: Get current subpage parameters
+    </a></span></dt><dt><span class="sect1"><a href="plgstrm.html">
+      <code class="function">plgstrm</code>: Get current stream number
+    </a></span></dt><dt><span class="sect1"><a href="plgver.html">
+      <code class="function">plgver</code>: Get the current library version number
+    </a></span></dt><dt><span class="sect1"><a href="plgvpd.html">
+      <code class="function">plgvpd</code>: Get viewport limits in normalized
+      device coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plgvpw.html">
+      <code class="function">plgvpw</code>: Get viewport limits in world coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plgxax.html">
+      <code class="function">plgxax</code>: Get x axis parameters
+    </a></span></dt><dt><span class="sect1"><a href="plgyax.html">
+      <code class="function">plgyax</code>: Get y axis parameters
+    </a></span></dt><dt><span class="sect1"><a href="plgzax.html">
+      <code class="function">plgzax</code>: Get z axis parameters
+    </a></span></dt><dt><span class="sect1"><a href="plhist.html">
+      <code class="function">plhist</code>: Plot a histogram from unbinned data
+    </a></span></dt><dt><span class="sect1"><a href="plhlsrgb.html">
+      <code class="function">plhlsrgb</code>: Convert HLS color to RGB
+    </a></span></dt><dt><span class="sect1"><a href="plimagefr.html">
+      <code class="function">plimagefr</code>: Plot a 2D matrix using cmap1
+    </a></span></dt><dt><span class="sect1"><a href="plimage.html">
+      <code class="function">plimage</code>: Plot a 2D matrix using cmap1 with
+      automatic color adjustment
+    </a></span></dt><dt><span class="sect1"><a href="plinit.html">
+      <code class="function">plinit</code>: Initialize PLplot
+    </a></span></dt><dt><span class="sect1"><a href="pljoin.html">
+      <code class="function">pljoin</code>: Draw a line between two points
+    </a></span></dt><dt><span class="sect1"><a href="pllab.html">
+      <code class="function">pllab</code>: Simple routine to write labels
+    </a></span></dt><dt><span class="sect1"><a href="pllegend.html">
+      <code class="function">pllegend</code>: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols
+    </a></span></dt><dt><span class="sect1"><a href="pllightsource.html">
+      <code class="function">pllightsource</code>: Sets the 3D position of the light
+      source
+    </a></span></dt><dt><span class="sect1"><a href="plline.html">
+      <code class="function">plline</code>: Draw a line
+    </a></span></dt><dt><span class="sect1"><a href="plline3.html">
+      <code class="function">plline3</code>: Draw a line in 3 space
+    </a></span></dt><dt><span class="sect1"><a href="pllsty.html">
+      <code class="function">pllsty</code>: Select line style
+    </a></span></dt><dt><span class="sect1"><a href="plmap.html">
+      <code class="function">plmap</code>: Plot continental outline or shapefile
+      data in world coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plmapfill.html">
+      <code class="function">plmapfill</code>: Plot all or a subset of
+      Shapefile data, filling the polygons
+    </a></span></dt><dt><span class="sect1"><a href="plmapline.html">
+      <code class="function">plmapline</code>: Plot all or a subset of
+      Shapefile data using lines in world coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plmapstring.html">
+      <code class="function">plmapstring</code>: Plot all or a subset of
+      Shapefile data using strings or points in world coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plmaptex.html">
+      <code class="function">plmaptex</code>: Draw text at points defined by
+      Shapefile data in world coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plmeridians.html">
+      <code class="function">plmeridians</code>: Plot latitude and longitude lines
+    </a></span></dt><dt><span class="sect1"><a href="plmesh.html">
+      <code class="function">plmesh</code>: Plot surface mesh
+    </a></span></dt><dt><span class="sect1"><a href="plmeshc.html">
+      <code class="function">plmeshc</code>: Magnitude colored plot surface mesh with contour
+    </a></span></dt><dt><span class="sect1"><a href="plmkstrm.html">
+      <code class="function">plmkstrm</code>: Creates a new stream and makes it the
+      default
+    </a></span></dt><dt><span class="sect1"><a href="plmtex.html">
+      <code class="function">plmtex</code>: Write text relative to viewport boundaries
+    </a></span></dt><dt><span class="sect1"><a href="plmtex3.html">
+      <code class="function">plmtex3</code>: Write text relative to viewport boundaries
+      in 3D plots
+    </a></span></dt><dt><span class="sect1"><a href="plot3d.html">
+      <code class="function">plot3d</code>: Plot 3-d surface plot
+    </a></span></dt><dt><span class="sect1"><a href="plot3dc.html">
+      <code class="function">plot3dc</code>: Magnitude colored plot surface with contour
+    </a></span></dt><dt><span class="sect1"><a href="plot3dcl.html">
+      <code class="function">plot3dcl</code>: Magnitude colored plot surface
+      with contour for z[x][y] with y index limits
+    </a></span></dt><dt><span class="sect1"><a href="plparseopts.html">
+      <code class="function">plparseopts</code>: Parse command-line arguments
+    </a></span></dt><dt><span class="sect1"><a href="plpat.html">
+      <code class="function">plpat</code>: Set area line fill pattern
+    </a></span></dt><dt><span class="sect1"><a href="plpath.html">
+      <code class="function">plpath</code>: Draw a line between two points, accounting
+      for coordinate transforms
+    </a></span></dt><dt><span class="sect1"><a href="plpoin.html">
+      <code class="function">plpoin</code>: Plot a glyph at the specified points
+    </a></span></dt><dt><span class="sect1"><a href="plpoin3.html">
+      <code class="function">plpoin3</code>: Plot a glyph at the specified 3D points
+    </a></span></dt><dt><span class="sect1"><a href="plpoly3.html">
+      <code class="function">plpoly3</code>: Draw a polygon in 3 space
+    </a></span></dt><dt><span class="sect1"><a href="plprec.html">
+      <code class="function">plprec</code>: Set precision in numeric labels
+    </a></span></dt><dt><span class="sect1"><a href="plpsty.html">
+      <code class="function">plpsty</code>: Select area fill pattern
+    </a></span></dt><dt><span class="sect1"><a href="plptex.html">
+      <code class="function">plptex</code>: Write text inside the viewport
+    </a></span></dt><dt><span class="sect1"><a href="plptex3.html">
+      <code class="function">plptex3</code>: Write text inside the viewport of a 3D plot
+    </a></span></dt><dt><span class="sect1"><a href="plrandd.html">
+      <code class="function">plrandd</code>: Random number generator
+      returning a real random number in the range [0,1]
+    </a></span></dt><dt><span class="sect1"><a href="plreplot.html">
+      <code class="function">plreplot</code>: Replays contents of plot buffer to
+      current device/file
+    </a></span></dt><dt><span class="sect1"><a href="plrgbhls.html">
+      <code class="function">plrgbhls</code>: Convert RGB color to HLS
+    </a></span></dt><dt><span class="sect1"><a href="plschr.html">
+      <code class="function">plschr</code>: Set character size
+    </a></span></dt><dt><span class="sect1"><a href="plscmap0.html">
+      <code class="function">plscmap0</code>: Set cmap0 colors by 8-bit RGB values
+    </a></span></dt><dt><span class="sect1"><a href="plscmap0a.html">
+      <code class="function">plscmap0a</code>: Set cmap0 colors by 8-bit RGB values and
+      PLFLT alpha transparency value
+    </a></span></dt><dt><span class="sect1"><a href="plscmap0n.html">
+      <code class="function">plscmap0n</code>: Set number of colors in cmap0
+    </a></span></dt><dt><span class="sect1"><a href="plscmap1_range.html">
+      <code class="function">plscmap1_range</code>: Set the cmap1 argument
+      range for continuous color plots
+    </a></span></dt><dt><span class="sect1"><a href="plscmap1.html">
+      <code class="function">plscmap1</code>: Set opaque RGB cmap1 colors
+      values
+    </a></span></dt><dt><span class="sect1"><a href="plscmap1a.html">
+      <code class="function">plscmap1a</code>: Set semitransparent cmap1 RGBA colors.
+    </a></span></dt><dt><span class="sect1"><a href="plscmap1l.html">
+      <code class="function">plscmap1l</code>: Set cmap1 colors using a
+      piece-wise linear relationship
+    </a></span></dt><dt><span class="sect1"><a href="plscmap1la.html">
+      <code class="function">plscmap1la</code>: Set cmap1 colors and alpha
+      transparency using a piece-wise linear relationship
+    </a></span></dt><dt><span class="sect1"><a href="plscmap1n.html">
+      <code class="function">plscmap1n</code>: Set number of colors in cmap1
+    </a></span></dt><dt><span class="sect1"><a href="plscol0.html">
+      <code class="function">plscol0</code>:  Set 8-bit RGB values for given
+      cmap0 color index
+    </a></span></dt><dt><span class="sect1"><a href="plscol0a.html">
+      <code class="function">plscol0a</code>:  Set 8-bit
+      RGB values and PLFLT alpha transparency value for given
+      cmap0 color index
+    </a></span></dt><dt><span class="sect1"><a href="plscolbg.html">
+      <code class="function">plscolbg</code>: Set the background color
+      by 8-bit RGB value
+    </a></span></dt><dt><span class="sect1"><a href="plscolbga.html">
+      <code class="function">plscolbga</code>: Set the background color
+      by 8-bit RGB value and PLFLT alpha transparency value.
+    </a></span></dt><dt><span class="sect1"><a href="plscolor.html">
+      <code class="function">plscolor</code>: Used to globally turn color output on/off
+    </a></span></dt><dt><span class="sect1"><a href="plscompression.html">
+      <code class="function">plscompression</code>: Set device-compression level
+    </a></span></dt><dt><span class="sect1"><a href="plsdev.html">
+      <code class="function">plsdev</code>: Set the device (keyword) name
+    </a></span></dt><dt><span class="sect1"><a href="plsdidev.html">
+      <code class="function">plsdidev</code>: Set parameters that define current
+      device-space window
+    </a></span></dt><dt><span class="sect1"><a href="plsdimap.html">
+      <code class="function">plsdimap</code>: Set up transformation from metafile
+      coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plsdiori.html">
+      <code class="function">plsdiori</code>: Set plot orientation
+    </a></span></dt><dt><span class="sect1"><a href="plsdiplt.html">
+      <code class="function">plsdiplt</code>: Set parameters that define current
+      plot-space window
+    </a></span></dt><dt><span class="sect1"><a href="plsdiplz.html">
+      <code class="function">plsdiplz</code>: Set parameters incrementally (zoom mode)
+      that define current plot-space window
+    </a></span></dt><dt><span class="sect1"><a href="plsdrawmode.html">
+      <code class="function">plsdrawmode</code>: Set drawing mode (depends on
+      device support!)
+    </a></span></dt><dt><span class="sect1"><a href="plseed.html">
+      <code class="function">plseed</code>: Set seed for internal random
+      number generator.
+    </a></span></dt><dt><span class="sect1"><a href="plsesc.html">
+      <code class="function">plsesc</code>: Set the escape character for text strings
+    </a></span></dt><dt><span class="sect1"><a href="plsetopt.html">
+      <code class="function">plsetopt</code>: Set any command-line option
+    </a></span></dt><dt><span class="sect1"><a href="plsfam.html">
+      <code class="function">plsfam</code>: Set family file parameters
+    </a></span></dt><dt><span class="sect1"><a href="plsfci.html">
+      <code class="function">plsfci</code>: Set FCI (font characterization integer)
+    </a></span></dt><dt><span class="sect1"><a href="plsfnam.html">
+      <code class="function">plsfnam</code>: Set output file name
+    </a></span></dt><dt><span class="sect1"><a href="plsfont.html">
+      <code class="function">plsfont</code>: Set family, style and weight of the
+      current font
+    </a></span></dt><dt><span class="sect1"><a href="plshades.html">
+      <code class="function">plshades</code>: Shade regions on the basis of value
+    </a></span></dt><dt><span class="sect1"><a href="plshade.html">
+      <code class="function">plshade</code>:  Shade individual region on the basis of value
+    </a></span></dt><dt><span class="sect1"><a href="plslabelfunc.html">
+      <code class="function">plslabelfunc</code>: Assign a function to use for generating custom axis labels
+    </a></span></dt><dt><span class="sect1"><a href="plsmaj.html">
+      <code class="function">plsmaj</code>: Set length of major ticks
+    </a></span></dt><dt><span class="sect1"><a href="plsmem.html">
+      <code class="function">plsmem</code>: Set the memory area to be plotted (RGB)
+    </a></span></dt><dt><span class="sect1"><a href="plsmema.html">
+      <code class="function">plsmema</code>: Set the memory area to be plotted (RGBA)
+    </a></span></dt><dt><span class="sect1"><a href="plsmin.html">
+      <code class="function">plsmin</code>: Set length of minor ticks
+    </a></span></dt><dt><span class="sect1"><a href="plsori.html">
+      <code class="function">plsori</code>: Set orientation
+    </a></span></dt><dt><span class="sect1"><a href="plspage.html">
+      <code class="function">plspage</code>: Set page parameters
+    </a></span></dt><dt><span class="sect1"><a href="plspal0.html">
+      <code class="function">plspal0</code>: Set the cmap0 palette using the
+      specified <code class="filename">cmap0*.pal</code> format file
+    </a></span></dt><dt><span class="sect1"><a href="plspal1.html">
+      <code class="function">plspal1</code>: Set the cmap1 palette using the
+      specified <code class="filename">cmap1*.pal</code> format file
+    </a></span></dt><dt><span class="sect1"><a href="plspause.html">
+      <code class="function">plspause</code>: Set the pause (on end-of-page) status
+    </a></span></dt><dt><span class="sect1"><a href="plsstrm.html">
+      <code class="function">plsstrm</code>: Set current output stream
+    </a></span></dt><dt><span class="sect1"><a href="plssub.html">
+      <code class="function">plssub</code>: Set the number of subpages in x and y
+    </a></span></dt><dt><span class="sect1"><a href="plssym.html">
+      <code class="function">plssym</code>: Set symbol size
+    </a></span></dt><dt><span class="sect1"><a href="plstar.html">
+      <code class="function">plstar</code>: Initialization
+    </a></span></dt><dt><span class="sect1"><a href="plstart.html">
+      <code class="function">plstart</code>: Initialization
+    </a></span></dt><dt><span class="sect1"><a href="plstransform.html">
+      <code class="function">plstransform</code>: Set a global coordinate transform
+      function
+    </a></span></dt><dt><span class="sect1"><a href="plstring.html">
+      <code class="function">plstring</code>: Plot a glyph at the specified points
+    </a></span></dt><dt><span class="sect1"><a href="plstring3.html">
+      <code class="function">plstring3</code>: Plot a glyph at the specified 3D points
+    </a></span></dt><dt><span class="sect1"><a href="plstripa.html">
+      <code class="function">plstripa</code>: Add a point to a strip chart
+    </a></span></dt><dt><span class="sect1"><a href="plstripc.html">
+      <code class="function">plstripc</code>: Create a 4-pen strip chart
+    </a></span></dt><dt><span class="sect1"><a href="plstripd.html">
+      <code class="function">plstripd</code>: Deletes and releases memory used by a
+      strip chart
+    </a></span></dt><dt><span class="sect1"><a href="plstyl.html">
+      <code class="function">plstyl</code>: Set line style
+    </a></span></dt><dt><span class="sect1"><a href="plsurf3d.html">
+      <code class="function">plsurf3d</code>: Plot shaded 3-d surface plot
+    </a></span></dt><dt><span class="sect1"><a href="plsurf3dl.html">
+      <code class="function">plsurf3dl</code>: Plot shaded 3-d surface plot for
+      z[x][y] with y index limits
+    </a></span></dt><dt><span class="sect1"><a href="plsvect.html">
+      <code class="function">plsvect</code>: Set arrow style for vector plots
+    </a></span></dt><dt><span class="sect1"><a href="plsvpa.html">
+      <code class="function">plsvpa</code>: Specify viewport in absolute coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plsxax.html">
+      <code class="function">plsxax</code>: Set x axis parameters
+    </a></span></dt><dt><span class="sect1"><a href="plsyax.html">
+      <code class="function">plsyax</code>: Set y axis parameters
+    </a></span></dt><dt><span class="sect1"><a href="plsym.html">
+      <code class="function">plsym</code>: Plot a glyph at the specified points
+    </a></span></dt><dt><span class="sect1"><a href="plszax.html">
+      <code class="function">plszax</code>: Set z axis parameters
+    </a></span></dt><dt><span class="sect1"><a href="pltext.html">
+      <code class="function">pltext</code>: Switch to text screen
+    </a></span></dt><dt><span class="sect1"><a href="pltimefmt.html">
+      <code class="function">pltimefmt</code>: Set format for date / time labels
+    </a></span></dt><dt><span class="sect1"><a href="plvasp.html">
+      <code class="function">plvasp</code>: Specify viewport using aspect ratio only
+    </a></span></dt><dt><span class="sect1"><a href="plvect.html">
+      <code class="function">plvect</code>: Vector plot
+    </a></span></dt><dt><span class="sect1"><a href="plvpas.html">
+      <code class="function">plvpas</code>: Specify viewport using coordinates and aspect ratio
+    </a></span></dt><dt><span class="sect1"><a href="plvpor.html">
+      <code class="function">plvpor</code>: Specify viewport using normalized subpage coordinates
+    </a></span></dt><dt><span class="sect1"><a href="plvsta.html">
+      <code class="function">plvsta</code>: Select standard viewport
+    </a></span></dt><dt><span class="sect1"><a href="plw3d.html">
+      <code class="function">plw3d</code>: Configure the transformations required for projecting a 3D surface on a 2D window
+    </a></span></dt><dt><span class="sect1"><a href="plwidth.html">
+      <code class="function">plwidth</code>: Set pen width
+    </a></span></dt><dt><span class="sect1"><a href="plwind.html">
+      <code class="function">plwind</code>: Specify window
+    </a></span></dt><dt><span class="sect1"><a href="plxormod.html">
+      <code class="function">plxormod</code>: Enter or leave xor mode
+    </a></span></dt></dl></div><p>The purpose of this chapter is to document the common API for
+  every PLplot function that should be available across all PLplot
+  language bindings.  Therefore, this chapter excludes
+  obsolete/deprecated API functions which are listed in <a class="xref" href="API-OBSOLETE.html" title="Chapter 21. Obsolete/Deprecated API for PLplot">Chapter 21, <i>Obsolete/Deprecated API for PLplot</i></a> and also excludes API specialized for each
+  language binding that is documented in <a class="xref" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot">Chapter 18, <i>The Specialized C/C++ API for PLplot</i></a> and
+  subsequent chapters.  </p><p> The common API constitutes the
+  most important part of the PLplot API that programmers need to
+  know.</p><p>For the C case, these common API routines have prototypes
+  defined in <code class="filename">plplot.h</code> using <a class="link" href="c.html#plplot-types">PLplot C types for arguments</a>.  The names
+  for these types have been chosen to be self-documenting.  So
+  <em class="parameter"><code>PLINT</code></em> refers to the PLplot integer type, and
+  <em class="parameter"><code>PLFLT</code></em> refers to the PLplot floating-point type.
+  If the name has a <em class="parameter"><code>_VECTOR</code></em> or
+  <em class="parameter"><code>_MATRIX</code></em> suffix the type corresponds to the
+  one-dimensional or two-dimensional array argument type native to the
+  language being supported by PLplot.  If the name does not have either
+  of those two suffixes or if it has a suffix of
+  <em class="parameter"><code>_SCALAR</code></em>, then it refers to a scalar quantity.
+  Finally, note that most of our common API arguments are input only and
+  are guaranteed not to be changed by the PLplot routine.  However, in
+  some cases the argument is used for output quantities which
+  <span class="emphasis"><em>are</em></span> changed by the PLplot routine, and in this
+  case we include <em class="parameter"><code>_NC</code></em> (standing for
+  "non-constant") in the argument type name.</p><p> We document our common API below for the C case, but it
+  should be fairly straightforward to infer the corresponding API for
+  any of our supported languages from these results because of the
+  self-documenting names we use for the <a class="link" href="c.html#plplot-types">PLplot C types for arguments</a>.  Of
+  course, the best way to learn how to use our common API for the
+  language of your choice is to look at <a class="ulink" href="http://plplot.org/examples.php" target="_top">our standard set of
+  examples</a>.  For additional language documentation you should
+  consult the various chapters in <a class="xref" href="part_bindings.html" title="Part III.  Supported computer languages">Part III, “ Supported computer languages ”</a> as
+  well.</p><p>
+    What follows is a list of all common API functions of the latest
+    PLplot version.  The
+    following information is provided for each function:
+    </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>
+	  The function name and a brief description.
+	</p></li><li class="listitem"><p>
+	  The function as it would be called from C.
+	</p></li><li class="listitem"><p>
+	  A complete description of the function.
+	</p></li><li class="listitem"><p>
+	  A description of each argument that the function takes.
+	</p></li><li class="listitem"><p>
+	  The redacted argument form of the function as well as any language specific variations that
+	  might occur on the general calling scheme described in
+	  the following paragraph.
+	</p></li><li class="listitem"><p>
+	  A list of PLplot examples that demonstrate how to use
+	  the function.
+	</p></li></ol></div><p>
+  </p><p>
+    The general calling scheme for the other languages supported
+    by PLplot is as follows, using the function
+    <a class="link" href="plline.html" title="plline: Draw a line"><code class="function">plline</code></a> as an example.
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  C: <code class="function">plline( n, x, y );</code>
+	</p></li><li class="listitem"><p>
+	  Ada/standard: <code class="function">Draw_Curve( x, y );</code>
+	</p></li><li class="listitem"><p>
+	  Ada/traditional: <code class="function">plline( x, y );</code>
+	</p></li><li class="listitem"><p>
+	  C++: <code class="function">pls-&gt;line(n, x, y );</code>
+	</p></li><li class="listitem"><p>
+	  D: <code class="function">plline( x, y );</code>
+	</p></li><li class="listitem"><p>
+	  Fortran: <code class="function">plline( x, y )</code>
+	</p></li><li class="listitem"><p>
+	  Java: <code class="function">pls.line( x, y );</code>
+	</p></li><li class="listitem"><p>
+	  Lua: <code class="function">pl.line( x, y )</code>
+	</p></li><li class="listitem"><p>
+	  OCaml: <code class="function">plline x y;</code>
+	</p></li><li class="listitem"><p>
+	  Octave: <code class="function">plline( x', y' );</code>
+	</p></li><li class="listitem"><p>
+	  Python: <code class="function">plline( x, y )</code>
+	</p></li><li class="listitem"><p>
+	  Tcl/Tk: <code class="function">$w cmd plline x y</code>
+	</p></li></ul></div><p>
+
+    Note that in all our supported languages other than C and C++, the
+    argument <code class="literal"><em class="parameter"><code>n</code></em></code> (which specifies
+    the length of the input vectors
+    <code class="literal"><em class="parameter"><code>x</code></em></code> and
+    <code class="literal"><em class="parameter"><code>y</code></em></code>) is not used in the
+    argument list since that information is already available from the
+    vector (and matrix in the general case) arguments themselves.  This is
+    what we refer to above as the <span class="quote">“<span class="quote">redacted argument form</span>”</span> of
+    the function.
+  </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="BIBLIOGRAPHY.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="part_reference.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="pl_setcontlabelformat.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 16. Bibliography </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> <code class="function">pl_setcontlabelformat</code>: Set
+    format of numerical label for contours</td></tr></table></div></body></html>

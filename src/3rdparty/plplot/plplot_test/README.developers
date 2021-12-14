@@ -1,0 +1,136 @@
+Information for developers
+
+The configured bash test scripts in this directory are designed to be used in 5
+(!) different testing contexts.  These contexts are the following:
+
+1. Ordinary CMake targets that perform tests for the CMake-based build
+   system for the source tree (if -DBUILD_TEST=ON).  Scripts are
+   configured into the ${CMAKE_BINARY_DIR}/plplot_test directory.
+
+2. CMake ctest targets that perform tests for the CMake-based build
+   system for the source tree (if -DBUILD_TEST=ON).  Scripts are
+   configured into the ${CMAKE_BINARY_DIR}/plplot_test directory
+
+3. Ordinary CMake targets that perform tests for the CMake-based build
+   system for the installed examples.  Scripts are configured
+   separately for the install-tree case and installed at the top-level
+   directory of the installed examples = ${DATA_DIR}/examples.
+
+4. (Planned) CMake ctest targets that perform tests for the
+   CMake-based build system for the installed examples.  Scripts are
+   configured separately for the install-tree case and installed at
+   the top-level directory of the installed examples =
+   ${DATA_DIR}/examples.
+
+5. Traditional make targets that perform tests for the traditional
+   (Makefile + pkg-config) build system for the installed examples.
+   Scripts are configured separately for the install-tree case and
+   installed at the top-level directory of the installed examples =
+   ${DATA_DIR}/examples.
+
+EXAMPLES_PREFIX and SRC_EXAMPLES_PREFIX are the environment
+variables that designates where the examples are found for the
+front ends for these different contexts.  These environment variables
+can be set externally or internally (in, e.g., the plplot-test.sh
+script using the script options --examples-prefix and/or
+--src-examples-prefix).  The default values of these environment
+variables are ".", i.e., the current directory.  Furthermore,
+$EXAMPLES_PREFIX/c must be an existing directory.  Note that SRC_EXAMPLES_PREFIX
+is only used in a fairly limited number of cases.  Those are the octave
+case (where it is used in both the core build and installed examples cases) and the
+python and lua cases (where it is used in just the installed examples case).
+
+These environment variables are set for the 5 different contexts
+as follows:
+
+1 and 2: EXAMPLES_PREFIX=${CMAKE_BINARY_DIR}/examples SRC_EXAMPLES_PREFIX=${CMAKE_SOURCE_DIR}/examples
+
+3 and 4: EXAMPLES_PREFIX=default ("." = top-level of build-tree for installed examples) SRC_EXAMPLES_PREFIX=${CMAKE_CURRENT_SOURCE_DIR} (= top-level of source tree for installed examples)
+
+5. EXAMPLES_PREFIX=default (= "." = top-level of source-tree for installed examples) SRC_EXAMPLES_PREFIX= default (= "." = top-level of source-tree for installed examples)
+
+Notes on the "front ends" for each of these contexts:
+
+* Ada, C, C++, D, Fortran, Java, and OCaml:
+Thse are all languages where the examples are compiled and linked for
+all contexts with the build results stored in the ada, c, cxx, d,
+fortran, java, and ocaml subdirectories of EXAMPLES_PREFIX.  For this
+group of compiled languages SRC_EXAMPLES_PREFIX is ignored, and the
+only configurable template file in the examples is
+examples/fortran/plfortrandemos.inc.in where the configuration has
+nothing to do with location so is the same for all contexts.
+
+* plrender:
+This is a special case that is virtually identical to the C case
+(including ignoring SRC_EXAMPLES_PREFIX) except that -dev plmeta is
+used to provide intermediate results and plrender used to provide
+final results to compare with the C results.  N.B. I am not sure
+whether this works anymore since -dev plmeta and plrender are no
+longer enabled by default (because of -dev plmeta and plrender UTF-8
+and other issues) so may have fallen into disrepair.
+
+* Tcl:
+
+This is also a case where SRC_EXAMPLES_PREFIX is ignored.  The plmeta
+application (corresponding to the prefixed "plmeta" CMake targets, i.e.,
+PLPLOT::plmeta and ${WRITEABLE_TARGET}plmeta) is used
+to help render results.  The Tcl examples use the following
+configured files:
+
+examples/tcl/pltcl_standard_examples(.in)
+examples/tcl/tclsh_standard_examples(.in)
+examples/tcl/x??(.in)
+
+For contexts 1 and 2 these files are configured from the source tree
+to corresponding build directory by the core CMake-based build system
+and for contexts 3 and 4 the file templates must be installed (by the
+core build system) to examples/tcl in the installed examples and
+configured from there to the corresponding build directory by the
+CMake-based build system for the installed examples.  The traditional
+build system for the installed examples (context 5) is too primitive
+to configure files so for this special context these files must be
+preconfigured and installed in the installed examples by the
+CMake-based core build system where they are accessed by the
+traditional build system using the (default) EXAMPLES_PREFIX of ".".
+
+* Octave:
+The tests are done from one octave session rather than for individual
+octave sessions.  The setup of that octave session (in test_octave.sh
+and test_octave_interactive.sh) is configured in the present directory
+and depends on a fairly large number of different locations that occur
+in two prefix locations.  For this reason, both EXAMPLES_PREFIX and
+SRC_EXAMPLES_PREFIX are used for this case.  Note, that although all
+test shell scripts in the present directory are configured (including
+the octave-related test scripts), the octave examples themselves
+contain no configured files.
+
+* Python and Lua:
+This is the set of front-ends that use the EXAMPLES_PREFIX environment
+variable to help find the examples in the core build tree, and the
+SRC_EXAMPLES_PREFIX environment variable to help find the examples in the
+installed examples tree.  Additional notes for these languages:
+
+ + Python:
+ The Python examples use the following configured files:
+
+ examples/python/plplot_python_start.py(.in)
+ examples/python/test_plsmem.py(.in)
+
+ In the core build case (contexts 1 and 2) these files are configured
+ to the build tree and the relevant examples files also copied over to
+ the build tree so that all Python examples are run there.  In the
+ installed examples case (contexts 3, 4 and 5) the Python examples are
+ run in situ in the source tree (see remarks concerning
+ SRC_EXAMPLES_PREFIX above) so special configurations of the above
+ files need to be installed for that case by the core build system
+ and the installed examples build systems do not configure the
+ above files.
+
+ + Lua:
+ The Lua examples use the following configured file:
+
+ examples/lua/plplot_examples.lua(.in)
+
+ Lua uses exactly the same paradigm as the above Python case concerning
+ how this file is configured and installed and how the Lua examples
+ are copied to the build tree for the core build case.

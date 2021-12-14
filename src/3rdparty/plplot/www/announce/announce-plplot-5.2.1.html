@@ -1,0 +1,340 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+  <title>Announcement of PLplot-5.2.1</title>
+</head>
+<body>
+<h1>Announcement of PLplot-5.2.1</h1>
+<p>
+Three months and a lot of hard work after the release of PLplot-5.2.0, it is
+time for another stable release of this publication-quality scientific
+plotting package.
+</p>
+<ul>
+  <li>What: PLplot-5.2.1 release.</li>
+  <li>Where: <a href="http://sourceforge.net/project/showfiles.php?group_id=2915">
+  http://sourceforge.net/project/showfiles.php?group_id=2915</a>
+  (click on plplot-5.2.1.tar.gz).</li>
+  <li>When: 2003 April 21.</li>
+  <li>Why: Consolidation of the many changes in 5.2.0, bug-fixing, new
+features.</li>
+  <li>Who: The PLplot core development <a href="http://sourceforge.net/project/memberlist.php?group_id=2915">team</a>
+  with additional help from
+  <a href="mailto:svensson@esrf.fr">Olof Svensson</a>
+  in supporting the windows port of PLplot (see
+  plplot/sys/win32/msdev/README.TXT).
+</ul>
+<p>
+This is the first detailed PLplot release announcement since 5.1.0 so we
+will be covering both the changes (1000+ commits) between 5.1.0
+and 5.2.0, and the additional changes (700+ commits) between
+5.2.0, and the current 5.2.1.
+</p>
+<h2>API Additions</h2>
+<ul>
+<li> 5.2.0
+  <ul>
+  <li>plcalc_world.  Calculate world coordinates and subpage from relative
+device coordinates.</li>
+  <li>plenv0.  Similar to plenv, but in multiplot mode does not advance the
+  subpage, instead the current subpage is cleared.</li>
+  <li>plgvpd.  Get viewport boundaries in normalized device coordinates.</li>
+  <li>plgvpw.  Get viewport boundaries in world coordinates.</li>
+  <li>plmeshc. Contoured version of plmesh.</li>
+  <li>plot3dc. Contoured version of plot3d.</li>
+  <li>plsurf3d. Contoured version of deprecated plotsh3d.</li>
+  <li>plsbopH.  Sets an optional user bop handler.</li>
+  <li>plseopH.  Sets an optional user eop handler.</li>
+  </ul>
+</li>
+<li> 5.2.1
+  <ul>
+  <li>plsmem.  Set the memory area to be plotted.  This function is used in
+  conjunction with the mem.c device driver which is required by Doug Hunt's
+  PDL interface to PLplot.</li>
+  <li>plgriddata.  Generate grid data for 3D plots from irregularly sampled data.</li>
+  </ul>
+</li>
+</ul>
+
+<p></p>
+<h2>API Changes</h2>
+<ul>
+<li> 5.2.0
+  <ul>
+  <li>plotsh3d deprecated.  Use plsurf3d instead.</li>
+  <li>plP_gvpd deprecated.  Use plgvpd instead.</li>
+  <li>plP_gvpw deprecated.  Use plgvpw instead.</li>
+  <li>plpoly3.  Argument list change.</li>
+  <li>plimage.  Argument list change.</li>
+  <li>plend.  Changed internally.  May only be called once to close the PLplot
+  library and terminate all plotting. If you have multiple instances of
+  plinit, the first one opens the PLplot library and plend1 should be used to
+  terminate all but the last of them which should be terminated by plend.</li>
+  </ul>
+</li>
+<li> 5.2.1
+  <ul>
+  <li>None.</li>
+  </ul>
+</li>
+</ul>
+<p></p>
+<h2>Important Paradigm Shifts for 5.2.x</h2>
+<p>
+5.1.0 introduced the idea of plug-in or dynamic devices, and this paradigm
+shift lead to other paradigm shifts in the way our libraries were organized
+and the way we configured PLplot for 5.2.0.  Because of limitations in the
+way our 5.1.0 code was organized into libraries several drivers (e.g., xwin,
+tk) could not be made dynamic.  This problem was solved for 5.2.0 by
+reorganizing our code into a larger number of smaller libraries and shared
+objects where linking was strictly hierarchical (rather than having
+cross-linking between our various libraries and shared objects).  This
+paradigm shift meant that code specific to particular interfaces was kept
+strictly in separate interface libraries; libplplot was strictly reserved
+for core plotting functions; and specialized device code was kept with the
+device shared objects (or plug-ins). A side benefit of this reorganization
+was that it became possible to load the plplot Tcl/Tk interface library
+directly into a tclsh or wish environment for the first time for Linux/Unix
+platforms.  (See examples/tcl/README.tcldemos and examples/tk/README.tkdemos
+for the details.)
+</p>
+<p>
+The library reorganization forced another paradigm shift in the way we did
+our configuration for 5.2.0.  Our previous low-level pure autoconf-based
+configuration system was extremely difficult to adjust to the new library
+reorganization. Thus, we changed over to a high-level autotools (libtool and
+automake on top of autoconf) approach to generate our configuration. This
+paradigm shift is mostly transparent to the user (who should simple execute
+configure; make; and make install as before, see comments below), but it
+makes PLplot configuration much more maintainable and also potentially gives
+our users the ability to configure, build and run PLplot on a much wider
+variety of Unix platforms. For example, Unix users should now be able to use
+their native make command (as opposed to the GNU make we demanded before)
+and their native compiler to build PLplot using shared libraries, and
+dynamic drivers; something that was impossible before.
+</p>
+<p>
+Although the new configuration has great cross-platform potential, it should
+be emphasized that the vast majority of our testing of PLplot-5.2.1 has been
+done on Linux (good reports for Debian, Mandrake, RedHat, and SuSe), and our
+Unix testing has so far been quite limited (good reports for OSF1 and
+NetBSD). Thus some additional minor changes might be required to get PLplot
+to work for other Unix platforms such as Solaris. User's feedback will be an
+essential part of determining what (if any) changes need to be made.
+</p>
+<p>
+Here is a list of known exceptions to the expected cross-platform Unix
+support of PLplot.
+</p>
+
+<ul>
+<li>Pre-built documentation is included in our release tarball so there is no
+need for our general users to build the documentation. Thus, we only support
+documentation building on Linux for developers who want to contribute
+documentation, and our Makefiles in the doc/docbook tree consequently
+contain Gnu makeisms and probably other Linux-only constructs as well.
+</li>
+<li>The Tcl/Tk configuration works on Linux, but it will need some changes
+to work on all Unix platforms.
+</li>
+<li>From bad reports we have received we do not expect PLplot-5.2.1 to work on
+Cygwin and Mac OS X because of libtool-1.4.3 issues with those platforms.
+However, there has been a very recent release (only a week ago) of
+libtool-1.5 which apparently addresses a number of those issues.  Although
+this libtool release is too late to test for our current PLplot release,
+there is good hope for PLplot on Cygwin and Mac OS X for the near future.
+</li>
+</ul>
+
+<p></p>
+<h2>5.2.0 Improvements</h2>
+<ul>
+<li>The plframe widget for multi-page plots now has page control.
+</li>
+<li>The internals of dealing with hidden 3D shaded regions have been
+completely
+rewritten so that the egregious rendering bugs in example 8 for 5.1.0 have
+now been fixed.
+</li>
+<li>Contouring versions of all 3D surface plotting routines.  See added API
+above and examples 8 and 11 at <a
+href="http://plplot.sourceforge.net/examples/index.html">
+http://plplot.sourceforge.net/examples/index.html</a> for some good-looking
+examples of this API.</li>
+<li>SWIG-generated Python and Java interfaces to the PLplot library.  Unlike,
+the prior hand-coded interfaces, these new interfaces have essentially
+complete support for all PLplot API (with the redundant dimensions of
+matrices and vectors dropped).  The Python version has a user-friendly
+wrapper (see bindings/python/plplot.py) which supports some useful
+simplified variations in the argument list as well as angle wrapping (see
+below). The Java interface lacks this user-friendly wrapper at the moment.
+For other (minor) Java interface limitations see
+bindings/java/README.javaAPI.
+</li>
+<li>Removed bugs in angle wrapping code (a user-friendly way to deal with the
+transition from 2pi to 0) for the Tcl and Python interfaces to PLplot.  The
+Java interface is lacking this angle-wrapping code at the moment.
+</li>
+<li>Completed Java, Tcl, Python, and Octave equivalents of most of the C
+examples.  The consistency of example results for the interfaces to PLplot
+is a good measure of the quality of the various interfaces.
+</li>
+<li>The Tcl/Tk interface to PLplot can now be run directly from tclsh and wish
+environments (tested on Linux, but not on Unix).
+</li>
+<li>tkwin driver added. (It does not implement a plug-in device like other
+drivers.  Instead, it is designed to work in both
+plserver and wish
+environments, see examples/tk/README.tkdemos.)
+</li>
+<li>3D clipping support added to allow zooming of 3D plots.  This gives good
+results for example 18, mostly good results for example 8 (the base contours
+[if present] are not clipped properly).  Through an oversight, plmesh and
+plmeshc were not included in the 3D clipping code fixup so zooming gives a
+poor result for example 11.
+</li>
+<li>PLplot interface to freetype2 library.  This allows us to use system fonts
+instead of our default Hershey fonts.  At this time only the gd device driver
+(which implements the png and jpeg devices)
+has been freetype-enabled.  To use this feature look
+at the documentation in drivers/gd.c.  This proof of concept gives some
+nice-looking antialiased character results in png and jpeg plots using
+system fonts, and we need volunteers to extend this idea to other device
+drivers as well.
+(See the notes on how to do this in
+<a href="http://plplot.sourceforge.net/resources/docbook-manual/plplot-html-5.2.1/freetype-notes.html">
+http://plplot.sourceforge.net/resources/docbook-manual/plplot-html-5.2.1/freetype-notes.html</a>.)
+</li>
+<li>Application-defaults files (to set X resources) for use with PLplot and
+Tk.  See bindings/tk/app-defaults/README for more details.
+</li>
+</ul>
+
+<p></p>
+<h2>5.2.1 Improvements</h2>
+<ul>
+<li>There has been a a substantial rewrite of the the new autotools
+configuration system in a better style which should make it easier to
+maintain in the future.  As a direct benefit of this rewrite, Debian
+packaging of PLplot (see results at
+<a href="http://packages.debian.org/unstable/math/libplplot5.html">
+http://packages.debian.org/unstable/math/libplplot5.html</a>) is now easier to
+do.
+</li>
+<li>The configuration combination of static libraries and double precision
+which failed in 5.2.0 now works.
+</li>
+<li>Allow 3D plots of irregularly sampled data (see new plgriddata API above
+and example 21 at
+<a href="http://plplot.sourceforge.net/examples/index.html">
+http://plplot.sourceforge.net/examples/index.html</a> for
+some good-looking results).
+</li>
+</ul>
+
+<p></p>
+<h2>Configuring, Building, Installing, and Testing PLplot</h2>
+<h3>Configuring</h3>
+<p>
+To configure Plplot just run the configure script with appropriate options
+(see below).  It normally should find all resources (programmes, libraries,
+and headers) required to build PLplot on your system (or else after a
+warning turn off some aspect of PLplot that needs the missing resource).
+</p>
+<p>
+Our configuration option defaults have substantially changed from 5.2.0.
+Every interface is turned on by default except for Java. You can turn that
+on by using the &minus;&minus;enable-java option. (Our new SWIG-generated Java interface
+works well to compile and run our rather complete Java examples without
+problems, but in our judgement the Java interface needs this fully
+publicized 5.2.1 release cycle of full user testing before we turn it on by
+default in the next release.) Every device driver is enabled by default
+except for gnome (still alpha quality software). Both shared and static
+libraries are built by default.
+</p>
+<p>
+There are some important options you may want to use rather than the
+defaults. If you want to save the time and space required to build static
+libraries, specify &minus;&minus;disable-static.  If you prefer the old-fashioned method
+of embedding the drivers into the library rather than the default method of
+using dynamic (or plug-in) drivers, specify &minus;&minus;disable-dyndrivers. If you
+prefer building single precision versions of all the libraries, specify
+&minus;&minus;without-double. If you want to install the pre-built documentation that is
+included in the tarball, specify &minus;&minus;with-prebuiltdoc.  If you want a
+different installation prefix than the default /usr/local, specify it using,
+e.g., &minus;&minus;prefix=/usr/local/plplot.
+</p>
+<p>
+You can find out quite a bit about configuration options using the
+&minus;&minus;help option to the configure command. Also, in difficult cases
+there are environment variables you can set to help the configure script
+find libraries and headers on your system. Most of these environment
+variables are not well documented, but you can usually figure them out by
+reading configure.ac and sysloc.in.
+</p>
+<h3>Building and installing</h3>
+<p>
+The usual make; make install.
+</p>
+<h3>Testing</h3>
+<p>
+Currently none of our examples work in the build directory (unless you take
+some extraordinary measures).  Instead, you must install PLplot first, then
+(optionally) copy the *installed* examples directory to some user location,
+build the examples, and exercise them for a comprehensive test.  Here are
+the details.
+</p>
+<pre>
+# Substitute your installation prefix for /usr/local/plplot.  Also note
+# this cp step is not necessary if you can write files into your install area
+# as an ordinary user.
+
+cp -a /usr/local/plplot/lib/plplot5.2.1/examples /tmp
+cd /tmp/examples
+
+# build the installed examples that need compiling
+
+cd c; make; cd c++; make; cd f77; make; cd tk; make; cd ..
+
+# Run all the examples to produce many coloured postscript image files.
+
+./plplot-test.sh --device=psc
+
+# Find out about other PLplot file devices to test such as png and jpeg.
+
+./plplot-test.sh --help
+</pre>
+<p>
+If you have installed the Tcl/Tk interface to PLplot you can do further
+interactive testing following the instructions in
+examples/tcl/README.tcldemos and examples/tk/README.tkdemos.
+</p>
+<p>
+N.B. for all the above testing steps to work /usr/local/plplot/bin must be in
+your PATH.
+</p>
+
+<h2>The Future</h2>
+<p>
+The future for PLplot looks bright indeed. 5.2.1 consolidates the paradigm
+shifts of plug-in devices, library reorganization, and an autotools-based
+configuration scheme for PLplot and establishes an excellent infrastructure
+for further more incremental improvements.
+</p>
+
+<h2> Thanks </h2>
+<p>
+I thank the rest of the PLplot core team for all their hard work in making
+PLplot-5.2.1 possible.  Also,
+an external developer, Gary Bishop, deserves special thanks for his
+donation of the new SWIG-generated Python interface (which inspired my work
+on the SWIG-generated Java interface as well), and his complete rewrite of
+what is now called plsurf3d to eliminate our worst rendering bug in 5.1.0.
+</p>
+
+<p>Alan W. Irwin, 2003 April 21</p>
+</body>
+</html>

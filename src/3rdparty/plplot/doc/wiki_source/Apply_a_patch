@@ -1,0 +1,24 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+The key elements to pay attention to with the patch application are to make sure you are in the proper directory within the source tree, and the --dry-run and -p options for patch such as -p0, -p1, etc. Basically, the number after the -p option is the number of subdirectory prefixes to strip off the file names in the patch. Hez's current patch has file names a/drivers/cairo.c and b/drivers/cairo.c so you apply -p1 to strip off just the a/ and b/ from the names and patch will find drivers/cairo.c to patch _IF_ you are in the top-level of the source tree. However, if you are in the drivers subdirectory of the source tree, then you have to use -p2 to strip off a/drivers/ and b/drivers from the cairo.c name. Hope that makes sense. The --dry-run option lets you know (a) whether the files to be patched can be found (i.e., whether you are in a directory that is consistent with the -p option you have used), and (b) whether the patch applies cleanly to those files (without actually applying the patch). In any case just remember that --dry-run gives you a chance to experiment with different -p numbers until you discover the correct one for the directory that you are in.
+
+Here is how I discovered that Hez's patch would apply cleanly (without actually patching cairo.c)
+
+`software@raven> patch --dry-run -p1 \`
+`< /home/irwin/cairo-xcairo-offscreen-rendering-v2.patch`
+`patching file drivers/cairo.c`
+
+The lack of further messages after the "patching file" message indicates the file was found and the patch would apply cleanly. Remove the --dry-run option when you actually are ready to apply the patch. After you apply the patch and evaluate it, you might want to remove it again from your source tree . For that, you use the --reverse option of patch (which reverses the effect of the patch). Of course, again, you would first want to use the --dry-run and --reverse options combined to make sure you are in the right directory with a consistent -p number used before you remove the --dry-run option.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

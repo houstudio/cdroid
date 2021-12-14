@@ -1,0 +1,25 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plP_getinitdriverlist: Get the initialized-driver list</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-Internal.html" title="Chapter 22. Internal C functions in PLplot"><link rel="prev" href="plP_checkdriverinit.html" title="plP_checkdriverinit: Checks to see if any of the specified drivers have been initialized"><link rel="next" href="libraries.html" title="Chapter 23. The PLplot Libraries"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plP_getinitdriverlist</code>: Get the initialized-driver
+      list
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plP_checkdriverinit.html">Prev</a> </td><th width="60%" align="center">Chapter 22. Internal C functions in PLplot</th><td width="20%" align="right"> <a accesskey="n" href="libraries.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plP_getinitdriverlist"></a>
+      <code class="function">plP_getinitdriverlist</code>: Get the initialized-driver
+      list
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plP_getinitdriverlist</b>
+	  (</code></td><td><var class="pdparam">text_buffer</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p> Get the initialized-driver list. Function returns a
+    space-delimited list of the currently initialized drivers or streams. If more
+    than one stream is using the same driver, then its name will be returned
+    more than once. The function can be analogously thought of as also
+    returning the names of the active streams.  Invoked internally by
+    <a class="link" href="plP_checkdriverinit.html" title="plP_checkdriverinit: Checks to see if any of the specified drivers have been initialized"><code class="function">plP_checkdriverinit</code></a>. </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>text_buffer</code></em>
+	  (<code class="literal">char *</code>, output)
+	</span></dt><dd><p>
+	    Pointer to a user-allocated buffer to hold the result. The user
+	    must ensure the buffer is big enough to hold the result.
+	  </p></dd></dl></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plP_checkdriverinit.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-Internal.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="libraries.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plP_checkdriverinit</code>: Checks to see if any
+      of the specified drivers have been initialized
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 23. The PLplot Libraries</td></tr></table></div></body></html>

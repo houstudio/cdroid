@@ -1,0 +1,256 @@
+# -*- mode: cmake -*-
+# This file used to configure CMake variables that are used to build the
+# installed examples.
+# Identify that this is the build system for the installed examples.
+set(BUILD_TEST ON)
+set(CORE_BUILD OFF)
+
+# =======================================================================
+# Useful functions.
+# =======================================================================
+include(plplot_functions)
+
+# =======================================================================
+# pkg-config support as well as macros to put link flags in standard
+# *.pc (pkg-config) form as well as standard fullpath form used by cmake.
+# PKG_CONFIG_EXECUTABLE can be used to discover whether pkg-config was
+# found or not.
+# =======================================================================
+include(pkg-config)
+
+set(INCLUDE_DIR "@INCLUDE_DIR@")
+set(CMAKE_PREFIX_PATH "@CMAKE_INSTALL_PREFIX@")
+set(MATH_LIB @MATH_LIB@)
+set(SH_EXECUTABLE @SH_EXECUTABLE@)
+
+set(BUILD_SHARED_LIBS @BUILD_SHARED_LIBS@)
+
+set(language_info_LIST @language_info_LIST@)
+
+# This list of set commands must be consistent with language_info_LIST
+# set in examples/CMakeLists.txt and configured just above.  Thus,
+# some consistent maintenance of that list and the current list of set
+# commands must be done on the rare occasions when a language is added
+# to PLplot.  Cannot make the list of set commands automatically with
+# a foreach loop because explicit configuration of each name is required.
+set(ENABLE_ada @ENABLE_ada@)
+set(ENABLE_c @ENABLE_c@)
+set(ENABLE_cxx @ENABLE_cxx@)
+set(ENABLE_d @ENABLE_d@)
+set(ENABLE_fortran @ENABLE_fortran@)
+set(ENABLE_java @ENABLE_java@)
+set(ENABLE_lua @ENABLE_lua@)
+set(ENABLE_ocaml @ENABLE_ocaml@)
+set(ENABLE_octave @ENABLE_octave@)
+set(ENABLE_python @ENABLE_python@)
+set(ENABLE_pyqt4 @ENABLE_pyqt4@)
+set(ENABLE_pyqt5 @ENABLE_pyqt5@)
+set(ENABLE_tcl @ENABLE_tcl@)
+
+# Interactive bindings
+set(ENABLE_tk @ENABLE_tk@)
+set(ENABLE_tkX @ENABLE_tkX@)
+set(OLD_WXWIDGETS @OLD_WXWIDGETS@)
+set(wxdemo_name @wxdemo_name@)
+set(ENABLE_wxwidgets @ENABLE_wxwidgets@)
+set(ENABLE_qt @ENABLE_qt@)
+
+# Check for all officially supported CMake compilers that we use with
+# soft-landing support.
+include(language_support)
+
+# First field is lower-case language string, second field is
+# mixed-case language string used for official CMake variables, third
+# field is language string to be used in output messages, and final
+# field is whether it is a fatal error if this language is missing/not
+# working.
+set(COMPILED_LANGUAGE_INFO_LIST
+"c:C:C:ON"
+"ada:Ada:Ada:OFF"
+"cxx:CXX:C++:OFF"
+"d:D:D:OFF"
+"fortran:Fortran:Fortran:OFF"
+"java:Java:Java:OFF"
+)
+
+# C++ is a special language case that needs to be enabled if at all
+# possible regardless of ENABLE_CXX (see cmake/modules/c++.cmake.)
+# Hence the (language STREQUAL "cxx" OR ENABLE_${language}) logic below.
+
+foreach(COMPILED_LANGUAGE_INFO ${COMPILED_LANGUAGE_INFO_LIST})
+  string(REGEX REPLACE "^(.*):.*:.*:.*$" "\\1" language ${COMPILED_LANGUAGE_INFO})
+  string(REGEX REPLACE "^.*:(.*):.*:.*$" "\\1" Language ${COMPILED_LANGUAGE_INFO})
+  string(REGEX REPLACE "^.*:.*:(.*):.*$" "\\1" language_output ${COMPILED_LANGUAGE_INFO})
+  string(REGEX REPLACE "^.*:.*:.*:(.*)$" "\\1" fatal_language ${COMPILED_LANGUAGE_INFO})
+  if((language STREQUAL "cxx" OR ENABLE_${language}) AND NOT PLPLOT_${Language}_COMPILER_WORKS)
+    workaround_9220(${Language} PLPLOT_${Language}_COMPILER_WORKS)
+    if(NOT PLPLOT_${Language}_COMPILER_WORKS)
+      if(fatal_language)
+	message(FATAL_ERROR "${language_output} compiler absolutely required to build this project.")
+      endif(fatal_language)
+      message(STATUS "WARNING: no working ${language_output} compiler so disabling ${language} examples.")
+      set(ENABLE_${language} OFF CACHE BOOL "Enable ${language} bindings" FORCE)
+    endif(NOT PLPLOT_${Language}_COMPILER_WORKS)
+  endif((language STREQUAL "cxx" OR ENABLE_${language}) AND NOT PLPLOT_${Language}_COMPILER_WORKS)
+
+  if(language STREQUAL "cxx" OR ENABLE_${language})
+    # Find and check ${Language} compiler
+    enable_language(${Language} OPTIONAL)
+    if(NOT CMAKE_${Language}_COMPILER_WORKS)
+      if(fatal_language)
+	message(FATAL_ERROR "${language_output} compiler absolutely required to build this project.")
+      endif(fatal_language)
+      message(STATUS "WARNING: no working ${language_output} compiler so disabling ${language} examples.")
+      set(ENABLE_${language} OFF CACHE BOOL "Enable ${language} bindings" FORCE)
+    endif(NOT CMAKE_${Language}_COMPILER_WORKS)
+  endif(language STREQUAL "cxx" OR ENABLE_${language})
+endforeach(COMPILED_LANGUAGE_INFO ${COMPILED_LANGUAGE_INFO_LIST})
+
+if(ENABLE_ada)
+  set(ADA_INCLUDE_DIR "@ADA_INCLUDE_DIR@")
+  set(ADA_LIB_DIR "@ADA_LIB_DIR@")
+endif(ENABLE_ada)
+
+if(ENABLE_fortran)
+  set(FORTRAN_MOD_DIR "@FORTRAN_MOD_DIR@")
+endif(ENABLE_fortran)
+
+if(ENABLE_java)
+  find_package(JNI)
+  set(JAR_DIR "@JAR_DIR@")
+  set(LIB_DIR "@LIB_DIR@")
+endif(ENABLE_java)
+
+if(ENABLE_ocaml)
+  set(OCAMLC @OCAMLC@)
+  set(OCAMLOPT @OCAMLOPT@)
+  set(OCAMLFIND @OCAMLFIND@)
+  set(OCAML_HAS_CAIRO @OCAML_HAS_CAIRO@)
+  set(OCAML_HAS_GTK @OCAML_HAS_GTK@)
+  set(CMAKE_INSTALL_LIBDIR "@CMAKE_INSTALL_LIBDIR@")
+  set(OCAML_INSTALL_DIR "@OCAML_INSTALL_DIR@")
+  set(install_tree_ocaml_RPATH "@install_tree_ocaml_RPATH@")
+  # Need to implement this way because using set command gets rid of escapes.
+  string(REPLACE " " "\\ " install_tree_ocaml_RPATH_ESCAPED "${install_tree_ocaml_RPATH}")
+endif(ENABLE_ocaml)
+
+if(ENABLE_tcl OR ENABLE_tk)
+  set(TCL_TCLSH "@TCL_TCLSH@")
+  set(MKTCLINDEX ${CMAKE_SOURCE_DIR}/tcl/mktclIndex)
+  set(MKTCLINDEX_ARGS @MKTCLINDEX_ARGS@)
+  # Needed to configure tclsh_standard_examples and wish_standard_examples
+  set(DATA_DIR "@DATA_DIR@")
+endif(ENABLE_tcl OR ENABLE_tk)
+
+if(ENABLE_tk)
+  set(ENABLE_itk @ENABLE_itk@)
+  set(ENABLE_itkX @ENABLE_itkX@)
+  set(TCL_INCLUDE_PATH "@TCL_INCLUDE_PATH@")
+  set(TK_INCLUDE_PATH "@TK_INCLUDE_PATH@")
+  set(TCL_LIBRARY "@TCL_LIBRARY@")
+  set(TK_LIBRARY "@TK_LIBRARY@")
+endif(ENABLE_tk)
+
+if(ENABLE_wxwidgets)
+  # Use identical compile and link flags to build wxwidgets application.
+  set(wxwidgets_COMPILE_FLAGS "@wxwidgets_COMPILE_FLAGS@")
+  set(wxwidgets_LINK_FLAGS @wxwidgets_LINK_FLAGS@)
+endif(ENABLE_wxwidgets)
+
+if(ENABLE_qt)
+  set(ANY_QT_DEVICE @ANY_QT_DEVICE@)
+  # Qt5 support?
+  set(PLPLOT_USE_QT5 @PLPLOT_USE_QT5@)
+  if(PLPLOT_USE_QT5)
+    set(CORE_Qt5_VERSION_MAJOR @Qt5_VERSION_MAJOR@)
+    set(CORE_Qt5_VERSION_MINOR @Qt5_VERSION_MINOR@)
+    set(CORE_Qt5_VERSION_PATCH @Qt5_VERSION_PATCH@)
+  else(PLPLOT_USE_QT5)
+    set(CORE_QT_VERSION_MAJOR @QT_VERSION_MAJOR@)
+    set(CORE_QT_VERSION_MINOR @QT_VERSION_MINOR@)
+    set(CORE_QT_VERSION_PATCH @QT_VERSION_PATCH@)
+  endif(PLPLOT_USE_QT5)
+  set(PLPLOT_AUTOMOC_MOC_OPTIONS @PLPLOT_AUTOMOC_MOC_OPTIONS@)
+endif(ENABLE_qt)
+
+set(ENABLE_DYNDRIVERS @ENABLE_DYNDRIVERS@)
+
+set(FILE_DEVICES_LIST @FILE_DEVICES_LIST@)
+# This list of set commands must be consistent with the above list which
+# implies a maintenance issue.
+set(PLD_pdfcairo @PLD_pdfcairo@)
+set(PLD_pngcairo @PLD_pngcairo@)
+set(PLD_pscairo @PLD_pscairo@)
+set(PLD_epscairo @PLD_epscairo@)
+set(PLD_svgcairo @PLD_svgcairo@)
+set(PLD_cgm @PLD_cgm@)
+set(PLD_epsqt @PLD_epsqt@)
+set(PLD_pdfqt @PLD_pdfqt@)
+set(PLD_bmpqt @PLD_bmpqt@)
+set(PLD_jpgqt @PLD_jpgqt@)
+set(PLD_pngqt @PLD_pngqt@)
+set(PLD_ppmqt @PLD_ppmqt@)
+set(PLD_tiffqt @PLD_tiffqt@)
+set(PLD_svgqt @PLD_svgqt@)
+set(PLD_gif @PLD_gif@)
+set(PLD_jpeg @PLD_jpeg@)
+set(PLD_png @PLD_png@)
+set(PLD_pdf @PLD_pdf@)
+set(PLD_ps @PLD_ps@)
+set(PLD_pstex @PLD_pstex@)
+set(PLD_psttf @PLD_psttf@)
+set(PLD_svg @PLD_svg@)
+set(PLD_wxpng @PLD_wxpng@)
+set(PLD_xfig @PLD_xfig@)
+
+# These only used for testing, but not core build
+set(PLD_psc @PLD_psc@)
+set(PLD_psttfc @PLD_psttfc@)
+
+set(INTERACTIVE_DEVICES_LIST @INTERACTIVE_DEVICES_LIST@)
+# Set interactive devices that are needed to build certain examples.  This
+# list should be consistent with INTERACTIVE_DEVICES_LIST which implies a
+# maintenance issue.
+
+set(PLD_aqt @PLD_aqt@)
+set(PLD_ntk @PLD_ntk@)
+set(PLD_qtwidget @PLD_qtwidget@)
+set(PLD_tk @PLD_tk@)
+set(PLD_wincairo @PLD_wincairo@)
+set(PLD_wingcc @PLD_wingcc@)
+set(PLD_wxwidgets @PLD_wxwidgets@)
+set(PLD_xcairo @PLD_xcairo@)
+set(PLD_xwin @PLD_xwin@)
+set(PLD_wingdi @PLD_wingdi@)
+
+# Set external devices that are needed to build certain examples.
+set(PLD_extcairo @PLD_extcairo@)
+set(PLD_extqt @PLD_extqt@)
+
+# Needed to optionally drop creation and testing of extXdrawable_demo target.
+set(DROP_GTK_PLUS_2_BUILDS @DROP_GTK_PLUS_2_BUILDS@)
+
+# Needed for test_diff_device target and corresponding ctest examples_compare test.
+set(PLPLOT_TEST_DEVICE @PLPLOT_TEST_DEVICE@)
+set(FAMILIED_PLPLOT_TEST_DEVICE @FAMILIED_PLPLOT_TEST_DEVICE@)
+set(DIFF_EXECUTABLE @DIFF_EXECUTABLE@)
+set(TAIL_EXECUTABLE @TAIL_EXECUTABLE@)
+set(CMP_EXECUTABLE @CMP_EXECUTABLE@)
+set(TEST_DIFF @TEST_DIFF@)
+
+# ocaml examples build needs this.
+set(USE_RPATH @USE_RPATH@)
+
+# WIN32 and CYGWIN derived variables
+set(WIN32_AND_NOT_CYGWIN @WIN32_AND_NOT_CYGWIN@)
+set(WIN32_OR_CYGWIN @WIN32_OR_CYGWIN@)
+
+# Needed for Tcl/Tk linking decisions.
+set(tcltk_in_plplot_library @tcltk_in_plplot_library@)
+
+# Needed for running Python scripts if PYTHON_EXECUTABLE is different
+# from /usr/bin/env python (which often happens if both python2 and python3
+# are installed).
+set(PYTHON_EXECUTABLE @PYTHON_EXECUTABLE@)
+# Needed for Python testing
+set(PYTHON_VERSION @PYTHON_VERSION@)

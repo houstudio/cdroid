@@ -1,0 +1,127 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>View Surfaces, (Sub-)Pages, Viewports and Windows</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="FreeType-notes.html" title="Adding FreeType Library Support to Bitmap Drivers"><link rel="next" href="line-attributes.html" title="Setting Line Attributes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">View Surfaces, (Sub-)Pages, Viewports and Windows</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="FreeType-notes.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="line-attributes.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="viewport_window"></a>View Surfaces, (Sub-)Pages, Viewports and Windows</h2></div></div></div><p>There is a whole hierarchy of coordinate systems associated with
+    any PLplot graph.  At the lowest level a device provides a view surface
+    (coordinates in mm's) which can be a terminal screen or a sheet of paper
+    in the output device.  <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> or <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a> (or <a class="link" href="plstart.html" title="plstart: Initialization"><code class="function">plstart</code></a>) makes that
+    device view surface accessible as a page or divided up into sub-pages
+    (see <a class="link" href="plssub.html" title="plssub: Set the number of subpages in x and y"><code class="function">plssub</code></a>) which are accessed with <a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a>.  Before a graph can be
+    drawn for a subpage, the program must call appropriate routines in
+    PLplot to define the viewport for the subpage and a window for the
+    viewport. A viewport is a rectangular region of the
+    <span class="emphasis"><em>subpage</em></span> which is specified in normalized subpage
+    coordinates or millimetres.  A window is a rectangular region of
+    world-coordinate space which is mapped directly to its viewport. (When
+    drawing a graph, the programmer usually wishes to specify the
+    coordinates of the points to be plotted in terms of the values of the
+    variables involved. These coordinates are called <span class="emphasis"><em>world
+    coordinates</em></span>, and may have any floating-point value
+    representable by the computer.)</p><p>Although the usual choice is to have one viewport per subpage, and
+    one window per viewport, each subpage can have more than one (possibly
+    overlapping) viewport defined, and each viewport can have more than one
+    window (more than one set of world coordinates) defined.</p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="viewports"></a>Defining the Viewport</h3></div></div></div><p>After defining the view surface and subpage with the appropriate
+      call to <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> or <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a> (or <a class="link" href="plstart.html" title="plstart: Initialization"><code class="function">plstart</code></a>) and a call to <a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a> it
+      is necessary to define the portion of this subpage which is to be used
+      for plotting the graph (the viewport).  All lines and symbols (except
+      for labels drawn by <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>, <a class="link" href="plmtex.html" title="plmtex: Write text relative to viewport boundaries"><code class="function">plmtex</code></a> and <a class="link" href="pllab.html" title="pllab: Simple routine to write labels"><code class="function">pllab</code></a>) are clipped at the
+      viewport boundaries. </p><p>Viewports are created within the current subpage.  If the
+      division of the output device into equally sized subpages is
+      inappropriate, it is best to specify only a single subpage which
+      occupies the entire output device (by using <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> or by setting
+      <code class="literal">nx = 1</code> and <code class="literal">ny = 1</code> in <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a>
+      or <a class="link" href="plstart.html" title="plstart: Initialization"><code class="function">plstart</code></a>), and use one of the viewport specification subroutines
+      below to place the plot in the desired position on the page. </p><p>
+	The routines <a class="link" href="plvpor.html" title="plvpor: Specify viewport using normalized subpage coordinates"><code class="function">plvpor</code></a>, <a class="link" href="plsvpa.html" title="plsvpa: Specify viewport in absolute coordinates"><code class="function">plsvpa</code></a>, <a class="link" href="plvasp.html" title="plvasp: Specify viewport using aspect ratio only"><code class="function">plvasp</code></a>, <a class="link" href="plvpas.html" title="plvpas: Specify viewport using coordinates and aspect ratio"><code class="function">plvpas</code></a>, and
+	<a class="link" href="plvsta.html" title="plvsta: Select standard viewport"><code class="function">plvsta</code></a> may be used to specify the limits of the viewport within the
+	current subpage.  The <a class="link" href="plvpor.html" title="plvpor: Specify viewport using normalized subpage coordinates"><code class="function">plvpor</code></a> routine specifies the viewport limits
+	in normalized subpage coordinates. The <a class="link" href="plsvpa.html" title="plsvpa: Specify viewport in absolute coordinates"><code class="function">plsvpa</code></a> routine (often used in
+	conjunction with the <a class="link" href="plgspa.html" title="plgspa: Get current subpage parameters"><code class="function">plgspa</code></a> routine which returns the physical
+	limits of the current subpage) specifies the viewport limits in
+	physical coordinates.  The routine <a class="link" href="plvasp.html" title="plvasp: Specify viewport using aspect ratio only"><code class="function">plvasp</code></a> specifies the largest
+	viewport with the given aspect ratio that fits in the current subpage
+	while allowing for a standard margins on each side of the viewport.
+	The routine <a class="link" href="plvpas.html" title="plvpas: Specify viewport using coordinates and aspect ratio"><code class="function">plvpas</code></a> specifies the largest viewport with the given
+	aspect ratio that fits in a region that is specified by normalized
+	subpage coordinates as with <a class="link" href="plvpor.html" title="plvpor: Specify viewport using normalized subpage coordinates"><code class="function">plvpor</code></a>.  (The routine <a class="link" href="plvpas.html" title="plvpas: Specify viewport using coordinates and aspect ratio"><code class="function">plvpas</code></a>
+	is functionally equivalent to <a class="link" href="plvpor.html" title="plvpor: Specify viewport using normalized subpage coordinates"><code class="function">plvpor</code></a> when the specified aspect ratio
+	is set to zero.)  The <a class="link" href="plvsta.html" title="plvsta: Select standard viewport"><code class="function">plvsta</code></a> routine specifies the largest viewport
+	that fits in the current subpage while allowing for a standard margins
+	on each side of the viewport.  This standard viewport is that used by
+	<a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a> (See <a class="xref" href="viewport_window.html#standard-window" title="Setting up a Standard Window">the section called “Setting up a Standard Window”</a>).
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="windows"></a>Defining the Window</h3></div></div></div><p>
+	The routine <a class="link" href="plwind.html" title="plwind: Specify window"><code class="function">plwind</code></a> is used to map the world coordinate
+	rectangle into the viewport rectangle.  If the order of either the X
+	limits or Y limits is reversed, the corresponding axis will point in
+	the opposite sense, (i.e., right to left for X and top to bottom for
+	Y).  The window must be defined before any calls to the routines which
+	actually draw the data points.  Note however that <a class="link" href="plwind.html" title="plwind: Specify window"><code class="function">plwind</code></a> may also be
+	called to change the window at any time.  This will affect the
+	appearance of objects drawn later in the program, and is useful for
+	drawing two or more graphs with different axes on the same viewport.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="annotation"></a>Annotating the Viewport</h3></div></div></div><p>
+	The routine <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a> is used to specify how much (if any) of
+	the frame is drawn around the viewport and to control the positions of
+	the axis subdivisions and numeric labels.  In addition, non-default
+	lengths of major and minor ticks on the axes may be set up by calls to
+	the routines <a class="link" href="plsmaj.html" title="plsmaj: Set length of major ticks"><code class="function">plsmaj</code></a> and <a class="link" href="plsmin.html" title="plsmin: Set length of minor ticks"><code class="function">plsmin</code></a>.
+      </p><p>
+	The routine <a class="link" href="pllab.html" title="pllab: Simple routine to write labels"><code class="function">pllab</code></a> is used to specify text labels for the bottom, left
+	hand side and top of the viewport.  These labels are not clipped,
+	even though they lie outside the viewport (but they are clipped at
+	the subpage boundaries).  <a class="link" href="pllab.html" title="pllab: Simple routine to write labels"><code class="function">pllab</code></a> actually calls the more general
+	routine <a class="link" href="plmtex.html" title="plmtex: Write text relative to viewport boundaries"><code class="function">plmtex</code></a> which can be used for plotting labels at any point
+	relative to the viewport.
+      </p><p>
+	The appearance of axis labels may be further altered by auxiliary
+	calls to <a class="link" href="plprec.html" title="plprec: Set precision in numeric labels"><code class="function">plprec</code></a>, <a class="link" href="plschr.html" title="plschr: Set character size"><code class="function">plschr</code></a>, <a class="link" href="plsxax.html" title="plsxax: Set x axis parameters"><code class="function">plsxax</code></a>, <a class="link" href="plsyax.html" title="plsyax: Set y axis parameters"><code class="function">plsyax</code></a>, and <a class="link" href="plszax.html" title="plszax: Set z axis parameters"><code class="function">plszax</code></a>.  The
+	routine <a class="link" href="plprec.html" title="plprec: Set precision in numeric labels"><code class="function">plprec</code></a> is used to set the number of decimal places
+	precision for axis labels, while <a class="link" href="plschr.html" title="plschr: Set character size"><code class="function">plschr</code></a> modifies the heights of
+	characters used for the axis and graph labels.  Routines <a class="link" href="plsxax.html" title="plsxax: Set x axis parameters"><code class="function">plsxax</code></a>,
+	<a class="link" href="plsyax.html" title="plsyax: Set y axis parameters"><code class="function">plsyax</code></a>, and <a class="link" href="plszax.html" title="plszax: Set z axis parameters"><code class="function">plszax</code></a> are used to modify the
+	<code class="literal">digmax</code> setting for each axis, which affects how
+	floating point labels are formatted.
+      </p><p>
+	The <code class="literal">digmax</code> variable represents the maximum field
+	width for the numeric labels on an axis (ignored if less than one).
+	If the numeric labels as generated by PLplot exceed this width, then
+	PLplot automatically switches to floating point representation.  In
+	this case the exponent will be placed at the top left for a vertical
+	axis on the left, top right for a vertical axis on the right, and
+	bottom right for a horizontal axis.
+      </p><p>
+	For example, let's suppose that we have set <code class="literal">digmax =
+	5</code> via <a class="link" href="plsyax.html" title="plsyax: Set y axis parameters"><code class="function">plsyax</code></a>, and for our plot a label is generated at
+	<code class="literal">y = 0.0000478</code>.  In this case the actual field
+	width is longer than <code class="literal">digmax</code>, so PLplot switches to
+	floating point.  In this representation, the label is printed as
+	simply 4.78 with the 10<sup>-5</sup> exponent placed
+	separately.
+      </p><p>
+	The determination of maximum length (i.e. <code class="literal">digmax</code>)
+	for fixed point quantities is complicated by the fact that long fixed
+	point representations look much worse than the same sized floating
+	point representation.  Further, a fixed point number with magnitude
+	much less than one will actually gain in precision when written as
+	floating point.  There is some compensation for this effect built
+	into PLplot, thus the internal representation for number of digits
+	kept (<code class="literal">digfix</code>) may not always match the user's
+	specification (via <code class="literal">digmax</code>).  However, it will
+	always be true that <code class="literal">digfix ≤ digmax</code>.  The
+	PLplot defaults are set up such that good results are usually
+	obtained without user intervention.
+      </p><p>
+	Finally, after the call to <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>, the user may call routines
+	<a class="link" href="plgxax.html" title="plgxax: Get x axis parameters"><code class="function">plgxax</code></a>, <a class="link" href="plgyax.html" title="plgyax: Get y axis parameters"><code class="function">plgyax</code></a>, or <a class="link" href="plgzax.html" title="plgzax: Get z axis parameters"><code class="function">plgzax</code></a> to obtain information about the
+	window just drawn.  This can be helpful when deciding where to put
+	captions.  For example, a typical usage would be to call <a class="link" href="plgyax.html" title="plgyax: Get y axis parameters"><code class="function">plgyax</code></a> to
+	get the value of <code class="literal">digits</code>, then offset the y axis
+	caption by that amount (plus a bit more) so that the caption
+	<span class="quote">“<span class="quote">floats</span>”</span> just to the outside of the numeric labels.
+	Note that the <code class="literal">digits</code> value for each axis for the
+	current plot is not correct until <span class="emphasis"><em>after</em></span> the call
+	to <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a> is complete.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="standard-window"></a>Setting up a Standard Window</h3></div></div></div><p>
+	Having to call <a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a>, <a class="link" href="plvpor.html" title="plvpor: Specify viewport using normalized subpage coordinates"><code class="function">plvpor</code></a>, <a class="link" href="plwind.html" title="plwind: Specify window"><code class="function">plwind</code></a> and <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a> is
+	cumbersome for drawing simple graphs so as an alternative we have
+	implemented <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a> that combines all four of these capabilities in
+	one routine using the standard viewport and a limited subset of the
+	capabilities of <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="FreeType-notes.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="line-attributes.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Adding FreeType Library Support to Bitmap Drivers </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Setting Line Attributes</td></tr></table></div></body></html>

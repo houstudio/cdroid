@@ -1,0 +1,40 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Specializing the PLplot C++ Interface</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="cplusplus.html" title="Chapter 9. A C++ Interface for PLplot"><link rel="prev" href="cpluscplus-design.html" title="Design of the PLplot C++ Interface"><link rel="next" href="cpluscplus-status.html" title="Status of the C++ Interface"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Specializing the PLplot C++ Interface</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="cpluscplus-design.html">Prev</a> </td><th width="60%" align="center">Chapter 9. A C++ Interface for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="cpluscplus-status.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="cpluscplus-specializing"></a>Specializing the PLplot C++ Interface</h2></div></div></div><p>
+      The <code class="literal">plstream</code> class is an ideal candidate for derivation.  By
+      inheriting from <code class="literal">plstream</code>, the user can construct a new class
+      which is automatically endowed with the ability to plot to a specific
+      PLplot output stream in a coherent manner without having to worry
+      about interplay with other <code class="literal">plstream</code> (or derived type) objects.
+      Moreover, new, higher level, plotting functionality can be constructed
+      to provide even more simplicity and ease of use than the PLplot API.
+    </p><p>
+      The PLplot maintainers (Geoff and Maurice) expect to introduce a class
+      plxstream in the future which provides superior support for
+      constructing graphics with multiple plots per page, easier
+      specification of plot adornments, etc.  This should significantly ease
+      one aspect of PLplot usage which we regard as being clumsy at this
+      time.
+    </p><p>
+      Beyond that, users may find it useful to derive from
+      <code class="literal">plstream</code>
+      (or later plxstream whenever it finally makes its appearance) for the
+      purpose of making "application specific" output streams.  For example,
+      a C++ program will normally have a variety of objects which constitute
+      the fundamental entities in the code.  These could all be made to be
+      "atomically plotted" by providing suitable methods.  For example:
+    </p><pre class="programlisting">
+      class Cat { ... };
+      class Dog { ... };
+      class Bear { ... };
+      class Fish { ... };
+
+      class zoostream : public plstream {
+      public:
+      void plot( const Cat&amp; c ) { ... }
+      void plot( const Dog&amp; d ) { ... }
+      void plot( const Bear&amp; b ) { ... }
+      void plot( const Fish&amp; f ) { ... }
+      };
+    </pre><p>
+      Presumably the PLplot user community can think of even more
+      imaginative uses...  :-).
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="cpluscplus-design.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="cplusplus.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="cpluscplus-status.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Design of the PLplot C++ Interface </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Status of the C++ Interface</td></tr></table></div></body></html>

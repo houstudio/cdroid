@@ -1,0 +1,11 @@
+bmpqt:Qt Windows bitmap driver:0:qt:66:bmpqt
+jpgqt:Qt jpg driver:0:qt:67:jpgqt
+pngqt:Qt png driver:0:qt:68:pngqt
+ppmqt:Qt ppm driver:0:qt:69:ppmqt
+tiffqt:Qt tiff driver:0:qt:70:tiffqt
+svgqt:Qt SVG driver:0:qt:71:svgqt
+qtwidget:Qt Widget:1:qt:72:qtwidget
+epsqt:Qt EPS driver:0:qt:73:epsqt
+pdfqt:Qt PDF driver:0:qt:74:pdfqt
+extqt:External Qt driver:0:qt:75:extqt
+memqt:Memory Qt driver:0:qt:76:memqt

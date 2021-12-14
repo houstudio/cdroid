@@ -1,0 +1,44 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plStatic2dGrid: Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT's that is statically allocated</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot"><link rel="prev" href="plsfile.html" title="plsfile: Set output file handle"><link rel="next" href="pltr0.html" title="pltr0: Identity transformation for matrix index to world coordinate mapping"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plStatic2dGrid</code>: Determine the Iliffe column vector of pointers to PLFLT row
+      vectors corresponding to a 2D matrix of PLFLT's that is statically allocated
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plsfile.html">Prev</a> </td><th width="60%" align="center">Chapter 18. The Specialized C/C++ API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="pltr0.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plStatic2dGrid"></a>
+      <code class="function">plStatic2dGrid</code>: Determine the Iliffe column vector of pointers to PLFLT row
+      vectors corresponding to a 2D matrix of PLFLT's that is statically allocated
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plStatic2dGrid</b>
+	  (</code></td><td><var class="pdparam">zIliffe</var>, </td></tr><tr><td> </td><td><var class="pdparam">zStatic</var>, </td></tr><tr><td> </td><td><var class="pdparam">nx</var>, </td></tr><tr><td> </td><td><var class="pdparam">ny</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Determine the <a class="ulink" href="https://en.wikipedia.org/wiki/Iliffe_vector" target="_top">Iliffe column
+      vector</a> of pointers to PLFLT row
+      vectors corresponding to a 2D matrix of PLFLT's that is statically allocated.
+      As a result the Iliffe column vector
+      can be accessed using C/C++ syntax like <code class="literal">*zIliffe[i][j]</code>.  However,
+      the primary purpose of this routine is to convert 2D plot data stored in statically allocated
+      arrays to Iliffe column vector form which is suitable to be the 2D matrix arguments of
+      the C and C++ versions of <a class="link" href="plcont.html" title="plcont: Contour plot"><code class="function">plcont</code></a>, <a class="link" href="plshade.html" title="plshade: Shade individual region on the basis of value"><code class="function">plshade</code></a>, <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>, <a class="link" href="plimage.html" title="plimage: Plot a 2D matrix using cmap1 with automatic color adjustment"><code class="function">plimage</code></a>, <a class="link" href="plvect.html" title="plvect: Vector plot"><code class="function">plvect</code></a>, etc.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>zIliffe</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_MATRIX-type"><code class="function">PLFLT_NC_MATRIX</code></a></code>, output)
+	</span></dt><dd><p>The pre-existing column vector of pointers which is filled in by this routine
+	  so that on return, <code class="literal">zIliffe</code> is a <a class="ulink" href="https://en.wikipedia.org/wiki/Iliffe_vector" target="_top">Iliffe column
+	  vector</a> of pointers to the row vectors of <code class="literal">zStatic</code>.</p></dd><dt><span class="term">
+	  <em class="parameter"><code>zStatic</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    Pointer to the first element of a statically allocated 2D matrix.  This pointer is
+	    used to find the locations of the row vectors of this matrix which are used to determine
+	    <code class="literal">zIliffe</code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nx, ny</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	  Dimensions of the statically allocated 2D matrix, <code class="literal">zStatic</code>.
+	  </p></dd></dl></div><p>
+      This function is used in our example 15.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plsfile.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-C.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="pltr0.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plsfile</code>: Set output file handle
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">pltr0</code>: Identity transformation for matrix index to world
+      coordinate mapping
+    </td></tr></table></div></body></html>

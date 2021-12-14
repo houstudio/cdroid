@@ -1,0 +1,204 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 4. Deploying programs that use PLplot</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="part_programming.html" title="Part II.  Programming"><link rel="prev" href="legends.html" title="Legends and color bars"><link rel="next" href="file-drivers.html" title="Chapter 5. Drivers which implement file devices"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 4. Deploying programs that use PLplot</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="legends.html">Prev</a> </td><th width="60%" align="center">Part II.  Programming </th><td width="20%" align="right"> <a accesskey="n" href="file-drivers.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="deploying"></a>Chapter 4. Deploying programs that use PLplot</h2></div></div></div><p>
+    This chapter provides some information on the issue of
+    delivering programs that use PLplot: what files should be installed and
+    where, what environment variables are involved and related matters.
+  </p><p>
+    The scenario is this: You have created one or more programs that run
+    successfully on your development machine and now you need to install
+    them on the machine of a user.
+  </p><p>
+    One solution is to provide him or her with the full development
+    environment that you use, but that is in general only an option if your
+    user is comfortable with making programs themselves. A more common
+    situation is that your user just wants the executable programs and
+    wants to get using them right away. We will focus on this particular
+    solution, as there are a few non-trivial issues.
+  </p><p>
+    To be absolutely clear about what we are describing, here is a summary:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  Your program must run on a machine that does not have PLplot
+	  installed from the sources.
+	</p></li><li class="listitem"><p>
+	  There is no development environment that you can rely on.
+	</p></li><li class="listitem"><p>
+	  The program should be installed in a self-contained directory
+	  structure (which <span class="emphasis"><em>can</em></span> be
+	  <code class="filename">/usr/local</code> or <code class="filename">c:\program</code>
+	  files or whatever, but need not be so).
+	</p></li></ul></div><p>
+  </p><p>
+    Under Linux, the easiest way to install a binary version of PLplot on a
+    user's machine is to use PLplot deb binary packages for the <a class="ulink" href="http://www.debian.org" target="_top">Debian</a> distribution, and PLplot rpm
+    binary packages for rpm-based distributions. (See the <a class="ulink" href="http://plplot.org/download.php" target="_top">download
+    area</a> of the PLplot web site for locations of debs and rpms.)
+    Build the application on the build machine using the results of the
+    <strong class="userinput"><code>pkg-config --cflags --libs plplotd</code></strong> command, and copy
+    the resulting executable(s) to the users' machines.
+  </p><p>
+    Under Unix (and also under Linux if you would prefer to use a newer
+    version of PLplot than is available in the debs or rpms), a good way
+    to deploy binary PLplot and applications that depend on that binary PLplot
+    on users' machines is as follows:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  Use the <span class="command"><strong>cmake</strong></span> option
+	  <strong class="userinput"><code>-DCMAKE_INSTALL_PREFIX=/usr/local/plplot</code></strong> (or some other
+	  unique but consistent directory that is available on the build
+	  machine and all users' machines).
+	</p></li><li class="listitem"><p>
+	  Build and install as normal on the build machine.
+	</p></li><li class="listitem"><p>
+	  Copy the installed PLplot tree,
+	  <code class="filename">/usr/local/plplot</code>, into a tarball.
+	</p></li><li class="listitem"><p>
+	  Unpack that tarball on all users' machines in the same location
+	  <code class="filename">/usr/local/plplot</code>.
+	</p></li><li class="listitem"><p>
+	  Build the application(s) on the build machine using either the
+	  make or cmake based build system in
+	  /usr/local/plplot/share/plplotX.Y.Z/examples where X.Y.Z is
+	  the plplot version, and copy the resulting executable(s) to the users'
+	  machines.  Since the PLplot install location is consistent on all
+	  machines, the application should work the same way on all
+	  machines.
+	</p></li></ul></div><p>
+  </p><p>
+    On Windows, and also those rare Linux/Unix cases where you cannot install
+    the PLplot install tree in a consistent location on users' machines, then
+    there are some additional options you need to consider.
+  </p><p>
+    There are three situations depending on how you configure and
+    build the PLplot libraries:
+    </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>
+	  You use the static versions of the PLplot libraries and devices
+	  which are not dynamically loaded.
+	  <a href="#ftn.idm1858" class="footnote" name="idm1858"><sup class="footnote">[1]</sup></a>
+	</p></li><li class="listitem"><p>
+	  You use the shared versions of the PLplot libraries and devices
+	  which are not dynamically loaded.
+	</p></li><li class="listitem"><p>
+	  You use the shared versions of the PLplot library and devices
+	  which are dynamically loaded.  This combination is the default
+	  option under Unix/Linux.
+	</p></li></ol></div><p>
+  </p><p>
+    In the <span class="emphasis"><em>first</em></span> case the program will contain all the
+    code it needs to work, but to run successfully, it needs to find the
+    font files, <code class="filename">plstnd5.fnt</code> and
+    <code class="filename">plxtnd5.fnt</code>. The mechanism used in PLplot to find
+    these files is fairly simple:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  It looks at a number of built-in places, determined at the time
+	  the PLplot library itself was installed and built. For deployment
+	  these places are irrelevant in general.
+	</p></li><li class="listitem"><p>
+	  It looks at the environment variables
+	  <code class="envar">PLPLOT_LIB</code> and <code class="envar">PLPLOT_HOME</code>.
+	  (Actually, this happens only, if the corresponding compiler
+	  macros <code class="envar">PLPLOT_LIB_ENV</code> and
+	  <code class="envar">PLPLOT_HOME_ENV</code> were defined at compile time.)
+	</p></li><li class="listitem"><p>
+	  <span class="emphasis"><em>(TODO: remark about Mac)</em></span>
+	</p></li></ul></div><p>
+  </p><p>
+    Note: This is also the place to put the geographical map files, if you
+    happen to use them.
+  </p><p>
+    The environment variables should point to the directory holding the two
+    font files or the one above (one variable is enough though):
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  <code class="envar">PLPLOT_LIB</code> should point to the directory
+	  actually holding these files
+	</p></li><li class="listitem"><p>
+	  <code class="envar">PLPLOT_HOME</code> should point to the directory that
+	  holds a subdirectory <span class="quote">“<span class="quote"><code class="filename">lib</code></span>”</span>
+	  which in turn holds these files.
+	</p></li></ul></div><p>
+  </p><p>
+    If it can find these, PLplot can do its job.
+  </p><p>
+    Note: This is the case for instance when you use the static PLplot
+    library on Windows (see the directory
+    <code class="filename">sys\win32\msdev\plplib</code>).
+  </p><p>
+    In the <span class="emphasis"><em>second </em></span> case the font and map files are found
+    as in the <span class="emphasis"><em>first</em></span> case.  In addition, you also
+    require another environment variable so the PLplot shared libraries can
+    be found at run time by the run-time loader.  The details depend on the
+    system you are working on, but here are some common platforms:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  Most UNIX, BSD and Linux systems use an environment variable
+	  <code class="envar">LD_LIBRARY_PATH</code> which indicates
+	  directories where shared libraries can be found. Some use
+	  <code class="envar">SHLIB_PATH</code>, like HPUX.
+	</p></li><li class="listitem"><p>
+	  On Windows the PATH variable is used to find the DLLs, but
+	  beware: Windows uses a number of places to find the DLLs a
+	  program needs and the ordering seems to depend on some intricate
+	  details. It seems easiest and safest to put the DLLs in the same
+	  directory as your program.
+	</p></li><li class="listitem"><p>
+	  On MacOSX, ... <span class="emphasis"><em>TODO</em></span>
+	</p></li></ul></div><p>
+  </p><p>
+    In the <span class="emphasis"><em>third</em></span> (default) case, the PLplot fonts and
+    maps are found as in the <span class="emphasis"><em>first</em></span> case, and the
+    shared libraries are found as in the <span class="emphasis"><em>second</em></span> case,
+    but in addition the separated dynamic devices have to be found as well.
+  </p><p>
+    When PLplot uses dynamic devices, it first builds up a list of them, by
+    examining a directory which contains files describing those devices:
+    the <code class="filename">*.driver_info</code> files. Each of these files indicates what
+    the relevant properties for the device or devices. Then when the
+    device is actually needed, the corresponding shared object (or plug-in
+    or DLL depending on your terminology) is dynamically loaded.
+  </p><p>
+    The directory that contains all these files (the device descriptions as
+    well as the actual libraries and the description files that libtool
+    uses) is a directory determined at the time you configured
+    PLplot which is typically something like
+    <code class="filename">/usr/local/plplot/lib/plplot5.3.1/driversd</code>.  This
+    directory must be pointed to by the <code class="envar">PLPLOT_DRV_DIR</code>
+    environment variable. Again for deployment, only the environment
+    variable is of real interest.
+  </p><p>
+    To summarize the case where you don't have a deb or rpm option, and
+    you must use inconsistent install locations on your users' machines:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  The following environment variables are important:
+	  </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+		<code class="envar">PLPLOT_HOME</code> or
+		<code class="envar">PLPLOT_LIB</code> to indicate the position of
+		font files (and also of the various geographic maps)
+	      </p></li><li class="listitem"><p>
+		<code class="envar">LD_LIBRARY_PATH</code>,
+		<code class="envar">SHLIB_PATH</code> or <code class="envar">PATH</code> to
+		find the dynamic/shared libraries
+	      </p></li><li class="listitem"><p>
+		<code class="envar">PLPLOT_DRV_DIR</code> to find the device
+		descriptions
+	      </p></li></ul></div><p>
+	</p></li><li class="listitem"><p>
+	  The following files being part of PLplot must be distributed
+	  along with your program:
+	  </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+		The font files (<code class="filename">plstnd5.fnt</code> and
+		<code class="filename">plxtnd5.fnt</code>) and, possibly, if you use
+		them, the geographic map files.
+	      </p></li><li class="listitem"><p>
+		The PLplot shared libraries
+	      </p></li><li class="listitem"><p>
+		The device description files and the device shared object files
+	      </p></li></ul></div><p>
+	</p></li></ul></div><p>
+  </p><p>
+    All the environment variables, except
+    <code class="envar">LD_LIBRARY_PATH</code> and equivalents, can be set within
+    the program (by using a small configuration file or by determining the
+    position of the files relative to the program's location). They just
+    have be set before PLplot is initialized.
+  </p><div class="footnotes"><br><hr style="width:100; text-align:left;margin-left: 0"><div id="ftn.idm1858" class="footnote"><p><a href="#idm1858" class="para"><sup class="para">[1] </sup></a>
+	      UNIX-like systems libraries can be static or shared, the first
+	      type becoming part of the program, the second existing as a
+	      separate file. On Windows the terms are respectively static
+	      and dynamic (the latter type is also known as DLL).
+	    </p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="legends.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="part_programming.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="file-drivers.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Legends and color bars </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 5. Drivers which implement file devices</td></tr></table></div></body></html>

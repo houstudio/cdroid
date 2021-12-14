@@ -1,0 +1,40 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLBIN 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplbin\fP - Plot a histogram from binned data
+.SH SYNOPSIS
+\fBplbin\fP(\fInbin\fP, \fIx\fP, \fIy\fP, \fIopt\fP)
+.SH DESCRIPTION
+
+.P
+Plots a histogram consisting of \fInbin\fP bins.  The value associated with the i'th bin is placed in \fIx\fP[i], and the number of points in the bin is placed in \fIy\fP[i].  For proper operation, the values in \fIx\fP[i] must form a strictly increasing sequence.  By default, \fIx\fP[i] is the left-hand edge of the i'th bin. If \fIopt\fP=PL_BIN_CENTRED is used, the bin boundaries are placed midway between the values in the \fIx\fP vector.  Also see \fBplhist\fP(3plplot) for drawing histograms from unbinned data.
+.P
+Redacted form: General: \fBplbin(x, y, opt)\fP
+Python: \fBplbin(nbin, x, y, opt)\fP
+
+.P
+This function is not used in any examples.
+.SH ARGUMENTS
+.TP
+\fInbin\fP (\fBPLINT\fP(3plplot), input)
+Number of bins (i.e., number of values in \fIx\fP and \fIy\fP vectors.)
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing values associated with bins.  These must form a strictly increasing sequence.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing a number which is proportional to the number of points in each bin.  This is a PLFLT (instead of PLINT) vector so as to allow histograms of probabilities, etc.
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+Is a combination of several flags: \fIopt\fP=PL_BIN_DEFAULT: The \fIx\fP represent the lower bin boundaries, the outer bins are expanded to fill up the entire x-axis and bins of zero height are simply drawn.
+\fIopt\fP=PL_BIN_CENTRED|...: The bin boundaries are to be midway between the \fIx\fP values. If the values in \fIx\fP are equally spaced, the values are the center values of the bins.
+\fIopt\fP=PL_BIN_NOEXPAND|...: The outer bins are drawn with equal size as the ones inside.
+\fIopt\fP=PL_BIN_NOEMPTY|...: Bins with zero height are not drawn (there is a gap for such bins).
+
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

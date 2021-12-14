@@ -1,0 +1,5 @@
+#
+
+our $octave_version = "@OCTAVE_VERSION@";
+
+1;

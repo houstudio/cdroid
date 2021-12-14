@@ -1,0 +1,32 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCOLBGA 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplscolbga\fP - Set the background color by 8-bit RGB value and PLFLT alpha transparency value.
+.SH SYNOPSIS
+\fBplscolbga\fP(\fIr\fP, \fIg\fP, \fIb\fP, \fIalpha\fP)
+.SH DESCRIPTION
+
+.P
+Set the background color (color 0 in cmap0) by 8-bit RGB value and PLFLT alpha transparency value (see the PLplot documentation).
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIr\fP (\fBPLINT\fP(3plplot), input)
+Unsigned 8-bit integer (0-255) representing the degree of red in the color.
+.TP
+\fIg\fP (\fBPLINT\fP(3plplot), input)
+Unsigned 8-bit integer (0-255) representing the degree of green in the color.
+.TP
+\fIb\fP (\fBPLINT\fP(3plplot), input)
+Unsigned 8-bit integer (0-255) representing the degree of blue in the color.
+.TP
+\fIalpha\fP (\fBPLFLT\fP(3plplot), input)
+Value of the alpha transparency in the range (0.0-1.0).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

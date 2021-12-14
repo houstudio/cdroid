@@ -1,0 +1,110 @@
+# examples/ada/Makefile.examples.in for PLplot
+# Copyright (C) 2002-2019 Alan W. Irwin
+# Copyright (C) 2003-2005 Rafael Laboissiere
+# Copyright (C) 2004-2008 Andrew Ross
+# Copyright (C) 2008-2009 Jerry Bauck
+#
+# This file is part of PLplot.
+#
+# PLplot is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# PLplot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with the file PLplot; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+SHELL = @SH_EXECUTABLE@
+GNAT_EXECUTABLE_BUILDER = @GNAT_EXECUTABLE_BUILDER@ \
+	"-aI@ADA_INCLUDE_DIR@" "-aL@ADA_LIB_DIR@"
+EXEEXT = @EXEEXT@
+
+PKG_CONFIG_ENV = @PKG_CONFIG_ENV@
+install_tree_ada_RPATHCMD = @install_tree_ada_RPATHCMD@
+
+EXECUTABLES_list = \
+	xtraditional00a$(EXEEXT) \
+	xtraditional01a$(EXEEXT) \
+	xtraditional02a$(EXEEXT) \
+	xtraditional03a$(EXEEXT) \
+	xtraditional04a$(EXEEXT) \
+	xtraditional05a$(EXEEXT) \
+	xtraditional06a$(EXEEXT) \
+	xtraditional07a$(EXEEXT) \
+	xtraditional08a$(EXEEXT) \
+	xtraditional09a$(EXEEXT) \
+	xtraditional10a$(EXEEXT) \
+	xtraditional11a$(EXEEXT) \
+	xtraditional12a$(EXEEXT) \
+	xtraditional13a$(EXEEXT) \
+	xtraditional14a$(EXEEXT) \
+	xtraditional15a$(EXEEXT) \
+	xtraditional16a$(EXEEXT) \
+	xtraditional17a$(EXEEXT) \
+	xtraditional18a$(EXEEXT) \
+	xtraditional19a$(EXEEXT) \
+	xtraditional20a$(EXEEXT) \
+	xtraditional21a$(EXEEXT) \
+	xtraditional22a$(EXEEXT) \
+	xtraditional23a$(EXEEXT) \
+	xtraditional24a$(EXEEXT) \
+	xtraditional25a$(EXEEXT) \
+	xtraditional26a$(EXEEXT) \
+	xtraditional27a$(EXEEXT) \
+	xtraditional28a$(EXEEXT) \
+	xtraditional29a$(EXEEXT) \
+	xtraditional30a$(EXEEXT) \
+	xtraditional31a$(EXEEXT) \
+	xtraditional33a$(EXEEXT) \
+	xstandard00a$(EXEEXT) \
+	xstandard01a$(EXEEXT) \
+	xstandard02a$(EXEEXT) \
+	xstandard03a$(EXEEXT) \
+	xstandard04a$(EXEEXT) \
+	xstandard05a$(EXEEXT) \
+	xstandard06a$(EXEEXT) \
+	xstandard07a$(EXEEXT) \
+	xstandard08a$(EXEEXT) \
+	xstandard09a$(EXEEXT) \
+	xstandard10a$(EXEEXT) \
+	xstandard11a$(EXEEXT) \
+	xstandard12a$(EXEEXT) \
+	xstandard13a$(EXEEXT) \
+	xstandard14a$(EXEEXT) \
+	xstandard15a$(EXEEXT) \
+	xstandard16a$(EXEEXT) \
+	xstandard17a$(EXEEXT) \
+	xstandard18a$(EXEEXT) \
+	xstandard19a$(EXEEXT) \
+	xstandard20a$(EXEEXT) \
+	xstandard21a$(EXEEXT) \
+	xstandard22a$(EXEEXT) \
+	xstandard23a$(EXEEXT) \
+	xstandard24a$(EXEEXT) \
+	xstandard25a$(EXEEXT) \
+	xstandard26a$(EXEEXT) \
+	xstandard27a$(EXEEXT) \
+	xstandard28a$(EXEEXT) \
+	xstandard29a$(EXEEXT) \
+	xstandard30a$(EXEEXT) \
+	xstandard31a$(EXEEXT) \
+	xstandard33a$(EXEEXT)
+
+all: $(EXECUTABLES_list)
+
+clean:
+	rm -f $(EXECUTABLES_list) *.ali *.o
+
+# target_link_libraries(${TARGET_NAME} plplotada plplot)
+# Due to command-line limitations of gnatmake cannot continue (by trailing \)
+# anything after -cargs below.
+.adb$(EXEEXT):
+	$(GNAT_EXECUTABLE_BUILDER) $< \
+	-cargs $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags plplot-ada plplot) -largs $(install_tree_ada_RPATHCMD) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --libs plplot-ada plplot)
+
+.SUFFIXES: .adb $(EXEEXT)

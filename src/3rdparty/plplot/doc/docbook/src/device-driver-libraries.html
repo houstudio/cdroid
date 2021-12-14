@@ -1,0 +1,24 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Device-driver Libraries</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="libraries.html" title="Chapter 23. The PLplot Libraries"><link rel="prev" href="enhancement-libraries.html" title="Enhancement Libraries"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Device-driver Libraries</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="enhancement-libraries.html">Prev</a> </td><th width="60%" align="center">Chapter 23. The PLplot Libraries</th><td width="20%" align="right"> </td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="device-driver-libraries"></a>Device-driver Libraries</h2></div></div></div><p>
+      Device-driver libraries are libraries which are built as part to the
+      PLplot build and which are linked by PLplot device drivers.  At this
+      time we only have one example of this, the NIST cd library which makes
+      it easy to create files in CGM format.  The original name of this
+      library was libcd, but we call it libnistcd to distinguish it from all
+      other "cd" libraries out there.  This library is linked by our cgm
+      device driver.
+    </p><p>
+      CGM format is a long-established (since 1987) open standard for vector
+      graphics (see http://www.w3.org/Graphics/WebCGM/).  The libnistcd
+      software was developed by G. Edward Johnson at NIST to provide
+      convenient access to the CGM format.  The library is no longer
+      maintained (the last official release was in 1997), but the software
+      is mature and works well.  Furthermore, it is in the public domain
+      except for the small part licensed under the libgd open-source license
+      (see lib/nistcd/cd.html in the PLplot source tree).  PLplot developers
+      have added a modern CMake-based build system for libnistcd and also
+      have done some visibility support so the code builds properly
+      under Windows and also under Linux with gcc when the
+      -fvisibility=hidden option for gcc is used.  Otherwise, the code is
+      identical to the 1997 version.  For documentation of the libnistcd API
+      see lib/nistcd/cd.html in the PLplot source tree.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="enhancement-libraries.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="libraries.html">Up</a></td><td width="40%" align="right"> </td></tr><tr><td width="40%" align="left" valign="top">Enhancement Libraries </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> </td></tr></table></div></body></html>

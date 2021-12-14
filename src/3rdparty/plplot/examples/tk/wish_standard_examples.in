@@ -1,0 +1,47 @@
+#!@SH_EXECUTABLE@
+# Run standard examples using wish TEA-based approach.
+# Drop examples 14 and 31 because querying for devices does not
+# seem to work in this context.
+# The following exec command reexecutes the script under wish.  This
+# is possible because all comment lines are ignored by wish including
+# continued ones with a trailing backslash like this one \
+exec @TK_WISH@ "$0" "$@"
+lappend auto_path "@pkgIndex_LOCATION@"
+package require Pltk
+source tkdemos.tcl
+# Note wish currently disables pauses so no special method is
+# required to do that (unlike the plserver case).
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+#14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+#31
+33
+exit

@@ -1,0 +1,38 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSLABELFUNC 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplslabelfunc\fP - Assign a function to use for generating custom axis labels
+.SH SYNOPSIS
+\fBplslabelfunc\fP(\fIlabel_func\fP, \fIlabel_data\fP)
+.SH DESCRIPTION
+
+.P
+This function allows a user to provide their own function to provide axis label text.  The user function is given the numeric value for a point on an axis and returns a string label to correspond with that value.  Custom axis labels can be enabled by passing appropriate arguments to \fBplenv\fP(3plplot), \fBplbox\fP(3plplot), \fBplbox3\fP(3plplot) and similar functions.
+.P
+This function is used in example 19.
+.SH ARGUMENTS
+.TP
+\fIlabel_func\fP (\fBPLLABEL_FUNC_callback\fP(3plplot), input)
+This is the custom label function.  In order to reset to the default labelling, set this to NULL. The labelling function parameters are, in order: .TP
+\fIaxis\fP
+This indicates which axis a label is being requested for. The value will be one of PL_X_AXIS, PL_Y_AXIS or PL_Z_AXIS.
+.TP
+\fIvalue\fP
+This is the value along the axis which is being labelled.
+.TP
+\fIlabel_text\fP
+The string representation of the label value.
+.TP
+\fIlength\fP
+The maximum length in characters allowed for label_text.
+
+.TP
+\fIlabel_data\fP (\fBPLPointer\fP(3plplot), input)
+This parameter may be used to pass data to the label_func function.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

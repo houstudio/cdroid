@@ -1,0 +1,65 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plstyl: Set line style</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plstripd.html" title="plstripd: Deletes and releases memory used by a strip chart"><link rel="next" href="plsurf3d.html" title="plsurf3d: Plot shaded 3-d surface plot"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plstyl</code>: Set line style
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plstripd.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plsurf3d.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plstyl"></a>
+      <code class="function">plstyl</code>: Set line style
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plstyl</b>
+          (</code></td><td>
+            <var class="pdparam">nms</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">mark</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">space</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      This sets up the line style for all lines subsequently drawn.  A line
+      consists of segments in which the pen is alternately down and up.
+      The lengths of these segments are passed in the vectors
+      <code class="literal"><em class="parameter"><code>mark</code></em></code> and
+      <code class="literal"><em class="parameter"><code>space</code></em></code> respectively.  The
+      number of mark-space pairs is specified by
+      <code class="literal"><em class="parameter"><code>nms</code></em></code>.  In order to return
+      the line style to the default continuous line, <a class="link" href="plstyl.html" title="plstyl: Set line style"><code class="function">plstyl</code></a> should be
+      called with <code class="literal"><em class="parameter"><code>nms</code></em> =0 </code>.(see
+      also <a class="link" href="pllsty.html" title="pllsty: Select line style"><code class="function">pllsty</code></a>)
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>nms</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            The number of <code class="literal">
+              <em class="parameter"><code>mark</code></em>
+            </code>
+            and <code class="literal">
+              <em class="parameter"><code>space</code></em>
+            </code> elements in
+            a line.  Thus a simple broken line can be obtained by setting
+            <code class="literal">
+              <em class="parameter"><code>nms</code></em>=1
+            </code>.  A continuous
+            line is specified by setting
+            <code class="literal">
+              <em class="parameter"><code>nms</code></em>=0
+            </code>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>mark</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the lengths of the segments during which
+            the pen is down, measured in micrometers.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>space</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the lengths of the segments during which
+            the pen is up, measured in micrometers.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plstyl(mark, space)</code>
+    </p><p>
+      This function is used in examples 1, 9, and 14.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plstripd.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plsurf3d.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plstripd</code>: Deletes and releases memory used by a
+      strip chart
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plsurf3d</code>: Plot shaded 3-d surface plot
+    </td></tr></table></div></body></html>

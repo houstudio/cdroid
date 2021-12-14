@@ -1,0 +1,857 @@
+diff -Naur libharu-2.2.1_pristine/CMakeLists.txt libharu-2.2.1/CMakeLists.txt
+--- libharu-2.2.1_pristine/CMakeLists.txt	1969-12-31 16:00:00.000000000 -0800
++++ libharu-2.2.1/CMakeLists.txt	2013-10-22 15:55:30.205030236 -0700
+@@ -0,0 +1,220 @@
++# CMakeLists.txt
++#
++# Copyright (C) 2008  Werner Smekal
++# Copyright (C) 2010  Alan W. Irwin
++#
++# This software is provided 'as-is', without any express or implied warranty.
++#
++# In no event will the authors be held liable for any damages arising from the
++# use of this software.
++# 
++# Permission is granted to anyone to use this software for any purpose,including
++# commercial applications, and to alter it and redistribute it freely, subject
++# to the following restrictions:
++# 
++#  1. The origin of this software must not be misrepresented; you must not claim
++#     that you wrote the original software. If you use this software in a
++#     product, an acknowledgment in the product documentation would be
++#     appreciated but is not required.
++#  2. Altered source versions must be plainly marked as such, and must not be
++#     misrepresented as being the original software.
++#  3. This notice may not be removed or altered from any source distribution. 
++#
++# Process this file with cmake to produce Makefiles or project files
++# for your specific compiler tool set
++#
++# TODO:
++# - shared and static library
++# - packaging
++# - devpackage
++# =======================================================================
++# libharu project
++# =======================================================================
++project(libharu C)
++
++message(STATUS "CMake version = ${CMAKE_VERSION}")
++message(STATUS "CMAKE_SYSTEM = ${CMAKE_SYSTEM}")
++message(STATUS "CMAKE_GENERATOR = ${CMAKE_GENERATOR}")
++message(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
++
++cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
++
++# Location where the haru cmake build system first looks for cmake modules
++set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
++
++# determine compiler name
++set(COMPILER_LABEL "unknown")
++if(CMAKE_COMPILER_IS_GNUCC)
++  set(COMPILER_LABEL "gcc")
++endif(CMAKE_COMPILER_IS_GNUCC)
++if(MSVC)
++  set(COMPILER_LABEL "vc")
++endif(MSVC)
++
++### Version information for libharu software package.  
++### N.B. Needs review before each release!
++set(LIBHARU_MAJOR 2)
++set(LIBHARU_MINOR 2)
++set(LIBHARU_PATCH 0)
++set(LIBHARU_VERSION ${LIBHARU_MAJOR}.${LIBHARU_MINOR}.${LIBHARU_PATCH})
++# libhpdf library version information.
++# N.B. Not to be confused with package version set above!
++
++# Rules: 
++# (1) If a backwards incompatible API change has been made in the library
++#     API (e.g., if old compiled and linked applications will no longer work)
++#     then increment SOVERSION and zero the corresponding minor and patch
++#     numbers just before release.
++# (2) If the library changes are limited to additions to the API, then
++#     then leave SOVERSION alone, increment the minor number and zero the
++#     patch number just before release.
++# (3) If the library changes are limited to implementation changes with 
++#     no API changes at all, then leave SOVERSION and minor number alone, and
++#     increment the patch number just before the release.
++# (4) If there are no library source code changes at all, then leave all
++#     library version numbers the same for the release.
++# If library has not been properly versioned before start the numbering
++# at 0.0.0.
++set(hpdf_SOVERSION 0)
++set(hpdf_VERSION ${hpdf_SOVERSION}.0.0)
++### End of version information to be reviewed.
++
++# Use RPATH?
++if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
++  # No rpath on Darwin. Setting it will only cause trouble.
++else(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
++  option(USE_RPATH "Use -rpath when linking libraries, executables" ON)
++endif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
++
++# Description of libharu for cpack.
++set(LIBHARU_DESCRIPTION "libHaru is a free, cross platform, open source library for generating PDF files.")
++set(LIBHARU_PACKAGE_NAME "libHaru-${LIBHARU_VERSION}-${COMPILER_LABEL}")
++
++# Comment out all this name stuff which I feel is probably unnecessary (since
++# PLplot doesn't bother with this.)
++# set library name, msvc does not prepend 'lib' automatically
++#if(MSVC)
++#  set(LIBHARU_NAME lib)
++#endif(MSVC)
++#set(LIBHARU_NAME ${LIBHARU_NAME}hpdf)
++#set(LIBHARU_NAME_STATIC ${LIBHARU_NAME}s)
++
++# =======================================================================
++# command line options
++# =======================================================================
++option(LIBHARU_SHARED "Build shared lib" YES)
++option(LIBHARU_STATIC "Build static lib" YES)
++option(LIBHARU_EXAMPLES "Build libharu examples" NO)
++option(DEVPAK "Create DevPackage" NO)
++
++if(DEVPAK AND NOT WIN32)
++  message( STATUS "DevPackage only available for Win32. Set DEVPAK to OFF." )
++  set(DEVPAK OFF)
++endif(DEVPAK AND NOT WIN32)
++if(DEVPAK AND LIBHARU_EXAMPLES)
++  message( STATUS "Examples are not build for DevPackage. Set LIBHARU_EXAMPLES to OFF." )
++  set(LIBHARU_EXAMPLES OFF)
++endif(DEVPAK AND LIBHARU_EXAMPLES)
++
++
++
++if(BUILD_SHARED_LIBS)
++  set(LIBHARU_SHARED ON)
++endif(BUILD_SHARED_LIBS)
++
++# =======================================================================
++# look for headers and libraries
++# =======================================================================
++include(haru)
++include(summary)
++
++set(ADDITIONAL_LIBRARIES ${MATH_LIB})
++# check zlib availibility
++find_package(ZLIB)
++if(ZLIB_FOUND)
++  set(HAVE_LIBZ ON)
++  include_directories(${ZLIB_INCLUDE_DIR})
++  list(APPEND ADDITIONAL_LIBRARIES ${ZLIB_LIBRARIES})
++else(ZLIB_FOUND)
++  set(LIBHPDF_HAVE_NOZLIB ON)  
++endif(ZLIB_FOUND)
++
++# check png availibility
++find_package(PNG)
++if(PNG_FOUND)
++  set(HAVE_LIBPNG ON)
++  include_directories(${PNG_INCLUDE_DIR})
++  add_definitions(${PNG_DEFINITIONS})
++  list(APPEND ADDITIONAL_LIBRARIES ${PNG_LIBRARIES})
++else(PNG_FOUND)
++  set(LIBHPDF_HAVE_NOPNGLIB ON)  
++endif(PNG_FOUND)
++
++# =======================================================================
++# Add compiler flags
++# =======================================================================
++# add definitions and directories to include
++#if(CMAKE_COMPILER_IS_GNUCC)
++#  add_definitions("-Wall")
++#endif(CMAKE_COMPILER_IS_GNUCC)
++if(MSVC_VERSION GREATER 1399)
++  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE)
++endif(MSVC_VERSION GREATER 1399)
++include_directories(${CMAKE_SOURCE_DIR}/include)
++include_directories(${CMAKE_BINARY_DIR}/include)
++
++# create DevPackage file
++if(DEVPAK)
++  configure_file(
++    ${CMAKE_SOURCE_DIR}/libharu.DevPackage.cmake
++    ${CMAKE_BINARY_DIR}/libharu.DevPackage
++    )
++endif(DEVPAK)
++
++# =======================================================================
++# Configure and install header files.
++# =======================================================================
++add_subdirectory(include)
++
++# =======================================================================
++# create library and demos
++# =======================================================================
++add_subdirectory(src)
++add_subdirectory(demo)
++
++# install various files
++# These commented out to keep install tree as lean as possible.  May want
++# to add some documentation files later to the install tree.
++#install(FILES README CHANGES INSTALL DESTINATION .)
++#install(DIRECTORY doc DESTINATION .)
++#if(NOT DEVPAK)
++#  install(DIRECTORY if DESTINATION .)
++#endif(NOT DEVPAK)
++#if(DEVPAK)
++#  install(FILES ${CMAKE_BINARY_DIR}/libharu.DevPackage DESTINATION .)
++#endif(DEVPAK)
++# =======================================================================
++# print out some information
++# =======================================================================
++summary()
++
++# =======================================================================
++# packing stuff
++# =======================================================================
++set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${LIBHARU_DESCRIPTION})
++set(CPACK_PACKAGE_VENDOR "Werner Smekal")
++set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/README)
++set(CPACK_PACKAGE_VERSION_MAJOR "${LIBHARU_MAJOR}")
++set(CPACK_PACKAGE_VERSION_MINOR "${LIBHARU_MINOR}")
++set(CPACK_PACKAGE_VERSION_PATCH "${LIBHARU_PATCH}")
++set(CPACK_PACKAGE_FILE_NAME "libHaru-${LIBHARU_VERSION}-${COMPILER_LABEL}")
++
++set(CPACK_STRIP_FILES ON)
++
++if(WIN32)
++  set(CPACK_GENERATOR ZIP)
++else(WIN32)
++  set(CPACK_GENERATOR TGZ)
++endif(WIN32)
++
++INCLUDE( CPack )
+diff -Naur libharu-2.2.1_pristine/cmake/modules/haru.cmake libharu-2.2.1/cmake/modules/haru.cmake
+--- libharu-2.2.1_pristine/cmake/modules/haru.cmake	1969-12-31 16:00:00.000000000 -0800
++++ libharu-2.2.1/cmake/modules/haru.cmake	2013-10-22 15:55:30.205030236 -0700
+@@ -0,0 +1,54 @@
++# cmake/modules/haru.cmake
++#
++# Copyright (C) 2008  Werner Smekal
++#
++# This software is provided 'as-is', without any express or implied warranty.
++#
++# In no event will the authors be held liable for any damages arising from the
++# use of this software.
++# 
++# Permission is granted to anyone to use this software for any purpose,including
++# commercial applications, and to alter it and redistribute it freely, subject
++# to the following restrictions:
++# 
++#  1. The origin of this software must not be misrepresented; you must not claim
++#     that you wrote the original software. If you use this software in a
++#     product, an acknowledgment in the product documentation would be
++#     appreciated but is not required.
++#  2. Altered source versions must be plainly marked as such, and must not be
++#     misrepresented as being the original software.
++#  3. This notice may not be removed or altered from any source distribution. 
++#
++# check if headers exist
++# Need these modules to do subsequent checks.
++include(CheckIncludeFiles)
++
++# =======================================================================
++# check header availability
++# =======================================================================
++# check if header file exists
++check_include_files(dlfcn.h HAVE_DLFCN_H)
++check_include_files(inttypes.h HAVE_INTTYPES_H)
++check_include_files(memory.h HAVE_MEMORY_H)
++check_include_files(stdint.h HAVE_STDINT_H)
++check_include_files(stdlib.h HAVE_STDLIB_H)
++check_include_files(strings.h HAVE_STRINGS_H)
++check_include_files(string.h HAVE_STRING_H)
++check_include_files(sys/stat.h HAVE_SYS_STAT_H)
++check_include_files(sys/types.h HAVE_SYS_TYPES_H)
++check_include_files(unistd.h HAVE_UNISTD_H)
++
++
++# =======================================================================
++# additional library support
++# =======================================================================
++# On windows systems the math library is not separated so do not specify
++# it unless you are on a non-windows system.
++if(NOT WIN32)
++  find_library(MATH_LIB NAMES m PATHS /usr/local/lib /usr/lib)
++  if(NOT MATH_LIB)
++    message(FATAL_ERROR "Cannot find required math library")
++  endif(NOT MATH_LIB)
++else(NOT WIN32)
++  set(MATH_LIB)
++endif(NOT WIN32)
+diff -Naur libharu-2.2.1_pristine/cmake/modules/summary.cmake libharu-2.2.1/cmake/modules/summary.cmake
+--- libharu-2.2.1_pristine/cmake/modules/summary.cmake	1969-12-31 16:00:00.000000000 -0800
++++ libharu-2.2.1/cmake/modules/summary.cmake	2013-10-22 15:55:30.213030083 -0700
+@@ -0,0 +1,66 @@
++# cmake/modules/summary.cmake
++#
++# Copyright (C) 2008  Werner Smekal
++#
++# This software is provided 'as-is', without any express or implied warranty.
++#
++# In no event will the authors be held liable for any damages arising from the
++# use of this software.
++# 
++# Permission is granted to anyone to use this software for any purpose,including
++# commercial applications, and to alter it and redistribute it freely, subject
++# to the following restrictions:
++# 
++#  1. The origin of this software must not be misrepresented; you must not claim
++#     that you wrote the original software. If you use this software in a
++#     product, an acknowledgment in the product documentation would be
++#     appreciated but is not required.
++#  2. Altered source versions must be plainly marked as such, and must not be
++#     misrepresented as being the original software.
++#  3. This notice may not be removed or altered from any source distribution. 
++#
++# Macro for outputting all the most important CMake variables for haru
++
++# =======================================================================
++# print summary of configuration to screen
++# =======================================================================
++
++macro(summary)
++set(_output_results "
++Summary of CMake build system results for the haru library
++
++Install location variables which can be set by the user:
++CMAKE_INSTALL_PREFIX:      ${CMAKE_INSTALL_PREFIX}
++CMAKE_INSTALL_EXEC_PREFIX  ${CMAKE_INSTALL_EXEC_PREFIX}
++CMAKE_INSTALL_BINDIR 	   ${CMAKE_INSTALL_BINDIR}
++CMAKE_INSTALL_LIBDIR 	   ${CMAKE_INSTALL_LIBDIR}
++CMAKE_INSTALL_INCLUDEDIR   ${CMAKE_INSTALL_INCLUDEDIR}
++
++Other important CMake variables:
++
++CMAKE_SYSTEM_NAME:	${CMAKE_SYSTEM_NAME}
++UNIX:			${UNIX}
++WIN32:			${WIN32}
++APPLE:			${APPLE}
++MSVC:			${MSVC}	(MSVC_VERSION:	${MSVC_VERSION})
++MINGW:			${MINGW}
++MSYS:			${MSYS}
++CYGWIN:			${CYGWIN}
++BORLAND:		${BORLAND}
++WATCOM:		  ${WATCOM}
++
++CMAKE_BUILD_TYPE:	${CMAKE_BUILD_TYPE}
++CMAKE_C_COMPILER CMAKE_C_FLAGS:			${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS}
++
++Library options:
++LIBHARU_SHARED:		${LIBHARU_SHARED}
++LIBHARU_STATIC:		${LIBHARU_STATIC}
++LIBHARU_EXAMPLES:	${LIBHARU_EXAMPLES}
++DEVPAK:			${DEVPAK}
++
++Optional libraries:
++HAVE_LIBZ:		${HAVE_LIBZ}
++HAVE_LIBPNG:		${HAVE_LIBPNG}
++")
++message("${_output_results}")
++endmacro(summary)
+diff -Naur libharu-2.2.1_pristine/demo/CMakeLists.txt libharu-2.2.1/demo/CMakeLists.txt
+--- libharu-2.2.1_pristine/demo/CMakeLists.txt	1969-12-31 16:00:00.000000000 -0800
++++ libharu-2.2.1/demo/CMakeLists.txt	2013-10-22 15:55:30.213030083 -0700
+@@ -0,0 +1,183 @@
++# demo/CMakeLists.txt
++#
++# Copyright (C) 2008  Werner Smekal
++# Copyright (C) 2010  Alan W. Irwin
++#
++# This software is provided 'as-is', without any express or implied warranty.
++#
++# In no event will the authors be held liable for any damages arising from the
++# use of this software.
++# 
++# Permission is granted to anyone to use this software for any purpose,including
++# commercial applications, and to alter it and redistribute it freely, subject
++# to the following restrictions:
++# 
++#  1. The origin of this software must not be misrepresented; you must not claim
++#     that you wrote the original software. If you use this software in a
++#     product, an acknowledgment in the product documentation would be
++#     appreciated but is not required.
++#  2. Altered source versions must be plainly marked as such, and must not be
++#     misrepresented as being the original software.
++#  3. This notice may not be removed or altered from any source distribution. 
++##
++# create demo executables
++
++if(LIBHARU_EXAMPLES)
++  # =======================================================================
++  # source file names and c flags
++  # =======================================================================
++  set(
++    demos_NAMES
++    character_map
++    encoding_list
++    encryption
++    ext_gstate_demo
++    font_demo
++    image_demo
++    jpeg_demo
++    jpfont_demo
++    line_demo
++    link_annotation
++    make_rawimage
++    outline_demo
++    #outline_demo_jp
++    permission
++    png_demo
++    slide_show_demo
++    text_annotation
++    ttfont_demo
++    ttfont_demo_jp
++    )
++
++  set(
++    demos_with_grid_NAMES
++    arc_demo
++    chfont_demo
++    raw_image_demo
++    text_demo
++    text_demo2
++    )
++
++  # we need to add some definitions for win 32
++  if(WIN32 AND NOT CYGWIN)
++    add_definitions(-D_WIN32)
++  endif(WIN32 AND NOT CYGWIN)
++
++  # link the examples to the shared library otherwise to the static
++  if(LIBHARU_SHARED)
++    set(_LIBHARU_LIB hpdf)
++    if(CYGWIN OR MINGW)
++      add_definitions(-DHPDF_DLL_CDECL)
++    elseif(WIN32)
++      add_definitions(-DHPDF_DLL)
++    endif(CYGWIN OR MINGW)
++  else(LIBHARU_SHARED)
++    set(_LIBHARU_LIB hpdf_static)
++  endif(LIBHARU_SHARED)
++  
++  # =======================================================================
++  # create demos
++  # =======================================================================
++  foreach(demo ${demos_NAMES})
++    add_executable(${demo} ${demo}.c)
++    target_link_libraries(${demo} ${_LIBHARU_LIB})
++    if(USE_RPATH)
++      set_target_properties(
++	${demo}
++	PROPERTIES 
++	INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
++	INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++	)
++    else(USE_RPATH)
++      set_target_properties(
++	${demo}
++	PROPERTIES 
++	INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++	)
++    endif(USE_RPATH)
++  endforeach(demo)
++  
++  # some demos need grid_sheet.c compiled in
++  foreach(demo ${demos_with_grid_NAMES})
++    add_executable(${demo} ${demo}.c grid_sheet.c)
++    target_link_libraries(${demo} ${_LIBHARU_LIB})
++    if(USE_RPATH)
++      set_target_properties(
++	${demo}
++	PROPERTIES 
++	INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
++	INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++	)
++    else(USE_RPATH)
++      set_target_properties(
++	${demo}
++	PROPERTIES 
++	INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++	)
++    endif(USE_RPATH)
++  endforeach(demo)
++  
++  if(MATH_LIB)
++    # These are a subset of the demos above which include math.h and which
++    # therefore require linking with ${MATH_LIB}.
++    set(
++      demos_requiring_MATH_LIB
++      text_demo2
++      text_demo
++      raw_image_demo
++      image_demo
++      make_rawimage
++      )
++
++    foreach(demo ${demos_requiring_MATH_LIB})
++      target_link_libraries(${demo} ${MATH_LIB})
++    endforeach(demo ${demos_requiring_MATH_LIB})
++  endif(MATH_LIB)
++
++  add_executable(grid_sheet grid_sheet.c)
++  # the grid_sheet demo needs extra define, but cannot use add_definitions
++  # for that because that command affects all source files in the directory.
++  # So use set_target_properties instead.
++  set_target_properties(grid_sheet PROPERTIES COMPILE_FLAGS "-DSTAND_ALONE")
++  target_link_libraries(grid_sheet ${_LIBHARU_LIB})
++  if(USE_RPATH)
++    set_target_properties(
++      grid_sheet
++      PROPERTIES 
++      INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
++      INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++      )
++  else(USE_RPATH)
++    set_target_properties(
++      grid_sheet
++      PROPERTIES 
++      INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++      )
++  endif(USE_RPATH)
++
++  # =======================================================================
++  # install demo source, demo executables and other files
++  # =======================================================================
++
++  # comment out the rest of this until have better install tree
++  # location for these files.  For example, the current location makes
++  # a real mess on Unix.  In any case, demo executables should not be
++  # installed.  Instead, an independent demo build and test system
++  # (say, CMake-based as for PLplot) would be nice to implement for
++  # the installed demos.
++
++  #  install(
++  #    TARGETS ${demos_NAMES} ${demos_with_grid_NAMES} grid_sheet
++  #    DESTINATION demo
++  #  )
++
++  #  foreach(demo ${demos_NAMES} ${demos_with_grid_NAMES} grid_sheet)
++  #    install(FILES ${demo}.c DESTINATION demo)
++  #  endforeach(demo)
++
++  # install demo files
++  #  install(
++  #    DIRECTORY images mbtext pngsuite rawimage ttfont type1
++  #    DESTINATION demo
++  #  )
++endif(LIBHARU_EXAMPLES)
+diff -Naur libharu-2.2.1_pristine/include/CMakeLists.txt libharu-2.2.1/include/CMakeLists.txt
+--- libharu-2.2.1_pristine/include/CMakeLists.txt	1969-12-31 16:00:00.000000000 -0800
++++ libharu-2.2.1/include/CMakeLists.txt	2013-10-22 15:55:30.213030083 -0700
+@@ -0,0 +1,65 @@
++# include/CMakeLists.txt for libharu.
++###
++### Process this file with cmake to produce Makefile
++###
++# Copyright (C) 2008  Werner Smekal
++# Copyright (C) 2010  Alan W. Irwin
++#
++# This software is provided 'as-is', without any express or implied warranty.
++#
++# In no event will the authors be held liable for any damages arising from the
++# use of this software.
++# 
++# Permission is granted to anyone to use this software for any purpose,including
++# commercial applications, and to alter it and redistribute it freely, subject
++# to the following restrictions:
++# 
++#  1. The origin of this software must not be misrepresented; you must not claim
++#     that you wrote the original software. If you use this software in a
++#     product, an acknowledgment in the product documentation would be
++#     appreciated but is not required.
++#  2. Altered source versions must be plainly marked as such, and must not be
++#     misrepresented as being the original software.
++#  3. This notice may not be removed or altered from any source distribution. 
++#
++
++configure_file(
++  ${CMAKE_CURRENT_SOURCE_DIR}/hpdf_config.h.cmake
++  ${CMAKE_CURRENT_BINARY_DIR}/hpdf_config.h
++  )
++
++set(include_INSTALLED_HEADERS
++  hpdf.h
++  hpdf_annotation.h
++  hpdf_catalog.h
++  hpdf_conf.h
++  ${CMAKE_CURRENT_BINARY_DIR}/hpdf_config.h
++  hpdf_consts.h
++  hpdf_destination.h
++  hpdf_doc.h
++  hpdf_encoder.h
++  hpdf_encrypt.h
++  hpdf_encryptdict.h
++  hpdf_error.h
++  hpdf_ext_gstate.h
++  hpdf_font.h
++  hpdf_fontdef.h
++  hpdf_gstate.h
++  hpdf_image.h
++  hpdf_info.h
++  hpdf_list.h
++  hpdf_mmgr.h
++  hpdf_namedict.h
++  hpdf_objects.h
++  hpdf_outline.h
++  hpdf_page_label.h
++  hpdf_pages.h
++  hpdf_pdfa.h
++  hpdf_streams.h
++  hpdf_types.h
++  hpdf_u3d.h
++  hpdf_utils.h
++  hpdf_version.h
++  )
++
++install(FILES ${include_INSTALLED_HEADERS} DESTINATION include/hpdf)
+diff -Naur libharu-2.2.1_pristine/include/hpdf_config.h.cmake libharu-2.2.1/include/hpdf_config.h.cmake
+--- libharu-2.2.1_pristine/include/hpdf_config.h.cmake	1969-12-31 16:00:00.000000000 -0800
++++ libharu-2.2.1/include/hpdf_config.h.cmake	2013-10-22 15:56:31.771881667 -0700
+@@ -0,0 +1,91 @@
++/* 
++ * Copyright (C) 2008  Werner Smekal
++ * Copyright (C) 2010  Alan W. Irwin
++ *
++ * This software is provided 'as-is', without any express or implied warranty.
++ *
++ * In no event will the authors be held liable for any damages arising from the
++ * use of this software.
++ * 
++ * Permission is granted to anyone to use this software for any purpose,including
++ * commercial applications, and to alter it and redistribute it freely, subject
++ * to the following restrictions:
++ * 
++ *  1. The origin of this software must not be misrepresented; you must not claim
++ *     that you wrote the original software. If you use this software in a
++ *     product, an acknowledgment in the product documentation would be
++ *     appreciated but is not required.
++ *  2. Altered source versions must be plainly marked as such, and must not be
++ *     misrepresented as being the original software.
++ *  3. This notice may not be removed or altered from any source distribution. 
++ */
++
++/* include/hpdf_config.h.in.  Generated from configure.in by autoheader.  */
++
++#ifndef _HPDF_CONFIG_H
++#define _HPDF_CONFIG_H
++
++/* Define to 1 if you have the <dlfcn.h> header file. */
++#cmakedefine LIBHPDF_HAVE_DLFCN_H
++
++/* Define to 1 if you have the <inttypes.h> header file. */
++#cmakedefine LIBHPDF_HAVE_INTTYPES_H
++
++/* Define to 1 if you have the <memory.h> header file. */
++#cmakedefine LIBHPDF_HAVE_MEMORY_H
++
++/* Define to 1 if you have the <stdint.h> header file. */
++#cmakedefine LIBHPDF_HAVE_STDINT_H
++
++/* Define to 1 if you have the <stdlib.h> header file. */
++#cmakedefine LIBHPDF_HAVE_STDLIB_H
++
++/* Define to 1 if you have the <strings.h> header file. */
++#cmakedefine LIBHPDF_HAVE_STRINGS_H
++
++/* Define to 1 if you have the <string.h> header file. */
++#cmakedefine LIBHPDF_HAVE_STRING_H
++
++/* Define to 1 if you have the <sys/stat.h> header file. */
++#cmakedefine LIBHPDF_HAVE_SYS_STAT_H
++
++/* Define to 1 if you have the <sys/types.h> header file. */
++#cmakedefine LIBHPDF_HAVE_SYS_TYPES_H
++
++/* Define to 1 if you have the <unistd.h> header file. */
++#cmakedefine LIBHPDF_HAVE_UNISTD_H
++
++/* debug build */
++#cmakedefine LIBHPDF_DEBUG
++
++/* debug trace enabled */
++#cmakedefine LIBHPDF_DEBUG_TRACE
++
++/* libpng is not available */
++#cmakedefine LIBHPDF_HAVE_NOPNGLIB
++
++/* zlib is not available */
++#cmakedefine LIBHPDF_HAVE_NOZLIB
++
++/* Define to the address where bug reports for this package should be sent. */
++#cmakedefine LIBHPDF_PACKAGE_BUGREPORT
++
++/* Define to the full name of this package. */
++#cmakedefine LIBHPDF_PACKAGE_NAME
++
++/* Define to the full name and version of this package. */
++#cmakedefine LIBHPDF_PACKAGE_STRING
++
++/* Define to the one symbol short name of this package. */
++#cmakedefine LIBHPDF_PACKAGE_TARNAME
++
++/* Define to the version of this package. */
++#cmakedefine LIBHPDF_PACKAGE_VERSION
++
++/* Define to 1 if you have the ANSI C header files. */
++#cmakedefine LIBHPDF_STDC_HEADERS
++
++/* Define to `unsigned int' if <sys/types.h> does not define. */
++#cmakedefine LIBHPDF_size_t
++
++#endif /* _HPDF_CONFIG_H */
+diff -Naur libharu-2.2.1_pristine/src/CMakeLists.txt libharu-2.2.1/src/CMakeLists.txt
+--- libharu-2.2.1_pristine/src/CMakeLists.txt	1969-12-31 16:00:00.000000000 -0800
++++ libharu-2.2.1/src/CMakeLists.txt	2013-10-22 15:55:30.213030083 -0700
+@@ -0,0 +1,150 @@
++# src/CMakeLists.txt
++#
++# Copyright (C) 2008  Werner Smekal
++# Copyright (C) 2010  Alan W. Irwin
++#
++# This software is provided 'as-is', without any express or implied warranty.
++#
++# In no event will the authors be held liable for any damages arising from the
++# use of this software.
++# 
++# Permission is granted to anyone to use this software for any purpose,including
++# commercial applications, and to alter it and redistribute it freely, subject
++# to the following restrictions:
++# 
++#  1. The origin of this software must not be misrepresented; you must not claim
++#     that you wrote the original software. If you use this software in a
++#     product, an acknowledgment in the product documentation would be
++#     appreciated but is not required.
++#  2. Altered source versions must be plainly marked as such, and must not be
++#     misrepresented as being the original software.
++#  3. This notice may not be removed or altered from any source distribution. 
++#
++# create library
++# =======================================================================
++# libharu source files
++# =======================================================================
++set(
++  libharu_SRCS
++  hpdf_annotation.c
++  hpdf_array.c
++  hpdf_binary.c
++  hpdf_boolean.c
++  hpdf_catalog.c
++  hpdf_destination.c
++  hpdf_dict.c
++  hpdf_doc_png.c
++  hpdf_doc.c
++  hpdf_encoder_cns.c
++  hpdf_encoder_cnt.c
++  hpdf_encoder_jp.c
++  hpdf_encoder_kr.c
++  hpdf_encoder.c
++  hpdf_encrypt.c
++  hpdf_encryptdict.c
++  hpdf_error.c
++  hpdf_ext_gstate.c
++  hpdf_font_cid.c
++  hpdf_font_tt.c
++  hpdf_font_type1.c
++  hpdf_font.c
++  hpdf_fontdef_base14.c
++  hpdf_fontdef_cid.c
++  hpdf_fontdef_cns.c
++  hpdf_fontdef_cnt.c
++  hpdf_fontdef_jp.c
++  hpdf_fontdef_kr.c
++  hpdf_fontdef_tt.c
++  hpdf_fontdef_type1.c
++  hpdf_fontdef.c
++  hpdf_gstate.c
++  hpdf_image_png.c
++  hpdf_image.c
++  hpdf_info.c
++  hpdf_list.c
++  hpdf_mmgr.c
++  hpdf_name.c
++  hpdf_null.c
++  hpdf_number.c
++  hpdf_objects.c
++  hpdf_outline.c
++  hpdf_page_label.c
++  hpdf_page_operator.c
++  hpdf_pages.c
++  hpdf_real.c
++  hpdf_streams.c
++  hpdf_string.c
++  hpdf_u3d.c
++  hpdf_utils.c
++  hpdf_xref.c
++  )
++option(POST_2.1.0 "Version after 2.1.0?" ON)
++# Source code has one additional file in git version after 2.1.0 was released.
++if(POST_2.1.0)
++  list(APPEND libharu_SRCS
++    hpdf_namedict.c
++    )
++endif(POST_2.1.0)
++
++# Set macros to define visibility for various Windows platforms.
++# (gcc visibility support happens by default if none of these
++# are defined).
++
++if(CYGWIN OR MINGW)
++  add_definitions(-DHPDF_DLL_MAKE_CDECL)
++elseif(WIN32)
++  add_definitions(-DHPDF_DLL_MAKE)
++endif(CYGWIN OR MINGW)
++
++# =======================================================================
++# create static and shared haru library
++# =======================================================================
++if(LIBHARU_STATIC)
++  add_library(hpdf_static STATIC ${libharu_SRCS})
++  target_link_libraries(hpdf_static ${ADDITIONAL_LIBRARIES})
++  set_target_properties(
++    hpdf_static
++    PROPERTIES
++    OUTPUT_NAME hpdf
++    )
++  install(
++    TARGETS hpdf_static
++    ARCHIVE DESTINATION lib
++    LIBRARY DESTINATION lib
++    RUNTIME DESTINATION bin
++    )
++  if(WIN32 AND NOT CYGWIN)
++    foreach(addlib ${ADDITIONAL_LIBRARIES})
++      install(FILES ${addlib} DESTINATION lib)
++    endforeach(addlib)
++  endif(WIN32 AND NOT CYGWIN)
++endif(LIBHARU_STATIC)
++if(LIBHARU_SHARED)
++  add_library(hpdf SHARED ${libharu_SRCS})
++  target_link_libraries(hpdf ${ADDITIONAL_LIBRARIES})
++  if(USE_RPATH)
++    set_target_properties(
++      hpdf
++      PROPERTIES 
++      SOVERSION ${hpdf_SOVERSION}
++      VERSION ${hpdf_VERSION}
++      INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
++      INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++      )
++  else(USE_RPATH)
++    set_target_properties(
++      hpdf
++      PROPERTIES
++      SOVERSION ${hpdf_SOVERSION}
++      VERSION ${hpdf_VERSION}
++      INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
++      )
++  endif(USE_RPATH)
++
++  install(
++    TARGETS hpdf
++    ARCHIVE DESTINATION lib
++    LIBRARY DESTINATION lib
++    RUNTIME DESTINATION bin
++    )
++endif(LIBHARU_SHARED)

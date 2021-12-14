@@ -1,0 +1,36 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Description
+-----------
+
+The aquaterm driver uses [the aquaterm software package](http://aquaterm.sourceforge.net/index.shtml?page=a0|Aquaterm) to display plots and is only available for Mac OS X.
+
+Aquaterm Homepage
+-----------------
+
+Download the dmg file from the Aquaterm Homepage at <http://sourceforge.net/project/showfiles.php?group_id=39915> and install the Aquaterm.pkg file contained therein. The library as well as the necessary header files are installed at the corresponding places. cmake will now find and enable the aquaterm driver.
+
+Fink package manager
+--------------------
+
+The other way to install Aquaterm is via the fink package manager.
+
+Macports
+--------
+
+Aquaterm is also available via Macports. To install Aquaterm open the terminmal and enter
+
+`sudo port install aquaterm`
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

@@ -1,0 +1,277 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plcolorbar: Plot color bar for image, shade or gradient plots</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plcol1.html" title="plcol1: Set color, cmap1"><link rel="next" href="plconfigtime.html" title="plconfigtime: Configure the transformation between continuous and broken-down time for the current stream"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plcolorbar</code>: Plot color bar for image, shade or gradient plots
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plcol1.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plconfigtime.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plcolorbar"></a>
+      <code class="function">plcolorbar</code>: Plot color bar for image, shade or gradient plots
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plcolorbar</b>
+	  (</code></td><td><var class="pdparam">p_colorbar_width</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_colorbar_height</var>, </td></tr><tr><td> </td><td><var class="pdparam">opt</var>, </td></tr><tr><td> </td><td><var class="pdparam">position</var>, </td></tr><tr><td> </td><td><var class="pdparam">x</var>, </td></tr><tr><td> </td><td><var class="pdparam">y</var>, </td></tr><tr><td> </td><td><var class="pdparam">x_length</var>, </td></tr><tr><td> </td><td><var class="pdparam">y_length</var>, </td></tr><tr><td> </td><td><var class="pdparam">bg_color</var>, </td></tr><tr><td> </td><td><var class="pdparam">bb_color</var>, </td></tr><tr><td> </td><td><var class="pdparam">bb_style</var>, </td></tr><tr><td> </td><td><var class="pdparam">low_cap_color</var>, </td></tr><tr><td> </td><td><var class="pdparam">high_cap_color</var>, </td></tr><tr><td> </td><td><var class="pdparam">cont_color</var>, </td></tr><tr><td> </td><td><var class="pdparam">cont_width</var>, </td></tr><tr><td> </td><td><var class="pdparam">n_labels</var>, </td></tr><tr><td> </td><td><var class="pdparam">label_opts</var>, </td></tr><tr><td> </td><td><var class="pdparam">labels</var>, </td></tr><tr><td> </td><td><var class="pdparam">naxes</var>, </td></tr><tr><td> </td><td><var class="pdparam">axis_opts</var>, </td></tr><tr><td> </td><td><var class="pdparam">ticks</var>, </td></tr><tr><td> </td><td><var class="pdparam">sub_ticks</var>, </td></tr><tr><td> </td><td><var class="pdparam">n_values</var>, </td></tr><tr><td> </td><td><var class="pdparam">values</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Routine for creating a continuous color bar for image, shade, or gradient plots.
+      (See <a class="link" href="pllegend.html" title="pllegend: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols"><code class="function">pllegend</code></a> for similar functionality for creating legends with discrete elements).
+      The arguments of plcolorbar provide control over the location
+      and size of the color bar as well as the location and characteristics of
+      the elements (most of which are optional) within that color bar.  The
+      resulting color bar is clipped at the boundaries of the current subpage.
+      (N.B. the adopted coordinate system used for some of the parameters is
+      defined in the documentation of the
+      <code class="literal"><em class="parameter"><code>position</code></em></code> parameter.)
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>p_colorbar_width</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the
+	    labelled and decorated color bar width in adopted coordinates.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_colorbar_height</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the
+	    labelled and decorated color bar height in adopted coordinates.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>opt</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    <code class="literal"><em class="parameter"><code>opt</code></em></code> contains
+	    bits controlling the overall color bar.  The orientation (direction of
+	    the maximum value) of the color bar is specified with
+	    <code class="literal">PL_ORIENT_RIGHT</code>, <code class="literal">PL_ORIENT_TOP</code>,
+	    <code class="literal">PL_ORIENT_LEFT</code>, or
+	    <code class="literal">PL_ORIENT_BOTTOM</code>.  If none of these bits are
+	    specified, the default orientation is toward the top if the colorbar
+	    is placed on the left or right of the viewport or toward the right if
+	    the colorbar is placed on the top or bottom of the viewport. If the
+	    <code class="literal">PL_COLORBAR_BACKGROUND</code> bit is set, plot a
+	    (semitransparent) background for the color bar. If the
+	    <code class="literal">PL_COLORBAR_BOUNDING_BOX</code> bit is set, plot a
+	    bounding box for the color bar. The type of color bar must be
+	    specified with one of <code class="literal">PL_COLORBAR_IMAGE</code>,
+	    <code class="literal">PL_COLORBAR_SHADE</code>, or
+	    <code class="literal">PL_COLORBAR_GRADIENT</code>. If more than one of those
+	    bits is set only the first one in the above list is honored. The
+	    position of the (optional) label/title can be specified with
+	    <code class="literal">PL_LABEL_RIGHT</code>, <code class="literal">PL_LABEL_TOP</code>,
+	    <code class="literal">PL_LABEL_LEFT</code>, or
+	    <code class="literal">PL_LABEL_BOTTOM</code>.  If no label position bit is set
+	    then no label will be drawn. If more than one of this list of bits is
+	    specified, only the first one on the list is honored. End-caps for the
+	    color bar can added with <code class="literal">PL_COLORBAR_CAP_LOW</code> and
+	    <code class="literal">PL_COLORBAR_CAP_HIGH</code>. If a particular color bar cap
+	    option is not specified then no cap will be drawn for that end. As a
+	    special case for <code class="literal">PL_COLORBAR_SHADE</code>, the option
+	    <code class="literal">PL_COLORBAR_SHADE_LABEL</code> can be specified. If this
+	    option is provided then any tick marks and tick labels will be placed
+	    at the breaks between shaded segments. TODO: This should be expanded
+	    to support custom placement of tick marks and tick labels at custom
+	    value locations for any color bar type.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>position</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    <code class="literal"><em class="parameter"><code>position</code></em></code>
+	    contains bits which control the overall position of the
+	    color bar and the definition of the adopted coordinates used for
+	    positions just like what is done for the position argument for
+	    <a class="link" href="pllegend.html" title="pllegend: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols"><code class="function">pllegend</code></a>. However, note that the defaults for the position bits
+	    (see below) are different than the <a class="link" href="pllegend.html" title="pllegend: Plot legend using discretely annotated filled boxes, lines, and/or lines of symbols"><code class="function">pllegend</code></a> case. The combination of
+	    the <code class="literal">PL_POSITION_LEFT</code>,
+	    <code class="literal">PL_POSITION_RIGHT</code>,
+	    <code class="literal">PL_POSITION_TOP</code>,
+	    <code class="literal">PL_POSITION_BOTTOM</code>,
+	    <code class="literal">PL_POSITION_INSIDE</code>, and
+	    <code class="literal">PL_POSITION_OUTSIDE</code> bits specifies one of the 16
+	    possible standard positions (the 4 corners and centers of the 4 sides
+	    for both the inside and outside cases) of the color bar relative to
+	    the adopted coordinate system. The corner positions are specified by
+	    the appropriate combination of two of the
+	    <code class="literal">PL_POSITION_LEFT</code>,
+	    <code class="literal">PL_POSITION_RIGHT</code>,
+	    <code class="literal">PL_POSITION_TOP</code>, and
+	    <code class="literal">PL_POSITION_BOTTOM</code> bits while the sides are
+	    specified by a single value of one of those bits.  The adopted
+	    coordinates are normalized viewport coordinates if the
+	    <code class="literal">PL_POSITION_VIEWPORT</code> bit is set or normalized
+	    subpage coordinates if the <code class="literal">PL_POSITION_SUBPAGE</code> bit
+	    is set. Default position bits: If none of
+	    <code class="literal">PL_POSITION_LEFT</code>,
+	    <code class="literal">PL_POSITION_RIGHT</code>,
+	    <code class="literal">PL_POSITION_TOP</code>, or
+	    <code class="literal">PL_POSITION_BOTTOM</code> are set, then use
+	    <code class="literal">PL_POSITION_RIGHT</code>. If neither of
+	    <code class="literal">PL_POSITION_INSIDE</code> or
+	    <code class="literal">PL_POSITION_OUTSIDE</code> is set, use
+	    <code class="literal">PL_POSITION_OUTSIDE</code>. If neither of
+	    <code class="literal">PL_POSITION_VIEWPORT</code> or
+	    <code class="literal">PL_POSITION_SUBPAGE</code> is set, use
+	    <code class="literal">PL_POSITION_VIEWPORT</code>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>x</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    X offset of the color bar position in adopted coordinates from the
+	    specified standard position of the color bar. For positive x, the
+	    direction of motion away from the standard position is inward/outward
+	    from the standard corner positions or standard left or right positions
+	    if the
+	    <code class="literal">PL_POSITION_INSIDE</code>/<code class="literal">PL_POSITION_OUTSIDE</code>
+	    bit is set in <code class="literal"><em class="parameter"><code>position</code></em></code>.  For
+	    the standard top or bottom positions, the direction of motion is
+	    toward positive X.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Y offset of the color bar position in adopted coordinates from the
+	    specified standard position of the color bar. For positive y, the
+	    direction of motion away from the standard position is inward/outward
+	    from the standard corner positions or standard top or bottom positions
+	    if the
+	    <code class="literal">PL_POSITION_INSIDE</code>/<code class="literal">PL_POSITION_OUTSIDE</code>
+	    bit is set in <code class="literal"><em class="parameter"><code>position</code></em></code>.  For
+	    the standard left or right positions, the direction of motion is
+	    toward positive Y.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>x_length</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Length of the body of the color bar in the X direction in
+	    adopted coordinates.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y_length</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Length of the body of the color bar in the Y direction in adopted
+	    coordinates.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>bg_color</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+            The cmap0 color of the background for the color bar
+	    (<code class="literal">PL_COLORBAR_BACKGROUND</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>bb_color</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The cmap0 color of the bounding-box line for the color bar
+	    (<code class="literal">PL_COLORBAR_BOUNDING_BOX</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>bb_style</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The <a class="link" href="pllsty.html" title="pllsty: Select line style"><code class="function">pllsty</code></a> style number for the bounding-box line for the color bar
+	    (<code class="literal">PL_COLORBAR_BACKGROUND</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>low_cap_color</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The cmap1 color of the low-end color bar cap, if it is drawn
+	    (<code class="literal">PL_COLORBAR_CAP_LOW</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>high_cap_color</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The cmap1 color of the high-end color bar cap, if it is drawn
+	    (<code class="literal">PL_COLORBAR_CAP_HIGH</code>).
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>cont_color</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    The cmap0 contour color for <code class="literal">PL_COLORBAR_SHADE</code>
+	    plots. This is passed directly to <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>, so it will be
+	    interpreted according to the design of <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>cont_width</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Contour width for <code class="literal">PL_COLORBAR_SHADE</code>
+	    plots. This is passed directly to <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>, so it will be
+	    interpreted according to the design of <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>n_labels</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of labels to place around the color bar.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>label_opts</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of options for each of <em class="parameter"><code>n_labels</code></em> labels.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>labels</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_MATRIX-type"><code class="function">PLCHAR_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of <em class="parameter"><code>n_labels</code></em> UTF-8 character
+	    strings containing the labels for the color bar.  Ignored if
+	    no label position is specified with one of the
+	    <code class="literal">PL_COLORBAR_LABEL_RIGHT</code>,
+	    <code class="literal">PL_COLORBAR_LABEL_TOP</code>,
+	    <code class="literal">PL_COLORBAR_LABEL_LEFT</code>, or
+	    <code class="literal">PL_COLORBAR_LABEL_BOTTOM</code> bits in the corresponding
+	    label_opts field.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>n_axes</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of axis definitions provided. This value must be greater than
+	    0. It is typically 1 (numerical axis labels are provided for one of
+	    the long edges of the color bar), but it can be larger if multiple
+	    numerical axis labels for the long edges of the color bar are desired.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>axis_opts</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_MATRIX-type"><code class="function">PLCHAR_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of <em class="parameter"><code>n_axes</code></em> ascii character strings containing
+	    options (interpreted as for <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>) for the
+	    color bar's axis definitions.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ticks</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of n_axes values of the spacing of the major tick marks
+	    (interpreted as for <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>) for the color bar's axis definitions.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>sub_ticks</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector of n_axes values of the number of subticks (interpreted as
+	    for <a class="link" href="plbox.html" title="plbox: Draw a box with axes, etc"><code class="function">plbox</code></a>) for the color bar's axis definitions.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>n_values</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing the number of elements in each of the
+	    <code class="literal"><em class="parameter"><code>n_axes</code></em></code> rows of the
+	    <code class="literal"><em class="parameter"><code>values</code></em></code> matrix.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>values</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+	</span></dt><dd><p>
+	    A matrix containing the numeric values for the data
+	    range represented by the color bar. For a row index of
+	    <code class="literal"><em class="parameter"><code>i_axis</code></em></code> (where 0 &lt;
+	    <code class="literal"><em class="parameter"><code>i_axis</code></em></code> &lt;
+	    <code class="literal"><em class="parameter"><code>n_axes</code></em></code>), the number of
+	    elements in the row is specified by
+	    <code class="literal"><em class="parameter"><code>n_values</code></em></code>[<code class="literal"><em class="parameter"><code>i_axis</code></em></code>]. For <code class="literal">PL_COLORBAR_IMAGE</code> and
+	    <code class="literal">PL_COLORBAR_GRADIENT</code> the number of elements is 2,
+	    and the corresponding row elements of the
+	    <code class="literal"><em class="parameter"><code>values</code></em></code> matrix are the minimum
+	    and maximum value represented by the colorbar.  For
+	    <code class="literal">PL_COLORBAR_SHADE</code>, the number and values of the
+	    elements of a row of the
+	    <code class="literal"><em class="parameter"><code>values</code></em></code> matrix is interpreted
+	    the same as the <code class="literal"><em class="parameter"><code>nlevel</code></em></code> and
+	    <code class="literal"><em class="parameter"><code>clevel</code></em></code> arguments of
+	    <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a>.
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plcolorbar(p_colorbar_width, p_colorbar_height,
+      opt, position, x, y, x_length, y_length, bg_color,
+      bb_color, bb_style, low_cap_color, high_cap_color, cont_color, cont_width, label_opts, labels, axis_opts, ticks, sub_ticks, values)</code>
+    </p><p>
+      This function is used in examples 16 and 33.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plcol1.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plconfigtime.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plcol1</code>: Set color, cmap1
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plconfigtime</code>: Configure the transformation
+        between continuous and broken-down time for the current stream
+    </td></tr></table></div></body></html>

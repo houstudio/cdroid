@@ -1,0 +1,78 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plspage: Set page parameters</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plsori.html" title="plsori: Set orientation"><link rel="next" href="plspal0.html" title="plspal0: Set the cmap0 palette using the specified cmap0*.pal format file"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plspage</code>: Set page parameters
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plsori.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plspal0.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plspage"></a>
+      <code class="function">plspage</code>: Set page parameters
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plspage</b>
+          (</code></td><td>
+            <var class="pdparam">xp</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">yp</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xleng</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">yleng</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">xoff</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">yoff</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Sets the page configuration (optional).  If an individual parameter
+      is zero then that parameter value is not updated.  Not all parameters are
+      recognized by all drivers and the interpretation is device-dependent.
+      The X-window driver uses the length and offset parameters to determine
+      the window size and location.  The length and offset values are expressed
+      in units that are specific to the current driver.  For instance:
+      screen drivers will usually interpret them as number of pixels,
+      whereas printer drivers will usually use mm.
+      </p><p>This routine, if used, must be called before initializing PLplot.  It may be
+      called at later times for interactive drivers to change only the dpi for subsequent
+      redraws which you can force via a call to <a class="link" href="plreplot.html" title="plreplot: Replays contents of plot buffer to current device/file"><code class="function">plreplot</code></a>.  If this function is not
+      called then the page size defaults to landscape A4 for drivers which use real world page
+      sizes and 744 pixels wide by 538 pixels high for raster drivers. The default
+      value for dx and dy is 90 pixels per inch for raster drivers.
+    </p><p>
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>xp</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of pixels per inch (DPI), x. Used only by raster drivers, ignored by drivers
+            which use "real world" units (e.g. mm).
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>yp</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of pixels per inch (DPI), y.  Used only by raster drivers, ignored by drivers
+            which use "real world" units (e.g. mm).
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xleng</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Page length, x.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>yleng</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Page length, y.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>xoff</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Page offset, x.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>yoff</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Page offset, y.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plspage(xp, yp, xleng, yleng, xoff, yoff)</code>
+    </p><p>
+      This function is used in examples 14 and 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plsori.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plspal0.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plsori</code>: Set orientation
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plspal0</code>: Set the cmap0 palette using the
+      specified <code class="filename">cmap0*.pal</code> format file
+    </td></tr></table></div></body></html>

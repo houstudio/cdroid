@@ -1,0 +1,49 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Useful CMake documentation.
+
+-   [The dated but still extremely useful LJ article/tutorial](http://www.linuxjournal.com/article/6700)
+
+-   [The official CMake documentation site](http://www.cmake.org/documentation/).
+
+-   The man page which should be available with your distribution and also [on line](http://www.cmake.org/cmake/help/v2.8.12/cmake.html).
+
+-   To get complete documentation from cmake itself, run
+`cmake --help-full |less`
+
+-   To get a complete list of cmake commands use
+`cmake --help-command-list |less`
+
+-   To get specific help for, e.g., the add_subdirectory command use
+`cmake --help-command add_subdirectory`
+
+-   [The CMake Wiki](http://www.cmake.org/Wiki/CMake)
+
+-   [The CMake FAQ](http://www.cmake.org/Wiki/CMake_FAQ)
+
+-   [Useful CMake variables](http://www.cmake.org/Wiki/CMake_Useful_Variables)
+
+-   [How to find libraries](http://www.cmake.org/Wiki/CMake:How_To_Find_Libraries)
+
+-   [How to do platform checks](http://www.cmake.org/Wiki/CMake_HowToDoPlatformChecks)
+
+-   [Useful Introduction and tutorial for CMake from the KDE perspective](https://techbase.kde.org/Development/Tutorials/CMake)
+
+-   CMake is an easy language to understand so the cmake modules in $cmake_prefix/share/CMake-2.8/Modules, where $cmake_prefix is the prefix for your cmake install, are a good source of ideas.
+
+-   KDE and Scribus CMakeLists.txt files and \*.cmake modules. You may get access to the latest KDE and Scribus work following the instructions at <http://download.kde.org/> and <http://wiki.scribus.net/canvas/Download>.
+
+-   [The CMake mailing list](http://www.cmake.org/mailman/listinfo/cmake) This is an extremely active mailing list where the subscribers are most helpful.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

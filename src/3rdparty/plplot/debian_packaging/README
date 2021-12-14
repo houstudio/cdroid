@@ -1,0 +1,31 @@
+We collect here information concerning the Debian packaging of PLplot.  Most of this
+information has been supplied by Ole Streicher, the current maintainer for
+the Debian packaging of PLplot.
+
+* The development repository is
+  https://anonscm.debian.org/cgit/debian-science/packages/plplot.git
+
+* Git clones for the above repository
+
+  https://anonscm.debian.org/git/debian-science/packages/plplot.git
+  git://anonscm.debian.org/debian-science/packages/plplot.git
+  ssh://git.debian.org/git/debian-science/packages/plplot.git
+
+* The users page for the source package is
+  https://packages.debian.org/source/unstable/plplot
+  with links to all binary packages
+
+* There is a page with developers information about the package:
+  https://tracker.debian.org/pkg/plplot
+
+* The source code of the released packages can also be found at
+  https://sources.debian.net/src/plplot/unstable/
+
+* plplot will be maintained collaboratively by the debian-science
+  team, so packaging specific discussion shall go to
+  debian-science@lists.debian.org
+  We are happy about volunteers wanting to help us, send patches or
+  join the mainenance team.
+
+* Debian specific bugs shall be files with the "reportbug" tool in the
+  Debian bug database

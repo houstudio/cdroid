@@ -1,0 +1,303 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    simple.xml: "Simple Use of PLplot" chapter
+
+Copyright (C) 1994  Geoffrey Furnish and Maurice LeBrun
+Copyright (C) 1999-2017  Alan W. Irwin
+Copyright (C) 1999, 2000, 2001, 2002, 2003  Rafael Laboissiere
+Copyright (C) 2003  Joao Cardoso
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<chapter id="simple">
+  <title>Simple Use of PLplot</title>
+  <para>We describe simple use of PLplot in this chapter which
+  includes many cross-references to elements of our <link
+  linkend="API">common (C) API</link> that use PLplot C types such as
+  &PLFLT; and &PLINT;.  For full documentation of all PLplot C types see
+  <link linkend="plplot-types">here</link>.  The best way to learn how
+  to use our common API for the language of your choice is to look at
+  <ulink url="&PLplot-website;/examples.php">our standard set of
+  examples</ulink>.  For additional language documentation you should
+  consult the various chapters in <xref linkend="part_bindings"/> as
+  well.</para>
+
+  <sect1 id="simple-graph">
+    <title>Plotting a Simple Graph</title>
+
+    <para>
+      We shall first consider plotting simple graphs showing the dependence
+      of one variable upon another.  Such a graph may be composed of
+      several elements:
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  A box which defines the ranges of the variables, perhaps with
+	  axes and numeric labels along its edges.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A set of points or lines within the box showing the functional
+	  dependence.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A set of labels for the variables and a title for the graph.
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>For a good tutorial example of such a simple graph for each
+    of our supported languages, see <ulink
+    url="&PLplot-website;/examples.php?demo=00">our standard example
+    00</ulink>.</para>
+
+    <para>In order to draw such a simple graph, it is necessary to
+    call at least four of the PLplot functions: </para>
+    <orderedlist>
+      <listitem>
+	<para>
+	  &plinit;, to initialize PLplot.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  &plenv;, to define the range and scale of the
+	  graph, and draw labels, axes, etc.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  One or more calls to &plline; or &plstring; to draw lines or points
+	  as needed.  Other more complex routines include &plbin; and
+	  &plhist; to draw histograms, and &plerrx; and &plerry; to draw
+	  error-bars.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  &plend;, to close the plot.
+	</para>
+      </listitem>
+    </orderedlist>
+
+    <para>
+      More than one graph can be drawn on a single set of axes by making
+      repeated calls to the routines listed in item 3 above.  PLplot only
+      needs to be initialized once unless plotting to multiple output
+      devices.
+    </para>
+
+  </sect1>
+
+  <sect1 id="initializing">
+    <title>Initializing PLplot</title>
+
+    <para>
+      Before any actual plotting calls are made, a graphics program must
+      call &plinit;, is the main initialization routine for PLplot.  It
+      sets up all internal data structures necessary for plotting and
+      initializes the output device driver.  If the output device has not
+      already been specified when &plinit; is called, a list of valid
+      output devices is given and the user is prompted for a choice.
+      Either the device number or a device keyword is accepted.
+    </para>
+
+    <para>
+      There are several routines affecting the initialization that must
+      be called <emphasis>before</emphasis> &plinit;, if they are used.  The
+      function &plsdev; allows you to set the device explicitly.  The
+      function &plsetopt; allows you to set any command-line option
+      internally in your code.  The function &plssub; may be called to
+      divide the output device plotting area into several subpages of equal
+    size, each of which can be used separately. </para>
+
+    <para>
+      One advances to the next page (or screen) via &pladv;.  If subpages
+      are used, this can be used to advance to the next subpage or to a
+      particular subpage.
+    </para>
+  </sect1>
+
+
+  <sect1 id="scales">
+    <title>Defining Plot Scales and Axes</title>
+
+    <para>
+      The function &plenv; is used to define the scales and axes for simple
+      graphs.  &plenv; starts a new picture on the next subpage (or a new
+      page if necessary), and defines the ranges of the variables required.
+      The routine will also draw a box, axes, and numeric labels if
+      requested.
+    </para>
+
+    <para>
+      For greater control over the size of the plots, axis labelling and
+      tick intervals, more complex graphs should make use of the functions
+      &plvpor;, &plvasp;, &plvpas;, &plwind;, &plbox;, and routines for
+      manipulating axis labelling &plgxax; through &plszax;.
+    </para>
+  </sect1>
+
+  <sect1 id="labelling">
+    <title>Labelling the Graph</title>
+
+    <para>
+      The function &pllab; may be called after &plenv; to write labels on
+      the x and y axes, and at the top of the graph.
+      More complex labels can be drawn using the function &plmtex;.  For
+      discussion of writing text within a plot see <xref linkend="text"/>.
+    </para>
+
+  </sect1>
+  <sect1 id="drawing">
+    <title>Drawing the Graph</title>
+
+    <para>
+      PLplot can draw graphs consisting of points with optional error bars,
+      line segments or histograms.  Functions which perform each of these
+      actions may be called after setting up the plotting environment using
+      &plenv;.  All of the following functions draw within the box defined
+      by &plenv;, and any lines crossing the boundary are clipped.
+      Functions are also provided for drawing surface and contour
+      representations of multi-dimensional functions.  See <xref
+      linkend="advanced"/> for discussion of finer control of plot
+      generation.
+    </para>
+
+    <sect2 id="points">
+      <title>Drawing Points</title>
+
+      <para>&plstring;, &plpoin;, and &plsym; plot
+      <literal>n</literal> points <literal>(x[i], y[i])</literal> using the
+      specified symbol.  The routines differ only in how the plotted symbol
+      is specified.  &plstring; is now the preferred way of drawing points
+      for unicode-aware devices because it gives users full access via a
+      UTF-8 string to any unicode glyph they prefer for the symbol that is
+      is available via system fonts. &plpoin; and &plsym; are limited to
+      Hershey glyphs and are therefore more suitable for device drivers that
+      only use Hershey fonts.  For both of these functions the Hershey glyph
+      is indicated by a code value.  &plpoin; uses an extended ASCII index
+      of Hershey glyphs for that code value, with the printable ASCII codes
+      mapping to the respective characters in the current Hershey font, and
+      the codes from 0&ndash;31 mapping to various useful Hershey glyphs for
+      symbols.  In &plsym; however, the code is a Hershey font code number.
+      Standard examples <ulink
+      url="&PLplot-website;/examples.php?demo=04">04</ulink>, <ulink
+      url="&PLplot-website;/examples.php?demo=21">21</ulink>, and <ulink
+      url="&PLplot-website;/examples.php?demo=26">26</ulink>, demonstrate
+      use of &plstring; while <ulink
+      url="&PLplot-website;/examples.php?demo=06">standard example
+      06</ulink> demonstrates all the Hershey symbols available with
+      &plpoin; and <ulink
+      url="&PLplot-website;/examples.php?demo=07">standard example
+      07</ulink> demonstrates all the Hershey symbols available with
+      &plsym;.</para>
+    </sect2>
+
+    <sect2 id="lines">
+      <title>Drawing Lines or Curves</title>
+
+      <para>
+	PLplot provides two functions for drawing line graphs.  All lines are
+	drawn in the currently selected color, style and width.  See <xref
+	linkend="line-attributes"/> for information about changing these
+	parameters.
+      </para>
+
+      <para>
+	&plline; draws a line or curve.  The curve consists of
+	<literal>n-1</literal> line segments joining the <literal>n</literal>
+	points in the input arrays.  For single line segments, &pljoin; is
+	used to join two points.
+      </para>
+    </sect2>
+
+    <sect2 id="text">
+      <title>Writing Text on a Graph</title>
+
+      <para>
+	The &plptex; API allows UTF-* text to be written anywhere within the limits set by &plenv;
+	with justification and text angle set by the user.
+      </para>
+    </sect2>
+
+    <sect2 id="fills">
+      <title>Area Fills</title>
+
+      <para>
+	Area fills are done in the currently selected color, line style, line
+	width and pattern style.
+      </para>
+
+      <para>
+	&plfill; fills a polygon.  The polygon consists of
+	<literal>n</literal> vertices which define the polygon.
+      </para>
+    </sect2>
+
+    <sect2 id="complex">
+      <title>More Complex Graphs</title>
+
+      <para>
+	Functions &plbin; and &plhist; are provided for drawing histograms,
+	and functions &plerrx; and &plerry; draw error bars about specified
+	points.  There are lots more too (see <xref linkend="API"/>).
+      </para>
+
+    </sect2>
+
+  </sect1>
+
+  <sect1 id="finishing">
+    <title>Finishing Up</title>
+
+    <para>
+      Before the end of the program, <emphasis>always</emphasis> call
+      &plend; to close any output plot files and to free up resources.  For
+      devices that have separate graphics and text modes, &plend; resets
+      the device to text mode.
+    </para>
+
+  </sect1>
+
+  <sect1 id="error">
+    <title>In Case of Error</title>
+    <para>
+      If a fatal error is encountered during execution of a PLplot routine
+      then &plexit; is called.  This routine prints an error message,
+      does resource recovery, and then exits.  The user may specify an error
+      handler via <function>plsexit</function> that gets called before anything else is
+      done, allowing either the user to abort the error termination, or
+      clean up user-specific data structures before exit.
+    </para>
+  </sect1>
+</chapter>

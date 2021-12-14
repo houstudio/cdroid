@@ -1,0 +1,78 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLENV0 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplenv0\fP - Same as \fBplenv\fP(3plplot) but if in multiplot mode does not advance the subpage, instead clears it
+.SH SYNOPSIS
+\fBplenv0\fP(\fIxmin\fP, \fIxmax\fP, \fIymin\fP, \fIymax\fP, \fIjust\fP, \fIaxis\fP)
+.SH DESCRIPTION
+
+.P
+Sets up plotter environment for simple graphs by calling \fBpladv\fP(3plplot) and setting up viewport and window to sensible default values. \fBplenv0\fP(3plplot) leaves a standard margin (left-hand margin of eight character heights, and a margin around the other three sides of five character heights) around most graphs for axis labels and a title.  When these defaults are not suitable, use the individual routines \fBplvpas\fP(3plplot), \fBplvpor\fP(3plplot), or \fBplvasp\fP(3plplot) for setting up the viewport, \fBplwind\fP(3plplot) for defining the window, and \fBplbox\fP(3plplot) for drawing the box.
+.P
+Redacted form: \fBplenv0(xmin, xmax, ymin, ymax, just, axis)\fP
+.P
+This function is used in example 21.
+.SH ARGUMENTS
+.TP
+\fIxmin\fP (\fBPLFLT\fP(3plplot), input)
+Value of x at left-hand edge of window (in world coordinates).
+.TP
+\fIxmax\fP (\fBPLFLT\fP(3plplot), input)
+Value of x at right-hand edge of window (in world coordinates).
+.TP
+\fIymin\fP (\fBPLFLT\fP(3plplot), input)
+Value of y at bottom edge of window (in world coordinates).
+.TP
+\fIymax\fP (\fBPLFLT\fP(3plplot), input)
+Value of y at top edge of window (in world coordinates).
+.TP
+\fIjust\fP (\fBPLINT\fP(3plplot), input)
+Controls how the axes will be scaled: -1: the scales will not be set, the user must set up the scale before calling \fBplenv0\fP(3plplot) using \fBplsvpa\fP(3plplot), \fBplvasp\fP(3plplot) or other.
+0: the x and y axes are scaled independently to use as much of the screen as possible.
+1: the scales of the x and y axes are made equal.
+2: the axis of the x and y axes are made equal, and the plot box will be square.
+
+.TP
+\fIaxis\fP (\fBPLINT\fP(3plplot), input)
+Controls drawing of the box around the plot: -2: draw no box, no tick marks, no numeric tick labels, no axes.
+-1: draw box only.
+0: draw box, ticks, and numeric tick labels.
+1: also draw coordinate axes at x=0 and y=0.
+2: also draw a grid at major tick positions in both coordinates.
+3: also draw a grid at minor tick positions in both coordinates.
+10: same as 0 except logarithmic x tick marks. (The x data have to be converted to logarithms separately.)
+11: same as 1 except logarithmic x tick marks. (The x data have to be converted to logarithms separately.)
+12: same as 2 except logarithmic x tick marks. (The x data have to be converted to logarithms separately.)
+13: same as 3 except logarithmic x tick marks. (The x data have to be converted to logarithms separately.)
+20: same as 0 except logarithmic y tick marks. (The y data have to be converted to logarithms separately.)
+21: same as 1 except logarithmic y tick marks. (The y data have to be converted to logarithms separately.)
+22: same as 2 except logarithmic y tick marks. (The y data have to be converted to logarithms separately.)
+23: same as 3 except logarithmic y tick marks. (The y data have to be converted to logarithms separately.)
+30: same as 0 except logarithmic x and y tick marks. (The x and y data have to be converted to logarithms separately.)
+31: same as 1 except logarithmic x and y tick marks. (The x and y data have to be converted to logarithms separately.)
+32: same as 2 except logarithmic x and y tick marks. (The x and y data have to be converted to logarithms separately.)
+33: same as 3 except logarithmic x and y tick marks. (The x and y data have to be converted to logarithms separately.)
+40: same as 0 except date / time x labels.
+41: same as 1 except date / time x labels.
+42: same as 2 except date / time x labels.
+43: same as 3 except date / time x labels.
+50: same as 0 except date / time y labels.
+51: same as 1 except date / time y labels.
+52: same as 2 except date / time y labels.
+53: same as 3 except date / time y labels.
+60: same as 0 except date / time x and y labels.
+61: same as 1 except date / time x and y labels.
+62: same as 2 except date / time x and y labels.
+63: same as 3 except date / time x and y labels.
+70: same as 0 except custom x and y labels.
+71: same as 1 except custom x and y labels.
+72: same as 2 except custom x and y labels.
+73: same as 3 except custom x and y labels.
+
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

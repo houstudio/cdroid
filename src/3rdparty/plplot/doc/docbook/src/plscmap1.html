@@ -1,0 +1,73 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plscmap1: Set opaque RGB cmap1 colors values</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plscmap1_range.html" title="plscmap1_range: Set the cmap1 argument range for continuous color plots"><link rel="next" href="plscmap1a.html" title="plscmap1a: Set semitransparent cmap1 RGBA colors."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plscmap1</code>: Set opaque RGB cmap1 colors
+      values
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plscmap1_range.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plscmap1a.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plscmap1"></a>
+      <code class="function">plscmap1</code>: Set opaque RGB cmap1 colors
+      values
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plscmap1</b>
+          (</code></td><td>
+            <var class="pdparam">r</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">g</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">b</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ncol1</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set opaque cmap1 colors (see <a class="xref" href="color.html#color-map-1" title="Color Map1">the section called “Color Map1”</a>)
+      using RGB vector values.  This function also sets the
+      number of cmap1 colors.  N.B. Continuous cmap1 colors are indexed with
+      a floating-point index in the range from 0.0-1.0 which is linearly
+      transformed (e.g., by <a class="link" href="plcol1.html" title="plcol1: Set color, cmap1"><code class="function">plcol1</code></a>) to an integer index of these RGB
+      vectors in the range from 0 to <em class="parameter"><code>ncol1-1</code></em>.  So in
+      order for this continuous color model to work properly, it is the
+      responsibility of the user of <a class="link" href="plscmap1.html" title="plscmap1: Set opaque RGB cmap1 colors values"><code class="function">plscmap1</code></a> to insure that these RGB
+      vectors are continuous functions of their integer indices.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>r</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector that represents (using unsigned 8-bit integers in
+	    the range from 0-255) the degree of red in the color as a continuous
+	    function of the integer index of the vector.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>g</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector that represents (using unsigned 8-bit integers in
+	    the range from 0-255) the degree of green in the color as a continuous
+	    function of the integer index of the vector.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>b</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector that represents (using unsigned 8-bit integers in
+	    the range from 0-255) the degree of blue in the color as a continuous
+	    function of the integer index of the vector.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ncol1</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of items in the
+            <code class="literal">
+              <em class="parameter"><code>r</code></em>
+            </code>,
+            <code class="literal">
+              <em class="parameter"><code>g</code></em>
+            </code>, and
+            <code class="literal">
+              <em class="parameter"><code>b</code></em>
+            </code> vectors.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plscmap1(r, g, b)</code>
+    </p><p>
+      This function is used in example 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plscmap1_range.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plscmap1a.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plscmap1_range</code>: Set the cmap1 argument
+      range for continuous color plots
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plscmap1a</code>: Set semitransparent cmap1 RGBA colors.
+    </td></tr></table></div></body></html>

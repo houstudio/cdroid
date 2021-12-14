@@ -1,0 +1,31 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLFILL 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplfill\fP - Draw filled polygon
+.SH SYNOPSIS
+\fBplfill\fP(\fIn\fP, \fIx\fP, \fIy\fP)
+.SH DESCRIPTION
+
+.P
+Fills the polygon defined by the \fIn\fP points (\fIx\fP[i], \fIy\fP[i]) using the pattern defined by \fBplpsty\fP(3plplot) or \fBplpat\fP(3plplot).  The default fill style is a solid fill. The routine will automatically close the polygon between the last and first vertices.  If multiple closed polygons are passed in \fIx\fP and \fIy\fP then \fBplfill\fP(3plplot) will fill in between them.
+.P
+Redacted form: \fBplfill(x,y)\fP
+.P
+This function is used in examples 12, 13, 15, 16, 21, 24, and 25.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of vertices in polygon.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates of vertices.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of vertices.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

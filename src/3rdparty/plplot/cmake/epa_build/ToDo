@@ -1,0 +1,80 @@
+Here is the current (2013-12-06) epa_build ToDo list.
+
+* Add a build configuration for Qt4_lite.  As far as I can tell
+  (despite all the excitement over the years concerning the
+  CMake-based build system for KDE) the build system for Qt4 is an
+  autotools-based one, see
+  <http://www.linuxfromscratch.org/blfs/view/svn/x/qt4.html>.  Note
+  the prerequisities mentioned on that blfs page are Linux
+  prerequisites.  So I attempted to find out more about Windows
+  platform requirements by running the configure script from
+  MinGW/MSYS/Wine with the --help option.  That bombed out (saying
+  something about the platform not being ready) so I tried specifying
+  the platform before asking for help using these configure options:
+  -platform win32-g++ --help.  That worked, and showed, for example,
+  all the X11 options had disappeared.  I determined that platform
+  string following the directions in
+  <http://stackoverflow.com/questions/5211188/what-are-the-different-platforms-for-qts-configure>)
+  which said to use the same name as one of the subdirectories in the
+  mkspecs subdirectory of the top-level of the Qt source tarball.
+  From that method, another alternative platform string was
+  win32-g++-4.6, and looking at that subdirectory in more detail, it
+  obviously is an (extremely minor) update to win32-g++ so from now on
+  I intend to use the later platform string, i.e., -platform
+  win32-g++-4.6 because my MinGW version is 4.7.2 and not something
+  earlier than 4.6.
+
+  My guess is the Windows version of Qt4 is essentially a standalone
+  version with no outside dependencies.  In contrast from the BLFS
+  remarks, the Linux version has lots of dependencies, and if you
+  follow those up you would have to create and test epa_build
+  configurations for many additional software packages including some
+  difficult-to-get-right security packages such as openssl and the
+  security certificates.  So the strategy I intend to use is specify
+  no dependencies for Qt4 (which will mean the Linux epa_build of Qt4
+  will depend on some pre-existing system libraries which is OK, and
+  it should likely not be an issue for the Windows epa_build of Qt4 if
+  that is truly standalone).  Furthermore, I will attempt to make the
+  Qt4 build as quick and "lite" as possible by dropping as much as
+  possible from the configuration that does not interfere with PLplot
+  use, and for components that are used by PLplot such as jpeg, use
+  the in-house Qt4 version of that library rather than the system
+  library (which again reduces or avoids dependencies for the Windows
+  case).
+
+  Later on, of course, if somebody was interested they could configure
+  a more complete and powerful form of epa_build configuration of Qt4
+  that was suitable, for example, to support even an epa_build
+  configuration for KDE.  But for now I am going to concentrate on
+  Qt4_lite.
+
+* Test whether the current build_plplot_lite works for the current
+  wine (1.6-rc4) that I have built.  This has worked in the past
+  so I expect only minor issues to show up for this case.
+
+* Attempt to add a Tcl8.6 and friends buildtools for the Wine case.
+  If this works, then try build_plplot_lite on Wine again. Our normal
+  Tcl test targets such as test_pltcl_standard_examples and
+  test_tclsh_standard_examples, should work, and there is also a good
+  chance that test_c_ntk will work also since -dev ntk only depends on
+  Tk and not X. Of course, our other Tk test targets (test_c_tk,
+  test_plserver_standard_examples, test_wish_standard_examples,
+  test_plserver_runAllDemos, and test_wish_runAllDemos) will not work
+  on this platform because all the PLplot Tk functionality exercised
+  by those tests ultimately depends on -dev xwin and X.
+
+* Update to the latest Wine and verify that build_plplot_lite continues
+  to work in that case.
+
+* libcurl build configuration following the specific libcurl
+  information (and all its dependencies) in Linux from Scratch
+  <http://www.linuxfromscratch.org/blfs/view/svn/basicnet/curl.html>.
+  A build configuration success with libcurl would free epa_build
+  users of the need to rely on binary versions of CMake which is a
+  worthwhile goal although an extremely low priority compared to Qt4_lite
+  since ABI incompatibility is not an issue with binary
+  downloads of CMake (since that is just an application) while they
+  are an issue with binary downloads of the Qt4 set of libraries.
+  In fact, I may never bother to configure libcurl since it has a lot
+  of dependencies and some of those (like openssl and security certificates)
+  seem difficult to get right.

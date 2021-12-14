@@ -1,0 +1,128 @@
+#!@xtk01_LOCATION@ -f
+#                     -*-tcl-*-
+# Geoffrey Furnish
+# 11 April 1994
+#
+# @> A script for using Tk to control xtk01
+###############################################################################
+
+wm title . "x01c -- Tk version"
+plstdwin .
+
+# If you just want a bare plframe, set this to 0.
+
+set use_plxframe 1
+
+if { $use_plxframe == 1 } then {
+    set plwin .plw.plwin
+} else {
+    set plwin .plwin
+}
+
+###############################################################################
+# Set up the menubar and message widgets.
+
+frame .menu -relief raised -borderwidth 3
+
+button .menu.one -text "One" -command "myplot 1"
+pack append .menu .menu.one {left expand fill}
+
+button .menu.two -text "Two" -command "myplot 2"
+pack append .menu .menu.two {left expand fill}
+
+button .menu.three -text "Three" -command "myplot 3"
+pack append .menu .menu.three {left expand fill}
+
+button .menu.four -text "Four" -command "myplot 4"
+pack append .menu .menu.four {left expand fill}
+
+button .menu.exit -text "Exit" -command "quit 0"
+pack append .menu .menu.exit {right expand fill}
+
+message .msg \
+	-font -Adobe-helvetica-medium-r-normal--*-240* -aspect 200 \
+	 -width 500 -borderwidth 1 \
+	-text "tk01: Control x01c from Tk"
+
+pack append . \
+	.menu {top fillx} \
+	.msg {top padx 5 pady 5 fill}
+
+tk_menuBar .menu .menu.one .menu.two .menu.three .menu.four .menu.exit
+
+###############################################################################
+
+if { $use_plxframe == 1 } then {
+    plxframe .plw
+    pack append . .plw {left expand fill}
+
+} else {
+    plframe .plwin
+    pack append . .plwin {left expand fill}
+}
+
+bind $plwin L locate_on
+bind $plwin <Escape> locate_off
+
+bind $plwin <Control-Button-1> rband_on
+bind $plwin <Control-ButtonRelease-1> rband_off
+
+proc rband_on {} {
+    global plwin
+    $plwin configure -rubberband 1
+}
+
+proc rband_off {} {
+    global plwin
+    $plwin configure -rubberband 0
+}
+
+###############################################################################
+# Definitions of procedures used in this script.
+
+# Punch eject and hold onto your seat !!!
+
+proc quit a {
+    exit
+}
+
+# Utility routine.
+
+proc dpos w {
+    wm geometry $w +300+300
+}
+
+###############################################################################
+# Here is a binding which allows you to obtain the world coordinates of a
+# point or points through invoking a "Locate" mode.  You could instead just
+# turn it on somewhere in the script and leave it on if you prefer modeless
+# behavior, although you can sometimes get into trouble if you move the
+# crosshairs while a graphic draw is being performed (X is not forced to
+# handle these events serially -- the crosshairs may be updated before the
+# graphic draw is complete, and if the graphic draw then obscures the
+# crosshairs it will leave traces of the crosshairs on the plot when you
+# next move them).  Note especially that in the body of this example
+# "get_coords" proc, you can do anything you can do from Tcl.  In
+# particular, you need not put the data out to stdout (which is pretty
+# boring).  Instead, you can use this to feed the world coords to some more
+# complicated Tcl proc of your choosing.  Use the regexp parser to pull out
+# the world x and y coordinates, etc.  Have fun!
+
+proc locate_on {} {
+    global plwin
+    $plwin configure -xhairs 1
+    bind $plwin <Shift-1> { get_coords %x %y }
+}
+
+proc locate_off {} {
+    global plwin
+    $plwin configure -xhairs 0
+    bind $plwin <Shift-1> {}
+}
+
+proc get_coords {x y} {
+    global plwin
+    puts "world coordinates: [$plwin report wc $x $y]"
+}
+
+###############################################################################

@@ -1,0 +1,41 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+In order to be able to configure and compile the PLplot library on a Debian/Ubuntu OS many deb packages need to be installed. Below is a list of the packages needed. Mandatory packages are marked and more information is given if useful. This list can also be used to lookup for other Linux distributions, since the names of the packages are quite similar.
+
+### Base/Main
+
+-   libltdl3-dev - dynamic library
+-   libqhull-dev
+
+### Website
+
+-   subversion (mandatory)
+-   eperl (mandatory)
+-   xmlto (mandatory)
+-   php5 - for test on localhost, don't forget to restart apache2 after install
+-   apache2 - for test on localhost
+-   openssh-server - for test on localhost
+
+### Manual
+
+-   texlive-latex-base (mandatory)
+-   texinfo (mandatory)
+-   openjade (mandatory)
+-   jadetex (mandatory)
+-   docbook (mandatory)
+-   docbook2x (mandatory)
+-   libxml-dom-perl (mandatory)
+-   docbook-dsssl (mandatory) - DocBook stylesheets for html and print
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

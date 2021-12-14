@@ -1,0 +1,33 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Plotting a Simple Graph</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="simple.html" title="Chapter 2. Simple Use of PLplot"><link rel="prev" href="simple.html" title="Chapter 2. Simple Use of PLplot"><link rel="next" href="initializing.html" title="Initializing PLplot"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Plotting a Simple Graph</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="simple.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Simple Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="initializing.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="simple-graph"></a>Plotting a Simple Graph</h2></div></div></div><p>
+      We shall first consider plotting simple graphs showing the dependence
+      of one variable upon another.  Such a graph may be composed of
+      several elements:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  A box which defines the ranges of the variables, perhaps with
+	  axes and numeric labels along its edges.
+	</p></li><li class="listitem"><p>
+	  A set of points or lines within the box showing the functional
+	  dependence.
+	</p></li><li class="listitem"><p>
+	  A set of labels for the variables and a title for the graph.
+	</p></li></ul></div><p>For a good tutorial example of such a simple graph for each
+    of our supported languages, see <a class="ulink" href="http://plplot.org/examples.php?demo=00" target="_top">our standard example
+    00</a>.</p><p>In order to draw such a simple graph, it is necessary to
+    call at least four of the PLplot functions: </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>
+	  <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a>, to initialize PLplot.
+	</p></li><li class="listitem"><p>
+	  <a class="link" href="plenv.html" title="plenv: Set up standard window and draw box"><code class="function">plenv</code></a>, to define the range and scale of the
+	  graph, and draw labels, axes, etc.
+	</p></li><li class="listitem"><p>
+	  One or more calls to <a class="link" href="plline.html" title="plline: Draw a line"><code class="function">plline</code></a> or <a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a> to draw lines or points
+	  as needed.  Other more complex routines include <a class="link" href="plbin.html" title="plbin: Plot a histogram from binned data"><code class="function">plbin</code></a> and
+	  <a class="link" href="plhist.html" title="plhist: Plot a histogram from unbinned data"><code class="function">plhist</code></a> to draw histograms, and <a class="link" href="plerrx.html" title="plerrx: Draw error bars in x direction"><code class="function">plerrx</code></a> and <a class="link" href="plerry.html" title="plerry: Draw error bars in the y direction"><code class="function">plerry</code></a> to draw
+	  error-bars.
+	</p></li><li class="listitem"><p>
+	  <a class="link" href="plend.html" title="plend: End plotting session"><code class="function">plend</code></a>, to close the plot.
+	</p></li></ol></div><p>
+      More than one graph can be drawn on a single set of axes by making
+      repeated calls to the routines listed in item 3 above.  PLplot only
+      needs to be initialized once unless plotting to multiple output
+      devices.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="simple.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="simple.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="initializing.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 2. Simple Use of PLplot </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Initializing PLplot</td></tr></table></div></body></html>

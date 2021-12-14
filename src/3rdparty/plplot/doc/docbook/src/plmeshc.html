@@ -1,0 +1,137 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plmeshc: Magnitude colored plot surface mesh with contour</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plmesh.html" title="plmesh: Plot surface mesh"><link rel="next" href="plmkstrm.html" title="plmkstrm: Creates a new stream and makes it the default"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plmeshc</code>: Magnitude colored plot surface mesh with contour
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plmesh.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plmkstrm.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plmeshc"></a>
+      <code class="function">plmeshc</code>: Magnitude colored plot surface mesh with contour
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plmeshc</b>
+          (</code></td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">z</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">nx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ny</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">opt</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">clevel</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">nlevel</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      A more powerful form of <code class="function"><a class="link" href="plmesh.html" title="plmesh: Plot surface mesh"><code class="function">plmesh</code></a></code>:
+      the surface mesh can be colored accordingly to the current z value being plotted,
+      a contour plot can be drawn at the base XY plane, and a curtain can be drawn between
+      the plotted function border and the base XY plane.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the x coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the y coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>z</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+        </span></dt><dd><p>
+	    A matrix containing function values to plot.  Should have
+	    dimensions of <em class="parameter"><code>nx</code></em> by <em class="parameter"><code>ny</code></em>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>nx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal"><em class="parameter"><code>x</code></em></code> values at
+            which function is evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ny</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal"><em class="parameter"><code>y</code></em></code> values at
+            which function is evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>opt</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Determines the way in which the surface is represented. To specify
+            more than one option just add the options, e.g. DRAW_LINEXY + MAG_COLOR
+            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEX
+                  </code>: Lines
+                  are drawn showing
+                  <code class="literal">
+                    <em class="parameter"><code>z</code></em>
+                  </code> as a function
+                  of <code class="literal">
+                    <em class="parameter"><code>x</code></em>
+                  </code> for each
+                  value of <code class="literal">
+                    <em class="parameter"><code>y</code></em>[j]
+                  </code>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEY
+                  </code>: Lines
+                  are drawn showing
+                  <code class="literal">
+                    <em class="parameter"><code>z</code></em>
+                  </code> as a function
+                  of <code class="literal">
+                    <em class="parameter"><code>y</code></em>
+                  </code> for each
+                  value of <code class="literal">
+                    <em class="parameter"><code>x</code></em>[i]
+                  </code>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEXY
+                  </code>: Network
+                  of lines is drawn connecting points at which function is
+                  defined.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=MAG_COLOR
+                  </code>: Each line
+                  in the mesh is colored according to the z value being plotted. The
+                  color is used from the current cmap1.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=BASE_CONT
+                  </code>: A contour
+                  plot is drawn at the base XY plane using parameters
+                  <em class="parameter"><code>nlevel</code></em> and <em class="parameter"><code>clevel</code></em>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_SIDES
+                  </code>: draws a curtain
+                  between the base XY plane and the borders of the plotted function.
+                </p></li></ul></div><p>
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>clevel</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the contour levels.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>nlevel</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of elements in the <code class="literal">clevel</code> vector.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plmeshc(x, y, z, opt, clevel)</code>
+    </p><p>
+      This function is used in example 11.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plmesh.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plmkstrm.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plmesh</code>: Plot surface mesh
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plmkstrm</code>: Creates a new stream and makes it the
+      default
+    </td></tr></table></div></body></html>

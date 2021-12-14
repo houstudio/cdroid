@@ -1,0 +1,42 @@
+#!/bin/sh
+#--------------------------------*- Tcl -*------------------------------------#
+# Maurice LeBrun
+# 12/24/02
+#
+# A front-end to run x22.tcl directly from the command line with
+# a configured location for pltcl.
+# Handles all usual plplot command arguments.  See "@pltcl_LOCATION@ -h" for info.
+#-----------------------------------------------------------------------------#
+#\
+exec "@pltcl_LOCATION@" -f "$0" ${1+"$@"}
+
+#
+# This example uses UTF-8 characters, placeddirectly in the source code
+#
+if { [encoding system] != "utf-8" } {
+    if { [package vsatisfies [info patch] 8.5] } {
+
+        source -encoding utf-8 x24.tcl
+
+    } else {
+
+        #
+        # Pre-Tcl 8.5
+        #
+        set infile [open "x24.tcl"]
+        set contents [read $infile]
+        close $infile
+        eval [encoding convertfrom utf-8 \
+            [encoding convertto [encoding system] $contents]]
+    }
+} else {
+
+    #
+    # Plain source will do
+    #
+    source x24.tcl
+}
+
+plinit
+x24
+plend

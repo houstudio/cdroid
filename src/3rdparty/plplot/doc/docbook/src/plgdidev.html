@@ -1,0 +1,48 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plgdidev: Get parameters that define current device-space window</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plgdev.html" title="plgdev: Get the current device (keyword) name"><link rel="next" href="plgdiori.html" title="plgdiori: Get plot orientation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plgdidev</code>: Get parameters that define current
+      device-space window
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plgdev.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plgdiori.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plgdidev"></a>
+      <code class="function">plgdidev</code>: Get parameters that define current
+      device-space window
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plgdidev</b>
+	  (</code></td><td><var class="pdparam">p_mar</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_aspect</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_jx</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_jy</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Get relative margin width, aspect ratio, and relative justification
+      that define current device-space window.
+      If <a class="link" href="plsdidev.html" title="plsdidev: Set parameters that define current device-space window"><code class="function">plsdidev</code></a> has not been called the default values pointed to by
+      <code class="literal"><em class="parameter"><code>p_mar</code></em></code>,
+      <code class="literal"><em class="parameter"><code>p_aspect</code></em></code>,
+      <code class="literal"><em class="parameter"><code>p_jx</code></em></code>, and
+      <code class="literal"><em class="parameter"><code>p_jy</code></em></code>
+      will all be 0.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>p_mar</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the relative margin width.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_aspect</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the aspect ratio.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_jx</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the relative justification in x.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_jy</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the relative justification in y.
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plgdidev(p_mar, p_aspect, p_jx, p_jy)</code>
+    </p><p>
+      This function is used in example 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plgdev.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plgdiori.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plgdev</code>: Get the current device (keyword) name
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plgdiori</code>: Get plot orientation
+    </td></tr></table></div></body></html>

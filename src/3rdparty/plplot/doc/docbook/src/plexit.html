@@ -1,0 +1,30 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plexit: Error exit</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot"><link rel="prev" href="plClearOpts.html" title="plClearOpts: Clear internal option table info structure"><link rel="next" href="plFree2dGrid.html" title="plFree2dGrid: Free the memory associated with a PLFLT matrix allocated using plAlloc2dGrid"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plexit</code>: Error exit
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plClearOpts.html">Prev</a> </td><th width="60%" align="center">Chapter 18. The Specialized C/C++ API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plFree2dGrid.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plexit"></a>
+      <code class="function">plexit</code>: Error exit
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plexit</b>
+	  (</code></td><td><var class="pdparam">message</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      This routine is called in case an error is encountered during
+      execution of a PLplot routine.  It prints the error message, tries to
+      release allocated resources, calls the handler provided by <a class="link" href="plsexit.html" title="plsexit: Set exit handler"><code class="function">plsexit</code></a>
+      and then exits.  If cleanup needs to be done in the driver program
+      then the user may want to supply his/her own exit handler and pass it
+      in via <a class="link" href="plsexit.html" title="plsexit: Set exit handler"><code class="function">plsexit</code></a>.  This function should either call <a class="link" href="plend.html" title="plend: End plotting session"><code class="function">plend</code></a> before
+      exiting, or simply return.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>message</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    Error message.
+	  </p></dd></dl></div><p>
+      This function is not used in any of our C examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plClearOpts.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-C.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plFree2dGrid.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plClearOpts</code>: Clear internal option table info
+      structure
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+        <code class="function">plFree2dGrid</code>: Free the memory associated
+	with a PLFLT matrix allocated using <code class="function">plAlloc2dGrid</code>
+    </td></tr></table></div></body></html>

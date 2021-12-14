@@ -1,0 +1,45 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLHIST 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplhist\fP - Plot a histogram from unbinned data
+.SH SYNOPSIS
+\fBplhist\fP(\fIn\fP, \fIdata\fP, \fIdatmin\fP, \fIdatmax\fP, \fInbin\fP, \fIopt\fP)
+.SH DESCRIPTION
+
+.P
+Plots a histogram from \fIn\fP data points stored in the \fIdata\fP vector.  This routine bins the data into \fInbin\fP bins equally spaced between \fIdatmin\fP and \fIdatmax\fP, and calls \fBplbin\fP(3plplot) to draw the resulting histogram.  Parameter \fIopt\fP allows, among other things, the histogram either to be plotted in an existing window or causes \fBplhist\fP(3plplot) to call \fBplenv\fP(3plplot) with suitable limits before plotting the histogram.
+.P
+Redacted form: \fBplhist(data, datmin, datmax, nbin, opt)\fP
+.P
+This function is used in example 5.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of data points.
+.TP
+\fIdata\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the values of the \fIn\fP data points.
+.TP
+\fIdatmin\fP (\fBPLFLT\fP(3plplot), input)
+Left-hand edge of lowest-valued bin.
+.TP
+\fIdatmax\fP (\fBPLFLT\fP(3plplot), input)
+Right-hand edge of highest-valued bin.
+.TP
+\fInbin\fP (\fBPLINT\fP(3plplot), input)
+Number of (equal-sized) bins into which to divide the interval \fIxmin\fP to \fIxmax\fP.
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+Is a combination of several flags: \fIopt\fP=PL_HIST_DEFAULT: The axes are automatically rescaled to fit the histogram data, the outer bins are expanded to fill up the entire x-axis, data outside the given extremes are assigned to the outer bins and bins of zero height are simply drawn.
+\fIopt\fP=PL_HIST_NOSCALING|...: The existing axes are not rescaled to fit the histogram data, without this flag, \fBplenv\fP(3plplot) is called to set the world coordinates.
+\fIopt\fP=PL_HIST_IGNORE_OUTLIERS|...: Data outside the given extremes are not taken into account. This option should probably be combined with \fIopt\fP=PL_HIST_NOEXPAND|..., so as to properly present the data.
+\fIopt\fP=PL_HIST_NOEXPAND|...: The outer bins are drawn with equal size as the ones inside.
+\fIopt\fP=PL_HIST_NOEMPTY|...: Bins with zero height are not drawn (there is a gap for such bins).
+
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

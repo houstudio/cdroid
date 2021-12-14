@@ -1,0 +1,47 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCTIME 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplctime\fP - Calculate continuous time from broken-down time for the current stream
+.SH SYNOPSIS
+\fBplctime\fP(\fIyear\fP, \fImonth\fP, \fIday\fP, \fIhour\fP, \fImin\fP, \fIsec\fP, \fIctime\fP)
+.SH DESCRIPTION
+
+.P
+Calculate continuous time, \fIctime\fP, from broken-down time for the current stream.  The broken-down
+time is specified by the following parameters: \fIyear\fP, \fImonth\fP, \fIday\fP, \fIhour\fP, \fImin\fP, and \fIsec\fP. This function is the inverse of \fBplbtime\fP(3plplot).
+.P
+The PLplot definition of broken-down time is a calendar time that completely ignores all time zone offsets, i.e., it is the user's responsibility to apply those offsets (if so desired) before using the PLplot time API.  By default broken-down time is defined using the proleptic Gregorian calendar without the insertion of leap seconds and continuous time is defined as the number of seconds since the Unix epoch of 1970-01-01T00:00:00Z. However, other definitions of broken-down and continuous time are possible, see \fBplconfigtime\fP(3plplot) which specifies that transformation for the current stream.
+.P
+Redacted form: General: \fBplctime(year, month, day, hour, min, sec, ctime)\fP
+
+.P
+This function is used in example 29.
+.SH ARGUMENTS
+.TP
+\fIyear\fP (\fBPLINT\fP(3plplot), input)
+Input year.
+.TP
+\fImonth\fP (\fBPLINT\fP(3plplot), input)
+Input month in range from 0 (January) to 11 (December).
+.TP
+\fIday\fP (\fBPLINT\fP(3plplot), input)
+Input day in range from 1 to 31.
+.TP
+\fIhour\fP (\fBPLINT\fP(3plplot), input)
+Input hour in range from 0 to 23
+.TP
+\fImin\fP (\fBPLINT\fP(3plplot), input)
+Input minute in range from 0 to 59.
+.TP
+\fIsec\fP (\fBPLFLT\fP(3plplot), input)
+Input second in range from 0. to 60.
+.TP
+\fIctime\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the continuous time calculated from the broken-down time specified by the previous parameters.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

@@ -1,0 +1,104 @@
+# examples/c++/Makefile.examples.in for PLplot
+# Copyright (C) 2002 Maurice LeBrun
+# Copyright (C) 2002-2019 Alan W. Irwin
+# Copyright (C) 2003-2005 Rafael Laboissiere
+# Copyright (C) 2004-2012 Andrew Ross
+#
+# This file is part of PLplot.
+#
+# PLplot is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# PLplot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with the file PLplot; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+SHELL = @SH_EXECUTABLE@
+CXX = @CXX@
+EXEEXT = @EXEEXT@
+
+PKG_CONFIG_ENV = @PKG_CONFIG_ENV@
+install_tree_cxx_RPATHCMD = @install_tree_cxx_RPATHCMD@
+
+@wxwidgets_true@install_tree_wxwidgets_RPATHCMD = @install_tree_wxwidgets_RPATHCMD@
+@wxwidgets_true@PLPLOTWXWIDGETS_EXECUTABLES_list = \
+@wxwidgets_true@	@wxdemo_name@$(EXEEXT)
+
+@qt_gui_true@QT_MOC_EXECUTABLE = @QT_MOC_EXECUTABLE@
+@qt_gui_true@install_tree_qt_RPATHCMD = @install_tree_qt_RPATHCMD@
+@qt_gui_true@qt_gui_EXECUTABLES_list = \
+@qt_gui_true@	qt_example$(EXEEXT)
+
+EXECUTABLES_list = \
+		 x01cc$(EXEEXT) \
+		 x00$(EXEEXT) \
+		 x01$(EXEEXT) \
+		 x02$(EXEEXT) \
+		 x03$(EXEEXT) \
+		 x04$(EXEEXT) \
+		 x05$(EXEEXT) \
+		 x06$(EXEEXT) \
+		 x07$(EXEEXT) \
+		 x08$(EXEEXT) \
+		 x09$(EXEEXT) \
+		 x10$(EXEEXT) \
+		 x11$(EXEEXT) \
+		 x12$(EXEEXT) \
+		 x13$(EXEEXT) \
+		 x14$(EXEEXT) \
+		 x15$(EXEEXT) \
+		 x16$(EXEEXT) \
+		 x17$(EXEEXT) \
+		 x18$(EXEEXT) \
+		 x19$(EXEEXT) \
+		 x20$(EXEEXT) \
+		 x21$(EXEEXT) \
+		 x22$(EXEEXT) \
+		 x23$(EXEEXT) \
+		 x24$(EXEEXT) \
+		 x25$(EXEEXT) \
+		 x26$(EXEEXT) \
+		 x27$(EXEEXT) \
+		 x28$(EXEEXT) \
+		 x29$(EXEEXT) \
+		 x30$(EXEEXT) \
+		 x31$(EXEEXT) \
+		 x33$(EXEEXT) \
+		 $(PLPLOTWXWIDGETS_EXECUTABLES_list) \
+		 $(qt_gui_EXECUTABLES_list)
+
+
+all: $(EXECUTABLES_list)
+
+clean:
+	rm -f $(EXECUTABLES_list)
+
+# target_link_libraries(wxPLplotDemo plplotwxwidgets plplotcxx ${wxwidgets_LINK_FLAGS} ${MATH_LIB})
+@wxwidgets_true@@wxdemo_name@$(EXEEXT): @wxdemo_name@.cpp
+@wxwidgets_true@	$(CXX) $< -o $@ $(install_tree_wxwidgets_RPATHCMD) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags --libs plplot-wxwidgets plplot-c++) @pkg_config_wxwidgets_LINK_FLAGS@ @MATH_LIB@
+
+# Note, must filter out -p options which confuse $(QT_MOC_EXECUTABLE).  Such
+# options (e.g., -pthread) tend to appear in the static driver case.
+@qt_gui_true@moc_qt_PlotWindow.cpp: qt_PlotWindow.h
+@qt_gui_true@	$(QT_MOC_EXECUTABLE) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags-only-I plplot-qt) $< -o $@
+
+# For the ENABLE_DYNDRIVERS=ON case, must include link to the plplot-qt library
+# target_link_libraries(qt_example ${QT_LIBRARIES} plplotqt plplot)
+# For the ENABLE_DYNDRIVERS=OFF case, drop the link to the plplot-qt library (to avoid memory
+# management issues when linking to identical code in two different libraries).
+# target_link_libraries(qt_example ${QT_LIBRARIES} plplot)
+@qt_gui_true@qt_example$(EXEEXT): qt_example.cpp qt_PlotWindow.cpp moc_qt_PlotWindow.cpp
+@qt_gui_true@@enable_dyndrivers_true@	$(CXX) @Qt_EXECUTABLE_COMPILE_FLAGS@ qt_example.cpp qt_PlotWindow.cpp moc_qt_PlotWindow.cpp -o $@ $(install_tree_qt_RPATHCMD) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags --libs plplot-qt) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags --libs plplot) @pc_qt_link_flags@
+@qt_gui_true@@enable_dyndrivers_false@	$(CXX) @Qt_EXECUTABLE_COMPILE_FLAGS@ qt_example.cpp qt_PlotWindow.cpp moc_qt_PlotWindow.cpp -o $@ $(install_tree_qt_RPATHCMD) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags --libs plplot) @pc_qt_link_flags@
+
+# target_link_libraries(x${STRING_INDEX} plplotcxx ${MATH_LIB})
+.cc$(EXEEXT):
+	$(CXX) $< -o $@ $(install_tree_cxx_RPATHCMD) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags --libs plplot-c++) @MATH_LIB@
+
+.SUFFIXES: .cc $(EXEEXT)

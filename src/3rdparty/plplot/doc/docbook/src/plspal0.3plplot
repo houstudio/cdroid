@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSPAL0 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplspal0\fP - Set the cmap0 palette using the specified cmap0*.pal format file
+.SH SYNOPSIS
+\fBplspal0\fP(\fIfilename\fP)
+.SH DESCRIPTION
+
+.P
+Set the cmap0 palette using the specified cmap0*.pal format file.
+.P
+Redacted form: \fBplspal0(filename)\fP
+.P
+This function is in example 16.
+.SH ARGUMENTS
+.TP
+\fIfilename\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the name of the cmap0*.pal file.  If this string is empty, use the default cmap0*.pal file.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

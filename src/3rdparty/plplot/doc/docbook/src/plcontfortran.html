@@ -1,0 +1,134 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plcont: Contour plot for Fortran</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-FORTRAN.html" title="Chapter 19. The Specialized Fortran API for PLplot"><link rel="prev" href="API-FORTRAN.html" title="Chapter 19. The Specialized Fortran API for PLplot"><link rel="next" href="plshadefortran.html" title="plshade: Shaded plot for Fortran"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plcont</code>: Contour plot for Fortran
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="API-FORTRAN.html">Prev</a> </td><th width="60%" align="center">Chapter 19. The Specialized Fortran API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plshadefortran.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plcontfortran"></a>
+      <code class="function">plcont</code>: Contour plot for Fortran
+    </h4></div></div></div><p>
+      This is an overloaded function with a variety of argument lists:
+
+      </p><pre class="programlisting">
+	interface plcont
+	subroutine plcontour_0(z,kx,lx,ky,ly,clevel)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	end subroutine plcontour_0
+
+	subroutine plcontour_1(z,kx,lx,ky,ly,clevel,xg,yg)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:)   :: xg
+	real(kind=plflt), dimension(:)   :: yg
+	end subroutine plcontour_1
+
+	subroutine plcontour_2(z,kx,lx,ky,ly,clevel,xg,yg)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:,:) :: xg
+	real(kind=plflt), dimension(:,:) :: yg
+	end subroutine plcontour_2
+
+	subroutine plcontour_tr(z,kx,lx,ky,ly,clevel,tr)
+	integer                          :: kx,lx,ky,ly
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(6)   :: tr
+	end subroutine plcontour_tr
+
+	subroutine plcontour_0_all(z,clevel)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	end subroutine plcontour_0_all
+
+	subroutine plcontour_1_all(z,clevel,xg,yg)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:)   :: xg
+	real(kind=plflt), dimension(:)   :: yg
+	end subroutine plcontour_1_all
+
+	subroutine plcontour_2_all(z,clevel,xg,yg)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(:,:) :: xg
+	real(kind=plflt), dimension(:,:) :: yg
+	end subroutine plcontour_2_all
+
+	subroutine plcontour_tr_all(z,clevel,tr)
+	real(kind=plflt), dimension(:,:) :: z
+	real(kind=plflt), dimension(:)   :: clevel
+	real(kind=plflt), dimension(6)   :: tr
+	end subroutine plcontour_tr_all
+	end interface
+      </pre><p>
+    </p><p>
+      When called from Fortran, this overloaded routine has the same
+      effect as when invoked from C.  See
+      <code class="filename">examples/fortran/x??f.f90</code> for various ways to call
+      plcont from Fortran.
+    </p><p>
+      The meaning of the various arguments is as follows:
+      </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	    <em class="parameter"><code>z</code></em>
+	    (<code class="literal">real(kind=plflt), dimension(:,:)</code>, input)
+	  </span></dt><dd><p>
+	      Matrix containing the values to be plotted.
+	    </p></dd><dt><span class="term">
+	    <em class="parameter"><code>kx, lx</code></em>
+	    (<code class="literal">integer</code>, input)
+	  </span></dt><dd><p>
+	      Range for the first index in the matrix <code class="literal">z</code> to consider.
+	      If not given, then the whole first index is considered.
+	    </p></dd><dt><span class="term">
+	    <em class="parameter"><code>clevel</code></em>
+	    (<code class="literal">real(kind=plflt), dimension(:)</code>, input)
+	  </span></dt><dd><p>
+	      Levels at which the contours are computed and drawn.
+	    </p></dd><dt><span class="term">
+	    <em class="parameter"><code>kx, lx</code></em>
+	    (<code class="literal">integer</code>, input)
+	  </span></dt><dd><p>
+	      Range for the first index in the matrix <code class="literal">z</code> to consider.
+	      If not given, then the whole first index is considered.
+	    </p></dd><dt><span class="term">
+	    <em class="parameter"><code>ky, ly</code></em>
+	    (<code class="literal">integer</code>, input)
+	  </span></dt><dd><p>
+	      Range for the second index in the matrix <code class="literal">z</code> to consider.
+	      If not given, then the whole second index is considered.
+	    </p></dd><dt><span class="term">
+	    <em class="parameter"><code>xg</code></em>
+	    (<code class="literal">real(kind=plft), dimension(:)</code> or
+	    <code class="literal">real(kind=plft), dimension(:,:)</code>, input)
+	  </span></dt><dd><p>
+	      The x-coordinates for the grid lines (if one-dimensional)
+	      or the x-coordinates of the grid vertices (if two-dimensional).
+	      The values in the matrix are plotted at these coordinates.
+	      If not given, implicit coordinates are used (equal to the
+	      indices in the matrix).
+	    </p></dd><dt><span class="term">
+	    <em class="parameter"><code>yg</code></em>
+	    (<code class="literal">real(kind=plft), dimension(:)</code> or
+	    <code class="literal">real(kind=plft), dimension(:,:)</code>, input)
+	  </span></dt><dd><p>
+	      The y-coordinates for the grid lines (if one-dimensional)
+	      or the x-coordinates of the grid vertices (if two-dimensional).
+	      The values in the matrix are plotted at these coordinates.
+	    </p></dd><dt><span class="term">
+	    <em class="parameter"><code>tr</code></em>
+	    (<code class="literal">real(kind=plft), dimension(6)</code>, input)
+	  </span></dt><dd><p>
+	      The coefficients of an affine transformation:
+
+	      </p><pre class="programlisting">
+		x = tr(1) * ix + tr(2) * iy + tr(3)
+		y = tr(4) * ix + tr(5) * iy + tr(6)
+	      </pre><p>
+
+	      The indices of the matrix element are used to compute the
+	      "actual" coordinates according to the above formulae.
+	    </p></dd></dl></div><p>
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="API-FORTRAN.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-FORTRAN.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plshadefortran.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 19. The Specialized Fortran API for PLplot </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plshade</code>: Shaded plot for Fortran
+    </td></tr></table></div></body></html>

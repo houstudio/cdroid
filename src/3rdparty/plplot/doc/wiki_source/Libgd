@@ -1,0 +1,48 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Description
+-----------
+
+[gd](http://www.libgd.org) is a graphics library. It allows your code to quickly draw images complete with lines, arcs, text, multiple colors, cut and paste from other images, and flood fills, and write out the result as a PNG or JPEG file. This is particularly useful in World Wide Web applications, where PNG and JPEG are two of the formats accepted for inline images by most browsers.
+
+*Note:* This driver has been deprecated in favour of more modern library like libcairo and libpango. See the relevant Wiki pages for these.
+
+Instructions for Mac OS X
+-------------------------
+
+N/A
+
+Instructions for Linux
+----------------------
+
+N/A
+
+Instructions for Windows
+------------------------
+
+-   Download [gd 2.34 library as zip](http://www.libgd.org/releases/gd-latest-win32.zip)
+-   Unzip gd-latest-win32.zip into a folder of your choice
+
+### Set CMake paths
+
+-   set environment variables (for MinGW and Visual C++) and add bin directory to PATH
+
+`set LIBGDDIR=c:\libraries\libgd`
+`set PATH=%LIBGDDIR%\bin;%PATH%`
+`set CMAKE_INCLUDE_PATH=%LIBGDDIR%\include;%CMAKE_INCLUDE_PATH%`
+`set CMAKE_LIBRARY_PATH=%LIBGDDIR%\lib;%CMAKE_LIBRARY_PATH%`
+
+CMake is now able to find the libgd library and headers.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

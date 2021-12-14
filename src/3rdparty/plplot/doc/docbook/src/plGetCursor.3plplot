@@ -1,0 +1,27 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGETCURSOR 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplGetCursor\fP - Wait for graphics input event and translate to world coordinates.
+.SH SYNOPSIS
+PLINT \fBplGetCursor\fP(\fIgin\fP)
+.SH DESCRIPTION
+
+.P
+Wait for graphics input event and translate to world coordinates. Returns 0 if no translation to world coordinates is possible.
+.P
+This function returns 1 on success and 0 if no translation to world coordinates is possible.
+.P
+Redacted form: \fBplGetCursor(gin)\fP
+.P
+This function is used in examples 1 and 20.
+.SH ARGUMENTS
+.TP
+\fIgin\fP (PLGraphicsIn(3plplot) *, output)
+Pointer to PLGraphicsIn(3plplot) structure which will contain the output. The structure is not allocated by the routine and must exist before the function is called.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

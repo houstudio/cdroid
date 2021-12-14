@@ -1,0 +1,56 @@
+
+
+Announcing the release of CGM Draw 1.3.
+
+CGM Draw is a freely available library for generating CGM files from a
+C program.  It has been tested on Solaris, Ultrix, Linux, IRIX, AIX,
+OpenVMS, and DOS.  CGM (Computer Graphics Metafile) is a vector
+graphics format that can be read by many popular packages.  With CGM
+Draw your code can quickly draw images complete with lines, arcs,
+rectangles, polygons, and text.  CGM Draw is ideal for creating CGM
+files on the fly when you have a rapidly changing data set (such as in
+response to database queries.)
+
+
+Documentation for cd is included with the package, and is available from
+http://speckle.ncsl.nist.gov/~lorax/cgm/cd.html
+General information about CGM is available many places on the web, including 
+http://speckle.ncsl.nist.gov/~lsr/cgm.htm
+This distribution may be retrieved via ftp from
+zing.ncsl.nist.gov in the directory "cgm"  It will have the
+name cd followed by the version number.
+The current version is 1.3 and is at:
+ftp://zing.ncsl.nist.gov/cgm/cd1.3.tar.gz
+
+
+Whats new in this version:
+-Polygon Sets, you can define multiple polygons and draw them all with
+ one simple command.
+-Markers, set points in CGM's
+-Expert functions, to give you more control of the final CGM if you need it.
+
+
+What is CGM:
+CGM is a widely used method for representing 2D vector
+pictures.  Many industry users have decided to use CGM as the means of
+representing, storing, and interchanging pictures in all their documentation
+(e.g., Air Transport Association will use CGM to represent illustrations, US
+Petroleum industry has also adopted it).   
+CGM is already and established, open standard.  In 1987
+ISO approved the first version as an international standard, and the
+current version (which extends the original) was approved in 1992 (ISO
+8632.)  Many programs are already capable of creating CGM files.  Major
+illustration packages already can save their files in the CGM format
+(CorelDraw is one example) and many word processing programs (WordPerfect
+and Word) can include CGM files in their documents.
+
+
+What types of pictures is CGM suited for:
+CGM is ideally suited for pictures with geometric shapes, line drawings,
+and text.  Here are some particular applications that CGM would do well
+with:
+    Charts and Graphs--For instance charts of recent stock market data, or
+graphs of web server usage.
+    Technical illustrations--Diagrams for products or engineering drawings.
+CGM pictures can be zoomed in on to show small details.
+    General illustrations--Such as those you see in books or comic strips.

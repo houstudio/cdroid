@@ -1,0 +1,5976 @@
+Commit from rlaboiss (2004-02-02 11:49 CET)
+--------------------
+
+[RL for Brian D. Wright:]
+
+Changed version to 5.3.0 and release to 1mdk.
+
+  plplot  rpm/plplot_mandrake9.2.spec  1.3
+
+
+Commit from rlaboiss (2004-02-01 11:49 CET)
+--------------------
+
+[RL for Brian D. Wright:]
+
+Bug fixed spec file for Mandrake 9.2. Fixes some missing file attribute
+settings and adds some directories to file lists for proper clean up on
+uninstall.
+
+  plplot  rpm/plplot_mandrake9.2.spec  1.2
+
+
+Commit from airwin (2004-01-31 07:26 CET)
+------------------
+
+Add wish list item for converting configuration-related environment
+variables to ./configure options.
+
+  plplot  PROBLEMS  1.26
+
+
+Commit from airwin (2004-01-31 07:22 CET)
+------------------
+
+Tore out the old Unix instructions which were so old they were completely
+misleading.  Replaced with more generic Unix instructions including
+rudimentary documentation of our configuration environment variables.
+Also included specific instructions for Cygwin and solaris.
+
+  plplot  INSTALL  1.12
+
+
+Commit from airwin (2004-01-28 20:38 CET)
+------------------
+
+Change incorrect $(DESTDIR)/ ==> $(DESTDIR)
+
+  plplot  examples/Makefile.am      1.7
+  plplot  examples/c/Makefile.am    1.17
+  plplot  examples/c++/Makefile.am  1.15
+  plplot  examples/f77/Makefile.am  1.20
+
+
+Commit from rlaboiss (2004-01-28 20:08 CET)
+--------------------
+
+Disable Octave bindings building by default
+
+  plplot  configure.ac  1.158
+
+
+Commit from airwin (2004-01-28 18:56 CET)
+------------------
+
+Use EXPAND_EXPRESSION to determine PYTHON_INSTDIR and JAVA_INSTDIR rather
+than previous multiple invocations of echo and sed to do the same thing.
+
+  plplot  configure.ac  1.157
+
+
+Commit from jcard (2004-01-28 18:40 CET)
+-----------------
+
+Fix the usage message.
+
+  plplot  bindings/octave/demos/plplot_octave_demo.m  1.4
+
+
+Commit from jcard (2004-01-28 18:39 CET)
+-----------------
+
+Fix usage message formating
+
+  plplot  bindings/octave/demos/x14c.m  1.9
+
+
+Commit from jcard (2004-01-28 18:38 CET)
+-----------------
+
+Fix (again) the usage message.
+
+  plplot  bindings/octave/demos/x01c.m  1.11
+
+
+Commit from jcard (2004-01-28 18:37 CET)
+-----------------
+
+Exchange mouse buttons 2 and 3 in help/label messages.
+
+  plplot  bindings/octave/demos/p17.m  1.3
+  plplot  bindings/octave/demos/p18.m  1.2
+
+
+Commit from andrewross (2004-01-28 13:36 CET)
+----------------------
+
+Fix 3 memory leaks found using plrender on x01c example.
+Any tcl_cmd command line options do not get memory freed on exit in plcore.c
+If a stream is not fully initialised the FileName string associated with
+it is not freed in plcore.c
+There is a malloc without a free in plrender.c
+
+  plplot  src/plcore.c      1.126
+  plplot  utils/plrender.c  1.64
+
+
+Commit from rlaboiss (2004-01-28 10:57 CET)
+--------------------
+
+Make the PostScript linewidth a multiple of DEF_WIDTH.
+
+  plplot  drivers/ps.c  1.63
+
+
+Commit from rlaboiss (2004-01-28 10:28 CET)
+--------------------
+
+Get out of the while loop when plGetCursor returns a status == 0, such that
+this script will not hang forever when launched with a non-interactive
+driver.
+
+  plplot  bindings/octave/demos/x01c.m  1.10
+
+
+Commit from aroach (2004-01-27 05:54 CET)
+------------------
+
+Ok, I will admit, this one has me stumped, but for reasons I can't
+understand, I have to move <time.h> a few lines up to get rid of a
+problem with how select() is defined in DJGPP's header. Never affected
+anything before, but... as long as it works now, who cares ?
+
+  plplot  sys/dos/djgpp/src/gnusvga.c  1.17
+
+
+Commit from aroach (2004-01-27 05:51 CET)
+------------------
+
+Small changes to get DJGPP version OK with 5.3.0
+
+  plplot  sys/dos/djgpp/cf/plconfig.in  1.5
+  plplot  sys/dos/djgpp/cf/version.in   1.2
+
+
+Commit from rlaboiss (2004-01-25 23:21 CET)
+--------------------
+
+Since on Octave 2.1.53 glob returns a cell array instead of a padded char
+array, call char() on the result of glob(), such that toggle_plplot_use will
+work on both Octave 2.1.50 and 2.1.53.
+
+Thanks to Brian D. Wright <bdwright@phy.ucsf.edu> for the fix.
+
+  plplot  bindings/octave/PLplot/toggle_plplot_use.m  1.6
+
+
+Commit from rlaboiss (2004-01-25 23:17 CET)
+--------------------
+
+Call help for plplot_octave_path instead of octave_plplot_path
+
+  plplot  bindings/octave/PLplot/plplot_octave_path.m.in  1.8
+
+
+Commit from jcard (2004-01-25 19:53 CET)
+-----------------
+
+Fix help message.
+
+  plplot  bindings/octave/PLplot/set_view.m  1.11
+
+
+Commit from jcard (2004-01-25 19:52 CET)
+-----------------
+
+Fix usage message. Slightly mouse behavior change.
+
+  plplot  bindings/octave/demos/x01c.m  1.9
+
+
+Commit from jcard (2004-01-25 19:48 CET)
+-----------------
+
+Fix usage messages.
+
+  plplot  bindings/octave/demos/x14c.m  1.8
+
+
+Commit from rlaboiss (2004-01-25 15:37 CET)
+--------------------
+
+[ RL for AWI: ]
+
+The include directories aren't specified quite correctly in
+bindings/python/Makefile.am.
+
+AM_CPPFLAGS = $(INCLTDL) -I/$(PYTHON_INC_DIR) -I/$(PYTHON_NUM_DIR) $(X_CFLAGS)
+
+should be replaced by
+
+AM_CPPFLAGS = $(INCLTDL) -I$(PYTHON_INC_DIR) -I$(PYTHON_NUM_DIR) $(X_CFLAGS)
+
+The first way puts a double slash in the result (since both PYTHON_INC_DIR
+and PYTHON_NUM_DIR already have a leading slash). This double slash confuses
+the Cygwin compiler and shouldn't be there anyway.
+
+  plplot  bindings/python/Makefile.am  1.25
+
+
+Commit from rlaboiss (2004-01-25 15:32 CET)
+--------------------
+
+Put the install-data-hook rule outside the enable_cxx conditional.
+Configure --disable-cxx should work now.
+
+  plplot  examples/c++/Makefile.am  1.14
+
+
+Commit from rlaboiss (2004-01-25 15:28 CET)
+--------------------
+
+Removed the install-data-hook rule from inside the with_pkg_config
+conditional.  Instead, Use the conditional inside the -hook rule.
+
+This pattern have been used already in other Makefile.am files in PLplot.
+
+  plplot  pkgcfg/Makefile.am  1.11
+
+
+Commit from rlaboiss (2004-01-25 15:24 CET)
+--------------------
+
+Use "+=" automake construct to set SUBDIR.  Code is now cleaner and nicer.
+
+  plplot  lib/Makefile.am  1.9
+
+
+Commit from rlaboiss (2004-01-25 15:08 CET)
+--------------------
+
+Exclude from EXTRA_DIST the *.sh files that are generated by AC_OUTPUT.
+
+  plplot  test/Makefile.am  1.12
+
+
+Commit from rlaboiss (2004-01-25 14:52 CET)
+--------------------
+
+Added build instruction notes for the Mac OS X (Fink).  Thanks to Koen van
+der Drift <kvddrift@earthlink.net>.
+
+  plplot  INSTALL  1.11
+
+
+Commit from airwin (2004-01-25 05:01 CET)
+------------------
+
+Update to remove solved problems, and document new problems which have
+surfaced because of our more extensive cross-platform testing.
+
+  plplot  PROBLEMS  1.25
+
+
+Commit from andrewross (2004-01-23 16:00 CET)
+----------------------
+
+Fix plend() to check the library is initialised before trying to clear up.
+
+  plplot  src/plcore.c  1.125
+
+
+Commit from airwin (2004-01-23 07:06 CET)
+------------------
+
+PHI and THETA statement functions must have integer arguments according to
+solaris native f95 compiler.  g77 doesn't care and gives the identical result.
+
+  plplot  examples/f77/x18f.fm4  1.6
+
+
+Commit from airwin (2004-01-23 05:48 CET)
+------------------
+
+Account for two variations of BIG_ENDIAN symbol in system headers.
+#elif defined(BIG_ENDIAN) ==> #elif defined(BIG_ENDIAN) || defined(_BIG_ENDIAN)
+
+  plplot  sysloc.in      1.71
+  plplot  lib/csa/nan.h  1.3
+  plplot  lib/nn/nan.h   1.3
+
+
+Commit from rlaboiss (2004-01-22 23:30 CET)
+--------------------
+
+  * debian/control: Removed most of the Conflicts/Replaces/Provides
+    fields, since they where legacies from the libplplot5 packages.  The
+    libplplot9 and libplplot5 still cannot co-exist (although this is
+    only of theoretical interest, since there are no other packages in
+    Debian that depend on libplplot5).
+
+  plplot  debian/changelog  1.71
+  plplot  debian/control    1.44
+
+
+Commit from rlaboiss (2004-01-22 22:51 CET)
+--------------------
+
+Added year 2004 for Copyright holders AWI and RL.
+
+  plplot  doc/docbook/src/plplotdoc.xml.in  1.33
+
+
+Commit from rlaboiss (2004-01-22 22:49 CET)
+--------------------
+
+RL for Arjen Markus <arjen.markus@wldelft.nl>: applied patch for DLL examples.
+
+  plplot  sys/win32/msdev/DExamples/DExamples.mak  1.3
+
+
+Commit from rlaboiss (2004-01-22 22:03 CET)
+--------------------
+
+Added rpm spec file for Mandrake 9.2 (contributed by Brian D. Wright
+<bdwright@phy.ucsf.edu>)
+
++ plplot  rpm/plplot_mandrake9.2.spec  1.1
+
+
+Commit from jcard (2004-01-22 04:04 CET)
+-----------------
+
+Check that the event (key/mouse button) is printable.
+
+A Octave-2.1.50 behaviour change in is isprint()
+
+  plplot  bindings/octave/demos/x01c.m  1.8
+
+
+Commit from jcard (2004-01-22 03:41 CET)
+-----------------
+
+Close the slave window before ending, otherwise it will be left around.
+
+  plplot  bindings/octave/demos/x14c.m  1.7
+
+
+Commit from rlaboiss (2004-01-21 23:17 CET)
+--------------------
+
+Changed boolean operation OR from element-by-element to short-circuit (as it
+was intended to be, originally).  This was causing an error in Octave
+2.1.50.
+
+  plplot  bindings/octave/PLplot/plplot_octave_path.m.in  1.7
+
+
+Commit from airwin (2004-01-21 22:33 CET)
+------------------
+
+Make fortran test for command-line parsing more parallel with actual code
+in bindings/fortran/configurable.f.in.  In particular use implicit none
+and explicitly type iargc.
+
+  plplot  configure.ac  1.154
+
+
+Commit from airwin (2004-01-21 22:30 CET)
+------------------
+
+The iargc intrinsic must be explicitly typed for certain fortran compilers
+for the implicit none case.
+
+This change is not required by g77, but g77 still works with it.
+
+  plplot  bindings/f77/configurable.f.in  1.4
+
+
+Commit from airwin (2004-01-21 22:27 CET)
+------------------
+
+lnblnk and rand intrinsics require specific typing for certain compilers for
+the implicit none case.
+
+This change is not required by g77, but g77 still works with it.
+
+  plplot  examples/f77/x01f.fm4  1.14
+  plplot  examples/f77/x17f.fm4  1.6
+
+
+Commit from airwin (2004-01-20 21:09 CET)
+------------------
+
+Improve configuration logic surrounding the question of whether fortran
+command-line processing is available or not.
+
+  plplot  configure.ac                    1.153
+  plplot  bindings/f77/configurable.f.in  1.3
+  plplot  test/test_f77.sh.in             1.5
+
+
+Commit from rlaboiss (2004-01-20 19:07 CET)
+--------------------
+
+Cosmetic formatting change in the plplot-config section.
+
+  plplot  INSTALL  1.10
+
+
+Commit from airwin (2004-01-20 18:07 CET)
+------------------
+
+Updated plplot-config documentation.
+
+  plplot  INSTALL  1.9
+
+
+Commit from rlaboiss (2004-01-20 15:48 CET)
+--------------------
+
+Added notice about use of pkg-config support.
+
+  plplot  INSTALL  1.8
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-20 15:46 CET)
+-------------------------------------
+
+Added notice about use of pkg-config support.
+
+  plplot  INSTALL  1.7.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-20 15:37 CET)
+-------------------------------------
+
+Added year 2004 for Copyright holder AWI and RL.
+
+  plplot  doc/docbook/src/plplotdoc.xml.in  1.32.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-20 15:30 CET)
+-------------------------------------
+
+Committing the last fix to get_drv_info_LDADD into the v5_3_0 branch, so
+that it will be in the final release.
+
+  plplot  drivers/Makefile.am  1.36.2.3
+
+
+Commit from rlaboiss (2004-01-20 15:28 CET)
+--------------------
+
+Further simplication of the code, since the Automake construct
+
+    a += b
+    a += c
+
+can be written as
+
+    a += b c
+
+  plplot  drivers/Makefile.am  1.41
+
+
+Commit from rlaboiss (2004-01-20 15:09 CET)
+--------------------
+
+Added $(LIB_TAG) to the names of the plplottcltk and tclmatrix .la files.
+Also, to avoid repetition of code, created the variables $(libplplottcltk)
+and $(libtclmatrix).
+
+  plplot  drivers/Makefile.am  1.40
+
+
+Commit from airwin (2004-01-20 06:38 CET)
+------------------
+
+Fix for get-drv-info linking issue with libplplottcltk and libtclmatrix.
+This fix should allow cross-platform dynamic loading of the tk and tkwin
+drivers by get-drv-info.
+
+  plplot  drivers/Makefile.am  1.39
+
+
+Commit from airwin (2004-01-20 03:25 CET)
+------------------
+
+Tighten up memory managment for C examples 18 and 21.
+
+  plplot  examples/c/x18c.c  1.21
+  plplot  examples/c/x21c.c  1.12
+
+
+Commit from airwin (2004-01-20 03:03 CET)
+------------------
+
+Plot a contour only if the number of points in the contour is greater than
+zero.
+
+This fix takes care of some memory management issues (use of uninitialized
+values) turned up by valgrind for example 21.
+
+  plplot  src/plot3d.c  1.54
+
+
+Commit from airwin (2004-01-20 00:10 CET)
+------------------
+
+Tighten memory management for C examples 1-16.
+
+  plplot  examples/c/x08c.c  1.41
+  plplot  examples/c/x09c.c  1.25
+  plplot  examples/c/x11c.c  1.22
+  plplot  examples/c/x14c.c  1.23
+  plplot  examples/c/x16c.c  1.25
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-19 21:32 CET)
+-------------------------------------
+
+Set RELEASE_DATE as today.
+
+  plplot  configure.ac  1.150.2.4
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-19 21:30 CET)
+-------------------------------------
+
+Break a long AC_MSG_WARN message into two lines, as per the recommended
+practice. This is 80-columns-xterm friendly.
+
+  plplot  sysloc.in  1.69.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-19 21:28 CET)
+-------------------------------------
+
+[ Forcing cvs commit to get the correct log message, screwed up in the
+  previous commit: ]
+
+When PLplot is configured with disable_shared, dyndrivers must also be
+disabled. However, this test was done too late in configure.ac, after the
+libltdl checks were done conditionally on the value of enable_dyndrivers.
+This was causing needless checks and configuration of libltdl.
+
+Since this check is done now before AC_PROG_LIBTOOL, where enable_shared is
+usually initialized, an explicit initialization of enable_shared (=yes)  was
+needed at the beginning of configure.ac.
+
+  plplot  configure.ac  1.150.2.3
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-19 21:15 CET)
+-------------------------------------
+
+When PLplot is configured with disable_shared, dyndrivers must be disabled.
+However, this test was done too late in configure.ac, after the libltdl
+checks were done conditionally on the value of enable_dyndrivers.
+
+Since this check is done now before AC_INIT_LIBTOOL
+
+  plplot  configure.ac  1.150.2.2
+
+
+Commit from airwin (2004-01-19 21:11 CET)
+------------------
+
+Resolved conflict. Also, original patch was slightly wrong  npoints ==> points
+
+  plplot  lib/nn/delaunay.c  1.5
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-19 21:09 CET)
+-------------------------------------
+
+This is a most cosmetic change, just to get the $(libplplot) variable added
+to get_drv_info_LDADD instead of redefining it.
+
+  plplot  drivers/Makefile.am  1.36.2.2
+
+
+Commit from airwin (2004-01-19 21:07 CET)
+------------------
+
+AWI for Andrew Ross.
+
+Memory management fixes.
+
+The C++ examples were a bit lax in freeing allocated memory. These changes
+ensure all allocations are paired up with a suitable delete or Free2dGrid
+call.
+
+  plplot  examples/c++/x01.cc    1.8
+  plplot  examples/c++/x01cc.cc  1.10
+  plplot  examples/c++/x02.cc    1.5
+  plplot  examples/c++/x03.cc    1.4
+  plplot  examples/c++/x04.cc    1.5
+  plplot  examples/c++/x05.cc    1.5
+  plplot  examples/c++/x06.cc    1.4
+  plplot  examples/c++/x07.cc    1.4
+  plplot  examples/c++/x08.cc    1.6
+  plplot  examples/c++/x09.cc    1.4
+  plplot  examples/c++/x10.cc    1.4
+  plplot  examples/c++/x11.cc    1.4
+  plplot  examples/c++/x12.cc    1.4
+  plplot  examples/c++/x13.cc    1.4
+  plplot  examples/c++/x14.cc    1.6
+  plplot  examples/c++/x15.cc    1.4
+  plplot  examples/c++/x16.cc    1.5
+  plplot  examples/c++/x17.cc    1.5
+  plplot  examples/c++/x18.cc    1.4
+  plplot  examples/c++/x19.cc    1.4
+  plplot  examples/c++/x20.cc    1.5
+  plplot  examples/c++/x21.cc    1.5
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-19 21:02 CET)
+-------------------------------------
+
+Parse the name of the library correctly when processing a *.la entry.  Wrong
+results were occurring when the file name containing "lib" twice, as in
+libglib.la.
+
+  plplot  scripts/get-dependency-libs.sh  1.4.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-19 21:00 CET)
+-------------------------------------
+
+Include $(LIBLTDL) in libplplot@LIB_TAG@_la_LIBADD conditionally on the
+Automake conditional enable_dyndrivers.  This fixes the problem of libltdl
+being looked for when compiling libplplot under configure --disable-shared.
+
+  plplot  src/Makefile.am  1.11.2.1
+
+
+Commit from airwin (2004-01-19 20:17 CET)
+------------------
+
+AWI for Andrew Ross memory management cleanup.
+
+Change plInitDispatchTable() to properly initialize driver counts,
+Change plend() so that it properly frees dispatch table memory, and
+allows the PLplot library to be reinitialized if you want to start over
+without exiting your application.
+
+  plplot  src/plcore.c  1.124
+
+
+Commit from jcard (2004-01-19 20:14 CET)
+-----------------
+
+plmap(): Close map file after use, as per Andrew Ross patch
+
+  plplot  src/plmap.c  1.16
+
+
+Commit from jcard (2004-01-19 20:12 CET)
+-----------------
+
+delaunay_destroy(): free d->points, allocated in delaunay_build() and never released, as per Andrew Ross patch.
+
+  plplot  lib/nn/delaunay.c  1.4
+
+
+Commit from airwin (2004-01-19 20:10 CET)
+------------------
+
+AWI for Andrew Ross memory management cleanup.
+
+Add #ifndef ENABLE_DYNDRIVERS ... #endif about the lines in
+plD_dispatch_init_XXXXX which assign pdt->pl_MenuStr and pdt->pl_DevName. If
+this is a dynamic driver then we have already assigned these strings in
+plcore.c using the database. We absolutely don't want to use a static string
+in the dynamic driver to initialise it with since that string will disappear
+once the driver is unloaded and we are left with no valid driver name or
+menu item. Oh and overwriting the string will also leak the previously
+allocated memory for the names.
+
+  plplot  drivers/cgm.c       1.11
+  plplot  drivers/dg300.c     1.23
+  plplot  drivers/gd.c        1.33
+  plplot  drivers/gnome.c     1.31
+  plplot  drivers/hpgl.c      1.16
+  plplot  drivers/impress.c   1.25
+  plplot  drivers/linuxvga.c  1.15
+  plplot  drivers/ljii.c      1.32
+  plplot  drivers/ljiip.c     1.19
+  plplot  drivers/mem.c       1.2
+  plplot  drivers/ntk.c       1.10
+  plplot  drivers/null.c      1.23
+  plplot  drivers/pbm.c       1.13
+  plplot  drivers/plmeta.c    1.41
+  plplot  drivers/ps.c        1.62
+  plplot  drivers/pstex.c     1.17
+  plplot  drivers/tek.c       1.50
+  plplot  drivers/tk.c        1.83
+  plplot  drivers/tkwin.c     1.20
+  plplot  drivers/xfig.c      1.34
+  plplot  drivers/xwin.c      1.118
+
+
+Commit from airwin (2004-01-19 19:16 CET)
+------------------
+
+AWI for Arjen Markus:  Redefine tmpfile for WIN32 case.
+
+  plplot  include/plplotP.h  1.75
+
+
+Commit from airwin (2004-01-19 19:09 CET)
+------------------
+
+Documentation of the changes to the WIN32 driver
+dd. 16 january 2004, by A. Markus
+
+Note 1:
+The files in this tree are expressly in Windows/DOS format
+The reason is that we are not sure that UNIX/Linux format
+would be acceptable to all compilers.
+
+Note 2:
+Since the changes are legion, I have documented them in detail.
+
+win32/msdev/README.TXT
+Added my name to the file
+
+win32/msdev/makefile
+Small corrections regarding the creation of the tmp directory
+and copying all files to it.
+
+win32/msdev/DExamples/DExamples.mak
+Default target now x01d (release).
+Added the flag __PLDLL_H__ - this must be defined, if the DLL
+is to be used (see README file).
+Path to the source files and the extension changed.
+
+win32/msdev/plpdll/plpdll.mak
+Added the flag "BUILD_DIR" to the compile step.
+Relative path to the tmp directory.
+plimage.c added to the makefile
+Changed the extensions of some source files (from .cpp to .c)
+
+win32/msdev/plplib/plplib.mak
+Added the flag "BUILD_DIR" to the compile step.
+
+win32/msdev/src/win3.cpp
+Added a function w32_tmpfile() to solve the problem of
+opening temporary files on network disk (the main directory
+is often read-only and the version of tmpfile() that comes
+with Windows, ignores the environment variables but simply
+opens in the directory "\").
+Replaced the export keyword by __declspec(dllexport)
+(this seems to be the recommended way).
+
+win32/msdev/src/plplotd.def
+Added the routines plGetCursor, plParseOpts and plMergeOpts.
+
+win32/msdev/src/plplot.rc
+Corrected the path to the include files.
+
+win32/msdev/src/plstub.cpp
+Added stubs for the routines plGetCursor, plParseOpts and plMergeOpts.
+Corrected call to plpoly3()
+Corrected stubs for plshade() and plshade1() (prototypes for the
+function arguments caused trouble)
+
+win32/msdev/src/plplot.h
+Updated the plplot.h file from a previous version.
+Added the flag __PLDLL_H__ to select between three situations:
+- Compiling the generic sources and Windows applications using the
+  static library (neither __PLSTUBS_H__ or __PLDLL_H__ defined):
+  Requires that the names c_plinit() and the like be untouched
+  Define a macro plinit for user-code on non-Windows systems
+- Compiling the Windows stubs (only __PLSTUBS_H__ defined):
+  Requires that the names c_plinit() and the like be untouched
+  Do _not_ define macros like plinit, as there are actual functions
+  by these names. They are undefined at the end
+- Compiling Windows applications that use DLL (only __PLDLL_H__ defined):
+  Requires that the names c_plinit() and the like be turned to
+  WINAPI plinit().
+Added the macro API to the prototypes.
+
+  plplot  sys/win32/msdev/plplib/plplib.mak  1.6
+  plplot  sys/win32/msdev/src/plplot.h       1.3
+  plplot  sys/win32/msdev/src/plplot.rc      1.3
+  plplot  sys/win32/msdev/src/plplotd.def    1.2
+  plplot  sys/win32/msdev/src/plstub.cpp     1.3
+  plplot  sys/win32/msdev/src/win3.cpp       1.8
+  plplot  sys/win32/msdev/plpdll/plpdll.mak  1.2
+  plplot  sys/win32/msdev/README.TXT               1.3
+  plplot  sys/win32/msdev/makefile                 1.13
+  plplot  sys/win32/msdev/DExamples/DExamples.mak  1.2
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-18 21:33 CET)
+-------------------------------------
+
+Add libplplot.la, as well as libcsirocsa.la (conditionally on with_csa) and
+libcsironn.la (conditionally on with_qhull) to get_drv_info_LDADD such that
+when get-drv-info is run to generate the *.rc files on MacOS X, there will
+be a chance that lt_dlopenext will work without needing to set
+DYLD_LIBRARY_PATH.
+
+  plplot  drivers/Makefile.am  1.36.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-18 13:38 CET)
+-------------------------------------
+
+Really use $BRANCH in cvs export command
+
+  plplot  scripts/make-cvs-tarball.sh  1.11.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-18 12:43 CET)
+-------------------------------------
+
+Changed the less robust @prefix@/@DATA_DIR@/examples/octave// to ./octave//
+in octavedir.  plplot-test.sh works now from everywhere the examples
+directory is installed.
+
+This change is done in a relative hush, to make Alan happy and also before I
+tag everything v5_3_0_rc1.  Everyday there is a new cool patch to apply...
+Sigh...
+
+Please, notice that this is committed only to the v5_3_0 branch.
+
+  plplot  test/plplot-test.sh.in  1.10.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-18 12:28 CET)
+-------------------------------------
+
+Preparation for the 5.2.1.rc1.5.3.0 release. Changed the string version in
+AC_INIT call and the RELEASE_DATE to today.
+
+  plplot  configure.ac  1.150.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-18 12:02 CET)
+-------------------------------------
+
+Preparation for Debian release 5.2.1.rc1.5.3.0-1
+
+  plplot  debian/changelog  1.69.2.1
+
+
+Commit from rlaboiss on branch v5_3_0 (2004-01-18 11:39 CET)
+-------------------------------------
+
+Changed copyright holder (JC) and licensing conditions (LGPL -> GPL)
+
+  plplot  bindings/octave/plplot_octave.h.in  1.2.2.1
+
+
+Commit from rlaboiss (2004-01-17 17:41 CET)
+--------------------
+
+This jumbo cvs commit is the result of a herculean task to update the
+copyright notices of most of the source files of PLplot.
+
+I hope that I did not introduce any serious breakage.  This seems plausible,
+because I did changes only at the beginning of the files and only in
+commented lines.  However, I used a semi-automatic procedure for doing that
+and some bugs may have slipped into the files.  The sources still build okay
+(at least the Debian packages) and I can install the libraries, and compile
+and run some C examples.  That is not enough, so PLEASE TEST!
+
+This is what I did in more detail:
+
+1) From the CVS ChangeLog, I considered all the files that changed since the
+   last release (5.2.1).  I then added the line:
+
+       Copyright (C) 2004  Joe C. V. S. Committer
+
+   where the name of the developper who did the CVS commit is included.
+
+2) Notice that the year in the line above should read 2004, even if the
+   changes were done last year, since Copyright years refer to when the
+   software is released.
+
+3) For the same reason, I did not bother adding missing Copyright entries
+   for previous authors of each file.  One copyright holder is enough for
+   our purposes.
+
+4) I also reformatted and reworded the License Conditions text.  This
+   included changing things like "This file is free software" to "PLplot is
+   free sofware" and so on.
+
+5) Finally, some files were lacking License notices, especially the src/*.c.
+   I added them and put in the Copyright holder line the name of the
+   developer who did the last cvs commit for the file.
+
+If you wish to know where your name appears, you can run from the
+$(top_builddir):
+
+    grep -ri "copyright.*2004".
+
+  plplot  test/test_cxx.sh            1.8
+  plplot  test/test_f77.sh.in         1.4
+  plplot  test/test_java.sh           1.5
+  plplot  test/test_octave.sh         1.13
+  plplot  test/test_python.sh.in      1.2
+  plplot  test/test_single_python.sh  1.4
+  plplot  test/test_single_tcl.sh     1.2
+  plplot  test/test_tcl.sh            1.6
+  plplot  utils/Makefile.am           1.9
+  plplot  utils/plrender.c            1.63
+  plplot  utils/pltcl.c               1.20
+  plplot  test/test_c.sh              1.9
+  plplot  src/plgridd.c           1.8
+  plplot  src/plhist.c            1.17
+  plplot  src/plimage.c           1.10
+  plplot  src/plline.c            1.30
+  plplot  src/plmap.c             1.15
+  plplot  src/plot3d.c            1.53
+  plplot  src/plpage.c            1.27
+  plplot  src/plsdef.c            1.14
+  plplot  src/plshade.c           1.25
+  plplot  src/plstripc.c          1.10
+  plplot  src/plsym.c             1.33
+  plplot  src/pltick.c            1.10
+  plplot  src/plvpor.c            1.21
+  plplot  src/plwind.c            1.15
+  plplot  sys/win-tk/makefile.vc  1.14
+  plplot  test/Makefile.am        1.11
+  plplot  test/plplot-test.sh.in  1.10
+  plplot  src/plfreetype.c        1.15
+  plplot  src/plfill.c            1.24
+  plplot  src/pldtik.c            1.14
+  plplot  src/plargs.c  1.65
+  plplot  src/plbox.c   1.35
+  plplot  src/plbuf.c   1.2
+  plplot  src/plcont.c  1.24
+  plplot  src/plcore.c  1.123
+  plplot  src/plctrl.c  1.76
+  plplot  src/plcvt.c   1.10
+  plplot  src/pdfutils.c  1.26
+  plplot  include/plplot.h                1.147
+  plplot  include/plplotP.h               1.74
+  plplot  lib/Makefile.am                 1.8
+  plplot  lib/csa/Makefile.am             1.10
+  plplot  lib/nn/Makefile.am              1.11
+  plplot  pkgcfg/Makefile.am              1.10
+  plplot  pkgcfg/gen-pc-files.pl.in       1.3
+  plplot  scripts/Makefile.am             1.8
+  plplot  scripts/check-tarball-cvs.sh    1.4
+  plplot  scripts/get-dependency-libs.sh  1.4
+  plplot  scripts/plplot-config.in        1.4
+  plplot  src/Makefile.am                 1.11
+  plplot  include/plConfig.h.in  1.9
+  plplot  examples/tk/xtk04.c  1.13
+  plplot  include/Makefile.am  1.4
+  plplot  examples/tk/xtk01.c  1.18
+  plplot  examples/tk/xtk02.c  1.18
+  plplot  doc/docbook/src/Makefile.am             1.55
+  plplot  doc/docbook/src/api-c.xml               1.9
+  plplot  doc/docbook/src/api-fortran.xml         1.7
+  plplot  doc/docbook/src/api.xml                 1.62
+  plplot  doc/docbook/src/bibliography.xml        1.5
+  plplot  doc/docbook/src/c.xml                   1.6
+  plplot  doc/docbook/src/cplus.xml               1.5
+  plplot  doc/docbook/src/drivers.xml             1.6
+  plplot  doc/docbook/src/fortran.xml             1.4
+  plplot  doc/docbook/src/gui.xml                 1.4
+  plplot  doc/docbook/src/intro.xml               1.12
+  plplot  doc/docbook/src/os_notes.xml            1.5
+  plplot  doc/docbook/src/perl.xml                1.6
+  plplot  doc/docbook/src/plplotdoc-html.dsl.in   1.8
+  plplot  doc/docbook/src/plplotdoc-print.dsl.in  1.7
+  plplot  doc/docbook/src/plplotdoc.xml.in        1.32
+  plplot  doc/docbook/src/python.xml              1.5
+  plplot  doc/docbook/src/simple.xml              1.11
+  plplot  doc/docbook/src/stylesheet.css          1.3
+  plplot  doc/docbook/src/tcl.xml                 1.6
+  plplot  doc/docbook/src/wish.xml                1.6
+  plplot  drivers/Makefile.am                     1.36
+  plplot  drivers/gd.c                            1.32
+  plplot  drivers/get-drv-info.c                  1.8
+  plplot  drivers/gnome.c                         1.30
+  plplot  drivers/ntk.c                           1.9
+  plplot  drivers/tk.c                            1.82
+  plplot  drivers/tkwin.c                         1.19
+  plplot  drivers/xwin.c                          1.117
+  plplot  examples/Makefile.am                    1.6
+  plplot  examples/Makefile.examples.in           1.2
+  plplot  examples/c/Makefile.am                  1.16
+  plplot  examples/c/Makefile.examples.in         1.19
+  plplot  examples/c/x08c.c                       1.40
+  plplot  examples/c/x21c.c                       1.11
+  plplot  examples/c++/Makefile.am                1.13
+  plplot  examples/c++/Makefile.examples.in       1.18
+  plplot  examples/c++/x01.cc                     1.7
+  plplot  examples/c++/x01cc.cc                   1.9
+  plplot  examples/c++/x02.cc                     1.4
+  plplot  examples/c++/x03.cc                     1.3
+  plplot  examples/c++/x04.cc                     1.4
+  plplot  examples/c++/x05.cc                     1.4
+  plplot  examples/c++/x06.cc                     1.3
+  plplot  examples/c++/x07.cc                     1.3
+  plplot  examples/c++/x08.cc                     1.5
+  plplot  examples/c++/x09.cc                     1.3
+  plplot  examples/c++/x10.cc                     1.3
+  plplot  examples/c++/x11.cc                     1.3
+  plplot  examples/c++/x12.cc                     1.3
+  plplot  examples/c++/x13.cc                     1.3
+  plplot  examples/c++/x14.cc                     1.5
+  plplot  examples/c++/x15.cc                     1.3
+  plplot  examples/c++/x16.cc                     1.4
+  plplot  examples/c++/x17.cc                     1.4
+  plplot  examples/c++/x18.cc                     1.3
+  plplot  examples/c++/x19.cc                     1.3
+  plplot  examples/c++/x20.cc                     1.4
+  plplot  examples/c++/x21.cc                     1.4
+  plplot  examples/f77/Makefile.am                1.19
+  plplot  examples/f77/Makefile.examples.in       1.19
+  plplot  examples/f77/double2single.sed          1.2
+  plplot  examples/f77/x01f.fm4                   1.13
+  plplot  examples/f77/x02f.fm4                   1.9
+  plplot  examples/f77/x03f.fm4                   1.11
+  plplot  examples/f77/x04f.fm4                   1.10
+  plplot  examples/f77/x05f.fm4                   1.11
+  plplot  examples/f77/x06f.fm4                   1.10
+  plplot  examples/f77/x07f.fm4                   1.10
+  plplot  examples/f77/x08f.fm4                   1.12
+  plplot  examples/f77/x09f.fm4                   1.10
+  plplot  examples/f77/x10f.fm4                   1.9
+  plplot  examples/f77/x11f.fm4                   1.10
+  plplot  examples/f77/x12f.fm4                   1.10
+  plplot  examples/f77/x13f.fm4                   1.10
+  plplot  examples/f77/x15f.fm4                   1.5
+  plplot  examples/f77/x16af.fm4                  1.5
+  plplot  examples/f77/x16f.fm4                   1.11
+  plplot  examples/f77/x17f.fm4                   1.5
+  plplot  examples/f77/x18f.fm4                   1.5
+  plplot  examples/f77/x19f.fm4                   1.4
+  plplot  examples/java/Makefile.am               1.5
+  plplot  examples/java/x01.java                  1.13
+  plplot  examples/java/x02.java                  1.7
+  plplot  examples/java/x03.java                  1.9
+  plplot  examples/java/x04.java                  1.8
+  plplot  examples/java/x05.java                  1.7
+  plplot  examples/java/x06.java                  1.6
+  plplot  examples/java/x07.java                  1.7
+  plplot  examples/java/x08.java                  1.19
+  plplot  examples/java/x09.java                  1.15
+  plplot  examples/java/x10.java                  1.7
+  plplot  examples/java/x11.java                  1.12
+  plplot  examples/java/x12.java                  1.7
+  plplot  examples/java/x13.java                  1.7
+  plplot  examples/java/x14.java                  1.3
+  plplot  examples/java/x15.java                  1.8
+  plplot  examples/java/x16.java                  1.8
+  plplot  examples/java/x17.java                  1.3
+  plplot  examples/java/x18.java                  1.7
+  plplot  examples/java/x19.java                  1.3
+  plplot  examples/perl/Makefile.am               1.3
+  plplot  examples/perl/x01.pl                    1.4
+  plplot  examples/python/Makefile.am             1.9
+  plplot  examples/python/xw08.py                 1.29
+  plplot  examples/python/xw17.py                 1.10
+  plplot  examples/tcl/Makefile.am                1.9
+  plplot  examples/tcl/x08.tcl                    1.21
+  plplot  examples/tk/Makefile.am                 1.14
+  plplot  examples/tk/Makefile.examples.in        1.15
+  plplot  doc/docbook/bin/size-href.pl  1.7
+  plplot  bindings/tk/pkgIndex.tcl.in          1.10
+  plplot  bindings/tk/pldefaults.tcl           1.24
+  plplot  bindings/tk/plframe.c                1.84
+  plplot  bindings/tk/plserver.c               1.47
+  plplot  bindings/tk/tcpip.c                  1.22
+  plplot  bindings/tk/tkMain.c                 1.20
+  plplot  bindings/tk/tkshell.c                1.30
+  plplot  bindings/tk-x-plat/Plplotter_Init.c  1.8
+  plplot  bindings/tk-x-plat/pkgIndex.tcl.in   1.10
+  plplot  bindings/tk-x-plat/plplotter.c       1.17
+  plplot  data/Makefile.am                     1.3
+  plplot  doc/Makefile.am                      1.8
+  plplot  doc/docbook/COPYING                  1.3
+  plplot  doc/docbook/Makefile.am              1.29
+  plplot  doc/docbook/docbook.m4               1.14
+  plplot  bindings/tk/Pltk_Init.c  1.12
+  plplot  bindings/tcl/tclMatrix.c  1.24
+  plplot  bindings/tcl/tclMatrix.h  1.24
+  plplot  bindings/tk/Makefile.am   1.12
+  plplot  bindings/tcl/tclAPI.c   1.55
+  plplot  bindings/tcl/tclMain.c  1.17
+  plplot  bindings/java/PLStreamc.java                1.3
+  plplot  bindings/java/config.java.in                1.4
+  plplot  bindings/java/plplotcapi.i                  1.10
+  plplot  bindings/java/plplotjavac.i                 1.9
+  plplot  bindings/octave/Makefile.am                 1.41
+  plplot  bindings/octave/plplot_octave.h.in          1.2
+  plplot  bindings/octave/PLplot/Makefile.am          1.12
+  plplot  bindings/octave/PLplot/toggle_plplot_use.m  1.5
+  plplot  bindings/octave/PLplot/use_plplot.m         1.8
+  plplot  bindings/octave/PLplot/support/Makefile.am  1.6
+  plplot  bindings/octave/demos/Makefile.am           1.10
+  plplot  bindings/octave/misc/Makefile.am            1.6
+  plplot  bindings/python/Makefile.am                 1.24
+  plplot  bindings/python/makedocstrings.py           1.2
+  plplot  bindings/python/plplot.py                   1.11
+  plplot  bindings/python/plplotcapi.i                1.3
+  plplot  bindings/python/plplotcmodule.i             1.17
+  plplot  bindings/python/setup.py.in                 1.3
+  plplot  bindings/tcl/Makefile.am                    1.20
+  plplot  bindings/tcl/matrixInit.c                   1.8
+  plplot  bindings/tcl/pkgIndex.tcl.in                1.8
+  plplot  bindings/java/Makefile.am  1.23
+  plplot  bindings/f77/strutil.f  1.5
+  plplot  bindings/f77/sfstubs.h  1.3
+  plplot  bindings/f77/scstubs.c    1.34
+  plplot  bindings/f77/sfstubs.fm4  1.12
+  plplot  bindings/f77/sccont.c  1.9
+  plplot  bindings/f77/plstubs.h  1.34
+  plplot  bindings/f77/sc3d.c     1.13
+  plplot  bindings/f77/double2single.sed  1.2
+  plplot  bindings/Makefile.am            1.13
+  plplot  bindings/c++/Makefile.am        1.14
+  plplot  bindings/c++/plstream.cc        1.19
+  plplot  bindings/c++/plstream.h         1.13
+  plplot  bindings/f77/Makefile.am        1.17
+  plplot  bindings/f77/configurable.f.in  1.2
+  plplot  sysloc.in  1.69
+  plplot  acinclude.m4  1.13
+  plplot  bootstrap.sh  1.27
+  plplot  configure.ac  1.150
+  plplot  Makefile.am  1.32
+
+
+Commit from rlaboiss (2004-01-17 16:45 CET)
+--------------------
+
+Replaced all occurrences of "../.." by the robust variable $(top_builddir)
+
+  plplot  examples/tk/Makefile.am  1.13
+  plplot  bindings/tk/Makefile.am   1.11
+  plplot  examples/tcl/Makefile.am  1.8
+  plplot  bindings/c++/Makefile.am     1.13
+  plplot  bindings/java/Makefile.am    1.22
+  plplot  bindings/python/Makefile.am  1.23
+
+
+Commit from rlaboiss (2004-01-17 16:38 CET)
+--------------------
+
+make-cvs-tarball.sh accepts now a third argument which must be a CVS tag.
+This allows to build CVS tarballs from a specific CVS branch.
+
+  plplot  scripts/make-cvs-tarball.sh  1.11
+
+
+Commit from rlaboiss (2004-01-17 14:19 CET)
+--------------------
+
+Added Andrew Ross to the list of authors for his contributions to the C++
+bindings.
+
+Please, add here other names that I am forgetting.
+
+  plplot  AUTHORS  1.4
+
+
+Commit from airwin (2004-01-16 18:24 CET)
+------------------
+
+Rafael's script-based method of getting and using libtool information to
+solve mkoctfile linking issues and a more careful approach to overcoming the
+run library path issues of mkoctfile has proved successful not only on Linux
+but also cross-platform. Therefore, abandon the pure libtool-based approach
+to build the octave interface.
+
+Note, we use the pure libtool-based approach to build every other interface,
+and building the octave interface worked fine with the pure libtool approach
+in the Linux case, but there was one cross-platform showstopper (couldn't
+get the -shrext libtool option to work in the documented manner to set the
+shared object suffix to .oct as demanded by octave) that I hadn't solved yet
+when Rafael beat me to a solution using a special script-based method.
+
+Start here, if future developers want to use the pure libtool approach for
+building the octave interface.
+
+  plplot  sysloc.in                  1.68
+- plplot  scripts/process-link-line  1.3
+
+
+Commit from airwin (2004-01-16 18:18 CET)
+------------------
+
+Change script to simply mimic stdin except for case of -framework option
+used by MacOS X.  In that case escape options by appropriate -Wl, commands
+to pass on the -framework options to the linker via libtool.
+
+Note this change is simply to get the script right for historical purposes
+since it will soon be removed to CVS attic.
+
+  plplot  scripts/process-link-line  1.2
+
+
+Commit from rlaboiss (2004-01-16 11:46 CET)
+--------------------
+
+Set correctly LD_RUN_PATH when generating plplot_octave.oct locally .  The
+Octave bindings work now in the build tree without PLplot installed in the
+system.
+
+AM_CONDITONALs for with_csa and with_qhull have been defined in sysloc.in
+and are used in bindings/octave/Makefile.am for selectively adding path
+components to LD_RUN_PATH.
+
+Also, changed one lasting ugly "../.." to "$(top_builddir)" in
+bindings/octave/Makefile.am
+
+  plplot  sysloc.in                    1.67
+  plplot  bindings/octave/Makefile.am  1.40
+
+
+Commit from rlaboiss (2004-01-16 11:44 CET)
+--------------------
+
+Added -lpthread at the output of pkg-config --libs, such that when
+libpthread support is required by configure, user applications will also
+link against that library, avoiding the infamous segmentation faults.
+
+  plplot  pkgcfg/gen-pc-files.pl.in  1.2
+
+
+Commit from rlaboiss (2004-01-16 09:42 CET)
+--------------------
+
+CVS release tarball 5.2.1.cvs.20040115
+
+  plplot  configure.ac  1.149
+
+
+Commit from rlaboiss (2004-01-16 09:25 CET)
+--------------------
+
+Only include -L$path/.libs conditionally on the existence of the $path/.libs
+directory.
+
+  plplot  scripts/get-dependency-libs.sh  1.3
+
+
+Commit from rlaboiss (2004-01-15 10:17 CET)
+--------------------
+
+Debian release 5.2.1.cvs.20040115-3
+
+  plplot  debian/changelog  1.69
+
+
+Commit from rlaboiss (2004-01-15 10:14 CET)
+--------------------
+
+Added -L<path>/.libs to the list of flags in output when a <path>/*.la entry
+is found in the dependency_libs line.  This allows the linker to find
+libraries in the build tree.
+
+  plplot  scripts/get-dependency-libs.sh  1.2
+
+
+Commit from rlaboiss (2004-01-15 09:54 CET)
+--------------------
+
+Debian release 5.2.1.cvs.20040115-2
+
+  plplot  debian/changelog  1.68
+
+
+Commit from rlaboiss (2004-01-15 09:23 CET)
+--------------------
+
+Made the existence check of __pl_plplot_octave_path work in Octave 2.1.52.
+
+  plplot  bindings/octave/PLplot/plplot_octave_path.m.in  1.6
+
+
+Commit from rlaboiss (2004-01-15 09:17 CET)
+--------------------
+
+Removed whitespaces before the parenthesis of the calls to glob, what was
+causing problems with the default setting of whitespace_in_literal_matrix in
+Octave 2.1.52.
+
+  plplot  bindings/octave/PLplot/toggle_plplot_use.m  1.4
+
+
+Commit from rlaboiss (2004-01-15 07:02 CET)
+--------------------
+
+Added get-dependency-libs.sh to EXTRA_DIST
+
+  plplot  scripts/Makefile.am  1.7
+
+
+Commit from rlaboiss (2004-01-15 06:32 CET)
+--------------------
+
+Preparation for Debian release 5.2.1.cvs.20040114-1
+
+  plplot  debian/changelog  1.67
+  plplot  debian/control    1.43
+
+
+Commit from rlaboiss (2004-01-14 23:39 CET)
+--------------------
+
+Added this script, which parses the *.la file and outputs the appropriate
+flags for the linker.  It is for use in bindings/octave/Makefile.am.
+
++ plplot  scripts/get-dependency-libs.sh  1.1
+
+
+Commit from rlaboiss (2004-01-14 23:37 CET)
+--------------------
+
+Reverting the last changes (libtool approach) and improving the current
+mkoctfile-based approach by adding the linker flags to the command line
+(thanks to the get-dependency-libs.sh script).
+
+  plplot  bindings/octave/Makefile.am  1.39
+
+
+Commit from airwin (2004-01-14 03:11 CET)
+------------------
+
+Make changes to build octave interface with libtool.
+
+  plplot  sysloc.in                    1.66
+  plplot  bindings/octave/Makefile.am  1.38
++ plplot  scripts/process-link-line    1.1
+
+
+Commit from vincentdarley (2004-01-09 17:35 CET)
+-------------------------
+
+compilation fixes for latest plplot and win-tk build
+
+  plplot  sys/win-tk/makePlplotStarkit.tcl  1.4
+  plplot  sys/win-tk/makefile.vc            1.13
+  plplot  include/plplotP.h                 1.73
+
+
+Commit from airwin (2004-01-07 17:47 CET)
+------------------
+
+Define two alternates of each of the embedded underscore names
+(PL_SETCONTLABELFORMAT, PL_SETCONTLABELPARAM, and PLCALC_WORLD).  One has an
+extra trailing underscore (required by g77 and friends for names with
+embedded underscores), and one does not (for those compilers that don't
+follow this convention by default).
+
+  plplot  bindings/f77/plstubs.h  1.33
+  plplot  bindings/f77/scstubs.c  1.33
+
+
+Commit from rlaboiss (2004-01-07 10:04 CET)
+--------------------
+
+Disable pthreads by default.
+
+  plplot  configure.ac  1.148
+
+
+Commit from airwin (2004-01-07 06:36 CET)
+------------------
+
+f77_examples is a list of the generated *.f files.  It should be cleaned
+rather than maintainercleaned.  This problem caught me tonight when I
+reconfigured for single precision, yet make clean did not get rid of these
+generated files.
+
+  plplot  examples/f77/Makefile.am  1.18
+
+
+Commit from airwin (2004-01-07 06:21 CET)
+------------------
+
+Compile error solved in single-precision case by new double ==> new PLFLT
+
+  plplot  examples/c++/x05.cc  1.3
+
+
+Commit from airwin (2004-01-07 05:22 CET)
+------------------
+
+For the double-precision case simply copy the double-precision code in
+sfstubs.fm4 to sfstubs.f.  For the single precision case use sed commands
+contained in double2single.sed to convert sfstubs.fm4 to single-precision
+sfstubs.f.
+
+  plplot  bindings/f77/Makefile.am        1.16
+  plplot  bindings/f77/README.f77API      1.3
++ plplot  bindings/f77/double2single.sed  1.1
+
+
+Commit from airwin (2004-01-07 05:19 CET)
+------------------
+
+Remove from cvs control because this file is only of historical interest.
+
+- plplot  bindings/f77/fmacs.m4  1.9
+
+
+Commit from airwin (2004-01-07 05:05 CET)
+------------------
+
+Tweak EXTRA_DIST to add README.f77demos. Note README.f77demos is only
+suitable for the build tree, and it would not be appropriate to install it.
+
+  plplot  examples/f77/Makefile.am  1.17
+
+
+Commit from airwin (2004-01-07 04:46 CET)
+------------------
+
+Initial commit of a sed script to convert *.fm4 example files from
+double- to single-precision and a file that documents the fortran examples.
+
+Makefile.am changes to take advantage of the sed script.
+
+  plplot  examples/f77/Makefile.am        1.16
++ plplot  examples/f77/README.f77demos    1.1
++ plplot  examples/f77/double2single.sed  1.1
+
+
+Commit from airwin (2004-01-07 02:03 CET)
+------------------
+
+Tweak (gen-pc-files.pl)
+
+  plplot  pkgcfg/.cvsignore  1.3
+
+
+Commit from airwin (2004-01-07 02:03 CET)
+------------------
+
+Oops, revert back gen-pc-files.pl (wrong directory).
+
+  plplot  test/.cvsignore  1.6
+
+
+Commit from airwin (2004-01-07 02:00 CET)
+------------------
+
+Tweak (gen-pc-files.pl)
+
+  plplot  test/.cvsignore  1.5
+
+
+Commit from airwin (2004-01-07 01:33 CET)
+------------------
+
+Fortran API change as discussed on the list.
+
+All plshade[0-2] and plshade fortran calls now have a last parameter which
+is the first dimension of the 2D arrays.  This extra parameter is similar to
+what is currently done for the fortran versions of plmesh, plmeshc, plot3d,
+plot3dc, plshades[0-2], and plshades.  It allows large static 2D arrays to
+be dimensioned in fortran apps which call these PLplot functions (plcon[0-2]
+and plcont have similar possibilities for large static arrays done a
+different way).  This in turn allows smaller areas of the fortran array to
+be populated as needed (interactively from input, say) without having to
+recompile for every change in size of the defined part of the array.
+
+These recent Fortran API changes have been tested for fortran examples 15
+and 16a (now both changes to use static arrays dimensioned larger than the
+defined area), and identical results to the previous are obtained.
+Furthermore, memory management has been changed substantially for fortran
+plshade[0-2] and plshade, and valgrind applied to fortran examples 15 and
+16a show no problems with these memory management changes.
+
+  plplot  bindings/f77/sccont.c     1.8
+  plplot  bindings/f77/sfstubs.fm4  1.11
+  plplot  examples/f77/x15f.fm4     1.4
+  plplot  examples/f77/x16af.fm4    1.4
+
+
+Commit from rlaboiss (2004-01-06 23:36 CET)
+--------------------
+
+  * debian/control: Made Build-Conflicts on libplplot5 unversioned.
+
+  plplot  debian/changelog  1.66
+  plplot  debian/control    1.42
+
+
+Commit from airwin (2004-01-06 22:51 CET)
+------------------
+
+Use this new-fangled construction (:-)) called for loops to substantially
+shorten and simplify these scripts.  This should make Rafael's eyes hurt
+less.... :-)
+
+  plplot  test/test_c.sh       1.8
+  plplot  test/test_cxx.sh     1.7
+  plplot  test/test_f77.sh.in  1.3
+  plplot  test/test_java.sh    1.4
+
+
+Commit from rlaboiss (2004-01-06 22:25 CET)
+--------------------
+
+Restructured the pkg-config support.
+
+Everything that was scattered across pkgcfg/gen-pc-files.sh and
+pkgcfg/Makefile.am (shell code) as well as pkgcfg/plplot-master-pc.in (.pc
+file template) is now regrouped in the single Perl script
+gen-pc-files.pl.in, configurable through configure.
+
+Since Perl is needed now, the code in configure.ac was changed, such that
+pkg-config support is disabled if Perl cannot found in the system. Also the
+pkg-config section in configure.ac was moved after the call to
+CHECK_PROG(perl).
+
+The Tcl/Tk specific cflags for include directories are now integrated in
+plplot*-tcl.pc.  The file examples/tk/Makefile.examples.in was changed
+accordingly.
+
+  plplot  configure.ac                      1.147
+  plplot  examples/tk/Makefile.examples.in  1.14
+  plplot  pkgcfg/Makefile.am                1.9
++ plplot  pkgcfg/gen-pc-files.pl.in         1.1
+- plplot  pkgcfg/gen-pc-files.sh            1.4
+- plplot  pkgcfg/plplot-master-pc.in        1.2
+
+
+Commit from rlaboiss (2004-01-06 22:02 CET)
+--------------------
+
+Removed the obsolete file setup.py.in for EXTRA_DIST.
+
+  plplot  bindings/python/Makefile.am  1.22
+
+
+Commit from rlaboiss (2004-01-06 21:37 CET)
+--------------------
+
+Removed cruft from EXTRA_DIST and DISTCLEAN variables.
+
+  plplot  examples/tk/Makefile.am      1.12
+  plplot  examples/python/Makefile.am  1.8
+
+
+Commit from rlaboiss (2004-01-06 21:13 CET)
+--------------------
+
+Removed *.sh.in from EXTRA_DIST and *.sh from DISTCLEANFILES, since Automake
+takes care of this.
+
+  plplot  test/Makefile.am  1.10
+
+
+Commit from rlaboiss (2004-01-06 21:05 CET)
+--------------------
+
+Removed configurable.f.in from EXTRA_DIST and configurable.f.in from
+DISTCLEANFILES, since Automake takes care of this.
+
+Also, updated and reformatted the copyright notice and replace "../.." by
+the more robust "$(top_builddir)", as it was done for other Makefile.am's.
+
+  plplot  bindings/f77/Makefile.am  1.15
+
+
+Commit from airwin (2004-01-06 20:44 CET)
+------------------
+
+Run the fortran examples in different ways depending on whether command-line
+parsing is available for fortran or not.
+
+  plplot  test/.cvsignore      1.4
+  plplot  test/test_f77.sh.in  1.2
+
+
+Commit from airwin (2004-01-06 20:25 CET)
+------------------
+
+Make test_f77.sh configurable.
+
+  plplot  configure.ac         1.146
+  plplot  test/Makefile.am     1.9
+- plplot  test/test_f77.sh     1.7
++ plplot  test/test_f77.sh.in  1.1
+
+
+Commit from airwin (2004-01-06 20:24 CET)
+------------------
+
+Add a call to fortran plparseopts so that these examples are able to
+use command-line parsing.
+
+  plplot  examples/f77/x01f.fm4   1.12
+  plplot  examples/f77/x02f.fm4   1.8
+  plplot  examples/f77/x03f.fm4   1.10
+  plplot  examples/f77/x04f.fm4   1.9
+  plplot  examples/f77/x05f.fm4   1.10
+  plplot  examples/f77/x06f.fm4   1.9
+  plplot  examples/f77/x07f.fm4   1.9
+  plplot  examples/f77/x08f.fm4   1.11
+  plplot  examples/f77/x09f.fm4   1.9
+  plplot  examples/f77/x10f.fm4   1.8
+  plplot  examples/f77/x11f.fm4   1.9
+  plplot  examples/f77/x12f.fm4   1.9
+  plplot  examples/f77/x13f.fm4   1.9
+  plplot  examples/f77/x15f.fm4   1.3
+  plplot  examples/f77/x16af.fm4  1.3
+  plplot  examples/f77/x16f.fm4   1.10
+  plplot  examples/f77/x17f.fm4   1.4
+  plplot  examples/f77/x18f.fm4   1.4
+  plplot  examples/f77/x19f.fm4   1.3
+
+
+Commit from airwin (2004-01-06 19:34 CET)
+------------------
+
+Tweak EXTRA_DIST and DISTCLEANFILES to deal with new configurable.f.in and
+its configured result configurable.f.
+
+  plplot  bindings/f77/Makefile.am  1.14
+
+
+Commit from airwin (2004-01-06 19:31 CET)
+------------------
+
+Implement plparseopts, the fortran function that allows parsing
+the PLplot command-line options from fortran.
+
+  plplot  bindings/f77/.cvsignore         1.4
++ plplot  bindings/f77/configurable.f.in  1.1
+
+
+Commit from airwin (2004-01-06 18:24 CET)
+------------------
+
+Implement plparseopts, the fortran function that allows parsing
+the PLplot command-line options from fortran.
+
+  plplot  bindings/f77/Makefile.am    1.13
+  plplot  bindings/f77/README.f77API  1.2
+  plplot  bindings/f77/plstubs.h      1.32
+  plplot  bindings/f77/scstubs.c      1.32
+
+
+Commit from airwin (2004-01-06 18:19 CET)
+------------------
+
+Install configuration test for the fortran capability of command-line parsing
+and use the results to configure bindings/f77/configurable.f
+
+  plplot  configure.ac  1.145
+
+
+Commit from rlaboiss (2004-01-06 13:38 CET)
+--------------------
+
+Variable substitution for generation of bindings/octave/plplot_octave.h is
+now done with help of autoconf/automake.
+
+A new AC_SUBST variable called DEFINE_PL_DOUBLE is defined in configure.ac,
+which is set to "#define PL_DOUBLE" if $with_double == yes, or a null string
+otherwise.
+
+The old file plplot_octave_org.h has been renamed to plplot_octave.h.in and
+its name is included in the AC_CONFIG_FILES list in configure.ac.  It
+contains the token @DEFINE_PL_DOUBLE@ at the place of the old REPLACEME
+token.
+
+Since everything is set up automatically by Automake, the rule for building
+plplot_octave.h is removed from bindings/octave/Makefile.am.  Also, there is
+no need to include plplot_octave.h in the CLEANFILES list.
+
+  plplot  configure.ac                         1.144
+  plplot  bindings/octave/Makefile.am          1.37
++ plplot  bindings/octave/plplot_octave.h.in   1.1
+- plplot  bindings/octave/plplot_octave_org.h  1.19
+
+
+Commit from mlebrun (2004-01-06 10:13 CET)
+-------------------
+
+Fix for the "centuries old" very irritating bogus warning messages about
+itclDecls.h during configuration (this should improve your day :).
+
+The problem was, itclDecls.h apparently is not meant to be included except
+from itcl.h, or after itcl.h has been included first.  So, this dependency
+needed to be accounted for, and fortunately there is an autoconf construct
+to do it.  As is often the case with these things, very simple once you know
+what to do.
+
+  plplot  sysloc.in  1.65
+
+
+Commit from mlebrun (2004-01-06 04:59 CET)
+-------------------
+
+Increased size of a string buffer for safety.
+
+  plplot  drivers/xwin.c  1.116
+
+
+Commit from rlaboiss (2004-01-05 20:24 CET)
+--------------------
+
+Commented out the call to AC_F77_LIBRARY_LDFLAGS until it proves to be
+necessary/useful for proper compilation of F77 bindings and exmaples
+
+  plplot  configure.ac  1.143
+
+
+Commit from airwin (2004-01-05 19:43 CET)
+------------------
+
+Demonstrate use of large static dimensions with a potentially dynamic smaller
+defined area for all 2D arrays.
+
+  plplot  examples/f77/x08f.fm4  1.10
+  plplot  examples/f77/x09f.fm4  1.8
+  plplot  examples/f77/x16f.fm4  1.9
+
+
+Commit from mlebrun (2004-01-05 02:29 CET)
+-------------------
+
+Added some commentary.
+
+  plplot  configure.ac  1.142
+
+
+Commit from airwin (2004-01-05 00:22 CET)
+------------------
+
+Use the convenient plplot-config front end to plplot_libtool rather than
+the raw plplot_libtool itself.
+
+  plplot  examples/c/Makefile.examples.in    1.18
+  plplot  examples/c++/Makefile.examples.in  1.17
+  plplot  examples/f77/Makefile.examples.in  1.18
+  plplot  examples/tk/Makefile.examples.in   1.13
+
+
+Commit from airwin (2004-01-05 00:20 CET)
+------------------
+
+Update this script so the configured result handles the -I options correctly
+for each of c, c++, f77, and tcltk.  Also make the script a little more
+robust.
+
+  plplot  scripts/plplot-config.in  1.3
+
+
+Commit from mlebrun (2004-01-05 00:05 CET)
+-------------------
+
+Chopped out plplot-centric support for defaults files in favor of the (now)
+official site files.  The following places are checked, in order:
+    $CONFIG_SITE
+    $prefix/share/config.site
+    $prefix/etc/config.site
+
+So to reproduce the previous plplot config file behavior, do:
+$ CONFIG_SITE=~/config/cf_plplot.in ./configure
+
+The latter is the *only* way currently to set prefix via a config file.  In
+this case, set ac_default_prefix appropriately ("pl_prefix" was previously
+used for this purpose).  Also some obsolete commentary removed.
+
+  plplot  configure.ac  1.141
+
+
+Commit from jcard (2004-01-04 19:04 CET)
+-----------------
+
+Correct typo: require Octave >= 2.1.50 and not 2.1.51
+
+  plplot  bindings/octave/PLplot/figure.m  1.19
+
+
+Commit from jcard (2004-01-04 19:02 CET)
+-----------------
+
+Don't include config.h in plplot_octave_org.h, as it might clash with
+Octave's config.h
+
+Instead, extract PL_DOUBLE from config.h and insert into plplot_octave_org.h
+
+  plplot  bindings/octave/Makefile.am          1.36
+  plplot  bindings/octave/plplot_octave_org.h  1.18
+
+
+Commit from rlaboiss (2004-01-04 18:45 CET)
+--------------------
+
+Change the logic of setting PLPLOT_MUTEX_RECURSIVE, by making $host_os =
+linex* the special case, and not $host_os = darwin
+
+  plplot  configure.ac  1.140
+  plplot  sysloc.in     1.64
+
+
+Commit from rlaboiss (2004-01-04 13:20 CET)
+--------------------
+
+Preparation for Debian release 5.2.1.cvs.20040104-1
+
+  plplot  debian/changelog  1.65
+
+
+Commit from rlaboiss (2004-01-04 13:18 CET)
+--------------------
+
+Improve portability of libpthread-related code
+
+In sysloc.in, a new AC_DEFINE macro is created: PLPLOT_MUTEX_RECURSIVE.  In
+darwin systems it will expand to PTHREAD_MUTEX_RECURSIVE, otherwise to
+PTHREAD_MUTEX_RECURSIVE_NP.
+
+Also, in xwin.c, pthread_mutexattr_setkind_np() was changed to
+pthread_mutexattr_settype(), since this should work in all systems.
+
+  plplot  sysloc.in       1.63
+  plplot  drivers/xwin.c  1.115
+
+
+Commit from airwin (2004-01-04 04:06 CET)
+------------------
+
+Eliminate "p" examples from test because they user higher-level octave
+programming that demands octave-2.1.50 or better (which not all users have).
+
+We have kept the remaining "x" examples for this test.  They are worth
+having since they directly test the octave interface to libplplot and they
+work for octave-2.0.x or later.
+
+  plplot  test/test_octave.sh  1.12
+
+
+Commit from airwin (2004-01-04 02:13 CET)
+------------------
+
+Took Rafael's advice and moved all AC_SUBST macros out of conditionals
+(since apparently they are executed regardless, and they can lead to
+shell problems if they are the only macro inside the conditional).
+
+  plplot  configure.ac  1.139
+  plplot  sysloc.in     1.62
+
+
+Commit from rlaboiss (2004-01-04 01:09 CET)
+--------------------
+
+Fixed use of rpath option in compile commands under the pkg-config paradigm.
+
+A new AC_SUBST variable RPATHCMD is created in configure.ac containing
+"-Wl,-rpath -Wl,$libdir".  This solution has portability issues, but should
+work now for a large spectrum of systems/compilers.  I will revisit this
+issue in the future.
+
+  plplot  configure.ac                       1.138
+  plplot  examples/c/Makefile.examples.in    1.17
+  plplot  examples/c++/Makefile.examples.in  1.16
+  plplot  examples/f77/Makefile.examples.in  1.17
+  plplot  examples/tk/Makefile.examples.in   1.12
+
+
+Commit from airwin (2004-01-03 21:56 CET)
+------------------
+
+Get rid of lots of "default" linking cruft in configure.ac. Instead, use
+ADD_TO_INCS and ADD_TO_LIBS in sysloc.in.
+
+There is more of this to do for the (i)tcl/tk flags, but that is a more
+complicated situation, and in any case tcl/tk configuration needs a complete
+rewrite in other ways as well.
+
+  plplot  configure.ac  1.137
+  plplot  sysloc.in     1.61
+
+
+Commit from airwin (2004-01-03 21:44 CET)
+------------------
+
+Fixed continuation issue.
+
+  plplot  examples/tk/Makefile.examples.in  1.11
+
+
+Commit from rlaboiss (2004-01-03 20:22 CET)
+--------------------
+
+* Created the AC_SUBSTituted variable PKG_CONFIG_ENV. This variable replaces
+  the previous PKG_CONFIG_PATH.  It defaults to the usual
+  "PKG_CONFIG_PATH=$PKG_CONFIG_DIR", but can be overriden by using the
+  environment variable of same name.  This is done in debian/rules for
+  instance , since setting PKG_CONFIG_PATH is not necessary in Debian.  The
+  echo from the make command in the installed examples directories is much
+  cleaner now (in Debian, at least):
+
+      $ cd examples/c
+      $ make -n x01c
+      gcc x01c.c -o x01c  `pkg-config --cflags --libs plplotd`
+
+
+* Added $(RPATH) to the compilation command under the pkg-config approach in
+  the examples/*/Makefile.examples.in.
+
+
+* In examples/tk/Makefile.examples.in, added include flags specific to
+  Tcl/Tk in the compilation command under the pkg-config approach.  A new
+  variable TCLTKINCCMD was created, which is also used in INCLUDEANDLIB.
+
+  plplot  configure.ac                       1.136
+  plplot  debian/changelog                   1.64
+  plplot  debian/rules                       1.44
+  plplot  examples/c/Makefile.examples.in    1.16
+  plplot  examples/c++/Makefile.examples.in  1.15
+  plplot  examples/f77/Makefile.examples.in  1.16
+  plplot  examples/tk/Makefile.examples.in   1.10
+
+
+Commit from airwin (2004-01-03 18:14 CET)
+------------------
+
+Add top-level Makefile to installed examples tree.  To do this and to
+avoid name clashes with existing Makefiles, the configurable file is
+called Makefile.examples.in which is configured to Makefile.examples which
+is renamed on install to Makefile.
+
+The resulting Makefile in the installed examples tree is of considerable
+usefulness.  Previous instructions were "cd c; make; cd c++; make; cd f77;
+make; cd tk; make; cd ..; ./plplot-test.sh".  Those are now simply replace
+(in the _installed_ examples tree or a copy of it) by "make;
+./plplot-test.sh".  Also, the subdirectories are now configured in the
+generated Makefile so the instructions don't have to be modified if, e.g.,
+fortran, is not enabled.
+
+  plplot  configure.ac                   1.135
+  plplot  examples/.cvsignore            1.4
+  plplot  examples/Makefile.am           1.5
++ plplot  examples/Makefile.examples.in  1.1
+
+
+Commit from airwin (2004-01-03 16:58 CET)
+------------------
+
+Include 18th fortran example in plplot-test.sh tests.
+
+  plplot  test/test_f77.sh  1.6
+
+
+Commit from airwin (2004-01-03 05:39 CET)
+------------------
+
+Bug fix for unique prefix case: put PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) inside
+backwards quotes rather than at start of command line.
+
+  plplot  examples/c/Makefile.examples.in    1.15
+  plplot  examples/c++/Makefile.examples.in  1.14
+  plplot  examples/f77/Makefile.examples.in  1.15
+  plplot  examples/tk/Makefile.examples.in   1.9
+
+
+Commit from airwin (2004-01-03 04:33 CET)
+------------------
+
+* Define the expanded variables LIB_HARDDIR and DRV_HARDDIR (expanded or
+"hard" versions of LIB_DIR and DRV_DIR).
+
+* These variables are used to configure bindings/*/pkgIndex.tcl which are
+then concatanated into bindings/pkgIndex.tcl.  The latter file is installed
+in the $prefix/share tree.  It allows needed PLplot libraries or plug-in
+drivers to be found in the $prefix/lib tree directly from the tclsh or wish
+environments using the lappend command.
+
+* With these changes (which adjust for moving all the installed PLplot
+tcl/tk scripts from the $prefix/lib tree to the $prefix/share tree) I can
+once again execute PLplot commands from tclsh and wish environments
+following the instructions in examples/README.tcldemos and
+examples/README.tkdemos.
+
+  plplot  configure.ac                        1.134
+  plplot  bindings/tcl/pkgIndex.tcl.in        1.7
+  plplot  bindings/tk/pkgIndex.tcl.in         1.9
+  plplot  bindings/tk-x-plat/pkgIndex.tcl.in  1.9
+
+
+Commit from airwin (2004-01-03 04:16 CET)
+------------------
+
+Change documentation from "lib" to "share" location used for lappend command.
+
+  plplot  examples/tcl/README.tcldemos  1.10
+  plplot  examples/tk/README.tkdemos    1.12
+
+
+Commit from airwin (2004-01-03 03:10 CET)
+------------------
+
+Get rid of trailing whitespace on the list of executables that was screwing
+up the make.
+
+  plplot  examples/f77/Makefile.examples.in  1.14
+
+
+Commit from rlaboiss (2004-01-03 01:43 CET)
+--------------------
+
+Preparation to Debian release 5.2.1.cvs.20031231-2
+
+  plplot  debian/changelog  1.63
+  plplot  debian/rules      1.43
+
+
+Commit from rlaboiss (2004-01-03 01:42 CET)
+--------------------
+
+Fixed several issues related to the *_DIR variables
+
+* Made the treatment of the *_DIR even more systematic now.  These variables
+  are really intended to AC_SUBSTitution in the Makefile.in generated from
+  Automake.  As such, they are always relative, never hard paths.
+
+* When it is needed to get them substituted as hard paths (like in config.h
+  via AC_DEFINE_UNQUOTED, or in the examples/*/Makefile.examples), then new
+  variables are defined.  In particular, this is the case of the new
+  variables INCLUDE_DIR_CMD and LIB_DIR_CMD, which should be used in
+  examples/*/Makefile.examples and fix the problems with the plplot_libtool
+  approach.
+
+* In order to help expansion of hard paths, the macro EXPAND_EXPRESSION was
+  added to acinclude.m4.
+
+* Support for pkg-config was added to examples/tk/Makefile.examples.in.
+  Build of the examples in examples/tk with pkg-config is not working yet,
+  though.  The Tcl/Tk include directories are not being included.  I will
+  fix this later.
+
+  plplot  configure.ac                       1.133
+  plplot  acinclude.m4                       1.12
+  plplot  examples/c/Makefile.examples.in    1.14
+  plplot  examples/c++/Makefile.examples.in  1.13
+  plplot  examples/f77/Makefile.examples.in  1.13
+  plplot  examples/tk/Makefile.examples.in   1.8
+  plplot  pkgcfg/Makefile.am                 1.8
+
+
+Commit from airwin (2004-01-03 00:31 CET)
+------------------
+
+* Stylistic changes: (comments, indentation, do loops)
+
+* Removed bugs (notably some incorrect types, off-by-one indices, and
+incorrect format statements).
+
+* Removed redundant phi and theta routines whose functionality was already
+done by statement functions.
+
+* The updated example now produces identical results to the equivalent C
+example without any valgrind problems.  This tests the implementation of
+the fortran interface wrappers for plline3, plpoin3, and plpoly3.
+
+  plplot  examples/f77/x18f.fm4  1.3
+
+
+Commit from airwin (2004-01-02 22:42 CET)
+------------------
+
+* Style changes (comments, indentation, do loops).
+
+* Make this fortran "chart recorder example" work for first time.  There are
+some inevitable differences relative to the C version.
+
+  . Used g77 (and solaris fortran and ?) library rand function to generated
+    random numbers.  Users will probably have to substitute some other
+    library call for random numbers for other compilers.  Note the numbers
+    returned by rand are different from those of the C Library routine
+    drand48 so the interactive results look different (but still it looks
+    like a chart recorder which is cool.)
+
+  . plsError not part of the PLplot common API so bypassed it and let PLplot
+    do its own error handling.
+
+  . Dropped sleep interval from loop.  10 ms is about right, but the g77
+    sleep routine only has a resolution of 1 second (which is like watching
+    paint dry).  Actually eliminating the loop delay altogether still makes
+    a good-looking "chart-recorder" example (at least on my 600MHz machine).
+
+  plplot  examples/f77/x17f.fm4  1.3
+
+
+Commit from airwin (2004-01-02 22:25 CET)
+------------------
+
+Implement fortran interface wrapper for plstripc.
+
+  plplot  bindings/f77/scstubs.c    1.31
+  plplot  bindings/f77/sfstubs.fm4  1.10
+
+
+Commit from airwin (2004-01-02 22:24 CET)
+------------------
+
+Expand number of strings that can be simultanously handled to 9 (fortran
+plstripc needs this).
+
+  plplot  bindings/f77/sfstubs.h  1.2
+
+
+Commit from airwin (2004-01-02 18:54 CET)
+------------------
+
+Change documentation of id parameter of plstripc: input ==> output.
+
+  plplot  doc/docbook/src/api.xml  1.61
+
+
+Commit from rlaboiss (2004-01-02 17:22 CET)
+--------------------
+
+Move back to the non-Automake method for generating the
+examples/*/Makefile.examples.
+
+configure option --with-pkg-config is an opt-in now and defaults to "no".
+
+  plplot  configure.ac                       1.132
++ plplot  examples/c/Makefile.examples.in    1.13
+- plplot  examples/c/Makefile.examples.am    1.2
++ plplot  examples/c++/Makefile.examples.in  1.12
+- plplot  examples/c++/Makefile.examples.am  1.2
++ plplot  examples/f77/Makefile.examples.in  1.12
+- plplot  examples/f77/Makefile.examples.am  1.2
+
+
+Commit from airwin (2004-01-02 04:35 CET)
+------------------
+
+Fix for -dev tk on Linux.  src/plctrl.c requires BIN_DIR to be set to the
+hard install path in order for -dev tk to find things.  To accomplish this
+make the following fix:
+
+-AC_DEFINE_UNQUOTED(BIN_DIR, "$BIN_DIR",
++AC_DEFINE_UNQUOTED(BIN_DIR, "`eval eval echo $BIN_DIR`",
+
+This follows what was done for most (not all) other _DIR variables. I could
+find no other use of BIN_DIR in the build tree other than above so I think
+this is okay.
+
+Nevertheless, it is a tentative fix because I have spot-rezoned what Rafael
+has done recently for his massive changes of all the _DIR variables, and he
+may have had something else in mind.
+
+  plplot  configure.ac  1.131
+
+
+Commit from rlaboiss (2004-01-01 22:33 CET)
+--------------------
+
+In src/plctrl.c, implemented plsabort, that does for plabort the same as
+plsexit does for plexit (i.e., set a user abort handler).
+
+The API sections for plsexit, plabort, and plsabort have been added to
+doc/docbook/src/api-c.xml.  The plexit section was updated, since the
+description of plsexit was not accurate.
+
+  plplot  include/plplot.h                  1.146
+  plplot  src/plctrl.c                      1.75
+  plplot  doc/docbook/src/api-c.xml         1.8
+  plplot  doc/docbook/src/plplotdoc.xml.in  1.31
+
+
+Commit from airwin (2004-01-01 21:19 CET)
+------------------
+
+Greatly modified the 16th fortran example (the old version has been kept as
+x16af.fm4) to mimic equivalent C example results exactly.  This tests the
+implementation of the new fortran interface (PLSHADES0, PLSHADES1, and
+PLSHADES2) to plshades.
+
+  plplot  examples/f77/x16f.fm4  1.8
+
+
+Commit from airwin (2004-01-01 21:14 CET)
+------------------
+
+Implement fortran PLSHADE API (in analogy with fortran PLCONT) and
+PLSHADES0, PLSHADES1, PLSHADES2, and PLSHADES.
+
+  plplot  bindings/f77/plstubs.h    1.31
+  plplot  bindings/f77/sccont.c     1.7
+  plplot  bindings/f77/sfstubs.fm4  1.9
+
+
+Commit from airwin (2004-01-01 21:06 CET)
+------------------
+
+Fix bugs in handling transformations of zero-length or completely blank
+character strings.
+
+  plplot  bindings/f77/strutil.f  1.4
+
+
+Commit from rlaboiss (2004-01-01 19:18 CET)
+--------------------
+
+Reintroduced AC_F77_LIBRARY_LDFLAGS, because the linking error that I was
+observing with plplot_libtool was actually a bug in Debian package g77-3.3.
+
+  plplot  configure.ac  1.130
+
+
+Commit from rlaboiss (2004-01-01 19:17 CET)
+--------------------
+
+  * debian/control: Added pkg-config to build-dependencies and to
+    libplplot-dev Recommends:.
+
+  plplot  debian/changelog  1.62
+  plplot  debian/control    1.41
+
+
+Commit from rlaboiss (2004-01-01 19:06 CET)
+--------------------
+
+Use pkg-config in examples/*/Makefile.examples when appropriate
+
+   - Makefile.examples are now under Automake control.  This means that
+     Makefile.examples.in are removed from the CVS repository and replaced
+     by Makefile.examples.am.  The Makefile.examples.in are automatically
+     generated by bootstrap.sh (no change to the script was needed for
+     that).
+
+   - In the Makefile.examples.am, the rule to build the examples look
+     like this:
+
+     .c$(EXEEXT):
+     if have_pkg_config
+             $(CC) $< -o $@ `pkg-config --cflags --libs plplot$(LIB_TAG)`
+     else
+             plplot_libtool --mode=link $(CC) $(CFLAGS) $< $(INCLUDEANDLIB) -o
++$@
+     endif
+
+   - The AM_CONDITIONAL have_pkg_config is exercised in configure.ac and
+     will be "true" when the pkg-config program is found in the system.
+     Also, there is a configure option --without-pkg-config (or
+     --with-pkg-config=no) that will disable the use of pkg-config and
+     fallback to plplot_libtool.
+
+  plplot  configure.ac                       1.129
+- plplot  examples/c/Makefile.examples.in    1.12
++ plplot  examples/c/Makefile.examples.am    1.1
++ plplot  examples/c++/Makefile.examples.am  1.1
+- plplot  examples/c++/Makefile.examples.in  1.11
++ plplot  examples/f77/Makefile.examples.am  1.1
+- plplot  examples/f77/Makefile.examples.in  1.11
+
+
+Commit from airwin (2004-01-01 18:07 CET)
+------------------
+
+Change the logic of the previous bug fix so the test for what to do with the
+plcont case is now identical to the test (pltr && pltr_data) done inside
+plshade.
+
+  plplot  src/plshade.c  1.24
+
+
+Commit from airwin (2004-01-01 01:41 CET)
+------------------
+
+Fixed subtle bug for the corner case when pltr == NULL AND contouring is
+wanted.  In this case, plshades is supposed to have the same interpretation
+as plshade, that is if pltr == NULL then transform the x and y index ranges
+to the ranges xmin to xmax, and ymin to ymax.  Normally, that transformation
+was accomplished by simply passing on pltr to plshade to deal with using the
+correct transformation.  But a complication arose for pltr == NULL when
+plshades was asked to also invoke plcont after its invocations of plshade.
+The plcont interpretation of pltr is different, and in fact it must be
+specified so the NULL was causing a segfault.  The solution for the case of
+pltr == NULL and contouring is to generate the appropriate x and y grids
+ranging from xmin to xmax and ymin to ymax on the fly and set up the
+invocation of plcont from plshades appropriately.
+
+I copied the ideas for the necessary memory management from other plplot code
+and tested the result with valgrind to make sure no memory management issues
+have been introduced by this bug fix.
+
+  plplot  src/plshade.c  1.23
+
+
+Commit from rlaboiss (2003-12-31 14:16 CET)
+--------------------
+
+Preparation for Debian release 5.2.1.cvs.20031231-1
+
+  plplot  debian/changelog  1.61
+
+
+Commit from rlaboiss (2003-12-31 14:14 CET)
+--------------------
+
+Commented out the call to AC_F77_LIBRARY_LDFLAGS, because it seems useless,
+besides triggering an error when using plplot_libtool to build the F77
+examples.
+
+  plplot  configure.ac  1.128
+
+
+Commit from rlaboiss (2003-12-31 02:46 CET)
+--------------------
+
+
+Sane behavior of TCL_DIR, LIB_DIR, and BIN_DIR.
+
+  TCL_DIR: Made coherent the AC_SUSTitution for bindings/{tcl,tk}/Makefile.am
+    and the #define for bindings/tcl/tclAPI.c.  They both are prefixed by
+    $datadir now.
+
+  LIB_DIR & BIN_DIR: Made those Autotools-friendly.  They are now defined as
+    $libdir and $bindir, respectively.  Besides this, LIB_DIR does not need
+    to be AC_DEFINEd and BIN_DIR does not need to be AC_SUBSTituted, so
+    removed those calls.
+
+  plplot  configure.ac              1.127
+  plplot  bindings/tcl/Makefile.am  1.19
+  plplot  bindings/tk/Makefile.am   1.10
+
+
+Commit from rlaboiss (2003-12-31 02:34 CET)
+--------------------
+
+Call return after two calls to plabort in function plInitDispatchTable. This
+prevents a gratuitous segmentation fault when the drivers library cannot be
+opened.
+
+  plplot  src/plcore.c  1.122
+
+
+Commit from rlaboiss (2003-12-30 22:52 CET)
+--------------------
+
+Quoted definition of DOC_DIR, such that '${datadir}'is propagated into the
+Makefiles.  This allows specification of prefix at make run, like "make
+prefix=/some/dir", as David Schleef suggested some time ago in plplot-devel.
+Also changed the name of the variable from DOCDIR to DOC_DIR, for
+consistency with the other *_DIR variables.
+
+  plplot  configure.ac                 1.126
+  plplot  bindings/octave/Makefile.am  1.35
+  plplot  drivers/Makefile.am          1.35
+  plplot  lib/csa/Makefile.am          1.9
+  plplot  lib/nn/Makefile.am           1.10
+  plplot  pkgcfg/Makefile.am           1.7
+
+
+Commit from airwin (2003-12-30 19:48 CET)
+------------------
+
+Make the actual leading dimension larger than the defined leading dimension
+of the z matrix.  The results were the same (as the equivalent C example)
+which tests both the leading dimension functionality of the fortran
+interface to the 3D functions and the latest commit of sc3d.c which now
+implements that fortran interface to the 3D functions using plAlloc2dGrid
+and plFree2dGrid rather than in-line code.
+
+  plplot  examples/f77/x08f.fm4  1.9
+
+
+Commit from airwin (2003-12-30 19:42 CET)
+------------------
+
+Use plAlloc2dGrid and plFree2dGrid rather than in-line code to create
+a vectored array from the transpose of the fortran matrix.
+
+  plplot  bindings/f77/sc3d.c  1.12
+
+
+Commit from rlaboiss (2003-12-30 19:40 CET)
+--------------------
+
+Sane treatment of DATA_DIR and DRV_DIR
+
+The variables/#defines DATA_DIR and DRV_DIR are treated now in a more
+coherent and Autotools-friendly way.  The main changes regard:
+
+    - Use of $libdir and $datadir as prefixes of DRV_DIR and DATA_DIR,
+      respectively, in configure.ac.  This allows users to easily override
+      the installation locations when running configure (options --libdir
+      and --datadir).  The environment variables DATA_DIR and DRV_DIR are
+      still honored.
+
+    - DRV_DIR is an absolute path now, not relative to DATA_DIR as before.
+      Besides it being cleaner and more intuitive, the new design allows
+      better compliance with the FHS.  Indeed, architecture-independent
+      files (like the font amd map files, as weel as examples and the Tcl
+      stuff) go by default in $prefix/share, while driver module files
+      (which are architecture-dependent) go in $prefix/lib.
+
+As regards final results, the only difference with the previous situation is
+that the *.fnt and *.map files are installed now in plplot<version>/ instead
+of plplot<version>/data.  I did not try to keep the previous situation
+because it would imply in the definition of a new variable/#define.
+However, if the other developers have really strong arguments in favor of
+it, I will implement that.
+
+  plplot  configure.ac                       1.125
+  plplot  bindings/Makefile.am               1.12
+  plplot  bindings/octave/demos/Makefile.am  1.9
+  plplot  bindings/octave/misc/Makefile.am   1.5
+  plplot  bindings/tcl/Makefile.am           1.18
+  plplot  bindings/tk/Makefile.am            1.9
+  plplot  data/Makefile.am                   1.2
+  plplot  debian/changelog                   1.60
+  plplot  debian/libplplot9.files            1.2
+  plplot  debian/plplot-tcl.files            1.8
+  plplot  debian/rules                       1.42
+  plplot  drivers/Makefile.am                1.34
+  plplot  examples/c/Makefile.am             1.15
+  plplot  examples/c++/Makefile.am           1.12
+  plplot  examples/f77/Makefile.am           1.15
+  plplot  examples/perl/Makefile.am          1.2
+  plplot  examples/python/Makefile.am        1.7
+  plplot  examples/tcl/Makefile.am           1.7
+  plplot  examples/tk/Makefile.am            1.11
+  plplot  scripts/Makefile.am                1.6
+  plplot  src/plcore.c                       1.121
+  plplot  test/Makefile.am                   1.8
+  plplot  test/plplot-test.sh.in             1.9
+
+
+Commit from jcard (2003-12-30 04:19 CET)
+-----------------
+
+Drop Octave-2.0.x compatibility at the script level. The PLplot library bindings are still Octave-2.0.x compatible.
+
+Octave-2.0.x is very old, and even the Octave developper recomends using Octave-2.1.50.
+The script components of the Octave bindings now require Octave-2.1.50 or greater;
+however, the PLplot library bindings are still compatible with any Octave version.
+
+  plplot  bindings/octave/PLplot/axis.m                     1.9
+  plplot  bindings/octave/PLplot/closeallfig.m              1.7
+  plplot  bindings/octave/PLplot/fig.m                      1.5
+  plplot  bindings/octave/PLplot/figure.m                   1.18
+  plplot  bindings/octave/PLplot/grid.m                     1.9
+  plplot  bindings/octave/PLplot/legend.m                   1.9
+  plplot  bindings/octave/PLplot/loglog.m                   1.4
+  plplot  bindings/octave/PLplot/meshc.m                    1.4
+  plplot  bindings/octave/PLplot/mesh.m                     1.7
+  plplot  bindings/octave/PLplot/meshz.m                    1.4
+  plplot  bindings/octave/PLplot/mplot.m                    1.6
+  plplot  bindings/octave/PLplot/plimage.m                  1.5
+  plplot  bindings/octave/PLplot/plot_border.m              1.5
+  plplot  bindings/octave/PLplot/plot.m                     1.4
+  plplot  bindings/octave/PLplot/polar.m                    1.7
+  plplot  bindings/octave/PLplot/semilogx.m                 1.4
+  plplot  bindings/octave/PLplot/semilogy.m                 1.4
+  plplot  bindings/octave/PLplot/set_view.m                 1.10
+  plplot  bindings/octave/PLplot/shade.m                    1.13
+  plplot  bindings/octave/PLplot/surfc.m                    1.4
+  plplot  bindings/octave/PLplot/surf.m                     1.4
+  plplot  bindings/octave/PLplot/support/__pl_contour.m     1.8
+  plplot  bindings/octave/PLplot/support/__pl_logplotit.m   1.2
+  plplot  bindings/octave/PLplot/support/__pl_mesh.m        1.12
+  plplot  bindings/octave/PLplot/support/__pl_meshplotit.m  1.3
+  plplot  bindings/octave/PLplot/support/__pl_plot3.m       1.4
+  plplot  bindings/octave/PLplot/support/__pl_plotit.m      1.10
+  plplot  bindings/octave/PLplot/support/__pl_store.m       1.4
+  plplot  bindings/octave/PLplot/support/__plt__.m          1.5
+
+
+Commit from jcard (2003-12-30 04:14 CET)
+-----------------
+
+Don't try/allow to use pthreads if they are not available.
+
+  plplot  drivers/xwin.c  1.114
+
+
+Commit from jcard (2003-12-30 04:12 CET)
+-----------------
+
+Make with_pthreads=yes (an option only effective for the xwin driver) the
+default.
+
+Recent changes to the xwin driver code should allow this to be now the
+default.  Use "-drvopt usepth=0" to not use pthreads to redisplay the plot
+when using the xwin driver.
+
+  plplot  configure.ac  1.124
+
+
+Commit from airwin (2003-12-30 03:02 CET)
+------------------
+
+Wording tweak for documentation of plshades parameter nlevel.
+
+  plplot  doc/docbook/src/api.xml  1.60
+
+
+Commit from rlaboiss (2003-12-30 01:46 CET)
+--------------------
+
+Include file usr/lib/plplot*/pkgIndex.tcl in plplot-tcl.files
+
+  plplot  debian/changelog         1.59
+  plplot  debian/plplot-tcl.files  1.7
+
+
+Commit from airwin (2003-12-29 18:46 CET)
+------------------
+
+Plplot ==> PLplot
+
+  plplot  bindings/octave/demos/x01c.m  1.7
+
+
+Commit from rlaboiss (2003-12-29 11:56 CET)
+--------------------
+
+Changed all instances of "Plplot" to "PLplot", since the later is our official
+spelling.
+
+  plplot  examples/c/tutor.c        1.15
+  plplot  examples/c/x01c.c         1.36
+  plplot  examples/c++/x01.cc       1.6
+  plplot  examples/f77/x01f.fm4     1.11
+  plplot  examples/java/x01.java    1.12
+  plplot  examples/python/tutor.py  1.3
+  plplot  examples/python/x01.py    1.6
+
+
+Commit from airwin (2003-12-29 01:46 CET)
+------------------
+
+Remove reconfig from the clean list
+
+  plplot  Makefile.am  1.31
+
+
+Commit from airwin (2003-12-29 00:27 CET)
+------------------
+
+Style changes: comments, do loops, indentation, and plcol ==> plcol0.
+
+  plplot  examples/f77/x16af.fm4  1.2
+
+
+Commit from airwin (2003-12-29 00:11 CET)
+------------------
+
+Add the 15th fortran example (which now works for the first time) and the
+alternative 16th fortran example to the fortran executables that are tested.
+
+  plplot  test/test_f77.sh  1.5
+
+
+Commit from airwin (2003-12-29 00:08 CET)
+------------------
+
+The 16th fortran example is about to be substantially changed to mimic what
+is done for the standard 16th example, but I thought the current programming
+for the 16th fortran example should be preserved as x16af.fm4 since it
+produces an attractive looking result.
+
+  plplot  examples/f77/.cvsignore            1.5
+  plplot  examples/f77/Makefile.am           1.14
+  plplot  examples/f77/Makefile.examples.in  1.10
++ plplot  examples/f77/x16af.fm4             1.1
+
+
+Commit from airwin (2003-12-29 00:00 CET)
+------------------
+
+Trim length of output version string using lnblnk.
+
+  plplot  examples/f77/x01f.fm4  1.10
+
+
+Commit from rlaboiss (2003-12-28 23:53 CET)
+--------------------
+
+Preparation for Debian release 5.2.1.cvs.20031228-2
+
+  * NOT YET RELEASED!
+  * debian/control: Changed section of packages libplplot9,
+    plplot9-driver-gd, plplot9-driver-gnome, and plplot9-driver-xwin to
+    libs (was math before) in order to comply with overrides of
+    debian-installer.
+
+  plplot  debian/changelog  1.58
+  plplot  debian/control    1.40
+
+
+Commit from airwin (2003-12-28 23:35 CET)
+------------------
+
+Remove reconfig since that file is now under CVS control
+
+  plplot  .cvsignore  1.12
+
+
+Commit from rlaboiss (2003-12-28 23:24 CET)
+--------------------
+
+Debian release 5.2.1.cvs.20031228-1
+
+  plplot  debian/changelog  1.57
+
+
+Commit from airwin (2003-12-28 21:25 CET)
+------------------
+
+Embedded underscore fix.  For g77 all names by default that originally have
+an underscore in them have two underscores appended rather than the usual
+one.  hello ==> hello_ while hello_world ==> hello_world__ . Therefore, I
+have appended an additional underscore to the three plplot function names
+(pl_setcontlabelformat, pl_setcontlabelparam, and plcalc_world) that have an
+underscore embedded, and this seems to build and execute fine with g77,
+while the build fails on g77 without this fix.  We may have to do something
+additional for some platforms/compilers to get them to work with this g77
+default naming convention as well, but apparently, the reason this is the
+default for g77 is this is the behaviour of many Unix fortran compilers
+(according to info g77).
+
+  plplot  bindings/f77/plstubs.h  1.30
+
+
+Commit from airwin (2003-12-28 21:00 CET)
+------------------
+
+Style changes: comments, do loops, indentation, and plcol ==> plcol0.
+
+Change 15th example to (a) make it work for the first time (there were
+incorrect arguments in some cases, and the 15th example uses more than 3
+colours in cmap0 so that is why plscmap0n(3) is commented out in the C
+example case and is now dropped altogether in this fortran example case) and
+(b) obtain exact agreement with file results from the corresponding C
+example. This agreement confirms that the fortran interface plshade0
+function is implemented correctly.
+
+  plplot  examples/f77/x15f.fm4  1.2
+
+
+Commit from airwin (2003-12-28 19:49 CET)
+------------------
+
+Style changes: comments, do loops, indentation, and plcol ==> plcol0.
+
+Change 9th example to obtain exact agreement with file results from the
+corresponding C example.  This confirms that plcont, plcon1, and plcon2
+are implemented correctly for the fortran interface.
+
+  plplot  examples/f77/x09f.fm4  1.7
+
+
+Commit from rlaboiss (2003-12-28 19:20 CET)
+--------------------
+
+Put back the setting of the variable plplot_config_invocationer with The
+line containing "command:" in the configuration summary shows the configure
+invocation again.
+
+  plplot  configure.ac  1.123
+
+
+Commit from airwin (2003-12-28 00:58 CET)
+------------------
+
+Style changes: comments, do loops, indentation, and plcol ==> plcol0.
+
+Change 13th example to obtain exact agreement with file results from
+corresponding C examples.
+
+  plplot  examples/f77/x13f.fm4  1.8
+
+
+Commit from airwin (2003-12-28 00:16 CET)
+------------------
+
+Style changes: comments, do loops, indentation, and plcol ==> plcol0.
+Results still are in exact agreement with file results from corresponding C
+examples.
+
+  plplot  examples/f77/x10f.fm4  1.7
+  plplot  examples/f77/x12f.fm4  1.8
+
+
+Commit from airwin (2003-12-27 23:58 CET)
+------------------
+
+* Change 11th fortran example to produce identical results to corresponding
+C example.  This result shows the recently changed or updated fortran
+interface to plmesh, plmeshc, and plot3d is implemented correctly.
+
+  plplot  examples/f77/x11f.fm4  1.8
+
+
+Commit from airwin (2003-12-27 23:39 CET)
+------------------
+
+Tweak wording.
+
+  plplot  doc/docbook/src/api.xml  1.59
+
+
+Commit from airwin (2003-12-27 23:04 CET)
+------------------
+
+* Implement PLMESHC, PLOT3DC (actually reorganize so PLMESH, PLMESHC, and
+PLOT3D all call PLOT3DC in analogy with code in plot3d.c) for the fortran
+interface.
+
+* implement PLSURF3D for the fortran interface.
+
+* Change eighth fortran example to produce identical file results to the
+corresponding C example.  This tests the implementation of PLSURF3D.
+
+  plplot  bindings/f77/sc3d.c    1.11
+  plplot  examples/f77/x08f.fm4  1.8
+
+
+Commit from airwin (2003-12-27 02:14 CET)
+------------------
+
+Use AC_F77_LIBRARY_LDFLAGS to define FLIBS, and use that when linking
+libplplotf77[d].  The resulting fortran linking rules are more extensive
+on Linux, but they still work, and they may work much better now for other
+platforms such as Mac OS X.
+
+  plplot  configure.ac              1.122
+  plplot  bindings/f77/Makefile.am  1.12
+
+
+Commit from rlaboiss (2003-12-27 01:58 CET)
+--------------------
+
+Preparation for Debian release 5.2.1.cvs.20031227-1.
+
+  plplot  debian/changelog  1.56
+
+
+Commit from rlaboiss (2003-12-27 00:26 CET)
+--------------------
+
+Call AC_PROG_CC_STDC before any call to Libtool related macros.
+
+The command "./configure --disable-dyndrivers" works now.  This bug is
+triggered using the most recent versions of the Autotools.
+
+  plplot  configure.ac  1.121
+
+
+Commit from rlaboiss (2003-12-26 23:49 CET)
+--------------------
+
+Quoted some double quotes in arguments of the CHECK_DTD macro call
+
+This should make the tests for the DSSSL files more robust.  Thanks to Brian
+D. Wright <bdwright@phy.ucsf.edu> for the suggestion.
+
+  plplot  configure.ac  1.120
+
+
+Commit from rlaboiss (2003-12-26 22:34 CET)
+--------------------
+
+Clean up of configure messages
+
+Changed many instances of AC_MSG_RESULT to more appropriate autoconf macros,
+like AC_MSG_WARN, AC_MSG_ERROR, and AC_MSG_NOTICE.  Also, added some pairs
+of AC_MSG_CHECKING/AC_MSG_RESULT around some checks where feedback to the
+user was lacking (like in the Java checking section).
+
+In implementing the changes, I noticed that there is a repetition of code
+(probably done by cut & paste) for checking several different libraries (gd,
+png, libz, etc).  I will try to change the code using the very nice
+FIND_LIB* and FIND_INC* suites defined in acinclude.m4.
+
+  plplot  sysloc.in     1.60
+  plplot  configure.ac  1.119
+  plplot  acinclude.m4  1.11
+
+
+Commit from rlaboiss (2003-12-26 19:02 CET)
+--------------------
+
+Replaced instances of "../.." by the more robust "$(top_builddir)".  Also,
+the workaround automake brokeness which demanded the dummy definition of
+install-data-hook is not needed anymore.
+
+  plplot  examples/c++/Makefile.am  1.11
+
+
+Commit from rlaboiss (2003-12-26 17:17 CET)
+--------------------
+
+Preparation for Debian release 5.2.1.cvs.20031226-1
+
+  plplot  debian/changelog  1.55
+
+
+Commit from rlaboiss (2003-12-26 17:15 CET)
+--------------------
+
+Fixed typo in regular expression for parsing AC_INIT command.
+
+  plplot  debian/get-upstream-version.pl  1.3
+
+
+Commit from rlaboiss (2003-12-26 17:08 CET)
+--------------------
+
+Disabled inclusion of drivers/*.rc in the distribution tarball
+
+Revert the previous changes regarding includion of the drivers/*.rc files
+into the tarball, because a .rc file depend on the .la file, which gets
+built with "make" by the user.  The result is that the *.rc and get-drv-info
+are built anyway.
+
+I will think later on a better way to include the *.rc files in the tarball.
+
+  plplot  drivers/Makefile.am          1.33
+  plplot  scripts/make-cvs-tarball.sh  1.10
+
+
+Commit from rlaboiss (2003-12-26 16:06 CET)
+--------------------
+
+Modernized some Autotools constructs
+
+The following old-style calls in configure.ac:
+
+    AC_INIT(src/plcore.c)
+    AM_INIT_AUTOMAKE(plplot, 5.2.1)
+
+have been modernized to:
+
+    AC_INIT(plplot, 5.2.1, plplot-devel@lists.sourceforge.net)
+    AC_CONFIG_SRCDIR(src/plcore.c)
+    AM_INIT_AUTOMAKE
+
+(see "info autoconf" and "info automake" for details).
+
+The three scripts that parsed configure.ac and relied on the old-style call
+of AM_INIT_AUTOMAKE have been changed accordingly.
+
+  plplot  configure.ac                    1.118
+  plplot  bootstrap.sh                    1.26
+  plplot  debian/get-upstream-version.pl  1.2
+  plplot  scripts/check-tarball-cvs.sh    1.3
+
+
+Commit from rlaboiss (2003-12-26 15:31 CET)
+--------------------
+
+Disabled generation of reconfig script by configure
+
+As per our discussion in plplot-devel in September 2003 (and since Maurice
+agreed), the section in configure.ac responsible for the generation of the
+reconfig script is removed.  The command "./config.status --recheck" has the
+same effect (i.e. calling configure with the previously specified options).
+
+In order to keep the functionality for the fingers too used to type
+"./reconfig", a one-line shell script called reconfig has been added to the
+repository.
+
+Also, added reconfig to the EXTRA_DIST variable in the top-dir Makefile.am,
+such that the script gets included into the distribution tarball.
+
+  plplot  configure.ac  1.117
++ plplot  reconfig      1.1
+  plplot  Makefile.am   1.30
+
+
+Commit from rlaboiss (2003-12-26 15:14 CET)
+--------------------
+
+Include most drivers/*.rc files in the distribution tarball
+
+The goal of this change is to avoid the building of the drivers/*.rc files
+by the users by including them into the distribution tarball.  This also
+avoids the building of the get-drv-info utility when running "make" from the
+tarball.
+
+The price paid for this improvement on the user's side is that "make" is
+needed before "make dist" (see scripts/make-cvs-tarball.sh). This happens
+because get-drv-info needs libplplot, which needs libcsirocsa and libcsironn
+in turn.  Also, libltdl needs to be built.
+
+Since this change only affects the tarball construction and since the price
+paid is too small compared with the gain obtained, I decided to implement
+the new behavior. If anybody objects, please let us discuss in plplot-devel.
+
+  plplot  scripts/make-cvs-tarball.sh  1.9
+  plplot  drivers/Makefile.am          1.32
+
+
+Commit from rlaboiss (2003-12-26 12:58 CET)
+--------------------
+
+Fixed debug and error messages.
+
+In function plOpenFile, the message "Opened <filename>" is sent now through
+pldebug.  This means that it will not spuriously appear on stderr anymore,
+but will be issued when option -debug is specified.  Also, the message
+"Can't open <filename>" is sent now to stderr instead of stdout.
+
+In function plLibOpenPdfstr, two calls to pldebug are fixed now (called with
+two arguments instead of three).
+
+  plplot  src/plctrl.c  1.74
+
+
+Commit from airwin (2003-12-25 01:14 CET)
+------------------
+
+* Change so that file device result is visually identical with corresponding
+C example result. diff shows that file device results still sometimes
+disagree in last digit with corresponding C example (presumbably due to
+16-bit rendering issues).
+
+* Style changes: comments, do loops, indentation, and plcol ==> plcol0.
+
+  plplot  examples/f77/x07f.fm4  1.8
+
+
+Commit from airwin (2003-12-25 00:48 CET)
+------------------
+
+* Style changes: comments, do loops, indentation, and plcol ==> plcol0.
+File device result still disagree with corresponding C example.  java
+results also disagree (both with c and f77) for this example.  I believe
+all these differences would disappear for higher resolution 32-bit rendering
+as opposed to the current 16-bit rendering we now use for all devices.
+
+  plplot  examples/f77/x06f.fm4  1.8
+
+
+Commit from airwin (2003-12-24 23:25 CET)
+------------------
+
+* Style changes: comments, do loops, and indentation.  File device result
+still agrees with corresponding C example.
+
+  plplot  examples/f77/x05f.fm4  1.9
+
+
+Commit from airwin (2003-12-24 21:09 CET)
+------------------
+
+* Change so that gives identical file device result to corresponding C example.
+
+* Stylistic changes: comments, do loops, indentation, plcol ==> plcol0.
+
+  plplot  examples/f77/x04f.fm4  1.8
+
+
+Commit from airwin (2003-12-24 20:33 CET)
+------------------
+
+* Change so that gives identical file device result to C example.
+
+* Stylistic changes: comments, do loops, and indentation.
+
+  plplot  examples/f77/x03f.fm4  1.9
+
+
+Commit from airwin (2003-12-24 02:16 CET)
+------------------
+
+Style improvements: enddo, indentation ==> still produces identical file
+result to C example.
+
+  plplot  examples/f77/x02f.fm4  1.7
+
+
+Commit from airwin (2003-12-24 01:44 CET)
+------------------
+
+* Change code so that file results agree with C example file results.
+
+* float ==> dble
+
+* Stylistic changes: do ... enddo
+
+  plplot  examples/f77/x01f.fm4  1.9
+
+
+Commit from airwin (2003-12-23 07:29 CET)
+------------------
+
+Add the following API wrappers to the fortran interface:
+
+PL_SETCONTLABELFORMAT
+PL_SETCONTLABELPARAM
+PLCALC_WORLD
+PLCLEAR
+PLCPSTRM
+PLFILL3
+PLGCOL0
+PLGCOLBG
+PLGCOMPRESSION
+PLGDIDEV
+PLGDIORI
+PLGDIPLT
+PLGRIDDATA
+PLGVPD
+PLGVPW
+PLLIGHTSOURCE
+PLMKSTRM
+PLREPLOT
+PLSCMAP1N
+PLSCOMPRESSION
+PLSDIDEV
+PLSDIMAP
+PLSDIORI
+PLSDIPLT
+PLSDIPLZ
+PLSMEM
+PLSTRIPA
+PLSTRIPD
+PLXORMOD
+
+All of these new wrappers build without problems, but there are no examples
+to run-time test them yet.  Also there still remains work to do
+on the PLMESHC, PLOT3DC, PLSHADE1, PLSHADES, PLSURF3D, and PLSTRIPC wrappers
+to implement all the common API.
+
+  plplot  bindings/f77/plstubs.h  1.29
+  plplot  bindings/f77/scstubs.c  1.30
+
+
+Commit from airwin (2003-12-23 07:12 CET)
+------------------
+
+* Replace file designed to be processed by m4 by result of m4 processing of
+that file using double precision.  Fortran passes everything by reference,
+and there is no actual numerical computation or constants in this fortran
+source.  Thus, I believe the double precision is only technical in this case
+and needs no further processing in the single-precision case.
+
+* Handle common blocks by an include file, sfstubs.h.
+
+  plplot  bindings/f77/sfstubs.fm4  1.8
+
+
+Commit from airwin (2003-12-23 07:05 CET)
+------------------
+
+* Move from m4 processing to a simple cp.
+
+* sfstubs.h added to file lists
+
+  plplot  bindings/f77/Makefile.am  1.11
+
+
+Commit from airwin (2003-12-23 07:03 CET)
+------------------
+
+Initial commit of common block definitions that are required (as an
+include file) by routines in sfstubs.f(m4).
+
++ plplot  bindings/f77/sfstubs.h  1.1
+
+
+Commit from airwin (2003-12-23 07:01 CET)
+------------------
+
+Initial commit of documentation about how Fortran API is
+controlled/generated by the various files in this directory.
+
++ plplot  bindings/f77/README.f77API  1.1
+
+
+Commit from airwin (2003-12-23 06:46 CET)
+------------------
+
+* plgriddata: sg parameter changed from input to output.
+
+* tweak wording: "in in" ==> "in"
+
+  plplot  doc/docbook/src/api.xml  1.58
+
+
+Commit from airwin (2003-12-23 06:42 CET)
+------------------
+
+Style Changes:
+
+* improve alphabetic ordering to help in maintenance
+
+* plshades1 ==> c_plshades1 to be consistent with other common API functions.
+
+  plplot  include/plplot.h  1.145
+
+
+Commit from airwin (2003-12-23 01:43 CET)
+------------------
+
+x19f excluded from these Makefiles because this example invokes plmap and
+plmeridians, and these functions are not implemented as part of the common
+API (and probably won't be for a long time because of having to work around
+the mapform type of argument for these functions).
+
+  plplot  examples/f77/Makefile.am           1.13
+  plplot  examples/f77/Makefile.examples.in  1.9
+
+
+Commit from airwin (2003-12-22 20:21 CET)
+------------------
+
+Correct from "input" to "output" designation of certain plcalc_world arguments.
+
+  plplot  doc/docbook/src/api.xml  1.57
+
+
+Commit from airwin (2003-12-22 20:11 CET)
+------------------
+
+Adjust to new names of generated files
+
+  plplot  pkgcfg/.cvsignore  1.2
+
+
+Commit from airwin (2003-12-22 04:58 CET)
+------------------
+
+Change from int to PLINT arguments for plgriddata to conform to the pattern
+for all other functions in our public API.
+
+  plplot  bindings/c++/plstream.cc  1.18
+  plplot  include/plplot.h          1.144
+  plplot  src/plgridd.c             1.7
+  plplot  examples/c/x21c.c         1.10
+  plplot  examples/c++/x21.cc       1.3
+
+
+Commit from rlaboiss (2003-12-21 12:59 CET)
+--------------------
+
+Debian release 5.2.1.cvs.20031030-2
+
+>From the changelog:
+
+  * debian/rules: Call configure with --enable-static, such that the
+    lib*.a files will be present in the *-dev packages (closes: #224550).
+  * debian/control: Changed architecture of packages libplplot-dev and
+    plplot-tcl-dev from "all" to "any", because of the *.a files included.
+
+  plplot  debian/changelog            1.54
+  plplot  debian/control              1.39
+  plplot  debian/libplplot-dev.files  1.8
+  plplot  debian/rules                1.41
+
+
+Commit from rlaboiss (2003-12-16 18:08 CET)
+--------------------
+
+Made the Math::Trig module export only the symbol `pi', to avoid conflict
+with PDL definitions.  Also, some small formatting cleanups were done.
+
+  plplot  examples/perl/x01.pl  1.3
+
+
+Commit from rlaboiss (2003-12-16 18:02 CET)
+--------------------
+
+Added exclusions file.
+
++ plplot  examples/perl/.cvsignore  1.1
+
+
+Commit from rlaboiss (2003-12-16 18:00 CET)
+--------------------
+
+Use module Math::Trig to get definition of number pi.
+
+  plplot  examples/perl/x01.pl  1.2
+
+
+Commit from rlaboiss (2003-12-15 19:07 CET)
+--------------------
+
+PDL demos for PLplot.
+
+Added Perl examples directory, which work with the PDL::Graphics::PLplot
+module (PDL version 2.4 or later).  For now, only example x01.pl is written.
+
+The files README.perldemos and x01.pl will be unconditionally installed in
+the $(DATA_DIR)/../examples/perl directory.  Of course, the scripts only
+work if PDL is installed.
+
+  plplot  configure.ac                    1.116
+  plplot  examples/Makefile.am            1.4
++ plplot  examples/perl/Makefile.am       1.1
++ plplot  examples/perl/README.perldemos  1.1
++ plplot  examples/perl/x01.pl            1.1
+
+
+Commit from airwin (2003-12-12 04:48 CET)
+------------------
+
+Convert all floating-point constants in fortran examples to standard
+double-precision form.
+
+e.g., .3 ==> 0.3d0.
+
+Also, convert ugly dble (0.3), etc.  in argument lists to 0.3d0.
+
+This was all done by a fairly well tested sed script that I have developed
+for a different project.
+
+Examples 3, 9, 11, and 13 gave slightly different (but still visually
+acceptable) answers as a result.
+
+  plplot  examples/f77/x01f.fm4  1.8
+  plplot  examples/f77/x02f.fm4  1.6
+  plplot  examples/f77/x03f.fm4  1.8
+  plplot  examples/f77/x04f.fm4  1.7
+  plplot  examples/f77/x05f.fm4  1.8
+  plplot  examples/f77/x06f.fm4  1.7
+  plplot  examples/f77/x07f.fm4  1.7
+  plplot  examples/f77/x08f.fm4  1.7
+  plplot  examples/f77/x09f.fm4  1.6
+  plplot  examples/f77/x10f.fm4  1.6
+  plplot  examples/f77/x11f.fm4  1.7
+  plplot  examples/f77/x12f.fm4  1.7
+  plplot  examples/f77/x13f.fm4  1.7
+  plplot  examples/f77/x16f.fm4  1.7
+  plplot  examples/f77/x17f.fm4  1.2
+  plplot  examples/f77/x18f.fm4  1.2
+  plplot  examples/f77/x19f.fm4  1.2
+
+
+Commit from rlaboiss (2003-12-09 18:27 CET)
+--------------------
+
+I just noticed that the Octave function octave_config_info accepts an
+argument.  This slightly simplifies the OCTAVE_CONFIG_INFO macro.  This
+change was tested only with Octave 2.1.50.  Hopefully it will work with any
+version of Octave supported by PLplot.
+
+  plplot  sysloc.in  1.59
+
+
+Commit from rlaboiss (2003-11-18 21:26 CET)
+--------------------
+
+Removed entry about --enable-strip-libraries option, since this is already
+implemented by Automake.
+
+  plplot  TODO.AM-LT  1.4
+
+
+Commit from rlaboiss (2003-11-18 17:42 CET)
+--------------------
+
+Revamped ToDo list
+
+Reorganization of this ToDo list, separating task that are already completed
+or abandoned from those issues that are still open.  Also, added an item
+about the implementation of the --enable-strip-libraries option of configure.
+
+  plplot  TODO.AM-LT  1.3
+
+
+Commit from jcard (2003-11-14 01:33 CET)
+-----------------
+
+- Make default visual the default, use "-drvopt defvis=0" to not use the
+  default visual.
+- Add "usepth" driver specific option; enable pthreads by default, use
+  "-drvopt usepth=0" to not use pthreads to redisplay the plot.
+- Fix subtle bug when using pthreads with two or more plot windows; when
+  resizing one of them  the resize/replot was directed to the plot window on
+  he current stream.
+
+  plplot  drivers/xwin.c  1.113
+
+
+Commit from rlaboiss (2003-10-31 14:44 CET)
+--------------------
+
+Deleted obsolete files.
+
+- plplot  debian/libplplot5.README.Debian  1.7
+- plplot  debian/libplplot5.files          1.3
+
+
+Commit from rlaboiss (2003-10-30 10:10 CET)
+--------------------
+
+Debian release 5.2.1.cvs.20031030-1.
+
+  plplot  debian/.cvsignore  1.6
+  plplot  debian/changelog   1.53
+
+
+Commit from rlaboiss (2003-10-29 22:30 CET)
+--------------------
+
+Renaming of the driver module Debian packages.
+
+The naming changes are:
+
+    plplot-gd    -> plplot9-driver-gd
+    plplot-xwin  -> plplot9-driver-xwin
+    plplot-gnome -> plplot9-driver-gnome
+
+  plplot  debian/changelog                   1.52
+  plplot  debian/control                     1.38
+  plplot  debian/libplplot9.README.Debian    1.2
+- plplot  debian/plplot-gd.files             1.3
+- plplot  debian/plplot-gnome.files          1.3
+- plplot  debian/plplot-xwin.files           1.3
++ plplot  debian/plplot9-driver-gd.files     1.1
++ plplot  debian/plplot9-driver-gnome.files  1.1
++ plplot  debian/plplot9-driver-xwin.files   1.1
+  plplot  debian/rules                       1.40
+
+
+Commit from jcard (2003-10-29 20:40 CET)
+-----------------
+
+Mostly cosmetic changes that enable plplot to compiled with (almost) no
+warnings, even with gcc -Wall.
+
+Most changes are just casts, and most of them are tcl/tk related. For
+tcl/tk-8.4, no warnings occurs. Also tested with tcl/tk-8.3, where some
+warnings remain.  There are no java/f77/cxx/python/octave changes.
+
+  plplot  utils/pltcl.c                        1.19
+  plplot  src/pdfutils.c                       1.25
+  plplot  src/plbox.c                          1.34
+  plplot  src/plcore.c                         1.120
+  plplot  src/plfreetype.c                     1.14
+  plplot  src/plot3d.c                         1.52
+  plplot  include/plplotP.h                    1.72
+  plplot  examples/tk/xtk01.c                  1.17
+  plplot  examples/tk/xtk02.c                  1.17
+  plplot  examples/tk/xtk04.c                  1.12
+  plplot  drivers/gd.c                         1.31
+  plplot  drivers/get-drv-info.c               1.7
+  plplot  drivers/tk.c                         1.81
+  plplot  drivers/tkwin.c                      1.18
+  plplot  drivers/xwin.c                       1.112
+  plplot  bindings/tk-x-plat/Plplotter_Init.c  1.7
+  plplot  bindings/tk-x-plat/plplotter.c       1.16
+  plplot  bindings/tk/Pltk_Init.c              1.11
+  plplot  bindings/tk/plframe.c                1.83
+  plplot  bindings/tk/plserver.c               1.46
+  plplot  bindings/tk/tcpip.c                  1.21
+  plplot  bindings/tk/tkMain.c                 1.19
+  plplot  bindings/tk/tkshell.c                1.29
+  plplot  bindings/tcl/matrixInit.c            1.7
+  plplot  bindings/tcl/tclAPI.c                1.54
+  plplot  bindings/tcl/tclMain.c               1.16
+  plplot  bindings/tcl/tclMatrix.c             1.23
+
+
+Commit from rlaboiss (2003-10-29 20:19 CET)
+--------------------
+
+Preparation for the next Debian release.
+
+>From the debian/changelog file:
+
+  * NOT YET RELEASED!
+  * Preparation for the new upstream version, which changed the soversion
+    of the PLplot library.  Changed all the references to libplplot5 to
+    libplplot9.  Affected files:
+    - control
+    - libplplot-dev.files
+    - octave-plplot.files
+    - plplot-doc.doc-base
+    - plplot-doc.files
+    - plplot-tcl-dev.files
+    - python-plplot.files
+    - rules
+    - libplplot9.README.Debian (new)
+    - libplplot9.files (new)
+
+  plplot  debian/changelog                 1.51
+  plplot  debian/control                   1.37
+  plplot  debian/libplplot-dev.files       1.7
++ plplot  debian/libplplot9.README.Debian  1.1
++ plplot  debian/libplplot9.files          1.1
+  plplot  debian/octave-plplot.files       1.5
+  plplot  debian/plplot-doc.doc-base       1.4
+  plplot  debian/plplot-doc.files          1.6
+  plplot  debian/plplot-tcl-dev.files      1.2
+  plplot  debian/python-plplot.files       1.6
+  plplot  debian/rules                     1.39
+
+
+Commit from airwin (2003-10-29 18:24 CET)
+------------------
+
+Add examples 15, 17, 18, and 19.
+
+Note 17 and 19 don't link properly yet (missing fortran API) so the
+installed examples will have to be built using make -k.
+
+  plplot  examples/f77/Makefile.examples.in  1.8
+
+
+Commit from airwin (2003-10-29 17:14 CET)
+------------------
+
+AWI for Arjen Markus <arjen.markus@wldelft.nl>
+
+White space changes.
+
+  plplot  examples/f77/x01f.fm4  1.7
+  plplot  examples/f77/x04f.fm4  1.6
+  plplot  examples/f77/x06f.fm4  1.6
+  plplot  examples/f77/x07f.fm4  1.6
+  plplot  examples/f77/x08f.fm4  1.6
+  plplot  examples/f77/x09f.fm4  1.5
+  plplot  examples/f77/x11f.fm4  1.6
+  plplot  examples/f77/x12f.fm4  1.6
+  plplot  examples/f77/x13f.fm4  1.6
+  plplot  examples/f77/x16f.fm4  1.6
+
+
+Commit from airwin (2003-10-29 17:14 CET)
+------------------
+
+Add new example 15.
+
+  plplot  examples/f77/Makefile.am  1.12
+
+
+Commit from airwin (2003-10-29 17:13 CET)
+------------------
+
+AWI for Arjen Markus <arjen.markus@wldelft.nl>.
+
+Initial commit.  This compiles and executes, but there is a problem with
+the colours which needs debugging.
+
++ plplot  examples/f77/x15f.fm4  1.1
+
+
+Commit from rlaboiss (2003-10-29 15:13 CET)
+--------------------
+
+Debian release plplot-5.2.1.cvs.20031027-3.
+
+>From the debian/changelog file:
+
+  * debian/rules:
+    - Added symlinks /usr/lib/lib{nn,csa}.so.0, such that this release of
+      the libplplot5 package does not break binary compatiblity with previous
+      released versions of PLplot (closes: #217895).  This is an interim
+      solution.  Probably, the upstream authors will have to change the
+      soversion or revert the changing of names of the libscsiro{nn,csa}
+      libraries in order to get the problem cleanly fixed.
+    - Call configure with --disable-java, since enable_java has been made
+      the default in the upstream configure.ac.
+
+  plplot  debian/changelog  1.50
+  plplot  debian/rules      1.38
+
+
+Commit from rlaboiss (2003-10-29 14:46 CET)
+--------------------
+
+Marked all tasks as "DONE".
+
+I just realized that this list of ToDo tasks is finished now.  I am keeping
+this file here out of historical interest.
+
+  plplot  debian/TODO  1.5
+
+
+Commit from rlaboiss (2003-10-29 14:38 CET)
+--------------------
+
+Upgraded SOVERSION to 9:0:0.
+
+This is necessary since the recent changes in the naming of the libraries
+libnn -> libcsironn and libcsa -> libcsirocsa have broke backward binary
+compatibility for the PLplot library.
+
+  plplot  configure.ac  1.115
+
+
+Commit from rlaboiss (2003-10-29 14:10 CET)
+--------------------
+
+Dummy commit to get the sticky -kb option (hopefully).
+
+No changes have been made to this file.
+
+  plplot  examples/c/lena.pgm  1.3
+
+
+Commit from rlaboiss (2003-10-29 13:47 CET)
+--------------------
+
+Changed the build-dependency for GD library.
+
+Instead of using the "transitional" package libgd2-dev, use the explicit
+dependencies to the real packages (libgd2-noxpm-dev | libgd2-xpm-dev).
+
+  plplot  debian/control  1.36
+
+
+Commit from vincentdarley (2003-10-28 17:16 CET)
+-------------------------
+
+win-tk build now works again
+
+  plplot  sys/win-tk/makePlplotStarkit.tcl  1.3
+  plplot  sys/win-tk/makefile.vc            1.12
++ plplot  sys/win-tk/testPlplot.tcl         1.1
+
+
+Commit from rlaboiss (2003-10-27 11:54 CET)
+--------------------
+
+Debian release 5.2.1.cvs.20031027-2.
+
+>From the debian/changelog file:
+
+  * debian/libplplot-dev.files: Added README.pkg-config file.
+  * debian/libplplot5.README.Debian: Fixed typos.
+
+  plplot  debian/changelog                 1.49
+  plplot  debian/libplplot-dev.files       1.6
+  plplot  debian/libplplot5.README.Debian  1.6
+
+
+Commit from rlaboiss (2003-10-27 11:35 CET)
+--------------------
+
+Debian release 5.2.1.cvs.20031027-1.
+
+>From the debian/changelog file:
+
+  * New CVS snapshot upstream release.  This release is actually quite
+    close to the latest Debian 5.2.1-21, since I have been tracking CVS
+    developments since the upstream release 5.2.1.  One of biggest
+    advantages of this move is the enourmous reduction in the size of the
+    diff.gz file:
+
+      du -b plplot*diff*
+      2686036 ../plplot_5.2.1-21.diff.gz
+      10198   ../plplot_5.2.1.cvs.20031027-1.diff.gz
+
+    This huge difference is due to the patched documentation file and the
+    necessity of an uuencoded file for the Debian packages.
+
+  * debian/rules: Removed all manipulations (targets "build" and
+    "clean") related to the plplot-5.2.1-new-doc.tar.gz.uu file, which is
+    not included in the source package anymore.  Also, added flag -k to
+    make distclean.
+
+  * debian/control: Removed build-dependency on sharutils.
+
+  * debian/libplplot5.README.Debian: Added note about pkg-config support.
+
+  plplot  debian/changelog                 1.48
+  plplot  debian/control                   1.35
+  plplot  debian/libplplot5.README.Debian  1.5
+  plplot  debian/rules                     1.37
+
+
+Commit from rlaboiss (2003-10-27 11:18 CET)
+--------------------
+
+Added tclIndex to the CLEANFILES list.
+
+  plplot  bindings/tk/Makefile.am  1.8
+
+
+Commit from rlaboiss (2003-10-27 11:17 CET)
+--------------------
+
+Install README file in $(docdir)/README.pkg-config.
+
+  plplot  pkgcfg/Makefile.am  1.6
+
+
+Commit from rlaboiss (2003-10-27 08:48 CET)
+--------------------
+
+Fixed "--with-pthread" -> "--with-pthreads" in call to configure.
+
+  plplot  debian/rules  1.36
+
+
+Commit from rlaboiss (2003-10-27 08:46 CET)
+--------------------
+
+Made make-cvs-tarball script more robust to premature exit.
+
+Added a cleanup function that is called for the trapped signals 0, HUP,
+QUIT, INT, TERM, and PIPE.  This insures that the temporary directory
+$CVSTMPDIR is removed at exit.  Also, a caveat note is added at the comments
+on the top of the file.
+
+  plplot  scripts/make-cvs-tarball.sh  1.8
+
+
+Commit from rlaboiss (2003-10-26 16:07 CET)
+--------------------
+
+Call aclocal in libltdl directory.
+
+This insures that the aclocal.m4 files in both the topdir and the libltdl
+directory are generated with by same version of Automake and no errors
+regarding incompatible calls of AM_AUTOMAKE_VERSION will happen.
+
+  plplot  bootstrap.sh  1.25
+
+
+Commit from airwin (2003-10-26 05:37 CET)
+------------------
+
+AWI for Arjen Markus plus significant changes of my own as well.  Update
+fifth standard fortran example so it produces results consistent with
+results for other language interfaces.  diff of postscript results showed no
+difference with c result for example.
+
+  plplot  examples/f77/x05f.fm4  1.7
+
+
+Commit from airwin (2003-10-26 05:23 CET)
+------------------
+
+AWI for Arjen Markus.  Minore update of third standard fortran example so it
+avoids deprecated plcol API and replaces by plcol0 instead.  More work
+required, however, before it will produce results consistent with results
+for other language interfaces.
+
+  plplot  examples/f77/x03f.fm4  1.7
+
+
+Commit from airwin (2003-10-26 05:17 CET)
+------------------
+
+AWI for Arjen Markus.  Update second standard fortran example so it produces
+results consistent with results for other language interfaces.  diff of
+postscript results showed no difference with c result for example.
+
+  plplot  examples/f77/x02f.fm4  1.5
+
+
+Commit from airwin (2003-10-26 03:55 CET)
+------------------
+
+Initial commit of contributed standard examples from Arjen Markus with some
+changes by AWI to allow them to compile.  x17f and x19f don't link (so must
+use, e.g, make -k check for now to compile rest of examples) because of
+missing fortran API. x18f actually links and gives almost the correct
+standard results for example 18, but "almost" means there is probably an API
+problem to deal with there.
+
+  plplot  examples/f77/Makefile.am  1.11
++ plplot  examples/f77/x17f.fm4     1.1
++ plplot  examples/f77/x18f.fm4     1.1
++ plplot  examples/f77/x19f.fm4     1.1
+
+
+Commit from airwin (2003-10-26 02:49 CET)
+------------------
+
+Drop single-precision support for examples for now.  I intend to re-instate
+it later with a sed script.  The *.fm4 are now a misnomer (probably the
+name should be changed to *.fdouble or something, but I have to think about
+it) since they are no longer processed by m4.  Instead, these files are
+filled by straight double-precision fortran (with no embedded m4 commands)
+and simply copied to *.f.
+
+  plplot  examples/f77/Makefile.am  1.10
+- plplot  examples/f77/fmacs.m4     1.3
+  plplot  examples/f77/x01f.fm4     1.6
+  plplot  examples/f77/x02f.fm4     1.4
+  plplot  examples/f77/x03f.fm4     1.6
+  plplot  examples/f77/x04f.fm4     1.5
+  plplot  examples/f77/x05f.fm4     1.6
+  plplot  examples/f77/x06f.fm4     1.5
+  plplot  examples/f77/x07f.fm4     1.5
+  plplot  examples/f77/x08f.fm4     1.5
+  plplot  examples/f77/x09f.fm4     1.4
+  plplot  examples/f77/x10f.fm4     1.5
+  plplot  examples/f77/x11f.fm4     1.5
+  plplot  examples/f77/x12f.fm4     1.5
+  plplot  examples/f77/x13f.fm4     1.5
+  plplot  examples/f77/x16f.fm4     1.5
+
+
+Commit from jcard (2003-10-24 20:31 CET)
+-----------------
+
+Disable dynamic drivers if enable_shared != yes
+
+If the user don't want (or the system is not capable of) to build shared
+libraries, then disable dynamic drivers, as they are dynamically loaded
+objects.
+
+This must to be done after AM_PROG_LIBTOOL.
+There is a test
+     if test "$enable_dyndrivers" = "yes"
+above that should, if possible, be put after this test.
+
+  plplot  configure.ac  1.114
+
+
+Commit from rlaboiss (2003-10-23 11:48 CET)
+--------------------
+
+Debian release 5.2.1-21
+
+>From the debian/changelog file:
+
+  * sysloc.in: Applied patch from upstream CVS that assigns an unversioned
+    path to OCTAVE_OCT_DIR.
+  * debian/rules:
+    - Loosen the restriction on the Octave version dependency, now that
+      OCTAVE_OCT_DIR is unversioned.
+    - Configure with --with-pthreads, such that the xwin driver refreshes
+      the plot when the window is moved or re-exposed.
+
+  plplot  debian/changelog  1.47
+  plplot  debian/rules      1.35
+
+
+Commit from rlaboiss (2003-10-23 09:17 CET)
+--------------------
+
+Unversioned path for Octave oct dir
+
+The OCTAVE_OCT_DIR variable is not versioned anymore (i.e. it does not
+contain the Octave version 2.*.* in it).  This parallels what is done for
+the OCT_M_DIR variable.  OCTAVE_OCT_DIR takes it value from the
+octave_config_info structure, being either localoctfiledir (for Octave
+version 2.1.*) or the first component of localoctfilepath (version 2.0.*).
+
+The advantage of this change is that the Octave bindings are not tied to a
+specific version of Octave, and will continue to be visible if the user
+upgrades Octave.  Remember though that there is no guarantee of backward
+compatibility of the *.oct API within the unstable series of Octave (2.1.*).
+
+  plplot  sysloc.in  1.58
+
+
+Commit from rlaboiss (2003-10-21 12:22 CET)
+--------------------
+
+Use HAVE_PTHREAD instead of USE_THREADS
+
+This means that pthreads support will be activated in the gnome
+driver whenever the --with-pthreads option is given to
+configure.
+
+  plplot  drivers/gnome.c  1.29
+
+
+Commit from rlaboiss (2003-10-17 15:16 CET)
+--------------------
+
+Debian release 5.2.1-20
+
+  plplot  debian/changelog  1.46
+
+
+Commit from rlaboiss (2003-10-17 14:16 CET)
+--------------------
+
+Put AC_CHECK_LIB(ltdl, ...) outside the with_ltdlsystem conditional
+
+For some mysterious reason, when the AC_CHECK_LIB was put inside the
+conditional 'if test "$with_ltdlsystem" = no', configure was failing with
+the error message: conditional "AMDEP" was never defined.  This should be
+fixed now.
+
+Please, test this change.
+
+  plplot  configure.ac  1.113
+
+
+Commit from rlaboiss (2003-10-16 13:22 CET)
+--------------------
+
+Preparation for Debian release 5.2.1-20
+
+This will be uploaded to unstable only after version 5.2.1-19 had hit the
+testing distribution.
+
+>From debian/changelog:
+
+    * Following a suggestion of Matthias Klose <doko@cs.tu-berlin.de>, the
+      libltdl library shipped with the upstream sources is not compiled
+      anymore as a convenience library:
+      - Imported configure.ac and Makefile.am from upstream CVS that
+        implement the confgiure option --with-ltdlsystem, allowing the use
+        of the installed libltdl library.
+      - debian/control: Build-depends on libltdl3-dev.
+      - debian/rules: Call configure with option --with-ltdlsystem.
+    * debian/control:
+      - Fixed description of libplplot-dev package.
+      - Bumped the build-dependency on debhelper to version 4.1.67, since we
+        are using dh_python (thanks again to Matthias Klose for pointing
+        this out).
+
+  plplot  debian/changelog  1.45
+  plplot  debian/control    1.34
+  plplot  debian/rules      1.34
+
+
+Commit from rlaboiss (2003-10-16 13:13 CET)
+--------------------
+
+Cosmetic changes
+
+Removed an obsolete comment about AM_PROG_LIBTOOL and added AC_HELP_STRING
+in MY_ARG_WITH(pthreads, ...).
+
+  plplot  configure.ac  1.112
+
+
+Commit from rlaboiss (2003-10-16 12:43 CET)
+--------------------
+
+Better logic for use of system's libltdl
+
+The decision about when to use the libltdl library is improved.  Now, the
+default is to always compiled the shipped libtool's libltdl as a convenience
+library, unless the user explicitly give the option --with-ltdlsystem to
+configure.  When this option is given, configure checks if the libltdl
+library is actually installed.  If not, it falls back to the convenience
+compilation case.
+
+Alan, if you are hearing this, could you please comment?
+
+  plplot  Makefile.am   1.29
+  plplot  configure.ac  1.111
+
+
+Commit from jcard (2003-10-16 03:06 CET)
+-----------------
+
+plInBuildTree() is always needed, move out of conditional ENABLE_DYNDRIVERS
+
+  plplot  src/plcore.c  1.119
+
+
+Commit from rlaboiss (2003-10-16 02:05 CET)
+--------------------
+
+Allow use of installed libltdl
+
+A Debian fellow pointed out to me that there is no need to compile the
+libltdl support when building the PLplot Debian packages, since there is a
+libltdl3 package against which libplplot can be linked.
+
+In order to be able to disable configuration/compilation of the libltdl
+support, I did the following changes:
+
+    * In configure.ac, AC_LIBTOOL_CONVENIENCE and AC_LIBTOOL_INSTALLABLE are
+      called conditionally on the presence of an installed libltdl (using
+      AC_CHECK_LIB).
+
+    * In order to avoid config/build of the libltdl directory,
+      AC_CONFIG_SUBDIRS(libltdl) is called conditionally as well.  Also, in
+      Makefile.am, the libltdl directory is included conditionally on the
+      (newly created) AM_CONDITIONAL variable enable_ltdl_convenience.
+      [N.B.: I changed the code for setting the SUBDIRS variable in
+      Makefile.am using the automake append (+=) operator, instead of using
+      the auxiliary variable drivers_src_dirs as before.]
+
+If the user has libltdl installed in the system but wants to use the version
+shipped with PLplot, she can override the configure check by giving the
+--enable-ltdl-convenience option (this needs further tests, though).
+
+The advantage of using the system's libltdl are:
+
+    * Configuration time is reduced, since the libltdl dir does not need to
+      be configured.
+    * Build time is also reduced, for a similar reason.
+    * The size of the resulting libplplot library is around 10% smaller (at
+      least in Linux).
+
+  plplot  Makefile.am   1.28
+  plplot  configure.ac  1.110
+
+
+Commit from rlaboiss (2003-10-15 23:36 CET)
+--------------------
+
+Fixed problem with sed option -i
+
+Option -i of the sed command is quite useful, because it allows files to be
+edited in-place.  It is too bad that GNU sed older than version 4 do not
+support this feature.  Since this should be the case for general sed's, the
+use of option -i was replaced by an ugly (but working) code using a
+temporary file.
+
+  plplot  pkgcfg/Makefile.am  1.5
+
+
+Commit from rlaboiss (2003-10-15 23:31 CET)
+--------------------
+
+Added some output messages
+
+In the for loop, messages like "Generated plplot(...).pc" are now echoed.
+This will help to diagnose problems in the future.
+
+Also, some small reformatting of the code was done.
+
+  plplot  pkgcfg/gen-pc-files.sh  1.3
+
+
+Commit from rlaboiss (2003-10-15 22:53 CET)
+--------------------
+
+Added missing double quote in sed command
+
+This fixes the 'command substitution: unexpected EOF while looking for
+matching "' bug.  Quite interesting, this error message is only triggered
+when /bin/sh is bash.  Other Bourne shells like ash and dash accept happily
+this "syntax error".
+
+  plplot  pkgcfg/gen-pc-files.sh  1.2
+
+
+Commit from rlaboiss (2003-10-11 19:48 CET)
+--------------------
+
+Fixed parsing of -L... entries in dependency_libs
+
+The -L... entries were incorrectly parsed in the install-data-hook rule and
+disappeared from the Libs lines in the *.pc files.  The documentation README
+is updated to reflect this fix.
+
+  plplot  pkgcfg/Makefile.am  1.4
+  plplot  pkgcfg/README       1.2
+
+
+Commit from rlaboiss (2003-10-11 15:40 CET)
+--------------------
+
+Total redesign of the pkg-config support for PLplot
+
+Read the pkgcfg/README file for details.
+
+  plplot  configure.ac                1.109
+  plplot  pkgcfg/Makefile.am          1.3
++ plplot  pkgcfg/README               1.1
++ plplot  pkgcfg/gen-pc-files.sh      1.1
+- plplot  pkgcfg/plplot-float.pc.in   1.4
++ plplot  pkgcfg/plplot-master-pc.in  1.1
+- plplot  pkgcfg/plplot.pc.in         1.5
+
+
+Commit from rlaboiss (2003-10-11 10:20 CET)
+--------------------
+
+pkg-config gives now complete list of dependency libraries
+
+This is a first try to have "pkg-config plplot --libs" working correctly
+in a cross-platform way.  For that, the complete list of dependency
+libraries flags (-l*) must be included into plplot.pc and plplot-float.pc.
+
+This information is already available in the src/.libs/libplplot*.lai files.
+These files are parsed in the install-data-hook rule of pkgcfg/Makefile.am
+in a similar way the plplot_libtool script does at run time.  However, this
+is done at install time.
+
+This is now the result I am having in Linux (must be also tested in other
+platform):
+
+    $ pkg-config plplot --libs
+    -lplplotd -lfreetype -lz -lcsirocsa -lcsironn -lqhull -lm -ldl
+
+  plplot  pkgcfg/Makefile.am         1.2
+  plplot  pkgcfg/plplot-float.pc.in  1.3
+  plplot  pkgcfg/plplot.pc.in        1.4
+
+
+Commit from airwin (2003-10-10 20:57 CET)
+------------------
+
+Update and partial redesign of plplot-config, a simplified wrapper for
+plplot_libtool if you don't want to use the power of that script directly.
+
+* fixed bugs where it failed for libtool-1.5 (a linker must be specified),
+and also failed for --with-c++ (wrongly named library).
+
+* introduce --with-f77 and --with-tcl options
+
+* non-cumulative library modes.  The idea here is you ordinarily only tell
+plplot_libtool about libplplot, and it figures out the correct link options
+for the local platform based on that.  However, there are some additional
+mutually exclusive options a user can specify:
+
+--with-c++,
+--with-f77, or
+--with-tcl.
+
+If you specify any of those additional switches you tell plplot_libtool only
+about the appropriate library (libplplotcxx for --with-c++, libplplotf77 for
+--with-f77, and libplplottcltk for --with-tcl), and it determines the
+correct link options for your local platform.  The above switches should be
+mutually exclusive, but my scripting skills aren't up to checking for that
+(help, please!), but for now I settled for an increasing order of precedence
+being in the above order (so anything lower on the list means anything above
+is ignored).
+
+  plplot  scripts/plplot-config.in  1.2
+
+
+Commit from jcard (2003-10-10 20:26 CET)
+-----------------
+
+Adjust to show how to run the demos in the build tree.
+
+  plplot  examples/tk/README.tkdemos    1.11
+  plplot  examples/tcl/README.tcldemos  1.9
+
+
+Commit from jcard (2003-10-10 20:26 CET)
+-----------------
+
+Fix to enable the demos to be run in the build tree.
+
+  plplot  bindings/tk-x-plat/pkgIndex.tcl.in  1.8
+  plplot  bindings/tk/pkgIndex.tcl.in         1.8
+  plplot  bindings/tcl/pkgIndex.tcl.in        1.6
+
+
+Commit from rlaboiss (2003-10-10 15:17 CET)
+--------------------
+
+Fixed Libs and Cflags entries
+
+Added "/plplot" to the includedir variable, such that there is no need to
+explicitly #include <plplot/...> in user programs (this is the case for the
+C and C++ examples shiped with PLplot).
+
+Also, removed -DPL_DOUBLE from Cflags (this was producing compilation
+warnings, since PL_DOUBLE is already defined in plConfig.h) and removed
+@FREETYPELIBCMD@ from Libs.  All the dependecy libraries of libplplot are
+guessed by the default linker of Linux.  I am not sure this will work like
+this in other Unices.  More work is needed here.
+
+At any rate, compilation of the C examples work correctly now with:
+
+    gcc `pkg-config plplot --cflags` x01c.c -o x01c `pkg-config plplot --libs`
+
+  plplot  pkgcfg/plplot-float.pc.in  1.2
+  plplot  pkgcfg/plplot.pc.in        1.3
+
+
+Commit from rlaboiss (2003-10-10 10:45 CET)
+--------------------
+
+Removed #undef *_DIR
+
+The *_DIR #defines are only needed in plConfg.h, which is included in user
+programs.  These #defines are only needed at build time by the core
+functions of the PLplot library.  Since they are already included in
+config.h (thanks to the AC_DEFINE_UNQUOTED calls in configure.ac) and this
+later file is included by plConfig.h at build time, then they can be deleted
+from plConfig.h.in.
+
+  plplot  include/plConfig.h.in  1.8
+
+
+Commit from airwin (2003-10-09 23:08 CET)
+------------------
+
+Change java install procedure so that CLASSPATH is not required.  This solves
+the configuration problem we were discussing.
+
+Also drop all mention of CLASSPATH in the documentation except where relevant;
+i.e., only at the time when you execute the installed compiled java examples.
+
+  plplot  bindings/java/Makefile.am       1.21
+  plplot  bindings/java/README.javaAPI    1.7
+  plplot  examples/java/Makefile.am       1.4
+  plplot  examples/java/README.javademos  1.5
+  plplot  test/test_java.sh               1.3
+
+
+Commit from jcard (2003-10-09 23:02 CET)
+-----------------
+
+Create and set BUILD_DIR.
+
+  plplot  configure.ac           1.108
+  plplot  include/plConfig.h.in  1.7
+
+
+Commit from jcard (2003-10-09 23:00 CET)
+-----------------
+
+If the current directory is in the build tree, change files search order so
+as to load them locally.
+
+The modifications guarantee that files/drivers/scripts are loaded from the
+build tree if the current directory is somewhere in the build tree.
+
+The objective is that one should be able to change/test/evaluate PLplot
+without the necessity of installing it; recently this was needed (and for
+some front ends it still is), requiring the user to have a separate
+directory to test/change/evaluate PLplot, which means two steps of
+configure/make, one with the test --prefix and the other with the final
+one, which is confusing and error prone. Also, for developpers, the
+make/make install step turns the development cycle sloww and boring.
+
+All the compiled front-ends, C, C++ and F77, was tested and work OK with
+all drivers.  The Tcl and Tk front-ends also work OK, but the tk loadable
+extensions, Pltk and Plplotter, as well as the tcl extension Pltcl, still
+need adjustments in the pkgIndex.tcl script.
+
+The Octave front-end also works OK.
+
+Python and Java was not yet tested.
+
+This is not yet finish, as some problems might yet appear; however, care
+has been taken to guarantee that the old behavior still works OK.
+
+tclAPI.c:
+   PLbasicInit(): search the init script in the build tree
+   pls_auto_path(): add bindings/tk to auto_path
+
+plcore.c:
+   add plInBuildTree() that check if the current directory in within the
+   build source tree plGetDriverDir(): if in the build tree, load the
+   drivers locally
+
+plctrl.c:
+    plFindCommand(): if in the build tree, search locally
+    plLibOpenPdfstrm(): if in the build tree, search locally
+
+  plplot  src/plcore.c           1.118
+  plplot  src/plctrl.c           1.73
+  plplot  bindings/tcl/tclAPI.c  1.53
+
+
+Commit from rlaboiss (2003-10-08 19:19 CET)
+--------------------
+
+Reintroduced deleted AC_MSG_RESULT in Nan awareness test
+
+Also, the logic of the test is fixed now.  Strangely, the last commit made
+AC_RUN_IFELSE have only two arguments, instead of three.  Besides that, the
+test must return 1 in case of failure and not 0 as was the case.  I did
+minimal tests, but evrything seems to work now.
+
+  plplot  sysloc.in  1.57
+
+
+Commit from jcard (2003-10-08 18:37 CET)
+-----------------
+
+Reformating of "Check for NaN awareness" test, to avoid using another
+variable.
+
+  plplot  sysloc.in  1.56
+
+
+Commit from rlaboiss (2003-10-08 17:22 CET)
+--------------------
+
+Surrounded NaN awareness test with AC_MSG_CHECKING/RESULT
+
+Configure shows now: "checking for NaN awareness in C compiler... yes".
+Please change the message text if it is not appropriate.
+
+  plplot  sysloc.in  1.55
+
+
+Commit from jcard (2003-10-08 16:51 CET)
+-----------------
+
+Make test on simple NaN operations
+
+libscirocsa/nn can only be compiled if the OS/C compiler is NaN aware.  If
+this test fails they are disabled.  For this test to suceed, the correct
+CFLAGS must be passed to the C compiler.
+
+  plplot  sysloc.in  1.54
+
+
+Commit from jcard (2003-10-08 16:15 CET)
+-----------------
+
+The #, as in #define, should be in the first column, as Compaq C complains.
+
+  plplot  examples/c/x21c.c  1.9
+
+
+Commit from rlaboiss (2003-10-08 15:51 CET)
+--------------------
+
+Added CFLAGS and CXXFLAGS
+
+The CFLAGS and CXXFLAGS variables have been added to the calls of
+plplot_libtool in examples/c/Makefile and examples/c++/Makefile,
+respectively.  They get their values from the AC_SUBST variables of same
+name.
+
+  plplot  examples/c/Makefile.examples.in    1.11
+  plplot  examples/c++/Makefile.examples.in  1.10
+
+
+Commit from rlaboiss (2003-10-08 15:48 CET)
+--------------------
+
+Added -mieee to CXXFLAGS when neeeded.
+
+Setting the CXXFLAGS variable seems to be necessary for compiling the C++
+examples on the Alpha architecture, even when the -mieee option is only
+needed for compiling the libcsirocsa and libcsironn libraries.
+
+  plplot  sysloc.in  1.53
+
+
+Commit from mlebrun (2003-10-08 11:17 CET)
+-------------------
+
+Removed references to plsc -- drivers should use pls, which is passed in.
+Also minor formatting fixes.
+
+  plplot  drivers/tk.c     1.80
+  plplot  drivers/tkwin.c  1.17
+  plplot  drivers/xwin.c   1.111
+
+
+Commit from rlaboiss (2003-10-07 18:23 CET)
+--------------------
+
+Avoid abortion of configure when python is not found
+
+Redefine AC_MSG_ERROR as AC_MSG_WARN around the call to AM_PATH_PYTHON, such
+that if python is not found, configure will not stop.
+
+  plplot  configure.ac  1.107
+
+
+Commit from rlaboiss (2003-10-05 01:42 CET)
+--------------------
+
+Removed csa_internal.h from EXTRA_DIST.
+
+  plplot  lib/csa/Makefile.am  1.8
+
+
+Commit from airwin (2003-10-04 23:05 CET)
+------------------
+
+This is the long-promised update of this basic documentation file for
+writing device drivers for PLplot.
+
+  plplot  drivers/README.drivers  1.5
+
+
+Commit from jcard (2003-10-04 22:32 CET)
+-----------------
+
+Update to nn version 1.38
+
+  plplot  src/plgridd.c  1.6
+
+
+Commit from jcard (2003-10-04 22:29 CET)
+-----------------
+
+Update to nn version 1.38
+
+  plplot  lib/nn/Makefile.am  1.9
+  plplot  lib/nn/delaunay.c   1.3
+  plplot  lib/nn/delaunay.h   1.2
+  plplot  lib/nn/hash.c       1.2
+  plplot  lib/nn/hash.h       1.2
+- plplot  lib/nn/linear.c     1.3
++ plplot  lib/nn/lpi.c        1.1
+  plplot  lib/nn/nan.h        1.2
+  plplot  lib/nn/nn.h         1.2
+  plplot  lib/nn/nnai.c       1.2
+  plplot  lib/nn/nncommon.c   1.3
+  plplot  lib/nn/nnpi.c       1.3
+  plplot  lib/nn/version.h    1.2
+
+
+Commit from jcard (2003-10-04 22:25 CET)
+-----------------
+
+Not needed in csa version 0.22
+
+- plplot  lib/csa/csa_internal.h  1.2
+
+
+Commit from jcard (2003-10-04 22:24 CET)
+-----------------
+
+Update to csa version 0.22
+
+  plplot  lib/csa/csa.c      1.4
+  plplot  lib/csa/csa.h      1.2
+  plplot  lib/csa/nan.h      1.2
+  plplot  lib/csa/version.h  1.2
+
+
+Commit from airwin (2003-10-04 19:53 CET)
+------------------
+
+Put in EXEEXT (executable extension) support for those platforms like Cygwin
+that require it.  Also, make the clean and all targets identical.
+
+  plplot  examples/c/Makefile.examples.in    1.10
+  plplot  examples/c++/Makefile.examples.in  1.9
+  plplot  examples/f77/Makefile.examples.in  1.7
+  plplot  examples/tk/Makefile.examples.in   1.7
+
+
+Commit from airwin (2003-10-04 14:08 CET)
+------------------
+
+rm ==> rm -f
+
+  plplot  examples/c/Makefile.examples.in  1.9
+
+
+Commit from airwin (2003-10-03 18:28 CET)
+------------------
+
+AWI for Andrew Ross <andrewr@coriolis.greenend.org.uk>. Correct problem with
+too many lines commented out while removing the plinit() calls from the
+plstream constructor.  This two-line change to the API does not affect the
+current examples, but according to Andrew does affect other programmes using
+the PLplot C++ API.
+
+  plplot  bindings/c++/plstream.cc  1.17
+
+
+Commit from airwin (2003-10-02 08:47 CET)
+------------------
+
+Bug fix for changed way we now handle libltdl.
+Only do libltdl directory for case when dyndrivers are enabled.
+
+  plplot  Makefile.am  1.27
+
+
+Commit from airwin (2003-10-01 23:05 CET)
+------------------
+
+Update documentation to reflect building of installed java examples that
+now occurs automatically and the new installed location for the module
+(DLL) for the java PLplot interface.
+
+  plplot  bindings/java/README.javaAPI  1.6
+
+
+Commit from airwin (2003-10-01 22:52 CET)
+------------------
+
+Complete reorganization following what is done for
+../../bindings/python/Makefile.am.
+
+Note that install-exec-hook: is now used to compile all the installed java
+files rather than compiling them in a local directory underneath
+bindings/java before installation, and this reduces a lot of clutter that
+was occurring before.
+
+Another notable change is the java module that interfaces to PLplot is no
+longer built like a full-blown library with a version number, precision tag,
+etc. with installation into $prefix/lib with appropriate version number
+symlinks.  Instead, it is built similarly to the python module and installed
+in the location where the core java and compiled class files are installed.
+
+  plplot  bindings/java/Makefile.am  1.20
+
+
+Commit from airwin (2003-10-01 22:41 CET)
+------------------
+
+For PLStreamc.java,  change from
+
+System.loadLibrary( plplot.core.config.libname );
+
+to
+
+System.load( plplot.core.config.libname );
+
+The former requires setting LD_LIBRARY_PATH on Linux/Unix systems (ugh, that
+is old-fashioned!).
+
+The latter requires an absolute path name + exact name of dynamically loaded
+module which is setup in configure.ac and configured using config.java.in.
+
+Yipee! No more setting of LD_LIBRARY_PATH is required for PLplot java use!
+
+  plplot  bindings/java/PLStreamc.java  1.2
+  plplot  bindings/java/config.java.in  1.3
+
+
+Commit from airwin (2003-10-01 22:29 CET)
+------------------
+
+* Only do libltdl related actions if dyndrivers is enabled.
+
+* Define AC_SUBSTituted variables JAVA_INSTDIR and PLPLOTJAVAC_WRAP_DLL
+for the absolute path of the Java install location, and the name of the
+module for interfacing java to PLplot that is (now) installed in that
+location.
+
+  plplot  configure.ac  1.106
+
+
+Commit from airwin (2003-10-01 22:22 CET)
+------------------
+
+Add another macro, GET_DLLNAME, for getting the name for dynamically loaded
+libraries (modules).  This macro has largely been copied from GET_DLNAME.
+On many systems the name for modules is just simply namestem.so, but we
+cannot assume that for all Unix platforms.
+
+  plplot  acinclude.m4  1.10
+
+
+Commit from airwin (2003-10-01 22:12 CET)
+------------------
+
+Tweak wording to reflect Mac OS X success.
+
+  plplot  bindings/python/README.pythonbuild  1.8
+
+
+Commit from airwin (2003-10-01 22:10 CET)
+------------------
+
+Drop -no-undefined from LDFLAGS for the creation of the module that will be
+dynamically loaded by python. It makes no sense to resolve every reference
+at link time since python will be supplying the references to the python
+library names at dynamic load time. (Thanks to Rob Managan for his Mac OS X
+error report on this issue.)
+
+  plplot  bindings/python/Makefile.am  1.21
+
+
+Commit from airwin (2003-10-01 22:03 CET)
+------------------
+
+Update documentation reflecting the automatic build of the examples by
+make install.
+
+  plplot  examples/java/README.javademos  1.4
+
+
+Commit from airwin (2003-10-01 21:59 CET)
+------------------
+
+Update commentary.
+
+  plplot  test/test_java.sh  1.2
+
+
+Commit from airwin (2003-10-01 21:54 CET)
+------------------
+
+Compile java examples after installation.  This is contrary to what we do
+for our other compiled language examples, but seems consistent with what
+is normally done for distribution of java software.
+
+  plplot  examples/java/Makefile.am  1.3
+
+
+Commit from airwin (2003-10-01 21:50 CET)
+------------------
+
+$(LN_S) must be preceded by rm -f.  (Thanks to Rob Managan for his error
+report concerning this issue.)
+
+  plplot  examples/c++/Makefile.am  1.10
+
+
+Commit from airwin (2003-10-01 21:38 CET)
+------------------
+
+As discussed on the list deal with SourceForge username consistently both
+for configure time using the --with-www-user=NAME option and at make time
+overriding the WWW_USER variable using
+
+make WWW_USER=NAME
+
+Previously, overriding the make variable required a trailing @ in the NAME,
+but now NAME is treated identically in both cases with no trailing @ required.
+
+  plplot  doc/docbook/docbook.m4       1.13
+  plplot  doc/docbook/src/Makefile.am  1.54
+
+
+Commit from rlaboiss (2003-10-01 12:58 CET)
+--------------------
+
+Better wording in comment for PL_DOUBLE
+
+The comment preceeding #define PL_DOUBLE is now clearer.  Thanks to Arjen
+Markus <arjen.markus@wldelft.nl> for the suggestion.
+
+  plplot  configure.ac           1.105
+  plplot  include/plConfig.h.in  1.6
+
+
+Commit from airwin (2003-09-30 18:45 CET)
+------------------
+
+AWI for Andrew Ross <andrewr@coriolis.greenend.org.uk>.
+
+Adjust examples to recent C++ API update (plflush to flush and pl_cmd to
+cmd).
+
+Correct a couple of mistakes in the examples which resulted in differences
+between the C and C++ output for x04 and x16.
+
+  plplot  examples/c++/x01.cc  1.5
+  plplot  examples/c++/x04.cc  1.3
+  plplot  examples/c++/x14.cc  1.4
+  plplot  examples/c++/x16.cc  1.3
+
+
+Commit from airwin (2003-09-30 18:41 CET)
+------------------
+
+AWI for Andrew Ross <andrewr@coriolis.greenend.org.uk>
+WARNING: API change:
+plflush ==> flush
+and pl_cmd ==> cmd
+
+As discussed on list this change was made to be consistent with all other
+C++ PLplot API where the unnecessary (for C++) pl suffix had previously been
+removed.
+
+  plplot  bindings/c++/plstream.cc  1.16
+  plplot  bindings/c++/plstream.h   1.12
+
+
+Commit from airwin (2003-09-30 02:29 CET)
+------------------
+
+Document plsetopt.
+
+  plplot  doc/docbook/src/api.xml           1.56
+  plplot  doc/docbook/src/plplotdoc.xml.in  1.30
+  plplot  doc/docbook/src/simple.xml        1.10
+
+
+Commit from aroach (2003-09-28 15:42 CET)
+------------------
+
+Made a couple of changes to the readme to reflect building on XP, and
+presumably 2K and NT.
+
+  plplot  sys/dos/djgpp/readme  1.8
+
+
+Commit from aroach (2003-09-28 15:39 CET)
+------------------
+
+Made three small changes to GNUSVGA.C to reflect a namespace change in
+GRX20 versions >2.4.4 which prefixed "Gr" in front of the sub routine to
+save JPEGs.
+
+  plplot  sys/dos/djgpp/src/gnusvga.c  1.16
+
+
+Commit from aroach (2003-09-28 15:35 CET)
+------------------
+
+Small change to MTMF.BAT to get rid of a superflious error
+
+  plplot  sys/dos/djgpp/mkmf.bat  1.9
+
+
+Commit from aroach (2003-09-28 15:34 CET)
+------------------
+
+Minor changes to DJGPPs' build to make sure it works well with GCC 3.3.1
+
+  plplot  sys/dos/djgpp/cf/djgpp.in    1.14
+  plplot  sys/dos/djgpp/cf/initlib.in  1.8
+
+
+Commit from airwin (2003-09-28 07:10 CET)
+------------------
+
+As part of dealing with cygwin platform issues I have reconsidered the
+autotools chapter on interlibrary dependencies.  The changes here are meant
+to follow those precepts more closely along with rules about order of
+linking for systems where that matters for static libraries. libtool takes
+care of interlibrary dependencies so long as you identify just the
+_directly_ dependent libraries using a *.la suffix.  However, for
+interdependent system libraries which are (quite possibly) not linked by
+libtool you cannot rely on this mechanism to keep track of the library
+dependencies so it is necessary to mention _all_ interdependent system
+libraries in the correct order on the libtool line when any one of them
+is referred to.
+
+* The order of interdependent system libraries is libitk, libtk, libitcl,
+libtcl, libX11, libm, and all changes here involve those libraries.
+
+* If libitk is referred to you must also mention libtk.
+
+* If libtk is referred to you must also mention libtcl, libX11 and libm.
+
+* If libtcl is referred to you must also mention libm.  (This fixes an
+AIX problem mentioned some time ago for libtclmatrix.)
+
+* if libX11 is referred to you must also mention libm.
+
+The fixes here make no essential difference on Linux, but they are expected
+to reduce linking errors on Unix platforms.
+
+  plplot  bindings/tcl/Makefile.am  1.17
+  plplot  drivers/Makefile.am       1.31
+
+
+Commit from airwin (2003-09-28 00:46 CET)
+------------------
+
+Drop extraneous tcl/tk linking flags from pltcl_LDFLAGS.  This makes the
+style consistent with what is done for plserver in the bindings/tk directory.
+
+  plplot  utils/Makefile.am  1.8
+
+
+Commit from rlaboiss (2003-09-27 21:29 CET)
+--------------------
+
+Oops, forgot "\" at the end of the line in my last commit.
+
+  plplot  lib/nn/Makefile.am  1.8
+
+
+Commit from rlaboiss (2003-09-27 21:06 CET)
+--------------------
+
+Fixed typo in libtool option "-version" => "-version-info"
+
+  plplot  lib/csa/Makefile.am  1.7
+  plplot  lib/nn/Makefile.am   1.7
+
+
+Commit from airwin (2003-09-27 19:23 CET)
+------------------
+
+Added $(RPATH) -no-undefined to libcsirocsa_la_LDFLAGS to conform with what
+we do for all other libraries, and also to remove a warning message on
+cygwin (which does not tolerate the possibility of unresolved references
+when creating libraries).
+
+  plplot  lib/csa/Makefile.am  1.6
+
+
+Commit from jcard (2003-09-27 02:20 CET)
+-----------------
+
+Make this example consistent with other frontend examples: check if log
+argument is <=0 before applying the log, instead calculating the log and
+changing NaNs to -5.
+
+  plplot  bindings/octave/demos/x08c.m  1.10
+
+
+Commit from rlaboiss (2003-09-26 11:15 CET)
+--------------------
+
+In include/plplotP.h, include <sys/types.h> before #include <dirent.h>
+conditionally to NEED_SYS_TYPES_H, which is AC_DEFINEd in sysloc.in for the
+broken MacOSX system (darwin*).
+
+  plplot  sysloc.in          1.52
+  plplot  include/plplotP.h  1.71
+
+
+Commit from rlaboiss (2003-09-25 10:01 CET)
+--------------------
+
+Changed libnn => libcsironn and libcsa => libcsirocsa to avoid nameclashes
+in the future.
+
+  plplot  sysloc.in            1.51
+  plplot  lib/nn/Makefile.am   1.6
+  plplot  lib/csa/Makefile.am  1.5
+
+
+Commit from airwin (2003-09-24 23:45 CET)
+------------------
+
+Fix bug for case when any of libgd, libpng, libjpeg, or libz are available
+only as a static library.
+
+  plplot  configure.ac  1.104
+
+
+Commit from airwin (2003-09-24 21:48 CET)
+------------------
+
+Allow possibility of DLL's on cygwin as recommended by autobook.
+
+  plplot  configure.ac  1.103
+
+
+Commit from jcard (2003-09-24 18:01 CET)
+-----------------
+
+Include errno.h, as RH-9.? and SuSE-8.2, at least, need it.
+
+  plplot  lib/csa/csa.c  1.3
+
+
+Commit from rlaboiss (2003-09-24 17:51 CET)
+--------------------
+
+In the check for the Swig version, removed code for sed that was too GNUish.
+The check could now be much more portable.
+
+Also, Added a pair of AC_MSG_CHECKING/AC_MSG_RESULT around the version
+number check.  In the configure output, something like this will appear now:
+
+    checking Swig version... 1.3.17u-20021128-1508
+
+[ This makes me remember that we should add similar things at some other
+  places in configure.ac and sysloc.in.  I have also spotted some improper
+  uses of AC_MSG_RESULT, but this will be fixed when time permits. ]
+
+Finally, the robustness of the code has been improved.  In particular, if
+something went wrong with the setting of teh variable SWIG_VERSION_MICRO,
+then configure choked when doing an arithmetic expansion $(( ... )).  This
+is fixed now.
+
+  plplot  sysloc.in  1.50
+
+
+Commit from airwin (2003-09-23 21:34 CET)
+------------------
+
+Connected changes to drivers/Makefile.am, lib/nn/Makefile.am, and
+src/Makefile.am
+
+Link xwin driver with libpthreads (or if disable dynamic drivers so that
+xwin driver embedded in libplplot, link libplplot with libpthreads).
+
+Link libnn with libqhull
+
+Do not link libplplot with libqhull
+
+Do not link libplplot with libpthreads (except for disabled dynamic drivers
+case mentioned above and dealt with in the drivers directory).
+
+  plplot  drivers/Makefile.am  1.30
+  plplot  lib/nn/Makefile.am   1.5
+  plplot  src/Makefile.am      1.10
+
+
+Commit from airwin (2003-09-23 00:44 CET)
+------------------
+
+Tweaked wording (docbook2x problem) on problem of missing info references in
+Chapter 14.
+
+  plplot  PROBLEMS  1.24
+
+
+Commit from airwin (2003-09-22 19:02 CET)
+------------------
+
+AWI for Andrew Ross <andrewr@coriolis.greenend.org.uk>.
+
+Apply "using namespace std" patch to improve style as per discussion on
+list.
+
+  plplot  examples/c++/x01.cc    1.4
+  plplot  examples/c++/x01cc.cc  1.8
+  plplot  examples/c++/x02.cc    1.3
+  plplot  examples/c++/x03.cc    1.2
+  plplot  examples/c++/x04.cc    1.2
+  plplot  examples/c++/x05.cc    1.2
+  plplot  examples/c++/x06.cc    1.2
+  plplot  examples/c++/x07.cc    1.2
+  plplot  examples/c++/x08.cc    1.4
+  plplot  examples/c++/x09.cc    1.2
+  plplot  examples/c++/x10.cc    1.2
+  plplot  examples/c++/x11.cc    1.2
+  plplot  examples/c++/x12.cc    1.2
+  plplot  examples/c++/x13.cc    1.2
+  plplot  examples/c++/x14.cc    1.3
+  plplot  examples/c++/x15.cc    1.2
+  plplot  examples/c++/x16.cc    1.2
+  plplot  examples/c++/x17.cc    1.3
+  plplot  examples/c++/x18.cc    1.2
+  plplot  examples/c++/x19.cc    1.2
+  plplot  examples/c++/x20.cc    1.3
+  plplot  examples/c++/x21.cc    1.2
+
+
+Commit from airwin (2003-09-21 03:55 CET)
+------------------
+
+Add two issues: generated info file names should be versioned, and xml backend
+screws up the info references in Chapter 14 for some reason.
+
+  plplot  PROBLEMS  1.23
+
+
+Commit from airwin (2003-09-20 23:36 CET)
+------------------
+
+Remove NOBRAINDEAD from source tree (except for sys/win-tk and
+sys/win32/msdev which I leave to Vince and Olof) as per discussion on list.
+
+  plplot  PROBLEMS                             1.22
+  plplot  bindings/octave/plplot_octave_org.h  1.17
+  plplot  doc/docbook/src/c.xml                1.5
+  plplot  include/plConfig.h.in                1.5
+  plplot  include/plplot.h                     1.143
+
+
+Commit from rlaboiss (2003-09-20 10:00 CET)
+--------------------
+
+Quick hack to avoid garbage being stored in the reconfig script when
+configure is called recursively with the --fallback-echo option (for
+instance, this happens for the checks of maximum command length by the
+libtool configuration).
+
+This problem made surface now that we decided to use Libtool 1.5 instead of
+1.4.  However, it could have arisen before, because the --falback option and
+the implicit rule that the configure script can be called recursively using
+this option have always been present in autoconf. In sum, we might try in
+the future to restructure configure.ac, in particular rethinking about the
+non-orthodox stuff before AC_INIT.
+
+At any rate, the generation of the reconfig script has been superseded by
+"./config.status --recheck".
+
+  plplot  configure.ac  1.102
+
+
+Commit from rlaboiss (2003-09-19 10:23 CET)
+--------------------
+
+The robustness of the macro has been improved.  If GET_DLNAME is called
+before AC_LIBTOOL_PROG, the configure script will exit now with an
+appropriate error message.  This is not intended for general users, but only
+for developers who make changes to configure.ac.
+
+Some comments about the last changes done by Alan:
+
+In the GET_DLNAME macro, $LD was changed to $CC as the command when invoking
+libtool --mode=link. Actually, the name of this command is irrelevant to the
+actions taken by the libtool script.  However, in version 1.5 (or 1.5.0a) of
+libtool, the name is used to guess a "tagged configuration", in case the
+option --tag has not been specified.  Using $LD would then trigger an error.
+I hope that this macro will be portable across different platforms. The
+future will tell us.
+
+  plplot  acinclude.m4  1.9
+
+
+Commit from airwin (2003-09-19 02:54 CET)
+------------------
+
+Drop the use of LIBRARY_VERSION from these scripts and instead use the more
+specific DLNAME_LIBPLPLOT, DLNAME_LIBPLPLOTD, DLNAME_LIBPLPLOTTCLTK, and
+DLNAME_LIBPLPLOTTCLTKD dlnames that are needed for the various libraries and
+which should be defined well (using libtool in configure.ac) for all Unix
+platforms.
+
+  plplot  bindings/tcl/pkgIndex.tcl.in        1.5
+  plplot  bindings/tk/pkgIndex.tcl.in         1.7
+  plplot  bindings/tk-x-plat/pkgIndex.tcl.in  1.7
+
+
+Commit from airwin (2003-09-19 02:50 CET)
+------------------
+
+Use Rafael's new GET_DLNAME macro to determine the following dlnames:
+DLNAME_LIBPLPLOT, DLNAME_LIBPLPLOTD, DLNAME_LIBPLPLOTTCLTK, and
+DLNAME_LIBPLPLOTTCLTKD.  These library dlnames are used to configure the
+various bindings/*/pkgIndex.tcl scripts.  Note the scripts currently require
+both the single and double-precision names.
+
+Drop LIBRARY_VERSION which is no longer used in these scripts.
+
+  plplot  configure.ac  1.101
+
+
+Commit from airwin (2003-09-19 02:44 CET)
+------------------
+
+Change $LD to $CC in Rafael's new GET_DLNAME macro.  $LD caused "tag" errors
+for my particular brand of libtool-1.5 while $CC is fine.
+
+  plplot  acinclude.m4  1.8
+
+
+Commit from airwin (2003-09-19 02:39 CET)
+------------------
+
+Drop example 21 from non-interactive tests because it has variable results
+(the time values printed on axis) depending on computer load, resolution of
+the timer, etc.
+
+  plplot  test/test_c.sh    1.7
+  plplot  test/test_cxx.sh  1.6
+
+
+Commit from airwin (2003-09-19 02:26 CET)
+------------------
+
+In directions change ./plserver ==> plserver
+
+  plplot  examples/tk/README.tkdemos  1.10
+
+
+Commit from airwin (2003-09-18 19:57 CET)
+------------------
+
+Test log argument for > 0. to avoid math errors rather than trying to
+intercept those math errors afterward.
+
+  plplot  examples/c/x08c.c        1.39
+  plplot  examples/c++/x08.cc      1.3
+  plplot  examples/java/x08.java   1.18
+  plplot  examples/python/xw08.py  1.28
+  plplot  examples/tcl/x08.tcl     1.20
+
+
+Commit from airwin (2003-09-18 18:10 CET)
+------------------
+
+endl ==> std::endl (as suggested by Joao).
+
+  plplot  examples/c++/x01.cc  1.3
+  plplot  examples/c++/x14.cc  1.2
+  plplot  examples/c++/x20.cc  1.2
+
+
+Commit from airwin (2003-09-18 16:28 CET)
+------------------
+
+AWI for Andrew Ross <andrewr@coriolis.greenend.org.uk>.  Sort out previous
+problems with getting usleep call and associated code to compile.
+
+  plplot  examples/c++/x01.cc  1.2
+  plplot  examples/c++/x17.cc  1.2
+
+
+Commit from rlaboiss (2003-09-18 09:27 CET)
+--------------------
+
+Debian release 5.2.1-19
+
+  plplot  debian/changelog  1.44
+
+
+Commit from rlaboiss (2003-09-18 09:16 CET)
+--------------------
+
+Added the macro GET_DLNAME(STEM,VERSION_INFO,VARIABLE) to guess the dlname
+of a library to be installed by libtool.
+
+For instance, if the following code is used in configure.ac:
+
+    GET_DLNAME([plplottcltk$LIB_TAG], [$SOVERSION], [DLNAME_TCL])
+    echo $DLNAME_TCL
+
+it will produce:
+
+    libplplottcltkd.so.5
+
+Notice that the code above will work only if placed after the call to
+AM_PROG_LIBTOOL and the definitions of $SOVERSION and $LIB_TAG.
+
+  plplot  acinclude.m4  1.7
+
+
+Commit from rlaboiss (2003-09-17 22:18 CET)
+--------------------
+
+Made the output of the echo commands that appear before AC_INIT go to stderr
+instead of stdout.  This fixes a bug during libtool configuration, since it
+relies on a proper functioning of "./configure --fallback-echo" when trying
+to determine the maximum command line length.
+
+  plplot  configure.ac  1.100
+
+
+Commit from airwin (2003-09-17 21:00 CET)
+------------------
+
+Replace isinf logic by simple check for zero log argument.
+
+Fix bug of uninitialized zmin and zmax.
+
+  plplot  examples/c++/x08.cc  1.2
+
+
+Commit from rlaboiss (2003-09-16 12:35 CET)
+--------------------
+
+Debian release 5.2.1-18
+
+  plplot  debian/changelog  1.43
+  plplot  debian/rules      1.33
+
+
+Commit from airwin (2003-09-16 10:05 CET)
+------------------
+
+Commit lots of changes to upgrade this from plplot-5.2.0 to the latest
+cvs version of Plplot as of 2003-09-16.
+
+Note some additional refinement should be made for the final version of this
+spec file for the next release.
+
+* release version string (of course!)
+
+* install rpm of libqhull on RedHat 7.3 build system, and change file list accordingly to
+include libnn.*  This is required to get 21st example to run properly.
+
+* plus lots of minor plplot tarball issues that I have discussed privately
+with Rafael.
+
+  plplot  rpm/plplot_redhat7.3.spec  1.4
+
+
+Commit from rlaboiss (2003-09-15 21:08 CET)
+--------------------
+
+Added --force option to the call of libtoolize, forcing the file
+ltmain.sh to be overwritten.  This is crucial when running bootstrap.sh with
+a new version of Libtool in a non-fresh build tree.
+
+  plplot  bootstrap.sh  1.24
+
+
+Commit from rlaboiss (2003-09-12 08:44 CET)
+--------------------
+
+Added year 2002 for copyright entry for AWI and RL.
+
+  plplot  doc/docbook/COPYING  1.2
+
+
+Commit from vincentdarley (2003-09-10 16:34 CET)
+-------------------------
+
+updated build for current plplot config
+
+  plplot  sys/win-tk/makePlplotStarkit.tcl  1.2
+  plplot  sys/win-tk/makefile.vc            1.11
+
+
+Commit from rlaboiss (2003-09-09 00:22 CET)
+--------------------
+
+Removed the single, obsolete paragraph in this chapter and replaced it by a
+short description of the new PLplot interface for the last version of
+the Perl Data Language.
+
+  plplot  doc/docbook/src/perl.xml  1.5
+
+
+Commit from rlaboiss (2003-09-09 00:19 CET)
+--------------------
+
+
+Added at the top of the source files, before the licensing terms, (1) a line
+containing the filename and a short description, and (2) the copyright
+notices with the years and the names of the authors.
+
+  plplot  doc/docbook/src/advanced.xml            1.22
+  plplot  doc/docbook/src/api-c.xml               1.7
+  plplot  doc/docbook/src/api-fortran.xml         1.6
+  plplot  doc/docbook/src/api.xml                 1.55
+  plplot  doc/docbook/src/bibliography.xml        1.4
+  plplot  doc/docbook/src/c.xml                   1.4
+  plplot  doc/docbook/src/cplus.xml               1.4
+  plplot  doc/docbook/src/drivers.xml             1.5
+  plplot  doc/docbook/src/fortran.xml             1.3
+  plplot  doc/docbook/src/gui.xml                 1.3
+  plplot  doc/docbook/src/intro.xml               1.11
+  plplot  doc/docbook/src/os_notes.xml            1.4
+  plplot  doc/docbook/src/perl.xml                1.4
+  plplot  doc/docbook/src/plplotdoc-html.dsl.in   1.7
+  plplot  doc/docbook/src/plplotdoc-print.dsl.in  1.6
+  plplot  doc/docbook/src/plplotdoc.xml.in        1.29
+  plplot  doc/docbook/src/python.xml              1.4
+  plplot  doc/docbook/src/simple.xml              1.9
+  plplot  doc/docbook/src/tcl.xml                 1.5
+  plplot  doc/docbook/src/wish.xml                1.5
+
+
+Commit from rlaboiss (2003-09-08 23:39 CET)
+--------------------
+
+
+Added a command to remove the useless "&#13;" entities that are introduced
+in the html files by (open)jade.  They were bugging me when I looked at the
+documentations with high-end browsers, like links. :-)
+
+  plplot  doc/docbook/src/Makefile.am  1.53
+
+
+Commit from rlaboiss (2003-09-08 23:36 CET)
+--------------------
+
+Moved some formatting style settings from plplotdoc-html.dsl.in into
+style.css, where it properly belongs.  Also, since the CSS language is more
+powerful for that, the style of verbatim material and function definitions
+in the API is kinda "improved".
+
+  plplot  doc/docbook/src/plplotdoc-html.dsl.in  1.6
+  plplot  doc/docbook/src/stylesheet.css         1.2
+
+
+Commit from airwin (2003-09-07 04:51 CET)
+------------------
+
+Fixed character size inconsistency with corresponding C example by putting
+in missing call to pls-->schr.  Postscript results are now identical. Only
+remaining differences with C examples are for x04, x16, and x21, and those
+differences are so subtle they cannot be seen visually (similar to java
+versus C differences or platform differences).  Probably, these subtle
+issues are due to some floating-point logic issues deep in the core of
+Plplot that are triggered by slightly different order of computations in the
+various platforms/front-end languages.  One candidate for that deep issue is
+the 16-bit resolution of the various drivers so when Geoffrey generalizes
+this to the option of 32-bit (or even 64 bit) we may see all these subtle
+differences between platforms/languages go away.
+
+  plplot  examples/c++/x02.cc  1.2
+
+
+Commit from airwin (2003-09-06 20:12 CET)
+------------------
+
+Brought this file up to date with recent C++ improvements, other issues that
+have become resolved, and new issues recognized since the last update.
+
+Developers, please have a look at this file and edit it if you feel there
+are issues that should be mentioned/dropped/rewritten.
+
+On the whole, this file is getting gradually smaller which reflects the
+patient and much-appreciated efforts of the developers to constantly improve
+PLplot.
+
+  plplot  PROBLEMS  1.21
+
+
+Commit from airwin (2003-09-06 19:33 CET)
+------------------
+
+Document recent C++ enhancements.
+
+  plplot  ChangeLog  1.45
+
+
+Commit from airwin (2003-09-03 22:47 CET)
+------------------
+
+Remove DRIVERS_DB which is no longer used anywhere.
+
+  plplot  include/plConfig.h.in  1.4
+
+
+Commit from airwin (2003-09-03 22:45 CET)
+------------------
+
+Put symlink in installed C++ examples for lena.pgm so that x20 will work
+properly.
+
+  plplot  examples/c++/Makefile.am  1.9
+
+
+Commit from rlaboiss (2003-09-02 19:41 CET)
+--------------------
+
+Major change:
+
+    * Added a AC_SUSTitutable variable called CPP_SOVERSION in configure.ac.
+      This variable is used in option -version-info for setting the
+      soversion of libplplotcxx in file bindings/c++/Makefile.am.
+
+Minor changes (in configure.ac):
+
+    * For consistency reason, set RELEASE_DATE=2003-04-22, the actual date
+      of release 5.2.1.
+
+    * Added some commentaries to the comments preceding the definition of
+      SOVERSION.  In particular, the statements about the "secret" libtool
+      code are not true.
+
+  plplot  bindings/c++/Makefile.am  1.12
+  plplot  configure.ac              1.99
+
+
+Commit from airwin (2003-09-02 08:13 CET)
+------------------
+
+Configure
+
+HAVE_FINITE
+HAVE_ISINF
+HAVE_ISNAN
+HAVE_UNISTD_H
+HAVE_USLEEP
+
+following exactly what is done in config.h.in in the top-level directory.
+
+These #defines are all used in the examples and must be compiled using the
+installed system (which does not have access to configured config.h results).
+
+  plplot  include/plConfig.h.in  1.3
+
+
+Commit from airwin (2003-09-02 03:49 CET)
+------------------
+
+AWI for Andrew Ross <andrewr@coriolis.greenend.org.uk> who kindly updated
+the C++ interface (under the LGPL) to bring it into the modern era.  At
+least 13 API additions were made.
+
+N.B. the method of initializing plplot under the C++ interface has been
+changed. So this is an API breakage, but it allows, for example, the user to
+use command-line options for the first time for that interface.  Also, an
+extensive set of C++ examples (clones of the corresponding C/python/java/tcl
+examples) have been committed that use the updated C++ interface so it
+should not be a difficult change for the user to make.
+
+  plplot  bindings/c++/plstream.cc  1.15
+  plplot  bindings/c++/plstream.h   1.11
+
+
+Commit from airwin (2003-09-02 03:39 CET)
+------------------
+
+Take advantage of command-line options that are now available for C++.
+Also, do all the new C++ examples.
+
+  plplot  test/test_cxx.sh  1.5
+
+
+Commit from airwin (2003-09-02 03:38 CET)
+------------------
+
+Replace mv by mv -f in install-hook.  This should work better cross-platform
+for the case where you are installing on top of an area where plplot was
+installed before.
+
+  plplot  examples/c/Makefile.am    1.14
+  plplot  examples/f77/Makefile.am  1.9
+
+
+Commit from airwin (2003-09-02 03:34 CET)
+------------------
+
+Extend the install to include the new examples. Also reorganize in better
+style (no more .samename).
+
+  plplot  examples/c++/Makefile.am  1.8
+
+
+Commit from airwin (2003-09-02 03:31 CET)
+------------------
+
+Extend the build list and clean list to the new examples.
+
+  plplot  examples/c++/Makefile.examples.in  1.8
+
+
+Commit from airwin (2003-09-02 03:27 CET)
+------------------
+
+Change this unique c++ example to use the updated C++ interface.  Command-line
+options now work!
+
+  plplot  examples/c++/x01cc.cc  1.7
+
+
+Commit from airwin (2003-09-02 03:26 CET)
+------------------
+
+AWI for Andrew Ross <andrewr@coriolis.greenend.org.uk>.  Andrew kindly
+donated these clones of the C/python/java/tcl examples under the LGPL.
+
+I added the appropriate copyright line and (LGPL) copying conditions. I also
+removed java commentary that had been inadvertently copied for x01.cc from
+the java example.  I also temporarily disabled the HAVE_USLEEP code in
+x01.cc and x17.cc which does not work on Linux (at least on my Debian stable
+system).  Another issue is that x02, x04, x16, and x21 produce different
+results than the corresponding C examples.  There is an obvious problem for
+the second example, but the rest are subtle as in similar differences I
+find between java and c.  The good news is that the rest of the
+examples produce identical to C results which is a pretty good test that
+the C++ interface has now entered the modern era.
+
+Thanks Andrew!
+
++ plplot  examples/c++/x01.cc  1.1
++ plplot  examples/c++/x02.cc  1.1
++ plplot  examples/c++/x03.cc  1.1
++ plplot  examples/c++/x04.cc  1.1
++ plplot  examples/c++/x05.cc  1.1
++ plplot  examples/c++/x06.cc  1.1
++ plplot  examples/c++/x07.cc  1.1
++ plplot  examples/c++/x08.cc  1.1
++ plplot  examples/c++/x09.cc  1.1
++ plplot  examples/c++/x10.cc  1.1
++ plplot  examples/c++/x11.cc  1.1
++ plplot  examples/c++/x12.cc  1.1
++ plplot  examples/c++/x13.cc  1.1
++ plplot  examples/c++/x14.cc  1.1
++ plplot  examples/c++/x15.cc  1.1
++ plplot  examples/c++/x16.cc  1.1
++ plplot  examples/c++/x17.cc  1.1
++ plplot  examples/c++/x18.cc  1.1
++ plplot  examples/c++/x19.cc  1.1
++ plplot  examples/c++/x20.cc  1.1
++ plplot  examples/c++/x21.cc  1.1
+
+
+Commit from airwin (2003-09-02 02:45 CET)
+------------------
+
+Tweak.
+
+  plplot  examples/c++/.cvsignore  1.5
+
+
+Commit from airwin (2003-09-02 02:43 CET)
+------------------
+
+Put in copyright and copyright conditions (LGPL).
+
+  plplot  examples/java/x01.java  1.11
+  plplot  examples/java/x02.java  1.6
+  plplot  examples/java/x03.java  1.8
+  plplot  examples/java/x04.java  1.7
+  plplot  examples/java/x05.java  1.6
+  plplot  examples/java/x06.java  1.5
+  plplot  examples/java/x07.java  1.6
+  plplot  examples/java/x08.java  1.17
+  plplot  examples/java/x09.java  1.14
+  plplot  examples/java/x10.java  1.6
+  plplot  examples/java/x11.java  1.11
+  plplot  examples/java/x12.java  1.6
+  plplot  examples/java/x13.java  1.6
+  plplot  examples/java/x14.java  1.2
+  plplot  examples/java/x15.java  1.7
+  plplot  examples/java/x16.java  1.7
+  plplot  examples/java/x17.java  1.2
+  plplot  examples/java/x18.java  1.6
+  plplot  examples/java/x19.java  1.2
+
+
+Commit from airwin (2003-09-01 21:39 CET)
+------------------
+
+Enable java by default since that is a reasonably mature interface now.
+
+  plplot  configure.ac  1.98
+
+
+Commit from rlaboiss (2003-08-28 03:22 CET)
+--------------------
+
+Created a new AC_SUBSTitutable variable RELEASE_DATE in configure.ac.  This
+variable is automatically set in ISO 6801 formant (YYYY-MM-DD) by the
+bootstrap.sh script when options --version or --date-version are specified.
+For now, only plplotdoc.xml.in is using it, fixing that long-lasting bug in
+the "Release date" of the documentation.
+
+  plplot  bootstrap.sh                      1.23
+  plplot  configure.ac                      1.97
+  plplot  doc/docbook/src/plplotdoc.xml.in  1.28
+
+
+Commit from rlaboiss (2003-08-27 23:56 CET)
+--------------------
+
+* Added year 2002 for copyright entry of Alan and Rafael.
+
+* Fixed the Project-Date entity, which contains now the RCS keyword "Date",
+  and must be updated with CVS keyword substitution.  This is not a
+  completely satisfactory solution, because the "Date" keyword reflects only
+  the date of the last CVS checkin of the present file.  We ought to find a
+  way to update automatically the date of release of the documentation.
+
+  plplot  doc/docbook/src/plplotdoc.xml.in  1.27
+
+
+Commit from rlaboiss (2003-08-27 23:51 CET)
+--------------------
+
+Mangled the e-mail addresses appearing in mailto:s.  For emacs-friendliness,
+added "-*- html -*-" in a comment at the top.  Also, some paragraphas have
+been reformatted, but no content was changed.
+
+  plplot  doc/docbook/www/index.html.in.in  1.9
+
+
+Commit from rlaboiss (2003-08-26 18:28 CET)
+--------------------
+
+Makefile.examples was wrongly going into the distribution tarball, because
+it was included in EXTRA_DIST through examples_c_DATA.  A new variable
+called sources is created to avoid this problem.
+
+  plplot  examples/c/Makefile.am  1.13
+
+
+Commit from rlaboiss (2003-08-25 02:43 CET)
+--------------------
+
+This is the real Debian release 5.2.1-17.
+
+  plplot  debian/changelog  1.42
+  plplot  debian/control    1.33
+  plplot  debian/rules      1.32
+
+
+Commit from rlaboiss (2003-08-25 01:06 CET)
+--------------------
+
+
+Debian release 5.2.1-17.  From the changelog:
+
+  * Rebuilt against the new python2.3-dev itcl/itk 3.2 and iwidgets4
+    packages.
+  * debian/control:
+    - Bumped Standards-Version to 3.6.1.
+    - Bumped build-dependencies to python2.3, itcl3, and itk3.
+    - plplot-tcl depends now on iwidgets4.
+  * sysloc.in, configure.ac: Using patched version from CVS upstream with
+    fixes in the Python configuration and in the list of include
+    directories to find files itcl.h and itk.h.
+  * Used new CVS upstream version of the documentation files with
+    legacy license statement removed.  A new .orig.tar.gz was generated,
+    since it was impossible to patch binary files, like plplot-5.2.1.pdf.
+    The plplot-doc package is now DFSG compliant (closes: #202761).
+  * utils/plrender.c: Patched from CVS upstream.  From the commit log:
+    Comment out call to plSetInternalOpt which uses the tcl_cmd option
+    that has been disabled in plargs.c.  This fix solves the plrender
+    memory management problems and the crashes associated with plrender
+    and device tk.
+
+  plplot  debian/changelog  1.41
+  plplot  debian/control    1.32
+  plplot  debian/copyright  1.6
+  plplot  debian/rules      1.31
+
+
+Commit from rlaboiss (2003-08-24 22:59 CET)
+--------------------
+
+Changed the license terms for the PLplot Documentation, which is now like
+the FreeBSD Documentation License.  The changes:
+
+  * Changed the text of <legalnotice> in plplotdoc.xml.in (and also fixed
+    some typos in <copyright>, like Joao's name appearing twice).
+
+  *  Added a comment at the top of each xml and dsl file containing the
+     whole text of the license.
+
+  * Added the file doc/docbook/COPYING.  It is included in EXTRA_DIST of
+    file doc/docbook/Makefile.am and will appear in the source documentation
+    tarball, generated in doc/docbook/src/Makefile.am.
+
+  * Added Joao Cardoso in the doc/docbook/AUTHORS list.
+
+  * Fixed LGPL licensing text in some files.
+
+  plplot  doc/docbook/AUTHORS                     1.2
++ plplot  doc/docbook/COPYING                     1.1
+  plplot  doc/docbook/Makefile.am                 1.28
+  plplot  doc/docbook/docbook.m4                  1.12
+  plplot  doc/docbook/src/Makefile.am             1.52
+  plplot  doc/docbook/src/advanced.xml            1.21
+  plplot  doc/docbook/src/api-c.xml               1.6
+  plplot  doc/docbook/src/api-fortran.xml         1.5
+  plplot  doc/docbook/src/api.xml                 1.54
+  plplot  doc/docbook/src/bibliography.xml        1.3
+  plplot  doc/docbook/src/c.xml                   1.3
+  plplot  doc/docbook/src/cplus.xml               1.3
+  plplot  doc/docbook/src/drivers.xml             1.4
+  plplot  doc/docbook/src/fortran.xml             1.2
+  plplot  doc/docbook/src/gui.xml                 1.2
+  plplot  doc/docbook/src/intro.xml               1.10
+  plplot  doc/docbook/src/os_notes.xml            1.3
+  plplot  doc/docbook/src/perl.xml                1.3
+  plplot  doc/docbook/src/plplotdoc-html.dsl.in   1.5
+  plplot  doc/docbook/src/plplotdoc-print.dsl.in  1.5
+  plplot  doc/docbook/src/plplotdoc.xml.in        1.26
+  plplot  doc/docbook/src/python.xml              1.3
+  plplot  doc/docbook/src/simple.xml              1.8
+  plplot  doc/docbook/src/tcl.xml                 1.4
+  plplot  doc/docbook/src/wish.xml                1.4
+
+
+Commit from mlebrun (2003-08-24 21:44 CET)
+-------------------
+
+Re-enabled setting of the tcl_cmd internal opt.  Only affects plrender -dev
+tk, by adding a "back arrow" button for going backward in metafile.
+Previously this did not work correctly due to a problem with plargs.c, now
+fixed.
+
+  plplot  utils/plrender.c  1.62
+
+
+Commit from mlebrun (2003-08-24 21:42 CET)
+-------------------
+
+plstrdup() tcl_cmd string instead of copying the pointer, and remove
+(disabled) status from help entry.
+
+  plplot  src/plargs.c  1.64
+
+
+Commit from mlebrun (2003-08-24 19:01 CET)
+-------------------
+
+Many more improvements to fill clipping.  Handle cases where fill polygon
+intersects bounding box on two edges by calculating the approximate
+circulation of the contour and filling in the edge vertices appropriately.
+With these changes the clipping performs accurately up to reasonably high
+levels of zooming using x16c as a test case.  At some point (as one continues
+to zoom in) it starts to have problems, which I suspect to be a problem in
+clipline() or related to fidelity (or both).  Further work on this will have
+to wait, as for now I'm out of time.
+
+  plplot  src/plline.c  1.29
+
+
+Commit from mlebrun (2003-08-24 12:44 CET)
+-------------------
+
+More updates to polygon fill: fixed a couple bugs with the previous change,
+structural changes to make this easier to understand/modify.
+
+  plplot  src/plline.c  1.28
+
+
+Commit from mlebrun (2003-08-24 00:56 CET)
+-------------------
+
+Correctly treat the case where one or two corners are encircled by the polygon
+fill.  I gave up on this problem 9 years ago but it's actually not that bad.
+A good test case: run "x16c -dev tk", zoom in on a smallish region, then start
+panning around.  An incorrectly clipped region at one of the corners should
+soon appear.  This change fixes most occurances of that.
+
+Still todo: handle the encircling
+
+  plplot  src/plline.c  1.27
+
+
+Commit from rlaboiss (2003-08-23 11:04 CET)
+--------------------
+
+Added /usr/include/tcl8.4* directories to the incdirs_default list.  Without
+this, configure fails to find itcl.h and itk.h when PLplot is built against
+itcl/itk 3.2 (at least in Debian).
+
+  plplot  sysloc.in  1.49
+
+
+Commit from rlaboiss (2003-08-16 19:10 CET)
+--------------------
+
+If a specific version of Python is present in the system, but the header
+file has not be found in {$prefix,/usr}/include/python$PYTHON_VERSION/, then
+the following loud warning message is issued:
+
+configure: WARNING: Header file for Python version 2.3 has not been found.
+configure: WARNING: This probably means that an appropriate Python
+configure: WARNING: development package needs to be installed.
+
+(Aside note: we should replace in configure.ac and sysloc.in all the
+instances of AC_MSG_RESULT by AC_MSG_WARN, when warning messages are
+issued.)
+
+  plplot  sysloc.in  1.48
+
+
+Commit from airwin (2003-08-16 17:46 CET)
+------------------
+
+Comment out call to plSetInternalOpt which uses the tcl_cmd option that
+has been disabled in plargs.c.  This fix solves the plrender memory
+management problems (diagnosed by valgrind) and the crashes associated
+with plrender and device tk.  Maurice may eventually reinstate the tcl_cmd
+option in both plargs.c and plrender.c.
+
+  plplot  utils/plrender.c  1.61
+
+
+Commit from rlaboiss (2003-08-16 15:53 CET)
+--------------------
+
+Oops, the last commit have accidentally removed the scripts/plplot-config
+entry from AC_CONFIG_FILES.  Putting it back.
+
+  plplot  configure.ac  1.96
+
+
+Commit from rlaboiss (2003-08-16 15:39 CET)
+--------------------
+
+In sysloc.in, changed the list of directories to search for Python headers
+(when setting the PYTHON_INC_DIR variable) to have just:
+
+        $prefix/include/python$PYTHON_VERSION
+        /usr/include/python$PYTHON_VERSION
+
+instead of a long list of all possible Python versioned include dirs.
+
+This change requires that the call to AM_PATH_PYTHON be made before
+AC_INCLUDE(sysloc.in), in configure.in.
+
+Also, an additional sanity check for non-emptiness of the PYTHON_VERSION
+variable is added to sysloc.in, right at the beginning of the Python
+configuration section.
+
+  plplot  sysloc.in     1.47
+  plplot  configure.ac  1.95
+
+
+Commit from airwin (2003-08-13 21:49 CET)
+------------------
+
+Tweak.  plsdev ==> plssub which is the correct cross-reference from the
+context.
+
+  plplot  doc/docbook/src/simple.xml  1.7
+
+
+Commit from airwin (2003-07-30 18:02 CET)
+------------------
+
+AWI for Rafael Laboissiere: make bootstrap.sh still work with libtool-1.4
+(although we should remove this as soon as we are all using libtool-1.5).
+
+  plplot  bootstrap.sh  1.22
+
+
+Commit from airwin (2003-07-30 01:50 CET)
+------------------
+
+Remove two lines from script (cp configure.in configure.ac and rm -f
+configure.ac in the libltdl subdirectory) that were causing problems for
+libtool-1.5 (which has a file called configure.ac in this subdirectory).
+I believe this change is still backwards-compatible with libtool-1.4.x,
+but if not it should be possible to reinstate in a way that does not screw up
+libtool-1.5.
+
+  plplot  bootstrap.sh  1.21
+
+
+Commit from airwin (2003-07-30 01:44 CET)
+------------------
+
+Replace "bail" error message by something more specific and useful.
+
+  plplot  src/plot3d.c  1.51
+
+
+Commit from airwin (2003-07-30 01:43 CET)
+------------------
+
+Tweak
+
+  plplot  scripts/.cvsignore  1.2
+
+
+Commit from airwin (2003-07-28 21:18 CET)
+------------------
+
+Second parameter of plxormod is output not input.
+
+  plplot  doc/docbook/src/api.xml  1.53
+
+
+Commit from rlaboiss (2003-07-08 11:16 CET)
+--------------------
+
+Debian release 5.2.1-15
+
+  plplot  debian/changelog  1.40
+  plplot  debian/control    1.31
+
+
+Commit from rlaboiss (2003-07-03 11:28 CET)
+--------------------
+
+Debian release 5.2.1-14.
+
+  plplot  debian/changelog  1.39
+
+
+Commit from mlebrun (2003-06-30 00:14 CET)
+-------------------
+
+A nit: replaced deprecated include of iostream.h (when in C++) to iostream.
+
+  plplot  bindings/tcl/tclMatrix.h  1.23
+
+
+Commit from rlaboiss (2003-06-03 23:42 CET)
+--------------------
+
+Debian release 5.2.1-13 (this includes also the changes for release
+5.2.1-12, which was not cvs committed).
+
+  plplot  debian/changelog  1.38
+  plplot  debian/control    1.30
+  plplot  debian/rules      1.30
+
+
+Commit from rlaboiss (2003-06-03 23:26 CET)
+--------------------
+
+Reordered some invocations of macros AC_MSG_CHECKING/AC_MSG_RESULT for the
+Octave checks, such that these macros occur immediately after/before the
+actual checks.  This should help me understand the nature of configure
+errors on some Debian architectures.
+
+  plplot  sysloc.in  1.46
+
+
+Commit from rlaboiss (2003-05-22 23:23 CET)
+--------------------
+
+Debian release 5.2.1-11
+
+  plplot  debian/changelog  1.37
+  plplot  debian/rules      1.29
+  plplot  debian/control    1.29
+
+
+Commit from rlaboiss (2003-05-22 22:45 CET)
+--------------------
+
+Fixed all the instances of multi-line string literals, since they are not
+accepted by gcc anymore (version 3.3).
+
+  plplot  drivers/ntk.c  1.8
+
+
+Commit from rlaboiss (2003-05-22 11:46 CET)
+--------------------
+
+Debian release 5.2.1-10
+
+  plplot  debian/changelog  1.36
+  plplot  debian/control    1.28
+  plplot  debian/rules      1.28
+
+
+Commit from airwin (2003-05-13 22:40 CET)
+------------------
+
+Tweak.  Replace plsurf3dc by plsurf3d in commentary.
+
+  plplot  include/plplot.h  1.142
+
+
+Commit from rlaboiss (2003-05-12 18:40 CET)
+--------------------
+
+Debian release 5.2.1-9
+
+  plplot  debian/changelog  1.35
+  plplot  debian/control    1.27
+
+
+Commit from rlaboiss (2003-05-08 15:45 CET)
+--------------------
+
+Debian release 5.2.1-8
+
+  plplot  debian/changelog  1.34
+
+
+Commit from rlaboiss (2003-05-07 10:28 CET)
+--------------------
+
+Debian release 5.2.1-7
+
+  plplot  debian/changelog  1.33
+  plplot  debian/rules      1.27
+
+
+Commit from rlaboiss (2003-05-07 08:53 CET)
+--------------------
+
+Debian release 5.2.1-6
+
+  plplot  debian/changelog  1.32
+  plplot  debian/rules      1.26
+
+
+Commit from rlaboiss (2003-05-06 17:24 CET)
+--------------------
+
+Debian release 5.2.1-5
+
+  plplot  debian/changelog  1.31
+  plplot  debian/rules      1.25
+
+
+Commit from rlaboiss (2003-05-06 14:23 CET)
+--------------------
+
+Debian release 5.2.1-4
+
+  plplot  debian/changelog  1.30
+  plplot  debian/control    1.26
+  plplot  debian/rules      1.24
+
+
+Commit from rlaboiss (2003-05-03 11:31 CET)
+--------------------
+
+Debian release 5.2.1-3
+
+  plplot  debian/changelog  1.29
+  plplot  debian/rules      1.23
+
+
+Commit from rlaboiss (2003-05-03 09:25 CET)
+--------------------
+
+Added config.summary to CLEANFILES list.
+
+  plplot  Makefile.am  1.26
+
+
+Commit from rlaboiss (2003-05-03 09:02 CET)
+--------------------
+
+Added docbook.m4 file to EXTRA_DIST.  Unfortunately, this file is lacking in
+the 5.2.1 tarball :-(
+
+  plplot  doc/docbook/Makefile.am  1.27
+
+
+Commit from rlaboiss (2003-05-01 21:58 CET)
+--------------------
+
+Debian release 5.2.1-2
+
+  plplot  debian/changelog  1.28
+  plplot  debian/control    1.25
+
+
+Commit from rlaboiss (2003-04-29 15:03 CET)
+--------------------
+
+Remove config.sub and config.guess in clean rule.
+
+  plplot  debian/rules  1.22
+
+
+Commit from rlaboiss (2003-04-29 13:38 CET)
+--------------------
+
+Tweak.
+
+  plplot  debian/.cvsignore  1.5
+
+
+Commit from rlaboiss (2003-04-29 13:37 CET)
+--------------------
+
+Removed the remaining warnings about the packages being experimental.
+
+  plplot  debian/control  1.24
+
+
+Commit from rlaboiss (2003-04-25 09:34 CET)
+--------------------
+
+Moved script plplot-config.in from cf/ to scripts/.  Makefile.am and
+configure.ac ajusted accordingly.
+
+  plplot  Makefile.am               1.25
+  plplot  configure.ac              1.94
+  plplot  scripts/Makefile.am       1.5
++ plplot  scripts/plplot-config.in  1.1
+- plplot  cf/plplot-config.in       1.11
+
+
+Commit from rlaboiss (2003-04-25 08:54 CET)
+--------------------
+
+Fixed copyright year for Joao Cardoso.
+
+  plplot  doc/docbook/src/plplotdoc.xml.in  1.25
+
+
+Commit from rlaboiss (2003-04-25 08:43 CET)
+--------------------
+
+Accept both "K" and "k" as output of ls -sh.
+
+  plplot  doc/docbook/bin/size-href.pl  1.6
+
+
+Commit from mlebrun (2003-04-24 10:36 CET)
+-------------------
+
+Added cf/plplot-config to the list of files to generate.
+
+  plplot  configure.ac  1.93
+
+
+Commit from mlebrun (2003-04-24 10:36 CET)
+-------------------
+
+Added cf/plplot-config to the list of scripts to install.
+
+  plplot  Makefile.am  1.24
+
+
+Commit from mlebrun (2003-04-24 10:35 CET)
+-------------------
+
+Rewritten to basically work like before, but under the new build paradigm.
+The --libs option now is a wrapper around plplot_libtool, allowing
+backward compatibility in one's build but with all the linker commands
+needed for building against plplot.
+
+  plplot  cf/plplot-config.in  1.10
+
+
+Commit from mlebrun (2003-04-24 10:33 CET)
+-------------------
+
+plplot-config exclusion
+
+  plplot  cf/.cvsignore  1.3
+
+
+Commit from mlebrun (2003-04-24 09:20 CET)
+-------------------
+
+Put a catch around the cget -activeplot since plframe itself doesn't
+understand it and this leads to errors.  Anyone have a demo for what
+these bindings are used for?
+
+  plplot  bindings/tk/pldefaults.tcl  1.23

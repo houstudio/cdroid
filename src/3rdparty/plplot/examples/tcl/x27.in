@@ -1,0 +1,17 @@
+#!/bin/sh
+#--------------------------------*- Tcl -*------------------------------------#
+# Arjen Markus
+# 08/18/08
+#
+# A front-end to run x26.tcl directly from the command line with
+# a configured location for pltcl.
+# Handles all usual plplot command arguments.  See "@pltcl_LOCATION@ -h" for info.
+#-----------------------------------------------------------------------------#
+#\
+exec "@pltcl_LOCATION@" -f "$0" ${1+"$@"}
+
+source x27.tcl
+
+plinit
+x27
+plend

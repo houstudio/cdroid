@@ -1,0 +1,76 @@
+--- gtk_packages_3.9.4.xml	2014-03-16 09:50:11.390911485 -0700
++++ gtk_packages_3.9.4.xml_patched	2014-03-16 09:47:48.865523190 -0700
+@@ -591,6 +591,7 @@
+     <pkg-config/>
+     <branch hash="sha256:96d0d1e3f9b74d2ca3469ff187c5e5f25649b1ad35cf06f4f3a83847dff4ac13" module="releases/cairo-${version}.tar.xz" repo="cairo.org" version="1.12.14"/>
+     <dependencies>
++      <dep package="glib"/>
+       <dep package="fontconfig"/>
+       <dep package="gtk-doc"/>
+       <dep package="pixman"/>
+@@ -640,11 +641,14 @@
+   <autotools id="gnome-common">
+     <branch hash="sha256:2af2d97010d2a9aeb3b99dd2ce07d1ef023e15a27b412ffe4f067f016ff7117b" module="gnome-common/3.7/gnome-common-3.7.4.tar.xz" repo="http://download.gnome.org/sources/" size="151864" version="3.7.4"/>
+   </autotools>
+-  <autotools id="gtk-doc">
++  <autotools autogenargs="--with-xml-catalog=${CMAKE_INSTALL_PREFIX}/etc/xml/catalog" id="gtk-doc">
+     <branch hash="sha256:27df247fa828433a9390368e2088cc22f954f2ce1f255ddbd12ab6e027b12e68" module="gtk-doc/1.19/gtk-doc-1.19.tar.xz" repo="http://download.gnome.org/sources/" size="597880" version="1.19"/>
+     <dependencies>
++      <dep package="glib"/>
+       <dep package="libxslt"/>
+       <dep package="yelp-tools"/>
++      <dep package="docbook-xml"/>
++      <dep package="docbook-xsl"/>
+     </dependencies>
+   </autotools>
+   <autotools id="iso-codes">
+@@ -751,10 +755,9 @@
+       <dep package="libtiff"/>
+     </dependencies>
+   </autotools>
+-  <autotools autogenargs="--enable-installed-tests" id="glib">
++  <autotools autogenargs="--enable-installed-tests --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf" id="glib">
+     <branch hash="sha256:7e76a32e6ea0ced118aa64f87e46cdf5c3e90527f1f0eb93eabe42a03cebd1e7" module="glib/2.37/glib-2.37.4.tar.xz" repo="http://download.gnome.org/sources/" size="6698320" version="2.37.4"/>
+     <dependencies>
+-      <dep package="gtk-doc"/>
+       <dep package="libffi"/>
+     </dependencies>
+     <suggests>
+@@ -765,7 +768,7 @@
+       <dep package="shared-mime-info"/>
+     </after>
+   </autotools>
+-  <autotools autogenargs="--enable-x11-backend --enable-wayland-backend --enable-installed-tests" id="gtk+">
++  <autotools autogenargs="--enable-x11-backend" id="gtk+">
+     <branch hash="sha256:a2053a9556c600e0217ec48df75e96aad909f3bc4ec307d2e04817ac548d39a8" module="gtk+/3.9/gtk+-3.9.8.tar.xz" repo="http://download.gnome.org/sources/" size="13216448" version="3.9.8"/>
+     <dependencies>
+       <dep package="atk"/>
+@@ -777,7 +780,6 @@
+       <dep package="gobject-introspection"/>
+       <dep package="at-spi2-atk"/>
+       <dep package="libxkbcommon"/>
+-      <dep package="wayland"/>
+     </dependencies>
+     <suggests>
+       <dep package="shared-mime-info"/>
+@@ -925,7 +927,7 @@
+     </suggests>
+   </autotools>
+   <autotools autogenargs="" id="harfbuzz">
+-    <branch hash="sha256:fef0fbbc6d6492cb4074a5e26a699d87d88bef8adc25dda62af6077735a7d908" module="harfbuzz-0.9.18.tar.bz2" repo="http://www.freedesktop.org/software/harfbuzz/release/" size="902395" version="0.9.18"/>
++    <branch hash="sha256:d2da0f060d47f6ad9de8c8781bb21fa4b9eae8ea1cd1e956b814095baa002f35" module="harfbuzz-0.9.19.tar.bz2" repo="http://www.freedesktop.org/software/harfbuzz/release/" size="926632" version="0.9.19"/>
+     <branch checkoutdir="harfbuzz" module="harfbuzz" repo="git.freedesktop.org"/>
+     <dependencies>
+       <dep package="glib"/>
+@@ -1560,9 +1562,10 @@
+   <repository href="http://wayland.freedesktop.org/releases/" name="http://wayland.freedesktop.org/releases/" type="tarball"/>
+   <repository href="http://people.freedesktop.org/~hughsient/releases/" name="http://people.freedesktop.org/~hughsient/releases/" type="tarball"/>
+   <repository href="http://www.freedesktop.org/software/colord/releases/" name="http://www.freedesktop.org/software/colord/releases/" type="tarball"/>
+-  <autotools id="at-spi2-core">
++  <autotools autogenargs="--with-sysroot=${CMAKE_INSTALL_PREFIX} LDFLAGS=-L${CMAKE_INSTALL_PREFIX}/lib" id="at-spi2-core">
+     <branch hash="sha256:512701456e61c2af3435326a37877404c604de719c3b28e7d53d1368c237e8ae" module="at-spi2-core/2.9/at-spi2-core-2.9.4.tar.xz" repo="http://download.gnome.org/sources/" size="443788" version="2.9.4"/>
+     <dependencies>
++      <dep package="intltool"/>
+       <dep package="dbus"/>
+       <dep package="glib"/>
+     </dependencies>

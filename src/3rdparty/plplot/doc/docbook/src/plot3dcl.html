@@ -1,0 +1,225 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plot3dcl: Magnitude colored plot surface with contour for z[x][y] with y index limits</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plot3dc.html" title="plot3dc: Magnitude colored plot surface with contour"><link rel="next" href="plparseopts.html" title="plparseopts: Parse command-line arguments"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plot3dcl</code>: Magnitude colored plot surface
+      with contour for z[x][y] with y index limits
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plot3dc.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plparseopts.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plot3dcl"></a>
+      <code class="function">plot3dcl</code>: Magnitude colored plot surface
+      with contour for z[x][y] with y index limits
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plot3dcl</b>
+          (</code></td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">z</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">nx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ny</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">opt</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">clevel</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">nlevel</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexxmin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexxmax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexymin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexymax</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      When the implementation is completed this variant of <a class="link" href="plot3dc.html" title="plot3dc: Magnitude colored plot surface with contour"><code class="function">plot3dc</code></a>
+      (see that function's documentation for more details)
+      should be suitable for the case where the area of the
+      <code class="literal"><em class="parameter"><code>x</code></em></code>,
+      <code class="literal"><em class="parameter"><code>y</code></em></code> coordinate grid
+      where <code class="literal"><em class="parameter"><code>z</code></em></code> is defined can
+      be non-rectangular. The implementation is incomplete so the last
+      4 parameters of plot3dcl;
+      <code class="literal">
+        <em class="parameter"><code>indexxmin</code></em>
+      </code>,
+      <code class="literal">
+        <em class="parameter"><code>indexxmax</code></em>
+      </code>,
+      <code class="literal">
+        <em class="parameter"><code>indexymin</code></em>
+      </code>, and
+      <code class="literal">
+        <em class="parameter"><code>indexymax</code></em>
+      </code>; are
+      currently ignored and the functionality is otherwise identical
+      to that of <a class="link" href="plot3dc.html" title="plot3dc: Magnitude colored plot surface with contour"><code class="function">plot3dc</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the x coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the y coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>z</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+        </span></dt><dd><p>
+	    A matrix containing function values to plot.  Should have
+	    dimensions of <em class="parameter"><code>nx</code></em> by <em class="parameter"><code>ny</code></em>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>nx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal"><em class="parameter"><code>x</code></em></code> values at
+            which the function is evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ny</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal">
+              <em class="parameter"><code>y</code></em>
+            </code> values at
+            which the function is evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>opt</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Determines the way in which the surface is represented. To specify
+            more than one option just add the options, e.g. DRAW_LINEXY + MAG_COLOR
+            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEX
+                  </code>: Lines
+                  are drawn showing
+                  <code class="literal">
+                    <em class="parameter"><code>z</code></em>
+                  </code> as a function
+                  of <code class="literal">
+                    <em class="parameter"><code>x</code></em>
+                  </code> for each
+                  value of <code class="literal">
+                    <em class="parameter"><code>y</code></em>[j]
+                  </code>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEY
+                  </code>: Lines
+                  are drawn showing
+                  <code class="literal">
+                    <em class="parameter"><code>z</code></em>
+                  </code> as a function
+                  of <code class="literal">
+                    <em class="parameter"><code>y</code></em>
+                  </code> for each
+                  value of <code class="literal">
+                    <em class="parameter"><code>x</code></em>[i]
+                  </code>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_LINEXY
+                  </code>: Network
+                  of lines is drawn connecting points at which function is
+                  defined.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=MAG_COLOR
+                  </code>: Each line
+                  in the mesh is colored according to the z value being plotted. The
+                  color is used from the current cmap1.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=BASE_CONT
+                  </code>: A contour
+                  plot is drawn at the base XY plane using parameters
+                  <em class="parameter"><code>nlevel</code></em> and <em class="parameter"><code>clevel</code></em>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_SIDES
+                  </code>: draws a curtain
+                  between the base XY plane and the borders of the plotted function.
+                </p></li></ul></div><p>
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>clevel</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the contour levels.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>nlevel</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of elements in the <code class="literal">clevel</code> vector.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexxmin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            The index value (which must be ≥ 0) that corresponds to
+            the first <code class="literal">
+              <em class="parameter"><code>x</code></em>
+            </code> index where
+            <code class="literal">
+              <em class="parameter"><code>z</code></em>
+            </code> is defined.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexxmax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            The index value (which must be ≤
+            <code class="literal">
+              <em class="parameter"><code>nx</code></em>
+            </code>) which corresponds (by
+            convention) to one more than the last
+            <code class="literal">
+              <em class="parameter"><code>x</code></em>
+            </code> index value where
+            <code class="literal">
+              <em class="parameter"><code>z</code></em>
+            </code> is defined.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexymin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing <code class="literal"><em class="parameter"><code>y</code></em></code> index
+            values which all must be ≥ 0.  These values are the first
+            <code class="literal"><em class="parameter"><code>y</code></em></code> index where
+            <code class="literal"><em class="parameter"><code>z</code></em></code> is defined for a
+            particular <code class="literal"><em class="parameter"><code>x</code></em>
+            </code> index in the range from <code class="literal"><em class="parameter"><code>indexxmin</code></em>
+            </code> to <code class="literal"><em class="parameter"><code>indexxmax - 1</code></em></code>.
+	    The dimension of <code class="literal"><em class="parameter"><code>indexymin</code></em></code> is
+            <code class="literal"><em class="parameter"><code>indexxmax</code></em></code>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexymax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing <code class="literal"><em class="parameter"><code>y</code></em></code> index
+            values which all must be ≤ <code class="literal"><em class="parameter"><code>ny</code></em></code>.
+	    These values correspond (by convention) to one more than the last
+            <code class="literal"><em class="parameter"><code>y</code></em></code> index where
+            <code class="literal"><em class="parameter"><code>z</code></em></code> is defined for a
+            particular <code class="literal"><em class="parameter"><code>x</code></em></code> index in the
+            range from <code class="literal"><em class="parameter"><code>indexxmin</code></em></code> to
+	    <code class="literal"><em class="parameter"><code>indexxmax - 1</code></em></code>.  The dimension of
+            <code class="literal"><em class="parameter"><code>indexymax</code></em></code> is
+            <code class="literal"><em class="parameter"><code>indexxmax</code></em></code>.
+          </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            General: <code class="function">
+              plot3dcl(x, y, z, opt, clevel, indexxmin,
+              indexymin, indexymax)
+            </code>
+          </p></li></ul></div><p>
+    </p><p>
+      This function is not used in any example.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plot3dc.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plparseopts.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plot3dc</code>: Magnitude colored plot surface with contour
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plparseopts</code>: Parse command-line arguments
+    </td></tr></table></div></body></html>

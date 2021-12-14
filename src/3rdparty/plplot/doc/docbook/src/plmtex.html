@@ -1,0 +1,118 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plmtex: Write text relative to viewport boundaries</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plmkstrm.html" title="plmkstrm: Creates a new stream and makes it the default"><link rel="next" href="plmtex3.html" title="plmtex3: Write text relative to viewport boundaries in 3D plots"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plmtex</code>: Write text relative to viewport boundaries
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plmkstrm.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plmtex3.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plmtex"></a>
+      <code class="function">plmtex</code>: Write text relative to viewport boundaries
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plmtex</b>
+          (</code></td><td>
+            <var class="pdparam">side</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">disp</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">pos</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">just</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">text</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Writes text at a specified position relative to the viewport
+      boundaries.  Text may be written inside or outside the viewport, but
+      is clipped at the subpage boundaries.  The reference point of a
+      string lies along a line passing through the string at half the
+      height of a capital letter.  The position of the reference point
+      along this line is determined by
+      <code class="literal">
+        <em class="parameter"><code>just</code></em>
+      </code>, and the position of
+      the reference point relative to the viewport is set by
+      <code class="literal">
+        <em class="parameter"><code>disp</code></em>
+      </code> and
+      <code class="literal">
+        <em class="parameter"><code>pos</code></em>
+      </code>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>side</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    An ascii character string specifying the
+            side of the viewport along which the text is to
+            be written. The string must be one of:
+            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  <code class="literal">b</code>: Bottom of viewport, text written
+                  parallel to edge.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">bv</code>: Bottom of viewport, text written at
+                  right angles to edge.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">l</code>: Left of viewport, text written
+                  parallel to edge.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">lv</code>: Left of viewport, text written at
+                  right angles to edge.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">r</code>: Right of viewport, text written
+                  parallel to edge.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">rv</code>: Right of viewport, text written at
+                  right angles to edge.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">t</code>: Top of viewport, text written
+                  parallel to edge.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">tv</code>: Top of viewport, text written at
+                  right angles to edge.
+                </p></li></ul></div><p>
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>disp</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Position of the reference point of string, measured outwards
+            from the specified viewport edge in units of the current
+            character height.  Use negative
+	    <code class="literal"><em class="parameter"><code>disp</code></em></code> to write within
+            the viewport.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>pos</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Position of the reference point of string along the specified
+            edge, expressed as a fraction of the length of the edge.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>just</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Specifies the position of the string relative to its reference
+            point.  If <code class="literal">
+              <em class="parameter"><code>just</code></em>=0.
+            </code>,
+            the reference point is at the left and if
+            <code class="literal">
+              <em class="parameter"><code>just</code></em>=1.
+            </code>, it is at the
+            right of the string.  Other values of
+            <code class="literal">
+              <em class="parameter"><code>just</code></em>
+            </code> give
+            intermediate justifications.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>text</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A UTF-8 character string to be written out.
+          </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            General: <code class="function">plmtex(side, disp, pos, just, text)</code>
+          </p></li></ul></div><p>
+    </p><p>
+      This function is used in examples 3, 4, 6-8, 11, 12, 14, 18, 23, and 26.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plmkstrm.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plmtex3.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plmkstrm</code>: Creates a new stream and makes it the
+      default
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plmtex3</code>: Write text relative to viewport boundaries
+      in 3D plots
+    </td></tr></table></div></body></html>

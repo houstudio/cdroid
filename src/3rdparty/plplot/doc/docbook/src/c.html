@@ -1,0 +1,220 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 7. C Language</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="part_bindings.html" title="Part III.  Supported computer languages"><link rel="prev" href="part_bindings.html" title="Part III.  Supported computer languages"><link rel="next" href="ada.html" title="Chapter 8. Ada Language"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 7. C Language</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="part_bindings.html">Prev</a> </td><th width="60%" align="center">Part III.  Supported computer languages </th><td width="20%" align="right"> <a accesskey="n" href="ada.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="c"></a>Chapter 7. C Language</h2></div></div></div><p>The C computer language is fundamental to PLplot because our
+  core plotting library and our definitive set of standard examples are
+  written in that language, and the remainder of the computer languages
+  that we support are implemented as bindings for our core C library.
+  The C standard we use is <a class="ulink" href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n897.pdf" target="_top">C99</a>,
+  and our experience is that all C compilers accessible to our users
+  support that standard sufficiently to have no trouble building
+  PLplot.</p><p><a name="plplot-types"></a></p><div class="itemizedlist"><p class="title"><b>Argument Types for our C API</b></p><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument types for input scalars</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLFLT-type"></a>Floating-point type (where the C macro PL_DOUBLE is #defined if the
+    CMake variable PL_DOUBLE is set to ON [which occurs by default])</p><pre class="programlisting">
+#if defined ( PL_DOUBLE )
+typedef double PLFLT;
+#else
+typedef float PLFLT;
+#endif
+    </pre></li><li class="listitem"><p><a name="PLINT-type"></a>Integer type</p><pre class="programlisting">
+typedef int32_t PLINT;
+    </pre></li><li class="listitem"><p><a name="PLBOOL-type"></a>Boolean type</p><pre class="programlisting">
+typedef PLINT PLBOOL;
+    </pre></li><li class="listitem"><p><a name="PLUNICODE-type"></a>32-bit type that contains either UCS4-encoded unicode or FCI (font characterization integer) data</p><pre class="programlisting">
+typedef uint32_t PLUNICODE;
+    </pre></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument types for input/output scalars</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLFLT_NC_SCALAR-type"></a>Input/output PLFLT scalar</p><pre class="programlisting">
+typedef PLFLT * PLFLT_NC_SCALAR;
+    </pre></li><li class="listitem"><p><a name="PLINT_NC_SCALAR-type"></a>Input/output PLINT scalar</p><pre class="programlisting">
+typedef PLINT * PLINT_NC_SCALAR;
+    </pre></li><li class="listitem"><p><a name="PLBOOL_NC_SCALAR-type"></a>Input/output PLBOOL scalar</p><pre class="programlisting">
+typedef PLBOOL * PLBOOL_NC_SCALAR;
+    </pre></li><li class="listitem"><p><a name="PLUNICODE_NC_SCALAR-type"></a>Input/output PLUNICODE scalar</p><pre class="programlisting">
+typedef PLUNICODE * PLUNICODE_NC_SCALAR;
+    </pre></li><li class="listitem"><p><a name="PLCHAR_NC_SCALAR-type"></a>Input/output char scalar</p><pre class="programlisting">
+typedef char * PLCHAR_NC_SCALAR;
+    </pre></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument types for input vectors</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLFLT_VECTOR-type"></a>Input PLFLT vector</p><pre class="programlisting">
+typedef const PLFLT * PLFLT_VECTOR;
+    </pre></li><li class="listitem"><p><a name="PLINT_VECTOR-type"></a>Input PLINT vector</p><pre class="programlisting">
+typedef const PLINT * PLINT_VECTOR;
+    </pre></li><li class="listitem"><p><a name="PLBOOL_VECTOR-type"></a>Input PLBOOL vector</p><pre class="programlisting">
+typedef const PLBOOL * PLBOOL_VECTOR;
+    </pre></li><li class="listitem"><p><a name="PLCHAR_VECTOR-type"></a>Input character string</p><pre class="programlisting">
+typedef const char * PLCHAR_VECTOR;
+    </pre><p>This string is NULL-terminated in C.</p></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument types for input/output vectors</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLFLT_NC_VECTOR-type"></a>Input/output PLFLT vector</p><pre class="programlisting">
+typedef PLFLT * PLFLT_NC_VECTOR;
+    </pre></li><li class="listitem"><p><a name="PLCHAR_NC_VECTOR-type"></a>Input/output character string</p><pre class="programlisting">
+typedef char * PLCHAR_NC_VECTOR;
+    </pre><p>This string is NULL-terminated in C.</p></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument types for input 2D matrices</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLFLT_MATRIX-type"></a>Input PLFLT 2D matrix</p><pre class="programlisting">
+typedef const PLFLT * const * PLFLT_MATRIX;
+    </pre></li><li class="listitem"><p><a name="PLCHAR_MATRIX-type"></a>Input vector of character strings</p><pre class="programlisting">
+typedef const char * const * PLCHAR_MATRIX;
+    </pre><p>These strings are NULL-terminated in C.</p></li></ul></div><p>
+    Note that for the C language case the above
+    input matrices must be organized as an <a class="ulink" href="https://en.wikipedia.org/wiki/Iliffe_vector" target="_top">Iliffe column
+    vector</a> of pointers to row vectors.
+  </p></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument types for input/output 2D matrices</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLFLT_NC_MATRIX-type"></a>Input/output PLFLT 2D matrix</p><pre class="programlisting">
+typedef PLFLT ** PLFLT_NC_MATRIX;
+  </pre></li><li class="listitem"><p><a name="PLCHAR_NC_MATRIX-type"></a>Input/output vector of character strings</p><pre class="programlisting">
+typedef char ** PLCHAR_NC_MATRIX;
+  </pre><p>These strings are NULL-terminated in C.</p></li></ul></div><p>
+    Note that for the C language case the above
+    input/output matrices must be organized as an <a class="ulink" href="https://en.wikipedia.org/wiki/Iliffe_vector" target="_top">Iliffe column
+    vector</a> of pointers to row vectors.
+  </p></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument type for a generic pointer</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLPointer-type"></a>Input/output generic pointer</p><pre class="programlisting">
+typedef void * PLPointer;
+    </pre></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Argument types for callback functions</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLMAPFORM_callback-type"></a>Map transformation callback type</p><pre class="programlisting">
+typedef void ( *PLMAPFORM_callback )( PLINT n, PLFLT_NC_VECTOR x, PLFLT_NC_VECTOR y );
+    </pre><p>where the callback arguments are the following:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>n</code></em>
+          (<code class="literal">PLINT</code>, input)
+        </span></dt><dd><p>Number of elements in the <code class="literal">x</code> and <code class="literal">y</code> vectors.</p></dd><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal">PLFLT_NC_VECTOR</code>, input/output)
+        </span></dt><dd><p>
+            Vector of <code class="literal">x</code> coordinates of points to be transformed.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal">PLFLT_NC_VECTOR</code>, input/output)
+        </span></dt><dd><p>
+            Vector of <code class="literal">y</code> coordinates of points to be transformed.
+          </p></dd></dl></div></li><li class="listitem"><p><a name="PLTRANSFORM_callback-type"></a>Coordinate transformation callback type</p><pre class="programlisting">
+typedef void ( *PLTRANSFORM_callback )( PLFLT x, PLFLT y, PLFLT_NC_SCALAR tx, PLFLT_NC_SCALAR ty, PLPointer data);
+    </pre><p>where the callback arguments are the following:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal">PLFLT</code>, input)
+        </span></dt><dd><p>
+            <code class="literal">x</code>-position to be transformed.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal">PLFLT</code>, input)
+        </span></dt><dd><p>
+            <code class="literal">y</code>-position to be transformed.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>tx</code></em>
+          (<code class="literal">PLFLT_NC_SCALAR</code>, output)
+        </span></dt><dd><p>
+            Transformed <code class="literal">x</code>-position.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ty</code></em>
+          (<code class="literal">PLFLT_NC_SCALAR</code>, output)
+        </span></dt><dd><p>
+            Transformed <code class="literal">y</code>-position.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>data</code></em>
+          (<code class="literal">PLPointer</code>, input)
+        </span></dt><dd><p>
+            Generic pointer to additional input data that may be required by the callback routine in
+            order to implement the transformation.
+          </p></dd></dl></div></li><li class="listitem"><p><a name="PLLABEL_FUNC_callback-type"></a>Custom label callback type</p><pre class="programlisting">
+typedef void ( *PLLABEL_FUNC_callback )( PLINT axis, PLFLT value, PLCHAR_NC_VECTOR label, PLINT length, PLPointer data);
+    </pre><p>where the callback arguments are the following:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>axis</code></em>
+          (<code class="literal">PLINT</code>, input)
+        </span></dt><dd><p>
+	    An integer whose value is <code class="literal">PL_X_AXIS = 1</code> if an
+	    <code class="literal">x</code>-axis label is being generated and
+	    <code class="literal">PL_Y_AXIS = 2</code> if a <code class="literal">y</code>-axis label
+	    is being generated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>value</code></em>
+          (<code class="literal">PLFLT</code>, input)
+        </span></dt><dd><p>
+	    Floating-point numerical value to be used to help generate the label.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>label</code></em>
+          (<code class="literal">PLCHAR_NC_VECTOR</code>, output)
+        </span></dt><dd><p>
+	    A pointer to a memory area suitable for containing the output
+	    NULL-terminated character string of maximum length (including
+	    the NULL-terminating byte) of <code class="literal">length</code>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>length</code></em>
+          (<code class="literal">PLINT</code>, input)
+        </span></dt><dd><p>
+	    The maximum possible length (including NULL-terminating byte) of the
+	    output NULL-terminated character string.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>data</code></em>
+          (<code class="literal">PLPointer</code>, input)
+        </span></dt><dd><p>
+            Generic pointer to additional input data that may be required by the callback routine in
+	    order to generate a label.
+          </p></dd></dl></div></li><li class="listitem"><p><a name="PLF2EVAL_callback-type"></a>Two-dimensional function array lookup callback type</p><pre class="programlisting">
+typedef PLFLT ( *PLF2EVAL_callback )( PLINT ix, PLINT iy, PLPointer data);
+    </pre><p>where the callback function returns the looked-up value, and the
+callback arguments are the following:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>ix</code></em>
+          (<code class="literal">PLINT</code>, input)
+        </span></dt><dd><p>The <code class="literal">x</code> index of the function array lookup.</p></dd><dt><span class="term">
+          <em class="parameter"><code>iy</code></em>
+          (<code class="literal">PLINT</code>, input)
+        </span></dt><dd><p>The <code class="literal">y</code> index of the function array lookup.</p></dd><dt><span class="term">
+          <em class="parameter"><code>data</code></em>
+          (<code class="literal">PLPointer</code>, input)
+        </span></dt><dd><p>Generic pointer to the two-dimensional function input data that
+	  are required by the callback routine.  Since this is a generic
+	  pointer, these two-dimensional data can be arranged in any way that is
+	  desired by the user.</p></dd></dl></div></li><li class="listitem"><p><a name="PLFILL_callback-type"></a>Fill callback type</p><pre class="programlisting">
+typedef void ( *PLFILL_callback )( PLINT n, PLFLT_VECTOR x, PLFLT_VECTOR y );
+    </pre><p>where the callback arguments are the following:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>n</code></em>
+          (<code class="literal">PLINT</code>, input)
+        </span></dt><dd><p>Number of vertices in polygon to be filled.</p></dd><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal">PLFLT_VECTOR</code>, input)
+        </span></dt><dd><p>Vector of <code class="literal">x</code>-coordinates of vertices.</p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal">PLFLT_VECTOR</code>, input)
+        </span></dt><dd><p>Vector of <code class="literal">y</code>-coordinates of vertices.</p></dd></dl></div></li><li class="listitem"><p><a name="PLDEFINED_callback-type"></a>Defined callback type</p><pre class="programlisting">
+typedef PLINT ( *PLDEFINED_callback )( PLFLT x, PLFLT y );
+</pre><p>where the callback function returns a 1 or 0 depending on whether the
+<code class="literal">x</code> and <code class="literal">y</code> arguments are within specified defined
+area, and the callback arguments are the following:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal">PLFLT</code>, input)
+        </span></dt><dd><p><code class="literal">x</code>-coordinate to be tested for whether it is in the defined region.</p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal">PLFLT</code>, input)
+        </span></dt><dd><p><code class="literal">y</code>-coordinate to be tested for whether it is in the defined region.</p></dd></dl></div></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p class="title"><b>Arguments of miscellaneous types</b></p><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><a name="PLGraphicsIn-type"></a>A struct containing output mouse/keyboard event data</p><pre class="programlisting">
+typedef struct
+{
+    int          type;              // of event (CURRENTLY UNUSED)
+    unsigned int state;             // key or button mask
+    unsigned int keysym;            // key selected
+    unsigned int button;            // mouse button selected
+    PLINT        subwindow;         // subwindow (alias subpage, alias subplot) number
+    char         string[PL_MAXKEY]; // translated string
+    int          pX, pY;            // absolute device coordinates of pointer
+    PLFLT        dX, dY;            // relative device coordinates of pointer
+    PLFLT        wX, wY;            // world coordinates of pointer
+} PLGraphicsIn;
+    </pre></li><li class="listitem"><p><a name="PLF2OPS-type"></a>Input/output pointer to a struct that holds pointers to functions that are used to
+    get, set, modify, and test individual 2-D data points referenced by
+    a PLPointer or PLPointer</p><pre class="programlisting">
+typedef struct
+{
+    PLFLT ( *get )( PLPointer p, PLINT ix, PLINT iy );
+    PLFLT ( *set )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *add )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *sub )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *mul )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *div )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLINT ( *is_nan )( PLPointer p, PLINT ix, PLINT iy );
+    void ( *minmax )( PLPointer p, PLINT nx, PLINT ny, PLFLT_NC_SCALAR zmin, PLFLT_NC_SCALAR zmax );
+    //
+    // f2eval is backwards compatible signature for "f2eval" functions that
+    // existed before plf2ops "operator function families" were used.
+    //
+    PLFLT ( *f2eval )( PLINT ix, PLINT iy, PLPointer p );
+} plf2ops_t;
+
+typedef plf2ops_t * PLF2OPS;
+    </pre><p>
+    </p></li><li class="listitem"><p><a name="PLFLT_FE_POINTER-type"></a>Input/output pointer to first element of contiguous PLFLT array</p><pre class="programlisting">
+typedef PLFLT * PLFLT_FE_POINTER;
+    </pre><p>
+    Note the array must correspond to a contiguous block of memory but may be organized
+    with arbitrary dimensions that conform to that block of memory.
+    </p></li></ul></div></li></ul></div><p>For more information on calling PLplot from C, please consult
+  the example C programs in <code class="filename">examples/c</code> that are
+  distributed with PLplot.  For more information on building your own
+  PLplot-related C routines, please consult either the traditional
+  (Makefile + pkg-config) or CMake-based build systems that are created
+  as part of the install step for our C (and other language)
+  examples.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="part_bindings.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="part_bindings.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ada.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part III.  Supported computer languages  </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 8. Ada Language</td></tr></table></div></body></html>

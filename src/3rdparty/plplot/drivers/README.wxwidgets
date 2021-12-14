@@ -1,0 +1,238 @@
+Installation instructions for Unix
+1) Install the wxwidgets library either by compiling it yourself or using apt/rpm (2.6.0 is needed)
+   + compile it yourself:
+     - Download wxWidgets 2.6.1 from http://www.wxwidgets.org (wxGTK package)
+     - Untar it to a folder and cd into the main dir.
+     - Make a directory called "buildgtk". Cd into buildgtk
+     - Run: ../configure --disable-debug --enable-gtk2 --enable-monolithic --enable-shared
+     - Run: make
+     - Run: sudo make install (library and developer files are installed to /usr/local)
+2) Install at least automake 1.82 and libtool 1.4
+3) download plplot 5.5.3 from cvs
+4) build plplot library
+   - cd into plplot main directory
+   - run: cf/bootstrap.sh
+   - run: ./configure --enable-wxwidgets
+   - run: make
+   - run: sudo make install
+   - run: cd examples/c
+   - run: make x01c
+   - run: ./x01c
+
+Installation instructions for Mac OS X
+1) Install the wxwidgets library either by compiling it yourself or using the opendarwin port
+   + Mac OS X G++ Compiler
+     - Download wxWidgets 2.6.1 from http://www.wxwidgets.org (wxMAC package).
+     - Untar it to a folder and cd into the main dir.
+     - Make a directory called "buildosx". cd into "buildosx".
+     - Run: ../configure --disable-debug --enable-monolithic --enable-shared
+     - Run: make
+     - Run: sudo make install (library and developer files are installed to /usr/local)
+     OR
+     - download and install the port package from http://darwinports.opendarwin.org
+     - add
+		    PATH=/opt/local/bin:$PATH
+			  MANPATH=/opt/local/share/man:$MANPATH
+				INFOPATH=/opt/local/share/info:$INFOPATH
+	  	 to your ".profile" file in your home directory.
+  	 - run: sudo port -d selfupdate
+	   - run: sudo port install wxWidgets (library and developer files are installed to /opt/local)
+2) Install at least automake 1.82 and libtool 1.4, e.g. via opendarwin port:
+   - download and install the port package from http://darwinports.opendarwin.org
+   - add
+		    PATH=/opt/local/bin:$PATH
+			  MANPATH=/opt/local/share/man:$MANPATH
+				INFOPATH=/opt/local/share/info:$INFOPATH
+		 to your ".profile" file in your home directory.
+	 - run: sudo port -d selfupdate
+	 - run: sudo port install automake
+	 - run: sudo port install libtool
+	 - run: sudo ln -s /opt/local/bin/glibtool /opt/local/bin/libtool
+	 - run: sudo ln -s /opt/local/bin/glibtoolize /opt/local/bin/libtoolize
+3) download plplot 5.5.3 from cvs
+4) build plplot library
+   - cd into plplot main directory
+   - run: cf/bootstrap.sh
+   - run: ./configure --enable-wxwidgets --with-wxwidgets-bindir=/opt/local/bin (port)
+     OR
+     run: ./configure --enable-wxwidgets (self compiled in /usr/local)
+   - run: make
+   - run: sudo make install
+   - run: cd examples/c
+   - run: make x01c
+   - run: ./x01c
+
+
+--------- Using the driver in a wxWidgets Application -------------------------------------
+
+The wxWidgets driver is already capable of redirecting the plot to any canvas (wxDC), which can also be provided by a wxApp. The API is not quite ready for release, but it's easy to implement. First we need to inherit a class from plstream
+
+
+#include "plplotP.h"
+#include "plstream.h"
+#include "wx/dc.h"
+
+class wxPLplotstream : public plstream
+{
+public:
+  wxPLplotstream( wxDC *dc, int width, int height );  //!< Constructor.
+  void set_stream();   //!< Calls some code before every PLplot command.
+	void SetSize( int width, int height );   //!< Set new size of plot area.
+	void RenewPlot();   //!< Redo plot.
+private:
+	wxDC* m_dc;   //!< Pointer to wxDC to plot into.
+	int m_width;   //!< Width of dc/plot area.
+	int m_height;   //!< Height of dc/plot area.
+};
+
+
+wxPLplotstream::wxPLplotstream( wxDC *dc, int width, int height ) :
+                m_dc(dc), m_width(width), m_height(height)
+{
+  ::plstream();
+  sdev( "wxwidgets" );
+  spage( 0.0, 0.0, m_width, m_height, 0, 0 );
+  SetOpt( "text", "1" ); // use freetype?
+  SetOpt( "smooth", "1" );  // antialiased text?
+  init();
+  plP_esc( PLESC_DEVINIT, (void*)m_dc );
+}
+
+void wxPLplotstream::set_stream()
+{
+  plstream::set_stream();
+}
+
+void wxPLplotstream::SetSize( int width, int height )
+{
+	m_width=width;
+	m_height=height;
+  plP_esc( PLESC_CLEAR, NULL );
+  wxSize size( m_width, m_height );
+  plP_esc( PLESC_RESIZE, (void*)&size );
+}
+
+void wxPLplotstream::RenewPlot()
+{
+  plP_esc( PLESC_CLEAR, NULL );
+  replot();
+}
+
+
+In the wxWidgets application a wxMemoryDC must be created (e.g. in the constructor of a wxWindow) and made known to the driver, e.g.
+
+
+	MemPlotDC = new wxMemoryDC;
+  MemPlotDCBitmap = new wxBitmap( 640, 400, -1 );
+  MemPlotDC->SelectObject( *MemPlotDCBitmap );
+	my_stream = new wxPLplotstream( (wxDC*)MemPlotDC, MemPlotDC_width, MemPlotDC_height );
+
+
+The OnPaint() event handler looks like this (double buffering is used here)
+
+
+void plotwindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
+{
+  int width, height;
+  GetSize( &width, &height );
+
+	// Check if we window was resized (or dc is invalid)
+	if( (my_stream == NULL) || (MemPlotDC_width!=width) || (MemPlotDC_height!=height) ) {
+    MemPlotDC->SelectObject( wxNullBitmap );
+    if( MemPlotDCBitmap )
+      delete MemPlotDCBitmap;
+    MemPlotDCBitmap = new wxBitmap( width, height, -1 );
+    MemPlotDC->SelectObject( *MemPlotDCBitmap );
+		my_stream->SetSize( width, height );
+    my_stream->replot();
+    MemPlotDC_width = width;
+    MemPlotDC_height = height;
+	}
+
+  wxPaintDC dc( this );
+	dc.SetClippingRegion( GetUpdateRegion() );
+  dc.BeginDrawing();
+  dc.Blit( 0, 0, width, height, MemPlotDC, 0, 0 );
+  dc.EndDrawing();
+}
+
+The whole PLplot API is then available via the my_stream object.
+
+
+--------- don't bother with stuff below this line -----------------------------------------
+
+
+Installation instructions for Win32
+
+- install wxWidgets 2.6.1 (see instructions below)
+- NOT WORKING NOW: install gd library and/or freetype library (see instructions below)
+- download the PLplot library from plplot.org
+- Remark (Mac OS X): You need automake 1.8.2 and libtool 1.4 in order to compile PLplot.
+                     Download and install fink (fink.sf.net) and install these programs.
+- untar or unzip it in a suitable directory
+- unzip or untar the wxPLplot package in sys/win32
+- cd into sys/win32/wxplplot
+
+- WIN32:
+  . Set WXWIN environment variable (see wxWidgets instructions).
+  . For all compilers you need the mingw32-make program (www.mingw.org).
+  . Check the settings in config.mak.
+  . Run: mingw32-make COMPILER=bcc
+  .  or: mingw32-make COMPILER=gcc
+  . Run: cd examples
+  . Run: mingw32-make COMPILER=bcc
+  .  or: mingw32-make COMPILER=gcc
+
+
+
+
+Install the gd library for png, gif and jpeg drivers (Win32, NOT WORKING NOW)
+
+- goto http://www.boutell.com/gd/ and download the precompiled Windows DLL at
+  the bottom ( http://www.boutell.com/gd/http/gdwin32.zip )
+- extract to sys/win32/wxplplot
+- enter sys/win32/wxplplot/gdwin32 and make a library from the dll
+  Borland BCC 5.5: implib -a bgd_bcc.lib bgd.dll
+  VC++: lib /machine:i386 /def:bgd.def
+  MingW: already in gdwin32 (libbgd.a)
+
+Install the freetype library (Win32, NOT WORKING NOW)
+
+
+Install wxWidgets 2.6.1
+
+ + Win32 MingW Compiler
+ - Download the necessary files from www.mingw.org. Either the whole package mingw-3.1.0 or
+   the canditate releases from at least gcc-core, gcc-g++, binutils, mingw-runtime, w32api,
+   mingw-utils, mingw32-make and gdb. Install them in a directory and set the path file accordingly.
+ - Download wxWidgets 2.6.1 from http://www.wxwidgets.org (wxMSW package).
+ -  Unzip it to a folder and set the WXWIN variable accordingly (system wide in System Settings/System).
+ - Goto %WXWIN%/build/msw.
+ - Run all or some of the following commands:
+   mingw32-make -f makefile.gcc BUILD=debug MONOLITHIC=1 SHARED=1
+     The wxWidgets (debug, shared) library will be build.
+   mingw32-make -f makefile.gcc BUILD=release MONOLITHIC=1 SHARED=1
+     The wxWidgets (release, shared) library will be build.
+   mingw32-make -f makefile.gcc BUILD=debug MONOLITHIC=1 SHARED=0
+     The wxWidgets (debug, static) library will be build.
+   mingw32-make -f makefile.gcc BUILD=release MONOLITHIC=1 SHARED=0.
+     The wxWidgets (release, static) library will be build.
+ - Copy both dlls from %%WXWIN%/lib/gcc_dll to a directory, where they can be found (e.g. sys/win32/wxplplot/examples directory).
+ - The same WXWIN variable must than be set for the wxplplot makefile.
+
+ + Win32 Borland free command line tools (BCC 5.5.2)
+ - Install the Borland Compiler.
+ - Download wxWidgets 2.6.1 from http://www.wxwidgets.org (wxMSW package)
+ -  Unzip it to a folder and set the WXWIN variable accordingly (system wide in System Settings/System).
+ - Goto %WXWIN%/build/msw.
+ - Run all or some of the following commands:
+   make -f makefile.bcc -DBUILD=debug -DMONOLITHIC=1 -DSHARED=1
+     The wxWidgets (debug, shared) library will be build.
+   make -f makefile.bcc -DBUILD=release -DMONOLITHIC=1 -DSHARED=1
+     The wxWidgets (release, shared) library will be build.
+   make -f makefile.bcc -DBUILD=debug -DMONOLITHIC=1 -DSHARED=0
+     The wxWidgets (debug, static) library will be build.
+   make -f makefile.bcc -DBUILD=release -DMONOLITHIC=1 -DSHARED=0.
+     The wxWidgets (release, static) library will be build.
+ - Copy both dlls from %%WXWIN%/lib/gcc_dll to a directory, where they can be found (e.g. sys/win32/wxplplot/examples directory).
+ - The same WXWIN variable must than be set for the wxplplot makefile.

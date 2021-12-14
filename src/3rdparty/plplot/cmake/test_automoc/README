@@ -1,0 +1,61 @@
+This test_automoc project is designed to demonstrate the results of
+one qt5_wrap method and four automoc methods of processing project
+headers with moc for the Qt5 case.  The following are descriptions for
+the five "hello world" targets that are configured by this project.
+The C++ implementation files used by the five targets are called
+helloworld.cpp and reside in various subdirectories with identical
+code other than different #includes. The project header files
+#include'd by those implementation files are all identical but have
+various names and locations.
+
+1. helloworld_qt5_wrap
+This target demonstrates the straightforward qt5_wrap method where
+the header file name does not have the same basename or directory
+location as the implementation file.  The moc-generated results do not
+need to be #included in the C++ implementation file because they are
+specifically added to the list of target source files.
+
+2. helloworld_automoc_noinclude
+This target demonstrates the automoc method for exactly the same
+needs (header with different basename in different directory location)
+as in 1.  The moc-generated results should not be #included in the C++
+implementation file because that method has the potential to name
+clash.  Without such an #include, the moc results are automatically
+added to the list of target source files by automoc in a way that does
+not name clash.
+
+3. helloworld_automoc_same_noinclude
+This target demonstrates the automoc method for the special case when
+the header is in the same directory as the source file and has the
+same basename.  For the same reasons as for the helloworld_automoc_noinclude
+target above, the moc-generated results should not be #included in the
+C++ implementation file.
+
+4. helloworld_automoc_same_include
+This target is a variant of helloworld_automoc_same_noinclude where
+the header file is in the same directory as the implementation file,
+but does not have the same basename.  In this case, the
+moc_<headerbasename>.cpp file must be #included by the user in the
+implementation file to indicate to the automoc system that the
+<headerbasename>.h file must be processed by moc to generate
+moc_<headerbasename>.cpp.  However, there is a potential to name clash
+in this case.
+
+5. The helloworld_automoc_same_include1 and helloworld_automoc_same_include2 targets
+
+These two targets deliberately use identical implementation code
+and headers as the helloworld_automoc_same_include target.  For helloworld_automoc_same_include1
+the identical code in the same directory as used by the helloworld_automoc_same_include target
+is used, while for helloworld_automoc_same_include2, the code is identical but copied
+to a separate directory (in case that would make any difference).
+The builds of these two targets and the helloworld_automoc_same_include
+target demonstrate a nameclash with CMake-3.7.0 (with no warning
+about that nameclash which is likely a bug in that version of CMake).
+Each separate target generates the same file called
+moc_<headerbasename>.cpp in the common build subdirectory for these
+three different targets, and that file is generated three separate times.
+So that is potentially a big issue for parallel
+builds with the possibility of three different target builds writing to the same
+file at the same time.  And it is clearly an issue if the three targets
+(unlike this case) have different include directories or compiler
+definitions (which potentially can affect generated moc results).

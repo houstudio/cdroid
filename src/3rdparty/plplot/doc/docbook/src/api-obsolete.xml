@@ -1,0 +1,426 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    api-obsolete.xml: "The Obsolete/Deprecated API for PLplot" chapter
+
+Copyright (C) 1994 Geoffrey Furnish and Maurice LeBrun
+Copyright (C) 1999-2018 Alan W. Irwin
+Copyright (C) 1999-2004 Rafael Laboissiere
+Copyright (C) 2003 Joao Cardoso
+Copyright (C) 2004 Andrew Ross
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<chapter id="API-OBSOLETE">
+  <title>Obsolete/Deprecated API for PLplot</title>
+
+  <para>
+    The purpose of this chapter is to provide minimal documentation for
+    obsolete/deprecated API that appears in our C library to provide backwards
+    compatibility until these functions
+    disappear.  Do not use these functions, and if you already use them
+    in legacy PLplot applications, replace them by the suggested
+    equivalents so you won't be caught out when they disappear.
+  </para>
+
+  <sect1 id="plshade1" renderas="sect3">
+    <title>
+      <function>plshade1</function>: Shade individual region on the basis of value
+    </title>
+
+    <para>
+      <funcsynopsis>
+        <funcprototype>
+          <funcdef>
+            <function>plshade1</function>
+          </funcdef>
+          <paramdef>
+            <parameter>a</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>nx</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>ny</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>defined</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>xmin</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>xmax</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>ymin</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>ymax</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>shade_min</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>shade_max</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>sh_cmap</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>sh_color</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>sh_width</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>min_color</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>min_width</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>max_color</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>max_width</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>fill</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>rectangular</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>pltr</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>pltr_data</parameter>
+          </paramdef>
+        </funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Shade individual region on the basis of value.  Use &plshades; if you want to
+      shade a number of contiguous regions using continuous colors.  In
+      particular the edge contours are treated properly in &plshades;.
+      If you attempt to do contiguous regions with &plshade1; (or &plshade;)
+      the contours at the edge of the shade are partially obliterated by subsequent
+      plots of contiguous shaded regions.
+      &plshade1; differs from &plshade; only by the type of the first
+      argument.  Look at the argument list below  and &plcont;
+      for more information about the transformation from matrix index to world
+      coordinates.  Shading NEEDS DOCUMENTATION, but
+      as a stopgap look at how &plshade1; (or &plshade;) are used in
+      <filename>examples/c/x15c.c</filename>
+    </para>
+
+    <variablelist>
+      <varlistentry>
+        <term>
+          <parameter>a</parameter>
+          (<literal>&PLFLT_FE_POINTER;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Contains pointer to first element of array to be plotted. The array must have been declared
+            as PLFLT a[nx][ny].
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>nx</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            First dimension of array "a".
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>ny</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Second dimension of array "a".
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>defined</parameter>
+          (<literal>&PLDEFINED_callback;</literal>, input)
+        </term>
+        <listitem>
+	  <para>Callback function specifying the region that should be plotted in
+	  the shade plot.  This function accepts x and y coordinates as input
+	  arguments and must return 1 if the point is to be included in the
+	  shade plot and 0 otherwise.  If you want to plot the entire
+	  shade plot (the usual case), this argument should be set to NULL.
+	  </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>xmin, xmax, ymin, ymax</parameter>
+          (<literal>&PLFLT;</literal>, input)
+        </term>
+        <listitem>
+          <para>See the discussion of <parameter>pltr</parameter>
+	  below for how these arguments are used (only for the special case when
+	  the callback function <parameter>pltr</parameter> is not
+	  supplied).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>shade_min</parameter>
+          (<literal>&PLFLT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines the lower end of the interval to be shaded. If
+            shade_max &leq; shade_min, &plshade1; does nothing.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>shade_max</parameter>
+          (<literal>&PLFLT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines the upper end of the interval to be shaded. If
+            shade_max &leq; shade_min, &plshade1; does nothing.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>sh_cmap</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines color map. If <literal><parameter>sh_cmap</parameter>=0</literal>, then
+            <literal><parameter>sh_color</parameter></literal>
+            is interpreted as a cmap0 (integer) index.  If
+            <literal><parameter>sh_cmap</parameter>=1</literal>, then
+            <literal><parameter>sh_color</parameter></literal>
+            is interpreted as a cmap1 argument in range (0.0-1.0).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>sh_color</parameter>
+          (<literal>&PLFLT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines color map index with integer value if cmap0 or
+	    value in range (0.0-1.0) if cmap1.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>sh_width</parameter>
+          (<literal>&PLFLT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines width used by the fill pattern.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>min_color</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines pen color, width used by the boundary of shaded region.
+            The min values are used for the shade_min boundary, and the max
+            values are used on the shade_max boundary.  Set color and width
+            to zero for no plotted boundaries.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>min_width</parameter>
+          (<literal>&PLFLT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines pen color, width used by the boundary of shaded region.
+            The min values are used for the shade_min boundary, and the max
+            values are used on the shade_max boundary.  Set color and width
+            to zero for no plotted boundaries.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>max_color</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines pen color, width used by the boundary of shaded region.
+            The min values are used for the shade_min boundary, and the max
+            values are used on the shade_max boundary.  Set color and width
+            to zero for no plotted boundaries.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>max_width</parameter>
+          (<literal>&PLFLT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Defines pen color, width used by the boundary of shaded region.
+            The min values are used for the shade_min boundary, and the max
+            values are used on the shade_max boundary.  Set color and width
+            to zero for no plotted boundaries.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>fill</parameter>
+          (<literal>&PLFILL_callback;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Routine used to fill the region.  Use &plfill;.  Future version of
+            PLplot may have other fill routines.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>rectangular</parameter>
+          (<literal>&PLBOOL;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Set <literal>
+              <parameter>rectangular</parameter>
+            </literal> to true
+            if rectangles map to rectangles after coordinate transformation
+            with <literal><parameter>pltrl</parameter></literal>.  Otherwise,
+            set <literal><parameter>rectangular</parameter></literal> to false.
+            If <literal><parameter>rectangular</parameter></literal>
+            is set to true, plshade1 tries to save time by
+            filling large rectangles.  This optimization fails if
+            the coordinate transformation distorts the shape of rectangles.
+            For example a plot in polar coordinates has to have
+            <literal><parameter>rectangular</parameter></literal>
+            set to false.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>pltr</parameter>
+          (<literal>&PLTRANSFORM_callback;</literal>, input)
+        </term>
+        <listitem>
+          <para> A callback function that defines the transformation
+	  between the zero-based indices of the matrix
+	  <literal><parameter>a</parameter></literal> and world coordinates.
+	  If <parameter>pltr</parameter> is not supplied (e.g., is set to NULL
+	  in the C case), then the x indices of
+	  <literal><parameter>a</parameter></literal> are mapped to the range
+	  <parameter>xmin</parameter> through <parameter>xmax</parameter> and
+	  the y indices of <literal><parameter>a</parameter></literal> are
+	  mapped to the range <parameter>ymin</parameter> through
+	  <parameter>ymax</parameter>.</para>
+
+	  <para>For the C case, transformation functions are provided
+	  in the PLplot library: &pltr0; for the identity mapping, and &pltr1;
+	  and &pltr2; for arbitrary mappings respectively defined by vectors and
+	  matrices.  In addition, C callback routines for the transformation can
+	  be supplied by the user such as the <literal>mypltr</literal> function
+	  in <filename>examples/c/x09c.c</filename> which provides a general
+	  linear transformation between index coordinates and world
+	  coordinates.</para>
+
+	  <para>For languages other than C you should consult <xref
+	  linkend="part_bindings"/> for the details concerning how
+	  &PLTRANSFORM_callback; arguments are interfaced.
+	  However, in general, a particular pattern of
+	  callback-associated arguments such as a <literal>tr</literal> vector
+	  with 6 elements; <literal>xg</literal> and <literal>yg</literal>
+	  vectors; or <literal>xg</literal> and <literal>yg</literal> matrices
+	  are respectively interfaced to a linear-transformation routine similar
+	  to the above <literal>mypltr</literal> function; &pltr1;; and &pltr2;.
+	  Furthermore, some of our more sophisticated bindings (see, e.g., <xref
+	  linkend="fortran"/>) support native language callbacks for handling
+	  index to world-coordinate transformations.  Examples of these various
+	  approaches are given in
+	  <filename>examples/&lt;language&gt;x09*</filename>,
+	  <filename>examples/&lt;language&gt;x16*</filename>,
+	  <filename>examples/&lt;language&gt;x20*</filename>,
+	  <filename>examples/&lt;language&gt;x21*</filename>, and
+	  <filename>examples/&lt;language&gt;x22*</filename>, for all our
+	  supported languages.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>pltr_data</parameter>
+          (<literal>&PLPointer;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Extra parameter to help
+            pass information to &pltr0;, &pltr1;, &pltr2;, or whatever routine
+            that is externally supplied.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      &plshade1; is currently not used in any of our examples.  Use &plshade; instead.
+    </para>
+
+  </sect1>
+
+</chapter>

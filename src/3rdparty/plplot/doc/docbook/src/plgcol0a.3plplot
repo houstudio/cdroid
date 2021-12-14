@@ -1,0 +1,37 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGCOL0A 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgcol0a\fP - Returns 8-bit RGB values and PLFLT alpha transparency value for given color index from cmap0
+.SH SYNOPSIS
+\fBplgcol0a\fP(\fIicol0\fP, \fIr\fP, \fIg\fP, \fIb\fP, \fIalpha\fP)
+.SH DESCRIPTION
+
+.P
+Returns 8-bit RGB values (0-255) and PLFLT alpha transparency value (0.0-1.0) for given color from cmap0 (see the PLplot documentation).  Values are negative if an invalid color id is given.
+.P
+Redacted form: \fBplgcola(r, g, b)\fP
+.P
+This function is used in example 30.
+.SH ARGUMENTS
+.TP
+\fIicol0\fP (\fBPLINT\fP(3plplot), input)
+Index of desired cmap0 color.
+.TP
+\fIr\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the red intensity in the range from 0 to 255.
+.TP
+\fIg\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the green intensity in the range from 0 to 255.
+.TP
+\fIb\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the blue intensity in the range from 0 to 255.
+.TP
+\fIalpha\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the alpha transparency in the range from (0.0-1.0).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

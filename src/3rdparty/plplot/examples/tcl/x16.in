@@ -1,0 +1,22 @@
+#!/bin/sh
+#--------------------------------*- Tcl -*------------------------------------#
+# Maurice LeBrun
+# 12/24/02
+#
+# A front-end to run x16.tcl directly from the command line with
+# a configured location for pltcl.
+# Handles all usual plplot command arguments.  See "@pltcl_LOCATION@ -h" for info.
+#-----------------------------------------------------------------------------#
+#\
+exec "@pltcl_LOCATION@" -f "$0" ${1+"$@"}
+
+source x16.tcl
+
+# Reducing the size of the colour map needs to be done before plinit
+plspal0 "cmap0_black_on_white.pal"
+plspal1 "cmap1_gray.pal" 1
+plscmap0n 3
+
+plinit
+x16
+plend

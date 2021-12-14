@@ -1,0 +1,48 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Unpack the latest tarball ([download](https://sourceforge.net/projects/plplot/files/plplot/)) which creates a tree with e.g. the top-level directory plplot-5.10.0
+
+`cp -a plplot-5.10.0 plplot-5.10.0new`
+
+Make your changes in the correct location in plplot-5.10.0new overwriting some of the files and adding new files in some cases. You should not compile anything in either plplot-5.10.0 or plplot-5.10.0new. That is, both should be clean directory trees. In order to test your changes make sure you configure plplot with CMake out-of-source. E.g.
+
+`cd plplot-5.10.0new`
+`mkdir build`
+`cd build`
+`cmake ..`
+`make`
+
+If you have made changes to the PLplot documentation, you should also check the validity of the documentation syntax:
+
+`make validate`
+
+This documentation validation does not require performing a full build of the PLplot documentation. Note that running the validation requires the "onsgmls" program to be present.
+
+Remove the build directory after you tested your changes.
+
+`cd ..`
+`rm -rf build`
+`cd ..`
+
+To produce the patch from the two clean directory trees (don't forget to remove the CMake build directory) set up above do the following:
+
+`diff -Naur plplot-5.10.0 plplot-5.10.0new >plplot-5.10.0.patch`
+
+Please review plplot-5.10.0.patch to make sure those are the exact changes to the main tree that you require and nothing extra. Afterwards do the following:
+
+`gzip plplot-5.10.0.patch`
+
+Send plplot-5.10.0.patch.gz (the file created by gzip) to the the [plplot-devel list](https://lists.sourceforge.net/lists/listinfo/plplot-devel).
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

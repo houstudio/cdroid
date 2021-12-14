@@ -1,0 +1,63 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLPARSEOPTS 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplparseopts\fP - Parse command-line arguments
+.SH SYNOPSIS
+PLINT \fBplparseopts\fP(\fIp_argc\fP, \fIargv\fP, \fImode\fP)
+.SH DESCRIPTION
+
+.P
+Parse command-line arguments.
+.P
+\fBplparseopts\fP(3plplot) removes all recognized flags (decreasing argc accordingly), so that invalid input may be readily detected.  It can also be used to process user command line flags.  The user can merge an option table of type PLOptionTable into the internal option table info structure using \fBplMergeOpts\fP(3plplot).  Or, the user can specify that ONLY the external table(s) be parsed by calling \fBplClearOpts\fP(3plplot) before \fBplMergeOpts\fP(3plplot).
+.P
+The default action taken by \fBplparseopts\fP(3plplot) is as follows:
+.RS
+.P
+.PD 0
+.P
+Returns with an error if an unrecognized option or badly formed option-value pair are encountered.
+.P
+Returns immediately (return code 0) when the first non-option command line argument is found.
+.P
+Returns with the return code of the option handler, if one was called.
+.P
+Deletes command line arguments from argv list as they are found, and decrements argc accordingly.
+.P
+Does not show "invisible" options in usage or help messages.
+.P
+Assumes the program name is contained in argv[0].
+.PD
+.P
+
+.P
+These behaviors may be controlled through the \fImode\fP argument.
+.P
+Redacted form: General: \fBplparseopts(argv, mode)\fP
+
+.P
+This function is used in all of the examples.
+.SH ARGUMENTS
+.TP
+\fIp_argc\fP (int *, input/output)
+Number of arguments.
+.TP
+\fIargv\fP (\fBPLCHAR_NC_MATRIX\fP(3plplot), input/output)
+A vector of character strings containing \fI*p_argc\fP command-line arguments.
+.TP
+\fImode\fP (\fBPLINT\fP(3plplot), input)
+Parsing mode with the following possibilities: PL_PARSE_FULL (1) -- Full parsing of command line and all error messages enabled, including program exit when an error occurs.  Anything on the command line that isn't recognized as a valid option or option argument is flagged as an error.
+PL_PARSE_QUIET (2) -- Turns off all output except in the case of errors.
+PL_PARSE_NODELETE (4) -- Turns off deletion of processed arguments.
+PL_PARSE_SHOWALL (8) -- Show invisible options
+PL_PARSE_NOPROGRAM (32) -- Specified if argv[0] is NOT a pointer to the program name.
+PL_PARSE_NODASH (64) -- Set if leading dash is NOT required.
+PL_PARSE_SKIP (128) -- Set to quietly skip over any unrecognized arguments.
+
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

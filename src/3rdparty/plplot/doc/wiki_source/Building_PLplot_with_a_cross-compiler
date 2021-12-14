@@ -1,0 +1,54 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+From version 2.6.0 cmake includes support for cross-compiling. The [CMake wiki](http://www.cmake.org/Wiki/CMake_Cross_Compiling) provides a useful source of background information here.
+
+Cross-compiling plplot is complicated because a full build involves lots of external libraries for different drivers and multiple different compilers /interpreters for the language bindings. However, it is possible to build a cut-down version of PLplot using cmake. PLplot compiles and runs several executables to create source files / data for the project at build time. Obviously it is not generally possible to run the cross-compiled versions and so access is also required to a native build tree in which to find the native versions of the build-time executables. Support for this was only added to PLplot on 3rd March 2009 (svn revision 9665).
+
+The following instructions were written and tested on using the mingw32 cross-compiler for Windows running under Linux. Debian and Ubuntu supply packages for this environment so it is simple to install and test.
+
+Build a native version of PLplot
+--------------------------------
+
+This can just be a normal PLplot build. The only thing to be careful of it to ensure that it uses dynamic drivers if you intend to use them for the cross compiler otherwise get-drv-info will not be built.
+
+Create a CMake toolchain
+------------------------
+
+See the [CMake wiki](http://www.cmake.org/Wiki/CMake_Cross_Compiling) for details of this for individual platforms. The mingw32 example worked fine for me.
+
+Building a cross-compiled version of PLplot
+-------------------------------------------
+
+-   Create a new directory for the cross-compile build and change to that directory.
+-   Run cmake.
+
+<!-- -->
+
+-   -   You probably want to disable all languages and drivers by default and then just enable the ones you need. You can achieve this by setting DEFAULT_NO_DEVICES=ON and DEFAULT_NO_BINDINGS=ON. Failure to do this can lead to strange results if cmake picks up native rather than cross-compiler versions of tools, for example the fortran compiler, which are not part of your toolchain.
+    -   You will need to set the following CMake variables.
+        -   CMAKE_TOOLCHAIN_FILE: points to the CMake toolchain file for this cross-compiler.
+        -   CMAKE_NATIVE_BINARY_DIR: points to the top-level directory in the native PLplot build tree.
+    -   You will need to disable pkg-config support or ensure that pkg-config is using the correct package information files for the cross-platform. The simplest way of disabling this is by setting PKG_CONFIG_EXECUTABLE to something like NOT-FOUND.
+    -   You will either need to disable support for the CSA library, or explicitly set NanAwareCCompiler (probably to ON) since this uses a build-time executable to check for support. This can't be executed for a cross-compiled environment.
+
+<!-- -->
+
+-   Run make to build the cross-compiled version of PLplot.
+
+Using this method I have successfully cross-compiled the C++ bindings and the ps and svg drivers. Note that neither of these has external dependencies. For reference the cmake command line looked like
+
+`cmake -DCMAKE_TOOLCHAIN_FILE=~/Toolchain-mingw32.cmake -DDEFAULT_NO_DEVICES=ON -DPLD_ps=ON -DPLD_svg=ON -DPKG_CONFIG_EXECUTABLE=Not-Found -DDEFAULT_NO_BINDINGS=ON -DENABLE_cxx=ON -DNaNAwareCCompiler=ON -DCMAKE_NATIVE_BINARY_DIR=/home/andrew/software/plplot/build`
+`../plplot`
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

@@ -1,0 +1,263 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 10. Fortran Language</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="part_bindings.html" title="Part III.  Supported computer languages"><link rel="prev" href="cpluscplus-status.html" title="Status of the C++ Interface"><link rel="next" href="OCaml.html" title="Chapter 11. OCaml Language"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 10. Fortran Language</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="cpluscplus-status.html">Prev</a> </td><th width="60%" align="center">Part III.  Supported computer languages </th><td width="20%" align="right"> <a accesskey="n" href="OCaml.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="fortran"></a>Chapter 10. Fortran Language</h2></div></div></div><p>The new implemention of the Fortran binding of PLplot takes full
+advantage of the <code class="literal">ISO_C_BINDING</code> feature of the
+Fortran 2003 standard, which is supported by all current compilers.
+The advantage of this approach is that the entire binding is now
+written in Fortran, so that there is only one library that calling
+programs need to link against.  Furthermore, the binding defines
+overloaded routines for the case of either single- or double-precision
+arguments supplied by the calling programme regardless of the floating-point
+precision of the underlying C library.  That makes this binding much
+easier to use than our previous implementation of the Fortran binding
+where calling routines were forced to use the same floating-point precision that was
+configured for the underlying PLplot C library.</p><p> Note: in this chapter <span class="quote">“<span class="quote">Fortran</span>”</span> stands for
+<span class="quote">“<span class="quote">Fortran as defined by the Fortran 2003 standard</span>”</span>.  Older
+versions of PLplot supported FORTRAN 77, but the binding for this 40
+years old version has been abandoned for quite a few years now.  As we
+now use features from the Fortran 2003 standard, it is no longer
+appropriate to refer to the language as Fortran 95.</p><p>We illustrate the implementation of our Fortran binding using the
+<code class="literal"><a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a></code> API as an example.  The
+summary of the C
+API for that routine which best serves our purposes here is
+</p><pre class="programlisting">
+void plstring( PLINT n, const PLFLT *x, const PLFLT *y, const char *string );
+</pre><p>
+The arguments <code class="literal">n</code>, <code class="literal">x</code>,
+<code class="literal">y</code>, and <code class="literal">string</code> represent the
+number of times the string is plotted, the arrays of length
+<code class="literal">n</code> which contain the <code class="literal">x, y</code> values where that string is plotted, and
+the NULL-terminated C string that contains the ordinary (not
+wide) characters in the UTF-8 encoding of a unicode glyph to be
+plotted.  The PLplot <code class="literal">PLINT</code> type is normally defined
+as the C fundamental type <code class="literal">int32_t</code>, and the PLplot
+<code class="literal">PLFLT</code> type is defined to be one of the two C
+fundamental types <code class="literal">float</code> or
+<code class="literal">double</code> depending on how the C PLplot library
+is configured.</p><p>Here is an example of one fairly typical Fortran call of <code class="literal">plstring</code>.
+</p><pre class="programlisting">
+program test_plplot
+    use plplot
+    implicit none
+    integer, parameter :: my_real  = kind(1.0)
+    real(kind=my_real), dimension(6) :: x, y
+    ...
+    x = ...
+    y = ...
+    ...
+    call plstring(x,y,"+")
+    ...
+end program test_plplot
+</pre><p>
+where for this particular case <code class="literal">x</code> and <code class="literal">y</code> are arrays with 6
+elements defined and the points are to be plotted using the ascii "+"
+symbol (although if you are using a unicode-aware PLplot device, then
+you can try many other unicode possibilities for the symbol such as
+the U+22C5 DOT OPERATOR, "⋅").  Note that our Fortran binding
+implementation below allows use of the <code class="literal">kind(1.0d0)</code> choice of
+<code class="literal">my_real</code> precision as well.</p><p>The <code class="literal">plstring</code>-relevant parts of the <code class="literal">plplot</code> module used above are
+</p><pre class="programlisting">
+module plplot
+    ...
+    use plplot_single
+    use plplot_double
+    ...
+end module plplot
+</pre><p>
+The redacted part of the <code class="literal">plplot</code> module implements the interfaces to
+the PLplot C library routines that happen to have no floating-point
+arguments very similarly to the way that the <code class="literal">plplot_single</code> and
+<code class="literal">plplot_double</code> modules interface the PLplot C routines like <a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a>
+that do include floating-point arguments.  The <code class="literal">plstring</code>-relevant parts of the
+<code class="literal">plplot_single</code> module are
+</p><pre class="programlisting">
+module plplot_single
+    ...
+    integer, parameter :: wp = private_single
+    ...
+    interface plstring
+        module procedure plstring_impl
+    end interface plstring
+    private :: plstring_impl
+    ...
+contains
+    ...
+    subroutine plstring_impl( x, y, string )
+
+       real(kind=wp), dimension (:), intent(in) :: x, y
+       character(len=*), intent(in) :: string
+
+       integer(kind=private_plint) :: n_local
+
+       interface
+           subroutine interface_plstring( n, x, y, string ) bind(c,name='c_plstring')
+               import :: private_plint, private_plflt
+               implicit none
+               integer(kind=private_plint), value, intent(in) :: n
+               real(kind=private_plflt), dimension(*), intent(in) :: x, y
+               character(len=1), dimension(*), intent(in) :: string
+           end subroutine interface_plstring
+       end interface
+
+       n_local = size(x, kind=private_plint)
+       if(n_local /= size(y, kind=private_plint) ) then
+           write(error_unit,"(a)") "Plplot Fortran Warning: plstring: inconsistent sizes for x and y"
+       end if
+
+       call interface_plstring( n_local, real(x,kind=private_plflt), real(y,kind=private_plflt), &amp;
+           trim(string)//c_null_char )
+    end subroutine plstring_impl
+    ...
+end module plplot_single
+</pre><p>
+The <code class="literal">plstring</code>-relevant parts of the <code class="literal">plplot_double</code> module are defined
+identically (in fact that identicality is guaranteed by using the
+same included file to define the identical parts) except for
+</p><pre class="programlisting">
+    integer, parameter :: wp = private_double
+</pre><p>
+</p><p>Here are some notes on the above implementation of our Fortran
+binding for <code class="literal">plstring</code>.  The
+<code class="literal">plplot_single</code> and <code class="literal">plplot_double</code>
+modules implement two versions of the Fortran
+<code class="literal">plstring</code> subroutine which are identical except one
+subroutine has floating-point arguments with a kind value of
+<code class="literal">wp = private_single = kind(1.0)</code> and one subroutine
+has floating-point arguments with kind value of <code class="literal">wp =
+private_double = kind(1.0d0)</code>.  The result is the Fortran
+compiler automatically chooses the correct overloaded version of
+<code class="literal">plstring</code> that corresponds to the precision of the
+floating-point arguments used by the program (e.g., like
+<code class="literal">test_plplot</code> above) that is being compiled.  The
+intrinsic function <code class="literal">size()</code> is used to determine the
+size of arrays and allows checking that their dimensions are
+consistent with each other when the C implementation uses a common
+size for the arrays as in the <code class="literal">plstring</code> case. (See also,
+<code class="filename">bindings/fortran/README_array_sizes</code>.)  The
+intrinsic function <code class="literal">real()</code> is used to convert
+floating-point data between the type used by the calling routine and
+the type used by the underlying PLplot C library, and the intrinsic
+function <code class="literal">int()</code> (not used in the above example) is
+used for similarly converting integer data.  The intrinsic function
+<code class="literal">trim()</code> and the <code class="literal">ISO_C_BINDING</code>
+parameter <code class="literal">c_null_char</code> are used to help convert
+a Fortran character string into a NULL-terminated C string.
+Also note the above interface block defining
+<code class="literal">subroutine interface_plstring</code> is the
+Fortran representation of the exact C API of <a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a>. </p><p> Here is a table summarizing how C data types correspond to
+Fortran data types in the arguments of functions defined by our
+Fortran binding.  Consult the Fortran code in
+<code class="filename">bindings/fortran/*</code> for further details of how the
+conversion is done between our private Fortran types that are
+equivalent to the corresponding C types, and the public Fortran types
+that are available for Fortran function arguments in our Fortran
+binding.  Note the <code class="literal">my_flt</code> kind value used in this
+table is not provided by our Fortran binding.  Instead it merely
+indicates that the calling routine (e.g., the
+<code class="literal">test_plplot</code> example routine above) has the choice
+of either <code class="literal">kind(1.0)</code> or
+<code class="literal">kind(1.0d0)</code> for the kind values of the
+floating-point arguments of the PLplot functions defined by our
+Fortran binding.
+    </p><div class="informaltable"><table class="informaltable" style="border-collapse: collapse;border-top: 1px solid ; border-bottom: 1px solid ; border-left: 1px solid ; border-right: 1px solid ; "><colgroup><col align="left"><col align="left"><col align="left"></colgroup><thead><tr><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left">C type</th><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left">Private Fortran type</th><th style="border-bottom: 10px solid white; " align="left">Public Fortran type</th></tr></thead><tbody><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">PLFLT</code></td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">real(kind=private_plflt)</code></td><td style="border-bottom: 10px solid white; " align="left"><code class="literal">real(kind=my_flt)</code></td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">PLFLT *</code></td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">real(kind=private_plflt), dimension(*)</code></td><td style="border-bottom: 10px solid white; " align="left"><code class="literal">real(kind=my_flt), dimension(:)</code></td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">PLFLT **</code></td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">type(c_ptr), dimension(*)</code></td><td style="border-bottom: 10px solid white; " align="left"><code class="literal">real(kind=my_flt), dimension(:, :)</code></td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">PLINT</code></td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">integer(kind=private_plint)</code></td><td style="border-bottom: 10px solid white; " align="left"><code class="literal">integer</code></td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">PLINT *</code></td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">integer(kind=private_plint), dimension(*)</code></td><td style="border-bottom: 10px solid white; " align="left"><code class="literal">integer, dimension(:)</code></td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">PLBOOL</code></td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="left"><code class="literal">integer(kind=private_plbool)</code></td><td style="border-bottom: 10px solid white; " align="left"><code class="literal">logical</code></td></tr><tr><td style="border-right: 10px solid white; " align="left"><code class="literal">char *</code></td><td style="border-right: 10px solid white; " align="left"><code class="literal">character(len=1), dimension(*)</code></td><td style="" align="left"><code class="literal">character(len=*)</code></td></tr></tbody></table></div><p>
+In C there are two ways to pass a variable --- by value (the default)
+or by reference (pointer), whereas in Fortran this difference is not
+visible in the call, only in the interface definition via the
+<code class="literal">value</code> attribute.  Therefore when you see references
+in the documentation of our C API to <span class="emphasis"><em>either</em></span> an
+ordinary argument or a pointer argument (e.g.
+<code class="literal">*data</code>), you simply use an ordinary Fortran variable
+or array name.  The new Fortran binding automatically takes care of
+any conversion that may be necessary.  </p><p>In sum, the <code class="literal">plstring</code> example above
+illustrates the way our Fortran binding makes the PLplot C API
+conveniently accessible from Fortran while letting the C binding and
+overloading features of the Fortran compiler hide the complexities of
+the name mangling that occurs.</p><p>Users should be aware that there are a few cases with our new Fortran binding where we provide
+double-precision floating-point entities but no equivalent single-precision floating-point alternative.
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+        The Fortran standard dictates that compilers cannot disambiguate
+        overloaded functions based on the type of their return value.  This
+        means that the <a class="link" href="plrandd.html" title="plrandd: Random number generator returning a real random number in the range [0,1]"><code class="function">plrandd</code></a> function cannot be
+        disambiguated because it has no arguments.  For this reason we have
+        decided to provide only one version of this function that
+        returns a double-precision random value.
+      </p></li><li class="listitem"><p>
+        The Fortran standard dictates that compilers cannot disambiguate
+        overloaded routines based on the types of arguments to callback
+        routines that appear as arguments to those routines.  This means that
+        the <a class="link" href="plstransform.html" title="plstransform: Set a global coordinate transform function"><code class="function">plstransform</code></a> and <a class="link" href="plslabelfunc.html" title="plslabelfunc: Assign a function to use for generating custom axis labels"><code class="function">plslabelfunc</code></a> routines cannot be disambiguated
+        because they have no <span class="emphasis"><em>direct</em></span> floating-point
+        arguments.  For this reason we have decided that for the case where
+        <code class="literal">plstransform</code> uses a
+        <code class="literal">transform_coordinate</code> callback as its first
+        argument, that callback will be allowed to only have double-precision
+        arguments.  And similarly for <code class="literal">plslabelfunc</code> and the
+        <code class="literal">label_func</code> callback.
+      </p></li><li class="listitem"><p>
+        The new Fortran binding defines a derived <code class="literal">PLGraphicsIn</code> type as follows:
+        </p><pre class="programlisting">
+  type :: PLGraphicsIn
+     integer                   :: type           ! of event (CURRENTLY UNUSED)
+     integer                   :: state          ! key or button mask
+     integer                   :: keysym         ! key selected
+     integer                   :: button         ! mouse button selected
+     integer                   :: subwindow      ! subwindow (alias subpage, alias subplot) number
+     character(len=16)         :: string         ! Fortran character string
+     integer                   :: pX, pY         ! absolute device coordinates of pointer
+     real(kind=private_double) :: dX, dY         ! relative device coordinates of pointer
+     real(kind=private_double) :: wX, wY         ! world coordinates of pointer
+  end type PLGraphicsIn
+        </pre><p>
+        This is the type that should be used for the argument of the Fortran
+        <code class="literal">plGetCursor</code> routine.  We provide no alternative
+        <code class="literal">plGetCursor</code> routine whose argument is similar to
+        <code class="literal">PLGraphicsIn</code> but with single-precision
+        <code class="literal">dX</code>, <code class="literal">dY</code>, <code class="literal">wX</code>,
+        and <code class="literal">wY</code> components.
+      </p></li><li class="listitem"><p>
+        The new Fortran binding provides three auxiliary floating-point parameters,
+        <code class="literal">PL_PI</code>, <code class="literal">PL_TWOPI</code> and <code class="literal">PL_NOTSET</code> which are
+        all defined in double precision. If the calling routine requires single precision instead it
+        should define a local parameter as in the following code fragment:
+        </p><pre class="programlisting">
+    use plplot
+    ...
+    integer, parameter :: my_flt = kind(1.0)
+    real(kind=my_flt), parameter :: my_NOTSET = PL_NOTSET
+        </pre><p>
+      </p></li></ul></div><p>
+</p><p>Users should be aware that the new Fortran binding for PLplot enforces the following interfacing rules:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>The new Fortran binding interfaces Fortran functions/subroutines with
+      C routines if the C routines provide/do not provide a return value.  For example, this rule means
+      that the C <a class="link" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><code class="function">plparseopts</code></a> routine that returns an error code must be invoked at the
+      Fortran level similarly to the following:
+      </p><pre class="programlisting">
+    integer :: plplarseopts_rc
+    ...
+    plparseopts_rc = plparseopts(...)
+      </pre><p>
+      Of course, this rule means it is possible for Fortran routines invoking functions like plparseopts to respond properly
+      to error conditions returned by the corresponding C routine.
+      </p></li><li class="listitem"><p> Only the redacted form of Fortran API (with all redundant dimension
+      arguments removed) is supported.</p></li><li class="listitem"><p>If the C API for the function being interfaced
+      includes a size value corresponding to identical sizes of dimension(s)
+      of multiple array arguments. then the sizes of the corresponding
+      dimensions of the Fortran arrays must also be identical.  The complete
+      list of these adopted rules for consistently sized array arguments for
+      our Fortran binding are given at <code class="filename">bindings/fortran/README_array_sizes</code>.
+      These rules are enforced in a user-friendly way by issuing a run-time
+      warning whenever these rules have been violated.  For those cases which
+      generate such warnings because the calling
+      routine has specified static or allocatable arrays whose
+      relevant defined areas are smaller than their size, use the normal
+      Fortran rules for array slicing to specify completely defined arrays
+      with consistent sizes that comply with this interfacing rule.
+      </p></li><li class="listitem"><p>Fortran logical arguments are used for all cases where
+      the corresponding C argument is <code class="literal">PLBOOL</code>.</p></li><li class="listitem"><p>All floating-point arguments for a given function call
+      must have consistent kind values (either <code class="literal">kind(1.0)</code>
+      or <code class="literal">kind(1.0.d0)</code>).</p></li></ul></div><p>
+</p><p>For more information on calling PLplot from Fortran, please consult
+the example Fortran programs in <code class="filename">examples/fortran</code> that are
+distributed with PLplot.  For more information on building your own
+PLplot-related Fortran routines, please consult either the traditional
+(Makefile + pkg-config) or CMake-based build systems that are created
+as part of the install step for our Fortran (and other language)
+examples.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="cpluscplus-status.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="part_bindings.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="OCaml.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Status of the C++ Interface </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 11. OCaml Language</td></tr></table></div></body></html>

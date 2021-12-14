@@ -1,0 +1,23 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Status of the C++ Interface</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="cplusplus.html" title="Chapter 9. A C++ Interface for PLplot"><link rel="prev" href="cpluscplus-specializing.html" title="Specializing the PLplot C++ Interface"><link rel="next" href="fortran.html" title="Chapter 10. Fortran Language"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Status of the C++ Interface</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="cpluscplus-specializing.html">Prev</a> </td><th width="60%" align="center">Chapter 9. A C++ Interface for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="fortran.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="cpluscplus-status"></a>Status of the C++ Interface</h2></div></div></div><p>
+      The class <code class="literal">plstream</code> (and the other abstraction classes in
+      <code class="filename">plstream.h</code>) provided in PLplot 4.99j (alpha) are to be
+      considered as works in progress.  By the standards outlined above, the
+      work has barely begun.  At this time, <code class="literal">plstream</code> is mostly a one
+      to one mirror of the C API, which is to say, it is still far from the
+      goals of simplification and abstraction outlined above.  As such, it
+      can be expected to change radically over the course of time.  (We
+      don't quote schedules--how long have you been waiting for 5.0?  :-).
+    </p><p>
+      In any event, we would welcome improvement submissions along the lines
+      of those above, but we would strongly discourage people from using
+      <code class="literal">plstream</code> if they are expecting it to be rock solid.  It
+      <span class="emphasis"><em>will</em></span>
+      be changing, to become more like the design goals elucidated above.
+    </p><p>
+      So, if you like the ideas described above, and are willing to accept
+      the burden of "upgrading" your code as the class <code class="literal">plstream</code>
+      evolves, then feel free to use it.  Just don't whine when I fix some
+      of the methods to take references instead of pointers, when I
+      eliminate some of the redundant methods to use the collapsed form,
+      etc.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="cpluscplus-specializing.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="cplusplus.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="fortran.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Specializing the PLplot C++ Interface </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 10. Fortran Language</td></tr></table></div></body></html>

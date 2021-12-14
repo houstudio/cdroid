@@ -1,0 +1,27 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCMAP0N 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplscmap0n\fP - Set number of colors in cmap0
+.SH SYNOPSIS
+\fBplscmap0n\fP(\fIncol0\fP)
+.SH DESCRIPTION
+
+.P
+Set number of colors in cmap0 (see the PLplot documentation). Allocate (or reallocate) cmap0, and fill with default values for those colors not previously allocated.  The first 16 default colors are given in the \fBplcol0\fP(3plplot) documentation.  For larger indices the default color is red.
+.P
+The drivers are not guaranteed to support more than 16 colors.
+.P
+Redacted form: \fBplscmap0n(ncol0)\fP
+.P
+This function is used in examples 15, 16, and 24.
+.SH ARGUMENTS
+.TP
+\fIncol0\fP (\fBPLINT\fP(3plplot), input)
+Number of colors that will be allocated in the cmap0 palette. If this number is zero or less, then the value from the previous call to \fBplscmap0n\fP(3plplot) is used and if there is no previous call, then a default value is used.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

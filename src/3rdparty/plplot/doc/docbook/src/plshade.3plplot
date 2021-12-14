@@ -1,0 +1,77 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSHADE 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplshade\fP - Shade individual region on the basis of value
+.SH SYNOPSIS
+\fBplshade\fP(\fIa\fP, \fInx\fP, \fIny\fP, \fIdefined\fP, \fIxmin\fP, \fIxmax\fP, \fIymin\fP, \fIymax\fP, \fIshade_min\fP, \fIshade_max\fP, \fIsh_cmap\fP, \fIsh_color\fP, \fIsh_width\fP, \fImin_color\fP, \fImin_width\fP, \fImax_color\fP, \fImax_width\fP, \fIfill\fP, \fIrectangular\fP, \fIpltr\fP, \fIpltr_data\fP)
+.SH DESCRIPTION
+
+.P
+Shade individual region on the basis of value.  Use \fBplshades\fP(3plplot) if you want to shade a number of contiguous regions using continuous colors.  In particular the edge contours are treated properly in \fBplshades\fP(3plplot).  If you attempt to do contiguous regions with \fBplshade\fP(3plplot) the contours at the edge of the shade are partially obliterated by subsequent plots of contiguous shaded regions.
+.P
+Redacted form: General: \fBplshade(a, defined, xmin, xmax, ymin, ymax, shade_min, shade_max, sh_cmap, sh_color, sh_width, min_color, min_width, max_color, max_width, fill, rectangular, pltr, pltr_data)\fP
+
+.P
+This function is used in example 15.
+.SH ARGUMENTS
+.TP
+\fIa\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing function values to plot.  Should have dimensions of \fInx\fP by \fIny\fP.
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+First dimension of the matrix "a".
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Second dimension of the matrix "a".
+.TP
+\fIdefined\fP (\fBPLDEFINED_callback\fP(3plplot), input)
+Callback function specifying the region that should be plotted in the shade plot.  This function accepts x and y coordinates as input arguments and must return 1 if the point is to be included in the shade plot and 0 otherwise.  If you want to plot the entire shade plot (the usual case), this argument should be set to NULL.
+.TP
+\fIxmin, xmax, ymin, ymax\fP (\fBPLFLT\fP(3plplot), input)
+See the discussion of \fIpltr\fP below for how these arguments are used (only for the special case when the callback function \fIpltr\fP is not supplied).
+.TP
+\fIshade_min\fP (\fBPLFLT\fP(3plplot), input)
+Defines the lower end of the interval to be shaded. If shade_max <= shade_min, \fBplshade\fP(3plplot) does nothing.
+.TP
+\fIshade_max\fP (\fBPLFLT\fP(3plplot), input)
+Defines the upper end of the interval to be shaded. If shade_max <= shade_min, \fBplshade\fP(3plplot) does nothing.
+.TP
+\fIsh_cmap\fP (\fBPLINT\fP(3plplot), input)
+Defines color map. If \fIsh_cmap\fP=0, then \fIsh_color\fP is interpreted as a cmap0 (integer) index.  If \fIsh_cmap\fP=1, then \fIsh_color\fP is interpreted as a cmap1 argument in the range (0.0-1.0).
+.TP
+\fIsh_color\fP (\fBPLFLT\fP(3plplot), input)
+Defines color map index with integer value if cmap0 or value in range (0.0-1.0) if cmap1.
+.TP
+\fIsh_width\fP (\fBPLFLT\fP(3plplot), input)
+Defines width used by the fill pattern.
+.TP
+\fImin_color\fP (\fBPLINT\fP(3plplot), input)
+Defines pen color, width used by the boundary of shaded region. The min values are used for the shade_min boundary, and the max values are used on the shade_max boundary.  Set color and width to zero for no plotted boundaries.
+.TP
+\fImin_width\fP (\fBPLFLT\fP(3plplot), input)
+Defines pen color, width used by the boundary of shaded region. The min values are used for the shade_min boundary, and the max values are used on the shade_max boundary.  Set color and width to zero for no plotted boundaries.
+.TP
+\fImax_color\fP (\fBPLINT\fP(3plplot), input)
+Defines pen color, width used by the boundary of shaded region. The min values are used for the shade_min boundary, and the max values are used on the shade_max boundary.  Set color and width to zero for no plotted boundaries.
+.TP
+\fImax_width\fP (\fBPLFLT\fP(3plplot), input)
+Defines pen color, width used by the boundary of shaded region. The min values are used for the shade_min boundary, and the max values are used on the shade_max boundary.  Set color and width to zero for no plotted boundaries.
+.TP
+\fIfill\fP (\fBPLFILL_callback\fP(3plplot), input)
+Routine used to fill the region.  Use \fBplfill\fP(3plplot).  Future version of PLplot may have other fill routines.
+.TP
+\fIrectangular\fP (\fBPLBOOL\fP(3plplot), input)
+Set \fIrectangular\fP to true if rectangles map to rectangles after coordinate transformation with \fIpltrl\fP.  Otherwise, set \fIrectangular\fP to false. If \fIrectangular\fP is set to true, plshade tries to save time by filling large rectangles.  This optimization fails if the coordinate transformation distorts the shape of rectangles. For example a plot in polar coordinates has to have \fIrectangular\fP set to false.
+.TP
+\fIpltr\fP (\fBPLTRANSFORM_callback\fP(3plplot), input)
+A callback function that defines the transformation between the zero-based indices of the matrix \fIa\fP and world coordinates. If \fIpltr\fP is not supplied (e.g., is set to NULL in the C case), then the x indices of \fIa\fP are mapped to the range \fIxmin\fP through \fIxmax\fP and the y indices of \fIa\fP are mapped to the range \fIymin\fP through \fIymax\fP.For the C case, transformation functions are provided in the PLplot library: \fBpltr0\fP(3plplot) for the identity mapping, and \fBpltr1\fP(3plplot) and \fBpltr2\fP(3plplot) for arbitrary mappings respectively defined by vectors and matrices.  In addition, C callback routines for the transformation can be supplied by the user such as the mypltr function in examples/c/x09c.c which provides a general linear transformation between index coordinates and world coordinates.For languages other than C you should consult the PLplot documentation for the details concerning how \fBPLTRANSFORM_callback\fP(3plplot) arguments are interfaced. However, in general, a particular pattern of callback-associated arguments such as a tr vector with 6 elements; xg and yg vectors; or xg and yg matrices are respectively interfaced to a linear-transformation routine similar to the above mypltr function; \fBpltr1\fP(3plplot); and \fBpltr2\fP(3plplot). Furthermore, some of our more sophisticated bindings (see, e.g., the PLplot documentation) support native language callbacks for handling index to world-coordinate transformations.  Examples of these various approaches are given in examples/<language>x09*, examples/<language>x16*, examples/<language>x20*, examples/<language>x21*, and examples/<language>x22*, for all our supported languages.
+.TP
+\fIpltr_data\fP (\fBPLPointer\fP(3plplot), input)
+Extra parameter to help pass information to \fBpltr0\fP(3plplot), \fBpltr1\fP(3plplot), \fBpltr2\fP(3plplot), or whatever routine that is externally supplied.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

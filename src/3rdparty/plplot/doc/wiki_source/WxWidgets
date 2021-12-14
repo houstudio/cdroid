@@ -1,0 +1,94 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Description
+-----------
+
+wxWidgets is a cross platform GUI toolkit which also provides other common classes as wxString, wxMap etc. and is known to work well on Windows, Linux and Mac OS X. The wxWidgets toolkit is used for the wxWidgets driver. Version 2.6.x and 2.8.x of wxWidgets can be used for the wxWidgets driver. Go to <http://www.wxwidgets.org> for more information.
+
+Instructions for Mac OS X
+-------------------------
+
+### Mac OS X 10.5
+
+The wxWidgets library version 2.8.4 is already installed on Mac OS X 10.5.1 and later. This version is known to work well with the wxWidgets driver, therefore just run cmake as described on the [Mac OSX Page](Mac_OSX "wikilink"). The wxWidgets library should be discovered automatically. This can be checked at the end of the cmake output:
+
+`Language Bindings:`
+`ENABLE_f77:        OFF     ENABLE_f95:     OFF`
+`ENABLE_cxx:        ON      ENABLE_java:        ON`
+`ENABLE_python:     ON      ENABLE_octave:      OFF`
+`ENABLE_tcl:        ON      ENABLE_itcl:        OFF`
+`ENABLE_tk:     ON      ENABLE_itk:     OFF`
+`ENABLE_pdl:        OFF     ENABLE_wxwidgets:   ON`
+`ENABLE_gnome2:     OFF     ENABLE_pygcw:       OFF`
+`ENABLE_ada:        OFF`
+
+Instructions for Linux
+----------------------
+
+The simplest way to install the wxWidgets (wxGTK) library and development files is to install the corresponding packages for your distribution, e.g. in Ubuntu Hardy Heron install the libwxgtk2.8-dev package, which dependes on libwxbase2.8-0, libwxbase2.8-dev, libwxgtk2.8-0 and wx2.8-headers.
+
+Instructions for Windows
+------------------------
+
+-   Download [wxWidgets 2.8.9 library as zip](http://prdownloads.sourceforge.net/wxwindows/wxMSW-2.8.9.zip) (exe installer is also available)
+-   Unzip the wxMSW-2.8.9.zip package in a suitable place
+-   Set the WXWIN environment variable (either system wide or only for your CLI session), e.g.
+
+`set WXWIN=C:\wxWidgets-2.8.9`
+
+-   The following instructions will build a shared, unicode, release version of wxWidgets. If you use plplot within your wxWidgets application you have already a wxWidgets library ready for use - see <tt>cmake-path\\share\\modules\\FindwxWidgets.cmake</tt> for the options for your special wxWidgets library.
+
+### MinGW command line tools
+
+-   To compile wxWidgets with the MinGW compiler run
+
+`cd %WXWIN%\build\msw`
+`mingw32-make -f makefile.gcc SHARED=1 UNICODE=1 BUILD=release`
+
+-   set environment variables
+
+`set PATH=%WXWIN%\lib\gcc_dll;%PATH%`
+
+CMake is now able to find the wxWidgets library and headers, if you additionally set the following cmake options for MinGW:
+
+` -DwxWidgets_LIB_DIR=%WXWIN%/lib/gcc_dll -DwxWidgets_CONFIGURATION=mswu -DENABLE_MIX_CXX=ON`
+
+**CAUTION:** If you have used other guides to compile wxWidgets ([Eclipse, CDT & MingW & MSYS Setup Guide](http://wiki.wxwidgets.org/Eclipse,_CDT_%26_MingW_%26_MSYS_Setup_Guide) in my case), be aware that there is a significant difference between having compiled wxWidgets with ./configure in MSYS and the above commands using [CMake](http://www.cmake.org/). Although both result in Windows libraries, they will not place them in the same paths. The location of build.cfg may also be a significant factor. [CMake](http://www.cmake.org/), as is used by PLplot, can search for wxWidgets via two independent methods labeled 'unix' and 'win32'. The ./configure method is not compatible with the 'win32' search method.
+
+### VisualC command line tools
+
+-   To compile wxWidgets with the Visual C++ command line toolset run
+
+`cd %WXWIN%\build\msw`
+`nmake -f makefile.vc SHARED=1 UNICODE=1 BUILD=release USE_GDIPLUS=1`
+
+This builds a shared, unicode release library of wxWidgets with GDI+ support for wxGraphicsContext included.
+
+-   Open the file <tt>%WXWIN%\\lib\\vc_dll\\mswu\\wx\\setup.h</tt> and change
+
+`#define wxUSE_GRAPHICS_CONTEXT 0`
+
+to
+
+`#define wxUSE_GRAPHICS_CONTEXT 1`
+
+-   set environment variables (Visual C++)
+
+`set PATH=%WXWIN%\lib\vc_dll;%PATH%`
+
+-   CMake is now able to find the wxWidgets library and headers, if you additionally set the following cmake options for Visual C++:
+
+` -DwxWidgets_LIB_DIR=%WXWIN%/lib/vc_dll -DwxWidgets_CONFIGURATION=mswu -DENABLE_MIX_CXX=ON`
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

@@ -1,0 +1,34 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSTRING 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplstring\fP - Plot a glyph at the specified points
+.SH SYNOPSIS
+\fBplstring\fP(\fIn\fP, \fIx\fP, \fIy\fP, \fIstring\fP)
+.SH DESCRIPTION
+
+.P
+Plot a glyph at the specified points. (Supersedes \fBplpoin\fP(3plplot) and \fBplsym\fP(3plplot) because many[!] more glyphs are accessible with \fBplstring\fP(3plplot).) The glyph is specified with a PLplot user string.  Note that the user string is not actually limited to one glyph so it is possible (but not normally useful) to plot more than one glyph at the specified points with this function.  As with \fBplmtex\fP(3plplot) and \fBplptex\fP(3plplot), the user string can contain FCI escapes to determine the font, UTF-8 code to determine the glyph or else PLplot escapes for Hershey or unicode text to determine the glyph.
+.P
+Redacted form: \fBplstring(x, y, string)\fP
+.P
+This function is used in examples 4, 21 and 26.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of points in the \fIx\fP and \fIy\fP vectors.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates of the points.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of the points.
+.TP
+\fIstring\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string containing the glyph(s) to be plotted at each of the \fIn\fP points.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

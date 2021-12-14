@@ -1,0 +1,37 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLVPAS 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplvpas\fP - Specify viewport using coordinates and aspect ratio
+.SH SYNOPSIS
+\fBplvpas\fP(\fIxmin\fP, \fIxmax\fP, \fIymin\fP, \fIymax\fP, \fIaspect\fP)
+.SH DESCRIPTION
+
+.P
+Device-independent routine for setting up the viewport.  The viewport is chosen to be the largest with the given aspect ratio that fits within the specified region (in terms of normalized subpage coordinates).  This routine is functionally equivalent to \fBplvpor\fP(3plplot) when a ``natural'' aspect ratio (0.0) is chosen.  Unlike \fBplvasp\fP(3plplot), this routine reserves no extra space at the edges for labels.
+.P
+Redacted form: \fBplvpas(xmin, xmax, ymin, ymax, aspect)\fP
+.P
+This function is used in example 9.
+.SH ARGUMENTS
+.TP
+\fIxmin\fP (\fBPLFLT\fP(3plplot), input)
+The normalized subpage coordinate of the left-hand edge of the viewport.
+.TP
+\fIxmax\fP (\fBPLFLT\fP(3plplot), input)
+The normalized subpage coordinate of the right-hand edge of the viewport.
+.TP
+\fIymin\fP (\fBPLFLT\fP(3plplot), input)
+The normalized subpage coordinate of the bottom edge of the viewport.
+.TP
+\fIymax\fP (\fBPLFLT\fP(3plplot), input)
+The normalized subpage coordinate of the top edge of the viewport.
+.TP
+\fIaspect\fP (\fBPLFLT\fP(3plplot), input)
+Ratio of length of y axis to length of x axis.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

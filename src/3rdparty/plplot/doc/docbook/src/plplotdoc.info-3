@@ -1,0 +1,3814 @@
+This is plplotdoc.info, produced by makeinfo version 6.5 from
+plplotdoc.texi.
+
+INFO-DIR-SECTION Scientific Visualization
+START-INFO-DIR-ENTRY
+* Documentation of the PLplot plotting software: (plplotdoc).
+                                                  This reference contains
+                                                  complete user documentation
+                                                  for the PLplot plotting
+                                                  software
+END-INFO-DIR-ENTRY
+
+
+File: plplotdoc.info,  Node: plsdiplt; Set parameters that define current plot-space window,  Next: plsdiplz; Set parameters incrementally [zoom mode] that define current plot-space window,  Prev: plsdiori; Set plot orientation,  Up: The Common API for PLplot
+
+17.122 plsdiplt: Set parameters that define current plot-space window
+=====================================================================
+
+     plsdiplt ( xmin , ymin , xmax , ymax );
+
+   Set relative minima and maxima that define the current plot-space
+window.  If ‘plsdiplt’ (*note plsdiplt; Set parameters that define
+current plot-space window::) is not called the default values of ‘
+‘xmin’ ’, ‘ ‘ymin’ ’, ‘ ‘xmax’ ’, and ‘ ‘ymax’ ’ are 0., 0., 1., and 1.
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative minimum in x.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative minimum in y.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative maximum in x.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative maximum in y.
+
+   Redacted form: ‘plsdiplt(xmin, ymin, xmax, ymax)’
+
+   This function is used in example 31.
+
+
+File: plplotdoc.info,  Node: plsdiplz; Set parameters incrementally [zoom mode] that define current plot-space window,  Next: plsdrawmode; Set drawing mode [depends on device support!],  Prev: plsdiplt; Set parameters that define current plot-space window,  Up: The Common API for PLplot
+
+17.123 plsdiplz: Set parameters incrementally (zoom mode) that define current plot-space window
+===============================================================================================
+
+     plsdiplz ( xmin , ymin , xmax , ymax );
+
+   Set relative minima and maxima incrementally (zoom mode) that define
+the current plot-space window.  This function has the same effect as
+‘plsdiplt’ (*note plsdiplt; Set parameters that define current
+plot-space window::) if that function has not been previously called.
+Otherwise, this function implements zoom mode using the transformation
+‘min_used = old_min + old_length*min ’ and ‘max_used = old_min +
+old_length*max ’ for each axis.  For example, if ‘min = 0.05’ and ‘max =
+0.95’ for each axis, repeated calls to ‘plsdiplz’ (*note plsdiplz; Set
+parameters incrementally [zoom mode] that define current plot-space
+window::) will zoom in by 10 per cent for each call.
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative (incremental) minimum in x.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative (incremental) minimum in y.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative (incremental) maximum in x.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Relative (incremental) maximum in y.
+
+   Redacted form: ‘plsdiplz(xmin, ymin, xmax, ymax)’
+
+   This function is used in example 31.
+
+
+File: plplotdoc.info,  Node: plsdrawmode; Set drawing mode [depends on device support!],  Next: plseed; Set seed for internal random number generator_,  Prev: plsdiplz; Set parameters incrementally [zoom mode] that define current plot-space window,  Up: The Common API for PLplot
+
+17.124 plsdrawmode: Set drawing mode (depends on device support!)
+=================================================================
+
+     plsdrawmode (mode);
+
+   Set drawing mode.  Note only one device driver (cairo) currently
+supports this at the moment.  See also ‘plgdrawmode’ (*note plgdrawmode;
+Get drawing mode [depends on device support!]::).
+
+‘mode’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Control variable which species the drawing mode (one of
+     ‘PL_DRAWMODE_DEFAULT’, ‘PL_DRAWMODE_REPLACE’, or ‘PL_DRAWMODE_XOR’)
+     to use.
+
+   Redacted form: ‘plsdrawmode(mode)’
+
+   This function is used in example 34.
+
+
+File: plplotdoc.info,  Node: plseed; Set seed for internal random number generator_,  Next: plsesc; Set the escape character for text strings,  Prev: plsdrawmode; Set drawing mode [depends on device support!],  Up: The Common API for PLplot
+
+17.125 plseed: Set seed for internal random number generator.
+=============================================================
+
+     plseed ( seed );
+
+   Set the seed for the internal random number generator.  See ‘plrandd’
+(*note plrandd; Random number generator returning a real random number
+in the range [0;1]::) for further details.
+
+‘seed’ (‘unsigned int’, input)
+     Seed for random number generator.
+
+   Redacted form: ‘plseed(seed)’
+
+   This function is used in example 21.
+
+
+File: plplotdoc.info,  Node: plsesc; Set the escape character for text strings,  Next: plsetopt; Set any command-line option,  Prev: plseed; Set seed for internal random number generator_,  Up: The Common API for PLplot
+
+17.126 plsesc: Set the escape character for text strings
+========================================================
+
+     plsesc ( esc );
+
+   Set the escape character for text strings.  From C (in contrast to
+Fortran, see ‘plsescfortran’ (*note plsesc; Set the escape character for
+text strings for Fortran::)) you pass ‘‘esc’’ as a character.  Only
+selected characters are allowed to prevent the user from shooting
+himself in the foot (For example, a ‘\’ isn’t allowed since it conflicts
+with C’s use of backslash as a character escape).  Here are the allowed
+escape characters and their corresponding decimal ASCII values:
+
+   • ‘!’, ASCII 33
+
+   • ‘#’, ASCII 35
+
+   • ‘$’, ASCII 36
+
+   • ‘%’, ASCII 37
+
+   • ‘&’, ASCII 38
+
+   • ‘*’, ASCII 42
+
+   • ‘@’, ASCII 64
+
+   • ‘^’, ASCII 94
+
+   • ‘~’, ASCII 126
+
+‘esc’ (‘char’, input)
+     Escape character.
+
+   Redacted form:
+
+   • General: ‘plsesc(esc)’
+
+   This function is used in example 29.
+
+
+File: plplotdoc.info,  Node: plsetopt; Set any command-line option,  Next: plsfam; Set family file parameters,  Prev: plsesc; Set the escape character for text strings,  Up: The Common API for PLplot
+
+17.127 plsetopt: Set any command-line option
+============================================
+
+     PLINT plsetopt ( opt , optarg );
+
+   Set any command-line option internally from a program before it
+invokes ‘plinit’ (*note plinit; Initialize PLplot::).  ‘opt’ is the name
+of the command-line option and ‘optarg’ is the corresponding
+command-line option argument.
+
+‘opt’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the command-line option.
+
+‘optarg’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the argument of the
+     command-line option.
+
+   This function returns 0 on success.
+
+   Redacted form: ‘plsetopt(opt, optarg)’
+
+   This function is used in example 14.
+
+
+File: plplotdoc.info,  Node: plsfam; Set family file parameters,  Next: plsfci; Set FCI [font characterization integer],  Prev: plsetopt; Set any command-line option,  Up: The Common API for PLplot
+
+17.128 plsfam: Set family file parameters
+=========================================
+
+     plsfam ( fam , num , bmax );
+
+   Sets variables dealing with output file familying.  Does nothing if
+familying not supported by the driver.  This routine, if used, must be
+called before initializing PLplot.  See *note Family File Output:: for
+more information.
+
+‘fam’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Family flag (Boolean).  If nonzero, familying is enabled.
+
+‘num’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Current family file number.
+
+‘bmax’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Maximum file size (in bytes) for a family file.
+
+   Redacted form: ‘plsfam(fam, num, bmax)’
+
+   This function is used in examples 14 and 31.
+
+
+File: plplotdoc.info,  Node: plsfci; Set FCI [font characterization integer],  Next: plsfnam; Set output file name,  Prev: plsfam; Set family file parameters,  Up: The Common API for PLplot
+
+17.129 plsfci: Set FCI (font characterization integer)
+======================================================
+
+     plsfci ( fci );
+
+   Sets font characteristics to be used at the start of the next string
+using the FCI approach.  See *note FCI:: for more information.  Note,
+‘plsfont’ (*note plsfont; Set family; style and weight of the current
+font::) (which calls ‘plsfci’ (*note plsfci; Set FCI [font
+characterization integer]::) internally) provides a more user-friendly
+API for setting the font characterisitics.
+
+‘fci’ (‘‘PLUNICODE’ (*note PLUNICODE-type::)’, input)
+     PLUNICODE (unsigned 32-bit integer) value of FCI.
+
+   Redacted form:
+
+   • General: ‘plsfci(fci)’
+
+   This function is used in example 23.
+
+
+File: plplotdoc.info,  Node: plsfnam; Set output file name,  Next: plsfont; Set family; style and weight of the current font,  Prev: plsfci; Set FCI [font characterization integer],  Up: The Common API for PLplot
+
+17.130 plsfnam: Set output file name
+====================================
+
+     plsfnam ( fnam );
+
+   Sets the current output file name, if applicable.  If the file name
+has not been specified and is required by the driver, the user will be
+prompted for it.  If using the X-windows output driver, this sets the
+display name.  This routine, if used, must be called before initializing
+PLplot.
+
+‘fnam’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the file name.
+
+   Redacted form: ‘plsfnam(fnam)’
+
+   This function is used in examples 1 and 20.
+
+
+File: plplotdoc.info,  Node: plsfont; Set family; style and weight of the current font,  Next: plshades; Shade regions on the basis of value,  Prev: plsfnam; Set output file name,  Up: The Common API for PLplot
+
+17.131 plsfont: Set family, style and weight of the current font
+================================================================
+
+     plsfont ( family , style , weight );
+
+   Sets the current font.  See *note FCI:: for more information on font
+selection.
+
+‘family’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Font family to select for the current font.  The available values
+     are given by the PL_FCI_* constants in ‘plplot.h’.  Current options
+     are PL_FCI_SANS, PL_FCI_SERIF, PL_FCI_MONO, PL_FCI_SCRIPT and
+     PL_FCI_SYMBOL. A negative value signifies that the font family
+     should not be altered.
+
+‘style’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Font style to select for the current font.  The available values
+     are given by the PL_FCI_* constants in ‘plplot.h’.  Current options
+     are PL_FCI_UPRIGHT, PL_FCI_ITALIC and PL_FCI_OBLIQUE. A negative
+     value signifies that the font style should not be altered.
+
+‘weight’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Font weight to select for the current font.  The available values
+     are given by the PL_FCI_* constants in ‘plplot.h’.  Current options
+     are PL_FCI_MEDIUM and PL_FCI_BOLD. A negative value signifies that
+     the font weight should not be altered.
+
+   Redacted form: ‘plsfont(family, style, weight)’
+
+   This function is used in example 23.
+
+
+File: plplotdoc.info,  Node: plshades; Shade regions on the basis of value,  Next: plshade; Shade individual region on the basis of value,  Prev: plsfont; Set family; style and weight of the current font,  Up: The Common API for PLplot
+
+17.132 plshades: Shade regions on the basis of value
+====================================================
+
+     plshades ( a , nx , ny , defined , xmin , xmax , ymin , ymax ,
+     clevel , nlevel , fill_width , cont_color , cont_width , fill ,
+     rectangular , pltr , pltr_data );
+
+   Shade regions on the basis of value.  This is the high-level routine
+for making continuous color shaded plots with cmap1 while ‘plshade’
+(*note plshade; Shade individual region on the basis of value::) should
+be used to plot individual shaded regions using either cmap0 or cmap1.
+‘examples/;<language>/x16*’ shows how to use ‘plshades’ (*note plshades;
+Shade regions on the basis of value::) for each of our supported
+languages.
+
+‘a’ (‘‘PLFLT_MATRIX’ (*note PLFLT_MATRIX-type::)’, input)
+     A matrix containing function values to plot.  Should have
+     dimensions of ‘nx’ by ‘ny’.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     First dimension of matrix "a".
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Second dimension of matrix "a".
+
+‘defined’ (‘‘PLDEFINED_callback’ (*note PLDEFINED_callback-type::)’, input)
+     Callback function specifying the region that should be plotted in
+     the shade plot.  This function accepts x and y coordinates as input
+     arguments and must return 1 if the point is to be included in the
+     shade plot and 0 otherwise.  If you want to plot the entire shade
+     plot (the usual case), this argument should be set to NULL.
+
+‘xmin, xmax, ymin, ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     See the discussion of ‘pltr’ below for how these arguments are used
+     (only for the special case when the callback function ‘pltr’ is not
+     supplied).
+
+‘clevel’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the data levels corresponding to the edges of
+     each shaded region that will be plotted by this function.  To work
+     properly the levels should be monotonic.
+
+‘nlevel’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of shades plus 1 (i.e., the number of shade edge values in
+     ‘‘clevel’’).
+
+‘fill_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines the line width used by the fill pattern.
+
+‘cont_color’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Defines cmap0 pen color used for contours defining edges of shaded
+     regions.  The pen color is only temporary set for the contour
+     drawing.  Set this value to zero or less if no shade edge contours
+     are wanted.
+
+‘cont_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines line width used for contours defining edges of shaded
+     regions.  This value may not be honored by all drivers.  The pen
+     width is only temporary set for the contour drawing.  Set this
+     value to zero or less if no shade edge contours are wanted.
+
+‘fill’ (‘‘PLFILL_callback’ (*note PLFILL_callback-type::)’, input)
+     Callback routine used to fill the region.  Use ‘plfill’ (*note
+     plfill; Draw filled polygon::) for this purpose.
+
+‘rectangular’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     Set ‘‘rectangular’’ to true if rectangles map to rectangles after
+     coordinate transformation with ‘‘pltrl’’.  Otherwise, set
+     ‘‘rectangular’’ to false.  If ‘‘rectangular’’ is set to true,
+     plshade tries to save time by filling large rectangles.  This
+     optimization fails if the coordinate transformation distorts the
+     shape of rectangles.  For example a plot in polar coordinates has
+     to have ‘‘rectangular’’ set to false.
+
+‘pltr’ (‘‘PLTRANSFORM_callback’ (*note PLTRANSFORM_callback-type::)’, input)
+     A callback function that defines the transformation between the
+     zero-based indices of the matrix ‘‘a’’ and world coordinates.  If
+     ‘pltr’ is not supplied (e.g., is set to NULL in the C case), then
+     the x indices of ‘‘a’’ are mapped to the range ‘xmin’ through
+     ‘xmax’ and the y indices of ‘‘a’’ are mapped to the range ‘ymin’
+     through ‘ymax’.
+
+     For the C case, transformation functions are provided in the PLplot
+     library: ‘pltr0’ (*note pltr0; Identity transformation for matrix
+     index to world coordinate mapping::) for the identity mapping, and
+     ‘pltr1’ (*note pltr1; Linear interpolation for matrix index to
+     world coordinate mapping using singly dimensioned coordinate
+     arrays::) and ‘pltr2’ (*note pltr2; Linear interpolation for grid
+     to world mapping using doubly dimensioned coordinate arrays
+     [row-major order as per normal C 2d arrays]::) for arbitrary
+     mappings respectively defined by vectors and matrices.  In
+     addition, C callback routines for the transformation can be
+     supplied by the user such as the ‘mypltr’ function in
+     ‘examples/c/x09c.c’ which provides a general linear transformation
+     between index coordinates and world coordinates.
+
+     For languages other than C you should consult *note Supported
+     computer languages: Supported computer languages. for the details
+     concerning how ‘PLTRANSFORM_callback’ (*note
+     PLTRANSFORM_callback-type::) arguments are interfaced.  However, in
+     general, a particular pattern of callback-associated arguments such
+     as a ‘tr’ vector with 6 elements; ‘xg’ and ‘yg’ vectors; or ‘xg’
+     and ‘yg’ matrices are respectively interfaced to a
+     linear-transformation routine similar to the above ‘mypltr’
+     function; ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::); and ‘pltr2’ (*note pltr2; Linear
+     interpolation for grid to world mapping using doubly dimensioned
+     coordinate arrays [row-major order as per normal C 2d arrays]::).
+     Furthermore, some of our more sophisticated bindings (see, e.g.,
+     *note Fortran Language::) support native language callbacks for
+     handling index to world-coordinate transformations.  Examples of
+     these various approaches are given in ‘examples/<language>x09*’,
+     ‘examples/<language>x16*’, ‘examples/<language>x20*’,
+     ‘examples/<language>x21*’, and ‘examples/<language>x22*’, for all
+     our supported languages.
+
+‘pltr_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Extra parameter to help pass information to ‘pltr0’ (*note pltr0;
+     Identity transformation for matrix index to world coordinate
+     mapping::), ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::), ‘pltr2’ (*note pltr2; Linear interpolation
+     for grid to world mapping using doubly dimensioned coordinate
+     arrays [row-major order as per normal C 2d arrays]::), or whatever
+     routine that is externally supplied.
+
+   Redacted form:
+
+   • General: ‘plshades(a, defined, xmin, xmax, ymin, ymax, clevel,
+     fill_width, cont_color, cont_width, fill, rectangular, pltr,
+     pltr_data)’
+
+   This function is used in examples 16, 21, and 22.
+
+
+File: plplotdoc.info,  Node: plshade; Shade individual region on the basis of value,  Next: plslabelfunc; Assign a function to use for generating custom axis labels,  Prev: plshades; Shade regions on the basis of value,  Up: The Common API for PLplot
+
+17.133 plshade: Shade individual region on the basis of value
+=============================================================
+
+     plshade ( a , nx , ny , defined , xmin , xmax , ymin , ymax ,
+     shade_min , shade_max , sh_cmap , sh_color , sh_width , min_color ,
+     min_width , max_color , max_width , fill , rectangular , pltr ,
+     pltr_data );
+
+   Shade individual region on the basis of value.  Use ‘plshades’ (*note
+plshades; Shade regions on the basis of value::) if you want to shade a
+number of contiguous regions using continuous colors.  In particular the
+edge contours are treated properly in ‘plshades’ (*note plshades; Shade
+regions on the basis of value::).  If you attempt to do contiguous
+regions with ‘plshade’ (*note plshade; Shade individual region on the
+basis of value::) the contours at the edge of the shade are partially
+obliterated by subsequent plots of contiguous shaded regions.
+
+‘a’ (‘‘PLFLT_MATRIX’ (*note PLFLT_MATRIX-type::)’, input)
+     A matrix containing function values to plot.  Should have
+     dimensions of ‘nx’ by ‘ny’.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     First dimension of the matrix "a".
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Second dimension of the matrix "a".
+
+‘defined’ (‘‘PLDEFINED_callback’ (*note PLDEFINED_callback-type::)’, input)
+     Callback function specifying the region that should be plotted in
+     the shade plot.  This function accepts x and y coordinates as input
+     arguments and must return 1 if the point is to be included in the
+     shade plot and 0 otherwise.  If you want to plot the entire shade
+     plot (the usual case), this argument should be set to NULL.
+
+‘xmin, xmax, ymin, ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     See the discussion of ‘pltr’ below for how these arguments are used
+     (only for the special case when the callback function ‘pltr’ is not
+     supplied).
+
+‘shade_min’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines the lower end of the interval to be shaded.  If shade_max ≤
+     shade_min, ‘plshade’ (*note plshade; Shade individual region on the
+     basis of value::) does nothing.
+
+‘shade_max’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines the upper end of the interval to be shaded.  If shade_max ≤
+     shade_min, ‘plshade’ (*note plshade; Shade individual region on the
+     basis of value::) does nothing.
+
+‘sh_cmap’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Defines color map.  If ‘‘sh_cmap’=0’, then ‘‘sh_color’’ is
+     interpreted as a cmap0 (integer) index.  If ‘‘sh_cmap’=1’, then
+     ‘‘sh_color’’ is interpreted as a cmap1 argument in the range
+     (0.0-1.0).
+
+‘sh_color’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines color map index with integer value if cmap0 or value in
+     range (0.0-1.0) if cmap1.
+
+‘sh_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines width used by the fill pattern.
+
+‘min_color’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘min_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘max_color’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘max_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘fill’ (‘‘PLFILL_callback’ (*note PLFILL_callback-type::)’, input)
+     Routine used to fill the region.  Use ‘plfill’ (*note plfill; Draw
+     filled polygon::).  Future version of PLplot may have other fill
+     routines.
+
+‘rectangular’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     Set ‘ ‘rectangular’ ’ to true if rectangles map to rectangles after
+     coordinate transformation with ‘‘pltrl’’.  Otherwise, set
+     ‘‘rectangular’’ to false.  If ‘‘rectangular’’ is set to true,
+     plshade tries to save time by filling large rectangles.  This
+     optimization fails if the coordinate transformation distorts the
+     shape of rectangles.  For example a plot in polar coordinates has
+     to have ‘‘rectangular’’ set to false.
+
+‘pltr’ (‘‘PLTRANSFORM_callback’ (*note PLTRANSFORM_callback-type::)’, input)
+     A callback function that defines the transformation between the
+     zero-based indices of the matrix ‘‘a’’ and world coordinates.  If
+     ‘pltr’ is not supplied (e.g., is set to NULL in the C case), then
+     the x indices of ‘‘a’’ are mapped to the range ‘xmin’ through
+     ‘xmax’ and the y indices of ‘‘a’’ are mapped to the range ‘ymin’
+     through ‘ymax’.
+
+     For the C case, transformation functions are provided in the PLplot
+     library: ‘pltr0’ (*note pltr0; Identity transformation for matrix
+     index to world coordinate mapping::) for the identity mapping, and
+     ‘pltr1’ (*note pltr1; Linear interpolation for matrix index to
+     world coordinate mapping using singly dimensioned coordinate
+     arrays::) and ‘pltr2’ (*note pltr2; Linear interpolation for grid
+     to world mapping using doubly dimensioned coordinate arrays
+     [row-major order as per normal C 2d arrays]::) for arbitrary
+     mappings respectively defined by vectors and matrices.  In
+     addition, C callback routines for the transformation can be
+     supplied by the user such as the ‘mypltr’ function in
+     ‘examples/c/x09c.c’ which provides a general linear transformation
+     between index coordinates and world coordinates.
+
+     For languages other than C you should consult *note Supported
+     computer languages: Supported computer languages. for the details
+     concerning how ‘PLTRANSFORM_callback’ (*note
+     PLTRANSFORM_callback-type::) arguments are interfaced.  However, in
+     general, a particular pattern of callback-associated arguments such
+     as a ‘tr’ vector with 6 elements; ‘xg’ and ‘yg’ vectors; or ‘xg’
+     and ‘yg’ matrices are respectively interfaced to a
+     linear-transformation routine similar to the above ‘mypltr’
+     function; ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::); and ‘pltr2’ (*note pltr2; Linear
+     interpolation for grid to world mapping using doubly dimensioned
+     coordinate arrays [row-major order as per normal C 2d arrays]::).
+     Furthermore, some of our more sophisticated bindings (see, e.g.,
+     *note Fortran Language::) support native language callbacks for
+     handling index to world-coordinate transformations.  Examples of
+     these various approaches are given in ‘examples/<language>x09*’,
+     ‘examples/<language>x16*’, ‘examples/<language>x20*’,
+     ‘examples/<language>x21*’, and ‘examples/<language>x22*’, for all
+     our supported languages.
+
+‘pltr_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Extra parameter to help pass information to ‘pltr0’ (*note pltr0;
+     Identity transformation for matrix index to world coordinate
+     mapping::), ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::), ‘pltr2’ (*note pltr2; Linear interpolation
+     for grid to world mapping using doubly dimensioned coordinate
+     arrays [row-major order as per normal C 2d arrays]::), or whatever
+     routine that is externally supplied.
+
+   Redacted form:
+
+   • General: ‘plshade(a, defined, xmin, xmax, ymin, ymax, shade_min,
+     shade_max, sh_cmap, sh_color, sh_width, min_color, min_width,
+     max_color, max_width, fill, rectangular, pltr, pltr_data)’
+
+   This function is used in example 15.
+
+
+File: plplotdoc.info,  Node: plslabelfunc; Assign a function to use for generating custom axis labels,  Next: plsmaj; Set length of major ticks,  Prev: plshade; Shade individual region on the basis of value,  Up: The Common API for PLplot
+
+17.134 plslabelfunc: Assign a function to use for generating custom axis labels
+===============================================================================
+
+     plslabelfunc ( label_func , label_data );
+
+   This function allows a user to provide their own function to provide
+axis label text.  The user function is given the numeric value for a
+point on an axis and returns a string label to correspond with that
+value.  Custom axis labels can be enabled by passing appropriate
+arguments to ‘plenv’ (*note plenv; Set up standard window and draw
+box::), ‘plbox’ (*note plbox; Draw a box with axes; etc::), ‘ plbox3’
+(*note plbox3; Draw a box with axes; etc; in 3-d::) and similar
+functions.
+
+‘label_func’ (‘‘PLLABEL_FUNC_callback’ (*note PLLABEL_FUNC_callback-type::)’, input)
+     This is the custom label function.  In order to reset to the
+     default labelling, set this to ‘NULL’.  The labelling function
+     parameters are, in order:
+
+     ‘axis’
+          This indicates which axis a label is being requested for.  The
+          value will be one of ‘PL_X_AXIS’, ‘PL_Y_AXIS’ or ‘PL_Z_AXIS’.
+
+     ‘value’
+          This is the value along the axis which is being labelled.
+
+     ‘label_text’
+          The string representation of the label ‘value’.
+
+     ‘length’
+          The maximum length in characters allowed for ‘label_text’.
+
+‘label_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     This parameter may be used to pass data to the ‘label_func’
+     function.
+
+   This function is used in example 19.
+
+
+File: plplotdoc.info,  Node: plsmaj; Set length of major ticks,  Next: plsmem; Set the memory area to be plotted [RGB],  Prev: plslabelfunc; Assign a function to use for generating custom axis labels,  Up: The Common API for PLplot
+
+17.135 plsmaj: Set length of major ticks
+========================================
+
+     plsmaj ( def , scale );
+
+   This sets up the length of the major ticks.  The actual length is the
+product of the default length and a scaling factor as for character
+height.
+
+‘def’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The default length of a major tick in millimeters, should be set to
+     zero if the default length is to remain unchanged.
+
+‘scale’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Scale factor to be applied to default to get actual tick length.
+
+   Redacted form: ‘plsmaj(def, scale)’
+
+   This function is used in example 29.
+
+
+File: plplotdoc.info,  Node: plsmem; Set the memory area to be plotted [RGB],  Next: plsmema; Set the memory area to be plotted [RGBA],  Prev: plsmaj; Set length of major ticks,  Up: The Common API for PLplot
+
+17.136 plsmem: Set the memory area to be plotted (RGB)
+======================================================
+
+     plsmem ( maxx , maxy , plotmem );
+
+   Set the memory area to be plotted (with the ‘mem’ or ‘memcairo’
+driver) as the ‘dev’ member of the stream structure.  Also set the
+number of pixels in the memory passed in ‘plotmem’, which is a block of
+memory ‘maxy’ by ‘maxx’ by 3 bytes long, say: 480 x 640 x 3 (Y, X, RGB)
+
+   This memory will have to be freed by the user!
+
+‘maxx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Size of memory area in the X coordinate.
+
+‘maxy’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Size of memory area in the Y coordinate.
+
+‘plotmem’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Pointer to the beginning of a user-supplied writeable memory area.
+
+   Redacted form: ‘plsmem(maxx, maxy, plotmem)’
+
+   This function is not used in any examples.
+
+
+File: plplotdoc.info,  Node: plsmema; Set the memory area to be plotted [RGBA],  Next: plsmin; Set length of minor ticks,  Prev: plsmem; Set the memory area to be plotted [RGB],  Up: The Common API for PLplot
+
+17.137 plsmema: Set the memory area to be plotted (RGBA)
+========================================================
+
+     plsmema ( maxx , maxy , plotmem );
+
+   Set the memory area to be plotted (with the ‘memcairo’ driver) as the
+‘dev’ member of the stream structure.  Also set the number of pixels in
+the memory passed in ‘plotmem’, which is a block of memory ‘maxy’ by
+‘maxx’ by 4 bytes long, say: 480 x 640 x 4 (Y, X, RGBA)
+
+   This memory will have to be freed by the user!
+
+‘maxx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Size of memory area in the X coordinate.
+
+‘maxy’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Size of memory area in the Y coordinate.
+
+‘plotmem’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Pointer to the beginning of a user-supplied writeable memory area.
+
+   Redacted form: ‘plsmema(maxx, maxy, plotmem)’
+
+   This function is not used in any examples.
+
+
+File: plplotdoc.info,  Node: plsmin; Set length of minor ticks,  Next: plsori; Set orientation,  Prev: plsmema; Set the memory area to be plotted [RGBA],  Up: The Common API for PLplot
+
+17.138 plsmin: Set length of minor ticks
+========================================
+
+     plsmin ( def , scale );
+
+   This sets up the length of the minor ticks and the length of the
+terminals on error bars.  The actual length is the product of the
+default length and a scaling factor as for character height.
+
+‘def’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The default length of a minor tick in millimeters, should be set to
+     zero if the default length is to remain unchanged.
+
+‘scale’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Scale factor to be applied to default to get actual tick length.
+
+   Redacted form: ‘plsmin(def, scale)’
+
+   This function is used in example 29.
+
+
+File: plplotdoc.info,  Node: plsori; Set orientation,  Next: plspage; Set page parameters,  Prev: plsmin; Set length of minor ticks,  Up: The Common API for PLplot
+
+17.139 plsori: Set orientation
+==============================
+
+     plsori ( ori );
+
+   Set integer plot orientation parameter.  This function is identical
+to ‘plsdiori’ (*note plsdiori; Set plot orientation::) except for the
+type of the argument, and should be used in the same way.  See the
+documentation of ‘plsdiori’ (*note plsdiori; Set plot orientation::) for
+details.
+
+‘ori’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Orientation value (0 for landscape, 1 for portrait, etc.)  The
+     value is multiplied by 90 degrees to get the angle.
+
+   Redacted form: ‘plsori(ori)’
+
+   This function is used in example 3.
+
+
+File: plplotdoc.info,  Node: plspage; Set page parameters,  Next: plspal0; Set the cmap0 palette using the specified cmap0*_pal format file,  Prev: plsori; Set orientation,  Up: The Common API for PLplot
+
+17.140 plspage: Set page parameters
+===================================
+
+     plspage ( xp , yp , xleng , yleng , xoff , yoff );
+
+   Sets the page configuration (optional).  If an individual parameter
+is zero then that parameter value is not updated.  Not all parameters
+are recognized by all drivers and the interpretation is
+device-dependent.  The X-window driver uses the length and offset
+parameters to determine the window size and location.  The length and
+offset values are expressed in units that are specific to the current
+driver.  For instance: screen drivers will usually interpret them as
+number of pixels, whereas printer drivers will usually use mm.
+
+   This routine, if used, must be called before initializing PLplot.  It
+may be called at later times for interactive drivers to change only the
+dpi for subsequent redraws which you can force via a call to ‘plreplot’
+(*note plreplot; Replays contents of plot buffer to current
+device/file::).  If this function is not called then the page size
+defaults to landscape A4 for drivers which use real world page sizes and
+744 pixels wide by 538 pixels high for raster drivers.  The default
+value for dx and dy is 90 pixels per inch for raster drivers.
+
+‘xp’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Number of pixels per inch (DPI), x.  Used only by raster drivers,
+     ignored by drivers which use "real world" units (e.g.  mm).
+
+‘yp’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Number of pixels per inch (DPI), y.  Used only by raster drivers,
+     ignored by drivers which use "real world" units (e.g.  mm).
+
+‘xleng’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Page length, x.
+
+‘yleng’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Page length, y.
+
+‘xoff’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Page offset, x.
+
+‘yoff’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Page offset, y.
+
+   Redacted form: ‘plspage(xp, yp, xleng, yleng, xoff, yoff)’
+
+   This function is used in examples 14 and 31.
+
+
+File: plplotdoc.info,  Node: plspal0; Set the cmap0 palette using the specified cmap0*_pal format file,  Next: plspal1; Set the cmap1 palette using the specified cmap1*_pal format file,  Prev: plspage; Set page parameters,  Up: The Common API for PLplot
+
+17.141 plspal0: Set the cmap0 palette using the specified cmap0*.pal format file
+================================================================================
+
+     plspal0 ( filename );
+
+   Set the cmap0 palette using the specified ‘cmap0*.pal’ format file.
+
+‘filename’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the name of the ‘cmap0*.pal’
+     file.  If this string is empty, use the default ‘cmap0*.pal’ file.
+
+   Redacted form: ‘plspal0(filename)’
+
+   This function is in example 16.
+
+
+File: plplotdoc.info,  Node: plspal1; Set the cmap1 palette using the specified cmap1*_pal format file,  Next: plspause; Set the pause [on end-of-page] status,  Prev: plspal0; Set the cmap0 palette using the specified cmap0*_pal format file,  Up: The Common API for PLplot
+
+17.142 plspal1: Set the cmap1 palette using the specified cmap1*.pal format file
+================================================================================
+
+     plspal1 ( filename , interpolate );
+
+   Set the cmap1 palette using the specified ‘cmap1*.pal’ format file.
+
+‘filename’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the name of the ‘cmap1*.pal’
+     file.  If this string is empty, use the default ‘cmap1*.pal’ file.
+
+‘interpolate’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     If this parameter is true, the columns containing the intensity
+     index, r, g, b, alpha and alt_hue_path in the ‘cmap1*.pal’ file are
+     used to set the cmap1 palette with a call to ‘plscmap1la’ (*note
+     plscmap1la; Set cmap1 colors and alpha transparency using a
+     piece-wise linear relationship::).  (The ‘cmap1*.pal’ header
+     contains a flag which controls whether the r, g, b data sent to
+     ‘plscmap1la’ (*note plscmap1la; Set cmap1 colors and alpha
+     transparency using a piece-wise linear relationship::) are
+     interpreted as HLS or RGB.)
+
+     If this parameter is false, the intensity index and alt_hue_path
+     columns are ignored and the r, g, b (interpreted as RGB), and alpha
+     columns of the ‘cmap1*.pal’ file are used instead to set the cmap1
+     palette directly with a call to ‘plscmap1a’ (*note plscmap1a; Set
+     semitransparent cmap1 RGBA colors_::).
+
+   Redacted form: ‘plspal1(filename, interpolate)’
+
+   This function is used in example 16.
+
+
+File: plplotdoc.info,  Node: plspause; Set the pause [on end-of-page] status,  Next: plsstrm; Set current output stream,  Prev: plspal1; Set the cmap1 palette using the specified cmap1*_pal format file,  Up: The Common API for PLplot
+
+17.143 plspause: Set the pause (on end-of-page) status
+======================================================
+
+     plspause ( pause );
+
+   Set the pause (on end-of-page) status.
+
+‘pause’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     If ‘ ‘pause’ ’ is true there will be a pause on end-of-page for
+     those drivers which support this.  Otherwise there is no pause.
+
+   Redacted form: ‘plspause(pause)’
+
+   This function is in examples 14,20.
+
+
+File: plplotdoc.info,  Node: plsstrm; Set current output stream,  Next: plssub; Set the number of subpages in x and y,  Prev: plspause; Set the pause [on end-of-page] status,  Up: The Common API for PLplot
+
+17.144 plsstrm: Set current output stream
+=========================================
+
+     plsstrm ( strm );
+
+   Sets the number of the current output stream.  The stream number
+defaults to 0 unless changed by this routine.  The first use of this
+routine must be followed by a call initializing PLplot (e.g.  ‘plstar’
+(*note plstar; Initialization::)).
+
+‘strm’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     The current stream number.
+
+   Redacted form: ‘plsstrm(strm)’
+
+   This function is examples 1,14,20.
+
+
+File: plplotdoc.info,  Node: plssub; Set the number of subpages in x and y,  Next: plssym; Set symbol size,  Prev: plsstrm; Set current output stream,  Up: The Common API for PLplot
+
+17.145 plssub: Set the number of subpages in x and y
+====================================================
+
+     plssub ( nx , ny );
+
+   Set the number of subpages in x and y.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of windows in x direction (i.e., number of window columns).
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of windows in y direction (i.e., number of window rows).
+
+   Redacted form: ‘plssub(nx, ny)’
+
+   This function is examples 1,2,14,21,25,27.
+
+
+File: plplotdoc.info,  Node: plssym; Set symbol size,  Next: plstar; Initialization,  Prev: plssub; Set the number of subpages in x and y,  Up: The Common API for PLplot
+
+17.146 plssym: Set symbol size
+==============================
+
+     plssym ( def , scale );
+
+   This sets up the size of all subsequent symbols drawn by ‘plpoin’
+(*note plpoin; Plot a glyph at the specified points::) and ‘plsym’
+(*note plsym; Plot a glyph at the specified points::).  The actual
+height of a symbol is the product of the default symbol size and a
+scaling factor as for the character height.
+
+‘def’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The default height of a symbol in millimeters, should be set to
+     zero if the default height is to remain unchanged.
+
+‘scale’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Scale factor to be applied to default to get actual symbol height.
+
+   Redacted form: ‘plssym(def, scale)’
+
+   This function is used in example 29.
+
+
+File: plplotdoc.info,  Node: plstar; Initialization,  Next: plstart; Initialization,  Prev: plssym; Set symbol size,  Up: The Common API for PLplot
+
+17.147 plstar: Initialization
+=============================
+
+     plstar ( nx , ny );
+
+   Initializing the plotting package.  The program prompts for the
+device keyword or number of the desired output device.  Hitting a RETURN
+in response to the prompt is the same as selecting the first device.  If
+only one device is enabled when PLplot is installed, ‘plstar’ (*note
+plstar; Initialization::) will issue no prompt.  The output device is
+divided into ‘ ‘nx’ ’ by ‘ ‘ny’ ’ subpages, each of which may be used
+independently.  The subroutine ‘pladv’ (*note pladv; Advance the
+[sub-]page::) is used to advance from one subpage to the next.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of subpages to divide output page in the x direction.
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of subpages to divide output page in the y direction.
+
+   Redacted form: ‘plstar(nx, ny)’
+
+   This function is used in example 1.
+
+
+File: plplotdoc.info,  Node: plstart; Initialization,  Next: plstransform; Set a global coordinate transform function,  Prev: plstar; Initialization,  Up: The Common API for PLplot
+
+17.148 plstart: Initialization
+==============================
+
+     plstart ( devname , nx , ny );
+
+   Alternative to ‘plstar’ (*note plstar; Initialization::) for
+initializing the plotting package.  The device name keyword for the
+desired output device must be supplied as an argument.  These keywords
+are the same as those printed out by ‘plstar’ (*note plstar;
+Initialization::).  If the requested device is not available, or if the
+input string is empty or begins with “?”, the prompted start up of
+‘plstar’ (*note plstar; Initialization::) is used.  This routine also
+divides the output device page into ‘ ‘nx’ ’ by ‘ ‘ny’ ’ subpages, each
+of which may be used independently.  The subroutine ‘pladv’ (*note
+pladv; Advance the [sub-]page::) is used to advance from one subpage to
+the next.
+
+‘devname’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the device name keyword of the
+     required output device.  If ‘devname’ is NULL or if the first
+     character of the string is a “?”, the normal (prompted) start up is
+     used.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of subpages to divide output page in the x direction.
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of subpages to divide output page in the y direction.
+
+   Redacted form:
+
+   • General: ‘plstart(devname, nx, ny)’
+
+   This function is not used in any examples.
+
+
+File: plplotdoc.info,  Node: plstransform; Set a global coordinate transform function,  Next: plstring; Plot a glyph at the specified points,  Prev: plstart; Initialization,  Up: The Common API for PLplot
+
+17.149 plstransform: Set a global coordinate transform function
+===============================================================
+
+     plstransform ( coordinate_transform , coordinate_transform_data );
+
+   This function can be used to define a coordinate transformation which
+affects all elements drawn within the current plot window.  The
+‘‘coordinate_transform’’ callback function is similar to that provided
+for the ‘plmap’ (*note plmap; Plot continental outline or shapefile data
+in world coordinates::) and ‘plmeridians’ (*note plmeridians; Plot
+latitude and longitude lines::) functions.  The
+‘‘coordinate_transform_data’’ parameter may be used to pass extra data
+to ‘‘coordinate_transform’’.
+
+‘coordinate_transform’ (‘‘PLTRANSFORM_callback’ (*note PLTRANSFORM_callback-type::)’, input)
+     A callback function that defines the transformation from the input
+     (x, y) world coordinates to new PLplot world coordinates.  If
+     ‘coordinate_transform’ is not supplied (e.g., is set to NULL in the
+     C case), then no transform is applied.
+
+‘coordinate_transform_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Optional extra data for ‘ ‘coordinate_transform’ ’.
+
+   Redacted form:
+
+   • General: ‘plstransform(coordinate_transform,
+     coordinate_transform_data)’
+
+   This function is used in examples 19 and 22.
+
+
+File: plplotdoc.info,  Node: plstring; Plot a glyph at the specified points,  Next: plstring3; Plot a glyph at the specified 3D points,  Prev: plstransform; Set a global coordinate transform function,  Up: The Common API for PLplot
+
+17.150 plstring: Plot a glyph at the specified points
+=====================================================
+
+     plstring ( n , x , y , string );
+
+   Plot a glyph at the specified points.  (Supersedes ‘plpoin’ (*note
+plpoin; Plot a glyph at the specified points::) and ‘plsym’ (*note
+plsym; Plot a glyph at the specified points::) because many[!]  more
+glyphs are accessible with ‘plstring’ (*note plstring; Plot a glyph at
+the specified points::).)  The glyph is specified with a PLplot user
+string.  Note that the user string is not actually limited to one glyph
+so it is possible (but not normally useful) to plot more than one glyph
+at the specified points with this function.  As with ‘plmtex’ (*note
+plmtex; Write text relative to viewport boundaries::) and ‘plptex’
+(*note plptex; Write text inside the viewport::), the user string can
+contain FCI escapes to determine the font, UTF-8 code to determine the
+glyph or else PLplot escapes for Hershey or unicode text to determine
+the glyph.
+
+‘n’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of points in the ‘‘x’’ and ‘‘y’’ vectors.
+
+‘x’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the x coordinates of the points.
+
+‘y’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the y coordinates of the points.
+
+‘string’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     A UTF-8 character string containing the glyph(s) to be plotted at
+     each of the ‘‘n’’ points.
+
+   Redacted form: ‘plstring(x, y, string)’
+
+   This function is used in examples 4, 21 and 26.
+
+
+File: plplotdoc.info,  Node: plstring3; Plot a glyph at the specified 3D points,  Next: plstripa; Add a point to a strip chart,  Prev: plstring; Plot a glyph at the specified points,  Up: The Common API for PLplot
+
+17.151 plstring3: Plot a glyph at the specified 3D points
+=========================================================
+
+     plstring3 ( n , x , y , z , string );
+
+   Plot a glyph at the specified 3D points.  (Supersedes ‘plpoin3’
+(*note plpoin3; Plot a glyph at the specified 3D points::) because
+many[!]  more glyphs are accessible with ‘plstring3’ (*note plstring3;
+Plot a glyph at the specified 3D points::).)  Set up the call to this
+function similar to what is done for ‘plline3’ (*note plline3; Draw a
+line in 3 space::).  The glyph is specified with a PLplot user string.
+Note that the user string is not actually limited to one glyph so it is
+possible (but not normally useful) to plot more than one glyph at the
+specified points with this function.  As with ‘plmtex’ (*note plmtex;
+Write text relative to viewport boundaries::) and ‘plptex’ (*note
+plptex; Write text inside the viewport::), the user string can contain
+FCI escapes to determine the font, UTF-8 code to determine the glyph or
+else PLplot escapes for Hershey or unicode text to determine the glyph.
+
+‘n’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of points in the ‘‘x’’, ‘‘y’’, and ‘‘z’’ vectors.
+
+‘x’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the x coordinates of the points.
+
+‘y’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the y coordinates of the points.
+
+‘z’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the z coordinates of the points.
+
+‘string’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     A UTF-8 character string containing the glyph(s) to be plotted at
+     each of the ‘‘n’’ points.  points.
+
+   Redacted form: ‘plstring3(x, y, z, string)’
+
+   This function is used in example 18.
+
+
+File: plplotdoc.info,  Node: plstripa; Add a point to a strip chart,  Next: plstripc; Create a 4-pen strip chart,  Prev: plstring3; Plot a glyph at the specified 3D points,  Up: The Common API for PLplot
+
+17.152 plstripa: Add a point to a strip chart
+=============================================
+
+     plstripa ( id , pen , x , y );
+
+   Add a point to a given pen of a given strip chart.  There is no need
+for all pens to have the same number of points or to be equally sampled
+in the x coordinate.  Allocates memory and rescales as necessary.
+
+‘id’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Identification number of the strip chart (set up in ‘plstripc’
+     (*note plstripc; Create a 4-pen strip chart::)).
+
+‘pen’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Pen number (ranges from 0 to 3).
+
+‘x’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     X coordinate of point to plot.
+
+‘y’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Y coordinate of point to plot.
+
+   Redacted form: ‘plstripa(id, pen, x, y)’
+
+   This function is used in example 17.
+
+
+File: plplotdoc.info,  Node: plstripc; Create a 4-pen strip chart,  Next: plstripd; Deletes and releases memory used by a strip chart,  Prev: plstripa; Add a point to a strip chart,  Up: The Common API for PLplot
+
+17.153 plstripc: Create a 4-pen strip chart
+===========================================
+
+     plstripc ( id , xspec , yspec , xmin , xmax , xjump , ymin , ymax ,
+     xlpos , ylpos , y_ascl , acc , colbox , collab , colline , styline
+     , legline[] , labx , laby , labtop );
+
+   Create a 4-pen strip chart, to be used afterwards by ‘plstripa’
+(*note plstripa; Add a point to a strip chart::)
+
+‘id’ (‘‘PLINT_NC_SCALAR’ (*note PLINT_NC_SCALAR-type::)’, output)
+     Returned value of the identification number of the strip chart to
+     use on ‘plstripa’ (*note plstripa; Add a point to a strip chart::)
+     and ‘plstripd’ (*note plstripd; Deletes and releases memory used by
+     a strip chart::).
+
+‘xspec’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the x-axis specification as in
+     ‘plbox’ (*note plbox; Draw a box with axes; etc::).
+
+‘yspec’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string containing the y-axis specification as in
+     ‘plbox’ (*note plbox; Draw a box with axes; etc::).
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Initial coordinates of plot box; they will change as data are
+     added.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Initial coordinates of plot box; they will change as data are
+     added.
+
+‘xjump’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     When x attains ‘ ‘xmax’ ’, the length of the plot is multiplied by
+     the factor ‘ (1 + ‘xjump’) ’.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Initial coordinates of plot box; they will change as data are
+     added.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Initial coordinates of plot box; they will change as data are
+     added.
+
+‘xlpos’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     X legend box position (range from 0 to 1).
+
+‘ylpos’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Y legend box position (range from 0 to 1).
+
+‘y_ascl’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     Autoscale y between x jumps if ‘ ‘y_ascl’ ’ is true, otherwise not.
+
+‘acc’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     Accumulate strip plot if ‘ ‘acc’ ’ is true, otherwise slide
+     display.
+
+‘colbox’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Plot box color index (cmap0).
+
+‘collab’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Legend color index (cmap0).
+
+‘colline’ (‘‘PLINT_VECTOR’ (*note PLINT_VECTOR-type::)’, input)
+     A vector containing the cmap0 color indices for the 4 pens.
+
+‘styline’ (‘‘PLINT_VECTOR’ (*note PLINT_VECTOR-type::)’, input)
+     A vector containing the line style indices for the 4 pens.
+
+‘legline’ (‘‘PLCHAR_MATRIX’ (*note PLCHAR_MATRIX-type::)’, input)
+     A vector of UTF-8 character strings containing legends for the 4
+     pens.
+
+‘labx’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     A UTF-8 character string containing the label for the x axis.
+
+‘laby’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     A UTF-8 character string containing the label for the y axis.
+
+‘labtop’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     A UTF-8 character string containing the plot title.
+
+   Redacted form:
+
+   • General: ‘plstripc(id, xspec, yspec, xmin, xmax, xjump, ymin, ymax,
+     xlpos, ylpos, y_ascl, acc, colbox, collab, colline, styline,
+     legline, labx, laby, labz)’
+
+   This function is used in example 17.
+
+
+File: plplotdoc.info,  Node: plstripd; Deletes and releases memory used by a strip chart,  Next: plstyl; Set line style,  Prev: plstripc; Create a 4-pen strip chart,  Up: The Common API for PLplot
+
+17.154 plstripd: Deletes and releases memory used by a strip chart
+==================================================================
+
+     plstripd ( id );
+
+   Deletes and releases memory used by a strip chart.
+
+‘id’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Identification number of strip chart to delete.
+
+   Redacted form: ‘plstripd(id)’
+
+   This function is used in example 17.
+
+
+File: plplotdoc.info,  Node: plstyl; Set line style,  Next: plsurf3d; Plot shaded 3-d surface plot,  Prev: plstripd; Deletes and releases memory used by a strip chart,  Up: The Common API for PLplot
+
+17.155 plstyl: Set line style
+=============================
+
+     plstyl ( nms , mark , space );
+
+   This sets up the line style for all lines subsequently drawn.  A line
+consists of segments in which the pen is alternately down and up.  The
+lengths of these segments are passed in the vectors ‘‘mark’’ and
+‘‘space’’ respectively.  The number of mark-space pairs is specified by
+‘‘nms’’.  In order to return the line style to the default continuous
+line, ‘plstyl’ (*note plstyl; Set line style::) should be called with
+‘‘nms’ =0 ’.(see also ‘pllsty’ (*note pllsty; Select line style::))
+
+‘nms’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     The number of ‘ ‘mark’ ’ and ‘ ‘space’ ’ elements in a line.  Thus
+     a simple broken line can be obtained by setting ‘ ‘nms’=1 ’.  A
+     continuous line is specified by setting ‘ ‘nms’=0 ’.
+
+‘mark’ (‘‘PLINT_VECTOR’ (*note PLINT_VECTOR-type::)’, input)
+     A vector containing the lengths of the segments during which the
+     pen is down, measured in micrometers.
+
+‘space’ (‘‘PLINT_VECTOR’ (*note PLINT_VECTOR-type::)’, input)
+     A vector containing the lengths of the segments during which the
+     pen is up, measured in micrometers.
+
+   Redacted form: ‘plstyl(mark, space)’
+
+   This function is used in examples 1, 9, and 14.
+
+
+File: plplotdoc.info,  Node: plsurf3d; Plot shaded 3-d surface plot,  Next: plsurf3dl; Plot shaded 3-d surface plot for z[x][y] with y index limits,  Prev: plstyl; Set line style,  Up: The Common API for PLplot
+
+17.156 plsurf3d: Plot shaded 3-d surface plot
+=============================================
+
+     plsurf3d ( x , y , z , nx , ny , opt , clevel , nlevel );
+
+   Plots a three-dimensional shaded surface plot within the environment
+set up by ‘plw3d’ (*note plw3d; Configure the transformations required
+for projecting a 3D surface on a 2D window::).  The surface is defined
+by the two-dimensional matrix ‘‘z’[‘nx’][‘ny’]’, the point ‘‘z’[i][j]’
+being the value of the function at ‘(‘x’[i],‘y’[j])’.  Note that the
+points in vectors ‘‘x’’ and ‘‘y’’ do not need to be equally spaced, but
+must be stored in ascending order.  For further details see *note
+Three-dimensional Plots::.
+
+‘x’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the x coordinates at which the function is
+     evaluated.
+
+‘y’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the y coordinates at which the function is
+     evaluated.
+
+‘z’ (‘‘PLFLT_MATRIX’ (*note PLFLT_MATRIX-type::)’, input)
+     A matrix containing function values to plot.  Should have
+     dimensions of ‘nx’ by ‘ny’.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of ‘‘x’’ values at which function is evaluated.
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of ‘‘y’’ values at which function is evaluated.
+
+‘opt’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Determines the way in which the surface is represented.  To specify
+     more than one option just add the options, e.g.  FACETED +
+     SURF_CONT
+
+        • ‘ ‘opt’=FACETED ’: Network of lines is drawn connecting points
+          at which function is defined.
+
+        • ‘ ‘opt’=BASE_CONT ’: A contour plot is drawn at the base XY
+          plane using parameters ‘nlevel’ and ‘clevel’.
+
+        • ‘ ‘opt’=SURF_CONT ’: A contour plot is drawn at the surface
+          plane using parameters ‘nlevel’ and ‘clevel’.
+
+        • ‘ ‘opt’=DRAW_SIDES ’: draws a curtain between the base XY
+          plane and the borders of the plotted function.
+
+        • ‘ ‘opt’=MAG_COLOR ’: the surface is colored according to the
+          value of Z; if ‘MAG_COLOR’ is not used, then the surface is
+          colored according to the intensity of the reflected light in
+          the surface from a light source whose position is set using
+          ‘pllightsource’ (*note pllightsource; Sets the 3D position of
+          the light source::).
+
+‘clevel’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the contour levels.
+
+‘nlevel’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of elements in the ‘clevel’ vector.
+
+   Redacted form: ‘plsurf3d(x, y, z, opt, clevel)’
+
+   This function is not used in any examples.
+
+
+File: plplotdoc.info,  Node: plsurf3dl; Plot shaded 3-d surface plot for z[x][y] with y index limits,  Next: plsvect; Set arrow style for vector plots,  Prev: plsurf3d; Plot shaded 3-d surface plot,  Up: The Common API for PLplot
+
+17.157 plsurf3dl: Plot shaded 3-d surface plot for z[x][y] with y index limits
+==============================================================================
+
+     plsurf3dl ( x , y , z , nx , ny , opt , clevel , nlevel , indexxmin
+     , indexxmax , indexymin , indexymax );
+
+   This variant of ‘plsurf3d’ (*note plsurf3d; Plot shaded 3-d surface
+plot::) (see that function’s documentation for more details) should be
+suitable for the case where the area of the ‘‘x’’, ‘‘y’’ coordinate grid
+where ‘‘z’’ is defined can be non-rectangular.  The limits of that grid
+are provided by the parameters ‘‘indexxmin’’, ‘‘indexxmax’’,
+‘‘indexymin’’, and ‘‘indexymax’’.
+
+‘x’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the x coordinates at which the function is
+     evaluated.
+
+‘y’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the y coordinates at which the function is
+     evaluated.
+
+‘z’ (‘‘PLFLT_MATRIX’ (*note PLFLT_MATRIX-type::)’, input)
+     A matrix containing function values to plot.  Should have
+     dimensions of ‘nx’ by ‘ny’.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of ‘‘x’’ values at which function is evaluated.
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of ‘‘y’’ values at which function is evaluated.
+
+‘opt’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Determines the way in which the surface is represented.  To specify
+     more than one option just add the options, e.g.  FACETED +
+     SURF_CONT
+
+        • ‘ ‘opt’=FACETED ’: Network of lines is drawn connecting points
+          at which function is defined.
+
+        • ‘ ‘opt’=BASE_CONT ’: A contour plot is drawn at the base XY
+          plane using parameters ‘nlevel’ and ‘clevel’.
+
+        • ‘ ‘opt’=SURF_CONT ’: A contour plot is drawn at the surface
+          plane using parameters ‘nlevel’ and ‘clevel’.
+
+        • ‘ ‘opt’=DRAW_SIDES ’: draws a curtain between the base XY
+          plane and the borders of the plotted function.
+
+        • ‘ ‘opt’=MAG_COLOR ’: the surface is colored according to the
+          value of Z; if ‘MAG_COLOR’ is not used, then the surface is
+          colored according to the intensity of the reflected light in
+          the surface from a light source whose position is set using
+          ‘pllightsource’ (*note pllightsource; Sets the 3D position of
+          the light source::).
+
+‘clevel’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the contour levels.
+
+‘nlevel’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of elements in the ‘clevel’ vector.
+
+‘indexxmin’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     The index value (which must be ≥ 0) that corresponds to the first ‘
+     ‘x’ ’ index where ‘ ‘z’ ’ is defined.
+
+‘indexxmax’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     The index value (which must be ≤ ‘ ‘nx’ ’) which corresponds (by
+     convention) to one more than the last ‘ ‘x’ ’ index value where ‘
+     ‘z’ ’ is defined.
+
+‘indexymin’ (‘‘PLINT_VECTOR’ (*note PLINT_VECTOR-type::)’, input)
+     A vector containing the ‘‘y’’ index values which all must be ≥ 0.
+     These values are the first ‘‘y’’ index where ‘‘z’’ is defined for a
+     particular ‘‘x’’ index in the range from ‘‘indexxmin’’ to
+     ‘‘indexxmax - 1’’.  The dimension of ‘‘indexymin’’ is
+     ‘‘indexxmax’’.
+
+‘indexymax’ (‘‘PLINT_VECTOR’ (*note PLINT_VECTOR-type::)’, input)
+     A vector containing the ‘‘y’’ index values which all must be ≤
+     ‘‘ny’’.  These values correspond (by convention) to one more than
+     the last ‘‘y’’ index where ‘‘z’’ is defined for a particular ‘‘x’’
+     index in the range from ‘‘indexxmin’’ to ‘‘indexxmax - 1’’.  The
+     dimension of ‘‘indexymax’’ is ‘‘indexxmax’’.
+
+   Redacted form: ‘ plsurf3dl(x, y, z, opt, clevel, indexxmin,
+indexymin, indexymax) ’
+
+   This function is used in example 8.
+
+
+File: plplotdoc.info,  Node: plsvect; Set arrow style for vector plots,  Next: plsvpa; Specify viewport in absolute coordinates,  Prev: plsurf3dl; Plot shaded 3-d surface plot for z[x][y] with y index limits,  Up: The Common API for PLplot
+
+17.158 plsvect: Set arrow style for vector plots
+================================================
+
+     plsvect ( arrowx , arrowy , npts , fill );
+
+   Set the style for the arrow used by ‘plvect’ (*note plvect; Vector
+plot::) to plot vectors.
+
+‘arrowx, arrowy’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A pair of vectors containing the x and y points which make up the
+     arrow.  The arrow is plotted by joining these points to form a
+     polygon.  The scaling assumes that the x and y points in the arrow
+     lie in the range ‘-0.5 <= x,y <= 0.5’.  If both ‘‘arrowx’’ and
+     ‘‘arrowy’’ are NULL then the arrow style will be reset to its
+     default.
+
+‘npts’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of points in the vectors ‘ ‘arrowx’ ’ and ‘ ‘arrowy’ ’.
+
+‘fill’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     If ‘ ‘fill’ ’ is true then the arrow is closed, if ‘ ‘fill’ ’ is
+     false then the arrow is open.
+
+   Redacted form: ‘plsvect(arrowx, arrowy, fill)’
+
+   This function is used in example 22.
+
+
+File: plplotdoc.info,  Node: plsvpa; Specify viewport in absolute coordinates,  Next: plsxax; Set x axis parameters,  Prev: plsvect; Set arrow style for vector plots,  Up: The Common API for PLplot
+
+17.159 plsvpa: Specify viewport in absolute coordinates
+=======================================================
+
+     plsvpa ( xmin , xmax , ymin , ymax );
+
+   Alternate routine to ‘plvpor’ (*note plvpor; Specify viewport using
+normalized subpage coordinates::) for setting up the viewport.  This
+routine should be used only if the viewport is required to have a
+definite size in millimeters.  The routine ‘plgspa’ (*note plgspa; Get
+current subpage parameters::) is useful for finding out the size of the
+current subpage.
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The distance of the left-hand edge of the viewport from the
+     left-hand edge of the subpage in millimeters.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The distance of the right-hand edge of the viewport from the
+     left-hand edge of the subpage in millimeters.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The distance of the bottom edge of the viewport from the bottom
+     edge of the subpage in millimeters.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The distance of the top edge of the viewport from the bottom edge
+     of the subpage in millimeters.
+
+   Redacted form: ‘plsvpa(xmin, xmax, ymin, ymax)’
+
+   This function is used in example 10.
+
+
+File: plplotdoc.info,  Node: plsxax; Set x axis parameters,  Next: plsyax; Set y axis parameters,  Prev: plsvpa; Specify viewport in absolute coordinates,  Up: The Common API for PLplot
+
+17.160 plsxax: Set x axis parameters
+====================================
+
+     plsxax ( digmax , digits );
+
+   Sets values of the ‘ ‘digmax’ ’ and ‘ ‘digits’ ’ flags for the x
+axis.  See *note Annotating the Viewport:: for more information.
+
+‘digmax’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Variable to set the maximum number of digits for the x axis.  If
+     nonzero, the printed label will be switched to a floating-point
+     representation when the number of digits exceeds ‘ ‘digmax’ ’.
+
+‘digits’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Field digits value.  Currently, changing its value here has no
+     effect since it is set only by ‘plbox’ (*note plbox; Draw a box
+     with axes; etc::) or ‘ plbox3’ (*note plbox3; Draw a box with axes;
+     etc; in 3-d::).  However, the user may obtain its value after a
+     call to either of these functions by calling ‘plgxax’ (*note
+     plgxax; Get x axis parameters::).
+
+   Redacted form: ‘plsxax(digmax, digits)’
+
+   This function is used in example 31.
+
+
+File: plplotdoc.info,  Node: plsyax; Set y axis parameters,  Next: plsym; Plot a glyph at the specified points,  Prev: plsxax; Set x axis parameters,  Up: The Common API for PLplot
+
+17.161 plsyax: Set y axis parameters
+====================================
+
+     plsyax ( digmax , digits );
+
+   Identical to ‘plsxax’ (*note plsxax; Set x axis parameters::), except
+that arguments are flags for y axis.  See the description of ‘plsxax’
+(*note plsxax; Set x axis parameters::) for more detail.
+
+‘digmax’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Variable to set the maximum number of digits for the y axis.  If
+     nonzero, the printed label will be switched to a floating-point
+     representation when the number of digits exceeds ‘ ‘digmax’ ’.
+
+‘digits’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Field digits value.  Currently, changing its value here has no
+     effect since it is set only by ‘plbox’ (*note plbox; Draw a box
+     with axes; etc::) or ‘ plbox3’ (*note plbox3; Draw a box with axes;
+     etc; in 3-d::).  However, the user may obtain its value after a
+     call to either of these functions by calling ‘plgyax’ (*note
+     plgyax; Get y axis parameters::).
+
+   Redacted form: ‘plsyax(digmax, digits)’
+
+   This function is used in examples 1, 14, and 31.
+
+
+File: plplotdoc.info,  Node: plsym; Plot a glyph at the specified points,  Next: plszax; Set z axis parameters,  Prev: plsyax; Set y axis parameters,  Up: The Common API for PLplot
+
+17.162 plsym: Plot a glyph at the specified points
+==================================================
+
+     plsym ( n , x , y , code );
+
+   Plot a glyph at the specified points.  (This function is largely
+superseded by ‘plstring’ (*note plstring; Plot a glyph at the specified
+points::) which gives access to many[!]  more glyphs.)
+
+‘n’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of points in the ‘‘x’’ and ‘‘y’’ vectors.
+
+‘x’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the x coordinates of the points.
+
+‘y’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the y coordinates of the points.
+
+‘code’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Hershey symbol code corresponding to a glyph to be plotted at each
+     of the ‘ ‘n’ ’ points.
+
+   Redacted form: ‘plsym(x, y, code)’
+
+   This function is used in example 7.
+
+
+File: plplotdoc.info,  Node: plszax; Set z axis parameters,  Next: pltext; Switch to text screen,  Prev: plsym; Plot a glyph at the specified points,  Up: The Common API for PLplot
+
+17.163 plszax: Set z axis parameters
+====================================
+
+     plszax ( digmax , digits );
+
+   Identical to ‘plsxax’ (*note plsxax; Set x axis parameters::), except
+that arguments are flags for z axis.  See the description of ‘plsxax’
+(*note plsxax; Set x axis parameters::) for more detail.
+
+‘digmax’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Variable to set the maximum number of digits for the z axis.  If
+     nonzero, the printed label will be switched to a floating-point
+     representation when the number of digits exceeds ‘ ‘digmax’ ’.
+
+‘digits’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Field digits value.  Currently, changing its value here has no
+     effect since it is set only by ‘plbox’ (*note plbox; Draw a box
+     with axes; etc::) or ‘ plbox3’ (*note plbox3; Draw a box with axes;
+     etc; in 3-d::).  However, the user may obtain its value after a
+     call to either of these functions by calling ‘plgzax’ (*note
+     plgzax; Get z axis parameters::).
+
+   Redacted form: ‘plszax(digmax, digits)’
+
+   This function is used in example 31.
+
+
+File: plplotdoc.info,  Node: pltext; Switch to text screen,  Next: pltimefmt; Set format for date / time labels,  Prev: plszax; Set z axis parameters,  Up: The Common API for PLplot
+
+17.164 pltext: Switch to text screen
+====================================
+
+     pltext ();
+
+   Sets an interactive device to text mode, used in conjunction with
+‘plgra’ (*note plgra; Switch to graphics screen::) to allow graphics and
+text to be interspersed.  On a device which supports separate text and
+graphics windows, this command causes control to be switched to the text
+window.  This can be useful for printing diagnostic messages or getting
+user input, which would otherwise interfere with the plots.  The program
+_must_ switch back to the graphics window before issuing plot commands,
+as the text (or console) device will probably become quite confused
+otherwise.  If already in text mode, this command is ignored.  It is
+also ignored on devices which only support a single window or use a
+different method for shifting focus (see also ‘plgra’ (*note plgra;
+Switch to graphics screen::)).
+
+   Redacted form: ‘pltext()’
+
+   This function is used in example 1.
+
+
+File: plplotdoc.info,  Node: pltimefmt; Set format for date / time labels,  Next: plvasp; Specify viewport using aspect ratio only,  Prev: pltext; Switch to text screen,  Up: The Common API for PLplot
+
+17.165 pltimefmt: Set format for date / time labels
+===================================================
+
+     pltimefmt ( fmt );
+
+   Sets the format for date / time labels.  To enable date / time format
+labels see the options to ‘plbox’ (*note plbox; Draw a box with axes;
+etc::), ‘ plbox3’ (*note plbox3; Draw a box with axes; etc; in 3-d::),
+and ‘plenv’ (*note plenv; Set up standard window and draw box::).
+
+‘fmt’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string which is interpreted similarly to the
+     format specifier of typical system strftime routines except that
+     PLplot ignores locale and also supplies some useful extensions in
+     the context of plotting.  All text in the string is printed as-is
+     other than conversion specifications which take the form of a ’%’
+     character followed by further conversion specification character.
+     The conversion specifications which are similar to those provided
+     by system strftime routines are the following:
+
+        • ‘%a’: The abbreviated (English) weekday name.
+
+        • ‘%A’: The full (English) weekday name.
+
+        • ‘%b’: The abbreviated (English) month name.
+
+        • ‘%B’: The full (English) month name.
+
+        • ‘%c’: Equivalent to %a %b %d %T %Y (non-ISO).
+
+        • ‘%C’: The century number (year/100) as a 2-digit integer.
+
+        • ‘%d’: The day of the month as a decimal number (range 01 to
+          31).
+
+        • ‘%D’: Equivalent to %m/%d/%y (non-ISO).
+
+        • ‘%e’: Like %d, but a leading zero is replaced by a space.
+
+        • ‘%F’: Equivalent to %Y-%m-%d (the ISO 8601 date format).
+
+        • ‘%h’: Equivalent to %b.
+
+        • ‘%H’: The hour as a decimal number using a 24-hour clock
+          (range 00 to 23).
+
+        • ‘%I’: The hour as a decimal number using a 12-hour clock
+          (range 01 to 12).
+
+        • ‘%j’: The day of the year as a decimal number (range 001 to
+          366).
+
+        • ‘%k’: The hour (24-hour clock) as a decimal number (range 0 to
+          23); single digits are preceded by a blank.  (See also %H.)
+
+        • ‘%l’: The hour (12-hour clock) as a decimal number (range 1 to
+          12); single digits are preceded by a blank.  (See also %I.)
+
+        • ‘%m’: The month as a decimal number (range 01 to 12).
+
+        • ‘%M’: The minute as a decimal number (range 00 to 59).
+
+        • ‘%n’: A newline character.
+
+        • ‘%p’: Either "AM" or "PM" according to the given time value.
+          Noon is treated as "PM" and midnight as "AM".
+
+        • ‘%r’: Equivalent to %I:%M:%S %p.
+
+        • ‘%R’: The time in 24-hour notation (%H:%M). For a version
+          including the seconds, see %T below.
+
+        • ‘%s’: The number of seconds since the Epoch, 1970-01-01
+          00:00:00 +0000 (UTC).
+
+        • ‘%S’: The second as a decimal number (range 00 to 60).  (The
+          range is up to 60 to allow for occasional leap seconds.)
+
+        • ‘%t’: A tab character.
+
+        • ‘%T’: The time in 24-hour notation (%H:%M:%S).
+
+        • ‘%u’: The day of the week as a decimal, range 1 to 7, Monday
+          being 1.  See also %w.
+
+        • ‘%U’: The week number of the current year as a decimal number,
+          range 00 to 53, starting with the first Sunday as the first
+          day of week 01.  See also %V and %W.
+
+        • ‘%v’: Equivalent to %e-%b-%Y.
+
+        • ‘%V’: The ISO 8601 week number of the current year as a
+          decimal number, range 01 to 53, where week 1 is the first week
+          that has at least 4 days in the new year.  See also %U and %W.
+
+        • ‘%w’: The day of the week as a decimal, range 0 to 6, Sunday
+          being 0.  See also %u.
+
+        • ‘%W’: The week number of the current year as a decimal number,
+          range 00 to 53, starting with the first Monday as the first
+          day of week 01.
+
+        • ‘%x’: Equivalent to %a %b %d %Y.
+
+        • ‘%X’: Equivalent to %T.
+
+        • ‘%y’: The year as a decimal number without a century (range 00
+          to 99).
+
+        • ‘%Y’: The year as a decimal number including a century.
+
+        • ‘%z’: The UTC time-zone string = "+0000".
+
+        • ‘%Z’: The UTC time-zone abbreviation = "UTC".
+
+        • ‘%+’: The UTC date and time in default format of the Unix date
+          command which is equivalent to %a %b %d %T %Z %Y.
+
+        • ‘%%’: A literal "%" character.
+
+     The conversion specifications which are extensions to those
+     normally provided by system strftime routines are the following:
+
+        • ‘%(0-9)’: The fractional part of the seconds field (including
+          leading decimal point) to the specified accuracy.  Thus %S%3
+          would give seconds to millisecond accuracy (00.000).
+
+        • ‘%.’: The fractional part of the seconds field (including
+          leading decimal point) to the maximum available accuracy.
+          Thus %S%.  would give seconds with fractional part up to 9
+          decimal places if available.
+
+   Redacted form: ‘pltimefmt(fmt)’
+
+   This function is used in example 29.
+
+
+File: plplotdoc.info,  Node: plvasp; Specify viewport using aspect ratio only,  Next: plvect; Vector plot,  Prev: pltimefmt; Set format for date / time labels,  Up: The Common API for PLplot
+
+17.166 plvasp: Specify viewport using aspect ratio only
+=======================================================
+
+     plvasp ( aspect );
+
+   Selects the largest viewport with the given aspect ratio within the
+subpage that leaves a standard margin (left-hand margin of eight
+character heights, and a margin around the other three sides of five
+character heights).
+
+‘aspect’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Ratio of length of y axis to length of x axis of resulting
+     viewport.
+
+   Redacted form: ‘plvasp(aspect)’
+
+   This function is used in example 13.
+
+
+File: plplotdoc.info,  Node: plvect; Vector plot,  Next: plvpas; Specify viewport using coordinates and aspect ratio,  Prev: plvasp; Specify viewport using aspect ratio only,  Up: The Common API for PLplot
+
+17.167 plvect: Vector plot
+==========================
+
+     plvect ( u , v , nx , ny , scale , pltr , pltr_data );
+
+   Draws a plot of vector data contained in the matrices ‘
+(‘u’[‘nx’][‘ny’],‘v’[‘nx’][‘ny’]) ’.  The scaling factor for the vectors
+is given by ‘‘scale’’.  A transformation routine pointed to by ‘‘pltr’’
+with a pointer ‘‘pltr_data’’ for additional data required by the
+transformation routine to map indices within the matrices to the world
+coordinates.  The style of the vector arrow may be set using ‘plsvect’
+(*note plsvect; Set arrow style for vector plots::).
+
+‘u, v’ (‘‘PLFLT_MATRIX’ (*note PLFLT_MATRIX-type::)’, input)
+     A pair of matrices containing the x and y components of the vector
+     data to be plotted.
+
+‘nx, ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Dimensions of the matrices ‘‘u’’ and ‘‘v’’.
+
+‘scale’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Parameter to control the scaling factor of the vectors for
+     plotting.  If ‘‘scale’ = 0 ’ then the scaling factor is
+     automatically calculated for the data.  If ‘‘scale’ < 0’ then the
+     scaling factor is automatically calculated for the data and then
+     multiplied by ‘-‘scale’ ’.  If ‘‘scale’ > 0’ then the scaling
+     factor is set to ‘‘scale’’.
+
+‘pltr’ (‘‘PLTRANSFORM_callback’ (*note PLTRANSFORM_callback-type::)’, input)
+     A callback function that defines the transformation between the
+     zero-based indices of the matrices ‘‘u’’ and ‘‘v’’ and world
+     coordinates.
+
+     For the C case, transformation functions are provided in the PLplot
+     library: ‘pltr0’ (*note pltr0; Identity transformation for matrix
+     index to world coordinate mapping::) for the identity mapping, and
+     ‘pltr1’ (*note pltr1; Linear interpolation for matrix index to
+     world coordinate mapping using singly dimensioned coordinate
+     arrays::) and ‘pltr2’ (*note pltr2; Linear interpolation for grid
+     to world mapping using doubly dimensioned coordinate arrays
+     [row-major order as per normal C 2d arrays]::) for arbitrary
+     mappings respectively defined by vectors and matrices.  In
+     addition, C callback routines for the transformation can be
+     supplied by the user such as the ‘mypltr’ function in
+     ‘examples/c/x09c.c’ which provides a general linear transformation
+     between index coordinates and world coordinates.
+
+     For languages other than C you should consult *note Supported
+     computer languages: Supported computer languages. for the details
+     concerning how ‘PLTRANSFORM_callback’ (*note
+     PLTRANSFORM_callback-type::) arguments are interfaced.  However, in
+     general, a particular pattern of callback-associated arguments such
+     as a ‘tr’ vector with 6 elements; ‘xg’ and ‘yg’ vectors; or ‘xg’
+     and ‘yg’ matrices are respectively interfaced to a
+     linear-transformation routine similar to the above ‘mypltr’
+     function; ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::); and ‘pltr2’ (*note pltr2; Linear
+     interpolation for grid to world mapping using doubly dimensioned
+     coordinate arrays [row-major order as per normal C 2d arrays]::).
+     Furthermore, some of our more sophisticated bindings (see, e.g.,
+     *note Fortran Language::) support native language callbacks for
+     handling index to world-coordinate transformations.  Examples of
+     these various approaches are given in ‘examples/<language>x09*’,
+     ‘examples/<language>x16*’, ‘examples/<language>x20*’,
+     ‘examples/<language>x21*’, and ‘examples/<language>x22*’, for all
+     our supported languages.
+
+‘pltr_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Extra parameter to help pass information to ‘pltr0’ (*note pltr0;
+     Identity transformation for matrix index to world coordinate
+     mapping::), ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::), ‘pltr2’ (*note pltr2; Linear interpolation
+     for grid to world mapping using doubly dimensioned coordinate
+     arrays [row-major order as per normal C 2d arrays]::), or whatever
+     callback routine that is externally supplied.
+
+   Redacted form: ‘plvect(u, v, scale, pltr, pltr_data)’ where (see
+above discussion) the ‘pltr, pltr_data’ callback arguments are sometimes
+replaced by a ‘tr’ vector with 6 elements, or ‘xg’ and ‘yg’ array
+arguments with either one or two dimensions.
+
+   This function is used in example 22.
+
+
+File: plplotdoc.info,  Node: plvpas; Specify viewport using coordinates and aspect ratio,  Next: plvpor; Specify viewport using normalized subpage coordinates,  Prev: plvect; Vector plot,  Up: The Common API for PLplot
+
+17.168 plvpas: Specify viewport using coordinates and aspect ratio
+==================================================================
+
+     plvpas ( xmin , xmax , ymin , ymax , aspect );
+
+   Device-independent routine for setting up the viewport.  The viewport
+is chosen to be the largest with the given aspect ratio that fits within
+the specified region (in terms of normalized subpage coordinates).  This
+routine is functionally equivalent to ‘plvpor’ (*note plvpor; Specify
+viewport using normalized subpage coordinates::) when a “natural” aspect
+ratio (0.0) is chosen.  Unlike ‘plvasp’ (*note plvasp; Specify viewport
+using aspect ratio only::), this routine reserves no extra space at the
+edges for labels.
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the left-hand edge of the
+     viewport.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the right-hand edge of the
+     viewport.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the bottom edge of the
+     viewport.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the top edge of the viewport.
+
+‘aspect’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Ratio of length of y axis to length of x axis.
+
+   Redacted form: ‘plvpas(xmin, xmax, ymin, ymax, aspect)’
+
+   This function is used in example 9.
+
+
+File: plplotdoc.info,  Node: plvpor; Specify viewport using normalized subpage coordinates,  Next: plvsta; Select standard viewport,  Prev: plvpas; Specify viewport using coordinates and aspect ratio,  Up: The Common API for PLplot
+
+17.169 plvpor: Specify viewport using normalized subpage coordinates
+====================================================================
+
+     plvpor ( xmin , xmax , ymin , ymax );
+
+   Device-independent routine for setting up the viewport.  This defines
+the viewport in terms of normalized subpage coordinates which run from
+0.0 to 1.0 (left to right and bottom to top) along each edge of the
+current subpage.  Use the alternate routine ‘plsvpa’ (*note plsvpa;
+Specify viewport in absolute coordinates::) in order to create a
+viewport of a definite size.
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the left-hand edge of the
+     viewport.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the right-hand edge of the
+     viewport.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the bottom edge of the
+     viewport.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized subpage coordinate of the top edge of the viewport.
+
+   Redacted form: ‘plvpor(xmin, xmax, ymin, ymax)’
+
+   This function is used in examples 2, 6-8, 10, 11, 15, 16, 18, 21, 23,
+24, 26, 27, and 31.
+
+
+File: plplotdoc.info,  Node: plvsta; Select standard viewport,  Next: plw3d; Configure the transformations required for projecting a 3D surface on a 2D window,  Prev: plvpor; Specify viewport using normalized subpage coordinates,  Up: The Common API for PLplot
+
+17.170 plvsta: Select standard viewport
+=======================================
+
+     plvsta ();
+
+   Selects the largest viewport within the subpage that leaves a
+standard margin (left-hand margin of eight character heights, and a
+margin around the other three sides of five character heights).
+
+   Redacted form: ‘plvsta()’
+
+   This function is used in examples 1, 12, 14, 17, 25, and 29.
+
+
+File: plplotdoc.info,  Node: plw3d; Configure the transformations required for projecting a 3D surface on a 2D window,  Next: plwidth; Set pen width,  Prev: plvsta; Select standard viewport,  Up: The Common API for PLplot
+
+17.171 plw3d: Configure the transformations required for projecting a 3D surface on a 2D window
+===============================================================================================
+
+     plw3d ( basex , basey , height , xmin , xmax , ymin , ymax , zmin ,
+     zmax , alt , az );
+
+   Configure the transformations required for projecting a 3D surface on
+an existing 2D window.  Those transformations (see *note Surface
+Plots::) are done to a rectangular cuboid enclosing the 3D surface which
+has its limits expressed in 3D world coordinates and also normalized 3D
+coordinates (used for interpreting the altitude and azimuth of the
+viewing angle).  The transformations consist of the linear transform
+from 3D world coordinates to normalized 3D coordinates, and the 3D
+rotation of normalized coordinates required to align the pole of the new
+3D coordinate system with the viewing direction specified by altitude
+and azimuth so that x and y of the surface elements in that transformed
+coordinate system are the projection of the 3D surface with given
+viewing direction on the 2D window.
+
+   The enclosing rectangular cuboid for the surface plot is defined by
+‘‘xmin’’, ‘‘xmax’’, ‘‘ymin’’, ‘‘ymax’’, ‘‘zmin’’ and ‘‘zmax’’ in 3D
+world coordinates.  It is mapped into the same rectangular cuboid with
+normalized 3D coordinate sizes of ‘‘basex’’ by ‘‘basey’’ by ‘‘height’’
+so that ‘‘xmin’’ maps to ‘-‘basex’/2’, ‘‘xmax’’ maps to ‘‘basex’/2’,
+‘‘ymin’’ maps to ‘-‘basey’/2’, ‘‘ymax’’ maps to ‘‘basey’/2’, ‘‘zmin’’
+maps to ‘0’ and ‘‘zmax’’ maps to ‘‘height’’.  The resulting rectangular
+cuboid in normalized coordinates is then viewed by an observer at
+altitude ‘‘alt’’ and azimuth ‘‘az’’.  This routine must be called before
+‘ plbox3’ (*note plbox3; Draw a box with axes; etc; in 3-d::) or any of
+the 3D surface plotting routines; ‘plmesh’ (*note plmesh; Plot surface
+mesh::), ‘plmeshc’ (*note plmeshc; Magnitude colored plot surface mesh
+with contour::), ‘plot3d’ (*note plot3d; Plot 3-d surface plot::),
+‘plot3dc’ (*note plot3dc; Magnitude colored plot surface with
+contour::), ‘plot3dcl’ (*note plot3dcl; Magnitude colored plot surface
+with contour for z[x][y] with y index limits::), ‘plsurf3d’ (*note
+plsurf3d; Plot shaded 3-d surface plot::), ‘plsurf3dl’ (*note plsurf3dl;
+Plot shaded 3-d surface plot for z[x][y] with y index limits::) or
+‘plfill3’ (*note plfill3; Draw filled polygon in 3D::).
+
+‘basex’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized x coordinate size of the rectangular cuboid.
+
+‘basey’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized y coordinate size of the rectangular cuboid.
+
+‘height’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The normalized z coordinate size of the rectangular cuboid.
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The minimum x world coordinate of the rectangular cuboid.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The maximum x world coordinate of the rectangular cuboid.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The minimum y world coordinate of the rectangular cuboid.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The maximum y world coordinate of the rectangular cuboid.
+
+‘zmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The minimum z world coordinate of the rectangular cuboid.
+
+‘zmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The maximum z world coordinate of the rectangular cuboid.
+
+‘alt’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The viewing altitude in degrees above the xy plane of the
+     rectangular cuboid in normalized coordinates.
+
+‘az’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The viewing azimuth in degrees of the rectangular cuboid in
+     normalized coordinates.  When ‘‘az’=0’, the observer is looking
+     face onto the zx plane of the rectangular cuboid in normalized
+     coordinates, and as ‘‘az’’ is increased, the observer moves
+     clockwise around that cuboid when viewed from above the xy plane.
+
+   Redacted form: ‘plw3d(basex, basey, height, xmin, xmax, ymin, ymax,
+zmin, zmax, alt, az)’
+
+   This function is examples 8, 11, 18, and 21.
+
+
+File: plplotdoc.info,  Node: plwidth; Set pen width,  Next: plwind; Specify window,  Prev: plw3d; Configure the transformations required for projecting a 3D surface on a 2D window,  Up: The Common API for PLplot
+
+17.172 plwidth: Set pen width
+=============================
+
+     plwidth ( width );
+
+   Sets the pen width.
+
+‘width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The desired pen width.  If ‘ ‘width’ ’ is negative or the same as
+     the previous value no action is taken.  ‘ ‘width’ = 0. ’ should be
+     interpreted as as the minimum valid pen width for the device.  The
+     interpretation of positive ‘ ‘width’ ’ values is also device
+     dependent.
+
+   Redacted form: ‘plwidth(width)’
+
+   This function is used in examples 1 and 2.
+
+
+File: plplotdoc.info,  Node: plwind; Specify window,  Next: plxormod; Enter or leave xor mode,  Prev: plwidth; Set pen width,  Up: The Common API for PLplot
+
+17.173 plwind: Specify window
+=============================
+
+     plwind ( xmin , xmax , ymin , ymax );
+
+   Specify the window, i.e., the world coordinates of the edges of the
+viewport.
+
+‘xmin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The world x coordinate of the left-hand edge of the viewport.
+
+‘xmax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The world x coordinate of the right-hand edge of the viewport.
+
+‘ymin’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The world y coordinate of the bottom edge of the viewport.
+
+‘ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     The world y coordinate of the top edge of the viewport.
+
+   Redacted form: ‘plwind(xmin, xmax, ymin, ymax)’
+
+   This function is used in examples 1, 2, 4, 6-12, 14-16, 18, 21,
+23-27, 29, and 31.
+
+
+File: plplotdoc.info,  Node: plxormod; Enter or leave xor mode,  Prev: plwind; Specify window,  Up: The Common API for PLplot
+
+17.174 plxormod: Enter or leave xor mode
+========================================
+
+     plxormod ( mode , status );
+
+   Enter (when ‘ ‘mode’ ’ is true) or leave (when ‘ ‘mode’ ’ is false)
+xor mode for those drivers (e.g., the xwin driver) that support it.
+Enables erasing plots by drawing twice the same line, symbol, etc.  If
+driver is not capable of xor operation it returns a ‘ ‘status’ ’ of
+false.
+
+‘mode’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     ‘‘mode’’ is true means enter xor mode and ‘‘mode’’ is false means
+     leave xor mode.
+
+‘status’ (‘‘PLBOOL_NC_SCALAR’ (*note PLBOOL_NC_SCALAR-type::)’, output)
+     Returned value of the status.  ‘‘mode’’status of true (false) means
+     driver is capable (incapable) of xor mode.
+
+   Redacted form: ‘plxormod(mode, status)’
+
+   This function is used in examples 1 and 20.
+
+
+File: plplotdoc.info,  Node: The Specialized C/C++ API for PLplot,  Next: The Specialized Fortran API for PLplot,  Prev: The Common API for PLplot,  Up: Reference
+
+18 The Specialized C/C++ API for PLplot
+***************************************
+
+The purpose of this chapter is to document the PLplot C/C++ functions
+and associated structures that are only used for those languages and
+which should not be propagated to our other language bindings.
+
+* Menu:
+
+* plabort; Error abort : plabort; Error abort.
+* plAlloc2dGrid; Allocate a block of memory for use as a matrix of type PLFLT_MATRIX : plAlloc2dGrid; Allocate a block of memory for use as a matrix of type PLFLT_MATRIX.
+* plClearOpts; Clear internal option table info structure : plClearOpts; Clear internal option table info structure.
+* plexit; Error exit : plexit; Error exit.
+* plFree2dGrid; Free the memory associated with a PLFLT matrix allocated using plAlloc2dGrid : plFree2dGrid; Free the memory associated with a PLFLT matrix allocated using plAlloc2dGrid.
+* plfsurf3d; Plot shaded 3-d surface plot : plfsurf3d; Plot shaded 3-d surface plot.
+* plgfile; Get output file handle : plgfile; Get output file handle.
+* plMergeOpts; Merge use option table into internal info structure : plMergeOpts; Merge use option table into internal info structure.
+* plMinMax2dGrid; Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid : plMinMax2dGrid; Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid.
+* plOptUsage; Print usage and syntax message : plOptUsage; Print usage and syntax message.
+* plResetOpts; Reset internal option table info structure : plResetOpts; Reset internal option table info structure.
+* plsabort; Set abort handler : plsabort; Set abort handler.
+* plSetUsage; Set the ascii character strings used in usage and syntax messages : plSetUsage; Set the ascii character strings used in usage and syntax messages.
+* plsexit; Set exit handler : plsexit; Set exit handler.
+* plsfile; Set output file handle : plsfile; Set output file handle.
+* plStatic2dGrid; Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT’s that is statically allocated : plStatic2dGrid; Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT's that is statically allocated.
+* pltr0; Identity transformation for matrix index to world coordinate mapping : pltr0; Identity transformation for matrix index to world coordinate mapping.
+* pltr1; Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays : pltr1; Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays.
+* pltr2; Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays) : pltr2; Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays [row-major order as per normal C 2d arrays].
+* plTranslateCursor; Convert device to world coordinates : plTranslateCursor; Convert device to world coordinates.
+* PLGraphicsIn; PLplot Graphics Input structure::
+* PLOptionTable; PLplot command line options table structure::
+
+
+File: plplotdoc.info,  Node: plabort; Error abort,  Next: plAlloc2dGrid; Allocate a block of memory for use as a matrix of type PLFLT_MATRIX,  Up: The Specialized C/C++ API for PLplot
+
+18.1 plabort: Error abort
+=========================
+
+     plabort (message);
+
+   This routine is to be used when something goes wrong that doesn’t
+require calling ‘plexit’ (*note plexit; Error exit::) but for which
+there is no useful recovery.  It calls the abort handler defined via
+‘plsabort’ (*note plsabort; Set abort handler::), does some cleanup and
+returns.  The user can supply his/her own abort handler and pass it in
+via ‘plsabort’ (*note plsabort; Set abort handler::).
+
+‘message’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     Abort message.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plAlloc2dGrid; Allocate a block of memory for use as a matrix of type PLFLT_MATRIX,  Next: plClearOpts; Clear internal option table info structure,  Prev: plabort; Error abort,  Up: The Specialized C/C++ API for PLplot
+
+18.2 plAlloc2dGrid: Allocate a block of memory for use as a matrix of type PLFLT_MATRIX
+=======================================================================================
+
+     plAlloc2dGrid (f, nx, ny);
+
+   Allocates the memory for a matrix of type PLFLT_MATRIX (organized as
+an Iliffe column vector (https://en.wikipedia.org/wiki/Iliffe_vector) of
+pointers to row vectors).  As a result the matrix can be accessed using
+C/C++ syntax like ‘*f[i][j]’.  The memory associated with this matrix
+must be freed by calling ‘plFree2dGrid’ (*note plFree2dGrid; Free the
+memory associated with a PLFLT matrix allocated using plAlloc2dGrid::)
+once it is no longer required.
+
+‘f’ (‘‘PLFLT_NC_MATRIX’ (*note PLFLT_NC_MATRIX-type::) *’, output)
+     If the allocation is a success, a pointer to a matrix (organized as
+     an Iliffe column vector
+     (https://en.wikipedia.org/wiki/Iliffe_vector) of pointers to row
+     vectors) is returned.  If the allocation is a failure, then the
+     returned value of ‘f’ will be NULL.
+
+‘nx, ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Dimensions of matrix to be allocated.
+
+   This function is used in our C (and C++) examples 8, 9, 11, 14, 16,
+20, 21, 22, 28, 30.
+
+
+File: plplotdoc.info,  Node: plClearOpts; Clear internal option table info structure,  Next: plexit; Error exit,  Prev: plAlloc2dGrid; Allocate a block of memory for use as a matrix of type PLFLT_MATRIX,  Up: The Specialized C/C++ API for PLplot
+
+18.3 plClearOpts: Clear internal option table info structure
+============================================================
+
+     plClearOpts ();
+
+   Clear the internal options table info structure.  This removes any
+option added with ‘plMergeOpts’ (*note plMergeOpts; Merge use option
+table into internal info structure::) as well as all default entries.
+
+   This function returns 0 on success.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plexit; Error exit,  Next: plFree2dGrid; Free the memory associated with a PLFLT matrix allocated using plAlloc2dGrid,  Prev: plClearOpts; Clear internal option table info structure,  Up: The Specialized C/C++ API for PLplot
+
+18.4 plexit: Error exit
+=======================
+
+     plexit (message);
+
+   This routine is called in case an error is encountered during
+execution of a PLplot routine.  It prints the error message, tries to
+release allocated resources, calls the handler provided by ‘plsexit’
+(*note plsexit; Set exit handler::) and then exits.  If cleanup needs to
+be done in the driver program then the user may want to supply his/her
+own exit handler and pass it in via ‘plsexit’ (*note plsexit; Set exit
+handler::).  This function should either call ‘plend’ (*note plend; End
+plotting session::) before exiting, or simply return.
+
+‘message’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     Error message.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plFree2dGrid; Free the memory associated with a PLFLT matrix allocated using plAlloc2dGrid,  Next: plfsurf3d; Plot shaded 3-d surface plot,  Prev: plexit; Error exit,  Up: The Specialized C/C++ API for PLplot
+
+18.5 plFree2dGrid: Free the memory associated with a PLFLT matrix allocated using ‘plAlloc2dGrid’
+=================================================================================================
+
+     plFree2dGrid (f, nx, ny);
+
+   Frees a block of memory allocated using ‘plAlloc2dGrid’ (*note
+plAlloc2dGrid; Allocate a block of memory for use as a matrix of type
+PLFLT_MATRIX::).
+
+‘f’ (‘‘PLFLT_NC_MATRIX’ (*note PLFLT_NC_MATRIX-type::)’, input)
+     A matrix to be freed after allocation by ‘plAlloc2dGrid’ (*note
+     plAlloc2dGrid; Allocate a block of memory for use as a matrix of
+     type PLFLT_MATRIX::) and all use of the matrix has been completed.
+
+‘nx, ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Dimensions of the matrix to be freed.
+
+   This function is used in C examples 8, 9, 11, 14, 16, 20, 21, 22, 28,
+30.
+
+
+File: plplotdoc.info,  Node: plfsurf3d; Plot shaded 3-d surface plot,  Next: plgfile; Get output file handle,  Prev: plFree2dGrid; Free the memory associated with a PLFLT matrix allocated using plAlloc2dGrid,  Up: The Specialized C/C++ API for PLplot
+
+18.6 plfsurf3d: Plot shaded 3-d surface plot
+============================================
+
+     plfsurf3d ( x , y , zops , zp , nx , ny , opt , clevel , nlevel );
+
+   Plots a three-dimensional shaded surface plot within the environment
+set up by ‘plw3d’ (*note plw3d; Configure the transformations required
+for projecting a 3D surface on a 2D window::).  The surface is defined
+by the two-dimensional function data accessed via the ‘‘zp’’ generic
+pointer argument.  How the data in ‘‘zp’’ is formatted is determined by
+the ‘‘zops’’ pointer to a struct containing the "get" function that
+reads that data.  The following functions in PLplot core will return an
+appropriate function pointer: ‘plf2ops_c()’ should be used when ‘‘zp’’
+is of type ‘PLFLT_MATRIX’ and ‘plf2ops_grid_c()’,
+‘plf2ops_grid_row_major()’, and ‘plf2ops_grid_col_major()’ should be
+used when the matrix of two-dimensional function data are organized
+within a ‘PLfGrid2’ structure as respectively two-dimensional row-major
+data, one-dimensional row-major data, and one-dimensional column-major
+data.  The ‘‘nx’’, ‘‘ny’’ ‘‘opt’’ ‘‘clevel’’ and ‘‘nlevel’’ parameters
+are used in the same way as ‘plsurf3d’ (*note plsurf3d; Plot shaded 3-d
+surface plot::).
+
+‘x’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the x coordinates at which the function is
+     evaluated.
+
+‘y’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the y coordinates at which the function is
+     evaluated.
+
+‘zops’ (‘‘PLF2OPS’ (*note PLF2OPS-type::)’, input)
+     Pointer to a ‘plf2ops_t’ struct that contains (amongst other
+     function pointers) a pointer to a "get" function that is used to
+     evaluate the 2D function data required by plfsurf3d.
+
+‘zp’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Pointer to the two-dimensional function data in the format required
+     by the "get" function that is (indirectly) pointed to by ‘zops’.
+     The various possibilities have been discussed above, and examples
+     of such use are given in ‘examples/c/x08c.c’.
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of ‘ ‘x’ ’ values at which function is evaluated.
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of ‘ ‘y’ ’ values at which function is evaluated.
+
+‘opt’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Determines the way in which the surface is represented.  To specify
+     more than one option just add the options, e.g.  FACETED +
+     SURF_CONT
+
+        • ‘ ‘opt’=FACETED ’: Network of lines is drawn connecting points
+          at which function is defined.
+
+        • ‘ ‘opt’=BASE_CONT ’: A contour plot is drawn at the base XY
+          plane using parameters ‘nlevel’ and ‘clevel’.
+
+        • ‘ ‘opt’=SURF_CONT ’: A contour plot is drawn at the surface
+          plane using parameters ‘nlevel’ and ‘clevel’.
+
+        • ‘ ‘opt’=DRAW_SIDES ’: draws a curtain between the base XY
+          plane and the borders of the plotted function.
+
+        • ‘ ‘opt’=MAG_COLOR ’: the surface is colored according to the
+          value of Z; if ‘MAG_COLOR’ is not used, then the surface is
+          colored according to the intensity of the reflected light in
+          the surface from a light source whose position is set using
+          ‘pllightsource’ (*note pllightsource; Sets the 3D position of
+          the light source::).
+
+‘clevel’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     A vector containing the contour levels.
+
+‘nlevel’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Number of elements in the ‘clevel’ vector.
+
+   This function is optionally used in C example 8.
+
+
+File: plplotdoc.info,  Node: plgfile; Get output file handle,  Next: plMergeOpts; Merge use option table into internal info structure,  Prev: plfsurf3d; Plot shaded 3-d surface plot,  Up: The Specialized C/C++ API for PLplot
+
+18.7 plgfile: Get output file handle
+====================================
+
+     plgfile (file);
+
+   Gets the current output file handle, if applicable.
+
+‘file’ (‘FILE **’, output)
+     File pointer to current output file.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plMergeOpts; Merge use option table into internal info structure,  Next: plMinMax2dGrid; Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid,  Prev: plgfile; Get output file handle,  Up: The Specialized C/C++ API for PLplot
+
+18.8 plMergeOpts: Merge use option table into internal info structure
+=====================================================================
+
+     PLINT plMergeOpts (options, name, notes);
+
+   Merges in a set of user-supplied command line options with the
+internal options table.  This allows such options to be used along with
+the built-in PLplot options to set device driver, output file etc.  See
+‘plparseopts’ (*note plparseopts; Parse command-line arguments::) for
+details of how to parse these options in a program.
+
+‘options’ (‘PLOptionTable *’, input)
+     User option table to merge.
+
+‘name’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     Label to preface the options in the program help.
+
+‘notes’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::) *’, input)
+     A vector of character strings which appear after the options in the
+     program help.
+
+   This function is used in C examples 1, 8, 16, 20 and 21.
+
+
+File: plplotdoc.info,  Node: plMinMax2dGrid; Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid,  Next: plOptUsage; Print usage and syntax message,  Prev: plMergeOpts; Merge use option table into internal info structure,  Up: The Specialized C/C++ API for PLplot
+
+18.9 plMinMax2dGrid: Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using ‘plAlloc2dGrid’
+========================================================================================================================
+
+     plMinMax2dGrid (f, nx, ny, fmax, fmin);
+
+   Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX
+allocated using ‘plAlloc2dGrid’ (*note plAlloc2dGrid; Allocate a block
+of memory for use as a matrix of type PLFLT_MATRIX::).
+
+‘f’ (‘‘PLFLT_MATRIX’ (*note PLFLT_MATRIX-type::)’, input)
+     A matrix to find the maximum / minimum of.
+
+‘nx, ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Dimensions of ‘f’.
+
+‘fmax, fmin’ (‘‘PLFLT_NC_SCALAR’ (*note PLFLT_NC_SCALAR-type::)’, output)
+     Returned maximum and minimum values of the matrix ‘f’.
+
+   This function is used in C examples 8, 11, 20 and 21.
+
+
+File: plplotdoc.info,  Node: plOptUsage; Print usage and syntax message,  Next: plResetOpts; Reset internal option table info structure,  Prev: plMinMax2dGrid; Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid,  Up: The Specialized C/C++ API for PLplot
+
+18.10 plOptUsage: Print usage and syntax message
+================================================
+
+     plOptUsage ();
+
+   Prints the usage and syntax message.  The message can also be
+displayed using the -h command line option.  There is a default message
+describing the default PLplot options.  The usage message is also
+modified by ‘plSetUsage’ (*note plSetUsage; Set the ascii character
+strings used in usage and syntax messages::) and ‘plMergeOpts’ (*note
+plMergeOpts; Merge use option table into internal info structure::).
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plResetOpts; Reset internal option table info structure,  Next: plsabort; Set abort handler,  Prev: plOptUsage; Print usage and syntax message,  Up: The Specialized C/C++ API for PLplot
+
+18.11 plResetOpts: Reset internal option table info structure
+=============================================================
+
+     plResetOpts ();
+
+   Resets the internal command line options table to the default built
+in value.  Any user options added with ‘plMergeOpts’ (*note plMergeOpts;
+Merge use option table into internal info structure::) will be cleared.
+See ‘plparseopts’ (*note plparseopts; Parse command-line arguments::)
+for details of how to parse these options in a program.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plsabort; Set abort handler,  Next: plSetUsage; Set the ascii character strings used in usage and syntax messages,  Prev: plResetOpts; Reset internal option table info structure,  Up: The Specialized C/C++ API for PLplot
+
+18.12 plsabort: Set abort handler
+=================================
+
+     plsabort (handler);
+
+   Sets an optional user abort handler.  See ‘plabort’ (*note plabort;
+Error abort::) for details.
+
+‘handler’ (‘void (*) (‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::))’, input)
+     Error abort handler.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plSetUsage; Set the ascii character strings used in usage and syntax messages,  Next: plsexit; Set exit handler,  Prev: plsabort; Set abort handler,  Up: The Specialized C/C++ API for PLplot
+
+18.13 plSetUsage: Set the ascii character strings used in usage and syntax messages
+===================================================================================
+
+     plSetUsage (program_string, usage_string);
+
+   Sets the program string and usage string displayed by the command
+line help option (-h) and by ‘plOptUsage’ (*note plOptUsage; Print usage
+and syntax message::).
+
+‘program_string’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string to appear as the name of program.
+
+‘usage_string’ (‘‘PLCHAR_VECTOR’ (*note PLCHAR_VECTOR-type::)’, input)
+     An ascii character string to appear as the usage text.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plsexit; Set exit handler,  Next: plsfile; Set output file handle,  Prev: plSetUsage; Set the ascii character strings used in usage and syntax messages,  Up: The Specialized C/C++ API for PLplot
+
+18.14 plsexit: Set exit handler
+===============================
+
+     plsexit (handler);
+
+   Sets an optional user exit handler.  See ‘plexit’ (*note plexit;
+Error exit::) for details.
+
+‘handler’ (‘int (*) (PLCHAR_VECTOR)’, input)
+     Error exit handler.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plsfile; Set output file handle,  Next: plStatic2dGrid; Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT's that is statically allocated,  Prev: plsexit; Set exit handler,  Up: The Specialized C/C++ API for PLplot
+
+18.15 plsfile: Set output file handle
+=====================================
+
+     plsfile (file);
+
+   Sets the current output file handle, if applicable.  If the file has
+has not been previously opened and is required by the driver, the user
+will be prompted for the file name.  This routine, if used, must be
+called before initializing PLplot.
+
+‘file’ (‘FILE *’, input)
+     File pointer.  The type (i.e.  text or binary) doesn’t matter on
+     *ix systems.  On systems where it might matter it should match the
+     type of file that the output driver would produce, i.e.  text for
+     the postscript driver.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: plStatic2dGrid; Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT's that is statically allocated,  Next: pltr0; Identity transformation for matrix index to world coordinate mapping,  Prev: plsfile; Set output file handle,  Up: The Specialized C/C++ API for PLplot
+
+18.16 plStatic2dGrid: Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT’s that is statically allocated
+==============================================================================================================================================================
+
+     plStatic2dGrid (zIliffe, zStatic, nx, ny);
+
+   Determine the Iliffe column vector
+(https://en.wikipedia.org/wiki/Iliffe_vector) of pointers to PLFLT row
+vectors corresponding to a 2D matrix of PLFLT’s that is statically
+allocated.  As a result the Iliffe column vector can be accessed using
+C/C++ syntax like ‘*zIliffe[i][j]’.  However, the primary purpose of
+this routine is to convert 2D plot data stored in statically allocated
+arrays to Iliffe column vector form which is suitable to be the 2D
+matrix arguments of the C and C++ versions of ‘plcont’ (*note plcont;
+Contour plot::), ‘plshade’ (*note plshade; Shade individual region on
+the basis of value::), ‘plshades’ (*note plshades; Shade regions on the
+basis of value::), ‘plimage’ (*note plimage; Plot a 2D matrix using
+cmap1 with automatic color adjustment::), ‘plvect’ (*note plvect; Vector
+plot::), etc.
+
+‘zIliffe’ (‘‘PLFLT_NC_MATRIX’ (*note PLFLT_NC_MATRIX-type::)’, output)
+     The pre-existing column vector of pointers which is filled in by
+     this routine so that on return, ‘zIliffe’ is a Iliffe column vector
+     (https://en.wikipedia.org/wiki/Iliffe_vector) of pointers to the
+     row vectors of ‘zStatic’.
+
+‘zStatic’ (‘‘PLFLT_VECTOR’ (*note PLFLT_VECTOR-type::)’, input)
+     Pointer to the first element of a statically allocated 2D matrix.
+     This pointer is used to find the locations of the row vectors of
+     this matrix which are used to determine ‘zIliffe’.
+
+‘nx, ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Dimensions of the statically allocated 2D matrix, ‘zStatic’.
+
+   This function is used in our example 15.
+
+
+File: plplotdoc.info,  Node: pltr0; Identity transformation for matrix index to world coordinate mapping,  Next: pltr1; Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays,  Prev: plStatic2dGrid; Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT's that is statically allocated,  Up: The Specialized C/C++ API for PLplot
+
+18.17 pltr0: Identity transformation for matrix index to world coordinate mapping
+=================================================================================
+
+     pltr0 (x, y, tx, ty, pltr_data);
+
+   Identity transformation for matrix index to world coordinate mapping.
+This routine can be used for the ‘PLTRANSFORM_callback’ (*note
+PLTRANSFORM_callback-type::) argument of ‘plcont’ (*note plcont; Contour
+plot::), ‘plshade’ (*note plshade; Shade individual region on the basis
+of value::), ‘plshades’ (*note plshades; Shade regions on the basis of
+value::), ‘plimagefr’ (*note plimagefr; Plot a 2D matrix using cmap1::),
+or ‘plvect’ (*note plvect; Vector plot::).
+
+‘x’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     X index of matrix.
+
+‘y’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Y index of matrix.
+
+‘tx’ (‘‘PLFLT_NC_SCALAR’ (*note PLFLT_NC_SCALAR-type::)’, output)
+     Transformed x value in world coordinates corresponding to x index
+     of matrix.
+
+‘ty’ (‘‘PLFLT_NC_SCALAR’ (*note PLFLT_NC_SCALAR-type::)’, output)
+     Transformed y value in world coordinates corresponding to y index
+     of matrix.
+
+‘pltr_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     A pointer to additional data that is passed as an argument to
+     PLplot routines that potentially could use the ‘pltr0’ (*note
+     pltr0; Identity transformation for matrix index to world coordinate
+     mapping::) callback (i.e., ‘plcont’ (*note plcont; Contour plot::),
+     ‘plimagefr’ (*note plimagefr; Plot a 2D matrix using cmap1::),
+     ‘plshade’ (*note plshade; Shade individual region on the basis of
+     value::), ‘plshades’ (*note plshades; Shade regions on the basis of
+     value::), and ‘plvect’ (*note plvect; Vector plot::)); which then
+     internally pass that argument on to this callback.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: pltr1; Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays,  Next: pltr2; Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays [row-major order as per normal C 2d arrays],  Prev: pltr0; Identity transformation for matrix index to world coordinate mapping,  Up: The Specialized C/C++ API for PLplot
+
+18.18 pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays
+=========================================================================================================================
+
+     pltr1 (x, y, tx, ty, pltr_data);
+
+   Linear interpolation for matrix index to world coordinate mapping
+using one-dimensional ‘x’ and ‘y’ coordinate arrays.  This routine can
+be used for the ‘PLTRANSFORM_callback’ (*note
+PLTRANSFORM_callback-type::) argument of ‘plcont’ (*note plcont; Contour
+plot::), ‘plshade’ (*note plshade; Shade individual region on the basis
+of value::), ‘plshades’ (*note plshades; Shade regions on the basis of
+value::), ‘plimagefr’ (*note plimagefr; Plot a 2D matrix using cmap1::),
+or ‘plvect’ (*note plvect; Vector plot::).
+
+‘x’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     X index of matrix.
+
+‘y’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Y index of matrix.
+
+‘tx’ (‘‘PLFLT_NC_SCALAR’ (*note PLFLT_NC_SCALAR-type::)’, output)
+     Transformed x value in world coordinates corresponding to x index
+     of matrix.
+
+‘ty’ (‘‘PLFLT_NC_SCALAR’ (*note PLFLT_NC_SCALAR-type::)’, output)
+     Transformed y value in world coordinates corresponding to y index
+     of matrix.
+
+‘pltr_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     A pointer to additional data that is passed as an argument to
+     PLplot routines that potentially could use the ‘pltr1’ (*note
+     pltr1; Linear interpolation for matrix index to world coordinate
+     mapping using singly dimensioned coordinate arrays::) callback
+     (i.e., ‘plcont’ (*note plcont; Contour plot::), ‘plimagefr’ (*note
+     plimagefr; Plot a 2D matrix using cmap1::), ‘plshade’ (*note
+     plshade; Shade individual region on the basis of value::),
+     ‘plshades’ (*note plshades; Shade regions on the basis of value::),
+     and ‘plvect’ (*note plvect; Vector plot::)); which then internally
+     pass that argument on to this callback.
+
+   This function is used in C examples 9 and 16.
+
+
+File: plplotdoc.info,  Node: pltr2; Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays [row-major order as per normal C 2d arrays],  Next: plTranslateCursor; Convert device to world coordinates,  Prev: pltr1; Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays,  Up: The Specialized C/C++ API for PLplot
+
+18.19 pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)
+==================================================================================================================================================
+
+     pltr2 (x, y, tx, ty, pltr_data);
+
+   Linear interpolation for grid to world mapping using two-dimensional
+‘x’ and ‘y’ coordinate arrays.  This routine can be used for the
+‘PLTRANSFORM_callback’ (*note PLTRANSFORM_callback-type::) argument of
+‘plcont’ (*note plcont; Contour plot::), ‘plshade’ (*note plshade; Shade
+individual region on the basis of value::), ‘plshades’ (*note plshades;
+Shade regions on the basis of value::), ‘plimagefr’ (*note plimagefr;
+Plot a 2D matrix using cmap1::), or ‘plvect’ (*note plvect; Vector
+plot::).
+
+‘x’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     X index of matrix.
+
+‘y’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Y index of matrix.
+
+‘tx’ (‘‘PLFLT_NC_SCALAR’ (*note PLFLT_NC_SCALAR-type::)’, output)
+     Transformed x value in world coordinates corresponding to x index
+     of matrix.
+
+‘ty’ (‘‘PLFLT_NC_SCALAR’ (*note PLFLT_NC_SCALAR-type::)’, output)
+     Transformed y value in world coordinates corresponding to y index
+     of matrix.
+
+‘pltr_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     A pointer to additional data that is passed as an argument to
+     PLplot routines that potentially could use the ‘pltr2’ (*note
+     pltr2; Linear interpolation for grid to world mapping using doubly
+     dimensioned coordinate arrays [row-major order as per normal C 2d
+     arrays]::) callback (i.e., ‘plcont’ (*note plcont; Contour plot::),
+     ‘plimagefr’ (*note plimagefr; Plot a 2D matrix using cmap1::),
+     ‘plshade’ (*note plshade; Shade individual region on the basis of
+     value::), ‘plshades’ (*note plshades; Shade regions on the basis of
+     value::), and ‘plvect’ (*note plvect; Vector plot::)); which then
+     internally pass that argument on to this callback.
+
+   This function is used in C examples 9, 16, 20, and 22.
+
+
+File: plplotdoc.info,  Node: plTranslateCursor; Convert device to world coordinates,  Next: PLGraphicsIn; PLplot Graphics Input structure,  Prev: pltr2; Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays [row-major order as per normal C 2d arrays],  Up: The Specialized C/C++ API for PLplot
+
+18.20 plTranslateCursor: Convert device to world coordinates
+============================================================
+
+     PLINT plTranslateCursor ( gin );
+
+   Convert from device to world coordinates.  The variable gin must have
+members dX and dY set before the call.These represent the coordinates of
+the point as a fraction of the total drawing area.  If the point passed
+in is on a window then the function returns 1, members wX and wY will be
+filled with the world coordinates of that point and the subwindow member
+will be filled with the index of the window on which the point falls.
+If the point falls on more than one window (because they overlap) then
+the window with the lowest index is used.  If the point does not fall on
+a window then the function returns 0, wX and wY are set to 0 and
+subwindow remains unchanged.
+
+‘gin’ (‘‘PLGraphicsIn’ (*note PLGraphicsIn; PLplot Graphics Input structure::) *’, input/output)
+     Pointer to a ‘PLGraphicsIn’ (*note PLGraphicsIn; PLplot Graphics
+     Input structure::) structure to hold the input and output
+     coordinates.
+
+   This function is not used in any of our C examples.
+
+
+File: plplotdoc.info,  Node: PLGraphicsIn; PLplot Graphics Input structure,  Next: PLOptionTable; PLplot command line options table structure,  Prev: plTranslateCursor; Convert device to world coordinates,  Up: The Specialized C/C++ API for PLplot
+
+18.21 PLGraphicsIn: PLplot Graphics Input structure
+===================================================
+
+The ‘PLGraphicsIn’ structure is used by ‘plGetCursor’ (*note
+plGetCursor; Wait for graphics input event and translate to world
+coordinates_::) and ‘plTranslateCursor’ (*note plTranslateCursor;
+Convert device to world coordinates::) to return information on the
+current cursor position and key / button state.  The structure contains
+the following fields:
+
+‘type’ (‘int’)
+     Type of event (currently unused?).
+
+‘state’ (‘unsigned int’)
+     Key or button mask.  Consists of a combination of the following
+     masks: ‘PL_MASK_SHIFT, PL_MASK_CAPS, PL_MASK_CONTROL, PL_MASK_ALT,
+     PL_MASK_NUM PL_MASK_ALTGR, PL_MASK_WIN, PL_MASK_SCROLL,
+     PL_MASK_BUTTON1, PL_MASK_BUTTON2, PL_MASK_BUTTON3, PL_MASK_BUTTON4,
+     PL_MASK_BUTTON5’.  The button values indicate mouse buttons.  Caps,
+     num and scroll indicate that the appropriate lock is on.
+
+‘keysym’ (‘unsigned int’)
+     Key selected.
+
+‘button’ (‘unsigned int’)
+     Mouse button selected.
+
+‘subwindow’ (‘PLINT’)
+     Subwindow (or subpage / subplot) number.
+
+‘string’ (‘char [PL_MAXKEY]’)
+     Translated ascii character string.
+
+‘pX, pY’ (‘int’)
+     Absolute device coordinates of mouse pointer.
+
+‘dX, dY’ (‘PLFLT’)
+     Relative device coordinates of mouse pointer.
+
+‘wX, wY’ (‘PLFLT’)
+     World coordinates of mouse pointer.
+
+
+File: plplotdoc.info,  Node: PLOptionTable; PLplot command line options table structure,  Prev: PLGraphicsIn; PLplot Graphics Input structure,  Up: The Specialized C/C++ API for PLplot
+
+18.22 PLOptionTable: PLplot command line options table structure
+================================================================
+
+The ‘PLOptionTable’ structure is used by ‘plMergeOpts’ (*note
+plMergeOpts; Merge use option table into internal info structure::) to
+pass information on user-defined command line options to PLplot.  The
+structure contains the following fields:
+
+‘opt’ (‘PLCHAR_VECTOR’)
+     Name of option.
+
+‘handler’ (‘int (*func) (PLCHAR_VECTOR, PLCHAR_VECTOR, PLPointer)’)
+     User-defined handler function to be called when option is set.  A
+     NULL value indicates that no user-defined handler is required.
+
+‘client_data’ (‘PLPointer’)
+     A pointer to client data.  A NULL value indicates that no client
+     data is required.
+
+‘var’ (‘PLPointer’)
+     A pointer to a variable to be set to the value specified on the
+     command-line option.
+
+‘mode’ (‘long’)
+     Type of variable ‘var’.  Allowed values are PL_OPT_FUNC,
+     PL_OPT_BOOL, PL_OPT_INT, PL_OPT_FLOAT, PL_OPT_STRING.
+
+‘syntax’ (‘PLCHAR_VECTOR’)
+     Syntax for option (used in the usage message).
+
+‘desc’ (‘PLCHAR_VECTOR’)
+     Description of the option (used in the usage message).
+
+
+File: plplotdoc.info,  Node: The Specialized Fortran API for PLplot,  Next: API compatibility definition,  Prev: The Specialized C/C++ API for PLplot,  Up: Reference
+
+19 The Specialized Fortran API for PLplot
+*****************************************
+
+The purpose of this Chapter is to document the API for each Fortran
+function in PLplot that differs substantially (usually in argument
+lists) from the common API that has already been documented in *note The
+Common API for PLplot::.
+
+   Normally, the common API is wrapped in such a way for Fortran that
+there is and one-to-one correspondence between each Fortran and C
+argument with the exception of arguments that indicate array sizes (see
+*note Fortran Language:: for discussion).  However, for certain routines
+documented in this chapter the Fortran argument lists necessarily differ
+substantially from the C versions.
+
+   This chapter is incomplete and NEEDS DOCUMENTATION.
+
+* Menu:
+
+* plcont; Contour plot for Fortran : plcont; Contour plot for Fortran.
+* plshade; Shaded plot for Fortran : plshade; Shaded plot for Fortran.
+* plshades; Continuously shaded plot for Fortran : plshades; Continuously shaded plot for Fortran.
+* plvect; Vector plot for Fortran : plvect; Vector plot for Fortran.
+* plmesh; Plot surface mesh for Fortran : plmesh; Plot surface mesh for Fortran.
+* plot3d; Plot 3-d surface plot for Fortran : plot3d; Plot 3-d surface plot for Fortran.
+* plparseopts; parse arguments for Fortran : plparseopts; parse arguments for Fortran.
+* plsesc; Set the escape character for text strings for Fortran : plsesc; Set the escape character for text strings for Fortran.
+
+
+File: plplotdoc.info,  Node: plcont; Contour plot for Fortran,  Next: plshade; Shaded plot for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.1 plcont: Contour plot for Fortran
+=====================================
+
+This is an overloaded function with a variety of argument lists:
+
+
+     	interface plcont
+     	subroutine plcontour_0(z,kx,lx,ky,ly,clevel)
+     	integer                          :: kx,lx,ky,ly
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	end subroutine plcontour_0
+
+     	subroutine plcontour_1(z,kx,lx,ky,ly,clevel,xg,yg)
+     	integer                          :: kx,lx,ky,ly
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	real(kind=plflt), dimension(:)   :: xg
+     	real(kind=plflt), dimension(:)   :: yg
+     	end subroutine plcontour_1
+
+     	subroutine plcontour_2(z,kx,lx,ky,ly,clevel,xg,yg)
+     	integer                          :: kx,lx,ky,ly
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	real(kind=plflt), dimension(:,:) :: xg
+     	real(kind=plflt), dimension(:,:) :: yg
+     	end subroutine plcontour_2
+
+     	subroutine plcontour_tr(z,kx,lx,ky,ly,clevel,tr)
+     	integer                          :: kx,lx,ky,ly
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	real(kind=plflt), dimension(6)   :: tr
+     	end subroutine plcontour_tr
+
+     	subroutine plcontour_0_all(z,clevel)
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	end subroutine plcontour_0_all
+
+     	subroutine plcontour_1_all(z,clevel,xg,yg)
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	real(kind=plflt), dimension(:)   :: xg
+     	real(kind=plflt), dimension(:)   :: yg
+     	end subroutine plcontour_1_all
+
+     	subroutine plcontour_2_all(z,clevel,xg,yg)
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	real(kind=plflt), dimension(:,:) :: xg
+     	real(kind=plflt), dimension(:,:) :: yg
+     	end subroutine plcontour_2_all
+
+     	subroutine plcontour_tr_all(z,clevel,tr)
+     	real(kind=plflt), dimension(:,:) :: z
+     	real(kind=plflt), dimension(:)   :: clevel
+     	real(kind=plflt), dimension(6)   :: tr
+     	end subroutine plcontour_tr_all
+     	end interface
+
+
+   When called from Fortran, this overloaded routine has the same effect
+as when invoked from C. See ‘examples/fortran/x??f.f90’ for various ways
+to call plcont from Fortran.
+
+   The meaning of the various arguments is as follows:
+
+‘z’ (‘real(kind=plflt), dimension(:,:)’, input)
+     Matrix containing the values to be plotted.
+
+‘kx, lx’ (‘integer’, input)
+     Range for the first index in the matrix ‘z’ to consider.  If not
+     given, then the whole first index is considered.
+
+‘clevel’ (‘real(kind=plflt), dimension(:)’, input)
+     Levels at which the contours are computed and drawn.
+
+‘kx, lx’ (‘integer’, input)
+     Range for the first index in the matrix ‘z’ to consider.  If not
+     given, then the whole first index is considered.
+
+‘ky, ly’ (‘integer’, input)
+     Range for the second index in the matrix ‘z’ to consider.  If not
+     given, then the whole second index is considered.
+
+‘xg’ (‘real(kind=plft), dimension(:)’ or ‘real(kind=plft), dimension(:,:)’, input)
+     The x-coordinates for the grid lines (if one-dimensional) or the
+     x-coordinates of the grid vertices (if two-dimensional).  The
+     values in the matrix are plotted at these coordinates.  If not
+     given, implicit coordinates are used (equal to the indices in the
+     matrix).
+
+‘yg’ (‘real(kind=plft), dimension(:)’ or ‘real(kind=plft), dimension(:,:)’, input)
+     The y-coordinates for the grid lines (if one-dimensional) or the
+     x-coordinates of the grid vertices (if two-dimensional).  The
+     values in the matrix are plotted at these coordinates.
+
+‘tr’ (‘real(kind=plft), dimension(6)’, input)
+     The coefficients of an affine transformation:
+
+
+          		x = tr(1) * ix + tr(2) * iy + tr(3)
+          		y = tr(4) * ix + tr(5) * iy + tr(6)
+
+
+     The indices of the matrix element are used to compute the "actual"
+     coordinates according to the above formulae.
+
+
+File: plplotdoc.info,  Node: plshade; Shaded plot for Fortran,  Next: plshades; Continuously shaded plot for Fortran,  Prev: plcont; Contour plot for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.2 plshade: Shaded plot for Fortran
+=====================================
+
+This is an overloaded function with a variety of argument lists which
+NEED DOCUMENTATION.
+
+   When called from Fortran, this overloaded routine has the same effect
+as when invoked from C. See ‘examples/fortran/x??f.f90’ for various ways
+to call plshade from Fortran.
+
+
+File: plplotdoc.info,  Node: plshades; Continuously shaded plot for Fortran,  Next: plvect; Vector plot for Fortran,  Prev: plshade; Shaded plot for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.3 plshades: Continuously shaded plot for Fortran
+===================================================
+
+This is an overloaded function with a variety of argument lists which
+NEED DOCUMENTATION.
+
+   When called from Fortran, this overloaded routine has the same effect
+as when invoked from C. See ‘examples/fortran/x??f.f90’ for various ways
+to call plshades from Fortran.
+
+
+File: plplotdoc.info,  Node: plvect; Vector plot for Fortran,  Next: plmesh; Plot surface mesh for Fortran,  Prev: plshades; Continuously shaded plot for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.4 plvect: Vector plot for Fortran
+====================================
+
+This is an overloaded function with a variety of argument lists which
+NEED DOCUMENTATION.
+
+   When called from Fortran, this overloaded routine has the same effect
+as when invoked from C. See ‘examples/fortran/x??f.f90’ for various ways
+to call plvect from Fortran.
+
+
+File: plplotdoc.info,  Node: plmesh; Plot surface mesh for Fortran,  Next: plot3d; Plot 3-d surface plot for Fortran,  Prev: plvect; Vector plot for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.5 plmesh: Plot surface mesh for Fortran
+==========================================
+
+     plmesh (x, y, z, nx, ny, opt, mx);
+
+   When called from Fortran, this routine has the same effect as when
+invoked from C. The interpretation of all parameters (see ‘plmesh’
+(*note plmesh; Plot surface mesh::)) is also the same except there is an
+additional parameter given by:
+
+‘mx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Length of array in x direction, for plotting subarrays.
+
+
+File: plplotdoc.info,  Node: plot3d; Plot 3-d surface plot for Fortran,  Next: plparseopts; parse arguments for Fortran,  Prev: plmesh; Plot surface mesh for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.6 plot3d: Plot 3-d surface plot for Fortran
+==============================================
+
+     plot3d (x, y, z, nx, ny, opt, side, mx);
+
+   When called from Fortran, this routine has the same effect as when
+invoked from C. The interpretation of all parameters (see ‘plot3d’
+(*note plot3d; Plot 3-d surface plot::)) is also the same except there
+is an additional parameter given by:
+
+‘mx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Length of array in x direction, for plotting subarrays.
+
+
+File: plplotdoc.info,  Node: plparseopts; parse arguments for Fortran,  Next: plsesc; Set the escape character for text strings for Fortran,  Prev: plot3d; Plot 3-d surface plot for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.7 plparseopts: parse arguments for Fortran
+=============================================
+
+     plparseopts (mode);
+
+   When called from Fortran, this routine has the same effect as when
+invoked from C (see ‘plparseopts’ (*note plparseopts; Parse command-line
+arguments::)) except that the argument list just contains the parsing
+mode and the Fortran system routines ‘iargc’ and ‘getarg’ are used
+internally to obtain the number of arguments and argument values.
+(Note, during configuration, the user’s Fortran compiler is checked to
+see whether it supports ‘iargc’ and ‘getarg’.  If it does not, the
+Fortran plparseopts simply writes a warning message and returns.
+
+‘mode’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Parsing mode; see ‘plparseopts’ (*note plparseopts; Parse
+     command-line arguments::) for details.
+
+
+File: plplotdoc.info,  Node: plsesc; Set the escape character for text strings for Fortran,  Prev: plparseopts; parse arguments for Fortran,  Up: The Specialized Fortran API for PLplot
+
+19.8 plsesc: Set the escape character for text strings for Fortran
+==================================================================
+
+     plsesc (esc);
+
+   Set the escape character for text strings.  From Fortran it needs to
+be the decimal ASCII value.  Only selected characters are allowed to
+prevent the user from shooting himself in the foot (For example, a ‘\’
+isn’t allowed since it conflicts with C’s use of backslash as a
+character escape).  Here are the allowed escape characters and their
+corresponding decimal ASCII values:
+
+   • ‘!’, ASCII 33
+
+   • ‘#’, ASCII 35
+
+   • ‘$’, ASCII 36
+
+   • ‘%’, ASCII 37
+
+   • ‘&’, ASCII 38
+
+   • ‘*’, ASCII 42
+
+   • ‘@’, ASCII 64
+
+   • ‘^’, ASCII 94
+
+   • ‘~’, ASCII 126
+
+‘esc’ (‘char’, input)
+     NEEDS DOCUMENTATION
+
+
+File: plplotdoc.info,  Node: API compatibility definition,  Next: Obsolete/Deprecated API for PLplot,  Prev: The Specialized Fortran API for PLplot,  Up: Reference
+
+20 API compatibility definition
+*******************************
+
+This chapter presents the formal definition of what is considered to be
+in the PLplot library API. It is assumed that major new releases of
+PLplot will have substantial backwards incompatible changes in the API,
+but the PLplot developers commit to introducing as few as possible of
+such incompatibilities between minor releases such that stability across
+those minor releases is practically guaranteed.  In all cases where
+backwards incompatible changes have been introduced, then the library
+soname will be changed (for operating systems such as Linux that support
+versioned shared libraries).
+
+   The information in this chapter regards version 5.15.0 of PLplot,
+released on 2019-06-01.
+
+* Menu:
+
+* What is in the API? : What is in the API?.
+* Regression test for backwards compatibility : Regression test for backwards compatibility.
+
+
+File: plplotdoc.info,  Node: What is in the API?,  Next: Regression test for backwards compatibility,  Up: API compatibility definition
+
+20.1 What is in the API?
+========================
+
+The formal definition of the PLplot C API is everything that is defined
+in the include file ‘plplot.h’.  This includes all the function
+prototypes, the defined structures and the semantics of the constants.
+The list of symbols currently exported by the shared library
+‘libplplot.h’ that are declared in ‘plplot.h’ is the following:
+
+     plAlloc2dGrid           plgcol0                 plscmap1_range
+     plClearOpts             plgcol0a                plscmap1a
+     plFindCommand           plgcolbg                plscmap1l
+     plFindName              plgcolbga               plscmap1la
+     plFree2dGrid            plgcompression          plscmap1n
+     plGetCursor             plgdev                  plscol0
+     plGetFlt                plgdidev                plscol0a
+     plGetInt                plgdiori                plscolbg
+     plGetName               plgdiplt                plscolbga
+     plMergeOpts             plgdrawmode             plscolor
+     plMinMax2dGrid          plgesc                  plscompression
+     plOptUsage              plgfam                  plsdev
+     plResetOpts             plgfci                  plsdevdata
+     plSetUsage              plgfile                 plsdidev
+     plStatic2dGrid          plgfnam                 plsdimap
+     plTranslateCursor       plgfont                 plsdiori
+     pl_cmd                  plglevel                plsdiplt
+     pl_setcontlabelformat   plgpage                 plsdiplz
+     pl_setcontlabelparam    plgra                   plsdrawmode
+     pladv                   plgradient              plseed
+     plarc                   plgriddata              plseopH
+     plaxes                  plgspa                  plsesc
+     plbin                   plgstrm                 plsetopt
+     plbop                   plgver                  plsexit
+     plbox                   plgvpd                  plsfam
+     plbox3                  plgvpw                  plsfci
+     plbtime                 plgxax                  plsfile
+     plcalc_world            plgyax                  plsfnam
+     plclear                 plgzax                  plsfont
+     plcol0                  plhist                  plshade
+     plcol1                  plhlsrgb                plshades
+     plcolorbar              plimage                 plslabelfunc
+     plconfigtime            plimagefr               plsmaj
+     plcont                  plinit                  plsmem
+     plcpstrm                pljoin                  plsmema
+     plctime                 pllab                   plsmin
+     pldid2pc                pllegend                plsori
+     pldip2dc                pllightsource           plspage
+     plend                   plline                  plspal0
+     plend1                  plline3                 plspal1
+     plenv                   pllsty                  plspause
+     plenv0                  plmap                   plsstrm
+     pleop                   plmapfill               plssub
+     plerrx                  plmapline               plssym
+     plerry                  plmapstring             plstar
+     plf2eval                plmaptex                plstart
+     plf2eval1               plmeridians             plstransform
+     plf2eval2               plmesh                  plstring
+     plf2evalr               plmeshc                 plstring3
+     plf2ops_c               plmkstrm                plstripa
+     plf2ops_grid_c          plmtex                  plstripc
+     plf2ops_grid_col_major  plmtex3                 plstripd
+     plf2ops_grid_row_major  plot3d                  plstyl
+     plfamadv                plot3dc                 plsurf3d
+     plfcont                 plot3dcl                plsurf3dl
+     plfgriddata             plparseopts             plsvect
+     plfill                  plpat                   plsvpa
+     plfill3                 plpath                  plsxax
+     plfimage                plpoin                  plsxwin
+     plfimagefr              plpoin3                 plsyax
+     plflush                 plpoly3                 plsym
+     plfmesh                 plprec                  plszax
+     plfmeshc                plpsty                  pltext
+     plfont                  plptex                  pltimefmt
+     plfontld                plptex3                 pltr0
+     plfplot3d               plrandd                 pltr1
+     plfplot3dc              plreplot                pltr2
+     plfplot3dcl             plrgbhls                pltr2f
+     plfshade                plsButtonEH             pltr2p
+     plfshade1               plsError                plvasp
+     plfshades               plsKeyEH                plvect
+     plfsurf3d               plsabort                plvpas
+     plfsurf3dl              plsbopH                 plvpor
+     plfvect                 plschr                  plvsta
+     plgDevs                 plscmap0                plw3d
+     plgFileDevs             plscmap0a               plwidth
+     plgchr                  plscmap0n               plwind
+     plgcmap1_range          plscmap1                plxormod
+
+   Another important aspect of compatibility regard the Application
+Binary Interface (ABI). Backwards compatibility can be broken by changes
+in the C structures made public through ‘plplot.h’.  Currently, they
+are:
+
+     typedef struct
+     {
+         PLCHAR_VECTOR opt;
+         int ( *handler )( PLCHAR_VECTOR, PLCHAR_VECTOR, PLPointer );
+         PLPointer     client_data;
+         PLPointer     var;
+         long          mode;
+         PLCHAR_VECTOR syntax;
+         PLCHAR_VECTOR desc;
+     } PLOptionTable;
+
+     typedef struct
+     {
+         int          type;              // of event (CURRENTLY UNUSED)
+         unsigned int state;             // key or button mask
+         unsigned int keysym;            // key selected
+         unsigned int button;            // mouse button selected
+         PLINT        subwindow;         // subwindow (alias subpage, alias subplot) number
+         char         string[PL_MAXKEY]; // translated string
+         int          pX, pY;            // absolute device coordinates of pointer
+         PLFLT        dX, dY;            // relative device coordinates of pointer
+         PLFLT        wX, wY;            // world coordinates of pointer
+     } PLGraphicsIn;
+
+     typedef struct
+     {
+         PLFLT dxmi, dxma, dymi, dyma;       // min, max window rel dev coords
+         PLFLT wxmi, wxma, wymi, wyma;       // min, max window world coords
+     } PLWindow;
+
+     typedef struct
+     {
+         unsigned int x, y;                  // upper left hand corner
+         unsigned int width, height;         // window dimensions
+     } PLDisplay;
+
+     typedef struct
+     {
+         PLFLT_FE_POINTER f;
+         PLINT            nx, ny, nz;
+     } PLfGrid;
+
+     typedef struct
+     {
+         PLFLT_NC_MATRIX f;
+         PLINT           nx, ny;
+     } PLfGrid2;
+
+     typedef struct
+     {
+         PLFLT_NC_FE_POINTER xg, yg, zg;
+         PLINT nx, ny, nz;
+     } PLcGrid;
+
+     typedef struct
+     {
+         PLFLT_NC_MATRIX xg, yg, zg;
+         PLINT           nx, ny;
+     } PLcGrid2;
+
+     typedef struct
+     {
+         unsigned char r;            // red
+         unsigned char g;            // green
+         unsigned char b;            // blue
+         PLFLT         a;            // alpha (or transparency)
+         PLCHAR_VECTOR name;
+     } PLColor;
+
+     typedef struct
+     {
+         PLFLT c1;                   // hue or red
+         PLFLT c2;                   // lightness or green
+         PLFLT c3;                   // saturation or blue
+         PLFLT p;                    // position
+         PLFLT a;                    // alpha (or transparency)
+         int   alt_hue_path;         // if set, interpolate through h=0
+     } PLControlPt;
+
+     typedef struct
+     {
+         PLINT cmd;
+         PLINT result;
+     } PLBufferingCB;
+
+     typedef struct
+     {
+         PLFLT exp_label_disp;
+         PLFLT exp_label_pos;
+         PLFLT exp_label_just;
+     } PLLabelDefaults;
+
+     typedef struct
+     {
+         PLFLT ( *get )( PLPointer p, PLINT ix, PLINT iy );
+         PLFLT ( *set )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+         PLFLT ( *add )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+         PLFLT ( *sub )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+         PLFLT ( *mul )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+         PLFLT ( *div )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+         PLINT ( *is_nan )( PLPointer p, PLINT ix, PLINT iy );
+         void ( *minmax )( PLPointer p, PLINT nx, PLINT ny, PLFLT_NC_SCALAR zmin, PLFLT_NC_SCALAR zmax );
+         //
+         // f2eval is backwards compatible signature for "f2eval" functions that
+         // existed before plf2ops "operator function families" were used.
+         //
+         PLFLT ( *f2eval )( PLINT ix, PLINT iy, PLPointer p );
+     } plf2ops_t;
+
+     typedef struct
+     {
+         size_t    size;
+         PLPointer buffer;
+     } plbuffer;
+
+
+
+File: plplotdoc.info,  Node: Regression test for backwards compatibility,  Prev: What is in the API?,  Up: API compatibility definition
+
+20.2 Regression test for backwards compatibility
+================================================
+
+Since PLplot is developed by so many people, the task of checking for
+backwards compatibility of the library is very hard.  As for the 5.3.1
+release, we do not have any rigorous regression test for check whether
+the library is really backwards compatible.
+
+   However, here are some rules to be followed by the Release Manager
+prior to releasing a new version of PLplot:
+
+   • Check if there are any changes in ‘plplot.h’.  If no prototype is
+     changed, then the chances are high that no backwards
+     incompatibilities have been introduced.  If new functions has been
+     added, then the library soname will be kept, although the soversion
+     strings in ‘cmake/module/plplot_version.cmake’ must be changed
+     following the instructions in that file.
+
+   • A necessary, but not sufficient test consists of the following:
+     first, install the previous released version of PLplot in the
+     system and compile all the examples ‘examples/c/x??c.’.  After
+     that, install the to-be-released version of PLplot and try to run
+     the previously compiled examples.  If they either link or run
+     incorrectly, then backwards incompatibilities have been introduced
+     and the soversion string must be upgraded from ‘x:y:z’ to
+     ‘(x+1):0:0’.
+
+
+File: plplotdoc.info,  Node: Obsolete/Deprecated API for PLplot,  Next: Internal C functions in PLplot,  Prev: API compatibility definition,  Up: Reference
+
+21 Obsolete/Deprecated API for PLplot
+*************************************
+
+The purpose of this chapter is to provide minimal documentation for
+obsolete/deprecated API that appears in our C library to provide
+backwards compatibility until these functions disappear.  Do not use
+these functions, and if you already use them in legacy PLplot
+applications, replace them by the suggested equivalents so you won’t be
+caught out when they disappear.
+
+* Menu:
+
+* plshade1; Shade individual region on the basis of value : plshade1; Shade individual region on the basis of value.
+
+
+File: plplotdoc.info,  Node: plshade1; Shade individual region on the basis of value,  Up: Obsolete/Deprecated API for PLplot
+
+21.1 plshade1: Shade individual region on the basis of value
+============================================================
+
+     plshade1 ( a , nx , ny , defined , xmin , xmax , ymin , ymax ,
+     shade_min , shade_max , sh_cmap , sh_color , sh_width , min_color ,
+     min_width , max_color , max_width , fill , rectangular , pltr ,
+     pltr_data );
+
+   Shade individual region on the basis of value.  Use ‘plshades’ (*note
+plshades; Shade regions on the basis of value::) if you want to shade a
+number of contiguous regions using continuous colors.  In particular the
+edge contours are treated properly in ‘plshades’ (*note plshades; Shade
+regions on the basis of value::).  If you attempt to do contiguous
+regions with ‘plshade1’ (*note plshade1; Shade individual region on the
+basis of value::) (or ‘plshade’ (*note plshade; Shade individual region
+on the basis of value::)) the contours at the edge of the shade are
+partially obliterated by subsequent plots of contiguous shaded regions.
+‘plshade1’ (*note plshade1; Shade individual region on the basis of
+value::) differs from ‘plshade’ (*note plshade; Shade individual region
+on the basis of value::) only by the type of the first argument.  Look
+at the argument list below and ‘plcont’ (*note plcont; Contour plot::)
+for more information about the transformation from matrix index to world
+coordinates.  Shading NEEDS DOCUMENTATION, but as a stopgap look at how
+‘plshade1’ (*note plshade1; Shade individual region on the basis of
+value::) (or ‘plshade’ (*note plshade; Shade individual region on the
+basis of value::)) are used in ‘examples/c/x15c.c’
+
+‘a’ (‘‘PLFLT_FE_POINTER’ (*note PLFLT_FE_POINTER-type::)’, input)
+     Contains pointer to first element of array to be plotted.  The
+     array must have been declared as PLFLT a[nx][ny].
+
+‘nx’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     First dimension of array "a".
+
+‘ny’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Second dimension of array "a".
+
+‘defined’ (‘‘PLDEFINED_callback’ (*note PLDEFINED_callback-type::)’, input)
+     Callback function specifying the region that should be plotted in
+     the shade plot.  This function accepts x and y coordinates as input
+     arguments and must return 1 if the point is to be included in the
+     shade plot and 0 otherwise.  If you want to plot the entire shade
+     plot (the usual case), this argument should be set to NULL.
+
+‘xmin, xmax, ymin, ymax’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     See the discussion of ‘pltr’ below for how these arguments are used
+     (only for the special case when the callback function ‘pltr’ is not
+     supplied).
+
+‘shade_min’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines the lower end of the interval to be shaded.  If shade_max ≤
+     shade_min, ‘plshade1’ (*note plshade1; Shade individual region on
+     the basis of value::) does nothing.
+
+‘shade_max’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines the upper end of the interval to be shaded.  If shade_max ≤
+     shade_min, ‘plshade1’ (*note plshade1; Shade individual region on
+     the basis of value::) does nothing.
+
+‘sh_cmap’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Defines color map.  If ‘‘sh_cmap’=0’, then ‘‘sh_color’’ is
+     interpreted as a cmap0 (integer) index.  If ‘‘sh_cmap’=1’, then
+     ‘‘sh_color’’ is interpreted as a cmap1 argument in range (0.0-1.0).
+
+‘sh_color’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines color map index with integer value if cmap0 or value in
+     range (0.0-1.0) if cmap1.
+
+‘sh_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines width used by the fill pattern.
+
+‘min_color’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘min_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘max_color’ (‘‘PLINT’ (*note PLINT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘max_width’ (‘‘PLFLT’ (*note PLFLT-type::)’, input)
+     Defines pen color, width used by the boundary of shaded region.
+     The min values are used for the shade_min boundary, and the max
+     values are used on the shade_max boundary.  Set color and width to
+     zero for no plotted boundaries.
+
+‘fill’ (‘‘PLFILL_callback’ (*note PLFILL_callback-type::)’, input)
+     Routine used to fill the region.  Use ‘plfill’ (*note plfill; Draw
+     filled polygon::).  Future version of PLplot may have other fill
+     routines.
+
+‘rectangular’ (‘‘PLBOOL’ (*note PLBOOL-type::)’, input)
+     Set ‘ ‘rectangular’ ’ to true if rectangles map to rectangles after
+     coordinate transformation with ‘‘pltrl’’.  Otherwise, set
+     ‘‘rectangular’’ to false.  If ‘‘rectangular’’ is set to true,
+     plshade1 tries to save time by filling large rectangles.  This
+     optimization fails if the coordinate transformation distorts the
+     shape of rectangles.  For example a plot in polar coordinates has
+     to have ‘‘rectangular’’ set to false.
+
+‘pltr’ (‘‘PLTRANSFORM_callback’ (*note PLTRANSFORM_callback-type::)’, input)
+     A callback function that defines the transformation between the
+     zero-based indices of the matrix ‘‘a’’ and world coordinates.  If
+     ‘pltr’ is not supplied (e.g., is set to NULL in the C case), then
+     the x indices of ‘‘a’’ are mapped to the range ‘xmin’ through
+     ‘xmax’ and the y indices of ‘‘a’’ are mapped to the range ‘ymin’
+     through ‘ymax’.
+
+     For the C case, transformation functions are provided in the PLplot
+     library: ‘pltr0’ (*note pltr0; Identity transformation for matrix
+     index to world coordinate mapping::) for the identity mapping, and
+     ‘pltr1’ (*note pltr1; Linear interpolation for matrix index to
+     world coordinate mapping using singly dimensioned coordinate
+     arrays::) and ‘pltr2’ (*note pltr2; Linear interpolation for grid
+     to world mapping using doubly dimensioned coordinate arrays
+     [row-major order as per normal C 2d arrays]::) for arbitrary
+     mappings respectively defined by vectors and matrices.  In
+     addition, C callback routines for the transformation can be
+     supplied by the user such as the ‘mypltr’ function in
+     ‘examples/c/x09c.c’ which provides a general linear transformation
+     between index coordinates and world coordinates.
+
+     For languages other than C you should consult *note Supported
+     computer languages: Supported computer languages. for the details
+     concerning how ‘PLTRANSFORM_callback’ (*note
+     PLTRANSFORM_callback-type::) arguments are interfaced.  However, in
+     general, a particular pattern of callback-associated arguments such
+     as a ‘tr’ vector with 6 elements; ‘xg’ and ‘yg’ vectors; or ‘xg’
+     and ‘yg’ matrices are respectively interfaced to a
+     linear-transformation routine similar to the above ‘mypltr’
+     function; ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::); and ‘pltr2’ (*note pltr2; Linear
+     interpolation for grid to world mapping using doubly dimensioned
+     coordinate arrays [row-major order as per normal C 2d arrays]::).
+     Furthermore, some of our more sophisticated bindings (see, e.g.,
+     *note Fortran Language::) support native language callbacks for
+     handling index to world-coordinate transformations.  Examples of
+     these various approaches are given in ‘examples/<language>x09*’,
+     ‘examples/<language>x16*’, ‘examples/<language>x20*’,
+     ‘examples/<language>x21*’, and ‘examples/<language>x22*’, for all
+     our supported languages.
+
+‘pltr_data’ (‘‘PLPointer’ (*note PLPointer-type::)’, input)
+     Extra parameter to help pass information to ‘pltr0’ (*note pltr0;
+     Identity transformation for matrix index to world coordinate
+     mapping::), ‘pltr1’ (*note pltr1; Linear interpolation for matrix
+     index to world coordinate mapping using singly dimensioned
+     coordinate arrays::), ‘pltr2’ (*note pltr2; Linear interpolation
+     for grid to world mapping using doubly dimensioned coordinate
+     arrays [row-major order as per normal C 2d arrays]::), or whatever
+     routine that is externally supplied.
+
+   ‘plshade1’ (*note plshade1; Shade individual region on the basis of
+value::) is currently not used in any of our examples.  Use ‘plshade’
+(*note plshade; Shade individual region on the basis of value::)
+instead.
+
+
+File: plplotdoc.info,  Node: Internal C functions in PLplot,  Next: The PLplot Libraries,  Prev: Obsolete/Deprecated API for PLplot,  Up: Reference
+
+22 Internal C functions in PLplot
+*********************************
+
+The purpose of this chapter is to document the API for every internal C
+function in PLplot (other than language bindings) that is _not_ part of
+the common API that has already been documented in *note The Common API
+for PLplot:: or elsewhere.  The functions documented here are internal
+plplot functions.  They are not intended for external use and may change
+between releases.
+
+   This chapter is a work that is just starting.  There are many C
+functions in the code base that are not part of the common API, and we
+haven’t even gotten to the point of listing them all.  What gets
+documented here now is whatever C-explicit code we are trying to
+understand at the time.
+
+* Menu:
+
+* plP_checkdriverinit; Checks to see if any of the specified drivers have been initialized : plP_checkdriverinit; Checks to see if any of the specified drivers have been initialized.
+* plP_getinitdriverlist; Get the initialized-driver list : plP_getinitdriverlist; Get the initialized-driver list.
+
+
+File: plplotdoc.info,  Node: plP_checkdriverinit; Checks to see if any of the specified drivers have been initialized,  Next: plP_getinitdriverlist; Get the initialized-driver list,  Up: Internal C functions in PLplot
+
+22.1 plP_checkdriverinit: Checks to see if any of the specified drivers have been initialized
+=============================================================================================
+
+     plP_checkdriverinit (list);
+
+   Checks to see if any of the specified drivers have been initialized.
+Function tests a space-delimited list of driver names to see how many of
+the given drivers have been initialized, and how often.  The return code
+of the function is: ‘0’ if no matching drivers were found to have been
+initialized; ‘-1’ if an error occurred allocating the internal buffer;
+or, a positive number indicating the number of streams encountered that
+belong to drivers on the provided list.  This function invokes
+‘plP_getinitdriverlist’ (*note plP_getinitdriverlist; Get the
+initialized-driver list::) internally to get a _complete_ list of
+drivers that have been initialized in order to compare with the driver
+names specified in the argument list to ‘plP_checkdriverinit’ (*note
+plP_checkdriverinit; Checks to see if any of the specified drivers have
+been initialized::).
+
+‘list’ (‘char *’, input)
+     Pointer to character string specifying a space-delimited list of
+     driver names, e.g., ‘"bmp jpeg tiff"’.
+
+
+File: plplotdoc.info,  Node: plP_getinitdriverlist; Get the initialized-driver list,  Prev: plP_checkdriverinit; Checks to see if any of the specified drivers have been initialized,  Up: Internal C functions in PLplot
+
+22.2 plP_getinitdriverlist: Get the initialized-driver list
+===========================================================
+
+     plP_getinitdriverlist (text_buffer);
+
+   Get the initialized-driver list.  Function returns a space-delimited
+list of the currently initialized drivers or streams.  If more than one
+stream is using the same driver, then its name will be returned more
+than once.  The function can be analogously thought of as also returning
+the names of the active streams.  Invoked internally by
+‘plP_checkdriverinit’ (*note plP_checkdriverinit; Checks to see if any
+of the specified drivers have been initialized::).
+
+‘text_buffer’ (‘char *’, output)
+     Pointer to a user-allocated buffer to hold the result.  The user
+     must ensure the buffer is big enough to hold the result.
+
+
+File: plplotdoc.info,  Node: The PLplot Libraries,  Prev: Internal C functions in PLplot,  Up: Reference
+
+23 The PLplot Libraries
+***********************
+
+The purpose of this chapter is give an overview of the libraries that
+are created as part of a PLplot build.  These consist of bindings
+libraries to make the PLplot API accessible for various computer
+languages or GUI environments, the PLplot core library which implements
+the PLplot API in C, enhancement libraries which add essential
+functionality the PLplot core library, and device-driver libraries which
+help to implement some of our device drivers.
+
+* Menu:
+
+* Bindings Libraries::
+* The PLplot Core Library::
+* Enhancement Libraries::
+* Device-driver Libraries::
+
+
+File: plplotdoc.info,  Node: Bindings Libraries,  Next: The PLplot Core Library,  Up: The PLplot Libraries
+
+23.1 Bindings Libraries
+=======================
+
+The purpose of the PLplot bindings is to make the PLplot API documented
+in *note The Common API for PLplot:: accessible from various computer
+languages and GUI environments.  Some bindings (e.g., qt and cairo) are
+implemented by a special form of "external" device.  Other bindings
+(e.g., python) are implemented as shared objects which are dynamically
+loaded by the language in question.  However, the majority of our
+bindings are implemented as bindings libraries which must be
+specifically linked by the application.  (See the Makefiles in the
+installed examples tree for comprehensive examples of how we use
+‘pkg-config’ to supply the necessary linking information.)  In turn
+these bindings libraries are linked to the PLplot core library described
+in *note The PLplot Core Library::.  We tabulate below the bindings
+library or libraries associated with the compiled languages and GUI
+environments we support in this specific way.
+
+
+   *Bindings Libraries*
+
+Bindings                             Libraries
+Ada                                  libplplotada
+C++                                  libplplotcxx
+Fortran                              libplplotfortran
+Tk GUI                               libplplottcltk, libtclmatrix
+wxWidgets GUI                        libplplotwxwidgets
+
+
+File: plplotdoc.info,  Node: The PLplot Core Library,  Next: Enhancement Libraries,  Prev: Bindings Libraries,  Up: The PLplot Libraries
+
+23.2 The PLplot Core Library
+============================
+
+The PLplot core library is written in C and implements the PLplot API
+documented in *note The Common API for PLplot::.  The name of that core
+library is libplplot.  libplplot links to the enhancement libraries
+documented in *note Enhancement Libraries::.  libplplot also normally
+dynamically loads devices (a build mode is also available to put the
+driver code right into the core library) which in turn can potentially
+link to device-driver libraries that are described in *note
+Device-driver Libraries::.
+
+
+File: plplotdoc.info,  Node: Enhancement Libraries,  Next: Device-driver Libraries,  Prev: The PLplot Core Library,  Up: The PLplot Libraries
+
+23.3 Enhancement Libraries
+==========================
+
+The enhancement libraries add essential functionality to the PLplot core
+library (see *note The PLplot Core Library::).  They consist of a cubic
+spline approximation library, libcsirocsa; a natural neighbours
+interpolation library, libcsironn; and a time format conversion library
+libqsastime.
+
+* Menu:
+
+* The CSIRO Cubic Spline Approximation Library::
+* The CSIRO Natural Neighbours Interpolation Library::
+* The QSAS Time Format Conversion Library::
+
+
+File: plplotdoc.info,  Node: The CSIRO Cubic Spline Approximation Library,  Next: The CSIRO Natural Neighbours Interpolation Library,  Up: Enhancement Libraries
+
+23.3.1 The CSIRO Cubic Spline Approximation Library
+---------------------------------------------------
+
+libcsirocsa NEEDS DOCUMENTATION.
+
+
+File: plplotdoc.info,  Node: The CSIRO Natural Neighbours Interpolation Library,  Next: The QSAS Time Format Conversion Library,  Prev: The CSIRO Cubic Spline Approximation Library,  Up: Enhancement Libraries
+
+23.3.2 The CSIRO Natural Neighbours Interpolation Library
+---------------------------------------------------------
+
+libcsironn NEEDS DOCUMENTATION.
+
+
+File: plplotdoc.info,  Node: The QSAS Time Format Conversion Library,  Prev: The CSIRO Natural Neighbours Interpolation Library,  Up: Enhancement Libraries
+
+23.3.3 The QSAS Time Format Conversion Library
+----------------------------------------------
+
+This library grew out of a discussion with Steve Schwartz of the QSAS
+Support Team, Cluster Science Centre, Imperial College and our mutual
+frustrations with the poor time conversion capabilities of
+POSIX-compliant computer operating systems.  For such systems, the
+continuous time variable is often stored internally as a 32-bit integer
+containing the number of seconds since 1970.  This gives a limited date
+range of only 136 years, and a limited numerical precision of only a
+second.  Furthermore, although the POSIX standard includes gmtime which
+provides a conversion between broken-down time (year, month, day, hour,
+min, sec), and the continuous time variable, the inverse of gmtime
+(called timegm on Linux) is not a POSIX standard.  Finally, the POSIX
+standard ignores leap seconds.  All these limitations are not acceptable
+for plotting of scientific time series and are addressed by the qsastime
+library which was originally donated under the LGPL to the PLplot
+project in early 2009 by Anthony J. Allen of the QSAS team and
+substantially modified after that by a PLplot developer, Alan W. Irwin
+(e.g., to add leap-second functionality).
+
+   The qsastime library uses MJD (modified Julian Date = Julian Date -
+2400000.5) for the internal continuous time variable.  This variable is
+stored as a signed int (to hold the integer part) and a double (to hold
+the seconds since midnight).  On 32-bit systems, this combination gives
+an effective date range of roughly +/- 6 million years from the MJD
+epoch in late 1858 and an effective numerical time precision of 0.01 ns.
+This should cover most range and precision requirements of those doing
+plots of scientific time series.
+
+   The qsastime library provides internal routines to convert between
+the broken-down time representation and the internal continuous time
+variable and vice versa using the formal rules of either the Gregorian
+or Julian calendars.  These routines have been tested extensively for
+the internal consistency of the routines both for the Gregorian and
+Julian calendars and also by comparing the Gregorian results against the
+equivalent Linux C library gmtime and timegm routines on a 64-bit
+platform.  These tests were done for a number of epochs including every
+year from -5000000 to 5000000 for critical dates in the year (January 1,
+February 28, February 29, March 1, and December 31).  These extensive
+tests give some confidence that the formal conversion from broken-down
+to continuous time (and vice versa) should be reliable for the qsastime
+library on all 32-bit and 64-bit platforms.
+
+   The qsastime library also provides an internal routine that gives
+formatted time results as a function of continuous time.  This routine
+has been lightly tested against the results of the C library strftime
+routine on Linux.
+
+   The three internal routines described above are wrapped by functions
+that provide the externally visible API for the qsastime library.  This
+API is described below.
+
+
+File: plplotdoc.info,  Node: Device-driver Libraries,  Prev: Enhancement Libraries,  Up: The PLplot Libraries
+
+23.4 Device-driver Libraries
+============================
+
+Device-driver libraries are libraries which are built as part to the
+PLplot build and which are linked by PLplot device drivers.  At this
+time we only have one example of this, the NIST cd library which makes
+it easy to create files in CGM format.  The original name of this
+library was libcd, but we call it libnistcd to distinguish it from all
+other "cd" libraries out there.  This library is linked by our cgm
+device driver.
+
+   CGM format is a long-established (since 1987) open standard for
+vector graphics (see http://www.w3.org/Graphics/WebCGM/).  The libnistcd
+software was developed by G. Edward Johnson at NIST to provide
+convenient access to the CGM format.  The library is no longer
+maintained (the last official release was in 1997), but the software is
+mature and works well.  Furthermore, it is in the public domain except
+for the small part licensed under the libgd open-source license (see
+lib/nistcd/cd.html in the PLplot source tree).  PLplot developers have
+added a modern CMake-based build system for libnistcd and also have done
+some visibility support so the code builds properly under Windows and
+also under Linux with gcc when the -fvisibility=hidden option for gcc is
+used.  Otherwise, the code is identical to the 1997 version.  For
+documentation of the libnistcd API see lib/nistcd/cd.html in the PLplot
+source tree.
+

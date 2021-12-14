@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+plplotdoc.xml.in: Master file for the PLplot documentation
+
+Copyright (C) 1994 Maurice J. LeBrun and Geoffrey Furnish
+Copyright (C) 2000-2005 Rafael Laboissiere
+Copyright (C) 2000-2018 Alan W. Irwin
+Copyright (C) 2001-2003 Joao Cardoso
+Copyright (C) 2004 Andrew Roach
+Copyright (C) 2004-2013 Andrew Ross
+Copyright (C) 2004-2016 Arjen Markus
+Copyright (C) 2005 Thomas J. Duck
+Copyright (C) 2005-2010 Hazen Babcock
+Copyright (C) 2008 Werner Smekal
+Copyright (C) 2008-2016 Jerry Bauck
+Copyright (C) 2009-2014 Hezekiah M. Carty
+Copyright (C) 2014-2015 Phil Rosenberg
+Copyright (C) 2015 Jim Dishaw
+
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!DOCTYPE book PUBLIC "@DOCBOOK_DTD_PUBID@" "@DOCBOOK_DTD_SYSID@" [
+
+<!ENTITY Project-Version "@PLPLOT_VERSION@">
+<!ENTITY Release-Date "@RELEASE_DATE@">
+
+<!ENTITY chap-intro SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/intro.xml">
+<!ENTITY chap-simple SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/simple.xml">
+<!ENTITY chap-advanced SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/advanced.xml">
+<!ENTITY chap-deploying SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/deploying.xml">
+<!ENTITY chap-drivers SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/drivers.xml">
+<!ENTITY chap-c SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/c.xml">
+<!ENTITY chap-ada SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/ada.xml">
+<!ENTITY chap-cplus SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/cplus.xml">
+<!ENTITY chap-fortran SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/fortran.xml">
+<!ENTITY chap-ocaml SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/ocaml.xml">
+<!ENTITY chap-python SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/python.xml">
+<!ENTITY chap-tcl SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/tcl.xml">
+<!ENTITY chap-wish SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/wish.xml">
+<!ENTITY chap-gui SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/gui.xml">
+<!ENTITY chap-bibliography SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/bibliography.xml">
+<!ENTITY chap-api SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/api.xml">
+<!ENTITY chap-api-c SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/api-c.xml">
+<!ENTITY chap-api-fortran SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/api-fortran.xml">
+<!ENTITY chap-api-compat SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/api-compat.xml">
+<!ENTITY chap-api-obsolete SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/api-obsolete.xml">
+<!ENTITY chap-api-internal SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/api-internal.xml">
+<!ENTITY chap-libraries SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/libraries.xml">
+<!ENTITY plplot-symbols SYSTEM "plplot-symbols.txt">
+<!ENTITY plplot-structs SYSTEM "plplot-structs.txt">
+<!ENTITY features-cross-platform '<link linkend="features-cross-platform">cross-platform</link>'>
+<!ENTITY features-bindings '<link linkend="features-bindings">bindings</link>'>
+<!ENTITY features-noninteractive '<link linkend="features-noninteractive">noninteractive</link>'>
+<!ENTITY features-interactive '<link linkend="features-interactive">interactive</link>'>
+<!ENTITY plP_checkdriverinit '<link linkend="plP_checkdriverinit"><function>plP_checkdriverinit</function></link>'>
+<!ENTITY plP_getinitdriverlist '<link linkend="plP_getinitdriverlist"><function>plP_getinitdriverlist</function></link>'>
+<!ENTITY pl_setcontlabelformat '<link linkend="pl_setcontlabelformat"><function>pl_setcontlabelformat</function></link>'>
+<!ENTITY pl_setcontlabelparam '<link linkend="pl_setcontlabelparam"><function>pl_setcontlabelparam</function></link>'>
+<!ENTITY plabort '<link linkend="plabort"><function>plabort</function></link>'>
+<!ENTITY pladv '<link linkend="pladv"><function>pladv</function></link>'>
+<!ENTITY plAlloc2dGrid '<link linkend="plAlloc2dGrid"><function>plAlloc2dGrid</function></link>'>
+<!ENTITY plaxes '<link linkend="plaxes"><function>plaxes</function></link>'>
+<!ENTITY plbin '<link linkend="plbin"><function>plbin</function></link>'>
+<!ENTITY plbop '<link linkend="plbop"><function>plbop</function></link>'>
+<!ENTITY plbox '<link linkend="plbox"><function>plbox</function></link>'>
+<!ENTITY plbox3 '<link linkend="plbox3"><function> plbox3</function></link>'>
+<!ENTITY plbtime '<link linkend="plbtime"><function> plbtime</function></link>'>
+<!ENTITY plcalc_world '<link linkend="plcalc_world"><function> plcalc_world</function></link>'>
+<!ENTITY plclear '<link linkend="plclear"><function>plclear</function></link>'>
+<!ENTITY plClearOpts '<link linkend="plClearOpts"><function>plClearOpts</function></link>'>
+<!ENTITY plcol0 '<link linkend="plcol0"><function>plcol0</function></link>'>
+<!ENTITY plcol1 '<link linkend="plcol1"><function>plcol1</function></link>'>
+<!ENTITY plcolorbar '<link linkend="plcolorbar"><function>plcolorbar</function></link>'>
+<!ENTITY plcon0 '<link linkend="plcon0"><function>plcon0</function></link>'>
+<!ENTITY plcon1 '<link linkend="plcon1"><function>plcon1</function></link>'>
+<!ENTITY plcon2 '<link linkend="plcon2"><function>plcon2</function></link>'>
+<!ENTITY plconf '<link linkend="plconf"><function>plconf</function></link>'>
+<!ENTITY plconfigtime '<link linkend="plconfigtime"><function>plconfigtime</function></link>'>
+<!ENTITY plcont '<link linkend="plcont"><function>plcont</function></link>'>
+<!ENTITY plcontfortran '<link linkend="plcontfortran"><function>plcontfortran</function></link>'>
+<!ENTITY plcpstrm '<link linkend="plcpstrm"><function>plcpstrm</function></link>'>
+<!ENTITY plctime '<link linkend="plctime"><function>plctime</function></link>'>
+<!ENTITY plend '<link linkend="plend"><function>plend</function></link>'>
+<!ENTITY plend1 '<link linkend="plend1"><function>plend1</function></link>'>
+<!ENTITY plenv0 '<link linkend="plenv0"><function>plenv0</function></link>'>
+<!ENTITY plenv '<link linkend="plenv"><function>plenv</function></link>'>
+<!ENTITY pleop '<link linkend="pleop"><function>pleop</function></link>'>
+<!ENTITY plerrx '<link linkend="plerrx"><function>plerrx</function></link>'>
+<!ENTITY plerry '<link linkend="plerry"><function>plerry</function></link>'>
+<!ENTITY plexit '<link linkend="plexit"><function>plexit</function></link>'>
+<!ENTITY plfamadv '<link linkend="plfamadv"><function>plfamadv</function></link>'>
+<!ENTITY plfill '<link linkend="plfill"><function>plfill</function></link>'>
+<!ENTITY plfill3 '<link linkend="plfill3"><function>plfill3</function></link>'>
+<!ENTITY plflush '<link linkend="plflush"><function>plflush</function></link>'>
+<!ENTITY plfont '<link linkend="plfont"><function>plfont</function></link>'>
+<!ENTITY plfontld '<link linkend="plfontld"><function>plfontld</function></link>'>
+<!ENTITY plFree2dGrid '<link linkend="plFree2dGrid"><function>plFree2dGrid</function></link>'>
+<!ENTITY plgch '<link linkend="plgch"><function>plgch</function></link>'>
+<!ENTITY plgcmap1_range '<link linkend="plgcmap1_range"><function>plgcmap1_range</function></link>'>
+<!ENTITY plgcol0 '<link linkend="plgcol0"><function>plgcol0</function></link>'>
+<!ENTITY plgcolbg '<link linkend="plgcolbg"><function>plgcolbg</function></link>'>
+<!ENTITY plgcompression '<link linkend="plgcompression"><function>plgcompression</function></link>'>
+<!ENTITY plgdev '<link linkend="plgdev"><function>plgdev</function></link>'>
+<!ENTITY plgdidev '<link linkend="plgdidev"><function>plgdidev</function></link>'>
+<!ENTITY plgdiori '<link linkend="plgdiori"><function>plgdiori</function></link>'>
+<!ENTITY plgdiplt '<link linkend="plgdiplt"><function>plgdiplt</function></link>'>
+<!ENTITY plGetCursor '<link linkend="plGetCursor"><function>plGetCursor</function></link>'>
+<!ENTITY plgdrawmode '<link linkend="plgdrawmode"><function>plgdrawmode</function></link>'>
+<!ENTITY plgfam '<link linkend="plgfam"><function>plgfam</function></link>'>
+<!ENTITY plgfci '<link linkend="plgfci"><function>plgfci</function></link>'>
+<!ENTITY plgfnam '<link linkend="plgfnam"><function>plgfnam</function></link>'>
+<!ENTITY plgfont '<link linkend="plgfont"><function>plgfont</function></link>'>
+<!ENTITY plglevel '<link linkend="plglevel"><function>plglevel</function></link>'>
+<!ENTITY plgpage '<link linkend="plgpage"><function>plgpage</function></link>'>
+<!ENTITY plgra '<link linkend="plgra"><function>plgra</function></link>'>
+<!ENTITY plgradient '<link linkend="plgradient"><function>plgradient</function></link>'>
+<!ENTITY plgriddata '<link linkend="plgriddata"><function>plgriddata</function></link>'>
+<!ENTITY plgspa '<link linkend="plgspa"><function>plgspa</function></link>'>
+<!ENTITY plgstrm '<link linkend="plgstrm"><function>plgstrm</function></link>'>
+<!ENTITY plgver '<link linkend="plgver"><function>plgver</function></link>'>
+<!ENTITY plgvpd '<link linkend="plgvpd"><function>plgvpd</function></link>'>
+<!ENTITY plgvpw '<link linkend="plgvpw"><function>plgvpw</function></link>'>
+<!ENTITY plgxax '<link linkend="plgxax"><function>plgxax</function></link>'>
+<!ENTITY plgyax '<link linkend="plgyax"><function>plgyax</function></link>'>
+<!ENTITY plgzax '<link linkend="plgzax"><function>plgzax</function></link>'>
+<!ENTITY plhist '<link linkend="plhist"><function>plhist</function></link>'>
+<!ENTITY plhlsrgb '<link linkend="plhlsrgb"><function>plhlsrgb</function></link>'>
+<!ENTITY plimage '<link linkend="plimage"><function>plimage</function></link>'>
+<!ENTITY plimagefr '<link linkend="plimagefr"><function>plimagefr</function></link>'>
+<!ENTITY plinit '<link linkend="plinit"><function>plinit</function></link>'>
+<!ENTITY pljoin '<link linkend="pljoin"><function>pljoin</function></link>'>
+<!ENTITY pllab '<link linkend="pllab"><function>pllab</function></link>'>
+<!ENTITY pllegend '<link linkend="pllegend"><function>pllegend</function></link>'>
+<!ENTITY pllightsource '<link linkend="pllightsource"><function>pllightsource</function></link>'>
+<!ENTITY plline '<link linkend="plline"><function>plline</function></link>'>
+<!ENTITY plline3 '<link linkend="plline3"><function>plline3</function></link>'>
+<!ENTITY pllsty '<link linkend="pllsty"><function>pllsty</function></link>'>
+<!ENTITY plmap '<link linkend="plmap"><function>plmap</function></link>'>
+<!ENTITY plmapline '<link linkend="plmapline"><function>plmapline</function></link>'>
+<!ENTITY plmapfill '<link linkend="plmapfill"><function>plmapfill</function></link>'>
+<!ENTITY plmapstring '<link linkend="plmapstring"><function>plmapstring</function></link>'>
+<!ENTITY plmaptex '<link linkend="plmaptex"><function>plmaptex</function></link>'>
+<!ENTITY plmeridians '<link linkend="plmeridians"><function>plmeridians</function></link>'>
+<!ENTITY plMergeOpts '<link linkend="plMergeOpts"><function>plMergeOpts</function></link>'>
+<!ENTITY plmesh '<link linkend="plmesh"><function>plmesh</function></link>'>
+<!ENTITY plmeshc '<link linkend="plmeshc"><function>plmeshc</function></link>'>
+<!ENTITY plmeshfortran '<link linkend="plmeshfortran"><function>plmeshfortran</function></link>'>
+<!ENTITY plmkstrm '<link linkend="plmkstrm"><function>plmkstrm</function></link>'>
+<!ENTITY plmtex '<link linkend="plmtex"><function>plmtex</function></link>'>
+<!ENTITY plOptUsage '<link linkend="plOptUsage"><function>plOptUsage</function></link>'>
+<!ENTITY plot3d '<link linkend="plot3d"><function>plot3d</function></link>'>
+<!ENTITY plot3dc '<link linkend="plot3dc"><function>plot3dc</function></link>'>
+<!ENTITY plot3dcl '<link linkend="plot3dcl"><function>plot3dcl</function></link>'>
+<!ENTITY plot3dfortran '<link linkend="plot3dfortran"><function>plot3dfortran</function></link>'>
+<!ENTITY plparseopts '<link linkend="plparseopts"><function>plparseopts</function></link>'>
+<!ENTITY plparseoptsfortran '<link linkend="plparseoptsfortran"><function>plparseoptsfortran</function></link>'>
+<!ENTITY plpat '<link linkend="plpat"><function>plpat</function></link>'>
+<!ENTITY plpath '<link linkend="plpath"><function>plpath</function></link>'>
+<!ENTITY plpoin '<link linkend="plpoin"><function>plpoin</function></link>'>
+<!ENTITY plpoin3 '<link linkend="plpoin3"><function>plpoin3</function></link>'>
+<!ENTITY plpoly3 '<link linkend="plpoly3"><function>plpoly3</function></link>'>
+<!ENTITY plprec '<link linkend="plprec"><function>plprec</function></link>'>
+<!ENTITY plpsty '<link linkend="plpsty"><function>plpsty</function></link>'>
+<!ENTITY plptex '<link linkend="plptex"><function>plptex</function></link>'>
+<!ENTITY plrandd '<link linkend="plrandd"><function>plrandd</function></link>'>
+<!ENTITY plreplot '<link linkend="plreplot"><function>plreplot</function></link>'>
+<!ENTITY plResetOpts '<link linkend="plResetOpts"><function>plResetOpts</function></link>'>
+<!ENTITY plrgbhls '<link linkend="plrgbhls"><function>plrgbhls</function></link>'>
+<!ENTITY plsabort '<link linkend="plsabort"><function>plsabort</function></link>'>
+<!ENTITY plschr '<link linkend="plschr"><function>plschr</function></link>'>
+<!ENTITY plscmap0 '<link linkend="plscmap0"><function>plscmap0</function></link>'>
+<!ENTITY plscmap0a '<link linkend="plscmap0a"><function>plscmap0a</function></link>'>
+<!ENTITY plscmap0n '<link linkend="plscmap0n"><function>plscmap0n</function></link>'>
+<!ENTITY plscmap1_range '<link linkend="plscmap1_range"><function>plscmap1_range</function></link>'>
+<!ENTITY plscmap1 '<link linkend="plscmap1"><function>plscmap1</function></link>'>
+<!ENTITY plscmap1a '<link linkend="plscmap1a"><function>plscmap1a</function></link>'>
+<!ENTITY plscmap1l '<link linkend="plscmap1l"><function>plscmap1l</function></link>'>
+<!ENTITY plscmap1la '<link linkend="plscmap1la"><function>plscmap1la</function></link>'>
+<!ENTITY plscmap1n '<link linkend="plscmap1n"><function>plscmap1n</function></link>'>
+<!ENTITY plscol0 '<link linkend="plscol0"><function>plscol0</function></link>'>
+<!ENTITY plscol0a '<link linkend="plscol0a"><function>plscol0a</function></link>'>
+<!ENTITY plscolbg '<link linkend="plscolbg"><function>plscolbg</function></link>'>
+<!ENTITY plscolbga '<link linkend="plscolbga"><function>plscolbga</function></link>'>
+<!ENTITY plscolor '<link linkend="plscolor"><function>plscolor</function></link>'>
+<!ENTITY plscompression '<link linkend="plscompression"><function>plscompression</function></link>'>
+<!ENTITY plsdev '<link linkend="plsdev"><function>plsdev</function></link>'>
+<!ENTITY plsdidev '<link linkend="plsdidev"><function>plsdidev</function></link>'>
+<!ENTITY plsdimap '<link linkend="plsdimap"><function>plsdimap</function></link>'>
+<!ENTITY plsdiori '<link linkend="plsdiori"><function>plsdiori</function></link>'>
+<!ENTITY plsdiplt '<link linkend="plsdiplt"><function>plsdiplt</function></link>'>
+<!ENTITY plsdiplz '<link linkend="plsdiplz"><function>plsdiplz</function></link>'>
+<!ENTITY plsdrawmode '<link linkend="plsdrawmode"><function>plsdrawmode</function></link>'>
+<!ENTITY plseed '<link linkend="plseed"><function>plseed</function></link>'>
+<!ENTITY plsesc '<link linkend="plsesc"><function>plsesc</function></link>'>
+<!ENTITY plsescfortran '<link linkend="plsescfortran"><function>plsescfortran</function></link>'>
+<!ENTITY plsetopt '<link linkend="plsetopt"><function>plsetopt</function></link>'>
+<!ENTITY plSetUsage '<link linkend="plSetUsage"><function>plSetUsage</function></link>'>
+<!ENTITY plsexit '<link linkend="plsexit"><function>plsexit</function></link>'>
+<!ENTITY plsfam '<link linkend="plsfam"><function>plsfam</function></link>'>
+<!ENTITY plsfci '<link linkend="plsfci"><function>plsfci</function></link>'>
+<!ENTITY plsfnam '<link linkend="plsfnam"><function>plsfnam</function></link>'>
+<!ENTITY plsfont '<link linkend="plsfont"><function>plsfont</function></link>'>
+<!ENTITY plshades '<link linkend="plshades"><function>plshades</function></link>'>
+<!ENTITY plshade '<link linkend="plshade"><function>plshade</function></link>'>
+<!ENTITY plshade1 '<link linkend="plshade1"><function>plshade1</function></link>'>
+<!ENTITY plslabelfunc '<link linkend="plslabelfunc"><function>plslabelfunc</function></link>'>
+<!ENTITY plsmaj '<link linkend="plsmaj"><function>plsmaj</function></link>'>
+<!ENTITY plsmem '<link linkend="plsmem"><function>plsmem</function></link>'>
+<!ENTITY plsmin '<link linkend="plsmin"><function>plsmin</function></link>'>
+<!ENTITY plsori '<link linkend="plsori"><function>plsori</function></link>'>
+<!ENTITY plspage '<link linkend="plspage"><function>plspage</function></link>'>
+<!ENTITY plspal0 '<link linkend="plspal0"><function>plspal0</function></link>'>
+<!ENTITY plspal1 '<link linkend="plspal1"><function>plspal1</function></link>'>
+<!ENTITY plspause '<link linkend="plspause"><function>plspause</function></link>'>
+<!ENTITY plsstrm '<link linkend="plsstrm"><function>plsstrm</function></link>'>
+<!ENTITY plssub '<link linkend="plssub"><function>plssub</function></link>'>
+<!ENTITY plssym '<link linkend="plssym"><function>plssym</function></link>'>
+<!ENTITY plstar '<link linkend="plstar"><function>plstar</function></link>'>
+<!ENTITY plStatic2dGrid '<link linkend="plStatic2dGrid"><function>plStatic2dGrid</function></link>'>
+<!ENTITY plstripa '<link linkend="plstripa"><function>plstripa</function></link>'>
+<!ENTITY plstring '<link linkend="plstring"><function>plstring</function></link>'>
+<!ENTITY plstring3 '<link linkend="plstring3"><function>plstring3</function></link>'>
+<!ENTITY plstripc '<link linkend="plstripc"><function>plstripc</function></link>'>
+<!ENTITY plstripd '<link linkend="plstripd"><function>plstripd</function></link>'>
+<!ENTITY plstart '<link linkend="plstart"><function>plstart</function></link>'>
+<!ENTITY plstransform '<link linkend="plstransform"><function>plstransform</function></link>'>
+<!ENTITY plstyl '<link linkend="plstyl"><function>plstyl</function></link>'>
+<!ENTITY plsurf3d '<link linkend="plsurf3d"><function>plsurf3d</function></link>'>
+<!ENTITY plsurf3dl '<link linkend="plsurf3dl"><function>plsurf3dl</function></link>'>
+<!ENTITY plsvect '<link linkend="plsvect"><function>plsvect</function></link>'>
+<!ENTITY plsvpa '<link linkend="plsvpa"><function>plsvpa</function></link>'>
+<!ENTITY plsxax '<link linkend="plsxax"><function>plsxax</function></link>'>
+<!ENTITY plsyax '<link linkend="plsyax"><function>plsyax</function></link>'>
+<!ENTITY plsym '<link linkend="plsym"><function>plsym</function></link>'>
+<!ENTITY plszax '<link linkend="plszax"><function>plszax</function></link>'>
+<!ENTITY pltext '<link linkend="pltext"><function>pltext</function></link>'>
+<!ENTITY pltimefmt '<link linkend="pltimefmt"><function>pltimefmt</function></link>'>
+<!ENTITY plTranslateCursor '<link linkend="plTranslateCursor"><function>plTranslateCursor</function></link>'>
+<!ENTITY pltr0 '<link linkend="pltr0"><function>pltr0</function></link>'>
+<!ENTITY pltr1 '<link linkend="pltr1"><function>pltr1</function></link>'>
+<!ENTITY pltr2 '<link linkend="pltr2"><function>pltr2</function></link>'>
+<!ENTITY plvasp '<link linkend="plvasp"><function>plvasp</function></link>'>
+<!ENTITY plvec0 '<link linkend="plvec0"><function>plvec0</function></link>'>
+<!ENTITY plvec1 '<link linkend="plvec1"><function>plvec1</function></link>'>
+<!ENTITY plvec2 '<link linkend="plvec2"><function>plvec2</function></link>'>
+<!ENTITY plvect '<link linkend="plvect"><function>plvect</function></link>'>
+<!ENTITY plvectfortran '<link linkend="plvectfortran"><function>plvectfortran</function></link>'>
+<!ENTITY plvpas '<link linkend="plvpas"><function>plvpas</function></link>'>
+<!ENTITY plvpor '<link linkend="plvpor"><function>plvpor</function></link>'>
+<!ENTITY plvsta '<link linkend="plvsta"><function>plvsta</function></link>'>
+<!ENTITY plw3d '<link linkend="plw3d"><function>plw3d</function></link>'>
+<!ENTITY plwidth '<link linkend="plwidth"><function>plwidth</function></link>'>
+<!ENTITY plwind '<link linkend="plwind"><function>plwind</function></link>'>
+<!ENTITY PLGraphicsIn '<link linkend="PLGraphicsIn"><structname>PLGraphicsIn</structname></link>'>
+<!ENTITY PLOptionTable '<link linkend="PLOptionTable"><structname>PLOptionTable</structname></link>'>
+<!ENTITY PLFLT '<link linkend="PLFLT-type"><function>PLFLT</function></link>'>
+<!ENTITY PLINT '<link linkend="PLINT-type"><function>PLINT</function></link>'>
+<!ENTITY PLBOOL '<link linkend="PLBOOL-type"><function>PLBOOL</function></link>'>
+<!ENTITY PLUNICODE '<link linkend="PLUNICODE-type"><function>PLUNICODE</function></link>'>
+<!ENTITY PLFLT_NC_SCALAR '<link linkend="PLFLT_NC_SCALAR-type"><function>PLFLT_NC_SCALAR</function></link>'>
+<!ENTITY PLINT_NC_SCALAR '<link linkend="PLINT_NC_SCALAR-type"><function>PLINT_NC_SCALAR</function></link>'>
+<!ENTITY PLBOOL_NC_SCALAR '<link linkend="PLBOOL_NC_SCALAR-type"><function>PLBOOL_NC_SCALAR</function></link>'>
+<!ENTITY PLUNICODE_NC_SCALAR '<link linkend="PLUNICODE_NC_SCALAR-type"><function>PLUNICODE_NC_SCALAR</function></link>'>
+<!ENTITY PLCHAR_NC_SCALAR '<link linkend="PLCHAR_NC_SCALAR-type"><function>PLCHAR_NC_SCALAR</function></link>'>
+<!ENTITY PLFLT_VECTOR '<link linkend="PLFLT_VECTOR-type"><function>PLFLT_VECTOR</function></link>'>
+<!ENTITY PLINT_VECTOR '<link linkend="PLINT_VECTOR-type"><function>PLINT_VECTOR</function></link>'>
+<!ENTITY PLBOOL_VECTOR '<link linkend="PLBOOL_VECTOR-type"><function>PLBOOL_VECTOR</function></link>'>
+<!ENTITY PLCHAR_VECTOR '<link linkend="PLCHAR_VECTOR-type"><function>PLCHAR_VECTOR</function></link>'>
+<!ENTITY PLFLT_NC_VECTOR '<link linkend="PLFLT_NC_VECTOR-type"><function>PLFLT_NC_VECTOR</function></link>'>
+<!ENTITY PLCHAR_NC_VECTOR '<link linkend="PLCHAR_NC_VECTOR-type"><function>PLCHAR_NC_VECTOR</function></link>'>
+<!ENTITY PLFLT_MATRIX '<link linkend="PLFLT_MATRIX-type"><function>PLFLT_MATRIX</function></link>'>
+<!ENTITY PLCHAR_MATRIX '<link linkend="PLCHAR_MATRIX-type"><function>PLCHAR_MATRIX</function></link>'>
+<!ENTITY PLFLT_NC_MATRIX '<link linkend="PLFLT_NC_MATRIX-type"><function>PLFLT_NC_MATRIX</function></link>'>
+<!ENTITY PLCHAR_NC_MATRIX '<link linkend="PLCHAR_NC_MATRIX-type"><function>PLCHAR_NC_MATRIX</function></link>'>
+<!ENTITY PLPointer '<link linkend="PLPointer-type"><function>PLPointer</function></link>'>
+<!ENTITY PLMAPFORM_callback '<link linkend="PLMAPFORM_callback-type"><function>PLMAPFORM_callback</function></link>'>
+<!ENTITY PLTRANSFORM_callback '<link linkend="PLTRANSFORM_callback-type"><function>PLTRANSFORM_callback</function></link>'>
+<!ENTITY PLLABEL_FUNC_callback '<link linkend="PLLABEL_FUNC_callback-type"><function>PLLABEL_FUNC_callback</function></link>'>
+<!ENTITY PLF2EVAL_callback '<link linkend="PLF2EVAL_callback-type"><function>PLF2EVAL_callback</function></link>'>
+<!ENTITY PLFILL_callback '<link linkend="PLFILL_callback-type"><function>PLFILL_callback</function></link>'>
+<!ENTITY PLDEFINED_callback '<link linkend="PLDEFINED_callback-type"><function>PLDEFINED_callback</function></link>'>
+<!ENTITY PLGraphicsIn '<link linkend="PLGraphicsIn-type"><function>PLGraphicsIn</function></link>'>
+<!ENTITY PLF2OPS '<link linkend="PLF2OPS-type"><function>PLF2OPS</function></link>'>
+<!ENTITY PLFLT_FE_POINTER '<link linkend="PLFLT_FE_POINTER-type"><function>PLFLT_FE_POINTER</function></link>'>
+<!ENTITY PLplot-website '@PLPLOT_WEBSITE@'>
+<!ENTITY % Math-Entities SYSTEM "@CMAKE_CURRENT_SOURCE_DIR@/math.ent">
+%Math-Entities;
+<!ENTITY % Inline-Entities SYSTEM "@inline_entities@">
+%Inline-Entities;
+]
+>
+
+<book id="plplot-docbook">
+  <bookinfo>
+    <title>Documentation of the PLplot plotting software</title>
+    <titleabbrev role="texinfo-file">plplotdoc</titleabbrev>
+    <abstract role="texinfo-node">
+      <para>This reference contains complete user documentation for the PLplot plotting software</para>
+    </abstract>
+    <subjectset scheme="texinfo-directory">
+      <subject><subjectterm>Scientific Visualization</subjectterm></subject>
+    </subjectset>
+    <abbrev>DocBook</abbrev>
+    <releaseinfo>Version &Project-Version;</releaseinfo>
+    <authorgroup>
+      <author>
+	<firstname>Maurice</firstname>
+	<othername>J.</othername>
+	<surname>LeBrun</surname>
+      </author>
+      <author>
+	<firstname>Geoffrey</firstname>
+	<surname>Furnish</surname>
+      </author>
+    <collab><collabname>Rafael Laboissi&egrave;re</collabname></collab>
+    <collab><collabname>Alan W. Irwin</collabname></collab>
+    <collab><collabname>Joao Cardoso</collabname></collab>
+    <collab><collabname>Andrew Roach</collabname></collab>
+    <collab><collabname>Andrew Ross</collabname></collab>
+    <collab><collabname>Arjen Markus</collabname></collab>
+    <collab><collabname>Thomas J. Duck</collabname></collab>
+    <collab><collabname>Hazen Babcock</collabname></collab>
+    <collab><collabname>Werner Smekal</collabname></collab>
+    <collab><collabname>Jerry Bauck</collabname></collab>
+    <collab><collabname>Hezekiah M. Carty</collabname></collab>
+    <collab><collabname>Phil Rosenberg</collabname></collab>
+    <collab><collabname>Jim Dishaw</collabname></collab>
+    </authorgroup>
+    <copyright>
+      <year>1994</year>
+      <holder>Maurice J. LeBrun, Geoffrey Furnish</holder>
+    </copyright>
+    <copyright>
+      <year>2000-2005</year>
+      <holder>Rafael Laboissi&egrave;re</holder>
+    </copyright>
+    <copyright>
+      <year>2000-2016</year>
+      <holder>Alan W. Irwin</holder>
+    </copyright>
+    <copyright>
+      <year>2001-2003</year>
+      <holder>Joao Cardoso</holder>
+    </copyright>
+    <copyright>
+      <year>2004</year>
+      <holder>Andrew Roach</holder>
+    </copyright>
+    <copyright>
+      <year>2004-2013</year>
+      <holder>Andrew Ross</holder>
+    </copyright>
+    <copyright>
+      <year>2004-2016</year>
+      <holder>Arjen Markus</holder>
+    </copyright>
+    <copyright>
+      <year>2005</year>
+      <holder>Thomas J. Duck</holder>
+    </copyright>
+    <copyright>
+      <year>2005-2010</year>
+      <holder>Hazen Babcock</holder>
+    </copyright>
+    <copyright>
+      <year>2008</year>
+      <holder>Werner Smekal</holder>
+    </copyright>
+    <copyright>
+      <year>2008-2016</year>
+      <holder>Jerry Bauck</holder>
+    </copyright>
+    <copyright>
+      <year>2009-2014</year>
+      <holder>Hezekiah M. Carty</holder>
+    </copyright>
+    <copyright>
+      <year>2014-2015</year>
+      <holder>Phil Rosenberg</holder>
+    </copyright>
+    <copyright>
+      <year>2015</year>
+      <holder>Jim Dishaw</holder>
+    </copyright>
+
+    <legalnotice>
+      <para>
+	Redistribution and use in source (XML DocBook) and
+	<quote>compiled</quote> forms (HTML, PDF, PostScript, DVI, TeXinfo
+	and so forth) with or without modification, are permitted provided
+	that the following conditions are met:
+	<orderedlist>
+	  <listitem>
+	    <para>
+	      Redistributions of source code (XML DocBook) must retain the
+	      above copyright notice, this list of conditions and the
+	      following disclaimer as the first lines of this file
+	      unmodified.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Redistributions in compiled form (transformed to other DTDs,
+	      converted to HTML, PDF, PostScript, and other formats) must
+	      reproduce the above copyright notice, this list of conditions
+	      and the following disclaimer in the documentation and/or
+	      other materials provided with the distribution.
+	    </para>
+	  </listitem>
+	</orderedlist>
+	Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT
+	<quote>AS IS</quote> AND ANY EXPRESS OR IMPLIED WARRANTIES,
+	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+	MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE FOR ANY
+	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+	DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+	GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+	WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+	NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	DOCUMENTATION, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+      </para>
+
+      <para>
+	Release version: &Project-Version;
+      </para>
+      <para>
+	Release date: &Release-Date;
+      </para>
+
+    </legalnotice>
+
+  </bookinfo>
+  <toc></toc>
+  <!-- <lot></lot> -->
+
+  <part id="part_introduction">
+    <title> Introduction </title>
+    &chap-intro;
+  </part>
+
+  <part id="part_programming">
+    <title> Programming </title>
+    &chap-simple;
+    &chap-advanced;
+    &chap-deploying;
+    &chap-drivers;
+  </part>
+
+  <part id="part_bindings">
+    <title> Supported computer languages </title>
+    &chap-c;
+    &chap-ada;
+    &chap-cplus;
+    &chap-fortran;
+    &chap-ocaml;
+    &chap-python;
+    &chap-tcl;
+    &chap-wish;
+    &chap-gui;
+  </part>
+
+  <part id="part_reference">
+    <title> Reference </title>
+    &chap-bibliography;
+    &chap-api;
+    &chap-api-c;
+    &chap-api-fortran;
+    &chap-api-compat;
+    &chap-api-obsolete;
+    &chap-api-internal;
+    &chap-libraries;
+  </part>
+</book>

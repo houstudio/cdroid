@@ -1,0 +1,187 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+A large number of options are available to modify the CMake configuration process. Use the ccmake or cmake-gui commands or inspect the contents of the CMakeCache.txt file after a build to obtain documentation for most options. Some options are hidden depending on other option values so for a more complete look at all option documentation look for the string "option" in the files in the cmake/modules subdirectory.
+
+Here we give the documentation of the most heavily used subset of the options. The value specified is the default value, but note that value can automatically be changed by the build system if some essential resource is not available on the platform. For example, if no Fortran 95-capable compiler can be found on the platform, the Fortran 95 bindings are automatically disabled. Furthermore, certain option values depend on other option values. For example, if BUILD_SHARED_LIBS is set to OFF, then ENABLE_DYNDRIVERS is automatically set to OFF as well.
+
+In general, if you just use the default options PLplot will normally configure itself to build without problems. The cmake output will have WARNING messages about any missing components. If one of those is important to you, then you will have to install additional libraries or executables (e.g., a Fortran 95-capable compiler) and do a fresh cmake run in an empty directory to configure a PLplot build that includes the component that was missing before.
+
+General options
+---------------
+
+**CMAKE_INSTALL_PREFIX:PATH**=/usr/local - install directory.
+
+**CMAKE_BUILD_TYPE:STRING**= - One of blank (None), Debug, Release, RelWithDebInfo, or MinSizeRel. This option provides overall control of the optimization and debug options used for the build depending on the compiler and platform.
+
+**BUILD_SHARED_LIBS:BOOL**=ON - build shared libraries (ON) or static libraries (OFF).
+
+**ENABLE_DYNDRIVERS:BOOL**=ON - build device drivers as dynamically loaded plugins (ON) or as part of the PLplot core C library (OFF).
+
+**BUILD_TEST:BOOL**=OFF - builds examples in the build tree so that ctest can be run afterward to test that those examples work.
+
+**BUILD_DOC:BOOL**=OFF - build DocBook form of documentation.
+
+**BUILD_DOX_DOC:BOOL**=OFF - build Doxygen form of documentation.
+
+**PL_DOUBLE:BOOL**=ON - use 64-bit (ON) or 32-bit (OFF) floating-point precision.
+
+**USE_RPATH:BOOL**=ON - use rpath (ON) or do not use rpath (OFF) when linking libraries and executables.
+
+**HAVE_QHULL:BOOL**=ON - internally build and use the csironn library for natural neighbours interpolation. This library depends externally on the qhull library.
+
+**WITH_CSA:BOOL**=ON - internally build and use the csirocsa library for bivariate cubic spline approximation.
+
+Bindings options
+----------------
+
+**DEFAULT_NO_BINDINGS:BOOL**=OFF - if this option is turned ON, all language bindings are turned OFF by default.
+
+**ENABLE_ada:BOOL**=ON - Ada 95 and Ada 2005 binding.
+
+**ENABLE_cxx:BOOL**=ON - C++ binding.
+
+**ENABLE_d:BOOL**=ON - [D](http://www.digitalmars.com/d/index.html) binding.
+
+**ENABLE_f95:BOOL**=ON - Fortran 95 binding.
+
+**ENABLE_itcl:BOOL**=ON - iTcl object-oriented extension of the Tcl binding.
+
+**ENABLE_itk:BOOL**=ON - iTk object-oriented extension of the Tk binding.
+
+**ENABLE_java:BOOL**=ON - Java binding.
+
+**ENABLE_lua:BOOL**=ON - [Lua](http://www.lua.org/) binding.
+
+**ENABLE_ocaml:BOOL**=ON - [OCaml](http://caml.inria.fr/) binding.
+
+**ENABLE_octave:BOOL**=ON - [Octave](https://gnu.org/software/octave/) binding.
+
+**ENABLE_python:BOOL**=ON - Python binding.
+
+**ENABLE_tcl:BOOL**=ON - Tcl binding.
+
+**ENABLE_tk:BOOL**=ON - Tk (graphical extension of Tcl) binding.
+
+Device options
+--------------
+
+### General device options
+
+**DEFAULT_ALL_DEVICES:BOOL**=OFF - if this option is turned ON, all devices default to ON.
+
+**DEFAULT_NO_DEVICES:BOOL**=OFF - if this option is turned ON, all devices default to OFF.
+
+**DEFAULT_NO_CAIRO_DEVICES:BOOL**=OFF - if this option is turned ON, all cairo devices default to OFF.
+
+**DEFAULT_NO_QT_DEVICES:BOOL**=OFF - if this option is turned ON, all qt devices default to OFF.
+
+**WITH_FREETYPE:BOOL**=ON - access TrueType fonts with direct calls to libfreetype for certain device drivers that use this method of accessing TrueType fonts.
+
+N.B. All PLD_\* options below which default to OFF correspond to deprecated/unmaintained devices.
+
+### libpango/libcairo-related devices
+
+These devices use various cairo backends. The ones that are turned ON by default generally give beautiful results with properly hinted unicode fonts even for CTL (complex text layout) languages.
+
+**PLD_epscairo**=ON
+
+**PLD_extcairo**=ON
+
+**PLD_memcairo**=ON
+
+**PLD_pdfcairo**=ON
+
+**PLD_pngcairo**=ON
+
+**PLD_pscairo**=ON
+
+**PLD_svgcairo**=ON
+
+**PLD_wincairo**=ON - Windows platforms only.
+
+**PLD_xcairo**=ON - Unix platforms only.
+
+### Qt4-related devices
+
+These devices depend on the Qt4 libraries and generally give beautiful results with properly hinted unicode fonts even for CTL (complex text layout) languages.
+
+**PLD_bmpqt**=ON
+
+**PLD_epsqt**=ON
+
+**PLD_extqt**=ON
+
+**PLD_jpgqt**=ON
+
+**PLD_memqt**=ON
+
+**PLD_pdfqt**=ON
+
+**PLD_pngqt**=ON
+
+**PLD_ppmqt**=ON
+
+**PLD_qtwidget**=ON
+
+**PLD_svgqt**=ON
+
+**PLD_tiffqt**=ON
+
+### libgd-related devices
+
+**PLD_png:BOOL**=OFF
+
+**PLD_jpeg:BOOL**=OFF
+
+**PLD_gif:BOOL**=OFF
+
+### Other devices
+
+**PLD_aqt:BOOL**=ON - Mac OS X platform only.
+
+**PLD_cgm:BOOL**=OFF- note this device depends on the NIST public-domain cd library which we build internally (as libnistcd) if this option is set to ON by the user.
+
+**PLD_mem:BOOL**=ON
+
+**PLD_ntk:BOOL**=ON
+
+**PLD_null:BOOL**=ON - a working device that creates no (!) interactive or file output.
+
+**PLD_pdf:BOOL**=ON
+
+**PLD_plmeta:BOOL**=OFF
+
+**PLD_ps:BOOL**=ON
+
+**PLD_pstex:BOOL**=OFF
+
+**PLD_psttf:BOOL**=ON
+
+**PLD_svg:BOOL**=ON
+
+**PLD_tk:BOOL**=ON
+
+**PLD_tkwin:BOOL**=ON
+
+**PLD_wingcc:BOOL**=ON - Windows platforms only.
+
+**PLD_wxpng:BOOL**=OFF
+
+**PLD_wxwidgets:BOOL**=ON
+
+**PLD_xfig:BOOL**=ON
+
+**PLD_xwin:BOOL**=ON - Unix platforms only.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

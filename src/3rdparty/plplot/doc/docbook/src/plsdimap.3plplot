@@ -1,0 +1,40 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSDIMAP 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsdimap\fP - Set up transformation from metafile coordinates
+.SH SYNOPSIS
+\fBplsdimap\fP(\fIdimxmin\fP, \fIdimxmax\fP, \fIdimymin\fP, \fIdimymax\fP, \fIdimxpmm\fP, \fIdimypmm\fP)
+.SH DESCRIPTION
+
+.P
+Set up transformation from metafile coordinates.  The size of the plot is scaled so as to preserve aspect ratio.  This isn't intended to be a general-purpose facility just yet (not sure why the user would need it, for one).
+.P
+Redacted form: \fBplsdimap(dimxmin, dimxmax, dimymin, dimymax, dimxpmm, dimypmm)\fP
+.P
+This function is not used in any examples.
+.SH ARGUMENTS
+.TP
+\fIdimxmin\fP (\fBPLINT\fP(3plplot), input)
+NEEDS DOCUMENTATION
+.TP
+\fIdimxmax\fP (\fBPLINT\fP(3plplot), input)
+NEEDS DOCUMENTATION
+.TP
+\fIdimymin\fP (\fBPLINT\fP(3plplot), input)
+NEEDS DOCUMENTATION
+.TP
+\fIdimymax\fP (\fBPLINT\fP(3plplot), input)
+NEEDS DOCUMENTATION
+.TP
+\fIdimxpmm\fP (\fBPLFLT\fP(3plplot), input)
+NEEDS DOCUMENTATION
+.TP
+\fIdimypmm\fP (\fBPLFLT\fP(3plplot), input)
+NEEDS DOCUMENTATION
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

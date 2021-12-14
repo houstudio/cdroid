@@ -1,0 +1,40 @@
+To submit a dashboard (which is defined as the collection of virtually
+all details concerning a ctest run) to the PLplot dashboard server to
+be publicly displayed there, PLplot users simply have to configure
+PLplot (with -DBUILD_TEST=ON), build the "all" target as per normal,
+then run
+
+ctest -D Experimental
+
+That ctest command does its normal ctest thing (performing all the
+tests we have configured in plplot_test/CMakeLists.txt), but then
+because of that -D Experimental option it then collects all that
+test data into a dashboard and sends it to our dashboard server to be
+publicly displayed.
+
+For now, the PLplot dashboard submission capability is very simply
+configured using the CTest module method with the two files
+CTestConfig.cmake (to specify the dashboard server which is the
+PLplot_config "project" of my.cdash.org with submitted dashboard
+results publicly displayed at
+<http://my.cdash.org/index.php?project=PLplot_git>) and
+CTestCustom.ctest.in (to specify one minor CTest module customization
+that we need). In addition there is some code in the top-level
+CMakeLists.txt file to support a scheme (commit 7e987c4) to add a
+user-specified suffix (called PLPLOT_BUILDNAME_SUFFIX) to the
+BUILDNAME build label string that is ordinarily determined by the
+CTest module.  This change is to help users identify their builds a
+little more precisely (e.g., by using the cmake option
+
+-DPLPLOT_BUILDNAME_SUFFIX:STRING="-(shared library + dynamic devices)"
+
+the users adds that suffix to the usual BUILDNAME label to help
+identify their dashboard in what can be long lists of dashboards
+presented by dashboard servers.
+
+I plan no more changes to this Experimental dashboard client
+capability I have configured for ctest and which is also supported by
+the "-do_submit_dashboard yes" option of the
+scripts/comprehensive_test.sh script.  However, at some point I or
+somebody else may decide to generalize this capability to deal with
+Nightly and Continuous types of dashboard submissions.

@@ -1,0 +1,471 @@
+This is plplotdoc.info, produced by makeinfo version 6.5 from
+plplotdoc.texi.
+
+INFO-DIR-SECTION Scientific Visualization
+START-INFO-DIR-ENTRY
+* Documentation of the PLplot plotting software: (plplotdoc).
+                                                  This reference contains
+                                                  complete user documentation
+                                                  for the PLplot plotting
+                                                  software
+END-INFO-DIR-ENTRY
+
+
+Indirect:
+plplotdoc.info-1: 509
+plplotdoc.info-2: 302546
+plplotdoc.info-3: 600687
+
+Tag Table:
+(Indirect)
+Node: Top509
+Node: Introduction26456
+Node: Introduction <1>26614
+Node: The PLplot plotting software26952
+Node: Feature Summary30824
+Node: Cross Platform31109
+Node: Language Bindings31881
+Node: Output File Formats32389
+Node: Interactive Platforms32757
+Node: Obtaining Access to PLplot33109
+Node: Configure; build; and install PLplot from source33580
+Node: PLplot Copyright Licensing38907
+Node: Credits39535
+Node: Programming39799
+Node: Simple Use of PLplot40126
+Node: Plotting a Simple Graph41108
+Node: Initializing PLplot43050
+Node: Defining Plot Scales and Axes44613
+Node: Labelling the Graph45870
+Node: Drawing the Graph46497
+Node: Drawing Points47442
+Node: Drawing Lines or Curves49594
+Node: Writing Text on a Graph50285
+Node: Area Fills50730
+Node: More Complex Graphs51128
+Node: Finishing Up51709
+Node: In Case of Error52159
+Node: Advanced Use of PLplot52722
+Node: Command Line Arguments53948
+Node: Devices58674
+Ref: PLplot File Devices60754
+Ref: PLplot Interactive Devices62464
+Node: Driver Functions63198
+Node: Family File Output65604
+Node: Specifying the Output Device68342
+Node: Adding FreeType Library Support to Bitmap Drivers74244
+Node: View Surfaces; [Sub-]Pages; Viewports and Windows75926
+Node: Defining the Viewport77919
+Node: Defining the Window81463
+Node: Annotating the Viewport82366
+Node: Setting up a Standard Window86902
+Node: Setting Line Attributes87716
+Node: Setting the Area Fill Pattern89721
+Node: Setting Color91222
+Node: Color Map092780
+Node: Color Map198772
+Node: Setting Character Attributes106083
+Node: Hershey font system106936
+Node: Unicode font system109012
+Node: The ps device driver111067
+Node: The gd and wingcc device drivers112436
+Node: The svg device driver116166
+Node: The psttf; cairo; qt; and wxwidgets device drivers117392
+Node: FCI118366
+Ref: FCI interpretation119834
+Node: Escape sequences in text120494
+Ref: Roman Characters Corresponding to Greek Characters123113
+Ref: The word "peace" expressed in several different languages in example 24 using UTF-8125007
+Node: Character size adjustment126298
+Node: Three-dimensional Plots127854
+Node: Surface Plots128422
+Node: Contour Plots131458
+Node: Shade plots133620
+Node: Image plots134365
+Node: Vector plots134981
+Node: Legends and color bars135605
+Node: Deploying programs that use PLplot139090
+Ref: Deploying programs that use PLplot-Footnote-1147370
+Node: Drivers which implement file devices147614
+Node: The qt driver148219
+Node: The cairo driver148916
+Node: The svg driver149645
+Node: The ps driver150330
+Node: The psttf driver151467
+Node: The pdf driver152723
+Node: The gd driver153155
+Node: The pstex driver154369
+Node: Drivers which implement interactive devices155804
+Node: The qt driver <1>156390
+Node: The cairo driver <1>157493
+Node: The xwin driver158695
+Node: The tk driver159759
+Node: The aqt driver160331
+Node: The wxwidgets driver160710
+Node: wxWidgets Driver Basics161157
+Node: Supported computer languages162390
+Node: C Language162805
+Ref: plplot-types163429
+Ref: PLFLT-type163519
+Ref: PLINT-type163845
+Ref: PLBOOL-type163912
+Ref: PLUNICODE-type163978
+Ref: PLFLT_NC_SCALAR-type164195
+Ref: PLINT_NC_SCALAR-type164285
+Ref: PLBOOL_NC_SCALAR-type164375
+Ref: PLUNICODE_NC_SCALAR-type164468
+Ref: PLCHAR_NC_SCALAR-type164570
+Ref: PLFLT_VECTOR-type164702
+Ref: PLINT_VECTOR-type164788
+Ref: PLBOOL_VECTOR-type164874
+Ref: PLCHAR_VECTOR-type164963
+Ref: PLFLT_NC_VECTOR-type165151
+Ref: PLCHAR_NC_VECTOR-type165241
+Ref: PLFLT_MATRIX-type165436
+Ref: PLCHAR_MATRIX-type165533
+Ref: PLFLT_NC_MATRIX-type165952
+Ref: PLCHAR_NC_MATRIX-type166046
+Ref: PLPointer-type166455
+Ref: PLMAPFORM_callback-type166589
+Ref: PLTRANSFORM_callback-type167171
+Ref: PLLABEL_FUNC_callback-type168012
+Ref: PLF2EVAL_callback-type169302
+Ref: PLFILL_callback-type170118
+Ref: PLDEFINED_callback-type170614
+Ref: PLGraphicsIn-type171266
+Ref: PLF2OPS-type172154
+Ref: PLFLT_FE_POINTER-type173443
+Node: Ada Language174138
+Node: Overview174739
+Node: The Bindings175510
+Node: Thin Binding176667
+Node: The Thick Bindings178720
+Node: Standard Thick Binding Using Enhanced Names181271
+Node: Thick Binding Using Traditional Names183718
+Node: The Examples184234
+Node: Obtaining the Software185220
+Node: Obtaining an Ada compiler185625
+Node: Download and install PLplot186881
+Node: The Ada bindings to PLplot187533
+Node: How to use the Ada bindings188210
+Node: Ada 95 versus Ada 2005188523
+Node: GNAT versus non-GNAT190820
+Node: Sample command line project192616
+Node: Unique Features of the Ada bindings194941
+Node: High-level features for simplified plotting195754
+Node: Foreground-background control196112
+Node: Draw_On_Black; Draw_On_White196397
+Node: Simple Plotters196949
+Node: Multiplot_Pairs197604
+Node: Simple_Plot197838
+Node: Simple_Plot_Log_X198083
+Node: Simple_Plot_Log_Y198296
+Node: Simple_Plot_Log_XY198516
+Node: Simple_Plot_Pairs198747
+Node: Single_Plot198992
+Node: Simple_Contour199253
+Node: Simple_Mesh_3D199429
+Node: Simple_Surface_3D199644
+Node: Simple color map manipulations199845
+Node: Integer Options Given Ada Names202622
+Node: One-offs205052
+Node: Parts That Retain a C Flavor208466
+Node: Map-drawing208906
+Node: Known Variances209767
+Node: Documentation209974
+Node: API210435
+Node: Compilation notes211067
+Node: Ada 95 Versus Ada 2005211328
+Node: GNAT Dependence211811
+Node: PLplot_Auxiliary212102
+Node: Notes for Apple Macintosh OS X users212989
+Node: Using Apple's Xcode IDE213863
+Node: AquaTerm214930
+Node: X11215540
+Node: GNAT for OS X216127
+Node: A C++ Interface for PLplot216510
+Node: Motivation for the C++ Interface217404
+Node: Design of the PLplot C++ Interface220282
+Node: Stream/Object Identity220689
+Node: Namespace Management221686
+Node: Abstraction of Data Layout223282
+Node: Callbacks and Shades225610
+Node: Collapsing the API226652
+Node: Specializing the PLplot C++ Interface227601
+Node: Status of the C++ Interface229584
+Node: Fortran Language230950
+Node: OCaml Language246392
+Node: Overview <1>246943
+Node: The Bindings <1>247356
+Node: Core Binding248993
+Node: OCaml-specific variations to the core PLplot API249895
+Node: OCaml high level 2D plotting API251178
+Node: The Examples <1>251884
+Node: Obtaining the Software <1>252614
+Node: Obtaining the OCaml compiler253025
+Node: How to use the OCaml bindings253821
+Node: How to setup findlib for use with the OCaml bindings254482
+Node: Sample command line project [core API]255351
+Node: Sample command line project [OCaml-specific API]256959
+Node: Sample toplevel project258776
+Node: Known Issues260119
+Node: Using PLplot from Python260453
+Node: Using PLplot from Tcl261842
+Node: Motivation for the Tcl Interface to PLplot263016
+Node: Overview of the Tcl Language Binding268227
+Node: The PLplot Tcl Matrix Extension273595
+Node: Using Tcl Matrices from Tcl274705
+Node: Using Tcl Matrices from C286857
+Node: Using Tcl Matrices from C++288072
+Node: Extending the Tcl Matrix facility289340
+Node: Contouring and Shading from Tcl292085
+Node: Drawing a Contour Plot from Tcl292822
+Node: Drawing a Shaded Plot from Tcl297517
+Node: Understanding the Performance Characteristics of Tcl298558
+Node: Building an Extended WISH302546
+Node: Introduction to Tcl303794
+Node: Motivation for Tcl304924
+Node: Capabilities of Tcl306048
+Node: Acquiring Tcl307626
+Node: Introduction to Tk308996
+Node: Introduction to [incr Tcl]311717
+Node: PLplot Extensions to Tcl313550
+Node: Custom Extensions to Tcl315132
+Node: WISH Construction316625
+Node: WISH Linking319583
+Node: WISH Programming320271
+Node: Embedding Plots in Graphical User Interfaces321392
+Node: Reference321985
+Node: Bibliography322368
+Node: References322645
+Node: The Common API for PLplot323280
+Node: pl_setcontlabelformat; Set format of numerical label for contours345352
+Node: pl_setcontlabelparam; Set parameters of contour labelling other than format of numerical label346259
+Node: pladv; Advance the [sub-]page347675
+Node: plarc; Draw a circular or elliptical arc349352
+Node: plaxes; Draw a box with axes; etc_ with arbitrary origin350891
+Node: plbin; Plot a histogram from binned data355836
+Node: plbop; Begin a new page358348
+Node: plbox; Draw a box with axes; etc359704
+Node: plbox3; Draw a box with axes; etc; in 3-d364282
+Node: plbtime; Calculate broken-down time from continuous time for the current stream371414
+Node: plcalc_world; Calculate world coordinates and corresponding window index from relative device coordinates374265
+Node: plclear; Clear current [sub]page377212
+Node: plcol0; Set color; cmap0378052
+Node: plcol1; Set color; cmap1379168
+Node: plcolorbar; Plot color bar for image; shade or gradient plots380088
+Node: plconfigtime; Configure the transformation between continuous and broken-down time for the current stream392052
+Node: plcont; Contour plot396707
+Node: plcpstrm; Copy state parameters from the reference stream to the current stream402151
+Node: plctime; Calculate continuous time from broken-down time for the current stream403802
+Node: plend; End plotting session406360
+Node: plend1; End plotting session for current stream407229
+Node: plenv0; Same as plenv but if in multiplot mode does not advance the subpage; instead clears it407831
+Node: plenv; Set up standard window and draw box414425
+Node: pleop; Eject current page420785
+Node: plerrx; Draw error bars in x direction421291
+Node: plerry; Draw error bars in the y direction422602
+Node: plfamadv; Advance to the next family file on the next new page423952
+Node: plfill; Draw filled polygon424465
+Node: plfill3; Draw filled polygon in 3D425738
+Node: plflush; Flushes the output stream427139
+Node: plfont; Set font427548
+Node: plfontld; Load Hershey fonts429067
+Node: plGetCursor; Wait for graphics input event and translate to world coordinates_430264
+Node: plgchr; Get character default height and current [scaled] height431382
+Node: plgcmap1_range; Get the cmap1 argument range for continuous color plots432275
+Node: plgcol0; Returns 8-bit RGB values for given color index from cmap0433373
+Node: plgcol0a; Returns 8-bit RGB values and PLFLT alpha transparency value for given color index from cmap0434572
+Node: plgcolbg; Returns the background color [cmap0[0]] by 8-bit RGB value436124
+Node: plgcolbga; Returns the background color [cmap0[0]] by 8-bit RGB value and PLFLT alpha transparency value437250
+Node: plgcompression; Get the current device-compression setting438556
+Node: plgdev; Get the current device [keyword] name439381
+Node: plgdidev; Get parameters that define current device-space window440170
+Node: plgdiori; Get plot orientation441572
+Node: plgdiplt; Get parameters that define current plot-space window442676
+Node: plgdrawmode; Get drawing mode [depends on device support!]444064
+Node: plgfam; Get family file parameters444992
+Node: plgfci; Get FCI [font characterization integer]446062
+Node: plgfnam; Get output file name446709
+Node: plgfont; Get family; style and weight of the current font447357
+Node: plglevel; Get the [current] run level449005
+Node: plgpage; Get page parameters449698
+Node: plgra; Switch to graphics screen451184
+Node: plgradient; Draw linear gradient inside polygon452077
+Node: plgriddata; Grid data from irregularly sampled data454142
+Node: plgspa; Get current subpage parameters458265
+Node: plgstrm; Get current stream number459704
+Node: plgver; Get the current library version number460348
+Node: plgvpd; Get viewport limits in normalized device coordinates461112
+Node: plgvpw; Get viewport limits in world coordinates462423
+Node: plgxax; Get x axis parameters463633
+Node: plgyax; Get y axis parameters464925
+Node: plgzax; Get z axis parameters465991
+Node: plhist; Plot a histogram from unbinned data467071
+Node: plhlsrgb; Convert HLS color to RGB469956
+Node: plimagefr; Plot a 2D matrix using cmap1471281
+Node: plimage; Plot a 2D matrix using cmap1 with automatic color adjustment476332
+Node: plinit; Initialize PLplot478137
+Node: pljoin; Draw a line between two points479470
+Node: pllab; Simple routine to write labels480316
+Node: pllegend; Plot legend using discretely annotated filled boxes; lines; and/or lines of symbols481397
+Node: pllightsource; Sets the 3D position of the light source493785
+Node: plline; Draw a line494791
+Node: plline3; Draw a line in 3 space495609
+Node: pllsty; Select line style496688
+Node: plmap; Plot continental outline or shapefile data in world coordinates497511
+Node: plmapfill; Plot all or a subset of Shapefile data; filling the polygons502025
+Node: plmapline; Plot all or a subset of Shapefile data using lines in world coordinates505551
+Node: plmapstring; Plot all or a subset of Shapefile data using strings or points in world coordinates509611
+Node: plmaptex; Draw text at points defined by Shapefile data in world coordinates513409
+Node: plmeridians; Plot latitude and longitude lines517384
+Node: plmesh; Plot surface mesh519910
+Node: plmeshc; Magnitude colored plot surface mesh with contour522262
+Node: plmkstrm; Creates a new stream and makes it the default525168
+Node: plmtex; Write text relative to viewport boundaries526291
+Node: plmtex3; Write text relative to viewport boundaries in 3D plots529119
+Node: plot3d; Plot 3-d surface plot531897
+Node: plot3dc; Magnitude colored plot surface with contour534865
+Node: plot3dcl; Magnitude colored plot surface with contour for z[x][y] with y index limits538444
+Node: plparseopts; Parse command-line arguments543315
+Node: plpat; Set area line fill pattern546406
+Node: plpath; Draw a line between two points; accounting for coordinate transforms547864
+Node: plpoin; Plot a glyph at the specified points549211
+Node: plpoin3; Plot a glyph at the specified 3D points551063
+Node: plpoly3; Draw a polygon in 3 space553133
+Node: plprec; Set precision in numeric labels556010
+Node: plpsty; Select area fill pattern556960
+Node: plptex; Write text inside the viewport558435
+Node: plptex3; Write text inside the viewport of a 3D plot560590
+Node: plrandd; Random number generator returning a real random number in the range [0;1]563987
+Node: plreplot; Replays contents of plot buffer to current device/file564970
+Node: plrgbhls; Convert RGB color to HLS565536
+Node: plschr; Set character size566882
+Node: plscmap0; Set cmap0 colors by 8-bit RGB values568035
+Node: plscmap0a; Set cmap0 colors by 8-bit RGB values and PLFLT alpha transparency value569356
+Node: plscmap0n; Set number of colors in cmap0571008
+Node: plscmap1_range; Set the cmap1 argument range for continuous color plots572252
+Node: plscmap1; Set opaque RGB cmap1 colors values573799
+Node: plscmap1a; Set semitransparent cmap1 RGBA colors_575857
+Node: plscmap1l; Set cmap1 colors using a piece-wise linear relationship578327
+Node: plscmap1la; Set cmap1 colors and alpha transparency using a piece-wise linear relationship583599
+Node: plscmap1n; Set number of colors in cmap1586099
+Node: plscol0; Set 8-bit RGB values for given cmap0 color index587090
+Node: plscol0a; Set 8-bit RGB values and PLFLT alpha transparency value for given cmap0 color index588587
+Node: plscolbg; Set the background color by 8-bit RGB value590282
+Node: plscolbga; Set the background color by 8-bit RGB value and PLFLT alpha transparency value_591371
+Node: plscolor; Used to globally turn color output on/off592607
+Node: plscompression; Set device-compression level593349
+Node: plsdev; Set the device [keyword] name594752
+Node: plsdidev; Set parameters that define current device-space window595537
+Node: plsdimap; Set up transformation from metafile coordinates597085
+Node: plsdiori; Set plot orientation598426
+Node: plsdiplt; Set parameters that define current plot-space window600687
+Node: plsdiplz; Set parameters incrementally [zoom mode] that define current plot-space window601900
+Node: plsdrawmode; Set drawing mode [depends on device support!]603637
+Node: plseed; Set seed for internal random number generator_604578
+Node: plsesc; Set the escape character for text strings605320
+Node: plsetopt; Set any command-line option606571
+Node: plsfam; Set family file parameters607584
+Node: plsfci; Set FCI [font characterization integer]608561
+Node: plsfnam; Set output file name609498
+Node: plsfont; Set family; style and weight of the current font610327
+Node: plshades; Shade regions on the basis of value611937
+Node: plshade; Shade individual region on the basis of value619482
+Node: plslabelfunc; Assign a function to use for generating custom axis labels628485
+Node: plsmaj; Set length of major ticks630338
+Node: plsmem; Set the memory area to be plotted [RGB]631240
+Node: plsmema; Set the memory area to be plotted [RGBA]632412
+Node: plsmin; Set length of minor ticks633578
+Node: plsori; Set orientation634479
+Node: plspage; Set page parameters635291
+Node: plspal0; Set the cmap0 palette using the specified cmap0*_pal format file637546
+Node: plspal1; Set the cmap1 palette using the specified cmap1*_pal format file638380
+Node: plspause; Set the pause [on end-of-page] status640262
+Node: plsstrm; Set current output stream640969
+Node: plssub; Set the number of subpages in x and y641705
+Node: plssym; Set symbol size642410
+Node: plstar; Initialization643401
+Node: plstart; Initialization644542
+Node: plstransform; Set a global coordinate transform function646230
+Node: plstring; Plot a glyph at the specified points647847
+Node: plstring3; Plot a glyph at the specified 3D points649772
+Node: plstripa; Add a point to a strip chart651900
+Node: plstripc; Create a 4-pen strip chart653005
+Node: plstripd; Deletes and releases memory used by a strip chart656914
+Node: plstyl; Set line style657517
+Node: plsurf3d; Plot shaded 3-d surface plot659107
+Node: plsurf3dl; Plot shaded 3-d surface plot for z[x][y] with y index limits662294
+Node: plsvect; Set arrow style for vector plots666887
+Node: plsvpa; Specify viewport in absolute coordinates668265
+Node: plsxax; Set x axis parameters669785
+Node: plsyax; Set y axis parameters671057
+Node: plsym; Plot a glyph at the specified points672395
+Node: plszax; Set z axis parameters673552
+Node: pltext; Switch to text screen674878
+Node: pltimefmt; Set format for date / time labels676045
+Node: plvasp; Specify viewport using aspect ratio only681566
+Node: plvect; Vector plot682346
+Node: plvpas; Specify viewport using coordinates and aspect ratio687389
+Node: plvpor; Specify viewport using normalized subpage coordinates689113
+Node: plvsta; Select standard viewport690619
+Node: plw3d; Configure the transformations required for projecting a 3D surface on a 2D window691278
+Node: plwidth; Set pen width695972
+Node: plwind; Specify window696766
+Node: plxormod; Enter or leave xor mode697756
+Node: The Specialized C/C++ API for PLplot698792
+Node: plabort; Error abort702117
+Node: plAlloc2dGrid; Allocate a block of memory for use as a matrix of type PLFLT_MATRIX702955
+Node: plClearOpts; Clear internal option table info structure704447
+Node: plexit; Error exit705151
+Node: plFree2dGrid; Free the memory associated with a PLFLT matrix allocated using plAlloc2dGrid706194
+Node: plfsurf3d; Plot shaded 3-d surface plot707301
+Node: plgfile; Get output file handle711500
+Node: plMergeOpts; Merge use option table into internal info structure712015
+Node: plMinMax2dGrid; Find the minimum and maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using plAlloc2dGrid713285
+Node: plOptUsage; Print usage and syntax message714511
+Node: plResetOpts; Reset internal option table info structure715410
+Node: plsabort; Set abort handler716182
+Node: plSetUsage; Set the ascii character strings used in usage and syntax messages716806
+Node: plsexit; Set exit handler717768
+Node: plsfile; Set output file handle718320
+Node: plStatic2dGrid; Determine the Iliffe column vector of pointers to PLFLT row vectors corresponding to a 2D matrix of PLFLT's that is statically allocated719301
+Node: pltr0; Identity transformation for matrix index to world coordinate mapping721662
+Node: pltr1; Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays724061
+Node: pltr2; Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays [row-major order as per normal C 2d arrays]726625
+Node: plTranslateCursor; Convert device to world coordinates729233
+Node: PLGraphicsIn; PLplot Graphics Input structure730722
+Node: PLOptionTable; PLplot command line options table structure732456
+Node: The Specialized Fortran API for PLplot733884
+Node: plcont; Contour plot for Fortran735524
+Node: plshade; Shaded plot for Fortran739935
+Node: plshades; Continuously shaded plot for Fortran740490
+Node: plvect; Vector plot for Fortran741073
+Node: plmesh; Plot surface mesh for Fortran741629
+Node: plot3d; Plot 3-d surface plot for Fortran742327
+Node: plparseopts; parse arguments for Fortran743052
+Node: plsesc; Set the escape character for text strings for Fortran744152
+Node: API compatibility definition745176
+Node: What is in the API?746246
+Node: Regression test for backwards compatibility755490
+Node: Obsolete/Deprecated API for PLplot757009
+Node: plshade1; Shade individual region on the basis of value757743
+Node: Internal C functions in PLplot767315
+Node: plP_checkdriverinit; Checks to see if any of the specified drivers have been initialized768517
+Node: plP_getinitdriverlist; Get the initialized-driver list769986
+Node: The PLplot Libraries771014
+Node: Bindings Libraries771742
+Ref: Bindings Libraries <1>772841
+Node: The PLplot Core Library773191
+Node: Enhancement Libraries773898
+Node: The CSIRO Cubic Spline Approximation Library774551
+Node: The CSIRO Natural Neighbours Interpolation Library774854
+Node: The QSAS Time Format Conversion Library775216
+Node: Device-driver Libraries778440
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

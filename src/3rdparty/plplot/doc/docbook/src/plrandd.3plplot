@@ -1,0 +1,20 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLRANDD 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplrandd\fP - Random number generator returning a real random number in the range [0,1]
+.SH SYNOPSIS
+\fBplrandd\fP()
+.SH DESCRIPTION
+
+.P
+Random number generator returning a real random number in the range [0,1]. The generator is based on the Mersenne Twister. Most languages / compilers provide their own random number generator, and so this is provided purely for convenience and to give a consistent random number generator across all languages supported by PLplot. This is particularly useful for comparing results from the test suite of examples.
+.P
+Redacted form: \fBplrandd()\fP
+.P
+This function is used in examples 17 and 21.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

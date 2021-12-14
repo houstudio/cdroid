@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSDRAWMODE 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsdrawmode\fP - Set drawing mode (depends on device support!)
+.SH SYNOPSIS
+\fBplsdrawmode\fP(mode)
+.SH DESCRIPTION
+
+.P
+Set drawing mode.  Note only one device driver (cairo) currently supports this at the moment.  See also \fBplgdrawmode\fP(3plplot).
+.P
+Redacted form: \fBplsdrawmode(mode)\fP
+.P
+This function is used in example 34.
+.SH ARGUMENTS
+.TP
+\fImode\fP (\fBPLINT\fP(3plplot), input)
+Control variable which species the drawing mode (one of PL_DRAWMODE_DEFAULT, PL_DRAWMODE_REPLACE, or PL_DRAWMODE_XOR) to use.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

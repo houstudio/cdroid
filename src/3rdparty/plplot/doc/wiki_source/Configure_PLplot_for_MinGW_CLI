@@ -1,0 +1,57 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+You need a working MinGW installation. Start the command line interface (NOT MSYS - see below) and issue the following commands:
+
+`cd plplot`
+`mkdir buildmingw`
+`cd buildmingw`
+`cmake -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=install ..`
+`mingw32-make`
+`mingw32-make install`
+
+For a shared plplot build you need to have the dll directory in the build tree (i.e. the buildmingw\\dll folder) in your system path. This will also enable you to run the build tree examples (see below) without having to copy all the dlls.
+
+This will build a shared plplot library and install all files into the directory <tt>plplot\\buildmingw\\install</tt>. The following options are available for cmake:
+
+-   <tt>-DBUILD_SHARED_LIBS=OFF</tt>: static build of plplot
+-   <tt>-DCMAKE_VERBOSE_MAKEFILE=ON</tt>: makefiles provide verbose informations
+-   <tt>-DBUILD_TEST=ON</tt>: all examples will be built also (for test purposes)
+-   [Configuration of wxWidgets driver](Configuration_of_wxWidgets_driver "wikilink")
+
+If you used the <tt>-DBUILD_TEST=ON</tt> option, you need to copy some files in order to run the examples:
+
+`cd examples\c`
+`copy ..\..\..\data\*.fnt .`
+
+and additionally some dlls for a shared plplot built:
+
+`copy ..\..\src\libplplotd.dll .`
+`copy "..\..\bindings\c++\libplplotcxxd.dll" . (for c++ examples)`
+`copy ..\..\lib\csa\libcsirocsa.dll . (if library as built)`
+
+and for the wxWidgets driver (if wxWidgets library is shared):
+
+`copy %WXWIN%\lib\gcc_dll\wxmsw26d_gcc_custom.dll .`
+
+if this dll is not in the path.
+
+Note on MSYS:
+
+The MSYS command window (rxvt) is somewhat awkward to use with an interactive program. It buffers the output, so that the question what device you want (as printed by plinit()) appears only after you have given an answer. The net effect is that the program appears to hang. It is easier to use an ordinary DOS-box.
+
+Note on Python:
+
+You need to either add the install tree directory plplot\\lib\\site-packages to your PYTHONPATH or copy the contents of that directory to your PythonX.Y\\Lib\\site-packages directory. You may also need to rename _plplotcmodule.dll to _plplotc.pyd, plplot_pyqt4.dll to plplot_pyqt4.pyd and plplot_widgetmodule.dll to plplot_widgetmodule.pyd
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

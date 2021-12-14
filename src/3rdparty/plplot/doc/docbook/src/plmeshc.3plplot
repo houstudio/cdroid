@@ -1,0 +1,52 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLMESHC 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplmeshc\fP - Magnitude colored plot surface mesh with contour
+.SH SYNOPSIS
+\fBplmeshc\fP(\fIx\fP, \fIy\fP, \fIz\fP, \fInx\fP, \fIny\fP, \fIopt\fP, \fIclevel\fP, \fInlevel\fP)
+.SH DESCRIPTION
+
+.P
+A more powerful form of \fB\fBplmesh\fP(3plplot)\fP: the surface mesh can be colored accordingly to the current z value being plotted, a contour plot can be drawn at the base XY plane, and a curtain can be drawn between the plotted function border and the base XY plane.
+.P
+Redacted form: \fBplmeshc(x, y, z, opt, clevel)\fP
+.P
+This function is used in example 11.
+.SH ARGUMENTS
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates at which the function is evaluated.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates at which the function is evaluated.
+.TP
+\fIz\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing function values to plot.  Should have dimensions of \fInx\fP by \fIny\fP.
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIx\fP values at which function is evaluated.
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIy\fP values at which function is evaluated.
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+Determines the way in which the surface is represented. To specify more than one option just add the options, e.g. DRAW_LINEXY + MAG_COLOR \fIopt\fP=DRAW_LINEX : Lines are drawn showing \fIz\fP as a function of \fIx\fP for each value of \fIy\fP[j] .
+\fIopt\fP=DRAW_LINEY : Lines are drawn showing \fIz\fP as a function of \fIy\fP for each value of \fIx\fP[i] .
+\fIopt\fP=DRAW_LINEXY : Network of lines is drawn connecting points at which function is defined.
+\fIopt\fP=MAG_COLOR : Each line in the mesh is colored according to the z value being plotted. The color is used from the current cmap1.
+\fIopt\fP=BASE_CONT : A contour plot is drawn at the base XY plane using parameters \fInlevel\fP and \fIclevel\fP.
+\fIopt\fP=DRAW_SIDES : draws a curtain between the base XY plane and the borders of the plotted function.
+
+.TP
+\fIclevel\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the contour levels.
+.TP
+\fInlevel\fP (\fBPLINT\fP(3plplot), input)
+Number of elements in the clevel vector.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

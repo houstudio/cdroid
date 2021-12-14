@@ -1,0 +1,107 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>The Bindings</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="ada.html" title="Chapter 8. Ada Language"><link rel="prev" href="ada_overview.html" title="Overview"><link rel="next" href="ada_examples.html" title="The Examples"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">The Bindings</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ada_overview.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Ada Language</th><td width="20%" align="right"> <a accesskey="n" href="ada_examples.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="ada_bindings"></a>The Bindings</h2></div></div></div><p>The bindings are a re-expression and extension of the C-language API
+    and as such are a kind of abstract layer between the user's code and the
+    PLplot binary library. Additionally, there are a few capabilities not in
+    the official API but nonetheless which are available to the C programmer
+    which are included in the bindings and thus are directly available to the
+    Ada programmer.</p><p>The thin binding is a layer between the thick bindings and the
+    underlying C code. It is mainly a programming convenience for the
+    developer of the bindings; this is a common implementation for foreign
+    language bindings and for the most part, the user can ignore it.</p><p>There are two thick bindings provided for the convenience of the
+    user. Either may be used and they both provide exactly the same
+    functionality. The thick bindings are the user's main concern with
+    programming for PLplot.</p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_thin"></a>Thin Binding</h3></div></div></div><p>The thin binding, in the files <code class="literal">plplotthin.ads</code>
+      and <code class="literal">plplotthin.adb</code>, is mostly a direct and obvious
+      mapping of the C application programming interface (API) to Ada. Thus,
+      for example, where a C program such as <code class="literal">plcol0</code>
+      requires a single integer argument, there is a corresponding Ada program
+      also called <code class="literal">plcol0</code> which also requires a single
+      integer argument. (<code class="literal">plcol0</code> happens to set the drawing
+      color using a number which is associated with a set of colors.) Various
+      constants from the C API are also included here. Numeric types as
+      defined in PLplot are associated with numeric types in Ada in the thin
+      binding by use of Ada's type system. Thus, the thin binding refers to
+      the PLplot-centric type <code class="literal">PLFLT</code> for floating-point
+      types while the thick binding uses the usual Ada type
+      <code class="literal">Long_Float</code>.</p><p>Many of the comments from the C source header file (similar in
+      purpose to an Ada specification file) have been retained in the thin
+      binding, even when they are no longer make sense. These might be pruned at
+      some point to facilitate reading the Ada source.</p><p>Also included in the thin binding are some other declarations
+      which help the Ada binding to mesh well with C by emulating certain data
+      structures which are needed in some rather specialized usages as well as
+      providing certain subprogram pointer types.</p><p>The Ada programmer working with either of the thick bindings will
+      have to refer to the thin binding relatively rarely, if ever, and mainly
+      to examine the subroutine pointer declarations and the several variant
+      record types which are used mostly for contour and three-dimensional
+      plots. However, some of these have been <code class="literal">subtype</code>-ed or
+      <code class="literal">renames</code>-ed in the thick bindings so even less
+      reference to the thin binding will be necessary. The goal is to put
+      everything of interest to the user in the thick bindings and the user
+      need not bother with the thin binding.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_thick"></a>The Thick Bindings</h3></div></div></div><p>The thick bindings provide most of the information that the Ada
+      programmer needs. Normally, only one of the two thick bindings would be
+      used per user program but it should be possible to include both but that
+      scenario would be unusual.</p><p>There are three main aspects of the thick bindings: providing an
+      alternative access to the PLplot API, extending the PLplot functionality
+      with some easy-to-use features, and overlaying Ada data structures and
+      types.</p><p>In the first aspect, the thick bindings provide a fully Ada
+      interface to the entire PLplot library. Packages are
+      <code class="literal">with</code>-ed and <code class="literal">use</code>-d as normal Ada
+      code. Ada arrays can be passed as usual, not requiring the array length
+      or start or end indices to be passed separately. All necessary Ada types
+      are made to match the underlying C types exactly.</p><p>The second aspect of the thick bindings is to provide some
+      simplified ways to get a lot of plotting done with only one or two
+      subroutine calls. For example, a single call to Simple_Plot can display
+      from one to five "<span class="emphasis"><em>y</em></span>'s" as a function of a single
+      "<span class="emphasis"><em>x</em></span>" with default plot appearances chosen to suit
+      many situations. Other simple plotters are available for
+      three-dimensional and contour plots. Manipulating PLplot's colors is
+      similarly made easy and some default color schemes are provided.</p><p>The third main aspect of the thick binding is to use Ada data
+      structures and Ada's type system extensively to reduce the chances of
+      inappropriate actions. For example, Ada arrays are used throughout (as
+      opposed to C's
+      pointer-plus-offset-while-carrying-along-the-size-separately approach).
+      Quantities which have natural range limits are
+      <code class="literal">subtype</code>-d to reflect those constraints. The hope is
+      that program errors will result in more-familiar Ada compilation or
+      run-time errors rather than error reports from the PLplot library or no
+      reports at all. However, there remain a few instances where the typing
+      could be improved and PLplot errors will still be reported from time to
+      time.</p><p>Both the specification and body for the standard thick (and thin)
+      binding contain the C subroutine name as a comment line immediately
+      above the Ada procedure declaration; this should help in making the
+      associations between "Ada" names and "PLplot" names. Also, the
+      subroutine-specific comments from the C API have been retained
+      verbatim.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_thick_enhanced"></a>Standard Thick Binding Using Enhanced Names</h3></div></div></div><p>The distinguishing feature of this thick binding (the "standard"
+      binding) is to provide more descriptive names for PLplot subroutines,
+      variables, constants, arguments, and other objects. Most Ada programmers
+      will be more comfortable using these names. For example, in the C API as
+      well as the thin Ada binding and the other thick Ada binding, the
+      procedure <code class="literal">plcol0(1)</code> sets the drawing color to red. In
+      the standard thick binding, the same thing is accomplished by writing
+      <code class="literal">Set_Pen_Color(Red)</code>. The Ada program may just as well
+      write <code class="literal">Set_Pen_Color(1)</code> since the binding merely sets
+      a constant <code class="literal">Red</code> to be equal to the integer
+      <code class="literal">1</code>. Many such numeric constants from the C API are
+      given names in this thick binding. These renamed integers are discussed
+      more fully in Section 7.2.</p><p>The disadvantage of this renaming is that it makes referring to
+      the PLplot documentation somewhat awkward. There might be, at some time,
+      a utility for easing this problem by providing an HTML file with links
+      so that a "normal" PLplot name can be linked to the "Ada" name along
+      with the appropriate entry in the Ada specification, as well as another
+      HTML file with links from the "Ada" name directly to the PLplot web page
+      that documents that name. It might also be possible to provide an
+      alternate version of the documentation with the enhanced names used.
+      (The developer of the bindings has a sed file prepared which makes most
+      of the subroutine-name substitutions.) However, this thick binding
+      retains the original C subprogram names as comments immediately above
+      the function or procedure name in the code listing so it is relatively
+      easy to locate the relevant item in the PLplot documentation.</p><p>One simple rule applies in reading the PLplot API documentation:
+      the argument names are in the same order in Ada as in the PLplot
+      documentation (the names are different) except that all array lengths
+      are eliminated. The PLplot documentation, for each subroutine, shows a
+      "redacted" version which should be correct for Ada as well as other
+      languages which have proper arrays.</p><p>The standard bindings are in the Ada files
+      <code class="literal">plplot.ads</code> and <code class="literal">plplot.adb</code>.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_thick_traditional"></a>Thick Binding Using Traditional Names</h3></div></div></div><p>This thick binding provides exactly the same functionality as the
+      standard thick binding but retains the original names as used in the C
+      code and the PLplot documentation.</p><p>The traditional bindings are in the Ada files
+      <code class="literal">plplot_traditional.ads</code> and
+      <code class="literal">plplot_traditional.adb</code>.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ada_overview.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="ada.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ada_examples.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Overview </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> The Examples</td></tr></table></div></body></html>

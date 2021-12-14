@@ -1,0 +1,56 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+This page presents an overview of the status of plplot/CBS on OS-X 10.4/PowerPC.
+
+Status per 17 November 2007, Hazen Babcock (Darwin Kernel Version 8.7.0)
+
+Library options: | Known to Work
+---|---
+Static libraries | untested
+Shared libraries (dylib) | Yes
+
+Languages: | Known to Work
+---|---
+C (powerpc-apple-darwin8-gcc-4.0.1) | Yes
+C++ (powerpc-apple-darwin8-g++-4.0.1) | Yes
+F77 (GNU Fortran (GCC) 3.4.4) | Yes (3)
+F95 (GNU Fortran 95 (GCC) 4.3) | Yes (5)
+Java (java version "1.5.0_06") | Yes
+Octave (Octave, version 2.1.73) | No (1)
+Perl (perl, v5.8.6) | Yes
+Python (Python 2.5, OS-X Framework) | Yes
+Tcl (8.4.10, TclTkAqua) | Yes
+Tk (8.4.10, TclTkAqua) | Yes
+
+Drivers: | Known to Work
+---|---
+AquaTerm (aqt) | Yes
+GD (png, jpeg, gif) | Yes
+PBM (pbm) | Yes
+PostScript (ps, psc) | Yes
+TrueType Postscript (psttf, psttfc) | Should Work... (2)
+X11 (xwin) | Yes
+Cairo (xcairo, ...) | Yes
+wxWidgets | Yes (4)
+
+(1) This used to work but does not currently. Work is in progress to bring Octave back to a working state.
+
+(2) This should work if you can get LASi and all of its dependencies installed correctly. A package manager such as Fink is probably the best way to go.
+
+(3) Both Fortran bindings, f77 and f95, don't work on Mac OS X 10.5.
+
+(4) Test on Mac OS X 10.5.1 (where wxWidgets 2.8.4 is preinstalled).
+
+(5) One user had difficulties with version 4.2.1 (error messages from libtool) and succeeded with version 4.3 (from MacResearch). As version 4.2.1 is rather old, we recommend this newer version.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

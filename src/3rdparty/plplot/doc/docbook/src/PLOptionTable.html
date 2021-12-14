@@ -1,0 +1,45 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>PLOptionTable: PLplot command line options table structure</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot"><link rel="prev" href="PLGraphicsIn.html" title="PLGraphicsIn: PLplot Graphics Input structure"><link rel="next" href="API-FORTRAN.html" title="Chapter 19. The Specialized Fortran API for PLplot"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center"><span class="structname">PLOptionTable</span>: PLplot command line options table structure</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="PLGraphicsIn.html">Prev</a> </td><th width="60%" align="center">Chapter 18. The Specialized C/C++ API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="API-FORTRAN.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="PLOptionTable"></a><span class="structname">PLOptionTable</span>: PLplot command line options table structure</h4></div></div></div><p>
+      The <span class="structname">PLOptionTable</span> structure is used by
+      <a class="link" href="plMergeOpts.html" title="plMergeOpts: Merge use option table into internal info structure"><code class="function">plMergeOpts</code></a> to pass information on user-defined command line
+      options to PLplot. The structure contains the following fields:
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="structfield"><code>opt</code></em>
+	  (<code class="literal">PLCHAR_VECTOR</code>)
+	</span></dt><dd><p>
+	    Name of option.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>handler</code></em>
+	  (<code class="literal">int (*func) (PLCHAR_VECTOR, PLCHAR_VECTOR, PLPointer)</code>)
+	</span></dt><dd><p>
+	    User-defined handler function to be called when option is set. A
+	    NULL value indicates that no user-defined handler is required.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>client_data</code></em>
+	  (<code class="literal">PLPointer</code>)
+	</span></dt><dd><p>
+	    A pointer to client data. A
+	    NULL value indicates that no client data is required.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>var</code></em>
+	  (<code class="literal">PLPointer</code>)
+	</span></dt><dd><p>
+	    A pointer to a variable to be set to the value specified on the
+	    command-line option.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>mode</code></em>
+	  (<code class="literal">long</code>)
+	</span></dt><dd><p>
+	    Type of variable <em class="parameter"><code>var</code></em>. Allowed values
+	    are PL_OPT_FUNC, PL_OPT_BOOL, PL_OPT_INT, PL_OPT_FLOAT,
+	    PL_OPT_STRING.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>syntax</code></em>
+	  (<code class="literal">PLCHAR_VECTOR</code>)
+	</span></dt><dd><p>
+	    Syntax for option (used in the usage message).
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>desc</code></em>
+	  (<code class="literal">PLCHAR_VECTOR</code>)
+	</span></dt><dd><p>
+	    Description of the option (used in the usage message).
+	  </p></dd></dl></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="PLGraphicsIn.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-C.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="API-FORTRAN.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top"><span class="structname">PLGraphicsIn</span>: PLplot Graphics Input structure </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 19. The Specialized Fortran API for PLplot</td></tr></table></div></body></html>

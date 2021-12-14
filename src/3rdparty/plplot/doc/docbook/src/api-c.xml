@@ -1,0 +1,1569 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    api-c.xml: "The Specialized C API for PLplot" chapter
+
+Copyright (C) 1994 Geoffrey Furnish and Maurice LeBrun
+Copyright (C) 1999-2017 Alan W. Irwin
+Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Rafael Laboissiere
+Copyright (C) 2003 Joao Cardoso
+Copyright (C) 2008 Andrew Ross
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<chapter id="API-C">
+  <title>The Specialized C/C++ API for PLplot</title>
+
+  <para>
+    The purpose of this chapter is to document the PLplot C/C++
+    functions and associated structures that are only used for those
+    languages and which should not be propagated to our other language
+    bindings.
+  </para>
+
+  <sect1 id="plabort" renderas="sect3">
+    <title>
+      <function>plabort</function>: Error abort
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plabort</function>
+	  </funcdef>
+	  <paramdef><parameter>message</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      This routine is to be used when something goes wrong that doesn't
+      require calling &plexit; but for which there is no useful recovery.
+      It calls the abort handler defined via &plsabort;, does some cleanup
+      and returns. The user can supply his/her own abort handler and pass it
+      in via &plsabort;.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>message</parameter>
+	  (<literal>&PLCHAR_VECTOR;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Abort message.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plAlloc2dGrid" renderas="sect3">
+    <title>
+      <function>plAlloc2dGrid</function>: Allocate a block of memory
+    for use as a matrix of type PLFLT_MATRIX
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plAlloc2dGrid</function>
+	  </funcdef>
+	  <paramdef><parameter>f</parameter></paramdef>
+	  <paramdef><parameter>nx</parameter></paramdef>
+	  <paramdef><parameter>ny</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Allocates the memory for a matrix of type PLFLT_MATRIX (organized as an <ulink
+      url="https://en.wikipedia.org/wiki/Iliffe_vector">Iliffe column
+      vector</ulink> of pointers to row vectors).  As a result the matrix
+      can be accessed using C/C++ syntax like <literal>*f[i][j]</literal>. The
+      memory associated with this matrix must be freed by calling
+      &plFree2dGrid; once it is no longer required.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>f</parameter>
+	  (<literal>&PLFLT_NC_MATRIX; *</literal>, output)
+	</term>
+	<listitem>
+	  <para>If the allocation is a success, a pointer to a matrix
+	  (organized as an <ulink
+	  url="https://en.wikipedia.org/wiki/Iliffe_vector">Iliffe column
+	  vector</ulink> of pointers to row vectors) is returned.  If the
+	  allocation is a failure, then the returned value of
+	  <literal>f</literal> will be NULL.</para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>nx, ny</parameter>
+	  (<literal>&PLINT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	  Dimensions of matrix to be allocated.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is used in our C (and C++) examples 8, 9, 11, 14, 16, 20, 21, 22, 28, 30.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plClearOpts" renderas="sect3">
+    <title>
+      <function>plClearOpts</function>: Clear internal option table info
+      structure
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plClearOpts</function>
+	  </funcdef>
+	  <paramdef></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Clear the internal options table info structure. This removes any
+      option added with &plMergeOpts; as well as all default entries.
+    </para>
+
+    <para>
+      This function returns 0 on success.
+    </para>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plexit" renderas="sect3">
+    <title>
+      <function>plexit</function>: Error exit
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plexit</function>
+	  </funcdef>
+	  <paramdef><parameter>message</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      This routine is called in case an error is encountered during
+      execution of a PLplot routine.  It prints the error message, tries to
+      release allocated resources, calls the handler provided by &plsexit;
+      and then exits.  If cleanup needs to be done in the driver program
+      then the user may want to supply his/her own exit handler and pass it
+      in via &plsexit;.  This function should either call &plend; before
+      exiting, or simply return.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>message</parameter>
+	  (<literal>&PLCHAR_VECTOR;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Error message.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plFree2dGrid" renderas="sect3">
+    <title>
+        <function>plFree2dGrid</function>: Free the memory associated
+	with a PLFLT matrix allocated using &plAlloc2dGrid;
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plFree2dGrid</function>
+	  </funcdef>
+	  <paramdef><parameter>f</parameter></paramdef>
+	  <paramdef><parameter>nx</parameter></paramdef>
+	  <paramdef><parameter>ny</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+    Frees a block of memory allocated using &plAlloc2dGrid;.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>f</parameter>
+	  (<literal>&PLFLT_NC_MATRIX;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    A matrix to be freed after allocation by &plAlloc2dGrid; and all use
+	    of the matrix has been completed.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>nx, ny</parameter>
+	  (<literal>&PLINT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	  Dimensions of the matrix to be freed.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is used in C examples 8, 9, 11, 14, 16, 20, 21, 22, 28, 30.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plfsurf3d" renderas="sect3">
+    <title>
+      <function>plfsurf3d</function>: Plot shaded 3-d surface plot
+    </title>
+
+    <para>
+      <funcsynopsis>
+        <funcprototype>
+          <funcdef>
+            <function>plfsurf3d</function>
+          </funcdef>
+          <paramdef>
+            <parameter>x</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>y</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>zops</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>zp</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>nx</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>ny</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>opt</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>clevel</parameter>
+          </paramdef>
+          <paramdef>
+            <parameter>nlevel</parameter>
+          </paramdef>
+        </funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Plots a three-dimensional shaded surface plot within the
+      environment set up by &plw3d;. The surface is defined by the
+      two-dimensional function data accessed via the
+      <literal><parameter>zp</parameter></literal> generic pointer argument.
+      How the data in <literal><parameter>zp</parameter></literal> is
+      formatted is determined by the
+      <literal><parameter>zops</parameter></literal> pointer to a struct
+      containing the "get" function that reads that data. The following
+      functions in PLplot core will return an appropriate function pointer:
+      <literal>plf2ops_c()</literal> should be used when
+      <literal><parameter>zp</parameter></literal> is of type
+      <literal>PLFLT_MATRIX</literal> and
+      <literal>plf2ops_grid_c()</literal>,
+      <literal>plf2ops_grid_row_major()</literal>, and
+      <literal>plf2ops_grid_col_major()</literal> should be used when the
+      matrix of two-dimensional function data are organized within a
+      <literal>PLfGrid2</literal> structure as respectively two-dimensional
+      row-major data, one-dimensional row-major data, and one-dimensional
+      column-major data.  The <literal><parameter>nx</parameter></literal>,
+      <literal><parameter>ny</parameter></literal>
+      <literal><parameter>opt</parameter></literal>
+      <literal><parameter>clevel</parameter></literal> and
+      <literal><parameter>nlevel</parameter></literal> parameters are used
+      in the same way as &plsurf3d;.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+        <term>
+          <parameter>x</parameter>
+          (<literal>&PLFLT_VECTOR;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            A vector containing the x coordinates at which the function is
+            evaluated.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>y</parameter>
+          (<literal>&PLFLT_VECTOR;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            A vector containing the y coordinates at which the function is
+            evaluated.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>zops</parameter>
+          (<literal>&PLF2OPS;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Pointer to a <parameter>plf2ops_t</parameter> struct that
+	    contains (amongst other function pointers) a pointer to a "get"
+	    function that is used to evaluate the 2D function data required by
+	    plfsurf3d.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>zp</parameter>
+          (<literal>&PLPointer;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Pointer to the two-dimensional function data in
+	    the format required by the "get" function that is (indirectly) pointed
+	    to by <parameter>zops</parameter>.  The various possibilities have
+	    been discussed above, and examples of such use are given in
+	    <filename>examples/c/x08c.c</filename>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>nx</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Number of <literal>
+              <parameter>x</parameter>
+            </literal> values at
+            which function is evaluated.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>ny</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Number of <literal>
+              <parameter>y</parameter>
+            </literal> values at
+            which function is evaluated.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>opt</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Determines the way in which the surface is represented. To specify
+            more than one option just add the options, e.g. FACETED + SURF_CONT
+            <itemizedlist>
+              <listitem>
+                <para>
+                  <literal>
+                    <parameter>opt</parameter>=FACETED
+                  </literal>: Network
+                  of lines is drawn connecting points at which function is
+                  defined.
+                </para>
+              </listitem>
+              <listitem>
+                <para>
+                  <literal>
+                    <parameter>opt</parameter>=BASE_CONT
+                  </literal>: A contour
+                  plot is drawn at the base XY plane using parameters
+                  <parameter>nlevel</parameter> and <parameter>clevel</parameter>.
+                </para>
+              </listitem>
+              <listitem>
+                <para>
+                  <literal>
+                    <parameter>opt</parameter>=SURF_CONT
+                  </literal>: A contour
+                  plot is drawn at the surface plane using parameters
+                  <parameter>nlevel</parameter> and <parameter>clevel</parameter>.
+                </para>
+              </listitem>
+              <listitem>
+                <para>
+                  <literal>
+                    <parameter>opt</parameter>=DRAW_SIDES
+                  </literal>: draws a curtain
+                  between the base XY plane and the borders of the plotted function.
+                </para>
+              </listitem>
+              <listitem>
+                <para>
+                  <literal>
+                    <parameter>opt</parameter>=MAG_COLOR
+                  </literal>:
+                  the surface is colored according to the value of Z; if
+                  <literal>MAG_COLOR</literal> is not used, then
+                  the surface is colored according to the intensity of the
+                  reflected light in the surface from a light source whose
+                  position is set using &pllightsource;.
+                </para>
+              </listitem>
+            </itemizedlist>
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <parameter>clevel</parameter>
+          (<literal>&PLFLT_VECTOR;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            A vector containing the contour levels.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <parameter>nlevel</parameter>
+          (<literal>&PLINT;</literal>, input)
+        </term>
+        <listitem>
+          <para>
+            Number of elements in the <literal>clevel</literal> vector.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is optionally used in C example 8.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plgfile" renderas="sect3">
+    <title>
+      <function>plgfile</function>: Get output file handle
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plgfile</function>
+	  </funcdef>
+	  <paramdef><parameter>file</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Gets the current output file handle, if applicable.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>file</parameter>
+	  (<literal>FILE **</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    File pointer to current output file.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plMergeOpts" renderas="sect3">
+    <title>
+      <function>plMergeOpts</function>: Merge use option table into
+      internal info structure
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>PLINT
+	    <function>plMergeOpts</function>
+	  </funcdef>
+	  <paramdef><parameter>options</parameter></paramdef>
+	  <paramdef><parameter>name</parameter></paramdef>
+	  <paramdef><parameter>notes</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Merges in a set of user-supplied command line options with the
+      internal options table. This allows such options to be used along
+      with the built-in PLplot options to set device driver, output file
+      etc. See &plparseopts; for details of how to parse these options in
+      a program.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>options</parameter>
+	  (<literal>PLOptionTable *</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    User option table to merge.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>name</parameter>
+	  (<literal>&PLCHAR_VECTOR;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	  Label to preface the options in the program help.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>notes</parameter>
+	  (<literal>&PLCHAR_VECTOR; *</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    A vector of character strings which appear after
+	    the options in the program help.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is used in C examples 1, 8, 16, 20 and 21.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plMinMax2dGrid" renderas="sect3">
+    <title>
+      <function>plMinMax2dGrid</function>: Find the minimum and
+    maximum of a PLFLT matrix of type PLFLT_MATRIX allocated using &plAlloc2dGrid;
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plMinMax2dGrid</function>
+	  </funcdef>
+	  <paramdef><parameter>f</parameter></paramdef>
+	  <paramdef><parameter>nx</parameter></paramdef>
+	  <paramdef><parameter>ny</parameter></paramdef>
+	  <paramdef><parameter>fmax</parameter></paramdef>
+	  <paramdef><parameter>fmin</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+    Find the minimum and maximum of a PLFLT matrix of type
+    PLFLT_MATRIX allocated using &plAlloc2dGrid;.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>f</parameter>
+	  (<literal>&PLFLT_MATRIX;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    A matrix to find the maximum / minimum of.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>nx, ny</parameter>
+	  (<literal>&PLINT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	  Dimensions of <literal>f</literal>.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>fmax, fmin</parameter>
+	  (<literal>&PLFLT_NC_SCALAR;</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	  Returned maximum and minimum values of the matrix
+	  <literal>f</literal>.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is used in C examples 8, 11, 20 and 21.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plOptUsage" renderas="sect3">
+    <title>
+      <function>plOptUsage</function>: Print usage and syntax message
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plOptUsage</function>
+	  </funcdef>
+	  <paramdef></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Prints the usage and syntax message. The message can also be
+      displayed using the -h command line option. There is a default
+      message describing the default PLplot options. The usage
+      message is also modified by &plSetUsage; and &plMergeOpts;.
+    </para>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plResetOpts" renderas="sect3">
+    <title>
+      <function>plResetOpts</function>: Reset internal option table
+      info structure
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plResetOpts</function>
+	  </funcdef>
+	  <paramdef></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Resets the internal command line options table to the default
+      built in value. Any user options added with &plMergeOpts; will be
+      cleared. See &plparseopts; for details of how to parse these
+      options in a program.
+    </para>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plsabort" renderas="sect3">
+    <title>
+      <function>plsabort</function>: Set abort handler
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plsabort</function>
+	  </funcdef>
+	  <paramdef><parameter>handler</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Sets an optional user abort handler.  See &plabort; for details.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>handler</parameter>
+	  (<literal>void (*) (&PLCHAR_VECTOR;)</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Error abort handler.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plSetUsage" renderas="sect3">
+    <title>
+      <function>plSetUsage</function>: Set the ascii character strings used in usage
+      and syntax messages
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plSetUsage</function>
+	  </funcdef>
+	  <paramdef><parameter>program_string</parameter></paramdef>
+	  <paramdef><parameter>usage_string</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Sets the program string and usage string displayed by the command
+      line help option (-h) and by &plOptUsage;.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>program_string</parameter>
+	  (<literal>&PLCHAR_VECTOR;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    An ascii character string to appear as the name of program.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>usage_string</parameter>
+	  (<literal>&PLCHAR_VECTOR;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	  An ascii character string to appear as the usage text.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plsexit" renderas="sect3">
+    <title>
+      <function>plsexit</function>: Set exit handler
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plsexit</function>
+	  </funcdef>
+	  <paramdef><parameter>handler</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Sets an optional user exit handler.  See &plexit; for details.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>handler</parameter>
+	  (<literal>int (*) (PLCHAR_VECTOR)</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Error exit handler.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plsfile" renderas="sect3">
+    <title>
+      <function>plsfile</function>: Set output file handle
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plsfile</function>
+	  </funcdef>
+	  <paramdef><parameter>file</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Sets the current output file handle, if applicable.  If the file has
+      has not been previously opened and is required by the driver, the
+      user will be prompted for the file name.  This routine, if used, must
+      be called before initializing PLplot.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>file</parameter>
+	  (<literal>FILE *</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    File pointer. The type (i.e. text or binary) doesn't matter
+	    on *ix systems. On systems where it might matter it should
+	    match the type of file that the output driver would produce,
+	    i.e. text for the postscript driver.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plStatic2dGrid" renderas="sect3">
+    <title>
+      <function>plStatic2dGrid</function>: Determine the Iliffe column vector of pointers to PLFLT row
+      vectors corresponding to a 2D matrix of PLFLT's that is statically allocated
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>plStatic2dGrid</function>
+	  </funcdef>
+	  <paramdef><parameter>zIliffe</parameter></paramdef>
+	  <paramdef><parameter>zStatic</parameter></paramdef>
+	  <paramdef><parameter>nx</parameter></paramdef>
+	  <paramdef><parameter>ny</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Determine the <ulink
+      url="https://en.wikipedia.org/wiki/Iliffe_vector">Iliffe column
+      vector</ulink> of pointers to PLFLT row
+      vectors corresponding to a 2D matrix of PLFLT's that is statically allocated.
+      As a result the Iliffe column vector
+      can be accessed using C/C++ syntax like <literal>*zIliffe[i][j]</literal>.  However,
+      the primary purpose of this routine is to convert 2D plot data stored in statically allocated
+      arrays to Iliffe column vector form which is suitable to be the 2D matrix arguments of
+      the C and C++ versions of &plcont;, &plshade;, &plshades;, &plimage;, &plvect;, etc.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>zIliffe</parameter>
+	  (<literal>&PLFLT_NC_MATRIX;</literal>, output)
+	</term>
+	<listitem>
+	  <para>The pre-existing column vector of pointers which is filled in by this routine
+	  so that on return, <literal>zIliffe</literal> is a <ulink
+	  url="https://en.wikipedia.org/wiki/Iliffe_vector">Iliffe column
+	  vector</ulink> of pointers to the row vectors of <literal>zStatic</literal>.</para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>zStatic</parameter>
+	  (<literal>&PLFLT_VECTOR;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Pointer to the first element of a statically allocated 2D matrix.  This pointer is
+	    used to find the locations of the row vectors of this matrix which are used to determine
+	    <literal>zIliffe</literal>.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>nx, ny</parameter>
+	  (<literal>&PLINT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	  Dimensions of the statically allocated 2D matrix, <literal>zStatic</literal>.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is used in our example 15.
+    </para>
+
+  </sect1>
+
+  <sect1 id="pltr0" renderas="sect3">
+    <title>
+      <function>pltr0</function>: Identity transformation for matrix index to world
+      coordinate mapping
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>pltr0</function>
+	  </funcdef>
+	  <paramdef><parameter>x</parameter></paramdef>
+	  <paramdef><parameter>y</parameter></paramdef>
+	  <paramdef><parameter>tx</parameter></paramdef>
+	  <paramdef><parameter>ty</parameter></paramdef>
+	  <paramdef><parameter>pltr_data</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>Identity transformation for matrix index to world coordinate mapping.  This routine
+    can be used for the &PLTRANSFORM_callback; argument of &plcont;,
+    &plshade;, &plshades;, &plimagefr;, or &plvect;.</para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>x</parameter>
+	  (<literal>&PLFLT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    X index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>y</parameter>
+	  (<literal>&PLFLT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Y index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>tx</parameter>
+	  (<literal>&PLFLT_NC_SCALAR;</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    Transformed x value in world coordinates corresponding to x index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>ty</parameter>
+	  (<literal>&PLFLT_NC_SCALAR;</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    Transformed y value in world coordinates corresponding to y index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>pltr_data</parameter>
+	  (<literal>&PLPointer;</literal>, input)
+	</term>
+	<listitem>
+	  <para>A pointer to additional data that is passed as an
+	  argument to PLplot routines that potentially could use the &pltr0;
+	  callback (i.e., &plcont;, &plimagefr;, &plshade;,
+	  &plshades;, and &plvect;); which then internally pass that argument on
+	  to this callback.</para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="pltr1" renderas="sect3">
+    <title>
+      <function>pltr1</function>: Linear interpolation for matrix index to world
+      coordinate mapping using singly dimensioned coordinate arrays
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>pltr1</function>
+	  </funcdef>
+	  <paramdef><parameter>x</parameter></paramdef>
+	  <paramdef><parameter>y</parameter></paramdef>
+	  <paramdef><parameter>tx</parameter></paramdef>
+	  <paramdef><parameter>ty</parameter></paramdef>
+	  <paramdef><parameter>pltr_data</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>Linear interpolation for matrix index to world coordinate mapping using
+    one-dimensional <literal>x</literal> and <literal>y</literal>
+    coordinate arrays.  This routine can be used for the
+    &PLTRANSFORM_callback; argument of &plcont;, &plshade;, &plshades;,
+    &plimagefr;, or &plvect;.</para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>x</parameter>
+	  (<literal>&PLFLT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    X index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>y</parameter>
+	  (<literal>&PLFLT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Y index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>tx</parameter>
+	  (<literal>&PLFLT_NC_SCALAR;</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    Transformed x value in world coordinates corresponding to x index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>ty</parameter>
+	  (<literal>&PLFLT_NC_SCALAR;</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    Transformed y value in world coordinates corresponding to y index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>pltr_data</parameter>
+	  (<literal>&PLPointer;</literal>, input)
+	</term>
+	<listitem>
+	  <para>A pointer to additional data that is passed as an
+	  argument to PLplot routines that potentially could use the &pltr1;
+	  callback (i.e., &plcont;, &plimagefr;, &plshade;,
+	  &plshades;, and &plvect;); which then internally pass that argument on
+	  to this callback.</para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is used in C examples 9 and 16.
+    </para>
+
+  </sect1>
+
+  <sect1 id="pltr2" renderas="sect3">
+    <title>
+      <function>pltr2</function>: Linear interpolation for grid to world
+      mapping using doubly dimensioned coordinate arrays (row-major order
+      as per normal C 2d arrays)
+    </title>
+
+    <para>
+      <funcsynopsis>
+	<funcprototype>
+	  <funcdef>
+	    <function>pltr2</function>
+	  </funcdef>
+	  <paramdef><parameter>x</parameter></paramdef>
+	  <paramdef><parameter>y</parameter></paramdef>
+	  <paramdef><parameter>tx</parameter></paramdef>
+	  <paramdef><parameter>ty</parameter></paramdef>
+	  <paramdef><parameter>pltr_data</parameter></paramdef>
+	</funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>Linear interpolation for grid to world mapping using
+    two-dimensional <literal>x</literal> and <literal>y</literal>
+    coordinate arrays.  This routine can be used for the
+    &PLTRANSFORM_callback; argument of &plcont;, &plshade;, &plshades;,
+    &plimagefr;, or &plvect;.</para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <parameter>x</parameter>
+	  (<literal>&PLFLT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    X index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>y</parameter>
+	  (<literal>&PLFLT;</literal>, input)
+	</term>
+	<listitem>
+	  <para>
+	    Y index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>tx</parameter>
+	  (<literal>&PLFLT_NC_SCALAR;</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    Transformed x value in world coordinates corresponding to x index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>ty</parameter>
+	  (<literal>&PLFLT_NC_SCALAR;</literal>, output)
+	</term>
+	<listitem>
+	  <para>
+	    Transformed y value in world coordinates corresponding to y index of matrix.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <parameter>pltr_data</parameter>
+	  (<literal>&PLPointer;</literal>, input)
+	</term>
+	<listitem>
+	  <para>A pointer to additional data that is passed as an
+	  argument to PLplot routines that potentially could use the &pltr2;
+	  callback (i.e., &plcont;, &plimagefr;, &plshade;,
+	  &plshades;, and &plvect;); which then internally pass that argument on
+	  to this callback.</para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is used in C examples 9, 16, 20, and 22.
+    </para>
+
+  </sect1>
+
+  <sect1 id="plTranslateCursor" renderas="sect3">
+    <title>
+      <function>plTranslateCursor</function>: Convert device to world coordinates
+    </title>
+
+    <para>
+      <funcsynopsis>
+        <funcprototype>
+          <funcdef>PLINT
+            <function>plTranslateCursor</function>
+          </funcdef>
+          <paramdef>
+            <parameter>gin</parameter>
+          </paramdef>
+        </funcprototype>
+      </funcsynopsis>
+    </para>
+
+    <para>
+      Convert from device to world coordinates. The variable gin must have
+      members dX and dY set before the call.These represent the coordinates
+      of the point as a fraction of the total drawing area. If the point passed in is
+      on a window then the function returns 1, members wX and wY will be filled with
+      the world coordinates of that point and the subwindow member will be
+      filled with the index of the window on which the point falls. If the point
+      falls on more than one window (because they overlap) then the window
+      with the lowest index is used. If the point does not fall on a window then
+      the function returns 0, wX and wY are set to 0 and subwindow remains
+      unchanged.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+        <term>
+          <parameter>gin</parameter>
+          (<literal>&PLGraphicsIn; *</literal>, input/output)
+        </term>
+        <listitem>
+          <para>
+            Pointer to a &PLGraphicsIn; structure to hold the input and output coordinates.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      This function is not used in any of our C examples.
+    </para>
+
+  </sect1>
+
+  <sect1 id="PLGraphicsIn" renderas="sect3">
+    <title><structname>PLGraphicsIn</structname>: PLplot Graphics Input structure</title>
+
+    <para>
+      The <structname>PLGraphicsIn</structname> structure is used by
+      &plGetCursor; and &plTranslateCursor; to return information
+      on the current cursor position and key / button state.
+      The structure contains the following fields:
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <structfield>type</structfield>
+	  (<literal>int</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Type of event (currently unused?).
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>state</structfield>
+	  (<literal>unsigned int</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Key or button mask. Consists of a combination of the following masks: <literal>PL_MASK_SHIFT,
+	    PL_MASK_CAPS, PL_MASK_CONTROL, PL_MASK_ALT, PL_MASK_NUM PL_MASK_ALTGR,
+	    PL_MASK_WIN, PL_MASK_SCROLL, PL_MASK_BUTTON1, PL_MASK_BUTTON2,
+	    PL_MASK_BUTTON3, PL_MASK_BUTTON4, PL_MASK_BUTTON5</literal>. The button values indicate
+	    mouse buttons. Caps, num and scroll indicate that the appropriate lock is on.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>keysym</structfield>
+	  (<literal>unsigned int</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Key selected.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>button</structfield>
+	  (<literal>unsigned int</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Mouse button selected.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>subwindow</structfield>
+	  (<literal>PLINT</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Subwindow (or subpage / subplot) number.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>string</structfield>
+	  (<literal>char [PL_MAXKEY]</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Translated ascii character string.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>pX, pY</structfield>
+	  (<literal>int</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Absolute device coordinates of mouse pointer.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>dX, dY</structfield>
+	  (<literal>PLFLT</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Relative device coordinates of mouse pointer.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>wX, wY</structfield>
+	  (<literal>PLFLT</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    World coordinates of mouse pointer.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    </sect1>
+
+  <sect1 id="PLOptionTable" renderas="sect3">
+    <title><structname>PLOptionTable</structname>: PLplot command line options table structure</title>
+
+    <para>
+      The <structname>PLOptionTable</structname> structure is used by
+      &plMergeOpts; to pass information on user-defined command line
+      options to PLplot. The structure contains the following fields:
+    </para>
+
+    <variablelist>
+      <varlistentry>
+	<term>
+	  <structfield>opt</structfield>
+	  (<literal>PLCHAR_VECTOR</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Name of option.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>handler</structfield>
+	  (<literal>int (*func) (PLCHAR_VECTOR, PLCHAR_VECTOR, PLPointer)</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    User-defined handler function to be called when option is set. A
+	    NULL value indicates that no user-defined handler is required.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>client_data</structfield>
+	  (<literal>PLPointer</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    A pointer to client data. A
+	    NULL value indicates that no client data is required.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>var</structfield>
+	  (<literal>PLPointer</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    A pointer to a variable to be set to the value specified on the
+	    command-line option.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>mode</structfield>
+	  (<literal>long</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Type of variable <parameter>var</parameter>. Allowed values
+	    are PL_OPT_FUNC, PL_OPT_BOOL, PL_OPT_INT, PL_OPT_FLOAT,
+	    PL_OPT_STRING.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>syntax</structfield>
+	  (<literal>PLCHAR_VECTOR</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Syntax for option (used in the usage message).
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+	  <structfield>desc</structfield>
+	  (<literal>PLCHAR_VECTOR</literal>)
+	</term>
+	<listitem>
+	  <para>
+	    Description of the option (used in the usage message).
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    </sect1>
+
+</chapter>

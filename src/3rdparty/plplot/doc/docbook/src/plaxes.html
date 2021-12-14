@@ -1,0 +1,151 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plaxes: Draw a box with axes, etc. with arbitrary origin</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plarc.html" title="plarc: Draw a circular or elliptical arc"><link rel="next" href="plbin.html" title="plbin: Plot a histogram from binned data"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plaxes</code>: Draw a box with axes, etc. with arbitrary
+      origin
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plarc.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plbin.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plaxes"></a>
+      <code class="function">plaxes</code>: Draw a box with axes, etc. with arbitrary
+      origin
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plaxes</b>
+	  (</code></td><td><var class="pdparam">x0</var>, </td></tr><tr><td> </td><td><var class="pdparam">y0</var>, </td></tr><tr><td> </td><td><var class="pdparam">xopt</var>, </td></tr><tr><td> </td><td><var class="pdparam">xtick</var>, </td></tr><tr><td> </td><td><var class="pdparam">nxsub</var>, </td></tr><tr><td> </td><td><var class="pdparam">yopt</var>, </td></tr><tr><td> </td><td><var class="pdparam">ytick</var>, </td></tr><tr><td> </td><td><var class="pdparam">nysub</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Draws a box around the currently defined viewport with arbitrary
+      world-coordinate origin specified by
+      <code class="literal"><em class="parameter"><code>x0</code></em></code> and
+      <code class="literal"><em class="parameter"><code>y0</code></em></code>
+      and labels it with world coordinate values appropriate to the
+      window.  Thus <a class="link" href="plaxes.html" title="plaxes: Draw a box with axes, etc. with arbitrary origin"><code class="function">plaxes</code></a> should only be called after defining both
+      viewport and window.  The ascii character strings
+      <code class="literal"><em class="parameter"><code>xopt</code></em></code> and
+      <code class="literal"><em class="parameter"><code>yopt</code></em></code> specify how the box
+      should be drawn as described below.  If ticks and/or subticks are to
+      be drawn for a particular axis, the tick intervals and number of
+      subintervals may be specified explicitly, or they may be defaulted by
+    setting the appropriate arguments to zero. </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>x0</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    World X coordinate of origin.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>y0</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    World Y coordinate of origin.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>xopt</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    An ascii character string specifying options for the x
+	    axis.  The string can include any combination of the following
+	    letters (upper or lower case) in any order:
+	    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+		  <code class="literal">a</code>: Draws axis, X-axis is horizontal
+		  line (<code class="literal">y=0</code>), and Y-axis is vertical
+		  line (<code class="literal">x=0</code>).
+		</p></li><li class="listitem"><p>
+		  <code class="literal">b</code>: Draws bottom (X) or left (Y) edge
+		  of frame.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">c</code>: Draws top (X) or right (Y) edge of
+		  frame.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">d</code>: Plot labels as date / time.
+		  Values are assumed to be seconds since the epoch
+		  (as used by gmtime).
+		</p></li><li class="listitem"><p>
+		  <code class="literal">f</code>:  Always use fixed point numeric labels.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">g</code>: Draws a grid at the major tick
+		  interval.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">h</code>: Draws a grid at the minor tick
+		  interval.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">i</code>: Inverts tick marks, so they are
+		  drawn outwards, rather than inwards.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">l</code>: Labels axis logarithmically.  This
+		  only affects the labels, not the data, and so it is
+		  necessary to compute the logarithms of data points before
+		  passing them to any of the drawing routines.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">m</code>: Writes numeric labels at major tick
+		  intervals in the unconventional location (above box for
+		  X, right of box for Y).
+		</p></li><li class="listitem"><p>
+		  <code class="literal">n</code>: Writes numeric labels at major tick
+		  intervals in the conventional location (below box for X,
+		  left of box for Y).
+		</p></li><li class="listitem"><p>
+		  <code class="literal">o</code>: Use custom labelling function to
+		  generate axis label text.  The custom labelling function
+		  can be defined with the <a class="link" href="plslabelfunc.html" title="plslabelfunc: Assign a function to use for generating custom axis labels"><code class="function">plslabelfunc</code></a> command.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">s</code>: Enables subticks between major
+		  ticks, only valid if <code class="literal">t</code> is also
+		  specified.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">t</code>: Draws major ticks.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">u</code>: Exactly like "b" except don't draw edge line.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">w</code>: Exactly like "c" except don't draw edge line.
+		</p></li><li class="listitem"><p>
+		  <code class="literal">x</code>: Exactly like "t" (including the side effect of
+		  the numerical labels for the major ticks) except exclude drawing the
+		  major and minor tick marks.
+		</p></li></ul></div><p>
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>xtick</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    World coordinate interval between major ticks on the x axis.
+	    If it is set to zero, PLplot automatically generates a suitable
+	    tick interval.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nxsub</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of subintervals between major x axis ticks for minor
+	    ticks.  If it is set to zero, PLplot automatically generates a
+	    suitable minor tick interval.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>yopt</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    An ascii character string specifying options for the y
+	    axis.  The string can include any combination of the letters
+	    defined above for
+	    <code class="literal"><em class="parameter"><code>xopt</code></em></code>, and in addition
+	    may contain:
+	    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+		  <code class="literal">v</code>: Write numeric labels for the y
+		  axis parallel to the base of the graph, rather than
+		  parallel to the axis.
+		</p></li></ul></div><p>
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ytick</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+	</span></dt><dd><p>
+	    World coordinate interval between major ticks on the y axis.
+	    If it is set to zero, PLplot automatically generates a suitable
+	    tick interval.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>nysub</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of subintervals between major y axis ticks for minor
+	    ticks.  If it is set to zero, PLplot automatically generates a
+	    suitable minor tick interval.
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plaxes(x0, y0, xopt, xtick, nxsub, yopt, ytick, nysub)</code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is not used in any examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plarc.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plbin.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plarc</code>: Draw a circular or elliptical arc
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plbin</code>: Plot a histogram from binned data
+    </td></tr></table></div></body></html>

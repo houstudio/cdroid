@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGFNAM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgfnam\fP - Get output file name
+.SH SYNOPSIS
+\fBplgfnam\fP(\fIfnam\fP)
+.SH DESCRIPTION
+
+.P
+Gets the current output file name, if applicable.
+.P
+Redacted form: \fBplgfnam(fnam)\fP
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIfnam\fP (\fBPLCHAR_NC_VECTOR\fP(3plplot), output)
+Returned ascii character string (with preallocated length of 80 characters or more) containing the file name.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

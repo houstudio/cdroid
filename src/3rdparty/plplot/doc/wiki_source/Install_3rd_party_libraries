@@ -1,0 +1,186 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+In contrast to Linux, where installing development files for certain 3rd party libraries is only a matter of seconds (depending on the distribution), in Windows much more work needs to be done. In the following we provide extensive instructions how to install 3rd party libraries with the corresponding development files so that the PLplot library can use them.
+
+You actually need none of these libraries to get PLplot compiled - they are only needed for added interpolation choices ([QHull](#QHull_Library "wikilink")) for the core PLplot library or as dependencies of some device drivers.
+
+<a name="QHull_Library"></a>QHull Library
+-------------
+
+### Description
+
+QHull is a library/program to determine the convex hull of a set of points in n dimensions. The CSIRO library that is part of PLplot uses this for certain interpolation methods (convex hulls in n dimensions are related to Voronoi diagrams and Delaunay triangulations in n-1 dimensions). For further information visit <http://www.qhull.org/> .
+
+### Instructions
+
+-   Download [QHull for windows](http://www.qhull.org/download/qhull-2003.1.zip)
+-   Unzip qhull-2003.1.zip package in a suitable place
+-   Copy the custom <tt>CMakeLists.txt</tt> from <tt>plplot\\cmake\\external\\libqhull</tt> into the new directory (qhull-2003.1)
+-   Cd into the new directory
+-   Than (e.g. for MSVC):
+
+`mkdir build`
+`cd build`
+`cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=local ..`
+`nmake install`
+
+-   a static library will be built and the library and the include files will copied into <tt>build\\local\\lib</tt> and <tt>build\\local\\include</tt> respectively - a shared library can only be build with MinGW or Cygwin
+-   set environment variables
+
+`set QHULLDIR=path-to\qhull-2003.1\build\local`
+`set CMAKE_INCLUDE_PATH=%QHULLDIR%\include`
+`set CMAKE_LIBRARY_PATH=%QHULLDIR%\lib`
+
+CMake is now able to find the qhull library and headers.
+
+AGG Library
+-----------
+
+### Description
+
+The AGG (Anti-Grain Graphics) Library is used by the wxWidgets driver (so there is no need for this library, if you don't use this driver) to display the plots nicely antialized. Note, that from Version 2.5 on, the AGG library is now GPL, so for the time being Version 2.4 should be used for binary packages of PLplot, which is free also for commercial applications. Visit <http://www.antigrain.com> for further information.
+
+### Instructions
+
+-   Download [AGG v2.4 Windows](http://www.antigrain.com/agg-2.4.zip)
+-   Unzip agg-2.4.zip package in a suitable place
+-   Copy the custom <tt>CMakeLists.txt</tt> from <tt>plplot\\cmake\\external\\libagg</tt> into the new directory (agg-2.4)
+-   Cd into the new directory
+-   Than (e.g. for MSVC):
+
+`mkdir build`
+`cd build`
+`cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=local ..`
+`nmake install`
+
+-   a static library will be built and the library and the include files will copied into <tt>build\\local\\lib</tt> and <tt>build\\local\\include</tt> respectively - a shared library can only be build with MinGW or Cygwin
+-   set environment variables
+
+`set AGGDIR=path-to\agg-2.4\build\local`
+`set CMAKE_INCLUDE_PATH=%AGGDIR%\include`
+`set CMAKE_LIBRARY_PATH=%AGGDIR%\lib`
+
+CMake is now able to find the agg library and headers.
+
+<a name="GTK+_Libraries"></a>GTK+ Libraries
+--------------
+
+### Description
+
+### Instructions
+
+<a name="Qt4_Libraries"></a>Qt4 Libraries
+-------------
+
+### Description
+
+### Instructions
+
+GD Library
+----------
+
+### Description
+
+The gd library is needed by the gd driver of PLplot to produce png, jpeg or gif files. See <http://www.boutell.com/gd/> for details. Note, however, that the PLplot gd device driver has been deprecated since the release of PLplot-5.9.3 for reasons given in that release announcement and subsequent release announcements. The PLplot gd device driver will likely be eventually removed and much better alternatives are the cairo and qt device drivers which depend on the external [GTK+](#GTK+_Libraries "wikilink") and [Qt4](#Qt4_Libraries "wikilink") libraries.
+
+### Instructions
+
+-   Download the gd library for Windows from <http://www.boutell.com/gd/> . The latest version is [2.0.33](http://www.boutell.com/gd/http/gdwin32.zip) (Windows dll).
+-   Unzip the archive to a suitable place.
+-   The package provides a dll and an import library for the MinGW compiler. To obtain an import library for the MSVC compiler run the <tt>makemsvcimport.bat</tt> batch file in a CLI with the correct environment settings for MSVC.
+-   In order to let cmake find the gd library files you need to set environment variables (best in batch file - see above), e.g.
+
+`set GDLIBDIR=C:\DevZone\gdwin32`
+`set CMAKE_INCLUDE_PATH=%GDLIBDIR%`
+`set CMAKE_LIBRARY_PATH=%GDLIBDIR%`
+
+CMake should than be able to find the gd library and headers and the gd driver (png, gif, jpeg) will be automatically compiled into the library.
+
+Freetype Library
+----------------
+
+### Description
+
+FreeType 2 is a software font engine that is designed to be small, efficient, highly customizable, and portable while capable of producing high-quality output (glyph images). It can be used in graphics libraries, display servers, font conversion tools, text image generation tools, and many other products as well. <http://www.freetype.org> reveals more information.
+
+### Instructions
+
+-   Download [Freetype library](http://download.savannah.gnu.org/releases/freetype/ft221.zip)
+-   Unzip the ft221.zip package in a suitable place
+-   Cd into the new directory
+-   Than for MinGW (call <tt>mingw32.make</tt> twice!):
+
+`mingw32-make`
+`mingw32-make`
+`copy objs\freetype.a objs\libfreetype.a`
+
+-   Or for Visual C++ (you need to use GNU-Make not nmake - download it from <http://prdownloads.sf.net/mingw/mingw32-make-3.80.0-3.tar.gz?download> or <http://gnuwin32.sourceforge.net/packages/make.htm>):
+
+`path_to_gnu_make\mingw32-make setup visualc`
+`path_to_gnu_make\mingw32-make`
+
+-   For Visual C++ 2005 you need to change line 69 of <tt>freetype-2.2.1\\builds\\compiler\\visualc.mk</tt> to
+
+`   CFLAGS ?= /nologo /c /Ox /W3 /WX /D_CRT_SECURE_NO_DEPRECATE`
+
+-   set environment variables
+
+`set FREETYPEDIR=C:\freetype-2.2.1`
+`set CMAKE_INCLUDE_PATH=%FREETYPEDIR%\include`
+`set CMAKE_LIBRARY_PATH=%FREETYPEDIR%\objs`
+
+CMake is now able to find the freetype library and headers.
+
+wxWidgets Library
+-----------------
+
+See [wxWidgets](wxWidgets "wikilink") for other instructions.
+
+### Description
+
+wxWidgets is a cross platform GUI toolkit which also provides other common classes as wxString, wxMap etc. and is known to work well on Windows, Linux and MacOSX. The wxWidgets toolkit is used for the wxWidgets driver. Version 2.6.x and 2.8.x of wxWidgets can be used for the wxWidgets driver. Surf to <http://www.wxwidgets.org> for more information.
+
+### Instructions
+
+-   Download [wxWidgets 2.6.3 library as zip](http://prdownloads.sourceforge.net/wxwindows/wxMSW-2.6.3.zip) (exe installer is also available, wxWidgets 2.8.0 has problems with MinGW in the moment)
+-   Unzip the wxMSW-2.6.3.zip package in a suitable place
+-   The following instructions will build a shared, unicode, release version of wxWidgets. If you use plplot within your wxWidgets application you have already a wxWidgets library ready for use - see <tt>cmake-2.4.5\\share\\modules\\FindwxWidgets.cmake</tt> for the options for your special wxWidgets library.
+-   Cd into <tt>wxWidgets-2.6.3\\build\\msw</tt>
+-   Than for MinGW:
+
+`mingw32-make -f makefile.gcc SHARED=1 UNICODE=1 BUILD=release`
+
+-   set environment variables (MinGW)
+
+`set WXWIN=C:\wxWidgets-2.6.3`
+`set PATH=%WXWIN%\lib\gcc_dll;%PATH%`
+
+-   Or for Visual C++:
+
+`nmake -f makefile.vc SHARED=0 UNICODE=1 BUILD=release`
+
+-   set environment variables (Visual C++)
+
+`set WXWIN=C:\wxWidgets-2.6.3`
+`set PATH=%WXWIN%\lib\vc_dll;%PATH%`
+
+CMake is now able to find the wxWidgets library and headers, if you additionally set the following cmake options for MinGW:
+
+` -DwxWidgets_LIB_DIR=%WXWIN%/lib/gcc_dll -DwxWidgets_CONFIGURATION=mswu -DENABLE_MIX_CXX=ON`
+
+and for Visual C++:
+
+` -DwxWidgets_LIB_DIR=%WXWIN%/lib/vc_dll -DwxWidgets_CONFIGURATION=mswu -DENABLE_MIX_CXX=ON`
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

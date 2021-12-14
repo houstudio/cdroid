@@ -1,0 +1,22 @@
+This plplot docbook documentation project started as a joint effort by
+Alan W. Irwin and Rafael Laboissiere to convert the plplot latexinfo
+documentation (last modified in 1995 or earlier) to the DocBook SGML
+format.  We finished the conversion project in July 1999 and
+subsequently we and others have constantly updated our DocBook source
+code (see the results from "git log doc/docbook") and the
+DocBook-related parts of our build system (see the results from "git
+log cmake/modules/docbook.cmake") to improve the substance of our
+documentation as well as how it is built.  In addition, we have moved
+to the DocBook XML format and using modern DocBook tools to generate
+our documentation in various formats (i.e.,
+doc/docbook/bin/api2man.pl(.in) to generate the man page form of our
+documentation [limited to just our public API documented in
+doc/docbook/src/api.xml]; doc/docbook/bin/info-clean.pl,
+db2x_xsltproc, db2x_texixml, and makeinfo to generate the info page
+form of our full documentation; xmlto to generate the html form of our
+full documentation, and "dblatex --backend=xetex" to generate the PDF
+form of our full documentation).  To get the latest DocBook
+documentation results either build it (for instructions see
+plplot/doc/docbook/README.developers) from the latest git master
+branch of PLplot or visit http://plplot.org/documentation.php which
+points to recent DocBook results in html, pdf, info and man forms.

@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGVER 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgver\fP - Get the current library version number
+.SH SYNOPSIS
+\fBplgver\fP(\fIp_ver\fP)
+.SH DESCRIPTION
+
+.P
+Get the current library version number.  Note: you must have allocated space for this (80 characters is safe).
+.P
+Redacted form: \fBplgver(p_ver)\fP
+.P
+This function is used in example 1.
+.SH ARGUMENTS
+.TP
+\fIp_ver\fP (\fBPLCHAR_NC_VECTOR\fP(3plplot), output)
+Returned ascii character string (with preallocated length of 80 characters or more) containing the PLplot version number.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

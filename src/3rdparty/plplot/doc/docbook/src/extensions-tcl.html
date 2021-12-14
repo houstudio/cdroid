@@ -1,0 +1,36 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>PLplot Extensions to Tcl</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="extended-wish.html" title="Chapter 14. Building an Extended WISH"><link rel="prev" href="introduction-itcl.html" title="Introduction to [incr Tcl]"><link rel="next" href="custom-extensions-tcl.html" title="Custom Extensions to Tcl"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">PLplot Extensions to Tcl</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="introduction-itcl.html">Prev</a> </td><th width="60%" align="center">Chapter 14. Building an Extended WISH</th><td width="20%" align="right"> <a accesskey="n" href="custom-extensions-tcl.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="extensions-tcl"></a>PLplot Extensions to Tcl</h2></div></div></div><p>
+      Following the paradigm described above, PLplot provides extensions to
+      Tcl as well, designed to allow the use of PLplot from Tcl/Tk
+      programs.  Essentially the idea here is to allow PLplot programmers
+      to achieve two goals:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	  To access PLplot facilities from their own extended WISH and/or
+	  Tcl/Tk user interface scripts.
+	</p></li><li class="listitem"><p>
+	  To have PLplot display its output in a window integrated
+	  directly into the rest of their Tcl/Tk interface.
+	</p></li></ul></div><p>
+      For instance, prior to PLplot 5.0, if a programmer wanted to use
+      PLplot in a Tcl/Tk application, the best he could manage was to call
+      the PLplot C API from compiled C code, and get the output via the
+      Xwin driver, which would display in it's own toplevel window.  In
+      other words, there was no integration, and the result was pretty
+      sloppy.
+    </p><p>
+      With PLplot 5.0, there is now a supported Tcl interface to PLplot
+      functionality.  This is provided through a <span class="quote">“<span class="quote">family</span>”</span> of
+      PLplot megawidgets implemented in [incr Tcl].  Using this interface,
+      a programmer can get a PLplot window/widget into a Tk interface as
+      easily as:
+    </p><p>
+      </p><pre class="programlisting">
+	PLWin .plw
+	pack .plw</pre><p>
+    </p><p>
+      Actually, there's the update/init business—need to clear that up.
+    </p><p>
+      The <code class="literal">PLWin</code> class then mirrors much of the PLplot C
+      API, so that a user can generate plots in the PLplot widget entirely
+      from Tcl.  This is demonstrated in the <code class="filename">tk02</code>
+      demo,
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="introduction-itcl.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="extended-wish.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="custom-extensions-tcl.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Introduction to [incr Tcl] </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Custom Extensions to Tcl</td></tr></table></div></body></html>

@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2004-2016 Alan W. Irwin
+# Copyright (C) 2004 Andrew Ross
+#
+# This file is part of PLplot.
+#
+# PLplot is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; version 2 of the License.
+#
+# PLplot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with the file PLplot; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+
+# Run python plplot example 30 non-interactively.
+
+# Append to effective python path so that can find plplot modules.
+from plplot_python_start import *
+
+import sys
+import plplot as w
+
+# Parse and process command line arguments
+w.plparseopts(sys.argv, w.PL_PARSE_FULL)
+
+# Initialize plplot
+w.plinit()
+
+import x30
+x30.main(w)
+
+# Terminate plplot
+w.plend()

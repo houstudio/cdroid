@@ -1,0 +1,77 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plpoin3: Plot a glyph at the specified 3D points</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plpoin.html" title="plpoin: Plot a glyph at the specified points"><link rel="next" href="plpoly3.html" title="plpoly3: Draw a polygon in 3 space"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plpoin3</code>: Plot a glyph at the specified 3D points
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plpoin.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plpoly3.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plpoin3"></a>
+      <code class="function">plpoin3</code>: Plot a glyph at the specified 3D points
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plpoin3</b>
+          (</code></td><td>
+            <var class="pdparam">n</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">z</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">code</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plot a glyph at the specified 3D points.  (This function is largely
+      superseded by <a class="link" href="plstring3.html" title="plstring3: Plot a glyph at the specified 3D points"><code class="function">plstring3</code></a> which gives access to many[!] more glyphs.)
+      Set up the call to this function similar to what is done for <a class="link" href="plline3.html" title="plline3: Draw a line in 3 space"><code class="function">plline3</code></a>.
+      <code class="literal">
+        <em class="parameter"><code>code</code></em>=-1
+      </code> means try to
+      just draw a point.  Right now it's just a move and a draw at the same
+      place.  Not ideal, since a sufficiently intelligent output device may
+      optimize it away, or there may be faster ways of doing it.  This is OK
+      for now, though, and offers a 4X speedup over drawing a Hershey font
+      "point" (which is actually diamond shaped and therefore takes 4
+      strokes to draw).  If 0 &lt; code &lt; 32, then a useful (but small
+      subset) of Hershey symbols is plotted.  If 32 &lt;= code &lt;= 127 the
+      corresponding printable ASCII character is plotted.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>n</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of points in the
+            <code class="literal">
+              <em class="parameter"><code>x</code></em>
+            </code> and
+            <code class="literal">
+              <em class="parameter"><code>y</code></em>
+            </code> vectors.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the x coordinates of points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the y coordinates of points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>z</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the z coordinates of points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>code</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Hershey symbol code (in "ascii-indexed" form with -1 &lt;= code &lt;=
+            127) corresponding to a glyph to be plotted at each of the
+            <code class="literal">
+              <em class="parameter"><code>n</code></em>
+            </code> points.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plpoin3(x, y, z, code)</code>
+    </p><p>
+      This function is not used in any example.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plpoin.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plpoly3.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plpoin</code>: Plot a glyph at the specified points
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plpoly3</code>: Draw a polygon in 3 space
+    </td></tr></table></div></body></html>

@@ -1,0 +1,9 @@
+# findlib META file for ocaml-plplot
+requires = ""
+description = "PLplot library bindings"
+version = "@PLPLOT_VERSION@"
+browse_interfaces = " Plplot "
+linkopts = "-ccopt \"-L@LIB_DIR@\""
+archive(byte) = "plplot.cma"
+archive(native) = "plplot.cmxa"
+

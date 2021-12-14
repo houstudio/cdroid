@@ -1,0 +1,420 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>The PLplot Tcl Matrix Extension</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="tcl.html" title="Chapter 13. Using PLplot from Tcl"><link rel="prev" href="tcl-overview.html" title="Overview of the Tcl Language Binding"><link rel="next" href="tcl-contouring.html" title="Contouring and Shading from Tcl"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">The PLplot Tcl Matrix Extension</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="tcl-overview.html">Prev</a> </td><th width="60%" align="center">Chapter 13. Using PLplot from Tcl</th><td width="20%" align="right"> <a accesskey="n" href="tcl-contouring.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tcl-extension"></a>The PLplot Tcl Matrix Extension</h2></div></div></div><p>
+      Tcl does many things well, but handling collections of numbers is not
+      one of them.   You could make lists, but for data sets of sizes
+      relevant to scientific graphics which is the primary domain of
+      applicability for PLplot, the extraction time is excessive and
+      burdensome.  You could use Tcl arrays, but the storage overhead is
+      astronomical and the lookup time, while better than list manipulation,
+      is still prohibitive.
+    </p><p>
+      To cope with this, a Tcl Matrix extension has been created for the
+      purpose of making it feasible to work with large collections of
+      numbers in Tcl, in a way which is storage efficient, reasonably
+      efficient for accesses from Tcl, and reasonably compatible with
+      practices used in compiled code.
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="tcl-using-tcl"></a>Using Tcl Matrices from Tcl</h3></div></div></div><p>
+	Much like the Tk widget creation commands, the Tcl <code class="literal">matrix</code>
+	command considers its first argument to be the name of a new command
+	to be created, and the rest of the arguments to be modifiers.  After
+	the name, the next argument can be <code class="literal">float</code> or
+	<code class="literal">int</code> or
+	contractions thereof.  Next follow a variable number of size arguments
+	which determine the size of the matrix in each of its dimensions.  For
+	example:
+      </p><pre class="programlisting">
+	matrix x f 100
+	matrix y i 64 64
+      </pre><p>
+	constructs two matrices.  <code class="literal">x</code> is a float matrix, with one
+	dimension and 100 elements.  <code class="literal">y</code> is an integer matrix, and has 2
+	dimensions each of size 64.
+      </p><p>
+	Additionally a matrix can be initialized when it is created, e.g.,
+      </p><pre class="programlisting">
+	matrix x f 4 = { 1.5, 2.5, 3.5, 4.5 }
+      </pre><p>
+	The <code class="literal">matrix</code> command supports subcommands such as
+	<code class="literal">info</code>
+	which reports the number of elements in each dimension, e.g.,
+      </p><pre class="programlisting">
+	pltcl&gt; matrix x f 4
+	pltcl&gt; x info
+	4
+	pltcl&gt; matrix y i 8 10
+	pltcl&gt; y info
+	8 10
+      </pre><p>
+      Other useful subcommands are <code class="literal">delete</code> to delete the
+      matrix (if, for example, you wanted to use that variable name for
+      something else such as a differently dimensioned matrix) and
+      <code class="literal">help</code> to document all subcommands possible with
+      a given matrix.
+      </p><p>
+	A Tcl matrix is a command, and as longtime Tcl users know, Tcl
+	commands are globally accessible.  The PLplot Tcl Matrix extension
+	attempts to lessen the impact of this by registering a variable in the
+	local scope, and tracing it for insets, and deleting the actual
+	matrix command when the variable goes out of scope.  In this way, a
+	Tcl matrix appears to work sort of like a variable.  It is, however,
+	just an illusion, so you have to keep this in mind.  In particular,
+	you may want the matrix to outlive the scope in which it was created.
+	For example, you may want to create a matrix, load it with data, and
+	then pass it off to a Tk megawidget for display in a spreadsheet like
+	form.  The proc which launches the Tk megawidget will complete, but
+	the megawidget, and the associated Tcl matrix are supposed to hang
+	around until they are explicitly destroyed.  To achieve this effect,
+	create the Tcl matrix with the <code class="literal">-persist</code> flag.  If present
+	(can be anywhere on the line), the matrix is not automatically deleted
+	when the scope of the current proc (method) ends.  Instead, you must
+	explicitly clean up by using either the 'delete' matrix command or renaming
+	the matrix command name to {}.  Now works correctly from within [incr Tcl].
+      </p><p>
+	As mentioned above, the result of creating a matrix is that a new
+	command of the given name is added to the interpreter.  You can then
+	evaluate the command, providing indices as arguments, to extract the
+	data.  For example:
+      </p><pre class="programlisting">
+	pltcl&gt; matrix x f = {1.5, 2.5, 3.5, 4.5}
+	insufficient dimensions given for Matrix operator "x"
+	pltcl&gt; matrix x f 4 = {1.5, 2.5, 3.5, 4.5}
+	pltcl&gt; x 0
+	1.500000
+	pltcl&gt; x 1
+	2.500000
+	pltcl&gt; x 3
+	4.500000
+	pltcl&gt; x :
+	1.500000 2.500000 3.500000 4.500000
+	pltcl&gt; puts "x\[1\]=[x 1]"
+	x[1]=2.500000
+	pltcl&gt; puts "x\[:\] = [x :]"
+	x[:] = 1.500000 2.500000 3.500000 4.500000
+	pltcl&gt; foreach v [x *] { puts $v }
+	1.500000
+	2.500000
+	3.500000
+	4.500000
+	pltcl&gt; for {set i 0} {$i &lt; 4} {incr i} {
+	if {[x $i] &lt; 3} {puts [x $i]} }
+	1.500000
+	2.500000
+      </pre><p>
+	Note from the above that the output of evaluating a matrix indexing
+	operation is suitable for use in condition processing, list
+	processing, etc.
+      </p><p>
+	You can assign to matrix locations in a similar way:
+      </p><pre class="programlisting">
+	pltcl&gt; x 2 = 7
+	pltcl&gt; puts "[x :]"
+	1.500000 2.500000 7.000000 4.500000
+	pltcl&gt; x : = 3
+	pltcl&gt; puts "[x :]"
+	3.000000 3.000000 3.000000 3.000000
+      </pre><p>
+	Note that the : provides a means of obtaining an index range,
+	and that it must be separated from the = by a space.  This is a simple
+	example of matrix index slices, and a full index slice capability has
+	been implemented following what is available for Python (see Note 5 of
+	<a class="ulink" href="https://docs.python.org/2/library/stdtypes.html#sequence-types-str-unicode-list-tuple-bytearray-buffer-xrange" target="_top">https://docs.python.org/2/library/stdtypes.html#sequence-types-str-unicode-list-tuple-bytearray-buffer-xrange</a>
+	for Python 2 or Note 5 of <a class="ulink" href="https://docs.python.org/3/library/stdtypes.html#common-sequence-operations" target="_top">https://docs.python.org/3/library/stdtypes.html#common-sequence-operations</a>
+	for Python 3).  Each index slice is represented by a colon-separated
+	list of three integers, i:j:k, which designate the index range and
+	increment.  The default value of k is 1. For positive k the default
+	values of i and j are 0 and the number of elements in the dimension while for
+	negative k, the default values of i and j the number of elements in the dimension
+	and 0.  Negative values of i and j have the number of elements in the dimension
+	added to them.  After these rules have been applied to determine the
+	final i, j, and k values the slice from i to j with step k is defined
+	as the sequence of items with index x = i + n*k such that 0 ≤ n
+	&lt; (j-i)/k.  N.B.  rational division is used to calculate the last
+	limit of this expression.  As a result the indices in the slice are i,
+	i+k, i+2*k, i+3*k and so on, stopping when j is reached (but never
+	including j).  Some examples (see
+	<code class="filename">bindings/tcl/test_tclmatrix.tcl</code>) of using this
+	slice notation are given by the following Tcl code: </p><pre class="programlisting">
+puts "Create one-dimensional x matrix using \"matrix x f 4 = {0., 1., 2., 3.}\""
+matrix x f 4 = {0., 1., 2., 3.}
+puts "Various start:stop:step slice examples for this matrix"
+puts "Examples where start, stop, and step are default"
+puts "\[x :\] yields [x :]"
+puts "\"*\" (implemented for backwards compatibility) has exactly the same effect as \":\""
+puts "\[x *\] yields [x *]"
+puts "\"::\" has exactly the same effect as \":\""
+puts "\[x ::\] yields [x ::]"
+puts "Examples where start and stop are default"
+puts "\[x ::1\] yields [x ::1]"
+puts "\[x ::2\] yields [x ::2]"
+puts "\[x ::3\] yields [x ::3]"
+puts "\[x ::4\] yields [x ::4]"
+puts "\[x ::-1\] yields [x ::-1]"
+puts "\[x ::-2\] yields [x ::-2]"
+puts "\[x ::-3\] yields [x ::-3]"
+puts "\[x ::-4\] yields [x ::-4]"
+puts "Examples where start and step are default"
+puts "\[x :2:\] yields [x :2:]"
+puts "\[x :2\] yields [x :2]"
+puts "Examples where stop and step are default"
+puts "\[x 2::\] yields [x 2::]"
+puts "\[x 2:\] yields [x 2:]"
+puts "Examples where start is default"
+puts "\[x :3:2\] yields [x :3:2]"
+puts "\[x :-4:-2\] yields [x :-4:-2]"
+puts "Examples where stop is default"
+puts "\[x 1::2\] yields [x 1::2]"
+puts "\[x -2::-2\] yields [x -2::-2]"
+puts "Examples where step is default"
+puts "\[x 1:3:\] yields [x 1:3:]"
+puts "\[x 1:3\] yields [x 1:3]"
+puts "Examples where start, stop, and step are all explicitly specified"
+puts "\[x 1:0:2\] yields [x 1:0:2]"
+puts "\[x 1:1:2\] yields [x 1:1:2]"
+puts "\[x 1:2:2\] yields [x 1:2:2]"
+puts "\[x 1:3:2\] yields [x 1:3:2]"
+puts "\[x 1:4:2\] yields [x 1:4:2]"
+puts "\[x 1:5:2\] yields [x 1:5:2]"
+puts "\[x -2:-1:-2\] yields [x -2:-1:-2]"
+puts "\[x -2:-2:-2\] yields [x -2:-2:-2]"
+puts "\[x -2:-3:-2\] yields [x -2:-3:-2]"
+puts "\[x -2:-4:-2\] yields [x -2:-4:-2]"
+puts "\[x -2:-5:-2\] yields [x -2:-5:-2]"
+puts "\[x -2:-6:-2\] yields [x -2:-6:-2]"
+	</pre><p> which generates (see <code class="filename">bindings/tcl/test_tclmatrix.out</code>)
+	the following results:</p><pre class="screen">
+Create one-dimensional x matrix using "matrix x f 4 = {0., 1., 2., 3.}"
+Various start:stop:step slice examples for this matrix
+Examples where start, stop, and step are default
+[x :] yields 0.0 1.0 2.0 3.0
+"*" (implemented for backwards compatibility) has exactly the same effect as ":"
+[x *] yields 0.0 1.0 2.0 3.0
+"::" has exactly the same effect as ":"
+[x ::] yields 0.0 1.0 2.0 3.0
+Examples where start and stop are default
+[x ::1] yields 0.0 1.0 2.0 3.0
+[x ::2] yields 0.0 2.0
+[x ::3] yields 0.0 3.0
+[x ::4] yields 0.0
+[x ::-1] yields 3.0 2.0 1.0 0.0
+[x ::-2] yields 3.0 1.0
+[x ::-3] yields 3.0 0.0
+[x ::-4] yields 3.0
+Examples where start and step are default
+[x :2:] yields 0.0 1.0
+[x :2] yields 0.0 1.0
+Examples where stop and step are default
+[x 2::] yields 2.0 3.0
+[x 2:] yields 2.0 3.0
+Examples where start is default
+[x :3:2] yields 0.0 2.0
+[x :-4:-2] yields 3.0 1.0
+Examples where stop is default
+[x 1::2] yields 1.0 3.0
+[x -2::-2] yields 2.0 0.0
+Examples where step is default
+[x 1:3:] yields 1.0 2.0
+[x 1:3] yields 1.0 2.0
+Examples where start, stop, and step are all explicitly specified
+[x 1:0:2] yields
+[x 1:1:2] yields
+[x 1:2:2] yields 1.0
+[x 1:3:2] yields 1.0
+[x 1:4:2] yields 1.0 3.0
+[x 1:5:2] yields 1.0 3.0
+[x -2:-1:-2] yields
+[x -2:-2:-2] yields
+[x -2:-3:-2] yields 2.0
+[x -2:-4:-2] yields 2.0
+[x -2:-5:-2] yields 2.0 0.0
+[x -2:-6:-2] yields 2.0 0.0
+      </pre><p>
+      </p><p>
+	We have already shown examples of matrix initialization above
+	where the RHS (right hand side) expression beyond the "=" sign was a
+	simple list of numbers and also an example of an matrix slice
+	assignment above where the RHS was a simple number, but much more
+	complex RHS expressions (arbitrary combinations of lists of lists and
+	matrix slices) are allowed for both matrix initialization and matrix
+	slice assignment.  Furthermore, the RHS matrices are read from and the
+	LHS (left hand side) matrix or matrix slice are written to in <a class="ulink" href="https://en.wikipedia.org/wiki/Row_major" target="_top">row major order</a>,
+	and excess elements on the RHS are ignored while excess
+	elements on the LHS of a matrix initialization or matrix slice
+	assignment are zeroed.  Some examples (see
+	<code class="filename">bindings/tcl/test_tclmatrix.tcl</code>) of using these
+	matrix initialization and matrix slice assignment capabilities are
+	given by the following Tcl code:</p><pre class="programlisting">
+puts "Various matrix initializations and assignments"
+puts "Using a collection of space-separated numbers"
+matrix x f 4 = 1 2 3 4
+puts "\[x :\] = [x :]"
+matrix y f 2 4
+y : : = 1 2 3 4 5 6 7 8
+puts "\[y : :\] = [y : :]"
+x delete
+y delete
+puts "Using a list of lists of numbers"
+matrix x f 4 = {{{1 2}} {3 4}}
+puts "\[x :\] = [x :]"
+matrix y f 2 4
+y : : = {{1 2 3 4 5} {{6}} {7 8}}
+puts "\[y : :\] = [y : :]"
+puts "Using slices of a previously defined matrix"
+matrix z f 2 2 2 = [x ::] [x ::-1]
+puts "\[z : : :\] = [z : : :]"
+y : : = [x ::] [x ::-1]
+puts "\[y : :\] = [y : :]"
+puts "Combination of previously defined matrices, deep lists, and space-separated numbers"
+matrix a f 2 2 3 = [x ::] [x ::-1] {{{1.E-13} {2}}} 3 4 5 6 7 8 9 10 11 12 13 14
+puts "\[a : : :\] = [a : : :]"
+matrix b f 2 2 3
+b : : : = [x ::] [x ::-1] {{{1.E-13} {2}}} 3 4 5 6 7 8 9 10 11 12 13 14
+puts "\[b : : :\] = [b : : :]"
+	</pre><p> which generates (see <code class="filename">bindings/tcl/test_tclmatrix.out</code>)
+	the following results:</p><pre class="screen">
+Various matrix initializations and assignments
+Using a collection of space-separated numbers
+[x :] = 1.0 2.0 3.0 4.0
+[y : :] = 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0
+Using a list of lists of numbers
+[x :] = 1.0 2.0 3.0 4.0
+[y : :] = 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0
+Using slices of a previously defined matrix
+[z : : :] = 1.0 2.0 3.0 4.0 4.0 3.0 2.0 1.0
+[y : :] = 1.0 2.0 3.0 4.0 4.0 3.0 2.0 1.0
+Combination of previously defined matrices, deep lists, and space-separated numbers
+[a : : :] = 1.0 2.0 3.0 4.0 4.0 3.0 2.0 1.0 1e-13 2.0 3.0 4.0
+[b : : :] = 1.0 2.0 3.0 4.0 4.0 3.0 2.0 1.0 1e-13 2.0 3.0 4.0
+      </pre><p>
+      A method of testing the matrix slice, initialization, and assignment capabilities using
+      <code class="filename">bindings/tcl/test_tclmatrix.tcl</code> and
+      <code class="filename">bindings/tcl/test_tclmatrix.out</code> has been given
+      in <code class="filename">examples/tcl/README.tcldemos</code>.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="tcl-using-c"></a>Using Tcl Matrices from C</h3></div></div></div><p>
+	Normally you will create a matrix in Tcl, and then want to pass it to
+	C in order to have the data filled in, or existing data to be used in
+	a computation, etc.  To do this, pass the name of the matrix command
+	as an argument to your C Tcl command procedure.  The C code should
+	include <code class="filename">tclMatrix.h</code>, which has a definition for the
+	<code class="literal">tclMatrix</code> structure.  You fetch a pointer to the
+	<code class="literal">tclMatrix</code> structure using the
+	<code class="literal">Tcl_GetMatrixPtr</code> function.
+      </p><p>
+	For example, in Tcl:
+      </p><pre class="programlisting">
+	matrix x f 100
+	wacky x
+      </pre><p>
+	and in C:
+      </p><pre class="programlisting">
+	int wackyCmd( ClientData clientData, Tcl_Interp *interp,
+	int argc, char *argv[] )
+	{
+	tclMatrix *w;
+
+	w = Tcl_GetMatrixPtr( interp, argv[1] );
+	...
+      </pre><p>
+	To learn about what else you can do with the matrix once inside
+	compiled code, read <code class="filename">tclMatrix.h</code> to learn the definition of the
+	<code class="literal">tclMatrix</code> structure, and see the examples in files like
+	<code class="filename">tclAPI.c</code> which show many various uses of the Tcl matrix.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="tcl-using-cplusplus"></a>Using Tcl Matrices from C++</h3></div></div></div><p>
+	Using a Tcl matrix from C++ is very much like using it from C, except
+	that <code class="filename">tclMatrix.h</code> contains some C++ wrapper classes which are
+	somewhat more convenient than using the indexing macros which one has
+	to use in C.  For example, here is a tiny snippet from one of the
+	authors codes in which Tcl matrices are passed in from Tcl to a C++
+	routine which is supposed to fill them in with values from some
+	matrices used in the compiled side of the code:
+      </p><pre class="programlisting">
+	...
+	if (item == "vertex_coords") {
+	tclMatrix *matxg = Tcl_GetMatrixPtr( interp, argv[1] );
+	tclMatrix *matyg = Tcl_GetMatrixPtr( interp, argv[2] );
+
+	Mat2&lt;float&gt; xg(ncu, ncv), yg(ncu, ncv);
+	cg-&gt;Get_Vertex_Coords( xg, yg );
+
+	TclMatFloat txg( matxg ), tyg( matyg );
+
+	for( i=0; i &lt; ncu; i++ )
+	for( j=0; j &lt; ncv; j++ ) {
+	txg(i,j) = xg(i,j);
+	tyg(i,j) = yg(i,j);
+	}
+      </pre><p>
+	There are other things you can do too, see the definitions of the
+	<code class="literal">TclMatFloat</code> and <code class="literal">TclMatInt</code> classes in
+	<code class="filename">tclMatrix.h</code>.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="tcl-extending"></a>Extending the Tcl Matrix facility</h3></div></div></div><p>
+	The Tcl matrix facility provides creation, indexing, and information
+	gathering facilities.  However, considering the scientifically
+	inclined PLplot user base, it is clear that some users will demand
+	more.  Consequently there is a mechanism for augmenting the Tcl matrix
+	facility with your own, user defined, extension subcommands.  Consider
+	<code class="filename">xtk04.c</code>.  In this extended wish, we want to be able to
+	determine the minimum and maximum values stored in a matrix.  Doing
+	this in Tcl would involve nested loops, which in Tcl would be
+	prohibitively slow.  We could register a Tcl extension command to do
+	it, but since the only sensible data for such a command would be a
+	Tcl matrix, it seems nice to provide this facility as an actual
+	subcommand of the matrix.  However, the PLplot maintainers cannot
+	foresee every need, so a mechanism is provided to register subcommands
+	for use with matrix objects.
+      </p><p>
+	The way to register matrix extension subcommands is to call
+	<code class="literal">Tcl_MatrixInstallXtnsn</code>:
+      </p><pre class="programlisting">
+	typedef int (*tclMatrixXtnsnProc) ( tclMatrix *pm, Tcl_Interp *interp,
+	int argc, char *argv[] );
+
+	int Tcl_MatrixInstallXtnsn( char *cmd, tclMatrixXtnsnProc proc );
+      </pre><p>
+	In other words, make a function for handling the matrix extension
+	subcommand, with the same function signature (prototype) as
+	<code class="literal">tclMatrixXtnsnProc</code>, and register the subcommand name along with
+	the function pointer.  For example, xtk04.c has:
+      </p><pre class="programlisting">
+	int mat_max( tclMatrix *pm, Tcl_Interp *interp,
+	int argc, char *argv[] )
+	{
+	float max = pm-&gt;fdata[0];
+	int i;
+	for( i=1; i &lt; pm-&gt;len; i++ )
+	if (pm-&gt;fdata[i] &gt; max)
+	max = pm-&gt;fdata[i];
+
+	sprintf( interp-&gt;result, "%f", max );
+	return TCL_OK;
+	}
+
+	int mat_min( tclMatrix *pm, Tcl_Interp *interp,
+	int argc, char *argv[] )
+	{
+	float min = pm-&gt;fdata[0];
+	int i;
+	for( i=1; i &lt; pm-&gt;len; i++ )
+	if (pm-&gt;fdata[i] &lt; min)
+	min = pm-&gt;fdata[i];
+
+	sprintf( interp-&gt;result, "%f", min );
+	return TCL_OK;
+	}
+      </pre><p>
+	Then, inside the application initialization function
+	(<code class="literal">Tcl_AppInit()</code> to long time Tcl users):
+      </p><pre class="programlisting">
+	Tcl_MatrixInstallXtnsn( "max", mat_max );
+	Tcl_MatrixInstallXtnsn( "min", mat_min );
+      </pre><p>
+	Then we can do things like:
+      </p><pre class="programlisting">
+	dino 65: xtk04
+	% matrix x f 4 = {1, 2, 3, 1.5}
+	% x min
+	1.000000
+	% x max
+	3.000000
+      </pre><p>
+	Your imagination is your only limit for what you can do with this.
+	You could add an FFT subcommand, matrix math, BLAS, whatever.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="tcl-overview.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="tcl.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="tcl-contouring.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Overview of the Tcl Language Binding </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Contouring and Shading from Tcl</td></tr></table></div></body></html>

@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSSUB 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplssub\fP - Set the number of subpages in x and y
+.SH SYNOPSIS
+\fBplssub\fP(\fInx\fP, \fIny\fP)
+.SH DESCRIPTION
+
+.P
+Set the number of subpages in x and y.
+.P
+Redacted form: \fBplssub(nx, ny)\fP
+.P
+This function is examples 1,2,14,21,25,27.
+.SH ARGUMENTS
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+Number of windows in x direction (i.e., number of window columns).
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Number of windows in y direction (i.e., number of window rows).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

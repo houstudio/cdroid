@@ -1,0 +1,56 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+#Preliminaries
+The first step is to have [MSYS2](http://www.msys2.org/) installed.  Open a MSYS2 terminal and use pacman to install the following packages:
+
+* make
+* gcc
+
+*N.B. If you discover that a required package is missing from that list, please let us know on the [mailing list](mailto:plplot-general@lists.sourceforge.net).*
+
+**NOTE:  As of 18 April 2017 the version of cmake available within MSYS2 does not work with PLplot.  You will need to [install the Windows version](https://cmake.org/download/) of cmake distributed by developer. **
+
+The package requirements for the drivers vary and not all of them have been tested using the MSYS2 environment.  To use the wingcc driver (or the beta wingdi driver), you will need to install
+
+* msys2-w32api-headers
+* msys2-w32api-runtime
+
+If you want other language bindings (e.g. Fortran) you will need to install those packages.
+
+#Building
+Download the release version of PLplot and extract the files into a directory (e.g. plplot).  Note that in MSYS2 in the C drive is available at /c.  Thus, if you created a "plplot" directory in your home directory, the path in MSYS2 will be /c/Users/yourusername/plplot.
+
+From a MSYS2 terminal enter the following commands:
+~~~
+cd /c/Users/yourusername/plplot
+
+mkdir build-msys2
+
+cd build-msys2
+
+/c/Program\ Files/CMake/bin/cmake -G "Unix Makefiles" -DMINGW=1  -DCMAKE_INSTALL_PREFIX=yourinstallpath ../
+
+make
+
+make install
+~~~
+
+This will build a shared plplot library and install all files into the directory you specified (substitute "yourinstallpath" with where you want PLplot to be installed). The following cmake options may be useful:
+
+* -DCMAKE_VERBOSE_MAKEFILE=ON: makefiles provide verbose informations
+* -DBUILD_TEST=ON: all examples will be built also (for test purposes)
+
+#Post-Install Actions
+The MSYS2 platform allows both shared libraries and dynamic drivers, making it almost equivalent to a regular Linux platform in this respect.  If you use the shared libraries, the DLL files will be installed in the bin directory, not in the lib directory, in accordance with the Windows conventions.  The DLL files may either be copied to the same directory as your application or the bin directory must in the PATH environment variable.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

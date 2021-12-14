@@ -1,0 +1,20 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLBOP 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplbop\fP - Begin a new page
+.SH SYNOPSIS
+\fBplbop\fP()
+.SH DESCRIPTION
+
+.P
+Begins a new page.  For a file driver, the output file is opened if necessary.  Advancing the page via \fBpleop\fP(3plplot) and \fBplbop\fP(3plplot) is useful when a page break is desired at a particular point when plotting to subpages.  Another use for \fBpleop\fP(3plplot) and \fBplbop\fP(3plplot) is when plotting pages to different files, since you can manually set the file name by calling \fBplsfnam\fP(3plplot) after the call to \fBpleop\fP(3plplot). (In fact some drivers may only support a single page per file, making this a necessity.)  One way to handle this case automatically is to page advance via \fBpladv\fP(3plplot), but enable familying (see \fBplsfam\fP(3plplot)) with a small limit on the file size so that a new family member file will be created on each page break.
+.P
+Redacted form: \fBplbop()\fP
+.P
+This function is used in examples 2 and 20.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

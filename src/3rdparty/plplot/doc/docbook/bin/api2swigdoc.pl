@@ -1,0 +1,274 @@
+#!/usr/bin/perl
+# File: api2man.pl
+# Description: Convert the PLplot API chapter (file api.xml of the DocBook
+#              manual) into a swig documentation file.
+#
+# Copyright (C) 2000, 2003 Rafael Laboissiere
+# Copyright (C) 2010-2017 Alan W. Irwin
+#
+# This script relies on the present structure of the API chapter (file
+# ../src/api.xml), where each API function is documented in its own
+# section.  Here is the typical structure of a section:
+#
+#   <sect1 id="NAME">
+#     <title><function>NAME</function>: DESCRIPTION</title>
+#
+#     <para>
+#       <funcsynopsis>
+#       <funcprototype>
+# 	<funcdef>
+# 	  <function>NAME</function>
+# 	</funcdef>
+#         <paramdef><parameter>ARG1</parameter></paramdef>
+#         <paramdef><parameter>ARG2</parameter></paramdef>
+#          ...
+#       </funcprototype>
+#       </funcsynopsis>
+#     </para>
+#
+#     <para>
+#       DESCRIPTION
+#     </para>
+#
+#     <variablelist>
+#       <varlistentry>
+# 	<term>
+# 	  <parameter>ARG1</parameter>
+# 	  TYPE
+# 	</term>
+# 	<listitem>
+# 	  <para>
+# 	    ARG1 DESCRIPTION
+# 	  </para>
+# 	</listitem>
+#       </varlistentry>
+#       ...
+#     </variablelist>
+#
+#     <para>
+#       REDACTED FORM
+#     </para>
+#     <para>
+#       EXAMPLES LIST
+#     </para>
+#   </sect1>
+
+#  Call this script by giving the swig *.i file defining the
+#  octave binding of PLplot as the first argument, the master file (typically
+#  plplotdoc.xml) as the second argument, the API chapter file
+#  (typically api.xml) as the third argument, and the output file
+#  (typically swig_documentation.i) as the fourth argument.
+
+%rename_hash = ();
+
+# Figure out the octave renames.
+open (PLPLOT_OCTAVE_I, "< $ARGV[0]") or die "Can't open $ARGV[0] : $!";
+while( <PLPLOT_OCTAVE_I>){
+    if(/^%rename\( *([\w]*) *\) *([\w]*);$/){
+	$rename_hash{ $1 } = $2;
+    }
+}
+close (PLPLOT_OCTAVE_I);
+
+#print "the complete rename hash is\n";
+#while ( ($key, $value) = each(%rename_hash) ) {
+#    print "$key => $value\n";
+#}
+
+use XML::Parser;
+use XML::DOM;
+use Text::Wrap;
+$Text::Wrap::columns = 75;
+$Text::Wrap::unexpand = 0;
+
+$api = "";
+open (MASTER, "< $ARGV[1]");
+while (<MASTER>) {
+  if (/^(<!DOCTYPE.*)\[/) {
+    $api .= "$1 [\n";
+  }
+  elsif (/^<\?xml/) {
+    $api .= '<?xml version="1.0" standalone="yes"?>
+';
+  }
+# Use entities from MASTER starting with "pl"
+  elsif (/^<!ENTITY pl/) {
+    $api .= $_;
+  }
+# Use entities from MASTER starting with "PL"
+  elsif (/^<!ENTITY PL/) {
+    $api .= $_;
+  }
+}
+# Add a few additional entities that are needed.
+$api .= "<!ENTITY amp '#38;#38;'>
+<!ENTITY deg ' degrees'>
+<!ENTITY gt '&#x003E;'>
+<!ENTITY leq '&#38;#60;='>
+<!ENTITY le '&#38;#60;='>
+<!ENTITY lt '&#38;#60;'>
+<!ENTITY ndash '--'>
+]>\n";
+close MASTER;
+
+open (API, "< $ARGV[2]");
+$/ = undef;
+$api .= <API>;
+close API;
+
+sub process_node {
+  my $ret = "";
+  my $t = shift;
+  my $c = $t->getChildNodes;
+  my $m = $c->getLength;
+  for (my $j = 0; $j < $m; $j++) {
+    my $e = $c->item($j);
+    my $nt = $e->getNodeType;
+    if ($nt == TEXT_NODE) {
+      my $a = $e->getData;
+      $a =~ s/^\s+/ /;
+      $a =~ s/^\s+$//;
+      $a =~ s/\n\s+/ /g;
+      $ret .= $a;
+    }
+    elsif ($nt == ELEMENT_NODE) {
+      my $tag = $e->getTagName;
+    if ($tag eq "parameter") {
+        $ret .= "\n" . process_node ($e);
+      }
+      elsif  ($tag eq "function") {
+        $ret .= process_node ($e);
+      }
+      elsif  ($tag eq "link") {
+        $ret .= process_node ($e) ;
+      }
+      elsif  ($tag eq "funcprototype") {
+        $startproto = 1;
+	my $p = process_node ($e);
+	$p =~ s/ +$//;
+        $ret .= $p . ")";
+      }
+      elsif  ($tag eq "paramdef") {
+	my $p = process_node ($e);
+	$p =~ s/ +$//;
+        $ret .= ($startproto ? "(" : ", ") . $p;
+        $startproto = 0;
+      }
+      elsif  ($tag eq "term") {
+        $ret .= "\n" . process_node ($e) . ":";
+      }
+      elsif  ($tag eq "listitem") {
+        $ret .= "\t" . process_node ($e) . "\n";
+      }
+      elsif  ($tag eq "xref") {
+        $ret .= "the PLplot documentation";
+      }
+      elsif ($tag eq "simplelist") {
+        my $ncols = $e->getAttributeNode ("columns")->getValue;
+        my $children = $e->getElementsByTagName ("member");
+        my $nc = $children->getLength;
+        $ret .= join ("", map {
+            ($_ % $ncols ? "\t" : "\n")
+              . process_node ($children->item ($_))
+                . " ";
+           } (0 .. ($nc - 1))) . "\n\n";
+      }
+      elsif  ($tag eq "varlistentry") {
+        $ret .= "\n" . process_node ($e);
+      }
+      else {
+        $ret .= process_node ($e);
+      }
+    }
+    else {
+      $ret .= process_node ($e);
+    }
+  }
+  $ret =~ s/^\s+//;
+  return $ret;
+}
+
+$p = new XML::DOM::Parser(ErrorContext => 2);
+$sects = $p->parse ($api)->getElementsByTagName ("sect1");
+my $ns = $sects->getLength;
+$titles = "";
+
+open (SWIG_DOC, "> $ARGV[3]");
+# Suppress warnings about UTF-8 in SWIG_DOC.
+binmode SWIG_DOC, ':utf8';
+
+print SWIG_DOC "// This file is generated by doc/docbook/src/api2swigdoc.pl from\n";
+print SWIG_DOC "// doc/docbook/src/api.xml.  Do not modify by hand since this file\n";
+print SWIG_DOC "// will be overwritten.  Edit doc/docbook/src/api.xml instead.\n\n";
+for ($i = 0; $i < $ns; $i++) {
+  $fun = $sects->item ($i);
+  $name = $fun->getAttribute ("id");
+  $c = $fun->getChildNodes;
+  $nc = $c->getLength;
+  $desc = "";
+  $varlist = "";
+  $got_synopsis = 0;
+  $indent = '    ';
+  for ($j = 0; $j < $nc; $j++) {
+    $part = $c->item($j);
+    if ($part->getNodeType == ELEMENT_NODE) {
+      $contents = process_node ($part);
+      $node = $part->getTagName;
+      if ($node eq "title") {
+        $title = $contents;
+      }
+      elsif ($node eq "para") {
+        if ($got_synopsis) {
+          $desc .=  wrap ($indent, $indent, split(/\n\s*\n/, $contents)) . "\n\n";
+        }
+        else {
+          $synopsis = $contents;
+          $got_synopsis = 1;
+        }
+      }
+      elsif ($node eq "variablelist") {
+        $varlist = $contents;
+      }
+    }
+  }
+  $varlist = join ("\n", map {
+                           s/\t/    /g;
+                           /(^\s+)/;
+                           $_ = wrap ($indent . $1,
+                                      $indent . $1 . $indent, $_);
+                           s/\t/    /g;
+                           $_;
+                         } split ("\n", $varlist));
+  # Get rid of preceding name identifier followed by ":" and any extra
+  # blanks that is normally part of the raw title in api.xml.
+  $title =~s/^.*: *//;
+
+  # Escape double quotes in description and arguments
+  $desc =~ s/\"/\\"/g;
+  $varlist =~ s/\"/\\"/g;
+  # Perl processing leaves some trailing blanks.  Get rid of those.
+  $title =~ s/ *\n/\n/g;
+  $desc =~ s/ *\n/\n/g;
+  $synopsis =~ s/ *\n/\n/g;
+  $varlist =~ s/ *\n/\n/g;
+  $title =~ s/ *$//;
+  $desc =~ s/ *$//;
+  $synopsis =~ s/ *$//;
+  $varlist =~ s/ *$//;
+  print SWIG_DOC "%feature( \"docstring\", \"$title\n";
+  print SWIG_DOC "\nDESCRIPTION:\n\n$desc\n";
+  print SWIG_DOC "\nSYNOPSIS:\n\n$synopsis\n";
+  print SWIG_DOC "\nARGUMENTS:\n\n$varlist\n"
+    if not $varlist eq "";
+  print SWIG_DOC "\")\n";
+  if(exists  $rename_hash{ $name } ) {
+      print SWIG_DOC "#ifdef SWIG_OCTAVE\n";
+      print SWIG_DOC "$rename_hash{ $name };\n";
+      print SWIG_DOC "#else\n";
+      print SWIG_DOC "$name;\n";
+      print SWIG_DOC "#endif\n\n";
+  } else {
+      print SWIG_DOC "$name;\n\n";
+  }
+}
+close SWIG_DOC;

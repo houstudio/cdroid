@@ -1,0 +1,23 @@
+The files in this directory originated with Joao Cardoso's 2003
+download of Pavel Sakov's nn library which was immediately stripped
+down by Joao to just the parts he needed to help implement the
+plgriddata API for the 'plplot' C library and with calls to the
+non-free triangle library <http://www.cs.cmu.edu/~quake/triangle.html>
+that appeared in the original nn replaced by equivalent calls to the
+free qhull library <http://www.qhull.org/>.  The PLplot development
+team have been maintaining that stripped version of the nn library
+ever since with no further contribution (except for the new LICENSE
+text referred to below) from Pavel Sakov.
+
+As of 2017-07-11 Pavel Sakov gave us permission to update the license
+of our stripped version of nn to be the same as the current licence of
+his modern nn version (without the trailing note concerning the
+triangle library since that is not relevant to our stripped version)
+which we cut and pasted on that date from
+<https://github.com/sakov/nn-c/blob/master/nn/LICENSE> and stored in
+the LICENSE file in this directory.  The only additional changes we
+have made to that file are to add additional lines to the copyright
+notice at the top reflecting Joao Cardoso's initial commit in 2003 and
+the further commits since then (as recorded in our software repository
+log) to this stripped version of the nn library by him and other
+members of the PLplot development team.

@@ -1,0 +1,35 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSCOL0A 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplscol0a\fP - Set 8-bit RGB values and PLFLT alpha transparency value for given cmap0 color index
+.SH SYNOPSIS
+\fBplscol0a\fP(\fIicol0\fP, \fIr\fP, \fIg\fP, \fIb\fP, \fIalpha\fP)
+.SH DESCRIPTION
+
+.P
+Set 8-bit RGB value and PLFLT alpha transparency value for given cmap0 (see the PLplot documentation) index.  Overwrites the previous color value for the given index and, thus, does not result in any additional allocation of space for colors.
+.P
+This function is used in example 30.
+.SH ARGUMENTS
+.TP
+\fIicol0\fP (\fBPLINT\fP(3plplot), input)
+Color index.  Must be less than the maximum number of colors (which is set by default, by \fBplscmap0n\fP(3plplot), or even by \fBplscmap0\fP(3plplot)).
+.TP
+\fIr\fP (\fBPLINT\fP(3plplot), input)
+Unsigned 8-bit integer (0-255) representing the degree of red in the color.
+.TP
+\fIg\fP (\fBPLINT\fP(3plplot), input)
+Unsigned 8-bit integer (0-255) representing the degree of green in the color.
+.TP
+\fIb\fP (\fBPLINT\fP(3plplot), input)
+Unsigned 8-bit integer (0-255) representing the degree of blue in the color.
+.TP
+\fIalpha\fP (\fBPLFLT\fP(3plplot), input)
+Value of the alpha transparency in the range (0.0-1.0).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

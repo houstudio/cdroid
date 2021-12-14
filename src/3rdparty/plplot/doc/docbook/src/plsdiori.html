@@ -1,0 +1,51 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plsdiori: Set plot orientation</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plsdimap.html" title="plsdimap: Set up transformation from metafile coordinates"><link rel="next" href="plsdiplt.html" title="plsdiplt: Set parameters that define current plot-space window"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plsdiori</code>: Set plot orientation
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plsdimap.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plsdiplt.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plsdiori"></a>
+      <code class="function">plsdiori</code>: Set plot orientation
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plsdiori</b>
+          (</code></td><td>
+            <var class="pdparam">rot</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set plot orientation parameter which is multiplied by 90° to
+      obtain the angle of rotation.  Note, arbitrary rotation parameters
+      such as 0.2 (corresponding to 18°) are possible, but the usual
+      values for the rotation parameter are 0., 1., 2., and 3. corresponding
+      to 0° (landscape mode), 90° (portrait mode), 180°
+      (seascape mode), and 270° (upside-down mode).  If <a class="link" href="plsdiori.html" title="plsdiori: Set plot orientation"><code class="function">plsdiori</code></a> is
+      not called the default value of
+      <code class="literal">
+        <em class="parameter"><code>rot</code></em>
+      </code> is 0.
+    </p><p>
+      N.B. aspect ratio is unaffected by calls to <a class="link" href="plsdiori.html" title="plsdiori: Set plot orientation"><code class="function">plsdiori</code></a>.  So you will
+      probably want to change the aspect ratio to a value suitable for the
+      plot orientation using a call to <a class="link" href="plsdidev.html" title="plsdidev: Set parameters that define current device-space window"><code class="function">plsdidev</code></a> or the command-line
+      options <code class="literal">
+        <em class="parameter"><code>-a</code></em>
+      </code> or
+      <code class="literal">
+        <em class="parameter"><code>-freeaspect</code></em>
+      </code>.  For more
+      documentation of those options see <a class="xref" href="arguments.html" title="Command Line Arguments">the section called “Command Line Arguments”</a>.  Such
+      command-line options can be set internally using <a class="link" href="plsetopt.html" title="plsetopt: Set any command-line option"><code class="function">plsetopt</code></a> or set
+      directly using the command line and parsed using a call to
+      <a class="link" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><code class="function">plparseopts</code></a>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>rot</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT-type"><code class="function">PLFLT</code></a></code>, input)
+        </span></dt><dd><p>
+            Plot orientation parameter.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plsdiori(rot)</code>
+    </p><p>
+      This function is not used in any examples.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plsdimap.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plsdiplt.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plsdimap</code>: Set up transformation from metafile
+      coordinates
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plsdiplt</code>: Set parameters that define current
+      plot-space window
+    </td></tr></table></div></body></html>

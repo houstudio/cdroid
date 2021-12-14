@@ -1,0 +1,77 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Compiling PLplot on GNU-Linux
+-----------------------------
+
+### Prerequisites
+
+[List of Debian/Ubuntu packages](List_of_Debian_Ubuntu_packages "wikilink") provides a list of packages needed to configure and compile PLplot successfully. The Debian/Ubuntu package names should be a rough guide for the names of required packages for other Linux distributions.
+
+### Quick recipe for building and installing PLplot from a tarball
+
+This quick method should be relevant for most Linux users. Assume the path /home/yourname/plplot exists and is empty, and assume you have put the latest released PLplot version string into the "PL_VERSION" environment variable (as of this writing do that using "export PL_VERSION=5.10.0"). Then do the following steps:
+
+~~~~
+1.  cd /home/yourname/plplot
+2.  rm -rf plplot-$PL_VERSION build_dir install_directory
+3.  tar -zxf plplot-$PL_VERSION.tar.gz
+4.  mkdir build_directory
+5.  cd build_directory
+6.  cmake -DCMAKE_INSTALL_PREFIX:PATH=/home/yourname/plplot/install_directory ../plplot-$PL_VERSION >& cmake.out
+7.  less cmake.out
+8.  make VERBOSE=1 >& make.out
+9.  less make.out
+10. make VERBOSE=1 install >& make_install.out
+11. less make_install.out
+~~~~
+
+Step (1) changes your directory to the correct starting directory; step(2) removes the stale source, build, and install trees (note be careful with rm -rf since that is a powerful and potentially dangerous command); step (3) unpacks the tarball into the plplot-$PL_VERSION subdirectory of your starting directory; step (4) creates a new subdirectory where the configuration and build steps will be done; step (5) changes to that subdirectory; step (6) configures PLplot using the cmake application and captures the resulting output in the cmake.out file. (n.b. the "../plplot-$PL_VERSION" refers to the top of the source directory tree); step (7) lets you look at that captured output for any error or warning messages; step (8) builds PLplot and captures the resulting output in the make.out file; step (9) lets you look at that captured output for any error or warning messages; step (10) installs PLplot in the /home/yourname/plplot/install_directory specified in step (6) as the install prefix and captures the resulting output in the make_install.out file; and step (11) lets you look at that captured output for any error or warning messages.
+
+To summarize, the various directories referred to above are:
+
+1.  /home/yourname/plplot/plplot-$PL_VERSION, the top-level directory of the source tree (created by unpacking the tarball),
+2.  /home/yourname/plplot/build_directory, the top-level directory of the build tree, and
+3.  /home/yourname/plplot/install_directory, the top-level directory of the install tree.
+
+For more details consult [the generic Unix instructions for our build system](Building_PLplot#Generic_Unix_instructions_for_our_build_system "wikilink").
+
+### Other options
+
+The Python and Java interfaces to PLplot are generated with SWIG so if you want those interfaces you must install SWIG. If SWIG is installed and cmake cannot find it, then you must help cmake out by specifying the directory where swig.swg (an important SWIG file) is located using the CMAKE_INCLUDE_PATH environment variable. For example, one of our users reported success with finding SWIG and generating our Python and Java interfaces for Arch Linux by specifying
+
+CMAKE_INCLUDE_PATH=/usr/share/swig/1.3.27
+
+Normally, though, such extraordinary measures are not required on Linux.
+
+Compiling the PLplot examples
+-----------------------------
+
+Following the previous quick recipe for building and installing PLplot, here is how to compile the examples and test them:
+
+~~~~
+1.  cd /home/yourname/plplot/install_directory/share/plplot$PL_VERSION/examples
+2.  make test_noninteractive >& make_test.out
+3.  less make_test.out
+~~~~
+
+The test takes a significant amount of time and a large number of plot files (pdf, png, xfig,...) that consume a couple of gigabytes of disk space are generated. For more details consult [Testing PLplot](Testing_PLplot "wikilink").
+
+Troubleshooting
+---------------
+
+### Cairo undefined references
+
+If during the make stage or when making examples or your own programs you see undefined references to pango_layout_get_baseline or cairo_ps_surface_set_eps then it is likely that your version of Cairo is older than required. This has been reported on more conservative distros e.g. CentOS/RedHat. You can turn off Cairo dependencies by using the cmake flag -DDEFAULT_NO_CAIRO_DEVICES=ON
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

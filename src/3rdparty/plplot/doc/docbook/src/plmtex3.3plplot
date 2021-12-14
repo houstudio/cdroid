@@ -1,0 +1,43 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLMTEX3 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplmtex3\fP - Write text relative to viewport boundaries in 3D plots
+.SH SYNOPSIS
+\fBplmtex3\fP(\fIside\fP, \fIdisp\fP, \fIpos\fP, \fIjust\fP, \fItext\fP)
+.SH DESCRIPTION
+
+.P
+Writes text at a specified position relative to the viewport boundaries.  Text may be written inside or outside the viewport, but is clipped at the subpage boundaries.  The reference point of a string lies along a line passing through the string at half the height of a capital letter.  The position of the reference point along this line is determined by \fIjust\fP, and the position of the reference point relative to the viewport is set by \fIdisp\fP and \fIpos\fP.
+.P
+Redacted form: \fBplmtex3(side, disp, pos, just, text)\fP
+.P
+This function is used in example 28.
+.SH ARGUMENTS
+.TP
+\fIside\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying the side of the viewport along which the text is to be written. The string should contain one or more of the following characters: [xyz][ps][v]. Only one label is drawn at a time, i.e. xyp will only label the X axis, not both the X and Y axes. x: Label the X axis.
+y: Label the Y axis.
+z: Label the Z axis.
+p: Label the primary axis. For Z this is the leftmost Z axis. For X it is the axis that starts at y-min. For Y it is the axis that starts at x-min.
+s: Label the secondary axis.
+v: Draw the text perpendicular to the axis.
+
+.TP
+\fIdisp\fP (\fBPLFLT\fP(3plplot), input)
+Position of the reference point of string, measured outwards from the specified viewport edge in units of the current character height.  Use negative \fIdisp\fP to write within the viewport.
+.TP
+\fIpos\fP (\fBPLFLT\fP(3plplot), input)
+Position of the reference point of string along the specified edge, expressed as a fraction of the length of the edge.
+.TP
+\fIjust\fP (\fBPLFLT\fP(3plplot), input)
+Specifies the position of the string relative to its reference point.  If \fIjust\fP=0. , the reference point is at the left and if \fIjust\fP=1. , it is at the right of the string.  Other values of \fIjust\fP give intermediate justifications.
+.TP
+\fItext\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string to be written out.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

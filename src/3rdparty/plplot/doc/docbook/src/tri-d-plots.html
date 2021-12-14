@@ -1,0 +1,67 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Three-dimensional Plots</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="characters.html" title="Setting Character Attributes"><link rel="next" href="legends.html" title="Legends and color bars"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Three-dimensional Plots</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="characters.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="legends.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tri-d-plots"></a>Three-dimensional Plots</h2></div></div></div><p>PLplot includes three-dimensional plot routines that plot
+    functions of the two independent variables <code class="literal">x</code> and
+    <code class="literal">y</code> in a variety of ways (see <a class="xref" href="tri-d-plots.html#surface-plots" title="Surface Plots">the section called “Surface Plots”</a>, <a class="xref" href="tri-d-plots.html#contour-plots" title="Contour Plots">the section called “Contour Plots”</a>, <a class="xref" href="tri-d-plots.html#shade-plots" title="Shade plots">the section called “Shade plots”</a>, <a class="xref" href="tri-d-plots.html#image-plots" title="Image plots">the section called “Image plots”</a>, and <a class="xref" href="tri-d-plots.html#vector-plots" title="Vector plots">the section called “Vector plots”</a>).</p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="surface-plots"></a>Surface Plots</h3></div></div></div><p>PLplot provides the routines <a class="link" href="plmesh.html" title="plmesh: Plot surface mesh"><code class="function">plmesh</code></a>, <a class="link" href="plmeshc.html" title="plmeshc: Magnitude colored plot surface mesh with contour"><code class="function">plmeshc</code></a>,
+      <a class="link" href="plot3d.html" title="plot3d: Plot 3-d surface plot"><code class="function">plot3d</code></a>, <a class="link" href="plot3dc.html" title="plot3dc: Magnitude colored plot surface with contour"><code class="function">plot3dc</code></a>, <a class="link" href="plot3dcl.html" title="plot3dcl: Magnitude colored plot surface with contour for z[x][y] with y index limits"><code class="function">plot3dcl</code></a>, <a class="link" href="plsurf3d.html" title="plsurf3d: Plot shaded 3-d surface plot"><code class="function">plsurf3d</code></a>, <a class="link" href="plsurf3dl.html" title="plsurf3dl: Plot shaded 3-d surface plot for z[x][y] with y index limits"><code class="function">plsurf3dl</code></a> and <a class="link" href="plfill3.html" title="plfill3: Draw filled polygon in 3D"><code class="function">plfill3</code></a>
+      to plot the projection of a 3D surface on an existing 2D window.  Our
+      standard examples <a class="ulink" href="http://plplot.org/examples.php?demo=08" target="_top">08</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=11" target="_top">11</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=15" target="_top">15</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=21" target="_top">21</a>, and <a class="ulink" href="http://plplot.org/examples.php?demo=28" target="_top">28</a> illustrate how
+      these routines are used.</p><p>In all cases the transformations required to plot the
+      projection of a 3D surface on a 2D window are configured by <a class="link" href="plw3d.html" title="plw3d: Configure the transformations required for projecting a 3D surface on a 2D window"><code class="function">plw3d</code></a>
+      and are done to a rectangular cuboid enclosing the 3D surface which
+      has its limits expressed in 3D world coordinates and also normalized
+      3D coordinates (used for interpreting the altitude and azimuth of the
+      viewing angle).  This representation of the transformation process
+      allows considerable flexibility in specifying how the surface is
+      depicted.  The lengths of the sides of the normalized rectangular
+      cuboid are independent of the 3D world coordinate ranges of each of
+      the variables, making it possible to use <span class="quote">“<span class="quote">reasonable</span>”</span>
+      viewing angles even if the ranges of the 3D world coordinates on the
+      axes are very different.  The size of the normalized rectangular
+      cuboid is determined essentially by the size of the two-dimensional
+      window into which it is to be mapped.  The normalized cuboid is
+      centered about its origin in the <code class="literal">x</code> and
+      <code class="literal">y</code> directions, but rests on the plane <code class="literal">z =
+      0</code>.  It is viewed by an observer located at altitude
+      <code class="literal">alt</code> and azimuth <code class="literal">az</code>, where both
+      angles are measured in degrees.  The altitude should be restricted to
+      the range zero to ninety degrees for proper operation, and represents
+      the viewing angle above the xy plane of the normalized cuboid.  The
+      azimuth is defined so that when <code class="literal">az = 0</code>, the
+      observer sees the xz plane face on, and as the angle is increased, the
+      observer moves clockwise around the normalized cuboid as viewed from
+      above the xy plane.  The azimuth can take on any value.  In the above
+      list of examples, we have chosen x and y world-coordinate ranges near
+      (-1.0-1.0) for the 2D window, and x, y, z sizes of the normalized
+      cuboid near (1., 1., 1.), and users will likely want to adopt similar
+      values as well.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="contour-plots"></a>Contour Plots</h3></div></div></div><p>PLplot provides the <a class="link" href="plcont.html" title="plcont: Contour plot"><code class="function">plcont</code></a> routine for generating
+      contour plots and our standard examples <a class="ulink" href="http://plplot.org/examples.php?demo=09" target="_top">08</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=14" target="_top">14</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=16" target="_top">16</a>, and <a class="ulink" href="http://plplot.org/examples.php?demo=22" target="_top">22</a> illustrate how
+      this routine is used.  The contourer uses a contour-following
+      algorithm so that it is possible to use non-continuous line styles.
+      Further, one may specify arbitrary coordinate mappings from array
+      indices to world coordinates, such as for contours in a polar
+      coordinate system.</p><p>The path of each contour is initially computed in terms of
+      the values of the indices of the matrix that holds the data to be
+      contoured.  Before these can be drawn in the current window (see <a class="xref" href="viewport_window.html#windows" title="Defining the Window">the section called “Defining the Window”</a>), it is necessary to convert from these array
+      indices into world coordinates.  This transformation is normally done
+      by a callback function which is supplied as an argument to <a class="link" href="plcont.html" title="plcont: Contour plot"><code class="function">plcont</code></a>.
+      For C use of <a class="link" href="plcont.html" title="plcont: Contour plot"><code class="function">plcont</code></a> we have included directly in the PLplot library
+      the following transformation callback routines: <a class="link" href="pltr0.html" title="pltr0: Identity transformation for matrix index to world coordinate mapping"><code class="function">pltr0</code></a> (identity
+      transformation); <a class="link" href="pltr1.html" title="pltr1: Linear interpolation for matrix index to world coordinate mapping using singly dimensioned coordinate arrays"><code class="function">pltr1</code></a> (linear interpolation in singly dimensioned
+      coordinate arrays); and <a class="link" href="pltr2.html" title="pltr2: Linear interpolation for grid to world mapping using doubly dimensioned coordinate arrays (row-major order as per normal C 2d arrays)"><code class="function">pltr2</code></a> (linear interpolation in doubly
+      dimensioned coordinate arrays), but other callbacks can be used for
+      the C case instead.  The above list of examples illustrates how this
+      callback argument and associated transformation from index arguments to
+      world coordinates is implemented in each of our supported
+      languages.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="shade-plots"></a>Shade plots</h3></div></div></div><p>PLplot provides the <a class="link" href="plshade.html" title="plshade: Shade individual region on the basis of value"><code class="function">plshade</code></a> and <a class="link" href="plshades.html" title="plshades: Shade regions on the basis of value"><code class="function">plshades</code></a> routines for
+      generating shade plots and our standard examples <a class="ulink" href="http://plplot.org/examples.php?demo=15" target="_top">15</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=16" target="_top">16</a>, <a class="ulink" href="http://plplot.org/examples.php?demo=21" target="_top">21</a>, and <a class="ulink" href="http://plplot.org/examples.php?demo=22" target="_top">22</a> illustrate how
+      those routines are used including how the needed transformation from
+      index arguments to world coordinates is implemented in each of
+      our supported languages.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="image-plots"></a>Image plots</h3></div></div></div><p>PLplot provides the <a class="link" href="plimage.html" title="plimage: Plot a 2D matrix using cmap1 with automatic color adjustment"><code class="function">plimage</code></a> and <a class="link" href="plimagefr.html" title="plimagefr: Plot a 2D matrix using cmap1"><code class="function">plimagefr</code></a> routines for
+      generating images plots and our standard example <a class="ulink" href="http://plplot.org/examples.php?demo=20" target="_top">20</a> illustrates how
+      those routines are used including how the needed transformation from
+      index arguments to world coordinates is implemented in each of
+      our supported languages.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="vector-plots"></a>Vector plots</h3></div></div></div><p>PLplot provides the <a class="link" href="plvect.html" title="plvect: Vector plot"><code class="function">plvect</code></a> routine for
+      generating vector plots and our standard example <a class="ulink" href="http://plplot.org/examples.php?demo=22" target="_top">22</a> illustrates how
+      that routine is used including how the needed transformation from
+      index arguments to world coordinates is implemented in each of
+      our supported languages.  In addition that routine shows
+      how to call <a class="link" href="plsvect.html" title="plsvect: Set arrow style for vector plots"><code class="function">plsvect</code></a> to set the arrow style for vector plots.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="characters.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="legends.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Setting Character Attributes </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Legends and color bars</td></tr></table></div></body></html>

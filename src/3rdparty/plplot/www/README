@@ -1,0 +1,200 @@
+2007-03-31: Since the conversion to subversion these instructions are even
+more dated, but we keep them for a historical reference.  Instead, follow the
+directions in ../README.Release_Manager_Cookbook.
+
+11-27-06: This may work, but it is deprecated. Please follow the
+instructions contained in README.Release_Manager_Cookbook.
+
+
+Remote installation of the PLplot web site
+==========================================
+
+We are heading towards a fully automated, remote web site management for
+the PLplot project.  For now there are five areas in the site that should
+be treated individually.  Note that the instructions below are valid for
+the present situation, as in 2004-02, in which the web site is hosted by
+SourceForge.  This document must be updated in the enventuality of a moving
+to another host.
+
+The uploading of the five areas as described below are non-interfering, in
+the sense that each one can be done without affecting the others.
+
+
+Main www area
+-------------
+
+The sources for this area are in the CVS module www.  You must be a
+developer in the PLplot project at SourceForge in order to checkout, modify
+and upload the web site.
+
+To obtain a fresh CVS tree:
+
+    export CVS_RSH=ssh
+    cvs -d :ext:joeplplotter@cvs.sf.net/cvsroot/plplot co www
+
+To install the whole web site, just type:
+
+    cd www
+    WWW_USER=joeplplotter make
+
+and everything will be built and uploaded automatically, including the
+stuff in the announce directory.  Sensible variables are defined in file
+Makefile-vars, which is included by both Makefile and announce/Makefile.
+
+Needless to say, this only works with GNU make.  It is better to run make
+under ssh-agent/ssh-add, otherwise you will be prompted several times for
+your SF password.
+
+Caveat: the command above will happily upload the entire contents of the
+subdirectories.  This means that it may upload useless files, most notably
+the CVS directories present when working from a cvs checked out source.
+Using cvs export is more appropriate here, although the useless files will
+not hurt the web site.  I may try to find a fix for this in the future.
+
+It is also possible to install individual files by overriding the FILES
+variable in the Makefile, like this:
+
+    make install FILES="resources/index.html examples/index.html"
+
+
+Examples area
+-------------
+
+The examples area in the web site need a set of PNG files as well as the
+demos source files that are obtained from the PLplot source tree.  To
+obtain it from CVS, do:
+
+    export CVS_RSH=ssh
+    cvs -d :ext:joeplplotter@cvs.sf.net/cvsroot/plplot co plplot
+
+Then go to the plplot directory and type:
+
+    WWW_USER=joeplplotter scripts/htdocs-gen_plot-examples.sh
+
+This will build the PNG files and upload everything to the
+htdocs/examples-data directory in the SF shell server.
+
+To avoid rebuild of the whole project, launch it like this:
+
+    build=false scripts/htdocs-gen_plot-examples.sh
+
+
+DocBook area
+------------
+
+The documentation files (HTML, PDF, info, etc) generated from the DocBook
+sources are uploaded to the htdocs/docbook-manual directory in
+shell.sf.net.  They are automatically generated at the PLplot source tree
+by doing:
+
+    ./configure --enable-builddoc
+    cd doc/docbook/src
+    make
+
+Note that you will need several tools for processing the DocBook sources.
+See doc/docbook/README.developers for details.
+
+To install the DocBook area in the web site, do:
+
+    make WWW_USER=joeplplotter www-install
+
+
+CVS snapshot tarballs area
+--------------------------
+
+To generate a cvs snapshot tarball, use the make-cvs-tarball.sh in the
+directory scripts.  This script accepts many arguments, like the login anme
+in teh remote system, the branch name, and a version string.  Type:
+
+    make-cvs-tarbal.sh -h
+
+For a usage notice.
+
+A typical usage would be:
+
+    make-cvs-tarball.sh -v 5.3.0.cvs -r v5_3_0 -u joeplplotter
+
+The -r option is the CVS branch label from which the tarball is built. It
+default to HEAD.  The -v argument is the version string that will be
+substituted in the argument of the AC_INIT macro call in configure.ac.  If
+it is absent, then it will be automatically generated from the current
+date, like 5.3.0.cvs.20040207.
+
+You can prevent the building of the Docbook documentation (and, by
+consequence, its inclusion in the tarball), by giving the option -n to
+make-cvs-tarbal.sh.
+
+The resulting tarball can be uploaded to htdocs/cvs-tarball in the web site
+with the upload-cvs-tarball.sh, like this:
+
+    WWW_USER=joeplplotter upload-cvs-tarball.sh plplot-5.3.0.cvs.20040207.tar.gz
+
+A file called <tarball>.asc containing the detached GPG signature will also
+be generated and uploaded.  To override the default GPG key, use the
+environment variable GPGKEY, like this:
+
+    GPGKEY=0x1234ABCD upload-cvs-tarball.sh tarball.tar.gz
+
+
+The release process
+-------------------
+
+Tarball releases are generated with the make-cvs-tarball.sh script as
+described above.  The script tags the CVS repository with a unique tag
+generated from the current date and time.  This tag has the following
+structure:
+
+    cvs-tarball_<year>-<month>-<day>-<hour>-<minutes>-<seconds>
+
+where the time is UTC-based.
+
+This tag can be used later to tag the final release with a symbolic string
+(vM_N_P) in the CVS repository. Here is the algorithm for a typical release
+cycle (for the sake of the example, let us say we are going to release
+version 5.6.7):
+
+0) Change the release number in AC_INIT to 5.6.7 in configure.ac
+
+1) Generate the tarball with a command like:
+   path/to/make-cvs-tarball.sh -v 5.6.7 2>&1 | tee build.log
+
+2) Test the generated tarball (plplot-5.6.7.tar.gz)
+   You might also give options -c an -i to make some checks automatic
+
+3) Are you happy with the tarball?
+   NO:
+     Make changes in CVS and go back to 1)
+   YES:
+     4) Release the tarball
+     5) Tag the cvs repository with:
+        cvs rtag -r cvs-tarball-<date>-<time> v5_6_7
+        (where cvs-tarball-<date>-<time> was obtained in step 1)
+
+6) Remove the temporary tags using scripts/rm-cvs-tarball-tags.pl
+
+Option -r of make-cvs-tarball.sh must be used if the release is being taken
+from a branch in the CVS repository.
+
+
+Debian area
+-----------
+
+This area is maintained by the Debian maintainer of the PLplot packages.
+To generate the Debian package, install the devscripts packages, go to the
+top_scrdir directory and type:
+
+    debuild -us -uc -i
+
+Go then to the upper directory and launch the uplaod-debs.pl script:
+
+    cd ..
+    WWW_USER=joeplplotter plplot/debian/upload-debs.pl
+
+The packages, as well as an automatically generated index.html will be
+uploaded to htdocs/debian.
+
+ -- Rafael Laboissiere <rlaboiss@users.sf.net>
+
+Local Variables:
+mode: indented-text
+End:

@@ -1,0 +1,98 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>How to use the Ada bindings</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="ada.html" title="Chapter 8. Ada Language"><link rel="prev" href="ada_obtaining.html" title="Obtaining the Software"><link rel="next" href="ada_unique.html" title="Unique Features of the Ada bindings"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">How to use the Ada bindings</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ada_obtaining.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Ada Language</th><td width="20%" align="right"> <a accesskey="n" href="ada_unique.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="ada_howto"></a>How to use the Ada bindings</h2></div></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_95_2005"></a>Ada 95 versus Ada 2005</h3></div></div></div><p>The bindings will work for either Ada 95 or Ada 2005 but there is
+      a slightly subtle point regarding the use and declaration of vectors and
+      matrices. The package <code class="literal">PLplot_Auxiliary</code> declares the
+      types</p><pre class="programlisting">
+    type Real_Vector is array (Integer range &lt;&gt;) of Long_Float;
+    type Real_Matrix is array (Integer range &lt;&gt;, Integer range &lt;&gt;) of Long_Float;
+</pre><p>These declarations mimic exactly the declarations described in
+      Annex G.3, Vector and Matrix Manipulation, of the Ada 2005 reference
+      manual when the generic package therein described is specialized for
+      <code class="literal">Long_Float</code>. The reason for this approach is to avoid
+      requiring the user program to <code class="literal">with</code>
+      <code class="literal">Ada.Numerics.Long_Real_Arrays</code> simply to gain access
+      to these types and in the process require linking to the BLAS and LAPACK
+      numerical libraries.</p><p>Ada 2005 introduced an annex G.3 which formally defines vector and
+      matrix support to Ada, along with some common mathematical operations on
+      those types. (This feature is a specific to vectors and matrices and
+      extends the usual array apparatus.) The Ada PLplot user has a choice on how
+      to deal with this. The default, as described in
+      <code class="literal">PLplot_Auxiliary.ads</code>,
+      has <code class="literal">Real_Vector</code> and <code class="literal">Real_Matrix</code>
+      declared therein, separate from the Ada 2005 declarations. This allows the
+      widest compatibility and does not require an Ada 2005 compiler. However,
+      many users will want to gain the benefit of the built-in declarations of
+      Ada 2005. This is easily done: Read the short comments in
+      <code class="literal">PLplot_Auxiliary.ads</code> on how to comment-out two lines and
+      uncomment three lines. Either configuration will compile correctly, but
+      depending on the Cmake configuration to expose an Ada 2005 compiler in the later
+      case. (Note that at some points in the documentation, Ada 2005 is referred
+      to as Ada 2007, including some Cmake flags.)</p><p>This policy was changed in SVN version 11153. Before this, the
+      type of compiler (Ada 95 or Ada 2005) had to be specified at the time
+      that PLplot was built, and in the case of Ada 2005, the BLAS and LAPACK
+      libraries had to be present and were subsequently linked.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_gnat_nongnat"></a>GNAT versus non-GNAT</h3></div></div></div><p>The bindings were made using the GNAT compiler and there is a
+      slight dependence on that compiler. Specifically, the
+      <code class="literal">Unrestricted_Access</code> attribute of GNAT was used in
+      making the function <code class="literal">Matrix_To_Pointers</code> in
+      <code class="literal">plplotthin.adb</code> and in a few callbacks.
+      <code class="literal">Matrix_To_Pointers</code> is called whenever an Ada matrix
+      (2D array) is passed to a PLplot subroutine. For more about
+      <code class="literal">Unrestricted_Access attribute</code>, see Implementation
+      Defined Attributes in the GNAT Reference Manual. This dependency
+      shouldn't be difficult to remove by either incorporating the GNAT code
+      which implements it, by following the TO-DO comment near the function
+      definition in <code class="literal">plplotthin.adb</code>, or by providing the
+      proper aliasing.</p><p>Another GNAT dependency is used to parse command line arguments in
+      a C-like way.</p><p>Pragma Warnings (Off, "some text") and Pragma Warnings (On, "some
+      text") are used in the bindings to suppress warnings about a particular
+      method used to interface with C code. These pragmas are also used in
+      Ada Examples 21 to suppress a particular warning. Pragma Warnings is a
+      GNAT extension. Non-GNAT usage could simply remove these pragmas with
+      the resulting warnings ignored as they are benign.</p><p>Most of the GNAT dependencies can be found by searching the source
+      code for "<code class="literal">GNAT</code>",
+      "<code class="literal">Unrestricted_Access</code> and <code class="literal">Pragma Warnings</code>."</p><p>The GNAT dependence, though slight, will no doubt frustrate users
+      of other Ada compilers. We welcome comments from those users, especially
+      comments with specific suggestions on how to remove any GNAT-specific
+      usages.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="ada_sample_project"></a>Sample command line project</h3></div></div></div><p>It is instructive to present a simple example that can be compiled
+      and run from the command line. Although this example is specific to one
+      installation, it should be fairly straightforward to adapt it to another
+      installation. Toward that end, it is helpful to understand the PLplot
+      lingo of "build directory" and "installation directory."</p><p>Here is a simple program that will generate a plot of part of a
+      parabola.</p><pre class="programlisting">
+ with
+    PLplot_Auxiliary,
+    PLplot;
+ use
+    PLplot_Auxiliary,
+    PLplot;
+ procedure Simple_Example is
+    x, y : Real_Vector(-10 .. 10);
+ begin
+    for i in x'range loop
+       x(i) := Long_Float(i);
+       y(i) := x(i)**2;
+    end loop;
+    Initialize_PLplot; -- Call this only once.
+    Simple_Plot(x, y); -- Make the plot.
+    End_PLplot;        -- Call this only once.
+ end Simple_Example;
+      </pre><p>Next is a bash script that will compile, bind, and link it. It is
+      installation-specific in that paths to the GNAT compiler, PLplot
+      libraries, and BLAS (Basic Linear Algebra System) and LAPACK (Linear
+      Algebra Package) are hard-coded. You will have to adjust the paths to
+      fit your installation. Some Linux installations which have GNAT 4.3 or
+      later (Ada 2005) preinstalled might have already set the paths to the
+      BLAS and LAPACK libraries.</p><p>(Note that the G.3 Annex of Ada 2005, in the GNAT version, depends
+      heavily on BLAS and LAPACK. These packages are tried-and-true packages
+      that are available from several places in either C or Fortran versions.
+      The present example is specific to OS X which has both C and Fortran
+      versions preinstalled.)</p><pre class="programlisting">
+ #!/bin/bash
+ /usr/local/ada-4.3/bin/gnatmake simple_example.adb \
+ -aI/usr/local/plplot_build_dir/bindings/ada \
+ -aL/usr/local/plplot_build_dir/bindings/ada/CMakeFiles/plplotadad.dir \
+ -largs \
+ /usr/local/plplot/lib/libplplotd.dylib \
+ /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/libblas.dylib \
+ /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/liblapack.dylib
+      </pre><p>The resulting binary program can be run by typing
+      <span class="command"><strong>./simple_example</strong></span></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ada_obtaining.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="ada.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ada_unique.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Obtaining the Software </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Unique Features of the Ada bindings</td></tr></table></div></body></html>

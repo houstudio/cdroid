@@ -1,0 +1,50 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+You need a working cygwin installation. Start cygwin and issue the following commands:
+
+`cd plplot`
+`mkdir buildcygwin`
+`cd buildcygwin`
+`cmake -DCMAKE_INSTALL_PREFIX=install ../`
+`make`
+`make install`
+
+This will build a shared plplot library and install all files into the directory <tt>plplot\\buildcygwin\\install</tt>. The following options are available for cmake:
+
+-   <tt>-DCMAKE_VERBOSE_MAKEFILE=ON</tt>: makefiles provide verbose informations
+-   <tt>-DBUILD_TEST=ON</tt>: all examples will be built also (for test purposes)
+
+The Cygwin platform allows both shared libraries and dynamic drivers, making it almost equivalent to a regular Linux platform in this respect. However:
+
+-   The shared libraries will be installed in the bin directory, not in the lib directory, in accordance with the Windows conventions
+-   They have the extension .dll instead of .so
+
+-   If the PATH environment variable gives access to native Windows compilers before the Cygwin-specific compilers, you need to either reset the PATH variable or specify the Cygwin-specific compilers explicitly.
+
+Note on Tk:
+
+Since the version of Tk that is available from the Cywin distribution uses the X11 Window System, you need to prepare the system before running CMake:
+
+-   Start the X server:
+
+`X &`
+
+-   Set the DISPLAY variable to the name of the X display. Under Cygwin this will be ":0.0" (instead of "localhost:0.0"):
+
+`export DISPLAY=:0.0`
+
+-   Run CMake with Tcl and Tk enabled
+
+Note that the wingcc device driver is also available under Cygwin just as under plain Windows. This means that you can use both device drivers, though the xwin driver requires the X Window server to be running and the wingcc driver does not require anything specific.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

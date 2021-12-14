@@ -1,0 +1,27 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+To take advantage of PLplot's first-class Tcl bindings and examples, it is necessary to install Tcl on Windows. (Note, PLplot's Tk bindings currently depend on X so that Tcl-related component of PLplot will automatically get excluded from Windows builds of PLplot.)
+
+The following directions work on the Linux wine version of Windows. For the Microsoft version of Windows, drop the "wine" from all the following commands and run the \*.exe files directly from MSYS-bash instead.
+
+-   Download the ActiveState Windows version of Tcl from <http://downloads.activestate.com/ActiveTcl/releases/8.5.9.1/ActiveTcl8.5.9.1.294121-win32-ix86-threaded.exe>
+-   Install that version using the "wine ActiveTcl8.5.9.1.294121-win32-ix86-threaded.exe" command. I chose Z:\\home\\wine\\newstart\\tcl\\Tcl as the prefix, but choose any unique location that is convenient for you. Everything else I chose was default. The installer encountered one error near the end concerning not being able to find Win32_init, and it ended up by aborting the TEApot setup. This may be a wine idiosyncrasy, but in any case this error did not matter to the subsequent PLplot build. Under bash the above prefix can be referred to using the variable "\$TCL_PREFIX=/z/home/wine/newstart/tcl/Tcl". Set this variable to whatever you have chosen to use for the prefix in the above installer.
+
+To make Tcl accessible to the PLplot CMake-based build system, set the following environment variables (where I assume here those environment variables have been set previously which is always the case for PATH and usually the case for the other two).
+
+-   PATH=\$TCL_PREFIX/bin:\$PATH
+-   CMAKE_INCLUDE_PATH=\$TCL_PREFIX/include:\$CMAKE_INCLUDE_PATH
+-   CMAKE_LIBRARY_PATH=\$TCL_PREFIX/lib:\$CMAKE_LIBRARY_PATH
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

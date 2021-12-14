@@ -1,0 +1,22 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLEND 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplend\fP - End plotting session
+.SH SYNOPSIS
+\fBplend\fP()
+.SH DESCRIPTION
+
+.P
+Ends a plotting session, tidies up all the output files, switches interactive devices back into text mode and frees up any memory that was allocated.  Must be called before end of program.
+.P
+By default, PLplot's interactive devices (Xwin, TK, etc.) go into a wait state after a call to plend or other functions which trigger the end of a plot page. To avoid this, use the \fBplspause\fP(3plplot) function.
+.P
+Redacted form: \fBplend()\fP
+.P
+This function is used in all of the examples.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

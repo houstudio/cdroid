@@ -1,0 +1,35 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLFILL3 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplfill3\fP - Draw filled polygon in 3D
+.SH SYNOPSIS
+\fBplfill3\fP(\fIn\fP, \fIx\fP, \fIy\fP, \fIz\fP)
+.SH DESCRIPTION
+
+.P
+Fills the 3D polygon defined by the \fIn\fP points in the \fIx\fP, \fIy\fP, and \fIz\fP vectors using the pattern defined by \fBplpsty\fP(3plplot) or \fBplpat\fP(3plplot).  The routine will automatically close the polygon between the last and first vertices.  If multiple closed polygons are passed in \fIx\fP, \fIy\fP, and \fIz\fP then \fBplfill3\fP(3plplot) will fill in between them.
+.P
+Redacted form: General: \fBplfill3(x, y, z)\fP
+
+.P
+This function is used in example 15.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of vertices in polygon.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates of vertices.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of vertices.
+.TP
+\fIz\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the z coordinates of vertices.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

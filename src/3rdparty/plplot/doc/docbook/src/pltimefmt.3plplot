@@ -1,0 +1,67 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLTIMEFMT 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBpltimefmt\fP - Set format for date / time labels
+.SH SYNOPSIS
+\fBpltimefmt\fP(\fIfmt\fP)
+.SH DESCRIPTION
+
+.P
+Sets the format for date / time labels. To enable date / time format labels see the options to \fBplbox\fP(3plplot), \fBplbox3\fP(3plplot), and \fBplenv\fP(3plplot).
+.P
+Redacted form: \fBpltimefmt(fmt)\fP
+.P
+This function is used in example 29.
+.SH ARGUMENTS
+.TP
+\fIfmt\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string which is interpreted similarly to the format specifier of typical system strftime routines except that PLplot ignores locale and also supplies some useful extensions in the context of plotting.  All text in the string is printed as-is other than conversion specifications which take the form of a '%' character followed by further conversion specification character.  The conversion specifications which are similar to those provided by system strftime routines are the following: %a: The abbreviated (English) weekday name.
+%A: The full (English) weekday name.
+%b: The abbreviated (English) month name.
+%B: The full (English) month name.
+%c: Equivalent to %a %b %d %T %Y (non-ISO).
+%C: The century number (year/100) as a 2-digit integer.
+%d: The day of the month as a decimal number (range 01 to 31).
+%D: Equivalent to %m/%d/%y (non-ISO).
+%e: Like %d, but a leading zero is replaced by a space.
+%F: Equivalent to %Y-%m-%d (the ISO 8601 date format).
+%h: Equivalent to %b.
+%H: The hour as a decimal number using a 24-hour clock (range 00 to 23).
+%I: The hour as a decimal number using a 12-hour clock (range 01 to 12).
+%j: The day of the year as a decimal number (range 001 to 366).
+%k: The hour (24-hour clock) as a decimal number (range 0 to 23); single digits are preceded by a blank.  (See also %H.)
+%l: The hour (12-hour clock) as a decimal number (range 1 to 12); single digits are preceded by a blank.  (See also %I.)
+%m: The month as a decimal number (range 01 to 12).
+%M: The minute as a decimal number (range 00 to 59).
+%n: A newline character.
+%p: Either "AM" or "PM" according to the given time value.  Noon is treated as "PM" and midnight as "AM".
+%r: Equivalent to %I:%M:%S %p.
+%R: The time in 24-hour notation (%H:%M). For a version including the seconds, see %T below.
+%s: The number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+%S: The second as a decimal number (range 00 to 60).  (The range is up to 60 to allow for occasional leap seconds.)
+%t: A tab character.
+%T: The time in 24-hour notation (%H:%M:%S).
+%u: The day of the week as a decimal, range 1 to 7, Monday being 1.  See also %w.
+%U: The week number of the current year as a decimal number, range 00 to 53, starting with the first Sunday as the first day of week 01.  See also %V and %W.
+%v: Equivalent to %e-%b-%Y.
+%V: The ISO 8601 week number of the current year as a decimal number, range 01 to 53, where week 1 is the first week that has at least 4 days in the new year.  See also %U and %W.
+%w: The day of the week as a decimal, range 0 to 6, Sunday being 0.  See also %u.
+%W: The week number of the current year as a decimal number, range 00 to 53, starting with the first Monday as the first day of week 01.
+%x: Equivalent to %a %b %d %Y.
+%X: Equivalent to %T.
+%y: The year as a decimal number without a century (range 00 to 99).
+%Y: The year as a decimal number including a century.
+%z: The UTC time-zone string = "+0000".
+%Z: The UTC time-zone abbreviation = "UTC".
+%+: The UTC date and time in default format of the Unix date command which is equivalent to %a %b %d %T %Z %Y.
+%%: A literal "%" character.
+ The conversion specifications which are extensions to those normally provided by system strftime routines are the following: %(0-9): The fractional part of the seconds field (including leading decimal point) to the specified accuracy. Thus %S%3 would give seconds to millisecond accuracy (00.000).
+%.: The fractional part of the seconds field (including leading decimal point) to the maximum available accuracy. Thus %S%. would give seconds with fractional part up to 9 decimal places if available.
+
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

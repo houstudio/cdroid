@@ -1,0 +1,39 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+The core of PLplot as well as most of the drivers depend on third-party libraries. For the PLplot library most dependencies are optional, while drivers are not included if dependencies are not fulfilled. In the following section information about this dependencies for the various operating systems are given.
+
+PLplot core
+-----------
+
+-   [qhull](Qhull "wikilink")
+
+Drivers
+-------
+
+-   [aquaterm](Aquaterm "wikilink") - displays plots, available for Mac OS X
+-   [cairo/pango](Cairo_pango "wikilink") - displays plots and save to different file formats, available for Windows, Linux, Mac OS X
+-   [cgm](Cgm "wikilink") - outputs cgm files
+-   [freetype](Freetype "wikilink") - enables use of ttf fonts for some drivers
+-   [libgd](Libgd "wikilink") - the gd driver is able to output png, jpeg and gif files (*note:* deprecated - use cairo/pango instead)
+-   [libharu](Libharu "wikilink") - C library used for the pdf driver
+-   [Qt](Qt "wikilink") - display plots, output various formats on Windows, Linux and Mac OS X using Qt UI framework
+-   [wxWidgets](WxWidgets "wikilink") - displays plots, available on Windows, Linux and Mac OS X using wxWidgets library
+
+Bindings
+--------
+
+-   [SWIG](Swig "wikilink") - creates Python, Java, Octave, and Lua bindings for the core C PLplot library
+-   [Lua](Lua "wikilink") - a powerful, fast, lightweight, embeddable scripting language
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

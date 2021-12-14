@@ -1,0 +1,91 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plscmap1la: Set cmap1 colors and alpha transparency using a piece-wise linear relationship</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plscmap1l.html" title="plscmap1l: Set cmap1 colors using a piece-wise linear relationship"><link rel="next" href="plscmap1n.html" title="plscmap1n: Set number of colors in cmap1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plscmap1la</code>: Set cmap1 colors and alpha
+      transparency using a piece-wise linear relationship
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plscmap1l.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plscmap1n.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plscmap1la"></a>
+      <code class="function">plscmap1la</code>: Set cmap1 colors and alpha
+      transparency using a piece-wise linear relationship
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plscmap1la</b>
+          (</code></td><td>
+            <var class="pdparam">itype</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">npts</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">intensity</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">coord1</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">coord2</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">coord3</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">alpha</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">alt_hue_path</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      This is a variant of <a class="link" href="plscmap1l.html" title="plscmap1l: Set cmap1 colors using a piece-wise linear relationship"><code class="function">plscmap1l</code></a> that supports alpha channel
+      transparency. It sets cmap1 colors using a piece-wise linear
+      relationship between cmap1 intensity index (0.0-1.0) and
+      position in HLS or RGB color space (see <a class="xref" href="color.html#color-map-1" title="Color Map1">the section called “Color Map1”</a>)
+      with <code class="literal"><em class="parameter"><code>alpha</code></em></code>
+      transparency value (0.0-1.0). It may be called at any time.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>itype</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+        </span></dt><dd><p>
+            true: RGB, false: HLS.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>npts</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            number of control points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>intensity</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    A vector containing the cmap1 intensity index
+	    (0.0-1.0) in ascending order for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>coord1</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the first coordinate (H or R) for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>coord2</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the second coordinate (L or G) for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>coord3</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the third coordinate (S or B) for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>alpha</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the alpha transparency value (0.0-1.0) for each control point.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>alt_hue_path</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL_VECTOR-type"><code class="function">PLBOOL_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector (with <em class="parameter"><code>npts - 1</code></em> elements) containing
+	    the alternative interpolation method Boolean value for each control point
+	    interval.  (<code class="literal">alt_hue_path[i]</code> refers
+            to the interpolation interval between the <code class="literal">i</code> and
+            <code class="literal">i + 1</code> control points).
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">
+        plscmap1la(itype, intensity, coord1,
+        coord2, coord3, alpha, alt_hue_path)
+      </code>
+    </p><p>
+      This function is used in example 30.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plscmap1l.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plscmap1n.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plscmap1l</code>: Set cmap1 colors using a
+      piece-wise linear relationship
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plscmap1n</code>: Set number of colors in cmap1
+    </td></tr></table></div></body></html>

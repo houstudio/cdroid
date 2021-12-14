@@ -1,0 +1,67 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Command Line Arguments</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="next" href="devices.html" title="Devices"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Command Line Arguments</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="advanced.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="devices.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="arguments"></a>Command Line Arguments</h2></div></div></div><p>
+      PLplot supports a large number of command line arguments, but it is
+      up to the user to pass these to PLplot for processing at the
+      beginning of execution.
+      <a class="link" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><code class="function">plparseopts</code></a> is responsible for parsing
+      the argument list, removing all that are recognized by PLplot, and
+      taking the appropriate action before returning.  There are an
+      extensive number of options available to affect this process.  The
+      command line arguments recognized by PLplot are given by the -h
+      option:
+    </p><p>
+      </p><pre class="screen">
+	<code class="prompt">%</code> <strong class="userinput"><code>x00c -h</code></strong>
+Usage:
+        examples/c/x00c [options]
+
+PLplot options:
+    -h                   Print out this message
+    -v                   Print out the PLplot library version number
+    -verbose             Be more verbose than usual
+    -debug               Print debugging info (implies -verbose)
+    -dev name            Output device name
+    -o name              Output filename
+    -display name        X server to contact
+    -px number           Plots per page in x
+    -py number           Plots per page in y
+    -geometry geom       Window size/position specified as in X, e.g., 400x300, 400x300-100+200, +100-200, etc.
+    -wplt xl,yl,xr,yr    Relative coordinates [0-1] of window into plot
+    -mar margin          Margin space in relative coordinates (0 to 0.5, def 0)
+    -a aspect            Page aspect ratio (def: same as output device)
+    -jx justx            Page justification in x (-0.5 to 0.5, def 0)
+    -jy justy            Page justification in y (-0.5 to 0.5, def 0)
+    -ori orient          Plot orientation (0,1,2,3=landscape,portrait,seascape,upside-down)
+    -freeaspect          Allow aspect ratio to adjust to orientation swaps
+    -portrait            Sets portrait mode (both orientation and aspect ratio)
+    -width width         Sets pen width (0 &lt;= width)
+    -bg color            Background color (FF0000=opaque red, 0000FF_0.1=blue with alpha of 0.1)
+    -ncol0 n             Number of colors to allocate in cmap 0 (upper bound)
+    -ncol1 n             Number of colors to allocate in cmap 1 (upper bound)
+    -fam                 Create a family of output files
+    -fsiz size[kKmMgG]   Output family file size (e.g. -fsiz 0.5G, def MB)
+    -fbeg number         First family member number on output
+    -finc number         Increment between family members
+    -fflen length        Family member number minimum field width
+    -nopixmap            Don't use pixmaps in X-based drivers
+    -db                  Double buffer X window output
+    -np                  No pause between pages
+    -server_name name    Main window name of PLplot server (tk driver)
+    -dpi dpi             Resolution, in dots per inch (e.g. -dpi 360x360)
+    -compression num     Sets compression level in supporting devices
+    -cmap0 file name     Initializes color table 0 from a cmap0.pal format file in one of standard PLplot paths.
+    -cmap1 file name     Initializes color table 1 from a cmap1.pal format file in one of standard PLplot paths.
+    -locale              Use locale environment (e.g., LC_ALL, LC_NUMERIC, or LANG) to set LC_NUMERIC locale (which affects decimal point separator).
+    -eofill              For the case where the boundary of the filled region is self-intersecting, use the even-odd fill rule rather than the default nonzero fill rule.
+    -drvopt option[=value][,option[=value]]* Driver specific options
+    -mfo PLplot metafile name Write the plot to the specified PLplot metafile
+    -mfi PLplot metafile name Read the specified PLplot metafile
+
+All parameters must be white-space delimited.  Some options are driver
+dependent.  Please see the PLplot reference document for more detail.
+      </pre><p>
+    </p><p>
+      The command-line options can also be set using the <a class="link" href="plsetopt.html" title="plsetopt: Set any command-line option"><code class="function">plsetopt</code></a> function, if invoked before <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a>.
+    </p><p>
+      Some options may not be recognized by individual drivers.  If an option is not recognized but should be, please contact the driver author via the plplot mailing lists.
+    </p><p>Many drivers have specific options that can be set using the -drvopt command line option or with <a class="link" href="plsetopt.html" title="plsetopt: Set any command-line option"><code class="function">plsetopt</code></a>.  These options are documented in <a class="xref" href="file-drivers.html" title="Chapter 5. Drivers which implement file devices">Chapter 5, <i>Drivers which implement file devices</i></a> and <a class="xref" href="interactive-drivers.html" title="Chapter 6. Drivers which implement interactive devices">Chapter 6, <i>Drivers which implement interactive devices</i></a>.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="advanced.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="devices.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 3. Advanced Use of PLplot </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Devices</td></tr></table></div></body></html>

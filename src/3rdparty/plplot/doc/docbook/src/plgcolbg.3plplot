@@ -1,0 +1,31 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGCOLBG 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgcolbg\fP - Returns the background color (cmap0[0]) by 8-bit RGB value
+.SH SYNOPSIS
+\fBplgcolbg\fP(\fIr\fP, \fIg\fP, \fIb\fP)
+.SH DESCRIPTION
+
+.P
+Returns the background color (cmap0[0]) by 8-bit RGB value.
+.P
+Redacted form: \fBplgcolbg(r, g, b)\fP
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIr\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the red intensity in the range from 0 to 255.
+.TP
+\fIg\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the green intensity in the range from 0 to 255.
+.TP
+\fIb\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the blue intensity in the range from 0 to 255.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

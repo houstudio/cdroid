@@ -1,0 +1,35 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLERRY 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplerry\fP - Draw error bars in the y direction
+.SH SYNOPSIS
+\fBplerry\fP(\fIn\fP, \fIx\fP, \fIymin\fP, \fIymax\fP)
+.SH DESCRIPTION
+
+.P
+Draws a set of \fIn\fP error bars in the y direction, the i'th error bar extending from \fIymin\fP[i] to \fIymax\fP[i] at x coordinate \fIx\fP[i].  The terminals of the error bars are of length equal to the minor tick length (settable using \fBplsmin\fP(3plplot)).
+.P
+Redacted form: General: \fBplerry(x, ymin, ymax)\fP
+
+.P
+This function is used in example 29.
+.SH ARGUMENTS
+.TP
+\fIn\fP (\fBPLINT\fP(3plplot), input)
+Number of error bars to draw.
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates of the error bars.
+.TP
+\fIymin\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of the lower endpoints of the error bars.
+.TP
+\fIymax\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates of the upper endpoints of the error bars.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

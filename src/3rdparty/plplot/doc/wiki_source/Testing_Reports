@@ -1,0 +1,885 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+### Testing Reports (in reverse chronological order)
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b2), (c), (d), (e1), (A)
+Date|2019-05-26
+PLplot commit|plplot-5.14.0-44-g9c113444c
+CMake version|3.14.4
+Generator|"Unix Makefiles"
+Platform|Debian Buster = Testing (updated on 2019-05-06, 64-bit)
+Pango/Cairo version|1.42.3/1.16.0
+Qt version|5.11.3
+WxWidgets version|3.0.4
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive?
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b2), (c), (d), (e1), (A)
+Date|2019-05-22
+PLplot commit|plplot-5.14.0-42-gb766e84b4
+CMake version|3.13.2
+Generator|"Unix Makefiles"
+Platform|Debian Buster = Testing (updated on 2019-05-06, 64-bit)
+Pango/Cairo version|1.42.3/1.16.0
+Qt version|5.11.3
+WxWidgets version|3.0.4
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive?
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e1), (A), (B1), (E5), (F3), (G5), (H6)
+Date|2019-05-22
+PLplot commit|plplot-5.14.0-42-gb766e84b4
+CMake version|3.14.2
+Generator|"Unix Makefiles"
+Platform|MinGW-w64/MSYS2 (updated on 2019-05-13, 64-bit, Windows 7)
+Pango/Cairo version|1.42.1/1.15.12
+Qt version|5.10.1
+WxWidgets version|Not applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive|ctest?
+Yes|Yes|No|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b2), (c), (d), (e1), (A), (J2)
+Date|2018-12-02
+PLplot commit|plplot-5.13.0-155-g920d3983b
+CMake version|3.13.1
+Generator|"Unix Makefiles"
+Platform|Debian Buster = Testing (updated on 2018-12-01, 64-bit)
+Pango/Cairo version|1.42.3/1.16.0
+Qt version|5.11.2
+WxWidgets version|3.0.4
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b1), (c), (d), (e1), (A), (H5)
+Date|2018-10-27
+PLplot commit|plplot-5.13.0-146-g48a56ee63
+CMake version|3.7.2
+Generator|"Unix Makefiles"
+Platform|Debian Buster = Testing (updated on 2018-10-25, 64-bit)
+Pango/Cairo version|1.42.3/1.16.0
+Qt version|5.11.2
+WxWidgets version|3.0.4
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e1), (A), (B1), (D2), (E4), (F2), (G3), (H2)
+Date|2018-10-26
+PLplot commit|plplot-5.13.0-145-g9f5330253
+CMake version|3.11.1
+Generator|"Unix Makefiles"
+Platform|MinGW-w64/MSYS2 (updated on 2018-10-26, 64-bit, Windows 7)
+Pango/Cairo version|1.42.1/1.15.12
+Qt version|5.10.1
+WxWidgets version|Not applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e), (i2) (A), (B1), (E3), (F2), (G4), (H4)
+Date|2018-10-25
+PLplot commit|plplot-5.13.0-145-g9f5330253
+CMake version|3.12.2
+Generator|"Unix Makefiles"
+Platform|Cygwin (updated on 2018-10-23, 64-bit, Windows 7)
+Pango/Cairo version|1.40.14/1.14.12
+Qt version|4.8.7
+WxWidgets version|not applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e1), (A)
+Date|2017-08-25
+PLplot commit|c2b7e3d
+CMake version|3.9.1
+Generator|"Unix Makefiles"
+Platform|Debian Jessie = stable with system libraries
+Pango/Cairo version|1.36.8/1.14.0
+Qt version|4.8.6
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e1),  (A), (B1), (E''''), (F1), (G3), (H3), (N1)
+Date|2017-08-17
+PLplot commit|ac3473f
+CMake version|3.6.2
+Generator|"MSYS Makefiles"
+Platform|MinGW-w64/MSYS2 (64-bit)
+Pango/Cairo version|1.40.3/1.15.2
+Qt version|4.8.7
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e1), (A)
+Date|2017-08-15
+PLplot commit|ac753c6
+CMake version|3.6.2
+Generator|"Unix Makefiles"
+Platform|Debian Jessie = stable with system libraries
+Pango/Cairo version|1.36.8/1.14.0
+Qt version|4.8.6
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e), (l), (A)
+Date|2016-12-21
+PLplot commit|995e75e
+CMake version|3.4.3
+Generator|"NMake Makefiles"
+Platform|64-bit Windows with MSVC + ifort
+Pango/Cairo version|not applicable
+Qt version|not applicable
+WxWidgets version|not applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+No|No|No|No
+CMake-based installed examples?|test_noninteractive?|test_interactive
+No|No|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+No|No|No
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e), (A), (B1), (E1), (G1), (H1)
+Date|2016-12-13
+PLplot commit|08935de
+CMake version|3.6.2
+Generator|"Unix Makefiles"
+Platform|Cygwin (64-bit)
+Pango/Cairo version|1.38.1/1.14.4
+Qt version|4.8.7
+WxWidgets version|3.0.2.0
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e), (i1), (A), (B1), (C1), (D1), (E2), (F1), (G2), (H2), (I1), (J1)
+Date|2016-12-13
+PLplot commit|08935de
+CMake version|3.4.3
+Generator|"Unix Makefiles"
+Platform|MinGW-w64/MSYS2 (64-bit)
+Pango/Cairo version|not applicable
+Qt version|not applicable
+WxWidgets version|not applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+No|No|No
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e), (A)
+Date|2016-12-13
+PLplot commit|6170626
+CMake version|3.0.2
+Generator|"Unix Makefiles"
+Platform|Debian Jessie = stable with system libraries
+Pango/Cairo version|1.36.8/1.14.0
+Qt version|4.8.6
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e), (A)
+Date|2016-12-11
+PLplot commit|aab0449
+CMake version|3.7.0
+Generator|"Unix Makefiles"
+Platform|Debian Jessie = stable with system libraries
+Pango/Cairo version|1.36.8/1.14.0
+Qt version|4.8.6
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e), (A)
+Date|2016-07-17
+PLplot commit|11c496b
+CMake version|3.6.0
+Generator|"Unix Makefiles"
+Platform|Debian Jessie = stable with system libraries
+Pango/Cairo version|1.36.8/1.14.0
+Qt version|4.8.6
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (e), (A), (B'), (E''), (G'), (H')
+Date|2016-05-25
+PLplot commit|c9f392a
+CMake version|3.3.2
+Generator|"Unix Makefiles"
+Platform|Cygwin (64-bit)
+Pango/Cairo version|1.38.1/1.14.4
+Qt version|4.8.7
+WxWidgets version|3.0.2.0
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Greg Jung
+Notes|(a), (b), (e), (i'), (A), (B'), (D'), (E'''''), (F''''), (G''), (H'), (J')
+Date|2015-11-13
+PLplot commit|142e9d2
+CMake version|3.3.2
+Generator|"Unix Makefiles"
+Platform|OpenSuse-13.2, download edition
+Pango/Cairo version|1.36.8/1.14.0
+Qt version|not applicable
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e), (A)
+Date|2015-11-08
+PLplot commit|5fde587
+CMake version|3.3.2
+Generator|"Unix Makefiles"
+Platform|Debian jessie = stable with system libraries
+Pango/Cairo version|1.36.8/1.14.0
+Qt version|4.8.6
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e), (k), (A)
+Date|2015-08-07
+PLplot commit|6747256
+CMake version|3.0.2
+Generator|"Unix Makefiles"
+Platform|Debian wheezy = oldstable with system libraries
+Pango/Cairo version|1.30.0/1.12.2
+Qt version|4.8.2
+WxWidgets version|2.8.12.1
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|No|Yes|No
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|No|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|No|Yes
+
+|||
+---|---|---|---
+Tester|Greg Jung
+Notes|(a), (e), (i), (j), (A), (B'), (E''''), (F'''), (G'), (H'''), (N)
+Date|2015-07-30
+PLplot commit|be85695
+CMake version|3.2.3
+Generator|"MSYS Makefiles"
+Platform|mingw-w64-x86_64/MSYS2
+Pango/Cairo version|1.37.1/1.14.2
+Qt version|4.8.7
+WxWidgets version|3.0.2-5
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Greg Jung
+Notes|(a), (e), (i), (A), (B'), (E''''), (F'''), (G'), (H''), (N)
+Date|2015-07-30
+PLplot commit|be85695
+CMake version|3.2.3
+Generator|"Unix Makefiles"
+Platform|mingw-w64-x86_64/MSYS2
+Pango/Cairo version|1.37.1/1.14.2
+Qt version|4.8.7
+WxWidgets version|Not applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Greg Jung
+Notes|(a), (b), (e), (A), (B'), (D'), (E'''), (G'), (H'), (M)
+Date|2015-07-11
+PLplot commit|dd9f79e
+CMake version|3.1.2
+Generator|"Unix Makefiles"
+Platform|Cygwin (64-bit)
+Pango/Cairo version|1.36.8/1.12.18
+Qt version|4.8.7
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Arjen Markus
+Notes|(a), (h), (A), (B'), (C'), (D), (D'), (E), (F'), (G), (H), (I), (J)
+Date|2015-07-10
+PLplot commit|32be1b9
+CMake version|3.2.2
+Generator|"MSYS Makefiles"
+Platform|MinGW/MSYS
+Pango/Cairo version|Not Applicable
+Qt version|Not Applicable
+WxWidgets version|Not Applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+No||
+
+|||
+---|---|---|---
+Tester|Hazen Babcock
+Notes|(a), (b), (e), (g), (A), (L)
+Date|2015-04-13
+PLplot commit|09dee003
+CMake version|2.8.12.2
+Generator|"Unix Makefiles"
+Platform|Lubuntu 14.04.2 LTS with system libraries
+Pango/Cairo version|1.36.3/1.13.1
+Qt version|Not Applicable
+WxWidgets version|Not Applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|No|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|No
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e), (f), (A), (K)
+Date|2015-04-11
+PLplot commit|99fe5f0
+CMake version|3.0.2
+Generator|"MSYS Makefiles"
+Platform|MinGW-4.7.2/MSYS/Wine-1.6.1 with epa_built libraries
+Pango/Cairo version|Not Applicable
+Qt version|Not Applicable
+WxWidgets version|Not Applicable
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+|||
+---|---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (c), (d), (e), (A)
+Date|2015-03-29
+PLplot commit|5f6e28f
+CMake version|3.0.2
+Generator|"Unix Makefiles"
+Platform|Debian stable with epa_built libraries
+Pango/Cairo version|1.35/1.12.14
+Qt version|5.3.2
+WxWidgets version|3.0.2
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|test_interactive?|ctest?
+Yes|Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+Legacy Installed examples?|test_noninteractive?|test_interactive
+Yes|Yes|Yes
+
+Testing notes where lower case notes concern configuration and build options while upper case notes concern limitations on testing due to platform constraints ("not available"), arbitrary constraints imposed by the tester to simplify testing ("not installed" or "ignored"), or working around PLplot issues for the platform ("disabled").
+* (a) Testing done on 64-bit (x86-64, also known as x64, x86_64, and AMD64, ) hardware.
+* (b) Used parallel make option (-j4) for all builds, installs, and test targets.
+* (b1) Used parallel make option (-j10) for all builds, installs, and test targets.
+* (b2) Used parallel make option (-j16) for all builds, installs, and test targets.
+* (c) Suitable dependent libraries have been installed on the system so there are no device drivers from the default list for this platform that are missing from this test.
+* (d) Suitable compilers and bindings-related development packages have been installed on the system so there are no default bindings that are missing from this test.
+* (e) Java, Python, Octave, Lua, and OCaml bindings/examples require shared PLplot libraries in order to work so were not available for testing for the static PLplot libraries case.
+* (e1) Java, Python, Octave, and Lua bindings/examples require shared PLplot libraries in order to work so were not available for testing for the static PLplot libraries case.
+* (f) For this MinGW/MSYS/Wine platform test the build_plplot_lite epa_build target was used which simplifies testing by excluding the qt, cairo, and wxwidgets devices from tests.  This was a "lite" test in other respects as well; i.e., the D, Java, OCaml, and Octave languages were not available on this platform.
+* (g) This Lubuntu platform did not have Ada, Fortran, D, Java, or OCaml compilers installed and did not have development versions of Octave, Tcl/Tk, WxWidgets, Lua, shapelib, qhull, libLASi, or libharu installed. Therefore corresponding components of PLplot were disabled and not tested.
+* (h) This MinGW/MSYS platform with no epa_built libraries has very few PLplot soft prerequisites available so tests on this platform necessarily only apply to a small number of the PLplot components (i.e., just the mem, ntk, null, ps, svg, wingcc, and xfig device drivers and just the c++, f95, and tcl bindings).
+* (i) CMake was built with the bootstrap method to make it depend on Qt4 rather than Qt5 to help avoid Qt4/Qt5 MSYS2 package conflicts.
+* (i') CMake-3.3.2 was built with the bootstrap method to use the more consistent Python version finding that is available for that CMake version.
+* (i1) Non-system CMake-3.4.3 used for the configuration.
+* (i2) CMake was built with the bootstrap method because the platform version was too old.
+* (j) g++ (but not gcc) -DUNICODE option required to make wxwidgets device driver buildable.
+* (k) wxwidgets-only interactive tests using -DOLD_WXWIDGETS=ON to comprehensively test the old wxwidgets device driver.
+* (l) This "bare" Windows platform has only limited access to free software libraries that are the prerequisites for many different components of PLplot and no access to Unix tools.  Both factors greatly constrain the PLplot testing that can be done on this platform.  The MSVC C/C++ compiler was "Microsoft (R) C/C++ Optimizing Compiler Version 18.00.40629 for x64"; the ifort Fortran compiler was "Intel(R) Parallel Studio XE 2015 Update 1 Composer Edition (package 148)"; the Tcl software package that was used was version 8.6.1 downloaded from [ActiveState](http://www.activestate.com/tcl); the build was done with nmake; and the run-time testing (implemented with a Windows batch file) consisted of running all the PLplot C, Fortran, and Tcl standard examples for the psc device and checking that corresponding PostScript results were consistent for those computer languages.
+* (A) No obvious configure, build, or install errors. No run-time errors in tests other than those noted in additional "upper-case" notes (if any).
+* (B) Interactive tests disabled to avoid run-time errors.
+* (B') Interactive tests ignored.
+* (B1) Interactive tests ignored.
+* (C) Legacy build of installed tests disabled to avoid build errors.
+* (C') pkg-config not available therefore legacy build of installed examples not tested.
+* (C'') pkg-config was installed, but legacy build had to be disabled because of runtime errors.
+* (C1) pkg-config not installed so legacy build of installed examples not tested.
+* (D) libqhull not available.
+* (D') shapelib not available.
+* (D1) libqhull not installed and shapelib not installed so interpolation and map capabilities of PLplot were substantially reduced for this test.
+* (D2) libqhull find issue.
+* (E) Swig not available therefore Java, Python, Octave, and Lua bindings not tested.
+* (E') Swig was installed but Java, Octave, and Lua not installed so those bindings not tested.
+* (E'') Java not available and Octave ignored.
+* (E''') Java not available, Octave ignored, and Numpy not installed so java, octave, and python bindings not tested.
+* (E'''') Java and Octave not available so java and octave bindings not tested.
+* (E''''') Octave (build errors) and Lua (run-time errors) were disabled so octave and lua bindings not tested.
+* (E1) Java not available, Octave4 available, but ignored because experimental.
+* (E2) Java not available, Python libraries not installed, octave not available, and lua not installed.  Therefore, java, python, octave, and lua bindings not tested.
+* (E3) Java not available and Octave dropped because Cygwin swig does not support Octave-4.4.  Therefore, java, and octave bindings not tested.
+* (E4) Java and Octave not available, and lua had a find issue so was dropped.  Therefore, java, octave, and lua bindings were not tested.
+* (E5) Java and Octave not available, and the latest upstream version of lua is broken on Windows so was dropped.  Therefore, java, octave, and lua bindings were not tested.
+* (F) Tk/Itcl/Itk not installed therefore not tested.
+* (F') X11 not available.  Therefore -dev tk and -dev tkwin not tested and Itcl/Itk not installed therefore not tested.
+* (F'') X11 server was running, but was not picked up - DISPLAY variable?  Therefore, dev tk and -dev tkwin not tested and Itcl/Itk not installed therefore not tested.
+* (F''') X11, Itcl, and Itk not available.  Therefore -dev xcairo, -dev tk, and -dev tkwin not tested and Itcl/Itk not tested.
+* (F'''') Itcl and Itk not available so those parts of the Tcl/Tk bindings were not tested.
+* (F1) X11 not available.  Therefore, no Tk-related examples could be built, and the only Tk-related device that could be built was -dev ntk.  That device build was a success, but that device was not run-tested because of issue (B1).
+* (F2) Itcl and Itk were automatically disabled because of find issues.
+* (F3) Itcl and Itk were automatically disabled because they have not been packaged for this platform.
+* (G) Ada, D, and OCaml compilers not available so ada, d, and ocaml bindings not tested.
+* (G') Ada disabled, D not available, and camlidl not available so ada, d, and ocaml bindings not tested.
+* (G'') D compiler(gdc) not available and OCaml (build errors) was disabled so d, and ocaml bindings not tested.
+* (G1) Ada automatically disabled because gnat library not found; D, and OCaml compilers not available.  Therefore ada, d, and ocaml bindings not tested.
+* (G2) Ada disabled for unknown reasons, D compiler (gdc) not available, and ocaml disabled for unknown reasons.  Therefore, ada, d, and ocaml bindings not tested.
+* (G3) gnatmake cannot compile simple Ada test programme, gdc compiler is not available, and camlidl application not available.  Therefore, ada, d, and ocaml bindings are automatically disabled.
+* (G4) Installed Ada bindings segfault so drop Ada until this situation is resolved.  Also, the gdc compiler is not available and camlidl application not available.  Therefore, d, and ocaml bindings are automatically disabled.
+* (G5) Because Installed Ada bindings segfault on some other platforms decided to drop Ada for this platform until that issue is resolved.  Also, the gdc compiler is not available and camlidl application not available.  Therefore, d, and ocaml bindings are automatically disabled.
+* (H) libharu, libLASi, wxwidgets not available so pdf, psttf, and wxwidgets device drivers not tested.
+* (H') libharu not available so pdf device driver not tested.
+* (H'') libharu and libLASi not available and wxwidgets ignored so pdf, psttf, and wxwidgets device drivers not tested.
+* (H''') libharu and libLASi not available so pdf and psttf device drivers not tested.
+* (H1) libharu not available so pdf device driver not tested.
+* (H2) libharu not installed, liblasi not available, and wxwidgets not installed.  Therefore, the pdf, psttf, and wxwidgets device drivers were not tested.
+* (H3) libLASi not available.  Therefore, the psttf device driver was automatically disabled.
+* (H4) libharu not available and wxwidgets had find issues so pdf and wxwidgets device drivers were automatically disabled.
+* (H5) libharu not installed so pdf device driver not tested.
+* (H6) liblasi not available, and wxwidgets had inconsistent ABI issues because (for unknown reasons) the platform compilers were not consistently updated.  Therefore, the psttf device driver was automatically disabled, and the wxwidgets ABI issue was bypassed by deliberately disabling the wxwidgets device (by not installing the wxwidgets package).
+* (I) libpango/libcairo not available therefore cairo devices not tested.
+* (I1) pkg-config not installed which means libpango/libcairo not found.  Therefore, cairo devices not tested.
+* (J) libQt not available therefore qt devices not tested.
+* (J') The Qt component of PLplot is disabled because of run-time errors (segfaults) for qt devices so those devices  (and pyqt4) not tested.
+* (J1) libqt5 not installed so qt devices not tested.
+* (J2) -DPLD_extqt=OFF or otherwise the installed versions of qt_example and pyqt5_example.py both segfaulted.
+* (K) Encountered intermittent (once only, repeat test did not have it) make.exe error: "INTERNAL: Exiting with 1 jobserver tokens available; should be 4!"  I attribute this error to the problematic make.exe parallel-build option on MSYS. (See \u003Chttps://sourceforge.net/p/mingw/bugs/1950/> for other unsolved classical MSYS parallel build flakiness.)  To work around this bug for the MinGW/MSYS platform should use the epa_build cmake option, -DNUMBER_PARALLEL_JOBS:STRING=1.  However, this workaround should not be necessary for the Cygwin or MinGW-w64/MSYS2 platforms.
+* (L) For this Lubuntu system with Qt4.8.6 system libraries, severe memory management issues (including segfaults) occurred for all attempts to use qt devices.  Therefore, to complete this comprehensive test had to disable everything Qt related by using the script option
+`--cmake_added_options "DEFAULT_NO_QT_DEVICES=ON -DENABLE_qt=OFF"`
+* (M) gtk+-x11-2.0 development package not installed, therefore extXdrawable_demo test not run.
+* (N) sip ignored so pyqt4 not tested.
+* (N1) sip directory not found because pyqtconfig module not available.  Therefore, pyqt4 was automatically disabled.
+
+### <a name="Fortran Testing Reports"></a>Testing Reports for new Fortran Binding (in reverse chronological order)
+This table was created to summarize testing reports of the new Fortran binding, but now that testing just occurs as part of the above general testing results.  Therefore this table is now frozen to preserve the historical test records for non-standard compilers (such as nagfor) that we tried.
+
+||
+---|---|---
+Tester|Arjen Markus
+Notes|(a), (d), (A)
+Date|2016-12-21
+PLplot commit|995e75e
+CMake version|3.4.3
+Generator|"NMake Makefiles"
+Platform|64-bit Windows with MSVC + ifort
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|No|No
+CMake-based installed examples?|test_noninteractive?
+No|No
+Legacy Installed examples?|test_noninteractive?
+No|No
+
+||
+---|---|---
+Tester|Arjen Markus
+Notes|(a), (A)
+Date|2016-12-13
+PLplot commit|08935de
+CMake version|3.6.2
+Generator|"Unix Makefiles"
+Platform|64-bit Cygwin with gfortran-5.4.0
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?
+Yes|Yes
+Legacy Installed examples?|test_noninteractive?
+Yes|Yes
+
+||
+---|---|---
+Tester|Arjen Markus
+Notes|(a), (c1), (A), (B1)
+Date|2016-12-13
+PLplot commit|08935de
+CMake version|3.4.3
+Generator|"Unix Makefiles"
+Platform|64-bit MinGW-w64/MSYS2 with gfortran 6.2.0
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?
+Yes|Yes
+Legacy Installed examples?|test_noninteractive?
+No|No
+
+||
+---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (A)
+Date|2016-12-13
+PLplot commit|6170626
+CMake version|3.0.2
+Generator|"Unix Makefiles"
+Platform|Debian Jessie with gfortran 4.9.2-10
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?
+Yes|Yes
+Legacy Installed examples?|test_noninteractive?
+Yes|Yes
+
+||
+---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (A)
+Date|2016-12-11
+PLplot commit|aab0449
+CMake version|3.7.0
+Generator|"Unix Makefiles"
+Platform|Debian Jessie with gfortran 4.9.2-10
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?
+Yes|Yes
+Legacy Installed examples?|test_noninteractive?
+Yes|Yes
+
+||
+---|---|---
+Tester|Arjen Markus
+Notes|(a), (A1)
+Date|2016-07-27
+PLplot commit|71c86fc
+CMake version|3.5.2
+Generator|"Unix Makefiles"
+Platform|Ubuntu 16.04 LTS (Xenial) with NAGFOR (version 6.1) compiler
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?
+Yes|Yes
+Legacy Installed examples?|test_noninteractive?
+Yes|Yes
+
+||
+---|---|---
+Tester|Alan W. Irwin
+Notes|(a), (b), (A)
+Date|2016-04-27
+PLplot commit|3442bac
+CMake version|3.4.3
+Generator|"Unix Makefiles"
+Platform|Debian Jessie with gfortran 4.9.2-10
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?
+Yes|Yes
+Legacy Installed examples?|test_noninteractive?
+Yes|Yes
+
+||
+---|---|---
+Tester|Arjen Markus
+Notes|(a), (A)
+Date|2016-03-16
+PLplot commit|1183a10
+CMake version|3.3.2
+Generator|"Unix Makefiles"
+Platform|64-bit Cygwin
+Shared libraries?|Dynamic drivers?
+Yes|Yes
+Yes|No
+No|No
+CMake-based build tree?|test_noninteractive?|ctest?
+Yes|Yes|Yes
+CMake-based installed examples?|test_noninteractive?
+Yes|Yes
+Legacy Installed examples?|test_noninteractive?
+Yes|Yes
+
+Testing notes where lower case notes concern configuration and build options while upper case notes concern limitations on testing due to platform constraints ("not available"), arbitrary constraints imposed by the tester to simplify testing ("not installed" or "ignored"), or working around PLplot issues for the platform ("disabled").
+* (a) Testing done on 64-bit (x86-64, also known as x64, x86_64, and AMD64, ) hardware.
+* (b) Used parallel make option (-j4) for all builds, installs, and test targets.
+* (c1) Non-system CMake-3.4.3 used for the configuration.
+* (d) This "bare" Windows platform has only limited access to free software libraries that are the prerequisites for many different components of PLplot and no access to Unix tools.  Both factors greatly constrain the PLplot testing that can be done on this platform.  The MSVC C/C++ compiler was "Microsoft (R) C/C++ Optimizing Compiler Version 18.00.40629 for x64"; the ifort Fortran compiler was "Intel(R) Parallel Studio XE 2015 Update 1 Composer Edition (package 148)"; the Tcl software package that was used was version 8.6.1 downloaded from [ActiveState](http://www.activestate.com/tcl); the build was done with nmake; and the run-time testing (implemented with a Windows batch file) consisted of running all the PLplot C, Fortran, and Tcl standard examples for the psc device and checking that corresponding PostScript results were consistent for those computer languages.
+* (A) No obvious configure, build, or install errors. No run-time errors in tests other than those noted in additional "upper-case" notes (if any).
+* (A1) No obvious configure, build, or install errors. No run-time errors in tests other than those noted in additional "upper-case" notes (if any). No warning messages at all emitted by the NAGFOR compiler.
+* (B1) pkg-config not installed so legacy build of installed examples not tested.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

@@ -1,0 +1,497 @@
+		PLPLOT DOCUMENTATION IN THE DOCBOOK FORMAT
+		    (Notes for contributors/developers)
+
+Introduction
+============
+
+You will find in this directory tree the latest PLplot documentation in
+DocBook 4.1 XML format.  You will find in the current file
+(README.developers) instructions for building the documentation from the
+DocBook source files in this directory. The documentation that is built
+includes man pages of the API as well as complete versions of the
+documentation in info, HTML, and PDF forms.
+
+Configuring and Building
+========================
+
+If you would like to help with improving the content, you will want to build
+the documentation from the DocBook source so you can immediately see and
+evaluate the results of your efforts.
+
+Here is how.  Simply add the cmake option -DBUILD_DOC=ON to your
+normal cmake command-line options for the PLplot build.  The resulting
+cmake step looks for all the tools required for the documentation
+build and generates a WARNING message and turns off all or some
+component of the documentation build if any of those required tools
+are missing.  The tools searched for by our build system are onsgmls
+(validation); db2x_texixml, db2x_xsltproc, and makeinfo (info);
+XML::Parser and XML::DOM (man); xmlto (html); and dblatex and xelatex
+(pdf).
+
+After the cmake step using -DBUILD_DOC=ON you must run either
+
+# Set JOBS to suitable value. 16 is correct for hardware such as the
+# Ryzen 7 1700 system with 8 cpu cores and twice that number of
+# hardware threads.  But parallel builds are unreliable on Cygwin and
+# MinGW-w64/MSYS2 as well if/when someone tries to build our DocBook
+# documentation on that platform so for those two platforms you should
+# always set JOBS=1.
+JOBS=16
+
+make -j$JOBS all >& all.out
+
+or
+
+make -j$JOBS build_docbook_documentation >& build_docbook_documentation.out
+
+to build the DocBook documentation.  (The former command builds all
+aspects of PLplot including the documentation, while the latter
+command is quicker because it just builds the documentation and its
+PLplot prerequisites.)  Furthermore, at build-time xmlto and dblatex
+automatically check for required tools, and dblatex checks for missing
+fonts when generating the pdf results.  (Those required fonts are
+chosen by doc/docbook/source/dblatex_stylesheet.xsl and are currently
+FreeSans, FreeSerif, and FreeMono).
+
+In sum, cmake WARNING messages with the -DBUILD_DOC=ON option _and_
+build-time messages from xmlto and dblatex should be sufficient for you
+to figure out what DocBook/XML related tools and fonts you need to
+install in order to build the documentation.
+
+N.B. As far as we know, the complete set of required tools is only
+available on Linux and Cygwin platforms so you will need access to one of those
+platforms to do a documentation build.  It is possible as well that the required
+tools are available for MinGW-w64/MSYS2, but so far nobody has reported on that
+platform.  For more information for the Linux and Cygwin cases,
+see "Linux Specific" and "Cygwin Specific" below.
+
+Linux Specific
+==============
+
+Installing the following packages on Debian should allow you
+to build the documentation (this may not be a complete list,
+but it should be close to complete since installation
+of one Debian package also automatically installs all
+Debian packages it depends on).
+
+You can use, e.g., apt-file search bin/xmlto to discover
+that
+
+/usr/bin/onsgmls is contained in the "opensp" Debian package;
+/usr/bin/db2x_texixml is contained in the "docbook2x" Debian package;
+/usr/bin/db2x_xsltproc is contained in the "docbook2x" Debian package;
+/usr/bin/makeinfo is contained in the "texinfo" Debian package;
+/usr/lib/perl5/XML/Parser.pm (which implements XML::Parser) is contained in the "libxml-parser-perl" Debian package;
+/usr/share/perl5/XML/DOM.pm (which implements XML::DOM) is contained in the "libxml-parser-perl" Debian package;
+/usr/bin/xmlto is contained in the "xmlto" Debian package;
+/usr/bin/dblatex is contained in the "dblatex" Debian package;
+/usr/bin/xelatex is contained in the "texlive-xetex" Debian package;
+/usr/share/texlive/texmf-dist/fonts/truetype/public/gnu-freefont/FreeSans.ttf is in the "texlive-fonts-extra" Debian package
+/usr/share/texlive/texmf-dist/fonts/truetype/public/gnu-freefont/FreeSerif.ttf is in the "texlive-fonts-extra" Debian package
+/usr/share/texlive/texmf-dist/fonts/truetype/public/gnu-freefont/FreeMono.ttf is in the "texlive-fonts-extra" Debian package
+
+With these in place the documentation should build with the
+appropriate cmake -DBUILD_DOC=ON option set on Debian and other
+Debian-based distros such as Ubuntu.
+
+N.B. For what it is worth, the deprecated (because you achieve better
+UTF-8 results without this option which is equivalent to setting
+-DDOCBOOK_DBLATEX_BACKEND=ON) -DDOCBOOK_DBLATEX_BACKEND=OFF cmake
+option still works on Debian.  However, there are substantial errors
+to start until you address fairly obscure warning messages concerning
+PassiveTeX and fop by installing the "xmltex" and "fop" packages.  It
+is notable that the "fop" package has large numbers of dependencies.
+Those are, or course, automatically installed by Debian, but I don't
+know the situation for other Linux distros.
+
+PLplot developers have no recent experience with rpm-based Linux
+distros, but Orion Poplawski (the Fedora packager for PLplot and a lot
+of other free software) has recently had success building the PLplot
+documentation on Fedora.  We presume he used command-line rpm tools
+similar to Debian's apt-file or else used generic rpm-finding software
+such as <http://www.rpmfind.net/linux/RPM/> to search rpm packages
+for particular filenames similar to the above.  Presumably a
+similar situation would apply for other rpm-based distros such
+as openSUSE.
+
+Cygwin Specific
+===============
+
+Installing the following packages on Cygwin will allow you
+to build the documentation (note this may include more
+packages than strictly required, but this list definitely
+works):
+openjade, OpenSP, texlive-collection-htmlxml,
+texlive-collection-genericrecommended,
+texlive-collection-latexrecommended,
+texlive-collection-fontsextra, docbook-dsssl, lynx,
+ImageMagick, libxml2.
+
+You must then make the gnu FreeFonts available to fontconfig. You can do
+this by creating a file /etc/fonts/local.conf which should contain the
+following:
+     <?xml version="1.0"?>
+     <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+
+     <fontconfig>
+
+     <!-- Font directory list -->
+
+             <dir>/usr/share/texmf-dist/fonts/opentype</dir>
+             <dir>/usr/share/texmf-dist/fonts/truetype</dir>
+             <dir>/usr/share/texmf-dist/fonts/type1</dir>
+
+
+     </fontconfig>
+Note also that if you wish you could copy the FreeFonts from the opentype
+subdirectory of the folder listed above to anywhere else (e.g. ~/.fonts or
+your Windows fonts directory) and add this to the local.conf file or you can
+copy them to /usr/share/fonts/OTF in which case a local.conf file is not
+needed.
+Finally run fc-cache to update the fontconfig cache. Now the documentation
+should build with the apropriate cmake -DBUILD_DOC=ON option set.
+
+
+The DocBook Back-end Tool Chains
+================================
+
+PLplot uses a number of different applications to generate
+PLplot documentation in various formats from our source DocBook XML files.
+
+1.  man pages.
+
+Our man pages are generated with a configured home-brew perl script
+bin/api2man.pl(.in). That script uses XML::DOM::Parser to parse the
+combination of plplotdoc.xml (for entity definitions) and api.xml
+(the subset of our DocBook source files which describes our core
+library's API) to obtain the information used to generate the man
+pages.
+
+(Aside. The bin subdirectory also contained at one time api2text.pl which
+was used by the non-swig version of the Octave bindings to generate
+text documentation for the octave PLplot commands.  That script has
+now been removed and replaced by the closely related
+api2swigdoc.pl which generates bindings/swig-support/swig_documentation.i
+API documentation in a form which can be used by swig (for both
+the Python and Octave bindings).
+
+2. info pages.
+
+Our info pages are generated by a combination of
+
+bin/info-clean.pl --> db2x_xsltproc --> db2x_texixml --> makeinfo
+
+where info-clean.pl is a home-brew perl script required (as far as I
+can tell from reading comments in it) to get around some of the
+db2x_xsltproc limitations.  db2x_xsltproc and db2x_texixml are from
+the docbook2x package.
+
+3. Our HTML results are generated with xmlto and configured at run
+time with a CSS stylesheet, see doc/docbook/src/stylesheet.css.xsl.in.
+The xmlto application is actually a convenience script that uses
+XML/XSL to generate the HTML results as opposed to the previous
+SGML/DSSSL approach used to create the HTML results for plplot-5.9.9
+and previous.
+
+4. Our PDF results are generated with "dblatex --backend=xetex" using
+a combination of XML/XSL and xelatex to generate the PDF results (in
+contrast to the SGML/DSSL tools used for that job for plplot-5.9.9 and
+previous, and the XML/XSL "xmlto --with-fop" method used with
+PLplot-5.9.10 to do that job.
+
+5. Generation of dvi and PostScript forms of our documentation is no longer available.
+
+
+Validation
+==========
+
+Validation checks that the PLplot Docbook files in doc/docbook/src are
+well-formed XML and correspond to the DocBook schema.  You can perform
+such validation by typing the
+
+make validate
+
+command at the top of the build tree.  This make target is only available if
+the PLplot CMake-based build system has found the onsgmls software
+application (which is distributed as part of OpenSP) on your system. This
+quick check works regardless of whether you decide to build the
+documentation with -DBUILD_DOC=ON or not. Using "make validate" is
+especially useful if you are just making a series of simple changes to the
+files in doc/docbook/src, and you don't really feel it is necessary to check
+every change by doing a complete documentation build.
+
+In addition, the xmlto commands used to build the HTML and print
+part of the documentation automatically include a validation step
+with xmllint.  It turns out that xmllint is more sensitive than onsgmls
+to DocBook XML errors.  On the other hand, onsgmls handles any
+errors it finds with ease while xmllint tends to segfault when there
+is a validation error.  So use "make validate"
+first to detect any obvious validation errors using onsgmls to avoid
+situations where xmlto's call to xmllint will segfault.
+
+Testing the documentation that has been built.
+==============================================
+
+The following tests are performed in the doc/docbook/src subdirectory _of the
+build tree_.  The given test commands are for the bash shell, and
+plplot_version is an environment variable that has been set
+to the current PLplot version.  For the man pages, look carefully at
+the style of the results.  For the rest, look carefully at the style
+of the api chapter and the style/results near Table-3.4 in the
+advanced chapter.  In particular look at how the following examples
+render: the overline-underline example just prior to Table-3.4,
+Table-3.4 of Greek symbols, Table-3.5 of the "Peace" word expressed in
+various languages, and the mathematical symbols occurring in the
+paragraph just after Table-3.5.
+
+First, make sure all forms of the DocBook-generated documentation are built using
+
+make -j$JOBS build_docbook_documentation.
+
+Then here are the specific tests for each kind of that generated documentation.
+
+1. man pages.
+
+N.B. nroff is a wrapper for groff which is OK for ascii input but which does not
+work correctly (since it doesn't have a -K option which it can pass on to groff)
+with input utf8 manpage files so instead of
+
+nroff -man <manpage file> |less
+
+must instead use the following command
+
+groff -K utf8 -T utf8 -mandoc <manpage file> |less
+
+In particular to check out our two man pages which contain any UTF-8
+symbols at all (in this case ≤ and ≥) execute the following command if
+in this directory (doc/docbook in the build tree):
+
+
+for MANPAGE in src/plot3dcl.3plplot src/plsurf3dl.3plplot ; do (groff -K utf8 -T utf8 -mandoc $MANPAGE|less) ; done
+
+Those UTF-8 symbols  ≤ and ≥ should render without issues (see discussion below), but if you
+want to look at all our man pages as well, use
+
+for MANPAGE in src/*.3plplot ; do (groff -K utf8 -T utf8 -mandoc $MANPAGE|less) ; done
+
+So currently our man pages are a case of "so far so good" with regard
+to UTF-8 system glyphs since at the present time our UTF-8 text in our
+man pages is quite limited.  For example, we don't know how well our
+man backend and groff will do for exotic system glyphs such as the
+many thousands of mathematical symbols normally available, and we also
+don't know how that combination of software will render CTL scripts
+(if we ever use those in the documentation of our API).
+
+2. info pages.
+
+If in this directory (doc/docbook in the build tree)
+
+info src/plplotdoc.info
+
+If in the top directory of the build tree
+
+info doc/docbook/src/plplotdoc.info
+
+I suggest searching explicitly for "≤", "≥", and "peace" to evaluate
+how those first two glyphs, the glyphs mentioned in the "peace"
+paragraph, and the additional mathematical glyphs mentioned in the
+following paragraph are rendered.  For Debian Testing I have found
+that "konsole" (the KDE terminal emulation app that uses client-side
+TrueType glyphs selected by font-config) renders all those unicode
+glyphs well including rendering the CTL scripts for Hebrew, Arabic,
+and Devanagari (the script for Hindi) "peace" words in the correct order,
+while xterm (the legacy X terminal emulation app that
+uses server side X fonts with no font-config glyph selection) is
+missing a number of glyphs, renders the CTL language glyphs in
+an incorrect order, and the results for the unicode glphys it
+does recognize do not look as good as the results from konsole.  So
+the conclusion is for the purposes of this evaluation stick to a
+terminal emulation app (such as konsole but NOT xterm) that uses X client-side
+system unicode fonts and you should get perfect UTF-8
+results with info.
+
+3. web pages.
+
+Browse with your favorite browser the <doc/docbook/src/index.html> file
+in your build tree.  To look especially for UTF-8 issues
+browse <doc/docbook/src/plot3dcl.html>, <doc/docbook/src/plsurf3dl.html>, and in the
+range of lines near <doc/docbook/src/characters.html#peace>.  I got
+perfect UTF-8 results for this case including the glyph order for the
+CTL scripts Hebrew, Arabic, and Devanagari (the script for Hindi).
+
+4. pdf file
+
+Browse with your favorite browser the
+<doc/docbook/src/plplot-$plplot_version.pdf> file that is generated in
+your build tree.  To look especially for UTF-8 issues search for
+plot3dcl, plsurf3dl, and peace.  In this case, a long-standing problem
+is the Korean and Mandarin glyphs are missing, and the last-few Hindi
+glyphs are rendered out of order.
+
+The following tests of our swig documentation are done with python and octave
+in separate directories:
+
+1. Preliminaries
+
+Use the cmake option -DADD_SPECIAL_CONSISTENCY_CHECKING=ON, check the cmake.out
+file for any warnings about additional components of PLplot missing for this option, and build
+the check_swig_documentation target.  That target uses the api2swigdoc.pl perl
+script to generate from api.xml a check file bindings/swig-support/swig_documentation.i_compare
+in the build tree as the basis of a consistency check with bindings/swig-support/swig_documentation.i
+in the source tree.  Copy that check file to the source file to resolve
+any of those inconsistencies.  N.B. that source file is the basis
+for the python and octave documentation checked below.
+
+2. Check the python documentation
+
+Build the test_python_svg target in order to build
+all the required /prerequisites.
+
+cd to examples/python in the build tree and invoke
+the python interpreter
+
+Execute the python3 (or python2 if appropriate) Python interpreter
+Then for that Python environment execute the following commands:
+
+>>> from plplot_python_start import *
+>>> import plplot as w
+>>> # list out all possible constants and commands for the plplot binding
+>>> dir(w)
+>>> # Check documentation strings for some of those commands
+>>> print(w.plw3d.__doc__)
+>>> print(w.plot3dcl.__doc__)
+>>> print(w.plsurf3dl.__doc__)
+>>> # etc
+
+These documentation strings should be consistent with the latest
+version of the api.xml file.  Also the last two should show the expected
+UTF-8 symbols ≤ and ≥.
+
+3. Check the octave documentation
+
+* Build the test_octave_svg target in order to build
+  all the required prerequisites.
+
+* Determine the octavedir environment variable
+
+SRC_EXAMPLES_PREFIX should point to the examples subdirectory of the source tree,
+and EXAMPLES_PREFIX should point to the examples subdirectory of the build tree.
+e.g.,
+
+export SRC_EXAMPLES_PREFIX=/home/software/plplot/HEAD/plplot.git/examples
+export EXAMPLES_PREFIX=/home/software/plplot/HEAD/build_dir/examples
+export octavedir=\
+"$SRC_EXAMPLES_PREFIX"/../bindings/octave/PLplot:\
+"$SRC_EXAMPLES_PREFIX"/../bindings/octave/PLplot/support:\
+"$SRC_EXAMPLES_PREFIX"/../bindings/octave/misc:\
+"$SRC_EXAMPLES_PREFIX"/octave:\
+"$EXAMPLES_PREFIX"/../bindings/octave:\
+"$EXAMPLES_PREFIX"/../bindings/octave/PLplot
+
+* Invoke the octave interpreter, load PLplot, and printout help strings for various
+  PLplot commands.
+
+software@raven> octave -f -q
+octave:1> warning("off","Octave:shadowed-function");
+octave:2> addpath(getenv("octavedir"));
+octave:3> plplot_stub;
+octave:4> help plw3d
+[...]
+octave:5> help plot3dcl
+[...]
+octave:6> help plsurf3dl
+[...]
+
+These documentation strings should be consistent with the latest
+version of the api.xml file.  Also the last two should show the expected
+UTF-8 symbols ≤ and ≥.
+
+UTF-8 limitations of the current set of backend tools
+=====================================================
+
+The above set of DocBook backend tools has been chosen with the goal
+of allowing essentially arbitrary UTF-8 strings into our DocBook
+source.  And the advanced.xml part of our DocBook source constitutes a
+simple test of how close we have come to that goal by including the
+"Peace" word in the 12 human languages expressed in example 24 and by
+also including some UTF-8 forms of math symbols.  Here are the current
+results for how well those UTF-8 strings render for our various
+backends.
+
+Man and info results
+
+Should be near-perfect if you are using a
+terminal application (e.g., konsole, but NOT xterm) that uses
+X client-side system unicode fonts.
+
+HTML results
+
+Should be perfect.
+
+PDF results
+
+These results are reasonably good.  All math glyphs and all but the
+glyphs occurring in the Korean and Mandarin "Peace" words are present.
+I attribute the missing glyph issues to missing Korean and Mandarin
+glyphs in the chosen FreeSans, FreeSerif, and FreeMono fonts (more
+about that choice below). The order of the glyphs in the Hindi Peace
+word is not correct (last two glyphs switched) which is a common
+complex text layout (CTL) issue when using unsophisticated software to
+render Hindi (Devangari script).  However, the Peace word is laid out
+in the correct (right-to-left) order for Arabic and Hebrew so there is
+some CTL sophistication in the xelatex layout engine, and probably
+hope that further layout issues such as the one for Hindi will be
+fixed.
+
+More on the reason for the missing PDF glyphs.
+
+It was a huge step forward in the TeX world for the combination of
+xelatex and the fontspec TeX package to make a very large number of
+UTF-8 glyphs potentially available in pdf results.  So I think the
+above method of using dblatex with the xetex backend (which uses
+xelatex and fontspec internally) is the best we can do to generate the
+pdf form of our documentation as free as possible from unicode issues.
+For example, the situation is much improved over the previous xmlto
+method which severely limited the glyphs in the PDF form of our
+results.
+
+However, the fontspec package still has a fundamental limitation which
+is you must use a specific rather than generic font for the sans,
+serif, and mono cases. Specific fonts are never a good way to go for
+documents containing different languages (such as the table of "Peace"
+words I recently introduced into advanced.xml) since the user is
+forced to compromise between font quality and comprehensiveness.  For
+example, I have tried using the unifont font (which gives complete
+coverage of glyphs for the basic multilingual plane), and the
+resulting pdf form of our documentation has no missing glyphs.
+However, that font is of extremely poor quality (scaled,
+low-resolution bitmapped, monospaced fonts) which makes our
+documentation look ugly so I am not going to use it.  Instead, I have
+chosen (via doc/docbook/src/dblatex_stylesheet.xsl) to use FreeSans,
+FreeSerif, and FreeMono fonts which have reasonable quality but which
+have some missing glyphs (notably CJK glyphs that leave our Korean and
+Mandarin "peace" words empty in the documentation).
+
+The proper way to solve this issue (which would bring TeX completely
+into the modern unicode world) would be to modify fontspec so that
+certain given font names are considered generic, (e.g., the
+"sans-serif", "serif", and "mono-space" font names could be adopted
+for this purpose to follow what is done in the SVG world).  For those
+generic font names, the idea is the fontspec package would simply hand
+off font selection to fontconfig which does a very nice job of
+automatically selecting the ideal sans, serif, or mono system font to
+provide a particular UTF-8 glyph.  I have asked the fontspec
+maintainer about this potential feature, and his reply indicated there
+will be no quick fixes to xelatex/fontspec with regard to automatic
+selection of fonts for the generic case, and we will be stuck for the
+foreseeable future with the specific font approach.  That approach
+forces a compromise between complete glyph coverage and reasonable
+quality.  Thus, as a result of avoiding truly ugly fonts in our
+generated pdf documentation there are missing CJK glyphs in the
+results.
+
+Installing the generated documentation (and the rest of the generated website) at plplot.org.
+===============================================================================================
+
+Follow the directions in README.Release_Manager_Cookbook.  That file is
+located in the top-level source tree for PLplot.

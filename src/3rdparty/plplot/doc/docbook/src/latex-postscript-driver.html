@@ -1,0 +1,32 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>The pstex driver</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="file-drivers.html" title="Chapter 5. Drivers which implement file devices"><link rel="prev" href="gd-driver.html" title="The gd driver"><link rel="next" href="interactive-drivers.html" title="Chapter 6. Drivers which implement interactive devices"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">The pstex driver</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gd-driver.html">Prev</a> </td><th width="60%" align="center">Chapter 5. Drivers which implement file devices</th><td width="20%" align="right"> <a accesskey="n" href="interactive-drivers.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="latex-postscript-driver"></a>The pstex driver</h2></div></div></div><p>
+      N.B. This driver is disabled by default because it is not maintained.
+      This is a PostScript device driver that writes out its results in two
+      files.  (1) The encapsulated postscript (EPS) file contains all the
+      postscript commands for rendering the plot without characters, and (2)
+      the LaTeX file contains a fragment of LaTeX that reads in the EPS file
+      and renders the plot characters using LaTeX commands (and LaTeX
+      fonts!) in alignment with the EPS file to produce a combined result.
+    </p><p>
+
+      Suppose you create the EPS and LaTeX files with the following command:
+      <strong class="userinput"><code>./x01c -dev pstex -o x01c.eps</code></strong>.  The EPS file
+      is then stored in <code class="filename">x01c.eps</code> and the LaTeX fragment
+      is stored in <code class="filename">x01c.eps_t</code>.  Then
+      you may use the generated files with the <code class="filename">x01c.tex</code>
+      LaTeX code that follows:
+    </p><p>
+      </p><pre class="programlisting">\documentclass{article}
+      \usepackage[dvips]{graphicx}
+      \begin{document}
+      \input{x01c.eps_t}
+      \end{document}
+      </pre><p>
+    </p><p>
+      and generate PostScript results using the LaTeX fonts with the following
+      command: <strong class="userinput"><code>latex x01c.tex; dvips -f &lt;x01c.dvi &gt;x01c.ps
+      </code></strong>.  The results look good (aside from an obvious bounding-box
+      problem that still needs to be fixed with this device) and should be
+      useful for LaTeX enthusiasts.
+    </p><p>
+      There are no available driver options.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="gd-driver.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="file-drivers.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="interactive-drivers.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">The gd driver </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 6. Drivers which implement interactive devices</td></tr></table></div></body></html>

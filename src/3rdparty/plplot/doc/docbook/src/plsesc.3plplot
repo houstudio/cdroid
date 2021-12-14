@@ -1,0 +1,35 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSESC 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsesc\fP - Set the escape character for text strings
+.SH SYNOPSIS
+\fBplsesc\fP(\fIesc\fP)
+.SH DESCRIPTION
+
+.P
+Set the escape character for text strings.  From C (in contrast to Fortran, see \fBplsescfortran\fP(3plplot)) you pass \fIesc\fP as a character. Only selected characters are allowed to prevent the user from shooting himself in the foot (For example, a \ isn't allowed since it conflicts with C's use of backslash as a character escape).  Here are the allowed escape characters and their corresponding decimal ASCII values: !, ASCII 33
+#, ASCII 35
+$, ASCII 36
+%, ASCII 37
+&, ASCII 38
+*, ASCII 42
+@, ASCII 64
+^, ASCII 94
+~, ASCII 126
+
+.P
+Redacted form: General: \fBplsesc(esc)\fP
+
+.P
+This function is used in example 29.
+.SH ARGUMENTS
+.TP
+\fIesc\fP (char, input)
+Escape character.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

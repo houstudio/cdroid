@@ -1,0 +1,20 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Initializing PLplot</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="simple.html" title="Chapter 2. Simple Use of PLplot"><link rel="prev" href="simple-graph.html" title="Plotting a Simple Graph"><link rel="next" href="scales.html" title="Defining Plot Scales and Axes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Initializing PLplot</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="simple-graph.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Simple Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="scales.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="initializing"></a>Initializing PLplot</h2></div></div></div><p>
+      Before any actual plotting calls are made, a graphics program must
+      call <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a>, is the main initialization routine for PLplot.  It
+      sets up all internal data structures necessary for plotting and
+      initializes the output device driver.  If the output device has not
+      already been specified when <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> is called, a list of valid
+      output devices is given and the user is prompted for a choice.
+      Either the device number or a device keyword is accepted.
+    </p><p>
+      There are several routines affecting the initialization that must
+      be called <span class="emphasis"><em>before</em></span> <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a>, if they are used.  The
+      function <a class="link" href="plsdev.html" title="plsdev: Set the device (keyword) name"><code class="function">plsdev</code></a> allows you to set the device explicitly.  The
+      function <a class="link" href="plsetopt.html" title="plsetopt: Set any command-line option"><code class="function">plsetopt</code></a> allows you to set any command-line option
+      internally in your code.  The function <a class="link" href="plssub.html" title="plssub: Set the number of subpages in x and y"><code class="function">plssub</code></a> may be called to
+      divide the output device plotting area into several subpages of equal
+    size, each of which can be used separately. </p><p>
+      One advances to the next page (or screen) via <a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a>.  If subpages
+      are used, this can be used to advance to the next subpage or to a
+      particular subpage.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="simple-graph.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="simple.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="scales.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Plotting a Simple Graph </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Defining Plot Scales and Axes</td></tr></table></div></body></html>

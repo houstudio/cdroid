@@ -1,0 +1,49 @@
+#!@SH_EXECUTABLE@
+# Examples 14 and 31 commented out - see Tk standard_examples.in
+# The following exec command reexecutes the script under tclsh.  This
+# is possible because all comment lines are ignored by tclsh including
+# continued ones with a trailing backslash like this one \
+exec "@TCL_TCLSH@" "$0" "$@"
+lappend auto_path "@pkgIndex_LOCATION@"
+package require Pltcl
+source tcldemos.tcl
+plsdev "@generic_interactive_device@"
+plinit
+# Disable pausing.
+plspause 0
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+#14
+15
+16
+17
+18
+19
+20
+# example 20 enables plspause so must disable it again.
+plspause 0
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+#31
+33
+exit

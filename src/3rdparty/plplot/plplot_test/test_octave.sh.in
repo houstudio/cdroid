@@ -1,0 +1,126 @@
+#!@SH_EXECUTABLE@
+# Test suite for octave examples.
+#
+# Copyright (C) 2004-2015  Alan W. Irwin
+# Copyright (C) 2004  Rafael Laboissiere
+#
+# This file is part of PLplot.
+#
+# PLplot is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# PLplot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with PLplot; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+# This is called from plplot-test.sh with $octave, $octavedir, $device,
+# $dsuffix and $options defined.
+# Assumes that $option starts and are '-' separated.
+
+lang="o"
+export lang
+
+# Launch an Octave script that exercises all the demos
+$octave -f -q  <<EOF 2> octave_${device}_test.error
+
+# Disable warnings about shadowed functions - PLplot is _supposed_ to shadow the core functions
+warning("off","Octave:shadowed-function");
+
+addpath(getenv("octavedir"));
+
+# Check verbose_test variable
+if (strcmp(getenv("verbose_test"),"on") == 1)
+    verbose_test = 1;
+else
+    verbose_test = 0;
+endif
+
+plplot_stub;
+t = char(strsplit("${options}", "-"));
+if (t)
+    t(1,:)="";
+    for i=1:rows(t)
+        tt = deblank (t(i,:)); len = length(tt);
+        ix = index(tt," ");
+        if (ix == 0); ix = len; len = 0; endif
+        plsetopt(tt(1:ix), tt(ix+1:len));
+    endfor
+endif
+
+# Subset of p examples selected that seem to work ok with noninteractive
+# devices.
+
+# Remove 7, 16 until plshade1 fix is done.
+
+for i=[1:6 8 9 13 15 21] ;
+    if (verbose_test)
+	printf("p%d\n",i);
+    endif
+    figure(i,"${device}",sprintf("${OUTPUT_DIR}/p%d%%n.${dsuffix}",i));
+    feval(sprintf("p%d",i))
+    closefig
+endfor
+#plot equivalent of x??c examples.
+# Example 32 not implemented because there has been no call for propagation
+# and it exercises no new API.
+failed = [] ;
+for i=[0:31 33] ;
+    ofile = sprintf("${OUTPUT_DIR}/x%.2d${lang}_${dsuffix}.txt",i);
+    strm = fopen(ofile,"w");
+    cmd = sprintf("x%.2dc",i);
+    if (verbose_test)
+	printf("%s\n",cmd);
+    endif
+    t = char(strsplit("${options}", "-"));
+    if (t)
+        t(1,:)="";
+        for j=1:rows(t)
+            tt = deblank (t(j,:)); len = length(tt);
+       	    ix = index(tt," ");
+	    if (ix == 0); ix = len; len = 0; endif
+	    plSetOpt(deblank(tt(1:ix)), tt(ix:len));
+        endfor
+    endif
+    device="${device}";
+    plSetOpt("dev", device);
+#o trailer on filename e.g., x01o.ps) to distinguish from other
+#common examples.
+    file = sprintf("${OUTPUT_DIR}/x%.2d${lang}%%n.${dsuffix}",i);
+    plSetOpt("o", file);
+    if i == 14
+	file2 = sprintf("${OUTPUT_DIR}/x%.2da${lang}%%n.${dsuffix}",i);
+    endif
+    eval(cmd, "failed = [failed, i] ;");
+    fclose(strm);
+    clear file2;
+endfor
+if ! isempty (failed)
+    printf ("Failed tests: ");
+    for i = 1 : length (failed)
+        if i != 1
+            printf (", ");
+        endif
+        printf ("x%.2dc.m", failed (i));
+    endfor
+    printf ("\n");
+    exit (1);
+endif
+EOF
+status_code=$?
+cat octave_${device}_test.error
+if [ "$status_code" -ne 0 ] ; then
+    exit $status_code
+fi
+# Look for any PLPLOT ERROR messages from plwarn that do not result in an
+# exit code.
+is_error=`grep -l 'PLPLOT ERROR' octave_${device}_test.error`
+if [ -n "$is_error" ] ; then
+    exit 1
+fi

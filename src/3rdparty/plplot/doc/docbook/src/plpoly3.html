@@ -1,0 +1,105 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plpoly3: Draw a polygon in 3 space</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plpoin3.html" title="plpoin3: Plot a glyph at the specified 3D points"><link rel="next" href="plprec.html" title="plprec: Set precision in numeric labels"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plpoly3</code>: Draw a polygon in 3 space
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plpoin3.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plprec.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plpoly3"></a>
+      <code class="function">plpoly3</code>: Draw a polygon in 3 space
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plpoly3</b>
+          (</code></td><td>
+            <var class="pdparam">n</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">z</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">draw</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ifcc</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Draws a polygon in 3 space defined by <code class="literal">
+        <em class="parameter"><code>n</code></em>
+      </code>
+      points in
+      <code class="literal">
+        <em class="parameter"><code>x</code></em>
+      </code>,
+      <code class="literal">
+        <em class="parameter"><code>y</code></em>
+      </code>, and
+      <code class="literal">
+        <em class="parameter"><code>z</code></em>
+      </code>.
+      Setup like <a class="link" href="plline3.html" title="plline3: Draw a line in 3 space"><code class="function">plline3</code></a>, but differs from that function in that <a class="link" href="plpoly3.html" title="plpoly3: Draw a polygon in 3 space"><code class="function">plpoly3</code></a>
+      attempts to determine if the polygon is viewable depending on the
+      order of the points within the vector and the value of
+      <code class="literal"><em class="parameter"><code>ifcc</code></em></code>.  If the back of
+      polygon is facing the viewer, then it isn't drawn.  If this isn't what
+      you want, then use <a class="link" href="plline3.html" title="plline3: Draw a line in 3 space"><code class="function">plline3</code></a> instead.
+    </p><p>
+      The points are assumed to be in a plane, and the directionality of
+      the plane is determined from the first three points.  Additional
+      points do not <span class="emphasis"><em>have</em></span> to lie on the plane defined
+      by the first three, but if they do not, then the determination of
+      visibility obviously can't be 100% accurate... So if you're 3 space
+      polygons are too far from planar, consider breaking them into smaller
+      polygons.  <span class="quote">“<span class="quote">3 points define a plane</span>”</span> :-).
+    </p><p>
+      <span class="emphasis"><em>Bugs</em></span>:  If one of the first two segments is of
+      zero length, or if they are co-linear, the calculation of visibility
+      has a 50/50 chance of being correct.  Avoid such situations :-).  See
+      <code class="filename">x18c.c</code> for an example of this problem.
+      (Search for <span class="quote">“<span class="quote">20.1</span>”</span>).
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>n</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of points defining line.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing <em class="parameter"><code>n</code></em> x coordinates of points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing <em class="parameter"><code>n</code></em> y coordinates of points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>z</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing <em class="parameter"><code>n</code></em> z coordinates of points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>draw</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL_VECTOR-type"><code class="function">PLBOOL_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing <em class="parameter"><code>n-1</code></em> Boolean values
+	    which control drawing the segments of the polygon.  If
+	    <code class="literal"><em class="parameter"><code>draw[i]</code></em></code> is true,
+            then the polygon segment from index
+            <code class="literal"><em class="parameter"><code>[i]</code></em></code> to
+            <code class="literal"><em class="parameter"><code>[i+1]</code></em></code> is drawn,
+	    otherwise, not.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ifcc</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+        </span></dt><dd><p>
+            If <code class="literal">
+              <em class="parameter"><code>ifcc</code></em>
+            </code> is true
+            the directionality of the polygon is determined by assuming the points
+            are laid out in a counter-clockwise order.  Otherwise,
+            the directionality of the polygon is determined by assuming the points
+            are laid out in a clockwise order.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plpoly3(x, y, z, code)</code>
+    </p><p>
+      This function is used in example 18.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plpoin3.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plprec.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plpoin3</code>: Plot a glyph at the specified 3D points
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plprec</code>: Set precision in numeric labels
+    </td></tr></table></div></body></html>

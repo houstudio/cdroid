@@ -1,0 +1,20 @@
+# Top-level CMakeLists.txt for the installed version of a simple project consisting of an
+# installed "Hello, world" library and an executable to be built to test CMake language support
+# for Fortran.
+
+# MAINTENANCE
+# Use same minimum version for all platforms as the non-Linux platform minimum adopted for
+# the PLplot project.
+cmake_minimum_required(VERSION 3.11.0 FATAL_ERROR)
+
+project(installed_test_ada Fortran)
+
+# Define key variables that are configured by the core build.
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
+include(test_fortran_configure)
+
+# Find installed project
+find_package(test_fortran)
+
+# Build Ada executable that links to the "hello" Ada library that is installed by test_ada
+add_subdirectory(fortran)

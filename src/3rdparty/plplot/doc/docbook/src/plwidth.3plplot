@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLWIDTH 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplwidth\fP - Set pen width
+.SH SYNOPSIS
+\fBplwidth\fP(\fIwidth\fP)
+.SH DESCRIPTION
+
+.P
+Sets the pen width.
+.P
+Redacted form: \fBplwidth(width)\fP
+.P
+This function is used in examples 1 and 2.
+.SH ARGUMENTS
+.TP
+\fIwidth\fP (\fBPLFLT\fP(3plplot), input)
+The desired pen width.  If \fIwidth\fP is negative or the same as the previous value no action is taken. \fIwidth\fP = 0.  should be interpreted as as the minimum valid pen width for the device.  The interpretation of positive \fIwidth\fP values is also device dependent.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

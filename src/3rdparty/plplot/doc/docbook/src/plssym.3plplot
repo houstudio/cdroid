@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSSYM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplssym\fP - Set symbol size
+.SH SYNOPSIS
+\fBplssym\fP(\fIdef\fP, \fIscale\fP)
+.SH DESCRIPTION
+
+.P
+This sets up the size of all subsequent symbols drawn by \fBplpoin\fP(3plplot) and \fBplsym\fP(3plplot).  The actual height of a symbol is the product of the default symbol size and a scaling factor as for the character height.
+.P
+Redacted form: \fBplssym(def, scale)\fP
+.P
+This function is used in example 29.
+.SH ARGUMENTS
+.TP
+\fIdef\fP (\fBPLFLT\fP(3plplot), input)
+The default height of a symbol in millimeters, should be set to zero if the default height is to remain unchanged.
+.TP
+\fIscale\fP (\fBPLFLT\fP(3plplot), input)
+Scale factor to be applied to default to get actual symbol height.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

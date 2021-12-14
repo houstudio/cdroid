@@ -1,0 +1,50 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plspal1: Set the cmap1 palette using the specified cmap1*.pal format file</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plspal0.html" title="plspal0: Set the cmap0 palette using the specified cmap0*.pal format file"><link rel="next" href="plspause.html" title="plspause: Set the pause (on end-of-page) status"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plspal1</code>: Set the cmap1 palette using the
+      specified <code class="filename">cmap1*.pal</code> format file
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plspal0.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plspause.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plspal1"></a>
+      <code class="function">plspal1</code>: Set the cmap1 palette using the
+      specified <code class="filename">cmap1*.pal</code> format file
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plspal1</b>
+          (</code></td><td>
+            <var class="pdparam">filename</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">interpolate</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Set the cmap1 palette using the specified
+      <code class="filename">cmap1*.pal</code> format file.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>filename</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLCHAR_VECTOR-type"><code class="function">PLCHAR_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+	    An ascii character string containing the
+	    name of the <code class="filename">cmap1*.pal</code> file.  If this string is
+	    empty, use the default <code class="filename">cmap1*.pal</code> file.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>interpolate</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+        </span></dt><dd><p>
+            If this parameter is true, the columns containing the
+            intensity index, r, g, b, alpha and
+            alt_hue_path in the <code class="filename">cmap1*.pal</code> file are used to set
+            the cmap1 palette with a call to <a class="link" href="plscmap1la.html" title="plscmap1la: Set cmap1 colors and alpha transparency using a piece-wise linear relationship"><code class="function">plscmap1la</code></a>.
+            (The <code class="filename">cmap1*.pal</code> header contains a flag which controls
+            whether the r, g, b data sent to <a class="link" href="plscmap1la.html" title="plscmap1la: Set cmap1 colors and alpha transparency using a piece-wise linear relationship"><code class="function">plscmap1la</code></a> are
+            interpreted as HLS or RGB.)
+          </p><p>
+            If this parameter is false, the intensity index and alt_hue_path columns
+            are ignored and the r, g, b (interpreted as RGB), and alpha columns of the
+            <code class="filename">cmap1*.pal</code> file are used instead to set the cmap1 palette directly
+            with a call to <a class="link" href="plscmap1a.html" title="plscmap1a: Set semitransparent cmap1 RGBA colors."><code class="function">plscmap1a</code></a>.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plspal1(filename, interpolate)</code>
+    </p><p>
+      This function is used in example 16.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plspal0.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plspause.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plspal0</code>: Set the cmap0 palette using the
+      specified <code class="filename">cmap0*.pal</code> format file
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plspause</code>: Set the pause (on end-of-page) status
+    </td></tr></table></div></body></html>

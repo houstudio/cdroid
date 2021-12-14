@@ -1,0 +1,115 @@
+typedef struct
+{
+    PLCHAR_VECTOR opt;
+    int ( *handler )( PLCHAR_VECTOR, PLCHAR_VECTOR, PLPointer );
+    PLPointer     client_data;
+    PLPointer     var;
+    long          mode;
+    PLCHAR_VECTOR syntax;
+    PLCHAR_VECTOR desc;
+} PLOptionTable;
+
+typedef struct
+{
+    int          type;              // of event (CURRENTLY UNUSED)
+    unsigned int state;             // key or button mask
+    unsigned int keysym;            // key selected
+    unsigned int button;            // mouse button selected
+    PLINT        subwindow;         // subwindow (alias subpage, alias subplot) number
+    char         string[PL_MAXKEY]; // translated string
+    int          pX, pY;            // absolute device coordinates of pointer
+    PLFLT        dX, dY;            // relative device coordinates of pointer
+    PLFLT        wX, wY;            // world coordinates of pointer
+} PLGraphicsIn;
+
+typedef struct
+{
+    PLFLT dxmi, dxma, dymi, dyma;       // min, max window rel dev coords
+    PLFLT wxmi, wxma, wymi, wyma;       // min, max window world coords
+} PLWindow;
+
+typedef struct
+{
+    unsigned int x, y;                  // upper left hand corner
+    unsigned int width, height;         // window dimensions
+} PLDisplay;
+
+typedef struct
+{
+    PLFLT_FE_POINTER f;
+    PLINT            nx, ny, nz;
+} PLfGrid;
+
+typedef struct
+{
+    PLFLT_NC_MATRIX f;
+    PLINT           nx, ny;
+} PLfGrid2;
+
+typedef struct
+{
+    PLFLT_NC_FE_POINTER xg, yg, zg;
+    PLINT nx, ny, nz;
+} PLcGrid;
+
+typedef struct
+{
+    PLFLT_NC_MATRIX xg, yg, zg;
+    PLINT           nx, ny;
+} PLcGrid2;
+
+typedef struct
+{
+    unsigned char r;            // red
+    unsigned char g;            // green
+    unsigned char b;            // blue
+    PLFLT         a;            // alpha (or transparency)
+    PLCHAR_VECTOR name;
+} PLColor;
+
+typedef struct
+{
+    PLFLT c1;                   // hue or red
+    PLFLT c2;                   // lightness or green
+    PLFLT c3;                   // saturation or blue
+    PLFLT p;                    // position
+    PLFLT a;                    // alpha (or transparency)
+    int   alt_hue_path;         // if set, interpolate through h=0
+} PLControlPt;
+
+typedef struct
+{
+    PLINT cmd;
+    PLINT result;
+} PLBufferingCB;
+
+typedef struct
+{
+    PLFLT exp_label_disp;
+    PLFLT exp_label_pos;
+    PLFLT exp_label_just;
+} PLLabelDefaults;
+
+typedef struct
+{
+    PLFLT ( *get )( PLPointer p, PLINT ix, PLINT iy );
+    PLFLT ( *set )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *add )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *sub )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *mul )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLFLT ( *div )( PLPointer p, PLINT ix, PLINT iy, PLFLT z );
+    PLINT ( *is_nan )( PLPointer p, PLINT ix, PLINT iy );
+    void ( *minmax )( PLPointer p, PLINT nx, PLINT ny, PLFLT_NC_SCALAR zmin, PLFLT_NC_SCALAR zmax );
+    //
+    // f2eval is backwards compatible signature for "f2eval" functions that
+    // existed before plf2ops "operator function families" were used.
+    //
+    PLFLT ( *f2eval )( PLINT ix, PLINT iy, PLPointer p );
+} plf2ops_t;
+
+typedef struct
+{
+    size_t    size;
+    PLPointer buffer;
+} plbuffer;
+

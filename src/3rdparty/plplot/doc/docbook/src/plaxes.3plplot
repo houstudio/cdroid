@@ -1,0 +1,65 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLAXES 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplaxes\fP - Draw a box with axes, etc. with arbitrary origin
+.SH SYNOPSIS
+\fBplaxes\fP(\fIx0\fP, \fIy0\fP, \fIxopt\fP, \fIxtick\fP, \fInxsub\fP, \fIyopt\fP, \fIytick\fP, \fInysub\fP)
+.SH DESCRIPTION
+
+.P
+Draws a box around the currently defined viewport with arbitrary world-coordinate origin specified by \fIx0\fP and \fIy0\fP and labels it with world coordinate values appropriate to the window.  Thus \fBplaxes\fP(3plplot) should only be called after defining both viewport and window.  The ascii character strings \fIxopt\fP and \fIyopt\fP specify how the box should be drawn as described below.  If ticks and/or subticks are to be drawn for a particular axis, the tick intervals and number of subintervals may be specified explicitly, or they may be defaulted by setting the appropriate arguments to zero.
+.P
+Redacted form: General: \fBplaxes(x0, y0, xopt, xtick, nxsub, yopt, ytick, nysub)\fP
+
+.P
+This function is not used in any examples.
+.SH ARGUMENTS
+.TP
+\fIx0\fP (\fBPLFLT\fP(3plplot), input)
+World X coordinate of origin.
+.TP
+\fIy0\fP (\fBPLFLT\fP(3plplot), input)
+World Y coordinate of origin.
+.TP
+\fIxopt\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying options for the x axis.  The string can include any combination of the following letters (upper or lower case) in any order: a: Draws axis, X-axis is horizontal line (y=0), and Y-axis is vertical line (x=0).
+b: Draws bottom (X) or left (Y) edge of frame.
+c: Draws top (X) or right (Y) edge of frame.
+d: Plot labels as date / time. Values are assumed to be seconds since the epoch (as used by gmtime).
+f:  Always use fixed point numeric labels.
+g: Draws a grid at the major tick interval.
+h: Draws a grid at the minor tick interval.
+i: Inverts tick marks, so they are drawn outwards, rather than inwards.
+l: Labels axis logarithmically.  This only affects the labels, not the data, and so it is necessary to compute the logarithms of data points before passing them to any of the drawing routines.
+m: Writes numeric labels at major tick intervals in the unconventional location (above box for X, right of box for Y).
+n: Writes numeric labels at major tick intervals in the conventional location (below box for X, left of box for Y).
+o: Use custom labelling function to generate axis label text.  The custom labelling function can be defined with the \fBplslabelfunc\fP(3plplot) command.
+s: Enables subticks between major ticks, only valid if t is also specified.
+t: Draws major ticks.
+u: Exactly like "b" except don't draw edge line.
+w: Exactly like "c" except don't draw edge line.
+x: Exactly like "t" (including the side effect of the numerical labels for the major ticks) except exclude drawing the major and minor tick marks.
+
+.TP
+\fIxtick\fP (\fBPLFLT\fP(3plplot), input)
+World coordinate interval between major ticks on the x axis. If it is set to zero, PLplot automatically generates a suitable tick interval.
+.TP
+\fInxsub\fP (\fBPLINT\fP(3plplot), input)
+Number of subintervals between major x axis ticks for minor ticks.  If it is set to zero, PLplot automatically generates a suitable minor tick interval.
+.TP
+\fIyopt\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string specifying options for the y axis.  The string can include any combination of the letters defined above for \fIxopt\fP, and in addition may contain: v: Write numeric labels for the y axis parallel to the base of the graph, rather than parallel to the axis.
+
+.TP
+\fIytick\fP (\fBPLFLT\fP(3plplot), input)
+World coordinate interval between major ticks on the y axis. If it is set to zero, PLplot automatically generates a suitable tick interval.
+.TP
+\fInysub\fP (\fBPLINT\fP(3plplot), input)
+Number of subintervals between major y axis ticks for minor ticks.  If it is set to zero, PLplot automatically generates a suitable minor tick interval.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

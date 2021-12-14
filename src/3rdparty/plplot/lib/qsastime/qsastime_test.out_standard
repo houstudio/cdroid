@@ -1,0 +1,49 @@
+Start date/time components: 2004-1-23 13:39:  2.345678901
+date/time components: 2004-1-23 13:39:  2.345678901
+
+MJD = 53027, seconds =   49142.345678901
+ MJD =   53027.5687771491 
+ JD = 2453028.0687771491 
+
+ISO string = '2004-01-23 13:39:02.3456789010'
+
+strfMJD:ISO equiv:   '2004-01-23 13:39:02.345678901'
+strfMJD:ISO equiv:  '2004-01-23T13:39:02.3457Z'
+difference MJD (month/day) - MJD(doy) '0'
+
+difference MJD (d-1, h+24) - MJD(d, h) '-8.42125e-17'
+
+CDF epoch sec 63242084342345.680
+from CDF ISO string (CDF epoch is accurate to msec only) = '2004-01-23T13:39:02.3456802368Z'
+Day of week is/was Fri
+
+ISO string = '2004-01-23 13:39:02.3456789010'
+
+for 2004-01-23 13:39:02.3456789010, MJD = 53027, seconds =      49142.345679
+ISO string = '2004-01-23T13:39:02.3456789010Z'
+
+for 2004-01-23T13:39:02.3456789010Z, MJD = 53027, seconds =      49142.345679
+
+Gregorian = '1752-09-14 00:39:02.3456789010'
+1752-09-03T00:39:02.3456789010Z Julian = '1752-09-14 00:39:02.3456789010' Gregorian, (give us back our 11 days)
+chars 154 for 
+   strfMJD():
+   --------
+ 'Fri Jan 23 13:39:02 UTC 2004' 
+ Fri Jan 23 13:39:02 2004
+ 01/23/04 2004-01-23 
+ 023 
+ 01:39:02 PM 
+ 1074865142 
+ 23-Jan-2004
+
+
+  strftime(): (invalid before 1970 on some systems and subject to time zones on all systems)
+   ------
+ 'Fri Jan 23 13:39:02 UTC 2004' 
+ Fri Jan 23 13:39:02 2004
+ 01/23/04 2004-01-23 
+ 023 
+ 01:39:02 PM 
+ 1074893942 
+ 23-Jan-2004

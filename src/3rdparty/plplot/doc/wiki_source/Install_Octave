@@ -1,0 +1,26 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Plplot supports bindings and test examples. To include this powerful component of PLplot for Windows you must download and install Octave for Windows.
+
+Download the Windows Octave installer from <http://prdownloads.sourceforge.net/octave/Octave_Windows%20-%20MinGW/Octave%203.2.4%20for%20Windows%20MinGW32%20Installer/Octave-3.2.4_i686-pc-mingw32_gcc-4.4.0_setup.exe>
+
+Run that executable (under wine that is done with the "wine Octave-3.2.4_i686-pc-mingw32_gcc-4.4.0_setup.exe command), and choose all defaults except the install prefix which should refer to a unique location so that octave can easily be removed later without interfering with anything else. In my case I chose to use Z:\\home\\wine\\newstart\\octave\\Octave\\3.2.4_gcc-4.4.0. In other words, I replaced the C: in the default prefix by Z:\\home\\wine\\newstart\\octave, but you are free to use anything you like. Let's call that install prefix OCTAVE_PREFIX (e.g., OCTAVE_PREFIX=Z:\\home\\wine\\newstart\\octave\\Octave\\3.2.4_gcc-4.4.0 in my case). Then to help cmake locate octave on your Windows machine you have to set the following environment variables:
+
+-   PATH=\$PATH:\$OCTAVE_PREFIX/bin (Location of octave.exe and liboctave.dll.)
+-   CMAKE_INCLUDE_PATH=\$OCTAVE_PREFIX/include/octave-3.2.4/octave:\$CMAKE_INCLUDE_PATH (Location of octave.h.)
+-   CMAKE_LIBRARY_PATH=\$OCTAVE_PREFIX/lib/octave-3.2.4:\$CMAKE_LIBRARY_PATH (Location of liboctave.dll.a)
+
+(PATH is always predefined, but in case CMAKE_INCLUDE_PATH is not predefined, then drop the trailing ":\$CMAKE_INCLUDE_PATH" in that definition, and in case CMAKE_LIBRARY_PATH is not defined drop the trailing ":\$CMAKE_LIBRARY_PATH" in that definition.)
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

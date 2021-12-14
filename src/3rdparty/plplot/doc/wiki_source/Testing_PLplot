@@ -1,0 +1,497 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+We encourage those who build PLplot to test both their build-tree and installed-examples-tree versions on any Linux, Windows, or Mac OS X platform.  If an issue is discovered with such tests, it should initially be reported to [the plplot-general mailing list](https://lists.sourceforge.net/lists/listinfo/plplot-general "wikilink").  Only if there is no quick resolution to be found on that list do we encourage our users to document the issue on our [bug tracker](https://sourceforge.net/p/plplot/bugs/ "wikilink").
+
+### Summary of testing systems
+
+We have implemented the following test systems which are referred to throughout this document:
+
+1. A [CMake-based test system](#cmake_based_test_system "wikilink") for both the build tree and installed examples tree that consists of a collection of test targets and their detailed dependencies that is configured by CMake.
+2. A [CTest-based test system](#ctest_based_test_system "wikilink") for the build tree and installed examples tree that is based on tests configured by CTest whose prerequisites must be built by building the "all" target first.
+3. A [legacy test system](#legacy_test_system "wikilink") for the installed examples tree that is implemented by the legacy (make + pkg-config) build system for the installed examples.
+
+### <a name="Comprehensive testing"></a>Comprehensive testing
+
+If you want to just help out with comprehensive testing before a release on the platforms accessible to you available without becoming too concerned about details of the tests and which of the test systems are used, all you really need to do is the following:
+
+~~~
+.../scripts/comprehensive_test.sh <zero or more script options>
+~~~
+where `...` is the directory holding the PLplot sources. The results are stored in a directory `comprehensive_test_disposeable` at the same level as the source directory. If you want more control, you can use a procedure like this:
+
+~~~
+# For convenience set a bash variable SOURCE_PREFIX that points to
+# the source tree, and a bash variable COMPREHENSIVE_TEST_PREFIX
+# that points to the prefix used to store all script results.
+
+# For example, for tests of blanks in prefixes you want the source tree to
+# have a blank in the prefix and both the build and install trees to have blanks
+# in their prefixes.  On my Linux system I arrange this, for example, with
+
+SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+# where "plplot blank .git" is actually a symlink to my normal plplot git repository
+# working directory without a blank in the prefix.
+
+# After these two bash variables are defined, run the comprehensive test script as follows:
+
+"$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" <other script options>
+
+# where <other script options> are documented by the --help script option
+~~~
+
+By default this bash script `comprehensive_test.sh` runs a complete set of 8 major tests for our 3 principal build configurations (shared libraries/dynamic plot devices, shared libraries/static plot devices, and static libraries/static plot devices).  Those 8 major tests use all of our test systems and are the following:
+
+1. ([CMake-based test system](#cmake_based_test_system "wikilink")) Run the test_interactive target in the core build tree.
+2. ([CMake-based test system](#cmake_based_test_system "wikilink")) Run the test_interactive target in the installed examples tree with the CMake-based build system.
+3. ([legacy test system](#legacy_test_system "wikilink")) Run the test_interactive target in the installed examples tree with the legacy (make + pkg-config) build system.
+4. ([CMake-based test system](#cmake_based_test_system "wikilink")) Run the test_noninteractive target in the core build tree.
+5. ([CTest-based test system](#ctest_based_test_system "wikilink")) Build the "all" target (to build all prerequisite targets for ctest) and run ctest in the core build tree.
+6. ([CMake-based test system](#cmake_based_test_system "wikilink")) Run the test_noninteractive target in the installed examples tree with the CMake-based build system.
+7. ([CTest-based test system](#ctest_based_test_system "wikilink")) Build the "all" target (to build all prerequisite targets for ctest) and run ctest in the installed examples tree with the CMake-based build system.
+8. ([legacy test system](#legacy_test_system "wikilink")) Run the test_noninteractive target in the installed examples tree with the legacy (make + pkg-config) build system.
+
+Consult the links provided if you need to know more details about these 8 major tests.
+
+Use the --help option of the above script to find out how to turn off some of these 8x3 = 24 major tests if some of them do not work on your platform or if you want to run just a subset of the default tests.  For example, all forms of interactive testing are tedious for testers because of the relatively large amount of user interaction that is required to get through these tests even if that problem is substantially mitigated by configuration of these tests which by default deploys the -np option (this "no-pause" option means the tester ordinarily does not have to hit the enter key to page through multi-page examples or exit from those examples).  Therefore, many testers use the
+
+`--do_test_interactive no`
+
+option for the above script to stop all interaction other than answering one question at the start.
+
+N.B. Each of the 5x3 noninteractive tests above produces roughly 3GB of output plot files.  So if you use the
+
+`--do_clean_as_you_go no`
+
+script option, the script will consume roughly 45GB (!) of disk space.  So use that option with care if you are short of disk space.  (By default that option is set to yes which means the noninteractive file results are all removed after each of the above 5x3 tests so in this case the high watermark of disk space usage is roughly 3GB which may still be of concern for systems with extremely limited disk space.)
+
+Summaries of results of various components of the comprehensive tests that are run are stored in \*.out files within the $COMPREHENSIVE_TEST_PREFIX tree.  These may evaluated for issues as follows:
+
+~~~
+# N.B. COMPREHENSIVE_TEST_PREFIX variable must be set the same as during the above
+# script run.
+
+# Check for all errors where that last pipeline stanza is to ignore
+# normal "ldd" references to the gpg-error library and normal "make
+# clean" references to test.error:
+
+grep -i error "$COMPREHENSIVE_TEST_PREFIX"/*/*/output_tree/*.out |grep -vE 'libgpg-error.so|test.error'
+
+# Check for regressions in configuration warnings:
+
+grep -i warning "$COMPREHENSIVE_TEST_PREFIX"/*/*/output_tree/cmake.out |grep -Ev 'Octave-4|Suitable Qt4|PLPLOT_USE_QT5|PLD_pdf|PLplot OCaml|spurious|PRIVATE|gfortran Fortran compiler|It appears these warnings|The test_.*target|requires shared libraries'
+
+# Check for regressions in the distinct run-time warning labelled by 'PLPLOT WARNING'
+# Currently on Cygwin systems you get a mixture of Unix and Windows line endings so
+# make those equivalent with the "tr" stanza (which does not harm on other platforms).
+
+grep -A1 --no-filename "PLPLOT WARNING" "$COMPREHENSIVE_TEST_PREFIX"/*/*/output_tree/*.out |sed -e 's?^[0-9][0-9]*: ??' |tr --delete $'\r' |sort -u
+
+# Check for build or run-time warnings where the trailing stanza is to
+# remove the "PLPLOT WARNING" and cmake.out warnings investigated
+# above, spurious gfortran warnings, and warnings concerning test_diff differences:
+
+find "$COMPREHENSIVE_TEST_PREFIX"/*/*/output_tree/* -type f -print0 |xargs -0 grep -i warning |grep -vE 'PLPLOT WARNING|cmake.out|PRIVATE|argv_dynamic|Some graphical' |less
+
+# Check for any ldd issues for the shared and nondynamic cases:
+
+grep -iE 'found|symbol|undefined' "$COMPREHENSIVE_TEST_PREFIX"/*/*/output_tree/*ldd.out
+
+# Check for any file device (which defaults to the svg device, see below) or stdout
+# differences between all non-C languages and the corresponding C results:
+
+grep -B1 -A3 "Missing examples" "$COMPREHENSIVE_TEST_PREFIX"/*/*/output_tree/*.out |less
+~~~
+
+N.B. The script `comprehensive_test.sh` automatically collects incremental results in the report tarball "$COMPREHENSIVE_TEST_PREFIX"/comprehensive_test.tar.gz.  Testers are encouraged to send this report tarball to [the plplot-general mailing list](https://lists.sourceforge.net/lists/listinfo/plplot-general "wikilink") whether this test script fails with an early exit or succeeds.  In the case of failure, the test tarball provides useful information to help PLplot developers figure out what the problem is on the tester's platform.  In the case of success, the test tarball provides virtually all the details necessary to publish a test report (if the tester so desires) in [this wiki page](Testing_Reports "wikilink").
+
+Also note that this procedure requires that the platform supports a bash-like command shell and several UNIX utilities, such as `tar` and`diff`. The main platform that lacks these facilities is Windows, though they are available under Cygwin and MinGW-w64/MSYS2.
+
+### Details of the various test systems
+
+This section documents our three different test systems.  The [CMake-based](#cmake_based_test_system "wikilink") and [CTest-based](#ctest_based_test_system "wikilink") test systems are available for the core build tree (if that build uses the -DBUILD_TEST=ON cmake option) and are always available for the CMake-based build tree of the installed examples.  The [legacy test system](#legacy_test_system "wikilink") is only available for the legacy (make + pkg-config) build system for the installed examples.
+
+The prerequisites of the [CMake-based](#cmake_based_test_system "wikilink"), [CTest-based](#ctest_based_test_system "wikilink") and [legacy](#legacy_test_system "wikilink") test systems are respectively CMake and bash; CTest and bash; and make, pkg-config, and bash.
+
+Note that the CMake software package is readily available for all platforms and includes both the cmake and ctest executables needed for the first two test systems above.  Furthermore, bash (required by all three test systems because they all depend in part on common configured bash scripts whose templates are located in the plplot_test subdirectory of the source tree) should be readily available on all non-Windows platforms, and for Windows bash should be available for at least the Cygwin, and MinGW-w64/MSYS2 distributions of free software for Windows.
+
+The principal advantages of the [CMake-based test system](#cmake_based_test_system "wikilink") is both interactive and noninteractive tests can be implemented using the full power of CMake to account for dependencies, and the principal disadvantage of this test system is no dashboards (summaries of test results) can be submitted to a [CDash](https://www.cdash.org/) server with it.
+
+The principal advantage of the [CTest-based test system](#ctest_based_test_system "wikilink") is dashboards can be submitted to [our CDash server](http://my.cdash.org/index.php?project=PLplot_git) with it, but the principal disadvantages of this test system are no interactive tests are allowed, and dependencies on CMake targets are limited, i.e., CTest tests can only depend on the "all" target.
+
+The principal advantage of the [legacy test system](#legacy_test_system "wikilink") is both interactive and noninteractive tests can be implemented, but the principal disadvantages of this test system is it is limited to just the legacy build system of the installed examples, and the implementation of tests must necessarily be done with low-level tools (raw Makefiles and pkg-config) rather than the high-level CMake commands used to implement the other two test systems.
+
+#### <a name="cmake_based_test_system"></a>The CMake-based test system
+
+The following two sets of commands are typical ways to use this test system for the CMake "Unix Makefiles" generator in the core build tree and in the build tree for the installed examples.
+
+~~~
+# Example of using the CMake-based test system for the core build tree.
+# 1. Configure a PLplot core build with CMake as normal in an initially
+# empty build tree.
+CORE_BUILD_DIR=$HOME/plplot_core_build_dir
+rm -rf $CORE_BUILD_DIR
+mkdir $CORE_BUILD_DIR
+cd $CORE_BUILD_DIR
+# N.B. the CMake-based test system does not work in the core build tree unless -DBUILD_TEST=ON.
+cmake -DCMAKE_INSTALL_PREFIX=<install prefix> -DBUILD_TEST=ON <other cmake options> <top-level directory of the PLplot source tree> >& cmake.out
+# 2. Build a test target.
+make VERBOSE=1 -j<jobs> <some test target> >& <some_test_target>.out
+~~~
+
+~~~
+# Example of using the CMake-based test system for the installed examples build tree.
+# After step and possibly step 2 above,  do the following:
+# 3. Install PLplot
+make VERBOSE=1 -j<jobs> install >& install.out
+# 4. Configure the CMake-based build system for the installed examples in an initially empty build tree.
+# N.B. note that no CMake options are allowed for this step.
+INSTALLED_BUILD_DIR=$HOME/plplot_installed_build_dir
+rm -rf $INSTALLED_BUILD_DIR
+mkdir $INSTALLED_BUILD_DIR
+cd $INSTALLED_BUILD_DIR
+# N.B. note there are no parameters allowed for this particular cmake command
+cmake <install_prefix>/share/plplot<plplot_version>/examples ctest.out
+# 5. Build a test target.
+make VERBOSE=1 -j<jobs> <some test target> >& <some_test_target>.out
+~~~
+
+The tester should be able to infer from these "Unix Makefiles" examples how to use the CMake-based test system for any other CMake generator as well.
+
+In the above commands, $HOME is an environment variable pointing to your home directory; &lt;install_prefix&gt; should point to an initially non-existent disk directory that will become the top-level directory of the install tree; &lt;other cmake options&gt; can be any additional cmake options you want to specify to control the PLplot configuration; &lt;top-level directory of the PLplot source tree&gt; is self-explanatory; &lt;jobs&gt; is the maximum number of parallel jobs that will be executed by the make command (for most efficient results this integer should match the number of hardware threads for your box (e.g., it should be 16 for a Ryzen 7 1700 system with 8 real cores and 16 threads); &lt;some_test_target&gt; is one of the test targets [listed here](#target_list "wikilink") such as "test_noninteractive"; and &lt;plplot_version&gt; is the PLplot version number, e.g., "5.14.0".
+
+You should search the \*.out files generated by the above commands for obvious configuration, build, or run-time errors.  You should also look for rendering issues associated with interactive targets (in the displays they generate) and noninteractive targets (using an appropriate viewer such as the [ImageMagick](http://www.imagemagick.org/) "display" application to view the files they generate in the examples/test_examples_output_dir subdirectory of the build tree).
+
+The building blocks of this [CMake-based test system](#cmake_based_test_system "wikilink") are low-level custom test targets that are configured by combined add_custom_command and add_custom_target CMake commands in the examples/CMakeLists.txt file in the PLplot source tree.  Assuming all file- and target-level dependencies are correctly implemented for these combined commands means building any low-level custom test target will automatically build the necessary prerequisites for that target.
+
+For testing convenience higher-level custom targets such as test_diff_device, test_noninteractive, and test_interactive are configured by using the add_custom_target command to create a target that depends (via the add_dependencies CMake command) on certain low-level custom test targets which are therefore automatically built whenever the high-level target is built.
+
+The test_diff_device target tests the noninteractive capabilities of PLplot by comparing results for a particular noninteractive plot device, ${PLPLOT_TEST_DEVICE}, for our complete set of C examples with the corresponding results from all of our other supported languages and reports any differences as a strong test of the consistency of the PLplot API from language to language.  The particular plot device used for ${PLPLOT_TEST_DEVICE} is "svg" by default since that modern device demonstrates the full noninteractive power of PLplot (e.g., UTF-8 input in essentially all human languages is rendered correctly and a native gradient capability is implemented) and that device has no extra library dependencies (so it is automatically available on all platforms).  However, other noninteractive plot devices can be chosen for the comparison by specifying the CMake option -DPLPLOT_TEST_DEVICE=&lt;test device&gt;, where &lt;test device&gt; can be any noninteractive device that is suitable for such comparisons.
+
+The test_noninteractive target tests more extensive noninteractive capabilities for PLplot by running all the comparison tests described for the test_diff_device target as well as running all the noninteractive devices (other than ${PLPLOT_TEST_DEVICE}) for our standard C examples.  The test_interactive target tests the interactive capabilities of PLplot by running our standard set of C examples for all our interactive devices as well as many other special interactive tests (mostly written in C or C++).  In sum, the test_diff_device target tests how well changes in our C API and standard set of C examples have been propagated to our other supported language bindings and examples for a particular plot device, the test_noninteractive target does that and additionally tests every other noninteractive device for our standard set of C examples, and the test_interactive device tests all our interactive plot devices for our standard set of C examples and also runs additional interactive tests of PLplot.
+
+When a low-level noninteractive test target is built, e.g., test_c_svgqt, all prerequisites are built (e.g., the qt target which builds the qt device driver which implements the svgqt device).  Furthermore, the named noninteractive device (in this case svgqt) is run-time tested for the C examples as the name of the test_c_svgqt target implies.  The results are a series of files written in a particular image format (SVG in the case of the svgqt device).  These plot files (which are located in the examples/test_examples_output_dir subdirectory in the build tree must be viewed with appropriate viewer to check for rendering issues.
+
+When a low-level interactive test target is built, e.g., test_c_qtwidget, all prerequisites are built (e.g., the qt target which builds the qt device driver which implements the qtwidget interactive device). Furthermore, the named interactive device (in this case qtwidget) is run-time tested for the C examples as the name of the test_c_qtwidget target implies.  In the interest of reducing how much user effort is required to finish such low-level interactive tests, the run-time testing of such interactive devices is done with the -np (no-pause) option.  For properly implemented interactive devices this option allows the user to look at all pages of all the tested examples for rendering issues without the user interaction normally required to navigate from one page of an example to another or to exit any given example once all pages have been displayed for it.
+
+##### <a name="target_list"></a>Target names
+To obtain a sorted list of all targets for the [CMake-based test system](#cmake_based_test_system "wikilink") build the "help" target, select target names in those results that have the "test" prefix in the target name, exclude "test" targets which are known to not be part of this test system, and sort the results.  When those steps are implemented with the compound command,
+
+`make help |grep '^... test' |grep -vE '^... test$|test-drv-info|dyndriver' |sort`
+
+on a Linux platform with essentially all PLplot prerequisites installed, the following results
+are obtained:
+
+~~~
+... test_ada_svg
+... test_all_cairo
+... test_c_bmpqt
+... test_c_epscairo
+... test_c_jpgqt
+... test_c_ntk
+... test_c_pdfcairo
+... test_c_pdfqt
+... test_c_pngcairo
+... test_c_pngqt
+... test_c_ppmqt
+... test_c_ps
+... test_c_psc
+... test_c_pscairo
+... test_c_psttf
+... test_c_psttfc
+... test_c_qtwidget
+... test_c_svg
+... test_c_svgcairo
+... test_c_svgqt
+... test_c_tiffqt
+... test_c_tk
+... test_c_wxwidgets
+... test_c_xcairo
+... test_c_xfig
+... test_c_xwin
+... test_cxx_svg
+... test_d_svg
+... test_diff_device
+... test_extcairo
+... test_fortran_svg
+... test_interactive
+... test_java_svg
+... test_lua_svg
+... test_noninteractive
+... test_ocaml_svg
+... test_octave_ntk
+... test_octave_qtwidget
+... test_octave_svg
+... test_octave_tk
+... test_octave_wxwidgets
+... test_octave_xcairo
+... test_octave_xwin
+... test_plbuf
+... test_plend
+... test_plfortrandemolib
+... test_plserver_runAllDemos
+... test_plserver_standard_examples
+... test_pltcl_standard_examples
+... test_pyqt5_example
+... test_python_svg
+... test_pytkdemo
+... test_qt_example
+... test_tcl
+... test_tcl_svg
+... test_tclsh_standard_examples
+... test_tk
+... test_tk_01
+... test_tk_02
+... test_tk_03
+... test_tk_04
+... test_tk_plgrid
+... test_wish_runAllDemos
+... test_wish_standard_examples
+... test_wxPLplotDemo
+~~~
+
+These target names are largely self-explanatory.  For example, the low-level test_c_svgqt and test_c_qtwidget targets run all our standard examples implemented with "C" using -dev svgqt and -dev qtwidget to thoroughly test those noninteractive and interactive devices.  Some high-level test targets such as the already-mentioned test_diff_device, test_noninteractive, and test_interactive targets as well as others such as test_all_cairo, test_all_qt, test_tcl, and test_tk also do what their name implies and are implemented by invoking other selected low-level test targets as dependencies.
+
+##### <a name="plot_filenames"></a>Plot filenames
+
+Here are results generated in the examples/test_examples_output_dir subdirectory of the build tree for either the test_diff_device or test_noninteractive targets for -dev svg and example 2.
+
+~~~
+x02c_svg.txt
+x02cxx_svg.txt
+x02d_svg.txt
+x02f_svg.txt
+x02j_svg.txt
+x02lua_svg.txt
+x02o_svg.txt
+x02ocaml_svg.txt
+x02p_svg.txt
+x02t_svg.txt
+xstandard02a_svg.txt
+xtraditional02a_svg.txt
+
+x02c01.svg
+x02c02.svg
+x02cxx01.svg
+x02cxx02.svg
+x02d01.svg
+x02d02.svg
+x02f01.svg
+x02f02.svg
+x02j01.svg
+x02j02.svg
+x02lua01.svg
+x02lua02.svg
+x02o01.svg
+x02o02.svg
+x02ocaml01.svg
+x02ocaml02.svg
+x02p01.svg
+x02p02.svg
+x02t01.svg
+x02t02.svg
+xstandard02a01.svg
+xstandard02a02.svg
+xtraditional02a01.svg
+xtraditional02a02.svg
+~~~
+
+We have selected these results for -dev svg since that is the default device used for the difference report referred to above.  And we have selected example 2 file results since that is an example with only two pages.  The "x02c", "x02cxx", "x02d", "x02f", "x02j", "x02lua", "x02o", "x02ocaml", "x02p", "x02t", "xstandard02a", and "xtraditional02a" filename prefixes correspond to the C, C++, D, Fortran 95, Java, Lua, Octave, OCaml, Python, Tcl, and Ada (for both the standard and traditional Ada interfaces) language results.  The remaining "_svg.txt", 01.svg", and "02.svg" suffixes refer to the example 2 stdout results and plot results for first and second pages of example 2 (since the svg device is a "familied" device that must use separate files to contain the results for the two separate plot pages of example 2) for the given language and device.
+
+You can view any of these \*.txt with any text viewer (e.g., the "less" application) and any of these \*.svg plot files results using an appropriate image viewer (e.g.,the [ImageMagick](http://www.imagemagick.org/) "display" application).  The difference test report referred to above compares non-C stdout and -dev svg plot file results in this list with the corresponding C results for example 2 (and similarly for all the other standard PLplot examples).  So assuming this report shows no differences, testers only need to view the C versions of the \*svg.txt files and C versions of the \*.svg plot files for any text or rendering issues.
+
+For a fully loaded Linux platform, here are the additional (beyond what is generated by the test_diff_device target) text and plot file results generated by the test_noninteractive target.
+
+~~~
+x02c_bmpqt.txt
+x02c_epscairo.txt
+x02c_jpgqt.txt
+x02c_pdfcairo.txt
+x02c_pdfqt.txt
+x02c_pngcairo.txt
+x02c_pngqt.txt
+x02c_ppmqt.txt
+x02c_ps.txt
+x02c_psc.txt
+x02c_pscairo.txt
+x02c_psttf.txt
+x02c_psttfc.txt
+x02c_svgcairo.txt
+x02c_svgqt.txt
+x02c_tiffqt.txt
+x02c_xfig.txt
+
+x02c.pdfcairo
+x02c.ps
+x02c.psc
+x02c.pscairo
+x02c.psttf
+x02c.psttfc
+x02c01.bmpqt
+x02c01.epscairo
+x02c01.jpgqt
+x02c01.pdfqt
+x02c01.pngcairo
+x02c01.pngqt
+x02c01.ppmqt
+x02c01.svgcairo
+x02c01.svgqt
+x02c01.tiffqt
+x02c01.xfig
+x02c02.bmpqt
+x02c02.epscairo
+x02c02.jpgqt
+x02c02.pdfqt
+x02c02.pngcairo
+x02c02.pngqt
+x02c02.ppmqt
+x02c02.svgcairo
+x02c02.svgqt
+x02c02.tiffqt
+x02c02.xfig
+~~~
+
+Since different devices are involved in all cases, these text and plot files should be viewed individually for text or rendering issues (and similarly for the rest of our 33 standard examples). Note such checking is a huge job so we certainly don't expect it of our testers very often, but it is worth doing for a given platform once every year or so and especially for new or changed examples or devices that haven't been checked before.
+
+####  <a name="ctest_based_test_system"></a>The CTest-based test system
+
+The following two sets of commands are typical ways to use this test system for the CMake "Unix Makefiles" generator in the core build tree and in the build tree for the installed examples.
+
+~~~
+# Example of using the CTest-based test system for the core build tree.
+# 1. Configure a PLplot core build with CMake as normal in an initially
+# empty build tree.
+CORE_BUILD_DIR=$HOME/plplot_core_build_dir
+rm -rf $CORE_BUILD_DIR
+mkdir $CORE_BUILD_DIR
+cd $CORE_BUILD_DIR
+# N.B. the CTest-based test system does not work in the core build tree unless -DBUILD_TEST=ON.
+cmake -DCMAKE_INSTALL_PREFIX=<install prefix> -DBUILD_TEST=ON <other cmake options> <top-level directory of the PLplot source tree> >& cmake.out
+# 2. Build the "all" target.  This is necessary before the ctest command below will work.
+make VERBOSE=1 -j<jobs> all >& all.out
+# 3. Run ctest
+ctest -j<jobs> --extra-verbose <other ctest options> >& ctest.out
+~~~
+
+~~~
+# Example of using the CTest-based test system for the installed examples build tree.
+# After steps 1 and 2 and possibly 3 above, do the following:
+# 4. Install PLplot
+make VERBOSE=1 -j<jobs> install >& install.out
+# 5. Configure the CMake-based build system for the installed examples in an initially empty build tree.
+# N.B. note that no CMake options are allowed for this step.
+INSTALLED_BUILD_DIR=$HOME/plplot_installed_build_dir
+rm -rf $INSTALLED_BUILD_DIR
+mkdir $INSTALLED_BUILD_DIR
+cd $INSTALLED_BUILD_DIR
+# N.B. note there are no parameters allowed for this particular cmake command
+cmake <install_prefix>/share/plplot<plplot_version>/examples >& ctest.out
+# 6. Build the "all" target.  This is necessary before the ctest command below will work.
+make VERBOSE=1 -j<jobs> all >& all.out
+# 7. Run ctest
+ctest -j<jobs> --extra-verbose <other ctest options> >& ctest.out
+~~~
+
+The tester should be able to infer from these "Unix Makefiles" examples how to use the CTest-based test system for any other CMake generator as well.
+
+In the above commands:
+* $HOME is an environment variable pointing to your home directory;
+* &lt;install_prefix&gt; should point to an initially non-existent disk directory that will become the top-level directory of the install tree;
+* &lt;other cmake options&gt; can be any additional cmake options you want to specify to control the PLplot configuration;
+* &lt;top-level directory of the PLplot source tree&gt; is self-explanatory;
+* &lt;jobs&gt; is the maximum number of parallel jobs that will be executed by the make and ctest commands (for most efficient results this integer should match the number of hardware threads for your box (e.g., it should be 16 for a Ryzen 7 1700 system with 8 real cores and 16 threads);
+* &lt;other ctest options&gt; can include the "-D Experimental" option which is configured by CMake to submit a dashboard (summary of test results) to [our CDash server](http://my.cdash.org/index.php?project=PLplot_git) and other options (normally not used) to further control ctest;
+* &lt;plplot_version&gt; is the PLplot version number, e.g., "5.14.0".
+
+You should search the \*.out files generated by the above commands for obvious configuration, build, or run-time errors.  You should also look for rendering issues associated with the (noninteractive) tests performed by ctest using an appropriate viewer (e.g., the [ImageMagick](http://www.imagemagick.org/) "display" application) to view the files these tests generate in the ctest_examples_output_dir subdirectory of the build tree.  Note this location is distinct from the examples/test_examples_output_dir subdirectory used to store plot file results for the [CMake-based test system](#cmake_based_test_system "wikilink"), but the names of the plot files within those two distinct directories are identical for the two test systems (and the file contents should be identical as well except possibly for timestamps).  For further remarks about these filenames please consult [the filenames subsection](#plot_filenames "wikilink") of the discussion of the [CMake-based test system](#cmake_based_test_system "wikilink").
+
+The above possibility of dashboard submission is a strong motivation for porting all noninteractive tests from our [CMake-based test system](#cmake_based_test_system "wikilink") to this one.  CMake logic in plplot_test/CMakeLists.txt configures this test system and implements individual tests for it using the CMake add_test command.  Such porting is straightforward since "COMMAND" syntax within the add_test command is interpreted identically to the "COMMAND" syntax within the add_custom_command command used to help implement the [CMake-based test system](#cmake_based_test_system "wikilink") in examples/CMakeLists.txt.
+
+The resulting CTest test names for a Linux platform with essentially all PLplot prerequisites installed are as follows:
+
+~~~
+examples_ada
+examples_c
+examples_cxx
+examples_d
+examples_fortran
+examples_java
+examples_lua
+examples_ocaml
+examples_octave
+examples_python
+examples_tcl
+
+examples_compare
+
+examples_bmpqt
+examples_epscairo
+examples_jpgqt
+examples_pdfcairo
+examples_pdfqt
+examples_pngcairo
+examples_pngqt
+examples_ppmqt
+examples_ps
+examples_psc
+examples_pscairo
+examples_psttf
+examples_psttfc
+examples_svgcairo
+examples_svgqt
+examples_tiffqt
+examples_xfig
+~~~
+
+The first group of these CTest tests have the name pattern examples_&lt;language&gt; and correspond to the low-level test targets test_&lt;language&gt;\_${PLPLOT_TEST_DEVICE} (where ${PLPLOT_TEST_DEVICE} is the test device which defaults to "svg") for this test system as well as the [CMake-based test system](#cmake_based_test_system "wikilink").  The next CTest test is called "examples_compare" and corresponds to the high-level test_diff_device test target for the [CMake-based test system](#cmake_based_test_system "wikilink").  The final set of CTest tests have the name pattern examples_&lt;device&gt; and correspond to the low-level test targets test_c_&lt;device&gt; in the [CMake-based test system](#cmake_based_test_system "wikilink").
+
+CTest tests do not depend on CMake targets other than the "all" target so it is necessary (as we see in the examples above) to build the "all" target before running the ctest command.  Most of these CTest tests can be run in any order, but the examples_compare test must be run after the preceding tests in the above list are completed (since the results of those tests are compared by the examples_compare test), and that constraint is enforced by setting the DEPENDS property of the examples_compare test with the set_test_properties command.
+
+####  <a name="legacy_test_system"></a>The legacy test system
+
+The following set of commands is a typical way to use this test system.
+
+~~~
+# Example of using the legacy test system.
+# 1. Configure a PLplot core build with CMake as normal in an initially
+# empty build tree.
+CORE_BUILD_DIR=$HOME/plplot_core_build_dir
+rm -rf $CORE_BUILD_DIR
+mkdir $CORE_BUILD_DIR
+cd $CORE_BUILD_DIR
+cmake -DCMAKE_INSTALL_PREFIX=<install prefix> <other cmake options> <top-level directory of the PLplot source tree> >& cmake.out
+# 2. Install PLplot where this installation includes a legacy build tree for the installed examples.
+make VERBOSE=1 -j<jobs> install >& install.out
+# 3. Copy the build tree for the legacy build system of the installed examples somewhere else
+#    to avoid contaminating the install tree with files generated by the tests below.
+LEGACY_BUILD_DIR=$HOME/plplot_legacy_build_dir
+rm -rf $LEGACY_BUILD_DIR
+cp -a <install_prefix>/share/plplot<plplot_version>/examples $LEGACY_BUILD_DIR
+cd $LEGACY_BUILD_DIR/
+# 4. (optional) Build the legacy "test_interactive" target.
+make -j<jobs> test_interactive >& test_interactive.out
+# 5. Build the legacy "test_noninteractive" target.
+make -j<jobs> test_noninteractive >& test_noninteractive.out
+~~~
+
+The first 3 steps of the above example are for the CMake "Unix Makefiles" generator case, but the tester should be able to infer from this example how to do these steps for any other CMake generator as well.
+
+In the above commands, $HOME is an environment variable pointing to your home directory; &lt;install_prefix&gt; should point to an initially non-existent disk directory that will become the top-level directory of the install tree; &lt;other cmake options&gt; can be any additional cmake options you want to specify to control the PLplot configuration; &lt;top-level directory of the PLplot source tree&gt; is self-explanatory; &lt;jobs&gt; is the maximum number of parallel jobs that will be executed by the make command (for most efficient results this integer should match the number of hardware threads for your box (e.g., it should be 16 for a Ryzen 7 1700 system with 8 real cores and 16 threads); and &lt;plplot_version&gt; is the PLplot version number, e.g., "5.14.0".
+
+Note that building the above legacy test_interactive target is labelled optional for testers because of the relatively large amount of user interaction that is required to get through these interactive tests even if that problem is substantially mitigated by configuration of these tests which by default deploys the -np option (this "no-pause" option means the tester ordinarily does not have to hit the enter key to page through multi-page examples or exit from those examples).
+
+You should search the \*.out files generated by the above commands for obvious configure, build, or install errors for the core build and for obvious build or run-time errors for the build of the above legacy targets.  You should also look for rendering issues associated with test_interactive target (in the displays that target generates) and rendering issues associated with test_noninterative_target (using an appropriate viewer such as the [ImageMagick](http://www.imagemagick.org/) "display" application to view the files that file generates in the $LEGACY_BUILD_DIR directory).
+
+N.B. The above build of the legacy test_interactive and test_noninteractive targets executes many of our interactive and noninteractive examples. The interactive results are similar to those of the test_interactive target implemented with our [CMake-based test system](#cmake_based_test_system "wikilink"), and the noninteractive results are similar to those of the test_noninteractive target of our [CMake-based test system](#cmake_based_test_system "wikilink") and the (noninteractive) results of our [CTest-based test system](#ctest_based_test_system "wikilink").  However, the implementation of the legacy targets is complex and difficult compared to the ease of implementing test targets for our [CMake-based test system](#cmake_based_test_system "wikilink") and tests for our [CTest-based test system](#ctest_based_test_system "wikilink") because our [legacy test system](#legacy_test_system "wikilink") necessarily depends on a number of specifically configured Makefiles.  As a result we spend little effort porting additional interactive or noninteractive tests from our  [CMake-based](#cmake_based_test_system "wikilink") and [CTest-based](#ctest_based_test_system "wikilink") test systems to our [legacy test system](#legacy_test_system "wikilink") although we do try to keep what we have implemented for this test system well maintained via testing it often with the comprehensive_test.sh script.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

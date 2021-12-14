@@ -1,0 +1,95 @@
+This check of our git repository was made necessary by the great
+Sourceforge outage that started on 2015-07-16 and lasting for roughly
+a week after that.  The following procedures were used to check the
+git repository that Sourceforge restored from their backups against a
+local repository with top-level working directory called plplot.git
+which was located on my (AWI) computer and which was up-to-date with
+the SF repo before the SF outage.
+
+# Clone restored repo in directory where plplot.git (my working local
+# repository) is a subdirectory
+export PREFIX_GIT=/home/software/plplot/HEAD
+export GIT_OLD_REPO=${PREFIX_GIT}/plplot.git
+export GIT_NEW_REPO=${PREFIX_GIT}/plplot.git_new
+
+git clone ssh://airwin@git.code.sf.net/p/plplot/plplot ${GIT_NEW_REPO}
+
+# Arrange git access to both repos
+
+alias git_old='git --work-tree=${GIT_OLD_REPO} --git-dir=${GIT_OLD_REPO}/.git'
+alias git_new='git --work-tree=${GIT_NEW_REPO} --git-dir=${GIT_NEW_REPO}/.git'
+
+#fsck both
+git_old fsck --strict
+git_new fsck --strict
+
+The former shows a number of dangling trees, commits, and blobs
+(presumably from my git local topic branch activity) which have not
+been garbage-collected yet. But this check shows there is no
+corrupt objects or any other internal inconsistency.
+The latter gives a clean result which by itself already goes a long way
+toward restoring complete confidence in this restored repository.
+
+# Check logs are identical
+
+# Insure get full log if previous checkouts not master tip
+git_old checkout master
+git_new checkout master
+git_old log --name-status > /tmp/git_log_old.out
+git_new log --name-status > /tmp/git_log_new.out
+diff /tmp/git_log_old.out /tmp/git_log_new.out
+
+Also look at the above results to verify they go back to
+
+commit eacad1b4079dacd192c85006125bc03c38204046
+Author: Geoffrey Furnish <furnish@users.sourceforge.net>
+Date:   Wed May 20 21:36:02 1992 +0000
+
+    Initial checkin of the whole PLPLOT project.
+
+    svn path=/trunk/; revision=2
+
+# Check working directories for each commit in log are identical (requires ~20 minutes)
+
+# Insure get full (old) log in loop if previous checkout not master tip (which
+# could happen if following loop is interrupted).
+git_old checkout master
+time (for ID in $(git_old log --oneline |sed -e 's? .*$??'); do echo $ID; git_old checkout --quiet $ID; git_new checkout --quiet $ID ; diff -Naur -x .git -x '*.pyc' -x '*~' -x '#*#' ${GIT_OLD_REPO} ${GIT_NEW_REPO}; done) >| for.out
+
+# Restore both repos to master tip.
+git_old checkout master
+git_new checkout master
+
+# Check that both log and for.out have the same information, i.e., there
+# is no extra warning or error information in for.out.
+git_old log --oneline |sed -e 's? .*$??' |diff - for.out
+
+# Make sure tag list is identical between two repos.
+
+git_old tag --list > /tmp/git_tag_old.out
+git_new tag --list > /tmp/git_tag_new.out
+diff /tmp/git_tag*.out
+
+# Collect all release-related tags (some of which are not in above
+# test of principal branch of development since tag done on dead-end
+# side branch) and verify corresponding working directories.  (Takes roughly 15 seconds.)
+
+time (for ID in $(git_old tag --list |grep 'plplot-5') $(git_old tag --list |grep '^v'); do echo $ID; git_old checkout --quiet $ID; git_new checkout --quiet $ID ; diff -Naur -x .git -x '*.pyc' -x '*~' -x '#*#' ${GIT_OLD_REPO} ${GIT_NEW_REPO}; done) >| for_tag_diff.out
+# Restore both repos to master tip.
+git_old checkout master
+git_new checkout master
+
+# Check that both git tag and for_tag_diff.out have the same information, i.e., there
+# is no extra warning or error information in for_tag_diff.out.
+
+git_old tag --list |grep 'plplot-5' >| /tmp/git_tag_old_list.out
+git_old tag --list |grep '^v' >> /tmp/git_tag_old_list.out
+diff /tmp/git_tag_old_list.out for_tag_diff.out
+
+# All the above tests show good results so get rid of new repository
+# that is indistinguishable from old repository (aside from the
+# additional local topic branches in the old repository).
+
+rm -rf plplot.git_new
+
+DONE!

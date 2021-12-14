@@ -1,0 +1,43 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plcpstrm: Copy state parameters from the reference stream to the current stream</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plcont.html" title="plcont: Contour plot"><link rel="next" href="plctime.html" title="plctime: Calculate continuous time from broken-down time for the current stream"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plcpstrm</code>: Copy state parameters from the
+      reference stream to the current stream
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plcont.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plctime.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plcpstrm"></a>
+      <code class="function">plcpstrm</code>: Copy state parameters from the
+      reference stream to the current stream
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plcpstrm</b>
+	  (</code></td><td><var class="pdparam">iplsr</var>, </td></tr><tr><td> </td><td><var class="pdparam">flags</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Copies state parameters from the reference stream to the current stream.
+      Tell driver interface to map device coordinates unless
+      <code class="literal"><em class="parameter"><code>flags</code></em> == 1</code>.
+    </p><p>
+      This function is used for making save files of selected plots (e.g.
+      from the TK driver).  After initializing, you can get a copy of the
+      current plot to the specified device by switching to this stream and
+      issuing a <a class="link" href="plcpstrm.html" title="plcpstrm: Copy state parameters from the reference stream to the current stream"><code class="function">plcpstrm</code></a> and a <a class="link" href="plreplot.html" title="plreplot: Replays contents of plot buffer to current device/file"><code class="function">plreplot</code></a>, with calls to <a class="link" href="plbop.html" title="plbop: Begin a new page"><code class="function">plbop</code></a> and
+      <a class="link" href="pleop.html" title="pleop: Eject current page"><code class="function">pleop</code></a> as appropriate.  The plot buffer must have previously been
+      enabled (done automatically by some display drivers, such as X).
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>iplsr</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of reference stream.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>flags</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLBOOL-type"><code class="function">PLBOOL</code></a></code>, input)
+	</span></dt><dd><p>
+	    If <code class="literal"><em class="parameter"><code>flags</code></em></code> is set to true
+	    the device coordinates are <span class="emphasis"><em>not</em></span> copied from the reference to current
+	    stream.
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plcpstrm(iplsr, flags)</code>
+    </p><p>
+      This function is used in example 1,20.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plcont.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plctime.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plcont</code>: Contour plot
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plctime</code>: Calculate continuous time from
+      broken-down time for the current stream
+    </td></tr></table></div></body></html>

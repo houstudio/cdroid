@@ -1,0 +1,21 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Adding FreeType Library Support to Bitmap Drivers</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="devices.html" title="Devices"><link rel="next" href="viewport_window.html" title="View Surfaces, (Sub-)Pages, Viewports and Windows"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Adding FreeType Library Support to Bitmap Drivers</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="viewport_window.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="FreeType-notes"></a>Adding FreeType Library Support to Bitmap Drivers</h2></div></div></div><p>N.B. this FreeType approach is officially deprecated
+    because of its inherent font-selection issues (fonts must be specified
+    by filename) and because it only supports left-to-right layout (i.e.,
+    there is no support for complex text layout languages).  Specialized
+    libraries or system services that automatically find the best system
+    font to render the given (unicode) glyph and which support complex
+    text layout should be used instead.  Those possibilities include
+    <a class="ulink" href="https://www.qt.io/" target="_top">Qt</a> (available on all platforms
+    and used by our qt device driver), the pango/cairo subset of the
+    <a class="ulink" href="https://www.gtk.org/" target="_top">GTK+ suite of libraries</a>
+    (available on all platforms and used directly by our cairo device
+    driver and indirectly by our psttf device driver), <a class="ulink" href="https://en.wikipedia.org/wiki/Uniscribe" target="_top">Uniscribe</a>
+    (available only on Windows for Windows 2000 and later), and <a class="ulink" href="https://en.wikipedia.org/wiki/DirectWrite" target="_top">DirectWrite</a>
+    (available only on Windows for Windows 7 and later).  Currently the
+    wingcc and gd device drivers are the only ones that depend on the
+    FreeType approach described here.  Because of the limitations of this
+    approach we have plans to update wingcc to use either Uniscribe or
+    DirectWrite, and once those plans are realized we will likely retire
+    the gd device driver (currently deprecated because of the limitations
+    of the current approach) and also retire this Freetype
+    approach.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="viewport_window.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Devices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> View Surfaces, (Sub-)Pages, Viewports and Windows</td></tr></table></div></body></html>

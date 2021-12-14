@@ -1,0 +1,17 @@
+#!/bin/sh
+#--------------------------------*- Tcl -*------------------------------------#
+# Maurice LeBrun
+# 12/24/02
+#
+# A front-end to run x22.tcl directly from the command line with
+# a configured location for pltcl.
+# Handles all usual plplot command arguments.  See "@pltcl_LOCATION@ -h" for info.
+#-----------------------------------------------------------------------------#
+#\
+exec "@pltcl_LOCATION@" -f "$0" ${1+"$@"}
+
+source x22.tcl
+
+plinit
+x22
+plend

@@ -1,0 +1,30 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSETOPT 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsetopt\fP - Set any command-line option
+.SH SYNOPSIS
+PLINT \fBplsetopt\fP(\fIopt\fP, \fIoptarg\fP)
+.SH DESCRIPTION
+
+.P
+Set any command-line option internally from a program before it invokes \fBplinit\fP(3plplot). opt is the name of the command-line option and optarg is the corresponding command-line option argument.
+.P
+This function returns 0 on success.
+.P
+Redacted form: \fBplsetopt(opt, optarg)\fP
+.P
+This function is used in example 14.
+.SH ARGUMENTS
+.TP
+\fIopt\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the command-line option.
+.TP
+\fIoptarg\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the argument of the command-line option.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

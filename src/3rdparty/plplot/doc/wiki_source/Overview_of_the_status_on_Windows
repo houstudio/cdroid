@@ -1,0 +1,74 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+This page presents an overview of the various Windows platforms and the status of the CBS for them.
+
+The platforms are "canonical": we assume typical or often encountered installations. For "bare Windows" this means Windows XP, Microsoft Visual C/C++ (version 2013 and newer). For Cygwin and MinGW this is the suite of GCC compilers. Since 64 bits platforms are the standard, we report the results for the 64-bits versions of all platforms. For MinGW in particular we use the newer MinGW-w64/MSYS2 platform.
+
+Status per 2 October 2017, Arjen Markus, Werner Smekal and Hazen Babcock
+
+Library options | Bare Windows | Cygwin 64 | MinGW-w64/MSYS2 | Borland 5.5 |Open Watcom 1.5 (1)
+---|---|---|---|---|---
+Static libraries | Yes | Yes | Yes | Yes | Yes
+Shared libraries (DLL)| Yes | Yes | Yes | Yes | Yes
+Dynamic drivers | Yes | Yes | Yes | . | .
+Freetype support | Yes | Yes | Yes | . | .
+QHull support | Yes |  Yes | Yes | . | .
+AGG support | Yes | . | Yes | . | .
+Shapelib support | . | Yes | Yes | . | .
+
+Languages| Bare Windows | Cygwin 64 | MinGW-w64/MSYS2 | Borland 5.5 |Open Watcom 1.5
+---|---|---|---|---|---
+C | Yes | Yes | Yes | Yes | Yes
+C++ | Yes | Yes | Yes | No | No(2)
+D (3) | . | . | . | . | .
+Fortran 2003 (4) | Yes | Yes | Yes | . | .
+Java (5) | Yes | No | No | - | -
+Lua | . | Yes | Yes | . | .
+Ocaml (6) | . | No | No | . | .
+Octave (7) | . | No | No | . | .
+Perl (8) | - | - | - | - | -
+Python | Yes | Yes | Yes | - | -
+Ada | - | No | Yes | - | -
+Tcl | Yes | Yes | Yes | - | -
+Tk | . | (9) | . | - | -
+
+Drivers| Bare Windows | Cygwin 64 | MinGW-w64/MSYS2 | Borland 5.5 |Open Watcom 1.5
+---|---|---|---|---|---
+PostScript (psc) | Yes | Yes | Yes | Yes | Yes
+PostScript (psttf) | Yes | Yes | Yes | . | .
+Wingcc (10) | Yes | Yes | Yes | . | Yes
+gd (png, jpeg, gif) | Yes | Yes | Yes | Yes | No
+wxWidgets | Yes | Yes | Yes | . | .
+cgm | Yes | Yes | Yes | Yes | Yes
+svg | Yes | Yes | Yes | . | .
+pdf | Yes | Yes | Yes | . | .
+cairo (11) | Yes | Yes | Yes | . | .
+qt | Yes | Yes | Yes | . | .
+
+Notes:
+
+-   A dot (.) simply means this aspect has not yet been tested.
+-   A dash (-) means that this option will not be supported for this compiler, as others covers this field.
+-   \(1) The Borland and Open Watcom compilers have not been tested in several years. For the time being we keep them in this status report.
+-   \(2) C++ Bindings are in the moment not available, because of invalid characters in the foldername.
+-   \(3) There do not seem to be free D compilers for the Windows platform.
+-   \(4) The Fortran compilers tested include gfortran, Intel Fortran and NAG Fortran. The main requirement is that the compiler supports the Fortran 2003 standard.
+-   \(5) There is a Java compiler as part of the GCC compiler suite, but support for it under CMake seems to be limited.
+-   \(6) For support of the Ocaml binding a component is missing - camlidl.
+-   \(7) For support of the Octave binding Octave 3 is preferred. The Octave 4 binding is under test.
+-   \(8) The support for PLplot under Perl is outside of the PLplot project.
+-   \(9) The Tk binding is available if you have an X Server running at configure time.
+-   \(10) The fact that the wingcc driver works under bare Windows, means that the win3 driver is redundant. We could phase it out in due time.
+-   \(11) Cairo was obtained as part of GTK here: <http://www.gtk.org/download-windows.html>
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

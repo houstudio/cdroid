@@ -1,0 +1,32 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Setup Visual C++
+----------------
+
+Visual C++ Express Edition<ref>[Visual C++ Express Homepage](http://www.microsoft.com/express/vc/)</ref> is a integrated development environments (IDE) developed by Microsoft that is a lightweight version of the Microsoft Visual Studio C++ product line. The idea of express editions, according to Microsoft, is to provide streamlined, easy-to-use and easy-to-learn IDEs for users other than professional software developers, such as hobbyists and students.<ref>[Wikipedia entry about Visual Studio Express](http://en.wikipedia.org/wiki/Visual_Studio_Express)</ref>
+
+### Download and install
+
+Download the webinstaller from the [Visual C++ Express Edition Website](http://www.microsoft.com/express/vc/) and run it. Go through the installer wizard - Visual C++ will be downloaded and installed accordingly. Alternatively you could download the whole DVD containing the complete Visual Studio 2008 Express Edition set ([scroll to the bottom](http://www.microsoft.com/express/download/)) to install the tools offline.
+
+### Setup
+
+To configure and compile plplot with Visual C++ you can either use the command line interface or the integrated development environment. See the instructions at [Configure PLplot for Visual CXX CLI](Configure_PLplot_for_Visual_CXX_CLI "wikilink") or [Configure PLplot for the Visual Studio IDE](Configure_PLplot_for_the_Visual_Studio_IDE "wikilink").
+
+If you are using the CLI you may find it useful to set up a batch file to prepare the environment before you start. To do so open your [favorite text editor](http://www.scintilla.org/SciTE.html) and enter the following CLI commands <pre> @echo off
+
+rem setup Visual C++ compiler call "%VS90COMNTOOLS%"\\vsvars32.bat
+
+rem setup PLplot library set PLPLOTDIR=path_to_plplot set PLPLOT_LIB=%PLPLOTDIR%\\data set PATH=%PLPLOTDIR%\\dll;%PATH% </pre> and save this to e.g. <tt>vcvars.bat</tt>. Start you Windows CLI, cd into the directory where the batch file was saved and run <tt>vcvars.bat</tt>. Run <tt>nmake /?</tt>, to see if everything works. Your Visual C++ developing environment is now ready.
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

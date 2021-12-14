@@ -1,0 +1,17 @@
+diff -Naur iwidgets4.0.1_orig/iwidgets.tcl.in iwidgets4.0.1/iwidgets.tcl.in
+--- iwidgets4.0.1_orig/iwidgets.tcl.in	2001-08-07 12:56:47.000000000 -0700
++++ iwidgets4.0.1/iwidgets.tcl.in	2013-11-07 18:57:47.610530341 -0800
+@@ -28,4 +28,5 @@
+ lappend auto_path $iwidgets::library \
+ 		  [file join $iwidgets::library generic] \
+ 		  [file join $iwidgets::library scripts]
++package provide iwidgets $iwidgets::version
+ package provide Iwidgets $iwidgets::version
+diff -Naur iwidgets4.0.1_orig/pkgIndex.tcl.in iwidgets4.0.1/pkgIndex.tcl.in
+--- iwidgets4.0.1_orig/pkgIndex.tcl.in	1999-09-13 17:01:24.000000000 -0700
++++ iwidgets4.0.1/pkgIndex.tcl.in	2013-11-07 18:59:00.941136073 -0800
+@@ -1,3 +1,4 @@
+ # Tcl package index file, version 1.0
+ 
++package ifneeded iwidgets @VERSION@ [list source [file join $dir iwidgets.tcl]]
+ package ifneeded Iwidgets @VERSION@ [list source [file join $dir iwidgets.tcl]]

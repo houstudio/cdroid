@@ -1,0 +1,47 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plgspa: Get current subpage parameters</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plgriddata.html" title="plgriddata: Grid data from irregularly sampled data"><link rel="next" href="plgstrm.html" title="plgstrm: Get current stream number"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plgspa</code>: Get current subpage parameters
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plgriddata.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plgstrm.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plgspa"></a>
+      <code class="function">plgspa</code>: Get current subpage parameters
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plgspa</b>
+	  (</code></td><td><var class="pdparam">xmin</var>, </td></tr><tr><td> </td><td><var class="pdparam">xmax</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymin</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymax</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Gets the size of the current subpage in millimeters measured from the
+      bottom left hand corner of the output device page or screen.  Can be
+      used in conjunction with <a class="link" href="plsvpa.html" title="plsvpa: Specify viewport in absolute coordinates"><code class="function">plsvpa</code></a> for setting the size of a viewport
+      in absolute coordinates (millimeters).
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>xmin</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the position of the left hand edge of the subpage
+	    in millimeters.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>xmax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the position of the right hand edge of the subpage
+	    in millimeters.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ymin</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the position of the bottom edge of the subpage in
+	    millimeters.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ymax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the position of the top edge of the subpage in
+	    millimeters.
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plgspa(xmin, xmax, ymin, ymax)</code>
+    </p><p>
+      This function is used in example 23.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plgriddata.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plgstrm.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plgriddata</code>: Grid data from irregularly sampled
+      data
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plgstrm</code>: Get current stream number
+    </td></tr></table></div></body></html>

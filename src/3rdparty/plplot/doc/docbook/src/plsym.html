@@ -1,0 +1,54 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plsym: Plot a glyph at the specified points</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plsyax.html" title="plsyax: Set y axis parameters"><link rel="next" href="plszax.html" title="plszax: Set z axis parameters"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plsym</code>: Plot a glyph at the specified points
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plsyax.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plszax.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plsym"></a>
+      <code class="function">plsym</code>: Plot a glyph at the specified points
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plsym</b>
+          (</code></td><td>
+            <var class="pdparam">n</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">code</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Plot a glyph at the specified points.  (This function is
+      largely superseded by <a class="link" href="plstring.html" title="plstring: Plot a glyph at the specified points"><code class="function">plstring</code></a> which gives access to many[!]
+      more glyphs.)
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>n</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of points in the
+            <code class="literal"><em class="parameter"><code>x</code></em></code> and
+            <code class="literal"><em class="parameter"><code>y</code></em></code> vectors.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the x coordinates of the points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the y coordinates of the points.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>code</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Hershey symbol code corresponding to a glyph to be plotted
+            at each of the <code class="literal">
+              <em class="parameter"><code>n</code></em>
+            </code> points.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">plsym(x, y, code)</code>
+    </p><p>
+      This function is used in example 7.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plsyax.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plszax.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plsyax</code>: Set y axis parameters
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plszax</code>: Set z axis parameters
+    </td></tr></table></div></body></html>

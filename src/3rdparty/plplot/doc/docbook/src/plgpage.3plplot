@@ -1,0 +1,40 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGPAGE 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgpage\fP - Get page parameters
+.SH SYNOPSIS
+\fBplgpage\fP(\fIp_xp\fP, \fIp_yp\fP, \fIp_xleng\fP, \fIp_yleng\fP, \fIp_xoff\fP, \fIp_yoff\fP)
+.SH DESCRIPTION
+
+.P
+Gets the current page configuration. The length and offset values are expressed in units that are specific to the current driver. For instance: screen drivers will usually interpret them as number of pixels, whereas printer drivers will usually use mm.
+.P
+Redacted form: \fBplgpage(p_xp, p_yp, p_xleng, p_yleng, p_xoff, p_yoff)\fP
+.P
+This function is used in examples 14 and 31.
+.SH ARGUMENTS
+.TP
+\fIp_xp\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the number of pixels/inch (DPI) in x.
+.TP
+\fIp_yp\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the number of pixels/inch (DPI) in y.
+.TP
+\fIp_xleng\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the x page length.
+.TP
+\fIp_yleng\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the y page length.
+.TP
+\fIp_xoff\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the x page offset.
+.TP
+\fIp_yoff\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the y page offset.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

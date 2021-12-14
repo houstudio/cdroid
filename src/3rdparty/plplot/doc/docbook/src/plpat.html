@@ -1,0 +1,56 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plpat: Set area line fill pattern</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><link rel="next" href="plpath.html" title="plpath: Draw a line between two points, accounting for coordinate transforms"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plpat</code>: Set area line fill pattern
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plparseopts.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plpath.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plpat"></a>
+      <code class="function">plpat</code>: Set area line fill pattern
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plpat</b>
+          (</code></td><td>
+            <var class="pdparam">nlin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">inc</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">del</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Sets the area line fill pattern to be used, e.g., for calls to <a class="link" href="plfill.html" title="plfill: Draw filled polygon"><code class="function">plfill</code></a>.
+      The pattern consists of 1 or 2 sets of
+      parallel lines with specified inclinations and spacings.  The
+      arguments to this routine are the number of sets to use (1 or 2)
+      followed by two vectors (with 1 or 2 elements)
+      specifying the inclinations in tenths of a degree and the spacing in
+      micrometers.  (See also <a class="link" href="plpsty.html" title="plpsty: Select area fill pattern"><code class="function">plpsty</code></a>)
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>nlin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of sets of lines making up the pattern, either 1 or 2.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>inc</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing
+            <code class="literal"><em class="parameter"><code>nlin</code></em></code> values
+            of the inclination in tenths of a degree.  (Should
+            be between -900 and 900).
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>del</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing
+            <code class="literal"><em class="parameter"><code>nlin</code></em></code> values
+            of the spacing in micrometers between the lines making
+            up the pattern.
+          </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            General: <code class="function">plpat(inc, del)</code>
+          </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 15.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plparseopts.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plpath.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plparseopts</code>: Parse command-line arguments
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plpath</code>: Draw a line between two points, accounting
+      for coordinate transforms
+    </td></tr></table></div></body></html>

@@ -1,0 +1,20 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLVSTA 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplvsta\fP - Select standard viewport
+.SH SYNOPSIS
+\fBplvsta\fP()
+.SH DESCRIPTION
+
+.P
+Selects the largest viewport within the subpage that leaves a standard margin (left-hand margin of eight character heights, and a margin around the other three sides of five character heights).
+.P
+Redacted form: \fBplvsta()\fP
+.P
+This function is used in examples 1, 12, 14, 17, 25, and 29.
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

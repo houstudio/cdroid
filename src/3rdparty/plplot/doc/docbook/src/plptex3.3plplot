@@ -1,0 +1,55 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLPTEX3 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplptex3\fP - Write text inside the viewport of a 3D plot
+.SH SYNOPSIS
+\fBplptex3\fP(\fIwx\fP, \fIwy\fP, \fIwz\fP, \fIdx\fP, \fIdy\fP, \fIdz\fP, \fIsx\fP, \fIsy\fP, \fIsz\fP, \fIjust\fP, \fItext\fP)
+.SH DESCRIPTION
+
+.P
+Writes text at a specified position and inclination and with a specified shear within the viewport.  Text is clipped at the viewport boundaries.  The reference point of a string lies along a line passing through the string at half the height of a capital letter.  The position of the reference point along this line is determined by \fIjust\fP, and the reference point is placed at world coordinates (\fIwx\fP, \fIwy\fP, \fIwz\fP)  within the viewport. The inclination and shear of the string is specified in terms of differences of world coordinates making it easy to write text parallel to a line in a graph.
+.P
+Redacted form: \fBplptex3(x, y, z, dx, dy, dz, sx, sy, sz, just, text) \fP
+.P
+This function is used in example 28.
+.SH ARGUMENTS
+.TP
+\fIwx\fP (\fBPLFLT\fP(3plplot), input)
+x world coordinate of reference point of string.
+.TP
+\fIwy\fP (\fBPLFLT\fP(3plplot), input)
+y world coordinate of reference point of string.
+.TP
+\fIwz\fP (\fBPLFLT\fP(3plplot), input)
+z world coordinate of reference point of string.
+.TP
+\fIdx\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIdy\fP and \fIdz \fP, this specifies the inclination of the string.  The baseline of the string is parallel to a line joining (\fIx\fP, \fIy\fP, \fIz\fP)  to (\fIx\fP+\fIdx\fP, \fIy\fP+\fIdy\fP, \fIz\fP+\fIdz\fP) .
+.TP
+\fIdy\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIdx\fP and \fIdz\fP, this specifies the inclination of the string.
+.TP
+\fIdz\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIdx\fP and \fIdy\fP, this specifies the inclination of the string.
+.TP
+\fIsx\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIsy\fP and \fIsz \fP, this specifies the shear of the string.  The string is sheared so that the characters are vertically parallel to a line joining (\fIx\fP, \fIy\fP, \fIz\fP)  to (\fIx\fP+\fIsx\fP, \fIy\fP+\fIsy\fP, \fIz\fP+\fIsz\fP) . If \fIsx\fP = \fIsy\fP = \fIsz\fP = 0.)  then the text is not sheared.
+.TP
+\fIsy\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIsx\fP and \fIsz\fP, this specifies shear of the string.
+.TP
+\fIsz\fP (\fBPLFLT\fP(3plplot), input)
+Together with \fIsx\fP and \fIsy\fP, this specifies shear of the string.
+.TP
+\fIjust\fP (\fBPLFLT\fP(3plplot), input)
+Specifies the position of the string relative to its reference point.  If \fIjust\fP=0. , the reference point is at the left and if \fIjust\fP=1. , it is at the right of the string.  Other values of \fIjust\fP give intermediate justifications.
+.TP
+\fItext\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string to be written out.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

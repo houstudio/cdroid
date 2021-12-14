@@ -1,0 +1,147 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Custom Extensions to Tcl</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="extended-wish.html" title="Chapter 14. Building an Extended WISH"><link rel="prev" href="extensions-tcl.html" title="PLplot Extensions to Tcl"><link rel="next" href="gui.html" title="Chapter 15. Embedding Plots in Graphical User Interfaces"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Custom Extensions to Tcl</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="extensions-tcl.html">Prev</a> </td><th width="60%" align="center">Chapter 14. Building an Extended WISH</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="custom-extensions-tcl"></a>Custom Extensions to Tcl</h2></div></div></div><p>
+      By this point, you should have a pretty decent understanding of the
+      underlying philosophy of Tcl and Tk, and the whole concept of
+      extensions, of which [incr Tcl] and PLplot are examples.  These alone
+      are enough to allow the rapid prototyping and development of
+      powerful, flexible graphical applications.  Normally the programmer
+      simply writes a shell script to be executed by the Tk windowing
+      shell, <span class="command"><strong>wish</strong></span>.  It is in vogue for each Tcl/Tk
+      extension package to build it's own <span class="quote">“<span class="quote">extended WISH</span>”</span>.
+      There are many examples of this, and indeed even PLplot's
+      <span class="command"><strong>plserver</strong></span> program, described in an earlier chapter,
+      could just as easily have been called <span class="command"><strong>plwish</strong></span>.
+    </p><p>
+      In any event, as exciting and useful as these standalone, extended
+      windowing shells may be, they are ultimately only the beginning of
+      what you can do.  The real benefit of this approach is realized when
+      you make your own <span class="quote">“<span class="quote">extended WISH</span>”</span>, comprised of Tcl, Tk,
+      any of the standard extensions you like, and finally embellished with
+      a smattering of application specific extensions designed to support
+      your own application domain.  In this section we give a detailed
+      introduction to the process of constructing your own WISH.  After
+      that, you're on your own...
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="wish-construction"></a>WISH Construction</h3></div></div></div><p>
+	The standard way to make your own WISH, as supported by the Tcl/Tk
+	system, is to take a boilerplate file,
+	<code class="filename">tkAppInit.c</code>, edit to reflect the Tcl/Tk
+	extensions you will be requiring, add some commands to the
+	interpreter, and link it all together.
+      </p><p>
+	Here for example is the important part of the
+	<code class="filename">tk02</code> demo, extracted from the file
+	<code class="filename">xtk02.c</code>, which is effectively the extended
+	WISH definition file for the <code class="filename">tk02</code> demo.
+	Comments and other miscellany are omitted.
+      </p><p>
+	</p><pre class="programlisting">
+	  #include "tk.h"
+	  #include "itcl.h"
+
+	  /* ... */
+
+	  int   myplotCmd        (ClientData, Tcl_Interp *, int, char **);
+
+	  int
+	  Tcl_AppInit(interp)
+	  Tcl_Interp *interp;		/* Interpreter for application. */
+	  {
+	  int   plFrameCmd        (ClientData, Tcl_Interp *, int, char **);
+
+	  Tk_Window main;
+
+	  main = Tk_MainWindow(interp);
+
+	  /*
+	  * Call the init procedures for included packages.  Each call should
+	  * look like this:
+	  *
+	  * if (Mod_Init(interp) == TCL_ERROR) {
+	  *     return TCL_ERROR;
+	  * }
+	  *
+	  * where "Mod" is the name of the module.
+	  */
+
+	  if (Tcl_Init(interp) == TCL_ERROR) {
+	  return TCL_ERROR;
+	  }
+	  if (Tk_Init(interp) == TCL_ERROR) {
+	  return TCL_ERROR;
+	  }
+	  if (Itcl_Init(interp) == TCL_ERROR) {
+	  return TCL_ERROR;
+	  }
+	  if (Pltk_Init(interp) == TCL_ERROR) {
+	  return TCL_ERROR;
+	  }
+
+	  /*
+	  * Call Tcl_CreateCommand for application-specific commands, if
+	  * they weren't already created by the init procedures called above.
+	  */
+
+	  Tcl_CreateCommand(interp, "myplot", myplotCmd,
+	  (ClientData) main, (void (*)(ClientData)) NULL);
+
+
+	  /*
+	  * Specify a user-specific start up file to invoke if the
+	  * application is run interactively.  Typically the start up
+	  * file is "~/.apprc" where "app" is the name of the application.
+	  * If this line is deleted then no user-specific start up file
+	  * will be run under any conditions.
+	  */
+
+	  tcl_RcFileName = "~/.wishrc";
+	  return TCL_OK;
+	  }
+
+	  /* ... myPlotCmd, etc ... */</pre><p>
+      </p><p>
+	The calls to <code class="literal">Tcl_Init()</code> and
+	<code class="literal">Tk_Init()</code> are in every WISH.  To make an
+	extended WISH, you add calls to the initialization routines for any
+	extension packages you want to use, in this [incr Tcl]
+	(<code class="literal">Itcl_Init()</code>) and PLplot
+	(<code class="literal">Pltk_Init()</code>).  Finally you add keywords to the
+	interpreter, associating them with functions in your code using
+	<code class="literal">Tcl_CreateCommand()</code> as shown.
+      </p><p>
+	In particular, PLplot has a number of [incr Tcl] classes in its Tcl
+	library.  If you want to be able to use those in your WISH, you
+	need to include the initialization of [incr Tcl].
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="wish-linking"></a>WISH Linking</h3></div></div></div><p>
+	Having constructed your <code class="literal">Tcl_AppInit()</code> function,
+	you now merely need to link this file with your own private files
+	to provide the code for any functions you registered via
+	<code class="literal">Tcl_CreateCommand()</code> (and any they depend on),
+	against the Tcl, Tk and extension libraries you are using.
+      </p><p>
+	</p><pre class="programlisting">
+	  cc -c tkAppInit.c
+	  cc -c mycommands.c
+	  cc -o my_wish tkAppInit.o mycommands.o
+	  -lplplotftk -ltcl -ltk -litcl -lX11 -lm</pre><p>
+      </p><p>
+	Add any needed <code class="literal">-L</code> options as needed.
+      </p><p>
+	Voila!  You have made a wish.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="wish-programming"></a>WISH Programming</h3></div></div></div><p>
+	Now you are ready to put the genie to work.  The basic plan here is
+	to write shell scripts which use your new application specific
+	windowing shell as their interpreter, to implement X Windows user
+	interfaces to control and utilize the facilities made available in
+	your extensions.
+      </p><p>
+	Effectively this just comes down to writing Tcl/Tk code, embellished
+	as appropriate with calls to the extension commands you registered.
+	Additionally, since this wish includes the PLplot extensions, you
+	can instantiate any of the PLplot family of [incr Tcl] classes, and
+	invoke methods on those objects to effect the drawing of graphs.
+	Similarly, you may have your extension commands (which are coded in
+	C) call the PLplot C programmers API to draw into the widget.  In
+	this way you can have the best of both worlds.  Use compiled C code
+	when the computational demands require the speed of compiled code,
+	or use Tcl when your programming convenience is more important than
+	raw speed.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="extensions-tcl.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="extended-wish.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="gui.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">PLplot Extensions to Tcl </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 15. Embedding Plots in Graphical User Interfaces</td></tr></table></div></body></html>

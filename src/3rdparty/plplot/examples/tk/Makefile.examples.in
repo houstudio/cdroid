@@ -1,0 +1,48 @@
+# examples/tk/Makefile.examples.in for PLplot
+
+# Copyright (C) 2002 Maurice LeBrun
+# Copyright (C) 2002-2019 Alan W. Irwin
+# Copyright (C) 2003-2005 Rafael Laboissiere
+# Copyright (C) 2012 Andrew Ross
+#
+# This file is part of PLplot.
+#
+# PLplot is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# PLplot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with the file PLplot; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+SHELL = @SH_EXECUTABLE@
+CC = @CC@
+EXEEXT = @EXEEXT@
+
+PKG_CONFIG_ENV = @PKG_CONFIG_ENV@
+install_tree_tk_RPATHCMD = @install_tree_tk_RPATHCMD@
+
+EXECUTABLES_list = xtk01$(EXEEXT)
+# Second and fourth examples depend on itk.
+@itk_true@itk_EXECUTABLES_list = xtk02$(EXEEXT) xtk04$(EXEEXT)
+
+all: $(EXECUTABLES_list) $(itk_EXECUTABLES_list)
+
+clean:
+	rm -f $(EXECUTABLES_list) $(itk_EXECUTABLES_list)
+
+#if(tcltk_in_plplot_library)
+#  target_link_libraries(${TK_EXE} plplottcltk_Main plplot ${TK_LIBRARY} ${TCL_LIBRARY} ${MATH_LIB})
+#else(tcltk_in_plplot_library)
+#  target_link_libraries(${TK_EXE} plplottcltk_Main plplottcltk tclmatrix plplot ${TK_LIBRARY} ${TCL_LIBRARY} ${MATH_LIB})
+#endif(tcltk_in_plplot_library)
+.c$(EXEEXT):
+@tcltk_in_plplot_library_true@	$(CC) $< -o $@ $(install_tree_tk_RPATHCMD) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags plplot-tcl_Main plplot) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --libs plplot-tcl_Main plplot) @pkg_config_TK_LIBRARY@ @pkg_config_TCL_LIBRARY@ @MATH_LIB@
+@tcltk_in_plplot_library_false@	$(CC) $< -o $@ $(install_tree_tk_RPATHCMD) $(shell $(PKG_CONFIG_ENV) pkg-config @PC_STATIC_OPTION@ --cflags --libs plplot-tcl_Main plplot-tcl plplot) -ltclmatrix @pkg_config_TK_LIBRARY@ @pkg_config_TCL_LIBRARY@ @MATH_LIB@
+
+.SUFFIXES: .c $(EXEEXT)

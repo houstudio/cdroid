@@ -1,0 +1,318 @@
+<!-- -*-  mode: nxml -*- -->
+<!--
+    intro.xml: "Introduction" chapter
+
+Copyright (C) 1994  Geoffrey Furnish and Maurice LeBrun
+Copyright (C) 1999-2017  Alan W. Irwin
+Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004  Rafael Laboissiere
+Copyright (C) 2003  Joao Cardoso
+
+Redistribution and use in source (XML DocBook) and "compiled" forms
+(HTML, PDF, PostScript, DVI, TeXinfo and so forth) with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code (XML DocBook) must retain the
+above copyright notice, this list of conditions and the following
+disclaimer as the first lines of this file unmodified.
+
+2. Redistributions in compiled form (transformed to other DTDs,
+converted to HTML, PDF, PostScript, and other formats) must
+reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Important: THIS DOCUMENTATION IS PROVIDED BY THE PLPLOT PROJECT "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PLPLOT PROJECT BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS DOCUMENTATION,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<chapter id="intro">
+  <title>Introduction</title>
+  <sect1 id="plplot-plotting-library">
+    <title>The PLplot plotting software</title>
+
+    <para>PLplot is a &features-cross-platform; software package for
+    creating scientific plots whose (<ulink
+    url="http://www.utf-8.com/">UTF-8</ulink>) plot symbols and text are
+    limited in practice only by what <ulink
+    url="http://www.utf-8.com/">Unicode</ulink>-aware system fonts are
+    installed on a user's computer. The PLplot software, which is
+    primarily licensed under <ulink
+    url="http://www.gnu.org/licenses/lgpl.html">the LGPL</ulink>, has a
+    clean architecture that is organized as a core C library, separate
+    language &features-bindings; for that library,
+    and separate device drivers that are dynamically
+    loaded by the core library which control how the plots are presented
+    in &features-noninteractive; and &features-interactive; plotting
+    contexts.</para>
+
+    <para>The PLplot core library can be used to create standard x-y
+    plots, semi-log plots, log-log plots, contour plots, 3D surface plots,
+    mesh plots, bar charts and pie charts. Multiple graphs (of the same or
+    different sizes) may be placed on a single page, and multiple pages
+    are allowed for those device formats that support them.</para>
+
+    <para> PLplot has core library support for plot symbols and text
+    specified by the user in the UTF-8 encoding of Unicode. This means for
+    our many Unicode-aware devices that plot symbols and text are only
+    limited by the collection of glyphs normally available via installed
+    system fonts. Furthermore, a large subset of our Unicode-aware devices
+    also support complex text layout (CTL) languages such as Arabic,
+    Hebrew, and Indic and Indic-derived CTL scripts such as Devanagari,
+    Thai, Lao, and Tibetan. Thus, for these PLplot devices essentially any
+    language that is supported by Unicode and installed system fonts can
+    be used to label plots.</para>
+
+    <para>
+      PLplot was originally developed by Sze Tan of the University of
+      Auckland in Fortran-77.  Many of the underlying concepts used in the
+      PLplot package are based on ideas used in Tim Pearson's PGPLOT
+      package.  Sze Tan writes:
+      <blockquote>
+	<para>
+	  I'm rather amazed how far PLPLOT has travelled given its origins
+	  etc. I first used PGPLOT on the Starlink VAX computers while I was
+	  a graduate student at the Mullard Radio Astronomy Observatory in
+	  Cambridge from 1983-1987. At the beginning of 1986, I was to give a
+	  seminar within the department at which I wanted to have a computer
+	  graphics demonstration on an IBM PC which was connected to a
+	  completely non-standard graphics card. Having about a week to do
+	  this and not having any drivers for the card, I started from the
+	  back end and designed PLPLOT to be such that one only needed to be
+	  able to draw a line or a dot on the screen in order to do arbitrary
+	  graphics.  The application programmer's interface was made as
+	  similar as possible to PGPLOT so that I could easily port my
+	  programs from the VAX to the PC.  The kernel of PLPLOT was modelled
+	  on PGPLOT but the code is not derived from it.
+	</para>
+      </blockquote>
+    </para>
+
+    <para>The C version of PLplot was originally developed by Tony
+    Richardson on a Commodore Amiga.  That version has been improved and
+    expanded ever since first by Geoffrey Furnish and Maurice Lebrun in
+    the 1990's and later (after the project was registered at SourceForge
+    on 2000-02-23) <ulink
+    url="&PLplot-website;/credits.php">with a much-expanded
+    development team.</ulink></para>
+
+    <para>
+      We welcome suggestions on how to improve this code, especially in the
+      form of user-contributed enhancements or bug fixes.  If PLplot is used
+      in any published papers, please include an acknowledgement or citation
+      of our work, which will help us to continue improving PLplot.  Please
+      direct all communication to the <ulink
+      url="https://lists.sourceforge.net/lists/listinfo/plplot-general">plplot-general
+      mailing list.</ulink>
+    </para>
+  </sect1>
+  <sect1 id="features">
+  <title>Feature Summary</title>
+  <sect2 id="features-cross-platform">
+    <title>Cross Platform</title>
+    <para>PLplot is currently known to work on the following platforms:</para>
+    <itemizedlist>
+      <listitem><para>Linux, Mac OS X, and other Unices</para></listitem>
+      <listitem><para>MSVC IDE on the Microsoft version of Windows (Windows 2000 and later)</para></listitem>
+      <listitem><para>Cygwin on the Microsoft version of Windows</para></listitem>
+      <listitem><para>MinGW-w64/MSYS2 on the Microsoft version of Windows</para></listitem>
+    </itemizedlist>
+    <para>For each of the above platforms, PLplot <link
+    linkend="plplot_configure_build_install">can be configured, built, and
+    installed</link> from <ulink
+    url="&PLplot-website;/downloads.php">source</ulink>, and for the Linux
+    and Mac OS X platforms third-party binary packages for PLplot <ulink
+    url="&PLplot-website;/downloads.php#Binary_Packages">are
+    available</ulink>.</para>
+  </sect2>
+  <sect2 id="features-bindings">
+    <title>Language Bindings</title>
+    <para>The language bindings of the C PLplot library are currently the following:</para>
+    <itemizedlist>
+      <listitem><para>Ada</para></listitem>
+      <listitem><para>C++</para></listitem>
+      <listitem><para>D</para></listitem>
+      <listitem><para>Fortran</para></listitem>
+      <listitem><para>Java</para></listitem>
+      <listitem><para><ulink url="http://common-lisp.net/project/cl-plplot/">Lisp</ulink></para></listitem>
+      <listitem><para>Lua</para></listitem>
+      <listitem><para>OCaml</para></listitem>
+      <listitem><para>Octave</para></listitem>
+      <listitem><para><ulink url="http://search.cpan.org/~dhunt/PDL-Graphics-PLplot">Perl/PDL</ulink></para></listitem>
+      <listitem><para>Python</para></listitem>
+      <listitem><para>Tcl/Tk</para></listitem>
+    </itemizedlist>
+  </sect2>
+  <sect2 id="features-noninteractive">
+    <title>Output File Formats</title>
+    <para>PLplot device drivers support the following plotting file formats:</para>
+    <itemizedlist>
+      <listitem><para>CGM</para></listitem>
+      <listitem><para>GIF</para></listitem>
+      <listitem><para>JPEG</para></listitem>
+      <listitem><para>PBM</para></listitem>
+      <listitem><para>PDF</para></listitem>
+      <listitem><para>PNG</para></listitem>
+      <listitem><para>PostScript</para></listitem>
+      <listitem><para>SVG</para></listitem>
+      <listitem><para>Xfig</para></listitem>
+    </itemizedlist>
+  </sect2>
+  <sect2 id="features-interactive">
+    <title>Interactive Platforms</title>
+    <para>PLplot device drivers support the following platforms that are suitable for interactive plotting:</para>
+    <itemizedlist>
+      <listitem><para>GDI</para></listitem>
+      <listitem><para>GTK+</para></listitem>
+      <listitem><para>PyQt</para></listitem>
+      <listitem><para>Qt</para></listitem>
+      <listitem><para>Tcl/Tk</para></listitem>
+      <listitem><para>wxWidgets</para></listitem>
+      <listitem><para>X</para></listitem>
+    </itemizedlist>
+
+  </sect2>
+  </sect1>
+  <sect1 id="acquiring-plplot">
+    <title>Obtaining Access to PLplot</title>
+    <para>
+      PLplot is a SourceForge project and may be obtained by
+      the usual SourceForge file release and anonymous git repository access that is made
+      available from links at
+      <ulink url="http://sourceforge.net/projects/plplot">http://sourceforge.net/projects/plplot</ulink>.
+    </para>
+  </sect1>
+  <sect1 id="plplot_configure_build_install">
+    <title>Configure, build, and install PLplot from source</title>
+    <para>After the source code for PLplot <ulink
+    url="&PLplot-website;/downloads.php">has been obtained</ulink> the generic
+    steps to configure, build, and install PLplot are as follows:
+    <itemizedlist>
+      <listitem><para>Optionally set environment variables to force
+      CMake's find commands to locate any of PLplot's software dependencies
+      that are installed in non-standard locations.  See the CMake
+      documentation for the <ulink
+      url="https://cmake.org/cmake/help/latest/command/find_file.html"><literal>find_file</literal></ulink>
+      and <ulink
+      url="https://cmake.org/cmake/help/latest/command/find_library.html"><literal>find_library</literal></ulink>
+      commands for the list of such variables which includes
+      <literal>CMAKE_INCLUDE_PATH</literal>,
+      <literal>CMAKE_LIBRARY_PATH</literal>, and <literal>PATH</literal>.
+      In addition, the <literal>PKG_CONFIG_PATH</literal> environment
+      variable forces CMake to find certain software packages which specify
+      their (non-standard) install locations using <literal>pkg-config</literal>.
+      </para></listitem>
+      <listitem><para>Optionally set environment variables that force CMake
+      to use specific compilers to override the (normally good) default
+      choice of compilers that CMake uses.  The environment variables that
+      CMake recognizes for this purpose are <literal>ADA</literal> to
+      specify the Ada compiler, <literal>CC</literal> to specify the C
+      compiler, <literal>CXX</literal> to specify the C++ compiler,
+      <literal>DC</literal> to specify the D compiler, and
+      <literal>FC</literal> to specify the Fortran compiler.
+      </para></listitem>
+      <listitem><para>Optionally set environment variables that force CMake
+      to use specific compiler flags.  The environment variables that CMake recognizes for this
+      purpose are <literal>ADAFLAGS</literal> to specify the Ada compiler flags,
+      <literal>CCFLAGS</literal> to specify the C compiler flags,
+      <literal>CXXFLAGS</literal> to specify the C++ compiler flags,
+      <literal>DFLAGS</literal> to specify the D compiler flags, and
+      <literal>FFLAGS</literal> to specify the Fortran compiler flags.
+      </para></listitem>
+      <listitem><para>Prepare for running the <literal>cmake</literal> command
+      by removing the stale PLplot install tree (if it exists) that corresponds to
+      the <literal>-DCMAKE_INSTALL_PREFIX</literal> option for the
+      <literal>cmake</literal> command (see below), creating an empty build directory, and
+      changing directories to that build directory (which will become the top-level directory
+      of the build tree).
+      </para></listitem>
+      <listitem><para>Configure the PLplot build and install by running
+      <programlisting>
+	cmake &lt;cmake options&gt; &lt;top-level directory of the source tree&gt;
+      </programlisting>
+      on the command line. Many <literal>cmake</literal> options are possible.  Two common ones that are
+      often sufficient for most purposes are
+      <literal>-DCMAKE_INSTALL_PREFIX=&lt;installation prefix&gt;</literal> (to specify the
+      top-level directory of the soon-to-be created install tree) and <literal>-G &lt;generator identification string&gt;</literal>
+      (to identify the <literal>cmake</literal> backend generator to use such as "Unix Makefiles").  However, there are also
+      many other <literal>cmake</literal> options that are
+      specific to the PLplot build system that
+      are documented in the <filename>CMakeCache.txt</filename> file that
+      is created by the <literal>cmake</literal> command.
+      </para></listitem>
+      <listitem><para>Build PLplot by building the "all" target.  For example, that would
+      be done for the "Unix Makefiles" generator case by
+      <programlisting>
+	make all
+      </programlisting>
+      </para></listitem>
+      <listitem><para>Install PLplot by building the "install" target.  For example, that would
+      be done for the "Unix Makefiles" generator case by
+      <programlisting>
+	make install
+      </programlisting>
+      </para></listitem>
+      <listitem><para>Determine the list of additional targets that are available for the
+      PLplot build by building the "help" target.  For example, that would
+      be done for the "Unix Makefiles" generator case by
+      <programlisting>
+	make help
+      </programlisting>
+      </para></listitem>
+    </itemizedlist>
+    For additional platform-specific details beyond the above generic
+    steps, please consult <ulink
+    url="http://sourceforge.net/p/plplot/wiki/Home">our wiki</ulink>.
+    </para>
+    <para> After PLplot has been configured, built, and installed, you can
+    write code in C or any of the languages that have PLplot bindings to
+    make the desired PLplot calls.  Standard example programs in all
+    supported languages are included with the PLplot software package.
+    The installation of those examples includes both a CMake-based build
+    system (see <filename>&lt;installation
+    prefix&gt;/share/plplot&Project-Version;/examples/CMakelists.txt</filename>)
+    and a more traditional (Makefile + pkg-config) build system (see
+    <filename>&lt;installation
+    prefix&gt;/share/plplot&Project-Version;/examples/Makefile</filename>)
+    for building and linking the examples.  Either of these two build
+    systems can be adapted by users to build and link their own
+    PLplot-related code for compiled languages or to test PLplot related
+    code that is compiled or which is written in a scripting language
+    where PLplot capability is dynamically loaded.  However, note the
+    CMake-based build system for the installed examples should work on all
+    platforms where PLplot can be built while the traditional build system
+    for the installed examples will only work on platforms (e.g., Linux)
+    which have <literal>make</literal> (only with GNU extensions),
+    <literal>pkg-config</literal>, and <literal>bash</literal> (required
+    for testing targets) installed.  Plots generated from these example
+    programs as well as the source code for those examples in all our
+    supported languages are available from links given <ulink
+    url="&PLplot-website;/examples.php">here</ulink>.</para>
+  </sect1>
+  <sect1 id="copyrights">
+    <title>PLplot Copyright Licensing</title>
+    <para>
+      PLplot is free software that is primarily licensed under the
+      LGPL (version 2 or any later version at the option of the user).  The
+      exact text of that license is given in the file
+      <filename>COPYING.LIB</filename> that is distributed with PLplot.  The
+      free software licenses that are used for the parts of PLplot not distributed
+      under the LGPL are explicitly noted in the
+      <filename>Copyright</filename> file that is distributed with PLplot.
+    </para>
+  </sect1>
+  <sect1 id="credits">
+    <title>Credits</title>
+    <para>Many developers have contributed to PLplot over its long history.  For further details see
+    <ulink url="&PLplot-website;/credits.php">our credits page</ulink></para>
+  </sect1>
+</chapter>

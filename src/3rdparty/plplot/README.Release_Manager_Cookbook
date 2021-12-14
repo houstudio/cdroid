@@ -1,0 +1,1245 @@
+Configuration of these instructions.
+
+export plplot_version=5.15.0
+export old_plplot_version=5.14.0
+
+These environment variables are used extensively for the command-line
+commands below, and for the few cases below where a GUI is used,
+these environment variables are used symbolically to remind
+the release manager exactly what versions must be explicitly stated
+in the GUI case.
+
+INDEX
+** Perform a (preliminary) search and fix for all internal inconsistencies
+** Arrange preliminary comprehensive tests
+** Declare a push freeze on the plplot-devel mailing list
+** Perform a (preliminary) PLplot contract test
+** Prepare a (preliminary) version of the ChangeLog file for this release
+** Prepare the README.release file and/or encourage those who have made
+   changes in this release cycle to update that file
+** Update versions
+** Prepare and test the documentation
+** Perform a (final) search and fix for all internal inconsistencies
+** Update website-related files
+** Install and test a (preliminary) local copy of the PLplot website
+** Create (a preliminary version of) the release tarball and check the
+   result for errors
+** Do comprehensive test of PLplot
+** Install and test a local copy of the PLplot website
+** Upload the local website to SourceForge
+** Commit the changes in this file (README.Release_Manager_CookBook)
+** Update and commit README.cumulated_release
+** Push new version of ChangeLog.release for this release
+** Contract test of the last push of this release
+** Create the PLplot Release
+   ++ Preliminaries
+   ++ Create a final release tarball and check the result for errors
+   ++ Tag the release
+   ++ Sign the release with your plplot Release Manager gpg key
+   ++ Verify the release tarball signing
+   ++ Make a SourceForge file release
+** Publicize the release announcement
+** Prepare immediately for the next release cycle
+
+INDEX for Appendix
+** GNU Privacy Guard (gpg)
+** Correct computer time
+** System prerequisites for viewing local website
+** Fix website permissions
+
+N.B. the order of steps below is important because of the dependencies
+between the steps which are noted (except for the generation of the
+final release tarball and ChangeLog which depend on virtually all
+prior steps).
+_________________________________________________________________________
+
+** Perform a (preliminary) search and fix for all internal inconsistencies
+
+This step depends on no previous steps.
+
+Some of the files in the source tree are generated from other files
+in the source tree using build-system targets.  All targets that
+have "check" in the name prefix are these kind of targets.  Also,
+some of the checks require special setup or take too long for the
+general case, and these will be configured only for the
+-DADD_SPECIAL_CONSISTENCY_CHECKING=ON case.
+
+So use the above cmake option, and then for a complete list of
+checks run
+
+make help |grep '... check' |sort
+
+in the build tree.  The current result of that command should be
+
+... check_all
+... check_api_xml_consistency
+... check_fortran_parameters
+... check_ifort_definitions_file
+... check_libtclmatrix_capabilities
+... check_plplot_h.inc
+... check_plplotcapi_defines
+... check_swig_documentation
+... check_tcl_parameters
+
+Note the check_api_xml_consistency target only exists if
+-DADD_SPECIAL_CONSISTENCY_CHECKING=ON and our build system finds the
+golang application "plplot-doc-check" which has been developed
+by Hǎiliàng Wang and which is executed by
+that check_api_xml_consistency target.  For more details
+concerning how to build and install "plplot-doc-check" and
+put that result on the PATH see the commentary
+in doc/docbook/src/CMakeLists.txt.
+
+Also note that the check_api_xml_consistency target currently
+($plplot_version) succeeds with the latest castxml-ready version of
+plplot-doc-check.  However, golang is a bit esoteric so for now I am
+excluding check_api_xml_consistency as a dependency of the check_all
+target so the check_api_xml_consistency target has to be built
+specifically.
+
+Note the above check_plplot_h.inc target only exists
+because -DADD_SPECIAL_CONSISTENCY_CHECKING=ON implies
+-DGENERATE_PLPLOT_H_INC=ON by default which in turn requires
+that at least the OCaml version of the Perl regular expression library
+be installed.  (On Debian the associated package name is
+libpcre-ocaml-dev.)  Normally, GENERATE_PLPLOT_H_INC is OFF by default
+to reduce build dependencies.
+
+To actually do the internal consistency checks, configure PLplot with
+the -DADD_SPECIAL_CONSISTENCY_CHECKING=ON option and build each of the
+above targets (except for check_api_xml_consistency) by building the
+check_all target.  Each individual check target typically generates a
+file in the build tree which is then compared (using the Unix cmp
+command) with the file that is being checked in the source tree.  If
+the two files are inconsistent (which can be caused by documentation
+updates, for example), the cmp command complains, and you should
+follow up by doing a diff between the two files to confirm that the
+changes are reasonable followed by copying the build-tree version of
+the file on top of the source-tree version and committing the
+source-tree version.  When this process is completed, all the above
+targets should run with no cmp
+or other errors/warnings at all, i.e.,
+
+software@merlin> make check_all
+
+should normally "just work" without errors.
+
+Then finish up such checking by building the check_api_xml_consistency
+target which should also give a clean result (as of $plplot_version
+with the castxml version).
+_________________________________________________________________________
+
+** Arrange preliminary comprehensive tests
+
+This step depends on the previous step "Perform a (preliminary) search
+and fix for all internal inconsistencies" because resolving those
+inconsistencies that tend to grow during each release cycle can be
+fairly intrusive so it is important to comprehensively test after
+those intrusive changes are made.
+
+The minimum version of CMake we currently allow is 3.13.2 on all
+platforms, and currently the latest version of CMake that has been
+officially released is 3.14.4.
+
+The point of these comprehensive tests is to insure that PLplot is in
+releasable state (i.e., without any release critical issues) on all
+platforms for the above range of CMake versions.  Thus, these tests
+should at least be done on the release manager's platform for both
+versions of CMake mentioned above.  (Note the easiest way to get
+access to these specific versions is by building CMake via the bootstrap
+method from the appropriate gpg-verified git tags for the two
+releases.)  In addition the release manager should encourage other
+developers to perform comprehensive tests on their platforms to help
+confirm there are no release critical bugs for those additional
+platforms.
+_________________________________________________________________________
+
+** Declare a push freeze on the plplot-devel mailing list
+
+This step should be done as soon as the first successful preliminary
+comprehensive test has been completed (typically by the release
+manager).  The point of this freeze is to reduce the chances of some
+further change compromising the comprehensive test results (which are
+typically quite time consuming to finish).  However, this freeze (on
+source code and build system changes) does allow further changes
+before the release such as documentation improvements, the known
+build-system changes below (e.g., version changes) that are required
+for an actual release, and also possibly (this is a judgement call by
+the release manager in consultation with the PLplot developer that is
+recommending the fix) minimal code and build system fixes for any
+issues found and judged to be release critical after the first
+successful preliminary comprehensive test.
+_________________________________________________________________________
+
+** Perform a (preliminary) PLplot contract test
+
+See README.PLplot_Contract_Testing for how the release manager should
+set up a PLplot contract test for their platform.  The release manager
+should then perform an Experimental version of that test using the
+commit ID corresponding to the SourcForge git server tip of the PLplot
+master branch, i.e., the version of PLplot that is close to or the
+same as the version used for the above comprehensive testing and
+therefore close to the version of PLplot that will be released.  The
+point here is future-proof PLplot with regard to CMake changes by
+confirming that the latest development (git) version of PLplot
+correctly configures, builds, and installs for the latest development
+(git) version of CMake.
+_________________________________________________________________________
+
+** Prepare a (preliminary) version of the ChangeLog file for this release
+
+This step does not depend on other steps.
+
+Confirm previous release tag.
+
+git tag --list |grep "^plplot-${old_plplot_version}"
+
+Checkout an up-to-date master branch, then create the preliminary
+ChangeLog from that.
+
+git checkout master
+git log --name-status --reverse plplot-${old_plplot_version}..master >| /tmp/ChangeLog.release_preliminary
+
+Also, create a summary of all the commit topics for quick reference.
+
+git log --oneline --reverse plplot-${old_plplot_version}..master >| /tmp/ChangeLog.release_preliminary_summary
+
+This file is useful, for example, for counting commits for this release cycle.
+
+Note because of the --reverse option above the order of these logs will
+be in chronological order.  But it is traditional for the final
+version ChangeLog to have the result in default reverse
+chronological order so the --reverse option is not used in that case
+(see below).
+_________________________________________________________________________
+
+** Prepare the README.release file and/or encourage those who have made
+   changes in this release cycle to update that file
+
+This step depends on the step above entitled
+
+"Prepare a (preliminary) version of the ChangeLog file for this release".
+
+Skim /tmp/ChangeLog.release_preliminary to make sure README.release is
+complete with regards to all major developments during this release
+cycle including and especially all API changes.
+_________________________________________________________________________
+
+** Update versions
+
+This step depends on the step above entitled
+
+"Prepare the README.release file ..."
+
+Update PLplot version in www/examples.php.  Also follow the
+instructions in cmake/modules/plplot_version.cmake to update all
+version information.
+
+And because theoretically you could screw
+up the version syntax (although it has never happened) test for
+typographical errors in this commit with
+
+git diff www
+
+and
+
+git diff cmake/modules/plplot_version.cmake |grep '^[+-]' |sort --key=1.2 |less
+
+where in the latter case, the format of the result makes typographical errors
+quite noticeable.
+
+I can get away with the above simple tests at this stage because the final comprehensive
+test below should find any issues with this change that the above simple tests
+missed.
+
+_________________________________________________________________________
+
+** Prepare and test the documentation
+
+This step depends on the "Update versions" step above.
+
+Update the doxygen documentation (in our source code) and DocBook
+documentation (in doc/docbook/src) to reflect any changes (new drivers
+or new PLplot functionality) in the current release cycle.  Or
+encourage those who made the changes to update the
+documentation.
+
+Generate and test our doxygen form of documentation following the
+instructions in doc/README.doxygen.
+
+Update your best estimate of the UTC release date which is specified
+as RELEASE_DATE in doc/docbook/src/CMakeLists.txt.  That value might
+need further revision when generating the the final website result
+below.
+
+Update, generate and test our Docbook documentation following the
+instructions in doc/docbook/README.developers.
+_________________________________________________________________________
+
+** Perform a (final) search and fix for all internal inconsistencies
+
+This step (unlike its preliminary variant above) depends on the above
+"Prepare and test the documentation" step since documentation changes
+can affect internal consistency.
+
+See the discussion in the "Perform a (preliminary) search and fix for
+all internal inconsistencies" step above for details.  Following what
+is done there, build "plplot-doc-check" and put that application on
+the PATH, e.g.,
+
+PATH=/home/software/golang_apps:$PATH
+
+configure PLplot with the
+-DADD_SPECIAL_CONSISTENCY_CHECKING=ON option, and build the check_all
+and check_api_xml_consistency targets.  If no build errors occur with
+these targets, then our internal consistency checks pass for the final
+form of this release.
+_________________________________________________________________________
+
+** Update website-related files
+
+This step does not depend on other steps.
+
+Look for any fundamental standard examples changes using
+
+git diff --ignore-all-space plplot-$old_plplot_version -- examples/lua
+
+(I chose examples/lua here rather than examples/c since the lua
+examples are normally kept right up to date with any fundamental
+changes in the C examples, but without the churn that sometimes occurs
+in examples/c.)
+
+If the above test shows there is a necessity to update the examples
+list in scripts/htdocs-gen_plot-examples.sh, then do that.  That list
+is used to generate the website example-related files and copy the
+results to the website. The list automatically controls what example
+source code is configured (for source code that needs that), as well
+as what example plots and example thumbnails are generated.  The list
+also automatically controls what examples-related files are copied to
+the website.
+
+Update the project web page including the examples.  For example, edit
+www/examples.php to reflect any changes to the examples themselves
+(i.e. pages added or removed from an existing example or entirely new
+examples).
+
+Note, the xmlto package that must be installed in order to generate
+the DocBook documentation (see doc/docbook/README.developers referred
+to above) is also used to generate some of our older release
+announcements for the website, and could also be used to generate
+present release announcements for the website if desired.  See
+www/announce/README for just how easy this step would be.
+_________________________________________________________________________
+
+** Install and test a (preliminary) local copy of the PLplot website
+
+This step depends on the steps above entitled
+
+"Prepare and test the documentation" and
+"Update website-related files"
+
+
+N.B. The git checkout-index command exports everything from the
+working directory that is in the index or committed, but it will
+ignore local changes in the working directory that haven't been
+"added".  So use "git add" or "git commit" judiciously before running
+this script to get all local changes relevant to website generation
+tested by this script.
+
+To build the local form of the website (including both the doxygen and
+DocBook forms of our documentation) run (on a Linux host that is
+capable of building the documentation for the source tree that has all
+local changes)
+
+scripts/generate_website.sh
+
+with no arguments (but with stdin configured as below using echo).
+The script asks you four questions, gives you a chance to verify your
+answers, then does all the rest of it (downloading a throwaway copy of
+the PLplot source code, building the doxygen and DocBook
+documentation, generating the announcements that are part of the base
+website, uploading the base website, uploading the documentation,
+building the examples, running the examples, uploading the example
+source code and example results) automatically.  I (AWI) ran this
+script as follows:
+
+time (echo irwin$'\n'irwin$'\n'merlin$'\n'/home/irwin/public_html/plplot$'\n'yes |scripts/generate_website.sh)
+
+==>
+
+Summary:
+USERNAME = irwin
+GROUPNAME = irwin
+HOSTNAME = merlin
+WEBSITE_PREFIX = /home/irwin/public_html/plplot
+
+(merlin is my local computer name, and /home/irwin/public_html is a
+location where I can store various websites).  For the above command,
+a typical time result on my Ryzen 7 1700 computer is
+
+real    1m16.944s
+user    1m30.211s
+sys     0m9.983s
+
+
+Check for warnings other than "too deep" explanations, doxygen warnings about FreeSans no
+longer being used, and spurious autogen code warnings from doxygen
+
+find /tmp/plplotdoc -name '*.out' |xargs grep -i warning |grep -vE '_autogen|too deep|FreeSans' |less
+
+This turned up quite a few warnings from cmake, but they all seemed to
+be ignorable (and will disappear when we change "message(STATUS
+"WARNING...") cmake status messages to something else that does not
+use the "warning" attribute.
+
+Check for errors (e.g., due
+to missing commands that need to be installed) by running
+
+find /tmp/plplotdoc -name '*.out' |xargs grep -i error
+
+doxygen did generate one error message, 
+
+/tmp/plplotdoc/build/make_prebuild.out:Preprocessing /tmp/plplotdoc/error: NamespaceDef::insertMembers(): member `_swig_property' with class scope `' inserted in namespace scope `plplotc'!
+
+but I attribute that to a false alarm due to incorrect doxygen parsing
+of source code since the g++ compiler does not have any issues with
+that swig-generated code.
+
+I also check for changes in a lot of the web content other than
+examples data such as screenshots and doxygen- and DocBook-generated
+documentation using
+
+git diff plplot-${old_plplot_version}..master www
+
+Test the local version of the website (currently at
+<http://merlin/~irwin/plplot/htdocs> as a result of the above local
+website generation command) for the changes revealed by the above "git
+diff" command and also check the documentation looks good, checking
+the examples are complete and look good and the source code for each
+language for examples is accessible, etc.  Also, test that local
+website by clicking on all links.  As a result of those tests, some
+iterations with the steps above entitled
+
+"Prepare and test the documentation" and
+"Update website-related files"
+
+will likely be required.
+
+N.B. As explained above scripts/generate_website.sh uses the index of
+the git working directory (but ignores local changes which have not
+yet been added to the index) as the source tree for generating the
+local website.  So there is no need to commit every documentation,
+example, and version change until you are completely satisfied with
+the local website.  But after you _are_ satisfied with the local
+website you should commit all your changes so they are available for
+generating the tarball and ChangeLog (see below) for this release.
+
+N.B. The iterated result should be identical to the final result (see
+below) except for correcting (if necessary) the RELEASE_DATE as mentioned
+above.
+_________________________________________________________________________
+
+** Create (a preliminary version of) the release tarball and check the
+   result for errors
+
+This step depends on the steps above entitled
+
+"Prepare and test documentation"
+"Check and potentially fix internal consistency"
+
+The -c option runs ctest on the directory tree unpacked from the
+release tarball, and the -i option installs a build from that
+directory tree.  N.B. be careful what you specify for the
+-i option since that directory will be completely removed
+initially.
+
+N.B. the env settings below are to bypass the bad lua 5.3.3 version
+available for Debian Testing, bypass the outdated/buggy version of
+libLASi for Debian Testing, to test a local build of qhull, and to use
+a CMake version (for our currently allowed minimum version) that has
+been built on my Debian Testing platform.
+
+time (env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install:/home/software/qhull/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" scripts/make_tarball.sh -c -i /tmp/plplot_install)
+
+A typical recent (with Ryzen 7 1700 system) time output was
+
+real    2m20.935s
+user    13m4.418s
+sys     1m23.955s
+
+Check for warnings where we ignore spurious warnings from doxygen concerning autogen code
+and spurious warnings from gfortran concerning private C modules and an uninitialized argv_dynamic
+variable which isn't.
+
+find /tmp/plplot-dist-prep -name "*.out" |xargs grep -i warning |grep -vE '_autogen|is marked PRIVATE|argv_dynamic' |less
+
+The remaining warnings appear to be fairly numerous, but in all cases innocuous such as
+known cmake warnings.
+
+Check for errors.
+
+find /tmp/plplot-dist-prep -name "*.out" |xargs grep -i error
+
+This search found two innocuous hits.
+
+Look at the ctest results:
+
+less /tmp/plplot-dist-prep/ctest_build_dir/ctest.out
+less /tmp/plplot-dist-prep/ctest_build_dir/Testing/Temporary/LastTest.log
+
+Compare the following install locations that were generated from the
+tarball with the corresponding local website that was generated above.
+
+diff -Naur --exclude=HTML-MANIFEST /tmp/plplot_install/share/doc/plplot/html /home/irwin/public_html/plplot/htdocs/docbook-manual/plplot-html-5.15.0 |less
+
+diff -Naur /tmp/plplot_install/share/doc/plplot/doxygen/html/index.html /home/irwin/public_html/plplot/htdocs/doxygen/html/ |less
+
+cmp /tmp/plplot_install/share/doc/plplot/plplot-$plplot_version.pdf /home/irwin/public_html/plplot/htdocs/docbook-manual/plplot-$plplot_version.pdf
+
+The first comparison showed no differences, the second comparison showed one generated datestamp change,
+and the last comparison showed the binary blobs were different (likely due to a datestamp) so follow
+up by browsing /tmp/plplot_install/share/doc/plplot/plplot-$plplot_version.pdf to make sure all
+is well for that PDF.
+
+Look at tarball contents to make sure included filenames are
+what is intended.
+
+less /tmp/plplot-dist-prep/plplot-$plplot_version.tar.gz
+
+Also compare the table of contents of that tarball for the previous release with the present release.
+
+tar ztf ../export/plplot-$old_plplot_version.tar.gz |sort >| /tmp/${old_plplot_version}.out
+tar ztf /tmp/plplot-dist-prep/plplot-$plplot_version.tar.gz |sed -e "s?${plplot_version}?${old_plplot_version}?g" |sort >| /tmp/${plplot_version}.out
+diff -au /tmp/${old_plplot_version}.out /tmp/${plplot_version}.out | less
+
+Look at a few man pages that were generated from the tarball, e.g.,
+
+man -M/tmp/plplot_install/share/man pllegend
+man -M/tmp/plplot_install/share/man plsurf3dl
+
+Look at the info pages that were generated from the tarball using
+
+info /tmp/plplot_install/share/info/plplotdoc.info
+_________________________________________________________________________
+
+** Do comprehensive test of PLplot
+
+This step depends on the steps above entitled
+
+"Check and potentially fix internal consistency"
+"Update date/versions"
+
+To make sure there have been no issues introduced since the previous
+preliminary comprehensive tests (which were performed both for the
+minimum CMake version and the latest CMake release) do the following
+comprehensive test using the minimum CMake version.  (Repeating this
+test for the latest CMake version could also be done, but assuming all
+is well for the minimum version such an additional test is considered
+to be overkill.)
+
+# Specify COMPREHENSIVE_TEST_PREFIX and SOURCE_PREFIX such that this
+# is done with blank-prefixed source, build, and install trees to
+# test such blanks in those directory names do not cause build-system
+# problems.
+
+# Set CMAKE_PREFIX_PATH to access local versions of lua and libLASi to
+# avoid important bugs in the Debian Testing versions of those
+# packages.  Also access a local version of libqhull to test
+# that additional rpath possibility.
+    
+# Put a local build of CMake-3.13.2 first on the PATH to thoroughly test our
+# build system for our new minimum version of CMake.
+    
+# Use the -DUSE_INCRTCL_VERSION_4=ON option to help CMake find Tcl/Tk
+# components. (This step will not be necessary as soon as the PLplot
+# build system is modified to make Tcl/Tk/Itcl/Itk/Iwidgets finding
+# more robust.)
+    
+# Use -DSWIG_EXECUTABLE=/home/software/swig/install/bin/swig to test a pre-release version
+# of swig-4.0.0.
+    
+# Apply no constraints to limit the tests.
+
+COMPREHENSIVE_TEST_PREFIX="/home/software/plplot/HEAD/comprehensive_test_disposeable blank"
+SOURCE_PREFIX="/home/software/plplot/HEAD/plplot blank .git"
+time (nice -19 env CMAKE_PREFIX_PATH=/home/software/lua/install-5.3.5:/home/software/lasi_svn/install:/home/software/qhull/install PATH="/home/software/cmake/install-3.13.2/bin:$PATH" "$SOURCE_PREFIX"/scripts/comprehensive_test.sh --prefix "$COMPREHENSIVE_TEST_PREFIX" --cmake_added_options "-DUSE_INCRTCL_VERSION_4=ON -DSWIG_EXECUTABLE=/home/software/swig/install/bin/swig" --build_command "make -j16" --ctest_command "ctest -j16" --do_submit_dashboard yes)
+
+After this script completes, follow the evaluation procedure for
+comprehensive test results documented in
+doc/wiki_source/Testing_PLplot.  Assuming all goes well with that, you
+have proved that the changes since the preliminary comprehensive test
+have not introduced any issues in this comprehensive test (at least
+for the minimum CMake version).
+_________________________________________________________________________
+
+Install and test a local copy of the PLplot website
+
+This step depends on the step above entitled
+
+"Install and test a (preliminary) local copy of the PLplot website"
+
+Follow the exact instructions given in that step except this time correct
+RELEASE_DATE (configured in doc/docbook/src/CMakeLists.text) if
+necessary.  Here is the command I used for this step
+
+echo irwin$'\n'irwin$'\n'merlin$'\n'/home/irwin/public_html/plplot$'\n'yes | scripts/generate_website.sh
+_________________________________________________________________________
+
+Upload the local website to SourceForge
+
+Once you are satisfied with the local website, you should upload it to
+SourceForge with rsync.
+
+For the above WEBSITE_PREFIX, here is what worked for me from my computer
+with the hostname of merlin where that WEBSITE_PREFIX directory was
+created.
+
+rsync -av --delete --no-p --no-g --chmod=ugo=rwX \
+/home/irwin/public_html/plplot/htdocs/ \
+airwin,plplot@web.sourceforge.net:htdocs
+
+Adjust for your username and WEBSITE_PREFIX.  The ",plplot" part of the
+username makes sure you have the right group permissions and default website
+directory location for PLplot.
+
+The --no-p --no-g --chmod=ugo=rwX options were introduced recently and
+are recommended by the rsync man page to preserve SourceForge's file
+and directory attributes.  It is only with those options that I am
+able to get a clean result for a second rsync run.  (Otherwise, each
+directory is mentioned as being changed.)  These options may solve the
+website permissions problem mentioned in an Appendix.
+
+N.B. the trailing slash on the source directory is essential and means rsync
+the contents of this directory with the contents of the destination htdocs
+directory.  Without the trailing slash you would rsync the the contents of
+the source directory with the contents of the htdocs/htdocs destination
+directory which is not what you want to do.
+
+N.B. the --dry-run option for rsync is a godsend since it tells you exactly what
+will happen without actually doing it.
+
+Once you have a proper upload of the local website to SourceForge, test
+it as before.  Also, click the xhtml and css validate buttons on each of
+index.php, download.php, examples.php, documentation.php, and credits.php
+to validate those pages.
+_________________________________________________________________________
+
+** Commit the changes in this file (README.Release_Manager_CookBook)
+
+This step depends on all prior steps since at least some of them have
+likely been edited to reflect changed release manager practices
+as the release process has unfolded.
+
+Make sure this file reflects the latest practices by the release
+manager.  That is, if some prior step has been taken in a way that is
+not properly documented in this file, you should update that section
+of this file (and hopefully you have done that for each of the above
+parts of the document as the step was taken).  Note, that at this
+stage we should be ready for the actual release and all the subsequent
+steps should need little or no additional editing for any release, but
+if some release practice changes for any of the subsequent steps, then
+this file should be changed accordingly after this release.
+_________________________________________________________________________
+
+** Update and commit README.cumulated_release
+
+This step depends on all previous changes (and subsequent tweaks)
+of README.release.
+Once you are completely satisfied with README.release, then preserve
+the historical record of the significant changes between versions of
+PLplot in one file by prepending README.release for $plplot_version to
+README.cumulated_release.
+
+cat README.release README.cumulated_release > README.cumulated_release_new
+mv README.cumulated_release_new README.cumulated_release
+_________________________________________________________________________
+
+** Push new version of ChangeLog.release for this release
+
+N.B. commit all local changes to the repository so they will be
+reflected in the ChangeLog, tagged version of the release, and the
+release tarball.  And if there are committed changes after this one
+repeat this step so the ChangeLog.release commit is the last commit on
+master for this release cycle (with the possible exception of the
+current file, README.Release_Manager_Cookbook).
+
+Prepare the ChangeLog.release file to keep track of all changes
+made for the release.  Make sure master and maint are up to date using
+
+git checkout master
+git fetch
+git log --oneline -1 origin/master
+git log --oneline -1 master
+git log --oneline -1 maint
+
+Create final ChangeLog for this release
+
+# maint is a private topic branch I use for maintenance which I keep
+# identical to master (confirmed with above git log commands) before I
+# start using it.
+git checkout maint
+git log --name-status plplot-${old_plplot_version}..master >| ChangeLog.release
+
+Note this result (unlike the prelimary version above) will be in the
+traditional reverse chronological order.
+
+# Commit, fast-forward merge to master, and push
+
+git add ChangeLog.release
+git commit
+# There is a chicken/egg situation here since the ChangeLog.release file
+# does not include the log of its own last commit.  You could address
+# that issue by re-running the above commit command, and amending the commit.
+# However, that amending will change the commit id so the ChangeLog.release
+# will have incorrect information about its own commmit id.
+# So the best course is not to do such amending and accept that the
+# ChangeLog.release file will not include the log of the last commit (i.e., its own commit)
+# for the release.
+
+git checkout master
+#Last check there is nothing to download from server.
+git fetch
+# Only if git fetch did not download anything....
+git merge --ff-only maint
+git push origin master
+
+This should be the last push for this release.
+_________________________________________________________________________
+
+** Contract test of the last push of this release
+
+This step depends on the step above entitled
+
+"Push new version of ChangeLog.release for this release"
+
+Adjust your configuration of the contract test (in my case it is
+located at ~/cmake/Dashboards/Scripts/CMakeScripts/my_dashboard.cmake)
+so that the pushed commit above is used for the test, and then launch
+that contract test.  In my case that is done with
+
+time (nice -19 /usr/bin/ctest -S ~/cmake/Dashboards/Scripts/CMakeScripts/my_dashboard.cmake -VV >| ctest.out 2>&1)
+
+This normally completes in ~20 minutes or so for my Ryzen 7 1700 computer, and you should check the site
+https://open.cdash.org/index.php?project=CMake for your particular dashboard (mine
+is labelled "merlin") and confirm that the particular test there for
+your platform called "Contracts.PLplot" (i) passed, and (ii) indeed used the correct commit id for
+PLplot!
+_________________________________________________________________________
+
+** Create the PLplot Release
+
+   ++ Preliminaries
+
+The preliminaries are very simple with git.  Stay on master and
+change nothing there for the following tests of this release.
+
+
+   ++ Create a final release tarball and check the result for errors
+
+Follow the above step entitled
+
+"Create (a preliminary version of) the release tarball and check the result for errors"
+
+but this time for the current last commit of master (which includes
+the latest ChangeLog.release) to make sure the
+tarball is exactly consistent with the release tag that will be
+created for that commit (if all is well).
+
+
+   ++ Tag the release
+
+Assuming all is well with the release tarball tests, then tag (with
+signed key) HEAD of master and push it.
+
+git checkout master
+
+A list of your GPG keys can be obtained using, e.g.,
+
+software@merlin> gpg --list-keys Alan
+pub   rsa2048 2011-08-19 [SC] [expires: 2021-12-12]
+      A7CED6D2D4903103FCDDFC1E418B8FC4BB159E92
+uid           [ultimate] Alan W. Irwin (Time Ephemerides key) <airwin@users.sourceforge.net>
+uid           [ultimate] Alan W. Irwin (libLASi key) <airwin@users.sourceforge.net>
+uid           [ultimate] Alan W. Irwin (FreeEOS key) <airwin@users.sourceforge.net>
+uid           [ultimate] Alan W. Irwin (PLplot key) <airwin@users.sourceforge.net>
+
+The A7CED6D2D4903103FCDDFC1E418B8FC4BB159E92 field above is the "key" (heh) one.
+
+Also, a new curveball thrown by the Debian Testing version of gpg is you must identify
+the tty you are using with, e.g.,
+
+export GPG_TTY=$(tty)
+
+(see remarks at <https://www.elliotblackburn.com/importing-pgp-keys-from-keybase-into-gpg/>)
+
+Otherwise, in my experience, gpg will refuse to sign the tag and you will get the error:
+
+error: gpg failed to sign the data
+error: unable to sign the tag
+
+But with the above trick, the following command just worked.
+
+git tag -u A7CED6D2D4903103FCDDFC1E418B8FC4BB159E92 --message="PLplot ${plplot_version} release" plplot-${plplot_version}
+# Note, a tag simply tags a particular commit so if I checkout some
+# other branch (such as maint) that has the same tagged commit as
+# as master, then the "git tag --list" command will find the tag
+# (which I proved was actually true for maint).
+
+# Verify signature (which also confirms the above tag message)
+
+git tag --verify plplot-${plplot_version}
+
+# Irrevocable step since no pushed tags can ever be deleted from
+# upstream repository.
+git push origin plplot-${plplot_version}
+
+(Note we are changing release tag names here from the old scheme
+which would have been v5_11_0 to a more informative scheme for names.)
+
+   ++ Sign the release with your plplot Release Manager gpg key
+
+
+gpg --default-key A7CED6D2D4903103FCDDFC1E418B8FC4BB159E92 --detach-sign --armor /tmp/plplot-dist-prep/plplot-$plplot_version.tar.gz
+
+where A7CED6D2D4903103FCDDFC1E418B8FC4BB159E92 refers to the public key for Alan W. Irwin as taken from the above key list.
+
+   ++ Verify the release tarball signing
+
+gpg --verify /tmp/plplot-dist-prep/plplot-$plplot_version.tar.gz.asc
+
+   ++ Make a SourceForge file release
+
+#IMPORTANT
+cd /tmp/plplot-dist-prep/
+
+sftp airwin,plplot@frs.sourceforge.net <<EOF
+cd /home/frs/project/p/pl/plplot/plplot
+mkdir ${plplot_version}\ Source
+cd ${plplot_version}\ Source
+put plplot-$plplot_version.tar.gz.asc
+put plplot-$plplot_version.tar.gz
+exit
+EOF
+
+# Save a local copy of the release tarball for future reference and
+# also check it.
+cd /home/software/plplot/HEAD/export #(or wherever)
+cp -a /tmp/plplot-dist-prep/plplot-$plplot_version.tar.gz* .
+gpg --verify plplot-$plplot_version.tar.gz.asc
+
+# Check and verify download from SF works:
+cd /tmp
+wget http://downloads.sourceforge.net/plplot/plplot/${plplot_version}%20Source/plplot-$plplot_version.tar.gz.asc
+wget http://downloads.sourceforge.net/plplot/plplot/${plplot_version}%20Source/plplot-$plplot_version.tar.gz
+gpg --verify plplot-$plplot_version.tar.gz.asc
+
+Prepare concatenated release notes + Changelog.
+
+cd /tmp/plplot-dist-prep/plplot-$plplot_version
+echo "
+
+DETAILED CHANGELOG FOR THIS RELEASE
+
+" | cat README.release - ChangeLog.release >| /tmp/README.release
+
+cd /tmp
+sftp airwin,plplot@frs.sourceforge.net <<EOF
+cd /home/frs/project/p/pl/plplot/plplot/${plplot_version}\ Source
+put /tmp/README.release
+exit
+EOF
+
+Make, e.g., plplot-$plplot_version.tar.gz, the "latest" version.
+
+login to SF website with firefox
+files ==> plplot ==> ${plplot_version} Source ==> view details (the "i" icon) for
+plplot-${plplot_version}.tar.gz and hit the "select all" button and "save" button
+
+It finishes with a "file properties updated" message, and appears to "take"
+immediately.
+
+Note also, the above does not work with konqueror because enabling ".sourceforge.net" under
+javascript does not appear to cover all the javascript stuff that the sourceforge site users.
+(firefox accepts javascript from any source so does not have this problem, but is insecure
+as a result).
+
+   ++ Make a SourceForge news item concerning this release
+
+Create a news item for this release largely following previous
+news items (or even identical to them but with a changed title).
+
+Point your browser to http://sourceforge.net/projects/plplot and login.  A
+news item will then be available on the menu bar.  Click that, then
+"new post".
+
+Enter the title (e.g., PLplot $plplot_version has been released) and
+the text.  The text is in markdown format so copying and pasting from
+a previous news item (using the ctrl-c command on the editing area of
+the old release notes to copy and ctrl-v command on the new release
+notes editing area since normal cutting and pasting no longer works)
+is a very efficient way to create the new news item.  After that copy
+and paste, remember to change all occurrences of $old_plplot_version
+to $plplot_version within the text, and also to update the highlights
+area (by copying from the list of "2. Improvements relative to the
+previous release) in README.release and changing all the numbers to
+"*").
+
+   ++ Publicize the release announcement
+
+   Normally all we do these days is publicize the new release on the
+   plplot-general mailing list, but in the past Jerry has publicized
+   our releases on macresearch.org, and Barbara Irwin has publicized
+   our releases on linuxtoday.com, lwn.net, and lxer.com.
+
+   ++ Prepare immediately for the next release cycle
+
+  a. Commit last-minute tweaks (e.g., in README.Release_Manager_Cookbook)
+     that did not make it into the official tarball of the release or
+     official tag of the release.
+
+  b. Update README.release file to reflect the start of a new release
+     cycle.  Keep the opening paragraphs and sections 1.1, 2.1, 2.2,
+     and 3 since those parts will only be changed a small amount for
+     the next release.  But you can drop Sections 1.[2-?] and 2.[2-?]
+     since those are only relevant to the present release and not the
+     next release.  Also any details mentioned in Section 2.1
+     concerning specific bug fixes should be dropped since those are
+     obviously not relevant to the next release.
+
+  c. Configure the contract test as above (but this time using the
+     commit id "plplot-${plplot_version}", and then run it and
+     evaluate the test as above.
+
+--- Appendix ---
+_________________________________________________________________________
+
+** GNU Privacy Guard (gpg)
+A brief summary of developer relevant gpg commands, see also:
+http://dewinter.com/gnupg_howto/english/GPGMiniHowto.html,
+man gpg, and http://www.gnupg.org/faq/GnuPG-FAQ.html.
+
+   ++ Configure key-server (if you haven't done that already) by editing
+      $HOME/.gnupg/gpg.conf.  Also specify the auto-key-retrieve option
+      for convenience.
+
+      N.B. According to
+      <http://superuser.com/questions/227991/where-to-upload-pgp-public-key-are-keyservers-still-surviving>
+      the recommended keyserver (which really refers to a large pool of them
+      that are deemed reliable at any given time) is
+      hkp://pool.sks-keyservers.net so that is what I have been using
+      recently, and it appears so far to be reliable.
+
+   ++ List keys on your keyring that have been retrieved or generated so far:
+
+gpg --list-keys irwin
+
+   ++Search for any previously published keys that you might want to
+  revoke.  (Note the search phrase is case insensitive but the search
+  is done on the Boolean AND of the terms so the following search would
+  miss any key generated in the past by Alan Irwin because of the
+  middle initial "W." that is specified for the search).  OTOH, I
+  always use my middle initial for publications to reduce name clashes.
+
+gpg --search-keys Alan W. Irwin
+
+   ++ Create a new key:
+
+gpg --gen-key
+
+  With gnupg 1.4.10, I chose the following options when creating a new key:
+
+Please select what kind of key you want:
+  (1) RSA and RSA (default)
+
+What keysize do you want?
+2048 (default)
+5-year expiration date.
+
+....
+
+Real name: Alan W. Irwin
+Email address: airwin@users.sourceforge.net
+Comment: Time Ephemerides key
+You selected this USER-ID:
+    "Alan W. Irwin (Time Ephemerides key) <airwin@users.sourceforge.net>"
+
+
+N.B. nameofkey below is the name of the key, usually specified by the
+second number after the slash for the first pub line given by
+"gpg --list-keys".  For example, the above key gives the following
+result:
+
+software@merlin> gpg --list-keys irwin
+pub   2048R/BB159E92 2011-08-19 [expires: 2016-08-17]
+uid                  Alan W. Irwin (Time Ephemerides key) <airwin@users.sourceforge.net>
+sub   2048R/C5ECCF77 2011-08-19 [expires: 2016-08-17]
+
+So the name could be BB159E92.  Other possibilities exist as well such
+as "irwin", but that might not be unique.
+
+Here is a complete recording of the gpg --edit-keys commands where I
+added an additional user ID with the different comment "PLplot key" to
+my existing key.  Note this technique could be used to add an
+additional user ID with a different Real name or Email address as
+well.
+
+gpg --edit-key irwin
+gpg> adduid
+Real name: Alan W. Irwin
+Email address: airwin@users.sourceforge.net
+Comment: PLplot key
+Okay # to accept this added subkey
+... need to enter passphrase
+
+gpg> uid 5 # to select the new user ID for additional changes
+gpg> trust # select ultimate since you ultimately trust yourself.  :-)
+Your decision? 5
+Do you really want to set this key to ultimate trust? (y/N) y
+
+# Due to a gpg bug, the trust value looks like it is not updated, but
+# it is so if you
+
+gpg > save  # To save your changes, the trust value listed by
+
+gpg --list-keys irwin
+
+is correct.
+
+If you make a mistake in adding a new user id.... (which happened to
+me when I put down a wrong e-mail address).
+
+gpg --edit-key irwin
+
+adduid  (fill in correct e-mail address this time)
+uid number (to select uid to work on for further commands
+revuid  (revoke bad e-mail one)
+primary (to make the new one the primary one, I am not sure that is necessary)
+trust  (to make the new one ultimately trusted, again, not sure that is necessary.  N.B. didn't seem to change trust value, but that was just bad output)
+
+save  (to get out again)
+
+When edited the next time showed ultimate trust value for correct id,
+but I don't know whether that was the above primary/trust subcommands
+or whether those were necessary at all.  It turned out those were not
+necessary at all as I later used the above first sequence without
+trust subcommand to generate a libLASi uid key and a FreeEOS uid key.
+
+  ++ Key Expiration:
+
+      What to do when your key expires and you feel it is _not_
+      compromised in any way.  (See
+      <http://unix.stackexchange.com/questions/177291/how-to-renew-an-expired-keypair-with-gpg>
+      for discussion of this method):
+
+gpg --edit-key irwin
+# To bump expiration date of existing key.  gpg asked some reasonable
+# questions here such as how long until the next expiry (I specified
+# 5y for 5 more years).  Then it asks you to verify that new expiry,
+# then asks for your pass phrase and then shows the changed result.
+gpg> expire
+# Save results in your local keyring
+gpg> save
+
+      N.B.  The key ID (BB159E92 in my case) remains unchanged.
+
+      Publish those changed results to a keyserver (which propagates
+      them to all other key servers).
+
+gpg --send-keys key ID
+
+      where key ID is BB159E92 for my case.
+
+   ++ Verify the above propagated.
+
+      Use a different user account with keyring that has not
+      been locally updated.  Then update it using
+
+gpg --refresh-keys
+
+      Then verified that refresh worked using, e.g.,
+
+gpg --list-keys irwin
+gpg --verify plplot-${plplot_version}.tar.gz.asc
+
+      etc.
+
+   ++ Generate a revocation certificate.  Note this requires the pass
+      phrase specified at the time of key generation so keep that pass
+      phrase in a safe place or else generate the revocation
+      certificate right after generating the key, and keep that
+      certificate in a safe place.  I chose the former course (keep
+      the pass phrase safe).  N.B. the options should appear below in
+      the order given!
+
+gpg --armor -o nameofkey-revocation.asc --gen-revoke nameofkey
+
+   ++ Publicly revoke old key (from FAQ):
+
+gpg --import old-revocation.asc
+gpg --send-keys nameofkey
+
+   ++ Upload your (public) key to GPG key server pool so that others
+      can obtain it to verify your signature on the release tarball.
+
+gpg --send-keys key ID
+
+      where key ID is BB159E92 for my case.
+
+gpg --refresh-keys
+
+      to update from the key server pool all keys on your keyring
+      including your own.
+
+This verified that the bad irwin address was revoked even though
+gpg --search-keys Alan W. Irwin
+
+still shows revoked uid as the #1 uid.
+_________________________________________________________________________
+
+** Correct computer time
+
+(While it is useful to have the correct time on your computer, this is no
+longer strictly necessary).
+Verify that your computer has the right date and time using the command date.
+The easiest way to make sure the time and date are correct is to do the
+following:
+1. Install the debian ntpdate package.
+2. Execute the command "/usr/sbin/ntpdate pool.ntp.org", which you will
+   have to do as root.
+This will immediately change your system clock. It is not recommended if you
+have other apps running on your system that expect time to increase in a
+smooth and linear fashion.
+
+If you would like your computer to always have the correct time and date, you
+can install the debian ntp package.  The default configuration appears
+to give good results.  You can check those results by the ntpq -pe command,
+e.g.,
+
+software@merlin> ntpq -dp
+1 packets reassembled into response
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+2 packets reassembled into response
+ one.tariox.com  24.150.241.178   2 u   7d 1024    0   79.179   -6.028   0.000
+2 packets reassembled into response
+ tor-web-02.surr 97.107.129.217   3 u  33d 1024    0   79.696   -4.199   0.000
+2 packets reassembled into response
+*helliana.com    128.9.176.30     2 u  580 1024  177   82.416    0.120   0.518
+2 packets reassembled into response
+ chelsea.ii1.net 216.218.254.202  2 u  16d 1024    0   33.252    5.646   0.000
+
+The delay column is the round-trip travel time (in ms) to the indicated server.
+
+The offset column is the "combined time offset" (in ms) for the
+indicated server.  I assume this is the offset of that server clock from
+the weighted mean of all the clocks.
+
+The jitter column is the "exponentially-weighted rms average" for the
+indicated server.  I assume it is in ms so the above jitters of 0.000
+show a very small rms for those servers, i.e., a clock of extremely
+high quality.
+_________________________________________________________________________
+
+** System prerequisites for viewing local website
+
+You should install both apache and PHP on your computer.  For Debian Testing
+that is done (as root) by installing libapache2-mod-php
+and enabling user directories using the command
+
+a2enmod userdir
+
+and editing /etc/apache2/mods-available/php7.2.conf as indicated in that
+file to allow user directories for php.  I am not sure, but I believe
+from some google results I found that editing of that file is also
+necessary on modern versions of Ubuntu in order to allow php-based websites
+like that of PLplot to work when installed in local user directories.
+
+After the above changes, you must restart the apache server.  On
+Debian this is done with
+
+systemctl restart apache2
+
+(When user directories are enabled this way, for the above case
+where
+
+Summary:
+USERNAME = irwin
+GROUPNAME = irwin
+HOSTNAME = merlin
+WEBSITE_PREFIX = /home/irwin/public_html/plplot
+
+that directory location browses as
+<http://merlin/~irwin/plplot/htdocs/>.)
+_________________________________________________________________________
+
+Fix website permissions
+
+When the release manager uploads the website, those files belong to both
+him and the PLplot group.  So in theory those files can be overwritten by
+anyone else belonging to the group.  But in the past, this did not work
+and whenever someone else tried to upload the website (e.g., when the
+release manager changed), there were lots of permission issues to deal with.
+
+This discussion of dealing with permissions problems may be moot now
+because of the--no-p --no-g --chmod=ugo=rwX options recently
+introduced for the rsync command above or because Allura handles website
+file permissions differently now.  But we won't know that for a
+fact until someone besides the current release manager attempts to
+generate the website and upload it so I will leave the following
+instructions for dealing with permissions problems in place, "just in
+case".
+
+Note that when changing those who upload the website, the SF
+permissions (at least in the pre-Allura version of SF) were not set
+up correctly to delete files belonging to the old release manager
+using rsync.
+
+If this problem re-occurs, then one thing to try is to attempt to
+mass-delete all website files using
+
+mkdir /tmp/empty
+rsync -av --delete  /tmp/empty/ airwin,plplot@web.sourceforge.net:htdocs
+
+followed by the original rsync command above to upload the website using
+the new ownership of files.
+
+For more on the extremly non-posix permissions of the SF website files
+see
+<https://sourceforge.net/p/forge/documentation/Project%20Web%20Filesystem%20Permissions/>
+which claims, for example, that any authorized PLplot user can delete
+files regardless of ownership so the above may work fine.  But that document also implies you
+can change permissions from the defaults which (as reported by the
+sftp "ls -l" command) are "drwxrwxr-x" for all directories and
+"-rw-rw-r--" for all files.  This is indeed true using the sftp
+"chmod" command which allows you to change permissions one file at a
+time (ugh).  But any attempt to get rsync to change permissions from
+these defaults (e.g., with the "--no-g
+--chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r" set of options with or without
+-no-p and starting from empty or not) failed.
+
+"Just in case" the above mass-deletion with rsync fails, this quite
+laborious method worked to delete all files in the past.
+
+sftp airwin,plplot@web.sourceforge.net
+
+Then use the
+
+ls -l
+
+command to figure out who owns what and the
+
+rm *
+
+command on the _file_ contents of each subdirectory of htdocs, and use
+the
+
+rmdir <directory name>
+
+command on empty directories.
+
+Note, sftp has no recursive feature so you have to figure out the
+directory structure and cd to the correct directory levels to remove
+the files in each directory, ugh.  I did try the sftp chown command,
+but that did not work so the only possibility I could find was the above
+commands to remove htdocs and everything below it in a piece-meal fashion.
+_________________________________________________________________________

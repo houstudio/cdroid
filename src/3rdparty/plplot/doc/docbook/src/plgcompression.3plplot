@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGCOMPRESSION 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgcompression\fP - Get the current device-compression setting
+.SH SYNOPSIS
+\fBplgcompression\fP(\fIcompression\fP)
+.SH DESCRIPTION
+
+.P
+Get the current device-compression setting.  This parameter is only used for drivers that provide compression.
+.P
+Redacted form: \fBplgcompression(compression)\fP
+.P
+This function is used in example 31.
+.SH ARGUMENTS
+.TP
+\fIcompression\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the compression setting for the current device.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

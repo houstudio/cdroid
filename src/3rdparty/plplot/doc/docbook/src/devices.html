@@ -1,0 +1,227 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Devices</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="advanced.html" title="Chapter 3. Advanced Use of PLplot"><link rel="prev" href="arguments.html" title="Command Line Arguments"><link rel="next" href="FreeType-notes.html" title="Adding FreeType Library Support to Bitmap Drivers"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Devices</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="arguments.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Advanced Use of PLplot</th><td width="20%" align="right"> <a accesskey="n" href="FreeType-notes.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="devices"></a>Devices</h2></div></div></div><p>
+      PLplot implements a set of device drivers which support a wide
+      variety of devices.  Each driver is required to implement a small set
+      of low-level graphics primitives such as initialization, line draw,
+      and page advance for each device it supports.  In addition a driver
+      can implement higher-level features such as rendering unicode text.
+      Thus a driver may be simple or complex depending on the driver
+      capabilities that are implemented.
+    </p><p>
+      The list of available devices is determined at configuration
+      time by our CMake-based build system based on what device drivers are
+      possible and what devices are enabled by default for a given platform.
+      Most users just accept that default list of devices, but it is also
+      possible for users to modify the list of enabled devices in any way
+      they like.  For example, they could use
+      <code class="literal">-DPLD_svg=OFF</code> to exclude just the svg device from
+      the default list; they could use <code class="literal">-DDEFAULT_NO_DEVICES=ON
+      -DPLD_svg=ON</code> to enable just the svg device (say if they were
+      interested just in that device and they wanted to save some
+      configuration and build time); or they could use
+      <code class="literal">-DDEFAULT_ALL_DEVICES=ON -DPLD_svg=OFF</code> to enable
+      all devices other than svg.  Note, however, extreme caution should be
+      used with <code class="literal">-DDEFAULT_ALL_DEVICES=ON</code> since the result
+      is often one of the "disabled by default" devices below gets enabled
+      which is almost always problematic since those devices are typically
+      unmaintained, deprecated, or just being developed which means they
+      might not even build or if they do build, they might not run properly.
+    </p><p>
+      Most PLplot devices can be classified as either <a class="link" href="features.html#features-noninteractive" title="Output File Formats">noninteractive</a> file devices
+      or <a class="link" href="features.html#features-interactive" title="Interactive Platforms">interactive</a> devices.  The available file devices are tabulated in <a class="xref" href="devices.html#tab_dev1" title="Table 3.1. PLplot File Devices">Table 3.1, “PLplot File Devices”</a> while the available interactive devices are
+      tabulated in <a class="xref" href="devices.html#tab_dev2" title="Table 3.2. PLplot Interactive Devices">Table 3.2, “PLplot Interactive Devices”</a>.
+
+      </p><div class="table"><a name="tab_dev1"></a><p class="title"><b>Table 3.1. PLplot File Devices</b></p><div class="table-contents"><table class="table" summary="PLplot File Devices" style="border: none;"><colgroup><col align="center"><col align="center"><col align="center"><col align="center"></colgroup><thead><tr><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Description</th><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Keyword</th><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Source code</th><th style="border-bottom: 10px solid white; " align="center">Default?</th></tr></thead><tbody><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PDF (cairo)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">pdfcairo</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cairo.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PNG (cairo)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">pngcairo</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cairo.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PostScript (cairo)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">pscairo</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cairo.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Encapsulated PostScript (cairo)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">epscairo</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cairo.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">SVG (cairo)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">epscairo</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cairo.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">CGM</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cgm</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cgm.c</td><td style="border-bottom: 10px solid white; " align="center">No</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Encapsulated PostScript (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">epsqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PDF (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">pdfqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">BMP (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">bmpqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">JPEG (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">jpgqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PNG (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">pngqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PPM (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">ppmqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">TIFF (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">tiffqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">SVG (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">svgqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PNG (GD)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">png</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">gd.c</td><td style="border-bottom: 10px solid white; " align="center">No</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">JPEG (GD)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">jpeg</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">gd.c</td><td style="border-bottom: 10px solid white; " align="center">No</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">GIF (GD)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">gif</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">gd.c</td><td style="border-bottom: 10px solid white; " align="center">No</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PDF (Haru)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">pdf</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">pdf.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PLplot Native Meta-File</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">plmeta</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">plmeta.c</td><td style="border-bottom: 10px solid white; " align="center">No</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PostScript (monochrome)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">ps</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">ps.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PostScript (color)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">psc</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">ps.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PostScript (monochrome), (LASi)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">psttf</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">psttf.cc</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">PostScript (color), (LASi)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">psttfc</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">psttf.cc.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">SVG</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">svg</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">svg.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; " align="center">XFig</td><td style="border-right: 10px solid white; " align="center">xfig</td><td style="border-right: 10px solid white; " align="center">xfig.c</td><td class="auto-generated" style=""> </td></tr></tbody></table></div></div><p><br class="table-break">
+      </p><div class="table"><a name="tab_dev2"></a><p class="title"><b>Table 3.2. PLplot Interactive Devices</b></p><div class="table-contents"><table class="table" summary="PLplot Interactive Devices" style="border: none;"><colgroup><col align="center"><col align="center"><col align="center"><col align="center"></colgroup><thead><tr><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Device</th><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Keyword</th><th style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Source Code</th><th style="border-bottom: 10px solid white; " align="center">Default?</th></tr></thead><tbody><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Aquaterm</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">aqt</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">aqt.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">X (cairo)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">xcairo</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cairo.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Windows (cairo)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">wincairo</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">cairo.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">X or Windows (Qt)</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qtwidget</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">qt.cpp</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">X</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">xwin</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">xwin.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Tcl/Tk </td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">tk</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">tk.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">New Tcl/Tk</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">ntk</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">ntk.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">Windows</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">wingcc</td><td style="border-right: 10px solid white; border-bottom: 10px solid white; " align="center">wingcc.c</td><td style="border-bottom: 10px solid white; " align="center">Yes</td></tr><tr><td style="border-right: 10px solid white; " align="center">wxWidgets</td><td style="border-right: 10px solid white; " align="center">wxwidgets</td><td style="border-right: 10px solid white; " align="center">wxwidgets*.cpp</td><td style="" align="center"> </td></tr></tbody></table></div></div><p><br class="table-break">
+    </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="driver-functions"></a>Driver Functions</h3></div></div></div><p>A dispatch table is used to direct function calls to whatever driver
+      is chosen at run-time.  Below are listed the names of each entry in the
+      PLDispatchTable dispatch table struct defined in
+      <code class="filename">plcore.h</code>.  The entries specific to each device (defined
+      in <code class="filename">drivers/*.c</code>) are typically named similarly but with
+      <span class="quote">“<span class="quote">pl_</span>”</span> replaced by a string specific for that device (the
+      logical order must be preserved, however). The dispatch table entries are :
+
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    <code class="literal">pl_MenuStr</code>: Pointer to string that is printed in device menu.
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_DevName</code>: A short device "name" for device selection by name.
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_type</code>: 0 for file-oriented device, 1 for interactive
+	    (the null driver uses -1 here).
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_init</code>: Initialize device.  This routine may also prompt the user
+	    for certain device parameters or open a graphics file
+	    (see Notes).  Called only once to set things up.  Certain
+	    options such as familying and resolution (dots/mm) should
+	    be set up before calling this routine (note: some drivers
+	    ignore these).
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_line</code>: Draws a line between two points.
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_polyline</code>: Draws a polyline (no broken segments).
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_eop</code>: Finishes out current page (see Notes).
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_bop</code>: Set up for plotting on a new page. May also open a new
+	    a new graphics file (see Notes).
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_tidy</code>: Tidy up. May close graphics file (see Notes).
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_state</code>: Handle change in PLStream state
+	    (color, pen width, fill attribute, etc).
+	  </p></li><li class="listitem"><p>
+	    <code class="literal">pl_esc</code>: Escape function for driver-specific commands.
+	  </p></li></ul></div><p>
+      Notes: Most devices allow multi-page plots to be stored in a single graphics
+      file, in which case the graphics file should be opened in the pl_init()
+      routine, closed in pl_tidy(), and page advances done by calling pl_eop and
+      pl_bop() in sequence. If multi-page plots need to be stored in different
+      files then pl_bop() should open the file and pl_eop() should close it.  Do
+      NOT open files in both pl_init() and pl_bop() or close files in both
+      pl_eop() and pl_tidy(). It is recommended that when adding new functions to
+      only a certain driver, the escape function be used.  Otherwise it is
+      necessary to add a null routine to all the other drivers to handle the new
+      function.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="familying"></a>Family File Output</h3></div></div></div><p>
+	When sending PLplot to a file, the user has the option of generating a
+	<span class="quote">“<span class="quote">family</span>”</span> of output files for most output file drivers.
+	This can be valuable when generating a large amount of output, so as to not
+	strain network or printer facilities by processing extremely large single
+	files.  Each family member file can be treated as a completely independent
+	file.
+      </p><p>To create a family file, one must simply call <a class="link" href="plsfam.html" title="plsfam: Set family file parameters"><code class="function">plsfam</code></a> with the
+      familying flag <code class="literal">fam</code> set to 1, and the desired maximum
+      member size (in bytes) in <code class="literal">bmax</code>.  <a class="link" href="plsfam.html" title="plsfam: Set family file parameters"><code class="function">plsfam</code></a> also allows
+      you to set the current family file number.  If the current output
+      driver does not support familying, there will be no effect.  This call must
+      be made <span class="emphasis"><em>before</em></span> calling <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a> or <a class="link" href="plstart.html" title="plstart: Initialization"><code class="function">plstart</code></a>. </p><p>If familying is enabled, the name given for the output file (on the
+      command line, in response to the <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a> prompt, as a <a class="link" href="plstart.html" title="plstart: Initialization"><code class="function">plstart</code></a> argument,
+      or as the result of a call to <a class="link" href="plsfnam.html" title="plsfnam: Set output file name"><code class="function">plsfnam</code></a>) becomes the name template for the
+      family.  Thus, if you request an svg output file with name
+      <code class="filename">test-%n.svg</code>, the files actually created will be
+      <code class="filename">test-1.svg</code>, <code class="filename">test-2.svg</code>, and so on,
+      where <code class="filename">%n</code> indicates where the member number is replaced.
+      If there is no <code class="filename">%n</code>, then the output file becomes the
+      stem name and the created files will be
+      <code class="filename">test.svg.1</code>, <code class="filename">test.svg.2</code>, and so on.
+      A new file is automatically started once the byte limit for the current file
+      is passed, but not until the next page break. One may insure a new file at
+      every page break by making the byte limit small enough.  Alternatively, if
+      the byte limit is large you can still insure a new file is automatically
+      started after a page break if you precede the call to <a class="link" href="pleop.html" title="pleop: Eject current page"><code class="function">pleop</code></a> with a call to
+      <a class="link" href="plfamadv.html" title="plfamadv: Advance to the next family file on the next new page"><code class="function">plfamadv</code></a>.</p><p>If familying is not enabled, <code class="filename">%n</code> is dropped
+      from the filename if that string appears anywhere in it.</p><p>
+	The <a class="link" href="plgfam.html" title="plgfam: Get family file parameters"><code class="function">plgfam</code></a> routine can be used from within the user program to find
+	out more about the graphics file being written.  In particular, by
+	periodically checking the number of the member file currently being written
+	to, one can detect when a new member file is started.
+      </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="specifying-devices"></a>Specifying the Output Device</h3></div></div></div><p>
+	The main initialization routine for PLplot is <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a>, which sets up
+	all internal data structures necessary for plotting and initializes
+	the output device driver.  The output device can be a terminal, disk
+	file, window system, pipe, or socket.  If the output device has not
+	already been specified when <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> is called, the output device
+	will be taken from the value of the PLPLOT_DEV environment variable.
+	If this variable is not set (or is empty), a list of valid output
+	devices is given and the user is prompted for a choice.  For example:
+      </p><p>
+	</p><pre class="screen">
+	  <code class="prompt">%</code> <strong class="userinput"><code>x01c</code></strong>
+
+	  Plotting Options:
+	  &lt; 1&gt; xwin       X-Window (Xlib)
+	  &lt; 2&gt; tk         Tcl/TK Window
+	  &lt; 3&gt; ps         PostScript File (monochrome)
+	  &lt; 4&gt; psc        PostScript File (color)
+	  &lt; 5&gt; xfig       Fig file
+	  &lt; 6&gt; null       Null device
+	  &lt; 7&gt; ntk        New tk driver
+	  &lt; 8&gt; tkwin      New tk driver
+	  &lt; 9&gt; mem        User-supplied memory device
+	  &lt;10&gt; wxwidgets  wxWidgets Driver
+	  &lt;11&gt; psttf      PostScript File (monochrome)
+	  &lt;12&gt; psttfc     PostScript File (color)
+	  &lt;13&gt; svg        Scalable Vector Graphics (SVG 1.1)
+	  &lt;14&gt; pdf        Portable Document Format PDF
+	  &lt;15&gt; bmpqt      Qt Windows bitmap driver
+	  &lt;16&gt; jpgqt      Qt jpg driver
+	  &lt;17&gt; pngqt      Qt png driver
+	  &lt;18&gt; ppmqt      Qt ppm driver
+	  &lt;19&gt; tiffqt     Qt tiff driver
+	  &lt;20&gt; svgqt      Qt SVG driver
+	  &lt;21&gt; qtwidget   Qt Widget
+	  &lt;22&gt; epsqt      Qt EPS driver
+	  &lt;23&gt; pdfqt      Qt PDF driver
+	  &lt;24&gt; extqt      External Qt driver
+	  &lt;25&gt; memqt      Memory Qt driver
+	  &lt;26&gt; xcairo     Cairo X Windows Driver
+	  &lt;27&gt; pdfcairo   Cairo PDF Driver
+	  &lt;28&gt; pscairo    Cairo PS Driver
+	  &lt;29&gt; epscairo   Cairo EPS Driver
+	  &lt;30&gt; svgcairo   Cairo SVG Driver
+	  &lt;31&gt; pngcairo   Cairo PNG Driver
+	  &lt;32&gt; memcairo   Cairo Memory Driver
+	  &lt;33&gt; extcairo   Cairo External Context Driver
+
+	  Enter device number or keyword: </pre><p>
+      </p><p>
+	Either the device number or a device keyword is accepted.  Specifying
+	the device by keyword is preferable in aliases or scripts since the
+	device number is dependent on the install procedure (the installer
+	can choose which device drivers to include).  The device can be
+	specified prior to the call to <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> by:
+
+	</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	      A call to <a class="link" href="plsdev.html" title="plsdev: Set the device (keyword) name"><code class="function">plsdev</code></a>.
+	    </p></li><li class="listitem"><p>
+	      The <code class="literal">-dev</code> <em class="replaceable"><code>device</code></em>
+	      command line argument, if the program's command line arguments
+	      are being passed to the PLplot function
+	      <a class="link" href="plparseopts.html" title="plparseopts: Parse command-line arguments"><code class="function">plparseopts</code></a>.
+	    </p></li><li class="listitem"><p>
+	      The value of the <code class="literal">PLPLOT_DEV</code> environment
+	      variable.  Note that specifying the output device via <a class="link" href="plsdev.html" title="plsdev: Set the device (keyword) name"><code class="function">plsdev</code></a>
+	      or the <code class="literal">-dev</code> command line argument will
+	      override the value given by the <code class="literal">PLPLOT_DEV</code>
+	      environment variable.
+	    </p></li></ul></div><p>
+
+      </p><p>
+	Additional start up routines <a class="link" href="plstar.html" title="plstar: Initialization"><code class="function">plstar</code></a> and <a class="link" href="plstart.html" title="plstart: Initialization"><code class="function">plstart</code></a> are available but
+	these are simply front-ends to <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a>, and should be avoided.  It
+	is preferable to call <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> directly, along with the appropriate
+	setup calls, for the greater amount of control this provides (see
+	<a class="ulink" href="http://plplot.org/examples.php" target="_top">our standard examples</a>
+	for more info).
+      </p><p>
+	Before <a class="link" href="plinit.html" title="plinit: Initialize PLplot"><code class="function">plinit</code></a> is called, you may modify the number of subpages the
+	output device is divided into via a call to
+	<code class="function">plssub</code>.  Subpages are useful for placing several
+	graphs on a page, but all subpages are constrained to be of the same
+	size.  For greater flexibility, viewports can be used (see <a class="xref" href="viewport_window.html#viewports" title="Defining the Viewport">the section called “Defining the Viewport”</a> for more info on viewports).  The routine
+	<a class="link" href="pladv.html" title="pladv: Advance the (sub-)page"><code class="function">pladv</code></a> is used to advance to a particular subpage or to the next
+	subpage.  The screen is cleared (or a new piece of paper loaded) if a
+	new subpage is requested when there are no subpages left on the
+	current page.  When a page is divided into subpages, the default
+	character, symbol and tick sizes are scaled inversely as the square
+	root of the number of subpages in the vertical direction.  This is
+	designed to improve readability of plot labels as the plot size
+	shrinks.
+      </p><p>
+	PLplot has the ability to write to multiple output streams.
+	An output stream corresponds to a single logical device to which one
+	plots independent of all other streams.  The function <a class="link" href="plsstrm.html" title="plsstrm: Set current output stream"><code class="function">plsstrm</code></a> is
+	used to switch between streams.  For any of our supported languages
+	<a class="ulink" href="http://plplot.org/examples.php?demo=14" target="_top">our standard
+	example 14</a> demonstrates of how to use multiple output streams
+	where the same device is used for both streams, but, of course,
+	different devices can be used for different streams as well.
+      </p><p>
+	At the end of a plotting program, it is important to close the
+	plotting device by calling <a class="link" href="plend.html" title="plend: End plotting session"><code class="function">plend</code></a>.  This flushes any internal
+	buffers and frees any memory that may have been allocated, for all
+	open output streams.  You may call <a class="link" href="plend1.html" title="plend1: End plotting session for current stream"><code class="function">plend1</code></a> to close the plotting
+	device for the current output stream only.  Note that if PLplot is
+	initialized more than once during a program to change the output
+	device, an automatic call to <a class="link" href="plend1.html" title="plend1: End plotting session for current stream"><code class="function">plend1</code></a> is made before the new device
+	is opened for the given stream.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="arguments.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="FreeType-notes.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Command Line Arguments </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Adding FreeType Library Support to Bitmap Drivers</td></tr></table></div></body></html>

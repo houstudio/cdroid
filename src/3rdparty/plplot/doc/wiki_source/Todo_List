@@ -1,0 +1,98 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+PLplot Core
+-----------
+
+-   find solution to setenv/unsetenv problem in qsaslib_test for Visual C++ (AR)
+-   is it possible to move dirent stuff from plplotP.h to plcore.h (ws)
+
+Drivers
+-------
+
+### haru pdf
+
+-   example 24 segfaults (WS)
+-   add text clipping (WS)
+-   example 10: text and box positions wrong.
+-   example 13: pattern fill spacing wrong.
+-   example 30: transparency not implemented.
+
+### wxWidgets
+
+-   fix crash in example 14 when master window is closed (ws)
+-   only master should handle return key in example 14 (ws)
+-   improvements of wxpng (WS)
+-   saveplot() - background, plreplot buffer improvement (ws)
+
+### Cairo
+
+-   Fix arbitrary plot rotations (HC)
+    -   Text is incorrectly clipped when the plot orientation is set to anything other than 0. This issue seems to hold for the Qt and SVG drivers as well. One possible work-around is to hand off a portion of the rotation and clipping responsibilities to the plot driver, as each of the underlying libraries/standards support this. For an illustration of the problem, try:
+
+` ./x01c -ori 1 -dev xcairo`
+
+### Qt
+
+-   Visibility of symbols issues on Windows with VC++, possible MinGW (WS)
+
+Bindings
+--------
+
+-   octave style graphics routines follow the style of older octave / matlab versions. Need extensive updating to be more like octave 3.0 (and current matlab). This is a non-trivial exercise, but exceedingly worthwhile. Volunteers? (AR)
+-   update the Tcl and Tk bindings to use the Tcl_Obj interface (not quite trivial; AM)
+-   improve checking for Itcl (AM)
+-   investigate crash with Tk (AM)
+-   investigate availability of Tk on Windows (turned of for bare Windows - no X11; problems with UNIX-only functions under Cygwin; status MinGW unknown; AM)
+-   problem with example x19 for Fortran 95 with CVF on Windows: __stdcall. The issue is complicated due to CVF and IVF using different calling conventions (AM)
+-   fix differences of example output for various bindings on Mac OS X (WS)
+-   It's possible to enable wxWidgets bindings without enabling c++ bindings which leads to link error (WS).
+-   wxWidgets bindings - improve saveplot feature (WS)
+
+Examples
+--------
+
+-   Lua (5.1) examples on Mac OS X print out a lot of memory error messages (WS)
+-   check differences in several F77 examples (x09, x14, x15) on Windows with CVF (AM)
+-   fix problem with record length in example x20 for CVF on Windows (AM)
+-   Example 19 doesnt't work with Visual C++, since snprintf is not known (WS)
+
+Platforms
+---------
+
+-   improve support of Cygwin (AM, WS)
+-   fix (small number of) warnings on Mac Os X (ws)
+
+Documentation
+-------------
+
+Webpage
+-------
+
+Testing
+-------
+
+-   make test_tcl.sh work under Windows - sh-bang lines, "heredoc" not supported, path problem (AM)
+
+Done
+----
+
+-   <strike>\* return should end wxPLplotdemo</strike> (ws)
+-   <strike>make lua examples run on Mac OS X</strike> (ws)
+-   <strike>replace the example 14 call in the test scripts, so that it also works in Windows</strike> (ws)
+-   <strike>implement lua examples</strike> (ws)
+-   <strike>Lua cmake files: build only if double and swig version high enough</strike> (ws)
+-   <strike>AGG backend can't be used in wxWidgets bindings</strike> (ws)
+-   <strike>backend name in title of wxPLplotdemo</strike> (ws)
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

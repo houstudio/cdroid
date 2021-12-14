@@ -1,0 +1,427 @@
+PLplot Release 5.15.0
+
+This is a release of the PLplot plotting package. It represents the
+ongoing best efforts (roughly ~50 commits since the last release) of
+the PLplot development community to improve this package, and it is
+the only version of PLplot that we attempt to support.  Releases in
+the 5.x.y series should be available roughly two times per year.
+
+Note that PLplot has been continuously developed since 1986 so it has
+accumulated a lot of cruft since that time.  Therefore, we are now
+slowing removing that cruft to improve the lot of both new users and
+new members of the development team.  As a result virtually every
+PLplot release has some backwards incompatibilities introduced to help
+clean it up so please pay careful attention to the OFFICIAL NOTICES
+FOR USERS below (and also in the various sections of
+README.cumulated_release if you need backward incompatibility
+information for several recent releases) where we document such
+incompatibilities to make life easier for those who have prior
+experience with older PLplot releases.
+
+If you encounter a problem with this release that is not already
+documented on our bug tracker, then please send bug reports to PLplot
+developers via our mailing lists (preferred for initial discussion of
+issues) at <http://sourceforge.net/p/plplot/mailman/>. If it turns out
+no quick resolution is possible via mailing-list discussion, then the
+issue should be placed on our bug tracker at
+<http://sourceforge.net/p/plplot/bugs/>.
+
+This software is primarily distributed under the LGPL.  See the
+Copyright file for all licensing details.
+________________________________________________________________
+
+CONTENTS
+
+1. OFFICIAL NOTICES FOR USERS
+
+1.1 CMake version compatibility
+1.2 Remove typedefs for PL_NC_GENERIC_POINTER and PL_GENERIC_POINTER
+1.3 Fix typedef for PLINT_NC_VECTOR
+
+2. Improvements relative to the previous release
+
+2.1 Bug fixes
+2.2 Update PLplot to be consistent with modern free software
+2.3 Rewrite the configuration of the INSTALL_RPATH target property
+2.4 Rewrite the rpath configuration of traditionally built examples
+2.5 Factor the PLplot export files
+2.6 Introduce symbolic constants in our color-map routines
+2.7 New implementation of the range checks for the validity of cmap0 and cmap1 user input
+2.8 New implementation of the -bg command-line option
+2.9 Implement ctest for the build system of the installed examples
+
+3. PLplot testing
+________________________________________________________________
+
+1. OFFICIAL NOTICES FOR USERS
+
+1.1 CMake version compatibility
+
+Our build system is implemented using CMake.  The minimum version of
+CMake we currently allow is 3.13.2 on all platforms, and currently the
+latest version of CMake that has been officially released is 3.14.4.
+
+Note, that as of the time of this release we have the following
+free distribution packaging support for modern CMake versions:
+
+* Cygwin: 3.13.1 from <https://cygwin.com/cgi-bin2/package-grep.cgi>
+* MinGW-w64/MSYS2: 3.14.4 from <http://repo.msys2.org/mingw/x86_64/>
+* Fink: 3.11.0 from <http://pdb.finkproject.org/pdb/browse.php?name=cmake>
+* MacPorts: 3.14.4 from <https://www.macports.org/ports.php?by=name&substr=cmake>
+* Homebrew: 3.14.4 from <https://formulae.brew.sh/formula/cmake>
+* Debian Testing: 3.13.4 (from <https://packages.debian.org/buster/cmake> where Testing = Buster is likely to become the official Debian Stable release of Debian in mid-2019, i.e., soon, see <https://en.wikipedia.org/wiki/Debian_version_history>).
+* Other modern Linux distributions: likely 3.13.4 or greater since they typically package later versions of CMake than are available for Debian Stable.
+
+It appears from the above table that binary packages for CMake for our
+minimum allowed version (3.13.2) or later should be available soon or
+immediately on most modern free software distributions.  However,
+PLplot users of distributions that do not package 3.13.2 or later
+(e.g., Cygwin and Fink) will need to build CMake 3.13.2 or later for
+themselves before they build PLplot-5.15.0
+
+This particular PLplot release has been comprehensively tested for
+CMake-3.13.2 through 3.14.4 on a variety of platforms (see
+<http://sourceforge.net/p/plplot/wiki/Testing_Reports> for details
+of recent tests on all platforms).
+
+Therefore, if the CMake version is within this range there is an
+excellent chance that our build system will "just work" on all
+platforms.  Furthermore, if later on you try CMake versions greater
+than the latest version of CMake that is available at the time of this
+PLplot release (3.14.4), our build system will likely continue to work
+well because CMake has an excellent reputation for preserving
+backwards compatibility.
+
+1.2 Remove typedefs for PL_NC_GENERIC_POINTER and PL_GENERIC_POINTER
+
+typedef PLPointer   PL_NC_GENERIC_POINTER;
+typedef PLPointer   PL_GENERIC_POINTER;
+
+were introduced as of 5.12.0 as the start of a plan that was almost
+immediately abandoned.  So these typedefs were officially deprecated
+in 5.13.0, and they are now being dropped as of this release.
+
+This cruft-removal causes a backwards-incompatible change to our C API
+that is of no concern for users who do not use PL_NC_GENERIC_POINTER
+and PL_GENERIC_POINTER in their code.  However, for the remaining
+users the solution must be to replace PL_NC_GENERIC_POINTER and
+PL_GENERIC_POINTER by PLPointer everywhere in their code.
+
+1.3 Fix typedef for PLINT_NC_VECTOR
+
+This typedef (first defined as of 5.12.0) has been changed from
+
+-typedef int *                 PLINT_NC_VECTOR;
++typedef PLINT *               PLINT_NC_VECTOR;
+
+to fix an inconsistency that was incorrectly and inadvertently created
+for 5.12.0 between this typedef and all other PLINT* typedefs.
+
+For systems that provide the stdint.h header the PLINT typedef is
+
+typedef int32_t        PLINT;
+
+but for those systems that do not provide that header, this typedef is
+
+typedef int            PLINT;
+
+Therefore the above change to the typedef for PLINT_NC_VECTOR is
+backwards-incompatible (requiring recompilation of user code but no
+changes to that code to fix the problem) for users with systems that
+(a) provide the stdint.h header, and (b) define int differently than
+int32_t for those systems.
+________________________________________________________________
+
+2. Improvements relative to the previous release
+
+2.1 Bug fixes
+
+The bug fixes in this release are noted in the ~50 commit messages
+collected in ChangeLog.release.
+
+Commit plplot-5.14.0-8-gdb9d90d0b should be of particular note since
+it finally makes results achieved with our qt device driver linked to
+Qt5 similar to the high quality of results achieved with that same
+device driver when it is linked to Qt4.
+
+2.2 Update PLplot to be consistent with modern free software
+
+This ongoing project is implemented by making sure PLplot passes all
+[comprehensive
+tests](<https://sourceforge.net/p/plplot/wiki/Testing_Reports) on the
+Debian Testing platform which is a high-quality rolling release that
+keeps up to date with modern free software development.  As a result
+PLplot should be compatible with the following modern versions of free
+software packages:
+
+* CMake-3.13.2 through 3.14.4       (core, bindings, and device drivers)
+* gcc 8.3.0			    (core)
+* qhull 2015.2			    (optional core interpolation functionality)
+* shapelib 1.4.1		    (optional core map functionality)
+* swig 3.0.12 through 4.0.0	    (java, lua, octave, and python bindings)
+* gnatmake/gdc/gfortran 8.3.0	    (ada, d, and fortran bindings)
+* g++ 8.3.0			    (c++ binding and psttf and wxwidgets device drivers)
+* pango 1.42.3, cairo 1.16.0	    (cairo device driver)
+* openjdk 11.0.3		    (java binding)
+* lua 5.3.5			    (lua binding)
+* camlidl 1.05, ocaml 4.05	    (ocaml binding)
+* octave 4.4.1	      		    (octave binding)
+* python 3.7.3			    (python binding)
+* Qt 5.11.3			    (qt binding and qt device driver)
+* Tcl/Tk 8.6.9			    (tcl/tk binding and tk device driver)
+* libx11 2:1.6.7		    (tk and xwin device drivers)
+* wxWidgets 3.0.4		    (wxwidgets binding and device driver)
+
+Notes for this table:
+
+* The CMake versions used for testing were locally built rather than
+  installed from Debian testing, see Section 1.1 for details.
+
+* The Debian Testing package for swig 3.0.12 contains a swig fix from
+  swig-4.0.0. That fix allows an Octave-4.4 binding to be built for
+  PLplot.  If your swig-3 version does not have this fix, you should
+  use Octave-4.2 until swig-4 is released.
+
+* The swig-4.0.0 version used for testing was locally built since this
+  version is not packaged for Debian Testing (yet).
+
+* The Debian Testing package for lua 5.3.3 currently perpetuates
+  [a serious bug](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=902238)
+  for that particular upstream version.  The above good results for lua
+  5.3.5 were generated with a locally built version of upstream 5.3.5
+  that contains the essential fix for 5.3.3.
+
+2.3 Rewrite the configuration of the INSTALL_RPATH target property
+
+This change is important for those Unix users who install
+PLplot dependencies (such as libLASi) in non-standard locations and
+who use the traditional build of our installed examples rather than
+the CMake-based build of those examples.
+
+DT_RPATH and its more modern variant DT_RUNPATH are two ways on Unix
+systems to inform the run-time loader of non-standard locations of
+shared libraries that are needed by applications.  Therefore, the
+details of how our build system configures use of the INSTALL_RPATH
+target property (which controls DT_RPATH on old Unix systems such as
+Debian Jessie and DT_RUNPATH on more modern Unix systems such as
+Debian Testing) become important for the traditional build of
+installed examples if any external library (e.g., libLASi) needed by
+any PLplot component is installed in a non-standard location.  (Note
+that CMake-based builds automatically take care of all rpath concerns
+so our CMake-based core build and CMake-based build of the installed
+examples automatically work fine regardless of where our external
+libraries are installed or the INSTALL_RPATH target property set for
+them.)
+
+Our INSTALL_RPATH configuration worked fine for our traditional builds
+of installed examples on DT_RPATH platforms such as Debian Jessie and
+was extensively tested in that era with epa_built external libraries
+that were installed in non-standard locations.  However, that
+configuration did not work correctly for DT_RUNPATH platforms such as
+Debian Testing since it was not always consistent with the following
+additional constraint on the use of DT_RUNPATH that has been taken
+from
+<https://refspecs.linuxfoundation.org/elf/gabi4+/ch5.dynamic.html>:
+
+  "The set of directories specified by a given DT_RUNPATH entry is
+  used to find only the immediate dependencies of the executable or
+  shared object containing the DT_RUNPATH entry. That is, it is used
+  only for those dependencies contained in the DT_NEEDED entries of
+  the dynamic structure containing the DT_RUNPATH entry, itself. One
+  object's DT_RUNPATH entry does not affect the search for any other
+  object's dependencies."
+
+As a result PLplot's use of the new libLASi release (which necessarily
+had to be built locally and with a non-standard install prefix) failed
+for our traditional build.
+
+To address this issue I (AWI) have completely rewritten our rpath
+configuration logic for the INSTALL_RPATH property of installed
+targets to (i) be consistent with the above additional DT_RUNPATH
+constraint, and (ii) have that configuration done in a standardized
+way for all our installed targets (executables, dll's (modules)
+generated by swig, ordinary dll's, shared libraries and static
+libraries).  The result of this work is a substantial reduction in the
+number of lines of CMake logic in our build system (since virtually
+all of the INSTALL_RPATH logic is now taken care of in the new
+process_rpath function).
+
+Note that this new logic always uses the transitive INSTALL_RPATH
+method for the static build case and by default uses non-transitive
+INSTALL_RPATH method for the shared library case (regardless of
+whether the device drivers are dynamic or nondynamic).  And that
+default for the shared library case works well for Debian Testing.
+But if there are still some Unix platforms out there that only work
+for the transitive INSTALL_RPATH method for the shared library case,
+the user can choose that method by setting the
+-DNON_TRANSITIVE_RPATH=OFF cmake option.  And as always if the user
+(typically a binary package maintainer) specifies -DUSE_RPATH=OFF, the
+INSTALL_RPATH target property (transitive or otherwise) will not be
+set at all for installed targets with the result that DT_RPATH (old
+Unix systems) and DT_RUNPATH (modern Unix systems) will not be set for
+those targets.
+
+N.B. in the rewritten INSTALL_RPATH logic the simplifying assumption
+is made that in both the non-transitive and transitive rpath cases,
+that all non-system library locations must be mentioned in the derived
+DT_RPATH or DT_RUNPATH.  Of course, this assumption is only necessary
+if the relevant libraries are shared so the result in the case where
+the relevant library (whether external or internal) is static is the
+non-standard location of that library is unnecessarily listed in the
+resulting DT_RPATH or DT_RUNPATH.  So the result is the run-time
+loader has to check a bit more before deciding that location
+information is irrelevant so it adds slightly to start-up latency.
+However, implementing a check whether external and internal libraries
+are shared or not would so complicate our build system code and
+therefore make it more fragile that I have decided to stick with using
+this simplifying assumption.
+
+2.4 Rewrite the rpath configuration of traditionally built examples
+
+In this case, "traditionally built" refers to the traditional (GNU
+make + pkg-config) build of the installed examples (including the
+ocaml examples) AND the CMake-based builds of the ocaml examples in
+the core build tree and the build tree for the installed examples.
+(OCaml is a special case because there is no CMake official support
+for this language so even for the CMake-based build of ocaml examples,
+low-level CMake add_custom_command/target pairs must be used that are
+very similar to the traditional build of the installed ocaml examples.
+
+This change updated the somewhat sloppy transitive rpath method that
+was used before for traditionally built examples to the rigorous
+method I have implemented (see Section 2.3) recently for the case of
+the INSTALL_RPATH property for installed targets.  That is, for the
+non-transitive rpath case the traditionally built examples only refer
+to the directory location of the "PLPLOT::" libraries that the plplot
+examples in question depend on, and for the transitive case append the
+INSTALL_RPATH locations for just the internal libraries that are
+dependencies of the examples in question.  See the process_rpath
+function in cmake/modules/plplot_functions.cmake for details.)
+
+Note we use the same simplifying assumption mentioned in Section 2.3
+to decide which library locations should be inserted in DT_RPATH or
+DT_RUNPATH for traditionally built examples.
+
+Note this more rigorous approach solved an ocaml rpath bug that was
+exposed by the DT_RUNPATH Debian Testing platform.  So as far as I
+know the combination of this change and the INSTALL_RPATH changes
+described in section 2.3 eliminates the last known regression against
+the good test results I achieved with the old sloppy rpath method on
+the Debian Jessie platform with its old-fashioned but nevertheless
+working DT_RPATH capability.
+
+In sum, recent comprehensive tests on the Debian Testing platform
+support the idea that our rewritten INSTALL_RPATH configuration for
+installed targets and our rewritten rpath configuration for
+traditionally built executables generates working DT_RUNPATH results
+for the case where either/both PLplot libraries or external libraries
+are installed in non-standard locations.  And presumably that good
+result also holds true for generated DT_RPATH results since even quite
+sloppy rpath configuration seems to have worked well in the past on
+such systems (e.g., Debian Jessie).  However, if there are Unix
+platforms still out there where the run-time loader (operating at run
+time in contrast to the linker that operates at build time) errors out
+by saying it cannot find a library for the present rpath methods, the
+first thing the user should try is -DUSE_RPATH=ON (if they are not
+using that default already) and the second thing they should try if
+this trouble occurs for the shared build case is
+-DNON_TRANSITIVE_RPATH=OFF.
+
+2.5 Factor the PLplot export files
+
+Packagers of binary versions of PLplot used in free software
+distributions such as Debian and Fedora typically split the PLplot
+installation into many different package components, and users of
+those distributions have the option of only installing the subset of
+those packages (and their dependencies) that they need.  However, the
+CMake-based build system that is part of the examples package (which
+contains source code for all our test examples) can currently only
+build the examples if the user installs all binary components of
+PLplot.
+
+The current change is a large step toward removing that constraint.
+This change factors the the two previous integrated PLplot export
+files into two exported files per exported target (which can be an
+installed library, module, or executable).  So if packagers distribute
+these factored export files in the same binary packages which contain
+the actual libraries, modules, or executables which are described by
+the exported targets, then *any* CMake-based build systems for
+software that depends on the PLplot installation can simply
+interrogate that installation (using the if(TARGET ...)  command) to
+see what subset of the PLplot targets have been installed and act
+accordingly.
+
+N.B. the CMake-based build system for the example source code that is
+installed is a (large) example of such software.  But that software
+has not yet been changed as described above so packagers will have to
+wait until the next release before the source code for the appropriate
+subset of the examples in that package can be built properly against
+the subset of binary PLplot packages that have been installed by
+users.
+
+2.6 Introduce symbolic constants in our color-map routines
+
+These new symbolic constants (in their C/C++ form) are
+
+// Default number of colors for cmap0 and cmap1.
+#define PL_DEFAULT_NCOL0    16
+#define PL_DEFAULT_NCOL1    128
+// minimum and maximum PLINT RGB values.
+#define MIN_PLINT_RGB       0
+#define MAX_PLINT_RGB       255
+// minimum and maximum PLFLT cmap1 color index values.
+#define MIN_PLFLT_CMAP1     0.
+#define MAX_PLFLT_CMAP1     1.
+// minimum and maximum PLFLT alpha values.
+#define MIN_PLFLT_ALPHA     0.
+#define MAX_PLFLT_ALPHA     1.
+
+These constants should be defined for our core C "plplot" library and
+all our different supported language bindings.  These symbolic
+constants are used, for example, in our range checks for the validity
+of cmap0 and cmap1 user input.
+
+2.7 New implementation of the range checks for the validity of cmap0 and cmap1 user input
+
+Instead of exiting when cmap0 or cmap1 user input is invalid, the
+philosophy for the new implementation of cmap0 and cmap1 range
+checking is to issue a warning message, substitute something
+reasonable, and continue.  In addition, for the new implementation we
+attempt to catch all invalid cmap0 or cmap1 user input rather than
+just a subset of such cases.
+
+2.8 New implementation of the -bg command-line option
+
+The -bg command-line option is used to specify the RGB and (optional)
+alpha values of the background.  The new implementation is much more
+careful about checking for user input errors in both the RGB and alpha
+values and follows the philosophy of warning and continuing with
+reasonable default values when the user specifies an non-parsable or
+invalid value for the RGB or alpha values of the background.
+
+2.9 Implement ctest for the build system of the installed examples
+
+Previously the ctest command was only configured for the CMake-based
+build system of the core build of PLplot libraries and the source code
+of the PLplot examples that appears in the PLplot source tree.  What
+is changed now is the ctest command has also been configured for the
+CMake-based build system of the installed source code for the PLplot
+examples using in most cases common CMake logic as for the core build
+case.  As a result, the ctest results in the two very different cases
+cover the same tests.  In addition the same (good) ctest results have
+been achieved for these two different builds confirming that all is
+well with the core build of PLplot libraries and examples as well as
+the installed binary version of PLplot libraries and corresponding
+CMake-based build system for the installed source code for the PLplot
+examples that is built against those installed libraries.
+________________________________________________________________
+
+3. PLplot testing
+
+Comprehensive tests of this release are documented in
+<https://sourceforge.net/p/plplot/wiki/Testing_Reports>.  In addition,
+developers and users who have used the evolving git master tip
+development version of PLplot for their plotting needs during this
+release cycle have provided additional important testing of this
+release of PLplot.
+________________________________________________________________

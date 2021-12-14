@@ -1,0 +1,2347 @@
+sizeof(time_t) = 8
+sizeof(int) = 4
+Test 01 of calendar dates in the vicinity of the JD epoch 
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4717-01-01T12:00:00.000000000000000Z
+-4717-01-01T12:00:00.0Z
+setFromUT JD =    -1826.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4717-01-01T12:00:00.000000000000000Z
+-4717-01-01T12:00:00Z
+-4717-01-01T12:00:00.0Z
+setFromUT JD =    -1788.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4716-01-01T12:00:00.000000000000000Z
+-4716-01-01T12:00:00.0Z
+setFromUT JD =    -1461.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4716-01-01T12:00:00.000000000000000Z
+-4716-01-01T12:00:00Z
+-4716-01-01T12:00:00.0Z
+setFromUT JD =    -1423.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4715-01-01T12:00:00.000000000000000Z
+-4715-01-01T12:00:00.0Z
+setFromUT JD =    -1095.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4715-01-01T12:00:00.000000000000000Z
+-4715-01-01T12:00:00Z
+-4715-01-01T12:00:00.0Z
+setFromUT JD =    -1057.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4714-01-01T12:00:00.000000000000000Z
+-4714-01-01T12:00:00.0Z
+setFromUT JD =     -730.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4714-01-01T12:00:00.000000000000000Z
+-4714-01-01T12:00:00Z
+-4714-01-01T12:00:00.0Z
+setFromUT JD =     -692.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4713-01-01T12:00:00.000000000000000Z
+-4713-01-01T12:00:00.0Z
+setFromUT JD =     -365.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4713-01-01T12:00:00.000000000000000Z
+-4713-01-01T12:00:00Z
+-4713-01-01T12:00:00.0Z
+setFromUT JD =     -327.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4712-01-01T12:00:00.000000000000000Z
+-4712-01-01T12:00:00.0Z
+setFromUT JD =        0.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4712-01-01T12:00:00.000000000000000Z
+-4712-01-01T12:00:00Z
+-4712-01-01T12:00:00.0Z
+setFromUT JD =       38.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4711-01-01T12:00:00.000000000000000Z
+-4711-01-01T12:00:00.0Z
+setFromUT JD =      366.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4711-01-01T12:00:00.000000000000000Z
+-4711-01-01T12:00:00Z
+-4711-01-01T12:00:00.0Z
+setFromUT JD =      404.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4710-01-01T12:00:00.000000000000000Z
+-4710-01-01T12:00:00.0Z
+setFromUT JD =      731.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4710-01-01T12:00:00.000000000000000Z
+-4710-01-01T12:00:00Z
+-4710-01-01T12:00:00.0Z
+setFromUT JD =      769.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4709-01-01T12:00:00.000000000000000Z
+-4709-01-01T12:00:00.0Z
+setFromUT JD =     1096.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4709-01-01T12:00:00.000000000000000Z
+-4709-01-01T12:00:00Z
+-4709-01-01T12:00:00.0Z
+setFromUT JD =     1134.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4708-01-01T12:00:00.000000000000000Z
+-4708-01-01T12:00:00.0Z
+setFromUT JD =     1461.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4708-01-01T12:00:00.000000000000000Z
+-4708-01-01T12:00:00Z
+-4708-01-01T12:00:00.0Z
+setFromUT JD =     1499.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4707-01-01T12:00:00.000000000000000Z
+-4707-01-01T12:00:00.0Z
+setFromUT JD =     1827.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4707-01-01T12:00:00.000000000000000Z
+-4707-01-01T12:00:00Z
+-4707-01-01T12:00:00.0Z
+setFromUT JD =     1865.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4717-02-28T12:00:00.000000000000000Z
+-4717-02-28T12:00:00.0Z
+setFromUT JD =    -1768.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4717-02-28T12:00:00.000000000000000Z
+-4717-02-28T12:00:00Z
+-4717-02-28T12:00:00.0Z
+setFromUT JD =    -1730.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4716-02-28T12:00:00.000000000000000Z
+-4716-02-28T12:00:00.0Z
+setFromUT JD =    -1403.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4716-02-28T12:00:00.000000000000000Z
+-4716-02-28T12:00:00Z
+-4716-02-28T12:00:00.0Z
+setFromUT JD =    -1365.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4715-02-28T12:00:00.000000000000000Z
+-4715-02-28T12:00:00.0Z
+setFromUT JD =    -1037.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4715-02-28T12:00:00.000000000000000Z
+-4715-02-28T12:00:00Z
+-4715-02-28T12:00:00.0Z
+setFromUT JD =     -999.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4714-02-28T12:00:00.000000000000000Z
+-4714-02-28T12:00:00.0Z
+setFromUT JD =     -672.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4714-02-28T12:00:00.000000000000000Z
+-4714-02-28T12:00:00Z
+-4714-02-28T12:00:00.0Z
+setFromUT JD =     -634.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4713-02-28T12:00:00.000000000000000Z
+-4713-02-28T12:00:00.0Z
+setFromUT JD =     -307.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4713-02-28T12:00:00.000000000000000Z
+-4713-02-28T12:00:00Z
+-4713-02-28T12:00:00.0Z
+setFromUT JD =     -269.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4712-02-28T12:00:00.000000000000000Z
+-4712-02-28T12:00:00.0Z
+setFromUT JD =       58.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4712-02-28T12:00:00.000000000000000Z
+-4712-02-28T12:00:00Z
+-4712-02-28T12:00:00.0Z
+setFromUT JD =       96.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4711-02-28T12:00:00.000000000000000Z
+-4711-02-28T12:00:00.0Z
+setFromUT JD =      424.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4711-02-28T12:00:00.000000000000000Z
+-4711-02-28T12:00:00Z
+-4711-02-28T12:00:00.0Z
+setFromUT JD =      462.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4710-02-28T12:00:00.000000000000000Z
+-4710-02-28T12:00:00.0Z
+setFromUT JD =      789.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4710-02-28T12:00:00.000000000000000Z
+-4710-02-28T12:00:00Z
+-4710-02-28T12:00:00.0Z
+setFromUT JD =      827.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4709-02-28T12:00:00.000000000000000Z
+-4709-02-28T12:00:00.0Z
+setFromUT JD =     1154.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4709-02-28T12:00:00.000000000000000Z
+-4709-02-28T12:00:00Z
+-4709-02-28T12:00:00.0Z
+setFromUT JD =     1192.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4708-02-28T12:00:00.000000000000000Z
+-4708-02-28T12:00:00.0Z
+setFromUT JD =     1519.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4708-02-28T12:00:00.000000000000000Z
+-4708-02-28T12:00:00Z
+-4708-02-28T12:00:00.0Z
+setFromUT JD =     1557.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4707-02-28T12:00:00.000000000000000Z
+-4707-02-28T12:00:00.0Z
+setFromUT JD =     1885.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4707-02-28T12:00:00.000000000000000Z
+-4707-02-28T12:00:00Z
+-4707-02-28T12:00:00.0Z
+setFromUT JD =     1923.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4717-02-29T12:00:00.000000000000000Z
+-4717-03-01T12:00:00.0Z
+setFromUT JD =    -1767.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4717-02-29T12:00:00.000000000000000Z
+-4717-03-01T12:00:00Z
+-4717-03-01T12:00:00.0Z
+setFromUT JD =    -1729.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4716-02-29T12:00:00.000000000000000Z
+-4716-02-29T12:00:00.0Z
+setFromUT JD =    -1402.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4716-02-29T12:00:00.000000000000000Z
+-4716-02-29T12:00:00Z
+-4716-02-29T12:00:00.0Z
+setFromUT JD =    -1364.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4715-02-29T12:00:00.000000000000000Z
+-4715-03-01T12:00:00.0Z
+setFromUT JD =    -1036.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4715-02-29T12:00:00.000000000000000Z
+-4715-03-01T12:00:00Z
+-4715-03-01T12:00:00.0Z
+setFromUT JD =     -998.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4714-02-29T12:00:00.000000000000000Z
+-4714-03-01T12:00:00.0Z
+setFromUT JD =     -671.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4714-02-29T12:00:00.000000000000000Z
+-4714-03-01T12:00:00Z
+-4714-03-01T12:00:00.0Z
+setFromUT JD =     -633.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4713-02-29T12:00:00.000000000000000Z
+-4713-03-01T12:00:00.0Z
+setFromUT JD =     -306.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4713-02-29T12:00:00.000000000000000Z
+-4713-03-01T12:00:00Z
+-4713-03-01T12:00:00.0Z
+setFromUT JD =     -268.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4712-02-29T12:00:00.000000000000000Z
+-4712-02-29T12:00:00.0Z
+setFromUT JD =       59.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4712-02-29T12:00:00.000000000000000Z
+-4712-02-29T12:00:00Z
+-4712-02-29T12:00:00.0Z
+setFromUT JD =       97.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4711-02-29T12:00:00.000000000000000Z
+-4711-03-01T12:00:00.0Z
+setFromUT JD =      425.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4711-02-29T12:00:00.000000000000000Z
+-4711-03-01T12:00:00Z
+-4711-03-01T12:00:00.0Z
+setFromUT JD =      463.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4710-02-29T12:00:00.000000000000000Z
+-4710-03-01T12:00:00.0Z
+setFromUT JD =      790.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4710-02-29T12:00:00.000000000000000Z
+-4710-03-01T12:00:00Z
+-4710-03-01T12:00:00.0Z
+setFromUT JD =      828.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4709-02-29T12:00:00.000000000000000Z
+-4709-03-01T12:00:00.0Z
+setFromUT JD =     1155.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4709-02-29T12:00:00.000000000000000Z
+-4709-03-01T12:00:00Z
+-4709-03-01T12:00:00.0Z
+setFromUT JD =     1193.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4708-02-29T12:00:00.000000000000000Z
+-4708-02-29T12:00:00.0Z
+setFromUT JD =     1520.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4708-02-29T12:00:00.000000000000000Z
+-4708-02-29T12:00:00Z
+-4708-02-29T12:00:00.0Z
+setFromUT JD =     1558.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4707-02-29T12:00:00.000000000000000Z
+-4707-03-01T12:00:00.0Z
+setFromUT JD =     1886.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4707-02-29T12:00:00.000000000000000Z
+-4707-03-01T12:00:00Z
+-4707-03-01T12:00:00.0Z
+setFromUT JD =     1924.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4717-03-01T12:00:00.000000000000000Z
+-4717-03-01T12:00:00.0Z
+setFromUT JD =    -1767.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4717-03-01T12:00:00.000000000000000Z
+-4717-03-01T12:00:00Z
+-4717-03-01T12:00:00.0Z
+setFromUT JD =    -1729.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4716-03-01T12:00:00.000000000000000Z
+-4716-03-01T12:00:00.0Z
+setFromUT JD =    -1401.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4716-03-01T12:00:00.000000000000000Z
+-4716-03-01T12:00:00Z
+-4716-03-01T12:00:00.0Z
+setFromUT JD =    -1363.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4715-03-01T12:00:00.000000000000000Z
+-4715-03-01T12:00:00.0Z
+setFromUT JD =    -1036.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4715-03-01T12:00:00.000000000000000Z
+-4715-03-01T12:00:00Z
+-4715-03-01T12:00:00.0Z
+setFromUT JD =     -998.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4714-03-01T12:00:00.000000000000000Z
+-4714-03-01T12:00:00.0Z
+setFromUT JD =     -671.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4714-03-01T12:00:00.000000000000000Z
+-4714-03-01T12:00:00Z
+-4714-03-01T12:00:00.0Z
+setFromUT JD =     -633.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4713-03-01T12:00:00.000000000000000Z
+-4713-03-01T12:00:00.0Z
+setFromUT JD =     -306.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4713-03-01T12:00:00.000000000000000Z
+-4713-03-01T12:00:00Z
+-4713-03-01T12:00:00.0Z
+setFromUT JD =     -268.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4712-03-01T12:00:00.000000000000000Z
+-4712-03-01T12:00:00.0Z
+setFromUT JD =       60.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4712-03-01T12:00:00.000000000000000Z
+-4712-03-01T12:00:00Z
+-4712-03-01T12:00:00.0Z
+setFromUT JD =       98.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4711-03-01T12:00:00.000000000000000Z
+-4711-03-01T12:00:00.0Z
+setFromUT JD =      425.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4711-03-01T12:00:00.000000000000000Z
+-4711-03-01T12:00:00Z
+-4711-03-01T12:00:00.0Z
+setFromUT JD =      463.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4710-03-01T12:00:00.000000000000000Z
+-4710-03-01T12:00:00.0Z
+setFromUT JD =      790.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4710-03-01T12:00:00.000000000000000Z
+-4710-03-01T12:00:00Z
+-4710-03-01T12:00:00.0Z
+setFromUT JD =      828.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4709-03-01T12:00:00.000000000000000Z
+-4709-03-01T12:00:00.0Z
+setFromUT JD =     1155.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4709-03-01T12:00:00.000000000000000Z
+-4709-03-01T12:00:00Z
+-4709-03-01T12:00:00.0Z
+setFromUT JD =     1193.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4708-03-01T12:00:00.000000000000000Z
+-4708-03-01T12:00:00.0Z
+setFromUT JD =     1521.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4708-03-01T12:00:00.000000000000000Z
+-4708-03-01T12:00:00Z
+-4708-03-01T12:00:00.0Z
+setFromUT JD =     1559.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4707-03-01T12:00:00.000000000000000Z
+-4707-03-01T12:00:00.0Z
+setFromUT JD =     1886.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4707-03-01T12:00:00.000000000000000Z
+-4707-03-01T12:00:00Z
+-4707-03-01T12:00:00.0Z
+setFromUT JD =     1924.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4717-12-31T12:00:00.000000000000000Z
+-4717-12-31T12:00:00.0Z
+setFromUT JD =    -1462.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4717-12-31T12:00:00.000000000000000Z
+-4717-12-31T12:00:00Z
+-4717-12-31T12:00:00.0Z
+setFromUT JD =    -1424.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4716-12-31T12:00:00.000000000000000Z
+-4716-12-31T12:00:00.0Z
+setFromUT JD =    -1096.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4716-12-31T12:00:00.000000000000000Z
+-4716-12-31T12:00:00Z
+-4716-12-31T12:00:00.0Z
+setFromUT JD =    -1058.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4715-12-31T12:00:00.000000000000000Z
+-4715-12-31T12:00:00.0Z
+setFromUT JD =     -731.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4715-12-31T12:00:00.000000000000000Z
+-4715-12-31T12:00:00Z
+-4715-12-31T12:00:00.0Z
+setFromUT JD =     -693.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4714-12-31T12:00:00.000000000000000Z
+-4714-12-31T12:00:00.0Z
+setFromUT JD =     -366.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4714-12-31T12:00:00.000000000000000Z
+-4714-12-31T12:00:00Z
+-4714-12-31T12:00:00.0Z
+setFromUT JD =     -328.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4713-12-31T12:00:00.000000000000000Z
+-4713-12-31T12:00:00.0Z
+setFromUT JD =       -1.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4713-12-31T12:00:00.000000000000000Z
+-4713-12-31T12:00:00Z
+-4713-12-31T12:00:00.0Z
+setFromUT JD =       37.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4712-12-31T12:00:00.000000000000000Z
+-4712-12-31T12:00:00.0Z
+setFromUT JD =      365.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4712-12-31T12:00:00.000000000000000Z
+-4712-12-31T12:00:00Z
+-4712-12-31T12:00:00.0Z
+setFromUT JD =      403.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4711-12-31T12:00:00.000000000000000Z
+-4711-12-31T12:00:00.0Z
+setFromUT JD =      730.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4711-12-31T12:00:00.000000000000000Z
+-4711-12-31T12:00:00Z
+-4711-12-31T12:00:00.0Z
+setFromUT JD =      768.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4710-12-31T12:00:00.000000000000000Z
+-4710-12-31T12:00:00.0Z
+setFromUT JD =     1095.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4710-12-31T12:00:00.000000000000000Z
+-4710-12-31T12:00:00Z
+-4710-12-31T12:00:00.0Z
+setFromUT JD =     1133.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4709-12-31T12:00:00.000000000000000Z
+-4709-12-31T12:00:00.0Z
+setFromUT JD =     1460.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4709-12-31T12:00:00.000000000000000Z
+-4709-12-31T12:00:00Z
+-4709-12-31T12:00:00.0Z
+setFromUT JD =     1498.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4708-12-31T12:00:00.000000000000000Z
+-4708-12-31T12:00:00.0Z
+setFromUT JD =     1826.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4708-12-31T12:00:00.000000000000000Z
+-4708-12-31T12:00:00Z
+-4708-12-31T12:00:00.0Z
+setFromUT JD =     1864.0000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-4707-12-31T12:00:00.000000000000000Z
+-4707-12-31T12:00:00.0Z
+setFromUT JD =     2191.0000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-4707-12-31T12:00:00.000000000000000Z
+-4707-12-31T12:00:00Z
+-4707-12-31T12:00:00.0Z
+setFromUT JD =     2229.0000000000000000 days
+Test 02 of calendar dates in the vicinity of the year epoch. 
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0005-01-01T00:00:00.000000000000000Z
+-0005-01-01T00:00:00.0Z
+setFromUT JD =  1719231.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0005-01-01T00:00:00.000000000000000Z
+-5-01-01T00:00:00Z
+-0005-01-01T00:00:00.0Z
+setFromUT JD =  1719233.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0004-01-01T00:00:00.000000000000000Z
+-0004-01-01T00:00:00.0Z
+setFromUT JD =  1719596.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0004-01-01T00:00:00.000000000000000Z
+-4-01-01T00:00:00Z
+-0004-01-01T00:00:00.0Z
+setFromUT JD =  1719598.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0003-01-01T00:00:00.000000000000000Z
+-0003-01-01T00:00:00.0Z
+setFromUT JD =  1719962.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0003-01-01T00:00:00.000000000000000Z
+-3-01-01T00:00:00Z
+-0003-01-01T00:00:00.0Z
+setFromUT JD =  1719964.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0002-01-01T00:00:00.000000000000000Z
+-0002-01-01T00:00:00.0Z
+setFromUT JD =  1720327.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0002-01-01T00:00:00.000000000000000Z
+-2-01-01T00:00:00Z
+-0002-01-01T00:00:00.0Z
+setFromUT JD =  1720329.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0001-01-01T00:00:00.000000000000000Z
+-0001-01-01T00:00:00.0Z
+setFromUT JD =  1720692.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0001-01-01T00:00:00.000000000000000Z
+-1-01-01T00:00:00Z
+-0001-01-01T00:00:00.0Z
+setFromUT JD =  1720694.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:00.000000000000000Z
+0000-01-01T00:00:00.0Z
+setFromUT JD =  1721057.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:00.000000000000000Z
+0-01-01T00:00:00Z
+0000-01-01T00:00:00.0Z
+setFromUT JD =  1721059.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0001-01-01T00:00:00.000000000000000Z
+0001-01-01T00:00:00.0Z
+setFromUT JD =  1721423.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0001-01-01T00:00:00.000000000000000Z
+1-01-01T00:00:00Z
+0001-01-01T00:00:00.0Z
+setFromUT JD =  1721425.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0002-01-01T00:00:00.000000000000000Z
+0002-01-01T00:00:00.0Z
+setFromUT JD =  1721788.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0002-01-01T00:00:00.000000000000000Z
+2-01-01T00:00:00Z
+0002-01-01T00:00:00.0Z
+setFromUT JD =  1721790.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0003-01-01T00:00:00.000000000000000Z
+0003-01-01T00:00:00.0Z
+setFromUT JD =  1722153.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0003-01-01T00:00:00.000000000000000Z
+3-01-01T00:00:00Z
+0003-01-01T00:00:00.0Z
+setFromUT JD =  1722155.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0004-01-01T00:00:00.000000000000000Z
+0004-01-01T00:00:00.0Z
+setFromUT JD =  1722518.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0004-01-01T00:00:00.000000000000000Z
+4-01-01T00:00:00Z
+0004-01-01T00:00:00.0Z
+setFromUT JD =  1722520.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0005-01-01T00:00:00.000000000000000Z
+0005-01-01T00:00:00.0Z
+setFromUT JD =  1722884.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0005-01-01T00:00:00.000000000000000Z
+5-01-01T00:00:00Z
+0005-01-01T00:00:00.0Z
+setFromUT JD =  1722886.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0005-02-28T00:00:00.000000000000000Z
+-0005-02-28T00:00:00.0Z
+setFromUT JD =  1719289.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0005-02-28T00:00:00.000000000000000Z
+-5-02-28T00:00:00Z
+-0005-02-28T00:00:00.0Z
+setFromUT JD =  1719291.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0004-02-28T00:00:00.000000000000000Z
+-0004-02-28T00:00:00.0Z
+setFromUT JD =  1719654.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0004-02-28T00:00:00.000000000000000Z
+-4-02-28T00:00:00Z
+-0004-02-28T00:00:00.0Z
+setFromUT JD =  1719656.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0003-02-28T00:00:00.000000000000000Z
+-0003-02-28T00:00:00.0Z
+setFromUT JD =  1720020.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0003-02-28T00:00:00.000000000000000Z
+-3-02-28T00:00:00Z
+-0003-02-28T00:00:00.0Z
+setFromUT JD =  1720022.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0002-02-28T00:00:00.000000000000000Z
+-0002-02-28T00:00:00.0Z
+setFromUT JD =  1720385.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0002-02-28T00:00:00.000000000000000Z
+-2-02-28T00:00:00Z
+-0002-02-28T00:00:00.0Z
+setFromUT JD =  1720387.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0001-02-28T00:00:00.000000000000000Z
+-0001-02-28T00:00:00.0Z
+setFromUT JD =  1720750.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0001-02-28T00:00:00.000000000000000Z
+-1-02-28T00:00:00Z
+-0001-02-28T00:00:00.0Z
+setFromUT JD =  1720752.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-02-28T00:00:00.000000000000000Z
+0000-02-28T00:00:00.0Z
+setFromUT JD =  1721115.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-02-28T00:00:00.000000000000000Z
+0-02-28T00:00:00Z
+0000-02-28T00:00:00.0Z
+setFromUT JD =  1721117.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0001-02-28T00:00:00.000000000000000Z
+0001-02-28T00:00:00.0Z
+setFromUT JD =  1721481.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0001-02-28T00:00:00.000000000000000Z
+1-02-28T00:00:00Z
+0001-02-28T00:00:00.0Z
+setFromUT JD =  1721483.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0002-02-28T00:00:00.000000000000000Z
+0002-02-28T00:00:00.0Z
+setFromUT JD =  1721846.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0002-02-28T00:00:00.000000000000000Z
+2-02-28T00:00:00Z
+0002-02-28T00:00:00.0Z
+setFromUT JD =  1721848.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0003-02-28T00:00:00.000000000000000Z
+0003-02-28T00:00:00.0Z
+setFromUT JD =  1722211.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0003-02-28T00:00:00.000000000000000Z
+3-02-28T00:00:00Z
+0003-02-28T00:00:00.0Z
+setFromUT JD =  1722213.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0004-02-28T00:00:00.000000000000000Z
+0004-02-28T00:00:00.0Z
+setFromUT JD =  1722576.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0004-02-28T00:00:00.000000000000000Z
+4-02-28T00:00:00Z
+0004-02-28T00:00:00.0Z
+setFromUT JD =  1722578.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0005-02-28T00:00:00.000000000000000Z
+0005-02-28T00:00:00.0Z
+setFromUT JD =  1722942.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0005-02-28T00:00:00.000000000000000Z
+5-02-28T00:00:00Z
+0005-02-28T00:00:00.0Z
+setFromUT JD =  1722944.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0005-02-29T00:00:00.000000000000000Z
+-0005-03-01T00:00:00.0Z
+setFromUT JD =  1719290.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0005-02-29T00:00:00.000000000000000Z
+-5-03-01T00:00:00Z
+-0005-03-01T00:00:00.0Z
+setFromUT JD =  1719292.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0004-02-29T00:00:00.000000000000000Z
+-0004-02-29T00:00:00.0Z
+setFromUT JD =  1719655.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0004-02-29T00:00:00.000000000000000Z
+-4-02-29T00:00:00Z
+-0004-02-29T00:00:00.0Z
+setFromUT JD =  1719657.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0003-02-29T00:00:00.000000000000000Z
+-0003-03-01T00:00:00.0Z
+setFromUT JD =  1720021.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0003-02-29T00:00:00.000000000000000Z
+-3-03-01T00:00:00Z
+-0003-03-01T00:00:00.0Z
+setFromUT JD =  1720023.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0002-02-29T00:00:00.000000000000000Z
+-0002-03-01T00:00:00.0Z
+setFromUT JD =  1720386.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0002-02-29T00:00:00.000000000000000Z
+-2-03-01T00:00:00Z
+-0002-03-01T00:00:00.0Z
+setFromUT JD =  1720388.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0001-02-29T00:00:00.000000000000000Z
+-0001-03-01T00:00:00.0Z
+setFromUT JD =  1720751.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0001-02-29T00:00:00.000000000000000Z
+-1-03-01T00:00:00Z
+-0001-03-01T00:00:00.0Z
+setFromUT JD =  1720753.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-02-29T00:00:00.000000000000000Z
+0000-02-29T00:00:00.0Z
+setFromUT JD =  1721116.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-02-29T00:00:00.000000000000000Z
+0-02-29T00:00:00Z
+0000-02-29T00:00:00.0Z
+setFromUT JD =  1721118.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0001-02-29T00:00:00.000000000000000Z
+0001-03-01T00:00:00.0Z
+setFromUT JD =  1721482.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0001-02-29T00:00:00.000000000000000Z
+1-03-01T00:00:00Z
+0001-03-01T00:00:00.0Z
+setFromUT JD =  1721484.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0002-02-29T00:00:00.000000000000000Z
+0002-03-01T00:00:00.0Z
+setFromUT JD =  1721847.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0002-02-29T00:00:00.000000000000000Z
+2-03-01T00:00:00Z
+0002-03-01T00:00:00.0Z
+setFromUT JD =  1721849.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0003-02-29T00:00:00.000000000000000Z
+0003-03-01T00:00:00.0Z
+setFromUT JD =  1722212.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0003-02-29T00:00:00.000000000000000Z
+3-03-01T00:00:00Z
+0003-03-01T00:00:00.0Z
+setFromUT JD =  1722214.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0004-02-29T00:00:00.000000000000000Z
+0004-02-29T00:00:00.0Z
+setFromUT JD =  1722577.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0004-02-29T00:00:00.000000000000000Z
+4-02-29T00:00:00Z
+0004-02-29T00:00:00.0Z
+setFromUT JD =  1722579.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0005-02-29T00:00:00.000000000000000Z
+0005-03-01T00:00:00.0Z
+setFromUT JD =  1722943.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0005-02-29T00:00:00.000000000000000Z
+5-03-01T00:00:00Z
+0005-03-01T00:00:00.0Z
+setFromUT JD =  1722945.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0005-03-01T00:00:00.000000000000000Z
+-0005-03-01T00:00:00.0Z
+setFromUT JD =  1719290.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0005-03-01T00:00:00.000000000000000Z
+-5-03-01T00:00:00Z
+-0005-03-01T00:00:00.0Z
+setFromUT JD =  1719292.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0004-03-01T00:00:00.000000000000000Z
+-0004-03-01T00:00:00.0Z
+setFromUT JD =  1719656.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0004-03-01T00:00:00.000000000000000Z
+-4-03-01T00:00:00Z
+-0004-03-01T00:00:00.0Z
+setFromUT JD =  1719658.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0003-03-01T00:00:00.000000000000000Z
+-0003-03-01T00:00:00.0Z
+setFromUT JD =  1720021.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0003-03-01T00:00:00.000000000000000Z
+-3-03-01T00:00:00Z
+-0003-03-01T00:00:00.0Z
+setFromUT JD =  1720023.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0002-03-01T00:00:00.000000000000000Z
+-0002-03-01T00:00:00.0Z
+setFromUT JD =  1720386.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0002-03-01T00:00:00.000000000000000Z
+-2-03-01T00:00:00Z
+-0002-03-01T00:00:00.0Z
+setFromUT JD =  1720388.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0001-03-01T00:00:00.000000000000000Z
+-0001-03-01T00:00:00.0Z
+setFromUT JD =  1720751.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0001-03-01T00:00:00.000000000000000Z
+-1-03-01T00:00:00Z
+-0001-03-01T00:00:00.0Z
+setFromUT JD =  1720753.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-03-01T00:00:00.000000000000000Z
+0000-03-01T00:00:00.0Z
+setFromUT JD =  1721117.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-03-01T00:00:00.000000000000000Z
+0-03-01T00:00:00Z
+0000-03-01T00:00:00.0Z
+setFromUT JD =  1721119.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0001-03-01T00:00:00.000000000000000Z
+0001-03-01T00:00:00.0Z
+setFromUT JD =  1721482.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0001-03-01T00:00:00.000000000000000Z
+1-03-01T00:00:00Z
+0001-03-01T00:00:00.0Z
+setFromUT JD =  1721484.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0002-03-01T00:00:00.000000000000000Z
+0002-03-01T00:00:00.0Z
+setFromUT JD =  1721847.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0002-03-01T00:00:00.000000000000000Z
+2-03-01T00:00:00Z
+0002-03-01T00:00:00.0Z
+setFromUT JD =  1721849.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0003-03-01T00:00:00.000000000000000Z
+0003-03-01T00:00:00.0Z
+setFromUT JD =  1722212.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0003-03-01T00:00:00.000000000000000Z
+3-03-01T00:00:00Z
+0003-03-01T00:00:00.0Z
+setFromUT JD =  1722214.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0004-03-01T00:00:00.000000000000000Z
+0004-03-01T00:00:00.0Z
+setFromUT JD =  1722578.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0004-03-01T00:00:00.000000000000000Z
+4-03-01T00:00:00Z
+0004-03-01T00:00:00.0Z
+setFromUT JD =  1722580.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0005-03-01T00:00:00.000000000000000Z
+0005-03-01T00:00:00.0Z
+setFromUT JD =  1722943.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0005-03-01T00:00:00.000000000000000Z
+5-03-01T00:00:00Z
+0005-03-01T00:00:00.0Z
+setFromUT JD =  1722945.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0005-12-31T00:00:00.000000000000000Z
+-0005-12-31T00:00:00.0Z
+setFromUT JD =  1719595.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0005-12-31T00:00:00.000000000000000Z
+-5-12-31T00:00:00Z
+-0005-12-31T00:00:00.0Z
+setFromUT JD =  1719597.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0004-12-31T00:00:00.000000000000000Z
+-0004-12-31T00:00:00.0Z
+setFromUT JD =  1719961.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0004-12-31T00:00:00.000000000000000Z
+-4-12-31T00:00:00Z
+-0004-12-31T00:00:00.0Z
+setFromUT JD =  1719963.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0003-12-31T00:00:00.000000000000000Z
+-0003-12-31T00:00:00.0Z
+setFromUT JD =  1720326.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0003-12-31T00:00:00.000000000000000Z
+-3-12-31T00:00:00Z
+-0003-12-31T00:00:00.0Z
+setFromUT JD =  1720328.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0002-12-31T00:00:00.000000000000000Z
+-0002-12-31T00:00:00.0Z
+setFromUT JD =  1720691.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0002-12-31T00:00:00.000000000000000Z
+-2-12-31T00:00:00Z
+-0002-12-31T00:00:00.0Z
+setFromUT JD =  1720693.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+-0001-12-31T00:00:00.000000000000000Z
+-0001-12-31T00:00:00.0Z
+setFromUT JD =  1721056.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+-0001-12-31T00:00:00.000000000000000Z
+-1-12-31T00:00:00Z
+-0001-12-31T00:00:00.0Z
+setFromUT JD =  1721058.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-12-31T00:00:00.000000000000000Z
+0000-12-31T00:00:00.0Z
+setFromUT JD =  1721422.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-12-31T00:00:00.000000000000000Z
+0-12-31T00:00:00Z
+0000-12-31T00:00:00.0Z
+setFromUT JD =  1721424.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0001-12-31T00:00:00.000000000000000Z
+0001-12-31T00:00:00.0Z
+setFromUT JD =  1721787.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0001-12-31T00:00:00.000000000000000Z
+1-12-31T00:00:00Z
+0001-12-31T00:00:00.0Z
+setFromUT JD =  1721789.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0002-12-31T00:00:00.000000000000000Z
+0002-12-31T00:00:00.0Z
+setFromUT JD =  1722152.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0002-12-31T00:00:00.000000000000000Z
+2-12-31T00:00:00Z
+0002-12-31T00:00:00.0Z
+setFromUT JD =  1722154.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0003-12-31T00:00:00.000000000000000Z
+0003-12-31T00:00:00.0Z
+setFromUT JD =  1722517.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0003-12-31T00:00:00.000000000000000Z
+3-12-31T00:00:00Z
+0003-12-31T00:00:00.0Z
+setFromUT JD =  1722519.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0004-12-31T00:00:00.000000000000000Z
+0004-12-31T00:00:00.0Z
+setFromUT JD =  1722883.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0004-12-31T00:00:00.000000000000000Z
+4-12-31T00:00:00Z
+0004-12-31T00:00:00.0Z
+setFromUT JD =  1722885.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0005-12-31T00:00:00.000000000000000Z
+0005-12-31T00:00:00.0Z
+setFromUT JD =  1723248.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0005-12-31T00:00:00.000000000000000Z
+5-12-31T00:00:00Z
+0005-12-31T00:00:00.0Z
+setFromUT JD =  1723250.5000000000000000 days
+Test 03 of calendar dates in the vicinity of the MJD epoch. 
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1853-01-01T00:00:00.000000000000000Z
+1853-01-01T00:00:00.0Z
+setFromUT JD =  2397866.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1853-01-01T00:00:00.000000000000000Z
+1853-01-01T00:00:00Z
+1853-01-01T00:00:00.0Z
+setFromUT JD =  2397854.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1854-01-01T00:00:00.000000000000000Z
+1854-01-01T00:00:00.0Z
+setFromUT JD =  2398231.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1854-01-01T00:00:00.000000000000000Z
+1854-01-01T00:00:00Z
+1854-01-01T00:00:00.0Z
+setFromUT JD =  2398219.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1855-01-01T00:00:00.000000000000000Z
+1855-01-01T00:00:00.0Z
+setFromUT JD =  2398596.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1855-01-01T00:00:00.000000000000000Z
+1855-01-01T00:00:00Z
+1855-01-01T00:00:00.0Z
+setFromUT JD =  2398584.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1856-01-01T00:00:00.000000000000000Z
+1856-01-01T00:00:00.0Z
+setFromUT JD =  2398961.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1856-01-01T00:00:00.000000000000000Z
+1856-01-01T00:00:00Z
+1856-01-01T00:00:00.0Z
+setFromUT JD =  2398949.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1857-01-01T00:00:00.000000000000000Z
+1857-01-01T00:00:00.0Z
+setFromUT JD =  2399327.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1857-01-01T00:00:00.000000000000000Z
+1857-01-01T00:00:00Z
+1857-01-01T00:00:00.0Z
+setFromUT JD =  2399315.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1858-01-01T00:00:00.000000000000000Z
+1858-01-01T00:00:00.0Z
+setFromUT JD =  2399692.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1858-01-01T00:00:00.000000000000000Z
+1858-01-01T00:00:00Z
+1858-01-01T00:00:00.0Z
+setFromUT JD =  2399680.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1859-01-01T00:00:00.000000000000000Z
+1859-01-01T00:00:00.0Z
+setFromUT JD =  2400057.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1859-01-01T00:00:00.000000000000000Z
+1859-01-01T00:00:00Z
+1859-01-01T00:00:00.0Z
+setFromUT JD =  2400045.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1860-01-01T00:00:00.000000000000000Z
+1860-01-01T00:00:00.0Z
+setFromUT JD =  2400422.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1860-01-01T00:00:00.000000000000000Z
+1860-01-01T00:00:00Z
+1860-01-01T00:00:00.0Z
+setFromUT JD =  2400410.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1861-01-01T00:00:00.000000000000000Z
+1861-01-01T00:00:00.0Z
+setFromUT JD =  2400788.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1861-01-01T00:00:00.000000000000000Z
+1861-01-01T00:00:00Z
+1861-01-01T00:00:00.0Z
+setFromUT JD =  2400776.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1862-01-01T00:00:00.000000000000000Z
+1862-01-01T00:00:00.0Z
+setFromUT JD =  2401153.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1862-01-01T00:00:00.000000000000000Z
+1862-01-01T00:00:00Z
+1862-01-01T00:00:00.0Z
+setFromUT JD =  2401141.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1863-01-01T00:00:00.000000000000000Z
+1863-01-01T00:00:00.0Z
+setFromUT JD =  2401518.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1863-01-01T00:00:00.000000000000000Z
+1863-01-01T00:00:00Z
+1863-01-01T00:00:00.0Z
+setFromUT JD =  2401506.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1853-02-28T00:00:00.000000000000000Z
+1853-02-28T00:00:00.0Z
+setFromUT JD =  2397924.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1853-02-28T00:00:00.000000000000000Z
+1853-02-28T00:00:00Z
+1853-02-28T00:00:00.0Z
+setFromUT JD =  2397912.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1854-02-28T00:00:00.000000000000000Z
+1854-02-28T00:00:00.0Z
+setFromUT JD =  2398289.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1854-02-28T00:00:00.000000000000000Z
+1854-02-28T00:00:00Z
+1854-02-28T00:00:00.0Z
+setFromUT JD =  2398277.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1855-02-28T00:00:00.000000000000000Z
+1855-02-28T00:00:00.0Z
+setFromUT JD =  2398654.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1855-02-28T00:00:00.000000000000000Z
+1855-02-28T00:00:00Z
+1855-02-28T00:00:00.0Z
+setFromUT JD =  2398642.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1856-02-28T00:00:00.000000000000000Z
+1856-02-28T00:00:00.0Z
+setFromUT JD =  2399019.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1856-02-28T00:00:00.000000000000000Z
+1856-02-28T00:00:00Z
+1856-02-28T00:00:00.0Z
+setFromUT JD =  2399007.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1857-02-28T00:00:00.000000000000000Z
+1857-02-28T00:00:00.0Z
+setFromUT JD =  2399385.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1857-02-28T00:00:00.000000000000000Z
+1857-02-28T00:00:00Z
+1857-02-28T00:00:00.0Z
+setFromUT JD =  2399373.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1858-02-28T00:00:00.000000000000000Z
+1858-02-28T00:00:00.0Z
+setFromUT JD =  2399750.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1858-02-28T00:00:00.000000000000000Z
+1858-02-28T00:00:00Z
+1858-02-28T00:00:00.0Z
+setFromUT JD =  2399738.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1859-02-28T00:00:00.000000000000000Z
+1859-02-28T00:00:00.0Z
+setFromUT JD =  2400115.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1859-02-28T00:00:00.000000000000000Z
+1859-02-28T00:00:00Z
+1859-02-28T00:00:00.0Z
+setFromUT JD =  2400103.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1860-02-28T00:00:00.000000000000000Z
+1860-02-28T00:00:00.0Z
+setFromUT JD =  2400480.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1860-02-28T00:00:00.000000000000000Z
+1860-02-28T00:00:00Z
+1860-02-28T00:00:00.0Z
+setFromUT JD =  2400468.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1861-02-28T00:00:00.000000000000000Z
+1861-02-28T00:00:00.0Z
+setFromUT JD =  2400846.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1861-02-28T00:00:00.000000000000000Z
+1861-02-28T00:00:00Z
+1861-02-28T00:00:00.0Z
+setFromUT JD =  2400834.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1862-02-28T00:00:00.000000000000000Z
+1862-02-28T00:00:00.0Z
+setFromUT JD =  2401211.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1862-02-28T00:00:00.000000000000000Z
+1862-02-28T00:00:00Z
+1862-02-28T00:00:00.0Z
+setFromUT JD =  2401199.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1863-02-28T00:00:00.000000000000000Z
+1863-02-28T00:00:00.0Z
+setFromUT JD =  2401576.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1863-02-28T00:00:00.000000000000000Z
+1863-02-28T00:00:00Z
+1863-02-28T00:00:00.0Z
+setFromUT JD =  2401564.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1853-02-29T00:00:00.000000000000000Z
+1853-03-01T00:00:00.0Z
+setFromUT JD =  2397925.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1853-02-29T00:00:00.000000000000000Z
+1853-03-01T00:00:00Z
+1853-03-01T00:00:00.0Z
+setFromUT JD =  2397913.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1854-02-29T00:00:00.000000000000000Z
+1854-03-01T00:00:00.0Z
+setFromUT JD =  2398290.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1854-02-29T00:00:00.000000000000000Z
+1854-03-01T00:00:00Z
+1854-03-01T00:00:00.0Z
+setFromUT JD =  2398278.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1855-02-29T00:00:00.000000000000000Z
+1855-03-01T00:00:00.0Z
+setFromUT JD =  2398655.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1855-02-29T00:00:00.000000000000000Z
+1855-03-01T00:00:00Z
+1855-03-01T00:00:00.0Z
+setFromUT JD =  2398643.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1856-02-29T00:00:00.000000000000000Z
+1856-02-29T00:00:00.0Z
+setFromUT JD =  2399020.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1856-02-29T00:00:00.000000000000000Z
+1856-02-29T00:00:00Z
+1856-02-29T00:00:00.0Z
+setFromUT JD =  2399008.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1857-02-29T00:00:00.000000000000000Z
+1857-03-01T00:00:00.0Z
+setFromUT JD =  2399386.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1857-02-29T00:00:00.000000000000000Z
+1857-03-01T00:00:00Z
+1857-03-01T00:00:00.0Z
+setFromUT JD =  2399374.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1858-02-29T00:00:00.000000000000000Z
+1858-03-01T00:00:00.0Z
+setFromUT JD =  2399751.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1858-02-29T00:00:00.000000000000000Z
+1858-03-01T00:00:00Z
+1858-03-01T00:00:00.0Z
+setFromUT JD =  2399739.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1859-02-29T00:00:00.000000000000000Z
+1859-03-01T00:00:00.0Z
+setFromUT JD =  2400116.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1859-02-29T00:00:00.000000000000000Z
+1859-03-01T00:00:00Z
+1859-03-01T00:00:00.0Z
+setFromUT JD =  2400104.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1860-02-29T00:00:00.000000000000000Z
+1860-02-29T00:00:00.0Z
+setFromUT JD =  2400481.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1860-02-29T00:00:00.000000000000000Z
+1860-02-29T00:00:00Z
+1860-02-29T00:00:00.0Z
+setFromUT JD =  2400469.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1861-02-29T00:00:00.000000000000000Z
+1861-03-01T00:00:00.0Z
+setFromUT JD =  2400847.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1861-02-29T00:00:00.000000000000000Z
+1861-03-01T00:00:00Z
+1861-03-01T00:00:00.0Z
+setFromUT JD =  2400835.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1862-02-29T00:00:00.000000000000000Z
+1862-03-01T00:00:00.0Z
+setFromUT JD =  2401212.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1862-02-29T00:00:00.000000000000000Z
+1862-03-01T00:00:00Z
+1862-03-01T00:00:00.0Z
+setFromUT JD =  2401200.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1863-02-29T00:00:00.000000000000000Z
+1863-03-01T00:00:00.0Z
+setFromUT JD =  2401577.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1863-02-29T00:00:00.000000000000000Z
+1863-03-01T00:00:00Z
+1863-03-01T00:00:00.0Z
+setFromUT JD =  2401565.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1853-03-01T00:00:00.000000000000000Z
+1853-03-01T00:00:00.0Z
+setFromUT JD =  2397925.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1853-03-01T00:00:00.000000000000000Z
+1853-03-01T00:00:00Z
+1853-03-01T00:00:00.0Z
+setFromUT JD =  2397913.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1854-03-01T00:00:00.000000000000000Z
+1854-03-01T00:00:00.0Z
+setFromUT JD =  2398290.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1854-03-01T00:00:00.000000000000000Z
+1854-03-01T00:00:00Z
+1854-03-01T00:00:00.0Z
+setFromUT JD =  2398278.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1855-03-01T00:00:00.000000000000000Z
+1855-03-01T00:00:00.0Z
+setFromUT JD =  2398655.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1855-03-01T00:00:00.000000000000000Z
+1855-03-01T00:00:00Z
+1855-03-01T00:00:00.0Z
+setFromUT JD =  2398643.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1856-03-01T00:00:00.000000000000000Z
+1856-03-01T00:00:00.0Z
+setFromUT JD =  2399021.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1856-03-01T00:00:00.000000000000000Z
+1856-03-01T00:00:00Z
+1856-03-01T00:00:00.0Z
+setFromUT JD =  2399009.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1857-03-01T00:00:00.000000000000000Z
+1857-03-01T00:00:00.0Z
+setFromUT JD =  2399386.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1857-03-01T00:00:00.000000000000000Z
+1857-03-01T00:00:00Z
+1857-03-01T00:00:00.0Z
+setFromUT JD =  2399374.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1858-03-01T00:00:00.000000000000000Z
+1858-03-01T00:00:00.0Z
+setFromUT JD =  2399751.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1858-03-01T00:00:00.000000000000000Z
+1858-03-01T00:00:00Z
+1858-03-01T00:00:00.0Z
+setFromUT JD =  2399739.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1859-03-01T00:00:00.000000000000000Z
+1859-03-01T00:00:00.0Z
+setFromUT JD =  2400116.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1859-03-01T00:00:00.000000000000000Z
+1859-03-01T00:00:00Z
+1859-03-01T00:00:00.0Z
+setFromUT JD =  2400104.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1860-03-01T00:00:00.000000000000000Z
+1860-03-01T00:00:00.0Z
+setFromUT JD =  2400482.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1860-03-01T00:00:00.000000000000000Z
+1860-03-01T00:00:00Z
+1860-03-01T00:00:00.0Z
+setFromUT JD =  2400470.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1861-03-01T00:00:00.000000000000000Z
+1861-03-01T00:00:00.0Z
+setFromUT JD =  2400847.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1861-03-01T00:00:00.000000000000000Z
+1861-03-01T00:00:00Z
+1861-03-01T00:00:00.0Z
+setFromUT JD =  2400835.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1862-03-01T00:00:00.000000000000000Z
+1862-03-01T00:00:00.0Z
+setFromUT JD =  2401212.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1862-03-01T00:00:00.000000000000000Z
+1862-03-01T00:00:00Z
+1862-03-01T00:00:00.0Z
+setFromUT JD =  2401200.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1863-03-01T00:00:00.000000000000000Z
+1863-03-01T00:00:00.0Z
+setFromUT JD =  2401577.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1863-03-01T00:00:00.000000000000000Z
+1863-03-01T00:00:00Z
+1863-03-01T00:00:00.0Z
+setFromUT JD =  2401565.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1853-11-17T00:00:00.000000000000000Z
+1853-11-17T00:00:00.0Z
+setFromUT JD =  2398186.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1853-11-17T00:00:00.000000000000000Z
+1853-11-17T00:00:00Z
+1853-11-17T00:00:00.0Z
+setFromUT JD =  2398174.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1854-11-17T00:00:00.000000000000000Z
+1854-11-17T00:00:00.0Z
+setFromUT JD =  2398551.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1854-11-17T00:00:00.000000000000000Z
+1854-11-17T00:00:00Z
+1854-11-17T00:00:00.0Z
+setFromUT JD =  2398539.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1855-11-17T00:00:00.000000000000000Z
+1855-11-17T00:00:00.0Z
+setFromUT JD =  2398916.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1855-11-17T00:00:00.000000000000000Z
+1855-11-17T00:00:00Z
+1855-11-17T00:00:00.0Z
+setFromUT JD =  2398904.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1856-11-17T00:00:00.000000000000000Z
+1856-11-17T00:00:00.0Z
+setFromUT JD =  2399282.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1856-11-17T00:00:00.000000000000000Z
+1856-11-17T00:00:00Z
+1856-11-17T00:00:00.0Z
+setFromUT JD =  2399270.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1857-11-17T00:00:00.000000000000000Z
+1857-11-17T00:00:00.0Z
+setFromUT JD =  2399647.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1857-11-17T00:00:00.000000000000000Z
+1857-11-17T00:00:00Z
+1857-11-17T00:00:00.0Z
+setFromUT JD =  2399635.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1858-11-17T00:00:00.000000000000000Z
+1858-11-17T00:00:00.0Z
+setFromUT JD =  2400012.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1858-11-17T00:00:00.000000000000000Z
+1858-11-17T00:00:00Z
+1858-11-17T00:00:00.0Z
+setFromUT JD =  2400000.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1859-11-17T00:00:00.000000000000000Z
+1859-11-17T00:00:00.0Z
+setFromUT JD =  2400377.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1859-11-17T00:00:00.000000000000000Z
+1859-11-17T00:00:00Z
+1859-11-17T00:00:00.0Z
+setFromUT JD =  2400365.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1860-11-17T00:00:00.000000000000000Z
+1860-11-17T00:00:00.0Z
+setFromUT JD =  2400743.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1860-11-17T00:00:00.000000000000000Z
+1860-11-17T00:00:00Z
+1860-11-17T00:00:00.0Z
+setFromUT JD =  2400731.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1861-11-17T00:00:00.000000000000000Z
+1861-11-17T00:00:00.0Z
+setFromUT JD =  2401108.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1861-11-17T00:00:00.000000000000000Z
+1861-11-17T00:00:00Z
+1861-11-17T00:00:00.0Z
+setFromUT JD =  2401096.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1862-11-17T00:00:00.000000000000000Z
+1862-11-17T00:00:00.0Z
+setFromUT JD =  2401473.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1862-11-17T00:00:00.000000000000000Z
+1862-11-17T00:00:00Z
+1862-11-17T00:00:00.0Z
+setFromUT JD =  2401461.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1863-11-17T00:00:00.000000000000000Z
+1863-11-17T00:00:00.0Z
+setFromUT JD =  2401838.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1863-11-17T00:00:00.000000000000000Z
+1863-11-17T00:00:00Z
+1863-11-17T00:00:00.0Z
+setFromUT JD =  2401826.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1853-12-31T00:00:00.000000000000000Z
+1853-12-31T00:00:00.0Z
+setFromUT JD =  2398230.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1853-12-31T00:00:00.000000000000000Z
+1853-12-31T00:00:00Z
+1853-12-31T00:00:00.0Z
+setFromUT JD =  2398218.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1854-12-31T00:00:00.000000000000000Z
+1854-12-31T00:00:00.0Z
+setFromUT JD =  2398595.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1854-12-31T00:00:00.000000000000000Z
+1854-12-31T00:00:00Z
+1854-12-31T00:00:00.0Z
+setFromUT JD =  2398583.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1855-12-31T00:00:00.000000000000000Z
+1855-12-31T00:00:00.0Z
+setFromUT JD =  2398960.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1855-12-31T00:00:00.000000000000000Z
+1855-12-31T00:00:00Z
+1855-12-31T00:00:00.0Z
+setFromUT JD =  2398948.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1856-12-31T00:00:00.000000000000000Z
+1856-12-31T00:00:00.0Z
+setFromUT JD =  2399326.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1856-12-31T00:00:00.000000000000000Z
+1856-12-31T00:00:00Z
+1856-12-31T00:00:00.0Z
+setFromUT JD =  2399314.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1857-12-31T00:00:00.000000000000000Z
+1857-12-31T00:00:00.0Z
+setFromUT JD =  2399691.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1857-12-31T00:00:00.000000000000000Z
+1857-12-31T00:00:00Z
+1857-12-31T00:00:00.0Z
+setFromUT JD =  2399679.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1858-12-31T00:00:00.000000000000000Z
+1858-12-31T00:00:00.0Z
+setFromUT JD =  2400056.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1858-12-31T00:00:00.000000000000000Z
+1858-12-31T00:00:00Z
+1858-12-31T00:00:00.0Z
+setFromUT JD =  2400044.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1859-12-31T00:00:00.000000000000000Z
+1859-12-31T00:00:00.0Z
+setFromUT JD =  2400421.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1859-12-31T00:00:00.000000000000000Z
+1859-12-31T00:00:00Z
+1859-12-31T00:00:00.0Z
+setFromUT JD =  2400409.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1860-12-31T00:00:00.000000000000000Z
+1860-12-31T00:00:00.0Z
+setFromUT JD =  2400787.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1860-12-31T00:00:00.000000000000000Z
+1860-12-31T00:00:00Z
+1860-12-31T00:00:00.0Z
+setFromUT JD =  2400775.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1861-12-31T00:00:00.000000000000000Z
+1861-12-31T00:00:00.0Z
+setFromUT JD =  2401152.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1861-12-31T00:00:00.000000000000000Z
+1861-12-31T00:00:00Z
+1861-12-31T00:00:00.0Z
+setFromUT JD =  2401140.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1862-12-31T00:00:00.000000000000000Z
+1862-12-31T00:00:00.0Z
+setFromUT JD =  2401517.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1862-12-31T00:00:00.000000000000000Z
+1862-12-31T00:00:00Z
+1862-12-31T00:00:00.0Z
+setFromUT JD =  2401505.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+1863-12-31T00:00:00.000000000000000Z
+1863-12-31T00:00:00.0Z
+setFromUT JD =  2401882.5000000000000000 days
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+1863-12-31T00:00:00.000000000000000Z
+1863-12-31T00:00:00Z
+1863-12-31T00:00:00.0Z
+setFromUT JD =  2401870.5000000000000000 days
+Test 04 of small second range near Year 0 (Julian)
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:00.000000000000000Z
+0000-01-01T00:00:00.0Z
+JD =  1721057.5000000000000000 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:01.000000000000000Z
+0000-01-01T00:00:01.0Z
+JD =  1721057.5000115740112960 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:02.000000000000000Z
+0000-01-01T00:00:02.0Z
+JD =  1721057.5000231482554227 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:03.000000000000000Z
+0000-01-01T00:00:03.0Z
+JD =  1721057.5000347222667187 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:04.000000000000000Z
+0000-01-01T00:00:04.0Z
+JD =  1721057.5000462962780148 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:05.000000000000000Z
+0000-01-01T00:00:05.0Z
+JD =  1721057.5000578702893108 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:06.000000000000000Z
+0000-01-01T00:00:06.0Z
+JD =  1721057.5000694445334375 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:07.000000000000000Z
+0000-01-01T00:00:07.0Z
+JD =  1721057.5000810185447335 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:08.000000000000000Z
+0000-01-01T00:00:08.0Z
+JD =  1721057.5000925925560296 days
+
+Start of Julian proleptic inner test
+input and output (strfMJD) date/time
+0000-01-01T00:00:09.000000000000000Z
+0000-01-01T00:00:09.0Z
+JD =  1721057.5001041665673256 days
+Test 04 of small second range near Year 0 (Gregorian)
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:00.000000000000000Z
+0-01-01T00:00:00Z
+0000-01-01T00:00:00.0Z
+JD =  1721059.5000000000000000 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:01.000000000000000Z
+0-01-01T00:00:01Z
+0000-01-01T00:00:01.0Z
+JD =  1721059.5000115740112960 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:02.000000000000000Z
+0-01-01T00:00:02Z
+0000-01-01T00:00:02.0Z
+JD =  1721059.5000231482554227 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:03.000000000000000Z
+0-01-01T00:00:03Z
+0000-01-01T00:00:03.0Z
+JD =  1721059.5000347222667187 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:04.000000000000000Z
+0-01-01T00:00:04Z
+0000-01-01T00:00:04.0Z
+JD =  1721059.5000462962780148 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:05.000000000000000Z
+0-01-01T00:00:05Z
+0000-01-01T00:00:05.0Z
+JD =  1721059.5000578702893108 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:06.000000000000000Z
+0-01-01T00:00:06Z
+0000-01-01T00:00:06.0Z
+JD =  1721059.5000694445334375 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:07.000000000000000Z
+0-01-01T00:00:07Z
+0000-01-01T00:00:07.0Z
+JD =  1721059.5000810185447335 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:08.000000000000000Z
+0-01-01T00:00:08Z
+0000-01-01T00:00:08.0Z
+JD =  1721059.5000925925560296 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+0000-01-01T00:00:09.000000000000000Z
+0-01-01T00:00:09Z
+0000-01-01T00:00:09.0Z
+JD =  1721059.5001041665673256 days
+Test 04 of small second range near 2009-01-01 (Gregorian) when a leap second was inserted
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2008-12-31T23:59:55.123456789006013Z
+2008-12-31T23:59:55Z
+2008-12-31T23:59:55.123456789Z
+JD =  2454832.4999435585923493 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2008-12-31T23:59:56.123456789006013Z
+2008-12-31T23:59:56Z
+2008-12-31T23:59:56.123456789Z
+JD =  2454832.4999551326036453 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2008-12-31T23:59:57.123456789006013Z
+2008-12-31T23:59:57Z
+2008-12-31T23:59:57.123456789Z
+JD =  2454832.4999667066149414 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2008-12-31T23:59:58.123456789006013Z
+2008-12-31T23:59:58Z
+2008-12-31T23:59:58.123456789Z
+JD =  2454832.4999782806262374 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2008-12-31T23:59:59.123456789006013Z
+2008-12-31T23:59:59Z
+2008-12-31T23:59:59.123456789Z
+JD =  2454832.4999898546375334 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2009-01-01T00:00:00.123456789012345Z
+2009-01-01T00:00:00Z
+2009-01-01T00:00:00.123456789Z
+JD =  2454832.5000014291144907 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2009-01-01T00:00:01.123456789012345Z
+2009-01-01T00:00:01Z
+2009-01-01T00:00:01.123456789Z
+JD =  2454832.5000130031257868 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2009-01-01T00:00:02.123456789012345Z
+2009-01-01T00:00:02Z
+2009-01-01T00:00:02.123456789Z
+JD =  2454832.5000245771370828 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2009-01-01T00:00:03.123456789012345Z
+2009-01-01T00:00:03Z
+2009-01-01T00:00:03.123456789Z
+JD =  2454832.5000361511483788 days
+
+Start of Gregorian proleptic inner test
+input and output (strftime), and output (strfMJD) date/time
+2009-01-01T00:00:04.123456789012345Z
+2009-01-01T00:00:04Z
+2009-01-01T00:00:04.123456789Z
+JD =  2454832.5000477251596749 days
+Test 05 of normalization of breakDownMJD result and strfMJD results near the hour.
+MJD = {51910,3599.999999990000106}
+breakDownMJD result is year, month, day, hour, min, sec = 2001, 0, 1, 0, 59,   59.999999990000106
+strfMJD %S%9 result is 2001-01-01T00:59:59.999999990Z
+strfMJD %S%. result is 2001-01-01T00:59:59.99999999Z
+strfMJD more heavily rounded results (the latter ones with a blank before the
+decimal point to prove separated formatting works) for H:M:S are the following:
+01:00:00, 01:00:00, 01:00:00.0, 01:00:00.00, 01:00:00.000, 01:00:00.0000
+          01:00:00 ,01:00:00 .0,01:00:00 .00,01:00:00 .000,01:00:00 .0000
+MJD = {51910,3600.000000000000000}
+breakDownMJD result is year, month, day, hour, min, sec = 2001, 0, 1, 1, 0,    0.000000000000000
+strfMJD %S%9 result is 2001-01-01T01:00:00.000000000Z
+strfMJD %S%. result is 2001-01-01T01:00:00.0Z
+strfMJD more heavily rounded results (the latter ones with a blank before the
+decimal point to prove separated formatting works) for H:M:S are the following:
+01:00:00, 01:00:00, 01:00:00.0, 01:00:00.00, 01:00:00.000, 01:00:00.0000
+          01:00:00 ,01:00:00 .0,01:00:00 .00,01:00:00 .000,01:00:00 .0000
+MJD = {51910,3600.000000009999894}
+breakDownMJD result is year, month, day, hour, min, sec = 2001, 0, 1, 1, 0,    0.000000009999894
+strfMJD %S%9 result is 2001-01-01T01:00:00.000000010Z
+strfMJD %S%. result is 2001-01-01T01:00:00.00000001Z
+strfMJD more heavily rounded results (the latter ones with a blank before the
+decimal point to prove separated formatting works) for H:M:S are the following:
+01:00:00, 01:00:00, 01:00:00.0, 01:00:00.00, 01:00:00.000, 01:00:00.0000
+          01:00:00 ,01:00:00 .0,01:00:00 .00,01:00:00 .000,01:00:00 .0000
+Test 06 (non-verbose) of calendar dates for every year from -5000000 to 5000000
+Test 07 (non-verbose) of all seconds from late 2007 to early 2009

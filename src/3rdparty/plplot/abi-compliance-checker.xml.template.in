@@ -1,0 +1,27 @@
+<version>${PLPLOT_VERSION}</version>
+<headers>
+  ${PREFIX}/include/plplot
+</headers>
+<libs>
+  ${PREFIX}/lib
+</libs>
+<include_paths>
+  @TCL_INCLUDE_PATH@
+  @TK_INCLUDE_PATH@
+  @QT_INCLUDES@
+</include_paths>
+
+<include_preamble>
+<!-- These two must be first in the list of headers.  plplotP.h for
+obvious reasons, and qt.h because some other PLplot installed header
+interferes (somehow) unless qt.h is near the top of the list. -->
+plplotP.h
+qt.h
+</include_preamble>
+
+<skip_headers>
+<!-- Remove headers that currently cause errors for
+abi-compliance-checker.-->
+wxPLplotstream.h
+wxPLplotwindow.h
+</skip_headers>

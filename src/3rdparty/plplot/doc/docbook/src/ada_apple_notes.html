@@ -1,0 +1,32 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Notes for Apple Macintosh OS X users</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="ada.html" title="Chapter 8. Ada Language"><link rel="prev" href="ada_compilation_notes.html" title="Compilation notes"><link rel="next" href="cplusplus.html" title="Chapter 9. A C++ Interface for PLplot"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Notes for Apple Macintosh OS X users</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ada_compilation_notes.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Ada Language</th><td width="20%" align="right"> <a accesskey="n" href="cplusplus.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="ada_apple_notes"></a>Notes for Apple Macintosh OS X users</h2></div></div></div><p>The following comments apply to users of Apple Macintosh computers
+    which run OS X. OS X users may use Apple's free integrated development
+    environment (IDE) or may prefer other methods such as using a favorite
+    editor and building from the command line.</p><p>OS X users should be aware that an excellent graphical terminal
+    program is available and is highly recommended. It is called AquaTerm and
+    is a full Cocoa program with window control. Performing a cut operation
+    places a PDF of the front window on the clipboard, a convenience when
+    working with other graphics or word processing programs.</p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm2821"></a>Using Apple's Xcode IDE</h3></div></div></div><p>The Macintosh Ada community has made a plug-in for Apple's free
+      Xcode integrated development environment (IDE) that makes programming
+      Ada in Xcode possible. The plug-in is included with the compiler that is
+      available at <a class="ulink" href="http://www.macada.org/" target="_top">www.macada.org</a>.
+      Since Xcode is based on gcc, it is possible to work in the various gcc
+      languages as well as to incorporate binaries such as the PLplot
+      library.</p><p>In order to make an Xcode project, drag-and-drop source files and
+      the PLplot library file to the Groups &amp; Files pane of an Ada
+      project. There are a few idiosyncrasies that you may encounter so make
+      sure to contact the very friendly Macintosh Ada mailing list at <a class="ulink" href="http://www.macada.org/" target="_top">www.macada.org</a> or study the FAQ at
+      that same site if you have any difficulties.</p><p>[This plug-in still works for some older versions of Xcode but not
+   for newer versions, as of 2013.]</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm2828"></a>AquaTerm</h3></div></div></div><p>AquaTerm is a display option available on Macintosh computers
+      using OS X and is supported by PLplot. It is a native Cocoa graphics
+      "terminal" that is highly recommended. All output is antialiased and is
+      easily cut-and-pasted in OS X's native PDF format. Get it <a class="ulink" href="http://sourceforge.net/projects/aquaterm/files" target="_top">here</a>.
+      It can also be installed from either the <a class="ulink" href="http://fink.thetis.ig42.org/" target="_top">Fink</a> or <a class="ulink" href="http://www.macports.org/" target="_top">MacPorts</a>
+      projects.</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm2834"></a>X11</h3></div></div></div><p>Apple supplies the X11 windowing system that is popular on some
+      other Unix and Linux operations systems. Formerly it was available as part
+      of the Developer Tools but as of OS X 10.8 it is a separate installation.
+      All PLplot programs made with the Ada bindings will run on X11. In fact,
+      some types of interactivity such as Example 17 will not run on
+      Apple's Terminal.app and should be run on X11 (or
+      some other output device such as TCL/TK).</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm2837"></a>GNAT for OS X</h3></div></div></div><p>A web site for OS X users is at <a class="ulink" href="http://www.macada.org/macada/Welcome.html" target="_top">www.macada.org</a>.
+      Although rather dated, the mailing list is still active. Assistance can be
+      found at other places on the web including the usenet comp.lang.ada.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ada_compilation_notes.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="ada.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="cplusplus.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Compilation notes </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 9. A C++ Interface for PLplot</td></tr></table></div></body></html>

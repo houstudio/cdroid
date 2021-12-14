@@ -1,0 +1,285 @@
+#!/bin/sh
+#--------------------------------*- Tcl -*------------------------------------#
+# Maurice LeBrun
+# 30 Jun 1994
+#
+# @> A script illustrating multiple toplevel plframes.
+#-----------------------------------------------------------------------------#
+#\
+exec "@plserver_LOCATION@" -f "$0" ${1+"$@"}
+
+# Note: I defer running "open_main" until later to make sure everything
+# has been sourced.
+
+wm title . "tk03"
+plstdwin .
+
+set child_count 1
+
+# If you just want a bare plframe, set this to 0.
+
+set use_plxframe 1
+
+###############################################################################
+# Set up the menubar and message widgets for main window.
+
+proc open_main {} {
+
+    global use_plxframe
+
+    if { $use_plxframe == 1 } then {
+	set plwin .plw.plwin
+    } else {
+	set plwin .plwin
+    }
+
+    frame .menu -relief raised -borderwidth 3
+
+    button .menu.one -text "One" -command "1 $plwin"
+    pack append .menu .menu.one {left expand fill}
+
+    button .menu.two -text "Two" -command "2 $plwin"
+    pack append .menu .menu.two {left expand fill}
+
+    button .menu.open -text "Open new" -command "open_child"
+    pack append .menu .menu.open {left expand fill}
+
+    button .menu.exit -text "Exit" -command "destroy ."
+
+#"quit 0"
+
+    pack append .menu .menu.exit {right expand fill}
+
+    message .msg \
+	-font -Adobe-helvetica-medium-r-normal--*-240* -aspect 200 \
+	-width 500 -borderwidth 1 \
+	-text "TK03: Multiple toplevels with plframes"
+
+    pack append . \
+	.menu {top fillx} \
+	.msg {top padx 5 pady 5 fill}
+
+    tk_menuBar .menu .menu.one .menu.two .menu.exit
+
+    if { $use_plxframe == 1 } then {
+	plxframe .plw
+	pack append . .plw {left expand fill}
+    } else {
+	plframe .plwin
+	pack append . .plwin {left expand fill}
+    }
+}
+
+###############################################################################
+# Set up the second toplevel
+
+proc open_child {} {
+
+    global child_count use_plxframe
+
+    set w .$child_count
+
+    toplevel $w
+    plstdwin $w
+
+    if { $use_plxframe == 1 } then {
+	set plwin $w.plw.plwin
+    } else {
+	set plwin $w.plwin
+    }
+
+# Set up the second menubar and message widgets.
+
+    frame $w.menu -relief raised -borderwidth 3
+
+    button $w.menu.three -text "Three" -command "plot2 $plwin"
+    pack append $w.menu $w.menu.three {left expand fill}
+
+    button $w.menu.four -text "Four" -command "plot3 $plwin"
+    pack append $w.menu $w.menu.four {left expand fill}
+
+    button $w.menu.exit -text "Dismiss" -command "destroy $w"
+    pack append $w.menu $w.menu.exit {right expand fill}
+
+    message $w.msg \
+	-font -Adobe-helvetica-medium-r-normal--*-240* -aspect 200 \
+	-width 500 -borderwidth 1 \
+	-text "TK03: toplevel $child_count"
+
+    pack append $w \
+	$w.menu {top fillx} \
+	$w.msg {top padx 5 pady 5 fill}
+
+    tk_menuBar $w.menu $w.menu.three $w.menu.four
+
+# This creates the plframe "megawidget".  If you just want a bare plframe,
+# change use_plxframe to 0.
+
+    if { $use_plxframe == 1 } then {
+	plxframe $w.plw
+	pack append $w $w.plw {left expand fill}
+    } else {
+	plframe $w.plwin
+	pack append $w $w.plwin {left expand fill}
+    }
+
+    incr child_count
+}
+
+###############################################################################
+# Utility routines
+
+# Punch eject and hold onto your seat !!!
+
+proc quit a {
+    exit
+}
+
+# Utility routine.
+
+proc dpos w {
+    wm geometry $w +300+300
+}
+
+###############################################################################
+# Plotting routines
+###############################################################################
+
+proc 1 {w} {
+    global xscale yscale xoff yoff
+
+    set xscale 6.0
+    set yscale 1.0
+    set xoff   0.0
+    set yoff   0.0
+
+    plot1 $w
+}
+
+proc 2 {w} {
+    global xscale yscale xoff yoff
+
+    set xscale 1.0
+    set yscale 0.0014
+    set xoff   0.0
+    set yoff   0.0185
+
+    $w cmd plsyax 5
+
+    plot1 $w
+}
+
+# This is supposed to work just like the plot1() in x01c.c
+
+proc plot1 {w} {
+    global xscale yscale xoff yoff
+
+    set npts 60
+    matrix x f $npts
+    matrix y f $npts
+
+    for {set i 0} {$i < $npts} {incr i} {
+	x $i = [expr $xoff + $xscale * ($i + 1) / $npts]
+	y $i = [expr $yoff + $yscale * pow([x $i],2)]
+    }
+
+    set xmax [x [expr $npts-1]]
+    set ymax [y [expr $npts-1]]
+
+    matrix x1 f 6
+    matrix y1 f 6
+
+    for {set i 0} {$i < 6} {incr i} {
+	set j [expr $i*10+3]
+	x1 $i = [x $j]
+	y1 $i = [y $j]
+    }
+
+    $w cmd plcol0 1
+    $w cmd plenv $xoff $xmax $yoff $ymax 0 0
+    $w cmd plcol0 6
+    $w cmd pllab "(x)" "(y)" "#frPLplot Example 1 - y=x#u2"
+
+    # plot the data points
+
+    $w cmd plcol0 9
+    $w cmd plpoin x1 y1 9
+
+    # draw the line through the data
+
+    $w cmd plcol0 4
+    $w cmd plline x y
+}
+
+# This is supposed to work just like the plot2() in x01c.c
+
+proc plot2 {w} {
+    $w cmd plcol0 1
+    $w cmd plenv -2 10 -.4 1.2 0 1
+    $w cmd plcol0 2
+    $w cmd pllab "(x)" "sin(x)/x" "#frPLplot Example 1 - Sinc Function"
+
+    # Fill up the array
+
+    matrix x1 f 101
+    matrix y1 f 101
+
+    for {set i 0} {$i < 101} {incr i} {
+	set x [expr ($i - 19.)/6.]
+	x1 $i = $x
+	y1 $i = 1
+	if {$x != 0} { y1 $i = [expr sin($x)/$x] }
+    }
+
+    $w cmd plcol0 3
+    $w cmd plline x1 y1
+}
+
+# This is supposed to work just like the plot3() in x01c.c
+
+proc plot3 {w} {
+
+    $w cmd pladv
+    $w cmd plvsta
+    $w cmd plwind 0.0 360.0 -1.2 1.2
+
+# Draw a box with ticks spaced 60 degrees apart in X, and 0.2 in Y.
+
+    $w cmd plcol0 1
+    $w cmd plbox "bcnst" 60.0 2 "bcnstv" 0.2 2
+
+# Superimpose a dashed line grid, with 1.5 mm marks and spaces.
+# plstyl expects two integer matrices for mark and space!
+
+    matrix mark i 1
+    matrix space i 1
+
+    mark 0 = 1500
+    space 0 = 1500
+    $w cmd plstyl mark space
+
+    $w cmd plcol0 2
+    $w cmd plbox "g" 30.0 0 "g" 0.2 0
+
+    # Change back to default style.
+    matrix empty i 0
+    $w cmd plstyl empty empty
+
+    $w cmd plcol0 3
+    $w cmd pllab "Angle (degrees)" "sine" "#frPLplot Example 1 - Sine function"
+
+    matrix x f 101
+    matrix y f 101
+
+    for {set i 0} {$i < 101} {incr i} {
+	x $i = [expr 3.6 * $i]
+	y $i = [expr sin([x $i] * 3.141592654 / 180.0)]
+    }
+
+    $w cmd plcol0 4
+    $w cmd plline x y
+}
+
+###############################################################################
+
+open_main

@@ -1,0 +1,30 @@
+body {  background-color: white; }
+hr {  border-width: 0pt; }
+:link {  color: #007d71; }
+
+.sect1 .title {
+  color: #990066;
+  text-align: center;
+}
+
+.sect2 .title {
+  color: #005A9C;
+  text-align: left;
+}
+
+.foot {
+  text-align: center;
+  font-size: 80%;
+}
+
+.signature {
+  text-align: right;
+  padding: 3ex;
+}
+
+table {
+  margin-right: auto;
+  margin-left: auto;
+  border: solid 1px;
+  background: #E0FFE0;
+}

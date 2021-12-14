@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGDEV 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgdev\fP - Get the current device (keyword) name
+.SH SYNOPSIS
+\fBplgdev\fP(\fIp_dev\fP)
+.SH DESCRIPTION
+
+.P
+Get the current device (keyword) name.  Note: you must have allocated space for this (80 characters is safe).
+.P
+Redacted form: \fBplgdev(p_dev)\fP
+.P
+This function is used in example 14.
+.SH ARGUMENTS
+.TP
+\fIp_dev\fP (\fBPLCHAR_NC_VECTOR\fP(3plplot), output)
+Returned ascii character string (with preallocated length of 80 characters or more) containing the device (keyword) name.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

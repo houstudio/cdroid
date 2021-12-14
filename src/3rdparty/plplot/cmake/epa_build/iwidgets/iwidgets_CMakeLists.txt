@@ -1,0 +1,149 @@
+# Top-level CMakeLists.txt for the CMake-based build and test system
+# of the iwidgets software.
+
+# Copyright (C) 2013-2014 Alan W. Irwin
+
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; version 2 of the License.
+#
+# This file is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with this file; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+# The traditional autoconf build of iwidgets that was created in 2002
+# or earlier is completely broken and difficult to understand because
+# lots of the install is done in a low-level way.
+# Therefore, this is an attempt to replace that build system with a
+# rational CMake-based build system that actually works.
+
+# N.B. This "build" system only installs files so
+# no compiler is required for this project
+project(iwidgets NONE)
+
+message(STATUS "CMake version = ${CMAKE_VERSION}")
+message(STATUS "CMAKE_SYSTEM = ${CMAKE_SYSTEM}")
+message(STATUS "CMAKE_GENERATOR = ${CMAKE_GENERATOR}")
+message(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
+
+cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
+
+option(BUILD_IWIDGETS_4.1 "Build iwidgets 4.1" OFF)
+
+if(BUILD_IWIDGETS_4.1)
+  # install iwidgets 4.1 that is associated with version 4 of itcl and itk.
+  # Note the only difference between iwidgets 4.1 and 4.0 source code
+  # is a small patch.  We assume that patch has been applied for this case.
+  set(ITCL_VERSION 4.0)
+  set(VERSION 4.1.0)
+else(BUILD_IWIDGETS_4.1)
+  # install iwidgets 4.0 that is associated with version 3 of itcl and itk.
+  set(ITCL_VERSION 3.2)
+  set(VERSION 4.0.1)
+endif(BUILD_IWIDGETS_4.1)
+
+set(PACKAGE iwidgets${VERSION})
+
+# Set up install locations.
+set(
+  CMAKE_INSTALL_SCRIPTS_DIR
+  ${CMAKE_INSTALL_PREFIX}/lib/${PACKAGE}
+  CACHE PATH "install location for iwidgets scripts."
+  )
+
+set(
+  CMAKE_INSTALL_DOC_DIR
+  ${CMAKE_INSTALL_PREFIX}/share/doc/${PACKAGE}
+  CACHE PATH "install location for iwidgets scripts."
+  )
+
+set(
+  CMAKE_INSTALL_MAN_DIR
+  ${CMAKE_INSTALL_PREFIX}/share/man
+  CACHE PATH "install location for man documentation"
+  )
+
+# Install configured iwidgets.tcl and pkgIndex.tcl.
+configure_file(iwidgets.tcl.in iwidgets.tcl @ONLY)
+configure_file(pkgIndex.tcl.in pkgIndex.tcl @ONLY)
+install(
+  FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/iwidgets.tcl
+  ${CMAKE_CURRENT_BINARY_DIR}/pkgIndex.tcl
+  DESTINATION ${CMAKE_INSTALL_SCRIPTS_DIR}
+  )
+
+# Install selected files from the generic subdirectory.
+
+file(GLOB generic_FILE_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} generic/*.itk generic/*.itcl generic/tclIndex generic/*.gif)
+install(
+  FILES
+  ${generic_FILE_LIST}
+  DESTINATION ${CMAKE_INSTALL_SCRIPTS_DIR}/scripts
+  )
+
+# Install some individual files to the documentation directory.
+install(
+  FILES
+  CHANGES ChangeLog README license.terms
+  DESTINATION ${CMAKE_INSTALL_DOC_DIR}
+  )
+
+
+# Install demos, demos/images, and demos/html.
+
+file(GLOB demos_FILE_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} demos/*)
+list(REMOVE_ITEM demos_FILE_LIST demos/images demos/html)
+install(
+  FILES
+  ${demos_FILE_LIST}
+  DESTINATION ${CMAKE_INSTALL_DOC_DIR}/demos
+  )
+
+file(GLOB demos_images_FILE_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} demos/images/*)
+install(
+  FILES
+  ${demos_images_FILE_LIST}
+  DESTINATION ${CMAKE_INSTALL_DOC_DIR}/demos/images
+  )
+file(GLOB demos_html_FILE_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} demos/html/*)
+install(
+  FILES
+  ${demos_html_FILE_LIST}
+  DESTINATION ${CMAKE_INSTALL_DOC_DIR}/demos/html
+  )
+
+# Install transformed man pages using "iwidgets_" filename suffix.
+# (All these changes copied exactly from the traditional build system
+# except that I use default 644 permissions [which is consistent
+# with the permissions of Debian man pages].)
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc)
+
+find_program(SED_EXECUTABLE sed)
+if(NOT SED_EXECUTABLE)
+  message(FATAL_ERROR "sed required for build but not found")
+endif(NOT SED_EXECUTABLE)
+
+file(GLOB man_FILE_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} doc/*.n)
+foreach(manpage ${man_FILE_LIST})
+  string(REGEX REPLACE "^doc/" "doc/iwidgets_" processed_manpage ${manpage})
+  execute_process(
+    COMMAND
+    ${SED_EXECUTABLE} -e "/man\\.macros/r ${CMAKE_CURRENT_SOURCE_DIR}/doc/man.macros" -e "/man\\.macros/d"
+    INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${manpage}
+    OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${processed_manpage}
+    )
+endforeach(manpage ${man_FILE_LIST})
+
+file(GLOB man_FILE_LIST ${CMAKE_CURRENT_BINARY_DIR}/doc/*.n)
+install(
+  FILES
+  ${man_FILE_LIST}
+  DESTINATION ${CMAKE_INSTALL_MAN_DIR}/mann
+  )

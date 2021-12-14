@@ -1,0 +1,83 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSTRIPC 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplstripc\fP - Create a 4-pen strip chart
+.SH SYNOPSIS
+\fBplstripc\fP(\fIid\fP, \fIxspec\fP, \fIyspec\fP, \fIxmin\fP, \fIxmax\fP, \fIxjump\fP, \fIymin\fP, \fIymax\fP, \fIxlpos\fP, \fIylpos\fP, \fIy_ascl\fP, \fIacc\fP, \fIcolbox\fP, \fIcollab\fP, \fIcolline\fP, \fIstyline\fP, \fIlegline[]\fP, \fIlabx\fP, \fIlaby\fP, \fIlabtop\fP)
+.SH DESCRIPTION
+
+.P
+Create a 4-pen strip chart, to be used afterwards by \fBplstripa\fP(3plplot)
+.P
+Redacted form: General: \fBplstripc(id, xspec, yspec, xmin, xmax, xjump, ymin, ymax, xlpos, ylpos, y_ascl, acc, colbox, collab, colline, styline, legline, labx, laby, labz)\fP
+
+.P
+This function is used in example 17.
+.SH ARGUMENTS
+.TP
+\fIid\fP (\fBPLINT_NC_SCALAR\fP(3plplot), output)
+Returned value of the identification number of the strip chart to use on \fBplstripa\fP(3plplot) and \fBplstripd\fP(3plplot).
+.TP
+\fIxspec\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the x-axis specification as in \fBplbox\fP(3plplot).
+.TP
+\fIyspec\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the y-axis specification as in \fBplbox\fP(3plplot).
+.TP
+\fIxmin\fP (\fBPLFLT\fP(3plplot), input)
+Initial coordinates of plot box; they will change as data are added.
+.TP
+\fIxmax\fP (\fBPLFLT\fP(3plplot), input)
+Initial coordinates of plot box; they will change as data are added.
+.TP
+\fIxjump\fP (\fBPLFLT\fP(3plplot), input)
+When x attains \fIxmax\fP, the length of the plot is multiplied by the factor (1 + \fIxjump\fP) .
+.TP
+\fIymin\fP (\fBPLFLT\fP(3plplot), input)
+Initial coordinates of plot box; they will change as data are added.
+.TP
+\fIymax\fP (\fBPLFLT\fP(3plplot), input)
+Initial coordinates of plot box; they will change as data are added.
+.TP
+\fIxlpos\fP (\fBPLFLT\fP(3plplot), input)
+X legend box position (range from 0 to 1).
+.TP
+\fIylpos\fP (\fBPLFLT\fP(3plplot), input)
+Y legend box position (range from 0 to 1).
+.TP
+\fIy_ascl\fP (\fBPLBOOL\fP(3plplot), input)
+Autoscale y between x jumps if \fIy_ascl\fP is true, otherwise not.
+.TP
+\fIacc\fP (\fBPLBOOL\fP(3plplot), input)
+Accumulate strip plot if \fIacc\fP is true, otherwise slide display.
+.TP
+\fIcolbox\fP (\fBPLINT\fP(3plplot), input)
+Plot box color index (cmap0).
+.TP
+\fIcollab\fP (\fBPLINT\fP(3plplot), input)
+Legend color index (cmap0).
+.TP
+\fIcolline\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the cmap0 color indices for the 4 pens.
+.TP
+\fIstyline\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the line style indices for the 4 pens.
+.TP
+\fIlegline\fP (\fBPLCHAR_MATRIX\fP(3plplot), input)
+A vector of UTF-8 character strings containing legends for the 4 pens.
+.TP
+\fIlabx\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string containing the label for the x axis.
+.TP
+\fIlaby\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string containing the label for the y axis.
+.TP
+\fIlabtop\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+A UTF-8 character string containing the plot title.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

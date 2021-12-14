@@ -1,0 +1,51 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plerry: Draw error bars in the y direction</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plerrx.html" title="plerrx: Draw error bars in x direction"><link rel="next" href="plfamadv.html" title="plfamadv: Advance to the next family file on the next new page"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plerry</code>: Draw error bars in the y direction
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plerrx.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plfamadv.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plerry"></a>
+      <code class="function">plerry</code>: Draw error bars in the y direction
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plerry</b>
+	  (</code></td><td><var class="pdparam">n</var>, </td></tr><tr><td> </td><td><var class="pdparam">x</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymin</var>, </td></tr><tr><td> </td><td><var class="pdparam">ymax</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Draws a set of <code class="literal"><em class="parameter"><code>n</code></em></code>
+      error bars in the y direction, the <code class="literal">i</code>'th error bar extending from
+      <code class="literal"><em class="parameter"><code>ymin</code></em>[i]</code> to
+      <code class="literal"><em class="parameter"><code>ymax</code></em>[i]</code> at x coordinate
+      <code class="literal"><em class="parameter"><code>x</code></em>[i]</code>.  The terminals of the
+      error bars are of length equal to the minor tick length (settable
+      using <a class="link" href="plsmin.html" title="plsmin: Set length of minor ticks"><code class="function">plsmin</code></a>).
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>n</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+	</span></dt><dd><p>
+	    Number of error bars to draw.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>x</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing the x coordinates of the error bars.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ymin</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing the y coordinates of the lower endpoints of the error
+	    bars.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>ymax</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+	</span></dt><dd><p>
+	    A vector containing the y coordinates of the upper endpoints of the error
+	    bars.
+	  </p></dd></dl></div><p>
+      Redacted form:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+	    General: <code class="function">plerry(x, ymin, ymax)</code>
+	  </p></li></ul></div><p>
+    </p><p>
+      This function is used in example 29.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plerrx.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plfamadv.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plerrx</code>: Draw error bars in x direction
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plfamadv</code>: Advance to the next family file on the
+      next new page
+    </td></tr></table></div></body></html>

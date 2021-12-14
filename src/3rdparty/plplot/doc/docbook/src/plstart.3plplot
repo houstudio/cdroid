@@ -1,0 +1,32 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSTART 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplstart\fP - Initialization
+.SH SYNOPSIS
+\fBplstart\fP(\fIdevname\fP, \fInx\fP, \fIny\fP)
+.SH DESCRIPTION
+
+.P
+Alternative to \fBplstar\fP(3plplot) for initializing the plotting package.  The device name keyword for the desired output device must be supplied as an argument.  These keywords are the same as those printed out by \fBplstar\fP(3plplot).  If the requested device is not available, or if the input string is empty or begins with ``?'', the prompted start up of \fBplstar\fP(3plplot) is used.  This routine also divides the output device page into \fInx\fP by \fIny\fP subpages, each of which may be used independently.  The subroutine \fBpladv\fP(3plplot) is used to advance from one subpage to the next.
+.P
+Redacted form: General: \fBplstart(devname, nx, ny)\fP
+
+.P
+This function is not used in any examples.
+.SH ARGUMENTS
+.TP
+\fIdevname\fP (\fBPLCHAR_VECTOR\fP(3plplot), input)
+An ascii character string containing the device name keyword of the required output device.  If \fIdevname\fP is NULL or if the first character of the string is a ``?'', the normal (prompted) start up is used.
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+Number of subpages to divide output page in the x direction.
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Number of subpages to divide output page in the y direction.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

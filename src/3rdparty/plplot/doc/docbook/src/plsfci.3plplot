@@ -1,0 +1,26 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSFCI 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsfci\fP - Set FCI (font characterization integer)
+.SH SYNOPSIS
+\fBplsfci\fP(\fIfci\fP)
+.SH DESCRIPTION
+
+.P
+Sets font characteristics to be used at the start of the next string using the FCI approach.  See the PLplot documentation for more information.  Note, \fBplsfont\fP(3plplot) (which calls \fBplsfci\fP(3plplot) internally) provides a more user-friendly API for setting the font characterisitics.
+.P
+Redacted form: General: \fBplsfci(fci)\fP
+
+.P
+This function is used in example 23.
+.SH ARGUMENTS
+.TP
+\fIfci\fP (\fBPLUNICODE\fP(3plplot), input)
+PLUNICODE (unsigned 32-bit integer) value of FCI.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

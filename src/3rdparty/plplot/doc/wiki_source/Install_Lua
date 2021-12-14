@@ -1,0 +1,36 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+In order for the high-class Lua bindings and examples for PLplot to work you must install Lua on your Windows platform.
+
+The Lua build only takes a minute or so. Thus the simplest way to install Lua is to first [install MinGW/MSYS](Install_MinGW_MSYS "wikilink") (if you haven't done so already). Then use that compiler and associated build tools to build Lua on Windows with the following steps:
+
+-   Put both MinGW and MSYS on your PATH. This puts all sorts of command-line tools at your fingertips that will be used in the further steps.
+-   Set the LUA_PREFIX variable which points to the directory used for all further steps. Under bash (available as part of MSYS), I set "LUA_PREFIX=/z/home/wine/newstart/lua/", but use whatever is convenient for you.
+-   Create that directory if it doesn't exist already and change directory to that location using the following commands:
+    -   mkdir -p \$LUA_PREFIX
+    -   cd \$LUA_PREFIX
+-   Download <http://www.lua.org/ftp/lua-5.1.4.tar.gz> in that location.
+-   Unpack, build, and install Lua using the following commands (where that last "cp -a" command works around a bug in the lua-5.1.4 build system for MinGW/MSYS):
+    -   tar zxf lua-5.1.4.tar.gz
+    -   cd lua-5.1.4
+    -   make mingw >& make_mingw.out
+    -   make install INSTALL_TOP=\$LUA_PREFIX/install >& make_install.out
+    -   cp -a src/lua51.dll \$LUA_PREFIX/install/bin
+
+To make Lua accessible to the PLplot CMake-based build system, you must put the lua command on your PATH (using "PATH=\$LUA_PREFIX/install/bin:\$PATH") and use the following cmake options for your PLplot build:
+
+-   -DLUA_INCLUDE_DIR:PATH=\$LUA_PREFIX/install/include
+-   -DLUA_LIBRARY:FILEPATH=\$LUA_PREFIX/install/lib/liblua.a
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).

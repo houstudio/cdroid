@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['offset',['offset',['../struct__plm__format.html#aa5e62c8c1ea4026ab7b4d5e7fe4379fe',1,'_plm_format']]],
+  ['offset1',['offset1',['../structQSASConfigStruct.html#a8b404820878eee60a2dede7bd4601e06',1,'QSASConfigStruct::offset1()'],['../structTAI__UTC.html#a95eb25905e36f51b1dd3b14fa100d931',1,'TAI_UTC::offset1()']]],
+  ['offset2',['offset2',['../structQSASConfigStruct.html#a4fe06a80b0e8aeaece961d4058766a92',1,'QSASConfigStruct::offset2()'],['../structTAI__UTC.html#a65455014519f456daa9106f56659397d',1,'TAI_UTC::offset2()']]],
+  ['old_5fsoffset',['old_soffset',['../structPLCairo.html#a12edf6e15a7faef7af76269423dce238',1,'PLCairo']]],
+  ['old_5fsscale',['old_sscale',['../structPLCairo.html#a53a3a8d2d8f7bfd556c6dbb2e9afb8b7',1,'PLCairo']]],
+  ['oldhiview',['oldhiview',['../plot3d_8c.html#af35e0f7b0a9113c6ae7a70341e8d3fd6',1,'plot3d.c']]],
+  ['oldloview',['oldloview',['../plot3d_8c.html#a391febef01caa614ae612952a95aac25',1,'plot3d.c']]],
+  ['onew2b',['ONEW2B',['../namespaceplplot.html#a682ba4d7edb5b72c8768df356142ebb0',1,'plplot::ONEW2B()'],['../namespaceplplotc.html#aeada52a4c537c3e5cbb723e664b03248',1,'plplotc.ONEW2B()']]],
+  ['onew2d',['ONEW2D',['../namespaceplplot.html#a778b78c3e46e3647c5b8ce171f26d437',1,'plplot::ONEW2D()'],['../namespaceplplotc.html#a78b40bbc38a3710c1443bb0cabe7a011',1,'plplotc.ONEW2D()']]],
+  ['open',['open',['../structcdImageStruct.html#af6d152248bfa7637e35b08427f099c0a',1,'cdImageStruct']]],
+  ['opt',['opt',['../structplplot_1_1__N1.html#a6e723e62d028e42dde3579bd656022dc',1,'plplot::_N1::opt()'],['../structPLOptionTable.html#a9f6233441172fbe3198bfec5f8d25fc1',1,'PLOptionTable::opt()'],['../structDrvOpt.html#a73abb759388e28f4a9710e7ead5d08d5',1,'DrvOpt::opt()']]],
+  ['option',['option',['../structDrvOptCmd.html#a917cd988483f737f6a44e769c31a9432',1,'DrvOptCmd']]],
+  ['options',['options',['../structPLOptionInfo.html#a2c426d695c239e1377d59ea04301fe80',1,'PLOptionInfo::options()'],['../tclMain_8c.html#a9c426a6e467ca57cd72f5637f5928d6e',1,'options():&#160;tclMain.c']]],
+  ['opttmp',['opttmp',['../plargs_8c.html#a139fcf820c58a2331e102cd367a8f158',1,'plargs.c']]],
+  ['order',['order',['../structtriangle.html#a8b3d3cd3631f47f800a289afd43a9ccb',1,'triangle']]],
+  ['original_5fchrdef',['original_chrdef',['../structPLStream.html#a1c96071977b830441e8dc0b6d1ea0323',1,'PLStream']]],
+  ['original_5fchrht',['original_chrht',['../structPLStream.html#ab8a4ab4b5ce5ed5892455da26b638af3',1,'PLStream']]],
+  ['outbuf',['outbuf',['../ps_8c.html#a603f0d56bb0045e7f9bc3ef592a96e4f',1,'outbuf():&#160;ps.c'],['../psttf_8cc.html#a603f0d56bb0045e7f9bc3ef592a96e4f',1,'outbuf():&#160;psttf.cc']]],
+  ['outfile',['OutFile',['../structPLStream.html#a60e06589a87b44963d348f430d7a6b24',1,'PLStream::OutFile()'],['../structcdImageStruct.html#a50e8cb41a845ade846fb57652c4e7c83',1,'cdImageStruct::outfile()']]],
+  ['output_5ftype',['output_type',['../structPLStream.html#ab6a87dc559f780569957bdd96f586e2e',1,'PLStream']]],
+  ['overlined',['overlined',['../classQtPLDriver.html#ad5312b0059aeaa32a1742e6e9e4d418d',1,'QtPLDriver']]],
+  ['ovl',['ovl',['../structoctave__value__ref.html#aa0e2752ab23498ca52528a35fa108d27',1,'octave_value_ref']]],
+  ['own',['own',['../structswig__lua__userdata.html#a12970d19b437f84b1e7fba18ede882cb',1,'swig_lua_userdata::own()'],['../structswig__lua__rawdata.html#ac52566bcb4a7b4d8421c17d182048924',1,'swig_lua_rawdata::own()'],['../classoctave__swig__type.html#ab9e07dcba7290f802cbc551323f555eb',1,'octave_swig_type::own()'],['../structSwigPyObject.html#a83cb6489fb1b171467f06c091ae6f283',1,'SwigPyObject::own()']]],
+  ['owndata',['owndata',['../structswig__type__info.html#a93c25d5903cbfcb82208eea7227c32bd',1,'swig_type_info']]]
+];

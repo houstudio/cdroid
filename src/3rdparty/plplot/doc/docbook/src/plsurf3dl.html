@@ -1,0 +1,190 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plsurf3dl: Plot shaded 3-d surface plot for z[x][y] with y index limits</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plsurf3d.html" title="plsurf3d: Plot shaded 3-d surface plot"><link rel="next" href="plsvect.html" title="plsvect: Set arrow style for vector plots"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plsurf3dl</code>: Plot shaded 3-d surface plot for
+      z[x][y] with y index limits
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plsurf3d.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plsvect.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plsurf3dl"></a>
+      <code class="function">plsurf3dl</code>: Plot shaded 3-d surface plot for
+      z[x][y] with y index limits
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+            <b class="fsfunc">plsurf3dl</b>
+          (</code></td><td>
+            <var class="pdparam">x</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">y</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">z</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">nx</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">ny</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">opt</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">clevel</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">nlevel</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexxmin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexxmax</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexymin</var>
+          , </td></tr><tr><td> </td><td>
+            <var class="pdparam">indexymax</var>
+          <code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      This variant of <a class="link" href="plsurf3d.html" title="plsurf3d: Plot shaded 3-d surface plot"><code class="function">plsurf3d</code></a> (see that function's documentation for
+      more details) should be suitable for the case where the area of
+      the <code class="literal"><em class="parameter"><code>x</code></em></code>,
+      <code class="literal"><em class="parameter"><code>y</code></em></code> coordinate grid where
+      <code class="literal"><em class="parameter"><code>z</code></em></code> is defined can be
+      non-rectangular.  The limits of that grid are provided by
+      the parameters <code class="literal"><em class="parameter"><code>indexxmin</code></em></code>,
+      <code class="literal"><em class="parameter"><code>indexxmax</code></em></code>,
+      <code class="literal"><em class="parameter"><code>indexymin</code></em></code>,
+      and <code class="literal"><em class="parameter"><code>indexymax</code></em></code>.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+          <em class="parameter"><code>x</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the x coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>y</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the y coordinates at which the function is
+            evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>z</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_MATRIX-type"><code class="function">PLFLT_MATRIX</code></a></code>, input)
+        </span></dt><dd><p>
+	    A matrix containing function values to plot.  Should have
+	    dimensions of <em class="parameter"><code>nx</code></em> by <em class="parameter"><code>ny</code></em>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>nx</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal"><em class="parameter"><code>x</code></em></code> values at
+            which function is evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>ny</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of <code class="literal"><em class="parameter"><code>y</code></em></code> values at
+            which function is evaluated.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>opt</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Determines the way in which the surface is represented. To specify
+            more than one option just add the options, e.g. FACETED + SURF_CONT
+            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=FACETED
+                  </code>: Network
+                  of lines is drawn connecting points at which function is
+                  defined.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=BASE_CONT
+                  </code>: A contour
+                  plot is drawn at the base XY plane using parameters
+                  <em class="parameter"><code>nlevel</code></em> and <em class="parameter"><code>clevel</code></em>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=SURF_CONT
+                  </code>: A contour
+                  plot is drawn at the surface plane using parameters
+                  <em class="parameter"><code>nlevel</code></em> and <em class="parameter"><code>clevel</code></em>.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=DRAW_SIDES
+                  </code>: draws a curtain
+                  between the base XY plane and the borders of the plotted function.
+                </p></li><li class="listitem"><p>
+                  <code class="literal">
+                    <em class="parameter"><code>opt</code></em>=MAG_COLOR
+                  </code>:
+                  the surface is colored according to the value of Z; if
+                  <code class="literal">MAG_COLOR</code> is not used, then
+                  the surface is colored according to the intensity of the
+                  reflected light in the surface from a light source whose
+                  position is set using <a class="link" href="pllightsource.html" title="pllightsource: Sets the 3D position of the light source"><code class="function">pllightsource</code></a>.
+                </p></li></ul></div><p>
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>clevel</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLFLT_VECTOR-type"><code class="function">PLFLT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the contour levels.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>nlevel</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            Number of elements in the <code class="literal">clevel</code> vector.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexxmin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            The index value (which must be ≥ 0) that corresponds to
+            the first <code class="literal">
+              <em class="parameter"><code>x</code></em>
+            </code> index where
+            <code class="literal">
+              <em class="parameter"><code>z</code></em>
+            </code> is defined.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexxmax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT-type"><code class="function">PLINT</code></a></code>, input)
+        </span></dt><dd><p>
+            The index value (which must be ≤
+            <code class="literal">
+              <em class="parameter"><code>nx</code></em>
+            </code>) which corresponds (by
+            convention) to one more than the last
+            <code class="literal">
+              <em class="parameter"><code>x</code></em>
+            </code> index value where
+            <code class="literal">
+              <em class="parameter"><code>z</code></em>
+            </code> is defined.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexymin</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the <code class="literal"><em class="parameter"><code>y</code></em></code>
+	    index values which all must be ≥ 0.  These values are the first
+	    <code class="literal"><em class="parameter"><code>y</code></em></code> index where
+	    <code class="literal"><em class="parameter"><code>z</code></em></code> is defined for a
+	    particular <code class="literal"><em class="parameter"><code>x</code></em></code> index in the
+	    range from <code class="literal"><em class="parameter"><code>indexxmin</code></em></code> to
+	    <code class="literal"><em class="parameter"><code>indexxmax - 1</code></em></code>.  The
+	    dimension of <code class="literal"><em class="parameter"><code>indexymin</code></em></code> is
+	    <code class="literal"><em class="parameter"><code>indexxmax</code></em></code>.
+          </p></dd><dt><span class="term">
+          <em class="parameter"><code>indexymax</code></em>
+          (<code class="literal"><a class="link" href="c.html#PLINT_VECTOR-type"><code class="function">PLINT_VECTOR</code></a></code>, input)
+        </span></dt><dd><p>
+            A vector containing the
+	    <code class="literal"><em class="parameter"><code>y</code></em></code> index values which all
+	    must be ≤ <code class="literal"><em class="parameter"><code>ny</code></em></code>.  These values
+	    correspond (by convention) to one more than the last
+	    <code class="literal"><em class="parameter"><code>y</code></em></code> index where
+	    <code class="literal"><em class="parameter"><code>z</code></em></code> is defined for a
+	    particular <code class="literal"><em class="parameter"><code>x</code></em></code> index in the
+	    range from <code class="literal"><em class="parameter"><code>indexxmin</code></em></code> to
+	    <code class="literal"><em class="parameter"><code>indexxmax - 1</code></em></code>.  The
+	    dimension of <code class="literal"><em class="parameter"><code>indexymax</code></em></code> is
+	    <code class="literal"><em class="parameter"><code>indexxmax</code></em></code>.
+          </p></dd></dl></div><p>
+      Redacted form: <code class="function">
+        plsurf3dl(x, y, z, opt, clevel,
+        indexxmin, indexymin, indexymax)
+      </code>
+    </p><p>
+      This function is used in example 8.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plsurf3d.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plsvect.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plsurf3d</code>: Plot shaded 3-d surface plot
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plsvect</code>: Set arrow style for vector plots
+    </td></tr></table></div></body></html>

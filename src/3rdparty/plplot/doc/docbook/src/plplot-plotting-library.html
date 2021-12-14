@@ -1,0 +1,57 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>The PLplot plotting software</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="prev" href="intro.html" title="Chapter 1. Introduction"><link rel="next" href="features.html" title="Feature Summary"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">The PLplot plotting software</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="features.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="plplot-plotting-library"></a>The PLplot plotting software</h2></div></div></div><p>PLplot is a <a class="link" href="features.html#features-cross-platform" title="Cross Platform">cross-platform</a> software package for
+    creating scientific plots whose (<a class="ulink" href="http://www.utf-8.com/" target="_top">UTF-8</a>) plot symbols and text are
+    limited in practice only by what <a class="ulink" href="http://www.utf-8.com/" target="_top">Unicode</a>-aware system fonts are
+    installed on a user's computer. The PLplot software, which is
+    primarily licensed under <a class="ulink" href="http://www.gnu.org/licenses/lgpl.html" target="_top">the LGPL</a>, has a
+    clean architecture that is organized as a core C library, separate
+    language <a class="link" href="features.html#features-bindings" title="Language Bindings">bindings</a> for that library,
+    and separate device drivers that are dynamically
+    loaded by the core library which control how the plots are presented
+    in <a class="link" href="features.html#features-noninteractive" title="Output File Formats">noninteractive</a> and <a class="link" href="features.html#features-interactive" title="Interactive Platforms">interactive</a> plotting
+    contexts.</p><p>The PLplot core library can be used to create standard x-y
+    plots, semi-log plots, log-log plots, contour plots, 3D surface plots,
+    mesh plots, bar charts and pie charts. Multiple graphs (of the same or
+    different sizes) may be placed on a single page, and multiple pages
+    are allowed for those device formats that support them.</p><p> PLplot has core library support for plot symbols and text
+    specified by the user in the UTF-8 encoding of Unicode. This means for
+    our many Unicode-aware devices that plot symbols and text are only
+    limited by the collection of glyphs normally available via installed
+    system fonts. Furthermore, a large subset of our Unicode-aware devices
+    also support complex text layout (CTL) languages such as Arabic,
+    Hebrew, and Indic and Indic-derived CTL scripts such as Devanagari,
+    Thai, Lao, and Tibetan. Thus, for these PLplot devices essentially any
+    language that is supported by Unicode and installed system fonts can
+    be used to label plots.</p><p>
+      PLplot was originally developed by Sze Tan of the University of
+      Auckland in Fortran-77.  Many of the underlying concepts used in the
+      PLplot package are based on ideas used in Tim Pearson's PGPLOT
+      package.  Sze Tan writes:
+      </p><div class="blockquote"><blockquote class="blockquote"><p>
+	  I'm rather amazed how far PLPLOT has travelled given its origins
+	  etc. I first used PGPLOT on the Starlink VAX computers while I was
+	  a graduate student at the Mullard Radio Astronomy Observatory in
+	  Cambridge from 1983-1987. At the beginning of 1986, I was to give a
+	  seminar within the department at which I wanted to have a computer
+	  graphics demonstration on an IBM PC which was connected to a
+	  completely non-standard graphics card. Having about a week to do
+	  this and not having any drivers for the card, I started from the
+	  back end and designed PLPLOT to be such that one only needed to be
+	  able to draw a line or a dot on the screen in order to do arbitrary
+	  graphics.  The application programmer's interface was made as
+	  similar as possible to PGPLOT so that I could easily port my
+	  programs from the VAX to the PC.  The kernel of PLPLOT was modelled
+	  on PGPLOT but the code is not derived from it.
+	</p></blockquote></div><p>
+    </p><p>The C version of PLplot was originally developed by Tony
+    Richardson on a Commodore Amiga.  That version has been improved and
+    expanded ever since first by Geoffrey Furnish and Maurice Lebrun in
+    the 1990's and later (after the project was registered at SourceForge
+    on 2000-02-23) <a class="ulink" href="http://plplot.org/credits.php" target="_top">with a much-expanded
+    development team.</a></p><p>
+      We welcome suggestions on how to improve this code, especially in the
+      form of user-contributed enhancements or bug fixes.  If PLplot is used
+      in any published papers, please include an acknowledgement or citation
+      of our work, which will help us to continue improving PLplot.  Please
+      direct all communication to the <a class="ulink" href="https://lists.sourceforge.net/lists/listinfo/plplot-general" target="_top">plplot-general
+      mailing list.</a>
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="intro.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="features.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 1. Introduction </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Feature Summary</td></tr></table></div></body></html>

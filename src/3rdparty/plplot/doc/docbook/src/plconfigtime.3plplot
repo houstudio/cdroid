@@ -1,0 +1,56 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCONFIGTIME 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplconfigtime\fP - Configure the transformation between continuous and broken-down time for the current stream
+.SH SYNOPSIS
+\fBplconfigtime\fP(\fIscale\fP, \fIoffset1\fP, \fIoffset2\fP, \fIccontrol\fP, \fIifbtime_offset\fP, \fIyear\fP, \fImonth\fP, \fIday\fP, \fIhour\fP, \fImin\fP, \fIsec\fP)
+.SH DESCRIPTION
+
+.P
+Configure the transformation between continuous and broken-down time for the current stream.  This transformation is used by both \fBplbtime\fP(3plplot) and \fBplctime\fP(3plplot).
+.P
+Redacted form: General: \fBplconfigtime(scale, offset1, offset2, ccontrol, ifbtime_offset, year, month, day, hour, min, sec)\fP
+
+.P
+This function is used in example 29.
+.SH ARGUMENTS
+.TP
+\fIscale\fP (\fBPLFLT\fP(3plplot), input)
+The number of days per continuous time unit.  As a special case, if \fIscale\fP is 0., then all other arguments are ignored, and the result (the default used by PLplot) is the equivalent of a call to plconfigtime(1./86400., 0., 0., 0x0, 1, 1970, 0, 1, 0, 0, 0.). That is, for this special case broken-down time is calculated with the proleptic Gregorian calendar with no leap seconds inserted, and the continuous time is defined as the number of seconds since the Unix epoch of 1970-01-01T00:00:00Z.
+.TP
+\fIoffset1\fP (\fBPLFLT\fP(3plplot), input)
+If \fIifbtime_offset\fP is true, the parameters \fIoffset1\fP and \fIoffset2\fP are completely ignored. Otherwise, the sum of these parameters (with units in days) specify the epoch of the continuous time relative to the MJD epoch corresponding to the Gregorian calendar date of 1858-11-17T00:00:00Z or JD = 2400000.5.  Two PLFLT numbers are used to specify the origin to allow users (by specifying \fIoffset1\fP as an integer that can be exactly represented by a floating-point variable and specifying \fIoffset2\fP as a number in the range from 0. to 1) the chance to minimize the numerical errors of the continuous time representation.
+.TP
+\fIoffset2\fP (\fBPLFLT\fP(3plplot), input)
+See documentation of \fIoffset1\fP.
+.TP
+\fIccontrol\fP (\fBPLINT\fP(3plplot), input)
+\fIccontrol\fP contains bits controlling the transformation.  If the 0x1 bit is set, then the proleptic Julian calendar is used for broken-down time rather than the proleptic Gregorian calendar.  If the 0x2 bit is set, then leap seconds that have been historically used to define UTC are inserted into the broken-down time. Other possibilities for additional control bits for ccontrol exist such as making the historical time corrections in the broken-down time corresponding to ET (ephemeris time) or making the (slightly non-constant) corrections from international atomic time (TAI) to what astronomers define as terrestrial time (TT).  But those additional possibilities have not been implemented yet in the qsastime library (one of the PLplot utility libraries).
+.TP
+\fIifbtime_offset\fP (\fBPLBOOL\fP(3plplot), input)
+\fIifbtime_offset\fP controls how the epoch of the continuous time scale is specified by the user. If \fIifbtime_offset\fP is false, then \fIoffset1\fP and \fIoffset2\fP are used to specify the epoch, and the following broken-down time parameters are completely ignored.  If \fIifbtime_offset\fP is true, then \fIoffset1\fP and \fIoffset2\fP are completely ignored, and the following broken-down time parameters are used to specify the epoch.
+.TP
+\fIyear\fP (\fBPLINT\fP(3plplot), input)
+Year of epoch.
+.TP
+\fImonth\fP (\fBPLINT\fP(3plplot), input)
+Month of epoch in range from 0 (January) to 11 (December).
+.TP
+\fIday\fP (\fBPLINT\fP(3plplot), input)
+Day of epoch in range from 1 to 31.
+.TP
+\fIhour\fP (\fBPLINT\fP(3plplot), input)
+Hour of epoch in range from 0 to 23
+.TP
+\fImin\fP (\fBPLINT\fP(3plplot), input)
+Minute of epoch in range from 0 to 59.
+.TP
+\fIsec\fP (\fBPLFLT\fP(3plplot), input)
+Second of epoch in range from 0. to 60.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

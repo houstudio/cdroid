@@ -1,0 +1,28 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLGCMAP1_RANGE 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplgcmap1_range\fP - Get the cmap1 argument range for continuous color plots
+.SH SYNOPSIS
+\fBplgcmap1_range\fP(\fImin_color\fP, \fImax_color\fP)
+.SH DESCRIPTION
+
+.P
+Get the cmap1 argument range for continuous color plots. (Use \fBplscmap1_range\fP(3plplot) to set the cmap1 argument range.)
+.P
+Redacted form: \fBplgcmap1_range(min_color, max_color)\fP
+.P
+This function is currently not used in any example.
+.SH ARGUMENTS
+.TP
+\fImin_color\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the current minimum cmap1 argument.
+.TP
+\fImax_color\fP (\fBPLFLT_NC_SCALAR\fP(3plplot), output)
+Returned value of the current maximum cmap1 argument.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

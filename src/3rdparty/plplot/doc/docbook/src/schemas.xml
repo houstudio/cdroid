@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<locatingRules xmlns="http://thaiopensource.com/ns/locating-rules/1.0">
+  <uri resource="ada.xml" typeId="DocBook"/>
+  <uri resource="api.xml" typeId="DocBook"/>
+  <uri resource="advanced.xml" typeId="DocBook"/>
+  <uri resource="api-c.xml" typeId="DocBook"/>
+  <uri resource="api-compat.xml" typeId="DocBook"/>
+  <uri resource="api-fortran77.xml" typeId="DocBook"/>
+  <uri resource="api-fortran.xml" typeId="DocBook"/>
+  <uri resource="api-internal.xml" typeId="DocBook"/>
+  <uri resource="api-obsolete.xml" typeId="DocBook"/>
+  <uri resource="api.xml" typeId="DocBook"/>
+  <uri resource="bibliography.xml" typeId="DocBook"/>
+  <uri resource="c.xml" typeId="DocBook"/>
+  <uri resource="cplus.xml" typeId="DocBook"/>
+  <uri resource="deploying.xml" typeId="DocBook"/>
+  <uri resource="drivers.xml" typeId="DocBook"/>
+  <uri resource="fortran77.xml" typeId="DocBook"/>
+  <uri resource="fortran.xml" typeId="DocBook"/>
+  <uri resource="gui.xml" typeId="DocBook"/>
+  <uri resource="intro.xml" typeId="DocBook"/>
+  <uri resource="libraries.xml" typeId="DocBook"/>
+  <uri resource="ocaml.xml" typeId="DocBook"/>
+  <uri resource="os_notes.xml" typeId="DocBook"/>
+  <uri resource="python.xml" typeId="DocBook"/>
+  <uri resource="simple.xml" typeId="DocBook"/>
+  <uri resource="tcl.xml" typeId="DocBook"/>
+  <uri resource="wish.xml" typeId="DocBook"/>
+  <uri resource="plplotdoc.xml.in" typeId="DocBook"/>
+</locatingRules>

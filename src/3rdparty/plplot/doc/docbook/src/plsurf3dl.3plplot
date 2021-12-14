@@ -1,0 +1,63 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSURF3DL 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsurf3dl\fP - Plot shaded 3-d surface plot for z[x][y] with y index limits
+.SH SYNOPSIS
+\fBplsurf3dl\fP(\fIx\fP, \fIy\fP, \fIz\fP, \fInx\fP, \fIny\fP, \fIopt\fP, \fIclevel\fP, \fInlevel\fP, \fIindexxmin\fP, \fIindexxmax\fP, \fIindexymin\fP, \fIindexymax\fP)
+.SH DESCRIPTION
+
+.P
+This variant of \fBplsurf3d\fP(3plplot) (see that function's documentation for more details) should be suitable for the case where the area of the \fIx\fP, \fIy\fP coordinate grid where \fIz\fP is defined can be non-rectangular.  The limits of that grid are provided by the parameters \fIindexxmin\fP, \fIindexxmax\fP, \fIindexymin\fP, and \fIindexymax\fP.
+.P
+Redacted form: \fBplsurf3dl(x, y, z, opt, clevel, indexxmin, indexymin, indexymax) \fP
+.P
+This function is used in example 8.
+.SH ARGUMENTS
+.TP
+\fIx\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the x coordinates at which the function is evaluated.
+.TP
+\fIy\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the y coordinates at which the function is evaluated.
+.TP
+\fIz\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing function values to plot.  Should have dimensions of \fInx\fP by \fIny\fP.
+.TP
+\fInx\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIx\fP values at which function is evaluated.
+.TP
+\fIny\fP (\fBPLINT\fP(3plplot), input)
+Number of \fIy\fP values at which function is evaluated.
+.TP
+\fIopt\fP (\fBPLINT\fP(3plplot), input)
+Determines the way in which the surface is represented. To specify more than one option just add the options, e.g. FACETED + SURF_CONT \fIopt\fP=FACETED : Network of lines is drawn connecting points at which function is defined.
+\fIopt\fP=BASE_CONT : A contour plot is drawn at the base XY plane using parameters \fInlevel\fP and \fIclevel\fP.
+\fIopt\fP=SURF_CONT : A contour plot is drawn at the surface plane using parameters \fInlevel\fP and \fIclevel\fP.
+\fIopt\fP=DRAW_SIDES : draws a curtain between the base XY plane and the borders of the plotted function.
+\fIopt\fP=MAG_COLOR : the surface is colored according to the value of Z; if MAG_COLOR is not used, then the surface is colored according to the intensity of the reflected light in the surface from a light source whose position is set using \fBpllightsource\fP(3plplot).
+
+.TP
+\fIclevel\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector containing the contour levels.
+.TP
+\fInlevel\fP (\fBPLINT\fP(3plplot), input)
+Number of elements in the clevel vector.
+.TP
+\fIindexxmin\fP (\fBPLINT\fP(3plplot), input)
+The index value (which must be ≥ 0) that corresponds to the first \fIx\fP index where \fIz\fP is defined.
+.TP
+\fIindexxmax\fP (\fBPLINT\fP(3plplot), input)
+The index value (which must be ≤ \fInx\fP) which corresponds (by convention) to one more than the last \fIx\fP index value where \fIz\fP is defined.
+.TP
+\fIindexymin\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the \fIy\fP index values which all must be ≥ 0.  These values are the first \fIy\fP index where \fIz\fP is defined for a particular \fIx\fP index in the range from \fIindexxmin\fP to \fIindexxmax - 1\fP.  The dimension of \fIindexymin\fP is \fIindexxmax\fP.
+.TP
+\fIindexymax\fP (\fBPLINT_VECTOR\fP(3plplot), input)
+A vector containing the \fIy\fP index values which all must be ≤ \fIny\fP.  These values correspond (by convention) to one more than the last \fIy\fP index where \fIz\fP is defined for a particular \fIx\fP index in the range from \fIindexxmin\fP to \fIindexxmax - 1\fP.  The dimension of \fIindexymax\fP is \fIindexxmax\fP.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

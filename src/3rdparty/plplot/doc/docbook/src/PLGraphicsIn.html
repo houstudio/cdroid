@@ -1,0 +1,57 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>PLGraphicsIn: PLplot Graphics Input structure</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API-C.html" title="Chapter 18. The Specialized C/C++ API for PLplot"><link rel="prev" href="plTranslateCursor.html" title="plTranslateCursor: Convert device to world coordinates"><link rel="next" href="PLOptionTable.html" title="PLOptionTable: PLplot command line options table structure"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center"><span class="structname">PLGraphicsIn</span>: PLplot Graphics Input structure</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plTranslateCursor.html">Prev</a> </td><th width="60%" align="center">Chapter 18. The Specialized C/C++ API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="PLOptionTable.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="PLGraphicsIn"></a><span class="structname">PLGraphicsIn</span>: PLplot Graphics Input structure</h4></div></div></div><p>
+      The <span class="structname">PLGraphicsIn</span> structure is used by
+      <a class="link" href="plGetCursor.html" title="plGetCursor: Wait for graphics input event and translate to world coordinates."><code class="function">plGetCursor</code></a> and <a class="link" href="plTranslateCursor.html" title="plTranslateCursor: Convert device to world coordinates"><code class="function">plTranslateCursor</code></a> to return information
+      on the current cursor position and key / button state.
+      The structure contains the following fields:
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="structfield"><code>type</code></em>
+	  (<code class="literal">int</code>)
+	</span></dt><dd><p>
+	    Type of event (currently unused?).
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>state</code></em>
+	  (<code class="literal">unsigned int</code>)
+	</span></dt><dd><p>
+	    Key or button mask. Consists of a combination of the following masks: <code class="literal">PL_MASK_SHIFT,
+	    PL_MASK_CAPS, PL_MASK_CONTROL, PL_MASK_ALT, PL_MASK_NUM PL_MASK_ALTGR,
+	    PL_MASK_WIN, PL_MASK_SCROLL, PL_MASK_BUTTON1, PL_MASK_BUTTON2,
+	    PL_MASK_BUTTON3, PL_MASK_BUTTON4, PL_MASK_BUTTON5</code>. The button values indicate
+	    mouse buttons. Caps, num and scroll indicate that the appropriate lock is on.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>keysym</code></em>
+	  (<code class="literal">unsigned int</code>)
+	</span></dt><dd><p>
+	    Key selected.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>button</code></em>
+	  (<code class="literal">unsigned int</code>)
+	</span></dt><dd><p>
+	    Mouse button selected.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>subwindow</code></em>
+	  (<code class="literal">PLINT</code>)
+	</span></dt><dd><p>
+	    Subwindow (or subpage / subplot) number.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>string</code></em>
+	  (<code class="literal">char [PL_MAXKEY]</code>)
+	</span></dt><dd><p>
+	    Translated ascii character string.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>pX, pY</code></em>
+	  (<code class="literal">int</code>)
+	</span></dt><dd><p>
+	    Absolute device coordinates of mouse pointer.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>dX, dY</code></em>
+	  (<code class="literal">PLFLT</code>)
+	</span></dt><dd><p>
+	    Relative device coordinates of mouse pointer.
+	  </p></dd><dt><span class="term">
+	  <em class="structfield"><code>wX, wY</code></em>
+	  (<code class="literal">PLFLT</code>)
+	</span></dt><dd><p>
+	    World coordinates of mouse pointer.
+	  </p></dd></dl></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plTranslateCursor.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API-C.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="PLOptionTable.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plTranslateCursor</code>: Convert device to world coordinates
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> <span class="structname">PLOptionTable</span>: PLplot command line options table structure</td></tr></table></div></body></html>

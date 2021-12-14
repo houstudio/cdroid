@@ -1,0 +1,373 @@
+/*
+
+Copyright (C) 2008-2018 Alan W. Irwin
+Copyright (C) 2008-2016 Werner Smekal
+
+License: Released Under the "Creative Commons License",
+<http://creativecommons.org/licenses/by-nc/2.5/> in
+accordance with the copyright license of the original
+css theme.
+
+That original css theme <http://www.oswd.org/design/preview/id/3181>
+was called fruitopia.  It was designed by Darren Hester,
+<http://www.designsbydarren.com> and distributed under the above
+license.  We downloaded that theme in 2008 and have substantially
+modified it since to make it easy to configure it with CMake (most
+notably to configure both a "liquid" [appearance scales with page
+size] and "static" [appearance is fixed regardless of page size] form
+of this theme).
+*/
+
+body {
+  text-align: center;
+  background-color: #F4FDE5;
+/* Could configure the url for the static style and use a pseudo scaling
+   background for the liquid style, but none looks fine in all cases so
+   don't bother with anything more fancy than that. */
+/*  background-image: url('../img/bg.jpg');*/
+  background-image: none;
+  background-position: top center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  margin-top:10px;
+  margin-bottom:10px;
+}
+
+A:link {
+	COLOR: #FF6600; text-decoration: none
+}
+A:visited {
+	COLOR: #FF6600; text-decoration: none
+}
+A:active {
+	COLOR: #FF6600; text-decoration: none
+}
+A:hover {
+	COLOR: #FF6600; text-decoration: underline
+}
+
+#pagewrapper {
+  margin-left: auto;
+  margin-right: auto;
+  width: @width_pagewrapper@;
+  text-align: left;
+  background: #FFFFFF top right repeat-y;
+  border: 1px solid #018843;
+}
+
+#pagewrapper_full {
+  margin-left: auto;
+  margin-right: auto;
+  width: @width_pagewrapper@;
+  text-align: left;
+  background: #FFFFFF;
+  border: 1px solid #018843;
+}
+
+#pageheader {
+  height: 120px;
+  background: #000000 url('../img/plplot_logo.jpg') top left no-repeat;
+  clear: both;
+}
+
+#pageheader h1 {
+  margin: 0px;
+  padding-top:30px;
+  padding-left:25px;
+  font-family: verdana, arial, sans-serif;
+  font-size:32px;
+  font-weight: bold;
+  letter-spacing: -1px;
+  color: #FFFFFF;
+}
+
+#pageheader h2 {
+  margin: 0px;
+  padding-left:25px;
+  font-family: verdana, arial, sans-serif;
+  font-size:13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #EEEEEE;
+}
+
+#menubar {
+  height:40px;
+  background: #FFFFFF url('../img/drop_shadow.gif') top left repeat-x;
+  clear: both;
+}
+
+/* Notes on menu images.
+
+/* menu_bg.gif is a 10x40 color gradient ranging from
+ * #FF6500 at the top to #C55000 at the bottom. */
+
+/* menu_hover_bg.gif is a 10x40 color gradient ranging from
+ * #E65D00 at the top to #FF6500 at the bottom. */
+
+/* menu_selected.gif is a 10x40 solid color = #94CA31. */
+#menubar ul {
+  margin-top: 0px;
+  padding-left: 0px;
+  margin-left: 0px;
+  background: #FF6601 url('../img/menu_bg.gif') top left repeat-x;
+  color: White;
+  float: left;
+  width: 100%;
+  font-family: verdana, arial, sans-serif;
+  font-size:14px;
+  font-weight: bold;
+}
+
+#menubar ul li { display: inline; }
+
+#menubar ul li a
+{
+  padding-top:5px;
+  padding-bottom:5px;
+  padding-left:30px;
+  padding-right:30px;
+  background: #FF6601 url('../img/menu_bg.gif') top left repeat-x;
+  color: #EFEFEF;
+  text-decoration: none;
+  float: left;
+/*  border-right: 1px solid #fff; */
+}
+
+#menubar ul li a:hover
+{
+  background: #FF6601 url('../img/menu_hover_bg.gif') top left repeat-x;
+  color: #FFFFFF;
+}
+
+#menubar #selected
+{
+  background: #FF6601 url('../img/menu_selected_bg.gif') top left repeat-x;
+  color: #FFFFFF;
+}
+
+#contentwrapper {
+  margin-top:10px;
+  margin-bottom:0px;
+  margin-left:15px;
+  margin-right:15px;
+  clear:both;
+}
+
+#rightside {
+  margin-top:5px;
+  float: right;
+  width:@width_rightside@;
+  border:0px dashed #cccccc;
+}
+
+#rightside h3 {
+  margin-top:0px;
+  margin-bottom:10px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 14px;
+  color: #FF6600;
+  padding:4px;
+  border: 1px solid #AAE5A4;
+  background-color:#F4FDE5;
+}
+
+#rightside h4 {
+  margin-top:0px;
+  margin-bottom:5px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 12px;
+  color: @dark_text_color@;
+  background-color:#FFFFFF;
+  padding:4px;
+}
+
+#rightside p {
+  margin-top:0px;
+  margin-bottom:15px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 11px;
+  color: @dark_text_color@;
+  line-height: 16px;
+  padding-left:4px;
+}
+
+#fullside {
+  float:left;
+  width:@width_fullside@;
+  background: #FFFFFF;
+  border:0px dashed #cccccc;
+}
+
+#leftside {
+  float: left;
+  width:@width_leftside@;
+  background-color: #FFFFFF;
+  border:0px dashed #cccccc;
+}
+
+#leftside h3,#fullside h3 {
+  margin-top:0px;
+  margin-bottom:10px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 18px;
+  color: #FF6600;
+  background-color:#FFFFFF;
+  padding:4px;
+  border-bottom: 1px solid #018843;
+  clear:both;
+}
+
+#leftside h4,#fullside h4 {
+  margin-top:0px;
+  margin-bottom:5px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 15px;
+  color: @dark_text_color@;
+  background-color:#FFFFFF;
+  padding:4px;
+  clear:both;
+}
+
+#leftside p,#fullside p {
+  margin-top:0px;
+  margin-bottom:15px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 12px;
+  color: @dark_text_color@;
+  line-height: 18px;
+  padding-left:4px;
+}
+
+#leftside pre,#fullside pre {
+  margin-top:0px;
+  margin-bottom:15px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 12px;
+  color: @dark_text_color@;
+  line-height: 18px;
+  padding-left:4px;
+  white-space:pre;
+}
+
+.floatleft {
+  float: left;
+  margin-right: 10px;
+}
+
+.floatright {
+  float: right;
+  margin-left: 10px;
+}
+
+#featurebox {
+  float:left;
+  width:@width_featurebox@;
+  background-color: #F6FCEC;
+  border:1px solid #AAE5A4;
+  padding:10px;
+  margin-top:10px;
+  margin-bottom:5px;
+  margin-right:8px;
+}
+
+#featurebox h4 {
+  padding-left:5px;
+  margin-top:0px;
+  margin-bottom:5px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 12px;
+  color: #779E28;
+}
+
+#featurebox p {
+  font-family: verdana, arial, sans-serif;
+  font-size: 11px;
+  color: #222222;
+  line-height: 16px;
+  margin-bottom:5px;
+}
+
+#pagefooter {
+  height:@height_pagefooter@ ;
+  background-color: #99CC33;
+  clear: both;
+}
+
+#pagefooter p {
+  padding-top:18px;
+  text-align: center;
+  font-family: verdana, arial, sans-serif;
+  font-size: 11px;
+  color: @dark_text_color@;
+  letter-spacing:1px;
+}
+
+#spacer {
+  height:20px;
+  clear:both;
+}
+
+#codebox {
+  width:@width_codebox@;
+	height:400px;
+	font-size:0.7em;
+  background-color:#f2f8e6;
+  border:1px solid #AAE5A4;
+  padding:10px;
+  margin:10px;
+}
+
+.codeform {
+text-align:left;
+}
+
+.codeform input {
+width:auto;
+padding:0 1px;
+border:1px solid #808080;
+text-align:center;
+}
+
+.arrowlist {
+  margin-left: 10px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.arrowlist li {
+  padding-left: 10px;
+  background-image: url(../img/arrow.gif);
+  background-repeat: no-repeat;
+  background-position: 0 7px;
+  font-family: verdana, arial, sans-serif;
+  font-size: 11px;
+  line-height:18px;
+  color: @dark_text_color@;
+}
+
+/**************** Searchbar styles ****************/
+
+#searchbar{margin:0 0 20px 0;}
+#searchbar form fieldset{margin-left:0px; border:0 solid;}
+
+#searchbar #s{
+height:1.2em;
+width:@width_searchbar@;
+margin:0 5px 0 0;
+border:1px solid #a0a0a0;
+}
+
+#searchbar #searchbutton{
+width:auto;
+padding:0 1px;
+border:1px solid #808080;
+font-size:0.7em;
+text-align:center;
+}
+
+/**************** Misc classes and styles ****************/
+
+.splitcontentleft{float:left; width:48%;}
+.splitcontentright{float:right; width:48%;}

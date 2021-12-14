@@ -1,0 +1,52 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>plgpage: Get page parameters</title><link rel="stylesheet" type="text/css" href="stylesheet.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="Documentation of the PLplot plotting software"><link rel="up" href="API.html" title="Chapter 17. The Common API for PLplot"><link rel="prev" href="plglevel.html" title="plglevel: Get the (current) run level"><link rel="next" href="plgra.html" title="plgra: Switch to graphics screen"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">
+      <code class="function">plgpage</code>: Get page parameters
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="plglevel.html">Prev</a> </td><th width="60%" align="center">Chapter 17. The Common API for PLplot</th><td width="20%" align="right"> <a accesskey="n" href="plgra.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h4 class="title"><a name="plgpage"></a>
+      <code class="function">plgpage</code>: Get page parameters
+    </h4></div></div></div><p>
+      </p><div class="funcsynopsis"><table border="0" class="funcprototype-table" summary="Function synopsis" style="cellspacing: 0; cellpadding: 0;"><tr><td><code class="funcdef">
+	    <b class="fsfunc">plgpage</b>
+	  (</code></td><td><var class="pdparam">p_xp</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_yp</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_xleng</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_yleng</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_xoff</var>, </td></tr><tr><td> </td><td><var class="pdparam">p_yoff</var><code>)</code>;</td></tr></table><div class="funcprototype-spacer"> </div></div><p>
+    </p><p>
+      Gets the current page configuration. The length and offset values are expressed
+      in units that are specific to the current driver. For instance:
+      screen drivers will usually interpret them as number of pixels,
+      whereas printer drivers will usually use mm.
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+	  <em class="parameter"><code>p_xp</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the number of pixels/inch (DPI) in x.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_yp</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLFLT_NC_SCALAR-type"><code class="function">PLFLT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the number of pixels/inch (DPI) in y.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_xleng</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_NC_SCALAR-type"><code class="function">PLINT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the x page length.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_yleng</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_NC_SCALAR-type"><code class="function">PLINT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the y page length.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_xoff</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_NC_SCALAR-type"><code class="function">PLINT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the x page offset.
+	  </p></dd><dt><span class="term">
+	  <em class="parameter"><code>p_yoff</code></em>
+	  (<code class="literal"><a class="link" href="c.html#PLINT_NC_SCALAR-type"><code class="function">PLINT_NC_SCALAR</code></a></code>, output)
+	</span></dt><dd><p>
+	    Returned value of the y page offset.
+	  </p></dd></dl></div><p>
+      Redacted form: <code class="function">plgpage(p_xp, p_yp, p_xleng, p_yleng, p_xoff, p_yoff)</code>
+    </p><p>
+      This function is used in examples 14 and 31.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="plglevel.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="API.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="plgra.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <code class="function">plglevel</code>: Get the (current) run level
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 
+      <code class="function">plgra</code>: Switch to graphics screen
+    </td></tr></table></div></body></html>

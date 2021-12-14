@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLSSTRM 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplsstrm\fP - Set current output stream
+.SH SYNOPSIS
+\fBplsstrm\fP(\fIstrm\fP)
+.SH DESCRIPTION
+
+.P
+Sets the number of the current output stream.  The stream number defaults to 0 unless changed by this routine.  The first use of this routine must be followed by a call initializing PLplot (e.g. \fBplstar\fP(3plplot)).
+.P
+Redacted form: \fBplsstrm(strm)\fP
+.P
+This function is examples 1,14,20.
+.SH ARGUMENTS
+.TP
+\fIstrm\fP (\fBPLINT\fP(3plplot), input)
+The current stream number.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

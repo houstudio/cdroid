@@ -1,0 +1,46 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCONT 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplcont\fP - Contour plot
+.SH SYNOPSIS
+\fBplcont\fP(\fIf\fP, \fInx\fP, \fIny\fP, \fIkx\fP, \fIlx\fP, \fIky\fP, \fIly\fP, \fIclevel\fP, \fInlevel\fP, \fIpltr\fP, \fIpltr_data\fP)
+.SH DESCRIPTION
+
+.P
+Draws a contour plot of the data in \fIf\fP[\fInx\fP][\fIny\fP], using the \fInlevel\fP contour levels specified by \fIclevel\fP. Only the region of the matrix from \fIkx\fP to \fIlx\fP and from \fIky\fP to \fIly\fP is plotted out where all these index ranges are interpreted as one-based for historical reasons.  A transformation routine pointed to by \fIpltr\fP with a generic pointer \fIpltr_data\fP for additional data required by the transformation routine is used to map indices within the matrix to the world coordinates.
+.P
+Redacted form: \fBplcont(f, kx, lx, ky, ly, clevel, pltr, pltr_data)\fP where (see above discussion) the pltr, pltr_data callback arguments are sometimes replaced by a tr vector with 6 elements; xg and yg vectors; or xg and yg matrices.
+.P
+This function is used in examples 9, 14, 16, and 22.
+.SH ARGUMENTS
+.TP
+\fIf\fP (\fBPLFLT_MATRIX\fP(3plplot), input)
+A matrix containing data to be contoured.
+.TP
+\fInx, ny\fP (\fBPLINT\fP(3plplot), input)
+The dimensions of the matrix \fIf\fP.
+.TP
+\fIkx, lx\fP (\fBPLINT\fP(3plplot), input)
+Range of x indices to consider where 0 <= kx-1 < lx-1 < nx.  Values of kx and lx are one-based rather than zero-based for historical backwards-compatibility reasons.
+.TP
+\fIky, ly\fP (\fBPLINT\fP(3plplot), input)
+Range of y indices to consider where 0 <= ky-1 < ly-1 < ny.  Values of ky and ly are one-based rather than zero-based for historical backwards-compatibility reasons.
+.TP
+\fIclevel\fP (\fBPLFLT_VECTOR\fP(3plplot), input)
+A vector specifying the levels at which to draw contours.
+.TP
+\fInlevel\fP (\fBPLINT\fP(3plplot), input)
+Number of contour levels to draw.
+.TP
+\fIpltr\fP (\fBPLTRANSFORM_callback\fP(3plplot), input)
+A callback function that defines the transformation between the zero-based indices of the matrix \fIf\fP and the world coordinates.For the C case, transformation functions are provided in the PLplot library: \fBpltr0\fP(3plplot) for the identity mapping, and \fBpltr1\fP(3plplot) and \fBpltr2\fP(3plplot) for arbitrary mappings respectively defined by vectors and matrices.  In addition, C callback routines for the transformation can be supplied by the user such as the mypltr function in examples/c/x09c.c which provides a general linear transformation between index coordinates and world coordinates.For languages other than C you should consult the PLplot documentation for the details concerning how \fBPLTRANSFORM_callback\fP(3plplot) arguments are interfaced. However, in general, a particular pattern of callback-associated arguments such as a tr vector with 6 elements; xg and yg vectors; or xg and yg matrices are respectively interfaced to a linear-transformation routine similar to the above mypltr function; \fBpltr1\fP(3plplot); and \fBpltr2\fP(3plplot). Furthermore, some of our more sophisticated bindings (see, e.g., the PLplot documentation) support native language callbacks for handling index to world-coordinate transformations.  Examples of these various approaches are given in examples/<language>x09*, examples/<language>x16*, examples/<language>x20*, examples/<language>x21*, and examples/<language>x22*, for all our supported languages.
+.TP
+\fIpltr_data\fP (\fBPLPointer\fP(3plplot), input)
+Extra parameter to help pass information to \fBpltr0\fP(3plplot), \fBpltr1\fP(3plplot), \fBpltr2\fP(3plplot), or whatever callback routine that is externally supplied.
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

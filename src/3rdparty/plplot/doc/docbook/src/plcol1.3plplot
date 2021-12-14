@@ -1,0 +1,25 @@
+.\" This page was automatically generated.  Do not edit!
+.\"
+.TH PLCOL1 3plplot  "June, 2019" "" "PLplot API"
+.SH NAME
+\fBplcol1\fP - Set color, cmap1
+.SH SYNOPSIS
+\fBplcol1\fP(\fIcol1\fP)
+.SH DESCRIPTION
+
+.P
+Sets the color for cmap1 (see the PLplot documentation).
+.P
+Redacted form: \fBplcol1(col1)\fP
+.P
+This function is used in examples 12 and 21.
+.SH ARGUMENTS
+.TP
+\fIcol1\fP (\fBPLFLT\fP(3plplot), input)
+This value must be in the range (0.0-1.0) and is mapped to color using the continuous cmap1 palette which by default ranges from blue to the background color to red.  The cmap1 palette can also be straightforwardly changed by the user with \fBplscmap1\fP(3plplot) or \fBplscmap1l\fP(3plplot).
+
+.SH AUTHORS
+Many developers (who are credited at http://plplot.org/credits.php)
+have contributed to PLplot over its long history.
+.SH SEE ALSO
+PLplot documentation at http://plplot.org/documentation.php.

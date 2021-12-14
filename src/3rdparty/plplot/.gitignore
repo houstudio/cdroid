@@ -1,0 +1,31 @@
+# For emacs there are many more ignore patterns available from
+# https://github.com/github/gitignore/blob/master/Global/Emacs.gitignore,
+# but I think that is overkill, and these are the only three patterns I
+# routinely encounter when using emacs as an editor rather than an
+# OS.  :-)
+# Those whose emacs use creates more auto-generated
+# files than this should probably being doing a global
+# config for themselves instead of a change to this file.
+*~
+\#*\#
+.\#*
+
+# For Python there are many more ignore patterns available from
+# https://github.com/github/gitignore/blob/master/Python.gitignore
+# if needed, but so far I find this pattern is enough when using
+# python from another directory (such as the separate build directory
+# you should be using).
+*.py[cod]
+
+# In case the user wants to use this specific separate build tree
+# within the source tree.
+build/
+
+# Other ignore patterns which have historically been in this
+# file but which are currently undocumented.
+*.flc
+tmp/
+
+# Ignore Mac OS X generated file/directory attribute storage files
+\.DS_Store
+\._\.DS_Store

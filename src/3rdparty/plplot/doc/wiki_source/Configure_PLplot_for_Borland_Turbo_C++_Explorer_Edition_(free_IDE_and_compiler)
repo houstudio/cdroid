@@ -1,0 +1,34 @@
+<!---
+N.B.  The definitive Markdown source of this file is located in the
+doc/wiki_source subdirectory of the PLplot source tree.  So only use
+the ctrl-v and delete capabilities of the GUI file editor at
+SourceForge to make changes to the SourceForge version of this file,
+where ctrl-v is used to complete a cut and paste from the definitive
+version of this file in the PLplot source tree that is being edited
+with your favorite file editor, and delete used to remove extraneous
+unmodified text whose changed form has been copied with the cut and
+paste.
+-->
+
+Everything is pretty much as with Borland C++ 5.5, the only thing that's needs change are lines in the top-level CMakeLists.txt.
+
+Comment this out (near line 159):
+
+`# Borland Compiler must compile in ANSII mode`
+`if(BORLAND)`
+`  ADD_DEFINITIONS(-A)`
+`endif(BORLAND)`
+
+I.e. lines above should look like:
+
+`# Borland Compiler must compile in ANSII mode`
+`#if(BORLAND)`
+`#  ADD_DEFINITIONS(-A)`
+`#endif(BORLAND)`
+
+The reason for this is, that '-A' flag forces ASCII compile mode, which results in compiler errors when processing winnt.h (it uses some Borland special extensions like '_EDX' register names) and winreg.h. Also it fails on some source .c files because of single-line comments starting with '//'.
+
+I understand that commenting out something in CMakeLists.txt is hack-like thing, but this option cannot be configured usual way, because the commented lines add '-A' to compiler command line after all other flags have been added, so putting '-AT' or '-A-' in CMAKE_C_FLAGS doesn't help.
+
+
+The content of this page is available under the [GNU Free Documentation License 1.2](http://www.gnu.org/copyleft/fdl.html).
