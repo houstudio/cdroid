@@ -14,45 +14,39 @@ RotateAnimation::RotateAnimation(const RotateAnimation&o){
 
 RotateAnimation::RotateAnimation(Context* context,const AttributeSet& attrs){
     mFromDegrees = attrs.getFloat("fromDegrees", 0.0f);
-    mToDegrees = attrs.getFloat("toDegrees", 0.0f);
-#if 0
-    Description d = Description.parseValue(a.peekValue("pivotX"));
-    mPivotXType = d.type;
-    mPivotXValue = d.value;
+    mToDegrees   = attrs.getFloat("toDegrees", 0.0f);
+    mPivotXValue = getPivotType(attrs.getString("pivotX"),mPivotXType);
+    mPivotYValue = getPivotType(attrs.getString("pivotY"),mPivotYType);
 
-    d = Description.parseValue(a.peekValue("pivotY"));
-    mPivotYType = d.type;
-    mPivotYValue = d.value;
-#endif
     initializePivotPoint();
 }
 
 RotateAnimation::RotateAnimation(float fromDegrees, float toDegrees){
-    mFromDegrees = fromDegrees;
-    mToDegrees = toDegrees;
+    mFromDegrees= fromDegrees;
+    mToDegrees  = toDegrees;
     mPivotX = 0.0f;
     mPivotY = 0.0f;
 }
 
 RotateAnimation::RotateAnimation(float fromDegrees, float toDegrees, float pivotX, float pivotY) {
-    mFromDegrees = fromDegrees;
-    mToDegrees = toDegrees;
+    mFromDegrees= fromDegrees;
+    mToDegrees  = toDegrees;
 
     mPivotXType = ABSOLUTE;
     mPivotYType = ABSOLUTE;
-    mPivotXValue = pivotX;
-    mPivotYValue = pivotY;
+    mPivotXValue= pivotX;
+    mPivotYValue= pivotY;
     initializePivotPoint();
 }
 
 RotateAnimation::RotateAnimation(float fromDegrees, float toDegrees, int pivotXType, float pivotXValue,
             int pivotYType, float pivotYValue){
-    mFromDegrees = fromDegrees;
-    mToDegrees = toDegrees;
+    mFromDegrees= fromDegrees;
+    mToDegrees  = toDegrees;
 
-    mPivotXValue = pivotXValue;
+    mPivotXValue= pivotXValue;
     mPivotXType = pivotXType;
-    mPivotYValue = pivotYValue;
+    mPivotYValue= pivotYValue;
     mPivotYType = pivotYType;
     initializePivotPoint();
 }

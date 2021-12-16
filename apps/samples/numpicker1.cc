@@ -7,7 +7,7 @@ int main(int argc,const char*argv[]){
     LinearLayout*layout=new LinearLayout(1280,600);
     layout->setOrientation(LinearLayout::VERTICAL);
 
-    NumberPicker*np1=new NumberPicker(200,0);
+    NumberPicker*np1=new NumberPicker(200,90);
     np1->setMinValue(1);
     np1->setMaxValue(12);
     np1->setSelector(7,-1);

@@ -1,4 +1,5 @@
 #include <animation/animation.h>
+#include <animation/animationutils.h>
 #include <systemclock.h>
 #include <limits>
 #include <cdtypes.h>
@@ -43,6 +44,24 @@ Animation::Animation(const Animation&o){
 }
 
 Animation::Animation(Context* context, const AttributeSet& attrs){
+    setDuration(attrs.getInt("duration",0));
+    setStartOffset(attrs.getInt("startOffset",0));
+    setFillEnabled(attrs.getBoolean("fillEnabled",mFillEnabled));
+    setFillBefore (attrs.getBoolean("fillBefore",mFillBefore));
+    setFillAfter  (attrs.getBoolean("fillAfter",mFillAfter));
+    setRepeatCount(attrs.getInt("repeatCount",mRepeatCount));
+    setRepeatMode (attrs.getInt("repeatMode",RESTART));
+    //setBackgroundColor(Color::parseColor(attrs.getString("background")));
+    const std::string resid=attrs.getString("interpolator");
+    if(!resid.empty())setInterpolator(context,resid);
+}
+
+float Animation::getPivotType(const std::string&v,int &type){
+    const float ret=std::strtof(v.c_str(),nullptr);
+    if(v.find("%p")!=std::string::npos)type = RELATIVE_TO_PARENT;
+    else if(v.find("%")!=std::string::npos)type= RELATIVE_TO_SELF;
+    else type = ABSOLUTE;
+    return ret;
 }
 
 Animation* Animation::clone(){
@@ -96,7 +115,7 @@ void Animation::initialize(int width, int height, int parentWidth, int parentHei
 //void Animation::setListenerHandler(Handler handler){}
 
 void Animation::setInterpolator(Context* context,const std::string&resID) {
-    //setInterpolator(AnimationUtils.loadInterpolator(context, resID));
+    setInterpolator(AnimationUtils::loadInterpolator(context, resID));
 }
 
 void Animation::setInterpolator(Interpolator* i) {

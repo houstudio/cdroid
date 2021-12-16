@@ -17,6 +17,12 @@ ScaleAnimation::ScaleAnimation(const ScaleAnimation&o):Animation(o){
 
 ScaleAnimation::ScaleAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context,attrs){
+    mFromX= attrs.getFloat("fromXScale",.0f);
+    mToX  = attrs.getFloat("toXScale",.0f);
+    mFromY= attrs.getFloat("fromYScale",.0f);
+    mToY  = attrs.getFloat("toYScale",.0f);
+    getPivotType(attrs.getString("pivotX"),mPivotXType);
+    getPivotType(attrs.getString("pivotY"),mPivotYType);
 }
 
 ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY) {

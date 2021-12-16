@@ -59,6 +59,7 @@ typedef struct{
     XML_Parser parser;
     std::vector<View*>views;//the first element is rootview setted by inflate
     ViewGroup*root;
+    int parsedView;
 }WindowParserData;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
@@ -80,11 +81,12 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         atts.inherit(style);
     }
     View*v=inflater(pd->ctx,atts);
+    pd->parsedView++;
     pd->views.push_back(v);
     if(parent){
         LayoutParams*lp=parent->generateLayoutParams(atts);
         LOGV("<%s> layoutSize=%dx%d id:%d",name,lp->width,lp->height,v->getId());
-        parent->addViewInLayout(v,-1,lp);
+        parent->addViewInLayout(v,-1,lp,true);
     }else{
         LayoutParams*lp=((ViewGroup*)v)->generateLayoutParams(atts);
         ((ViewGroup*)v)->setLayoutParams(lp);
@@ -107,6 +109,7 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
     WindowParserData pd={mContext,parser};
     ULONGLONG tstart=SystemClock::uptimeMillis();
 
+    pd.parsedView=0;
     if(root){pd.root=root;pd.views.push_back(root);}
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startElement, endElement);
@@ -122,7 +125,8 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
     } while(len!=0);
     XML_ParserFree(parser);
     pd.root->requestLayout();
-    LOGD("usedtime %dms views.size=%d",SystemClock::uptimeMillis()-tstart,pd.views.size());
+    pd.root->startLayoutAnimation();
+    LOGD("usedtime %dms  parsed %d views",SystemClock::uptimeMillis()-tstart,pd.parsedView);
     return pd.root;
 }
 

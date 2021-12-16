@@ -15,6 +15,15 @@ ClipRectAnimation::ClipRectAnimation(const ClipRectAnimation&o):Animation(o){
 
 ClipRectAnimation::ClipRectAnimation(Context* context, const AttributeSet& attrs)
 :Animation(context,attrs){
+    mFromLeftValue  = getPivotType(attrs.getString("fromLeft"),mFromLeftType);
+    mFromTopValue   = getPivotType(attrs.getString("fromTop"),mFromTopType);
+    mFromRightValue = getPivotType(attrs.getString("fromRight"),mFromRightType);
+    mFromBottomValue= getPivotType(attrs.getString("fromBottom"),mFromBottomType);
+
+    mToLeftValue  = getPivotType(attrs.getString("toLeft"),mToLeftType);
+    mToTopValue   = getPivotType(attrs.getString("toTop"),mToTopType);
+    mToRightValue = getPivotType(attrs.getString("toRight"),mToRightType);
+    mToBottomValue= getPivotType(attrs.getString("tpBottom"),mToBottomType);
 }
 
 ClipRectAnimation::ClipRectAnimation(const Rect& fromClip,const Rect& toClip)

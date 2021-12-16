@@ -64,8 +64,26 @@ int main(int argc,const char*argv[]){
     };
     pager->addOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    if(argc>1)
-    pager->setPageTransformer(true,new ParallaxTransformer());
+    if(argc>1){
+        ViewPager::PageTransformer*pt=nullptr;
+        switch(atoi(argv[1])){
+        case  0:pt=new ScaleInOutTransformer(); break;
+        case  1:pt=new AccordionTransformer();  break;
+        case  2:pt=new CubeInTransformer();break;
+        case  3:pt=new CubeOutTransformer();break;
+        case  4:pt=new FlipHorizontalTransformer();break;
+        case  5:pt=new FlipVerticalTransformer();break;
+        case  6:pt=new ParallaxTransformer();break;
+        case  7:pt=new RotateDownTransformer();break;
+        case  8:pt=new RotateUpTransformer();break;
+        case  9:pt=new ScaleInOutTransformer();break;
+        case 10:pt=new StackTransformer();break;
+        case 11:pt=new ZoomInTransformer();break;
+        case 12:pt=new ZoomOutTransformer();break;
+        case 13:pt=new ZoomOutSlideTransformer();break;
+        }  
+        if(pt)pager->setPageTransformer(true,pt);
+    }
     layout->addView(pager);
     tab->setupWithViewPager(pager);
     w->addView(layout);

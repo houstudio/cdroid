@@ -63,6 +63,7 @@ protected:
     Transformation mPreviousTransformation;
 protected:
     Animation(const Animation&other);
+    static float getPivotType(const std::string&v,int &type);
     float getScaleFactor()const;
     void ensureInterpolator();
     virtual void applyTransformation(float interpolatedTime, Transformation& t);

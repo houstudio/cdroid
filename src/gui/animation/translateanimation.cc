@@ -16,6 +16,10 @@ TranslateAnimation::TranslateAnimation(const TranslateAnimation&o):Animation(o){
 
 TranslateAnimation::TranslateAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context,attrs){
+    mFromXValue=getPivotType(attrs.getString("toXDelta"),mFromXType);
+    mFromYValue=getPivotType(attrs.getString("toYDelta"),mFromYType);
+    mToXValue=getPivotType(attrs.getString("toYDelta"),mToXType);
+    mToYValue=getPivotType(attrs.getString("toYDelta"),mToYType);
 }
 
 TranslateAnimation::TranslateAnimation(float fromXDelta, float toXDelta, float fromYDelta, float toYDelta) {

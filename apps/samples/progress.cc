@@ -24,14 +24,15 @@ int main(int argc,const char*argv[]){
     w->addView(pb2).setPos(50,100);
     Runnable progress;
     progress=[w,pb,pb2,&progress](){
-        pb->setProgress((pb->getProgress()+23)%100);
+        pb->setSecondaryProgress((pb->getSecondaryProgress()+1)%100);
+        pb->setProgress(time(nullptr)%100);
         pb2->setProgress((pb->getProgress()+13)%100);
-        w->postDelayed(progress,2000);
+        w->postDelayed(progress,200);
     };
     w->post(progress);
 
     ProgressBar*pb3=new ProgressBar(72,72);
-    d=ctx->getDrawable("cdroid:drawable/progress_large.xml");
+    d=ctx->getDrawable("cdroid:drawable/progress_large");
     pb3->setIndeterminateDrawable(d);
     LOGD("Indeterminate drawable=%p",d);
     w->addView(pb3).setId(104).setPos(680,60);
@@ -43,18 +44,24 @@ int main(int argc,const char*argv[]){
     ad->addFrame(new ColorDrawable(0xFFFF0000),500);
     ad->addFrame(new ColorDrawable(0xFF00FF00),500);
     ad->addFrame(new ColorDrawable(0xFF0000FF),500);
-    BitmapDrawable*bd=(BitmapDrawable*)ctx->getDrawable("cdroid:mipmap/seek_thumb_normal.png");//ic_launcher.png");
-    bd->setTileModeXY(TileMode::MIRROR,TileMode::CLAMP);
+    BitmapDrawable*bd=(BitmapDrawable*)ctx->getDrawable("cdroid:mipmap/ic_launcher");
+    bd->setTileModeXY(TileMode::MIRROR,TileMode::MIRROR);
     ad->addFrame(bd,1000);
     w->addView(pb4).setId(105).setPos(800,10);
     pb4->setIndeterminateDrawable(ad);
     pb4->setIndeterminate(true);
     pb4->setProgressDrawable(new ColorDrawable(0xFF111111));
+
+    ProgressBar*pb5=new ProgressBar(600,20);
+    pb5->setIndeterminateDrawable(ctx->getDrawable("cdroid:drawable/progress_indeterminate_horizontal_holo.xml"));
+    pb5->setIndeterminate(true);pb5->setProgress(40);
+    //pb5->setProgressDrawable(new ColorDrawable(0xFF111111));   
+    w->addView(pb5).setId(105).setPos(50,150);
 //////////////////////////////////////////////////////////    
     SeekBar*sb = new SeekBar(800,50);
     SeekBar*sb2= new SeekBar(800,50);
 
-    d=ctx->getDrawable("cdroid:drawable/progress_horizontal.xml");
+    d=ctx->getDrawable("cdroid:drawable/progress_horizontal");
     sb->setProgressDrawable(d);
     sb2->setProgressDrawable(d->getConstantState()->newDrawable());
 
