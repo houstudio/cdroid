@@ -20,6 +20,7 @@
 #include <widget/view.h>
 #include <core/scroller.h>
 #include <animations.h>
+
 namespace cdroid {
 
 #define ATTR_ANIMATE_FOCUS (0x2000) /*flag to open animate focus*/
@@ -157,8 +158,6 @@ protected:
     bool isChildrenDrawingOrderEnabled()const;
     void setChildrenDrawingOrderEnabled(bool enabled);
 
-    bool addViewInLayout(View* child, int index,LayoutParams* params);
-    bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void attachViewToParent(View* child, int index, LayoutParams* params);
     void dispatchViewAdded(View* child);
     void dispatchViewRemoved(View* child);
@@ -258,6 +257,8 @@ public:
     virtual View& addView(View* child, LayoutParams* params);
     virtual View& addView(View* child, int index, LayoutParams* params);
     View& addView(View* child, int width, int height);
+    bool addViewInLayout(View* child, int index,LayoutParams* params);
+    bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addTransientView(View*view,int index);
     void removeTransientView(View*);
    

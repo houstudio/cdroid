@@ -83,8 +83,8 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     pd->views.push_back(v);
     if(parent){
         LayoutParams*lp=parent->generateLayoutParams(atts);
-        LOGV("<%s> layoutSize=%dx%d",name,lp->width,lp->height);
-        parent->addView(v,lp);
+        LOGV("<%s> layoutSize=%dx%d id:%d",name,lp->width,lp->height,v->getId());
+        parent->addViewInLayout(v,-1,lp);
     }else{
         LayoutParams*lp=((ViewGroup*)v)->generateLayoutParams(atts);
         ((ViewGroup*)v)->setLayoutParams(lp);
@@ -121,6 +121,7 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
         }
     } while(len!=0);
     XML_ParserFree(parser);
+    pd.root->requestLayout();
     LOGD("usedtime %dms views.size=%d",SystemClock::uptimeMillis()-tstart,pd.views.size());
     return pd.root;
 }

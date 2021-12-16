@@ -95,7 +95,7 @@ TEST_F(WINDOW,create){
 
 TEST_F(WINDOW,inflate){
     App app;
-    Window*w=new Window(0,0,800,600);
+    Window*w=new Window(0,0,960,700);
     LayoutInflater::from(&app)->inflate("cdroid:layout/window.xml",w);
     app.exec();
 }
