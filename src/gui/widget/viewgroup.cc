@@ -79,7 +79,7 @@ bool ViewGroup::DEBUG_DRAW = false;
 
 ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
     initGroup();
-	initFromAttributes(ctx,attrs);
+    initFromAttributes(ctx,attrs);
 }
 
 ViewGroup::ViewGroup(int w,int h)
@@ -126,8 +126,8 @@ void ViewGroup::initGroup(){
 }
 
 void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
-    setClipChildren(atts.getBoolean("clipChildren",false));
-    setClipToPadding(atts.getBoolean("clipToPadding",false));
+    setClipChildren(atts.getBoolean("clipChildren",true));
+    setClipToPadding(atts.getBoolean("clipToPadding",true));
     //setAnimationCacheEnabled
     std::string resid=atts.getString("layoutAnimation");
     setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));

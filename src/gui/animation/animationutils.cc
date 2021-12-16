@@ -72,6 +72,7 @@ Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resi
 }
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
+    return nullptr;
 }
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){

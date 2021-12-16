@@ -119,7 +119,8 @@ View& Window::setSize(int cx,int cy){
 }
 
 void Window::onFinishInflate(){
-    requestLayout(); 
+    requestLayout();
+    startLayoutAnimation();
 }
 
 Canvas*Window::getCanvas(){
