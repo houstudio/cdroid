@@ -1539,7 +1539,8 @@ cairo_qt_surface_create (QPainter *painter)
     _cairo_surface_init (&qs->base,
 			 &cairo_qt_surface_backend,
 			 NULL, /* device */
-			 CAIRO_CONTENT_COLOR_ALPHA);
+			 CAIRO_CONTENT_COLOR_ALPHA,
+			 FALSE); /* is_vector */
 
     _cairo_surface_clipper_init (&qs->clipper,
 				 _cairo_qt_surface_clipper_intersect_clip_path);
@@ -1578,7 +1579,8 @@ cairo_qt_surface_create_with_qimage (cairo_format_t format,
     _cairo_surface_init (&qs->base,
 			 &cairo_qt_surface_backend,
 			 NULL, /* device */
-			 _cairo_content_from_format (format));
+			 _cairo_content_from_format (format),
+			 FALSE); /* is_vector */
 
     _cairo_surface_clipper_init (&qs->clipper,
 				 _cairo_qt_surface_clipper_intersect_clip_path);
@@ -1639,7 +1641,8 @@ cairo_qt_surface_create_with_qpixmap (cairo_content_t content,
     _cairo_surface_init (&qs->base,
 			 &cairo_qt_surface_backend,
 			 NULL, /* device */
-			 content);
+			 content,
+			 FALSE); /* is_vector */
 
     _cairo_surface_clipper_init (&qs->clipper,
 				 _cairo_qt_surface_clipper_intersect_clip_path);

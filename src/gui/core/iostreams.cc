@@ -92,8 +92,8 @@ MemoryBuf::MemoryBuf(char const* base, size_t size){
 }
 
 std::streambuf::pos_type  MemoryBuf::seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,
-     std::ios_base::openmode mode/*ios_base::in | ios_base::out*/){
-     switch(way){
+    std::ios_base::openmode mode/*ios_base::in | ios_base::out*/){
+    switch(way){
     case std::ios_base::beg: buffpos=off; break;
     case std::ios_base::cur: buffpos+=off; break;
     case std::ios_base::end: buffpos=buffersize-off; break;

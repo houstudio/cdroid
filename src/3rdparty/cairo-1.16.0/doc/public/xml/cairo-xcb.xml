@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-surface-t"><returnvalue>cairo_surface_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-xcb-surface-create">cairo_xcb_surface_create</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -48,10 +48,10 @@
 </refsect1>
 <refsect1 id="cairo-XCB-Surfaces.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-XCB-SURFACE:CAPS">CAIRO_HAS_XCB_SURFACE</link></entry></row>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-XCB-SHM-FUNCTIONS:CAPS">CAIRO_HAS_XCB_SHM_FUNCTIONS</link></entry></row>

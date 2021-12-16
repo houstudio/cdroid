@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-scaled-font-t"><returnvalue>cairo_scaled_font_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-scaled-font-create">cairo_scaled_font_create</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -62,10 +62,10 @@
 </refsect1>
 <refsect1 id="cairo-cairo-scaled-font-t.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="typedef_keyword">typedef</entry><entry role="function_name"><link linkend="cairo-scaled-font-t">cairo_scaled_font_t</link></entry></row>
 <row><entry role="datatype_keyword"></entry><entry role="function_name"><link linkend="cairo-font-extents-t">cairo_font_extents_t</link></entry></row>

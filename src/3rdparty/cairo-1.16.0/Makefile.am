@@ -23,8 +23,6 @@ if CAIRO_HAS_PNG_FUNCTIONS
 SUBDIRS += boilerplate test perf
 endif
 
-configure: cairo-version.h
-
 doc:
 	cd doc && $(MAKE) $(AM_MAKEFLAGS) $@
 test retest recheck: all
@@ -52,7 +50,33 @@ EXTRA_DIST += \
 	README \
 	RELEASING \
 	autogen.sh \
-	cairo-version.h \
+	$(NULL)
+
+# Meson build system files
+EXTRA_DIST += \
+	meson.build \
+	meson_options.txt \
+	version.py \
+	boilerplate/make-cairo-boilerplate-constructors.py \
+	boilerplate/meson.build \
+	src/meson.build \
+	test/make-cairo-test-constructors.py \
+	test/meson.build \
+	test/pdiff/meson.build \
+	util/cairo-fdr/meson.build \
+	util/cairo-gobject/meson.build \
+	util/cairo-missing/meson.build \
+	util/cairo-script/meson.build \
+	util/cairo-sphinx/meson.build \
+	util/cairo-trace/meson.build \
+	util/meson.build \
+	meson-cc-tests/atomic-ops-cxx11.c \
+	meson-cc-tests/ipc_rmid_deferred_release.c \
+	meson-cc-tests/ft_has_color.c \
+	meson-cc-tests/mkdir-variant-1.c \
+	meson-cc-tests/pthread.c \
+	meson-cc-tests/atomic-ops-gcc-legacy.c \
+	meson-cc-tests/mkdir-variant-2.c \
 	$(NULL)
 
 DISTCLEANFILES += config.cache

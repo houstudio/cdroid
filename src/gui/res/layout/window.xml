@@ -47,7 +47,7 @@
             cdroid:layout_gravity="center_horizontal"
             cdroid:layout_weight="1"
             cdroid:minHeight="48"
-            cdroid:background="cdroid:drawable/btn_default.xml"
+            cdroid:background="cdroid:drawable/btn_default"
             cdroid:text="Hello world!" />
     </LinearLayout>
     <LinearLayout
@@ -89,28 +89,28 @@
             cdroid:layout_width="wrap_content"
             cdroid:layout_height="wrap_content"
             cdroid:indeterminate="true"
-            cdroid:indeterminateDrawable="cdroid:drawable/progress_large.xml"
+            cdroid:indeterminateDrawable="cdroid:drawable/progress_large"
             />
         <ProgressBar
             cdroid:id="206"
             cdroid:layout_width="fill_parent"
             cdroid:layout_height="wrap_content"
             cdroid:progress="30"
-            cdroid:progressDrawable="cdroid:drawable/progress_horizontal.xml"
+            cdroid:progressDrawable="cdroid:drawable/progress_horizontal"
             />
         <SeekBar
             cdroid:id="210"
             cdroid:layout_width="fill_parent"
             cdroid:layout_height="wrap_content"
-            cdroid:progressDrawable="cdroid:drawable/progress_horizontal.xml"
-            cdroid:thumb="cdroid:drawable/seek_thumb.xml"
+            cdroid:progressDrawable="cdroid:drawable/progress_horizontal"
+            cdroid:thumb="cdroid:drawable/seek_thumb"
             />
         <SeekBar
             cdroid:id="211"
             cdroid:layout_width="fill_parent"
             cdroid:layout_height="wrap_content"
-            cdroid:progressDrawable="cdroid:drawable/progress_horizontal.xml"
-            cdroid:thumb="cdroid:drawable/seek_thumb.xml"
+            cdroid:progressDrawable="cdroid:drawable/progress_horizontal"
+            cdroid:thumb="cdroid:drawable/seek_thumb"
             />
     </LinearLayout>
 </LinearLayout>

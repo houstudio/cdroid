@@ -153,7 +153,7 @@ create_printer_dc (win32_target_closure_t *ptc)
 
     /* The printer device units on win32 are 1 unit == 1 dot and the
      * origin is the start of the printable area. We transform the
-     * cordinate space to 1 unit is 1 point as expected by the
+     * coordinate space to 1 unit is 1 point as expected by the
      * tests. As the page size is larger than the test surface, the
      * origin is translated down so that the each test is drawn at the
      * bottom left corner of the page. This is because the bottom left
@@ -270,22 +270,28 @@ _cairo_boilerplate_win32_printing_surface_write_to_png (cairo_surface_t *surface
     cairo_t *cr;
     cairo_status_t status;
 
-    /* Both surface and ptc->target were originally created at the
-     * same dimensions. We want a 1:1 copy here, so we first clear any
-     * device offset on surface.
-     *
-     * In a more realistic use case of device offsets, the target of
-     * this copying would be of a different size than the source, and
-     * the offset would be desirable during the copy operation. */
-    cairo_surface_set_device_offset (surface, 0, 0);
-
     if (ptc->target) {
+	/* Both surface and ptc->target were originally created at the
+	 * same dimensions. We want a 1:1 copy here, so we first clear any
+	 * device offset and scale on surface.
+	 *
+	 * In a more realistic use case of device offsets, the target of
+	 * this copying would be of a different size than the source, and
+	 * the offset would be desirable during the copy operation. */
+	double x_offset, y_offset;
+	double x_scale, y_scale;
+	cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+	cairo_surface_get_device_scale (surface, &x_scale, &y_scale);
+	cairo_surface_set_device_offset (surface, 0, 0);
+	cairo_surface_set_device_scale (surface, 1, 1);
 	cairo_t *cr;
 	cr = cairo_create (ptc->target);
 	cairo_set_source_surface (cr, surface, 0, 0);
 	cairo_paint (cr);
 	cairo_show_page (cr);
 	cairo_destroy (cr);
+	cairo_surface_set_device_offset (surface, x_offset, y_offset);
+	cairo_surface_set_device_scale (surface, x_scale, y_scale);
 
 	cairo_surface_finish (surface);
 	surface = ptc->target;

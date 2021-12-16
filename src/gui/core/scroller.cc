@@ -54,7 +54,7 @@ void Scroller::sInit(){
             x = x_min + (x_max - x_min) / 2.0f;
             coef = 3.0f * x * (1.0f - x);
             tx = coef * ((1.0f - x) * P1 + x * P2) + x * x * x;
-            if (std::abs(tx - alpha) < 1E-5) break;
+            if (abs(tx - alpha) < 1E-5) break;
             if (tx > alpha) x_max = x;
             else x_min = x;
         }
@@ -66,7 +66,7 @@ void Scroller::sInit(){
             y = y_min + (y_max - y_min) / 2.0f;
             coef = 3.0f * y * (1.0f - y);
             dy = coef * ((1.0f - y) * START_TENSION + y) + y * y * y;
-            if (std::abs(dy - alpha) < 1E-5) break;
+            if (abs(dy - alpha) < 1E-5) break;
             if (dy > alpha) y_max = y;
             else y_min = y;
         }
@@ -139,8 +139,8 @@ bool Scroller::computeScrollOffset() {
         switch (mMode) {
         case SCROLL_MODE:
             x = mInterpolator->getInterpolation(timePassed * mDurationReciprocal);
-            mCurrX = mStartX + std::round(x * mDeltaX);
-            mCurrY = mStartY + std::round(x * mDeltaY);
+            mCurrX = mStartX + round(x * mDeltaX);
+            mCurrY = mStartY + round(x * mDeltaY);
             break;
         case FLING_MODE:
             t = (float) timePassed / mDuration;
@@ -158,13 +158,13 @@ bool Scroller::computeScrollOffset() {
 
             mCurrVelocity = velocityCoef * mDistance / mDuration * 1000.0f;
                 
-            mCurrX = mStartX + (int)std::round(distanceCoef * (mFinalX - mStartX));
+            mCurrX = mStartX + (int)round(distanceCoef * (mFinalX - mStartX));
             // Pin to mMinX <= mCurrX <= mMaxX
             mCurrX = std::min(mCurrX, mMaxX);
             mCurrX = std::max(mCurrX, mMinX);
                 
-            mCurrY = mStartY + (int)std::round(distanceCoef * (mFinalY - mStartY));
-            //std::round must converto int ,otherwise willcause NumberPicker::scrollBy enter infinity in its while loop
+            mCurrY = mStartY + (int)round(distanceCoef * (mFinalY - mStartY));
+            //round must converto int ,otherwise willcause NumberPicker::scrollBy enter infinity in its while loop
             // Pin to mMinX <= mCurrX <= mMaxX
             // Pin to mMinY <= mCurrY <= mMaxY
             mCurrY = std::min(mCurrY, mMaxY);
@@ -227,7 +227,7 @@ void Scroller::fling(int startX, int startY, int velocityX, int velocityY,
 
         float dx = (float) (mFinalX - mStartX);
         float dy = (float) (mFinalY - mStartY);
-        float hyp = (float) std::hypot(dx, dy);
+        float hyp = (float) hypot(dx, dy);
 
         float ndx = dx / hyp;
         float ndy = dy / hyp;
@@ -244,7 +244,7 @@ void Scroller::fling(int startX, int startY, int velocityX, int velocityY,
     mMode = FLING_MODE;
     mFinished = false;
 
-    float velocity = (float) std::hypot(velocityX, velocityY);
+    float velocity = (float) hypot(velocityX, velocityY);
      
     mVelocity = velocity;
     mDuration = getSplineFlingDuration(velocity);
@@ -261,31 +261,31 @@ void Scroller::fling(int startX, int startY, int velocityX, int velocityY,
     mMaxX = maxX;
     mMinY = minY;
     mMaxY = maxY;
-    mFinalX = startX + (int) std::round(totalDistance * coeffX);
+    mFinalX = startX + (int) round(totalDistance * coeffX);
     // Pin to mMinX <= mFinalX <= mMaxX
     mFinalX = std::min(mFinalX, mMaxX);
     mFinalX = std::max(mFinalX, mMinX);
       
-    mFinalY = startY + (int) std::round(totalDistance * coeffY);
+    mFinalY = startY + (int) round(totalDistance * coeffY);
     // Pin to mMinY <= mFinalY <= mMaxY
     mFinalY = std::min(mFinalY, mMaxY);
     mFinalY = std::max(mFinalY, mMinY);
 }
     
 double Scroller::getSplineDeceleration(float velocity) {
-    return std::log(INFLEXION * std::abs(velocity) / (mFlingFriction * mPhysicalCoeff));
+    return log(INFLEXION * abs(velocity) / (mFlingFriction * mPhysicalCoeff));
 }
 
 int Scroller::getSplineFlingDuration(float velocity) {
     double l = getSplineDeceleration(velocity);
     double decelMinusOne = DECELERATION_RATE - 1.0;
-    return (int) (1000.0 * std::exp(l / decelMinusOne));
+    return (int) (1000.0 * exp(l / decelMinusOne));
 }
 
 double Scroller::getSplineFlingDistance(float velocity) {
     double l = getSplineDeceleration(velocity);
     double decelMinusOne = DECELERATION_RATE - 1.0;
-    return mFlingFriction * mPhysicalCoeff * std::exp(DECELERATION_RATE / decelMinusOne * l);
+    return mFlingFriction * mPhysicalCoeff * exp(DECELERATION_RATE / decelMinusOne * l);
 }
 
 void Scroller::abortAnimation() {
@@ -345,10 +345,10 @@ float Scroller::ViscousFluidInterpolator::VISCOUS_FLUID_OFFSET = 1.0f - VISCOUS_
 float Scroller::ViscousFluidInterpolator::viscousFluid(float x){
     x *= VISCOUS_FLUID_SCALE;
     if (x < 1.0f) {
-        x -= (1.0f - (float)std::exp(-x));
+        x -= (1.0f - (float)exp(-x));
     } else {
         float start = 0.36787944117f;   // 1/e == exp(-1)
-        x = 1.0f - (float)std::exp(1.0f - x);
+        x = 1.0f - (float)exp(1.0f - x);
         x = start + x * (1.0f - start);
     }
     return x;    

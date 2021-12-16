@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-t"><returnvalue>cairo_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-create">cairo_create</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -148,10 +148,10 @@
 </refsect1>
 <refsect1 id="cairo-cairo-t.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="typedef_keyword">typedef</entry><entry role="function_name"><link linkend="cairo-t">cairo_t</link></entry></row>
 <row><entry role="datatype_keyword">enum</entry><entry role="function_name"><link linkend="cairo-antialias-t">cairo_antialias_t</link></entry></row>
@@ -2111,7 +2111,7 @@ the backend, typically this will be similar to <parameter>CAIRO_ANTIALIAS_GOOD</
 <tbody>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-ANTIALIAS-DEFAULT:CAPS">CAIRO_ANTIALIAS_DEFAULT</para></entry>
 <entry role="enum_member_description"><para>Use the default antialiasing for
-  the subsystem and target device, since 1.0</para>
+the subsystem and target device, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -2122,14 +2122,14 @@ the backend, typically this will be similar to <parameter>CAIRO_ANTIALIAS_GOOD</
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-ANTIALIAS-GRAY:CAPS">CAIRO_ANTIALIAS_GRAY</para></entry>
 <entry role="enum_member_description"><para>Perform single-color antialiasing (using
- shades of gray for black text on a white background, for example), since 1.0</para>
+shades of gray for black text on a white background, for example), since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-ANTIALIAS-SUBPIXEL:CAPS">CAIRO_ANTIALIAS_SUBPIXEL</para></entry>
 <entry role="enum_member_description"><para>Perform antialiasing by taking
- advantage of the order of subpixel elements on devices
- such as LCD panels, since 1.0</para>
+advantage of the order of subpixel elements on devices
+such as LCD panels, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>

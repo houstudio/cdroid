@@ -36,9 +36,6 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     setProgressDrawable(ctx->getDrawable(attrs.getString("progressDrawable")));
     setIndeterminateDrawable(ctx->getDrawable(attrs.getString("indeterminateDrawable")));
 
-    setProgress(attrs.getInt("progress",mProgress));
-    setSecondaryProgress(attrs.getInt("secondaryProgress",mSecondaryProgress));
-
     mDuration = attrs.getInt("indeterminateDuration",mDuration);
     mMinWidth = attrs.getDimensionPixelSize("minWidth", mMinWidth);
     mMaxWidth = attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
@@ -50,11 +47,15 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);
     mNoInvalidate = false;
     setIndeterminate(mOnlyIndeterminate||attrs.getBoolean("indeterminate",false));
+
     mMirrorForRtl =attrs.getBoolean("mirrorForRtl",false); 
 
     setMin(attrs.getInt("min",mMin));
     setMax(attrs.getInt("max",mMax));
-    
+
+    setProgress(attrs.getInt("progress",mProgress));
+    setSecondaryProgress(attrs.getInt("secondaryProgress",mSecondaryProgress));
+
     applyProgressTints();
     applyIndeterminateTint();
 }
@@ -210,6 +211,7 @@ void ProgressBar::initProgressBar(){
     mTransformation=nullptr;
     mHasAnimation= false;
     mInDrawing   = false;
+    mAggregatedIsVisible =false;
     mRefreshIsPosted =false;
     mData.push_back(RefreshData());
     mData.push_back(RefreshData());
@@ -333,7 +335,7 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (d != nullptr) {
         dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
         dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
-        LOGD("%p drawable.size=%dx%d",this,d->getIntrinsicWidth(),d->getIntrinsicHeight());
+        LOGV("%p drawable.size=%dx%d",this,d->getIntrinsicWidth(),d->getIntrinsicHeight());
     }
     updateDrawableState();
 
@@ -608,6 +610,37 @@ void ProgressBar::drawTrack(Canvas&canvas){
             ((AnimationDrawable*) d)->start();
         mShouldStartAnimationDrawable = false;
     }
+    
+}
+
+void ProgressBar::onVisibilityAggregated(bool isVisible){
+    View::onVisibilityAggregated(isVisible);
+    if (isVisible != mAggregatedIsVisible) {
+        mAggregatedIsVisible = isVisible;
+        if (mIndeterminate) {
+            // let's be nice with the UI thread
+            if (isVisible) {
+                startAnimation();
+            } else {
+                stopAnimation();
+            }
+        }
+        if (mCurrentDrawable)mCurrentDrawable->setVisible(isVisible, false);
+    }
+}
+
+void ProgressBar::invalidateDrawable(Drawable& dr) {
+    if (!mInDrawing) {
+        if (verifyDrawable(&dr)) {
+            Rect dirty = dr.getBounds();
+            int scrollX = mScrollX + mPaddingLeft;
+            int scrollY = mScrollY + mPaddingTop;
+            dirty.offset(scrollX,scrollY);
+            invalidate(dirty);
+        } else {
+            View::invalidateDrawable(dr);
+        }
+    }
 }
 
 void ProgressBar::updateDrawableBounds(int w,int h){
@@ -658,6 +691,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
 }
 
 void ProgressBar::onSizeChanged(int w,int h,int ow,int oh){
+    LOGV("%p sizechanged->(%d,%d)",w,h);
     updateDrawableBounds(w,h);
 }
 

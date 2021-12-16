@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-status-t"><returnvalue>cairo_status_t</returnvalue></link>
 </entry><entry role="function_name"><phrase role="c_punctuation">(</phrase><link linkend="cairo-user-scaled-font-init-func-t">*cairo_user_scaled_font_init_func_t</link><phrase role="c_punctuation">)</phrase>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -54,10 +54,10 @@
 </refsect1>
 <refsect1 id="cairo-User-Fonts.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-USER-FONT:CAPS">CAIRO_HAS_USER_FONT</link></entry></row>
 

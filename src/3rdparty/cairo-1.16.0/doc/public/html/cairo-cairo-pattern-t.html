@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-drawing.html" title="Drawing">
 <link rel="prev" href="cairo-Paths.html" title="Paths">
 <link rel="next" href="cairo-Regions.html" title="Regions">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-cairo-pattern-t.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -357,8 +357,8 @@
 <a name="cairo-cairo-pattern-t.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -1230,30 +1230,30 @@ the color of C0.</p>
 22
 23
 24</pre></td>
-        <td class="listing_code"><pre class="programlisting">cairo_pattern_t <span class="gtkdoc opt">*</span>pattern <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-cairo-pattern-t.html#cairo-pattern-create-mesh">cairo_pattern_create_mesh</a></span> <span class="gtkdoc opt">();</span>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_pattern_t</span> <span class="o">*</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">cairo_pattern_create_mesh</span> <span class="p">();</span>
 
-<span class="comment">/* Add a Coons patch */</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-begin-patch">cairo_mesh_pattern_begin_patch</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-move-to">cairo_mesh_pattern_move_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-curve-to">cairo_mesh_pattern_curve_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">30</span><span class="gtkdoc opt">, -</span><span class="number">30</span><span class="gtkdoc opt">,</span>  <span class="number">60</span><span class="gtkdoc opt">,</span>  <span class="number">30</span><span class="gtkdoc opt">,</span> <span class="number">100</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-curve-to">cairo_mesh_pattern_curve_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">60</span><span class="gtkdoc opt">,</span>  <span class="number">30</span><span class="gtkdoc opt">,</span> <span class="number">130</span><span class="gtkdoc opt">,</span>  <span class="number">60</span><span class="gtkdoc opt">,</span> <span class="number">100</span><span class="gtkdoc opt">,</span> <span class="number">100</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-curve-to">cairo_mesh_pattern_curve_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">60</span><span class="gtkdoc opt">,</span>  <span class="number">70</span><span class="gtkdoc opt">,</span>  <span class="number">30</span><span class="gtkdoc opt">,</span> <span class="number">130</span><span class="gtkdoc opt">,</span>   <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">100</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-curve-to">cairo_mesh_pattern_curve_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">30</span><span class="gtkdoc opt">,</span>  <span class="number">70</span><span class="gtkdoc opt">, -</span><span class="number">30</span><span class="gtkdoc opt">,</span>  <span class="number">30</span><span class="gtkdoc opt">,</span>   <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-set-corner-color-rgb">cairo_mesh_pattern_set_corner_color_rgb</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-set-corner-color-rgb">cairo_mesh_pattern_set_corner_color_rgb</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-set-corner-color-rgb">cairo_mesh_pattern_set_corner_color_rgb</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">2</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-set-corner-color-rgb">cairo_mesh_pattern_set_corner_color_rgb</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">3</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-end-patch">cairo_mesh_pattern_end_patch</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">);</span>
+<span class="cm">/* Add a Coons patch */</span>
+<span class="n">cairo_mesh_pattern_begin_patch</span> <span class="p">(</span><span class="n">pattern</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_move_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_curve_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span>  <span class="mi">60</span><span class="p">,</span>  <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_curve_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span>  <span class="mi">30</span><span class="p">,</span> <span class="mi">130</span><span class="p">,</span>  <span class="mi">60</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_curve_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span>  <span class="mi">70</span><span class="p">,</span>  <span class="mi">30</span><span class="p">,</span> <span class="mi">130</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_curve_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span>  <span class="mi">70</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span>  <span class="mi">30</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_set_corner_color_rgb</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_set_corner_color_rgb</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_set_corner_color_rgb</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_set_corner_color_rgb</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_end_patch</span> <span class="p">(</span><span class="n">pattern</span><span class="p">);</span>
 
-<span class="comment">/* Add a Gouraud-shaded triangle */</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-begin-patch">cairo_mesh_pattern_begin_patch</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">)</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-move-to">cairo_mesh_pattern_move_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">100</span><span class="gtkdoc opt">,</span> <span class="number">100</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-line-to">cairo_mesh_pattern_line_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">130</span><span class="gtkdoc opt">,</span> <span class="number">130</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-line-to">cairo_mesh_pattern_line_to</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">130</span><span class="gtkdoc opt">,</span>  <span class="number">70</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-set-corner-color-rgb">cairo_mesh_pattern_set_corner_color_rgb</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-set-corner-color-rgb">cairo_mesh_pattern_set_corner_color_rgb</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-set-corner-color-rgb">cairo_mesh_pattern_set_corner_color_rgb</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">,</span> <span class="number">2</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">1</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-mesh-pattern-end-patch">cairo_mesh_pattern_end_patch</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">)</span></pre></td>
+<span class="cm">/* Add a Gouraud-shaded triangle */</span>
+<span class="n">cairo_mesh_pattern_begin_patch</span> <span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+<span class="n">cairo_mesh_pattern_move_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_line_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">130</span><span class="p">,</span> <span class="mi">130</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_line_to</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">130</span><span class="p">,</span>  <span class="mi">70</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_set_corner_color_rgb</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_set_corner_color_rgb</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_set_corner_color_rgb</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="n">cairo_mesh_pattern_end_patch</span> <span class="p">(</span><span class="n">pattern</span><span class="p">)</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -2173,8 +2173,8 @@ creates implicitly. For example:</p></li></ul></div>
       <tr>
         <td class="listing_lines" align="right"><pre>1
 2</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="function"><a href="cairo-cairo-t.html#cairo-set-source-surface">cairo_set_source_surface</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> image<span class="gtkdoc opt">,</span> x<span class="gtkdoc opt">,</span> y<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-pattern-set-filter">cairo_pattern_set_filter</a></span> <span class="gtkdoc opt">(</span><span class="function"><a href="cairo-cairo-t.html#cairo-get-source">cairo_get_source</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">),</span> CAIRO_FILTER_NEAREST<span class="gtkdoc opt">);</span></pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_set_source_surface</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+<span class="n">cairo_pattern_set_filter</span> <span class="p">(</span><span class="n">cairo_get_source</span> <span class="p">(</span><span class="n">cr</span><span class="p">),</span> <span class="n">CAIRO_FILTER_NEAREST</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -2258,8 +2258,8 @@ it does by default the correct code to use is:</p>
       <tr>
         <td class="listing_lines" align="right"><pre>1
 2</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="function"><a href="cairo-cairo-matrix-t.html#cairo-matrix-init-scale">cairo_matrix_init_scale</a></span> <span class="gtkdoc opt">(&amp;</span>matrix<span class="gtkdoc opt">,</span> <span class="number">0.5</span><span class="gtkdoc opt">,</span> <span class="number">0.5</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-pattern-t.html#cairo-pattern-set-matrix">cairo_pattern_set_matrix</a></span> <span class="gtkdoc opt">(</span>pattern<span class="gtkdoc opt">, &amp;</span>matrix<span class="gtkdoc opt">);</span></pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_matrix_init_scale</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">matrix</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">);</span>
+<span class="n">cairo_pattern_set_matrix</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">matrix</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -2523,7 +2523,7 @@ and <a class="link" href="cairo-cairo-pattern-t.html#CAIRO-EXTEND-PAD:CAPS"><cod
 <td class="enum_member_name"><p><a name="CAIRO-EXTEND-NONE:CAPS"></a>CAIRO_EXTEND_NONE</p></td>
 <td class="enum_member_description">
 <p>pixels outside of the source pattern
-  are fully transparent (Since 1.0)</p>
+are fully transparent (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2538,7 +2538,7 @@ and <a class="link" href="cairo-cairo-pattern-t.html#CAIRO-EXTEND-PAD:CAPS"><cod
 <td class="enum_member_name"><p><a name="CAIRO-EXTEND-REFLECT:CAPS"></a>CAIRO_EXTEND_REFLECT</p></td>
 <td class="enum_member_description">
 <p>the pattern is tiled by reflecting
-  at the edges (Since 1.0; but only implemented for surface patterns since 1.6)</p>
+at the edges (Since 1.0; but only implemented for surface patterns since 1.6)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2546,8 +2546,8 @@ and <a class="link" href="cairo-cairo-pattern-t.html#CAIRO-EXTEND-PAD:CAPS"><cod
 <td class="enum_member_name"><p><a name="CAIRO-EXTEND-PAD:CAPS"></a>CAIRO_EXTEND_PAD</p></td>
 <td class="enum_member_description">
 <p>pixels outside of the pattern copy
-  the closest pixel from the source (Since 1.2; but only
-  implemented for surface patterns since 1.6)</p>
+the closest pixel from the source (Since 1.2; but only
+implemented for surface patterns since 1.6)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2576,7 +2576,7 @@ used with a particular pattern.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FILTER-FAST:CAPS"></a>CAIRO_FILTER_FAST</p></td>
 <td class="enum_member_description">
 <p>A high-performance filter, with quality similar
-    to <a class="link" href="cairo-cairo-pattern-t.html#CAIRO-FILTER-NEAREST:CAPS"><code class="literal">CAIRO_FILTER_NEAREST</code></a> (Since 1.0)</p>
+to <a class="link" href="cairo-cairo-pattern-t.html#CAIRO-FILTER-NEAREST:CAPS"><code class="literal">CAIRO_FILTER_NEAREST</code></a> (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2584,7 +2584,7 @@ used with a particular pattern.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FILTER-GOOD:CAPS"></a>CAIRO_FILTER_GOOD</p></td>
 <td class="enum_member_description">
 <p>A reasonable-performance filter, with quality
-    similar to <a class="link" href="cairo-cairo-pattern-t.html#CAIRO-FILTER-BILINEAR:CAPS"><code class="literal">CAIRO_FILTER_BILINEAR</code></a> (Since 1.0)</p>
+similar to <a class="link" href="cairo-cairo-pattern-t.html#CAIRO-FILTER-BILINEAR:CAPS"><code class="literal">CAIRO_FILTER_BILINEAR</code></a> (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2592,7 +2592,7 @@ used with a particular pattern.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FILTER-BEST:CAPS"></a>CAIRO_FILTER_BEST</p></td>
 <td class="enum_member_description">
 <p>The highest-quality available, performance may
-    not be suitable for interactive use. (Since 1.0)</p>
+not be suitable for interactive use. (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2614,7 +2614,7 @@ used with a particular pattern.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FILTER-GAUSSIAN:CAPS"></a>CAIRO_FILTER_GAUSSIAN</p></td>
 <td class="enum_member_description">
 <p>This filter value is currently
-    unimplemented, and should not be used in current code. (Since 1.0)</p>
+unimplemented, and should not be used in current code. (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2705,6 +2705,6 @@ color. It may be opaque or translucent, since 1.2.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

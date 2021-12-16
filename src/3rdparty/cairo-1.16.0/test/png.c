@@ -60,6 +60,8 @@ format_to_string (cairo_format_t format)
     case CAIRO_FORMAT_RGB24:  return "rgb24";
     case CAIRO_FORMAT_RGB30:  return "rgb30";
     case CAIRO_FORMAT_ARGB32: return "argb32";
+    case CAIRO_FORMAT_RGB96F: return "rgb96f";
+    case CAIRO_FORMAT_RGBA128F: return "rgba128f";
     case CAIRO_FORMAT_INVALID:
     default: return "???";
     }

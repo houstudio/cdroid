@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-surface-t"><returnvalue>cairo_surface_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-surface-create-similar">cairo_surface_create_similar</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -90,10 +90,10 @@
 </refsect1>
 <refsect1 id="cairo-cairo-surface-t.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-MIME-SURFACE:CAPS">CAIRO_HAS_MIME_SURFACE</link></entry></row>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-MIME-TYPE-CCITT-FAX:CAPS">CAIRO_MIME_TYPE_CCITT_FAX</link></entry></row>
@@ -401,8 +401,8 @@ cairo_surface_finish (<parameter><link linkend="cairo-surface-t"><type>cairo_sur
 external resources.  For example, for the Xlib backend it means
 that cairo will no longer access the drawable, which can be freed.
 After calling <link linkend="cairo-surface-finish"><function>cairo_surface_finish()</function></link> the only valid operations on a
-surface are getting and setting user, referencing and
-destroying, and flushing and finishing it.
+surface are checking status, getting and setting user, referencing
+and destroying, and flushing and finishing it.
 Further drawing to the surface will not affect the
 surface but will instead trigger a <link linkend="CAIRO-STATUS-SURFACE-FINISHED:CAPS"><literal>CAIRO_STATUS_SURFACE_FINISHED</literal></link>
 error.</para>
@@ -741,7 +741,7 @@ backends.</para>
 completing a page (with <link linkend="cairo-show-page"><function>cairo_show_page()</function></link> or <link linkend="cairo-copy-page"><function>cairo_copy_page()</function></link>) so
 there is currently no way to have more than one fallback resolution
 in effect on a single page.</para>
-<para>The default fallback resoultion is 300 pixels per inch in both
+<para>The default fallback resolution is 300 pixels per inch in both
 dimensions.</para>
 <refsect3 id="cairo-surface-set-fallback-resolution.parameters" role="parameters">
 <title>Parameters</title>
@@ -1503,7 +1503,7 @@ the wrong type is undefined.</para>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-SURFACE-TYPE-SUBSURFACE:CAPS">CAIRO_SURFACE_TYPE_SUBSURFACE</para></entry>
 <entry role="enum_member_description"><para>The surface is a subsurface created with
-  <link linkend="cairo-surface-create-for-rectangle"><function>cairo_surface_create_for_rectangle()</function></link>, since 1.10</para>
+<link linkend="cairo-surface-create-for-rectangle"><function>cairo_surface_create_for_rectangle()</function></link>, since 1.10</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>

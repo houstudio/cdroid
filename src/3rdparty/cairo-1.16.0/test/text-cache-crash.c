@@ -42,7 +42,7 @@
  *
  * 2004-11-04 Carl Worth <cworth@cworth.org>
  *
- *   I trimmed down Ned's example to the folllowing test while still
+ *   I trimmed down Ned's example to the following test while still
  *   maintaining the assertion.
  *
  *   Oh, actually, it looks like I may have triggered something

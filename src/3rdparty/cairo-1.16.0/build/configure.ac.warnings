@@ -24,7 +24,7 @@ MAYBE_C_SPECIFIC_WARN="-Wold-style-definition \
 
 # New -Wno options should be added here
 # gcc-4.4 and later accept every -Wno- option but may complain later that this
-# option is unknow each time another warning happen.
+# option is unknown each time another warning happens.
 # -Wunused-but-set-variable is too noisy at present
 NO_WARN="unused-but-set-variable"
 

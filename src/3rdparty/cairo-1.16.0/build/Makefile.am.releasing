@@ -28,7 +28,7 @@ snapshot-dist: dist
 	  sed -e 1h -e 1s/./=/g -e 1p -e 1x -e '$$p' -e '$$x'
 
 RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ; then echo release; else echo snapshot; fi)
-RELEASE_UPLOAD_HOST =   cairographics.org
+RELEASE_UPLOAD_HOST =   cairo.freedesktop.org
 RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
 RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/$(RELEASE_OR_SNAPSHOT)s
 RELEASE_URL_BASE = 	https://cairographics.org/$(RELEASE_OR_SNAPSHOT)s

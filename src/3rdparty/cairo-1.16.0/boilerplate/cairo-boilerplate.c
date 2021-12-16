@@ -24,8 +24,6 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#define CAIRO_VERSION_H 1
-
 #include "cairo-boilerplate-private.h"
 #include "cairo-boilerplate-scaled-font.h"
 
@@ -37,10 +35,6 @@
 #if CAIRO_HAS_SCRIPT_SURFACE
 #include <cairo-script.h>
 #endif
-
-/* get the "real" version info instead of dummy cairo-version.h */
-#undef CAIRO_VERSION_H
-#include "../cairo-version.h"
 
 #include <stddef.h>
 #include <stdlib.h>

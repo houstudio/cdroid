@@ -46,6 +46,19 @@ int Assets::addResource(const std::string&path,const std::string&name){
     return pak?0:-1;
 }
 
+static bool guessExtension(ZIPArchive*pak,std::string&ioname){
+    bool ret=(ioname.find('.')!=std::string::npos);
+    if(ret)return ret;
+    if(TextUtils::startWith(ioname,"drawable")){
+        if(ret=pak->hasEntry(ioname+".xml",false))
+            ioname+=".xml";
+    }else if(TextUtils::startWith(ioname,"mipmap")){
+        if(ret=pak->hasEntry(ioname+".png",false)) ioname+=".png";
+        else if(ret=pak->hasEntry(ioname+".9.png",false))ioname+=".9.png"; 
+    }
+    return ret;
+}
+
 //"@android:drawable/ic_dialog_email"
 //"@drawable/test"
 ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeResid)const{
@@ -63,14 +76,13 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
         relname=fullResId;
     }
     auto it=mResources.find(pakName);
-    for(auto it=mResources.begin();it!=mResources.end();it++)
-        LOGD_IF(it==mResources.end(),"%s:%p",it->first.c_str(),it->second);
-
-    if(relativeResid) *relativeResid=relname;
-
-    if(it!=mResources.end()) return it->second;
-
-    LOGD("resource for [%s:%s] is not found",pakName.c_str(),relname.c_str());
+    if(it!=mResources.end()){//convert noextname ->extname.
+        ZIPArchive*pak=it->second;
+        guessExtension(pak,relname);
+        if(relativeResid) *relativeResid=relname;
+        return pak;
+    }
+    LOGD_IF(relname.size(),"resource for [%s:%s] is not found",pakName.c_str(),relname.c_str());
     return nullptr;
 }
 

@@ -143,7 +143,7 @@ _cairo_dfb_surface_create_similar (void            *abstract_src,
 	format = DSPF_RGB32;
 	break;
     case CAIRO_CONTENT_ALPHA:
-        format = DSPF_A8;
+	format = DSPF_A8;
 	break;
     }
 

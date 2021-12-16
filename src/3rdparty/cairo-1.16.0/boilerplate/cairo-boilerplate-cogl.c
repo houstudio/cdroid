@@ -37,20 +37,15 @@
 
 typedef struct _cogl_closure {
     cairo_device_t *device;
-    CoglFramebuffer *fb;
     cairo_surface_t *surface;
 } cogl_closure_t;
 
 static const cairo_user_data_key_t cogl_closure_key;
 
-static CoglContext *context = NULL;
-
 static void
 _cairo_boilerplate_cogl_cleanup (void *abstract_closure)
 {
     cogl_closure_t *closure = abstract_closure;
-
-    cogl_object_unref (closure->fb);
 
     cairo_device_finish (closure->device);
     cairo_device_destroy (closure->device);
@@ -68,35 +63,30 @@ _cairo_boilerplate_cogl_create_offscreen_color_surface (const char		*name,
 							cairo_boilerplate_mode_t mode,
 							void		       **abstract_closure)
 {
+    CoglContext *context;
     cairo_device_t *device;
-    CoglTexture *tex;
-    CoglHandle offscreen;
-    CoglFramebuffer *fb;
     cogl_closure_t *closure;
     cairo_status_t status;
 
-    if (!context)
-	context = cogl_context_new (NULL, NULL);
+    if (width < 1)
+        width = 1;
+    if (height < 1)
+        height = 1;
+
+    context = cogl_context_new (NULL, NULL);
 
     device = cairo_cogl_device_create (context);
-    tex = cogl_texture_new_with_size (width, height,
-				      COGL_TEXTURE_NO_SLICING,
-				      COGL_PIXEL_FORMAT_BGRA_8888_PRE);
-    offscreen = cogl_offscreen_new_to_texture (tex);
-    fb = COGL_FRAMEBUFFER (offscreen);
 
-    cogl_framebuffer_allocate (fb, NULL);
-    cogl_push_framebuffer (fb);
-    cogl_ortho (0, cogl_framebuffer_get_width (fb),
-                cogl_framebuffer_get_height (fb), 0,
-                -1, 100);
-    cogl_pop_framebuffer ();
+    /* The device will take a reference on the context */
+    cogl_object_unref (context);
 
     closure = malloc (sizeof (cogl_closure_t));
     *abstract_closure = closure;
     closure->device = device;
-    closure->fb = fb;
-    closure->surface = cairo_cogl_surface_create (device, fb);
+    closure->surface = cairo_cogl_offscreen_surface_create (device,
+                                                            content,
+                                                            width,
+                                                            height);
 
     status = cairo_surface_set_user_data (closure->surface,
 					  &cogl_closure_key, closure, NULL);
@@ -117,32 +107,57 @@ _cairo_boilerplate_cogl_create_onscreen_color_surface (const char	       *name,
 						       cairo_boilerplate_mode_t mode,
 						       void		      **abstract_closure)
 {
+    CoglContext *context;
     cairo_device_t *device;
-    CoglOnscreen *onscreen;
-    CoglFramebuffer *fb;
     cogl_closure_t *closure;
     cairo_status_t status;
 
-    if (!context)
-	context = cogl_context_new (NULL, NULL);
+    if (width < 1)
+        width = 1;
+    if (height < 1)
+        height = 1;
+
+    if (content & CAIRO_CONTENT_ALPHA) {
+	/* A hackish way to ensure that we get a framebuffer with
+	 * an alpha component */
+	CoglSwapChain *swap_chain;
+	CoglOnscreenTemplate *onscreen_template;
+	CoglRenderer *renderer;
+	CoglDisplay *display;
+
+        swap_chain = cogl_swap_chain_new ();
+        cogl_swap_chain_set_has_alpha (swap_chain, TRUE);
+
+        onscreen_template = cogl_onscreen_template_new (swap_chain);
+        renderer = cogl_renderer_new ();
+        display = cogl_display_new (renderer, onscreen_template);
+
+        /* References will be taken on the swap chain, renderer, and
+         * onscreen template by the constructors */
+        cogl_object_unref (swap_chain);
+        cogl_object_unref (renderer);
+        cogl_object_unref (onscreen_template);
+
+        context = cogl_context_new (display, NULL);
+
+        /* The context will take a reference on the display */
+        cogl_object_unref (display);
+    } else {
+        context = cogl_context_new (NULL, NULL);
+    }
 
     device = cairo_cogl_device_create (context);
-    onscreen = cogl_onscreen_new (context, width, height);
-    fb = COGL_FRAMEBUFFER (onscreen);
 
-    cogl_onscreen_show (onscreen);
-
-    cogl_push_framebuffer (fb);
-    cogl_ortho (0, cogl_framebuffer_get_width (fb),
-                cogl_framebuffer_get_height (fb), 0,
-                -1, 100);
-    cogl_pop_framebuffer ();
+    /* The device will take a reference on the context */
+    cogl_object_unref (context);
 
     closure = malloc (sizeof (cogl_closure_t));
     *abstract_closure = closure;
     closure->device = device;
-    closure->fb = fb;
-    closure->surface = cairo_cogl_surface_create (device, fb);
+    closure->surface = cairo_cogl_onscreen_surface_create (device,
+                                                           content,
+                                                           width,
+                                                           height);
 
     status = cairo_surface_set_user_data (closure->surface,
 					  &cogl_closure_key, closure, NULL);
@@ -154,22 +169,16 @@ _cairo_boilerplate_cogl_create_onscreen_color_surface (const char	       *name,
 }
 
 static cairo_status_t
-_cairo_boilerplate_cogl_finish_onscreen (cairo_surface_t *surface)
+_cairo_boilerplate_cogl_finish (cairo_surface_t *surface)
 {
-    cogl_closure_t *closure = cairo_surface_get_user_data (surface, &cogl_closure_key);
-
-    cairo_cogl_surface_end_frame (surface);
-
-    cogl_framebuffer_swap_buffers (closure->fb);
-
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_cogl_surface_end_frame (surface);
 }
 
 static void
 _cairo_boilerplate_cogl_synchronize (void *abstract_closure)
 {
     cogl_closure_t *closure = abstract_closure;
-    cogl_framebuffer_finish (closure->fb);
+    cairo_cogl_surface_synchronize (closure->surface);
 }
 
 static const cairo_boilerplate_target_t targets[] = {
@@ -179,7 +188,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	"cairo_cogl_device_create",
 	_cairo_boilerplate_cogl_create_offscreen_color_surface,
 	cairo_surface_create_similar,
-	NULL, NULL,
+	NULL,
+        _cairo_boilerplate_cogl_finish,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_cogl_cleanup,
@@ -194,7 +204,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_cogl_create_onscreen_color_surface,
 	cairo_surface_create_similar,
 	NULL,
-	_cairo_boilerplate_cogl_finish_onscreen,
+	_cairo_boilerplate_cogl_finish,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_cogl_cleanup,

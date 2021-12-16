@@ -38,10 +38,13 @@
  *      Adrian Johnson <ajohnson@redneon.com>
  */
 
+#define _GNU_SOURCE 1	/* strtod_l() */
+
 #include "cairoint.h"
 #include "cairo-error-private.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <locale.h>
 #ifdef HAVE_XLOCALE_H
@@ -959,7 +962,7 @@ _cairo_fopen (const char *filename, const char *mode, FILE **file_out)
 /* tmpfile() replacement for Windows.
  *
  * On Windows tmpfile() creates the file in the root directory. This
- * may fail due to unsufficient privileges. However, this isn't a
+ * may fail due to insufficient privileges. However, this isn't a
  * problem on Windows CE so we don't use it there.
  */
 FILE *

@@ -42,8 +42,6 @@
 #include <GL/gl.h>
 #endif
 
-static const cairo_user_data_key_t gl_closure_key;
-
 typedef struct _egl_target_closure {
     EGLDisplay dpy;
     EGLContext ctx;

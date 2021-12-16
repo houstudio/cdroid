@@ -30,8 +30,6 @@
 
 #define _GNU_SOURCE 1	/* for sched_getaffinity() and getline() */
 
-#include "../cairo-version.h" /* for the real version */
-
 #include "cairo-missing.h"
 #include "cairo-perf.h"
 #include "cairo-stats.h"
@@ -377,7 +375,7 @@ usage (const char *argv0)
 "  -i	iterations; specify the number of iterations per test case\n"
 "  -l	list only; just list selected test case names without executing\n"
 "  -r	raw; display each time measurement instead of summary statistics\n"
-"  -s	sync; only sum the elapsed time of the indiviual operations\n"
+"  -s	sync; only sum the elapsed time of the individual operations\n"
 "  -t	tile size; draw to tiled surfaces\n"
 "  -v	verbose; in raw mode also show the summaries\n"
 "  -x	exclude; specify a file to read a list of traces to exclude\n"

@@ -346,7 +346,7 @@ record_create (cairo_t *target)
     cairo_t *cr;
 
     surface = cairo_recording_surface_create (cairo_surface_get_content (cairo_get_target (target)), NULL);
-    cr = cairo_create (surface);
+    cr = cairo_test_create (surface, cairo_test_get_context (target));
     cairo_surface_destroy (surface);
 
     return cr;

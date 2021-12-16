@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-font-face-t"><returnvalue>cairo_font_face_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-win32-font-face-create-for-logfontw">cairo_win32_font_face_create_for_logfontw</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -44,10 +44,10 @@
 </refsect1>
 <refsect1 id="cairo-Win32-Fonts.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-WIN32-FONT:CAPS">CAIRO_HAS_WIN32_FONT</link></entry></row>
 

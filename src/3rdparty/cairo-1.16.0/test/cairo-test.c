@@ -1470,7 +1470,7 @@ UNWIND_STRINGS:
 #include <signal.h>
 #include <setjmp.h>
 /* Used to catch crashes in a test, so that we report it as such and
- * continue testing, although one crasher may already have corrupted memory in
+ * continue testing, although one crash may already have corrupted memory in
  * an nonrecoverable fashion. */
 static jmp_buf jmpbuf;
 
@@ -1660,6 +1660,16 @@ const cairo_test_context_t *
 cairo_test_get_context (cairo_t *cr)
 {
     return cairo_get_user_data (cr, &_cairo_test_context_key);
+}
+
+cairo_t *
+cairo_test_create (cairo_surface_t *surface,
+		   const cairo_test_context_t *ctx)
+{
+    cairo_t *cr = cairo_create (surface);
+    cairo_set_user_data (cr, &_cairo_test_context_key,
+			 (void*) ctx, NULL);
+    return cr;
 }
 
 cairo_surface_t *

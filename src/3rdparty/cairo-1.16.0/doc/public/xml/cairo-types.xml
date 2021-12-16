@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="void"><returnvalue>void</returnvalue></link>
 </entry><entry role="function_name"><phrase role="c_punctuation">(</phrase><link linkend="cairo-destroy-func-t">*cairo_destroy_func_t</link><phrase role="c_punctuation">)</phrase>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -30,10 +30,10 @@
 </refsect1>
 <refsect1 id="cairo-Types.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="typedef_keyword">typedef</entry><entry role="function_name"><link linkend="cairo-bool-t">cairo_bool_t</link></entry></row>
 <row><entry role="datatype_keyword"></entry><entry role="function_name"><link linkend="cairo-user-data-key-t">cairo_user_data_key_t</link></entry></row>

@@ -34,6 +34,8 @@
 #define WIDTH 200
 #define HEIGHT 80
 
+static char *png_filename = NULL;
+
 /* Lazy way of determining PNG dimensions... */
 static void
 png_dimensions (const char *filename,
@@ -84,14 +86,25 @@ release (cairo_pattern_t *pattern, void *closure, cairo_surface_t *image)
     cairo_surface_destroy (image);
 }
 
+static void
+free_filename(void)
+{
+    free (png_filename);
+}
+
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    const char *png_filename = "png.png";
     cairo_pattern_t *png, *red;
     cairo_content_t content;
     int png_width, png_height;
     int i, j;
+
+    if (png_filename == NULL) {
+      const cairo_test_context_t *ctx = cairo_test_get_context (cr);
+      xasprintf (&png_filename, "%s/png.png", ctx->srcdir);
+      atexit (free_filename);
+    }
 
     png_dimensions (png_filename, &content, &png_width, &png_height);
 

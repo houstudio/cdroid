@@ -72,6 +72,7 @@ protected:
     int mSampleWidth;
     bool mIndeterminate;
     bool mMirrorForRtl;
+    bool mAggregatedIsVisible;
     Drawable*mCurrentDrawable;
     Drawable*mProgressDrawable;
     Drawable*mIndeterminateDrawable;
@@ -83,6 +84,8 @@ protected:
     virtual void drawTrack(Canvas&canvas);
     void refreshProgress(int id, int progress, bool from,bool animate);
     void doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate);
+    void onVisibilityAggregated(bool isVisible)override;
+    void invalidateDrawable(Drawable& dr)override;
     void onSizeChanged(int w,int h,int ow,int oh)override;
     virtual bool setProgressInternal(int progress, bool fromUser=false,bool animate=false);
     void onAttachedToWindow()override;

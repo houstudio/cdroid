@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
     <!--item cdroid:state_checked="true" cdroid:state_window_focused="false"
-          cdroid:drawable="mipmap/btn_radio_on.png" />
+          cdroid:drawable="mipmap/btn_radio_on" />
     <item cdroid:state_checked="false" cdroid:state_window_focused="false"
-          cdroid:drawable="mipmap/btn_radio_off.png" /-->
+          cdroid:drawable="mipmap/btn_radio_off" /-->
           
     <item cdroid:state_checked="true" cdroid:state_pressed="true"
-          cdroid:drawable="mipmap/btn_radio_on_pressed.png" />
+          cdroid:drawable="mipmap/btn_radio_on_pressed" />
     <item cdroid:state_checked="false" cdroid:state_pressed="true"
-          cdroid:drawable="mipmap/btn_radio_off_pressed.png" />
+          cdroid:drawable="mipmap/btn_radio_off_pressed" />
 
     <item cdroid:state_checked="true" cdroid:state_focused="true"
-          cdroid:drawable="mipmap/btn_radio_on_selected.png" />
+          cdroid:drawable="mipmap/btn_radio_on_selected" />
     <item cdroid:state_checked="false" cdroid:state_focused="true"
-          cdroid:drawable="mipmap/btn_radio_off_selected.png" />
+          cdroid:drawable="mipmap/btn_radio_off_selected" />
 
-    <item cdroid:state_checked="false" cdroid:drawable="mipmap/btn_radio_off.png" />
-    <item cdroid:state_checked="true" cdroid:drawable="mipmap/btn_radio_on.png" />
+    <item cdroid:state_checked="false" cdroid:drawable="mipmap/btn_radio_off" />
+    <item cdroid:state_checked="true" cdroid:drawable="mipmap/btn_radio_on" />
 </selector>

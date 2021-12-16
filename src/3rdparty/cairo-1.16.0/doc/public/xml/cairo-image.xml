@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="int"><returnvalue>int</returnvalue></link>
 </entry><entry role="function_name"><link linkend="cairo-format-stride-for-width">cairo_format_stride_for_width</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -44,10 +44,10 @@
 </refsect1>
 <refsect1 id="cairo-Image-Surfaces.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-IMAGE-SURFACE:CAPS">CAIRO_HAS_IMAGE_SURFACE</link></entry></row>
 <row><entry role="datatype_keyword">enum</entry><entry role="function_name"><link linkend="cairo-format-t">cairo_format_t</link></entry></row>
@@ -370,45 +370,55 @@ image data.</para>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-ARGB32:CAPS">CAIRO_FORMAT_ARGB32</para></entry>
 <entry role="enum_member_description"><para>each pixel is a 32-bit quantity, with
-  alpha in the upper 8 bits, then red, then green, then blue.
-  The 32-bit quantities are stored native-endian. Pre-multiplied
-  alpha is used. (That is, 50% transparent red is 0x80800000,
-  not 0x80ff0000.) (Since 1.0)</para>
+alpha in the upper 8 bits, then red, then green, then blue.
+The 32-bit quantities are stored native-endian. Pre-multiplied
+alpha is used. (That is, 50% transparent red is 0x80800000,
+not 0x80ff0000.) (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-RGB24:CAPS">CAIRO_FORMAT_RGB24</para></entry>
 <entry role="enum_member_description"><para>each pixel is a 32-bit quantity, with
-  the upper 8 bits unused. Red, Green, and Blue are stored
-  in the remaining 24 bits in that order. (Since 1.0)</para>
+the upper 8 bits unused. Red, Green, and Blue are stored
+in the remaining 24 bits in that order. (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-A8:CAPS">CAIRO_FORMAT_A8</para></entry>
 <entry role="enum_member_description"><para>each pixel is a 8-bit quantity holding
-  an alpha value. (Since 1.0)</para>
+an alpha value. (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-A1:CAPS">CAIRO_FORMAT_A1</para></entry>
 <entry role="enum_member_description"><para>each pixel is a 1-bit quantity holding
-  an alpha value. Pixels are packed together into 32-bit
-  quantities. The ordering of the bits matches the
-  endianness of the platform. On a big-endian machine, the
-  first pixel is in the uppermost bit, on a little-endian
-  machine the first pixel is in the least-significant bit. (Since 1.0)</para>
+an alpha value. Pixels are packed together into 32-bit
+quantities. The ordering of the bits matches the
+endianness of the platform. On a big-endian machine, the
+first pixel is in the uppermost bit, on a little-endian
+machine the first pixel is in the least-significant bit. (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-RGB16-565:CAPS">CAIRO_FORMAT_RGB16_565</para></entry>
 <entry role="enum_member_description"><para>each pixel is a 16-bit quantity
-  with red in the upper 5 bits, then green in the middle
-  6 bits, and blue in the lower 5 bits. (Since 1.2)</para>
+with red in the upper 5 bits, then green in the middle
+6 bits, and blue in the lower 5 bits. (Since 1.2)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-RGB30:CAPS">CAIRO_FORMAT_RGB30</para></entry>
 <entry role="enum_member_description"><para>like RGB24 but with 10bpc. (Since 1.12)</para>
+</entry>
+<entry role="enum_member_annotations"></entry>
+</row>
+<row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-RGB96F:CAPS">CAIRO_FORMAT_RGB96F</para></entry>
+<entry role="enum_member_description"><para>3 floats, R, G, B. (Since 1.17.2)</para>
+</entry>
+<entry role="enum_member_annotations"></entry>
+</row>
+<row role="constant"><entry role="enum_member_name"><para id="CAIRO-FORMAT-RGBA128F:CAPS">CAIRO_FORMAT_RGBA128F</para></entry>
+<entry role="enum_member_description"><para>4 floats, R, G, B, A. (Since 1.17.2)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>

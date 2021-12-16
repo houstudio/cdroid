@@ -1,4 +1,6 @@
 #! /bin/sh
+#
+# IMPORTANT: Keep in sync with make-cairo-boilerplate-constructors.py!
 
 if test $# -eq 0; then
     echo "$0: no input files." >&2

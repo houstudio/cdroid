@@ -290,7 +290,7 @@ preamble (cairo_test_context_t *ctx)
 	return cairo_test_status_from_status (ctx, status);
     }
 
-    /* And test the degnerate case */
+    /* And test the degenerate case */
     CAIRO_CREATE ();
     path.num_data = 0;
     cairo_append_path (cr, &path);

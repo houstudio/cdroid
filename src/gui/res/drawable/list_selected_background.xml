@@ -2,5 +2,4 @@
 <selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
     <item cdroid:state_focused="true"   cdroid:state_checked="true" cdroid:drawable="cdroid:drawable/list_selector_background_focused_selected" />
     <item cdroid:state_focused="false"  cdroid:state_checked="true" cdroid:drawable="cdroid:drawable/list_selector_background_selected" />
-
 </selector>

@@ -67,15 +67,16 @@ typedef struct _cairo_cogl_linear_gradient {
 } cairo_cogl_linear_gradient_t;
 
 cairo_int_status_t
-_cairo_cogl_get_linear_gradient (cairo_cogl_device_t *context,
-				 cairo_extend_t extend_mode,
-				 int n_stops,
-				 const cairo_gradient_stop_t *stops,
+_cairo_cogl_get_linear_gradient (cairo_cogl_device_t           *context,
+				 cairo_extend_t                 extend_mode,
+				 int                            n_stops,
+				 const cairo_gradient_stop_t   *stops,
+				 const cairo_bool_t             need_mirrored_gradient,
 				 cairo_cogl_linear_gradient_t **gradient_out);
 
 cairo_cogl_linear_texture_entry_t *
 _cairo_cogl_linear_gradient_texture_for_extend (cairo_cogl_linear_gradient_t *gradient,
-						cairo_extend_t extend_mode);
+						cairo_extend_t                extend_mode);
 
 cairo_cogl_linear_gradient_t *
 _cairo_cogl_linear_gradient_reference (cairo_cogl_linear_gradient_t *gradient);

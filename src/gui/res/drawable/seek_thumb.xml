@@ -2,14 +2,14 @@
 <selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
 
     <item cdroid:state_pressed="true"  cdroid:state_window_focused="true"
-          cdroid:drawable="cdroid:mipmap/seek_thumb_pressed.png" />
+          cdroid:drawable="cdroid:mipmap/seek_thumb_pressed" />
 
     <item cdroid:state_focused="true"  cdroid:state_window_focused="true"
-          cdroid:drawable="cdroid:mipmap/seek_thumb_selected.png" />
+          cdroid:drawable="cdroid:mipmap/seek_thumb_selected" />
 
     <item cdroid:state_selected="true" cdroid:state_window_focused="true"
-          cdroid:drawable="cdroid:mipmap/seek_thumb_selected.png" />
+          cdroid:drawable="cdroid:mipmap/seek_thumb_selected" />
 
-    <item cdroid:drawable="cdroid:mipmap/seek_thumb_normal.png" />
+    <item cdroid:drawable="cdroid:mipmap/seek_thumb_normal" />
 
 </selector>

@@ -833,6 +833,7 @@ csi_file_getc (csi_file_t *file)
 	    file->rem--;
 	} else {
 	    file->rem = fread (file->bp = file->data, 1, CHUNK_SIZE, file->src);
+	    /* fall through */
     case BYTES:
 	    if (_csi_likely (file->rem)) {
 		c = *file->bp++;

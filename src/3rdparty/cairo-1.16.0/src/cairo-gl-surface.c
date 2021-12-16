@@ -1252,7 +1252,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 	return _cairo_image_surface_create_in_error (status);
     }
 
-    /* We must invert the image manualy if we lack GL_MESA_pack_invert */
+    /* We must invert the image manually if we lack GL_MESA_pack_invert */
     if (flipped && ! mesa_invert) {
 	uint8_t stack[1024], *row = stack;
 	uint8_t *top = image->data;

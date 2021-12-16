@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-surfaces.html" title="Surfaces">
 <link rel="prev" href="cairo-surfaces.html" title="Surfaces">
 <link rel="next" href="cairo-cairo-surface-t.html" title="cairo_surface_t">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-cairo-device-t.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -189,8 +189,8 @@
 <a name="cairo-cairo-device-t.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -247,26 +247,26 @@ look something like this:</p>
 18
 19
 20</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="gtkdoc kwb">void</span>
-<span class="function">my_device_modifying_function</span> <span class="gtkdoc opt">(</span>cairo_device_t <span class="gtkdoc opt">*</span>device<span class="gtkdoc opt">)</span>
-<span class="gtkdoc opt">{</span>
-  cairo_status_t status<span class="gtkdoc opt">;</span>
+        <td class="listing_code"><pre class="programlisting"><span class="kt">void</span>
+<span class="nf">my_device_modifying_function</span> <span class="p">(</span><span class="n">cairo_device_t</span> <span class="o">*</span><span class="n">device</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">cairo_status_t</span> <span class="n">status</span><span class="p">;</span>
 
-  <span class="gtkdoc slc">// Ensure the device is properly reset</span>
-  <span class="function"><a href="cairo-cairo-device-t.html#cairo-device-flush">cairo_device_flush</a></span> <span class="gtkdoc opt">(</span>device<span class="gtkdoc opt">);</span>
-  <span class="gtkdoc slc">// Try to acquire the device</span>
-  status <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-cairo-device-t.html#cairo-device-acquire">cairo_device_acquire</a></span> <span class="gtkdoc opt">(</span>device<span class="gtkdoc opt">);</span>
-  <span class="keyword">if</span> <span class="gtkdoc opt">(</span>status <span class="gtkdoc opt">!=</span> CAIRO_STATUS_SUCCESS<span class="gtkdoc opt">) {</span>
-    <span class="function">printf</span> <span class="gtkdoc opt">(</span><span class="string">&quot;Failed to acquire the device: %s</span><span class="gtkdoc esc">\n</span><span class="string">&quot;</span><span class="gtkdoc opt">,</span> <span class="function"><a href="cairo-Error-handling.html#cairo-status-to-string">cairo_status_to_string</a></span> <span class="gtkdoc opt">(</span>status<span class="gtkdoc opt">));</span>
-    <span class="keyword">return</span><span class="gtkdoc opt">;</span>
-  <span class="gtkdoc opt">}</span>
+  <span class="c1">// Ensure the device is properly reset</span>
+  <span class="n">cairo_device_flush</span> <span class="p">(</span><span class="n">device</span><span class="p">);</span>
+  <span class="c1">// Try to acquire the device</span>
+  <span class="n">status</span> <span class="o">=</span> <span class="n">cairo_device_acquire</span> <span class="p">(</span><span class="n">device</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">!=</span> <span class="n">CAIRO_STATUS_SUCCESS</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">printf</span> <span class="p">(</span><span class="s">&quot;Failed to acquire the device: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">cairo_status_to_string</span> <span class="p">(</span><span class="n">status</span><span class="p">));</span>
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">}</span>
 
-  <span class="gtkdoc slc">// Do the custom operations on the device here.</span>
-  <span class="gtkdoc slc">// But do not call any Cairo functions that might acquire devices.</span>
+  <span class="c1">// Do the custom operations on the device here.</span>
+  <span class="c1">// But do not call any Cairo functions that might acquire devices.</span>
   
-  <span class="gtkdoc slc">// Release the device when done.</span>
-  <span class="function"><a href="cairo-cairo-device-t.html#cairo-device-release">cairo_device_release</a></span> <span class="gtkdoc opt">(</span>device<span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">}</span></pre></td>
+  <span class="c1">// Release the device when done.</span>
+  <span class="n">cairo_device_release</span> <span class="p">(</span><span class="n">device</span><span class="p">);</span>
+<span class="p">}</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -816,6 +816,6 @@ the wrong type is undefined.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

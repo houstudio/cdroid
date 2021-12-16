@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-pattern-t"><returnvalue>cairo_pattern_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-pattern-create-raster-source">cairo_pattern_create_raster_source</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -43,7 +43,7 @@
 </entry><entry role="function_name"><link linkend="cairo-raster-source-pattern-set-finish">cairo_raster_source_pattern_set_finish</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
 <row><entry role="function_type"><link linkend="cairo-raster-source-finish-func-t"><returnvalue>cairo_raster_source_finish_func_t</returnvalue></link>
 </entry><entry role="function_name"><link linkend="cairo-raster-source-pattern-get-finish">cairo_raster_source_pattern_get_finish</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
-<row><entry role="function_type"><link linkend="cairo-surface-t"><returnvalue>cairo_surface_t</returnvalue></link>
+<row><entry role="function_type"><link linkend="cairo-surface-t"><returnvalue>cairo_surface_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><phrase role="c_punctuation">(</phrase><link linkend="cairo-raster-source-acquire-func-t">*cairo_raster_source_acquire_func_t</link><phrase role="c_punctuation">)</phrase>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
 <row><entry role="function_type"><link linkend="void"><returnvalue>void</returnvalue></link>
 </entry><entry role="function_name"><phrase role="c_punctuation">(</phrase><link linkend="cairo-raster-source-release-func-t">*cairo_raster_source_release_func_t</link><phrase role="c_punctuation">)</phrase>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -375,7 +375,7 @@ cairo_raster_source_pattern_get_finish
 <refsect2 id="cairo-raster-source-acquire-func-t" role="function" condition="since:1.12">
 <title>cairo_raster_source_acquire_func_t&#160;()</title>
 <indexterm zone="cairo-raster-source-acquire-func-t" role="1.12"><primary sortas="raster_source_acquire_func_t">cairo_raster_source_acquire_func_t</primary></indexterm>
-<programlisting language="C"><link linkend="cairo-surface-t"><returnvalue>cairo_surface_t</returnvalue></link>
+<programlisting language="C"><link linkend="cairo-surface-t"><returnvalue>cairo_surface_t</returnvalue></link>&#160;*
 <phrase role="c_punctuation">(</phrase>*cairo_raster_source_acquire_func_t<phrase role="c_punctuation">)</phrase> (<parameter><link linkend="cairo-pattern-t"><type>cairo_pattern_t</type></link> *pattern</parameter>,
                                        <parameter><link linkend="void"><type>void</type></link> *callback_data</parameter>,
                                        <parameter><link linkend="cairo-surface-t"><type>cairo_surface_t</type></link> *target</parameter>,
@@ -535,10 +535,6 @@ called when the pattern (or a copy thereof) is no longer required.</para>
 <entry role="parameter_annotations"></entry></row>
 </tbody></tgroup></informaltable>
 </refsect3><para role="since">Since: <link linkend="api-index-1.12">1.12</link></para></refsect2>
-
-</refsect1>
-<refsect1 id="cairo-Raster-Sources.other_details" role="details">
-<title role="details.title">Types and Values</title>
 
 </refsect1>
 <refsect1 id="cairo-Raster-Sources.see-also">

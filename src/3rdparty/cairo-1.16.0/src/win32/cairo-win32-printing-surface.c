@@ -2041,7 +2041,7 @@ _cairo_win32_printing_surface_start_page (void *abstract_surface)
      * coordinates.
      *
      * If the device context is an EMF file, using an identity
-     * transform often provides insufficent resolution. The workaround
+     * transform often provides insufficient resolution. The workaround
      * is to set the GDI CTM to a scale < 1 eg [1.0/16 0 0 1/0/16 0 0]
      * and scale the cairo CTM by [16 0 0 16 0 0]. The
      * SetWorldTransform function call to scale the GDI CTM by 1.0/16

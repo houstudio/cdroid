@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="void"><returnvalue>void</returnvalue></link>
 </entry><entry role="function_name"><link linkend="cairo-tag-begin">cairo_tag_begin</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -32,10 +32,10 @@
 </refsect1>
 <refsect1 id="cairo-Tags-and-Links.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-TAG-DEST:CAPS">CAIRO_TAG_DEST</link></entry></row>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-TAG-LINK:CAPS">CAIRO_TAG_LINK</link></entry></row>
@@ -78,35 +78,34 @@ specified by four elements in the array: x, y, width, height. The
 array size must be a multiple of four.</para>
 <para>An example of creating a link with user specified clickable region:</para>
 <informalexample><programlisting>
-cairo_font_extents_t font_extents;
+struct text {
+    const char *s;
+    double x, y;
+};
+const struct text text1 = { "This link is split", 450, 70 };
+const struct text text2 = { "across two lines", 50, 70 };
 cairo_text_extents_t text1_extents;
 cairo_text_extents_t text2_extents;
 char attribs[100];
-const char *text1 = "This link is split";
-const char *text2 = "across two lines";
 
-cairo_font_extents (cr, &amp;font_extents);
-cairo_move_to (cr, 450, 50);
-cairo_text_extents (cr, text1, &amp;text1_extents);
-cairo_move_to (cr, 50, 70);
-cairo_text_extents (cr, text2, &amp;text2_extents);
+cairo_text_extents (cr, text1.s, &amp;text1_extents);
+cairo_text_extents (cr, text2.s, &amp;text2_extents);
 sprintf (attribs,
          "rect=[%f %f %f %f %f %f %f %f] uri='https://cairographics.org'",
-         text1_extents.x_bearing,
-         text1_extents.y_bearing,
+         text1_extents.x_bearing + text1.x,
+         text1_extents.y_bearing + text1.y,
          text1_extents.width,
          text1_extents.height,
-         text2_extents.x_bearing,
-         text2_extents.y_bearing,
+         text2_extents.x_bearing + text2.x,
+         text2_extents.y_bearing + text2.y,
          text2_extents.width,
          text2_extents.height);
 
 cairo_tag_begin (cr, CAIRO_TAG_LINK, attribs);
-cairo_show_text (cr, "This is a link to the cairo website");
-cairo_move_to (cr, 450, 50);
-cairo_show_text (cr, text1);
-cairo_move_to (cr, 50, 70);
-cairo_show_text (cr, text2);
+cairo_move_to (cr, text1.x, text1.y);
+cairo_show_text (cr, text1.s);
+cairo_move_to (cr, text2.x, text2.y);
+cairo_show_text (cr, text2.s);
 cairo_tag_end (cr, CAIRO_TAG_LINK);
 </programlisting></informalexample>
 <para>There are three types of links. Each type has its own attributes as detailed below.</para>

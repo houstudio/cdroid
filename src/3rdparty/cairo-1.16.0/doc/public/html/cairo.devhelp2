@@ -716,6 +716,8 @@
     <keyword type="constant" name="CAIRO_FORMAT_A1" link="cairo-Image-Surfaces.html#CAIRO-FORMAT-A1:CAPS"/>
     <keyword type="constant" name="CAIRO_FORMAT_RGB16_565" link="cairo-Image-Surfaces.html#CAIRO-FORMAT-RGB16-565:CAPS"/>
     <keyword type="constant" name="CAIRO_FORMAT_RGB30" link="cairo-Image-Surfaces.html#CAIRO-FORMAT-RGB30:CAPS"/>
+    <keyword type="constant" name="CAIRO_FORMAT_RGB96F" link="cairo-Image-Surfaces.html#CAIRO-FORMAT-RGB96F:CAPS"/>
+    <keyword type="constant" name="CAIRO_FORMAT_RGBA128F" link="cairo-Image-Surfaces.html#CAIRO-FORMAT-RGBA128F:CAPS"/>
     <keyword type="constant" name="CAIRO_PDF_OUTLINE_FLAG_OPEN" link="cairo-PDF-Surfaces.html#CAIRO-PDF-OUTLINE-FLAG-OPEN:CAPS"/>
     <keyword type="constant" name="CAIRO_PDF_OUTLINE_FLAG_BOLD" link="cairo-PDF-Surfaces.html#CAIRO-PDF-OUTLINE-FLAG-BOLD:CAPS"/>
     <keyword type="constant" name="CAIRO_PDF_OUTLINE_FLAG_ITALIC" link="cairo-PDF-Surfaces.html#CAIRO-PDF-OUTLINE-FLAG-ITALIC:CAPS"/>

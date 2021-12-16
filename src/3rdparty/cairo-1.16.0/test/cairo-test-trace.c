@@ -79,12 +79,21 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/mman.h>
-#include <sys/poll.h>
 #include <sys/un.h>
 #include <errno.h>
 #include <assert.h>
+#include <unistd.h>
+
 #if CAIRO_HAS_REAL_PTHREAD
 #include <pthread.h>
+#endif
+
+#if defined(HAVE_POLL_H)
+#include <poll.h>
+#elif defined(HAVE_SYS_POLL_H)
+#include <sys/poll.h>
+#else
+#error No poll.h equivalent found
 #endif
 
 #if HAVE_FCFINI
@@ -906,7 +915,7 @@ write_result (const char *trace, struct slave *slave)
     static int index;
     char *filename;
 
-    xasprintf (&filename, "%s-%s-pass-%d-%d-%d.png",
+    xasprintf (&filename, "%s-%s-pass-%d-%ld-%ld.png",
 	       trace, slave->target->name, ++index,
 	       slave->start_line, slave->end_line);
     cairo_surface_write_to_png (slave->image, filename);
@@ -1175,7 +1184,7 @@ test_run (void *base,
 	    if (write_results) write_result (trace, &slaves[1]);
 	    if (write_traces && slaves[0].is_recording) {
 		char buf[80];
-		snprintf (buf, sizeof (buf), "%d", slaves[0].image_serial);
+		snprintf (buf, sizeof (buf), "%ld", slaves[0].image_serial);
 		write_trace (trace, buf, &slaves[0]);
 	    }
 
@@ -1203,7 +1212,7 @@ test_run (void *base,
 	    image = 0;
 	}
     }
-done:
+
     ret = TRUE;
 
 out:

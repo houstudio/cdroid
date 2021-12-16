@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-path-t"><returnvalue>cairo_path_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-copy-path">cairo_copy_path</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -70,10 +70,10 @@
 </refsect1>
 <refsect1 id="cairo-Paths.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="datatype_keyword"></entry><entry role="function_name"><link linkend="cairo-path-t">cairo_path_t</link></entry></row>
 <row><entry role="datatype_keyword">union</entry><entry role="function_name"><link linkend="cairo-path-data-t">cairo_path_data_t</link></entry></row>

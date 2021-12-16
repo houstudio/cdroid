@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-support.html" title="Utilities">
 <link rel="prev" href="cairo-Error-handling.html" title="Error handling">
 <link rel="next" href="cairo-Types.html" title="Types">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-Version-Information.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -73,8 +73,8 @@
 <a name="cairo-Version-Information.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -188,12 +188,12 @@ to 1.0.0 could be achieved at compile-time or run-time as follows:
 4
 5
 6</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="gtkdoc ppc">##if CAIRO_VERSION &gt;= CAIRO_VERSION_ENCODE(1, 0, 0)</span>
-<span class="function">printf</span> <span class="gtkdoc opt">(</span><span class="string">&quot;Compiling with suitable cairo version: %s</span><span class="gtkdoc esc">\n</span><span class="string">&quot;</span><span class="gtkdoc opt">, %</span>CAIRO_VERSION_STRING<span class="gtkdoc opt">);</span>
-<span class="gtkdoc ppc">##endif</span>
+        <td class="listing_code"><pre class="programlisting"><span class="cp">##if CAIRO_VERSION &gt;= CAIRO_VERSION_ENCODE(1, 0, 0)</span>
+<span class="n">printf</span> <span class="p">(</span><span class="s">&quot;Compiling with suitable cairo version: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="o">%</span><span class="n">CAIRO_VERSION_STRING</span><span class="p">);</span>
+<span class="cp">##endif</span>
 
-<span class="keyword">if</span> <span class="gtkdoc opt">(</span><span class="function"><a href="cairo-Version-Information.html#cairo-version">cairo_version</a></span><span class="gtkdoc opt">() &gt;=</span> <span class="function"><a href="cairo-Version-Information.html#CAIRO-VERSION-ENCODE:CAPS">CAIRO_VERSION_ENCODE</a></span><span class="gtkdoc opt">(</span><span class="number">1</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">))</span>
-    <span class="function">printf</span> <span class="gtkdoc opt">(</span><span class="string">&quot;Running with suitable cairo version: %s</span><span class="gtkdoc esc">\n</span><span class="string">&quot;</span><span class="gtkdoc opt">,</span> <span class="function"><a href="cairo-Version-Information.html#cairo-version-string">cairo_version_string</a></span> <span class="gtkdoc opt">());</span></pre></td>
+<span class="k">if</span> <span class="p">(</span><span class="n">cairo_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">CAIRO_VERSION_ENCODE</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">printf</span> <span class="p">(</span><span class="s">&quot;Running with suitable cairo version: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">cairo_version_string</span> <span class="p">());</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -298,7 +298,7 @@ or equal to version X.Y.Z could be performed as follows:</p>
     <tbody>
       <tr>
         <td class="listing_lines" align="right"><pre>1</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="keyword">if</span> <span class="gtkdoc opt">(</span><span class="function"><a href="cairo-Version-Information.html#cairo-version">cairo_version</a></span><span class="gtkdoc opt">() &gt;=</span> <span class="function"><a href="cairo-Version-Information.html#CAIRO-VERSION-ENCODE:CAPS">CAIRO_VERSION_ENCODE</a></span><span class="gtkdoc opt">(</span>X<span class="gtkdoc opt">,</span>Y<span class="gtkdoc opt">,</span>Z<span class="gtkdoc opt">)) {...}</span></pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="k">if</span> <span class="p">(</span><span class="n">cairo_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">CAIRO_VERSION_ENCODE</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">))</span> <span class="p">{...}</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -340,7 +340,7 @@ of the form "X.Y.Z".</p>
 <hr>
 <div class="refsect2">
 <a name="CAIRO-VERSION-MAJOR:CAPS"></a><h3>CAIRO_VERSION_MAJOR</h3>
-<pre class="programlisting">#define CAIRO_VERSION_MAJOR USE_cairo_version_OR_cairo_version_string_INSTEAD
+<pre class="programlisting">#define CAIRO_VERSION_MAJOR 1
 </pre>
 <p>The major component of the version of cairo available at compile-time.</p>
 <p class="since">Since: 1.0</p>
@@ -348,7 +348,7 @@ of the form "X.Y.Z".</p>
 <hr>
 <div class="refsect2">
 <a name="CAIRO-VERSION-MINOR:CAPS"></a><h3>CAIRO_VERSION_MINOR</h3>
-<pre class="programlisting">#define CAIRO_VERSION_MINOR USE_cairo_version_OR_cairo_version_string_INSTEAD
+<pre class="programlisting">#define CAIRO_VERSION_MINOR 17
 </pre>
 <p>The minor component of the version of cairo available at compile-time.</p>
 <p class="since">Since: 1.0</p>
@@ -356,7 +356,7 @@ of the form "X.Y.Z".</p>
 <hr>
 <div class="refsect2">
 <a name="CAIRO-VERSION-MICRO:CAPS"></a><h3>CAIRO_VERSION_MICRO</h3>
-<pre class="programlisting">#define CAIRO_VERSION_MICRO USE_cairo_version_OR_cairo_version_string_INSTEAD
+<pre class="programlisting">#define CAIRO_VERSION_MICRO 4
 </pre>
 <p>The micro component of the version of cairo available at compile-time.</p>
 <p class="since">Since: 1.0</p>
@@ -372,6 +372,6 @@ at compile-time, in the form of "X.Y.Z".</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

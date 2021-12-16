@@ -296,18 +296,10 @@ void GradientDrawable::setStroke(int width,ColorStateList* colorStateList, float
 }
 
 void GradientDrawable::setStrokeInternal(int width, int color, float dashWidth, float dashGap) {
-    /*if (mStrokePaint == null)  {
-        mStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mStrokePaint.setStyle(Paint.Style.STROKE);
-    }
-    mStrokePaint.setStrokeWidth(width);
-    mStrokePaint.setColor(color);
-
-    DashPathEffect e = null;
-    if (dashWidth > 0) {
-        e = new DashPathEffect(new float[] { dashWidth, dashGap }, 0);
-    }
-    mStrokePaint.setPathEffect(e);*/
+    Color c(color);
+    mStrokePaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
+    mStrokeWidth =width;
+    mDashArray=std::vector<double>{dashWidth,dashGap};
     invalidateSelf();
 }
 
@@ -416,8 +408,8 @@ const std::vector<int>&GradientDrawable::getColors()const {
 void GradientDrawable::buildPathIfDirty() {
     if (mPathIsDirty) {
         ensureValidRect();
-        //mPath.reset();
-        //mPath.addRoundRect(mRect,mGradientState->mRadiusArray, Path.Direction.CW);
+        mPath->reset();
+        mPath->round_rectangle(mRect,mGradientState->mRadiusArray);
         mPathIsDirty = false;
     }
 }
@@ -425,8 +417,9 @@ void GradientDrawable::buildPathIfDirty() {
 //Path buildRing(GradientState st){}
 
 void GradientDrawable::setColor(int argb) {
+    Color c(argb);
     mGradientState->setSolidColors(ColorStateList::valueOf(argb));
-    //mFillPaint->setColor(argb);
+    mFillPaint=SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     invalidateSelf();
 }
 
@@ -439,7 +432,8 @@ void GradientDrawable::setColor(ColorStateList* colorStateList) {
         std::vector< int>stateSet = getState();
         color = colorStateList->getColorForState(stateSet, 0);
     }
-    //mFillPaint.setColor(color);
+    Color c(color);
+    mFillPaint=SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     invalidateSelf();
 }
 
@@ -519,9 +513,9 @@ bool GradientDrawable::ensureValidRect(){
         GradientState&st =*mGradientState;
         mRect.set(bounds.left + inset, bounds.top + inset, bounds.width - 2*inset, bounds.height - 2*inset);
 
-        std::vector<int>&gradientColors = st.mGradientColors;
+        std::vector<int>&gradientColors = st.mGradientColors; 
         if (gradientColors.size()) {
-             const Rect r = mRect;
+             const RectF r = mRect;
              float x0, x1, y0, y1;
 
              if (st.mGradient == LINEAR_GRADIENT) {
@@ -536,7 +530,13 @@ bool GradientDrawable::ensureValidRect(){
                  case LEFT_RIGHT: x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = y0;              break;
                  default:/*TL_BR*/x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = level *r.height; break;
                  }
-                 //mFillPaint.setShader(new LinearGradient(x0, y0, x1, y1, gradientColors, st.mPositions, Shader.TileMode.CLAMP));
+                 RefPtr<Cairo::LinearGradient>pat=LinearGradient::create(x0, y0, x1, y1);
+                 //gradientColors, st.mPositions, Shader.TileMode.CLAMP));
+                 for(int i=0;i<gradientColors.size();i++){
+                     Color c((uint32_t)gradientColors[i]);
+                     pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),c.alpha());
+                 }
+                 mFillPaint=pat;
             } else if (st.mGradient == RADIAL_GRADIENT) {
                 x0 = r.left + r.width* st.mCenterX;
                 y0 = r.top + r.height * st.mCenterY;
@@ -559,39 +559,44 @@ bool GradientDrawable::ensureValidRect(){
                      // let's have a very, very small radius.
                      radius = 0.001f;
                 }
-                //mFillPaint.setShader(new RadialGradient( x0, y0, radius, gradientColors, null, Shader.TileMode.CLAMP));
+                RefPtr<Cairo::RadialGradient>pat=RadialGradient::create( x0, y0, radius,x0,y0,0);
+                for(int i=0;i<gradientColors.size();i++){
+                    Color c((uint32_t)gradientColors[i]);
+                    pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),c.alpha());
+                }// , gradientColors, null, Shader.TileMode.CLAMP));
+                mFillPaint=pat;
             } else if (st.mGradient == SWEEP_GRADIENT) {
-                /*x0 = r.x + r.width * st.mCenterX;
-                y0 = r.y + r.height * st.mCenterY;
-                std::vector<int>tempColors = gradientColors;
+                x0 = r.left + r.width * st.mCenterX;
+                y0 = r.top + r.height * st.mCenterY;
+                std::vector<int> tempColors = gradientColors;
                 std::vector<float> tempPositions ;
 
                 if (st.mUseLevel) {
-                    tempColors = st.mTempColors;
                     const int length = gradientColors.size();
-                    if (tempColors == null || tempColors.length != length + 1) {
+                    /*if (tempColors == null || tempColors.length != length + 1) {
                         tempColors = st.mTempColors = new int[length + 1];
                     }
-                    System.arraycopy(gradientColors, 0, tempColors, 0, length);
-                    tempColors[length] = gradientColors[length - 1];
-                    tempPositions = st.mTempPositions;
+                    System.arraycopy(gradientColors, 0, tempColors, 0, length);*/
+                    
+                    tempColors.push_back( gradientColors[length - 1]);
+                    tempPositions.resize(length);
                     const float fraction = 1.0f / (length - 1);
-                    if (tempPositions == null || tempPositions.length != length + 1) {
-                         tempPositions = st.mTempPositions = new float[length + 1];
-                    }
 
                     const float level = getLevel() / 10000.0f;
                     for (int i = 0; i < length; i++) {
                          tempPositions[i] = i * fraction * level;
                     }
-                    tempPositions[length] = 1.0f;
-                }*/
-                //mFillPaint.setShader(new SweepGradient(x0, y0, tempColors, tempPositions));
+                    tempPositions.push_back(1.f);//[length] = 1.0f;
+                }
+                RefPtr<SweepGradient>pat=SweepGradient::create(x0, y0,200);
+                //tempColors, tempPositions));
+                mFillPaint=pat;
             }
 
             // If we don't have a solid color, the alpha channel must be
             // maxed out so that alpha modulation works correctly.
-            //if (st.mSolidColors == nullptr) mFillPaint.setColor(Color.BLACK);
+            if (st.mSolidColors == nullptr) 
+                mFillPaint=SolidPattern::create_rgb(0,0,0);//setColor(Color.BLACK);
         }
     }
     return !mRect.empty();
@@ -612,6 +617,8 @@ bool GradientDrawable::isOpaqueForState()const{
 
 void GradientDrawable::draw(Canvas&canvas){
     if (!ensureValidRect())return; // nothing to draw
+    const GradientState& st = *mGradientState;
+    const bool haveStroke = /*currStrokeAlpha > 0 &&*/ mStrokePaint &&  mStrokeWidth> 0;
 #if 0
     // remember the alpha values, in case we temporarily overwrite them
     // when we modulate them with mAlpha
@@ -624,7 +631,6 @@ void GradientDrawable::draw(Canvas&canvas){
     const bool haveStroke = currStrokeAlpha > 0 && mStrokePaint != null &&
             mStrokePaint.getStrokeWidth() > 0;
     const bool haveFill = currFillAlpha > 0;
-    const GradientState st = mGradientState;
     const ColorFilter colorFilter = mColorFilter != null ? mColorFilter : mTintFilter;
 
     /*  we need a layer iff we're drawing both a fill and stroke, and the
@@ -673,14 +679,17 @@ void GradientDrawable::draw(Canvas&canvas){
             mStrokePaint.setColorFilter(colorFilter);
         }
     }
-
+#endif
+#if 0
     switch (st.mShape) {
     case RECTANGLE:
-        if (st.mRadiusArray != null) {
+        if (st.mRadiusArray.size()) {
             buildPathIfDirty();
-            canvas.drawPath(mPath, mFillPaint);
+            mPath->append_to_context(&canvas);//canvas.drawPath(mPath, mFillPaint);
+            canvas.set_source(mFillPaint);canvas.fill();
             if (haveStroke) {
-                canvas.drawPath(mPath, mStrokePaint);
+                mPath->append_to_context(&canvas);//canvas.drawPath(mPath, mStrokePaint);
+                canvas.set_source(mStrokePaint); canvas.stroke();
             }
         } else if (st.mRadius > 0.0f) {
             // since the caller is only giving us 1 value, we will force
@@ -694,12 +703,13 @@ void GradientDrawable::draw(Canvas&canvas){
                 canvas.drawRoundRect(mRect, rad, rad, mStrokePaint);
             }
         } else {
-            if (mFillPaint.getColor() != 0 || colorFilter != null ||
-                    mFillPaint.getShader() != null) {
-                canvas.drawRect(mRect, mFillPaint);
+            if (mPaint/*mFillPaint.getColor() != 0 || colorFilter != null ||  mFillPaint.getShader() != null*/) {
+                canvas.rectangle(mRect.left,mRect.top,mRect.width,mRect.height);
+                canvas.set_source(mFillPaint);canvas.fill();
             }
             if (haveStroke) {
-                canvas.drawRect(mRect, mStrokePaint);
+                canvas.rectangle(mRect.left,mRect.top,mRect.width,mRect.height);
+                canvas.set_source(mStrokePaint);canvas.stroke();
             }
         }
         break;
@@ -725,16 +735,15 @@ void GradientDrawable::draw(Canvas&canvas){
         }
         break;
     }
-
-    if (useLayer) {
+#endif
+    /*if (useLayer) {
         canvas.restore();
     } else {
         mFillPaint.setAlpha(prevFillAlpha);
         if (haveStroke) {
             mStrokePaint.setAlpha(prevStrokeAlpha);
         }
-    }
-#endif
+    }*/
 }
 
 Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts){

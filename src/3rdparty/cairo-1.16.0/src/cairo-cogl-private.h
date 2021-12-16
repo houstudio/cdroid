@@ -37,53 +37,68 @@
 #include "cairo-backend-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-surface-private.h"
+#include "cairo-freelist-private.h"
 
 #include <cogl/cogl2-experimental.h>
 
 typedef enum _cairo_cogl_template_type {
+	/* solid source */
     CAIRO_COGL_TEMPLATE_TYPE_SOLID,
+    /* solid source with solid mask */
+    CAIRO_COGL_TEMPLATE_TYPE_SOLID_MASK_SOLID,
+    /* solid source with texture mask */
+    CAIRO_COGL_TEMPLATE_TYPE_TEXTURE_MASK_SOLID,
+    /* texture source */
     CAIRO_COGL_TEMPLATE_TYPE_TEXTURE,
-    CAIRO_COGL_TEMPLATE_TYPE_MASK_SOLID,
-    CAIRO_COGL_TEMPLATE_TYPE_MASK_TEXTURE,
+    /* texture source with solid mask */
+    CAIRO_COGL_TEMPLATE_TYPE_SOLID_MASK_TEXTURE,
+    /* texture source with texture mask */
+    CAIRO_COGL_TEMPLATE_TYPE_TEXTURE_MASK_TEXTURE,
+    /* texture source with source alpha ignored */
+    CAIRO_COGL_TEMPLATE_TYPE_TEXTURE_IGNORE_ALPHA,
+    /* texture source with solid mask with source alpha ignored */
+    CAIRO_COGL_TEMPLATE_TYPE_SOLID_MASK_TEXTURE_IGNORE_ALPHA,
+    /* texture source with texture mask with source alpha ignored */
+    CAIRO_COGL_TEMPLATE_TYPE_TEXTURE_MASK_TEXTURE_IGNORE_ALPHA,
     CAIRO_COGL_TEMPLATE_TYPE_COUNT
 } cairo_cogl_template_type;
 
 typedef struct _cairo_cogl_device {
     cairo_device_t base;
 
-    cairo_bool_t backend_vtable_initialized;
-    cairo_backend_t backend;
-
-    /* We save a copy of all the original backend methods that we override so
-     * we can chain up...
-     */
-    cairo_backend_t backend_parent;
-
     CoglContext *cogl_context;
 
-    CoglTexture *dummy_texture;
+    cairo_bool_t has_npots;
+    cairo_bool_t has_mirrored_repeat;
 
-    /* This is a sparsely filled set of templates because we don't support
-     * the full range of operators that cairo has. All entries corresponding
-     * to unsupported operators are NULL.
+    CoglAttributeBuffer *buffer_stack;
+    size_t buffer_stack_size;
+    size_t buffer_stack_offset;
+    guint8 *buffer_stack_pointer;
+
+    /* This is a limited set of templates because we don't support the
+     * full range of operators that cairo has. The CAIRO_OPERATOR_ADD
+     * is the operator enum with the highest value that we support so
+     * we cap the size of the array by that.
      *
-     * The CAIRO_OPERATOR_ADD is the operator enum with the highest value that
-     * we support so we at least cap the size of the array by that.
+     * For each operator, we have a template for when we have a solid
+     * source and a non-solid source. For each of those, we also have
+     * additional templates for when we have a solid mask or a
+     * non-solid mask, for a total of six templates per operator.
      *
-     * For each operator we have a template for when we have a solid source
-     * and another for each texture format that could be used as a source.
+     * The templates are set to null at device creation time and only
+     * actually created on their first use.
      */
     CoglPipeline *template_pipelines[CAIRO_OPERATOR_ADD + 1][CAIRO_COGL_TEMPLATE_TYPE_COUNT];
-
-    CoglMatrix identity;
 
     /* Caches 1d linear gradient textures */
     cairo_cache_t linear_cache;
 
-    cairo_cache_t path_fill_staging_cache;
     cairo_cache_t path_fill_prim_cache;
-    cairo_cache_t path_stroke_staging_cache;
     cairo_cache_t path_stroke_prim_cache;
+
+    cairo_freelist_t path_fill_meta_freelist;
+    cairo_freelist_t path_stroke_meta_freelist;
 } cairo_cogl_device_t;
 
 typedef struct _cairo_cogl_clip_primitives {
@@ -93,9 +108,6 @@ typedef struct _cairo_cogl_clip_primitives {
 
 typedef struct _cairo_cogl_surface {
     cairo_surface_t base;
-
-    CoglPixelFormat cogl_format;
-    cairo_bool_t ignore_alpha;
 
     /* We currently have 3 basic kinds of Cogl surfaces:
      * 1) A light surface simply wrapping a CoglTexture
@@ -111,12 +123,11 @@ typedef struct _cairo_cogl_surface {
     int width;
     int height;
 
-    GQueue *journal;
+    /* Is this a snapshot used for mirrored repeating on hardware which
+     * doesn't have it, consisting of four reflected images? */
+    cairo_bool_t is_mirrored_snapshot;
 
-    CoglAttributeBuffer *buffer_stack;
-    size_t buffer_stack_size;
-    size_t buffer_stack_offset;
-    guint8 *buffer_stack_pointer;
+    GQueue *journal;
 
     cairo_clip_t *last_clip;
 
@@ -134,8 +145,8 @@ typedef struct _cairo_cogl_surface {
      * side band data on the surface...
      */
     cairo_path_fixed_t *user_path;
-    cairo_matrix_t *ctm;
-    cairo_matrix_t *ctm_inverse;
+    cairo_matrix_t ctm;
+    cairo_matrix_t ctm_inverse;
     cairo_bool_t path_is_rectangle;
     double path_rectangle_x;
     double path_rectangle_y;
@@ -149,16 +160,5 @@ _cairo_cogl_path_fixed_rectangle (cairo_path_fixed_t *path,
 				  cairo_fixed_t y,
 				  cairo_fixed_t width,
 				  cairo_fixed_t height);
-
-cairo_int_status_t
-_cairo_cogl_surface_fill_rectangle (void		     *abstract_surface,
-				    cairo_operator_t	      op,
-				    const cairo_pattern_t    *source,
-				    double		      x,
-				    double		      y,
-				    double		      width,
-				    double		      height,
-				    cairo_matrix_t	     *ctm,
-				    const cairo_clip_t	     *clip);
 
 #endif /* CAIRO_COGL_PRIVATE_H */

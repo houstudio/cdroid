@@ -27,7 +27,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #include <cairo-ft.h>
 #include <fontconfig/fontconfig.h>
@@ -72,6 +74,10 @@ check_font_extents (const cairo_test_context_t *ctx, cairo_t *cr, const char *co
 
     return CAIRO_TEST_SUCCESS;
 }
+
+#if !defined(S_ISREG) && defined(S_IFMT) && defined(S_IFREG)
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)

@@ -120,16 +120,20 @@ _cairo_boilerplate_pdf_finish_surface (cairo_surface_t *surface)
 							     &pdf_closure_key);
     cairo_status_t status;
 
-    /* Both surface and ptc->target were originally created at the
-     * same dimensions. We want a 1:1 copy here, so we first clear any
-     * device offset on surface.
-     *
-     * In a more realistic use case of device offsets, the target of
-     * this copying would be of a different size than the source, and
-     * the offset would be desirable during the copy operation. */
-    cairo_surface_set_device_offset (surface, 0, 0);
-
     if (ptc->target) {
+	/* Both surface and ptc->target were originally created at the
+	 * same dimensions. We want a 1:1 copy here, so we first clear any
+	 * device offset and scale on surface.
+	 *
+	 * In a more realistic use case of device offsets, the target of
+	 * this copying would be of a different size than the source, and
+	 * the offset would be desirable during the copy operation. */
+	double x_offset, y_offset;
+	double x_scale, y_scale;
+	cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+	cairo_surface_get_device_scale (surface, &x_scale, &y_scale);
+	cairo_surface_set_device_offset (surface, 0, 0);
+	cairo_surface_set_device_scale (surface, 1, 1);
 	cairo_t *cr;
 	cr = cairo_create (ptc->target);
 	cairo_set_source_surface (cr, surface, 0, 0);
@@ -137,6 +141,8 @@ _cairo_boilerplate_pdf_finish_surface (cairo_surface_t *surface)
 	cairo_show_page (cr);
 	status = cairo_status (cr);
 	cairo_destroy (cr);
+	cairo_surface_set_device_offset (surface, x_offset, y_offset);
+	cairo_surface_set_device_scale (surface, x_scale, y_scale);
 
 	if (status)
 	    return status;
@@ -196,11 +202,14 @@ _cairo_boilerplate_pdf_get_image_surface (cairo_surface_t *surface,
 					  int		   height)
 {
     cairo_surface_t *image;
+    double x_offset, y_offset;
+    double x_scale, y_scale;
 
     image = _cairo_boilerplate_pdf_convert_to_image (surface, page);
-    cairo_surface_set_device_offset (image,
-				     cairo_image_surface_get_width (image) - width,
-				     cairo_image_surface_get_height (image) - height);
+    cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+    cairo_surface_get_device_scale (surface, &x_scale, &y_scale);
+    cairo_surface_set_device_offset (image, x_offset, y_offset);
+    cairo_surface_set_device_scale (image, x_scale, y_scale);
     surface = _cairo_boilerplate_get_image_surface (image, 0, width, height);
     cairo_surface_destroy (image);
 

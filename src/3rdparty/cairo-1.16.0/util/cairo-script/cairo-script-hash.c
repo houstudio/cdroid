@@ -153,7 +153,7 @@ _csi_hash_table_init (csi_hash_table_t *hash_table,
  * _csi_hash_table_destroy is called. It is a fatal error otherwise,
  * and this function will halt. The rationale for this behavior is to
  * avoid memory leaks and to avoid needless complication of the API
- * with destroy notifiy callbacks.
+ * with destroy notify callbacks.
  *
  * WARNING: The hash_table must have no running iterators in it when
  * _csi_hash_table_destroy is called. It is a fatal error otherwise,

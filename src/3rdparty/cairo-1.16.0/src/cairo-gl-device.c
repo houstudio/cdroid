@@ -606,7 +606,7 @@ _cairo_gl_ensure_stencil (cairo_gl_context_t *ctx,
  * glLoadIdentity()
  * gluOrtho2D()
  *
- * The calculation for the ortho tranformation was taken from the
+ * The calculation for the ortho transformation was taken from the
  * mesa source code.
  */
 static void

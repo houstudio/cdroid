@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-surfaces.html" title="Surfaces">
 <link rel="prev" href="cairo-cairo-device-t.html" title="cairo_device_t">
 <link rel="next" href="cairo-Image-Surfaces.html" title="Image Surfaces">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-cairo-surface-t.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -293,8 +293,8 @@
 <a name="cairo-cairo-surface-t.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -401,25 +401,25 @@ you must use <a class="link" href="cairo-cairo-surface-t.html#cairo-surface-mark
 17
 18
 19</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="gtkdoc kwb">void</span>
-<span class="function">modify_image_surface</span> <span class="gtkdoc opt">(</span>cairo_surface_t <span class="gtkdoc opt">*</span>surface<span class="gtkdoc opt">)</span>
-<span class="gtkdoc opt">{</span>
-  <span class="gtkdoc kwb">unsigned char</span> <span class="gtkdoc opt">*</span>data<span class="gtkdoc opt">;</span>
-  <span class="gtkdoc kwb">int</span> width<span class="gtkdoc opt">,</span> height<span class="gtkdoc opt">,</span> stride<span class="gtkdoc opt">;</span>
+        <td class="listing_code"><pre class="programlisting"><span class="kt">void</span>
+<span class="nf">modify_image_surface</span> <span class="p">(</span><span class="n">cairo_surface_t</span> <span class="o">*</span><span class="n">surface</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">stride</span><span class="p">;</span>
 
-  <span class="gtkdoc slc">// flush to ensure all writing to the image was done</span>
-  <span class="function"><a href="cairo-cairo-surface-t.html#cairo-surface-flush">cairo_surface_flush</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
+  <span class="c1">// flush to ensure all writing to the image was done</span>
+  <span class="n">cairo_surface_flush</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
 
-  <span class="gtkdoc slc">// modify the image</span>
-  data <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-Image-Surfaces.html#cairo-image-surface-get-data">cairo_image_surface_get_data</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
-  width <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-Image-Surfaces.html#cairo-image-surface-get-width">cairo_image_surface_get_width</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
-  height <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-Image-Surfaces.html#cairo-image-surface-get-height">cairo_image_surface_get_height</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
-  stride <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-Image-Surfaces.html#cairo-image-surface-get-stride">cairo_image_surface_get_stride</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
-  <span class="function">modify_image_data</span> <span class="gtkdoc opt">(</span>data<span class="gtkdoc opt">,</span> width<span class="gtkdoc opt">,</span> height<span class="gtkdoc opt">,</span> stride<span class="gtkdoc opt">);</span>
+  <span class="c1">// modify the image</span>
+  <span class="n">data</span> <span class="o">=</span> <span class="n">cairo_image_surface_get_data</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
+  <span class="n">width</span> <span class="o">=</span> <span class="n">cairo_image_surface_get_width</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
+  <span class="n">height</span> <span class="o">=</span> <span class="n">cairo_image_surface_get_height</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
+  <span class="n">stride</span> <span class="o">=</span> <span class="n">cairo_image_surface_get_stride</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
+  <span class="n">modify_image_data</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">stride</span><span class="p">);</span>
 
-  <span class="gtkdoc slc">// mark the image dirty so Cairo clears its caches.</span>
-  <span class="function"><a href="cairo-cairo-surface-t.html#cairo-surface-mark-dirty">cairo_surface_mark_dirty</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">}</span></pre></td>
+  <span class="c1">// mark the image dirty so Cairo clears its caches.</span>
+  <span class="n">cairo_surface_mark_dirty</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
+<span class="p">}</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -726,8 +726,8 @@ cairo_surface_finish (<em class="parameter"><code><a class="link" href="cairo-ca
 external resources.  For example, for the Xlib backend it means
 that cairo will no longer access the drawable, which can be freed.
 After calling <a class="link" href="cairo-cairo-surface-t.html#cairo-surface-finish" title="cairo_surface_finish ()"><code class="function">cairo_surface_finish()</code></a> the only valid operations on a
-surface are getting and setting user, referencing and
-destroying, and flushing and finishing it.
+surface are checking status, getting and setting user, referencing
+and destroying, and flushing and finishing it.
 Further drawing to the surface will not affect the
 surface but will instead trigger a <a class="link" href="cairo-Error-handling.html#CAIRO-STATUS-SURFACE-FINISHED:CAPS"><code class="literal">CAIRO_STATUS_SURFACE_FINISHED</code></a>
 error.</p>
@@ -1150,7 +1150,7 @@ backends.</p>
 completing a page (with <a class="link" href="cairo-cairo-t.html#cairo-show-page" title="cairo_show_page ()"><code class="function">cairo_show_page()</code></a> or <a class="link" href="cairo-cairo-t.html#cairo-copy-page" title="cairo_copy_page ()"><code class="function">cairo_copy_page()</code></a>) so
 there is currently no way to have more than one fallback resolution
 in effect on a single page.</p>
-<p>The default fallback resoultion is 300 pixels per inch in both
+<p>The default fallback resolution is 300 pixels per inch in both
 dimensions.</p>
 <div class="refsect3">
 <a name="cairo-surface-set-fallback-resolution.parameters"></a><h4>Parameters</h4>
@@ -2102,7 +2102,7 @@ the wrong type is undefined.</p>
 <td class="enum_member_name"><p><a name="CAIRO-SURFACE-TYPE-SUBSURFACE:CAPS"></a>CAIRO_SURFACE_TYPE_SUBSURFACE</p></td>
 <td class="enum_member_description">
 <p>The surface is a subsurface created with
-  <a class="link" href="cairo-cairo-surface-t.html#cairo-surface-create-for-rectangle" title="cairo_surface_create_for_rectangle ()"><code class="function">cairo_surface_create_for_rectangle()</code></a>, since 1.10</p>
+<a class="link" href="cairo-cairo-surface-t.html#cairo-surface-create-for-rectangle" title="cairo_surface_create_for_rectangle ()"><code class="function">cairo_surface_create_for_rectangle()</code></a>, since 1.10</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2125,6 +2125,6 @@ the wrong type is undefined.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

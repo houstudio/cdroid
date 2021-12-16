@@ -36,7 +36,7 @@ dnl This has to be in acinclude.m4 as it includes other files
 dnl Parse Version.mk and declare m4 variables out of it
 m4_define([CAIRO_PARSE_VERSION],dnl
 		m4_translit(dnl
-		m4_bpatsubst(m4_include(cairo-version.h),
+		m4_bpatsubst(m4_include(src/cairo-version.h),
 			     [^.define \([a-zA-Z0-9_]*\)  *\([0-9][0-9]*\)],
 			     [[m4_define(\1, \2)]]),
 			    [A-Z], [a-z])dnl

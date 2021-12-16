@@ -52,7 +52,7 @@ void AbsSeekBar::setMin(int min) {
     if ((mKeyProgressIncrement == 0) || (range / mKeyProgressIncrement > 20)) {
         // It will take the user too long to change this via keys, change it
         // to something more reasonable
-        setKeyProgressIncrement(std::max(1.f,round((float) range / 20)));
+        setKeyProgressIncrement(std::max(1.f,(float)round((float) range / 20)));
     }
 }
 
@@ -63,7 +63,7 @@ void AbsSeekBar::setMax(int max) {
     if ((mKeyProgressIncrement == 0) || (range / mKeyProgressIncrement > 20)) {
         // It will take the user too long to change this via keys, change it
         // to something more reasonable
-        setKeyProgressIncrement(std::max(1.f,round((float) range / 20)));
+        setKeyProgressIncrement(std::max(1.f,(float)round((float) range / 20)));
     }
 }
 

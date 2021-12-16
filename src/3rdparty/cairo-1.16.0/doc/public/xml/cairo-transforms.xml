@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="void"><returnvalue>void</returnvalue></link>
 </entry><entry role="function_name"><link linkend="cairo-translate">cairo_translate</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -374,10 +374,6 @@ transforming (<parameter>dx</parameter>
 <entry role="parameter_annotations"></entry></row>
 </tbody></tgroup></informaltable>
 </refsect3><para role="since">Since: <link linkend="api-index-1.0">1.0</link></para></refsect2>
-
-</refsect1>
-<refsect1 id="cairo-Transformations.other_details" role="details">
-<title role="details.title">Types and Values</title>
 
 </refsect1>
 <refsect1 id="cairo-Transformations.see-also">

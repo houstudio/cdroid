@@ -178,24 +178,29 @@ _cairo_boilerplate_ps_finish_surface (cairo_surface_t *surface)
 							    &ps_closure_key);
     cairo_status_t status;
 
-    /* Both surface and ptc->target were originally created at the
-     * same dimensions. We want a 1:1 copy here, so we first clear any
-     * device offset on surface.
-     *
-     * In a more realistic use case of device offsets, the target of
-     * this copying would be of a different size than the source, and
-     * the offset would be desirable during the copy operation. */
-    cairo_surface_set_device_offset (surface, 0, 0);
-
     if (ptc->target) {
+	/* Both surface and ptc->target were originally created at the
+	 * same dimensions. We want a 1:1 copy here, so we first clear any
+	 * device offset and scale on surface.
+	 *
+	 * In a more realistic use case of device offsets, the target of
+	 * this copying would be of a different size than the source, and
+	 * the offset would be desirable during the copy operation. */
+	double x_offset, y_offset;
+	double x_scale, y_scale;
+	cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+	cairo_surface_get_device_scale (surface, &x_scale, &y_scale);
+	cairo_surface_set_device_offset (surface, 0, 0);
+	cairo_surface_set_device_scale (surface, 1, 1);
 	cairo_t *cr;
-
 	cr = cairo_create (ptc->target);
 	cairo_set_source_surface (cr, surface, 0, 0);
 	cairo_paint (cr);
 	cairo_show_page (cr);
 	status = cairo_status (cr);
 	cairo_destroy (cr);
+	cairo_surface_set_device_offset (surface, x_offset, y_offset);
+	cairo_surface_set_device_scale (surface, x_scale, y_scale);
 
 	if (status)
 	    return status;
@@ -244,6 +249,8 @@ _cairo_boilerplate_ps_get_image_surface (cairo_surface_t *surface,
 {
     ps_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							    &ps_closure_key);
+    double x_offset, y_offset;
+    double x_scale, y_scale;
     char *filename;
     cairo_status_t status;
 
@@ -259,15 +266,28 @@ _cairo_boilerplate_ps_get_image_surface (cairo_surface_t *surface,
 	free (filename);
 	xasprintf (&filename, "%s-%05d.png", ptc->filename, page);
     }
-    surface = cairo_boilerplate_get_image_surface_from_png (filename,
-							    width,
-							    height,
-							    ptc->target == NULL);
+    cairo_surface_t *converted = cairo_boilerplate_get_image_surface_from_png (filename,
+									       ptc->width,
+									       ptc->height,
+									       ptc->target == NULL);
 
     remove (filename);
     free (filename);
 
-    return surface;
+    cairo_surface_t *image = cairo_image_surface_create(ptc->target ? CAIRO_FORMAT_RGB24 : CAIRO_FORMAT_ARGB32,
+							width,
+							height);
+    cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+    cairo_surface_get_device_scale (surface, &x_scale, &y_scale);
+    cairo_surface_set_device_offset (converted, x_offset, y_offset);
+    cairo_surface_set_device_scale (converted, x_scale, y_scale);
+    cairo_t *cr = cairo_create (image);
+    cairo_set_source_surface (cr, converted, 0, 0);
+    cairo_paint (cr);
+    cairo_destroy (cr);
+    cairo_surface_destroy (converted);
+
+    return image;
 }
 
 static void

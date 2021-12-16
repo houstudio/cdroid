@@ -89,7 +89,7 @@ More detailed build instructions
        cairo errs during configure if your intention cannot be followed.
 
      * default=no: These are the "experimental" features, and hence by
-       default off.  Use --enabled-XYZ to enable them.
+       default off.  Use --enable-XYZ to enable them.
 
    The list of all features and their default state can be seen in the
    output of ./configure --help.

@@ -50,8 +50,6 @@ libcairo_la_LIBADD = $(CAIRO_LIBS) \
 libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(cairo_cxx_lib)
 
 # Special headers
-cairoinclude_HEADERS += $(top_srcdir)/cairo-version.h
-libcairo_la_SOURCES += cairo-version.h
 nodist_cairoinclude_HEADERS = cairo-features.h
 nodist_libcairo_la_SOURCES  = cairo-features.h
 BUILT_SOURCES  += cairo-features.h cairo-supported-features.h

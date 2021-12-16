@@ -203,6 +203,7 @@ _cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx)
 	    ctx->dispatch.DeleteShader (ctx->vertex_shaders[i]);
     }
 
+    _cairo_gl_shader_fini(ctx, &ctx->fill_rectangles_shader);
     _cairo_cache_fini (&ctx->shaders);
 }
 

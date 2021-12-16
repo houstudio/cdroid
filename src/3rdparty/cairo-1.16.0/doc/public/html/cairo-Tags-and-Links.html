@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-drawing.html" title="Drawing">
 <link rel="prev" href="cairo-Raster-Sources.html" title="Raster Sources">
 <link rel="next" href="cairo-fonts.html" title="Fonts">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-Tags-and-Links.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -62,8 +62,8 @@
 <a name="cairo-Tags-and-Links.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -98,10 +98,10 @@ document logical structure on supported backends. The following tags are support
 2
 3
 4</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_LINK<span class="gtkdoc opt">,</span> <span class="string">&quot;uri=&apos;https://cairographics.org&apos;&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;This is a link to the cairo website.&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_LINK<span class="gtkdoc opt">);</span></pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_LINK</span><span class="p">,</span> <span class="s">&quot;uri=&#39;https://cairographics.org&#39;&quot;</span><span class="p">);</span>
+<span class="n">cairo_move_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;This is a link to the cairo website.&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_LINK</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -151,38 +151,36 @@ array size must be a multiple of four.</p>
 26
 27
 28
-29
-30</pre></td>
-        <td class="listing_code"><pre class="programlisting">cairo_font_extents_t font_extents<span class="gtkdoc opt">;</span>
-cairo_text_extents_t text1_extents<span class="gtkdoc opt">;</span>
-cairo_text_extents_t text2_extents<span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">char</span> attribs<span class="gtkdoc opt">[</span><span class="number">100</span><span class="gtkdoc opt">];</span>
-<span class="gtkdoc kwb">const char</span> <span class="gtkdoc opt">*</span>text1 <span class="gtkdoc opt">=</span> <span class="string">&quot;This link is split&quot;</span><span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">const char</span> <span class="gtkdoc opt">*</span>text2 <span class="gtkdoc opt">=</span> <span class="string">&quot;across two lines&quot;</span><span class="gtkdoc opt">;</span>
+29</pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="k">struct</span> <span class="n">text</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">const</span> <span class="k">struct</span> <span class="n">text</span> <span class="n">text1</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;This link is split&quot;</span><span class="p">,</span> <span class="mi">450</span><span class="p">,</span> <span class="mi">70</span> <span class="p">};</span>
+<span class="k">const</span> <span class="k">struct</span> <span class="n">text</span> <span class="n">text2</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;across two lines&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">70</span> <span class="p">};</span>
+<span class="n">cairo_text_extents_t</span> <span class="n">text1_extents</span><span class="p">;</span>
+<span class="n">cairo_text_extents_t</span> <span class="n">text2_extents</span><span class="p">;</span>
+<span class="kt">char</span> <span class="n">attribs</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
 
-<span class="function"><a href="cairo-text.html#cairo-font-extents">cairo_font_extents</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">, &amp;</span>font_extents<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">450</span><span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-text-extents">cairo_text_extents</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> text1<span class="gtkdoc opt">, &amp;</span>text1_extents<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">,</span> <span class="number">70</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-text-extents">cairo_text_extents</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> text2<span class="gtkdoc opt">, &amp;</span>text2_extents<span class="gtkdoc opt">);</span>
-<span class="function">sprintf</span> <span class="gtkdoc opt">(</span>attribs<span class="gtkdoc opt">,</span>
-         <span class="string">&quot;rect=[%f %f %f %f %f %f %f %f] uri=&apos;https://cairographics.org&apos;&quot;</span><span class="gtkdoc opt">,</span>
-         text1_extents<span class="gtkdoc opt">.</span>x_bearing<span class="gtkdoc opt">,</span>
-         text1_extents<span class="gtkdoc opt">.</span>y_bearing<span class="gtkdoc opt">,</span>
-         text1_extents<span class="gtkdoc opt">.</span>width<span class="gtkdoc opt">,</span>
-         text1_extents<span class="gtkdoc opt">.</span>height<span class="gtkdoc opt">,</span>
-         text2_extents<span class="gtkdoc opt">.</span>x_bearing<span class="gtkdoc opt">,</span>
-         text2_extents<span class="gtkdoc opt">.</span>y_bearing<span class="gtkdoc opt">,</span>
-         text2_extents<span class="gtkdoc opt">.</span>width<span class="gtkdoc opt">,</span>
-         text2_extents<span class="gtkdoc opt">.</span>height<span class="gtkdoc opt">);</span>
+<span class="n">cairo_text_extents</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">text1</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">text1_extents</span><span class="p">);</span>
+<span class="n">cairo_text_extents</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">text2</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">text2_extents</span><span class="p">);</span>
+<span class="n">sprintf</span> <span class="p">(</span><span class="n">attribs</span><span class="p">,</span>
+         <span class="s">&quot;rect=[%f %f %f %f %f %f %f %f] uri=&#39;https://cairographics.org&#39;&quot;</span><span class="p">,</span>
+         <span class="n">text1_extents</span><span class="p">.</span><span class="n">x_bearing</span> <span class="o">+</span> <span class="n">text1</span><span class="p">.</span><span class="n">x</span><span class="p">,</span>
+         <span class="n">text1_extents</span><span class="p">.</span><span class="n">y_bearing</span> <span class="o">+</span> <span class="n">text1</span><span class="p">.</span><span class="n">y</span><span class="p">,</span>
+         <span class="n">text1_extents</span><span class="p">.</span><span class="n">width</span><span class="p">,</span>
+         <span class="n">text1_extents</span><span class="p">.</span><span class="n">height</span><span class="p">,</span>
+         <span class="n">text2_extents</span><span class="p">.</span><span class="n">x_bearing</span> <span class="o">+</span> <span class="n">text2</span><span class="p">.</span><span class="n">x</span><span class="p">,</span>
+         <span class="n">text2_extents</span><span class="p">.</span><span class="n">y_bearing</span> <span class="o">+</span> <span class="n">text2</span><span class="p">.</span><span class="n">y</span><span class="p">,</span>
+         <span class="n">text2_extents</span><span class="p">.</span><span class="n">width</span><span class="p">,</span>
+         <span class="n">text2_extents</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
 
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_LINK<span class="gtkdoc opt">,</span> attribs<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;This is a link to the cairo website&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">450</span><span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> text1<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">,</span> <span class="number">70</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> text2<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_LINK<span class="gtkdoc opt">);</span></pre></td>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_LINK</span><span class="p">,</span> <span class="n">attribs</span><span class="p">);</span>
+<span class="n">cairo_move_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">text1</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">text1</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">text1</span><span class="p">.</span><span class="n">s</span><span class="p">);</span>
+<span class="n">cairo_move_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">text2</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">text2</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">text2</span><span class="p">.</span><span class="n">s</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_LINK</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -286,17 +284,17 @@ operations with the <a class="link" href="cairo-Tags-and-Links.html#CAIRO-TAG-DE
 9
 10
 11</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="comment">/* Create a hyperlink */</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_LINK<span class="gtkdoc opt">,</span> <span class="string">&quot;dest=&apos;mydest&apos; internal&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;This is a hyperlink.&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_LINK<span class="gtkdoc opt">);</span>
+        <td class="listing_code"><pre class="programlisting"><span class="cm">/* Create a hyperlink */</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_LINK</span><span class="p">,</span> <span class="s">&quot;dest=&#39;mydest&#39; internal&quot;</span><span class="p">);</span>
+<span class="n">cairo_move_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;This is a hyperlink.&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_LINK</span><span class="p">);</span>
 
-<span class="comment">/* Create a destination */</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_DEST<span class="gtkdoc opt">,</span> <span class="string">&quot;name=&apos;mydest&apos;&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">50</span><span class="gtkdoc opt">,</span> <span class="number">250</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;This paragraph is the destination of the above link.&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> CAIRO_TAG_DEST<span class="gtkdoc opt">);</span></pre></td>
+<span class="cm">/* Create a destination */</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_DEST</span><span class="p">,</span> <span class="s">&quot;name=&#39;mydest&#39;&quot;</span><span class="p">);</span>
+<span class="n">cairo_move_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">250</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;This paragraph is the destination of the above link.&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">CAIRO_TAG_DEST</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -347,29 +345,29 @@ a header and a paragraph.</p>
 21
 22
 23</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Document&quot;</span><span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">);</span>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Document&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Sect&quot;</span><span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;H1&quot;</span><span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Heading 1&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;H1&quot;</span><span class="gtkdoc opt">);</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Sect&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;H1&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Heading 1&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;H1&quot;</span><span class="p">);</span>
 
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;P&quot;</span><span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Paragraph 1&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;P&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Sect&quot;</span><span class="gtkdoc opt">);</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Paragraph 1&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;P&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Sect&quot;</span><span class="p">);</span>
 
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Sect&quot;</span><span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;H1&quot;</span><span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Heading 2&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;H1&quot;</span><span class="gtkdoc opt">);</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Sect&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;H1&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Heading 2&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;H1&quot;</span><span class="p">);</span>
 
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-begin">cairo_tag_begin</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;P&quot;</span><span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-text.html#cairo-show-text">cairo_show_text</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Paragraph 2&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;P&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Sect&quot;</span><span class="gtkdoc opt">);</span>
+<span class="n">cairo_tag_begin</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">cairo_show_text</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Paragraph 2&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;P&quot;</span><span class="p">);</span>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Sect&quot;</span><span class="p">);</span>
 
-<span class="function"><a href="cairo-Tags-and-Links.html#cairo-tag-end">cairo_tag_end</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="string">&quot;Document&quot;</span><span class="gtkdoc opt">);</span></pre></td>
+<span class="n">cairo_tag_end</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="s">&quot;Document&quot;</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -500,6 +498,6 @@ Links.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

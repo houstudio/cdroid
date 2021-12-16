@@ -2,6 +2,8 @@
 #define __SCROLLER_H__
 #include <animation/interpolators.h>
 #include <core/context.h>
+#include <math.h>
+
 namespace cdroid{
 
 class Scroller  {
@@ -37,7 +39,7 @@ private:
     static constexpr int SCROLL_MODE = 0;
     static constexpr int FLING_MODE = 1;
 
-    static constexpr float DECELERATION_RATE = (float) (std::log(0.78) / std::log(0.9));
+    static constexpr float DECELERATION_RATE = (float) (log(0.78) / log(0.9));
     static constexpr float INFLEXION = 0.35f; // Tension lines cross at (INFLEXION, 1)
     static constexpr float START_TENSION = 0.5f;
     static constexpr float END_TENSION = 1.0f;

@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-VERSION-ENCODE:CAPS">CAIRO_VERSION_ENCODE</link><phrase role="c_punctuation">()</phrase></entry></row>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-VERSION-STRINGIZE:CAPS">CAIRO_VERSION_STRINGIZE</link><phrase role="c_punctuation">()</phrase></entry></row>
@@ -34,10 +34,10 @@
 </refsect1>
 <refsect1 id="cairo-Version-Information.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-VERSION:CAPS">CAIRO_VERSION</link></entry></row>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-VERSION-MAJOR:CAPS">CAIRO_VERSION_MAJOR</link></entry></row>
@@ -247,21 +247,21 @@ of the form "X.Y.Z".</para>
 <refsect2 id="CAIRO-VERSION-MAJOR:CAPS" role="macro" condition="since:1.0">
 <title>CAIRO_VERSION_MAJOR</title>
 <indexterm zone="CAIRO-VERSION-MAJOR:CAPS" role="1.0"><primary sortas="VERSION_MAJOR">CAIRO_VERSION_MAJOR</primary></indexterm>
-<programlisting language="C">#define CAIRO_VERSION_MAJOR USE_cairo_version_OR_cairo_version_string_INSTEAD
+<programlisting language="C">#define CAIRO_VERSION_MAJOR 1
 </programlisting>
 <para>The major component of the version of cairo available at compile-time.</para>
 <para role="since">Since: <link linkend="api-index-1.0">1.0</link></para></refsect2>
 <refsect2 id="CAIRO-VERSION-MINOR:CAPS" role="macro" condition="since:1.0">
 <title>CAIRO_VERSION_MINOR</title>
 <indexterm zone="CAIRO-VERSION-MINOR:CAPS" role="1.0"><primary sortas="VERSION_MINOR">CAIRO_VERSION_MINOR</primary></indexterm>
-<programlisting language="C">#define CAIRO_VERSION_MINOR USE_cairo_version_OR_cairo_version_string_INSTEAD
+<programlisting language="C">#define CAIRO_VERSION_MINOR 17
 </programlisting>
 <para>The minor component of the version of cairo available at compile-time.</para>
 <para role="since">Since: <link linkend="api-index-1.0">1.0</link></para></refsect2>
 <refsect2 id="CAIRO-VERSION-MICRO:CAPS" role="macro" condition="since:1.0">
 <title>CAIRO_VERSION_MICRO</title>
 <indexterm zone="CAIRO-VERSION-MICRO:CAPS" role="1.0"><primary sortas="VERSION_MICRO">CAIRO_VERSION_MICRO</primary></indexterm>
-<programlisting language="C">#define CAIRO_VERSION_MICRO USE_cairo_version_OR_cairo_version_string_INSTEAD
+<programlisting language="C">#define CAIRO_VERSION_MICRO 4
 </programlisting>
 <para>The micro component of the version of cairo available at compile-time.</para>
 <para role="since">Since: <link linkend="api-index-1.0">1.0</link></para></refsect2>

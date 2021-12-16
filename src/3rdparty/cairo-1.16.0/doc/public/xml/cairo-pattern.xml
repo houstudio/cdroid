@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="void"><returnvalue>void</returnvalue></link>
 </entry><entry role="function_name"><link linkend="cairo-pattern-add-color-stop-rgb">cairo_pattern_add_color_stop_rgb</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -106,10 +106,10 @@
 </refsect1>
 <refsect1 id="cairo-cairo-pattern-t.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="typedef_keyword">typedef</entry><entry role="function_name"><link linkend="cairo-pattern-t">cairo_pattern_t</link></entry></row>
 <row><entry role="datatype_keyword">enum</entry><entry role="function_name"><link linkend="cairo-extend-t">cairo_extend_t</link></entry></row>
@@ -1821,7 +1821,7 @@ and <link linkend="CAIRO-EXTEND-PAD:CAPS"><literal>CAIRO_EXTEND_PAD</literal></l
 <tbody>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-EXTEND-NONE:CAPS">CAIRO_EXTEND_NONE</para></entry>
 <entry role="enum_member_description"><para>pixels outside of the source pattern
-  are fully transparent (Since 1.0)</para>
+are fully transparent (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -1832,14 +1832,14 @@ and <link linkend="CAIRO-EXTEND-PAD:CAPS"><literal>CAIRO_EXTEND_PAD</literal></l
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-EXTEND-REFLECT:CAPS">CAIRO_EXTEND_REFLECT</para></entry>
 <entry role="enum_member_description"><para>the pattern is tiled by reflecting
-  at the edges (Since 1.0; but only implemented for surface patterns since 1.6)</para>
+at the edges (Since 1.0; but only implemented for surface patterns since 1.6)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-EXTEND-PAD:CAPS">CAIRO_EXTEND_PAD</para></entry>
 <entry role="enum_member_description"><para>pixels outside of the pattern copy
-  the closest pixel from the source (Since 1.2; but only
-  implemented for surface patterns since 1.6)</para>
+the closest pixel from the source (Since 1.2; but only
+implemented for surface patterns since 1.6)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -1862,19 +1862,19 @@ used with a particular pattern.</para>
 <tbody>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FILTER-FAST:CAPS">CAIRO_FILTER_FAST</para></entry>
 <entry role="enum_member_description"><para>A high-performance filter, with quality similar
-    to <link linkend="CAIRO-FILTER-NEAREST:CAPS"><literal>CAIRO_FILTER_NEAREST</literal></link> (Since 1.0)</para>
+to <link linkend="CAIRO-FILTER-NEAREST:CAPS"><literal>CAIRO_FILTER_NEAREST</literal></link> (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FILTER-GOOD:CAPS">CAIRO_FILTER_GOOD</para></entry>
 <entry role="enum_member_description"><para>A reasonable-performance filter, with quality
-    similar to <link linkend="CAIRO-FILTER-BILINEAR:CAPS"><literal>CAIRO_FILTER_BILINEAR</literal></link> (Since 1.0)</para>
+similar to <link linkend="CAIRO-FILTER-BILINEAR:CAPS"><literal>CAIRO_FILTER_BILINEAR</literal></link> (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FILTER-BEST:CAPS">CAIRO_FILTER_BEST</para></entry>
 <entry role="enum_member_description"><para>The highest-quality available, performance may
-    not be suitable for interactive use. (Since 1.0)</para>
+not be suitable for interactive use. (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -1890,7 +1890,7 @@ used with a particular pattern.</para>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-FILTER-GAUSSIAN:CAPS">CAIRO_FILTER_GAUSSIAN</para></entry>
 <entry role="enum_member_description"><para>This filter value is currently
-    unimplemented, and should not be used in current code. (Since 1.0)</para>
+unimplemented, and should not be used in current code. (Since 1.0)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>

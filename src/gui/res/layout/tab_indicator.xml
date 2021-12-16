@@ -5,7 +5,7 @@
     cdroid:layout_weight="1"
     cdroid:layout_marginStart="-3dip"
     cdroi:layout_marginEnd="-3dip"
-    cdroid:background="@cdroid:drawable/tab_indicator.xml">
+    cdroid:background="@cdroid:drawable/tab_indicator">
     <ImageView cdroid:id="@+id/icon"
         cdroid:layout_width="wrap_content"
         cdroid:layout_height="wrap_content"

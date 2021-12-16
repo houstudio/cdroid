@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-surfaces.html" title="Surfaces">
 <link rel="prev" href="cairo-cairo-surface-t.html" title="cairo_surface_t">
 <link rel="next" href="cairo-PDF-Surfaces.html" title="PDF Surfaces">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-Image-Surfaces.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -109,8 +109,8 @@
 <a name="cairo-Image-Surfaces.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -153,15 +153,15 @@ within cairo. Typical usage will be of the form:</p>
 7
 8
 9</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="gtkdoc kwb">int</span> stride<span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">unsigned char</span> <span class="gtkdoc opt">*</span>data<span class="gtkdoc opt">;</span>
-cairo_surface_t <span class="gtkdoc opt">*</span>surface<span class="gtkdoc opt">;</span>
+        <td class="listing_code"><pre class="programlisting"><span class="kt">int</span> <span class="n">stride</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">;</span>
+<span class="n">cairo_surface_t</span> <span class="o">*</span><span class="n">surface</span><span class="p">;</span>
 
-stride <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-Image-Surfaces.html#cairo-format-stride-for-width">cairo_format_stride_for_width</a></span> <span class="gtkdoc opt">(</span>format<span class="gtkdoc opt">,</span> width<span class="gtkdoc opt">);</span>
-data <span class="gtkdoc opt">=</span> <span class="function">malloc</span> <span class="gtkdoc opt">(</span>stride <span class="gtkdoc opt">*</span> height<span class="gtkdoc opt">);</span>
-surface <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-Image-Surfaces.html#cairo-image-surface-create-for-data">cairo_image_surface_create_for_data</a></span> <span class="gtkdoc opt">(</span>data<span class="gtkdoc opt">,</span> format<span class="gtkdoc opt">,</span>
-					  width<span class="gtkdoc opt">,</span> height<span class="gtkdoc opt">,</span>
-					  stride<span class="gtkdoc opt">);</span></pre></td>
+<span class="n">stride</span> <span class="o">=</span> <span class="n">cairo_format_stride_for_width</span> <span class="p">(</span><span class="n">format</span><span class="p">,</span> <span class="n">width</span><span class="p">);</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">malloc</span> <span class="p">(</span><span class="n">stride</span> <span class="o">*</span> <span class="n">height</span><span class="p">);</span>
+<span class="n">surface</span> <span class="o">=</span> <span class="n">cairo_image_surface_create_for_data</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">format</span><span class="p">,</span>
+					  <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
+					  <span class="n">stride</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -514,10 +514,10 @@ image data.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FORMAT-ARGB32:CAPS"></a>CAIRO_FORMAT_ARGB32</p></td>
 <td class="enum_member_description">
 <p>each pixel is a 32-bit quantity, with
-  alpha in the upper 8 bits, then red, then green, then blue.
-  The 32-bit quantities are stored native-endian. Pre-multiplied
-  alpha is used. (That is, 50% transparent red is 0x80800000,
-  not 0x80ff0000.) (Since 1.0)</p>
+alpha in the upper 8 bits, then red, then green, then blue.
+The 32-bit quantities are stored native-endian. Pre-multiplied
+alpha is used. (That is, 50% transparent red is 0x80800000,
+not 0x80ff0000.) (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -525,8 +525,8 @@ image data.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FORMAT-RGB24:CAPS"></a>CAIRO_FORMAT_RGB24</p></td>
 <td class="enum_member_description">
 <p>each pixel is a 32-bit quantity, with
-  the upper 8 bits unused. Red, Green, and Blue are stored
-  in the remaining 24 bits in that order. (Since 1.0)</p>
+the upper 8 bits unused. Red, Green, and Blue are stored
+in the remaining 24 bits in that order. (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -534,7 +534,7 @@ image data.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FORMAT-A8:CAPS"></a>CAIRO_FORMAT_A8</p></td>
 <td class="enum_member_description">
 <p>each pixel is a 8-bit quantity holding
-  an alpha value. (Since 1.0)</p>
+an alpha value. (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -542,11 +542,11 @@ image data.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FORMAT-A1:CAPS"></a>CAIRO_FORMAT_A1</p></td>
 <td class="enum_member_description">
 <p>each pixel is a 1-bit quantity holding
-  an alpha value. Pixels are packed together into 32-bit
-  quantities. The ordering of the bits matches the
-  endianness of the platform. On a big-endian machine, the
-  first pixel is in the uppermost bit, on a little-endian
-  machine the first pixel is in the least-significant bit. (Since 1.0)</p>
+an alpha value. Pixels are packed together into 32-bit
+quantities. The ordering of the bits matches the
+endianness of the platform. On a big-endian machine, the
+first pixel is in the uppermost bit, on a little-endian
+machine the first pixel is in the least-significant bit. (Since 1.0)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -554,8 +554,8 @@ image data.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FORMAT-RGB16-565:CAPS"></a>CAIRO_FORMAT_RGB16_565</p></td>
 <td class="enum_member_description">
 <p>each pixel is a 16-bit quantity
-  with red in the upper 5 bits, then green in the middle
-  6 bits, and blue in the lower 5 bits. (Since 1.2)</p>
+with red in the upper 5 bits, then green in the middle
+6 bits, and blue in the lower 5 bits. (Since 1.2)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -563,6 +563,20 @@ image data.</p>
 <td class="enum_member_name"><p><a name="CAIRO-FORMAT-RGB30:CAPS"></a>CAIRO_FORMAT_RGB30</p></td>
 <td class="enum_member_description">
 <p>like RGB24 but with 10bpc. (Since 1.12)</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="CAIRO-FORMAT-RGB96F:CAPS"></a>CAIRO_FORMAT_RGB96F</p></td>
+<td class="enum_member_description">
+<p>3 floats, R, G, B. (Since 1.17.2)</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="CAIRO-FORMAT-RGBA128F:CAPS"></a>CAIRO_FORMAT_RGBA128F</p></td>
+<td class="enum_member_description">
+<p>4 floats, R, G, B, A. (Since 1.17.2)</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -578,6 +592,6 @@ image data.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

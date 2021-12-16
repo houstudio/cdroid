@@ -22,7 +22,6 @@ all: inform $(CFG)/cairo.dll $(CFG)/cairo-static.lib
 	@echo "Built successfully!"
 	@echo "You should copy the following files to a proper place now:"
 	@echo ""
-	@echo "	cairo-version.h (NOTE: toplevel, not the src/cairo-version.h one!)"
 	@echo "	src/cairo-features.h"
 	@for x in $(enabled_cairo_headers); do echo "	src/$$x"; done
 	@echo "	src/$(CFG)/cairo.dll"

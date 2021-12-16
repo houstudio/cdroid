@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-font-options-t"><returnvalue>cairo_font_options_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-font-options-create">cairo_font_options_create</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -62,10 +62,10 @@
 </refsect1>
 <refsect1 id="cairo-cairo-font-options-t.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="typedef_keyword">typedef</entry><entry role="function_name"><link linkend="cairo-font-options-t">cairo_font_options_t</link></entry></row>
 <row><entry role="datatype_keyword">enum</entry><entry role="function_name"><link linkend="cairo-subpixel-order-t">cairo_subpixel_order_t</link></entry></row>
@@ -552,31 +552,31 @@ antialiasing mode of <link linkend="CAIRO-ANTIALIAS-SUBPIXEL:CAPS"><literal>CAIR
 <tbody>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-SUBPIXEL-ORDER-DEFAULT:CAPS">CAIRO_SUBPIXEL_ORDER_DEFAULT</para></entry>
 <entry role="enum_member_description"><para>Use the default subpixel order for
-  for the target device, since 1.0</para>
+for the target device, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-SUBPIXEL-ORDER-RGB:CAPS">CAIRO_SUBPIXEL_ORDER_RGB</para></entry>
 <entry role="enum_member_description"><para>Subpixel elements are arranged horizontally
-  with red at the left, since 1.0</para>
+with red at the left, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-SUBPIXEL-ORDER-BGR:CAPS">CAIRO_SUBPIXEL_ORDER_BGR</para></entry>
 <entry role="enum_member_description"><para>Subpixel elements are arranged horizontally
-  with blue at the left, since 1.0</para>
+with blue at the left, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-SUBPIXEL-ORDER-VRGB:CAPS">CAIRO_SUBPIXEL_ORDER_VRGB</para></entry>
 <entry role="enum_member_description"><para>Subpixel elements are arranged vertically
-  with red at the top, since 1.0</para>
+with red at the top, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-SUBPIXEL-ORDER-VBGR:CAPS">CAIRO_SUBPIXEL_ORDER_VBGR</para></entry>
 <entry role="enum_member_description"><para>Subpixel elements are arranged vertically
-  with blue at the top, since 1.0</para>
+with blue at the top, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -602,7 +602,7 @@ styles are supported by all font backends.</para>
 <tbody>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-HINT-STYLE-DEFAULT:CAPS">CAIRO_HINT_STYLE_DEFAULT</para></entry>
 <entry role="enum_member_description"><para>Use the default hint style for
-  font backend and target device, since 1.0</para>
+font backend and target device, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -613,15 +613,15 @@ styles are supported by all font backends.</para>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-HINT-STYLE-SLIGHT:CAPS">CAIRO_HINT_STYLE_SLIGHT</para></entry>
 <entry role="enum_member_description"><para>Hint outlines slightly to improve
-  contrast while retaining good fidelity to the original
-  shapes, since 1.0</para>
+contrast while retaining good fidelity to the original
+shapes, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-HINT-STYLE-MEDIUM:CAPS">CAIRO_HINT_STYLE_MEDIUM</para></entry>
 <entry role="enum_member_description"><para>Hint outlines with medium strength
-  giving a compromise between fidelity to the original shapes
-  and contrast, since 1.0</para>
+giving a compromise between fidelity to the original shapes
+and contrast, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -650,7 +650,7 @@ will be laid out differently at different zoom factors.</para>
 <tbody>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-HINT-METRICS-DEFAULT:CAPS">CAIRO_HINT_METRICS_DEFAULT</para></entry>
 <entry role="enum_member_description"><para>Hint metrics in the default
- manner for the font backend and target device, since 1.0</para>
+manner for the font backend and target device, since 1.0</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>

@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-drawing.html" title="Drawing">
 <link rel="prev" href="cairo-cairo-t.html" title="cairo_t">
 <link rel="next" href="cairo-cairo-pattern-t.html" title="cairo_pattern_t">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-Paths.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -214,8 +214,8 @@
 <a name="cairo-Paths.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -638,11 +638,11 @@ in the box given by <em class="parameter"><code>x</code></em>
 3
 4
 5</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="function"><a href="cairo-cairo-t.html#cairo-save">cairo_save</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Transformations.html#cairo-translate">cairo_translate</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> x <span class="gtkdoc opt">+</span> width <span class="gtkdoc opt">/</span> <span class="number">2</span><span class="gtkdoc opt">.,</span> y <span class="gtkdoc opt">+</span> height <span class="gtkdoc opt">/</span> <span class="number">2</span><span class="gtkdoc opt">.);</span>
-<span class="function"><a href="cairo-Transformations.html#cairo-scale">cairo_scale</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> width <span class="gtkdoc opt">/</span> <span class="number">2</span><span class="gtkdoc opt">.,</span> height <span class="gtkdoc opt">/</span> <span class="number">2</span><span class="gtkdoc opt">.);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-arc">cairo_arc</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">.,</span> <span class="number">0</span><span class="gtkdoc opt">.,</span> <span class="number">1</span><span class="gtkdoc opt">.,</span> <span class="number">0</span><span class="gtkdoc opt">.,</span> <span class="number">2</span> <span class="gtkdoc opt">*</span> M_PI<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-cairo-t.html#cairo-restore">cairo_restore</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">);</span></pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_save</span> <span class="p">(</span><span class="n">cr</span><span class="p">);</span>
+<span class="n">cairo_translate</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">height</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">);</span>
+<span class="n">cairo_scale</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">height</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">);</span>
+<span class="n">cairo_arc</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">);</span>
+<span class="n">cairo_restore</span> <span class="p">(</span><span class="n">cr</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -950,11 +950,11 @@ path at position (<em class="parameter"><code>x</code></em>
 3
 4
 5</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="function"><a href="cairo-Paths.html#cairo-move-to">cairo_move_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> x<span class="gtkdoc opt">,</span> y<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-rel-line-to">cairo_rel_line_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> width<span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-rel-line-to">cairo_rel_line_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">,</span> height<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-rel-line-to">cairo_rel_line_to</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">, -</span>width<span class="gtkdoc opt">,</span> <span class="number">0</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-Paths.html#cairo-close-path">cairo_close_path</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">);</span></pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_move_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+<span class="n">cairo_rel_line_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_rel_line_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">);</span>
+<span class="n">cairo_rel_line_to</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="o">-</span><span class="n">width</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cairo_close_path</span> <span class="p">(</span><span class="n">cr</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -1454,32 +1454,32 @@ with <a class="link" href="cairo-Paths.html#cairo-move-to" title="cairo_move_to�
 24
 25
 26</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="gtkdoc kwb">int</span> i<span class="gtkdoc opt">;</span>
-cairo_path_t <span class="gtkdoc opt">*</span>path<span class="gtkdoc opt">;</span>
-cairo_path_data_t <span class="gtkdoc opt">*</span>data<span class="gtkdoc opt">;</span>
+        <td class="listing_code"><pre class="programlisting"><span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+<span class="n">cairo_path_t</span> <span class="o">*</span><span class="n">path</span><span class="p">;</span>
+<span class="n">cairo_path_data_t</span> <span class="o">*</span><span class="n">data</span><span class="p">;</span>
  
-path <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-Paths.html#cairo-copy-path">cairo_copy_path</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">);</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">cairo_copy_path</span> <span class="p">(</span><span class="n">cr</span><span class="p">);</span>
  
-<span class="keyword">for</span> <span class="gtkdoc opt">(</span>i<span class="gtkdoc opt">=</span><span class="number">0</span><span class="gtkdoc opt">;</span> i <span class="gtkdoc opt">&lt;</span> path<span class="gtkdoc opt">-&gt;</span>num_data<span class="gtkdoc opt">;</span> i <span class="gtkdoc opt">+=</span> path<span class="gtkdoc opt">-&gt;</span>data<span class="gtkdoc opt">[</span>i<span class="gtkdoc opt">].</span>header<span class="gtkdoc opt">.</span>length<span class="gtkdoc opt">) {</span>
-    data <span class="gtkdoc opt">= &amp;</span>path<span class="gtkdoc opt">-&gt;</span>data<span class="gtkdoc opt">[</span>i<span class="gtkdoc opt">];</span>
-    <span class="keyword">switch</span> <span class="gtkdoc opt">(</span>data<span class="gtkdoc opt">-&gt;</span>header<span class="gtkdoc opt">.</span>type<span class="gtkdoc opt">) {</span>
-    <span class="keyword">case</span> CAIRO_PATH_MOVE_TO<span class="gtkdoc opt">:</span>
-        <span class="function">do_move_to_things</span> <span class="gtkdoc opt">(</span>data<span class="gtkdoc opt">[</span><span class="number">1</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>x<span class="gtkdoc opt">,</span> data<span class="gtkdoc opt">[</span><span class="number">1</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>y<span class="gtkdoc opt">);</span>
-        <span class="keyword">break</span><span class="gtkdoc opt">;</span>
-    <span class="keyword">case</span> CAIRO_PATH_LINE_TO<span class="gtkdoc opt">:</span>
-        <span class="function">do_line_to_things</span> <span class="gtkdoc opt">(</span>data<span class="gtkdoc opt">[</span><span class="number">1</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>x<span class="gtkdoc opt">,</span> data<span class="gtkdoc opt">[</span><span class="number">1</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>y<span class="gtkdoc opt">);</span>
-        <span class="keyword">break</span><span class="gtkdoc opt">;</span>
-    <span class="keyword">case</span> CAIRO_PATH_CURVE_TO<span class="gtkdoc opt">:</span>
-        <span class="function">do_curve_to_things</span> <span class="gtkdoc opt">(</span>data<span class="gtkdoc opt">[</span><span class="number">1</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>x<span class="gtkdoc opt">,</span> data<span class="gtkdoc opt">[</span><span class="number">1</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>y<span class="gtkdoc opt">,</span>
-                            data<span class="gtkdoc opt">[</span><span class="number">2</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>x<span class="gtkdoc opt">,</span> data<span class="gtkdoc opt">[</span><span class="number">2</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>y<span class="gtkdoc opt">,</span>
-                            data<span class="gtkdoc opt">[</span><span class="number">3</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>x<span class="gtkdoc opt">,</span> data<span class="gtkdoc opt">[</span><span class="number">3</span><span class="gtkdoc opt">].</span>point<span class="gtkdoc opt">.</span>y<span class="gtkdoc opt">);</span>
-        <span class="keyword">break</span><span class="gtkdoc opt">;</span>
-    <span class="keyword">case</span> CAIRO_PATH_CLOSE_PATH<span class="gtkdoc opt">:</span>
-        <span class="function">do_close_path_things</span> <span class="gtkdoc opt">();</span>
-        <span class="keyword">break</span><span class="gtkdoc opt">;</span>
-    <span class="gtkdoc opt">}</span>
-<span class="gtkdoc opt">}</span>
-<span class="function"><a href="cairo-Paths.html#cairo-path-destroy">cairo_path_destroy</a></span> <span class="gtkdoc opt">(</span>path<span class="gtkdoc opt">);</span></pre></td>
+<span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">path</span><span class="o">-&gt;</span><span class="n">num_data</span><span class="p">;</span> <span class="n">i</span> <span class="o">+=</span> <span class="n">path</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">header</span><span class="p">.</span><span class="n">length</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">path</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">data</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">.</span><span class="n">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="nl">CAIRO_PATH_MOVE_TO</span><span class="p">:</span>
+        <span class="n">do_move_to_things</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="nl">CAIRO_PATH_LINE_TO</span><span class="p">:</span>
+        <span class="n">do_line_to_things</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="nl">CAIRO_PATH_CURVE_TO</span><span class="p">:</span>
+        <span class="n">do_curve_to_things</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">y</span><span class="p">,</span>
+                            <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">y</span><span class="p">,</span>
+                            <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">point</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="nl">CAIRO_PATH_CLOSE_PATH</span><span class="p">:</span>
+        <span class="n">do_close_path_things</span> <span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="n">cairo_path_destroy</span> <span class="p">(</span><span class="n">path</span><span class="p">);</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -1545,6 +1545,6 @@ See <a class="link" href="cairo-Paths.html#cairo-path-data-t" title="union cairo
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

@@ -25,7 +25,7 @@ void OverScroller::SplineOverScroller::sInit(){
             x = x_min + (x_max - x_min) / 2.0f;
             coef = 3.0f * x * (1.0f - x);
             tx = coef * ((1.0f - x) * P1 + x * P2) + x * x * x;
-            if (std::abs(tx - alpha) < 1E-5) break;
+            if (abs(tx - alpha) < 1E-5) break;
                 if (tx > alpha) x_max = x;
                 else x_min = x;
             }
@@ -37,7 +37,7 @@ void OverScroller::SplineOverScroller::sInit(){
                 y = y_min + (y_max - y_min) / 2.0f;
                 coef = 3.0f * y * (1.0f - y);
                 dy = coef * ((1.0f - y) * START_TENSION + y) + y * y * y;
-                if (std::abs(dy - alpha) < 1E-5) break;
+                if (abs(dy - alpha) < 1E-5) break;
                 if (dy > alpha) y_max = y;
                 else y_min = y;
             }
@@ -76,14 +76,14 @@ float OverScroller::SplineOverScroller::getDeceleration(int velocity) {
 }
 
 double OverScroller::SplineOverScroller::getSplineDeceleration(int velocity) {
-     return std::log(INFLEXION * std::abs(velocity) / (mFlingFriction * mPhysicalCoeff));
+     return log(INFLEXION * abs(velocity) / (mFlingFriction * mPhysicalCoeff));
 }
 
 void OverScroller::SplineOverScroller::setFriction(float friction) {
     mFlingFriction = friction;
 }
 void OverScroller::SplineOverScroller::updateScroll(float q) {
-    mCurrentPosition = mStart + std::round(q * (mFinal - mStart));
+    mCurrentPosition = mStart + round(q * (mFinal - mStart));
 }
 
 void OverScroller::SplineOverScroller::finish() {
@@ -102,18 +102,18 @@ void OverScroller::SplineOverScroller::setFinalPosition(int position) {
 double OverScroller::SplineOverScroller::getSplineFlingDistance(int velocity) {
     double l = getSplineDeceleration(velocity);
     double decelMinusOne = DECELERATION_RATE - 1.0;
-    return mFlingFriction * mPhysicalCoeff * std::exp(DECELERATION_RATE / decelMinusOne * l);
+    return mFlingFriction * mPhysicalCoeff * exp(DECELERATION_RATE / decelMinusOne * l);
 }
 int OverScroller::SplineOverScroller::getSplineFlingDuration(int velocity) {
     double l = getSplineDeceleration(velocity);
     double decelMinusOne = DECELERATION_RATE - 1.0;
-    return (int) (1000.0 * std::exp(l / decelMinusOne));
+    return (int) (1000.0 * exp(l / decelMinusOne));
 }
 
 void OverScroller::SplineOverScroller::adjustDuration(int start, int oldFinal, int newFinal) {
     int oldDistance = oldFinal - start;
     int newDistance = newFinal - start;
-    float x = std::abs((float) newDistance / oldDistance);
+    float x = abs((float) newDistance / oldDistance);
     int index = (int) (NB_SAMPLES * x);
     if (index < NB_SAMPLES) {
        float x_inf = (float) index / NB_SAMPLES;
@@ -161,7 +161,7 @@ void OverScroller::SplineOverScroller::startSpringback(int start, int end, int v
     // TODO take velocity into account
     mVelocity = -delta; // only sign is used
     mOver = std::abs(delta);
-    mDuration = (int) (1000.0 * std::sqrt(-2.0 * delta / mDeceleration));
+    mDuration = (int) (1000.0 * sqrt(-2.0 * delta / mDeceleration));
 }
 
 void OverScroller::SplineOverScroller::fling(int start, int velocity, int min, int max, int over){
@@ -204,9 +204,9 @@ void OverScroller::SplineOverScroller::fitOnBounceCurve(int start, int end, int 
     float durationToApex = - velocity / mDeceleration;
     // The float cast below is necessary to avoid integer overflow.
     float velocitySquared = (float) velocity * velocity;
-    float distanceToApex = velocitySquared / 2.0f / std::abs(mDeceleration);
+    float distanceToApex = velocitySquared / 2.0f / abs(mDeceleration);
     float distanceToEdge = std::abs(end - start);
-    float totalDuration = (float) std::sqrt(2.0 * (distanceToApex + distanceToEdge) / std::abs(mDeceleration));
+    float totalDuration = (float) sqrt(2.0 * (distanceToApex + distanceToEdge) / abs(mDeceleration));
     mStartTime -= (int) (1000.0f * (totalDuration - durationToApex));
     mCurrentPosition = mStart = end;
     mVelocity = (int) (- mDeceleration * totalDuration);
@@ -254,7 +254,7 @@ void OverScroller::SplineOverScroller::notifyEdgeReached(int start, int end, int
 
 void OverScroller::SplineOverScroller::onEdgeReached(){
     float velocitySquared = (float) mVelocity * mVelocity;
-    float distance = velocitySquared / (2.0f * std::abs(mDeceleration));
+    float distance = velocitySquared / (2.0f * abs(mDeceleration));
     float sign = signum(mVelocity);
 
     if (distance > mOver) {
@@ -349,7 +349,7 @@ bool OverScroller::SplineOverScroller::update(){
          }
     }
 
-    mCurrentPosition = mStart + (int) std::round(distance);
+    mCurrentPosition = mStart + (int) round(distance);
     return true;
 }
 
@@ -406,7 +406,7 @@ int OverScroller::getCurrY()const{
 }
 
 float OverScroller::getCurrVelocity()const{
-    return (float) std::hypot(mScrollerX->mCurrVelocity, mScrollerY->mCurrVelocity);
+    return (float) hypot(mScrollerX->mCurrVelocity, mScrollerY->mCurrVelocity);
 }
 
 int OverScroller::getStartX()const{

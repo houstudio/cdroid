@@ -51,6 +51,8 @@ pixel_direct (cairo_t *cr, int width, int height, int loops)
     case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_ARGB32: bpp = 32; break;
+    case CAIRO_FORMAT_RGB96F: bpp = 96; break;
+    case CAIRO_FORMAT_RGBA128F: bpp = 128; break;
     }
 
     cairo_perf_timer_start ();

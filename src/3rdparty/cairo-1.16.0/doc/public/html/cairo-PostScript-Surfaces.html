@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-surfaces.html" title="Surfaces">
 <link rel="prev" href="cairo-PNG-Support.html" title="PNG Support">
 <link rel="next" href="cairo-Recording-Surfaces.html" title="Recording Surfaces">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-PostScript-Surfaces.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -133,8 +133,8 @@
 <a name="cairo-PostScript-Surfaces.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -645,24 +645,24 @@ the following comments:</p>
 16
 17
 18</pre></td>
-        <td class="listing_code"><pre class="programlisting">cairo_surface_t <span class="gtkdoc opt">*</span>surface <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-create">cairo_ps_surface_create</a></span> <span class="gtkdoc opt">(</span>filename<span class="gtkdoc opt">,</span> width<span class="gtkdoc opt">,</span> height<span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">...</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%Title: My excellent document&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%Copyright: Copyright (C) 2006 Cairo Lover&quot;</span><span class="gtkdoc opt">)</span>
-<span class="gtkdoc opt">...</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-begin-setup">cairo_ps_surface_dsc_begin_setup</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%IncludeFeature: *MediaColor White&quot;</span><span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">...</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-begin-page-setup">cairo_ps_surface_dsc_begin_page_setup</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%IncludeFeature: *PageSize A3&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%IncludeFeature: *InputSlot LargeCapacity&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%IncludeFeature: *MediaType Glossy&quot;</span><span class="gtkdoc opt">);</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%IncludeFeature: *MediaColor Blue&quot;</span><span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">...</span> draw to first page here <span class="gtkdoc opt">..</span>
-<span class="function"><a href="cairo-cairo-t.html#cairo-show-page">cairo_show_page</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">...</span>
-<span class="function"><a href="cairo-PostScript-Surfaces.html#cairo-ps-surface-dsc-comment">cairo_ps_surface_dsc_comment</a></span> <span class="gtkdoc opt">(</span>surface<span class="gtkdoc opt">,</span> <span class="string">&quot;%%IncludeFeature: *PageSize A5&quot;</span><span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">...</span></pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_surface_t</span> <span class="o">*</span><span class="n">surface</span> <span class="o">=</span> <span class="n">cairo_ps_surface_create</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%Title: My excellent document&quot;</span><span class="p">);</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%Copyright: Copyright (C) 2006 Cairo Lover&quot;</span><span class="p">)</span>
+<span class="p">...</span>
+<span class="n">cairo_ps_surface_dsc_begin_setup</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%IncludeFeature: *MediaColor White&quot;</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="n">cairo_ps_surface_dsc_begin_page_setup</span> <span class="p">(</span><span class="n">surface</span><span class="p">);</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%IncludeFeature: *PageSize A3&quot;</span><span class="p">);</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%IncludeFeature: *InputSlot LargeCapacity&quot;</span><span class="p">);</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%IncludeFeature: *MediaType Glossy&quot;</span><span class="p">);</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%IncludeFeature: *MediaColor Blue&quot;</span><span class="p">);</span>
+<span class="p">...</span> <span class="n">draw</span> <span class="n">to</span> <span class="n">first</span> <span class="n">page</span> <span class="n">here</span> <span class="p">..</span>
+<span class="n">cairo_show_page</span> <span class="p">(</span><span class="n">cr</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="n">cairo_ps_surface_dsc_comment</span> <span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="s">&quot;%%IncludeFeature: *PageSize A5&quot;</span><span class="p">);</span>
+<span class="p">...</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -744,6 +744,6 @@ conform to.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

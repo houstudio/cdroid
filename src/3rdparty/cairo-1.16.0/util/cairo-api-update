@@ -3,7 +3,7 @@ set -e
 
 if [ $# -lt 1 ]; then
     argv0=`basename $0`
-    echo "$argv0: Update source code to the lastest Cairo API" >&2
+    echo "$argv0: Update source code to the latest Cairo API" >&2
     echo "" >&2
     echo "Usage: $argv0 file [...]" >&2
     exit 1

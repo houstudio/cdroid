@@ -1054,6 +1054,7 @@ scan_token:
 	switch (c) {
 	case 0xa:
 	    scan->line_number++;
+	    /* fall through */
 	case 0x0:
 	case 0x9:
 	case 0xc:

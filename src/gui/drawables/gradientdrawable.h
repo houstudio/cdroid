@@ -1,6 +1,7 @@
 #ifndef __GRADIENT_DRAWABLE_H__
 #define __GRADIENT_DRAWABLE_H__
 #include <drawables/drawable.h>
+#include <core/path.h>
 namespace cdroid{
 
 class GradientDrawable:public Drawable{
@@ -89,7 +90,7 @@ private:
        void setDensity(int targetDensity);
        void applyDensityScaling(int sourceDensity, int targetDensity);
        Drawable* newDrawable()override;
-	   int getChangingConfigurations()const;
+       int getChangingConfigurations()const;
        void setShape(int shape);
        void setGradientType(int gradient);
        void setGradientCenter(float x, float y);
@@ -103,14 +104,19 @@ private:
        void computeOpacity();
     };
     int mAlpha;
-    Rect mRect;
+    RefPtr<cdroid::Path>mPath;
+    RefPtr<cdroid::Path>mRingPath;
+    RectF mRect;
     Rect mPadding;
     bool mPathIsDirty;
     bool mGradientIsDirty;
     bool mMutated;
     float mGradientRadius;
     std::shared_ptr<GradientState>mGradientState;
-    RefPtr<Gradient>pat;
+    std::vector<double>mDashArray;
+    double mStrokeWidth;
+    RefPtr<Cairo::Pattern>mStrokePaint;
+    RefPtr<Cairo::Pattern>mFillPaint;
     bool ensureValidRect();
     void buildPathIfDirty();
     bool isOpaqueForState()const;

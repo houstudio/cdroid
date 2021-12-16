@@ -152,16 +152,20 @@ _cairo_boilerplate_svg_finish_surface (cairo_surface_t *surface)
 							     &svg_closure_key);
     cairo_status_t status;
 
-    /* Both surface and ptc->target were originally created at the
-     * same dimensions. We want a 1:1 copy here, so we first clear any
-     * device offset on surface.
-     *
-     * In a more realistic use case of device offsets, the target of
-     * this copying would be of a different size than the source, and
-     * the offset would be desirable during the copy operation. */
-    cairo_surface_set_device_offset (surface, 0, 0);
-
     if (ptc->target) {
+	/* Both surface and ptc->target were originally created at the
+	 * same dimensions. We want a 1:1 copy here, so we first clear any
+	 * device offset and scale on surface.
+	 *
+	 * In a more realistic use case of device offsets, the target of
+	 * this copying would be of a different size than the source, and
+	 * the offset would be desirable during the copy operation. */
+	double x_offset, y_offset;
+	double x_scale, y_scale;
+	cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+	cairo_surface_get_device_scale (surface, &x_scale, &y_scale);
+	cairo_surface_set_device_offset (surface, 0, 0);
+	cairo_surface_set_device_scale (surface, 1, 1);
 	cairo_t *cr;
 	cr = cairo_create (ptc->target);
 	cairo_set_source_surface (cr, surface, 0, 0);
@@ -169,6 +173,8 @@ _cairo_boilerplate_svg_finish_surface (cairo_surface_t *surface)
 	cairo_show_page (cr);
 	status = cairo_status (cr);
 	cairo_destroy (cr);
+	cairo_surface_set_device_offset (surface, x_offset, y_offset);
+	cairo_surface_set_device_scale (surface, x_scale, y_scale);
 
 	if (status)
 	    return status;
@@ -228,15 +234,29 @@ _cairo_boilerplate_svg_get_image_surface (cairo_surface_t *surface,
 					  int		   height)
 {
     cairo_surface_t *image;
+    double x_offset, y_offset;
+    double x_scale, y_scale;
+    svg_target_closure_t *ptc = cairo_surface_get_user_data (surface,
+							     &svg_closure_key);
 
     if (page != 0)
 	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     image = _cairo_boilerplate_svg_convert_to_image (surface);
-    cairo_surface_set_device_offset (image,
-				     cairo_image_surface_get_width (image) - width,
-				     cairo_image_surface_get_height (image) - height);
+    cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+    cairo_surface_get_device_scale (surface, &x_scale, &y_scale);
+    cairo_surface_set_device_offset (image, x_offset, y_offset);
+    cairo_surface_set_device_scale (image, x_scale, y_scale);
     surface = _cairo_boilerplate_get_image_surface (image, 0, width, height);
+    if (ptc->target) {
+	cairo_surface_t *old_surface = surface;
+	surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, width, height);
+	cairo_t *cr = cairo_create (surface);
+	cairo_set_source_surface (cr, old_surface, 0, 0);
+	cairo_paint (cr);
+	cairo_destroy (cr);
+	cairo_surface_destroy (old_surface);
+    }
     cairo_surface_destroy (image);
 
     return surface;

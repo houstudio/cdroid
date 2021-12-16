@@ -45,6 +45,8 @@ set_pixel_black(uint8_t *data, int stride,
     case CAIRO_FORMAT_RGB16_565:
 	*(uint16_t *)(data + y * stride + 2*x) = black_pixel;
 	break;
+    case CAIRO_FORMAT_RGBA128F:
+    case CAIRO_FORMAT_RGB96F:
     case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_A8:
     case CAIRO_FORMAT_A1:
@@ -137,19 +139,19 @@ fill (cairo_t *cr, int width, int height)
 }
 
 CAIRO_TEST (map_all_to_image,
-	    "Test maping a surface to an image and modifying it externally",
+	    "Test mapping a surface to an image and modifying it externally",
 	    "image", /* keywords */
 	    "target=raster", /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, all)
 CAIRO_TEST (map_bit_to_image,
-	    "Test maping a surface to an image and modifying it externally",
+	    "Test mapping a surface to an image and modifying it externally",
 	    "image", /* keywords */
 	    "target=raster", /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, bit)
 CAIRO_TEST (map_to_image_fill,
-	    "Test maping a surface to an image and modifying it externally",
+	    "Test mapping a surface to an image and modifying it externally",
 	    "image", /* keywords */
 	    "target=raster", /* requirements */
 	    WIDTH, HEIGHT,

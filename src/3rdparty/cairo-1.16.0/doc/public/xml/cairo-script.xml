@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-device-t"><returnvalue>cairo_device_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-script-create">cairo_script_create</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -44,10 +44,10 @@
 </refsect1>
 <refsect1 id="cairo-Script-Surfaces.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-SCRIPT-SURFACE:CAPS">CAIRO_HAS_SCRIPT_SURFACE</link></entry></row>
 <row><entry role="datatype_keyword">enum</entry><entry role="function_name"><link linkend="cairo-script-mode-t">cairo_script_mode_t</link></entry></row>
@@ -298,7 +298,7 @@ cairo_script_write_comment (<parameter><link linkend="cairo-device-t"><type>cair
 <entry role="parameter_description"><para>the string to emit</para></entry>
 <entry role="parameter_annotations"></entry></row>
 <row><entry role="parameter_name"><para>len</para></entry>
-<entry role="parameter_description"><para>the length of the sting to write, or -1 to use <link linkend="strlen"><function>strlen()</function></link></para></entry>
+<entry role="parameter_description"><para>the length of the string to write, or -1 to use <link linkend="strlen"><function>strlen()</function></link></para></entry>
 <entry role="parameter_annotations"></entry></row>
 </tbody></tgroup></informaltable>
 </refsect3><para role="since">Since: <link linkend="api-index-1.12">1.12</link></para></refsect2>

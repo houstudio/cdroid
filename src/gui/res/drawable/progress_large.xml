@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <animated-rotate xmlns:cdroid="http://schemas.android.com/apk/res/android"
-    cdroid:drawable="cdroid:mipmap/spinner_black_76.png"
+    cdroid:drawable="cdroid:mipmap/spinner_black_76"
     cdroid:pivotX="50%" cdroid:pivotY="50%"
     cdroid:framesCount="20"  cdroid:frameDuration="200" />

@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
-#include <sys/poll.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -23,6 +22,14 @@
 #include <errno.h>
 #include <assert.h>
 #include <pthread.h>
+
+#if defined(HAVE_POLL_H)
+#include <poll.h>
+#elif defined(HAVE_SYS_POLL_H)
+#include <sys/poll.h>
+#else
+#error No poll.h equivalent found
+#endif
 
 #include <cairo.h>
 #include <cairo-script.h>

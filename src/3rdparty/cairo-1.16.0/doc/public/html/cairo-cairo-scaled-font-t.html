@@ -8,7 +8,7 @@
 <link rel="up" href="cairo-fonts.html" title="Fonts">
 <link rel="prev" href="cairo-cairo-font-face-t.html" title="cairo_font_face_t">
 <link rel="next" href="cairo-cairo-font-options-t.html" title="cairo_font_options_t">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="cairo-cairo-scaled-font-t.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -181,8 +181,8 @@
 <a name="cairo-cairo-scaled-font-t.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -569,29 +569,29 @@ and a suitable array will be allocated.  In code:</p>
 21
 22
 23</pre></td>
-        <td class="listing_code"><pre class="programlisting">cairo_status_t status<span class="gtkdoc opt">;</span>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_status_t</span> <span class="n">status</span><span class="p">;</span>
 
-cairo_glyph_t <span class="gtkdoc opt">*</span>glyphs <span class="gtkdoc opt">=</span> NULL<span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">int</span> num_glyphs<span class="gtkdoc opt">;</span>
-cairo_text_cluster_t <span class="gtkdoc opt">*</span>clusters <span class="gtkdoc opt">=</span> NULL<span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">int</span> num_clusters<span class="gtkdoc opt">;</span>
-cairo_text_cluster_flags_t cluster_flags<span class="gtkdoc opt">;</span>
+<span class="n">cairo_glyph_t</span> <span class="o">*</span><span class="n">glyphs</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">num_glyphs</span><span class="p">;</span>
+<span class="n">cairo_text_cluster_t</span> <span class="o">*</span><span class="n">clusters</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">num_clusters</span><span class="p">;</span>
+<span class="n">cairo_text_cluster_flags_t</span> <span class="n">cluster_flags</span><span class="p">;</span>
 
-status <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-cairo-scaled-font-t.html#cairo-scaled-font-text-to-glyphs">cairo_scaled_font_text_to_glyphs</a></span> <span class="gtkdoc opt">(</span>scaled_font<span class="gtkdoc opt">,</span>
-                                           x<span class="gtkdoc opt">,</span> y<span class="gtkdoc opt">,</span>
-                                           utf8<span class="gtkdoc opt">,</span> utf8_len<span class="gtkdoc opt">,</span>
-                                           <span class="gtkdoc opt">&amp;</span>glyphs<span class="gtkdoc opt">, &amp;</span>num_glyphs<span class="gtkdoc opt">,</span>
-                                           <span class="gtkdoc opt">&amp;</span>clusters<span class="gtkdoc opt">, &amp;</span>num_clusters<span class="gtkdoc opt">, &amp;</span>cluster_flags<span class="gtkdoc opt">);</span>
+<span class="n">status</span> <span class="o">=</span> <span class="n">cairo_scaled_font_text_to_glyphs</span> <span class="p">(</span><span class="n">scaled_font</span><span class="p">,</span>
+                                           <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                                           <span class="n">utf8</span><span class="p">,</span> <span class="n">utf8_len</span><span class="p">,</span>
+                                           <span class="o">&amp;</span><span class="n">glyphs</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">num_glyphs</span><span class="p">,</span>
+                                           <span class="o">&amp;</span><span class="n">clusters</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">num_clusters</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">cluster_flags</span><span class="p">);</span>
 
-<span class="keyword">if</span> <span class="gtkdoc opt">(</span>status <span class="gtkdoc opt">==</span> CAIRO_STATUS_SUCCESS<span class="gtkdoc opt">) {</span>
-    <span class="function"><a href="cairo-text.html#cairo-show-text-glyphs">cairo_show_text_glyphs</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span>
-                            utf8<span class="gtkdoc opt">,</span> utf8_len<span class="gtkdoc opt">,</span>
-                            glyphs<span class="gtkdoc opt">,</span> num_glyphs<span class="gtkdoc opt">,</span>
-                            clusters<span class="gtkdoc opt">,</span> num_clusters<span class="gtkdoc opt">,</span> cluster_flags<span class="gtkdoc opt">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="n">CAIRO_STATUS_SUCCESS</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cairo_show_text_glyphs</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span>
+                            <span class="n">utf8</span><span class="p">,</span> <span class="n">utf8_len</span><span class="p">,</span>
+                            <span class="n">glyphs</span><span class="p">,</span> <span class="n">num_glyphs</span><span class="p">,</span>
+                            <span class="n">clusters</span><span class="p">,</span> <span class="n">num_clusters</span><span class="p">,</span> <span class="n">cluster_flags</span><span class="p">);</span>
 
-    <span class="function"><a href="cairo-text.html#cairo-glyph-free">cairo_glyph_free</a></span> <span class="gtkdoc opt">(</span>glyphs<span class="gtkdoc opt">);</span>
-    <span class="function"><a href="cairo-text.html#cairo-text-cluster-free">cairo_text_cluster_free</a></span> <span class="gtkdoc opt">(</span>clusters<span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">}</span></pre></td>
+    <span class="n">cairo_glyph_free</span> <span class="p">(</span><span class="n">glyphs</span><span class="p">);</span>
+    <span class="n">cairo_text_cluster_free</span> <span class="p">(</span><span class="n">clusters</span><span class="p">);</span>
+<span class="p">}</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -618,22 +618,22 @@ status <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-c
 14
 15
 16</pre></td>
-        <td class="listing_code"><pre class="programlisting">cairo_status_t status<span class="gtkdoc opt">;</span>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_status_t</span> <span class="n">status</span><span class="p">;</span>
 
-cairo_glyph_t <span class="gtkdoc opt">*</span>glyphs <span class="gtkdoc opt">=</span> NULL<span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">int</span> num_glyphs<span class="gtkdoc opt">;</span>
+<span class="n">cairo_glyph_t</span> <span class="o">*</span><span class="n">glyphs</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">num_glyphs</span><span class="p">;</span>
 
-status <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-cairo-scaled-font-t.html#cairo-scaled-font-text-to-glyphs">cairo_scaled_font_text_to_glyphs</a></span> <span class="gtkdoc opt">(</span>scaled_font<span class="gtkdoc opt">,</span>
-                                           x<span class="gtkdoc opt">,</span> y<span class="gtkdoc opt">,</span>
-                                           utf8<span class="gtkdoc opt">,</span> utf8_len<span class="gtkdoc opt">,</span>
-                                           <span class="gtkdoc opt">&amp;</span>glyphs<span class="gtkdoc opt">, &amp;</span>num_glyphs<span class="gtkdoc opt">,</span>
-                                           NULL<span class="gtkdoc opt">,</span> NULL<span class="gtkdoc opt">,</span>
-                                           NULL<span class="gtkdoc opt">);</span>
+<span class="n">status</span> <span class="o">=</span> <span class="n">cairo_scaled_font_text_to_glyphs</span> <span class="p">(</span><span class="n">scaled_font</span><span class="p">,</span>
+                                           <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                                           <span class="n">utf8</span><span class="p">,</span> <span class="n">utf8_len</span><span class="p">,</span>
+                                           <span class="o">&amp;</span><span class="n">glyphs</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">num_glyphs</span><span class="p">,</span>
+                                           <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span>
+                                           <span class="nb">NULL</span><span class="p">);</span>
 
-<span class="keyword">if</span> <span class="gtkdoc opt">(</span>status <span class="gtkdoc opt">==</span> CAIRO_STATUS_SUCCESS<span class="gtkdoc opt">) {</span>
-    <span class="function"><a href="cairo-text.html#cairo-show-glyphs">cairo_show_glyphs</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span> glyphs<span class="gtkdoc opt">,</span> num_glyphs<span class="gtkdoc opt">);</span>
-    <span class="function"><a href="cairo-text.html#cairo-glyph-free">cairo_glyph_free</a></span> <span class="gtkdoc opt">(</span>glyphs<span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">}</span></pre></td>
+<span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="n">CAIRO_STATUS_SUCCESS</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cairo_show_glyphs</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="n">glyphs</span><span class="p">,</span> <span class="n">num_glyphs</span><span class="p">);</span>
+    <span class="n">cairo_glyph_free</span> <span class="p">(</span><span class="n">glyphs</span><span class="p">);</span>
+<span class="p">}</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -672,33 +672,33 @@ arrays:</p>
 25
 26
 27</pre></td>
-        <td class="listing_code"><pre class="programlisting">cairo_status_t status<span class="gtkdoc opt">;</span>
+        <td class="listing_code"><pre class="programlisting"><span class="n">cairo_status_t</span> <span class="n">status</span><span class="p">;</span>
 
-cairo_glyph_t stack_glyphs<span class="gtkdoc opt">[</span><span class="number">40</span><span class="gtkdoc opt">];</span>
-cairo_glyph_t <span class="gtkdoc opt">*</span>glyphs <span class="gtkdoc opt">=</span> stack_glyphs<span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">int</span> num_glyphs <span class="gtkdoc opt">=</span> <span class="keyword">sizeof</span> <span class="gtkdoc opt">(</span>stack_glyphs<span class="gtkdoc opt">) /</span> <span class="keyword">sizeof</span> <span class="gtkdoc opt">(</span>stack_glyphs<span class="gtkdoc opt">[</span><span class="number">0</span><span class="gtkdoc opt">]);</span>
-cairo_text_cluster_t stack_clusters<span class="gtkdoc opt">[</span><span class="number">40</span><span class="gtkdoc opt">];</span>
-cairo_text_cluster_t <span class="gtkdoc opt">*</span>clusters <span class="gtkdoc opt">=</span> stack_clusters<span class="gtkdoc opt">;</span>
-<span class="gtkdoc kwb">int</span> num_clusters <span class="gtkdoc opt">=</span> <span class="keyword">sizeof</span> <span class="gtkdoc opt">(</span>stack_clusters<span class="gtkdoc opt">) /</span> <span class="keyword">sizeof</span> <span class="gtkdoc opt">(</span>stack_clusters<span class="gtkdoc opt">[</span><span class="number">0</span><span class="gtkdoc opt">]);</span>
-cairo_text_cluster_flags_t cluster_flags<span class="gtkdoc opt">;</span>
+<span class="n">cairo_glyph_t</span> <span class="n">stack_glyphs</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span>
+<span class="n">cairo_glyph_t</span> <span class="o">*</span><span class="n">glyphs</span> <span class="o">=</span> <span class="n">stack_glyphs</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">num_glyphs</span> <span class="o">=</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">stack_glyphs</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">stack_glyphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="n">cairo_text_cluster_t</span> <span class="n">stack_clusters</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span>
+<span class="n">cairo_text_cluster_t</span> <span class="o">*</span><span class="n">clusters</span> <span class="o">=</span> <span class="n">stack_clusters</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">num_clusters</span> <span class="o">=</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">stack_clusters</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">stack_clusters</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="n">cairo_text_cluster_flags_t</span> <span class="n">cluster_flags</span><span class="p">;</span>
 
-status <span class="gtkdoc opt">=</span> <span class="function"><a href="cairo-cairo-scaled-font-t.html#cairo-scaled-font-text-to-glyphs">cairo_scaled_font_text_to_glyphs</a></span> <span class="gtkdoc opt">(</span>scaled_font<span class="gtkdoc opt">,</span>
-                                           x<span class="gtkdoc opt">,</span> y<span class="gtkdoc opt">,</span>
-                                           utf8<span class="gtkdoc opt">,</span> utf8_len<span class="gtkdoc opt">,</span>
-                                           <span class="gtkdoc opt">&amp;</span>glyphs<span class="gtkdoc opt">, &amp;</span>num_glyphs<span class="gtkdoc opt">,</span>
-                                           <span class="gtkdoc opt">&amp;</span>clusters<span class="gtkdoc opt">, &amp;</span>num_clusters<span class="gtkdoc opt">, &amp;</span>cluster_flags<span class="gtkdoc opt">);</span>
+<span class="n">status</span> <span class="o">=</span> <span class="n">cairo_scaled_font_text_to_glyphs</span> <span class="p">(</span><span class="n">scaled_font</span><span class="p">,</span>
+                                           <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                                           <span class="n">utf8</span><span class="p">,</span> <span class="n">utf8_len</span><span class="p">,</span>
+                                           <span class="o">&amp;</span><span class="n">glyphs</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">num_glyphs</span><span class="p">,</span>
+                                           <span class="o">&amp;</span><span class="n">clusters</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">num_clusters</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">cluster_flags</span><span class="p">);</span>
 
-<span class="keyword">if</span> <span class="gtkdoc opt">(</span>status <span class="gtkdoc opt">==</span> CAIRO_STATUS_SUCCESS<span class="gtkdoc opt">) {</span>
-    <span class="function"><a href="cairo-text.html#cairo-show-text-glyphs">cairo_show_text_glyphs</a></span> <span class="gtkdoc opt">(</span>cr<span class="gtkdoc opt">,</span>
-                            utf8<span class="gtkdoc opt">,</span> utf8_len<span class="gtkdoc opt">,</span>
-                            glyphs<span class="gtkdoc opt">,</span> num_glyphs<span class="gtkdoc opt">,</span>
-                            clusters<span class="gtkdoc opt">,</span> num_clusters<span class="gtkdoc opt">,</span> cluster_flags<span class="gtkdoc opt">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="n">CAIRO_STATUS_SUCCESS</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cairo_show_text_glyphs</span> <span class="p">(</span><span class="n">cr</span><span class="p">,</span>
+                            <span class="n">utf8</span><span class="p">,</span> <span class="n">utf8_len</span><span class="p">,</span>
+                            <span class="n">glyphs</span><span class="p">,</span> <span class="n">num_glyphs</span><span class="p">,</span>
+                            <span class="n">clusters</span><span class="p">,</span> <span class="n">num_clusters</span><span class="p">,</span> <span class="n">cluster_flags</span><span class="p">);</span>
 
-    <span class="keyword">if</span> <span class="gtkdoc opt">(</span>glyphs <span class="gtkdoc opt">!=</span> stack_glyphs<span class="gtkdoc opt">)</span>
-        <span class="function"><a href="cairo-text.html#cairo-glyph-free">cairo_glyph_free</a></span> <span class="gtkdoc opt">(</span>glyphs<span class="gtkdoc opt">);</span>
-    <span class="keyword">if</span> <span class="gtkdoc opt">(</span>clusters <span class="gtkdoc opt">!=</span> stack_clusters<span class="gtkdoc opt">)</span>
-        <span class="function"><a href="cairo-text.html#cairo-text-cluster-free">cairo_text_cluster_free</a></span> <span class="gtkdoc opt">(</span>clusters<span class="gtkdoc opt">);</span>
-<span class="gtkdoc opt">}</span></pre></td>
+    <span class="k">if</span> <span class="p">(</span><span class="n">glyphs</span> <span class="o">!=</span> <span class="n">stack_glyphs</span><span class="p">)</span>
+        <span class="n">cairo_glyph_free</span> <span class="p">(</span><span class="n">glyphs</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">clusters</span> <span class="o">!=</span> <span class="n">stack_clusters</span><span class="p">)</span>
+        <span class="n">cairo_text_cluster_free</span> <span class="p">(</span><span class="n">clusters</span><span class="p">);</span>
+<span class="p">}</span></pre></td>
       </tr>
     </tbody>
   </table>
@@ -1296,6 +1296,6 @@ for vertical text layout as found in East-Asian languages.</p></td>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

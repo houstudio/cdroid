@@ -4,20 +4,20 @@
     <item cdroid:state_pressed="false"
           cdroid:state_enabled="true"
           cdroid:state_focused="false"
-          cdroid:drawable="cdroid:mipmap/numberpicker_down_normal.9.png" />
+          cdroid:drawable="cdroid:mipmap/numberpicker_down_normal" />
     <item cdroid:state_pressed="true"
           cdroid:state_enabled="true"
-          cdroid:drawable="cdroid:mipmap/numberpicker_down_pressed.9.png" />
+          cdroid:drawable="cdroid:mipmap/numberpicker_down_pressed" />
     <item cdroid:state_pressed="false"
           cdroid:state_enabled="true"
           cdroid:state_focused="true"
-          cdroid:drawable="cdroid:mipmap/numberpicker_down_selected.9.png" />
+          cdroid:drawable="cdroid:mipmap/numberpicker_down_selected" />
     <item cdroid:state_pressed="false"
           cdroid:state_enabled="false"
           cdroid:state_focused="false"
-          cdroid:drawable="cdroid:mipmap/numberpicker_down_disabled.9.png" />
+          cdroid:drawable="cdroid:mipmap/numberpicker_down_disabled" />
     <item cdroid:state_pressed="false"
           cdroid:state_enabled="false"
           cdroid:state_focused="true"
-          cdroid:drawable="cdroid:mipmap/numberpicker_down_disabled_focused.9.png" />
+          cdroid:drawable="cdroid:mipmap/numberpicker_down_disabled_focused" />
 </selector>

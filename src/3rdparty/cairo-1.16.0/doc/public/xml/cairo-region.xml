@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-region-t"><returnvalue>cairo_region_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-region-create">cairo_region_create</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -74,10 +74,10 @@
 </refsect1>
 <refsect1 id="cairo-Regions.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="typedef_keyword">typedef</entry><entry role="function_name"><link linkend="cairo-region-t">cairo_region_t</link></entry></row>
 <row><entry role="datatype_keyword">enum</entry><entry role="function_name"><link linkend="cairo-region-overlap-t">cairo_region_overlap_t</link></entry></row>
@@ -781,7 +781,7 @@ either in <parameter>dst</parameter>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-REGION-OVERLAP-PART:CAPS">CAIRO_REGION_OVERLAP_PART</para></entry>
 <entry role="enum_member_description"><para>The contents are partially inside and
-    partially outside the region. (Since 1.10)</para>
+partially outside the region. (Since 1.10)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>

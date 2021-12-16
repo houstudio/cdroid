@@ -1,3 +1,65 @@
+Release 1.17.4 (2020-11-27 Bryce Harrington <bryce@bryceharrington.org>)
+========================================================================
+
+Thank you to the many people who have contributed the large number of
+bug fixes and refinements since 1.17.2.
+
+A particularly noteworthy improvement in this release is the addition of
+the meson build system as an alternative to autotools.  Autotools is
+still used for producing the releases, so will be the default in the
+tarball and presumably will still be preferred by distro packagers of
+Cairo.  It should be possible to build the release tarball using meson,
+but as this is new functionality consider it still a work in progress.
+The meson configuration has striven to track the autotools
+implementation but be aware there may still be some differences between
+the two.
+
+Continuous Integration configurations have been added that enable
+testing on a variety of platforms including Fedora, Windows MSVC, etc.
+This work has helped in identifying updates and fixes including
+adjusting to changes in API calls in dependencies like rsvg and
+fontconfig, and to fix platform-specific build issues.
+
+The cogl Cairo backend underwent significant development this cycle.
+Cogl provides GPU accelerated drawing support.  The development work
+includes implementation of core functionality, performance
+optimizations, and stabilization.
+
+Subpixel positioning support allows improved glyph outlines with the
+Freetype font backend.
+
+For a complete log of changes, please see
+
+    https://cairographics.org/releases/ChangeLog.1.17.4
+
+[On a personal note, this will be my last release for Cairo.  My Cairo
+time availability has been non-existent (particularly this crazy past
+year).  The release process is well documented and hopefully will help
+whomever picks up the baton from here.]
+
+
+Release 1.17.2 (2019-01-31 Bryce Harrington <bryce@bryceharrington.org>)
+========================================================================
+This snapshot provides the new support for writing floating point
+formats as 16 bpc PNGs, with support for RGBA128F and RGB96F formats.
+This new feature increases Cairo's pixman version requirement to 0.36.0.
+
+Beyond this are a range of bugfixes and some work on establishing CI for
+Cairo.
+
+For a complete log of changes, please see
+
+    https://cairographics.org/releases/ChangeLog.1.17.2
+
+API Changes
+-----------
+None
+
+Dependency Changes
+------------------
+pixman 0.36.0
+
+
 Release 1.16.0 (2018-10-19 Bryce Harrington <bryce@bryceharrington.org>)
 ========================================================================
 This new stable release incorporates a number of improvements made in
@@ -18,7 +80,6 @@ backends.
 For a complete log of changes, please see
 
     https://cairographics.org/releases/ChangeLog.1.16.0
-
 
 Features and Enhancements
 -------------------------
@@ -175,7 +236,7 @@ legitimate problems found and fixed.
 
 For a complete log of changes, please see
 
-    https://cairographics.org/releases/ChangeLog.1.15.12
+    https://cairographics.org/releases/ChangeLog.1.15.14
 
 Features and Enhancements
 -------------------------
@@ -257,7 +318,7 @@ Bug Fixes
   (Bug #105084)
 * Fix multi-monitor virtual desktop with negative coords on Win32
   (Bug #100793)
-* Fix issues occuring with older FreeType versions.
+* Fix issues occurring with older FreeType versions.
 
 
 Release 1.15.10    (2017-12-07 Bryce Harrington <bryce@osg.samsung.com>)
@@ -552,7 +613,7 @@ Bug Fixes
 * Fix build issue when using non-GNU strings utility.  (Bug #88639)
 
 * Fix build of cairo modules as regular modules, not as versioned shared
-  libaries.  (Bug #29319)
+  libraries.  (Bug #29319)
 
 * Fix build on win32 using gcc 5.4.
 
@@ -1275,7 +1336,7 @@ reduction in rendering latency by reducing the number of copies
 required to upload image data - given hardware and driver support,
 cairo-xlib can now perform zero copy uploads onto the GPU. And as usual
 Adrian Johnson has been very busy fixing many different corner cases in
-cairo-pdf, impoving opacity groups and font subsetting. Last, but not
+cairo-pdf, improving opacity groups and font subsetting. Last, but not
 least, for cairo-image Søren Sandmann Pedersen added support for
 rendering glyphs to pixman and using that from within cairo. The new
 glyph rendering facility reduces the overhead for setting up the
@@ -1290,7 +1351,7 @@ Bug fixes
 ---------
 
  Interior boxes were being dropped when amalgamating regions during
- tesselation.
+ tessellation.
  https://bugs.freedesktop.org/show_bug.cgi?id=49446
 
  Allow building without gtk-doc installed
@@ -1310,7 +1371,7 @@ Bug fixes
  Upload the whole source for a repeating pattern.
  https://bugs.freedesktop.org/show_bug.cgi?id=51910
 
- Fix damage tracking to handle continuation chunks corectly and so
+ Fix damage tracking to handle continuation chunks correctly and so
  prevent crashes on win32.
  https://bugs.freedesktop.org/show_bug.cgi?id=53384
 
@@ -1375,7 +1436,7 @@ Bug fixes
 Release 1.12.0 (2012-03-23 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 It's taken over 18 months, but the wait is finally over. A new cairo release!
-We are pleased to annouce a new stable release of Cairo that brings many
+We are pleased to announce a new stable release of Cairo that brings many
 new features and performance improvements, all whilst maintaining
 compatibility with cairo-1.0 and all releases since. We recommend anyone
 using a previous release of Cairo to upgrade to 1.12.0.
@@ -2105,7 +2166,7 @@ Long standing bugs fixed:
     tessellator has been overhauled and tune, which handles the fallback
     for when we are unable to use the new span rasteriser on the stroke
     (e.g. when using the current RENDER protocol). The large number of
-    pixel artefacts that implementing self-intersection elimination
+    pixel artifacts that implementing self-intersection elimination
     removes is ample justification for the potential performance
     regression. If you unfortunately do suffer a substantial performance
     regression in your application, please consider obtaining a
@@ -5789,7 +5850,7 @@ Release 1.2.6 (2006-11-02 Behdad Esfahbod <behdad@behdad.org>)
 This is the third bug fix release in the 1.2 series, coming less than
 two months after the 1.2.4 release made on August 18.
 
-The 1.2.4 release turned out to be a pretty solid one, except for a crasher
+The 1.2.4 release turned out to be a pretty solid one, except for a crash
 bug when forwarding an X connection where the client and the server have
 varying byte orders, eg. from a PPC to an i686.  Other than that, various
 other small bugs have been fixed.
@@ -6099,7 +6160,7 @@ And at least the following bugs have been fixed:
  * Do device offset before float->fixed conversion
    https://bugzilla.gnome.org/show_bug.cgi?id=332266
  * PS: Fix source surfaces with transformations
- * PS: Fix to not draw BUTT-capped degnerate sub-paths
+ * PS: Fix to not draw BUTT-capped degenerate sub-paths
  * PS: Don't walk off end of array when printing "~>"
  * Fix some memory leaks in the test suite rig
  * SVG: Fix memory leak when using cairo_mask
@@ -6692,7 +6753,7 @@ Bug fixes
 
  * Negative dash offsets have been fixed to work correctly.
 
- * The stroking of paths with mutiple subpaths has now been fixed to
+ * The stroking of paths with multiple subpaths has now been fixed to
    apply caps to all subpaths rather than just the last one.
 
  * Many build fixes for better portability on various systems.

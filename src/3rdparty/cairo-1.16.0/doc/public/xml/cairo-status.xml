@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type">const <link linkend="char"><returnvalue>char</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-status-to-string">cairo_status_to_string</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -32,10 +32,10 @@
 </refsect1>
 <refsect1 id="cairo-Error-handling.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="datatype_keyword">enum</entry><entry role="function_name"><link linkend="cairo-status-t">cairo_status_t</link></entry></row>
 
@@ -306,9 +306,9 @@ to get a human-readable representation of an error message.</para>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-STATUS-INVALID-MESH-CONSTRUCTION:CAPS">CAIRO_STATUS_INVALID_MESH_CONSTRUCTION</para></entry>
 <entry role="enum_member_description"><para>a mesh pattern
-  construction operation was used outside of a
-  <link linkend="cairo-mesh-pattern-begin-patch"><function>cairo_mesh_pattern_begin_patch()</function></link>/<link linkend="cairo-mesh-pattern-end-patch"><function>cairo_mesh_pattern_end_patch()</function></link>
-  pair (Since 1.12)</para>
+construction operation was used outside of a
+<link linkend="cairo-mesh-pattern-begin-patch"><function>cairo_mesh_pattern_begin_patch()</function></link>/<link linkend="cairo-mesh-pattern-end-patch"><function>cairo_mesh_pattern_end_patch()</function></link>
+pair (Since 1.12)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -319,7 +319,7 @@ to get a human-readable representation of an error message.</para>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-STATUS-JBIG2-GLOBAL-MISSING:CAPS">CAIRO_STATUS_JBIG2_GLOBAL_MISSING</para></entry>
 <entry role="enum_member_description"><para><link linkend="CAIRO-MIME-TYPE-JBIG2-GLOBAL-ID:CAPS"><literal>CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID</literal></link> has been used on at least one image
-  but no image provided <link linkend="CAIRO-MIME-TYPE-JBIG2-GLOBAL:CAPS"><literal>CAIRO_MIME_TYPE_JBIG2_GLOBAL</literal></link> (Since 1.14)</para>
+but no image provided <link linkend="CAIRO-MIME-TYPE-JBIG2-GLOBAL:CAPS"><literal>CAIRO_MIME_TYPE_JBIG2_GLOBAL</literal></link> (Since 1.14)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -345,9 +345,9 @@ to get a human-readable representation of an error message.</para>
 </row>
 <row role="constant"><entry role="enum_member_name"><para id="CAIRO-STATUS-LAST-STATUS:CAPS">CAIRO_STATUS_LAST_STATUS</para></entry>
 <entry role="enum_member_description"><para>this is a special value indicating the number of
-  status values defined in this enumeration.  When using this value, note
-  that the version of cairo at run-time may have additional status values
-  defined than the value of this symbol at compile-time. (Since 1.10)</para>
+status values defined in this enumeration.  When using this value, note
+that the version of cairo at run-time may have additional status values
+defined than the value of this symbol at compile-time. (Since 1.10)</para>
 </entry>
 <entry role="enum_member_annotations"></entry>
 </row>
@@ -358,8 +358,8 @@ to get a human-readable representation of an error message.</para>
 <refsect1 id="cairo-Error-handling.see-also">
 <title>See Also</title>
 <para>cairo_status(), <link linkend="cairo-surface-status"><function>cairo_surface_status()</function></link>, <link linkend="cairo-pattern-status"><function>cairo_pattern_status()</function></link>,
-           <link linkend="cairo-font-face-status"><function>cairo_font_face_status()</function></link>, <link linkend="cairo-scaled-font-status"><function>cairo_scaled_font_status()</function></link>,
-           <link linkend="cairo-region-status"><function>cairo_region_status()</function></link></para>
+<link linkend="cairo-font-face-status"><function>cairo_font_face_status()</function></link>, <link linkend="cairo-scaled-font-status"><function>cairo_scaled_font_status()</function></link>,
+<link linkend="cairo-region-status"><function>cairo_region_status()</function></link></para>
 
 </refsect1>
 

@@ -88,7 +88,7 @@ AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t, __uint128_t])
 
 dnl Check for socket support for any2ppm daemon
-AC_CHECK_HEADERS([fcntl.h unistd.h signal.h sys/stat.h sys/socket.h sys/poll.h sys/un.h])
+AC_CHECK_HEADERS([fcntl.h unistd.h signal.h poll.h sys/stat.h sys/socket.h sys/poll.h sys/un.h])
 
 dnl Check for infinite loops
 AC_CHECK_FUNCS([alarm])

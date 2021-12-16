@@ -18,8 +18,8 @@
 <title role="functions_proto.title">Functions</title>
 <informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="functions_return" colwidth="150px"/>
-<colspec colname="functions_name"/>
+<colspec colname="functions_proto_type" colwidth="150px"/>
+<colspec colname="functions_proto_name"/>
 <tbody>
 <row><entry role="function_type"><link linkend="cairo-surface-t"><returnvalue>cairo_surface_t</returnvalue></link>&#160;*
 </entry><entry role="function_name"><link linkend="cairo-quartz-surface-create">cairo_quartz_surface_create</link>&#160;<phrase role="c_punctuation">()</phrase></entry></row>
@@ -34,10 +34,10 @@
 </refsect1>
 <refsect1 id="cairo-Quartz-Surfaces.other" role="other_proto">
 <title role="other_proto.title">Types and Values</title>
-<informaltable role="enum_members_table" pgwide="1" frame="none">
+<informaltable pgwide="1" frame="none">
 <tgroup cols="2">
-<colspec colname="name" colwidth="150px"/>
-<colspec colname="description"/>
+<colspec colname="other_proto_type" colwidth="150px"/>
+<colspec colname="other_proto_name"/>
 <tbody>
 <row><entry role="define_keyword">#define</entry><entry role="function_name"><link linkend="CAIRO-HAS-QUARTZ-SURFACE:CAPS">CAIRO_HAS_QUARTZ_SURFACE</link></entry></row>
 

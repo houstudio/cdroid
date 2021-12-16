@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
     <item cdroid:state_pressed="true" 
-        cdroid:drawable="cdroid:mipmap/btn_default_pressed.9.png" />
+        cdroid:drawable="cdroid:mipmap/btn_default_pressed" />
     <item cdroid:state_focused="true" cdroid:state_enabled="true"
-        cdroid:drawable="cdroid:mipmap/btn_default_selected.9.png" />
+        cdroid:drawable="cdroid:mipmap/btn_default_selected" />
     <item cdroid:state_enabled="true"
-        cdroid:drawable="cdroid:mipmap/btn_default_normal.9.png" />
+        cdroid:drawable="cdroid:mipmap/btn_default_normal" />
     <item cdroid:state_focused="true"
-        cdroid:drawable="cdroid:mipmap/btn_default_normal_disable_focused.9.png" />
+        cdroid:drawable="cdroid:mipmap/btn_default_normal_disable_focused" />
     <item
-        cdroid:drawable="cdroid:mipmap/btn_default_normal_disable.9.png" />
+        cdroid:drawable="cdroid:mipmap/btn_default_normal_disable" />
 </selector>

@@ -196,6 +196,9 @@
 /* Enable if you have MacOS X atomic operations */
 #undef HAVE_OS_ATOMIC_OPS
 
+/* Define to 1 if you have the <poll.h> header file. */
+#undef HAVE_POLL_H
+
 /* Define to 1 if you have the `poppler_page_render' function. */
 #undef HAVE_POPPLER_PAGE_RENDER
 
