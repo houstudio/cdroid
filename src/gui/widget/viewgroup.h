@@ -52,7 +52,6 @@ public:
         FLAG_CHILDREN_DRAWN_WITH_CACHE = 0x8000,
         FLAG_NOTIFY_CHILDREN_ON_DRAWABLE_STATE_CHANGE = 0x10000,
 
-        FLAG_TOUCHSCREEN_BLOCKS_FOCUS = 0x4000000,
         FOCUS_BEFORE_DESCENDANTS= 0x20000,
         FOCUS_AFTER_DESCENDANTS = 0x40000,
         FOCUS_BLOCK_DESCENDANTS = 0x60000,
@@ -60,8 +59,10 @@ public:
         FLAG_DISALLOW_INTERCEPT = 0x80000,
         FLAG_SPLIT_MOTION_EVENTS= 0x200000,
         FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW =0x400000,
+        FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET      =0x800000,
         FLAGS_IS_TRANSITION_GROUP    = 0x1000000,
         FLAGS_IS_TRANSITION_GROUP_SET= 0x2000000,
+        FLAG_TOUCHSCREEN_BLOCKS_FOCUS= 0x4000000,
     };
     enum{
         LAYOUT_MODE_UNDEFINED  =-1,
@@ -95,6 +96,7 @@ private:
     POINT animateFrom;//window animate from boundary
     Transformation* mChildTransformation;
     void initGroup();
+    void initFromAttributes(Context*,const AttributeSet&);
     void setBooleanFlag(int flag, bool value);
     bool hasBooleanFlag(int flag)const;
     bool hasChildWithZ()const;
@@ -144,6 +146,7 @@ protected:
     OnHierarchyChangeListener mOnHierarchyChangeListener;
     virtual bool canAnimate()const;
     void setDefaultFocus(View* child);
+    View*getDeepestFocusedChild();
     void clearDefaultFocus(View* child);
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
@@ -157,6 +160,7 @@ protected:
 
     bool isChildrenDrawingOrderEnabled()const;
     void setChildrenDrawingOrderEnabled(bool enabled);
+    void setLayoutMode(int layoutMode,bool explicity);
 
     void attachViewToParent(View* child, int index, LayoutParams* params);
     void dispatchViewAdded(View* child);
@@ -167,6 +171,7 @@ protected:
     void detachAllViewsFromParent();
     void clearFocusedInCluster(View* child);
     void clearFocusedInCluster();
+    void invalidateInheritedLayoutMode(int layoutModeOfRoot)override;
 
     virtual LayoutParams* generateLayoutParams(const LayoutParams* p)const;
     virtual LayoutParams* generateDefaultLayoutParams()const;
@@ -211,6 +216,8 @@ public:
     bool shouldBlockFocusForTouchscreen()const;
     int getDescendantFocusability()const;
     void setDescendantFocusability(int);
+    int  getLayoutMode();
+    void setLayoutMode(int layoutMode);
 
     bool getClipChildren()const;
     void setClipChildren(bool clipChildren);
@@ -222,8 +229,9 @@ public:
     void dispatchSetActivated(bool activated)override;
     virtual std::vector<View*> buildTouchDispatchChildList();
 
-    View*focusSearch(View*focused,int direction)const;
+    virtual View*focusSearch(View*focused,int direction)const;
     View*getFocusedChild();
+    bool hasFocus()const override;
     View*findFocus()override;
     bool restoreDefaultFocus()override;
     virtual void requestChildFocus(View*child,View*focused);
@@ -240,6 +248,7 @@ public:
 
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)override;
+    void setTouchscreenBlocksFocus(bool touchscreenBlocksFocus);
     void setOnHierarchyChangeListener(OnHierarchyChangeListener listener);
     bool restoreFocusNotInCluster();
     View*keyboardNavigationClusterSearch(View* currentCluster,int direction)override;

@@ -3889,6 +3889,10 @@ void View::invalidateParentIfNeeded(){
     if(mParent)mParent->invalidate(true);
 }
 
+void View::invalidateInheritedLayoutMode(int layoutModeOfRoot){
+    //nothing
+}
+
 void View::invalidateParentIfNeededAndWasQuickRejected() {
     if ((mPrivateFlags2 & PFLAG2_VIEW_QUICK_REJECTED) != 0) {
         // View was rejected last time it was drawn by its parent; this may have changed

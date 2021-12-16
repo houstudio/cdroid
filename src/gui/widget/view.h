@@ -432,6 +432,7 @@ protected:
     void invalidateParentCaches();
     void invalidateParentIfNeeded();
     void invalidateParentIfNeededAndWasQuickRejected();
+    virtual void invalidateInheritedLayoutMode(int);
     void destroyDrawingCache();
     RefPtr<ImageSurface>getDrawingCache(bool autoScale);
     virtual bool hasWindowFocus()const;

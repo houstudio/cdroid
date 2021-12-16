@@ -35,7 +35,7 @@ int main(int argc,const char*argv[]){
     Animation *anim= new ScaleAnimation(0.5,1,0.1,1,Animation::RELATIVE_TO_PARENT,.5,Animation::RELATIVE_TO_SELF,.5);
     anim->setDuration(500);
     w->setId(10);
-    LayoutAnimationController*lac = new LayoutAnimationController(anim,0.1);
+    LayoutAnimationController*lac = new LayoutAnimationController(anim,0.02);
     ListView*lv=(ListView*)&w->addView(new ListView(460,500)).setId(100);
     lv->setPos(10,10);
     adapter->setNotifyOnChange(true);

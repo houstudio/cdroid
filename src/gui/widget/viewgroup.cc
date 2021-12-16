@@ -79,6 +79,7 @@ bool ViewGroup::DEBUG_DRAW = false;
 
 ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
     initGroup();
+	initFromAttributes(ctx,attrs);
 }
 
 ViewGroup::ViewGroup(int w,int h)
@@ -122,6 +123,20 @@ void ViewGroup::initGroup(){
          if(transitionType==LayoutTransition::DISAPPEARING && mTransitioningViews.size())
               endViewTransition(view);
     };
+}
+
+void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
+    setClipChildren(atts.getBoolean("clipChildren",false));
+    setClipToPadding(atts.getBoolean("clipToPadding",false));
+    //setAnimationCacheEnabled
+    std::string resid=atts.getString("layoutAnimation");
+    setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
+    setDescendantFocusability(0);
+    setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents"));
+    if(atts.getBoolean("animateLayoutChanges",false))
+       setLayoutTransition(new LayoutTransition());
+    setLayoutMode(0);
+    setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus",false));
 }
 
 ViewGroup::~ViewGroup() {
@@ -1643,6 +1658,20 @@ View*ViewGroup::getFocusedChild(){
     return mFocused;
 }
 
+View*ViewGroup::getDeepestFocusedChild(){
+    View*v=this;
+    while(v){
+        if(v->isFocused())return v;
+        if(dynamic_cast<ViewGroup*>(v))
+            v=((ViewGroup*)v)->getFocusedChild();
+        else v=nullptr;
+    }
+}
+
+bool ViewGroup::hasFocus()const{
+    return (mPrivateFlags&PFLAG_FOCUSED)||(mFocused!=nullptr);
+}
+
 View*ViewGroup::findFocus(){
     if (isFocused()) {
         return this;
@@ -2045,6 +2074,29 @@ void ViewGroup::addKeyboardNavigationClusters(std::vector<View*>&views,int direc
     }
 }
 
+void ViewGroup::setTouchscreenBlocksFocus(bool touchscreenBlocksFocus){
+    if (touchscreenBlocksFocus) {
+        mGroupFlags |= FLAG_TOUCHSCREEN_BLOCKS_FOCUS;
+        if (hasFocus() && !isKeyboardNavigationCluster()) {
+            View* focusedChild = getDeepestFocusedChild();
+            if (!focusedChild->isFocusableInTouchMode()) {
+                View* newFocus = View::focusSearch((int)FOCUS_FORWARD);
+                if (newFocus) newFocus->requestFocus();
+            }
+        }
+    } else {
+        mGroupFlags &= ~FLAG_TOUCHSCREEN_BLOCKS_FOCUS;
+    }    
+}
+
+void ViewGroup::setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus) {
+    if (touchscreenBlocksFocus) {
+        mGroupFlags |= FLAG_TOUCHSCREEN_BLOCKS_FOCUS;
+    } else {
+        mGroupFlags &= ~FLAG_TOUCHSCREEN_BLOCKS_FOCUS;
+    }
+}
+
 void ViewGroup::transformPointToViewLocal(float point[2],View&child) {
      point[0] += mScrollX - child.getX();
      point[1] += mScrollY - child.getY();
@@ -2053,11 +2105,36 @@ void ViewGroup::transformPointToViewLocal(float point[2],View&child) {
      }
 }
 
-void ViewGroup::setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus) {
-    if (touchscreenBlocksFocus) {
-        mGroupFlags |= FLAG_TOUCHSCREEN_BLOCKS_FOCUS;
-    } else {
-        mGroupFlags &= ~FLAG_TOUCHSCREEN_BLOCKS_FOCUS;
+int ViewGroup::getLayoutMode(){
+    if(mLayoutMode==LAYOUT_MODE_UNDEFINED){
+        const int inheritedLayoutMode=mParent?mParent->getLayoutMode():LAYOUT_MODE_DEFAULT;
+        setLayoutMode(inheritedLayoutMode,false);
+    }
+}
+
+void ViewGroup::setLayoutMode(int layoutMode) {
+    if (mLayoutMode != layoutMode) {
+        invalidateInheritedLayoutMode(layoutMode);
+        setLayoutMode(layoutMode, layoutMode != LAYOUT_MODE_UNDEFINED);
+        requestLayout();
+    }
+}
+
+void ViewGroup::setLayoutMode(int layoutMode, bool explicitly) {
+    mLayoutMode = layoutMode;
+    setBooleanFlag(FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET, explicitly);
+}
+
+void ViewGroup::invalidateInheritedLayoutMode(int layoutModeOfRoot){
+    if (mLayoutMode == LAYOUT_MODE_UNDEFINED ||
+        mLayoutMode == layoutModeOfRoot ||
+        hasBooleanFlag(FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET)) {
+        return;
+    }
+    setLayoutMode(LAYOUT_MODE_UNDEFINED, false);
+    // apply recursively
+    for (auto child:mChildren) {
+        child->invalidateInheritedLayoutMode(layoutModeOfRoot);
     }
 }
 
