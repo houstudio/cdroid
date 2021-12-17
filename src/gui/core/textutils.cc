@@ -103,6 +103,15 @@ bool TextUtils::endWith(const std::string&str,const std::string&tail){
     return str.size()>=tail.size()&&(str.compare(str.size() - tail.size(), tail.size(), tail) == 0);
 }
 
+std::string& TextUtils::trim(std::string&s){
+    if (s.empty()){  
+        return s;  
+    }  
+    s.erase(0,s.find_first_not_of(" \t\r\n"));  
+    s.erase(s.find_last_not_of(" \t\r\n") + 1);  
+    return s;
+}
+
 int TextUtils::UTF2UCS(const char*utf,wchar_t*unicode){
     const unsigned char *p = (const unsigned char*)utf;
     int e = 0, n = 0;

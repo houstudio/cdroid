@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <functional>
 #include <drawables/drawable.h>
 
 namespace cdroid{
@@ -16,12 +17,14 @@ private:
     std::map<const std::string,class ZIPArchive*>mResources;
     std::map<const std::string,AttributeSet>mStyles;
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
-    int loadAttributes(std::map<const std::string,AttributeSet>&atts,const std::string&resid);
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
+    int loadKeyValues(const std::string&resid,const std::string&tag,
+        std::function<void(const AttributeSet&,const std::string&,const std::string&,int)>func);
+    int loadAttributes(std::map<const std::string,AttributeSet>&atts,const std::string&resid);
 public:
     Assets();
     Assets(const std::string&path);

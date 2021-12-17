@@ -120,7 +120,8 @@ DWORD GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
        ioctl(dev.fb, FBIO_WAITFORVSYNC, 0);
-       ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
+       int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
+       LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
 #if ENABLE_RFB
        rfbMarkRectAsModified(dev.rfbScreen,0,0,surf->width,surf->height);
 #endif
@@ -182,64 +183,66 @@ static void ResetScreenFormat(FBSURFACE*fb,int width,int height,int format){
 #endif
 
 DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
-     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
-     surf->width=width;
-     surf->height=height;
-     surf->format=format;
-     surf->ishw=hwsurface;
-     surf->pitch=width*4;
-     if(hwsurface){
-	 setfbinfo(surf);
-         surf->buffer=mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
-         dev.rfbScreen->frameBuffer = surf->buffer;
-	 surf->pitch=dev.fix.line_length;
-         ResetScreenFormat(surf,width,height,format);
-     }else
-	 surf->buffer=malloc(width*surf->pitch);
-     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
-     *surface=surf;
-     return E_OK;
+    FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+    surf->width=width;
+    surf->height=height;
+    surf->format=format;
+    surf->ishw=hwsurface;
+    surf->pitch=width*4;
+    if(hwsurface){
+        size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
+        setfbinfo(surf);
+        surf->buffer=mmap( NULL,mem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
+        dev.rfbScreen->frameBuffer = surf->buffer;
+	surf->pitch=dev.fix.line_length;
+        ResetScreenFormat(surf,width,height,format);
+    }else{
+        surf->buffer=malloc(width*surf->pitch);
+    }
+    LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
+    *surface=surf;
+    return E_OK;
 }
 
 
 DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
-     unsigned int x,y,sw,sh;
-     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
-     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
-     GFXRect rs={0,0};
-     BYTE*pbs=(BYTE*)nsrc->buffer;
-     BYTE*pbd=(BYTE*)ndst->buffer;
-     rs.w=nsrc->width;rs.h=nsrc->height;
-     if(srcrect)rs=*srcrect;
-     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
-         LOGV("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
-         return E_INVALID_PARA;
-     }
+    unsigned int x,y,sw,sh;
+    FBSURFACE*ndst=(FBSURFACE*)dstsurface;
+    FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
+    GFXRect rs={0,0};
+    BYTE*pbs=(BYTE*)nsrc->buffer;
+    BYTE*pbd=(BYTE*)ndst->buffer;
+    rs.w=nsrc->width;rs.h=nsrc->height;
+    if(srcrect)rs=*srcrect;
+    if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
+        LOGV("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
+        return E_INVALID_PARA;
+    }
 
-     LOGV("Blit %p[%dx%d] %d,%d-%d,%d -> %p[%dx%d] %d,%d",nsrc,nsrc->width,nsrc->height,
-          rs.x,rs.y,rs.w,rs.h,ndst,ndst->width,ndst->height,dx,dy);
-     if(dx<0){rs.x-=dx;rs.w=(int)rs.w+dx; dx=0;}
-     if(dy<0){rs.y-=dy;rs.h=(int)rs.h+dy;dy=0;}
-     if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
-     if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
+    LOGV("Blit %p[%dx%d] %d,%d-%d,%d -> %p[%dx%d] %d,%d",nsrc,nsrc->width,nsrc->height,
+         rs.x,rs.y,rs.w,rs.h,ndst,ndst->width,ndst->height,dx,dy);
+    if(dx<0){rs.x-=dx;rs.w=(int)rs.w+dx; dx=0;}
+    if(dy<0){rs.y-=dy;rs.h=(int)rs.h+dy;dy=0;}
+    if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
+    if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
 
-     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-     pbs+=rs.y*nsrc->pitch+rs.x*4;
-     pbd+=dy*ndst->pitch+dx*4;
-     for(y=0;y<rs.h;y++){
-         memcpy(pbd,pbs,rs.w*4);
-         pbs+=nsrc->pitch;
-         pbd+=ndst->pitch;
-     }
-     GFXFlip(dstsurface);
-     return 0;
+    LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
+    pbs+=rs.y*nsrc->pitch+rs.x*4;
+    pbd+=dy*ndst->pitch+dx*4;
+    for(y=0;y<rs.h;y++){
+        memcpy(pbd,pbs,rs.w*4);
+        pbs+=nsrc->pitch;
+        pbd+=ndst->pitch;
+    }
+    GFXFlip(dstsurface);
+    return 0;
 }
 
 DWORD GFXDestroySurface(HANDLE surface){
-     FBSURFACE*surf=(FBSURFACE*)surface;
-     if(surf->ishw)
-         munmap(surf->buffer,dev.fix.smem_len);
-     else if(surf->buffer)free(surf->buffer);
-     free(surf);
-     return 0;
+    FBSURFACE*surf=(FBSURFACE*)surface;
+    if(surf->ishw)
+        munmap(surf->buffer,dev.fix.smem_len);
+    else if(surf->buffer)free(surf->buffer);
+    free(surf);
+    return 0;
 }

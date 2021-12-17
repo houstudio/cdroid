@@ -10,6 +10,7 @@
 #include <drawables.h>
 #include <textutils.h>
 #include <expat.h>
+#include <limits.h>
 
 namespace cdroid{
 
@@ -206,49 +207,43 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
     return nullptr;
 }
 
-typedef struct StyleData{
-    std::map<const std::string,AttributeSet>*maps;
-    AttributeSet*cur;
-    std::string key;
-    std::string value;
-}STYLEDATA;
+typedef struct{
+   AttributeSet parentAttr;
+   std::string tag;
+   std::string key;
+   std::string value;
+   int index;
+   std::function<void(const AttributeSet&,const std::string&,const std::string&,int)>func;
+}KVPARSER;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-    AttributeSet atts(satts);
-    STYLEDATA*sd=(STYLEDATA*)userData;
-    std::map<const std::string,AttributeSet>*maps=sd->maps;
-    
-    if(0==strcmp(name,"style")){
-        const std::string stylename=atts.getString("name");
-        const std::string parent=atts.getString("parent");
-        auto it=maps->find(stylename);
-        LOGD("<%s> parent=%s",stylename.c_str(),parent.c_str()); 
-        if(it!=maps->end()){
-            sd->cur=&it->second;
-        }else{
-            auto it2=maps->insert(std::make_pair<const std::string,AttributeSet>(stylename.c_str(),AttributeSet()));
-            sd->cur=&(it2.first->second);
-            if(!parent.empty())sd->cur->add("parent",parent);
-        }
-    }else if(0==strcmp(name,"item")){
-        sd->key  = atts.getString("name");
-        sd->value=std::string();
+    KVPARSER*kvp=(KVPARSER*)userData;
+    if(0==kvp->tag.compare(name)){
+        AttributeSet atts(satts);
+        kvp->key=atts.getString("name");
+    }else if(strcmp(name,"resources")){
+        kvp->parentAttr=AttributeSet(satts);
+        kvp->index=0;
+    }else{//strcmp(name,"resources")
+        //do nothing
     }
 }
 
 static void CharacterHandler(void *userData,const XML_Char *s, int len){
-    STYLEDATA*sd=(STYLEDATA*)userData;
-    sd->value+=std::string(s,len);
+    KVPARSER*kvp=(KVPARSER*)userData;
+    kvp->value+=std::string(s,len);
 }
 
 static void endElement(void *userData, const XML_Char *name){
-    STYLEDATA*sd=(STYLEDATA*)userData;
-    std::map<const std::string,AttributeSet>*maps=sd->maps;
-    if(0==strcmp(name,"style")){
-       sd->cur=nullptr;
-    }else if(0==strcmp(name,"item")){
-       LOGV("\t%s=%s",sd->key.c_str(),sd->value.c_str());
-       sd->cur->add(sd->key,sd->value);
+    KVPARSER*kvp=(KVPARSER*)userData;
+    if(0==kvp->tag.compare(name)){
+        TextUtils::trim(kvp->value);
+        kvp->func(kvp->parentAttr,kvp->key,kvp->value,kvp->index);
+        kvp->key=std::string();
+        kvp->value=std::string();
+        kvp->index++;
+    }else if(strcmp(name,"resources")){
+        kvp->func(kvp->parentAttr,name,name,INT_MIN);
     }
 }
 
@@ -256,19 +251,22 @@ int Assets::loadStyles(const std::string&fullresid){
     return loadAttributes(mStyles,fullresid);
 }
 
-int Assets::loadAttributes(std::map<const std::string,AttributeSet>&attmaps,const std::string&fullresid){
+int Assets::loadKeyValues(const std::string&fullresid,const std::string&tag,
+        std::function<void(const AttributeSet&,const std::string&,const std::string&,int)>func){
     int len = 0;
     char buf[256];
     std::string resname;
     ZIPArchive*pak=getResource(fullresid,&resname);
     void*zfile=pak?pak->getZipHandle(resname):nullptr;
-    LOG(DEBUG)<<"pak="<<pak<<" res:"<<resname<<"="<<zfile; 
+
     ZipInputStream stream(zfile);
     XML_Parser parser=XML_ParserCreate(nullptr);
     std::string curKey;
     std::string curValue;
-    STYLEDATA sd={&attmaps,nullptr};
-    XML_SetUserData(parser,&sd);
+    KVPARSER kvp;
+    kvp.tag=tag;
+    kvp.func=func;
+    XML_SetUserData(parser,&kvp);
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetCharacterDataHandler(parser,CharacterHandler);
     do {
@@ -281,8 +279,21 @@ int Assets::loadAttributes(std::map<const std::string,AttributeSet>&attmaps,cons
             return 0;
         }
     } while(len!=0);
-    XML_ParserFree(parser);
-    return 0;
+    XML_ParserFree(parser); 
+}
+
+int Assets::loadAttributes(std::map<const std::string,AttributeSet>&attmaps,const std::string&fullresid){
+    std::map<const std::string,AttributeSet>::iterator itr=attmaps.end();
+    loadKeyValues(fullresid,"item",[&attmaps,&itr](const AttributeSet&parentAtts,const std::string&key,const std::string&value,int index){
+        if(index==0){
+            const std::string name=parentAtts.getString("name");
+            auto it2=attmaps.insert(std::make_pair<const std::string,AttributeSet>(name.c_str(),AttributeSet()));
+            itr=it2.first;
+        }
+        if(index!=INT_MIN)itr->second.add(key,value);
+    });
+    LOGD("%d attributes loaded!",attmaps.size());
+    return attmaps.size();
 }
 
 void Assets::clearStyles(){

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.8)
 project(gui_test C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -27,10 +27,4 @@ foreach(Example ${ExamplesFileList})
   add_dependencies(build_app_examples ${ExampleName})
   install(TARGETS ${ExampleName} DESTINATION bin/examples)
 endforeach(Example ${ExamplesFileList})
-
-add_custom_command(TARGET simplewin PRELINK
-  COMMAND zip -r -0  ${CMAKE_CURRENT_BINARY_DIR}/simplewin.pak *
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/assets
-  COMMENT "package assets resource="
-  )
 

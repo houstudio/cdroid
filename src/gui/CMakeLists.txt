@@ -1,8 +1,10 @@
 project(gui C CXX)
 
+set(CMAKE_CXX_STANDARD 11)
+
 option( LUA_BINDINGS "UI Lua script bindings" OFF)
 option( GUI_STATIC "UI is static link" ON)
-set(CMAKE_CXX_STANDARD 11)
+
 aux_source_directory(core SRCS_GUICORE)
 aux_source_directory(views SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)

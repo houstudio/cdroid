@@ -12,6 +12,7 @@ public:
     static const std::string unicode2utf8(const std::wstring&);
     static bool startWith(const std::string&str,const std::string&head);
     static bool endWith(const std::string&str,const std::string&tail);
+    static std::string& trim(std::string&);
     static int UCS2UTF(wchar_t wc,char*oututf,int outlen);
     static int UTF2UCS(const char*utf,wchar_t*unicode);
 };
