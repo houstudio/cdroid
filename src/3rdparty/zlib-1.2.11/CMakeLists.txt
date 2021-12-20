@@ -4,7 +4,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 project(zlib C)
 
 set(VERSION "1.2.11")
-set(SKIP_INSTALL_ALL ON)
+
 option(ASM686 "Enable building i686 assembly implementation")
 option(AMD64 "Enable building amd64 assembly implementation")
 
@@ -83,8 +83,6 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/zlib.pc.cmakein
 		${ZLIB_PC} @ONLY)
 configure_file(	${CMAKE_CURRENT_SOURCE_DIR}/zconf.h.cmakein
 		${CMAKE_CURRENT_BINARY_DIR}/zconf.h @ONLY)
-configure_file(	${CMAKE_CURRENT_SOURCE_DIR}/zconf.h.cmakein
-		${PROJECT_SOURCE_DIR}/zconf.h @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR})
 
 
@@ -231,8 +229,6 @@ endif()
 #============================================================================
 # Example binaries
 #============================================================================
-if( BUILD_EXAMPLES )
-include_directories(${PROJECT_SOURCE_DIR}/include)
 
 add_executable(example test/example.c)
 target_link_libraries(example zlib)
@@ -251,7 +247,3 @@ if(HAVE_OFF64_T)
     target_link_libraries(minigzip64 zlib)
     set_target_properties(minigzip64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
 endif()
-endif(BUILD_EXAMPLES)
-
-install(TARGETS zlib zlibstatic DESTINATION lib)
-file(COPY ${ZLIB_PUBLIC_HDRS} DESTINATION ${CMAKE_BINARY_DIR}/include )

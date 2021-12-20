@@ -173,7 +173,7 @@ set(LIBRARY_VERSION "${LIBRARY_SOVERSION}.${LIBTOOL_AGE}.${LIBTOOL_REVISION}")
 
 # External dependency library detection is automatic. See the notes at the top
 # of this file, for how to force or disable dependencies completely.
-option(FT_WITH_ZLIB "Use system zlib instead of internal library." OFF)
+option(FT_WITH_ZLIB "Use system zlib instead of internal library." ON)
 option(FT_WITH_BZIP2 "Support bzip2 compressed fonts." OFF)
 option(FT_WITH_PNG "Support PNG compressed OpenType embedded bitmaps." OFF)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." OFF)
@@ -209,11 +209,7 @@ endif ()
 # Find dependencies
 set(HARFBUZZ_MIN_VERSION "2.8.0")
 if (FT_WITH_HARFBUZZ)
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
-  if(NOT HarfBuzz_FOUND)
-     set(HarfBuzz_LIBRARIES harfbuzz)
-     set(HarfBuzz_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/harfbuzz)
-  endif()
+  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
 else ()
   find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
 endif ()
@@ -450,7 +446,6 @@ endif ()
 
 set(PKG_CONFIG_REQUIRED_PRIVATE "")
 set(PKG_CONFIG_LIBS_PRIVATE "")
-
 if (ZLIB_FOUND)
   target_link_libraries(freetype PRIVATE ${ZLIB_LIBRARIES})
   target_include_directories(freetype PRIVATE ${ZLIB_INCLUDE_DIRS})
@@ -589,6 +584,4 @@ set(CPACK_COMPONENT_LIBRARIES_GROUP "Development")
 set(CPACK_COMPONENT_HEADERS_GROUP "Development")
 
 #include(CPack)
-
-file(COPY ${PROJECT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_BINARY_DIR}/include/freetype2)
 

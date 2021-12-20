@@ -33,22 +33,18 @@ set(PNGLIB_VERSION ${PNGLIB_MAJOR}.${PNGLIB_MINOR}.${PNGLIB_RELEASE})
 include(GNUInstallDirs)
 
 # needed packages
+
 # Allow users to specify location of Zlib.
 # Useful if zlib is being built alongside this as a sub-project.
 option(PNG_BUILD_ZLIB "Custom zlib Location, else find_package is used" OFF)
 
-find_package(ZLIB)
-if( ZLIB_FOUND )
+if(NOT PNG_BUILD_ZLIB)
+  find_package(ZLIB REQUIRED)
   include_directories(${ZLIB_INCLUDE_DIR})
-else()
-  set(ZLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include )
-  set(ZLIB_LIBRARY zlib)
-  set(ZLIB_FOUND TRUE)
 endif()
 
 if(UNIX AND NOT APPLE AND NOT BEOS AND NOT HAIKU)
   find_library(M_LIBRARY m)
-  set(M_LIBRARY "m")
 else()
   # libm is not needed and/or not available
   set(M_LIBRARY "")
@@ -920,13 +916,6 @@ if(NOT SKIP_INSTALL_EXPORT AND NOT SKIP_INSTALL_ALL)
   install(EXPORT libpng DESTINATION lib/libpng FILE lib${PNG_LIB_NAME}.cmake)
 endif()
 
-add_custom_command(TARGET genfiles POST_BUILD
-    COMMAND cp -u pngconf.h  png.h  ${CMAKE_CURRENT_BINARY_DIR}/pnglibconf.h  ${CMAKE_BINARY_DIR}/include
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
-    COMMENT "Copy PNG Header Files")
-
-file(COPY pngconf.h  png.h DESTINATION ${CMAKE_BINARY_DIR}/include)
-install(TARGETS ${PNG_LIB_TARGETS} DESTINATION lib)
 # what's with libpng-manual.txt and all the extra files?
 
 # UNINSTALL

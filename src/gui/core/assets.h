@@ -22,8 +22,8 @@ protected:
     DisplayMetrics mDisplayMetrics;
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
-    int loadKeyValues(const std::string&resid,const std::string&tag,
-        std::function<void(const AttributeSet&,const std::string&,const std::string&,int)>func);
+    int loadKeyValues(const std::string&resid,
+        std::function<void(const std::string&tag,const AttributeSet*,const AttributeSet&,const std::string&,int)>func);
     int loadAttributes(std::map<const std::string,AttributeSet>&atts,const std::string&resid);
 public:
     Assets();

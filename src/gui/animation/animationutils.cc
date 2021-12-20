@@ -122,7 +122,7 @@ static void startPolator(void *userData, const XML_Char *xname, const XML_Char *
     } else if (0==name.compare("pathInterpolator")) {
         *interpolator = new PathInterpolator(ctx,attrs);
     } else {
-        LOGE("Unknown interpolator name: %s",name);
+        LOGE("Unknown interpolator name: %s",name.c_str());
     }
 }
 

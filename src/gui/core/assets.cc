@@ -208,24 +208,24 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
 }
 
 typedef struct{
-   AttributeSet parentAttr;
-   std::string tag;
-   std::string key;
+   std::vector<std::string> tags;
+   std::vector<AttributeSet> attrs;
    std::string value;
+   int level;
    int index;
-   std::function<void(const AttributeSet&,const std::string&,const std::string&,int)>func;
+   std::function<void(const std::string&,const AttributeSet*,const AttributeSet&,const std::string&,int)>func;
 }KVPARSER;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     KVPARSER*kvp=(KVPARSER*)userData;
-    if(0==kvp->tag.compare(name)){
-        AttributeSet atts(satts);
-        kvp->key=atts.getString("name");
-    }else if(strcmp(name,"resources")){
-        kvp->parentAttr=AttributeSet(satts);
-        kvp->index=0;
+    if(strcmp(name,"resources")){
+        kvp->attrs.push_back(AttributeSet(satts));
+        kvp->tags.push_back(name);
+        kvp->level++;
+        kvp->value=std::string();
     }else{//strcmp(name,"resources")
         //do nothing
+        kvp->level=0;
     }
 }
 
@@ -236,14 +236,19 @@ static void CharacterHandler(void *userData,const XML_Char *s, int len){
 
 static void endElement(void *userData, const XML_Char *name){
     KVPARSER*kvp=(KVPARSER*)userData;
-    if(0==kvp->tag.compare(name)){
+    if(strcmp(name,"resources")){
         TextUtils::trim(kvp->value);
-        kvp->func(kvp->parentAttr,kvp->key,kvp->value,kvp->index);
-        kvp->key=std::string();
+        const std::string& tag=kvp->tags.back();
+        const AttributeSet&atts1=kvp->attrs.back();
+        const AttributeSet*atts0=kvp->level<2?nullptr:&kvp->attrs[kvp->level-2];
+        kvp->func(tag,atts0,atts1,kvp->value,kvp->index);
+        kvp->tags.pop_back();
+        kvp->attrs.pop_back();
         kvp->value=std::string();
         kvp->index++;
+        kvp->level--;  
     }else if(strcmp(name,"resources")){
-        kvp->func(kvp->parentAttr,name,name,INT_MIN);
+        //kvp->func(kvp->parentAttr,name,name,INT_MIN);
     }
 }
 
@@ -251,8 +256,8 @@ int Assets::loadStyles(const std::string&fullresid){
     return loadAttributes(mStyles,fullresid);
 }
 
-int Assets::loadKeyValues(const std::string&fullresid,const std::string&tag,
-        std::function<void(const AttributeSet&,const std::string&,const std::string&,int)>func){
+int Assets::loadKeyValues(const std::string&fullresid,
+        std::function<void(const std::string&,const AttributeSet*,const AttributeSet&,const std::string&,int)>func){
     int len = 0;
     char buf[256];
     std::string resname;
@@ -264,7 +269,6 @@ int Assets::loadKeyValues(const std::string&fullresid,const std::string&tag,
     std::string curKey;
     std::string curValue;
     KVPARSER kvp;
-    kvp.tag=tag;
     kvp.func=func;
     XML_SetUserData(parser,&kvp);
     XML_SetElementHandler(parser, startElement, endElement);
@@ -284,9 +288,10 @@ int Assets::loadKeyValues(const std::string&fullresid,const std::string&tag,
 
 int Assets::loadAttributes(std::map<const std::string,AttributeSet>&attmaps,const std::string&fullresid){
     std::map<const std::string,AttributeSet>::iterator itr=attmaps.end();
-    loadKeyValues(fullresid,"item",[&attmaps,&itr](const AttributeSet&parentAtts,const std::string&key,const std::string&value,int index){
+    loadKeyValues(fullresid,[&attmaps,&itr](const std::string&tag,const AttributeSet*parentAttrs,const AttributeSet&atts,const std::string&value,int index){
+        const std::string key=atts.getString("name");
         if(index==0){
-            const std::string name=parentAtts.getString("name");
+            const std::string name=parentAttrs->getString("name");
             auto it2=attmaps.insert(std::make_pair<const std::string,AttributeSet>(name.c_str(),AttributeSet()));
             itr=it2.first;
         }
