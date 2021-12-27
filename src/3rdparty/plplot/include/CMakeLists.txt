@@ -41,7 +41,7 @@ set(plhershey-unicode-gen_SRCS
 if(NOT CMAKE_CROSSCOMPILING)
   add_executable(plhershey-unicode-gen ${plhershey-unicode-gen_SRCS})
 else(NOT CMAKE_CROSSCOMPILING)
-  SET(IMPORT_EXECUTABLES ${CMAKE_NATIVE_BINARY_DIR}/include/ImportExecutables.cmake)
+  SET(IMPORT_EXECUTABLES ${PROJECT_SOURCE_DIR}/ImportExecutables.cmake)
   INCLUDE(${IMPORT_EXECUTABLES})
 endif(NOT CMAKE_CROSSCOMPILING)
 
@@ -56,7 +56,7 @@ add_custom_command(
   )
 
 if(NOT CMAKE_CROSSCOMPILING)
-  export(TARGETS plhershey-unicode-gen FILE ${CMAKE_CURRENT_BINARY_DIR}/ImportExecutables.cmake )
+  export(TARGETS plhershey-unicode-gen FILE ${PROJECT_SOURCE_DIR}/ImportExecutables.cmake )
 endif(NOT CMAKE_CROSSCOMPILING)
 
 # For cross-directory dependencies....

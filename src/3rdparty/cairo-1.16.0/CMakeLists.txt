@@ -27,7 +27,7 @@ if(FONTCONFIG_FOUND)
     list(APPEND CAIRO_LIBS ${FONTCONFIG_LIBRARY})
 endif()
 
-if(FREETYPE_FOUND AND BZIP2_FOUND)
+if(FREETYPE_FOUND)
     find_package(BZip2)
     include_directories(${FREETYPE_INCLUDE_DIRS})
     include_directories(${BZIP2_INCLUDE_DIR})

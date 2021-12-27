@@ -401,7 +401,7 @@ endif(PERL_FOUND)
 if(NOT WIN32_OR_CYGWIN)
   find_library(MATH_LIB NAMES m PATHS /usr/local/lib /usr/lib)
   if(NOT MATH_LIB)
-    message(FATAL_ERROR "Cannot find required math library")
+    message("Cannot find required math library")
   endif(NOT MATH_LIB)
 endif(NOT WIN32_OR_CYGWIN)
 
@@ -467,7 +467,7 @@ message(STATUS "X11_LIBRARIES = ${X11_LIBRARIES}")
 
 option(DEFAULT_NO_BINDINGS
 "All language bindings are disabled by default"
-OFF
+ON
 )
 
 # Individual language support (beyond C and C++)

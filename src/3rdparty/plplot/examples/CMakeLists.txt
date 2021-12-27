@@ -451,26 +451,26 @@ if(CORE_BUILD)
 
   # function support for CMake-based build system for installed examples.
   install(FILES
-    ${CMAKE_SOURCE_DIR}/cmake/modules/plplot_functions.cmake
+    ${PROJECT_SOURCE_DIR}/cmake/modules/plplot_functions.cmake
     DESTINATION ${DATA_DIR}/examples/cmake/modules
     )
 
   # pkg-config support for CMake-based build system for installed examples.
   install(FILES
-    ${CMAKE_SOURCE_DIR}/cmake/modules/pkg-config.cmake
+    ${PROJECT_SOURCE_DIR}/cmake/modules/pkg-config.cmake
     DESTINATION ${DATA_DIR}/examples/cmake/modules
     )
 
   # Install soft-landing support for compiler detection/testing.
   install(FILES
-    ${CMAKE_SOURCE_DIR}/cmake/modules/language_support.cmake
+    ${PROJECT_SOURCE_DIR}/cmake/modules/language_support.cmake
     DESTINATION ${DATA_DIR}/examples/cmake/modules
     )
 
   # Install qt support file.
   if(ANY_QT_DEVICE)
     install(FILES
-      ${CMAKE_SOURCE_DIR}/cmake/modules/ndp_UseQt4.cmake
+      ${PROJECT_SOURCE_DIR}/cmake/modules/ndp_UseQt4.cmake
       DESTINATION ${DATA_DIR}/examples/cmake/modules
       )
   endif(ANY_QT_DEVICE)
@@ -517,7 +517,7 @@ if(CORE_BUILD)
       string(REGEX REPLACE "^(.*):.*$" "\\1" LANG_SUPPORT_DIR ${LANG_SUPPORT_info})
       string(REGEX REPLACE "^.*:(.*)$" "\\1" LANG_SUPPORT_FILE ${LANG_SUPPORT_info})
       install(FILES
-	${CMAKE_SOURCE_DIR}/cmake/modules/${LANG_SUPPORT_DIR}/${LANG_SUPPORT_FILE}
+	${PROJECT_SOURCE_DIR}/cmake/modules/${LANG_SUPPORT_DIR}/${LANG_SUPPORT_FILE}
 	DESTINATION ${DATA_DIR}/examples/cmake/modules/${LANG_SUPPORT_DIR}
 	)
     endforeach(LANG_SUPPORT_info ${LANG_SUPPORT_FILES})
@@ -744,7 +744,7 @@ if(BUILD_TEST)
   file(MAKE_DIRECTORY ${TEST_EXAMPLES_OUTPUT_DIR})
   if(CORE_BUILD)
     set(custom_test_script ${CMAKE_BINARY_DIR}/plplot_test/plplot-test.sh)
-    set(custom_env EXAMPLES_PREFIX=${CMAKE_BINARY_DIR}/examples SRC_EXAMPLES_PREFIX=${CMAKE_SOURCE_DIR}/examples OUTPUT_DIR=${TEST_EXAMPLES_OUTPUT_DIR})
+    set(custom_env EXAMPLES_PREFIX=${CMAKE_BINARY_DIR}/examples SRC_EXAMPLES_PREFIX=${PROJECT_SOURCE_DIR}/examples OUTPUT_DIR=${TEST_EXAMPLES_OUTPUT_DIR})
     set(java_custom_env ${custom_env} PLPLOT_JAVA_WRAP_DIR=${CMAKE_BINARY_DIR}/bindings/java/ PLPLOT_CLASSPATH=${CMAKE_BINARY_DIR}/examples/java/plplot.jar)
     set(compare_script ${CMAKE_BINARY_DIR}/plplot_test/test_diff.sh)
   else(CORE_BUILD)
