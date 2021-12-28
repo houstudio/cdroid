@@ -9,3 +9,4 @@
 #cmakedefine ENABLE_MP3ID3
 #cmakedefine ENABLE_FRIBIDI
 #cmakedefine ENABLE_PINYIN2HZ
+#cmakedefine ENABLE_PLPLOT

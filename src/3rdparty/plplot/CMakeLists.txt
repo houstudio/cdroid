@@ -132,6 +132,7 @@ set(PACKAGE plplot)
 
 # Locations where the PLplot build system first looks for cmake modules.
 set(CMAKE_MODULE_PATH
+  ${CMAKE_MODULE_PATH}
   "${PROJECT_SOURCE_DIR}/cmake/modules"
   "${PROJECT_SOURCE_DIR}/cmake/modules/language_support/cmake"
   )

@@ -134,8 +134,8 @@ set(DRIVERS_DEVICE_LIST
   "pscairo:cairo:ON:F:OFF"
   "epscairo:cairo:ON:F:ON"
   "svgcairo:cairo:ON:F:ON"
-  "xcairo:cairo:ON:I:OFF"
-  "wincairo:cairo:ON:I:OFF"
+  #"xcairo:cairo:ON:I:OFF"
+  #"wincairo:cairo:ON:I:OFF"
 )
 set(DRIVERS_DEVICE_LIST_EXT
   # new example 16 shows severe valgrind issues with this device.

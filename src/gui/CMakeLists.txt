@@ -12,7 +12,9 @@ aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 #aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
-
+find_package(Freetype)
+find_package(EXPAT)
+find_package(PLPLOT)
 message("UI Lua script bindings is ${LUA_BINDINGS} guistatic=${GUI_STATIC}")
 
 include_directories(
@@ -22,7 +24,7 @@ include_directories(
     ./cairomm 
     ./core/svg ./luabinding 
     ${CMAKE_BINARY_DIR}/include
-    ${CMAKE_BINARY_DIR}/include/freetype2
+    ${FREETYPE_INCLUDE_DIR} ${PLPLOT_INCLUDE_DIR}
     ${CMAKE_BINARY_DIR}/include/pixman
     ${CMAKE_BINARY_DIR}/include/cairo
     ${CMAKE_BINARY_DIR}/include/porting
@@ -71,7 +73,7 @@ endforeach(each_file)
 
 message("=======OPTIONAL_LIBS=${OPTIONAL_LIBS}")
 
-target_link_libraries(gui pixman-1 png jpeg cairo unibreak zip jsoncpp tvhal ${OPTIONAL_LIBS})
+target_link_libraries(gui pixman-1 png jpeg cairo unibreak zip jsoncpp tvhal ${OPTIONAL_LIBS} expat)
 target_link_libraries(gui_static pixman-1 png jpeg cairo_static unibreak  zip jsoncpp tvhal_static ${OPTIONAL_LIBS})
 
 install (TARGETS gui  DESTINATION lib)
