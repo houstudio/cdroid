@@ -2,7 +2,7 @@ project (allwinner C CXX)
 
 set(ALLWINNER_SRCS 
      input_linux.cc
-     graph_x5fb.c
+     graph_nx5fb.c
     )
 include(CheckIncludeFile)
 check_include_file(poll.h HAVE_POLL_H)
@@ -22,16 +22,24 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
+set(NX5ROOT_DIR)
+find_library(LIBVIDEODEC_PATH VideoDec ${NX5ROOT_DIR}/thirdparty/lib/codec)
+
+if(LIBVIDEODEC_PATH)
+    add_definitions(-DHAVE_FY_TDE2=1)
+endif()
+
 #sudo apt install libx11-dev
 if( ENABLE_RFB )
     add_definitions(-DENABLE_RFB=1)
     list(APPEND ALLWINNER_LIBS vncserver)
 endif()
 
-list(APPEND ALLWINNER_LIBS pthread)
+list(APPEND ALLWINNER_LIBS pthread ${LIBVIDEODEC_PATH})
 
 include_directories(./
     ../include
+    ${NX5ROOT_DIR}/thirdparty/include
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${CMAKE_BINARY_DIR}/include
