@@ -1,5 +1,4 @@
-set(LZO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/lzo)
+set(LZO_INCLUDE_DIR ${lzo_SOURCE_DIR}/include/lzo)
 set(LZO_LIBRARY lzo)
 set(LZO_LIBRARIES ${LZO_LIBRARY})
 set(LZO_FOUND TRUE)
-message("=====LZO_LIBRARIES=${LZO_LIBRARIES}")

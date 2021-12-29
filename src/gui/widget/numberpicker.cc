@@ -26,7 +26,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
         mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     }
    
-    mInputText =(EditText*)findViewById(0);//new EditText("123",20,20);
+    mInputText =(EditText*)findViewById(0);
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
         mInputText->setText("123");

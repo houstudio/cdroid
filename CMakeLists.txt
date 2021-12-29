@@ -9,8 +9,10 @@ include(cmake/options.cmake)
 set(CAIRO_HAS_CDROID_SURFACE TRUE)
 set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 set(CMAKE_INSTALL_MANDIR ${CMAKE_BINARY_DIR}/man)
-set(CMAKE_INSTALL_DEFAULT_PREFIX ${CMAKE_BINARY_DIR})
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
+set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/data)
+set(CMAKE_INSTALL_DATADIR ${CMAKE_BINARY_DIR}/data CACHE PATH "General install location")
 
 if (EXISTS "${CMAKE_SOURCE_DIR}/src/gui/widget/view.h" )
    set(DEPS_DIR ${CMAKE_BINARY_DIR})
@@ -25,8 +27,8 @@ message("BuildType=${CMAKE_BUILD_TYPE} OPTIONAL_LIBS=${OPTIONAL_LIBS}")
 
 add_subdirectory(src/porting)
 if (EXISTS "${CMAKE_SOURCE_DIR}/src/gui" )
-  add_subdirectory(src/gui)
   add_subdirectory(src/3rdparty)
+  add_subdirectory(src/gui)
   add_subdirectory(src/modules)
 endif()
 add_subdirectory(apps)
@@ -39,7 +41,7 @@ build_doxygen()
 endif()
 
 add_custom_target(appdevops
-    COMMAND rm -f ${CMAKE_BINARY_DIR}/appdevops.tar.gz
+  COMMAND rm -f ${CMAKE_BINARY_DIR}/appdevops.tar.gz
   COMMAND rm -rf ${CMAKE_SOURCE_DIR}/deps
   COMMAND mkdir ${CMAKE_SOURCE_DIR}/deps
   COMMAND cp -r ${CMAKE_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/deps
