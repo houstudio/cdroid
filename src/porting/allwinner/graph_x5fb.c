@@ -9,6 +9,7 @@
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
+#include <VoApi.h>
 
 typedef struct{
     int fb;
@@ -50,6 +51,7 @@ DWORD GFXInit(){
     dev.var.yoffset=0;//set first screen memory for display
     LOGI("FBIOPUT_VSCREENINFO=%d",ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var));
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev.var.xres,dev.var.yres,dev.var.accel_flags);
+    LOGI("FY_TDE2_Open=%d",FY_TDE2_Open());
 #if ENABLE_RFB
     rfbScreenInfoPtr rfbScreen = rfbGetScreen(NULL,NULL,800,600,8,3,3);
     rfbScreen->desktopName = "X5-RFB";
