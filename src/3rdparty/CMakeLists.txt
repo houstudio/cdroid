@@ -30,6 +30,7 @@ add_subdirectory(fribidi)
 add_subdirectory(pinyin)
 
 if(ENABLE_PLPLOT)
+   add_subdirectory(shapelib)
    add_subdirectory(plplot)
 endif()
 

@@ -56,7 +56,7 @@ add_custom_target(systempak
    COMMENT "package system resource"
    )
 
-CreatePAK(${PROJECT_SOURCE_DIR}/res  ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak gui)
+CreatePAK(${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak gui)
 set_target_properties(gui_static PROPERTIES OUTPUT_NAME "gui")
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
@@ -78,6 +78,7 @@ target_link_libraries(gui_static pixman-1 png jpeg cairo_static unibreak  zip js
 
 install (TARGETS gui  DESTINATION lib)
 install (TARGETS gui_static  DESTINATION lib)
+install (FILES ${PROJECT_BINARY_DIR}/cdroid.pak DESTINATION data)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "views" EXCLUDE 
     PATTERN "core" EXCLUDE)

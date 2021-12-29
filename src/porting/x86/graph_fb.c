@@ -46,6 +46,9 @@ DWORD GFXInit(){
         LOGE("Error reading variable information");
         return E_ERROR;
     }
+
+    dev.var.yoffset=0;//set first screen memory for display
+    LOGI("FBIOPUT_VSCREENINFO=%d",ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var));
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev.var.xres,dev.var.yres,dev.var.accel_flags);
 #if ENABLE_RFB
     rfbScreenInfoPtr rfbScreen = rfbGetScreen(NULL,NULL,800,600,8,3,3);
