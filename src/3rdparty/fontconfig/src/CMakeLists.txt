@@ -42,7 +42,7 @@ set( fontconfig_SRCS
     fcserialize.c
     fcstat.c
     fcstr.c
-    fcweight
+    fcweight.c
     fcxml.c
     ftglue.c
     fcptrlist.c

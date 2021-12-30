@@ -1,8 +1,16 @@
 add_subdirectory(zlib-1.2.11)
-add_subdirectory(freetype-2.11.0)
 add_subdirectory(libpng)
+add_subdirectory(expat)
+add_subdirectory(freetype-2.11.0)
 add_subdirectory(libjpeg-turbo)
 add_subdirectory(pixman)
+add_subdirectory(fontconfig)
+
+if(FT_WITH_HARFBUZZ)
+   add_subdirectory(harfbuzz)
+   add_subdirectory(graphite2-1.3.14)
+endif()
+
 add_subdirectory(cairo-1.16.0)
 add_subdirectory(libunibreak)
 add_subdirectory(libiconv)
@@ -19,13 +27,11 @@ if (ENABLE_CAIROSVG)
 endif()
 
 add_subdirectory(gtest)
-add_subdirectory(expat)
 add_subdirectory(jsoncpp)
 add_subdirectory(id3)
 add_subdirectory(libgif)
 add_subdirectory(libzip)
 add_subdirectory(uuid)
-add_subdirectory(fontconfig)
 add_subdirectory(fribidi)
 add_subdirectory(pinyin)
 
@@ -39,11 +45,6 @@ if(ENABLE_GESTURE)
 endif(ENABLE_GESTURE)
 
 add_subdirectory(mbedtls)
-
-if(FT_WITH_HARFBUZZ)
-   add_subdirectory(harfbuzz)
-   add_subdirectory(graphite2-1.3.14)
-endif()
 
 add_subdirectory(libvncserver)
 add_subdirectory(xLua/build)

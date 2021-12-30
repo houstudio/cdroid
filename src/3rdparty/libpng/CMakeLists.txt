@@ -23,7 +23,7 @@ cmake_policy(VERSION 3.1)
 
 project(libpng C ASM)
 enable_testing()
-set(SKIP_INSTALL_ALL ON)
+set(SKIP_INSTALL_ALL OFF)
 set(PNGLIB_MAJOR 1)
 set(PNGLIB_MINOR 6)
 set(PNGLIB_RELEASE 37)

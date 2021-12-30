@@ -8,6 +8,7 @@ namespace cdroid{
 class Path{
 private:
     Cairo::RefPtr<Cairo::Context>mCTX; 
+    
 public:
     Path();
     Path(const Path&);
@@ -24,6 +25,7 @@ public:
     void reset();
     void begin_new_sub_path();
     void close_path();
+    void approximate(std::vector<float>&,float acceptableError);
 };
 }
 #endif

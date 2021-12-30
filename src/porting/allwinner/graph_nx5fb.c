@@ -56,6 +56,7 @@ DWORD GFXInit(){
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev.var.xres,dev.var.yres,dev.var.accel_flags);
 #ifdef HAVE_FY_TDE2
     LOGI("FY_TDE2_Open=%d",FY_TDE2_Open());
+    VO_Enable();
 #endif
 #if ENABLE_RFB
     rfbScreenInfoPtr rfbScreen = rfbGetScreen(NULL,NULL,800,600,8,3,3);
@@ -132,6 +133,8 @@ DWORD GFXFlip(HANDLE surface){
        ioctl(dev.fb, FBIO_WAITFORVSYNC, 0);
        int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
        LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
+       dev.var.yoffset=0;
+       ret=ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var);
 #if ENABLE_RFB
        rfbMarkRectAsModified(dev.rfbScreen,0,0,surf->width,surf->height);
 #endif
@@ -202,7 +205,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     if(hwsurface){
         size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
         setfbinfo(surf);
-        surf->buffer=mmap( NULL,mem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
+        surf->buffer=mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
         dev.rfbScreen->frameBuffer = surf->buffer;
 	surf->pitch=dev.fix.line_length;
         ResetScreenFormat(surf,width,height,format);

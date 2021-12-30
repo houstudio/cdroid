@@ -1,4 +1,5 @@
-set(LZO_INCLUDE_DIR ${lzo_SOURCE_DIR}/include/lzo)
+set(LZO_INCLUDE_DIR  ${lzo_SOURCE_DIR}/include/lzo)
+set(LZO_INCLUDE_DIRS ${LZO_INCLUDE_DIR})
 set(LZO_LIBRARY lzo)
 set(LZO_LIBRARIES ${LZO_LIBRARY})
 set(LZO_FOUND TRUE)

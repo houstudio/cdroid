@@ -195,7 +195,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     if(hwsurface){
         size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
         setfbinfo(surf);
-        surf->buffer=mmap( NULL,mem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
+        surf->buffer=mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
         dev.rfbScreen->frameBuffer = surf->buffer;
 	surf->pitch=dev.fix.line_length;
         ResetScreenFormat(surf,width,height,format);

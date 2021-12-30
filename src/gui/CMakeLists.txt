@@ -12,6 +12,7 @@ aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 #aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
+find_package(PNG)
 find_package(Freetype)
 find_package(EXPAT)
 find_package(PLPLOT)
@@ -24,7 +25,7 @@ include_directories(
     ./cairomm 
     ./core/svg ./luabinding 
     ${CMAKE_BINARY_DIR}/include
-    ${FREETYPE_INCLUDE_DIR} ${PLPLOT_INCLUDE_DIR}
+    ${PNG_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIR} ${PLPLOT_INCLUDE_DIR}
     ${CMAKE_BINARY_DIR}/include/pixman
     ${CMAKE_BINARY_DIR}/include/cairo
     ${CMAKE_BINARY_DIR}/include/porting
