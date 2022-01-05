@@ -603,6 +603,27 @@ void View::setPadding(int left, int top, int right, int bottom){
     LOGV("%p padding=%d,%d-%d-%d",this,left,top,right,bottom);
 }
 
+void View::setPaddingRelative(int start,int top,int end,int bottom){
+    mPrivateFlags2 &= ~PFLAG2_PADDING_RESOLVED;//resetResolvedPaddingInternal();
+    mUserPaddingStart = start;
+    mUserPaddingEnd =end;
+    mLeftPaddingDefined  =true;
+    mRightPaddingDefined =true;
+    switch(getLayoutDirection()){
+    case LAYOUT_DIRECTION_RTL:
+        mUserPaddingLeftInitial  =end;
+        mUserPaddingRightInitial =start;
+        internalSetPadding(end,top,start,bottom);
+        break;
+    case LAYOUT_DIRECTION_LTR:
+    default:
+        mUserPaddingLeftInitial =start;
+        mUserPaddingRightInitial=end;
+        internalSetPadding(start,top,end,bottom);
+        break;
+    }
+}
+
 void View::recomputePadding() {
     internalSetPadding(mUserPaddingLeft, mPaddingTop, mUserPaddingRight, mUserPaddingBottom);
 }
@@ -2188,7 +2209,6 @@ void View::draw(Canvas&canvas){
         drawDefaultFocusHighlight(canvas);
 
         if (debugDraw()) debugDrawFocus(canvas);
-
         // we're done...
         return;
     }
@@ -2198,7 +2218,8 @@ void View::draw(Canvas&canvas){
      * (this is an uncommon case where speed matters less,
      * this is why we repeat some of the tests that have been
      * done above)
-     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     *////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     bool drawTop = false;
     bool drawBottom = false;
@@ -2549,8 +2570,8 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         canvas.set_source(cache,0,0);
         canvas.paint_with_alpha(alpha);
     }
-    while(restoreTo>0) {
-        canvas.restore();restoreTo--;//ToCount(restoreTo);
+    while(restoreTo-->0) {
+        canvas.restore();//ToCount(restoreTo);
     }
 
     if (a != nullptr && !more) {

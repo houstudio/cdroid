@@ -19,11 +19,27 @@ TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
 TabLayout::TabLayout(Context*context,const AttributeSet&atts)
   :HorizontalScrollView(context,atts){
     initTabLayout();
+    mTabStrip->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",-1));
+    mTabStrip->setSelectedIndicatorColor(atts.getColor("tabIndicatorColor",0)); 
+    setTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
+    mTabPaddingStart = mTabPaddingTop=mTabPaddingEnd=mPaddingBottom=atts.getDimensionPixelSize("tabPadding",0);
+    mTabPaddingStart = atts.getDimensionPixelSize("tabPaddingStart",mTabPaddingStart);
+    mTabPaddingEnd   = atts.getDimensionPixelSize("tabPaddingEnd",mTabPaddingEnd);
+    mTabPaddingTop   = atts.getDimensionPixelSize("tabPaddingTop",mTabPaddingTop);
+    mTabPaddingBottom= atts.getDimensionPixelSize("tabPaddingBottom",mTabPaddingBottom); 
+    mTabTextSize  =atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
+    mTabTextColors=context->getColorStateList(atts.getString("tabTextColor"));
+    mTabBackgroundResId=atts.getString("tabBackground");
+    mMode = atts.getInt("tabMode",std::map<const std::string,int>{{"scrollable",0},{"fixed",1}},1);
+    mTabGravity =atts.getGravity("tabGravity",0);
+    mInlineLabel=atts.getBoolean("tabInlineLabel",false);
+    
 }
 
 void TabLayout::initTabLayout(){
     AttributeSet atts;
     mMode = MODE_SCROLLABLE;
+    mInlineLabel =false;
     mTabPaddingStart= mTabPaddingTop = 0;
     mTabPaddingEnd = mTabPaddingBottom=0;
     mTabTextSize = 20;
@@ -32,7 +48,8 @@ void TabLayout::initTabLayout(){
     mScrollAnimator = nullptr;
     mViewPager = nullptr;
     mPagerAdapter =nullptr;
-    mAdapterChangeListener = nullptr;
+    mAdapterChangeListener= nullptr;
+    mTabSelectedIndicator = nullptr;
     mRequestedTabMinWidth = INVALID_WIDTH;
     mRequestedTabMaxWidth = INVALID_WIDTH;
     mTabTextMultiLineSize =2;
@@ -211,6 +228,48 @@ int TabLayout::getTabGravity()const{
     return mTabGravity;
 }
 
+Drawable*TabLayout::getSelectedTabIndicator()const{
+    return mTabSelectedIndicator;
+}
+
+void TabLayout::setSelectedTabIndicator(Drawable*d){
+    if(mTabSelectedIndicator!=d){
+        delete mTabSelectedIndicator;
+        mTabSelectedIndicator=d;
+        mTabStrip->postInvalidateOnAnimation();
+    }
+}
+
+void TabLayout::setSelectedTabIndicator(const std::string&res){
+    setSelectedTabIndicator(getContext()->getDrawable(res));
+}
+
+int TabLayout::getTabIndicatorGravity()const{
+    return mTabIndicatorGravity;
+}
+
+void TabLayout::setTabIndicatorGravity(int gravity){
+    if(mTabIndicatorGravity!=gravity){
+         mTabIndicatorGravity =gravity;
+         mTabStrip->postInvalidateOnAnimation();
+    }
+}
+
+bool TabLayout::isInlineLabel()const{
+    return mInlineLabel;
+}
+
+void TabLayout::setInlineLabel(bool v){
+    if(mInlineLabel==v)return;
+    mInlineLabel=v;
+    for(int i=0;i<mTabStrip->getChildCount();i++){
+        View*child=mTabStrip->getChildAt(i);
+        if(dynamic_cast<TabLayout::TabView*>(child)){
+            TabLayout::TabView*tv=(TabLayout::TabView*)child;
+            //tv->updateBackgroundDrawable(getContext());
+        }  
+    }
+}
 
 void TabLayout::setTabTextColors(ColorStateList* textColor) {
     if (mTabTextColors != textColor) {
@@ -416,7 +475,7 @@ void TabLayout::updateTabViewLayoutParams(LinearLayout::LayoutParams* lp){
 }
 
 int dpToPx(int dps) {
-    return dps;//Math.round(getResources().getDisplayMetrics().density * dps);
+    return dps;//Math.round(getDisplayMetrics().density * dps);
 }
 
 void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -657,7 +716,7 @@ int TabLayout::getDefaultHeight() {
             break;
         }
     }
-    return hasIconAndText ? DEFAULT_HEIGHT_WITH_TEXT_ICON : DEFAULT_HEIGHT;
+    return hasIconAndText&&!isInlineLabel() ? DEFAULT_HEIGHT_WITH_TEXT_ICON : DEFAULT_HEIGHT;
 }
 
 int TabLayout::getTabMinWidth() {
@@ -793,9 +852,10 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*p
     /*if (mTabBackgroundResId != 0) {
         //ViewCompat.setBackground(this, AppCompatResources.getDrawable(context, mTabBackgroundResId));
     }*/
-    //ViewCompat.setPaddingRelative(this, mTabPaddingStart, mTabPaddingTop, mTabPaddingEnd, mTabPaddingBottom);
+    setBackgroundResource(parent->mTabBackgroundResId);
+    setPaddingRelative(parent->mTabPaddingStart, parent->mTabPaddingTop, parent->mTabPaddingEnd, parent->mTabPaddingBottom);
     setGravity(Gravity::CENTER);
-    setOrientation(VERTICAL);
+    setOrientation(parent->mInlineLabel?HORIZONTAL:VERTICAL);
     setClickable(true);
     //ViewCompat.setPointerIcon(this,PointerIconCompat.getSystemIcon(getContext(), PointerIconCompat.TYPE_HAND));
 }
@@ -1260,10 +1320,30 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
 void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
     LinearLayout::draw(canvas);
     // Thick colored underline below the current selection
+    int indicatorHeight=mSelectedIndicatorHeight;
+    int indicatorTop   =0;
+    int indicatorBottom=0;
+    switch(mParent->getTabIndicatorGravity()&Gravity::VERTICAL_GRAVITY_MASK){
+    case Gravity::NO_GRAVITY: 
+        indicatorTop   =getHeight()-indicatorHeight;
+        indicatorBottom=getHeight();
+        break;
+    case Gravity::CENTER_VERTICAL:
+        indicatorTop    =(getHeight()-indicatorHeight)/2;
+        indicatorBottom =(getHeight()+indicatorHeight)/2; 
+        break;
+    case Gravity::TOP:
+        indicatorTop =0;
+        indicatorBottom =indicatorHeight;
+        break;
+    case Gravity::FILL_VERTICAL:
+        indicatorTop =0;
+        indicatorBottom=getHeight();
+        break;
+    }
     if (mIndicatorLeft >= 0 && mIndicatorRight > mIndicatorLeft) {
         canvas.set_color(mSelectedIndicatorColor);        
-        canvas.rectangle(mIndicatorLeft, getHeight() - mSelectedIndicatorHeight,
-                mIndicatorRight-mIndicatorLeft, mSelectedIndicatorHeight);
+        canvas.rectangle(mIndicatorLeft,indicatorTop, mIndicatorRight-mIndicatorLeft,indicatorBottom-indicatorTop);
         canvas.fill();
     }
 }

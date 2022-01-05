@@ -565,6 +565,7 @@ public:
     Insets getOpticalInsets();
     void setOpticalInsets(const Insets& insets);
     void setPadding(int left, int top, int right, int bottom);
+    void setPaddingRelative(int start,int top,int end,int bottom);
     bool isPaddingResolved()const;
     virtual void resolvePadding();
     virtual void onRtlPropertiesChanged(int layoutDirection);

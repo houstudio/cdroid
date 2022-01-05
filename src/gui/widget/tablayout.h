@@ -54,7 +54,8 @@ public:
     private:
         static constexpr int CUSTOM_ID_TEXT =0;
         static constexpr int CUSTOM_ID_ICON =1;
-        TabLayout*mParent;
+        friend class TabLayout;
+        TabLayout *mParent;
         Tab* mTab;
         TextView* mTextView;
         ImageView* mIconView;
@@ -196,13 +197,14 @@ protected:
     Drawable* mTabSelectedIndicator;
     float mTabTextSize;
     float mTabTextMultiLineSize;
-    int  mTabBackgroundResId;
+    std::string mTabBackgroundResId;
     int  mTabMaxWidth;
 
     int  mTabGravity;
     int  mTabIndicatorAnimationDuration;
     int  mTabIndicatorGravity;
     int  mMode;
+    bool mInlineLabel;
     std::vector<OnTabSelectedListener> mSelectedListeners;
     OnTabSelectedListener mCurrentVpSelectedListener;
     bool inlineLabel;
@@ -252,6 +254,13 @@ public:
     int  getTabMode()const;
     void setTabGravity(int gravity);
     int  getTabGravity()const;
+    int  getTabIndicatorGravity()const;
+    void setTabIndicatorGravity(int);
+    Drawable* getSelectedTabIndicator()const;
+    void setSelectedTabIndicator(Drawable*d);
+    void setSelectedTabIndicator(const std::string&res);
+    bool isInlineLabel()const;
+    void setInlineLabel(bool);
     void setTabTextColors(ColorStateList* textColor);
     ColorStateList* getTabTextColors()const;
     void setTabTextColors(int normalColor, int selectedColor);
