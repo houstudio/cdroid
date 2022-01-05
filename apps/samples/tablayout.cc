@@ -28,14 +28,16 @@ int main(int argc,const char*argv[]){
     layout->setOrientation(LinearLayout::VERTICAL);
 
     TabLayout* tab=new TabLayout(1280,36);
-    ViewPager*pager=new ViewPager(1280,560);
+    ViewPager* pager=new ViewPager(1280,560);
     pager->setOffscreenPageLimit(gpAdapter->getCount());
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     pager->setAdapter(gpAdapter);
     pager->setBackgroundColor(0xFFF3333);
-    
+    tab->setSelectedTabIndicatorColor(0x8000FF00);
+    tab->setSelectedTabIndicatorHeight(4); 
+    tab->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     tab->setupWithViewPager(pager);
-    layout->addView(tab);
+    layout->addView(tab).setId(1);
     layout->addView(pager).setId(10);
     w->addView(layout);
     w->requestLayout();

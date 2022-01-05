@@ -1324,7 +1324,7 @@ void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
     int indicatorTop   =0;
     int indicatorBottom=0;
     switch(mParent->getTabIndicatorGravity()&Gravity::VERTICAL_GRAVITY_MASK){
-    case Gravity::NO_GRAVITY: 
+    case Gravity::BOTTOM: 
         indicatorTop   =getHeight()-indicatorHeight;
         indicatorBottom=getHeight();
         break;
@@ -1342,9 +1342,16 @@ void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
         break;
     }
     if (mIndicatorLeft >= 0 && mIndicatorRight > mIndicatorLeft) {
-        canvas.set_color(mSelectedIndicatorColor);        
-        canvas.rectangle(mIndicatorLeft,indicatorTop, mIndicatorRight-mIndicatorLeft,indicatorBottom-indicatorTop);
-        canvas.fill();
+        Drawable*d =mParent->mTabSelectedIndicator;
+        if(d){
+            d->setBounds(mIndicatorLeft,indicatorTop, mIndicatorRight-mIndicatorLeft,indicatorBottom-indicatorTop);
+            d->setColorFilter(mSelectedIndicatorColor,PorterDuffMode::SRC_IN);
+            d->draw(canvas);
+        }else{
+            canvas.set_color(mSelectedIndicatorColor);        
+            canvas.rectangle(mIndicatorLeft,indicatorTop, mIndicatorRight-mIndicatorLeft,indicatorBottom-indicatorTop);
+            canvas.fill();
+        }
     }
 }
 
