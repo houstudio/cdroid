@@ -1,18 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2008 The Android Open Source Project
-
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
-
-          http://www.apache.org/licenses/LICENSE-2.0
-
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
--->
 
 <selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
     <!-- Enabled states -->
@@ -26,37 +12,37 @@
 
     <item cdroid:state_checked="true" cdroid:state_pressed="true"
           cdroid:state_enabled="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_on_pressedg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_on_pressed" />
     <item cdroid:state_checked="false" cdroid:state_pressed="true"
           cdroid:state_enabled="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_off_pressedg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_off_pressed" />
 
     <item cdroid:state_checked="true" cdroid:state_focused="true"
           cdroid:state_enabled="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_on_selectedg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_on_selected" />
     <item cdroid:state_checked="false" cdroid:state_focused="true"
           cdroid:state_enabled="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_off_selectedg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_off_selected" />
 
     <item cdroid:state_checked="false" cdroid:state_enabled="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_offg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_off" />
     <item cdroid:state_checked="true"  cdroid:state_enabled="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_ong" />
+          cdroid:drawable="cdroid:mipmap/btn_check_on" />
 
 
     <!-- Disabled states -->
 
     <item cdroid:state_checked="true" cdroid:state_window_focused="false"
-          cdroid:drawable="cdroid:mipmap/btn_check_on_disableg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_on_disable" />
     <item cdroid:state_checked="false" cdroid:state_window_focused="false"
-          cdroid:drawable="cdroid:mipmap/btn_check_off_disableg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_off_disable" />
 
     <item cdroid:state_checked="true" cdroid:state_focused="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_on_disable_focusedg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_on_disable_focused" />
     <item cdroid:state_checked="false" cdroid:state_focused="true"
-          cdroid:drawable="cdroid:mipmap/btn_check_off_disable_focusedg" />
+          cdroid:drawable="cdroid:mipmap/btn_check_off_disable_focused" />
 
-    <item cdroid:state_checked="false" cdroid:drawable="cdroid:mipmap/btn_check_off_disableg" />
-    <item cdroid:state_checked="true" cdroid:drawable="cdroid:mipmap/btn_check_on_disableg" />
+    <item cdroid:state_checked="false" cdroid:drawable="cdroid:mipmap/btn_check_off_disable" />
+    <item cdroid:state_checked="true" cdroid:drawable="cdroid:mipmap/btn_check_on_disable" />
 
 </selector>
