@@ -21,10 +21,15 @@ static std::vector<std::string> split(const std::string & path) {
 }
 
 AttributeSet::AttributeSet(){
+   mContext=nullptr;
 }
 
 AttributeSet::AttributeSet(const char*atts[],int size){
     set(atts,size);
+}
+
+void AttributeSet::setContext(Context*ctx){
+    mContext=ctx;
 }
 
 int AttributeSet::set(const char*atts[],int size){
@@ -53,16 +58,6 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
         return false; 
     mAttrs.insert(std::make_pair<const std::string,std::string>(key.c_str(),value.c_str()));
     return true;
-}
-
-void AttributeSet::setBasePath(const std::string&path){
-    basePath=path;
-    if(path.back()!='/')
-        basePath.append("/");
-}
-
-const std::string AttributeSet::getAbsolutePath(const std::string&file)const{
-    return basePath+file;
 }
 
 bool AttributeSet::hasAttribute(const std::string&key)const{

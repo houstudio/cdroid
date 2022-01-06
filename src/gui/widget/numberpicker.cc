@@ -52,7 +52,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     initView();
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mSolidColor =atts.getColor("solidColor",0);
-    mSelectionDivider =context->getDrawable(atts.getString("selectionDivider"));
+    mSelectionDivider =context->getDrawable(atts,"selectionDivider");
     if (mSelectionDivider) {
         mSelectionDivider->setCallback(this);
         mSelectionDivider->setLayoutDirection(getLayoutDirection());

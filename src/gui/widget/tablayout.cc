@@ -743,7 +743,8 @@ TabLayout::TabItem::TabItem():View(0,0){
     mIcon=nullptr;
 }
 TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(context,attrs){
-    mIcon=nullptr;
+    mText=attrs.getString("text");
+    mIcon=context->getDrawable(attrs,"icon");
 }
 
 /*-------------------------------------------------------------------------------------------*/

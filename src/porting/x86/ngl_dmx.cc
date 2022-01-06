@@ -104,12 +104,11 @@ static void OnTSArrived(BYTE*tsdata,int len,void*p){
             if(ch->type==DMX_SECTION){
                 memcpy(ch->section+ch->pos,pts+5,pts[4]);
                 ch->pos+=pts[4];
+            }else if(ch->type==DMX_PES){
+                //memcpy(ch->section+ch->pos,pts+4,184);
+                //ch->pos+=184;
             }
-            if(0&&pid==2003){
-                LOGD("pid=%d pointer=%d",pid,pts[4]);
-                LOG_DUMP("TSDATA: ",pts,16);
-            }
-            for(i=0;i<MAX_FILTER&&(ch->pos>pts[4]);i++){
+            for(i=0;i<MAX_FILTER&&ch->pos>4;i++){
                 NGLDMXFILTER*f=Filters+i; 
                 if((f->ch!=ch)||(f->started==0)||(f->CallBack==NULL))continue;
                 if(PatternMatch(f,ch->section))
@@ -118,6 +117,9 @@ static void OnTSArrived(BYTE*tsdata,int len,void*p){
             if(ch->type==DMX_SECTION){
                 ch->pos=188-5-pts[4];
                 memcpy(ch->section,pts+5+pts[4],ch->pos);
+            }else if(ch->type==DMX_PES){
+                ch->pos=184;
+                memcpy(ch->section,pts+4,184);
             }
         }else{
             if((ch->cc+1)%16==cc ){

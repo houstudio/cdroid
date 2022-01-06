@@ -19,12 +19,13 @@ ListView::ListView(int w,int h):AbsListView(w,h) {
 ListView::ListView(Context* context,const AttributeSet& attrs)
    :AbsListView(context,attrs){
     initListView();
-    Drawable* d = getContext()->getDrawable(attrs.getString("divider"));
-    Drawable* osHeader = getContext()->getDrawable(attrs.getString("overScrollHeader"));
-    Drawable* osFooter = getContext()->getDrawable(attrs.getString("overScrollFooter"));
+    Drawable* d = getContext()->getDrawable(attrs,"divider");
+    Drawable* osHeader = getContext()->getDrawable(attrs,"overScrollHeader");
+    Drawable* osFooter = getContext()->getDrawable(attrs,"overScrollFooter");
 
     setOverscrollHeader(osHeader);
     setOverscrollHeader(osFooter);
+	setDivider(d);
     mHeaderDividersEnabled = attrs.getBoolean("headerDividersEnabled",true);
     mFooterDividersEnabled = attrs.getBoolean("footerDividersEnabled", true);
     setDividerHeight(attrs.getDimensionPixelSize("dividerHeight",0));

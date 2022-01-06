@@ -33,8 +33,8 @@ DECLARE_WIDGET(ProgressBar)
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initProgressBar();
-    setProgressDrawable(ctx->getDrawable(attrs.getString("progressDrawable")));
-    setIndeterminateDrawable(ctx->getDrawable(attrs.getString("indeterminateDrawable")));
+    setProgressDrawable(ctx->getDrawable(attrs,"progressDrawable"));
+    setIndeterminateDrawable(ctx->getDrawable(attrs,"indeterminateDrawable"));
 
     mDuration = attrs.getInt("indeterminateDuration",mDuration);
     mMinWidth = attrs.getDimensionPixelSize("minWidth", mMinWidth);

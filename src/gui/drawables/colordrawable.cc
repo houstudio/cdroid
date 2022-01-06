@@ -117,8 +117,9 @@ bool ColorDrawable::hasFocusStateSpecified()const{
 void ColorDrawable::draw(Canvas&canvas){
     LOGV("%p color=%x  bounds=%d,%d-%d,%d mTintFilter=%p",this,mColorState->mUseColor,
 	mBounds.left,mBounds.top,mBounds.width,mBounds.height,mTintFilter);
-    if(mColorState->mUseColor>>24){
+    if(mColorState->mUseColor>>24||mTintFilter){
         canvas.set_color(mColorState->mUseColor);
+        if(mTintFilter)canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mTintFilter->getMode()));
         canvas.rectangle(getBounds());
         canvas.fill();
     }

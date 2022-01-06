@@ -5,18 +5,17 @@
 namespace cdroid{
 class AttributeSet{
 private:
-    std::string basePath;//only for path file 
+    class Context*mContext;
     std::map<const std::string,std::string>mAttrs;
 public:
     AttributeSet();
     AttributeSet(const char*atts[],int size=0);
+    void setContext(Context*);
     bool add(const std::string&,const std::string&value);
     bool hasAttribute(const std::string&key)const;
     int  size()const;
     int  set(const char*atts[],int size=0);
     int  inherit(const AttributeSet&other);
-    void setBasePath(const std::string&path);
-    const std::string getAbsolutePath(const std::string&file)const;
     const std::string getAttributeValue(const std::string&key)const;
     bool getBoolean(const std::string&key,bool def=false)const;
     int  getInt(const std::string&key,int def=0)const;

@@ -13,10 +13,10 @@ AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     mDial=mSecondHand=mMinuteHand=mHourHand=nullptr;
     mHour=mMinutes=mSeconds=0;
-    setClockDrawable(ctx->getDrawable(attrs.getString("dial")) , DIAL);
-    setClockDrawable(ctx->getDrawable(attrs.getString("second")),SECOND);
-    setClockDrawable(ctx->getDrawable(attrs.getString("minute")),MINUTE);
-    setClockDrawable(ctx->getDrawable(attrs.getString("HOUR")) , HOUR);
+    setClockDrawable(ctx->getDrawable(attrs,"dial") , DIAL);
+    setClockDrawable(ctx->getDrawable(attrs,"second"),SECOND);
+    setClockDrawable(ctx->getDrawable(attrs,"minute"),MINUTE);
+    setClockDrawable(ctx->getDrawable(attrs,"hour") , HOUR);
 }
 
 AnalogClock::AnalogClock(int w,int h):View(w,h){

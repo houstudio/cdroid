@@ -159,8 +159,7 @@ void GraphDevice::ComposeSurfaces(){
         if( (*s)->mInvalidRgn->empty() )continue;
         rects+=(*s)->blit2Device(primarySurface);
     }
-    GFXFlip(primarySurface);
-    
+    GFXFlip(primarySurface); 
     t2=SystemClock::uptimeMillis();
     LOGV("ComposeSurfaces %d surfaces %d rects used %d ms",gSurfaces.size(),rects,t2-t1);
     last_compose_time=SystemClock::uptimeMillis();

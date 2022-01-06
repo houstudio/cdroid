@@ -245,10 +245,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     std::string txt=attrs.getString("text");
     mLayout->setText(txt);
     
-    Drawable* left =ctx->getDrawable(attrs.getString("drawableLeft"));
-    Drawable*right =ctx->getDrawable(attrs.getString("drawableRight"));
-    Drawable* top  =ctx->getDrawable(attrs.getString("drawableTop"));
-    Drawable*bottom=ctx->getDrawable(attrs.getString("drawableBottom"));
+    Drawable* left =ctx->getDrawable(attrs,"drawableLeft");
+    Drawable*right =ctx->getDrawable(attrs,"drawableRight");
+    Drawable* top  =ctx->getDrawable(attrs,"drawableTop");
+    Drawable*bottom=ctx->getDrawable(attrs,"drawableBottom");
     setCompoundDrawables(left,top,right,bottom);
 
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
@@ -265,8 +265,8 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
     setEllipsize(attrs.getInt("ellipsize",Layout::ELLIPSIS_NONE));
-    //Drawable*start =ctx->getDrawable(attrs.getString("drawableStart"));
-    //Drawable* end  =ctx->getDrawable(attrs.getString("drawableEnd"));
+    //Drawable*start =ctx->getDrawable(attrs,"drawableStart");
+    //Drawable* end  =ctx->getDrawable(attrs,"drawableEnd");
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){

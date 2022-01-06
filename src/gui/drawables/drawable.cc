@@ -265,7 +265,6 @@ public:
     XML_Parser parser;
     Context*ctx;
     std::string resourceFile;
-    std::string basePath;//only for file parse(ctx=nullptr)
     ParseData(){
         drawable=nullptr;
         parser=nullptr;
@@ -292,21 +291,11 @@ Drawable*Drawable::createItemDrawable(Context*ctx,const AttributeSet&atts){
     std::vector<NinePatchBlock>horz,vert;
     
     if(resname.find("xml")!=std::string::npos){
-        if(ctx==nullptr){
-            std::string path=atts.getAbsolutePath(resname);
-            return Drawable::inflate(ctx,path);
-        }else
-            return Drawable::inflate(ctx,resname);
+        return Drawable::inflate(ctx,resname);
     }
-    if(ctx==nullptr){
-        std::string path=atts.getAbsolutePath(resname);
-        std::ifstream fs(path);
-        img=ImageSurface::create_from_stream(fs);
-    }else{
-        std::unique_ptr<std::istream>is=ctx->getInputStream(resname);
-        if(is!=nullptr&&is->good())
-            img=ImageSurface::create_from_stream(*is);
-    }
+    std::unique_ptr<std::istream>is=ctx->getInputStream(resname);
+    if(is!=nullptr&&is->good())
+        img=ImageSurface::create_from_stream(*is);
     if(img==nullptr)
         return nullptr;
     else if(TextUtils::endWith(resname,"9.png"))
@@ -378,18 +367,18 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     if(it!=drawableParsers.end()){
         DrawableParser parser=it->second;
         item.props.set(satts);
-        if(pd->ctx==nullptr)
-            item.props.setBasePath(pd->basePath);
+        item.props.setContext(pd->ctx);
         item.name=name;
         item.line=XML_GetCurrentLineNumber(pd->parser);
         item.drawable=parser(pd->ctx,item.props);
         LOGV("created drawable %s:%p props:%d",name,item.drawable,item.props.size());
     }
     if(pd->isTopShape()){//if current drawable is shapedrawable
-        const AttributeSet atts(satts);
+        AttributeSet atts(satts);
         const ParseItem &item=pd->items.back();
         ShapeDrawable*sd=(ShapeDrawable*)item.drawable;
         Shape*shape=sd->getShape();
+        atts.setContext(pd->ctx);
         LOGV("drawable %p parse shape %p's props %s",item.drawable,shape,name);
         if(strcmp(name,"size")==0){
             int w=atts.getDimensionPixelSize("width");
@@ -490,7 +479,6 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
     pd.parser=parser;
     pd.ctx=ctx;
     pd.resourceFile=resname;
-    pd.basePath=basePath;
     XML_SetUserData(parser,&pd);
     pd.items.clear();
     XML_SetElementHandler(parser, startElement, endElement);

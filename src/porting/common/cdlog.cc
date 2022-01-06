@@ -135,7 +135,8 @@ void LogParseModules(int argc,const char*argv[]){
        }
    }
 }
-#ifdef __cplusplus
+
+
 namespace cdlog{
 static const std::string kTruncatedWarningText = "[...truncated...]";
 LogMessage::LogMessage(const std::string& file, const int line, const std::string& function,int level)
@@ -206,6 +207,4 @@ FatalMessage::FatalMessage(const std::string& file, const int line, const std::s
 FatalMessage::~FatalMessage(){
 }
 }//endof namespace
-
-#endif
 

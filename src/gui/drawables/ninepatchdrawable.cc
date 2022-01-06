@@ -228,14 +228,8 @@ void NinePatchDrawable::draw(Canvas&canvas){
 Drawable*NinePatchDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const std::string src=atts.getString("src");
     RefPtr<ImageSurface>bmp;
-    if(ctx==nullptr){
-	std::string path=atts.getAbsolutePath(src);
-        std::ifstream fs(path);
-        bmp=ImageSurface::create_from_stream(fs);
-    }else{
-        std::unique_ptr<std::istream>is=ctx->getInputStream(src);
-        bmp=ImageSurface::create_from_stream(*is);
-    }
+    std::unique_ptr<std::istream>is=ctx->getInputStream(src);
+    bmp=ImageSurface::create_from_stream(*is);
     return new NinePatchDrawable(bmp);
 }
 

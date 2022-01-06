@@ -197,7 +197,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(!bgtxt.empty()){
         if(bgtxt[0]=='#')
             mBackground=new ColorDrawable(Color::parseColor(bgtxt));
-         else mBackground=ctx->getDrawable(attrs.getString("background"));
+         else mBackground=ctx->getDrawable(attrs,"background");
     }else
         mBackground=new ColorDrawable(0xFF222222);
     
@@ -1317,10 +1317,10 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
  
     scrollabilityCache->scrollBarSize = a.getDimensionPixelSize("scrollbarSize",ViewConfiguration::get(mContext).getScaledScrollBarSize());
  
-    Drawable* track = mContext->getDrawable(a.getString("scrollbarTrackHorizontal"));
+    Drawable* track = mContext->getDrawable(a,"scrollbarTrackHorizontal");
     scrollabilityCache->scrollBar->setHorizontalTrackDrawable(track);
  
-    Drawable* thumb = mContext->getDrawable(a.getString("scrollbarThumbHorizontal"));
+    Drawable* thumb = mContext->getDrawable(a,"scrollbarThumbHorizontal");
     if (thumb) {
         scrollabilityCache->scrollBar->setHorizontalThumbDrawable(thumb);
     }
@@ -1330,10 +1330,10 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
         scrollabilityCache->scrollBar->setAlwaysDrawHorizontalTrack(true);
     }
  
-    track = mContext->getDrawable(a.getString("scrollbarTrackVertical"));
+    track = mContext->getDrawable(a,"scrollbarTrackVertical");
     scrollabilityCache->scrollBar->setVerticalTrackDrawable(track);
  
-    thumb = mContext->getDrawable(a.getString("View_scrollbarThumbVertical"));
+    thumb = mContext->getDrawable(a,"scrollbarThumbVertical");
     if (thumb) {
         scrollabilityCache->scrollBar->setVerticalThumbDrawable(thumb);
     }

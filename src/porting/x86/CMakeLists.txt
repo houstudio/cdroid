@@ -34,6 +34,7 @@ endif()
 if( ENABLE_RFB )
     add_definitions(-DENABLE_RFB=1)
     list(APPEND X86LIBS vncserver)
+    find_package(ZLIB)
 endif()
 
 string(TOLOWER ${CMAKE_SYSTEM_NAME} SYSNAME_LOWER)
@@ -42,7 +43,9 @@ if ( SYSNAME_LOWER MATCHES "linux" OR SYSNAME_LOWER MATCHES "cygwin" )
     find_package(PkgConfig REQUIRED)
 	pkg_check_modules(GTK3 gtk+-3.0)
     message("X11_INCLUDE_DIR=${X11_INCLUDE_DIR} ${X11_FOUND} ${GTK3_LIBRARIES} ${GTK3_FOUND}")
-    if( X11_FOUND )
+    if (FALSE)
+        list(APPEND X86_SRCS graph_fb.c)
+    elseif( X11_FOUND )
         list(APPEND X86_SRCS graph_xlib.c)
         list(APPEND X86LIBS ${X11_LIBRARIES})
     elseif( GTK3_FOUND )
@@ -65,6 +68,7 @@ include_directories(./
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${X11_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}
+    ${ZLIB_INCLUDE_DIR}
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver
     ${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver

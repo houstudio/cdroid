@@ -33,12 +33,14 @@ endif()
 if( ENABLE_RFB )
     add_definitions(-DENABLE_RFB=1)
     list(APPEND ALLWINNER_LIBS vncserver)
+    find_package(ZLIB)
 endif()
 
 list(APPEND ALLWINNER_LIBS pthread ${LIBVIDEODEC_PATH})
 
 include_directories(./
     ../include
+    ${ZLIB_INCLUDE_DIR}
     ${NX5ROOT_DIR}/thirdparty/include
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
