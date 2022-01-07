@@ -10,6 +10,7 @@
 # **Screen Shots**
 ![ListView](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/listview_springback.gif)
 ![ViewPager](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/viewpagerimg.gif)
+![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)
 ![ListView+Progress](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/list_with_progress.gif)
 # **UI Components:**
    * View
