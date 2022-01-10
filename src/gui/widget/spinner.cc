@@ -474,12 +474,14 @@ const std::string Spinner::DialogPopup::getHintText(){
 }
 
 int Spinner::DialogPopup::getVerticalOffset(){
+    return 0;
 }
 
 void Spinner::DialogPopup::setVerticalOffset(int px){
 }
 
 int Spinner::DialogPopup::getHorizontalOffset(){
+    return 0;
 }
 
 void Spinner::DialogPopup::setHorizontalOffset(int px){

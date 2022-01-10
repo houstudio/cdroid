@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <animation-list xmlns:cdroid="http://schemas.android.com/apk/res/android"
         cdroid:oneshot="false">
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo1" cdroid:duration="50" />
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo2" cdroid:duration="50" />
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo3" cdroid:duration="50" />
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo4" cdroid:duration="50" />
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo5" cdroid:duration="50" />
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo6" cdroid:duration="50" />
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo7" cdroid:duration="50" />
-    <item cdroid:drawable="cdroid:mipmap-mdpi/progressbar_indeterminate_holo8" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo1" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo2" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo3" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo4" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo5" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo6" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo7" cdroid:duration="50" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate_holo8" cdroid:duration="50" />
 </animation-list>

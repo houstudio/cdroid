@@ -39,10 +39,10 @@ extern "C" void setupRFB(rfbScreenInfoPtr rfbScreen,const char*name,int port){
     rfbScreen->getFileTransferPermission=FileTransferPermitted;
     rfbRegisterTightVNCFileTransferExtension();
 
+    rfbTightProcessArg(2,ftpargs);
     rfbInitServer(rfbScreen);
     rfbRunEventLoop(rfbScreen,5,TRUE);//non block
     
-    rfbTightProcessArg(2,ftpargs);
     return;
 }
 
