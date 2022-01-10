@@ -820,6 +820,7 @@ public:
     virtual bool dispatchTouchEvent(MotionEvent& event);
     virtual bool dispatchGenericMotionEvent(MotionEvent& event);
 
+    KeyEvent::DispatcherState* getKeyDispatcherState()const;
     virtual bool dispatchKeyEvent(KeyEvent&event);
     virtual bool dispatchUnhandledMove(View* focused,int direction);
     bool onKeyUp(int keycode,KeyEvent& evt)override;
