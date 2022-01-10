@@ -14,7 +14,7 @@ View* createClockView(const std::string&bgres,int num,...){
         LOGD("drawable %p:%s",d,s);
         ld->addLayer(d);
     }
-    v->setBackgroundDrawable(ld);
+    v->setBackground(ld);
     return v;
 }
 

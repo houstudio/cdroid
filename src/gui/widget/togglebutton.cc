@@ -70,8 +70,8 @@ void ToggleButton::updateReferenceToIndicatorDrawable(Drawable* backgroundDrawab
     }
 }
 
-View& ToggleButton::setBackgroundDrawable(Drawable* d){
-    CompoundButton::setBackgroundDrawable(d);
+View& ToggleButton::setBackground(Drawable* d){
+    CompoundButton::setBackground(d);
     updateReferenceToIndicatorDrawable(d);
     return *this;
 }

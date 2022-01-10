@@ -127,7 +127,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     filter_type=VIDEO;
     sort_revert=false;
     drbmp=new BitmapDrawable(nullptr,"");
-    setBackgroundDrawable(drbmp);
+    setBackground(drbmp);
     RelativeLayout*layout=new RelativeLayout(w,h);//LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     layout->setBackgroundColor(0x000000);
     RelativeLayout::LayoutParams*lp=new RelativeLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);

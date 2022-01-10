@@ -1065,6 +1065,15 @@ void View::mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent){
 
 }
 
+void View::getLocationOnScreen(int*outLocation){
+    getLocationInWindow(outLocation);
+
+    if (mAttachInfo) {
+        outLocation[0] += mAttachInfo->mWindowLeft;
+        outLocation[1] += mAttachInfo->mWindowTop;
+    }
+}
+
 void View::getLocationInWindow(int* outLocation) {
     outLocation[0] = 0;
     outLocation[1] = 0;
@@ -3093,10 +3102,14 @@ Drawable*View::getBackground()const{
 
 View& View::setBackgroundResource(const std::string&resid){
     Drawable*d=getContext()->getDrawable(resid);
-    return setBackgroundDrawable(d);
+    return setBackground(d);
 }
 
-View& View::setBackgroundDrawable(Drawable*background){
+/*View& View::setBackground(Drawable*background){
+    return setBackgroundDrawable(background);
+}*/
+/*deprecated*/
+View& View::setBackground(Drawable*background){
     computeOpaqueFlags();
     if(background==mBackground) return*this;
 
@@ -3176,7 +3189,7 @@ View& View::setBackgroundColor(int color){
     if(dynamic_cast<ColorDrawable*>(mBackground)){
         ((ColorDrawable*)mBackground)->setColor(color);
     }else
-        setBackgroundDrawable(new ColorDrawable(color));
+        setBackground(new ColorDrawable(color));
     return *this;
 }
 
@@ -3831,6 +3844,35 @@ int View::getWindowVisibility()const{
     return mAttachInfo  ? mAttachInfo->mWindowVisibility : GONE;
 }
 
+void View::getWindowVisibleDisplayFrame(Rect& outRect){
+    if (mAttachInfo) {
+        //mAttachInfo.mSession.getDisplayFrame(mAttachInfo.mWindow, outRect);
+        // XXX This is really broken, and probably all needs to be done
+        // in the window manager, and we need to know more about whether
+        // we want the area behind or in front of the IME.
+        Rect insets = mAttachInfo->mVisibleInsets;
+        outRect.left += insets.left;
+        outRect.top += insets.top;
+        outRect.width -= (insets.width+insets.left);
+        outRect.height-= (insets.height+insets.top);
+        return;
+    }
+    // The view is not attached to a display so we don't have a context.
+    // Make a best guess about the display size.
+    //Display d = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
+    //d.getRectSize(outRect);
+}
+
+void View::getWindowDisplayFrame(Rect& outRect) {
+    if (mAttachInfo) {
+        //mAttachInfo.mSession.getDisplayFrame(mAttachInfo.mWindow, outRect);
+        return;
+    }
+    // The view is not attached to a display so we don't have a context.
+    // Make a best guess about the display size.
+    //Display d = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
+    //d.getRectSize(outRect);
+}
 void View::dispatchVisibilityChanged(View& changedView,int visibility){
     onVisibilityChanged(changedView, visibility); 
 }

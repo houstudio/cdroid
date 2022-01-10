@@ -20,7 +20,7 @@ public:
     const std::string getTextOff()const;
     void setTextOff(const std::string& textOff);
     void setChecked(bool checked)override;
-    View& setBackgroundDrawable(Drawable* d)override;
+    View& setBackground(Drawable* d)override;
 };
 }
 #endif

@@ -35,7 +35,7 @@ TEST_F(LAYOUT,linear){
     Button*btn=new Button("OK",0,0);
     //lp->setMarginsRelative(10,0,10,0);
     lp->gravity=Gravity::TOP;
-    ll->setBackgroundDrawable(new ColorDrawable(0xFFFFFFFF));
+    ll->setBackground(new ColorDrawable(0xFFFFFFFF));
     ll->addView(btn,lp).setBackgroundColor(0xFFFF0000);
     btn->setTextSize(30);
     btn->setTextColor(0xFFFFFF00);
@@ -95,20 +95,20 @@ TEST_F(LAYOUT,frame){
     FrameLayoutParams*lp=new FrameLayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT,Gravity::CENTER);
 
     TextView*tv=new TextView("Hello world!",0,0);
-    tv->setBackgroundDrawable(new ColorDrawable(0xFF884444));
+    tv->setBackground(new ColorDrawable(0xFF884444));
     tv->setTextColor(0xFF00FF88);
     tv->setTextSize(100);
     frame->addView(tv,lp);
 
     lp=new FrameLayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,Gravity::CENTER);
     Button*btn=new Button("OK",0,0);
-    btn->setBackgroundDrawable(new ColorDrawable(0xFF4444ff));
+    btn->setBackground(new ColorDrawable(0xFF4444ff));
     btn->setTextColor(0xFF00FF00);
     frame->addView(btn,lp);
 
     frame->measure(800,600);
     frame->layout(0,0,800,600);
-    frame->setBackgroundDrawable(new ColorDrawable(0xFF222222));
+    frame->setBackground(new ColorDrawable(0xFF222222));
     w->addView(frame);
     app.exec();
 }
@@ -119,13 +119,13 @@ TEST_F(LAYOUT,absolute){
     AbsoluteLayout*ll=new AbsoluteLayout(800,600);
     AbsoluteLayoutParams*lp=new AbsoluteLayoutParams(300,50,100,100);
     TextView*tv=new TextView("A crown fox jump over the lazy dog!",0,0);
-    tv->setBackgroundDrawable(new ColorDrawable(0xFF4444ff));
+    tv->setBackground(new ColorDrawable(0xFF4444ff));
     tv->setTextColor(0xFF00FF00);
     ll->addView(tv,lp);
 
     lp=new AbsoluteLayoutParams(150,60,200,200);
     Button *btn=new Button("Browser",0,0);
-    btn->setBackgroundDrawable(new ColorDrawable(0xFF4444ff));
+    btn->setBackground(new ColorDrawable(0xFF4444ff));
     btn->setTextColor(0xFF00FF00);
     ll->addView(btn,lp);
     ll->measure(800,600);
@@ -139,12 +139,12 @@ TEST_F(LAYOUT,tablerow){
     const char*captions[]={"OK","Cancel","Ignore"};
     Window*w=new Window(0,0,800,600);
     TableRow*row=new TableRow(800,80);
-    row->setBackgroundDrawable(new ColorDrawable(0xFF444444));
+    row->setBackground(new ColorDrawable(0xFF444444));
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
         TableRowLayoutParams*rp=new TableRowLayoutParams(200+i*20,80);
         rp->setMarginsRelative(10,5,10,5);
         Button*btn=new Button(captions[i],0,0);
-        btn->setBackgroundDrawable(new ColorDrawable(0xFFFF0000));
+        btn->setBackground(new ColorDrawable(0xFFFF0000));
         btn->setTextColor(0xFF00FF88);
         row->addView(btn,rp);
     }
@@ -166,7 +166,7 @@ TEST_F(LAYOUT,table){
             TableRowLayoutParams*rp=new TableRowLayoutParams(200+i*40,80);
             rp->setMarginsRelative(10,0,10,0);
             Button*btn=new Button(captions[i],0,0);
-            btn->setBackgroundDrawable(new ColorDrawable(0xFFFF0000+i*20));
+            btn->setBackground(new ColorDrawable(0xFFFF0000+i*20));
             btn->setTextColor(0xFF00FF00+i*20);
             row[j]->addView(btn,rp);
         }
@@ -195,7 +195,7 @@ TEST_F(LAYOUT,grid){
         GridLayoutParams*gp=new GridLayoutParams();
         gp->setMarginsRelative(5,5,5,5);
         Button*btn=new Button(captions[i%N],0,0);
-        btn->setBackgroundDrawable(new ColorDrawable(0xFFFF0000+i*20));
+        btn->setBackground(new ColorDrawable(0xFFFF0000+i*20));
         btn->setTextColor(0xFF00FF00+i*20);
         grd->addView(btn,gp);
     }

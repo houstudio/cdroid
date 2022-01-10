@@ -45,7 +45,7 @@ int main(int argc,const char*argv[]){
        new ColorDrawable(0x8000FF00),sd);
     Button*btn=new Button("Open",100,64);
     btn->setMinimumHeight(64);
-    btn->setBackgroundDrawable(rp);
+    btn->setBackground(rp);
     content->addView(btn);
     btn->setOnClickListener([dl](View&){
         LOGD("openDrawer");

@@ -681,7 +681,7 @@ public:
 
     virtual void jumpDrawablesToCurrentState();
     Drawable*getBackground()const;
-    virtual View& setBackgroundDrawable(Drawable*drawable);
+    virtual View& setBackground(Drawable*background);
     View& setBackgroundColor(int color);
     View& setBackgroundResource(const std::string&resid);
     View& setBackgroundTintList(ColorStateList* tint);
@@ -717,6 +717,7 @@ public:
     void setFadingEdgeLength(int length);
     void transformFromViewToWindowSpace(int*);
     void mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent);
+    void getLocationOnScreen(int*);
     void getLocationInWindow(int*);
     bool startNestedScroll(int axes);
     void stopNestedScroll();
@@ -753,6 +754,8 @@ public:
     virtual View& setVisibility(int visable);
     virtual int getVisibility() const;
     int  getWindowVisibility()const;
+    void getWindowVisibleDisplayFrame(Rect& outRect);
+    void getWindowDisplayFrame(Rect& outRect);
     bool isShown()const;
     virtual View& setEnabled(bool enable);
     virtual bool isEnabled() const;

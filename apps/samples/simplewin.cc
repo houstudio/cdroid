@@ -19,7 +19,7 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
     sd=dynamic_cast<StateListDrawable*>(d);
     LOGD("%p statecount=%d",sd,sd->getStateCount());
-    btn->setBackgroundDrawable(d);
+    btn->setBackground(d);
     btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
     btn->setOnClickListener([](View&v){LOGD(" Button Clicked ");});
     btn->setOnLongClickListener([](View&v)->bool{LOGD(" Button LongClicked ");return true;});
@@ -28,7 +28,7 @@ int main(int argc,const char*argv[]){
 
     btn=new ToggleButton(120,40);
     d=ctx->getDrawable("cdroid:drawable/btn_toggle_bg.xml");
-    btn->setBackgroundDrawable(d);
+    btn->setBackground(d);
     btn->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
     ((ToggleButton*)btn)->setTextOn("ON");
     ((ToggleButton*)btn)->setTextOff("Off");
@@ -56,7 +56,7 @@ int main(int argc,const char*argv[]){
 	
     EditText*edt=new EditText("Edit Me!",200,60);
     d=ctx->getDrawable("cdroid:drawable/edit_text.xml");//editbox_background.xml");
-    edt->setBackgroundDrawable(d);
+    edt->setBackground(d);
     edt->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
     w->addView(edt).setId(102).setPos(800,60).setKeyboardNavigationCluster(true);
 #endif

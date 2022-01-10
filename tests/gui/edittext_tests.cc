@@ -31,7 +31,7 @@ TEST_F(EDITTEXT,multiline){
     EditText*edt=new EditText("Hello world!\nThis is the second line\n The last line",400,200);
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
-    edt->setBackgroundDrawable(new ColorDrawable(0xFF111111));
+    edt->setBackground(new ColorDrawable(0xFF111111));
     w->addView(edt).setSize(600,200);
     app.exec();
 }
@@ -48,7 +48,7 @@ TEST_F(EDITTEXT,hebrew){
     edt->setTextSize(40);
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
-    edt->setBackgroundDrawable(new ColorDrawable(0xFF111111));
+    edt->setBackground(new ColorDrawable(0xFF111111));
     w->addView(edt).setSize(600,200);
     app.exec();
 
@@ -61,7 +61,7 @@ TEST_F(EDITTEXT,hindi){//印地语
     edt->setTextSize(40);
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
-    edt->setBackgroundDrawable(new ColorDrawable(0xFF111111));
+    edt->setBackground(new ColorDrawable(0xFF111111));
     w->addView(edt).setSize(600,200);
     app.exec();
 }
