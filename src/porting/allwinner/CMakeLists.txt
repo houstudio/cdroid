@@ -32,6 +32,7 @@ endif()
 #sudo apt install libx11-dev
 if( ENABLE_RFB )
     add_definitions(-DENABLE_RFB=1)
+    list(APPEND ALLWINNER_SRCS ../common/rfbcommon.cc)
     list(APPEND ALLWINNER_LIBS vncserver)
     find_package(ZLIB)
 endif()

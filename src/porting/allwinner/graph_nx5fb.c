@@ -60,20 +60,7 @@ DWORD GFXInit(){
 #endif
 #if ENABLE_RFB
     rfbScreenInfoPtr rfbScreen = rfbGetScreen(NULL,NULL,800,600,8,3,3);
-    rfbScreen->desktopName = "X5-RFB";
-    rfbScreen->frameBuffer = NULL;//(char*)malloc(width*height*4);
-    rfbScreen->alwaysShared = (1==1);
-    rfbScreen->kbdAddEvent=NULL;//onVNCClientKey;
-    rfbScreen->ptrAddEvent=NULL;//onMousePtr;
-    rfbScreen->newClientHook=NULL;//onNewClient;
-    rfbScreen->setTextChat=NULL;//onChatText;
-    rfbScreen->permitFileTransfer=-1;
-    rfbScreen->bitsPerPixel=24;
-    rfbScreen->getFileTransferPermission=NULL;//FileTransferPermitted;
-    rfbRegisterTightVNCFileTransferExtension();
-
-    rfbInitServer(rfbScreen);
-    rfbRunEventLoop(rfbScreen,5,TRUE);//non block
+    setupRFB(rfbScreen,"X5-RFB",0);
     dev.rfbScreen=rfbScreen;
 #endif
     return E_OK;

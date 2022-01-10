@@ -6,6 +6,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <eventcodes.h>
+#include <cdinput.h>
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
@@ -31,6 +33,7 @@ typedef struct{
 
 static FBDEVICE dev={-1};
 
+
 DWORD GFXInit(){
     if(dev.fb>=0)return E_OK;
     dev.fb=open("/dev/fb0", O_RDWR);
@@ -52,20 +55,7 @@ DWORD GFXInit(){
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev.var.xres,dev.var.yres,dev.var.accel_flags);
 #if ENABLE_RFB
     rfbScreenInfoPtr rfbScreen = rfbGetScreen(NULL,NULL,800,600,8,3,3);
-    rfbScreen->desktopName = "X5-RFB";
-    rfbScreen->frameBuffer = NULL;//(char*)malloc(width*height*4);
-    rfbScreen->alwaysShared = (1==1);
-    rfbScreen->kbdAddEvent=NULL;//onVNCClientKey;
-    rfbScreen->ptrAddEvent=NULL;//onMousePtr;
-    rfbScreen->newClientHook=NULL;//onNewClient;
-    rfbScreen->setTextChat=NULL;//onChatText;
-    rfbScreen->permitFileTransfer=-1;
-    rfbScreen->bitsPerPixel=24;
-    rfbScreen->getFileTransferPermission=NULL;//FileTransferPermitted;
-    rfbRegisterTightVNCFileTransferExtension();
-
-    rfbInitServer(rfbScreen);
-    rfbRunEventLoop(rfbScreen,5,TRUE);//non block
+    setupRFB(rfbScreen,"X5RFB",0);
     dev.rfbScreen=rfbScreen;
 #endif
     return E_OK;
@@ -179,9 +169,9 @@ static void ResetScreenFormat(FBSURFACE*fb,int width,int height,int format){
          break;
     default:return;
     }
-    dev.rfbScreen->paddedWidthInBytes=fb->pitch;
     LOGV("format=%d %dx%d:%d",format,width,height,fb->pitch);
     rfbNewFramebuffer(dev.rfbScreen,fb->buffer,width,height,8,3,4);
+    dev.rfbScreen->paddedWidthInBytes=fb->pitch;
 }
 #endif
 
