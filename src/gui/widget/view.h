@@ -160,6 +160,7 @@ protected:
         Rect mVisibleInsets;
         Rect mStableInsets;
         Rect mOutsets;
+        KeyEvent::DispatcherState mKeyDispatchState;
         bool mAlwaysConsumeNavBar;
         bool mHasWindowFocus;
         bool mViewVisibilityChanged;

@@ -4553,6 +4553,10 @@ void View::onScrollChanged(int l, int t, int oldl, int oldt){
 void View::onFinishInflate(){
 }
 
+KeyEvent::DispatcherState* View::getKeyDispatcherState()const{
+    return mAttachInfo ? &mAttachInfo->mKeyDispatchState : nullptr;
+}
+
 bool View::dispatchKeyEvent(KeyEvent&event){
     bool res=event.dispatch(this,&mKeyDispatchState,this);
     LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),res);    
