@@ -109,5 +109,5 @@ public:
 };
 typedef LinearLayout::LayoutParams LinearLayoutParams;
 
-}  // namespace ui
+}  // namespace cdroid
 #endif 

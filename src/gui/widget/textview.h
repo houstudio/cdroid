@@ -214,6 +214,6 @@ public:
     void removeTextChangedListener(TextWatcher watcher);
 };
 
-}  // namespace ui
+}  // namespace cdroid
 
 #endif  //__TEXTVIEW_H__

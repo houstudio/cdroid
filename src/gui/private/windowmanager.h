@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __NGLUI_WINDOWMANAGER_H__
-#define __NGLUI_WINDOWMANAGER_H__
+#ifndef __CDROID_WINDOWMANAGER_H__
+#define __CDROID_WINDOWMANAGER_H__
 
 #include <widget/view.h>
 #include <widget/window.h>
@@ -53,6 +53,6 @@ private:
     DISALLOW_COPY_AND_ASSIGN(WindowManager);
 };
 
-}  // namespace ui
+}  // namespace cdroid
 
-#endif  // __NGLUI_WINDOWMANAGER_H__
+#endif  // __CDROID WINDOWMANAGER_H__

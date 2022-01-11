@@ -1,5 +1,5 @@
-#ifndef __NGLUI_EDITVIEW_H__
-#define __NGLUI_EDITVIEW_H__
+#ifndef __CDROID_EDITVIEW_H__
+#define __CDROID_EDITVIEW_H__
 #include <widget/textview.h>
 
 namespace cdroid{
@@ -49,7 +49,7 @@ public:
     virtual bool onKeyDown(int,KeyEvent&evt)override;
 };
 
-}//endof UI
+}//endof cdroid
 
 #endif
 

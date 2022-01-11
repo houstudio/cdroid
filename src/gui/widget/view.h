@@ -1,5 +1,5 @@
-#ifndef __NGL_VIEW_H__
-#define __NGL_VIEW_H__
+#ifndef __CDROID_VIEW_H__
+#define __CDROID_VIEW_H__
 #include <core/eventcodes.h>
 #include <core/uievents.h>
 #include <core/canvas.h>

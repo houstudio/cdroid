@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __NGLUI_GROUPVIEW_H__
-#define __NGLUI_GROUPVIEW_H__
+#ifndef __CDROID_GROUPVIEW_H__
+#define __CDROID_GROUPVIEW_H__
 
 #include <widget/view.h>
 #include <core/scroller.h>
@@ -328,6 +328,6 @@ public:
     virtual void cancelInvalidate(View* view);
 };
 
-}  // namespace ui
+}  // namespace cdroid
 
-#endif  // __NGLUI_GROUPVIEW_H__
+#endif  // __CDROID_GROUPVIEW_H__

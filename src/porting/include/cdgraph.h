@@ -1,5 +1,5 @@
-#ifndef __NGL_GRAPH_H__
-#define __NGL_GRAPH_H__
+#ifndef __CDROID_GRAPH_H__
+#define __CDROID_GRAPH_H__
 #include <cdtypes.h>
 
 /**

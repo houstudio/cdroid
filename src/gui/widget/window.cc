@@ -96,7 +96,6 @@ void Window::hide(){
 View& Window::setPos(int x,int y){
     ViewGroup::setPos(x,y);
     if( ((x!=mLeft) || (y!=mTop) ) && isAttachedToWindow()){
-        //WindowManager::getInstance().resetVisibleRegion();
         WindowManager::getInstance().moveWindow(this,x,y);
         mLeft=x;
         mTop=y;

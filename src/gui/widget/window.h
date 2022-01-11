@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __NGLUI_WINDOW_H__
-#define __NGLUI_WINDOW_H__
+#ifndef __CDROID_WINDOW_H__
+#define __CDROID_WINDOW_H__
 #include <cdtypes.h>
 #include <widget/viewgroup.h>
 #include <widget/framelayout.h>

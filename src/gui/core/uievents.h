@@ -1,5 +1,5 @@
-#ifndef __NGL_UIEVENTS_H__
-#define __NGL_UIEVENTS_H__
+#ifndef __CDROID_UIEVENTS_H__
+#define __CDROID_UIEVENTS_H__
 #include <string>
 #include <core/eventcodes.h>
 #include <core/sparsearray.h>
