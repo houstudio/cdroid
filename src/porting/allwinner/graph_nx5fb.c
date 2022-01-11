@@ -29,8 +29,11 @@ typedef struct{
    UINT pitch;
    int format;
    int ishw;
+   void*current;
    void*buffer;
    void*bkbuffer;/*kernel buffer address*/
+   void*phybuffer;
+   void*phybkbuffer;
 }FBSURFACE;
 
 static FBDEVICE dev={-1};
@@ -65,6 +68,51 @@ DWORD GFXInit(){
 #endif
     return E_OK;
 }
+
+#ifdef HAVE_FY_TDE2
+void swapBuffer(FBSURFACE*surf){
+    TDE2_RECT_S src_rect; 
+    memset(&src_rect, 0, sizeof(TDE2_RECT_S));
+    src_rect.s32Xpos    = 0;
+    src_rect.s32Ypos    = 0;
+    src_rect.u32Width   = dev.var.xres;
+    src_rect.u32Height  = dev.var.yres;
+
+    TDE2_SURFACE_S src_surface; 
+    memset(&src_surface, 0, sizeof(TDE2_SURFACE_S));
+    src_surface.enColorFmt      = TDE2_COLOR_FMT_ARGB8888;
+    src_surface.u32Width        = dev.var.xres;
+    src_surface.u32Height       = dev.var.yres;
+    src_surface.u32Stride       = dev.fix.line_length;
+    src_surface.bAlphaMax255    = FY_TRUE;
+
+    TDE2_SURFACE_S dst_surface; 
+    memset(&dst_surface, 0, sizeof(TDE2_SURFACE_S));
+    dst_surface.enColorFmt      = TDE2_COLOR_FMT_ARGB8888;
+    dst_surface.u32Width        = dev.var.xres;
+    dst_surface.u32Height       = dev.var.yres;
+    dst_surface.u32Stride       = dev.fix.line_length;
+    dst_surface.bAlphaMax255    = FY_TRUE;
+
+    TDE2_RECT_S dst_rect; 
+    memset(&dst_rect, 0, sizeof(TDE2_RECT_S));
+    dst_rect.s32Xpos    = 0;
+    dst_rect.s32Ypos    = 0;
+    dst_rect.u32Width   = dev.var.xres
+    dst_rect.u32Height  = dev.var.yres;
+
+    // 获取虚拟地址对应的物理地址
+    src_surface.u32PhyAddr = surf->current==surf->buffer?surf->phybkbuffer:surf->phybuffer;//src_phy;
+    dst_surface.u32PhyAddr = surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;//dst_phy;
+
+    TDE_HANDLE tde_handle= FY_TDE2_BeginJob();
+    if (FY_TDE2_QuickCopy(tde_handle, &src_surface, &src_rect, &dst_surface, &dst_rect))
+    {
+        LOGE("gpu copy error\n");
+    }
+    FY_TDE2_EndJob(tde_handle, FY_TRUE, FY_TRUE, 0);
+}
+#endif
 
 DWORD GFXGetScreenSize(UINT*width,UINT*height){
     *width=dev.var.xres;
@@ -110,18 +158,19 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
            fb[x]=color;
         fb+=(ngs->pitch>>2);
     }
-    GFXFlip(surface);
     return E_OK;
 }
 
 DWORD GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
-       ioctl(dev.fb, FBIO_WAITFORVSYNC, 0);
-       int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
-       LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
+#ifdef HAVE_FY_TDE2
+       swapBuffer();
+#endif
+       dev.var.yoffset=surf->current==surf->buffer?0:surf->height;
        dev.var.yoffset=0;
-       ret=ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var);
+       int ret=ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var);
+       surf->current=(surf->current==surf->buffer)?surf->bkbuffer:surf->buffer;
 #if ENABLE_RFB
        rfbMarkRectAsModified(dev.rfbScreen,0,0,surf->width,surf->height);
 #endif
@@ -184,17 +233,24 @@ static void ResetScreenFormat(FBSURFACE*fb,int width,int height,int format){
 
 DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+    bzero(surf,sizeof(FBSURFACE));
     surf->width=width;
     surf->height=height;
     surf->format=format;
     surf->ishw=hwsurface;
     surf->pitch=width*4;
     if(hwsurface){
+        const size_t fb_size=dev.fix.line_length*height;
         size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
         setfbinfo(surf);
         surf->buffer=mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
         dev.rfbScreen->frameBuffer = surf->buffer;
-	surf->pitch=dev.fix.line_length;
+        surf->pitch=dev.fix.line_length;
+        surf->phybuffer=dev.fix.smem_start;
+        if(dev.fix.smem_len>=fb_size*2){
+            surf->bkbuffer =surf->buffer+fb_size;
+            surf->phybkbuffer=surf->phybuffer+fb_size;
+        }
         ResetScreenFormat(surf,width,height,format);
     }else{
         surf->buffer=malloc(width*surf->pitch);
