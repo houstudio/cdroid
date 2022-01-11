@@ -11,7 +11,10 @@
 #include <rfb/rfbproto.h>
 
 #ifdef HAVE_FY_TDE2
-#include <VoApi.h>
+#include <mpi_tde.h>
+//#include <mpi_sys.h>
+#include <vd/VDecApi.h>
+#include <vd/VoApi.h>
 #endif
 
 typedef struct{
@@ -98,7 +101,7 @@ void swapBuffer(FBSURFACE*surf){
     memset(&dst_rect, 0, sizeof(TDE2_RECT_S));
     dst_rect.s32Xpos    = 0;
     dst_rect.s32Ypos    = 0;
-    dst_rect.u32Width   = dev.var.xres
+    dst_rect.u32Width   = dev.var.xres;
     dst_rect.u32Height  = dev.var.yres;
 
     // 获取虚拟地址对应的物理地址
@@ -165,7 +168,7 @@ DWORD GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
 #ifdef HAVE_FY_TDE2
-       swapBuffer();
+       swapBuffer(surf);
 #endif
        dev.var.yoffset=surf->current==surf->buffer?0:surf->height;
        dev.var.yoffset=0;
