@@ -18,7 +18,7 @@ private:
     class Canvas*primaryContext;//
     DWORD compose_event;
     HANDLE primarySurface;
-    std::vector<class Canvas*>gSurfaces;
+    RefPtr<Region>mInvalidateRgn;
     static GraphDevice*mInst;
     GraphDevice(int format=-1);
     void trackFPS();
@@ -29,13 +29,10 @@ public:
    int getScreenWidth();
    int getScreenHeight();
    void flip();
-   void ComposeSurfaces();
+   void composeSurfaces();
    bool needCompose();
-   Canvas*createContext(int w,int h);
-   Canvas*createContext(const RECT&rect);
    Canvas*getPrimaryContext();
-   void add(Canvas*ctx);
-   void remove(Canvas*ctx);
+   void invalidate(const Rect&);
    HANDLE getPrimarySurface(){return primarySurface;}
 };
 }

@@ -19,6 +19,10 @@ private:
         bool dispatchTouchEvent(MotionEvent& ev)override;
         bool onTouchEvent(MotionEvent& event)override;
     };
+    class PopupBackgroundView:public FrameLayout{
+    public:
+        PopupBackgroundView(Context* context);
+    };
 private:
     static constexpr int DEFAULT_ANCHORED_GRAVITY = Gravity::TOP | Gravity::START;
     static constexpr int ANIMATION_STYLE_DEFAULT = -1;
@@ -55,7 +59,7 @@ private:
     bool mAttachedInDecor = true;
     bool mAttachedInDecorSet = false;
 
-    //OnTouchListener mTouchInterceptor;
+    View::OnTouchListener mTouchInterceptor;
 
     int mWidthMode;
     int mWidth = LayoutParams::WRAP_CONTENT;
@@ -93,6 +97,9 @@ private:
     bool mPopupViewInitialLayoutDirectionInherited;
 private:
     int computeGravity();
+    PopupDecorView* createDecorView(View* contentView);
+    void invokePopup(LayoutParams* p);
+    void setLayoutDirectionFromAnchor();
 protected:
     void setShowing(bool);
     void setDropDown(bool isDropDown);
@@ -100,6 +107,13 @@ protected:
     OnDismissListener getOnDismissListener();
     bool hasContentView()const;
     bool hasDecorView()const;
+    void detachFromAnchor();
+    void attachToAnchor(View* anchor, int xoff, int yoff, int gravity);
+    
+    bool isLayoutInScreenEnabled()const;
+    void preparePopup(LayoutParams*p);
+    PopupBackgroundView*createBackgroundView(View* contentView);
+    void update(View* anchor,LayoutParams* params);
 public:
     PopupWindow(Context* context,const AttributeSet& attrs);
     PopupWindow(View* contentView, int width, int height,bool focusable=false);
@@ -111,8 +125,19 @@ public:
     void setElevation(float elevation);
     View*getContentView();
     void setContentView(View* contentView);
+    void setTouchInterceptor(View::OnTouchListener l);
     bool isFocusable();
     void setFocusable(bool focusable);
+    bool isOutsideTouchable()const;
+    void setOutsideTouchable(bool);
+    void setLayoutInScreenEnabled(bool);
+    bool isAttachedInDecor()const;
+    void setAttachedInDecor(bool);
+    void setLayoutInsetDecor(bool enabled);
+    bool isLayoutInsetDecor()const;
+    void setTouchModal(bool touchModal);
+    bool getOverlapAnchor()const;
+    void setOverlapAnchor(bool overlapAnchor);
     int  getWidth();
     void setWidth(int );
     int  getHeight();
@@ -121,6 +146,7 @@ public:
     void showAtLocation(View* parent, int gravity, int x, int y);
     void showAsDropDown(View* anchor);
     void showAsDropDown(View* anchor, int xoff, int yoff);
+    void showAsDropDown(View* anchor, int xoff, int yoff,int gravity);
     bool isAboveAnchor();
 
     int getMaxAvailableHeight(View* anchor);

@@ -784,10 +784,6 @@ RefPtr<Surface> get_surface_wrapper (cairo_surface_t* surface)
       return make_refptr_for_instance<SvgSurface>(new SvgSurface(surface, false /* does not have reference */));
       break;
 #endif
-#if CAIRO_HAS_CDROID_SURFACE
-    case CAIRO_SURFACE_TYPE_CDROID:
-      return wrap_surface_cdroid(surface);
-#endif
     // the following surfaces are not directly supported in cairomm yet
     case CAIRO_SURFACE_TYPE_DIRECTFB:
     case CAIRO_SURFACE_TYPE_OS2:

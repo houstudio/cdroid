@@ -349,10 +349,10 @@ static void parseShapeGradient(Shape*shape,const AttributeSet&atts){
 
 static void parseCorners(Shape*shape,const AttributeSet&atts){
     int radius=atts.getDimensionPixelSize("radius",-1);
-    int topLeftRadius =atts.getDimensionPixelSize("topLeftRadius",radius);
-    int topRightRadius=atts.getDimensionPixelSize("topRightRadius",radius);
-    int bottomRightRadius=atts.getDimensionPixelSize("bottomRightRadius",radius);
-    int bottomLeftRadius =atts.getDimensionPixelSize("bottomLeftRadius",radius);
+    float topLeftRadius =atts.getDimensionPixelSize("topLeftRadius",radius);
+    float topRightRadius=atts.getDimensionPixelSize("topRightRadius",radius);
+    float bottomRightRadius=atts.getDimensionPixelSize("bottomRightRadius",radius);
+    float bottomLeftRadius =atts.getDimensionPixelSize("bottomLeftRadius",radius);
     if(dynamic_cast<RoundRectShape*>(shape)){
         RoundRectShape*rs=(RoundRectShape*)shape;
         rs->setOuterRadii(std::vector<float>{topLeftRadius,topRightRadius,bottomRightRadius,bottomLeftRadius});

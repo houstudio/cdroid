@@ -4,10 +4,8 @@
 #include <cdtypes.h>
 #include <cdgraph.h>
 #include <cdlog.h>
-#include <cairo-cdroid.h>
 #include <vector>
 #include <cairomm/context.h>
-#include <cairomm/cdroid_surface.h>
 #include <cairomm/region.h>
 #include <cairomm/fontface.h>
 #include <windowmanager.h>
@@ -27,6 +25,8 @@ GraphDevice&GraphDevice::GraphDevice::getInstance(){
 }
 
 GraphDevice::GraphDevice(int fmt){
+    BYTE*buffer;
+    UINT pitch;
     mInst=this;
     compose_event=0;
     mFpsStartTime=mFpsPrevTime=0;
@@ -36,17 +36,22 @@ GraphDevice::GraphDevice(int fmt){
 
     format=fmt<0?GPF_ARGB:fmt;
     GFXCreateSurface(&primarySurface,width,height,format,1);
+    GFXLockSurface(primarySurface,(void**)&buffer,&pitch);
     last_compose_time=SystemClock::uptimeMillis();
     LOGD("primarySurface=%p size=%dx%d",primarySurface,width,height);
-
-    primaryContext=new Canvas(mInst,primarySurface);
+    RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,width,height,pitch);
+    primaryContext=new Canvas(surf);
+    mInvalidateRgn=Region::create();
 }
 
 GraphDevice::~GraphDevice(){
-    //GFXDestroySurface(primarySurface);//surface will be destroied by CDroidSurface
     delete primaryContext;
     GFXDestroySurface(primarySurface);
     LOGD("%p Destroied",this);
+}
+
+void GraphDevice::invalidate(const Rect&r){
+    mInvalidateRgn->do_union((const RectangleInt&)r);
 }
 
 void GraphDevice::trackFPS() {
@@ -95,73 +100,55 @@ Canvas*GraphDevice::getPrimaryContext(){
     return primaryContext;
 }
 
-Canvas*GraphDevice::createContext(int width,int height){
-    HANDLE cdsurface;
-    GFXCreateSurface(&cdsurface,width,height,format,0);
-    Canvas*graph_ctx=new Canvas(this,CDroidSurface::create(cdsurface));
-    LOGD("ctx=%p cdsurface=%p  size=%dx%d",graph_ctx,cdsurface,width,height);     
-    gSurfaces.push_back(graph_ctx);
-    graph_ctx->dev=this;
-    graph_ctx->mWidth=width;
-    graph_ctx->mHeight=height;
-    graph_ctx->set_antialias(ANTIALIAS_GRAY);//ANTIALIAS_SUBPIXEL);
-    return graph_ctx;
-}
-
-Canvas*GraphDevice::createContext(const RECT&rect){
-    Canvas*ctx=createContext(rect.width,rect.height);
-    ctx->mLeft=rect.left;
-    ctx->mTop=rect.top;
-    return ctx;
-}
-
-void GraphDevice::add(Canvas*ctx){
-     if(ctx)gSurfaces.push_back(ctx);
-}
-
-void GraphDevice::remove(Canvas*ctx){
-    if(ctx==nullptr)return;
-    const RECT rcw={ctx->mLeft,ctx->mTop,ctx->mWidth,ctx->mHeight};
-    auto itw=std::find(gSurfaces.begin(),gSurfaces.end(),ctx);
-    GraphDevice::getInstance().getPrimaryContext()->invalidate(rcw);
-    if(itw==gSurfaces.end()){
-        LOGD_IF(itw==gSurfaces.end(),"context %p not found",ctx);
-	return ;
-    }
-    for(auto itr=gSurfaces.begin();itr!=itw;itr++){
-       Canvas*c=(*itr);
-       RECT r={c->mLeft,c->mTop,c->mWidth,c->mHeight};
-       r.intersect(rcw);
-       r.offset(-c->mLeft,-c->mTop);
-       c->mInvalidRgn->do_union((const RectangleInt&)r);
-    }
-    if(itw!=gSurfaces.end()){
-        gSurfaces.erase(itw);
-        flip();
-    }
-}
-
-void GraphDevice::ComposeSurfaces(){
+void GraphDevice::composeSurfaces(){
     int rects=0;
     long t2,t1=SystemClock::uptimeMillis();
     trackFPS();
-    std::sort(gSurfaces.begin(),gSurfaces.end(),[](Canvas*c1,Canvas*c2){
-        return c2->mLayer-c1->mLayer>0;
+
+    std::vector<RefPtr<Canvas>>wSurfaces;
+    std::vector<Rect>wBounds;
+    std::vector<Window*>wins;
+    WindowManager::getInstance().enumWindows([&wSurfaces,&wBounds,&wins](Window*w)->bool{
+        if(w->getVisibility()!=View::VISIBLE||w->mVisibleRgn->empty()==false){
+            Rect rcw=w->getBound();
+            wSurfaces.push_back(w->mAttachInfo->mCanvas);
+            wBounds.push_back(rcw);
+            wins.push_back(w);
+        }return true;
     });
-
-    for(int i=0;i<primaryContext->mInvalidRgn->get_num_rectangles();i++){
-        RectangleInt r=primaryContext->mInvalidRgn->get_rectangle(i);
-        GFXFillRect(primarySurface,(const GFXRect*)&r,0);
+    primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
+    for(int i=0;i<wSurfaces.size();i++){
+        Rect rcw=wBounds[i];
+        HANDLE hdlSurface=wSurfaces[i]->mHandle;
+        std::vector<Rectangle>clipRects;
+        primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
+        RefPtr<Region>rgn=wins[i]->mVisibleRgn;
+        wSurfaces[i]->copy_clip_rectangle_list(clipRects);
+        rects+=clipRects.size();
+        mInvalidateRgn->subtract((const RectangleInt&)rcw);
+        if(hdlSurface){
+            for(auto r:clipRects){
+                Rect rc;
+                rc.set(r.x,r.y,r.width,r.height);
+                GFXBlit(primarySurface,rcw.left+rc.left,rcw.top+rc.top,hdlSurface,(const GFXRect*)&rc);
+            }
+            continue;
+        }
+        for(auto r:clipRects){
+            primaryContext->rectangle(rcw.left+r.x,rcw.top+r.y,r.width,r.height);
+            LOGV("win %p invalidrect(%d,%d,%d,%d) ",wins[i],(int)r.x,(int)r.y,(int)r.width,(int)r.height);
+        }
+        primaryContext->fill();
     } 
-    primaryContext->mInvalidRgn->do_xor(primaryContext->mInvalidRgn);
-
-    for(auto s=gSurfaces.begin();s!=gSurfaces.end();s++){
-        if( (*s)->mInvalidRgn->empty() )continue;
-        rects+=(*s)->blit2Device(primarySurface);
+    for(int i=0;i<mInvalidateRgn->get_num_rectangles();i++){
+        RectangleInt r=mInvalidateRgn->get_rectangle(i);
+        GFXFillRect(primarySurface,(const GFXRect*)&r,0);
+        LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
+    mInvalidateRgn->do_xor(mInvalidateRgn);
     GFXFlip(primarySurface); 
     t2=SystemClock::uptimeMillis();
-    LOGV("ComposeSurfaces %d surfaces %d rects used %d ms",gSurfaces.size(),rects,t2-t1);
+    LOGV("%d surfaces %d rects used %d ms",wSurfaces.size(),rects,t2-t1);
     last_compose_time=SystemClock::uptimeMillis();
     compose_event=0;
 }

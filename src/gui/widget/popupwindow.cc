@@ -130,12 +130,16 @@ void PopupWindow::setContentView(View* contentView) {
     // instead of in the constructor since we might not have the context
     // object in the constructor. We only want to set default here if the
     // app hasn't already set the attachedInDecor.
-    //if (mContext != null && !mAttachedInDecorSet) {
+    if (mContext != nullptr && !mAttachedInDecorSet) {
         // Attach popup window in decor frame of parent window by default for
         // {@link Build.VERSION_CODES.LOLLIPOP_MR1} or greater. Keep current
         // behavior of not attaching to decor frame for older SDKs.
-        //setAttachedInDecor(mContext.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.LOLLIPOP_MR1);
-    //}
+        setAttachedInDecor(true);//mContext.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.LOLLIPOP_MR1);
+    }
+}
+
+void PopupWindow::setTouchInterceptor(View::OnTouchListener l) {
+    mTouchInterceptor = l;
 }
 
 bool PopupWindow::isFocusable() {
@@ -145,15 +149,64 @@ bool PopupWindow::isFocusable() {
 void PopupWindow::setFocusable(bool focusable) {
     mFocusable = focusable;
 }
+
+bool PopupWindow::isOutsideTouchable()const{
+    return mOutsideTouchable;
+}
+
+void PopupWindow::setOutsideTouchable(bool touchable){
+    mOutsideTouchable=touchable;
+}
+
+bool PopupWindow::isLayoutInScreenEnabled()const{
+    return mLayoutInScreen;
+}
+
+void PopupWindow::setLayoutInScreenEnabled(bool enabled){
+    mLayoutInScreen=enabled;
+}
+
+bool PopupWindow::isAttachedInDecor()const{
+    return mAttachedInDecor;
+}
+
+void PopupWindow::setAttachedInDecor(bool enabled){
+    mAttachedInDecor= enabled;
+    mAttachedInDecorSet=true;
+}
+
+void PopupWindow::setLayoutInsetDecor(bool enabled) {
+    mLayoutInsetDecor = enabled;
+}
+
+bool PopupWindow::isLayoutInsetDecor()const{
+    return mLayoutInsetDecor;
+}
+
+void PopupWindow::setTouchModal(bool touchModal){
+    mNotTouchModal =!touchModal;
+}
+
+void PopupWindow::setOverlapAnchor(bool overlapAnchor) {
+    mOverlapAnchor = overlapAnchor;
+}
+
+bool PopupWindow::getOverlapAnchor()const{
+    return mOverlapAnchor;
+}
+
 void PopupWindow::setShowing(bool isShowing) {
      mIsShowing = isShowing;
 }
+
 bool PopupWindow::isShowing(){
     return mIsShowing;
 }
+
 void PopupWindow::setDropDown(bool isDropDown) {
      mIsDropdown = isDropDown;
 }
+
 void PopupWindow::setHeight(int height){
     mHeight=height;
 }
@@ -161,9 +214,11 @@ void PopupWindow::setHeight(int height){
 int PopupWindow::getHeight(){
     return mHeight;
 }
+
 void PopupWindow::setWidth(int width){
     mWidth=width;
 }
+
 int PopupWindow::getWidth(){
     return mHeight;
 }
@@ -174,7 +229,92 @@ void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){
 void PopupWindow::showAsDropDown(View* anchor){
     showAsDropDown(anchor,0,0);
 }
+
 void PopupWindow::showAsDropDown(View* anchor, int xoff, int yoff){
+    showAsDropDown(anchor,xoff,yoff,DEFAULT_ANCHORED_GRAVITY);
+}
+
+void PopupWindow::showAsDropDown(View* anchor, int xoff, int yoff,int gravity){
+    if (isShowing() || !hasContentView()) {
+        return;
+    }
+
+    //TransitionManager::endTransitions(mDecorView);
+
+    attachToAnchor(anchor, xoff, yoff, gravity);
+
+    mIsShowing = true;
+    mIsDropdown = true;
+
+    LayoutParams* p=nullptr;//=createPopupLayoutParams(anchor.getApplicationWindowToken());
+    preparePopup(p);
+
+    bool aboveAnchor =false;
+        //findDropDownPosition(anchor, p, xoff, yoff,
+        //p.width, p.height, gravity, mAllowScrollingAnchorParent);
+    updateAboveAnchor(aboveAnchor);
+    //p.accessibilityIdOfAnchor = (anchor) ? anchor->getAccessibilityViewId() : -1;
+    invokePopup(nullptr);
+}
+
+void PopupWindow::preparePopup(LayoutParams*p){
+    //if (mDecorView)  mDecorView->cancelTransitions();
+
+    // When a background is available, we embed the content view within
+    // another view that owns the background drawable.
+    if (mBackground) {
+        mBackgroundView = createBackgroundView(mContentView);
+        mBackgroundView->setBackground(mBackground);
+    } else {
+        mBackgroundView = mContentView;
+    }
+
+    mDecorView = createDecorView(mBackgroundView);
+    mDecorView->setIsRootNamespace(true);
+
+    // The background owner should be elevated so that it casts a shadow.
+    mBackgroundView->setElevation(mElevation);
+
+    // We may wrap that in another view, so we'll need to manually specify
+    // the surface insets.
+    //p->setSurfaceInsets(mBackgroundView, true /*manual*/, true /*preservePrevious*/);
+
+    mPopupViewInitialLayoutDirectionInherited =
+            (mContentView->getRawLayoutDirection() == View::LAYOUT_DIRECTION_INHERIT);
+}
+
+PopupWindow::PopupBackgroundView* PopupWindow::createBackgroundView(View* contentView) {
+    ViewGroup::LayoutParams* layoutParams = mContentView->getLayoutParams();
+    int height;
+    if (layoutParams && layoutParams->height == LayoutParams::WRAP_CONTENT) {
+        height = LayoutParams::WRAP_CONTENT;
+    } else {
+        height = LayoutParams::MATCH_PARENT;
+    }
+
+    PopupBackgroundView* backgroundView = new PopupBackgroundView(mContext);
+    PopupBackgroundView::LayoutParams* listParams = new PopupBackgroundView::LayoutParams(
+                LayoutParams::MATCH_PARENT, height);
+    backgroundView->addView(contentView, listParams);
+
+    return backgroundView;
+}
+
+PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
+    ViewGroup::LayoutParams* layoutParams = mContentView->getLayoutParams();
+    int height;
+    if (layoutParams  && layoutParams->height == LayoutParams::WRAP_CONTENT) {
+        height = LayoutParams::WRAP_CONTENT;
+    } else {
+        height = LayoutParams::MATCH_PARENT;
+    }
+
+    PopupDecorView* decorView = new PopupDecorView(mContext);
+    decorView->addView(contentView, LayoutParams::MATCH_PARENT, height);
+    decorView->setClipChildren(false);
+    decorView->setClipToPadding(false);
+
+    return decorView;
 }
 
 void PopupWindow::updateAboveAnchor(bool aboveAnchor){
@@ -198,6 +338,18 @@ void PopupWindow::updateAboveAnchor(bool aboveAnchor){
     }
 }
 
+void PopupWindow::invokePopup(LayoutParams* p){
+}
+
+void PopupWindow::setLayoutDirectionFromAnchor() {
+    if (mAnchor != nullptr) {
+        View* anchor = mAnchor;//.get();
+        if (anchor != nullptr && mPopupViewInitialLayoutDirectionInherited) {
+            mDecorView->setLayoutDirection(anchor->getLayoutDirection());
+        }
+    }
+}
+
 bool PopupWindow::isAboveAnchor() {
     return mAboveAnchor;
 }
@@ -214,6 +366,7 @@ int PopupWindow::computeGravity() {
 int PopupWindow::getMaxAvailableHeight(View* anchor){
     return getMaxAvailableHeight(anchor, 0,false);
 }
+
 int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBottomDecorations){
      Rect displayFrame;
      Rect visibleDisplayFrame;
@@ -276,10 +429,89 @@ void PopupWindow::update(){
 
 }
 
+void PopupWindow::update(View* anchor,LayoutParams* params) {
+    setLayoutDirectionFromAnchor();
+   // mWindowManager.updateViewLayout(mDecorView, params);
+}
+
 void PopupWindow::update(int width, int height){
 }
 
 void PopupWindow::update(int x, int y, int width, int height){
+    if (width >= 0) {
+        mLastWidth = width;
+        setWidth(width);
+    }
+
+    if (height >= 0) {
+        mLastHeight = height;
+        setHeight(height);
+    }
+
+    if (!isShowing() || !hasContentView()) {
+        return;
+    }
+
+
+    bool updated = true;//force;
+#if 0
+    WindowManager.LayoutParams p = getDecorViewLayoutParams();
+    int finalWidth = mWidthMode < 0 ? mWidthMode : mLastWidth;
+    if (width != -1 && p.width != finalWidth) {
+        p.width = mLastWidth = finalWidth;
+        updated = true;
+    }
+
+    int finalHeight = mHeightMode < 0 ? mHeightMode : mLastHeight;
+    if (height != -1 && p.height != finalHeight) {
+        p.height = mLastHeight = finalHeight;
+        updated = true;
+    }
+
+    if (p.x != x) {
+        p.x = x;
+        updated = true;
+    }
+
+    if (p.y != y) {
+        p.y = y;
+        updated = true;
+    }
+
+    int newAnim = computeAnimationResource();
+    if (newAnim != p.windowAnimations) {
+        p.windowAnimations = newAnim;
+        updated = true;
+    }
+
+    const int newFlags = computeFlags(p.flags);
+    if (newFlags != p.flags) {
+        p.flags = newFlags;
+        updated = true;
+    }
+
+    const int newGravity = computeGravity();
+    if (newGravity != p.gravity) {
+        p.gravity = newGravity;
+        updated = true;
+    }
+#endif
+    View* anchor = nullptr;
+    int newAccessibilityIdOfAnchor = -1;
+
+    if (mAnchor != nullptr) {
+        anchor = mAnchor;
+        //newAccessibilityIdOfAnchor = anchor->getAccessibilityViewId();
+    }
+
+    /*if (newAccessibilityIdOfAnchor != p.accessibilityIdOfAnchor) {
+        p.accessibilityIdOfAnchor = newAccessibilityIdOfAnchor;
+        update = true;
+    }*/
+
+    if (updated) {
+        //update(anchor, p);
+    }
 }
 
 bool PopupWindow::hasContentView()const{
@@ -290,9 +522,51 @@ bool PopupWindow::hasDecorView()const{
     return mDecorView!=nullptr;
 }
 
+void PopupWindow::detachFromAnchor(){
+    View* anchor = mAnchor;//getAnchor();
+    /*if (anchor) {
+        ViewTreeObserver vto = anchor.getViewTreeObserver();
+        vto->removeOnScrollChangedListener(mOnScrollChangedListener);
+        anchor->removeOnAttachStateChangeListener(mOnAnchorDetachedListener);
+    }*/
+
+    /*View* anchorRoot = mAnchorRoot != null ? mAnchorRoot.get() : null;
+    if (anchorRoot != nullptr) {
+        anchorRoot->removeOnAttachStateChangeListener(mOnAnchorRootDetachedListener);
+        anchorRoot->removeOnLayoutChangeListener(mOnLayoutChangeListener);
+    }*/
+
+    mAnchor = nullptr;
+    mAnchorRoot = nullptr;
+    mIsAnchorRootAttached = false;
+}
+
+void PopupWindow::attachToAnchor(View* anchor, int xoff, int yoff, int gravity){
+    detachFromAnchor();
+
+    /*ViewTreeObserver vto = anchor.getViewTreeObserver();
+    if (vto) {
+        vto.addOnScrollChangedListener(mOnScrollChangedListener);
+    }*/
+    //anchor.addOnAttachStateChangeListener(mOnAnchorDetachedListener);
+
+    View* anchorRoot = anchor->getRootView();
+    //anchorRoot->addOnAttachStateChangeListener(mOnAnchorRootDetachedListener);
+    //anchorRoot->addOnLayoutChangeListener(mOnLayoutChangeListener);
+
+    mAnchor = anchor;//new WeakReference<>(anchor);
+    mAnchorRoot = anchorRoot;//new WeakReference<>(anchorRoot);
+    mIsAnchorRootAttached = anchorRoot->isAttachedToWindow();
+    mParentRootView = mAnchorRoot;
+
+    mAnchorXoff = xoff;
+    mAnchorYoff = yoff;
+    mAnchoredGravity = gravity;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 PopupWindow::PopupDecorView::PopupDecorView(Context* context):FrameLayout(context,AttributeSet()){
+    mPop=nullptr;
 }
 
 bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){
@@ -321,9 +595,9 @@ bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){
 }
 
 bool PopupWindow::PopupDecorView::dispatchTouchEvent(MotionEvent& ev){
-    /*if (mTouchInterceptor && mTouchInterceptor->onTouch(this, ev)) {
+    if (mPop && mPop->mTouchInterceptor && mPop->mTouchInterceptor(*this, ev)) {
         return true;
-    }*/
+    }
     return FrameLayout::dispatchTouchEvent(ev);
 }
 
@@ -343,4 +617,7 @@ bool PopupWindow::PopupDecorView::onTouchEvent(MotionEvent& event){
     }
 }
 
+PopupWindow::PopupBackgroundView::PopupBackgroundView(Context* context)
+:FrameLayout(context,AttributeSet()){
+}
 }

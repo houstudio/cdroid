@@ -48,6 +48,7 @@ private:
 protected:
     std::vector<View*>mLayoutRequesters;
     RefPtr<Region>mWindowRgn;
+    RefPtr<Region>mVisibleRgn;
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;
@@ -57,7 +58,7 @@ protected:
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);
-    Canvas*getCanvas();
+    RefPtr<Canvas>getCanvas();
 public:
     typedef enum{
         TYPE_WALLPAPER    =1,

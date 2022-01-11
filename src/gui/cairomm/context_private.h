@@ -31,7 +31,6 @@ namespace Private
 RefPtr<Surface> wrap_surface_quartz(cairo_surface_t*);
 RefPtr<Surface> wrap_surface_win32(cairo_surface_t*);
 RefPtr<Surface> wrap_surface_xlib(cairo_surface_t*);
-RefPtr<Surface> wrap_surface_cdroid(cairo_surface_t*);
 
 } // namespace Private
 

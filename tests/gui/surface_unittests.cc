@@ -21,7 +21,7 @@ public :
    static Canvas*ctx;
    static void SetUpTestCase(){
        GFXInit();
-       ctx=GraphDevice::getInstance().createContext(1280,720);
+       ctx=new Canvas(nullptr);//GraphDevice::getInstance().createContext(1280,720);
        rm=new Assets("ntvplus.pak");
    }
    static void TearDownCase(){
@@ -36,7 +36,7 @@ public :
    virtual void TearDown(){
 		RECT rect={0,0,1280,720};
         //GraphDevice::getInstance().invalidate(&rect);
-        GraphDevice::getInstance().ComposeSurfaces();
+        GraphDevice::getInstance().composeSurfaces();
         sleep(2);
    }
 };
@@ -65,7 +65,7 @@ TEST_F(CONTEXT,TEXT_ALIGNMENT){
            //GraphDevice::getInstance().invalidate(&rect);
            strcat(alignment,".png");
            ctx->dump2png(alignment);
-           GraphDevice::getInstance().ComposeSurfaces();
+           GraphDevice::getInstance().composeSurfaces();
            SLEEP(1000);
         }SLEEP(1000); 
     }
@@ -102,7 +102,7 @@ TEST_F(CONTEXT,circle){
     ctx->translate(-300,-300);
     RECT r={0,0,800,600};
     //GraphDevice::getInstance().invalidate(&r);
-    GraphDevice::getInstance().ComposeSurfaces();
+    GraphDevice::getInstance().composeSurfaces();
 }
 
 TEST_F(CONTEXT,Translate){
@@ -270,7 +270,7 @@ TEST_F(CONTEXT,Font){
        }else{
            ctx->text_path(txt);ctx->stroke();
        }
-       GraphDevice::getInstance().ComposeSurfaces();
+       GraphDevice::getInstance().composeSurfaces();
         SLEEP(200);
     }
     
@@ -284,7 +284,7 @@ TEST_F(CONTEXT,Font){
        ctx->move_to(0,600);
        ctx->show_text("Innovation in China!");
        //GraphDevice::getInstance().invalidate(&rect);
-       GraphDevice::getInstance().ComposeSurfaces();
+       GraphDevice::getInstance().composeSurfaces();
        SLEEP(100);
     }
     SLEEP(1000);

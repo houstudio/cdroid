@@ -25,8 +25,10 @@ endif()
 set(NX5ROOT_DIR)
 find_library(LIBVIDEODEC_PATH VideoDec ${NX5ROOT_DIR}/thirdparty/lib/codec)
 
+list(APPEND ALLWINNER_LIBS pthread)
 if(LIBVIDEODEC_PATH)
     add_definitions(-DHAVE_FY_TDE2=1)
+    list(APPEND ALLWINNER_LIBS ${LIBVIDEODEC_PATH})
 endif()
 
 #sudo apt install libx11-dev
@@ -37,7 +39,6 @@ if( ENABLE_RFB )
     find_package(ZLIB)
 endif()
 
-list(APPEND ALLWINNER_LIBS pthread ${LIBVIDEODEC_PATH})
 
 include_directories(./
     ../include

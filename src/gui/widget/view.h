@@ -170,7 +170,7 @@ protected:
         bool mKeepScreenOn;
         bool mDebugLayout;
         bool mDisplayState;/*true display is on*/
-        Canvas* mCanvas;
+        RefPtr<Canvas> mCanvas;
         View* mTooltipHost;
         View* mViewRequestingLayout;
         AttachInfo(); 
@@ -286,6 +286,7 @@ public:
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
             int oldLeft, int oldTop, int oldWidth, int oldHeight);
+    DECLARE_UIEVENT(bool,OnTouchListener,View&,MotionEvent&);
 private:
     int mMinWidth;
     int mMinHeight;

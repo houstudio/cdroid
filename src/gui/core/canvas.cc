@@ -1,8 +1,6 @@
 #include <cdtypes.h>
 #include <canvas.h>
 #include <cairo.h>
-#include <cairo-cdroid.h>
-#include <cairomm/cdroid_surface.h>
 #include <cdlog.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,54 +10,30 @@
 #include <textutils.h>
 #include <gravity.h>
 #include <windowmanager.h>
-
+#include <cdgraph.h>
 using namespace std;
 using namespace Cairo;
 namespace cdroid{
 
-Canvas::Canvas(GraphDevice*_dev,HANDLE surface)
-   :Canvas(_dev,CDroidSurface::create(surface,false)){
-}
-
-Canvas::Canvas(GraphDevice*_dev,const RefPtr<Surface>& target)
+Canvas::Canvas(const RefPtr<Surface>& target)
    :Context(target){
-    dev=_dev;
-    mLeft=mTop=0;
-    mInvalidRgn=Region::create();
+    mHandle=nullptr;
+    //mInvalidRgn=Region::create();
 }
 
-void Canvas::invalidate(const Rect&r){
-    mInvalidRgn->do_union((RectangleInt&)r); 
-    dev->flip();
-}
-void Canvas::invalidate(const RefPtr<Region>&rgn){
-    mInvalidRgn->do_union(rgn);
-    dev->flip();
-}
-int Canvas::blit2Device(HANDLE surface){
-    int num=mInvalidRgn->get_num_rectangles();
-    HANDLE cdsurface=cairo_cdroid_surface_get_surface(get_target()->cobj());
-    for(int i=0;i<num;i++){
-        RectangleInt r=mInvalidRgn->get_rectangle(i);
-        LOGV("blit %p (%d,%d-%d,%d)-->%d,%d",this,r.x,r.y,r.width,r.height,mLeft,mTop);
-        GFXBlit(surface,mLeft+r.x,mTop+r.y,cdsurface,(GFXRect*)&r);
-    }
-    mInvalidRgn->subtract(mInvalidRgn);
-    return num;
+Canvas::Canvas(unsigned int width,unsigned int height):Context(nullptr,true){
+    BYTE*buffer;
+    INT format;
+    UINT pitch;
+    GFXCreateSurface(&mHandle,width,height,GPF_ARGB,false);
+    GFXLockSurface(mHandle,(void**)&buffer,&pitch);
+    RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,width,height,pitch);
+    m_cobject=cairo_create(surf->cobj());
 }
 
 Canvas::~Canvas(){
-}
-
-void Canvas::set_position(int x,int y){
-    mLeft=x;
-    mTop=y;
-    dev->flip();
-}
-
-void Canvas::set_layer(int l,RefPtr<Region>rgn){
-    mLayer=l;
-    mVisibleRgn=rgn;
+    if(mHandle)
+        GFXDestroySurface(mHandle);
 }
 
 void Canvas::set_color(UINT color){

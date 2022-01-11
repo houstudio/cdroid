@@ -68,12 +68,13 @@ void Window::setRegion(const RefPtr<Region>&rgn){
 }
 
 void Window::draw(){
-    Canvas*canvas=getCanvas();
+    RefPtr<Canvas>canvas=getCanvas();
     mAttachInfo->mDrawingTime=SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);
     if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
-    canvas->invalidate(mInvalidRgn);
-    mInvalidRgn->subtract(mInvalidRgn); 
+    //canvas->invalidate(mInvalidRgn);
+    mInvalidRgn->subtract(mInvalidRgn);
+    GraphDevice::getInstance().flip();
 }
 
 void Window::show(){
@@ -82,16 +83,12 @@ void Window::show(){
         if(mAttachInfo->mCanvas==nullptr)
             invalidate(true);
         WindowManager::getInstance().resetVisibleRegion();
-        if(mAttachInfo->mCanvas){
-            GraphDevice::getInstance().add(mAttachInfo->mCanvas);
-        }
     }
 }
 
 void Window::hide(){
     if(getVisibility()==VISIBLE){
         setVisibility(INVISIBLE);
-        GraphDevice::getInstance().remove(mAttachInfo->mCanvas);
         WindowManager::getInstance().resetVisibleRegion();
     }
 }
@@ -103,10 +100,8 @@ View& Window::setPos(int x,int y){
         WindowManager::getInstance().moveWindow(this,x,y);
         mLeft=x;
         mTop=y;
-        if(mAttachInfo && mAttachInfo->mCanvas){
-           mAttachInfo->mCanvas->set_position(x,y);
-        }
     }
+    GraphDevice::getInstance().flip();
     return *this;
 }
 
@@ -123,17 +118,17 @@ void Window::onFinishInflate(){
     startLayoutAnimation();
 }
 
-Canvas*Window::getCanvas(){
-//for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
+RefPtr<Canvas>Window::getCanvas(){
+    //for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
     if(mAttachInfo==nullptr)return nullptr;
-    Canvas *canvas=mAttachInfo->mCanvas;
+    RefPtr<Canvas> canvas=mAttachInfo->mCanvas;
     if((canvas==nullptr)&&(getVisibility()==VISIBLE)){
-        canvas=GraphDevice::getInstance().createContext(getBound());
-        mAttachInfo->mCanvas=canvas;		
+        //GraphDevice::getInstance().createContext(getBound());
+        canvas=make_refptr_for_instance<Canvas>(new Canvas(getWidth(),getHeight()));		
+        mAttachInfo->mCanvas=canvas;
     }
     const int num=mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
-	canvas->set_position(mLeft,mTop);
     for(int i=0;i<num;i++){
         RectangleInt r=mInvalidRgn->get_rectangle(i);
         canvas->rectangle(r.x,r.y,r.width,r.height);
@@ -143,12 +138,6 @@ Canvas*Window::getCanvas(){
 }
 
 Window::~Window() {
-    Canvas*canvas=mAttachInfo->mCanvas;
-    LOGV("%p source=%p canvas=%p",this,source,canvas);
-    if(mAttachInfo->mCanvas!=GraphDevice::getInstance().getPrimaryContext()){
-        GraphDevice::getInstance().remove(canvas);
-        delete canvas;
-    }
     delete mAttachInfo;
 }
 

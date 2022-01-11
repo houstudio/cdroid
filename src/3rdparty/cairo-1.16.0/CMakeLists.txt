@@ -36,8 +36,4 @@ if(FREETYPE_FOUND)
 endif()
 
 include_directories(src)
-if(CAIRO_HAS_CDROID_SURFACE)
-include_directories(${CMAKE_SOURCE_DIR}/src/porting/include)
-list(APPEND CAIRO_LIBS tvhal)
-endif()
 add_subdirectory(src)

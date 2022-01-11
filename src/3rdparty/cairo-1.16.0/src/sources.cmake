@@ -431,5 +431,3 @@ set(cairo_cogl_sources
         cairo-cogl-utils.c
 )
 
-set(cairo_cdroid_headers  cairo-cdroid.h)
-set(cairo_cdroid_sources  cairo-cdroid-surface.c)

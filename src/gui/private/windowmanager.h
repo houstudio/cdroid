@@ -19,6 +19,7 @@
 
 #include <widget/view.h>
 #include <widget/window.h>
+#include <core/graph_device.h>
 #include <vector>
 #include <stdint.h>
 #include <queue>
@@ -43,6 +44,7 @@ protected:
     virtual void onKeyEvent(KeyEvent&key);
     virtual void onMotion(MotionEvent&event);
 private:
+    friend class GraphDevice;
     WindowManager();
     virtual ~WindowManager();
     Window*activeWindow;/*activeWindow*/

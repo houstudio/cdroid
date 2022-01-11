@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <core/systemclock.h>
+#include <core/path.h>
 #define SLEEP(x) usleep((x)*1000)
 class DRAWABLE:public testing::Test{
 public:
@@ -14,7 +15,7 @@ public:
 public:
     static void SetUpTestCase(){
         GFXInit();
-        ctx=GraphDevice::getInstance().createContext(800,600);
+        ctx=new Canvas(nullptr);//GraphDevice::getInstance().createContext(800,600);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
         RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
         RefPtr<Gradient>rd=RadialGradient::create(20,20,30,200,200,100);
@@ -50,13 +51,13 @@ public:
     }
     void postCompose(){
         RECT rect={0,0,800,600};
-        ctx->invalidate(rect);
-        ctx->blit2Device(GraphDevice::getInstance().getPrimarySurface());
+        //ctx->invalidate(rect);
+        //ctx->blit2Device(GraphDevice::getInstance().getPrimarySurface());
     }
     virtual void TearDown(){
         ctx->restore();
         postCompose();
-        sleep(65);
+        sleep(2);
     }
 };
 

@@ -31,15 +31,6 @@ if(CAIRO_HAS_XLIB_SURFACE)
 list(APPEND enabled_cairo_pkgconf cairo-xlib.pc)
 endif()
 
-#################################################################
-list(APPEND supported_cairo_headers ${cairo_cdroid_headers})
-list(APPEND all_cairo_headers ${cairo_cdroid_headers})
-list(APPEND all_cairo_sources ${cairo_cdroid_sources})
-if(CAIRO_HAS_CDROID_SURFACE)
-list(APPEND enabled_cairo_headers ${cairo_cdroid_headers})
-list(APPEND enabled_cairo_sources ${cairo_cdroid_sources})
-endif()
-#################################################################
 
 list(APPEND supported_cairo_headers ${cairo_xlib_xrender_headers})
 list(APPEND all_cairo_headers ${cairo_xlib_xrender_headers})

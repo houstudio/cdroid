@@ -200,28 +200,29 @@ static void createVerbSegments(cairo_path_data_t*data,PointF*points,std::vector<
     }
 }
 
-void Path::approximate(std::vector<float>&,float acceptableError){
+void Path::approximate(std::vector<float>&approximations,float acceptableError){
     PointF points[4];
     std::vector<PointF>segmentPoints;
     std::vector<float>lengths;
+	
     float errorSquared=acceptableError*acceptableError;
     float errorConic =acceptableError/2.f;
-    cairo_path_t*path=cairo_copy_path(mCTX->cobj());
-    for (int i=0; i < path->num_data; i += path->data[i].header.length){
+	
+	mCTX->set_tolerance(acceptableError);    
+    cairo_path_t*path=cairo_copy_path_flat(mCTX->cobj());
+	for (int i=0; i < path->num_data; i += path->data[i].header.length){
         cairo_path_data_t *data=path->data+i;
         createVerbSegments(data,points,segmentPoints,lengths,errorSquared,errorConic);
     }
-    cairo_path_destroy(path);
 
     if (segmentPoints.empty()) {
-        int numVerbs = path->num_data;//path->countVerbs();
+        int numVerbs = path->num_data;
         PointF pt={0,0};
         if (numVerbs == 1) {
             pt.x=path->data[1].point.x;
             pt.y=path->data[1].point.y;
             addMove(segmentPoints, lengths, pt);//path->getPoint(0));
-        } else {
-            // Invalid or empty path. Fall back to point(0,0)
+        } else {// Invalid or empty path. Fall back to point(0,0)
             addMove(segmentPoints, lengths, pt);
         }
     }
@@ -234,17 +235,16 @@ void Path::approximate(std::vector<float>&,float acceptableError){
         totalLength = 1;
     }
 
-    size_t numPoints = segmentPoints.size();
-    size_t approximationArraySize = numPoints * 3;
-
-    float* approximation = new float[approximationArraySize];
+    const size_t numPoints = segmentPoints.size();
     int approximationIndex = 0;
-    for (size_t i = 0; i < numPoints; i++) {
+    approximations.resize(numPoints*3);
+    for (size_t i = 0,index=0; i < numPoints; i++) {
         const PointF& point = segmentPoints[i];
-        approximation[approximationIndex++] = lengths[i] / totalLength;
-        approximation[approximationIndex++] = point.x;
-        approximation[approximationIndex++] = point.y;
-    }    
+        approximations[index++] = lengths[i] / totalLength;
+        approximations[index++] = point.x;
+        approximations[index++] = point.y;
+    }
+    cairo_path_destroy(path);
 }
 
 }

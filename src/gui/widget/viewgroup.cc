@@ -156,7 +156,7 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     long now = SystemClock::uptimeMillis();
     bool syntheticEvent=(event==nullptr);
     if(event==nullptr){
-	    event=MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
+        event=MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
         event->setAction(MotionEvent::ACTION_CANCEL);
         //event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
     }
@@ -2215,7 +2215,9 @@ void ViewGroup::requestDisallowInterceptTouchEvent(bool disallowIntercept){
 }
 
 bool ViewGroup::onInterceptTouchEvent(MotionEvent& ev){
-    if( (ev.getAction() == MotionEvent::ACTION_DOWN)
+    if( false//ev.isFromSource(InputDevice::SOURCE_MOUSE)
+        && (ev.getAction() == MotionEvent::ACTION_DOWN)
+        && ev.isButtonPressed(MotionEvent::BUTTON_PRIMARY)
         && isOnScrollbarThumb(ev.getX(), ev.getY()) )
         return true;
     return false; 

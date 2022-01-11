@@ -32,7 +32,7 @@ public :
        GFXInit();
        InputInit();
        rm=new Assets("ntvplus.pak");
-       ctx=GraphDevice::getInstance().createContext(800,600);
+       ctx=new Canvas(nullptr);//GraphDevice::getInstance().createContext(800,600);
    }
    static void TearDownCase(){
        delete rm; 
@@ -50,7 +50,7 @@ public :
    void postCompose(){
        RECT rect={0,0,800,600};
        //GraphDevice::getInstance().invalidate(&rect);
-       GraphDevice::getInstance().ComposeSurfaces();
+       GraphDevice::getInstance().composeSurfaces();
    }
    void tmend(const char*txt){
       printf("%s:used time %lldms\r\n",txt,gettime()-ts);
@@ -248,7 +248,7 @@ TEST_F(IMAGE,SVG){
          sprintf(fpng,"pngs/%s",file+1);
          strcpy((char*)strrchr(fpng,'.'),".png");
          ctx->invalidate(rect);
-         GraphDevice::getInstance().ComposeSurfaces();
+         GraphDevice::getInstance().composeSurfaces();
          
          ctx->dump2png(fpng);
          SLEEP(500);
@@ -256,18 +256,4 @@ TEST_F(IMAGE,SVG){
      SLEEP(3000);
 }
 #endif
-
-TEST_F(IMAGE,Resource_Image){
-   RefPtr<Canvas>ctx(GraphDevice::getInstance().createContext(800,600));
-    tmstart();
-    RefPtr<ImageSurface>img=rm->getImage("hs-400.png");//"hd_mainmenu.bmp");
-    tmend("decodejpg");
-    RECT rect={0,0,800,600};
-    ctx->rectangle(rect);ctx->fill();
-    tmstart();
-    ctx->draw_image(img,rect,nullptr);
-    tmend("drawimage");
-    postCompose();
-    SLEEP(2500);
-}
 

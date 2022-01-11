@@ -76,7 +76,7 @@ void WindowManager::removeWindow(Window*w){
     if(w->hasFlag(View::FOCUSABLE))
         w->onDeactive();
     auto itw=std::find(windows.begin(),windows.end(),w);
-    const RECT wrect=w->getBound();
+    const Rect wrect=w->getBound();
     windows.erase(itw);
     resetVisibleRegion();
     for(auto itr=windows.begin();itr!=windows.end();itr++){
@@ -95,7 +95,7 @@ void WindowManager::removeWindow(Window*w){
             break;
         } 
     }
-    GraphDevice::getInstance().getPrimaryContext()->invalidate(wrect);
+    GraphDevice::getInstance().invalidate(wrect);
     GraphDevice::getInstance().flip();
     LOGV("w=%p windows.size=%d",w,windows.size());
 }
@@ -103,20 +103,22 @@ void WindowManager::removeWindow(Window*w){
 void WindowManager::moveWindow(Window*w,int x,int y){
     auto itw=std::find(windows.begin(),windows.end(),w);
     if(w->isAttachedToWindow()==false)return;
+    Rect rcw=w->getBound();
+    GraphDevice::getInstance().invalidate(rcw);
+    rcw.left=x;rcw.top=y;
+    GraphDevice::getInstance().invalidate(rcw);
     for(auto itr=windows.begin();itr!=itw;itr++){
         RECT rcw=w->getBound();
         Window*w1=(*itr);
-        Canvas*c=w1->getCanvas();
+        RefPtr<Canvas>c=w1->getCanvas();
         RECT r=w1->getBound();
         if(w1->getVisibility()!=View::VISIBLE)continue;
         r.intersect(rcw);
         r.offset(-w1->getX(),-w1->getY());
-        c->mInvalidRgn->do_union((const RectangleInt&)r);
         r=w1->getBound();
         rcw.left=x;rcw.top=y;
         r.intersect(rcw);
         r.offset(-w1->getX(),-w1->getY());
-        c->mInvalidRgn->subtract((const RectangleInt&)r);
     }
 }
 
@@ -204,7 +206,8 @@ void WindowManager::resetVisibleRegion(){
         if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
             newrgn->intersect((*w)->mWindowRgn); 
         }
-        (*w)->getCanvas()->set_layer((*w)->mLayer,newrgn);
+        (*w)->mVisibleRgn=newrgn;   
+        //(*w)->getCanvas()->set_layer((*w)->mLayer,newrgn);
         LOGV("window %p[%s] Layer=%d %d rects visible=%d",(*w),(*w)->getText().c_str(),(*w)->mLayer,
                    newrgn->get_num_rectangles(),(*w)->getVisibility());
     }

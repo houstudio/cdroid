@@ -114,5 +114,19 @@ public:
     void draw(Canvas&canvas,int x=0,int y=0)override;
     Shape*clone()const override;
 };
+
+class PathShape:public Shape{
+private:
+    float mStdWidth;
+    float mStdHeight;
+    float mScaleX;
+    float mScaleY;
+    Path*mPath;
+public:
+    PathShape(Path*,float stdWidth,float stdHeight);
+    void onResize(int w, int h)override;
+    void draw(Canvas&canvas,int x=0,int y=0)override;
+    Shape*clone()const override;
+};
 }
 #endif

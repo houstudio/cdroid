@@ -27,7 +27,7 @@ int UIEventSource::handleEvents(){
         GraphDevice::getInstance().flip();
     }
     if(GraphDevice::getInstance().needCompose())
-        GraphDevice::getInstance().ComposeSurfaces();
+        GraphDevice::getInstance().composeSurfaces();
 
     mRunnables.remove_if([](const RUNNER&r)->bool{
          return r.removed;
