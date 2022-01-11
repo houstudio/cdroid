@@ -207,7 +207,6 @@ void WindowManager::resetVisibleRegion(){
             newrgn->intersect((*w)->mWindowRgn); 
         }
         (*w)->mVisibleRgn=newrgn;   
-        //(*w)->getCanvas()->set_layer((*w)->mLayer,newrgn);
         LOGV("window %p[%s] Layer=%d %d rects visible=%d",(*w),(*w)->getText().c_str(),(*w)->mLayer,
                    newrgn->get_num_rectangles(),(*w)->getVisibility());
     }

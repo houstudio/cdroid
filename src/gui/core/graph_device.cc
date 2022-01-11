@@ -119,26 +119,27 @@ void GraphDevice::composeSurfaces(){
     primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw=wBounds[i];
-        HANDLE hdlSurface=wSurfaces[i]->mHandle;
-        std::vector<Rectangle>clipRects;
-        primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
-        RefPtr<Region>rgn=wins[i]->mVisibleRgn;
+        std::vector<Rectangle> clipRects;
+        HANDLE hdlSurface = wSurfaces[i]->mHandle;
+        RefPtr<Region>rgn = Region::create();
         wSurfaces[i]->copy_clip_rectangle_list(clipRects);
-        rects+=clipRects.size();
-        mInvalidateRgn->subtract((const RectangleInt&)rcw);
-        if(hdlSurface){
-            for(auto r:clipRects){
-                Rect rc;
-                rc.set(r.x,r.y,r.width,r.height);
-                GFXBlit(primarySurface,rcw.left+rc.left,rcw.top+rc.top,hdlSurface,(const GFXRect*)&rc);
-            }
-            continue;
-        }
         for(auto r:clipRects){
-            primaryContext->rectangle(rcw.left+r.x,rcw.top+r.y,r.width,r.height);
-            LOGV("win %p invalidrect(%d,%d,%d,%d) ",wins[i],(int)r.x,(int)r.y,(int)r.width,(int)r.height);
+            Rect rc;
+            rc.set(r.x,r.y,r.width,r.height);
+            rgn->do_union((const RectangleInt&)rc);
         }
-        primaryContext->fill();
+        mInvalidateRgn->subtract((const RectangleInt&)rcw);
+        rgn->intersect(wins[i]->mVisibleRgn);
+        rects+=rgn->get_num_rectangles();
+        for(int j=0;j<rgn->get_num_rectangles();j++){
+            RectangleInt rc=rgn->get_rectangle(j);
+            if(hdlSurface)GFXBlit(primarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
+            else primaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
+        }
+        if(hdlSurface==nullptr){
+            primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
+            primaryContext->fill();
+        } 
     } 
     for(int i=0;i<mInvalidateRgn->get_num_rectangles();i++){
         RectangleInt r=mInvalidateRgn->get_rectangle(i);

@@ -187,7 +187,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
         setfbinfo(surf);
         surf->buffer=mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
         dev.rfbScreen->frameBuffer = surf->buffer;
-	surf->pitch=dev.fix.line_length;
+        surf->pitch=dev.fix.line_length;
         ResetScreenFormat(surf,width,height,format);
     }else{
         surf->buffer=malloc(width*surf->pitch);
