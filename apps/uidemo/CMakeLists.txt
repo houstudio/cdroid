@@ -22,11 +22,7 @@ add_custom_target(uidemopo
   COMMENT "xgettext:Make MultiLanguage files (.po) for files in DIR:${PROJECT_SOURCE_DIR}"
 )
 
-add_custom_target(uidemopak
-  COMMAND zip -r -0  ${CMAKE_CURRENT_BINARY_DIR}/uidemo.pak *
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/assets
-  COMMENT "package assets resource"
-  )
+CreatePAK( ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo.pak uidemo)
 
 add_custom_target(uidemotranslate
   COMMAND python  ${CMAKE_SOURCE_DIR}/src/tools/po2json.py ${CMAKE_CURRENT_BINARY_DIR}/uidemo.po

@@ -184,11 +184,12 @@ InputMethodManager::~InputMethodManager(){
 int InputMethodManager::setKeyCharacterMap(const std::string&filename){
     std::ifstream fs(filename);
     delete kcm;
+    kcm = nullptr;
     if(fs.good()){
         KeyCharacterMap::load(filename,fs,KeyCharacterMap::FORMAT_ANY,kcm);
     }else{
         std::shared_ptr<std::istream>in=App::getInstance().getInputStream(filename);
-        KeyCharacterMap::load(filename,*in,KeyCharacterMap::FORMAT_ANY,kcm);
+        if(in)KeyCharacterMap::load(filename,*in,KeyCharacterMap::FORMAT_ANY,kcm);
     }
     LOGI("load Keyboard Character map from %s  kcm=%p",filename.c_str(),kcm);
     return kcm?0:-1;

@@ -251,7 +251,6 @@ static void endTag(void *userData, const XML_Char *name){
 }
 
 void Keyboard::loadKeyboard(Context*context,const std::string&resid){
-    std::unique_ptr<std::istream>stream=context->getInputStream(resid);
     XML_Parser parser=XML_ParserCreateNS(NULL,':');
     KeyboardData pd={&rows,&mKeys,context,this,nullptr,0,0};
     ULONGLONG tstart=SystemClock::uptimeMillis();
@@ -261,17 +260,20 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     pd.displayHeight=mDisplayHeight;
     pd.keyboardMode=mKeyboardMode;
     int len = 0;
-    do{
-        char buf[256];
-        stream->read(buf,sizeof(buf));
-        len=stream->gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return ;
-        }
-    } while(len!=0);
+    std::unique_ptr<std::istream>stream=context->getInputStream(resid);
+    if(stream){
+        do{
+            char buf[256];
+            stream->read(buf,sizeof(buf));
+            len=stream->gcount();
+            if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
+                const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+                LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
+                XML_ParserFree(parser);
+                return ;
+            }
+        } while(len!=0);
+    }
     XML_ParserFree(parser);
     mTotalHeight= pd.y-mDefaultVerticalGap;
     mTotalWidth = pd.minWidth;
