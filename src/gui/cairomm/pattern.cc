@@ -291,57 +291,57 @@ RadialGradient::~RadialGradient()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 MeshPattern::MeshPattern(){
-   m_cobject=cairo_pattern_create_mesh();
-   check_object_status_and_throw_exception(*this);
+    m_cobject=cairo_pattern_create_mesh();
+    check_object_status_and_throw_exception(*this);
 }
 
 MeshPattern::MeshPattern(cairo_pattern_t* cobject, bool has_reference)
-  :Pattern(cobject,has_reference){
+    :Pattern(cobject,has_reference){
 }
 
 void MeshPattern::begin_patch(){
-   cairo_mesh_pattern_begin_patch(m_cobject);
+    cairo_mesh_pattern_begin_patch(m_cobject);
 }
 
 void MeshPattern::end_patch(){
-   cairo_mesh_pattern_end_patch(m_cobject);
+    cairo_mesh_pattern_end_patch(m_cobject);
 }
 
 void MeshPattern::line_to(double x,double y){
-   cairo_mesh_pattern_line_to(m_cobject,x,y);
+    cairo_mesh_pattern_line_to(m_cobject,x,y);
 }
 
 void MeshPattern::move_to(double x,double y){
-   cairo_mesh_pattern_move_to(m_cobject,x,y);
+    cairo_mesh_pattern_move_to(m_cobject,x,y);
 }
 
 void MeshPattern::curve_to(double x1,double y1,double x2,double y2,double x3,double y3){
-   cairo_mesh_pattern_curve_to(m_cobject,x1,y1,x2,y2,x3,y3);
+    cairo_mesh_pattern_curve_to(m_cobject,x1,y1,x2,y2,x3,y3);
 }
 
 void MeshPattern::set_control_point(uint32_t point_num,double x,double y){
-   cairo_mesh_pattern_set_control_point(m_cobject,point_num,x,y);
+    cairo_mesh_pattern_set_control_point(m_cobject,point_num,x,y);
 }
 
 void MeshPattern::set_corner_color_rgb(uint32_t corner_num,double red,double green,double blue){
-   cairo_mesh_pattern_set_corner_color_rgb(m_cobject,corner_num,red,green,blue);
+    cairo_mesh_pattern_set_corner_color_rgb(m_cobject,corner_num,red,green,blue);
 }
 
 void MeshPattern::set_corner_color_rgba(uint32_t corner_num,double red,double green,double blue,double alpha){
-   cairo_mesh_pattern_set_corner_color_rgba(m_cobject,corner_num,red,green,blue,alpha);
+    cairo_mesh_pattern_set_corner_color_rgba(m_cobject,corner_num,red,green,blue,alpha);
 }
 
 int MeshPattern::get_corner_color_rgba(uint32_t patch_num,uint32_t corner_num,double& red,double& green,double& blue,double&alpha){
-   return cairo_mesh_pattern_get_corner_color_rgba(m_cobject,patch_num,corner_num,&red,&green,&blue,&alpha);
+    return cairo_mesh_pattern_get_corner_color_rgba(m_cobject,patch_num,corner_num,&red,&green,&blue,&alpha);
 }
 
 int MeshPattern::get_control_point(uint32_t patch_num,uint32_t corner_num,double&x,double&y){
-   return cairo_mesh_pattern_get_control_point(m_cobject,patch_num,corner_num,&x,&y);
+    return cairo_mesh_pattern_get_control_point(m_cobject,patch_num,corner_num,&x,&y);
 }
 
 RefPtr<MeshPattern>MeshPattern::create(){
-   cairo_pattern_t*p=cairo_pattern_create_mesh();
-   return make_refptr_for_instance<MeshPattern>(new MeshPattern());
+    cairo_pattern_t*p=cairo_pattern_create_mesh();
+    return make_refptr_for_instance<MeshPattern>(new MeshPattern());
 }
 
 SweepGradient::SweepGradient(double cx,double cy,double radius)
@@ -357,7 +357,7 @@ SweepGradient::SweepGradient(cairo_pattern_t* cobject, bool has_reference)
 }
 
 RefPtr<SweepGradient>SweepGradient::create(double cx,double cy,double radius){
-   return make_refptr_for_instance<SweepGradient>(new SweepGradient(cx,cy,radius));
+    return make_refptr_for_instance<SweepGradient>(new SweepGradient(cx,cy,radius));
 }
 
 void SweepGradient::add_sector_patch( double angle_A,double A_r, double A_g, double A_b,double A_a,
@@ -398,6 +398,7 @@ static void color2rgba(uint32_t c,float&r,float&g,float&b,float&a){
     g=((c>>8)&0xFF)/255.;
     b=(c&0xFF)/255;
 }
+
 void SweepGradient::add_sector_patch(double angleA,uint32_t colorA,double angleB, uint32_t colorB){
     float r1,g1,b1,a1,r2,g2,b2,a2;
     color2rgba(colorA,r1,g1,b1,a1);

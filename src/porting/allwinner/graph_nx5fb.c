@@ -281,14 +281,17 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
         size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
         setfbinfo(surf);
         surf->buffer=mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
-        dev.rfbScreen->frameBuffer = surf->buffer;
         surf->pitch=dev.fix.line_length;
         surf->phybuffer=dev.fix.smem_start;
+        memset(surf->buffer,0,dev.fix.smem_len);
         if(dev.fix.smem_len>=fb_size*2){
             surf->bkbuffer =surf->buffer+fb_size;
             surf->phybkbuffer=surf->phybuffer+fb_size;
         }
+#ifdef ENABLE_RFB
+        dev.rfbScreen->frameBuffer = surf->buffer;
         ResetScreenFormat(surf,width,height,format);
+#endif
     }else{
         surf->buffer=malloc(width*surf->pitch);
     }

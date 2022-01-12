@@ -24,7 +24,7 @@ GradientDrawable::GradientState::GradientState(){
    mGradientRadiusType = RADIUS_TYPE_PIXELS;
    mUseLevel = false;
    mUseLevelForShape = true;
-   mDensity = 160;//DisplayMetrics.DENSITY_DEFAULT;
+   mDensity = DisplayMetrics::DENSITY_DEFAULT;
 }
 
 GradientDrawable::GradientState::GradientState(Orientation orientation, const std::vector<int>&gradientColors)

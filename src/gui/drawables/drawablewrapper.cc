@@ -6,7 +6,7 @@ namespace cdroid{
 
 DrawableWrapper::DrawableWrapperState::DrawableWrapperState(){
     mDrawableState=nullptr;
-    mDensity=160;//DisplayMetrics.DENSITY_DEFAULT
+    mDensity = DisplayMetrics::DENSITY_DEFAULT;
     mSrcDensityOverride =0;
 }
 
