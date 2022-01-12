@@ -104,9 +104,11 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     for(x=0;x<rec.w;x++)fb[x]=color;
     for(y=1;y<rec.h;y++){
         fb+=(ngs->pitch>>2);
-        memcpy(fb,fbtop,rec.w*2);
+        memcpy(fb,fbtop,rec.w*4);
     }
-    GFXFlip(surface);
+#ifdef ENABLE_RFB
+    rfbMarkRectAsModified(rfbScreen,rec.x,rec.y,rec.w,rec.h);
+#endif
     return E_OK;
 }
 
@@ -228,7 +230,9 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
         pbs+=nsrc->pitch;
         pbd+=ndst->pitch;
     }
-    GFXFlip(dstsurface);
+#ifdef ENABLE_RFB
+    rfbMarkRectAsModified(rfbScreen,dx,dy,dx+rs.w,dy+rs.h);
+#endif
     return 0;
 }
 

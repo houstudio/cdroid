@@ -71,9 +71,9 @@ static int getfeatures(int fd){
            source|=(1<<i);
        }
    }
-   if(test_bit(ABS_MT_TOUCH_MAJOR,bitmask)
-       && test_bit(ABS_MT_POSITION_X,bitmask)
-       && test_bit(ABS_MT_POSITION_Y,bitmask)){
+   if(test_bit(ABS_MT_TOUCH_MAJOR,(unsigned int*)bitmask)
+       && test_bit(ABS_MT_POSITION_X,(unsigned int*)bitmask)
+       && test_bit(ABS_MT_POSITION_Y,(unsigned int*)bitmask)){
       LOGD("fd %d is multitouchdevice!");
    }
    LOGD("fd:%d feature:%s source=%x",fd,features,source);

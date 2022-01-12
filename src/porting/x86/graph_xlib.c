@@ -151,10 +151,13 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     for(x=0;x<rec.w;x++)fb[x]=color;
     for(y=1;y<rec.h;y++){
         fb+=(img->bytes_per_line>>2);
-        memcpy(fb,fbtop,rec.w*2);
+        memcpy(fb,fbtop,rec.w*4);
     }
     if(surface==mainSurface){
         X11Expose(rec.x,rec.y,rec.w,rec.h);
+#if ENABLE_RFB
+       rfbMarkRectAsModified(rfbScreen,rec.x,rec.y,rec.w,rec.h);
+#endif
     }
     return E_OK;
 }

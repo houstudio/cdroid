@@ -193,7 +193,7 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
         fb[x]=color;
     for(y=1;y<rec.h;y++){
         fb+=(ngs->pitch>>2);
-        memcpy(fb,fbtop,rec.w*2);
+        memcpy(fb,fbtop,rec.w*4);
     }
     return E_OK;
 }
