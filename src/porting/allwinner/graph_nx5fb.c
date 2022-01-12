@@ -73,7 +73,7 @@ DWORD GFXInit(){
 }
 
 #ifdef HAVE_FY_TDE2
-void swapBuffer(FBSURFACE*surf){
+void copySurface(void*phyfrom,void*phyto){
     TDE2_RECT_S src_rect; 
     memset(&src_rect, 0, sizeof(TDE2_RECT_S));
     src_rect.s32Xpos    = 0;
@@ -104,14 +104,40 @@ void swapBuffer(FBSURFACE*surf){
     dst_rect.u32Width   = dev.var.xres;
     dst_rect.u32Height  = dev.var.yres;
 
-    // 获取虚拟地址对应的物理地址
-    src_surface.u32PhyAddr = surf->current==surf->buffer?surf->phybkbuffer:surf->phybuffer;//src_phy;
-    dst_surface.u32PhyAddr = surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;//dst_phy;
+    // 鑾峰彇铏氭嫙鍦板潃瀵瑰簲鐨勭墿鐞嗗湴鍧�
+    src_surface.u32PhyAddr = phyfrom;//surf->current==surf->buffer?surf->phybkbuffer:surf->phybuffer;//src_phy;
+    dst_surface.u32PhyAddr = phyto;//surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;//dst_phy;
 
     TDE_HANDLE tde_handle= FY_TDE2_BeginJob();
-    if (FY_TDE2_QuickCopy(tde_handle, &src_surface, &src_rect, &dst_surface, &dst_rect))
-    {
+    if (FY_TDE2_QuickCopy(tde_handle, &src_surface, &src_rect, &dst_surface, &dst_rect)){
         LOGE("gpu copy error\n");
+    }
+    FY_TDE2_EndJob(tde_handle, FY_TRUE, FY_TRUE, 0);
+}
+
+void swapBuffer(FBSURFACE*surf){
+    if(surf->current==surf->buffer){
+	    copySurface(surf->phybuffer,surf->phybkbuffer);
+	}else{
+	    copySurface(surf->phybkbuffer,surf->phybuffer);
+	}
+}
+
+void FastFillRect(FBSURFACE*surf,GFXRect*rect,UINT color){
+    TDE2_SURFACE_S dst_surface; 
+    memset(&dst_surface, 0, sizeof(TDE2_SURFACE_S));
+    dst_surface.enColorFmt      = TDE2_COLOR_FMT_ARGB8888;
+    dst_surface.u32Width        = surf->width;
+    dst_surface.u32Height       = surf->height;
+    dst_surface.u32Stride       = surf->pitch;
+    dst_surface.bAlphaMax255    = FY_TRUE;
+
+    dst_surface.u32PhyAddr = surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;
+
+    TDE_HANDLE tde_handle=FY_TDE2_BeginJob();
+
+    if (FY_TDE2_QuickFill(tde_handle, &dst_surface, (TDE2_RECT_S*)&rect, color)){
+        LOGD("gpu fill error\n");
     }
     FY_TDE2_EndJob(tde_handle, FY_TRUE, FY_TRUE, 0);
 }
@@ -156,10 +182,18 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch);
     UINT*fb=(UINT*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
-    for(y=0;y<rec.h;y++){
-        for(x=0;x<rec.w;x++)
-           fb[x]=color;
+    UINT *fbtop=fb; 
+#ifdef HAVE_FY_TDE2
+    if(ngs->ishw){
+        FastFillRect(ngs,rect,color);
+        return 0;
+    }
+#endif
+    for(x=0;x<rec.w;x++)
+        fb[x]=color;
+    for(y=1;y<rec.h;y++){
         fb+=(ngs->pitch>>2);
+        memcpy(fb,fbtop,rec.w*2);
     }
     return E_OK;
 }

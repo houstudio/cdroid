@@ -100,10 +100,11 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch);
     UINT*fb=(UINT*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
-    for(y=0;y<rec.h;y++){
-        for(x=0;x<rec.w;x++)
-           fb[x]=color;
+    UINT*fbtop=fb;
+    for(x=0;x<rec.w;x++)fb[x]=color;
+    for(y=1;y<rec.h;y++){
         fb+=(ngs->pitch>>2);
+        memcpy(fb,fbtop,rec.w*2);
     }
     GFXFlip(surface);
     return E_OK;

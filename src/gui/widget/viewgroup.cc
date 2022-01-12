@@ -163,7 +163,6 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     for (TouchTarget* target = mFirstTouchTarget; target ; target = target->next) {
         resetCancelNextUpFlag(target->child);
         dispatchTransformedTouchEvent(*event, true, target->child, target->pointerIdBits);
-	    LOGD("send CANCEL to %p:%d",target->child,target->child->getId());
     }
     if(syntheticEvent)
         event->recycle();

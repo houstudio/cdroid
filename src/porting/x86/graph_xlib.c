@@ -147,15 +147,16 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",img,rec.x,rec.y,rec.w,rec.h,color,img->bytes_per_line);
     UINT*fb=(UINT*)(img->data+img->bytes_per_line*rec.y+rec.x*4);
-    for(y=0;y<rec.h;y++){
-        for(x=0;x<rec.w;x++)
-           fb[x]=color;
+    UINT*fbtop=fb;
+    for(x=0;x<rec.w;x++)fb[x]=color;
+    for(y=1;y<rec.h;y++){
         fb+=(img->bytes_per_line>>2);
+        memcpy(fb,fbtop,rec.w*2);
     }
-   if(surface==mainSurface){
-       X11Expose(rec.x,rec.y,rec.w,rec.h);
-   }
-   return E_OK;
+    if(surface==mainSurface){
+        X11Expose(rec.x,rec.y,rec.w,rec.h);
+    }
+    return E_OK;
 }
 
 DWORD GFXFlip(HANDLE surface){
