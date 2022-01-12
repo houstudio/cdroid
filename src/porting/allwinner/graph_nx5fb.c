@@ -10,6 +10,8 @@
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
 
+#define USE_DOUBLE_BUFFER 1
+
 #ifdef HAVE_FY_TDE2
 #include <mpi_tde.h>
 //#include <mpi_sys.h>
@@ -116,6 +118,8 @@ void copySurface(void*phyfrom,void*phyto){
 }
 
 void swapBuffer(FBSURFACE*surf){
+    if(surf->bkbuffer==nullptr)
+        return;
     if(surf->current==surf->buffer){
 	    copySurface(surf->phybuffer,surf->phybkbuffer);
 	}else{
@@ -131,9 +135,9 @@ void FastFillRect(FBSURFACE*surf,GFXRect*rect,UINT color){
     dst_surface.u32Height       = surf->height;
     dst_surface.u32Stride       = surf->pitch;
     dst_surface.bAlphaMax255    = FY_TRUE;
-
-    dst_surface.u32PhyAddr = surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;
-
+    if(surf->bkbuffer==nullptr){
+        dst_surface.u32PhyAddr = (surf->current==surf->buffer)?surf->phybuffer:surf->phybkbuffer;
+    }
     TDE_HANDLE tde_handle=FY_TDE2_BeginJob();
 
     if (FY_TDE2_QuickFill(tde_handle, &dst_surface, (TDE2_RECT_S*)&rect, color)){
@@ -207,7 +211,9 @@ DWORD GFXFlip(HANDLE surface){
        dev.var.yoffset=surf->current==surf->buffer?0:surf->height;
        dev.var.yoffset=0;
        int ret=ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var);
-       surf->current=(surf->current==surf->buffer)?surf->bkbuffer:surf->buffer;
+       if(surf->bkbuffer==nullptr){
+           surf->current=(surf->current==surf->buffer)?surf->bkbuffer:surf->buffer;
+       }
 #if ENABLE_RFB
        rfbMarkRectAsModified(dev.rfbScreen,0,0,surf->width,surf->height);
 #endif
@@ -284,10 +290,12 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
         surf->pitch=dev.fix.line_length;
         surf->phybuffer=dev.fix.smem_start;
         memset(surf->buffer,0,dev.fix.smem_len);
+#ifdef USE_DOUBLE_BUFFER
         if(dev.fix.smem_len>=fb_size*2){
             surf->bkbuffer =surf->buffer+fb_size;
             surf->phybkbuffer=surf->phybuffer+fb_size;
         }
+#endif
 #ifdef ENABLE_RFB
         dev.rfbScreen->frameBuffer = surf->buffer;
         ResetScreenFormat(surf,width,height,format);
