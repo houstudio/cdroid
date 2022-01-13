@@ -12,14 +12,15 @@ class INPUT:public testing::Test{
    virtual void TearDown(){}
 };
 
+#define test_bit(bit, array)    ((array)[(bit)/8] & (1<<((bit)%8)))
 TEST_F(INPUT,GetDeviceInfo){
    INPUTDEVICEINFO info;
    InputGetDeviceInfo(INJECTDEV_KEY,&info);
-   ASSERT_TRUE(info.source&(1<<EV_KEY));
+   ASSERT_TRUE(test_bit(EV_KEY,info.keyBitMask));
    ASSERT_GT(strlen(info.name),0);
    InputGetDeviceInfo(INJECTDEV_PTR,&info);
    ASSERT_GT(strlen(info.name),0);
-   ASSERT_TRUE(info.source&(1<<EV_ABS));
+   ASSERT_TRUE(test_bit(EV_ABS,info.absBitMask));
 }
 
 TEST_F(INPUT,InjectEvent){
