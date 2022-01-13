@@ -49,14 +49,14 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
     std::shared_ptr<InputDevice>dev;
     auto itr=devices.find(fd);
     if(itr==devices.end()){
-        InputDevice tmpdev(fd);
-        if(tmpdev.getSource()&(1<<EV_ABS)){
+        InputDevice tmpdev(fd);LOGD("device %d classes=%x",fd,tmpdev.getClasses());
+        if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
             dev.reset(new MouseDevice(fd));
             dev->setEventConsumeListener([&](const InputEvent&e){
                MotionEvent*mt=MotionEvent::obtain((MotionEvent&)e);
                events.push(mt);
             });
-        }else if(tmpdev.getSource()&(1<<EV_KEY)){
+        }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_KEYBOARD)){
             dev.reset(new KeyDevice(fd));
             dev->setEventConsumeListener([&](const InputEvent&e){
                KeyEvent*key=KeyEvent::obtain((KeyEvent&)e);

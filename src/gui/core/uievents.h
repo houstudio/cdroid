@@ -75,10 +75,7 @@ struct PointerProperties {
 
     void copyFrom(const PointerProperties& other);
 };
-enum {
-   INPUTSOURCE_KEY=1,
-   INPUTSOURCE_TOUCH=2,
-};
+
 class InputEvent{
 protected:
    int mDeviceId;
@@ -454,7 +451,7 @@ public:
    inline void getPointerProperties(size_t pointerIndex,PointerProperties*out) const {
         *out=mPointerProperties[pointerIndex];
    }
-   void addSample(nsecs_t eventTime, const PointerCoords* pointerCoords);
+   void addSample(nsecs_t eventTime,const PointerProperties&, const PointerCoords&);
    void offsetLocation(float xOffset, float yOffset);
    void setLocation(float x,float y);
    void scale(float scaleFactor);

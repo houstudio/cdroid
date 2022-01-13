@@ -15,22 +15,148 @@
 using namespace std;
 namespace cdroid{
 
-
+static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint32_t endIndex) {
+    const uint8_t* end = array + endIndex;
+    array += startIndex;
+    while (array != end) {
+        if (*(array++) != 0) {
+            return true;
+        }
+    }
+    return false;
+}
+#define test_bit(bit, array)    ((array)[(bit)/8] & (1<<((bit)%8)))
+#define sizeof_bit_array(bits)  (((bits) + 7) / 8)
 InputDevice::InputDevice(int fdev):listener(nullptr){
-   INPUTDEVICEINFO info;
-   InputDeviceIdentifier di;
-   InputGetDeviceInfo(fdev,&info);
-   di.name=info.name;
-   di.product=info.product;
-   di.vendor=info.vendor;
-   devinfo.initialize(fdev,0,0,di,std::string(),0,0);
-   devinfo.addSource(info.source);
-   kmap=nullptr;
-   LOGD("device %d source=%x vid/pid=%x/%x name=%s",fdev,info.source,info.vendor,info.product,info.name);
+    INPUTDEVICEINFO info;
+    InputDeviceIdentifier di;
+
+    mDeviceClasses=0;
+    InputGetDeviceInfo(fdev,&info);
+    di.name=info.name;
+    di.product=info.product;
+    di.vendor=info.vendor;
+    devinfo.initialize(fdev,0,0,di,std::string(),0,0);
+
+    // See if this is a keyboard.  Ignore everything in the button range except for
+    // joystick and gamepad buttons which are handled like keyboards for the most part.
+    bool haveKeyboardKeys = containsNonZeroByte(info.keyBitMask, 0, sizeof_bit_array(BTN_MISC))
+            || containsNonZeroByte(info.keyBitMask, sizeof_bit_array(KEY_OK),
+                    sizeof_bit_array(KEY_MAX + 1));
+    bool haveGamepadButtons = containsNonZeroByte(info.keyBitMask, sizeof_bit_array(BTN_MISC),
+                    sizeof_bit_array(BTN_MOUSE))
+            || containsNonZeroByte(info.keyBitMask, sizeof_bit_array(BTN_JOYSTICK),
+                    sizeof_bit_array(BTN_DIGI));
+    if (haveKeyboardKeys || haveGamepadButtons) {
+        mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
+    }
+
+    if(test_bit(BTN_MOUSE,info.keyBitMask)
+       &&test_bit(REL_X,info.relBitMask)
+       &&test_bit(REL_Y,info.relBitMask))
+        mDeviceClasses=INPUT_DEVICE_CLASS_CURSOR;//devinfo.addSource(INPUT_DEVICE_CLASS_CURSOR);
+    if(test_bit(ABS_MT_POSITION_X, info.absBitMask)
+            && test_bit(ABS_MT_POSITION_Y, info.absBitMask)) {
+        // Some joysticks such as the PS3 controller report axes that conflict
+        // with the ABS_MT range.  Try to confirm that the device really is
+        // a touch screen.
+        if (test_bit(BTN_TOUCH, info.keyBitMask) || !haveGamepadButtons) {
+            mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
+        }
+    // Is this an old style single-touch driver?
+    } else if (test_bit(BTN_TOUCH, info.keyBitMask)
+            && test_bit(ABS_X, info.absBitMask)
+            && test_bit(ABS_Y, info.absBitMask)) {
+        mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
+    // Is this a BT stylus?
+    } else if ((test_bit(ABS_PRESSURE, info.absBitMask) ||  test_bit(BTN_TOUCH, info.keyBitMask))
+            && !test_bit(ABS_X, info.absBitMask) && !test_bit(ABS_Y, info.absBitMask)) {
+        //device->classes |= INPUT_DEVICE_CLASS_EXTERNAL_STYLUS;
+        // Keyboard will try to claim some of the buttons but we really want to reserve those so we
+        // can fuse it with the touch screen data, so just take them back. Note this means an
+        // external stylus cannot also be a keyboard device.
+        mDeviceClasses &= ~INPUT_DEVICE_CLASS_KEYBOARD;
+    }
+ 
+    // See if this device is a joystick.
+    // Assumes that joysticks always have gamepad buttons in order to distinguish them
+    // from other devices such as accelerometers that also have absolute axes.
+    if (haveGamepadButtons) {
+        uint32_t assumedClasses = mDeviceClasses | INPUT_DEVICE_CLASS_JOYSTICK;
+        for (int i = 0; i <= ABS_MAX; i++) {
+            if (test_bit(i, info.absBitMask)
+                    && (getAbsAxisUsage(i, assumedClasses) & INPUT_DEVICE_CLASS_JOYSTICK)) {
+                mDeviceClasses = assumedClasses;
+                break;
+            }
+        }
+    }
+
+    // Check whether this device has switches.
+    for (int i = 0; i <= SW_MAX; i++) {
+        if (test_bit(i, info.swBitMask)) {
+            mDeviceClasses |= INPUT_DEVICE_CLASS_SWITCH;
+            break;
+        }
+    }
+
+    // Check whether this device supports the vibrator.
+    if (test_bit(FF_RUMBLE, info.ffBitMask)) {
+        mDeviceClasses |= INPUT_DEVICE_CLASS_VIBRATOR;
+    }
+
+    // Configure virtual keys.
+    if ((mDeviceClasses & INPUT_DEVICE_CLASS_TOUCH)) {
+        // Load the virtual keys for the touch screen, if any.
+        // We do this now so that we can make sure to load the keymap if necessary.
+        uint32_t status = 0;//loadVirtualKeyMapLocked(device);
+        if (!status) {
+            mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
+        }
+    } 
+    kmap=nullptr;
 }
 
+uint32_t getAbsAxisUsage(int32_t axis, uint32_t mDeviceClasses) {
+    // Touch devices get dibs on touch-related axes.
+    if (mDeviceClasses & INPUT_DEVICE_CLASS_TOUCH) {
+        switch (axis) {
+        case ABS_X:
+        case ABS_Y:
+        case ABS_PRESSURE:
+        case ABS_TOOL_WIDTH:
+        case ABS_DISTANCE:
+        case ABS_TILT_X:
+        case ABS_TILT_Y:
+        case ABS_MT_SLOT:
+        case ABS_MT_TOUCH_MAJOR:
+        case ABS_MT_TOUCH_MINOR:
+        case ABS_MT_WIDTH_MAJOR:
+        case ABS_MT_WIDTH_MINOR:
+        case ABS_MT_ORIENTATION:
+        case ABS_MT_POSITION_X:
+        case ABS_MT_POSITION_Y:
+        case ABS_MT_TOOL_TYPE:
+        case ABS_MT_BLOB_ID:
+        case ABS_MT_TRACKING_ID:
+        case ABS_MT_PRESSURE:
+        case ABS_MT_DISTANCE:
+            return INPUT_DEVICE_CLASS_TOUCH;
+        }
+    }
+
+    // External stylus gets the pressure axis
+    if (mDeviceClasses & INPUT_DEVICE_CLASS_EXTERNAL_STYLUS) {
+        if (axis == ABS_PRESSURE) {
+            return INPUT_DEVICE_CLASS_EXTERNAL_STYLUS;
+        }
+    }
+
+    // Joystick devices get the rest.
+    return mDeviceClasses & INPUT_DEVICE_CLASS_JOYSTICK;
+}
 int InputDevice::isValidEvent(int type,int code,int value){
-    return ((1<<type)&getSource())==(1<<type);
+    return true;
 }
 
 int InputDevice::getId()const{
@@ -46,6 +172,10 @@ int InputDevice::getProduct()const{
     return devinfo.getIdentifier().product;
 }
 
+int InputDevice::getClasses()const{
+    return mDeviceClasses;
+}
+
 const std::string&InputDevice::getName()const{
     return devinfo.getIdentifier().name;
 }
@@ -53,8 +183,8 @@ const std::string&InputDevice::getName()const{
 KeyDevice::KeyDevice(int fd)
    :InputDevice(fd){
    msckey=0;
-   lastDownKey=-1;
-   repeatCount=0;
+   mLastDownKey=-1;
+   mRepeatCount=0;
    const std::string fname=App::getInstance().getDataPath()+getName()+".kl";
    KeyLayoutMap::load(fname,kmap);
 }
@@ -69,16 +199,16 @@ int KeyDevice::putRawEvent(int type,int code,int value){
     switch(type){
     case EV_KEY:
         if(kmap)kmap->mapKey(code/*scancode*/,0,&keycode/*keycode*/,(uint32_t*)&flags);
-        lastDownKey=(value?keycode:-1);//key down
-        if(lastDownKey==keycode)
-            repeatCount+=(value==0);
+        mLastDownKey=(value?keycode:-1);//key down
+        if(mLastDownKey==keycode)
+            mRepeatCount+=(value==0);
         else
-            repeatCount=0;
+            mRepeatCount=0;
 
-        key.initialize(getId(),getSource(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
-                       keycode,code/*scancode*/,0/*metaState*/,repeatCount, downtime,SystemClock::uptimeNanos()/*eventtime*/);
-        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, key.getLabel(),value,flags);
-        if(listener)listener(key); 
+        mEvent.initialize(getId(),getSource(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
+                       keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeNanos()/*eventtime*/);
+        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
+        if(listener)listener(mEvent); 
         break;
     case EV_SYN:
         LOGV("fd[%d].SYN value=%d code=%d",getId(),value,code);
@@ -89,28 +219,50 @@ int KeyDevice::putRawEvent(int type,int code,int value){
 }
 
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
-    memset(coords,0,sizeof(coords));
-    memset(ptprops,0,sizeof(ptprops));
-    memset(buttonstats,0,sizeof(buttonstats));
+    mPointSlot = 0;
+    //memset(coords,0,sizeof(coords));
+    //memset(ptprops,0,sizeof(ptprops));
+}
+
+void TouchDevice::setAxisValue(int index,int axis,int value){
+    auto it=mPointMAP.find(index);
+    if(it==mPointMAP.end()){
+        TouchPoint tp;
+        tp.coord.clear();
+        auto it2=mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
+        it=it2.first;
+    }
+    it->second.coord.setAxisValue(axis,value);
 }
 
 int TouchDevice::putRawEvent(int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    if(type==EV_ABS){
-        switch(type){
-        case ABS_MT_SLOT: mPointId=value;break;
+    switch(type){
+    case EV_ABS:
+        switch(code){
+        case ABS_MT_SLOT: mPointSlot=value;break;
         case ABS_MT_TRACKING_ID:
         case ABS_MT_TOUCH_MAJOR:
         case ABS_MT_POSITION_X:
-        case ABS_MT_POSITION_Y:break;
+        case ABS_MT_POSITION_Y:
+             setAxisValue(mPointSlot,code,value);break;
+        case ABS_X:
+        case ABS_Y:
+        case ABS_Z: setAxisValue(0,code,value);break;
         case ABS_MT_WIDTH_MINOR:
         case ABS_MT_PRESSURE:
         case ABS_MT_DISTANCE:
         case ABS_MT_TOOL_TYPE:
         case ABS_MT_ORIENTATION:break; 
-        }
+        }break;
+    
+    case EV_SYN:break;
     }
     return 0;
+}
+
+MouseDevice::MouseDevice(int fd):TouchDevice(fd){
+    memset(buttonstats,0,sizeof(buttonstats));
 }
 
 int MouseDevice::putRawEvent(int type,int code,int value){
@@ -121,24 +273,27 @@ int MouseDevice::putRawEvent(int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
     switch(type){
     case EV_KEY:
-        downtime=SystemClock::uptimeNanos();
+        mDownTime=SystemClock::uptimeNanos();
         buttonstats[act_btn]=code;
-        LOGV("Key %x /%d btn=%d %lld",value,code,btnmap[act_btn],downtime);
-        mt.setAction(code?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
-        mt.setActionButton(btnmap[act_btn]);
-        if(listener)listener(mt);
-        if(code==0)mt.setActionButton(0);
+        LOGV("Key %x /%d btn=%d %lld",value,code,btnmap[act_btn],mDownTime);
+        mEvent.setAction(code?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
+        mEvent.setActionButton(btnmap[act_btn]);
+        if(listener)listener(mEvent);
+        if(code==0)mEvent.setActionButton(0);
         break;
     case EV_ABS:
-        coords->setAxisValue(code,value);
-        mt.setAction(MotionEvent::ACTION_MOVE);
+        TouchDevice::putRawEvent(type,code,value);
+        mEvent.setAction(MotionEvent::ACTION_MOVE);
         break;
     case EV_SYN:
-        mt.initialize(getId(),getSource(),mt.getAction()/*action*/,mt.getActionButton()/*actionbutton*/,
+        mEvent.initialize(getId(),getSource(),mEvent.getAction()/*action*/,mEvent.getActionButton()/*actionbutton*/,
                0/*flags*/,  0/*edgeFlags*/,0/*metaState*/,0/*buttonState*/,
                0/*xOffset*/,0/*yOffset*/,0/*xPrecision*/,0/*yPrecision*/,
-               downtime,SystemClock::uptimeNanos(),1/*pointerCount*/,ptprops,coords);
-        if(listener)listener(mt);
+               mDownTime,SystemClock::uptimeNanos(),0,nullptr,nullptr);//1/*pointerCount*/,ptprops,coords);
+        for(auto p:mPointMAP){
+            mEvent.addSample(SystemClock::uptimeNanos(),p.second.prop,p.second.coord);
+        }
+        if(listener)listener(mEvent);
         break;
     }
     return 0;

@@ -99,6 +99,55 @@ private:
     std::vector<MotionRange> mMotionRanges;
 };
 
+/* Input device classes. */
+enum {
+    /* The input device is a keyboard or has buttons. */
+    INPUT_DEVICE_CLASS_KEYBOARD      = 0x00000001,
+
+    /* The input device is an alpha-numeric keyboard (not just a dial pad). */
+    INPUT_DEVICE_CLASS_ALPHAKEY      = 0x00000002,
+
+    /* The input device is a touchscreen or a touchpad (either single-touch or multi-touch). */
+    INPUT_DEVICE_CLASS_TOUCH         = 0x00000004,
+
+    /* The input device is a cursor device such as a trackball or mouse. */
+    INPUT_DEVICE_CLASS_CURSOR        = 0x00000008,
+
+    /* The input device is a multi-touch touchscreen. */
+    INPUT_DEVICE_CLASS_TOUCH_MT      = 0x00000010,
+
+    /* The input device is a directional pad (implies keyboard, has DPAD keys). */
+    INPUT_DEVICE_CLASS_DPAD          = 0x00000020,
+
+    /* The input device is a gamepad (implies keyboard, has BUTTON keys). */
+    INPUT_DEVICE_CLASS_GAMEPAD       = 0x00000040,
+
+    /* The input device has switches. */
+    INPUT_DEVICE_CLASS_SWITCH        = 0x00000080,
+
+    /* The input device is a joystick (implies gamepad, has joystick absolute axes). */
+    INPUT_DEVICE_CLASS_JOYSTICK      = 0x00000100,
+
+    /* The input device has a vibrator (supports FF_RUMBLE). */
+    INPUT_DEVICE_CLASS_VIBRATOR      = 0x00000200,
+
+    /* The input device has a microphone. */
+    INPUT_DEVICE_CLASS_MIC           = 0x00000400,
+
+    /* The input device is an external stylus (has data we want to fuse with touch data). */
+    INPUT_DEVICE_CLASS_EXTERNAL_STYLUS = 0x00000800,
+
+    /* The input device has a rotary encoder */
+    INPUT_DEVICE_CLASS_ROTARY_ENCODER = 0x00001000,
+
+    /* The input device is virtual (not a real device, not part of UI configuration). */
+    INPUT_DEVICE_CLASS_VIRTUAL       = 0x40000000,
+
+    /* The input device is external (not built-in). */
+    INPUT_DEVICE_CLASS_EXTERNAL      = 0x80000000,
+};
+extern uint32_t getAbsAxisUsage(int32_t axis, uint32_t deviceClasses);
+
 class InputDevice{
 public:
     static constexpr int SOURCE_CLASS_MASK     = 0x000000ff;
@@ -126,6 +175,7 @@ public:
     static constexpr int SOURCE_ANY = 0xffffff00;    
     typedef std::function<void(const InputEvent&)>EventListener;
 protected:
+    int mDeviceClasses;
     InputDeviceInfo devinfo;
     EventListener listener;
     class KeyLayoutMap*kmap;
@@ -138,17 +188,18 @@ public:
     int getSource()const;
     int getVendor()const;
     int getProduct()const;
+    int getClasses()const;
     const std::string&getName()const;
 };
 
 class KeyDevice:public InputDevice{
 private:
-    int lastDownKey;
-    int repeatCount;
+    int mLastDownKey;
+    int mRepeatCount;
 protected:
     int msckey;
-    KeyEvent key;
-    nsecs_t downtime;
+    KeyEvent mEvent;
+    nsecs_t mDownTime;
 public:
     KeyDevice(int fd);
     virtual int putRawEvent(int type,int code,int value);
@@ -156,20 +207,27 @@ public:
 
 class TouchDevice:public InputDevice{
 protected:
-    MotionEvent mt;
-    nsecs_t downtime;
-    int mPointId;
-    uint8_t buttonstats[16];
-    PointerCoords coords[32];
-    PointerProperties ptprops[32];
+    MotionEvent mEvent;
+    nsecs_t mDownTime;
+    int mPointSlot;
+    typedef struct{
+        PointerCoords coord;
+        PointerProperties prop; 
+    }TouchPoint;
+    std::map<int, TouchPoint>mPointMAP;
+    //PointerCoords coords[32];
+    //PointerProperties ptprops[32];
+    void setAxisValue(int index,int axis,int value);
 public:
     TouchDevice(int fd);
     virtual int putRawEvent(int type,int code,int value);
 };
 
 class MouseDevice:public TouchDevice{
+protected:
+    uint8_t buttonstats[16];
 public:
-    MouseDevice(int fd):TouchDevice(fd){}
+    MouseDevice(int fd);
     virtual int putRawEvent(int type,int code,int value);
 };
 }//namespace

@@ -540,11 +540,10 @@ void MotionEvent::initialize(
     mDownTime = downTime;
     mPointerProperties.clear();
 
-    for(int i=0;i<pointerCount;i++)
-       mPointerProperties.push_back(pointerProperties[i]);
     mSampleEventTimes.clear();
     mSamplePointerCoords.clear();
-    addSample(eventTime, pointerCoords);
+    for(int i=0;i<pointerCount;i++)
+       addSample(eventTime,pointerProperties[i], pointerCoords[i]);
 }
 
 MotionEvent::MotionEvent(const MotionEvent&other){
@@ -660,11 +659,10 @@ bool MotionEvent::isButtonPressed(int button)const{
     return (button!=0)&&((getButtonState() & button) == button);
 }
 
-void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords* pointerCoords) {
+void MotionEvent::addSample(nsecs_t eventTime,const PointerProperties&prop, const PointerCoords&coord) {
     mSampleEventTimes.push_back(eventTime);
-
-    for(int i=0;i<getPointerCount();i++)
-       mSamplePointerCoords.push_back(pointerCoords[i]);
+    mPointerProperties.push_back(prop);  
+    mSamplePointerCoords.push_back(coord);
 }
 
 const PointerCoords* MotionEvent::getRawPointerCoords(size_t pointerIndex) const {

@@ -57,7 +57,7 @@ static void key_callback(aui_key_info*ki,void*d){
     }
 }
 
-#define set_bit(array,bit)    ((array)[(bit)/8] = (1<<((bit)%8)))
+#define set_bit(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     switch(device){
     case DEVICE_IR:
@@ -71,17 +71,16 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
          strcpy(devinfo->name,"Mouse-Inject");
          devinfo->vendor=INJECTDEV_PTR>>16;
          devinfo->product=INJECTDEV_PTR&0xFF;
-         set_bit(devinfo->absBitMask,EV_ABS);
-         set_bit(devinfo->absBitMask,EV_SYN);
-         set_bit(devinfo->keyBitMask,EV_KEY); 
-         set_bit(devinfo->keyBitMask,EV_SYN); 
+         set_bit(devinfo->absBitMask,ABS_X);
+         set_bit(devinfo->absBitMask,ABS_Y);
+         set_bit(devinfo->keyBitMask,BTN_TOUCH);
          break;
     case INJECTDEV_KEY:
          strcpy(devinfo->name,"Keyboard-Inject");
          devinfo->vendor=INJECTDEV_KEY>>16;
          devinfo->product=INJECTDEV_KEY&0xFF;
-         set_bit(devinfo->keyBitMask,EV_KEY); 
-         set_bit(devinfo->keyBitMask,EV_SYN); 
+         set_bit(devinfo->keyBitMask,BTN_MISC); 
+         set_bit(devinfo->keyBitMask,KEY_OK); 
          break;
     default:break;
     }
