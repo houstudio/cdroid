@@ -2214,7 +2214,7 @@ void ViewGroup::requestDisallowInterceptTouchEvent(bool disallowIntercept){
 }
 
 bool ViewGroup::onInterceptTouchEvent(MotionEvent& ev){
-    if( false//ev.isFromSource(InputDevice::SOURCE_MOUSE)
+    if( ev.isFromSource(InputDevice::SOURCE_MOUSE)
         && (ev.getAction() == MotionEvent::ACTION_DOWN)
         && ev.isButtonPressed(MotionEvent::BUTTON_PRIMARY)
         && isOnScrollbarThumb(ev.getX(), ev.getY()) )

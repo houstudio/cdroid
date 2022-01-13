@@ -56,16 +56,16 @@ static int test_bit(int nr, uint32_t * addr){
 }
 
 static int getfeatures(int fd){
-   BYTE bitmask[EV_MAX+1];
+   BYTE bitmask[EV_CNT];
    static char features[256];
    const char*evs[]={"SYN ","KEY ","REL ","ABS ","MSC ","SW ","LED ","SND ","REP ","FF ","PWR ","FFS ","MAX"};
    int rc;
    int source=0;
-   memset(bitmask,0,EV_MAX+1);
+   memset(bitmask,0,EV_CNT);
    rc=ioctl(fd, EVIOCGBIT(0, EV_MAX),bitmask);
    features[0]=0;
    LOGD_IF(rc<=0,"EVIOCGBIT %d",rc);
-   for(int i=0;i<0x17/*EV_MAX*/;i++){
+   for(int i=0;i<EV_CNT;i++){
        if(test_bit(i,(unsigned int*)bitmask)&&(i<=5||i>0x10)){
            strcat(features,evs[(i<=5?i:i-10)]);
            source|=(1<<i);

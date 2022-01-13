@@ -29,16 +29,26 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
    LOGD("device %d source=%x vid/pid=%x/%x name=%s",fdev,info.source,info.vendor,info.product,info.name);
 }
 
-int InputDevice::isvalid_event(const INPUTEVENT*e){
-    return ((1<<e->type)&getSource())==(1<<e->type);
+int InputDevice::isValidEvent(int type,int code,int value){
+    return ((1<<type)&getSource())==(1<<type);
 }
 
-int InputDevice::getId()const{return devinfo.getId();}
-int InputDevice::getSource()const{return devinfo.getSources();}
-int InputDevice::getVendor()const{return devinfo.getIdentifier().vendor;}
-int InputDevice::getProduct()const{return devinfo.getIdentifier().product;}
+int InputDevice::getId()const{
+    return devinfo.getId();
+}
+int InputDevice::getSource()const{
+    return devinfo.getSources();
+}
+int InputDevice::getVendor()const{
+    return devinfo.getIdentifier().vendor;
+}
+int InputDevice::getProduct()const{
+    return devinfo.getIdentifier().product;
+}
 
-const std::string&InputDevice::getName()const{return devinfo.getIdentifier().name;}
+const std::string&InputDevice::getName()const{
+    return devinfo.getIdentifier().name;
+}
 
 KeyDevice::KeyDevice(int fd)
    :InputDevice(fd){
@@ -49,31 +59,31 @@ KeyDevice::KeyDevice(int fd)
    KeyLayoutMap::load(fname,kmap);
 }
 
-int KeyDevice::putrawdata(const INPUTEVENT*e){
-    int flags=0;
-    int keycode=e->code;
-    if(!isvalid_event(e)){
-         LOGD("invalid event type %x source=%x",e->type,devinfo.getSources());
+int KeyDevice::putRawEvent(int type,int code,int value){
+    int flags  =0;
+    int keycode=code;
+    if(!isValidEvent(type,code,value)){
+         LOGD("invalid event type %x source=%x",type,devinfo.getSources());
          return -1;
     }
-    switch(e->type){
+    switch(type){
     case EV_KEY:
-        if(kmap)kmap->mapKey(e->code/*scancode*/,0,&keycode/*keycode*/,(uint32_t*)&flags);
-        lastDownKey=(e->value?keycode:-1);//key down
+        if(kmap)kmap->mapKey(code/*scancode*/,0,&keycode/*keycode*/,(uint32_t*)&flags);
+        lastDownKey=(value?keycode:-1);//key down
         if(lastDownKey==keycode)
-            repeatCount+=(e->value==0);
+            repeatCount+=(value==0);
         else
             repeatCount=0;
 
-        key.initialize(getId(),getSource(),(e->value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
-                       keycode,e->code/*scancode*/,0/*metaState*/,repeatCount, downtime,SystemClock::uptimeNanos()/*eventtime*/);
-        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),e->code,keycode, key.getLabel(),e->value,flags);
+        key.initialize(getId(),getSource(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
+                       keycode,code/*scancode*/,0/*metaState*/,repeatCount, downtime,SystemClock::uptimeNanos()/*eventtime*/);
+        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, key.getLabel(),value,flags);
         if(listener)listener(key); 
         break;
     case EV_SYN:
-        LOGV("fd[%d].SYN value=%d code=%d",getId(),e->value,e->code);
+        LOGV("fd[%d].SYN value=%d code=%d",getId(),value,code);
         break;
-    default:LOGD("event type %x source=%x",e->type,getSource());break;
+    default:LOGD("event type %x source=%x",type,getSource());break;
     }
     return 0;
 }
@@ -84,29 +94,43 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     memset(buttonstats,0,sizeof(buttonstats));
 }
 
-int TouchDevice::putrawdata(const INPUTEVENT*e){
-    if(!isvalid_event(e))return -1;
+int TouchDevice::putRawEvent(int type,int code,int value){
+    if(!isValidEvent(type,code,value))return -1;
+    if(type==EV_ABS){
+        switch(type){
+        case ABS_MT_SLOT: mPointId=value;break;
+        case ABS_MT_TRACKING_ID:
+        case ABS_MT_TOUCH_MAJOR:
+        case ABS_MT_POSITION_X:
+        case ABS_MT_POSITION_Y:break;
+        case ABS_MT_WIDTH_MINOR:
+        case ABS_MT_PRESSURE:
+        case ABS_MT_DISTANCE:
+        case ABS_MT_TOOL_TYPE:
+        case ABS_MT_ORIENTATION:break; 
+        }
+    }
     return 0;
 }
 
-int MouseDevice::putrawdata(const INPUTEVENT*e){
+int MouseDevice::putRawEvent(int type,int code,int value){
     BYTE btnmap[]={ MotionEvent::BUTTON_PRIMARY  ,/*BTN_LEFT*/
                     MotionEvent::BUTTON_SECONDARY,/*BTN_RIGHT*/
                     MotionEvent::BUTTON_TERTIARY/*BTN_MIDDLE*/ ,0,0};
-    int act_btn=e->value-BTN_MOUSE;
-    if(!isvalid_event(e))return -1;
-    switch(e->type){
+    int act_btn=value-BTN_MOUSE;
+    if(!isValidEvent(type,code,value))return -1;
+    switch(type){
     case EV_KEY:
         downtime=SystemClock::uptimeNanos();
-        buttonstats[act_btn]=e->code;
-        LOGV("Key %x /%d btn=%d %lld",e->value,e->code,btnmap[act_btn],downtime);
-        mt.setAction(e->code?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
+        buttonstats[act_btn]=code;
+        LOGV("Key %x /%d btn=%d %lld",value,code,btnmap[act_btn],downtime);
+        mt.setAction(code?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
         mt.setActionButton(btnmap[act_btn]);
         if(listener)listener(mt);
-        if(e->code==0)mt.setActionButton(0);
+        if(code==0)mt.setActionButton(0);
         break;
     case EV_ABS:
-        coords->setAxisValue(e->code,e->value);
+        coords->setAxisValue(code,value);
         mt.setAction(MotionEvent::ACTION_MOVE);
         break;
     case EV_SYN:

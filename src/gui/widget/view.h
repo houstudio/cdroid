@@ -2,6 +2,7 @@
 #define __CDROID_VIEW_H__
 #include <core/eventcodes.h>
 #include <core/uievents.h>
+#include <core/inputdevice.h>
 #include <core/canvas.h>
 #include <core/insets.h>
 #include <core/viewconfiguration.h>

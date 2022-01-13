@@ -107,7 +107,7 @@ int  InputEventSource::process(const INPUTEVENT*inevents,int count){
             LOGD("%d,%d,%d device=%d ",e->type,e->code,e->value,e->device);
             continue;
         }
-        dev->putrawdata(e);
+        dev->putRawEvent(e->type,e->code,e->value);
     }
     return 0;
 }

@@ -4816,7 +4816,7 @@ bool View::performContextClick() {
 }
 
 bool View::performButtonActionOnTouchDown(MotionEvent& event) {
-    if (//event.isFromSource(InputDevice::SOURCE_MOUSE) &&
+    if (event.isFromSource(InputDevice::SOURCE_MOUSE) &&
         (event.getButtonState() & MotionEvent::BUTTON_SECONDARY) != 0) {
         //showContextMenu(event.getX(), event.getY());
         mPrivateFlags |= PFLAG_CANCEL_NEXT_UP_EVENT;
@@ -4896,7 +4896,7 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
     int action = event.getAction();
     if ((mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING
             && action != MotionEvent::ACTION_DOWN)
-            //|| !event.isFromSource(InputDevice::SOURCE_MOUSE)
+            || !event.isFromSource(InputDevice::SOURCE_MOUSE)
             || !event.isButtonPressed(MotionEvent::BUTTON_PRIMARY)) {
         mScrollCache->mScrollBarDraggingState = ScrollabilityCache::NOT_DRAGGING;
         return false;

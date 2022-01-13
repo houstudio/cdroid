@@ -10,11 +10,10 @@
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
 
-#define USE_DOUBLE_BUFFER 1
+#define USE_DOUBLE_BUFFER 0/*do not open doublebuffer,it is not necessary for the gui core */
 
-#ifdef HAVE_FY_TDE2
+#ifdef HAVE_FY_TDE2 /*for small screen ,it is no necessary ,memcpy is faster for smallscreen*/
 #include <mpi_tde.h>
-//#include <mpi_sys.h>
 #include <vd/VDecApi.h>
 #include <vd/VoApi.h>
 #endif

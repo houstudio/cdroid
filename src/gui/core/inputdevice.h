@@ -1,6 +1,6 @@
 #ifndef __INPUT_DEVICE_H__
 #define __INPUT_DEVICE_H__
-#include <uievents.h>
+#include <core/uievents.h>
 #include <functional>
 #include <map>
 #include <memory>
@@ -49,9 +49,8 @@ public:
         float resolution;
     };
 
-    void initialize(int32_t id, int32_t generation, int32_t controllerNumber,
-            const InputDeviceIdentifier& identifier, const std::string& alias, bool isExternal,
-            bool hasMic);
+    void initialize(int32_t id, int32_t generation, int32_t controllerNumber, 
+            const InputDeviceIdentifier& identifier,const std::string& alias, bool isExternal,bool hasMic);
 
     inline int32_t getId() const { return mId; }
     inline int32_t getControllerNumber() const { return mControllerNumber; }
@@ -130,10 +129,10 @@ protected:
     InputDeviceInfo devinfo;
     EventListener listener;
     class KeyLayoutMap*kmap;
-    int isvalid_event(const INPUTEVENT*e);
+    virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
-    virtual int putrawdata(const INPUTEVENT*){return 0;}//PENDING need more rawevent OK,wecan getevent now
+    virtual int putRawEvent(int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
     void setEventConsumeListener(EventListener ls){listener=ls;}
     int getId()const;
     int getSource()const;
@@ -152,25 +151,26 @@ protected:
     nsecs_t downtime;
 public:
     KeyDevice(int fd);
-    virtual int putrawdata(const INPUTEVENT*);
+    virtual int putRawEvent(int type,int code,int value);
 };
 
 class TouchDevice:public InputDevice{
 protected:
     MotionEvent mt;
     nsecs_t downtime;
-    BYTE buttonstats[16];
+    int mPointId;
+    uint8_t buttonstats[16];
     PointerCoords coords[32];
     PointerProperties ptprops[32];
 public:
     TouchDevice(int fd);
-    virtual int putrawdata(const INPUTEVENT*);
+    virtual int putRawEvent(int type,int code,int value);
 };
 
 class MouseDevice:public TouchDevice{
 public:
     MouseDevice(int fd):TouchDevice(fd){}
-    virtual int putrawdata(const INPUTEVENT*);
+    virtual int putRawEvent(int type,int code,int value);
 };
 }//namespace
 #endif 
