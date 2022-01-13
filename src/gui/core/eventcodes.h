@@ -561,4 +561,44 @@
 #define SND_MAX         0x07
 #define SND_CNT         (SND_MAX+1)
 
+/*
+ * Force feedback effect types
+ */
+
+#define FF_RUMBLE       0x50
+#define FF_PERIODIC     0x51
+#define FF_CONSTANT     0x52
+#define FF_SPRING       0x53
+#define FF_FRICTION     0x54
+#define FF_DAMPER       0x55
+#define FF_INERTIA      0x56
+#define FF_RAMP         0x57
+
+#define FF_EFFECT_MIN   FF_RUMBLE
+#define FF_EFFECT_MAX   FF_RAMP
+
+/*
+ * Force feedback periodic effect types
+ */
+
+#define FF_SQUARE       0x58
+#define FF_TRIANGLE     0x59
+#define FF_SINE         0x5a
+#define FF_SAW_UP       0x5b
+#define FF_SAW_DOWN     0x5c
+#define FF_CUSTOM       0x5d
+
+#define FF_WAVEFORM_MIN FF_SQUARE
+#define FF_WAVEFORM_MAX FF_CUSTOM
+
+/*
+ * Set ff device properties
+ */
+
+#define FF_GAIN         0x60
+#define FF_AUTOCENTER   0x61
+
+#define FF_MAX          0x7f
+#define FF_CNT          (FF_MAX+1)
+
 #endif

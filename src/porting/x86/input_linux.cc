@@ -42,44 +42,11 @@ typedef struct{
    int inotify;
    int pipe[2]; 
    int fds[128];
-   int source[128];//source type
    std::map<int,int>keymap;
 }INPUTDEVICE;
 
 static INPUTDEVICE dev={0,0};
-#ifdef HAVE_INPUT_H
-static int test_bit(int nr, uint32_t * addr){
-    int mask;
-    addr += nr >> 5;
-    mask = 1 << (nr & 0x1f);
-    return ((mask & *addr) != 0);
-}
 
-static int getfeatures(int fd){
-   BYTE bitmask[EV_CNT];
-   static char features[256];
-   const char*evs[]={"SYN ","KEY ","REL ","ABS ","MSC ","SW ","LED ","SND ","REP ","FF ","PWR ","FFS ","MAX"};
-   int rc;
-   int source=0;
-   memset(bitmask,0,EV_CNT);
-   rc=ioctl(fd, EVIOCGBIT(0, EV_MAX),bitmask);
-   features[0]=0;
-   LOGD_IF(rc<=0,"EVIOCGBIT %d",rc);
-   for(int i=0;i<EV_CNT;i++){
-       if(test_bit(i,(unsigned int*)bitmask)&&(i<=5||i>0x10)){
-           strcat(features,evs[(i<=5?i:i-10)]);
-           source|=(1<<i);
-       }
-   }
-   if(test_bit(ABS_MT_TOUCH_MAJOR,bitmask)
-       && test_bit(ABS_MT_POSITION_X,bitmask)
-       && test_bit(ABS_MT_POSITION_Y,bitmask)){
-      LOGD("fd %d is multitouchdevice!");
-   }
-   LOGD("fd:%d feature:%s source=%x",fd,features,source);
-   return source;
-}
-#endif
 INT InputInit(){
     if(dev.pipe[0]>0)
         return 0;
@@ -88,9 +55,8 @@ INT InputInit(){
     dev.fds[dev.nfd++]=dev.pipe[0];
     dev.maxfd=dev.pipe[0];
     int rc=fcntl(dev.pipe[0],F_SETFL,O_NONBLOCK);
-    LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d",__cplusplus,dev.nfd,rc,dev.fds[0]);
-#ifdef HAVE_INPUT_H
     struct dirent **namelist=nullptr;
+    LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d",__cplusplus,dev.nfd,rc,dev.fds[0]);
     int nf=scandir("/dev/input",&namelist,[&dev](const struct dirent * ent)->int{
         char fname[256];
         int rc=ent->d_type!=DT_DIR; 
@@ -100,42 +66,52 @@ INT InputInit(){
             LOGD("%s fd=%d",fname,fd);
             if(fd>0){
                 dev.maxfd=std::max(dev.maxfd,fd);
-                dev.fds[dev.nfd]=fd;
-                dev.source[dev.nfd++]=getfeatures(fd);
+                dev.fds[dev.nfd++]=fd;
             }
         }
         return rc; 
     },nullptr);
     free(namelist);
     LOGD(".....end nglInputInit maxfd=%d numfd=%d\r\n",dev.maxfd,nf);
-#endif
     return 0;
 }
 
+#define set_bit(array,bit)    ((array)[(bit)/8] = (1<<((bit)%8)))
+
 INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     int rc1,rc2;
-    memset(devinfo->name,0,sizeof(devinfo->name));
-#ifdef HAVE_INPUT_H
+    memset(devinfo,0,sizeof(INPUTDEVICEINFO));
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
     LOGD_IF(rc2,"fd=%d[%s] rc1=%d,rc2=%d",device,devinfo->name,rc1,rc2);
-    devinfo->source=getfeatures(device);
     devinfo->product=id.product;
     devinfo->vendor=id.vendor;
-#endif
+    ioctl(device, EVIOCGBIT(EV_KEY, sizeof(devinfo->keyBitMask)), devinfo->keyBitMask);
+    ioctl(device, EVIOCGBIT(EV_ABS, sizeof(devinfo->absBitMask)), devinfo->absBitMask);
+    ioctl(device, EVIOCGBIT(EV_REL, sizeof(devinfo->relBitMask)), devinfo->relBitMask);
+    ioctl(device, EVIOCGBIT(EV_SW , sizeof(devinfo->swBitMask)) , devinfo->swBitMask);
+    ioctl(device, EVIOCGBIT(EV_LED, sizeof(devinfo->ledBitMask)), devinfo->ledBitMask);
+    ioctl(device, EVIOCGBIT(EV_FF , sizeof(devinfo->ffBitMask)) , devinfo->ffBitMask);
+    ioctl(device, EVIOCGPROP(sizeof(devinfo->propBitMask)), devinfo->propBitMask);
     switch(device){
     case INJECTDEV_PTR:
          strcpy(devinfo->name,"Mouse-Inject");
          devinfo->vendor=INJECTDEV_PTR>>16;
          devinfo->product=INJECTDEV_PTR&0xFF;
-         devinfo->source=(1<<EV_ABS)|(1<<EV_KEY)|(1<<EV_SYN); 
+         set_bit(devinfo->absBitMask,EV_ABS);
+         set_bit(devinfo->absBitMask,EV_SYN);
+         set_bit(devinfo->keyBitMask,EV_KEY); 
+         set_bit(devinfo->keyBitMask,EV_SYN); 
          break;
     case INJECTDEV_KEY:
          strcpy(devinfo->name,"qwerty");
          devinfo->vendor=INJECTDEV_KEY>>16;
          devinfo->product=INJECTDEV_KEY&0xFF;
-         devinfo->source=(1<<EV_KEY)|(1<<EV_SYN); 
+         set_bit(devinfo->keyBitMask,EV_KEY); 
+         set_bit(devinfo->keyBitMask,EV_SYN); 
+         
+         //devinfo->source=(1<<EV_ABS)|(1<<EV_KEY)|(1<<EV_SYN); 
          break;
     default:break;
     }
@@ -164,9 +140,7 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout){
 INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
     int rc,ret=0;
     struct timeval tv;
-#ifdef HAVE_INPUT_H
     struct input_event events[64];
-#endif
     INPUTEVENT*e=outevents;
     fd_set rfds;
     static const char*type2name[]={"SYN","KEY","REL","ABS","MSC","SW"};
@@ -183,7 +157,6 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
     }
     for(int i=0;i<dev.nfd;i++){
         if(!FD_ISSET(dev.fds[i],&rfds))continue;
-#ifdef HAVE_INPUT_H
         if(dev.fds[i]!=dev.pipe[0]){
            rc=read(dev.fds[i],events, (max-ret)*sizeof(struct input_event));
            for(int j=0;j<rc/sizeof(struct input_event);j++,e++){
@@ -192,9 +165,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%x,%x,%x ",dev.fds[i],
                   type2name[e->type],e->type,e->code,e->value);
            }
-        }else
-#endif
-	{//for pipe
+        }else{//for pipe
            rc=read(dev.fds[i],e, (max-ret)*sizeof(INPUTEVENT));
            e+=rc/sizeof(INPUTEVENT);
         }

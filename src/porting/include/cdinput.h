@@ -28,11 +28,17 @@ typedef struct{
 #define INJECTDEV_KEY 0x101080
 #define INJECTDEV_PTR 0x101081
 typedef struct{
-    int source;
     USHORT bustype;
     USHORT vendor;
     USHORT product;
     USHORT version;
+    BYTE keyBitMask[128];
+    BYTE absBitMask[4];
+    BYTE relBitMask[4];
+    BYTE swBitMask [4];
+    BYTE ledBitMask[4];
+    BYTE ffBitMask [16];
+    BYTE propBitMask[4];
     char name[MAX_DEVICE_NAME];
 }INPUTDEVICEINFO;
 
