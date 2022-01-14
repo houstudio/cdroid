@@ -210,7 +210,7 @@ DWORD GFXFlip(HANDLE surface){
 #endif
        dev.var.yoffset=surf->current==surf->buffer?0:surf->height;
        dev.var.yoffset=0;
-       int ret=ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var);
+       int ret=ioctl(dev.fb,FBIOPAN_DISPLAY,&dev.var);
        if(surf->bkbuffer==NULL){
            surf->current=(surf->current==surf->buffer)?surf->bkbuffer:surf->buffer;
        }

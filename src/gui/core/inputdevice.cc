@@ -259,7 +259,7 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         case ABS_MT_POSITION_Y:
              setAxisValue(mPointSlot,code,value);break;
         case ABS_X:
-        case ABS_Y: LOGV("ABSXY %d,%d button&state=%d:%d",code,value,mEvent.getActionButton(),mEvent.getButtonState());
+        case ABS_Y: 
         case ABS_Z: setAxisValue(0,code,value);break;
         case ABS_MT_WIDTH_MINOR:
         case ABS_MT_PRESSURE:
