@@ -6,10 +6,11 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#ifdef ENABLE_RFB
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
-
+#endif
 #define USE_DOUBLE_BUFFER 0/*do not open doublebuffer,it is not necessary for the gui core */
 
 #ifdef HAVE_FY_TDE2 /*for small screen ,it is no necessary ,memcpy is faster for smallscreen*/

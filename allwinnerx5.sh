@@ -10,7 +10,7 @@ TYPE=Debug
 fi
 
 cmake  -DCMAKE_TOOLCHAIN_FILE=../cmake/allwinner-x5toolchain.cmake\
-    -DCDROID_CHIPSET=allwinner  -DENABLE_RFB=ON  \
+    -DCDROID_CHIPSET=allwinner  -DENABLE_RFB=OFF  \
     -DCMAKE_INSTALL_PREFIX=./ \
     -DCMAKE_BUILD_TYPE=${TYPE} \
     ..

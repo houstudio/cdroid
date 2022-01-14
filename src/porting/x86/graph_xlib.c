@@ -262,7 +262,6 @@ DWORD GFXDestroySurface(HANDLE surface)
 }
 
 static void* X11EventProc(void*p){
-    const static int btns[]={BTN_LEFT,BTN_MIDDLE,BTN_RIGHT,BTN_WHEEL,0,0};
     XEvent event;
     int down;
     while(x11Display){
@@ -337,8 +336,10 @@ static void* X11EventProc(void*p){
             int x=event.xbutton.x;
             int y=event.xbutton.y;
             int btnidx=event.xbutton.button;
-            LOGV("Button%s pos=%d,%d btn=%d",(event.type==ButtonPress?"Press":"Release"),x,y,btnidx);
-            InjectABS(EV_KEY,(event.type==ButtonPress)?1:0,btns[btnidx]);
+            switch(event.xbutton.button){
+            case 1:InjectABS(EV_KEY,BTN_TOUCH,(event.type==ButtonPress)?1:0);
+            default:break;
+            }
             }break;
         case MotionNotify:{
             int x=event.xmotion.x;

@@ -8,10 +8,11 @@
 #include <sys/mman.h>
 #include <eventcodes.h>
 #include <cdinput.h>
+#ifdef ENABLE_RFB
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
-
+#endif
 typedef struct{
     int fb;
     struct fb_fix_screeninfo fix;
@@ -107,7 +108,7 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
         memcpy(fb,fbtop,rec.w*4);
     }
 #ifdef ENABLE_RFB
-    rfbMarkRectAsModified(rfbScreen,rec.x,rec.y,rec.w,rec.h);
+    rfbMarkRectAsModified(dev.rfbScreen,rec.x,rec.y,rec.w,rec.h);
 #endif
     return E_OK;
 }
@@ -115,7 +116,7 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
 DWORD GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
-       ioctl(dev.fb, FBIO_WAITFORVSYNC, 0);
+       dev.var.yoffset=0;
        int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
        LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
 #if ENABLE_RFB
@@ -231,7 +232,7 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
         pbd+=ndst->pitch;
     }
 #ifdef ENABLE_RFB
-    rfbMarkRectAsModified(rfbScreen,dx,dy,dx+rs.w,dy+rs.h);
+    rfbMarkRectAsModified(dev.rfbScreen,dx,dy,dx+rs.w,dy+rs.h);
 #endif
     return 0;
 }

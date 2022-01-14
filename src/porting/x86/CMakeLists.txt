@@ -62,7 +62,7 @@ elseif (WIN32)
 endif()
 
 list(APPEND X86LIBS pthread)
-
+find_package(ZLIB)
 include_directories(./
     ../include
     ${CMAKE_SOURCE_DIR}/src/gui/
