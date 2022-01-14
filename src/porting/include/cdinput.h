@@ -33,7 +33,7 @@ typedef struct{
     USHORT product;
     USHORT version;
     BYTE keyBitMask[128];
-    BYTE absBitMask[4];
+    BYTE absBitMask[8];
     BYTE relBitMask[4];
     BYTE swBitMask [4];
     BYTE ledBitMask[4];
