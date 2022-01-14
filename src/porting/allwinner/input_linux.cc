@@ -61,7 +61,7 @@ INT InputInit(){
         char fname[256];
         int fd=-1; 
         snprintf(fname,sizeof(fname),"/dev/input/%s",ent->d_name);
-        if(ent->d_type!=DT_DIRc){
+        if(ent->d_type!=DT_DIR){
             int fd=open(fname,O_RDWR);//|O_NONBLOCK;
             LOGD("%s fd=%d",fname,fd);
             if(fd>0){
