@@ -127,7 +127,10 @@ static void onMousePtr(int buttonMask,int x,int y,rfbClientPtr cl){
       }else  cd->oldButton=0;
       if(btn>0&&btn<0x10){
           LOGV("ButtonMask %x->%x btn=%x/%d",cd->oldButton,buttonMask,btn,btnidx(btn),btns[btnidx(btn)]);
-          InjectABS(EV_KEY,(bc1>bc0?1:0),btns[btnidx(btn)]);
+        switch(btns[btnidx(btn)]){
+        case BTN_LEFT:InjectABS(EV_KEY,BTN_TOUCH,(bc1>bc0?1:0));
+        default:break;
+        }
       }
       cd->oldx=x; cd->oldy=y; cd->oldButton=buttonMask;
    }

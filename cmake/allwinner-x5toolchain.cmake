@@ -1,11 +1,11 @@
 
 SET(CMAKE_SYSTEM_NAME Linux)
 
-SET(TOOLCHAIN_DIR /opt/nx5-toolchain)
+SET(TOOLCHAIN_DIR /home/houzh/NX5/arm-toolchain/ext-toolchain)
 set(CMAKE_CROSSCOMPILING true)
-
+SET(M_LIBRAY m)
 SET(SIZEOF_UINT64_T 8)
-SET(CMAKE_SYSTEM_PROCESSOR mips)
+SET(CMAKE_SYSTEM_PROCESSOR arm)
 SET(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/bin/arm-linux-gnueabi-g++)
 SET(CMAKE_C_COMPILER ${TOOLCHAIN_DIR}/bin/arm-linux-gnueabi-gcc)
 SET(CMAKE_ASM_COMPILER ${TOOLCHAIN_DIR}/bin/arm-linux-gnueabi-gcc)

@@ -117,7 +117,7 @@ void copySurface(void*phyfrom,void*phyto){
 }
 
 void swapBuffer(FBSURFACE*surf){
-    if(surf->bkbuffer==nullptr)
+    if(surf->bkbuffer==NULL)
         return;
     if(surf->current==surf->buffer){
 	    copySurface(surf->phybuffer,surf->phybkbuffer);
@@ -134,7 +134,7 @@ void FastFillRect(FBSURFACE*surf,GFXRect*rect,UINT color){
     dst_surface.u32Height       = surf->height;
     dst_surface.u32Stride       = surf->pitch;
     dst_surface.bAlphaMax255    = FY_TRUE;
-    if(surf->bkbuffer==nullptr){
+    if(surf->bkbuffer==NULL){
         dst_surface.u32PhyAddr = (surf->current==surf->buffer)?surf->phybuffer:surf->phybkbuffer;
     }
     TDE_HANDLE tde_handle=FY_TDE2_BeginJob();
@@ -210,7 +210,7 @@ DWORD GFXFlip(HANDLE surface){
        dev.var.yoffset=surf->current==surf->buffer?0:surf->height;
        dev.var.yoffset=0;
        int ret=ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var);
-       if(surf->bkbuffer==nullptr){
+       if(surf->bkbuffer==NULL){
            surf->current=(surf->current==surf->buffer)?surf->bkbuffer:surf->buffer;
        }
 #if ENABLE_RFB

@@ -1,5 +1,4 @@
 project (allwinner C CXX)
-
 set(ALLWINNER_SRCS 
      input_linux.cc
      graph_nx5fb.c
@@ -36,10 +35,9 @@ if( ENABLE_RFB )
     add_definitions(-DENABLE_RFB=1)
     list(APPEND ALLWINNER_SRCS ../common/rfbcommon.cc)
     list(APPEND ALLWINNER_LIBS vncserver)
-    find_package(ZLIB)
 endif()
 
-
+find_package(ZLIB)
 include_directories(./
     ../include
     ${ZLIB_INCLUDE_DIR}
