@@ -301,6 +301,13 @@ public:
         ACTION_BUTTON_PRESS = 11,
         ACTION_BUTTON_RELEASE = 12
     };
+    /*Flag indicating the motion event intersected the top edge of the screen.*/
+    enum{
+        EDGE_TOP   = 0x0001,
+        EDGE_BOTTOM= 0x0002,
+        EDGE_LEFT  = 0x0004,
+        EDGE_RIGHT = 0x0008
+    };
     enum{
         AXIS_X = 0,
         AXIS_Y = 1,

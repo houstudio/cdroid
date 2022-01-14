@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <sstream>
 #include <keylayoutmap.h>
-#include <app.h>
+#include <core/app.h>
 
 using namespace std;
 namespace cdroid{
@@ -36,7 +36,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     di.name=info.name;
     di.product=info.product;
     di.vendor=info.vendor;
-    devinfo.initialize(fdev,0,0,di,std::string(),0,0);
+    mDeviceInfo.initialize(fdev,0,0,di,std::string(),0,0);
 
     // See if this is a keyboard.  Ignore everything in the button range except for
     // joystick and gamepad buttons which are handled like keyboards for the most part.
@@ -152,16 +152,16 @@ int InputDevice::isValidEvent(int type,int code,int value){
 }
 
 int InputDevice::getId()const{
-    return devinfo.getId();
+    return mDeviceInfo.getId();
 }
 int InputDevice::getSource()const{
-    return devinfo.getSources();
+    return mDeviceInfo.getSources();
 }
 int InputDevice::getVendor()const{
-    return devinfo.getIdentifier().vendor;
+    return mDeviceInfo.getIdentifier().vendor;
 }
 int InputDevice::getProduct()const{
-    return devinfo.getIdentifier().product;
+    return mDeviceInfo.getIdentifier().product;
 }
 
 int InputDevice::getClasses()const{
@@ -169,7 +169,7 @@ int InputDevice::getClasses()const{
 }
 
 const std::string&InputDevice::getName()const{
-    return devinfo.getIdentifier().name;
+    return mDeviceInfo.getIdentifier().name;
 }
 
 KeyDevice::KeyDevice(int fd)
@@ -185,7 +185,7 @@ int KeyDevice::putRawEvent(int type,int code,int value){
     int flags  =0;
     int keycode=code;
     if(!isValidEvent(type,code,value)){
-         LOGD("invalid event type %x source=%x",type,devinfo.getSources());
+         LOGD("invalid event type %x source=%x",type,mDeviceInfo.getSources());
          return -1;
     }
     switch(type){
@@ -230,16 +230,25 @@ int TouchDevice::putRawEvent(int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
     switch(type){
     case EV_KEY:
-        LOGV("BTN %d %d:%d",BTN_TOUCH,code,value);
         switch(code){
         case BTN_TOUCH:
-        case BTN_TOOL_FINGER:
-            mEvent.setActionButton(code);
+        case BTN_STYLUS:
+            LOGV("BTN %d %d:%d====",BTN_TOUCH,code,value);
+            mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
             if(value)
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
             else
                 mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_PRIMARY));
             break;
+        case BTN_0:
+        case BTN_STYLUS2:
+            mEvent.setActionButton(MotionEvent::BUTTON_SECONDARY);
+            if(value)
+                mEvent.setButtonState(MotionEvent::BUTTON_SECONDARY);
+            else
+                mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_SECONDARY));
+            break;
+        case BTN_TOOL_FINGER:break;
         }break;
     case EV_ABS:
         switch(code){
@@ -267,7 +276,7 @@ int TouchDevice::putRawEvent(int type,int code,int value){
             if(mLastButtonStates==0){
                 action=mEvent.getButtonState()?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_MOVE;
             }else{
-                action=mLastButtonStates&&mEvent.getButtonState()==0?MotionEvent::ACTION_UP:MotionEvent::ACTION_MOVE;
+                action=(mLastButtonStates&&(mEvent.getButtonState()==0))?MotionEvent::ACTION_UP:MotionEvent::ACTION_MOVE;
             }
             LOGV("action :%d buttonstate:%d/%d",action,mEvent.getActionButton(),mEvent.getButtonState()); 
             mEvent.initialize(getId(),getSource(),action,mEvent.getActionButton(),

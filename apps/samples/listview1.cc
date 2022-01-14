@@ -28,7 +28,7 @@ public:
 };
 
 int main(int argc,const char*argv[]){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,50,1200,620);
     MyAdapter*adapter=new MyAdapter(0);
 

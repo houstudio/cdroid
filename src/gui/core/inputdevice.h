@@ -176,7 +176,7 @@ public:
     typedef std::function<void(const InputEvent&)>EventListener;
 protected:
     int mDeviceClasses;
-    InputDeviceInfo devinfo;
+    InputDeviceInfo mDeviceInfo;
     EventListener listener;
     class KeyLayoutMap*kmap;
     virtual int isValidEvent(int type,int code,int value);
