@@ -59,9 +59,9 @@ INT InputInit(){
     LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d",__cplusplus,dev.nfd,rc,dev.fds[0]);
     int nf=scandir("/dev/input",&namelist,[&dev](const struct dirent * ent)->int{
         char fname[256];
-        int rc=ent->d_type!=DT_DIR; 
+        int fd=-1; 
         snprintf(fname,sizeof(fname),"/dev/input/%s",ent->d_name);
-        if(rc){
+        if(ent->d_type!=DT_DIRc){
             int fd=open(fname,O_RDWR);//|O_NONBLOCK;
             LOGD("%s fd=%d",fname,fd);
             if(fd>0){
@@ -109,7 +109,6 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
          devinfo->product=INJECTDEV_KEY&0xFF;
          set_bit(devinfo->keyBitMask,BTN_MISC); 
          set_bit(devinfo->keyBitMask,KEY_OK);      
-         //devinfo->source=(1<<EV_ABS)|(1<<EV_KEY)|(1<<EV_SYN); 
          break;
     default:break;
     }

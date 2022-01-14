@@ -210,13 +210,12 @@ protected:
     MotionEvent mEvent;
     nsecs_t mDownTime;
     int mPointSlot;
+    int mLastButtonStates;//only for touchevent
     typedef struct{
         PointerCoords coord;
         PointerProperties prop; 
     }TouchPoint;
     std::map<int, TouchPoint>mPointMAP;
-    //PointerCoords coords[32];
-    //PointerProperties ptprops[32];
     void setAxisValue(int index,int axis,int value);
 public:
     TouchDevice(int fd);

@@ -65,7 +65,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
          devinfo->vendor=INJECTDEV_PTR>>16;
          devinfo->product=INJECTDEV_PTR&0xFF;
          set_bit(devinfo->keyBitMask,EV_KEY); 
-         set_bit(devinfo->keyBitMask,EV_SYN); 
+         set_bit(devinfo->keyBitMask,EV_MISC); 
          break; 
     case INJECTDEV_PTR:
          strcpy(devinfo->name,"Mouse-Inject");

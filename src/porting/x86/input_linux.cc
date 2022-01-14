@@ -59,20 +59,20 @@ INT InputInit(){
     LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d",__cplusplus,dev.nfd,rc,dev.fds[0]);
     int nf=scandir("/dev/input",&namelist,[&dev](const struct dirent * ent)->int{
         char fname[256];
-        int rc=ent->d_type!=DT_DIR; 
+        int fd=-1; 
         snprintf(fname,sizeof(fname),"/dev/input/%s",ent->d_name);
-        if(rc){
-            int fd=open(fname,O_RDWR);//|O_NONBLOCK;
+        if(ent->d_type!=DT_DIR){
+            fd=open(fname,O_RDWR);
             LOGD("%s fd=%d",fname,fd);
             if(fd>0){
                 dev.maxfd=std::max(dev.maxfd,fd);
                 dev.fds[dev.nfd++]=fd;
             }
         }
-        return rc; 
+        return fd>0; 
     },nullptr);
     free(namelist);
-    LOGD(".....end nglInputInit maxfd=%d numfd=%d\r\n",dev.maxfd,nf);
+    LOGD(".....end nglInputInit maxfd=%d numfd=%d\r\n",dev.maxfd,nf+1);
     return 0;
 }
 
@@ -99,11 +99,9 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
          strcpy(devinfo->name,"Mouse-Inject");
          devinfo->vendor=INJECTDEV_PTR>>16;
          devinfo->product=INJECTDEV_PTR&0xFF;
-         //set_bit(devinfo->absBitMask,EV_ABS);
          set_bit(devinfo->absBitMask,ABS_X);
          set_bit(devinfo->absBitMask,ABS_Y);
          set_bit(devinfo->keyBitMask,BTN_TOUCH); 
-         //set_bit(devinfo->keyBitMask,EV_SYN); 
          break;
     case INJECTDEV_KEY:
          strcpy(devinfo->name,"qwerty");
@@ -111,7 +109,6 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
          devinfo->product=INJECTDEV_KEY&0xFF;
          set_bit(devinfo->keyBitMask,BTN_MISC); 
          set_bit(devinfo->keyBitMask,KEY_OK);     
-         //devinfo->source=(1<<EV_ABS)|(1<<EV_KEY)|(1<<EV_SYN); 
          break;
     default:break;
     }
