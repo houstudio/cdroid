@@ -16,7 +16,8 @@ typedef struct ClientData {
     int oldx,oldy;
 } RFBClientData;
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
-#define SENDMOUSE(x,y)  {InjectABS(EV_ABS,0,x);InjectABS(EV_ABS,1,y);InjectABS(EV_SYN,SYN_REPORT,0);}
+#define SENDMOUSE(x,y)  {InjectABS(EV_ABS,0,x);\
+            InjectABS(EV_ABS,1,y);InjectABS(EV_SYN,SYN_REPORT,0);}
 
 static enum rfbNewClientAction onNewClient(rfbClientPtr cl);
 static void onVNCClientKey(rfbBool down,rfbKeySym key,rfbClientPtr cl);
@@ -74,7 +75,7 @@ static void InjectABS(int type,int axis,int value){
     i.type=type;
     i.code=axis;
     i.value=value;
-    i.device=INJECTDEV_PTR;
+    i.device=INJECTDEV_TOUCH;
     InputInjectEvents(&i,1,1);
 }
 
@@ -96,45 +97,29 @@ static enum rfbNewClientAction onNewClient(rfbClientPtr cl){
 }
 
 static void onMousePtr(int buttonMask,int x,int y,rfbClientPtr cl){
-   RFBClientData* cd=(RFBClientData*)cl->clientData;
-   rfbScreenInfoPtr rfbScreen=cl->screen;
-   if(x>=0 && y>=0 && x<rfbScreen->width && y<rfbScreen->height) {
-      int bc0=bitcount(cd->oldButton);
-      int bc1=bitcount(buttonMask);
-      int btns[]={BTN_LEFT,BTN_MIDDLE,BTN_RIGHT,BTN_WHEEL};
-      int btn=cd->oldButton^buttonMask;
-      SENDMOUSE(x,y);
-      if(buttonMask) {//buttonmask 1->left 2-middle 4-right
-         int i,j,x1,x2,y1,y2;
-         if(cd->oldButton==buttonMask) { /* draw a line */
-            rfbDrawLine(cl->screen,x,y,cd->oldx,cd->oldy,0x00FF);
-            x1=x; y1=y;
-            if(x1>cd->oldx) x1++; else cd->oldx++;
-            if(y1>cd->oldy) y1++; else cd->oldy++;
-            rfbMarkRectAsModified(cl->screen,x,y,cd->oldx,cd->oldy);
-         } else { /* draw a point (diameter depends on button) */
-            int w=cl->screen->paddedWidthInBytes;
-            x1=x-buttonMask; if(x1<0) x1=0;
-            x2=x+buttonMask; if(x2>rfbScreen->width) x2=rfbScreen->width;
-            y1=y-buttonMask; if(y1<0) y1=0;
-            y2=y+buttonMask; if(y2>rfbScreen->height) y2=rfbScreen->height;
-
-            for(i=x1*4/*BPP*/;i<x2*4;i++)
-              for(j=y1;j<y2;j++)
-                cl->screen->frameBuffer[j*w+i]=(char)0xff;
-            rfbMarkRectAsModified(cl->screen,x1,y1,x2,y2);
-         }
-      }else  cd->oldButton=0;
-      if(btn>0&&btn<0x10){
-          LOGV("ButtonMask %x->%x btn=%x/%d",cd->oldButton,buttonMask,btn,btnidx(btn),btns[btnidx(btn)]);
-        switch(btns[btnidx(btn)]){
-        case BTN_LEFT:InjectABS(EV_KEY,BTN_TOUCH,(bc1>bc0?1:0));
-        default:break;
+    RFBClientData* cd=(RFBClientData*)cl->clientData;
+    rfbScreenInfoPtr rfbScreen=cl->screen;
+    if(x>=0 && y>=0 && x<rfbScreen->width && y<rfbScreen->height) {
+        int btn=cd->oldButton^buttonMask;
+        if(btn) {//buttonmask 1->left 2-middle 4-right
+            int i,j,x1,x2,y1,y2;
+            InjectABS(EV_KEY,BTN_TOUCH,(buttonMask&1)==1);
+            SENDMOUSE(x,y);
+            if(cd->oldButton==buttonMask) { /* draw a line */
+                rfbDrawLine(cl->screen,x,y,cd->oldx,cd->oldy,0x00FF);
+                x1=x; y1=y;
+                if(x1>cd->oldx) x1++; else cd->oldx++;
+                if(y1>cd->oldy) y1++; else cd->oldy++;
+                rfbMarkRectAsModified(cl->screen,x,y,cd->oldx,cd->oldy);
+            }
+        }else{  
+            if(cd->oldButton)SENDMOUSE(x,y);
+            cd->oldButton=0;
         }
-      }
-      cd->oldx=x; cd->oldy=y; cd->oldButton=buttonMask;
-   }
-   rfbDefaultPtrAddEvent(buttonMask,x,y,cl);
+        cd->oldx=x; cd->oldy=y; 
+        cd->oldButton=buttonMask;
+    }
+    rfbDefaultPtrAddEvent(buttonMask,x,y,cl);
 }
 
 static void onVNCClientKey(rfbBool down,rfbKeySym key,rfbClientPtr cl)

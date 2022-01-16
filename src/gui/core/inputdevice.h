@@ -210,7 +210,6 @@ protected:
     MotionEvent mEvent;
     nsecs_t mDownTime;
     int mPointSlot;
-    int mLastButtonStates;//only for touchevent
     typedef struct{
         PointerCoords coord;
         PointerProperties prop; 

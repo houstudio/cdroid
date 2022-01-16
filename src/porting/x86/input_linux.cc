@@ -95,21 +95,28 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     ioctl(device, EVIOCGBIT(EV_FF , sizeof(devinfo->ffBitMask)) , devinfo->ffBitMask);
     ioctl(device, EVIOCGPROP(sizeof(devinfo->propBitMask)), devinfo->propBitMask);
     switch(device){
-    case INJECTDEV_PTR:
-         strcpy(devinfo->name,"Mouse-Inject");
-         devinfo->vendor=INJECTDEV_PTR>>16;
-         devinfo->product=INJECTDEV_PTR&0xFF;
-         set_bit(devinfo->absBitMask,ABS_X);
-         set_bit(devinfo->absBitMask,ABS_Y);
-         set_bit(devinfo->keyBitMask,BTN_TOUCH); 
-         break;
+    case INJECTDEV_TOUCH:
+        strcpy(devinfo->name,"Touch-Inject");
+        devinfo->vendor=INJECTDEV_TOUCH>>16;
+        devinfo->product=INJECTDEV_TOUCH&0xFF;
+        set_bit(devinfo->absBitMask,ABS_X);
+        set_bit(devinfo->absBitMask,ABS_Y);
+        set_bit(devinfo->keyBitMask,BTN_TOUCH); 
+        break;
+    case INJECTDEV_MOUSE:
+        strcpy(devinfo->name,"Touch-Inject");
+        devinfo->vendor=INJECTDEV_MOUSE>>16;
+        devinfo->product=INJECTDEV_MOUSE&0xFF;
+        set_bit(devinfo->relBitMask,REL_X);
+        set_bit(devinfo->relBitMask,REL_Y);
+        break;
     case INJECTDEV_KEY:
-         strcpy(devinfo->name,"qwerty");
-         devinfo->vendor=INJECTDEV_KEY>>16;
-         devinfo->product=INJECTDEV_KEY&0xFF;
-         set_bit(devinfo->keyBitMask,BTN_MISC); 
-         set_bit(devinfo->keyBitMask,KEY_OK);     
-         break;
+        strcpy(devinfo->name,"qwerty");
+        devinfo->vendor=INJECTDEV_KEY>>16;
+        devinfo->product=INJECTDEV_KEY&0xFF;
+        set_bit(devinfo->keyBitMask,BTN_MISC); 
+        set_bit(devinfo->keyBitMask,KEY_OK);     
+        break;
     default:break;
     }
     return 0;

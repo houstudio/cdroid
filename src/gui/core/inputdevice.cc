@@ -212,7 +212,6 @@ int KeyDevice::putRawEvent(int type,int code,int value){
 
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
-    mLastButtonStates =0;
 }
 
 void TouchDevice::setAxisValue(int index,int axis,int value){
@@ -228,17 +227,20 @@ void TouchDevice::setAxisValue(int index,int axis,int value){
 
 int TouchDevice::putRawEvent(int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
+    LOGV("%d,%d,%d",type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
         case BTN_TOUCH:
         case BTN_STYLUS:
-            LOGV("BTN %d %d:%d====",BTN_TOUCH,code,value);
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
-            if(value)
+            if(value){
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
-            else
+                mEvent.setAction(MotionEvent::ACTION_DOWN);
+            }else{
+                mEvent.setAction(MotionEvent::ACTION_UP);
                 mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_PRIMARY));
+            }
             break;
         case BTN_0:
         case BTN_STYLUS2:
@@ -267,32 +269,31 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         case ABS_MT_TOOL_TYPE:
         case ABS_MT_ORIENTATION:break; 
         }break;
-    
+    case EV_REL:
+        switch(code){
+        case REL_X:
+        case REL_Y:
+        case REL_Z:break;
+        }break;
     case EV_SYN:
         switch(code){
-        int action;
+        nsecs_t nanoNow;
         case SYN_REPORT:
         case SYN_MT_REPORT:
-            if(mLastButtonStates==0){
-                action=mEvent.getButtonState()?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_MOVE;
-            }else{
-                action=(mLastButtonStates&&(mEvent.getButtonState()==0))?MotionEvent::ACTION_UP:MotionEvent::ACTION_MOVE;
-            }
-            LOGV("action :%d buttonstate:%d/%d",action,mEvent.getActionButton(),mEvent.getButtonState()); 
-            mEvent.initialize(getId(),getSource(),action,mEvent.getActionButton(),
+            nanoNow = SystemClock::uptimeNanos();
+            LOGV_IF(mPointMAP.size(),"action :%d buttonstate:%d/%d pos=%.f,%.f",
+               mEvent.getAction(),mEvent.getActionButton(),mEvent.getButtonState(),
+               mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
+            mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
                0/*flags*/,  0/*edgeFlags*/,0/*metaState*/,mEvent.getButtonState(),
                0/*xOffset*/,0/*yOffset*/,0/*xPrecision*/,0/*yPrecision*/,
-               mDownTime,SystemClock::uptimeNanos(),0,nullptr,nullptr);
+               mDownTime,nanoNow,0,nullptr,nullptr);
             for(auto p:mPointMAP){
-                mEvent.addSample(SystemClock::uptimeNanos(),p.second.prop,p.second.coord);
+                mEvent.addSample(nanoNow,p.second.prop,p.second.coord);
             }
             if(listener)listener(mEvent);
             mPointMAP.clear();
-            if(action==MotionEvent::ACTION_UP){
-                mLastButtonStates =0;
-            }else{
-                mLastButtonStates=mEvent.getButtonState();
-            }
+            mEvent.setAction(MotionEvent::ACTION_MOVE);
         }break;
     }
     return 0;

@@ -18,7 +18,7 @@ TEST_F(INPUT,GetDeviceInfo){
    InputGetDeviceInfo(INJECTDEV_KEY,&info);
    ASSERT_TRUE(test_bit(EV_KEY,info.keyBitMask));
    ASSERT_GT(strlen(info.name),0);
-   InputGetDeviceInfo(INJECTDEV_PTR,&info);
+   InputGetDeviceInfo(INJECTDEV_TOUCH,&info);
    ASSERT_GT(strlen(info.name),0);
    ASSERT_TRUE(test_bit(EV_ABS,info.absBitMask));
 }
