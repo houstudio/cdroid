@@ -289,7 +289,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() , 0/*xOffset*/,0/*yOffset*/,
                0/*xPrecision*/, 0/*yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
-                mEvent.addSample(nanoNow,p.second.prop,p.second.coord);
+                mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
             if(listener)listener(mEvent);
             mPointMAP.clear();
