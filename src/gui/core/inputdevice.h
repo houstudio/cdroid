@@ -4,7 +4,7 @@
 #include <functional>
 #include <map>
 #include <memory>
-
+#include <time.h>
 namespace cdroid{
 struct InputDeviceIdentifier {
     InputDeviceIdentifier() :
@@ -182,7 +182,7 @@ protected:
     virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
-    virtual int putRawEvent(int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
+    virtual int putRawEvent(const struct timeval&tv,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
     void setEventConsumeListener(EventListener ls){listener=ls;}
     int getId()const;
     int getSource()const;
@@ -202,13 +202,14 @@ protected:
     nsecs_t mDownTime;
 public:
     KeyDevice(int fd);
-    virtual int putRawEvent(int type,int code,int value);
+    virtual int putRawEvent(const struct timeval&tv,int type,int code,int value);
 };
 
 class TouchDevice:public InputDevice{
 protected:
     MotionEvent mEvent;
     nsecs_t mDownTime;
+    nsecs_t mMoveTime;
     int mPointSlot;
     typedef struct{
         PointerCoords coord;
@@ -218,7 +219,7 @@ protected:
     void setAxisValue(int index,int axis,int value,bool isRelative);
 public:
     TouchDevice(int fd);
-    virtual int putRawEvent(int type,int code,int value);
+    virtual int putRawEvent(const struct timeval&tv,int type,int code,int value);
 };
 
 class MouseDevice:public TouchDevice{
@@ -226,7 +227,7 @@ protected:
     uint8_t buttonstats[16];
 public:
     MouseDevice(int fd);
-    virtual int putRawEvent(int type,int code,int value);
+    virtual int putRawEvent(const timeval&tv,int type,int code,int value);
 };
 }//namespace
 #endif 

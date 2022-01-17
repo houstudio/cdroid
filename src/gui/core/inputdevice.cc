@@ -181,7 +181,7 @@ KeyDevice::KeyDevice(int fd)
    KeyLayoutMap::load(fname,kmap);
 }
 
-int KeyDevice::putRawEvent(int type,int code,int value){
+int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     int flags  =0;
     int keycode=code;
     if(!isValidEvent(type,code,value)){
@@ -228,15 +228,15 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     it->second.coord.setAxisValue(axis,value);
 }
 
-int TouchDevice::putRawEvent(int type,int code,int value){
+int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    LOGV("%d,%d,%d",type,code,value);
+    //LOGV("%d,%d,%d",type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
-            mDownTime =SystemClock::uptimeNanos();
+            mMoveTime = mDownTime =tv.tv_sec*1000000+tv.tv_usec;
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
             mEvent.setAction(value?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
             if(value){
@@ -257,7 +257,9 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         }break;
     case EV_ABS:
         switch(code){
-        case ABS_X ... ABS_Z : setAxisValue(0,code,value,false) ; break;
+        case ABS_X ... ABS_Z : 
+            mMoveTime =tv.tv_sec*1000000+tv.tv_usec;
+            setAxisValue(0,code,value,false) ; break;
         //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
         case ABS_MT_SLOT    : mPointSlot=value ; break;
         case ABS_MT_TRACKING_ID:
@@ -279,15 +281,13 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         }break;
     case EV_SYN:
         switch(code){
-        nsecs_t nanoNow;
         case SYN_REPORT:
         case SYN_MT_REPORT:
-            nanoNow = SystemClock::uptimeNanos();
             LOGV_IF(mPointMAP.size(),"%s button:%d state:%d pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
                mEvent.getActionButton(),mEvent.getButtonState(),mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
                0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() , 0/*xOffset*/,0/*yOffset*/,
-               0/*xPrecision*/, 0/*yPrecision*/ , mDownTime , nanoNow , 0 , nullptr , nullptr);
+               0/*xPrecision*/, 0/*yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
                 mEvent.addSample(nanoNow,p.second.prop,p.second.coord);
             }
@@ -303,9 +303,9 @@ MouseDevice::MouseDevice(int fd):TouchDevice(fd){
     memset(buttonstats,0,sizeof(buttonstats));
 }
 
-int MouseDevice::putRawEvent(int type,int code,int value){
+int MouseDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    return TouchDevice::putRawEvent(type,code,value);
+    return TouchDevice::putRawEvent(tv,type,code,value);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////

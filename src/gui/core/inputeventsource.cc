@@ -102,12 +102,13 @@ int  InputEventSource::process(const INPUTEVENT*inevents,int count){
     LOGV_IF(count,"%p  recv %d events ",this,count);
     for(int i=0;i<count;i++){
         const INPUTEVENT*e=inevents+i;
+        struct timeval tv={e->tv_sec,e->tv_usec};
         std::shared_ptr<InputDevice>dev=getdevice(e->device);
         if(dev==nullptr){
             LOGD("%d,%d,%d device=%d ",e->type,e->code,e->value,e->device);
             continue;
         }
-        dev->putRawEvent(e->type,e->code,e->value);
+        dev->putRawEvent(tv,e->type,e->code,e->value);
     }
     return 0;
 }

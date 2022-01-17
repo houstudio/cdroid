@@ -7,6 +7,7 @@
 #include <sys/mman.h>
 #include <eventcodes.h>
 #include <cdinput.h>
+#include <time.h>
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
@@ -64,6 +65,10 @@ static int btnidx(int btn){
 }
 static void InjectKey(int type,int code,int value){
     INPUTEVENT i={0};
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC,&ts);
+    i.tv_sec=ts.tv_sec;
+    i.tv_usec=ts.tv_nsec/1000;	
     i.type=type;
     i.code=code;
     i.value=value;
@@ -72,6 +77,10 @@ static void InjectKey(int type,int code,int value){
 }
 static void InjectABS(int type,int axis,int value){
     INPUTEVENT i={0};
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC,&ts);
+    i.tv_sec=ts.tv_sec;
+    i.tv_usec=ts.tv_nsec/1000;	
     i.type=type;
     i.code=axis;
     i.value=value;
