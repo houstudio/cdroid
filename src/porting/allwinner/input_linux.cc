@@ -164,8 +164,8 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
         if(!FD_ISSET(dev.fds[i],&rfds))continue;
         if(dev.fds[i]!=dev.pipe[0]){
            clock_gettime(CLOCK_MONOTONIC,&ts);
-           rc=read(dev.fds[i],events, (max-count)*sizeof(struct input_event));
-           for(int j=0;j<rc/sizeof(struct input_event);j++,e++){
+           rc=read(dev.fds[i],events, sizeof(events)/sizeof(struct input_event));
+           for(int j=0;j<rc/sizeof(struct input_event)&&(count<max);j++,e++){
                e->tv_sec =events[j].time.tv_sec;
                e->tv_usec=events[j].time.tv_usec;
                e->type = events[j].type;
