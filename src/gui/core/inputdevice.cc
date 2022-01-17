@@ -230,12 +230,13 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
 
 int TouchDevice::putRawEvent(int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    //LOGV("%d,%d,%d",type,code,value);
+    LOGV("%d,%d,%d",type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
+            mDownTime =SystemClock::uptimeNanos();
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
             mEvent.setAction(value?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
             if(value){
@@ -256,8 +257,8 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         }break;
     case EV_ABS:
         switch(code){
-        case ABS_X ... ABS_Z: setAxisValue(0,code,value,false) ; break;
-        case ABS_PRESSURE   : setAxisValue(0,code,value,false) ; break;
+        case ABS_X ... ABS_Z : setAxisValue(0,code,value,false) ; break;
+        //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
         case ABS_MT_SLOT    : mPointSlot=value ; break;
         case ABS_MT_TRACKING_ID:
         case ABS_MT_TOUCH_MAJOR:
