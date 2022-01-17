@@ -29,8 +29,8 @@ static rfbScreenInfoPtr rfbScreen=NULL;
 #endif
 
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
-#define SENDMOUSE(x,y)  {InjectABS(EV_ABS,0,x);\
-            InjectABS(EV_ABS,1,y);InjectABS(EV_SYN,SYN_REPORT,0);}
+#define SENDMOUSE(time,x,y)  {InjectABS(time,EV_ABS,0,x);\
+            InjectABS(time,EV_ABS,1,y);InjectABS(time,EV_SYN,SYN_REPORT,0);}
 
 static void InjectKey(int type,int code,int value){
     INPUTEVENT i={0};
@@ -44,12 +44,10 @@ static void InjectKey(int type,int code,int value){
     i.device=INJECTDEV_KEY;
     InputInjectEvents(&i,1,1);
 }
-static void InjectABS(int type,int axis,int value){
+static void InjectABS(ULONG time,int type,int axis,int value){
     INPUTEVENT i={0};
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC,&ts);
-    i.tv_sec =ts.tv_sec;
-    i.tv_usec=ts.tv_nsec/1000;
+    i.tv_sec=time/1000;
+    i.tv_usec=(time%1000)*1000;
     i.type=type;
     i.code=axis;
     i.value=value;
@@ -344,12 +342,12 @@ static void* X11EventProc(void*p){
         case ButtonPress:
         case ButtonRelease:
             if(1==event.xbutton.button){
-                InjectABS(EV_KEY,BTN_TOUCH,(event.type==ButtonPress)?1:0);
-                SENDMOUSE(event.xbutton.x,event.xbutton.y);
+                InjectABS(event.xbutton.time,EV_KEY,BTN_TOUCH,(event.type==ButtonPress)?1:0);
+                SENDMOUSE(event.xbutton.time,event.xbutton.x,event.xbutton.y);
             }break;
         case MotionNotify:
             if(event.xmotion.state==0x100){
-               SENDMOUSE(event.xmotion.x,event.xmotion.y);
+               SENDMOUSE(event.xmotion.time,event.xmotion.x,event.xmotion.y);
             }
             break;
         case DestroyNotify:

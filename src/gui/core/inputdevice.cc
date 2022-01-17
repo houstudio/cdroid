@@ -230,18 +230,19 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
 
 int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    //LOGV("%d,%d,%d",type,code,value);
+    //LOGV("%lld:%04d %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
-            mMoveTime = mDownTime =tv.tv_sec*1000000+tv.tv_usec;
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
             mEvent.setAction(value?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
             if(value){
+                mMoveTime = mDownTime =tv.tv_sec*1000000+tv.tv_usec;
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
             }else{
+                mMoveTime =tv.tv_sec*1000000+tv.tv_usec;
                 mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_PRIMARY));
             }
             break;

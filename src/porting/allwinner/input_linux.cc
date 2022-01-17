@@ -142,7 +142,7 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout){
 }
 
 INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
-    int rc,ret=0;
+    int rc,count=0;
     struct timeval tv;
     struct input_event events[64];
     INPUTEVENT*e=outevents;
@@ -160,17 +160,23 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
         return E_ERROR;
     }
     for(int i=0;i<dev.nfd;i++){
+        struct timespec ts;
         if(!FD_ISSET(dev.fds[i],&rfds))continue;
         if(dev.fds[i]!=dev.pipe[0]){
-           rc=read(dev.fds[i],events, (max-ret)*sizeof(struct input_event));
+           clock_gettime(CLOCK_MONOTONIC,&ts);
+           rc=read(dev.fds[i],events, (max-count)*sizeof(struct input_event));
            for(int j=0;j<rc/sizeof(struct input_event);j++,e++){
-               *(struct input_event*)e=events[j];
+               e->tv_sec =events[j].time.tv_sec;
+               e->tv_usec=events[j].time.tv_usec;
+               e->type = events[j].type;
+               e->code = events[j].code;
+               e->value= events[j].value;
                e->device=dev.fds[i];
                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%x,%x,%x ",dev.fds[i],
                   type2name[e->type],e->type,e->code,e->value);
            }
         }else{//for pipe
-           rc=read(dev.fds[i],e, (max-ret)*sizeof(INPUTEVENT));
+           rc=read(dev.fds[i],e, (max-count)*sizeof(INPUTEVENT));
            e+=rc/sizeof(INPUTEVENT);
         }
         LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",dev.fds[i],rc,dev.fds[i]==dev.pipe[0]);
