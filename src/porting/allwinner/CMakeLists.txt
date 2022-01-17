@@ -21,10 +21,11 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
-set(NX5ROOT_DIR)
+set(NX5ROOT_DIR .)
 find_library(LIBVIDEODEC_PATH VideoDec ${NX5ROOT_DIR}/thirdparty/lib/codec)
 
 list(APPEND ALLWINNER_LIBS pthread)
+
 if(LIBVIDEODEC_PATH)
     add_definitions(-DHAVE_FY_TDE2=1)
     list(APPEND ALLWINNER_LIBS ${LIBVIDEODEC_PATH})

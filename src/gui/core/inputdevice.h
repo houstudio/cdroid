@@ -215,7 +215,7 @@ protected:
         PointerProperties prop; 
     }TouchPoint;
     std::map<int, TouchPoint>mPointMAP;
-    void setAxisValue(int index,int axis,int value);
+    void setAxisValue(int index,int axis,int value,bool isRelative);
 public:
     TouchDevice(int fd);
     virtual int putRawEvent(int type,int code,int value);

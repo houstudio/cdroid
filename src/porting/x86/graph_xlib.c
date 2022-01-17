@@ -187,6 +187,7 @@ static void ResetScreenFormat(XImage*fb,int width,int height,int format){
     }
     LOGD("format=%d",format);
     rfbNewFramebuffer(rfbScreen,fb->data,width,height,8,3,4);
+    rfbScreen->paddedWidthInBytes=fb->bytes_per_line;
 }
 #endif
 

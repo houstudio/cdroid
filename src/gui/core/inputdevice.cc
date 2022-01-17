@@ -214,7 +214,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
 }
 
-void TouchDevice::setAxisValue(int index,int axis,int value){
+void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     auto it=mPointMAP.find(index);
     if(it==mPointMAP.end()){
         TouchPoint tp;
@@ -222,23 +222,25 @@ void TouchDevice::setAxisValue(int index,int axis,int value){
         auto it2=mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
         it=it2.first;
     }
+    if(isRelative){
+        value=it->second.coord.getAxisValue(axis)+value;
+    }
     it->second.coord.setAxisValue(axis,value);
 }
 
 int TouchDevice::putRawEvent(int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    LOGV("%d,%d,%d",type,code,value);
+    //LOGV("%d,%d,%d",type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
-        case BTN_TOUCH:
+        case BTN_TOUCH :
         case BTN_STYLUS:
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
+            mEvent.setAction(value?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
             if(value){
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
-                mEvent.setAction(MotionEvent::ACTION_DOWN);
             }else{
-                mEvent.setAction(MotionEvent::ACTION_UP);
                 mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_PRIMARY));
             }
             break;
@@ -254,18 +256,17 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         }break;
     case EV_ABS:
         switch(code){
-        case ABS_MT_SLOT: mPointSlot=value;break;
+        case ABS_X ... ABS_Z: setAxisValue(0,code,value,false) ; break;
+        case ABS_PRESSURE   : setAxisValue(0,code,value,false) ; break;
+        case ABS_MT_SLOT    : mPointSlot=value ; break;
         case ABS_MT_TRACKING_ID:
         case ABS_MT_TOUCH_MAJOR:
-        case ABS_MT_POSITION_X:
-        case ABS_MT_POSITION_Y:
-             setAxisValue(mPointSlot,code,value);break;
-        case ABS_X:
-        case ABS_Y: 
-        case ABS_Z: setAxisValue(0,code,value);break;
+        case ABS_MT_POSITION_X :
+        case ABS_MT_POSITION_Y :
+             setAxisValue(mPointSlot,code,value,false);break;
         case ABS_MT_WIDTH_MINOR:
-        case ABS_MT_PRESSURE:
-        case ABS_MT_DISTANCE:
+        case ABS_MT_PRESSURE :
+        case ABS_MT_DISTANCE :
         case ABS_MT_TOOL_TYPE:
         case ABS_MT_ORIENTATION:break; 
         }break;
@@ -273,7 +274,7 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         switch(code){
         case REL_X:
         case REL_Y:
-        case REL_Z:break;
+        case REL_Z:setAxisValue(0,code,value,true);break;
         }break;
     case EV_SYN:
         switch(code){
@@ -281,13 +282,11 @@ int TouchDevice::putRawEvent(int type,int code,int value){
         case SYN_REPORT:
         case SYN_MT_REPORT:
             nanoNow = SystemClock::uptimeNanos();
-            LOGV_IF(mPointMAP.size(),"action :%d buttonstate:%d/%d pos=%.f,%.f",
-               mEvent.getAction(),mEvent.getActionButton(),mEvent.getButtonState(),
-               mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
+            LOGV_IF(mPointMAP.size(),"%s button:%d state:%d pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
+               mEvent.getActionButton(),mEvent.getButtonState(),mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
-               0/*flags*/,  0/*edgeFlags*/,0/*metaState*/,mEvent.getButtonState(),
-               0/*xOffset*/,0/*yOffset*/,0/*xPrecision*/,0/*yPrecision*/,
-               mDownTime,nanoNow,0,nullptr,nullptr);
+               0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() , 0/*xOffset*/,0/*yOffset*/,
+               0/*xPrecision*/, 0/*yPrecision*/ , mDownTime , nanoNow , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
                 mEvent.addSample(nanoNow,p.second.prop,p.second.coord);
             }
@@ -307,6 +306,7 @@ int MouseDevice::putRawEvent(int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
     return TouchDevice::putRawEvent(type,code,value);
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 InputDeviceInfo::InputDeviceInfo() {
     initialize(-1, 0, -1, InputDeviceIdentifier(), std::string(), false, false);

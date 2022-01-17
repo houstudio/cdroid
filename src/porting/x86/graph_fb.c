@@ -150,6 +150,7 @@ static int setfbinfo(FBSURFACE*surf){
     default:break; 
     }
     rc=ioctl(dev.fb,FBIOPUT_VSCREENINFO,v);
+    dev.rfbScreen->paddedWidthInBytes=surf->pitch;
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }

@@ -45,13 +45,17 @@ static FBDEVICE dev={-1};
 
 DWORD GFXInit(){
     if(dev.fb>=0)return E_OK;
+#ifdef HAVE_FY_TDE2
+    VO_Enable();
+    LOGI("FY_TDE2_Open=%d",FY_TDE2_Open());
+#endif
     dev.fb=open("/dev/fb0", O_RDWR);
-     // Get fixed screen information
+    // Get fixed screen information
     if(ioctl(dev.fb, FBIOGET_FSCREENINFO, &dev.fix) == -1) {
         LOGE("Error reading fixed information fd=%d",dev.fb);
         return E_ERROR;
     }
-    LOGI("fbmem.addr=%x fbmem.size=%d pitch=%d",dev.fix.smem_start,dev.fix.smem_len,dev.fix.line_length);
+    LOGI("NX5.fbmem.addr=%x fbmem.size=%d pitch=%d",dev.fix.smem_start,dev.fix.smem_len,dev.fix.line_length);
 
     // Get variable screen information
     if(ioctl(dev.fb, FBIOGET_VSCREENINFO, &dev.var) == -1) {
@@ -59,13 +63,22 @@ DWORD GFXInit(){
         return E_ERROR;
     }
 
-    dev.var.yoffset=0;//set first screen memory for display
+    /************************************/
+    unsigned int fb_mem_offset = (((long)dev.fix.smem_start) - (((long)dev.fix.smem_start) & ~(getpagesize() - 1)));
+    int fb_mem_len = dev.fix.smem_len + fb_mem_offset;
+    unsigned char*fb_vir_addr = (unsigned char *)mmap(0,fb_mem_len,PROT_READ|PROT_WRITE,MAP_SHARED,dev.fb, 0);
+    if ((long)fb_vir_addr == -1){
+        LOGE("Error: failed to map framebuffer device to memory");
+        return E_ERROR;
+    }
+    /* 初始化，清空framebuffer */
+    memset(fb_vir_addr, 0x00,fb_mem_len);
+/************************************/
+	//set first screen memory for display
+    dev.var.yoffset=0;
     LOGI("FBIOPUT_VSCREENINFO=%d",ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var));
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev.var.xres,dev.var.yres,dev.var.accel_flags);
-#ifdef HAVE_FY_TDE2
-    LOGI("FY_TDE2_Open=%d",FY_TDE2_Open());
-    VO_Enable();
-#endif
+
 #if ENABLE_RFB
     rfbScreenInfoPtr rfbScreen = rfbGetScreen(NULL,NULL,800,600,8,3,3);
     setupRFB(rfbScreen,"X5-RFB",0);
@@ -107,8 +120,8 @@ void copySurface(void*phyfrom,void*phyto){
     dst_rect.u32Height  = dev.var.yres;
 
     // 获取虚拟地址对应的物理地址
-    src_surface.u32PhyAddr = phyfrom;//surf->current==surf->buffer?surf->phybkbuffer:surf->phybuffer;//src_phy;
-    dst_surface.u32PhyAddr = phyto;//surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;//dst_phy;
+    src_surface.u32PhyAddr = (UINT32)phyfrom;//surf->current==surf->buffer?surf->phybkbuffer:surf->phybuffer;//src_phy;
+    dst_surface.u32PhyAddr = (UINT32)phyto;//surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;//dst_phy;
 
     TDE_HANDLE tde_handle= FY_TDE2_BeginJob();
     if (FY_TDE2_QuickCopy(tde_handle, &src_surface, &src_rect, &dst_surface, &dst_rect)){
@@ -117,7 +130,7 @@ void copySurface(void*phyfrom,void*phyto){
     FY_TDE2_EndJob(tde_handle, FY_TRUE, FY_TRUE, 0);
 }
 
-void swapBuffer(FBSURFACE*surf){
+static void swapBuffer(FBSURFACE*surf){
     if(surf->bkbuffer==NULL)
         return;
     if(surf->current==surf->buffer){
@@ -127,7 +140,7 @@ void swapBuffer(FBSURFACE*surf){
 	}
 }
 
-void FastFillRect(FBSURFACE*surf,GFXRect*rect,UINT color){
+void FastFillRect(FBSURFACE*surf,const GFXRect*rect,UINT color){
     TDE2_SURFACE_S dst_surface; 
     memset(&dst_surface, 0, sizeof(TDE2_SURFACE_S));
     dst_surface.enColorFmt      = TDE2_COLOR_FMT_ARGB8888;
@@ -136,7 +149,7 @@ void FastFillRect(FBSURFACE*surf,GFXRect*rect,UINT color){
     dst_surface.u32Stride       = surf->pitch;
     dst_surface.bAlphaMax255    = FY_TRUE;
     if(surf->bkbuffer==NULL){
-        dst_surface.u32PhyAddr = (surf->current==surf->buffer)?surf->phybuffer:surf->phybkbuffer;
+        dst_surface.u32PhyAddr = (UINT32)((surf->current==surf->buffer)?surf->phybuffer:surf->phybkbuffer);
     }
     TDE_HANDLE tde_handle=FY_TDE2_BeginJob();
 
@@ -206,14 +219,11 @@ DWORD GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
 #ifdef HAVE_FY_TDE2
-       swapBuffer(surf);
+       //swapBuffer(surf);
 #endif
-       dev.var.yoffset=surf->current==surf->buffer?0:surf->height;
        dev.var.yoffset=0;
        int ret=ioctl(dev.fb,FBIOPAN_DISPLAY,&dev.var);
-       if(surf->bkbuffer==NULL){
-           surf->current=(surf->current==surf->buffer)?surf->bkbuffer:surf->buffer;
-       }
+       LOGD_IF(ret,"FBIOPAN_DISPLAY error %d",ret);
 #if ENABLE_RFB
        rfbMarkRectAsModified(dev.rfbScreen,0,0,surf->width,surf->height);
 #endif
@@ -268,9 +278,9 @@ static void ResetScreenFormat(FBSURFACE*fb,int width,int height,int format){
          break;
     default:return;
     }
+    rfbNewFramebuffer(dev.rfbScreen,fb->buffer,width,height,8,3,4);
     dev.rfbScreen->paddedWidthInBytes=fb->pitch;
     LOGV("format=%d %dx%d:%d",format,width,height,fb->pitch);
-    rfbNewFramebuffer(dev.rfbScreen,fb->buffer,width,height,8,3,4);
 }
 #endif
 
