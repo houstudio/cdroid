@@ -9,6 +9,10 @@ AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr){
 AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::AnimationState>state){
     std::shared_ptr<AnimationState>as =std::make_shared<AnimationState>(state.get(),this);
     setConstantState(as);
+    mRunning  =false;
+    mCurFrame =0;
+    mMutated  =false;
+    mAnimating=false;
     if(state)setFrame(0,true,false);
     mRunnable=std::bind(&AnimationDrawable::run,this);
 }

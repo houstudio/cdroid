@@ -46,7 +46,9 @@ void ViewPager::initViewPager(){
     mInLayout = false;
     mFirstLayout = true;
     mPageTransformer =nullptr;
-    mFakeDragging =false;
+    mFakeDragging = false;
+    mDrawingOrder = DRAW_ORDER_DEFAULT;
+    mActivePointerId =INVALID_POINTER;
     ViewConfiguration configuration = ViewConfiguration::get(context);
     const float density = context->getDisplayMetrics().density;
 

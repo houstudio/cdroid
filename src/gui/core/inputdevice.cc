@@ -293,7 +293,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
             if(listener)listener(mEvent);
-            mPointMAP.clear();
+            if(mEvent.getAction()==MotionEvent::ACTION_UP)
+                mPointMAP.clear();
             mEvent.setAction(MotionEvent::ACTION_MOVE);
         }break;
     }

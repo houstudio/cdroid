@@ -35,10 +35,12 @@ void AbsSeekBar::initSeekBar(){
     mSplitTrack=false;
     mThumb=nullptr;
     mThumbOffset=0;
-    mTickMark=nullptr;
+    mTickMark = nullptr;
     mIsUserSeekable=true;
-    mIsDragging=false;
-    mTouchDownX=.0;
+    mIsDragging = false;
+    mTouchDownX = .0;
+    mHasThumbTint = false;
+    mHasThumbTintMode =false;
     mDisabledAlpha=1.f;
     mTouchProgressOffset =.0f;
     mScaledTouchSlop=ViewConfiguration::get(mContext).getScaledTouchSlop();

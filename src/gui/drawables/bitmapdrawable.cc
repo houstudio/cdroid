@@ -57,9 +57,9 @@ int BitmapDrawable::BitmapState::getChangingConfigurations()const{
 BitmapDrawable::BitmapDrawable(RefPtr<ImageSurface>img){
     mBitmapState=std::make_shared<BitmapState>(img);
     mDstRectAndInsetsDirty=true;
-    computeBitmapSize();
     mMutated=false;
     mTintFilter=nullptr;
+    computeBitmapSize();
 }
 
 BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
@@ -70,11 +70,10 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
     computeBitmapSize();
 }
 
-BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname){
-    mBitmapState=std::make_shared<BitmapState>();
+BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
+  :BitmapDrawable(std::make_shared<BitmapState>()){
     std::ifstream fs(resname);
     RefPtr<ImageSurface>b;
-    mTintFilter=nullptr;
     LOGV("%s",resname.c_str());
     if((ctx==nullptr)||fs.good())
         b=ImageSurface::create_from_stream(fs);

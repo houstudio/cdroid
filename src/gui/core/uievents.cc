@@ -459,7 +459,9 @@ void KeyEvent::DispatcherState::handleUpEvent(KeyEvent& event){
 
 //-------------------MotionEvent------------
 MotionEvent::MotionEvent(){
-   
+    mPointerProperties.clear();
+    mSamplePointerCoords.clear();
+    mSampleEventTimes.clear(); 
 }
 
 MotionEvent*MotionEvent::obtain(){

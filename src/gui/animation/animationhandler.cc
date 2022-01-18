@@ -31,7 +31,8 @@ void AnimationHandler::MyFrameCallbackProvider::setFrameDelay(long delay) {
 AnimationHandler*AnimationHandler::mInst=nullptr;
 
 AnimationHandler::AnimationHandler(){
-    mProvider=nullptr;
+    mProvider  = nullptr;
+    mListDirty = false;
     mFrameCallback=std::bind(&AnimationHandler::doFrame,this,std::placeholders::_1);
 }
 

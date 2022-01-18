@@ -837,7 +837,7 @@ void LayerDrawable::setOpacity(int opacity) {
 }
 
 int LayerDrawable::getOpacity() {
-    if (mLayerState->mOpacityOverride != UNKNOWN) {
+    if (mLayerState->mOpacityOverride != PixelFormat::UNKNOWN) {
         return mLayerState->mOpacityOverride;
     }
     return mLayerState->mOpacity;//getOpacity();

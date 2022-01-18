@@ -14,7 +14,7 @@ private:
         void addFrame(Drawable*,int dur);
     };
      std::shared_ptr<AnimationState>mAnimationState;
-    int mCurFrame;
+    int  mCurFrame;
     bool mRunning;
     bool mAnimating;
     bool mMutated;
