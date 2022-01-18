@@ -1,7 +1,7 @@
 #include <widget/layoutinflater.h>
 #include <widget/viewgroup.h>
 #include <core/theme.h>
-#include <windows.h>
+#include <cdroid.h>
 #include <expat.h>
 #include <cdlog.h>
 #include <string.h>

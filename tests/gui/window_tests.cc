@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <windows.h>
+#include <cdroid.h>
 #include <ngl_os.h>
 #include <fstream>
 #include <widget/layoutinflater.h>
@@ -95,7 +95,7 @@ TEST_F(WINDOW,create){
 
 TEST_F(WINDOW,inflate){
     App app;
-    Window*w=new Window(0,0,960,700);
+    Window*w=new Window(0,0,800,600);
     LayoutInflater::from(&app)->inflate("cdroid:layout/window.xml",w);
     app.exec();
 }

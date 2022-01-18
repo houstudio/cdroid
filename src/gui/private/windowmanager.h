@@ -17,8 +17,7 @@
 #ifndef __CDROID_WINDOWMANAGER_H__
 #define __CDROID_WINDOWMANAGER_H__
 
-#include <widget/view.h>
-#include <widget/window.h>
+#include <widget/cdwindow.h>
 #include <core/graph_device.h>
 #include <vector>
 #include <stdint.h>

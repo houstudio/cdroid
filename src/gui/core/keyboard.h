@@ -1,6 +1,6 @@
 #ifndef __SOFT_KEYBOARD_H__
 #define __SOFT_KEYBOARD_H__
-#include <windows.h>
+#include <cdroid.h>
 #include <istream>
 
 namespace cdroid{

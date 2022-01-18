@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <windows.h>
-#include <widget/window.h>
+#include <cdroid.h>
+#include <widget/cdwindow.h>
 #include <widget/textview.h>
 #include <windowmanager.h>
 #include <cdlog.h>

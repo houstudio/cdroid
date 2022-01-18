@@ -3906,10 +3906,8 @@ void View::destroyDrawingCache(){
 }
 
 void View::buildDrawingCache(bool autoScale){
-#if 0
-    RefPtr<ImageSurface>bmp;
-    bmp=ImageSurface::create(Surface::Format::ARGB32,getWidth(),getHeight());
-    Canvas canvas(nullptr,bmp);
+    RefPtr<ImageSurface>bmp=ImageSurface::create(Surface::Format::ARGB32,getWidth(),getHeight());
+    Canvas canvas(bmp);
     computeScroll();
     canvas.translate(-mScrollX, -mScrollY);
     mPrivateFlags |= PFLAG_DRAWN;
@@ -3927,7 +3925,6 @@ void View::buildDrawingCache(bool autoScale){
     }
     if(autoScale)mDrawingCache=bmp;
     else mUnscaledDrawingCache =bmp;
-#endif
 }
 
 void View::invalidateViewProperty(bool invalidateParent, bool forceRedraw) {

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <windows.h>
+#include <cdroid.h>
 #include <ngl_misc.h>
 #include <drawables.h>
 #include <fstream>

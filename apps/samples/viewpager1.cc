@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <cdroid.h>
 #include <widget/simplemonthview.h>
 #include <widget/pagetransformers.h>
 static int mPageCount=5;

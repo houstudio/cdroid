@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <windows.h>
+#include <cdroid.h>
 #include <ngl_os.h>
 #include <sys/time.h>
 #include <core/systemclock.h>

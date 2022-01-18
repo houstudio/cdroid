@@ -1,7 +1,7 @@
 #ifndef __ADAPTER_H__
 #define __ADAPTER_H__
 #include <widget/viewgroup.h>
-#include <widget/window.h>
+#include <widget/cdwindow.h>
 namespace cdroid{
 class DataSetObserver{
 public:

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <windows.h>
+#include <cdroid.h>
 #include <core/gravity.h>
 #include <core/assets.h>
 #include <ngl_os.h>

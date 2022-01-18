@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <windows.h>
+#include <cdroid.h>
 #include <ngl_os.h>
 #include <ngl_timer.h>
 #include <cdlog.h>

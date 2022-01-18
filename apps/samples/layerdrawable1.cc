@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <cdroid.h>
 #include <cdlog.h>
 
 View* createClockView(const std::string&bgres,int num,...){

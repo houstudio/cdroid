@@ -33,7 +33,7 @@
 #include <widget/scrollview.h>
 #include <widget/horizontalscrollview.h>
 #include <widget/progressbar.h>
-#include <widget/window.h>
+#include <widget/cdwindow.h>
 #include <views/toastwindow.h>
 #include <core/app.h>
 #include <widget/seekbar.h>

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <windows.h>
+#include <cdroid.h>
 #include <widget/keyboardview.h>
 #include <ngl_os.h>
 #include <cdlog.h>
@@ -84,6 +84,7 @@ TEST_F(WIDGET,EditText){
          "AfterInstallationEnableRequiredApacheModulesAndRestartApacheService","",
          "AbcEFG","^[A-Za-z]+$",
          "123","^[1-9]\\d*$",
+         "आज सुबह एक ट्रैफिक जैम था","""^[A-Za-z]+$",
          "0.0.0.0","^((25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))$"//"\\d+\\.\\d+\\.\\d+\\.\\d+",
     };
     App app;
@@ -96,7 +97,7 @@ TEST_F(WIDGET,EditText){
     e->setSingleLine(false);
     e->setBreakStrategy(0);
     e->setBackgroundColor(0xFF222222);
-    for(int i=0,y=160;i<0;i++,y){
+    for(int i=0,y=160;i<4;i++,y){
         EditText *e=new EditText(680,((i==0)?100:50)+i*5);
         e->setBackgroundColor(0Xff444444);
         e->setSingleLine(i>0);

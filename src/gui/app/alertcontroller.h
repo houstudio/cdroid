@@ -1,6 +1,6 @@
 #ifndef __ALERT_CONTROLLER_H__
 #define __ALERT_CONTROLLER_H__
-#include <windows.h>
+#include <cdroid.h>
 #include <app/dialoginterface.h>
 
 namespace cdroid{

@@ -1,4 +1,4 @@
-#include<windows.h>
+#include<cdroid.h>
 #include<cdlog.h>
 int main(int argc,const char*argv[]){
     setenv("LANG","zh.CN",1);

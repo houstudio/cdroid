@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <cdroid.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <strings.h>
@@ -36,7 +36,6 @@ public:
         tv->setId(position);
         tv->setText(mi.name);
         tv->setTextColor(mi.isDir?0xFFFFFFFF:0xFF88FF00);
-        tv->setBackgroundColor(0x80111111);
         tv->setTextSize(28);
         return tv;
     }
@@ -145,11 +144,11 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mdlist=new ListView(600,520);
     lp=new RelativeLayout::LayoutParams(600,LayoutParams::MATCH_PARENT);
     lp->addRule(RelativeLayout::ABOVE,100);
-    mdlist->setSelector(new ColorDrawable(0x8000ff00));
+    mdlist->setSelector(new ColorDrawable(0xFF00ff00));
     mdlist->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     mdlist->setVerticalScrollBarEnabled(true);
     mdlist->setDrawSelectorOnTop(true);
-    mdlist->setDivider(new ColorDrawable(0x40FFFFFF));
+    mdlist->setDivider(new ColorDrawable(0xFF444444));
     mdlist->setDividerHeight(1);
     layout->addView(mdlist,lp).setId(1);
 

@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <cdroid.h>
 class MyPageAdapter:public PagerAdapter{
 public:
     int getCount()override{return 8;}

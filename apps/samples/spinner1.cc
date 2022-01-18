@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <cdroid.h>
 class MyView:public View{
 public:
    MyView(int w,int h):View(w,h){

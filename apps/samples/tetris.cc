@@ -1,7 +1,7 @@
 // HWRECTView.cpp : implementation of the CHWRECTView class
 //
 
-#include <windows.h>
+#include <cdroid.h>
 #include <cdlog.h>
 #include <sstream>
 
