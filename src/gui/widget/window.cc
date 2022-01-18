@@ -374,6 +374,11 @@ void Window::cancelInvalidate(View* view){
     mInvalidateOnAnimationRunnable.removeView(view);
 }
 
+Window::InvalidateOnAnimationRunnable::InvalidateOnAnimationRunnable(){
+    mOwner =nullptr;
+    mPosted=false;
+}
+
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
     mOwner=w;
 }

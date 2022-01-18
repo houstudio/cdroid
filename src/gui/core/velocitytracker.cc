@@ -263,7 +263,7 @@ void VelocityTrackerCC::addMovement(const MotionEvent& event) {
         idBits.markBit(event.getPointerId(i));
     }
 
-    uint32_t pointerIndex[MAX_POINTERS];
+    uint32_t pointerIndex[MAX_POINTERS]={0};
     for (size_t i = 0; i < pointerCount; i++) {
         pointerIndex[i] = idBits.getIndexOfBit(event.getPointerId(i));
     }
@@ -272,6 +272,7 @@ void VelocityTrackerCC::addMovement(const MotionEvent& event) {
     VelocityTracker::Position positions[pointerCount];
 
     size_t historySize = event.getHistorySize();
+    memset(positions,0,sizeof(positions));
     for (size_t h = 0; h < historySize; h++) {
         eventTime = event.getHistoricalEventTime(h);
         for (size_t i = 0; i < pointerCount; i++) {
@@ -426,6 +427,7 @@ void IntegratingVelocityTrackerStrategy::populateEstimator(const State& state,
 
 ImpulseVelocityTrackerStrategy::ImpulseVelocityTrackerStrategy() {
     clear();
+    memset(mMovements,0,sizeof(mMovements));
 }
 
 ImpulseVelocityTrackerStrategy::~ImpulseVelocityTrackerStrategy() {
@@ -550,6 +552,7 @@ LeastSquaresVelocityTrackerStrategy::LeastSquaresVelocityTrackerStrategy(
         uint32_t degree, Weighting weighting) :
         mDegree(degree), mWeighting(weighting) {
     clear();
+    memset(mMovements,0,sizeof(mMovements));
 }
 
 LeastSquaresVelocityTrackerStrategy::~LeastSquaresVelocityTrackerStrategy() {
@@ -742,10 +745,10 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(uint32_t id,
     outEstimator->clear();
 
     // Iterate over movement samples in reverse time order and collect samples.
-    float x[HISTORY_SIZE];
-    float y[HISTORY_SIZE];
-    float w[HISTORY_SIZE];
-    float time[HISTORY_SIZE];
+    float x[HISTORY_SIZE]={.0};
+    float y[HISTORY_SIZE]={.0};
+    float w[HISTORY_SIZE]={.0};
+    float time[HISTORY_SIZE]={.0};
     uint32_t m = 0;
     uint32_t index = mIndex;
     const Movement& newestMovement = mMovements[mIndex];

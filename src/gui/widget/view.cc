@@ -5767,6 +5767,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 View::AttachInfo::AttachInfo(){
     mHardwareAccelerated =false;
     mWindowVisibility =VISIBLE;
+    mHasWindowFocus   =true;
     mApplicationScale =1.0f;
     mDebugLayout  = false;
     mDrawingTime  = 0;

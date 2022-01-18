@@ -299,6 +299,7 @@ void TextView::initView(){
     mMinWidthMode = PIXELS;
     mMaxMode =LINES;
     mMinMode =LINES;
+    mDeferScroll = -1;
     mMarqueeRepeatLimit =3;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;

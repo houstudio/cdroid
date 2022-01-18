@@ -245,7 +245,7 @@ void AbsListView::initAbsListView() {
     mIsChildViewEnabled =false;
     mIsDetaching =false;
     mSuppressIdleStateChangeCall =false;
- 
+    mVelocityScale =1.0f; 
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mOnScrollListener.onScroll = nullptr;
     mOnScrollListener.onScrollStateChanged = nullptr;
@@ -276,6 +276,7 @@ void AbsListView::initAbsListView() {
     mSelectedTop = 0;
     mChoiceMode  = CHOICE_MODE_NONE;
     mLayoutMode  = LAYOUT_NORMAL;
+    mActivePointerId = INVALID_POINTER;
     mTranscriptMode=TRANSCRIPT_MODE_DISABLED;
     mRecycler=new RecycleBin(this);
     mScrollUp = mScrollDown = nullptr;

@@ -32,6 +32,7 @@ protected:
         std::vector<View*>mViews;
         void postIfNeededLocked();
     public:
+        InvalidateOnAnimationRunnable();
         void setOwner(Window*w);
         void addView(View* view);
         void removeView(View* view);

@@ -230,7 +230,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
 
 int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    //LOGV("%lld:%04d %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
+    LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
