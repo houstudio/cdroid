@@ -333,9 +333,12 @@ bool DrawableContainer::DrawableContainerState::isStateful(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 DrawableContainer::DrawableContainer(){
     mDrawableContainerState=std::make_shared<DrawableContainerState>(nullptr,this);
-    mCurIndex=mLastIndex=-1;
-    mCurrDrawable=mLastDrawable=nullptr;
-    mBlockInvalidateCallback=nullptr;
+    mHasAlpha =false;
+    mCurIndex = mLastIndex = -1;
+    mCurrDrawable = mLastDrawable = nullptr;
+    mBlockInvalidateCallback = nullptr;
+    mExitAnimationEnd =0;
+    mEnterAnimationEnd=0;
 }
 
 DrawableContainer::~DrawableContainer(){

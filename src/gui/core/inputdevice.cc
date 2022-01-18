@@ -284,8 +284,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_REPORT:
         case SYN_MT_REPORT:
-            LOGV_IF(mPointMAP.size(),"%s button:%d state:%d pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
-               mEvent.getActionButton(),mEvent.getButtonState(),mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
+            LOGV_IF(mPointMAP.size(),"%s time:%lld pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
+               mMoveTime,mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
                0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() , 0/*xOffset*/,0/*yOffset*/,
                0/*xPrecision*/, 0/*yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);

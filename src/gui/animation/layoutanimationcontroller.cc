@@ -10,7 +10,9 @@ LayoutAnimationController::LayoutAnimationController(Context* context, const Att
     mOrder = attrs.getInt("animationOrder",ORDER_NORMAL);
     std::string resource = attrs.getString("animation");
     mAnimation    = nullptr;
-    mInterpolator = nullptr;	  
+    mInterpolator = nullptr;
+    mMaxDelay  = LONG_MIN;
+    mOrder     =0;
     setAnimation(context,resource);
     resource   = attrs.getString("interpolator");
     setInterpolator(context,resource);
@@ -18,8 +20,10 @@ LayoutAnimationController::LayoutAnimationController(Context* context, const Att
 
 LayoutAnimationController::LayoutAnimationController(Animation* animation,float delay){
     mDelay = delay;
+    mOrder =0;
     mInterpolator= nullptr;
     mAnimation   = nullptr;
+    mMaxDelay    = LONG_MIN;
     setAnimation(animation);
 }
 

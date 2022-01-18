@@ -244,6 +244,7 @@ void AbsListView::initAbsListView() {
     mStackFromBottom = false;
     mIsChildViewEnabled =false;
     mIsDetaching =false;
+    mSuppressIdleStateChangeCall =false;
  
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mOnScrollListener.onScroll = nullptr;

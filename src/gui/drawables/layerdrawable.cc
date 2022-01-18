@@ -81,7 +81,7 @@ LayerDrawable::LayerState::LayerState(){
     mPaddingStart=mPaddingEnd   =-1;
     mPaddingMode = PADDING_MODE_NEST;
     mAutoMirrored=false;
-
+    mOpacityOverride =PixelFormat::UNKNOWN;
 }
 
 LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner):LayerState(){

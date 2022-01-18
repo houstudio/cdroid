@@ -78,17 +78,16 @@ int InputEventSource::checkEvents(){
 }
 
 int InputEventSource::handleEvents(){
-    std::lock_guard<std::mutex> lock(mtxEvents);
+    std::unique_lock<std::mutex> lock(mtxEvents);
     if(events.size()==0)return false;
     while(events.size()){
         InputEvent* e=events.front();
         WindowManager::getInstance().processEvent(*e);
         if((!isplayback)&& frecord.is_open() && dynamic_cast<KeyEvent*>(e) ){
             nsecs_t eventTime=SystemClock::uptimeMillis();
-            const char*actname[]={"down","up","multi"};
             KeyEvent*key=dynamic_cast<KeyEvent*>(e);
             frecord<<"delay("<<eventTime-lasteventTime<<")"<<std::endl;
-            frecord<<"key("<<actname[key->getAction()]<<","
+            frecord<<"key("<<KeyEvent::actionToString(key->getAction())<<","
                   <<KeyEvent::getLabel(key->getKeyCode())<<")"<<std::endl;
             lasteventTime=eventTime;
         }
@@ -100,6 +99,7 @@ int InputEventSource::handleEvents(){
 
 int  InputEventSource::process(const INPUTEVENT*inevents,int count){
     LOGV_IF(count,"%p  recv %d events ",this,count);
+    std::unique_lock<std::mutex> lock(mtxEvents);
     for(int i=0;i<count;i++){
         const INPUTEVENT*e=inevents+i;
         struct timeval tv={e->tv_sec,e->tv_usec};
@@ -114,7 +114,7 @@ int  InputEventSource::process(const INPUTEVENT*inevents,int count){
 }
 
 int InputEventSource::pushEvent(InputEvent*evt){
-    std::lock_guard<std::mutex> lock(mtxEvents);
+    std::unique_lock<std::mutex> lock(mtxEvents);
     events.push(evt);
     return events.size();
 }
@@ -142,7 +142,7 @@ void InputEventSource::playback(const std::string&fname){
                  std::this_thread::sleep_for(dur);
              }else if(word.compare("key")==0){
                  word =tok->nextToken(DELIMITERS);  
-                 int action =(word.find("down")!=std::string::npos)?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP;
+                 int action =(word.find("DOWN")!=std::string::npos)?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP;
 
                  tok->skipDelimiters(DELIMITERS);
                  word =tok->nextToken(DELIMITERS);
