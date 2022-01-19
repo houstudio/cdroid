@@ -82,11 +82,14 @@ bool AttributeSet::getBoolean(const std::string&key,bool def)const{
 }
 
 int AttributeSet::getInt(const std::string&key,int def)const{
+    int base=10;
     const std::string v=getAttributeValue(key);
     if(v.empty()||((v[0]>='a')&&(v[0]<='z'))){
         return def;
     }
-    return std::strtol(v.c_str(),nullptr,10);
+    if(((v.length()>2)&&(v[1]=='x'||v[1]=='X'))||(v[0]=='#'))
+        base=16;
+    return std::strtol(v.c_str(),nullptr,base);
 }
 
 int AttributeSet::getInt(const std::string&key,const std::map<const std::string,int>&kvs,int def)const{

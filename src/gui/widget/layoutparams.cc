@@ -47,17 +47,17 @@ const std::string LayoutParams::sizeToString(int size) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
-    int margin=attrs.getDimensionPixelSize("margin",-1);
+    int margin=attrs.getDimensionPixelSize("layout_margin",-1);
     if(margin>0){
         leftMargin=topMargin=rightMargin=bottomMargin=margin;
     }else{
-        int horzMargin = attrs.getDimensionPixelSize("marginHorizontal",-1);
-        int vertMargin = attrs.getDimensionPixelSize("marginVertical",-1);
+        int horzMargin = attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
+        int vertMargin = attrs.getDimensionPixelSize("layout_marginVertical",-1);
         if(horzMargin>=0){
             leftMargin= rightMargin =horzMargin;
         }else{
-            leftMargin = attrs.getDimensionPixelSize("leftMargin", UNDEFINED_MARGIN);
-            rightMargin= attrs.getDimensionPixelSize("rightMargin",UNDEFINED_MARGIN);
+            leftMargin = attrs.getDimensionPixelSize("layout_arginLeft", UNDEFINED_MARGIN);
+            rightMargin= attrs.getDimensionPixelSize("layout_arginRight",UNDEFINED_MARGIN);
             if(leftMargin==UNDEFINED_MARGIN){
                 mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
                 leftMargin = DEFAULT_MARGIN_RESOLVED;
@@ -67,13 +67,13 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
                 rightMargin = DEFAULT_MARGIN_RESOLVED;
             }
         }
-        startMargin = attrs.getDimensionPixelSize("startMargin",DEFAULT_MARGIN_RELATIVE);
-        endMargin   = attrs.getDimensionPixelSize("endMargin",DEFAULT_MARGIN_RELATIVE);
+        startMargin = attrs.getDimensionPixelSize("layout_marginStart",DEFAULT_MARGIN_RELATIVE);
+        endMargin   = attrs.getDimensionPixelSize("layout_marginEnd",DEFAULT_MARGIN_RELATIVE);
         if(vertMargin>=0){
             topMargin = bottomMargin = vertMargin;
         }else{
-            topMargin   = attrs.getDimensionPixelSize("topMargin",DEFAULT_MARGIN_RESOLVED);
-            bottomMargin= attrs.getDimensionPixelSize("bottomMargin",DEFAULT_MARGIN_RESOLVED);
+            topMargin   = attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
+            bottomMargin= attrs.getDimensionPixelSize("layout_arginBottom",DEFAULT_MARGIN_RESOLVED);
         }
         if (isMarginRelative()) {
             mMarginFlags |= NEED_RESOLUTION_MASK;

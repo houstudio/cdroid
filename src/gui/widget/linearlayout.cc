@@ -14,7 +14,8 @@ LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
     weight = attrs.getFloat("layout_weight", 0);
     gravity= attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
-    LOGV("width=%d,height=%d weight=%.2f gravity=%x",width,height,weight,gravity);
+    LOGV("width=%d,height=%d weight=%.2f gravity=%x margin=%d,%d,%d,%d",width,height,
+	    weight,gravity,topMargin,bottomMargin,leftMargin,rightMargin);
 }
 
 LinearLayout::LayoutParams::LayoutParams(int width, int height)
