@@ -160,8 +160,9 @@ void App::exit(int code){
 }
 
 void App::setName(const std::string&appname){
-    mName=appname;
-    addResource(getAssetsPath(),appname);
+    size_t pt=appname.rfind('/');
+    mName= (pt==std::string::npos)?appname:appname.substr(pt+1);
+    addResource(getAssetsPath(),mName);
 }
 
 const std::string& App::getName(){

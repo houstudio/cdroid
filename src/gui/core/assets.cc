@@ -74,17 +74,19 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
         pos=mName.find_last_of('/');
         if(pos!=std::string::npos)
             pakName=mName.substr(pos+1);
-        relname=fullResId;
+        pos=fullResId.find('@');
+        if(pos!=std::string::npos)relname=fullResId.substr(pos+1);
+        else relname=fullResId;
     }
     auto it=mResources.find(pakName);
+    ZIPArchive*pak=nullptr;
     if(it!=mResources.end()){//convert noextname ->extname.
-        ZIPArchive*pak=it->second;
+        pak=it->second;
         guessExtension(pak,relname);
         if(relativeResid) *relativeResid=relname;
-        return pak;
     }
-    LOGD_IF(relname.size(),"resource for [%s:%s] is not found",pakName.c_str(),relname.c_str());
-    return nullptr;
+    LOGV_IF(relname.size(),"resource for [%s::%s:%s] is%s found",pakName.c_str(),fullResId.c_str(),relname.c_str(),(pak?"":" not"));
+    return pak;
 }
 
 std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid){
