@@ -1317,9 +1317,10 @@ View* ViewGroup::findViewWithTagTraversal(void*tag)const{
 
 View*ViewGroup::findViewById(int id)const{
     for(auto v:mChildren){
-       if(v->findViewById(id))return v;
+        View*c=v->findViewById(id);
+        if(c)return c;
     }
-    return nullptr;
+    return View::findViewById(id);
 }
 
 bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){

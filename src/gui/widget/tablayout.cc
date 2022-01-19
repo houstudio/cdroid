@@ -757,6 +757,7 @@ TabLayout::TabItem::TabItem():View(0,0){
 TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(context,attrs){
     mText=attrs.getString("text");
     mIcon=context->getDrawable(attrs,"icon");
+    LOGV("%s,%p",mText.c_str(),mIcon);
 }
 
 /*-------------------------------------------------------------------------------------------*/
