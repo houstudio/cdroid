@@ -7,7 +7,20 @@ namespace cdroid{
 ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initImageView();
+    mBaselineAlignBottom =attrs.getBoolean("baselineAlignBottom",false);
+    mBaseline =attrs.getDimensionPixelSize("baseline",-1);
+    setAdjustViewBounds(attrs.getBoolean("adjustViewBounds",false));
+    mScaleType=attrs.getInt("scaleType",std::map<const std::string,int>{
+            {"matrix",ScaleType::MATRIX}, {"fitXY",ScaleType::FIT_XY},
+            {"fitStart",ScaleType::FIT_START},{"fitCenter",ScaleType::FIT_CENTER},
+            {"fitEnd",ScaleType::FIT_END},   {"center",ScaleType::CENTER},
+            {"centerCrop",ScaleType::CENTER_CROP},{"centerInside",ScaleType::CENTER_INSIDE}
+         },mScaleType);
     setImageResource(attrs.getString("src"));
+    setMaxWidth (attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
+    setMaxHeight(attrs.getDimensionPixelSize("maxHeight",INT_MAX));
+    setImageAlpha(attrs.getInt("alpha",255));
+    mCropToPadding =attrs.getBoolean("cropToPadding",false);
 }
 
 ImageView::ImageView(int w, int h)
@@ -323,7 +336,7 @@ void ImageView::configureBounds(){
 
     mDrawable->setBounds(0, 0, vwidth, vheight);
     
-    if (dwidth <= 0 || dheight <= 0 || FIT_XY == mScaleType) {
+    if (dwidth <= 0 || dheight <= 0 || ScaleType::FIT_XY == mScaleType) {
         /* If the drawable has no intrinsic size, or we're told to
             scaletofit, then we just fill our entire view.*/
         mDrawable->setBounds(0, 0, vwidth, vheight);
@@ -333,19 +346,19 @@ void ImageView::configureBounds(){
         // use its native size.
         mDrawable->setBounds(0, 0, dwidth, dheight);
 
-        if (MATRIX == mScaleType) {
+        if (ScaleType::MATRIX == mScaleType) {
             // Use the specified matrix as-is.
             if (!IsIdentity(mMatrix)){
                 mDrawMatrix = mMatrix;
-            }
+            }else mDrawMatrix=identity_matrix();
         } else if (fits) {
             // The bitmap fits exactly, no transform needed.
             mDrawMatrix = identity_matrix();
-        } else if (CENTER == mScaleType) {
+        } else if (ScaleType::CENTER == mScaleType) {
             // Center bitmap in view, no scaling.
             mDrawMatrix = mMatrix;
             mDrawMatrix.translate(round((vwidth - dwidth) * 0.5f),  round((vheight - dheight) * 0.5f));
-        } else if (CENTER_CROP == mScaleType) {
+        } else if (ScaleType::CENTER_CROP == mScaleType) {
             mDrawMatrix = mMatrix;
 
             float scale;
@@ -361,7 +374,7 @@ void ImageView::configureBounds(){
 
             mDrawMatrix.scale(scale, scale);
             mDrawMatrix.translate(round(dx), round(dy));
-        } else if (CENTER_INSIDE == mScaleType) {
+        } else if (ScaleType::CENTER_INSIDE == mScaleType) {
             mDrawMatrix = mMatrix;
             float scale;
             float dx;
@@ -409,6 +422,7 @@ void ImageView::invalidateDrawable(Drawable& dr){
         // update cached drawable dimensions if they've changed
         const int w = dr.getIntrinsicWidth();
         const int h = dr.getIntrinsicHeight();
+        LOGD("wh=%d,%d ->%d,%d",w,h,mDrawableWidth,mDrawableHeight);
         if (w != mDrawableWidth || h != mDrawableHeight) {
             mDrawableWidth = w;
             mDrawableHeight = h;
