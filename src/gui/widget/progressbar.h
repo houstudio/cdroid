@@ -55,11 +55,7 @@ private:
     void applyProgressBackgroundTint();
     void applySecondaryProgressTint();
 protected:
-    enum{//progress id
-        ID_BACKGROUND=0,
-        ID_PRIMARY=1,
-        ID_SECONDARY =2
-    };
+
     int mMin;
     int mMax;
     int mMinWidth;

@@ -1,5 +1,6 @@
 #include <widget/absseekbar.h>
 #include <widget/viewgroup.h>
+#include <widget/R.h>
 #include <math.h>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -76,7 +77,7 @@ void AbsSeekBar::onSizeChanged(int w,int h,int ow,int oh){
 
 void AbsSeekBar::onVisualProgressChanged(int id, float scale){
     ProgressBar::onVisualProgressChanged(id,scale);
-    if (id ==ID_PRIMARY) {
+    if (id ==R::id::progress) {
         if (mThumb != nullptr) {
             setThumbPos(getWidth(),mThumb, scale, INT_MIN);
             // Since we draw translated, the drawable's bounds that it signals

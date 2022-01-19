@@ -1,4 +1,5 @@
 #include <widget/tablayout.h>
+#include <widget/R.h>
 
 namespace cdroid{
 static constexpr int DEFAULT_HEIGHT_WITH_TEXT_ICON = 72;
@@ -1001,11 +1002,11 @@ void TabLayout::TabView::update() {
             mIconView->setImageDrawable(nullptr);
         }
 
-        mCustomTextView = (TextView*) custom->findViewById(CUSTOM_ID_TEXT);//android.R.id.text1);
+        mCustomTextView = (TextView*) custom->findViewById(cdroid::R::id::text1);
         if (mCustomTextView != nullptr) {
             mDefaultMaxLines = mCustomTextView->getMaxLines();// TextViewCompat.getMaxLines(mCustomTextView);
         }
-        mCustomIconView = (ImageView*) custom->findViewById(CUSTOM_ID_ICON);//android.R.id.icon);
+        mCustomIconView = (ImageView*) custom->findViewById(cdroid::R::id::icon);
     } else {
         // We do not have a custom view. Remove one if it already exists
         if (mCustomView != nullptr) {

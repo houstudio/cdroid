@@ -1,5 +1,6 @@
 #include <widget/progressbar.h>
 #include <animation/objectanimator.h>
+#include <widget/R.h>
 #include <cdlog.h>
 
 #define  MAX_LEVEL  10000
@@ -121,7 +122,7 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
 
         for (int i = 0; i < N; i++) {
             const int id = orig->getId(i);
-            Drawable*dr=tileify(orig->getDrawable(i),(id == ID_PRIMARY || id == ID_SECONDARY));
+            Drawable*dr=tileify(orig->getDrawable(i),(id == R::id::progress || id == R::id::secondaryProgress));
             outDrawables.push_back(dr); 
         }
 
@@ -305,7 +306,7 @@ void ProgressBar::setVisualProgress(int id, float progress){
 void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
     int range = mMax - mMin;
     const float scale = range > 0 ? (float)(progress - mMin) / (float) range : 0;
-    const bool isPrimary = id == ID_PRIMARY;//R.id.progress;
+    const bool isPrimary = id == R::id::progress;
 
     if (isPrimary && animate) {
         if(mAnimator==nullptr){
@@ -314,7 +315,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
             mAnimator->setInterpolator(new  DecelerateInterpolator());
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-                setVisualProgress(ID_PRIMARY,anim.getAnimatedValue().get<float>());
+                setVisualProgress(R::id::progress,anim.getAnimatedValue().get<float>());
             }));
         }
         mAnimator->getValues(0)->setValues(std::vector<float>({mVisualProgress,scale}));
@@ -357,7 +358,7 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     if(!mRefreshIsPosted){
         if(mAttached&&!mRefreshIsPosted){
             mRefreshProgressRunnable =[this](){
-                for(int i=ID_PRIMARY;i<=ID_SECONDARY;i++){
+                for(int i=R::id::progress;i<=R::id::secondaryProgress;i++){
                     RefreshData&rd=mData[i-1];
                     doRefreshProgress(i, rd.progress, rd.fromUser, true, rd.animate);
                 }
@@ -375,7 +376,7 @@ bool ProgressBar::setProgressInternal(int value, bool fromUser,bool animate){
     if(value>mMax)value=mMax;
     if(mProgress==value)return false;
     mProgress=value;
-    refreshProgress(ID_PRIMARY,mProgress,fromUser,value);
+    refreshProgress(R::id::progress,mProgress,fromUser,value);
     return true;
 }
 
@@ -392,7 +393,7 @@ void ProgressBar::setSecondaryProgress(int secondaryProgress) {
 
     if (secondaryProgress != mSecondaryProgress) {
         mSecondaryProgress = secondaryProgress;
-        refreshProgress(ID_SECONDARY, mSecondaryProgress, false, false);
+        refreshProgress(R::id::secondaryProgress, mSecondaryProgress, false, false);
     }
 }
 
@@ -465,8 +466,8 @@ void ProgressBar::setProgressDrawable(Drawable*d){
         updateDrawableBounds(getWidth(), getHeight());
         updateDrawableState();
 
-        doRefreshProgress(ID_PRIMARY, mProgress, false, false, false);
-        doRefreshProgress(ID_SECONDARY , mSecondaryProgress, false, false, false);
+        doRefreshProgress(R::id::progress, mProgress, false, false, false);
+        doRefreshProgress(R::id::secondaryProgress , mSecondaryProgress, false, false, false);
     }
 }
 
@@ -722,7 +723,7 @@ void ProgressBar::applyProgressTints() {
 void ProgressBar::applyPrimaryProgressTint(){
     if (mProgressTintInfo->mHasProgressTint
           || mProgressTintInfo->mHasProgressTintMode) {
-        Drawable* target = getTintTarget(ID_PRIMARY/*R.id.progress*/, true);
+        Drawable* target = getTintTarget(R::id::progress, true);
         if (target != nullptr) {
             if (mProgressTintInfo->mHasProgressTint) {
                 target->setTintList(mProgressTintInfo->mProgressTintList);
@@ -743,7 +744,7 @@ void ProgressBar::applyPrimaryProgressTint(){
 void ProgressBar::applyProgressBackgroundTint(){
      if (mProgressTintInfo->mHasProgressBackgroundTint
             || mProgressTintInfo->mHasProgressBackgroundTintMode) {
-        Drawable* target = getTintTarget(ID_BACKGROUND/*R.id.background*/, false);
+        Drawable* target = getTintTarget(R::id::background, false);
         if (target != nullptr) {
             if (mProgressTintInfo->mHasProgressBackgroundTint) {
                 target->setTintList(mProgressTintInfo->mProgressBackgroundTintList);
@@ -764,7 +765,7 @@ void ProgressBar::applyProgressBackgroundTint(){
 void ProgressBar::applySecondaryProgressTint(){
      if (mProgressTintInfo->mHasSecondaryProgressTint
             || mProgressTintInfo->mHasSecondaryProgressTintMode) {
-        Drawable* target = getTintTarget(ID_SECONDARY/*R.id.secondaryProgress*/, false);
+        Drawable* target = getTintTarget(R::id::secondaryProgress, false);
             if (target != nullptr) {
                 if (mProgressTintInfo->mHasSecondaryProgressTint) {
                     target->setTintList(mProgressTintInfo->mSecondaryProgressTintList);

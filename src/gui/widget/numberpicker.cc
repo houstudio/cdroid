@@ -1,5 +1,6 @@
 #include <widget/numberpicker.h>
 #include <widget/layoutinflater.h>
+#include <widget/R.h>
 #include <color.h>
 #include <textutils.h>
 #include <cdlog.h>
@@ -19,7 +20,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     delete inflater;
    
     if(!mHasSelectorWheel){
-        mDecrementButton=(ImageButton*)findViewById(BUTTON_DECREMENT);
+        mDecrementButton=(ImageButton*)findViewById(R::id::decrement);
         mDecrementButton->setMinimumHeight(20);
         addView(mDecrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
         mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
@@ -35,7 +36,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     }
 
     if(!mHasSelectorWheel){
-        mIncrementButton=(ImageButton*)findViewById(BUTTON_INCREMENT);
+        mIncrementButton=(ImageButton*)findViewById(R::id::increment);
         mIncrementButton->setMinimumHeight(20);
         addView(mIncrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
         mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
@@ -79,7 +80,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     setWillNotDraw(!mHasSelectorWheel);
 
     if (!mHasSelectorWheel) {
-        mIncrementButton = (ImageButton*)findViewById(BUTTON_INCREMENT);//R.id.increment);
+        mIncrementButton = (ImageButton*)findViewById(cdroid::R::id::increment);
         mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     } else {
@@ -88,14 +89,14 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 
     // decrement button
     if (!mHasSelectorWheel) {
-        mDecrementButton = (ImageButton*)findViewById(BUTTON_DECREMENT);//R.id.decrement);
+        mDecrementButton = (ImageButton*)findViewById(cdroid::R::id::decrement);
         mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     } else {
         mDecrementButton = nullptr;
     }
 
-    mInputText =(EditText*)findViewById(0);//R.id.numberpicker_input
+    mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     ViewConfiguration configuration = ViewConfiguration::get(context);
     mTextSize = (int) mInputText->getTextSize();
 
@@ -248,11 +249,11 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
         // Handle pressed state before any state change.
         if (mLastDownEventY < mTopSelectionDividerTop) {
             if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-                pshButtonPressDelayed(BUTTON_DECREMENT);
+                pshButtonPressDelayed(R::id::decrement);
             }
         } else if (mLastDownEventY > mBottomSelectionDividerBottom) {
             if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-                pshButtonPressDelayed(BUTTON_INCREMENT);
+                pshButtonPressDelayed(R::id::increment);
             }
         }
         // Make sure we support flinging inside scrollables.
@@ -329,10 +330,10 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                         int selectorIndexOffset = (eventY / mSelectorElementHeight) - mMiddleItemIndex;
                         if (selectorIndexOffset > 0) {
                             changeValueByOne(true);
-                            pshButtonTapped(BUTTON_INCREMENT);
+                            pshButtonTapped(R::id::increment);
                         } else if (selectorIndexOffset < 0) {
                             changeValueByOne(false);
-                            pshButtonTapped(BUTTON_DECREMENT);
+                            pshButtonTapped(R::id::decrement);
                         }
                     }
                 } else {
@@ -1022,11 +1023,11 @@ void NumberPicker::pshRun(){
     switch (mPSHMode) {
     case MODE_PRESS:
         switch (mPSHManagedButton) {
-        case BUTTON_INCREMENT:
+        case R::id::increment:
              mIncrementVirtualButtonPressed = true;
              invalidate(0, mBottomSelectionDividerBottom, mRight, mBottom);
              break;
-        case BUTTON_DECREMENT:
+        case R::id::decrement:
              mDecrementVirtualButtonPressed = true;
              invalidate(0, 0, mRight, mTopSelectionDividerTop);
              break;
@@ -1034,14 +1035,14 @@ void NumberPicker::pshRun(){
         break;
     case MODE_TAPPED:
         switch (mPSHManagedButton) {
-        case BUTTON_INCREMENT:
+        case R::id::increment:
             if (!mIncrementVirtualButtonPressed) {
                 postDelayed(mPressedStateHelpers,ViewConfiguration::getPressedStateDuration());
             }
             mIncrementVirtualButtonPressed ^= true;
             invalidate(0, mBottomSelectionDividerBottom, mRight, mBottom);
              break;
-        case BUTTON_DECREMENT:
+        case R::id::decrement:
             if (!mDecrementVirtualButtonPressed) {
                 postDelayed(mPressedStateHelpers,ViewConfiguration::getPressedStateDuration());
             }

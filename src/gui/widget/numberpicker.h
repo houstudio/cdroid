@@ -20,8 +20,6 @@ public:
         std::function<void(NumberPicker&,int)>onScrollStateChange;
     };
 private:
-    static constexpr int BUTTON_INCREMENT =1;
-    static constexpr int BUTTON_DECREMENT =2;
     static constexpr int MODE_PRESS =1;
     static constexpr int MODE_TAPPED=2;
     static constexpr int DEFAULT_SELECTOR_WHEEL_ITEM_COUNT =3;
