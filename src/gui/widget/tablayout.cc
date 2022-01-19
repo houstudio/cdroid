@@ -749,6 +749,7 @@ int TabLayout::getTabMaxWidth() {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+static InflaterRegister<TabLayout::TabItem> widget_inflater_tabitem("TabItem");
 TabLayout::TabItem::TabItem():View(0,0){
     mIcon=nullptr;
 }
