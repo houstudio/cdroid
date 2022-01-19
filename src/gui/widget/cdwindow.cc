@@ -35,7 +35,6 @@ Window::Window(Context*ctx,const AttributeSet&atts)
     setFrame(0,0,1280,720);
     setFocusable(true);
     mInLayout=false;
-    layoutRunner=nullptr;
     setKeyboardNavigationCluster(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     WindowManager::getInstance().addWindow(this);
@@ -48,7 +47,6 @@ Window::Window(int x,int y,int width,int height,int type)
     source=new UIEventSource(this);
     mContext=&App::getInstance();
     mInLayout=false;
-    layoutRunner =nullptr;
     LOGV("%p source=%p visible=%d size=%dx%d",this,source,hasFlag(VISIBLE),width,height);
     setFrame(x, y, width, height);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);

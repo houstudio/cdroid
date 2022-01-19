@@ -19,7 +19,14 @@ public:
        buttonPanel,
        customPanel,
        custom,
- 
+       scrollView,
+       message,
+       leftSpacer,
+       button1,
+       button2,
+       button3,
+       rightSpacer,
+
        textSpacerNoButtons,
        titleDividerNoCustom,
        titleDivider,

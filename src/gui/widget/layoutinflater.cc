@@ -19,7 +19,9 @@ LayoutInflater*LayoutInflater::from(Context*context){
 
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name){
     std::map<const std::string,ViewInflater>&maps=LayoutInflater::getMap();
-    auto it=maps.find(name);
+    const size_t  pt = name.rfind('.');
+    const std::string sname=(pt!=std::string::npos)?name.substr(pt+1):name;
+    auto it=maps.find(sname);
     return (it!=maps.end())?it->second:nullptr;
 }
 
