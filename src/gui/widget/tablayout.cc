@@ -40,20 +40,21 @@ void TabLayout::initTabLayout(){
     AttributeSet atts;
     mMode = MODE_SCROLLABLE;
     mInlineLabel =false;
-    mTabPaddingStart= mTabPaddingTop = 0;
-    mTabPaddingEnd = mTabPaddingBottom=0;
+    mTabPaddingStart= mTabPaddingTop   = 0;
+    mTabPaddingEnd  = mTabPaddingBottom= 0;
     mTabTextSize = 20;
     mTabTextColors  = nullptr;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;
-    mViewPager = nullptr;
-    mPagerAdapter =nullptr;
+    mViewPager    = nullptr;
+    mPagerAdapter = nullptr;
     mAdapterChangeListener= nullptr;
     mTabSelectedIndicator = nullptr;
     mRequestedTabMinWidth = INVALID_WIDTH;
     mRequestedTabMaxWidth = INVALID_WIDTH;
-    mTabTextMultiLineSize =2;
-    mScrollableTabMinWidth =100;
+    mTabTextMultiLineSize = 2;
+    mScrollableTabMinWidth= 100;
+    tabIndicatorFullWidth = false;
     mTabStrip = new SlidingTabStrip(getContext(),atts,this);
     HorizontalScrollView::addView(mTabStrip, 0, new HorizontalScrollView::LayoutParams(
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
@@ -253,6 +254,15 @@ void TabLayout::setTabIndicatorGravity(int gravity){
          mTabIndicatorGravity =gravity;
          mTabStrip->postInvalidateOnAnimation();
     }
+}
+
+bool TabLayout::isTabIndicatorFullWidth()const{
+    return tabIndicatorFullWidth;
+}
+
+void TabLayout::setTabIndicatorFullWidth(bool tabIndicatorFullWidth) {
+    this->tabIndicatorFullWidth = tabIndicatorFullWidth;
+    mTabStrip->postInvalidateOnAnimation();//slidingTabIndicator);
 }
 
 bool TabLayout::isInlineLabel()const{

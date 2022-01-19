@@ -259,6 +259,8 @@ public:
     Drawable* getSelectedTabIndicator()const;
     void setSelectedTabIndicator(Drawable*d);
     void setSelectedTabIndicator(const std::string&res);
+    bool isTabIndicatorFullWidth()const;
+    void setTabIndicatorFullWidth(bool tabIndicatorFullWidth);
     bool isInlineLabel()const;
     void setInlineLabel(bool);
     void setTabTextColors(ColorStateList* textColor);
