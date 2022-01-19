@@ -65,7 +65,7 @@ public:
         ImageView* mCustomIconView;
 
         int mDefaultMaxLines = 2;
- 
+        int getContentWidth(); 
         void updateTextAndIcon(TextView* textView,ImageView* iconView);
         float approximateLineWidth(Layout* layout, int line, float textSize);
     public:
@@ -137,6 +137,7 @@ private:
         ValueAnimator* mIndicatorAnimator;
         void updateIndicatorPosition();
     protected:
+        void calculateTabViewContentBounds(TabLayout::TabView* tabView, Rect& contentBounds);
         void onMeasure(int widthMeasureSpec,int heightMeasureSpec)override;
         void onLayout(bool changed, int l, int t, int r, int b);
     public:
@@ -155,7 +156,7 @@ private:
     int  mRequestedTabMaxWidth;
     int  mScrollableTabMinWidth;
     int  mContentInsetStart;
-
+    Rect tabViewContentBounds;
     ValueAnimator* mScrollAnimator;
     Tab* mSelectedTab;
     SlidingTabStrip* mTabStrip;

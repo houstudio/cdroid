@@ -54,7 +54,7 @@ void TabLayout::initTabLayout(){
     mRequestedTabMaxWidth = INVALID_WIDTH;
     mTabTextMultiLineSize = 2;
     mScrollableTabMinWidth= 100;
-    tabIndicatorFullWidth = false;
+    tabIndicatorFullWidth = true;
     mTabStrip = new SlidingTabStrip(getContext(),atts,this);
     HorizontalScrollView::addView(mTabStrip, 0, new HorizontalScrollView::LayoutParams(
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
@@ -484,7 +484,7 @@ void TabLayout::updateTabViewLayoutParams(LinearLayout::LayoutParams* lp){
     }
 }
 
-int dpToPx(int dps) {
+static int dpToPx(int dps) {
     return dps;//Math.round(getDisplayMetrics().density * dps);
 }
 
@@ -1044,6 +1044,24 @@ void TabLayout::TabView::update() {
     setSelected(tab && tab->isSelected());
 }
 
+int TabLayout::TabView::getContentWidth(){
+    bool initialized = false;
+    int left = 0;
+    int right = 0;
+    View*var4[] = {mTextView, mIconView, mCustomView};
+    int var5 = sizeof(var4)/sizeof(View*);
+
+    for(int var6 = 0; var6 < var5; ++var6) {
+        View* view = var4[var6];
+        if (view && view->getVisibility() == View::INVISIBLE) {
+            left = initialized ? std::min(left, view->getLeft()) : view->getLeft();
+            right = initialized ? std::max(right, view->getRight()) : view->getRight();
+            initialized = true;
+        }
+    }
+    return right - left;
+}
+
 void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconView) {
     Drawable* icon = mTab ? mTab->getIcon() : nullptr;
     std::string text = mTab ? mTab->getText() : "";
@@ -1243,10 +1261,21 @@ void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
     if (selectedTitle && selectedTitle->getWidth() > 0) {
         left = selectedTitle->getLeft();
         right = selectedTitle->getRight();
-
+        if(!mParent->tabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(selectedTitle)){
+            calculateTabViewContentBounds((TabLayout::TabView*)selectedTitle,mParent->tabViewContentBounds);
+            left = mParent->tabViewContentBounds.left;
+            right= mParent->tabViewContentBounds.right();
+        }
         if (mSelectionOffset > .0f && mSelectedPosition < getChildCount() - 1) {
             // Draw the selection partway between the tabs
             View* nextTitle = getChildAt(mSelectedPosition + 1);
+            int nextTitleLeft = nextTitle->getLeft();
+            int nextTitleRight= nextTitle->getRight(); 
+            if(!mParent->tabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(nextTitle)){
+                calculateTabViewContentBounds((TabLayout::TabView*)selectedTitle,mParent->tabViewContentBounds);
+                nextTitleLeft = mParent->tabViewContentBounds.left;
+                nextTitleRight= mParent->tabViewContentBounds.right();
+            }
             left = (int) (mSelectionOffset * nextTitle->getLeft() +
                     (1.0f - mSelectionOffset) * left);
             right = (int) (mSelectionOffset * nextTitle->getRight() +
@@ -1279,53 +1308,55 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
     if (targetView == nullptr) {
         // If we don't have a view, just update the position now and return
         updateIndicatorPosition();
-        return;
-    }
+    }else{
 
-    int targetLeft = targetView->getLeft();
-    int targetRight= targetView->getRight();
-    int startLeft;
-    int startRight;
+        int targetLeft = targetView->getLeft();
+        int targetRight= targetView->getRight();
 
-    if (std::abs(position - mSelectedPosition) <= 1) {
-        // If the views are adjacent, we'll animate from edge-to-edge
-        startLeft = mIndicatorLeft;
-        startRight = mIndicatorRight;
-    } else {
-        // Else, we'll just grow from the nearest edge
-        int offset = dpToPx(MOTION_NON_ADJACENT_OFFSET);
-        if (position < mSelectedPosition) {
-            // We're going end-to-start
-            startLeft = startRight = isRtl ?(targetLeft - offset ):(targetRight + offset);
-        } else {
-            // We're going start-to-end
-            startLeft = startRight = isRtl ?(targetRight + offset):(targetLeft - offset);
+        if (!mParent->tabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(targetView)){
+            // If the views are adjacent, we'll animate from edge-to-edge
+            calculateTabViewContentBounds((TabLayout::TabView*)targetView,mParent->tabViewContentBounds);
+            targetLeft = mParent->tabViewContentBounds.left;
+            targetRight= mParent->tabViewContentBounds.right();
+        } 
+        int startLeft =mIndicatorLeft;
+        int startRight=mIndicatorRight;
+
+        if( mIndicatorAnimator==nullptr){ 
+            mIndicatorAnimator = new ValueAnimator();
+            mIndicatorAnimator->setInterpolator(new FastOutSlowInInterpolator());
+            mIndicatorAnimator->setFloatValues({.0f,1.f});
+        }
+        if (startLeft != targetLeft || startRight != targetRight) {
+            ValueAnimator* animator = mIndicatorAnimator;
+            animator->setDuration(duration);
+            animator->removeAllListeners();
+            animator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this,startLeft,targetLeft,startRight,targetRight](ValueAnimator&anim) {
+                const float fraction = anim.getAnimatedFraction();
+                setIndicatorPosition(lerp(startLeft, targetLeft, fraction),lerp(startRight, targetRight, fraction));
+            }));
+            Animator::AnimatorListener al;
+            al.onAnimationEnd=[this,position](Animator&anim,bool reverse){
+                mSelectedPosition = position;
+                mSelectionOffset = .0f;
+            };
+
+            animator->addListener(al);
+            animator->start();
         }
     }
 
-    if( mIndicatorAnimator==nullptr){
-        mIndicatorAnimator = new ValueAnimator();
-        mIndicatorAnimator->setInterpolator(new FastOutSlowInInterpolator());
-        mIndicatorAnimator->setFloatValues({.0f,1.f});
-    }
-    if (startLeft != targetLeft || startRight != targetRight) {
-        ValueAnimator* animator = mIndicatorAnimator;
-        animator->setDuration(duration);
-        animator->removeAllListeners();
-        animator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this,startLeft,targetLeft,startRight,targetRight](ValueAnimator&anim) {
-            const float fraction = anim.getAnimatedFraction();
-            setIndicatorPosition(lerp(startLeft, targetLeft, fraction),lerp(startRight, targetRight, fraction));
-        }));
-        Animator::AnimatorListener al;
-        al.onAnimationEnd=[this,position](Animator&anim,bool reverse){
-            mSelectedPosition = position;
-            mSelectionOffset = .0f;
-        };
+}
 
-        animator->addListener(al);
-        animator->start();
+void TabLayout::SlidingTabStrip::calculateTabViewContentBounds(TabLayout::TabView* tabView, Rect& contentBounds){
+    int tabViewContentWidth = tabView->getContentWidth();
+    if (tabViewContentWidth <  dpToPx(24)) {
+         tabViewContentWidth = dpToPx(24);
     }
-
+    int tabViewCenter = (tabView->getLeft() + tabView->getRight()) / 2;
+    int contentLeftBounds = tabViewCenter - tabViewContentWidth / 2;
+    int contentRightBounds = tabViewCenter + tabViewContentWidth / 2;
+    contentBounds.set((float)contentLeftBounds, 0.0F, tabViewContentWidth, 0.0F);
 }
 
 void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
