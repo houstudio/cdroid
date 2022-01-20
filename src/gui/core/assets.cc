@@ -172,6 +172,10 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
         mDrawables.erase(it);
     }
     //wrap png to drawable,make app develop simply
+    if(resname[0]=='#'||resname[1]=='x'||resname[1]=='X'){
+        LOGD("color %s",fullresid.c_str());
+        return new ColorDrawable(Color::parseColor(resname));
+    }
     if(TextUtils::endWith(resname,".9.png")){
         d=new NinePatchDrawable(this,fullresid);
     }else if (TextUtils::endWith(resname,".png")){

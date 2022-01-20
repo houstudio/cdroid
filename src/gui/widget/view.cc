@@ -155,6 +155,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mID = attrs.getInt("id",NO_ID);
     mMinWidth = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight= attrs.getDimensionPixelSize("minHeight",0);
+    mContentDescription=attrs.getString("contentDescription");
     setClickable(attrs.getBoolean("clickable",false));
     setLongClickable(attrs.getBoolean("longclickable",false));
     setFocusableInTouchMode(attrs.getBoolean("focusableInTouchMode",false));
@@ -193,13 +194,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
 
-    std::string bgtxt=attrs.getString("background");
-    if(!bgtxt.empty()){
-        if(bgtxt[0]=='#')
-            mBackground=new ColorDrawable(Color::parseColor(bgtxt));
-         else mBackground=ctx->getDrawable(attrs,"background");
-    }else
-        mBackground=new ColorDrawable(0xFF222222);
+    mBackground=ctx->getDrawable(attrs,"background");
     
     int padding=attrs.getDimensionPixelSize("padding",-1);
     if(padding>=0){
@@ -231,6 +226,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
 void View::initView(){
     mID       = NO_ID;
+    mAutofillViewId =NO_ID;
+    mAccessibilityViewId=NO_ID;
     mContext  = nullptr;
     mParent   = nullptr;
     mAttachInfo = nullptr;
@@ -2626,6 +2623,20 @@ View& View::setId(int id){
 int View::getId() const{
     return mID;
 }
+static int sNextAccessibilityViewId=0;
+int View::getAccessibilityViewId(){
+    if (mAccessibilityViewId == NO_ID) {
+        mAccessibilityViewId = sNextAccessibilityViewId++;
+    }
+    return mAccessibilityViewId;
+}
+
+int View::getAutoFillViewId(){
+    if (mAutofillViewId == NO_ID) {
+        //mAutofillViewId = mContext->getNextAutofillId();
+    }
+    return mAutofillViewId;
+}
 
 View& View::setHint(const std::string&hint){
     mHint=hint;
@@ -2634,6 +2645,14 @@ View& View::setHint(const std::string&hint){
 }
 const std::string&View::getHint()const{
     return mHint;
+}
+
+void View::setContentDescription(const std::string&content){
+    mContentDescription = content;
+}
+
+std::string View::getContentDescription()const{
+    return mContentDescription;
 }
 
 bool View::isTemporarilyDetached()const{

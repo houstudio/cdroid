@@ -15,6 +15,7 @@ DECLARE_WIDGET(TabLayout)
 
 TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
     initTabLayout();
+    applyModeAndGravity();
 }
 
 TabLayout::TabLayout(Context*context,const AttributeSet&atts)
@@ -34,7 +35,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mMode = atts.getInt("tabMode",std::map<const std::string,int>{{"scrollable",0},{"fixed",1}},1);
     mTabGravity =atts.getGravity("tabGravity",0);
     mInlineLabel=atts.getBoolean("tabInlineLabel",false);
-    
+    applyModeAndGravity();
 }
 
 void TabLayout::initTabLayout(){
@@ -59,7 +60,6 @@ void TabLayout::initTabLayout(){
     mTabStrip = new SlidingTabStrip(getContext(),atts,this);
     HorizontalScrollView::addView(mTabStrip, 0, new HorizontalScrollView::LayoutParams(
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
-    applyModeAndGravity();
 }
 
 void TabLayout::setSelectedTabIndicatorColor( int color){
@@ -693,7 +693,7 @@ void TabLayout::applyModeAndGravity(){
 }
 
 void TabLayout::updateTabViews(bool requestLayout){
-    LOGD("requestLayout=%d",requestLayout);
+    LOGD("requestLayout=%d mintabwidth=%d %d children",requestLayout,getTabMinWidth(),mTabStrip->getChildCount());
     for (int i = 0; i < mTabStrip->getChildCount(); i++) {
         View* child = mTabStrip->getChildAt(i);
         child->setMinimumWidth(getTabMinWidth());
@@ -1195,7 +1195,7 @@ void TabLayout::SlidingTabStrip::onMeasure(int widthMeasureSpec, int heightMeasu
     }
 
     if (mParent->mMode == MODE_FIXED && mParent->mTabGravity == GRAVITY_CENTER) {
-        int count = getChildCount();
+        const int count = getChildCount();
 
         // First we'll find the widest tab
         int largestTabWidth = 0;
@@ -1240,9 +1240,9 @@ void TabLayout::SlidingTabStrip::onMeasure(int widthMeasureSpec, int heightMeasu
     }
 }
 
-void TabLayout::SlidingTabStrip::onLayout(bool changed, int l, int t, int r, int b) {
-    LOGD("SlidingTabStrip::onLayout(%d,%d,%d,%d) childs=%d",l,t,r,b,getChildCount());
-    LinearLayout::onLayout(changed, l, t, r, b);
+void TabLayout::SlidingTabStrip::onLayout(bool changed, int l, int t, int w, int h) {
+    LOGD("SlidingTabStrip::onLayout(%d,%d,%d,%d) childs=%d",l,t,w,h,getChildCount());
+    LinearLayout::onLayout(changed, l, t, w, h);
 
     if (mIndicatorAnimator && mIndicatorAnimator->isRunning()) {
         // If we're currently running an animation, lets cancel it and start a
@@ -1287,7 +1287,7 @@ void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
     } else {
         left = right = -1;
     }
-
+    LOGD("setIndicatorPosition[%d/%d](%d,%d)",mSelectedPosition,getChildCount(),left,right);
     setIndicatorPosition(left, right);
 }
 
@@ -1356,6 +1356,7 @@ void TabLayout::SlidingTabStrip::calculateTabViewContentBounds(TabLayout::TabVie
     if (tabViewContentWidth <  dpToPx(24)) {
          tabViewContentWidth = dpToPx(24);
     }
+    LOGD("tabViewBounds=(%d,%d)",tabView->getLeft(),tabView->getWidth());
     int tabViewCenter = (tabView->getLeft() + tabView->getRight()) / 2;
     int contentLeftBounds = tabViewCenter - tabViewContentWidth / 2;
     int contentRightBounds = tabViewCenter + tabViewContentWidth / 2;

@@ -360,6 +360,8 @@ private:
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
     int mID;
+    int mAutofillViewId;
+    int mAccessibilityViewId;
     int mScrollX;
     int mScrollY;
     int mOverScrollMode;
@@ -389,6 +391,7 @@ protected:
     bool mLeftPaddingDefined;
     bool mRightPaddingDefined;
     std::string mHint;
+    std::string mContentDescription;
     bool mCachingFailed;
     RefPtr<ImageSurface>mDrawingCache;
     RefPtr<ImageSurface>mUnscaledDrawingCache;
@@ -701,9 +704,13 @@ public:
     void setHasTransientState(bool hasTransientState);
 
     View& setId(int id);
-    int getId()const;
+    int  getId()const;
+    int  getAccessibilityViewId();
+    int  getAutoFillViewId();
     virtual View& setHint(const std::string&hint);
     const std::string&getHint()const;
+    void setContentDescription(const std::string&);
+    std::string getContentDescription()const;
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     Context*getContext()const;

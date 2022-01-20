@@ -422,7 +422,7 @@ void ImageView::invalidateDrawable(Drawable& dr){
         // update cached drawable dimensions if they've changed
         const int w = dr.getIntrinsicWidth();
         const int h = dr.getIntrinsicHeight();
-        LOGD("wh=%d,%d ->%d,%d",w,h,mDrawableWidth,mDrawableHeight);
+        LOGV("wh=%d,%d ->%d,%d",w,h,mDrawableWidth,mDrawableHeight);
         if (w != mDrawableWidth || h != mDrawableHeight) {
             mDrawableWidth = w;
             mDrawableHeight = h;
