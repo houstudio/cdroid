@@ -3124,10 +3124,6 @@ View& View::setBackgroundResource(const std::string&resid){
     return setBackground(d);
 }
 
-/*View& View::setBackground(Drawable*background){
-    return setBackgroundDrawable(background);
-}*/
-/*deprecated*/
 View& View::setBackground(Drawable*background){
     computeOpaqueFlags();
     if(background==mBackground) return*this;

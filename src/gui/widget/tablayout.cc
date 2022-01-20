@@ -36,6 +36,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabGravity =atts.getGravity("tabGravity",0);
     mInlineLabel=atts.getBoolean("tabInlineLabel",false);
     applyModeAndGravity();
+    LOGD("mTabBackgroundResId=%s",mTabBackgroundResId.c_str());
 }
 
 void TabLayout::initTabLayout(){
@@ -863,10 +864,8 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*p
     mCustomView = nullptr;
     mCustomTextView = nullptr;
     mCustomIconView = nullptr;
-    /*if (mTabBackgroundResId != 0) {
-        //ViewCompat.setBackground(this, AppCompatResources.getDrawable(context, mTabBackgroundResId));
-    }*/
-    setBackgroundResource(parent->mTabBackgroundResId);
+    if(parent->mTabBackgroundResId.length())
+        setBackgroundResource(parent->mTabBackgroundResId);
     setPaddingRelative(parent->mTabPaddingStart, parent->mTabPaddingTop, parent->mTabPaddingEnd, parent->mTabPaddingBottom);
     setGravity(Gravity::CENTER);
     setOrientation(parent->mInlineLabel?HORIZONTAL:VERTICAL);
@@ -1287,7 +1286,7 @@ void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
     } else {
         left = right = -1;
     }
-    LOGD("setIndicatorPosition[%d/%d](%d,%d)",mSelectedPosition,getChildCount(),left,right);
+
     setIndicatorPosition(left, right);
 }
 
@@ -1356,7 +1355,6 @@ void TabLayout::SlidingTabStrip::calculateTabViewContentBounds(TabLayout::TabVie
     if (tabViewContentWidth <  dpToPx(24)) {
          tabViewContentWidth = dpToPx(24);
     }
-    LOGD("tabViewBounds=(%d,%d)",tabView->getLeft(),tabView->getWidth());
     int tabViewCenter = (tabView->getLeft() + tabView->getRight()) / 2;
     int contentLeftBounds = tabViewCenter - tabViewContentWidth / 2;
     int contentRightBounds = tabViewCenter + tabViewContentWidth / 2;

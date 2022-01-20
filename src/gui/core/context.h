@@ -27,7 +27,7 @@ public:
      virtual RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)=0;
      virtual Drawable* getDrawable(const std::string&resid)=0;
      Drawable* getDrawable(const AttributeSet&atts,const std::string&key){
-         return getDrawable(atts.getString(key));
+         return atts.hasAttribute(key)?getDrawable(atts.getString(key)):nullptr;
      }
      virtual ColorStateList* getColorStateList(const std::string&resid)=0;
      virtual AttributeSet obtainStyledAttributes(const std::string&resid)=0;

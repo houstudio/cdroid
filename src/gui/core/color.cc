@@ -65,7 +65,7 @@ unsigned int Color::parseColor(const std::string& colorString){
         return cc;
     }else if(colorString.compare("transparent")==0){
         return 0;
-    }else
+    }else{
         return 0xFF000000|getHtmlColor(colorString);
     }
 }
