@@ -109,7 +109,7 @@ int InputEventSource::handleEvents(){
 }
 
 int  InputEventSource::process(){
-    LOGD_IF(mRawEvents.size(),"%p  recv %d events ",this,mRawEvents.size());
+    LOGV_IF(mRawEvents.size(),"%p  recv %d events ",this,mRawEvents.size());
     while(mRawEvents.size()){
         const INPUTEVENT e=mRawEvents.front();
         struct timeval tv={e.tv_sec,e.tv_usec};

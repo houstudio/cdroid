@@ -21,9 +21,9 @@ ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
 
 ViewPager::~ViewPager(){
     delete mLeftEdge;
-	delete mRightEdge;
-	delete mMarginDrawable;
-	delete mScroller;
+    delete mRightEdge;
+    delete mMarginDrawable;
+    delete mScroller;
 }
 
 ViewPager::ViewPager(Context* context,const AttributeSet& attrs)
@@ -55,7 +55,7 @@ void ViewPager::initViewPager(){
     mTouchSlop = configuration.getScaledPagingTouchSlop();
     mMinimumVelocity = (int) (MIN_FLING_VELOCITY * density);
     mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-    mLeftEdge = new EdgeEffect(context);
+    mLeftEdge  = new EdgeEffect(context);
     mRightEdge = new EdgeEffect(context);
     mMarginDrawable =nullptr;
 
