@@ -2,23 +2,23 @@
 #include <map>
 namespace cdroid{
 static std::map<const std::string ,unsigned int>sColorNameMap={
-    {"aquamarine",0x7FFFD4},    {"beige", 0xF5F5DC},       {"black", 0x000000},         {"blue", 0x0000FF},
-    {"blueviolet",0x8A2BE2},     {"brown", 0xA52A2A},       {"cadetblue", 0x5F9EA0},     {"chartreuse", 0x7FFF00},
-    {"chocolate" ,0xD2691E},     {"coral", 0xFF7F50},       {"cornflowerblue", 0x6495ED},{"cyan", 0x00FFFF},
-    {"firebrick" ,0xB22222},     {"forestgreen", 0x228B22}, {"gold", 0xFFD700},          {"goldenrod", 0xDAA520},
-    {"gray", 0xBEBEBE},          {"green", 0x00FF00},       {"greenyellow", 0xADFF2F},   {"hotpink", 0xFF69B4},
-    {"indianred", 0xCD5C5C},     {"khaki", 0xF0E68C},       {"lawngreen", 0x7CFC00},     {"limegreen", 0x32CD32},
-    {"magenta", 0xFF00FF},       {"maroon", 0xB03060},      {"navy", 0x000080},          {"orange", 0xFFA500},
-    {"orangered", 0xFF4500},     {"orchid", 0xDA70D6},      {"palegoldenrod", 0xEEE8AA}, {"palegreen", 0x98FB98},
-    {"palevioletred", 0xDB7093}, {"papayawhip", 0xFFEFD5},  {"peachpuff", 0xFFDAB9},     {"peru", 0xCD853F},
-    {"pink", 0xFFC0CB},          {"plum", 0xDDA0DD},        {"powderblue", 0xB0E0E6},    {"purple", 0xA020F0},
-    {"red", 0xFF0000},           {"rosybrown", 0xBC8F8F},   {"royalblue", 0x4169E1},     {"saddlebrown", 0x8B4513},
-    {"salmon", 0xFA8072},        {"sandybrown", 0xF4A460},  {"seagreen", 0x2E8B57},      {"seashell", 0xFFF5EE},
-    {"sienna", 0xA0522D},        {"skyblue", 0x87CEEB},     {"slateblue", 0x6A5ACD},     {"slategray", 0x708090},
-    {"snow", 0xFFFAFA},          {"springgreen", 0x00FF7F}, {"steelblue", 0x4682B4},     {"tan", 0xD2B48C},
-    {"thistle", 0xD8BFD8},       {"tomato", 0xFF6347},      {"turquoise", 0x40E0D0},     {"violet", 0xEE82EE},
-    {"wheat", 0xF5DEB3},         {"whitesmoke", 0xF5F5F5},  {"white", 0xFFFFFF},         {"yellow", 0xFFFF00},
-    {"yellowgreen", 0x9ACD32}
+    {"aquamarine",0xFF7FFFD4},    {"beige" , 0xFFF5F5DC},       {"black"    , 0xFF000000},     {"blue"      , 0xFF0000FF},
+    {"blueviolet",0xFF8A2BE2},    {"brown" , 0xFFA52A2A},       {"cadetblue", 0xFF5F9EA0},     {"chartreuse", 0xFF7FFF00},
+    {"chocolate" ,0xFFD2691E},    {"coral" , 0xFFFF7F50},       {"cornflowerblue",0xFF6495ED}, {"cyan"      , 0xFF00FFFF},
+    {"firebrick" ,0xFFB22222},    {"forestgreen", 0xFF228B22},  {"gold"        , 0xFFFFD700},  {"goldenrod" , 0xFFDAA520},
+    {"gray"      ,0xFFBEBEBE},    {"green" , 0xFF00FF00},       {"greenyellow" , 0xFFADFF2F},  {"hotpink"   , 0xFFFF69B4},
+    {"indianred", 0xFFCD5C5C},    {"khaki" , 0xFFF0E68C},       {"lawngreen"   , 0xFF7CFC00},  {"limegreen" , 0xFF32CD32},
+    {"magenta"  , 0xFFFF00FF},    {"maroon", 0xFFB03060},       {"navy"        , 0xFF000080},  {"orange"    , 0xFFFFA500},
+    {"orangered", 0xFFFF4500},    {"orchid", 0xFFDA70D6},       {"palegoldenrod",0xFFEEE8AA},  {"palegreen" , 0xFF98FB98},
+    {"palevioletred",0xFFDB7093}, {"papayawhip", 0xFFFFEFD5},   {"peachpuff", 0xFFFFDAB9},     {"peru"      , 0xFFCD853F},
+    {"pink"  , 0xFFFFC0CB},       {"plum"  , 0xFFDDA0DD},       {"powderblue", 0xFFB0E0E6},    {"purple"    , 0xFFA020F0},
+    {"red"   , 0xFFFF0000},       {"rosybrown" , 0xFFBC8F8F},   {"royalblue", 0xFF4169E1},     {"saddlebrown",0xFF8B4513},
+    {"salmon", 0xFFFA8072},       {"sandybrown", 0xFFF4A460},   {"seagreen" , 0xFF2E8B57},     {"seashell"   , 0xFFFFF5EE},
+    {"sienna", 0xFFA0522D},       {"skyblue"   , 0xFF87CEEB},   {"slateblue", 0xFF6A5ACD},     {"slategray"  , 0xFF708090},
+    {"snow"  , 0xFFFFFAFA},       {"springgreen",0xFF00FF7F},   {"steelblue", 0xFF4682B4},     {"tan"        , 0xFFD2B48C},
+    {"thistle",0xFFD8BFD8},       {"tomato"    , 0xFFFF6347},   {"turquoise", 0xFF40E0D0},     {"violet", 0xFFEE82EE},
+    {"wheat" , 0xFFF5DEB3},       {"whitesmoke", 0xFFF5F5F5},   {"white"    , 0xFFFFFFFF},     {"yellow", 0xFFFFFF00},
+    {"yellowgreen", 0x9ACD32},    {"transparent",0}
 };
 
 Color::Color(unsigned int c){
@@ -63,10 +63,8 @@ unsigned int Color::parseColor(const std::string& colorString){
         if(colorString.length()<=7)
             cc|=0xFF000000;
         return cc;
-    }else if(colorString.compare("transparent")==0){
-        return 0;
     }else{
-        return 0xFF000000|getHtmlColor(colorString);
+        return getHtmlColor(colorString);
     }
 }
 
