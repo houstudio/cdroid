@@ -8,7 +8,6 @@
 #include <dirent.h>
 #include <fstream>
 #include <string.h>
-#include <lyricsview.h>
 #include <core/textutils.h>
 #include <fileadapter.h>
 
