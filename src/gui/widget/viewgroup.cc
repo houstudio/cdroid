@@ -655,6 +655,14 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     //notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
+void ViewGroup::setChildrenDrawingCacheEnabled(bool enabled){
+    if (enabled || (mPersistentDrawingCache & PERSISTENT_ALL_CACHES) != PERSISTENT_ALL_CACHES) {
+        for (auto c:mChildren) {
+            c->setDrawingCacheEnabled(enabled);
+        }
+    }
+}
+
 bool ViewGroup::isLayoutModeOptical()const{
     return mLayoutMode == LAYOUT_MODE_OPTICAL_BOUNDS;
 }

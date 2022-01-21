@@ -65,6 +65,19 @@ public:
         FLAG_TOUCHSCREEN_BLOCKS_FOCUS= 0x4000000,
     };
     enum{
+        PERSISTENT_NO_CACHE = 0x0,
+       /**
+       * Used to indicate that the animation drawing cache should be kept in memory.
+       */
+       PERSISTENT_ANIMATION_CACHE = 0x1,
+
+       /**
+       * Used to indicate that the scrolling drawing cache should be kept in memory.
+       */
+       PERSISTENT_SCROLLING_CACHE = 0x2,
+       PERSISTENT_ALL_CACHES      =0x03
+    };
+    enum{
         LAYOUT_MODE_UNDEFINED  =-1,
         LAYOUT_MODE_CLIP_BOUNDS=0,
         LAYOUT_MODE_OPTICAL_BOUNDS=1,
@@ -138,6 +151,7 @@ private:
     void addDisappearingView(View* v);
 protected:
     int mGroupFlags;
+    int mPersistentDrawingCache;
     std::vector<View*> mChildren;
     std::vector<View*>mDisappearingChildren;
     RefPtr<Region>mInvalidRgn;
@@ -258,6 +272,7 @@ public:
     int getChildCount()const;
     View*getChildAt(int idx)const;
     int indexOfChild(View* child)const;
+    void setChildrenDrawingCacheEnabled(bool);
     bool isLayoutModeOptical()const;
     void cleanupLayoutState(View* child)const;
 

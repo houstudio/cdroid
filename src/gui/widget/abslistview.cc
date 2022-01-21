@@ -2962,14 +2962,14 @@ void AbsListView::smoothScrollByOffset(int position){
         index = getLastVisiblePosition();
     }
 
-    /*if (index > -1) {
+    if (index > -1) {
         View* child = getChildAt(index - getFirstVisiblePosition());
         if (child != nullptr) {
-            Rect visibleRect = new Rect();
-            if (child.getGlobalVisibleRect(visibleRect)) {
+            Rect visibleRect;
+            if (1){//child->getGlobalVisibleRect(visibleRect)) {
                 // the child is partially visible
                 int childRectArea = child->getWidth() * child->getHeight();
-                int visibleRectArea = visibleRect.width() * visibleRect.height();
+                int visibleRectArea = visibleRect.width * visibleRect.height;
                 float visibleArea = (visibleRectArea / (float) childRectArea);
                 float visibleThreshold = 0.75f;
                 if ((position < 0) && (visibleArea < visibleThreshold)) {
@@ -2984,13 +2984,13 @@ void AbsListView::smoothScrollByOffset(int position){
             }
             smoothScrollToPosition(std::max(0, std::min(getCount(), index + position)));
         }
-    }*/
+    }
 }
 
 void AbsListView::createScrollingCache(){
     if (mScrollingCacheEnabled && !mCachingStarted /*&& !isHardwareAccelerated()*/) {
         //setChildrenDrawnWithCacheEnabled(true);
-        //setChildrenDrawingCacheEnabled(true);
+        setChildrenDrawingCacheEnabled(true);
         mCachingStarted = mCachingActive = true;
     }
 }
@@ -3000,10 +3000,10 @@ void AbsListView::clearScrollingCache(){
         mClearScrollingCache =[this]() {
             if (mCachingStarted) {
                 mCachingStarted = mCachingActive = false;
-                /*setChildrenDrawnWithCacheEnabled(false);
+                //setChildrenDrawnWithCacheEnabled(false);
                 if ((mPersistentDrawingCache & PERSISTENT_SCROLLING_CACHE) == 0) {
                     setChildrenDrawingCacheEnabled(false);
-                }*/
+                }
                 if (true){//!isAlwaysDrawnWithCacheEnabled()) {
                     invalidate();
                 }
