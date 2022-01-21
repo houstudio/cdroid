@@ -761,14 +761,14 @@ RelativeLayout::LayoutParams::LayoutParams(int w, int h)
 
 RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
   :MarginLayoutParams(source){
-    memcpy(mRules,0,sizeof(mRules));
-    memcpy(mInitialRules,0,sizeof(mInitialRules));
+    memset(mRules,0,sizeof(mRules));
+    memset(mInitialRules,0,sizeof(mInitialRules));
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& source)
   :MarginLayoutParams(source){
-    memcpy(mRules,0,sizeof(mRules));
-    memcpy(mInitialRules,0,sizeof(mInitialRules));
+    memset(mRules,0,sizeof(mRules));
+    memset(mInitialRules,0,sizeof(mInitialRules));
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& source)
