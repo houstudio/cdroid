@@ -220,8 +220,15 @@ public:
     bool mHasLetterSpacing = false;
     float mLetterSpacing = 0;
 public:
+    TextAppearanceAttributes();
     void readTextAppearance(Context*ctx,const AttributeSet&atts);
 };
+
+TextAppearanceAttributes::TextAppearanceAttributes(){
+    mTextColor    = nullptr;
+    mTextColorHint= nullptr;
+    mTextColorLink= nullptr;
+}
 
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
     mTextColorHighlight = atts.getColor("textColorHighlight",mTextColorHighlight);
@@ -320,11 +327,6 @@ void TextView::initView(){
     mEditMode =READONLY;
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
-
-    TextAppearanceAttributes attributes;
-    attributes.mTextColor = ColorStateList::valueOf(0xFFFFFFFF);
-    attributes.mTextSize  = 18;
-    applyTextAppearance(&attributes);
 }
 
 TextView::~TextView() {
@@ -1030,7 +1032,7 @@ void TextView::setTextColor(int color){
 }
 
 void TextView::setTextColor(ColorStateList* colors){
-    if(colors!=nullptr){
+    if((colors!=nullptr)&&(colors!=mTextColor)){
         delete mTextColor;
         mTextColor = colors;
         updateTextColors();

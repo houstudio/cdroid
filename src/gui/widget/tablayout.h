@@ -232,6 +232,7 @@ protected:
 public:
     TabLayout(int w,int h);
     TabLayout(Context*context,const AttributeSet&atts);
+    ~TabLayout();
     void setSelectedTabIndicatorColor( int color);
     void setSelectedTabIndicatorHeight(int height);
     void setScrollPosition(int position, float positionOffset, bool updateSelectedText);

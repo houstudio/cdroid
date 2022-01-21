@@ -49,6 +49,11 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     applyModeAndGravity();
 }
 
+TabLayout::~TabLayout(){
+    delete mTabTextColors;
+    delete mScrollAnimator; 
+}
+
 void TabLayout::initTabLayout(){
     AttributeSet atts;
     mMode = MODE_SCROLLABLE;
@@ -905,8 +910,7 @@ void TabLayout::TabView::setSelected(bool selected) {
         sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SELECTED);
     }*/
 
-    // Always dispatch this to the child views, regardless of whether the value has
-    // changed
+    // Always dispatch this to the child views, regardless of whether the value has changed
     if (mTextView)  mTextView->setSelected(selected);
 
     if (mIconView)  mIconView->setSelected(selected);
@@ -1042,7 +1046,7 @@ void TabLayout::TabView::update() {
         }
         //TextViewCompat.setTextAppearance(mTextView, mTabTextAppearance);
         if (mParent->mTabTextColors) {
-            mTextView->setTextColor(mParent->mTabTextColors);
+            mTextView->setTextColor(new ColorStateList(*mParent->mTabTextColors));
         }
         updateTextAndIcon(mTextView, mIconView);
     } else {

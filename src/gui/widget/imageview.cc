@@ -4,6 +4,8 @@
 #include <cdlog.h>
 namespace cdroid{
 
+DECLARE_WIDGET(ImageView)
+
 ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initImageView();
