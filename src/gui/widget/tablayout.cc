@@ -21,9 +21,14 @@ TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
 TabLayout::TabLayout(Context*context,const AttributeSet&atts)
   :HorizontalScrollView(context,atts){
     initTabLayout();
+
     mTabStrip->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",-1));
-    mTabStrip->setSelectedIndicatorColor(atts.getColor("tabIndicatorColor",0)); 
+    mTabStrip->setSelectedIndicatorColor(atts.getColor("tabIndicatorColor",0));
+
+    setSelectedTabIndicator(context->getDrawable(atts,"tabIndicator")); 
     setTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
+    setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
+
     mTabPaddingStart = mTabPaddingTop=mTabPaddingEnd=mPaddingBottom=atts.getDimensionPixelSize("tabPadding",0);
     mTabPaddingStart = atts.getDimensionPixelSize("tabPaddingStart",mTabPaddingStart);
     mTabPaddingEnd   = atts.getDimensionPixelSize("tabPaddingEnd",mTabPaddingEnd);
@@ -31,12 +36,17 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabPaddingBottom= atts.getDimensionPixelSize("tabPaddingBottom",mTabPaddingBottom); 
     mTabTextSize  =atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
     mTabTextColors=context->getColorStateList(atts.getString("tabTextColor"));
-    mTabBackgroundResId=atts.getString("tabBackground");
+
+    mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration", 300);
+    mRequestedTabMinWidth = atts.getDimensionPixelSize("tabMinWidth", -1);
+    mRequestedTabMaxWidth = atts.getDimensionPixelSize("tabMaxWidth", -1);
+
+    mTabBackgroundResId= atts.getString("tabBackground");
+    mContentInsetStart  = atts.getDimensionPixelSize("tabContentStart", 0);
     mMode = atts.getInt("tabMode",std::map<const std::string,int>{{"scrollable",0},{"fixed",1}},1);
     mTabGravity =atts.getGravity("tabGravity",0);
     mInlineLabel=atts.getBoolean("tabInlineLabel",false);
     applyModeAndGravity();
-    LOGD("mTabBackgroundResId=%s",mTabBackgroundResId.c_str());
 }
 
 void TabLayout::initTabLayout(){
@@ -1240,7 +1250,6 @@ void TabLayout::SlidingTabStrip::onMeasure(int widthMeasureSpec, int heightMeasu
 }
 
 void TabLayout::SlidingTabStrip::onLayout(bool changed, int l, int t, int w, int h) {
-    LOGD("SlidingTabStrip::onLayout(%d,%d,%d,%d) childs=%d",l,t,w,h,getChildCount());
     LinearLayout::onLayout(changed, l, t, w, h);
 
     if (mIndicatorAnimator && mIndicatorAnimator->isRunning()) {

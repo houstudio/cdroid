@@ -1,6 +1,7 @@
 #ifndef __TEXT_UTILS_H__
 #define __TEXT_UTILS_H__
 #include <string>
+#include <vector>
 namespace cdroid{
 
 class TextUtils{
@@ -13,6 +14,7 @@ public:
     static bool startWith(const std::string&str,const std::string&head);
     static bool endWith(const std::string&str,const std::string&tail);
     static std::string& trim(std::string&);
+    static std::vector<std::string> split(const std::string& s,const std::string& delim);
     static int UCS2UTF(wchar_t wc,char*oututf,int outlen);
     static int UTF2UCS(const char*utf,wchar_t*unicode);
 };

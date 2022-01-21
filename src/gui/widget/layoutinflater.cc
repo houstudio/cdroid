@@ -129,7 +129,7 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
     XML_ParserFree(parser);
     pd.root->requestLayout();
     pd.root->startLayoutAnimation();
-    LOGD("usedtime %dms  parsed %d views",SystemClock::uptimeMillis()-tstart,pd.parsedView);
+    LOGV("usedtime %dms  parsed %d views",SystemClock::uptimeMillis()-tstart,pd.parsedView);
     return pd.root;
 }
 

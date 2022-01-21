@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#12151C">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#FF12151C">
+        <ImageButton
+            android:id="100"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            android:src="@mipmap/reback"
+            android:background="#0"
+            >
+        </ImageButton>
+        <TabLayout
+            android:id="200"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="transparent"
+            android:layout_weight="1">
+        </TabLayout>
+        <ImageButton
+            android:id="300"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            android:src="@mipmap/dev_sync"
+            android:background="#0">
+
+        </ImageButton>
+    </LinearLayout>
+    <androidx.viewpager.widget.ViewPager
+        android:id="400"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:layout_gravity="bottom"
+        android:background="#FF0000">
+    </androidx.viewpager.widget.ViewPager>
+</LinearLayout>

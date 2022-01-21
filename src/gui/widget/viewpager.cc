@@ -61,6 +61,7 @@ void ViewPager::initViewPager(){
 
     mCurItem = 0;
     mPageMargin =0;
+    mOffscreenPageLimit =3;
     mFirstOffset=-std::numeric_limits<float>::max();
     mLastOffset = std::numeric_limits<float>::max();
     mTempItem=new ItemInfo();
@@ -1264,8 +1265,6 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
                 completeScroll(false);
                 mIsBeingDragged = false;
             }
-            LOGV("Down at %f,%f IsBeingDragged=%d mIsUnableToDrag=%d",
-                 mLastMotionX,mLastMotionY, mIsBeingDragged, mIsUnableToDrag); 
             break;
         }
     
@@ -1304,7 +1303,7 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
     bool needsInvalidate = false;
     
     switch (action & MotionEvent::ACTION_MASK) {
-    case MotionEvent::ACTION_DOWN: {
+    case MotionEvent::ACTION_DOWN: 
          mScroller->abortAnimation();
          mPopulatePending = false;
          populate();
@@ -1314,7 +1313,6 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
          mLastMotionY = mInitialMotionY = ev.getY();
          mActivePointerId = ev.getPointerId(0);
          break;
-        }
     case MotionEvent::ACTION_MOVE:
          if (!mIsBeingDragged) {
              int pointerIndex = ev.findPointerIndex(mActivePointerId);
