@@ -56,8 +56,8 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
         if(horzMargin>=0){
             leftMargin= rightMargin =horzMargin;
         }else{
-            leftMargin = attrs.getDimensionPixelSize("layout_arginLeft", UNDEFINED_MARGIN);
-            rightMargin= attrs.getDimensionPixelSize("layout_arginRight",UNDEFINED_MARGIN);
+            leftMargin = attrs.getDimensionPixelSize("layout_marginLeft", UNDEFINED_MARGIN);
+            rightMargin= attrs.getDimensionPixelSize("layout_marginRight",UNDEFINED_MARGIN);
             if(leftMargin==UNDEFINED_MARGIN){
                 mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
                 leftMargin = DEFAULT_MARGIN_RESOLVED;
@@ -73,7 +73,7 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
             topMargin = bottomMargin = vertMargin;
         }else{
             topMargin   = attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
-            bottomMargin= attrs.getDimensionPixelSize("layout_arginBottom",DEFAULT_MARGIN_RESOLVED);
+            bottomMargin= attrs.getDimensionPixelSize("layout_marginBottom",DEFAULT_MARGIN_RESOLVED);
         }
         if (isMarginRelative()) {
             mMarginFlags |= NEED_RESOLUTION_MASK;
