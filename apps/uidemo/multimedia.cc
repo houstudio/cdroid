@@ -38,12 +38,12 @@ public:
             }
         });
 
-        LOGD("instantiateItem %d to %p",position,lv);
+        LOGV("instantiateItem %d to %p",position,lv);
         return lv;
     }
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
-        LOGD("destroyItem[%d]: %p",position,object);
+        LOGV("destroyItem[%d]: %p",position,object);
     }
     std::string getPageTitle(int position)override{
         return std::string("Tab")+std::to_string(position);
@@ -73,11 +73,13 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mAdapter=new FileTypeAdapter();
     mTabLayout=(TabLayout*)vg->findViewById(200);
     mPager = (ViewPager*)vg->findViewById(400);
+
     mTabLayout->setSelectedTabIndicatorColor(0x8000FF00);
     mTabLayout->setSelectedTabIndicatorHeight(4);
     mTabLayout->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
     mPager->setAdapter(mAdapter);
+    mPager->setPageMargin(20);
     mTabLayout->setupWithViewPager(mPager);
     mTabLayout->requestLayout();
     requestLayout();

@@ -29,7 +29,6 @@ RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
 
 RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
  :ViewGroup(context,attrs){
-
 }
 
 bool RelativeLayout::shouldDelayChildPressedState(){
@@ -762,12 +761,14 @@ RelativeLayout::LayoutParams::LayoutParams(int w, int h)
 
 RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
   :MarginLayoutParams(source){
-
+    memcpy(mRules,0,sizeof(mRules));
+    memcpy(mInitialRules,0,sizeof(mInitialRules));
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& source)
   :MarginLayoutParams(source){
-
+    memcpy(mRules,0,sizeof(mRules));
+    memcpy(mInitialRules,0,sizeof(mInitialRules));
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& source)
@@ -786,7 +787,7 @@ RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):
     mRules[LEFT_OF] = atts.getResourceId("layout_toLeftOf",0);
     mRules[RIGHT_OF]= atts.getResourceId("layout_toRightOf",0);
     mRules[ABOVE]   = atts.getResourceId("layout_above",0);
-    mRules[BELOW]   = atts.getResourceId("layot_below",0);
+    mRules[BELOW]   = atts.getResourceId("layout_below",0);
     mRules[ALIGN_BASELINE]= atts.getResourceId("layout_alignBaseline",0);
     mRules[ALIGN_LEFT]    = atts.getResourceId("layout_alignLeft",0);
     mRules[ALIGN_TOP]     = atts.getResourceId("layout_alignTop",0);
