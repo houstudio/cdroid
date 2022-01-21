@@ -21,6 +21,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
+    AnimationHandler::getInstance().setFrameDelay(200);
     Window*w=new Window(0,0,1280,600);
     MyPageAdapter*gpAdapter=new MyPageAdapter();
 

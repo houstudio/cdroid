@@ -4,13 +4,20 @@
 static int mPageCount=5;
 class MyPageAdapter:public PagerAdapter{
 public:
-    int getCount(){return 12;}
+    int getCount(){return 8;}
     bool isViewFromObject(View* view, void*object) { return view==object;}
     void* instantiateItem(ViewGroup* container, int position) {
-        SimpleMonthView*sm=new  SimpleMonthView(100,100);
-        sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
-        container->addView(sm);
-        return sm;
+        if(position<getCount()/2){
+            SimpleMonthView*sm=new  SimpleMonthView(100,100);
+            sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
+            container->addView(sm);
+            return sm;
+        }else{
+            View*sm=new View(100,100);
+            sm->setBackground(new ColorDrawable(0xFF000000|(0xFF<<((position%3)*8))));
+            container->addView(sm);
+            return sm;
+        }
     }
     void destroyItem(ViewGroup* container, int position,void* object){
         container->removeView((View*)object);
@@ -20,6 +27,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
+    AnimationHandler::getInstance().setFrameDelay(100);
     Window*w=new Window(0,0,800,600);
     HorizontalScrollView* hs=new HorizontalScrollView(800,400);
     LinearLayout*layout=new LinearLayout(400,100);
@@ -42,7 +50,7 @@ int main(int argc,const char*argv[]){
     }
     ViewPager*pager=new ViewPager(800,560);
     MyPageAdapter*gpAdapter=new MyPageAdapter();
-    pager->setOffscreenPageLimit(3);
+    pager->setOffscreenPageLimit(8);
     pager->setAdapter(gpAdapter);
     ViewPager::OnPageChangeListener listener;
     listener.onPageSelected=[&](int position){

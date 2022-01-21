@@ -21,6 +21,19 @@ InputEventSource::InputEventSource(const std::string&file){
     frecord.open(file);
     isplayback=false;
     lasteventTime=SystemClock::uptimeMillis();
+    auto func=[this](){
+        while(1){
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            std::lock_guard<std::mutex> lock(mtxEvents);
+            INPUTEVENT es[32];
+            int count=InputGetEvents(es,32,0);
+            LOGV_IF(count,"rcv %d rawEvents",count);
+            for(int i=0;i<count;i++)
+                mRawEvents.push(es[i]);
+        }
+    };
+    std::thread th(func);
+    th.detach();
 }
 
 InputEventSource::~InputEventSource(){
@@ -54,13 +67,13 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
             dev.reset(new MouseDevice(fd));
             dev->setEventConsumeListener([&](const InputEvent&e){
                MotionEvent*mt=MotionEvent::obtain((MotionEvent&)e);
-               events.push(mt);
+               mInputEvents.push(mt);
             });
         }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_KEYBOARD)){
             dev.reset(new KeyDevice(fd));
             dev->setEventConsumeListener([&](const InputEvent&e){
                KeyEvent*key=KeyEvent::obtain((KeyEvent&)e);
-               events.push(key);
+               mInputEvents.push(key);
             });
         }
         devices.emplace(fd,dev);
@@ -70,18 +83,16 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
 }
 
 int InputEventSource::checkEvents(){
-    INPUTEVENT es[32];
-    if(events.size()>0)return TRUE;
-    int count=InputGetEvents(es,32,1);
-    process(es,count);
-    return count;
+    std::lock_guard<std::mutex> lock(mtxEvents);
+    process();
+    return mInputEvents.size()>0;
 }
 
 int InputEventSource::handleEvents(){
-    std::unique_lock<std::mutex> lock(mtxEvents);
-    if(events.size()==0)return false;
-    while(events.size()){
-        InputEvent* e=events.front();
+    std::lock_guard<std::mutex> lock(mtxEvents);
+    if(mInputEvents.size()==0)return false;
+    while(mInputEvents.size()){
+        InputEvent* e=mInputEvents.front();
         WindowManager::getInstance().processEvent(*e);
         if((!isplayback)&& frecord.is_open() && dynamic_cast<KeyEvent*>(e) ){
             nsecs_t eventTime=SystemClock::uptimeMillis();
@@ -92,31 +103,31 @@ int InputEventSource::handleEvents(){
             lasteventTime=eventTime;
         }
         e->recycle();
-        events.pop();
+        mInputEvents.pop();
     }
     return 0; 
 }
 
-int  InputEventSource::process(const INPUTEVENT*inevents,int count){
-    LOGV_IF(count,"%p  recv %d events ",this,count);
-    std::unique_lock<std::mutex> lock(mtxEvents);
-    for(int i=0;i<count;i++){
-        const INPUTEVENT*e=inevents+i;
-        struct timeval tv={e->tv_sec,e->tv_usec};
-        std::shared_ptr<InputDevice>dev=getdevice(e->device);
+int  InputEventSource::process(){
+    LOGD_IF(mRawEvents.size(),"%p  recv %d events ",this,mRawEvents.size());
+    while(mRawEvents.size()){
+        const INPUTEVENT e=mRawEvents.front();
+        struct timeval tv={e.tv_sec,e.tv_usec};
+        std::shared_ptr<InputDevice>dev=getdevice(e.device);
+        mRawEvents.pop();
         if(dev==nullptr){
-            LOGD("%d,%d,%d device=%d ",e->type,e->code,e->value,e->device);
+            LOGD("%d,%d,%d device=%d ",e.type,e.code,e.value,e.device);
             continue;
         }
-        dev->putRawEvent(tv,e->type,e->code,e->value);
+        dev->putRawEvent(tv,e.type,e.code,e.value);
     }
     return 0;
 }
 
 int InputEventSource::pushEvent(InputEvent*evt){
-    std::unique_lock<std::mutex> lock(mtxEvents);
-    events.push(evt);
-    return events.size();
+    std::lock_guard<std::mutex> lock(mtxEvents);
+    mInputEvents.push(evt);
+    return mInputEvents.size();
 }
 
 void InputEventSource::playback(const std::string&fname){
@@ -150,7 +161,7 @@ void InputEventSource::playback(const std::string&fname){
                  int keycode=KeyEvent::getKeyCodeFromLabel(word.c_str());
                  KeyEvent*key=KeyEvent::obtain(evttime,evttime,action,keycode,1,0/*metastate*/,
                        0/*deviceid*/,keycode/*scancode*/,0/*flags*/,0/*source*/);
-                 events.push(key);
+                 mInputEvents.push(key);
              }
              if(in.gcount()==0){
                  in.close();

@@ -24,13 +24,15 @@ protected:
     bool isplayback;
     nsecs_t lasteventTime;
     std::ofstream frecord;
-    std::queue<InputEvent*>events;
+    std::queue<InputEvent*>mInputEvents;
+    std::queue<INPUTEVENT>mRawEvents;
 #if ENABLED_GESTURE
     std::unique_ptr<GRT::GestureRecognitionPipeline>pipeline;
 #endif
     std::unordered_map<int,std::shared_ptr<InputDevice>>devices;
     std::shared_ptr<InputDevice>getdevice(int fd);
     int pushEvent(InputEvent*evt);
+    int process();
 public:
     InputEventSource(const std::string&recordfile=std::string() );
     ~InputEventSource();
@@ -38,7 +40,6 @@ public:
     void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;
-    int process(const INPUTEVENT*es,int count);
 };
 }
 #endif
