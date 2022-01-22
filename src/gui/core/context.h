@@ -18,19 +18,20 @@ class Drawable;
 class ColorStateList;
 class Context{
 public:
-     virtual const DisplayMetrics&getDisplayMetrics()=0;
-     virtual const std::string& getString(const std::string&id,const std::string&lan="")=0;
-     static RefPtr<Cairo::ImageSurface> loadImage( std::istream&istream ){
-         return Cairo::ImageSurface::create_from_stream(istream);
-     }
-     virtual std::unique_ptr<std::istream>getInputStream(const std::string&)=0;
-     virtual RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)=0;
-     virtual Drawable* getDrawable(const std::string&resid)=0;
-     Drawable* getDrawable(const AttributeSet&atts,const std::string&key){
-         return atts.hasAttribute(key)?getDrawable(atts.getString(key)):nullptr;
-     }
-     virtual ColorStateList* getColorStateList(const std::string&resid)=0;
-     virtual AttributeSet obtainStyledAttributes(const std::string&resid)=0;
+    virtual const DisplayMetrics&getDisplayMetrics()=0;
+    virtual int getId(const std::string&)=0;
+    virtual const std::string& getString(const std::string&id,const std::string&lan="")=0;
+    static RefPtr<Cairo::ImageSurface> loadImage( std::istream&istream ){
+        return Cairo::ImageSurface::create_from_stream(istream);
+    }
+    virtual std::unique_ptr<std::istream>getInputStream(const std::string&)=0;
+    virtual RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)=0;
+    virtual Drawable* getDrawable(const std::string&resid)=0;
+    Drawable* getDrawable(const AttributeSet&atts,const std::string&key){
+        return atts.hasAttribute(key)?getDrawable(atts.getString(key)):nullptr;
+    }
+    virtual ColorStateList* getColorStateList(const std::string&resid)=0;
+    virtual AttributeSet obtainStyledAttributes(const std::string&resid)=0;
 };
 
 }

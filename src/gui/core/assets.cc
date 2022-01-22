@@ -16,6 +16,7 @@ namespace cdroid{
 
 Assets::Assets(){
     addResource("cdroid.pak","cdroid");
+    getId("homescreen");
 }
 
 Assets::Assets(const std::string&path):Assets(){
@@ -132,6 +133,18 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid){
     img=loadImage(zipis);
     LOGV_IF(img,"image %s size=%dx%d",fullresid.c_str(),img->get_width(),img->get_height());
     return img;
+}
+
+int Assets::getId(const std::string&key){
+    auto func=[&](const std::string&section,const AttributeSet*att1,
+            const AttributeSet&att2,const std::string&value,int index){
+        if(section.length()&&section[0]=='i'&&section[1]=='d'){
+            const std::string name=att2.getString("name");
+            mIDS[name]=TextUtils::strtol(value);
+            LOG(DEBUG)<<name<<"========>>>>>"<<value;
+        }
+    };
+    loadKeyValues("cdroid:xml/ID.xml",func);
 }
 
 const std::string& Assets::getString(const std::string& id,const std::string&lan){
@@ -262,8 +275,8 @@ int Assets::loadStyles(const std::string&fullresid){
     return loadAttributes(mStyles,fullresid);
 }
 
-int Assets::loadKeyValues(const std::string&fullresid,
-        std::function<void(const std::string&,const AttributeSet*,const AttributeSet&,const std::string&,int)>func){
+int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const std::string&,
+        const AttributeSet*,const AttributeSet&,const std::string&,int)>func){
     int len = 0;
     char buf[256];
     std::string resname;
@@ -294,7 +307,8 @@ int Assets::loadKeyValues(const std::string&fullresid,
 
 int Assets::loadAttributes(std::map<const std::string,AttributeSet>&attmaps,const std::string&fullresid){
     std::map<const std::string,AttributeSet>::iterator itr=attmaps.end();
-    loadKeyValues(fullresid,[&attmaps,&itr](const std::string&tag,const AttributeSet*parentAttrs,const AttributeSet&atts,const std::string&value,int index){
+    loadKeyValues(fullresid,[&attmaps,&itr](const std::string&tag,const AttributeSet*parentAttrs,
+                const AttributeSet&atts,const std::string&value,int index){
         const std::string key=atts.getString("name");
         if(index==0){
             const std::string name=parentAttrs->getString("name");

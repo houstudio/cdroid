@@ -112,6 +112,14 @@ std::string& TextUtils::trim(std::string&s){
     return s;
 }
 
+long TextUtils::strtol(const std::string&value){
+    if(value.empty())return 0;
+    if(value[0]=='#')return std::strtoul(value.c_str()+1,nullptr,16);
+    if((value[0]=='0')&&((value[1]=='x')||(value[1]=='X')))
+        return std::strtoul(value.c_str()+2,nullptr,16);
+    return std::strtoul(value.c_str(),nullptr,10);
+}
+
 std::vector<std::string> TextUtils::split(const std::string& s,const std::string& delim){
     std::vector<std::string> elems;
     size_t pos = 0;
