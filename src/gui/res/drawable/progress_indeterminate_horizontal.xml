@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <animation-list xmlns:cdroid="http://schemas.android.com/apk/res/android"
        cdroid:oneshot="false">
-    <item cdroid:drawable"cdroid:mipmap/progressbar_indeterminate1" cdroid:duration="200" />
-    <item cdroid:drawable"cdroid:mipmap/progressbar_indeterminate2" cdroid:duration="200" />
-    <item cdroid:drawable"cdroid:mipmap/progressbar_indeterminate3" cdroid:duration="200" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate1" cdroid:duration="200" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate2" cdroid:duration="200" />
+    <item cdroid:drawable="cdroid:mipmap/progressbar_indeterminate3" cdroid:duration="200" />
 </animation-list>
