@@ -3,8 +3,10 @@ project(uidemo C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
+find_package(CDroid REQUIRED)
 include_directories(
    ./
+   ${CDROID_INCLUDE_DIR}
    ${DEPS_DIR}/include
    ${DEPS_DIR}/include/gui
    ${DEPS_DIR}/include/porting
@@ -14,13 +16,14 @@ include_directories(
 )
 aux_source_directory(./ DEMO_SRCS)
 link_directories(${DEPS_DIR}/lib)
-add_executable(uidemo ${DEMO_SRCS})
+add_executable(uidemo ${DEMO_SRCS} ./R.h)
 add_custom_target(uidemopo
   COMMAND touch ${PROJECT_BINARY_DIR}/uidemo.po
   COMMAND xgettext -d uidemo -j -c -p${PROJECT_BINARY_DIR} -kTEXT ${DEMO_SRCS}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   COMMENT "xgettext:Make MultiLanguage files (.po) for files in DIR:${PROJECT_SOURCE_DIR}"
 )
+
 
 CreatePAK(uidemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo.pak ${PROJECT_SOURCE_DIR}/R.h)
 
