@@ -79,14 +79,17 @@ class IDGenerater(object):
         return -1;
 
     def scanxml(self,scanPath):
+        lastmodifytime=0
         for top, dirs, nondirs in os.walk(scanPath):
             for item in nondirs:
                 fname=os.path.join(top, item)
                 if item.find('.xml')<0 or self.dirHasId(fname)<0:
                     continue
                 newestdate=os.stat(fname);
+                if(lastmodifytime<newestdate.st_mtime):
+                    lastmodifytime=newestdate.st_mtime
                 self.parser.parse(fname)
-        #print self.Handler.groupby()
+        return lastmodifytime
 
 if ( __name__ == "__main__"):
     idstart=10000
@@ -102,11 +105,16 @@ if ( __name__ == "__main__"):
         namespace='cdroid'
         idstart=1000
     print "namespace="+namespace
-
+    lastmodifytime=0 
+    if os.path.exists(sys.argv[2]):
+        fstat=os.stat(sys.argv[2])
+        lastmodifytime=fstat.st_mtime
     idgen=IDGenerater(idstart)
-    idgen.scanxml(sys.argv[1])
-    idgen.dict2RH(sys.argv[2],namespace)
     if not os.path.exists(sys.argv[1]+"/values"):
         os.makedirs(sys.argv[1]+"/values")
-    idgen.dict2ID(sys.argv[1]+"/values/ID.xml")
+    if idgen.scanxml(sys.argv[1])>lastmodifytime:
+       idgen.dict2RH(sys.argv[2],namespace)
+       idgen.dict2ID(sys.argv[1]+"/values/ID.xml")
+    else:
+        print sys.argv[2]+"is not outofdate ,skipped."
 

@@ -118,8 +118,8 @@ int Assets::fetchIdFromResource(const std::string&fullresid){
         if(section.length()&&section[0]=='i'&&section[1]=='d'){
             const std::string name=package+att2.getString("name");
             mIDS[name]=TextUtils::strtol(value);
+            LOGV("%s->%s",name.c_str(),value.c_str());
             count++;
-            LOG(DEBUG)<<name<<"-->"<<value;
         }
     };
     loadKeyValues(fullresid,func);
