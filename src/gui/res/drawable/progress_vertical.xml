@@ -1,6 +1,6 @@
 <layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
  
-    <item cdroid:id="0">
+    <item cdroid:id="@+cdroid:id/background">
         <shape cdroid:shape="rectangle">
             <corners cdroid:radius="5dip" />
             <gradient
@@ -13,7 +13,7 @@
         </shape>
     </item>
  
-    <item cdroid:id="1">
+    <item cdroid:id="@+cdroid:id/progress">
         <clip cdroid:clipOrientation="vertical" cdroid:gravity = "bottom">
             <shape cdroid:shape="rectangle">
                 <corners cdroid:radius="5dip" />
@@ -28,7 +28,7 @@
         </clip>
     </item>
  
-    <item cdroid:id="2">
+    <item cdroid:id="@+cdroid:id/secondaryProgress">
         <clip  cdroid:clipOrientation="vertical"
                cdroid:gravity = "bottom">
             <shape cdroid:shape="rectangle">

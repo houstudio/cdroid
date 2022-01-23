@@ -1,9 +1,10 @@
 
-function(CreatePAK ResourceDIR PakPath projectname)
-    add_custom_target(${projectname}_res
+function(CreatePAK project ResourceDIR PakPath rhpath)
+    add_custom_target(${project}_Resource
+        COMMAND python ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${ResourceDIR} ${rhpath}
         COMMAND zip -r  -0 ${PakPath} ./ 
         WORKING_DIRECTORY ${ResourceDIR})
-    add_dependencies(${projectname} ${projectname}_res)
+    add_dependencies(${project} ${project}_Resource)
     message("Package ${ResourceDIR} to:${PakPath}")
     install(FILES ${PakPath} DESTINATION data)
 endfunction()

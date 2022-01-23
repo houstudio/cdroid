@@ -152,7 +152,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     initView();
 
     mContext=ctx;
-    mID = attrs.getInt("id",NO_ID);
+    mID = ctx->getId(attrs.getString("id"));
     mMinWidth = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight= attrs.getDimensionPixelSize("minHeight",0);
     mContentDescription=attrs.getString("contentDescription");

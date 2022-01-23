@@ -18,7 +18,7 @@
             >
         </ImageButton>
         <TabLayout
-            android:id="200"
+            android:id="@id/tablayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="transparent"
@@ -35,7 +35,7 @@
         </ImageButton>
     </LinearLayout>
     <androidx.viewpager.widget.ViewPager
-        android:id="400"
+        android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="10dp"

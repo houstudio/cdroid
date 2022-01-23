@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <ImageButton cdroid:id="1@+id/increment"
+    <ImageButton cdroid:id="@+cdroid:id/increment"
         cdroid:layout_width="fill_parent"
         cdroid:layout_height="wrap_content"
         cdroid:background="cdroid:drawable/numberpicker_up_btn"
@@ -8,14 +8,14 @@
         cdroid:paddingBottom="22dip"
         cdroid:contentDescription="@string/number_picker_increment_button" />
     <EditText
-        cdroid:id="0@+id/numberpicker_input"
+        cdroid:id="@+cdroid:id/numberpicker_input"
         cdroid:layout_width="fill_parent"
         cdroid:layout_height="wrap_content"
         cdroid:textAppearance="@style/TextAppearance.Large.Inverse.NumberPickerInputText"
         cdroid:gravity="center"
         cdroid:singleLine="true"
         cdroid:background="cdroid:drawable/numberpicker_input" />
-    <ImageButton cdroid:id="2@+id/decrement"
+    <ImageButton cdroid:id="@+cdroid:id/decrement"
         cdroid:layout_width="fill_parent"
         cdroid:layout_height="wrap_content"
         cdroid:background="cdroid:drawable/numberpicker_down_btn"

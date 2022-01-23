@@ -16,7 +16,6 @@ namespace cdroid{
 
 Assets::Assets(){
     addResource("cdroid.pak","cdroid");
-    getId("homescreen");
 }
 
 Assets::Assets(const std::string&path):Assets(){
@@ -45,6 +44,7 @@ int Assets::addResource(const std::string&path,const std::string&name){
     std::vector<std::string>entries;
     pak->getEntries(entries);
     LOGD("entries.count=%d pakpath=%s",entries.size(),path.c_str());
+    fetchIdFromResource(name+":values/ID.xml");
     return pak?0:-1;
 }
 
@@ -61,32 +61,42 @@ static bool guessExtension(ZIPArchive*pak,std::string&ioname){
     return ret;
 }
 
-//"@android:drawable/ic_dialog_email"
-//"@drawable/test"
-ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeResid)const{
-    std::string pakName=mName;
-    size_t pos=fullResId.find(':');
+//"@[+][package:]id/filname"
+void Assets::parseResource(const std::string&fullResId,std::string*res,std::string*ns)const{
+    std::string pkg=mName;
+    size_t pos=fullResId.find(":");
     std::string relname;
     if(pos!=std::string::npos){
-        int startat=(fullResId.find('@')==std::string::npos)?0:1;
-        pakName=fullResId.substr(startat,pos-startat);
+        const int pluspos=fullResId.find('+');
+        const int atpos=fullResId.find('@');
+        const int startat=(pluspos!=std::string::npos)?pluspos:((atpos==std::string::npos)?0:atpos);
+        pkg=fullResId.substr(startat,pos-startat);
         relname=fullResId.substr(pos+1);
-    }else{
+    }else{//@+id/
         pos=mName.find_last_of('/');
         if(pos!=std::string::npos)
-            pakName=mName.substr(pos+1);
-        pos=fullResId.find('@');
+            pkg=mName.substr(pos+1);
+        pos=fullResId.find('+');
+        if(pos==std::string::npos)
+            pos=fullResId.find('@');
         if(pos!=std::string::npos)relname=fullResId.substr(pos+1);
         else relname=fullResId;
     }
-    auto it=mResources.find(pakName);
+    if(res)*res=relname;
+    if(ns)*ns=pkg;
+}
+
+ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeResid)const{
+    std::string package,resname;
+    parseResource(fullResId,&resname,&package);
+    auto it=mResources.find(package);
     ZIPArchive*pak=nullptr;
     if(it!=mResources.end()){//convert noextname ->extname.
         pak=it->second;
-        guessExtension(pak,relname);
-        if(relativeResid) *relativeResid=relname;
+        guessExtension(pak,resname);
+        if(relativeResid) *relativeResid=resname;
     }
-    LOGV_IF(relname.size(),"resource for [%s::%s:%s] is%s found",pakName.c_str(),fullResId.c_str(),relname.c_str(),(pak?"":" not"));
+    LOGV_IF(resname.size(),"resource for [%s::%s:%s] is%s found",package.c_str(),fullResId.c_str(),resname.c_str(),(pak?"":" not"));
     return pak;
 }
 
@@ -96,6 +106,25 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
     std::istream*stream=pak?pak->getInputStream(resname):nullptr;
     std::unique_ptr<std::istream>is(stream);
     return is;
+}
+
+int Assets::fetchIdFromResource(const std::string&fullresid){
+    int count=0;
+    std::string package;
+    parseResource(fullresid,nullptr,&package);
+    package+=":id/";
+    auto func=[&](const std::string&section,const AttributeSet*att1,
+            const AttributeSet&att2,const std::string&value,int index){
+        if(section.length()&&section[0]=='i'&&section[1]=='d'){
+            const std::string name=package+att2.getString("name");
+            mIDS[name]=TextUtils::strtol(value);
+            count++;
+            LOG(DEBUG)<<name<<"-->"<<value;
+        }
+    };
+    loadKeyValues(fullresid,func);
+    LOGD("load %d ids from %s",count,fullresid.c_str());
+    return count;
 }
 
 void Assets::loadStrings(const std::string&lan){
@@ -135,16 +164,14 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid){
     return img;
 }
 
-int Assets::getId(const std::string&key){
-    auto func=[&](const std::string&section,const AttributeSet*att1,
-            const AttributeSet&att2,const std::string&value,int index){
-        if(section.length()&&section[0]=='i'&&section[1]=='d'){
-            const std::string name=att2.getString("name");
-            mIDS[name]=TextUtils::strtol(value);
-            LOG(DEBUG)<<name<<"========>>>>>"<<value;
-        }
-    };
-    loadKeyValues("cdroid:xml/ID.xml",func);
+int Assets::getId(const std::string&key)const{
+    std::string resid,pkg;
+    if(key.empty())return -1;
+    if(key.length()&&(key.find('/')==std::string::npos))
+       return TextUtils::strtol(key);
+    parseResource(key,&resid,&pkg);
+    auto it=mIDS.find(pkg+":"+resid);
+    return it==mIDS.end()?-1:it->second;
 }
 
 const std::string& Assets::getString(const std::string& id,const std::string&lan){
@@ -279,11 +306,11 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
         const AttributeSet*,const AttributeSet&,const std::string&,int)>func){
     int len = 0;
     char buf[256];
-    std::string resname;
-    ZIPArchive*pak=getResource(fullresid,&resname);
-    void*zfile=pak?pak->getZipHandle(resname):nullptr;
 
-    ZipInputStream stream(zfile);
+    std::unique_ptr<std::istream>stream=getInputStream(fullresid);
+    LOGE_IF(stream==nullptr,"%s load failed",fullresid.c_str());
+    if(stream==nullptr)
+        return 0;
     XML_Parser parser=XML_ParserCreate(nullptr);
     std::string curKey;
     std::string curValue;
@@ -293,8 +320,8 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetCharacterDataHandler(parser,CharacterHandler);
     do {
-        stream.read(buf,sizeof(buf));
-        len=stream.gcount();
+        stream->read(buf,sizeof(buf));
+        len=stream->gcount();
         if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));

@@ -1016,7 +1016,7 @@ void TabLayout::TabView::update() {
             mIconView->setImageDrawable(nullptr);
         }
 
-        mCustomTextView = (TextView*) custom->findViewById(cdroid::R::id::text1);
+        //mCustomTextView = (TextView*) custom->findViewById(cdroid::R::id::text1);
         if (mCustomTextView != nullptr) {
             mDefaultMaxLines = mCustomTextView->getMaxLines();// TextViewCompat.getMaxLines(mCustomTextView);
         }

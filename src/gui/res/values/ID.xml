@@ -7,19 +7,21 @@
   <id name="parentPanel">0x000003ec</id>
   <id name="topPanel">0x000003ed</id>
   <id name="title_template">0x000003ee</id>
-  <id name="icon">0x000003ef</id>
-  <id name="alertTitle">0x000003f0</id>
-  <id name="titleDivider">0x000003f1</id>
-  <id name="contentPanel">0x000003f2</id>
-  <id name="scrollView">0x000003f3</id>
-  <id name="message">0x000003f4</id>
-  <id name="customPanel">0x000003f5</id>
-  <id name="custom">0x000003f6</id>
-  <id name="buttonPanel">0x000003f7</id>
-  <id name="leftSpacer">0x000003f8</id>
-  <id name="button1">0x000003f9</id>
-  <id name="button3">0x000003fa</id>
-  <id name="button2">0x000003fb</id>
-  <id name="rightSpacer">0x000003fc</id>
+  <id name="alertTitle">0x000003ef</id>
+  <id name="titleDivider">0x000003f0</id>
+  <id name="contentPanel">0x000003f1</id>
+  <id name="scrollView">0x000003f2</id>
+  <id name="message">0x000003f3</id>
+  <id name="customPanel">0x000003f4</id>
+  <id name="custom">0x000003f5</id>
+  <id name="buttonPanel">0x000003f6</id>
+  <id name="leftSpacer">0x000003f7</id>
+  <id name="button1">0x000003f8</id>
+  <id name="button3">0x000003f9</id>
+  <id name="button2">0x000003fa</id>
+  <id name="rightSpacer">0x000003fb</id>
+  <id name="background">0x000003fc</id>
+  <id name="progress">0x000003fd</id>
+  <id name="secondaryProgress">0x000003fe</id>
 </resources>
 

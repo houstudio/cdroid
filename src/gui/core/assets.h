@@ -17,7 +17,9 @@ private:
     std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
     std::map<const std::string,class ZIPArchive*>mResources;
     std::map<const std::string,AttributeSet>mStyles;
+    void parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
+    int fetchIdFromResource(const std::string&fullresid);
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
@@ -33,7 +35,7 @@ public:
     int loadStyles(const std::string&resid);
     void clearStyles();
     const DisplayMetrics&getDisplayMetrics()override;
-    int getId(const std::string&)override;
+    int getId(const std::string&)const override;
     const std::string& getString(const std::string&id,const std::string&lan="")override;
     RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)override;
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;

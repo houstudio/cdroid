@@ -10,7 +10,7 @@
 #include <string.h>
 #include <core/textutils.h>
 #include <fileadapter.h>
-
+#include <R.h>
 class FileTypeAdapter:public PagerAdapter{
 public:
     int getCount()override{return 3;}
@@ -71,9 +71,9 @@ public:
 MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate("layout/main.xml",this);
     mAdapter=new FileTypeAdapter();
-    mTabLayout=(TabLayout*)vg->findViewById(200);
-    mPager = (ViewPager*)vg->findViewById(400);
-
+    mTabLayout=(TabLayout*)vg->findViewById(uidemo::R::id::tablayout);
+    mPager = (ViewPager*)vg->findViewById(uidemo::R::id::viewpager);
+    
     mTabLayout->setSelectedTabIndicatorColor(0x8000FF00);
     mTabLayout->setSelectedTabIndicatorHeight(4);
     mTabLayout->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
