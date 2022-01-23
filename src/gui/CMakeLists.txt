@@ -41,7 +41,6 @@ include_directories(
 
 add_definitions(-DRAPIDJSON_HAS_STDSTRING)
 
-CreatePAK(gui ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
@@ -51,6 +50,8 @@ set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS}
 add_library(gui_objs OBJECT ${SOURCES_GUI})
 add_library(gui_static STATIC $<TARGET_OBJECTS:gui_objs>)
 add_library(gui SHARED $<TARGET_OBJECTS:gui_objs>)
+
+CreatePAK(gui ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
 set_target_properties(gui_static PROPERTIES OUTPUT_NAME "gui")
 
@@ -73,7 +74,6 @@ target_link_libraries(gui_static pixman-1 png jpeg cairo_static unibreak  zip js
 
 install (TARGETS gui  DESTINATION lib)
 install (TARGETS gui_static  DESTINATION lib)
-install (FILES ${PROJECT_BINARY_DIR}/cdroid.pak DESTINATION data)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "views" EXCLUDE 
     PATTERN "core" EXCLUDE)
