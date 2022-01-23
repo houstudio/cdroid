@@ -9,7 +9,7 @@
 #include <X11/Xatom.h>
 #include <pthread.h>
 #include <string.h>
-#include <eventcodes.h>
+#include <core/eventcodes.h>
 #include <time.h>
 #ifdef ENABLE_RFB
 #include <rfb/rfb.h>

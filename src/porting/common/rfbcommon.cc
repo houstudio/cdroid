@@ -5,7 +5,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <eventcodes.h>
+#include <core/eventcodes.h>
 #include <cdinput.h>
 #include <time.h>
 #include <rfb/rfb.h>

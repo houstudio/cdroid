@@ -6,7 +6,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <eventcodes.h>
+#include <core/eventcodes.h>
 #include <cdinput.h>
 #ifdef ENABLE_RFB
 #include <rfb/rfb.h>
