@@ -41,23 +41,17 @@ include_directories(
 
 add_definitions(-DRAPIDJSON_HAS_STDSTRING)
 
+CreatePAK(gui ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
+
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
     ${SRCS_CAIROMM} ${SRCS_DIALOG} 
-    ${SRCS_ANIMATION})
+    ${SRCS_ANIMATION} widget/R.h)
 
 add_library(gui_objs OBJECT ${SOURCES_GUI})
 add_library(gui_static STATIC $<TARGET_OBJECTS:gui_objs>)
 add_library(gui SHARED $<TARGET_OBJECTS:gui_objs>)
 
-add_custom_target(systempak
-   COMMAND zip -r -0 ${CMAKE_CURRENT_BINARY_DIR}/system.pak *
-   BYPRODUCTS gui gui_static
-   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/res
-   COMMENT "package system resource"
-   )
-
-CreatePAK(gui ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 set_target_properties(gui_static PROPERTIES OUTPUT_NAME "gui")
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")

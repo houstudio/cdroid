@@ -49,7 +49,7 @@ int FileAdapter::loadFiles(const std::string&filepath){
         }
     }
     if(dir)closedir(dir);
-    LOGD("%s scaned=%d",filepath.c_str(),count);
+    LOGV("%s scaned=%d",filepath.c_str(),count);
     return count;
 }
 

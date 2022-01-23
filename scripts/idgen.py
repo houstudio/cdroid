@@ -116,5 +116,5 @@ if ( __name__ == "__main__"):
        idgen.dict2RH(sys.argv[2],namespace)
        idgen.dict2ID(sys.argv[1]+"/values/ID.xml")
     else:
-        print sys.argv[2]+"is not outofdate ,skipped."
+        print sys.argv[2]+" is latest ,skipped."
 
