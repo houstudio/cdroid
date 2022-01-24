@@ -12,9 +12,9 @@ public:
         Context* mContext;
         LayoutInflater* mInflater;
 
-        int mIconId = 0;
+        std::string mIconId;
         Drawable* mIcon;
-        int mIconAttrId = 0;
+        std::string mIconAttrId;
         std::string mTitle;
         View* mCustomTitleView;
         std::string mMessage;
@@ -31,7 +31,7 @@ public:
         std::vector<std::string> mItems;
         ListAdapter* mAdapter;
         DialogInterface::OnClickListener mOnClickListener;
-        int mViewLayoutResId;
+        std::string mViewLayoutResId;
         View* mView;
         int  mViewSpacingLeft;
         int  mViewSpacingTop;
@@ -117,7 +117,7 @@ private:
     void setupView();
     void setupCustomContent(ViewGroup* customPanel);
     void centerButton(Button* button);
-    void setBackground(View* topPanel, View* contentPanel, View* customPanel,
+    void setBackground(const AttributeSet&,View* topPanel, View* contentPanel, View* customPanel,
             View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons); 
 protected:
     std::string mMessage;
@@ -138,9 +138,11 @@ public:
     void setView(const std::string&layoutResId);
     void setView(View* view);
     void setView(View* view, int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight,int viewSpacingBottom);
-    void setButton(int whichButton,const std::string&text,DialogInterface::OnClickListener listener, Message msg);
+    void setButton(int whichButton,const std::string&text,DialogInterface::OnClickListener listener);
     void setIcon(const std::string& resId);
     void setIcon(Drawable* icon);
+    std::string getIconAttributeResId(const std::string&attrId);
+    void setInverseBackgroundForced(bool forceInverseBackground);
     ListView* getListView();
     Button*getButton(int whichButton);
     bool onKeyDown(int keyCode, KeyEvent& event);

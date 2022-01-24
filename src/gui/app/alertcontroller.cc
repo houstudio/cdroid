@@ -61,8 +61,9 @@ void AlertController::installContent(AlertParams* params) {
 }
 
 void AlertController::installContent() {
-    //int contentView = selectContentView();
+    const std::string contentView = selectContentView();
     //mWindow->setContentView(contentView);
+    LayoutInflater::from(mContext)->inflate(contentView,mWindow,true);
     setupView();
 }
 
@@ -122,22 +123,22 @@ void AlertController::setView(View* view, int viewSpacingLeft, int viewSpacingTo
     mViewSpacingBottom = viewSpacingBottom;
 }
 
-void AlertController::setButton(int whichButton,const std::string&text,DialogInterface::OnClickListener listener, Message msg){
+void AlertController::setButton(int whichButton,const std::string&text,DialogInterface::OnClickListener listener){
     switch (whichButton) {
 
     case DialogInterface::BUTTON_POSITIVE:
          mButtonPositiveText = text;
-         mButtonPositiveMessage = msg;
+         //mButtonPositiveMessage = msg;
          break;
 
     case DialogInterface::BUTTON_NEGATIVE:
          mButtonNegativeText = text;
-         mButtonNegativeMessage = msg;
+         //mButtonNegativeMessage = msg;
          break;
 
     case DialogInterface::BUTTON_NEUTRAL:
          mButtonNeutralText = text;
-         mButtonNeutralMessage = msg;
+         //mButtonNeutralMessage = msg;
          break;
 
     default: LOGE("Button %d does not exist",whichButton);
@@ -170,6 +171,13 @@ void AlertController::setIcon(Drawable* icon) {
             mIconView->setVisibility(View::GONE);
         }
     }
+}
+
+std::string AlertController::getIconAttributeResId(const std::string&attrId){
+    return "";
+}
+
+void AlertController::setInverseBackgroundForced(bool forceInverseBackground){
 }
 
 ListView* AlertController::getListView() {
@@ -291,13 +299,12 @@ void AlertController::setupView() {
             content->setScrollIndicators(indicators,View::SCROLL_INDICATOR_TOP | View::SCROLL_INDICATOR_BOTTOM);
         }
     }
-#if 0
-    TypedArray a = mContext.obtainStyledAttributes(
-            null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
-    setBackground(a, topPanel, contentPanel, customPanel, buttonPanel,
+
+    AttributeSet atts;
+    //mContext->obtainStyledAttributes("   TypedArray a = mContext.obtainStyledAttributes(
+            //null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
+    setBackground(atts, topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
-    a.recycle();
-#endif
 }
 
 void AlertController::setupCustomContent(ViewGroup* customPanel){
@@ -359,10 +366,8 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
             } else {
                 // Apply the padding from the icon to ensure the title is
                 // aligned correctly.
-                mTitleView->setPadding(mIconView->getPaddingLeft(),
-                            mIconView->getPaddingTop(),
-                            mIconView->getPaddingRight(),
-                            mIconView->getPaddingBottom());
+                mTitleView->setPadding(mIconView->getPaddingLeft(), mIconView->getPaddingTop(),
+                            mIconView->getPaddingRight(), mIconView->getPaddingBottom());
                 mIconView->setVisibility(View::GONE);
             }
         } else {
@@ -482,18 +487,153 @@ void AlertController::centerButton(Button* button) {
     }
 }
 
-void AlertController::setBackground(View* topPanel, View* contentPanel, View* customPanel,
+void AlertController::setBackground(const AttributeSet&atts,View* topPanel, View* contentPanel, View* customPanel,
     View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons){
 }
 
 
-AlertController::AlertParams::AlertParams(Context*){
+AlertController::AlertParams::AlertParams(Context*context){
+    mContext = context;
+    mCancelable = true;
 }
 
 void AlertController::AlertParams::apply(AlertController* dialog){
+    if (mCustomTitleView) {
+        dialog->setCustomTitle(mCustomTitleView);
+    } else {
+        if (mTitle.length())dialog->setTitle(mTitle);
+        if (mIcon) dialog->setIcon(mIcon);
+        if (mIconId.length())dialog->setIcon(mIconId);
+        
+        if (mIconAttrId.length())
+            dialog->setIcon(dialog->getIconAttributeResId(mIconAttrId));
+        if (mMessage.length())dialog->setMessage(mMessage);
+            
+        if (mPositiveButtonText.length()) 
+            dialog->setButton(DialogInterface::BUTTON_POSITIVE, mPositiveButtonText,
+                    mPositiveButtonListener);
+        }
+        if (mNegativeButtonText.length()) {
+            dialog->setButton(DialogInterface::BUTTON_NEGATIVE, mNegativeButtonText,
+                    mNegativeButtonListener);
+        }
+        if (mNeutralButtonText.length()) {
+            dialog->setButton(DialogInterface::BUTTON_NEUTRAL, mNeutralButtonText,
+                    mNeutralButtonListener);
+        }
+        if (mForceInverseBackground) {
+            dialog->setInverseBackgroundForced(true);
+        }
+        // For a list, the client can either supply an array of items or an
+        // adapter or a cursor
+        if (mItems.size()/* || mCursor*/ || mAdapter) {
+            createListView(dialog);
+        }
+        if (mView) {
+            if (mViewSpacingSpecified) {
+                dialog->setView(mView, mViewSpacingLeft, mViewSpacingTop, mViewSpacingRight,
+                         mViewSpacingBottom);
+            } else {
+                dialog->setView(mView);
+            }
+        } else if (mViewLayoutResId.length()) {
+            dialog->setView(mViewLayoutResId);
+        }
 }
-
+class AlertListAdapter:public ArrayAdapter<std::string>{
+public:
+    AlertListAdapter(Context*ctx,const std::string&resource,int field)
+       :ArrayAdapter<std::string>::ArrayAdapter(ctx,resource,field){
+    }
+    View*getView(int position, View* convertView, ViewGroup* parent){
+        View* view=ArrayAdapter<std::string>::getView(position, convertView, parent);
+        /*if (mCheckedItems != nullptr) {
+            bool isItemChecked = mCheckedItems[position];
+            if (isItemChecked) {
+                listView.setItemChecked(position, true);
+            }
+        }*/
+        return view;  
+    }
+};
 void AlertController::AlertParams::createListView(AlertController* dialog){
+    ListView* listView =(ListView*)LayoutInflater::from(mContext)->inflate(dialog->mListLayout, nullptr,false);
+    ListAdapter* adapter;
+
+    if (mIsMultiChoice) {
+        if (true){//mCursor == nullptr) {
+            AlertListAdapter*alertadapter = new AlertListAdapter(mContext, dialog->mMultiChoiceItemLayout, R::id::text1);
+            alertadapter->addAll(mItems);
+            adapter=alertadapter; 
+        } else {
+             /*adapter = new CursorAdapter(mContext, mCursor, false) {
+                 int mLabelIndex;
+                 int mIsCheckedIndex;
+                 {
+                      Cursor cursor = getCursor();
+                      mLabelIndex = cursor.getColumnIndexOrThrow(mLabelColumn);
+                      mIsCheckedIndex = cursor.getColumnIndexOrThrow(mIsCheckedColumn);
+                 }
+
+                 void bindView(View view, Context context, Cursor cursor) {
+                      CheckedTextView text = (CheckedTextView) view->findViewById(R::id::text1);
+                      text.setText(cursor.getString(mLabelIndex));
+                      listView.setItemChecked(cursor.getPosition(), cursor.getInt(mIsCheckedIndex) == 1);
+                 }
+
+                 View* newView(Context context, Cursor cursor, ViewGroup parent) {
+                     return mInflater.inflate(dialog.mMultiChoiceItemLayout,parent, false);
+                 }
+
+             };*/
+        }
+    } else {
+        /*const std::string layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout
+
+        if (mCursor) {
+            adapter = new SimpleCursorAdapter(mContext, layout, mCursor,
+                    new String[] { mLabelColumn }, new int[] { R::id::text1 });
+        } else if (mAdapter != nullptr) {
+            adapter = mAdapter;
+        } else {
+            adapter = new CheckedItemAdapter(mContext, layout, R::id::text1, mItems);
+        }*/
+    }
+
+    //if (mOnPrepareListViewListener) mOnPrepareListViewListener->onPrepareListView(listView);
+
+    /* Don't directly set the adapter on the ListView as we might
+     * want to add a footer to the ListView later.*/
+    dialog->mAdapter = adapter;
+    dialog->mCheckedItem = mCheckedItem;
+
+    if (mOnClickListener) {
+        listView->setOnItemClickListener([&](AdapterView& parent, View& v, int position, long id) {
+                mOnClickListener(*dialog->mDialogInterface, position);
+                if (!mIsSingleChoice) {
+                    dialog->mDialogInterface->dismiss();
+                }
+        });
+    } else if (mOnCheckboxClickListener) {
+        listView->setOnItemClickListener([&](AdapterView& parent, View& v, int position, long id) {
+                if (mCheckedItems.size()) {
+                    mCheckedItems[position] = listView->isItemChecked(position);
+                }
+                mOnCheckboxClickListener(*dialog->mDialogInterface, position, listView->isItemChecked(position));
+        });
+    }
+
+    // Attach a given OnItemSelectedListener to the ListView
+    if (mOnItemSelectedListener.onItemSelected||mOnItemSelectedListener.onNothingSelected)
+        listView->setOnItemSelectedListener(mOnItemSelectedListener);
+
+    if (mIsSingleChoice) {
+        listView->setChoiceMode(ListView::CHOICE_MODE_SINGLE);
+    } else if (mIsMultiChoice) {
+        listView->setChoiceMode(ListView::CHOICE_MODE_MULTIPLE);
+    }
+    //listView->mRecycleOnMeasure = mRecycleOnMeasure;
+    dialog->mListView = listView;
 }
 
 }//namespace
