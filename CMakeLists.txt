@@ -1,4 +1,4 @@
-project(Miniwin C CXX)
+project(CDROID C CXX)
 cmake_minimum_required (VERSION 3.2)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_CXX_STANDARD 11)
