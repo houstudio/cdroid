@@ -109,6 +109,7 @@ private:
     bool mShowTitle;
     int mButtonPanelLayoutHint;
 private:
+    void onButtonClick(View&v);
     static bool shouldCenterSingleButton(Context* context);
     static AlertController* create(Context* context, DialogInterface* di, Window* window);
     const std::string& selectContentView();

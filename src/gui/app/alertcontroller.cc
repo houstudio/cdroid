@@ -17,35 +17,21 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mContext = context;
     mDialogInterface = di;
     mWindow = window;
-#if 0
-    mHandler = new ButtonHandler(di);
 
-    TypedArray a = context.obtainStyledAttributes(null,
-            R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
+    AttributeSet atts;
+    //TypedArray a = context.obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
 
-    mAlertDialogLayout = a.getResourceId(
-            R.styleable.AlertDialog_layout, R.layout.alert_dialog);
-    mButtonPanelSideLayout = a.getResourceId(
-            R.styleable.AlertDialog_buttonPanelSideLayout, 0);
-    mListLayout = a.getResourceId(
-            R.styleable.AlertDialog_listLayout, R.layout.select_dialog);
+    mAlertDialogLayout = atts.getString("layout","cdroid:layout/alert_dialog.xml");
+    mButtonPanelSideLayout = atts.getString("buttonPanelSideLayout");
+    mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog.xml");
 
-    mMultiChoiceItemLayout = a.getResourceId(
-            R.styleable.AlertDialog_multiChoiceItemLayout,
-            R.layout.select_dialog_multichoice);
-    mSingleChoiceItemLayout = a.getResourceId(
-            R.styleable.AlertDialog_singleChoiceItemLayout,
-            R.layout.select_dialog_singlechoice);
-    mListItemLayout = a.getResourceId(
-            R.styleable.AlertDialog_listItemLayout,
-            R.layout.select_dialog_item);
-    mShowTitle = a.getBoolean(R.styleable.AlertDialog_showTitle, true);
-
-    a.recycle();
+    mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout","cdroid:layout/select_dialog_multichoice.xml");
+    mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout","cdroid:layout/select_dialog_singlechoice.xml");
+    mListItemLayout = atts.getString("listItemLayout","cdroid:layout/select_dialog_item.xml");
+    mShowTitle = atts.getBoolean("showTitle", true);
 
     /* We use a custom title so never request a window title */
     //window.requestFeature(Window.FEATURE_NO_TITLE);
-#endif
 }
 
 bool AlertController::canTextInput(View* v) {
@@ -75,8 +61,8 @@ void AlertController::installContent(AlertParams* params) {
 }
 
 void AlertController::installContent() {
-    int contentView = selectContentView();
-    mWindow->setContentView(contentView);
+    //int contentView = selectContentView();
+    //mWindow->setContentView(contentView);
     setupView();
 }
 
@@ -357,7 +343,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
     } else {
         mIconView = (ImageView*) mWindow->findViewById(R::id::icon);
 
-        bool hasTextTitle = mTitle.length();//!TextUtils.isEmpty(mTitle);
+        const bool hasTextTitle = mTitle.length();//!TextUtils.isEmpty(mTitle);
         if (hasTextTitle && mShowTitle) {
             // Display the title if a title is supplied, else hide it.
             mTitleView = (TextView*) mWindow->findViewById(R::id::alertTitle);
@@ -416,13 +402,25 @@ void AlertController::setupContent(ViewGroup* contentPanel){
     }
 }
 
+void AlertController::onButtonClick(View&v){
+    switch (v.getId()) {
+     case R::id::button1://DialogInterface.BUTTON_POSITIVE:
+     case R::id::button2://DialogInterface.BUTTON_NEGATIVE:
+     case R::id::button3://DialogInterface.BUTTON_NEUTRAL:
+         //((DialogInterface.OnClickListener) msg.obj).onClick(mDialog.get(), msg.what);
+	     break;
+     //case MSG_DISMISS_DIALOG://((DialogInterface) msg.obj).dismiss();
+     }
+}
+
 void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
     int BIT_BUTTON_POSITIVE = 1;
     int BIT_BUTTON_NEGATIVE = 2;
     int BIT_BUTTON_NEUTRAL = 4;
     int whichButtons = 0;
+    auto mButtonHandler=std::bind(&AlertController::onButtonClick,this,std::placeholders::_1);
     mButtonPositive = (Button*) buttonPanel->findViewById(R::id::button1);
-    //mButtonPositive->setOnClickListener(mButtonHandler);
+    mButtonPositive->setOnClickListener(mButtonHandler);
 
     if (mButtonPositiveText.empty()) {
         mButtonPositive->setVisibility(View::GONE);
@@ -433,7 +431,7 @@ void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
     }
 
     mButtonNegative = (Button*) buttonPanel->findViewById(R::id::button2);
-    //mButtonNegative->setOnClickListener(mButtonHandler);
+    mButtonNegative->setOnClickListener(mButtonHandler);
     if (mButtonNegativeText.empty()) {
         mButtonNegative->setVisibility(View::GONE);
     } else {
@@ -443,7 +441,7 @@ void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
     }
 
     mButtonNeutral = (Button*) buttonPanel->findViewById(R::id::button3);
-    //mButtonNeutral->setOnClickListener(mButtonHandler);
+    mButtonNeutral->setOnClickListener(mButtonHandler);
     if (mButtonNeutralText.empty()) {
         mButtonNeutral->setVisibility(View::GONE);
     } else {

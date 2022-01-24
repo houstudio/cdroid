@@ -2,6 +2,8 @@
 #define __ADAPTER_H__
 #include <widget/viewgroup.h>
 #include <widget/cdwindow.h>
+#include <widget/textview.h>
+
 namespace cdroid{
 class DataSetObserver{
 public:
@@ -44,10 +46,41 @@ private:
 typedef Adapter ListAdapter,SpinnerAdapter;
 template<class T>
 class ArrayAdapter:public Adapter{
+public:
+    typedef std::function<void(TextView&,T&)>onSetTextListener;
 private:
-    std::vector<T>mObjects;
+    onSetTextListener onSetText;
+    std::vector<T> mObjects;
+protected:
+    Context* mContext;
+    std::string mResource;
+    int  mFieldId;
+private:
+     View* createViewFromResource(int position,View* convertView,ViewGroup* parent,const std::string& resource) {
+        View*view =convertView?convertView:LayoutInflater::from(mContext)->inflate(resource, parent, false);
+        //If no custom field is assigned, assume the whole resource is a TextView
+        //Otherwise, find the TextView field within the layout
+        TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);
+        LOGD_IF(text==nullptr,"Failed to find view with ID %d in item layout",mFieldId);
+        T& item = getItemAt(position);
+        if(text&&onSetText)onSetText(*text,item);
+        return view;
+    }
 public:
     ArrayAdapter():Adapter(){
+        mContext=nullptr;
+        onSetText=nullptr;
+        mFieldId=0;
+    }
+    ArrayAdapter(Context*context,const std::string&resource,int textViewResourceId,onSetTextListener setfun=nullptr){
+        mContext=context;
+        mResource=resource;
+        mFieldId=textViewResourceId;
+        onSetText=setfun;
+    }
+    void addAll(const std::vector<T>&items){
+        mObjects=items;
+        if (mNotifyOnChange) notifyDataSetChanged();
     }
     void*getItem(int position)const override{
         if(std::is_class<T>::value)return (void*)&mObjects[position];
@@ -83,7 +116,7 @@ public:
         if(mNotifyOnChange)notifyDataSetChanged();
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
-        return nullptr;
+        return mContext==nullptr?nullptr:createViewFromResource(position, convertView, parent, mResource);
     }
 };
 
