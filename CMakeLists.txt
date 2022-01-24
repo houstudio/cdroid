@@ -47,7 +47,8 @@ add_custom_target(appdevops
   COMMAND cp -r ${CMAKE_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/deps
   COMMAND cp -r ${CMAKE_BINARY_DIR}/lib ${CMAKE_SOURCE_DIR}/deps
   COMMAND cp -r ${CMAKE_BINARY_DIR}/bin ${CMAKE_SOURCE_DIR}/deps
-  COMMAND tar -zcf ${CMAKE_BINARY_DIR}/appdevops.tar.gz *.sh CMakeLists.txt README.md apps src/porting src/modules  cmake deps tests 
+  COMMAND tar -zcf ${CMAKE_BINARY_DIR}/appdevops.tar.gz *.sh CMakeLists.txt README.md apps 
+      scripts src/porting src/modules  cmake deps tests 
       apps/samples --checkpoint=300 --checkpoint-action=dot --totals
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Creating Application develop environment ..."
