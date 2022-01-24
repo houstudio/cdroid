@@ -25,8 +25,8 @@ protected:
 public:
     ScaleDrawable(Drawable* drawable, int gravity,int scaleWidth,int scaleHeight);
     std::shared_ptr<ConstantState>getConstantState()override;
-	void draw(Canvas& canvas);
-	static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void draw(Canvas& canvas);
+    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 
 }

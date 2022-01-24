@@ -6,6 +6,56 @@
 namespace cdroid{
 
 class AlertController{
+public:
+    class AlertParams {
+    public:
+        Context* mContext;
+        LayoutInflater* mInflater;
+
+        int mIconId = 0;
+        Drawable* mIcon;
+        int mIconAttrId = 0;
+        std::string mTitle;
+        View* mCustomTitleView;
+        std::string mMessage;
+        std::string mPositiveButtonText;
+        DialogInterface::OnClickListener mPositiveButtonListener;
+        std::string mNegativeButtonText;
+        DialogInterface::OnClickListener mNegativeButtonListener;
+        std::string mNeutralButtonText;
+        DialogInterface::OnClickListener mNeutralButtonListener;
+        bool mCancelable;
+        DialogInterface::OnCancelListener mOnCancelListener;
+        DialogInterface::OnDismissListener mOnDismissListener;
+        DialogInterface::OnKeyListener mOnKeyListener;
+        std::vector<std::string> mItems;
+        ListAdapter* mAdapter;
+        DialogInterface::OnClickListener mOnClickListener;
+        int mViewLayoutResId;
+        View* mView;
+        int  mViewSpacingLeft;
+        int  mViewSpacingTop;
+        int  mViewSpacingRight;
+        int  mViewSpacingBottom;
+        bool mViewSpacingSpecified = false;
+        std::vector<bool> mCheckedItems;
+        bool mIsMultiChoice;
+        bool mIsSingleChoice;
+        int  mCheckedItem = -1;
+        DialogInterface::OnMultiChoiceClickListener mOnCheckboxClickListener;
+        //Cursor mCursor;
+        std::string mLabelColumn;
+        std::string mIsCheckedColumn;
+        bool mForceInverseBackground;
+        AdapterView::OnItemSelectedListener mOnItemSelectedListener;
+        //OnPrepareListViewListener mOnPrepareListViewListener;
+        bool mRecycleOnMeasure = true;
+    private:
+        void createListView(AlertController* dialog);
+    public:
+        AlertParams(Context*);
+        void apply(AlertController* dialog);
+    };
 private:
     Context*mContext;
     DialogInterface* mDialogInterface;
@@ -34,7 +84,6 @@ private:
     std::string mButtonNeutralText;
     Message mButtonNeutralMessage;
 
-
     std::string mIconId ;
     Drawable* mIcon;
 
@@ -58,12 +107,17 @@ private:
     std::string mListItemLayout;
 
     bool mShowTitle;
+    int mButtonPanelLayoutHint;
 private:
     static bool shouldCenterSingleButton(Context* context);
     static AlertController* create(Context* context, DialogInterface* di, Window* window);
     const std::string& selectContentView();
+    ViewGroup* resolvePanel(View* customPanel,View* defaultPanel);
     void setupView();
     void setupCustomContent(ViewGroup* customPanel);
+    void centerButton(Button* button);
+    void setBackground(View* topPanel, View* contentPanel, View* customPanel,
+            View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons); 
 protected:
     std::string mMessage;
     ListView *  mListView;
@@ -72,6 +126,8 @@ protected:
     AlertController(Context* context, DialogInterface* di, Window* window);
     static bool canTextInput(View* v);
     void setupTitle(ViewGroup* topPanel);
+    void setupContent(ViewGroup*);
+    void setupButtons(ViewGroup*);
 public:
     void installContent(AlertParams* params);
     void installContent();

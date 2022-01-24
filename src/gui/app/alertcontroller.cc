@@ -1,6 +1,7 @@
 #include <app/alertcontroller.h>
 #include <app/alertdialog.h>
 #include <widget/layoutinflater.h>
+#include <widget/R.h>
 
 namespace cdroid{
 
@@ -16,6 +17,7 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mContext = context;
     mDialogInterface = di;
     mWindow = window;
+#if 0
     mHandler = new ButtonHandler(di);
 
     TypedArray a = context.obtainStyledAttributes(null,
@@ -43,6 +45,7 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
 
     /* We use a custom title so never request a window title */
     //window.requestFeature(Window.FEATURE_NO_TITLE);
+#endif
 }
 
 bool AlertController::canTextInput(View* v) {
@@ -72,8 +75,8 @@ void AlertController::installContent(AlertParams* params) {
 }
 
 void AlertController::installContent() {
-    int contentView = selectContentView();
-    mWindow->setContentView(contentView);
+    //int contentView = selectContentView();
+    //mWindow->setContentView(contentView);
     setupView();
 }
 
@@ -81,7 +84,7 @@ const std::string& AlertController::selectContentView() {
     if (mButtonPanelSideLayout.empty()) {
         return mAlertDialogLayout;
     }
-    if (mButtonPanelLayoutHint == AlertDialog::LAYOUT_HINT_SIDE) {
+    if (mButtonPanelLayoutHint == (int)AlertDialog::LAYOUT_HINT_SIDE) {
         return mButtonPanelSideLayout;
     }
     // TODO: use layout hint side for long messages/lists
@@ -207,20 +210,31 @@ bool AlertController::onKeyUp(int keyCode, KeyEvent& event){
     return mScrollView && mScrollView->executeKeyEvent(event);
 }
 
+ViewGroup* AlertController::resolvePanel(View* customPanel,View* defaultPanel){
+    if(customPanel==nullptr){
+        return (ViewGroup*)defaultPanel;
+    }
+    if(defaultPanel){
+        ViewGroup*parent=defaultPanel->getParent();
+        parent->removeView(defaultPanel);
+    }
+    return (ViewGroup*)customPanel;
+}
+
 void AlertController::setupView() {
-    View* parentPanel = mWindow->findViewById(R.id.parentPanel);
-    View* defaultTopPanel = parentPanel->findViewById(R.id.topPanel);
-    View* defaultContentPanel= parentPanel->findViewById(R.id.contentPanel);
-    View* defaultButtonPanel = parentPanel->findViewById(R.id.buttonPanel);
+    View* parentPanel = mWindow->findViewById(R::id::parentPanel);
+    View* defaultTopPanel = parentPanel->findViewById(R::id::topPanel);
+    View* defaultContentPanel= parentPanel->findViewById(R::id::contentPanel);
+    View* defaultButtonPanel = parentPanel->findViewById(R::id::buttonPanel);
 
     // Install custom content before setting up the title or buttons so
     // that we can handle panel overrides.
-    ViewGroup* customPanel = (ViewGroup*) parentPanel->findViewById(R.id.customPanel);
+    ViewGroup* customPanel = (ViewGroup*) parentPanel->findViewById(R::id::customPanel);
     setupCustomContent(customPanel);
 
-    View* customTopPanel    = customPanel->findViewById(R.id.topPanel);
-    View* customContentPanel= customPanel->findViewById(R.id.contentPanel);
-    View* customButtonPanel = customPanel->findViewById(R.id.buttonPanel);
+    View* customTopPanel    = customPanel->findViewById(R::id::topPanel);
+    View* customContentPanel= customPanel->findViewById(R::id::contentPanel);
+    View* customButtonPanel = customPanel->findViewById(R::id::buttonPanel);
 
     // Resolve the correct panels and remove the defaults, if needed.
     ViewGroup* topPanel    = resolvePanel(customTopPanel , defaultTopPanel);
@@ -238,12 +252,12 @@ void AlertController::setupView() {
     // Only display the text spacer if we don't have buttons.
     if (!hasButtonPanel) {
         if (contentPanel != nullptr) {
-            View* spacer = contentPanel->findViewById(R.id.textSpacerNoButtons);
+            View* spacer = contentPanel->findViewById(R::id::textSpacerNoButtons);
             if (spacer != nullptr) {
                 spacer->setVisibility(View::VISIBLE);
             }
         }
-        mWindow->setCloseOnTouchOutsideIfNotSet(true);
+        //mWindow->setCloseOnTouchOutsideIfNotSet(true);
     }
 
     if (hasTopPanel) {
@@ -256,14 +270,14 @@ void AlertController::setupView() {
         View* divider = nullptr;
         if (mMessage.size() || mListView != nullptr || hasCustomPanel) {
             if (!hasCustomPanel) {
-                divider = topPanel->findViewById(R.id.titleDividerNoCustom);
+                divider = topPanel->findViewById(R::id::titleDividerNoCustom);
             }
             if (divider == nullptr) {
-                divider = topPanel->findViewById(R.id.titleDivider);
+                divider = topPanel->findViewById(R::id::titleDivider);
             }
 
         } else {
-            divider = topPanel->findViewById(R.id.titleDividerTop);
+            divider = topPanel->findViewById(R::id::titleDividerTop);
         }
 
         if (divider != nullptr) {
@@ -271,7 +285,7 @@ void AlertController::setupView() {
         }
     } else {
         if (contentPanel != nullptr) {
-            View* spacer = contentPanel->findViewById(R.id.textSpacerNoTitle);
+            View* spacer = contentPanel->findViewById(R::id::textSpacerNoTitle);
             if (spacer != nullptr) {
                 spacer->setVisibility(View::VISIBLE);
             }
@@ -279,24 +293,25 @@ void AlertController::setupView() {
     }
 
     if (dynamic_cast<ListView*>(mListView)) {
-        ((ListView*)mListView)->setHasDecor(hasTopPanel, hasButtonPanel);
+        //((ListView*)mListView)->setHasDecor(hasTopPanel, hasButtonPanel);
     }
 
     // Update scroll indicators as needed.
     if (!hasCustomPanel) {
-        View* content = mListView != nullptr ? mListView : mScrollView;
+        View* content = mListView != nullptr ? (View*)mListView : (View*)mScrollView;
         if (content != nullptr) {
             int indicators = (hasTopPanel ? View::SCROLL_INDICATOR_TOP : 0)
                     | (hasButtonPanel ? View::SCROLL_INDICATOR_BOTTOM : 0);
             content->setScrollIndicators(indicators,View::SCROLL_INDICATOR_TOP | View::SCROLL_INDICATOR_BOTTOM);
         }
     }
-
+#if 0
     TypedArray a = mContext.obtainStyledAttributes(
             null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
     setBackground(a, topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
     a.recycle();
+#endif
 }
 
 void AlertController::setupCustomContent(ViewGroup* customPanel){
@@ -314,7 +329,7 @@ void AlertController::setupCustomContent(ViewGroup* customPanel){
     }
 
     if (hasCustomView) {
-        FrameLayout* custom = (FrameLayout*) mWindow->findViewById(R.id.custom);
+        FrameLayout* custom = (FrameLayout*) mWindow->findViewById(R::id::custom);
         custom->addView(customView, new LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT));
 
         if (mViewSpacingSpecified) {
@@ -329,7 +344,7 @@ void AlertController::setupCustomContent(ViewGroup* customPanel){
     }
 }
 
-void AlertController::setupTitle(ViewGroup topPanel) {
+void AlertController::setupTitle(ViewGroup* topPanel) {
     if (mCustomTitleView && mShowTitle) {
         // Add the custom title view directly to the topPanel layout
         LayoutParams* lp = new LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT);
@@ -337,28 +352,28 @@ void AlertController::setupTitle(ViewGroup topPanel) {
         topPanel->addView(mCustomTitleView, 0, lp);
 
             // Hide the title template
-        View* titleTemplate = mWindow->findViewById(R.id.title_template);
+        View* titleTemplate = mWindow->findViewById(R::id::title_template);
             titleTemplate->setVisibility(View::GONE);
     } else {
-        mIconView = (ImageView*) mWindow->findViewById(R.id.icon);
+        mIconView = (ImageView*) mWindow->findViewById(R::id::icon);
 
-        bool hasTextTitle = !TextUtils.isEmpty(mTitle);
+        bool hasTextTitle = mTitle.length();//!TextUtils.isEmpty(mTitle);
         if (hasTextTitle && mShowTitle) {
             // Display the title if a title is supplied, else hide it.
-            mTitleView = (TextView*) mWindow->findViewById(R.id.alertTitle);
+            mTitleView = (TextView*) mWindow->findViewById(R::id::alertTitle);
             mTitleView->setText(mTitle);
 
             // Do this last so that if the user has supplied any icons we
             // use them instead of the default ones. If the user has
             // specified 0 then make it disappear.
-            if (mIconId != 0) {
+            if (mIconId.length()) {
                  mIconView->setImageResource(mIconId);
             } else if (mIcon) {
                  mIconView->setImageDrawable(mIcon);
             } else {
                 // Apply the padding from the icon to ensure the title is
                 // aligned correctly.
-                mTitleView->setPadding(mIconView.getPaddingLeft(),
+                mTitleView->setPadding(mIconView->getPaddingLeft(),
                             mIconView->getPaddingTop(),
                             mIconView->getPaddingRight(),
                             mIconView->getPaddingBottom());
@@ -366,12 +381,121 @@ void AlertController::setupTitle(ViewGroup topPanel) {
             }
         } else {
             // Hide the title template
-            View* titleTemplate = mWindow->findViewById(R.id.title_template);
-            titleTemplate.setVisibility(View::GONE);
+            View* titleTemplate = mWindow->findViewById(R::id::title_template);
+            titleTemplate->setVisibility(View::GONE);
             mIconView->setVisibility(View::GONE);
             topPanel->setVisibility(View::GONE);
         }
     }
+}
+
+void AlertController::setupContent(ViewGroup* contentPanel){
+    mScrollView = (ScrollView*) contentPanel->findViewById(R::id::scrollView);
+    mScrollView->setFocusable(false);
+
+    // Special case for users that only want to display a String
+    mMessageView = (TextView*) contentPanel->findViewById(R::id::message);
+    if (mMessageView == nullptr) {
+        return;
+    }
+
+    if (mMessage.length()) {
+        mMessageView->setText(mMessage);
+    } else {
+        mMessageView->setVisibility(View::GONE);
+        mScrollView->removeView(mMessageView);
+
+        if (mListView != nullptr) {
+            ViewGroup* scrollParent = (ViewGroup*) mScrollView->getParent();
+            const int childIndex = scrollParent->indexOfChild(mScrollView);
+            scrollParent->removeViewAt(childIndex);
+            scrollParent->addView(mListView, childIndex,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
+        } else {
+            contentPanel->setVisibility(View::GONE);
+        }
+    }
+}
+
+void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
+    int BIT_BUTTON_POSITIVE = 1;
+    int BIT_BUTTON_NEGATIVE = 2;
+    int BIT_BUTTON_NEUTRAL = 4;
+    int whichButtons = 0;
+    mButtonPositive = (Button*) buttonPanel->findViewById(R::id::button1);
+    //mButtonPositive->setOnClickListener(mButtonHandler);
+
+    if (mButtonPositiveText.empty()) {
+        mButtonPositive->setVisibility(View::GONE);
+    } else {
+        mButtonPositive->setText(mButtonPositiveText);
+        mButtonPositive->setVisibility(View::VISIBLE);
+        whichButtons = whichButtons | BIT_BUTTON_POSITIVE;
+    }
+
+    mButtonNegative = (Button*) buttonPanel->findViewById(R::id::button2);
+    //mButtonNegative->setOnClickListener(mButtonHandler);
+    if (mButtonNegativeText.empty()) {
+        mButtonNegative->setVisibility(View::GONE);
+    } else {
+        mButtonNegative->setText(mButtonNegativeText);
+        mButtonNegative->setVisibility(View::VISIBLE);
+        whichButtons = whichButtons | BIT_BUTTON_NEGATIVE;
+    }
+
+    mButtonNeutral = (Button*) buttonPanel->findViewById(R::id::button3);
+    //mButtonNeutral->setOnClickListener(mButtonHandler);
+    if (mButtonNeutralText.empty()) {
+        mButtonNeutral->setVisibility(View::GONE);
+    } else {
+        mButtonNeutral->setText(mButtonNeutralText);
+        mButtonNeutral->setVisibility(View::VISIBLE);
+        whichButtons = whichButtons | BIT_BUTTON_NEUTRAL;
+    }
+
+    if (shouldCenterSingleButton(mContext)) {
+        /* If we only have 1 button it should be centered on the layout and
+         * expand to fill 50% of the available space.*/
+        if (whichButtons == BIT_BUTTON_POSITIVE) {
+            centerButton(mButtonPositive);
+        } else if (whichButtons == BIT_BUTTON_NEGATIVE) {
+            centerButton(mButtonNegative);
+        } else if (whichButtons == BIT_BUTTON_NEUTRAL) {
+            centerButton(mButtonNeutral);
+        }
+    }
+
+    if (whichButtons) {
+        buttonPanel->setVisibility(View::GONE);
+    }
+}
+
+void AlertController::centerButton(Button* button) {
+    LinearLayout::LayoutParams* params = (LinearLayout::LayoutParams*) button->getLayoutParams();
+    params->gravity = Gravity::CENTER_HORIZONTAL;
+    params->weight = 0.5f;
+    button->setLayoutParams(params);
+    View* leftSpacer = mWindow->findViewById(R::id::leftSpacer);
+    if (leftSpacer) {
+        leftSpacer->setVisibility(View::VISIBLE);
+    }
+    View* rightSpacer = mWindow->findViewById(R::id::rightSpacer);
+    if (rightSpacer) {
+        rightSpacer->setVisibility(View::VISIBLE);
+    }
+}
+
+void AlertController::setBackground(View* topPanel, View* contentPanel, View* customPanel,
+    View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons){
+}
+
+
+AlertController::AlertParams::AlertParams(Context*){
+}
+
+void AlertController::AlertParams::apply(AlertController* dialog){
+}
+
+void AlertController::AlertParams::createListView(AlertController* dialog){
 }
 
 }//namespace

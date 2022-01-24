@@ -501,7 +501,7 @@ void PopupWindow::update(int x, int y, int width, int height){
 
     if (mAnchor != nullptr) {
         anchor = mAnchor;
-        //newAccessibilityIdOfAnchor = anchor->getAccessibilityViewId();
+        newAccessibilityIdOfAnchor = anchor->getAccessibilityViewId();
     }
 
     /*if (newAccessibilityIdOfAnchor != p.accessibilityIdOfAnchor) {

@@ -1,11 +1,12 @@
 #include <inputmethod.h>
-#include <pinyinime.h>
 #include <utf16char.h>
 #include <textutils.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <gui/gui_features.h>
-
+#ifndef ENABLE_PINYIN2HZ
+#include <pinyinime.h>
+#endif
 using namespace ime_pinyin;
 
 namespace cdroid{

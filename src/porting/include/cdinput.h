@@ -25,7 +25,7 @@ typedef struct{
 }INPUTEVENT;//reference to linux input_event
 
 #define MAX_DEVICE_NAME 64
-#define INJECTDEV_KEY 0x101080
+#define INJECTDEV_KEY   0x101080
 #define INJECTDEV_TOUCH 0x101081
 #define INJECTDEV_MOUSE 0x101082
 typedef struct{

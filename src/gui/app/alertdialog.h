@@ -7,10 +7,11 @@
 namespace cdroid{
 	
 class AlertDialog :public DialogInterface{
-protected:
-    class AlertController* mAlert;
+public:
     static constexpr int LAYOUT_HINT_NONE = 0;
     static constexpr int LAYOUT_HINT_SIDE = 1;
+protected:
+    class AlertController* mAlert;
 public:
     AlertDialog(Context*ctx,const std::string&resid);
     Button*getButton(int whichButton);

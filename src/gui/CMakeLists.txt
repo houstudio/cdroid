@@ -10,7 +10,7 @@ aux_source_directory(views SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
-#aux_source_directory(app SRCS_APP)
+aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 find_package(PNG)
 find_package(Freetype)
@@ -31,6 +31,7 @@ include_directories(
     ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_BINARY_DIR}/include/pinyin
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
+    ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include/fribidi
     ${CMAKE_SOURCE_DIR}/src/modules/vold
     ${CMAKE_SOURCE_DIR}/src/3rdparty/grt

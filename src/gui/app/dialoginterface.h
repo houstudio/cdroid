@@ -1,5 +1,6 @@
 #ifndef __DIALOG_INTERFACE_H__
 #define __DIALOG_INTERFACE_H__
+#include <widget/view.h>
 namespace cdroid{
 
 class DialogInterface{

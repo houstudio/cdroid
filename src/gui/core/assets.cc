@@ -56,7 +56,8 @@ static bool guessExtension(ZIPArchive*pak,std::string&ioname){
             ioname+=".xml";
     }else if(TextUtils::startWith(ioname,"mipmap")){
         if(ret=pak->hasEntry(ioname+".png",false)) ioname+=".png";
-        else if(ret=pak->hasEntry(ioname+".9.png",false))ioname+=".9.png"; 
+        else if(ret=pak->hasEntry(ioname+".9.png",false))ioname+=".9.png";
+        else if(ret=pak->hasEntry(ioname+".jpg",false))ioname+=".jpg";
     }
     return ret;
 }
@@ -218,7 +219,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
     }
     if(TextUtils::endWith(resname,".9.png")){
         d=new NinePatchDrawable(this,fullresid);
-    }else if (TextUtils::endWith(resname,".png")){
+    }else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")){
         d=new BitmapDrawable(this,fullresid);
     }
     if( (d==nullptr) && (!fullresid.empty()) ){
