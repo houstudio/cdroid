@@ -75,8 +75,8 @@ void AlertController::installContent(AlertParams* params) {
 }
 
 void AlertController::installContent() {
-    //int contentView = selectContentView();
-    //mWindow->setContentView(contentView);
+    int contentView = selectContentView();
+    mWindow->setContentView(contentView);
     setupView();
 }
 

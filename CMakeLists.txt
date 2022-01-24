@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 11)
 include(cmake/common_functions.cmake)
 include(cmake/options.cmake)
 
-set(CAIRO_HAS_CDROID_SURFACE TRUE)
 set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 set(CMAKE_INSTALL_MANDIR ${CMAKE_BINARY_DIR}/man)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
@@ -48,7 +47,7 @@ add_custom_target(appdevops
   COMMAND cp -r ${CMAKE_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/deps
   COMMAND cp -r ${CMAKE_BINARY_DIR}/lib ${CMAKE_SOURCE_DIR}/deps
   COMMAND cp -r ${CMAKE_BINARY_DIR}/bin ${CMAKE_SOURCE_DIR}/deps
-  COMMAND tar -zcf ${CMAKE_BINARY_DIR}/appdevops.tar.gz *.sh CMakeLists.txt README.md apps src/porting src/modules  src/tools cmake deps tests 
+  COMMAND tar -zcf ${CMAKE_BINARY_DIR}/appdevops.tar.gz *.sh CMakeLists.txt README.md apps src/porting src/modules  cmake deps tests 
       apps/samples --checkpoint=300 --checkpoint-action=dot --totals
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Creating Application develop environment ..."
