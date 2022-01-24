@@ -17,13 +17,8 @@ include_directories(
 aux_source_directory(./ DEMO_SRCS)
 link_directories(${DEPS_DIR}/lib)
 add_executable(uidemo ${DEMO_SRCS} ./R.h)
-add_custom_target(uidemopo
-  COMMAND touch ${PROJECT_BINARY_DIR}/uidemo.po
-  COMMAND xgettext -d uidemo -j -c -p${PROJECT_BINARY_DIR} -kTEXT ${DEMO_SRCS}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  COMMENT "xgettext:Make MultiLanguage files (.po) for files in DIR:${PROJECT_SOURCE_DIR}"
-)
 
+CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} uidemo)
 
 CreatePAK(uidemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo.pak ${PROJECT_SOURCE_DIR}/R.h)
 
@@ -33,17 +28,6 @@ add_custom_target(uidemotranslate
   COMMENT "Translate strings resource..."
   )
 
-macro(makepopak tgname arg)
- add_custom_target(${tgname}
-   COMMAND zip -r -0  ${PROJECT_BINARY_DIR}/${arg}.pak *
-   COMMAND touch ${PROJECT_BINARY_DIR}/${arg}.po
-   #COMMAND xgettext  -d ${arg} -j -c -p${PROJECT_BINARY_DIR} -kTEXT ${DEMO_SRCS}
-   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/assets
-   COMMENT "=====xgettext:Make MultiLanguage files (.po) and resource package(pak)"
- )
-endmacro()
-makepopak(uidemodummy uidemo)
-add_dependencies(uidemo uidemodummy)
 
 target_link_libraries(uidemo gui id3 tvhal)
 
