@@ -40,6 +40,9 @@ void ViewPager::initViewPager(){
     mVelocityTracker=nullptr;
     mScroller = new Scroller(context, mInterpolator);
     mIsScrollStarted=false;
+    mPopulatePending=false;
+    mIsBeingDragged =false;
+    mIsUnableToDrag =false;
     mScrollState = SCROLL_STATE_IDLE;
     mAdapter  = nullptr;
     mObserver = nullptr;
@@ -49,6 +52,11 @@ void ViewPager::initViewPager(){
     mFakeDragging = false;
     mDrawingOrder = DRAW_ORDER_DEFAULT;
     mActivePointerId =INVALID_POINTER;
+    mExpectedAdapterCount=0;
+    mTopPageBounds=0;
+    mBottomPageBounds=0;
+    mLastMotionX = mLastMotionY = 0;
+    mInitialMotionX = mInitialMotionY = 0;
     ViewConfiguration configuration = ViewConfiguration::get(context);
     const float density = context->getDisplayMetrics().density;
 
@@ -69,6 +77,7 @@ void ViewPager::initViewPager(){
     mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
     mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
+    mGutterSize = 0;
 }
 
 ViewPager::ItemInfo::ItemInfo(){

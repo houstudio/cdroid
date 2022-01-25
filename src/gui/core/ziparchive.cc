@@ -24,12 +24,25 @@ ZIPArchive::~ZIPArchive(){
 }
 
 int ZIPArchive::getEntries(std::vector<std::string>&entries)const{
-    int num=zip_get_num_entries((zip_t*)zip,ZIP_FL_UNCHANGED);
+    const int num=zip_get_num_entries((zip_t*)zip,ZIP_FL_UNCHANGED);
     for(int i=0;i<num;i++){
         const char*name=zip_get_name((zip_t*)zip,i,0);
         entries.push_back(name);
     }
     return num;
+}
+
+int ZIPArchive::forEachEntry(std::function<bool(const std::string)>func)const{
+    int count=0;
+    if(func){
+        const int num=zip_get_num_entries((zip_t*)zip,ZIP_FL_NODIR);
+        for(int i=0;i<num;i++){
+            const char*name=zip_get_name((zip_t*)zip,i,0);
+            count+=(func(name)!=false);
+        }
+    }
+    return count;
+
 }
 
 bool ZIPArchive::hasEntry(const std::string&name,bool excludeDirectories)const{

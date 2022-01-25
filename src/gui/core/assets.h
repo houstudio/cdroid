@@ -14,20 +14,20 @@ private:
     std::string mDefault;//default resource
     std::map<const std::string,std::string>strings;
     std::map<const std::string,int>mIDS;
+    std::map<const std::string,std::vector<std::string>>mArraies;
     std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
     std::map<const std::string,class ZIPArchive*>mResources;
     std::map<const std::string,AttributeSet>mStyles;
     void parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
+    void parseItem(const std::string&package,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
-    int fetchIdFromResource(const std::string&fullresid);
-    int fetchStyles(const std::string&fullresid);
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
     int loadKeyValues(const std::string&resid,
-        std::function<void(const std::string&tag,const std::vector<AttributeSet>&,const std::string&)>func);
+        std::function<void(const std::vector<std::string>&tags,const std::vector<AttributeSet>&,const std::string&)>func);
 public:
     Assets();
     Assets(const std::string&path);
@@ -41,6 +41,8 @@ public:
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
     std::unique_ptr<std::istream> getInputStream(const std::string&resname)override;
     Drawable * getDrawable(const std::string&resid)override;
+    int getColor(const std::string&resid)override;
+    int getArray(const std::string&resname,std::vector<std::string>&)override;
     ColorStateList* getColorStateList(const std::string&resid)override;
     AttributeSet obtainStyledAttributes(const std::string&)override;
 };

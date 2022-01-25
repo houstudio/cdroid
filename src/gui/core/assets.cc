@@ -34,17 +34,62 @@ const DisplayMetrics& Assets::getDisplayMetrics(){
     return mDisplayMetrics;
 }
 
+
+void Assets::parseItem(const std::string&package,const std::vector<std::string>&tags,std::vector<AttributeSet>atts,const std::string&value){
+    const std::string&tag0=tags[0];
+    if(atts.size()==1){
+        if(tag0.compare("id")==0){
+            const std::string name=package+":id/"+atts.back().getString("name");
+            mIDS[name]=TextUtils::strtol(value);
+            LOGV("%s=%s",name.c_str(),value.c_str());
+        }else if(tag0.compare("color")==0){
+            const std::string name=atts[0].getString("name");
+            LOGV("color::%s:%s",name.c_str(),value.c_str());
+        }
+    }else  if(atts.size()==2){int i=0;
+        if(tag0.compare("style")==0){
+            AttributeSet&attStyle=atts[0];
+            const std::string styleName  =package+attStyle.getString("name");
+            const std::string styleParent=attStyle.getString("parent");
+            auto it=mStyles.find(styleName);
+            if(it==mStyles.end()){
+                it=mStyles.insert(it,std::pair<const std::string,AttributeSet>(styleName,AttributeSet()));
+                if(styleParent.length())it->second.add("parent",styleParent);
+            }
+            it->second.add(atts[1].getString("name"),value);
+        }else if(tag0.compare("array")==0){
+            const std::string name=atts[0].getString("name");
+            auto it=mArraies.find(name);
+            if(it==mArraies.end()){
+                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(name,std::vector<std::string>()));
+            }
+            it->second.push_back(value);
+            //LOGD("tags:%s:%s",name.c_str(),value.c_str());
+        }
+    }
+}
+
 int Assets::addResource(const std::string&path,const std::string&name){
     ZIPArchive*pak=new ZIPArchive(path);
     size_t pos=name.find_last_of('/');
     std::string key=name;
     key=(pos!=std::string::npos)?name.substr(pos+1):name;
     mResources.insert(std::pair<const std::string,ZIPArchive*>(key,pak));
-    LOGD("%s:%p",key.c_str(),pak);
-    std::vector<std::string>entries;
-    pak->getEntries(entries);
-    LOGD("entries.count=%d pakpath=%s",entries.size(),path.c_str());
-    fetchIdFromResource(name+":values/ID.xml");
+    
+    int count=0;
+    pak->forEachEntry([this,name,&count](const std::string&res){
+        count++;
+        if(TextUtils::startWith(res,"values")){
+            LOGV("LoadKeyValues from:%s ...",res.c_str());
+            const std::string resid=name+":"+res;
+            loadKeyValues(resid,std::bind(&Assets::parseItem,this,name,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
+        }return 0;
+    });
+    LOGD("%s %d resource,[id:%d arraies:%d Styles:%d]",name.c_str(),count,mIDS.size(),mArraies.size(),mStyles.size());
+    for(auto a:mArraies){
+        //LOGD("Array %s",a.first.c_str());
+        //for (auto i:a.second)LOGD("   %s",i.c_str());
+    }
     return pak?0:-1;
 }
 
@@ -107,45 +152,6 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
     std::istream*stream=pak?pak->getInputStream(resname):nullptr;
     std::unique_ptr<std::istream>is(stream);
     return is;
-}
-
-int Assets::fetchIdFromResource(const std::string&fullresid){
-    int count=0;
-    std::string package;
-    parseResource(fullresid,nullptr,&package);
-    package+=":id/";
-    auto func=[&](const std::string&tag,const std::vector<AttributeSet>atts,const std::string&value){
-        if(tag.compare("id")==0){
-            const std::string name=package+atts.back().getString("name");
-            mIDS[name]=TextUtils::strtol(value);
-            LOGV("%s->%s",name.c_str(),value.c_str());
-            count++;
-        }
-    };
-    loadKeyValues(fullresid,func);
-    LOGD("load %d ids from %s",count,fullresid.c_str());
-    return count;
-}
-
-int Assets::fetchStyles(const std::string&fullresid){
-    int count=0;
-    std::string package;
-    parseResource(fullresid,nullptr,&package);
-    package+=":style/";
-    auto func=[&](const std::string&tag,std::vector<AttributeSet>atts,const std::string&value){
-        if(atts.size()==2){int i=0;
-            const std::string name=package+atts.at(0).getString("name");
-            auto it=mStyles.find(name);
-            if(it==mStyles.end())it=mStyles.insert(it,std::pair<const std::string,AttributeSet>(name,AttributeSet()));
-            it->second.add(atts[1].getString("name"),value);
-            for(auto a:atts){LOGD("%d",i++);a.dump();}
-            count++;
-        }
-    };
-    loadKeyValues(fullresid,func);
-    //for(auto s:mStyles){LOGD("Style %s",s.first.c_str());s.second.dump();}
-    LOGV("load %d Styles from %s",count,fullresid.c_str());
-    return count;
 }
 
 void Assets::loadStrings(const std::string&lan){
@@ -260,6 +266,19 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
     return d;
 }
 
+int Assets::getColor(const std::string&resid){
+    return 0;
+}
+
+int Assets::getArray(const std::string&resname,std::vector<std::string>&out){
+    auto it=mArraies.find(resname);
+    if(it!=mArraies.end()){
+        out=it->second;
+		return out.size();
+	}
+    return 0;
+}
+
 ColorStateList* Assets::getColorStateList(const std::string&fullresid){
     std::string resname;
     ZIPArchive*pak=getResource(fullresid,&resname);
@@ -275,43 +294,38 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
 }
 
 typedef struct{
+   std::vector<std::string>tags;
    std::vector<AttributeSet> attrs;
-   std::string value;
-   int level;
-   std::function<void(const std::string&,const std::vector<AttributeSet>&attrs,const std::string&)>func;
+   std::string content;
+   std::function<void(const std::vector<std::string>&,const std::vector<AttributeSet>&attrs,const std::string&)>func;
 }KVPARSER;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     KVPARSER*kvp=(KVPARSER*)userData;
     if(strcmp(name,"resources")){//root node is not in KVPARSER::attrs
+        kvp->tags.push_back(name);
         kvp->attrs.push_back(AttributeSet(satts));
-        kvp->level++;
-        kvp->value=std::string();
-    }else{//strcmp(name,"resources")
-        //do nothing
-        kvp->level=0;
+        kvp->content=std::string();
     }
 }
 
 static void CharacterHandler(void *userData,const XML_Char *s, int len){
     KVPARSER*kvp=(KVPARSER*)userData;
-    kvp->value+=std::string(s,len);
+    kvp->content+=std::string(s,len);
 }
 
 static void endElement(void *userData, const XML_Char *name){
     KVPARSER*kvp=(KVPARSER*)userData;
     if(strcmp(name,"resources")){//root node is not in KVPARSER::attrs
-        TextUtils::trim(kvp->value);
-        kvp->func(name,kvp->attrs,kvp->value);
+        TextUtils::trim(kvp->content);
+        kvp->func(kvp->tags,kvp->attrs,kvp->content);
         kvp->attrs.pop_back();
-        kvp->value=std::string();
-        kvp->level--;  
-    }else{// if(strcmp(name,"resources")==0
-        //kvp->func(kvp->parentAttr,name,name,INT_MIN);
+        kvp->tags.pop_back();
+        kvp->content=std::string();
     }
 }
 
-int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const std::string&,
+int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const std::vector<std::string>&,
         const std::vector<AttributeSet>&atts,const std::string&)>func){
     int len = 0;
     char buf[256];
@@ -346,9 +360,15 @@ void Assets::clearStyles(){
 }
 
 AttributeSet Assets::obtainStyledAttributes(const std::string&name){
+    AttributeSet atts;
     auto it=mStyles.find(name);
-    if(it!=mStyles.end())return it->second;
-    return AttributeSet();
+    if(it!=mStyles.end())atts=it->second;
+    const std::string parent=atts.getString("parent");
+    if(parent.length()){
+        AttributeSet parentAtts=obtainStyledAttributes(parent);
+        atts.inherit(parentAtts);
+    }
+    return atts;
 }
 
 }//namespace
