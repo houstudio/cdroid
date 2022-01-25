@@ -1,6 +1,5 @@
 #include <widget/layoutinflater.h>
 #include <widget/viewgroup.h>
-#include <core/theme.h>
 #include <cdroid.h>
 #include <expat.h>
 #include <cdlog.h>
@@ -80,7 +79,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     }
     const std::string stname=atts.getString("style");
     if(stname.empty()){
-        AttributeSet style=Theme::getInstance().getStyle(stname);
+        AttributeSet style=pd->ctx->obtainStyledAttributes(stname);
         atts.inherit(style);
     }
     View*v=inflater(pd->ctx,atts);

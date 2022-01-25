@@ -72,17 +72,23 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate("layout/main.xml",this);
     mAdapter=new FileTypeAdapter();
     mTabLayout=(TabLayout*)vg->findViewById(uidemo::R::id::tablayout);
+#if 0//To use this case ,we must remove node ViewPager from layout/main.xml
+    mPager=new ViewPager(800,560);
+    vg->addView(mPager);
+    mPager->setPos(0,64);
+    mPager->setOffscreenPageLimit(mAdapter->getCount());
+    mPager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
+#else//Inflated ViewPager cant show right Edge correct!!!
     mPager = (ViewPager*)vg->findViewById(uidemo::R::id::viewpager);
-    
+#endif
     mTabLayout->setSelectedTabIndicatorColor(0x8000FF00);
     mTabLayout->setSelectedTabIndicatorHeight(4);
+    mTabLayout->setTabTextColors(0xFFFF0000,0xFF00FF00);
     mTabLayout->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
     mPager->setAdapter(mAdapter);
-    mPager->setPageMargin(20);
     mTabLayout->setupWithViewPager(mPager);
     mTabLayout->requestLayout();
-    requestLayout();
 }
 
 Window*CreateMultiMedia(){

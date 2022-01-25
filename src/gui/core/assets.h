@@ -20,14 +20,14 @@ private:
     void parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
     int fetchIdFromResource(const std::string&fullresid);
+    int fetchStyles(const std::string&fullresid);
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
     int loadKeyValues(const std::string&resid,
-        std::function<void(const std::string&tag,const AttributeSet*,const AttributeSet&,const std::string&,int)>func);
-    int loadAttributes(std::map<const std::string,AttributeSet>&atts,const std::string&resid);
+        std::function<void(const std::string&tag,const std::vector<AttributeSet>&,const std::string&)>func);
 public:
     Assets();
     Assets(const std::string&path);

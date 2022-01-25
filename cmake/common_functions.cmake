@@ -1,11 +1,7 @@
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
-    add_custom_command(OUTPUT ${rhpath}
-        COMMAND ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${ResourceDIR} ${rhpath}
-        COMMAND zip -r  -0 ${PakPath} ./ 
-        WORKING_DIRECTORY ${ResourceDIR}
-        COMMENT "Generate IDs from ${ResourceDIR} to:${rhpath}")
     add_custom_target(${project}_Resource
+        COMMAND ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${ResourceDIR} ${rhpath}
         COMMAND zip -r  -0 ${PakPath} ./
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")

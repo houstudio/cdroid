@@ -16,7 +16,7 @@ include_directories(
 )
 aux_source_directory(./ DEMO_SRCS)
 link_directories(${DEPS_DIR}/lib)
-add_executable(uidemo ${DEMO_SRCS} ./R.h)
+add_executable(uidemo ${DEMO_SRCS})
 
 CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} uidemo)
 
