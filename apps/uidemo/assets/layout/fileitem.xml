@@ -5,7 +5,7 @@
     android:layout_height="40dp"
     android:background="#FF12151C">
     <TextView
-        android:id="0x01"
+        android:id="@id/idno"
         android:layout_width="80dp"
         android:layout_height="match_parent"
         android:scaleType="center"
@@ -13,14 +13,14 @@
         >
     </TextView>
     <TextView
-        android:id="0x2"
+        android:id="@id/filename"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#333333"
         android:layout_weight="1">
     </TextView>
     <TextView
-        android:id="0x3"
+        android:id="@if/filesize"
         android:layout_width="120dp"
         android:layout_height="match_parent"
         android:background="#111111">

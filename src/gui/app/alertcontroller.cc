@@ -18,7 +18,7 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mDialogInterface = di;
     mWindow = window;
 
-    AttributeSet atts;
+    AttributeSet atts=context->obtainStyledAttributes("AlertDialog");
     //TypedArray a = context.obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
 
     mAlertDialogLayout = atts.getString("layout","cdroid:layout/alert_dialog.xml");
@@ -300,9 +300,8 @@ void AlertController::setupView() {
         }
     }
 
-    AttributeSet atts;
-    //mContext->obtainStyledAttributes("   TypedArray a = mContext.obtainStyledAttributes(
-            //null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
+    AttributeSet atts=mContext->obtainStyledAttributes("AlertDialog");
+    //TypedArray a = mContext.obtainStyledAttributes(R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
     setBackground(atts, topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
 }
@@ -540,6 +539,7 @@ void AlertController::AlertParams::apply(AlertController* dialog){
             dialog->setView(mViewLayoutResId);
         }
 }
+
 class AlertListAdapter:public ArrayAdapter<std::string>{
 public:
     AlertListAdapter(Context*ctx,const std::string&resource,int field)
@@ -556,6 +556,7 @@ public:
         return view;  
     }
 };
+
 void AlertController::AlertParams::createListView(AlertController* dialog){
     ListView* listView =(ListView*)LayoutInflater::from(mContext)->inflate(dialog->mListLayout, nullptr,false);
     ListAdapter* adapter;
@@ -588,16 +589,18 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
              };*/
         }
     } else {
-        /*const std::string layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout
+        const std::string layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout;
 
-        if (mCursor) {
+        /*if (mCursor) {
             adapter = new SimpleCursorAdapter(mContext, layout, mCursor,
                     new String[] { mLabelColumn }, new int[] { R::id::text1 });
-        } else if (mAdapter != nullptr) {
+        } else*/ if (mAdapter != nullptr) {
             adapter = mAdapter;
         } else {
-            adapter = new CheckedItemAdapter(mContext, layout, R::id::text1, mItems);
-        }*/
+            AlertListAdapter*alertadapter =new AlertListAdapter(mContext, layout, R::id::text1);
+            alertadapter->addAll(mItems);
+            adapter = alertadapter;
+        }
     }
 
     //if (mOnPrepareListViewListener) mOnPrepareListViewListener->onPrepareListView(listView);

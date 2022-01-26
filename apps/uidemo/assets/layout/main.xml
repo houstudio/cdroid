@@ -9,7 +9,7 @@
         android:layout_height="80dp"
         android:background="#FF12151C">
         <ImageButton
-            android:id="100"
+            android:id="@id/exitbutton"
             android:layout_width="80dp"
             android:layout_height="match_parent"
             android:scaleType="center"
@@ -35,12 +35,13 @@
         </ImageButton>
     </LinearLayout>
     <androidx.viewpager.widget.ViewPager
-        android:id="@+id/viewpager"
+        android:id="@id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="10dp"
         android:paddingLeft="30dp"
         android:paddingRight="30dp"
+        android:layout_marginLeft="20dp"
         android:layout_gravity="bottom"
         android:background="#FF0000">
     </androidx.viewpager.widget.ViewPager>

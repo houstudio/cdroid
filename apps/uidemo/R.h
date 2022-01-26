@@ -7,9 +7,12 @@ namespace uidemo{
 class R{
 public:
     enum id {
-        exitbutton              = 0x00002710 ,
-        tablayout               = 0x00002711 ,
-        viewpager               = 0x00002712
+        idno                    = 0x00002710 ,
+        filename                = 0x00002711 ,
+        filesize                = 0x00002712 ,
+        exitbutton              = 0x00002713 ,
+        tablayout               = 0x00002714 ,
+        viewpager               = 0x00002715
     };//endof enum id
 
 };//endof class R

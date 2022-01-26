@@ -1,6 +1,7 @@
 #include <fileadapter.h>
 #include <dirent.h>
 #include <cdroid.h>
+#include <R.h>
 namespace cdroid{
 std::string SimplifyPath(const std::string & path) {
     char rpath[1024];
@@ -19,9 +20,9 @@ View*FileAdapter::getView(int position, View* convertView, ViewGroup* parent){
     if(convertView==nullptr){
         vp=(ViewGroup*)LayoutInflater::from(&App::getInstance())->inflate("layout/fileitem.xml",nullptr);
     }
-    tv=(TextView*)vp->findViewById(1);
-    tv->setText(std::to_string(position));
-    tv=(TextView*)vp->findViewById(2);
+    tv=(TextView*)vp->findViewById(uidemo::R::id::idno);
+    if(tv)tv->setText(std::to_string(position));
+    tv=(TextView*)vp->findViewById(uidemo::R::id::filename);
     tv->setText(mi.fileName);
     tv->setTextColor(mi.isDir?0xFFFFFFFF:0xFF88FF00);
     tv->setTextSize(28);

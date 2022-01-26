@@ -86,10 +86,6 @@ int Assets::addResource(const std::string&path,const std::string&name){
         }return 0;
     });
     LOGD("%s %d resource,[id:%d arraies:%d Styles:%d]",name.c_str(),count,mIDS.size(),mArraies.size(),mStyles.size());
-    for(auto a:mArraies){
-        //LOGD("Array %s",a.first.c_str());
-        //for (auto i:a.second)LOGD("   %s",i.c_str());
-    }
     return pak?0:-1;
 }
 
