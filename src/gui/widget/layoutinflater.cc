@@ -73,7 +73,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         parent=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0)return;
     if(inflater==nullptr){
-        XML_StopParser(pd->parser,false);
+        //XML_StopParser(pd->parser,false);
         LOGE("Unknown Parser for %s",name);
         return;
     }

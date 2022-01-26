@@ -158,7 +158,7 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     if(event==nullptr){
         event=MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
         event->setAction(MotionEvent::ACTION_CANCEL);
-        //event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+        event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
     }
     for (TouchTarget* target = mFirstTouchTarget; target ; target = target->next) {
         resetCancelNextUpFlag(target->child);
@@ -416,7 +416,7 @@ void ViewGroup::dispatchViewRemoved(View*v){
 }
 
 void ViewGroup::removeDetachedView(View* child, bool animate){
-    //if (mTransition)mTransition.removeChild(this, child);
+    if (mTransition)mTransition->removeChild(this, child);
 
     if (child == mFocused) child->clearFocus();
     if (child == mDefaultFocus) clearDefaultFocus(child);
@@ -1132,14 +1132,14 @@ void ViewGroup::removeAllViewsInLayout() {
     }
 
     View* focused = mFocused;
-    bool detach =mParent!=nullptr;// mAttachInfo != nullptr;
+    bool detach = mAttachInfo != nullptr;
     bool bclearChildFocus = false;
 
     //needGlobalAttributesUpdate(false);
     for (int i = count - 1; i >= 0; i--) {
         View* view = mChildren[i];
 
-        //if (mTransition) mTransition.removeChild(this, view);
+        if (mTransition) mTransition->removeChild(this, view);
 
         if (view == focused) {
             view->unFocus(nullptr);
@@ -1151,16 +1151,15 @@ void ViewGroup::removeAllViewsInLayout() {
         cancelTouchTarget(view);
         cancelHoverTarget(view);
 
-        /*if (view->getAnimation() != nullptr ||
-            (mTransitioningViews != nullptr && mTransitioningViews.contains(view))) {
+        if (view->getAnimation() != nullptr ||std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view)!=mTransitioningViews.end()) {
             addDisappearingView(view);
-        } else*/ if (detach) {
+        } else if (detach) {
            view->dispatchDetachedFromWindow();
         }
 
-        /*if (view->hasTransientState()) {
+        if (view->hasTransientState()) {
             childHasTransientStateChanged(view, false);
-        }*/
+        }
 
         dispatchViewRemoved(view);
 
@@ -1191,7 +1190,7 @@ bool ViewGroup::removeViewInternal(View* view){
 }
 
 void ViewGroup::removeViewInternal(int index, View* view){
-    //if (mTransition != null)mTransition.removeChild(this, view);
+    if (mTransition)mTransition->removeChild(this, view);
 
     bool _clearChildFocus = false;
     if (view == mFocused) {
@@ -1228,13 +1227,13 @@ void ViewGroup::removeViewInternal(int index, View* view){
 
     //if (view->getVisibility() != View::GONE)notifySubtreeAccessibilityStateChangedIfNeeded();
 
-    /*int transientCount = mTransientIndices == nullptr ? 0 : mTransientIndices.size();
+    const int transientCount =  mTransientIndices.size();
     for (int i = 0; i < transientCount; ++i) {
-        int oldIndex = mTransientIndices.get(i);
+        int oldIndex = mTransientIndices.at(i);
         if (index < oldIndex) {
-            mTransientIndices.set(i, oldIndex - 1);
+            mTransientIndices[i]=oldIndex-1;//mTransientIndices.set(i, oldIndex - 1);
         }
-    }*/
+    }
     //if (mCurrentDragStartEvent != nullptr)  mChildrenInterestedInDrag->remove(view);
 }
 
@@ -1246,14 +1245,14 @@ void ViewGroup::removeViewsInternal(int start, int count){
     }
 
     View* focused = mFocused;
-    bool detach = true;//mAttachInfo != nullptr;
+    bool detach = mAttachInfo != nullptr;
     bool _clearChildFocus = false;
     View* _clearDefaultFocus = nullptr;
 
     for (int i = start; i < end; i++) {
         View* view = mChildren[i];
 
-        //if (mTransition != null) mTransition.removeChild(this, view);
+        if (mTransition) mTransition->removeChild(this, view);
 
         if (view == focused) {
             view->unFocus(nullptr);

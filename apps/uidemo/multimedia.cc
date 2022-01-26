@@ -72,7 +72,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate("layout/main.xml",this);
     mAdapter=new FileTypeAdapter();
     mTabLayout=(TabLayout*)vg->findViewById(uidemo::R::id::tablayout);
-#if 10//To use this case ,we must remove node ViewPager from layout/main.xml
+#if 0//To use this case ,we must remove node ViewPager from layout/main.xml
     mPager=new ViewPager(800,580);
     vg->addView(mPager);
     mPager->setPos(0,64);

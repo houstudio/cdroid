@@ -185,8 +185,8 @@ int MarginLayoutParams::getMarginEnd(){
         doResolveMargins();
     }
     switch(mMarginFlags & LAYOUT_DIRECTION_MASK) {
-	case View::LAYOUT_DIRECTION_RTL:return leftMargin;
-	case View::LAYOUT_DIRECTION_LTR:
+    case View::LAYOUT_DIRECTION_RTL:return leftMargin;
+    case View::LAYOUT_DIRECTION_LTR:
     default:return rightMargin;
     }
 }

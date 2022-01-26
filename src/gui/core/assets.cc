@@ -343,7 +343,7 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
         len=stream->gcount();
         if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
+            LOGE("%s:%s at line %ld",fullresid.c_str(),es, XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
             return 0;
         }
