@@ -4,7 +4,7 @@
 #include <widget/cdwindow.h>
 namespace cdroid{
 
-class Dialog:public DialogInterface{
+class Dialog:public DialogInterface,KeyEvent::Callback{
 private:
     Context*mContext;
     Window*mWindow;
@@ -36,11 +36,13 @@ public:
     View*findViewById(int id);
     void setContentView(const std::string&resid);
     void setContentView(View*view);
+    void addContentView(View* view,ViewGroup::LayoutParams* params);
     void setTitle(const std::string&);
     bool onKeyDown(int keyCode,KeyEvent& event);
     bool onKeyLongPress(int keyCode,KeyEvent& event);
     bool onKeyUp(int keyCode,KeyEvent& event);
-
+    bool onKeyMultiple(int keyCode, int repeatCount,KeyEvent& event);
+    void onBackPressed();
     void setCancelable(bool flag);
     void setCanceledOnTouchOutside(bool);
     void cancel()override;  

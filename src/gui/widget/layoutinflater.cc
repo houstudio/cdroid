@@ -74,6 +74,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     if(strcmp(name,"merge")==0)return;
     if(inflater==nullptr){
         //XML_StopParser(pd->parser,false);
+        pd->views.push_back(nullptr);
         LOGE("Unknown Parser for %s",name);
         return;
     }
@@ -99,8 +100,8 @@ static void endElement(void *userData, const XML_Char *name){
     WindowParserData*pd=(WindowParserData*)userData;
     ViewGroup*p=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0)return;
-	if((pd->views.size()==1)&&(pd->root==nullptr))
-	    pd->root=p; 
+    if(p&&(pd->views.size()==1)&&(pd->root==nullptr))
+        pd->root=p; 
     pd->views.pop_back();
 }
 

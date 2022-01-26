@@ -23,7 +23,7 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
 
     mAlertDialogLayout = atts.getString("layout","cdroid:layout/alert_dialog.xml");
     mButtonPanelSideLayout = atts.getString("buttonPanelSideLayout");
-    mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog.xml");
+    //mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog.xml");
 
     mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout","cdroid:layout/select_dialog_multichoice.xml");
     mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout","cdroid:layout/select_dialog_singlechoice.xml");

@@ -111,7 +111,6 @@ private:
 private:
     void onButtonClick(View&v);
     static bool shouldCenterSingleButton(Context* context);
-    static AlertController* create(Context* context, DialogInterface* di, Window* window);
     const std::string& selectContentView();
     ViewGroup* resolvePanel(View* customPanel,View* defaultPanel);
     void setupView();
@@ -130,6 +129,7 @@ protected:
     void setupContent(ViewGroup*);
     void setupButtons(ViewGroup*);
 public:
+    static AlertController* create(Context* context, DialogInterface* di, Window* window);
     void installContent(AlertParams* params);
     void installContent();
     void setTitle(const std::string& title);

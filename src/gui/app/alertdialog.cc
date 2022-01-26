@@ -1,14 +1,15 @@
 #include <app/alertdialog.h>
 namespace cdroid{
 
-AlertDialog::AlertDialog(Context*ctx):Dialog(ctx){
+AlertDialog::AlertDialog(Context*ctx):AlertDialog(ctx,false,nullptr){
 }
 
-AlertDialog::AlertDialog(Context*ctx,const std::string&resid):AlertDialog(ctx){
+AlertDialog::AlertDialog(Context*ctx,const std::string&resid):Dialog(ctx,resid){
+    mAlert = AlertController::create(getContext(), this, getWindow());
 }
 
 AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelListener listener)
-   :AlertDialog(ctx){
+   :AlertDialog(ctx,""){
     setCancelable(cancelable);
     setOnCancelListener(listener);
 }
@@ -178,8 +179,9 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 }
 
 AlertDialog* AlertDialog::Builder::create(){
-    AlertDialog* dialog = new AlertDialog(P->mContext, 0);//, false);
+    AlertDialog* dialog = new AlertDialog(P->mContext, P->mViewLayoutResId);//, false);
     P->apply(dialog->mAlert);
+    dialog->getWindow()->requestLayout();
     dialog->setCancelable(P->mCancelable);
     if (P->mCancelable) {
         dialog->setCanceledOnTouchOutside(true);
