@@ -83,7 +83,7 @@ class IDGenerater(object):
         for top, dirs, nondirs in os.walk(scanPath):
             for item in nondirs:
                 fname=os.path.join(top, item)
-                if item.find('.xml')<0 or self.dirHasId(fname)<0:
+                if (not item.endswith('.xml')) or (self.dirHasId(fname)<0):
                     continue
                 newestdate=os.stat(fname);
                 if(lastmodifytime<newestdate.st_mtime):

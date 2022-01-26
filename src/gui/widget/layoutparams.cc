@@ -48,7 +48,7 @@ const std::string LayoutParams::sizeToString(int size) {
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
     int margin=attrs.getDimensionPixelSize("layout_margin",-1);
-    if(margin>0){
+    if(margin>=0){
         leftMargin=topMargin=rightMargin=bottomMargin=margin;
     }else{
         int horzMargin = attrs.getDimensionPixelSize("layout_marginHorizontal",-1);

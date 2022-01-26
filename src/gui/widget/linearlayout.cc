@@ -32,10 +32,14 @@ LinearLayout::LayoutParams::LayoutParams(int width, int height, float weight)
 
 LinearLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& p)
     :ViewGroup::MarginLayoutParams(p){
+    this->weight = .0f;
+    gravity=Gravity::NO_GRAVITY;
 }
 
 LinearLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams&source)
     :ViewGroup::MarginLayoutParams(source){
+    this->weight = .0f;
+    gravity=Gravity::NO_GRAVITY;
 }
 
 LinearLayout::LayoutParams::LayoutParams(const LinearLayout::LayoutParams&source)
@@ -545,7 +549,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
 
         totalWeight += lp->weight;
 
-        bool useExcessSpace = lp->width == 0 && lp->weight > 0;
+        const bool useExcessSpace = lp->width == 0 && lp->weight > 0;
         if (widthMode == MeasureSpec::EXACTLY && useExcessSpace) {
             // Optimization: don't bother measuring children who are only
             // laid out using excess space. These views will get measured

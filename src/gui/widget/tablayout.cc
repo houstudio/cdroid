@@ -148,9 +148,9 @@ void TabLayout::addTabFromItemView(TabItem* item){
         tab->setIcon(item->mIcon);
     }
 
-    //tab->setCustomView(item->mCustomLayout);
+    tab->setCustomView(item->mCustomLayout);
 
-    //tab->setContentDescription(item->getContentDescription());//getContentDescription inherited from View.
+    tab->setContentDescription(item->getContentDescription());//getContentDescription inherited from View.
     addTab(tab);
 }
 
@@ -755,7 +755,7 @@ int TabLayout::getTabMinWidth() {
     return mMode == MODE_SCROLLABLE ? mScrollableTabMinWidth : 0;
 }
 
-LayoutParams* TabLayout::generateLayoutParams(const AttributeSet& attrs){
+ViewGroup::LayoutParams* TabLayout::generateLayoutParams(const AttributeSet& attrs)const{
     return generateDefaultLayoutParams();
 }
 
@@ -804,6 +804,11 @@ TabLayout::Tab& TabLayout::Tab::setCustomView(View*v){
     mCustomView=v;
     updateView();
     return *this;
+}
+
+TabLayout::Tab& TabLayout::Tab::setCustomView(const std::string&resid){
+    View*v=LayoutInflater::from(mParent->getContext())->inflate(resid,nullptr,false);
+    return setCustomView(v);
 }
 
 Drawable* TabLayout::Tab::getIcon()const{

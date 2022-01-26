@@ -249,8 +249,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     mTextColor =ctx->getColorStateList(attrs.getString("textColor"));
     mLayout=new Layout(20,50);
     mHintLayout=new Layout(20,50);
-    std::string txt=attrs.getString("text");
-    mLayout->setText(txt);
+    setText(attrs.getString("text"));
     
     Drawable* left =ctx->getDrawable(attrs,"drawableLeft");
     Drawable*right =ctx->getDrawable(attrs,"drawableRight");
@@ -261,7 +260,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
     
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
-    setMaxHeight(attrs.getDimensionPixelSize("maxHeight", -1));
+    setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
 
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));

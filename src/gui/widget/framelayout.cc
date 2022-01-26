@@ -20,20 +20,20 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
     mForegroundPaddingLeft=mForegroundPaddingRight=0;
     mForegroundPaddingTop =mForegroundPaddingBottom=0;
 }
+
 //@android.view.RemotableViewMethod
 void FrameLayout::setForegroundGravity(int foregroundGravity){
-    #if 0
     if (getForegroundGravity() != foregroundGravity) {
         ViewGroup::setForegroundGravity(foregroundGravity);
         // calling get* again here because the set above may apply default constraints
         Drawable* foreground = getForeground();
-        if (getForegroundGravity() == Gravity.FILL && foreground != null) {
+        if (getForegroundGravity() == Gravity::FILL && foreground ) {
             Rect padding;
-            if (foreground.getPadding(padding)) {
-                mForegroundPaddingLeft = padding.x;
-                mForegroundPaddingTop = padding.y;
-                mForegroundPaddingRight = padding.right();
-                mForegroundPaddingBottom = padding.bottom();
+            if (foreground->getPadding(padding)) {
+                mForegroundPaddingLeft = padding.left;
+                mForegroundPaddingTop = padding.top;
+                mForegroundPaddingRight = padding.width;
+                mForegroundPaddingBottom = padding.height;
             }
         } else {
             mForegroundPaddingLeft = 0;
@@ -43,7 +43,6 @@ void FrameLayout::setForegroundGravity(int foregroundGravity){
         }
         requestLayout();
     }
-    #endif
 }
 
 LayoutParams* FrameLayout::generateDefaultLayoutParams()const {
@@ -59,7 +58,7 @@ bool FrameLayout::checkLayoutParams(const LayoutParams* p)const{
 }
 
 LayoutParams* FrameLayout::generateLayoutParams(const LayoutParams* lp)const {
-    if (true/*sPreserveMarginParamsInLayoutParamConversion*/) {
+    if (false/*sPreserveMarginParamsInLayoutParamConversion*/) {
         if (dynamic_cast<const FrameLayoutParams*>(lp)) {
             return new LayoutParams(*(FrameLayoutParams*) lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {

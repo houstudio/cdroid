@@ -36,6 +36,7 @@ public:
         void setTag(void*tag);
         View* getCustomView()const;
         Tab& setCustomView(View*);
+        Tab& setCustomView(const std::string&);
         Drawable* getIcon()const;
         Tab& setIcon(Drawable* icon);
         int  getPosition()const;
@@ -277,7 +278,7 @@ public:
     View& addView(View* child, ViewGroup::LayoutParams* params)override;
     View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 
-    LayoutParams* generateLayoutParams(const AttributeSet& attrs);
+    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 
 }//endof namespace
