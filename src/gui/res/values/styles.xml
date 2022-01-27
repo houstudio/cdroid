@@ -17,16 +17,16 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
     <style name="AlertDialog">
-        <item name="fullDark">@drawable/popup_full_dark</item>
-        <item name="topDark">@drawable/popup_top_dark</item>
-        <item name="centerDark">@drawable/popup_center_dark</item>
-        <item name="bottomDark">@drawable/popup_bottom_dark</item>
-        <item name="fullBright">@drawable/popup_full_bright</item>
-        <item name="topBright">@drawable/popup_top_bright</item>
-        <item name="centerBright">@drawable/popup_center_bright</item>
-        <item name="bottomBright">@drawable/popup_bottom_bright</item>
-        <item name="bottomMedium">@drawable/popup_bottom_medium</item>
-        <item name="centerMedium">@drawable/popup_center_medium</item>
+        <item name="fullDark">@cdroid:mipmap/popup_full_dark</item>
+        <item name="topDark">@cdroid:mipmap/popup_top_dark</item>
+        <item name="centerDark">@cdroid:mipmap/popup_center_dark</item>
+        <item name="bottomDark">@cdroid:mipmap/popup_bottom_dark</item>
+        <item name="fullBright">@cdroid:mipmap/popup_full_bright</item>
+        <item name="topBright">@cdroid:mipmap/popup_top_bright</item>
+        <item name="centerBright">@cdroid:mipmap/popup_center_bright</item>
+        <item name="bottomBright">@cdroid:mipmap/popup_bottom_bright</item>
+        <item name="bottomMedium">@cdroid:mipmap/popup_bottom_medium</item>
+        <item name="centerMedium">@cdroid:mipmap/popup_center_medium</item>
         <item name="progressLayout">@layout/progress_dialog</item>
         <item name="horizontalProgressLayout">@layout/alert_dialog_progress</item>
         <item name="needsDefaultBackgrounds">false</item>
