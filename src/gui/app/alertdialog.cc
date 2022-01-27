@@ -204,7 +204,6 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 AlertDialog* AlertDialog::Builder::create(){
     AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog.xml");//, false);
     P->apply(dialog->mAlert);
-    dialog->getWindow()->requestLayout();
     dialog->setCancelable(P->mCancelable);
     if (P->mCancelable) {
         dialog->setCanceledOnTouchOutside(true);

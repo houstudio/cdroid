@@ -221,10 +221,12 @@ View::View(Context*ctx,const AttributeSet&attrs){
             leftPadding = rightPadding = horz;
             leftPaddingDefined = rightPaddingDefined = true;
         }else{
-            leftPadding = attrs.getDimensionPixelSize("paddingLeft",0);
-            rightPadding= attrs.getDimensionPixelSize("paddingRight",0);
-            leftPaddingDefined = (mPaddingLeft!=0);
-            rightPaddingDefined= (mPaddingRight!=0);
+            leftPadding = attrs.getDimensionPixelSize("paddingLeft",-1);
+            rightPadding= attrs.getDimensionPixelSize("paddingRight",-1);
+            leftPaddingDefined = (mPaddingLeft!=-1);
+            rightPaddingDefined= (mPaddingRight!=-1);
+            mUserPaddingLeftInitial =leftPaddingDefined?leftPadding:0;
+            mUserPaddingRightInitial=rightPaddingDefined?rightPadding:0;
         }
         if(vert>=0){
             topPadding = bottomPadding = vert;
@@ -232,14 +234,45 @@ View::View(Context*ctx,const AttributeSet&attrs){
             topPadding   = attrs.getDimensionPixelSize("paddingTop",0);
             bottomPadding= attrs.getDimensionPixelSize("paddingBottom",0);
         }
-        int paddingStart=attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
-        int endPadding = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
-        startPaddingDefined = (paddingStart != UNDEFINED_PADDING);
-        endPaddingDefined = (endPadding != UNDEFINED_PADDING);
-        if(startPaddingDefined)mPaddingLeft=paddingStart;
-        if(endPaddingDefined)mPaddingRight=endPadding;
-        LOGD_IF(startPaddingDefined||endPaddingDefined,"Padding StartEnd=%d,%d",paddingStart,endPadding);
     }
+
+    int startPadding=attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
+    int endPadding = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
+    startPaddingDefined = (startPadding != UNDEFINED_PADDING);
+    endPaddingDefined = (endPadding != UNDEFINED_PADDING);
+    
+    if (false){//isRtlCompatibilityMode()) {
+        // RTL compatibility mode: pre Jelly Bean MR1 case OR no RTL support case.
+        // left / right padding are used if defined (meaning here nothing to do). If they are not
+        // defined and start / end padding are defined (e.g. in Frameworks resources), then we use
+        // start / end and resolve them as left / right (layout direction is not taken into account).
+        // Padding from the background drawable is stored at this point in mUserPaddingLeftInitial
+        // and mUserPaddingRightInitial) so drawable padding will be used as ultimate default if
+        // defined.
+        if (!mLeftPaddingDefined && startPaddingDefined) {
+            leftPadding = startPadding;
+        }
+        mUserPaddingLeftInitial = (leftPadding >= 0) ? leftPadding : mUserPaddingLeftInitial;
+        if (!mRightPaddingDefined && endPaddingDefined) {
+            rightPadding = endPadding;
+        }
+        mUserPaddingRightInitial = (rightPadding >= 0) ? rightPadding : mUserPaddingRightInitial;
+    } else {
+        // Jelly Bean MR1 and after case: if start/end defined, they will override any left/right
+        // values defined. Otherwise, left /right values are used.
+        // Padding from the background drawable is stored at this point in mUserPaddingLeftInitial
+        // and mUserPaddingRightInitial) so drawable padding will be used as ultimate default if
+        // defined.
+        const bool hasRelativePadding = startPaddingDefined || endPaddingDefined;
+
+        if (mLeftPaddingDefined && !hasRelativePadding) {
+            mUserPaddingLeftInitial = leftPadding;
+        }
+        if (mRightPaddingDefined && !hasRelativePadding) {
+            mUserPaddingRightInitial = rightPadding;
+        }
+    }
+
     internalSetPadding( mUserPaddingLeftInitial, topPadding >= 0 ? topPadding : mPaddingTop,
                 mUserPaddingRightInitial, bottomPadding >= 0 ? bottomPadding : mPaddingBottom);
     const int x=attrs.getInt("scrollX",0);
@@ -262,7 +295,7 @@ void View::initView(){
     mMinWidth = mMinHeight = 0;
 
     mLeftPaddingDefined = mRightPaddingDefined =false;
-
+    mUserPaddingLeftInitial = mUserPaddingRightInitial =0;
     mX = mY = mZ =.0f;
     mAlpha = mScaleX = mScaleY=1.f;
     mTranslationX = mTranslationY =.0f;

@@ -31,4 +31,180 @@
         <item name="horizontalProgressLayout">@layout/alert_dialog_progress</item>
         <item name="needsDefaultBackgrounds">false</item>
     </style>
+
+    <!-- Text Appearances -->
+    <style name="TextAppearance">
+        <item name="textColor">?textColorPrimary</item>
+        <item name="textColorHighlight">?textColorHighlight</item>
+        <item name="textColorHint">?textColorHint</item>
+        <item name="textColorLink">?textColorLink</item>
+        <item name="textSize">16sp</item>
+        <item name="textStyle">normal</item>
+    </style>
+
+    <style name="TextAppearance.Inverse">
+        <item name="textColor">?textColorPrimaryInverse</item>
+        <item name="textColorHint">?textColorHintInverse</item>
+        <item name="textColorHighlight">?textColorHighlightInverse</item>
+        <item name="textColorLink">?textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Theme">
+    </style>
+
+    <style name="TextAppearance.DialogWindowTitle">
+        <item name="textSize">18sp</item>
+    </style>
+
+    <style name="TextAppearance.Large">
+        <item name="textSize">22sp</item>
+    </style>
+
+    <style name="TextAppearance.Large.Inverse">
+        <item name="textColor">?textColorPrimaryInverse</item>
+        <item name="textColorHint">?textColorHintInverse</item>
+        <item name="textColorHighlight">?textColorHighlightInverse</item>
+        <item name="textColorLink">?textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Medium">
+        <item name="textSize">18sp</item>
+    </style>
+
+    <style name="TextAppearance.Medium.Inverse">
+        <item name="textColor">?textColorPrimaryInverse</item>
+        <item name="textColorHint">?textColorHintInverse</item>
+        <item name="textColorHighlight">?textColorHighlightInverse</item>
+        <item name="textColorLink">?textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Small">
+        <item name="textSize">14sp</item>
+        <item name="textColor">?textColorSecondary</item>
+    </style>
+
+    <style name="TextAppearance.Small.Inverse">
+        <item name="textColor">?textColorSecondaryInverse</item>
+        <item name="textColorHint">?textColorHintInverse</item>
+        <item name="textColorHighlight">?textColorHighlightInverse</item>
+        <item name="textColorLink">?textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Theme.Dialog" parent="TextAppearance.Theme" />
+
+    <style name="TextAppearance.Widget" />
+
+    <style name="TextAppearance.Widget.Button" parent="TextAppearance.Small.Inverse">
+        <item name="textColor">@color/primary_text_light_nodisable</item>
+    </style>
+
+    <style name="TextAppearance.Widget.IconMenu.Item" parent="TextAppearance.Small">
+        <item name="textColor">?textColorPrimary</item>
+        <!-- dp is used on purpose here instead of sp; there is not space
+             for larger font sizes based on the user setting. Newer apps
+             should not receive the legacy icon menu panel. -->
+        <item name="textSize">14dp</item>
+    </style>
+
+    <style name="TextAppearance.Widget.EditText">
+        <item name="textColor">@color/widget_edittext_dark</item>
+        <item name="textColorHint">@color/hint_foreground_light</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TabWidget">
+        <item name="textSize">14sp</item>
+        <item name="textStyle">normal</item>
+        <item name="textColor">@color/tab_indicator_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TextView">
+        <item name="textColor">?textColorPrimaryDisableOnly</item>
+        <item name="textColorHint">?textColorHint</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TextView.PopupMenu">
+        <item name="textSize">18sp</item>
+        <item name="textColor">?textColorPrimaryDisableOnly</item>
+        <item name="textColorHint">?textColorHint</item>
+    </style>
+
+    <style name="TextAppearance.Widget.DropDownHint">
+        <item name="textColor">?textColorPrimaryInverse</item>
+        <item name="textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.Widget.DropDownItem">
+        <item name="textColor">@color/primary_text_light_disable_only</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TextView.SpinnerItem">
+        <item name="textColor">@color/primary_text_light_disable_only</item>
+    </style>
+
+    <!-- @hide -->
+    <style name="TextAppearance.SlidingTabNormal" parent="TextAppearance.Medium">
+        <item name="textColor">?attr/textColorTertiary</item>
+        <item name="textSize">28sp</item>
+        <item name="shadowColor">@color/sliding_tab_text_color_shadow</item>
+        <item name="shadowDx">0.0</item>
+        <item name="shadowDy">1.0</item>
+        <item name="shadowRadius">5.0</item>
+    </style>
+
+    <!-- @hide -->
+    <style name="TextAppearance.SlidingTabActive" parent="TextAppearance.Medium">
+        <item name="textColor">@color/sliding_tab_text_color_active</item>
+        <item name="textSize">28sp</item>
+    </style>
+
+    <!-- @hide -->
+     <style name="TextAppearance.SearchResult">
+         <item name="textStyle">normal</item>
+         <item name="textColor">?textColorPrimaryInverse</item>
+         <item name="textColorHint">?textColorHintInverse</item>
+     </style>	
+
+     <!-- @hide -->
+     <style name="TextAppearance.SearchResult.Title">
+         <item name="textSize">18sp</item>
+     </style>
+
+     <!-- @hide -->
+     <style name="TextAppearance.SearchResult.Subtitle">
+         <item name="textSize">14sp</item>
+         <item name="textColor">?textColorSecondaryInverse</item>
+     </style>
+
+    <style name="TextAppearance.WindowTitle">
+        <item name="textColor">#fff</item>
+        <item name="textSize">14sp</item>
+        <item name="textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Large.Inverse.NumberPickerInputText">
+        <item name="textColor">@color/primary_text_light</item>
+        <item name="textSize">30sp</item>
+    </style>
+
+    <style name="TextAppearance.Toast">
+        <item name="fontFamily">sans-serif-condensed</item>
+    </style>
+
+    <style name="TextAppearance.Tooltip">
+        <item name="fontFamily">sans-serif</item>
+        <item name="textSize">14sp</item>
+    </style>
+
+    <style name="Widget.ActivityChooserView">
+        <item name="gravity">center</item>
+        <item name="background">@drawable/ab_share_pack_holo_dark</item>
+        <item name="divider">?attr/dividerVertical</item>
+        <item name="showDividers">middle</item>
+        <item name="dividerPadding">6dip</item>
+    </style>
+
+    <style name="TextAppearance.SuggestionHighlight">
+        <item name="textSize">18sp</item>
+        <item name="textColor">@color/suggestion_highlight_text</item>
+    </style>
 </resources>

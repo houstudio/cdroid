@@ -190,8 +190,8 @@ void FrameLayout::layoutChildren(int left, int top, int right, int bottom, bool 
             int width = child->getMeasuredWidth();
             int height = child->getMeasuredHeight();
 
-            int childLeft;
-            int childTop;
+            int childLeft=0;
+            int childTop =0;
 
             int gravity = lp->gravity;
             if (gravity == -1) {
