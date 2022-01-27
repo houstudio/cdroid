@@ -44,9 +44,11 @@ const std::string LayoutParams::sizeToString(int size) {
     default:return std::to_string(size);
     }
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
+    mMarginFlags = 0;
     int margin=attrs.getDimensionPixelSize("layout_margin",-1);
     if(margin>=0){
         leftMargin=topMargin=rightMargin=bottomMargin=margin;
@@ -85,8 +87,8 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
 MarginLayoutParams::MarginLayoutParams(int width, int height)
 	:LayoutParams(width, height){
 	mMarginFlags=0;
-    leftMargin = topMargin=0;
-    rightMargin= bottomMargin=0;
+    leftMargin = topMargin   = 0;
+    rightMargin= bottomMargin= 0;
     startMargin=endMargin=0;
     mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
     mMarginFlags |= RIGHT_MARGIN_UNDEFINED_MASK;

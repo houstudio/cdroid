@@ -75,7 +75,7 @@ public:
 
 TouchTarget*TouchTarget::sRecycleBin=nullptr;
 int TouchTarget::sRecycledCount=0;
-bool ViewGroup::DEBUG_DRAW = false;
+bool ViewGroup::DEBUG_DRAW = true;
 
 ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
     initGroup();
@@ -99,6 +99,7 @@ void ViewGroup::initGroup(){
     mGroupFlags|= FLAG_ANIMATION_DONE;
     mGroupFlags|= FLAG_ANIMATION_CACHE;
     mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
+    mLayoutMode = LAYOUT_MODE_UNDEFINED;
     mFocused    = nullptr;
     mDefaultFocus = nullptr;
     mFocusedInCluster = nullptr;
@@ -2278,17 +2279,17 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
          ev.setTargetAccessibilityFocus(false);
     }
     // Check for cancelation.
-    bool canceled = resetCancelNextUpFlag(this)|| actionMasked == MotionEvent::ACTION_CANCEL;
+   const  bool canceled = resetCancelNextUpFlag(this)|| actionMasked == MotionEvent::ACTION_CANCEL;
 
-    bool split = (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) != 0;
+    const bool split = (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) != 0;
     TouchTarget* newTouchTarget = nullptr;
     bool alreadyDispatchedToNewTouchTarget = false;
 
     if(!canceled && !intercepted){
         if(actionMasked == MotionEvent::ACTION_DOWN || (split &&  actionMasked == MotionEvent::ACTION_POINTER_DOWN)
            || actionMasked == MotionEvent::ACTION_HOVER_MOVE){
-            int actionIndex = ev.getActionIndex(); // always 0 for down
-            int idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex): TouchTarget::ALL_POINTER_IDS;
+            const int actionIndex = ev.getActionIndex(); // always 0 for down
+            const int idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex): TouchTarget::ALL_POINTER_IDS;
 
             removePointersFromTouchTargets(idBitsToAssign);
             const int childrenCount = mChildren.size();

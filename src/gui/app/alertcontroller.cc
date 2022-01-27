@@ -22,12 +22,15 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mIconView  = nullptr;
     mTitleView = nullptr;
     mAdapter   = nullptr;
-    mMessageView     =nullptr;
+    mMessageView     = nullptr;
+    mListView        = nullptr;
+    mScrollView      = nullptr;
     mCustomTitleView = nullptr;
     mButtonPositive  = nullptr;
     mButtonNegative  = nullptr;
     mButtonNeutral   = nullptr;
-    mButtonPanelLayoutHint = AlertDialog::LAYOUT_HINT_NONE;
+    mForceInverseBackground = false;
+    mButtonPanelLayoutHint  = AlertDialog::LAYOUT_HINT_NONE;
     AttributeSet atts=context->obtainStyledAttributes("cdroid:style/AlertDialog");
 
     mAlertDialogLayout = atts.getString("layout","");
@@ -247,9 +250,9 @@ void AlertController::setupView() {
     setupButtons(buttonPanel);
     setupTitle(topPanel);
 
-    bool hasCustomPanel = customPanel && customPanel->getVisibility()!= View::GONE;
-    bool hasTopPanel    = topPanel    && topPanel->getVisibility()   != View::GONE;
-    bool hasButtonPanel = buttonPanel && buttonPanel->getVisibility()!= View::GONE;
+    const bool hasCustomPanel = customPanel && customPanel->getVisibility()!= View::GONE;
+    const bool hasTopPanel    = topPanel    && topPanel->getVisibility()   != View::GONE;
+    const bool hasButtonPanel = buttonPanel && buttonPanel->getVisibility()!= View::GONE;
 
     // Only display the text spacer if we don't have buttons.
     if (!hasButtonPanel) {

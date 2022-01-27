@@ -31,26 +31,28 @@ ImageView::ImageView(int w, int h)
 }
 
 void ImageView::initImageView(){
-    mColorMod=false;
-    mHasColorFilter=false;
-    mHasDrawableTint=false;
-    mHasDrawableTintMode=false;
-    mBaselineAlignBottom=false;
-    mBaseline=-1;
-    mAlpha=255;
-    mViewAlphaScale=256;
-    mScaleType =FIT_CENTER;
-    mMergeState=false;
-    mCropToPadding=false;
-    mDrawable=nullptr;
-    mHaveFrame=true;
-    mDrawMatrix=identity_matrix();
-    mMatrix=identity_matrix();
-    mRecycleableBitmapDrawable=nullptr;
+    mColorMod = false;
+    mHasColorFilter = false;
+    mHasDrawableTint= false;
+    mHasDrawableTintMode = false;
+    mBaselineAlignBottom = false;
+    mBaseline = -1;
+    mAlpha = 255;
+    mLevel = 0;
+    mViewAlphaScale= 256;
+    mDrawableWidth = mDrawableHeight = -1;
+    mScaleType  = FIT_CENTER;
+    mMergeState = false;
+    mCropToPadding= false;
+    mDrawable  = nullptr;
+    mHaveFrame = true;
+    mDrawMatrix= identity_matrix();
+    mMatrix = identity_matrix();
+    mRecycleableBitmapDrawable= nullptr;
     mMaxWidth = mMaxHeight = INT_MAX;
-    mDrawableTintList=nullptr;
-    mColorFilter=nullptr;
-    mDrawableTintMode=-1;
+    mDrawableTintList = nullptr;
+    mColorFilter = nullptr;
+    mDrawableTintMode = -1;
 }
 
 ImageView::~ImageView() {
