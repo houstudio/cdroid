@@ -17,17 +17,26 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mContext = context;
     mDialogInterface = di;
     mWindow = window;
+    mView   = nullptr;
+    mIcon   = nullptr;
+    mIconView  = nullptr;
+    mTitleView = nullptr;
+    mAdapter   = nullptr;
+    mMessageView     =nullptr;
+    mCustomTitleView = nullptr;
+    mButtonPositive  = nullptr;
+    mButtonNegative  = nullptr;
+    mButtonNeutral   = nullptr;
+    mButtonPanelLayoutHint = AlertDialog::LAYOUT_HINT_NONE;
+    AttributeSet atts=context->obtainStyledAttributes("cdroid:style/AlertDialog");
 
-    AttributeSet atts=context->obtainStyledAttributes("AlertDialog");
-    //TypedArray a = context.obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
-
-    mAlertDialogLayout = atts.getString("layout","cdroid:layout/alert_dialog.xml");
+    mAlertDialogLayout = atts.getString("layout","");
     mButtonPanelSideLayout = atts.getString("buttonPanelSideLayout");
-    //mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog.xml");
+    mListLayout = atts.getString("listLayout");
 
-    mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout","cdroid:layout/select_dialog_multichoice.xml");
-    mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout","cdroid:layout/select_dialog_singlechoice.xml");
-    mListItemLayout = atts.getString("listItemLayout","cdroid:layout/select_dialog_item.xml");
+    mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout");
+    mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout");
+    mListItemLayout = atts.getString("listItemLayout");
     mShowTitle = atts.getBoolean("showTitle", true);
 
     /* We use a custom title so never request a window title */
@@ -63,8 +72,10 @@ void AlertController::installContent(AlertParams* params) {
 void AlertController::installContent() {
     const std::string contentView = selectContentView();
     //mWindow->setContentView(contentView);
-    LayoutInflater::from(mContext)->inflate(contentView,mWindow,true);
+    View*v=LayoutInflater::from(mContext)->inflate(contentView,nullptr);
+    if(v)mWindow->addView(v);
     setupView();
+    mWindow->requestLayout();
 }
 
 const std::string& AlertController::selectContentView() {
@@ -128,17 +139,17 @@ void AlertController::setButton(int whichButton,const std::string&text,DialogInt
 
     case DialogInterface::BUTTON_POSITIVE:
          mButtonPositiveText = text;
-         //mButtonPositiveMessage = msg;
+         mButtonPositiveListener = std::bind(&AlertController::onButtonClick,this,listener,std::placeholders::_1);
          break;
 
     case DialogInterface::BUTTON_NEGATIVE:
          mButtonNegativeText = text;
-         //mButtonNegativeMessage = msg;
+         mButtonNegativeListener = std::bind(&AlertController::onButtonClick,this,listener,std::placeholders::_1);
          break;
 
     case DialogInterface::BUTTON_NEUTRAL:
          mButtonNeutralText = text;
-         //mButtonNeutralMessage = msg;
+         mButtonNeutralListener = std::bind(&AlertController::onButtonClick,this,listener,std::placeholders::_1);
          break;
 
     default: LOGE("Button %d does not exist",whichButton);
@@ -186,12 +197,9 @@ ListView* AlertController::getListView() {
 
 Button* AlertController::getButton(int whichButton) {
     switch (whichButton) {
-    case DialogInterface::BUTTON_POSITIVE:
-        return mButtonPositive;
-    case DialogInterface::BUTTON_NEGATIVE:
-        return mButtonNegative;
-    case DialogInterface::BUTTON_NEUTRAL:
-        return mButtonNeutral;
+    case DialogInterface::BUTTON_POSITIVE: return mButtonPositive;
+    case DialogInterface::BUTTON_NEGATIVE: return mButtonNegative;
+    case DialogInterface::BUTTON_NEUTRAL:  return mButtonNeutral;
     default:   return nullptr;
     }
 }
@@ -300,7 +308,7 @@ void AlertController::setupView() {
         }
     }
 
-    AttributeSet atts=mContext->obtainStyledAttributes("AlertDialog");
+    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:style/AlertDialog");
     //TypedArray a = mContext.obtainStyledAttributes(R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
     setBackground(atts, topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
@@ -312,7 +320,8 @@ void AlertController::setupCustomContent(ViewGroup* customPanel){
         customView = mView;
     } else if (mViewLayoutResId.size()) {
         LayoutInflater* inflater = LayoutInflater::from(mContext);
-        customView = inflater->inflate(mViewLayoutResId, customPanel, false);
+        customView = inflater->inflate(mViewLayoutResId, nullptr,false);//customPanel,true);
+        customPanel->addView(customView);
         delete inflater;
     } 
     bool hasCustomView = customView != nullptr;
@@ -344,10 +353,10 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
         topPanel->addView(mCustomTitleView, 0, lp);
 
             // Hide the title template
-        View* titleTemplate = mWindow->findViewById(R::id::title_template);
+        View* titleTemplate = mWindow->findViewById(cdroid::R::id::title_template);
             titleTemplate->setVisibility(View::GONE);
     } else {
-        mIconView = (ImageView*) mWindow->findViewById(R::id::icon);
+        mIconView = (ImageView*) mWindow->findViewById(cdroid::R::id::icon);
 
         const bool hasTextTitle = mTitle.length();//!TextUtils.isEmpty(mTitle);
         if (hasTextTitle && mShowTitle) {
@@ -371,7 +380,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
             }
         } else {
             // Hide the title template
-            View* titleTemplate = mWindow->findViewById(R::id::title_template);
+            View* titleTemplate = mWindow->findViewById(cdroid::R::id::title_template);
             titleTemplate->setVisibility(View::GONE);
             mIconView->setVisibility(View::GONE);
             topPanel->setVisibility(View::GONE);
@@ -406,25 +415,22 @@ void AlertController::setupContent(ViewGroup* contentPanel){
     }
 }
 
-void AlertController::onButtonClick(View&v){
+void AlertController::onButtonClick(DialogInterface::OnClickListener listener,View&v){
     switch (v.getId()) {
-     case R::id::button1://DialogInterface.BUTTON_POSITIVE:
-     case R::id::button2://DialogInterface.BUTTON_NEGATIVE:
-     case R::id::button3://DialogInterface.BUTTON_NEUTRAL:
-         //((DialogInterface.OnClickListener) msg.obj).onClick(mDialog.get(), msg.what);
-	     break;
-     //case MSG_DISMISS_DIALOG://((DialogInterface) msg.obj).dismiss();
-     }
+    case R::id::button1: if(listener)listener(*mDialogInterface,DialogInterface::BUTTON_POSITIVE) ; break;
+    case R::id::button2: if(listener)listener(*mDialogInterface,DialogInterface::BUTTON_NEGATIVE) ; break;
+    case R::id::button3: if(listener)listener(*mDialogInterface,DialogInterface::BUTTON_NEUTRAL)  ; break;
+    default :break;
+    }
 }
 
 void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
-    int BIT_BUTTON_POSITIVE = 1;
-    int BIT_BUTTON_NEGATIVE = 2;
-    int BIT_BUTTON_NEUTRAL = 4;
+    constexpr int BIT_BUTTON_POSITIVE = 1;
+    constexpr int BIT_BUTTON_NEGATIVE = 2;
+    constexpr int BIT_BUTTON_NEUTRAL = 4;
     int whichButtons = 0;
-    auto mButtonHandler=std::bind(&AlertController::onButtonClick,this,std::placeholders::_1);
     mButtonPositive = (Button*) buttonPanel->findViewById(R::id::button1);
-    mButtonPositive->setOnClickListener(mButtonHandler);
+    mButtonPositive->setOnClickListener(mButtonPositiveListener);
 
     if (mButtonPositiveText.empty()) {
         mButtonPositive->setVisibility(View::GONE);
@@ -435,7 +441,7 @@ void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
     }
 
     mButtonNegative = (Button*) buttonPanel->findViewById(R::id::button2);
-    mButtonNegative->setOnClickListener(mButtonHandler);
+    mButtonNegative->setOnClickListener(mButtonNegativeListener);
     if (mButtonNegativeText.empty()) {
         mButtonNegative->setVisibility(View::GONE);
     } else {
@@ -445,7 +451,7 @@ void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
     }
 
     mButtonNeutral = (Button*) buttonPanel->findViewById(R::id::button3);
-    mButtonNeutral->setOnClickListener(mButtonHandler);
+    mButtonNeutral->setOnClickListener(mButtonNeutralListener);
     if (mButtonNeutralText.empty()) {
         mButtonNeutral->setVisibility(View::GONE);
     } else {
@@ -454,6 +460,8 @@ void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
         whichButtons = whichButtons | BIT_BUTTON_NEUTRAL;
     }
 
+    LOGD("Positive=%p:%s Negative:%p:%s Neutral:%p:%s whichButtons=%d",mButtonPositive,mButtonPositiveText.c_str(),
+         mButtonNegative,mButtonNegativeText.c_str(), mButtonNeutral,mButtonNeutralText.c_str(),whichButtons);
     if (shouldCenterSingleButton(mContext)) {
         /* If we only have 1 button it should be centered on the layout and
          * expand to fill 50% of the available space.*/
@@ -466,7 +474,7 @@ void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
         }
     }
 
-    if (whichButtons) {
+    if (0==whichButtons) {//no buttons
         buttonPanel->setVisibility(View::GONE);
     }
 }
@@ -486,14 +494,137 @@ void AlertController::centerButton(Button* button) {
     }
 }
 
-void AlertController::setBackground(const AttributeSet&atts,View* topPanel, View* contentPanel, View* customPanel,
+void AlertController::setBackground(const AttributeSet&a,View* topPanel, View* contentPanel, View* customPanel,
     View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons){
+    std::string fullDark;
+    std::string topDark;
+    std::string centerDark;
+    std::string bottomDark;
+    std::string fullBright;
+    std::string topBright;
+    std::string centerBright;
+    std::string bottomBright;
+    std::string bottomMedium;
+
+    // If the needsDefaultBackgrounds attribute is set, we know we're
+    // inheriting from a framework style.
+    bool needsDefaultBackgrounds = a.getBoolean("needsDefaultBackgrounds", true);
+    if (needsDefaultBackgrounds) {
+        fullDark = "cdroid:drawable/popup_full_dark";
+        topDark = "cdroid:drawable/popup_top_dark";
+        centerDark = "cdroid:drawable/popup_center_dark";
+        bottomDark = "cdroid:drawable/popup_bottom_dark";
+        fullBright = "cdroid:drawable/popup_full_bright";
+        topBright = "cdroid:drawable/popup_top_bright";
+        centerBright = "cdroid:drawable/popup_center_bright";
+        bottomBright = "cdroid:drawable/popup_bottom_bright";
+        bottomMedium = "cdroid:drawable/popup_bottom_medium";
+    }
+
+    topBright = a.getString("topBright", topBright);
+    topDark   = a.getString("topDark", topDark);
+    centerBright= a.getString("centerBright", centerBright);
+    centerDark  = a.getString("centerDark", centerDark);
+
+    /* We now set the background of all of the sections of the alert.
+     * First collect together each section that is being displayed along
+     * with whether it is on a light or dark background, then run through
+     * them setting their backgrounds.  This is complicated because we need
+     * to correctly use the full, top, middle, and bottom graphics depending
+     * on how many views they are and where they appear.
+     */
+
+    View* views[4]={nullptr};
+    bool light[4]={false};
+    View* lastView = nullptr;
+    bool lastLight = false;
+
+    int pos = 0;
+    if (hasTitle) {
+        views[pos] = topPanel;
+        light[pos] = false;
+        pos++;
+    }
+
+    /* The contentPanel displays either a custom text message or
+     * a ListView. If it's text we should use the dark background
+     * for ListView we should use the light background. If neither
+     * are there the contentPanel will be hidden so set it as null.
+     */
+    views[pos] = contentPanel->getVisibility() == View::GONE ? nullptr : contentPanel;
+    light[pos] = mListView != nullptr;
+    pos++;
+
+    if (hasCustomView) {
+        views[pos] = customPanel;
+        light[pos] = mForceInverseBackground;
+        pos++;
+    }
+
+    if (hasButtons) {
+        views[pos] = buttonPanel;
+        light[pos] = true;
+    }
+
+    bool setView = false;
+    for (pos = 0; pos < 4; pos++) {
+        View* v = views[pos];
+        if (v == nullptr) continue;
+
+        if (lastView) {
+            if (!setView) {
+                lastView->setBackgroundResource(lastLight ? topBright : topDark);
+            } else {
+                lastView->setBackgroundResource(lastLight ? centerBright : centerDark);
+            }
+            setView = true;
+        }
+
+        lastView = v;
+        lastLight = light[pos];
+    }
+
+    if (lastView) {
+        if (setView) {
+            bottomBright = a.getString("bottomBright", bottomBright);
+            bottomMedium = a.getString("bottomMedium", bottomMedium);
+            bottomDark   = a.getString("bottomDark", bottomDark);
+
+            // ListViews will use the Bright background, but buttons use the
+            // Medium background.
+            lastView->setBackgroundResource(
+                    lastLight ? (hasButtons ? bottomMedium : bottomBright) : bottomDark);
+        } else {
+            fullBright = a.getString("fullBright", fullBright);
+            fullDark   = a.getString("fullDark", fullDark);
+
+            lastView->setBackgroundResource(lastLight ? fullBright : fullDark);
+        }
+    }
+
+    ListView* listView = mListView;
+    if (listView && mAdapter ) {
+        listView->setAdapter(mAdapter);
+        int checkedItem = mCheckedItem;
+        if (checkedItem > -1) {
+            listView->setItemChecked(checkedItem, true);
+            listView->setSelectionFromTop(checkedItem,
+                    a.getDimensionPixelSize("selectionScrollOffset", 0));
+        }
+    }
 }
 
 
 AlertController::AlertParams::AlertParams(Context*context){
     mContext = context;
     mCancelable = true;
+    mIsMultiChoice  = false;
+    mIsSingleChoice = false;
+    mIcon    = nullptr;
+    mView    = nullptr;
+    mAdapter = nullptr;
+    mCustomTitleView= nullptr;
+    mInflater= LayoutInflater::from(mContext);
 }
 
 void AlertController::AlertParams::apply(AlertController* dialog){

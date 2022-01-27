@@ -74,15 +74,15 @@ private:
 
     Button* mButtonPositive;
     std::string mButtonPositiveText;
-    Message mButtonPositiveMessage;
+    View::OnClickListener mButtonPositiveListener;
 
     Button* mButtonNegative;
     std::string mButtonNegativeText;
-    Message mButtonNegativeMessage;
+    View::OnClickListener mButtonNegativeListener;
 
     Button* mButtonNeutral;
     std::string mButtonNeutralText;
-    Message mButtonNeutralMessage;
+    View::OnClickListener mButtonNeutralListener;
 
     std::string mIconId ;
     Drawable* mIcon;
@@ -109,7 +109,7 @@ private:
     bool mShowTitle;
     int mButtonPanelLayoutHint;
 private:
-    void onButtonClick(View&v);
+    void onButtonClick(DialogInterface::OnClickListener listener,View&v);
     static bool shouldCenterSingleButton(Context* context);
     const std::string& selectContentView();
     ViewGroup* resolvePanel(View* customPanel,View* defaultPanel);

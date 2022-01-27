@@ -156,12 +156,17 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mMinWidth = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight= attrs.getDimensionPixelSize("minHeight",0);
     mContentDescription=attrs.getString("contentDescription");
+    setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
+           {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
+    mOverScrollMode=attrs.getInt("overScrollMode",std::map<const std::string,int>{
+           {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
+           {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}
+         },mOverScrollMode);
     setClickable(attrs.getBoolean("clickable",false));
     setLongClickable(attrs.getBoolean("longclickable",false));
     setFocusableInTouchMode(attrs.getBoolean("focusableInTouchMode",false));
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
     setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster",false));
-    setOverScrollMode(attrs.getInt("overScrollMode",OVER_SCROLL_IF_CONTENT_SCROLLS));
  
     if(attrs.getBoolean("focusableInTouchMode",false)){
         viewFlagValues &= ~FOCUSABLE_AUTO;
@@ -196,32 +201,54 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
     mBackground=ctx->getDrawable(attrs,"background");
     
+    int leftPadding,topPadding,rightPadding,bottomPadding;
     int padding=attrs.getDimensionPixelSize("padding",-1);
+    bool leftPaddingDefined = false;
+    bool rightPaddingDefined= false;
+    bool startPaddingDefined= false;
+    bool endPaddingDefined  = false;
     if(padding>=0){
-        mPaddingLeft= mPaddingRight =padding;
-        mPaddingTop = mPaddingBottom=padding;
+        leftPadding= rightPadding = padding;
+        topPadding = bottomPadding= padding;
+        mUserPaddingLeftInitial   = padding;
+        mUserPaddingRightInitial  = padding;
+        leftPaddingDefined = true;
+        rightPaddingDefined = true;
     }else{
         int horz=attrs.getDimensionPixelSize("paddingHorizontal",-1);
         int vert=attrs.getDimensionPixelSize("paddingVertical",-1);
         if(horz>=0){
-            mPaddingLeft=mPaddingRight=horz;
+            leftPadding = rightPadding = horz;
+            leftPaddingDefined = rightPaddingDefined = true;
         }else{
-            mPaddingLeft =attrs.getDimensionPixelSize("paddingLeft",0);
-            mPaddingRight=attrs.getDimensionPixelSize("paddingRight",0);
+            leftPadding = attrs.getDimensionPixelSize("paddingLeft",0);
+            rightPadding= attrs.getDimensionPixelSize("paddingRight",0);
+            leftPaddingDefined = (mPaddingLeft!=0);
+            rightPaddingDefined= (mPaddingRight!=0);
         }
         if(vert>=0){
-            mPaddingTop = mPaddingBottom=vert;
+            topPadding = bottomPadding = vert;
         }else{
-            mPaddingTop   =attrs.getDimensionPixelSize("paddingTop",0);
-            mPaddingBottom=attrs.getDimensionPixelSize("paddingBottom",0);
+            topPadding   = attrs.getDimensionPixelSize("paddingTop",0);
+            bottomPadding= attrs.getDimensionPixelSize("paddingBottom",0);
         }
+        int paddingStart=attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
+        int endPadding = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
+        startPaddingDefined = (paddingStart != UNDEFINED_PADDING);
+        endPaddingDefined = (endPadding != UNDEFINED_PADDING);
+        if(startPaddingDefined)mPaddingLeft=paddingStart;
+        if(endPaddingDefined)mPaddingRight=endPadding;
+        LOGD_IF(startPaddingDefined||endPaddingDefined,"Padding StartEnd=%d,%d",paddingStart,endPadding);
     }
+    internalSetPadding( mUserPaddingLeftInitial, topPadding >= 0 ? topPadding : mPaddingTop,
+                mUserPaddingRightInitial, bottomPadding >= 0 ? bottomPadding : mPaddingBottom);
     const int x=attrs.getInt("scrollX",0);
     const int y=attrs.getInt("scrollY",0);
     if(x||y)scrollTo(x,y);
     if(scrollbars!=SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
     if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
     computeOpaqueFlags();
+    LOGV_IF(mID!=NO_ID,"%d:%s",mID,attrs.getString("id").c_str());
 }
 
 void View::initView(){
@@ -676,6 +703,7 @@ void View::internalSetPadding(int left, int top, int right, int bottom){
     }
     if (changed) {
         requestLayout();
+        invalidate();
     }
 }
 
@@ -3141,8 +3169,20 @@ View& View::setBackground(Drawable*background){
        
         if(background->getPadding(padding)){
             resetResolvedDrawables();//Internal();
-            //switch(background->getLayoutDirection()){
-            setPadding(padding.left,padding.top,padding.width,padding.height);
+            switch (background->getLayoutDirection()) {
+            case LAYOUT_DIRECTION_RTL:
+                mUserPaddingLeftInitial = padding.width;
+                mUserPaddingRightInitial = padding.left;
+                internalSetPadding(padding.width, padding.top, padding.left, padding.height);
+                break;
+            case LAYOUT_DIRECTION_LTR:
+            default:
+                mUserPaddingLeftInitial = padding.left;
+                mUserPaddingRightInitial = padding.width;
+                internalSetPadding(padding.left, padding.top, padding.width, padding.height);
+            }
+            mLeftPaddingDefined = false;
+            mRightPaddingDefined = false;
         }
         bRequestLayout= mBackground==nullptr||mBackground->getMinimumWidth()!=background->getMinimumWidth()||
                mBackground->getMinimumHeight()!=background->getMinimumHeight();

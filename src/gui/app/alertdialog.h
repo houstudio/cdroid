@@ -59,6 +59,11 @@ public:
     void setTitle(const std::string& title);
     void setMessage(const std::string& message);
     void setButton(int whichButton,const std::string&text, OnClickListener listener);
+    void setIcon(const std::string&);
+    void setIcon(Drawable*);
+    void onCreate()override;
+    bool onKeyDown(int keyCode, KeyEvent& event)override;
+    bool onKeyUp(int keyCode, KeyEvent& event)override;
 };
 
 }//namespace 

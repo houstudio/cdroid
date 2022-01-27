@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:cdroid="http://schemas.cdroid.com/apk/res/cdroid"
-    cdroid:id="@+id/parentPanel"
+    cdroid:id="@cdroid:id/parentPanel"
     cdroid:layout_width="match_parent"
     cdroid:layout_height="wrap_content"
     cdroid:orientation="vertical"
@@ -10,12 +10,12 @@
     cdroid:paddingStart="3dip"
     cdroid:paddingEnd="1dip">
 
-    <LinearLayout cdroid:id="@+id/topPanel"
+    <LinearLayout cdroid:id="@cdroid:id/topPanel"
         cdroid:layout_width="match_parent"
         cdroid:layout_height="wrap_content"
         cdroid:minHeight="54dip"
         cdroid:orientation="vertical">
-        <LinearLayout cdroid:id="@+id/title_template"
+        <LinearLayout cdroid:id="@cdroid:id/title_template"
             cdroid:layout_width="match_parent"
             cdroid:layout_height="wrap_content"
             cdroid:orientation="horizontal"
@@ -24,14 +24,16 @@
             cdroid:layout_marginBottom="9dip"
             cdroid:layout_marginStart="10dip"
             cdroid:layout_marginEnd="10dip">
-            <ImageView cdroid:id="@+id/icon"
+            <ImageView cdroid:id="@cdroid:id/icon"
                 cdroid:layout_width="wrap_content"
                 cdroid:layout_height="wrap_content"
                 cdroid:layout_gravity="top"
                 cdroid:paddingTop="6dip"
                 cdroid:paddingEnd="10dip"
-                cdroid:src="@drawable/ic_dialog_info" />
-            <com.cdroid.internal.widget.DialogTitle cdroid:id="@+id/alertTitle"
+                cdroid:src="@cdroid:mipmap/ic_dialog_info" />
+            <!--com.cdroid.internal.widget.DialogTitle--> 
+            <TextView 
+                cdroid:id="@cdroid:id/alertTitle"
                 style="?cdroid:attr/textAppearanceLarge"
                 cdroid:singleLine="true"
                 cdroid:ellipsize="end"
@@ -39,22 +41,22 @@
                 cdroid:layout_height="wrap_content"
                 cdroid:textAlignment="viewStart" />
         </LinearLayout>
-        <ImageView cdroid:id="@+id/titleDivider"
+        <ImageView cdroid:id="@cdroid:id/titleDivider"
             cdroid:layout_width="match_parent"
             cdroid:layout_height="1dip"
             cdroid:visibility="gone"
             cdroid:scaleType="fitXY"
             cdroid:gravity="fill_horizontal"
-            cdroid:src="@cdroid:drawable/divider_horizontal_dark" />
+            cdroid:src="@cdroid:mipmap/divider_horizontal_dark" />
         <!-- If the client uses a customTitle, it will be added here. -->
     </LinearLayout>
 
-    <LinearLayout cdroid:id="@+id/contentPanel"
+    <LinearLayout cdroid:id="@cdroid:id/contentPanel"
         cdroid:layout_width="match_parent"
         cdroid:layout_height="wrap_content"
         cdroid:layout_weight="1"
         cdroid:orientation="vertical">
-        <ScrollView cdroid:id="@+id/scrollView"
+        <ScrollView cdroid:id="cdroid:id/scrollView"
             cdroid:layout_width="match_parent"
             cdroid:layout_height="wrap_content"
             cdroid:paddingTop="2dip"
@@ -62,7 +64,7 @@
             cdroid:paddingStart="14dip"
             cdroid:paddingEnd="10dip"
             cdroid:overScrollMode="ifContentScrolls">
-            <TextView cdroid:id="@+id/message"
+            <TextView cdroid:id="cdroid:id/message"
                 style="?cdroid:attr/textAppearanceMedium"
                 cdroid:layout_width="match_parent"
                 cdroid:layout_height="wrap_content"
@@ -70,18 +72,18 @@
         </ScrollView>
     </LinearLayout>
 
-    <FrameLayout cdroid:id="@+id/customPanel"
+    <FrameLayout cdroid:id="@cdroid:id/customPanel"
         cdroid:layout_width="match_parent"
         cdroid:layout_height="wrap_content"
         cdroid:layout_weight="1">
-        <FrameLayout cdroid:id="@+cdroid:id/custom"
+        <FrameLayout cdroid:id="@cdroid:id/custom"
             cdroid:layout_width="match_parent"
             cdroid:layout_height="wrap_content"
             cdroid:paddingTop="5dip"
             cdroid:paddingBottom="5dip" />
     </FrameLayout>
 
-    <LinearLayout cdroid:id="@+id/buttonPanel"
+    <LinearLayout cdroid:id="@cdroid:id/buttonPanel"
         cdroid:layout_width="match_parent"
         cdroid:layout_height="wrap_content"
         cdroid:minHeight="54dip"
@@ -95,34 +97,34 @@
             cdroid:paddingStart="2dip"
             cdroid:paddingEnd="2dip"
             cdroid:measureWithLargestChild="true">
-            <LinearLayout cdroid:id="@+id/leftSpacer"
+            <LinearLayout cdroid:id="@cdroid:id/leftSpacer"
                 cdroid:layout_weight="0.25"
                 cdroid:layout_width="0dip"
                 cdroid:layout_height="wrap_content"
                 cdroid:orientation="horizontal"
                 cdroid:visibility="gone" />
-            <Button cdroid:id="@+id/button1"
+            <Button cdroid:id="@cdroid:id/button1"
                 cdroid:layout_width="0dip"
                 cdroid:layout_gravity="start"
                 cdroid:layout_weight="1"
                 style="?cdroid:attr/buttonBarButtonStyle"
                 cdroid:maxLines="2"
                 cdroid:layout_height="wrap_content" />
-            <Button cdroid:id="@+id/button3"
+            <Button cdroid:id="@cdroid:id/button3"
                 cdroid:layout_width="0dip"
                 cdroid:layout_gravity="center_horizontal"
                 cdroid:layout_weight="1"
                 style="?cdroid:attr/buttonBarButtonStyle"
                 cdroid:maxLines="2"
                 cdroid:layout_height="wrap_content" />
-            <Button cdroid:id="@+id/button2"
+            <Button cdroid:id="@cdroid:id/button2"
                 cdroid:layout_width="0dip"
                 cdroid:layout_gravity="end"
                 cdroid:layout_weight="1"
                 style="?cdroid:attr/buttonBarButtonStyle"
                 cdroid:maxLines="2"
                 cdroid:layout_height="wrap_content" />
-            <LinearLayout cdroid:id="@+id/rightSpacer"
+            <LinearLayout cdroid:id="@cdroid:id/rightSpacer"
                 cdroid:layout_width="0dip"
                 cdroid:layout_weight="0.25"
                 cdroid:layout_height="wrap_content"

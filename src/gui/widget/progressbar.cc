@@ -214,8 +214,8 @@ void ProgressBar::initProgressBar(){
     mInDrawing   = false;
     mAggregatedIsVisible =false;
     mRefreshIsPosted =false;
-    mData.push_back(RefreshData());
-    mData.push_back(RefreshData());
+    mDatas.insert(std::pair<int,RefreshData>(R::id::progress,RefreshData()));
+    mDatas.insert(std::pair<int,RefreshData>(R::id::secondaryProgress,RefreshData()));
 }
 
 void ProgressBar::setMin(int value){
@@ -267,10 +267,9 @@ void ProgressBar::onAttachedToWindow(){
     mAttached = true;
     if (mIndeterminate) startAnimation();
 
-    const int count = mData.size();
-    for (int i = 0; i < count&&i<1; i++) {
-        RefreshData rd = mData[i];
-        doRefreshProgress(rd.id, rd.progress, rd.fromUser, true, rd.animate);
+    for (auto d:mDatas) {
+        RefreshData& rd = d.second;
+        doRefreshProgress(d.first, rd.progress, rd.fromUser, true, rd.animate);
     }
 }
 
@@ -349,7 +348,7 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate){
-    RefreshData&rd=mData[id-1];
+    RefreshData&rd=mDatas[id];
     rd.progress=progress;
     rd.fromUser=fromUser;
     rd.animate=animate;
@@ -358,9 +357,9 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     if(!mRefreshIsPosted){
         if(mAttached&&!mRefreshIsPosted){
             mRefreshProgressRunnable =[this](){
-                for(int i=R::id::progress;i<=R::id::secondaryProgress;i++){
-                    RefreshData&rd=mData[i-1];
-                    doRefreshProgress(i, rd.progress, rd.fromUser, true, rd.animate);
+                for(auto d:mDatas){
+                    RefreshData&rd=d.second; 
+                    doRefreshProgress(d.first,rd.progress, rd.fromUser, true, rd.animate);
                 }
                 mRefreshIsPosted=false;
             };

@@ -2,9 +2,11 @@
 namespace cdroid{
 
 Dialog::Dialog(Context*context){
-    mContext= context;
+    mContext = context;
+    mCreated = false;
+    mShowing = false;
+    mWindow  = nullptr;
     mCancelable = true;
-    mWindow = nullptr;
 }
 
 Dialog::Dialog(Context* context,const std::string&resId):Dialog(context){
@@ -50,6 +52,10 @@ void Dialog::dismissDialog(){
 }
 
 void Dialog::dispatchOnCreate(void*buddle){
+    if (!mCreated) {
+        onCreate();
+        mCreated = true;
+    }
 }
 
 void Dialog::onCreate(){

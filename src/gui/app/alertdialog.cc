@@ -14,6 +14,29 @@ AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelLi
     setOnCancelListener(listener);
 }
 
+void AlertDialog::setIcon(const std::string&iconId){
+    mAlert->setIcon(iconId);
+}
+
+void AlertDialog::setIcon(Drawable*icon){
+    mAlert->setIcon(icon);
+}
+
+void AlertDialog::onCreate(){
+    Dialog::onCreate();
+    mAlert->installContent();
+}
+
+bool AlertDialog::onKeyDown(int keyCode, KeyEvent& event){
+    if (mAlert->onKeyUp(keyCode, event)) return true;
+    return Dialog::onKeyUp(keyCode, event);
+}
+
+bool AlertDialog::onKeyUp(int keyCode, KeyEvent& event){
+    if (mAlert->onKeyUp(keyCode, event)) return true;
+    return Dialog::onKeyUp(keyCode, event);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 AlertDialog::Builder::Builder(Context* context){
@@ -179,7 +202,7 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 }
 
 AlertDialog* AlertDialog::Builder::create(){
-    AlertDialog* dialog = new AlertDialog(P->mContext, P->mViewLayoutResId);//, false);
+    AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog.xml");//, false);
     P->apply(dialog->mAlert);
     dialog->getWindow()->requestLayout();
     dialog->setCancelable(P->mCancelable);

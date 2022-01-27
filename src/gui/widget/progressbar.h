@@ -32,7 +32,7 @@ private:
     bool mHasAnimation;
     bool mInDrawing;
     bool mRefreshIsPosted;
-    std::vector<RefreshData>mData;
+    std::map<int,RefreshData>mDatas;
     Runnable mRefreshProgressRunnable;
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;

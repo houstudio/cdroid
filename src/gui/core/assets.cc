@@ -49,7 +49,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
     }else  if(atts.size()==2){int i=0;
         if(tag0.compare("style")==0){
             AttributeSet&attStyle=atts[0];
-            const std::string styleName  =package+attStyle.getString("name");
+            const std::string styleName  =package+":style/"+attStyle.getString("name");
             const std::string styleParent=attStyle.getString("parent");
             auto it=mStyles.find(styleName);
             if(it==mStyles.end()){
@@ -105,27 +105,24 @@ static bool guessExtension(ZIPArchive*pak,std::string&ioname){
 
 //"@[+][package:]id/filname"
 void Assets::parseResource(const std::string&fullResId,std::string*res,std::string*ns)const{
-    std::string pkg=mName;
-    size_t pos=fullResId.find(":");
-    std::string relname;
-    if(pos!=std::string::npos){
-        const int pluspos=fullResId.find('+');
-        const int atpos=fullResId.find('@');
-        const int startat=(pluspos!=std::string::npos)?pluspos:((atpos==std::string::npos)?0:atpos);
-        pkg=fullResId.substr(startat,pos-startat);
-        relname=fullResId.substr(pos+1);
-    }else{//@+id/
-        pos=mName.find_last_of('/');
-        if(pos!=std::string::npos)
-            pkg=mName.substr(pos+1);
-        pos=fullResId.find('+');
-        if(pos==std::string::npos)
-            pos=fullResId.find('@');
-        if(pos!=std::string::npos)relname=fullResId.substr(pos+1);
-        else relname=fullResId;
+    std::string relname,pkg=mName;
+    std::string fullid = fullResId;
+    if(fullid[0]=='@'){//remove @+
+        fullid = fullid.substr(1);
+        if(fullid[0]=='+')fullid = fullid.substr(1);
     }
-    if(res)*res=relname;
-    if(ns)*ns=pkg;
+    size_t pos=fullid.find(":");
+    if(pos != std::string::npos){
+        pkg = fullid.substr(0,pos);
+        relname= fullid.substr(pos+1);
+    }else{//id/xxx
+        pos = mName.find_last_of('/');
+        if(pos != std::string::npos)
+            pkg = mName.substr(pos+1);
+        relname = fullid;
+    }
+    if(ns) *ns = pkg;
+    if(res)*res= relname;
 }
 
 ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeResid)const{
