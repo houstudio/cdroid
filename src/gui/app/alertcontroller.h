@@ -7,6 +7,19 @@ namespace cdroid{
 
 class AlertController{
 public:
+    DECLARE_UIEVENT(void,OnPrepareListViewListener,ListView&);
+    class RecycleListView:public ListView {
+    private:
+        friend class AlertController;
+        int mPaddingTopNoTitle;
+        int mPaddingBottomNoButtons;
+        bool mRecycleOnMeasure = true;
+    protected:
+        bool recycleOnMeasure();
+    public:
+        RecycleListView(Context* context,const AttributeSet& attrs);
+        void setHasDecor(bool hasTitle, bool hasButtons);
+    };
     class AlertParams {
     public:
         Context* mContext;
@@ -48,7 +61,7 @@ public:
         std::string mIsCheckedColumn;
         bool mForceInverseBackground;
         AdapterView::OnItemSelectedListener mOnItemSelectedListener;
-        //OnPrepareListViewListener mOnPrepareListViewListener;
+        OnPrepareListViewListener mOnPrepareListViewListener;
         bool mRecycleOnMeasure = true;
     private:
         void createListView(AlertController* dialog);

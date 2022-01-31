@@ -296,7 +296,8 @@ void BitmapDrawable::draw(Canvas&canvas){
             mBounds.left,mBounds.top,mBounds.width,mBounds.height, mDstRect.left,mDstRect.top,
 	    mDstRect.width,mDstRect.height,mBitmapState->mAlpha,mTintFilter);
 
-    LOGD_IF(mBounds.empty(),"%p's bounds is empty,skip drawing,otherwise will caused crash",this);
+    LOGD_IF(mBounds.empty(),"%p's(%d,%d) bounds is empty,skip drawing,otherwise will caused crash",this,mBitmapWidth,mBitmapHeight);
+    if(mBounds.empty())return;
     canvas.save();
 
     if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){

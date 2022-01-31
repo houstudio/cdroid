@@ -675,29 +675,36 @@ void AlertController::AlertParams::apply(AlertController* dialog){
 }
 
 class AlertListAdapter:public ArrayAdapter<std::string>{
+private:
+    AlertController::AlertParams*mParams;
+    ListView*LV;
 public:
     AlertListAdapter(Context*ctx,const std::string&resource,int field)
        :ArrayAdapter<std::string>::ArrayAdapter(ctx,resource,field){
     }
+    void setParams(AlertController::AlertParams*param,ListView*lv){
+        mParams=param;
+        LV=lv;
+    }
     View*getView(int position, View* convertView, ViewGroup* parent){
         View* view=ArrayAdapter<std::string>::getView(position, convertView, parent);
-        /*if (mCheckedItems != nullptr) {
-            bool isItemChecked = mCheckedItems[position];
-            if (isItemChecked) {
-                listView.setItemChecked(position, true);
-            }
-        }*/
+        if (mParams->mCheckedItems.size()&& mParams->mCheckedItems[position]){
+            LV->setItemChecked(position, true);
+        }
+        TextView*tv=(TextView*)view->findViewById(mFieldId);
+        if(tv)tv->setText(getItemAt(position));
         return view;  
     }
 };
 
 void AlertController::AlertParams::createListView(AlertController* dialog){
-    ListView* listView =(ListView*)LayoutInflater::from(mContext)->inflate(dialog->mListLayout, nullptr,false);
+    RecycleListView* listView =(RecycleListView*)LayoutInflater::from(mContext)->inflate(dialog->mListLayout, nullptr,false);
     ListAdapter* adapter;
 
     if (mIsMultiChoice) {
         if (true){//mCursor == nullptr) {
             AlertListAdapter*alertadapter = new AlertListAdapter(mContext, dialog->mMultiChoiceItemLayout, R::id::text1);
+            alertadapter->setParams(this,listView);
             alertadapter->addAll(mItems);
             adapter=alertadapter; 
         } else {
@@ -732,12 +739,13 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
             adapter = mAdapter;
         } else {
             AlertListAdapter*alertadapter =new AlertListAdapter(mContext, layout, R::id::text1);
+            alertadapter->setParams(this,listView);
             alertadapter->addAll(mItems);
             adapter = alertadapter;
         }
     }
 
-    //if (mOnPrepareListViewListener) mOnPrepareListViewListener->onPrepareListView(listView);
+    if (mOnPrepareListViewListener) mOnPrepareListViewListener(*listView);
 
     /* Don't directly set the adapter on the ListView as we might
      * want to add a footer to the ListView later.*/
@@ -769,9 +777,31 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
     } else if (mIsMultiChoice) {
         listView->setChoiceMode(ListView::CHOICE_MODE_MULTIPLE);
     }
-    //listView->mRecycleOnMeasure = mRecycleOnMeasure;
+    listView->mRecycleOnMeasure = mRecycleOnMeasure;
     dialog->mListView = listView;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+DECLARE_WIDGET2(AlertController::RecycleListView,RecycleListView);
+
+bool AlertController::RecycleListView::recycleOnMeasure() {
+    return mRecycleOnMeasure;
+}
+
+AlertController::RecycleListView::RecycleListView(Context* context,const AttributeSet& attrs)
+    :ListView(context, attrs){
+    mPaddingBottomNoButtons = attrs.getDimensionPixelOffset("paddingBottomNoButtons", -1);
+    mPaddingTopNoTitle = attrs.getDimensionPixelOffset("paddingTopNoTitle", -1);
+}
+
+void AlertController::RecycleListView::setHasDecor(bool hasTitle, bool hasButtons) {
+    if (!hasButtons || !hasTitle) {
+        const int paddingLeft = getPaddingLeft();
+        const int paddingTop = hasTitle ? getPaddingTop() : mPaddingTopNoTitle;
+        const int paddingRight = getPaddingRight();
+        const int paddingBottom = hasButtons ? getPaddingBottom() : mPaddingBottomNoButtons;
+        setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom);
+    }
+}
 }//namespace
 

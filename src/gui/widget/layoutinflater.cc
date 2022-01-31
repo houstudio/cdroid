@@ -37,20 +37,14 @@ bool LayoutInflater::registInflater(const std::string&name,LayoutInflater::ViewI
     return true;
 }
 
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot){
-    View*v=inflate(resource,root);
-    if(root && attachToRoot) root->addView(v);
-    return v;
-}
-
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root){
+View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool attachToRoot){
     View*v=nullptr;
     if(mContext){
         std::unique_ptr<std::istream>stream=mContext->getInputStream(resource);
-        if(stream && stream->good()) v=inflate(*stream,root);
+        if(stream && stream->good()) v=inflate(*stream,root,attachToRoot && (root!=nullptr));
     }else{
         std::ifstream fin(resource);
-        v=inflate(fin,root);
+        v=inflate(fin,root,root!=nullptr);
     }
     return v;
 }
@@ -59,7 +53,7 @@ typedef struct{
     Context*ctx;
     XML_Parser parser;
     std::vector<View*>views;//the first element is rootview setted by inflate
-    ViewGroup*root;
+    ViewGroup*returnedView;
     int parsedView;
 }WindowParserData;
 
@@ -100,20 +94,20 @@ static void endElement(void *userData, const XML_Char *name){
     WindowParserData*pd=(WindowParserData*)userData;
     ViewGroup*p=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0)return;
-    if(p&&(pd->views.size()==1)&&(pd->root==nullptr))
-        pd->root=p; 
+    if(p&&(pd->views.size()==1))
+        pd->returnedView=p; 
     pd->views.pop_back();
 }
 
-View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
+View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root,bool attachToRoot){
     int len=0;
     char buf[256];
     XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
     WindowParserData pd={mContext,parser};
     ULONGLONG tstart=SystemClock::uptimeMillis();
 
-    pd.parsedView=0;
-    if(root){pd.root=root;pd.views.push_back(root);}
+    pd.parsedView  = 0;
+    pd.returnedView= nullptr;
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startElement, endElement);
     do {
@@ -127,10 +121,13 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root){
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    pd.root->requestLayout();
-    pd.root->startLayoutAnimation();
+    if(root&&attachToRoot){
+       root->addView(pd.returnedView);
+       root->requestLayout();
+       root->startLayoutAnimation();
+    }
     LOGV("usedtime %dms  parsed %d views",SystemClock::uptimeMillis()-tstart,pd.parsedView);
-    return pd.root;
+    return pd.returnedView;
 }
 
 }//endof namespace

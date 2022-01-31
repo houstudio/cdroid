@@ -13,13 +13,13 @@ private:
     Context*mContext;
     LayoutInflater(Context*ctx);
     static std::map<const std::string,ViewInflater>&getMap();
+protected:
+    View* inflate(std::istream&stream,ViewGroup*root,bool attachToRoot);
 public:
     static LayoutInflater*from(Context*context);
-    static bool registInflater(const std::string&name,ViewInflater fun);
     static ViewInflater getInflater(const std::string&);
-    View* inflate(std::istream&stream,ViewGroup*root);
-    View* inflate(const std::string&resource,ViewGroup* root);
-    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot);
+    static bool registInflater(const std::string&name,ViewInflater fun);
+    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true);
 };
 
 template<typename T>
@@ -31,6 +31,6 @@ public:
 };
 
 #define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T);
-
+#define DECLARE_WIDGET2(T,name) static InflaterRegister<T> widget_inflater_##T_##name(#name);
 }//endof namespace
 #endif
