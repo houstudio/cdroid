@@ -288,11 +288,13 @@ void View::initView(){
     mID       = NO_ID;
     mAutofillViewId =NO_ID;
     mAccessibilityViewId=NO_ID;
+    mDrawingCacheBackgroundColor =0;
     mContext  = nullptr;
     mParent   = nullptr;
     mAttachInfo = nullptr;
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
+    mLayerType = LAYER_TYPE_NONE;
 
     mLeftPaddingDefined = mRightPaddingDefined =false;
     mUserPaddingLeftInitial = mUserPaddingRightInitial =0;
@@ -684,6 +686,7 @@ void View::setPaddingRelative(int start,int top,int end,int bottom){
 void View::recomputePadding() {
     internalSetPadding(mUserPaddingLeft, mPaddingTop, mUserPaddingRight, mUserPaddingBottom);
 }
+
 void View::internalSetPadding(int left, int top, int right, int bottom){
     mUserPaddingLeft = left;
     mUserPaddingRight = right;
@@ -822,6 +825,13 @@ void View::computeOpaqueFlags(){
     }
 }
 
+int View::getLayerType()const{
+    return mLayerType;
+}
+
+void View::setLayerType(int type){
+    mLayerType= type;
+}
 
 void View::onAnimationStart() {
     mPrivateFlags |= PFLAG_ANIMATION_STARTED;
@@ -2262,7 +2272,7 @@ void View::draw(Canvas&canvas){
         // Step 4, draw the children
         dispatchDraw(canvas);
 
-        //drawAutofilledHighlight(canvas);
+        drawAutofilledHighlight(canvas);
 
         // Overlay is part of the content and draws beneath Foreground
         /*if (mOverlay != null && !mOverlay.isEmpty()) {
@@ -2393,7 +2403,7 @@ void View::draw(Canvas&canvas){
 
 bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     const bool hardwareAcceleratedCanvas=false;
-    const bool drawingWithRenderNode=false;
+    bool drawingWithRenderNode= mAttachInfo && mAttachInfo->mHardwareAccelerated  && hardwareAcceleratedCanvas;;
     bool more = false;
     const bool childHasIdentityMatrix = hasIdentityMatrix();
     int parentFlags = parent->mGroupFlags;
@@ -2405,7 +2415,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
 
     Transformation* transformToApply = nullptr;
     bool concatMatrix = false;
-    bool scalingRequired = mAttachInfo && mAttachInfo->mApplicationScale!=1.f;//mScalingRequired;
+    const bool scalingRequired = mAttachInfo && mAttachInfo->mScalingRequired;
     Animation* a = getAnimation();
     if (a != nullptr) {
         more = applyLegacyAnimation(parent, drawingTime, a, scalingRequired);
@@ -2458,7 +2468,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     }
 
     RefPtr<ImageSurface> cache = nullptr;
-    /*RenderNode renderNode = nullptr;
+    //RenderNode renderNode = nullptr;
     int layerType = getLayerType(); // TODO: signify cache state with just 'cache' local
     if (layerType == LAYER_TYPE_SOFTWARE || !drawingWithRenderNode) {
          if (layerType != LAYER_TYPE_NONE) {
@@ -2472,15 +2482,15 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     if (drawingWithRenderNode) {
         // Delay getting the display list until animation-driven alpha values are
         // set up and possibly passed on to the view
-        renderNode = updateDisplayListIfDirty();
+        /*renderNode = updateDisplayListIfDirty();
         if (!renderNode.isValid()) {
             // Uncommon, but possible. If a view is removed from the hierarchy during the call
             // to getDisplayList(), the display list will be marked invalid and we should not
             // try to use it again.
-            renderNode = nullptr;
+            //renderNode = nullptr;
             drawingWithRenderNode = false;
-        }
-    }*/
+        }*/
+    }
     int sx = 0;
     int sy = 0;
     if (!drawingWithRenderNode) {
@@ -2613,29 +2623,29 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         }
     } else if (cache != nullptr) {
         mPrivateFlags &= ~PFLAG_DIRTY_MASK;
-        /*if (layerType == LAYER_TYPE_NONE || mLayerPaint == nullptr) {
+        LOGV("%p:%d drawing use cache layerType=%d",this,mID,layerType);
+        if (layerType == LAYER_TYPE_NONE/* || mLayerPaint == nullptr*/) {
             // no layer paint, use temporary paint to draw bitmap
-            Paint cachePaint = parent->mCachePaint;
+            /*Paint cachePaint = parent->mCachePaint;
             if (cachePaint == nullptr) {
                 cachePaint = new Paint();
                 cachePaint.setDither(false);
                 parent->mCachePaint = cachePaint;
-            }
-            cachePaint.setAlpha((int) (alpha * 255));
-            canvas.drawBitmap(cache, 0.0f, 0.0f, cachePaint);
+            }*/
+            //cachePaint.setAlpha((int) (alpha * 255));
+            //canvas.drawBitmap(cache, 0.0f, 0.0f, cachePaint);
         } else {
             // use layer paint to draw the bitmap, merging the two alphas, but also restore
-            int layerPaintAlpha = mLayerPaint.getAlpha();
+            /*int layerPaintAlpha = mLayerPaint.getAlpha();
             if (alpha < 1) {
                 mLayerPaint.setAlpha((int) (alpha * layerPaintAlpha));
-            }
-            canvas.drawBitmap(cache, 0.0f, 0.0f, mLayerPaint);
-            if (alpha < 1){
-                mLayerPaint.setAlpha(layerPaintAlpha);
-            }
-        }*/
+            }*/
+            //drawBitmap(cache, 0.0f, 0.0f, mLayerPaint);
+            //if (alpha < 1) mLayerPaint.setAlpha(layerPaintAlpha);
+        }
         canvas.set_source(cache,0,0);
-        canvas.paint_with_alpha(alpha);
+        if(alpha<1)canvas.paint_with_alpha(alpha);
+        else canvas.paint();
     }
     while(restoreTo-->0) {
         canvas.restore();//ToCount(restoreTo);
@@ -3994,25 +4004,180 @@ void View::destroyDrawingCache(){
 }
 
 void View::buildDrawingCache(bool autoScale){
-    RefPtr<ImageSurface>bmp=ImageSurface::create(Surface::Format::ARGB32,getWidth(),getHeight());
-    Canvas canvas(bmp);
+    if ((mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == 0 || (autoScale ?
+        mDrawingCache == nullptr : mUnscaledDrawingCache == nullptr)){ 
+        buildDrawingCacheImpl(autoScale);
+    }
+}
+
+void View::buildDrawingCacheImpl(bool autoScale){
+    mCachingFailed = false;
+
+    int width = mRight - mLeft;
+    int height = mBottom - mTop;
+
+    bool scalingRequired = mAttachInfo && mAttachInfo->mScalingRequired;
+
+    if (autoScale && scalingRequired) {
+        width = (int) ((width * mAttachInfo->mApplicationScale) + 0.5f);
+        height = (int) ((height * mAttachInfo->mApplicationScale) + 0.5f);
+    }
+
+    bool opaque = mDrawingCacheBackgroundColor != 0 || isOpaque();
+    bool use32BitCache = mAttachInfo && mAttachInfo->mUse32BitDrawingCache;
+
+    long projectedBitmapSize = width * height * (opaque && !use32BitCache ? 2 : 4);
+    long drawingCacheSize =  ViewConfiguration::get(mContext).getScaledMaximumDrawingCacheSize();
+    if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
+        if (width > 0 && height > 0) {
+            LOG(WARN)<<this<<":"<<getId()<<" not displayed because it is too large to fit into a software layer (or drawing cache), needs "
+                    << projectedBitmapSize << " bytes, only "<< drawingCacheSize << " available size:"<<width<<"x"<<height;
+        }
+        destroyDrawingCache();
+        mCachingFailed = true;
+        return;
+    }
+
+    bool clear = true;
+    RefPtr<ImageSurface> bitmap = autoScale ? mDrawingCache : mUnscaledDrawingCache;
+
+    if (bitmap == nullptr || bitmap->get_width() != width || bitmap->get_height() != height) {
+        Surface::Format format = Surface::Format::RGB16_565;
+        if (!opaque) {
+            // Never pick ARGB_4444 because it looks awful
+            // Keep the DRAWING_CACHE_QUALITY_LOW flag just in case
+            switch (mViewFlags & DRAWING_CACHE_QUALITY_MASK) {
+            case DRAWING_CACHE_QUALITY_AUTO:
+            case DRAWING_CACHE_QUALITY_LOW:
+            case DRAWING_CACHE_QUALITY_HIGH:
+            default: format = Surface::Format::ARGB32;
+                    break;
+            }
+        } else {
+            // Optimization for translucent windows
+            // If the window is translucent, use a 32 bits bitmap to benefit from memcpy()
+            format = use32BitCache ? Surface::Format::ARGB32 : Surface::Format::RGB16_565;
+        }
+
+        // Try to cleanup memory
+
+        try {
+            bitmap = ImageSurface::create(format,width, height);
+            //bitmap.setDensity(getResources().getDisplayMetrics().densityDpi);
+            if (autoScale) {
+                mDrawingCache = bitmap;
+            } else {
+                mUnscaledDrawingCache = bitmap;
+            }
+            //if (opaque && use32BitCache) bitmap.setHasAlpha(false);
+        } catch (std::exception& e) {
+            // If there is not enough memory to create the bitmap cache, just
+            // ignore the issue as bitmap caches are not required to draw the
+            // view hierarchy
+            if (autoScale) {
+                mDrawingCache = nullptr;
+            } else {
+                mUnscaledDrawingCache = nullptr;
+            }
+            mCachingFailed = true;
+            return;
+        }
+
+        clear = mDrawingCacheBackgroundColor != 0;
+    }
+
+    RefPtr<Canvas> canvas;
+    if (mAttachInfo) {
+        canvas = mAttachInfo->mCanvas;
+        if (canvas == nullptr) {
+            canvas =std::make_shared<Canvas>(bitmap);
+        }
+        // Temporarily clobber the cached Canvas in case one of our children
+        // is also using a drawing cache. Without this, the children would
+        // steal the canvas by attaching their own bitmap to it and bad, bad
+        // thing would happen (invisible views, corrupted drawings, etc.)
+        mAttachInfo->mCanvas = nullptr;
+    } else {
+        // This case should hopefully never or seldom happen
+        canvas = std::make_shared<Canvas>(bitmap);
+    }
+
+    if (clear) {
+        canvas->rectangle(0,0,width,height);
+        canvas->set_operator(Cairo::Context::Operator::SOURCE);
+        canvas->set_color(mDrawingCacheBackgroundColor); 
+        canvas->fill();
+    }
+
     computeScroll();
-    canvas.translate(-mScrollX, -mScrollY);
+    canvas->save();
+
+    if (autoScale && scalingRequired) {
+        float scale = mAttachInfo->mApplicationScale;
+        canvas->scale(scale, scale);
+    }
+
+    canvas->translate(-mScrollX, -mScrollY);
+
     mPrivateFlags |= PFLAG_DRAWN;
-    mPrivateFlags |= PFLAG_DRAWING_CACHE_VALID;
-    LOGD("%p:%d",this,mID);
+    if (mAttachInfo == nullptr || !mAttachInfo->mHardwareAccelerated ||mLayerType != LAYER_TYPE_NONE) {
+        mPrivateFlags |= PFLAG_DRAWING_CACHE_VALID;
+    }
+
+    // Fast path for layouts with no backgrounds
     if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
         mPrivateFlags &= ~PFLAG_DIRTY_MASK;
-        dispatchDraw(canvas);
-        /*drawAutofilledHighlight(canvas);
-        if (mOverlay != null && !mOverlay.isEmpty()) {
-            mOverlay.getOverlayView().draw(canvas);
+        dispatchDraw(*canvas);
+        drawAutofilledHighlight(*canvas);
+        /*if (mOverlay != nullptr && !mOverlay.isEmpty()) {
+            mOverlay.getOverlayView().draw(*canvas);
         }*/
     } else {
-        draw(canvas);
+        draw(*canvas);
     }
-    if(autoScale)mDrawingCache=bmp;
-    else mUnscaledDrawingCache =bmp;
+
+    canvas->restore();
+
+    if (mAttachInfo) {
+        // Restore the cached Canvas for our siblings
+        mAttachInfo->mCanvas = canvas;
+    }
+}
+
+bool View::isAutofilled()const{
+    return mPrivateFlags3&PFLAG3_IS_AUTOFILLED;
+}
+
+void View::setAutofilled(bool autofilled) {
+    bool wasChanged = autofilled != isAutofilled();
+    if (wasChanged) {
+        if (autofilled) {
+            mPrivateFlags3 |= PFLAG3_IS_AUTOFILLED;
+        } else {
+            mPrivateFlags3 &= ~PFLAG3_IS_AUTOFILLED;
+        }
+        invalidate();
+    }
+}
+
+Drawable* View::getAutofilledDrawable(){
+    if (mAttachInfo->mAutofilledDrawable == nullptr) {
+        /*Context rootContext = getRootView().getContext();
+        TypedArray a = rootContext.getTheme().obtainStyledAttributes(AUTOFILL_HIGHLIGHT_ATTR);
+        int attributeResourceId = a.getResourceId(0, 0);
+        mAttachInfo->mAutofilledDrawable = rootContext.getDrawable(attributeResourceId);*/
+    }
+    return mAttachInfo->mAutofilledDrawable;
+}
+
+void View::drawAutofilledHighlight(Canvas& canvas){
+    if (isAutofilled()) {
+        Drawable* autofilledHighlight = getAutofilledDrawable();
+        if (autofilledHighlight) {
+            autofilledHighlight->setBounds(0, 0, getWidth(), getHeight());
+            autofilledHighlight->draw(canvas);
+        }
+   }
 }
 
 void View::invalidateViewProperty(bool invalidateParent, bool forceRedraw) {
@@ -5854,6 +6019,8 @@ View::AttachInfo::AttachInfo(){
     mWindowVisibility =VISIBLE;
     mHasWindowFocus   =true;
     mApplicationScale =1.0f;
+    mScalingRequired  =false;
+    mUse32BitDrawingCache=false;
     mDebugLayout  = false;
     mDrawingTime  = 0;
     mInTouchMode  = true;

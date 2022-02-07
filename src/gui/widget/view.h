@@ -144,11 +144,17 @@ protected:
     constexpr static int PFLAG3_SCROLL_INDICATOR_END        = 0x2000;
 
     constexpr static int PFLAG3_CLUSTER                 = 0x08000;
+    constexpr static int PFLAG3_IS_AUTOFILLED           = 0x10000;
     constexpr static int PFLAG3_FINGER_DOWN             = 0x20000;
     constexpr static int PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000;
     constexpr static int PFLAG3_TEMPORARY_DETACH        = 0x2000000;
     constexpr static int PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000;
     constexpr static int PFLAG3_AGGREGATED_VISIBLE      = 0x20000000;
+    enum LayerType{
+        LAYER_TYPE_NONE    =0,
+        LAYER_TYPE_SOFTWARE=1,
+        LAYER_TYPE_HARDWARE=2
+    };
     class AttachInfo{
     public:
         View*mRootView;
@@ -164,6 +170,8 @@ protected:
         KeyEvent::DispatcherState mKeyDispatchState;
         bool mAlwaysConsumeNavBar;
         bool mHasWindowFocus;
+        bool mScalingRequired;
+        bool mUse32BitDrawingCache;
         bool mViewVisibilityChanged;
         int mWindowVisibility;
         long mDrawingTime;
@@ -172,6 +180,7 @@ protected:
         bool mDebugLayout;
         bool mDisplayState;/*true display is on*/
         RefPtr<Canvas> mCanvas;
+        Drawable*mAutofilledDrawable;
         View* mTooltipHost;
         View* mViewRequestingLayout;
         AttachInfo(); 
@@ -291,6 +300,8 @@ public:
 private:
     int mMinWidth;
     int mMinHeight;
+    int mLayerType;
+    int mDrawingCacheBackgroundColor;
     int mOldWidthMeasureSpec;
     int mOldHeightMeasureSpec;
     int mVerticalScrollbarPosition;
@@ -339,6 +350,8 @@ private:
     void initializeScrollbarsInternal(const AttributeSet&attrs);
     void initScrollCache();
     ScrollabilityCache* getScrollCache();
+    Drawable* getAutofilledDrawable();
+    void drawAutofilledHighlight(Canvas& canvas);
     bool isOnVerticalScrollbarThumb(int x,int y);
     bool isOnHorizontalScrollbarThumb(int x,int y);
     bool isHoverable()const;
@@ -356,6 +369,7 @@ private:
     bool needRtlPropertiesResolution()const;
     bool skipInvalidate()const;
     void buildDrawingCache(bool autoScale);
+    void buildDrawingCacheImpl(bool autoScale);
     bool hasParentWantsFocus()const;
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
@@ -535,6 +549,8 @@ public:
     void postInvalidate();
     void postInvalidateOnAnimation();
     void invalidateDrawable(Drawable& who)override;
+    int  getLayerType()const;
+    void setLayerType(int);
     void scheduleDrawable(Drawable& who,Runnable what, long when)override;
     void unscheduleDrawable(Drawable& who,Runnable what)override;
     virtual void unscheduleDrawable(Drawable& who);
@@ -777,6 +793,8 @@ public:
     bool isActivated()const;
     bool isHovered()const;
     void setHovered(bool hovered);
+    bool isAutofilled()const;
+    void setAutofilled(bool);
 
     bool isClickable()const;
     void setClickable(bool clickable);
