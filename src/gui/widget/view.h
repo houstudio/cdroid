@@ -300,7 +300,6 @@ public:
 private:
     int mMinWidth;
     int mMinHeight;
-    int mLayerType;
     int mDrawingCacheBackgroundColor;
     int mOldWidthMeasureSpec;
     int mOldHeightMeasureSpec;
@@ -371,9 +370,11 @@ private:
     void buildDrawingCache(bool autoScale);
     void buildDrawingCacheImpl(bool autoScale);
     bool hasParentWantsFocus()const;
+    void cleanupDraw();
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
     int mID;
+    int mLayerType;
     int mAutofillViewId;
     int mAccessibilityViewId;
     int mScrollX;

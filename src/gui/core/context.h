@@ -18,6 +18,8 @@ class Drawable;
 class ColorStateList;
 class Context{
 public:
+    virtual const std::string getTheme()const=0;
+    virtual void setTheme(const std::string&theme)=0;
     virtual const DisplayMetrics&getDisplayMetrics()=0;
     virtual int getId(const std::string&)const=0;
     virtual const std::string& getString(const std::string&id,const std::string&lan="")=0;

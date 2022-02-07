@@ -16,6 +16,7 @@ namespace cdroid{
 
 Assets::Assets(){
     addResource("cdroid.pak","cdroid");
+    setTheme("cdroid:style/Theme");
 }
 
 Assets::Assets(const std::string&path):Assets(){
@@ -34,6 +35,20 @@ const DisplayMetrics& Assets::getDisplayMetrics(){
     return mDisplayMetrics;
 }
 
+const std::string Assets::getTheme()const{
+    return mThemeName;
+}
+
+void Assets::setTheme(const std::string&theme){
+    auto it=mStyles.find(theme);
+    if(it!=mStyles.end()){
+        mThemeName= theme;
+        mTheme=it->second;
+        LOGD("set Theme to %s",theme.c_str());
+    }else{
+        LOGE("Theme %s not found",theme.c_str());
+    }
+}
 
 void Assets::parseItem(const std::string&package,const std::vector<std::string>&tags,std::vector<AttributeSet>atts,const std::string&value){
     const std::string&tag0=tags[0];
@@ -44,7 +59,8 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             LOGV("%s=%s",name.c_str(),value.c_str());
         }else if(tag0.compare("color")==0){
             const std::string name=atts[0].getString("name");
-            LOGV("color::%s:%s",name.c_str(),value.c_str());
+            LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
+            mColors.insert(std::pair<const std::string,int>(package+":color/"+name,Color::parseColor(value)));
         }
     }else  if(atts.size()==2){int i=0;
         if(tag0.compare("style")==0){
@@ -55,6 +71,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             if(it==mStyles.end()){
                 it=mStyles.insert(it,std::pair<const std::string,AttributeSet>(styleName,AttributeSet()));
                 if(styleParent.length())it->second.add("parent",styleParent);
+                LOGV("style:%s",styleName.c_str());
             }
             it->second.add(atts[1].getString("name"),value);
         }else if(tag0.compare("array")==0){
@@ -62,9 +79,9 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             auto it=mArraies.find(name);
             if(it==mArraies.end()){
                 it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(name,std::vector<std::string>()));
+                LOGV("array:%s",name.c_str());
             }
             it->second.push_back(value);
-            //LOGD("tags:%s:%s",name.c_str(),value.c_str());
         }
     }
 }
@@ -261,8 +278,15 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
     return d;
 }
 
-int Assets::getColor(const std::string&resid){
-    return 0;
+int Assets::getColor(const std::string&refid){
+    auto it = mColors.find(refid);
+    if(it!=mColors.end())
+        return it->second;
+    else {
+        std::string name,pkg;
+        parseResource(refid,&name,&pkg);
+        return getColor(pkg+":"+name);
+    }
 }
 
 int Assets::getArray(const std::string&resname,std::vector<std::string>&out){
@@ -354,8 +378,25 @@ void Assets::clearStyles(){
     mStyles.clear();
 }
 
-AttributeSet Assets::obtainStyledAttributes(const std::string&name){
+AttributeSet Assets::obtainStyledAttributes(const std::string&refname){
     AttributeSet atts;
+    std::string name=refname;
+    size_t pos=name.find("attr");
+    while(pos!=std::string::npos){
+        std::string pkg;
+        name=name.replace(pos,4,"style");
+        if((pos =name.find('?'))!=std::string::npos)
+            name=name.substr(pos+1);
+        parseResource(name,&name,&pkg);
+        if((pos =name.find('/'))!=std::string::npos)
+            name=name.substr(pos+1);
+        name = mTheme.getString(name);
+        if((pos=name.find('@'))!=std::string::npos)
+            name.erase(pos,1);
+        if((pos=name.find(':'))==std::string::npos)
+            name=pkg+":"+name;
+        pos=name.find("attr");
+    }
     auto it=mStyles.find(name);
     if(it!=mStyles.end())atts=it->second;
     const std::string parent=atts.getString("parent");

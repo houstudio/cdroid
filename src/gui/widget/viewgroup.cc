@@ -1548,7 +1548,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
     int location[2]={child->mLeft,child->mTop};
 
     Matrix childMatrix = child->getMatrix();
-    if (true){//child->mLayerType != LAYER_TYPE_NONE){
+    if (child->mLayerType != LAYER_TYPE_NONE){
         mPrivateFlags |= PFLAG_INVALIDATED;
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
     }
@@ -1611,7 +1611,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
-    if (1||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
+    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         //mGroupFlags &=~ FLAG_CLIP_CHILDREN;
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
@@ -1641,7 +1641,7 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
             mPrivateFlags &= ~PFLAG_DRAWN;
         }
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
-        //if (mLayerType != LAYER_TYPE_NONE) 
+        if (mLayerType != LAYER_TYPE_NONE) 
             mPrivateFlags |= PFLAG_INVALIDATED;
 
         return mParent;

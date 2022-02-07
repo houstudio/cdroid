@@ -230,7 +230,9 @@ TextAppearanceAttributes::TextAppearanceAttributes(){
     mTextColorLink= nullptr;
 }
 
-void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
+void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&att){
+    const std::string ta=att.getString("textAppearance");
+    const AttributeSet atts=ctx->obtainStyledAttributes(ta);
     mTextColorHighlight = atts.getColor("textColorHighlight",mTextColorHighlight);
     mTextColor = ctx->getColorStateList(atts.getString("textColor"));
     mTextColorHint = ctx->getColorStateList(atts.getString("textColorHint"));
@@ -269,9 +271,11 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     mSingleLine=attrs.getBoolean("singleline",true);
-
-    setTextColor(0xFFFFFFFF);
-    setHintTextColor(0xFFFFFFFF);
+    attrs.dump();
+    if(attrs.hasAttribute("textAppearance")){
+        TextAppearanceAttributes attributes;
+        attributes.readTextAppearance(ctx,attrs);
+    }
     
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
     setEllipsize(attrs.getInt("ellipsize",std::map<const std::string,int>{

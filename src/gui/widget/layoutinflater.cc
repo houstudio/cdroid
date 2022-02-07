@@ -73,7 +73,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         return;
     }
     const std::string stname=atts.getString("style");
-    if(stname.empty()){
+    if(!stname.empty()){
         AttributeSet style=pd->ctx->obtainStyledAttributes(stname);
         atts.inherit(style);
     }

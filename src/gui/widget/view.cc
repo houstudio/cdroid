@@ -288,7 +288,7 @@ void View::initView(){
     mID       = NO_ID;
     mAutofillViewId =NO_ID;
     mAccessibilityViewId=NO_ID;
-    mDrawingCacheBackgroundColor =0;
+    mDrawingCacheBackgroundColor =0xFF000000;
     mContext  = nullptr;
     mParent   = nullptr;
     mAttachInfo = nullptr;
@@ -1247,7 +1247,7 @@ void View::onDetachedFromWindowInternal() {
 
     destroyDrawingCache();
 
-    //cleanupDraw();
+    cleanupDraw();
     mCurrentAnimation = nullptr;
 
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {
@@ -3611,7 +3611,7 @@ View& View::setFlags(int flags,int mask) {
     if ((changed & VISIBILITY_MASK) != 0) {
         // If the view is invisible, cleanup its display list to free up resources
         if (newVisibility != VISIBLE && mAttachInfo ) {
-            //cleanupDraw();
+            cleanupDraw();
         }
 
         if (mParent) {
@@ -4016,18 +4016,18 @@ void View::buildDrawingCacheImpl(bool autoScale){
     int width = mRight - mLeft;
     int height = mBottom - mTop;
 
-    bool scalingRequired = mAttachInfo && mAttachInfo->mScalingRequired;
+    const bool scalingRequired = mAttachInfo && mAttachInfo->mScalingRequired;
 
     if (autoScale && scalingRequired) {
         width = (int) ((width * mAttachInfo->mApplicationScale) + 0.5f);
         height = (int) ((height * mAttachInfo->mApplicationScale) + 0.5f);
     }
 
-    bool opaque = mDrawingCacheBackgroundColor != 0 || isOpaque();
-    bool use32BitCache = mAttachInfo && mAttachInfo->mUse32BitDrawingCache;
+    const bool opaque = mDrawingCacheBackgroundColor != 0 || isOpaque();
+    const bool use32BitCache = mAttachInfo && mAttachInfo->mUse32BitDrawingCache;
 
-    long projectedBitmapSize = width * height * (opaque && !use32BitCache ? 2 : 4);
-    long drawingCacheSize =  ViewConfiguration::get(mContext).getScaledMaximumDrawingCacheSize();
+    const long projectedBitmapSize = width * height * (opaque && !use32BitCache ? 2 : 4);
+    const long drawingCacheSize =  ViewConfiguration::get(mContext).getScaledMaximumDrawingCacheSize();
     if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
         if (width > 0 && height > 0) {
             LOG(WARN)<<this<<":"<<getId()<<" not displayed because it is too large to fit into a software layer (or drawing cache), needs "
@@ -4264,6 +4264,10 @@ void View::invalidate(bool invalidateCache){
  
 void View::postInvalidate(){
     postDelayed([this](){ invalidate(true);},30);
+}
+
+void View::cleanupDraw(){
+    //TODO
 }
 
 void View::postInvalidateOnAnimation(){

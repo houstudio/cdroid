@@ -6,6 +6,8 @@
 
 namespace cdroid{
 
+class Object{
+};
 template<typename R,typename... Args>
 class CallbackBase{
 private:
