@@ -255,10 +255,14 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     Drawable*right =ctx->getDrawable(attrs,"drawableRight");
     Drawable* top  =ctx->getDrawable(attrs,"drawableTop");
     Drawable*bottom=ctx->getDrawable(attrs,"drawableBottom");
-    setCompoundDrawables(left,top,right,bottom);
+    Drawable* start=ctx->getDrawable(attrs,"drawableStart");
+    Drawable*  end =ctx->getDrawable(attrs,"drawableEnd");
+
+    setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
+    setRelativeDrawablesIfNeeded(start, end);
 
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
-    
+   
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
 
@@ -270,9 +274,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setHintTextColor(0xFFFFFFFF);
     
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
-    setEllipsize(attrs.getInt("ellipsize",Layout::ELLIPSIS_NONE));
-    //Drawable*start =ctx->getDrawable(attrs,"drawableStart");
-    //Drawable* end  =ctx->getDrawable(attrs,"drawableEnd");
+    setEllipsize(attrs.getInt("ellipsize",std::map<const std::string,int>{
+        {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
+        {"end" ,Layout::ELLIPSIS_END},{"marquee",Layout::ELLIPSIS_MARQUEE}
+      },Layout::ELLIPSIS_NONE));
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){
@@ -945,6 +950,45 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, 
             context->getDrawable(right),context->getDrawable(bottom));    
 }
 
+void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
+    if (start||end) {
+        Drawables* dr = mDrawables;
+        if (dr == nullptr) {
+            mDrawables = dr = new Drawables(getContext());
+        }
+        mDrawables->mOverride = true;
+        Rect compoundRect = dr->mCompoundRect;
+        std::vector<int> state = getDrawableState();
+        if (start) {
+            start->setBounds(0, 0, start->getIntrinsicWidth(), start->getIntrinsicHeight());
+            start->setState(state);
+            compoundRect=start->getBounds();
+            start->setCallback(this);
+
+            dr->mDrawableStart = start;
+            dr->mDrawableSizeStart = compoundRect.width;
+            dr->mDrawableHeightStart = compoundRect.height;
+        } else {
+            dr->mDrawableSizeStart = dr->mDrawableHeightStart = 0;
+        }
+        if (end){
+            end->setBounds(0, 0, end->getIntrinsicWidth(), end->getIntrinsicHeight());
+            end->setState(state);
+            compoundRect=end->getBounds();
+            end->setCallback(this);
+
+            dr->mDrawableEnd = end;
+            dr->mDrawableSizeEnd = compoundRect.width;
+            dr->mDrawableHeightEnd = compoundRect.height;
+        } else {
+            dr->mDrawableSizeEnd = dr->mDrawableHeightEnd = 0;
+        }
+        resetResolvedDrawables();
+        resolveDrawables();
+        applyCompoundDrawableTint();
+    }
+}
+
 void TextView::drawableStateChanged(){
     View::drawableStateChanged();
 
@@ -1004,6 +1048,7 @@ void TextView::updateTextColors(){
 void TextView::setMarqueeRepeatLimit(int marqueeLimit) {
     mMarqueeRepeatLimit = marqueeLimit;
 }
+
 int TextView::getMarqueeRepeatLimit()const{
     return mMarqueeRepeatLimit;
 }

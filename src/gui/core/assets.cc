@@ -103,15 +103,17 @@ static bool guessExtension(ZIPArchive*pak,std::string&ioname){
     return ret;
 }
 
-//"@[+][package:]id/filname"
+//"@[package:][+]id/filname"
 void Assets::parseResource(const std::string&fullResId,std::string*res,std::string*ns)const{
     std::string relname,pkg=mName;
     std::string fullid = fullResId;
-    if(fullid[0]=='@'){//remove @+
-        fullid = fullid.substr(1);
-        if(fullid[0]=='+')fullid = fullid.substr(1);
+    size_t pos=fullid.find('@');
+    if(pos!=std::string::npos){//remove @+
+        fullid = fullid.erase(pos,1);
+        pos=fullid.find('+');
+        if(pos!=std::string::npos)fullid = fullid.erase(pos,1);
     }
-    size_t pos=fullid.find(":");
+    pos=fullid.find(":");
     if(pos != std::string::npos){
         pkg = fullid.substr(0,pos);
         relname= fullid.substr(pos+1);
@@ -267,8 +269,8 @@ int Assets::getArray(const std::string&resname,std::vector<std::string>&out){
     auto it=mArraies.find(resname);
     if(it!=mArraies.end()){
         out=it->second;
-		return out.size();
-	}
+        return out.size();
+    }
     return 0;
 }
 

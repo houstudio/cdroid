@@ -92,7 +92,7 @@ private:
     void setRawTextSize(float size, bool shouldRequestLayout);
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
-
+    void setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) ;
     void sendBeforeTextChanged(const std::wstring& text, int start, int before, int after);
     void sendAfterTextChanged(std::wstring& text);
     void sendOnTextChanged(const std::wstring& text, int start, int before, int after);

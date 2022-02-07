@@ -200,8 +200,8 @@ protected:
             int parentHeightMeasureSpec, int heightUsed);
     virtual bool drawChild(Canvas& canvas, View* child, long drawingTime);
 
-    void onDebugDrawMargins(Canvas& canvas);
-    void onDebugDraw(Canvas& canvas);
+    virtual void onDebugDrawMargins(Canvas& canvas);
+    virtual void onDebugDraw(Canvas& canvas);
     void drawInvalidateRegion(Canvas&canvas);
     void dispatchDraw(Canvas&)override;
 
@@ -220,7 +220,7 @@ protected:
     void finishAnimatingView(View* view, Animation* animation);
     bool isViewTransitioning(View* view);
     void attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count);
-    void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
+    virtual void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
 public:
     ViewGroup(int w,int h);
     ViewGroup(int x,int y,int w,int h);
