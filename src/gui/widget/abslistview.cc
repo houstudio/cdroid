@@ -407,7 +407,7 @@ void AbsListView::setCacheColorHint(int color) {
         mCacheColorHint = color;
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
-            //getChildAt(i)->setDrawingCacheBackgroundColor(color);
+            getChildAt(i)->setDrawingCacheBackgroundColor(color);
         }
         mRecycler->setCacheColorHint(color);
     }
@@ -1534,7 +1534,7 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
         }
     }
 
-    //if (mCacheColorHint != 0) child->setDrawingCacheBackgroundColor(mCacheColorHint);
+    if (mCacheColorHint != 0) child->setDrawingCacheBackgroundColor(mCacheColorHint);
 
     /*if (child->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         child->setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);

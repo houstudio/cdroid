@@ -326,7 +326,7 @@ void RecycleBin::setCacheColorHint(int color) {
         std::vector<View*>& scrap = mScrapViews[i];
         int scrapCount = scrap.size();
         for (int j = 0; j < scrapCount; j++) {
-            //scrap[j]->setDrawingCacheBackgroundColor(color);
+            scrap[j]->setDrawingCacheBackgroundColor(color);
         }
     }
 
@@ -335,7 +335,7 @@ void RecycleBin::setCacheColorHint(int color) {
     for (int i = 0; i < count; ++i) {
         View* victim = mActiveViews[i];
         if (victim != nullptr) {
-            //victim->setDrawingCacheBackgroundColor(color);
+            victim->setDrawingCacheBackgroundColor(color);
         }
     }
 }

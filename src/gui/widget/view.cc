@@ -2048,7 +2048,7 @@ void View::setOnScrollChangeListener(OnScrollChangeListener l){
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
-    setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
+    //setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
 }
 
 bool View::isDrawingCacheEnabled()const{
@@ -4001,6 +4001,17 @@ RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){
 void View::destroyDrawingCache(){
     mDrawingCache =nullptr;
     mUnscaledDrawingCache =nullptr;
+}
+
+int View::getDrawingCacheBackgroundColor()const{
+    return  mDrawingCacheBackgroundColor;
+}
+
+void View::setDrawingCacheBackgroundColor(int color){
+    if (color != mDrawingCacheBackgroundColor) {
+         mDrawingCacheBackgroundColor = color;
+         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+    }
 }
 
 void View::buildDrawingCache(bool autoScale){

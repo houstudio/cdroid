@@ -1453,7 +1453,7 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
         child->offsetTopAndBottom(childTop - child->getTop());
     }
 
-    //if (mCachingStarted && !child->isDrawingCacheEnabled()) child->setDrawingCacheEnabled(true);
+    if (mCachingStarted && !child->isDrawingCacheEnabled()) child->setDrawingCacheEnabled(true);
 }
 
 bool ListView::canAnimate()const{

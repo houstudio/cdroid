@@ -27,7 +27,7 @@ public:
     };
 private:
     static constexpr int MAX_SCROLL_X =2<<23;
-    static constexpr bool USE_CACHE = false;
+    static constexpr bool USE_CACHE = true;
     static constexpr int DEFAULT_OFFSCREEN_PAGES = 1;
     static constexpr int MAX_SETTLE_DURATION = 600; // ms
     static constexpr int MIN_DISTANCE_FOR_FLING =25; // dips
