@@ -150,11 +150,6 @@ protected:
     constexpr static int PFLAG3_TEMPORARY_DETACH        = 0x2000000;
     constexpr static int PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000;
     constexpr static int PFLAG3_AGGREGATED_VISIBLE      = 0x20000000;
-    enum LayerType{
-        LAYER_TYPE_NONE    =0,
-        LAYER_TYPE_SOFTWARE=1,
-        LAYER_TYPE_HARDWARE=2
-    };
     class AttachInfo{
     public:
         View*mRootView;
@@ -290,6 +285,11 @@ public:
     constexpr static int OVER_SCROLL_IF_CONTENT_SCROLLS =1;
     constexpr static int OVER_SCROLL_NEVER =2;
 
+    enum LayerType{
+        LAYER_TYPE_NONE    =0,
+        LAYER_TYPE_SOFTWARE=1,
+        LAYER_TYPE_HARDWARE=2
+    };
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);

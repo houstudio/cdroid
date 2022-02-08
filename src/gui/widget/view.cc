@@ -155,6 +155,18 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mID = ctx->getId(attrs.getString("id"));
     mMinWidth = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight= attrs.getDimensionPixelSize("minHeight",0);
+    setLayerType(attrs.getInt("layerType",std::map<const std::string,int>{
+           {"software",LAYER_TYPE_SOFTWARE},{"hardware",LAYER_TYPE_HARDWARE}
+        },LAYER_TYPE_NONE));
+    const int quality=attrs.getInt("drawingCacheQuality",std::map<const std::string,int>{
+           {"auto",(int)DRAWING_CACHE_QUALITY_AUTO,},
+           {"low" ,(int)DRAWING_CACHE_QUALITY_LOW},
+           {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
+    },DRAWING_CACHE_QUALITY_AUTO);
+    if(quality){
+        viewFlagValues|=quality;
+        viewFlagMasks|=DRAWING_CACHE_QUALITY_MASK;
+    }
     mContentDescription=attrs.getString("contentDescription");
     setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
@@ -2048,7 +2060,7 @@ void View::setOnScrollChangeListener(OnScrollChangeListener l){
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
-    //setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
+    setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
 }
 
 bool View::isDrawingCacheEnabled()const{
@@ -2482,14 +2494,14 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     if (drawingWithRenderNode) {
         // Delay getting the display list until animation-driven alpha values are
         // set up and possibly passed on to the view
-        /*renderNode = updateDisplayListIfDirty();
-        if (!renderNode.isValid()) {
+        //renderNode = updateDisplayListIfDirty();
+        if (true){//!renderNode.isValid()) {
             // Uncommon, but possible. If a view is removed from the hierarchy during the call
             // to getDisplayList(), the display list will be marked invalid and we should not
             // try to use it again.
             //renderNode = nullptr;
             drawingWithRenderNode = false;
-        }*/
+        }
     }
     int sx = 0;
     int sy = 0;
@@ -2623,29 +2635,13 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         }
     } else if (cache != nullptr) {
         mPrivateFlags &= ~PFLAG_DIRTY_MASK;
-        LOGV("%p:%d drawing use cache layerType=%d",this,mID,layerType);
-        if (layerType == LAYER_TYPE_NONE/* || mLayerPaint == nullptr*/) {
-            // no layer paint, use temporary paint to draw bitmap
-            /*Paint cachePaint = parent->mCachePaint;
-            if (cachePaint == nullptr) {
-                cachePaint = new Paint();
-                cachePaint.setDither(false);
-                parent->mCachePaint = cachePaint;
-            }*/
-            //cachePaint.setAlpha((int) (alpha * 255));
-            //canvas.drawBitmap(cache, 0.0f, 0.0f, cachePaint);
-        } else {
-            // use layer paint to draw the bitmap, merging the two alphas, but also restore
-            /*int layerPaintAlpha = mLayerPaint.getAlpha();
-            if (alpha < 1) {
-                mLayerPaint.setAlpha((int) (alpha * layerPaintAlpha));
-            }*/
-            //drawBitmap(cache, 0.0f, 0.0f, mLayerPaint);
-            //if (alpha < 1) mLayerPaint.setAlpha(layerPaintAlpha);
-        }
+        canvas.save();
+        canvas.reset_clip();
+        cache->flush();
         canvas.set_source(cache,0,0);
         if(alpha<1)canvas.paint_with_alpha(alpha);
         else canvas.paint();
+        canvas.restore();
     }
     while(restoreTo-->0) {
         canvas.restore();//ToCount(restoreTo);
@@ -4097,22 +4093,8 @@ void View::buildDrawingCacheImpl(bool autoScale){
         clear = mDrawingCacheBackgroundColor != 0;
     }
 
-    RefPtr<Canvas> canvas;
-    if (mAttachInfo) {
-        canvas = mAttachInfo->mCanvas;
-        if (canvas == nullptr) {
-            canvas =std::make_shared<Canvas>(bitmap);
-        }
-        // Temporarily clobber the cached Canvas in case one of our children
-        // is also using a drawing cache. Without this, the children would
-        // steal the canvas by attaching their own bitmap to it and bad, bad
-        // thing would happen (invisible views, corrupted drawings, etc.)
-        mAttachInfo->mCanvas = nullptr;
-    } else {
-        // This case should hopefully never or seldom happen
-        canvas = std::make_shared<Canvas>(bitmap);
-    }
-
+    RefPtr<Canvas> oldCanvas=mAttachInfo?mAttachInfo->mCanvas:nullptr;
+    RefPtr<Canvas> canvas=std::make_shared<Canvas>(bitmap);
     if (clear) {
         canvas->rectangle(0,0,width,height);
         canvas->set_operator(Cairo::Context::Operator::SOURCE);
@@ -4151,7 +4133,7 @@ void View::buildDrawingCacheImpl(bool autoScale){
 
     if (mAttachInfo) {
         // Restore the cached Canvas for our siblings
-        mAttachInfo->mCanvas = canvas;
+        mAttachInfo->mCanvas = oldCanvas;
     }
 }
 

@@ -6,7 +6,7 @@ public:
     void* instantiateItem(ViewGroup* container, int position)override{
         SimpleMonthView*sm=new  SimpleMonthView(1280,560);
         sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
-        container->addView(sm);
+        container->addView(sm).setId(100+position);
         return sm;
     }
     void destroyItem(ViewGroup* container, int position,void* object)override{
