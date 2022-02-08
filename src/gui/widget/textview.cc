@@ -271,7 +271,6 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     mSingleLine=attrs.getBoolean("singleline",true);
-    attrs.dump();
     if(attrs.hasAttribute("textAppearance")){
         TextAppearanceAttributes attributes;
         attributes.readTextAppearance(ctx,attrs);

@@ -15,6 +15,7 @@ public:
     bool hasAttribute(const std::string&key)const;
     int  size()const;
     int  set(const char*atts[],int size=0);
+    std::map<const std::string,std::string>&getEntries();
     int  inherit(const AttributeSet&other);
     const std::string getAttributeValue(const std::string&key)const;
     bool getBoolean(const std::string&key,bool def=false)const;

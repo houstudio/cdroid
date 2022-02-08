@@ -3,8 +3,8 @@
 #include <cdlog.h>
 
 namespace cdroid{
-    #define DEFAULT_FRAME_DELAY 30
-    #define FRAME_CALLBACK_TOKEN 1
+#define DEFAULT_FRAME_DELAY 20
+#define FRAME_CALLBACK_TOKEN 1
 class CallbackRecord {
 public:
     CallbackRecord* next;

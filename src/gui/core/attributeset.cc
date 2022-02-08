@@ -42,6 +42,10 @@ int AttributeSet::set(const char*atts[],int size){
     return mAttrs.size();
 }
 
+std::map<const std::string,std::string>&AttributeSet::getEntries(){
+    return mAttrs;
+}
+
 int AttributeSet::inherit(const AttributeSet&other){
     int inheritedCount=0;
     for(auto it=other.mAttrs.begin();it!=other.mAttrs.end();it++){

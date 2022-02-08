@@ -24,6 +24,8 @@ private:
     void parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
+    void normalizeProperty(const std::string&pkg,std::string&value);
+    void normalizeAttributes(const std::string&pkg,AttributeSet&atts);
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
