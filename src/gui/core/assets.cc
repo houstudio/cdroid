@@ -303,13 +303,14 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
 }
 
 int Assets::getColor(const std::string&refid){
+    std::string name;
     auto it = mColors.find(refid);
     if(it!=mColors.end())
         return it->second;
-    else {
-        std::string name,pkg;
-        parseResource(refid,&name,&pkg);
-        return getColor(pkg+":"+name);
+    else if(refid.find("color")==std::string::npos){//refid is defined as an color reference
+        parseResource(refid,&name,nullptr);
+        name=mTheme.getString(name);
+        return getColor(name);
     }
 }
 
@@ -330,8 +331,9 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
         ZipInputStream zs(zfile);
         return ColorStateList::fromStream(this,zs,resname);
     }else if(!fullresid.empty()){
-        std::ifstream fs(fullresid);
-        return ColorStateList::fromStream(this,fs,resname);
+        const int color=getColor(fullresid);
+        LOGV("%s==%x",fullresid.c_str(),color);
+        return ColorStateList::valueOf(color);
     }
     return nullptr;
 }

@@ -32,6 +32,493 @@
         <item name="needsDefaultBackgrounds">false</item>
     </style>
 
+    <!-- Widget Styles -->
+
+    <style name="Widget">
+        <item name="textAppearance">?textAppearance</item>
+    </style>
+
+    <style name="Widget.AbsListView">
+        <item name="scrollbars">vertical</item>
+        <item name="fadingEdge">vertical</item>
+        <item name="fastScrollStyle">?attr/fastScrollStyle</item>
+        <item name="defaultFocusHighlightEnabled">false</item>
+    </style>
+
+    <style name="Widget.GestureOverlayView">
+        <item name="gestureStrokeWidth">12.0</item>
+        <item name="gestureColor">#ffffff00</item>
+        <item name="uncertainGestureColor">#48ffff00</item>
+        <item name="fadeOffset">420</item>
+        <item name="fadeDuration">150</item>
+        <item name="gestureStrokeLengthThreshold">50.0</item>
+        <item name="gestureStrokeSquarenessThreshold">0.275</item>
+        <item name="gestureStrokeAngleThreshold">40.0</item>
+        <item name="eventsInterceptionEnabled">true</item>
+    </style>
+
+    <style name="Widget.GestureOverlayView.White">
+        <item name="gestureColor">#ff00ff00</item>
+        <item name="uncertainGestureColor">#4800ff00</item>
+    </style>
+
+    <style name="Widget.Button">
+        <item name="background">@drawable/btn_default</item>
+        <item name="focusable">true</item>
+        <item name="clickable">true</item>
+        <item name="textAppearance">?attr/textAppearanceSmallInverse</item>
+        <item name="textColor">@color/primary_text_light</item>
+        <item name="gravity">center_vertical|center_horizontal</item>
+    </style>
+
+    <style name="Widget.Button.Small">
+        <item name="background">@drawable/btn_default_small</item>
+    </style>
+
+    <style name="Widget.Button.Inset">
+        <item name="background">@drawable/button_inset</item>
+    </style>
+
+    <style name="Widget.Button.Transparent">
+        <item name="background">@drawable/btn_default_transparent</item>
+        <item name="textAppearance">?attr/textAppearanceSmall</item>
+        <item name="textColor">@color/white</item>
+    </style>
+
+    <style name="Widget.CompoundButton">
+        <item name="focusable">true</item>
+        <item name="clickable">true</item>
+        <item name="textAppearance">?attr/textAppearance</item>
+        <item name="textColor">?attr/textColorPrimaryDisableOnly</item>
+        <item name="gravity">center_vertical|start</item>
+    </style>
+
+    <style name="Widget.CompoundButton.CheckBox">
+        <item name="button">?attr/listChoiceIndicatorMultiple</item>
+    </style>
+
+    <style name="Widget.CompoundButton.RadioButton">
+        <item name="button">?attr/listChoiceIndicatorSingle</item>
+    </style>
+
+    <style name="Widget.CompoundButton.Star">
+        <item name="button">@drawable/btn_star</item>
+    </style>
+
+    <style name="Widget.Button.Toggle">
+        <item name="background">@drawable/btn_toggle_bg</item>
+        <item name="textOn">@string/capital_on</item>
+        <item name="textOff">@string/capital_off</item>
+        <item name="disabledAlpha">?attr/disabledAlpha</item>
+    </style>
+
+    <style name="Widget.StackView">
+        <item name="resOutColor">@color/holo_blue_light</item>
+        <item name="clickColor">@color/holo_blue_light</item>
+    </style>
+
+    <style name="Widget.ProgressBar">
+        <item name="indeterminateOnly">true</item>
+        <item name="indeterminateDrawable">@drawable/progress_medium_white</item>
+        <item name="indeterminateBehavior">repeat</item>
+        <item name="indeterminateDuration">3500</item>
+        <item name="minWidth">48dip</item>
+        <item name="maxWidth">48dip</item>
+        <item name="minHeight">48dip</item>
+        <item name="maxHeight">48dip</item>
+        <item name="mirrorForRtl">false</item>
+    </style>
+
+    <style name="Widget.ProgressBar.Large">
+        <item name="indeterminateDrawable">@drawable/progress_large_white</item>
+        <item name="minWidth">76dip</item>
+        <item name="maxWidth">76dip</item>
+        <item name="minHeight">76dip</item>
+        <item name="maxHeight">76dip</item>
+    </style>
+
+    <style name="Widget.ProgressBar.Small">
+        <item name="indeterminateDrawable">@drawable/progress_small_white</item>
+        <item name="minWidth">16dip</item>
+        <item name="maxWidth">16dip</item>
+        <item name="minHeight">16dip</item>
+        <item name="maxHeight">16dip</item>
+    </style>
+
+    <style name="Widget.ProgressBar.Inverse">
+        <item name="indeterminateDrawable">@drawable/progress_medium</item>
+    </style>
+
+    <style name="Widget.ProgressBar.Large.Inverse">
+        <item name="indeterminateDrawable">@drawable/progress_large</item>
+    </style>
+
+    <style name="Widget.ProgressBar.Small.Inverse">
+        <item name="indeterminateDrawable">@drawable/progress_small</item>
+    </style>
+
+    <style name="Widget.ProgressBar.Small.Title">
+        <item name="indeterminateDrawable">@drawable/progress_small_titlebar</item>
+    </style>
+
+    <style name="Widget.ProgressBar.Horizontal">
+        <item name="indeterminateOnly">false</item>
+        <item name="progressDrawable">@drawable/progress_horizontal</item>
+        <item name="indeterminateDrawable">@drawable/progress_indeterminate_horizontal</item>
+        <item name="minHeight">20dip</item>
+        <item name="maxHeight">20dip</item>
+        <item name="mirrorForRtl">true</item>
+    </style>
+
+    <style name="Widget.SeekBar">
+        <item name="indeterminateOnly">false</item>
+        <item name="progressDrawable">@drawable/progress_horizontal</item>
+        <item name="indeterminateDrawable">@drawable/progress_horizontal</item>
+        <item name="minHeight">20dip</item>
+        <item name="maxHeight">20dip</item>
+        <item name="thumb">@drawable/seek_thumb</item>
+        <item name="thumbOffset">8dip</item>
+        <item name="focusable">true</item>
+        <item name="mirrorForRtl">true</item>
+    </style>
+
+    <style name="Widget.RatingBar">
+        <item name="indeterminateOnly">false</item>
+        <item name="progressDrawable">@drawable/ratingbar_full</item>
+        <item name="indeterminateDrawable">@drawable/ratingbar_full</item>
+        <item name="minHeight">57dip</item>
+        <item name="maxHeight">57dip</item>
+        <item name="thumb">@null</item>
+        <item name="mirrorForRtl">true</item>
+    </style>
+
+    <style name="Widget.RatingBar.Indicator">
+        <item name="indeterminateOnly">false</item>
+        <item name="progressDrawable">@drawable/ratingbar</item>
+        <item name="indeterminateDrawable">@drawable/ratingbar</item>
+        <item name="minHeight">38dip</item>
+        <item name="maxHeight">38dip</item>
+        <item name="thumb">@null</item>
+        <item name="isIndicator">true</item>
+    </style>
+
+    <style name="Widget.RatingBar.Small">
+        <item name="indeterminateOnly">false</item>
+        <item name="progressDrawable">@drawable/ratingbar_small</item>
+        <item name="indeterminateDrawable">@drawable/ratingbar_small</item>
+        <item name="minHeight">14dip</item>
+        <item name="maxHeight">14dip</item>
+        <item name="thumb">@null</item>
+        <item name="isIndicator">true</item>
+    </style>
+
+    <style name="Widget.TextView">
+        <item name="textAppearance">?attr/textAppearanceSmall</item>
+        <item name="textSelectHandleLeft">?attr/textSelectHandleLeft</item>
+        <item name="textSelectHandleRight">?attr/textSelectHandleRight</item>
+        <item name="textSelectHandle">?attr/textSelectHandle</item>
+        <item name="textEditPasteWindowLayout">?attr/textEditPasteWindowLayout</item>
+        <item name="textEditNoPasteWindowLayout">?attr/textEditNoPasteWindowLayout</item>
+        <item name="textEditSidePasteWindowLayout">?attr/textEditSidePasteWindowLayout</item>
+        <item name="textEditSideNoPasteWindowLayout">?attr/textEditSideNoPasteWindowLayout</item>
+        <item name="textEditSuggestionItemLayout">?attr/textEditSuggestionItemLayout</item>
+        <item name="textEditSuggestionContainerLayout">?attr/textEditSuggestionContainerLayout</item>
+        <item name="textEditSuggestionHighlightStyle">?attr/textEditSuggestionHighlightStyle</item>
+        <item name="textCursorDrawable">?attr/textCursorDrawable</item>
+        <item name="breakStrategy">high_quality</item>
+        <item name="hyphenationFrequency">normal</item>
+    </style>
+
+    <style name="Widget.CheckedTextView">
+        <item name="textAlignment">viewStart</item>
+        <item name="breakStrategy">high_quality</item>
+        <item name="hyphenationFrequency">normal</item>
+    </style>
+
+    <style name="Widget.TextView.ListSeparator">
+        <item name="background">@drawable/dark_header_dither</item>
+        <item name="layout_width">match_parent</item>
+        <item name="layout_height">wrap_content</item>
+        <item name="textStyle">bold</item>
+        <item name="textColor">?textColorSecondary</item>
+        <item name="textSize">14sp</item>
+        <item name="gravity">center_vertical</item>
+        <item name="paddingStart">8dip</item>
+    </style>
+
+    <style name="Widget.TextView.ListSeparator.White">
+        <item name="textColor">?textColorPrimaryInverse</item>
+        <item name="background">@drawable/light_header_dither</item>
+    </style>
+
+    <style name="Widget.EditText">
+        <item name="focusable">true</item>
+        <item name="focusableInTouchMode">true</item>
+        <item name="clickable">true</item>
+        <item name="background">?attr/editTextBackground</item>
+        <item name="textAppearance">?attr/textAppearanceMediumInverse</item>
+        <item name="textColor">?attr/editTextColor</item>
+        <item name="gravity">center_vertical</item>
+        <item name="breakStrategy">simple</item>
+        <item name="hyphenationFrequency">normal</item>
+        <item name="defaultFocusHighlightEnabled">false</item>
+    </style>
+
+    <style name="Widget.ExpandableListView" parent="Widget.ListView">
+        <item name="groupIndicator">@drawable/expander_group</item>
+        <item name="indicatorLeft">?attr/expandableListPreferredItemIndicatorLeft</item>
+        <item name="indicatorRight">?attr/expandableListPreferredItemIndicatorRight</item>
+        <item name="childDivider">@drawable/divider_horizontal_dark_opaque</item>
+    </style>
+
+    <style name="Widget.ExpandableListView.White">
+        <item name="childDivider">@drawable/divider_horizontal_bright_opaque</item>
+    </style>
+
+    <style name="Widget.FragmentBreadCrumbs">
+        <item name="padding">4dp</item>
+        <item name="animateLayoutChanges">true</item>
+        <item name="itemLayout">@layout/fragment_bread_crumb_item</item>
+        <item name="itemColor">@null</item>
+    </style>
+
+    <style name="Widget.ImageWell">
+        <item name="background">@drawable/panel_picture_frame_background</item>
+    </style>
+
+    <style name="Widget.ImageButton">
+        <item name="focusable">true</item>
+        <item name="clickable">true</item>
+        <item name="scaleType">center</item>
+        <item name="background">@drawable/btn_default</item>
+    </style>
+
+    <style name="Widget.CalendarView">
+        <item name="showWeekNumber">true</item>
+        <item name="minDate">01/01/1900</item>
+        <item name="maxDate">12/31/2100</item>
+        <item name="shownWeekCount">6</item>
+        <item name="selectedWeekBackgroundColor">#330099FF</item>
+        <item name="focusedMonthDateColor">#FFFFFFFF</item>
+        <item name="unfocusedMonthDateColor">#66FFFFFF</item>
+        <item name="weekNumberColor">#33FFFFFF</item>
+        <item name="weekSeparatorLineColor">#19FFFFFF</item>
+        <item name="selectedDateVerticalBar">@drawable/day_picker_week_view_dayline_holo</item>
+        <item name="weekDayTextAppearance">@style/TextAppearance.Small.CalendarViewWeekDayView</item>
+        <item name="dateTextAppearance">?attr/textAppearanceSmall</item>
+        <item name="calendarViewMode">holo</item>
+    </style>
+
+    <style name="Widget.NumberPicker">
+        <item name="internalLayout">@layout/number_picker</item>
+        <item name="orientation">vertical</item>
+        <item name="fadingEdge">vertical</item>
+        <item name="fadingEdgeLength">50dip</item>
+    </style>
+
+    <style name="Widget.TimePicker">
+        <item name="timePickerMode">spinner</item>
+        <item name="legacyLayout">@layout/time_picker_legacy</item>
+    </style>
+
+    <style name="Widget.DatePicker">
+        <item name="datePickerMode">spinner</item>
+        <item name="legacyLayout">@layout/date_picker_legacy</item>
+        <item name="calendarViewShown">false</item>
+    </style>
+
+    <style name="Widget.AutoCompleteTextView" parent="Widget.EditText">
+        <item name="completionHintView">@layout/simple_dropdown_hint</item>
+        <item name="completionThreshold">2</item>
+        <item name="dropDownSelector">@drawable/list_selector_background</item>
+        <item name="popupBackground">@drawable/spinner_dropdown_background</item>
+        <item name="dropDownVerticalOffset">-6dip</item>
+        <item name="dropDownHorizontalOffset">0dip</item>
+        <item name="dropDownWidth">wrap_content</item>
+    </style>
+
+    <style name="Widget.Spinner">
+        <item name="background">@drawable/btn_dropdown</item>
+        <item name="clickable">true</item>
+        <item name="spinnerMode">dialog</item>
+
+        <item name="dropDownSelector">@drawable/list_selector_background</item>
+        <item name="popupBackground">@drawable/spinner_dropdown_background</item>
+        <item name="dropDownVerticalOffset">-10dip</item>
+        <item name="dropDownHorizontalOffset">0dip</item>
+        <item name="dropDownWidth">wrap_content</item>
+        <item name="popupPromptView">@layout/simple_dropdown_hint</item>
+        <item name="gravity">center</item>
+    </style>
+
+    <style name="Widget.Spinner.DropDown">
+        <item name="spinnerMode">dropdown</item>
+    </style>
+
+    <style name="Widget.TextView.PopupMenu">
+        <item name="clickable">true</item>
+        <item name="textAppearance">@style/TextAppearance.Widget.TextView.PopupMenu</item>
+    </style>
+
+    <style name="Widget.TextView.SpinnerItem">
+        <item name="textAppearance">@style/TextAppearance.Widget.TextView.SpinnerItem</item>
+    </style>
+
+    <style name="Widget.DropDownItem">
+        <item name="textAppearance">@style/TextAppearance.Widget.DropDownItem</item>
+        <item name="paddingStart">@dimen/dropdownitem_text_padding_left</item>
+        <item name="paddingEnd">@dimen/dropdownitem_text_padding_right</item>
+        <item name="gravity">center_vertical</item>
+    </style>
+
+    <style name="Widget.DropDownItem.Spinner">
+        <item name="checkMark">?attr/listChoiceIndicatorSingle</item>
+    </style>
+
+    <style name="Widget.ScrollView">
+        <item name="scrollbars">vertical</item>
+        <item name="fadingEdge">vertical</item>
+        <item name="focusableInTouchMode">@bool/config_focusScrollContainersInTouchMode</item>
+    </style>
+
+    <style name="Widget.HorizontalScrollView">
+        <item name="scrollbars">horizontal</item>
+        <item name="fadingEdge">horizontal</item>
+        <item name="focusableInTouchMode">@bool/config_focusScrollContainersInTouchMode</item>
+    </style>
+
+    <style name="Widget.ListView" parent="Widget.AbsListView">
+        <item name="listSelector">@drawable/list_selector_background</item>
+        <item name="cacheColorHint">?attr/colorBackgroundCacheHint</item>
+        <item name="divider">@drawable/divider_horizontal_dark_opaque</item>
+    </style>
+
+    <style name="Widget.ListView.White" parent="Widget.AbsListView">
+        <item name="listSelector">@drawable/list_selector_background</item>
+        <item name="cacheColorHint">?attr/colorBackgroundCacheHint</item>
+        <item name="divider">@drawable/divider_horizontal_bright_opaque</item>
+    </style>
+
+    <style name="Widget.ListView.DropDown">
+    	<item name="cacheColorHint">@null</item>
+        <item name="divider">@drawable/divider_horizontal_bright_opaque</item>
+    </style>
+
+    <style name="Widget.ListView.Menu" parent="Widget.Holo.ListView">
+		<item name="cacheColorHint">@null</item>
+        <item name="scrollbars">vertical</item>
+        <item name="fadingEdge">none</item>
+        <!-- Light background for the list in menus, so the divider for bright themes -->
+        <item name="divider">@drawable/divider_horizontal_dark</item>
+    </style>
+
+    <style name="Widget.GridView" parent="Widget.AbsListView">
+        <item name="listSelector">@drawable/grid_selector_background</item>
+    </style>
+
+    <style name="Widget.WebView">
+        <item name="focusable">true</item>
+        <item name="focusableInTouchMode">true</item>
+        <item name="scrollbars">horizontal|vertical</item>
+    </style>
+
+    <style name="Widget.WebTextView">
+        <item name="focusable">true</item>
+        <item name="focusableInTouchMode">true</item>
+        <item name="clickable">true</item>
+        <item name="completionHintView">@layout/simple_dropdown_item_1line</item>
+        <item name="textAppearance">?attr/textAppearanceLargeInverse</item>
+        <item name="completionThreshold">2</item>
+        <item name="dropDownSelector">@drawable/list_selector_background</item>
+        <item name="popupBackground">@drawable/spinner_dropdown_background</item>
+        <item name="textCursorDrawable">@drawable/text_cursor_holo_light</item>
+    </style>
+
+    <style name="Widget.TabWidget">
+        <item name="textAppearance">@style/TextAppearance.Widget.TabWidget</item>
+        <item name="ellipsize">marquee</item>
+        <item name="singleLine">true</item>
+        <item name="tabStripLeft">@drawable/tab_bottom_left</item>
+        <item name="tabStripRight">@drawable/tab_bottom_right</item>
+        <item name="tabStripEnabled">true</item>
+        <item name="divider">@null</item>
+        <item name="gravity">fill_horizontal|center_vertical</item>
+        <item name="tabLayout">@layout/tab_indicator</item>
+    </style>
+
+    <style name="Widget.Gallery">
+        <item name="fadingEdge">none</item>
+        <item name="gravity">center_vertical</item>
+        <item name="spacing">-20dip</item>
+        <item name="unselectedAlpha">0.85</item>
+    </style>
+
+    <style name="Widget.PopupWindow">
+        <item name="popupBackground">@drawable/editbox_dropdown_background_dark</item>
+        <item name="popupAnimationStyle">@style/Animation.PopupWindow</item>
+    </style>
+
+    <style name="Widget.KeyboardView" parent="Widget">
+        <item name="background">@drawable/keyboard_background</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key</item>
+        <item name="keyTextSize">22sp</item>
+        <item name="keyTextColor">#FFFFFFFF</item>
+        <item name="keyPreviewLayout">@layout/keyboard_key_preview</item>
+        <item name="keyPreviewOffset">-12dip</item>
+        <item name="keyPreviewHeight">80dip</item>
+        <item name="labelTextSize">14sp</item>
+        <item name="popupLayout">@layout/keyboard_popup_keyboard</item>
+        <item name="verticalCorrection">-10dip</item>
+        <item name="shadowColor">#BB000000</item>
+        <item name="shadowRadius">2.75</item>
+    </style>
+
+    <style name="Widget.GenericQuickContactBadge">
+        <item name="background">@null</item>
+        <item name="clickable">true</item>
+        <item name="scaleType">fitCenter</item>
+        <item name="src">@drawable/ic_contact_picture</item>
+    </style>
+
+    <style name="Widget.QuickContactBadge" parent="Widget.GenericQuickContactBadge">
+        <item name="layout_width">64dip</item>
+        <item name="layout_height">64dip</item>
+    </style>
+
+    <style name="Widget.QuickContactBadgeSmall" parent="Widget.GenericQuickContactBadge">
+        <item name="layout_width">40dip</item>
+        <item name="layout_height">40dip</item>
+    </style>
+
+    <style name="Widget.QuickContactBadge.WindowSmall">
+        <item name="quickContactWindowSize">modeSmall</item>
+    </style>
+
+    <style name="Widget.QuickContactBadge.WindowMedium">
+        <item name="quickContactWindowSize">modeMedium</item>
+    </style>
+
+    <style name="Widget.QuickContactBadge.WindowLarge">
+        <item name="quickContactWindowSize">modeLarge</item>
+    </style>
+
+    <style name="Widget.QuickContactBadgeSmall.WindowSmall">
+        <item name="quickContactWindowSize">modeSmall</item>
+    </style>
+
+    <style name="Widget.QuickContactBadgeSmall.WindowMedium">
+        <item name="quickContactWindowSize">modeMedium</item>
+    </style>
+
+    <style name="Widget.QuickContactBadgeSmall.WindowLarge">
+        <item name="quickContactWindowSize">modeLarge</item>
+    </style>
+
+    <style name="Widget.CompoundButton.Switch">
+        <item name="textOn">@string/capital_on</item>
+        <item name="textOff">@string/capital_off</item>
+    </style>
+
     <!-- Text Appearances -->
     <style name="TextAppearance">
         <item name="textColor">?textColorPrimary</item>
@@ -206,5 +693,16 @@
     <style name="TextAppearance.SuggestionHighlight">
         <item name="textSize">18sp</item>
         <item name="textColor">@color/suggestion_highlight_text</item>
+    </style>
+
+    <!-- Style you can use with a container (typically a horizontal
+         LinearLayout) to get the standard "button bar" background and
+         spacing. @hide -->
+    <style name="ButtonBar">
+        <item name="paddingTop">5dip</item>
+        <item name="paddingStart">4dip</item>
+        <item name="paddingEnd">4dip</item>
+        <item name="paddingBottom">1dip</item>
+        <item name="background">@cdroid:mipmap/bottom_bar</item>
     </style>
 </resources>

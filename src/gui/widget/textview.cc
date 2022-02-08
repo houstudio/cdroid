@@ -233,7 +233,8 @@ TextAppearanceAttributes::TextAppearanceAttributes(){
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&att){
     const std::string ta=att.getString("textAppearance");
     const AttributeSet atts=ctx->obtainStyledAttributes(ta);
-    mTextColorHighlight = atts.getColor("textColorHighlight",mTextColorHighlight);
+
+    mTextColorHighlight = ctx->getColor(atts.getString("textColorHighlight"));
     mTextColor = ctx->getColorStateList(atts.getString("textColor"));
     mTextColorHint = ctx->getColorStateList(atts.getString("textColorHint"));
     mTextColorLink = ctx->getColorStateList(atts.getString("textColorLink"));
@@ -255,9 +256,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     
     Drawable* left =ctx->getDrawable(attrs,"drawableLeft");
     Drawable*right =ctx->getDrawable(attrs,"drawableRight");
-    Drawable* top  =ctx->getDrawable(attrs,"drawableTop");
+    Drawable*  top =ctx->getDrawable(attrs,"drawableTop");
     Drawable*bottom=ctx->getDrawable(attrs,"drawableBottom");
-    Drawable* start=ctx->getDrawable(attrs,"drawableStart");
+    Drawable*start =ctx->getDrawable(attrs,"drawableStart");
     Drawable*  end =ctx->getDrawable(attrs,"drawableEnd");
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);

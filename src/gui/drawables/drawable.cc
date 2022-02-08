@@ -288,20 +288,11 @@ Drawable*Drawable::createItemDrawable(Context*ctx,const AttributeSet&atts){
     resname=atts.getString("drawable");
     if(resname.empty())
         return nullptr;
-    std::vector<NinePatchBlock>horz,vert;
     
     if(resname.find("xml")!=std::string::npos){
         return Drawable::inflate(ctx,resname);
     }
-    std::unique_ptr<std::istream>is=ctx->getInputStream(resname);
-    if(is!=nullptr&&is->good())
-        img=ImageSurface::create_from_stream(*is);
-    if(img==nullptr)
-        return nullptr;
-    else if(TextUtils::endWith(resname,"9.png"))
-        return new NinePatchDrawable(img);
-    else
-        return new BitmapDrawable(img);
+    return ctx->getDrawable(resname);
 }
 
 static std::map<const std::string,DrawableParser>drawableParsers={
