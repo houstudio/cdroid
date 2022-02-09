@@ -70,10 +70,13 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     }while(c>=0);
 
     if(argc&&argv){
-       spt_init(argc,(char**)argv);
-       setName(argv[0]);
+        spt_init(argc,(char**)argv);
+        setName(argv[0]);
     }
-
+    if(hasArg("debug")){
+        ViewGroup::DEBUG_DRAW=true;
+        View::DEBUG_DRAW=true;
+    }
     setOpacity(getArgAsInt("alpha",255));
     InputEventSource*inputsource=new InputEventSource(getArg("record",""));
     addEventHandler(inputsource);

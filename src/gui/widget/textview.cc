@@ -242,9 +242,10 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
 
     mShadowColor = atts.getInt("shadowColor",mShadowColor);
-    mShadowDx =atts.getInt("shadowDx",mShadowDx);
-    mShadowDy =atts.getInt("shadowDy",mShadowDy);
+    mShadowDx = atts.getInt("shadowDx",mShadowDx);
+    mShadowDy = atts.getInt("shadowDy",mShadowDy);
     mShadowRadius = atts.getInt("shadowRadius",mShadowRadius);
+    mFontFamily   = atts.getString("fontFamily");
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TextView::TextView(Context*ctx,const AttributeSet& attrs)

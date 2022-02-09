@@ -16,7 +16,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     setOrientation(VERTICAL);//HORIZONTAL);
 
     LayoutInflater*inflater=LayoutInflater::from(mContext);
-    inflater->inflate("cdroid:layout/number_picker.xml",this);
+    inflater->inflate("cdroid:layout/number_picker.xml",this,true);
     delete inflater;
    
     if(!mHasSelectorWheel){
