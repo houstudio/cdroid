@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_selected="true"
+          cdroid:color="?attr/textColorPrimary" />
+    <item cdroid:color="?attr/textColorSecondary" />
+</selector>

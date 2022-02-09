@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:alpha="@dimen/highlight_alpha_material_dark"
+          cdroid:color="@color/foreground_material_dark" />
+</selector>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item
+        cdroid:state_enabled="false"
+        cdroid:state_activated="true"
+        cdroid:color="?attr/textColorPrimaryInverse"
+        cdroid:alpha="?attr/disabledAlpha" />
+    <item
+        cdroid:state_enabled="false"
+        cdroid:color="?attr/textColorPrimary"
+        cdroid:alpha="?attr/disabledAlpha" />
+    <item
+        cdroid:state_activated="true"
+        cdroid:color="?attr/textColorPrimaryInverse" />
+    <item
+        cdroid:color="?attr/textColorPrimary" />
+</selector>

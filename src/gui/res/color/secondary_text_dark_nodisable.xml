@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_selected="true" cdroid:color="@cdroid:color/dim_foreground_dark_inverse"/>
+    <item cdroid:state_activated="true" cdroid:color="@cdroid:color/bright_foreground_dark_inverse"/>
+    <item cdroid:color="@cdroid:color/dim_foreground_dark"/> <!-- not selected -->
+</selector>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Used for the text of a borderless colored button. -->
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_enabled="false"
+          cdroid:alpha="?attr/disabledAlpha"
+          cdroid:color="?attr/textColorSecondary" />
+    <item cdroid:color="?attr/colorAccent"/>
+</selector>

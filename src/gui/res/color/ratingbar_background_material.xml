@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item
+        cdroid:state_pressed="true"
+        cdroid:color="?attr/colorControlActivated"
+        cdroid:alpha="?attr/disabledAlpha" />
+    <item
+        cdroid:state_focused="true"
+        cdroid:color="?attr/colorControlActivated"
+        cdroid:alpha="?attr/disabledAlpha" />
+    <item
+        cdroid:color="?attr/colorControlNormal"
+        cdroid:alpha="?attr/disabledAlpha" />
+</selector>

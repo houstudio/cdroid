@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_enabled="false" cdroid:color="@cdroid:color/bright_foreground_dark_disabled"/>
+    <item cdroid:color="@cdroid:color/bright_foreground_dark"/>
+</selector>
+

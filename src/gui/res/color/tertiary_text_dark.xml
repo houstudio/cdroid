@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_enabled="false" cdroid:color="#808080"/>
+    <item cdroid:state_window_focused="false" cdroid:color="#808080"/>
+    <item cdroid:state_pressed="true" cdroid:color="#808080"/>
+    <item cdroid:state_selected="true" cdroid:color="@cdroid:color/dim_foreground_light"/>
+    <item cdroid:color="#808080"/> <!-- not selected -->
+</selector>
+

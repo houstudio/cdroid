@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_focused="false" cdroid:color="@cdroid:color/bright_foreground_light"/> <!-- unfocused -->
+    <item cdroid:color="@cdroid:color/bright_foreground_light"/>
+</selector>

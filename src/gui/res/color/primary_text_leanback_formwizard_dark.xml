@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_enabled="false"
+        cdroid:alpha="@dimen/disabled_alpha_leanback_formwizard"
+        cdroid:color="@color/primary_text_leanback_formwizard_default_dark"/>
+    <item cdroid:color="@color/primary_text_leanback_formwizard_default_dark"/>
+</selector>
