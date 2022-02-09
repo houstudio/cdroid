@@ -27,7 +27,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
         mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     }
    
-    mInputText =(EditText*)findViewById(0);
+    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
         mInputText->setText("123");
@@ -667,7 +667,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     // draw the selector wheel
     std::vector<int>& selectorIndices = mSelectorIndices;
     ColorStateList* colors = mInputText->getTextColors();
-    int selectorWheelColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
+    const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
     Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};

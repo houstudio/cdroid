@@ -64,7 +64,10 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool att
 typedef struct{
     Context*ctx;
     XML_Parser parser;
+    bool attachToRoot;
+    ViewGroup* root;
     std::vector<View*>views;//the first element is rootview setted by inflate
+    std::vector<int>flags;
     ViewGroup*returnedView;
     int parsedView;
 }WindowParserData;
@@ -73,11 +76,22 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     WindowParserData*pd=(WindowParserData*)userData;
     AttributeSet atts(satts);
     LayoutInflater::ViewInflater inflater=LayoutInflater::getInflater(name);
-    ViewGroup*parent=nullptr;
+    ViewGroup*parent=pd->root;
     atts.setContext(pd->ctx);
     if(pd->views.size())
         parent=dynamic_cast<ViewGroup*>(pd->views.back());
-    if(strcmp(name,"merge")==0)return;
+    if(strcmp(name,"merge")==0){
+        pd->views.push_back(parent);
+        pd->flags.push_back(1);
+        if(pd->root==nullptr|| !pd->attachToRoot)
+            throw "<merge /> can be used only with a valid ViewGroup root and attachToRoot=true";
+        return ;
+    }
+    if(strcmp(name,"include")==0){
+        const std::string layout=atts.getString("layout");
+        LayoutInflater::from(pd->ctx)->inflate(layout,parent,true);
+        return;
+    }
     if(inflater==nullptr){
         pd->views.push_back(nullptr);
         LOGE("Unknown Parser for %s",name);
@@ -92,6 +106,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     }
     View*v=inflater(pd->ctx,atts);
     pd->parsedView++;
+    pd->flags.push_back(0);
     pd->views.push_back(v);
     LOGV("%p:%08x [%s] %s",v,v->getId(),name,stname.c_str());
     if(parent){
@@ -105,10 +120,12 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
 static void endElement(void *userData, const XML_Char *name){
     WindowParserData*pd=(WindowParserData*)userData;
-    ViewGroup*p=dynamic_cast<ViewGroup*>(pd->views.back());
-    if(strcmp(name,"merge")==0)return;
+    ViewGroup*p = dynamic_cast<ViewGroup*>(pd->views.back());
+    if(strcmp(name,"merge")==0||strcmp(name,"include")==0)return;
+    
     if(p&&(pd->views.size()==1))
         pd->returnedView=p; 
+    pd->flags.pop_back();
     pd->views.pop_back();
 }
 
@@ -119,8 +136,10 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root,bool attachToRo
     WindowParserData pd={mContext,parser};
     ULONGLONG tstart=SystemClock::uptimeMillis();
 
+    pd.root = root;
     pd.parsedView  = 0;
     pd.returnedView= nullptr;
+    pd.attachToRoot = attachToRoot;
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startElement, endElement);
     do {
@@ -134,7 +153,7 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root,bool attachToRo
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    if(root&&attachToRoot){
+    if(root && attachToRoot && pd.returnedView){
        root->addView(pd.returnedView);
        root->requestLayout();
        root->startLayoutAnimation();
