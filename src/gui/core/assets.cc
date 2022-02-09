@@ -178,7 +178,7 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
         guessExtension(pak,resname);
         if(relativeResid) *relativeResid=resname;
     }
-    LOGV_IF(resname.size(),"resource for [%s::%s:%s] is%s found",package.c_str(),fullResId.c_str(),resname.c_str(),(pak?"":" not"));
+    LOGV_IF(pak==nullptr&&resname.size(),"resource for [%s] is%s found",fullResId.c_str(),(pak?"":" not"));
     return pak;
 }
 

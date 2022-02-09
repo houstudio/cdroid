@@ -12,25 +12,30 @@ public:
 private:
     Context*mContext;
     LayoutInflater(Context*ctx);
-    static std::map<const std::string,ViewInflater>&getMap();
+    typedef std::map<const std::string,ViewInflater>INFLATERMAPPER;
+    typedef std::map<const std::string,const std::string>STYLEMAPPER;
+    static INFLATERMAPPER& getInflaterMap();
+    static STYLEMAPPER& getStyleMap();
 protected:
     View* inflate(std::istream&stream,ViewGroup*root,bool attachToRoot);
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
-    static bool registInflater(const std::string&name,ViewInflater fun);
+    static bool registInflater(const std::string&name,const std::string&,ViewInflater fun);
+    const std::string getDefaultStyle(const std::string&name)const;
     View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true);
 };
 
 template<typename T>
 class InflaterRegister{
 public:
-    InflaterRegister(const std::string&name){
-        LayoutInflater::registInflater(name,[](Context*ctx,const AttributeSet&attr)->View*{return new T(ctx,attr);});
+    InflaterRegister(const std::string&name,const std::string&defstyle){
+        LayoutInflater::registInflater(name,defstyle,[](Context*ctx,const AttributeSet&attr)->View*{return new T(ctx,attr);});
     }
 };
 
-#define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T);
-#define DECLARE_WIDGET2(T,name) static InflaterRegister<T> widget_inflater_##T_##name(#name);
+#define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T,"");
+#define DECLARE_WIDGET2(T,style) static InflaterRegister<T> widget_inflater_##T(#T,style);
+#define DECLARE_WIDGET3(T,name,style) static InflaterRegister<T> widget_inflater_##name(#name,style);
 }//endof namespace
 #endif

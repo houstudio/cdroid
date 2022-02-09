@@ -27,7 +27,7 @@
 
 namespace cdroid {
 
-DECLARE_WIDGET(TextView)
+DECLARE_WIDGET2(TextView,"cdroid:style/textViewStyle")
 
 class Drawables{
 public:
@@ -275,6 +275,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     if(attrs.hasAttribute("textAppearance")){
         TextAppearanceAttributes attributes;
         attributes.readTextAppearance(ctx,attrs);
+        applyTextAppearance(&attributes);
     }
     
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));

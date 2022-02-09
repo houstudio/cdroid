@@ -16,24 +16,36 @@ LayoutInflater*LayoutInflater::from(Context*context){
     return new LayoutInflater(context);
 }
 
+LayoutInflater::INFLATERMAPPER& LayoutInflater::getInflaterMap(){
+    static LayoutInflater::INFLATERMAPPER mFlateMapper;
+    return mFlateMapper;
+}
+
+LayoutInflater::STYLEMAPPER& LayoutInflater::getStyleMap(){
+    static LayoutInflater::STYLEMAPPER mDefaultStyle;
+    return mDefaultStyle;
+}
+
+const std::string LayoutInflater::getDefaultStyle(const std::string&name)const{
+    LayoutInflater::STYLEMAPPER& maps=getStyleMap();
+    auto it=maps.find(name);
+    return it==maps.end()?std::string():it->second;
+}
+
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name){
-    std::map<const std::string,ViewInflater>&maps=LayoutInflater::getMap();
     const size_t  pt = name.rfind('.');
+    LayoutInflater::INFLATERMAPPER &maps =getInflaterMap();
     const std::string sname=(pt!=std::string::npos)?name.substr(pt+1):name;
     auto it=maps.find(sname);
     return (it!=maps.end())?it->second:nullptr;
 }
 
-std::map<const std::string,LayoutInflater::ViewInflater>&LayoutInflater::getMap(){
-    static std::map<const std::string,LayoutInflater::ViewInflater> maps;
-    return maps;
-}
-
-bool LayoutInflater::registInflater(const std::string&name,LayoutInflater::ViewInflater inflater){
-    std::map<const std::string,ViewInflater>&maps=LayoutInflater::getMap();
+bool LayoutInflater::registInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater){
+    LayoutInflater::INFLATERMAPPER&maps =getInflaterMap();
     if(maps.find(name)!=maps.end())
         return false;
-    maps.insert(std::map<const std::string,LayoutInflater::ViewInflater>::value_type(name,inflater)); 
+    maps.insert(INFLATERMAPPER::value_type(name,inflater));
+    getStyleMap().insert(std::pair<const std::string,const std::string>(name,defstyle));
     return true;
 }
 
@@ -72,7 +84,9 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         LOGE("Unknown Parser for %s",name);
         return;
     }
-    const std::string stname=atts.getString("style");
+    std::string stname=atts.getString("style");
+    if(stname.empty())
+        stname=LayoutInflater::from(pd->ctx)->getDefaultStyle(name);
     if(!stname.empty()){
         AttributeSet style=pd->ctx->obtainStyledAttributes(stname);
         atts.inherit(style);

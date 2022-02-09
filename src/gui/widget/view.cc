@@ -300,7 +300,7 @@ void View::initView(){
     mID       = NO_ID;
     mAutofillViewId =NO_ID;
     mAccessibilityViewId=NO_ID;
-    mDrawingCacheBackgroundColor =0xFF000000;
+    mDrawingCacheBackgroundColor =0;
     mContext  = nullptr;
     mParent   = nullptr;
     mAttachInfo = nullptr;
@@ -2635,9 +2635,9 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         }
     } else if (cache != nullptr) {
         mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+        cache->flush();
         canvas.save();
         canvas.reset_clip();
-        cache->flush();
         canvas.set_source(cache,0,0);
         if(alpha<1)canvas.paint_with_alpha(alpha);
         else canvas.paint();

@@ -111,9 +111,11 @@ void GraphDevice::composeSurfaces(){
     WindowManager::getInstance().enumWindows([&wSurfaces,&wBounds,&wins](Window*w)->bool{
         if(w->getVisibility()!=View::VISIBLE||w->mVisibleRgn->empty()==false){
             Rect rcw=w->getBound();
-            wSurfaces.push_back(w->mAttachInfo->mCanvas);
-            wBounds.push_back(rcw);
-            wins.push_back(w);
+            if(w->mAttachInfo->mCanvas){
+                wSurfaces.push_back(w->mAttachInfo->mCanvas);
+                wBounds.push_back(rcw);
+                wins.push_back(w);
+            }
         }return true;
     });
     primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
