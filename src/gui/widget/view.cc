@@ -1840,7 +1840,7 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
 
 void View::initializeScrollIndicatorsInternal(){
     if (mScrollIndicatorDrawable == nullptr) {
-        mScrollIndicatorDrawable = mContext?mContext->getDrawable("scroll_indicator_material.xml"):nullptr;
+        mScrollIndicatorDrawable = mContext?mContext->getDrawable("cdroid:drawable/scroll_indicator_material"):nullptr;
     }
     if( mScrollIndicatorDrawable == nullptr){
         Shape*sp=new RectShape();

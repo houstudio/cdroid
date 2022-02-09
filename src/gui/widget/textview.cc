@@ -27,7 +27,7 @@
 
 namespace cdroid {
 
-DECLARE_WIDGET2(TextView,"cdroid:style/textViewStyle")
+DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
 
 class Drawables{
 public:
@@ -233,11 +233,14 @@ TextAppearanceAttributes::TextAppearanceAttributes(){
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&att){
     const std::string ta=att.getString("textAppearance");
     const AttributeSet atts=ctx->obtainStyledAttributes(ta);
-
-    mTextColorHighlight = ctx->getColor(atts.getString("textColorHighlight"));
-    mTextColor = ctx->getColorStateList(atts.getString("textColor"));
-    mTextColorHint = ctx->getColorStateList(atts.getString("textColorHint"));
-    mTextColorLink = ctx->getColorStateList(atts.getString("textColorLink"));
+    if(atts.hasAttribute("textColorHighlight"))
+        mTextColorHighlight = ctx->getColor(atts.getString("textColorHighlight"));
+    if(atts.hasAttribute("textColor"))
+        mTextColor = ctx->getColorStateList(atts.getString("textColor"));
+    if(atts.hasAttribute("textColorHint"))
+        mTextColorHint = ctx->getColorStateList(atts.getString("textColorHint"));
+    if(atts.hasAttribute("textColorLink"))
+        mTextColorLink = ctx->getColorStateList(atts.getString("textColorLink"));
     mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
 
     mShadowColor = atts.getInt("shadowColor",mShadowColor);
