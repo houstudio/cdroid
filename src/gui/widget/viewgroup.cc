@@ -1391,14 +1391,15 @@ void ViewGroup::onDebugDraw(Canvas& canvas){
         if (c->getVisibility() != View::GONE) {
             Insets insets = c->getOpticalInsets();
             drawRect(canvas,c->getLeft() + insets.left,c->getTop() + insets.top,
-			   c->getRight() - insets.right - 1,c->getBottom() - insets.bottom - 1);
+                c->getRight() - insets.right - 1,c->getBottom() - insets.bottom - 1);
         }
     }
     canvas.stroke();
 
     // Draw margins
-    canvas.set_color(0x70FF00FF);
-    onDebugDrawMargins(canvas);//fill
+    canvas.set_color(0x800000FF);
+    onDebugDrawMargins(canvas);
+    canvas.stroke();
 
     // Draw clip bounds
     //paint.setColor(DEBUG_CORNERS_COLOR);

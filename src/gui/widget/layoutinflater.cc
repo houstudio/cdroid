@@ -79,7 +79,6 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         parent=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0)return;
     if(inflater==nullptr){
-        //XML_StopParser(pd->parser,false);
         pd->views.push_back(nullptr);
         LOGE("Unknown Parser for %s",name);
         return;
@@ -94,9 +93,9 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     View*v=inflater(pd->ctx,atts);
     pd->parsedView++;
     pd->views.push_back(v);
+    LOGV("%p:%08x [%s] %s",v,v->getId(),name,stname.c_str());
     if(parent){
         LayoutParams*lp=parent->generateLayoutParams(atts);
-        LOGV("<%s> layoutSize=%dx%d id:%d",name,lp->width,lp->height,v->getId());
         parent->addViewInLayout(v,-1,lp,true);
     }else{
         LayoutParams*lp=((ViewGroup*)v)->generateLayoutParams(atts);

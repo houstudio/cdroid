@@ -71,8 +71,7 @@ void Window::draw(){
     RefPtr<Canvas>canvas=getCanvas();
     mAttachInfo->mDrawingTime=SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);
-    if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
-    //canvas->invalidate(mInvalidRgn);
+    //if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
     mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();
 }

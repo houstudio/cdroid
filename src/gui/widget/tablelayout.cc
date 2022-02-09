@@ -210,7 +210,6 @@ void TableLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 void TableLayout::onLayout(bool changed, int l, int t, int w, int h){
-    LOGD("TableLayout::onLayout(%d,%d-%d,%d)",l,t,w,h);
     layoutVertical(l, t, w, h);
 }
 
