@@ -50,7 +50,7 @@ class IDGenerater(object):
         i=0
         print self.Handler.idlist
         for k in self.Handler.idlist:
-            fr.write("%8s%-24s= 0x%08X"%('',k,self.idstart+i))
+            fr.write("%8s%-24s= 0x%08X /*%10d*/"%('',k,self.idstart+i,self.idstart+i))
             if(i<dsize-1):
                 fr.write(" ,")
             fr.write("\n")

@@ -230,9 +230,7 @@ TextAppearanceAttributes::TextAppearanceAttributes(){
     mTextColorLink= nullptr;
 }
 
-void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&att){
-    const std::string ta=att.getString("textAppearance");
-    const AttributeSet atts=ctx->obtainStyledAttributes(ta);
+void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
     if(atts.hasAttribute("textColorHighlight"))
         mTextColorHighlight = ctx->getColor(atts.getString("textColorHighlight"));
     if(atts.hasAttribute("textColor"))
@@ -275,11 +273,17 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     mSingleLine=attrs.getBoolean("singleline",true);
-    if(attrs.hasAttribute("textAppearance")){
-        TextAppearanceAttributes attributes;
+
+    TextAppearanceAttributes attributes;
+    const std::string appearance=attrs.getString("textAppearance");
+    if(appearance.empty()==false){
+        AttributeSet attrs2=ctx->obtainStyledAttributes(appearance);
+        attrs2.inherit(attrs);
+        attributes.readTextAppearance(ctx,attrs2);
+    }else{
         attributes.readTextAppearance(ctx,attrs);
-        applyTextAppearance(&attributes);
     }
+    applyTextAppearance(&attributes);
     
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
     setEllipsize(attrs.getInt("ellipsize",std::map<const std::string,int>{
