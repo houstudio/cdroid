@@ -22,7 +22,6 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     if(!mHasSelectorWheel){
         mDecrementButton=(ImageButton*)findViewById(R::id::decrement);
         mDecrementButton->setMinimumHeight(20);
-        addView(mDecrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
         mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     }
@@ -32,13 +31,11 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
         mInputText->setText("123");
         mInputText->setTextSize(24);
-        addView(mInputText,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
     }
 
     if(!mHasSelectorWheel){
         mIncrementButton=(ImageButton*)findViewById(R::id::increment);
         mIncrementButton->setMinimumHeight(20);
-        addView(mIncrementButton,new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
         mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
         mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
     }
@@ -75,7 +72,6 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     }
     LayoutInflater*inflater=LayoutInflater::from(mContext);
     inflater->inflate("cdroid:layout/number_picker.xml",this);
-    delete inflater;
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     setWillNotDraw(!mHasSelectorWheel);
 

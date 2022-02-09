@@ -13,7 +13,13 @@ LayoutInflater::LayoutInflater(Context*context){
 }
 
 LayoutInflater*LayoutInflater::from(Context*context){
-    return new LayoutInflater(context);
+    static std::map<Context*,LayoutInflater*>mMaps;
+    auto it=mMaps.find(context);
+    if(it==mMaps.end()){
+        LayoutInflater*flater=new LayoutInflater(context);
+        it=mMaps.insert(std::pair<Context*,LayoutInflater*>(context,flater)).first;
+    }
+    return it->second;
 }
 
 LayoutInflater::INFLATERMAPPER& LayoutInflater::getInflaterMap(){
@@ -121,9 +127,9 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 static void endElement(void *userData, const XML_Char *name){
     WindowParserData*pd=(WindowParserData*)userData;
     ViewGroup*p = dynamic_cast<ViewGroup*>(pd->views.back());
-    if(strcmp(name,"merge")==0||strcmp(name,"include")==0)return;
+    if(strcmp(name,"include")==0)return;
     
-    if(p&&(pd->views.size()==1))
+    if(p&&(pd->views.size()==1) && (pd->flags.back()==0))
         pd->returnedView=p; 
     pd->flags.pop_back();
     pd->views.pop_back();
@@ -153,8 +159,9 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root,bool attachToRo
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    if(root && attachToRoot && pd.returnedView){
-       root->addView(pd.returnedView);
+    if(root && attachToRoot){
+       if(pd.returnedView)
+           root->addView(pd.returnedView);
        root->requestLayout();
        root->startLayoutAnimation();
     }
