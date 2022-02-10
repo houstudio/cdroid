@@ -307,7 +307,9 @@ int Assets::getColor(const std::string&refid){
     auto it = mColors.find(refid);
     if(it!=mColors.end())
         return it->second;
-    else if(refid.find("color")==std::string::npos){//refid is defined as an color reference
+    else if((refid[0]=='#')||refid.find(':')==std::string::npos){
+        return Color::parseColor(refid);
+    }else if(refid.find("color")==std::string::npos){//refid is defined as an color reference
         parseResource(refid,&name,nullptr);
         name=mTheme.getString(name);
         return getColor(name);
