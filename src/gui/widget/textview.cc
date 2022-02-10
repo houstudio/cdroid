@@ -278,9 +278,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     TextAppearanceAttributes attributes;
     const std::string appearance=attrs.getString("textAppearance");
     if(appearance.empty()==false){
+        AttributeSet tmp =attrs;
         AttributeSet attrs2=ctx->obtainStyledAttributes(appearance);
-        attrs2.inherit(attrs);
-        attributes.readTextAppearance(ctx,attrs2);
+        tmp.inherit(attrs2);
+        attributes.readTextAppearance(ctx,tmp);
     }else{
         attributes.readTextAppearance(ctx,attrs);
     }
