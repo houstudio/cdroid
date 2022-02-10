@@ -3096,14 +3096,7 @@ void View::jumpDrawablesToCurrentState(){
 std::vector<int>View::onCreateDrawableState()const{
     int viewStateIndex = 0;
     std::vector<int>states;
-#if 0
-    if(mPrivateFlags & PFLAG_PRESSED)states.push_back(StateSet::PRESSED);
-    if(isEnabled())states.push_back(StateSet::ENABLED);
-    if(mPrivateFlags & PFLAG_HOVERED)states.push_back(StateSet::HOVERED);
-    if(mPrivateFlags & PFLAG_SELECTED)states.push_back(StateSet::SELECTED);
-    if(isFocused())states.push_back(StateSet::FOCUSED);
 
-#else
     if(mPrivateFlags & PFLAG_PRESSED)          viewStateIndex =StateSet::VIEW_STATE_PRESSED;
     if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
@@ -3117,7 +3110,6 @@ std::vector<int>View::onCreateDrawableState()const{
     std::ostringstream oss;
     for(auto s:states)oss<<s<<",";
     LOGD("%p:%d state=%s",this,mID,oss.str().c_str());
-#endif
     return states;
 }
 

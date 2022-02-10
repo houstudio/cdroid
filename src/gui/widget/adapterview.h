@@ -68,9 +68,9 @@ protected:
     void onLayout(bool changed, int left, int top, int width, int height)override; 
     virtual void handleDataChanged();
     void setNextSelectedPositionInt(int position);
-    void setSelectedPositionInt(int position);
+    virtual void setSelectedPositionInt(int position);
     void checkSelectionChanged();
-    void selectionChanged();
+    virtual void selectionChanged();
     void checkFocus();
     void rememberSyncState();
     int findSyncPosition();

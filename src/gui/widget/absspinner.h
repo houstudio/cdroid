@@ -29,7 +29,7 @@ protected:
     void resetList();
     void recycleAllViews();
     int getChildWidth(View* child);
-    int getChildHeight(View* child);
+    virtual int getChildHeight(View* child);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual void layout(int delta, bool animate)=0;
 public:
