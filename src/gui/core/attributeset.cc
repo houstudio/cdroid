@@ -36,8 +36,8 @@ int AttributeSet::set(const char*atts[],int size){
     int rc=0;
     for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key=strrchr(atts[i],' ');
-        if(key)key++;else key=atts[i];  
-        mAttrs.insert(std::make_pair<const std::string,std::string>(key,atts[i+1]));
+        if(key)key++;else key=atts[i];
+        mAttrs.insert(std::make_pair<const std::string,std::string>(std::string(key),std::string(atts[i+1])));
     }
     return mAttrs.size();
 }
