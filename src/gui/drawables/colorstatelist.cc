@@ -152,7 +152,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const std::string&resname){
     int done=0;
     char buf[256];
-    XML_Parser parser=XML_ParserCreate(nullptr);
+    XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
     ColorsParserData cd;
     cd.ctx=ctx;
     XML_SetUserData(parser,&cd);
