@@ -14,8 +14,6 @@ public:
     }
 };
 
-DECLARE_WIDGET(RadioButton)
-
 }//namespace
 
 #endif

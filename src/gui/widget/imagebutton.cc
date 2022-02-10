@@ -3,7 +3,7 @@
 #include<app.h>
 namespace cdroid{
 
-DECLARE_WIDGET(ImageButton)
+DECLARE_WIDGET2(ImageButton,"cdroid:attr/imageButtonStyle")
 
 ImageButton::ImageButton(Context*ctx,const AttributeSet& attrs)
   :ImageView(ctx,attrs){

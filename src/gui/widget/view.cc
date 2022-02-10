@@ -211,7 +211,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
 
-    mBackground=ctx->getDrawable(attrs,"background");
+    setBackground(ctx->getDrawable(attrs,"background"));
     
     int leftPadding,topPadding,rightPadding,bottomPadding;
     int padding=attrs.getDimensionPixelSize("padding",-1);
@@ -2060,7 +2060,7 @@ void View::setOnScrollChangeListener(OnScrollChangeListener l){
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
-    setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
+    //setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
 }
 
 bool View::isDrawingCacheEnabled()const{
@@ -3114,6 +3114,9 @@ std::vector<int>View::onCreateDrawableState()const{
     if(mPrivateFlags & PFLAG_HOVERED ) viewStateIndex |= StateSet::VIEW_STATE_HOVERED;
 
     states = StateSet::get(viewStateIndex);
+    std::ostringstream oss;
+    for(auto s:states)oss<<s<<",";
+    LOGD("%p:%d state=%s",this,mID,oss.str().c_str());
 #endif
     return states;
 }

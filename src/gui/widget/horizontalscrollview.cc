@@ -7,7 +7,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(HorizontalScrollView)
+DECLARE_WIDGET2(HorizontalScrollView,"cdroid:attr/horizontalScrollViewStyle")
  
 HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();

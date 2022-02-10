@@ -74,7 +74,7 @@ typedef struct{
     ViewGroup* root;
     std::vector<View*>views;//the first element is rootview setted by inflate
     std::vector<int>flags;
-    ViewGroup*returnedView;
+    View*returnedView;
     int parsedView;
 }WindowParserData;
 
@@ -126,11 +126,10 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
 static void endElement(void *userData, const XML_Char *name){
     WindowParserData*pd=(WindowParserData*)userData;
-    ViewGroup*p = dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"include")==0)return;
     
-    if(p&&(pd->views.size()==1) && (pd->flags.back()==0))
-        pd->returnedView=p; 
+    if((pd->views.size()==1) && (pd->flags.back()==0))
+        pd->returnedView=pd->views.back(); 
     pd->flags.pop_back();
     pd->views.pop_back();
 }

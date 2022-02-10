@@ -8,7 +8,7 @@ namespace cdroid{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-DECLARE_WIDGET(Spinner)
+DECLARE_WIDGET2(Spinner,"cdroid:attr/spinnerStyle")
 
 Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mPopupContext=nullptr;

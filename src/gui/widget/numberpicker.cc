@@ -9,15 +9,16 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(NumberPicker)
+DECLARE_WIDGET2(NumberPicker,"cdroid:attr/numberPickerStyle")
 
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
     setOrientation(VERTICAL);//HORIZONTAL);
 
     LayoutInflater*inflater=LayoutInflater::from(mContext);
-    inflater->inflate("cdroid:layout/number_picker.xml",this,true);
-    delete inflater;
+    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/numberPickerStyle");
+    std::string layoutres=atts.getString("internalLayout","cdroid:layout/number_picker.xml");
+    inflater->inflate(layoutres,this,true);
    
     if(!mHasSelectorWheel){
         mDecrementButton=(ImageButton*)findViewById(R::id::decrement);
@@ -70,8 +71,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
                 && mMinWidth > mMaxWidth) {
         throw "minWidth > maxWidth";
     }
+    mVirtualButtonPressedDrawable = context->getDrawable(atts,"virtualButtonPressedDrawable");
     LayoutInflater*inflater=LayoutInflater::from(mContext);
-    inflater->inflate("cdroid:layout/number_picker.xml",this);
+    std::string layoutres=atts.getString("internalLayout","cdroid:layout/number_picker.xml");
+    inflater->inflate(layoutres,this);
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     setWillNotDraw(!mHasSelectorWheel);
 

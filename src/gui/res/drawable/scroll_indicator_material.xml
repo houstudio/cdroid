@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:cdroid="http://schemas.android.com/apk/res/android"
-       cdroid:tint="?attr/colorForeground">
+    cdroid:tint="?attr/colorForeground"
+    cdroid:shape="rectangle">
     <solid cdroid:color="#1f000000" />
     <size
         cdroid:height="1dp"

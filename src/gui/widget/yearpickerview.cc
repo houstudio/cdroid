@@ -1,5 +1,6 @@
 #include <widget/yearpickerview.h>
 #include <widget/textview.h>
+#include <widget/layoutinflater.h>
 
 namespace cdroid{
 
@@ -8,18 +9,16 @@ DECLARE_WIDGET(YearPickerView)
 class YearAdapter:public ArrayAdapter<int> {
 private:
     /*static int ITEM_LAYOUT = R.layout.year_label_text_view;
-    static int ITEM_TEXT_APPEARANCE =
-                R.style.TextAppearance_Material_DatePicker_List_YearLabel;
-    static int ITEM_TEXT_ACTIVATED_APPEARANCE =
-                R.style.TextAppearance_Material_DatePicker_List_YearLabel_Activated;
-    //LayoutInflater mInflater;*/
+    static int ITEM_TEXT_APPEARANCE = R.style.TextAppearance_Material_DatePicker_List_YearLabel;
+    static int ITEM_TEXT_ACTIVATED_APPEARANCE =  R.style.TextAppearance_Material_DatePicker_List_YearLabel_Activated;*/
+    LayoutInflater* mInflater;
     int mActivatedYear;
     int mMinYear;
     int mCount;
 
 public:
     YearAdapter(Context* context) {
-        //mInflater = LayoutInflater.from(context);
+        mInflater = LayoutInflater::from(context);
     }
 
     void setRange(int minDate,int maxDate/*Calendar minDate, Calendar maxDate*/) {
@@ -65,7 +64,7 @@ public:
     View* getView(int position, View* convertView, ViewGroup* parent) {
         TextView* v;
         if (convertView==nullptr) {
-            v = new TextView("",0,0);//(TextView*) mInflater.inflate(ITEM_LAYOUT, parent, false);
+            v = (TextView*) mInflater->inflate("cdroid:layout/year_label_text_view.xml", parent, false);
         } else {
             v = (TextView*) convertView;
         }

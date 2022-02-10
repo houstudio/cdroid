@@ -2,6 +2,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET2(RatingBar,"cdroid:attr/ratingBarStyle")
+
 RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
 }
 

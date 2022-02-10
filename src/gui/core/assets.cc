@@ -133,13 +133,13 @@ int Assets::addResource(const std::string&path,const std::string&name){
 static bool guessExtension(ZIPArchive*pak,std::string&ioname){
     bool ret=(ioname.find('.')!=std::string::npos);
     if(ret)return ret;
-    if(TextUtils::startWith(ioname,"drawable")){
-        if(ret=pak->hasEntry(ioname+".xml",false))
-            ioname+=".xml";
-    }else if(TextUtils::startWith(ioname,"mipmap")){
+    if(TextUtils::startWith(ioname,"mipmap")){
         if(ret=pak->hasEntry(ioname+".png",false)) ioname+=".png";
         else if(ret=pak->hasEntry(ioname+".9.png",false))ioname+=".9.png";
         else if(ret=pak->hasEntry(ioname+".jpg",false))ioname+=".jpg";
+    }else{
+        if(ret=pak->hasEntry(ioname+".xml",false))
+            ioname+=".xml";
     }
     return ret;
 }

@@ -1022,7 +1022,7 @@ void TabLayout::TabView::update() {
             mIconView->setImageDrawable(nullptr);
         }
 
-        //mCustomTextView = (TextView*) custom->findViewById(cdroid::R::id::text1);
+        mCustomTextView = (TextView*) custom->findViewById(cdroid::R::id::text1);
         if (mCustomTextView != nullptr) {
             mDefaultMaxLines = mCustomTextView->getMaxLines();// TextViewCompat.getMaxLines(mCustomTextView);
         }
@@ -1039,14 +1039,13 @@ void TabLayout::TabView::update() {
 
     if (mCustomView == nullptr) {
         // If there isn't a custom view, we'll us our own in-built layouts
+        LayoutInflater* inflater =LayoutInflater::from(getContext());
         if (mIconView == nullptr) {
-            ImageView* iconView = new ImageView(0,0);//(ImageView*) LayoutInflater.from(getContext()).inflate(R.layout.design_layout_tab_icon, this, false);
-            addView(iconView, 0);
+            ImageView* iconView = (ImageView*)inflater->inflate("cdroid:layout/design_layout_tab_icon.xml", this, false);
             mIconView = iconView;
         }
         if (mTextView == nullptr) {
-            TextView* textView = new TextView("",0,0);//(TextView*) LayoutInflater.from(getContext()).inflate(R.layout.design_layout_tab_text, this, false);
-            addView(textView);
+            TextView* textView = (TextView*)inflater->inflate("cdroid:layout/design_layout_tab_text.xml", this, false);
             mTextView = textView;
             mDefaultMaxLines = mTextView->getMaxLines();
         }
@@ -1098,7 +1097,7 @@ void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconVie
             iconView->setVisibility(GONE);
             iconView->setImageDrawable(nullptr);
         }
-        //iconView->setContentDescription(contentDesc);
+        iconView->setContentDescription(contentDesc);
     }
 
     bool hasText = !text.empty();//!TextUtils.isEmpty(text);
@@ -1111,7 +1110,7 @@ void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconVie
             textView->setVisibility(GONE);
             textView->setText("");
         }
-        //textView->setContentDescription(contentDesc);
+        textView->setContentDescription(contentDesc);
     }
 
     if (iconView != nullptr) {

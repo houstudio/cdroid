@@ -7,6 +7,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET2(KeyboardView,"cdroid:attr/keyboardViewStyle")
+
 KeyboardView::KeyboardView(int w,int h):View(w,h){
     init();
     mKeyBackground = new ColorDrawable(0xFF112211);

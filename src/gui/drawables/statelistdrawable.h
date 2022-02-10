@@ -12,7 +12,7 @@ private:
         void mutate();
         Drawable*newDrawable()override;
         int addStateSet(const std::vector<int>&stateSet, Drawable*drawable);
-        int indexOfStateSet(const std::vector<int>stateSet);
+        int indexOfStateSet(const std::vector<int>&stateSet);
         bool hasFocusStateSpecified()const;
     };
     std::shared_ptr<StateListState>mStateListState;

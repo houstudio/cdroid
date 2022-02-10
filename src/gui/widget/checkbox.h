@@ -1,8 +1,10 @@
 #ifndef __CHECK_BOX_H__
 #define __CHECK_BOX_H__
 #include <widget/compoundbutton.h>
+#include <widget/layoutinflater.h>
 
 namespace cdroid{
+
 class CheckBox:public CompoundButton{
 public:
     CheckBox(Context*ctx,const AttributeSet& attrs)
@@ -11,8 +13,7 @@ public:
         setButtonDrawable("cdroid:drawable/btn_check.xml");
     }
 };
-
-DECLARE_WIDGET(CheckBox)
+DECLARE_WIDGET2(CheckBox,"cdroid:attr/checkboxStyle")
 
 }
 #endif

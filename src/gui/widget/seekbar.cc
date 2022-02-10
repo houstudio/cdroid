@@ -1,7 +1,7 @@
 #include <widget/seekbar.h>
 namespace cdroid{
 
-DECLARE_WIDGET(SeekBar)
+DECLARE_WIDGET2(SeekBar,"cdroid:attr/seekBarStyle")
 
 SeekBar::SeekBar(Context*ctx,const AttributeSet& attrs)
   :AbsSeekBar(ctx,attrs){

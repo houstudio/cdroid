@@ -23,7 +23,7 @@ int StateListDrawable::StateListState::addStateSet(const std::vector<int>&stateS
     return pos;
 }
 
-int StateListDrawable::StateListState::indexOfStateSet(const std::vector<int>stateSet){
+int StateListDrawable::StateListState::indexOfStateSet(const std::vector<int>&stateSet){
     const int N = getChildCount();
     for (int i = 0; i < N; i++) {
         if (StateSet::stateSetMatches(mStateSets[i], stateSet)) {
@@ -109,7 +109,7 @@ int StateListDrawable::getStateDrawableIndex(const std::vector<int>&stateSet)con
 bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
     const bool changed =DrawableContainer::onStateChange(stateSet);
     int idx=getStateDrawableIndex(stateSet);
-    LOGV("%p set stateIndex=%d/%d",this,idx,getChildCount());
+    LOGD("%p set stateIndex=%d/%d ",this,idx,getChildCount(),idx>=0?getChild(idx):nullptr);
     return selectDrawable(idx) || changed;
 }
 

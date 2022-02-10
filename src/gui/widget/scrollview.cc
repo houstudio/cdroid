@@ -3,7 +3,7 @@
 #include <cdlog.h>
 namespace cdroid {
 
-DECLARE_WIDGET(ScrollView)
+DECLARE_WIDGET2(ScrollView,"cdroid:attr/scrollViewStyle")
 
 ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();
