@@ -124,7 +124,13 @@ int Assets::addResource(const std::string&path,const std::string&name){
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             const std::string resid=name+":"+res;
             loadKeyValues(resid,std::bind(&Assets::parseItem,this,name,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
-        }return 0;
+        }else if(TextUtils::startWith(res,"color")){ 
+            std::string resid=name+":"+res.substr(0,res.find(".xml"));
+            ColorStateList *cl=ColorStateList::inflate(this,resid);
+            LOGV("colorstatelist %p<<%s",cl,resid.c_str());
+            mColors.insert(std::pair<const std::string,ColorStateList*>(resid,cl));
+        }
+        return 0;
     });
     LOGD("%s %d resource,[id:%d arraies:%d Styles:%d]",name.c_str(),count,mIDS.size(),mArraies.size(),mStyles.size());
     return pak?0:-1;
@@ -306,7 +312,7 @@ int Assets::getColor(const std::string&refid){
     std::string name;
     auto it = mColors.find(refid);
     if(it!=mColors.end())
-        return it->second;
+        return nonstd::get<int>(it->second);
     else if((refid[0]=='#')||refid.find(':')==std::string::npos){
         return Color::parseColor(refid);
     }else if(refid.find("color")==std::string::npos){//refid is defined as an color reference
@@ -326,16 +332,20 @@ int Assets::getArray(const std::string&resname,std::vector<std::string>&out){
 }
 
 ColorStateList* Assets::getColorStateList(const std::string&fullresid){
-    std::string resname;
-    ZIPArchive*pak=getResource(fullresid,&resname);
-    void*zfile=pak?pak->getZipHandle(resname):nullptr;
-    if(zfile){
-        ZipInputStream zs(zfile);
-        return ColorStateList::fromStream(this,zs,resname);
-    }else if(!fullresid.empty()){
-        const int color=getColor(fullresid);
-        LOGV("%s==%x",fullresid.c_str(),color);
-        return ColorStateList::valueOf(color);
+    std::string realName;
+    auto it=mColors.find(fullresid);
+    if( (it==mColors.end()) && (fullresid.find("color")==std::string::npos) ){
+        parseResource(fullresid,&realName,nullptr);
+        realName=mTheme.getString(realName);
+        it=mColors.find(realName); 
+    }
+    LOGV_IF(it!=mColors.end(),"%s[%s]type=%d",fullresid.c_str(),realName.c_str(),it->second.index());
+    LOGV_IF(it==mColors.end(),"%s not found",fullresid.c_str());
+    if(it!=mColors.end()){
+        switch(it->second.index()){
+        case 0: return ColorStateList::valueOf(nonstd::get<int>(it->second));
+        case 1: return new ColorStateList(*nonstd::get<ColorStateList*>(it->second));
+        }
     }
     return nullptr;
 }

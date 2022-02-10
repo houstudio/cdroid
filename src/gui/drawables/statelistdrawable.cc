@@ -108,8 +108,8 @@ int StateListDrawable::getStateDrawableIndex(const std::vector<int>&stateSet)con
 
 bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
     const bool changed =DrawableContainer::onStateChange(stateSet);
-    int idx=getStateDrawableIndex(stateSet);
-    LOGD("%p set stateIndex=%d/%d ",this,idx,getChildCount(),idx>=0?getChild(idx):nullptr);
+    const int  idx=getStateDrawableIndex(stateSet);
+    LOGV("%p set stateIndex=%d/%d ",this,idx,getChildCount(),idx>=0?getChild(idx):nullptr);
     return selectDrawable(idx) || changed;
 }
 

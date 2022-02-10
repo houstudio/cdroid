@@ -137,12 +137,13 @@ struct ColorsParserData{
     ColorStateList colors;
     Context*ctx;
 };
+
 static void startElement(void *userData, const XML_Char *name, const XML_Char **props){
     ColorsParserData*cd=(ColorsParserData*)userData;
     AttributeSet atts(props);
     if(strcmp(name,"item")==0){
         std::vector<int>states;
-        int color=atts.getColor("color",Color::WHITE);
+        int color=cd->ctx->getColor(atts.getString("color"));
         StateSet::parseState(states,atts);
 	cd->colors.addStateColor(states,color);
     }
@@ -155,7 +156,7 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
     ColorsParserData cd;
     cd.ctx=ctx;
     XML_SetUserData(parser,&cd);
-    XML_SetElementHandler(parser, startElement, nullptr);//endElement);
+    XML_SetElementHandler(parser, startElement, nullptr/*endElement*/);
     do {
        stream.read(buf,sizeof(buf));
        int rdlen=stream.gcount();

@@ -292,7 +292,9 @@ Drawable*Drawable::createItemDrawable(Context*ctx,const AttributeSet&atts){
     if(resname.find("xml")!=std::string::npos){
         return Drawable::inflate(ctx,resname);
     }
-    return ctx->getDrawable(resname);
+    Drawable*dr=ctx->getDrawable(resname);
+    dr->mResourceId=resname;
+    return dr;
 }
 
 static std::map<const std::string,DrawableParser>drawableParsers={
@@ -484,7 +486,7 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
         }
     } while(rdlen);
     XML_ParserFree(parser);
-
+    pd.drawable->mResourceId=resname;
     LOGV("parsed drawable [%p] from %s",pd.drawable,resname.c_str());
     return pd.drawable;
 }

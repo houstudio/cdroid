@@ -3109,7 +3109,7 @@ std::vector<int>View::onCreateDrawableState()const{
     states = StateSet::get(viewStateIndex);
     std::ostringstream oss;
     for(auto s:states)oss<<s<<",";
-    LOGD("%p:%d state=%s",this,mID,oss.str().c_str());
+    LOGV("%p:%d state=%s",this,mID,oss.str().c_str());
     return states;
 }
 

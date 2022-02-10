@@ -71,6 +71,8 @@ protected:
     virtual bool onLayoutDirectionChanged(int layoutDirection){return false;}
     virtual void onBoundsChange(const Rect& bounds){}
 public:
+    std::string mResourceId;
+public:
     Drawable();
     virtual ~Drawable();
     void setBounds(int x,int y,int w,int h);
