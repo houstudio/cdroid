@@ -272,7 +272,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
-    mSingleLine=attrs.getBoolean("singleline",true);
+    mSingleLine=attrs.getBoolean("singleLine",mSingleLine);
 
     TextAppearanceAttributes attributes;
     const std::string appearance=attrs.getString("textAppearance");
@@ -340,7 +340,7 @@ void TextView::initView(){
     mShadowDy = .0;
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
-    mSingleLine =true;
+    mSingleLine = false;
     mEditMode =READONLY;
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
