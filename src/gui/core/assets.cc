@@ -16,7 +16,6 @@ namespace cdroid{
 
 Assets::Assets(){
     addResource("cdroid.pak","cdroid");
-    setTheme("cdroid:style/Theme");
 }
 
 Assets::Assets(const std::string&path):Assets(){
@@ -124,7 +123,13 @@ int Assets::addResource(const std::string&path,const std::string&name){
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             const std::string resid=name+":"+res;
             loadKeyValues(resid,std::bind(&Assets::parseItem,this,name,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
-        }else if(TextUtils::startWith(res,"color")){ 
+        }
+        return 0;
+    });
+    if(name.compare("cdroid")==0)
+        setTheme("cdroid:style/Theme");
+    pak->forEachEntry([this,name,&count](const std::string&res){
+        if(TextUtils::startWith(res,"color")){ 
             std::string resid=name+":"+res.substr(0,res.find(".xml"));
             ColorStateList *cl=ColorStateList::inflate(this,resid);
             LOGV("colorstatelist %p<<%s",cl,resid.c_str());
@@ -315,7 +320,7 @@ int Assets::getColor(const std::string&refid){
         return nonstd::get<int>(it->second);
     else if((refid[0]=='#')||refid.find(':')==std::string::npos){
         return Color::parseColor(refid);
-    }else if(refid.find("color")==std::string::npos){//refid is defined as an color reference
+    }else if(refid.find("color/")==std::string::npos){//refid is defined as an color reference
         parseResource(refid,&name,nullptr);
         name=mTheme.getString(name);
         return getColor(name);

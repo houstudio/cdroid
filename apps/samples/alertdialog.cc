@@ -12,6 +12,7 @@ int main(int argc,const char*argv[]){
        .setPositiveButton("OK",f)
        .setNegativeButton("Cancel",f)
        .setTitle("This is Title...")
+       .setIcon("@cdroid:mipmap/ic_dialog_info")
        .setMessage("Hello world!!!")
        .show();
     return app.exec();
