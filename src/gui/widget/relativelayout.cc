@@ -24,11 +24,14 @@ static constexpr int RULES_HORIZONTAL[] = {
 DECLARE_WIDGET(RelativeLayout)
 
 RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
-    mIgnoreGravity=NO_ID;
+    mIgnoreGravity  = NO_ID;
+    mDirtyHierarchy = true;
 }
 
 RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
  :ViewGroup(context,attrs){
+    mIgnoreGravity = NO_ID;
+    mDirtyHierarchy = true;
 }
 
 bool RelativeLayout::shouldDelayChildPressedState(){
@@ -740,7 +743,7 @@ bool RelativeLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
 ViewGroup::LayoutParams* RelativeLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
     if (true){//sPreserveMarginParamsInLayoutParamConversion) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
-            return new LayoutParams((const LayoutParams)*lp);
+            return new LayoutParams((const LayoutParams&)*lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
             return new LayoutParams((const MarginLayoutParams&)*lp);
         }
@@ -752,23 +755,35 @@ ViewGroup::LayoutParams* RelativeLayout::generateLayoutParams(const ViewGroup::L
 /////////////////////////////////////////////////////////////////////////////////
 RelativeLayout::LayoutParams::LayoutParams(int w, int h)
   :MarginLayoutParams(w,h){
-    alignWithParent=false;
-    mRulesChanged=false;
-    mIsRtlCompatibilityMode=false;
+    alignWithParent= false;
+    mRulesChanged  = false;
+    mIsRtlCompatibilityMode= false;
     memset(mRules,0,sizeof(mRules));
     memset(mInitialRules,0,sizeof(mInitialRules));
+    mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
+    mNeedsLayoutResolution = false;
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
   :MarginLayoutParams(source){
+    mRulesChanged  = false;
+    alignWithParent= false;
     memset(mRules,0,sizeof(mRules));
     memset(mInitialRules,0,sizeof(mInitialRules));
+    mLeft = mTop = mRight = mBottom = 0;//VALUE_NOT_SET;
+    mIsRtlCompatibilityMode= false;
+    mNeedsLayoutResolution = false;
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& source)
   :MarginLayoutParams(source){
+    mRulesChanged  = false;
+    alignWithParent= false;
+    mIsRtlCompatibilityMode=false;
     memset(mRules,0,sizeof(mRules));
     memset(mInitialRules,0,sizeof(mInitialRules));
+    mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
+    mNeedsLayoutResolution = false;
 }
 
 RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& source)
@@ -778,12 +793,17 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
     alignWithParent= source.alignWithParent;
     memcpy(mRules,source.mRules,sizeof(mRules));
     memcpy(mInitialRules,source.mInitialRules,sizeof(mInitialRules)); 
+    mLeft = source.mLeft;
+    mTop  = source.mTop;
+    mRight  = source.mRight;
+    mBottom = source.mBottom;;
+    mNeedsLayoutResolution = false;
 }
 
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
 #define GETID(res) ctx->getId(atts.getString(res))
     alignWithParent = atts.getBoolean("alignWithParentIfMissing",false);
-
+    mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
     mRules[LEFT_OF] = GETID("layout_toLeftOf");
     mRules[RIGHT_OF]= GETID("layout_toRightOf");
     mRules[ABOVE]   = GETID("layout_above");

@@ -2,6 +2,9 @@
 #include <dirent.h>
 #include <cdroid.h>
 #include <R.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 namespace cdroid{
 std::string SimplifyPath(const std::string & path) {
     char rpath[1024];
@@ -18,14 +21,20 @@ View*FileAdapter::getView(int position, View* convertView, ViewGroup* parent){
     ViewGroup*vp=(ViewGroup*)convertView;
     TextView*tv;
     if(convertView==nullptr){
-        vp=(ViewGroup*)LayoutInflater::from(&App::getInstance())->inflate("layout/fileitem.xml",nullptr);
+        vp=(ViewGroup*)LayoutInflater::from(&App::getInstance())->inflate(mResource,nullptr);
     }
     tv=(TextView*)vp->findViewById(uidemo::R::id::idno);
     if(tv)tv->setText(std::to_string(position));
     tv=(TextView*)vp->findViewById(uidemo::R::id::filename);
     tv->setText(mi.fileName);
-    tv->setTextColor(mi.isDir?0xFFFFFFFF:0xFF88FF00);
-    tv->setTextSize(28);
+    tv=(TextView*)vp->findViewById(uidemo::R::id::filesize);
+    if(tv&&mi.isDir==false){
+       struct stat st;
+       int rc=stat(mi.fullpath.c_str(),&st);
+       if(rc==0)
+          tv->setText(std::to_string(st.st_size/1024)+"K");
+       else tv->setText("stat Error");
+    }
     return vp;
 }
 

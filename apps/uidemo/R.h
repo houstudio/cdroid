@@ -7,12 +7,27 @@ namespace uidemo{
 class R{
 public:
     enum id {
-        idno                    = 0x00002710 ,
-        filename                = 0x00002711 ,
-        filesize                = 0x00002712 ,
-        exitbutton              = 0x00002713 ,
-        tablayout               = 0x00002714 ,
-        viewpager               = 0x00002715
+        idno                    = 0x00002710 /*     10000*/ ,
+        filename                = 0x00002711 /*     10001*/ ,
+        filesize                = 0x00002712 /*     10002*/ ,
+        exitbutton              = 0x00002713 /*     10003*/ ,
+        tablayout               = 0x00002714 /*     10004*/ ,
+        viewpager               = 0x00002715 /*     10005*/ ,
+        tv1                     = 0x00002716 /*     10006*/ ,
+        et1                     = 0x00002717 /*     10007*/ ,
+        tv2                     = 0x00002718 /*     10008*/ ,
+        et2                     = 0x00002719 /*     10009*/ ,
+        btnadd                  = 0x0000271A /*     10010*/ ,
+        table                   = 0x0000271B /*     10011*/ ,
+        address                 = 0x0000271C /*     10012*/ ,
+        BtnGo                   = 0x0000271D /*     10013*/ ,
+        TextUrl                 = 0x0000271E /*     10014*/ ,
+        WebView01               = 0x0000271F /*     10015*/ ,
+        icon                    = 0x00002720 /*     10016*/ ,
+        editText1               = 0x00002721 /*     10017*/ ,
+        editText2               = 0x00002722 /*     10018*/ ,
+        button1                 = 0x00002723 /*     10019*/ ,
+        table1                  = 0x00002724 /*     10020*/
     };//endof enum id
 
 };//endof class R

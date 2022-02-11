@@ -1048,12 +1048,12 @@ void View::setOverScrollMode(int overScrollMode){
 
 bool View::overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
            int scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent){
-    int overScrollMode = mOverScrollMode;
-    bool canScrollHorizontal= computeHorizontalScrollRange() > computeHorizontalScrollExtent();
-    bool canScrollVertical =  computeVerticalScrollRange() > computeVerticalScrollExtent();
-    bool overScrollHorizontal = overScrollMode == OVER_SCROLL_ALWAYS ||
+    const int overScrollMode = mOverScrollMode;
+    const bool canScrollHorizontal= computeHorizontalScrollRange() > computeHorizontalScrollExtent();
+    const bool canScrollVertical =  computeVerticalScrollRange() > computeVerticalScrollExtent();
+    const bool overScrollHorizontal = overScrollMode == OVER_SCROLL_ALWAYS ||
                 (overScrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && canScrollHorizontal);
-    bool overScrollVertical = overScrollMode == OVER_SCROLL_ALWAYS ||
+    const bool overScrollVertical = overScrollMode == OVER_SCROLL_ALWAYS ||
                 (overScrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && canScrollVertical);
 
     int newScrollX = scrollX + deltaX;
@@ -1063,10 +1063,10 @@ bool View::overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int sc
     if (!overScrollVertical)   maxOverScrollY = 0;
 
         // Clamp values if at the limits and record
-    int left = -maxOverScrollX;
-    int right = maxOverScrollX + scrollRangeX;
-    int top = -maxOverScrollY;
-    int bottom = maxOverScrollY + scrollRangeY;
+    const int left = -maxOverScrollX;
+    const int right = maxOverScrollX + scrollRangeX;
+    const int top = -maxOverScrollY;
+    const int bottom = maxOverScrollY + scrollRangeY;
 
     bool clampedX = false;
     if (newScrollX > right) {

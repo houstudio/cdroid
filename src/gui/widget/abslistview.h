@@ -161,12 +161,15 @@ private:
     void onTouchUp(MotionEvent& ev);
     void onTouchDown(MotionEvent& ev);
     void onTouchMove(MotionEvent&,MotionEvent&);
+    bool shouldDisplayEdgeEffects()const;
     void onTouchCancel();
     void onSecondaryPointerUp(MotionEvent&);
     bool contentFits();
     void positionSelector(int position, View* sel, bool manageHotspot, float x, float y);
     bool startScrollIfNeeded(int x, int y, MotionEvent* vtev);
     void scrollIfNeeded(int x, int y, MotionEvent* vtev);
+    int  releaseGlow(int deltaY, int x);
+    bool isGlowActive()const;
     void invalidateTopGlow();
     void invalidateBottomGlow();
     void finishGlows();
@@ -259,7 +262,12 @@ protected:
     void hideSelector();
     void reportScrollStateChange(int newState);
     void setVisibleRangeHint(int start,int end);
-    int reconcileSelectedPosition();
+    void setEdgeEffectColor(int color);
+    void setBottomEdgeEffectColor( int color);
+    void setTopEdgeEffectColor(int color);
+    int  getTopEdgeEffectColor()const;
+    int  getBottomEdgeEffectColor()const;
+    int  reconcileSelectedPosition();
     void requestLayoutIfNecessary();
  
     bool resurrectSelection(); 
@@ -294,7 +302,6 @@ public:
     AbsListView(int w,int h);
     AbsListView(Context*,const AttributeSet&atts);
     ~AbsListView();
-    void setOverScrollMode(int mode)override;
     void setAdapter(Adapter*adapter)override;
     int getCheckedItemCount()const;
     int getCheckedItemPositions(SparseBooleanArray&array);

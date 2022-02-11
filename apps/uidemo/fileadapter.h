@@ -13,8 +13,10 @@ public:
 };
 
 class FileAdapter:public ArrayAdapter<FileItem>{
-
+private:
+    std::string mResource;
 public:
+    FileAdapter(const std::string&res):mResource(res){}
     View*getView(int position, View* convertView, ViewGroup* parent)override;
     int loadFiles(const std::string&path);
     static std::string SimplifyPath(const std::string & path);

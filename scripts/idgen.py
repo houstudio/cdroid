@@ -81,6 +81,7 @@ class IDGenerater(object):
     def scanxml(self,scanPath):
         lastmodifytime=0
         for top, dirs, nondirs in os.walk(scanPath):
+            dirs.sort()
             for item in nondirs:
                 fname=os.path.join(top, item)
                 if (not item.endswith('.xml')) or (self.dirHasId(fname)<0):

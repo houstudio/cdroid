@@ -1,28 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="0x23"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="40dp"
+    android:layout_height="wrap_content"
     android:background="#FF12151C">
     <TextView
-        android:id="@id/idno"
+        android:id="@+id/idno"
         android:layout_width="80dp"
+        android:layout_alignParentLeft="true"
         android:layout_height="match_parent"
-        android:scaleType="center"
-        android:background="#0"
+        android:textColor="#00FF00"
+        android:layout_centerVertical="true"
+        android:background="#ff0000"
+        android:text="NONO"
         >
     </TextView>
     <TextView
-        android:id="@id/filename"
+        android:id="@+id/filename"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#333333"
+        android:layout_toEndOf="@id/idno"
+        android:layout_toLeftOf="@id/filesize"
+        android:background="#00FF00"
+        android:layout_centerVertical="true"
+        android:textSize="24sp"
+        android:textColor="#888888"
+        android:text="Text Lines(FileName)"
         android:layout_weight="1">
     </TextView>
     <TextView
-        android:id="@if/filesize"
+        android:id="@+id/filesize"
         android:layout_width="120dp"
         android:layout_height="match_parent"
-        android:background="#111111">
+        android:layout_alignParentRight="true"
+        android:background="#0000ff"
+        android:layout_centerVertical="true"
+        android:text="12.3K"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp">
     </TextView>
-</LinearLayout>
+</RelativeLayout>
+

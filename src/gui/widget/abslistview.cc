@@ -251,7 +251,9 @@ void AbsListView::initAbsListView() {
     mOnScrollListener.onScrollStateChanged = nullptr;
 
     mScroller = new OverScroller(getContext());
-    mEdgeGlowTop   = mEdgeGlowBottom =nullptr;
+    mEdgeGlowBottom = new EdgeEffect(mContext);
+    mEdgeGlowTop = new EdgeEffect(mContext);
+
     mFlingRunnable = std::bind(&AbsListView::FLY_Proc,this);
     mCheckFlywheel = std::bind(&AbsListView::FLY_CheckFlyWheelProc,this);
     mWidthMeasureSpec=0;
@@ -302,20 +304,6 @@ void AbsListView::updateScrollIndicators(){
 void AbsListView::setScrollIndicatorViews(View* up, View* down){
     mScrollUp = up;
     mScrollDown = down;
-}
-
-void AbsListView::setOverScrollMode(int mode) {
-    if (mode != OVER_SCROLL_NEVER) {
-        if (mEdgeGlowTop == nullptr) {
-	    Context* context = getContext();
-            mEdgeGlowTop = new EdgeEffect(context);
-            mEdgeGlowBottom = new EdgeEffect(context);
-        }
-    } else {
-        mEdgeGlowTop = nullptr;
-        mEdgeGlowBottom = nullptr;
-    }
-    AdapterView::setOverScrollMode(mode);
 }
 
 void AbsListView::setAdapter(Adapter*adapter) {
@@ -1554,7 +1542,7 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
 
 void AbsListView::draw(Canvas& canvas) {
     AdapterView::draw(canvas);
-    if (mEdgeGlowTop != nullptr) {
+    if (shouldDisplayEdgeEffects()) {
         int scrollY = mScrollY;
         bool clipToPadding = getClipToPadding();
         int width;
@@ -2374,23 +2362,21 @@ bool AbsListView::startScrollIfNeeded(int x, int y, MotionEvent* vtev) {
 void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
     int rawDeltaY = y - mMotionY;
     int scrollOffsetCorrection = 0;
-    int scrollConsumedCorrection = 0;
     if (mLastY == INT_MIN) {
         rawDeltaY -= mMotionCorrection;
     }
-
-    if (dispatchNestedPreScroll(0, mLastY != INT_MIN ? mLastY - y : -rawDeltaY,
-                                mScrollConsumed, mScrollOffset)) {
+    int incrementalDeltaY = mLastY != INT_MIN ? y - mLastY : rawDeltaY;
+    incrementalDeltaY = releaseGlow(incrementalDeltaY,x);
+    if (dispatchNestedPreScroll(0,-incrementalDeltaY, mScrollConsumed, mScrollOffset)) {
         rawDeltaY += mScrollConsumed[1];
         scrollOffsetCorrection = -mScrollOffset[1];
-        scrollConsumedCorrection = mScrollConsumed[1];
+        incrementalDeltaY += mScrollConsumed[1];
         if (vtev != nullptr) {
             vtev->offsetLocation(0, mScrollOffset[1]);
             mNestedYOffset += mScrollOffset[1];
         }
     }
     int deltaY = rawDeltaY;
-    int incrementalDeltaY = mLastY != INT_MIN ? y - mLastY + scrollConsumedCorrection : deltaY;
     int lastYCorrection = 0;
 
     if (mTouchMode == TOUCH_MODE_SCROLL/*3*/) {
@@ -2468,13 +2454,13 @@ void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
                                 mTouchMode = TOUCH_MODE_OVERSCROLL;
                             }
                             if (incrementalDeltaY > 0) {
-                                mEdgeGlowTop->onPull((float) -overscroll / getHeight(), (float) x / getWidth());
+                                mEdgeGlowTop->onPullDistance((float) -overscroll / getHeight(), (float) x / getWidth());
                                 if (!mEdgeGlowBottom->isFinished()) {
                                     mEdgeGlowBottom->onRelease();
                                 }
                                 invalidateTopGlow();
                             } else if (incrementalDeltaY < 0) {
-                                mEdgeGlowBottom->onPull((float) overscroll / getHeight(), 1.f - (float) x / getWidth());
+                                mEdgeGlowBottom->onPullDistance((float) overscroll / getHeight(), 1.f - (float) x / getWidth());
                                 if (!mEdgeGlowTop->isFinished()) {
                                     mEdgeGlowTop->onRelease();
                                 }
@@ -2513,14 +2499,14 @@ void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
                         (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS &&
                          !contentFits())) {
                     if (rawDeltaY > 0) {
-                        mEdgeGlowTop->onPull((float) overScrollDistance / getHeight(),
+                        mEdgeGlowTop->onPullDistance((float) overScrollDistance / getHeight(),
                                             (float) x / getWidth());
                         if (!mEdgeGlowBottom->isFinished()) {
                             mEdgeGlowBottom->onRelease();
                         }
                         invalidateTopGlow();
                     } else if (rawDeltaY < 0) {
-                        mEdgeGlowBottom->onPull((float) overScrollDistance / getHeight(),
+                        mEdgeGlowBottom->onPullDistance((float) overScrollDistance / getHeight(),
                                                1.f - (float) x / getWidth());
                         if (!mEdgeGlowTop->isFinished()) {
                             mEdgeGlowTop->onRelease();
@@ -2556,6 +2542,34 @@ void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
         }//if (y != mLastY)
     }
 }
+
+int AbsListView::releaseGlow(int deltaY, int x) {
+        // First allow releasing existing overscroll effect:
+    float consumed = .0f;
+    if (mEdgeGlowTop->getDistance() != .0f) {
+        consumed = mEdgeGlowTop->onPullDistance((float) deltaY / getHeight(),
+                (float) x / getWidth());
+        if (consumed != .0f) {
+            invalidateTopGlow();
+        }
+    } else if (mEdgeGlowBottom->getDistance() != .0f) {
+        consumed = -mEdgeGlowBottom->onPullDistance((float) -deltaY / getHeight(),
+                1.f - (float) x / getWidth());
+        if (consumed != .0f) {
+            invalidateBottomGlow();
+        }
+    }
+    int pixelsConsumed = round(consumed * getHeight());
+    return deltaY - pixelsConsumed;
+}
+
+/**
+ * @return <code>true</code> if either the top or bottom edge glow is currently active or
+ * <code>false</code> if it has no value to release.
+ */
+bool AbsListView::isGlowActive()const{
+    return mEdgeGlowBottom->getDistance() != 0 || mEdgeGlowTop->getDistance() != 0;
+}
 void AbsListView::invalidateTopGlow() {
     if (mEdgeGlowTop == nullptr) return;
 
@@ -2579,7 +2593,7 @@ void AbsListView::invalidateBottomGlow() {
 }
 
 void AbsListView::finishGlows() {
-    if (mEdgeGlowTop != nullptr) {
+    if (shouldDisplayEdgeEffects()) {
         mEdgeGlowTop->finish();
         mEdgeGlowBottom->finish();
     }
@@ -2698,6 +2712,42 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
 
 void AbsListView::setVisibleRangeHint(int start,int end) {
     //nothing,for android's remote view
+}
+
+//Sets the edge effect color for both top and bottom edge effects.
+void AbsListView::setEdgeEffectColor(int color) {
+    setTopEdgeEffectColor(color);
+    setBottomEdgeEffectColor(color);
+}
+
+/**
+ * Sets the bottom edge effect color.
+ */
+void AbsListView::setBottomEdgeEffectColor( int color) {
+    mEdgeGlowBottom->setColor(color);
+    invalidateBottomGlow();
+}
+
+/**
+ * Sets the top edge effect color.
+ */
+void AbsListView::setTopEdgeEffectColor(int color) {
+    mEdgeGlowTop->setColor(color);
+    invalidateTopGlow();
+}
+
+/**
+ * Returns the top edge effect color.
+ */
+int AbsListView::getTopEdgeEffectColor()const{
+    return mEdgeGlowTop->getColor();
+}
+
+/**
+ * @return The bottom edge effect color.
+ */
+int AbsListView::getBottomEdgeEffectColor()const{
+    return mEdgeGlowBottom->getColor();
 }
 
 void AbsListView::onTouchUp(MotionEvent&ev) {
@@ -2829,7 +2879,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
 
     setPressed(false);
 
-    if (mEdgeGlowTop != nullptr) {
+    if (shouldDisplayEdgeEffects()) {
         mEdgeGlowTop->onRelease();
         mEdgeGlowBottom->onRelease();
     }
@@ -2853,6 +2903,10 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
     }*/
 }
 
+bool AbsListView::shouldDisplayEdgeEffects()const{
+    return getOverScrollMode() != OVER_SCROLL_NEVER;
+}
+
 void AbsListView::onTouchCancel() {
     switch (mTouchMode) {
     case TOUCH_MODE_OVERSCROLL:
@@ -2873,7 +2927,7 @@ void AbsListView::onTouchCancel() {
         removeCallbacks(mPendingCheckForLongPress);
         recycleVelocityTracker();
     }
-    if (mEdgeGlowTop != nullptr) {
+    if (shouldDisplayEdgeEffects()) {
         mEdgeGlowTop->onRelease();
         mEdgeGlowBottom->onRelease();
     }

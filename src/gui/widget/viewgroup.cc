@@ -495,7 +495,7 @@ bool ViewGroup::addViewInLayout(View* child, int index,LayoutParams* params){
 bool ViewGroup::addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout){
     if (child == nullptr) {
         LOGE("Cannot add a null child view to a ViewGroup");
-	return false;
+        return false;
     }
     child->mParent = nullptr;
     addViewInner(child, index, params, preventRequestLayout);

@@ -2,7 +2,8 @@
 #include <systemclock.h>
 #include <cdtypes.h>
 #include <cdlog.h>
-
+#include <animation/valueanimator.h>
+#include <animation/animationutils.h>
 
 namespace cdroid{
 
@@ -38,16 +39,29 @@ void EdgeEffect::setSize(int width, int height){
     float oR = height * RADIUS_FACTOR / SIN;
     float oy = COS * oR;
     float oh = oR - oy;
-
+    mWidth  = width;
+    mHeight = height;
     mRadius = r;
     mBaseGlowScale = h > 0 ? std::min(oh / h, 1.f) : 1.f;
     mBounds.set(mBounds.left, mBounds.top, width, (int) std::min((float)height, h));
 }
+
+int EdgeEffect::getCurrentEdgeEffectBehavior() {
+    if (0/*!ValueAnimator::areAnimatorsEnabled()*/) {
+        return TYPE_NONE;
+    } else {
+        return mEdgeEffectType;
+    }
+}
+
 bool EdgeEffect::isFinished()const{
     return mState == STATE_IDLE;
 }
+
 void EdgeEffect::finish(){
     mState = STATE_IDLE;
+    mDistance = 0;
+    mVelocity = 0;
 }
 
 void EdgeEffect::onPull(float deltaDistance){
@@ -55,13 +69,21 @@ void EdgeEffect::onPull(float deltaDistance){
 }
 
 void EdgeEffect::onPull(float deltaDistance, float displacement){
+    int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
+    if (edgeEffectBehavior == TYPE_NONE) {
+        finish();
+        return;
+    }
     long now = SystemClock::uptimeMillis();
     mTargetDisplacement = displacement;
-    if (mState == STATE_PULL_DECAY && now - mStartTime < mDuration) {
+    if (mState == STATE_PULL_DECAY && now - mStartTime < mDuration && edgeEffectBehavior == TYPE_GLOW) {
         return;
     }
     if (mState != STATE_PULL) {
-        mGlowScaleY = std::max(PULL_GLOW_BEGIN, mGlowScaleY);
+        if (edgeEffectBehavior == TYPE_STRETCH)
+             mPullDistance = mDistance;
+        else
+             mGlowScaleY = std::max(PULL_GLOW_BEGIN, mGlowScaleY);
     }
     mState = STATE_PULL;
 
@@ -69,14 +91,21 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
     mDuration = PULL_TIME;
 
     mPullDistance += deltaDistance;
-
-    float absdd = std::abs(deltaDistance);
-    mGlowAlpha = mGlowAlphaStart = std::min(MAX_ALPHA,
-                mGlowAlpha + (absdd * PULL_DISTANCE_ALPHA_GLOW_FACTOR));
+    if (edgeEffectBehavior == TYPE_STRETCH) {
+        // Don't allow stretch beyond 1
+        mPullDistance = std::min(1.f, mPullDistance);
+    }
+    mDistance = std::max(.0f, mPullDistance);
+    mVelocity = 0;
 
     if (mPullDistance == 0) {
         mGlowScaleY = mGlowScaleYStart = 0;
+        mGlowAlpha = mGlowAlphaStart = 0;
     } else {
+
+        float absdd = std::abs(deltaDistance);
+        mGlowAlpha = mGlowAlphaStart = std::min(MAX_ALPHA,
+                mGlowAlpha + (absdd * PULL_DISTANCE_ALPHA_GLOW_FACTOR));
         float scale = (float) (std::max(0.f, 1.f - 1.f /
                (float)std::sqrt(std::abs(mPullDistance) * mBounds.height) - 0.3f) / 0.7f);
 
@@ -85,6 +114,32 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
 
     mGlowAlphaFinish = mGlowAlpha;
     mGlowScaleYFinish = mGlowScaleY;
+    if(edgeEffectBehavior ==TYPE_STRETCH && mDistance ==0)
+        mState = STATE_IDLE;
+}
+
+float EdgeEffect::onPullDistance(float deltaDistance, float displacement) {
+    int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
+    if (edgeEffectBehavior == TYPE_NONE) {
+        return .0f;
+    }
+    float finalDistance = std::max(.0f, deltaDistance + mDistance);
+    float delta = finalDistance - mDistance;
+    if (delta == .0f && mDistance == .0f) {
+        return .0f; // No pull, don't do anything.
+    }
+
+    if (mState != STATE_PULL && mState != STATE_PULL_DECAY && edgeEffectBehavior == TYPE_GLOW) {
+        // Catch the edge glow in the middle of an animation.
+        mPullDistance = mDistance;
+        mState = STATE_PULL;
+    }
+    onPull(delta, displacement);
+    return delta;
+}
+
+float EdgeEffect::getDistance()const{
+    return mDistance;
 }
 
 void EdgeEffect::onRelease(){
@@ -100,33 +155,43 @@ void EdgeEffect::onRelease(){
 
     mGlowAlphaFinish = 0.f;
     mGlowScaleYFinish = 0.f;
+    mVelocity = 0.f;
 
     mStartTime = SystemClock::uptimeMillis();
     mDuration = RECEDE_TIME;
 }
 
 void EdgeEffect::onAbsorb(int velocity){
-    mState = STATE_ABSORB;
-    velocity = std::min(std::max(MIN_VELOCITY, std::abs(velocity)), MAX_VELOCITY);
+    int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
+    if (edgeEffectBehavior == TYPE_STRETCH) {
+        mState = STATE_RECEDE;
+        mVelocity = velocity * ON_ABSORB_VELOCITY_ADJUSTMENT;
+        mStartTime = AnimationUtils::currentAnimationTimeMillis();
+    } else if (edgeEffectBehavior == TYPE_GLOW){
+        mState = STATE_ABSORB;
+        mVelocity= 0;
+        velocity = std::min(std::max(MIN_VELOCITY, std::abs(velocity)), MAX_VELOCITY);
 
-    mStartTime = SystemClock::uptimeMillis();
-    mDuration = 0.15f + (velocity * 0.02f);
+        mStartTime = SystemClock::uptimeMillis();
+        mDuration = 0.15f + (velocity * 0.02f);
 
-    // The glow depends more on the velocity, and therefore starts out
-    // nearly invisible.
-    mGlowAlphaStart = GLOW_ALPHA_START;
-    mGlowScaleYStart = std::max(mGlowScaleY, 0.f);
+        // The glow depends more on the velocity, and therefore starts out
+        // nearly invisible.
+         mGlowAlphaStart = GLOW_ALPHA_START;
+        mGlowScaleYStart = std::max(mGlowScaleY, 0.f);
 
 
-    // Growth for the size of the glow should be quadratic to properly
-    // respond
-    // to a user's scrolling speed. The faster the scrolling speed, the more
-    // intense the effect should be for both the size and the saturation.
-    mGlowScaleYFinish = std::min(0.025f + (velocity * (velocity / 100) * 0.00015f) / 2, 1.f);
-    // Alpha should change for the glow as well as size.
-    mGlowAlphaFinish = std::max(
+        // Growth for the size of the glow should be quadratic to properly
+        // respond to a user's scrolling speed. The faster the scrolling speed, the more
+        // intense the effect should be for both the size and the saturation.
+        mGlowScaleYFinish = std::min(0.025f + (velocity * (velocity / 100) * 0.00015f) / 2, 1.f);
+        // Alpha should change for the glow as well as size.
+        mGlowAlphaFinish = std::max(
             mGlowAlphaStart, std::min(velocity * VELOCITY_GLOW_FACTOR * .00001f, MAX_ALPHA));
-    mTargetDisplacement = 0.5f;
+        mTargetDisplacement = 0.5f;
+    }else {
+        finish();
+    }
 }
 
 void EdgeEffect::setColor(int color){
@@ -138,24 +203,31 @@ int EdgeEffect::getColor()const{
 }
 
 bool EdgeEffect::draw(Canvas& canvas){
-    update();
-    float centerX = mBounds.centerX();
-    float centerY = mBounds.height - mRadius;
-    canvas.save();
+    const int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
+    if (edgeEffectBehavior == TYPE_GLOW){
+        update();
+        float centerX = mBounds.centerX();
+        float centerY = mBounds.height - mRadius;
+        canvas.save();
 
-    float displacement = std::max(0.f, std::min(mDisplacement, 1.f)) - 0.5f;
-    float translateX = mBounds.width * displacement / 2;
+        float displacement = std::max(0.f, std::min(mDisplacement, 1.f)) - 0.5f;
+        float translateX = mBounds.width * displacement / 2;
    
-    canvas.rectangle(mBounds);
-    canvas.clip();
-    canvas.set_color(mColor);
-    canvas.curve_to(mBounds.left,mBounds.top,mBounds.width/2+translateX,mBounds.height*mGlowScaleY,mBounds.width,0);
-    canvas.fill();
+        canvas.rectangle(mBounds);
+        canvas.clip();
+        canvas.set_color(mColor);
+        canvas.curve_to(mBounds.left,mBounds.top,mBounds.width/2+translateX,mBounds.height*mGlowScaleY,mBounds.width,0);
+        canvas.fill();
 
-    canvas.restore();
-
+        canvas.restore();
+    }else if(edgeEffectBehavior == TYPE_STRETCH /*&& canvas instanceof RecordingCanvas*/){
+    }else{
+        mState = STATE_IDLE;
+        mDistance = 0;
+        mVelocity = 0;
+    } 
     bool oneLastFrame = false;
-    if (mState == STATE_RECEDE && mGlowScaleY == 0) {
+    if (mState == STATE_RECEDE && mDistance ==0 && mVelocity == 0) {
         mState = STATE_IDLE;
         oneLastFrame = true;
     }
@@ -174,6 +246,9 @@ void EdgeEffect::update() {
 
     mGlowAlpha = mGlowAlphaStart + (mGlowAlphaFinish - mGlowAlphaStart) * interp;
     mGlowScaleY = mGlowScaleYStart + (mGlowScaleYFinish - mGlowScaleYStart) * interp;
+    if (mState != STATE_PULL) {
+        mDistance = calculateDistanceFromGlowValues(mGlowScaleY, mGlowAlpha);
+    }
     mDisplacement = (mDisplacement + mTargetDisplacement) / 2;
 
     if (t >= 1.f - EPSILON) {
@@ -210,6 +285,94 @@ void EdgeEffect::update() {
             break;
         }
     }
+}
+
+template <typename T> int signum(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+void EdgeEffect::updateSpring() {
+    long time = AnimationUtils::currentAnimationTimeMillis();
+    float deltaT = (time - mStartTime) / 1000.f; // Convert from millis to seconds
+    if (deltaT < 0.001f) {
+        return; // Must have at least 1 ms difference
+    }
+    mStartTime = time;
+
+    if (abs(mVelocity) <= LINEAR_VELOCITY_TAKE_OVER
+                && abs(mDistance * mHeight) < LINEAR_DISTANCE_TAKE_OVER
+                && signum(mVelocity) == -signum(mDistance)
+    ) {
+        // This is close. The spring will slowly reach the destination. Instead, we
+        // will interpolate linearly so that it arrives at its destination quicker.
+        mVelocity = signum(mVelocity) * LINEAR_VELOCITY_TAKE_OVER;
+
+        float targetDistance = mDistance + (mVelocity * deltaT / mHeight);
+        if (signum(targetDistance) != signum(mDistance)) {
+            // We have arrived
+            mDistance = 0;
+            mVelocity = 0;
+        } else {
+            mDistance = targetDistance;
+        }
+        return;
+    }
+    double mDampedFreq = NATURAL_FREQUENCY * sqrt(1 - DAMPING_RATIO * DAMPING_RATIO);
+
+    // We're always underdamped, so we can use only those equations:
+    double cosCoeff = mDistance * mHeight;
+    double sinCoeff = (1 / mDampedFreq) * (DAMPING_RATIO * NATURAL_FREQUENCY
+            * mDistance * mHeight + mVelocity);
+    double distance = pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
+            * (cosCoeff * cos(mDampedFreq * deltaT)
+            + sinCoeff * sin(mDampedFreq * deltaT));
+    double velocity = distance * (-NATURAL_FREQUENCY) * DAMPING_RATIO
+            + pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
+            * (-mDampedFreq * cosCoeff * sin(mDampedFreq * deltaT)
+                + mDampedFreq * sinCoeff * cos(mDampedFreq * deltaT));
+    mDistance = (float) distance / mHeight;
+    mVelocity = (float) velocity;
+    if (mDistance > 1.f) {
+        mDistance = 1.f;
+        mVelocity = .0f;
+    }
+    if (isAtEquilibrium()) {
+        mDistance = 0;
+        mVelocity = 0;
+    }
+}
+
+float EdgeEffect::calculateDistanceFromGlowValues(float scale, float alpha) {
+    if (scale >= 1.f) {
+        // It should asymptotically approach 1, but not reach there.
+        // Here, we're just choosing a value that is large.
+        return 1.f;
+    }
+    if (scale > .0f) {
+        float v = 1.f / 0.7f / (mGlowScaleY - 1.f);
+        return v * v / mBounds.height;
+    }
+    return alpha / PULL_DISTANCE_ALPHA_GLOW_FACTOR;
+}
+
+bool EdgeEffect::isAtEquilibrium()const{
+    double displacement = mDistance * mHeight; // in pixels
+    double velocity = mVelocity;
+
+    // Don't allow displacement to drop below 0. We don't want it stretching the opposite
+    // direction if it is flung that way. We also want to stop the animation as soon as
+    // it gets very close to its destination.
+    return displacement < 0 || (abs(velocity) < VELOCITY_THRESHOLD
+            && displacement < VALUE_THRESHOLD);
+}
+
+float EdgeEffect::dampStretchVector(float normalizedVec)const{
+    float sign = normalizedVec > .0f ? 1.f : -1.f;
+    float overscroll = abs(normalizedVec);
+    float linearIntensity = LINEAR_STRETCH_INTENSITY * overscroll;
+    double scalar = M_E / SCROLL_DIST_AFFECTED_BY_EXP_STRETCH;
+    double expIntensity = EXP_STRETCH_INTENSITY * (1.f - exp(-overscroll * scalar));
+    return sign * (float) (linearIntensity + expIntensity);
 }
 
 }//namespace

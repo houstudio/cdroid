@@ -13,33 +13,58 @@
 #include <R.h>
 class FileTypeAdapter:public PagerAdapter{
 public:
-    int getCount()override{return 3;}
+    int getCount()override{return 5;}
     bool isViewFromObject(View* view, void*object)override{ return view==object;}
     void* instantiateItem(ViewGroup* container, int position)override{
-        ListView*lv=new ListView(480,400);
-        lv->setDivider(new ColorDrawable(0x80224422));
-        lv->setDividerHeight(1);
-        lv->setSelector(new ColorDrawable(0x8800FF00));
-        lv->setVerticalScrollBarEnabled(true);
-        lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 
-        FileAdapter*adapter=new FileAdapter();
-        adapter->loadFiles("/"); 
-        lv->setAdapter(adapter);
-        lv->setBackgroundColor(0xFF000000|(0xFF<<position*8));
-        container->addView(lv);
-        lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
-            FileAdapter*adp=(FileAdapter*)lv.getAdapter();
-            FileItem&f=adp->getItemAt(pos);
-            LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
-            if(f.isDir){
-                adp->clear();
-                adp->loadFiles(f.fullpath);
-                adp->notifyDataSetChanged();
+        std::string res[]={"@layout/layout1.xml","@layout/layout2.xml","@layout/layout3.xml"};
+        switch(position){
+        case 2:
+        case 3:
+        case 4:
+            {View*v=LayoutInflater::from(container->getContext())->inflate(res[position-2],nullptr,false);
+            container->addView(v);
+            v->requestLayout();
+            return v;
+            }break;
+        case 0:
+            {
+            ListView*lv=new ListView(800,480);
+            lv->setDivider(new ColorDrawable(0x80224422));
+            lv->setDividerHeight(1);
+            lv->setSelector(new ColorDrawable(0x8800FF00));
+            lv->setVerticalScrollBarEnabled(true);
+            lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 
+            FileAdapter*adapter=new FileAdapter("@layout/fileitem.xml");
+            adapter->loadFiles("/"); 
+            lv->setAdapter(adapter);
+            lv->setBackgroundColor(0xFF000000|(0xFF<<position*8));
+            container->addView(lv);
+            lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
+                FileAdapter*adp=(FileAdapter*)lv.getAdapter();
+                FileItem&f=adp->getItemAt(pos);
+                LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
+                if(f.isDir){
+                    adp->clear();
+                    adp->loadFiles(f.fullpath);
+                    adp->notifyDataSetChanged();
+                }
+            });
+            LOGV("instantiateItem %d to %p",position,lv);
+            return lv;
+            }   
+        case 1:{LOGD("===========1111");
+            GridView*gv=new GridView(800,480);
+            FileAdapter*adapter=new FileAdapter("@layout/fileitem2.xml");
+            gv->setNumColumns(3);
+            gv->setAdapter(adapter);
+            gv->setHorizontalSpacing(2); 
+            gv->setVerticalSpacing(2);
+            container->addView(gv);
+            adapter->loadFiles("/");
+            adapter->notifyDataSetChanged();
+            return gv;
             }
-        });
-
-        LOGV("instantiateItem %d to %p",position,lv);
-        return lv;
+        }
     }
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
@@ -69,6 +94,7 @@ public:
 };
 
 MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
+#if 10
     ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate("layout/main.xml",this);
     mAdapter=new FileTypeAdapter();
     mTabLayout=(TabLayout*)vg->findViewById(uidemo::R::id::tablayout);
@@ -82,13 +108,17 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mPager = (ViewPager*)vg->findViewById(uidemo::R::id::viewpager);
 #endif
     mTabLayout->setSelectedTabIndicatorColor(0x8000FF00);
-    mTabLayout->setSelectedTabIndicatorHeight(4);
+    mTabLayout->setSelectedTabIndicatorHeight(5);
     mTabLayout->setTabTextColors(0xFFFF0000,0xFF00FF00);
     mTabLayout->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
     mPager->setAdapter(mAdapter);
     mTabLayout->setupWithViewPager(mPager);
     mTabLayout->requestLayout();
+#else
+    LayoutInflater::from(getContext())->inflate("@layout/fileitem",this);
+    requestLayout();
+#endif
 }
 
 Window*CreateMultiMedia(){

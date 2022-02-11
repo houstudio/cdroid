@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" 
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout 
+        android:id="@+id/address"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentTop="true"
+        android:background="#00FF00">
+        <Button android:id="@+id/BtnGo" 
+            android:layout_width="80dpwrap_content"
+            android:layout_height="match_parent" 
+            android:layout_alignParentRight="true"
+            android:text="Go"/>        
+        <EditText android:id="@+id/TextUrl" 
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" 
+            android:hint="请输入网址"
+            android:layout_alignTop="@id/BtnGo" 
+            android:layout_toLeftOf="@id/BtnGo"/>
+    </RelativeLayout>
+    <TextView android:id="@+id/WebView01" 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/address"
+        android:text="Text view ..."/> 
+</LinearLayout>

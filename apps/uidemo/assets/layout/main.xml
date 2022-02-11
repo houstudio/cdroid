@@ -23,6 +23,24 @@
             android:layout_height="match_parent"
             android:background="transparent"
             android:layout_weight="1">
+            <!--TabItem
+                android:id="101"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Tab2"
+                android:icon="@mipmap/dev_sync"/>
+            <TabItem
+                android:id="102"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Tab3"
+                android:icon="@mipmap/dev_sync"/>
+            <TabItem
+                android:id="103"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Tab1"
+                android:icon="@mipmap/dev_sync"/-->
         </TabLayout>
         <ImageButton
             android:id="300"

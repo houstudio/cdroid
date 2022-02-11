@@ -8,6 +8,63 @@ namespace cdroid{
 
 class EdgeEffect{
 private:
+    /*Completely disable edge effect*/
+    static constexpr int TYPE_NONE = -1;
+
+    /*Use a color edge glow for the edge effect.*/
+    static constexpr int TYPE_GLOW = 0;
+
+    /*Use a stretch for the edge effect. */
+    static constexpr int TYPE_STRETCH = 1;
+    /**
+     * The velocity threshold before the spring animation is considered settled.
+     * The idea here is that velocity should be less than 0.1 pixel per second.
+     */
+    static constexpr double VELOCITY_THRESHOLD = 0.01;
+
+    /**
+     * The speed at which we should start linearly interpolating to the destination.
+     * When using a spring, as it gets closer to the destination, the speed drops off exponentially.
+     * Instead of landing very slowly, a better experience is achieved if the constexpr
+     * destination is arrived at quicker.
+     */
+    static constexpr float LINEAR_VELOCITY_TAKE_OVER = 200.f;
+
+    /**
+     * The value threshold before the spring animation is considered close enough to
+     * the destination to be settled. This should be around 0.01 pixel.
+     */
+    static constexpr double VALUE_THRESHOLD = 0.001;
+
+    /**
+     * The maximum distance at which we should start linearly interpolating to the destination.
+     * When using a spring, as it gets closer to the destination, the speed drops off exponentially.
+     * Instead of landing very slowly, a better experience is achieved if the constexpr
+     * destination is arrived at quicker.
+     */
+    static constexpr double LINEAR_DISTANCE_TAKE_OVER = 8.0;
+
+    /**
+     * The natural frequency of the stretch spring.
+     */
+    static constexpr double NATURAL_FREQUENCY = 24.657;
+
+    /**
+     * The damping ratio of the stretch spring.
+     */
+    static constexpr double DAMPING_RATIO = 0.98;
+
+    /**
+     * The variation of the velocity for the stretch effect when it meets the bound.
+     * if value is > 1, it will accentuate the absorption of the movement.
+     */
+    static constexpr float ON_ABSORB_VELOCITY_ADJUSTMENT = 13.f;
+
+    static constexpr float LINEAR_STRETCH_INTENSITY = 0.016f;
+
+    static constexpr float EXP_STRETCH_INTENSITY = 0.016f;
+
+    static constexpr float SCROLL_DIST_AFFECTED_BY_EXP_STRETCH = 0.33f;
     // Time it will take the effect to fully recede in ms
     static constexpr int RECEDE_TIME = 600;
     // Time it will take before a pulled glow begins receding in ms
@@ -34,6 +91,8 @@ private:
     static constexpr float RADIUS_FACTOR = 0.6f;
     float mGlowAlpha;
     float mGlowScaleY;
+    float mDistance;
+    float mVelocity; // only for stretch animations
 
     float mGlowAlphaStart;
     float mGlowAlphaFinish;
@@ -59,13 +118,21 @@ private:
     float mPullDistance;
 
     Rect mBounds;
+    float mWidth;
+    float mHeight;
     int mColor;
     float mRadius;
     float mBaseGlowScale;
     float mDisplacement = 0.5f;
     float mTargetDisplacement = 0.5f;
+    int mEdgeEffectType = TYPE_GLOW;
 private:
     void update();
+    void updateSpring();
+    int  getCurrentEdgeEffectBehavior();
+    float calculateDistanceFromGlowValues(float scale, float alpha);
+    bool isAtEquilibrium()const;
+    float dampStretchVector(float normalizedVec)const;
 public:
     EdgeEffect(Context* context);
     ~EdgeEffect();
@@ -74,6 +141,8 @@ public:
     void finish();
     void onPull(float deltaDistance);
     void onPull(float deltaDistance, float displacement);
+    float onPullDistance(float deltaDistance, float displacement);
+    float getDistance()const;
     void onRelease();
     void onAbsorb(int velocity);
     void setColor(int color);

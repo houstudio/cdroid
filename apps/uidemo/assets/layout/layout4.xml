@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    <LinearLayout 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="6">
+        <TableLayout 
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical">
+            <TextView 
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="请输入要生成表格的行号列"
+                android:textSize="15sp"/>
+            <TableRow 
+                android:gravity="center"
+                android:layout_marginTop="5dp"
+                >
+                 <TextView 
+                    android:id="@+id/tv1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="行"
+                    android:textSize="15sp"/>
+            <EditText 
+                android:id="@+id/et1"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"/>
+            </TableRow>
+            <TableRow 
+                android:gravity="center"
+                android:layout_marginTop="5dp"
+                >
+
+                <TextView
+                    android:id="@+id/tv2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="列"
+                    android:textSize="15sp" />
+
+            <EditText 
+                android:id="@+id/et2"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:numeric="decimal"/>
+            <!-- decimal 只能输入数字，大于0的数字-->
+            </TableRow>
+            <TableRow
+                android:gravity="center"
+                >
+                <Button 
+                    android:id="@+id/btnadd"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_span="2"
+                    android:text="确定"
+                    
+                    />
+            </TableRow>
+        </TableLayout>
+     </LinearLayout>
+    <TableLayout 
+        android:id="@+id/table"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:stretchColumns="*"
+        android:shrinkColumns="*">
+        
+    </TableLayout>
+</LinearLayout>
