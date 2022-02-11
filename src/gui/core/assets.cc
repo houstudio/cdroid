@@ -82,8 +82,9 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             LOGV("%s=%s",name.c_str(),value.c_str());
         }else if(tag0.compare("color")==0){
             const std::string name=atts[0].getString("name");
+            COMPLEXCOLOR cl=Color::parseColor(value);
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
-            mColors.insert(std::pair<const std::string,int>(package+":color/"+name,Color::parseColor(value)));
+            mColors.insert(std::pair<const std::string,COMPLEXCOLOR>(package+":color/"+name,cl));
         }
     }else  if(atts.size()==2){int i=0;
         if(tag0.compare("style")==0){
@@ -119,7 +120,7 @@ int Assets::addResource(const std::string&path,const std::string&name){
     int count=0;
     pak->forEachEntry([this,name,&count](const std::string&res){
         count++;
-        if(TextUtils::startWith(res,"values")){
+        if(TextUtils::startWith(res,"values")&&res.size()>7){
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             const std::string resid=name+":"+res;
             loadKeyValues(resid,std::bind(&Assets::parseItem,this,name,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
@@ -129,11 +130,10 @@ int Assets::addResource(const std::string&path,const std::string&name){
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme");
     pak->forEachEntry([this,name,&count](const std::string&res){
-        if(TextUtils::startWith(res,"color")){ 
+        if(TextUtils::startWith(res,"color")&&res.size()>6){ 
             std::string resid=name+":"+res.substr(0,res.find(".xml"));
-            ColorStateList *cl=ColorStateList::inflate(this,resid);
-            LOGV("colorstatelist %p<<%s",cl,resid.c_str());
-            mColors.insert(std::pair<const std::string,ColorStateList*>(resid,cl));
+            COMPLEXCOLOR cl=ColorStateList::inflate(this,resid);
+            mColors.insert(std::pair<const std::string,COMPLEXCOLOR>(resid,cl));
         }
         return 0;
     });
@@ -314,10 +314,13 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
 }
 
 int Assets::getColor(const std::string&refid){
-    std::string name;
-    auto it = mColors.find(refid);
-    if(it!=mColors.end())
+    std::string pkg,name=refid;
+    parseResource(name,nullptr,&pkg);
+    normalizeProperty(pkg,name);
+    auto it = mColors.find(name);
+    if(it!=mColors.end()){
         return nonstd::get<int>(it->second);
+    }
     else if((refid[0]=='#')||refid.find(':')==std::string::npos){
         return Color::parseColor(refid);
     }else if(refid.find("color/")==std::string::npos){//refid is defined as an color reference
