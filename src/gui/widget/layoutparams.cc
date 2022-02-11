@@ -86,10 +86,10 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
 
 MarginLayoutParams::MarginLayoutParams(int width, int height)
 	:LayoutParams(width, height){
-	mMarginFlags=0;
+    mMarginFlags=0;
     leftMargin = topMargin   = 0;
     rightMargin= bottomMargin= 0;
-    startMargin=endMargin=0;
+    startMargin= endMargin = DEFAULT_MARGIN_RELATIVE;
     mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
     mMarginFlags |= RIGHT_MARGIN_UNDEFINED_MASK;
     mMarginFlags &= ~NEED_RESOLUTION_MASK;
@@ -101,7 +101,7 @@ MarginLayoutParams::MarginLayoutParams(const LayoutParams& source)
     mMarginFlags=0;
     leftMargin = topMargin =0;
     rightMargin= bottomMargin=0;
-    startMargin= endMargin = 0;
+    startMargin= endMargin = DEFAULT_MARGIN_RELATIVE;
 
     mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
     mMarginFlags |= RIGHT_MARGIN_UNDEFINED_MASK;
