@@ -214,7 +214,7 @@ std::shared_ptr<Drawable::ConstantState>NinePatchDrawable::getConstantState(){
 void NinePatchDrawable::draw(Canvas&canvas){
     if(mNinePatchState->mNinePatch){
         canvas.save(); 
-        if(needsMirroring()||1){
+        if(needsMirroring()){
             const float cx=mBounds.left+mBounds.width/2.f;
             const float cy=mBounds.left+mBounds.height/2.f;
             canvas.scale(-1.f,1.f);
