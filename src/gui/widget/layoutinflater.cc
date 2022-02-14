@@ -104,11 +104,14 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         return;
     }
     std::string stname=atts.getString("style");
-    if(stname.empty())
-        stname=LayoutInflater::from(pd->ctx)->getDefaultStyle(name);
     if(!stname.empty()){
         AttributeSet style=pd->ctx->obtainStyledAttributes(stname);
         atts.inherit(style);
+    }
+    stname=LayoutInflater::from(pd->ctx)->getDefaultStyle(name);
+    if(!stname.empty()){
+        AttributeSet defstyle=pd->ctx->obtainStyledAttributes(stname);
+        atts.inherit(defstyle);
     }
     View*v=inflater(pd->ctx,atts);
     pd->parsedView++;

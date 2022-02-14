@@ -9,7 +9,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(EditText)
+DECLARE_WIDGET2(EditText,"cdroid:attr/editTextStyle")
 
 EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){

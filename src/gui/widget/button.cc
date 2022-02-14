@@ -2,7 +2,7 @@
 #include <gravity.h>
 namespace cdroid{
 
-DECLARE_WIDGET(Button)
+DECLARE_WIDGET2(Button,"cdroid:attr/buttonStyle")
 
 Button::Button(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
     setGravity(Gravity::CENTER_VERTICAL);

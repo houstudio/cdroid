@@ -311,7 +311,7 @@ void AlertController::setupView() {
         }
     }
 
-    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:style/AlertDialog");
+    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/alertDialogStyle");
     //TypedArray a = mContext.obtainStyledAttributes(R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
     setBackground(atts, topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
@@ -513,15 +513,15 @@ void AlertController::setBackground(const AttributeSet&a,View* topPanel, View* c
     // inheriting from a framework style.
     bool needsDefaultBackgrounds = a.getBoolean("needsDefaultBackgrounds", true);
     if (needsDefaultBackgrounds) {
-        fullDark = "cdroid:drawable/popup_full_dark";
-        topDark = "cdroid:drawable/popup_top_dark";
-        centerDark = "cdroid:drawable/popup_center_dark";
-        bottomDark = "cdroid:drawable/popup_bottom_dark";
-        fullBright = "cdroid:drawable/popup_full_bright";
-        topBright = "cdroid:drawable/popup_top_bright";
-        centerBright = "cdroid:drawable/popup_center_bright";
-        bottomBright = "cdroid:drawable/popup_bottom_bright";
-        bottomMedium = "cdroid:drawable/popup_bottom_medium";
+        fullDark = "cdroid:mipmap/popup_full_dark";
+        topDark = "cdroid:mipmap/popup_top_dark";
+        centerDark = "cdroid:mipmap/popup_center_dark";
+        bottomDark = "cdroid:mipmap/popup_bottom_dark";
+        fullBright = "cdroid:mipmap/popup_full_bright";
+        topBright = "cdroid:mipmap/popup_top_bright";
+        centerBright = "cdroid:mipmap/popup_center_bright";
+        bottomBright = "cdroid:mipmap/popup_bottom_bright";
+        bottomMedium = "cdroid:mipmap/popup_bottom_medium";
     }
 
     topBright = a.getString("topBright", topBright);

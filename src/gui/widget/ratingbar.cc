@@ -22,9 +22,9 @@ RatingBar::OnRatingBarChangeListener RatingBar::getOnRatingBarChangeListener(){
 void RatingBar::setIsIndicator(bool isIndicator){
     mIsUserSeekable = !isIndicator;
     if (isIndicator) {
-        setFocusable(FOCUSABLE_AUTO);
+        setFocusable((int)FOCUSABLE_AUTO);
     } else {
-        setFocusable(FOCUSABLE);
+        setFocusable((int)FOCUSABLE);
     }
 }
 

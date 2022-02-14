@@ -1397,13 +1397,11 @@ void ViewGroup::onDebugDraw(Canvas& canvas){
     canvas.stroke();
 
     // Draw margins
-    canvas.set_color(0x800000FF);
+    canvas.set_source_rgba(1.f ,.0f, 1.f,.25f);
     onDebugDrawMargins(canvas);
-    canvas.stroke();
+    canvas.fill();;
 
     // Draw clip bounds
-    //paint.setColor(DEBUG_CORNERS_COLOR);
-    //paint.setStyle(Paint.Style.FILL);
     canvas.set_color(DEBUG_CORNERS_COLOR); 
     int lineLength = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
     int lineWidth  = dipsToPixels(1);

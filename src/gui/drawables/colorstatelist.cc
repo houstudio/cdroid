@@ -28,6 +28,16 @@ ColorStateList::ColorStateList(const std::vector<std::vector<int>>&states,const 
     onColorsChanged();
 }
 
+void ColorStateList::dump()const{
+    std::ostringstream oss;
+    for(int i=0;i<mColors.size();i++){
+        oss<<"[";
+        for(auto s:mStateSpecs[i])oss<<s<<",";
+        oss<<"]="<<std::hex<<(unsigned int)mColors.at(i)<<std::endl;
+    }
+    LOG(DEBUG)<<oss.str();
+}
+
 int ColorStateList::getChangingConfigurations()const{
     return mChangingConfigurations;
 }
@@ -145,7 +155,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         std::vector<int>states;
         int color=cd->ctx->getColor(atts.getString("color"));
         StateSet::parseState(states,atts);
-	cd->colors.addStateColor(states,color);
+        cd->colors.addStateColor(states,color);
     }
 }
 
