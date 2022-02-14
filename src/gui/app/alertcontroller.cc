@@ -75,8 +75,7 @@ void AlertController::installContent(AlertParams* params) {
 void AlertController::installContent() {
     const std::string contentView = selectContentView();
     //mWindow->setContentView(contentView);
-    View*v=LayoutInflater::from(mContext)->inflate(contentView,nullptr);
-    if(v)mWindow->addView(v);
+    LayoutInflater::from(mContext)->inflate(contentView,mWindow,true);
     setupView();
     mWindow->requestLayout();
 }
@@ -322,9 +321,7 @@ void AlertController::setupCustomContent(ViewGroup* customPanel){
         customView = mView;
     } else if (mViewLayoutResId.size()) {
         LayoutInflater* inflater = LayoutInflater::from(mContext);
-        customView = inflater->inflate(mViewLayoutResId, nullptr,false);//customPanel,true);
-        customPanel->addView(customView);
-        delete inflater;
+        customView = inflater->inflate(mViewLayoutResId,customPanel,false);
     } 
     bool hasCustomView = customView != nullptr;
     if (!hasCustomView || !canTextInput(customView)) {

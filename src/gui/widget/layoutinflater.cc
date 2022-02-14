@@ -118,10 +118,11 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     pd->flags.push_back(0);
     pd->views.push_back(v);
     LOGV("%p:%08x [%s] %s",v,v->getId(),name,stname.c_str());
-    if(parent){
+    if( (parent && (parent==pd->root) && pd->attachToRoot )||(parent!=pd->root)){
         LayoutParams*lp=parent->generateLayoutParams(atts);
         parent->addViewInLayout(v,-1,lp,true);
     }else{
+        LOGE("cant reached here!!!");
         LayoutParams*lp=((ViewGroup*)v)->generateLayoutParams(atts);
         ((ViewGroup*)v)->setLayoutParams(lp);
     }

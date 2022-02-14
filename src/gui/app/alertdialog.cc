@@ -9,7 +9,7 @@ AlertDialog::AlertDialog(Context*ctx,const std::string&resid):Dialog(ctx,resid){
 }
 
 AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelListener listener)
-   :AlertDialog(ctx,""){
+   :AlertDialog(ctx,"@cdroid:layout/alert_dialog"){
     setCancelable(cancelable);
     setOnCancelListener(listener);
 }
@@ -228,7 +228,7 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 }
 
 AlertDialog* AlertDialog::Builder::create(){
-    AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog.xml");//, false);
+    AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog");//, false);
     P->apply(dialog->mAlert);
     dialog->setCancelable(P->mCancelable);
     if (P->mCancelable) {

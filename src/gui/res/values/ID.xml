@@ -31,5 +31,6 @@
   <id name="titleDividerTop">0x00000404</id>
   <id name="progress_percent">0x00000405</id>
   <id name="progress_number">0x00000406</id>
+  <id name="body">0x00000407</id>
 </resources>
 

@@ -3,6 +3,49 @@
 
 namespace cdroid{
 
+ProgressDialog::ProgressDialog(cdroid::Context*context):AlertDialog(context){
+    mProgressStyle = STYLE_SPINNER;
+    mIndeterminate = false;
+    mProgress = nullptr;
+    mProgressNumber = nullptr;
+    mProgressPercent= nullptr;
+    mProgressDrawable = nullptr;
+    mIndeterminateDrawable = nullptr;
+}
+
+ProgressDialog::ProgressDialog(cdroid::Context*context,const std::string& resid):AlertDialog(context,resid){
+    mProgressStyle = STYLE_SPINNER;
+    mIndeterminate = false;
+    mProgress = nullptr;
+    mProgressNumber = nullptr;
+    mProgressPercent= nullptr;
+    mProgressDrawable = nullptr;
+    mIndeterminateDrawable = nullptr;
+}
+
+ProgressDialog* ProgressDialog::show(Context* context,const std::string&title,const std::string&message,bool indeterminate){
+    return show(context,title,message,indeterminate,false);
+}
+
+ProgressDialog* ProgressDialog::show(Context* context, const std::string& title,const std::string& message, bool indeterminate, bool cancelable){
+    return show(context,title,message,indeterminate,cancelable,nullptr);
+}
+
+ProgressDialog* ProgressDialog::show(Context* context,const std::string& title,const std::string& message, bool indeterminate, bool cancelable, OnCancelListener cancelListener){
+    ProgressDialog* dialog = new ProgressDialog(context);
+    dialog->setTitle(title);
+    dialog->setMessage(message);
+    dialog->setIndeterminate(indeterminate);
+    dialog->setCancelable(cancelable);
+    dialog->setOnCancelListener(cancelListener);
+    dialog->show();
+    return dialog;
+}
+
+void ProgressDialog::show(){
+    AlertDialog::show();
+}
+
 void ProgressDialog::onCreate() {
     LayoutInflater* inflater = LayoutInflater::from(getContext());
     AttributeSet a = getContext()->obtainStyledAttributes("cdroid:attr/alertDialogStyle");
@@ -19,7 +62,7 @@ void ProgressDialog::onCreate() {
                 int progress = mProgress.getProgress();
                 int max = mProgress.getMax();
                 if (mProgressNumberFormat != null) {
-                    String format = mProgressNumberFormat;
+                    std::string format = mProgressNumberFormat;
                     mProgressNumber.setText(String.format(format, progress, max));
                 } else {
                     mProgressNumber.setText("");
@@ -35,13 +78,13 @@ void ProgressDialog::onCreate() {
                 }
             }
         };*/
-        View* view = inflater->inflate(a.getString("horizontalProgressLayout","cdroid:layout/alert_dialog_progress"),nullptr);
+        View* view = inflater->inflate(a.getString("horizontalProgressLayout","cdroid:layout/alert_dialog_progress"),nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mProgressNumber = (TextView*) view->findViewById(R::id::progress_number);
         mProgressPercent = (TextView*) view->findViewById(R::id::progress_percent);
         setView(view);
     } else {
-        View* view = inflater->inflate(a.getString("progressLayout","cdroid:layout/progress_dialog"), nullptr);
+        View* view = inflater->inflate(a.getString("progressLayout","cdroid:layout/progress_dialog"),nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mMessageView = (TextView*) view->findViewById(R::id::message);
         setView(view);
@@ -118,11 +161,6 @@ int ProgressDialog::getSecondaryProgress()const{
     return mSecondaryProgressVal;
 }
 
-    /**
-     * Gets the maximum allowed progress value. The default value is 100.
-     *
-     * @return the maximum value
-     */
 int ProgressDialog::getMax()const {
     if (mProgress) {
         return mProgress->getMax();
@@ -130,9 +168,6 @@ int ProgressDialog::getMax()const {
     return mMax;
 }
 
-    /**
-     * Sets the maximum allowed progress value.
-     */
 void ProgressDialog::setMax(int max) {
     if (mProgress) {
         mProgress->setMax(max);
@@ -142,12 +177,6 @@ void ProgressDialog::setMax(int max) {
     }
 }
 
-    /**
-     * Increments the current progress value.
-     *
-     * @param diff the amount by which the current progress will be incremented,
-     * up to {@link #getMax()}
-     */
 void ProgressDialog::incrementProgressBy(int diff) {
     if (mProgress) {
         mProgress->incrementProgressBy(diff);
@@ -157,12 +186,6 @@ void ProgressDialog::incrementProgressBy(int diff) {
     }
 }
 
-    /**
-     * Increments the current secondary progress value.
-     *
-     * @param diff the amount by which the current secondary progress will be incremented,
-     * up to {@link #getMax()}
-     */
 void ProgressDialog::incrementSecondaryProgressBy(int diff) {
     if (mProgress) {
         mProgress->incrementSecondaryProgressBy(diff);

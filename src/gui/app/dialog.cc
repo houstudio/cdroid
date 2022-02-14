@@ -11,8 +11,7 @@ Dialog::Dialog(Context*context){
 
 Dialog::Dialog(Context* context,const std::string&resId):Dialog(context){
     mWindow=new Window(0,0,640,320);
-    View*v=LayoutInflater::from(mWindow->getContext())->inflate(resId,nullptr,false);
-    mWindow->addView(v); 
+    View*v=LayoutInflater::from(mWindow->getContext())->inflate(resId,mWindow,true);
 }
 
 Context*Dialog::getContext()const{

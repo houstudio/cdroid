@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
+    cdroid:layout_width="match_parent"
+    cdroid:layout_height="wrap_content">
+
+    <LinearLayout cdroid:id="@cdroid:+id/body"
+        cdroid:orientation="horizontal"
+        cdroid:layout_width="match_parent"
+        cdroid:layout_height="match_parent"
+        cdroid:baselineAligned="false"
+        cdroid:paddingStart="8dip"
+        cdroid:paddingTop="10dip"
+        cdroid:paddingEnd="8dip"
+        cdroid:paddingBottom="10dip">
+
+        <ProgressBar cdroid:id="@cdroid:id/progress"
+            style="?cdroid:attr/progressBarStyle"
+            cdroid:layout_width="wrap_content"
+            cdroid:layout_height="wrap_content"
+            cdroid:max="10000"
+            cdroid:layout_marginEnd="12dip" />
+
+        <TextView cdroid:id="@cdroid:+id/message"
+            cdroid:layout_width="match_parent"
+            cdroid:layout_height="wrap_content"
+            cdroid:layout_gravity="center_vertical" />
+    </LinearLayout>
+</FrameLayout>

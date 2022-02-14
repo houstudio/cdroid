@@ -39,9 +39,12 @@ protected:
     void onCreate()override;
     void onStop()override;
 public:
+    ProgressDialog(Context* context);
     ProgressDialog(Context* context,const std::string& theme);
-    static ProgressDialog show(Context* context,const std::string&title,const std::string&message);
-
+    static ProgressDialog* show(Context* context,const std::string&title,const std::string&message,bool indeterminate=false);
+    static ProgressDialog* show(Context* context,const std::string&title,const std::string&message,bool indeterminate,bool cancelable);
+    static ProgressDialog* show(Context* context,const std::string&title,const std::string&message,bool indeterminate,bool cancelable, OnCancelListener cancelListener);
+    void show()override;
     void onStart()override;
     void setProgress(int value);
     void setSecondaryProgress(int secondaryProgress);

@@ -27,7 +27,7 @@ public:
     Context*getContext()const;
     bool isShowing()const;
     void create();
-    void show();
+    virtual void show();
     void hide();
     void dismiss()override;
     void dismissDialog(); 
