@@ -131,7 +131,7 @@
     <color name="datepicker_default_header_dayofweek_background_color_material_dark">@color/white</color>
 
     <color name="datepicker_default_normal_text_color_material_light">#ff999999</color>
-    <color name="datepicker_default_normal_text_color_material_dark">@android:color/white</color>
+    <color name="datepicker_default_normal_text_color_material_dark">@cdroid:color/white</color>
 
     <color name="datepicker_default_disabled_text_color_material_light">#80999999</color>
     <color name="datepicker_default_disabled_text_color_material_dark">#80999999</color>

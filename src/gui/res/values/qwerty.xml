@@ -32,7 +32,7 @@
     </Row>
     
     <Row>
-        <Key codes="-1" keyIcon="cdroid:drawable/sym_keyboard_shift.png" 
+        <Key codes="-1" keyIcon="cdroid:mipmap/sym_keyboard_shift" 
                 keyWidth="15%p" isModifier="true"
                 isSticky="true" keyEdgeFlags="left"/>
         <Key codes="122" keyLabel="z"/>
@@ -42,26 +42,26 @@
         <Key codes="98" keyLabel="b"/>
         <Key codes="110" keyLabel="n"/>
         <Key codes="109" keyLabel="m"/>
-        <Key codes="-5" keyIcon="cdroid:drawable/sym_keyboard_delete.png" 
+        <Key codes="-5" keyIcon="cdroid:mipmap/sym_keyboard_delete" 
                 keyWidth="15%p" keyEdgeFlags="right"
                 isRepeatable="true"/>
     </Row>
     
     <Row rowEdgeFlags="bottom">
-        <Key codes="-3" keyIcon="cdroid:drawable/sym_keyboard_done.png" 
+        <Key codes="-3" keyIcon="cdroid:mipmap/sym_keyboard_done" 
                 keyWidth="15%p" keyEdgeFlags="left"/>
         <Key codes="-2" keyLabel="123" keyWidth="10%p"/>
         <!--
             codes: -101 is not a framework-defined key code but a key code that is
             privately defined in com.example.android.softkeyboard.LatinKeyboardView.
         -->
-        <Key codes="-101" keyIcon="cdroid:drawable/sym_keyboard_language_switch.png"
+        <Key codes="-101" keyIcon="cdroid:mipmap/sym_keyboard_language_switch"
                 keyWidth="10%p"/>
-        <Key codes="32" keyIcon="cdroid:drawable/sym_keyboard_space.png" 
+        <Key codes="32" keyIcon="cdroid:mipmap/sym_keyboard_space" 
                 keyWidth="30%p" isRepeatable="true"/>
         <Key codes="46,44" keyLabel=". ,"
                 keyWidth="15%p"/>
-        <Key codes="10" keyIcon="cdroid:drawable/sym_keyboard_return.png" 
+        <Key codes="10" keyIcon="cdroid:mipmap/sym_keyboard_return" 
                 keyWidth="20%p" keyEdgeFlags="right"/>
     </Row>
 </Keyboard>
