@@ -312,7 +312,6 @@ void AlertController::setupView() {
     }
 
     AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/alertDialogStyle");
-    //TypedArray a = mContext.obtainStyledAttributes(R.styleable.AlertDialog, R.attr.alertDialogStyle, 0);
     setBackground(atts, topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
 }

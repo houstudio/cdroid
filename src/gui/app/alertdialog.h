@@ -53,15 +53,20 @@ protected:
     AlertDialog(Context*ctx);
     AlertDialog(Context*ctx,const std::string&resid); 
     AlertDialog(Context*ctx,bool cancelable,OnCancelListener listener);
+    void onCreate()override;
 public:
     Button*getButton(int whichButton);
     ListView* getListView();
     void setTitle(const std::string& title);
-    void setMessage(const std::string& message);
+    void setCustomTitle(View*customTitleView);
+    virtual void setMessage(const std::string& message);
+    virtual void setView(View* view);
+    void setView(View* view, int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight,
+            int viewSpacingBottom);
     void setButton(int whichButton,const std::string&text, OnClickListener listener);
     void setIcon(const std::string&);
     void setIcon(Drawable*);
-    void onCreate()override;
+    void setInverseBackgroundForced(bool forceInverseBackground);
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
 };

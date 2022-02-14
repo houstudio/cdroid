@@ -14,12 +14,38 @@ AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelLi
     setOnCancelListener(listener);
 }
 
+void AlertDialog::setTitle(const std::string& title){
+    Dialog::setTitle(title);
+    mAlert->setTitle(title);
+}
+
+void AlertDialog::setCustomTitle(View*customTitleView){
+    mAlert->setCustomTitle(customTitleView);
+}
+
+void AlertDialog::setMessage(const std::string& message){
+    mAlert->setMessage(message);
+}
+
+void AlertDialog::setView(View* view){
+    mAlert->setView(view);
+}
+
+void AlertDialog::setView(View* view, int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight,
+            int viewSpacingBottom){
+    mAlert->setView(view,viewSpacingLeft,viewSpacingTop,viewSpacingRight,viewSpacingBottom);
+}
+
 void AlertDialog::setIcon(const std::string&iconId){
     mAlert->setIcon(iconId);
 }
 
 void AlertDialog::setIcon(Drawable*icon){
     mAlert->setIcon(icon);
+}
+
+void AlertDialog::setInverseBackgroundForced(bool forceInverseBackground){
+    mAlert->setInverseBackgroundForced(forceInverseBackground);
 }
 
 void AlertDialog::onCreate(){

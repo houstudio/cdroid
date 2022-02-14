@@ -55,7 +55,7 @@ class IDGenerater(object):
                fr.write(",")
             fr.write("\n")
             i+=1
-        fr.write("%4s};};//endof class&enum id\n\n"%(''))
+        fr.write("%4s};/*enum*/};/*class*/\n\n"%(''))
         fr.write("};//endof class R\n\n")
         fr.write("}//endof namespace\n\n")
         fr.close()
