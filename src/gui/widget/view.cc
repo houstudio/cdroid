@@ -232,6 +232,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         if(horz>=0){
             leftPadding = rightPadding = horz;
             leftPaddingDefined = rightPaddingDefined = true;
+            mUserPaddingLeftInitial = mUserPaddingRightInitial =horz;
         }else{
             leftPadding = attrs.getDimensionPixelSize("paddingLeft",0);
             rightPadding= attrs.getDimensionPixelSize("paddingRight",0);
@@ -248,12 +249,11 @@ View::View(Context*ctx,const AttributeSet&attrs){
         }
     }
 
-    int startPadding=attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
-    int endPadding = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
-    startPaddingDefined = (startPadding != UNDEFINED_PADDING);
-    endPaddingDefined = (endPadding != UNDEFINED_PADDING);
-    
-    if (false){//isRtlCompatibilityMode()) {
+    mUserPaddingStart= attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
+    mUserPaddingEnd  = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
+    startPaddingDefined= (mUserPaddingStart != UNDEFINED_PADDING);
+    endPaddingDefined  = (mUserPaddingEnd != UNDEFINED_PADDING);
+    if (isRtlCompatibilityMode()) {
         // RTL compatibility mode: pre Jelly Bean MR1 case OR no RTL support case.
         // left / right padding are used if defined (meaning here nothing to do). If they are not
         // defined and start / end padding are defined (e.g. in Frameworks resources), then we use
@@ -262,11 +262,11 @@ View::View(Context*ctx,const AttributeSet&attrs){
         // and mUserPaddingRightInitial) so drawable padding will be used as ultimate default if
         // defined.
         if (!mLeftPaddingDefined && startPaddingDefined) {
-            leftPadding = startPadding;
+            leftPadding  = mUserPaddingStart;
         }
         mUserPaddingLeftInitial = (leftPadding >= 0) ? leftPadding : mUserPaddingLeftInitial;
         if (!mRightPaddingDefined && endPaddingDefined) {
-            rightPadding = endPadding;
+            rightPadding = mUserPaddingEnd;
         }
         mUserPaddingRightInitial = (rightPadding >= 0) ? rightPadding : mUserPaddingRightInitial;
     } else {
@@ -655,6 +655,21 @@ Insets View::computeOpticalInsets() {
     return (mBackground == nullptr) ? Insets() : mBackground->getOpticalInsets();
 }
 
+void View::resetPaddingToInitialValues() {
+    if (isRtlCompatibilityMode()) {
+        mPaddingLeft = mUserPaddingLeftInitial;
+        mPaddingRight = mUserPaddingRightInitial;
+        return;
+    }
+    if (isLayoutRtl()) {
+        mPaddingLeft = (mUserPaddingEnd >= 0) ? mUserPaddingEnd : mUserPaddingLeftInitial;
+        mPaddingRight = (mUserPaddingStart >= 0) ? mUserPaddingStart : mUserPaddingRightInitial;
+    } else {
+        mPaddingLeft = (mUserPaddingStart >= 0) ? mUserPaddingStart : mUserPaddingLeftInitial;
+        mPaddingRight = (mUserPaddingEnd >= 0) ? mUserPaddingEnd : mUserPaddingRightInitial;
+    }
+}
+
 Insets View::getOpticalInsets() {
     mLayoutInsets = computeOpticalInsets();
     return mLayoutInsets;
@@ -764,7 +779,7 @@ bool View::isLayoutDirectionResolved()const{
 void View::resolvePadding(){
     int resolvedLayoutDirection = getLayoutDirection();
 
-    if (!hasRtlSupport()){//isRtlCompatibilityMode()) {
+    if (!isRtlCompatibilityMode()) {
         // Post Jelly Bean MR1 case: we need to take the resolved layout direction into account.
         // If start / end padding are defined, they will be resolved (hence overriding) to
         // left / right or right / left depending on the resolved layout direction.
@@ -5401,6 +5416,11 @@ bool View::isLayoutRequested()const{
 
 bool View::hasRtlSupport()const{
     return true;//mContext.getApplicationInfo().hasRtlSupport();
+}
+
+bool View::isRtlCompatibilityMode()const{
+    //const int targetSdkVersion = getContext().getApplicationInfo().targetSdkVersion;
+    return !hasRtlSupport();//targetSdkVersion < Build.VERSION_CODES.JELLY_BEAN_MR1 || !hasRtlSupport();
 }
 
 bool View::isTextDirectionInherited()const{

@@ -341,7 +341,6 @@ private:
     class ForegroundInfo*mForegroundInfo;
     KeyEvent::DispatcherState mKeyDispatchState;
 private:
-    void internalSetPadding(int left, int top, int right, int bottom);
     void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
     void setDefaultFocusHighlight(Drawable* highlight);
@@ -433,6 +432,8 @@ protected:
     OnFocusChangeListener mOnFocusChangeListener;
     std::vector<OnLayoutChangeListener> mOnLayoutChangeListeners;
     OnScrollChangeListener mOnScrollChangeListener;
+protected:
+    virtual void internalSetPadding(int left, int top, int right, int bottom);
     void assignParent(ViewGroup*p);
     bool debugDraw()const;
     int dipsToPixels(int dips)const;
@@ -592,6 +593,7 @@ public:
     bool isPaddingRelative()const;
     Insets computeOpticalInsets();
     Insets getOpticalInsets();
+    void resetPaddingToInitialValues();
     void setOpticalInsets(const Insets& insets);
     void setPadding(int left, int top, int right, int bottom);
     void setPaddingRelative(int start,int top,int end,int bottom);
@@ -938,6 +940,7 @@ public:
     virtual bool isInLayout()const;
     bool isLayoutValid()const;
     bool hasRtlSupport()const;
+    bool isRtlCompatibilityMode()const;
     bool isTextDirectionInherited()const;
     bool isTextDirectionResolved()const;
     bool resolveTextDirection();

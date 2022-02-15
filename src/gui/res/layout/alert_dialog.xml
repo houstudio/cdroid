@@ -22,7 +22,8 @@
             cdroid:gravity="center_vertical"
             cdroid:layout_marginTop="6dip"
             cdroid:layout_marginBottom="9dip"
-            cdroid:layout_marginHorizontal="10dip">
+            cdroid:layout_marginStart="10dip"
+            cdroid:layout_marginEnd="10dip">
             <ImageView cdroid:id="@cdroid:id/icon"
                 cdroid:layout_width="wrap_content"
                 cdroid:layout_height="wrap_content"
