@@ -35,11 +35,11 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
 
     mAlertDialogLayout = atts.getString("layout","");
     mButtonPanelSideLayout = atts.getString("buttonPanelSideLayout");
-    mListLayout = atts.getString("listLayout");
+    mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog");
 
-    mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout");
-    mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout");
-    mListItemLayout = atts.getString("listItemLayout");
+    mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout","cdroid:layout/select_dialog_multichoice");
+    mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout","cdroid:layout/select_dialog_singlechoice");
+    mListItemLayout = atts.getString("listItemLayout","cdroid:layout/select_dialog_item");
     mShowTitle = atts.getBoolean("showTitle", true);
 
     /* We use a custom title so never request a window title */
@@ -406,7 +406,9 @@ void AlertController::setupContent(ViewGroup* contentPanel){
             ViewGroup* scrollParent = (ViewGroup*) mScrollView->getParent();
             const int childIndex = scrollParent->indexOfChild(mScrollView);
             scrollParent->removeViewAt(childIndex);
+            mListView->setMinimumHeight(200); 
             scrollParent->addView(mListView, childIndex,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
+            //scrollParent->requestLayout();
         } else {
             contentPanel->setVisibility(View::GONE);
         }
@@ -600,13 +602,13 @@ void AlertController::setBackground(const AttributeSet&a,View* topPanel, View* c
         }
     }
 
-    ListView* listView = mListView;
-    if (listView && mAdapter ) {
-        listView->setAdapter(mAdapter);
-        int checkedItem = mCheckedItem;
-        if (checkedItem > -1) {
-            listView->setItemChecked(checkedItem, true);
-            listView->setSelectionFromTop(checkedItem,
+    if (mListView && mAdapter ) {
+        mListView->setAdapter(mAdapter);
+        mAdapter->notifyDataSetChanged();
+        mListView->setId(123456);
+        if (mCheckedItem > -1) {
+            mListView->setItemChecked(mCheckedItem, true);
+            mListView->setSelectionFromTop(mCheckedItem,
                     a.getDimensionPixelSize("selectionScrollOffset", 0));
         }
     }
@@ -621,6 +623,7 @@ AlertController::AlertParams::AlertParams(Context*context){
     mIcon    = nullptr;
     mView    = nullptr;
     mAdapter = nullptr;
+    mCursor  = nullptr;
     mCustomTitleView= nullptr;
     mInflater= LayoutInflater::from(mContext);
 }
@@ -654,7 +657,7 @@ void AlertController::AlertParams::apply(AlertController* dialog){
         }
         // For a list, the client can either supply an array of items or an
         // adapter or a cursor
-        if (mItems.size()/* || mCursor*/ || mAdapter) {
+        if (mItems.size() || mCursor || mAdapter) {
             createListView(dialog);
         }
         if (mView) {
@@ -697,7 +700,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
     ListAdapter* adapter;
 
     if (mIsMultiChoice) {
-        if (true){//mCursor == nullptr) {
+        if (mCursor == nullptr) {
             AlertListAdapter*alertadapter = new AlertListAdapter(mContext, dialog->mMultiChoiceItemLayout, R::id::text1);
             alertadapter->setParams(this,listView);
             alertadapter->addAll(mItems);
@@ -727,10 +730,10 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
     } else {
         const std::string layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout;
 
-        /*if (mCursor) {
-            adapter = new SimpleCursorAdapter(mContext, layout, mCursor,
-                    new String[] { mLabelColumn }, new int[] { R::id::text1 });
-        } else*/ if (mAdapter != nullptr) {
+        if (mCursor) {
+            //adapter = new SimpleCursorAdapter(mContext, layout, mCursor,
+            //        new String[] { mLabelColumn }, new int[] { R::id::text1 });
+        } else if (mAdapter != nullptr) {
             adapter = mAdapter;
         } else {
             AlertListAdapter*alertadapter =new AlertListAdapter(mContext, layout, R::id::text1);

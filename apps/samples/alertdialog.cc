@@ -8,12 +8,27 @@ int main(int argc,const char*argv[]){
     auto f=[](DialogInterface& dlg,int which){
         LOGD("click button %d",which);
     };
-    AlertDialog*dlg=AlertDialog::Builder(&app)
-       .setPositiveButton("OK",f)
-       .setNegativeButton("Cancel",f)
-       .setTitle("This is Title...")
-       .setIcon("@cdroid:mipmap/ic_dialog_info")
-       .setMessage("Hello world,this is alert dialog test message!!!")
-       .show();
+    AlertDialog*dlg;
+    std::vector<std::string>list;
+    for(int i=0;i<10;i++)list.push_back(std::string("item")+std::to_string(i));
+    switch(argc){
+    case 1:
+         dlg=AlertDialog::Builder(&app)
+           .setPositiveButton("OK",f)
+           .setNegativeButton("Cancel",f)
+           .setTitle("This is Title...")
+           .setIcon("@cdroid:mipmap/ic_dialog_info")
+           .setMessage("Hello world,this is alert dialog test message!!!")
+           .show();
+         break;
+    case 2:
+        dlg=AlertDialog::Builder(&app)
+           .setPositiveButton("OK",f)
+           .setNegativeButton("Cancel",f)
+           .setTitle("This is Title...")
+           .setItems(list,nullptr)//[](DialogInterface& dlg,int whitch){ })
+           .show();
+        break; 
+    }
     return app.exec();
 }

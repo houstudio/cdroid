@@ -21,6 +21,7 @@ public:
         LayoutParams(Context* c,const AttributeSet& attrs);
         LayoutParams(int width, int height);
         LayoutParams(int width, int height, int gravity);
+        LayoutParams(const ViewGroup::LayoutParams&);
         LayoutParams(const MarginLayoutParams& source) ;
         LayoutParams(const LayoutParams& source);
     };

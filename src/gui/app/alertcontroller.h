@@ -56,7 +56,7 @@ public:
         bool mIsSingleChoice;
         int  mCheckedItem = -1;
         DialogInterface::OnMultiChoiceClickListener mOnCheckboxClickListener;
-        //Cursor mCursor;
+        /*Cursor*/void* mCursor;
         std::string mLabelColumn;
         std::string mIsCheckedColumn;
         bool mForceInverseBackground;

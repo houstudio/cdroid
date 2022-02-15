@@ -157,13 +157,13 @@ AlertDialog::Builder& AlertDialog::Builder::setItems(const std::string& itemsId,
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setItems(const std::vector<std::string>&items, OnClickListener listener){
+AlertDialog::Builder& AlertDialog::Builder::setItems(const std::vector<std::string>&items, DialogInterface::OnClickListener listener){
     P->mItems =items;
     P->mOnClickListener = listener;
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setAdapter(ListAdapter* adapter,OnClickListener listener){
+AlertDialog::Builder& AlertDialog::Builder::setAdapter(ListAdapter* adapter,DialogInterface::OnClickListener listener){
     P->mAdapter = adapter;
     P->mOnClickListener = listener;
     return *this;

@@ -46,26 +46,26 @@ void FrameLayout::setForegroundGravity(int foregroundGravity){
 }
 
 ViewGroup::LayoutParams* FrameLayout::generateDefaultLayoutParams()const {
-    return new LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT);
+    return new FrameLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT);
 }
 
 ViewGroup::LayoutParams* FrameLayout::generateLayoutParams(const AttributeSet& attrs)const {
-    return new LayoutParams(getContext(), attrs);
+    return new FrameLayout::LayoutParams(getContext(), attrs);
 }
 
 bool FrameLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
-    return dynamic_cast<const LayoutParams*>(p);
+    return dynamic_cast<const FrameLayout::LayoutParams*>(p);
 }
 
 ViewGroup::LayoutParams* FrameLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const {
     if (false/*sPreserveMarginParamsInLayoutParamConversion*/) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
-            return new LayoutParams(*(LayoutParams*) lp);
+            return new FrameLayout::LayoutParams(*(LayoutParams*) lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
-            return new LayoutParams(*(MarginLayoutParams*)lp);
+            return new FrameLayout::LayoutParams(*(MarginLayoutParams*)lp);
         }
     }
-    return new LayoutParams(*lp);
+    return new FrameLayout::LayoutParams(*lp);
 }
 
 int FrameLayout::getPaddingLeftWithForeground() {
@@ -260,6 +260,11 @@ FrameLayout::LayoutParams::LayoutParams(int width, int height)
 FrameLayout::LayoutParams::LayoutParams(int width, int height, int gravity)
     :MarginLayoutParams(width,height){
     this->gravity=gravity;
+}
+
+FrameLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams&source)
+   :MarginLayoutParams(source){
+    gravity= UNSPECIFIED_GRAVITY;
 }
 
 FrameLayout::LayoutParams::LayoutParams(const MarginLayoutParams& source)
