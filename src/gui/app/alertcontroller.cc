@@ -605,7 +605,6 @@ void AlertController::setBackground(const AttributeSet&a,View* topPanel, View* c
     if (mListView && mAdapter ) {
         mListView->setAdapter(mAdapter);
         mAdapter->notifyDataSetChanged();
-        mListView->setId(123456);
         if (mCheckedItem > -1) {
             mListView->setItemChecked(mCheckedItem, true);
             mListView->setSelectionFromTop(mCheckedItem,
