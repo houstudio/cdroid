@@ -107,7 +107,6 @@ public:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual ~LinearLayout();
 };
-typedef LinearLayout::LayoutParams LinearLayoutParams;
 
 }  // namespace cdroid
 #endif 

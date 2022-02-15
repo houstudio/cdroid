@@ -7,7 +7,7 @@ namespace cdroid{
 
 class RadioGroup: public LinearLayout{
 public:
-    class LayoutParams:public LinearLayoutParams{
+    class LayoutParams:public LinearLayout::LayoutParams{
     public:
         LayoutParams(Context*c,const AttributeSet&);
         LayoutParams(int w,int h);
@@ -37,7 +37,6 @@ public:
     void check(int id);
     void clearCheck();
 };
-typedef RadioGroup::LayoutParams RadioGroupLayoutParams;
 }//namepace
 
 #endif

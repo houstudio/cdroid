@@ -36,20 +36,21 @@ void Dialog::show(){
     mCanceled = false;
     if(!mCreated) dispatchOnCreate(nullptr);
     onStart();
-#if 1
+
     ViewGroup*frm=(ViewGroup*)mWindow->getChildAt(0);
-    LayoutParams*lp=frm->getLayoutParams();
-    int widthSpec  = MeasureSpec::makeMeasureSpec(1280,MeasureSpec::EXACTLY);
-    int heightSpec = MeasureSpec::makeMeasureSpec(720,MeasureSpec::UNSPECIFIED);//AT_MOST);
+    MarginLayoutParams*lp=(MarginLayoutParams*)frm->getLayoutParams();
+    const int horzMargin = lp->leftMargin+lp->rightMargin;
+    const int vertMargin = lp->topMargin+lp->bottomMargin;
+    int widthSpec  = MeasureSpec::makeMeasureSpec(1280-horzMargin,MeasureSpec::EXACTLY);
+    int heightSpec = MeasureSpec::makeMeasureSpec(720-vertMargin,MeasureSpec::UNSPECIFIED);//AT_MOST);
     
-    widthSpec  = frm->getChildMeasureSpec(widthSpec ,0,lp->width);//measureChildWithMargins(frm,widthSpec,1280,heightSpec,720);
+    widthSpec  = frm->getChildMeasureSpec(widthSpec ,0,lp->width);
     heightSpec = frm->getChildMeasureSpec(heightSpec,0,lp->height);
     frm->measure(widthSpec,heightSpec);
-    mWindow->setSize(frm->getMeasuredWidth(),frm->getMeasuredHeight());
+    mWindow->setSize(frm->getMeasuredWidth()+horzMargin,frm->getMeasuredHeight()+vertMargin);
     LOGD("size=%dx%d %d,%d",frm->getMeasuredWidth(),frm->getMeasuredHeight(),mWindow->getWidth(),mWindow->getHeight());
-    frm->layout(0,0,mWindow->getWidth(),mWindow->getHeight());
+    frm->layout(lp->leftMargin,lp->topMargin,mWindow->getWidth()-horzMargin, mWindow->getHeight()-vertMargin);
     mShowing = true;
-#endif
 }
 
 void Dialog::hide(){

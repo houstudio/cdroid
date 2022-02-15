@@ -27,7 +27,7 @@ int main(int argc,const char*argv[]){
         });
     }
     hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    hs->addView(layout,new LinearLayout::LayoutParams(-1,-1));
+    hs->addView(layout,new FrameLayout::LayoutParams(-1,-1));
     w->addView(hs);
     layout->requestLayout();
     w->requestLayout();

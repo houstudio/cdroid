@@ -6,41 +6,41 @@ namespace cdroid{
 DECLARE_WIDGET(TableRow)
 
 TableRow::LayoutParams::LayoutParams()
-    :LinearLayoutParams(MATCH_PARENT, WRAP_CONTENT){
+    :LinearLayout::LayoutParams(MATCH_PARENT, WRAP_CONTENT){
     column = -1;
     span = 1;
 }
 
-TableRow::LayoutParams::LayoutParams(int column):TableRowLayoutParams(){
+TableRow::LayoutParams::LayoutParams(int column):LayoutParams(){
     this->column=column;
 }
 
 TableRow::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
-    :LinearLayoutParams(c,attrs){
+    :LinearLayout::LayoutParams(c,attrs){
     column=-1;
     span=1;
 }
 
 TableRow::LayoutParams::LayoutParams(int w, int h)
-    :LinearLayoutParams(w,h){
+    :LinearLayout::LayoutParams(w,h){
     column=-1;
     span=1;
 }
 
 TableRow::LayoutParams::LayoutParams(int w, int h, float initWeight)
-    :LinearLayoutParams(w,h,initWeight){
+    :LinearLayout::LayoutParams(w,h,initWeight){
     column=-1;
     span=1;
 }
 
 TableRow::LayoutParams::LayoutParams(const LayoutParams& p)
-    :LinearLayoutParams(p){
+    :LinearLayout::LayoutParams(p){
     column=-1;
     span=1;
 }
 
 TableRow::LayoutParams::LayoutParams(const MarginLayoutParams& source)
-    :LinearLayoutParams(source){
+    :LinearLayout::LayoutParams(source){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ void TableRow::mapIndexAndColumns() {
 
         for (int i = 0; i < count; i++) {
             View* child = getChildAt(i);
-            TableRowLayoutParams* layoutParams = (TableRowLayoutParams*) child->getLayoutParams();
+            LayoutParams* layoutParams = (LayoutParams*) child->getLayoutParams();
             if (layoutParams->column >= virtualCount) {
                 virtualCount = layoutParams->column;
             }
@@ -127,7 +127,7 @@ int TableRow::measureNullChild(int childIndex) {
 void TableRow::measureChildBeforeLayout(View* child, int childIndex,int widthMeasureSpec,
         int totalWidth,int heightMeasureSpec, int totalHeight) {
     if (mConstrainedColumnWidths.size()) {
-        TableRowLayoutParams* lp = (TableRowLayoutParams*) child->getLayoutParams();
+        LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
         int measureMode = MeasureSpec::EXACTLY;
         int columnWidth = 0;
@@ -157,7 +157,7 @@ void TableRow::measureChildBeforeLayout(View* child, int childIndex,int widthMea
 
         if (isHorizontalGravity) {
             int childWidth = child->getMeasuredWidth();
-            lp->mOffset[TableRowLayoutParams::LOCATION_NEXT] = columnWidth - childWidth;
+            lp->mOffset[LayoutParams::LOCATION_NEXT] = columnWidth - childWidth;
 
             int layoutDirection = getLayoutDirection();
             int absoluteGravity = Gravity::getAbsoluteGravity(gravity, layoutDirection);
@@ -166,14 +166,14 @@ void TableRow::measureChildBeforeLayout(View* child, int childIndex,int widthMea
                 // don't offset on X axis
                 break;
             case Gravity::RIGHT:
-                lp->mOffset[TableRowLayoutParams::LOCATION] = lp->mOffset[TableRowLayoutParams::LOCATION_NEXT];
+                lp->mOffset[LayoutParams::LOCATION] = lp->mOffset[LayoutParams::LOCATION_NEXT];
                 break;
             case Gravity::CENTER_HORIZONTAL:
-                lp->mOffset[TableRowLayoutParams::LOCATION] = lp->mOffset[TableRowLayoutParams::LOCATION_NEXT] / 2;
+                lp->mOffset[LayoutParams::LOCATION] = lp->mOffset[LayoutParams::LOCATION_NEXT] / 2;
                 break;
             }
         } else {
-            lp->mOffset[TableRowLayoutParams::LOCATION] = lp->mOffset[TableRowLayoutParams::LOCATION_NEXT] = 0;
+            lp->mOffset[LayoutParams::LOCATION] = lp->mOffset[LayoutParams::LOCATION_NEXT] = 0;
         }
     } else {
         // fail silently when column widths are not available
@@ -183,17 +183,17 @@ void TableRow::measureChildBeforeLayout(View* child, int childIndex,int widthMea
 }
 
 int TableRow::getChildrenSkipCount(View* child, int index) {
-    TableRowLayoutParams* layoutParams = (TableRowLayoutParams*) child->getLayoutParams();
+    LayoutParams* layoutParams = (LayoutParams*) child->getLayoutParams();
     // when the span is 1 (default), we need to skip 0 child
     return layoutParams->span - 1;
 }
 
 int TableRow::getLocationOffset(View* child) {
-    return ((TableRowLayoutParams*) child->getLayoutParams())->mOffset[TableRowLayoutParams::LOCATION];
+    return ((LayoutParams*) child->getLayoutParams())->mOffset[LayoutParams::LOCATION];
 }
 
 int TableRow::getNextLocationOffset(View* child) {
-    return ((TableRowLayoutParams*) child->getLayoutParams())->mOffset[TableRowLayoutParams::LOCATION_NEXT];
+    return ((LayoutParams*) child->getLayoutParams())->mOffset[LayoutParams::LOCATION_NEXT];
 }
 
 std::vector<int> TableRow::getColumnsWidths(int widthMeasureSpec, int heightMeasureSpec) {
@@ -205,7 +205,7 @@ std::vector<int> TableRow::getColumnsWidths(int widthMeasureSpec, int heightMeas
     for (int i = 0; i < numColumns; i++) {
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
-            TableRowLayoutParams* layoutParams = (TableRowLayoutParams*) child->getLayoutParams();
+            LayoutParams* layoutParams = (LayoutParams*) child->getLayoutParams();
             if (layoutParams->span == 1) {
                 int spec;
                 switch (layoutParams->width) {
@@ -242,19 +242,19 @@ void TableRow::setColumnsWidthConstraints(const std::vector<int>& columnWidths) 
 }
 
 ViewGroup::LayoutParams* TableRow::generateLayoutParams(const AttributeSet& attrs)const {
-    return new TableRowLayoutParams(getContext(), attrs);
+    return new LayoutParams(getContext(), attrs);
 }
 
 ViewGroup::LayoutParams* TableRow::generateDefaultLayoutParams()const {
-    return new TableRowLayoutParams();
+    return new LayoutParams();
 }
 
 bool TableRow::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
-    return dynamic_cast<const TableRowLayoutParams*>(p);
+    return dynamic_cast<const LayoutParams*>(p);
 }
 
 ViewGroup::LayoutParams*TableRow::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
-    return new TableRowLayoutParams(*p);
+    return new LayoutParams(*p);
 }
 
 }

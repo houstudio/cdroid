@@ -173,22 +173,22 @@ void FrameLayout::onLayout(bool changed, int left, int top, int width, int heigh
     layoutChildren(left, top, width, height, false /* no force left gravity */);
 }
 
-void FrameLayout::layoutChildren(int left, int top, int right, int bottom, bool forceLeftGravity) {
-    int count = getChildCount();
+void FrameLayout::layoutChildren(int left, int top, int width, int height, bool forceLeftGravity) {
+    const int count = getChildCount();
 
-    int parentLeft = getPaddingLeftWithForeground();
-    int parentRight = right - left - getPaddingRightWithForeground();
+    const int parentLeft = getPaddingLeftWithForeground();
+    const int parentRight= width - getPaddingRightWithForeground();
 
-    int parentTop = getPaddingTopWithForeground();
-    int parentBottom = bottom - top - getPaddingBottomWithForeground();
+    const int parentTop  = getPaddingTopWithForeground();
+    const int parentBottom =height - getPaddingBottomWithForeground();
 
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() != GONE) {
             LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
-            int width = child->getMeasuredWidth();
-            int height = child->getMeasuredHeight();
+            int childWidth = child->getMeasuredWidth();
+            int childHeight = child->getMeasuredHeight();
 
             int childLeft=0;
             int childTop =0;
@@ -204,12 +204,12 @@ void FrameLayout::layoutChildren(int left, int top, int right, int bottom, bool 
 
             switch (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) {
             case Gravity::CENTER_HORIZONTAL:
-                childLeft = parentLeft + (parentRight - parentLeft - width) / 2 +
+                childLeft = parentLeft + (parentRight - parentLeft - childWidth) / 2 +
                     lp->leftMargin - lp->rightMargin;
                 break;
             case Gravity::RIGHT:
                 if (!forceLeftGravity) {
-                    childLeft = parentRight - width - lp->rightMargin;
+                    childLeft = parentRight - childWidth - lp->rightMargin;
                     break;
                 }
             case Gravity::LEFT:
@@ -221,18 +221,18 @@ void FrameLayout::layoutChildren(int left, int top, int right, int bottom, bool 
                 childTop = parentTop + lp->topMargin;
                 break;
             case Gravity::CENTER_VERTICAL:
-                childTop = parentTop + (parentBottom - parentTop - height) / 2 +
+                childTop = parentTop + (parentBottom - parentTop - childHeight) / 2 +
                     lp->topMargin - lp->bottomMargin;
                 break;
             case Gravity::BOTTOM:
-                childTop = parentBottom - height - lp->bottomMargin;
+                childTop = parentBottom - childHeight - lp->bottomMargin;
                 break;
             default:  childTop = parentTop + lp->topMargin;
             }
 
             LOGV("child %p marin: %d,%d,%d,%d bounds:%d,%d-%d,%d",child,lp->leftMargin,lp->topMargin ,
-                        lp->rightMargin,lp->bottomMargin,childLeft, childTop, width,height);
-            child->layout(childLeft, childTop, width,height);
+                        lp->rightMargin,lp->bottomMargin,childLeft, childTop, childWidth,childHeight);
+            child->layout(childLeft, childTop, childWidth,childHeight);
         }
     }
 }

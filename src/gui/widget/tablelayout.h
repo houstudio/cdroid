@@ -68,6 +68,5 @@ public:
 
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
-typedef TableLayout::LayoutParams TableLayoutParams;
 }
 #endif

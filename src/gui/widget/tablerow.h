@@ -58,6 +58,5 @@ public:
     int getVirtualChildCount()override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
-typedef TableRow::LayoutParams TableRowLayoutParams;
 }
 #endif

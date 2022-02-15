@@ -8,28 +8,28 @@ namespace cdroid{
 DECLARE_WIDGET(TableLayout)
 
 TableLayout::LayoutParams::LayoutParams()
-    :LinearLayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT){
+    :LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT){
 }
 
 TableLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet&attrs)
-    :LinearLayoutParams(c,attrs){
+    :LinearLayout::LayoutParams(c,attrs){
 }
 TableLayout::LayoutParams::LayoutParams(int w, int h)
-    :LinearLayoutParams(w,h){
+    :LinearLayout::LayoutParams(w,h){
 }
 
 TableLayout::LayoutParams::LayoutParams(int w, int h, float initWeight)
-    :LinearLayoutParams(w,h,initWeight){
+    :LinearLayout::LayoutParams(w,h,initWeight){
 }
 
 TableLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& p)
-    :LinearLayoutParams(p){
+    :LinearLayout::LayoutParams(p){
 }
 TableLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& source)
-    :LinearLayoutParams(source){
+    :LinearLayout::LayoutParams(source){
     width = MATCH_PARENT;
     try{
-        const TableLayoutParams&tl=dynamic_cast<const TableLayoutParams&>(source);
+        const LayoutParams&tl=dynamic_cast<const LayoutParams&>(source);
         weight = tl.weight;
     }catch(std::bad_cast exp){
     }
@@ -351,19 +351,19 @@ void TableLayout::mutateColumnsWidth(SparseBooleanArray& columns,bool allColumns
 }
 
 ViewGroup::LayoutParams* TableLayout::generateLayoutParams(const AttributeSet& attrs)const {
-    return new TableLayoutParams(getContext(), attrs);
+    return new LayoutParams(getContext(), attrs);
 }
 
 ViewGroup::LayoutParams* TableLayout::generateDefaultLayoutParams()const {
-    return new TableLayoutParams();
+    return new LayoutParams();
 }
 
 bool TableLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
-    return dynamic_cast<const TableLayoutParams*>(p);
+    return dynamic_cast<const LayoutParams*>(p);
 }
 
 ViewGroup::LayoutParams* TableLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
-    return new TableLayoutParams(*p);
+    return new LayoutParams(*p);
 }
 
 }//namespace

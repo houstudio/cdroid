@@ -22,15 +22,15 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
 }
 
 LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
-    return new RadioGroupLayoutParams(getContext(), attrs);
+    return new LayoutParams(getContext(), attrs);
 }
 
 bool RadioGroup::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
-    return dynamic_cast<const RadioGroupLayoutParams*>(p);
+    return dynamic_cast<const LayoutParams*>(p);
 }
 
 ViewGroup::LayoutParams* RadioGroup::generateDefaultLayoutParams()const {
-    return new RadioGroupLayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 
 void RadioGroup::onRadioChecked(CompoundButton&c,bool checked){
@@ -116,23 +116,23 @@ View& RadioGroup::addView(View* child, int index,ViewGroup::LayoutParams* params
 
 //////////////////////////////////////////////////////////////////////////////////
 RadioGroup::LayoutParams::LayoutParams(Context*c,const AttributeSet&attrs)
-:LinearLayoutParams(c,attrs){
+:LinearLayout::LayoutParams(c,attrs){
 }
 
 RadioGroup::LayoutParams::LayoutParams(int w,int h)
-:LinearLayoutParams(w,h){
+:LinearLayout::LayoutParams(w,h){
 }
 
 RadioGroup::LayoutParams::LayoutParams(int w, int h, float initWeight)
-    :LinearLayoutParams(w,h,initWeight){
+    :LinearLayout::LayoutParams(w,h,initWeight){
 }
 
 RadioGroup::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& p)
-    :LinearLayoutParams(p){
+    :LinearLayout::LayoutParams(p){
 }
 
 RadioGroup::LayoutParams::LayoutParams(const MarginLayoutParams& source)
-    :LinearLayoutParams(source){
+    :LinearLayout::LayoutParams(source){
 }
 
 }

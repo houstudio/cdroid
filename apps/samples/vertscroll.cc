@@ -34,9 +34,9 @@ int main(int argc,const char*argv[]){
     w->addView(scroller);
     LinearLayout*layout=new LinearLayout(800,600);
     layout->setOrientation(LinearLayout::VERTICAL);
-    scroller->addView(layout,new LinearLayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::MATCH_PARENT)));
+    scroller->addView(layout,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::MATCH_PARENT)));
     for(int i=0;i<10;i++){
-        LinearLayoutParams*lp=new LinearLayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT));
+        LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT));
         lp->setMargins(5,2,5,2);
         EditText*edit=new EditText(TEXT("Hello world! This value is positive for typical fonts that include"),680,200);
         edit->setTextColor(0xFFFFFFFF);//app.getColorStateList("cdroid:color/textview.xml"));
@@ -56,7 +56,7 @@ int main(int argc,const char*argv[]){
     lv->setSelector(new ColorDrawable(0x8000FF00));
     lv->setDivider(new ColorDrawable(0x40FFFFFF));
     lv->setDividerHeight(1);
-    layout->addView(lv,new LinearLayoutParams(LayoutParams::MATCH_PARENT,300));
+    layout->addView(lv,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,300));
 
     for(int i=0;i<10;i++)
        adapter->add("");

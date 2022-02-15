@@ -42,7 +42,7 @@ LinearLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams&sou
     gravity=Gravity::NO_GRAVITY;
 }
 
-LinearLayout::LayoutParams::LayoutParams(const LinearLayout::LayoutParams&source)
+LinearLayout::LayoutParams::LayoutParams(const LayoutParams&source)
     :ViewGroup::MarginLayoutParams(source){
     weight = source.weight;
     gravity = source.gravity;
@@ -136,7 +136,7 @@ int LinearLayout::getBaseline(){
         }
     }
 
-    LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+    LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     return childTop + lp->topMargin + childBaseline;
 }
 
@@ -185,20 +185,20 @@ LayoutParams* LinearLayout::generateDefaultLayoutParams()const{
 ViewGroup::LayoutParams* LinearLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
     if (true/*sPreserveMarginParamsInLayoutParamConversion*/) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
-            return new LinearLayoutParams(*lp);
+            return new LayoutParams((const LayoutParams&)*lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
-            return new LinearLayoutParams(*(MarginLayoutParams*) lp);
+            return new LayoutParams((const MarginLayoutParams&)*lp);
         }
     }
-    return new LinearLayoutParams(*lp);
+    return new LayoutParams(*lp);
 }
 
 ViewGroup::LayoutParams* LinearLayout::generateLayoutParams(const AttributeSet&atts)const{
-    return new LinearLayoutParams(getContext(),atts); 
+    return new LayoutParams(getContext(),atts); 
 }
 
 bool LinearLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
-     return dynamic_cast<const LinearLayoutParams*>(p);
+     return dynamic_cast<const LayoutParams*>(p);
 }
 
 int LinearLayout::getGravity()const{
@@ -298,7 +298,7 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
             if (hasDividerBeforeChildAt(i)) {
-                LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+                LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
                 int position;
                 if (bisLayoutRtl) {
                     position = child->getRight() + lp->rightMargin;
@@ -320,7 +320,7 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
                 position = getWidth() - getPaddingRight() - mDividerWidth;
             }
         } else {
-            LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
             if (bisLayoutRtl) {
                 position = child->getLeft() - lp->leftMargin - mDividerWidth;
             } else {
@@ -349,7 +349,7 @@ void LinearLayout::drawDividersVertical(Canvas& canvas){
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
             if (hasDividerBeforeChildAt(i)) {
-                LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+                LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
                 int top = child->getTop() - lp->topMargin - mDividerHeight;
                 drawHorizontalDivider(canvas, top);
             }
@@ -362,7 +362,7 @@ void LinearLayout::drawDividersVertical(Canvas& canvas){
         if (child == nullptr) {
             bottom = getHeight() - getPaddingBottom() - mDividerHeight;
         } else {
-            LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
             bottom = child->getBottom() + lp->bottomMargin;
         }
         drawHorizontalDivider(canvas, bottom);
@@ -447,7 +447,7 @@ void LinearLayout::forceUniformHeight(int count, int widthMeasureSpec) {
     for (int i = 0; i < count; ++i) {
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
-            LinearLayoutParams*lp = (LinearLayoutParams*) child->getLayoutParams();
+            LayoutParams*lp = (LayoutParams*) child->getLayoutParams();
 
             if (lp->height == LayoutParams::MATCH_PARENT) {
                 // Temporarily force children to reuse their old measured width
@@ -469,7 +469,7 @@ void LinearLayout::forceUniformWidth(int count, int heightMeasureSpec) {
     for (int i = 0; i< count; ++i) {
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
-            LinearLayoutParams* lp = ((LinearLayoutParams*)child->getLayoutParams());
+            LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
 
             if (lp->width == LayoutParams::MATCH_PARENT) {
                 // Temporarily force children to reuse their old measured height
@@ -546,7 +546,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
             mTotalLength += mDividerWidth;
         }
 
-        LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+        LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
         totalWeight += lp->weight;
 
@@ -693,7 +693,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                 continue;
             }
 
-            LinearLayoutParams* lp = (LinearLayoutParams*)child->getLayoutParams();
+            LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
             if (isExactly) {
                 mTotalLength += largestChildWidth + lp->leftMargin + lp->rightMargin +
                         getNextLocationOffset(child);
@@ -737,7 +737,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                 continue;
             }
 
-            LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
             float childWeight = lp->weight;
             if (childWeight > 0) {
                 int share = (int) (childWeight * remainingExcess / remainingWeightSum);
@@ -834,7 +834,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                     continue;
                 }
 
-                LinearLayoutParams* lp =(LinearLayoutParams*) child->getLayoutParams();
+                LayoutParams* lp =(LayoutParams*) child->getLayoutParams();
 
                 float childExtra = lp->weight;
                 if (childExtra > 0) {
@@ -905,7 +905,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
             mTotalLength += mDividerHeight;
         }
 
-        LinearLayoutParams*lp = (LinearLayoutParams*) child->getLayoutParams();
+        LayoutParams*lp = (LayoutParams*) child->getLayoutParams();
 
         totalWeight += lp->weight;
 
@@ -1020,7 +1020,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
                 continue;
             }
 
-            LinearLayoutParams* lp = (LinearLayoutParams*)child->getLayoutParams();
+            LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
             // Account for negative margins
             const int totalLength = mTotalLength;
             mTotalLength = std::max(totalLength, totalLength + largestChildHeight +
@@ -1055,7 +1055,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
                 continue;
             }
 
-            LinearLayoutParams*lp = (LinearLayoutParams*) child->getLayoutParams();
+            LayoutParams*lp = (LayoutParams*) child->getLayoutParams();
             float childWeight = lp->weight;
             if (childWeight > 0) {
                 int share = (int) (childWeight * remainingExcess / remainingWeightSum);
@@ -1119,7 +1119,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
                     continue;
                 }
 
-                LinearLayoutParams* lp = (LinearLayoutParams*) child->getLayoutParams();
+                LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
                 float childExtra = lp->weight;
                 if (childExtra > 0) {
@@ -1185,7 +1185,7 @@ void LinearLayout::layoutVertical(int left, int top, int width, int height){
             int childWidth = child->getMeasuredWidth();
             int childHeight = child->getMeasuredHeight();
 
-            LinearLayoutParams* lp =(LinearLayoutParams*) child->getLayoutParams();
+            LayoutParams* lp =(LayoutParams*) child->getLayoutParams();
 
             int gravity = lp->gravity;
             if (gravity < 0) {
@@ -1277,7 +1277,7 @@ void LinearLayout::layoutHorizontal(int left, int top, int width, int height){
             int childHeight = child->getMeasuredHeight();
             int childBaseline = -1;
 
-            LinearLayoutParams*lp =(LinearLayoutParams*) child->getLayoutParams();
+            LayoutParams*lp =(LayoutParams*) child->getLayoutParams();
 
             if (baselineAligned && lp->height != LayoutParams::MATCH_PARENT) {
                 childBaseline = child->getBaseline();
