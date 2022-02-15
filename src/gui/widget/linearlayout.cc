@@ -204,6 +204,7 @@ bool LinearLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
 int LinearLayout::getGravity()const{
     return mGravity;
 }
+
 void LinearLayout::setGravity(int gravity){
     if (mGravity != gravity) {
         if ((gravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) == 0) {

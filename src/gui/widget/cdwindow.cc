@@ -55,6 +55,22 @@ Window::Window(int x,int y,int width,int height,int type)
     WindowManager::getInstance().addWindow(this);
 }
 
+ViewGroup::LayoutParams* Window::generateDefaultLayoutParams()const{
+    return new MarginLayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+}
+
+bool Window::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
+    return dynamic_cast<const MarginLayoutParams*>(p);
+}
+
+ViewGroup::LayoutParams* Window::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
+    return new MarginLayoutParams(*lp);
+}
+
+ViewGroup::LayoutParams* Window::generateLayoutParams(const AttributeSet&atts)const{
+    return new MarginLayoutParams(getContext(),atts);
+}
+
 void Window::setText(const std::string&txt){
     mText=txt;
 }

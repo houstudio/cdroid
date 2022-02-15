@@ -61,6 +61,9 @@ protected:
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);
     RefPtr<Canvas>getCanvas();
+    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
     typedef enum{
         TYPE_WALLPAPER    =1,
@@ -95,6 +98,7 @@ public:
     bool requestLayoutDuringLayout(View*)override;
     void dispatchInvalidateOnAnimation(View* view)override;
     void cancelInvalidate(View* view)override;
+    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     static void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);
     void close();
 protected:

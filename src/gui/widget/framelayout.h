@@ -10,21 +10,22 @@
 #include <widget/viewgroup.h>
 namespace cdroid{
 
-class FrameLayoutParams:public MarginLayoutParams{
-public:
-    enum{
-        UNSPECIFIED_GRAVITY=-1
-    };
-    int gravity;
-    FrameLayoutParams(Context* c,const AttributeSet& attrs);
-    FrameLayoutParams(int width, int height);
-    FrameLayoutParams(int width, int height, int gravity);
-    FrameLayoutParams(const LayoutParams& source);
-    FrameLayoutParams(const MarginLayoutParams& source) ;
-    FrameLayoutParams(const FrameLayoutParams& source);
-};
-
 class FrameLayout:public ViewGroup{
+public:
+    class LayoutParams:public MarginLayoutParams{
+    public:
+        enum{
+            UNSPECIFIED_GRAVITY=-1
+        };
+        int gravity;
+        LayoutParams(Context* c,const AttributeSet& attrs);
+        LayoutParams(int width, int height);
+        LayoutParams(int width, int height, int gravity);
+        LayoutParams(const MarginLayoutParams& source) ;
+        LayoutParams(const LayoutParams& source);
+    };
+
+
 private:
     bool mMeasureAllChildren;
     int mForegroundPaddingLeft;
@@ -39,9 +40,9 @@ protected:
     int getPaddingTopWithForeground();
     int getPaddingBottomWithForeground();
 
-    LayoutParams* generateDefaultLayoutParams()const override;
-    bool checkLayoutParams( const LayoutParams* p)const override;
-    LayoutParams* generateLayoutParams( const LayoutParams* lp)const override;
+    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    bool checkLayoutParams( const ViewGroup::LayoutParams* p)const override;
+    ViewGroup::LayoutParams* generateLayoutParams( const ViewGroup::LayoutParams* lp)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void layoutChildren(int left, int top, int width, int height, bool forceLeftGravity);
@@ -52,7 +53,7 @@ public:
     void setForegroundGravity(int foregroundGravity);
     void setMeasureAllChildren(bool measureAll);
     bool getMeasureAllChildren()const;
-    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 }//namespace
 #endif

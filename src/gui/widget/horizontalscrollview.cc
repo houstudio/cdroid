@@ -76,17 +76,20 @@ View& HorizontalScrollView::addView(View* child){
         FrameLayout::addView(child);
     return *this;
 }
+
 View& HorizontalScrollView::addView(View* child, int index){
     if(getChildCount()==0)
         FrameLayout::addView(child,index);
     return *this;
 }
-View& HorizontalScrollView::addView(View* child, LayoutParams* params){
+
+View& HorizontalScrollView::addView(View* child, ViewGroup::LayoutParams* params){
     if(getChildCount()==0)
         FrameLayout::addView(child,params);
     return *this;
 } 
-View& HorizontalScrollView::addView(View* child, int index,LayoutParams* params){
+
+View& HorizontalScrollView::addView(View* child, int index,ViewGroup::LayoutParams* params){
     if(getChildCount()==0)
         FrameLayout::addView(child,index,params);
     return *this;
@@ -134,7 +137,7 @@ void HorizontalScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec
         View* child = getChildAt(0);
         int widthPadding;
         int heightPadding;
-        FrameLayoutParams* lp = (FrameLayoutParams*) child->getLayoutParams();
+        LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
         widthPadding = mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin;
         heightPadding = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin;
 
@@ -807,7 +810,7 @@ int HorizontalScrollView::computeHorizontalScrollOffset() {
 
 void HorizontalScrollView::measureChild(View* child, int parentWidthMeasureSpec,
         int parentHeightMeasureSpec) {
-    LayoutParams* lp = child->getLayoutParams();
+    LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
 
     int horizontalPadding = mPaddingLeft + mPaddingRight;
     int childWidthMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
@@ -1002,7 +1005,7 @@ void HorizontalScrollView::onLayout(bool changed, int l, int t, int w, int h){
 
     if (getChildCount() > 0) {
         childWidth = getChildAt(0)->getMeasuredWidth();
-        FrameLayoutParams* childParams = (FrameLayoutParams*) getChildAt(0)->getLayoutParams();
+        LayoutParams* childParams = (LayoutParams*) getChildAt(0)->getLayoutParams();
         childMargins = childParams->leftMargin + childParams->rightMargin;
     }
 

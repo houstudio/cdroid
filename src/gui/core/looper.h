@@ -39,6 +39,9 @@ struct Message {
 
     /* The message type. (interpretation is left up to the handler) */
     int what;
+    int arg1;
+    int arg2;
+    void*obj;
 };
 
 typedef int (*Looper_callbackFunc)(int fd, int events, void* data);

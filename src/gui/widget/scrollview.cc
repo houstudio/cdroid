@@ -81,14 +81,14 @@ View& ScrollView::addView(View* child, int index) {
     return FrameLayout::addView(child, index);
 }
 
-View& ScrollView::addView(View* child, LayoutParams* params) {
+View& ScrollView::addView(View* child, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
         LOGE("ScrollView can host only one direct child");
     }
     return FrameLayout::addView(child, params);
 }
 
-View& ScrollView::addView(View* child, int index, LayoutParams* params) {
+View& ScrollView::addView(View* child, int index, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
         LOGE("ScrollView can host only one direct child");
     }
@@ -138,7 +138,7 @@ void ScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         View* child = getChildAt(0);
         int widthPadding;
         int heightPadding;
-        FrameLayoutParams* lp = (FrameLayoutParams*) child->getLayoutParams();
+        LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
         widthPadding = mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin;
         heightPadding = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin;
@@ -757,7 +757,7 @@ int ScrollView::computeVerticalScrollOffset() {
 }
 
 void ScrollView::measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec) {
-    LayoutParams* lp = child->getLayoutParams();
+    LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
 
     int childWidthMeasureSpec;
     int childHeightMeasureSpec;

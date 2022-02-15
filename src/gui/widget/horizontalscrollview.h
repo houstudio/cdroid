@@ -74,8 +74,8 @@ public:
     int getMaxScrollAmount();
     View& addView(View* child);
     View& addView(View* child, int index);
-    View& addView(View* child, LayoutParams* params);
-    View& addView(View* child, int index,LayoutParams* params);
+    View& addView(View* child, ViewGroup::LayoutParams* params);
+    View& addView(View* child, int index,ViewGroup::LayoutParams* params);
     bool isFillViewport()const;
     void setFillViewport(bool fillViewport);
     bool isSmoothScrollingEnabled()const;

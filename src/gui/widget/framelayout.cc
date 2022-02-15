@@ -16,9 +16,9 @@ FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
 
 FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context,attrs){
-    mMeasureAllChildren=false;
-    mForegroundPaddingLeft=mForegroundPaddingRight=0;
-    mForegroundPaddingTop =mForegroundPaddingBottom=0;
+    mMeasureAllChildren = attrs.getBoolean("measureAllChildren",false);
+    mForegroundPaddingLeft = mForegroundPaddingRight  = 0;
+    mForegroundPaddingTop  = mForegroundPaddingBottom = 0;
 }
 
 //@android.view.RemotableViewMethod
@@ -37,35 +37,35 @@ void FrameLayout::setForegroundGravity(int foregroundGravity){
             }
         } else {
             mForegroundPaddingLeft = 0;
-            mForegroundPaddingTop = 0;
+            mForegroundPaddingTop  = 0;
             mForegroundPaddingRight = 0;
-            mForegroundPaddingBottom = 0;
+            mForegroundPaddingBottom= 0;
         }
         requestLayout();
     }
 }
 
-LayoutParams* FrameLayout::generateDefaultLayoutParams()const {
+ViewGroup::LayoutParams* FrameLayout::generateDefaultLayoutParams()const {
     return new LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT);
 }
 
-LayoutParams* FrameLayout::generateLayoutParams(const AttributeSet& attrs)const {
-    return new FrameLayoutParams(getContext(), attrs);
+ViewGroup::LayoutParams* FrameLayout::generateLayoutParams(const AttributeSet& attrs)const {
+    return new LayoutParams(getContext(), attrs);
 }
 
-bool FrameLayout::checkLayoutParams(const LayoutParams* p)const{
-    return dynamic_cast<const FrameLayoutParams*>(p);
+bool FrameLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
+    return dynamic_cast<const LayoutParams*>(p);
 }
 
-LayoutParams* FrameLayout::generateLayoutParams(const LayoutParams* lp)const {
+ViewGroup::LayoutParams* FrameLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const {
     if (false/*sPreserveMarginParamsInLayoutParamConversion*/) {
-        if (dynamic_cast<const FrameLayoutParams*>(lp)) {
-            return new LayoutParams(*(FrameLayoutParams*) lp);
+        if (dynamic_cast<const LayoutParams*>(lp)) {
+            return new LayoutParams(*(LayoutParams*) lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
             return new LayoutParams(*(MarginLayoutParams*)lp);
         }
     }
-    return new FrameLayoutParams(*lp);
+    return new LayoutParams(*lp);
 }
 
 int FrameLayout::getPaddingLeftWithForeground() {
@@ -103,7 +103,7 @@ void FrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         View* child = getChildAt(i);
         if (mMeasureAllChildren || child->getVisibility() != GONE) {
             measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
-            FrameLayoutParams* lp = (FrameLayoutParams*) child->getLayoutParams();
+            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
             maxWidth = std::max(maxWidth,child->getMeasuredWidth() + lp->leftMargin + lp->rightMargin);
             maxHeight = std::max(maxHeight,child->getMeasuredHeight() + lp->topMargin + lp->bottomMargin);
             LOGV("%p margin:%d,%d-%d,%d size:%dx%d",child,lp->leftMargin,lp->topMargin,lp->rightMargin,lp->bottomMargin,maxWidth,maxHeight);
@@ -185,7 +185,7 @@ void FrameLayout::layoutChildren(int left, int top, int right, int bottom, bool 
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() != GONE) {
-            FrameLayoutParams* lp = (FrameLayoutParams*) child->getLayoutParams();
+            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
             int width = child->getMeasuredWidth();
             int height = child->getMeasuredHeight();
@@ -248,33 +248,28 @@ bool FrameLayout::getMeasureAllChildren()const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-FrameLayoutParams::FrameLayoutParams(Context* c,const AttributeSet& attrs)
+FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :MarginLayoutParams(c,attrs){
     gravity=attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
 }
 
-FrameLayoutParams::FrameLayoutParams(int width, int height)
-    :FrameLayoutParams(width,height,UNSPECIFIED_GRAVITY){
+FrameLayout::LayoutParams::LayoutParams(int width, int height)
+    :LayoutParams(width,height,UNSPECIFIED_GRAVITY){
 }
 
-FrameLayoutParams::FrameLayoutParams(int width, int height, int gravity)
+FrameLayout::LayoutParams::LayoutParams(int width, int height, int gravity)
     :MarginLayoutParams(width,height){
     this->gravity=gravity;
 }
 
-FrameLayoutParams::FrameLayoutParams(const LayoutParams& source)
-    :MarginLayoutParams(source){
-    gravity=UNSPECIFIED_GRAVITY;
-}
-
-FrameLayoutParams::FrameLayoutParams(const MarginLayoutParams& source)
+FrameLayout::LayoutParams::LayoutParams(const MarginLayoutParams& source)
     :MarginLayoutParams(source){
     gravity= UNSPECIFIED_GRAVITY;
 }
 
-FrameLayoutParams::FrameLayoutParams(const FrameLayoutParams& source)
+FrameLayout::LayoutParams::LayoutParams(const FrameLayout::LayoutParams& source)
     :MarginLayoutParams(source){
-    this->gravity = source.gravity;;
+    this->gravity = source.gravity;
 }
 
 }
