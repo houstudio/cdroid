@@ -36,6 +36,10 @@ void AlertDialog::setView(View* view, int viewSpacingLeft, int viewSpacingTop, i
     mAlert->setView(view,viewSpacingLeft,viewSpacingTop,viewSpacingRight,viewSpacingBottom);
 }
 
+void AlertDialog::setButton(int whichButton,const std::string&text, OnClickListener listener) {
+    mAlert->setButton(whichButton, text, listener);
+}
+
 void AlertDialog::setIcon(const std::string&iconId){
     mAlert->setIcon(iconId);
 }
@@ -77,8 +81,14 @@ Context* AlertDialog::Builder::getContext(){
     return P->mContext;
 }
 
+const std::string AlertDialog::Builder::getString(const std::string&resid)const{
+    const std::string text = P->mContext->getString(resid);
+    if(text.size())return text;
+    return resid;
+}
+
 AlertDialog::Builder& AlertDialog::Builder::setTitle(const std::string& title){
-    P->mTitle = title;
+    P->mTitle = getString(title);
     return *this;
 }
 
@@ -88,7 +98,7 @@ AlertDialog::Builder& AlertDialog::Builder::setCustomTitle(View* customTitleView
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setMessage(const std::string&messageId){
-    P->mMessage = messageId;//P->mContext->getText(messageId);
+    P->mMessage = getString(messageId);
     return *this;
 }
 
@@ -103,19 +113,19 @@ AlertDialog::Builder& AlertDialog::Builder::setIcon(Drawable*icon){
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setPositiveButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mPositiveButtonText = text;//P->mContext->getText(textId);
+    P->mPositiveButtonText = getString(text);
     P->mPositiveButtonListener = listener;
     return *this;
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setNegativeButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mNegativeButtonText = text;
+    P->mNegativeButtonText = getString(text);
     P->mNegativeButtonListener = listener;
     return *this;
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setNeutralButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mNeutralButtonText = text;
+    P->mNeutralButtonText = getString(text);
     P->mNeutralButtonListener = listener;
     return *this;
 }
@@ -228,7 +238,7 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 }
 
 AlertDialog* AlertDialog::Builder::create(){
-    AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog");//, false);
+    AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog");
     P->apply(dialog->mAlert);
     dialog->setCancelable(P->mCancelable);
     if (P->mCancelable) {

@@ -118,11 +118,10 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     pd->flags.push_back(0);
     pd->views.push_back(v);
     LOGV("%p:%08x [%s] %s",v,v->getId(),name,stname.c_str());
-    if( (parent && (parent==pd->root) && pd->attachToRoot )||(parent!=pd->root)){
+    if( parent){//(parent && (parent==pd->root) && pd->attachToRoot )||(parent!=pd->root)){
         LayoutParams*lp=parent->generateLayoutParams(atts);
         parent->addViewInLayout(v,-1,lp,true);
     }else{
-        LOGE("cant reached here!!!");
         LayoutParams*lp=((ViewGroup*)v)->generateLayoutParams(atts);
         ((ViewGroup*)v)->setLayoutParams(lp);
     }
@@ -163,8 +162,7 @@ View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root,bool attachToRo
     } while(len!=0);
     XML_ParserFree(parser);
     if(root && attachToRoot){
-       if(pd.returnedView)
-           root->addView(pd.returnedView);
+       //if(pd.returnedView)root->addView(pd.returnedView);already added in startElementd
        root->requestLayout();
        root->startLayoutAnimation();
     }

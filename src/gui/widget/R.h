@@ -38,7 +38,8 @@ public:
          textSpacerNoButtons     = 0x00000403 /*      1027*/,
          titleDividerTop         = 0x00000404 /*      1028*/,
          progress_percent        = 0x00000405 /*      1029*/,
-         progress_number         = 0x00000406 /*      1030*/
+         progress_number         = 0x00000406 /*      1030*/,
+         body                    = 0x00000407 /*      1031*/
     };/*enum*/};/*class*/
 
 };//endof class R

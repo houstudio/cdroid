@@ -21,6 +21,7 @@ protected:
     virtual void onCreate();
     virtual void onStart();
     virtual void onStop();
+    virtual ~Dialog();
 public:
     Dialog(Context*context);
     Dialog(Context* context,const std::string&resId);

@@ -1143,14 +1143,13 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
     if (matchWidth) forceUniformWidth(count, heightMeasureSpec);
 }
 
-void LinearLayout::layoutVertical(int left, int top, int right, int bottom){
+void LinearLayout::layoutVertical(int left, int top, int width, int height){
     int paddingLeft = mPaddingLeft;
 
     int childTop;
     int childLeft;
 
     // Where right end of child should go
-    int width = right - left;
     int childRight = width - mPaddingRight;
 
     // Space available for child
@@ -1164,11 +1163,11 @@ void LinearLayout::layoutVertical(int left, int top, int right, int bottom){
     switch (majorGravity) {
     case Gravity::BOTTOM:
         // mTotalLength contains the padding already
-        childTop = mPaddingTop + bottom - top - mTotalLength;
+        childTop = mPaddingTop + height - mTotalLength;
         break;
         // mTotalLength contains the padding already
     case Gravity::CENTER_VERTICAL:
-        childTop = mPaddingTop + (bottom - top - mTotalLength) / 2;
+        childTop = mPaddingTop + (height - mTotalLength) / 2;
         break;
 
     case Gravity::TOP:
@@ -1221,7 +1220,7 @@ void LinearLayout::layoutVertical(int left, int top, int right, int bottom){
     }
 }
 
-void LinearLayout::layoutHorizontal(int left, int top, int right, int bottom){
+void LinearLayout::layoutHorizontal(int left, int top, int width, int height){
     bool bLayoutRtl = isLayoutRtl();
     int paddingTop = mPaddingTop;
 
@@ -1229,7 +1228,6 @@ void LinearLayout::layoutHorizontal(int left, int top, int right, int bottom){
     int childLeft;
 
     // Where bottom of child should go
-    int height = bottom - top;
     int childBottom = height - mPaddingBottom;
 
     // Space available for child
@@ -1246,12 +1244,12 @@ void LinearLayout::layoutHorizontal(int left, int top, int right, int bottom){
     switch (Gravity::getAbsoluteGravity(majorGravity, layoutDirection)) {
     case Gravity::RIGHT:
         // mTotalLength contains the padding already
-        childLeft = mPaddingLeft + right - left - mTotalLength;
+        childLeft = mPaddingLeft + width - mTotalLength;
         break;
 
     case Gravity::CENTER_HORIZONTAL:
         // mTotalLength contains the padding already
-        childLeft = mPaddingLeft + (right - left - mTotalLength) / 2;
+        childLeft = mPaddingLeft + (width - mTotalLength) / 2;
         break;
 
     case Gravity::LEFT:

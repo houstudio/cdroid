@@ -103,12 +103,8 @@ View& Window::setPos(int x,int y){
     return *this;
 }
 
-View& Window::setSize(int cx,int cy){
-    ViewGroup::setSize(cx,cy); 
-    if(((cx!=getWidth())||(cy!=getHeight())) && isAttachedToWindow()){
-        WindowManager::getInstance().resetVisibleRegion();
-    }
-    return *this;
+void Window::onSizeChanged(int w,int h,int oldw,int oldh){
+    WindowManager::getInstance().resetVisibleRegion();
 }
 
 void Window::onFinishInflate(){

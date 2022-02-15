@@ -293,7 +293,6 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(scrollbars!=SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
     if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
     computeOpaqueFlags();
-    LOGV_IF(mID!=NO_ID,"%d:%s",mID,attrs.getString("id").c_str());
 }
 
 void View::initView(){
@@ -671,7 +670,6 @@ void View::setPadding(int left, int top, int right, int bottom){
     mPaddingTop=top;
     mPaddingBottom=bottom;
     internalSetPadding(left,top,right,bottom);
-    LOGV("%p padding=%d,%d-%d-%d",this,left,top,right,bottom);
 }
 
 void View::setPaddingRelative(int start,int top,int end,int bottom){
@@ -3095,7 +3093,6 @@ void View::jumpDrawablesToCurrentState(){
 
 std::vector<int>View::onCreateDrawableState()const{
     int viewStateIndex = 0;
-    std::vector<int>states;
 
     if(mPrivateFlags & PFLAG_PRESSED)          viewStateIndex =StateSet::VIEW_STATE_PRESSED;
     if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
@@ -3106,11 +3103,7 @@ std::vector<int>View::onCreateDrawableState()const{
     
     if(mPrivateFlags & PFLAG_HOVERED ) viewStateIndex |= StateSet::VIEW_STATE_HOVERED;
 
-    states = StateSet::get(viewStateIndex);
-    std::ostringstream oss;
-    for(auto s:states)oss<<s<<",";
-    LOGV("%p:%d state=%s",this,mID,oss.str().c_str());
-    return states;
+    return StateSet::get(viewStateIndex);
 }
 
 std::vector<int>& View::mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState) {

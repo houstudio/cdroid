@@ -67,8 +67,8 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 
     virtual void onLayout(bool changed, int l, int t, int w, int h);
-    void layoutVertical(int left, int top, int right, int bottom);
-    void layoutHorizontal(int left, int top, int right, int bottom);
+    void layoutVertical(int left, int top, int width, int height);
+    void layoutHorizontal(int left, int top, int width, int height);
     virtual void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec);
     virtual void measureVertical(int widthMeasureSpec, int heightMeasureSpec);
     void drawHorizontalDivider(Canvas& canvas, int top);

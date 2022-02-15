@@ -7,13 +7,14 @@
 
 namespace cdroid{
 	
-class AlertDialog :public Dialog{///DialogInterface{
+class AlertDialog :public Dialog{
 public:
     static constexpr int LAYOUT_HINT_NONE = 0;
     static constexpr int LAYOUT_HINT_SIDE = 1;
     class Builder{
     private:
         AlertController::AlertParams* P;
+        const std::string getString(const std::string&resid)const;
     public:
         Builder(Context* context);
         ~Builder(); 

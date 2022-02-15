@@ -77,7 +77,6 @@ void AlertController::installContent() {
     //mWindow->setContentView(contentView);
     LayoutInflater::from(mContext)->inflate(contentView,mWindow,true);
     setupView();
-    mWindow->requestLayout();
 }
 
 const std::string& AlertController::selectContentView() {

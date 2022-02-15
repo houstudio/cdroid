@@ -56,6 +56,7 @@ protected:
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
     class UIEventSource*source;
     void onFinishInflate()override;
+    void onSizeChanged(int w,int h,int oldw,int oldh)override;
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);
@@ -81,7 +82,6 @@ public:
     virtual void setText(const std::string&);
     const std::string getText()const;
     virtual View& setPos(int x,int y)override;
-    virtual View& setSize(int cx,int cy)override;
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();

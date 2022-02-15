@@ -910,7 +910,7 @@ int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
         } else if (childDimension == LayoutParams::MATCH_PARENT) {
             // Child wants to be our size... find out how big it should
             // be
-            resultSize =size;// View.sUseZeroUnspecifiedMeasureSpec ? 0 : size;
+            resultSize = size;// View.sUseZeroUnspecifiedMeasureSpec ? 0 : size;
             resultMode = MeasureSpec::UNSPECIFIED;
         } else if (childDimension == LayoutParams::WRAP_CONTENT) {
             // Child wants to determine its own size.... find out how
