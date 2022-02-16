@@ -31,7 +31,7 @@ TEST_F(LAYOUT,linear){
     sd->setIntrinsicHeight(100);
     ll->setDividerDrawable(sd);
 #if 1
-    LinearLayoutParams*lp =new LinearLayoutParams(0,LayoutParams::WRAP_CONTENT,1.0f);
+    LinearLayout::LayoutParams*lp =new LinearLayout::LayoutParams(0,LayoutParams::WRAP_CONTENT,1.0f);
     Button*btn=new Button("OK",0,0);
     //lp->setMarginsRelative(10,0,10,0);
     lp->gravity=Gravity::TOP;
@@ -40,7 +40,7 @@ TEST_F(LAYOUT,linear){
     btn->setTextSize(30);
     btn->setTextColor(0xFFFFFF00);
 
-    lp =new LinearLayoutParams(0,LayoutParams::WRAP_CONTENT,4.0f);
+    lp =new LinearLayout::LayoutParams(0,LayoutParams::WRAP_CONTENT,4.0f);
     lp->gravity=(Gravity::CENTER_VERTICAL);
     btn=new Button("Cancel",0,0);
     btn->setTextColor(0xFF0088FF);
@@ -50,14 +50,14 @@ TEST_F(LAYOUT,linear){
 #if 10
     ProgressBar*pb2=new ProgressBar(72,72);
     Drawable*d=Drawable::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/drawable/progress_large.xml");
-    lp =new LinearLayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);//,1.0f);
+    lp =new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);//,1.0f);
     lp->gravity=Gravity::BOTTOM;//CENTER_VERTICAL);
     pb2->setIndeterminateDrawable(d);
     pb2->setProgressDrawable(new ColorDrawable(0xFF112233));
     pb2->setIndeterminate(true);
     ll->addView(pb2,lp);
 #endif
-    lp =new LinearLayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+    lp =new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
     lp->gravity=(Gravity::CENTER_VERTICAL);
     lp->setMarginsRelative(20,0,0,0);
     w->addView(ll,lp);
@@ -80,7 +80,7 @@ TEST_F(LAYOUT,radiogroup){
         rb->setButtonDrawable(d);
         rb->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         rb->setTextColor(0xFFFF0000);
-        LinearLayoutParams*lp=new LinearLayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+        LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
         rg->addView(rb,i,lp);
     }
     rg->measure(500,300);
@@ -92,7 +92,7 @@ TEST_F(LAYOUT,frame){
     App app;
     Window*w=new Window(100,100,800,600);
     FrameLayout*frame=new FrameLayout(800,600);
-    FrameLayoutParams*lp=new FrameLayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT,Gravity::CENTER);
+    FrameLayout::LayoutParams*lp=new FrameLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT,Gravity::CENTER);
 
     TextView*tv=new TextView("Hello world!",0,0);
     tv->setBackground(new ColorDrawable(0xFF884444));
@@ -100,7 +100,7 @@ TEST_F(LAYOUT,frame){
     tv->setTextSize(100);
     frame->addView(tv,lp);
 
-    lp=new FrameLayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,Gravity::CENTER);
+    lp=new FrameLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,Gravity::CENTER);
     Button*btn=new Button("OK",0,0);
     btn->setBackground(new ColorDrawable(0xFF4444ff));
     btn->setTextColor(0xFF00FF00);
@@ -117,13 +117,13 @@ TEST_F(LAYOUT,absolute){
     App app;
     Window*w=new Window(100,100,800,600);
     AbsoluteLayout*ll=new AbsoluteLayout(800,600);
-    AbsoluteLayoutParams*lp=new AbsoluteLayoutParams(300,50,100,100);
+    AbsoluteLayout::LayoutParams*lp=new AbsoluteLayout::LayoutParams(300,50,100,100);
     TextView*tv=new TextView("A crown fox jump over the lazy dog!",0,0);
     tv->setBackground(new ColorDrawable(0xFF4444ff));
     tv->setTextColor(0xFF00FF00);
     ll->addView(tv,lp);
 
-    lp=new AbsoluteLayoutParams(150,60,200,200);
+    lp=new AbsoluteLayout::LayoutParams(150,60,200,200);
     Button *btn=new Button("Browser",0,0);
     btn->setBackground(new ColorDrawable(0xFF4444ff));
     btn->setTextColor(0xFF00FF00);
@@ -141,7 +141,7 @@ TEST_F(LAYOUT,tablerow){
     TableRow*row=new TableRow(800,80);
     row->setBackground(new ColorDrawable(0xFF444444));
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
-        TableRowLayoutParams*rp=new TableRowLayoutParams(200+i*20,80);
+        TableRow::LayoutParams*rp=new TableRow::LayoutParams(200+i*20,80);
         rp->setMarginsRelative(10,5,10,5);
         Button*btn=new Button(captions[i],0,0);
         btn->setBackground(new ColorDrawable(0xFFFF0000));
@@ -163,14 +163,14 @@ TEST_F(LAYOUT,table){
     for(int j=0;j<4;j++){
         row[j]=new TableRow(800,80);
         for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
-            TableRowLayoutParams*rp=new TableRowLayoutParams(200+i*40,80);
+            TableRow::LayoutParams*rp=new TableRow::LayoutParams(200+i*40,80);
             rp->setMarginsRelative(10,0,10,0);
             Button*btn=new Button(captions[i],0,0);
             btn->setBackground(new ColorDrawable(0xFFFF0000+i*20));
             btn->setTextColor(0xFF00FF00+i*20);
             row[j]->addView(btn,rp);
         }
-        TableLayoutParams*tp=new TableLayoutParams(800,80);
+        TableLayout::LayoutParams*tp=new TableLayout::LayoutParams(800,80);
         tp->setMarginsRelative(0,5,0,5);
         tbl->addView(row[j],tp);
         //row[j]->measure(800,80);

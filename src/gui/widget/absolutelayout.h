@@ -10,26 +10,28 @@
 #include <widget/viewgroup.h>
 namespace cdroid{
 
-class AbsoluteLayoutParams:public LayoutParams{
-public:
-    int x;
-    int y;
-    AbsoluteLayoutParams(int width, int height, int x, int y);
-    AbsoluteLayoutParams(Context* c,const AttributeSet& attrs);
-    AbsoluteLayoutParams(const LayoutParams& source);
-};
 
 class AbsoluteLayout:public ViewGroup{
+public:
+    class LayoutParams:public ViewGroup::LayoutParams{
+    public:
+        int x;
+        int y;
+        LayoutParams(int width, int height, int x, int y);
+        LayoutParams(Context* c,const AttributeSet& attrs);
+        LayoutParams(const ViewGroup::LayoutParams& source);
+        LayoutParams(const LayoutParams& source);
+    };
 protected:
-    LayoutParams* generateDefaultLayoutParams()const override;
-    bool checkLayoutParams(const LayoutParams* p)const override;
-    LayoutParams* generateLayoutParams(const LayoutParams* p)const override;
+    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t,int w, int h)override;
 public:
     AbsoluteLayout(int w,int h);
     AbsoluteLayout(Context* context,const AttributeSet& attrs);
-    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 
 }
