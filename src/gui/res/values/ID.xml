@@ -20,17 +20,17 @@
   <id name="button3">0x000003f9</id>
   <id name="button2">0x000003fa</id>
   <id name="rightSpacer">0x000003fb</id>
-  <id name="titleDividerNoCustom">0x000003fc</id>
-  <id name="text1">0x000003fd</id>
-  <id name="select_dialog_listview">0x000003fe</id>
-  <id name="increment">0x000003ff</id>
-  <id name="numberpicker_input">0x00000400</id>
-  <id name="decrement">0x00000401</id>
-  <id name="textSpacerNoTitle">0x00000402</id>
-  <id name="textSpacerNoButtons">0x00000403</id>
-  <id name="titleDividerTop">0x00000404</id>
-  <id name="progress_percent">0x00000405</id>
-  <id name="progress_number">0x00000406</id>
-  <id name="body">0x00000407</id>
+  <id name="titleDividerTop">0x000003fc</id>
+  <id name="textSpacerNoTitle">0x000003fd</id>
+  <id name="textSpacerNoButtons">0x000003fe</id>
+  <id name="progress_percent">0x000003ff</id>
+  <id name="progress_number">0x00000400</id>
+  <id name="titleDividerNoCustom">0x00000401</id>
+  <id name="increment">0x00000402</id>
+  <id name="numberpicker_input">0x00000403</id>
+  <id name="decrement">0x00000404</id>
+  <id name="body">0x00000405</id>
+  <id name="select_dialog_listview">0x00000406</id>
+  <id name="text1">0x00000407</id>
 </resources>
 

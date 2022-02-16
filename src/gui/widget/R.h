@@ -28,18 +28,18 @@ public:
          button3                 = 0x000003F9 /*      1017*/,
          button2                 = 0x000003FA /*      1018*/,
          rightSpacer             = 0x000003FB /*      1019*/,
-         titleDividerNoCustom    = 0x000003FC /*      1020*/,
-         text1                   = 0x000003FD /*      1021*/,
-         select_dialog_listview  = 0x000003FE /*      1022*/,
-         increment               = 0x000003FF /*      1023*/,
-         numberpicker_input      = 0x00000400 /*      1024*/,
-         decrement               = 0x00000401 /*      1025*/,
-         textSpacerNoTitle       = 0x00000402 /*      1026*/,
-         textSpacerNoButtons     = 0x00000403 /*      1027*/,
-         titleDividerTop         = 0x00000404 /*      1028*/,
-         progress_percent        = 0x00000405 /*      1029*/,
-         progress_number         = 0x00000406 /*      1030*/,
-         body                    = 0x00000407 /*      1031*/
+         titleDividerTop         = 0x000003FC /*      1020*/,
+         textSpacerNoTitle       = 0x000003FD /*      1021*/,
+         textSpacerNoButtons     = 0x000003FE /*      1022*/,
+         progress_percent        = 0x000003FF /*      1023*/,
+         progress_number         = 0x00000400 /*      1024*/,
+         titleDividerNoCustom    = 0x00000401 /*      1025*/,
+         increment               = 0x00000402 /*      1026*/,
+         numberpicker_input      = 0x00000403 /*      1027*/,
+         decrement               = 0x00000404 /*      1028*/,
+         body                    = 0x00000405 /*      1029*/,
+         select_dialog_listview  = 0x00000406 /*      1030*/,
+         text1                   = 0x00000407 /*      1031*/
     };/*enum*/};/*class*/
 
 };//endof class R

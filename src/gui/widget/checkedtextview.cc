@@ -60,7 +60,7 @@ void CheckedTextView::setCheckMarkDrawable(const std::string&resId) {
 }
 
 void CheckedTextView::setCheckMarkDrawable(Drawable* d) {
-    setCheckMarkDrawableInternal(d, 0);
+    setCheckMarkDrawableInternal(d, "");
 }
 
 void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string&resId){

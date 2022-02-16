@@ -751,17 +751,17 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
 
     if (mOnClickListener) {
         listView->setOnItemClickListener([&](AdapterView& parent, View& v, int position, long id) {
-                mOnClickListener(*dialog->mDialogInterface, position);
-                if (!mIsSingleChoice) {
-                    dialog->mDialogInterface->dismiss();
-                }
+            mOnClickListener(*dialog->mDialogInterface, position);
+            if (!mIsSingleChoice) {
+                dialog->mDialogInterface->dismiss();
+            }
         });
     } else if (mOnCheckboxClickListener) {
         listView->setOnItemClickListener([&](AdapterView& parent, View& v, int position, long id) {
-                if (mCheckedItems.size()) {
-                    mCheckedItems[position] = listView->isItemChecked(position);
-                }
-                mOnCheckboxClickListener(*dialog->mDialogInterface, position, listView->isItemChecked(position));
+            if (mCheckedItems.size()) {
+                mCheckedItems[position] = listView->isItemChecked(position);
+            }
+            mOnCheckboxClickListener(*dialog->mDialogInterface, position, listView->isItemChecked(position));
         });
     }
 

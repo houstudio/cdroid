@@ -74,7 +74,7 @@ AlertDialog::Builder::Builder(Context* context){
 }
 
 AlertDialog::Builder::~Builder(){
-    delete P;
+    //delete P;
 }
 
 Context* AlertDialog::Builder::getContext(){
@@ -169,8 +169,8 @@ AlertDialog::Builder& AlertDialog::Builder::setAdapter(ListAdapter* adapter,Dial
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::string&itemsId,const std::vector<bool>& checkedItems,
-         DialogInterface::OnMultiChoiceClickListener listener){
+AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::string&itemsId,
+      const std::vector<bool>& checkedItems,DialogInterface::OnMultiChoiceClickListener listener){
     //P.mItems = P.mContext.getResources().getTextArray(itemsId);
     P->mContext->getArray(itemsId,P->mItems);
     P->mOnCheckboxClickListener = listener;
@@ -179,8 +179,8 @@ AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::strin
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::vector<std::string>&items, const std::vector<bool>& checkedItems,
-         DialogInterface::OnMultiChoiceClickListener listener){
+AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::vector<std::string>&items, 
+      const std::vector<bool>&checkedItems, DialogInterface::OnMultiChoiceClickListener listener){
     P->mItems=items;
     P->mOnCheckboxClickListener = listener;
     P->mCheckedItems = checkedItems;
@@ -188,7 +188,8 @@ AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::vecto
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setSingleChoiceItems(const std::string&itemsId, int checkedItem, DialogInterface::OnClickListener listener){
+AlertDialog::Builder& AlertDialog::Builder::setSingleChoiceItems(const std::string&itemsId, 
+      int checkedItem, DialogInterface::OnClickListener listener){
     //P.mItems = P.mContext.getResources().getTextArray(itemsId);
     P->mContext->getArray(itemsId,P->mItems);
     P->mOnClickListener = listener;

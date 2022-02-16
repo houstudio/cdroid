@@ -17,7 +17,7 @@ public:
         const std::string getString(const std::string&resid)const;
     public:
         Builder(Context* context);
-        ~Builder(); 
+        ~Builder();
         Context* getContext();
         Builder& setTitle(const std::string& title);
         Builder& setCustomTitle(View* customTitleView);

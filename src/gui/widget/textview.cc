@@ -272,7 +272,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
-    mSingleLine=attrs.getBoolean("singleLine",mSingleLine);
+    setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
 
     TextAppearanceAttributes attributes;
     const std::string appearance=attrs.getString("textAppearance");
