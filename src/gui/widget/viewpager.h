@@ -181,7 +181,7 @@ protected:
     void setScrollState(int newState);
     void setCurrentItemInternal(int item, bool smoothScroll, bool always,int velocity=0);
     void drawableStateChanged()override;
-    bool verifyDrawable(Drawable& who);
+    bool verifyDrawable(Drawable* who)const override;
     ItemInfo* addNewItem(int position, int index);
     void dataSetChanged();
     void populate();

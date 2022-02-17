@@ -356,8 +356,8 @@ void ViewPager::setPageMarginDrawable(const std::string&resId){
     setPageMarginDrawable(getContext()->getDrawable(resId));
 }
 
-bool ViewPager::verifyDrawable(Drawable& who) {
-    return ViewPager::verifyDrawable(who) || &who == mMarginDrawable;
+bool ViewPager::verifyDrawable(Drawable* who)const{
+    return ViewGroup::verifyDrawable(who) || who == mMarginDrawable;
 }
 
 void ViewPager::drawableStateChanged(){

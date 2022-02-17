@@ -5,7 +5,14 @@ namespace cdroid{
 
 class NinePatchDrawable:public Drawable{
 private:
+    struct DIV{
+        int pos;
+        int len;
+        bool stretchable;
+    };
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{
+    private:
+        int get_ninepatch();
     public:
         float mBaseAlpha;// = 1.0f;
         bool mDither;// = DEFAULT_DITHER;
@@ -14,14 +21,15 @@ private:
         Insets mOpticalInsets;
         int mTintMode;
 		int mChangingConfigurations;
-        std::vector<NinePatchBlock> mHorz;
-        std::vector<NinePatchBlock> mVert;
+        std::vector<DIV> mHorz;
+        std::vector<DIV> mVert;
         ColorStateList*mTint;
         RefPtr<ImageSurface>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
         NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding=nullptr);
         Drawable*newDrawable()override;
+        void draw(Canvas&canvas,const Rect&rect);
         int getChangingConfigurations()const override;
     };
     int mAlpha;

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <limits.h>
 
 namespace cdroid{
 
@@ -890,6 +891,10 @@ void VelocityTracker::clear() {
 void VelocityTracker::addMovement(const MotionEvent& event) {
     mVelocityTracker->addMovement(event);
     LOGV("%f,%f",event.getX(),event.getY());
+}
+
+void VelocityTracker::computeCurrentVelocity(int32_t units){
+    computeCurrentVelocity(units,INT_MAX);
 }
 
 void VelocityTracker::computeCurrentVelocity(int32_t units, float maxVelocity) {

@@ -275,69 +275,6 @@ void Surface::write_to_jpg_stream(const SlotWriteFunc& write_func){
 #endif
 }
 
-typedef struct{
-  unsigned char a;
-  unsigned char r;
-  unsigned char g;
-  unsigned char b;
-}PRGB;
-static PRGB get_pixel(ImageSurface*img,int x,int y){
-    unsigned char*data=img->get_data()+img->get_stride()*y+x*4;
-    PRGB r={data[3],data[2],data[1],data[0]};
-    return r;
-}
-
-static bool isStretchableMarker(PRGB&p){
-    return (p.a>>7)&1;
-}
-int ImageSurface::get_ninepatch(std::vector<NinePatchBlock>&horz,std::vector<NinePatchBlock>&vert){
-    int i;
-    PRGB c;
-    int width=get_width();
-    int height=get_height();
-    int pad[4]={-1,-1,-1,-1};
-    horz.clear();
-    vert.clear();
-#define check_pixel(x,y) c=get_pixel(this,x,y); if( (c.a!=0) && (c.a+c.r+c.g+c.b)!=4) return 0;
-    check_pixel(0,0);
-    check_pixel(width-1,0);
-    check_pixel(0,height-1);
-    check_pixel(width-1,height-1);
-    //horz stretch infos
-    int pos=0;
-    int horz_stretch=0;
-    int vert_stretch=0;
-    PRGB last,next;
-    last=get_pixel(this,1,0);
-    for(int x=1;x<width-1;x++){
-        next=get_pixel(this,x+1,0);
-        if(isStretchableMarker(last)!=isStretchableMarker(next)||x==width-2){
-            bool stretchable=isStretchableMarker(last);
-            int len=x-pos;
-					  horz.push_back(NinePatchBlock(pos,len,stretchable));
-            //LOGV("horz:%d,%d,%d",pos,len,stretchable);
-            if(stretchable)horz_stretch+=len;
-            last=next;pos=x;
-        }
-    }
-    //vert streatch infos
-    pos=0;
-    last=get_pixel(this,0,1);
-    for(int y=1;y<height-1;y++){
-        next=get_pixel(this,0,y+1);
-        if(isStretchableMarker(last)!=isStretchableMarker(next)||y==height-2){
-            bool stretchable = isStretchableMarker(last);
-	 				  int len = y - pos;
-            //LOGV("vert:%d,%d,%d",pos,len,stretchable);
-					  vert.push_back(NinePatchBlock(pos,len,stretchable));
-					  if (stretchable)vert_stretch += len;
-					  last = next;
-					  pos = y;
-        }
-    }
-    return horz_stretch<<16|vert_stretch;
-}
-
 #if defined(ENABLE_JPEG)||defined(ENABLE_TURBOJPEG)
 RefPtr<ImageSurface> ImageSurface::create_from_jpg(std::string filename){
     auto cobject = cairo_image_surface_create_from_jpeg(filename.c_str());

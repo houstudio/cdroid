@@ -174,6 +174,7 @@ void Canvas::draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT
     restore();
 }
 
+#if 0
 void Canvas::draw_ninepatch(const RefPtr<ImageSurface>img,const RECT& rect,const std::vector<NinePatchBlock>&horz,
         const std::vector<NinePatchBlock>& vert){
     int dw=rect.width;
@@ -226,6 +227,7 @@ void Canvas::draw_ninepatch(const RefPtr<ImageSurface>img,const RECT& rect,const
         dy0=dy1;
     }    
 }
+#endif
 
 void Canvas::dump2png(const char*fname){
 #ifdef CAIRO_HAS_PNG_FUNCTIONS

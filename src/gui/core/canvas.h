@@ -39,8 +39,6 @@ public:
     void rectangle(int x,int y,int w,int h);
     void rectangle(const RECT &r);
     void draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT*src);
-    void draw_ninepatch(const RefPtr<ImageSurface>img,const RECT& rect,const std::vector<NinePatchBlock>&horz,
-            const std::vector<NinePatchBlock>&vert);
     void rotate(float degrees,float px,float py);
     void dump2png(const char*fname);
 };

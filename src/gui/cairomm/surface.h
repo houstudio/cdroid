@@ -636,14 +636,6 @@ protected:
  *
  * Note that like all surfaces, an ImageSurface is a reference-counted object that should be used via Cairo::RefPtr.
  */
-struct NinePatchBlock{
-    int pos;
-    int len;
-    bool stretchable;
-    NinePatchBlock(int p,int l,bool s){
-        pos=p;len=l;stretchable=s;
-    }
-};
 class CAIROMM_API ImageSurface : public Surface
 {
 protected:
@@ -696,7 +688,6 @@ public:
    * @since 1.2
    */
   int get_stride() const;
-  int get_ninepatch(std::vector<NinePatchBlock>&horz,std::vector<NinePatchBlock>&vert);
 
   /**
    * This function provides a stride value that will respect all alignment

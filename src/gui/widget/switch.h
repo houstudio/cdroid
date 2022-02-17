@@ -1,0 +1,153 @@
+#ifndef __SWITCH_H__
+#define __SWITCH_H__
+#include <widget/compoundbutton.h>
+
+namespace cdroid{
+
+typedef void* Typeface;
+
+class Switch:public CompoundButton{
+private:
+    static constexpr int THUMB_ANIMATION_DURATION = 250;
+
+    static constexpr int TOUCH_MODE_IDLE = 0;
+    static constexpr int TOUCH_MODE_DOWN = 1;
+    static constexpr int TOUCH_MODE_DRAGGING = 2;
+    Drawable* mThumbDrawable;
+    ColorStateList* mThumbTintList;
+    //BlendMode mThumbBlendMode = null;
+    bool mHasThumbTint = false;
+    bool mHasThumbTintMode = false;
+
+    Drawable* mTrackDrawable;
+    ColorStateList* mTrackTintList;
+    //BlendMode* mTrackBlendMode = null;
+    bool mHasTrackTint = false;
+    bool mHasTrackTintMode = false;
+
+    int mThumbTextPadding;
+    int mSwitchMinWidth;
+    int mSwitchPadding;
+    bool mSplitTrack;
+    std::string mTextOn;
+    std::string mTextOff;
+    bool mShowText;
+    bool mUseFallbackLineSpacing;
+
+    int mTouchMode;
+    int mTouchSlop;
+    float mTouchX;
+    float mTouchY;
+    VelocityTracker* mVelocityTracker;
+    int mMinFlingVelocity;
+
+    float mThumbPosition;
+
+    /**
+     * Width required to draw the switch track and thumb. Includes padding and
+     * optical bounds for both the track and thumb.
+     */
+    int mSwitchWidth;
+
+    /**
+     * Height required to draw the switch track and thumb. Includes padding and
+     * optical bounds for both the track and thumb.
+     */
+    int mSwitchHeight;
+
+    /**
+     * Width of the thumb's content region. Does not include padding or
+     * optical bounds.
+     */
+    int mThumbWidth;
+
+    /** Left bound for drawing the switch track and thumb. */
+    int mSwitchLeft;
+
+    /** Top bound for drawing the switch track and thumb. */
+    int mSwitchTop;
+
+    /** Right bound for drawing the switch track and thumb. */
+    int mSwitchRight;
+
+    /** Bottom bound for drawing the switch track and thumb. */
+    int mSwitchBottom;
+
+    ColorStateList* mTextColors;
+    Layout* mOnLayout;
+    Layout* mOffLayout;
+    //TransformationMethod2 mSwitchTransformationMethod;
+    ObjectAnimator* mPositionAnimator;
+private:
+    void init();
+    void setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex);
+    void applyTrackTint();
+    void applyThumbTint();
+    Layout* makeLayout(const std::string& text);
+    bool hitThumb(float x, float y);
+    void cancelSuperTouch(MotionEvent& ev);
+    void stopDrag(MotionEvent& ev);
+    void animateThumbToCheckedState(bool newCheckedState);
+    void cancelPositionAnimator();
+    bool getTargetCheckedState()const;
+    void setThumbPosition(float position);
+    int getThumbOffset();
+    int getThumbScrollRange();
+protected:
+    void onLayout(bool changed, int left, int top, int width, int height)override;
+    void onDraw(Canvas&)override;
+    std::vector<int>onCreateDrawableState()const override;
+    void drawableStateChanged()override;
+    bool verifyDrawable(Drawable* who)const override;
+public:
+    Switch(Context* context,const AttributeSet& attrs);
+    void setSwitchTextAppearance(Context* context,const std::string&resid);
+    void setSwitchTypeface(Typeface tf, int style);
+    void setSwitchTypeface(Typeface tf);
+    void setSwitchPadding(int pixels);
+    int  getSwitchPadding()const;
+    void setSwitchMinWidth(int pixels);
+    int  getSwitchMinWidth()const;
+    void setThumbTextPadding(int pixels);
+    int  getThumbTextPadding()const;
+    void setTrackDrawable(Drawable* track);
+    void setTrackResource(const std::string& resId);
+    Drawable* getTrackDrawable();
+    void setTrackTintList(ColorStateList* tint);
+    ColorStateList* getTrackTintList();
+    void setTrackTintMode(PorterDuffMode tintMode);
+    PorterDuffMode getTrackTintMode()const;
+    void setThumbDrawable(Drawable* thumb);
+    void setThumbResource(const std::string& resId);
+    Drawable* getThumbDrawable();
+    void setThumbTintList(ColorStateList* tint);
+    ColorStateList* getThumbTintList()const;
+    void setThumbTintMode(PorterDuffMode tintMode);
+    PorterDuffMode getThumbTintMode()const;
+    void setSplitTrack(bool splitTrack);
+    bool getSplitTrack()const;
+
+    std::string getTextOn()const;
+    void setTextOn(const std::string&);
+    std::string getTextOff()const;
+    void setTextOff(const std::string&);
+
+    bool getShowText()const;
+    void setShowText(bool showText);
+
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    bool onTouchEvent(MotionEvent& ev)override;
+    void toggle()override;
+    std::string getButtonStateDescription()const;// override;
+    void setChecked(bool checked)override;
+    void draw(Canvas&)override;
+
+    int getCompoundPaddingLeft() ;//override;
+    int getCompoundPaddingRight();//override;
+    void drawableHotspotChanged(float x, float y)override;
+    void jumpDrawablesToCurrentState()override;
+};
+
+}//endof namespace
+
+#endif

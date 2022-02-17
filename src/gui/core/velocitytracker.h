@@ -55,6 +55,7 @@ public:
     explicit VelocityTracker(const char* strategy);
     void clear();
     void addMovement(const MotionEvent& event);
+    void computeCurrentVelocity(int32_t units);
     void computeCurrentVelocity(int32_t units, float maxVelocity);
     void getVelocity(int32_t id, float* outVx, float* outVy);
     bool getEstimator(int32_t id, Estimator* outEstimator);
