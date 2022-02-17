@@ -160,9 +160,9 @@ TEST_F(IMAGE,ninepatch1){
     RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
     ASSERT_EQ(1,(int)fs.good());
     RECT rect={50,50,400,100};
-    std::vector<NinePatchBlock> horz,vert;
-    img->get_ninepatch(horz,vert);
-    ctx->draw_ninepatch(img,rect,horz,vert);
+    //std::vector<NinePatchBlock> horz,vert;
+    //img->get_ninepatch(horz,vert);
+    //ctx->draw_ninepatch(img,rect,horz,vert);
 }
 
 TEST_F(IMAGE,ninepatch2){
@@ -170,9 +170,9 @@ TEST_F(IMAGE,ninepatch2){
     RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
     ASSERT_EQ(1,(int)fs.good());
     RECT rect={50,50,400,100};
-    std::vector<NinePatchBlock> horz,vert;
-    img->get_ninepatch(horz,vert);
-    ctx->draw_ninepatch(img,rect,horz,vert);
+    //std::vector<NinePatchBlock> horz,vert;
+    //img->get_ninepatch(horz,vert);
+    //ctx->draw_ninepatch(img,rect,horz,vert);
 }
 #ifdef ENABLE_CAIROSVG
 TEST_F(IMAGE,SVG){
