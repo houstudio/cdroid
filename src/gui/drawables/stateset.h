@@ -37,7 +37,8 @@ public:
         DRAG_ACCPETABLE= 10,
         DRAG_HOVERED   = 11
     };
-    static std::vector<int>NOTHING;
+    static const std::vector<int>NOTHING;
+    static const std::vector<int>WILD_CARD;
 public:
     static void trimStateSet(std::vector<int>&states,int newsize);
     static bool isWildCard(const std::vector<int>&stateSetOrSpec);

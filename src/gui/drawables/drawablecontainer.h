@@ -44,10 +44,10 @@ protected:
         int getChildCount()const;
         Drawable*getChild(int index);
         void invalidateCache();
-        void mutate();
-        void clearMutated();
+        virtual void mutate();
+        virtual void clearMutated();
         void createAllFutures();
-        bool isStateful();
+        virtual bool isStateful();
         bool canConstantState();
         int getChangingConfigurations()const override;
         bool setLayoutDirection(int layoutDirection, int currentIndex);

@@ -2,7 +2,9 @@
 #include <bitset.h>
 namespace cdroid{
 
-std::vector<int>StateSet::NOTHING=std::vector<int>();
+const std::vector<int>StateSet::NOTHING={0};
+const std::vector<int>StateSet::WILD_CARD={};
+
 std::vector<int>StateSet::VIEW_STATE_IDS={
     WINDOW_FOCUSED , VIEW_STATE_WINDOW_FOCUSED,
     SELECTED       , VIEW_STATE_SELECTED ,

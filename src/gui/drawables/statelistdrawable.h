@@ -4,7 +4,7 @@
 namespace cdroid{
 
 class StateListDrawable:public DrawableContainer{
-private:
+protected:
     class StateListState:public DrawableContainerState{
     public:
         std::vector<std::vector<int>>mStateSets;
@@ -15,9 +15,10 @@ private:
         int indexOfStateSet(const std::vector<int>&stateSet);
         bool hasFocusStateSpecified()const;
     };
+private:
     std::shared_ptr<StateListState>mStateListState;
-    StateListDrawable(std::shared_ptr<StateListState>state);
 protected:
+    StateListDrawable(std::shared_ptr<StateListState>state);
     int indexOfStateSet(const std::vector<int>&states)const;
     bool onStateChange(const std::vector<int>&stateSet)override;
     std::shared_ptr<DrawableContainerState>cloneConstantState()override;
