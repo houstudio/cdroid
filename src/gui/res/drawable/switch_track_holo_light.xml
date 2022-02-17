@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cddroid:state_focused="true"  croid:drawable="@cdroid:mipmap/switch_bg_focused_holo_light" />
+    <item cdroid:drawable="@drawable/switch_bg_holo_light" />
+</selector>

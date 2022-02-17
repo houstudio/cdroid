@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:cdroid="http://schemas.android.com/apk/res/android"
+       cdroid:insetLeft="@dimen/button_inset_horizontal_material"
+       cdroid:insetTop="@dimen/button_inset_vertical_material"
+       cdroid:insetRight="@dimen/button_inset_horizontal_material"
+       cdroid:insetBottom="@dimen/button_inset_vertical_material">
+    <layer-list cdroid:paddingMode="stack">
+        <item>
+            <ripple cdroid:color="?attr/colorControlHighlight">
+                <item>
+                    <shape cdroid:shape="rectangle"
+                           cdroid:tint="?attr/colorButtonNormal">
+                        <corners cdroid:topLeftRadius="@dimen/control_corner_material"
+                                 cdroid:topRightRadius="@dimen/control_corner_material"/>
+                        <solid cdroid:color="@color/white" />
+                        <padding cdroid:left="@dimen/button_padding_horizontal_material"
+                                 cdroid:top="@dimen/button_padding_vertical_material"
+                                 cdroid:right="@dimen/button_padding_horizontal_material"
+                                 cdroid:bottom="@dimen/button_padding_vertical_material" />
+                    </shape>
+                </item>
+            </ripple>
+        </item>
+        <item cdroid:gravity="bottom|fill_horizontal">
+            <shape cdroid:shape="rectangle">
+                <size cdroid:height="2dp" />
+                <solid cdroid:color="@color/control_checkable_material" />
+            </shape>
+        </item>
+    </layer-list>
+</inset>
