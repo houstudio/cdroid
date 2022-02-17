@@ -109,11 +109,11 @@ void Window::hide(){
 }
 
 View& Window::setPos(int x,int y){
-    ViewGroup::setPos(x,y);
-    if( ((x!=mLeft) || (y!=mTop) ) && isAttachedToWindow()){
+    const bool changed =(x!=mLeft)||(mTop!=y);
+    if( changed && isAttachedToWindow()){
         WindowManager::getInstance().moveWindow(this,x,y);
-        mLeft=x;
-        mTop=y;
+        ViewGroup::setPos(x,y);
+        WindowManager::getInstance().resetVisibleRegion();
     }
     GraphDevice::getInstance().flip();
     return *this;
@@ -121,6 +121,11 @@ View& Window::setPos(int x,int y){
 
 void Window::onSizeChanged(int w,int h,int oldw,int oldh){
     WindowManager::getInstance().resetVisibleRegion();
+}
+
+ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){
+    invalidate(dirty);
+    return nullptr;
 }
 
 void Window::onFinishInflate(){

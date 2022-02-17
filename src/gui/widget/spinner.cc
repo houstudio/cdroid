@@ -278,7 +278,7 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
     if (background) {
         Rect rctmp;
         background->getPadding(rctmp);
-        width += rctmp.left + rctmp.right();
+        width += rctmp.left + rctmp.width;
     }
     return width;
 }
@@ -345,7 +345,7 @@ void Spinner::DropdownPopup::computeContentWidth() {
     Rect mTempRect;
     if (background != nullptr) {
         background->getPadding(mTempRect);
-        hOffset = mSpinner->isLayoutRtl() ? mTempRect.right() : -mTempRect.left;
+        hOffset = mSpinner->isLayoutRtl() ? mTempRect.width : -mTempRect.left;
     } else {
         mTempRect.left = mTempRect.width = 0;
     }

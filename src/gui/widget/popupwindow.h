@@ -1,7 +1,7 @@
 #pragma once
 #include <widget/viewgroup.h>
 #include <widget/framelayout.h>
-
+#include <widget/cdwindow.h>
 namespace cdroid{
 class PopupWindow{
 public:
@@ -10,11 +10,11 @@ public:
     static constexpr int INPUT_METHOD_NOT_NEEDED = 2;
     DECLARE_UIEVENT(void,OnDismissListener);
 private:
-    class PopupDecorView:public FrameLayout{
+    class PopupDecorView:public Window{
     private:
         PopupWindow*mPop;
     public:
-        PopupDecorView(Context* context);
+        PopupDecorView(int w,int h);
         bool dispatchKeyEvent(KeyEvent& event)override;
         bool dispatchTouchEvent(MotionEvent& ev)override;
         bool onTouchEvent(MotionEvent& event)override;
@@ -35,7 +35,7 @@ private:
     bool mIsTransitioningToDismiss;
     bool mIsDropdown;
 
-    /** View that handles event dispatch and content transitions. */
+    /** View that handles event dispatch and content transitions. maby we can use it as Window??*/
     PopupDecorView* mDecorView;
 
     /** View that holds the background and may animate during a transition. */
@@ -96,6 +96,7 @@ private:
 
     bool mPopupViewInitialLayoutDirectionInherited;
 private:
+    void init();
     int computeGravity();
     PopupDecorView* createDecorView(View* contentView);
     void invokePopup(LayoutParams* p);

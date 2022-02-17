@@ -2,6 +2,7 @@
 namespace cdroid{
 
 PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
+    init();
     mContext = context;
     //mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 #if 0 
@@ -44,6 +45,7 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
 }
 
 PopupWindow::PopupWindow(View* contentView, int width, int height, bool focusable) {
+    init();
     if (contentView) {
         mContext = contentView->getContext();
         //mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
@@ -56,6 +58,29 @@ PopupWindow::PopupWindow(View* contentView, int width, int height, bool focusabl
 }
 
 PopupWindow::PopupWindow(int width, int height):PopupWindow(nullptr,width,height){
+}
+
+void PopupWindow::init(){
+    mIsShowing = false;
+    mIsDropdown= false;
+    mFocusable = true;
+    mTouchable = false;
+    mOutsideTouchable = false;
+    mClippingEnabled  = true;
+    mSplitTouchEnabled= -1;
+    mIsTransitioningToDismiss = false;
+    mAllowScrollingAnchorParent= true;
+    mLayoutInsetDecor = false;
+    mAttachedInDecor  = false;
+    mAttachedInDecorSet= false;
+
+    mParentRootView = nullptr;
+    mAnchor = nullptr;
+    mAnchorRoot = nullptr;
+    mBackground = nullptr;
+    mBackgroundView = nullptr;
+    mAboveAnchorBackgroundDrawable = nullptr;
+    mBelowAnchorBackgroundDrawable = nullptr;
 }
 
 void PopupWindow::setEpicenterBounds(const Rect& bounds) {
@@ -250,8 +275,9 @@ void PopupWindow::showAsDropDown(View* anchor, int xoff, int yoff,int gravity){
     preparePopup(p);
 
     bool aboveAnchor =false;
-        //findDropDownPosition(anchor, p, xoff, yoff,
-        //p.width, p.height, gravity, mAllowScrollingAnchorParent);
+    mDecorView->setPos(xoff,yoff);
+    //findDropDownPosition(anchor, p, xoff, yoff,
+    //p.width, p.height, gravity, mAllowScrollingAnchorParent);
     updateAboveAnchor(aboveAnchor);
     //p.accessibilityIdOfAnchor = (anchor) ? anchor->getAccessibilityViewId() : -1;
     invokePopup(nullptr);
@@ -309,11 +335,10 @@ PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
         height = LayoutParams::MATCH_PARENT;
     }
 
-    PopupDecorView* decorView = new PopupDecorView(mContext);
+    PopupDecorView* decorView = new PopupDecorView(mWidth,mHeight);
     decorView->addView(contentView, LayoutParams::MATCH_PARENT, height);
-    decorView->setClipChildren(false);
+    //decorView->setClipChildren(false);
     decorView->setClipToPadding(false);
-
     return decorView;
 }
 
@@ -339,6 +364,7 @@ void PopupWindow::updateAboveAnchor(bool aboveAnchor){
 }
 
 void PopupWindow::invokePopup(LayoutParams* p){
+    
 }
 
 void PopupWindow::setLayoutDirectionFromAnchor() {
@@ -404,7 +430,7 @@ int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBott
     if (mBackground ) {
         Rect mTempRect; 
         mBackground->getPadding(mTempRect);
-        returnedHeight -= mTempRect.top + mTempRect.bottom();
+        returnedHeight -= mTempRect.top + mTempRect.height;
     }
 
     return returnedHeight;
@@ -426,7 +452,36 @@ PopupWindow::OnDismissListener PopupWindow::getOnDismissListener() {
 }
 
 void PopupWindow::update(){
+    if (!isShowing() || !hasContentView()) {
+        return;
+    }
+#if 0
+    Window::LayoutParams* p = getDecorViewLayoutParams();
 
+    bool bUpdate = false;
+
+    int newAnim = computeAnimationResource();
+    if (newAnim != p.windowAnimations) {
+        p.windowAnimations = newAnim;
+        bUpdate = true;
+    }
+
+    int newFlags = computeFlags(p.flags);
+    if (newFlags != p.flags) {
+        p.flags = newFlags;
+        bUpdate = true;
+    }
+
+    int newGravity = computeGravity();
+    if (newGravity != p.gravity) {
+        p.gravity = newGravity;
+        bUpdate = true;
+    }
+
+    if (bUpdate) {
+        update(mAnchor, p);
+    }
+#endif
 }
 
 void PopupWindow::update(View* anchor,LayoutParams* params) {
@@ -435,6 +490,7 @@ void PopupWindow::update(View* anchor,LayoutParams* params) {
 }
 
 void PopupWindow::update(int width, int height){
+    update(0,0/*getLeft(), getTop()*/, width, height);
 }
 
 void PopupWindow::update(int x, int y, int width, int height){
@@ -565,14 +621,17 @@ void PopupWindow::attachToAnchor(View* anchor, int xoff, int yoff, int gravity){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-PopupWindow::PopupDecorView::PopupDecorView(Context* context):FrameLayout(context,AttributeSet()){
+PopupWindow::PopupDecorView::PopupDecorView(int w,int h)
+   :Window(0,0,w,h){
     mPop=nullptr;
+    setBackgroundColor(0xFFFF0000);
+    LOGD("create PopupWindow...");
 }
 
 bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){
      if (event.getKeyCode() == KEY_BACK) {
         if (getKeyDispatcherState() == nullptr) {
-            return FrameLayout::dispatchKeyEvent(event);
+            return Window::dispatchKeyEvent(event);
         }
 
         if (event.getAction() == KeyEvent::ACTION_DOWN && event.getRepeatCount() == 0) {
@@ -588,9 +647,9 @@ bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){
                 return true;
             }
         }
-        return FrameLayout::dispatchKeyEvent(event);
+        return Window::dispatchKeyEvent(event);
     } else {
-        return FrameLayout::dispatchKeyEvent(event);
+        return Window::dispatchKeyEvent(event);
     }
 }
 
@@ -598,7 +657,7 @@ bool PopupWindow::PopupDecorView::dispatchTouchEvent(MotionEvent& ev){
     if (mPop && mPop->mTouchInterceptor && mPop->mTouchInterceptor(*this, ev)) {
         return true;
     }
-    return FrameLayout::dispatchTouchEvent(ev);
+    return Window::dispatchTouchEvent(ev);
 }
 
 bool PopupWindow::PopupDecorView::onTouchEvent(MotionEvent& event){
@@ -613,7 +672,7 @@ bool PopupWindow::PopupDecorView::onTouchEvent(MotionEvent& event){
         mPop->dismiss();
         return true;
     } else {
-        return FrameLayout::onTouchEvent(event);
+        return Window::onTouchEvent(event);
     }
 }
 

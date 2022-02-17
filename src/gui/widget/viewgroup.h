@@ -202,6 +202,7 @@ protected:
 
     virtual void onDebugDrawMargins(Canvas& canvas);
     virtual void onDebugDraw(Canvas& canvas);
+    virtual ViewGroup*invalidateChildInParent(int* location,Rect& dirty);
     void drawInvalidateRegion(Canvas&canvas);
     void dispatchDraw(Canvas&)override;
 
@@ -301,7 +302,6 @@ public:
     virtual void onViewAdded(View* child);
     virtual void onViewRemoved(View* child);
     void invalidateChild(View*child,Rect&dirty);
-    ViewGroup*invalidateChildInParent(int* location,Rect& dirty);
 
     virtual LayoutParams* generateLayoutParams(const AttributeSet& attrs)const;
     static int getChildMeasureSpec(int spec, int padding, int childDimension);

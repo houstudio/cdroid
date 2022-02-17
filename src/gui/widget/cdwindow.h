@@ -57,6 +57,7 @@ protected:
     class UIEventSource*source;
     void onFinishInflate()override;
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
+    ViewGroup*invalidateChildInParent(int* location,Rect& dirty)override;
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);

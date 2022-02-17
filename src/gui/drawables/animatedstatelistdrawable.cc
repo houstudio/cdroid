@@ -35,7 +35,11 @@ void AnimatedStateListDrawable::addState(const std::vector<int>&stateSet,Drawabl
 }
 
 void AnimatedStateListDrawable::addTransition(int fromId, int toId,AnimatedStateListDrawable::Transition* transition, bool reversible){
+    if (transition == nullptr) {
+        throw "Transition drawable must not be null";
+    }
 
+    //mState->addTransition(fromId, toId, transition, reversible);
 }
 
 bool AnimatedStateListDrawable::isStateful()const {
@@ -167,9 +171,9 @@ void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContain
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-//AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner)
-//  :StateListState(orig,owner){
-//}
+AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner)
+  :StateListState(orig,owner){
+}
 
 void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
     //mTransitions = mTransitions.clone();
@@ -186,7 +190,7 @@ int AnimatedStateListDrawable::AnimatedStateListState::addTransition(int fromId,
     mTransitions.put(keyFromTo, pos | reversibleBit);//append
 
     if (reversible) {
-        long keyToFrom = generateTransitionKey(toId, fromId);
+        const long keyToFrom = generateTransitionKey(toId, fromId);
         mTransitions.put(keyToFrom, pos | REVERSED_BIT | reversibleBit);//append
     }
     return pos;
