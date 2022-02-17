@@ -5,7 +5,7 @@
 
 namespace cdroid{
 
-DECLATE_WIDGET2(Switch,"cdroid:attr/switchStyle")
+DECLARE_WIDGET2(Switch,"cdroid:attr/switchStyle")
 
 Switch::Switch(Context* context,const AttributeSet& a)
   :CompoundButton(context,a){
