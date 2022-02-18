@@ -4040,8 +4040,8 @@ void View::buildDrawingCacheImpl(bool autoScale){
     const long drawingCacheSize =  ViewConfiguration::get(mContext).getScaledMaximumDrawingCacheSize();
     if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
         if (width > 0 && height > 0) {
-            LOG(WARN)<<this<<":"<<getId()<<" not displayed because it is too large to fit into a software layer (or drawing cache), needs "
-                    << projectedBitmapSize << " bytes, only "<< drawingCacheSize << " available size:"<<width<<"x"<<height;
+            //LOG(WARN)<<this<<":"<<getId()<<" not displayed because it is too large to fit into a software layer (or drawing cache), needs "
+            //        << projectedBitmapSize << " bytes, only "<< drawingCacheSize << " available size:"<<width<<"x"<<height;
         }
         destroyDrawingCache();
         mCachingFailed = true;

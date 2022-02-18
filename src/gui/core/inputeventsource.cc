@@ -23,10 +23,9 @@ InputEventSource::InputEventSource(const std::string&file){
     lasteventTime=SystemClock::uptimeMillis();
     auto func=[this](){
         while(1){
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
-            std::lock_guard<std::mutex> lock(mtxEvents);
             INPUTEVENT es[32];
-            int count=InputGetEvents(es,32,0);
+            int count=InputGetEvents(es,32,10);
+            std::lock_guard<std::mutex> lock(mtxEvents);
             LOGV_IF(count,"rcv %d rawEvents",count);
             for(int i=0;i<count;i++)
                 mRawEvents.push(es[i]);
