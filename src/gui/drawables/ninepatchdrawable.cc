@@ -273,7 +273,7 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
     int horz_stretch=0;
     int vert_stretch=0;
     unsigned int last,next;
-    int edge=padding?(width-1):0;
+    int edge=padding?(height-1):0;
     last=get_pixel(mNinePatch,1,edge);
     for(int x=1;x<width-1;x++){
         next=get_pixel(mNinePatch,x+1,edge);
@@ -288,7 +288,7 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
     }
     //vert streatch infos
     pos=1;
-    edge=padding?(height-1):0;
+    edge=padding?(width-1):0;
     last=get_pixel(mNinePatch,edge,1);
     for(int y=1;y<height-1;y++){
         next=get_pixel(mNinePatch,edge,y+1);
@@ -352,8 +352,6 @@ void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect){
             RECT rs={sx0, sy0,mHorz[j].len,mVert[i].len};
             rd.offset(rect.left,rect.top);
             canvas.draw_image(mNinePatch,rd,&rs);
-            LOGV("%p(%d,%d,%d,%d)->(%d,%d,%d,%d)",this,rs.left,rs.top,rs.width,rs.height,
-                 rd.left,rd.top,rd.width,rd.height);
             dx0=dx1;
         }
         dy0=dy1;
