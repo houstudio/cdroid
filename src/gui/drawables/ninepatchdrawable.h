@@ -12,7 +12,7 @@ private:
     };
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{
     private:
-        int get_ninepatch();
+        int get_ninepatch(std::vector<DIV>&divHorz,std::vector<DIV>&divVert,bool padding);
     public:
         float mBaseAlpha;// = 1.0f;
         bool mDither;// = DEFAULT_DITHER;

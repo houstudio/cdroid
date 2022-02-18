@@ -205,14 +205,24 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
 
 NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding)
   :NinePatchDrawable::NinePatchState(){
-    if(padding)
-       mPadding=*padding;
     mNinePatch=bitmap;
-    get_ninepatch();
+    get_ninepatch(mHorz,mVert,true);
+    
     mPadding.set(0,0,0,0);
-    LOGD("ninpatch %p size=%dx%d",this,bitmap->get_width(),bitmap->get_height());
-    for(auto h:mHorz)LOGD("%p HORZ %d,%d,%d)",this,h.pos,h.len,h.stretchable);
-    for(auto v:mVert)LOGD("%p VERT %d,%d,%d)",this,v.pos,v.len,v.stretchable);
+    if(mHorz.size()){
+        if(!mHorz[0].stretchable)mPadding.left=mHorz[0].len;
+        if(!mHorz.back().stretchable)mPadding.width=mHorz.back().len;
+    } 
+    if(mVert.size()){
+        if(!mVert[0].stretchable)mPadding.top=mVert[0].len;
+        if(!mVert.back().stretchable)mPadding.height=mVert.back().len;
+    } 
+    if(padding)mPadding=*padding;
+    get_ninepatch(mHorz,mVert,false);
+    LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d)",this,bitmap->get_width(),bitmap->get_height(),
+         mPadding.left,mPadding.top,mPadding.width,mPadding.height);
+    for(auto h:mHorz)LOGV("%p HORZ %d,%d,%d)",this,h.pos,h.len,h.stretchable);
+    for(auto v:mVert)LOGV("%p VERT %d,%d,%d)",this,v.pos,v.len,v.stretchable);
 }
 
 NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
@@ -246,13 +256,13 @@ static bool isStretchableMarker(unsigned int px){
     return (px>>24)==0xFF;
 }
 
-int NinePatchDrawable::NinePatchState::get_ninepatch(){
+int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,std::vector<DIV>&divVert,bool padding){
     int i;
     int width =mNinePatch->get_width();
     int height=mNinePatch->get_height();
     int pad[4]={-1,-1,-1,-1};
-    mHorz.clear();
-    mVert.clear();
+    divHorz.clear();
+    divVert.clear();
 #define check_pixel(x,y) c=get_pixel(this,x,y); if( (c.a!=0) && (c.a+c.r+c.g+c.b)!=4) return 0;
     /*check_pixel(0,0);
     check_pixel(width-1,0);
@@ -263,30 +273,31 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(){
     int horz_stretch=0;
     int vert_stretch=0;
     unsigned int last,next;
-    last=get_pixel(mNinePatch,1,0);
+    int edge=padding?(width-1):0;
+    last=get_pixel(mNinePatch,1,edge);
     for(int x=1;x<width-1;x++){
-        next=get_pixel(mNinePatch,x+1,0);
+        next=get_pixel(mNinePatch,x+1,edge);
         if(isStretchableMarker(last)!=isStretchableMarker(next)||x==width-2){
             bool stretchable=isStretchableMarker(last);
             int len=x-pos+1;
             DIV d={pos,len,stretchable};
-            mHorz.push_back(d);
-            //LOGV("horz:%d,%d,%d",pos,len,stretchable);
+            divHorz.push_back(d);
             if(stretchable)horz_stretch+=len;
             last=next;pos=x;
         }
     }
     //vert streatch infos
     pos=1;
-    last=get_pixel(mNinePatch,0,1);
+    edge=padding?(height-1):0;
+    last=get_pixel(mNinePatch,edge,1);
     for(int y=1;y<height-1;y++){
-        next=get_pixel(mNinePatch,0,y+1);
+        next=get_pixel(mNinePatch,edge,y+1);
         if(isStretchableMarker(last)!=isStretchableMarker(next)||y==height-2){
             bool stretchable = isStretchableMarker(last);
             int len = y - pos+1;
             //LOGV("vert:%d,%d,%d",pos,len,stretchable);
             DIV d={pos,len,stretchable};
-            mVert.push_back(d);
+            divVert.push_back(d);
             if (stretchable)vert_stretch += len;
             last = next;
             pos = y;
