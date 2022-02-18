@@ -103,7 +103,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             auto it=mArraies.find(name);
             if(it==mArraies.end()){
                 it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(name,std::vector<std::string>()));
-                LOGV("array:%s",name.c_str());
+                LOGI("array:%s",name.c_str());
             }
             it->second.push_back(value);
         }
@@ -120,7 +120,7 @@ int Assets::addResource(const std::string&path,const std::string&name){
     int count=0;
     pak->forEachEntry([this,name,&count](const std::string&res){
         count++;
-        if(TextUtils::startWith(res,"values")&&res.size()>7){
+        if((res.size()>7)&&TextUtils::startWith(res,"values")){
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             const std::string resid=name+":"+res;
             loadKeyValues(resid,std::bind(&Assets::parseItem,this,name,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
@@ -130,7 +130,8 @@ int Assets::addResource(const std::string&path,const std::string&name){
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme");
     pak->forEachEntry([this,name,&count](const std::string&res){
-        if(TextUtils::startWith(res,"color")&&res.size()>6){ 
+        if((res.size()>6)&&TextUtils::startWith(res,"color")){ 
+            LOGV("LoadKeyValues from:%s ...",res.c_str());
             std::string resid=name+":"+res.substr(0,res.find(".xml"));
             COMPLEXCOLOR cl=ColorStateList::inflate(this,resid);
             mColors.insert(std::pair<const std::string,COMPLEXCOLOR>(resid,cl));
@@ -313,6 +314,8 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
     return d;
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("O0")
 int Assets::getColor(const std::string&refid){
     std::string pkg,name=refid;
     parseResource(name,nullptr,&pkg);
@@ -340,9 +343,9 @@ int Assets::getArray(const std::string&resname,std::vector<std::string>&out){
 }
 
 ColorStateList* Assets::getColorStateList(const std::string&fullresid){
-    std::string realName;
     auto it=mColors.find(fullresid);
     if( (it==mColors.end()) && (fullresid.find("color")==std::string::npos) ){
+        std::string realName;
         parseResource(fullresid,&realName,nullptr);
         realName=mTheme.getString(realName);
         it=mColors.find(realName); 
@@ -359,7 +362,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
 }
 
 typedef struct{
-   std::vector<std::string>tags;
+   std::vector<std::string> tags;
    std::vector<AttributeSet> attrs;
    std::string content;
    std::function<void(const std::vector<std::string>&,const std::vector<AttributeSet>&attrs,const std::string&)>func;
@@ -419,6 +422,7 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
     } while(len!=0);
     XML_ParserFree(parser); 
 }
+#pragma GCC pop_options
 
 void Assets::clearStyles(){
     mStyles.clear();
@@ -450,6 +454,5 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&refname){
     }
     return atts;
 }
-
 }//namespace
 

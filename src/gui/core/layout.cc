@@ -124,6 +124,7 @@ int Layout::getParagraphDirection(int line)const{
 }
 
 int Layout::getLineTop(int line)const{
+    if(line<0)line=mLineCount-1;
     return mLines[line*mColumns+TOP];
 }
 

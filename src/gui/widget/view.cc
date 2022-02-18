@@ -309,6 +309,9 @@ void View::initView(){
 
     mLeftPaddingDefined = mRightPaddingDefined =false;
     mUserPaddingLeftInitial = mUserPaddingRightInitial =0;
+    mUserPaddingStart = mUserPaddingEnd = UNDEFINED_PADDING;
+    mUserPaddingRight = mUserPaddingLeft= UNDEFINED_PADDING;
+
     mX = mY = mZ =.0f;
     mAlpha = mScaleX = mScaleY=1.f;
     mTranslationX = mTranslationY =.0f;
