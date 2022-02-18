@@ -258,16 +258,16 @@ static bool isStretchableMarker(unsigned int px){
 
 int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,std::vector<DIV>&divVert,bool padding){
     int i;
-    int width =mNinePatch->get_width();
-    int height=mNinePatch->get_height();
-    int pad[4]={-1,-1,-1,-1};
+    const int width = mNinePatch->get_width();
+    const int height= mNinePatch->get_height();
     divHorz.clear();
     divVert.clear();
-#define check_pixel(x,y) c=get_pixel(this,x,y); if( (c.a!=0) && (c.a+c.r+c.g+c.b)!=4) return 0;
-    /*check_pixel(0,0);
+#define check_pixel(x,y) if(get_pixel(mNinePatch,x,y)>>24!=0) return 0;
+    if(width<3||height<3)return 0;
+    check_pixel(0,0);
     check_pixel(width-1,0);
     check_pixel(0,height-1);
-    check_pixel(width-1,height-1);*/
+    check_pixel(width-1,height-1);
     //horz stretch infos
     int pos=1;
     int horz_stretch=0;
@@ -277,7 +277,7 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
     last=get_pixel(mNinePatch,1,edge);
     for(int x=1;x<width-1;x++){
         next=get_pixel(mNinePatch,x+1,edge);
-        if(isStretchableMarker(last)!=isStretchableMarker(next)||x==width-2){
+        if(isStretchableMarker(last)!=isStretchableMarker(next)||(x==width-2)){
             bool stretchable=isStretchableMarker(last);
             int len=x-pos+1;
             DIV d={pos,len,stretchable};
@@ -292,10 +292,9 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
     last=get_pixel(mNinePatch,edge,1);
     for(int y=1;y<height-1;y++){
         next=get_pixel(mNinePatch,edge,y+1);
-        if(isStretchableMarker(last)!=isStretchableMarker(next)||y==height-2){
+        if(isStretchableMarker(last)!=isStretchableMarker(next)||(y==height-2)){
             bool stretchable = isStretchableMarker(last);
             int len = y - pos+1;
-            //LOGV("vert:%d,%d,%d",pos,len,stretchable);
             DIV d={pos,len,stretchable};
             divVert.push_back(d);
             if (stretchable)vert_stretch += len;

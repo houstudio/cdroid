@@ -9,6 +9,7 @@ DECLARE_WIDGET2(Switch,"cdroid:attr/switchStyle")
 
 Switch::Switch(Context* context,const AttributeSet& a)
   :CompoundButton(context,a){
+    init();
     mThumbDrawable = context->getDrawable(a.getString("thumb"));
     if (mThumbDrawable) {
         mThumbDrawable->setCallback(this);
@@ -77,9 +78,9 @@ void Switch::init(){
     mThumbTintList = nullptr;
     mTrackDrawable = nullptr;
     mTrackTintList = nullptr;
-    mVelocityTracker  = nullptr;
     mPositionAnimator = nullptr;
     mOnLayout = mOffLayout = nullptr;
+    mVelocityTracker  = VelocityTracker::obtain();
 }
 
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
@@ -368,7 +369,9 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 Layout* Switch::makeLayout(const std::string& text){
-    return nullptr;
+    Layout*layout=new Layout(18,getWidth());
+    layout->setText(text);
+    return layout;
 }
 
 bool Switch::hitThumb(float x, float y) {
@@ -665,6 +668,8 @@ void Switch::draw(Canvas& c) {
 
 void Switch::onDraw(Canvas& canvas) {
     CompoundButton::onDraw(canvas);
+    mOnLayout->relayout();
+    mOffLayout->relayout();
 
     Rect padding;
     if (mTrackDrawable) {
@@ -678,7 +683,6 @@ void Switch::onDraw(Canvas& canvas) {
     const int switchInnerTop = switchTop + padding.top;
     const int switchInnerBottom = switchBottom - padding.height;
 
-    Drawable* thumbDrawable = mThumbDrawable;
     if (mTrackDrawable) {
         if (mSplitTrack && mThumbDrawable) {
             Insets insets = mThumbDrawable->getOpticalInsets();
@@ -707,15 +711,15 @@ void Switch::onDraw(Canvas& canvas) {
         }
         //mTextPaint.drawableState = drawableState;
         int cX;
-        if (thumbDrawable) {
-            Rect bounds = thumbDrawable->getBounds();
+        if (mThumbDrawable) {
+            Rect bounds = mThumbDrawable->getBounds();
             cX = bounds.left + bounds.width;
         } else {
             cX = getWidth();
         }
         const int left = cX / 2 - switchText->getMaxLineWidth() / 2;
         const int top = (switchInnerTop + switchInnerBottom) / 2 - switchText->getHeight() / 2;
-        canvas.translate(left, top);
+        canvas.translate(left, 0);//top);
         switchText->draw(canvas);
     }
 

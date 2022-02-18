@@ -697,6 +697,8 @@ public:
     virtual bool performLongClick(int x,int y);
     bool  performContextClick(int x, int y);
     bool  performContextClick();
+    bool showContextMenu();
+    bool showContextMenu(float x, float y);
     // Foreground color
 
     //foreground/background

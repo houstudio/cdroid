@@ -1123,9 +1123,9 @@ bool AbsListView::performLongPress(View* child,int longPressPosition,long longPr
     /*if (!handled) {
         mContextMenuInfo = createContextMenuInfo(child, longPressPosition, longPressId);
         if (x != CheckForLongPress.INVALID_COORD && y != CheckForLongPress.INVALID_COORD) {
-            handled = super.showContextMenuForChild(AbsListView.this, x, y);
+            handled = AdapterView::showContextMenuForChild(this, x, y);
         } else {
-            handled = super.showContextMenuForChild(AbsListView.this);
+            handled = AdapterView::showContextMenuForChild(this);
         }
     }*/
     //if (handled) performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);

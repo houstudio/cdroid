@@ -2,6 +2,7 @@
 #define __SPINNER_H__
 #include <widget/absspinner.h>
 #include <widget/listview.h>
+#include <widget/popupwindow.h>
 namespace cdroid{
 
 class Spinner:public AbsSpinner{
@@ -33,7 +34,7 @@ private:
 
     class DialogPopup:public SpinnerPopup{
     private:
-        Window*mPopup;
+        PopupWindow*mPopup;
         Spinner *mSpinner; 
         Adapter *mAdapter;
         std::string mPrompt;

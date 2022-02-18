@@ -457,12 +457,12 @@ void Spinner::DialogPopup::show(int textDirection, int textAlignment){
 }
 
 void Spinner::DialogPopup::dismiss(){
-    mPopup->close();
+    mPopup->dismiss();
     mPopup=nullptr;
 }
 
 bool Spinner::DialogPopup::isShowing(){
-    return mPopup && (mPopup->getVisibility()==View::VISIBLE);
+    return mPopup && mPopup->isShowing();
 }
 
 void Spinner::DialogPopup::setPromptText(const std::string& hintText){

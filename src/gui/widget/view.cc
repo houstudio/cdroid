@@ -5065,10 +5065,18 @@ bool View::performContextClick() {
     return handled;
 }
 
+bool View::showContextMenu(){
+    return mParent->showContextMenuForChild(this);
+}
+
+bool View::showContextMenu(float x, float y){
+    return mParent->showContextMenuForChild(this, x, y);
+}
+
 bool View::performButtonActionOnTouchDown(MotionEvent& event) {
     if (event.isFromSource(InputDevice::SOURCE_MOUSE) &&
         (event.getButtonState() & MotionEvent::BUTTON_SECONDARY) != 0) {
-        //showContextMenu(event.getX(), event.getY());
+        showContextMenu(event.getX(), event.getY());
         mPrivateFlags |= PFLAG_CANCEL_NEXT_UP_EVENT;
         return true;
     }
@@ -5084,7 +5092,7 @@ void View::checkLongPressCallback(int x,int y){
 }
 
 void View::checkForLongClick(int delayOffset,int x,int y){
-    LOGV("%p:%d checkForLongClick longclickable=%d",this,mID,(mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE );
+    //LOGV("%p:%d checkForLongClick longclickable=%d",this,mID,(mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE );
     if ((mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE || (mViewFlags & TOOLTIP) == TOOLTIP) {
         mHasPerformedLongPress = false;
         mOriginalPressedState=isPressed();
@@ -5100,7 +5108,7 @@ void View::checkForTapCallback(int x,int y){
 }
 
 void View::unsetPressedCallback(){
-    LOGV("unsetPressedCallback pressed=%x",(mPrivateFlags & PFLAG_PRESSED));
+    //LOGV("unsetPressedCallback pressed=%x",(mPrivateFlags & PFLAG_PRESSED));
     if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
         setPressed(false);
         removeCallbacks(mUnsetPressedState);
@@ -5131,7 +5139,7 @@ void View::removePerformClickCallback(){
 }
 
 void View::removeUnsetPressCallback() {
-    LOGV("removeUnsetPressCallback pressed=%d",mPrivateFlags & PFLAG_PRESSED);
+    //LOGV("removeUnsetPressCallback pressed=%d",mPrivateFlags & PFLAG_PRESSED);
     if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
         setPressed(false);
         removeCallbacks(mUnsetPressedState);

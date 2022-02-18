@@ -341,6 +341,8 @@ public:
 
     virtual void dispatchInvalidateOnAnimation(View* view);
     virtual void cancelInvalidate(View* view);
+    virtual bool showContextMenuForChild(View* originalView);
+    virtual bool showContextMenuForChild(View* originalView, float x, float y);
 };
 
 }  // namespace cdroid

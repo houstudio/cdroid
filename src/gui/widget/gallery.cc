@@ -851,9 +851,9 @@ bool Gallery::dispatchLongPress(View& view, int position, long id, float x, floa
     if (!handled) {
         //mContextMenuInfo = new AdapterContextMenuInfo(view, position, id);
         if (useOffsets) {
-            //handled = super.showContextMenuForChild(view, x, y);
+            handled = AbsSpinner::showContextMenuForChild(view, x, y);
         } else {
-            //handled = AbsSpinner::showContextMenuForChild(this);
+            handled = AbsSpinner::showContextMenuForChild(this);
         }
     }
     if (handled) {

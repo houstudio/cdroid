@@ -1912,6 +1912,14 @@ void ViewGroup::offsetChildrenTopAndBottom(int offset){
     }
 }
 
+bool ViewGroup::showContextMenuForChild(View* originalView){
+    return false;
+}
+
+bool ViewGroup::showContextMenuForChild(View* originalView, float x, float y){
+    return false;
+}
+
 bool ViewGroup::canAnimate()const{
     return mLayoutAnimationController!=nullptr;
 }
