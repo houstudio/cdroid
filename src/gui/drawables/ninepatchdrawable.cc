@@ -279,11 +279,11 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
         next=get_pixel(mNinePatch,x+1,edge);
         if(isStretchableMarker(last)!=isStretchableMarker(next)||(x==width-2)){
             bool stretchable=isStretchableMarker(last);
-            int len=x-pos+(x<width-2);
+            int len=x + 1 - pos;
             DIV d={pos,len,stretchable};
             divHorz.push_back(d);
             if(stretchable)horz_stretch+=len;
-            last=next;pos=x;
+            last=next; pos=x+1;
         }
     }
     //vert streatch infos
@@ -294,12 +294,11 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
         next=get_pixel(mNinePatch,edge,y+1);
         if(isStretchableMarker(last)!=isStretchableMarker(next)||(y==height-2)){
             bool stretchable = isStretchableMarker(last);
-            int len = y - pos+(y<height-2);
+            int len = y + 1 - pos;
             DIV d={pos,len,stretchable};
             divVert.push_back(d);
             if (stretchable)vert_stretch += len;
-            last = next;
-            pos = y;
+            last = next;   pos = y+1;
         }
     }
     return horz_stretch<<16|vert_stretch;
@@ -349,6 +348,7 @@ void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect){
             }
             RECT rd={dx0,dy0,dx1-dx0+1,dy1-dy0+1};
             RECT rs={sx0, sy0,mHorz[j].len,mVert[i].len};
+            LOGV("rs=(%d,%d,%d,%d)",rs.left,rs.top,rs.width,rs.height);
             rd.offset(rect.left,rect.top);
             canvas.draw_image(mNinePatch,rd,&rs);
             dx0=dx1;

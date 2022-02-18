@@ -49,7 +49,7 @@ static void LogInit(){
                 std::string msg;
                 if(dbgMessages.size()==0)dbgMessages.wait_and_pop(msg,INT_MAX);
                 else dbgMessages.try_and_pop(msg);
-                printf(msg.c_str());
+                printf("%s",msg.c_str());
             }
         });th.detach();
     });
