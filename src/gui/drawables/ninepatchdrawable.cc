@@ -269,17 +269,17 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
     check_pixel(0,height-1);
     check_pixel(width-1,height-1);
     //horz stretch infos
-    int pos=1;
+    int pos = 1;
     int horz_stretch=0;
     int vert_stretch=0;
     unsigned int last,next;
     int edge=padding?(height-1):0;
-    last=get_pixel(mNinePatch,1,edge);
+    last=get_pixel(mNinePatch,pos,edge);
     for(int x=1;x<width-1;x++){
         next=get_pixel(mNinePatch,x+1,edge);
         if(isStretchableMarker(last)!=isStretchableMarker(next)||(x==width-2)){
             bool stretchable=isStretchableMarker(last);
-            int len=x-pos+1;
+            int len=x-pos+(x<width-2);
             DIV d={pos,len,stretchable};
             divHorz.push_back(d);
             if(stretchable)horz_stretch+=len;
@@ -287,14 +287,14 @@ int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,st
         }
     }
     //vert streatch infos
-    pos=1;
+    pos = 1;
     edge=padding?(width-1):0;
-    last=get_pixel(mNinePatch,edge,1);
+    last=get_pixel(mNinePatch,edge,pos);
     for(int y=1;y<height-1;y++){
         next=get_pixel(mNinePatch,edge,y+1);
         if(isStretchableMarker(last)!=isStretchableMarker(next)||(y==height-2)){
             bool stretchable = isStretchableMarker(last);
-            int len = y - pos+1;
+            int len = y - pos+(y<height-2);
             DIV d={pos,len,stretchable};
             divVert.push_back(d);
             if (stretchable)vert_stretch += len;
