@@ -350,7 +350,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
         realName=mTheme.getString(realName);
         it=mColors.find(realName); 
     }
-    LOGV_IF(it!=mColors.end(),"%s[%s]type=%d",fullresid.c_str(),realName.c_str(),it->second.index());
+    LOGV_IF(it!=mColors.end(),"%s type=%d",fullresid.c_str(),it->second.index());
     LOGV_IF(it==mColors.end(),"%s not found",fullresid.c_str());
     if(it!=mColors.end()){
         switch(it->second.index()){

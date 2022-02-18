@@ -25,10 +25,14 @@ static LogLevel sLogLevel=LOG_DEBUG;
 
 static std::string splitFileName(const std::string& str) {
     size_t found;
+    std::string result=str;
     found = str.find_last_of("(/\\");
-    std::string result=str.substr(found + 1);
+    if(found!=std::string::npos)
+        result=str.substr(found + 1);
     found = result.find_last_of(".");
-    return result.substr(0,found); 
+    if(found!=std::string::npos)
+        return result.substr(0,found);
+    return result; 
 }
 
 static std::map<const std::string,int>sModules;
@@ -157,7 +161,7 @@ LogMessage::~LogMessage() {
 
     if(level_>=module_loglevel){
         oss << std::setw(10) <<std::setfill('0')<< (timestamp_) << "." << std::setw(6) << (timeusec_);
-        oss << " \033[0;32m[" << splitFileName(file_)<<"]\033[0;34m ";
+        oss << " \033[0;32m[" << file_<<"]\033[0;34m ";
         oss << function_<<":" << line_ <<" "<<colors[level_];
 
         const std::string str(stream_.str());

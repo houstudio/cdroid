@@ -32,7 +32,7 @@ int ZIPArchive::getEntries(std::vector<std::string>&entries)const{
     return num;
 }
 
-int ZIPArchive::forEachEntry(std::function<bool(const std::string)>func)const{
+int ZIPArchive::forEachEntry(std::function<bool(const std::string&)>func)const{
     int count=0;
     if(func){
         const int num=zip_get_num_entries((zip_t*)zip,ZIP_FL_NODIR);
