@@ -12,10 +12,10 @@ option(ENABLE_GESTURE "enable gestrure" OFF)
 option(ENABLE_TURBOJPEG "enable turbo jpeg" ON)
 option(ENABLE_MP3ID3 "enable mp3 ids" ON)
 option(ENABLE_FRIBIDI "BIDI Text Layout  support" ON)
-option(ENABLE_PLPLOT "Enable PLPLot" ON)
+option(ENABLE_PLPLOT "Enable PLPLot" OFF)
 option(ENABLE_DTV "DTV modules support" OFF)
 option(WITH_JPEG8 "Emulate libjpeg v8 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)" ON)
-option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." OFF)
+option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" OFF)
 
