@@ -73,6 +73,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
 }
 
 void Switch::init(){
+    mTouchMode =TOUCH_MODE_IDLE;
     mTextColors    = nullptr;
     mThumbDrawable = nullptr;
     mThumbTintList = nullptr;
@@ -80,6 +81,8 @@ void Switch::init(){
     mTrackTintList = nullptr;
     mPositionAnimator = nullptr;
     mOnLayout = mOffLayout = nullptr;
+    mSwitchLeft= mSwitchRight  =0;
+    mSwitchTop = mSwitchBottom =0;
     mVelocityTracker  = VelocityTracker::obtain();
 }
 

@@ -1041,11 +1041,11 @@ void TabLayout::TabView::update() {
         // If there isn't a custom view, we'll us our own in-built layouts
         LayoutInflater* inflater =LayoutInflater::from(getContext());
         if (mIconView == nullptr) {
-            ImageView* iconView = (ImageView*)inflater->inflate("cdroid:layout/design_layout_tab_icon.xml", this, false);
+            ImageView* iconView = (ImageView*)inflater->inflate("cdroid:layout/design_layout_tab_icon.xml", this, true);
             mIconView = iconView;
         }
         if (mTextView == nullptr) {
-            TextView* textView = (TextView*)inflater->inflate("cdroid:layout/design_layout_tab_text.xml", this, false);
+            TextView* textView = (TextView*)inflater->inflate("cdroid:layout/design_layout_tab_text.xml", this, true);
             mTextView = textView;
             mDefaultMaxLines = mTextView->getMaxLines();
         }

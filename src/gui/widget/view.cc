@@ -4966,7 +4966,10 @@ bool View::dispatchTouchEvent(MotionEvent&event){
     if ((mViewFlags & ENABLED_MASK) == ENABLED && handleScrollBarDragging(event)) {
         result = true;
     }
-    result = (!result) && onTouchEvent(event);
+
+    if(!result&& onTouchEvent(event)){
+        result=true;
+    }
 
     if (actionMasked == MotionEvent::ACTION_UP ||
          actionMasked == MotionEvent::ACTION_CANCEL ||
