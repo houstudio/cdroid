@@ -292,7 +292,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
         return new ColorDrawable(Color::parseColor(resname));
     }
 
-    if(TextUtils::startWith(resname,"attr"))//for reference resource 
+    if(TextUtils::startWith(resname,"attr")){//for reference resource 
         resname = mTheme.getString(resname.substr(5));
         d=getDrawable(resname);  
         LOG(DEBUG)<<fullresid<<"="<<resname<<" d="<<d;
