@@ -255,9 +255,9 @@
         <item name="focusable">true</item>
         <item name="focusableInTouchMode">true</item>
         <item name="clickable">true</item>
-        <item name="background">?attr/editTextBackground</item>
-        <item name="textAppearance">?attr/textAppearanceMediumInverse</item>
-        <item name="textColor">?attr/editTextColor</item>
+        <item name="background">?cdroid:attr/editTextBackground</item>
+        <item name="textAppearance">?cdroid:attr/textAppearanceMediumInverse</item>
+        <item name="textColor">?cdroid:attr/editTextColor</item>
         <item name="gravity">center_vertical</item>
         <item name="breakStrategy">simple</item>
         <item name="hyphenationFrequency">normal</item>
@@ -266,9 +266,9 @@
 
     <style name="Widget.ExpandableListView" parent="Widget.ListView">
         <item name="groupIndicator">@drawable/expander_group</item>
-        <item name="indicatorLeft">?attr/expandableListPreferredItemIndicatorLeft</item>
-        <item name="indicatorRight">?attr/expandableListPreferredItemIndicatorRight</item>
-        <item name="childDivider">@drawable/divider_horizontal_dark_opaque</item>
+        <item name="indicatorLeft">?cdroid:attr/expandableListPreferredItemIndicatorLeft</item>
+        <item name="indicatorRight">?cdroid:attr/expandableListPreferredItemIndicatorRight</item>
+        <item name="childDivider">@cdroid:drawable/divider_horizontal_dark_opaque</item>
     </style>
 
     <style name="Widget.ExpandableListView.White">

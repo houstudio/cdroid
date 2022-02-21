@@ -98,6 +98,7 @@ void ViewGroup::initGroup(){
     mGroupFlags|= FLAG_CLIP_TO_PADDING;
     mGroupFlags|= FLAG_ANIMATION_DONE;
     mGroupFlags|= FLAG_ANIMATION_CACHE;
+    mGroupFlags|= FOCUS_BEFORE_DESCENDANTS;
     mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
     mLayoutMode = LAYOUT_MODE_UNDEFINED;
     mFocused    = nullptr;
@@ -132,7 +133,14 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     //setAnimationCacheEnabled
     std::string resid=atts.getString("layoutAnimation");
     setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
-    setDescendantFocusability(0);
+
+    const int flags=atts.getInt("descendantFocusability",std::map<const std::string,int>{
+        {"beforeDescendants",FOCUS_BEFORE_DESCENDANTS},
+        {"afterDescendants",FOCUS_AFTER_DESCENDANTS},
+        {"blocksDescendants",FOCUS_BLOCK_DESCENDANTS}
+    },FOCUS_BEFORE_DESCENDANTS);
+    setDescendantFocusability(flags);
+
     setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents"));
     if(atts.getBoolean("animateLayoutChanges",false))
        setLayoutTransition(new LayoutTransition());
@@ -2451,7 +2459,7 @@ bool ViewGroup::requestLayoutDuringLayout(View* view){
 }
 
 bool ViewGroup::requestFocus(int direction,Rect*previouslyFocusedRect){
-    int descendantFocusability = getDescendantFocusability();
+    const int descendantFocusability = getDescendantFocusability();
 
     bool result,took;
     switch (descendantFocusability) {

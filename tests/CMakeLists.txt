@@ -1,6 +1,5 @@
-add_subdirectory(gui)
-add_subdirectory(porting)
-if (ENABLE_DTV)
-add_subdirectory(epg)
-add_subdirectory(tv)
-endif(ENABLE_DTV)
+if (BUILD_CDROID_TESTS)
+  add_subdirectory(gui)
+  add_subdirectory(porting)
+
+endif(BUILD_CDROID_TESTS)

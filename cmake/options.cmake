@@ -1,8 +1,8 @@
 
-option(MINIMAL_SIZE_OPTIMIZED "For IOT/Embedded size optimize" ON)
+option(MINIMAL_SIZE_OPTIMIZED "For IOT/Embedded size optimize" OFF)
 option(BUILD_DOCS "Build documents" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
-option(BUILD_TESTS "Build unit tests" OFF)
+option(BUILD_CDROID_TESTS "Build unit tests" ON)
 
 option(ENABLE_GIF "enable gif encode and decoder" OFF)
 option(ENABLE_CAIROSVG "enable svg decoder" OFF)

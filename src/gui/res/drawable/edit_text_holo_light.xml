@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+
+    <item cdroid:state_multiline="true" cdroid:state_window_focused="false" cdroid:state_enabled="true"  cdroid:drawable="@cdroid:mipmap/textfield_multiline_default_holo_light" />
+    <item cdroid:state_multiline="true" cdroid:state_window_focused="false" cdroid:state_enabled="false" cdroid:drawable="@cdroid:mipmap/textfield_multiline_disabled_holo_light" />
+    <item cdroid:state_multiline="true" cdroid:state_enabled="true" cdroid:state_focused="true" cdroid:drawable="@cdroid:mipmap/textfield_multiline_activated_holo_light" />
+    <item cdroid:state_multiline="true" cdroid:state_enabled="true" cdroid:state_activated="true" cdroid:drawable="@cdroid:mipmap/textfield_multiline_focused_holo_light" />
+    <item cdroid:state_multiline="true" cdroid:state_enabled="true" cdroid:drawable="@cdroid:mipmap/textfield_multiline_default_holo_light" />
+    <item cdroid:state_multiline="true" cdroid:state_focused="true" cdroid:drawable="@cdroid:mipmap/textfield_multiline_disabled_focused_holo_light" />
+    <item cdroid:state_multiline="true" cdroid:drawable="@cdroid:mipmap/textfield_multiline_disabled_holo_light" />
+
+    <item cdroid:state_window_focused="false" cdroid:state_enabled="true" cdroid:drawable="@cdroid:mipmap/textfield_default_holo_light" />
+    <item cdroid:state_window_focused="false" cdroid:state_enabled="false" cdroid:drawable="@cdroid:mipmap/textfield_disabled_holo_light" />
+    <item cdroid:state_enabled="true" cdroid:state_focused="true" cdroid:drawable="@cdroid:mipmap/textfield_activated_holo_light" />
+    <item cdroid:state_enabled="true" cdroid:state_activated="true" cdroid:drawable="@cdroid:mipmap/textfield_focused_holo_light" />
+    <item cdroid:state_enabled="true" cdroid:drawable="@cdroid:mipmap/textfield_default_holo_light" />
+    <item cdroid:state_focused="true" cdroid:drawable="@cdroid:mipmap/textfield_disabled_focused_holo_light" />
+    <item cdroid:drawable="@cdroid:mipmap/textfield_disabled_holo_light" />
+</selector>
+

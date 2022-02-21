@@ -31,3 +31,6 @@ function(Translate pofile transtopath)
       COMMENT "Translate strings resource...${PROJECT_BINARY_DIR}"
    )
 endfunction()
+
+option(JSONCPP_WITH_TESTS "Compile and (for jsoncpp_check) run JsonCpp test executables" OFF)
+option(JSONCPP_WITH_POST_BUILD_UNITTEST "Automatically run unit-tests as a post build step" OFF)
