@@ -169,65 +169,10 @@ void Canvas::draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT
     }
 
     clip();
-    set_source(img, dx - sx, dy - sy);
+    set_source(img,dx - sx, dy - sy);
     paint_with_alpha(1.0);
     restore();
 }
-
-#if 0
-void Canvas::draw_ninepatch(const RefPtr<ImageSurface>img,const RECT& rect,const std::vector<NinePatchBlock>&horz,
-        const std::vector<NinePatchBlock>& vert){
-    int dw=rect.width;
-    int dh=rect.height;
-    int sw=img->get_width();
-    int sh=img->get_height();
-    float horz_stretch=0;
-    float vert_stretch=0;
-
-    float horz_mul=0,vert_mul =0;
-    int dy0=0, dy1=0;
-    float vstretch=0;
-    for_each(horz.begin(),horz.end(),[&](const NinePatchBlock&v){if(v.stretchable)horz_stretch+=v.len;});
-    for_each(vert.begin(),vert.end(),[&](const NinePatchBlock&v){if(v.stretchable)vert_stretch+=v.len;});
-
-    if (horz_stretch > 0) horz_mul = (float)(dw - (sw - 2 - horz_stretch)) / horz_stretch;
-    if (vert_stretch > 0) vert_mul = (float)(dh - (sh - 2 - vert_stretch)) / vert_stretch;
-    for(int i=0;i<(int)vert.size();i++){
-        int sy0=vert[i].pos;
-        if(i+1==(int)vert.size()){
-            dy1=dh;
-        }else if(vert[i].stretchable){
-            vstretch=(float)vert[i].len*vert_mul;
-            float s=floor(vstretch);
-            vstretch-=s;
-            dy1+=(int)s;
-        }else{
-            dy1+=vert[i].len;
-        }
-        int dx0=0,dx1=0;
-        float hstretch=0;
-        for(int j=0;j<(int)horz.size();j++){
-            int sx0=horz[j].pos;
-            if(j+1==(int)horz.size()){
-                dx1=dw;
-            }else if(horz[j].stretchable){
-                hstretch+=(float)horz[j].len*horz_mul;
-                float s=floor(hstretch);
-                hstretch-=s;
-                dx1+=(int)s;
-            }else{
-                dx1+=horz[j].len;
-            }
-            RECT rd={dx0,dy0,dx1-dx0,dy1-dy0};
-            RECT rs={sx0+1, sy0+1,horz[j].len,vert[i].len};
-            rd.offset(rect.left,rect.top);
-            draw_image(img,rd,&rs);
-            dx0=dx1;
-        }
-        dy0=dy1;
-    }    
-}
-#endif
 
 void Canvas::dump2png(const char*fname){
 #ifdef CAIRO_HAS_PNG_FUNCTIONS
