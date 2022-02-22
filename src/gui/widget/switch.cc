@@ -693,7 +693,8 @@ void Switch::onDraw(Canvas& canvas) {
             padding.left += insets.left;
             padding.width -= insets.right;
             canvas.save();
-            //canvas.clipRect(padding, Op.DIFFERENCE);
+            canvas.rectangle(padding.left,padding.top,padding.width,padding.height);
+            canvas.clip();//clipRect(padding, Op.DIFFERENCE);
             mTrackDrawable->draw(canvas);
             canvas.restore();
         } else {

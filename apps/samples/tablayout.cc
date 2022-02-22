@@ -40,6 +40,7 @@ int main(int argc,const char*argv[]){
     tab->setupWithViewPager(pager);
     layout->addView(tab).setId(1);
     layout->addView(pager).setId(10);
+    tab->setTabTextColors(0xFFFF0000,0xFF00FF00);
     w->addView(layout);
     w->requestLayout();
     app.exec();

@@ -1182,8 +1182,8 @@ void LinearLayout::layoutVertical(int left, int top, int width, int height){
         if (child == nullptr) {
             childTop += measureNullChild(i);
         } else if (child->getVisibility() != GONE) {
-            int childWidth = child->getMeasuredWidth();
-            int childHeight = child->getMeasuredHeight();
+            const int childWidth = child->getMeasuredWidth();
+            const int childHeight = child->getMeasuredHeight();
 
             LayoutParams* lp =(LayoutParams*) child->getLayoutParams();
 
@@ -1191,8 +1191,8 @@ void LinearLayout::layoutVertical(int left, int top, int width, int height){
             if (gravity < 0) {
                 gravity = minorGravity;
             }
-            int layoutDirection = getLayoutDirection();
-            int absoluteGravity = Gravity::getAbsoluteGravity(gravity, layoutDirection);
+            const int layoutDirection = getLayoutDirection();
+            const int absoluteGravity = Gravity::getAbsoluteGravity(gravity, layoutDirection);
             switch (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) {
             case Gravity::CENTER_HORIZONTAL:
                 childLeft = paddingLeft + ((childSpace - childWidth) / 2)

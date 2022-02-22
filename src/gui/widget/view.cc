@@ -298,8 +298,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
 void View::initView(){
     mID       = NO_ID;
     mAutofillViewId =NO_ID;
-    mAccessibilityViewId=NO_ID;
-    mDrawingCacheBackgroundColor =0;
+    mAccessibilityViewId = NO_ID;
+    mDrawingCacheBackgroundColor = 0;
     mContext  = nullptr;
     mParent   = nullptr;
     mAttachInfo = nullptr;
@@ -321,12 +321,12 @@ void View::initView(){
     mInContextButtonPress  = false;
     mIgnoreNextUpEvent     = false;
     mDefaultFocusHighlightEnabled = false;
-    mDefaultFocusHighlightSizeChanged=false;
-    mBoundsChangedmDefaultFocusHighlightSizeChanged=false;
+    mDefaultFocusHighlightSizeChanged =false;
+    mBoundsChangedmDefaultFocusHighlightSizeChanged = false;
 
-    mOldWidthMeasureSpec=mOldHeightMeasureSpec=INT_MIN;
+    mOldWidthMeasureSpec = mOldHeightMeasureSpec = INT_MIN;
     mViewFlags = ENABLED|VISIBLE|FOCUSABLE_AUTO;
-    mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 =0;
+    mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 = 0;
     mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
     mTop = mLeft = mRight = mBottom = 0;
@@ -339,16 +339,16 @@ void View::initView(){
     mUserPaddingTop  = mUserPaddingBottom = 0;
     mPrivateFlags  = mPrivateFlags3 = 0;
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
-    mNextFocusLeftId= mNextFocusRightId=NO_ID;
-    mNextFocusUpId  = mNextFocusDownId=NO_ID;
-    mNextFocusForwardId=mNextClusterForwardId=NO_ID;
+    mNextFocusLeftId= mNextFocusRightId= NO_ID;
+    mNextFocusUpId  = mNextFocusDownId = NO_ID;
+    mNextFocusForwardId=mNextClusterForwardId = NO_ID;
     mBackgroundTint= nullptr;
     mMeasuredWidth = mMeasuredHeight = 0;
     mLayoutParams  = nullptr;
-    mPaddingLeft   = mPaddingTop = 0;
-    mPaddingRight  = mPaddingBottom=0;
+    mPaddingLeft   = mPaddingTop    = 0;
+    mPaddingRight  = mPaddingBottom = 0;
     mForegroundInfo= nullptr;
-    mScrollIndicatorDrawable=nullptr;
+    mScrollIndicatorDrawable = nullptr;
     mBackground = nullptr;
     mDefaultFocusHighlight = nullptr;
     mDefaultFocusHighlightCache = nullptr;
@@ -4752,7 +4752,7 @@ void View::layout(int l, int t, int w, int h){
             // original requestFocus was likely on this view directly, so just clear focus
             clearFocusInternal(nullptr, /* propagate */ true, /* refocus */ false);
         }
-            // otherwise, we let parents handle re-assigning focus during their layout passes.
+        // otherwise, we let parents handle re-assigning focus during their layout passes.
     } else if ((mPrivateFlags & PFLAG_WANTS_FOCUS) != 0) {
         mPrivateFlags &= ~PFLAG_WANTS_FOCUS;
         View* focused = findFocus();
@@ -5983,19 +5983,19 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     }
 
     // Suppress sign extension for the low bytes
-    long key = (long) widthMeasureSpec << 32 | (long) heightMeasureSpec & 0xffffffffL;
+    const long key = (long) widthMeasureSpec << 32 | (long) heightMeasureSpec & 0xffffffffL;
 
-    bool forceLayout = (mPrivateFlags & PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT;
+    const bool forceLayout = (mPrivateFlags & PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT;
 
     // Optimize layout by avoiding an extra EXACTLY pass when the view is
     // already measured as the correct size. In API 23 and below, this
     // extra pass is required to make LinearLayout re-distribute weight.
-    bool specChanged = widthMeasureSpec != mOldWidthMeasureSpec  || heightMeasureSpec != mOldHeightMeasureSpec;
-    bool isSpecExactly = MeasureSpec::getMode(widthMeasureSpec) == MeasureSpec::EXACTLY
+    const bool specChanged = widthMeasureSpec != mOldWidthMeasureSpec  || heightMeasureSpec != mOldHeightMeasureSpec;
+    const bool isSpecExactly = MeasureSpec::getMode(widthMeasureSpec) == MeasureSpec::EXACTLY
                 && MeasureSpec::getMode(heightMeasureSpec) == MeasureSpec::EXACTLY;
-    bool matchesSpecSize = getMeasuredWidth() == MeasureSpec::getSize(widthMeasureSpec)
+    const bool matchesSpecSize = getMeasuredWidth() == MeasureSpec::getSize(widthMeasureSpec)
                 && getMeasuredHeight() == MeasureSpec::getSize(heightMeasureSpec);
-    bool needsLayout = specChanged  && (/*sAlwaysRemeasureExactly ||*/ !isSpecExactly || !matchesSpecSize);
+    const bool needsLayout = specChanged  && (/*sAlwaysRemeasureExactly ||*/ !isSpecExactly || !matchesSpecSize);
 
     if (forceLayout || needsLayout) {
         // first clears the measured dimension flag
@@ -6006,7 +6006,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
         if(mMeasureCache.find(key)!=mMeasureCache.end())
             cacheIndex=mMeasureCache[key];
         if(forceLayout)cacheIndex=-1;
-        if (cacheIndex < 0 || true/*sIgnoreMeasureCache*/) {
+        if (cacheIndex < 0 || false/*sIgnoreMeasureCache*/) {
             // measure ourselves, this should set the measured dimension flag back
             onMeasure(widthMeasureSpec, heightMeasureSpec);
             mPrivateFlags3 &= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;

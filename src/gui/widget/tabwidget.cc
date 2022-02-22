@@ -4,7 +4,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(TabWidget)
+DECLARE_WIDGET2(TabWidget,"cdroid:attr/tabWidgetStyle")
 
 TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
     initTab();
@@ -13,6 +13,18 @@ TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
 TabWidget::TabWidget(Context*ctx,const AttributeSet&atts)
   :LinearLayout(ctx,atts){
     initTab();
+    const bool hasExplicitLeft = atts.hasAttribute("tabStripLeft");
+    if(hasExplicitLeft)
+        mLeftStrip = ctx->getDrawable(atts,"tabStripLeft");
+    else
+        mLeftStrip = ctx->getDrawable(atts,"tab_bottom_left");
+
+    const bool hasExplicitRight = atts.hasAttribute("tabStripRight");
+    if(hasExplicitRight)
+        mRightStrip = ctx->getDrawable(atts,"tabStripRight");
+    else
+        mRightStrip = ctx->getDrawable(atts,"tab_bottom_right");
+    setChildrenDrawingOrderEnabled(true);
 }
 
 void TabWidget::initTab(){

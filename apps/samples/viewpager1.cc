@@ -30,7 +30,7 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,800,600);
     HorizontalScrollView* hs=new HorizontalScrollView(800,400);
     LinearLayout*layout=new LinearLayout(400,100);
-    ColorStateList*cl=ColorStateList::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/color/textview.xml");
+    ColorStateList*cl =app.getColorStateList("cdroid::color/textview");
     layout->setId(10);
     hs->addView(layout);
     hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);

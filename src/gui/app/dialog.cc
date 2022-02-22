@@ -42,7 +42,7 @@ void Dialog::show(){
     const int horzMargin = lp->leftMargin+lp->rightMargin;
     const int vertMargin = lp->topMargin+lp->bottomMargin;
     int widthSpec  = MeasureSpec::makeMeasureSpec(1280-horzMargin,MeasureSpec::EXACTLY);
-    int heightSpec = MeasureSpec::makeMeasureSpec(720-vertMargin,MeasureSpec::UNSPECIFIED);//AT_MOST);
+    int heightSpec = MeasureSpec::makeMeasureSpec(720-vertMargin,MeasureSpec::AT_MOST);
     
     widthSpec  = frm->getChildMeasureSpec(widthSpec ,0,lp->width);
     heightSpec = frm->getChildMeasureSpec(heightSpec,0,lp->height);
