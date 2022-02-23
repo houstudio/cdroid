@@ -1075,7 +1075,7 @@ bool ViewGroup::checkLayoutParams(const LayoutParams* p)const{
     return p!=nullptr;
 }
 
-void ViewGroup::onSetLayoutParams(View* child,LayoutParams* layoutParams){
+void ViewGroup::onSetLayoutParams(View* child,const LayoutParams* layoutParams){
     requestLayout();
 }
 

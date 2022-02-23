@@ -367,7 +367,7 @@ void GridLayout::invalidateValues(){
     mVerticalAxis->invalidateValues();
 }
 
-void GridLayout::onSetLayoutParams(View* child, ViewGroup::LayoutParams* layoutParams){
+void GridLayout::onSetLayoutParams(View* child,const ViewGroup::LayoutParams* layoutParams){
     ViewGroup::onSetLayoutParams(child,layoutParams);
     if (!checkLayoutParams(layoutParams)) {
         handleInvalidParams("supplied LayoutParams are of the wrong type");
@@ -1515,7 +1515,7 @@ void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
     }
     int deltaMin = 0; //inclusive
 
-    float totalWeight = calculateTotalWeight();
+    const float totalWeight = calculateTotalWeight();
 
     int validDelta = -1; //delta for which a solution exists
     bool validSolution = true;
@@ -1548,8 +1548,8 @@ float GridLayout::Axis::calculateTotalWeight() {
         if (c->getVisibility() == View::GONE) {
             continue;
         }
-        LayoutParams* lp = grd->getLayoutParams(c);
-        Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const LayoutParams* lp = grd->getLayoutParams(c);
+        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         totalWeight += spec.weight;
     }
     return totalWeight;

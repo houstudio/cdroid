@@ -191,7 +191,7 @@ protected:
     virtual LayoutParams* generateDefaultLayoutParams()const;
     virtual bool checkLayoutParams(const LayoutParams* p)const;
 
-    virtual void onSetLayoutParams(View* child,LayoutParams* layoutParams);
+    virtual void onSetLayoutParams(View* child,const LayoutParams* layoutParams);
 
     void measureChildren(int widthMeasureSpec, int heightMeasureSpec);
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);

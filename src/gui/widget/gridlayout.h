@@ -298,7 +298,7 @@ protected:
     static int adjust(int measureSpec, int delta);
     static bool canStretch(int flexibility);
     int getMeasurementIncludingMargin(View* c, bool horizontal);
-    void onSetLayoutParams(View* child, ViewGroup::LayoutParams* layoutParams)override;
+    void onSetLayoutParams(View* child,const ViewGroup::LayoutParams* layoutParams)override;
     LayoutParams* getLayoutParams(View* c);
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
