@@ -187,12 +187,9 @@ TEST_F(LAYOUT,grid){
     const char*captions[]={"OK","Cancel","Ignore","Hello world!","Sina News"};
     Window*w=new Window(0,0,800,600);
     GridLayout*grd=new GridLayout(800,400);
-    grd->setColumnCount(3);
-    grd->setVerticalSpace(1);
-    grd->setHorizontalSpace(1);
     const int N=sizeof(captions)/sizeof(captions[0]);
     for(int i=0;i<9;i++){
-        GridLayoutParams*gp=new GridLayoutParams();
+        GridLayout::LayoutParams*gp=new GridLayout::LayoutParams();
         gp->setMarginsRelative(5,5,5,5);
         Button*btn=new Button(captions[i%N],0,0);
         btn->setBackground(new ColorDrawable(0xFFFF0000+i*20));
