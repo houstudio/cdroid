@@ -197,6 +197,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     }else{
         surf->buffer=malloc(width*surf->pitch);
     }
+    surf->ishw=hwsurface;
     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
@@ -233,7 +234,7 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
         pbd+=ndst->pitch;
     }
 #ifdef ENABLE_RFB
-    rfbMarkRectAsModified(dev.rfbScreen,dx,dy,dx+rs.w,dy+rs.h);
+    if(ndst->ishw)rfbMarkRectAsModified(dev.rfbScreen,dx,dy,dx+rs.w,dy+rs.h);
 #endif
     return 0;
 }

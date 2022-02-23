@@ -348,7 +348,7 @@ void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect){
             }
             RECT rd={dx0,dy0,dx1-dx0+1,dy1-dy0+1};
             RECT rs={sx0, sy0,mHorz[j].len,mVert[i].len};
-            LOGV("rs=(%d,%d,%d,%d)",rs.left,rs.top,rs.width,rs.height);
+            LOGV("%p rs=(%d,%d,%d,%d)->(%d,%d,%d,%d)",this,rs.left,rs.top,rs.width,rs.height,rd.left,rd.top,rd.width,rd.height);
             rd.offset(rect.left,rect.top);
             canvas.draw_image(mNinePatch,rd,&rs);
             dx0=dx1;

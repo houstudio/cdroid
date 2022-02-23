@@ -170,7 +170,14 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
 }
 
 DWORD GFXFlip(HANDLE surface){
-    //(XFlush(x11Display);
+    XImage *img=(XImage*)surface;
+    if(mainSurface==surface){
+        X11Expose(0,0,img->width,img->height);
+#if ENABLE_RFB
+        rfbMarkRectAsModified(rfbScreen,0,0,img->width,img->height);
+#endif
+
+    }
     return 0;
 }
 #ifdef ENABLE_RFB

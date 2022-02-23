@@ -1,4 +1,4 @@
-#ifndef HAVE_INPUT_H
+#if 1//ndef HAVE_INPUT_H
 #include<linux/input.h>
 #else
 #define EV_SYN                  0x00
@@ -56,7 +56,7 @@ INT InputInit(){
     dev.maxfd=dev.pipe[0];
     int rc=fcntl(dev.pipe[0],F_SETFL,O_NONBLOCK);
     struct dirent **namelist=nullptr;
-    LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d",__cplusplus,dev.nfd,rc,dev.fds[0]);
+    LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,dev.nfd,rc,dev.fds[0],sizeof(struct input_event),sizeof(struct timeval));
     int nf=scandir("/dev/input",&namelist,[&dev](const struct dirent * ent)->int{
         char fname[256];
         int fd=-1; 

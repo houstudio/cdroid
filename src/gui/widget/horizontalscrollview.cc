@@ -57,8 +57,13 @@ int HorizontalScrollView::getMaxScrollAmount() {
 void HorizontalScrollView::initScrollView() {
     mScroller = new OverScroller(getContext());
     mVelocityTracker = nullptr;
+    mChildToScrollTo = nullptr;
+    mIsLayoutDirty= false;
     mEdgeGlowLeft = mEdgeGlowRight =nullptr;
     mFillViewport = false;
+    mIsBeingDragged = false;
+    mActivePointerId = INVALID_POINTER;
+    mSmoothScrollingEnabled =true;
     setFocusable(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);

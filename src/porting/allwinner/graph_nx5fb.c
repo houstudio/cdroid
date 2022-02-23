@@ -313,6 +313,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     }else{
         surf->buffer=malloc(width*surf->pitch);
     }
+    surf->ishw=hwsurface;
     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
@@ -348,7 +349,7 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
         pbs+=nsrc->pitch;
         pbd+=ndst->pitch;
     }
-    GFXFlip(dstsurface);
+    if(ndst->ishw)GFXFlip(dstsurface);
     return 0;
 }
 

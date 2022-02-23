@@ -2076,7 +2076,7 @@ void View::setOnScrollChangeListener(OnScrollChangeListener l){
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
-    setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
+    //setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
 }
 
 bool View::isDrawingCacheEnabled()const{

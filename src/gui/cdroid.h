@@ -18,6 +18,7 @@
 #include <widget/button.h>
 #include <widget/compoundbutton.h>
 #include <widget/togglebutton.h>
+#include <widget/switch.h>
 #include <widget/checkbox.h>
 #include <widget/radiobutton.h>
 #include <widget/radiogroup.h>
@@ -30,6 +31,7 @@
 #include <widget/abslistview.h>
 #include <widget/listview.h>
 #include <widget/gridview.h>
+#include <widget/gridlayout.h>
 #include <widget/scrollview.h>
 #include <widget/horizontalscrollview.h>
 #include <widget/progressbar.h>
