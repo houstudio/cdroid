@@ -616,16 +616,16 @@ void GridLayout::requestLayout() {
 void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
     consistencyCheck();
 
-    int targetWidth = w;//right - left;
-    int targetHeight = h;//bottom - top;
+    const int targetWidth  = w;//right - left;
+    const int targetHeight = h;//bottom - top;
 
-    int paddingLeft = getPaddingLeft();
-    int paddingTop = getPaddingTop();
-    int paddingRight = getPaddingRight();
-    int paddingBottom = getPaddingBottom();
+    const int paddingLeft = getPaddingLeft();
+    const int paddingTop  = getPaddingTop();
+    const int paddingRight  = getPaddingRight();
+    const int paddingBottom = getPaddingBottom();
 
-    mHorizontalAxis->layout(targetWidth - paddingLeft - paddingRight);
-    mVerticalAxis->layout(targetHeight - paddingTop - paddingBottom);
+    mHorizontalAxis->layout(targetWidth - paddingLeft- paddingRight);
+    mVerticalAxis->layout(targetHeight  - paddingTop - paddingBottom);
 
     std::vector<int> hLocations = mHorizontalAxis->getLocations();
     std::vector<int> vLocations = mVerticalAxis->getLocations();
@@ -687,7 +687,7 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
             c->measure(MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY), 
                        MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY));
         }
-        LOGV("child %p:%d pos=%d,%d",c,c->getId(),x1,y1);
+        LOGV("child %p:%d pos=%d,%d",c,c->getId(),cx,cy);
         c->layout(cx, cy, width, height);
     }
 }
@@ -724,7 +724,7 @@ bool GridLayout::Interval::operator<(const Interval &other) const{
 GridLayout::Arc::Arc(){
     valid =true;
 }
-GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableInt& value):Arc(){
+GridLayout::Arc::Arc(const GridLayout::Interval& span,int value):Arc(){
     this->span = span;
     this->value= value;
 }
@@ -1199,7 +1199,7 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
         }
         int src = arc.span.min;
         int dst = arc.span.max;
-        int value =arc.value.value;
+        int value =arc.value;
         if(src<dst)
             result<<var<<dst<<"-"<<var<<src<<">="<<value;
         else
@@ -1208,7 +1208,7 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
     return result.str();
 }
 
-void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&arcs, std::vector<bool>& culprits0){
+void GridLayout::Axis::logError(const std::string& axisName,const std::vector<Arc>&arcs, std::vector<bool>& culprits0){
     std::vector<Arc> culprits; 
     std::vector<Arc> removed;
     for (int c = 0; c < arcs.size(); c++) {
@@ -1224,14 +1224,14 @@ void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&ar
              " are inconsistent; permanently removing: " << arcsToString(horizontal,removed);
 }
 
-bool GridLayout::Axis::relax(std::vector<int>&locations, GridLayout::Arc& entry){
+bool GridLayout::Axis::relax(std::vector<int>&locations,const GridLayout::Arc& entry){
     if (!entry.valid) {
         return false;
     }
-    Interval& span = entry.span;
+    const Interval& span = entry.span;
     const int u = span.min;
     const int v = span.max;
-    const int candidate = locations[u] + entry.value.value;
+    const int candidate = locations[u] + entry.value;
     if (candidate > locations[v]) {
         locations[v] = candidate;
         return true;
@@ -1363,7 +1363,7 @@ std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridL
 }
 
 void GridLayout::Axis::addComponentSizes(std::vector<GridLayout::Arc>& result, 
-        GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& links) {
+        GridLayout::PackedMap<GridLayout::Interval,int>& links) {
     for (int i = 0; i < links.keys.size(); i++) {
         Interval& key = links.keys[i];
         include(result, key, links.values[i], false);
@@ -1383,7 +1383,7 @@ std::vector<GridLayout::Arc>GridLayout::Axis::createArcs(){
     if (orderPreserved) {
         // Add a constraint for every row/col
         for (int i = 0; i < getCount(); i++) {
-            include(mins,Interval(i, i + 1),MutableInt(0),true);
+            include(mins,Interval(i, i + 1),0,true);
         }
     }
 
@@ -1438,18 +1438,18 @@ std::vector<int>& GridLayout::Axis::getDeltas(){
     return deltas;
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>GridLayout::Axis::createLinks(bool min){
-    Assoc<Interval, MutableInt> result;
+GridLayout::PackedMap<GridLayout::Interval,int>GridLayout::Axis::createLinks(bool min){
+    Assoc<Interval,int> result;
     std::vector<Spec>&keys = getGroupBounds().keys;
     for (int i = 0, N = keys.size(); i < N; i++) {
         Interval span = min ? keys[i].span : keys[i].span.inverse();
-        result.put(span, MutableInt());
+        result.put(span, INT_MIN);//MutableInt());
     }
     return result.pack();
 }
 
-void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>&links,bool min){
-    std::vector<MutableInt>&spans = links.values;
+void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,int>&links,bool min){
+    std::vector<int>&spans = links.values;
     for (int i = 0; i < spans.size(); i++) {
         spans[i]=INT_MIN;//spans[i].reset();
     }
@@ -1457,14 +1457,14 @@ void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,G
     std::vector<Bounds>&bounds = getGroupBounds().values;
     for (int i = 0; i < bounds.size(); i++) {
         int size = bounds[i].size(min);
-        MutableInt& valueHolder = links.getValue(i);
+        int& valueHolder = links.getValue(i);
         // this effectively takes the max() of the minima and the min() of the maxima
-        valueHolder.value = std::max(valueHolder.value, min ? size : -size);
+        valueHolder = std::max(valueHolder, min ? size : -size);
         links.setValue(i,valueHolder);
     }
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::Axis::getForwardLinks(){
+GridLayout::PackedMap<GridLayout::Interval,int>& GridLayout::Axis::getForwardLinks(){
     if (forwardLinks.size()==0) {
        forwardLinks = createLinks(true);
     }
@@ -1475,7 +1475,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::
     return forwardLinks;
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::Axis::getBackwardLinks(){
+GridLayout::PackedMap<GridLayout::Interval,int>& GridLayout::Axis::getBackwardLinks(){
     if (backwardLinks.size()==0) {
         backwardLinks = createLinks(false);
     }
@@ -1487,7 +1487,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::
 }
 
 void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs, 
-        GridLayout::Interval key,MutableInt size,bool ignoreIfAlreadyPresent){
+        const GridLayout::Interval& key,int size,bool ignoreIfAlreadyPresent){
     /*Remove self referential links.
       These appear:
         . as parental constraints when GridLayout has no children
@@ -1509,7 +1509,7 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
 void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
     for (int i=0;i<deltas.size();i++)deltas[i]=0;
     solve(a);
-    int deltaMax = parentMin.value * grd->getChildCount() + 1; //exclusive
+    int deltaMax = parentMin * grd->getChildCount() + 1; //exclusive
     if (deltaMax < 2) {
         return; //don't have any delta to distribute
     }
