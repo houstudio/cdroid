@@ -301,7 +301,7 @@ int GridLayout::clip(Interval minorRange, bool minorWasDefined, int count){
 void GridLayout::validateLayoutParams() {
     bool horizontal = (mOrientation == HORIZONTAL);
     Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
-    int count = (axis->definedCount != UNDEFINED) ? axis->definedCount : 0;
+    const int count = (axis->definedCount != UNDEFINED) ? axis->definedCount : 0;
 
     int major = 0;
     int minor = 0;
@@ -997,6 +997,7 @@ GridLayout::Axis::Axis(GridLayout*g,bool horizontal){
     this->horizontal = horizontal;
     parentMin = 0;
     parentMax =-MAX_SIZE;
+    definedCount = UNDEFINED;
     arcsValid = false;
     hasWeightsValid = false;
     locationsValid  = false;
@@ -1309,10 +1310,10 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
     const int N = getCount() + 1; // the number of vertices
     std::vector<std::vector<Arc>> result;
     std::vector<int>sizes;
-	result.resize(N);
-	sizes.resize(N);
+    result.resize(N);
+    sizes.resize(N);
     for (Arc arc : arcs) {
-        sizes[arc.span.min]++;
+        sizes[arc.span.min]=sizes[arc.span.min]+1;
     }
     for (int i = 0; i < sizes.size(); i++) {
         result[i].resize(sizes[i]);// = new Arc[sizes[i]];
@@ -1321,7 +1322,8 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
     for(int i=0;i<sizes.size();i++)sizes[i]=0;//Arrays.fill(sizes, 0);
     for (Arc arc : arcs) {
         int i = arc.span.min;
-        result[i][sizes[i]++] = arc;
+        result[i][sizes[i]] = arc;
+        sizes[i]=sizes[i]+1;
     }
     return result;
 }

@@ -293,8 +293,8 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         Gravity::apply(mGravity, right - left, bottom - top, selfBounds, contentBounds,
                 layoutDirection);
 
-        int horizontalOffset = contentBounds.left - left;
-        int verticalOffset = contentBounds.top - top;
+        const int horizontalOffset = contentBounds.left - left;
+        const int verticalOffset = contentBounds.top - top;
         if (horizontalOffset != 0 || verticalOffset != 0) {
             for (int i = 0; i < count; i++) {
                 View* child = views[i];
@@ -314,7 +314,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     }
 
     if (isLayoutRtl()) {
-        int offsetWidth = myWidth - width;
+        const int offsetWidth = myWidth - width;
         for (int i = 0; i < count; i++) {
             View* child = views[i];
             if (child->getVisibility() != GONE) {
@@ -329,7 +329,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 int RelativeLayout::compareLayoutPosition(const LayoutParams* p1,const LayoutParams* p2){
-    int topDiff = p1->mTop - p2->mTop;
+    const int topDiff = p1->mTop - p2->mTop;
     if (topDiff != 0) {
         return topDiff;
     }
@@ -337,11 +337,11 @@ int RelativeLayout::compareLayoutPosition(const LayoutParams* p1,const LayoutPar
 }
 
 void RelativeLayout::measureChild(View* child, LayoutParams* params, int myWidth, int myHeight){
-    int childWidthMeasureSpec = getChildMeasureSpec(params->mLeft,
+    const int childWidthMeasureSpec = getChildMeasureSpec(params->mLeft,
             params->mRight, params->width,
             params->leftMargin, params->rightMargin,
             mPaddingLeft, mPaddingRight, myWidth);
-    int childHeightMeasureSpec = getChildMeasureSpec(params->mTop,
+    const int childHeightMeasureSpec = getChildMeasureSpec(params->mTop,
             params->mBottom, params->height,
             params->topMargin, params->bottomMargin,
             mPaddingTop, mPaddingBottom,myHeight);
@@ -349,7 +349,7 @@ void RelativeLayout::measureChild(View* child, LayoutParams* params, int myWidth
 }
 
 void RelativeLayout::measureChildHorizontal(View* child, LayoutParams* params, int myWidth, int myHeight){
-    int childWidthMeasureSpec = getChildMeasureSpec(params->mLeft, params->mRight, params->width, 
+    const int childWidthMeasureSpec = getChildMeasureSpec(params->mLeft, params->mRight, params->width, 
             params->leftMargin, params->rightMargin, mPaddingLeft, mPaddingRight,myWidth);
 
     int childHeightMeasureSpec;
@@ -393,7 +393,7 @@ int RelativeLayout::getChildMeasureSpec(int childStart, int childEnd, int childS
     // Negative values in a mySize value in RelativeLayout
     // measurement is code for, "we got an unspecified mode in the
     // RelativeLayout's measure spec."
-    bool isUnspecified = mySize < 0;
+    const bool isUnspecified = mySize < 0;
     if (isUnspecified && !mAllowBrokenMeasureSpecs) {
         if (childStart != VALUE_NOT_SET && childEnd != VALUE_NOT_SET) {
             // Constraints fixed both edges, so child has an exact size.
@@ -425,7 +425,7 @@ int RelativeLayout::getChildMeasureSpec(int childStart, int childEnd, int childS
     }
 
     // Figure out maximum size available to this view
-    int maxAvailable = tempEnd - tempStart;
+    const int maxAvailable = tempEnd - tempStart;
 
     if (childStart != VALUE_NOT_SET && childEnd != VALUE_NOT_SET) {
         // Constraints fixed both edges, so child must be an exact size.
@@ -653,7 +653,7 @@ void RelativeLayout::applyVerticalSizeRules(RelativeLayout::LayoutParams* childP
 }
 
 View* RelativeLayout::getRelatedView(const int* rules, int relation){
-    int id = rules[relation];
+    const int id = rules[relation];
     if (id != 0) {
         DependencyGraph::Node* node = mGraph.mKeyNodes.get(id);
         if (node == nullptr) return nullptr;
@@ -700,15 +700,15 @@ int RelativeLayout::getRelatedViewBaselineOffset(const int* rules){
 }
 
 void RelativeLayout::centerHorizontal(View* child, LayoutParams* params, int myWidth){
-    int childWidth = child->getMeasuredWidth();
-    int left = (myWidth - childWidth) / 2;
+    const int childWidth = child->getMeasuredWidth();
+    const int left = (myWidth - childWidth) / 2;
     params->mLeft = left;
     params->mRight = left + childWidth;
 }
 
 void RelativeLayout::centerVertical(View* child, LayoutParams* params, int myHeight){
-    int childHeight = child->getMeasuredHeight();
-    int top = (myHeight - childHeight) / 2;
+    const int childHeight = child->getMeasuredHeight();
+    const int top = (myHeight - childHeight) / 2;
     params->mTop = top;
     params->mBottom = top + childHeight;
 }
@@ -716,12 +716,12 @@ void RelativeLayout::centerVertical(View* child, LayoutParams* params, int myHei
 void RelativeLayout::onLayout(bool changed, int l, int t, int w, int h) {
     //  The layout has actually already been performed and the positions
     //  cached.  Apply the cached values to the children.
-    int count = getChildCount();
+    const int count = getChildCount();
 
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() != GONE) {
-            RelativeLayout::LayoutParams* st =
+            const RelativeLayout::LayoutParams* st =
                     (RelativeLayout::LayoutParams*) child->getLayoutParams();
             child->layout(st->mLeft, st->mTop, st->mRight-st->mLeft, st->mBottom-st->mTop);
         }
@@ -874,7 +874,7 @@ bool RelativeLayout::LayoutParams::isRelativeRule(int rule) {
 void RelativeLayout::LayoutParams::resolveRules(int layoutDirection) {
     const bool isLayoutRtl = (layoutDirection == View::LAYOUT_DIRECTION_RTL);
 
-            // Reset to initial state
+    // Reset to initial state
     memcpy(mRules,mInitialRules,sizeof(mRules));//  System.arraycopy(mInitialRules, LEFT_OF, mRules, LEFT_OF, VERB_COUNT);
 
     // Apply rules depending on direction and if we are in RTL compatibility mode
@@ -1060,9 +1060,9 @@ void RelativeLayout::DependencyGraph::add(View* view) {
 void RelativeLayout::DependencyGraph::getSortedViews(std::vector<View*>&sorted,const int* rules,size_t rulesCount){
     std::list<Node*> roots = findRoots(rules,rulesCount);
     int index = 0;
-    int count=roots.size();
+    const int count=roots.size();
  
-    Node* node;
+    Node* node = nullptr;
     while ((roots.empty()==false)&&(node = roots.back()) != nullptr) {
         View* view = node->view;
         const int key = view->getId();
