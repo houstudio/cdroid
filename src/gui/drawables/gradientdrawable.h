@@ -1,7 +1,7 @@
 #ifndef __GRADIENT_DRAWABLE_H__
 #define __GRADIENT_DRAWABLE_H__
 #include <drawables/drawable.h>
-#include <core/path.h>
+//#include <core/path.h>
 namespace cdroid{
 
 class GradientDrawable:public Drawable{
@@ -105,8 +105,8 @@ private:
        void computeOpacity();
     };
     int mAlpha;
-    RefPtr<cdroid::Path>mPath;
-    RefPtr<cdroid::Path>mRingPath;
+    //RefPtr<cdroid::Path>mPath;
+    //RefPtr<cdroid::Path>mRingPath;
     RectF mRect;
     Rect mPadding;
     bool mPathIsDirty;

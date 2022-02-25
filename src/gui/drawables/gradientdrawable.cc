@@ -420,13 +420,11 @@ const std::vector<int>&GradientDrawable::getColors()const {
 void GradientDrawable::buildPathIfDirty() {
     if (mPathIsDirty) {
         ensureValidRect();
-        mPath->reset();
-        mPath->round_rectangle(mRect,mGradientState->mRadiusArray);
+        //mPath->reset();
+        //mPath->round_rectangle(mRect,mGradientState->mRadiusArray);
         mPathIsDirty = false;
     }
 }
-
-//Path buildRing(GradientState st){}
 
 void GradientDrawable::setColor(int argb) {
     Color c(argb);
@@ -651,34 +649,32 @@ void GradientDrawable::draw(Canvas&canvas){
     if (!ensureValidRect())return; // nothing to draw
     auto st = mGradientState;
     const bool haveStroke = /*currStrokeAlpha > 0 &&*/ mStrokePaint &&  mStrokeWidth> 0;
+    float rad=.0f,innerRadius=.0f;
+    std::vector<float>radii;
     switch (st->mShape) {
-    case RECTANGLE:{
-            const float rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
-            std::vector<float>radii;
-            if(st->mRadiusArray.size())radii=st->mRadiusArray;
-            if(st->mRadius > 0.0f)radii={rad,rad,rad,rad};
-            canvas.set_source(mFillPaint);
-            drawRound(canvas,mRect,radii);
-            if (haveStroke) {
-                canvas.fill_preserve();
-                canvas.set_source(mStrokePaint);
-                canvas.stroke();
-            }else{
-                canvas.fill();
-            } 
-        }
-        break;
-    case LINE: {
-        RectF r = mRect;
-        const float y = r.top+r.height/2.f;
+    case RECTANGLE:
+        rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
+        if(st->mRadiusArray.size())radii=st->mRadiusArray;
+        if(st->mRadius > 0.0f)radii={rad,rad,rad,rad};
+        canvas.set_source(mFillPaint);
+        drawRound(canvas,mRect,radii);
         if (haveStroke) {
+            canvas.fill_preserve();
+            canvas.set_source(mStrokePaint);
+            canvas.stroke();
+        }else{
+            canvas.fill();
+        } 
+        break;
+    case LINE:
+        if (haveStroke) {
+            const float y = mRect.top+mRect.height/2.f;
             canvas.set_source(mStrokePaint);      
-            canvas.move_to(r.left, y);
-            canvas.line_to(r.left+r.width, y);
+            canvas.move_to(mRect.left, y);
+            canvas.line_to(mRect.left+mRect.width, y);
             canvas.stroke(); 
         }
         break;
-    }
     case OVAL:
         canvas.save();
         canvas.translate(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
@@ -691,14 +687,32 @@ void GradientDrawable::draw(Canvas&canvas){
         }else canvas.fill();
         canvas.restore();
         break;
-#if 0
     case RING:
-        Path path = buildRing(st);
-        canvas.drawPath(path, mFillPaint);
-        if (haveStroke) {
-            canvas.drawPath(path, mStrokePaint);
+        canvas.save();
+        canvas.translate(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
+        //outer
+        canvas.scale(1.,(float)mRect.height/mRect.width);
+        canvas.arc(0,0,mRect.width/2.f,0,M_PI*2.f);
+        canvas.scale(1.,(float)mRect.width/mRect.height);
+        //inner
+        innerRadius=st->mInnerRadius;
+        if(innerRadius==.0f)
+            innerRadius=mRect.width/2.f-st->mThickness;
+        if(innerRadius>.0f){
+            float ratio = mRect.width/mRect.height;
+            if(st->mInnerRadiusRatio>.0f)ratio=st->mInnerRadiusRatio;
+            canvas.scale(ratio,1.f);
+            canvas.arc(0,0,innerRadius,0,M_PI*2);
+            canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
         }
-#endif
+        canvas.set_source(mFillPaint);
+        if (haveStroke) {
+            canvas.fill_preserve();
+            canvas.set_source(mStrokePaint);
+            canvas.stroke();
+        }else
+            canvas.fill();
+        canvas.restore();
         break;
     }
 }
