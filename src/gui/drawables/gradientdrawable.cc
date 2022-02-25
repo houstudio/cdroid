@@ -1,5 +1,6 @@
 #include <drawables/gradientdrawable.h>
 #include <color.h>
+#include <cdlog.h>
 namespace cdroid{
 
 #define DEFAULT_INNER_RADIUS_RATIO 3.0f
@@ -87,6 +88,10 @@ void GradientDrawable::GradientState::setDensity(int targetDensity) {
         mDensity = targetDensity;
         applyDensityScaling(sourceDensity, targetDensity);
     }
+}
+
+bool GradientDrawable::GradientState::hasCenterColor()const{
+    return mGradientColors.size() == 3;
 }
 
 void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int targetDensity) {
@@ -401,6 +406,13 @@ void GradientDrawable::setColors(const std::vector<int>& colors) {
     invalidateSelf();
 }
 
+void GradientDrawable::setColors(const std::vector<int>&colors,const std::vector<float>&offsets) {
+    mGradientState->setGradientColors(colors);
+    mGradientState->mPositions = offsets;
+    mGradientIsDirty = true;
+    invalidateSelf();
+}
+
 const std::vector<int>&GradientDrawable::getColors()const {
     return mGradientState->mGradientColors;
 }
@@ -595,8 +607,8 @@ bool GradientDrawable::ensureValidRect(){
 
             // If we don't have a solid color, the alpha channel must be
             // maxed out so that alpha modulation works correctly.
-            if (st.mSolidColors == nullptr) 
-                mFillPaint=SolidPattern::create_rgb(0,0,0);//setColor(Color.BLACK);
+            //if (st.mSolidColors == nullptr) 
+            //    mFillPaint=SolidPattern::create_rgb(0,0,0);//setColor(Color.BLACK);
         }
     }
     return !mRect.empty();
@@ -615,135 +627,80 @@ bool GradientDrawable::isOpaqueForState()const{
     return true;
 }
 
+static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii){
+    constexpr double degree = M_PI/180.f;
+    if(radii.size()==0)
+        canvas.rectangle(r.left,r.top,r.width,r.height);
+    else{
+        float db=180.f;
+        float pts[8];
+        pts[0]=r.left + radii[0];    pts[1]=r.top + radii[0];
+        pts[2]=r.right()-radii[1];   pts[3]=r.top + radii[1];
+        pts[4]=r.right()-radii[2];   pts[5]=r.bottom()-radii[2];
+        pts[6]=r.left + radii[3];    pts[7]=r.bottom()-radii[3];
+        for(int i=0,j=0;i<8;i+=2,j++){
+            canvas.translate(pts[i],pts[i+1]);
+            canvas.arc(0,0,radii[j],db*degree,(db+90)*degree);
+            canvas.translate(-pts[i],-pts[i+1]);
+            db+=90.f;
+        }canvas.line_to(pts[0]-radii[0],pts[1]);
+    }
+}
+
 void GradientDrawable::draw(Canvas&canvas){
     if (!ensureValidRect())return; // nothing to draw
-    const GradientState& st = *mGradientState;
+    auto st = mGradientState;
     const bool haveStroke = /*currStrokeAlpha > 0 &&*/ mStrokePaint &&  mStrokeWidth> 0;
-#if 0
-    // remember the alpha values, in case we temporarily overwrite them
-    // when we modulate them with mAlpha
-    const int prevFillAlpha = mFillPaint.getAlpha();
-    const int prevStrokeAlpha = mStrokePaint != null ? mStrokePaint.getAlpha() : 0;
-    // compute the modulate alpha values
-    const int currFillAlpha = modulateAlpha(prevFillAlpha);
-    const int currStrokeAlpha = modulateAlpha(prevStrokeAlpha);
-
-    const bool haveStroke = currStrokeAlpha > 0 && mStrokePaint != null &&
-            mStrokePaint.getStrokeWidth() > 0;
-    const bool haveFill = currFillAlpha > 0;
-    const ColorFilter colorFilter = mColorFilter != null ? mColorFilter : mTintFilter;
-
-    /*  we need a layer iff we're drawing both a fill and stroke, and the
-        stroke is non-opaque, and our shapetype actually supports
-        fill+stroke. Otherwise we can just draw the stroke (if any) on top
-        of the fill (if any) without worrying about blending artifacts.
-    */
-    const bool useLayer = haveStroke && haveFill && mShape != LINE &&
-                 currStrokeAlpha < 255 && (mAlpha < 255 || colorFilter != null);
-
-    /*  Drawing with a layer is slower than direct drawing, but it
-        allows us to apply paint effects like alpha and colorfilter to
-        the result of multiple separate draws. In our case, if the user
-        asks for a non-opaque alpha value (via setAlpha), and we're
-        stroking, then we need to apply the alpha AFTER we've drawn
-        both the fill and the stroke.
-    */
-    if (useLayer) {
-        if (mLayerPaint == null) {
-            mLayerPaint = new Paint();
-        }
-        mLayerPaint.setDither(st.mDither);
-        mLayerPaint.setAlpha(mAlpha);
-        mLayerPaint.setColorFilter(colorFilter);
-
-        float rad = mStrokePaint.getStrokeWidth();
-        canvas.saveLayer(mRect.x-rad, mRect.y-rad, mRect.right()+rad, mRect.bottom()+rad,mLayerPaint);
-
-        // don't perform the filter in our individual paints
-        // since the layer will do it for us
-        mFillPaint.setColorFilter(null);
-        mStrokePaint.setColorFilter(null);
-    } else {
-        /*  if we're not using a layer, apply the dither/filter to our
-            individual paints
-        */
-        mFillPaint.setAlpha(currFillAlpha);
-        mFillPaint.setDither(st.mDither);
-        mFillPaint.setColorFilter(colorFilter);
-        if (colorFilter != null && st.mSolidColors == null) {
-            mFillPaint.setColor(mAlpha << 24);
-        }
-        if (haveStroke) {
-            mStrokePaint.setAlpha(currStrokeAlpha);
-            mStrokePaint.setDither(st.mDither);
-            mStrokePaint.setColorFilter(colorFilter);
-        }
-    }
-#endif
-#if 0
-    switch (st.mShape) {
-    case RECTANGLE:
-        if (st.mRadiusArray.size()) {
-            buildPathIfDirty();
-            mPath->append_to_context(&canvas);//canvas.drawPath(mPath, mFillPaint);
-            canvas.set_source(mFillPaint);canvas.fill();
+    switch (st->mShape) {
+    case RECTANGLE:{
+            const float rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
+            std::vector<float>radii;
+            if(st->mRadiusArray.size())radii=st->mRadiusArray;
+            if(st->mRadius > 0.0f)radii={rad,rad,rad,rad};
+            canvas.set_source(mFillPaint);
+            drawRound(canvas,mRect,radii);
             if (haveStroke) {
-                mPath->append_to_context(&canvas);//canvas.drawPath(mPath, mStrokePaint);
-                canvas.set_source(mStrokePaint); canvas.stroke();
-            }
-        } else if (st.mRadius > 0.0f) {
-            // since the caller is only giving us 1 value, we will force
-            // it to be square if the rect is too small in one dimension
-            // to show it. If we did nothing, Skia would clamp the rad
-            // independently along each axis, giving us a thin ellipse
-            // if the rect were very wide but not very tall
-            float rad = std::min(st.mRadius,std::min(mRect.width, mRect.height) * 0.5f);
-            canvas.drawRoundRect(mRect, rad, rad, mFillPaint);
-            if (haveStroke) {
-                canvas.drawRoundRect(mRect, rad, rad, mStrokePaint);
-            }
-        } else {
-            if (mPaint/*mFillPaint.getColor() != 0 || colorFilter != null ||  mFillPaint.getShader() != null*/) {
-                canvas.rectangle(mRect.left,mRect.top,mRect.width,mRect.height);
-                canvas.set_source(mFillPaint);canvas.fill();
-            }
-            if (haveStroke) {
-                canvas.rectangle(mRect.left,mRect.top,mRect.width,mRect.height);
-                canvas.set_source(mStrokePaint);canvas.stroke();
-            }
-        }
-        break;
-    case OVAL:
-        canvas.drawOval(mRect, mFillPaint);
-        if (haveStroke) {
-            canvas.drawOval(mRect, mStrokePaint);
+                canvas.fill_preserve();
+                canvas.set_source(mStrokePaint);
+                canvas.stroke();
+            }else{
+                canvas.fill();
+            } 
         }
         break;
     case LINE: {
         RectF r = mRect;
-        float y = r.centerY();
+        const float y = r.top+r.height/2.f;
         if (haveStroke) {
-            canvas.drawLine(r.left, y, r.right, y, mStrokePaint);
+            canvas.set_source(mStrokePaint);      
+            canvas.move_to(r.left, y);
+            canvas.line_to(r.left+r.width, y);
+            canvas.stroke(); 
         }
         break;
     }
+    case OVAL:
+        canvas.save();
+        canvas.translate(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
+        canvas.scale(1.f,mRect.height/mRect.width);
+        canvas.arc(0,0,mRect.width/2.f,0,M_PI*2.f);
+        if (haveStroke) {
+            canvas.fill_preserve(); 
+            canvas.set_source(mStrokePaint);
+            canvas.stroke();
+        }else canvas.fill();
+        canvas.restore();
+        break;
+#if 0
     case RING:
         Path path = buildRing(st);
         canvas.drawPath(path, mFillPaint);
         if (haveStroke) {
             canvas.drawPath(path, mStrokePaint);
         }
+#endif
         break;
     }
-#endif
-    /*if (useLayer) {
-        canvas.restore();
-    } else {
-        mFillPaint.setAlpha(prevFillAlpha);
-        if (haveStroke) {
-            mStrokePaint.setAlpha(prevStrokeAlpha);
-        }
-    }*/
 }
 
 Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts){

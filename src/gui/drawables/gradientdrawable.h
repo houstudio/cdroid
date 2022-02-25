@@ -88,6 +88,7 @@ private:
        GradientState(Orientation orientation, const std::vector<int>&gradientColors);
        GradientState(const GradientState& orig);
        void setDensity(int targetDensity);
+       bool hasCenterColor()const;
        void applyDensityScaling(int sourceDensity, int targetDensity);
        Drawable* newDrawable()override;
        int getChangingConfigurations()const;
@@ -159,6 +160,7 @@ public:
     Orientation getOrientation()const;
     void setOrientation(Orientation orientation);
     void setColors(const std::vector<int>& colors);
+    void setColors(const std::vector<int>&colors,const std::vector<float>&offsets);
     const std::vector<int>&getColors()const;
     void setColor(int argb);
     void setColor(ColorStateList* colorStateList);
