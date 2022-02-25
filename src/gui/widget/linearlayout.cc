@@ -13,39 +13,39 @@ DECLARE_WIDGET(LinearLayout)
 LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
     weight = attrs.getFloat("layout_weight", 0);
-    gravity= attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
+    gravity= attrs.getGravity("layout_gravity", -1);
     LOGV("width=%d,height=%d weight=%.2f gravity=%x margin=%d,%d,%d,%d",width,height,
 	    weight,gravity,topMargin,bottomMargin,leftMargin,rightMargin);
 }
 
 LinearLayout::LayoutParams::LayoutParams(int width, int height)
     :ViewGroup::MarginLayoutParams(width,height){
-    weight = 0;
-    gravity=Gravity::NO_GRAVITY;
+    weight  = 0;
+    gravity = -1;
 }
 
 LinearLayout::LayoutParams::LayoutParams(int width, int height, float weight)
     :ViewGroup::MarginLayoutParams(width,height){
     this->weight = weight;
-    gravity=Gravity::NO_GRAVITY;
+    gravity = -1;
 }
 
 LinearLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& p)
     :ViewGroup::MarginLayoutParams(p){
     this->weight = .0f;
-    gravity=Gravity::NO_GRAVITY;
+    gravity = -1;
 }
 
 LinearLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams&source)
     :ViewGroup::MarginLayoutParams(source){
     this->weight = .0f;
-    gravity=Gravity::NO_GRAVITY;
+    gravity = -1;
 }
 
 LinearLayout::LayoutParams::LayoutParams(const LayoutParams&source)
     :ViewGroup::MarginLayoutParams(source){
     weight = source.weight;
-    gravity = source.gravity;
+    gravity= source.gravity;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ int LinearLayout::getBaseline(){
     }
 
     View* child = getChildAt(mBaselineAlignedChildIndex);
-    int childBaseline = child->getBaseline();
+    const int childBaseline = child->getBaseline();
 
     if (childBaseline == -1) {
         if (mBaselineAlignedChildIndex == 0) {
@@ -122,7 +122,7 @@ int LinearLayout::getBaseline(){
     int childTop = mBaselineChildTop;
 
     if (mOrientation == VERTICAL) {
-        int majorGravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
+        const int majorGravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
         if (majorGravity != Gravity::TOP) {
             switch (majorGravity) {
             case Gravity::BOTTOM:
@@ -136,7 +136,7 @@ int LinearLayout::getBaseline(){
         }
     }
 
-    LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+    const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     return childTop + lp->topMargin + childBaseline;
 }
 
@@ -221,7 +221,7 @@ void LinearLayout::setGravity(int gravity){
 }
 
 void LinearLayout::setHorizontalGravity(int horizontalGravity) {
-    int gravity = horizontalGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
+    const int gravity = horizontalGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
     if ((mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) != gravity) {
         mGravity = (mGravity & ~Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) | gravity;
         requestLayout();
@@ -229,13 +229,11 @@ void LinearLayout::setHorizontalGravity(int horizontalGravity) {
 }
 
 void LinearLayout::setVerticalGravity(int verticalGravity) {
-    int gravity = verticalGravity & Gravity::VERTICAL_GRAVITY_MASK;
-    LOGD("verticalGravity=%d",verticalGravity);
+    const int gravity = verticalGravity & Gravity::VERTICAL_GRAVITY_MASK;
     if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != gravity) {
         mGravity = (mGravity & ~Gravity::VERTICAL_GRAVITY_MASK) | gravity;
         requestLayout();
     }
-    LOGD("mGravity=%d",mGravity);
 }
 
 void LinearLayout::setOrientation(int orientation){
@@ -292,8 +290,8 @@ View* LinearLayout::getLastNonGoneChild() {
 }
 
 void LinearLayout::drawDividersHorizontal(Canvas& canvas){
-    int count = getVirtualChildCount();
-    bool bisLayoutRtl = isLayoutRtl();
+    const int count = getVirtualChildCount();
+    const bool bisLayoutRtl = isLayoutRtl();
     for (int i = 0; i < count; i++) {
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
@@ -344,7 +342,7 @@ void LinearLayout::drawVerticalDivider(Canvas& canvas, int left){
 }
 
 void LinearLayout::drawDividersVertical(Canvas& canvas){
-    int count = getVirtualChildCount();
+    const int count = getVirtualChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
@@ -362,7 +360,7 @@ void LinearLayout::drawDividersVertical(Canvas& canvas){
         if (child == nullptr) {
             bottom = getHeight() - getPaddingBottom() - mDividerHeight;
         } else {
-            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+            const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
             bottom = child->getBottom() + lp->bottomMargin;
         }
         drawHorizontalDivider(canvas, bottom);
@@ -430,7 +428,7 @@ bool LinearLayout::hasDividerBeforeChildAt(int childIndex){
         // Check whether the end divider should draw.
         return (mShowDividers & SHOW_DIVIDER_END) != 0;
     }
-    bool ballViewsAreGoneBefore = allViewsAreGoneBefore(childIndex);
+    const bool ballViewsAreGoneBefore = allViewsAreGoneBefore(childIndex);
     if (ballViewsAreGoneBefore) {
         // This is the first view that's not gone, check if beginning divider is enabled.
         return (mShowDividers & SHOW_DIVIDER_BEGINNING) != 0;
@@ -443,7 +441,7 @@ void LinearLayout::forceUniformHeight(int count, int widthMeasureSpec) {
     // Pretend that the linear layout has an exact size. This is the measured height of
     // ourselves. The measured height should be the max height of the children, changed
     // to accommodate the heightMeasureSpec from the parent
-    int uniformMeasureSpec = MeasureSpec::makeMeasureSpec(getMeasuredHeight(), MeasureSpec::EXACTLY);
+    const int uniformMeasureSpec = MeasureSpec::makeMeasureSpec(getMeasuredHeight(), MeasureSpec::EXACTLY);
     for (int i = 0; i < count; ++i) {
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
@@ -465,7 +463,7 @@ void LinearLayout::forceUniformHeight(int count, int widthMeasureSpec) {
 
 void LinearLayout::forceUniformWidth(int count, int heightMeasureSpec) {
     // Pretend that the linear layout has an exact size.
-    int uniformMeasureSpec = MeasureSpec::makeMeasureSpec(getMeasuredWidth(), MeasureSpec::EXACTLY);
+    const int uniformMeasureSpec = MeasureSpec::makeMeasureSpec(getMeasuredWidth(), MeasureSpec::EXACTLY);
     for (int i = 0; i< count; ++i) {
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
@@ -474,7 +472,7 @@ void LinearLayout::forceUniformWidth(int count, int heightMeasureSpec) {
             if (lp->width == LayoutParams::MATCH_PARENT) {
                 // Temporarily force children to reuse their old measured height
                 // FIXME: this may not be right for something like wrapping text?
-                int oldHeight = lp->height;
+                const int oldHeight = lp->height;
                 lp->height = child->getMeasuredHeight();
 
                 // Remeasue with new dimensions
@@ -503,8 +501,8 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
 
     const int count = getVirtualChildCount();
 
-    int widthMode = MeasureSpec::getMode(widthMeasureSpec);
-    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    const int widthMode = MeasureSpec::getMode(widthMeasureSpec);
+    const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
 
     bool matchHeight = false;
     bool skippedMeasure = false;
@@ -521,7 +519,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
     bool baselineAligned = mBaselineAligned;
     bool useLargestChild = mUseLargestChild;
 
-    bool isExactly = widthMode == MeasureSpec::EXACTLY;
+    const bool isExactly = widthMode == MeasureSpec::EXACTLY;
 
     int largestChildWidth = INT_MIN;//Integer.MIN_VALUE;
     int usedExcessSpace = 0;
@@ -631,12 +629,12 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
         childState=combineMeasuredStates(childState, child->getMeasuredState());
 
         if (baselineAligned) {
-            int childBaseline = child->getBaseline();
+            const int childBaseline = child->getBaseline();
             if (childBaseline != -1) {
                 // Translates the child's vertical gravity into an index
                 // in the range 0..VERTICAL_GRAVITY_COUNT
-                int gravity = (lp->gravity < 0 ? mGravity : lp->gravity) & Gravity::VERTICAL_GRAVITY_MASK;
-                int index = ((gravity >> Gravity::AXIS_Y_SHIFT) & ~Gravity::AXIS_SPECIFIED) >> 1;
+                const int gravity = (lp->gravity < 0 ? mGravity : lp->gravity) & Gravity::VERTICAL_GRAVITY_MASK;
+                const int index = ((gravity >> Gravity::AXIS_Y_SHIFT) & ~Gravity::AXIS_SPECIFIED) >> 1;
 
                 mMaxAscent[index] = std::max(mMaxAscent[index], childBaseline);
                 mMaxDescent[index]= std::max(mMaxDescent[index], childHeight - childBaseline);
@@ -669,10 +667,10 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
         mMaxAscent[INDEX_CENTER_VERTICAL] != -1 ||
             mMaxAscent[INDEX_BOTTOM] != -1 ||
             mMaxAscent[INDEX_FILL] != -1) {
-        int ascent = std::max(mMaxAscent[INDEX_FILL],
+        const int ascent = std::max(mMaxAscent[INDEX_FILL],
                     std::max(mMaxAscent[INDEX_CENTER_VERTICAL],
                     std::max(mMaxAscent[INDEX_TOP], mMaxAscent[INDEX_BOTTOM])));
-        int descent = std::max(mMaxDescent[INDEX_FILL],
+        const int descent = std::max(mMaxDescent[INDEX_FILL],
                     std::max(mMaxDescent[INDEX_CENTER_VERTICAL],
                     std::max(mMaxDescent[INDEX_TOP], mMaxDescent[INDEX_BOTTOM])));
         maxHeight = std::max(maxHeight, ascent + descent);
@@ -790,12 +788,12 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
             allFillParent = allFillParent && lp->height == LayoutParams::MATCH_PARENT;
 
             if (baselineAligned) {
-                int childBaseline = child->getBaseline();
+                const int childBaseline = child->getBaseline();
                 if (childBaseline != -1) {
                     // Translates the child's vertical gravity into an index in the range 0..2
-                    int gravity = (lp->gravity < 0 ? mGravity : lp->gravity)
+                    const int gravity = (lp->gravity < 0 ? mGravity : lp->gravity)
                                 & Gravity::VERTICAL_GRAVITY_MASK;
-                    int index = ((gravity >> Gravity::AXIS_Y_SHIFT)
+                    const int index = ((gravity >> Gravity::AXIS_Y_SHIFT)
                                 & ~Gravity::AXIS_SPECIFIED) >> 1;
 
                     mMaxAscent[index] = std::max(mMaxAscent[index], childBaseline);
@@ -814,10 +812,10 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                 mMaxAscent[INDEX_CENTER_VERTICAL] != -1 ||
                 mMaxAscent[INDEX_BOTTOM] != -1 ||
                 mMaxAscent[INDEX_FILL] != -1) {
-            int ascent = std::max(mMaxAscent[INDEX_FILL],
+            const int ascent = std::max(mMaxAscent[INDEX_FILL],
                         std::max(mMaxAscent[INDEX_CENTER_VERTICAL],
                         std::max(mMaxAscent[INDEX_TOP], mMaxAscent[INDEX_BOTTOM])));
-            int descent =std::max(mMaxDescent[INDEX_FILL],
+            const int descent =std::max(mMaxDescent[INDEX_FILL],
                         std::max(mMaxDescent[INDEX_CENTER_VERTICAL],
                         std::max(mMaxDescent[INDEX_TOP], mMaxDescent[INDEX_BOTTOM])));
             maxHeight = std::max(maxHeight, ascent + descent);
@@ -836,7 +834,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
 
                 LayoutParams* lp =(LayoutParams*) child->getLayoutParams();
 
-                float childExtra = lp->weight;
+                const float childExtra = lp->weight;
                 if (childExtra > 0) {
                     child->measure(
                         MeasureSpec::makeMeasureSpec(largestChildWidth, MeasureSpec::EXACTLY),
@@ -1076,9 +1074,9 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
                     childHeight = child->getMeasuredHeight() + share;
                 }
 
-                int childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(
+                const int childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(
                     std::max(0, childHeight), MeasureSpec::EXACTLY);
-                int childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
+                const int childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
                         mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin,
                         lp->width);
                 child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
@@ -1145,21 +1143,21 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 void LinearLayout::layoutVertical(int left, int top, int width, int height){
-    int paddingLeft = mPaddingLeft;
+    const int paddingLeft = mPaddingLeft;
 
     int childTop;
     int childLeft;
 
     // Where right end of child should go
-    int childRight = width - mPaddingRight;
+    const int childRight = width - mPaddingRight;
 
     // Space available for child
-    int childSpace = width - paddingLeft - mPaddingRight;
+    const int childSpace = width - paddingLeft - mPaddingRight;
 
-    int count = getVirtualChildCount();
+    const int count = getVirtualChildCount();
 
-    int majorGravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
-    int minorGravity = mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
+    const int majorGravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
+    const int minorGravity = mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
 
     switch (majorGravity) {
     case Gravity::BOTTOM:
@@ -1222,26 +1220,26 @@ void LinearLayout::layoutVertical(int left, int top, int width, int height){
 }
 
 void LinearLayout::layoutHorizontal(int left, int top, int width, int height){
-    bool bLayoutRtl = isLayoutRtl();
-    int paddingTop = mPaddingTop;
+    const bool bLayoutRtl = isLayoutRtl();
+    const int paddingTop = mPaddingTop;
 
     int childTop;
     int childLeft;
 
     // Where bottom of child should go
-    int childBottom = height - mPaddingBottom;
+    const int childBottom = height - mPaddingBottom;
 
     // Space available for child
-    int childSpace = height - paddingTop - mPaddingBottom;
+    const int childSpace = height - paddingTop - mPaddingBottom;
 
-    int count = getVirtualChildCount();
+    const int count = getVirtualChildCount();
 
-    int majorGravity = mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
-    int minorGravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
+    const int majorGravity = mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
+    const int minorGravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
 
-    bool baselineAligned = mBaselineAligned;
+    const bool baselineAligned = mBaselineAligned;
 
-    int layoutDirection = getLayoutDirection();
+    const int layoutDirection = getLayoutDirection();
     switch (Gravity::getAbsoluteGravity(majorGravity, layoutDirection)) {
     case Gravity::RIGHT:
         // mTotalLength contains the padding already
