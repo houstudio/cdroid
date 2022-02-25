@@ -800,8 +800,13 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
     mNeedsLayoutResolution = false;
 }
 
+static int GetID(Context*ctx,const AttributeSet&atts,const std::string&res){
+    const int id=ctx->getId(atts.getString(res));
+    return id==View::NO_ID?0:id;
+}
+
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
-#define GETID(res) ctx->getId(atts.getString(res))
+#define GETID(res) GetID(ctx,atts,res)
     alignWithParent = atts.getBoolean("alignWithParentIfMissing",false);
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
     mRules[LEFT_OF] = GETID("layout_toLeftOf");
