@@ -273,6 +273,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
+    setGravity(attrs.getGravity("gravity",Gravity::NO_GRAVITY));
 
     TextAppearanceAttributes attributes;
     const std::string appearance=attrs.getString("textAppearance");
@@ -285,7 +286,6 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         attributes.readTextAppearance(ctx,attrs);
     }
     applyTextAppearance(&attributes);
-    
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
     setEllipsize(attrs.getInt("ellipsize",std::map<const std::string,int>{
         {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
