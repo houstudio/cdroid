@@ -174,6 +174,18 @@ View::View(Context*ctx,const AttributeSet&attrs){
            {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
            {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}
          },mOverScrollMode);
+
+    const int textAlignment=attrs.getInt("textAlignment",std::map<const std::string,int>{
+        {"inherit" , TEXT_ALIGNMENT_INHERIT},
+        {"gravity" , TEXT_ALIGNMENT_GRAVITY},
+        {"textStart",TEXT_ALIGNMENT_TEXT_START},
+        {"textEnd" , TEXT_ALIGNMENT_TEXT_END},
+        {"center"  , TEXT_ALIGNMENT_CENTER},
+        {"viewStart",TEXT_ALIGNMENT_VIEW_START},
+        {"viewEnd"  ,TEXT_ALIGNMENT_VIEW_END}
+    });
+    setTextAlignment(textAlignment);
+    setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
     setClickable(attrs.getBoolean("clickable",false));
     setLongClickable(attrs.getBoolean("longclickable",false));
     setFocusableInTouchMode(attrs.getBoolean("focusableInTouchMode",false));
