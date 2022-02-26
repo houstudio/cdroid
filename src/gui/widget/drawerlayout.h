@@ -96,8 +96,12 @@ private:
 
     ViewDragHelper*   mLeftDragger;
     ViewDragHelper*   mRightDragger;
+    ViewDragHelper*   mTopDragger;
+    ViewDragHelper*   mBottomDragger;
     ViewDragCallback* mLeftCallback;
     ViewDragCallback* mRightCallback;
+    ViewDragCallback* mTopCallback;
+    ViewDragCallback* mBottomCallback;
     int mDrawerState;
     bool mInLayout;
     bool mFirstLayout = true;
@@ -163,6 +167,7 @@ protected:
     View* findDrawerWithGravity(int gravity);
     bool isContentView(View* child)const;
     bool isDrawerView (View* child)const;
+    bool isDrawerViewTopBottom(View*child)const;
     View* findVisibleDrawer();
     void cancelChildViewTouch();
 
@@ -173,6 +178,7 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    ~DrawerLayout()override;
 public:
     DrawerLayout(int w,int h);
     DrawerLayout(Context*ctx,const AttributeSet&atts); 

@@ -22,6 +22,8 @@ void DrawerLayout::initView(){
 
     mLeftCallback  = new ViewDragCallback(this,Gravity::LEFT);
     mRightCallback = new ViewDragCallback(this,Gravity::RIGHT);
+    mTopCallback = new ViewDragCallback(this,Gravity::TOP);
+    mBottomCallback = new ViewDragCallback(this,Gravity::BOTTOM);
 
     mLeftDragger = ViewDragHelper::create(this, TOUCH_SLOP_SENSITIVITY, mLeftCallback);
     mLeftDragger->setEdgeTrackingEnabled(ViewDragHelper::EDGE_LEFT);
@@ -33,6 +35,16 @@ void DrawerLayout::initView(){
     mRightDragger->setMinVelocity(minVel);
     mRightCallback->setDragger(mRightDragger);
 
+    mTopDragger = ViewDragHelper::create(this, TOUCH_SLOP_SENSITIVITY, mTopCallback);
+    mTopDragger->setEdgeTrackingEnabled(ViewDragHelper::EDGE_TOP);
+    mTopDragger->setMinVelocity(minVel);
+    mTopCallback->setDragger(mTopDragger);
+
+    mBottomDragger = ViewDragHelper::create(this, TOUCH_SLOP_SENSITIVITY, mBottomCallback);
+    mBottomDragger->setEdgeTrackingEnabled(ViewDragHelper::EDGE_BOTTOM);
+    mBottomDragger->setMinVelocity(minVel);
+    mBottomCallback->setDragger(mBottomDragger);
+
     // So that we can catch the back button
     setFocusableInTouchMode(true);
 
@@ -43,6 +55,18 @@ void DrawerLayout::initView(){
 DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
   :ViewGroup(ctx,atts){
     initView();
+}
+
+DrawerLayout::~DrawerLayout(){
+    delete mLeftCallback;
+    delete mRightCallback;
+    delete mTopCallback;
+    delete mBottomCallback;
+
+    delete mLeftDragger;
+    delete mRightDragger;
+    delete mTopDragger;
+    delete mBottomDragger;
 }
 
 void DrawerLayout::setDrawerElevation(float elevation) {
@@ -394,6 +418,13 @@ View* DrawerLayout::findDrawerWithGravity(int gravity) {
             return child;
         }
     }
+    for (int i = 0; i < childCount; i++) {
+        View* child = getChildAt(i);
+        const int childAbsGravity = getDrawerViewAbsoluteGravity(child);
+        if ((childAbsGravity & Gravity::VERTICAL_GRAVITY_MASK) == gravity) {
+            return child;
+        }
+    }
     return nullptr;
 }
 
@@ -495,10 +526,9 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                     child->setElevation(mDrawerElevation);
                 }
             }
-            int childGravity = getDrawerViewAbsoluteGravity(child) & Gravity::HORIZONTAL_GRAVITY_MASK;
-            // Note that the isDrawerView check guarantees that childGravity here is either
-            // LEFT or RIGHT
-            bool isLeftEdgeDrawer = (childGravity == Gravity::LEFT);
+            const int childGravity = getDrawerViewAbsoluteGravity(child) & Gravity::HORIZONTAL_GRAVITY_MASK;
+            // Note that the isDrawerView check guarantees that childGravity here is either LEFT or RIGHT
+            const bool isLeftEdgeDrawer = (childGravity == Gravity::LEFT);
             if ((isLeftEdgeDrawer && hasDrawerOnLeftEdge)
                     || (!isLeftEdgeDrawer && hasDrawerOnRightEdge)) {
                 LOGE("Child drawer has absolute gravity %d but this already has a drawer view along that edge",childGravity);
@@ -513,7 +543,15 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             const int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
                     lp->topMargin + lp->bottomMargin, lp->height);
             child->measure(drawerWidthSpec, drawerHeightSpec);
-        } else {
+        } else if(isDrawerViewTopBottom(child)){
+            const int childGravity = getDrawerViewAbsoluteGravity(child) & Gravity::VERTICAL_GRAVITY_MASK;
+            const bool isTop=(childGravity==Gravity::TOP);
+            const int drawerWidthSpec = getChildMeasureSpec(widthMeasureSpec,
+                    mMinDrawerMargin + lp->leftMargin + lp->rightMargin, lp->width);
+            const int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
+                    lp->topMargin + lp->bottomMargin, lp->height);
+            child->measure(drawerWidthSpec, drawerHeightSpec);
+        }else{
             LOGE("Child %p at index %f does not have a valid layout_gravity - must be Gravity.LEFT, "
                    "Gravity.RIGHT or Gravity.NO_GRAVITY",child,i);
         }
@@ -790,8 +828,8 @@ bool DrawerLayout::isContentView(View* child)const{
 }
 
 bool DrawerLayout::isDrawerView(View* child)const{
-    int gravity = ((LayoutParams*) child->getLayoutParams())->gravity;
-    int absGravity = Gravity::getAbsoluteGravity(gravity,child->getLayoutDirection());
+    const int gravity = ((LayoutParams*) child->getLayoutParams())->gravity;
+    const int absGravity = Gravity::getAbsoluteGravity(gravity,child->getLayoutDirection());
     if ((absGravity & Gravity::LEFT) != 0) {
         // This child is a left-edge drawer
         return true;
@@ -799,6 +837,15 @@ bool DrawerLayout::isDrawerView(View* child)const{
     if ((absGravity & Gravity::RIGHT) != 0) {
         // This child is a right-edge drawer
         return true;
+    }
+    return false;
+}
+
+bool DrawerLayout::isDrawerViewTopBottom(View*child)const{
+    const int gravity = ((LayoutParams*) child->getLayoutParams())->gravity;
+    switch(gravity&Gravity::VERTICAL_GRAVITY_MASK){
+    case Gravity::TOP:
+    case Gravity::BOTTOM:  return true;
     }
     return false;
 }
@@ -882,6 +929,8 @@ bool DrawerLayout::dispatchGenericMotionEvent(MotionEvent& event) {
 bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
     mLeftDragger->processTouchEvent(ev);
     mRightDragger->processTouchEvent(ev);
+    mTopDragger->processTouchEvent(ev);
+    mBottomDragger->processTouchEvent(ev);
    
     int action = ev.getAction();
     bool wantTouchEvents = true;
@@ -900,9 +949,9 @@ bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
         bool peekingOnly = true;
         View* touchedView = mLeftDragger->findTopChildUnder((int) x, (int) y);
         if (touchedView && isContentView(touchedView)) {
-            float dx = x - mInitialMotionX;
-            float dy = y - mInitialMotionY;
-            int slop = mLeftDragger->getTouchSlop();
+            const float dx = x - mInitialMotionX;
+            const float dy = y - mInitialMotionY;
+            const int slop = mLeftDragger->getTouchSlop();
             if (dx * dx + dy * dy < slop * slop) {
                 // Taps close a dimmed open drawer but only if it isn't locked open.
                 View* openDrawer = findOpenDrawer();

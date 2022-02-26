@@ -16,8 +16,9 @@ int main(int argc,const char*argv[]){
         tv->setId(1000+i);
         tv->setTextSize(64);
         GridLayout::Spec rowspec=GridLayout::spec(GridLayout::UNDEFINED,1,1);
-        GridLayout::Spec colspec=GridLayout::spec(GridLayout::UNDEFINED,1+(i==0),1+(i==0));
+        GridLayout::Spec colspec=GridLayout::spec(GridLayout::UNDEFINED,1+(i==0),1);
         GridLayout::LayoutParams*lp=new GridLayout::LayoutParams(rowspec,colspec);
+        lp->setMargins(5,5,5,5);
         gl->addView(tv,lp); 
         if(i==0)tv->setBackgroundColor(0xFF00FF00);
         else tv->setBackgroundColor(0xFF000000+i*31);
