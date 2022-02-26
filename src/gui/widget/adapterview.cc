@@ -8,7 +8,7 @@ AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
     initAdapterView();
 }
 
-AdapterView::initAdapterView(){
+void AdapterView::initAdapterView(){
     mFirstPosition=0;
     mOldItemCount= mItemCount =0;
     mSelectedPosition=INVALID_POSITION;
