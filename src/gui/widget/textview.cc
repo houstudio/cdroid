@@ -332,7 +332,6 @@ void TextView::initView(){
     mHintLayout = new Layout(mLayout->getFontSize(),1);
     mGravity=Gravity::NO_GRAVITY;
     setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
-    setTextAlignment(TEXT_ALIGNMENT_TEXT_START);
     mTextColor =mHintTextColor =mLinkTextColor =nullptr;
     mHighlightColor=0x6633B5E5;
     mShadowRadius = .0;
@@ -359,14 +358,14 @@ int TextView::getLayoutAlignment()const{
     int alignment;
     switch (getTextAlignment()) {
     case TEXT_ALIGNMENT_GRAVITY:
-         switch (mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) {
-         case Gravity::START:  alignment = Layout::Alignment::ALIGN_NORMAL;      break;
-         case Gravity::END:    alignment = Layout::Alignment::ALIGN_OPPOSITE;    break;
-         case Gravity::LEFT:   alignment = Layout::Alignment::ALIGN_LEFT;        break;
-         case Gravity::RIGHT:  alignment = Layout::Alignment::ALIGN_RIGHT;       break;
-         case Gravity::CENTER_HORIZONTAL:alignment = Layout::Alignment::ALIGN_CENTER;  break;
-         default: alignment = Layout::Alignment::ALIGN_NORMAL;                   break;
-         }break;
+        switch (mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) {
+        case Gravity::START:  alignment = Layout::Alignment::ALIGN_NORMAL;      break;
+        case Gravity::END:    alignment = Layout::Alignment::ALIGN_OPPOSITE;    break;
+        case Gravity::LEFT:   alignment = Layout::Alignment::ALIGN_LEFT;        break;
+        case Gravity::RIGHT:  alignment = Layout::Alignment::ALIGN_RIGHT;       break;
+        case Gravity::CENTER_HORIZONTAL:alignment = Layout::Alignment::ALIGN_CENTER;  break;
+        default: alignment = Layout::Alignment::ALIGN_NORMAL;                   break;
+        }break;
     case TEXT_ALIGNMENT_TEXT_START:alignment = Layout::Alignment::ALIGN_NORMAL;  break;
     case TEXT_ALIGNMENT_TEXT_END:  alignment = Layout::Alignment::ALIGN_OPPOSITE;break;
     case TEXT_ALIGNMENT_CENTER:    alignment = Layout::Alignment::ALIGN_CENTER;  break;
@@ -377,8 +376,8 @@ int TextView::getLayoutAlignment()const{
                         ? Layout::Alignment::ALIGN_LEFT : Layout::Alignment::ALIGN_RIGHT;
          break;
     case TEXT_ALIGNMENT_INHERIT:
-                // This should never happen as we have already resolved the text alignment
-                // but better safe than sorry so we just fall through
+        // This should never happen as we have already resolved the text alignment
+        // but better safe than sorry so we just fall through
     default: alignment = Layout::Alignment::ALIGN_NORMAL;  break;
     }
     return alignment;

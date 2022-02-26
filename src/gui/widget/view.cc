@@ -183,7 +183,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         {"center"  , TEXT_ALIGNMENT_CENTER},
         {"viewStart",TEXT_ALIGNMENT_VIEW_START},
         {"viewEnd"  ,TEXT_ALIGNMENT_VIEW_END}
-    });
+    },TEXT_ALIGNMENT_DEFAULT);
     setTextAlignment(textAlignment);
     setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
     setClickable(attrs.getBoolean("clickable",false));
