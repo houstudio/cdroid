@@ -21,7 +21,7 @@ public :
    static Canvas*ctx;
    static void SetUpTestCase(){
        GFXInit();
-       ctx=new Canvas(nullptr);//GraphDevice::getInstance().createContext(1280,720);
+       ctx=new Canvas(800,600);//GraphDevice::getInstance().createContext(1280,720);
        rm=new Assets("ntvplus.pak");
    }
    static void TearDownCase(){
@@ -34,10 +34,12 @@ public :
 	   ctx->fill();
    }
    virtual void TearDown(){
-		RECT rect={0,0,1280,720};
-        //GraphDevice::getInstance().invalidate(&rect);
-        GraphDevice::getInstance().composeSurfaces();
-        sleep(2);
+       Canvas*primary=GraphDevice::getInstance().getPrimaryContext();
+       primary->set_source(ctx->get_target(),0,0);
+       primary->rectangle(0,0,800,600);
+       primary->fill();
+       GFXFlip(GraphDevice::getInstance().getPrimarySurface());
+       sleep(2);
    }
 };
 Canvas*CONTEXT::ctx=nullptr;

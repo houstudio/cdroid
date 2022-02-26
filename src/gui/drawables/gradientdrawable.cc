@@ -645,6 +645,14 @@ static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii
     }
 }
 
+void GradientDrawable::prepareStrokeProps(Canvas&canvas){
+    if(mGradientState->mStrokeWidth>0)
+        canvas.set_line_width(mGradientState->mStrokeWidth);
+    if(mGradientState->mStrokeDashWidth!=.0f&&mGradientState->mStrokeDashGap!=.0f)
+        canvas.set_dash(std::vector<double>{mGradientState->mStrokeDashWidth,mGradientState->mStrokeDashGap},0);
+    canvas.set_source(mStrokePaint);
+}
+
 void GradientDrawable::draw(Canvas&canvas){
     if (!ensureValidRect())return; // nothing to draw
     auto st = mGradientState;
@@ -660,7 +668,7 @@ void GradientDrawable::draw(Canvas&canvas){
         drawRound(canvas,mRect,radii);
         if (haveStroke) {
             canvas.fill_preserve();
-            canvas.set_source(mStrokePaint);
+            prepareStrokeProps(canvas);
             canvas.stroke();
         }else{
             canvas.fill();
@@ -669,7 +677,7 @@ void GradientDrawable::draw(Canvas&canvas){
     case LINE:
         if (haveStroke) {
             const float y = mRect.top+mRect.height/2.f;
-            canvas.set_source(mStrokePaint);      
+            prepareStrokeProps(canvas);
             canvas.move_to(mRect.left, y);
             canvas.line_to(mRect.left+mRect.width, y);
             canvas.stroke(); 
@@ -682,7 +690,7 @@ void GradientDrawable::draw(Canvas&canvas){
         canvas.arc(0,0,mRect.width/2.f,0,M_PI*2.f);
         if (haveStroke) {
             canvas.fill_preserve(); 
-            canvas.set_source(mStrokePaint);
+            prepareStrokeProps(canvas);
             canvas.stroke();
         }else canvas.fill();
         canvas.restore();
@@ -708,7 +716,7 @@ void GradientDrawable::draw(Canvas&canvas){
         canvas.set_source(mFillPaint);
         if (haveStroke) {
             canvas.fill_preserve();
-            canvas.set_source(mStrokePaint);
+            prepareStrokeProps(canvas);
             canvas.stroke();
         }else
             canvas.fill();

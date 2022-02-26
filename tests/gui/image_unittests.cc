@@ -32,7 +32,7 @@ public :
        GFXInit();
        InputInit();
        rm=new Assets("ntvplus.pak");
-       ctx=new Canvas(nullptr);//GraphDevice::getInstance().createContext(800,600);
+       ctx=new Canvas(800,600);
    }
    static void TearDownCase(){
        delete rm; 
@@ -49,8 +49,11 @@ public :
    }
    void postCompose(){
        RECT rect={0,0,800,600};
-       //GraphDevice::getInstance().invalidate(&rect);
-       GraphDevice::getInstance().composeSurfaces();
+       Canvas*primary=GraphDevice::getInstance().getPrimaryContext();
+       primary->set_source(ctx->get_target(),0,0);
+       primary->rectangle(0,0,800,600);
+       primary->fill();
+       GFXFlip(GraphDevice::getInstance().getPrimarySurface());
    }
    void tmend(const char*txt){
       printf("%s:used time %lldms\r\n",txt,gettime()-ts);

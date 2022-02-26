@@ -15,7 +15,7 @@ public:
 public:
     static void SetUpTestCase(){
         GFXInit();
-        ctx=new Canvas(nullptr);//GraphDevice::getInstance().createContext(800,600);
+        ctx=new Canvas(800,600);//GraphDevice::getInstance().createContext(800,600);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
         RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
         RefPtr<Gradient>rd=RadialGradient::create(20,20,30,200,200,100);
@@ -51,8 +51,11 @@ public:
     }
     void postCompose(){
         RECT rect={0,0,800,600};
-        //ctx->invalidate(rect);
-        //ctx->blit2Device(GraphDevice::getInstance().getPrimarySurface());
+        Canvas*primary=GraphDevice::getInstance().getPrimaryContext();
+        primary->set_source(ctx->get_target(),0,0);
+        primary->rectangle(0,0,800,600);
+        primary->fill();
+        GFXFlip(GraphDevice::getInstance().getPrimarySurface());
     }
     virtual void TearDown(){
         ctx->restore();
@@ -568,3 +571,29 @@ TEST_F(DRAWABLE,inflatelevellist){
        usleep(500000);
    }
 }
+
+TEST_F(DRAWABLE,gradient_rectangle){
+    GradientDrawable*gd=new GradientDrawable();
+    gd->setBounds(50,50,500,500);
+    for(int shape=0;shape<4;shape++){
+        gd->setShape(shape);
+        for(int i=0;i<8;i++){
+            gd->setStroke(i*2+8,0xFFFFFFFF,i*2,shape*2);
+
+            ctx->set_source_rgb(0,0,0);
+            ctx->rectangle(0,0,800,600);
+            ctx->fill();
+            gd->setOrientation((GradientDrawable::Orientation)i);
+            gd->setColors(std::vector<int>{(int)0xFFFF0000,(int)0xFF00FF00,(int)0xFF0000FF},{.0f,.5f,1.f});
+            gd->setSize(500-20*i,500-20*i);
+            gd->setCornerRadius(20-i);
+            gd->draw(*ctx);
+            ctx->get_target()->write_to_png("gradient1.png");
+             postCompose();
+            usleep(100000);
+        }
+   }
+}
+
+
+

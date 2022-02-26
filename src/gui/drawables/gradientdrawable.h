@@ -125,6 +125,7 @@ private:
     void setStrokeInternal(int width, int color, float dashWidth, float dashGap);
     GradientDrawable(std::shared_ptr<GradientState>state);
     void updateLocalState();
+    void prepareStrokeProps(Canvas&canvas);
 protected:
     void onBoundsChange(const Rect& r)override;
     bool onLevelChange(int level)override;
