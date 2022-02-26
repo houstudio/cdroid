@@ -35,6 +35,7 @@ private:
     Runnable mSelectionNotifier;
     Runnable mPendingSelectionNotifier;
     bool mDesiredFocusableInTouchModeState;
+    void initAdapterView();
     void updateEmptyStatus(bool empty);
     void dispatchOnItemSelected();
     void fireOnSelected();

@@ -5,6 +5,10 @@
 
 namespace cdroid{
 AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
+    initAdapterView();
+}
+
+AdapterView::initAdapterView(){
     mFirstPosition=0;
     mOldItemCount= mItemCount =0;
     mSelectedPosition=INVALID_POSITION;
@@ -34,6 +38,7 @@ AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
 
 AdapterView::AdapterView(Context*ctx,const AttributeSet&atts)
   :ViewGroup(ctx,atts){
+    initAdapterView();
 }
 
 AdapterView::~AdapterView(){
