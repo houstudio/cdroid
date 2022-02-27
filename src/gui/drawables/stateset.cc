@@ -146,6 +146,10 @@ int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){
     appendState(states,atts.getString("state_checkable"),CHECKABLE);
     appendState(states,atts.getString("state_pressed") , PRESSED );
     appendState(states,atts.getString("state_hovered") , HOVERED );
+    appendState(states,atts.getString("state_actived") , ACTIVATED);
+    appendState(states,atts.getString("state_window_focused") , WINDOW_FOCUSED);
+    appendState(states,atts.getString("state_drag_hoved") , DRAG_HOVERED);
+    appendState(states,atts.getString("state_drag_acceptable") , DRAG_ACCPETABLE);
     return states.size();
 }
 
