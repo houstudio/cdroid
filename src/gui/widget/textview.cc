@@ -286,6 +286,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         attributes.readTextAppearance(ctx,attrs);
     }
     applyTextAppearance(&attributes);
+    const std::string txtColor=attrs.getString("textColor");
+    if(!txtColor.empty())
+        setTextColor(ctx->getColorStateList(txtColor));
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
     setEllipsize(attrs.getInt("ellipsize",std::map<const std::string,int>{
         {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},

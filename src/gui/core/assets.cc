@@ -349,11 +349,17 @@ int Assets::getArray(const std::string&resname,std::vector<std::string>&out){
 
 ColorStateList* Assets::getColorStateList(const std::string&fullresid){
     auto it=mColors.find(fullresid);
-    if( (it==mColors.end()) && (fullresid.find("color")==std::string::npos) ){
-        std::string realName;
-        parseResource(fullresid,&realName,nullptr);
-        realName=mTheme.getString(realName);
-        it=mColors.find(realName); 
+    if( it==mColors.end() ){
+        if(fullresid[0]=='#'){
+            int color = Color::parseColor(fullresid);
+            return ColorStateList::valueOf(color);
+        }
+        if(fullresid.find("color")==std::string::npos ){
+            std::string realName;
+            parseResource(fullresid,&realName,nullptr);
+            realName=mTheme.getString(realName);
+            it=mColors.find(realName); 
+        }
     }
     LOGV_IF(it!=mColors.end(),"%s type=%d",fullresid.c_str(),it->second.index());
     LOGV_IF(it==mColors.end(),"%s not found",fullresid.c_str());
