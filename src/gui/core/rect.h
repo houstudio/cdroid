@@ -5,71 +5,143 @@
     private: TypeName& operator=(const TypeName&)
 namespace cdroid{
 
-typedef struct Point{
-    int x;
-    int y;
-    void set(int x,int y);
-    static constexpr Point Make(int x,int y){return {x,y};}
-}POINT;
+#define _MIN(a,b) ((a)>(b)?(b):(a))
+#define _MAX(a,b) ((a)<(b)?(b):(a))
+
+template<typename T>
+struct CPoint{
+    T x;
+    T y;
+    void set(T _x,T _y){x=_x;y=_y;};
+    static constexpr CPoint Make(T x,T y){return {x,y};}
+};
+typedef CPoint< int > Point,POINT;
+typedef CPoint<float> PointF;
 #define MAKEPOINT(x,y) POINT::Make(x,y)
 
-typedef struct Size{
-    int x;
-    int y;
-    void set(int x_,int y_){x=x_;y=y_;}
-    int width(){return x;}
-    int height(){return y;}
-    static constexpr Size Make(int x,int y){return {x,y};}
-    static constexpr Size MakeEmpty(){return {0,0};}
-}SIZE;
+template<typename T>
+struct CSize{
+    T x;
+    T y;
+    void set(T x_,T y_){x=x_;y=y_;}
+    T width()const{return x;}
+    T height()const{return y;}
+    static constexpr CSize Make(T x,T y){return {x,y};}
+    static constexpr CSize MakeEmpty(){return {0,0};}
+};
+typedef CSize< int > Size,SIZE;
+typedef CSize<float> SizeF;
 #define MAKESIZE(x,y) SIZE::Make(x,y)
 
-typedef struct Rect{
-    int left;
-    int top;
-    int width;
-    int height;
+template<typename T>
+struct CRect{
+    T left;
+    T top;
+    T width;
+    T height;
 
-    int bottom()const{return top+height;}
-    int right()const{return left+width;}
-    int centerX()const{return left+width/2;}
-    int centerY()const{return top+height/2;}
-    void set(int x,int y,int w,int h);
-    void inflate(int dx,int dy);
-    bool empty()const;
-    void setEmpty();
-    void offset(int dx,int dy);
-    bool intersect(const Rect&a,const Rect&b);
-    bool intersect(const Rect&b);
-    bool intersect(int l, int t, int w, int h);
-    bool contains(int x,int y)const;
-    bool contains(const Rect&a)const;
-    bool operator==(const Rect&b)const;
-    bool operator!=(const Rect&b)const;
-    void Union(const Rect&b);
-    void Union(int x,int y,int w,int h);
-    static constexpr Rect Make(int x,int y,int w,int h){return Rect{x,y,w,h};}
-    static constexpr Rect MakeEmpty(){return Rect{0,0,0,0};};
-    static constexpr Rect MakeWH(int w,int h){return Rect{0,0,w,h};}
-    static constexpr Rect MakeLTRB(int l,int t,int r,int b){return Rect{l,t,r-l,b-t};}
-    static constexpr Rect MakeSize(const SIZE&sz){return Rect{0,0,sz.x,sz.y};}
-}RECT;
+    T bottom()const{return top+height;}
+    T right()const{return left+width;}
+    T centerX()const{return left+width/2;}
+    T centerY()const{return top+height/2;}
 
-typedef struct PointFloat{
-    float x;
-    float y;
-}FloatPoint,PointF;
+    void set(T x,T y,T w,T h){
+        left= x;
+        top =y;
+        width =w;
+        height=h;
+    }
 
-typedef struct RectFloat{
-    float left;
-    float top;
-    float width;
-    float height;
-    void set(float x,float y,float w,float h);
-    bool empty()const;
-    float bottom()const{return top+height;}
-    float right()const{return left+width;}
-}RectF;
+    void inflate(T dx,T dy){
+        left-=dx;
+        top-=dy;
+        width+=(dx+dx);
+        height+=(dy+dy);
+    }
+
+    bool empty()const{
+        return width<=0||height<=0;
+    }
+
+    void setEmpty(){set(0,0,0,0);}
+
+    void offset(int dx,int dy){
+        left+= dx;
+        top += dy;
+    }
+ 
+    bool intersect(const CRect&a,const CRect&b){
+        T x1 = _MAX (a.left, b.left);
+        T y1 = _MAX (a.top , b.top);
+        T x2 = _MIN (a.left + a.width, b.left + b.width);
+        T y2 = _MIN (a.top +  a.height, b.top + b.height);
+
+        if (x1 >= x2 || y1 >= y2) {
+            left = 0;
+            top = 0;
+            width  = 0;
+            height = 0;
+            return false;
+        } else {
+            left = x1;
+            top = y1;
+            width  = x2 - x1;
+            height = y2 - y1;
+            return true;
+        }
+        return true;
+    }
+
+    bool intersect(const CRect&b){
+        return intersect(*this,b);
+    }
+
+    bool intersect(T l,T t,T w,T h){
+        return intersect(*this,Make(l,t,w,h));
+    }
+
+    bool contains(T x,T y)const{
+        return x>=left&&x<right() && y>=top&&y<bottom();
+    }
+
+    bool contains(const CRect&a)const{
+        if(a.empty()||empty())return false;
+        if((a.right()<=this->left)||(this->right()<=a.left)||(a.bottom()<=this->top)||(this->bottom()<a.top))
+            return false;
+        return true;
+    }
+
+    bool operator==(const CRect&b)const{
+        return (left==b.left)&&(top==b.top)&&(width==b.width)&&(height==b.height);
+    }
+
+    bool operator!=(const CRect&b)const{
+        return (left!=b.left)||(top!=b.top)||(width!=b.width)||(height!=b.height);
+    }
+
+    void Union(const CRect&b){
+        T x1 = _MIN (left, b.left);
+        T y1 = _MIN (top, b.top);
+        T x2 = _MAX (b.left + b.width,  left + width);
+        T y2 = _MAX (b.top +  b.height, top + height);
+        left = x1;
+        top = y1;
+        width  = x2 - x1;
+        height = y2 - y1;
+    }
+    void Union(T x,T y,T w,T h){
+        Union(Make(x,y,w,h));
+    }
+    static constexpr CRect Make(T x,T y,T w,T h){return CRect{x,y,w,h};}
+    static constexpr CRect MakeEmpty(){return CRect{0,0,0,0};}
+    static constexpr CRect MakeWH(T w,T h){return CRect{0,0,w,h};}
+    static constexpr CRect MakeLTRB(T l,T t,T r,T b){return CRect{l,t,r-l,b-t};}
+    static constexpr CRect MakeSize(const CSize<T>&sz){return CRect{0,0,sz.x,sz.y};}
+};
+
+typedef CRect<int> Rect,RECT;
+typedef CRect<float>RectF;
+
 #define MAKERECT(x,y,w,h) RECT::Make(x,y,w,h)
 
 }
