@@ -30,8 +30,9 @@ RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
 
 RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
  :ViewGroup(context,attrs){
-    mIgnoreGravity = NO_ID;
     mDirtyHierarchy = true;
+    mIgnoreGravity = attrs.getResourceId("ignoreGravity", View::NO_ID);
+    mGravity=attrs.getGravity("gravity",mGravity);
 }
 
 bool RelativeLayout::shouldDelayChildPressedState(){
