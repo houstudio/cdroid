@@ -437,10 +437,10 @@ protected:
     void assignParent(ViewGroup*p);
     bool debugDraw()const;
     int dipsToPixels(int dips)const;
-    bool hasIdentityMatrix();
+    bool hasIdentityMatrix()const;
     void computeOpaqueFlags();
     virtual void resolveDrawables();
-    bool areDrawablesResolved();
+    bool areDrawablesResolved()const;
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
 

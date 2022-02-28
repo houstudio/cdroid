@@ -1681,6 +1681,7 @@ View*ViewGroup::getDeepestFocusedChild(){
             v=((ViewGroup*)v)->getFocusedChild();
         else v=nullptr;
     }
+    return nullptr;
 }
 
 bool ViewGroup::hasFocus()const{
@@ -2133,6 +2134,7 @@ int ViewGroup::getLayoutMode(){
         const int inheritedLayoutMode=mParent?mParent->getLayoutMode():LAYOUT_MODE_DEFAULT;
         setLayoutMode(inheritedLayoutMode,false);
     }
+    return mLayoutMode;
 }
 
 void ViewGroup::setLayoutMode(int layoutMode) {

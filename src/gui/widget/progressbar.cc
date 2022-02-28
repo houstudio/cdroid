@@ -109,6 +109,7 @@ bool ProgressBar::needsTileify(Drawable* dr){
     if (dynamic_cast<BitmapDrawable*>(dr)) {
         return true;
     }
+    return false;
 }
 
 Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){

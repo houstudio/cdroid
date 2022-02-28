@@ -3081,7 +3081,7 @@ bool View::pointInView(int localX,int localY, int slop) {
 void View::onResolveDrawables(int layoutDirection){
 }
 
-bool View::areDrawablesResolved(){
+bool View::areDrawablesResolved()const{
     return (mPrivateFlags2 & PFLAG2_DRAWABLE_RESOLVED) == PFLAG2_DRAWABLE_RESOLVED;
 }
 
@@ -5675,7 +5675,7 @@ void View::setMeasuredDimensionRaw(int measuredWidth, int measuredHeight) {
     mPrivateFlags |= PFLAG_MEASURED_DIMENSION_SET;
 }
 
-void View::setMeasuredDimension(int measuredWidth, int measuredHeight) {
+void View::setMeasuredDimension(int measuredWidth, int measuredHeight){
     bool optical = isLayoutModeOptical(this);
     if (optical != isLayoutModeOptical(mParent)) {
         Insets insets = getOpticalInsets();
@@ -5759,7 +5759,7 @@ void View::ensureTransformationInfo(){
     }
 }
 
-bool View::hasIdentityMatrix(){
+bool View::hasIdentityMatrix()const{
     const bool rc= (mX==.0f) && (mY==.0f) && (mZ==.0f) &&
        (mTranslationX==.0f) && (mTranslationY==.0f) &&
        (mScaleX ==1.f) && (mScaleY==1.f) && (mRotation==.0f);

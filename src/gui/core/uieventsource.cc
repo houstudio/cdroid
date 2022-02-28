@@ -57,6 +57,7 @@ bool UIEventSource::post(Runnable& run,uint32_t delayedtime){
         }
     }
     mRunnables.push_back(runner);
+    return true;
 }
 //#pragma GCC pop_options
 
