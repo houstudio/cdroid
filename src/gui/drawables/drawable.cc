@@ -9,6 +9,9 @@
 
 namespace cdroid{
 
+Drawable::ConstantState::~ConstantState(){
+}
+
 Drawable::Drawable(){
     mLevel=0;
     mChangingConfigurations=0;

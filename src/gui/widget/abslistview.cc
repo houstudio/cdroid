@@ -27,6 +27,7 @@ void AbsListView::FLY_start(int initialVelocity) {
          mFlingStrictSpan = StrictMode.enterCriticalSpan("AbsListView-fling");
     }*/
 }
+
 void AbsListView::FLY_startSpringback() {
     mSuppressIdleStateChangeCall = false;
     if (mScroller->springBack(0, mScrollY, 0, 0, 0, 0)) {
@@ -38,6 +39,7 @@ void AbsListView::FLY_startSpringback() {
         reportScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
     }
 }
+
 void AbsListView::FLY_startOverfling(int initialVelocity) {
     mScroller->setInterpolator(nullptr);
     mScroller->fling(0, mScrollY, 0, initialVelocity, 0, 0,INT_MIN,INT_MAX, 0, getHeight());
@@ -46,6 +48,7 @@ void AbsListView::FLY_startOverfling(int initialVelocity) {
     invalidate();
     postOnAnimation(mFlingRunnable);
 }
+
 void AbsListView::FLY_edgeReached(int delta) {
     mScroller->notifyVerticalEdgeReached(mScrollY, 0, mOverflingDistance);
     int overscrollMode = getOverScrollMode();
@@ -71,6 +74,7 @@ void AbsListView::FLY_startScroll(int distance, int duration, bool linear, bool 
     mSuppressIdleStateChangeCall = suppressEndFlingStateChangeCall;
     postOnAnimation(mFlingRunnable);
 }
+
 void AbsListView::FLY_endFling() {
     mTouchMode = TOUCH_MODE_REST;
 
@@ -245,7 +249,7 @@ void AbsListView::initAbsListView() {
     mIsChildViewEnabled =false;
     mIsDetaching =false;
     mSuppressIdleStateChangeCall =false;
-    mVelocityScale =1.0f; 
+    mVelocityScale = 1.0f;
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mOnScrollListener.onScroll = nullptr;
     mOnScrollListener.onScrollStateChanged = nullptr;
@@ -257,12 +261,14 @@ void AbsListView::initAbsListView() {
     mFlingRunnable = std::bind(&AbsListView::FLY_Proc,this);
     mCheckFlywheel = std::bind(&AbsListView::FLY_CheckFlyWheelProc,this);
     mWidthMeasureSpec=0;
-    mSelector =nullptr;
+    mSelector = nullptr;
     mDataSetObserver =nullptr;
-    mLayoutMode=LAYOUT_FORCE_TOP;
-    mTouchMode =TOUCH_MODE_REST ;
-    mDrawSelectorOnTop=true;
-    mSmoothScrollbarEnabled =true;
+    mCacheColorHint = 0;
+    mResurrectToPosition = INVALID_POSITION;
+    mLayoutMode = LAYOUT_FORCE_TOP;
+    mTouchMode  = TOUCH_MODE_REST ;
+    mDrawSelectorOnTop = true;
+    mSmoothScrollbarEnabled = true;
     ViewConfiguration& configuration = ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
     mVerticalScrollFactor = configuration.getScaledVerticalScrollFactor();

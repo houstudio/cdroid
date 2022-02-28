@@ -21,6 +21,7 @@ void GridView::initGridView(){
     mRequestedColumnWidth=0;
     mHorizontalSpacing=0;
     mVerticalSpacing=0;
+    mRequestedHorizontalSpacing = 0;
     mStretchMode = STRETCH_COLUMN_WIDTH;
     mReferenceView=nullptr;
     mReferenceViewInSelectedRow=nullptr;

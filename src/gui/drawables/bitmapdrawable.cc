@@ -44,6 +44,10 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mAutoMirrored = bitmapState.mAutoMirrored;
 }
 
+BitmapDrawable::BitmapState::~BitmapState(){
+    delete mTint;
+}
+
 Drawable* BitmapDrawable::BitmapState::newDrawable(){
     return new BitmapDrawable(shared_from_this());    
 }
@@ -211,6 +215,7 @@ void BitmapDrawable::setTintMode(int tintMode) {
         invalidateSelf();
     }
 }
+
 std::shared_ptr<Drawable::ConstantState>BitmapDrawable::getConstantState(){
     return mBitmapState;
 }

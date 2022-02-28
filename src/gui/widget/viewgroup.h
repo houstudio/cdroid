@@ -131,7 +131,7 @@ private:
     void removePointersFromTouchTargets(int pointerIdBits);
     void cancelTouchTarget(View* view);
     void cancelHoverTarget(View*view);
-
+    MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child);
     bool dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
             View* child, int desiredPointerIdBits);
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);

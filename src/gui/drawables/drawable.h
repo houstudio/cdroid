@@ -52,6 +52,7 @@ public:
     public:
         virtual Drawable* newDrawable()=0;
         virtual int getChangingConfigurations()const=0;
+		virtual ~ConstantState();
     };
     enum{
         DEFAULT_TINT_MODE=SRC_IN

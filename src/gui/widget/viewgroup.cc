@@ -238,9 +238,10 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
         float offsetX = mScrollX - child->mLeft;
         float offsetY = mScrollY - child->mTop;
         transformedEvent->offsetLocation(offsetX, offsetY);
-        /*if (! child->hasIdentityMatrix()) {
-            transformedEvent.transform(child.getInverseMatrix());
-        }*/
+        if (! child->hasIdentityMatrix()) {
+            Matrix mtx=child->getInverseMatrix();
+            transformedEvent->transform((const float*)&mtx);
+        }
 
         handled = child->dispatchTouchEvent(*transformedEvent);
     }
@@ -382,11 +383,11 @@ bool ViewGroup::dispatchGenericFocusedEvent(MotionEvent&event){
 
 bool ViewGroup::dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child) {
     bool handled;
-    /*if (!child->hasIdentityMatrix()) {
-        MotionEvent transformedEvent = getTransformedMotionEvent(event, child);
-        handled = child.dispatchGenericMotionEvent(transformedEvent);
-        transformedEvent.recycle();
-    } else */{
+    if (!child->hasIdentityMatrix()) {
+        MotionEvent* transformedEvent = getTransformedMotionEvent(event, child);
+        handled = child->dispatchGenericMotionEvent(*transformedEvent);
+        transformedEvent->recycle();
+    } else {
         float offsetX = mScrollX - child->mLeft;
         float offsetY = mScrollY - child->mTop;
         event.offsetLocation(offsetX, offsetY);
@@ -2258,6 +2259,18 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
         }
     }
     return View::dispatchKeyEvent(event);
+}
+
+MotionEvent* ViewGroup::getTransformedMotionEvent(MotionEvent& event, View* child) {
+    const float offsetX = mScrollX - child->mLeft;
+    const float offsetY = mScrollY - child->mTop;
+    MotionEvent* transformedEvent = MotionEvent::obtain(event);
+    transformedEvent->offsetLocation(offsetX, offsetY);
+    if (!child->hasIdentityMatrix()) {
+        Matrix mtx=child->getInverseMatrix();
+        transformedEvent->transform((const float*)&mtx);
+    }
+    return transformedEvent;
 }
 
 bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){

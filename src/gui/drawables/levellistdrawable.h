@@ -11,11 +11,11 @@ private:
         LevelListState(const LevelListState*orig,LevelListDrawable*own);
         LevelListState(const LevelListState&state);
         void mutate();
+        int indexOfLevel(int level)const;
         Drawable*newDrawable()override;
     };
     bool mMutated;
     std::shared_ptr<LevelListState>mLevelListState;
-    int indexOfLevel(int level);
     LevelListDrawable(std::shared_ptr<LevelListState>state);
 protected:
     bool onLevelChange(int level)override;

@@ -3,6 +3,7 @@
 #include <drawables/statelistdrawable.h>
 #include <drawables/animationdrawable.h>
 #include <animation/interpolators.h>
+#include <animation/objectanimator.h>
 #include <core/sparsearray.h>
 namespace cdroid{
 
@@ -45,11 +46,54 @@ protected:
         virtual void start()=0;
         virtual void stop()=0;
 
-        virtual void reverse()=0;
+        virtual void reverse();
         // Not supported by default.
-        virtual bool canReverse() {
-            return false;
-        }
+        virtual bool canReverse();
+    };
+    class AnimatableTransition:public Transition {
+    private:
+        Animatable* mA;
+    public:
+        AnimatableTransition(Animatable* a);
+        void start()override;
+        void stop()override;
+    };
+
+    class AnimationDrawableTransition:public Transition {
+    private:
+        ObjectAnimator* mAnim;
+
+        // Even AnimationDrawable is always reversible technically, but
+        // we should obey the XML's android:reversible flag.
+        bool mHasReversibleFlag;
+    public:
+        AnimationDrawableTransition(AnimationDrawable* ad,
+              bool reversed, bool hasReversibleFlag);
+        bool canReverse()override;
+        void start()override;
+        void reverse()override;
+        void stop()override;
+    };
+    typedef Drawable AnimatedVectorDrawable;
+    class AnimatedVectorDrawableTransition:public Transition {
+    private:
+        AnimatedVectorDrawable* mAvd;
+
+        // mReversed is indicating the current transition's direction.
+        bool mReversed;
+
+        // mHasReversibleFlag is indicating whether the whole transition has
+        // reversible flag set to true.
+        // If mHasReversibleFlag is false, then mReversed is always false.
+        bool mHasReversibleFlag;
+    public:
+        AnimatedVectorDrawableTransition(AnimatedVectorDrawable* avd,
+                bool reversed, bool hasReversibleFlag);
+        bool canReverse()override;
+        void start()override;
+        void reverse()override;
+
+        void stop()override;
     };
 private:
     std::shared_ptr<AnimatedStateListState> mState;

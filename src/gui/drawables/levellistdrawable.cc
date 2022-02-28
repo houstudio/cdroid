@@ -6,14 +6,25 @@ namespace cdroid{
 
 LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,LevelListDrawable*own)
     :DrawableContainerState(orig,own){
-	if(orig!=nullptr){
-	    mLows = orig->mLows;
+    if(orig!=nullptr){
+        mLows = orig->mLows;
         mHighs= orig->mHighs;
-	}
+    }
 }
+
 void LevelListDrawable::LevelListState::mutate(){
     //mLows = mLows.clone();
     // mHighs = mHighs.clone();
+}
+
+int LevelListDrawable::LevelListState::indexOfLevel(int level)const{
+    const int N = getChildCount();
+    for (int i = 0; i < N; i++) {
+       if (level >= mLows[i] && level <= mHighs[i]) {
+           return i;
+       }
+    }
+    return -1;
 }
 
 Drawable*LevelListDrawable::LevelListState::newDrawable(){
@@ -34,7 +45,7 @@ LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state){
 }
 
 bool LevelListDrawable::onLevelChange(int level){
-    int idx =indexOfLevel(level);
+    int idx = mLevelListState->indexOfLevel(level);
     if (selectDrawable(idx)) {
         return true;
     }
@@ -70,16 +81,6 @@ void LevelListDrawable::addLevel(int low,int high,Drawable* drawable) {
     mLevelListState->mLows.push_back(low);
     mLevelListState->mHighs.push_back(high);
     onLevelChange(getLevel());
-}
-
-int  LevelListDrawable::indexOfLevel(int level){
-    const int N = getChildCount();
-    for (int i = 0; i < N; i++) {
-        if (level >= mLevelListState->mLows[i] && level <= mLevelListState->mHighs[i]) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 Drawable*LevelListDrawable::inflate(Context*ctx,const AttributeSet&atts){

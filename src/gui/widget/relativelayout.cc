@@ -836,6 +836,7 @@ RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):
     mRules[ALIGN_PARENT_START] = atts.getBoolean("layout_alignParentStart", false) ? LTRUE : 0;
     mRules[ALIGN_PARENT_END]   = atts.getBoolean("layout_alignParentEnd"  , false) ? LTRUE : 0;
     mRulesChanged = true;
+    mNeedsLayoutResolution = false;
     memcpy(mInitialRules,mRules,sizeof(mRules));
 }
 

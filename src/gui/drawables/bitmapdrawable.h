@@ -33,6 +33,7 @@ private:
         BitmapState();
         BitmapState(RefPtr<ImageSurface>bitmap);
         BitmapState(const BitmapState&bitmapState);
+		~BitmapState()override;
         Drawable* newDrawable()override;
        int getChangingConfigurations()const override;
     };

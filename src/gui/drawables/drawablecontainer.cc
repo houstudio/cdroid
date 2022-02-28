@@ -47,6 +47,7 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mAutoMirrored = false;
     mMutated = false;
     mDither  = false;
+    mCheckedStateful  = false;
     mLayoutDirection  = LayoutDirection::LTR;
     mEnterFadeDuration= 0;
     mExitFadeDuration = 0;
@@ -113,6 +114,7 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
             mDrawables[i]=d;
     }
 }
+
 DrawableContainer::DrawableContainerState::~DrawableContainerState(){
     for_each( mDrawables.begin(), mDrawables.end(),[](Drawable*d){delete d;});
     mDrawables.clear();
@@ -136,7 +138,6 @@ Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
             Drawable* prepared = prepareDrawable(cs->newDrawable());
             mDrawables[index] = prepared;
             LOGV("getChild(%d)=%p",index,prepared);
-            mDrawableFutures.erase(it);
             return prepared;
         }
     }
@@ -269,10 +270,12 @@ int DrawableContainer::DrawableContainerState::getConstantWidth() {
     if (!mCheckedConstantSize) computeConstantSize();
     return mConstantWidth;
 }
+
 int DrawableContainer::DrawableContainerState::getConstantHeight() {
     if (!mCheckedConstantSize) computeConstantSize();
     return mConstantHeight;
 }
+
 int DrawableContainer::DrawableContainerState::getConstantMinimumWidth() {
     if (!mCheckedConstantSize)computeConstantSize();
     return mConstantMinimumWidth;
@@ -291,13 +294,10 @@ Drawable* DrawableContainer::DrawableContainerState::prepareDrawable(Drawable* c
 }
 
 void DrawableContainer::DrawableContainerState::createAllFutures(){
-    if (mDrawableFutures.size()) {
-        int futureCount = mDrawableFutures.size();
-        for (int keyIndex = 0; keyIndex < futureCount; keyIndex++) {
-            auto cs = mDrawableFutures[keyIndex];
-            mDrawables[keyIndex] = prepareDrawable(cs->newDrawable());
-        }
-        mDrawableFutures.clear();//=nullptr;
+    const int futureCount = mDrawableFutures.size();
+    for (int keyIndex = 0; keyIndex < futureCount; keyIndex++) {
+        auto cs = mDrawableFutures[keyIndex];
+        mDrawables[keyIndex] = prepareDrawable(cs->newDrawable());
     }
 }
 
