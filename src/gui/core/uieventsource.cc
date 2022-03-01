@@ -8,23 +8,27 @@
 
 namespace cdroid{
 
-UIEventSource::UIEventSource(View*v){
+UIEventSource::UIEventSource(View*v,std::function<void()>r){
     mAttachedView=v;
+    mLayoutRunner=r;
 }
 
 UIEventSource::~UIEventSource(){
 }
 
 int UIEventSource::checkEvents(){
-    int rc= hasDelayedRunners()+(mAttachedView&&mAttachedView->isDirty())+GraphDevice::getInstance().needCompose();
-    return rc;
+    return hasDelayedRunners()||(mAttachedView&&mAttachedView->isDirty())
+           ||mAttachedView->isLayoutRequested()||GraphDevice::getInstance().needCompose();
 }
 
 int UIEventSource::handleEvents(){
-    if (mAttachedView && mAttachedView->isAttachedToWindow() && mAttachedView->isDirty() 
-           && mAttachedView->getVisibility()==View::VISIBLE){
-        ((Window*)mAttachedView)->draw();
-        GraphDevice::getInstance().flip();
+    if (mAttachedView && mAttachedView->isAttachedToWindow()){
+        if(mAttachedView->isLayoutRequested())
+            mLayoutRunner();//mAttachedView->requestLayout();
+        if(mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
+            ((Window*)mAttachedView)->draw();
+            GraphDevice::getInstance().flip();
+        }
     }
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().composeSurfaces();
@@ -40,8 +44,8 @@ int UIEventSource::handleEvents(){
     return 0;
 }
 
-#pragma GCC push_options
-#pragma GCC optimize("O0")
+//#pragma GCC push_options
+//#pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 bool UIEventSource::post(Runnable& run,uint32_t delayedtime){
     RUNNER runner;
@@ -59,7 +63,7 @@ bool UIEventSource::post(Runnable& run,uint32_t delayedtime){
     mRunnables.push_back(runner);
     return true;
 }
-#pragma GCC pop_options
+//#pragma GCC pop_options
 
 bool UIEventSource::hasDelayedRunners()const{
     if(mRunnables.empty())return false;

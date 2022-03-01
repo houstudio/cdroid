@@ -118,7 +118,7 @@ TEST_F(LOOPER,eventhandler){
 }
 TEST_F(LOOPER,loop){
    Looper loop(false);
-   UIEventSource*handler=new UIEventSource(nullptr);
+   UIEventSource*handler=new UIEventSource(nullptr,nullptr);
    loop.addEventHandler(handler);
    Runnable run;
    int count=0;

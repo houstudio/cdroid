@@ -31,7 +31,7 @@ constexpr int FINISH_NOT_HANDLED = 2;
 
 Window::Window(Context*ctx,const AttributeSet&atts)
   :ViewGroup(ctx,atts){
-    source=new UIEventSource(this);
+    source=new UIEventSource(this,[this](){ doLayout(); });
     setFrame(0,0,1280,720);
     setFocusable(true);
     mInLayout=false;
@@ -44,7 +44,7 @@ Window::Window(int x,int y,int width,int height,int type)
   : ViewGroup(width,height),source(nullptr),window_type(type){
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
-    source=new UIEventSource(this);
+    source=new UIEventSource(this,[this](){ doLayout(); });
     mContext=&App::getInstance();
     mInLayout=false;
     LOGV("%p source=%p visible=%d size=%dx%d",this,source,hasFlag(VISIBLE),width,height);
@@ -321,27 +321,6 @@ bool Window::removeCallbacks(const Runnable& what){
 
 bool Window::isInLayout()const{
     return mInLayout;
-}
-
-void Window::requestLayout(){
-    if(layoutRunner==nullptr)
-        layoutRunner=std::bind(&Window::doLayout,this);
-    LOGD_IF(mInLayout,"%p:%d receive layoutRequest during Layout",this,mID);
-    if(mInLayout==false){
-        mInLayout=true;
-        doLayout();
-    }else{
-        removeCallbacks(layoutRunner);
-        postDelayed(layoutRunner,20);
-    }
-}
-
-bool Window::requestLayoutDuringLayout(View*view){
-    if(view->getParent()==nullptr || view->isAttachedToWindow()==false)
-        return true;
-    if(std::find(mLayoutRequesters.begin(),mLayoutRequesters.end(),view)==mLayoutRequesters.end())
-        mLayoutRequesters.push_back(view);
-    return !mHandingLayoutInLayoutRequest;
 }
 
 void Window::doLayout(){

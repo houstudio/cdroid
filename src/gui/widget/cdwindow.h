@@ -39,7 +39,6 @@ protected:
         void run();
     };
 private:
-    Runnable layoutRunner;
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
@@ -95,8 +94,6 @@ public:
     bool isInLayout()const override;
     bool postDelayed(Runnable& what,uint32_t delay)override;
     bool removeCallbacks(const Runnable& what)override;
-    void requestLayout()override;
-    bool requestLayoutDuringLayout(View*)override;
     void dispatchInvalidateOnAnimation(View* view)override;
     void cancelInvalidate(View* view)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
