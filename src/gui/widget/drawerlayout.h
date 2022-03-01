@@ -144,7 +144,6 @@ private:
     static const std::string gravityToString(int gravity);
     bool isInBoundsOfChild(float x, float y, View* child);
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
-    MotionEvent getTransformedMotionEvent(MotionEvent& event, View* child);
     void updateChildrenImportantForAccessibility(View* drawerView, bool isDrawerOpen);
     void resolveShadowDrawables();
     Drawable* resolveLeftShadow();

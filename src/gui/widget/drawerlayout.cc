@@ -216,16 +216,13 @@ bool DrawerLayout::isInBoundsOfChild(float x, float y, View* child) {
 }
 
 bool DrawerLayout::dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child){
-   bool handled;
-#if 0
-   Matrix childMatrix = child.getMatrix();
-   if (!childMatrix.isIdentity()) {
-      MotionEvent transformedEvent = getTransformedMotionEvent(event, child);
-      handled = child.dispatchGenericMotionEvent(transformedEvent);
-      transformedEvent.recycle();
-   } else 
-#endif
-   {
+   bool handled = false;;
+   if (!child->hasIdentityMatrix()) {
+      Matrix childMatrix = child->getMatrix();
+      MotionEvent* transformedEvent = getTransformedMotionEvent(event, child);
+      handled = child->dispatchGenericMotionEvent(*transformedEvent);
+      transformedEvent->recycle();
+   } else {
       const float offsetX = getScrollX() - child->getLeft();
       const float offsetY = getScrollY() - child->getTop();
       event.offsetLocation(offsetX, offsetY);
@@ -233,19 +230,6 @@ bool DrawerLayout::dispatchTransformedGenericPointerEvent(MotionEvent& event, Vi
       event.offsetLocation(-offsetX, -offsetY);
    }
    return handled;
-}
-
-MotionEvent DrawerLayout::getTransformedMotionEvent(MotionEvent& event, View* child) {
-    const float offsetX = getScrollX() - child->getLeft();
-    const float offsetY = getScrollY() - child->getTop();
-    MotionEvent* transformedEvent = MotionEvent::obtain(event);
-    transformedEvent->offsetLocation(offsetX, offsetY);
-    Matrix childMatrix = child->getMatrix();
-    /*if (!childMatrix.isIdentity()) {
-       childMatrix.invert(mChildInvertedMatrix);
-       transformedEvent.transform(mChildInvertedMatrix);
-    }*/
-    return *transformedEvent;
 }
 
 void DrawerLayout::updateDrawerState(int forGravity,int activeState, View* activeDrawer) {

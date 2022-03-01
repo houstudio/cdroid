@@ -131,7 +131,6 @@ private:
     void removePointersFromTouchTargets(int pointerIdBits);
     void cancelTouchTarget(View* view);
     void cancelHoverTarget(View*view);
-    MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child);
     bool dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
             View* child, int desiredPointerIdBits);
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
@@ -164,6 +163,7 @@ protected:
     void clearDefaultFocus(View* child);
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
+    MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     bool dispatchVisibilityAggregated(bool isVisible);
     void dispatchDetachedFromWindow()override;

@@ -197,7 +197,7 @@ void ProgressBar::initProgressBar(){
     mIndeterminate = false;
     mOnlyIndeterminate = false;
     mDuration = 4000;
-    mProgressTintInfo=nullptr;
+    mProgressTintInfo= nullptr;
     mBehavior = AlphaAnimation::RESTART;
     mMinWidth  = 48;
     mMaxWidth  = 96;
@@ -206,15 +206,15 @@ void ProgressBar::initProgressBar(){
     mNoInvalidate = true;
     mCurrentDrawable = nullptr;
     mProgressDrawable= nullptr;
-    mIndeterminateDrawable=nullptr;
+    mIndeterminateDrawable = nullptr;
     mAnimator = nullptr;
     mAnimation= nullptr;
-    mInterpolator  =nullptr;
-    mTransformation=nullptr;
-    mHasAnimation= false;
-    mInDrawing   = false;
-    mAggregatedIsVisible =false;
-    mRefreshIsPosted =false;
+    mInterpolator  = nullptr;
+    mTransformation= nullptr;
+    mHasAnimation = false;
+    mInDrawing    = false;
+    mAggregatedIsVisible = false;
+    mRefreshIsPosted = false;
     mDatas.insert(std::pair<int,RefreshData>(R::id::progress,RefreshData()));
     mDatas.insert(std::pair<int,RefreshData>(R::id::secondaryProgress,RefreshData()));
 }

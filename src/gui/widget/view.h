@@ -437,7 +437,6 @@ protected:
     void assignParent(ViewGroup*p);
     bool debugDraw()const;
     int dipsToPixels(int dips)const;
-    bool hasIdentityMatrix()const;
     void computeOpaqueFlags();
     virtual void resolveDrawables();
     bool areDrawablesResolved()const;
@@ -898,6 +897,7 @@ public:
 
     Matrix getMatrix();
     Matrix getInverseMatrix();
+    bool hasIdentityMatrix()const;
 
     void setX(float);
     void setY(float);

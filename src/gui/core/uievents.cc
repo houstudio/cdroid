@@ -264,6 +264,7 @@ void KeyEvent::initialize(const KeyEvent& from) {
     mDownTime = from.mDownTime;
     mEventTime = from.mEventTime;
 }
+
 static const char*META_SYMBOLIC_NAMES[]={
     "META_SHIFT_ON",
     "META_ALT_ON",
@@ -321,6 +322,7 @@ const std::string KeyEvent::metaStateToString(int metaState){
     }
     return result;
 }
+
 const std::string KeyEvent::actionToString(int action){
     switch (action) {
     case ACTION_DOWN:
@@ -332,6 +334,7 @@ const std::string KeyEvent::actionToString(int action){
     default:return std::to_string(action);
     }
 }
+
 bool KeyEvent::metaStateHasNoModifiers(int metaState) {
     return (normalizeMetaState(metaState) & META_MODIFIER_MASK) == 0;
 }
@@ -424,6 +427,7 @@ void KeyEvent::DispatcherState::reset(void* target){
         mDownTarget=nullptr;
     }
 }
+
 void KeyEvent::DispatcherState::startTracking(KeyEvent& event,void* target){
     if (event.getAction() != ACTION_DOWN) {
          throw "Can only start tracking on a down event";
@@ -436,9 +440,11 @@ void KeyEvent::DispatcherState::startTracking(KeyEvent& event,void* target){
 bool KeyEvent::DispatcherState::isTracking(KeyEvent& event){
     return mDownKeyCode == event.getKeyCode();
 }
+
 void KeyEvent::DispatcherState::performedLongPress(KeyEvent& event){
     mActiveLongPresses.put(event.getKeyCode(), 1);
 }
+
 void KeyEvent::DispatcherState::handleUpEvent(KeyEvent& event){
     int keyCode = event.getKeyCode();
     //LOGV("Handle key up %s:%p",event,this);
@@ -551,6 +557,7 @@ void MotionEvent::initialize(
 MotionEvent::MotionEvent(const MotionEvent&other){
     copyFrom(&other,false);
 }
+
 void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
     InputEvent::initialize(other->mDeviceId, other->mSource);
     mAction = other->mAction;
@@ -694,6 +701,7 @@ float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
     }
     return value;
 }
+
 ssize_t MotionEvent::findPointerIndex(int32_t pointerId) const {
     size_t pointerCount = mPointerProperties.size();
     for (size_t i = 0; i < pointerCount; i++) {
@@ -703,16 +711,20 @@ ssize_t MotionEvent::findPointerIndex(int32_t pointerId) const {
     }
     return -1;
 }
+
 bool MotionEvent::isTouchEvent()const{
     return true;
 }
+
 void MotionEvent::offsetLocation(float xOffset, float yOffset) {
     mXOffset += xOffset;
     mYOffset += yOffset;
 }
+
 void MotionEvent::setLocation(float x, float y){
     offsetLocation(x-getX(),y-getY());
 }
+
 void MotionEvent::scale(float scaleFactor) {
     mXOffset *= scaleFactor;
     mYOffset *= scaleFactor;
@@ -724,6 +736,7 @@ void MotionEvent::scale(float scaleFactor) {
         mSamplePointerCoords[i].scale(scaleFactor);//editableitemat(i)
     }
 }
+
 const std::string MotionEvent::actionToString(int action){
     switch (action) {
     case ACTION_DOWN   :return "ACTION_DOWN";
@@ -807,6 +820,7 @@ void MotionEvent::transform(const float matrix[9]){
     }   
 
 }
+
 void MotionEvent::getHistoricalRawPointerCoords(
         size_t pointerIndex, size_t historicalIndex,PointerCoords*out) const {
     *out=mSamplePointerCoords[historicalIndex * getPointerCount() + pointerIndex];
@@ -877,4 +891,5 @@ void PooledInputEventFactory::recycle(InputEvent* event) {
     }
     delete event;
 }
+
 }

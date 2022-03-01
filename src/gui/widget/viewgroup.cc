@@ -178,6 +178,26 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     clearTouchTargets();
 }
 
+
+static void Matrix2Float9(const Matrix&m,float *f9){
+    /*Matrix{
+      double xx; double yx;
+      double xy; double yy;
+      double x0; double y0;}*/
+    //x_new = xx * x + xy * y + x0;
+    //y_new = yx * x + yy * y + y0;
+    f9[0] = m.xx ; //scaleX
+    f9[1] = m.xy ;  //skewX
+    f9[2] = m.x0 ; //skewY
+
+    f9[3] = m.yx ;  
+    f9[4] = m.yy ;
+    f9[5] = m.y0 ;
+
+    f9[6] = f9[7] =.0f;
+    f9[8] = 1.f;
+}
+
 bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
        View* child, int desiredPointerIdBits){
     bool handled;
@@ -216,12 +236,10 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
             if (child == nullptr) {
                 handled = View::dispatchTouchEvent(event);
             } else {
-                float offsetX = mScrollX - child->mLeft;
-                float offsetY = mScrollY - child->mTop;
+                const float offsetX = mScrollX - child->mLeft;
+                const float offsetY = mScrollY - child->mTop;
                 event.offsetLocation(offsetX, offsetY);
-
                 handled = child->dispatchTouchEvent(event);
-
                 event.offsetLocation(-offsetX, -offsetY);
             }
             return handled;
@@ -239,8 +257,11 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
         float offsetY = mScrollY - child->mTop;
         transformedEvent->offsetLocation(offsetX, offsetY);
         if (! child->hasIdentityMatrix()) {
-            Matrix mtx=child->getInverseMatrix();
-            transformedEvent->transform((const float*)&mtx);
+            float f9[9];
+            Matrix2Float9(child->getInverseMatrix(),f9);
+            LOGD_IF(event.getAction()==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
+            transformedEvent->transform(f9);
+            LOGD_IF(event.getAction()==MotionEvent::ACTION_DOWN,"XY=(%f,%f)",transformedEvent->getX(),transformedEvent->getY());
         }
 
         handled = child->dispatchTouchEvent(*transformedEvent);
@@ -447,9 +468,11 @@ void ViewGroup::removeDetachedView(View* child, bool animate){
 
     dispatchViewRemoved(child);
 }
+
 void ViewGroup::detachViewFromParent(View* child){
     removeFromArray(indexOfChild(child));
 }
+
 void ViewGroup::detachViewsFromParent(int start, int count){
     removeFromArray(start, count);
 }
@@ -2263,14 +2286,15 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
     return View::dispatchKeyEvent(event);
 }
 
-MotionEvent* ViewGroup::getTransformedMotionEvent(MotionEvent& event, View* child) {
+MotionEvent* ViewGroup::getTransformedMotionEvent(MotionEvent& event, View* child)const{
     const float offsetX = mScrollX - child->mLeft;
     const float offsetY = mScrollY - child->mTop;
     MotionEvent* transformedEvent = MotionEvent::obtain(event);
     transformedEvent->offsetLocation(offsetX, offsetY);
     if (!child->hasIdentityMatrix()) {
-        Matrix mtx=child->getInverseMatrix();
-        transformedEvent->transform((const float*)&mtx);
+        float f9[9]; 
+        Matrix2Float9(child->getInverseMatrix(),f9);
+        transformedEvent->transform(f9);
     }
     return transformedEvent;
 }

@@ -386,9 +386,9 @@ void ViewPager::smoothScrollTo(int x, int y, int velocity){
     }
     const bool wasScrolling = mScroller && !mScroller->isFinished();
     int sx = getScrollX();
-    int sy = getScrollY();
-    int dx = x - sx;
-    int dy = y - sy;
+    const int sy = getScrollY();
+    const int dx = x - sx;
+    const int dy = y - sy;
     if(wasScrolling){
         sx = mIsScrollStarted ? mScroller->getCurrX() : mScroller->getStartX();
         mScroller->abortAnimation();

@@ -5789,6 +5789,8 @@ Matrix View::getInverseMatrix() {
     ensureTransformationInfo();
     Matrix matrix = mTransformationInfo->mInverseMatrix;
     //mRenderNode.getInverseMatrix(matrix);
+    matrix = getMatrix();
+    matrix.invert();
     return matrix;
 }
 
