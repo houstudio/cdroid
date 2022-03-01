@@ -22,8 +22,6 @@ void DrawerLayout::initView(){
 
     mLeftCallback  = new ViewDragCallback(this,Gravity::LEFT);
     mRightCallback = new ViewDragCallback(this,Gravity::RIGHT);
-    mTopCallback = new ViewDragCallback(this,Gravity::TOP);
-    mBottomCallback = new ViewDragCallback(this,Gravity::BOTTOM);
 
     mLeftDragger = ViewDragHelper::create(this, TOUCH_SLOP_SENSITIVITY, mLeftCallback);
     mLeftDragger->setEdgeTrackingEnabled(ViewDragHelper::EDGE_LEFT);
@@ -34,16 +32,6 @@ void DrawerLayout::initView(){
     mRightDragger->setEdgeTrackingEnabled(ViewDragHelper::EDGE_RIGHT);
     mRightDragger->setMinVelocity(minVel);
     mRightCallback->setDragger(mRightDragger);
-
-    mTopDragger = ViewDragHelper::create(this, TOUCH_SLOP_SENSITIVITY, mTopCallback);
-    mTopDragger->setEdgeTrackingEnabled(ViewDragHelper::EDGE_TOP);
-    mTopDragger->setMinVelocity(minVel);
-    mTopCallback->setDragger(mTopDragger);
-
-    mBottomDragger = ViewDragHelper::create(this, TOUCH_SLOP_SENSITIVITY, mBottomCallback);
-    mBottomDragger->setEdgeTrackingEnabled(ViewDragHelper::EDGE_BOTTOM);
-    mBottomDragger->setMinVelocity(minVel);
-    mBottomCallback->setDragger(mBottomDragger);
 
     // So that we can catch the back button
     setFocusableInTouchMode(true);
@@ -60,13 +48,9 @@ DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
 DrawerLayout::~DrawerLayout(){
     delete mLeftCallback;
     delete mRightCallback;
-    delete mTopCallback;
-    delete mBottomCallback;
 
     delete mLeftDragger;
     delete mRightDragger;
-    delete mTopDragger;
-    delete mBottomDragger;
 }
 
 void DrawerLayout::setDrawerElevation(float elevation) {
@@ -93,11 +77,11 @@ void DrawerLayout::setScrimColor(int color) {
 }
 
 void DrawerLayout::addDrawerListener(DrawerListener listener) {
-   mListeners.push_back(listener);
+    mListeners.push_back(listener);
 }
 
 void DrawerLayout::removeDrawerListener(DrawerListener listener){
-
+    
 }
 
 void DrawerLayout::setDrawerLockMode(int lockMode) {
@@ -259,10 +243,11 @@ void DrawerLayout::updateDrawerState(int forGravity,int activeState, View* activ
 
         // Notify the listeners. Do that from the end of the list so that if a listener
         // removes itself as the result of being called, it won't mess up with our iteration
-        int listenerCount = mListeners.size();
-        /*for (int i = listenerCount - 1; i >= 0; i--) {
-            mListeners.get(i).onDrawerStateChanged(state);
-        }*/
+        const int listenerCount = mListeners.size();
+        for (int i = listenerCount - 1; i >= 0; i--) {
+            if(mListeners.at(i).onDrawerStateChanged)
+                mListeners.at(i).onDrawerStateChanged(state);
+        }
     }
 }
 
@@ -273,10 +258,11 @@ void DrawerLayout::dispatchOnDrawerClosed(View* drawerView) {
 
         // Notify the listeners. Do that from the end of the list so that if a listener
         // removes itself as the result of being called, it won't mess up with our iteration
-        /*int listenerCount = mListeners.size();
+        const int listenerCount = mListeners.size();
         for (int i = listenerCount - 1; i >= 0; i--) {
-            mListeners.get(i).onDrawerClosed(drawerView);
-        }*/
+            if(mListeners.at(i).onDrawerClosed)
+                mListeners.at(i).onDrawerClosed(*drawerView);
+        }
 
         updateChildrenImportantForAccessibility(drawerView, false);
 
@@ -299,9 +285,10 @@ void DrawerLayout::dispatchOnDrawerOpened(View* drawerView) {
         // Notify the listeners. Do that from the end of the list so that if a listener
         // removes itself as the result of being called, it won't mess up with our iteration
         int listenerCount = mListeners.size();
-        /*for (int i = listenerCount - 1; i >= 0; i--) {
-            mListeners.get(i).onDrawerOpened(drawerView);
-        }*/
+        for (int i = listenerCount - 1; i >= 0; i--) {
+            if(mListeners.at(i).onDrawerOpened)
+                mListeners.at(i).onDrawerOpened(*drawerView);
+        }
 
         updateChildrenImportantForAccessibility(drawerView, true);
 
@@ -331,7 +318,8 @@ void DrawerLayout::dispatchOnDrawerSlide(View* drawerView, float slideOffset) {
     // removes itself as the result of being called, it won't mess up with our iteration
     int listenerCount = mListeners.size();
     for (int i = listenerCount - 1; i >= 0; i--) {
-        //mListeners.get(i).onDrawerSlide(drawerView, slideOffset);
+        if(mListeners.at(i).onDrawerSlide)
+            mListeners.at(i).onDrawerSlide(*drawerView, slideOffset);
     }
 }
 
@@ -527,14 +515,6 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             const int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
                     lp->topMargin + lp->bottomMargin, lp->height);
             child->measure(drawerWidthSpec, drawerHeightSpec);
-        } else if(isDrawerViewTopBottom(child)){
-            const int childGravity = getDrawerViewAbsoluteGravity(child) & Gravity::VERTICAL_GRAVITY_MASK;
-            const bool isTop=(childGravity==Gravity::TOP);
-            const int drawerWidthSpec = getChildMeasureSpec(widthMeasureSpec,
-                    mMinDrawerMargin + lp->leftMargin + lp->rightMargin, lp->width);
-            const int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
-                    lp->topMargin + lp->bottomMargin, lp->height);
-            child->measure(drawerWidthSpec, drawerHeightSpec);
         }else{
             LOGE("Child %p at index %f does not have a valid layout_gravity - must be Gravity.LEFT, "
                    "Gravity.RIGHT or Gravity.NO_GRAVITY",child,i);
@@ -610,12 +590,10 @@ void DrawerLayout::onLayout(bool changed, int l, int t, int width, int height) {
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
         if (isContentView(child)) {
-            child->layout(lp->leftMargin, lp->topMargin,
-                    /*lp->leftMargin +*/ child->getMeasuredWidth(),
-                    /*lp->topMargin +*/ child->getMeasuredHeight());
+            child->layout(lp->leftMargin, lp->topMargin, child->getMeasuredWidth(),child->getMeasuredHeight());
         } else { // Drawer, if it wasn't onMeasure would have thrown an exception.
-            int childWidth = child->getMeasuredWidth();
-            int childHeight = child->getMeasuredHeight();
+            const int childWidth = child->getMeasuredWidth();
+            const int childHeight = child->getMeasuredHeight();
             int childLeft;
 
             float newOffset;
@@ -825,15 +803,6 @@ bool DrawerLayout::isDrawerView(View* child)const{
     return false;
 }
 
-bool DrawerLayout::isDrawerViewTopBottom(View*child)const{
-    const int gravity = ((LayoutParams*) child->getLayoutParams())->gravity;
-    switch(gravity&Gravity::VERTICAL_GRAVITY_MASK){
-    case Gravity::TOP:
-    case Gravity::BOTTOM:  return true;
-    }
-    return false;
-}
-
 bool DrawerLayout::onInterceptTouchEvent(MotionEvent& ev) {
     int action = ev.getActionMasked();
    
@@ -913,10 +882,8 @@ bool DrawerLayout::dispatchGenericMotionEvent(MotionEvent& event) {
 bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
     mLeftDragger->processTouchEvent(ev);
     mRightDragger->processTouchEvent(ev);
-    mTopDragger->processTouchEvent(ev);
-    mBottomDragger->processTouchEvent(ev);
    
-    int action = ev.getAction();
+    const int action = ev.getAction();
     bool wantTouchEvents = true;
    
     switch (action & MotionEvent::ACTION_MASK) {
@@ -981,7 +948,7 @@ void DrawerLayout::closeDrawers() {
     
 void DrawerLayout::closeDrawers(bool peekingOnly) {
     bool needsInvalidate = false;
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
@@ -990,7 +957,7 @@ void DrawerLayout::closeDrawers(bool peekingOnly) {
             continue;
         }
    
-        int childWidth = child->getWidth();
+        const int childWidth = child->getWidth();
    
         if (checkDrawerViewAbsoluteGravity(child, Gravity::LEFT)) {
             needsInvalidate |= mLeftDragger->smoothSlideViewTo(child,

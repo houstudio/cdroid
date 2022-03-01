@@ -484,7 +484,6 @@ void ViewGroup::removeFromArray(int index){
     }
     if (index>=0&&index<mChildren.size()) {
         auto it=mChildren.erase(mChildren.begin()+index);
-        delete *it; 
     } else {
         LOGE("IndexOutOfBounds %d",index);
     }
@@ -505,7 +504,6 @@ void ViewGroup::removeFromArray(int start, int count){
     if (start == end)  return;
     for (int i = start; i < end; i++) {
         mChildren[i]->mParent = nullptr;
-        delete mChildren[i];
         mChildren[i] = nullptr;
     }
     mChildren.erase(mChildren.begin()+start,mChildren.begin()+start+count);
@@ -518,7 +516,6 @@ void ViewGroup::detachAllViewsFromParent(){
     }
     for (int i = count - 1; i >= 0; i--) {
         mChildren[i]->mParent = nullptr;
-		delete mChildren[i];
         mChildren[i] = nullptr;
     }
     mChildren.clear();

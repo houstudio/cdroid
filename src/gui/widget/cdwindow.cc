@@ -381,9 +381,10 @@ void Window::close(){
     //sendMessage(View::WM_DESTROY,0,0);
 }
 
-void Window::dispatchInvalidateOnAnimation(View*v){
+void Window::dispatchInvalidateOnAnimation(View*view){
     mInvalidateOnAnimationRunnable.setOwner(this);
-    mInvalidateOnAnimationRunnable.addView(v);
+    mInvalidateOnAnimationRunnable.removeView(view);
+    mInvalidateOnAnimationRunnable.addView(view);
 }
 
 void Window::cancelInvalidate(View* view){

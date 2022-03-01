@@ -22,9 +22,22 @@ public:
     /**The drawer's lock state is reset to default.*/
     static constexpr int LOCK_MODE_UNDEFINED = 3;
 
-    class DrawerListener{
-    public:
-        
+    struct DrawerListener{
+        CallbackBase<void,View&, float>onDrawerSlide;
+
+        /* Called when a drawer has settled in a completely open state.
+         * The drawer is interactive at this point.
+         * @param drawerView Drawer view that is now open */
+        CallbackBase<void,View&>onDrawerOpened;
+
+        /* Called when a drawer has settled in a completely closed state.
+         * @param drawerView Drawer view that is now closed */
+        CallbackBase<void,View&> onDrawerClosed;
+
+        /* Called when the drawer motion state changes. The new state will
+         * be one of {@link #STATE_IDLE}, {@link #STATE_DRAGGING} or {@link #STATE_SETTLING}.
+         * @param newState The new drawer motion state */
+        CallbackBase<void,int> onDrawerStateChanged; 
     };
     class LayoutParams:public ViewGroup::MarginLayoutParams{
     public:
@@ -96,12 +109,8 @@ private:
 
     ViewDragHelper*   mLeftDragger;
     ViewDragHelper*   mRightDragger;
-    ViewDragHelper*   mTopDragger;
-    ViewDragHelper*   mBottomDragger;
     ViewDragCallback* mLeftCallback;
     ViewDragCallback* mRightCallback;
-    ViewDragCallback* mTopCallback;
-    ViewDragCallback* mBottomCallback;
     int mDrawerState;
     bool mInLayout;
     bool mFirstLayout = true;
@@ -166,7 +175,6 @@ protected:
     View* findDrawerWithGravity(int gravity);
     bool isContentView(View* child)const;
     bool isDrawerView (View* child)const;
-    bool isDrawerViewTopBottom(View*child)const;
     View* findVisibleDrawer();
     void cancelChildViewTouch();
 
