@@ -259,9 +259,9 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
         if (! child->hasIdentityMatrix()) {
             float f9[9];
             Matrix2Float9(child->getInverseMatrix(),f9);
-            LOGD_IF(event.getAction()==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
+            LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
             transformedEvent->transform(f9);
-            LOGD_IF(event.getAction()==MotionEvent::ACTION_DOWN,"XY=(%f,%f)",transformedEvent->getX(),transformedEvent->getY());
+            LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"XY=(%f,%f)",transformedEvent->getX(),transformedEvent->getY());
         }
 
         handled = child->dispatchTouchEvent(*transformedEvent);
@@ -403,14 +403,14 @@ bool ViewGroup::dispatchGenericFocusedEvent(MotionEvent&event){
 }
 
 bool ViewGroup::dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child) {
-    bool handled;
+    bool handled = false;;
     if (!child->hasIdentityMatrix()) {
         MotionEvent* transformedEvent = getTransformedMotionEvent(event, child);
         handled = child->dispatchGenericMotionEvent(*transformedEvent);
         transformedEvent->recycle();
     } else {
-        float offsetX = mScrollX - child->mLeft;
-        float offsetY = mScrollY - child->mTop;
+        const float offsetX = mScrollX - child->mLeft;
+        const float offsetY = mScrollY - child->mTop;
         event.offsetLocation(offsetX, offsetY);
         handled = child->dispatchGenericMotionEvent(event);
         event.offsetLocation(-offsetX, -offsetY);
@@ -423,17 +423,18 @@ bool ViewGroup::dispatchUnhandledMove(View* focused, int direction){
 }
 
 void ViewGroup::childHasTransientStateChanged(View* child, bool childHasTransientState){
-    bool oldHasTransientState = hasTransientState();
+    const bool oldHasTransientState = hasTransientState();
     if (childHasTransientState) {
         mChildCountWithTransientState++;
     } else {
         mChildCountWithTransientState--;
     }
 
-    bool newHasTransientState = hasTransientState();
+    const bool newHasTransientState = hasTransientState();
     if (mParent  && oldHasTransientState != newHasTransientState)
         mParent->childHasTransientStateChanged(this, newHasTransientState);
 }
+
 void ViewGroup::dispatchViewAdded(View*v){
     onViewAdded(v);
     if(mOnHierarchyChangeListener)
@@ -482,7 +483,8 @@ void ViewGroup::removeFromArray(int index){
         mChildren[index]->mParent = nullptr;
     }
     if (index>=0&&index<mChildren.size()) {
-        mChildren.erase(mChildren.begin()+index);
+        auto it=mChildren.erase(mChildren.begin()+index);
+        delete *it; 
     } else {
         LOGE("IndexOutOfBounds %d",index);
     }
@@ -503,6 +505,7 @@ void ViewGroup::removeFromArray(int start, int count){
     if (start == end)  return;
     for (int i = start; i < end; i++) {
         mChildren[i]->mParent = nullptr;
+        delete mChildren[i];
         mChildren[i] = nullptr;
     }
     mChildren.erase(mChildren.begin()+start,mChildren.begin()+start+count);
@@ -515,6 +518,7 @@ void ViewGroup::detachAllViewsFromParent(){
     }
     for (int i = count - 1; i >= 0; i--) {
         mChildren[i]->mParent = nullptr;
+		delete mChildren[i];
         mChildren[i] = nullptr;
     }
     mChildren.clear();
