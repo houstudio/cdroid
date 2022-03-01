@@ -57,6 +57,8 @@ public:
     DECLARE_UIEVENT(void,OnAdapterChangeListener,ViewPager&,PagerAdapter*oldAdapter,PagerAdapter*newAdapter);
     class LayoutParams :public ViewGroup::LayoutParams{
     public:
+        /* true if this view is a decoration on the pager itself and not
+         * a view supplied by the adapter. */
         bool isDecor;
         int gravity;
         float widthFactor = 0.f;

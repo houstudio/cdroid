@@ -26,11 +26,11 @@ void StateSet::trimStateSet(std::vector<int>&states,int newsize){
 }
 
 void StateSet::createStates(){
-    const int NUM_BITS=10;
+    const int NUM_BITS=VIEW_STATE_IDS.size()/2;
 
     std::vector<int>orderedIds;
     orderedIds.resize(VIEW_STATE_IDS.size());
-    for (int i = 0; i < VIEW_STATE_IDS.size()/2;i++){//R.styleable.ViewDrawableStates.length; i++) {
+    for (int i = 0; i < NUM_BITS;i++){//R.styleable.ViewDrawableStates.length; i++) {
         int viewState = i+1;//R.styleable.ViewDrawableStates[i];STATE is codedfrom WINDOW_FOCUSED:1-->DRAG_HOVERED:10
         for (int j = 0; j < VIEW_STATE_IDS.size(); j += 2) {
             if (VIEW_STATE_IDS[j] == viewState) {

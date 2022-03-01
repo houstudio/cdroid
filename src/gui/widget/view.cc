@@ -1461,7 +1461,7 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
     }
  
     // Apply layout direction to the new Drawables if needed
-    int layoutDirection = getLayoutDirection();
+    const int layoutDirection = getLayoutDirection();
     if (track) {
         track->setLayoutDirection(layoutDirection);
     }

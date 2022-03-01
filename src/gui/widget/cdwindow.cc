@@ -383,7 +383,6 @@ void Window::close(){
 
 void Window::dispatchInvalidateOnAnimation(View*view){
     mInvalidateOnAnimationRunnable.setOwner(this);
-    mInvalidateOnAnimationRunnable.removeView(view);
     mInvalidateOnAnimationRunnable.addView(view);
 }
 
@@ -401,8 +400,10 @@ void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
 }
 
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
-    mViews.push_back(view);
-    postIfNeededLocked();
+    if(std::find(mViews.begin(),mViews.end(),view)==mViews.end()){
+        mViews.push_back(view);
+        postIfNeededLocked();
+    }
 }
 
 void Window::InvalidateOnAnimationRunnable::removeView(View* view){

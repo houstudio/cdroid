@@ -431,6 +431,9 @@ ViewPager::ItemInfo* ViewPager::addNewItem(int position, int index){
     ItemInfo* ii = new ItemInfo();
     ii->position = position;
     ii->object = mAdapter->instantiateItem(this, position);
+    View* view=(View*)ii->object;
+    LayoutParams*lp=(LayoutParams*)view->getLayoutParams();
+    lp->isDecor = false;
     ii->widthFactor = mAdapter->getPageWidth(position);
     ii->scrolling=false;
     if (index < 0 || index >= mItems.size()) {
@@ -570,7 +573,7 @@ void ViewPager::populate(int newCurrentItem){
                 if (pos == ii->position && !ii->scrolling) {
                     mItems.erase(mItems.begin()+itemIndex);
                     mAdapter->destroyItem(this, pos, ii->object);
-                    LOGD("populate()- destroyItem() with pos:%d/%d view:%p curitem=%d",pos,ii->position,ii->object,mCurItem);
+                    LOGD("populate()- destroyItem() with pos:%d/%d view:%p curitem=%d/%d",pos,ii->position,ii->object,mCurItem,mItems.size());
                     itemIndex--;
                     curIndex--;
                     ii = itemIndex >= 0 ? mItems[itemIndex] : nullptr;
@@ -769,9 +772,9 @@ View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params
     }
     LayoutParams* lp = (LayoutParams*) params;
     // Any views added via inflation should be classed as part of the decor
-    //lp->isDecor |= true;//|= isDecorView(child);
+    //lp->isDecor |=  isDecorView(child);//isDecor has been setted in addNewItem(after Adapter::instantiateItem)
     if (mInLayout) {
-        LOGE_IF(lp != nullptr && lp->isDecor,"Cannot add pager decor view during layout");
+        LOGD_IF(lp != nullptr && lp->isDecor,"Cannot add pager decor view during layout");
         lp->needsMeasure = true;
         addViewInLayout(child, index, params);
     } else {
@@ -1941,7 +1944,7 @@ bool ViewPager::canScroll() {
 
 ViewPager::LayoutParams::LayoutParams()
   :ViewGroup::LayoutParams(MATCH_PARENT, MATCH_PARENT){
-    isDecor = false;
+    isDecor = true;
     gravity = Gravity::NO_GRAVITY;
     widthFactor = .0f;//.0f wil ask adapter for this value
     needsMeasure= true;
@@ -1951,7 +1954,7 @@ ViewPager::LayoutParams::LayoutParams()
 
 ViewPager::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts)
   :ViewGroup::LayoutParams(ctx,atts){
-    isDecor = false;
+    isDecor = true;
     gravity = Gravity::TOP;
     widthFactor = .0f;
     needsMeasure= true;
