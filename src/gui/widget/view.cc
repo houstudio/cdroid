@@ -2000,8 +2000,8 @@ void View::onDrawScrollBars(Canvas& canvas){
         cache->scrollBar->mutate()->setAlpha(255);
     }
 
-    bool drawHorizontalScrollBar = isHorizontalScrollBarEnabled();
-    bool drawVerticalScrollBar = isVerticalScrollBarEnabled() && !isVerticalScrollBarHidden();
+    const bool drawHorizontalScrollBar = isHorizontalScrollBarEnabled();
+    const bool drawVerticalScrollBar = isVerticalScrollBarEnabled() && !isVerticalScrollBarHidden();
     
     // Fork out the scroll bar drawing for round wearable devices.
     if (mRoundScrollbarRenderer != nullptr) {

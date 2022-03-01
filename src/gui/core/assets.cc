@@ -318,8 +318,8 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
     return d;
 }
 
-//#pragma GCC push_options
-//#pragma GCC optimize("O0")
+#pragma GCC push_options
+#pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 int Assets::getColor(const std::string&refid){
     std::string pkg,name=refid;
@@ -433,7 +433,7 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
     } while(len!=0);
     XML_ParserFree(parser); 
 }
-//#pragma GCC pop_options
+#pragma GCC pop_options
 
 void Assets::clearStyles(){
     mStyles.clear();

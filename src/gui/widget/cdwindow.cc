@@ -124,6 +124,7 @@ void Window::onSizeChanged(int w,int h,int oldw,int oldh){
 }
 
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){
+    ViewGroup::invalidateChildInParent(location,dirty);
     invalidate(dirty);
     return nullptr;
 }
@@ -325,7 +326,7 @@ bool Window::isInLayout()const{
 void Window::requestLayout(){
     if(layoutRunner==nullptr)
         layoutRunner=std::bind(&Window::doLayout,this);
-    LOGE_IF(mInLayout,"%p:%d receive layoutRequest during Layout",this,mID);
+    LOGD_IF(mInLayout,"%p:%d receive layoutRequest during Layout",this,mID);
     if(mInLayout==false){
         mInLayout=true;
         doLayout();

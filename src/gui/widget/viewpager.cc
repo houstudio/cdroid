@@ -771,7 +771,7 @@ View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params
         params = generateLayoutParams(params);
     }
     LayoutParams* lp = (LayoutParams*) params;
-    // Any views added via inflation should be classed as part of the decor
+    //Any views added via inflation should be classed as part of the decor
     //lp->isDecor |=  isDecorView(child);//isDecor has been setted in addNewItem(after Adapter::instantiateItem)
     if (mInLayout) {
         LOGD_IF(lp != nullptr && lp->isDecor,"Cannot add pager decor view during layout");
