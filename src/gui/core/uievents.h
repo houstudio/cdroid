@@ -72,7 +72,7 @@ struct PointerProperties {
     inline bool operator!=(const PointerProperties& other) const {
         return !(*this == other);
     }
-
+    PointerProperties(){clear();}
     void copyFrom(const PointerProperties& other);
 };
 

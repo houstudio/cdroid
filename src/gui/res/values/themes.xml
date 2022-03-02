@@ -149,17 +149,17 @@ please see themes_device_defaults.xml.
 
         <!-- @hide -->
         <item name="searchResultListItemHeight">58dip</item>
-        <item name="listDivider">@drawable/divider_horizontal_dark</item>
-        <item name="listSeparatorTextViewStyle">@style/Widget.TextView.ListSeparator</item>
+        <item name="listDivider">@cdroid:mipmap/divider_horizontal_dark</item>
+        <item name="listSeparatorTextViewStyle">@cdroid:style/Widget.TextView.ListSeparator</item>
 
         <item name="listChoiceIndicatorSingle">@drawable/btn_radio</item>
         <item name="listChoiceIndicatorMultiple">@drawable/btn_check</item>
 
-        <item name="listChoiceBackgroundIndicator">@drawable/list_selector_background</item>
+        <item name="listChoiceBackgroundIndicator">@cdroid:drawable/list_selector_background</item>
 
         <item name="activatedBackgroundIndicator">@drawable/activated_background</item>
 
-        <item name="listDividerAlertDialog">@drawable/divider_horizontal_bright</item>
+        <item name="listDividerAlertDialog">@cdroid:mipmap/divider_horizontal_bright</item>
 
         <item name="expandableListPreferredItemPaddingLeft">40dip</item>
         <item name="expandableListPreferredChildPaddingLeft">?attr/expandableListPreferredItemPaddingLeft</item>
@@ -534,7 +534,7 @@ please see themes_device_defaults.xml.
         <item name="gestureOverlayViewStyle">@style/Widget.GestureOverlayView.White</item>
         <item name="expandableListViewStyle">@style/Widget.ExpandableListView.White</item>
         <item name="listViewStyle">@style/Widget.ListView.White</item>
-        <item name="listDivider">@drawable/divider_horizontal_bright</item>
+        <item name="listDivider">@cdroid:mipmap/divider_horizontal_bright</item>
         <item name="listSeparatorTextViewStyle">@style/Widget.TextView.ListSeparator.White</item>
 
         <item name="progressBarStyle">@style/Widget.ProgressBar.Inverse</item>

@@ -13,7 +13,9 @@ DECLARE_WIDGET2(EditText,"cdroid:attr/editTextStyle")
 
 EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){
-    mHint=ctx->getString(attrs.getString("hint"));
+    initEditText();
+    mHint = ctx->getString(attrs.getString("hint"));
+    mInputType = attrs.getInt("inputType",TYPE_ANY);
     setEditable(true);
 }
 
@@ -21,9 +23,13 @@ EditText::EditText(int w,int h):EditText(std::string(),w,h){
 }
 
 EditText::EditText(const std::string&txt,int w,int h):TextView(txt,w,h){
+    initEditText();
     setFocusable(true);
     setFocusableInTouchMode(true);
     setEditable(true);
+}
+
+void EditText::initEditText(){
     mPasswordChar='*';
     mBlinkOn=true;
     mEditMode=INSERT;

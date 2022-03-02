@@ -166,7 +166,7 @@ please see themes_device_defaults.xml.
 
         <!-- @hide -->
         <item name="searchResultListItemHeight">58dip</item>
-        <item name="listDivider">@drawable/list_divider_holo_dark</item>
+        <item name="listDivider">@cdroid:mipmap/list_divider_holo_dark</item>
         <item name="listSeparatorTextViewStyle">@style/Widget.Holo.TextView.ListSeparator</item>
 
         <item name="listChoiceIndicatorSingle">@drawable/btn_radio_holo_dark</item>
@@ -176,7 +176,7 @@ please see themes_device_defaults.xml.
 
         <item name="activatedBackgroundIndicator">@drawable/activated_background_holo_dark</item>
 
-        <item name="listDividerAlertDialog">@drawable/list_divider_holo_dark</item>
+        <item name="listDividerAlertDialog">@cdroid:mipmap/list_divider_holo_dark</item>
 
         <item name="expandableListPreferredItemPaddingLeft">40dip</item>
         <item name="expandableListPreferredChildPaddingLeft">?attr/expandableListPreferredItemPaddingLeft</item>
@@ -360,8 +360,8 @@ please see themes_device_defaults.xml.
         <item name="actionModeFindDrawable">@drawable/ic_menu_find_holo_dark</item>
         <item name="actionModeWebSearchDrawable">@drawable/ic_menu_search_holo_dark</item>
 
-        <item name="dividerVertical">?attr/listDivider</item>
-        <item name="dividerHorizontal">?attr/listDivider</item>
+        <item name="dividerVertical">?cdroid:attr/listDivider</item>
+        <item name="dividerHorizontal">?cdroid:attr/listDivider</item>
         <item name="buttonBarStyle">@style/Holo.ButtonBar</item>
         <item name="buttonBarButtonStyle">?attr/borderlessButtonStyle</item>
         <item name="segmentedButtonStyle">@style/Holo.SegmentedButton</item>
@@ -507,10 +507,10 @@ please see themes_device_defaults.xml.
 
         <!-- @hide -->
         <item name="searchResultListItemHeight">58dip</item>
-        <item name="listDivider">@drawable/list_divider_holo_light</item>
+        <item name="listDivider">@cdroid:mipmap/list_divider_holo_light</item>
         <item name="listSeparatorTextViewStyle">@style/Widget.Holo.Light.TextView.ListSeparator</item>
 
-        <item name="listChoiceIndicatorSingle">@drawable/btn_radio_holo_light</item>
+        <item name="listChoiceIndicatorSingle">@cdroid:mipmap/btn_radio_holo_light</item>
         <item name="listChoiceIndicatorMultiple">@drawable/btn_check_holo_light</item>
 
         <item name="listChoiceBackgroundIndicator">@drawable/list_selector_holo_light</item>
@@ -702,8 +702,8 @@ please see themes_device_defaults.xml.
         <item name="actionModeFindDrawable">@drawable/ic_menu_find_holo_light</item>
         <item name="actionModeWebSearchDrawable">@drawable/ic_menu_search_holo_light</item>
 
-        <item name="dividerVertical">?attr/listDivider</item>
-        <item name="dividerHorizontal">?attr/listDivider</item>
+        <item name="dividerVertical">?cdroid:attr/listDivider</item>
+        <item name="dividerHorizontal">?cdroid:attr/listDivider</item>
         <item name="buttonBarStyle">@style/Holo.Light.ButtonBar</item>
         <item name="buttonBarButtonStyle">?attr/borderlessButtonStyle</item>
         <item name="segmentedButtonStyle">@style/Holo.Light.SegmentedButton</item>

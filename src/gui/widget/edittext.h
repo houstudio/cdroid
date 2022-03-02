@@ -6,6 +6,7 @@ namespace cdroid{
 
 class EditText:public TextView{
 private:
+    void initEditText();
     void checkMatch(const std::wstring&w);
 public:
     DECLARE_UIEVENT(void,AfterTextChanged,EditText&);

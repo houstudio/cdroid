@@ -11,53 +11,86 @@ DECLARE_WIDGET(AnalogClock)
 
 AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
-    mDial=mSecondHand=mMinuteHand=mHourHand=nullptr;
-    mHour=mMinutes=mSeconds=0;
-    setClockDrawable(ctx->getDrawable(attrs,"dial") , DIAL);
-    setClockDrawable(ctx->getDrawable(attrs,"second"),SECOND);
-    setClockDrawable(ctx->getDrawable(attrs,"minute"),MINUTE);
-    setClockDrawable(ctx->getDrawable(attrs,"hour") , HOUR);
+    initAnalog();
+
+    mDial      = ctx->getDrawable(attrs,"dial");
+    mHourHand  = ctx->getDrawable(attrs,"hand_hour");
+    mMinuteHand= ctx->getDrawable(attrs,"hand_minute");
+    mSecondHand= ctx->getDrawable(attrs,"hand_second");
+
+    mDialWidth = mDial->getIntrinsicWidth();
+    mDialHeight= mDial->getIntrinsicHeight();
 }
 
 AnalogClock::AnalogClock(int w,int h):View(w,h){
-    mDial=mSecondHand=mMinuteHand=mHourHand=nullptr;
-    mHour=mMinutes=mSeconds=0;
+    initAnalog();
 }
 
-void AnalogClock::setClockDrawable(Drawable*d,int id){
-    switch(id){
-    case DIAL  :
-        delete mDial;
-        mDial=d;
-        break;
-    case SECOND:
-        delete mSecondHand;
-        mSecondHand=d;
-        break;
-    case MINUTE:
-        delete mMinuteHand;
-        mMinuteHand=d;
-    case HOUR:
-        delete mHourHand;
-        mHourHand=d;
-        break;
-    default:return;
-    }
-    invalidate(true);
+
+void AnalogClock::initAnalog(){
+    mDial = mSecondHand = nullptr;
+    mMinuteHand = mHourHand = nullptr;
+    mHour = mMinutes = mSeconds = 0;
+    mDialWidth = mDialHeight =0;
+    mHourHandTintInfo = mMinuteHandTintInfo = nullptr;
+    mSecondHandTintInfo = mDialTintInfo = nullptr;
 }
 
-Drawable*AnalogClock::getClockDrawable(int id){
-    switch(id){
-	case DIAL:  return mDial;
-	case SECOND:return mSecondHand;
-	case MINUTE:return mMinuteHand;
-	case HOUR  :return mHourHand;
-	default:return nullptr;
+void AnalogClock::setDial(Icon& icon) {
+    mDial = icon;//.loadDrawable(getContext());
+    mDialWidth  = mDial->getIntrinsicWidth();
+    mDialHeight = mDial->getIntrinsicHeight();
+    /*if (mDialTintInfo->mHasTintList || mDialTintInfo->mHasTintBlendMode) {
+        mDial = mDialTintInfo->apply(mDial);
+    }*/
+
+    mChanged = true;
+    invalidate();
+}
+
+void AnalogClock::setHourHand(Icon& icon) {
+    mHourHand = icon;//.loadDrawable(getContext());
+    /*if (mHourHandTintInfo.mHasTintList || mHourHandTintInfo.mHasTintBlendMode) {
+        mHourHand = mHourHandTintInfo.apply(mHourHand);
+    }*/
+
+    mChanged = true;
+    invalidate();
+}
+
+void AnalogClock::setMinuteHand(Icon& icon) {
+    mMinuteHand = icon;//.loadDrawable(getContext());
+    /*if (mHourHandTintInfo.mHasTintList || mHourHandTintInfo.mHasTintBlendMode) {
+        mHourHand = mHourHandTintInfo.apply(mHourHand);
+    }*/
+
+    mChanged = true;
+    invalidate();
+}
+
+void AnalogClock::setSecondHand(Icon& icon) {
+    mSecondHand = icon;//.loadDrawable(getContext());
+    /*if (mHourHandTintInfo.mHasTintList || mHourHandTintInfo.mHasTintBlendMode) {
+        mHourHand = mHourHandTintInfo.apply(mHourHand);
+    }*/
+
+    mChanged = true;
+    invalidate();
+}
+
+
+void AnalogClock::onVisibilityAggregated(bool isVisible) {
+    View::onVisibilityAggregated(isVisible);
+
+    if (isVisible) {
+        onVisible();
+    } else {
+        onInvisible();
     }
 }
 
 void AnalogClock::onAttachedToWindow(){
-    mRunner=[&](){
+    mTick=[&](){
         std::time_t t = std::time(NULL);
         struct std::tm when= *std::localtime(&t);
         std::get_time(&when,"%R");
@@ -65,48 +98,132 @@ void AnalogClock::onAttachedToWindow(){
         mMinutes=when.tm_min;
         mSeconds=when.tm_sec;
         invalidate(true);
-        postDelayed(mRunner,800);
+        postDelayed(mTick,800);
     };
-    postDelayed(mRunner,800);
+    postDelayed(mTick,800);
+}
+
+
+void AnalogClock::onDetachedFromWindow() {
+    /*if (mReceiverAttached) {
+        getContext().unregisterReceiver(mIntentReceiver);
+        mReceiverAttached = false;
+    }*/
+    View::onDetachedFromWindow();
+}
+
+void AnalogClock::onVisible() {
+    if (!mVisible) {
+        mVisible = true;
+        //mTick.run();
+    }
+
+}
+
+void AnalogClock::onInvisible() {
+    if (mVisible) {
+        removeCallbacks(mTick);
+        mVisible = false;
+    }
+}
+
+void AnalogClock::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
+    const int widthMode  = MeasureSpec::getMode(widthMeasureSpec);
+    const int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
+    const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    const int heightSize = MeasureSpec::getSize(heightMeasureSpec);
+
+    float hScale = 1.0f;
+    float vScale = 1.0f;
+
+    if (widthMode != MeasureSpec::UNSPECIFIED && widthSize < mDialWidth) {
+        hScale = (float) widthSize / (float) mDialWidth;
+    }
+
+    if (heightMode != MeasureSpec::UNSPECIFIED && heightSize < mDialHeight) {
+        vScale = (float )heightSize / (float) mDialHeight;
+    }
+
+    const float scale = std::min(hScale, vScale);
+
+    setMeasuredDimension(resolveSizeAndState((int) (mDialWidth * scale), widthMeasureSpec, 0),
+            resolveSizeAndState((int) (mDialHeight * scale), heightMeasureSpec, 0));
+}
+
+void AnalogClock::onSizeChanged(int w, int h, int oldw, int oldh){
+    View::onSizeChanged(w,h,oldw,oldh);
+    mChanged = true;
 }
 
 void AnalogClock::onDraw(Canvas&canvas){
     View::onDraw(canvas);
-    int x=getWidth()/2;
-    int y=getHeight()/2;
-    int w,h;
-    if(mDial){
-        mDial->setBounds(0,0,getWidth(),getHeight());
-        mDial->draw(canvas);
+
+    bool changed = mChanged;
+    if (changed) {
+        mChanged = false;
     }
+
+    const int availableWidth = mRight - mLeft;
+    const int availableHeight = mBottom - mTop;
+
+    int x = availableWidth / 2;
+    int y = availableHeight / 2;
+
+    int w = mDial->getIntrinsicWidth();
+    int h = mDial->getIntrinsicHeight();
+
+    bool scaled = false;
+
+    if (availableWidth < w || availableHeight < h) {
+        scaled = true;
+        float scale = std::min((float) availableWidth / (float) w,
+                              (float) availableHeight / (float) h);
+        canvas.save();
+        canvas.scale(scale, scale);//, x, y);
+    }
+
+    if (changed) {
+        mDial->setBounds(x - (w / 2), y - (h / 2), w,h);//x + (w / 2), y + (h / 2));
+    }
+    mDial->draw(canvas);
+
+    canvas.save();
     canvas.translate(x,y);
-    if(mHourHand){
-        canvas.save();
-        canvas.rotate_degrees(360.f*mHour / 12.0f );
+    canvas.rotate_degrees(mHour / 12.0f * 360.0f);//, x, y);
+    if (changed) {
         w = mHourHand->getIntrinsicWidth();
         h = mHourHand->getIntrinsicHeight();
-        mHourHand->setBounds(-5,-4,10,80);
-        mHourHand->draw(canvas);
-        canvas.restore();
+        mHourHand->setBounds(x - (w / 2), y - (h / 2), w,h);//x + (w / 2), y + (h / 2));
     }
-    if(mMinuteHand){
-        canvas.save();
-        canvas.rotate_degrees(360.f*mMinutes / 60.f );
-        w = mHourHand->getIntrinsicWidth();
-        h = mHourHand->getIntrinsicHeight();
-        mHourHand->setBounds(-5,-4,10,90);
-        mHourHand->draw(canvas);
-        canvas.restore();
+    mHourHand->draw(canvas);
+    canvas.restore();
+
+    canvas.save();
+    canvas.translate(x,y);
+    canvas.rotate_degrees(mMinutes / 60.0f * 360.0f);//, x, y);
+
+    if (changed) {
+        w = mMinuteHand->getIntrinsicWidth();
+        h = mMinuteHand->getIntrinsicHeight();
+        mMinuteHand->setBounds(x - (w / 2), y - (h / 2),w,h);// x + (w / 2), y + (h / 2));
     }
-    if(mSecondHand){
+    mMinuteHand->draw(canvas);
+    canvas.restore();
+
+    if (mSecondHand  && mSecondsHandFps > 0) {
         canvas.save();
-        
-        w = mSecondHand->getIntrinsicWidth();
-        h = mSecondHand->getIntrinsicHeight();
-        //canvas.rotate(360.f*mSeconds / 60.f,0.5f*w,h);
-        canvas.rotate_degrees(360.f*mSeconds / 60.0f );
-        mSecondHand->setBounds(-5,-4,10,100);//x - (w / 2), y - (h / 2),w, h);
+        canvas.translate(x,y);
+        canvas.rotate_degrees(mSeconds / 60.0f * 360.0f);//, x, y);
+        if (changed) {
+            w = mSecondHand->getIntrinsicWidth();
+            h = mSecondHand->getIntrinsicHeight();
+            mSecondHand->setBounds(x - (w / 2), y - (h / 2),w,h);// x + (w / 2), y + (h / 2));
+        }
         mSecondHand->draw(canvas);
+        canvas.restore();
+    }
+
+    if (scaled) {
         canvas.restore();
     }
 }

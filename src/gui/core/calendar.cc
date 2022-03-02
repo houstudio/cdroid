@@ -20,7 +20,11 @@ namespace cdroid{
 int Calendar::nextStamp=0;
 
 Calendar::Calendar(){
-    zone=0;
+    zone  = 0;
+    mTime = 0;
+    isTimeSet = false;
+    areFieldsSet = false;
+    areAllFieldsSet =false;
     clear();
     firstDayOfWeek=SUNDAY;
     setTime(time(nullptr));

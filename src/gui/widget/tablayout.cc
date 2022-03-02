@@ -34,7 +34,8 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabPaddingEnd   = atts.getDimensionPixelSize("tabPaddingEnd",mTabPaddingEnd);
     mTabPaddingTop   = atts.getDimensionPixelSize("tabPaddingTop",mTabPaddingTop);
     mTabPaddingBottom= atts.getDimensionPixelSize("tabPaddingBottom",mTabPaddingBottom); 
-    mTabTextSize  =atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
+    mTabTextSize  = atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
+
     mTabTextColors=context->getColorStateList(atts.getString("tabTextColor"));
 
     mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration", 300);
@@ -61,6 +62,7 @@ void TabLayout::initTabLayout(){
     mTabPaddingStart= mTabPaddingTop   = 0;
     mTabPaddingEnd  = mTabPaddingBottom= 0;
     mTabTextSize = 20;
+    mContentInsetStart = 0;
     mTabTextColors  = nullptr;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;

@@ -484,7 +484,6 @@ void ViewGroup::removeFromArray(int index){
     }
     if (index>=0&&index<mChildren.size()) {
         auto it=mChildren.erase(mChildren.begin()+index);
-		LOGD("%p:%d remove child %p:%d",this,mID,*it,(*it)->getId());
         delete *it;
     } else {
         LOGE("IndexOutOfBounds %d",index);
@@ -506,6 +505,7 @@ void ViewGroup::removeFromArray(int start, int count){
     if (start == end)  return;
     for (int i = start; i < end; i++) {
         mChildren[i]->mParent = nullptr;
+        //Do not  delete mChildren[i];
         mChildren[i] = nullptr;
     }
     mChildren.erase(mChildren.begin()+start,mChildren.begin()+start+count);
@@ -1151,6 +1151,7 @@ void ViewGroup::removeViews(int start, int count){
 void ViewGroup::removeViewInLayout(View* view){
     removeViewInternal(view);
 }
+
 void ViewGroup::removeViewsInLayout(int start,int count){
     removeViewsInternal(start, count);
 }
@@ -1187,7 +1188,8 @@ void ViewGroup::removeAllViewsInLayout() {
         cancelTouchTarget(view);
         cancelHoverTarget(view);
 
-        if (view->getAnimation() != nullptr ||std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view)!=mTransitioningViews.end()) {
+        if (view->getAnimation() ||std::find(mTransitioningViews.begin(),
+		        mTransitioningViews.end(),view)!=mTransitioningViews.end()) {
             addDisappearingView(view);
         } else if (detach) {
            view->dispatchDetachedFromWindow();
@@ -1200,7 +1202,7 @@ void ViewGroup::removeAllViewsInLayout() {
         dispatchViewRemoved(view);
 
         view->mParent = nullptr;
-        mChildren[i] = nullptr;
+        mChildren[i] = nullptr;//cant delete mChilden[i]
     }
 
     if (mDefaultFocus)  clearDefaultFocus(mDefaultFocus);
@@ -1302,10 +1304,10 @@ void ViewGroup::removeViewsInternal(int start, int count){
         cancelTouchTarget(view);
         cancelHoverTarget(view);
 
-        /*if (view->getAnimation() != nullptr ||
-            (mTransitioningViews != nullptr && mTransitioningViews->contains(view))) {
+        if (view->getAnimation() ||(std::find(mTransitioningViews.begin(),
+                mTransitioningViews.end(),view)==mTransitioningViews.end())) {
             addDisappearingView(view);
-        } else */if (detach) {
+        } else if (detach) {
             view->dispatchDetachedFromWindow();
         }
 

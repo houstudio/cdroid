@@ -54,15 +54,19 @@ View& AdapterView::addView(View* child, int index, LayoutParams* params){
     LOGI("addView(View*,...)is not supported in AdapterView");
     return *this;
 }
+
 void AdapterView::removeView(View* child){
     LOGI("is not support in AdapterView");
 }
+
 void AdapterView::removeViewAt(int index){
     LOGI("is not support in AdapterView");
 }
+
 void AdapterView::removeAllViews(){
     LOGI("is not support in AdapterView");
 }
+
 void AdapterView::onLayout(bool changed, int left, int top, int w, int h) {
     mLayoutHeight = getHeight();
 }
@@ -93,6 +97,7 @@ void AdapterView::rememberSyncState() {
         }
     }
 }
+
 void AdapterView::handleDataChanged(){
     int count = mItemCount;
     bool found = false;
@@ -252,17 +257,21 @@ int AdapterView::getPositionForView(View* view){
 int AdapterView::getFirstVisiblePosition() {
     return mFirstPosition;
 }
+
 int AdapterView::getLastVisiblePosition(){
     return mFirstPosition + getChildCount() - 1;
 }
+
 void AdapterView::setEmptyView(View* emptyView){
     mEmptyView=emptyView;
     bool empty = (mAdapter==nullptr || mAdapter->isEmpty());
     updateEmptyStatus(empty);
 }
+
 View* AdapterView::getEmptyView(){
     return mEmptyView;
 }
+
 void* AdapterView::getItemAtPosition(int position){
     Adapter*adapter=getAdapter();
     return (adapter==nullptr||(position<0))?nullptr:adapter->getItem(position);
@@ -272,12 +281,15 @@ long AdapterView::getItemIdAtPosition(int position){
     Adapter*adapter=getAdapter();
     return (adapter==nullptr||(position<0))?INVALID_ROW_ID:adapter->getItemId(position);
 }
+
 int AdapterView::getSelectedItemPosition() {
     return mNextSelectedPosition;
 }
+
 long AdapterView::getSelectedItemId() {
     return mNextSelectedRowId;
 }
+
 void* AdapterView::getSelectedItem() {
     Adapter*adapter=getAdapter();
     int selection = getSelectedItemPosition();
@@ -361,6 +373,7 @@ void AdapterView::checkFocus() {
         updateEmptyStatus((adapter == nullptr) || adapter->isEmpty());
     }
 }
+
 void AdapterView::updateEmptyStatus(bool empty) {
     if (isInFilterMode()) {
         empty = false;
@@ -455,19 +468,24 @@ bool AdapterView::performItemClick(View* view, int position, long id){
 void AdapterView::setOnItemClickListener(OnItemClickListener listener) {
     mOnItemClickListener = listener;
 }
+
 AdapterView::OnItemClickListener AdapterView::getOnItemClickListener() const{
     return mOnItemClickListener;
 }
+
 void AdapterView::setOnItemSelectedListener(OnItemSelectedListener listener) {
     mOnItemSelectedListener = listener;
 }
+
 AdapterView::OnItemSelectedListener AdapterView::getOnItemSelectedListener()const {
     return mOnItemSelectedListener;
 }
+
 void AdapterView::setOnItemLongClickListener(OnItemLongClickListener listener){
     if (!isLongClickable()) setLongClickable(true);
     mOnItemLongClickListener = listener;
 }
+
 AdapterView::OnItemLongClickListener AdapterView::getOnItemLongClickListener() const{
     return mOnItemLongClickListener;
 }
@@ -476,6 +494,7 @@ AdapterView::OnItemLongClickListener AdapterView::getOnItemLongClickListener() c
 AdapterDataSetObserver::AdapterDataSetObserver(AdapterView*lv){
     adv=lv;
 }
+
 void AdapterDataSetObserver::onChanged() {
     adv->mDataChanged = true;
     adv->mOldItemCount = adv->mItemCount;
