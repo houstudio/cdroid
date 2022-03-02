@@ -325,7 +325,7 @@ private:
     bool mOriginalPressedState;
 
     ViewGroup*mNestedScrollingParent;
-    std::map<int,int>mMeasureCache;
+    std::map<Size,Size>mMeasureCache;
     class ScrollabilityCache*mScrollCache;
 
     Drawable*mBackground;

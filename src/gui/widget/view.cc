@@ -5420,7 +5420,7 @@ void View::requestLayout(){
 }
 
 void View::forceLayout(){
-    //if (mMeasureCache != nullptr) mMeasureCache.clear();
+    mMeasureCache.clear();
     mPrivateFlags |= PFLAG_FORCE_LAYOUT;
     mPrivateFlags |= PFLAG_INVALIDATED;
 }
@@ -5986,6 +5986,14 @@ void View::resolveLayoutParams() {
         mLayoutParams->resolveLayoutDirection(getLayoutDirection());
 }
 
+static bool operator<(const Size&a,const Size&b){
+    if(a.x!=b.x)
+       return a.x<b.x;
+    else if(a.y!=b.y)
+       return a.y<b.y;
+    return  false;
+}
+
 void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     bool optical = isLayoutModeOptical(this);
     if (optical != isLayoutModeOptical(mParent)) {
@@ -5997,7 +6005,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     }
 
     // Suppress sign extension for the low bytes
-    const long key = (long) widthMeasureSpec << 32 | (long) heightMeasureSpec & 0xffffffffL;
+    Size key ={widthMeasureSpec,heightMeasureSpec};
 
     const bool forceLayout = (mPrivateFlags & PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT;
 
@@ -6016,18 +6024,15 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
         mPrivateFlags &= ~PFLAG_MEASURED_DIMENSION_SET;
 
         resolveRtlPropertiesIfNeeded();
-        int cacheIndex =-1;  
-        if(mMeasureCache.find(key)!=mMeasureCache.end())
-            cacheIndex=mMeasureCache[key];
-        if(forceLayout)cacheIndex=-1;
-        if (cacheIndex < 0 || false/*sIgnoreMeasureCache*/) {
+        auto itc = mMeasureCache.find(key);
+        if (itc== mMeasureCache.end() || forceLayout/*sIgnoreMeasureCache*/) {
             // measure ourselves, this should set the measured dimension flag back
             onMeasure(widthMeasureSpec, heightMeasureSpec);
             mPrivateFlags3 &= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
         } else {
-            long value =0;// mMeasureCache.valueAt(cacheIndex);
+            Size value =itc->second;// mMeasureCache.valueAt(cacheIndex);
             // Casting a long to int drops the high 32 bits, no mask needed
-            setMeasuredDimensionRaw((int) (value >> 32), (int) value);
+            setMeasuredDimensionRaw(value.x,value.y);
             mPrivateFlags3 |= PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
         }
 
@@ -6042,9 +6047,9 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
     mOldWidthMeasureSpec = widthMeasureSpec;
     mOldHeightMeasureSpec = heightMeasureSpec;
-
-    //mMeasureCache.put(key, ((long) mMeasuredWidth) << 32 |
-    //        (long) mMeasuredHeight & 0xffffffffL); // suppress sign extension
+    Size szMeasured={mMeasuredWidth,mMeasuredHeight};
+    mMeasureCache[key]=szMeasured;//
+    //mMeasureCache.insert(std::pair<Size,Size>(key,szMeasured)); // suppress sign extension
 }
 
 View::AttachInfo::AttachInfo(){

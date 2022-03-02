@@ -331,8 +331,8 @@ void Window::doLayout(){
         const MarginLayoutParams*lp= (const MarginLayoutParams*)view->getLayoutParams();
         const int horzMargin = lp->leftMargin+lp->rightMargin;
         const int vertMargin = lp->topMargin+lp->bottomMargin;
-        int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth()-horzMargin,MeasureSpec::EXACTLY);
-        int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()-vertMargin,MeasureSpec::EXACTLY);
+        const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth()-horzMargin,MeasureSpec::EXACTLY);
+        const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()-vertMargin,MeasureSpec::EXACTLY);
         view->measure(widthSpec, heightSpec);
         view->layout(lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
     }
