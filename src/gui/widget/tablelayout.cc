@@ -85,13 +85,13 @@ void TableLayout::initTableLayout(){
     // for shared LinearLayout code.
     mShrinkAllColumns=false;
     mStretchAllColumns=false;
+    mInitialized = true;
     setOrientation(VERTICAL);
 
     //mPassThroughListener = new PassThroughHierarchyChangeListener();
     // make sure to call the parent class method to avoid potential
     // infinite loops
     //super.setOnHierarchyChangeListener(mPassThroughListener);
-    mInitialized = true;
 }
 
 void TableLayout::requestRowsLayout(){

@@ -217,8 +217,8 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     }
 
     // Calculate the number of pointers to deliver.
-    int oldPointerIdBits = event.getPointerIdBits();
-    int newPointerIdBits = oldPointerIdBits & desiredPointerIdBits;
+    const int oldPointerIdBits = event.getPointerIdBits();
+    const int newPointerIdBits = oldPointerIdBits & desiredPointerIdBits;
 
     // If for some reason we ended up in an inconsistent state where it looks like we
     // might produce a motion event with no pointers in it, then drop the event.

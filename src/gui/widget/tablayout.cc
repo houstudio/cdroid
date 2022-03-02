@@ -67,6 +67,7 @@ void TabLayout::initTabLayout(){
     mViewPager    = nullptr;
     mPagerAdapter = nullptr;
     mTabIndicatorGravity  = Gravity::BOTTOM;
+    mPagerAdapterObserver = nullptr;
     mAdapterChangeListener= nullptr;
     mTabSelectedIndicator = nullptr;
     mRequestedTabMinWidth = INVALID_WIDTH;

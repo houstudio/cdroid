@@ -335,7 +335,6 @@ void Window::doLayout(){
         int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()-vertMargin,MeasureSpec::EXACTLY);
         view->measure(widthSpec, heightSpec);
         view->layout(lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
-        return ;
     }
 #if 0//for multi children ,treat as absolute layout,do nothing
     for(auto c:mChildren){
