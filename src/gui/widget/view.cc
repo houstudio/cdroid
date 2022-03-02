@@ -59,6 +59,22 @@ public:
     }
 };
 
+class ListenerInfo{
+public:
+    View::OnFocusChangeListener  mOnFocusChangeListener;
+    std::vector<View::OnLayoutChangeListener> mOnLayoutChangeListeners;
+    View::OnScrollChangeListener mOnScrollChangeListener;
+    View::OnClickListener mOnClickListener;
+    View::OnLongClickListener mOnLongClickListener;
+    //OnContextClickListener mOnContextClickListener;
+    //OnCreateContextMenuListener mOnCreateContextMenuListener;
+    View::OnKeyListener mOnKeyListener;
+    View::OnTouchListener mOnTouchListener;
+    View::OnHoverListener mOnHoverListener;
+    View::OnGenericMotionListener mOnGenericMotionListener;
+    //View::OnDragListener mOnDragListener;
+};
+
 View::TransformationInfo::TransformationInfo(){
     mMatrix=identity_matrix();
     mInverseMatrix=identity_matrix();
@@ -314,7 +330,8 @@ void View::initView(){
     mDrawingCacheBackgroundColor = 0;
     mContext  = nullptr;
     mParent   = nullptr;
-    mAttachInfo = nullptr;
+    mAttachInfo  = nullptr;
+    mListenerInfo= nullptr;
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
     mLayerType = LAYER_TYPE_NONE;
@@ -342,9 +359,6 @@ void View::initView(){
     mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
     mTop = mLeft = mRight = mBottom = 0;
-    mOnClick = mOnLongClick = nullptr;
-    mOnFocusChangeListener  = nullptr;
-    mOnScrollChangeListener = nullptr;
     mOverScrollMode = OVER_SCROLL_NEVER;
     mVerticalScrollbarPosition = 0;
     mUserPaddingLeft = mUserPaddingRight  = 0;
@@ -373,6 +387,7 @@ void View::initView(){
 View::~View(){
     if(mParent)onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
+    delete mListenerInfo;
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
     delete mScrollCache;
@@ -2053,28 +2068,34 @@ bool View::isInScrollingContainer()const{
     return false;
 }
 
+ListenerInfo*View::getListenerInfo(){
+    if(mListenerInfo==nullptr)
+        mListenerInfo = new ListenerInfo();
+    return mListenerInfo;
+}
+
 void View::setOnClickListener(OnClickListener l){
     if(!isClickable())
         setClickable(true);
-    mOnClick=l;
+    getListenerInfo()->mOnClickListener=l;
 }
 
 bool View::hasClickListener()const{
-    return mOnClick!=nullptr;
+    return mListenerInfo&&mListenerInfo->mOnClickListener!=nullptr;
 }
 
 void View::setOnLongClickListener(OnLongClickListener l){
     if(!isLongClickable())
         setLongClickable(true);
-    mOnLongClick=l;
+    getListenerInfo()->mOnLongClickListener=l;
 }
 
 void View::setOnFocusChangeListener(OnFocusChangeListener listtener){
-    mOnFocusChangeListener=listtener;
+    getListenerInfo()->mOnFocusChangeListener = listtener;
 }
 
 void View::addOnLayoutChangeListener(OnLayoutChangeListener listener){
-    mOnLayoutChangeListeners.push_back(listener);
+    getListenerInfo()->mOnLayoutChangeListeners.push_back(listener);
 }
 
 void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
@@ -2082,7 +2103,7 @@ void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
 }
 
 void View::setOnScrollChangeListener(OnScrollChangeListener l){
-    mOnScrollChangeListener=l;
+    getListenerInfo()->mOnScrollChangeListener=l;
 }
 
 
@@ -3321,7 +3342,8 @@ ColorStateList* View::getBackgroundTintList()const{
 }
 
 void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){
-    if(mOnFocusChangeListener)mOnFocusChangeListener(*this,gainFocus);
+    if(mListenerInfo&&mListenerInfo->mOnFocusChangeListener)
+        mListenerInfo->mOnFocusChangeListener(*this,gainFocus);
     switchDefaultFocusHighlight();
     if(!gainFocus){
         if(isPressed())setPressed(false);
@@ -4739,8 +4761,10 @@ void View::layout(int l, int t, int w, int h){
         } else {
             mRoundScrollbarRenderer = nullptr;
         }
-        for(auto ls:mOnLayoutChangeListeners){
-            ls(this,l, t, w, h,oldL,oldT,oldW,oldH);
+        if(mListenerInfo){
+            for(auto ls:mListenerInfo->mOnLayoutChangeListeners){
+                ls(this,l, t, w, h,oldL,oldT,oldW,oldH);
+            }
         }
     }
 
@@ -4813,8 +4837,8 @@ void View::onScrollChanged(int l, int t, int oldl, int oldt){
     if (mForegroundInfo != nullptr) {
         mForegroundInfo->mBoundsChanged = true;
     }
-    if(mOnScrollChangeListener)
-        mOnScrollChangeListener(*this,l,t,oldl,oldt);
+    if(mListenerInfo && mListenerInfo->mOnScrollChangeListener)
+        mListenerInfo->mOnScrollChangeListener(*this,l,t,oldl,oldt);
 }
 
 void View::onFinishInflate(){
@@ -4825,7 +4849,7 @@ KeyEvent::DispatcherState* View::getKeyDispatcherState()const{
 }
 
 bool View::dispatchKeyEvent(KeyEvent&event){
-    bool res=event.dispatch(this,&mKeyDispatchState,this);
+    bool res=event.dispatch(this,(mAttachInfo? &mAttachInfo->mKeyDispatchState : nullptr),this);
     LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),res);    
     return res;
 }
@@ -5039,13 +5063,15 @@ void View::setHovered(bool hovered) {
 }
 
 bool View::performClick(){
-    if(mOnClick) mOnClick(*this);
-    return mOnClick!=nullptr;
+    if(mListenerInfo && mListenerInfo->mOnClickListener) 
+         mListenerInfo->mOnClickListener(*this);
+    return mListenerInfo!=nullptr && mListenerInfo->mOnClickListener!=nullptr;
 }
 
 bool View::performLongClickInternal(int x, int y){
     bool handled=false;
-    if(mOnLongClick)handled=mOnLongClick(*this);
+    if(mListenerInfo && mListenerInfo->mOnLongClickListener)
+        handled=mListenerInfo->mOnLongClickListener(*this);
     return handled;
 }
 

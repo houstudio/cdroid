@@ -294,13 +294,16 @@ public:
         LAYER_TYPE_SOFTWARE=1,
         LAYER_TYPE_HARDWARE=2
     };
+    DECLARE_UIEVENT(bool,OnKeyListener,View& v, int keyCode, KeyEvent&);
+    DECLARE_UIEVENT(bool,OnTouchListener,View&v, MotionEvent&);
+    DECLARE_UIEVENT(bool,OnHoverListener,View&v, MotionEvent&);
+    DECLARE_UIEVENT(bool,OnGenericMotionListener,View&v, MotionEvent&);
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
             int oldLeft, int oldTop, int oldWidth, int oldHeight);
-    DECLARE_UIEVENT(bool,OnTouchListener,View&,MotionEvent&);
 private:
     int mMinWidth;
     int mMinHeight;
@@ -339,7 +342,6 @@ private:
     class RoundScrollbarRenderer* mRoundScrollbarRenderer;
     class TintInfo*mBackgroundTint;
     class ForegroundInfo*mForegroundInfo;
-    KeyEvent::DispatcherState mKeyDispatchState;
 private:
     void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
@@ -427,11 +429,8 @@ protected:
     float mRotationX,mRotationY,mRotation;
     float mPivotX,mPivotY,mAlpha;
     float mTranslationX,mTranslationY,mTranslationZ;
-    OnClickListener mOnClick;
-    OnLongClickListener mOnLongClick;
-    OnFocusChangeListener mOnFocusChangeListener;
-    std::vector<OnLayoutChangeListener> mOnLayoutChangeListeners;
-    OnScrollChangeListener mOnScrollChangeListener;
+    class ListenerInfo* mListenerInfo;
+    ListenerInfo*getListenerInfo();
 protected:
     virtual void internalSetPadding(int left, int top, int right, int bottom);
     void assignParent(ViewGroup*p);
