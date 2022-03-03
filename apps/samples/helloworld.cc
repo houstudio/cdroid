@@ -3,9 +3,10 @@
 int main(int argc,const char*argv[]){
     setenv("LANG","zh.CN",1);
     App app(argc,argv);
-    LOGD("float.size=%d string.size=%d View.size=%d function.size=%d Runnable.size=%d map.size=%d Insets.size=%d",
-         sizeof(float),sizeof(std::string),sizeof(View),sizeof(std::function<void()>),
-        sizeof(Runnable),sizeof(std::map<int,int>),sizeof(Insets));
+    LOGD("float.size=%d ponter.size=%d string.size=%d View.size=%d function.size=%d Runnable.size=%d Insets.size=%d"
+         " shared_ptr.size=%d vector.size=%d map.size=%d",
+        sizeof(float),sizeof(void*),sizeof(std::string),sizeof(View),sizeof(std::function<void()>),sizeof(Runnable),sizeof(Insets),
+        sizeof(std::shared_ptr<int>),sizeof(std::vector<int>),sizeof(std::map<int,int>));
     Window*w=new Window(100,100,800,600);
    #if 10 
     EditText*edit=new EditText(TEXT("Hello world! This value is positive for typical fonts that include"),680,200);

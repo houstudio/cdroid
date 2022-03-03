@@ -29,7 +29,6 @@ int main(int argc,const char*argv[]){
 
     DrawerLayout*dl=new DrawerLayout(1280,720);
 
-
     /*content area*/
     LinearLayout*content=new LinearLayout(1280,720);
     content->setOrientation(LinearLayout::VERTICAL);
