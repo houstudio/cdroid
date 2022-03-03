@@ -322,9 +322,6 @@ private:
     int mNextClusterForwardId;
     Insets mLayoutInsets;
  
-    Runnable mPendingCheckForTap;
-    Runnable mPerformClick;
-	
     bool mInContextButtonPress;
     bool mHasPerformedLongPress;
     bool mIgnoreNextUpEvent;
@@ -339,16 +336,21 @@ private:
     std::map<Size,Size>mMeasureCache;
     class ScrollabilityCache*mScrollCache;
 
-    Drawable*mBackground;
-    Drawable*mDefaultFocusHighlight;
-    Drawable*mDefaultFocusHighlightCache;
-    Drawable*mScrollIndicatorDrawable;
-    Runnable mPendingCheckForLongPress;
-    Runnable mUnsetPressedState;	
+    Drawable* mBackground;
+    Drawable* mDefaultFocusHighlight;
+    Drawable* mDefaultFocusHighlightCache;
+    Drawable* mScrollIndicatorDrawable;
+	
+    Runnable* mPendingCheckForTap;
+    Runnable* mPerformClick;
+    Runnable* mPendingCheckForLongPress;
+    Runnable* mUnsetPressedState;	
     class RoundScrollbarRenderer* mRoundScrollbarRenderer;
-    class TintInfo*mBackgroundTint;
-    class ForegroundInfo*mForegroundInfo;
-private:
+    class TintInfo* mBackgroundTint;
+    class ForegroundInfo* mForegroundInfo;
+private:	
+    View(const View&)=delete;
+    View&operator=(const View&)=delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
     void checkForTapCallback(int x,int y);//for mPendingCheckForTap
@@ -374,8 +376,6 @@ private:
     bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
     bool requestFocusFromTouch();
     bool hasAncestorThatBlocksDescendantFocus();
-    View(const View&)=delete;
-    View&operator=(const View&)=delete;
 	
     void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
@@ -441,25 +441,25 @@ protected:
     /* Cache initial left padding*/
     int mUserPaddingLeftInitial;
     /* Cache initial right padding*/
-    int mUserPaddingRightInitial;
+    int  mUserPaddingRightInitial;
+    int  mTransientStateCount;
     bool mLeftPaddingDefined;
     bool mRightPaddingDefined;
+    bool mCachingFailed;
     std::string mHint;
     std::string mContentDescription;
-    bool mCachingFailed;
-    RefPtr<ImageSurface>mDrawingCache;
-    RefPtr<ImageSurface>mUnscaledDrawingCache;
-    LayoutParams*mLayoutParams;
+    RefPtr<ImageSurface> mDrawingCache;
+    RefPtr<ImageSurface> mUnscaledDrawingCache;
+    LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
-    Matrix mMatrix;
-    Context*mContext;
+    Context* mContext;
     Animation* mCurrentAnimation;
-    std::vector<int>mDrawableState;
+    std::vector<int> mDrawableState;
 
     int mTop,mLeft,mRight,mBottom;
-    ViewGroup*mParent;
+    ViewGroup * mParent;
     AttachInfo* mAttachInfo;
-    RenderNode *mRenderNode;
+    RenderNode* mRenderNode;
     class ListenerInfo* mListenerInfo;
     ListenerInfo*getListenerInfo();
 protected:

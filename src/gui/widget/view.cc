@@ -332,6 +332,12 @@ void View::initView(){
     mParent   = nullptr;
     mAttachInfo  = nullptr;
     mListenerInfo= nullptr;
+
+    mPerformClick = nullptr;
+    mPendingCheckForTap = nullptr;
+    mUnsetPressedState = nullptr;;
+    mPendingCheckForLongPress = nullptr;
+
     mRenderNode  = new  RenderNode();
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
@@ -377,12 +383,15 @@ void View::initView(){
     mCurrentAnimation = nullptr;
     mTransformationInfo = nullptr;
     mNestedScrollingParent = nullptr;
-    mMatrix=identity_matrix();
 }
 
 View::~View(){
     if(mParent)onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
+    delete mPerformClick;
+    delete mPendingCheckForTap;
+    delete mUnsetPressedState;
+    delete mPendingCheckForLongPress;
     delete mRenderNode;
     delete mListenerInfo;
     delete mScrollIndicatorDrawable;
@@ -1161,15 +1170,18 @@ void View::setFadingEdgeLength(int length){
 
 void View::transformFromViewToWindowSpace(int*inOutLocation){
     View* view = this;
+    Matrix matrix;
     double position[2]={(double)inOutLocation[0],(double)inOutLocation[1]};
     if(!hasIdentityMatrix()){
-        mMatrix.transform_point(position[0],position[1]);
+        matrix = getMatrix();
+        matrix.transform_point(position[0],position[1]);
     }
     while (view) {
         position[0] -= view->mScrollX;
         position[1] -= view->mScrollY;
         if (!view->hasIdentityMatrix()) {
-             view->mMatrix.transform_point(position[0],position[1]);
+             matrix = view->getMatrix();
+             matrix.transform_point(position[0],position[1]);
         }
         if(view->mParent){
             position[0] += view->mLeft;
@@ -2790,6 +2802,7 @@ std::string View::getContentDescription()const{
 bool View::isTemporarilyDetached()const{
     return (mPrivateFlags3 & PFLAG3_TEMPORARY_DETACH) != 0;
 }
+
 void View::dispatchFinishTemporaryDetach(){
     mPrivateFlags3 &= ~PFLAG3_TEMPORARY_DETACH;
     onFinishTemporaryDetach();
@@ -2808,6 +2821,7 @@ void View::dispatchStartTemporaryDetach(){
     //notifyEnterOrExitForAutoFillIfNeeded(false);
     onStartTemporaryDetach();
 }
+
 void View::onStartTemporaryDetach() {
     removeUnsetPressCallback();
     mPrivateFlags |= PFLAG_CANCEL_NEXT_UP_EVENT;
@@ -2817,8 +2831,23 @@ bool View::hasTransientState(){
     return (mPrivateFlags2 & PFLAG2_HAS_TRANSIENT_STATE) == PFLAG2_HAS_TRANSIENT_STATE;
 }
 
-void View::setHasTransientState(bool hasTransientState){
-    
+void View::setHasTransientState(bool hasState){
+    const bool oldHasTransientState = hasTransientState();
+    int mTransientStateCount =0;
+    mTransientStateCount= hasState ? mTransientStateCount + 1 :mTransientStateCount - 1;
+    if (mTransientStateCount < 0) {
+        mTransientStateCount = 0;
+        LOGE("hasTransientState decremented below 0: unmatched pair of setHasTransientState calls");
+    } else if ((hasState && mTransientStateCount == 1) ||
+            (!hasState && mTransientStateCount == 0)) {
+        // update flag if we've just incremented up from 0 or decremented down to 0
+        mPrivateFlags2 = (mPrivateFlags2 & ~PFLAG2_HAS_TRANSIENT_STATE) |
+                (hasState ? PFLAG2_HAS_TRANSIENT_STATE : 0);
+        const bool newHasTransientState = hasTransientState();
+        if (mParent && newHasTransientState != oldHasTransientState) {
+            mParent->childHasTransientStateChanged(this, newHasTransientState);
+        }
+    }    
 }
 
 void View::setIsRootNamespace(bool isRoot){
@@ -4939,16 +4968,16 @@ bool View::canReceivePointerEvents()const{
 }
 
 bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
-    /*if (li != null && li.mOnGenericMotionListener != null
-                && (mViewFlags & ENABLED_MASK) == ENABLED
-                && li.mOnGenericMotionListener.onGenericMotion(this, event)) {
-            return true;
-    }*/
+    if (mListenerInfo && mListenerInfo->mOnGenericMotionListener
+          && (mViewFlags & ENABLED_MASK) == ENABLED
+          && mListenerInfo->mOnGenericMotionListener(*this, event)) {
+        return true;
+    }
     if (onGenericMotionEvent(event)) {
         return true;
     }
 
-    int actionButton = event.getActionButton();
+    const int actionButton = event.getActionButton();
     switch (event.getActionMasked()) {
     case MotionEvent::ACTION_BUTTON_PRESS:
         if (isContextClickable() && !mInContextButtonPress && !mHasPerformedLongPress
@@ -5169,9 +5198,12 @@ void View::checkForLongClick(int delayOffset,int x,int y){
     //LOGV("%p:%d checkForLongClick longclickable=%d",this,mID,(mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE );
     if ((mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE || (mViewFlags & TOOLTIP) == TOOLTIP) {
         mHasPerformedLongPress = false;
+        if (mPendingCheckForLongPress == nullptr) {
+            mPendingCheckForLongPress = new Runnable;
+        }
         mOriginalPressedState=isPressed();
-        mPendingCheckForLongPress=std::bind(&View::checkLongPressCallback,this,x,y);
-        postDelayed(mPendingCheckForLongPress,ViewConfiguration::getLongPressTimeout()-delayOffset);
+        *mPendingCheckForLongPress=std::bind(&View::checkLongPressCallback,this,x,y);
+        postDelayed(*mPendingCheckForLongPress,ViewConfiguration::getLongPressTimeout()-delayOffset);
     }
 }
 
@@ -5185,7 +5217,8 @@ void View::unsetPressedCallback(){
     //LOGV("unsetPressedCallback pressed=%x",(mPrivateFlags & PFLAG_PRESSED));
     if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
         setPressed(false);
-        removeCallbacks(mUnsetPressedState);
+        removeCallbacks(*mUnsetPressedState);
+        delete mUnsetPressedState;
         mUnsetPressedState=nullptr;
     }
 }
@@ -5193,21 +5226,24 @@ void View::unsetPressedCallback(){
 void View::removeTapCallback() {
     if (mPendingCheckForTap != nullptr) {
         mPrivateFlags &= ~PFLAG_PREPRESSED;
-        removeCallbacks(mPendingCheckForTap);
+        removeCallbacks(*mPendingCheckForTap);
+        delete mPendingCheckForTap;
         mPendingCheckForTap=nullptr;
     }
 }
 
 void View::removeLongPressCallback() {
     if (mPendingCheckForLongPress != nullptr) {
-        removeCallbacks(mPendingCheckForLongPress);
+        removeCallbacks(*mPendingCheckForLongPress);
+        delete mPendingCheckForLongPress;
         mPendingCheckForLongPress=nullptr;
     }
 }
 
 void View::removePerformClickCallback(){
     if(mPerformClick!=nullptr){
-        removeCallbacks(mPerformClick);
+        removeCallbacks(*mPerformClick);
+        delete mPerformClick;
         mPerformClick=nullptr;
     } 
 }
@@ -5216,7 +5252,8 @@ void View::removeUnsetPressCallback() {
     //LOGV("removeUnsetPressCallback pressed=%d",mPrivateFlags & PFLAG_PRESSED);
     if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
         setPressed(false);
-        removeCallbacks(mUnsetPressedState);
+        removeCallbacks(*mUnsetPressedState);
+        delete mUnsetPressedState;
         mUnsetPressedState=nullptr;
     }
 }
@@ -5359,13 +5396,18 @@ bool View::onTouchEvent(MotionEvent& event){
             if(!mHasPerformedLongPress && !mIgnoreNextUpEvent){
                 removeLongPressCallback();
                 if (!focusTaken){
-                    if(mPerformClick==nullptr)mPerformClick=[this](){performClickInternal();};
-                    if(!post(mPerformClick))performClickInternal();
+                    if(mPerformClick == nullptr){
+                        mPerformClick = new Runnable;
+                        *mPerformClick= [this](){performClickInternal();};
+                    }
+                    if(!post(*mPerformClick))performClickInternal();
                 }
             }
-            if(mUnsetPressedState==nullptr)
-                mUnsetPressedState=std::bind(&View::unsetPressedCallback,this);
-            postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
+            if(mUnsetPressedState == nullptr){
+                mUnsetPressedState= new Runnable;
+                *mUnsetPressedState=std::bind(&View::unsetPressedCallback,this);
+            }
+            postDelayed(*mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
 
             removeTapCallback();
         }
@@ -5382,8 +5424,11 @@ bool View::onTouchEvent(MotionEvent& event){
 
         if(isInScrollingContainer()){
             mPrivateFlags |= PFLAG_PREPRESSED;
-            mPendingCheckForTap=std::bind(&View::checkForTapCallback,this,x,y);
-            postDelayed(mPendingCheckForTap,ViewConfiguration::getTapTimeout());
+            if(mPendingCheckForTap == nullptr){
+                mPendingCheckForTap = new Runnable;
+                *mPendingCheckForTap=std::bind(&View::checkForTapCallback,this,x,y);
+            }
+            postDelayed(*mPendingCheckForTap,ViewConfiguration::getTapTimeout());
         }else{
             setPressed(true,x,y);
             checkForLongClick(0, x, y);
@@ -5482,7 +5527,7 @@ void View::forceLayout(){
 }
 
 /**Returns true if this view has been through at least one layout since it
-   * was last attached to or detached from a window. */
+ * was last attached to or detached from a window. */
 bool View::isLaidOut()const{
     return (mPrivateFlags3 & PFLAG3_IS_LAID_OUT) == PFLAG3_IS_LAID_OUT;
 }
