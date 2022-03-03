@@ -463,7 +463,7 @@ void Layout::pushLineData(int start,int ytop,int descent,int width){
 void Layout::relayout(bool force){
     TextExtents extents;
     FontExtents fontextents;
-    float total_width=0;
+    double total_width=0;
     int start=0,ytop=0;
     std::wstring word;
     if(force==false&&mLayout==0)
@@ -485,7 +485,7 @@ void Layout::relayout(bool force){
             word.append(1,mText[i]);
             measureSize(word,extents);
             if(mBreakStrategy && (total_width+extents.x_advance>mWidth)){
-                pushLineData(start,ytop,fontextents.descent,total_width);
+                pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount++;
                 word.erase();
@@ -499,8 +499,8 @@ void Layout::relayout(bool force){
             word.append(1,mText[i]);
             measureSize(word,extents);
             int outofwidth=(total_width+extents.x_advance>mWidth);
-            if( (((breaks[0]==WORDBREAK_BREAK) && ( outofwidth && (mBreakStrategy==0) ))||(linebreak==LINEBREAK_MUSTBREAK))){
-                pushLineData(start,ytop,fontextents.descent,total_width);
+            if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && (mBreakStrategy==0) ))||(linebreak==LINEBREAK_MUSTBREAK))){
+                pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount++;
                 total_width=0;
@@ -520,7 +520,7 @@ void Layout::relayout(bool force){
     if(start<=mText.length()){
         measureSize(mText.substr(start),extents);
         total_width=extents.x_advance;
-        pushLineData(start,ytop,fontextents.descent,total_width);
+        pushLineData(start,ytop,fontextents.descent,ceil(total_width));
         ytop += mLineHeight;
         if( (mColumns==COLUMNS_ELLIPSIZE) && (total_width>mWidth) ){
             calculateEllipsis(mLineCount,mText.length());
