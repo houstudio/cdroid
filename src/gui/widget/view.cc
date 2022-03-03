@@ -2790,7 +2790,7 @@ void*View::getTag()const{
     return mTag;
 }
 
-void View*View::setTag(int key,void*tag){
+void View::setTag(int key,void*tag){
     mTag = tag;
 }
 
