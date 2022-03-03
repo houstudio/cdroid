@@ -1193,7 +1193,7 @@ void ViewGroup::removeAllViewsInLayout() {
 		        mTransitioningViews.end(),view)!=mTransitioningViews.end()) {
             addDisappearingView(view);
         } else if (detach) {
-           view->dispatchDetachedFromWindow();
+            view->dispatchDetachedFromWindow();
         }
 
         if (view->hasTransientState()) {

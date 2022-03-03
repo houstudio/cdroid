@@ -40,7 +40,7 @@ void EditText::initEditText(){
     mRBLink=std::bind(&EditText::blinkCaret,this);
 }
 
-EditText::~EditText(){
+void EditText::onDetachedFromWindow(){
     mBlinkOn=false;
     removeCallbacks(mRBLink);
 }

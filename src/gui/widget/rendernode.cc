@@ -6,6 +6,7 @@ RenderNode::RenderNode(){
     mAlpha  = 1.f;
     mScaleX = 1.f;
     mScaleY = 1.f;
+    mElevation =.0f;
     mTranslationX = .0f;
     mTranslationY = .0f;
     mTranslationZ = .0f;

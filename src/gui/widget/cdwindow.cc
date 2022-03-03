@@ -154,6 +154,7 @@ RefPtr<Canvas>Window::getCanvas(){
 }
 
 Window::~Window() {
+    dispatchDetachedFromWindow();
     delete mAttachInfo;
 }
 

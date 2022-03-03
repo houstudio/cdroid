@@ -18,6 +18,7 @@ protected:
     AfterTextChanged afterChanged;
     bool match();
     void blinkCaret();
+    void onDetachedFromWindow()override;
     virtual void onDrawCaret(Canvas&canvas,const Rect&r);
     virtual void onFocusChanged(bool,int,Rect*)override;
     virtual void onDraw(Canvas&ctx)override;
@@ -34,7 +35,6 @@ public:
     EditText(int w,int h);
     EditText(const std::string&txt,int w,int h);
     EditText(Context*ctx,const AttributeSet&attrs);
-    ~EditText();
     void setText(const std::string&txt)override;
     void setLabelColor(int color);
     void replace(size_t start,size_t len,const std::string&txt);
