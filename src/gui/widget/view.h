@@ -349,8 +349,8 @@ private:
     class TintInfo* mBackgroundTint;
     class ForegroundInfo* mForegroundInfo;
 private:	
-    View(const View&)=delete;
-    View&operator=(const View&)=delete;
+    View(const View&) = delete;
+    View&operator=(const View&) = delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
     void checkForTapCallback(int x,int y);//for mPendingCheckForTap
@@ -375,7 +375,7 @@ private:
     View* findViewInsideOutShouldExist(View* root, int id)const;
     bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
     bool requestFocusFromTouch();
-    bool hasAncestorThatBlocksDescendantFocus();
+    bool hasAncestorThatBlocksDescendantFocus()const;
 	
     void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
@@ -450,7 +450,7 @@ protected:
     std::string mContentDescription;
     RefPtr<ImageSurface> mDrawingCache;
     RefPtr<ImageSurface> mUnscaledDrawingCache;
-    void* mTag;
+    void * mTag;
     Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;

@@ -219,6 +219,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     if(it==mPointMAP.end()){
         TouchPoint tp;
         tp.coord.clear();
+        tp.prop.id=mPointMAP.size();
         auto it2=mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
         it=it2.first;
     }

@@ -120,14 +120,18 @@ struct CRect{
     }
 
     void Union(const CRect&b){
-        T x1 = _MIN (left, b.left);
-        T y1 = _MIN (top, b.top);
-        T x2 = _MAX (b.left + b.width,  left + width);
-        T y2 = _MAX (b.top +  b.height, top + height);
-        left = x1;
-        top = y1;
-        width  = x2 - x1;
-        height = y2 - y1;
+        if(empty()){
+            set(b.left,b.top,b.width,b.height);
+        }else{
+            T x1 = _MIN (left, b.left);
+            T y1 = _MIN (top, b.top);
+            T x2 = _MAX (b.left + b.width,  left + width);
+            T y2 = _MAX (b.top +  b.height, top + height);
+            left = x1;
+            top = y1;
+            width  = x2 - x1;
+            height = y2 - y1;
+        }
     }
     void Union(T x,T y,T w,T h){
         Union(Make(x,y,w,h));

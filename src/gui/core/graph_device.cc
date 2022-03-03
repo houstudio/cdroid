@@ -109,16 +109,18 @@ void GraphDevice::composeSurfaces(){
     std::vector<Rect>wBounds;
     std::vector<Window*>wins;
     WindowManager::getInstance().enumWindows([&wSurfaces,&wBounds,&wins](Window*w)->bool{
-        if(w->getVisibility()!=View::VISIBLE||w->mVisibleRgn->empty()==false){
+        if( (w->getVisibility()==View::VISIBLE) && (w->mVisibleRgn->empty()==false)){
             Rect rcw=w->getBound();
             if(w->mAttachInfo->mCanvas){
                 wSurfaces.push_back(w->mAttachInfo->mCanvas);
                 wBounds.push_back(rcw);
                 wins.push_back(w);
+                return true;
             }
-        }return true;
+        }return false;
     });
     primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
+    Rect rcBlited={0,0,0,0};
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw=wBounds[i];
         std::vector<Rectangle> clipRects;
@@ -137,6 +139,7 @@ void GraphDevice::composeSurfaces(){
             RectangleInt rc=rgn->get_rectangle(j);
             if(hdlSurface)GFXBlit(primarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
             else primaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
+            rcBlited.Union(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
         }
         if(hdlSurface==nullptr){
             primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
@@ -151,7 +154,8 @@ void GraphDevice::composeSurfaces(){
     mInvalidateRgn->do_xor(mInvalidateRgn);
     GFXFlip(primarySurface); 
     t2=SystemClock::uptimeMillis();
-    LOGV("%d surfaces %d rects used %d ms",wSurfaces.size(),rects,t2-t1);
+    LOGV("%d surfaces %d rects Blited.area=(%d,%d,%d,%d) used %d ms",wSurfaces.size(),rects,
+         rcBlited.left,rcBlited.top,rcBlited.width,rcBlited.height,t2-t1);
     last_compose_time=SystemClock::uptimeMillis();
     compose_event=0;
 }

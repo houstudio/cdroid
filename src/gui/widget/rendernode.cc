@@ -4,10 +4,14 @@ namespace cdroid{
 RenderNode::RenderNode(){
     mX = mY = mZ =.0f;
     mAlpha  = 1.f;
-    mScaleX = mScaleY=1.f;
-    mTranslationX = mTranslationY =.0f;
+    mScaleX = 1.f;
+    mScaleY = 1.f;
+    mTranslationX = .0f;
+    mTranslationY = .0f;
+    mTranslationZ = .0f;
     mRotation  = .0f;
-    mRotationX = mRotationY = .0f;
+    mRotationX = .0f;
+    mRotationY = .0f;
     mMatrix = identity_matrix();
 }
 

@@ -436,7 +436,7 @@ please see themes_device_defaults.xml.
         <item name="accessibilityFocusedDrawable">@drawable/view_accessibility_focused</item>
 
         <!-- Autofilled highlight drawable -->
-        <item name="autofilledHighlight">@drawable/autofilled_highlight</item>
+        <item name="autofilledHighlight">@cdroid:drawable/autofilled_highlight</item>
 
         <!-- Lighting and shadow properties -->
         <item name="lightY">@dimen/light_y</item>

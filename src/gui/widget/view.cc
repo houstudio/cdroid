@@ -2352,8 +2352,8 @@ void View::draw(Canvas&canvas){
     }
 
     // skip step 2 & 5 if possible (common case)
-    bool horizontalEdges = (mViewFlags & FADING_EDGE_HORIZONTAL) != 0;
-    bool verticalEdges = (mViewFlags & FADING_EDGE_VERTICAL) != 0;
+    const bool horizontalEdges = (mViewFlags & FADING_EDGE_HORIZONTAL) != 0;
+    const bool verticalEdges = (mViewFlags & FADING_EDGE_VERTICAL) != 0;
     if (!verticalEdges && !horizontalEdges) {
         // Step 3, draw the content
         if (!dirtyOpaque) onDraw(canvas);
@@ -4257,10 +4257,8 @@ void View::setAutofilled(bool autofilled) {
 
 Drawable* View::getAutofilledDrawable(){
     if (mAttachInfo->mAutofilledDrawable == nullptr) {
-        /*Context rootContext = getRootView().getContext();
-        TypedArray a = rootContext.getTheme().obtainStyledAttributes(AUTOFILL_HIGHLIGHT_ATTR);
-        int attributeResourceId = a.getResourceId(0, 0);
-        mAttachInfo->mAutofilledDrawable = rootContext.getDrawable(attributeResourceId);*/
+        Drawable*dr=getContext()->getDrawable("cdroid:attr/autofilled_highlight");
+        mAttachInfo->mAutofilledDrawable = dr;
     }
     return mAttachInfo->mAutofilledDrawable;
 }
@@ -4485,7 +4483,7 @@ bool View::requestFocusFromTouch(){
    return requestFocus(View::FOCUS_DOWN);
 }
 
-bool View::hasAncestorThatBlocksDescendantFocus(){
+bool View::hasAncestorThatBlocksDescendantFocus()const{
    const  bool focusableInTouchMode = isFocusableInTouchMode();
    ViewGroup* ancestor =mParent;
    while (ancestor) {
