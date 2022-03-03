@@ -2782,11 +2782,28 @@ int View::getAutoFillViewId(){
     return mAutofillViewId;
 }
 
+void View::setTag(void*tag){
+    mTag = tag;
+}
+
+void*View::getTag()const{
+    return mTag;
+}
+
+void View*View::setTag(int key,void*tag){
+    mTag = tag;
+}
+
+void*View::getTag(int key)const{
+    return nullptr;
+}
+
 View& View::setHint(const std::string&hint){
     mHint=hint;
     invalidate(true);
     return *this;
 }
+
 const std::string&View::getHint()const{
     return mHint;
 }

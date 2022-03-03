@@ -450,9 +450,10 @@ protected:
     std::string mContentDescription;
     RefPtr<ImageSurface> mDrawingCache;
     RefPtr<ImageSurface> mUnscaledDrawingCache;
+    void* mTag;
+    Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
-    Context* mContext;
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
 
@@ -768,6 +769,10 @@ public:
     int  getId()const;
     int  getAccessibilityViewId();
     int  getAutoFillViewId();
+    void setTag(void*);
+    void*getTag()const;
+    void setTag(int key,void*tag);
+    void*getTag(int key)const;
     virtual View& setHint(const std::string&hint);
     const std::string&getHint()const;
     void setContentDescription(const std::string&);
