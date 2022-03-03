@@ -364,6 +364,7 @@ void ViewGroup::cancelHoverTarget(View*view){
 bool ViewGroup::canViewReceivePointerEvents(View& child) {
     return (child.mViewFlags & VISIBILITY_MASK) == VISIBLE || child.getAnimation();
 }
+
 void ViewGroup::setOnHierarchyChangeListener(OnHierarchyChangeListener listener){
     mOnHierarchyChangeListener =listener;
 }

@@ -58,19 +58,20 @@ LinearLayout::LinearLayout(int x,int y,int w,int h)
   :ViewGroup(x,y,w,h){
     initView();
 }
+
 void LinearLayout::initView(){
-    mWeightSum  = -1.0;
-    mOrientation= HORIZONTAL;
-    mGravity    = Gravity::NO_GRAVITY;
-    mTotalLength =0;
-    mDividerPadding=0;
-    mDivider =nullptr;
-    mShowDividers=SHOW_DIVIDER_NONE;
-    mDividerWidth= mDividerHeight=0;
-    mUseLargestChild=false;
-    mBaselineAligned=false;
-    mBaselineAlignedChildIndex=-1;
-    mAllowInconsistentMeasurement=false;
+    mWeightSum   = -1.0;
+    mOrientation = HORIZONTAL;
+    mGravity     = Gravity::START | Gravity::TOP;
+    mTotalLength = 0;
+    mDividerPadding = 0;
+    mDivider = nullptr;
+    mShowDividers= SHOW_DIVIDER_NONE;
+    mDividerWidth= mDividerHeight = 0;
+    mUseLargestChild = false;
+    mBaselineAligned = false;
+    mBaselineAlignedChildIndex   = -1;
+    mAllowInconsistentMeasurement= false;
 }
 
 static std::map<const std::string,int>orientationkvs={
@@ -85,7 +86,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
 
     mOrientation=attrs.getInt("orientation",orientationkvs,HORIZONTAL);
 
-    mGravity=attrs.getGravity("gravity",Gravity::NO_GRAVITY);
+    mGravity=attrs.getGravity("gravity",mGravity);
 }
 
 LinearLayout::~LinearLayout() {

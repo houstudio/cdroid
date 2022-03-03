@@ -1586,7 +1586,7 @@ void TextView::onDraw(Canvas& canvas) {
     }
     
     canvas.save();
-    if(mRotation==.0f){
+    if(getRotation()==.0f){
         canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
         canvas.clip();//the content will be cutted in rotation 
     }

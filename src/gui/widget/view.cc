@@ -332,6 +332,7 @@ void View::initView(){
     mParent   = nullptr;
     mAttachInfo  = nullptr;
     mListenerInfo= nullptr;
+    mRenderNode  = new  RenderNode();
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
     mLayerType = LAYER_TYPE_NONE;
@@ -340,11 +341,6 @@ void View::initView(){
     mUserPaddingLeftInitial = mUserPaddingRightInitial =0;
     mUserPaddingStart = mUserPaddingEnd = UNDEFINED_PADDING;
     mUserPaddingRight = mUserPaddingLeft= UNDEFINED_PADDING;
-
-    mX = mY = mZ =.0f;
-    mAlpha = mScaleX = mScaleY=1.f;
-    mTranslationX = mTranslationY =.0f;
-    mRotation =.0f; 
 
     mHasPerformedLongPress = false;
     mInContextButtonPress  = false;
@@ -387,6 +383,7 @@ void View::initView(){
 View::~View(){
     if(mParent)onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
+    delete mRenderNode;
     delete mListenerInfo;
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
@@ -478,7 +475,7 @@ void View::setLeft(int left){
     int height = mBottom - mTop;
 
     mLeft = left;
-    //mRenderNode.setLeft(left);
+    mRenderNode->setLeft(left);
 
     sizeChange(mRight - mLeft, height, oldWidth, height);
 
@@ -523,7 +520,7 @@ void View::setTop(int top){
     int oldHeight = mBottom - mTop;
 
     mTop = top;
-    //mRenderNode.setTop(mTop);
+    mRenderNode->setTop(mTop);
 
     sizeChange(width, mBottom - mTop, width, oldHeight);
 
@@ -565,7 +562,7 @@ void View::setRight(int right){
     int height = mBottom - mTop;
 
     mRight = right;
-    //mRenderNode.setRight(mRight);
+    mRenderNode->setRight(mRight);
 
     sizeChange(mRight - mLeft, height, oldWidth, height);
 
@@ -607,7 +604,7 @@ void View::setBottom(int bottom){
     int oldHeight = mBottom - mTop;
     
     mBottom = bottom;
-    //mRenderNode.setBottom(mBottom);
+    mRenderNode->setBottom(mBottom);
     
     sizeChange(width, mBottom - mTop, width, oldHeight);
     
@@ -900,7 +897,7 @@ bool View::onSetAlpha(int alpha) {
     return false;
 }
 
-Animation* View::getAnimation() {
+Animation* View::getAnimation()const{
     return mCurrentAnimation;
 }
 
@@ -2106,6 +2103,25 @@ void View::setOnScrollChangeListener(OnScrollChangeListener l){
     getListenerInfo()->mOnScrollChangeListener=l;
 }
 
+void View::setOnKeyListener(OnKeyListener l){
+    getListenerInfo()->mOnKeyListener = l;
+}
+
+void View::setOnTouchListener(OnTouchListener l){
+    getListenerInfo()->mOnTouchListener = l;
+}
+
+void View::setOnGenericMotionListener(OnGenericMotionListener l){
+    getListenerInfo()->mOnGenericMotionListener = l;
+}
+
+void View::setOnHoverListener(OnHoverListener l){
+    getListenerInfo()->mOnHoverListener = l;
+}
+
+/*void View::setOnDragListener(OnDragListener l){
+    getListenerInfo()->
+}*/
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
@@ -3744,8 +3760,8 @@ void View::onAttachedToWindow(){
         InputMethodManager&imm=InputMethodManager::getInstance();
         imm.focusIn((View*)this);
     } 
-    mPivotX =(float)getWidth()/2.f;
-    mPivotY =(float)getHeight()/2.f;
+    mRenderNode->setPivotX((float)getWidth()/2.f);
+    mRenderNode->setPivotY((float)getHeight()/2.f);
 }
 
 void View::onDetachedFromWindow(){
@@ -4849,9 +4865,13 @@ KeyEvent::DispatcherState* View::getKeyDispatcherState()const{
 }
 
 bool View::dispatchKeyEvent(KeyEvent&event){
-    bool res=event.dispatch(this,(mAttachInfo? &mAttachInfo->mKeyDispatchState : nullptr),this);
-    LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),res);    
-    return res;
+    if (mListenerInfo && mListenerInfo->mOnKeyListener && (mViewFlags & ENABLED_MASK) == ENABLED
+            && mListenerInfo->mOnKeyListener(*this, event.getKeyCode(), event)) {
+        return true;
+    }
+    const bool result = event.dispatch(this,(mAttachInfo? &mAttachInfo->mKeyDispatchState : nullptr),this);
+    LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),result);
+    return result;
 }
 
 /** This method is the last chance for the focused view and its ancestors to
@@ -4912,6 +4932,10 @@ bool View::onKeyMultiple(int keyCode, int count, KeyEvent& event){
 
 int View::commitText(const std::wstring&ws){
     return 0;
+}
+
+bool View::canReceivePointerEvents()const{
+    return (mViewFlags & VISIBILITY_MASK) == VISIBLE || getAnimation() != nullptr;
 }
 
 bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
@@ -5000,6 +5024,12 @@ bool View::dispatchTouchEvent(MotionEvent&event){
     }
 
     if ((mViewFlags & ENABLED_MASK) == ENABLED && handleScrollBarDragging(event)) {
+        result = true;
+    }
+
+    if ( mListenerInfo && mListenerInfo->mOnTouchListener
+            && (mViewFlags & ENABLED_MASK) == ENABLED
+            && mListenerInfo->mOnTouchListener(*this, event)) {
         result = true;
     }
 
@@ -5786,37 +5816,19 @@ void View::ensureTransformationInfo(){
 }
 
 bool View::hasIdentityMatrix()const{
-    const bool rc= (mX==.0f) && (mY==.0f) && (mZ==.0f) &&
-       (mTranslationX==.0f) && (mTranslationY==.0f) &&
-       (mScaleX ==1.f) && (mScaleY==1.f) && (mRotation==.0f);
-    return rc;
-}
-
-static inline float sdot(float a,float b,float c,float d){
-    return a * b + c * d;
+    return mRenderNode->hasIdentityMatrix();
 }
 
 Matrix View::getMatrix() {
     ensureTransformationInfo();
     //mRenderNode.getMatrix(matrix);
     Matrix matrix=mTransformationInfo->mMatrix;
-    matrix.translate(mTranslationX,mTranslationY);
-    matrix.scale(mScaleX,mScaleY);
-
-    const float radians=mRotation*M_PI/180.f;
-    const float fsin=sin(radians);
-    const float fcos=cos(radians);
-    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1.f-fcos,mPivotX),sdot(fsin,mPivotX,1.f-fcos,mPivotY));
-    matrix.multiply(matrix,rt);
-    return matrix;
+    return mRenderNode->getMatrix();
 }
 
 Matrix View::getInverseMatrix() {
     ensureTransformationInfo();
-    Matrix matrix = mTransformationInfo->mInverseMatrix;
-    //mRenderNode.getInverseMatrix(matrix);
-    matrix = getMatrix();
-    matrix.invert();
+    Matrix matrix = mRenderNode->getInverseMatrix();
     return matrix;
 }
 
@@ -5829,18 +5841,19 @@ float View::getY()const{
 }
 
 float View::getZ()const{
-    return mZ;
+    return getElevation() + getTranslationZ();
 }
 
 void View::setZ(float z){
-    mZ=z;
+    setTranslationZ(z - getElevation());
 }
 
 float View::getElevation()const{
-    return .0f;
+    return mRenderNode->getElevation();
 }
 
 void View::setElevation(float elevation){
+    mRenderNode->setElevation(elevation);
 }
 
 void View::setX(float x){
@@ -5852,108 +5865,126 @@ void View::setY(float y){
 }
 
 void View::setScaleX(float x){
-    invalidateViewProperty(true,false);
-    mScaleX = (x==.0f)?.00001f:x;//scale cant be zero
-    invalidateViewProperty(false,true);
+    if(x != getScaleX()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setScaleX((x==.0f)?.00001f:x);//scale cant be zero
+        invalidateViewProperty(false,true);
+    }
 }
 
 float View::getScaleX()const{
-    return mScaleX;
+    return mRenderNode->getScaleX();
 }
 
 void View::setScaleY(float y){
-    invalidateViewProperty(true,false);
-    mScaleY = (y==.0f)?.00001f:y;//scale cant be zero
-    invalidateViewProperty(false,true);
+    if(y!=getScaleY()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setScaleY((y==.0f)?.00001f:y);//scale cant be zero
+        invalidateViewProperty(false,true);
+    }
 }
 
 float View::getScaleY()const{
-    return mScaleY;
+    return mRenderNode->getScaleY();
 }
 
 void View::setTranslationX(float x){
-    invalidateViewProperty(true,false);
-    mTranslationX=x;
-    invalidateViewProperty(false,true);
-    invalidateParentIfNeededAndWasQuickRejected();
+    if(x != getTranslationX()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setTranslationX(x);
+        invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
 }
 
 float View::getTranslationX()const{
-    return mTranslationX;
+    return mRenderNode->getTranslationX();
 }
 
 void View::setTranslationY(float y){
-    invalidateViewProperty(true,false);
-    mTranslationY=y; 
-    invalidateViewProperty(false,true);
-    invalidateParentIfNeededAndWasQuickRejected();
+    if(y!=getTranslationY()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setTranslationY(y); 
+        invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
 }
 
 float View::getTranslationY()const{
-    return mTranslationY;
+    return mRenderNode->getTranslationY();
 }
 
 void View::setTranslationZ(float z){
-    invalidateViewProperty(true,false);
-    mTranslationZ=z;
-    invalidateViewProperty(false,true);
-    invalidateParentIfNeededAndWasQuickRejected();
+    if(z!=getTranslationZ()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setTranslationZ(z);
+        invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
 }
 
 float View::getTranslationZ()const{
-    return mTranslationZ;
+    return mRenderNode->getTranslationZ();
 }
 
 float View::getRotation()const{
-    return mRotation;
+    return mRenderNode->getRotation();
 }
 
 /* Sets the degrees that the view is rotated around the pivot point. Increasing values
  * result in clockwise rotation.*/
 void View::setRotation(float rotation){
-    invalidateViewProperty(true,false);
-    mRotation=rotation;
-    invalidateViewProperty(false,true);
-    invalidateParentIfNeededAndWasQuickRejected();
+    if(rotation != getRotation()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setRotation(rotation);
+        invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
 }
 
 float View::getRotationX()const{
-    return mRotationX;
+    return mRenderNode->getRotationX();
 }
 
 void View::setRotationX(float x){
-    mRotationX=x;
-    invalidateParentIfNeededAndWasQuickRejected();
+    if(x!= getRotationX()){
+        mRenderNode->setRotationX(x);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
 }
 
 float View::getRotationY()const{
-    return mRotationY;
+    return mRenderNode->getRotationY();
 }
 
 void View::setRotationY(float y){
-     mRotationY=y; 
+     mRenderNode->setRotationY(y); 
 }
 
 float View::getPivotX()const{
-    return mPivotX;
+    return mRenderNode->getPivotX();
 }
 
 void View::setPivotX(float x){
-    invalidateViewProperty(true,false);
-    mPivotX=x;
-    invalidateViewProperty(false,true);
-    invalidateParentIfNeededAndWasQuickRejected();
+    if(x!=getPivotX()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setPivotX(x);
+        invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
 }
 
 float View::getPivotY()const{
-    return mPivotY;
+    return mRenderNode->getPivotY();
 }
 
 void View::setPivotY(float y){
-    invalidateViewProperty(true,false);
-    mPivotY=y;
-    invalidateViewProperty(false,true);
-    invalidateParentIfNeededAndWasQuickRejected();
+    if(y!=getPivotY()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setPivotY(y);
+        invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
 }
 
 bool View::isPivotSet()const{
@@ -5961,12 +5992,12 @@ bool View::isPivotSet()const{
 }
 
 void View::resetPivot(){
-    mPivotX=getWidth()/2.f;
-    mPivotY=getHeight()/2.f;
+    mRenderNode->setPivotX(getWidth()/2.f);
+    mRenderNode->setPivotY(getHeight()/2.f);
 }
 
 float View::getAlpha()const{
-    return mAlpha;//mTransformationInfo  ? mTransformationInfo->mAlpha : 1.f;
+    return mTransformationInfo  ? mTransformationInfo->mAlpha : 1.f;
 }
 
 void View::setAlpha(float a){

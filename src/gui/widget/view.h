@@ -7,6 +7,7 @@
 #include <core/insets.h>
 #include <core/viewconfiguration.h>
 #include <core/systemclock.h>
+#include <widget/rendernode.h>
 #include <widget/layoutparams.h>
 #include <widget/measurespec.h>
 #include <widget/layoutinflater.h>
@@ -305,6 +306,7 @@ public:
     DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
             int oldLeft, int oldTop, int oldWidth, int oldHeight);
 private:
+    friend  ViewGroup;
     int mMinWidth;
     int mMinHeight;
     int mDrawingCacheBackgroundColor;
@@ -322,27 +324,59 @@ private:
  
     Runnable mPendingCheckForTap;
     Runnable mPerformClick;
+	
     bool mInContextButtonPress;
     bool mHasPerformedLongPress;
     bool mIgnoreNextUpEvent;
     bool mOriginalPressedState;
+	
+    bool mBackgroundSizeChanged;
+    bool mDefaultFocusHighlightSizeChanged;
+    bool mDefaultFocusHighlightEnabled;
+    bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
     ViewGroup*mNestedScrollingParent;
     std::map<Size,Size>mMeasureCache;
     class ScrollabilityCache*mScrollCache;
 
     Drawable*mBackground;
-    bool mBackgroundSizeChanged;
     Drawable*mDefaultFocusHighlight;
     Drawable*mDefaultFocusHighlightCache;
-    bool mDefaultFocusHighlightSizeChanged;
-    bool mDefaultFocusHighlightEnabled;
-    bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
     Drawable*mScrollIndicatorDrawable;
+    Runnable mPendingCheckForLongPress;
+    Runnable mUnsetPressedState;	
     class RoundScrollbarRenderer* mRoundScrollbarRenderer;
     class TintInfo*mBackgroundTint;
     class ForegroundInfo*mForegroundInfo;
 private:
+    //Temporary values used to hold (x,y) coordinates when delegating from the
+    // two-arg performLongClick() method to the legacy no-arg version
+    void checkForTapCallback(int x,int y);//for mPendingCheckForTap
+    void checkLongPressCallback(int x,int y);//for mPendingCheckForLongPress
+    void unsetPressedCallback();//for mUnsetPressedState
+
+    void removeTapCallback();
+    void removeLongPressCallback();
+    void removePerformClickCallback();
+    void removeUnsetPressCallback();
+
+    void checkForLongClick(int delayOffset,int x,int y);
+    bool performClickInternal();
+    bool performLongClickInternal(int x,int y);
+    void setPressed(bool pressed,int x,int y);
+
+    void resetPressedState();
+    void initView();
+    void drawBackground(Canvas&canvas);
+    void applyBackgroundTint();
+    void applyForegroundTint();
+    View* findViewInsideOutShouldExist(View* root, int id)const;
+    bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
+    bool requestFocusFromTouch();
+    bool hasAncestorThatBlocksDescendantFocus();
+    View(const View&)=delete;
+    View&operator=(const View&)=delete;
+	
     void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
     void setDefaultFocusHighlight(Drawable* highlight);
@@ -422,13 +456,10 @@ protected:
     Animation* mCurrentAnimation;
     std::vector<int>mDrawableState;
 
+    int mTop,mLeft,mRight,mBottom;
     ViewGroup*mParent;
     AttachInfo* mAttachInfo;
-    int mTop,mLeft,mRight,mBottom;
-    float mX,mY,mZ,mScaleX,mScaleY;
-    float mRotationX,mRotationY,mRotation;
-    float mPivotX,mPivotY,mAlpha;
-    float mTranslationX,mTranslationY,mTranslationZ;
+    RenderNode *mRenderNode;
     class ListenerInfo* mListenerInfo;
     ListenerInfo*getListenerInfo();
 protected:
@@ -498,7 +529,7 @@ protected:
     virtual void dispatchSetActivated(bool activated);
     virtual void dispatchAttachedToWindow(AttachInfo*info,int visibility);
     virtual void dispatchDetachedFromWindow();
-
+    bool canReceivePointerEvents()const;
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericFocusedEvent(MotionEvent& event);
@@ -605,7 +636,7 @@ public:
     void setMinimumHeight(int minHeight);
     int getMinimumWidth();
     void setMinimumWidth(int minWidth);
-    Animation* getAnimation();
+    Animation* getAnimation()const;
     void startAnimation(Animation* animation);
     void clearAnimation();
     void setAnimation(Animation* animation);
@@ -684,7 +715,7 @@ public:
     void  setWillNotDraw(bool willNotDraw);
     const Rect getClientRect()const;
     bool  hasClickListener()const;
-    virtual void setOnClickListener(OnClickListener ls);
+    virtual void setOnClickListener(OnClickListener l);
     virtual void setOnLongClickListener(OnLongClickListener l);
     virtual void setOnFocusChangeListener(OnFocusChangeListener listtener); 
     virtual void setOnScrollChangeListener(OnScrollChangeListener l);
@@ -697,6 +728,11 @@ public:
     bool  performContextClick();
     bool showContextMenu();
     bool showContextMenu(float x, float y);
+    void setOnKeyListener(OnKeyListener l);
+    void setOnTouchListener(OnTouchListener l);
+    void setOnGenericMotionListener(OnGenericMotionListener l);
+    void setOnHoverListener(OnHoverListener l);
+    //void setOnDragListener(OnDragListener&l);
     // Foreground color
 
     //foreground/background
@@ -949,39 +985,6 @@ public:
     void forceLayout();
     virtual void resolveLayoutParams();
     void layout(int l, int t, int r, int b);
-private:
-    friend  ViewGroup;
-    //Temporary values used to hold (x,y) coordinates when delegating from the
-    // two-arg performLongClick() method to the legacy no-arg version
-    void checkForTapCallback(int x,int y);//for mPendingCheckForTap
-
-    Runnable mPendingCheckForLongPress;
-    void checkLongPressCallback(int x,int y);//for mPendingCheckForLongPress
-
-    Runnable mUnsetPressedState;
-    void unsetPressedCallback();//for mUnsetPressedState
-
-    void removeTapCallback();
-    void removeLongPressCallback();
-    void removePerformClickCallback();
-    void removeUnsetPressCallback();
-
-    void checkForLongClick(int delayOffset,int x,int y);
-    bool performClickInternal();
-    bool performLongClickInternal(int x,int y);
-    void setPressed(bool pressed,int x,int y);
-
-    void resetPressedState();
-    void initView();
-    void drawBackground(Canvas&canvas);
-    void applyBackgroundTint();
-    void applyForegroundTint();
-    View* findViewInsideOutShouldExist(View* root, int id)const;
-    bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
-    bool requestFocusFromTouch();
-    bool hasAncestorThatBlocksDescendantFocus();
-    View(const View&)=delete;
-    View&operator=(const View&)=delete;
 };
 }//endof namespace cdroid
 
