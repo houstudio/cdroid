@@ -59,11 +59,12 @@ void WindowManager::addWindow(Window*win){
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
     if(activeWindow)activeWindow->post(std::bind(&Window::onDeactive,activeWindow));
-    //win->post([win](){
-        View::AttachInfo*info=new View::AttachInfo();
-        info->mRootView=win;
-        win->dispatchAttachedToWindow(info,win->getVisibility());
-    //});
+    
+    View::AttachInfo*info=new View::AttachInfo();
+    info->mContentInsets.set(5,5,5,5);
+    info->mRootView=win;
+    win->dispatchAttachedToWindow(info,win->getVisibility());
+    
     Looper::getDefault()->addEventHandler(win->source);
     win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
@@ -122,16 +123,24 @@ void WindowManager::moveWindow(Window*w,int x,int y){
     }
 }
 
-void WindowManager::broadcast(DWORD msgid,DWORD wParam,ULONG lParam){
-    for(auto win:windows)
-       ;//win->sendMessage(msgid,wParam,lParam);
-}
-
 int WindowManager::enumWindows(WNDENUMPROC cbk){
     int rc=0;
     for(auto win:windows)
        rc+=cbk(win);
     return rc;
+}
+
+int WindowManager::getWindows(std::vector<Window*>&wins){
+    wins=windows;
+    return windows.size();
+}
+
+int WindowManager::getVisibleWindows(std::vector<Window*>&wins){
+    for(auto w:windows){
+        if(w->getVisibility()==View::VISIBLE)
+           wins.push_back(w);
+    }
+    return wins.size();
 }
 
 void WindowManager::processEvent(InputEvent&e){

@@ -36,8 +36,9 @@ public:
     void processEvent(InputEvent&e);
     void clip(Window*win);
     void resetVisibleRegion();
-    void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);
     int enumWindows(WNDENUMPROC cbk);
+    int getWindows(std::vector<Window*>&);
+    int getVisibleWindows(std::vector<Window*>&);
     void shutDown(){delete instance;}
 protected:
     virtual void onKeyEvent(KeyEvent&key);

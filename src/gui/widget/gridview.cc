@@ -1181,9 +1181,9 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
         child->offsetTopAndBottom(childTop - child->getTop());
     }
 
-    /*if (mCachingStarted && !child->isDrawingCacheEnabled()) {
+    if (mCachingStarted && !child->isDrawingCacheEnabled()) {
         child->setDrawingCacheEnabled(true);
-    }*/
+    }
 }
 
 void GridView::setSelection(int position) {
@@ -1193,14 +1193,14 @@ void GridView::setSelection(int position) {
         mResurrectToPosition = position;
     }
     mLayoutMode = LAYOUT_SET_SELECTION;
-    //if (mPositionScroller) mPositionScroller.stop();
+    if (mPositionScroller) mPositionScroller->stop();
     requestLayout();
 }
 
 void GridView::setSelectionInt(int position) {
     int previousSelectedPosition = mNextSelectedPosition;
 
-    //if (mPositionScroller) mPositionScroller.stop();
+    if (mPositionScroller) mPositionScroller->stop();
 
     setNextSelectedPositionInt(position);
     layoutChildren();
@@ -1225,7 +1225,7 @@ bool GridView::dispatchKeyEvent(KeyEvent& event) {
             // ... give it to ourselves so we can scroll if necessary
             handled = onKeyDown(event.getKeyCode(), event);
         }
-        //handled=commonKey(event.getKeyCode(), 1,event);
+        handled=commonKey(event.getKeyCode(), 1,event);
     }
     return handled;
 }

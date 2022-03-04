@@ -172,6 +172,10 @@ protected:
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
     bool performKeyboardGroupNavigation(int direction);
 
+    bool isAlwaysDrawnWithCacheEnabled()const;
+    void setAlwaysDrawnWithCacheEnabled(bool always);
+    bool isChildrenDrawnWithCacheEnabled()const;
+    void setChildrenDrawnWithCacheEnabled(bool enabled);
     bool isChildrenDrawingOrderEnabled()const;
     void setChildrenDrawingOrderEnabled(bool enabled);
     void setLayoutMode(int layoutMode,bool explicity);
@@ -243,7 +247,7 @@ public:
     void dispatchSetSelected(bool selected)override;
     void dispatchSetActivated(bool activated)override;
     virtual std::vector<View*> buildTouchDispatchChildList();
-
+    bool dispatchActivityResult(const std::string& who, int requestCode, int resultCode, Intent data)override;
     virtual View*focusSearch(View*focused,int direction)const;
     View*getFocusedChild();
     bool hasFocus()const override;

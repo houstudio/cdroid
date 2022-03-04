@@ -97,7 +97,6 @@ public:
     void dispatchInvalidateOnAnimation(View* view)override;
     void cancelInvalidate(View* view)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
-    static void broadcast(DWORD msgid,DWORD wParam,ULONG lParam);
     void close();
 protected:
 };

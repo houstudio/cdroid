@@ -692,6 +692,22 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     //notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
+bool ViewGroup::isAlwaysDrawnWithCacheEnabled()const{
+    return (mGroupFlags & FLAG_ALWAYS_DRAWN_WITH_CACHE) == FLAG_ALWAYS_DRAWN_WITH_CACHE;
+}
+
+void ViewGroup::setAlwaysDrawnWithCacheEnabled(bool always){
+    setBooleanFlag(FLAG_ALWAYS_DRAWN_WITH_CACHE, always);
+}
+
+bool ViewGroup::isChildrenDrawnWithCacheEnabled()const{
+    return (mGroupFlags & FLAG_CHILDREN_DRAWN_WITH_CACHE) == FLAG_CHILDREN_DRAWN_WITH_CACHE;
+}
+
+void ViewGroup::setChildrenDrawnWithCacheEnabled(bool enabled){
+    setBooleanFlag(FLAG_CHILDREN_DRAWN_WITH_CACHE, enabled);
+}
+
 void ViewGroup::setChildrenDrawingCacheEnabled(bool enabled){
     if (enabled || (mPersistentDrawingCache & PERSISTENT_ALL_CACHES) != PERSISTENT_ALL_CACHES) {
         for (auto c:mChildren) {
@@ -1877,6 +1893,18 @@ bool ViewGroup::getTouchscreenBlocksFocus()const{
 
 bool ViewGroup::shouldBlockFocusForTouchscreen()const{
     return getTouchscreenBlocksFocus()&&!( isKeyboardNavigationCluster()&& (hasFocus()||(findKeyboardNavigationCluster() != this)));
+}
+
+bool ViewGroup::dispatchActivityResult(const std::string& who, int requestCode, int resultCode, Intent data){
+    if (View::dispatchActivityResult(who, requestCode, resultCode, data)) {
+        return true;
+    }
+    for (auto child:mChildren){
+        if (child->dispatchActivityResult(who, requestCode, resultCode, data)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 View* ViewGroup::focusSearch(View* focused, int direction)const{

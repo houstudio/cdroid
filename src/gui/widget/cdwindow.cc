@@ -364,9 +364,6 @@ void Window::doLayout(){
     mInLayout=false;
 }
 
-void Window::broadcast(DWORD msgid,DWORD wParam,ULONG lParam){
-    WindowManager::getInstance().broadcast(msgid,wParam,lParam);
-}
 
 void Window::close(){
     //sendMessage(View::WM_DESTROY,0,0);

@@ -29,13 +29,9 @@
 #define DECLARE_UIEVENT(type,name,...) typedef std::function< type(__VA_ARGS__) >name
 #endif
 
-#define TEXT(x) App::getInstance().getString(x)
-#define _(x) TEXT(x)
-#define _T(x) TEXT(x)
-
 namespace cdroid{
-
 class ViewGroup;
+typedef const std::string Intent;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
     static bool DEBUG_DRAW;
@@ -95,6 +91,8 @@ protected:
         PFLAG_DRAWING_CACHE_VALID= 0x8000 ,
         PFLAG_ANIMATION_STARTED= 0x00010000 ,
         PFLAG_ALPHA_SET        = 0x00040000 ,
+        PFLAG_SCROLL_CONTAINER = 0x00080000 ,
+        PFLAG_SCROLL_CONTAINER_ADDED= 0x00100000,
         PFLAG_DIRTY            = 0x00200000 ,
         PFLAG_DIRTY_OPAQUE     = 0x00400000 ,
         PFLAG_DIRTY_MASK       = 0x00600000 ,
@@ -168,6 +166,7 @@ protected:
         Rect mOutsets;
         KeyEvent::DispatcherState mKeyDispatchState;
         bool mAlwaysConsumeNavBar;
+        bool mAlwaysConsumeSystemBars;
         bool mHasWindowFocus;
         bool mScalingRequired;
         bool mUse32BitDrawingCache;
@@ -182,6 +181,7 @@ protected:
         Drawable*mAutofilledDrawable;
         View* mTooltipHost;
         View* mViewRequestingLayout;
+        std::vector<View*> mScrollContainers;
         AttachInfo(); 
     };
 public:
@@ -301,6 +301,7 @@ public:
     DECLARE_UIEVENT(bool,OnGenericMotionListener,View&v, MotionEvent&);
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
+    DECLARE_UIEVENT(bool,OnContextClickListener,View&);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
@@ -334,6 +335,7 @@ private:
 
     ViewGroup*mNestedScrollingParent;
     std::map<Size,Size>mMeasureCache;
+    std::string mStartActivityRequestWho;
     class ScrollabilityCache*mScrollCache;
 
     Drawable* mBackground;
@@ -681,7 +683,8 @@ public:
     int getHorizontalScrollbarHeight()const;
     int getVerticalScrollbarWidth()const;
     int getVerticalScrollbarPosition()const;
-
+    bool isScrollContainer()const;
+    void setScrollContainer(bool isScrollContainer);
     bool isHorizontalFadingEdgeEnabled()const;
     void setHorizontalFadingEdgeEnabled(bool horizontalFadingEdgeEnabled);
     bool isVerticalFadingEdgeEnabled()const;
@@ -729,6 +732,9 @@ public:
     bool  performContextClick();
     bool showContextMenu();
     bool showContextMenu(float x, float y);
+    void startActivityForResult(Intent intent, int requestCode);
+    virtual bool dispatchActivityResult(const std::string& who, int requestCode, int resultCode, Intent data);
+    virtual void onActivityResult(int requestCode, int resultCode, Intent data);
     void setOnKeyListener(OnKeyListener l);
     void setOnTouchListener(OnTouchListener l);
     void setOnGenericMotionListener(OnGenericMotionListener l);

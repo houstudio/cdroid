@@ -322,6 +322,7 @@ void AbsListView::setAdapter(Adapter*adapter) {
 int AbsListView::getHeaderViewsCount()const {
     return 0;
 }
+
 int AbsListView::getFooterViewsCount()const {
     return 0;
 }
@@ -347,6 +348,7 @@ int AbsListView::getHeightForPosition(int position) {
 void AbsListView::setSmoothScrollbarEnabled(bool enable) {
     mSmoothScrollbarEnabled = enable;
 }
+
 bool AbsListView::isSmoothScrollbarEnabled()const {
     return mSmoothScrollbarEnabled;
 }
@@ -376,18 +378,23 @@ void AbsListView::setScrollingCacheEnabled(bool enabled){
 int AbsListView::getListPaddingTop()const {
     return mListPadding.top;
 }
+
 int AbsListView::getListPaddingBottom()const {
     return mListPadding.height;
 }
+
 int AbsListView::getListPaddingLeft()const {
     return mListPadding.left;
 }
+
 int AbsListView::getListPaddingRight()const {
     return mListPadding.width;
 }
+
 void AbsListView::setTranscriptMode(int mode){
     mTranscriptMode=mode;
 }
+
 int AbsListView::getTranscriptMode()const{
     return mTranscriptMode;
 }
@@ -410,6 +417,7 @@ void AbsListView::setCacheColorHint(int color) {
 ViewGroup::LayoutParams*AbsListView::generateDefaultLayoutParams()const {
     return new AbsListView::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT, 0);
 }
+
 ViewGroup::LayoutParams*AbsListView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     return new AbsListView::LayoutParams(*p);
 }
@@ -615,6 +623,7 @@ void AbsListView::setItemChecked(int position, bool value) {
         requestLayout();
     }
 }
+
 View* AbsListView::getSelectedView() {
     if (mItemCount > 0 && mSelectedPosition >= 0) {
         return getChildAt(mSelectedPosition - mFirstPosition);
@@ -768,6 +777,7 @@ void AbsListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyF
         resurrectSelection();
    }
 }
+
 void AbsListView::requestLayoutIfNecessary() {
     if (getChildCount() > 0) {
         resetList();
@@ -889,6 +899,7 @@ void AbsListView::updateSelectorState() {
 
 void AbsListView::layoutChildren() {
 }
+
 void AbsListView::drawableStateChanged() {
     AdapterView::drawableStateChanged();
     updateSelectorState();
@@ -1112,6 +1123,7 @@ bool AbsListView::resurrectSelection() {
 bool AbsListView::performLongPress(View* child,int longPressPosition,long longPressId){
     return performLongPress(child,longPressPosition,longPressId,-1,-1);
 }
+
 bool AbsListView::performLongPress(View* child,int longPressPosition,long longPressId,int x,int y){
     if (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL) {
         /*if (mChoiceActionMode == nullptr &&
@@ -2576,6 +2588,7 @@ int AbsListView::releaseGlow(int deltaY, int x) {
 bool AbsListView::isGlowActive()const{
     return mEdgeGlowBottom->getDistance() != 0 || mEdgeGlowTop->getDistance() != 0;
 }
+
 void AbsListView::invalidateTopGlow() {
     if (mEdgeGlowTop == nullptr) return;
 
@@ -2956,6 +2969,7 @@ void AbsListView::setFriction(float friction){
 void AbsListView::setVelocityScale(float scale) {
     mVelocityScale = scale;
 }
+
 void AbsListView::smoothScrollToPosition(int position){
     if (mPositionScroller == nullptr) {
         mPositionScroller = createPositionScroller();
@@ -3509,6 +3523,7 @@ void AbsListView::PositionScroller::operator()() {
 AbsListView::LayoutParams::LayoutParams():ViewGroup::LayoutParams() {
     init();
 }
+
 void AbsListView::LayoutParams::init(){
     itemId=-1;
     viewType=0;
@@ -3516,18 +3531,23 @@ void AbsListView::LayoutParams::init(){
     scrappedFromPosition=false;
     forceAdd=false;
 }
+
 AbsListView::LayoutParams::LayoutParams(const ViewGroup::LayoutParams&p):ViewGroup::LayoutParams(p) {
     init();
 }
+
 AbsListView::LayoutParams::LayoutParams(int w,int h):ViewGroup::LayoutParams(w,h) {
     init();
 }
+
 AbsListView::LayoutParams::LayoutParams(int w, int h, int vt):ViewGroup::LayoutParams(w,h) {
     init();
     viewType = vt;
 }
+
 AbsListView::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):ViewGroup::LayoutParams(ctx,atts){
     init();
 }
+
 }//namespace
 

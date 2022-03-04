@@ -66,7 +66,7 @@ public:
     View::OnScrollChangeListener mOnScrollChangeListener;
     View::OnClickListener mOnClickListener;
     View::OnLongClickListener mOnLongClickListener;
-    //OnContextClickListener mOnContextClickListener;
+    View::OnContextClickListener mOnContextClickListener;
     //OnCreateContextMenuListener mOnCreateContextMenuListener;
     View::OnKeyListener mOnKeyListener;
     View::OnTouchListener mOnTouchListener;
@@ -1275,6 +1275,10 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
         }
     }
 
+    if ((mPrivateFlags&PFLAG_SCROLL_CONTAINER) != 0) {
+        mAttachInfo->mScrollContainers.push_back(this);
+        mPrivateFlags |= PFLAG_SCROLL_CONTAINER_ADDED;
+    }
     // Send onVisibilityChanged directly instead of dispatchVisibilityChanged.
     // As all views in the subtree will already receive dispatchAttachedToWindow
     // traversing the subtree again here is not desired.
@@ -1291,6 +1295,13 @@ void View::dispatchDetachedFromWindow(){
     onDetachedFromWindowInternal();
     InputMethodManager&imm=InputMethodManager::getInstance();
     imm.onViewDetachedFromWindow(this);
+    if ((mPrivateFlags & PFLAG_SCROLL_CONTAINER_ADDED) != 0) {
+        std::vector<View*>&conts=mAttachInfo->mScrollContainers;
+        auto it=std::find(conts.begin(),conts.end(),this);
+        if(it!=conts.end())
+            conts.erase(it);
+        mPrivateFlags &= ~PFLAG_SCROLL_CONTAINER_ADDED;
+    }
     mAttachInfo = nullptr;
 }
 
@@ -1569,6 +1580,28 @@ View& View::setHorizontalScrollBarEnabled(bool horizontalScrollBarEnabled){
         awakenScrollBars(0,false);
     }
     return *this;
+}
+
+bool View::isScrollContainer()const{
+    return (mPrivateFlags & PFLAG_SCROLL_CONTAINER_ADDED) != 0;
+}
+
+void View::setScrollContainer(bool isScrollContainer){
+    if (isScrollContainer) {
+        if (mAttachInfo  && (mPrivateFlags&PFLAG_SCROLL_CONTAINER_ADDED) == 0) {
+            mAttachInfo->mScrollContainers.push_back(this);
+            mPrivateFlags |= PFLAG_SCROLL_CONTAINER_ADDED;
+        }
+        mPrivateFlags |= PFLAG_SCROLL_CONTAINER;
+    } else {
+        if ((mPrivateFlags&PFLAG_SCROLL_CONTAINER_ADDED) != 0) {
+            std::vector<View*>&conts = mAttachInfo->mScrollContainers;
+            auto it=std::find(conts.begin(),conts.end(),this);
+            if(it != conts.end())
+                conts.erase(it);
+        }
+        mPrivateFlags &= ~(PFLAG_SCROLL_CONTAINER|PFLAG_SCROLL_CONTAINER_ADDED);
+    }
 }
 
 float View::getTopFadingEdgeStrength(){
@@ -2109,6 +2142,22 @@ void View::addOnLayoutChangeListener(OnLayoutChangeListener listener){
 
 void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
     //mOnLayoutChangeListeners.push_back(listener);
+}
+
+void View::startActivityForResult(Intent intent, int requestCode){
+    mStartActivityRequestWho="cdroid:view";
+}
+
+bool View::dispatchActivityResult(const std::string& who, int requestCode, int resultCode, Intent data){
+    if (mStartActivityRequestWho.compare(who)==0) {
+        onActivityResult(requestCode, resultCode, data);
+        mStartActivityRequestWho.erase();
+        return true;
+    }
+    return false;
+}
+
+void View::onActivityResult(int requestCode, int resultCode, Intent data){
 }
 
 void View::setOnScrollChangeListener(OnScrollChangeListener l){
@@ -5173,11 +5222,10 @@ bool View::performContextClick(int x, int y) {
 bool View::performContextClick() {
     //sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CONTEXT_CLICKED);
     bool handled = false;
-    /*ListenerInfo li = mListenerInfo;
-    if (li != null && li.mOnContextClickListener != null) {
-        handled = li.mOnContextClickListener.onContextClick(View.this);
+    if (mListenerInfo && mListenerInfo->mOnContextClickListener) {
+        handled = mListenerInfo->mOnContextClickListener(*this);
     }
-    if (handled) {
+    /*if (handled) {
         performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK);
     }*/
     return handled;
@@ -6171,11 +6219,12 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
 View::AttachInfo::AttachInfo(){
     mHardwareAccelerated =false;
-    mWindowVisibility =VISIBLE;
-    mHasWindowFocus   =true;
-    mApplicationScale =1.0f;
-    mScalingRequired  =false;
-    mUse32BitDrawingCache=false;
+    mWindowVisibility = VISIBLE;
+    mHasWindowFocus   = true;
+    mApplicationScale = 1.0f;
+    mScalingRequired  = false;
+    mUse32BitDrawingCache = false;
+    mAlwaysConsumeSystemBars= false;
     mDebugLayout  = false;
     mDrawingTime  = 0;
     mInTouchMode  = true;
@@ -6183,8 +6232,8 @@ View::AttachInfo::AttachInfo(){
     mRootView     = nullptr;
     mCanvas       = nullptr;
     mDisplayState = true;
-    mTooltipHost  =nullptr;
-    mViewRequestingLayout =nullptr;
+    mTooltipHost  = nullptr;
+    mViewRequestingLayout = nullptr;
 }
 
 }//endof namespace
