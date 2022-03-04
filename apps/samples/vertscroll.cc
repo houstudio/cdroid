@@ -38,7 +38,7 @@ int main(int argc,const char*argv[]){
     for(int i=0;i<10;i++){
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT));
         lp->setMargins(5,2,5,2);
-        EditText*edit=new EditText(TEXT("Hello world! This value is positive for typical fonts that include"),680,200);
+        EditText*edit=new EditText("Hello world! This value is positive for typical fonts that include",680,200);
         edit->setTextColor(0xFFFFFFFF);//app.getColorStateList("cdroid:color/textview.xml"));
         //edit->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
         edit->setSingleLine(false);

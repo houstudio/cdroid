@@ -113,6 +113,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mTabLayout->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
     mPager->setAdapter(mAdapter);
+    mPager->setOffscreenPageLimit(mAdapter->getCount());
     mTabLayout->setupWithViewPager(mPager);
     mTabLayout->requestLayout();
 #else
@@ -123,7 +124,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
 
 Window*CreateMultiMedia(){
     MediaWindow*w=new MediaWindow(0,0,800,640);
-    w->setText(TEXT("Media"));
+    w->setText("Media");
     w->show();
     LOGD("CreateMultiMedia");
     return w;

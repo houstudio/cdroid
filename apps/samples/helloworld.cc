@@ -9,7 +9,7 @@ int main(int argc,const char*argv[]){
         sizeof(std::shared_ptr<int>),sizeof(std::vector<int>),sizeof(std::map<int,int>));
     Window*w=new Window(100,100,800,600);
    #if 10 
-    EditText*edit=new EditText(TEXT("Hello world! This value is positive for typical fonts that include"),680,200);
+    EditText*edit=new EditText("Hello world! This value is positive for typical fonts that include",680,200);
     edit->setTextColor(0xFFFFFFFF);
     edit->setSingleLine(false);
     edit->setInputType(EditText::TYPE_ANY);

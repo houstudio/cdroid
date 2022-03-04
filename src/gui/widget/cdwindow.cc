@@ -22,6 +22,7 @@
 #include <expat.h>
 #include <systemclock.h>
 #include <widget/measurespec.h>
+#include <widget/swipehelper.h>
 #include <fstream>
 
 namespace cdroid {
@@ -366,7 +367,12 @@ void Window::doLayout(){
 
 
 void Window::close(){
-    //sendMessage(View::WM_DESTROY,0,0);
+    post([this](){WindowManager::getInstance().removeWindow(this);} );
+}
+
+bool Window::dispatchTouchEvent(MotionEvent& event){
+    bool rc=SwipeHelper::get(mContext).onTouchEvent(event);
+    return rc||ViewGroup::dispatchTouchEvent(event);
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){

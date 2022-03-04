@@ -4323,8 +4323,7 @@ void View::drawAutofilledHighlight(Canvas& canvas){
 }
 
 void View::invalidateViewProperty(bool invalidateParent, bool forceRedraw) {
-    if (!isHardwareAccelerated()
-             //|| !mRenderNode.isValid()
+    if (!isHardwareAccelerated()//|| !mRenderNode->isValid()
              || (mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0) {
         if (invalidateParent) {
              invalidateParentCaches();

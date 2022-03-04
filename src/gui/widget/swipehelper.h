@@ -6,26 +6,40 @@ namespace cdroid{
 
 class SwipeHelper{
 private:
-    constexpr static int START_SLIDE_X = 30;
-    float mDownX;
-    float mMoveX;
-    float mMaxMoveX;
-    long  mDownTime;
-    int   mScreenWidth;
-    float mPreContentViewX;
+    constexpr static int MIN_DISTANCE_FOR_FLING=100;
+    constexpr static int MIN_FLING_VELOCITY = 400;
+    bool mCancel;
+    int mEdgeSlop;
+    int mScreenWidth;
+    int mWindowWidth;
+
+    int mCurrentOrigX;
+    int mCurrentStartX;
+    int mCurrentEndX;
+
+    int mPrevOrigX;
+    int mPrevStartX; 
+    int mPrevEndX;
+
+    int mDownX;
+    int mActivePointerId;
+    int mFlingDistance;
+    int mMaximumVelocity;
+    int mMinimumVelocity;
     Context*mContext;
     ValueAnimator* mPreContentViewAnimator;
     ValueAnimator* mCurContentViewAnimator;
+    VelocityTracker* mVelocityTracker;
     static SwipeHelper*mInst;
 private:
     SwipeHelper(Context*ctx);
     View* getCurContentView();
     View* getPreContentView();
-    void animatePreContentView(float start, float end);
-    void animateCurContentView(float start, float end);
 public:
-    SwipeHelper&get(Context*ctx);
-    bool processTouchEvent(MotionEvent& ev);
+    static SwipeHelper&get(Context*ctx);
+    bool onTouchEvent(MotionEvent& ev);
+    void setSlop(int slop);
+    int getSlop()const;
 };
 
 }//endof namespace

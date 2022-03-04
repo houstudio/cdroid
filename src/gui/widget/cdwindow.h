@@ -95,6 +95,7 @@ public:
     bool postDelayed(Runnable& what,uint32_t delay)override;
     bool removeCallbacks(const Runnable& what)override;
     void dispatchInvalidateOnAnimation(View* view)override;
+    bool dispatchTouchEvent(MotionEvent& event)override;
     void cancelInvalidate(View* view)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     void close();
