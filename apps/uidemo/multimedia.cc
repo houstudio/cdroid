@@ -41,7 +41,7 @@ public:
             container->addView(lv);
             lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
-                FileItem&f=adp->getItemAt(pos);
+                FileItem f=adp->getItemAt(pos);
                 LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
                 if(f.isDir){
                     adp->clear();
