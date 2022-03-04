@@ -152,7 +152,7 @@ void GraphDevice::composeSurfaces(){
         LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
-    GFXFlip(primarySurface); 
+    //GFXFlip(primarySurface); 
     t2=SystemClock::uptimeMillis();
     LOGV("%d surfaces %d rects Blited.area=(%d,%d,%d,%d) used %d ms",wSurfaces.size(),rects,
          rcBlited.left,rcBlited.top,rcBlited.width,rcBlited.height,t2-t1);
