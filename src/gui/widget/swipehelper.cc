@@ -57,17 +57,18 @@ int SwipeHelper::getSlop()const{
     return mEdgeSlop;
 }
 
+/*we conside that the first window is desktop,we must skip it*/
 View* SwipeHelper::getCurContentView() {
     std::vector<Window*>wins;
     WindowManager::getInstance().getVisibleWindows(wins);
-    return wins.size()?wins.back():nullptr;
+    return wins.size()>1?wins.back():nullptr;
 }
 
 View*SwipeHelper::getPreContentView() {
     std::vector<Window*>wins;
     WindowManager::getInstance().getVisibleWindows(wins);
     wins.pop_back();
-    return wins.size()?wins.back():nullptr;
+    return wins.size()>1?wins.back():nullptr;
 }
 
 bool SwipeHelper::onTouchEvent(MotionEvent& ev) {
