@@ -7,8 +7,8 @@ class ColorDrawable:public Drawable{
 private:
     class ColorState:public std::enable_shared_from_this<ColorState>,public ConstantState{
     public:
-        int mBaseColor;// base color, independent of setAlpha()
-        int mUseColor; // basecolor modulated by setAlpha()
+        uint32_t mBaseColor;// base color, independent of setAlpha()
+        uint32_t mUseColor; // basecolor modulated by setAlpha()
         ColorStateList*mTint;
         int mTintMode;
         ColorState();
@@ -29,6 +29,7 @@ public:
     int getColor()const;
     int getAlpha()const;
     void setAlpha(int a)override;
+    int getOpacity()override;
     void setTintList(ColorStateList* tint)override;
     void setTintMode(int tintMode)override;
     bool isStateful()const override;

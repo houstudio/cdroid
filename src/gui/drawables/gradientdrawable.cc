@@ -217,14 +217,17 @@ void GradientDrawable::GradientState::setGradientRadius(float gradientRadius,int
 
 GradientDrawable::GradientDrawable(){
     mGradientState=std::make_shared<GradientState>();
+    mAlpha = 255;
 }
 
 GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state){
     mGradientState=state;
+    mAlpha = 255;
 }
 
 GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors){
     mGradientState=std::make_shared<GradientState>(orientation,colors);
+    mAlpha = 255;
 }
 
 std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState(){
@@ -233,6 +236,7 @@ std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState(){
 
 void GradientDrawable::updateLocalState(){
 }
+
 Drawable* GradientDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
         mGradientState=std::make_shared<GradientState>(*mGradientState);
@@ -261,6 +265,7 @@ void GradientDrawable::setCornerRadii(const std::vector<float>& radii) {
     mPathIsDirty = true;
     invalidateSelf();
 }
+
 const std::vector<float>&GradientDrawable::getCornerRadii()const{
     return mGradientState->mRadiusArray;
 }

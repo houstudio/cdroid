@@ -3063,7 +3063,7 @@ void AbsListView::smoothScrollByOffset(int position){
 
 void AbsListView::createScrollingCache(){
     if (mScrollingCacheEnabled && !mCachingStarted /*&& !isHardwareAccelerated()*/) {
-        //setChildrenDrawnWithCacheEnabled(true);
+        setChildrenDrawnWithCacheEnabled(true);
         setChildrenDrawingCacheEnabled(true);
         mCachingStarted = mCachingActive = true;
     }
@@ -3074,7 +3074,7 @@ void AbsListView::clearScrollingCache(){
         mClearScrollingCache =[this]() {
             if (mCachingStarted) {
                 mCachingStarted = mCachingActive = false;
-                //setChildrenDrawnWithCacheEnabled(false);
+                setChildrenDrawnWithCacheEnabled(false);
                 if ((mPersistentDrawingCache & PERSISTENT_SCROLLING_CACHE) == 0) {
                     setChildrenDrawingCacheEnabled(false);
                 }

@@ -40,6 +40,7 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mTargetDensity = bitmapState.mTargetDensity;
     mBaseAlpha = bitmapState.mBaseAlpha;
     mAlpha = bitmapState.mAlpha;
+    mTransparency = bitmapState.mTransparency;
     //mRebuildShader = bitmapState.mRebuildShader;
     mAutoMirrored = bitmapState.mAutoMirrored;
 }

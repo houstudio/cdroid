@@ -112,6 +112,7 @@ void ViewGroup::initGroup(){
     mChildTransformation =nullptr;
     mInvalidationTransformation =nullptr;
     mTransition = nullptr;
+    mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
     mLayoutTransitionListener.startTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
          if(transitionType==LayoutTransition::DISAPPEARING)

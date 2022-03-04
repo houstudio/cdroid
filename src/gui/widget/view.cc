@@ -876,10 +876,9 @@ void View::computeOpaqueFlags(){
         mPrivateFlags &= ~PFLAG_OPAQUE_BACKGROUND;
     }
 
-    int flags = mViewFlags;
-    if (((flags & SCROLLBARS_VERTICAL) == 0 && (flags & SCROLLBARS_HORIZONTAL) == 0) ||
-            (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_INSIDE_OVERLAY ||
-            (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_OUTSIDE_OVERLAY) {
+    if (((mViewFlags & SCROLLBARS_VERTICAL) == 0 && (mViewFlags & SCROLLBARS_HORIZONTAL) == 0) ||
+            (mViewFlags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_INSIDE_OVERLAY ||
+            (mViewFlags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_OUTSIDE_OVERLAY) {
         mPrivateFlags |= PFLAG_OPAQUE_SCROLLBARS;
     } else {
         mPrivateFlags &= ~PFLAG_OPAQUE_SCROLLBARS;

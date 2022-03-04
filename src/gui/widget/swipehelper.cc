@@ -73,31 +73,31 @@ View*SwipeHelper::getPreContentView() {
 bool SwipeHelper::onTouchEvent(MotionEvent& ev) {
     float distance;
     int velocity;
-    View* curContentView = nullptr;
-    View* preContentView = nullptr;
+    View* curWindow = nullptr;
+    View* prevWindow = nullptr;
     if (mCurContentViewAnimator->isRunning() || mPreContentViewAnimator->isRunning()) {
         return true;
     }
 
-    curContentView = getCurContentView();
-    preContentView = getPreContentView();
-    if (curContentView == nullptr && preContentView == nullptr) {
+    curWindow  = getCurContentView();
+    prevWindow = getPreContentView();
+    if (curWindow == nullptr && prevWindow == nullptr) {
         return false;
     }
-    mWindowWidth = curContentView->getWidth();
+    mWindowWidth = curWindow->getWidth();
     mVelocityTracker->addMovement(ev);
     switch (ev.getActionMasked()) {
     case MotionEvent::ACTION_DOWN:
         mDownX = ev.getX();
         if ((mDownX > mEdgeSlop)&&(mDownX<mWindowWidth-mEdgeSlop)) return false;
 
-        LOGD("views=%p/%p mDownX=%d mScreenWidth=%d",curContentView,curContentView,mDownX,mScreenWidth);
-        mCurrentStartX = curContentView->getX();
+        LOGD("views=%p/%p mDownX=%d mScreenWidth=%d",curWindow,curWindow,mDownX,mScreenWidth);
+        mCurrentStartX = curWindow->getX();
         mCurrentOrigX  = mCurrentEndX = mCurrentStartX;
         mActivePointerId = ev.getPointerId(0);
         mCancel = false;
-        if(preContentView){
-            mPrevStartX= mPrevEndX  = preContentView->getX();
+        if(prevWindow){
+            mPrevStartX= mPrevEndX  = prevWindow->getX();
             mPrevOrigX = mPrevStartX;
         }
         break;
@@ -108,27 +108,27 @@ bool SwipeHelper::onTouchEvent(MotionEvent& ev) {
         if(mCurrentEndX==mCurrentStartX){
             if(distance>0){
                 mCurrentEndX+= mScreenWidth;
-                mPrevEndX   = preContentView?preContentView->getX():0;
+                mPrevEndX   = prevWindow?prevWindow->getX():0;
                 mPrevStartX = mPrevEndX - mScreenWidth;
             }else{
                 mCurrentEndX-=mScreenWidth; 
-                mPrevEndX   = preContentView?preContentView->getX():0;
+                mPrevEndX   = prevWindow?prevWindow->getX():0;
                 mPrevStartX = mPrevStartX + mScreenWidth;
             }
         }
         velocity = (int) mVelocityTracker->getXVelocity(mActivePointerId);
         if( (abs(velocity)>mMaximumVelocity) && (abs(distance)>mFlingDistance) ) {
-            if(preContentView)
-                preContentView->setPos(mPrevEndX,preContentView->getY());
-            LOGD("destroy curContentView(%p)",curContentView);
-            WindowManager::getInstance().removeWindow((Window*)curContentView);
+            if(prevWindow)
+                prevWindow->setPos(mPrevEndX,prevWindow->getY());
+            LOGD("destroy curWindow(%p)",curWindow);
+            WindowManager::getInstance().removeWindow((Window*)curWindow);
             return true;
         }
         //move Current(Top)Window
-        curContentView->setPos(mCurrentStartX+distance,curContentView->getY());
+        curWindow->setPos(mCurrentStartX+distance,curWindow->getY());
         LOGV("current.x=%.f",mCurrentStartX+distance);
         //move Previous Window
-        if(preContentView) preContentView->setPos(mPrevStartX+distance,preContentView->getY());
+        if(prevWindow) prevWindow->setPos(mPrevStartX+distance,prevWindow->getY());
         break;
     case MotionEvent::ACTION_UP:
     case MotionEvent::ACTION_CANCEL:
@@ -142,14 +142,14 @@ bool SwipeHelper::onTouchEvent(MotionEvent& ev) {
         mPrevStartX += distance;
         if ( abs(distance)>mFlingDistance && std::abs(velocity) > mMinimumVelocity){
             mCurContentViewAnimator->start();
-            if(preContentView)mPreContentViewAnimator->start();
+            if(prevWindow)mPreContentViewAnimator->start();
         } else {
             mPrevEndX = mPrevOrigX;
             mCurrentEndX = mCurrentOrigX;
             mCurContentViewAnimator->start();
             mCancel = true;
             LOGD("Cancel Destroy");
-            if(preContentView)mPreContentViewAnimator->start();
+            if(prevWindow)mPreContentViewAnimator->start();
         }
         break;
     }

@@ -6,14 +6,14 @@
 namespace cdroid{
 
 ColorDrawable::ColorState::ColorState(){
-    mTint=nullptr;
-    mBaseColor=0xFF000000;
-    mUseColor=0xFF000000;
-    mTintMode=DEFAULT_TINT_MODE;
+    mTint = nullptr;
+    mBaseColor= 0xFF000000;
+    mUseColor = 0xFF000000;
+    mTintMode = DEFAULT_TINT_MODE;
 }
 
 ColorDrawable::ColorState::ColorState(const ColorState& state){
-    mBaseColor = state.mBaseColor;
+    mBaseColor= state.mBaseColor;
     mUseColor = state.mUseColor;
     mTint = state.mTint;
     mTintMode=state.mTintMode;
@@ -29,14 +29,15 @@ int ColorDrawable::ColorState::getChangingConfigurations()const{
 
 ColorDrawable::ColorDrawable(int color){
     mColorState=std::make_shared<ColorState>();
-    mMutated=false;
-    mTintFilter=nullptr;
+    mMutated = false;
+    mTintFilter = nullptr;
     setColor(color);
 }
 
 ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
     mColorState = state;
-    mMutated=false;
+    mTintFilter = nullptr;
+    mMutated = false;
 }
 
 std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
@@ -114,10 +115,21 @@ bool ColorDrawable::hasFocusStateSpecified()const{
     return mColorState->mTint && mColorState->mTint->hasFocusStateSpecified();
 }
 
+int ColorDrawable::getOpacity() {
+    if (mTintFilter /*|| mPaint.getColorFilter() != null*/) {
+       return PixelFormat::TRANSLUCENT;
+    }
+    switch (mColorState->mUseColor >> 24) {
+    case 255:return PixelFormat::OPAQUE;
+    case 0 : return PixelFormat::TRANSPARENT;
+    }
+    return PixelFormat::TRANSLUCENT;
+}
+
 void ColorDrawable::draw(Canvas&canvas){
     LOGV("%p color=%x  bounds=%d,%d-%d,%d mTintFilter=%p",this,mColorState->mUseColor,
 	mBounds.left,mBounds.top,mBounds.width,mBounds.height,mTintFilter);
-    if(mColorState->mUseColor>>24||mTintFilter){
+    if((mColorState->mUseColor>>24)||mTintFilter){
         canvas.set_color(mColorState->mUseColor);
         if(mTintFilter)canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mTintFilter->getMode()));
         canvas.rectangle(getBounds());
