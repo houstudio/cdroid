@@ -14,18 +14,20 @@ constexpr int EdgeEffect::MAX_VELOCITY;
 
 EdgeEffect::EdgeEffect(Context* context){
     mInterpolator = new DecelerateInterpolator();
-    mDisplacement=0.5f;
+    mDisplacement = 0.5f;
     mBounds.set(0,0,0,0);
-    mPullDistance =0;
-    mState=STATE_IDLE;
-    mGlowAlpha=0;
-    mGlowAlphaStart=mGlowAlphaFinish=.0f;
-    mBaseGlowScale=0;
-    mGlowScaleY=0;
-    mGlowScaleYStart=mGlowScaleYFinish=.0f;
-    mStartTime=0;
-    mColor=0x4000FF00;
-    mDuration =PULL_DECAY_TIME;
+    mPullDistance = 0;
+    mState = STATE_IDLE;
+    mGlowAlpha = 0;
+    mGlowAlphaStart = mGlowAlphaFinish = .0f;
+    mBaseGlowScale = 0;
+    mGlowScaleY = 0;
+    mGlowScaleYStart = mGlowScaleYFinish = .0f;
+    mStartTime= 0;
+    mColor = 0x4000FF00;
+    mDuration = PULL_DECAY_TIME;
+    mDistance = 0;
+    mVelocity = .0f;
 }
 
 EdgeEffect::~EdgeEffect(){

@@ -43,11 +43,13 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mVariablePadding = false;
     mConstantSize = false;
     mCheckedConstantState = true;
+    mCheckedConstantSize  = 0;
     mCanConstantState = true;
     mAutoMirrored = false;
     mMutated = false;
     mDither  = false;
     mCheckedStateful  = false;
+    mCheckedOpacity   = false;
     mLayoutDirection  = LayoutDirection::LTR;
     mEnterFadeDuration= 0;
     mExitFadeDuration = 0;
@@ -165,8 +167,8 @@ int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
 }
 
 void DrawableContainer::DrawableContainerState::invalidateCache(){
-    mCheckedOpacity =false;
-    mCheckedStateful =false;
+    mCheckedOpacity = false;
+    mCheckedStateful= false;
 }
 
 void DrawableContainer::DrawableContainerState::mutate(){
