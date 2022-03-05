@@ -486,7 +486,7 @@ void ViewGroup::removeFromArray(int index){
     }
     if (index>=0&&index<mChildren.size()) {
         auto it=mChildren.erase(mChildren.begin()+index);
-        delete *it;
+        //delete *it;cant delete here 
     } else {
         LOGE("IndexOutOfBounds %d",index);
     }

@@ -338,7 +338,8 @@ bool DrawableContainer::DrawableContainerState::isStateful(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 DrawableContainer::DrawableContainer(){
     mDrawableContainerState=std::make_shared<DrawableContainerState>(nullptr,this);
-    mHasAlpha =false;
+    mHasAlpha = false;
+    mMutated  = false;
     mCurIndex = mLastIndex = -1;
     mCurrDrawable = mLastDrawable = nullptr;
     mBlockInvalidateCallback = nullptr;
