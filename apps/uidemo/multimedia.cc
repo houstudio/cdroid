@@ -65,6 +65,7 @@ public:
                     adp->notifyDataSetChanged();
                 }
             });
+            gv->setVerticalScrollBarEnabled(true);
             gv->setNumColumns(3);
             gv->setAdapter(adapter);
             gv->setHorizontalSpacing(2); 
