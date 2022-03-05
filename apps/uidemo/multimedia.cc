@@ -55,6 +55,16 @@ public:
         case 1:{LOGD("===========1111");
             GridView*gv=new GridView(800,480);
             FileAdapter*adapter=new FileAdapter("@layout/fileitem2.xml");
+            gv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
+                FileAdapter*adp=(FileAdapter*)lv.getAdapter();
+                FileItem f=adp->getItemAt(pos);
+                LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
+                if(f.isDir){
+                    adp->clear();
+                    adp->loadFiles(f.fullpath);
+                    adp->notifyDataSetChanged();
+                }
+            });
             gv->setNumColumns(3);
             gv->setAdapter(adapter);
             gv->setHorizontalSpacing(2); 

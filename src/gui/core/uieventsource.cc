@@ -31,16 +31,17 @@ int UIEventSource::handleEvents(){
         }
     }
     if(GraphDevice::getInstance().needCompose())
-        GraphDevice::getInstance().composeSurfaces();
+        GraphDevice::getInstance().notify();//composeSurfaces();
 
-    mRunnables.remove_if([](const RUNNER&r)->bool{
-         return r.removed;
-    });
+    GraphDevice::getInstance().lock();
+    mRunnables.remove_if([](const RUNNER&r)->bool{ return r.removed;  });
     if(hasDelayedRunners()){
+        //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
         RUNNER runner=mRunnables.front();
-        if(runner.run)runner.run();//maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
+        if(runner.run)runner.run();
         mRunnables.pop_front(); 
-    } 
+    }
+    GraphDevice::getInstance().unlock();
     return 0;
 }
 

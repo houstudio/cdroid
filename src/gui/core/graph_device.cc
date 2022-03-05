@@ -11,6 +11,7 @@
 #include <windowmanager.h>
 #include <pixman.h>
 #include <systemclock.h>
+#include <thread>
 
 using namespace Cairo;
 
@@ -42,6 +43,9 @@ GraphDevice::GraphDevice(int fmt){
     RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,width,height,pitch);
     primaryContext=new Canvas(surf);
     mInvalidateRgn=Region::create();
+    mComposing = 0;
+    std::thread t([this](){doCompose();});
+    t.detach();
 }
 
 GraphDevice::~GraphDevice(){
@@ -68,7 +72,7 @@ void GraphDevice::trackFPS() {
         mFpsPrevTime = nowTime;
         if (totalTime > 1000) {
             float fps = (float) mFpsNumFrames * 1000 / totalTime;
-            LOGV("\tFPS:%f",fps);
+            LOGD("\tFPS:%f",fps);
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
         }
@@ -93,11 +97,35 @@ void GraphDevice::flip(){
 }
 
 bool GraphDevice::needCompose(){
-    return compose_event;
+    return compose_event&&(mComposing==0);
 }
 
 Canvas*GraphDevice::getPrimaryContext(){
     return primaryContext;
+}
+
+void GraphDevice::doCompose(){
+    LOGD("%d concurrent threads are supported",std::thread::hardware_concurrency());
+    while(1){
+        std::unique_lock<std::mutex>lock(mMutex);
+        mComposing = 0;
+        mCV.wait(lock);
+        mComposing++;
+        composeSurfaces();
+    }
+}
+
+void GraphDevice::notify(){
+    std::unique_lock<std::mutex> lock(mMutex);
+    mCV.notify_all();
+}
+
+void GraphDevice::lock(){
+    mMutex.lock();
+}
+
+void GraphDevice::unlock(){
+    mMutex.unlock();
 }
 
 void GraphDevice::composeSurfaces(){
@@ -140,6 +168,7 @@ void GraphDevice::composeSurfaces(){
             if(hdlSurface)GFXBlit(primarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
             else primaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
             rcBlited.Union(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
+            LOGV("(%d,%d,%d,%d)",rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
         }
         if(hdlSurface==nullptr){
             primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
@@ -152,7 +181,7 @@ void GraphDevice::composeSurfaces(){
         LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
-    //GFXFlip(primarySurface); 
+    GFXFlip(primarySurface); 
     t2=SystemClock::uptimeMillis();
     LOGV("%d surfaces %d rects Blited.area=(%d,%d,%d,%d) used %d ms",wSurfaces.size(),rects,
          rcBlited.left,rcBlited.top,rcBlited.width,rcBlited.height,t2-t1);
