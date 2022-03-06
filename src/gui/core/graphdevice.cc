@@ -174,10 +174,11 @@ void GraphDevice::composeSurfaces(){
             primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             primaryContext->fill();
         } 
-    } 
+    }
+    const RectangleInt rectScreen={0,0,width,height};
+    mInvalidateRgn->intersect(rectScreen);
     for(int i=0;i<mInvalidateRgn->get_num_rectangles();i++){
         RectangleInt r=mInvalidateRgn->get_rectangle(i);
-        if((r.x+r.width<=0)||(r.y+r.height<=0))continue;
         GFXFillRect(primarySurface,(const GFXRect*)&r,0);
         LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
