@@ -4,7 +4,7 @@
 #include <cdgraph.h>
 #include <cairomm/context.h>
 #include <cairomm/region.h>
-#include <core/graph_device.h>
+#include <core/graphdevice.h>
 #include <gui/gui_features.h>
 using namespace Cairo;
 

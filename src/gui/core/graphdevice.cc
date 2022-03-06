@@ -1,5 +1,5 @@
 #include <canvas.h>
-#include <graph_device.h>
+#include <graphdevice.h>
 #include <cairo.h>
 #include <cdtypes.h>
 #include <cdgraph.h>

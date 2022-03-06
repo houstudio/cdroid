@@ -18,7 +18,6 @@
 #define __CDROID_WINDOWMANAGER_H__
 
 #include <widget/cdwindow.h>
-#include <core/graph_device.h>
 #include <vector>
 #include <stdint.h>
 #include <queue>

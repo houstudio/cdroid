@@ -19,7 +19,7 @@
 #include <ngl_os.h>
 #include <cdlog.h>
 #include <ngl_timer.h>
-#include <graph_device.h>
+#include <graphdevice.h>
 #include <uieventsource.h>
 
 
