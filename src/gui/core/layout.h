@@ -54,8 +54,8 @@ public:
     void setWidth(int width);
     void setFontSize(int size);
     int getFontSize()const;
-    void setText(const std::string&);
-    void setText(const std::wstring&);
+    bool setText(const std::string&);
+    bool setText(const std::wstring&);
     void setEditable(bool);
     bool isEditable()const;
     int getEllipsis()const;

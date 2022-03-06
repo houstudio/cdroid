@@ -498,11 +498,13 @@ int TextView::getHorizontalOffsetForDrawables()const{
 }
 
 void TextView::setText(const std::string&txt){
-    mLayout->setText(txt);
-    mCaretPos=0;
-    mLayout->setCaretPos(mCaretPos);
-    std::wstring&wText=getEditable();
-    invalidate(true);
+    if(mLayout->setText(txt)){
+        std::wstring&ws=getEditable();
+        if(mCaretPos<ws.length())
+            mCaretPos=ws.length()-1;
+        mLayout->setCaretPos(mCaretPos);
+        requestLayout();
+    }
 }
 
 const std::string TextView::getText()const{

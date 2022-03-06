@@ -408,16 +408,18 @@ const std::wstring Layout::getLineText(int line,bool expandEllipsis)const{
     return result;//TextUtils::unicode2utf8(result);
 }
 
-void Layout::setText(const std::wstring&txt){
+bool Layout::setText(const std::wstring&txt){
     if(mText.compare(txt)){
         mText=txt;
         mLayout++;
+        return true;
     }
+    return false;
 }
 
-void Layout::setText(const std::string&txt){
+bool Layout::setText(const std::string&txt){
     std::wstring ws=TextUtils::utf8tounicode(txt);
-    setText(ws);
+    return setText(ws);
 }
 
 const std::string Layout::getString()const{
