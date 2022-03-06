@@ -12,6 +12,7 @@
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
 #include <rfb/rfbproto.h>
+void setupRFB(rfbScreenInfoPtr rfbScreen,const char*name,int port);
 #endif
 typedef struct{
     int fb;
@@ -28,8 +29,8 @@ typedef struct{
    UINT pitch;
    int format;
    int ishw;
-   void*buffer;
-   void*bkbuffer;/*kernel buffer address*/
+   char*buffer;
+   char*bkbuffer;/*kernel buffer address*/
 }FBSURFACE;
 
 static FBDEVICE dev={-1};
@@ -103,9 +104,12 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     UINT*fb=(UINT*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
     UINT*fbtop=fb;
     for(x=0;x<rec.w;x++)fb[x]=color;
+    const int cpw=rec.w*4;
+    long copied=0;
     for(y=1;y<rec.h;y++){
         fb+=(ngs->pitch>>2);
-        memcpy(fb,fbtop,rec.w*4);
+        memcpy(fb,fbtop,cpw);
+        copied+=ngs->pitch;
     }
 #ifdef ENABLE_RFB
     rfbMarkRectAsModified(dev.rfbScreen,rec.x,rec.y,rec.w,rec.h);
@@ -116,11 +120,13 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
 DWORD GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
-       dev.var.yoffset=0;
-       int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
-       LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
+        GFXRect rect={0,0,surf->width,surf->height};
+        //if(rc)rect=*rc;
+        dev.var.yoffset=0;
+        int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
+        LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
 #if ENABLE_RFB
-       rfbMarkRectAsModified(dev.rfbScreen,0,0,surf->width,surf->height);
+        rfbMarkRectAsModified(dev.rfbScreen,rect.x,rect.y,rect.w,rect.h);
 #endif
     }
     return 0;
@@ -190,12 +196,12 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     if(hwsurface){
         size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
         setfbinfo(surf);
-        surf->buffer=mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
+        surf->buffer=(char*)mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
         dev.rfbScreen->frameBuffer = surf->buffer;
         surf->pitch=dev.fix.line_length;
         ResetScreenFormat(surf,width,height,format);
     }else{
-        surf->buffer=malloc(width*surf->pitch);
+        surf->buffer=(char*)malloc(width*surf->pitch);
     }
     surf->ishw=hwsurface;
     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
@@ -228,8 +234,9 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     pbs+=rs.y*nsrc->pitch+rs.x*4;
     pbd+=dy*ndst->pitch+dx*4;
+    const int cpw=rs.w*4;
     for(y=0;y<rs.h;y++){
-        memcpy(pbd,pbs,rs.w*4);
+        memcpy(pbd,pbs,cpw);
         pbs+=nsrc->pitch;
         pbd+=ndst->pitch;
     }

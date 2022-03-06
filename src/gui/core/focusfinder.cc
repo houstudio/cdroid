@@ -521,13 +521,15 @@ void FocusFinder::sort(std::vector<View*>&views, int start, int end, ViewGroup* 
         mRectByView.insert(std::map<View*,Rect>::value_type(views[i], next));
     }
 
-    // Sort top-to-bottom
+    // Sort top-to-bottom std::stable_sort(since c++17),line525 caused infinity loop!!!
     std::sort(views.begin()+start,views.begin()+count,[&mRectByView](View*first,View*second)->bool{
         if(first==second)return 0;
         Rect firstRect = mRectByView[first];
         Rect secondRect= mRectByView[second];
-        int result =firstRect.top -secondRect.top;
-        return result?result:(firstRect.bottom() -secondRect.bottom());
+        int result = firstRect.top -secondRect.top;;
+        if(result==0)
+           result = firstRect.bottom()- secondRect.bottom();
+        return result<0;
     });// mTopsComparator);
     // Sweep top-to-bottom to identify rows
     int sweepBottom = mRectByView[views[start]].bottom();
@@ -538,9 +540,9 @@ void FocusFinder::sort(std::vector<View*>&views, int start, int end, ViewGroup* 
         if(first == second)return 0;
         Rect firstRect = mRectByView[first];
         Rect secondRect= mRectByView[second];
-        int result = firstRect.left -secondRect.left;
-        if(result ==0 ) return firstRect.right() -secondRect.right(); 
-        return mRtlMult*result;
+        int result = firstRect.left - secondRect.left;
+        if(result ==0 ) result= firstRect.right()-secondRect.right();
+        return (mRtlMult*result)<0;
     };
     for (; sweepIdx < end; ++sweepIdx) {
         Rect currRect = mRectByView[views[sweepIdx]];
