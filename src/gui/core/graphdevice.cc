@@ -177,6 +177,7 @@ void GraphDevice::composeSurfaces(){
     } 
     for(int i=0;i<mInvalidateRgn->get_num_rectangles();i++){
         RectangleInt r=mInvalidateRgn->get_rectangle(i);
+        if((r.x+r.width<=0)||(r.y+r.height<=0))continue;
         GFXFillRect(primarySurface,(const GFXRect*)&r,0);
         LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
