@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <memcpy-hybrid.h>
 #ifdef ENABLE_RFB
 #include <rfb/rfb.h>
 #include <rfb/keysym.h>
@@ -319,7 +320,6 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     return E_OK;
 }
 
-
 DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
     unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
@@ -344,8 +344,9 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     pbs+=rs.y*nsrc->pitch+rs.x*4;
     pbd+=dy*ndst->pitch+dx*4;
+    const int cpw=rs.w<<2;
     for(y=0;y<rs.h;y++){
-        memcpy(pbd,pbs,rs.w*4);
+        memcpy_hybrid(pbd,pbs,cpw);
         pbs+=nsrc->pitch;
         pbd+=ndst->pitch;
     }
