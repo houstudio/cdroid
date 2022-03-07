@@ -1,9 +1,6 @@
-project (allwinner C CXX ASM)
+project (allwinner C CXX)
 set(ALLWINNER_SRCS 
      input_linux.cc
-     new_arm.S
-     arm_asm.S
-     memcpy-hybrid.S
      graph_nx5fb.c
     )
 include(CheckIncludeFile)
