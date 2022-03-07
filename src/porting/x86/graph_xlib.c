@@ -173,9 +173,9 @@ DWORD GFXFlip(HANDLE surface){
     XImage *img=(XImage*)surface;
     if(mainSurface==surface){
         GFXRect rect={0,0,img->width,img->height};
-        X11Expose(0,0,img->width,img->height);
+        //X11Expose(0,0,img->width,img->height);
 #if ENABLE_RFB
-        rfbMarkRectAsModified(rfbScreen,rect.x,rect.y,rect.w,rect.h);
+        //rfbMarkRectAsModified(rfbScreen,rect.x,rect.y,rect.w,rect.h);
 #endif
 
     }

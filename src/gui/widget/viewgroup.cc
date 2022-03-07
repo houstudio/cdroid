@@ -2084,10 +2084,10 @@ void ViewGroup::addFocusables(std::vector<View*>& views, int direction, int focu
     }
 
     std::vector<View*> children;
-    for_each(mChildren.begin(),mChildren.end(),[&children](View*c){
+    for(auto c:mChildren){
         if(c->getVisibility()==View::VISIBLE)
            children.push_back(c);
-    });
+    };
     FocusFinder::sort(children, 0, children.size(), this, isLayoutRtl());
     for (int i = 0; i < children.size(); ++i) {
         children[i]->addFocusables(views, direction, focusableMode);
