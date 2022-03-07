@@ -2851,7 +2851,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                 // Since we can potentially overfling more than we can overscroll, don't
                 // allow the weird behavior where you can scroll to a boundary then
                 // fling further.
-                LOGV("Velocity [%d]%d:(%d,%d)",mActivePointerId,initialVelocity,mMinimumVelocity,mMaximumVelocity);
+                LOGD("Velocity [%d]%d:(%d,%d)",mActivePointerId,initialVelocity,mMinimumVelocity,mMaximumVelocity);
                 bool flingVelocity = std::abs(initialVelocity) > mMinimumVelocity;
                 if (flingVelocity && !((mFirstPosition == 0 &&
                         firstChildTop == contentTop - mOverscrollDistance) ||

@@ -100,7 +100,7 @@ void AnalogClock::onAttachedToWindow(){
         mSeconds=when.tm_sec;
         mChanged = true;
         invalidate(true);
-        postDelayed(mTick,500);
+        postDelayed(mTick,800);
     };
     postDelayed(mTick,800);
 }

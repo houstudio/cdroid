@@ -24,11 +24,6 @@ public:
             {View*v=LayoutInflater::from(container->getContext())->inflate(res[position-2],nullptr,false);
             container->addView(v);
             v->requestLayout();
-            View*btn=v->findViewById(uidemo::R::id::button1);
-            if(btn)btn->setOnClickListener([](View&v){
-                 Window*w=new Window(0,0,400,400);
-                 w->setBackgroundColor(0xFF123456);
-            }); 
             return v;
             }break;
         case 0:
@@ -71,7 +66,7 @@ public:
                 }
             });
             gv->setVerticalScrollBarEnabled(true);
-            gv->setNumColumns(2);
+            gv->setNumColumns(3);
             gv->setAdapter(adapter);
             gv->setHorizontalSpacing(2); 
             gv->setVerticalSpacing(2);
