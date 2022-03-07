@@ -39,19 +39,19 @@ public:
     AnalogClock(int w,int h);
     AnalogClock(Context*ctx,const AttributeSet& attrs);
 
-    void setDial(Icon& icon);
+    void setDial(Icon icon);
     //void setDialTintList(ColorStateList*);
     //ColorStateList*getDialTintList();
 
-    void setHourHand(Icon& icon);
+    void setHourHand(Icon icon);
     //void setHourHandTintList(ColorStateList*);
     //ColorStateList* getHourHandTintList();
 
-    void setMinuteHand(Icon& icon);
+    void setMinuteHand(Icon icon);
     //void setMinuteHandTintList(ColorStateList*);
     //ColorStateList* getMinuteHandTintList();
 
-    void setSecondHand(Icon& icon);
+    void setSecondHand(Icon icon);
     //void setSecondHandTintList(ColorStateList*);
     //ColorStateList* getSecondHandTintList();
 

@@ -31,7 +31,7 @@ MenuItem& MenuItem::setTooltipText(const std::string&tip){
 }
 
 SubMenu* MenuItem::getSubMenu()const{
-    return mSubMenu.get();
+    return mSubMenu;
 }
 
 bool MenuItem::hasSubMenu()const{
@@ -74,8 +74,8 @@ SubMenu& Menu::addSubMenu(const std::string&title){
 
 SubMenu& Menu::addSubMenu(int groupId,int itemId,int order,const std::string& title){
    MenuItem&itm=add(groupId,itemId,order,title);
-   itm.mSubMenu=std::make_shared<Menu>();
-   return *itm.mSubMenu.get();
+   itm.mSubMenu=new SubMenu();
+   return *itm.mSubMenu;
 }
 
 void Menu::removeItem(int id){

@@ -22,6 +22,7 @@ int UIEventSource::checkEvents(){
 }
 
 int UIEventSource::handleEvents(){
+    GraphDevice::getInstance().lock();
     if (mAttachedView && mAttachedView->isAttachedToWindow()){
         if(mAttachedView->isLayoutRequested())
             mLayoutRunner();
@@ -30,6 +31,8 @@ int UIEventSource::handleEvents(){
             GraphDevice::getInstance().flip();
         }
     }
+    GraphDevice::getInstance().unlock();
+
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().notify();//composeSurfaces();
 

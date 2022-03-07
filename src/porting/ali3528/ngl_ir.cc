@@ -62,15 +62,15 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     switch(device){
     case DEVICE_IR:
          strcpy(devinfo->name,"3528ir");
-         devinfo->vendor=INJECTDEV_PTR>>16;
-         devinfo->product=INJECTDEV_PTR&0xFF;
+         devinfo->vendor=INJECTDEV_KEY>>16;
+         devinfo->product=INJECTDEV_KEY&0xFF;
          set_bit(devinfo->keyBitMask,EV_KEY); 
-         set_bit(devinfo->keyBitMask,EV_MISC); 
+         set_bit(devinfo->keyBitMask,BTN_MISC); 
          break; 
     case INJECTDEV_TOUCH:
          strcpy(devinfo->name,"Mouse-Inject");
-         devinfo->vendor=INJECTDEV_PTR>>16;
-         devinfo->product=INJECTDEV_PTR&0xFF;
+         devinfo->vendor=INJECTDEV_TOUCH>>16;
+         devinfo->product=INJECTDEV_TOUCH&0xFF;
          set_bit(devinfo->absBitMask,ABS_X);
          set_bit(devinfo->absBitMask,ABS_Y);
          set_bit(devinfo->keyBitMask,BTN_TOUCH);

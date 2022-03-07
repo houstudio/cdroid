@@ -7,15 +7,12 @@
 
 namespace cdroid{
 
-// Nanoseconds per milliseconds.
-static const nsecs_t NANOS_PER_MS = 1000000;
-
 // Threshold for determining that a pointer has stopped moving.
 // Some input devices do not send ACTION_MOVE events in the case where a pointer has
 // stopped.  We need to detect this case so that we can accurately predict the
 // velocity after the pointer starts moving again.
 
-static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40 * NANOS_PER_MS;
+static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40;/*Millisecond*/
 
 static float vectorDot(const float* a, const float* b, uint32_t m) {
     float r = 0;
@@ -371,14 +368,14 @@ void IntegratingVelocityTrackerStrategy::initState(State& state,
 
 void IntegratingVelocityTrackerStrategy::updateState(State& state,
         nsecs_t eventTime, float xpos, float ypos) const {
-    const nsecs_t MIN_TIME_DELTA = 2 * NANOS_PER_MS;
+    const nsecs_t MIN_TIME_DELTA = 2 ;
     const float FILTER_TIME_CONSTANT = 0.010f; // 10 milliseconds
 
     if (eventTime <= state.updateTime + MIN_TIME_DELTA) {
         return;
     }
 
-    float dt = (eventTime - state.updateTime) * 0.000000001f;
+    float dt = (eventTime - state.updateTime) *0.001f;//0.000000001f;
     state.updateTime = eventTime;
 
     float xvel = (xpos - state.xpos) / dt;
@@ -467,7 +464,7 @@ static float kineticEnergyToVelocity(float work) {
 static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t count) {
     // The input should be in reversed time order (most recent sample at index i=0)
     // t[i] is in nanoseconds, but due to FP arithmetic, convert to seconds inside this function
-    static constexpr float SECONDS_PER_NANO = 1E-9;
+    static constexpr float SECONDS_PER_NANO = 1E-3;//android use nanosecond used value 1E-9;
 
     if (count < 2) {
         return 0; // if 0 or 1 points, velocity is zero
@@ -768,7 +765,7 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(uint32_t id,
         x[m] = position.x;
         y[m] = position.y;
         w[m] = chooseWeight(index);
-        time[m] = -age * 0.000000001f;
+        time[m] = -age * 0.001f;//android nanosecond use 0.000000001f;
         index = (index == 0 ? HISTORY_SIZE : index) - 1;
     } while (++m < HISTORY_SIZE);
 

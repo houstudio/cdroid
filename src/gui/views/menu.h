@@ -5,8 +5,31 @@
 
 namespace cdroid{
 
-class Menu;
-typedef class Menu SubMenu;
+class SubMenu;
+class MenuItem;
+class Menu{
+protected:
+   std::vector<MenuItem*>mMenuItems;
+   void *owner;/*menu owner/container*/
+public:
+   Menu();
+   ~Menu();
+   MenuItem& add(const std::string&title);
+   MenuItem& add(int groupId, int itemId, int order,const std::string&title);
+   SubMenu& addSubMenu(const std::string&title);
+   SubMenu& addSubMenu(int groupId,int itemId,int order,const std::string& title);
+   void popup(int x,int y);
+   void close();
+   void removeItem(int id);
+   void removeGroup(int groupId);
+   void clear();
+   void setGroupCheckable(int group, bool checkable, bool exclusive);
+   void setGroupEnabled(int group, bool enabled);
+   bool hasVisibleItems()const;
+   MenuItem*findItem(int id)const;
+   int size()const;
+   virtual MenuItem* getItem(int index)const;
+};
 
 class MenuItem{
 protected:
@@ -20,7 +43,7 @@ protected:
    bool mVisible;
    bool mEnabled;
    RefPtr<ImageSurface>mIcon;
-   RefPtr<SubMenu>mSubMenu;
+   SubMenu*mSubMenu;
    friend class Menu;
 public:
    MenuItem();
@@ -42,28 +65,16 @@ public:
    int getOrder()const{return mOrder;}
 };
 
-class Menu{
-protected:
-   std::vector<MenuItem*>mMenuItems;
-   void *owner;/*menu owner/container*/
+class SubMenu:public Menu{
 public:
-   Menu();
-   ~Menu();
-   MenuItem&add(const std::string&title);
-   MenuItem& add(int groupId, int itemId, int order,const std::string&title);
-   SubMenu& addSubMenu(const std::string&title);
-   SubMenu& addSubMenu(int groupId,int itemId,int order,const std::string& title);
-   void popup(int x,int y);
-   void close();
-   void removeItem(int id);
-   void removeGroup(int groupId);
-   void clear();
-   void setGroupCheckable(int group, bool checkable, bool exclusive);
-   void setGroupEnabled(int group, bool enabled);
-   bool hasVisibleItems()const;
-   MenuItem*findItem(int id)const;
-   int size()const;
-   MenuItem* getItem(int index)const;
+   SubMenu& setHeaderTitle(const std::string&);
+   SubMenu& setHeaderIcon(const std::string&iconRes);
+   SubMenu& setHeaderIcon(Drawable*);
+   SubMenu& setHeaderView(View*);
+   void clearHeader();
+   SubMenu& setIcon(const std::string&iconRes);
+   SubMenu& setIcon(Drawable*);
+   MenuItem*getItem()const;
 };
 
 }
