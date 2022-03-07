@@ -19,7 +19,7 @@ private:
     struct Velocity {
         float vx, vy;
     };
-    class VelocityTrackerCC* mVelocityTracker;
+    class VelocityTrackerImpl* mVelocityTracker;
     int32_t mActivePointerId;
     BitSet32 mCalculatedIdBits;
     Velocity mCalculatedVelocity[MAX_POINTERS];
@@ -67,59 +67,7 @@ public:
     void recycle(); 
 };
     
-class VelocityTrackerCC {//from VelocityTracker.cpp
-public:
 
-    // Creates a velocity tracker using the specified strategy.
-    // If strategy is NULL, uses the default strategy for the platform.
-    VelocityTrackerCC(const char* strategy = nullptr);
-
-    ~VelocityTrackerCC();
-
-    // Resets the velocity tracker state.
-    void clear();
-
-    // Resets the velocity tracker state for specific pointers.
-    // Call this method when some pointers have changed and may be reusing
-    // an id that was assigned to a different pointer earlier.
-    void clearPointers(BitSet32 idBits);
-
-    // Adds movement information for a set of pointers.
-    // The idBits bitfield specifies the pointer ids of the pointers whose positions
-    // are included in the movement.
-    // The positions array contains position information for each pointer in order by
-    // increasing id.  Its size should be equal to the number of one bits in idBits.
-    void addMovement(nsecs_t eventTime, BitSet32 idBits, const VelocityTracker::Position* positions);
-
-    // Adds movement information for all pointers in a MotionEvent, including historical samples.
-    void addMovement(const MotionEvent& event);
-
-    // Gets the velocity of the specified pointer id in position units per second.
-    // Returns false and sets the velocity components to zero if there is
-    // insufficient movement information for the pointer.
-    bool getVelocity(uint32_t id, float* outVx, float* outVy) const;
-
-    // Gets an estimator for the recent movements of the specified pointer id.
-    // Returns false and clears the estimator if there is no information available
-    // about the pointer.
-    bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
-
-    // Gets the active pointer id, or -1 if none.
-    inline int32_t getActivePointerId() const { return mActivePointerId; }
-
-    // Gets a bitset containing all pointer ids from the most recent movement.
-    inline BitSet32 getCurrentPointerIdBits() const { return mCurrentPointerIdBits; }
-private:
-    static const char* DEFAULT_STRATEGY;
-    nsecs_t mLastEventTime;
-    BitSet32 mCurrentPointerIdBits;
-    int32_t mActivePointerId;
-    VelocityTrackerStrategy* mStrategy;
-
-    bool configureStrategy(const char* strategy);
-
-    static VelocityTrackerStrategy* createStrategy(const char* strategy);
-};
 
 class VelocityTrackerStrategy {
 protected:

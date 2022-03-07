@@ -67,10 +67,62 @@ static std::string matrixToString(const float* a, uint32_t m, uint32_t n, bool r
     return ostr.str();
 }
 #endif
+class VelocityTrackerImpl {//from VelocityTracker.cpp
+public:
 
-const char* VelocityTrackerCC::DEFAULT_STRATEGY = "lsq2";
+    // Creates a velocity tracker using the specified strategy.
+    // If strategy is NULL, uses the default strategy for the platform.
+    VelocityTrackerImpl(const char* strategy = nullptr);
 
-VelocityTrackerCC::VelocityTrackerCC(const char* strategy) :
+    ~VelocityTrackerImpl();
+
+    // Resets the velocity tracker state.
+    void clear();
+
+    // Resets the velocity tracker state for specific pointers.
+    // Call this method when some pointers have changed and may be reusing
+    // an id that was assigned to a different pointer earlier.
+    void clearPointers(BitSet32 idBits);
+
+    // Adds movement information for a set of pointers.
+    // The idBits bitfield specifies the pointer ids of the pointers whose positions
+    // are included in the movement.
+    // The positions array contains position information for each pointer in order by
+    // increasing id.  Its size should be equal to the number of one bits in idBits.
+    void addMovement(nsecs_t eventTime, BitSet32 idBits, const VelocityTracker::Position* positions);
+
+    // Adds movement information for all pointers in a MotionEvent, including historical samples.
+    void addMovement(const MotionEvent& event);
+
+    // Gets the velocity of the specified pointer id in position units per second.
+    // Returns false and sets the velocity components to zero if there is
+    // insufficient movement information for the pointer.
+    bool getVelocity(uint32_t id, float* outVx, float* outVy) const;
+
+    // Gets an estimator for the recent movements of the specified pointer id.
+    // Returns false and clears the estimator if there is no information available
+    // about the pointer.
+    bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
+
+    // Gets the active pointer id, or -1 if none.
+    inline int32_t getActivePointerId() const { return mActivePointerId; }
+
+    // Gets a bitset containing all pointer ids from the most recent movement.
+    inline BitSet32 getCurrentPointerIdBits() const { return mCurrentPointerIdBits; }
+private:
+    static const char* DEFAULT_STRATEGY;
+    nsecs_t mLastEventTime;
+    BitSet32 mCurrentPointerIdBits;
+    int32_t mActivePointerId;
+    VelocityTrackerStrategy* mStrategy;
+
+    bool configureStrategy(const char* strategy);
+
+    static VelocityTrackerStrategy* createStrategy(const char* strategy);
+};
+const char* VelocityTrackerImpl::DEFAULT_STRATEGY = "lsq2";
+
+VelocityTrackerImpl::VelocityTrackerImpl(const char* strategy) :
     mLastEventTime(0), mCurrentPointerIdBits(0), mActivePointerId(-1) {
 
     // Allow the default strategy to be overridden using a system property for debugging.
@@ -85,16 +137,16 @@ VelocityTrackerCC::VelocityTrackerCC(const char* strategy) :
     }
 }
 
-VelocityTrackerCC::~VelocityTrackerCC() {
+VelocityTrackerImpl::~VelocityTrackerImpl() {
     delete mStrategy;
 }
 
-bool VelocityTrackerCC::configureStrategy(const char* strategy) {
+bool VelocityTrackerImpl::configureStrategy(const char* strategy) {
     mStrategy = createStrategy(strategy);
     return mStrategy != NULL;
 }
 
-VelocityTrackerStrategy* VelocityTrackerCC::createStrategy(const char* strategy) {
+VelocityTrackerStrategy* VelocityTrackerImpl::createStrategy(const char* strategy) {
     if (!strcmp("impulse", strategy)) {
         // Physical model of pushing an object.  Quality: VERY GOOD.
         // Works with duplicate coordinates, unclean finger liftoff.
@@ -146,26 +198,17 @@ VelocityTrackerStrategy* VelocityTrackerCC::createStrategy(const char* strategy)
         // for acceleration but it typically overestimates the effect.
         return new IntegratingVelocityTrackerStrategy(2);
     }
-#if 0
-    if (!strcmp("legacy", strategy)) {
-        // Legacy velocity tracker algorithm.  Quality: POOR.
-        // For comparison purposes only.  This algorithm is strongly influenced by
-        // old data points, consistently underestimates velocity and takes a very long
-        // time to adjust to changes in direction.
-        return new LegacyVelocityTrackerStrategy();
-    }
-#endif
     return NULL;
 }
 
-void VelocityTrackerCC::clear() {
+void VelocityTrackerImpl::clear() {
     mCurrentPointerIdBits.clear();
     mActivePointerId = -1;
 
     mStrategy->clear();
 }
 
-void VelocityTrackerCC::clearPointers(BitSet32 idBits) {
+void VelocityTrackerImpl::clearPointers(BitSet32 idBits) {
     BitSet32 remainingIdBits(mCurrentPointerIdBits.value & ~idBits.value);
     mCurrentPointerIdBits = remainingIdBits;
 
@@ -176,7 +219,7 @@ void VelocityTrackerCC::clearPointers(BitSet32 idBits) {
     mStrategy->clearPointers(idBits);
 }
 
-void VelocityTrackerCC::addMovement(nsecs_t eventTime, BitSet32 idBits, const VelocityTracker::Position* positions) {
+void VelocityTrackerImpl::addMovement(nsecs_t eventTime, BitSet32 idBits, const VelocityTracker::Position* positions) {
     while (idBits.count() > MAX_POINTERS) {
         idBits.clearLastMarkedBit();
     }
@@ -218,7 +261,7 @@ void VelocityTrackerCC::addMovement(nsecs_t eventTime, BitSet32 idBits, const Ve
 #endif
 }
 
-void VelocityTrackerCC::addMovement(const MotionEvent& event) {
+void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
     int32_t actionMasked = event.getActionMasked();
 
     switch (actionMasked) {
@@ -290,7 +333,7 @@ void VelocityTrackerCC::addMovement(const MotionEvent& event) {
     addMovement(eventTime, idBits, positions);
 }
 
-bool VelocityTrackerCC::getVelocity(uint32_t id, float* outVx, float* outVy) const {
+bool VelocityTrackerImpl::getVelocity(uint32_t id, float* outVx, float* outVy) const {
     VelocityTracker::Estimator estimator;
     if (getEstimator(id, &estimator) && estimator.degree >= 1) {
         *outVx = estimator.xCoeff[1];
@@ -302,7 +345,7 @@ bool VelocityTrackerCC::getVelocity(uint32_t id, float* outVx, float* outVy) con
     return false;
 }
 
-bool VelocityTrackerCC::getEstimator(uint32_t id,VelocityTracker::Estimator* outEstimator) const {
+bool VelocityTrackerImpl::getEstimator(uint32_t id,VelocityTracker::Estimator* outEstimator) const {
     return mStrategy->getEstimator(id, outEstimator);
 }
 
@@ -874,7 +917,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
 
 std::queue<VelocityTracker*>VelocityTracker::sPool;
 VelocityTracker::VelocityTracker(const char* strategy):mActivePointerId(-1) {
-    mVelocityTracker=new VelocityTrackerCC(strategy);
+    mVelocityTracker=new VelocityTrackerImpl(strategy);
     mCalculatedIdBits.clear();
     bzero(mCalculatedVelocity,sizeof(mCalculatedVelocity));
 }
