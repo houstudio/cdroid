@@ -16,6 +16,7 @@
 
 #include <widget/viewgroup.h>
 #include <widget/measurespec.h>
+#include <views/viewoverlay.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
 #include <cdlog.h>
@@ -836,6 +837,13 @@ int ViewGroup::indexOfChild(View* child)const{
     for(int i=0;i<count;i++)
         if(mChildren[i]==child)return i;
     return -1;
+}
+
+ViewOverlay* ViewGroup::getOverlay() {
+    if (mOverlay == nullptr) {
+        mOverlay = new ViewGroupOverlay(mContext, this);
+    }
+    return mOverlay;
 }
 
 int ViewGroup::getChildDrawingOrder(int count,int i){
@@ -2031,6 +2039,10 @@ void ViewGroup::setLayoutTransition(LayoutTransition* transition) {
     if (mTransition != nullptr) {
         mTransition->addTransitionListener(mLayoutTransitionListener);
     }
+}
+
+LayoutTransition* ViewGroup::getLayoutTransition()const{
+    return mTransition;
 }
 
 void ViewGroup::bindLayoutAnimation(View* child){

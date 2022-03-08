@@ -115,7 +115,7 @@ void GraphDevice::doCompose(){
     }
 }
 
-void GraphDevice::notify(){
+void GraphDevice::requestCompose(){
     std::unique_lock<std::mutex> lock(mMutex);
     mCV.notify_all();
 }
@@ -128,6 +128,33 @@ void GraphDevice::unlock(){
     mMutex.unlock();
 }
 
+void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<RefPtr<Region>>&regions){
+    for (auto w=windows.begin() ;w!= windows.end();w++){
+        Rect rcw=(*w)->getBound();
+        RefPtr<Region>newrgn=Region::create((RectangleInt&)rcw);
+        if((*w)->getVisibility()!=View::VISIBLE||(*w)->isAttachedToWindow()==false)continue;
+
+        for(auto w1=w+1;w1!=windows.end();w1++){
+            if((*w1)->getVisibility()!=View::VISIBLE)continue;
+            if((*w1)->mWindowRgn==nullptr || (*w1)->mWindowRgn->empty()){
+                RECT r=(*w1)->getBound();
+                newrgn->subtract((const RectangleInt&)r);
+            }else{
+                RefPtr<Region>tmp=(*w1)->mWindowRgn->copy();
+                tmp->translate((*w1)->getX(),(*w1)->getY());
+                newrgn->subtract(tmp);
+            }
+        }
+        newrgn->translate(-rcw.left,-rcw.top);
+        if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
+            newrgn->intersect((*w)->mWindowRgn);
+        }
+        regions.push_back(newrgn);
+        LOGV("window %p[%s] Layer=%d %d rects visible=%d",(*w),(*w)->getText().c_str(),(*w)->mLayer,
+                   newrgn->get_num_rectangles(),(*w)->getVisibility());
+    }
+}
+
 void GraphDevice::composeSurfaces(){
     int rects=0;
     long t2,t1=SystemClock::uptimeMillis();
@@ -136,8 +163,9 @@ void GraphDevice::composeSurfaces(){
     std::vector<RefPtr<Canvas>>wSurfaces;
     std::vector<Rect>wBounds;
     std::vector<Window*>wins;
+    std::vector<RefPtr<Region>>winVisibleRgns;
     WindowManager::getInstance().enumWindows([&wSurfaces,&wBounds,&wins](Window*w)->bool{
-        if( (w->getVisibility()==View::VISIBLE) && (w->mVisibleRgn->empty()==false)){
+        if( w->getVisibility()==View::VISIBLE ){
             Rect rcw=w->getBound();
             if(w->mAttachInfo->mCanvas){
                 wSurfaces.push_back(w->mAttachInfo->mCanvas);
@@ -147,13 +175,16 @@ void GraphDevice::composeSurfaces(){
             }
         }return false;
     });
+    computeVisibleRegion(wins,winVisibleRgns);
     primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     Rect rcBlited={0,0,0,0};
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw=wBounds[i];
         std::vector<Rectangle> clipRects;
         HANDLE hdlSurface = wSurfaces[i]->mHandle;
-        RefPtr<Region>rgn = Region::create();
+        RefPtr<Region>rgn;
+        if(winVisibleRgns[i]->empty())continue; 
+        rgn = Region::create();
         wSurfaces[i]->copy_clip_rectangle_list(clipRects);
         for(auto r:clipRects){
             Rect rc;
@@ -161,7 +192,7 @@ void GraphDevice::composeSurfaces(){
             rgn->do_union((const RectangleInt&)rc);
         }
         mInvalidateRgn->subtract((const RectangleInt&)rcw);
-        rgn->intersect(wins[i]->mVisibleRgn);
+        rgn->intersect(winVisibleRgns[i]);
         rects+=rgn->get_num_rectangles();
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc=rgn->get_rectangle(j);

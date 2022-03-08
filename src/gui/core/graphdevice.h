@@ -28,6 +28,7 @@ private:
     GraphDevice(int format=-1);
     void trackFPS();
     void doCompose();
+    void computeVisibleRegion(std::vector<class Window*>&windows,std::vector<RefPtr<Region>>&regions);
 public:
     static GraphDevice&getInstance();
     ~GraphDevice();
@@ -35,7 +36,7 @@ public:
     int getScreenWidth();
     int getScreenHeight();
     void flip();
-    void notify();
+    void requestCompose();
     void lock();
     void unlock();
     void composeSurfaces();

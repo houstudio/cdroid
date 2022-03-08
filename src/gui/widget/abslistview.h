@@ -135,6 +135,7 @@ private:
     bool mSmoothScrollbarEnabled;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
+    class FastScroller* mFastScroll;
     std::vector<int>mSelectorState;
     int mLastScrollState;
     bool mIsChildViewEnabled;
@@ -168,6 +169,8 @@ private:
     void positionSelector(int position, View* sel, bool manageHotspot, float x, float y);
     bool startScrollIfNeeded(int x, int y, MotionEvent* vtev);
     void scrollIfNeeded(int x, int y, MotionEvent* vtev);
+    void setFastScrollerEnabledUiThread(bool enabled);
+    void setFastScrollerAlwaysVisibleUiThread(bool alwaysShow);
     int  releaseGlow(int deltaY, int x);
     bool isGlowActive()const;
     void invalidateTopGlow();
@@ -185,6 +188,9 @@ protected:
     int mSelectedTop;
     int mStackFromBottom;
     bool mScrollingCacheEnabled;
+    bool mFastScrollEnabled;
+    bool mFastScrollAlwaysVisible;
+    int mFastScrollStyle;
     int mSelectorPosition;
     int mResurrectToPosition;
     int mMinimumVelocity;
@@ -316,12 +322,21 @@ public:
     void setOnScrollListener(OnScrollListener);
     bool isScrollingCacheEnabled()const;
     void setScrollingCacheEnabled(bool enabled);
+
+    void setFastScrollEnabled(bool);
+    bool isFastScrollEnabled()const;
+    void setFastScrollStyle(int styleid);
+    void setFastScrollAlwaysVisible(bool alwaysShow);
+    bool isFastScrollAlwaysVisible()const;
+
     void clearChoices();
     void setDrawSelectorOnTop(bool onTop);
     Drawable*getSelector();
     void setSelector(Drawable*drawable);
     void setSelector(const std::string&resid);
     void getFocusedRect(Rect& r)override;
+
+    void setScrollBarStyle(int style);
     void setSmoothScrollbarEnabled(bool);
     bool isSmoothScrollbarEnabled()const;
     void setStackFromBottom(bool stackFromBottom);

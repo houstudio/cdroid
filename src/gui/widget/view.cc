@@ -1,5 +1,6 @@
 #include <widget/view.h>
 #include <widget/viewgroup.h>
+#include <views/viewoverlay.h>
 #include <widget/measurespec.h>
 #include <widget/roundscrollbarrenderer.h>
 #include <widget/edgeeffect.h>
@@ -332,6 +333,7 @@ void View::initView(){
     mParent   = nullptr;
     mAttachInfo  = nullptr;
     mListenerInfo= nullptr;
+    mOverlay  = nullptr;
 
     mPerformClick = nullptr;
     mPendingCheckForTap = nullptr;
@@ -403,6 +405,7 @@ View::~View(){
     delete mRoundScrollbarRenderer;
     delete mCurrentAnimation;
     delete mTransformationInfo;
+    delete mOverlay;  
 }
 
 bool View::debugDraw()const {
@@ -1262,6 +1265,9 @@ int View::combineVisibility(int vis1, int vis2) {
 
 void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
     mAttachInfo = info;
+    if(mOverlay)
+        mOverlay->getOverlayView()->dispatchAttachedToWindow(info,visibility);
+
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     onAttachedToWindow();
     int vis = info->mWindowVisibility;
@@ -1302,6 +1308,8 @@ void View::dispatchDetachedFromWindow(){
         mPrivateFlags &= ~PFLAG_SCROLL_CONTAINER_ADDED;
     }
     mAttachInfo = nullptr;
+    if(mOverlay)
+        mOverlay->getOverlayView()->dispatchDetachedFromWindow();
 }
 
 void View::onDetachedFromWindowInternal() {
@@ -1525,6 +1533,18 @@ int View::getScrollBarSize()const{
 View& View::setScrollBarSize(int scrollBarSize){
     getScrollCache()->scrollBarSize = scrollBarSize;
     return *this;
+}
+
+void View::setScrollBarStyle(int style) {
+    if (style != (mViewFlags & SCROLLBARS_STYLE_MASK)) {
+        mViewFlags = (mViewFlags & ~SCROLLBARS_STYLE_MASK) | (style & SCROLLBARS_STYLE_MASK);
+        computeOpaqueFlags();
+        resolvePadding();
+    }
+}
+
+int View::getScrollBarStyle()const{
+    return mViewFlags & SCROLLBARS_STYLE_MASK;
 }
 
 bool View::isVerticalScrollBarHidden()const{
@@ -2412,9 +2432,9 @@ void View::draw(Canvas&canvas){
         drawAutofilledHighlight(canvas);
 
         // Overlay is part of the content and draws beneath Foreground
-        /*if (mOverlay != null && !mOverlay.isEmpty()) {
-            mOverlay.getOverlayView().dispatchDraw(canvas);
-        }*/
+        if (mOverlay && !mOverlay->isEmpty()) {
+            mOverlay->getOverlayView()->dispatchDraw(canvas);
+        }
 
         // Step 6, draw decorations (foreground, scrollbars)
         onDrawForeground(canvas);
@@ -2534,6 +2554,9 @@ void View::draw(Canvas&canvas){
         canvas.drawRect(right - length, top, right, bottom, p);
     }*/
     // Step 6, draw decorations (foreground, scrollbars)
+    drawAutofilledHighlight(canvas);
+    if(mOverlay && !mOverlay->isEmpty())
+        mOverlay->getOverlayView()->dispatchDraw(canvas);
     onDrawForeground(canvas);
     if (debugDraw()) debugDrawFocus(canvas);
 }
@@ -4272,9 +4295,9 @@ void View::buildDrawingCacheImpl(bool autoScale){
         mPrivateFlags &= ~PFLAG_DIRTY_MASK;
         dispatchDraw(*canvas);
         drawAutofilledHighlight(*canvas);
-        /*if (mOverlay != nullptr && !mOverlay.isEmpty()) {
-            mOverlay.getOverlayView().draw(*canvas);
-        }*/
+        if (mOverlay && !mOverlay->isEmpty()) {
+            mOverlay->getOverlayView()->draw(*canvas);
+        }
     } else {
         draw(*canvas);
     }
@@ -4922,6 +4945,9 @@ void View::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
 void View::sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight){
     onSizeChanged(newWidth,newHeight,oldWidth,oldHeight);
+    if(mOverlay)
+        mOverlay->getOverlayView()->setSize(getWidth(),getHeight());
+
     if(isLayoutValid()){
         if(newWidth<=0||newHeight<=0){
             if(hasFocus()){
@@ -5558,6 +5584,13 @@ bool View::removeCallbacks(const Runnable& what){
     if(root&&(root!=this))
         return root->removeCallbacks(what);
     return false;
+}
+
+ViewOverlay*View::getOverlay(){
+    if (mOverlay == nullptr) {
+        mOverlay = new ViewOverlay(mContext, this);
+    }
+    return mOverlay;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

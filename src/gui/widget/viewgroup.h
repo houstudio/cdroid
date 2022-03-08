@@ -237,6 +237,7 @@ public:
     void setDescendantFocusability(int);
     int  getLayoutMode();
     void setLayoutMode(int layoutMode);
+    ViewOverlay*getOverlay()override;
 
     bool getClipChildren()const;
     void setClipChildren(bool clipChildren);

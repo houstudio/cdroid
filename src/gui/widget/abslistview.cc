@@ -1,6 +1,7 @@
 #include <widget/abslistview.h>
 #include <widget/checkable.h>
 #include <widget/recyclebin.h>
+#include <widget/fastscroller.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 
@@ -245,6 +246,7 @@ void AbsListView::initAbsListView() {
     mListPadding.set(0,0,0,0);
     mVelocityTracker = nullptr;
     mPositionScroller= nullptr;
+	mFastScroll = nullptr; 
     mStackFromBottom = false;
     mIsChildViewEnabled =false;
     mIsDetaching =false;
@@ -295,6 +297,7 @@ void AbsListView::initAbsListView() {
 
 AbsListView::~AbsListView(){
     delete mSelector;
+	delete mFastScroll;
     delete mRecycler;
     delete mScroller;
     delete mEdgeGlowTop;
@@ -364,15 +367,103 @@ void AbsListView::setOnScrollListener(OnScrollListener l) {
     invokeOnItemScrollListener();
 }
 
-bool AbsListView::isScrollingCacheEnabled()const{
-    return mScrollingCacheEnabled;
-}
-
 void AbsListView::setScrollingCacheEnabled(bool enabled){
     if (mScrollingCacheEnabled && !enabled) {
         clearScrollingCache();
     }
     mScrollingCacheEnabled = enabled;
+}
+
+bool AbsListView::isScrollingCacheEnabled()const{
+    return mScrollingCacheEnabled;
+}
+
+void AbsListView::setFastScrollerEnabledUiThread(bool enabled) {
+    if (mFastScroll != nullptr) {
+        mFastScroll->setEnabled(enabled);
+    } else if (enabled) {
+        mFastScroll = new FastScroller(this, mFastScrollStyle);
+        mFastScroll->setEnabled(true);
+    }
+
+    resolvePadding();
+    if (mFastScroll != nullptr) {
+        mFastScroll->updateLayout();
+    }
+}
+
+void AbsListView::setFastScrollerAlwaysVisibleUiThread(bool alwaysShow) {
+     if (mFastScroll != nullptr) {
+         mFastScroll->setAlwaysShow(alwaysShow);
+     }
+}
+
+static bool isOwnerThread(){
+   return false;
+}
+
+void AbsListView::setFastScrollEnabled(bool enabled){
+    if (mFastScrollEnabled != enabled) {
+        mFastScrollEnabled = enabled;
+   
+        if (isOwnerThread()) {
+            setFastScrollerEnabledUiThread(enabled);
+        } else {
+            post([this,enabled](){
+                setFastScrollerEnabledUiThread(enabled);
+            });
+        }
+    }
+}
+
+
+void AbsListView::setFastScrollStyle(int styleResId){
+    if (mFastScroll == nullptr) {
+        mFastScrollStyle = styleResId;
+    } else {
+        mFastScroll->setStyle(styleResId);
+    }
+}
+
+void AbsListView::setFastScrollAlwaysVisible(bool alwaysShow){
+    if (mFastScrollAlwaysVisible != alwaysShow) {
+        if (alwaysShow && !mFastScrollEnabled) {
+            setFastScrollEnabled(true);
+        }
+
+        mFastScrollAlwaysVisible = alwaysShow;
+
+        if (isOwnerThread()) {
+            setFastScrollerAlwaysVisibleUiThread(alwaysShow);
+        } else {
+            post([this,alwaysShow](){
+                setFastScrollerAlwaysVisibleUiThread(alwaysShow);
+            });
+        }
+    }
+}
+
+bool AbsListView::isFastScrollAlwaysVisible()const{
+    if (mFastScroll == nullptr) {
+        return mFastScrollEnabled && mFastScrollAlwaysVisible;
+    } else {
+        return mFastScroll->isEnabled() && mFastScroll->isAlwaysShowEnabled();
+    }
+}
+
+bool AbsListView::isFastScrollEnabled()const{
+    if (mFastScroll == nullptr) {
+        return mFastScrollEnabled;
+    } else {
+        return mFastScroll->isEnabled();
+    }
+}
+
+void AbsListView::setScrollBarStyle(int style) {
+    AdapterView::setScrollBarStyle(style);
+    if (mFastScroll != nullptr) {
+        mFastScroll->setScrollBarStyle(style);
+    }
 }
 
 int AbsListView::getListPaddingTop()const {

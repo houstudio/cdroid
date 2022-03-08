@@ -31,6 +31,7 @@
 
 namespace cdroid{
 class ViewGroup;
+class ViewOverlay;
 typedef const std::string Intent;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
@@ -333,7 +334,8 @@ private:
     bool mDefaultFocusHighlightEnabled;
     bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
-    ViewGroup*mNestedScrollingParent;
+    ViewOverlay* mOverlay;
+    ViewGroup* mNestedScrollingParent;
     std::map<Size,Size>mMeasureCache;
     std::string mStartActivityRequestWho;
     class ScrollabilityCache*mScrollCache;
@@ -486,9 +488,9 @@ protected:
     int getFadeHeight(bool offsetRequired);
     bool isHardwareAccelerated()const;
 
-    void invalidateViewProperty(bool invalidateParent, bool forceRedraw);
-    void invalidateParentCaches();
-    void invalidateParentIfNeeded();
+    virtual void invalidateViewProperty(bool invalidateParent, bool forceRedraw);
+    virtual void invalidateParentCaches();
+    virtual void invalidateParentIfNeeded();
     void invalidateParentIfNeededAndWasQuickRejected();
     virtual void invalidateInheritedLayoutMode(int);
     void destroyDrawingCache();
@@ -580,9 +582,9 @@ public:
     virtual ~View();
     virtual void draw(Canvas&canvas);
     bool draw(Canvas&canvas,ViewGroup*parent,long drawingTime);
-    void invalidate(const Rect&dirty);
-    void invalidate(int l,int t,int w,int h);
-    void invalidate(bool invalidateCache=true);
+    virtual void invalidate(const Rect&dirty);
+    virtual void invalidate(int l,int t,int w,int h);
+    virtual void invalidate(bool invalidateCache=true);
     bool isDirty()const;
     void postInvalidate();
     void postInvalidateOnAnimation();
@@ -676,6 +678,8 @@ public:
 
     int getScrollBarSize()const;
     View& setScrollBarSize(int scrollBarSize);
+    virtual void setScrollBarStyle(int style);
+    int  getScrollBarStyle()const;
     bool isHorizontalScrollBarEnabled()const;
     View& setHorizontalScrollBarEnabled(bool);
     bool isVerticalScrollBarEnabled()const;
@@ -984,6 +988,7 @@ public:
     int getRawLayoutDirection()const;
     bool isLayoutDirectionInherited()const;
     void setLayoutParams(LayoutParams*lp);
+    virtual ViewOverlay*getOverlay();
     virtual bool isLayoutRequested()const;
     virtual bool isInLayout()const;
     bool isLayoutValid()const;

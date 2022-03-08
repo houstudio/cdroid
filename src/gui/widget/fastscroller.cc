@@ -1,0 +1,1076 @@
+#include <widget/fastscroller.h>
+#include <widget/abslistview.h>
+#include <core/mathutils.h>
+
+namespace cdroid{
+
+FastScroller::FastScroller(AbsListView*listView,int styleResId){
+    mList = listView;
+    mOldItemCount = listView->getCount();
+    mOldChildCount = listView->getChildCount();
+
+    Context* context = listView->getContext();
+    mScaledTouchSlop = ViewConfiguration::get(context).getScaledTouchSlop();
+    mScrollBarStyle = listView->getScrollBarStyle();
+
+    mScrollCompleted = true;
+    mState = STATE_VISIBLE;
+    mMatchDragPosition =true;// context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.HONEYCOMB;
+
+    AttributeSet atts;
+    mTrackImage = new ImageView(context,atts);
+    mTrackImage->setScaleType(ScaleType::FIT_XY);
+    mThumbImage = new ImageView(context,atts);
+    mThumbImage->setScaleType(ScaleType::FIT_XY);
+    mPreviewImage = new View(context,atts);
+    mPreviewImage->setAlpha(.0f);
+
+    mPrimaryText = createPreviewTextView(context);
+    mSecondaryText = createPreviewTextView(context);
+
+    mMinimumTouchTarget = 20;//listView.getResources().getDimensionPixelSize(
+            //com.android.internal.R.dimen.fast_scroller_minimum_touch_target);
+
+    setStyle(styleResId);
+
+    ViewGroupOverlay* overlay = (ViewGroupOverlay*)listView->getOverlay();
+    mOverlay = overlay;
+    overlay->add(mTrackImage);
+    overlay->add(mThumbImage);
+    overlay->add(mPreviewImage);
+    overlay->add(mPrimaryText);
+    overlay->add(mSecondaryText);
+
+    getSectionsFromIndexer();
+    updateLongList(mOldChildCount, mOldItemCount);
+    setScrollbarPosition(listView->getVerticalScrollbarPosition());
+    postAutoHide();
+}
+
+void FastScroller::setStyle(int){
+
+}
+
+void FastScroller::remove() {
+    mOverlay->remove(mTrackImage);
+    mOverlay->remove(mThumbImage);
+    mOverlay->remove(mPreviewImage);
+    mOverlay->remove(mPrimaryText);
+    mOverlay->remove(mSecondaryText);
+}
+
+void FastScroller::setEnabled(bool enabled){
+    if (mEnabled != enabled) {
+        mEnabled = enabled;
+        onStateDependencyChanged(true);
+    }
+}
+
+bool FastScroller::isEnabled()const{
+    return mEnabled && (mLongList || mAlwaysShow);
+}
+
+void FastScroller::setAlwaysShow(bool alwaysShow){
+    if (mAlwaysShow != alwaysShow) {
+        mAlwaysShow = alwaysShow;
+        onStateDependencyChanged(false);
+    }
+}
+
+bool FastScroller::isAlwaysShowEnabled()const{
+    return mAlwaysShow;
+}
+
+void FastScroller::onStateDependencyChanged(bool peekIfEnabled) {
+    if (isEnabled()) {
+        if (isAlwaysShowEnabled()) {
+            setState(STATE_VISIBLE);
+        } else if (mState == STATE_VISIBLE) {
+            postAutoHide();
+        } else if (peekIfEnabled) {
+            setState(STATE_VISIBLE);
+            postAutoHide();
+        }
+    } else {
+        stop();
+    }
+    mList->resolvePadding();
+}
+
+void FastScroller::setScrollBarStyle(int style){
+    if (mScrollBarStyle != style) {
+        mScrollBarStyle = style;
+        updateLayout();
+    }
+}
+
+void FastScroller::stop() {
+    setState(STATE_NONE);
+}
+
+void FastScroller::setScrollbarPosition(int position){
+    if (position == View::SCROLLBAR_POSITION_DEFAULT) {
+        position = mList->isLayoutRtl() ? View::SCROLLBAR_POSITION_LEFT : View::SCROLLBAR_POSITION_RIGHT;
+    }
+
+    if (mScrollbarPosition != position) {
+        mScrollbarPosition = position;
+        mLayoutFromRight = position != View::SCROLLBAR_POSITION_LEFT;
+
+        //const int previewResId = mPreviewResId[mLayoutFromRight ? PREVIEW_RIGHT : PREVIEW_LEFT];
+        //mPreviewImage->setBackgroundResource(previewResId);
+
+        // Propagate padding to text min width/height.
+        const int textMinWidth = std::max(0, mPreviewMinWidth - mPreviewImage->getPaddingLeft()
+                - mPreviewImage->getPaddingRight());
+        mPrimaryText->setMinimumWidth(textMinWidth);
+        mSecondaryText->setMinimumWidth(textMinWidth);
+
+        const int textMinHeight = std::max(0, mPreviewMinHeight - mPreviewImage->getPaddingTop()
+                    - mPreviewImage->getPaddingBottom());
+        mPrimaryText->setMinimumHeight(textMinHeight);
+        mSecondaryText->setMinimumHeight(textMinHeight);
+
+        // Requires re-layout.
+        updateLayout();
+    }
+}
+
+int FastScroller::getWidth()const{
+    return mWidth;
+}
+
+void FastScroller::onSizeChanged(int w, int h, int oldw, int oldh) {
+    updateLayout();
+}
+
+void FastScroller::onItemCountChanged(int childCount, int itemCount) {
+    if (mOldItemCount != itemCount || mOldChildCount != childCount) {
+        mOldItemCount = itemCount;
+        mOldChildCount = childCount;
+
+        const bool hasMoreItems = itemCount - childCount > 0;
+        if (hasMoreItems && mState != STATE_DRAGGING) {
+            const int firstVisibleItem = mList->getFirstVisiblePosition();
+            setThumbPos(getPosFromItemCount(firstVisibleItem, childCount, itemCount));
+        }
+
+        updateLongList(childCount, itemCount);
+    }
+}
+
+void FastScroller::updateLongList(int childCount, int itemCount) {
+    const bool longList = childCount > 0 && itemCount / childCount >= MIN_PAGES;
+    if (mLongList != longList) {
+        mLongList = longList;
+
+        onStateDependencyChanged(false);
+    }
+}
+
+TextView* FastScroller::createPreviewTextView(Context* context) {
+    LayoutParams* params = new LayoutParams( LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    AttributeSet atts;
+    TextView* textView = new TextView(context,atts);
+    textView->setLayoutParams(params);
+    textView->setSingleLine(true);
+    //textView->setEllipsize(TruncateAt.MIDDLE);
+    textView->setGravity(Gravity::CENTER);
+    textView->setAlpha(.0f);
+
+    // Manually propagate inherited layout direction.
+     textView->setLayoutDirection(mList->getLayoutDirection());
+
+    return textView;
+}
+
+void FastScroller::updateLayout(){
+    // Prevent re-entry when RTL properties change as a side-effect of
+    // resolving padding.
+    if (mUpdatingLayout) {
+        return;
+    }
+
+    mUpdatingLayout = true;
+
+    updateContainerRect();
+
+    layoutThumb();
+    layoutTrack();
+
+    updateOffsetAndRange();
+
+    Rect bounds;
+    measurePreview(mPrimaryText, bounds);
+    applyLayout(mPrimaryText, bounds);
+    measurePreview(mSecondaryText, bounds);
+    applyLayout(mSecondaryText, bounds);
+
+    if (mPreviewImage != nullptr) {
+        // Apply preview image padding.
+        bounds.left -= mPreviewImage->getPaddingLeft();
+        bounds.top -= mPreviewImage->getPaddingTop();
+        bounds.width += (mPreviewImage->getPaddingLeft()+mPreviewImage->getPaddingRight());
+        bounds.height += (mPreviewImage->getPaddingTop()+mPreviewImage->getPaddingBottom());
+        applyLayout(mPreviewImage, bounds);
+    }
+
+    mUpdatingLayout = false;
+}
+
+void FastScroller::applyLayout(View* view,const Rect& bounds) {
+    view->layout(bounds.left, bounds.top, bounds.width, bounds.height);
+    view->setPivotX(mLayoutFromRight ? bounds.width : 0);
+}
+
+void FastScroller::measurePreview(View* v, Rect& out) {
+    // Apply the preview image's padding as layout margins.
+    Rect margins;
+    margins.left = mPreviewImage->getPaddingLeft();
+    margins.top  = mPreviewImage->getPaddingTop();
+    margins.width = mPreviewImage->getPaddingRight();
+    margins.height= mPreviewImage->getPaddingBottom();
+
+    if (mOverlayPosition == OVERLAY_FLOATING) {
+        measureFloating(v, &margins, out);
+    } else {
+        measureViewToSide(v, mThumbImage, &margins, out);
+    }
+}
+
+void FastScroller::measureViewToSide(View* view, View* adjacent,const Rect* margins, Rect& out) {
+    int marginLeft;
+    int marginTop;
+    int marginRight;
+    if (margins == nullptr) {
+        marginLeft = 0;
+        marginTop = 0;
+        marginRight = 0;
+    } else {
+        marginLeft = margins->left;
+        marginTop = margins->top;
+        marginRight = margins->width;
+    }
+
+    Rect& container = mContainerRect;
+    int containerWidth = container.width;
+    int maxWidth;
+    if (adjacent == nullptr) {
+        maxWidth = containerWidth;
+    } else if (mLayoutFromRight) {
+        maxWidth = adjacent->getLeft();
+    } else {
+        maxWidth = containerWidth - adjacent->getRight();
+    }
+
+    const int adjMaxHeight= std::max(0, container.height);
+    const int adjMaxWidth = std::max(0, maxWidth - marginLeft - marginRight);
+    const int widthMeasureSpec = MeasureSpec::makeMeasureSpec(adjMaxWidth, MeasureSpec::AT_MOST);
+    const int heightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(adjMaxHeight, MeasureSpec::UNSPECIFIED);
+    view->measure(widthMeasureSpec, heightMeasureSpec);
+
+    // Align to the left or right.
+    const int width = std::min(adjMaxWidth, view->getMeasuredWidth());
+    int left;
+    int right;
+    if (mLayoutFromRight) {
+        right = (adjacent == nullptr ? container.right() : adjacent->getLeft()) - marginRight;
+        left = right - width;
+    } else {
+        left = (adjacent == nullptr ? container.left : adjacent->getRight()) + marginLeft;
+        right = left + width;
+    }
+
+    // Don't adjust the vertical position.
+    const int top = marginTop;
+    const int bottom = top + view->getMeasuredHeight();
+    out.set(left, top, right, bottom);
+}
+
+void FastScroller::measureFloating(View* preview,const Rect* margins, Rect& out) {
+    int marginLeft;
+    int marginTop;
+    int marginRight;
+    if (margins == nullptr) {
+        marginLeft = 0;
+        marginTop = 0;
+        marginRight = 0;
+    } else {
+        marginLeft = margins->left;
+        marginTop = margins->top;
+        marginRight = margins->width;
+    }
+
+    Rect& container = mContainerRect;
+    const int containerWidth = container.width;
+    const int adjMaxHeight = std::max(0, container.height);
+    const int adjMaxWidth = std::max(0, containerWidth - marginLeft - marginRight);
+    const int widthMeasureSpec = MeasureSpec::makeMeasureSpec(adjMaxWidth, MeasureSpec::AT_MOST);
+    const int heightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(adjMaxHeight, MeasureSpec::UNSPECIFIED);
+    preview->measure(widthMeasureSpec, heightMeasureSpec);
+
+    // Align at the vertical center, 10% from the top.
+    const int containerHeight = container.height;
+    const int width = preview->getMeasuredWidth();
+    const int top = containerHeight / 10 + marginTop + container.top;
+    const int bottom = top + preview->getMeasuredHeight();
+    const int left = (containerWidth - width) / 2 + container.left;
+    const int right = left + width;
+    out.set(left, top, right, bottom);
+}
+
+void FastScroller::updateContainerRect() {
+    mList->resolvePadding();
+
+    Rect& container = mContainerRect;
+    container.left = 0;
+    container.top = 0;
+    container.width = mList->getWidth();
+    container.height= mList->getHeight();
+
+    if (mScrollBarStyle == View::SCROLLBARS_INSIDE_INSET
+            || mScrollBarStyle == View::SCROLLBARS_INSIDE_OVERLAY) {
+        container.left += mList->getPaddingLeft();
+        container.top  += mList->getPaddingTop();
+        container.width -= (mList->getPaddingLeft()+mList->getPaddingRight());
+        container.height-= (mList->getPaddingTop()+mList->getPaddingBottom());
+
+        // In inset mode, we need to adjust for padded scrollbar width.
+        if (mScrollBarStyle == View::SCROLLBARS_INSIDE_INSET) {
+            const int width = getWidth();
+            if (mScrollbarPosition == View::SCROLLBAR_POSITION_RIGHT) {
+                container.width += width;
+            } else {
+                container.left -= width;
+            }
+        }
+    }
+}
+
+void FastScroller::layoutThumb() {
+    Rect bounds;
+    measureViewToSide(mThumbImage, nullptr, nullptr, bounds);
+    applyLayout(mThumbImage, bounds);
+}
+
+void FastScroller::layoutTrack() {
+    Rect& container = mContainerRect;
+    const int maxWidth = std::max(0, container.width);
+    const int maxHeight = std::max(0, container.height);
+    const int widthMeasureSpec = MeasureSpec::makeMeasureSpec(maxWidth, MeasureSpec::AT_MOST);
+    const int heightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(maxHeight, MeasureSpec::UNSPECIFIED);
+    mTrackImage->measure(widthMeasureSpec, heightMeasureSpec);
+
+    int top;
+    int bottom;
+    if (mThumbPosition == THUMB_POSITION_INSIDE) {
+        top = container.top;
+        bottom = container.bottom();
+    } else {
+        const int thumbHalfHeight = mThumbImage->getHeight() / 2;
+        top = container.top + thumbHalfHeight;
+        bottom = container.bottom() - thumbHalfHeight;
+    }
+
+    const int trackWidth = mTrackImage->getMeasuredWidth();
+    const int left = mThumbImage->getLeft() + (mThumbImage->getWidth() - trackWidth) / 2;
+    mTrackImage->layout(left, top, trackWidth, bottom);
+}
+
+void FastScroller::updateOffsetAndRange() {
+    float min;
+    float max;
+    if (mThumbPosition == THUMB_POSITION_INSIDE) {
+        const float halfThumbHeight = mThumbImage->getHeight() / 2.f;
+        min = mTrackImage->getTop() + halfThumbHeight;
+        max = mTrackImage->getBottom() - halfThumbHeight;
+    } else{
+        min = mTrackImage->getTop();
+        max = mTrackImage->getBottom();
+    }
+
+    mThumbOffset = min;
+    mThumbRange = max - min;
+}
+
+void FastScroller::setState(int state) {
+    mList->removeCallbacks(mDeferHide);
+
+    if (mAlwaysShow && state == STATE_NONE) {
+        state = STATE_VISIBLE;
+    }
+
+    if (state == mState) {
+        return;
+    }
+
+    switch (state) {
+    case STATE_NONE: transitionToHidden();  break;
+    case STATE_VISIBLE: transitionToVisible();break;
+    case STATE_DRAGGING:
+         if (transitionPreviewLayout(mCurrentSection)) {
+             transitionToDragging();
+         } else {
+             transitionToVisible();
+         }
+         break;
+    }
+    mState = state;
+    refreshDrawablePressedState();
+}
+
+void FastScroller::refreshDrawablePressedState() {
+    const bool isPressed = mState == STATE_DRAGGING;
+    mThumbImage->setPressed(isPressed);
+    mTrackImage->setPressed(isPressed);
+}
+
+void FastScroller::transitionToHidden() {
+#if 0
+    if (mDecorAnimation != nullptr) {
+        mDecorAnimation->cancel();
+    }
+
+    Animator fadeOut = groupAnimatorOfFloat(View.ALPHA, 0f, mThumbImage, mTrackImage,
+            mPreviewImage, mPrimaryText, mSecondaryText).setDuration(DURATION_FADE_OUT);
+
+        // Push the thumb and track outside the list bounds.
+    const float offset = mLayoutFromRight ? mThumbImage.getWidth() : -mThumbImage.getWidth();
+    Animator slideOut = groupAnimatorOfFloat(
+           View.TRANSLATION_X, offset, mThumbImage, mTrackImage)
+           .setDuration(DURATION_FADE_OUT);
+
+    mDecorAnimation = new AnimatorSet();
+    mDecorAnimation->playTogether(fadeOut, slideOut);
+    mDecorAnimation->start();
+#endif
+    mShowingPreview = false;
+}
+
+void FastScroller::transitionToVisible() {
+#if 0
+    if (mDecorAnimation != null) {
+        mDecorAnimation.cancel();
+    }
+
+    Animator fadeIn = groupAnimatorOfFloat(View.ALPHA, 1f, mThumbImage, mTrackImage)
+            .setDuration(DURATION_FADE_IN);
+    Animator fadeOut = groupAnimatorOfFloat(
+            View.ALPHA, 0f, mPreviewImage, mPrimaryText, mSecondaryText)
+            .setDuration(DURATION_FADE_OUT);
+    Animator slideIn = groupAnimatorOfFloat(
+            View.TRANSLATION_X, 0f, mThumbImage, mTrackImage).setDuration(DURATION_FADE_IN);
+
+    mDecorAnimation = new AnimatorSet();
+    mDecorAnimation.playTogether(fadeIn, fadeOut, slideIn);
+    mDecorAnimation.start();
+#endif
+    mShowingPreview = false;
+}
+
+void FastScroller::transitionToDragging() {
+#if 0
+    if (mDecorAnimation != null) {
+        mDecorAnimation.cancel();
+    }
+
+    Animator fadeIn = groupAnimatorOfFloat(
+            View.ALPHA, 1f, mThumbImage, mTrackImage, mPreviewImage)
+            .setDuration(DURATION_FADE_IN);
+    Animator slideIn = groupAnimatorOfFloat(
+            View.TRANSLATION_X, 0f, mThumbImage, mTrackImage).setDuration(DURATION_FADE_IN);
+
+    mDecorAnimation = new AnimatorSet();
+    mDecorAnimation.playTogether(fadeIn, slideIn);
+    mDecorAnimation.start();
+#endif
+    mShowingPreview = true;
+}
+
+void FastScroller::postAutoHide() {
+    mList->removeCallbacks(mDeferHide);
+    mList->postDelayed(mDeferHide, FADE_TIMEOUT);
+}
+
+void FastScroller::onScroll(int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+    if (!isEnabled()) {
+        setState(STATE_NONE);
+        return;
+    }
+
+    bool hasMoreItems = totalItemCount - visibleItemCount > 0;
+    if (hasMoreItems && mState != STATE_DRAGGING) {
+        setThumbPos(getPosFromItemCount(firstVisibleItem, visibleItemCount, totalItemCount));
+    }
+
+    mScrollCompleted = true;
+
+    if (mFirstVisibleItem != firstVisibleItem) {
+        mFirstVisibleItem = firstVisibleItem;
+
+        // Show the thumb, if necessary, and set up auto-fade.
+        if (mState != STATE_DRAGGING) {
+            setState(STATE_VISIBLE);
+            postAutoHide();
+        }
+    }
+}
+
+void FastScroller::getSectionsFromIndexer() {
+#if 0
+    mSectionIndexer = null;
+
+    Adapter adapter = mList->getAdapter();
+    if (adapter instanceof HeaderViewListAdapter) {
+        mHeaderCount = ((HeaderViewListAdapter) adapter).getHeadersCount();
+        adapter = ((HeaderViewListAdapter) adapter).getWrappedAdapter();
+    }
+
+    if (adapter instanceof ExpandableListConnector) {
+        ExpandableListAdapter expAdapter = ((ExpandableListConnector) adapter)
+                .getAdapter();
+        if (expAdapter instanceof SectionIndexer) {
+            mSectionIndexer = (SectionIndexer) expAdapter;
+            mListAdapter = adapter;
+            mSections = mSectionIndexer.getSections();
+        }
+    } else if (adapter instanceof SectionIndexer) {
+        mListAdapter = adapter;
+        mSectionIndexer = (SectionIndexer) adapter;
+        mSections = mSectionIndexer.getSections();
+    } else {
+        mListAdapter = adapter;
+        mSections = null;
+    }
+#endif
+}
+
+void FastScroller::onSectionsChanged() {
+    mListAdapter = nullptr;
+}
+
+void FastScroller::scrollTo(float position) {
+    mScrollCompleted = false;
+
+    int count = mList->getCount();
+    int sectionIndex;
+#if 0
+    if (mSectons.size()) {
+        int exactSection = MathUtils.constrain(
+                (int) (position * sectionCount), 0, sectionCount - 1);
+        int targetSection = exactSection;
+        int targetIndex = mSectionIndexer.getPositionForSection(targetSection);
+        sectionIndex = targetSection;
+
+        // Given the expected section and index, the following code will
+        // try to account for missing sections (no names starting with..)
+        // It will compute the scroll space of surrounding empty sections
+        // and interpolate the currently visible letter's range across the
+        // available space, so that there is always some list movement while
+        // the user moves the thumb.
+        int nextIndex = count;
+        int prevIndex = targetIndex;
+        int prevSection = targetSection;
+        int nextSection = targetSection + 1;
+
+        // Assume the next section is unique
+        if (targetSection < sectionCount - 1) {
+            nextIndex = mSectionIndexer.getPositionForSection(targetSection + 1);
+        }
+
+        // Find the previous index if we're slicing the previous section
+        if (nextIndex == targetIndex) {
+            // Non-existent letter
+            while (targetSection > 0) {
+                targetSection--;
+                prevIndex = mSectionIndexer.getPositionForSection(targetSection);
+                if (prevIndex != targetIndex) {
+                    prevSection = targetSection;
+                    sectionIndex = targetSection;
+                    break;
+                } else if (targetSection == 0) {
+                    // When section reaches 0 here, sectionIndex must follow it.
+                    // Assuming mSectionIndexer.getPositionForSection(0) == 0.
+                    sectionIndex = 0;
+                    break;
+                }
+            }
+        }
+
+        // Find the next index, in case the assumed next index is not
+        // unique. For instance, if there is no P, then request for P's
+        // position actually returns Q's. So we need to look ahead to make
+        // sure that there is really a Q at Q's position. If not, move
+        // further down...
+        int nextNextSection = nextSection + 1;
+        while (nextNextSection < sectionCount &&
+                mSectionIndexer.getPositionForSection(nextNextSection) == nextIndex) {
+            nextNextSection++;
+            nextSection++;
+        }
+
+        // Compute the beginning and ending scroll range percentage of the
+        // currently visible section. This could be equal to or greater than
+        // (1 / nSections). If the target position is near the previous
+        // position, snap to the previous position.
+        float prevPosition = (float) prevSection / sectionCount;
+        float nextPosition = (float) nextSection / sectionCount;
+        float snapThreshold = (count == 0) ? Float.MAX_VALUE : .125f / count;
+        if (prevSection == exactSection && position - prevPosition < snapThreshold) {
+            targetIndex = prevIndex;
+        } else {
+            targetIndex = prevIndex + (int) ((nextIndex - prevIndex) * (position - prevPosition)
+                / (nextPosition - prevPosition));
+        }
+
+        // Clamp to valid positions.
+        targetIndex = MathUtils.constrain(targetIndex, 0, count - 1);
+
+        if (mList instanceof ExpandableListView) {
+            ExpandableListView expList = (ExpandableListView) mList;
+            expList.setSelectionFromTop(expList.getFlatListPosition(
+                    ExpandableListView.getPackedPositionForGroup(targetIndex + mHeaderCount)),0);
+        } else if (mList instanceof ListView) {
+            ((ListView) mList).setSelectionFromTop(targetIndex + mHeaderCount, 0);
+        } else {
+            mList.setSelection(targetIndex + mHeaderCount);
+        }
+    } else {
+        int index = MathUtils.constrain((int) (position * count), 0, count - 1);
+        if (mList instanceof ExpandableListView) {
+            ExpandableListView expList = (ExpandableListView) mList;
+            expList.setSelectionFromTop(expList.getFlatListPosition(
+                    ExpandableListView.getPackedPositionForGroup(index + mHeaderCount)), 0);
+        } else if (mList instanceof ListView) {
+            ((ListView)mList).setSelectionFromTop(index + mHeaderCount, 0);
+        } else {
+            mList.setSelection(index + mHeaderCount);
+        }
+
+        sectionIndex = -1;
+    }
+
+    if (mCurrentSection != sectionIndex) {
+        mCurrentSection = sectionIndex;
+        bool hasPreview = transitionPreviewLayout(sectionIndex);
+        if (!mShowingPreview && hasPreview) {
+            transitionToDragging();
+        } else if (mShowingPreview && !hasPreview) {
+            transitionToVisible();
+        }
+    }
+#endif
+}
+
+bool FastScroller::transitionPreviewLayout(int sectionIndex) {
+#if 0
+    Object[] sections = mSections;
+    String text = null;
+    if (sections != null && sectionIndex >= 0 && sectionIndex < sections.length) {
+        Object section = sections[sectionIndex];
+        if (section != null) {
+            text = section.toString();
+        }
+    }
+
+    Rect bounds;
+    View* preview = mPreviewImage;
+    TextView* showing;
+    TextView* target;
+    if (mShowingPrimary) {
+        showing = mPrimaryText;
+        target = mSecondaryText;
+    } else {
+        showing = mSecondaryText;
+        target = mPrimaryText;
+    }
+
+    // Set and layout target immediately.
+    target.setText(text);
+    measurePreview(target, bounds);
+    applyLayout(target, bounds);
+
+    if (mPreviewAnimation != null) {
+        mPreviewAnimation.cancel();
+    }
+
+    // Cross-fade preview text.
+    Animator showTarget = animateAlpha(target, 1f).setDuration(DURATION_CROSS_FADE);
+    Animator hideShowing = animateAlpha(showing, 0f).setDuration(DURATION_CROSS_FADE);
+    hideShowing.addListener(mSwitchPrimaryListener);
+
+    // Apply preview image padding and animate bounds, if necessary.
+    bounds.left -= preview.getPaddingLeft();
+    bounds.top -= preview.getPaddingTop();
+    bounds.right += preview.getPaddingRight();
+    bounds.bottom += preview.getPaddingBottom();
+    Animator resizePreview = animateBounds(preview, bounds);
+    resizePreview.setDuration(DURATION_RESIZE);
+
+    mPreviewAnimation = new AnimatorSet();
+    AnimatorSet.Builder builder = mPreviewAnimation.play(hideShowing).with(showTarget);
+    builder.with(resizePreview);
+
+    // The current preview size is unaffected by hidden or showing. It's
+    // used to set starting scales for things that need to be scaled down.
+    const int previewWidth = preview.getWidth() - preview.getPaddingLeft()
+            - preview.getPaddingRight();
+
+    // If target is too large, shrink it immediately to fit and expand to
+    // target size. Otherwise, start at target size.
+    const int targetWidth = target.getWidth();
+    if (targetWidth > previewWidth) {
+        target.setScaleX((float) previewWidth / targetWidth);
+        Animator scaleAnim = animateScaleX(target, 1f).setDuration(DURATION_RESIZE);
+        builder.with(scaleAnim);
+    } else {
+        target.setScaleX(1f);
+    }
+
+    // If showing is larger than target, shrink to target size.
+    const int showingWidth = showing.getWidth();
+    if (showingWidth > targetWidth) {
+        float scale = (float) targetWidth / showingWidth;
+        Animator scaleAnim = animateScaleX(showing, scale).setDuration(DURATION_RESIZE);
+        builder.with(scaleAnim);
+    }
+
+    mPreviewAnimation.start();
+#endif
+    return true;//!TextUtils.isEmpty(text);
+}
+
+void FastScroller::setThumbPos(float position) {
+    float thumbMiddle = position * mThumbRange + mThumbOffset;
+    mThumbImage->setTranslationY(thumbMiddle - mThumbImage->getHeight() / 2.f);
+
+    float previewHalfHeight = mPreviewImage->getHeight() / 2.f;
+    float previewPos;
+    switch (mOverlayPosition) {
+    case OVERLAY_AT_THUMB:
+        previewPos = thumbMiddle;
+        break;
+    case OVERLAY_ABOVE_THUMB:
+        previewPos = thumbMiddle - previewHalfHeight;
+        break;
+    case OVERLAY_FLOATING:
+    default:
+        previewPos = 0;
+        break;
+    }
+
+    // Center the preview on the thumb, constrained to the list bounds.
+    Rect& container = mContainerRect;
+    int top = container.top;
+    int bottom = container.bottom();
+    float minP = top + previewHalfHeight;
+    float maxP = bottom - previewHalfHeight;
+    float previewMiddle = MathUtils::constrain(previewPos, minP, maxP);
+    float previewTop = previewMiddle - previewHalfHeight;
+    mPreviewImage->setTranslationY(previewTop);
+
+    mPrimaryText->setTranslationY(previewTop);
+    mSecondaryText->setTranslationY(previewTop);
+}
+
+float FastScroller::getPosFromMotionEvent(float y) {
+    // If the list is the same height as the thumbnail or shorter,
+    // effectively disable scrolling.
+    if (mThumbRange <= 0) {
+        return .0f;
+    }
+
+    return MathUtils::constrain((y - mThumbOffset) / mThumbRange, .0f, 1.f);
+}
+
+float FastScroller::getPosFromItemCount(int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+#if 0
+    SectionIndexer sectionIndexer = mSectionIndexer;
+    if (sectionIndexer == null || mListAdapter == null) {
+        getSectionsFromIndexer();
+    }
+
+    if (visibleItemCount == 0 || totalItemCount == 0) {
+        // No items are visible.
+        return 0;
+    }
+
+    bool hasSections = sectionIndexer != null && mSections !=null && mSections.length > 0;
+    if (!hasSections || !mMatchDragPosition) {
+        if (visibleItemCount == totalItemCount) {
+            // All items are visible.
+            return 0;
+        } else {
+            return (float) firstVisibleItem / (totalItemCount - visibleItemCount);
+        }
+    }
+
+    // Ignore headers.
+    firstVisibleItem -= mHeaderCount;
+    if (firstVisibleItem < 0) {
+        return 0;
+    }
+    totalItemCount -= mHeaderCount;
+
+    // Hidden portion of the first visible row.
+    View child = mList->getChildAt(0);
+    float incrementalPos;
+    if (child == null || child.getHeight() == 0) {
+        incrementalPos = 0;
+    } else {
+        incrementalPos = (float) (mList.getPaddingTop() - child.getTop()) / child.getHeight();
+    }
+
+    // Number of rows in this section.
+    int section = sectionIndexer.getSectionForPosition(firstVisibleItem);
+    int sectionPos = sectionIndexer.getPositionForSection(section);
+    int sectionCount = mSections.length;
+    int positionsInSection;
+    if (section < sectionCount - 1) {
+        int nextSectionPos;
+        if (section + 1 < sectionCount) {
+            nextSectionPos = sectionIndexer.getPositionForSection(section + 1);
+        } else {
+            nextSectionPos = totalItemCount - 1;
+        }
+        positionsInSection = nextSectionPos - sectionPos;
+    } else {
+        positionsInSection = totalItemCount - sectionPos;
+    }
+
+    // Position within this section.
+    float posWithinSection;
+    if (positionsInSection == 0) {
+        posWithinSection = 0;
+    } else {
+        posWithinSection = (firstVisibleItem + incrementalPos - sectionPos)
+                / positionsInSection;
+    }
+
+    float result = (section + posWithinSection) / sectionCount;
+    // Fake out the scroll bar for the last item. Since the section indexer
+    // won't ever actually move the list in this end space, make scrolling
+    // across the last item account for whatever space is remaining.
+    if (firstVisibleItem > 0 && firstVisibleItem + visibleItemCount == totalItemCount) {
+        View* lastChild = mList.getChildAt(visibleItemCount - 1);
+        int bottomPadding = mList.getPaddingBottom();
+        int maxSize;
+        int currentVisibleSize;
+        if (mList.getClipToPadding()) {
+            maxSize = lastChild.getHeight();
+            currentVisibleSize = mList.getHeight() - bottomPadding - lastChild.getTop();
+        } else {
+            maxSize = lastChild.getHeight() + bottomPadding;
+            currentVisibleSize = mList.getHeight() - lastChild.getTop();
+        }
+        if (currentVisibleSize > 0 && maxSize > 0) {
+            result += (1 - result) * ((float) currentVisibleSize / maxSize );
+        }
+    }
+    return result;
+#endif
+}
+
+void FastScroller::cancelFling() {
+    MotionEvent* cancelFling = MotionEvent::obtain(
+            0, 0, MotionEvent::ACTION_CANCEL, 0, 0, 0);
+    mList->onTouchEvent(*cancelFling);
+    cancelFling->recycle();
+}
+
+void FastScroller::cancelPendingDrag() {
+    mPendingDrag = -1;
+}
+
+    /**
+     * Delays dragging until after the framework has determined that the user is
+     * scrolling, rather than tapping.
+     */
+void FastScroller::startPendingDrag() {
+    mPendingDrag = SystemClock::uptimeMillis() + TAP_TIMEOUT;
+}
+
+void FastScroller::beginDrag() {
+    mPendingDrag = -1;
+
+    setState(STATE_DRAGGING);
+
+    if (mListAdapter == nullptr && mList != nullptr) {
+        getSectionsFromIndexer();
+    }
+
+    if (mList != nullptr) {
+        mList->requestDisallowInterceptTouchEvent(true);
+        //mList->reportScrollStateChange(AbsListView::OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
+    }
+
+    cancelFling();
+}
+
+bool FastScroller::onInterceptTouchEvent(MotionEvent& ev) {
+    if (!isEnabled()) {
+        return false;
+    }
+
+    switch (ev.getActionMasked()) {
+    case MotionEvent::ACTION_DOWN:
+        if (isPointInside(ev.getX(), ev.getY())) {
+            // If the parent has requested that its children delay
+            // pressed state (e.g. is a scrolling container) then we
+            // need to allow the parent time to decide whether it wants
+            // to intercept events. If it does, we will receive a CANCEL event.
+            if (!mList->isInScrollingContainer()) {
+                // This will get dispatched to onTouchEvent(). Start
+                // dragging there.
+                return true;
+            }
+
+            mInitialTouchY = ev.getY();
+            startPendingDrag();
+        }
+        break;
+    case MotionEvent::ACTION_MOVE:
+        if (!isPointInside(ev.getX(), ev.getY())) {
+            cancelPendingDrag();
+        } else if (mPendingDrag >= 0 && mPendingDrag <= SystemClock::uptimeMillis()) {
+            beginDrag();
+
+            float pos = getPosFromMotionEvent(mInitialTouchY);
+            scrollTo(pos);
+            // This may get dispatched to onTouchEvent(), but it
+            // doesn't really matter since we'll already be in a drag.
+            return onTouchEvent(ev);
+        }
+        break;
+    case MotionEvent::ACTION_UP:
+    case MotionEvent::ACTION_CANCEL:
+        cancelPendingDrag();
+        break;
+    }
+
+    return false;
+}
+
+bool FastScroller::onInterceptHoverEvent(MotionEvent& ev) {
+    if (!isEnabled()) {
+        return false;
+    }
+
+    const int actionMasked = ev.getActionMasked();
+    if ((actionMasked == MotionEvent::ACTION_HOVER_ENTER
+            || actionMasked == MotionEvent::ACTION_HOVER_MOVE) && mState == STATE_NONE
+            && isPointInside(ev.getX(), ev.getY())) {
+        setState(STATE_VISIBLE);
+        postAutoHide();
+    }
+
+    return false;
+}
+
+#if 0
+PointerIcon FastScroller::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    if (mState == STATE_DRAGGING || isPointInside(event.getX(), event.getY())) {
+        return PointerIcon.getSystemIcon(mList.getContext(), PointerIcon.TYPE_ARROW);
+    }
+    return nullptr;
+}
+#endif
+
+bool FastScroller::onTouchEvent(MotionEvent& me) {
+    if (!isEnabled()) {
+        return false;
+    }
+
+    switch (me.getActionMasked()) {
+    case MotionEvent::ACTION_DOWN:
+        if (isPointInside(me.getX(), me.getY())) {
+            if (!mList->isInScrollingContainer()) {
+                beginDrag();
+                return true;
+            }
+        }
+        break;
+
+    case MotionEvent::ACTION_UP:
+        if (mPendingDrag >= 0) {
+            // Allow a tap to scroll.
+            beginDrag();
+
+            float pos = getPosFromMotionEvent(me.getY());
+            setThumbPos(pos);
+            scrollTo(pos);
+            // Will hit the STATE_DRAGGING check below
+        }
+
+        if (mState == STATE_DRAGGING) {
+            if (mList != nullptr) {
+                // ViewGroup does the right thing already, but there might
+                // be other classes that don't properly reset on touch-up,
+                // so do this explicitly just in case.
+                mList->requestDisallowInterceptTouchEvent(false);
+                //mList->reportScrollStateChange(AbsListView::OnScrollListener::SCROLL_STATE_IDLE);
+            }
+
+            setState(STATE_VISIBLE);
+            postAutoHide();
+            return true;
+        }
+        break;
+
+    case MotionEvent::ACTION_MOVE:
+        if (mPendingDrag >= 0 && abs(me.getY() - mInitialTouchY) > mScaledTouchSlop) {
+            beginDrag();
+            // Will hit the STATE_DRAGGING check below
+        }
+
+        if (mState == STATE_DRAGGING) {
+            // TODO: Ignore jitter.
+            const float pos = getPosFromMotionEvent(me.getY());
+            setThumbPos(pos);
+            // If the previous scrollTo is still pending
+            if (mScrollCompleted) scrollTo(pos);
+            return true;
+        }
+        break;
+    case MotionEvent::ACTION_CANCEL:   cancelPendingDrag();    break;
+    }
+
+    return false;
+}
+
+bool FastScroller::isPointInside(float x, float y) {
+    return isPointInsideX(x) && (mTrackDrawable || isPointInsideY(y));
+}
+
+bool FastScroller::isPointInsideX(float x) {
+    float offset = mThumbImage->getTranslationX();
+    float left = mThumbImage->getLeft() + offset;
+    float right = mThumbImage->getRight() + offset;
+
+    // Apply the minimum touch target size.
+    float targetSizeDiff = mMinimumTouchTarget - (right - left);
+    float adjust = targetSizeDiff > 0 ? targetSizeDiff : 0;
+
+    if (mLayoutFromRight) {
+        return x >= mThumbImage->getLeft() - adjust;
+    } else {
+        return x <= mThumbImage->getRight() + adjust;
+    }
+}
+
+bool FastScroller::isPointInsideY(float y) {
+   float offset = mThumbImage->getTranslationY();
+   float top = mThumbImage->getTop() + offset;
+   float bottom = mThumbImage->getBottom() + offset;
+
+   // Apply the minimum touch target size.
+   float targetSizeDiff = mMinimumTouchTarget - (bottom - top);
+   float adjust = targetSizeDiff > 0 ? targetSizeDiff / 2 : 0;
+
+   return y >= (top - adjust) && y <= (bottom + adjust);
+}
+
+}//endof namespace
+
+
+

@@ -33,6 +33,7 @@ void AnalogClock::initAnalog(){
     mHour = mMinutes = mSeconds = 0;
     mDialWidth = mDialHeight =0;
     mSecondsHandFps = 1;
+    mVisible = false;
     mHourHandTintInfo = mMinuteHandTintInfo = nullptr;
     mSecondHandTintInfo = mDialTintInfo = nullptr;
 }
@@ -100,7 +101,7 @@ void AnalogClock::onAttachedToWindow(){
         mSeconds=when.tm_sec;
         mChanged = true;
         invalidate(true);
-        postDelayed(mTick,800);
+        postDelayed(mTick,500);
     };
     postDelayed(mTick,800);
 }

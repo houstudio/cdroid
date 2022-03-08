@@ -34,7 +34,6 @@ public:
     void moveWindow(Window*w,int x,int y);
     void processEvent(InputEvent&e);
     void clip(Window*win);
-    void resetVisibleRegion();
     int enumWindows(WNDENUMPROC cbk);
     int getWindows(std::vector<Window*>&);
     int getVisibleWindows(std::vector<Window*>&);

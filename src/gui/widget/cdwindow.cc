@@ -98,14 +98,14 @@ void Window::show(){
         setVisibility(VISIBLE);
         if(mAttachInfo->mCanvas==nullptr)
             invalidate(true);
-        WindowManager::getInstance().resetVisibleRegion();
+        //WindowManager::getInstance().resetVisibleRegion();
     }
 }
 
 void Window::hide(){
     if(getVisibility()==VISIBLE){
         setVisibility(INVISIBLE);
-        WindowManager::getInstance().resetVisibleRegion();
+        //WindowManager::getInstance().resetVisibleRegion();
     }
 }
 
@@ -114,14 +114,14 @@ View& Window::setPos(int x,int y){
     if( changed && isAttachedToWindow()){
         WindowManager::getInstance().moveWindow(this,x,y);
         ViewGroup::setPos(x,y);
-        WindowManager::getInstance().resetVisibleRegion();
+        //WindowManager::getInstance().resetVisibleRegion();
     }
     GraphDevice::getInstance().flip();
     return *this;
 }
 
 void Window::onSizeChanged(int w,int h,int oldw,int oldh){
-    WindowManager::getInstance().resetVisibleRegion();
+    //WindowManager::getInstance().resetVisibleRegion();
 }
 
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){

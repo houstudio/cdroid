@@ -68,7 +68,7 @@ void WindowManager::addWindow(Window*win){
     Looper::getDefault()->addEventHandler(win->source);
     win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
-    resetVisibleRegion();
+    //resetVisibleRegion();
     LOGV("win=%p source=%p windows.size=%d",win,win->source,windows.size());
 }
 
@@ -79,7 +79,7 @@ void WindowManager::removeWindow(Window*w){
     auto itw=std::find(windows.begin(),windows.end(),w);
     const Rect wrect=w->getBound();
     windows.erase(itw);
-    resetVisibleRegion();
+    //resetVisibleRegion();
     for(auto itr=windows.begin();itr!=windows.end();itr++){
         Window*w1=(*itr);
         RECT rc=w1->getBound();
@@ -191,33 +191,6 @@ void WindowManager::clip(Window*win){
         if(rc.empty())continue;
         rc.offset(-win->getX(),-win->getY());
         win->mInvalidRgn->subtract((const RectangleInt&)rc); 
-    }
-}
-
-void WindowManager::resetVisibleRegion(){
-    for (auto w=windows.begin() ;w!= windows.end();w++){
-        Rect rcw=(*w)->getBound();
-        RefPtr<Region>newrgn=Region::create((RectangleInt&)rcw);
-        if((*w)->getVisibility()!=View::VISIBLE||(*w)->isAttachedToWindow()==false)continue;
-
-        for(auto w1=w+1;w1!=windows.end();w1++){
-            if((*w1)->getVisibility()!=View::VISIBLE)continue;
-            if((*w1)->mWindowRgn==nullptr || (*w1)->mWindowRgn->empty()){
-                RECT r=(*w1)->getBound();
-                newrgn->subtract((const RectangleInt&)r);
-            }else{
-                RefPtr<Region>tmp=(*w1)->mWindowRgn->copy();
-                tmp->translate((*w1)->getX(),(*w1)->getY());
-                newrgn->subtract(tmp);
-            }
-        }
-        newrgn->translate(-rcw.left,-rcw.top);
-        if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
-            newrgn->intersect((*w)->mWindowRgn); 
-        }
-        (*w)->mVisibleRgn=newrgn;   
-        LOGV("window %p[%s] Layer=%d %d rects visible=%d",(*w),(*w)->getText().c_str(),(*w)->mLayer,
-                   newrgn->get_num_rectangles(),(*w)->getVisibility());
     }
 }
 
