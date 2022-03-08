@@ -234,13 +234,25 @@ AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
 
 AbsListView::AbsListView(Context*ctx,const AttributeSet&atts):AdapterView(ctx,atts) {
     initAbsListView();
+    mDrawSelectorOnTop = atts.getBoolean("drawSelectorOnTop",false);
+    setStackFromBottom(atts.getBoolean("stackFromBottom",false));
+    setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
+    setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
+    setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int>{
+        {"none",CHOICE_MODE_NONE},
+        {"singleChoice",CHOICE_MODE_SINGLE},
+        {"multipleChoice",CHOICE_MODE_MULTIPLE}
+    },CHOICE_MODE_NONE));
+    setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
+    //setFastScrollStyle(atts.getString("fastScrollStyle"));
+    setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
 }
 
 void AbsListView::initAbsListView() {
     setClickable(true);
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
-    //setAlwaysDrawnWithCacheEnabled(false);
+    setAlwaysDrawnWithCacheEnabled(false);
     mScrollingCacheEnabled=false;
     setScrollingCacheEnabled(true);
     mListPadding.set(0,0,0,0);
