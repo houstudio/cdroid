@@ -35,7 +35,7 @@ SwipeHelper::SwipeHelper(Context*ctx) {
         if ( cur != nullptr ) {
             cur->setPos( xx , cur->getY() );
             if( (xx == mCurrentEndX) && (mCancel == false)){
-                WindowManager::getInstance().removeWindow(cur);
+                cur->close();
                 LOGD("CurrentWindow(%p)destroied",cur);
             }
         }
@@ -145,10 +145,10 @@ bool SwipeHelper::onTouchEvent(MotionEvent& ev) {
             mCurContentViewAnimator->start();
             if(prevWindow)mPreContentViewAnimator->start();
         } else {
+            mCancel = true;
             mPrevEndX = mPrevOrigX;
             mCurrentEndX = mCurrentOrigX;
             mCurContentViewAnimator->start();
-            mCancel = true;
             LOGD("Cancel Destroy");
             if(prevWindow)mPreContentViewAnimator->start();
         }
