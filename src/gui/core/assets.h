@@ -26,7 +26,6 @@ private:
     void parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
-    std::string normalizeProperty(const std::string&pkg,const std::string&value);
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
@@ -47,7 +46,7 @@ public:
     const std::string& getString(const std::string&id,const std::string&lan="")override;
     RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)override;
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
-    std::unique_ptr<std::istream> getInputStream(const std::string&resname)override;
+    std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
     Drawable * getDrawable(const std::string&resid)override;
     int getColor(const std::string&resid)override;
     int getArray(const std::string&resname,std::vector<std::string>&)override;

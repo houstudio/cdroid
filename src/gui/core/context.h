@@ -26,7 +26,7 @@ public:
     static RefPtr<Cairo::ImageSurface> loadImage( std::istream&istream ){
         return Cairo::ImageSurface::create_from_stream(istream);
     }
-    virtual std::unique_ptr<std::istream>getInputStream(const std::string&)=0;
+    virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr)=0;
     virtual RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)=0;
     virtual Drawable* getDrawable(const std::string&resid)=0;
     Drawable* getDrawable(const AttributeSet&atts,const std::string&key){

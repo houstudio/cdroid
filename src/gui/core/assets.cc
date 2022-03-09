@@ -38,22 +38,6 @@ const std::string Assets::getTheme()const{
     return mThemeName;
 }
 
-std::string Assets::normalizeProperty(const std::string&pkg,const std::string&property){
-    std::string value= property;
-    size_t pos=value.find('?');
-    bool hasat=false;
-    if(pos!=std::string::npos){
-        value.erase(pos,1);  hasat=true;
-    }
-    if((pos=value.find('@'))!=std::string::npos){
-        value.erase(pos,1);  hasat=true;
-    }
-    if( hasat && (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
-        value= pkg+":"+value;
-    }
-    return value;
-}
-
 void Assets::setTheme(const std::string&theme){
     auto it=mStyles.find(theme);
     if(it!=mStyles.end()){
@@ -91,8 +75,8 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
                 if(styleParent.length())it->second.add("parent",styleParent);
                 LOGV("style:%s",styleName.c_str());
             }
-            std::string normalizedValue = normalizeProperty(package,value); 
-            it->second.add(atts[1].getString("name"),value);
+            const std::string normalizedValue = AttributeSet::normalize(package,value); 
+            it->second.add(atts[1].getString("name"),normalizedValue);
         }else if(tag0.compare("array")==0){
             const std::string name=atts[0].getString("name");
             auto it=mArraies.find(name);
@@ -155,12 +139,10 @@ static bool guessExtension(ZIPArchive*pak,std::string&ioname){
 void Assets::parseResource(const std::string&fullResId,std::string*res,std::string*ns)const{
     std::string relname,pkg=mName;
     std::string fullid = fullResId;
-    size_t pos=fullid.find('@');
-    if(pos!=std::string::npos){//remove @+
-        fullid = fullid.erase(pos,1);
-        pos=fullid.find('+');
-        if(pos!=std::string::npos)fullid = fullid.erase(pos,1);
-    }
+
+    size_t pos=fullid.find_last_of("@+");
+    if(pos!=std::string::npos)fullid =fullid.erase(0,pos+1);
+
     pos=fullid.find(":");
     if(pos != std::string::npos){
         pkg = fullid.substr(0,pos);
@@ -189,11 +171,14 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
     return pak;
 }
 
-std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid){
+std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid,std::string*outpkg){
     std::string resname;
     ZIPArchive*pak=getResource(fullresid,&resname);
     std::istream*stream=pak?pak->getInputStream(resname):nullptr;
     std::unique_ptr<std::istream>is(stream);
+    if(outpkg&&pak){
+         parseResource(fullresid,nullptr,outpkg);
+    } 
     return is;
 }
 
@@ -240,6 +225,7 @@ int Assets::getId(const std::string&key)const{
     if(key.length()&&(key.find('/')==std::string::npos))
        return TextUtils::strtol(key);
     parseResource(key,&resid,&pkg);
+    
     auto it=mIDS.find(pkg+":"+resid);
     return it==mIDS.end()?-1:it->second;
 }
@@ -319,7 +305,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
 int Assets::getColor(const std::string&refid){
     std::string pkg,name=refid;
     parseResource(name,nullptr,&pkg);
-    normalizeProperty(pkg,name);
+    name=AttributeSet::normalize(pkg,name);
     auto it = mColors.find(name);
     if(it!=mColors.end()){
         return nonstd::get<int>(it->second);

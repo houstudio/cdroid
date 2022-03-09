@@ -1246,7 +1246,7 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
                 // direction to be counted as a drag...  abort
                 // any attempt to drag horizontally, to work correctly
                 // with children that have scrolling containers.
-                LOGD("Starting unable to drag! yDiff=%f mTouchSlop=%d",yDiff,mTouchSlop);
+                LOGV("Starting unable to drag! yDiff=%f mTouchSlop=%d",yDiff,mTouchSlop);
                 mIsUnableToDrag = true;
             }
             if (mIsBeingDragged) {

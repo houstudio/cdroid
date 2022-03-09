@@ -32,6 +32,22 @@ void AttributeSet::setContext(Context*ctx){
     mContext=ctx;
 }
 
+std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
+    std::string value= property;
+    size_t pos=value.find('?');
+    bool hasat=false;
+    if(pos!=std::string::npos){
+        value.erase(pos,1);  hasat=true;
+    }
+    if((pos=value.find('@'))!=std::string::npos){
+        value.erase(pos,1);  hasat=true;
+    }
+    if( hasat && (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
+        value= pkg+":"+value;
+    }
+    return value;
+}
+
 int AttributeSet::set(const char*atts[],int size){
     int rc=0;
     for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
@@ -60,7 +76,9 @@ int AttributeSet::inherit(const AttributeSet&other){
 bool AttributeSet::add(const std::string&key,const std::string&value){
     if(mAttrs.find(key)!=mAttrs.end())
         return false; 
-    mAttrs.insert(std::make_pair<const std::string,std::string>(key.c_str(),value.c_str()));
+    const char*ks=strrchr(key.c_str(),' ');
+    if(ks)ks++;else ks=key.c_str();
+    mAttrs.insert(std::make_pair<const std::string,std::string>(std::string(ks),value.c_str()));
     return true;
 }
 
@@ -197,7 +215,7 @@ int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
 }
 void AttributeSet::dump()const{
     for(auto it=mAttrs.begin();it!=mAttrs.end();it++){
-       LOGD("%s:%s",it->first.c_str(),it->second.c_str());
+       LOGD("%s = %s",it->first.c_str(),it->second.c_str());
     }
 }
 

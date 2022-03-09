@@ -272,7 +272,7 @@
     </style>
 
     <style name="Widget.ExpandableListView.White">
-        <item name="childDivider">@drawable/divider_horizontal_bright_opaque</item>
+        <item name="childDivider">@mipmap/divider_horizontal_bright_opaque</item>
     </style>
 
     <style name="Widget.FragmentBreadCrumbs">
@@ -396,12 +396,12 @@
     <style name="Widget.ListView.White" parent="Widget.AbsListView">
         <item name="listSelector">@drawable/list_selector_background</item>
         <item name="cacheColorHint">?attr/colorBackgroundCacheHint</item>
-        <item name="divider">@drawable/divider_horizontal_bright_opaque</item>
+        <item name="divider">@mipmap/divider_horizontal_bright_opaque</item>
     </style>
 
     <style name="Widget.ListView.DropDown">
     	<item name="cacheColorHint">@null</item>
-        <item name="divider">@drawable/divider_horizontal_bright_opaque</item>
+        <item name="divider">@mipmap/divider_horizontal_bright_opaque</item>
     </style>
 
     <style name="Widget.ListView.Menu" parent="Widget.Holo.ListView">

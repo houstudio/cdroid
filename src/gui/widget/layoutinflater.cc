@@ -5,6 +5,7 @@
 #include <cdlog.h>
 #include <string.h>
 #include <fstream>
+#include <iomanip>
 
 namespace cdroid{
 
@@ -58,17 +59,19 @@ bool LayoutInflater::registInflater(const std::string&name,const std::string&def
 View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool attachToRoot){
     View*v=nullptr;
     if(mContext){
-        std::unique_ptr<std::istream>stream=mContext->getInputStream(resource);
-        if(stream && stream->good()) v=inflate(*stream,root,attachToRoot && (root!=nullptr));
+        std::string package;
+        std::unique_ptr<std::istream>stream=mContext->getInputStream(resource,&package);
+        if(stream && stream->good()) v=inflate(package,*stream,root,attachToRoot && (root!=nullptr));
     }else{
         std::ifstream fin(resource);
-        v=inflate(fin,root,root!=nullptr);
+        v=inflate(resource,fin,root,root!=nullptr);
     }
     return v;
 }
 
 typedef struct{
     Context*ctx;
+    std::string package;
     XML_Parser parser;
     bool attachToRoot;
     ViewGroup* root;
@@ -80,10 +83,13 @@ typedef struct{
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     WindowParserData*pd=(WindowParserData*)userData;
-    AttributeSet atts(satts);
+    AttributeSet atts;
     LayoutInflater::ViewInflater inflater=LayoutInflater::getInflater(name);
     ViewGroup*parent=pd->root;
     atts.setContext(pd->ctx);
+    for(int i=0;satts[i];i+=2){
+        atts.add(satts[i],AttributeSet::normalize(pd->package,satts[i+1]));
+    }
     if(pd->views.size())
         parent=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0){
@@ -117,7 +123,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     pd->parsedView++;
     pd->flags.push_back(0);
     pd->views.push_back(v);
-    LOGV("%p:%08x [%s] %s",v,v->getId(),name,stname.c_str());
+    LOG(VERBOSE)<<std::setw(pd->views.size()*8)<<v<<":"<<v->getId()<<"["<<name<<"]"<<stname;
     if( parent){//(parent && (parent==pd->root) && pd->attachToRoot )||(parent!=pd->root)){
         LayoutParams*lp=parent->generateLayoutParams(atts);
         parent->addViewInLayout(v,-1,lp,true);
@@ -137,14 +143,16 @@ static void endElement(void *userData, const XML_Char *name){
     pd->views.pop_back();
 }
 
-View* LayoutInflater::inflate(std::istream&stream,ViewGroup*root,bool attachToRoot){
+View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot){
     int len=0;
     char buf[256];
     XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
-    WindowParserData pd={mContext,parser};
+    WindowParserData pd;
     ULONGLONG tstart=SystemClock::uptimeMillis();
 
+    pd.ctx  = mContext;
     pd.root = root;
+    pd.package=package;
     pd.parsedView  = 0;
     pd.returnedView= nullptr;
     pd.attachToRoot = attachToRoot;

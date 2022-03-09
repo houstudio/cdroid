@@ -17,7 +17,7 @@ private:
     static INFLATERMAPPER& getInflaterMap();
     static STYLEMAPPER& getStyleMap();
 protected:
-    View* inflate(std::istream&stream,ViewGroup*root,bool attachToRoot);
+    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot);
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);

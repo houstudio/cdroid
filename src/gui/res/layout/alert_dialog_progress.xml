@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
     cdroid:layout_width="wrap_content" cdroid:layout_height="match_parent">
-        <ProgressBar cdroid:id="@cdroid:+id/progress"
-            style="?cdroid:attr/progressBarStyleHorizontal"
+        <ProgressBar cdroid:id="@+id/progress"
+            style="?attr/progressBarStyleHorizontal"
             cdroid:layout_width="match_parent"
             cdroid:layout_height="wrap_content"
             cdroid:layout_marginTop="12dip"
@@ -11,23 +11,23 @@
             cdroid:layout_marginEnd="10dip"
             cdroid:layout_centerHorizontal="true" />
         <TextView
-            cdroid:id="@cdroid:+id/progress_percent"
+            cdroid:id="@+id/progress_percent"
             cdroid:layout_width="wrap_content"
             cdroid:layout_height="wrap_content"
             cdroid:paddingBottom="12dip"
             cdroid:layout_marginStart="10dip"
             cdroid:layout_marginEnd="10dip"
             cdroid:layout_alignParentStart="true"
-            cdroid:layout_below="@cdroid:id/progress"
+            cdroid:layout_below="@id/progress"
         />
         <TextView
-            cdroid:id="@cdroid:+id/progress_number"
+            cdroid:id="@+id/progress_number"
             cdroid:layout_width="wrap_content"
             cdroid:layout_height="wrap_content"
             cdroid:paddingBottom="12dip"
             cdroid:layout_marginStart="10dip"
             cdroid:layout_marginEnd="10dip"
             cdroid:layout_alignParentEnd="true"
-            cdroid:layout_below="@cdroid:id/progress"
+            cdroid:layout_below="@id/progress"
         />
 </RelativeLayout>
