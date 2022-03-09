@@ -68,7 +68,7 @@ private:
      * Preview image resource IDs for left- and right-aligned layouts. See
      * {@link #PREVIEW_LEFT} and {@link #PREVIEW_RIGHT}.
      */
-    int mPreviewResId[2];
+    std::string mPreviewResId[2];
 
     /** The minimum touch target size in pixels. */
     int mMinimumTouchTarget;
@@ -103,10 +103,10 @@ private:
     int mWidth;
 
     /** Set containing decoration transition animations. */
-    //AnimatorSet* mDecorAnimation;
+    Animator*/*AnimatorSet**/ mDecorAnimation;
 
     /** Set containing preview text transition animations. */
-    //AnimatorSet* mPreviewAnimation;
+    Animator*/*AnimatorSet**/ mPreviewAnimation;
 
     /** Whether the primary text is showing. */
     bool mShowingPrimary;
@@ -197,14 +197,14 @@ private:
     void setState(int state);
     void applyLayout(View* view,const Rect& bounds);
 public:
-    FastScroller(AbsListView*,int scrollstyle);
+    FastScroller(AbsListView*,const std::string& scrollstyle);
     void remove();
     void setEnabled(bool);
     bool isEnabled()const;
     void setAlwaysShow(bool);
     bool isAlwaysShowEnabled()const;
     void onStateDependencyChanged(bool peekIfEnabled);
-    void setStyle(int);
+    void setStyle(const std::string&styleResId);
     void setScrollBarStyle(int);
     void stop();
     void setScrollbarPosition(int position);

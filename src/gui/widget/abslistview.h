@@ -148,7 +148,7 @@ private:
     static const bool PROFILE_FLINGING = true;
     bool mFlingProfilingStarted =false;
     OnScrollListener mOnScrollListener;
-    void initAbsListView();
+    void initAbsListView(const AttributeSet&atts);
     void useDefaultSelector();
     std::vector<int>getDrawableStateForSelector();
     void setItemViewLayoutParams(View* child, int position);
@@ -190,7 +190,7 @@ protected:
     bool mScrollingCacheEnabled;
     bool mFastScrollEnabled;
     bool mFastScrollAlwaysVisible;
-    int mFastScrollStyle;
+    std::string mFastScrollStyle;
     int mSelectorPosition;
     int mResurrectToPosition;
     int mMinimumVelocity;
@@ -251,6 +251,9 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void updateScrollIndicators();
     void setScrollIndicatorViews(View* up, View* down);
+    void internalSetPadding(int left, int top, int width, int height)override;
+    void onSizeChanged(int w, int h, int oldw, int oldh)override;
+    void handleBoundsChange();
     virtual bool touchModeDrawsInPressedState();
     virtual bool shouldShowSelector();
     void updateSelectorState();
@@ -266,7 +269,6 @@ protected:
     virtual View* obtainView(int position, bool*outMetadata);
     void positionSelector(int position, View* sel);
     void hideSelector();
-    void reportScrollStateChange(int newState);
     void setVisibleRangeHint(int start,int end);
     void setEdgeEffectColor(int color);
     void setBottomEdgeEffectColor( int color);
@@ -323,9 +325,10 @@ public:
     bool isScrollingCacheEnabled()const;
     void setScrollingCacheEnabled(bool enabled);
 
+    void reportScrollStateChange(int newState);
     void setFastScrollEnabled(bool);
     bool isFastScrollEnabled()const;
-    void setFastScrollStyle(int styleid);
+    void setFastScrollStyle(const std::string& styleid);
     void setFastScrollAlwaysVisible(bool alwaysShow);
     bool isFastScrollAlwaysVisible()const;
 

@@ -4,15 +4,16 @@
 
 namespace cdroid{
 
-FastScroller::FastScroller(AbsListView*listView,int styleResId){
+FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mList = listView;
     mOldItemCount = listView->getCount();
     mOldChildCount = listView->getChildCount();
 
     Context* context = listView->getContext();
     mScaledTouchSlop = ViewConfiguration::get(context).getScaledTouchSlop();
-    mScrollBarStyle = listView->getScrollBarStyle();
+    mScrollBarStyle  = listView->getScrollBarStyle();
 
+    mUpdatingLayout  = false;
     mScrollCompleted = true;
     mState = STATE_VISIBLE;
     mMatchDragPosition =true;// context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.HONEYCOMB;
@@ -47,8 +48,25 @@ FastScroller::FastScroller(AbsListView*listView,int styleResId){
     postAutoHide();
 }
 
-void FastScroller::setStyle(int){
+void FastScroller::setStyle(const std::string&styleResId){
+    Context* context = mList->getContext();
+    AttributeSet ta=context->obtainStyledAttributes(styleResId);//R.styleable.FastScroll, R.attr.fastScrollStyle, resId);
 
+    mOverlayPosition = ta.getInt("position", OVERLAY_FLOATING);
+    mPreviewResId[PREVIEW_LEFT] = ta.getString("backgroundLeft");
+    mPreviewResId[PREVIEW_RIGHT] = ta.getString("backgroundRight");
+    mThumbDrawable = context->getDrawable(ta,"thumbDrawable");
+    mTrackDrawable = context->getDrawable(ta,"trackDrawable");
+    //mTextAppearance = ta.getResourceId(index, 0);R.styleable.FastScroll_textAppearance
+    mTextColor = context->getColorStateList(ta.getString("textColor"));
+    mTextSize  = ta.getDimensionPixelSize("textSize", 0);
+    mPreviewMinWidth = ta.getDimensionPixelSize("minWidth", 0);
+    mPreviewMinHeight= ta.getDimensionPixelSize("minHeight", 0);
+    mThumbMinWidth  = ta.getDimensionPixelSize("thumbMinWidth", 0);
+    mThumbMinHeight = ta.getDimensionPixelSize("thumbMinHeight", 0);
+    mPreviewPadding = ta.getDimensionPixelSize("padding", 0);
+    mThumbPosition  = ta.getInt("thumbPosition", THUMB_POSITION_MIDPOINT);
+    //updateAppearance();
 }
 
 void FastScroller::remove() {
@@ -117,8 +135,8 @@ void FastScroller::setScrollbarPosition(int position){
         mScrollbarPosition = position;
         mLayoutFromRight = position != View::SCROLLBAR_POSITION_LEFT;
 
-        //const int previewResId = mPreviewResId[mLayoutFromRight ? PREVIEW_RIGHT : PREVIEW_LEFT];
-        //mPreviewImage->setBackgroundResource(previewResId);
+        const std::string previewResId = mPreviewResId[mLayoutFromRight ? PREVIEW_RIGHT : PREVIEW_LEFT];
+        mPreviewImage->setBackgroundResource(previewResId);
 
         // Propagate padding to text min width/height.
         const int textMinWidth = std::max(0, mPreviewMinWidth - mPreviewImage->getPaddingLeft()
@@ -174,7 +192,7 @@ TextView* FastScroller::createPreviewTextView(Context* context) {
     TextView* textView = new TextView(context,atts);
     textView->setLayoutParams(params);
     textView->setSingleLine(true);
-    //textView->setEllipsize(TruncateAt.MIDDLE);
+    textView->setEllipsize(Layout::ELLIPSIS_MIDDLE);
     textView->setGravity(Gravity::CENTER);
     textView->setAlpha(.0f);
 
@@ -449,8 +467,8 @@ void FastScroller::transitionToHidden() {
 
 void FastScroller::transitionToVisible() {
 #if 0
-    if (mDecorAnimation != null) {
-        mDecorAnimation.cancel();
+    if (mDecorAnimation != nullptr) {
+        mDecorAnimation->cancel();
     }
 
     Animator fadeIn = groupAnimatorOfFloat(View.ALPHA, 1f, mThumbImage, mTrackImage)
@@ -462,16 +480,16 @@ void FastScroller::transitionToVisible() {
             View.TRANSLATION_X, 0f, mThumbImage, mTrackImage).setDuration(DURATION_FADE_IN);
 
     mDecorAnimation = new AnimatorSet();
-    mDecorAnimation.playTogether(fadeIn, fadeOut, slideIn);
-    mDecorAnimation.start();
+    mDecorAnimation->playTogether(fadeIn, fadeOut, slideIn);
+    mDecorAnimation->start();
 #endif
     mShowingPreview = false;
 }
 
 void FastScroller::transitionToDragging() {
 #if 0
-    if (mDecorAnimation != null) {
-        mDecorAnimation.cancel();
+    if (mDecorAnimation != nullptr) {
+        mDecorAnimation->cancel();
     }
 
     Animator fadeIn = groupAnimatorOfFloat(
@@ -481,8 +499,8 @@ void FastScroller::transitionToDragging() {
             View.TRANSLATION_X, 0f, mThumbImage, mTrackImage).setDuration(DURATION_FADE_IN);
 
     mDecorAnimation = new AnimatorSet();
-    mDecorAnimation.playTogether(fadeIn, slideIn);
-    mDecorAnimation.start();
+    mDecorAnimation->playTogether(fadeIn, slideIn);
+    mDecorAnimation->start();
 #endif
     mShowingPreview = true;
 }
@@ -520,7 +538,7 @@ void FastScroller::getSectionsFromIndexer() {
 #if 0
     mSectionIndexer = null;
 
-    Adapter adapter = mList->getAdapter();
+    Adapter* adapter = mList->getAdapter();
     if (adapter instanceof HeaderViewListAdapter) {
         mHeaderCount = ((HeaderViewListAdapter) adapter).getHeadersCount();
         adapter = ((HeaderViewListAdapter) adapter).getWrappedAdapter();
@@ -882,10 +900,10 @@ void FastScroller::cancelPendingDrag() {
     mPendingDrag = -1;
 }
 
-    /**
-     * Delays dragging until after the framework has determined that the user is
-     * scrolling, rather than tapping.
-     */
+/**
+  * Delays dragging until after the framework has determined that the user is
+  * scrolling, rather than tapping.
+  */
 void FastScroller::startPendingDrag() {
     mPendingDrag = SystemClock::uptimeMillis() + TAP_TIMEOUT;
 }
@@ -901,7 +919,7 @@ void FastScroller::beginDrag() {
 
     if (mList != nullptr) {
         mList->requestDisallowInterceptTouchEvent(true);
-        //mList->reportScrollStateChange(AbsListView::OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
+        mList->reportScrollStateChange(AbsListView::OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
     }
 
     cancelFling();

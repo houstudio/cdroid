@@ -38,7 +38,8 @@ const std::string Assets::getTheme()const{
     return mThemeName;
 }
 
-void Assets::normalizeProperty(const std::string&pkg,std::string&value){
+std::string Assets::normalizeProperty(const std::string&pkg,const std::string&property){
+    std::string value= property;
     size_t pos=value.find('?');
     bool hasat=false;
     if(pos!=std::string::npos){
@@ -47,16 +48,10 @@ void Assets::normalizeProperty(const std::string&pkg,std::string&value){
     if((pos=value.find('@'))!=std::string::npos){
         value.erase(pos,1);  hasat=true;
     }
-    if(hasat&&((pos=value.find(':'))==std::string::npos)){
-        value=pkg+":"+value;
+    if( hasat && (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
+        value= pkg+":"+value;
     }
-}
-
-void Assets::normalizeAttributes(const std::string&pkg,AttributeSet&atts){
-    std::map<const std::string,std::string>&entries=atts.getEntries();
-    for(auto it=entries.begin();it!=entries.end();it++){
-        normalizeProperty(pkg,it->second);
-    }
+    return value;
 }
 
 void Assets::setTheme(const std::string&theme){
@@ -66,7 +61,6 @@ void Assets::setTheme(const std::string&theme){
         mThemeName= theme;
         mTheme=it->second;
         parseResource(theme,nullptr,&pkg);
-        normalizeAttributes(pkg,mTheme);
         LOGD("set Theme to %s",theme.c_str());
     }else{
         LOGE("Theme %s not found",theme.c_str());
@@ -97,6 +91,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
                 if(styleParent.length())it->second.add("parent",styleParent);
                 LOGV("style:%s",styleName.c_str());
             }
+            std::string normalizedValue = normalizeProperty(package,value); 
             it->second.add(atts[1].getString("name"),value);
         }else if(tag0.compare("array")==0){
             const std::string name=atts[0].getString("name");
@@ -458,7 +453,6 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&refname){
     if(it!=mStyles.end())atts=it->second;
     const std::string parent=atts.getString("parent");
     parseResource(name,nullptr,&pkg);
-    normalizeAttributes(pkg,atts);
     if(parent.length()){
         AttributeSet parentAtts=obtainStyledAttributes(parent);
         atts.inherit(parentAtts);

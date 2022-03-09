@@ -13,25 +13,17 @@ namespace cdroid {
 DECLARE_WIDGET2(ListView,"cdroid:attr/listViewStyle")
 
 ListView::ListView(int w,int h):AbsListView(w,h) {
-    initListView();
+    const std::string style=LayoutInflater::from(mContext)->getDefaultStyle("ListView");
+    AttributeSet attrs=mContext->obtainStyledAttributes(style);
+    initListView(attrs);
 }
 
 ListView::ListView(Context* context,const AttributeSet& attrs)
    :AbsListView(context,attrs){
-    initListView();
-    Drawable* d = getContext()->getDrawable(attrs,"divider");
-    Drawable* osHeader = getContext()->getDrawable(attrs,"overScrollHeader");
-    Drawable* osFooter = getContext()->getDrawable(attrs,"overScrollFooter");
-
-    setOverscrollHeader(osHeader);
-    setOverscrollHeader(osFooter);
-	setDivider(d);
-    mHeaderDividersEnabled = attrs.getBoolean("headerDividersEnabled",true);
-    mFooterDividersEnabled = attrs.getBoolean("footerDividersEnabled", true);
-    setDividerHeight(attrs.getDimensionPixelSize("dividerHeight",0));
+    initListView(attrs);
 }
 
-void ListView::initListView(){
+void ListView::initListView(const AttributeSet&attrs){
     mDividerHeight=0;
     mItemsCanFocus=false;
     mDivider=nullptr;
@@ -43,6 +35,17 @@ void ListView::initListView(){
     mFocusSelector =nullptr;
     mIsCacheColorOpaque =true;
     mDividerIsOpaque = true;
+
+    Drawable* d = getContext()->getDrawable(attrs,"divider");
+    Drawable* osHeader = getContext()->getDrawable(attrs,"overScrollHeader");
+    Drawable* osFooter = getContext()->getDrawable(attrs,"overScrollFooter");
+
+    setOverscrollHeader(osHeader);
+    setOverscrollHeader(osFooter);
+	setDivider(d);
+    mHeaderDividersEnabled = attrs.getBoolean("headerDividersEnabled",true);
+    mFooterDividersEnabled = attrs.getBoolean("footerDividersEnabled", true);
+    setDividerHeight(attrs.getDimensionPixelSize("dividerHeight",0));
 }
 
 ListView::~ListView(){

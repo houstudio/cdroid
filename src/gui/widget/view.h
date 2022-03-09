@@ -488,9 +488,6 @@ protected:
     int getFadeHeight(bool offsetRequired);
     bool isHardwareAccelerated()const;
 
-    virtual void invalidateViewProperty(bool invalidateParent, bool forceRedraw);
-    virtual void invalidateParentCaches();
-    virtual void invalidateParentIfNeeded();
     void invalidateParentIfNeededAndWasQuickRejected();
     virtual void invalidateInheritedLayoutMode(int);
     void destroyDrawingCache();
@@ -582,9 +579,14 @@ public:
     virtual ~View();
     virtual void draw(Canvas&canvas);
     bool draw(Canvas&canvas,ViewGroup*parent,long drawingTime);
+
+    virtual void invalidateParentCaches();
+    virtual void invalidateParentIfNeeded();
+    virtual void invalidateViewProperty(bool invalidateParent, bool forceRedraw);
     virtual void invalidate(const Rect&dirty);
     virtual void invalidate(int l,int t,int w,int h);
     virtual void invalidate(bool invalidateCache=true);
+
     bool isDirty()const;
     void postInvalidate();
     void postInvalidateOnAnimation();

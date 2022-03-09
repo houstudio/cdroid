@@ -182,7 +182,7 @@ void AnalogClock::onDraw(Canvas&canvas){
         float scale = std::min((float) availableWidth / (float) w,
                               (float) availableHeight / (float) h);
         canvas.save();
-        canvas.scale(scale, scale);//, x, y);
+        canvas.scale(scale, scale);
     }
 
     if (changed) {
@@ -192,7 +192,7 @@ void AnalogClock::onDraw(Canvas&canvas){
 
     canvas.save();
     canvas.translate(x,y);
-    canvas.rotate_degrees(mHour / 12.0f * 360.0f);
+    canvas.rotate_degrees((mHour+mMinutes/60.f) / 12.0f * 360.0f);
     if (changed) {
         w = mHourHand->getIntrinsicWidth();
         h = mHourHand->getIntrinsicHeight();
@@ -204,13 +204,13 @@ void AnalogClock::onDraw(Canvas&canvas){
 
     canvas.save();
     canvas.translate(x,y);
-    canvas.rotate_degrees(mMinutes / 60.0f * 360.0f);
+    canvas.rotate_degrees((mMinutes+mSeconds/60.f) / 60.0f * 360.0f);
 
     if (changed) {
         w = mMinuteHand->getIntrinsicWidth();
         h = mMinuteHand->getIntrinsicHeight();
         mMinuteHand->setBounds( - (w / 2), - (h / 2),w,h);
-        LOGV("Minite.size=%dx%d  %p",w,h,mMinuteHand);
+        LOGV("MinuteHand.size=%dx%d  %p",w,h,mMinuteHand);
     }
     mMinuteHand->draw(canvas);
     canvas.restore();

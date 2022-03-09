@@ -229,26 +229,15 @@ void AbsListView::FLY_CheckFlyWheelProc(){
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
-    initAbsListView();
+    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/absListViewStyle");
+    initAbsListView(atts);
 }
 
 AbsListView::AbsListView(Context*ctx,const AttributeSet&atts):AdapterView(ctx,atts) {
-    initAbsListView();
-    mDrawSelectorOnTop = atts.getBoolean("drawSelectorOnTop",false);
-    setStackFromBottom(atts.getBoolean("stackFromBottom",false));
-    setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
-    setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
-    setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int>{
-        {"none",CHOICE_MODE_NONE},
-        {"singleChoice",CHOICE_MODE_SINGLE},
-        {"multipleChoice",CHOICE_MODE_MULTIPLE}
-    },CHOICE_MODE_NONE));
-    setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
-    //setFastScrollStyle(atts.getString("fastScrollStyle"));
-    setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
+    initAbsListView(atts);
 }
 
-void AbsListView::initAbsListView() {
+void AbsListView::initAbsListView(const AttributeSet&atts) {
     setClickable(true);
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
@@ -258,10 +247,11 @@ void AbsListView::initAbsListView() {
     mListPadding.set(0,0,0,0);
     mVelocityTracker = nullptr;
     mPositionScroller= nullptr;
-	mFastScroll = nullptr; 
+    mFastScroll = nullptr; 
     mStackFromBottom = false;
     mIsChildViewEnabled =false;
-    mIsDetaching =false;
+    mIsDetaching = false;
+    mFastScrollEnabled = false;
     mSuppressIdleStateChangeCall =false;
     mVelocityScale = 1.0f;
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
@@ -305,11 +295,24 @@ void AbsListView::initAbsListView() {
     mCachingStarted = mCachingActive =false;
     mIsScrap[0]=mIsScrap[1]=0;
     mDensityScale=getContext()->getDisplayMetrics().density;
+
+    mDrawSelectorOnTop = atts.getBoolean("drawSelectorOnTop",false);
+    setStackFromBottom(atts.getBoolean("stackFromBottom",false));
+    setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
+    setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
+    setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int>{
+        {"none",CHOICE_MODE_NONE},
+        {"singleChoice",CHOICE_MODE_SINGLE},
+        {"multipleChoice",CHOICE_MODE_MULTIPLE}
+    },CHOICE_MODE_NONE));
+    setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
+    setFastScrollStyle(atts.getString("fastScrollStyle"));
+    setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
 }
 
 AbsListView::~AbsListView(){
     delete mSelector;
-	delete mFastScroll;
+    delete mFastScroll;
     delete mRecycler;
     delete mScroller;
     delete mEdgeGlowTop;
@@ -411,7 +414,7 @@ void AbsListView::setFastScrollerAlwaysVisibleUiThread(bool alwaysShow) {
 }
 
 static bool isOwnerThread(){
-   return false;
+   return true;
 }
 
 void AbsListView::setFastScrollEnabled(bool enabled){
@@ -429,7 +432,7 @@ void AbsListView::setFastScrollEnabled(bool enabled){
 }
 
 
-void AbsListView::setFastScrollStyle(int styleResId){
+void AbsListView::setFastScrollStyle(const std::string& styleResId){
     if (mFastScroll == nullptr) {
         mFastScrollStyle = styleResId;
     } else {
@@ -939,6 +942,40 @@ bool AbsListView::touchModeDrawsInPressedState() {
         return false;
     }
 }
+
+void AbsListView::internalSetPadding(int left, int top, int width, int height){
+    AdapterView::internalSetPadding(left, top, width, height);
+    if (isLayoutRequested()) {
+         handleBoundsChange();
+    }
+}
+
+void AbsListView::onSizeChanged(int w, int h, int oldw, int oldh){
+    handleBoundsChange();
+    if (mFastScroll) {
+        mFastScroll->onSizeChanged(w, h, oldw, oldh);
+    }
+}
+
+void AbsListView::handleBoundsChange(){
+    if (mInLayout) {
+        return;
+    }
+    const int childCount = getChildCount();
+    if (childCount > 0) {
+        mDataChanged = true;
+        rememberSyncState();
+        for (int i = 0; i < childCount; i++) {
+             View* child = getChildAt(i);
+             ViewGroup::LayoutParams* lp = child->getLayoutParams();
+             // force layout child unless it has exact specs
+             if (lp == nullptr || lp->width < 1 || lp->height < 1) {
+                 child->forceLayout();
+             }
+        }
+    }
+}
+
 bool AbsListView::shouldShowSelector() {
     return (isFocused() && !isInTouchMode()) || (touchModeDrawsInPressedState() && isPressed());
 }

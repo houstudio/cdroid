@@ -5589,6 +5589,7 @@ bool View::removeCallbacks(const Runnable& what){
 ViewOverlay*View::getOverlay(){
     if (mOverlay == nullptr) {
         mOverlay = new ViewOverlay(mContext, this);
+        mOverlay->getOverlayView()->setSize(getWidth(),getHeight());
     }
     return mOverlay;
 }

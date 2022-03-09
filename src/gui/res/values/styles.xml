@@ -17,16 +17,16 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
     <style name="AlertDialog">
-        <item name="fullDark">@cdroid:mipmap/popup_full_dark</item>
-        <item name="topDark">@cdroid:mipmap/popup_top_dark</item>
-        <item name="centerDark">@cdroid:mipmap/popup_center_dark</item>
-        <item name="bottomDark">@cdroid:mipmap/popup_bottom_dark</item>
-        <item name="fullBright">@cdroid:mipmap/popup_full_bright</item>
-        <item name="topBright">@cdroid:mipmap/popup_top_bright</item>
-        <item name="centerBright">@cdroid:mipmap/popup_center_bright</item>
-        <item name="bottomBright">@cdroid:mipmap/popup_bottom_bright</item>
-        <item name="bottomMedium">@cdroid:mipmap/popup_bottom_medium</item>
-        <item name="centerMedium">@cdroid:mipmap/popup_center_medium</item>
+        <item name="fullDark">@mipmap/popup_full_dark</item>
+        <item name="topDark">@mipmap/popup_top_dark</item>
+        <item name="centerDark">@mipmap/popup_center_dark</item>
+        <item name="bottomDark">@mipmap/popup_bottom_dark</item>
+        <item name="fullBright">@mipmap/popup_full_bright</item>
+        <item name="topBright">@mipmap/popup_top_bright</item>
+        <item name="centerBright">@mipmap/popup_center_bright</item>
+        <item name="bottomBright">@mipmap/popup_bottom_bright</item>
+        <item name="bottomMedium">@mipmap/popup_bottom_medium</item>
+        <item name="centerMedium">@mipmap/popup_center_medium</item>
         <item name="progressLayout">@layout/progress_dialog</item>
         <item name="horizontalProgressLayout">@layout/alert_dialog_progress</item>
         <item name="needsDefaultBackgrounds">false</item>
@@ -255,9 +255,9 @@
         <item name="focusable">true</item>
         <item name="focusableInTouchMode">true</item>
         <item name="clickable">true</item>
-        <item name="background">?cdroid:attr/editTextBackground</item>
-        <item name="textAppearance">?cdroid:attr/textAppearanceMediumInverse</item>
-        <item name="textColor">?cdroid:attr/editTextColor</item>
+        <item name="background">?attr/editTextBackground</item>
+        <item name="textAppearance">?attr/textAppearanceMediumInverse</item>
+        <item name="textColor">?attr/editTextColor</item>
         <item name="gravity">center_vertical</item>
         <item name="breakStrategy">simple</item>
         <item name="hyphenationFrequency">normal</item>
@@ -266,9 +266,9 @@
 
     <style name="Widget.ExpandableListView" parent="Widget.ListView">
         <item name="groupIndicator">@drawable/expander_group</item>
-        <item name="indicatorLeft">?cdroid:attr/expandableListPreferredItemIndicatorLeft</item>
-        <item name="indicatorRight">?cdroid:attr/expandableListPreferredItemIndicatorRight</item>
-        <item name="childDivider">@cdroid:drawable/divider_horizontal_dark_opaque</item>
+        <item name="indicatorLeft">?attr/expandableListPreferredItemIndicatorLeft</item>
+        <item name="indicatorRight">?attr/expandableListPreferredItemIndicatorRight</item>
+        <item name="childDivider">@mipmap/divider_horizontal_dark_opaque</item>
     </style>
 
     <style name="Widget.ExpandableListView.White">
@@ -390,7 +390,7 @@
     <style name="Widget.ListView" parent="Widget.AbsListView">
         <item name="listSelector">@drawable/list_selector_background</item>
         <item name="cacheColorHint">?attr/colorBackgroundCacheHint</item>
-        <item name="divider">@drawable/divider_horizontal_dark_opaque</item>
+        <item name="divider">@mipmap/divider_horizontal_dark_opaque</item>
     </style>
 
     <style name="Widget.ListView.White" parent="Widget.AbsListView">
@@ -703,6 +703,6 @@
         <item name="paddingStart">4dip</item>
         <item name="paddingEnd">4dip</item>
         <item name="paddingBottom">1dip</item>
-        <item name="background">@cdroid:mipmap/bottom_bar</item>
+        <item name="background">@mipmap/bottom_bar</item>
     </style>
 </resources>

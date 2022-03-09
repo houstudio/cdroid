@@ -1,4 +1,5 @@
 #include <views/viewoverlay.h>
+#include <cdlog.h>
 namespace cdroid{
 
 ViewOverlay::ViewOverlay(Context* context, View* hostView){
@@ -41,6 +42,7 @@ void ViewGroupOverlay::remove(View*view){
 ///////////////////////////////////////////////////////////////////////////////////
 
 ViewOverlay::OverlayViewGroup::OverlayViewGroup(Context*context,View* hostView):ViewGroup(0,0){
+    mHostView = hostView;
 }
 
 void ViewOverlay::OverlayViewGroup::add(Drawable* drawable){
@@ -79,8 +81,7 @@ void ViewOverlay::OverlayViewGroup::add(View* child) {
 
     if (child->getParent()) {
         ViewGroup* parent = child->getParent();
-        if (parent != mHostView && parent->getParent() != nullptr /*&&
-                parent->mAttachInfo != nullptr*/) {
+        if ((parent != mHostView) && parent->getParent() && parent->isAttachedToWindow()) {
             // Moving to different container; figure out how to position child such that
             // it is in the same location on the screen
             int parentLocation[2];
@@ -96,9 +97,9 @@ void ViewOverlay::OverlayViewGroup::add(View* child) {
             parent->getLayoutTransition()->cancel(LayoutTransition::DISAPPEARING);
         }
         // fail-safe if view is still attached for any reason
-        /*if (child->mParent != nullptr) {
-            child->mParent = nullptr;
-        }*/
+        if (child->getParent() != nullptr) {
+            //child->assignParent(nullptr);
+        }
     }
     ViewGroup::addView(child);
 }
@@ -170,21 +171,21 @@ void ViewOverlay::OverlayViewGroup::invalidate(bool invalidateCache) {
 void ViewOverlay::OverlayViewGroup::invalidateViewProperty(bool invalidateParent, bool forceRedraw) {
     ViewGroup::invalidateViewProperty(invalidateParent, forceRedraw);
     if (mHostView) {
-        //mHostView->invalidateViewProperty(invalidateParent, forceRedraw);
+        mHostView->invalidateViewProperty(invalidateParent, forceRedraw);
     }
 }
 
 void ViewOverlay::OverlayViewGroup::invalidateParentCaches() {
     ViewGroup::invalidateParentCaches();
     if (mHostView) {
-        //mHostView->invalidateParentCaches();
+        mHostView->invalidateParentCaches();
     }
 }
 
 void ViewOverlay::OverlayViewGroup::invalidateParentIfNeeded() {
     ViewGroup::invalidateParentIfNeeded();
     if (mHostView) {
-        //mHostView->invalidateParentIfNeeded();
+        mHostView->invalidateParentIfNeeded();
     }
 }
 
@@ -195,7 +196,7 @@ ViewGroup* ViewOverlay::OverlayViewGroup::invalidateChildInParent(int* location,
             location[0] = 0;
             location[1] = 0;
             ViewGroup::invalidateChildInParent(location, dirty);
-            return nullptr;//((ViewGroup*) mHostView)->invalidateChildInParent(location, dirty);
+            return ((ViewGroup*) mHostView)->invalidateChildInParent(location, dirty);
         } else {
             invalidate(dirty);
         }
