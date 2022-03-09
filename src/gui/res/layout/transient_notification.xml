@@ -3,16 +3,16 @@
     cdroid:layout_width="match_parent"
     cdroid:layout_height="match_parent"
     cdroid:orientation="vertical"
-    cdroid:background="?cdroid:attr/toastFrameBackground">
+    cdroid:background="?attr/toastFrameBackground">
 
     <TextView
-        cdroid:id="@cdroid:id/message"
+        cdroid:id="@id/message"
         cdroid:layout_width="wrap_content"
         cdroid:layout_height="wrap_content"
         cdroid:layout_weight="1"
         cdroid:layout_gravity="center_horizontal"
-        cdroid:textAppearance="@cdroid:style/TextAppearance.Toast"
-        cdroid:textColor="@cdroid:color/bright_foreground_dark"
+        cdroid:textAppearance="@style/TextAppearance.Toast"
+        cdroid:textColor="@color/bright_foreground_dark"
         cdroid:shadowColor="#BB000000"
         cdroid:shadowRadius="2.75"
         />

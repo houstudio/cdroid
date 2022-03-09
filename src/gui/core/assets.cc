@@ -20,7 +20,6 @@ Assets::Assets(){
 
 Assets::Assets(const std::string&path):Assets(){
     addResource(path);
-    mName=path;
 }
 
 Assets::~Assets(){
@@ -91,27 +90,33 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
 
 int Assets::addResource(const std::string&path,const std::string&name){
     ZIPArchive*pak=new ZIPArchive(path);
-    size_t pos=name.find_last_of('/');
-    std::string key=name;
-    key=(pos!=std::string::npos)?name.substr(pos+1):name;
-    mResources.insert(std::pair<const std::string,ZIPArchive*>(key,pak));
+    std::string package=name;
+    if(name.empty()){
+        size_t pos=path.find_last_of('/');
+        if(pos != std::string::npos)
+            package = path.substr(pos+1);
+        pos = package.find('.');
+        if( pos != std::string::npos)
+            package = package.substr(0,pos);
+    }
+    mResources.insert(std::pair<const std::string,ZIPArchive*>(package,pak));
     
     int count=0;
-    pak->forEachEntry([this,name,&count](const std::string&res){
+    pak->forEachEntry([this,package,&count](const std::string&res){
         count++;
         if((res.size()>7)&&TextUtils::startWith(res,"values")){
             LOGV("LoadKeyValues from:%s ...",res.c_str());
-            const std::string resid=name+":"+res;
-            loadKeyValues(resid,std::bind(&Assets::parseItem,this,name,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
+            const std::string resid=package+":"+res;
+            loadKeyValues(resid,std::bind(&Assets::parseItem,this,package,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
         }
         return 0;
     });
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme");
-    pak->forEachEntry([this,name,&count](const std::string&res){
+    pak->forEachEntry([this,package,&count](const std::string&res){
         if((res.size()>6)&&TextUtils::startWith(res,"color")){ 
             LOGV("LoadKeyValues from:%s ...",res.c_str());
-            std::string resid=name+":"+res.substr(0,res.find(".xml"));
+            std::string resid=package+":"+res.substr(0,res.find(".xml"));
             COMPLEXCOLOR cl=ColorStateList::inflate(this,resid);
             mColors.insert(std::pair<const std::string,COMPLEXCOLOR>(resid,cl));
         }

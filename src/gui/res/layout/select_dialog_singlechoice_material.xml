@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CheckedTextView xmlns:cdroid="http://schemas.android.com/apk/res/android"
-    cdroid:id="@cdroid:id/text1"
+    cdroid:id="@+id/text1"
     cdroid:layout_width="match_parent"
     cdroid:layout_height="wrap_content"
     cdroid:minHeight="?attr/listPreferredItemHeightSmall"

@@ -133,16 +133,11 @@ void App::setOpacity(unsigned char alpha){
 }
 
 const std::string App::getAssetsPath(){
-     std::string path=getDataPath();
-     if(path.compare("./")==0)path+=getName()+".pak";
-     else{
-         std::string name=getName()+".pak";
-         std::size_t found=name.find_last_of("/");
-         LOGD("======name=%s",name.c_str());
-         if(found!=std::string::npos)
-             name=name.substr(found+1);
-         path+=name;
-     }
+    std::string path=mName;
+    size_t pos = path.find_last_of("\\/");
+    if(pos!=std::string::npos)
+        path=path.substr(pos+1);
+    path=getDataPath()+path+".pak";
     return path;
 }
 
@@ -163,9 +158,8 @@ void App::exit(int code){
 }
 
 void App::setName(const std::string&appname){
-    size_t pt=appname.rfind('/');
-    mName= (pt==std::string::npos)?appname:appname.substr(pt+1);
-    addResource(getAssetsPath(),mName);
+    mName = appname;
+    addResource(getAssetsPath());
 }
 
 const std::string& App::getName(){

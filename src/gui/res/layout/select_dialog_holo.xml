@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <view class="com.android.internal.app.AlertController$RecycleListView"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+android:id/select_dialog_listview"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:cacheColorHint="@null"
-    android:divider="?cdroid:attr/listDividerAlertDialog"
-    android:scrollbars="vertical"
-    android:overScrollMode="ifContentScrolls"
-    android:textAlignment="viewStart" />
+    xmlns:cdroid="http://schemas.android.com/apk/res/android"
+    cdroid:id="@+cdroid:id/select_dialog_listview"
+    cdroid:layout_width="match_parent"
+    cdroid:layout_height="match_parent"
+    cdroid:cacheColorHint="@null"
+    cdroid:divider="?cdroid:attr/listDividerAlertDialog"
+    cdroid:scrollbars="vertical"
+    cdroid:overScrollMode="ifContentScrolls"
+    cdroid:textAlignment="viewStart" />
