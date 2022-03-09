@@ -24,6 +24,11 @@ public:
             {View*v=LayoutInflater::from(container->getContext())->inflate(res[position-2],nullptr,false);
             container->addView(v);
             v->requestLayout();
+            View*btn=v->findViewById(uidemo::R::id::button1);
+            if(btn)btn->setOnClickListener([](View&v){
+                 Window*w=new Window(0,0,400,400);
+                 w->setBackgroundColor(0x80FF0000);
+            }); 
             return v;
             }break;
         case 0:
@@ -31,6 +36,7 @@ public:
             ListView*lv=new ListView(800,480);
             lv->setDivider(new ColorDrawable(0x80224422));
             lv->setDividerHeight(1);
+            lv->setFastScrollEnabled(true);
             lv->setSelector(new ColorDrawable(0x8800FF00));
             lv->setVerticalScrollBarEnabled(true);
             lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 
@@ -66,7 +72,7 @@ public:
                 }
             });
             gv->setVerticalScrollBarEnabled(true);
-            gv->setNumColumns(3);
+            gv->setNumColumns(2);
             gv->setAdapter(adapter);
             gv->setHorizontalSpacing(2); 
             gv->setVerticalSpacing(2);
@@ -136,7 +142,6 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
 Window*CreateMultiMedia(){
     MediaWindow*w=new MediaWindow(0,0,800,640);
     w->setText("Media");
-    w->show();
     LOGD("CreateMultiMedia");
     return w;
 }

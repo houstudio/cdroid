@@ -33,7 +33,7 @@ public:
    bool onKeyUp(int keyCode,KeyEvent& evt)override{
        LOGV("...%d flags=%x",keyCode,evt.getFlags());
        switch(keyCode){
-       case KEY_ESCAPE:hide();return true;
+       case KEY_ESCAPE:setVisibility(View::INVISIBLE);return true;
        default: return Window::onKeyDown(keyCode,evt);
        }
    }
@@ -222,14 +222,14 @@ void InputMethodManager::focusIn(View*view){
 
 void InputMethodManager::focusOut(View*view){
     if(imeWindow){
-        imeWindow->hide();
+        imeWindow->setVisibility(View::INVISIBLE);
     }
     LOGV("view=%p %d",view,view->getId());
 }
 
 void InputMethodManager::showIme(){
     LOGV("imeWindow=%p",imeWindow);
-    if(imeWindow)imeWindow->show();
+    if(imeWindow)imeWindow->setVisibility(View::VISIBLE);
 }
 
 void InputMethodManager::sendKeyEvent(KeyEvent&k){
@@ -248,7 +248,7 @@ void InputMethodManager::setInputType(int inputType){
     }
     switch(mInputType){
     case EditText::TYPE_NONE:
-        if(imeWindow)imeWindow->hide();
+        if(imeWindow)imeWindow->setVisibility(View::INVISIBLE);
         break;
     default:
         if(imemethods.size()){

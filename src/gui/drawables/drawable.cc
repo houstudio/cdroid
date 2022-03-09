@@ -420,23 +420,25 @@ static void endElement(void *userData, const XML_Char *name){
             ((StateListDrawable*)parent)->addState(state,topchild);
             LOGV("add drawable %p to StateListDrawable %p",topchild,parent);
         }else if(dynamic_cast<LevelListDrawable*>(parent)){
-            int minLevel= atts.getInt("minLevel");//get child level info
-            int maxLevel= atts.getInt("maxLevel");
+            int minLevel= atts.getInt("minLevel",INT_MIN);//get child level info
+            int maxLevel= atts.getInt("maxLevel",INT_MIN);
+            if( minLevel == INT_MIN ) minLevel = maxLevel;
+            if( maxLevel == INT_MIN ) maxLevel = minLevel;
             ((LevelListDrawable*)parent)->addLevel(minLevel,maxLevel,topchild);
             LOGV("add drawable %p to LevelListDrawable %p level=(%d,%d)",topchild,parent,minLevel,maxLevel);
         }else if(dynamic_cast<LayerDrawable*>(parent)){
             LayerDrawable*ld=dynamic_cast<LayerDrawable*>(parent);
-            int idx=ld->addLayer(topchild);
+            const int idx=ld->addLayer(topchild);
             ld->setLayerInset(idx,atts.getDimensionPixelOffset("left"),atts.getDimensionPixelOffset("top"),
                   atts.getDimensionPixelOffset("right"),atts.getDimensionPixelOffset("bottom"));
             ld->setLayerGravity(idx,atts.getGravity("gravity",0));
-            int id=atts.getInt("id",-1);
+            const int id=atts.getInt("id",-1);
             const std::string src=atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
             LOGV("add drawable %pi[%s] to LayerDrawable %p index=%d id=%d",topchild,src.c_str(),parent,idx,id);
         }else if(dynamic_cast<AnimationDrawable*>(parent)){
             AnimationDrawable*ad=(AnimationDrawable*)parent;
-            int duration=atts.getInt("duration",0);
+            const int duration=atts.getInt("duration",0);
             const std::string src=atts.getString("drawable");
             ad->addFrame(topchild,duration);
             LOGV("add drawable %p[%s] to AnimationDrawable %p duration=%d",topchild,src.c_str(),parent,duration);

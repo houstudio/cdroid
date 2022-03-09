@@ -93,28 +93,11 @@ void Window::draw(){
     GraphDevice::getInstance().flip();
 }
 
-void Window::show(){
-    if(isAttachedToWindow()&&getVisibility()!=VISIBLE){
-        setVisibility(VISIBLE);
-        if(mAttachInfo->mCanvas==nullptr)
-            invalidate(true);
-        //WindowManager::getInstance().resetVisibleRegion();
-    }
-}
-
-void Window::hide(){
-    if(getVisibility()==VISIBLE){
-        setVisibility(INVISIBLE);
-        //WindowManager::getInstance().resetVisibleRegion();
-    }
-}
-
 View& Window::setPos(int x,int y){
     const bool changed =(x!=mLeft)||(mTop!=y);
     if( changed && isAttachedToWindow()){
         WindowManager::getInstance().moveWindow(this,x,y);
         ViewGroup::setPos(x,y);
-        //WindowManager::getInstance().resetVisibleRegion();
     }
     GraphDevice::getInstance().flip();
     return *this;
@@ -122,6 +105,11 @@ View& Window::setPos(int x,int y){
 
 void Window::onSizeChanged(int w,int h,int oldw,int oldh){
     //WindowManager::getInstance().resetVisibleRegion();
+}
+
+void Window::onVisibilityChanged(View& changedView,int visibility){
+    GraphDevice::getInstance().invalidate(getBound());
+    GraphDevice::getInstance().flip();
 }
 
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){
@@ -140,7 +128,6 @@ RefPtr<Canvas>Window::getCanvas(){
     if(mAttachInfo==nullptr)return nullptr;
     RefPtr<Canvas> canvas=mAttachInfo->mCanvas;
     if((canvas==nullptr)&&(getVisibility()==VISIBLE)){
-        //GraphDevice::getInstance().createContext(getBound());
         canvas=make_refptr_for_instance<Canvas>(new Canvas(getWidth(),getHeight()));		
         mAttachInfo->mCanvas=canvas;
     }

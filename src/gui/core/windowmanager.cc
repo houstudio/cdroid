@@ -68,7 +68,6 @@ void WindowManager::addWindow(Window*win){
     Looper::getDefault()->addEventHandler(win->source);
     win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
-    //resetVisibleRegion();
     LOGV("win=%p source=%p windows.size=%d",win,win->source,windows.size());
 }
 
@@ -79,7 +78,6 @@ void WindowManager::removeWindow(Window*w){
     auto itw=std::find(windows.begin(),windows.end(),w);
     const Rect wrect=w->getBound();
     windows.erase(itw);
-    //resetVisibleRegion();
     for(auto itr=windows.begin();itr!=windows.end();itr++){
         Window*w1=(*itr);
         RECT rc=w1->getBound();
@@ -102,25 +100,13 @@ void WindowManager::removeWindow(Window*w){
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){
-    auto itw=std::find(windows.begin(),windows.end(),w);
-    if(w->isAttachedToWindow()==false)return;
+    if( (w->isAttachedToWindow()==false)||(w->getVisibility()!=View::VISIBLE))
+        return;
     Rect rcw=w->getBound();
     GraphDevice::getInstance().invalidate(rcw);
     rcw.left=x;rcw.top=y;
     GraphDevice::getInstance().invalidate(rcw);
-    for(auto itr=windows.begin();itr!=itw;itr++){
-        RECT rcw=w->getBound();
-        Window*w1=(*itr);
-        RefPtr<Canvas>c=w1->getCanvas();
-        RECT r=w1->getBound();
-        if(w1->getVisibility()!=View::VISIBLE)continue;
-        r.intersect(rcw);
-        r.offset(-w1->getX(),-w1->getY());
-        r=w1->getBound();
-        rcw.left=x;rcw.top=y;
-        r.intersect(rcw);
-        r.offset(-w1->getX(),-w1->getY());
-    }
+    GraphDevice::getInstance().flip();
 }
 
 int WindowManager::enumWindows(WNDENUMPROC cbk){

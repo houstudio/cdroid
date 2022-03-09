@@ -160,17 +160,15 @@ void GraphDevice::composeSurfaces(){
     long t2,t1=SystemClock::uptimeMillis();
     trackFPS();
 
-    std::vector<RefPtr<Canvas>>wSurfaces;
     std::vector<Rect>wBounds;
     std::vector<Window*>wins;
+    std::vector<RefPtr<Canvas>>wSurfaces;
     std::vector<RefPtr<Region>>winVisibleRgns;
     WindowManager::getInstance().enumWindows([&wSurfaces,&wBounds,&wins](Window*w)->bool{
         if( w->getVisibility()==View::VISIBLE ){
-            Rect rcw=w->getBound();
             if(w->mAttachInfo->mCanvas){
                 wSurfaces.push_back(w->mAttachInfo->mCanvas);
-                wBounds.push_back(rcw);
-                wins.push_back(w);
+                wBounds.push_back(w->getBound());      wins.push_back(w);
                 return true;
             }
         }return false;
@@ -179,12 +177,11 @@ void GraphDevice::composeSurfaces(){
     primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     Rect rcBlited={0,0,0,0};
     for(int i=0;i<wSurfaces.size();i++){
-        Rect rcw=wBounds[i];
+        Rect rcw = wBounds[i];
         std::vector<Rectangle> clipRects;
         HANDLE hdlSurface = wSurfaces[i]->mHandle;
-        RefPtr<Region>rgn;
         if(winVisibleRgns[i]->empty())continue; 
-        rgn = Region::create();
+        RefPtr<Region> rgn = Region::create();
         wSurfaces[i]->copy_clip_rectangle_list(clipRects);
         for(auto r:clipRects){
             Rect rc;
@@ -196,6 +193,11 @@ void GraphDevice::composeSurfaces(){
         rects+=rgn->get_num_rectangles();
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc=rgn->get_rectangle(j);
+            Rect rcc={rc.x,rc.y,rc.width,rc.height};
+            rcc.offset(rcw.left,rcw.top);
+            rcc.intersect(0,0,width,height);
+            if(rcc.empty())continue;
+
             if(hdlSurface)GFXBlit(primarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
             else primaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
             rcBlited.Union(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
