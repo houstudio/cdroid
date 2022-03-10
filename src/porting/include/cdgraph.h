@@ -49,7 +49,7 @@ typedef struct _GFXRect{
  @{ */
 
 
-/*This function init the graph dirver .
+/*This function init the graph dirver .*/
 
 /**
     @retval E_OK                            If init success.

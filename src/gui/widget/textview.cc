@@ -1573,8 +1573,6 @@ void TextView::onDraw(Canvas& canvas) {
 
     // translate in by our padding
     /* shortcircuit calling getVerticaOffset() */
-    LOGV("%p:%d height=%d voffsetText=%d %s gravity=%x alignment=%x",this,mID,getHeight(),voffsetText,getText().c_str(),
-           (mGravity & Gravity::VERTICAL_GRAVITY_MASK),getTextAlignment());
     if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
         voffsetText = getVerticalOffset(false);
         voffsetCursor = getVerticalOffset(true);

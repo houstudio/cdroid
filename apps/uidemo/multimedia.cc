@@ -72,11 +72,12 @@ public:
                 }
             });
             gv->setVerticalScrollBarEnabled(true);
+            gv->setScrollbarFadingEnabled(false);
             gv->setNumColumns(2);
             gv->setAdapter(adapter);
             gv->setHorizontalSpacing(2); 
             gv->setVerticalSpacing(2);
-            container->addView(gv);
+            container->addView(gv).setId(12345);
             adapter->loadFiles("/");
             adapter->notifyDataSetChanged();
             return gv;

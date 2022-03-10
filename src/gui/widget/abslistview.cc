@@ -3220,7 +3220,7 @@ void AbsListView::clearScrollingCache(){
                 if ((mPersistentDrawingCache & PERSISTENT_SCROLLING_CACHE) == 0) {
                     setChildrenDrawingCacheEnabled(false);
                 }
-                if (true){//!isAlwaysDrawnWithCacheEnabled()) {
+                if (!isAlwaysDrawnWithCacheEnabled()) {
                     invalidate();
                 }
             }

@@ -122,9 +122,9 @@ public:
         scrollBarMinTouchTarget = configuration.getScaledMinScrollbarTouchTarget();
         scrollBarDefaultDelayBeforeFade = ViewConfiguration::getScrollDefaultDelay();
         scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
-        fadeScrollBars=true;
-        scrollBar=nullptr;
-        mScrollBarDraggingPos=0;
+        fadeScrollBars = true;
+        scrollBar = nullptr;
+        mScrollBarDraggingPos = 0;
         mScrollBarBounds.set(0,0,0,0);
         mScrollBarTouchBounds.set(0,0,0,0);
         this->host=host;
@@ -143,7 +143,7 @@ public:
             // transparent
             state = FADING;
             // Kick off the fade animation
-            host->invalidate(true);
+            host->invalidate(mScrollBarBounds);
         }
     }
 };
@@ -1900,8 +1900,8 @@ bool View::isOnVerticalScrollbarThumb(int x,int y){
     if (isVerticalScrollBarEnabled() && !isVerticalScrollBarHidden()) {
         x += getScrollX();
         y += getScrollY();
-        Rect bounds = mScrollCache->mScrollBarBounds;
-        Rect touchBounds = mScrollCache->mScrollBarTouchBounds;
+        Rect& bounds = mScrollCache->mScrollBarBounds;
+        Rect& touchBounds = mScrollCache->mScrollBarTouchBounds;
         getVerticalScrollBarBounds(&bounds, &touchBounds);
         int range = computeVerticalScrollRange();
         int offset = computeVerticalScrollOffset();
@@ -1924,8 +1924,8 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
     if (isHorizontalScrollBarEnabled()) {
         x += getScrollX();
         y += getScrollY();
-        Rect bounds = mScrollCache->mScrollBarBounds;
-        Rect touchBounds = mScrollCache->mScrollBarTouchBounds;
+        Rect& bounds = mScrollCache->mScrollBarBounds;
+        Rect& touchBounds = mScrollCache->mScrollBarTouchBounds;
         getHorizontalScrollBarBounds(&bounds, &touchBounds);
         int range = computeHorizontalScrollRange();
         int offset = computeHorizontalScrollOffset();
@@ -2082,7 +2082,7 @@ void View::onDrawScrollBars(Canvas& canvas){
     // Fork out the scroll bar drawing for round wearable devices.
     if (mRoundScrollbarRenderer != nullptr) {
         if (drawVerticalScrollBar) {
-            Rect bounds = mScrollCache->mScrollBarBounds;
+            Rect& bounds = mScrollCache->mScrollBarBounds;
             getVerticalScrollBarBounds(&bounds, nullptr);
             mRoundScrollbarRenderer->drawRoundScrollbars(
                 canvas, (float)mScrollCache->scrollBar->getAlpha() / 255.f, bounds);
@@ -2090,7 +2090,7 @@ void View::onDrawScrollBars(Canvas& canvas){
         }
         // Do not draw horizontal scroll bars for round wearable devices.
     } else if ( drawVerticalScrollBar || drawHorizontalScrollBar) {
-        Rect bounds;
+        Rect& bounds = mScrollCache->mScrollBarBounds;
         ScrollBarDrawable* scrollBar = mScrollCache->scrollBar;
         if (drawHorizontalScrollBar) {
             scrollBar->setParameters(computeHorizontalScrollRange(),
@@ -5365,7 +5365,7 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
         }
         if (mScrollCache->mScrollBarDraggingState
                 == ScrollabilityCache::DRAGGING_VERTICAL_SCROLL_BAR) {
-            Rect bounds = mScrollCache->mScrollBarBounds;
+            Rect& bounds = mScrollCache->mScrollBarBounds;
             getVerticalScrollBarBounds(&bounds, nullptr);
             int range = computeVerticalScrollRange();
             int offset = computeVerticalScrollOffset();
