@@ -21,28 +21,28 @@ static std::vector<std::string> split(const std::string & path) {
 }
 
 AttributeSet::AttributeSet(){
-   mContext=nullptr;
+    mContext = nullptr;
 }
 
-AttributeSet::AttributeSet(const char*atts[],int size){
-    set(atts,size);
+AttributeSet::AttributeSet(Context*ctx,const std::string&package){
+    mContext = ctx;
+    mPackage = package;
 }
 
-void AttributeSet::setContext(Context*ctx){
-    mContext=ctx;
+void AttributeSet::setContext(Context*ctx,const std::string&package){
+    mContext = ctx;
+    mPackage = package;
 }
 
+/*@android:+id/title ,?android:attr/windowContentOverlay*/
 std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
     std::string value= property;
     size_t pos=value.find('?');
-    bool hasat=false;
-    if(pos!=std::string::npos){
-        value.erase(pos,1);  hasat=true;
+    while( (pos=value.find_first_of("@?+")) != std::string::npos ){
+        value.erase(pos,1); 
     }
-    if((pos=value.find('@'))!=std::string::npos){
-        value.erase(pos,1);  hasat=true;
-    }
-    if( hasat && (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
+    
+    if( (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
         value= pkg+":"+value;
     }
     return value;
@@ -53,7 +53,8 @@ int AttributeSet::set(const char*atts[],int size){
     for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key=strrchr(atts[i],' ');
         if(key)key++;else key=atts[i];
-        mAttrs.insert(std::make_pair<const std::string,std::string>(std::string(key),std::string(atts[i+1])));
+        mAttrs.insert(std::make_pair<const std::string,std::string>
+            (std::string(key),normalize(mPackage,std::string(atts[i+1]))));
     }
     return mAttrs.size();
 }
@@ -66,7 +67,8 @@ int AttributeSet::inherit(const AttributeSet&other){
     int inheritedCount=0;
     for(auto it=other.mAttrs.begin();it!=other.mAttrs.end();it++){
         if(mAttrs.find(it->first)==mAttrs.end()){
-           mAttrs.insert(std::make_pair<const std::string,std::string>(it->first.c_str(),it->second.c_str()));
+           mAttrs.insert(std::make_pair<const std::string,std::string>
+              (it->first.c_str(),normalize(mPackage,it->second)));
            inheritedCount++;
         }
     }
@@ -78,7 +80,8 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
         return false; 
     const char*ks=strrchr(key.c_str(),' ');
     if(ks)ks++;else ks=key.c_str();
-    mAttrs.insert(std::make_pair<const std::string,std::string>(std::string(ks),value.c_str()));
+    mAttrs.insert(std::make_pair<const std::string,std::string>
+       (std::string(ks),normalize(mPackage,value)));
     return true;
 }
 
@@ -180,7 +183,6 @@ static std::map<const std::string,int>gravitykvs={
 };
 
 int AttributeSet::getGravity(const std::string&key,int defvalue)const{
-    //return getInt(key,gravitykvs,defvalue);
     int gravity=0;
     const std::string prop=getString(key);
     std::vector<std::string>gs=split(prop);
@@ -213,6 +215,7 @@ int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
     default :return std::strtol(v.c_str(),nullptr,10);
     }
 }
+
 void AttributeSet::dump()const{
     for(auto it=mAttrs.begin();it!=mAttrs.end();it++){
        LOGD("%s = %s",it->first.c_str(),it->second.c_str());

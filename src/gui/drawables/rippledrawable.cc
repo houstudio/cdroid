@@ -41,7 +41,10 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     mState.reset(new RippleState(state.get(), this));
     mLayerState = mState;
     mDensity = 160;//Drawable::resolveDensity(res, mState.mDensity);
-    mRipple = nullptr;
+    mRipple  = nullptr;
+    mBackground = nullptr;
+    mRippleActive   = false;
+    mOverrideBounds = false;
     if (mState->mChildren.size()) {
         ensurePadding();
         refreshPadding();
@@ -401,8 +404,8 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     }
 
     for (auto ripple:mExitingRipples) {
-        int alpha=0x80*ripple->getOpacity();
-        color=(color&0x00FFFFFF)|(alpha<<24);
+        const int alpha = 0x80 * ripple->getOpacity();
+        color = (color&0x00FFFFFF) | (alpha<<24);
         canvas.set_color(color);
         ripple->draw(canvas,1.f);
     }

@@ -242,7 +242,8 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
     setAlwaysDrawnWithCacheEnabled(false);
-    mScrollingCacheEnabled=false;
+    mScrollingCacheEnabled   = false;
+    mFastScrollAlwaysVisible = false;
     setScrollingCacheEnabled(true);
     mListPadding.set(0,0,0,0);
     mVelocityTracker = nullptr;

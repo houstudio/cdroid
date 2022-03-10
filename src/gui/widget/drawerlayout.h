@@ -46,9 +46,9 @@ public:
         static constexpr int FLAG_IS_CLOSING = 0x4;
 
         int gravity = Gravity::NO_GRAVITY;
-        float onScreen;
-        bool isPeeking;
-        int openState;
+        float onScreen = .0f;
+        bool isPeeking = false;
+        int openState  = 0;
         LayoutParams(Context* c,const AttributeSet& attrs);
         LayoutParams(int width, int height);
         LayoutParams(int width, int height, int gravity);

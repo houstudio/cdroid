@@ -8,15 +8,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" >
+        android:orientation="horizontal" >
 
-        <LinearLayout
-            android:layout_weight="1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" >
-                
-            <TextView 
+        <TextView 
                 android:layout_width="wrap_content"
                 android:gravity="center_vertical"
                 android:layout_height="match_parent"
@@ -25,23 +19,15 @@
                 android:text="请输入行:"
                 />
 
-            <EditText
+        <EditText
                 android:id="@+id/editText1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:ems="10"
                 android:hint="请输入数字！"
                 android:numeric="decimal" />
-            
-        </LinearLayout>
-        
-        <LinearLayout
-            android:layout_weight="1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" >
-            
-            <TextView 
+        <TextView 
                 android:layout_width="wrap_content"
                 android:gravity="center_vertical"
                 android:layout_height="match_parent"
@@ -50,43 +36,47 @@
                 android:text="请输入列:"
                 />
 
-            <EditText
+        <EditText
                 android:id="@+id/editText2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:ems="10"
                 android:hint="请输入数字！"
-                android:numeric="decimal">
-
-                <!--requestFocus/-->
-            </EditText>
-                
-        </LinearLayout>
-        
-        <LinearLayout 
+                android:numeric="decimal"/>
+    </LinearLayout> 
+    <LinearLayout 
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal" 
             >
-            
             <Button 
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/button1"
                 android:text="一键自动生成表格"
                 />
-            
-        </LinearLayout>
-        
     </LinearLayout>
 
 
-    <TableLayout
+    <AnalogClock
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:dial="@mipmap/dial"
+        android:layout_gravity="center_horizontal"
+        android:hand_hour="@mipmap/hour"
+        android:hand_minute="@mipmap/minute"
+        android:hand_second="@mipmap/second"/>
+    <TextView
+        android:id="@id/light"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" 
-        android:id="@+id/table1">
-
-        
-    </TableLayout>
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:text="One Light for test"
+        android:textSize="32dp"
+        android:background="#123456"
+        android:drawableTop="mipmap/light_on"
+        />    
 
 </LinearLayout>

@@ -10,6 +10,7 @@ RenderNode::RenderNode(){
     mTranslationX = .0f;
     mTranslationY = .0f;
     mTranslationZ = .0f;
+    mPivotX = mPivotY = std::numeric_limits<float>::min();
     mRotation  = .0f;
     mRotationX = .0f;
     mRotationY = .0f;
@@ -143,7 +144,8 @@ float RenderNode::getPivotY()const{
 }
 
 bool RenderNode::isPivotExplicitlySet()const{
-    return true;
+    return mPivotX!=std::numeric_limits<float>::min()&&
+               mPivotY!=std::numeric_limits<float>::min();
 }
 
 void RenderNode::setLeft(float){

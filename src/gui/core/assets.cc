@@ -142,7 +142,8 @@ static bool guessExtension(ZIPArchive*pak,std::string&ioname){
 
 //"@[package:][+]id/filname"
 void Assets::parseResource(const std::string&fullResId,std::string*res,std::string*ns)const{
-    std::string relname,pkg=mName;
+    std::string pkg = mName;
+    std::string relname= fullResId;
     std::string fullid = fullResId;
 
     size_t pos=fullid.find_last_of("@+");
@@ -162,15 +163,16 @@ void Assets::parseResource(const std::string&fullResId,std::string*res,std::stri
     if(res)*res= relname;
 }
 
-ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeResid)const{
+ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeResID,std::string*outPackage)const{
     std::string package,resname;
     parseResource(fullResId,&resname,&package);
     auto it=mResources.find(package);
     ZIPArchive*pak=nullptr;
+    if(outPackage)*outPackage=package;
     if(it!=mResources.end()){//convert noextname ->extname.
         pak=it->second;
         guessExtension(pak,resname);
-        if(relativeResid) *relativeResid=resname;
+        if(relativeResID) *relativeResID=resname;
     }
     LOGV_IF(pak==nullptr&&resname.size(),"resource for [%s] is%s found",fullResId.c_str(),(pak?"":" not"));
     return pak;
@@ -178,12 +180,9 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
 
 std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid,std::string*outpkg){
     std::string resname;
-    ZIPArchive*pak=getResource(fullresid,&resname);
+    ZIPArchive*pak=getResource(fullresid,&resname,outpkg);
     std::istream*stream=pak?pak->getInputStream(resname):nullptr;
     std::unique_ptr<std::istream>is(stream);
-    if(outpkg&&pak){
-         parseResource(fullresid,nullptr,outpkg);
-    } 
     return is;
 }
 
@@ -192,7 +191,7 @@ void Assets::loadStrings(const std::string&lan){
     Json::CharReaderBuilder builder;
     Json::String errs;
     Json::Value root;
-    ZIPArchive*pak=getResource(std::string(),nullptr);
+    ZIPArchive*pak=getResource(std::string(),nullptr,nullptr);
     std::istream*zipis=pak->getInputStream(fname);
     LOGD("%s zip=%p good=%d",fname.c_str(),zipis,zipis?zipis->good():-2);
     if(zipis==nullptr||zipis->good()==false)
@@ -208,7 +207,7 @@ void Assets::loadStrings(const std::string&lan){
 RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid){
     size_t capacity=0;
     std::string resname;
-    ZIPArchive*pak=getResource(fullresid,&resname);
+    ZIPArchive*pak=getResource(fullresid,&resname,nullptr);
 
     void*zfile=pak?pak->getZipHandle(resname):nullptr;
     ZipInputStream zipis(zfile);
@@ -251,7 +250,7 @@ std::vector<std::string>Assets::getStringArray(const std::string&resname,const s
     Json::CharReaderBuilder builder;
     Json::String errs;
     std::vector<std::string>sarray;
-    ZIPArchive*pak=getResource(std::string(),nullptr);
+    ZIPArchive*pak=getResource(std::string(),nullptr,nullptr);
     std::shared_ptr<std::istream>zipis(pak->getInputStream(resname));
     bool rc=Json::parseFromStream(builder,*zipis,&d,&errs);
     LOGE_IF(rc,"%s Error %s at %d",resname.c_str(),errs.c_str());
@@ -259,21 +258,25 @@ std::vector<std::string>Assets::getStringArray(const std::string&resname,const s
 }
 
 Drawable* Assets::getDrawable(const std::string&fullresid){
-    Drawable*d=nullptr;
-    std::string resname;
-    ZIPArchive*pak=getResource(fullresid,&resname);
-    auto it=mDrawables.find(fullresid);
-    if(it!=mDrawables.end() ){
-        if(it->second.expired()==false){
-            auto cs=it->second.lock();
-            d= cs->newDrawable();
-            LOGV("%s:%p use_count=%d",fullresid.c_str(),d,it->second.use_count());
-            return d;
+    Drawable* d = nullptr;
+    std::string resname,package;
+    ZIPArchive* pak = getResource(fullresid,&resname,&package);
+    if(fullresid.empty()){
+        return d;
+    }else{
+        auto it = mDrawables.find(fullresid);
+        if( it != mDrawables.end() ){
+            if(it->second.expired()==false){
+                auto cs=it->second.lock();
+                d= cs->newDrawable();
+                LOGV("%s:%p use_count=%d",fullresid.c_str(),d,it->second.use_count());
+                return d;
+            }
+            mDrawables.erase(it);
         }
-        mDrawables.erase(it);
     }
     //wrap png to drawable,make app develop simply
-    if(resname[0]=='#'||resname[1]=='x'||resname[1]=='X'||resname.find('/')==std::string::npos){
+    if(resname[0]=='#'||resname[1]=='x'|| resname[1]=='X'||resname.find('/')==std::string::npos){
         LOGV("color %s",fullresid.c_str());
         return new ColorDrawable(Color::parseColor(resname));
     }
@@ -282,7 +285,10 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
         resname = mTheme.getString(resname.substr(5));
         d=getDrawable(resname);
     }else if(TextUtils::endWith(resname,".9.png")){
-        d=new NinePatchDrawable(this,fullresid);
+        size_t pos = fullresid.find(".");
+        const std::string ext=(pos==std::string::npos?".9.png":"");
+        d=new NinePatchDrawable(this,fullresid+ext);
+        LOGD("%s load =%p",fullresid.c_str(),d);
     }else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")){
         d=new BitmapDrawable(this,fullresid);
     }
@@ -290,10 +296,10 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
         void*zfile=pak?pak->getZipHandle(resname):nullptr;
         if(zfile){
             ZipInputStream zs(zfile);
-            d=Drawable::fromStream(this,zs,resname);
+            d=Drawable::fromStream(this,zs,resname,package);
         }else if(!resname.empty()){
             std::ifstream fs(fullresid);
-            d=Drawable::fromStream(nullptr,fs,resname);
+            d=Drawable::fromStream(nullptr,fs,resname,package);
         }
         LOGD_IF(zfile==nullptr,"drawable %s load failed",fullresid.c_str());
     }
@@ -368,8 +374,10 @@ typedef struct{
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     KVPARSER*kvp=(KVPARSER*)userData;
     if(strcmp(name,"resources")){//root node is not in KVPARSER::attrs
+        AttributeSet atts;
+        atts.set(satts);
         kvp->tags.push_back(name);
-        kvp->attrs.push_back(AttributeSet(satts));
+        kvp->attrs.push_back(atts);
         kvp->content=std::string();
     }
 }

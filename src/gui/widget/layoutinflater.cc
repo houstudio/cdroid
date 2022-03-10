@@ -86,10 +86,8 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     AttributeSet atts;
     LayoutInflater::ViewInflater inflater=LayoutInflater::getInflater(name);
     ViewGroup*parent=pd->root;
-    atts.setContext(pd->ctx);
-    for(int i=0;satts[i];i+=2){
-        atts.add(satts[i],AttributeSet::normalize(pd->package,satts[i+1]));
-    }
+    atts.setContext(pd->ctx,pd->package);
+    atts.set(satts);
     if(pd->views.size())
         parent=dynamic_cast<ViewGroup*>(pd->views.back());
     if(strcmp(name,"merge")==0){

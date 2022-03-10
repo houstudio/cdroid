@@ -200,11 +200,12 @@ typedef struct{
 
 static void startTag(void *userData, const XML_Char *name, const XML_Char **satts){
     KeyboardData*pd=(KeyboardData*)userData;
-    AttributeSet atts(satts);
+    AttributeSet atts;
     Context*context=pd->context;
     Keyboard* keyboard=pd->keyboard;
     Keyboard::Row*row =pd->row;
     int sz;
+    atts.set(satts);
     if(0==strcmp(name,"Keyboard")){
         sz= getDimensionOrFraction(atts,"horizontalGap",pd->displayWidth,keyboard->getHorizontalGap());
         keyboard->setHorizontalGap(sz);

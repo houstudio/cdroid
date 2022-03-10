@@ -20,9 +20,10 @@ static void startAnimation(void *userData, const XML_Char *xname, const XML_Char
     int*index=(int*)parseParams[0];
     ANIMDATA*ads=(ANIMDATA*)parseParams[1];
     Context*c=(Context*)parseParams[2];
-    AttributeSet attrs=AttributeSet(satts);
+    AttributeSet attrs;
     std::string name=xname;
     Animation*anim=nullptr;
+    attrs.set(satts);
     if (0==name.compare("set")) {
         anim = new AnimationSet(c, attrs);
         //createAnimationFromXml(c, parser, (AnimationSet)anim, attrs);
@@ -98,9 +99,10 @@ Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
 
 static void startPolator(void *userData, const XML_Char *xname, const XML_Char **satts){
     Interpolator**interpolator=(Interpolator**)userData;
-    AttributeSet attrs(satts);
+    AttributeSet attrs;
     std::string name=xname;
     Context*ctx;
+    attrs.set(satts);
     if (0==name.compare("linearInterpolator")) {
         *interpolator = new LinearInterpolator();
     } else if (0==name.compare("accelerateInterpolator")) {

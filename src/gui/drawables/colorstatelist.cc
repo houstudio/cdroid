@@ -146,11 +146,13 @@ bool ColorStateList::hasState(int state)const{
 struct ColorsParserData{
     ColorStateList colors;
     Context*ctx;
+    std::string package;
 };
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **props){
     ColorsParserData*cd=(ColorsParserData*)userData;
-    AttributeSet atts(props);
+    AttributeSet atts(cd->ctx,cd->package);
+    atts.set(props);
     if(strcmp(name,"item")==0){
         std::vector<int>states;
         int color=cd->ctx->getColor(atts.getString("color"));
@@ -159,7 +161,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     }
 }
 
-ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const std::string&resname){
+ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const std::string&resname,const std::string&package){
     int done=0;
     char buf[256];
     XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
@@ -189,8 +191,9 @@ ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){
         std::ifstream fs(resname);
         cs=fromStream(ctx,fs,resname);
     }else{
-        std::unique_ptr<std::istream>is=ctx->getInputStream(resname);
-        cs=fromStream(ctx,*is,resname);
+        std::string package;
+        std::unique_ptr<std::istream>is=ctx->getInputStream(resname,&package);
+        cs=fromStream(ctx,*is,resname,package);
     }
     return cs;
 }

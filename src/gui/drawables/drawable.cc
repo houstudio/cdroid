@@ -267,6 +267,7 @@ public:
     Drawable*drawable;
     XML_Parser parser;
     Context*ctx;
+    std::string package;
     std::string resourceFile;
     ParseData(){
         drawable=nullptr;
@@ -362,19 +363,19 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     auto it=drawableParsers.find(name);
     if(it!=drawableParsers.end()){
         DrawableParser parser=it->second;
+        item.props.setContext(pd->ctx,pd->package);
         item.props.set(satts);
-        item.props.setContext(pd->ctx);
         item.name=name;
         item.line=XML_GetCurrentLineNumber(pd->parser);
         item.drawable=parser(pd->ctx,item.props);
         LOGV("created drawable %s:%p props:%d",name,item.drawable,item.props.size());
     }
     if(pd->isTopShape()){//if current drawable is shapedrawable
-        AttributeSet atts(satts);
+        AttributeSet atts(pd->ctx,pd->package);
         const ParseItem &item=pd->items.back();
         ShapeDrawable*sd=(ShapeDrawable*)item.drawable;
         Shape*shape=sd->getShape();
-        atts.setContext(pd->ctx);
+        atts.set(satts);
         LOGV("drawable %p parse shape %p's props %s",item.drawable,shape,name);
         if(strcmp(name,"size")==0){
             int w=atts.getDimensionPixelSize("width");
@@ -465,7 +466,7 @@ static void endElement(void *userData, const XML_Char *name){
     }
 }
 
-Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string& resname){
+Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string& resname,const std::string&package){
     ParseData pd;
     int rdlen;
     char buf[256];
@@ -474,9 +475,10 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
     std::string basePath=resname.substr(0,resname.find_last_of("/"));
     basePath=basePath.substr(0,basePath.find_last_of("/"));
 
-    pd.parser=parser;
-    pd.ctx=ctx;
-    pd.resourceFile=resname;
+    pd.parser = parser;
+    pd.ctx = ctx;
+    pd.package = package;
+    pd.resourceFile = resname;
     XML_SetUserData(parser,&pd);
     pd.items.clear();
     XML_SetElementHandler(parser, startElement, endElement);
@@ -500,10 +502,11 @@ Drawable*Drawable::inflate(Context*ctx,const std::string& resname){
     Drawable*d=nullptr;
     if(ctx==nullptr){
         std::ifstream fs(resname);
-        if(fs.good())d=fromStream(ctx,fs,resname);
+        if(fs.good())d=fromStream(ctx,fs,resname,"");
     }else if(!resname.empty()){
-        std::unique_ptr<std::istream>is=ctx->getInputStream(resname);
-        d=fromStream(ctx,*is,resname);
+        std::string package;
+        std::unique_ptr<std::istream>is=ctx->getInputStream(resname,&package);
+        d=fromStream(ctx,*is,resname,package);
     }
     return d;
 }

@@ -23,7 +23,14 @@
     </RelativeLayout>
     <TextView android:id="@+id/WebView01" 
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_below="@id/address"
         android:text="Text view ..."/> 
+    <AnalogClock
+        android:layout_width="320dp"
+        android:layout_height="320dp"
+        android:dial="@mipmap/dial"
+        android:hand_hour="@mipmap/hour"
+        android:hand_minute="@mipmap/minute"
+        android:hand_second="@mipmap/second"/>
 </LinearLayout>

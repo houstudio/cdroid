@@ -1512,6 +1512,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
         clipSaveCount++;
         canvas.rectangle(mScrollX + mPaddingLeft, mScrollY + mPaddingTop,
                 mRight-mLeft-mPaddingLeft - mPaddingRight, mBottom-mTop -mPaddingTop- mPaddingBottom);
+        canvas.clip();
     }
 
     // We will draw our child's animation, let's reset the flag
@@ -2526,6 +2527,15 @@ void ViewGroup::dispatchDetachedFromWindow(){
         view->dispatchDetachedFromWindow();
     }
     View::dispatchDetachedFromWindow();
+}
+
+void ViewGroup::internalSetPadding(int left, int top, int width, int height){
+    View::internalSetPadding(left,top,width,height);
+    if ((mPaddingLeft | mPaddingTop | mPaddingRight | mPaddingBottom) != 0) {
+         mGroupFlags |= FLAG_PADDING_NOT_NULL;
+    } else {
+         mGroupFlags &= ~FLAG_PADDING_NOT_NULL;
+    }
 }
 
 bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {

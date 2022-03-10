@@ -1393,6 +1393,7 @@ int DrawerLayout::ViewDragCallback::clampViewPositionVertical(View& child, int t
 DrawerLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
   :ViewGroup::MarginLayoutParams(c, attrs){
     gravity = attrs.getInt(0, Gravity::NO_GRAVITY);
+    onScreen =.0f;
 }
 
 DrawerLayout::LayoutParams::LayoutParams(int width, int height)

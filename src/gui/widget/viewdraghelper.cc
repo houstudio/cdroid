@@ -22,6 +22,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mPointersDown = INVALID_POINTER;
     sInterpolator = new VDInterpolator();
 
+    mDragState = STATE_IDLE;
     mVelocityTracker = nullptr;
     mTouchSlop = vc.getScaledTouchSlop();
     mMaxVelocity = vc.getScaledMaximumFlingVelocity();

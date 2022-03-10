@@ -8,8 +8,14 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     mForceSoftware = forceSoftware;
     mStartingX = startingX;
     mStartingY = startingY;
-    mUsingProperties =false;
-    mHasFinishedExit =false;
+    mUsingProperties = false;
+    mHasFinishedExit = false;
+    mStartRadius  = .0f;
+    mTargetRadius = .0f;
+    mOpacity = .0f;
+    mTweenRadius = .0f;
+    mClampedStartingX = .0f;
+    mClampedStartingY = .0f;
     // Take 60% of the maximum of the width and height, then divided half to get the radius.
     mStartRadius = std::max(bounds.width, bounds.height) * 0.3f;
     clampStartingPosition();
@@ -26,7 +32,7 @@ RippleForeground::~RippleForeground(){
 
 void RippleForeground::onTargetRadiusChanged(float targetRadius){
     clampStartingPosition();
-    LOGD("radius=%.2f",targetRadius);
+    LOGD("radius=%.2f anims=%d",targetRadius,mRunningSwAnimators.size());
     for (auto animator:mRunningSwAnimators) {
         animator->removeListener(mAnimationListener);
         animator->end();

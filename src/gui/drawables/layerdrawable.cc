@@ -75,13 +75,16 @@ void LayerDrawable::ChildDrawable::applyDensityScaling(int sourceDensity, int ta
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 LayerDrawable::LayerState::LayerState(){
-    mDensity=-1;
-    mPaddingTop  =mPaddingBottom=-1;
-    mPaddingLeft =mPaddingRight =-1;
-    mPaddingStart=mPaddingEnd   =-1;
+    mDensity = -1;
+    mPaddingTop  = mPaddingBottom= -1;
+    mPaddingLeft = mPaddingRight = -1;
+    mPaddingStart= mPaddingEnd   = -1;
     mPaddingMode = PADDING_MODE_NEST;
-    mAutoMirrored=false;
-    mOpacityOverride =PixelFormat::UNKNOWN;
+
+    mOpacity = 0xFF;
+    mAutoMirrored= false;
+    mCheckedOpacity  = false;
+    mOpacityOverride = PixelFormat::UNKNOWN;
 }
 
 LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner):LayerState(){

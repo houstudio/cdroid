@@ -13,6 +13,9 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mScaledTouchSlop = ViewConfiguration::get(context).getScaledTouchSlop();
     mScrollBarStyle  = listView->getScrollBarStyle();
 
+    mEnabled  = false;
+    mLongList = false;
+    mAlwaysShow = false;
     mUpdatingLayout  = false;
     mScrollCompleted = true;
     mState = STATE_VISIBLE;

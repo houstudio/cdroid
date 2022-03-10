@@ -25,7 +25,7 @@ private:
     std::map<const std::string,COMPLEXCOLOR>mColors;
     void parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value);
-    ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid)const;
+    ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;

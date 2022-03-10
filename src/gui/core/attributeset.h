@@ -5,12 +5,13 @@
 namespace cdroid{
 class AttributeSet{
 private:
+    std::string mPackage;
     class Context*mContext;
     std::map<const std::string,std::string>mAttrs;
 public:
     AttributeSet();
-    AttributeSet(const char*atts[],int size=0);
-    void setContext(Context*);
+    AttributeSet(Context*ctx,const std::string&package);
+    void setContext(Context*,const std::string&package);
     bool add(const std::string&,const std::string&value);
     bool hasAttribute(const std::string&key)const;
     int  size()const;

@@ -39,7 +39,8 @@ public:
     bool hasState(int state)const ;
     void dump()const;
     static ColorStateList*valueOf(int color);
-    static ColorStateList*fromStream(Context*ctx,std::istream&is,const std::string&resname);
+    static ColorStateList*fromStream(Context*ctx,std::istream&is,const std::string&resname,
+	          const std::string&package=std::string());
     static ColorStateList*inflate(Context*ctx,const std::string&resname);
 };
 

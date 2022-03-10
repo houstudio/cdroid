@@ -11,7 +11,7 @@
   <id name="editText1">0x00002718</id>
   <id name="editText2">0x00002719</id>
   <id name="button1">0x0000271a</id>
-  <id name="table1">0x0000271b</id>
+  <id name="light">0x0000271b</id>
   <id name="tv1">0x0000271c</id>
   <id name="et1">0x0000271d</id>
   <id name="tv2">0x0000271e</id>

@@ -3,7 +3,7 @@
     <ImageButton cdroid:id="@+id/increment"
         cdroid:layout_width="fill_parent"
         cdroid:layout_height="wrap_content"
-        cdroid:background="drawable/numberpicker_up_btn"
+        cdroid:background="@drawable/numberpicker_up_btn"
         cdroid:paddingTop="22dip"
         cdroid:paddingBottom="22dip"
         cdroid:contentDescription="@string/number_picker_increment_button" />
@@ -14,11 +14,11 @@
         cdroid:textAppearance="@style/TextAppearance.Large.Inverse.NumberPickerInputText"
         cdroid:gravity="center"
         cdroid:singleLine="true"
-        cdroid:background="drawable/numberpicker_input" />
-    <ImageButton cdroid:id="@+cdroid:id/decrement"
+        cdroid:background="@drawable/numberpicker_input" />
+    <ImageButton cdroid:id="@+id/decrement"
         cdroid:layout_width="fill_parent"
         cdroid:layout_height="wrap_content"
-        cdroid:background="drawable/numberpicker_down_btn"
+        cdroid:background="@drawable/numberpicker_down_btn"
         cdroid:paddingTop="22dip"
         cdroid:paddingBottom="22dip"
         cdroid:contentDescription="@string/number_picker_decrement_button" />

@@ -873,7 +873,7 @@ bool View::isOpaque()const{
 }
 
 void View::computeOpaqueFlags(){
-    if (mBackground  && mBackground->getOpacity() == PixelFormat::OPAQUE) {
+    if (mBackground && mBackground->getOpacity() == PixelFormat::OPAQUE) {
         mPrivateFlags |= PFLAG_OPAQUE_BACKGROUND;
     } else {
         mPrivateFlags &= ~PFLAG_OPAQUE_BACKGROUND;

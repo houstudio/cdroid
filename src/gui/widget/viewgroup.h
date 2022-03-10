@@ -167,6 +167,7 @@ protected:
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     bool dispatchVisibilityAggregated(bool isVisible);
     void dispatchDetachedFromWindow()override;
+    void internalSetPadding(int left, int top, int width, int height)override;
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);

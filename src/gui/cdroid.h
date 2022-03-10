@@ -1,5 +1,6 @@
 #include <cdtypes.h>
 #include <widget/viewgroup.h>
+#include <views/viewoverlay.h>
 #include <widget/viewpager.h>
 #include <widget/simplemonthview.h>
 #include <widget/linearlayout.h>
