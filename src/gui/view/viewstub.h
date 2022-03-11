@@ -1,4 +1,4 @@
-#include <widget/view.h>
+#include <view/view.h>
 namespace cdroid{
 
 class ViewStub:public View{

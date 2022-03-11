@@ -15,28 +15,32 @@ typedef struct{
    AttributeSet attr;
 }ANIMDATA;
 
+typedef struct{
+   Context*context;
+   std::string package;
+   int index;
+   ANIMDATA data[8];
+}ANIMPARSERDATA;
+
 static void startAnimation(void *userData, const XML_Char *xname, const XML_Char **satts){
-    void** parseParams=(void**)userData;
-    int*index=(int*)parseParams[0];
-    ANIMDATA*ads=(ANIMDATA*)parseParams[1];
-    Context*c=(Context*)parseParams[2];
-    AttributeSet attrs;
+    ANIMPARSERDATA*pd=(ANIMPARSERDATA*)userData;
+    AttributeSet attrs(pd->context,pd->package);
     std::string name=xname;
     Animation*anim=nullptr;
     attrs.set(satts);
     if (0==name.compare("set")) {
-        anim = new AnimationSet(c, attrs);
+        anim = new AnimationSet(pd->context, attrs);
         //createAnimationFromXml(c, parser, (AnimationSet)anim, attrs);
     } else if (0==name.compare("alpha")) {
-        anim = new AlphaAnimation(c, attrs);
+        anim = new AlphaAnimation(pd->context, attrs);
     } else if (0==name.compare("scale")) {
-        anim = new ScaleAnimation(c, attrs);
+        anim = new ScaleAnimation(pd->context, attrs);
     }  else if (0==name.compare("rotate")) {
-        anim = new RotateAnimation(c, attrs);
+        anim = new RotateAnimation(pd->context, attrs);
     }  else if (0==name.compare("translate")) {
-        anim = new TranslateAnimation(c, attrs);
+        anim = new TranslateAnimation(pd->context, attrs);
     } else if (0==name.compare("cliprect")) {
-        anim = new ClipRectAnimation(c, attrs);
+        anim = new ClipRectAnimation(pd->context, attrs);
     } else {
         LOGE("Unknown animation name: %s" ,xname);
     }
@@ -49,15 +53,14 @@ Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resi
     int rdlen;
     char buf[256];
     int index=0;
-    ANIMDATA ads[8];
+    ANIMPARSERDATA pd;
     void*parseParams[2];
-    parseParams[0]=&index;
-    parseParams[1]=(void*)ads;
-    parseParams[2]=context;
+    pd.index = 0;
+    pd.context = context;
     XML_Parser parser=XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startAnimation, endAnimation);
-    XML_SetUserData(parser,(void*)parseParams);
-    std::unique_ptr<std::istream>stream=context->getInputStream(resid);
+    XML_SetUserData(parser,(void*)&pd);
+    std::unique_ptr<std::istream>stream=context->getInputStream(resid,&pd.package);
     do {
         stream->read(buf,sizeof(buf));
         rdlen=stream->gcount();

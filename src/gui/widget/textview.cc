@@ -15,7 +15,6 @@
  */
 #include <widget/textview.h>
 #include <widget/measurespec.h>
-#include <gravity.h>
 #include <app.h>
 #include <layout.h>
 #include <cdlog.h>

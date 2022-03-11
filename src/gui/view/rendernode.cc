@@ -1,4 +1,4 @@
-#include <widget/rendernode.h>
+#include <view/rendernode.h>
 namespace cdroid{
 
 RenderNode::RenderNode(){

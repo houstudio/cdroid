@@ -1,6 +1,6 @@
 #ifndef __FOCUS_FINDER_H__
 #define __FOCUS_FINDER_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 namespace cdroid{
 
 class FocusFinder{

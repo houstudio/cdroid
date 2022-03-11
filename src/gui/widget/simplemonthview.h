@@ -1,6 +1,6 @@
 #ifndef __SIMPLE_MONTHVIEW_H__
 #define __SIMPLE_MONTHVIEW_H__
-#include <widget/view.h>
+#include <view/view.h>
 #include <core/calendar.h>
 namespace cdroid{
 

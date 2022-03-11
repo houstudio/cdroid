@@ -1,6 +1,5 @@
 #include <animation/animationhandler.h>
 #include <animation/objectanimator.h>
-#include <core/choreographer.h>
 #include <core/systemclock.h>
 
 namespace cdroid{

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <animation/animationutils.h>
 #include <animation/layoutanimationcontroller.h>
 

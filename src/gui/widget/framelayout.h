@@ -1,13 +1,6 @@
-/*************************************************************************
-	> File Name: ../../src/gui/widget/framelayout.h
-	> Author: 
-	> Mail: 
-	> Created Time: Wed 06 Jan 2021 05:07:47 AM UTC
- ************************************************************************/
-
 #ifndef __FRAMELAYOUT_H__
 #define __FRAMELAYOUT_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 namespace cdroid{
 
 class FrameLayout:public ViewGroup{

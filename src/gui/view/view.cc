@@ -1,6 +1,6 @@
-#include <widget/view.h>
-#include <widget/viewgroup.h>
-#include <views/viewoverlay.h>
+#include <view/view.h>
+#include <view/viewgroup.h>
+#include <view/viewoverlay.h>
 #include <widget/measurespec.h>
 #include <widget/roundscrollbarrenderer.h>
 #include <widget/edgeeffect.h>
@@ -73,6 +73,7 @@ public:
     View::OnTouchListener mOnTouchListener;
     View::OnHoverListener mOnHoverListener;
     View::OnGenericMotionListener mOnGenericMotionListener;
+    std::vector<View::OnUnhandledKeyEventListener> mUnhandledKeyListeners;
     //View::OnDragListener mOnDragListener;
 };
 
@@ -334,6 +335,8 @@ void View::initView(){
     mAttachInfo  = nullptr;
     mListenerInfo= nullptr;
     mOverlay  = nullptr;
+    mAnimator = nullptr;
+    mStateListAnimator = nullptr;
 
     mPerformClick = nullptr;
     mPendingCheckForTap = nullptr;
@@ -350,6 +353,7 @@ void View::initView(){
     mUserPaddingStart = mUserPaddingEnd = UNDEFINED_PADDING;
     mUserPaddingRight = mUserPaddingLeft= UNDEFINED_PADDING;
 
+    mLastIsOpaque = false;
     mHasPerformedLongPress = false;
     mInContextButtonPress  = false;
     mIgnoreNextUpEvent     = false;
@@ -2447,13 +2451,10 @@ void View::draw(Canvas&canvas){
         return;
     }
 
-    /*
-     * Here we do the full fledged routine...
+    /* Here we do the full fledged routine...
      * (this is an uncommon case where speed matters less,
      * this is why we repeat some of the tests that have been
-     * done above)
-     *////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+     * done above)*/
 
     bool drawTop = false;
     bool drawBottom = false;
@@ -2518,7 +2519,6 @@ void View::draw(Canvas&canvas){
     dispatchDraw(canvas);
 
     // Step 5, draw the fade effect and restore layers
-    LOGV("drawTB=%d,%d drawLR=%d,%d fadeHeight=%f length=%d",drawTop,drawBottom,drawLeft,drawRight,fadeHeight,length);
     /*if (drawTop) {
         matrix.setScale(1, fadeHeight * topFadeStrength);
         matrix.postTranslate(left, top);
@@ -3268,7 +3268,7 @@ bool View::verifyDrawable(Drawable*who)const{
 void View::jumpDrawablesToCurrentState(){
     if (mBackground) mBackground->jumpToCurrentState();
 
-    //if (mStateListAnimator) mStateListAnimator->jumpToCurrentState();
+    if (mStateListAnimator) mStateListAnimator->jumpToCurrentState();
 
     if (mDefaultFocusHighlight)mDefaultFocusHighlight->jumpToCurrentState();
 
@@ -3278,11 +3278,11 @@ void View::jumpDrawablesToCurrentState(){
 std::vector<int>View::onCreateDrawableState()const{
     int viewStateIndex = 0;
 
-    if(mPrivateFlags & PFLAG_PRESSED)          viewStateIndex =StateSet::VIEW_STATE_PRESSED;
-    if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
+    if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex =StateSet::VIEW_STATE_PRESSED;
     if(mPrivateFlags & PFLAG_SELECTED) viewStateIndex |= StateSet::VIEW_STATE_SELECTED;
-    if ((mPrivateFlags & PFLAG_ACTIVATED) != 0) viewStateIndex |= StateSet::VIEW_STATE_ACTIVATED;
+    if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
+    if((mPrivateFlags & PFLAG_ACTIVATED) != 0) viewStateIndex |= StateSet::VIEW_STATE_ACTIVATED;
     //LOGV("**** %p:%d isFocused=%d enabled=%d pressed=%d",this,getId(),isFocused(),isEnabled(),isPressed());
     
     if(mPrivateFlags & PFLAG_HOVERED ) viewStateIndex |= StateSet::VIEW_STATE_HOVERED;
@@ -3321,6 +3321,8 @@ void View::drawableStateChanged(){
             changed |= d->setState(state) && mScrollCache->state!=ScrollabilityCache::OFF;
         } 
     }
+
+    if (mStateListAnimator) mStateListAnimator->setState(state);
 
     if(changed)   invalidate(true);
 }
@@ -4385,9 +4387,9 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
-              || (fullInvalidate /*&& isOpaque() != mLastIsOpaque*/)) {
+              || (fullInvalidate && isOpaque() != mLastIsOpaque)) {
         if (fullInvalidate) {
-            //mLastIsOpaque = isOpaque();
+            mLastIsOpaque = isOpaque();
             mPrivateFlags &= ~PFLAG_DRAWN;
         }
 
@@ -4989,6 +4991,49 @@ bool View::dispatchKeyEvent(KeyEvent&event){
     const bool result = event.dispatch(this,(mAttachInfo? &mAttachInfo->mKeyDispatchState : nullptr),this);
     LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),result);
     return result;
+}
+
+View* View::dispatchUnhandledKeyEvent(KeyEvent& evt) {
+    if (onUnhandledKeyEvent(evt)) {
+        return this;
+    }
+    return nullptr;
+}
+
+bool View::onUnhandledKeyEvent(KeyEvent& event) {
+    if (mListenerInfo != nullptr){
+        for (int i = mListenerInfo->mUnhandledKeyListeners.size() - 1; i >= 0; --i) {
+            auto ls=mListenerInfo->mUnhandledKeyListeners.at(i);
+            if (ls && ls(*this, event)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool View::hasUnhandledKeyListener()const{
+    return mListenerInfo && mListenerInfo->mUnhandledKeyListeners.size();
+}
+
+void View::addOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener) {
+    std::vector<OnUnhandledKeyEventListener>& listeners = getListenerInfo()->mUnhandledKeyListeners;
+    listeners.push_back(listener);
+    if (listeners.size() == 1 && mParent) {
+        mParent->incrementChildUnhandledKeyListeners();
+    }
+}
+
+void View::removeOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener) {
+    if (mListenerInfo && mListenerInfo->mUnhandledKeyListeners.size()) {
+        std::vector<OnUnhandledKeyEventListener>& listeners=mListenerInfo->mUnhandledKeyListeners;
+        auto it=std::find(listeners.begin(),listeners.end(),listener);
+        if(it!=listeners.end())
+            listeners.erase(it);
+        if (listeners.size()==0) {
+            mParent->decrementChildUnhandledKeyListeners();
+        }
+    }
 }
 
 /** This method is the last chance for the focused view and its ancestors to
@@ -6153,6 +6198,25 @@ void View::setAlpha(float a){
     }
 }
 
+StateListAnimator* View::getStateListAnimator()const{
+    return mStateListAnimator;
+}
+
+void View::setStateListAnimator(StateListAnimator*stateListAnimator){
+    if (mStateListAnimator == stateListAnimator) {
+        return;
+    }
+    if (mStateListAnimator != nullptr) {
+        mStateListAnimator->setTarget(nullptr);
+    }
+    mStateListAnimator = stateListAnimator;
+    if (stateListAnimator != nullptr) {
+        stateListAnimator->setTarget(this);
+        if (isAttachedToWindow()) {
+            stateListAnimator->setState(getDrawableState());
+        }
+    }    
+}
 
 LayoutParams*View::getLayoutParams(){
     return mLayoutParams;

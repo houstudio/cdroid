@@ -1,7 +1,7 @@
 #include <drawables/ninepatchdrawable.h>
-#include <gravity.h>
 #include <fstream>
 #include <cdlog.h>
+
 namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 

@@ -2,7 +2,6 @@
 #include <cdtypes.h>
 #include <cdgraph.h>
 #include <core/canvas.h>
-#include <core/gravity.h>
 #include <sys/time.h>
 #include <core/assets.h>
 #include <cdinput.h>

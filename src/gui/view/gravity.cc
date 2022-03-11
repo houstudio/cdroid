@@ -1,5 +1,4 @@
-#include <gravity.h>
-#include <widget/view.h>
+#include <view/view.h>
 #include <iostream>
 #include <sstream>
 #include <cdlog.h>

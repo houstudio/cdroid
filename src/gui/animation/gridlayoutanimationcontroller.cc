@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <animation/gridlayoutanimationcontroller.h>
 
 namespace cdroid{

@@ -1,5 +1,4 @@
 #include <widget/numberpicker.h>
-#include <widget/layoutinflater.h>
 #include <widget/R.h>
 #include <color.h>
 #include <textutils.h>

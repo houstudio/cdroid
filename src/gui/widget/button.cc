@@ -1,5 +1,5 @@
 #include <widget/button.h>
-#include <gravity.h>
+
 namespace cdroid{
 
 DECLARE_WIDGET2(Button,"cdroid:attr/buttonStyle")

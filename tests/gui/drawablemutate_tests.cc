@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <core/gravity.h>
 #include <core/assets.h>
 #include <ngl_os.h>
 #include <ngl_timer.h>

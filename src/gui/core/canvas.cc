@@ -8,7 +8,7 @@
 #include <wordbreak.h>
 #include <linebreak.h>
 #include <textutils.h>
-#include <gravity.h>
+#include <view/gravity.h>
 #include <windowmanager.h>
 #include <cdgraph.h>
 using namespace std;

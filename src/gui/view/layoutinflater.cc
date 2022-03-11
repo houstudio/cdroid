@@ -1,5 +1,5 @@
-#include <widget/layoutinflater.h>
-#include <widget/viewgroup.h>
+#include <view/layoutinflater.h>
+#include <view/viewgroup.h>
 #include <cdroid.h>
 #include <expat.h>
 #include <cdlog.h>

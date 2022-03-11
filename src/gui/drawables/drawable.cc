@@ -1,7 +1,6 @@
 #include <color.h>
 #include <drawables.h>
 #include <expat.h>
-#include <gravity.h>
 #include <fstream>
 #include <cdlog.h>
 #include <string.h>

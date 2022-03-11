@@ -7,7 +7,7 @@
 
 #ifndef __RECYCLEBIN_H__
 #define __RECYCLEBIN_H__
-#include <widget/view.h>
+#include <view/view.h>
 #include <core/sparsearray.h>
 namespace cdroid{
 

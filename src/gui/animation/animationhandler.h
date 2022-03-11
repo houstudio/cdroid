@@ -1,8 +1,9 @@
 #ifndef __ANIMATION_HANDLER__
 #define __ANIMATION_HANDLER__
-#include <core/choreographer.h>
-#include <core/looper.h>
 #include <map>
+#include <core/looper.h>
+#include <view/choreographer.h>
+
 namespace cdroid{
 class ObjectAnimator;
 class AnimationHandler:EventHandler{

@@ -1,7 +1,5 @@
 #include <drawables/layerdrawable.h>
 #include <drawables/ninepatchdrawable.h>
-
-#include <gravity.h>
 #include <cdlog.h>
 #include <limits.h>
 

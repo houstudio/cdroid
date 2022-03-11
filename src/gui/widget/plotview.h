@@ -1,6 +1,6 @@
 #ifndef __PLOT_VIEW_H__
 #define __PLOT_VIEW_H__
-#include <widget/view.h>
+#include <view/view.h>
 class plstream;
 namespace cdroid{
 

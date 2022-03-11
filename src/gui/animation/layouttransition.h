@@ -2,7 +2,7 @@
 #define __LAYOUT_TRANSITION_H__
 #include <map>
 #include <functional>
-#include <widget/view.h>
+#include <view/view.h>
 #include <animation/animator.h>
 
 namespace cdroid{

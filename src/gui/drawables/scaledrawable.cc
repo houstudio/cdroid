@@ -1,5 +1,5 @@
 #include <drawables/scaledrawable.h>
-#include <gravity.h>
+
 namespace cdroid{
 
 #define MAX_LEVEL 10000

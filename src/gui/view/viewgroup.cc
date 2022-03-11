@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <widget/measurespec.h>
-#include <views/viewoverlay.h>
+#include <view/viewoverlay.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
 #include <cdlog.h>
@@ -108,7 +108,8 @@ void ViewGroup::initGroup(){
     mFirstTouchTarget = nullptr;
     mOnHierarchyChangeListener = nullptr;
     mLayoutAnimationController = nullptr;
-    mChildCountWithTransientState=0;
+    mChildCountWithTransientState= 0;
+    mChildUnhandledKeyListeners  = 0;
     mInvalidRgn=Region::create();
     mChildTransformation =nullptr;
     mInvalidationTransformation =nullptr;
@@ -1131,6 +1132,56 @@ bool ViewGroup::checkLayoutParams(const LayoutParams* p)const{
 
 void ViewGroup::onSetLayoutParams(View* child,const LayoutParams* layoutParams){
     requestLayout();
+}
+
+bool ViewGroup::hasUnhandledKeyListener()const{
+    return (mChildUnhandledKeyListeners > 0) || View::hasUnhandledKeyListener();
+}
+
+void ViewGroup::incrementChildUnhandledKeyListeners(){
+    mChildUnhandledKeyListeners += 1;
+    if (mChildUnhandledKeyListeners == 1) {
+        if (mParent) {
+            mParent->incrementChildUnhandledKeyListeners();
+        }
+    }
+}
+
+void ViewGroup::decrementChildUnhandledKeyListeners(){
+    mChildUnhandledKeyListeners -= 1;
+    if (mChildUnhandledKeyListeners == 0) {
+        if (mParent) {
+            mParent->decrementChildUnhandledKeyListeners();
+        }
+    }
+}
+
+View* ViewGroup::dispatchUnhandledKeyEvent(KeyEvent& evt){
+    if (!hasUnhandledKeyListener()) {
+        return nullptr;
+    }
+    std::vector<View*> orderedViews = buildOrderedChildList();
+    if (orderedViews.size()) {
+        for (int i = orderedViews.size() - 1; i >= 0; --i) {
+            View* v = orderedViews.at(i);
+            View* consumer = v->dispatchUnhandledKeyEvent(evt);
+            if (consumer != nullptr) {
+                return consumer;
+            }
+        }
+    } else {
+        for (int i = getChildCount() - 1; i >= 0; --i) {
+            View* v = getChildAt(i);
+            View* consumer = v->dispatchUnhandledKeyEvent(evt);
+            if (consumer != nullptr) {
+                return consumer;
+            }
+        }
+    }
+    if (onUnhandledKeyEvent(evt)) {
+        return this;
+    }
+    return nullptr;
 }
 
 void ViewGroup::measureChildren(int widthMeasureSpec, int heightMeasureSpec){

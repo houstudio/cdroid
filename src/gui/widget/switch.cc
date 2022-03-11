@@ -1,7 +1,7 @@
 #include <widget/switch.h>
 #include <core/soundeffect.h>
 #include <core/mathutils.h>
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 
 namespace cdroid{
 

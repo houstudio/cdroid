@@ -66,7 +66,6 @@ TEST_F(LISTVIEW,GridView){
     g->setNumColumns(2);
     g->setAdapter(adapter);
     adapter->notifyDataSetChanged();
-    w->addView(g);
     g->setSelector(new ColorDrawable(0x8800FF00));
     g->setSelection(2);
     app.exec();

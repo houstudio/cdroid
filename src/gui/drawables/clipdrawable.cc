@@ -1,7 +1,5 @@
 #include <drawables/clipdrawable.h>
-#include <gravity.h>
 #include <cdlog.h>
-
 
 namespace cdroid{
 

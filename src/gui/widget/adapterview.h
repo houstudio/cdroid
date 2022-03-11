@@ -1,13 +1,6 @@
-/*************************************************************************
-	> File Name: widget/adapterview.h
-	> Author: 
-	> Mail: 
-	> Created Time: Tue 16 Mar 2021 02:24:12 PM UTC
- ************************************************************************/
-
 #ifndef __ADAPTER_VIEW_H__
 #define __ADAPTER_VIEW_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <widget/adapter.h>
 namespace cdroid{
 class AdapterView:public ViewGroup{

@@ -1,5 +1,4 @@
 #include <drawables/bitmapdrawable.h>
-#include <gravity.h>
 #include <fstream>
 #include <app.h>
 #include <cdlog.h>

@@ -1,5 +1,5 @@
 #include <layout.h>
-#include <gravity.h>
+#include <view/gravity.h>
 #include <wordbreak.h>
 #include <linebreak.h>
 #include <fribidi.h>

@@ -2,7 +2,6 @@
 #include <cdroid.h>
 #include <ngl_os.h>
 #include <fstream>
-#include <widget/layoutinflater.h>
 
 static const char*texts[]={"Creates 中国智造"," the specified format and dimensions.",
             "Initially the surface contents"," are set to 0.","(Specifically, within each pixel,",

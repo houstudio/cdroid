@@ -1,5 +1,6 @@
-#pragma once
-#include <widget/viewgroup.h>
+#ifndef __RELATIVE_LAYOUT_H__
+#define __RELATIVE_LAYOUT_H__
+#include <view/viewgroup.h>
 #include <list>
 namespace cdroid{
 
@@ -153,3 +154,4 @@ public:
 };
 
 }//endof namespace
+#endif //__RELATIVE_LAYOUT_H____RELATIVE_LAYOUT_H__

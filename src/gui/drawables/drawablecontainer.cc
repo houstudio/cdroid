@@ -1,5 +1,4 @@
 #include <drawables/drawablecontainer.h>
-#include <gravity.h>
 #include <cdlog.h>
 namespace cdroid{
 

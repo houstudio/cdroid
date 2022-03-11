@@ -3,7 +3,7 @@
 #include <widget/textview.h>
 #include <widget/imageview.h>
 #include <widget/imagebutton.h>
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <widget/actionbar.h>
 namespace cdroid{
 typedef View ActionMenuView;

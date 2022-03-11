@@ -1,5 +1,5 @@
 #ifndef __ROUND_SCROLLBAR_RENDERER__
-#include <widget/view.h>
+#include <view/view.h>
 namespace cdroid{
 class RoundScrollbarRenderer{
 private:

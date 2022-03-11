@@ -2,7 +2,6 @@
 #include <windowmanager.h>
 #include <cdlog.h>
 #include <systemclock.h>
-#include <widget/view.h>
 #include <list>
 
 

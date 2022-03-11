@@ -3,6 +3,7 @@
 #include <core/attributeset.h>
 #include <core/attributeset.h>
 #include <core/context.h>
+
 namespace cdroid{
 class View;
 class ViewGroup;

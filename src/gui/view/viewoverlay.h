@@ -1,7 +1,7 @@
 #ifndef __VIEW_OVERLAY_H__
 #define __VIEW_OVERLAY_H__
-#include <widget/view.h>
-#include <widget/viewgroup.h>
+#include <view/view.h>
+#include <view/viewgroup.h>
 
 namespace cdroid{
 class ViewOverlay{

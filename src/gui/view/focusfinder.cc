@@ -1,5 +1,6 @@
-#include <focusfinder.h>
-#include <viewconfiguration.h>
+#include <view/focusfinder.h>
+#include <view/viewconfiguration.h>
+
 namespace cdroid {
 
 FocusFinder*FocusFinder::mInst=nullptr;

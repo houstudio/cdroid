@@ -6,7 +6,7 @@ option( LUA_BINDINGS "UI Lua script bindings" OFF)
 option( GUI_STATIC "UI is static link" ON)
 
 aux_source_directory(core SRCS_GUICORE)
-aux_source_directory(views SRCS_VIEWS)
+aux_source_directory(view SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
@@ -21,7 +21,7 @@ message("UI Lua script bindings is ${LUA_BINDINGS} guistatic=${GUI_STATIC}")
 include_directories(
     ./ ./private 
     ./core 
-    ./views 
+    ./view 
     ./cairomm 
     ./core/svg ./luabinding 
     ${CMAKE_BINARY_DIR}/include
@@ -76,7 +76,7 @@ target_link_libraries(gui_static pixman-1 png jpeg cairo_static unibreak  zip js
 install (TARGETS gui  DESTINATION lib)
 install (TARGETS gui_static  DESTINATION lib)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
-    PATTERN "views" EXCLUDE 
+    PATTERN "view" EXCLUDE 
     PATTERN "core" EXCLUDE)
 install (FILES ${LOOPERHEADERS} DESTINATION include/looper)
 

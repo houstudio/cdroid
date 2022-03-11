@@ -1,6 +1,6 @@
 #ifndef __TOAST_H__
 #define __TOAST_H__
-#include <widget/view.h>
+#include <view/view.h>
 #include <widget/cdwindow.h>
 
 namespace cdroid{

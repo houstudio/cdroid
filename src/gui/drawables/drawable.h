@@ -6,7 +6,7 @@
 #include <drawables/colorfilters.h>
 #include <core/attributeset.h>
 #include <core/context.h>
-#include <core/gravity.h>
+#include <view/gravity.h>
 #include <core/insets.h>
 #include <vector>
 

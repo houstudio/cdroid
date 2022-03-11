@@ -1,7 +1,6 @@
 #ifndef __KEYBOARD_VIEW_H__
 #define __KEYBOARD_VIEW_H__
 
-#include <widget/view.h>
 #include <widget/edittext.h>
 #include <vector>
 #include <core/keyboard.h>

@@ -1,6 +1,6 @@
 #ifndef __DRAWER_LAYOUT_H__
 #define __DRAWER_LAYOUT_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <widget/viewdraghelper.h>
 namespace cdroid{
 

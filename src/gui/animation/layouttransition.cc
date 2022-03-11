@@ -1,5 +1,5 @@
 #include <animation/layouttransition.h>
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <animation/objectanimator.h>
 
 namespace cdroid{

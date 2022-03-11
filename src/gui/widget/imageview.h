@@ -1,7 +1,7 @@
 #ifndef __UI_IMAGE_VIEW_H__
 #define __UI_IMAGE_VIEW_H__
 
-#include <widget/view.h>
+#include <view/view.h>
 
 namespace cdroid{
 

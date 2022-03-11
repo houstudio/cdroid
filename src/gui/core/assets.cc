@@ -285,10 +285,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid){
         resname = mTheme.getString(resname.substr(5));
         d=getDrawable(resname);
     }else if(TextUtils::endWith(resname,".9.png")){
-        size_t pos = fullresid.find(".");
-        const std::string ext=(pos==std::string::npos?".9.png":"");
-        d=new NinePatchDrawable(this,fullresid+ext);
-        LOGD("%s load =%p",fullresid.c_str(),d);
+        d=new NinePatchDrawable(this,fullresid);
     }else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")){
         d=new BitmapDrawable(this,fullresid);
     }

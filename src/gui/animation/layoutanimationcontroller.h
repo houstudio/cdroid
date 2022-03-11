@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __LAYOUT_ANIMATION_CONTROLLER_H__
+#define __LAYOUT_ANIMATION_CONTROLLER_H__
 #include <animation/animation.h>
 
 namespace cdroid{
@@ -50,3 +51,4 @@ public:
 };
 
 }//endof namespace
+#endif //__LAYOUT_ANIMATION_CONTROLLER_H__

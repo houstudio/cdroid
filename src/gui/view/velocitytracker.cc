@@ -1,4 +1,4 @@
-#include <velocitytracker.h>
+#include <view/velocitytracker.h>
 #include <math.h>
 #include <string.h>
 #include <cdtypes.h>

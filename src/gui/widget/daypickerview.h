@@ -1,13 +1,6 @@
-/*************************************************************************
-	> File Name: daypickerview.h
-	> Author: 
-	> Mail: 
-	> Created Time: Sun 23 May 2021 04:50:41 AM UTC
- ************************************************************************/
-
 #ifndef __DAY_PICKER_VIEW_H__
 #define __DAY_PICKER_VIEW_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <widget/imagebutton.h>
 #include <widget/adapter.h>
 #include <widget/simplemonthview.h>

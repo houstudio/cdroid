@@ -5,23 +5,25 @@
 #include <core/inputdevice.h>
 #include <core/canvas.h>
 #include <core/insets.h>
-#include <core/viewconfiguration.h>
 #include <core/systemclock.h>
-#include <widget/rendernode.h>
-#include <widget/layoutparams.h>
+#include <core/attributeset.h>
+#include <core/context.h>
+#include <view/gravity.h>
+#include <view/layoutparams.h>
+#include <view/rendernode.h>
+#include <view/velocitytracker.h>
+#include <view/layoutinflater.h>
+#include <view/viewpropertyanimator.h>
+#include <view/viewconfiguration.h>
 #include <widget/measurespec.h>
-#include <widget/layoutinflater.h>
 #include <animation/animation.h>
+#include <animation/statelistanimator.h>
 #include <set>
 #include <memory>
 #include <vector>
 #include <functional>
 #include <core/rect.h>
 #include <drawables.h>
-#include <core/gravity.h>
-#include <core/attributeset.h>
-#include <core/context.h>
-#include <core/velocitytracker.h>
 
 #ifndef _GLIBCXX_FUNCTIONAL
 #define DECLARE_UIEVENT(type,name,...) typedef type(*name)(__VA_ARGS__)
@@ -307,8 +309,10 @@ public:
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
             int oldLeft, int oldTop, int oldWidth, int oldHeight);
+    typedef CallbackBase<bool,View&,KeyEvent&>OnUnhandledKeyEventListener;
 private:
-    friend  ViewGroup;
+    friend ViewGroup;
+    friend ViewPropertyAnimator;
     int mMinWidth;
     int mMinHeight;
     int mDrawingCacheBackgroundColor;
@@ -335,6 +339,8 @@ private:
     bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
     ViewOverlay* mOverlay;
+    StateListAnimator* mStateListAnimator;
+    ViewPropertyAnimator* mAnimator;
     ViewGroup* mNestedScrollingParent;
     std::map<Size,Size>mMeasureCache;
     std::string mStartActivityRequestWho;
@@ -450,6 +456,7 @@ protected:
     bool mLeftPaddingDefined;
     bool mRightPaddingDefined;
     bool mCachingFailed;
+    bool mLastIsOpaque;
     std::string mHint;
     std::string mContentDescription;
     RefPtr<ImageSurface> mDrawingCache;
@@ -911,11 +918,17 @@ public:
 
     KeyEvent::DispatcherState* getKeyDispatcherState()const;
     virtual bool dispatchKeyEvent(KeyEvent&event);
+    virtual View* dispatchUnhandledKeyEvent(KeyEvent& evt);
     virtual bool dispatchUnhandledMove(View* focused,int direction);
     bool onKeyUp(int keycode,KeyEvent& evt)override;
     bool onKeyDown(int keycode,KeyEvent& evt)override;
     bool onKeyLongPress(int keyCode, KeyEvent& event)override;
     bool onKeyMultiple(int keyCode, int count, KeyEvent& event)override;
+    virtual bool onUnhandledKeyEvent(KeyEvent& event);
+    virtual bool hasUnhandledKeyListener()const;
+    void addOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
+    void removeOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
+
     virtual int  commitText(const std::wstring&);
     virtual void onWindowVisibilityChanged(int);
     virtual void onVisibilityAggregated(bool isVisible);
@@ -985,6 +998,8 @@ public:
     void  setRotationX(float);
     float getRotationY()const;
     void  setRotationY(float);
+    StateListAnimator* getStateListAnimator()const;
+    void setStateListAnimator(StateListAnimator*);
 
     LayoutParams*getLayoutParams();
     int getRawLayoutDirection()const;

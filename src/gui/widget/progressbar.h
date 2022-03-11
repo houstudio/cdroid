@@ -1,6 +1,6 @@
 #ifndef __PROGRESS_BAR_H__
 #define __PROGRESS_BAR_H__
-#include <widget/view.h>
+#include <view/view.h>
 #include <animation/objectanimator.h>
 #include <animation/alphaanimation.h>
 

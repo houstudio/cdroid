@@ -7,7 +7,7 @@
 
 #ifndef __VIEW_PAGER_H__
 #define __VIEW_PAGER_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 #include <widget/adapter.h>
 #include <widget/edgeeffect.h>
 #include <math.h>

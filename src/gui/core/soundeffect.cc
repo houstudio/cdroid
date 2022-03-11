@@ -1,5 +1,5 @@
 #include <core/soundeffect.h>
-#include <widget/view.h>
+#include <view/view.h>
 namespace cdroid{    
 int SoundEffectConstants::getContantForFocusDirection(int direction) {
     switch (direction) {

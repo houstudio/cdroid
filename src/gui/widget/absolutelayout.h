@@ -1,13 +1,6 @@
-/*************************************************************************
-	> File Name: absolutelayout.h
-	> Author: 
-	> Mail: 
-	> Created Time: Wed 06 Jan 2021 12:54:07 PM UTC
- ************************************************************************/
-
 #ifndef __ABSOLUTELAYOUT_H__
 #define __ABSOLUTELAYOUT_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 namespace cdroid{
 
 

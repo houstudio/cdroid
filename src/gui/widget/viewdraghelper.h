@@ -1,5 +1,6 @@
-#pragma once
-#include <widget/viewgroup.h>
+#ifndef __VIEW_DRAG_HELPER_H__
+#define __VIEW_DRAG_HELPER_H__
+#include <view/viewgroup.h>
 #include <widget/overscroller.h>
 
 namespace cdroid{
@@ -154,3 +155,4 @@ public:
 };
 
 }//endof namespace
+#endif//__VIEW_DRAG_HELPER_H__

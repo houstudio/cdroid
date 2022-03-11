@@ -1,5 +1,5 @@
-#include <widget/layoutparams.h>
-#include <widget/viewgroup.h>
+#include <view/layoutparams.h>
+#include <view/viewgroup.h>
 #include <cdlog.h>
 namespace cdroid{
 

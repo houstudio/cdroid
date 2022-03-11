@@ -14,7 +14,7 @@ set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/data)
 set(CMAKE_INSTALL_DATADIR ${CMAKE_BINARY_DIR}/data CACHE PATH "General install location")
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib)
 
-if (EXISTS "${CMAKE_SOURCE_DIR}/src/gui/widget/view.h" )
+if (EXISTS "${CMAKE_SOURCE_DIR}/src/gui/view/view.h" )
    set(DEPS_DIR ${CMAKE_BINARY_DIR})
 else()
    set(DEPS_DIR ${CMAKE_SOURCE_DIR}/deps)

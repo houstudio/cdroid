@@ -1,5 +1,5 @@
-#pragma once
-#include <widget/viewgroup.h>
+#ifndef __POPUP_WINDOW_H__
+#define __POPUP_WINDOW_H__
 #include <widget/framelayout.h>
 #include <widget/cdwindow.h>
 namespace cdroid{
@@ -159,3 +159,4 @@ public:
     void update(int x, int y, int width, int height);
 };
 }
+#endif//__POPUP_WINDOW_H__

@@ -1,7 +1,6 @@
 #ifndef __CHECK_BOX_H__
 #define __CHECK_BOX_H__
 #include <widget/compoundbutton.h>
-#include <widget/layoutinflater.h>
 
 namespace cdroid{
 

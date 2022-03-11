@@ -1,8 +1,7 @@
-#include <viewconfiguration.h>
 #include <math.h>
 #include <cdtypes.h>
 #include <cdlog.h>
-
+#include <view/viewconfiguration.h>
 
 namespace cdroid{
 ViewConfiguration*ViewConfiguration::mInst=nullptr;

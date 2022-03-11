@@ -1,7 +1,6 @@
 #ifndef __ADAPTER_H__
 #define __ADAPTER_H__
-#include <widget/viewgroup.h>
-#include <widget/cdwindow.h>
+#include <view/viewgroup.h>
 #include <widget/textview.h>
 
 namespace cdroid{

@@ -1,7 +1,6 @@
 #include <attributeset.h>
 #include <widget/linearlayout.h>
 #include <color.h>
-#include <gravity.h>
 #include <string.h>
 #include <vector>
 #include <cdlog.h>

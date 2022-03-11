@@ -1,6 +1,5 @@
-#include <widget/viewstub.h>
-#include <widget/viewgroup.h>
-#include <widget/layoutinflater.h>
+#include <view/viewstub.h>
+#include <view/viewgroup.h>
 
 namespace cdroid{
 

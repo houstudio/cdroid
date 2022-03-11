@@ -3,7 +3,7 @@
 #include <core/looper.h>
 #include <list>
 #include <unordered_set>
-#include <widget/view.h>
+#include <view/view.h>
 namespace cdroid{
 
 class UIEventSource:public EventHandler{

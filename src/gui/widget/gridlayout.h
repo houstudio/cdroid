@@ -1,7 +1,7 @@
 #ifndef __GRID_LAYOUT_H__
 #define __GRID_LAYOUT_H__
-#include <widget/viewgroup.h>
-#include <widget/layoutparams.h>
+#include <view/viewgroup.h>
+
 namespace cdroid{
 
 class GridLayout:public ViewGroup{

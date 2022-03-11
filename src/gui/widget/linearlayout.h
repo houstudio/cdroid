@@ -1,7 +1,7 @@
 #ifndef UI_LIBUI_LINEARLAYOUT_H_
 #define UI_LIBUI_LINEARLAYOUT_H_
 
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 
 namespace cdroid{
 

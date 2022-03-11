@@ -1,6 +1,5 @@
 #include <app/alertcontroller.h>
 #include <app/alertdialog.h>
-#include <widget/layoutinflater.h>
 #include <widget/R.h>
 
 namespace cdroid{

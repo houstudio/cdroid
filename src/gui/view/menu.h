@@ -1,7 +1,7 @@
 #ifndef __MENU_H__
 #define __MENU_H__
 #include <string>
-#include <widget/view.h>
+#include <view/view.h>
 
 namespace cdroid{
 

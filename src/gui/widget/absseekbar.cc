@@ -1,5 +1,5 @@
+#include <view/viewgroup.h>
 #include <widget/absseekbar.h>
-#include <widget/viewgroup.h>
 #include <widget/R.h>
 #include <math.h>
 #include <cdtypes.h>

@@ -4,7 +4,7 @@
 #include <widget/textview.h>
 #include <widget/abslistview.h>
 #include <animation/animationset.h>
-#include <views/viewoverlay.h>
+#include <view/viewoverlay.h>
 
 namespace cdroid{
 

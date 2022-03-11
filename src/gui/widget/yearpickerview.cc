@@ -1,6 +1,5 @@
 #include <widget/yearpickerview.h>
 #include <widget/textview.h>
-#include <widget/layoutinflater.h>
 
 namespace cdroid{
 

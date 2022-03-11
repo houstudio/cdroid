@@ -17,7 +17,7 @@
 #ifndef __CDROID_GROUPVIEW_H__
 #define __CDROID_GROUPVIEW_H__
 
-#include <widget/view.h>
+#include <view/view.h>
 #include <core/scroller.h>
 #include <animations.h>
 
@@ -100,6 +100,7 @@ private:
     std::vector<View*>mTransientViews;
     std::vector<int>mTransientIndices;
     int mChildCountWithTransientState;
+    int mChildUnhandledKeyListeners;
     bool mLayoutCalledWhileSuppressed;
     Animation::AnimationListener mAnimationListener;
     LayoutTransition::TransitionListener mLayoutTransitionListener;
@@ -197,7 +198,11 @@ protected:
     virtual bool checkLayoutParams(const LayoutParams* p)const;
 
     virtual void onSetLayoutParams(View* child,const LayoutParams* layoutParams);
-
+    bool hasUnhandledKeyListener()const override;
+    void incrementChildUnhandledKeyListeners();
+    void decrementChildUnhandledKeyListeners();
+    View* dispatchUnhandledKeyEvent(KeyEvent& evt)override;
+    
     void measureChildren(int widthMeasureSpec, int heightMeasureSpec);
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
 

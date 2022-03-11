@@ -1,6 +1,6 @@
 #ifndef __SWIPEHELPER_H__
 #define __SWIPEHELPER_H__
-#include <widget/view.h>
+#include <view/view.h>
 
 namespace cdroid{
 

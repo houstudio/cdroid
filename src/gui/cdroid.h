@@ -1,6 +1,6 @@
 #include <cdtypes.h>
-#include <widget/viewgroup.h>
-#include <views/viewoverlay.h>
+#include <view/viewgroup.h>
+#include <view/viewoverlay.h>
 #include <widget/viewpager.h>
 #include <widget/simplemonthview.h>
 #include <widget/linearlayout.h>
@@ -37,7 +37,7 @@
 #include <widget/horizontalscrollview.h>
 #include <widget/progressbar.h>
 #include <widget/cdwindow.h>
-#include <views/toastwindow.h>
+#include <view/toastwindow.h>
 #include <core/app.h>
 #include <widget/seekbar.h>
 using namespace cdroid;

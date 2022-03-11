@@ -1,6 +1,6 @@
 #ifndef __ACTION_BAR_H__
 #define __ACTION_BAR_H__
-#include <widget/viewgroup.h>
+#include <view/viewgroup.h>
 namespace cdroid{
 
 class ActionBar{
