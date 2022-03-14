@@ -4441,7 +4441,10 @@ void View::postInvalidate(){
 }
 
 void View::cleanupDraw(){
-    //TODO
+    if (mAttachInfo != nullptr) {
+        ViewGroup*root=(ViewGroup*)mAttachInfo->mRootView;
+        root->cancelInvalidate(this);
+    }
 }
 
 void View::postInvalidateOnAnimation(){
