@@ -12,6 +12,9 @@ ValueAnimator::ValueAnimator(){
 }
 
 ValueAnimator::~ValueAnimator(){
+    for(auto v:mValues)
+        delete v;
+    mValues.clear();
     removeAnimationCallback();
     delete mInterpolator;
 }
@@ -63,7 +66,7 @@ void ValueAnimator::setFloatValues(const std::vector<float>&values){
 }
 
 void ValueAnimator::setValues(const std::vector<PropertyValuesHolder*>&values){
-    mValues=values;
+    mValues = values;
     for(auto prop:values){
         if(prop==nullptr)continue;
         if(mValuesMap.find(prop->getPropertyName())!=mValuesMap.end())

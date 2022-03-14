@@ -59,7 +59,8 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 
 TabLayout::~TabLayout(){
     delete mTabTextColors;
-    delete mScrollAnimator; 
+    delete mScrollAnimator;
+    delete mAdapterChangeListener;
 }
 
 void TabLayout::initTabLayout(){
