@@ -58,7 +58,6 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 }
 
 TabLayout::~TabLayout(){
-    delete mScrollAnimator->getInterpolator();
     delete mTabTextColors;
     delete mScrollAnimator; 
 }

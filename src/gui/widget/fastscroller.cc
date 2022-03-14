@@ -39,11 +39,13 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 
     ViewGroupOverlay* overlay = (ViewGroupOverlay*)listView->getOverlay();
     mOverlay = overlay;
-    overlay->add(mTrackImage);
-    overlay->add(mThumbImage);
-    overlay->add(mPreviewImage);
-    overlay->add(mPrimaryText);
-    overlay->add(mSecondaryText);
+    if(overlay){
+        overlay->add(mTrackImage);
+        overlay->add(mThumbImage);
+        overlay->add(mPreviewImage);
+        overlay->add(mPrimaryText);
+        overlay->add(mSecondaryText);
+    }
 
     getSectionsFromIndexer();
     updateLongList(mOldChildCount, mOldItemCount);

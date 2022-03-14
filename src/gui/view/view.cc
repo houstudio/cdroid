@@ -1313,6 +1313,8 @@ void View::dispatchDetachedFromWindow(){
             conts.erase(it);
         mPrivateFlags &= ~PFLAG_SCROLL_CONTAINER_ADDED;
     }
+    if(mScrollCache&&mScrollCache->mRunner)
+       removeCallbacks(mScrollCache->mRunner);
     mAttachInfo = nullptr;
     if(mOverlay)
         mOverlay->getOverlayView()->dispatchDetachedFromWindow();

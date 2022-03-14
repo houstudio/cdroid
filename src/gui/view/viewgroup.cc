@@ -845,8 +845,8 @@ int ViewGroup::indexOfChild(View* child)const{
 
 ViewOverlay* ViewGroup::getOverlay() {
     if (mOverlay == nullptr) {
-        mOverlay = new ViewGroupOverlay(mContext, this);
-        mOverlay->getOverlayView()->setSize(getWidth(),getHeight());
+        //mOverlay = new ViewGroupOverlay(mContext, this);
+        //mOverlay->getOverlayView()->setSize(getWidth(),getHeight());
     }
     return mOverlay;
 }

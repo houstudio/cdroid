@@ -98,7 +98,7 @@ void AnalogClock::onVisibilityAggregated(bool isVisible) {
 }
 
 void AnalogClock::onAttachedToWindow(){
-    mTick=[&](){
+    mTick=[this](){
         std::time_t t = std::time(NULL);
         struct std::tm when= *std::localtime(&t);
         std::get_time(&when,"%R");
@@ -106,10 +106,10 @@ void AnalogClock::onAttachedToWindow(){
         mMinutes = (float)when.tm_min;
         mSeconds = (float)when.tm_sec;
         mChanged = true;
-        invalidate(true);
-        postDelayed(mTick,500);
+        this->invalidate(true);
+        this->postDelayed(mTick,500);
     };
-    postDelayed(mTick,800);
+    post(mTick);
 }
 
 
@@ -118,6 +118,7 @@ void AnalogClock::onDetachedFromWindow() {
         getContext().unregisterReceiver(mIntentReceiver);
         mReceiverAttached = false;
     }*/
+    removeCallbacks(mTick);
     View::onDetachedFromWindow();
 }
 

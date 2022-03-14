@@ -49,6 +49,14 @@ ViewOverlay::OverlayViewGroup::OverlayViewGroup(Context*context,View* hostView):
     mHostView = hostView;
 }
 
+ViewOverlay::OverlayViewGroup::~OverlayViewGroup(){
+    for(auto d:mDrawables){
+        unscheduleDrawable(*d);
+        delete d;
+    }
+    mDrawables.clear();
+}
+
 void ViewOverlay::OverlayViewGroup::add(Drawable* drawable){
     if (drawable == nullptr) {
         throw "drawable must be non-null";

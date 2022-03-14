@@ -19,6 +19,7 @@ public:
         void invalidateParentIfNeeded()override;
     public:
         OverlayViewGroup(Context*context,View* hostView);
+        ~OverlayViewGroup()override;
         void add(Drawable* drawable);
         void remove(Drawable* drawable);
         void add(View* child);

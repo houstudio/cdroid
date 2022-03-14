@@ -36,7 +36,7 @@ public:
             ListView*lv=new ListView(800,480);
             lv->setDivider(new ColorDrawable(0x80224422));
             lv->setDividerHeight(1);
-            lv->setFastScrollEnabled(true);
+            //lv->setFastScrollEnabled(true);
             lv->setSelector(new ColorDrawable(0x8800FF00));
             lv->setVerticalScrollBarEnabled(true);
             lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 
@@ -44,7 +44,7 @@ public:
             adapter->loadFiles("/"); 
             lv->setAdapter(adapter);
             lv->setBackgroundColor(0xFF000000|(0xFF<<position*8));
-            container->addView(lv);
+            container->addView(lv).setId(12345);
             lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
                 FileItem f=adp->getItemAt(pos);
