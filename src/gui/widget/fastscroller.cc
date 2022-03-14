@@ -51,6 +51,13 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     postAutoHide();
 }
 
+FastScroller::~FastScroller(){
+    delete mTrackImage;
+    delete mThumbImage;
+    delete mPreviewImage;
+    delete mOverlay;
+}
+
 void FastScroller::setStyle(const std::string&styleResId){
     Context* context = mList->getContext();
     AttributeSet ta=context->obtainStyledAttributes(styleResId);//R.styleable.FastScroll, R.attr.fastScrollStyle, resId);

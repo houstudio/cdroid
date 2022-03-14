@@ -344,7 +344,7 @@ public:
     bool dispatchTouchEvent(MotionEvent& event)override;
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt)override;
-    void onDescendantInvalidated(View* child,View* target);
+    virtual void onDescendantInvalidated(View* child,View* target);
 
     void jumpDrawablesToCurrentState()override;
     void setAddStatesFromChildren(bool addsStates);

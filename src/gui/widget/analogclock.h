@@ -38,7 +38,7 @@ protected:
 public:
     AnalogClock(int w,int h);
     AnalogClock(Context*ctx,const AttributeSet& attrs);
-
+    ~AnalogClock();
     void setDial(Icon icon);
     //void setDialTintList(ColorStateList*);
     //ColorStateList*getDialTintList();

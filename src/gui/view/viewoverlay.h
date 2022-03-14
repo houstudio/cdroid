@@ -29,13 +29,14 @@ public:
         void invalidate(const Rect& dirty)override;
         void invalidate(int l, int t, int w, int h)override;
         void invalidate(bool invalidateCache)override;
-        //void onDescendantInvalidated(View* child,View* target)override;
+        void onDescendantInvalidated(View* child,View* target)override;
         ViewGroup* invalidateChildInParent(int* location, Rect& dirty)override;
     };
 protected:
     OverlayViewGroup* mOverlayViewGroup;
 public:
     ViewOverlay(Context* context, View* hostView);
+    ~ViewOverlay();
     ViewGroup* getOverlayView()const;
     void add(Drawable* drawable);
     void remove(Drawable* drawable);

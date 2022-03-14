@@ -143,6 +143,7 @@ private:
         void onLayout(bool changed, int l, int t, int r, int b);
     public:
         SlidingTabStrip(Context* context,const AttributeSet&atts,TabLayout*parent);
+        ~SlidingTabStrip()override;
         void setSelectedIndicatorColor(int color);
         void setSelectedIndicatorHeight(int height);
         bool childrenNeedLayout();

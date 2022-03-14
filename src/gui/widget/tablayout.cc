@@ -58,6 +58,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 }
 
 TabLayout::~TabLayout(){
+    delete mScrollAnimator->getInterpolator();
     delete mTabTextColors;
     delete mScrollAnimator; 
 }
@@ -1153,13 +1154,17 @@ float TabLayout::TabView::approximateLineWidth(Layout* layout, int line, float t
 /*-------------------------------------------------------------------------------------------------------*/
 TabLayout::SlidingTabStrip::SlidingTabStrip(Context* context,const AttributeSet&atts,TabLayout*parent)
  :LinearLayout(context,atts){
-    mParent=parent;
-    mIndicatorLeft =-1;
-    mIndicatorRight=-1;
-    mIndicatorAnimator=nullptr;
-    mSelectedIndicatorHeight=4;
-    mSelectedIndicatorColor=0x60FF0000;
+    mParent = parent;
+    mIndicatorLeft  = -1;
+    mIndicatorRight = -1;
+    mIndicatorAnimator = nullptr;
+    mSelectedIndicatorHeight= 4;
+    mSelectedIndicatorColor = 0x60FF0000;
     setWillNotDraw(false);
+}
+
+TabLayout::SlidingTabStrip::~SlidingTabStrip(){
+    delete mIndicatorAnimator;
 }
 
 void TabLayout::SlidingTabStrip::setSelectedIndicatorColor(int color) {

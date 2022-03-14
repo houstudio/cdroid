@@ -198,6 +198,7 @@ private:
     void applyLayout(View* view,const Rect& bounds);
 public:
     FastScroller(AbsListView*,const std::string& scrollstyle);
+    ~FastScroller();
     void remove();
     void setEnabled(bool);
     bool isEnabled()const;

@@ -394,6 +394,7 @@ void View::initView(){
 View::~View(){
     if(mParent)onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
+    delete mForegroundInfo;
     delete mPerformClick;
     delete mPendingCheckForTap;
     delete mUnsetPressedState;
@@ -4390,7 +4391,7 @@ void View::invalidateParentIfNeededAndWasQuickRejected() {
 void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){
 
     if (skipInvalidate())   return;
-    LOGV_IF(mID==12345,"(%d,%d,%d,%d)",l,t,w,h);
+
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED

@@ -1026,19 +1026,15 @@ RelativeLayout::DependencyGraph::Node::Node(View*v){
 }
 
 RelativeLayout::DependencyGraph::Node::~Node(){
-
 }
 
 RelativeLayout::DependencyGraph::~DependencyGraph(){
-    for(int i=0;i<mKeyNodes.size();i++){
-         Node* nd=mKeyNodes.get(i);
-         delete nd;
-    }
-    mKeyNodes.clear();
+    clear();
 }
+
 void RelativeLayout::DependencyGraph::clear(){
     for (auto nd:mNodes) {
-        delete nd;//nd->release();
+        delete nd;
     }
     mNodes.clear();
     mKeyNodes.clear();

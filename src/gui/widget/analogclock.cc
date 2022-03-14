@@ -26,6 +26,12 @@ AnalogClock::AnalogClock(int w,int h):View(w,h){
     initAnalog();
 }
 
+AnalogClock::~AnalogClock(){
+    delete mDial;
+    delete mHourHand;
+    delete mMinuteHand;
+    delete mSecondHand;
+}
 
 void AnalogClock::initAnalog(){
     mDial = mSecondHand = nullptr;
@@ -96,9 +102,9 @@ void AnalogClock::onAttachedToWindow(){
         std::time_t t = std::time(NULL);
         struct std::tm when= *std::localtime(&t);
         std::get_time(&when,"%R");
-        mHour=when.tm_hour;
-        mMinutes=when.tm_min;
-        mSeconds=when.tm_sec;
+        mHour    = (float)when.tm_hour;
+        mMinutes = (float)when.tm_min;
+        mSeconds = (float)when.tm_sec;
         mChanged = true;
         invalidate(true);
         postDelayed(mTick,500);

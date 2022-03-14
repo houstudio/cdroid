@@ -6,6 +6,10 @@ ViewOverlay::ViewOverlay(Context* context, View* hostView){
     mOverlayViewGroup = new OverlayViewGroup(context, hostView);
 }
 
+ViewOverlay::~ViewOverlay(){
+    delete mOverlayViewGroup;
+}
+
 ViewGroup* ViewOverlay::getOverlayView()const{
     return mOverlayViewGroup;
 }
@@ -102,6 +106,23 @@ void ViewOverlay::OverlayViewGroup::add(View* child) {
         }
     }
     ViewGroup::addView(child);
+}
+
+void ViewOverlay::OverlayViewGroup::onDescendantInvalidated(View* child,View* target){
+    if (mHostView) {
+        if (dynamic_cast<ViewGroup*>(mHostView)) {
+            // Propagate invalidate through the host...
+            ((ViewGroup*) mHostView)->onDescendantInvalidated(mHostView, target);
+
+            // ...and also this view, since it will hold the descendant, and must later
+            // propagate the calls to update display lists if dirty
+            ViewGroup::onDescendantInvalidated(child, target);
+        } else {
+            // Can't use onDescendantInvalidated because host isn't a ViewGroup - fall back
+            // to invalidating.
+            invalidate(true);
+        }
+    }
 }
 
 void ViewOverlay::OverlayViewGroup::remove(View*view){
