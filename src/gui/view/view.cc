@@ -1031,7 +1031,8 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
 
         if (invalidate) {
             // Invalidate to show the scrollbars
-            postInvalidateOnAnimation();
+            const Rect&r = mScrollCache->mScrollBarBounds;
+            postInvalidateOnAnimation(r.left,r.top,r.width,r.height);
         }
 
         if (mScrollCache->state == ScrollabilityCache::OFF) {
@@ -2108,7 +2109,7 @@ void View::onDrawScrollBars(Canvas& canvas){
             getVerticalScrollBarBounds(&bounds, nullptr);
             onDrawVerticalScrollBar(canvas, scrollBar, bounds.left, bounds.top,bounds.width, bounds.height);
         }
-        if (bInvalidate) invalidate(true);
+        if (bInvalidate) invalidate(mScrollCache->mScrollBarBounds);
     }
 }
 
@@ -2401,8 +2402,8 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
 
 void View::draw(Canvas&canvas){
     const int privateFlags = mPrivateFlags;
-    const bool dirtyOpaque = (privateFlags & PFLAG_DIRTY_MASK) == PFLAG_DIRTY_OPAQUE;
-            //&&(mAttachInfo == null || !mAttachInfo.mIgnoreDirtyState);
+    const bool dirtyOpaque = (privateFlags & PFLAG_DIRTY_MASK) == PFLAG_DIRTY_OPAQUE &&
+                    (mAttachInfo == nullptr || !mAttachInfo->mIgnoreDirtyState);
     mPrivateFlags = (privateFlags & ~PFLAG_DIRTY_MASK) | PFLAG_DRAWN;
 
     /*
@@ -4357,7 +4358,13 @@ void View::invalidateViewProperty(bool invalidateParent, bool forceRedraw) {
         }
         invalidate(false);
     } else {
-        //damageInParent();
+        damageInParent();
+    }
+}
+
+void View::damageInParent() {
+    if (mParent && mAttachInfo ) {
+        mParent->onDescendantInvalidated(this, this);
     }
 }
 
@@ -4383,7 +4390,7 @@ void View::invalidateParentIfNeededAndWasQuickRejected() {
 void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){
 
     if (skipInvalidate())   return;
-
+    LOGV_IF(mID==12345,"(%d,%d,%d,%d)",l,t,w,h);
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
@@ -4408,6 +4415,7 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
         }
         if( mAttachInfo && getRootView()==this && dynamic_cast<ViewGroup*>(this) &&(w>0)&&(h>0)){
             const RectangleInt damage={l,t,w,h};
+            mPrivateFlags|=PFLAG_DIRTY;
             ((ViewGroup*)this)->mInvalidRgn->do_union(damage);
         }
     }
@@ -4441,6 +4449,17 @@ void View::postInvalidateOnAnimation(){
     if(root)root->dispatchInvalidateOnAnimation(this);
 }
 
+void View::postInvalidateOnAnimation(int left, int top, int width, int height) {
+    // We try only with the AttachInfo because there's no point in invalidating
+    // if we are not attached to our window
+    if (mAttachInfo) {
+        Rect rect={left,top,width,height};
+        ViewGroup*root=getRootView();
+        if(root)root->dispatchInvalidateRectOnAnimation(this,rect);
+    }
+}
+
+ 
 void View::invalidateDrawable(Drawable& who){
     if(verifyDrawable(&who)) invalidate(true);
 }
@@ -6319,6 +6338,7 @@ View::AttachInfo::AttachInfo(){
     mHasWindowFocus   = true;
     mApplicationScale = 1.0f;
     mScalingRequired  = false;
+    mIgnoreDirtyState = false;
     mUse32BitDrawingCache = false;
     mAlwaysConsumeSystemBars= false;
     mDebugLayout  = false;
@@ -6330,6 +6350,29 @@ View::AttachInfo::AttachInfo(){
     mDisplayState = true;
     mTooltipHost  = nullptr;
     mViewRequestingLayout = nullptr;
+}
+
+std::vector<View::AttachInfo::InvalidateInfo*>View::AttachInfo::sPool;
+
+View::AttachInfo::InvalidateInfo* View::AttachInfo::InvalidateInfo::obtain(){
+    InvalidateInfo*info=nullptr;
+    if(sPool.size()==0){
+        info= new InvalidateInfo();
+    }else{
+        info = sPool.back();
+        sPool.pop_back();
+    }
+    return info;
+}
+
+void View::AttachInfo::InvalidateInfo::recycle(){
+    if(sPool.size()<POOL_LIMIT ){
+        target = nullptr;
+        rect.set(0,0,0,0);
+        sPool.push_back(this);
+    }else{ 
+        delete this;
+    }
 }
 
 }//endof namespace

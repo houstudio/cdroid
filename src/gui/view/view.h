@@ -155,7 +155,19 @@ protected:
         PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000 ,
         PFLAG3_AGGREGATED_VISIBLE      = 0x20000000
     };
+
     class AttachInfo{
+    public:
+        class InvalidateInfo{
+        public:
+            View* target;
+            Rect rect;
+            static InvalidateInfo*obtain();
+            void recycle();
+        };
+    private:
+        static const int POOL_LIMIT = 64;
+        static std::vector<InvalidateInfo*>sPool;
     public:
         View*mRootView;
         bool mHardwareAccelerated;
@@ -174,6 +186,7 @@ protected:
         bool mScalingRequired;
         bool mUse32BitDrawingCache;
         bool mViewVisibilityChanged;
+        bool mIgnoreDirtyState;
         int mWindowVisibility;
         long mDrawingTime;
         bool mInTouchMode;
@@ -310,6 +323,7 @@ public:
     DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
             int oldLeft, int oldTop, int oldWidth, int oldHeight);
     typedef CallbackBase<bool,View&,KeyEvent&>OnUnhandledKeyEventListener;
+
 private:
     friend ViewGroup;
     friend ViewPropertyAnimator;
@@ -548,6 +562,7 @@ protected:
     static int resolveSize(int size, int measureSpec);
     static int resolveSizeAndState(int size, int measureSpec, int childMeasuredState);
     static int getDefaultSize(int size, int measureSpec);
+    void damageInParent();
     bool hasDefaultFocus()const;
     int getSuggestedMinimumWidth();
     int getSuggestedMinimumHeight();
@@ -597,6 +612,7 @@ public:
     bool isDirty()const;
     void postInvalidate();
     void postInvalidateOnAnimation();
+    void postInvalidateOnAnimation(int left, int top, int width, int height);
     void invalidateDrawable(Drawable& who)override;
     int  getLayerType()const;
     void setLayerType(int);

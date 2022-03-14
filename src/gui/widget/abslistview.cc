@@ -256,6 +256,8 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mSuppressIdleStateChangeCall =false;
     mVelocityScale = 1.0f;
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
+    mScrollConsumed[0]= mScrollConsumed[1] = 0;
+    mScrollOffset[0] = mScrollOffset[1] = 0;
     mOnScrollListener.onScroll = nullptr;
     mOnScrollListener.onScrollStateChanged = nullptr;
 

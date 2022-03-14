@@ -1037,6 +1037,7 @@ void TextView::updateTextColors(){
     const std::vector<int>&drawableState = getDrawableState();
     int color = mTextColor->getColorForState(drawableState,mTextColor->getDefaultColor());
     if (color != mCurTextColor) {
+        LOGV("%p:%d change color %x->%x",this,mID,color,mCurTextColor);
         mCurTextColor = color;
         inval = true;
     }
@@ -1610,9 +1611,9 @@ void TextView::onDraw(Canvas& canvas) {
         }
     }
 
-    LOGV("text:%s maxlinewidth=%d lines=%d size=%dx%d marquee=%d mSingleLine=%d",getText().c_str(),
+    /*LOGV("text:%s maxlinewidth=%d lines=%d size=%dx%d marquee=%d mSingleLine=%d",getText().c_str(),
           layout->getMaxLineWidth(),layout->getLineCount(),clipRight-clipLeft, clipBottom-clipTop,
-          isMarqueeFadeEnabled(),mSingleLine);
+          isMarqueeFadeEnabled(),mSingleLine);*/
     canvas.set_color(color);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);

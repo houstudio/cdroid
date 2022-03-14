@@ -136,22 +136,11 @@ void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<
 
         for(auto w1=w+1;w1!=windows.end();w1++){
             if((*w1)->getVisibility()!=View::VISIBLE)continue;
-            if((*w1)->mWindowRgn==nullptr || (*w1)->mWindowRgn->empty()){
-                RECT r=(*w1)->getBound();
-                newrgn->subtract((const RectangleInt&)r);
-            }else{
-                RefPtr<Region>tmp=(*w1)->mWindowRgn->copy();
-                tmp->translate((*w1)->getX(),(*w1)->getY());
-                newrgn->subtract(tmp);
-            }
+            Rect r=(*w1)->getBound();
+            newrgn->subtract((const RectangleInt&)r);
         }
         newrgn->translate(-rcw.left,-rcw.top);
-        if((*w)->mWindowRgn&&((*w)->mWindowRgn->empty()==false)){
-            newrgn->intersect((*w)->mWindowRgn);
-        }
         regions.push_back(newrgn);
-        LOGV("window %p[%s] Layer=%d %d rects visible=%d",(*w),(*w)->getText().c_str(),(*w)->mLayer,
-                   newrgn->get_num_rectangles(),(*w)->getVisibility());
     }
 }
 
@@ -175,21 +164,12 @@ void GraphDevice::composeSurfaces(){
     });
     computeVisibleRegion(wins,winVisibleRgns);
     primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
-    Rect rcBlited={0,0,0,0};
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw = wBounds[i];
-        std::vector<Rectangle> clipRects;
+        RefPtr<Region> rgn = winVisibleRgns[i];
         HANDLE hdlSurface = wSurfaces[i]->mHandle;
-        if(winVisibleRgns[i]->empty())continue; 
-        RefPtr<Region> rgn = Region::create();
-        wSurfaces[i]->copy_clip_rectangle_list(clipRects);
-        for(auto r:clipRects){
-            Rect rc;
-            rc.set(r.x,r.y,r.width,r.height);
-            rgn->do_union((const RectangleInt&)rc);
-        }
+        if(rgn->empty())continue; 
         mInvalidateRgn->subtract((const RectangleInt&)rcw);
-        rgn->intersect(winVisibleRgns[i]);
         rects+=rgn->get_num_rectangles();
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc=rgn->get_rectangle(j);
@@ -200,8 +180,6 @@ void GraphDevice::composeSurfaces(){
 
             if(hdlSurface)GFXBlit(primarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
             else primaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
-            rcBlited.Union(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
-            LOGV("(%d,%d,%d,%d)",rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
         }
         if(hdlSurface==nullptr){
             primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
@@ -218,8 +196,6 @@ void GraphDevice::composeSurfaces(){
     mInvalidateRgn->do_xor(mInvalidateRgn);
     GFXFlip(primarySurface); 
     t2=SystemClock::uptimeMillis();
-    LOGV("%d surfaces %d rects Blited.area=(%d,%d,%d,%d) used %d ms",wSurfaces.size(),rects,
-         rcBlited.left,rcBlited.top,rcBlited.width,rcBlited.height,t2-t1);
     last_compose_time=SystemClock::uptimeMillis();
     compose_event=0;
 }

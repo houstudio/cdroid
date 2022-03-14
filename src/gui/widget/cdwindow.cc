@@ -80,10 +80,6 @@ const std::string Window::getText()const{
     return mText;
 }
 
-void Window::setRegion(const RefPtr<Region>&rgn){
-    mWindowRgn=rgn->copy();
-}
-
 void Window::draw(){
     RefPtr<Canvas>canvas=getCanvas();
     mAttachInfo->mDrawingTime=SystemClock::uptimeMillis();
@@ -367,6 +363,11 @@ void Window::dispatchInvalidateOnAnimation(View*view){
     mInvalidateOnAnimationRunnable.addView(view);
 }
 
+void Window::dispatchInvalidateRectOnAnimation(View*view,const Rect&rect){
+    mInvalidateOnAnimationRunnable.setOwner(this);
+    mInvalidateOnAnimationRunnable.addViewRect(view,rect);
+}
+
 void Window::cancelInvalidate(View* view){
     mInvalidateOnAnimationRunnable.removeView(view);
 }
@@ -380,17 +381,50 @@ void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
     mOwner=w;
 }
 
-void Window::InvalidateOnAnimationRunnable::addView(View* view){
-    if(std::find(mViews.begin(),mViews.end(),view)==mViews.end()){
-        mViews.push_back(view);
-        postIfNeededLocked();
+std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
+    for(auto it=mInvalidateViews.begin();it!=mInvalidateViews.end();it++){
+        if((*it)->target == v)
+            return it;
     }
+    return mInvalidateViews.end();
+}
+
+void Window::InvalidateOnAnimationRunnable::addView(View* view){
+    auto it=find(view);
+    if(it==mInvalidateViews.end()){
+        AttachInfo::InvalidateInfo*info = AttachInfo::InvalidateInfo::obtain();
+        info->target = view;
+        info->rect.set(0,0,0,0);
+        mInvalidateViews.push_back(info);
+    }else{
+        (*it)->rect.set(0,0,0,0);
+    }
+    postIfNeededLocked();
+}
+
+void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect){
+    auto it=find(view);
+    AttachInfo::InvalidateInfo*info=nullptr;
+    if(it == mInvalidateViews.end()){
+        info = AttachInfo::InvalidateInfo::obtain();
+        info->target =view;
+        info->rect = rect;
+        mInvalidateViews.push_back(info);
+    }else{
+        info=(*it);
+        if(!info->rect.empty())
+            info->rect.Union(rect);
+    }
+    postIfNeededLocked();
 }
 
 void Window::InvalidateOnAnimationRunnable::removeView(View* view){
-    auto it=std::find(mViews.begin(),mViews.end(),view);
-    if(it!=mViews.end())mViews.erase(it);
-    if(mViews.size()==0){
+    auto it=find(view);
+    if(it != mInvalidateViews.end()){
+        mInvalidateViews.erase(it);
+        (*it)->recycle();
+    }
+    if(mInvalidateViews.size()==0){
         mPosted = false;
     }
 }
@@ -400,11 +434,15 @@ void Window::InvalidateOnAnimationRunnable::run(){
     int viewRectCount;
     mPosted = false;
 
-    std::vector<View*>tempViews=mViews; 
-    mViews.clear();
+    std::vector<AttachInfo::InvalidateInfo*>temp=mInvalidateViews; 
+    mInvalidateViews.clear();
 
-    for (auto view:tempViews){
-        view->invalidate();
+    for (auto i:temp){
+        Rect&r = i->rect;
+        View*v = i->target;
+        if(r.width<=0||r.height<=0) v->invalidate();
+        else  v->invalidate(r.left,r.top,r.width,r.height);
+        i->recycle();
     }
 }
 

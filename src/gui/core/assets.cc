@@ -343,7 +343,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
             int color = Color::parseColor(fullresid);
             return ColorStateList::valueOf(color);
         }
-        if(fullresid.find("color")==std::string::npos ){
+        if(fullresid.find("/")==std::string::npos ){
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             realName=mTheme.getString(realName);

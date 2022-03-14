@@ -36,7 +36,14 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabPaddingBottom= atts.getDimensionPixelSize("tabPaddingBottom",mTabPaddingBottom); 
     mTabTextSize  = atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
 
-    mTabTextColors=context->getColorStateList(atts.getString("tabTextColor"));
+    if(atts.hasAttribute("tabTextColor"))
+        mTabTextColors=context->getColorStateList(atts.getString("tabTextColor"));
+    if(atts.hasAttribute("tabSelectedTextColor")){
+        const int selected = context->getColor(atts.getString("tabSelectedTextColor"));
+        const int defColor = mTabTextColors->getDefaultColor();
+        delete mTabTextColors;
+        mTabTextColors = createColorStateList(defColor, selected);
+    }
 
     mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration", 300);
     mRequestedTabMinWidth = atts.getDimensionPixelSize("tabMinWidth", -1);

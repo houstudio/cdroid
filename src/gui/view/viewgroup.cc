@@ -645,6 +645,9 @@ void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
 void ViewGroup::dispatchInvalidateOnAnimation(View* view){
 }
 
+void ViewGroup::dispatchInvalidateRectOnAnimation(View*,const Rect&){
+}
+
 void ViewGroup::cancelInvalidate(View* view){
 }
 
@@ -679,7 +682,7 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     child->mLayoutParams = params;
 
     if (index < 0) {
-        index = getChildCount();//mChildrenCount;
+        index = getChildCount();
     }
 
     addInArray(child, index);
@@ -1331,7 +1334,7 @@ void ViewGroup::removeViewInternal(int index, View* view){
     //needGlobalAttributesUpdate(false);
     removeFromArray(index);
 
-    //if (view->hasUnhandledKeyListener()) decrementChildUnhandledKeyListeners();
+    if (view->hasUnhandledKeyListener()) decrementChildUnhandledKeyListeners();
 
     if (view == mDefaultFocus) clearDefaultFocus(view);
 
@@ -1726,7 +1729,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
-    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
+    if (TRUE||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
             dirty.offset(location[CHILD_LEFT_INDEX]-mScrollX,location[CHILD_TOP_INDEX]-mScrollY);
@@ -2369,6 +2372,31 @@ bool ViewGroup::onInterceptTouchEvent(MotionEvent& ev){
         && isOnScrollbarThumb(ev.getX(), ev.getY()) )
         return true;
     return false; 
+}
+
+void ViewGroup::onDescendantInvalidated(View* child,View* target){
+    mPrivateFlags |= (target->mPrivateFlags & PFLAG_DRAW_ANIMATION);
+
+    if ((target->mPrivateFlags & ~PFLAG_DIRTY_MASK) != 0) {
+        // We lazily use PFLAG_DIRTY, since computing opaque isn't worth the potential
+        // optimization in provides in a DisplayList world.
+        mPrivateFlags = (mPrivateFlags & ~PFLAG_DIRTY_MASK) | PFLAG_DIRTY;
+
+        // simplified invalidateChildInParent behavior: clear cache validity to be safe...
+        mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+    }
+
+    // ... and mark inval if in software layer that needs to repaint (hw handled in native)
+    if (mLayerType == LAYER_TYPE_SOFTWARE) {
+        // Layered parents should be invalidated. Escalate to a full invalidate (and note that
+        // we do this after consuming any relevant flags from the originating descendant)
+        mPrivateFlags |= PFLAG_INVALIDATED | PFLAG_DIRTY;
+        target = this;
+    }
+
+    if (mParent != nullptr) {
+        mParent->onDescendantInvalidated(this, target);
+    }
 }
 
 bool ViewGroup::dispatchKeyEvent(KeyEvent&event){

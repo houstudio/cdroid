@@ -344,6 +344,7 @@ public:
     bool dispatchTouchEvent(MotionEvent& event)override;
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt)override;
+    void onDescendantInvalidated(View* child,View* target);
 
     void jumpDrawablesToCurrentState()override;
     void setAddStatesFromChildren(bool addsStates);
@@ -351,6 +352,7 @@ public:
     virtual void childDrawableStateChanged(View* child);
 
     virtual void dispatchInvalidateOnAnimation(View* view);
+    virtual void dispatchInvalidateRectOnAnimation(View*,const Rect&);
     virtual void cancelInvalidate(View* view);
     virtual bool showContextMenuForChild(View* originalView);
     virtual bool showContextMenuForChild(View* originalView, float x, float y);

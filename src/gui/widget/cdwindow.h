@@ -13,12 +13,14 @@ protected:
     private:
         bool mPosted;
         Window*mOwner;
-        std::vector<View*>mViews;
+        std::vector<AttachInfo::InvalidateInfo*>mInvalidateViews;
         void postIfNeededLocked();
+        std::vector<AttachInfo::InvalidateInfo*>::iterator find(View*v);
     public:
         InvalidateOnAnimationRunnable();
         void setOwner(Window*w);
         void addView(View* view);
+        void addViewRect(View*view,const Rect&);
         void removeView(View* view);
         void run();
     };
@@ -31,7 +33,6 @@ private:
     static View*inflate(Context*ctx,std::istream&stream);
 protected:
     std::vector<View*>mLayoutRequesters;
-    RefPtr<Region>mWindowRgn;
     RefPtr<Region>mVisibleRgn;
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
@@ -78,6 +79,7 @@ public:
     bool postDelayed(Runnable& what,uint32_t delay)override;
     bool removeCallbacks(const Runnable& what)override;
     void dispatchInvalidateOnAnimation(View* view)override;
+    void dispatchInvalidateRectOnAnimation(View*,const Rect&)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
     void cancelInvalidate(View* view)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;

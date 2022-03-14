@@ -197,7 +197,7 @@ void AnalogClock::onDraw(Canvas&canvas){
         w = mHourHand->getIntrinsicWidth();
         h = mHourHand->getIntrinsicHeight();
         mHourHand->setBounds( - (w / 2), - (h / 2), w,h);
-        LOGV("HourHand.size=%dx%d  %p",w,h),mHourHand;
+        LOGV("HourHand.size=%dx%d  %p",w,h,mHourHand);
     }
     mHourHand->draw(canvas);
     canvas.restore();
