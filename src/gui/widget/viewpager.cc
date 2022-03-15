@@ -624,7 +624,7 @@ void ViewPager::populate(int newCurrentItem){
                     ii = addNewItem(pos, itemIndex);
                     itemIndex++;
                     extraWidthRight += ii->widthFactor;
-                   ii = itemIndex < mItems.size() ? mItems.at(itemIndex) : nullptr;
+                    ii = itemIndex < mItems.size() ? mItems.at(itemIndex) : nullptr;
                 }
             }
         }

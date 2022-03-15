@@ -906,6 +906,10 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*p
     //ViewCompat.setPointerIcon(this,PointerIconCompat.getSystemIcon(getContext(), PointerIconCompat.TYPE_HAND));
 }
 
+TabLayout::TabView::~TabView(){
+    delete mTab;
+}
+
 bool TabLayout::TabView::performClick(){
     bool handled = LinearLayout::performClick();
 

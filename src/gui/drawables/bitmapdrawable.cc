@@ -10,12 +10,12 @@ BitmapDrawable::BitmapState::BitmapState(){
     mBaseAlpha= 1.0f;
     mAlpha = 255;
     mTint  = nullptr;
-    mTransparency= -1;
-    mTintMode    = DEFAULT_TINT_MODE;
-    mTileModeX =mTileModeY=-1;
-    mAutoMirrored= false;
-    mSrcDensityOverride=0;
-    mTargetDensity=160;
+    mTransparency = -1;
+    mTintMode     = DEFAULT_TINT_MODE;
+    mTileModeX = mTileModeY = -1;
+    mAutoMirrored = false;
+    mSrcDensityOverride = 0;
+    mTargetDensity = 160;
     mChangingConfigurations=0;
 }
 

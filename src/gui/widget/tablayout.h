@@ -71,6 +71,7 @@ public:
         float approximateLineWidth(Layout* layout, int line, float textSize);
     public:
         TabView(Context* context,const AttributeSet&atts,TabLayout*parent);
+        ~TabView();
         bool performClick()override;
         void setSelected(bool selected)override;
         void onMeasure(int origWidthMeasureSpec,int origHeightMeasureSpec)override;

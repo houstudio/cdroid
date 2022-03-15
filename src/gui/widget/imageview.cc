@@ -42,13 +42,14 @@ void ImageView::initImageView(){
     mViewAlphaScale= 256;
     mDrawableWidth = mDrawableHeight = -1;
     mScaleType  = FIT_CENTER;
+    mHaveFrame  = true;
     mMergeState = false;
-    mCropToPadding= false;
-    mDrawable  = nullptr;
-    mHaveFrame = true;
-    mDrawMatrix= identity_matrix();
+    mCropToPadding = false;
+    mAdjustViewBounds = false;
+    mDrawable   = nullptr;
+    mDrawMatrix = identity_matrix();
     mMatrix = identity_matrix();
-    mRecycleableBitmapDrawable= nullptr;
+    mRecycleableBitmapDrawable = nullptr;
     mMaxWidth = mMaxHeight = INT_MAX;
     mDrawableTintList = nullptr;
     mColorFilter = nullptr;
@@ -56,10 +57,11 @@ void ImageView::initImageView(){
 }
 
 ImageView::~ImageView() {
+    if(mDrawable!=mRecycleableBitmapDrawable)
+        delete mRecycleableBitmapDrawable;
     delete mDrawable;
     delete mDrawableTintList;
     delete mColorFilter;
-    delete mRecycleableBitmapDrawable;
 }
 
 void ImageView::resolveUri(){
