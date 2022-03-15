@@ -86,6 +86,9 @@ void WindowManager::removeWindow(Window*w){
         w1->invalidate(&rc);
     }
     Looper::getDefault()->removeEventHandler(w->source);
+    View::AttachInfo*info=w->mAttachInfo;
+    w->dispatchDetachedFromWindow();
+    delete info;
     delete w;
     for(auto it=windows.rbegin();it!=windows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){

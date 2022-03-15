@@ -2630,6 +2630,17 @@ bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {
     return isVisible;
 }
 
+void ViewGroup::bringChildToFront(View* child) {
+    const int index = indexOfChild(child);
+    if (index >= 0) {
+        removeFromArray(index);
+        addInArray(child, mChildren.size());
+        child->mParent = this;
+        requestLayout();
+        invalidate();
+    }
+}
+
 bool ViewGroup::requestLayoutDuringLayout(View* view){
     return true;
 }

@@ -137,11 +137,6 @@ RefPtr<Canvas>Window::getCanvas(){
     return canvas;
 }
 
-Window::~Window() {
-    dispatchDetachedFromWindow();
-    delete mAttachInfo;
-}
-
 void Window::onActive(){
     LOGV("%p[%s]",this,getText().c_str());
 }

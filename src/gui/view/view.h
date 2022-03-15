@@ -909,6 +909,7 @@ public:
     // Parent and children views
     virtual ViewGroup*getParent()const;
     ViewGroup*getRootView()const;
+    void bringToFront();
 
     virtual View* findViewById(int id)const;
     virtual View* findViewWithTag(void*)const;

@@ -3876,6 +3876,12 @@ bool View::hasFlag(int flag) const {
     return (mViewFlags&flag)==flag;
 }
 
+void View::bringToFront() {
+    if (mParent != nullptr) {
+        mParent->bringChildToFront(this);
+    }
+}
+
 void View::onAttachedToWindow(){
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     jumpDrawablesToCurrentState();

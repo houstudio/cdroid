@@ -1,15 +1,14 @@
 #ifndef __STATESET_H__
 #define __STATESET_H__
-#include <string>
 #include <vector>
 #include <core/attributeset.h>
+
 namespace cdroid{
+
 class StateSet{
 private:
     static std::vector<int>VIEW_STATE_IDS;
-    static std::vector<std::vector<int>>VIEW_STATE_SETS;
     static void appendState(std::vector<int>&states,const std::string&s,int value);
-    static void createStates();
 public:
     enum{
         VIEW_STATE_WINDOW_FOCUSED =1<<0 ,
@@ -46,7 +45,7 @@ public:
     static bool stateSetMatches(const std::vector<int>&stateSpec,int state);
     static bool containsAttribute(const std::vector<std::vector<int>>&stateSpecs,int attr);
     static int parseState(std::vector<int>&states,const AttributeSet&attss);
-    static std::vector<int>&get(int mask);
+    static std::vector<int> get(int mask);
 };
 }
 #endif

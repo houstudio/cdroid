@@ -65,7 +65,6 @@ public:
     Window(Context*,const AttributeSet&);
     void setRegion(const RefPtr<Region>&region);
     void draw();
-    virtual ~Window();
     virtual void setText(const std::string&);
     const std::string getText()const;
     virtual View& setPos(int x,int y)override;

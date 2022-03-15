@@ -19,42 +19,17 @@ std::vector<int>StateSet::VIEW_STATE_IDS={
     DRAG_HOVERED   , VIEW_STATE_DRAG_HOVERED
 };
 
-std::vector<std::vector<int>>StateSet::VIEW_STATE_SETS;
-
 void StateSet::trimStateSet(std::vector<int>&states,int newsize){
     states.resize(newsize);
 }
 
-void StateSet::createStates(){
-    const int NUM_BITS=VIEW_STATE_IDS.size()/2;
-
-    std::vector<int>orderedIds;
-    orderedIds.resize(VIEW_STATE_IDS.size());
-    for (int i = 0; i < NUM_BITS;i++){//R.styleable.ViewDrawableStates.length; i++) {
-        int viewState = i+1;//R.styleable.ViewDrawableStates[i];STATE is codedfrom WINDOW_FOCUSED:1-->DRAG_HOVERED:10
-        for (int j = 0; j < VIEW_STATE_IDS.size(); j += 2) {
-            if (VIEW_STATE_IDS[j] == viewState) {
-                orderedIds[i * 2] = viewState;
-                orderedIds[i * 2 + 1] = VIEW_STATE_IDS[j + 1];
-            }
-        }
+std::vector<int> StateSet::get(int mask){
+    std::vector<int>states;
+    for( int i=0 ; i<VIEW_STATE_IDS.size() ; i+=2 ){
+        if( mask & VIEW_STATE_IDS[i+1] )
+           states.push_back(VIEW_STATE_IDS[i]);
     }
-    VIEW_STATE_SETS.resize(1<<NUM_BITS);
-    for (int i = 0; i < VIEW_STATE_SETS.size(); i++) {
-        std::vector<int>set;
-        for (int j = 0; j < orderedIds.size(); j += 2) {
-            if ((i & orderedIds[j + 1]) != 0) {
-                set.push_back(orderedIds[j]);
-            }
-        }
-        VIEW_STATE_SETS[i] = set;
-    }
-}
-
-std::vector<int>& StateSet::get(int mask){
-    if(VIEW_STATE_SETS.size()==0)
-         createStates();
-    return VIEW_STATE_SETS[mask]; 
+    return states;
 }
 
 bool StateSet::isWildCard(const std::vector<int>&stateSetOrSpec){

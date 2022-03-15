@@ -250,8 +250,6 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
 TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
-    mLayout=new Layout(20,50);
-    mHintLayout=new Layout(20,50);
     setText(attrs.getString("text"));
     
     Drawable* left =ctx->getDrawable(attrs,"drawableLeft");
