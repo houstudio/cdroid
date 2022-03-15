@@ -50,10 +50,6 @@ ViewOverlay::OverlayViewGroup::OverlayViewGroup(Context*context,View* hostView):
 }
 
 ViewOverlay::OverlayViewGroup::~OverlayViewGroup(){
-    for(auto d:mDrawables){
-        unscheduleDrawable(*d);
-        delete d;
-    }
     mDrawables.clear();
 }
 
@@ -75,9 +71,9 @@ void ViewOverlay::OverlayViewGroup::remove(Drawable* drawable){
     }
     auto it=std::find(mDrawables.begin(),mDrawables.end(),drawable);
     if (it!=mDrawables.end()) {
-        mDrawables.erase(it);
         invalidate(drawable->getBounds());
         drawable->setCallback(nullptr);
+        mDrawables.erase(it);
     }
 }
 

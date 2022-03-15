@@ -222,7 +222,7 @@ protected:
     float mVerticalScrollFactor;
     int mLayoutMode;
     RecycleBin*mRecycler;
-    AdapterDataSetObserver*mDataSetObserver;
+    DataSetObserver mDataSetObserver;
     SparseBooleanArray mCheckStates;
     LongSparseArray mCheckedIdStates;
     Drawable* mSelector;

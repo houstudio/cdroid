@@ -4,11 +4,11 @@
 #include <widget/textview.h>
 
 namespace cdroid{
-class DataSetObserver{
+struct DataSetObserver{
 public:
-    virtual void onChanged()=0;
-    virtual void onInvalidated()=0;
-    virtual void clearSavedState()=0;
+    CallbackBase<void> onChanged;//virtual void onChanged()=0;
+    CallbackBase<void> onInvalidated;//virtual void onInvalidated()=0;
+    CallbackBase<void> clearSavedState;//virtual void clearSavedState()=0;
 };
 
 class Adapter{
@@ -22,8 +22,8 @@ public:
     void setNotifyOnChange(bool notifyOnChange) {
         mNotifyOnChange = notifyOnChange;
     }
-    virtual void registerDataSetObserver(DataSetObserver* observer);
-    virtual void unregisterDataSetObserver(DataSetObserver* observer);
+    virtual void registerDataSetObserver(DataSetObserver observer);
+    virtual void unregisterDataSetObserver(DataSetObserver observer);
     virtual void notifyDataSetChanged();
     virtual void notifyDataSetInvalidated();
     virtual int  getCount()const=0;
@@ -39,7 +39,7 @@ public:
     virtual bool isEnabled(int position)const;//for listadapter
     virtual View*getDropDownView(int position, View* convertView, ViewGroup* parent);//only for spinneradapter
 private:
-    std::vector<DataSetObserver*> mObservers;
+    std::vector<DataSetObserver> mObservers;
 };
 
 typedef Adapter ListAdapter,SpinnerAdapter;
@@ -121,8 +121,8 @@ public:
 
 class PagerAdapter{
 protected:
-    std::vector<DataSetObserver*> mObservers;
-    DataSetObserver* mViewPagerObserver;
+    std::vector<DataSetObserver> mObservers;
+    DataSetObserver mViewPagerObserver;
 public:
     static constexpr int POSITION_UNCHANGED =-1;
     static constexpr int POSITION_NONE = -2;
@@ -141,9 +141,9 @@ public:
     virtual bool isViewFromObject(View* view, void* object)=0;
     virtual int getItemPosition(void* object){return POSITION_UNCHANGED;}
     void notifyDataSetChanged();
-    void registerDataSetObserver(DataSetObserver* observer);
-    void unregisterDataSetObserver(DataSetObserver* observer);
-    void setViewPagerObserver(DataSetObserver* observer);
+    void registerDataSetObserver(DataSetObserver observer);
+    void unregisterDataSetObserver(DataSetObserver observer);
+    void setViewPagerObserver(DataSetObserver observer);
     virtual std::string getPageTitle(int position){return std::string();}
     /*Returns the proportional width of a given page as a percentage of the
      * ViewPager's measured width from (0.f-1.f]*/

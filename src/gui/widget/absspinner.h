@@ -16,7 +16,7 @@ protected:
         void clear();
     };
     RecycleBin*mRecycler;
-    DataSetObserver* mDataSetObserver;
+    DataSetObserver mDataSetObserver;
     int mHeightMeasureSpec;
     int mWidthMeasureSpec;
     int mSelectionLeftPadding;

@@ -42,6 +42,10 @@ Scroller::Scroller(Context* context, Interpolator* interpolator, bool flywheel) 
     mPhysicalCoeff = computeDeceleration(0.84f); // look and feel tuning
 }
 
+Scroller::~Scroller(){
+    delete mInterpolator;
+}
+
 void Scroller::sInit(){
     float x_min = 0.0f;
     float y_min = 0.0f;

@@ -66,7 +66,6 @@ void AbsSpinner::setAdapter(Adapter* adapter) {
         mOldItemCount = mItemCount;
         mItemCount = mAdapter->getCount();
         checkFocus();
-        mDataSetObserver = new AdapterDataSetObserver(this);
         mAdapter->registerDataSetObserver(mDataSetObserver);
         int position = mItemCount > 0 ? 0 : INVALID_POSITION;
 

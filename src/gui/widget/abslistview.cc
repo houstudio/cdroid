@@ -242,6 +242,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
     setAlwaysDrawnWithCacheEnabled(false);
+    setDataObserver(mDataSetObserver);
     mScrollingCacheEnabled   = false;
     mFastScrollAlwaysVisible = false;
     setScrollingCacheEnabled(true);
@@ -269,7 +270,6 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mCheckFlywheel = std::bind(&AbsListView::FLY_CheckFlyWheelProc,this);
     mWidthMeasureSpec=0;
     mSelector = nullptr;
-    mDataSetObserver =nullptr;
     mCacheColorHint = 0;
     mResurrectToPosition = INVALID_POSITION;
     mLayoutMode = LAYOUT_FORCE_TOP;
@@ -2028,8 +2028,7 @@ void AbsListView::onAttachedToWindow() {
         treeObserver.addOnGlobalLayoutListener(this);
     }*/
 
-    if (mAdapter && mDataSetObserver) {
-        mDataSetObserver = new AdapterDataSetObserver(this);
+    if (mAdapter) {
         mAdapter->registerDataSetObserver(mDataSetObserver);
 
         // Data may have changed while we were detached. Refresh.
@@ -2057,9 +2056,8 @@ void AbsListView::onDetachedFromWindow() {
         mGlobalLayoutListenerAddedFilter = false;
     }*/
 
-    if (mAdapter && mDataSetObserver) {
+    if (mAdapter) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
-        mDataSetObserver = nullptr;
     }
 
     /*if (mScrollStrictSpan != nullptr) {

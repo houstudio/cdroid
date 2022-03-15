@@ -29,7 +29,6 @@ void ListView::initListView(const AttributeSet&attrs){
     mDivider=nullptr;
     mOverScrollHeader=nullptr;
     mOverScrollFooter=nullptr;
-    mDataSetObserver=nullptr;
     mHeaderDividersEnabled=true;
     mFooterDividersEnabled=true;
     mFocusSelector =nullptr;
@@ -50,7 +49,6 @@ void ListView::initListView(const AttributeSet&attrs){
 
 ListView::~ListView(){
     delete mDivider;
-    delete mDataSetObserver;
     delete mOverScrollHeader;
     delete mOverScrollFooter;
     delete mFocusSelector;
@@ -121,7 +119,8 @@ void ListView::addHeaderView(View* v,void* data, bool isSelectable){
 
         // In the case of re-adding a header view, or adding one later on,
         // we need to notify the observer.
-        if (mDataSetObserver ) mDataSetObserver->onChanged();
+        if (mDataSetObserver.onChanged ) 
+            mDataSetObserver.onChanged();
     }
 }
 
@@ -137,8 +136,8 @@ bool ListView::removeHeaderView(View* v){
     if (mHeaderViewInfos.size()) {
         bool result = false;
         if (mAdapter != nullptr && ((HeaderViewListAdapter*) mAdapter)->removeHeader(v)) {
-            if (mDataSetObserver != nullptr) {
-                mDataSetObserver->onChanged();
+            if (mDataSetObserver.onChanged) {
+                mDataSetObserver.onChanged();
             }
             result = true;
         }
@@ -179,7 +178,8 @@ void ListView::addFooterView(View* v,void* data, bool isSelectable){
 
         // In the case of re-adding a footer view, or adding one later on,
         // we need to notify the observer.
-        if (mDataSetObserver)mDataSetObserver->onChanged();
+        if (mDataSetObserver.onChanged)
+            mDataSetObserver.onChanged();
     }
 }
 
@@ -195,8 +195,8 @@ bool ListView::removeFooterView(View* v) {
     if (mFooterViewInfos.size() > 0) {
         bool result = false;
         if (mAdapter && ((HeaderViewListAdapter*) mAdapter)->removeFooter(v)) {
-            if (mDataSetObserver != nullptr) {
-                mDataSetObserver->onChanged();
+            if (mDataSetObserver.onChanged) {
+                mDataSetObserver.onChanged();
             }
             result = true;
         }
@@ -207,7 +207,7 @@ bool ListView::removeFooterView(View* v) {
 }
 
 void ListView::setAdapter(Adapter* adapter) {
-    if (mAdapter  && mDataSetObserver ) {
+    if (mAdapter ) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
     }
 
@@ -231,7 +231,6 @@ void ListView::setAdapter(Adapter* adapter) {
         mItemCount = mAdapter->getCount();
         checkFocus();
 
-        mDataSetObserver = new AdapterDataSetObserver(this);
         mAdapter->registerDataSetObserver(mDataSetObserver);
 
         mRecycler->setViewTypeCount(mAdapter->getViewTypeCount());

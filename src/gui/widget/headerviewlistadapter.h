@@ -31,8 +31,8 @@ public:
     View* getView(int position, View* convertView, ViewGroup* parent)override;
     int getItemViewType(int position)const;
     int getViewTypeCount()const override;
-    void registerDataSetObserver(DataSetObserver* observer)override;
-    void unregisterDataSetObserver(DataSetObserver* observer)override;
+    void registerDataSetObserver(DataSetObserver observer)override;
+    void unregisterDataSetObserver(DataSetObserver observer)override;
     Adapter* getWrappedAdapter();
 };
 

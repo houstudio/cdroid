@@ -113,15 +113,6 @@ private:
     class AdapterChangeListener:public ViewPager::OnAdapterChangeListener{
 
     };
-    class PagerAdapterObserver:public DataSetObserver{
-    protected:
-        TabLayout*mTabLayout;
-    public:
-        PagerAdapterObserver(TabLayout*tab);
-        void onChanged()override;
-        void onInvalidated()override;
-        void clearSavedState()override;
-    };
     class SlidingTabStrip:public LinearLayout{
     private:
         int  mSelectedIndicatorHeight;
@@ -216,7 +207,7 @@ protected:
     ViewPager* mViewPager;
     std::vector<Tab*>mTabs;
     PagerAdapter* mPagerAdapter;
-    DataSetObserver* mPagerAdapterObserver;
+    DataSetObserver mPagerAdapterObserver;
     AdapterChangeListener* mAdapterChangeListener;
     TabLayoutOnPageChangeListener mPageChangeListener;
 

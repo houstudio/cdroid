@@ -20,10 +20,15 @@ ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
 }
 
 ViewPager::~ViewPager(){
+    if(mAdapter)
+        mAdapter->setViewPagerObserver(DataSetObserver());
     delete mLeftEdge;
     delete mRightEdge;
     delete mMarginDrawable;
     delete mScroller;
+    delete mTempItem;
+    for(auto item: mItems)
+       delete item;
 }
 
 ViewPager::ViewPager(Context* context,const AttributeSet& attrs)
@@ -45,7 +50,6 @@ void ViewPager::initViewPager(){
     mIsUnableToDrag  = false;
     mScrollState = SCROLL_STATE_IDLE;
     mAdapter  = nullptr;
-    mObserver = nullptr;
     mInLayout = false;
     mFirstLayout = true;
     mPageTransformer = nullptr;
@@ -79,6 +83,8 @@ void ViewPager::initViewPager(){
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
     mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
     mGutterSize = 0;
+    mObserver.onChanged=[this](){ dataSetChanged(); };
+    mObserver.onInvalidated=[this](){ dataSetChanged(); };
 }
 
 ViewPager::ItemInfo::ItemInfo(){
@@ -104,7 +110,7 @@ void ViewPager::setScrollState(int newState){
 
 void ViewPager::setAdapter(PagerAdapter* adapter){
     if (mAdapter) {
-        mAdapter->setViewPagerObserver(nullptr);
+        mAdapter->setViewPagerObserver(DataSetObserver());
         mAdapter->startUpdate(this);
         for (int i = 0; i < mItems.size(); i++) {
             ItemInfo* ii = mItems[i];
@@ -123,7 +129,6 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
     mExpectedAdapterCount = 0;
 
     if (mAdapter != nullptr) {
-        if (mObserver == nullptr)  mObserver = new PagerObserver(this);
         mAdapter->setViewPagerObserver(mObserver);
         mPopulatePending = false;
         const bool wasFirstLayout = mFirstLayout;
@@ -776,7 +781,7 @@ View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params
     }
     LayoutParams* lp = (LayoutParams*) params;
     //Any views added via inflation should be classed as part of the decor
-    //lp->isDecor |=  isDecorView(child);//isDecor has been setted in addNewItem(after Adapter::instantiateItem)
+    //lp->isDecor |=  isDecorView(child);isDecor has been setted in addNewItem(after Adapter::instantiateItem)
     if (mInLayout) {
         LOGD_IF(lp != nullptr && lp->isDecor,"Cannot add pager decor view during layout");
         lp->needsMeasure = true;
@@ -1803,7 +1808,7 @@ bool ViewPager::arrowScroll(int direction){
         handled = pageRight();
     }
     if (handled) {
-        //playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));
+        //playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
     }
     return handled;
 }

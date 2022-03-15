@@ -64,6 +64,7 @@ private:
 public:
     Scroller(Context* context);
     Scroller(Context* context, Interpolator* interpolator,bool flywheel=true);
+    ~Scroller();
     void setFriction(float friction);
     float computeDeceleration(float friction);
     bool isFinished()const;

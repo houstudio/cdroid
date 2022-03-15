@@ -37,14 +37,13 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 
     setStyle(styleResId);
 
-    ViewGroupOverlay* overlay = (ViewGroupOverlay*)listView->getOverlay();
-    mOverlay = overlay;
-    if(overlay){
-        overlay->add(mTrackImage);
-        overlay->add(mThumbImage);
-        overlay->add(mPreviewImage);
-        overlay->add(mPrimaryText);
-        overlay->add(mSecondaryText);
+    mOverlay = (ViewGroupOverlay*)listView->getOverlay();
+    if(mOverlay){
+        mOverlay->add(mTrackImage);
+        mOverlay->add(mThumbImage);
+        mOverlay->add(mPreviewImage);
+        mOverlay->add(mPrimaryText);
+        mOverlay->add(mSecondaryText);
     }
 
     getSectionsFromIndexer();
@@ -54,10 +53,11 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 }
 
 FastScroller::~FastScroller(){
+    remove();
     delete mTrackImage;
     delete mThumbImage;
     delete mPreviewImage;
-    delete mOverlay;
+    //delete mOverlay;mOverlay is create/freed by View/ViewGroup,
 }
 
 void FastScroller::setStyle(const std::string&styleResId){
@@ -209,7 +209,7 @@ TextView* FastScroller::createPreviewTextView(Context* context) {
     textView->setAlpha(.0f);
 
     // Manually propagate inherited layout direction.
-     textView->setLayoutDirection(mList->getLayoutDirection());
+    textView->setLayoutDirection(mList->getLayoutDirection());
 
     return textView;
 }
