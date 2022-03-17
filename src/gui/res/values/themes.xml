@@ -425,10 +425,10 @@ please see themes_device_defaults.xml.
         <!-- DatePicker dialog theme -->
         <item name="datePickerDialogTheme">?attr/alertDialogTheme</item>
 
-        <item name="fastScrollThumbDrawable">@drawable/scrollbar_handle_accelerated_anim2</item>
+        <item name="fastScrollThumbDrawable">@mipmap/scrollbar_handle_accelerated_anim2</item>
         <item name="fastScrollTrackDrawable">@null</item>
-        <item name="fastScrollPreviewBackgroundRight">@drawable/menu_submenu_background</item>
-        <item name="fastScrollPreviewBackgroundLeft">@drawable/menu_submenu_background</item>
+        <item name="fastScrollPreviewBackgroundRight">@mipmap/menu_submenu_background</item>
+        <item name="fastScrollPreviewBackgroundLeft">@mipmap/menu_submenu_background</item>
         <item name="fastScrollOverlayPosition">floating</item>
         <item name="fastScrollTextColor">@color/primary_text_dark</item>
 
