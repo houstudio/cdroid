@@ -518,7 +518,20 @@
         <item name="textOn">@string/capital_on</item>
         <item name="textOff">@string/capital_off</item>
     </style>
-
+    <style name="Widget.FastScroll">
+        <item name="thumbDrawable">?attr/fastScrollThumbDrawable</item>
+        <item name="trackDrawable">?attr/fastScrollTrackDrawable</item>
+        <item name="backgroundLeft">?attr/fastScrollPreviewBackgroundLeft</item>
+        <item name="backgroundRight">?attr/fastScrollPreviewBackgroundRight</item>
+        <item name="position">?attr/fastScrollOverlayPosition</item>
+        <item name="textColor">?attr/fastScrollTextColor</item>
+        <item name="thumbMinWidth">64dp</item>
+        <item name="thumbMinHeight">52dp</item>
+        <item name="textSize">52sp</item>
+        <item name="minWidth">72dp</item>
+        <item name="minHeight">72dp</item>
+        <item name="padding">16dp</item>
+    </style>
     <!-- Text Appearances -->
     <style name="TextAppearance">
         <item name="textColor">?textColorPrimary</item>

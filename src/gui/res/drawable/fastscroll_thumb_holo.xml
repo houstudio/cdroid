@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_pressed="true" cdroid:drawable="@mipmap/fastscroll_thumb_pressed_holo" />
+    <item cdroid:drawable="@mipmap/fastscroll_thumb_default_holo" />
+</selector>

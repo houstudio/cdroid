@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:cdroid="http://schemas.android.com/apk/res/android"
+       cdroid:insetLeft="16dp">
+    <shape
+        cdroid:shape="rectangle"
+        cdroid:tint="?attr/colorControlActivated">
+        <corners
+            cdroid:topLeftRadius="44dp"
+            cdroid:topRightRadius="44dp"
+            cdroid:bottomRightRadius="44dp" />
+        <padding
+            cdroid:left="22dp"
+            cdroid:right="22dp" />
+        <solid cdroid:color="@color/white" />
+    </shape>
+</inset>
