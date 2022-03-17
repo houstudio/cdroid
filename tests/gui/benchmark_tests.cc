@@ -29,6 +29,7 @@ TEST_F(BENCHMARK,FillBlit){
     dst->set_source(srcsuf,0,0);
     int64_t t1=SystemClock::uptimeMillis();
     for(int i=0;i<100;i++){
+        dst->set_source_rgb(i*.01f,i*.01f,i*.01f);
         dst->rectangle(0,0,1280,720);
         dst->fill();
     }

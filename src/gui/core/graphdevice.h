@@ -10,12 +10,13 @@ using namespace Cairo;
 namespace cdroid{
 class GraphDevice{
 private:
-    int width;
-    int height;
-    int format;
+    int mScreenWidth;
+    int mScreenHeight;
+    int mFormat;
     int mComposing;
-    int compose_event;
-    uint64_t last_compose_time;
+    int mPendingCompose;
+    bool mQuitFlag;
+    uint64_t mLastComposeTime;
     uint64_t mFpsStartTime;
     uint64_t mFpsPrevTime;
     uint64_t mFpsNumFrames;

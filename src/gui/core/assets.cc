@@ -23,9 +23,21 @@ Assets::Assets(const std::string&path):Assets(){
 }
 
 Assets::~Assets(){
-    for(auto it=mResources.begin();it!=mResources.end();it++)
-       delete it->second;
+    for(auto it = mColors.begin() ;it != mColors.end() ; it++){
+        if(it->second.index()==1){
+            ColorStateList*c=nonstd::get<ColorStateList*>(it->second);
+            delete c;
+        }
+    }
+    mColors.clear();
+
+    for(auto it=mResources.begin();it!=mResources.end();it++){
+        delete it->second;
+    }
     mResources.clear();
+
+    mDrawables.clear();
+    printf(" assets destroied\r\n");
     LOGD("%p Destroied",this);
 }
 

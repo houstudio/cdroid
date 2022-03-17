@@ -63,6 +63,7 @@ public:
     }WindowType;
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
     Window(Context*,const AttributeSet&);
+    ~Window()override;
     void setRegion(const RefPtr<Region>&region);
     void draw();
     virtual void setText(const std::string&);

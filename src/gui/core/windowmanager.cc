@@ -25,7 +25,7 @@
 
 namespace cdroid {
 // Initialize the instance of the singleton to nullptr
-WindowManager* WindowManager::instance = nullptr;
+WindowManager* WindowManager::mInst = nullptr;
 
 WindowManager::WindowManager(){
      GraphDevice::getInstance();
@@ -33,10 +33,10 @@ WindowManager::WindowManager(){
 }
 
 WindowManager&WindowManager::getInstance(){
-    if(nullptr==instance){
-        instance=new WindowManager();
+    if(nullptr==mInst){
+        mInst = new WindowManager();
     }
-    return *instance;
+    return *mInst;
 };
 
 WindowManager::~WindowManager() {
@@ -114,8 +114,8 @@ void WindowManager::moveWindow(Window*w,int x,int y){
 
 int WindowManager::enumWindows(WNDENUMPROC cbk){
     int rc=0;
-    for(auto win:windows)
-       rc+=cbk(win);
+    for(auto& w:windows)
+       rc+=cbk(w);
     return rc;
 }
 
@@ -125,7 +125,7 @@ int WindowManager::getWindows(std::vector<Window*>&wins){
 }
 
 int WindowManager::getVisibleWindows(std::vector<Window*>&wins){
-    for(auto w:windows){
+    for(auto& w:windows){
         if(w->getVisibility()==View::VISIBLE)
            wins.push_back(w);
     }

@@ -16,6 +16,8 @@ class App:public Assets{
 private:
     const std::string getAssetsPath();
     std::map<std::string,std::string>args;
+    bool mQuitFlag;
+    int mExitCode;
 protected:
     static App*mInst;
 public:

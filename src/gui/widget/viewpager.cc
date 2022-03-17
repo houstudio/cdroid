@@ -26,7 +26,6 @@ ViewPager::~ViewPager(){
     delete mRightEdge;
     delete mMarginDrawable;
     delete mScroller;
-    delete mTempItem;
     for(auto item: mItems)
        delete item;
 }
@@ -77,7 +76,6 @@ void ViewPager::initViewPager(){
     mOffscreenPageLimit =3;
     mFirstOffset=-std::numeric_limits<float>::max();
     mLastOffset = std::numeric_limits<float>::max();
-    mTempItem=new ItemInfo();
 
     mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
@@ -528,7 +526,12 @@ void ViewPager::populate(int newCurrentItem){
         sortChildDrawingOrder();
         return;
     }
-
+    // Also, don't populate until we are attached to a window.  This is to
+    // avoid trying to populate before we have restored our view hierarchy
+    // state and conflicting with what is restored.
+    if(!isAttachedToWindow()){
+        return ;
+    }
     // Bail now if we are waiting to populate.  This is to hold off
     // on creating views from the time the user releases their finger to
     // fling to a new position until we have finished the scroll to
@@ -628,16 +631,13 @@ void ViewPager::populate(int newCurrentItem){
                 }
             }
         }
-
         calculatePageOffsets(curItem, curIndex, oldCurInfo);
+        mAdapter->setPrimaryItem(this, mCurItem, curItem != nullptr ? curItem->object : nullptr);
     }
 
 
-    mAdapter->setPrimaryItem(this, mCurItem, curItem != nullptr ? curItem->object : nullptr);
-
     mAdapter->finishUpdate(this);
 
-    
     // Check width measurement of current pages and drawing sort order.
     // Update LayoutParams as needed.
     for (int i=0;i<getChildCount();i++){
@@ -1492,13 +1492,14 @@ ViewPager::ItemInfo* ViewPager::infoForCurrentScrollPosition() {
     float lastWidth = 0.f;
     bool first = true;
 
+    ItemInfo tmpItem;
     ItemInfo* lastItem = nullptr;
     for (int i = 0; i < mItems.size(); i++) {
         ItemInfo* ii = mItems.at(i);
         float offset;
         if (!first && ii->position != lastPos + 1) {
             // Create a synthetic item for a missing page.
-            ii = mTempItem;
+            ii = &tmpItem;
             ii->offset = lastOffset + lastWidth + marginOffset;
             ii->position = lastPos + 1;
             ii->widthFactor = mAdapter->getPageWidth(ii->position);

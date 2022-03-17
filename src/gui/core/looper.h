@@ -117,7 +117,7 @@ private:
 
     // Whether we are currently waiting for work.  Not protected by a lock,
     // any use of it is racy anyway.
-    volatile bool mPolling;
+    bool mPolling;
 
     int mEpollFd; // guarded by mLock but only modified on the looper thread
     bool mEpollRebuildRequired; // guarded by mLock

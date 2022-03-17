@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 #include <cdgraph.h>
 #include <windowmanager.h>
 #include <assets.h>
@@ -40,8 +41,10 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     int option_index=-1,c=-1;
     std::string optstring;
     std::vector<struct option>all;
-    LogParseModules(argc,argv);    
-    mInst=this;
+    LogParseModules(argc,argv);
+    mQuitFlag = false;
+    mExitCode = 0;
+    mInst = this;
 
     LOGD("App %s started",(argc&&argv)?argv[0]:"");
     GFXInit();
@@ -81,6 +84,11 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     InputEventSource*inputsource=new InputEventSource(getArg("record",""));
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
+
+    signal(SIGINT,[](int){
+        LOGD("sigint...");
+        App::mInst->mQuitFlag = true;
+    });
 }
 
 App::~App(){
@@ -88,6 +96,7 @@ App::~App(){
     WindowManager::getInstance().shutDown();
     delete Looper::getDefault();
     delete &GraphDevice::getInstance();
+    exit(mExitCode);
     LOGD("%p Destroied",this);
 }
 
@@ -146,15 +155,16 @@ void App::addEventHandler(const EventHandler*handler){
 }
 
 void App::removeEventHandler(const EventHandler*handler){
-    //Looper::getDefault()->remove_event_source(source);
+    Looper::getDefault()->removeEventHandler(handler);
 }
 
 int App::exec(){
-    while(1)Looper::getDefault()->pollAll(5);
+    while(!mQuitFlag)Looper::getDefault()->pollAll(5);
 }
 
 void App::exit(int code){
-    //Looper::getDefault()->quit(code);
+    mQuitFlag = true;
+    mExitCode = code;
 }
 
 void App::setName(const std::string&appname){

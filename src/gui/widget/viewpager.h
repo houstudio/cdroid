@@ -75,7 +75,6 @@ private:
     Interpolator* mInterpolator;
     int mExpectedAdapterCount;
     std::vector<ItemInfo*>mItems ;
-    ItemInfo* mTempItem;
     int mRestoredCurItem = -1;
     Scroller* mScroller;
     bool mIsScrollStarted;

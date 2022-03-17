@@ -37,7 +37,7 @@ public:
     int enumWindows(WNDENUMPROC cbk);
     int getWindows(std::vector<Window*>&);
     int getVisibleWindows(std::vector<Window*>&);
-    void shutDown(){delete instance;}
+    void shutDown(){delete mInst;}
 protected:
     virtual void onKeyEvent(KeyEvent&key);
     virtual void onMotion(MotionEvent&event);
@@ -47,7 +47,7 @@ private:
     virtual ~WindowManager();
     Window*activeWindow;/*activeWindow*/
     std::vector< Window* > windows;
-    static WindowManager* instance;
+    static WindowManager* mInst;
     DISALLOW_COPY_AND_ASSIGN(WindowManager);
 };
 

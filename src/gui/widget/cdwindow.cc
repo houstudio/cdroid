@@ -56,6 +56,10 @@ Window::Window(int x,int y,int width,int height,int type)
     WindowManager::getInstance().addWindow(this);
 }
 
+Window::~Window(){
+    LOGD("%p:%d destroied!",this,mID);
+}
+
 ViewGroup::LayoutParams* Window::generateDefaultLayoutParams()const{
     return new MarginLayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
@@ -84,7 +88,7 @@ void Window::draw(){
     RefPtr<Canvas>canvas=getCanvas();
     mAttachInfo->mDrawingTime=SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);
-    //if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
+    if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
     mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();
 }
