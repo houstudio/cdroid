@@ -824,7 +824,7 @@ void GridView::layoutChildren() {
 
     if (mAdapter == nullptr) {
         resetList();
-        //invokeOnItemScrollListener();
+        invokeOnItemScrollListener();
         mBlockLayoutRequests=false;
         return;
     }
@@ -879,7 +879,7 @@ void GridView::layoutChildren() {
     // and calling it a day
     if (mItemCount == 0) {
         resetList();
-        //invokeOnItemScrollListener();
+        invokeOnItemScrollListener();
         mBlockLayoutRequests=false;
         return;
     }

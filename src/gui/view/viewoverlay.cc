@@ -160,12 +160,12 @@ void ViewOverlay::OverlayViewGroup::dispatchDraw(Canvas& canvas) {
      */
      //canvas.insertReorderBarrier();
 
-     ViewGroup::dispatchDraw(canvas);
+    ViewGroup::dispatchDraw(canvas);
 
-     //canvas.insertInorderBarrier();
-     for (Drawable*d:mDrawables) {
-         d->draw(canvas);
-     }
+    //canvas.insertInorderBarrier();
+    for (Drawable*d:mDrawables) {
+        d->draw(canvas);
+    }
 }
 
 void ViewOverlay::OverlayViewGroup::onLayout(bool changed, int l, int t, int w, int h) {

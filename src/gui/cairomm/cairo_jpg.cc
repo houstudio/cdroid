@@ -619,12 +619,15 @@ cairo_surface_t *cairo_image_surface_create_from_jpeg(const char *filename) {
         return cairo_image_surface_create(CAIRO_FORMAT_INVALID, 0, 0);
 
     // read data
-    if (read(infile, data, stat.st_size) < stat.st_size)
+    if (read(infile, data, stat.st_size) < stat.st_size){
+        free(data);
         return cairo_image_surface_create(CAIRO_FORMAT_INVALID, 0, 0);
-
+    }
     close(infile);
 
-    return cairo_image_surface_create_from_jpeg_mem(data, stat.st_size);
+    cairo_surface_t*result = cairo_image_surface_create_from_jpeg_mem(data, stat.st_size);
+    free(data);
+    return result;
 }
 
 #else

@@ -345,7 +345,8 @@ void Layout::calculateEllipsis(int line,int nChars){
     ellipsisX=ceil(measureSize(L"...",extents));
     int els=ellipsisX;
     switch(mEllipsis){
-    case ELLIPSIS_NONE :LOGD("calculateEllipsis:ELLIPSIS_NONE");return ;
+    case ELLIPSIS_NONE :LOGD("calculateEllipsis:ELLIPSIS_NONE");
+        delete []widths;return ;
     case Layout::ELLIPSIS_START:
         ellipsisX +=mLines[line*mColumns+LAYOUT_WIDTH]-mWidth;
         start=bsearch(widths,nChars, ellipsisX)+1;

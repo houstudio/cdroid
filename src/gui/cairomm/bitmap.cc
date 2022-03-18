@@ -1125,7 +1125,7 @@ int Bitmap::TellHorizontalDPI( void ) {
 }
 
 bool Bitmap::Read32bitRow( BYTE* Buffer, int BufferSize, int Row ) {
-    int i;
+    int i=0;
     if( Width*4 > BufferSize ) {
         return false;
     }

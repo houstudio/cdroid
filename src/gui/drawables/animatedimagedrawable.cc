@@ -154,7 +154,7 @@ static int gifDrawFrame(GifFileType*gif,int*current_frame,size_t pxstride, void 
     GifColorType *bg;
     GifColorType *color;
     SavedImage *frame;
-    ExtensionBlock *ext = 0;
+    ExtensionBlock *ext = nullptr;
     GifImageDesc *frameInfo;
     ColorMapObject *colorMap;
     int *line;

@@ -709,9 +709,9 @@ public:
     View& setHorizontalScrollBarEnabled(bool);
     bool isVerticalScrollBarEnabled()const;
     View& setVerticalScrollBarEnabled(bool);
-    int getHorizontalScrollbarHeight()const;
-    int getVerticalScrollbarWidth()const;
-    int getVerticalScrollbarPosition()const;
+    virtual int getHorizontalScrollbarHeight()const;
+    virtual int getVerticalScrollbarWidth()const;
+    virtual int getVerticalScrollbarPosition()const;
     bool isScrollContainer()const;
     void setScrollContainer(bool isScrollContainer);
     bool isHorizontalFadingEdgeEnabled()const;
@@ -719,7 +719,7 @@ public:
     bool isVerticalFadingEdgeEnabled()const;
     void setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled);
 
-    View& setVerticalScrollbarPosition(int position);
+    virtual View& setVerticalScrollbarPosition(int position);
 
     void setScrollbarFadingEnabled(bool fadeScrollbars);
     bool isScrollbarFadingEnabled();

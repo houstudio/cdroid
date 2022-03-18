@@ -252,7 +252,10 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mFastScroll = nullptr; 
     mStackFromBottom = false;
     mIsChildViewEnabled =false;
+    mFiltered    = false;
     mIsDetaching = false;
+    mPopupHidden = false;
+    mTextFilterEnabled = false;
     mFastScrollEnabled = false;
     mSuppressIdleStateChangeCall =false;
     mVelocityScale = 1.0f;
@@ -375,6 +378,9 @@ bool AbsListView::isSmoothScrollbarEnabled()const {
 }
 
 void AbsListView::invokeOnItemScrollListener(){
+    if (mFastScroll != nullptr) {
+        mFastScroll->onScroll(mFirstPosition, getChildCount(), mItemCount);
+    }
     if(mOnScrollListener.onScroll)
        mOnScrollListener.onScroll(*this,mFirstPosition,getChildCount(),mItemCount);
     onScrollChanged(0,0,0,0);
@@ -469,12 +475,27 @@ bool AbsListView::isFastScrollAlwaysVisible()const{
     }
 }
 
+int AbsListView::getVerticalScrollbarWidth()const{
+    if (mFastScroll && mFastScroll->isEnabled()) {
+        return std::max(AdapterView::getVerticalScrollbarWidth(), mFastScroll->getWidth());
+    }
+    return AdapterView::getVerticalScrollbarWidth();
+}
+
 bool AbsListView::isFastScrollEnabled()const{
     if (mFastScroll == nullptr) {
         return mFastScrollEnabled;
     } else {
         return mFastScroll->isEnabled();
     }
+}
+
+View& AbsListView::setVerticalScrollbarPosition(int position) {
+    AdapterView::setVerticalScrollbarPosition(position);
+    if (mFastScroll) {
+        mFastScroll->setScrollbarPosition(position);
+    }
+    return *this;
 }
 
 void AbsListView::setScrollBarStyle(int style) {
@@ -1084,7 +1105,8 @@ void AbsListView::onLayout(bool changed, int l, int t, int w, int h) {
     mOverscrollMax = h / OVERSCROLL_LIMIT_DIVISOR;
 
     // TODO: Move somewhere sane. This doesn't belong in onLayout().
-    //if (mFastScroll) mFastScroll.onItemCountChanged(getChildCount(), mItemCount);
+    if (mFastScroll)
+        mFastScroll->onItemCountChanged(getChildCount(), mItemCount);
     mInLayout = false;
 }
 
@@ -2092,6 +2114,67 @@ void AbsListView::onDetachedFromWindow() {
     mIsDetaching = false;
 }
 
+void AbsListView::onWindowFocusChanged(bool hasWindowFocus){
+    AdapterView::onWindowFocusChanged(hasWindowFocus);
+
+    int touchMode = isInTouchMode() ? TOUCH_MODE_ON : TOUCH_MODE_OFF;
+
+    if (!hasWindowFocus) {
+        setChildrenDrawingCacheEnabled(false);
+        if (mFlingRunnable != nullptr) {
+            removeCallbacks(mFlingRunnable);
+            // let the fling runnable report its new state which
+            // should be idle
+            mSuppressIdleStateChangeCall = false;//mFlingRunnable.mSuppressIdleStateChangeCall = false;
+            FLY_endFling();//mFlingRunnable.endFling();
+            if (mPositionScroller != nullptr) {
+                mPositionScroller->stop();
+            }
+            if (mScrollY != 0) {
+                mScrollY = 0;
+                invalidateParentCaches();
+                finishGlows();
+                invalidate();
+            }
+        }
+        // Always hide the type filter
+        dismissPopup();
+
+        if (touchMode == TOUCH_MODE_OFF) {
+            // Remember the last selected element
+            mResurrectToPosition = mSelectedPosition;
+        }
+    } else {
+        if (mFiltered && !mPopupHidden) {
+            // Show the type filter only if a filter is in effect
+            showPopup();
+        }
+
+        // If we changed touch mode since the last time we had focus
+        if (touchMode != mLastTouchMode && mLastTouchMode != TOUCH_MODE_UNKNOWN) {
+            // If we come back in trackball mode, we bring the selection back
+            if (touchMode == TOUCH_MODE_OFF) {
+                // This will trigger a layout
+                resurrectSelection();
+               // If we come back in touch mode, then we want to hide the selector
+            } else {
+                hideSelector();
+                mLayoutMode = LAYOUT_NORMAL;
+                layoutChildren();
+            }
+        }
+    }
+
+    mLastTouchMode = touchMode;
+}
+
+void AbsListView::onRtlPropertiesChanged(int layoutDirection) {
+    AdapterView::onRtlPropertiesChanged(layoutDirection);
+    if (mFastScroll != nullptr) {
+        mFastScroll->setScrollbarPosition(getVerticalScrollbarPosition());
+    }
+}
+
 void AbsListView::dismissPopup(){
 }
 
@@ -2252,7 +2335,7 @@ bool AbsListView::onInterceptTouchEvent(MotionEvent& ev) {
         return false;
     }
 
-    //if (mFastScroll && mFastScroll->onInterceptTouchEvent(ev)) return true;
+    if (mFastScroll && mFastScroll->onInterceptTouchEvent(ev)) return true;
     switch (actionMasked) {
     case MotionEvent::ACTION_DOWN: {
         if (mTouchMode == TOUCH_MODE_OVERFLING || mTouchMode == TOUCH_MODE_OVERSCROLL) {
@@ -2388,7 +2471,7 @@ bool AbsListView::onTouchEvent(MotionEvent& ev) {
 
     startNestedScroll(SCROLL_AXIS_VERTICAL);
 
-    //if (mFastScroll != null && mFastScroll.onTouchEvent(ev)) return true;
+    if (mFastScroll && mFastScroll->onTouchEvent(ev)) return true;
 
     initVelocityTrackerIfNotExists();
     MotionEvent* vtev = MotionEvent::obtain(ev);

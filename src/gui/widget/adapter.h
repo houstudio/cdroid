@@ -11,6 +11,12 @@ public:
     CallbackBase<void> clearSavedState;//virtual void clearSavedState()=0;
 };
 
+struct SectionIndexer{
+    std::function<std::vector<void*>()>getSections;
+    std::function<int(int)>getPositionForSection;
+    std::function<int(int)>getSectionForPosition;
+};
+
 class Adapter{
 protected:
     bool mNotifyOnChange;

@@ -1,13 +1,16 @@
 #include <widget/fastscroller.h>
-#include <widget/abslistview.h>
+#include <widget/listview.h>
+#include <widget/headerviewlistadapter.h>
 #include <core/mathutils.h>
+#include <float.h>
 
 namespace cdroid{
 
 FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mList = listView;
-    mOldItemCount = listView->getCount();
+    mOldItemCount  = listView->getCount();
     mOldChildCount = listView->getChildCount();
+    mHeaderCount   = 0;
 
     Context* context = listView->getContext();
     mScaledTouchSlop = ViewConfiguration::get(context).getScaledTouchSlop();
@@ -41,7 +44,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     if(mOverlay){
         mOverlay->add(mTrackImage);
         mOverlay->add(mThumbImage);
-        mOverlay->add(mPreviewImage);
+        //mOverlay->add(mPreviewImage);
         mOverlay->add(mPrimaryText);
         mOverlay->add(mSecondaryText);
     }
@@ -58,6 +61,50 @@ FastScroller::~FastScroller(){
     delete mThumbImage;
     delete mPreviewImage;
     //delete mOverlay;mOverlay is create/freed by View/ViewGroup,
+}
+
+void FastScroller::updateAppearance() {
+    int width = 0;
+
+    // Add track to overlay if it has an image.
+    mTrackImage->setImageDrawable(mTrackDrawable);
+    if (mTrackDrawable != nullptr) {
+        width = std::max(width, mTrackDrawable->getIntrinsicWidth());
+    }
+
+    // Add thumb to overlay if it has an image.
+    mThumbImage->setImageDrawable(mThumbDrawable);
+    mThumbImage->setMinimumWidth(mThumbMinWidth);
+    mThumbImage->setMinimumHeight(mThumbMinHeight);
+    if (mThumbDrawable != nullptr) {
+        width = std::max(width, mThumbDrawable->getIntrinsicWidth());
+    }
+
+    // Account for minimum thumb width.
+    mWidth = std::max(width, mThumbMinWidth);
+
+    /*if (mTextAppearance != 0) {
+        mPrimaryText->setTextAppearance(mTextAppearance);
+        mSecondaryText->setTextAppearance(mTextAppearance);
+    }*/
+
+    if (mTextColor != nullptr) {
+        mPrimaryText->setTextColor(mTextColor);
+        mSecondaryText->setTextColor(mTextColor);
+    }
+
+    if (mTextSize > 0) {
+        mPrimaryText->setTextSize(TypedValue::COMPLEX_UNIT_PX, mTextSize);
+        mSecondaryText->setTextSize(TypedValue::COMPLEX_UNIT_PX, mTextSize);
+    }
+
+    int padding = mPreviewPadding;
+    //mPrimaryText->setIncludeFontPadding(false);
+    mPrimaryText->setPadding(padding, padding, padding, padding);
+    //mSecondaryText->setIncludeFontPadding(false);
+    mSecondaryText->setPadding(padding, padding, padding, padding);
+
+    refreshDrawablePressedState();
 }
 
 void FastScroller::setStyle(const std::string&styleResId){
@@ -78,7 +125,7 @@ void FastScroller::setStyle(const std::string&styleResId){
     mThumbMinHeight = ta.getDimensionPixelSize("thumbMinHeight", 0);
     mPreviewPadding = ta.getDimensionPixelSize("padding", 0);
     mThumbPosition  = ta.getInt("thumbPosition", THUMB_POSITION_MIDPOINT);
-    //updateAppearance();
+    updateAppearance();
 }
 
 void FastScroller::remove() {
@@ -239,9 +286,9 @@ void FastScroller::updateLayout(){
     if (mPreviewImage != nullptr) {
         // Apply preview image padding.
         bounds.left -= mPreviewImage->getPaddingLeft();
-        bounds.top -= mPreviewImage->getPaddingTop();
-        bounds.width += (mPreviewImage->getPaddingLeft()+mPreviewImage->getPaddingRight());
-        bounds.height += (mPreviewImage->getPaddingTop()+mPreviewImage->getPaddingBottom());
+        bounds.top  -= mPreviewImage->getPaddingTop();
+        bounds.width += (mPreviewImage->getPaddingLeft()+ mPreviewImage->getPaddingRight());
+        bounds.height+= (mPreviewImage->getPaddingTop() + mPreviewImage->getPaddingBottom());
         applyLayout(mPreviewImage, bounds);
     }
 
@@ -467,7 +514,7 @@ void FastScroller::transitionToHidden() {
         // Push the thumb and track outside the list bounds.
     const float offset = mLayoutFromRight ? mThumbImage.getWidth() : -mThumbImage.getWidth();
     Animator slideOut = groupAnimatorOfFloat(
-           View.TRANSLATION_X, offset, mThumbImage, mTrackImage)
+        View::TRANSLATION_X, offset, mThumbImage, mTrackImage)
            .setDuration(DURATION_FADE_OUT);
 
     mDecorAnimation = new AnimatorSet();
@@ -547,16 +594,15 @@ void FastScroller::onScroll(int firstVisibleItem, int visibleItemCount, int tota
 }
 
 void FastScroller::getSectionsFromIndexer() {
-#if 0
-    mSectionIndexer = null;
+    mSectionIndexer = {nullptr,nullptr,nullptr};
 
     Adapter* adapter = mList->getAdapter();
-    if (adapter instanceof HeaderViewListAdapter) {
-        mHeaderCount = ((HeaderViewListAdapter) adapter).getHeadersCount();
-        adapter = ((HeaderViewListAdapter) adapter).getWrappedAdapter();
+    if (dynamic_cast<HeaderViewListAdapter*>(adapter)) {
+        mHeaderCount = ((HeaderViewListAdapter*) adapter)->getHeadersCount();
+        adapter = ((HeaderViewListAdapter*) adapter)->getWrappedAdapter();
     }
 
-    if (adapter instanceof ExpandableListConnector) {
+    /*if (adapter instanceof ExpandableListConnector) {
         ExpandableListAdapter expAdapter = ((ExpandableListConnector) adapter)
                 .getAdapter();
         if (expAdapter instanceof SectionIndexer) {
@@ -568,11 +614,10 @@ void FastScroller::getSectionsFromIndexer() {
         mListAdapter = adapter;
         mSectionIndexer = (SectionIndexer) adapter;
         mSections = mSectionIndexer.getSections();
-    } else {
+    } else*/ {
         mListAdapter = adapter;
-        mSections = null;
+        mSections.clear();// = nullptr;
     }
-#endif
 }
 
 void FastScroller::onSectionsChanged() {
@@ -583,10 +628,11 @@ void FastScroller::scrollTo(float position) {
     mScrollCompleted = false;
 
     int count = mList->getCount();
-    int sectionIndex;
-#if 0
-    if (mSectons.size()) {
-        int exactSection = MathUtils.constrain(
+    int sectionIndex = -1;
+    int sectionCount = mSections.size();
+#if 10
+    if (mSections.size()) {
+        int exactSection = MathUtils::constrain(
                 (int) (position * sectionCount), 0, sectionCount - 1);
         int targetSection = exactSection;
         int targetIndex = mSectionIndexer.getPositionForSection(targetSection);
@@ -645,7 +691,7 @@ void FastScroller::scrollTo(float position) {
         // position, snap to the previous position.
         float prevPosition = (float) prevSection / sectionCount;
         float nextPosition = (float) nextSection / sectionCount;
-        float snapThreshold = (count == 0) ? Float.MAX_VALUE : .125f / count;
+        float snapThreshold = (count == 0) ? FLT_MAX : .125f / count;
         if (prevSection == exactSection && position - prevPosition < snapThreshold) {
             targetIndex = prevIndex;
         } else {
@@ -654,32 +700,32 @@ void FastScroller::scrollTo(float position) {
         }
 
         // Clamp to valid positions.
-        targetIndex = MathUtils.constrain(targetIndex, 0, count - 1);
+        targetIndex = MathUtils::constrain(targetIndex, 0, count - 1);
 
-        if (mList instanceof ExpandableListView) {
+        /*if (dynamic_cast<ExpandableListView*>(mList)) {
             ExpandableListView expList = (ExpandableListView) mList;
             expList.setSelectionFromTop(expList.getFlatListPosition(
                     ExpandableListView.getPackedPositionForGroup(targetIndex + mHeaderCount)),0);
-        } else if (mList instanceof ListView) {
-            ((ListView) mList).setSelectionFromTop(targetIndex + mHeaderCount, 0);
+        } else */if (dynamic_cast<ListView*>(mList)) {
+            ((ListView*)mList)->setSelectionFromTop(targetIndex + mHeaderCount, 0);
         } else {
-            mList.setSelection(targetIndex + mHeaderCount);
+            mList->setSelection(targetIndex + mHeaderCount);
         }
     } else {
-        int index = MathUtils.constrain((int) (position * count), 0, count - 1);
-        if (mList instanceof ExpandableListView) {
+        int index = MathUtils::constrain((int) (position * count), 0, count - 1);
+        /*if (mList instanceof ExpandableListView) {
             ExpandableListView expList = (ExpandableListView) mList;
             expList.setSelectionFromTop(expList.getFlatListPosition(
                     ExpandableListView.getPackedPositionForGroup(index + mHeaderCount)), 0);
-        } else if (mList instanceof ListView) {
-            ((ListView)mList).setSelectionFromTop(index + mHeaderCount, 0);
+        } else */if (dynamic_cast<ListView*>(mList)) {
+            ((ListView*)mList)->setSelectionFromTop(index + mHeaderCount, 0);
         } else {
-            mList.setSelection(index + mHeaderCount);
+            mList->setSelection(index + mHeaderCount);
         }
 
         sectionIndex = -1;
     }
-
+#endif
     if (mCurrentSection != sectionIndex) {
         mCurrentSection = sectionIndex;
         bool hasPreview = transitionPreviewLayout(sectionIndex);
@@ -689,7 +735,6 @@ void FastScroller::scrollTo(float position) {
             transitionToVisible();
         }
     }
-#endif
 }
 
 bool FastScroller::transitionPreviewLayout(int sectionIndex) {
@@ -814,9 +859,9 @@ float FastScroller::getPosFromMotionEvent(float y) {
 }
 
 float FastScroller::getPosFromItemCount(int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-#if 0
-    SectionIndexer sectionIndexer = mSectionIndexer;
-    if (sectionIndexer == null || mListAdapter == null) {
+    SectionIndexer& sectionIndexer = mSectionIndexer;
+    if (sectionIndexer.getSectionForPosition==nullptr||sectionIndexer.getPositionForSection==nullptr
+        ||sectionIndexer.getSections== nullptr || mListAdapter == nullptr) {
         getSectionsFromIndexer();
     }
 
@@ -825,7 +870,7 @@ float FastScroller::getPosFromItemCount(int firstVisibleItem, int visibleItemCou
         return 0;
     }
 
-    bool hasSections = sectionIndexer != null && mSections !=null && mSections.length > 0;
+    bool hasSections = sectionIndexer.getSectionForPosition && mSections.size();
     if (!hasSections || !mMatchDragPosition) {
         if (visibleItemCount == totalItemCount) {
             // All items are visible.
@@ -843,18 +888,18 @@ float FastScroller::getPosFromItemCount(int firstVisibleItem, int visibleItemCou
     totalItemCount -= mHeaderCount;
 
     // Hidden portion of the first visible row.
-    View child = mList->getChildAt(0);
+    View* child = mList->getChildAt(0);
     float incrementalPos;
-    if (child == null || child.getHeight() == 0) {
+    if (child == nullptr || child->getHeight() == 0) {
         incrementalPos = 0;
     } else {
-        incrementalPos = (float) (mList.getPaddingTop() - child.getTop()) / child.getHeight();
+        incrementalPos = (float) (mList->getPaddingTop() - child->getTop()) / child->getHeight();
     }
 
     // Number of rows in this section.
     int section = sectionIndexer.getSectionForPosition(firstVisibleItem);
     int sectionPos = sectionIndexer.getPositionForSection(section);
-    int sectionCount = mSections.length;
+    int sectionCount = mSections.size();
     int positionsInSection;
     if (section < sectionCount - 1) {
         int nextSectionPos;
@@ -882,23 +927,22 @@ float FastScroller::getPosFromItemCount(int firstVisibleItem, int visibleItemCou
     // won't ever actually move the list in this end space, make scrolling
     // across the last item account for whatever space is remaining.
     if (firstVisibleItem > 0 && firstVisibleItem + visibleItemCount == totalItemCount) {
-        View* lastChild = mList.getChildAt(visibleItemCount - 1);
-        int bottomPadding = mList.getPaddingBottom();
+        View* lastChild = mList->getChildAt(visibleItemCount - 1);
+        int bottomPadding = mList->getPaddingBottom();
         int maxSize;
         int currentVisibleSize;
-        if (mList.getClipToPadding()) {
-            maxSize = lastChild.getHeight();
-            currentVisibleSize = mList.getHeight() - bottomPadding - lastChild.getTop();
+        if (mList->getClipToPadding()) {
+            maxSize = lastChild->getHeight();
+            currentVisibleSize = mList->getHeight() - bottomPadding - lastChild->getTop();
         } else {
-            maxSize = lastChild.getHeight() + bottomPadding;
-            currentVisibleSize = mList.getHeight() - lastChild.getTop();
+            maxSize = lastChild->getHeight() + bottomPadding;
+            currentVisibleSize = mList->getHeight() - lastChild->getTop();
         }
         if (currentVisibleSize > 0 && maxSize > 0) {
             result += (1 - result) * ((float) currentVisibleSize / maxSize );
         }
     }
     return result;
-#endif
 }
 
 void FastScroller::cancelFling() {
@@ -941,7 +985,6 @@ bool FastScroller::onInterceptTouchEvent(MotionEvent& ev) {
     if (!isEnabled()) {
         return false;
     }
-
     switch (ev.getActionMasked()) {
     case MotionEvent::ACTION_DOWN:
         if (isPointInside(ev.getX(), ev.getY())) {
@@ -966,6 +1009,7 @@ bool FastScroller::onInterceptTouchEvent(MotionEvent& ev) {
             beginDrag();
 
             float pos = getPosFromMotionEvent(mInitialTouchY);
+            LOGD("mInitialTouchY=%f pos=%f",mInitialTouchY,pos);
             scrollTo(pos);
             // This may get dispatched to onTouchEvent(), but it
             // doesn't really matter since we'll already be in a drag.
@@ -987,9 +1031,8 @@ bool FastScroller::onInterceptHoverEvent(MotionEvent& ev) {
     }
 
     const int actionMasked = ev.getActionMasked();
-    if ((actionMasked == MotionEvent::ACTION_HOVER_ENTER
-            || actionMasked == MotionEvent::ACTION_HOVER_MOVE) && mState == STATE_NONE
-            && isPointInside(ev.getX(), ev.getY())) {
+    if ((actionMasked == MotionEvent::ACTION_HOVER_ENTER || actionMasked == MotionEvent::ACTION_HOVER_MOVE) 
+           && mState == STATE_NONE && isPointInside(ev.getX(), ev.getY())) {
         setState(STATE_VISIBLE);
         postAutoHide();
     }
@@ -1038,7 +1081,7 @@ bool FastScroller::onTouchEvent(MotionEvent& me) {
                 // be other classes that don't properly reset on touch-up,
                 // so do this explicitly just in case.
                 mList->requestDisallowInterceptTouchEvent(false);
-                //mList->reportScrollStateChange(AbsListView::OnScrollListener::SCROLL_STATE_IDLE);
+                mList->reportScrollStateChange(AbsListView::OnScrollListener::SCROLL_STATE_IDLE);
             }
 
             setState(STATE_VISIBLE);

@@ -121,8 +121,11 @@ private:
     constexpr static int FLYWHEEL_TIMEOUT =40;
     enum{
         INVALID_POINTER=-1,
+        TOUCH_MODE_UNKNOWN = -1,
+        TOUCH_MODE_ON = 0,
+        TOUCH_MODE_OFF = 1,
     };
-
+    int mLastTouchMode = -1;
     OverScroller* mScroller;
     int mLastFlingY;
     bool mSuppressIdleStateChangeCall;
@@ -133,6 +136,9 @@ private:
     int mFirstPositionDistanceGuess;
     int mLastPositionDistanceGuess;
     bool mSmoothScrollbarEnabled;
+    bool mTextFilterEnabled;
+    bool mPopupHidden;
+    bool mFiltered;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
     class FastScroller* mFastScroll;
@@ -282,6 +288,7 @@ protected:
     bool resurrectSelectionIfNeeded();
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
+    void onWindowFocusChanged(bool)override;
     virtual void setSelectionInt(int position)=0; 
     virtual int getHeightForPosition(int position);
     virtual int getHeaderViewsCount()const;
@@ -328,6 +335,8 @@ public:
     void reportScrollStateChange(int newState);
     void setFastScrollEnabled(bool);
     bool isFastScrollEnabled()const;
+    int  getVerticalScrollbarWidth()const override;
+    View& setVerticalScrollbarPosition(int position)override;
     void setFastScrollStyle(const std::string& styleid);
     void setFastScrollAlwaysVisible(bool alwaysShow);
     bool isFastScrollAlwaysVisible()const;
@@ -355,6 +364,7 @@ public:
     bool onKeyUp(int keyCode, KeyEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
+    void onRtlPropertiesChanged(int layoutDirection)override;
     void onTouchModeChanged(bool isInTouchMode);//called by ViewTreeObserver
     View* getSelectedView()override;
     ViewGroup::LayoutParams*generateLayoutParams(const AttributeSet& attrs)const override;

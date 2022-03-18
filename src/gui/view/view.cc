@@ -4979,7 +4979,7 @@ void View::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 void View::sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight){
     onSizeChanged(newWidth,newHeight,oldWidth,oldHeight);
     if(mOverlay)
-        mOverlay->getOverlayView()->setSize(getWidth(),getHeight());
+        mOverlay->getOverlayView()->setFrame(mLeft,mTop,newWidth,newHeight);
 
     if(isLayoutValid()){
         if(newWidth<=0||newHeight<=0){
@@ -5665,7 +5665,7 @@ bool View::removeCallbacks(const Runnable& what){
 ViewOverlay*View::getOverlay(){
     if (mOverlay == nullptr) {
         mOverlay = new ViewOverlay(mContext, this);
-        mOverlay->getOverlayView()->setSize(getWidth(),getHeight());
+        mOverlay->getOverlayView()->setFrame(mLeft,mTop,mRight-mLeft,mBottom-mTop);
     }
     return mOverlay;
 }

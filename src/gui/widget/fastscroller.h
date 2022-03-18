@@ -140,7 +140,7 @@ private:
     bool mShowingPreview;
 
     Adapter* mListAdapter;
-    //SectionIndexer mSectionIndexer;
+    SectionIndexer mSectionIndexer;
 
     /** Whether decorations should be laid out from right to left. */
     bool mLayoutFromRight;
@@ -167,6 +167,7 @@ private:
     int mOldChildCount;
     Runnable mDeferHide;
 private:
+    void updateAppearance();
     void updateLongList(int childCount, int itemCount);
     TextView* createPreviewTextView(Context* context);
     void updateContainerRect();
