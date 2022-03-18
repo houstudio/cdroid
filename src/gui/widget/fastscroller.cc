@@ -11,6 +11,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mOldItemCount  = listView->getCount();
     mOldChildCount = listView->getChildCount();
     mHeaderCount   = 0;
+    mFirstVisibleItem = 0;
 
     Context* context = listView->getContext();
     mScaledTouchSlop = ViewConfiguration::get(context).getScaledTouchSlop();

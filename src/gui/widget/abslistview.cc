@@ -271,9 +271,10 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
 
     mFlingRunnable = std::bind(&AbsListView::FLY_Proc,this);
     mCheckFlywheel = std::bind(&AbsListView::FLY_CheckFlyWheelProc,this);
-    mWidthMeasureSpec=0;
-    mSelector = nullptr;
+    mSelector  = nullptr;
+    mDirection = 0;
     mCacheColorHint = 0;
+    mWidthMeasureSpec = 0;
     mResurrectToPosition = INVALID_POSITION;
     mLayoutMode = LAYOUT_FORCE_TOP;
     mTouchMode  = TOUCH_MODE_REST ;
