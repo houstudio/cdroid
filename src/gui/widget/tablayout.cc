@@ -77,6 +77,7 @@ void TabLayout::initTabLayout(){
     mViewPager    = nullptr;
     mPagerAdapter = nullptr;
     mTabIndicatorGravity  = Gravity::BOTTOM;
+    mPagerAdapterObserver = nullptr;
     mAdapterChangeListener= nullptr;
     mTabSelectedIndicator = nullptr;
     mRequestedTabMinWidth = INVALID_WIDTH;
@@ -87,10 +88,6 @@ void TabLayout::initTabLayout(){
     mTabStrip = new SlidingTabStrip(getContext(),atts,this);
     HorizontalScrollView::addView(mTabStrip, 0, new HorizontalScrollView::LayoutParams(
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
-
-    mPagerAdapterObserver.onChanged = [this](){ populateFromPagerAdapter(); };
-    mPagerAdapterObserver.onInvalidated  = [this](){ populateFromPagerAdapter();};
-    mPagerAdapterObserver.clearSavedState= [this](){ populateFromPagerAdapter();};
 }
 
 void TabLayout::setSelectedTabIndicatorColor( int color){
@@ -404,7 +401,7 @@ int TabLayout::getTabScrollRange(){
 }
 
 void TabLayout::setPagerAdapter(PagerAdapter* adapter,bool addObserver){
-    if (mPagerAdapter) {
+    if (mPagerAdapter  && mPagerAdapterObserver) {
         // If we already have a PagerAdapter, unregister our observer
         mPagerAdapter->unregisterDataSetObserver(mPagerAdapterObserver);
     }
@@ -413,6 +410,9 @@ void TabLayout::setPagerAdapter(PagerAdapter* adapter,bool addObserver){
 
     if (addObserver && adapter != nullptr) {
         // Register our observer on the new adapter
+        if (mPagerAdapterObserver == nullptr) {
+            mPagerAdapterObserver = new PagerAdapterObserver(this);
+        }
         adapter->registerDataSetObserver(mPagerAdapterObserver);
     }
 
@@ -1483,6 +1483,22 @@ void TabLayout::TabLayoutOnPageChangeListener::doPageSelected(int position){
                 && mPreviousScrollState == ViewPager::SCROLL_STATE_IDLE);
         mTabLayout->selectTab(mTabLayout->getTabAt(position), updateIndicator);
     }
+}
+
+TabLayout::PagerAdapterObserver::PagerAdapterObserver(TabLayout*tab){
+    mTabLayout = tab;
+}
+
+void TabLayout::PagerAdapterObserver::onChanged(){
+    mTabLayout->populateFromPagerAdapter();
+}
+
+void TabLayout::PagerAdapterObserver::onInvalidated(){
+    mTabLayout->populateFromPagerAdapter();
+}
+
+void TabLayout::PagerAdapterObserver::clearSavedState(){
+    mTabLayout->populateFromPagerAdapter();
 }
 
 /*------------------------------------------------------------------------------*/

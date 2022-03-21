@@ -242,7 +242,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
     setAlwaysDrawnWithCacheEnabled(false);
-    setDataObserver(mDataSetObserver);
+    mDataSetObserver = nullptr;
     mScrollingCacheEnabled   = false;
     mFastScrollAlwaysVisible = false;
     setScrollingCacheEnabled(true);
@@ -325,6 +325,7 @@ AbsListView::~AbsListView(){
     delete mEdgeGlowTop;
     delete mEdgeGlowBottom;
     delete mPositionScroller;
+    delete mDataSetObserver;
 }
 
 void AbsListView::updateScrollIndicators(){
@@ -942,7 +943,7 @@ void AbsListView::setSelector(Drawable*sel) {
 }
 
 void AbsListView::setSelector(const std::string&resid) {
-
+    setSelector(mContext->getDrawable(resid));
 }
 
 void AbsListView::getFocusedRect(Rect& r){
@@ -2051,7 +2052,8 @@ void AbsListView::onAttachedToWindow() {
         treeObserver.addOnGlobalLayoutListener(this);
     }*/
 
-    if (mAdapter) {
+    if (mAdapter && mDataSetObserver==nullptr) {
+        mDataSetObserver = new AdapterDataSetObserver(this);
         mAdapter->registerDataSetObserver(mDataSetObserver);
 
         // Data may have changed while we were detached. Refresh.
@@ -2079,8 +2081,10 @@ void AbsListView::onDetachedFromWindow() {
         mGlobalLayoutListenerAddedFilter = false;
     }*/
 
-    if (mAdapter) {
+    if (mAdapter && mDataSetObserver) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
+		delete mDataSetObserver;
+        mDataSetObserver = nullptr;
     }
 
     /*if (mScrollStrictSpan != nullptr) {

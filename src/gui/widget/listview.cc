@@ -119,8 +119,7 @@ void ListView::addHeaderView(View* v,void* data, bool isSelectable){
 
         // In the case of re-adding a header view, or adding one later on,
         // we need to notify the observer.
-        if (mDataSetObserver.onChanged ) 
-            mDataSetObserver.onChanged();
+        if (mDataSetObserver ) mDataSetObserver->onChanged();
     }
 }
 
@@ -136,8 +135,8 @@ bool ListView::removeHeaderView(View* v){
     if (mHeaderViewInfos.size()) {
         bool result = false;
         if (mAdapter != nullptr && ((HeaderViewListAdapter*) mAdapter)->removeHeader(v)) {
-            if (mDataSetObserver.onChanged) {
-                mDataSetObserver.onChanged();
+            if (mDataSetObserver != nullptr) {
+                mDataSetObserver->onChanged();
             }
             result = true;
         }
@@ -178,8 +177,7 @@ void ListView::addFooterView(View* v,void* data, bool isSelectable){
 
         // In the case of re-adding a footer view, or adding one later on,
         // we need to notify the observer.
-        if (mDataSetObserver.onChanged)
-            mDataSetObserver.onChanged();
+        if (mDataSetObserver)mDataSetObserver->onChanged();
     }
 }
 
@@ -195,8 +193,8 @@ bool ListView::removeFooterView(View* v) {
     if (mFooterViewInfos.size() > 0) {
         bool result = false;
         if (mAdapter && ((HeaderViewListAdapter*) mAdapter)->removeFooter(v)) {
-            if (mDataSetObserver.onChanged) {
-                mDataSetObserver.onChanged();
+            if (mDataSetObserver != nullptr) {
+                mDataSetObserver->onChanged();
             }
             result = true;
         }
@@ -207,8 +205,10 @@ bool ListView::removeFooterView(View* v) {
 }
 
 void ListView::setAdapter(Adapter* adapter) {
-    if (mAdapter ) {
+    if (mAdapter  && mDataSetObserver ) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
+        delete mDataSetObserver;
+        mDataSetObserver = nullptr;
     }
 
     resetList();
@@ -231,6 +231,7 @@ void ListView::setAdapter(Adapter* adapter) {
         mItemCount = mAdapter->getCount();
         checkFocus();
 
+        mDataSetObserver = new AdapterDataSetObserver(this);
         mAdapter->registerDataSetObserver(mDataSetObserver);
 
         mRecycler->setViewTypeCount(mAdapter->getViewTypeCount());

@@ -3,17 +3,12 @@
 
 namespace cdroid{
 
-void Adapter::registerDataSetObserver(DataSetObserver observer) {
-    auto it=std::find(mObservers.begin(),mObservers.end(),observer);
-    if(it==mObservers.end()&&observer.onChanged)
+void Adapter::registerDataSetObserver(DataSetObserver* observer) {
+    if(observer!=nullptr)
         mObservers.push_back(observer);
 }
 
-bool operator==(const DataSetObserver&o1,const DataSetObserver&o2){
-    return o1.onChanged==o2.onChanged;
-}
-
-void Adapter::unregisterDataSetObserver(DataSetObserver observer) {
+void Adapter::unregisterDataSetObserver(DataSetObserver* observer) {
     auto it=std::find(mObservers.begin(),mObservers.end(),observer);
     if(it!=mObservers.end())mObservers.erase(it);
 }
@@ -21,19 +16,14 @@ void Adapter::unregisterDataSetObserver(DataSetObserver observer) {
 void Adapter::notifyDataSetChanged(){
     int sz=mObservers.size()-1;
     for(int i=sz;i>=0;i--){
-        DataSetObserver&obs=mObservers[i];
-        if(obs.onChanged)
-            obs.onChanged();
+        DataSetObserver*obs=mObservers[i];
+        obs->onChanged();
     }
 }
 
 void Adapter::notifyDataSetInvalidated(){
     int sz=mObservers.size()-1;
-    for(int i=sz;i>=0;i--){
-        DataSetObserver&obs=mObservers[i];
-        if(obs.onInvalidated)
-            obs.onInvalidated();
-    }
+    for(int i=sz;i>=0;i--) mObservers[i]->onInvalidated();
 }
 
 long Adapter::getItemId(int position)const{
@@ -110,24 +100,21 @@ void PagerAdapter::setPrimaryItem(View* container, int position,void*object) {
 void PagerAdapter::notifyDataSetChanged(){
     int sz=mObservers.size()-1;
     for(int i=sz;i>=0;i--){
-        DataSetObserver& obs=mObservers[i];
-        if(obs.onChanged)
-            obs.onChanged();
+        DataSetObserver*obs=mObservers[i];
+        obs->onChanged();
     }
 }
 
-void PagerAdapter::registerDataSetObserver(DataSetObserver observer){
-    auto it=std::find(mObservers.begin(),mObservers.end(),observer);
-    if(it==mObservers.end())
-        mObservers.push_back(observer);
+void PagerAdapter::registerDataSetObserver(DataSetObserver* observer){
+    mObservers.push_back(observer);
 };
 
-void PagerAdapter::unregisterDataSetObserver(DataSetObserver observer){
+void PagerAdapter::unregisterDataSetObserver(DataSetObserver* observer){
     auto it=std::find(mObservers.begin(),mObservers.end(),observer);
     if(it!=mObservers.end())mObservers.erase(it);
 }
 
-void PagerAdapter::setViewPagerObserver(DataSetObserver observer){
+void PagerAdapter::setViewPagerObserver(DataSetObserver* observer){
     mViewPagerObserver = observer;
 }
 }//namespace

@@ -20,8 +20,7 @@ ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
 }
 
 ViewPager::~ViewPager(){
-    if(mAdapter)
-        mAdapter->setViewPagerObserver(DataSetObserver());
+    delete mObserver;
     delete mLeftEdge;
     delete mRightEdge;
     delete mMarginDrawable;
@@ -49,6 +48,7 @@ void ViewPager::initViewPager(){
     mIsUnableToDrag  = false;
     mScrollState = SCROLL_STATE_IDLE;
     mAdapter  = nullptr;
+    mObserver = nullptr;
     mInLayout = false;
     mFirstLayout = true;
     mPageTransformer = nullptr;
@@ -81,8 +81,6 @@ void ViewPager::initViewPager(){
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
     mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
     mGutterSize = 0;
-    mObserver.onChanged=[this](){ dataSetChanged(); };
-    mObserver.onInvalidated=[this](){ dataSetChanged(); };
 }
 
 ViewPager::ItemInfo::ItemInfo(){
@@ -108,7 +106,7 @@ void ViewPager::setScrollState(int newState){
 
 void ViewPager::setAdapter(PagerAdapter* adapter){
     if (mAdapter) {
-        mAdapter->setViewPagerObserver(DataSetObserver());
+        mAdapter->setViewPagerObserver(nullptr);
         mAdapter->startUpdate(this);
         for (int i = 0; i < mItems.size(); i++) {
             ItemInfo* ii = mItems[i];
@@ -127,6 +125,7 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
     mExpectedAdapterCount = 0;
 
     if (mAdapter != nullptr) {
+        if (mObserver == nullptr)  mObserver = new PagerObserver(this);
         mAdapter->setViewPagerObserver(mObserver);
         mPopulatePending = false;
         const bool wasFirstLayout = mFirstLayout;
@@ -632,9 +631,10 @@ void ViewPager::populate(int newCurrentItem){
             }
         }
         calculatePageOffsets(curItem, curIndex, oldCurInfo);
-        mAdapter->setPrimaryItem(this, mCurItem, curItem != nullptr ? curItem->object : nullptr);
     }
 
+
+    mAdapter->setPrimaryItem(this, mCurItem, curItem != nullptr ? curItem->object : nullptr);
 
     mAdapter->finishUpdate(this);
 

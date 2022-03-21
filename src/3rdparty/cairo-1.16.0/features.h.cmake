@@ -42,6 +42,4 @@
 #cmakedefine CAIRO_HAS_INTERPRETER 1
 #cmakedefine CAIRO_HAS_SYMBOL_LOOKUP 1
 
-#cmakedefine CAIRO_HAS_CDROID_SURFACE 1
-
 #endif

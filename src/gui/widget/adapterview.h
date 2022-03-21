@@ -68,7 +68,6 @@ protected:
     void checkFocus();
     void rememberSyncState();
     int  findSyncPosition();
-    void setDataObserver(DataSetObserver&observer);
     virtual int lookForSelectablePosition(int position, bool lookDown);
 public:
     AdapterView(int w,int h);
@@ -105,6 +104,16 @@ public:
     OnItemSelectedListener getOnItemSelectedListener()const;
     void setOnItemLongClickListener(OnItemLongClickListener listener);
     OnItemLongClickListener getOnItemLongClickListener() const;
+};
+
+class AdapterDataSetObserver:public DataSetObserver{
+protected:
+    AdapterView*adv;
+public:
+    AdapterDataSetObserver(AdapterView*adv);
+    void onChanged()override;
+    void onInvalidated()override;
+    void clearSavedState()override;
 };
 
 }//namespace

@@ -186,13 +186,13 @@ int HeaderViewListAdapter::getViewTypeCount()const{
     return 1;
 }
 
-void HeaderViewListAdapter::registerDataSetObserver(DataSetObserver observer) {
+void HeaderViewListAdapter::registerDataSetObserver(DataSetObserver* observer) {
     if (mAdapter != nullptr) {
         mAdapter->registerDataSetObserver(observer);
     }
 }
 
-void HeaderViewListAdapter::unregisterDataSetObserver(DataSetObserver observer) {
+void HeaderViewListAdapter::unregisterDataSetObserver(DataSetObserver* observer) {
     if (mAdapter != nullptr) {
         mAdapter->unregisterDataSetObserver(observer);
     }

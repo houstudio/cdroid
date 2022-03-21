@@ -491,49 +491,52 @@ AdapterView::OnItemLongClickListener AdapterView::getOnItemLongClickListener() c
     return mOnItemLongClickListener;
 }
 
-void AdapterView::setDataObserver(DataSetObserver&obsever){
-    obsever.onChanged=[this](){
+///////////////////////////////////////////////////////////////////////////////////////////////////
+AdapterDataSetObserver::AdapterDataSetObserver(AdapterView*lv){
+    adv=lv;
+}
 
-        mDataChanged = true;
-        mOldItemCount = mItemCount;
-        mItemCount = getAdapter()->getCount();
+void AdapterDataSetObserver::onChanged() {
+    adv->mDataChanged = true;
+    adv->mOldItemCount = adv->mItemCount;
+    adv->mItemCount = adv->getAdapter()->getCount();
 
-        // Detect the case where a cursor that was previously invalidated has
-        // been repopulated with new data.
-        if ( mAdapter->hasStableIds() //&& mInstanceState != null
-          && mOldItemCount == 0 && mItemCount > 0) {
-             //adv->onRestoreInstanceState(mInstanceState);
-             //mInstanceState = null;
-        } else {
-            rememberSyncState();
-        }
-        checkFocus();
-        requestLayout();
-    };
+    // Detect the case where a cursor that was previously invalidated has
+    // been repopulated with new data.
+    if (adv->getAdapter()->hasStableIds() //&& mInstanceState != null
+          && adv->mOldItemCount == 0 && adv->mItemCount > 0) {
+         //adv->onRestoreInstanceState(mInstanceState);
+         //mInstanceState = null;
+    } else {
+         adv->rememberSyncState();
+    }
+    adv->checkFocus();
+    adv->requestLayout();
+}
 
-    obsever.onInvalidated=[this](){
-        mDataChanged = true;
+void AdapterDataSetObserver::onInvalidated() {
+    adv->mDataChanged = true;
 
-        if ( mAdapter->hasStableIds()) {
-            // Remember the current state for the case where our hosting activity is being
-            // stopped and later restarted
-            //mInstanceState = AdapterView.this.onSaveInstanceState();
-        }
-        // Data is invalid so we should reset our state
-        mOldItemCount = mItemCount;
-        mItemCount = 0;
-        mSelectedPosition = AdapterView::INVALID_POSITION;
-        mSelectedRowId    = AdapterView::INVALID_ROW_ID;
-        mNextSelectedPosition = AdapterView::INVALID_POSITION;
-        mNextSelectedRowId    = AdapterView::INVALID_ROW_ID;
-        mNeedSync = false;
+    if (adv->getAdapter()->hasStableIds()) {
+        // Remember the current state for the case where our hosting activity is being
+        // stopped and later restarted
+        //mInstanceState = AdapterView.this.onSaveInstanceState();
+    }
+    // Data is invalid so we should reset our state
+    adv->mOldItemCount = adv->mItemCount;
+    adv->mItemCount = 0;
+    adv->mSelectedPosition = AdapterView::INVALID_POSITION;
+    adv->mSelectedRowId    = AdapterView::INVALID_ROW_ID;
+    adv->mNextSelectedPosition = AdapterView::INVALID_POSITION;
+    adv->mNextSelectedRowId    = AdapterView::INVALID_ROW_ID;
+    adv->mNeedSync = false;
 
-        checkFocus();
-        requestLayout();
-    };
-    obsever.clearSavedState=[](){
-        //mInstanceState = null;
-    };
+    adv->checkFocus();
+    adv->requestLayout();
+}
+
+void AdapterDataSetObserver::clearSavedState() {
+     //mInstanceState = null;
 }
 
 }//namespace

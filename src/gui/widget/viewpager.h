@@ -39,6 +39,15 @@ private:
     static constexpr int DRAW_ORDER_FORWARD = 1;
     static constexpr int DRAW_ORDER_REVERSE = 2;
     
+    class PagerObserver:public DataSetObserver {
+    private:
+        ViewPager*mVP;
+    public:
+        PagerObserver(ViewPager*vp){  mVP=vp; }
+        void onChanged()override {  mVP->dataSetChanged(); }
+        void onInvalidated()override { mVP->dataSetChanged(); }
+        void clearSavedState()override{}
+    };
 public:
     static constexpr int SCROLL_STATE_IDLE = 0;
     /**Indicates that the pager is currently being dragged by the user.*/
@@ -79,7 +88,7 @@ private:
     Scroller* mScroller;
     bool mIsScrollStarted;
     int mScrollState;
-    DataSetObserver mObserver;//PagerObserver * mObserver;
+    PagerObserver * mObserver;
     int mPageMargin;
     Drawable* mMarginDrawable;
     int mTopPageBounds;

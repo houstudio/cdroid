@@ -33,8 +33,10 @@ Adapter*GridView::getAdapter() {
 }
 
 void GridView::setAdapter(Adapter* adapter) {
-    if (mAdapter) {
+    if (mAdapter  && mDataSetObserver ) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
+        delete mDataSetObserver;
+        mDataSetObserver = nullptr; 
     }
 
     resetList();
@@ -53,6 +55,7 @@ void GridView::setAdapter(Adapter* adapter) {
         mDataChanged = true;
         checkFocus();
 
+        mDataSetObserver = new AdapterDataSetObserver(this);
         mAdapter->registerDataSetObserver(mDataSetObserver);
 
         mRecycler->setViewTypeCount(mAdapter->getViewTypeCount());
