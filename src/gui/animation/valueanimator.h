@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __ANIMATOR_H__
+#define __ANIMATOR_H__
 #include <animation/animator.h>
 #include <animation/propertyvaluesholder.h>
 #include <animation/animationhandler.h>
@@ -15,7 +16,7 @@ public:
     static constexpr int INFINITE= -1;
     typedef CallbackBase<void,ValueAnimator&>AnimatorUpdateListener;
 private:
-    static constexpr float sDurationScale = 1.0f;
+    static float sDurationScale;
     //static TimeInterpolator sDefaultInterpolator = new AccelerateDecelerateInterpolator();
     long mPauseTime;
     bool mResumed = false;
@@ -70,6 +71,9 @@ protected:
 public:
     ValueAnimator();
     ~ValueAnimator();
+    static void setDurationScale(float durationScale);
+    static float getDurationScale();
+    static bool areAnimatorsEnabled();
     static ValueAnimator* ofInt(const std::vector<int>&);
     static ValueAnimator* ofArgb(const std::vector<int>&);
     static ValueAnimator* ofFloat(const std::vector<float>&);
@@ -121,3 +125,4 @@ public:
 };
 
 }//endof namespace
+#endif//__ANIMATOR_H__

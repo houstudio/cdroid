@@ -13,6 +13,7 @@
 #include <animation/objectanimator.h>
 #include <animation/valueanimator.h>
 #include <animation/timeanimator.h>
+#include <animation/animatorset.h>
 #include <animation/animationutils.h>
 #include <animation/layouttransition.h>
 

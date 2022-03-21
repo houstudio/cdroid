@@ -41,7 +41,7 @@ void ListView::initListView(const AttributeSet&attrs){
 
     setOverscrollHeader(osHeader);
     setOverscrollHeader(osFooter);
-	setDivider(d);
+    setDivider(d);
     mHeaderDividersEnabled = attrs.getBoolean("headerDividersEnabled",true);
     mFooterDividersEnabled = attrs.getBoolean("footerDividersEnabled", true);
     setDividerHeight(attrs.getDimensionPixelSize("dividerHeight",0));

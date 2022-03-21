@@ -19,6 +19,19 @@ ValueAnimator::~ValueAnimator(){
     delete mInterpolator;
 }
 
+void ValueAnimator::setDurationScale(float durationScale) {
+    sDurationScale = durationScale;
+}
+
+float ValueAnimator::sDurationScale = 1.f;
+float ValueAnimator::getDurationScale() {
+    return sDurationScale;
+}
+
+bool ValueAnimator::areAnimatorsEnabled() {
+    return !(sDurationScale == 0);
+}
+
 ValueAnimator* ValueAnimator::ofInt(const std::vector<int>&values){
     ValueAnimator*anim=new ValueAnimator();
     anim->setIntValues(values);

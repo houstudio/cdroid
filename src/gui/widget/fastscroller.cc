@@ -43,13 +43,15 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 
     mOverlay = (ViewGroupOverlay*)listView->getOverlay();
     if(mOverlay){
-        mOverlay->add(mTrackImage);
-        mOverlay->add(mThumbImage);
-        //mOverlay->add(mPreviewImage);
-        mOverlay->add(mPrimaryText);
-        mOverlay->add(mSecondaryText);
+        mOverlay->add(mTrackImage);mTrackImage->setId(80000);
+        mOverlay->add(mThumbImage);mThumbImage->setId(80001);
+        mOverlay->add(mPreviewImage);
+        mOverlay->add(mPrimaryText);mPrimaryText->setId(80002);
+        mOverlay->add(mSecondaryText);mSecondaryText->setId(80003);
     }
-
+    mOverlay->getOverlayView()->setOnHierarchyChangeListener([](ViewGroup&container,View *view,bool addorremove){
+        if(addorremove==false) delete view;
+    });
     getSectionsFromIndexer();
     updateLongList(mOldChildCount, mOldItemCount);
     setScrollbarPosition(listView->getVerticalScrollbarPosition());
@@ -58,9 +60,6 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 
 FastScroller::~FastScroller(){
     remove();
-    delete mTrackImage;
-    delete mThumbImage;
-    delete mPreviewImage;
     //delete mOverlay;mOverlay is create/freed by View/ViewGroup,
 }
 
@@ -106,6 +105,7 @@ void FastScroller::updateAppearance() {
     mSecondaryText->setPadding(padding, padding, padding, padding);
 
     refreshDrawablePressedState();
+    mDeferHide=[this](){setState(STATE_NONE);};
 }
 
 void FastScroller::setStyle(const std::string&styleResId){

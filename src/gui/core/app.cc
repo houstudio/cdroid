@@ -160,6 +160,7 @@ void App::removeEventHandler(const EventHandler*handler){
 
 int App::exec(){
     while(!mQuitFlag)Looper::getDefault()->pollAll(5);
+    return mExitCode;
 }
 
 void App::exit(int code){

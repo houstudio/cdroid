@@ -103,10 +103,10 @@ private:
     int mWidth;
 
     /** Set containing decoration transition animations. */
-    Animator*/*AnimatorSet**/ mDecorAnimation;
+    AnimatorSet* mDecorAnimation;
 
     /** Set containing preview text transition animations. */
-    Animator*/*AnimatorSet**/ mPreviewAnimation;
+    AnimatorSet* mPreviewAnimation;
 
     /** Whether the primary text is showing. */
     bool mShowingPrimary;
