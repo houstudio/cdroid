@@ -111,7 +111,6 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
         for (int i = 0; i < mItems.size(); i++) {
             ItemInfo* ii = mItems[i];
             mAdapter->destroyItem(this, ii->position, ii->object);
-            delete (View*)ii->object;//added by zhhou
         }
         mAdapter->finishUpdate(this);
         mItems.clear();
@@ -474,7 +473,6 @@ void ViewPager::dataSetChanged(){
             }
 
             mAdapter->destroyItem(this, ii->position, ii->object);
-            delete (View*)ii->object;//added by zhhou
             needPopulate = true;
 
             if (mCurItem == ii->position) { // Keep the current item in the valid range
@@ -583,7 +581,6 @@ void ViewPager::populate(int newCurrentItem){
                 if (pos == ii->position && !ii->scrolling) {
                     mItems.erase(mItems.begin()+itemIndex);
                     mAdapter->destroyItem(this, pos, ii->object);
-                    delete (View*)ii->object;//added by zhhou
                     LOGD("destroyItem() with pos:%d/%d view:%p curitem=%d/%d",pos,ii->position,ii->object,mCurItem,mItems.size());
                     itemIndex--;
                     curIndex--;
@@ -615,7 +612,6 @@ void ViewPager::populate(int newCurrentItem){
                     if (pos == ii->position && !ii->scrolling) {
                         mItems.erase(mItems.begin()+itemIndex);
                         mAdapter->destroyItem(this, pos, ii->object);
-                        delete (View*)ii->object;//added by zhhou
                         ii = itemIndex < mItems.size() ? mItems[itemIndex] : nullptr;
                     }
                 } else if (ii != nullptr && pos == ii->position) {

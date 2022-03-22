@@ -11,6 +11,7 @@ public:
     }
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
+        delete (View*)object;
     }
     std::string getPageTitle(int position)override{
         return std::string("Tab")+std::to_string(position);

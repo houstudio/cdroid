@@ -36,12 +36,15 @@ GraphDevice::GraphDevice(int fmt){
     GFXGetScreenSize((UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
 
     mFormat = fmt<0?GPF_ARGB:fmt;
-    GFXCreateSurface(&primarySurface,mScreenWidth,mScreenHeight,mFormat,1);
-    GFXLockSurface(primarySurface,(void**)&buffer,&pitch);
+    GFXCreateSurface(&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
+    GFXLockSurface(mPrimarySurface,(void**)&buffer,&pitch);
+
+    GFXCreateSurface(&mBannerSurface,200,40,mFormat,0);
+    
     mLastComposeTime = SystemClock::uptimeMillis();
-    LOGD("primarySurface=%p size=%dx%d",primarySurface,mScreenWidth,mScreenHeight);
+    LOGD("PrimarySurface=%p size=%dx%d",mPrimarySurface,mScreenWidth,mScreenHeight);
     RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
-    primaryContext = new Canvas(surf);
+    mPrimaryContext = new Canvas(surf);
     mInvalidateRgn = Region::create();
     mComposing = 0;
     mQuitFlag  = false;
@@ -53,11 +56,15 @@ GraphDevice::~GraphDevice(){
     mQuitFlag = true;
     mCV.notify_all();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    delete primaryContext;
-    GFXDestroySurface(primarySurface);
-    primarySurface = nullptr;
-    primaryContext = nullptr;
+    delete mPrimaryContext;
+    GFXDestroySurface(mPrimarySurface);
+    mPrimarySurface = nullptr;
+    mPrimaryContext = nullptr;
     LOGD("%p Destroied",this);
+}
+
+HANDLE GraphDevice::getPrimarySurface()const{
+    return mPrimarySurface;
 }
 
 void GraphDevice::invalidate(const Rect&r){
@@ -107,7 +114,7 @@ bool GraphDevice::needCompose(){
 }
 
 Canvas*GraphDevice::getPrimaryContext(){
-    return primaryContext;
+    return mPrimaryContext;
 }
 
 void GraphDevice::doCompose(){
@@ -170,7 +177,7 @@ void GraphDevice::composeSurfaces(){
         return false;
     });
     computeVisibleRegion(wins,winVisibleRgns);
-    primaryContext->set_operator(Cairo::Context::Operator::SOURCE);
+    mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw = wBounds[i];
         RefPtr<Region> rgn = winVisibleRgns[i];
@@ -185,23 +192,23 @@ void GraphDevice::composeSurfaces(){
             rcc.intersect(0,0,mScreenWidth,mScreenHeight);
             if(rcc.empty())continue;
 
-            if(hdlSurface)GFXBlit(primarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
-            else primaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
+            if(hdlSurface)GFXBlit(mPrimarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
+            else mPrimaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
         }
         if(hdlSurface==nullptr){
-            primaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
-            primaryContext->fill();
+            mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
+            mPrimaryContext->fill();
         } 
     }
     const RectangleInt rectScreen={0,0,mScreenWidth,mScreenHeight};
     mInvalidateRgn->intersect(rectScreen);
     for(int i=0;i<mInvalidateRgn->get_num_rectangles();i++){
         RectangleInt r=mInvalidateRgn->get_rectangle(i);
-        GFXFillRect(primarySurface,(const GFXRect*)&r,0);
+        GFXFillRect(mPrimarySurface,(const GFXRect*)&r,0);
         LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
-    GFXFlip(primarySurface); 
+    GFXFlip(mPrimarySurface); 
     t2=SystemClock::uptimeMillis();
     mLastComposeTime = SystemClock::uptimeMillis();
     mPendingCompose = 0;

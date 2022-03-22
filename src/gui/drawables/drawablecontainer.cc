@@ -18,7 +18,7 @@ public:
     }
 
     void invalidateDrawable(Drawable& who)override{
-            // Ignore invalidation.
+        // Ignore invalidation.
     }
 
     void scheduleDrawable(Drawable& who,Runnable what, long when)override{

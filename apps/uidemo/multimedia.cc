@@ -12,7 +12,14 @@
 #include <fileadapter.h>
 #include <R.h>
 class FileTypeAdapter:public PagerAdapter{
+private:
+    FileAdapter*adapter1 = nullptr;
+    FileAdapter*adapter2 = nullptr;
 public:
+    ~FileTypeAdapter(){
+        delete adapter1;
+        delete adapter2;
+    }
     int getCount()override{return 5;}
     bool isViewFromObject(View* view, void*object)override{ return view==object;}
     void* instantiateItem(ViewGroup* container, int position)override{
@@ -36,13 +43,13 @@ public:
             ListView*lv=new ListView(800,480);
             lv->setDivider(new ColorDrawable(0x80224422));
             lv->setDividerHeight(1);
-            //lv->setFastScrollEnabled(true);
+            lv->setFastScrollEnabled(true);
             lv->setSelector(new ColorDrawable(0x8800FF00));
             lv->setVerticalScrollBarEnabled(true);
             lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 
-            FileAdapter*adapter=new FileAdapter("@layout/fileitem.xml");
-            adapter->loadFiles("/"); 
-            lv->setAdapter(adapter);
+            adapter1=new FileAdapter("@layout/fileitem.xml");
+            adapter1->loadFiles("/"); 
+            lv->setAdapter(adapter1);
             lv->setBackgroundColor(0xFF000000|(0xFF<<position*8));
             container->addView(lv).setId(12345);
             lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
@@ -60,7 +67,7 @@ public:
             }   
         case 1:{LOGD("===========1111");
             GridView*gv=new GridView(800,480);
-            FileAdapter*adapter=new FileAdapter("@layout/fileitem2.xml");
+            adapter2=new FileAdapter("@layout/fileitem2.xml");
             gv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
                 FileItem f=adp->getItemAt(pos);
@@ -74,12 +81,12 @@ public:
             gv->setVerticalScrollBarEnabled(true);
             gv->setScrollbarFadingEnabled(false);
             gv->setNumColumns(2);
-            gv->setAdapter(adapter);
+            gv->setAdapter(adapter2);
             gv->setHorizontalSpacing(2); 
             gv->setVerticalSpacing(2);
             container->addView(gv).setId(12345);
-            adapter->loadFiles("/");
-            adapter->notifyDataSetChanged();
+            adapter2->loadFiles("/");
+            adapter2->notifyDataSetChanged();
             return gv;
             }
         }
@@ -87,6 +94,7 @@ public:
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
         LOGV("destroyItem[%d]: %p",position,object);
+        delete (View*)object;
     }
     std::string getPageTitle(int position)override{
         return std::string("Tab")+std::to_string(position);
@@ -108,6 +116,7 @@ protected:
 public:
     MediaWindow(int x,int y,int w,int h);
     ~MediaWindow(){
+        delete mAdapter;
         player=nullptr;
     }
     

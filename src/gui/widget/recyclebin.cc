@@ -352,9 +352,9 @@ View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position
             if (LV->mAdapterHasStableIds) {
                 long id = getAdapter()->getItemId(position);
                 if (id == params->itemId) {
-		    View*scrap=scrapViews[i];
+		            View*scrap=scrapViews[i];
                     scrapViews.erase(scrapViews.begin()+i);//remove(i);
-		    return scrap;
+                    return scrap;
                 }
             } else if (params->scrappedFromPosition == position) {
                 View* scrap = scrapViews[i];
@@ -375,8 +375,8 @@ View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position
 void RecycleBin::clearScrap(std::vector<View*>& scrap) {
     int scrapCount = scrap.size();
     for (int j = 0; j < scrapCount; j++) {
-	View*v=scrap[scrapCount - 1 - j];
-	scrap.erase(scrap.begin()+scrapCount - 1 - j);
+        View*v=scrap[scrapCount - 1 - j];
+        scrap.erase(scrap.begin()+scrapCount - 1 - j);
         removeDetachedView(v, false);
     }
 }

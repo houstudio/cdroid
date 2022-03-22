@@ -1068,7 +1068,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
     } else {
         child->mParent = this;
     }
-    //if (child->hasUnhandledKeyListener()) incrementChildUnhandledKeyListeners();
+    if (child->hasUnhandledKeyListener()) incrementChildUnhandledKeyListeners();
 
     bool childHasFocus = child->hasFocus();
     if (childHasFocus) requestChildFocus(child, child->findFocus());

@@ -52,6 +52,7 @@ public:
     }
     void destroyItem(ViewGroup* container, int position,void* object){
         container->removeView((View*)object);
+        delete (View*)object;
     }
 };
 

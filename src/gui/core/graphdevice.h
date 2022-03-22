@@ -22,8 +22,10 @@ private:
     uint64_t mFpsNumFrames;
     std::mutex mMutex;
     std::condition_variable mCV;
-    class Canvas*primaryContext;//
-    HANDLE primarySurface;
+    HANDLE mPrimarySurface;
+    HANDLE mBannerSurface;
+    class Canvas*mPrimaryContext;
+    Canvas *mBannerContext;
     RefPtr<Region>mInvalidateRgn;
     static GraphDevice*mInst;
     GraphDevice(int format=-1);
@@ -44,7 +46,7 @@ public:
     bool needCompose();
     Canvas*getPrimaryContext();
     void invalidate(const Rect&);
-    HANDLE getPrimarySurface(){return primarySurface;}
+    HANDLE getPrimarySurface()const;
 };
 }
 #endif

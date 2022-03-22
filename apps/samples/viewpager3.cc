@@ -36,6 +36,7 @@ public:
     }
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
+        delete (View*)object;
     }
     float getPageWidth(int position)override{return 1.f;}
 
