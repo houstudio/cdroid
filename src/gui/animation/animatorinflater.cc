@@ -77,13 +77,34 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*ctx,
     return nullptr;
 }
 
-ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& attrs){
+ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts){
     ObjectAnimator*anim = new ObjectAnimator();
+    loadValueAnimator(ctx,atts,anim);
     return anim;
 }
 
-ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim){
-    anim = new ValueAnimator();
+ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim){
+    if(anim==nullptr)
+        anim = new ValueAnimator();
+    anim->setDuration(atts.getInt("duration",300));
+    anim->setStartDelay(atts.getInt("startDelay",0));
+    anim->setRepeatCount(atts.getInt("repeatCount",0));
+    anim->setRepeatMode(atts.getInt("repeatMode",std::map<const std::string,int>{
+        {"restart" , (int)ValueAnimator::RESTART},
+        {"reverse" , (int)ValueAnimator::REVERSE},
+        {"infinite", (int)ValueAnimator::INFINITE}
+    },ValueAnimator::RESTART));
+
+    std::vector<float>values;
+    if(atts.hasAttribute("valueFrom")){
+        float f=atts.getFloat("valueFrom",.0f);
+        values.push_back(f);
+    }
+    if(atts.hasAttribute("valueTo")){
+        float f=atts.getFloat("valueTo",.0f); 
+        values.push_back(f);
+    }
+    anim->setFloatValues(values);
     return anim;
 }
 

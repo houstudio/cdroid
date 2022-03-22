@@ -61,6 +61,9 @@ TabLayout::~TabLayout(){
     delete mTabTextColors;
     delete mScrollAnimator;
     delete mAdapterChangeListener;
+    if(mPagerAdapter&&mPagerAdapterObserver)
+        mPagerAdapter->unregisterDataSetObserver(mPagerAdapterObserver);
+    delete mPagerAdapterObserver;
 }
 
 void TabLayout::initTabLayout(){
