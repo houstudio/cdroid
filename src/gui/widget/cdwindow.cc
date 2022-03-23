@@ -22,7 +22,7 @@
 #include <expat.h>
 #include <systemclock.h>
 #include <widget/measurespec.h>
-#include <widget/swipehelper.h>
+#include <view/swipehelper.h>
 #include <fstream>
 
 namespace cdroid {
@@ -380,9 +380,9 @@ void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
     mOwner=w;
 }
 
-std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
+std::vector<Window::InvalidateInfo>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
     for(auto it=mInvalidateViews.begin();it!=mInvalidateViews.end();it++){
-        if((*it)->target == v)
+        if((*it).target == v)
             return it;
     }
     return mInvalidateViews.end();
@@ -391,28 +391,28 @@ std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAni
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
     auto it=find(view);
     if(it==mInvalidateViews.end()){
-        AttachInfo::InvalidateInfo*info = AttachInfo::InvalidateInfo::obtain();
-        info->target = view;
-        info->rect.set(0,0,0,0);
+        InvalidateInfo info;
+        info.target = view;
+        info.rect.set(0,0,0,0);
         mInvalidateViews.push_back(info);
     }else{
-        (*it)->rect.set(0,0,0,0);
+        InvalidateInfo& info=(*it);
+        info.rect.set(0,0,0,0);
     }
     postIfNeededLocked();
 }
 
 void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect){
     auto it=find(view);
-    AttachInfo::InvalidateInfo*info=nullptr;
     if(it == mInvalidateViews.end()){
-        info = AttachInfo::InvalidateInfo::obtain();
-        info->target =view;
-        info->rect = rect;
+        InvalidateInfo info;
+        info.target =view;
+        info.rect = rect;
         mInvalidateViews.push_back(info);
     }else{
-        info=(*it);
-        if(!info->rect.empty())
-            info->rect.Union(rect);
+        InvalidateInfo& info=(*it);
+        if(!info.rect.empty())
+            info.rect.Union(rect);
     }
     postIfNeededLocked();
 }
@@ -421,7 +421,6 @@ void Window::InvalidateOnAnimationRunnable::removeView(View* view){
     auto it=find(view);
     if(it != mInvalidateViews.end()){
         mInvalidateViews.erase(it);
-        (*it)->recycle();
     }
     if(mInvalidateViews.size()==0){
         mPosted = false;
@@ -433,15 +432,14 @@ void Window::InvalidateOnAnimationRunnable::run(){
     int viewRectCount;
     mPosted = false;
 
-    std::vector<AttachInfo::InvalidateInfo*>temp=mInvalidateViews; 
+    std::vector<InvalidateInfo>temp=mInvalidateViews; 
     mInvalidateViews.clear();
 
     for (auto i:temp){
-        Rect&r = i->rect;
-        View*v = i->target;
+        Rect&r = i.rect;
+        View*v = i.target;
         if(r.width<=0||r.height<=0) v->invalidate();
         else  v->invalidate(r.left,r.top,r.width,r.height);
-        i->recycle();
     }
 }
 

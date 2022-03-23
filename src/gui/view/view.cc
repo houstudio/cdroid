@@ -6364,27 +6364,4 @@ View::AttachInfo::AttachInfo(){
     mViewRequestingLayout = nullptr;
 }
 
-std::vector<View::AttachInfo::InvalidateInfo*>View::AttachInfo::sPool;
-
-View::AttachInfo::InvalidateInfo* View::AttachInfo::InvalidateInfo::obtain(){
-    InvalidateInfo*info=nullptr;
-    if(sPool.size()==0){
-        info= new InvalidateInfo();
-    }else{
-        info = sPool.back();
-        sPool.pop_back();
-    }
-    return info;
-}
-
-void View::AttachInfo::InvalidateInfo::recycle(){
-    if(sPool.size()<POOL_LIMIT ){
-        target = nullptr;
-        rect.set(0,0,0,0);
-        sPool.push_back(this);
-    }else{ 
-        delete this;
-    }
-}
-
 }//endof namespace

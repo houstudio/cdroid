@@ -15,7 +15,7 @@ private:
     std::string mDefault;//default resource
     std::string mThemeName;
     AttributeSet mTheme;
-    std::map<const std::string,std::string>strings;
+    std::map<const std::string,std::string>mStrings;
     std::map<const std::string,int>mIDS;
     std::map<const std::string,std::vector<std::string>>mArraies;
     std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;

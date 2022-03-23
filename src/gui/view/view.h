@@ -158,17 +158,6 @@ protected:
 
     class AttachInfo{
     public:
-        class InvalidateInfo{
-        public:
-            View* target;
-            Rect rect;
-            static InvalidateInfo*obtain();
-            void recycle();
-        };
-    private:
-        static const int POOL_LIMIT = 64;
-        static std::vector<InvalidateInfo*>sPool;
-    public:
         View*mRootView;
         bool mHardwareAccelerated;
         float mApplicationScale;

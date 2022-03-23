@@ -42,7 +42,7 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     }
     
     if( (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
-        value= pkg+":"+value;
+        return std::string(pkg+":"+value);
     }
     return value;
 }
@@ -52,13 +52,13 @@ int AttributeSet::set(const char*atts[],int size){
     for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key=strrchr(atts[i],' ');
         if(key)key++;else key=atts[i];
-        mAttrs.insert(std::make_pair<const std::string,std::string>
+        mAttrs.insert(std::make_pair<std::string,std::string>
             (std::string(key),normalize(mPackage,std::string(atts[i+1]))));
     }
     return mAttrs.size();
 }
 
-std::map<const std::string,std::string>&AttributeSet::getEntries(){
+std::map<std::string,std::string>&AttributeSet::getEntries(){
     return mAttrs;
 }
 
@@ -66,7 +66,7 @@ int AttributeSet::inherit(const AttributeSet&other){
     int inheritedCount=0;
     for(auto it=other.mAttrs.begin();it!=other.mAttrs.end();it++){
         if(mAttrs.find(it->first)==mAttrs.end()){
-           mAttrs.insert(std::make_pair<const std::string,std::string>
+           mAttrs.insert(std::make_pair<std::string,std::string>
               (it->first.c_str(),normalize(mPackage,it->second)));
            inheritedCount++;
         }
@@ -76,11 +76,12 @@ int AttributeSet::inherit(const AttributeSet&other){
 
 bool AttributeSet::add(const std::string&key,const std::string&value){
     if(mAttrs.find(key)!=mAttrs.end())
-        return false; 
-    const char*ks=strrchr(key.c_str(),' ');
-    if(ks)ks++;else ks=key.c_str();
-    mAttrs.insert(std::make_pair<const std::string,std::string>
-       (std::string(ks),normalize(mPackage,value)));
+        return false;
+    std::string ks = key;
+    size_t pos =ks.find(' ');
+    if(pos!=std::string::npos)ks=ks.substr(pos+1);
+    mAttrs.insert(std::make_pair<std::string,std::string>
+       ((std::string)ks,normalize(mPackage,value)));
     return true;
 }
 

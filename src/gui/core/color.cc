@@ -1,5 +1,7 @@
 #include <color.h>
 #include <map>
+#include <mutex>
+#include <iostream>
 namespace cdroid{
 static std::map<const std::string ,unsigned int>sColorNameMap={
     {"aquamarine",0xFF7FFFD4},    {"beige" , 0xFFF5F5DC},       {"black"    , 0xFF000000},     {"blue"      , 0xFF0000FF},
@@ -70,6 +72,13 @@ unsigned int Color::parseColor(const std::string& colorString){
 
 unsigned int Color::getHtmlColor(const std::string&colorname){
      auto it=sColorNameMap.find(colorname);
+     static std::once_flag sInit;
+     std::call_once(sInit,[&](){
+         atexit([](){
+             sColorNameMap.clear();
+             std::cout<<"sColorNameMap.cleared"<<std::endl;
+         });
+     });
      if(it== sColorNameMap.end())return -1;
      return it->second;
 }

@@ -318,6 +318,10 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
 }
 
 AbsListView::~AbsListView(){
+    if(mVelocityTracker){
+        mVelocityTracker->recycle();
+        mVelocityTracker = nullptr;
+    }
     delete mSelector;
     delete mFastScroll;
     delete mRecycler;

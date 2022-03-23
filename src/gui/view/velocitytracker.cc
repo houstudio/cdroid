@@ -997,6 +997,7 @@ float VelocityTracker::getXVelocity(int id){
 float VelocityTracker::getYVelocity(){
     return getYVelocity(ACTIVE_POINTER_ID);
 }
+
 float VelocityTracker::getYVelocity(int id){
     float vy;
     getVelocity(id, nullptr, &vy);

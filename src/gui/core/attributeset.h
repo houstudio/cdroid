@@ -7,7 +7,7 @@ class AttributeSet{
 private:
     std::string mPackage;
     class Context*mContext;
-    std::map<const std::string,std::string>mAttrs;
+    std::map<std::string,std::string>mAttrs;
 public:
     AttributeSet();
     AttributeSet(Context*ctx,const std::string&package);
@@ -17,7 +17,7 @@ public:
     int  size()const;
     int  set(const char*atts[],int size=0);
     static std::string normalize(const std::string&pkg,const std::string&property);
-    std::map<const std::string,std::string>&getEntries();
+    std::map<std::string,std::string>&getEntries();
     int  inherit(const AttributeSet&other);
     const std::string getAttributeValue(const std::string&key)const;
     bool getBoolean(const std::string&key,bool def=false)const;

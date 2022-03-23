@@ -4,6 +4,10 @@ namespace cdroid{
 //DECLARE_WIDGET(ToolBar)
 
 ToolBar::ToolBar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
+    initToolBar();
+}
+
+void ToolBar::initToolBar(){
 
 }
 
@@ -88,7 +92,8 @@ void ToolBar::setLogo(Drawable* drawable){
         }
     } else if (mLogoView && isChildOrHidden(mLogoView)) {
         removeView(mLogoView);
-        //mHiddenViews.remove(mLogoView);
+        auto it = std::find(mHiddenViews.begin(),mHiddenViews.end(),mLogoView);
+        mHiddenViews.erase(it);//mHiddenViews.remove(mLogoView)
     }
     if (mLogoView) {
         mLogoView->setImageDrawable(drawable);
@@ -131,31 +136,30 @@ std::string ToolBar::getTitle()const{
 }
 
 void ToolBar::setTitle(const std::string&title){
-    #if 0
     if (!title.empty()) {
-       if (mTitleTextView == nullptr) {
-           Context* context = getContext();
-           mTitleTextView = new TextView(context,AttributeSet());
-           mTitleTextView->setSingleLine(true);
-           //mTitleTextView->setEllipsize(TextUtils.TruncateAt.END);
-           if (mTitleTextAppearance != 0) {
-               //mTitleTextView->setTextAppearance(mTitleTextAppearance);
-           }
-           if (mTitleTextColor != 0) {
-               mTitleTextView->setTextColor(mTitleTextColor);
-           }
-       }
-       if (!isChildOrHidden(mTitleTextView)) {
-           addSystemView(mTitleTextView, true);
-       }
+        if (mTitleTextView == nullptr) {
+            Context* context = getContext();
+            mTitleTextView = new TextView(context,AttributeSet());
+            mTitleTextView->setSingleLine(true);
+            //mTitleTextView->setEllipsize(TextUtils.TruncateAt.END);
+            if (mTitleTextAppearance != 0) {
+                //mTitleTextView->setTextAppearance(mTitleTextAppearance);
+            }
+            if (mTitleTextColor != 0) {
+                 mTitleTextView->setTextColor(mTitleTextColor);
+            }
+        }
+        if (!isChildOrHidden(mTitleTextView)) {
+            addSystemView(mTitleTextView, true);
+        }
     } else if (mTitleTextView  && isChildOrHidden(mTitleTextView)) {
-       removeView(mTitleTextView);
-       mHiddenViews->remove(mTitleTextView);
+        removeView(mTitleTextView);
+        auto it = std::find(mHiddenViews.begin(),mHiddenViews.end(),mTitleTextView);
+        mHiddenViews.erase(it);
     }
     if (mTitleTextView) {
         mTitleTextView->setText(title);
     }
-    #endif
     mTitleText=title;
 }
 
@@ -163,15 +167,46 @@ std::string ToolBar::getSubtitle()const{
     return mSubtitleText;
 }
 
-void ToolBar::setSubtitle(const std::string&){
+void ToolBar::setSubtitle(const std::string&subtitle){
+    if (!subtitle.empty()) {
+        if (mSubtitleTextView == nullptr) {
+            mSubtitleTextView = new TextView(mContext,AttributeSet());
+            mSubtitleTextView->setSingleLine(true);
+            //mSubtitleTextView->setEllipsize(TextUtils.TruncateAt.END);
+            if (mSubtitleTextAppearance != 0) {
+                //mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
+            }
+            if (mSubtitleTextColor != 0) {
+                mSubtitleTextView->setTextColor(mSubtitleTextColor);
+            }
+        }
+        if (!isChildOrHidden(mSubtitleTextView)) {
+            addSystemView(mSubtitleTextView, true);
+        }
+    } else if (mSubtitleTextView && isChildOrHidden(mSubtitleTextView)) {
+        removeView(mSubtitleTextView);
+        auto it = std::find(mHiddenViews.begin(),mHiddenViews.end(),mSubtitleTextView);
+        mHiddenViews.erase(it);
+        //mHiddenViews.remove(mSubtitleTextView);
+    }
+    if (mSubtitleTextView != nullptr) {
+        mSubtitleTextView->setText(subtitle);
+    }
+    mSubtitleText = subtitle;
 }
 
 void ToolBar::setTitleTextColor(int color){
     mTitleTextColor = color;
+    if (mTitleTextView != nullptr) {
+         mTitleTextView->setTextColor(color);
+    }
 }
 
 void ToolBar::setSubtitleTextColor(int color){
     mSubtitleTextColor = color;
+    if (mSubtitleTextView != nullptr) {
+         mSubtitleTextView->setTextColor(color);
+    }
 }
 
 std::string ToolBar::getNavigationContentDescription()const{
@@ -201,70 +236,150 @@ View*ToolBar::getNavigationView()const{
     return mNavButtonView;
 }
 
-//void ToolBar::setOnMenuItemClickListener(OnMenuItemClickListener listener){}
+void ToolBar::setOnMenuItemClickListener(MenuItem::OnMenuItemClickListener listener){
+    mOnMenuItemClickListener = listener;
+}
 
 void ToolBar::setContentInsetsRelative(int contentInsetStart, int contentInsetEnd) {
-    //ensureContentInsets();
-    //mContentInsets.setRelative(contentInsetStart, contentInsetEnd);
+    ensureContentInsets();
+    mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
 }
 
 int ToolBar::getContentInsetStart()const{
-    
+    return mContentInsets ? mContentInsets->getStart() : 0; 
 }
 
 int ToolBar::getContentInsetEnd()const{
+    return mContentInsets ? mContentInsets->getEnd() : 0;
 }
 
 void ToolBar::setContentInsetsAbsolute(int contentInsetLeft, int contentInsetRight){
+     ensureContentInsets();
+     mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
 }
 
 int ToolBar::getContentInsetLeft()const{
-    return 0;//mContentInsets ? mContentInsets->getLeft() : 0;
+    return mContentInsets ? mContentInsets->getLeft() : 0;
 }
 
 int ToolBar::getContentInsetRight()const{
-    return 0;//mContentInsets ? mContentInsets->getRight() : 0;
+    return mContentInsets ? mContentInsets->getRight() : 0;
 }
 
 int ToolBar::getContentInsetStartWithNavigation()const{
-    return 0;
+    return mContentInsetStartWithNavigation != RtlSpacingHelper::UNDEFINED
+              ? mContentInsetStartWithNavigation : getContentInsetStart();
 }
 
 void ToolBar::setContentInsetStartWithNavigation(int insetStartWithNavigation){
+    if (insetStartWithNavigation < 0) {
+        insetStartWithNavigation = RtlSpacingHelper::UNDEFINED;
+    }
+    if (insetStartWithNavigation != mContentInsetStartWithNavigation) {
+        mContentInsetStartWithNavigation = insetStartWithNavigation;
+        if (getNavigationIcon() != nullptr) {
+            requestLayout();
+        }
+    }
 }
 
 int ToolBar::getContentInsetEndWithActions()const{
-    return 0;
+    return mContentInsetEndWithActions != RtlSpacingHelper::UNDEFINED
+                ? mContentInsetEndWithActions
+                : getContentInsetEnd();
 }
 
 void ToolBar::setContentInsetEndWithActions(int insetEndWithActions){
+    if (insetEndWithActions < 0) {
+        insetEndWithActions = RtlSpacingHelper::UNDEFINED;
+    }
+    if (insetEndWithActions != mContentInsetEndWithActions) {
+        mContentInsetEndWithActions = insetEndWithActions;
+        if (getNavigationIcon() != nullptr) {
+            requestLayout();
+        }
+    }
 }
 
 int ToolBar::getCurrentContentInsetStart()const{
+    return getNavigationIcon() ? std::max(getContentInsetStart(), std::max(mContentInsetStartWithNavigation, 0))
+              : getContentInsetStart();
 }
 
 int ToolBar::getCurrentContentInsetEnd()const{
+     bool hasActions = false;
+     if (mMenuView != nullptr) {
+         //MenuBuilder mb = mMenuView->peekMenu();
+         //hasActions = mb != nullptr && mb.hasVisibleItems();
+     }
+     return hasActions
+          ? std::max(getContentInsetEnd(), std::max(mContentInsetEndWithActions, 0))
+          : getContentInsetEnd();
 }
 
 int ToolBar::getCurrentContentInsetLeft()const{
+    return isLayoutRtl()
+                ? getCurrentContentInsetEnd()
+                : getCurrentContentInsetStart();
 }
 
 int ToolBar::getCurrentContentInsetRight()const{
+    return isLayoutRtl()
+            ? getCurrentContentInsetStart()
+            : getCurrentContentInsetEnd();
 }
 
 void ToolBar::ensureNavButtonView(){
+    if (mNavButtonView == nullptr) {
+        mNavButtonView = new ImageButton(getContext(),AttributeSet());// null, 0, mNavButtonStyle);
+        LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();
+        lp->gravity = Gravity::START | (mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
+        mNavButtonView->setLayoutParams(lp);
+    }
 }
 
 void ToolBar::ensureCollapseButtonView(){
+    if (mCollapseButtonView == nullptr) {
+        mCollapseButtonView = new ImageButton(getContext(),AttributeSet());// null, 0, mNavButtonStyle);
+        mCollapseButtonView->setImageDrawable(mCollapseIcon);
+        mCollapseButtonView->setContentDescription(mCollapseDescription);
+        LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();
+        lp->gravity = Gravity::START | (mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
+        lp->mViewType = LayoutParams::EXPANDED;
+        mCollapseButtonView->setLayoutParams(lp);
+        mCollapseButtonView->setOnClickListener([this](View&v){
+             collapseActionView();
+        });
+    }
 }
 
 void ToolBar::addSystemView(View* v, bool allowHide){
+    ViewGroup::LayoutParams* vlp = v->getLayoutParams();
+    LayoutParams* lp = nullptr;
+    if (vlp == nullptr) {
+        lp = (LayoutParams*)generateDefaultLayoutParams();
+    } else if (!checkLayoutParams(vlp)) {
+        lp = (LayoutParams*)generateLayoutParams(vlp);
+    } else {
+        lp = (LayoutParams*) vlp;
+    }
+    lp->mViewType = LayoutParams::SYSTEM;
+    if (allowHide && mExpandedActionView) {
+        v->setLayoutParams(lp);
+        mHiddenViews.push_back(v);
+    } else {
+        addView(v, lp);
+    }
 }
 
 void ToolBar::postShowOverflowMenu(){
+    removeCallbacks(mShowOverflowMenuRunnable);
+    post(mShowOverflowMenuRunnable);
 }
 
 void ToolBar::onDetachedFromWindow(){
+    ViewGroup::onDetachedFromWindow();
+    removeCallbacks(mShowOverflowMenuRunnable);
 }
 
 bool ToolBar::onTouchEvent(MotionEvent&ev){
@@ -864,6 +979,26 @@ void ToolBar::addChildrenForExpandedActionView() {
 bool ToolBar::isChildOrHidden(View* child) {
     return child->getParent() == this;// || mHiddenViews.contains(child);
 }
+
+void ToolBar::setCollapsible(bool collapsible) {
+    mCollapsible = collapsible;
+    requestLayout();
+}
+
+/*void ToolBar::setMenuCallbacks(MenuPresenter.Callback pcb, MenuBuilder.Callback mcb){
+    mActionMenuPresenterCallback = pcb;
+    mMenuBuilderCallback = mcb;
+    if (mMenuView != null) {
+        mMenuView.setMenuCallbacks(pcb, mcb);
+    }
+}*/
+
+void ToolBar::ensureContentInsets() {
+    if (mContentInsets == nullptr) {
+        mContentInsets = new RtlSpacingHelper();
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 ToolBar::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
    :ActionBar::LayoutParams(c, attrs){

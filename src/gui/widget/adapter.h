@@ -6,6 +6,7 @@
 namespace cdroid{
 class DataSetObserver{
 public:
+    virtual ~DataSetObserver()=default;
     virtual void onChanged()=0;
     virtual void onInvalidated()=0;
     virtual void clearSavedState()=0;

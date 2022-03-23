@@ -4,7 +4,10 @@
 #include <widget/imageview.h>
 #include <widget/imagebutton.h>
 #include <view/viewgroup.h>
+#include <view/menu.h>
 #include <widget/actionbar.h>
+#include <widget/rtlspacinghelper.h>
+
 namespace cdroid{
 typedef View ActionMenuView;
 class Menu;
@@ -54,7 +57,7 @@ private:
     int mTitleMarginTop;
     int mTitleMarginBottom;
 
-    //RtlSpacingHelper mContentInsets;
+    RtlSpacingHelper* mContentInsets;
     int mContentInsetStartWithNavigation;
     int mContentInsetEndWithActions;
 
@@ -69,7 +72,10 @@ private:
     bool mEatingTouch;
     std::vector<View*> mHiddenViews;
     bool mCollapsible;
+    Runnable mShowOverflowMenuRunnable;
+    MenuItem::OnMenuItemClickListener mOnMenuItemClickListener;
 private:
+    void initToolBar();
     void ensureLogoView();
     void ensureNavButtonView();
     void ensureCollapseButtonView();
@@ -94,6 +100,7 @@ private:
     int getHorizontalMargins(View* v);
     int getVerticalMargins(View* v);
     static bool isCustomView(View*);
+    void ensureContentInsets();
 protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
@@ -140,7 +147,7 @@ public:
     void setOverflowIcon(Drawable*);
     Drawable*getOverflowIcon();
     void inflateMenu(const std::string&);
-    //void setOnMenuItemClickListener(OnMenuItemClickListener listener);
+    void setOnMenuItemClickListener(MenuItem::OnMenuItemClickListener listener);
     void setContentInsetsRelative(int contentInsetStart, int contentInsetEnd);
     int getContentInsetStart()const;
     int getContentInsetEnd()const;
@@ -157,6 +164,8 @@ public:
     int getCurrentContentInsetRight()const;
     bool onTouchEvent(MotionEvent&)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    void setCollapsible(bool);
+    //void setMenuCallbacks(MenuPresenter.Callback pcb, MenuBuilder.Callback mcb);
 };
 
 }//namespace

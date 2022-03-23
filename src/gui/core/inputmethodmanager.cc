@@ -175,9 +175,9 @@ InputMethodManager::~InputMethodManager(){
     delete kcm;
     LOGD("InputMethodManager Destroied!");
     if(imeWindow)WindowManager::getInstance().removeWindow(imeWindow);
-    for_each(imemethods.begin(),imemethods.end(),[](std::map<std::string,InputMethod*>::reference it){
-        delete it.second;
-    });
+    for(auto ime:imemethods){
+        delete ime.second;
+    }
     imemethods.erase(imemethods.begin(),imemethods.end());
 }
 

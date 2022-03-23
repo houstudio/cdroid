@@ -34,11 +34,13 @@ Assets::~Assets(){
     for(auto it=mResources.begin();it!=mResources.end();it++){
         delete it->second;
     }
-    mResources.clear();
-
+    //for(auto d:mDrawables) d.second = nullptr;
     mDrawables.clear();
-    printf(" assets destroied\r\n");
-    LOGD("%p Destroied",this);
+    mIDS.clear(); 
+    mResources.clear();
+    mStrings.clear();
+    mStyles.clear();
+    std::cout<<" Assets destroied!"<<std::endl;
 }
 
 const DisplayMetrics& Assets::getDisplayMetrics(){
@@ -211,7 +213,7 @@ void Assets::loadStrings(const std::string&lan){
     Json::parseFromStream(builder,*zipis,&root,&errs);
     Json::Value::Members mems=root.getMemberNames();
     for(auto m:mems){
-        strings[m]=root[m].asString();
+        mStrings[m]=root[m].asString();
     }
     delete zipis;
 }
@@ -250,8 +252,8 @@ const std::string& Assets::getString(const std::string& id,const std::string&lan
     if((!lan.empty())&&(mLanguage!=lan)){
         loadStrings(lan);
     }
-    auto itr=strings.find(id);
-    if(itr!=strings.end()&&!itr->second.empty()){
+    auto itr=mStrings.find(id);
+    if(itr !=mStrings.end()&&!itr->second.empty()){
          return itr->second;
     }
     return id;

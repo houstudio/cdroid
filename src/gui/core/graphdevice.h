@@ -20,6 +20,7 @@ private:
     uint64_t mFpsStartTime;
     uint64_t mFpsPrevTime;
     uint64_t mFpsNumFrames;
+    Rect mRectBanner;
     std::mutex mMutex;
     std::condition_variable mCV;
     HANDLE mPrimarySurface;

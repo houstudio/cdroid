@@ -85,8 +85,8 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
 
-    signal(SIGINT,[](int){
-        LOGD("sigint...");
+    signal(SIGTERM,[](int){
+        LOGD("SIGTERM...");
         App::mInst->mQuitFlag = true;
     });
 }
@@ -96,8 +96,8 @@ App::~App(){
     WindowManager::getInstance().shutDown();
     delete Looper::getDefault();
     delete &GraphDevice::getInstance();
-    exit(mExitCode);
     LOGD("%p Destroied",this);
+    exit(mExitCode);
 }
 
 const std::string App::getDataPath()const{

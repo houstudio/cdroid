@@ -9,13 +9,17 @@ class Window : public ViewGroup {
 protected:
     friend class WindowManager;
     friend class GraphDevice;
+     struct InvalidateInfo{
+         View* target;
+         Rect rect;
+     };
     class InvalidateOnAnimationRunnable:public Runnable{
     private:
         bool mPosted;
         Window*mOwner;
-        std::vector<AttachInfo::InvalidateInfo*>mInvalidateViews;
+        std::vector<InvalidateInfo>mInvalidateViews;
         void postIfNeededLocked();
-        std::vector<AttachInfo::InvalidateInfo*>::iterator find(View*v);
+        std::vector<InvalidateInfo>::iterator find(View*v);
     public:
         InvalidateOnAnimationRunnable();
         void setOwner(Window*w);

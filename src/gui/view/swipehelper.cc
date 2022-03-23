@@ -1,4 +1,4 @@
-#include <widget/swipehelper.h>
+#include <view/swipehelper.h>
 #include <core/systemclock.h>
 #include <private/windowmanager.h>
 #include <cdlog.h>

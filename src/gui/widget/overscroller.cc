@@ -377,6 +377,7 @@ OverScroller::~OverScroller(){
 }
 
 void OverScroller::setInterpolator(Interpolator* interpolator) {
+    delete mInterpolator;
     if (interpolator == nullptr) {
         mInterpolator = new Scroller::ViscousFluidInterpolator();
     } else {

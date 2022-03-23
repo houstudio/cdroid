@@ -12,6 +12,8 @@
 #include <pixman.h>
 #include <systemclock.h>
 #include <thread>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 using namespace Cairo;
 
@@ -39,12 +41,16 @@ GraphDevice::GraphDevice(int fmt){
     GFXCreateSurface(&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
     GFXLockSurface(mPrimarySurface,(void**)&buffer,&pitch);
 
-    GFXCreateSurface(&mBannerSurface,200,40,mFormat,0);
-    
-    mLastComposeTime = SystemClock::uptimeMillis();
     LOGD("PrimarySurface=%p size=%dx%d",mPrimarySurface,mScreenWidth,mScreenHeight);
     RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
     mPrimaryContext = new Canvas(surf);
+
+    mRectBanner.set(0,0,400,40);
+    mBannerContext = new Canvas(mRectBanner.width,mRectBanner.height);
+    mBannerSurface = mBannerContext->mHandle;
+    
+    mLastComposeTime = SystemClock::uptimeMillis();
+
     mInvalidateRgn = Region::create();
     mComposing = 0;
     mQuitFlag  = false;
@@ -84,10 +90,19 @@ void GraphDevice::trackFPS() {
         long totalTime = nowTime - mFpsStartTime;
         mFpsPrevTime = nowTime;
         if (totalTime > 1000) {
-            float fps = (float) mFpsNumFrames * 1000 / totalTime;
-            LOGV("\tFPS:%f",fps);
+            const float fps = (float) mFpsNumFrames * 1000 / totalTime;
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
+            std::string fpsText = std::to_string(fps);
+            Cairo::Context::Operator oop = mBannerContext->get_operator();
+            mBannerContext->set_operator(Cairo::Context::Operator::SOURCE);
+            mBannerContext->set_source_rgba(0,0,0,.5);
+            mBannerContext->rectangle(0,0,mRectBanner.width,mRectBanner.height);
+            mBannerContext->fill();
+            mBannerContext->set_operator(oop);
+            mBannerContext->set_source_rgb(1,1,1);
+            mBannerContext->set_font_size(22);
+            mBannerContext->draw_text(mRectBanner,fpsText,DT_CENTER);
         }
     }
 }
@@ -208,6 +223,9 @@ void GraphDevice::composeSurfaces(){
         LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
+    if(mPrimarySurface&&mBannerSurface){
+        GFXBlit(mPrimarySurface,mScreenWidth-mRectBanner.width,mScreenHeight-mRectBanner.height,mBannerSurface,nullptr);
+    }
     GFXFlip(mPrimarySurface); 
     t2=SystemClock::uptimeMillis();
     mLastComposeTime = SystemClock::uptimeMillis();
