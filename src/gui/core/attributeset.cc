@@ -52,7 +52,7 @@ int AttributeSet::set(const char*atts[],int size){
     for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key=strrchr(atts[i],' ');
         if(key)key++;else key=atts[i];
-        mAttrs.insert(std::make_pair<std::string,std::string>
+        mAttrs.insert(std::pair<std::string,std::string>
             (std::string(key),normalize(mPackage,std::string(atts[i+1]))));
     }
     return mAttrs.size();
@@ -66,7 +66,7 @@ int AttributeSet::inherit(const AttributeSet&other){
     int inheritedCount=0;
     for(auto it=other.mAttrs.begin();it!=other.mAttrs.end();it++){
         if(mAttrs.find(it->first)==mAttrs.end()){
-           mAttrs.insert(std::make_pair<std::string,std::string>
+           mAttrs.insert(std::pair<std::string,std::string>
               (it->first.c_str(),normalize(mPackage,it->second)));
            inheritedCount++;
         }
@@ -80,7 +80,7 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
     std::string ks = key;
     size_t pos =ks.find(' ');
     if(pos!=std::string::npos)ks=ks.substr(pos+1);
-    mAttrs.insert(std::make_pair<std::string,std::string>
+    mAttrs.insert(std::pair<std::string,std::string>
        ((std::string)ks,normalize(mPackage,value)));
     return true;
 }

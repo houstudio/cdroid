@@ -26,6 +26,7 @@ DECLARE_WIDGET(RelativeLayout)
 RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
     mIgnoreGravity  = NO_ID;
     mDirtyHierarchy = true;
+    mGraph = new DependencyGraph();
 }
 
 RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
@@ -33,6 +34,11 @@ RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
     mDirtyHierarchy = true;
     mIgnoreGravity = attrs.getResourceId("ignoreGravity", View::NO_ID);
     mGravity=attrs.getGravity("gravity",mGravity);
+    mGraph = new DependencyGraph();
+}
+
+RelativeLayout::~RelativeLayout(){
+    delete mGraph;
 }
 
 bool RelativeLayout::shouldDelayChildPressedState(){
@@ -89,14 +95,13 @@ void RelativeLayout::sortChildren(){
     mSortedVerticalChildren.resize(count);
     mSortedHorizontalChildren.resize(count);
 
-    DependencyGraph& graph = mGraph;
-    graph.clear();
+    mGraph->clear();
 
     for (int i = 0; i < count; i++) {
-        graph.add(getChildAt(i));
+        mGraph->add(getChildAt(i));
     }
-    graph.getSortedViews(mSortedVerticalChildren, (const int*)RULES_VERTICAL,sizeof(RULES_VERTICAL)/sizeof(RULES_VERTICAL[0]));
-    graph.getSortedViews(mSortedHorizontalChildren,(const int*)RULES_HORIZONTAL,sizeof(RULES_HORIZONTAL)/sizeof(RULES_HORIZONTAL[0]));
+    mGraph->getSortedViews(mSortedVerticalChildren, (const int*)RULES_VERTICAL,sizeof(RULES_VERTICAL)/sizeof(RULES_VERTICAL[0]));
+    mGraph->getSortedViews(mSortedHorizontalChildren,(const int*)RULES_HORIZONTAL,sizeof(RULES_HORIZONTAL)/sizeof(RULES_HORIZONTAL[0]));
 }
 
 void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -656,14 +661,14 @@ void RelativeLayout::applyVerticalSizeRules(RelativeLayout::LayoutParams* childP
 View* RelativeLayout::getRelatedView(const int* rules, int relation){
     const int id = rules[relation];
     if (id != 0) {
-        DependencyGraph::Node* node = mGraph.mKeyNodes.get(id);
+        DependencyGraph::Node* node = mGraph->mKeyNodes.get(id);
         if (node == nullptr) return nullptr;
         View* v = node->view;
 
         // Find the first non-GONE view up the chain
         while (v->getVisibility() == View::GONE) {
             rules = ((LayoutParams*) v->getLayoutParams())->getRules(v->getLayoutDirection());
-            node = mGraph.mKeyNodes.get((rules[relation]));
+            node = mGraph->mKeyNodes.get((rules[relation]));
             // ignore self dependency. for more info look in git commit: da3003
             if (node == nullptr || v == node->view) return nullptr;
             v = node->view;
@@ -1026,6 +1031,11 @@ RelativeLayout::DependencyGraph::Node::Node(View*v){
 }
 
 RelativeLayout::DependencyGraph::Node::~Node(){
+    dependents.clear();
+    dependencies.clear();
+}
+
+RelativeLayout::DependencyGraph::DependencyGraph(){
 }
 
 RelativeLayout::DependencyGraph::~DependencyGraph(){
@@ -1033,8 +1043,8 @@ RelativeLayout::DependencyGraph::~DependencyGraph(){
 }
 
 void RelativeLayout::DependencyGraph::clear(){
-    for (auto nd:mNodes) {
-        delete nd;
+    for (Node* node:mNodes) {
+        delete node;
     }
     mNodes.clear();
     mKeyNodes.clear();

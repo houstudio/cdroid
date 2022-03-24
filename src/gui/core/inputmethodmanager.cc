@@ -178,7 +178,7 @@ InputMethodManager::~InputMethodManager(){
     for(auto ime:imemethods){
         delete ime.second;
     }
-    imemethods.erase(imemethods.begin(),imemethods.end());
+    imemethods.clear();
 }
 
 int InputMethodManager::setKeyCharacterMap(const std::string&filename){

@@ -34,7 +34,9 @@ Assets::~Assets(){
     for(auto it=mResources.begin();it!=mResources.end();it++){
         delete it->second;
     }
-    //for(auto d:mDrawables) d.second = nullptr;
+    for(auto d:mDrawables){
+        LOGD_IF(d.second.use_count(),"%s reference=%d",d.first.c_str(),d.second.use_count());
+    }
     mDrawables.clear();
     mIDS.clear(); 
     mResources.clear();
@@ -436,7 +438,7 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
             return 0;
         }
     } while(len!=0);
-    XML_ParserFree(parser); 
+    XML_ParserFree(parser);
 }
 #pragma GCC pop_options
 

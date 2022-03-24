@@ -61,40 +61,26 @@ bool Adapter::isEmpty()const{
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void PagerAdapter::startUpdate(ViewGroup* container){
-    startUpdate((View*)container);
-}
-
-void PagerAdapter::startUpdate(View*container){
 }
 
 void*PagerAdapter::instantiateItem(ViewGroup* container, int position){
-    return instantiateItem((View*)container,position);
-}
-
-void* PagerAdapter::instantiateItem(View* container, int position){
     throw "Required method instantiateItem was not overridden";
     return nullptr;
 }
 
-void PagerAdapter::destroyItem(ViewGroup* container, int position, void* object){
-    destroyItem((View*)container,position,object);
-}
 
-void PagerAdapter::destroyItem(View* container, int position,void*object){
+void PagerAdapter::destroyItem(ViewGroup* container, int position, void* object){
     throw "Required method destroyItem was not overridden";
 }
 
 void PagerAdapter::finishUpdate(ViewGroup* container){
-    finishUpdate((View*)container);
 }
-void PagerAdapter::finishUpdate(View* container) {
+
+int PagerAdapter::getItemPosition(void* object){
+    return POSITION_UNCHANGED;
 }
 
 void PagerAdapter::setPrimaryItem(ViewGroup* container, int position,void*object) {
-    setPrimaryItem((View*)container,position,object);
-}
-
-void PagerAdapter::setPrimaryItem(View* container, int position,void*object) {
 }
 
 void PagerAdapter::notifyDataSetChanged(){

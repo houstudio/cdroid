@@ -63,9 +63,9 @@ GraphDevice::~GraphDevice(){
     mCV.notify_all();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     delete mPrimaryContext;
+    delete mBannerContext;
     GFXDestroySurface(mPrimarySurface);
-    mPrimarySurface = nullptr;
-    mPrimaryContext = nullptr;
+    //mBannerSufrace is destroied by Canvas,GFXDestroySurface(mBannerSurface);
     LOGD("%p Destroied",this);
 }
 

@@ -43,11 +43,11 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 
     mOverlay = (ViewGroupOverlay*)listView->getOverlay();
     if(mOverlay){
-        mOverlay->add(mTrackImage);mTrackImage->setId(80000);
-        mOverlay->add(mThumbImage);mThumbImage->setId(80001);
+        mOverlay->add(mTrackImage);
+        mOverlay->add(mThumbImage);
         mOverlay->add(mPreviewImage);
-        mOverlay->add(mPrimaryText);mPrimaryText->setId(80002);
-        mOverlay->add(mSecondaryText);mSecondaryText->setId(80003);
+        mOverlay->add(mPrimaryText);
+        mOverlay->add(mSecondaryText);
     }
     mOverlay->getOverlayView()->setOnHierarchyChangeListener([](ViewGroup&container,View *view,bool addorremove){
         if(addorremove==false) delete view;
@@ -59,8 +59,8 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 }
 
 FastScroller::~FastScroller(){
-    remove();
-    //delete mOverlay;mOverlay is create/freed by View/ViewGroup,
+    //do not delete mOverlay and its children
+    //they are created/freed by View/ViewGroup,
 }
 
 void FastScroller::updateAppearance() {
@@ -83,10 +83,10 @@ void FastScroller::updateAppearance() {
     // Account for minimum thumb width.
     mWidth = std::max(width, mThumbMinWidth);
 
-    /*if (mTextAppearance != 0) {
+    if (!mTextAppearance.empty()) {
         mPrimaryText->setTextAppearance(mTextAppearance);
         mSecondaryText->setTextAppearance(mTextAppearance);
-    }*/
+    }
 
     if (mTextColor != nullptr) {
         mPrimaryText->setTextColor(mTextColor);
@@ -117,7 +117,7 @@ void FastScroller::setStyle(const std::string&styleResId){
     mPreviewResId[PREVIEW_RIGHT] = ta.getString("backgroundRight");
     mThumbDrawable = context->getDrawable(ta,"thumbDrawable");
     mTrackDrawable = context->getDrawable(ta,"trackDrawable");
-    //mTextAppearance = ta.getResourceId(index, 0);R.styleable.FastScroll_textAppearance
+    mTextAppearance = ta.getString("textAppearance");//R.styleable.FastScroll_textAppearance
     mTextColor = context->getColorStateList(ta.getString("textColor"));
     mTextSize  = ta.getDimensionPixelSize("textSize", 0);
     mPreviewMinWidth = ta.getDimensionPixelSize("minWidth", 0);

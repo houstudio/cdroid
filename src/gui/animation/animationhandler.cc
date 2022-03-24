@@ -35,6 +35,10 @@ AnimationHandler::AnimationHandler(){
     mFrameCallback=std::bind(&AnimationHandler::doFrame,this,std::placeholders::_1);
 }
 
+AnimationHandler::~AnimationHandler(){
+    delete mProvider;
+}
+
 int AnimationHandler::checkEvents(){
     return  mAnimationCallbacks.size();
 }

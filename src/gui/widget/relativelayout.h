@@ -77,6 +77,7 @@ private:
         std::vector<Node*>mNodes;
         SparseArray<Node*,nullptr> mKeyNodes;
         std::list<Node*>mRoots;
+        DependencyGraph();
         ~DependencyGraph();
         void clear();
         void add(View* view);
@@ -100,7 +101,7 @@ private:
     bool mDirtyHierarchy;
     std::vector<View*> mSortedHorizontalChildren;
     std::vector<View*> mSortedVerticalChildren;
-    DependencyGraph mGraph;// = new DependencyGraph();
+    DependencyGraph *mGraph;
 
     // Compatibility hack. Old versions of the platform had problems
     // with MeasureSpec value overflow and RelativeLayout was one source of them.
@@ -143,6 +144,7 @@ protected:
 public:
     RelativeLayout(int w,int h);
     RelativeLayout(Context* context,const AttributeSet& attrs);
+    ~RelativeLayout()override;
     bool shouldDelayChildPressedState()override; 
     int getGravity()const;
     void setGravity(int);

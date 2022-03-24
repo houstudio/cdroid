@@ -40,6 +40,7 @@ private:
 private:
     AnimationFrameCallbackProvider* getProvider();
     AnimationHandler();
+    ~AnimationHandler();
     void doFrame(long);
     void doAnimationFrame(long frameTime);
     bool isCallbackDue(AnimationFrameCallback* callback, long currentTime);

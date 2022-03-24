@@ -40,8 +40,13 @@ WindowManager&WindowManager::getInstance(){
 };
 
 WindowManager::~WindowManager() {
-    for_each(windows.begin(),windows.end(),[](Window*w){delete w;});
-    windows.erase(windows.begin(),windows.end());
+    for(Window*w:windows){
+        View::AttachInfo*info=w->mAttachInfo;
+        w->dispatchDetachedFromWindow();
+        delete info;
+        delete w;
+    };
+    windows.clear();
     LOGD("%p Destroied",this);
 }
 

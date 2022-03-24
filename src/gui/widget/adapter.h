@@ -136,17 +136,12 @@ public:
 public:
     virtual int getCount(){return 0;}
     virtual void startUpdate(ViewGroup* container);
-    virtual void startUpdate(View*container);
     virtual void*instantiateItem(ViewGroup* container, int position);
-    virtual void*instantiateItem(View* container, int position);
     virtual void destroyItem(ViewGroup* container, int position, void* object);
-    virtual void destroyItem(View* container, int position, void* object);
     virtual void setPrimaryItem(ViewGroup* container, int position, void* object);
-    virtual void setPrimaryItem(View* container, int position, void* object);
     virtual void finishUpdate(ViewGroup* container);
-    virtual void finishUpdate(View* container);
     virtual bool isViewFromObject(View* view, void* object)=0;
-    virtual int getItemPosition(void* object){return POSITION_UNCHANGED;}
+    virtual int getItemPosition(void* object);
     void notifyDataSetChanged();
     void registerDataSetObserver(DataSetObserver* observer);
     void unregisterDataSetObserver(DataSetObserver* observer);

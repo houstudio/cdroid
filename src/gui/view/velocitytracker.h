@@ -53,6 +53,7 @@ public:
 
 public:
     explicit VelocityTracker(const char* strategy);
+    ~VelocityTracker();
     void clear();
     void addMovement(const MotionEvent& event);
     void computeCurrentVelocity(int32_t units);

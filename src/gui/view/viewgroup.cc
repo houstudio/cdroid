@@ -1041,18 +1041,27 @@ void ViewGroup::cleanupLayoutState(View* child)const{
 }
 
 View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout){
-    if (!checkLayoutParams(params)){
-        LOGD("checkLayoutParams(%p) failed",params);
-        params = generateLayoutParams(params);
+    if(mTransition){
+        mTransition->cancel(LayoutTransition::DISAPPEARING);
     }
 
     if(child->mParent){
-        LOGE("The specified child already has a parent. you must call removeView() on the child's parent first.");
+        throw "The specified child already has a parent. you must call removeView() on the child's parent first.";
+    }
+    if(mTransition){
+        mTransition->addChild(this,child);
     }
     if (!checkLayoutParams(params)) {
+        LayoutParams*olp =params;
         params = generateLayoutParams(params);
+        if(child->mLayoutParams!=olp){
+            delete olp;//params is unbinded ,must be destroied!
+        }
     }
+
     if (preventRequestLayout) {
+        if(child->mLayoutParams!=params)
+            delete child->mLayoutParams;
         child->mLayoutParams = params;
     } else {
         child->setLayoutParams(params);
@@ -1070,18 +1079,17 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
     }
     if (child->hasUnhandledKeyListener()) incrementChildUnhandledKeyListeners();
 
-    bool childHasFocus = child->hasFocus();
+    const bool childHasFocus = child->hasFocus();
     if (childHasFocus) requestChildFocus(child, child->findFocus());
 
-    AttachInfo* ai = mAttachInfo;
-    if (ai  && (mGroupFlags & FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0) {
-        bool lastKeepOn = ai->mKeepScreenOn;
-        ai->mKeepScreenOn = false;
+    if (mAttachInfo  && (mGroupFlags & FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0) {
+        bool lastKeepOn = mAttachInfo->mKeepScreenOn;
+        mAttachInfo->mKeepScreenOn = false;
         child->dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
-        if (ai->mKeepScreenOn) {
+        if (mAttachInfo->mKeepScreenOn) {
             //needGlobalAttributesUpdate(true);
         }
-        ai->mKeepScreenOn = lastKeepOn;
+        mAttachInfo->mKeepScreenOn = lastKeepOn;
     }
 
     if (child->isLayoutDirectionInherited()) child->resetRtlProperties();

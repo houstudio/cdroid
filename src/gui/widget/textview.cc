@@ -466,6 +466,17 @@ void TextView::setRawTextSize(float size, bool shouldRequestLayout){
         requestLayout();
 }
 
+void TextView::setTextAppearance(const std::string&appearance){
+    TextAppearanceAttributes attributes;
+    if(appearance.empty()==false){
+        AttributeSet attrs=mContext->obtainStyledAttributes(appearance);
+        if(attrs.size()){
+            attributes.readTextAppearance(mContext,attrs);
+            applyTextAppearance(&attributes);
+        }
+    }
+}
+
 void TextView::setTextSizeInternal(int unit, float size, bool shouldRequestLayout){
     setRawTextSize(size,shouldRequestLayout);
 }

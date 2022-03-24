@@ -124,7 +124,8 @@ public:
     
     virtual void setText(const std::string&txt);
     const std::string getText()const;
-    View&setHint(const std::string&txt)override;
+    void  setTextAppearance(const std::string&);
+    View& setHint(const std::string&txt)override;
     virtual void setSingleLine(bool single);
     bool isSingleLine()const;
     void setBreakStrategy(int breakStrategy);

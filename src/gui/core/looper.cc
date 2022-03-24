@@ -54,6 +54,9 @@ Looper::~Looper() {
     if (mEpollFd >= 0) {
         close(mEpollFd);
     }
+    for(EventHandler*hdl:mEventHandlers){
+        delete hdl;
+    }mEventHandlers.clear();
 }
 Looper*Looper::mInst=nullptr;
 Looper*Looper::getDefault(){

@@ -779,8 +779,12 @@ void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* 
 
 View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params){
     if (!checkLayoutParams(params)) {
-        delete params;
+        ViewGroup::LayoutParams*olp = params;
         params = generateLayoutParams(params);
+        if(olp!=child->getLayoutParams()){
+            //param is not got from child,we must destroied it.
+            delete olp;
+        }
     }
     LayoutParams* lp = (LayoutParams*) params;
     //Any views added via inflation should be classed as part of the decor

@@ -92,7 +92,7 @@ private:
 
     Drawable* mThumbDrawable;
     Drawable* mTrackDrawable;
-    int mTextAppearance;
+    std::string mTextAppearance;
     int mThumbPosition;
 
     // Used to convert between y-coordinate and thumb position within track.

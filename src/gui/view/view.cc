@@ -406,7 +406,8 @@ View::~View(){
     delete mScrollCache;
     delete mBackground;
     delete mBackgroundTint;
-    delete mLayoutParams;
+    if(mLayoutParams)
+        delete mLayoutParams;
     delete mRoundScrollbarRenderer;
     delete mCurrentAnimation;
     delete mTransformationInfo;
@@ -6254,6 +6255,8 @@ LayoutParams*View::getLayoutParams(){
 }
 
 void View::setLayoutParams(LayoutParams*params){
+    if(mLayoutParams&&(params!=mLayoutParams))
+        delete mLayoutParams;
     mLayoutParams = params;
     resolveLayoutParams();
     if(mParent)((ViewGroup*) mParent)->onSetLayoutParams(this,params);

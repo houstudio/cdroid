@@ -922,6 +922,10 @@ VelocityTracker::VelocityTracker(const char* strategy):mActivePointerId(-1) {
     bzero(mCalculatedVelocity,sizeof(mCalculatedVelocity));
 }
 
+VelocityTracker::~VelocityTracker(){
+    delete mVelocityTracker;
+}
+
 void VelocityTracker::clear() {
     mVelocityTracker->clear();
     mActivePointerId = -1;
