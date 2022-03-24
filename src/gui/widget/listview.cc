@@ -2598,6 +2598,8 @@ void ListView::setDivider(Drawable* divider) {
     } else {
         mDividerHeight = 0;
     }
+    if(mDivider!= divider)
+        delete mDivider;
     mDivider = divider;
     mDividerIsOpaque = divider == nullptr || divider->getOpacity() == PixelFormat::OPAQUE;
     if(mAdapter && mItemCount)requestLayout();

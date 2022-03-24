@@ -747,7 +747,7 @@ bool RelativeLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
 }
 
 ViewGroup::LayoutParams* RelativeLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
-    if (true){//sPreserveMarginParamsInLayoutParamConversion) {
+    if (sPreserveMarginParamsInLayoutParamConversion) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
             return new LayoutParams((const LayoutParams&)*lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
@@ -756,7 +756,6 @@ ViewGroup::LayoutParams* RelativeLayout::generateLayoutParams(const ViewGroup::L
     }
     return new LayoutParams(*lp);
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////
 RelativeLayout::LayoutParams::LayoutParams(int w, int h)

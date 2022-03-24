@@ -417,13 +417,14 @@ ViewGroup::LayoutParams* GridLayout::generateLayoutParams(const AttributeSet&att
 }
 
 ViewGroup::LayoutParams* GridLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
-    if (dynamic_cast<const LayoutParams*>(lp)) {
-        return new LayoutParams((const LayoutParams&)*lp);
-    } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
-       return new LayoutParams((const MarginLayoutParams&)*lp);
-    }else{
-       return new LayoutParams(*lp);
+    if (sPreserveMarginParamsInLayoutParamConversion){
+        if (dynamic_cast<const LayoutParams*>(lp)) {
+            return new LayoutParams((const LayoutParams&)*lp);
+        } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
+           return new LayoutParams((const MarginLayoutParams&)*lp);
+        }
     }
+    return new LayoutParams(*lp);
 }
 
 void GridLayout::drawLine(Canvas& canvas, int x1, int y1, int x2, int y2){

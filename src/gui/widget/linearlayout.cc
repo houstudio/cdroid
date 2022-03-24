@@ -184,7 +184,7 @@ LayoutParams* LinearLayout::generateDefaultLayoutParams()const{
 }
 
 ViewGroup::LayoutParams* LinearLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
-    if (true/*sPreserveMarginParamsInLayoutParamConversion*/) {
+    if (sPreserveMarginParamsInLayoutParamConversion) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
             return new LayoutParams((const LayoutParams&)*lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {

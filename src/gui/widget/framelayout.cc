@@ -58,7 +58,7 @@ bool FrameLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
 }
 
 ViewGroup::LayoutParams* FrameLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const {
-    if (false/*sPreserveMarginParamsInLayoutParamConversion*/) {
+    if (sPreserveMarginParamsInLayoutParamConversion) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
             return new FrameLayout::LayoutParams(*(LayoutParams*) lp);
         } else if (dynamic_cast<const MarginLayoutParams*>(lp)) {
