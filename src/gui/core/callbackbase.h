@@ -52,5 +52,7 @@ public:
         return fun(std::forward<Args>(args)...);
     }
 };
-}
+typedef CallbackBase<void>Runnable;
+
+}//endof namespace
 

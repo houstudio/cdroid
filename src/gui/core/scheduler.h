@@ -23,7 +23,7 @@ public:
     void scheduleWeekly(Function f,system_clock::time_point t);
     void scheduleMonthly(Function f,system_clock::time_point t);/*TODO*/
     virtual void remove(system_clock::time_point t);
-    void handleMessage(const Message&)override;
+    void handleMessage(Message&)override;
 };
 
 }

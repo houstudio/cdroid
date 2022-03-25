@@ -13,7 +13,6 @@ using namespace Cairo;
 
 namespace cdroid{
 
-typedef CallbackBase<void> Runnable;
 class Drawable;
 class ColorStateList;
 class Context{

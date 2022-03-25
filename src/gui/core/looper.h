@@ -1,6 +1,6 @@
 #ifndef __ALOOPER_H__
 #define __ALOOPER_H__
-#include <functional>
+#include <core/callbackbase.h>
 #define NOPOLL 0
 #define POLL   1
 #define EPOLL  2
@@ -36,7 +36,7 @@ typedef int64_t nsecs_t;
 struct Message {
     Message() : what(0) { }
     Message(int w) : what(w) { }
-
+    Runnable callback;
     /* The message type. (interpretation is left up to the handler) */
     int what;
     int arg1;
@@ -67,7 +67,7 @@ class MessageHandler{
 protected:
     virtual ~MessageHandler();
 public:
-    virtual void handleMessage(const Message& message)=0;
+    virtual void handleMessage(Message& message)=0;
 };
 
 class EventHandler{

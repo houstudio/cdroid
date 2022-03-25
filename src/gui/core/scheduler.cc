@@ -59,7 +59,7 @@ void Scheduler::remove(system_clock::time_point t){
         taskQueue.erase(it);
 }
 
-void Scheduler::handleMessage(const Message&){
+void Scheduler::handleMessage(Message&){
 }
 #if 0
 bool Scheduler::check(){

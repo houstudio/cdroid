@@ -62,7 +62,7 @@ class TestHandler:public MessageHandler{
    int count;
 public:
    TestHandler(){count=0;}
-   void handleMessage(const Message&msg)override{
+   void handleMessage(Message&msg)override{
        count++;
    }
    int getCount()const{return count;}

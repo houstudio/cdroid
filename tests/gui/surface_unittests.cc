@@ -10,8 +10,10 @@
 #include <dirent.h>
 #include <svg-cairo.h>
 #include <fstream>
+#include <cdlog.h>
 #include <core/textutils.h>
 #include <fribidi.h>
+
 using namespace cdroid;
 #define SLEEP(x) usleep((x)*1000)
 class CONTEXT:public testing::Test{
@@ -21,7 +23,7 @@ public :
    static Canvas*ctx;
    static void SetUpTestCase(){
        GFXInit();
-       ctx=new Canvas(800,600);//GraphDevice::getInstance().createContext(1280,720);
+       ctx=new Canvas(800,600);
        rm=new Assets("ntvplus.pak");
    }
    static void TearDownCase(){
