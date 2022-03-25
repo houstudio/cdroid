@@ -2534,10 +2534,10 @@ void ListView::dispatchDraw(Canvas&canvas) {
                         // Draw dividers between enabled items, headers
                         // and/or footers when enabled and requested, and
                         // before the first enabled item.
-                        if (adapter->isEnabled(itemIndex) && (headerDividers || !isHeader
-                                                              && (previousIndex >= headerCount)) && (isFirstItem ||
-                                                                      adapter->isEnabled(previousIndex) && (footerDividers || !isFooter
-                                                                              && (previousIndex < footerLimit)))) {
+                        if ( adapter->isEnabled(itemIndex) &&
+                             (headerDividers || !isHeader && (previousIndex >= headerCount)) &&
+                             (isFirstItem ||adapter->isEnabled(previousIndex) && (footerDividers || !isFooter
+                                       && (previousIndex < footerLimit)))) {
                             bounds.top = top - dividerHeight;
                             bounds.height = dividerHeight;
                             // Give the method the child ABOVE the divider,

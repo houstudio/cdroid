@@ -2625,6 +2625,32 @@ void ViewGroup::internalSetPadding(int left, int top, int width, int height){
     }
 }
 
+void ViewGroup::dispatchSaveInstanceState(std::map<int,Parcelable>& container){
+    View::dispatchSaveInstanceState(container);
+    for (View*c:mChildren){
+        if ((c->mViewFlags & PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED) {
+            c->dispatchSaveInstanceState(container);
+        }
+    }
+}
+
+void ViewGroup::dispatchFreezeSelfOnly(std::map<int,Parcelable>& container){
+    View::dispatchSaveInstanceState(container);
+}
+
+void ViewGroup::dispatchRestoreInstanceState(std::map<int,Parcelable>& container){
+    View::dispatchRestoreInstanceState(container);
+    for (View*c:mChildren){
+        if ((c->mViewFlags & PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED) {
+            c->dispatchRestoreInstanceState(container);
+        }
+    }
+}
+
+void ViewGroup::dispatchThawSelfOnly(std::map<int,Parcelable>& container){
+    View:;dispatchRestoreInstanceState(container);
+}
+
 bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {
     isVisible = View::dispatchVisibilityAggregated(isVisible);
     for (View*child:mChildren){

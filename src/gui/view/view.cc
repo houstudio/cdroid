@@ -20,6 +20,9 @@ namespace cdroid{
 
 DECLARE_WIDGET(View)
 
+bool View::sIgnoreMeasureCache = false;
+bool View::sPreserveMarginParamsInLayoutParamConversion = true;
+
 class TintInfo{
 public:
     ColorStateList*mTintList;
@@ -1015,8 +1018,13 @@ void View::drawDefaultFocusHighlight(Canvas& canvas){
 }
 
 bool View::awakenScrollBars(){
-    return mScrollCache != nullptr &&
-           awakenScrollBars(mScrollCache->scrollBarDefaultDelayBeforeFade, true);
+    return mScrollCache && awakenScrollBars(
+        mScrollCache->scrollBarDefaultDelayBeforeFade, true);
+}
+
+bool View::initialAwakenScrollBars() {
+    return mScrollCache && awakenScrollBars(
+        mScrollCache->scrollBarDefaultDelayBeforeFade * 4, true);
 }
 
 bool View::awakenScrollBars(int startDelay, bool invalidate){
@@ -1346,10 +1354,101 @@ void View::onDetachedFromWindowInternal() {
     }
 }
 
+void View::saveHierarchyState(std::map<int,Parcelable>& container){
+    dispatchSaveInstanceState(container);
+}
+
+void View::dispatchSaveInstanceState(std::map<int,Parcelable>& container){
+    if (mID != NO_ID && (mViewFlags & SAVE_DISABLED_MASK) == 0) {
+        mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
+        Parcelable state = onSaveInstanceState();
+        if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
+            throw "Derived class did not call super.onSaveInstanceState()";
+        }
+        if (!state.empty()) {//state!=nullptr
+            // Log.i("View", "Freezing #" + Integer.toHexString(mID)
+            // + ": " + state);
+            container.insert(std::pair<int,Parcelable>(mID, state));
+        }
+    }
+}
+
+Parcelable View::onSaveInstanceState(){
+#if 0
+    mPrivateFlags |= PFLAG_SAVE_STATE_CALLED;
+    if (mStartActivityRequestWho != null || isAutofilled()
+            || mAutofillViewId > LAST_APP_AUTOFILL_ID) {
+        BaseSavedState state = new BaseSavedState(AbsSavedState.EMPTY_STATE);
+
+        if (mStartActivityRequestWho != null) {
+            state.mSavedData |= BaseSavedState.START_ACTIVITY_REQUESTED_WHO_SAVED;
+        }
+
+        if (isAutofilled()) {
+            state.mSavedData |= BaseSavedState.IS_AUTOFILLED;
+        }
+
+        if (mAutofillViewId > LAST_APP_AUTOFILL_ID) {
+            state.mSavedData |= BaseSavedState.AUTOFILL_ID;
+        }
+
+        state.mStartActivityRequestWhoSaved = mStartActivityRequestWho;
+        state.mIsAutofilled = isAutofilled();
+        state.mAutofillViewId = mAutofillViewId;
+        return state;
+    }
+    return BaseSavedState.EMPTY_STATE;
+#endif
+}
+
+void View::restoreHierarchyState(std::map<int,Parcelable>& container){
+    dispatchRestoreInstanceState(container);
+}
+
+void View::dispatchRestoreInstanceState(std::map<int,Parcelable>& container){
+    if (mID != NO_ID) {
+        auto it= container.find(mID);
+        if (it!=container.end()){//state != null) {
+            Parcelable state = it->second;//container.get(mID);
+            LOGD("View %p:%d Restoreing #",this,mID,state.c_str());
+            mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
+            onRestoreInstanceState(state);
+            if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
+                throw "Derived class did not call super.onRestoreInstanceState()";
+            }
+        }
+    }
+}
+
+void View::onRestoreInstanceState(Parcelable& state){
+#if 0
+    mPrivateFlags |= PFLAG_SAVE_STATE_CALLED;
+    if (state != null && !(state instanceof AbsSavedState)) {
+        throw new IllegalArgumentException("Wrong state class, expecting View State but "
+                + "received " + state.getClass().toString() + " instead. This usually happens "
+                + "when two views of different type have the same id in the same hierarchy. "
+                + "This view's id is " + ViewDebug.resolveId(mContext, getId()) + ". Make sure "
+                + "other views do not use the same id.");
+    }
+    if (state != null && state instanceof BaseSavedState) {
+        BaseSavedState baseState = (BaseSavedState) state;
+
+        if ((baseState.mSavedData & BaseSavedState.START_ACTIVITY_REQUESTED_WHO_SAVED) != 0) {
+            mStartActivityRequestWho = baseState.mStartActivityRequestWhoSaved;
+        }
+        if ((baseState.mSavedData & BaseSavedState.IS_AUTOFILLED) != 0) {
+            setAutofilled(baseState.mIsAutofilled);
+        }
+        if ((baseState.mSavedData & BaseSavedState.AUTOFILL_ID) != 0) {
+            mAutofillViewId = baseState.mAutofillViewId;
+        }
+    }
+#endif
+}
+
 void View::onWindowVisibilityChanged(int visibility) {
     if (visibility == VISIBLE) {
-        //initialAwakenScrollBars();
-        if(mScrollCache)awakenScrollBars(mScrollCache->scrollBarDefaultDelayBeforeFade*4,true);
+        initialAwakenScrollBars();
     }
 }
 
@@ -1368,7 +1467,7 @@ void View::onVisibilityAggregated(bool isVisible) {
     mPrivateFlags3 = isVisible ? (mPrivateFlags3 | PFLAG3_AGGREGATED_VISIBLE)
             : (mPrivateFlags3 & ~PFLAG3_AGGREGATED_VISIBLE);
     if (isVisible && mAttachInfo != nullptr) {
-        if(mScrollCache)awakenScrollBars(mScrollCache->scrollBarDefaultDelayBeforeFade*4,true);
+        initialAwakenScrollBars();
     }
 
     Drawable*dr= mBackground;

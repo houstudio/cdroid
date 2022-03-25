@@ -169,6 +169,12 @@ protected:
     bool dispatchVisibilityAggregated(bool isVisible);
     void dispatchDetachedFromWindow()override;
     void internalSetPadding(int left, int top, int width, int height)override;
+
+    void dispatchSaveInstanceState(std::map<int,Parcelable>& container)override;
+    void dispatchFreezeSelfOnly(std::map<int,Parcelable>& container);
+    void dispatchRestoreInstanceState(std::map<int,Parcelable>& container)override;
+    void dispatchThawSelfOnly(std::map<int,Parcelable>& container);
+
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);

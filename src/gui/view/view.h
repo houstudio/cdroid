@@ -32,9 +32,12 @@
 #endif
 
 namespace cdroid{
+
 class ViewGroup;
 class ViewOverlay;
 typedef const std::string Intent;
+typedef std::string Parcelable;
+
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
     static bool DEBUG_DRAW;
@@ -92,9 +95,10 @@ protected:
 
         PFLAG_PRESSED          = 0x4000 ,
         PFLAG_DRAWING_CACHE_VALID= 0x8000 ,
-        PFLAG_ANIMATION_STARTED= 0x00010000 ,
-        PFLAG_ALPHA_SET        = 0x00040000 ,
-        PFLAG_SCROLL_CONTAINER = 0x00080000 ,
+        PFLAG_ANIMATION_STARTED= 0x010000 ,
+        PFLAG_SAVE_STATE_CALLED= 0x020000 ,
+        PFLAG_ALPHA_SET        = 0x040000 ,
+        PFLAG_SCROLL_CONTAINER = 0x080000 ,
         PFLAG_SCROLL_CONTAINER_ADDED= 0x00100000,
         PFLAG_DIRTY            = 0x00200000 ,
         PFLAG_DIRTY_OPAQUE     = 0x00400000 ,
@@ -222,8 +226,12 @@ public:
 
         CLICKABLE       = 0x4000 ,
         DRAWING_CACHE_ENABLED  = 0x8000 ,
+
+        SAVE_DISABLED = 0x000010000,
+        SAVE_DISABLED_MASK = 0x000010000,
+
         WILL_NOT_CACHE_DRAWING = 0x000020000 ,
-        
+
         LONG_CLICKABLE = 0x200000 ,
         DUPLICATE_PARENT_STATE=0x10000 ,
         CONTEXT_CLICKABLE=0x20000 ,
@@ -284,6 +292,12 @@ public:
         SCROLLBARS_INSET_MASK     = 0x01000000 ,
         SCROLLBARS_OUTSIDE_MASK   = 0x02000000 ,
         SCROLLBARS_STYLE_MASK     = 0x03000000 ,
+
+        KEEP_SCREEN_ON            = 0x04000000 ,
+        SOUND_EFFECTS_ENABLED     = 0x08000000 ,
+        HAPTIC_FEEDBACK_ENABLED   = 0x10000000 ,
+        PARENT_SAVE_DISABLED      = 0x20000000 ,
+        PARENT_SAVE_DISABLED_MASK = 0x20000000 ,
 
        //Indicates no axis of view scrolling.
         SCROLL_AXIS_NONE      =0 ,
@@ -401,6 +415,7 @@ private:
     void initializeScrollbarsInternal(const AttributeSet&attrs);
     void initScrollCache();
     ScrollabilityCache* getScrollCache();
+    bool initialAwakenScrollBars();
     Drawable* getAutofilledDrawable();
     void drawAutofilledHighlight(Canvas& canvas);
     bool isOnVerticalScrollbarThumb(int x,int y);
@@ -425,6 +440,8 @@ private:
     void cleanupDraw();
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
+    static bool sIgnoreMeasureCache;
+    static bool sPreserveMarginParamsInLayoutParamConversion;
     int mID;
     int mLayerType;
     int mAutofillViewId;
@@ -545,6 +562,13 @@ protected:
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericFocusedEvent(MotionEvent& event);
+
+    virtual void saveHierarchyState(std::map<int,Parcelable>& container);
+    virtual void dispatchSaveInstanceState(std::map<int,Parcelable>& container);
+    virtual Parcelable onSaveInstanceState();
+    virtual void restoreHierarchyState(std::map<int,Parcelable>& container);
+    virtual void dispatchRestoreInstanceState(std::map<int,Parcelable>& container);
+    virtual void onRestoreInstanceState(Parcelable& state);
 
     static int combineMeasuredStates(int curState, int newState);
     static std::vector<int>& mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState);
