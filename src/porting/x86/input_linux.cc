@@ -72,7 +72,7 @@ INT InputInit(){
         return fd>0; 
     },nullptr);
     free(namelist);
-    LOGD(".....end nglInputInit maxfd=%d numfd=%d\r\n",dev.maxfd,nf+1);
+    LOGD("maxfd=%d numfd=%d\r\n",dev.maxfd,nf+1);
     return 0;
 }
 

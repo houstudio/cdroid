@@ -275,7 +275,6 @@ int Looper::pollInner(int timeoutMillis) {
         LOGD_IF(DEBUG_POLL_AND_WAKE,"%p next message in %lld ns, adjusted timeout:timeoutMillis=%d",
                 this,mNextMessageUptime - now, timeoutMillis);
     }
-
     nsecs_t t1=SystemClock::uptimeMillis();
     if(1||mNextMessageUptime>(nsecs_t)SystemClock::uptimeMillis()){
         doIdleHandlers(); 
@@ -288,6 +287,7 @@ int Looper::pollInner(int timeoutMillis) {
     }
     removeEventHandlers();
     long elapsedMillis = SystemClock::uptimeMillis()-t1;
+
     // Acquire lock.
     mLock.lock();
 

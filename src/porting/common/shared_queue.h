@@ -50,6 +50,10 @@ public:
         std::lock_guard<std::mutex> lock(m_);
         return queue_.size();
     }
+    void clear(){
+        std::lock_guard<std::mutex> lock(m_);
+        while(queue_.size())queue_.pop();
+    }
 };
 
 #endif

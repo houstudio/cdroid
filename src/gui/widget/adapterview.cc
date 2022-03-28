@@ -498,14 +498,13 @@ AdapterDataSetObserver::AdapterDataSetObserver(AdapterView*lv){
 
 void AdapterDataSetObserver::onChanged() {
     adv->mDataChanged = true;
-    adv->mOldItemCount = adv->mItemCount;
-    adv->mItemCount = adv->getAdapter()->getCount();
-
+    adv->mOldItemCount= adv->mItemCount;
+    adv->mItemCount   = adv->getAdapter()->getCount();
     // Detect the case where a cursor that was previously invalidated has
     // been repopulated with new data.
     if (adv->getAdapter()->hasStableIds() //&& mInstanceState != null
           && adv->mOldItemCount == 0 && adv->mItemCount > 0) {
-         //adv->onRestoreInstanceState(mInstanceState);
+         adv->onRestoreInstanceState(adv->mInstanceState);
          //mInstanceState = null;
     } else {
          adv->rememberSyncState();
@@ -521,6 +520,7 @@ void AdapterDataSetObserver::onInvalidated() {
         // Remember the current state for the case where our hosting activity is being
         // stopped and later restarted
         //mInstanceState = AdapterView.this.onSaveInstanceState();
+        adv->mInstanceState = adv->onSaveInstanceState();
     }
     // Data is invalid so we should reset our state
     adv->mOldItemCount = adv->mItemCount;

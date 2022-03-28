@@ -47,8 +47,10 @@ public:
             lv->setSelector(new ColorDrawable(0x8800FF00));
             lv->setVerticalScrollBarEnabled(true);
             lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 
-            adapter1=new FileAdapter("@layout/fileitem.xml");
-            adapter1->loadFiles("/"); 
+            if(adapter1==nullptr){
+                adapter1=new FileAdapter("@layout/fileitem.xml");
+                adapter1->loadFiles("/");
+            } 
             lv->setAdapter(adapter1);
             lv->setBackgroundColor(0xFF000000|(0xFF<<position*8));
             container->addView(lv).setId(12345);
@@ -60,6 +62,7 @@ public:
                     adp->clear();
                     adp->loadFiles(f.fullpath);
                     adp->notifyDataSetChanged();
+                    lv.setSelection(0);
                 }
             });
             LOGV("instantiateItem %d to %p",position,lv);
@@ -67,7 +70,8 @@ public:
             }   
         case 1:{LOGD("===========1111");
             GridView*gv=new GridView(800,480);
-            adapter2=new FileAdapter("@layout/fileitem2.xml");
+            if(adapter2==nullptr)
+                adapter2=new FileAdapter("@layout/fileitem2.xml");
             gv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
                 FileItem f=adp->getItemAt(pos);
@@ -76,6 +80,7 @@ public:
                     adp->clear();
                     adp->loadFiles(f.fullpath);
                     adp->notifyDataSetChanged();
+                    lv.setSelection(0);
                 }
             });
             gv->setVerticalScrollBarEnabled(true);

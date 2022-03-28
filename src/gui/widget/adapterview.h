@@ -25,6 +25,7 @@ public:
     typedef std::function<bool (AdapterView& parent,View& view, int position, long id)>OnItemLongClickListener; 
 private:
     int mDesiredFocusableState;
+    Parcelable mInstanceState;
     Runnable mSelectionNotifier;
     Runnable mPendingSelectionNotifier;
     bool mDesiredFocusableInTouchModeState;

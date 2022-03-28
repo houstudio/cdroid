@@ -54,32 +54,33 @@ static void LogInit(){
         });th.detach();
     });
 }
-void LogPrintf(int level,const char*tag,const char*func,int line,const char*format,...){
-#if 1
+void LogPrintf(int level,const char*file,const char*func,int line,const char*format,...){
     va_list args;
-    const std::string shorttag=splitFileName(tag);
+    const std::string tag=splitFileName(file);
     auto it=sModules.find(tag);
     int module_loglevel=(it==sModules.end())?sLogLevel:it->second;
-    struct timespec ts;
+#if 1
     const char*colors[]={"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[5;31m"};
-    if(level<module_loglevel)
+    if(level<module_loglevel||level<0||level>LOG_FATAL)
         return;
     LogInit();
-    if(level<0||level>LOG_FATAL)return;
+    struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     int len1=snprintf(msgBoddy,kMaxMessageSize,"%010ld.%06ld \033[0;32m[%s]\033[0;34m \%s:%d %s",
-             ts.tv_sec,ts.tv_nsec/1000, shorttag.c_str(),func,line, colors[level]);
+             ts.tv_sec,ts.tv_nsec/1000, tag.c_str(),func,line, colors[level]);
     va_start(args, format);
     len1+=vsnprintf(msgBoddy+len1,kMaxMessageSize-len1,format, args);
     va_end(args);
     strcat(msgBoddy+len1,"\033[0m\r\n");
     dbgMessages.push(msgBoddy);
 #else
-    va_list args;
-    cdlog::LogMessage log(tag,line,func,level);
-    va_start(args, format);
-    log.messageSave(format,args);
-    va_end(args);
+    if(level<module_loglevel){
+        va_list args;
+        cdlog::LogMessage log(tag,line,func,level);
+        va_start(args, format);
+        log.messageSave(format,args);
+        va_end(args);
+    }
 #endif
 }
 
@@ -144,25 +145,26 @@ void LogParseModules(int argc,const char*argv[]){
 namespace cdlog{
 static const std::string kTruncatedWarningText = "[...truncated...]";
 LogMessage::LogMessage(const std::string& file, const int line, const std::string& function,int level)
-   : file_(splitFileName(file)),function_(function) , line_(line),level_(level)
+   : file_(splitFileName(file)),function_(function) , line_(line),level_message(level)
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     timestamp_ =ts.tv_sec;
     timeusec_ =ts.tv_nsec/1000 ;
     LogInit();
+    const std::string tag=splitFileName(file);
+    auto it=sModules.find(tag);
+    level_module=(it==sModules.end())?sLogLevel:it->second;
 }
 
 LogMessage::~LogMessage() {
     std::ostringstream oss;
-    const char*colors[]={"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[0;31m"};
-    auto it=sModules.find(file_);
-    int module_loglevel=(it==sModules.end())?sLogLevel:it->second;
+    static const char*colors[]={"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[0;31m"};
 
-    if(level_>=module_loglevel){
+    if(level_message>=level_module){
         oss << std::setw(10) <<std::setfill('0')<< (timestamp_) << "." << std::setw(6) << (timeusec_);
         oss << " \033[0;32m[" << file_<<"]\033[0;34m ";
-        oss << function_<<":" << line_ <<" "<<colors[level_];
+        oss << function_<<":" << line_ <<" "<<colors[level_message];
 
         const std::string str(stream_.str());
         if (!str.empty()) oss << str ;
@@ -174,17 +176,19 @@ LogMessage::~LogMessage() {
 }
 
 void LogMessage::messageSave(const char* format, ...){
-    va_list arglist;
-    char message[kMaxMessageSize];
-    va_start(arglist, format);
-    const int nbrcharacters = vsnprintf(message, sizeof(message), format, arglist);
-    va_end(arglist);
-    if (nbrcharacters <= 0) {
-        stream_ << '"' << format << '"';
-    } else if (nbrcharacters > kMaxMessageSize) {
-        stream_  << message << kTruncatedWarningText;
-    } else {
-        stream_ << message;
+    if(level_message>=level_module){
+        va_list arglist;
+        char message[kMaxMessageSize];
+        va_start(arglist, format);
+        const int nbrcharacters = vsnprintf(message, sizeof(message), format, arglist);
+        va_end(arglist);
+        if (nbrcharacters <= 0) {
+            stream_ << '"' << format << '"';
+        } else if (nbrcharacters > kMaxMessageSize) {
+            stream_  << message << kTruncatedWarningText;
+        } else {
+            stream_ << message;
+        }
     }
 }
 FatalMessage::FatalMessage(const std::string& file, const int line, const std::string& function,int signal)

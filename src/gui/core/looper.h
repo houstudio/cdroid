@@ -1,6 +1,6 @@
 #ifndef __ALOOPER_H__
 #define __ALOOPER_H__
-#include <core/callbackbase.h>
+#include <core/message.h>
 #define NOPOLL 0
 #define POLL   1
 #define EPOLL  2
@@ -30,20 +30,7 @@ struct epoll_event{
 #include <list>
 
 namespace cdroid{
-
 typedef int64_t nsecs_t;
-
-struct Message {
-    Message() : what(0) { }
-    Message(int w) : what(w) { }
-    Runnable callback;
-    /* The message type. (interpretation is left up to the handler) */
-    int what;
-    int arg1;
-    int arg2;
-    void*obj;
-};
-
 typedef int (*Looper_callbackFunc)(int fd, int events, void* data);
 
 class LooperCallback{

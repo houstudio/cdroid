@@ -34,7 +34,8 @@ protected:
     const std::string file_;
     const int line_;
     const std::string function_;
-    int level_;
+    int level_message;
+    int level_module;
     std::ostringstream stream_;
     std::string log_entry_;
     long timestamp_; //second part
