@@ -64,10 +64,15 @@ private:
 };
 
 class MessageHandler{
+private:
+    int mFlags;
+    friend class Looper;
 protected:
+    MessageHandler();
     virtual ~MessageHandler();
 public:
     virtual void handleMessage(Message& message)=0;
+    virtual void handleIdle();
 };
 
 class EventHandler{
@@ -113,6 +118,7 @@ private:
 
     std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
     bool mSendingMessage; // guarded by mLock
+    std::list<MessageHandler*>mHandlers;
     std::list<EventHandler*> mEventHandlers;
 
     // Whether we are currently waiting for work.  Not protected by a lock,
@@ -133,12 +139,14 @@ private:
     nsecs_t mNextMessageUptime;
     static Looper*mInst;
 private:
+    int pollEvents(int timeoutMillis);
     int pollInner(int timeoutMillis);
     int removeFd(int fd, int seq);
     void awoken();
     void pushResponse(int events, const Request& request);
     void rebuildEpollLocked();
     void scheduleEpollRebuildLocked();
+    void doIdleHandlers();
     void removeEventHandlers();
 protected:
 public:
@@ -181,6 +189,9 @@ public:
     void sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,const Message& message);
     void removeMessages(const MessageHandler* handler);
     void removeMessages(const MessageHandler* handler, int what);
+    void removeCallbacks(const MessageHandler* handler,Runnable r);
+    void addHandler(MessageHandler*);
+    void removeHandler(MessageHandler*);
     void addEventHandler(const EventHandler*handler);
     void removeEventHandler(const EventHandler*handler);
     bool isPolling() const;

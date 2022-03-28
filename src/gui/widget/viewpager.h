@@ -176,7 +176,7 @@ private:
 protected:
     ItemInfo* infoForChild(View* child);
     ItemInfo* infoForAnyChild(View* child);
-    ItemInfo* infoForPosition(int position);
+    ItemInfo* infoForPosition(int position)const;
     void initViewPager();
     int getChildDrawingOrder(int childCount, int i)override;
     void setScrollState(int newState);
@@ -212,7 +212,7 @@ public:
     void removeOnPageChangeListener(OnPageChangeListener listener);
     void clearOnPageChangeListeners();
     OnPageChangeListener setInternalPageChangeListener(OnPageChangeListener listener);
-    int getCurrentItem();
+    int getCurrentItem()const;
     void setCurrentItem(int item);
     void setCurrentItem(int item, bool smoothScroll);
     void setPageTransformer(bool reverseDrawingOrder, PageTransformer* transformer);
@@ -226,6 +226,7 @@ public:
     void smoothScrollTo(int x, int y, int velocity);
     View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     void removeView(View* view)override;
+    void* getCurrent()const;
     void computeScroll();//override;
     bool executeKeyEvent(KeyEvent& event);
     bool dispatchKeyEvent(KeyEvent& event)override;

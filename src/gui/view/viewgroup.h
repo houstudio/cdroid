@@ -18,7 +18,7 @@
 #define __CDROID_GROUPVIEW_H__
 
 #include <view/view.h>
-#include <core/scroller.h>
+#include <widget/scroller.h>
 #include <animations.h>
 
 namespace cdroid {
@@ -330,9 +330,9 @@ public:
     virtual void removeViewInLayout(View* view);
     virtual void removeViewsInLayout(int start,int count);
     void removeAllViewsInLayout();
-    virtual View* findViewById(int id)const;
-    View* findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const override;
-    View* findViewWithTagTraversal(void*tag)const override;
+    virtual View* findViewById(int id);
+    View* findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)override;
+    View* findViewWithTagTraversal(void*tag)override;
     virtual bool shouldDelayChildPressedState();
 
     virtual bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);

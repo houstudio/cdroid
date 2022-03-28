@@ -3,7 +3,7 @@
 #include <widget/linearlayout.h>
 #include <widget/imagebutton.h>
 #include <widget/edittext.h>
-#include <core/scroller.h>
+#include <widget/scroller.h>
 #include <core/sparsearray.h>
 
 namespace cdroid{

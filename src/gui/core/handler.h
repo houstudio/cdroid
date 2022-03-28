@@ -11,15 +11,20 @@ private:
     Callback mCallback;
 private:
     static void handleCallback(Message& message);
+    static Message getPostMessage(Runnable& r);
 public:
     Handler();
     Handler(Callback callback);
     virtual ~Handler();
     void handleMessage(Message& msg)override;
+    void handleIdle()override;
     Looper* getLooper();
     void dispatchMessage(Message& msg);
+
     bool hasMessages(int what,void*object);
-    bool hasCallbacks(Runnable r);
+    void removeMessages(int what);
+    void removeMessages(int what,void*object);
+
     bool sendMessage(Message& msg);
     bool sendEmptyMessage(int what);
     bool sendEmptyMessageDelayed(int what, long delayMillis);
@@ -27,6 +32,11 @@ public:
     bool sendMessageDelayed(Message& msg, long delayMillis);
     bool sendMessageAtTime(Message& msg, long uptimeMillis);
 
+    bool hasCallbacks(Runnable r);
+    void removeCallbacks(const Runnable& r);
+    bool post(Runnable r);
+    bool postAtTime(Runnable r, long uptimeMillis);
+    bool postDelayed(Runnable r, long delayMillis);
 };
 }//endof namespace 
 #endif

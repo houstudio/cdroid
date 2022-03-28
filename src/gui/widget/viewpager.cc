@@ -178,7 +178,7 @@ int ViewPager::getClientWidth() {
     return getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
 }
 
-int ViewPager::getCurrentItem(){
+int ViewPager::getCurrentItem()const{
    return mCurItem;
 }
 
@@ -816,7 +816,12 @@ void ViewPager::removeView(View* view){
     }
 }
 
-ViewPager::ItemInfo* ViewPager::infoForChild(View* child) {
+void* ViewPager::getCurrent()const{
+    ItemInfo* itemInfo = infoForPosition(getCurrentItem());
+    return itemInfo ? itemInfo->object:nullptr;
+}
+
+ViewPager::ItemInfo* ViewPager::infoForChild(View* child){
     for (int i = 0; i < mItems.size(); i++) {
         ItemInfo* ii = mItems[i];
         if (mAdapter->isViewFromObject(child, ii->object)) {
@@ -826,7 +831,7 @@ ViewPager::ItemInfo* ViewPager::infoForChild(View* child) {
     return nullptr;
 }
 
-ViewPager::ItemInfo* ViewPager::infoForAnyChild(View* child) {
+ViewPager::ItemInfo* ViewPager::infoForAnyChild(View* child){
     ViewGroup* parent;
     while ((parent = child->getParent()) != this) {
         if (parent == nullptr /*|| !(parent instanceof View)*/) {
@@ -837,7 +842,7 @@ ViewPager::ItemInfo* ViewPager::infoForAnyChild(View* child) {
     return infoForChild(child);
 }
 
-ViewPager::ItemInfo* ViewPager::infoForPosition(int position){
+ViewPager::ItemInfo* ViewPager::infoForPosition(int position)const{
     for (int i = 0; i < mItems.size(); i++) {
         ItemInfo* ii = mItems[i];
         if (ii->position == position) {

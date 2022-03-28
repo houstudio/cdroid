@@ -69,11 +69,14 @@ void WindowManager::addWindow(Window*win){
     info->mContentInsets.set(5,5,5,5);
     info->mRootView=win;
     win->dispatchAttachedToWindow(info,win->getVisibility());
-    
-    Looper::getDefault()->addEventHandler(win->source);
+#if USE_UIEVENTHANDLER    
+    Looper::getDefault()->addHandler(win->mUIEventHandler);
+#else
+    Looper::getDefault()->addEventHandler(win->mUIEventHandler);
+#endif
     win->post(std::bind(&Window::onActive,win));
     activeWindow=win;
-    LOGV("win=%p source=%p windows.size=%d",win,win->source,windows.size());
+    LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,windows.size());
 }
 
 void WindowManager::removeWindow(Window*w){
@@ -90,7 +93,11 @@ void WindowManager::removeWindow(Window*w){
         rc.offset(-w1->getX(),-w1->getY());
         w1->invalidate(&rc);
     }
-    Looper::getDefault()->removeEventHandler(w->source);
+#if USE_UIEVENTHANDLER
+    Looper::getDefault()->removeHandler(w->mUIEventHandler);
+#else
+   Looper::getDefault()->removeEventHandler(w->mUIEventHandler);
+#endif
     View::AttachInfo*info=w->mAttachInfo;
     w->dispatchDetachedFromWindow();
     delete info;

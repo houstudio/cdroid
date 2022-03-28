@@ -1,4 +1,4 @@
-#include <scroller.h>
+#include <widget/scroller.h>
 #include <systemclock.h>
 #include <viewconfiguration.h>
 #include <animation/animationutils.h>

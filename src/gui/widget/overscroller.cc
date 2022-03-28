@@ -1,7 +1,7 @@
 #include <widget/overscroller.h>
 #include <view/viewconfiguration.h>
 #include <core/systemclock.h>
-#include <core/scroller.h>
+#include <widget/scroller.h>
 #include <cdlog.h>
 
 

@@ -3,6 +3,10 @@
 #include <cdtypes.h>
 #include <view/viewgroup.h>
 #include <widget/framelayout.h>
+#include <core/handler.h>
+#include <core/uieventsource.h>
+
+#define USE_UIEVENTHANDLER 0
 
 namespace cdroid {
 class Window : public ViewGroup {
@@ -29,6 +33,14 @@ protected:
         void run();
     };
 private:
+    class UIEventHandler:public Handler{
+    private:
+        View*mAttachedView;
+        std::function<void()> mLayoutRunner;
+    public:
+        UIEventHandler(View*,std::function<void()>run);
+        void handleIdle()override;
+    };
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
@@ -42,7 +54,11 @@ protected:
     int mLayer;/*surface layer*/
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
-    class UIEventSource*source;
+#if USE_UIEVENTHANDLER	
+    UIEventHandler* mUIEventHandler;
+#else
+    UIEventSource *mUIEventHandler;
+#endif
     void onFinishInflate()override;
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     void onVisibilityChanged(View& changedView,int visibility)override;

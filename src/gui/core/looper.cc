@@ -26,7 +26,21 @@ namespace cdroid{
 static constexpr int EPOLL_SIZE_HINT = 8;
 // Maximum number of file descriptors for which to retrieve poll events each iteration.
 static constexpr int EPOLL_MAX_EVENTS = 16;
-#define toMillisecondTimeoutDelay(n,p) ((n)-(p))
+
+static int toMillisecondTimeoutDelay(nsecs_t referenceTime, nsecs_t timeoutTime){
+    nsecs_t timeoutDelayMillis;
+    if (timeoutTime > referenceTime) {
+        uint64_t timeoutDelay = uint64_t(timeoutTime - referenceTime);
+        if (timeoutDelay > uint64_t(INT_MAX - 1)) {
+            timeoutDelayMillis = -1;
+        } else {
+            timeoutDelayMillis = timeoutDelay;
+        }
+    } else {
+        timeoutDelayMillis = 0;
+    }
+    return (int)timeoutDelayMillis;
+}
 
 void Looper::Looper::Request::initEventItem(struct epoll_event* eventItem) const{
     int epollEvents = 0;
@@ -119,19 +133,19 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
                 int fd = response.request.fd;
                 int events = response.events;
                 void* data = response.request.data;
-                LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  pollOnce - returning signalled identifier %d: fd=%d, events=0x%x, data=%p", this, ident, fd, events, data);
-                if (outFd != NULL) *outFd = fd;
-                if (outEvents != NULL) *outEvents = events;
-                if (outData != NULL) *outData = data;
+                LOGD_IF(DEBUG_POLL_AND_WAKE,"%p returning signalled identifier %d: fd=%d, events=0x%x, data=%p", this, ident, fd, events, data);
+                if (outFd != nullptr) *outFd = fd;
+                if (outEvents != nullptr) *outEvents = events;
+                if (outData != nullptr) *outData = data;
                 return ident;
             }
         }
 
         if (result != 0) {
-            LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  pollOnce - returning result %d", this, result);
-            if (outFd != NULL) *outFd = 0;
-            if (outEvents != NULL) *outEvents = 0;
-            if (outData != NULL) *outData = NULL;
+            LOGD_IF(DEBUG_POLL_AND_WAKE,"%p returning result %d", this, result);
+            if (outFd != nullptr) *outFd = 0;
+            if (outEvents != nullptr) *outEvents = 0;
+            if (outData != nullptr) *outData = nullptr;
             return result;
         }
 
@@ -139,33 +153,10 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
     }
 }
 
-int Looper::pollInner(int timeoutMillis) {
-    LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  pollOnce - waiting: timeoutMillis=%d mNextMessageUptime=%lld", this, timeoutMillis,mNextMessageUptime);
-
-    // Adjust the timeout based on when the next message is due.
-    if (timeoutMillis != 0 && mNextMessageUptime != LLONG_MAX) {
-        nsecs_t now = SystemClock::uptimeMillis();
-        int messageTimeoutMillis = toMillisecondTimeoutDelay(now, mNextMessageUptime);
-        if (messageTimeoutMillis >= 0
-                && (timeoutMillis < 0 || messageTimeoutMillis < timeoutMillis)) {
-            timeoutMillis = messageTimeoutMillis;
-        }
-        LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  pollOnce - next message in %lld ns, adjusted timeout: timeoutMillis=%d",this, mNextMessageUptime - now, timeoutMillis);
-    }
-
-    // Poll.
+int Looper::pollEvents(int timeoutMillis){
     int result = POLL_WAKE;
     mResponses.clear();
     mResponseIndex = 0;
-
-    for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
-        EventHandler*es=(*it);
-        if(es&&(es->mRemoved==0)&&(es->checkEvents()>0)){ 
-            es->handleEvents();
-        }
-    }
-    removeEventHandlers();
-    // We are about to idle.
     mPolling = true;
     int j,eventCount; 
     struct epoll_event eventItems[EPOLL_MAX_EVENTS];
@@ -185,16 +176,12 @@ int Looper::pollInner(int timeoutMillis) {
         if(f.revents==0)continue;
         eventItems[j].data.fd=f.fd;
         eventItems[j].events=f.revents;
-		j++;
+        j++;
     }
 #endif
     // No longer idling.
     mPolling = false;
 
-    // Acquire lock.
-    mLock.lock();
-
-    // Rebuild epoll set if needed.
     if (mEpollRebuildRequired) {
         mEpollRebuildRequired = false;
         rebuildEpollLocked();
@@ -219,7 +206,7 @@ int Looper::pollInner(int timeoutMillis) {
     }
 
     // Handle all events.
-    LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  pollOnce - handling events from %d fds", this, eventCount);
+    LOGD_IF(DEBUG_POLL_AND_WAKE,"%p handling events from %d fds", this, eventCount);
 
     for (int i = 0; i < eventCount; i++) {
         int fd = eventItems[i].data.fd;
@@ -245,43 +232,6 @@ int Looper::pollInner(int timeoutMillis) {
             }
         }
     }
-Done: ;
-
-    // Invoke pending message callbacks.
-    mNextMessageUptime = LLONG_MAX;
-    LOGD_IF(DEBUG_CALLBACKS,"mMessageEnvelopes.size=%d",mMessageEnvelopes.size());
-    while (mMessageEnvelopes.size() != 0) {
-        nsecs_t now = SystemClock::uptimeMillis();//systemTime(SYSTEM_TIME_MONOTONIC);
-        const MessageEnvelope& messageEnvelope = mMessageEnvelopes.front();
-        if (messageEnvelope.uptime <= now) {
-            // Remove the envelope from the list.
-            // We keep a strong reference to the handler until the call to handleMessage
-            // finishes.  Then we drop it so that the handler can be deleted *before*
-            // we reacquire our lock.
-            { // obtain handler
-                MessageHandler* handler = messageEnvelope.handler;
-                Message message = messageEnvelope.message;
-                mMessageEnvelopes.pop_front();
-                mSendingMessage = true;
-                mLock.unlock();
-
-                LOGD_IF(DEBUG_POLL_AND_WAKE || DEBUG_CALLBACKS,"%p  pollOnce - sending message: handler=%p, what=%d", this, handler, message.what);
-                handler->handleMessage(message);
-            } // release handler
-
-            mLock.lock();
-            mSendingMessage = false;
-            result = POLL_CALLBACK;
-        } else {
-            // The last message left at the head of the queue determines the next wakeup time.
-            mNextMessageUptime = messageEnvelope.uptime;
-            break;
-        }
-    }
-
-    // Release lock.
-    mLock.unlock();
-
     // Invoke all response callbacks.
     for (size_t i = 0; i < mResponses.size(); i++) {
         Response& response = mResponses.at(i);
@@ -289,7 +239,7 @@ Done: ;
             int fd = response.request.fd;
             int events = response.events;
             void* data = response.request.data;
-            LOGD_IF(DEBUG_POLL_AND_WAKE || DEBUG_CALLBACKS,"%p  pollOnce - invoking fd event callback %p: fd=%d, events=0x%x, data=%p",
+            LOGD_IF(DEBUG_POLL_AND_WAKE || DEBUG_CALLBACKS,"%pinvoking fd event callback %p: fd=%d, events=0x%x, data=%p",
                     this, response.request.callback, fd, events, data);
 
             // Invoke the callback.  Note that the file descriptor may be closed by
@@ -306,6 +256,79 @@ Done: ;
             result = POLL_CALLBACK;
         }
     }
+Done:
+    return result;
+}
+
+int Looper::pollInner(int timeoutMillis) {
+    int result = POLL_WAKE;
+    LOGD_IF(DEBUG_POLL_AND_WAKE,"%p waiting: timeoutMillis=%d mNextMessageUptime=%lld",
+            this,timeoutMillis,mNextMessageUptime);
+
+    // Adjust the timeout based on when the next message is due.
+    if (timeoutMillis != 0 && mNextMessageUptime != LLONG_MAX) {
+        nsecs_t now = SystemClock::uptimeMillis();
+        int messageTimeoutMillis = toMillisecondTimeoutDelay(now, mNextMessageUptime);
+        if ( (messageTimeoutMillis >= 0 ) && (timeoutMillis < 0 || messageTimeoutMillis < timeoutMillis)) {
+            timeoutMillis = messageTimeoutMillis;
+        }
+        LOGD_IF(DEBUG_POLL_AND_WAKE,"%p next message in %lld ns, adjusted timeout:timeoutMillis=%d",
+                this,mNextMessageUptime - now, timeoutMillis);
+    }
+
+    nsecs_t t1=SystemClock::uptimeMillis();
+    if(1||mNextMessageUptime>(nsecs_t)SystemClock::uptimeMillis()){
+        doIdleHandlers(); 
+    }
+    for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
+        EventHandler*es=(*it);
+        if(es&&(es->mRemoved==0)&&(es->checkEvents()>0)){ 
+            es->handleEvents();
+        }
+    }
+    removeEventHandlers();
+    long elapsedMillis = SystemClock::uptimeMillis()-t1;
+    // Acquire lock.
+    mLock.lock();
+
+    // Invoke pending message callbacks.
+    mNextMessageUptime = LLONG_MAX;
+    LOGD_IF(DEBUG_CALLBACKS,"mMessageEnvelopes.size=%d",mMessageEnvelopes.size());
+    while (mMessageEnvelopes.size() != 0) {
+        nsecs_t now = SystemClock::uptimeMillis();
+        const MessageEnvelope& messageEnvelope = mMessageEnvelopes.front();
+        if (messageEnvelope.uptime <= now) {
+            // Remove the envelope from the list.
+            // We keep a strong reference to the handler until the call to handleMessage
+            // finishes.  Then we drop it so that the handler can be deleted *before*
+            // we reacquire our lock.
+            { // obtain handler
+                MessageHandler* handler = messageEnvelope.handler;
+                Message message = messageEnvelope.message;
+                mMessageEnvelopes.pop_front();
+                mSendingMessage = true;
+                mLock.unlock();
+
+                LOGD_IF(DEBUG_POLL_AND_WAKE||DEBUG_CALLBACKS,"%psending message: handler=%p, what=%d",
+                        this, handler, message.what);
+                if(message.callback)
+                    message.callback();
+                else 
+                    handler->handleMessage(message);
+            } // release handler
+
+            mLock.lock();
+            mSendingMessage = false;
+            result = POLL_CALLBACK;
+        } else {
+            // The last message left at the head of the queue determines the next wakeup time.
+            mNextMessageUptime = messageEnvelope.uptime;
+            break;
+        }
+    }
+    pollEvents(timeoutMillis>elapsedMillis?(timeoutMillis-elapsedMillis):0);
+    mLock.unlock();
+
     return result;
 }
 
@@ -333,6 +356,19 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
         }
     }
 }
+
+void Looper::doIdleHandlers(){
+    for(auto it=mHandlers.begin();it!=mHandlers.end();it++){
+        if((*it)->mFlags==1){
+            LOGD("delete Handler %p",(*it));
+            delete *it;
+            it= mHandlers.erase(it);
+            continue;
+        }
+        (*it)->handleIdle();
+    }
+}
+
 //TEMP_FAILURE_RETRY defined in <unistd.h>
 void Looper::wake() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
@@ -359,7 +395,7 @@ void Looper::pushResponse(int events, const Request& request) {
 }
 
 int Looper::addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data) {
-    return addFd(fd, ident, events, callback ? new SimpleLooperCallback(callback) : NULL, data);
+    return addFd(fd, ident, events, callback ? new SimpleLooperCallback(callback) : nullptr, data);
 }
 
 int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, void* data) {
@@ -466,7 +502,7 @@ int Looper::removeFd(int fd, int seq) {
         // updating the epoll set so that we avoid accidentally leaking callbacks.
         mRequests.erase(itr);
 #if USED_POLL ==EPOLL
-        int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, NULL);
+        int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, nullptr);
         if (epollResult < 0) {
             if (seq != -1 && (errno == EBADF || errno == ENOENT)) {
                 // Tolerate EBADF or ENOENT when the sequence number is known because it
@@ -519,7 +555,7 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
 
         std::list<MessageEnvelope>::iterator it;
         for(it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
-            if(uptime>=it->uptime)break;
+            if(it->uptime>=uptime)break;
             i+=1;
         }
 
@@ -537,6 +573,19 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
     if (i == 0)  wake();
 }
 
+void Looper::addHandler(MessageHandler*handler){
+    mHandlers.insert(mHandlers.begin(),handler);
+}
+
+void Looper::removeHandler(MessageHandler*handler){
+    for(auto it=mHandlers.begin();it!=mHandlers.end();it++){
+        if((*it)==handler){
+            handler->mFlags=1;
+            break;
+        }
+    }
+}
+
 void Looper::addEventHandler(const EventHandler*handler){
     mEventHandlers.insert(mEventHandlers.begin(),(EventHandler*)handler);
 }
@@ -544,21 +593,19 @@ void Looper::addEventHandler(const EventHandler*handler){
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
         if((*it)==handler){
-            (*it)->mRemoved=1;
+            (*it)->mRemoved =true;
             break;
         }
     }
 }
 
 void Looper::removeEventHandlers(){
-    for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
-        if((*it)->mRemoved){
-            EventHandler*handler=(*it);
-            it=mEventHandlers.erase(it);
-            LOGD(" %p",(*it));
-            delete handler;
-        }
-    }
+     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
+          if((*it)->mRemoved){
+              delete (*it);
+              mEventHandlers.erase(it);
+          }
+      }
 }
 
 void Looper::removeMessages(const MessageHandler* handler) {
@@ -588,6 +635,15 @@ void Looper::removeMessages(const MessageHandler* handler, int what) {
     } // release lock
 }
 
+void Looper::removeCallbacks(const MessageHandler* handler,Runnable r){
+    std::lock_guard<std::mutex>_l(mLock);
+    for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
+        if((it->handler==handler) && (it->message.callback==r)){
+            it=mMessageEnvelopes.erase(it);
+        }
+    }
+}
+
 bool Looper::isPolling() const {
     return mPolling;
 }
@@ -606,7 +662,14 @@ int SimpleLooperCallback::handleEvent(int fd, int events, void* data) {
     return mCallback(fd, events, data);
 }
 
+MessageHandler::MessageHandler(){
+   mFlags = 0;
+}
+
 MessageHandler::~MessageHandler(){
+}
+
+void MessageHandler::handleIdle(){
 }
 
 EventHandler::~EventHandler(){

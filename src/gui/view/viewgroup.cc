@@ -1418,7 +1418,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
     }
 }
 
-View* ViewGroup::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const{
+View* ViewGroup::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip){
     if (predicate(this)) {
         return (View*)this;
     }
@@ -1437,7 +1437,7 @@ View* ViewGroup::findViewByPredicateTraversal(std::function<bool(const View*)>pr
 
 }
 
-View* ViewGroup::findViewWithTagTraversal(void*tag)const{
+View* ViewGroup::findViewWithTagTraversal(void*tag){
     //if (tag  && tag.equals(mTag)) return (View*)this;
 
     for (View*v:mChildren){
@@ -1449,7 +1449,7 @@ View* ViewGroup::findViewWithTagTraversal(void*tag)const{
     return nullptr;
 }
 
-View*ViewGroup::findViewById(int id)const{
+View*ViewGroup::findViewById(int id){
     for(auto v:mChildren){
         View*c=v->findViewById(id);
         if(c)return c;

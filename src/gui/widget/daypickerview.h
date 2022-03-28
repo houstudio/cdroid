@@ -5,6 +5,7 @@
 #include <widget/adapter.h>
 #include <widget/simplemonthview.h>
 #include <widget/viewpager.h>
+#include <widget/daypickerpageradapter.h>
 #include <sparsearray.h>
 #include <calendar.h>
 
@@ -59,47 +60,6 @@ public:
 
 };
 
-
-class DayPickerPagerAdapter:public PagerAdapter{
-public:
-    struct ViewHolder{
-        int position;
-        View* container;
-        SimpleMonthView* calendar;
-    };
-    DECLARE_UIEVENT(void,OnDaySelectedListener,DayPickerPagerAdapter&,Calendar& day);
-private:
-    static constexpr int MONTHS_IN_YEAR = 12;
-    int mCount;
-    int mFirstDayOfWeek;
-    OnDaySelectedListener mOnDaySelectedListener;
-    SparseArray<ViewHolder*,nullptr> mItems;
-    Calendar mMinDate ;
-    Calendar mMaxDate ;
-    Calendar* mSelectedDay;
-    
-    ColorStateList* mCalendarTextColor;
-    ColorStateList* mDaySelectorColor;
-    ColorStateList* mDayHighlightColor;
-
-    int getMonthForPosition(int position);
-    int getYearForPosition(int position);
-    int getPositionForDay(Calendar* day);
-public:
-    void setRange(Calendar&min,Calendar&max);
-    void setSelectedDay(Calendar&);
-    int getFirstDayOfWeek();
-    void setFirstDayOfWeek(int);
-    bool getBoundsForDate(Calendar&,Rect&);
-    bool isViewFromObject(View* view, void* object)override;
-    void* instantiateItem(ViewGroup*container, int position)override;
-    void destroyItem(ViewGroup* container, int position, void* object);
-    int getItemPosition(void* object)override;
-    std::string getPageTitle(int position)override;
-    void setCalendarTextColor(ColorStateList* calendarTextColor) ;
-    void setDaySelectorColor(ColorStateList* selectorColor);
-    void setOnDaySelectedListener(OnDaySelectedListener listener);
-};
-}//namespace
+}//endof namespace
 
 #endif

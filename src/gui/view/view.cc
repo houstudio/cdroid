@@ -426,12 +426,12 @@ int View::dipsToPixels(int dips)const{
     return (int)(dips*scale+0.5f); 
 }
 
-View* View::findViewById(int id)const{
+View* View::findViewById(int id){
     if(id==mID)return (View*)this;
     return nullptr;
 }
 
-View* View::findViewWithTag(void*tag)const{
+View* View::findViewWithTag(void*tag){
     return findViewWithTagTraversal(tag);
 }
 
@@ -442,19 +442,19 @@ View* View::findViewInsideOutShouldExist(View* root, int id)const{
     return result;
 }
 
-View* View::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const{
+View* View::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip){
     return predicate(this)?(View*)this:nullptr;
 }
 
-View* View::findViewByPredicate(std::function<bool(const View*)>predicate)const{
+View* View::findViewByPredicate(std::function<bool(const View*)>predicate){
     return findViewByPredicateTraversal(predicate,nullptr);
 }
 
-View* View::findViewWithTagTraversal(void* tag)const{
+View* View::findViewWithTagTraversal(void* tag){
     return nullptr;
 }
 
-View* View::findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>predicate)const{
+View* View::findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>predicate){
     View* childToSkip = nullptr;
     for (;;) {
         View*view = start->findViewByPredicateTraversal(predicate, childToSkip);

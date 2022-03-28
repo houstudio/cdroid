@@ -2701,7 +2701,7 @@ void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocu
     }
 }
 
-View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)const{
+View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip){
     View* v = AbsListView::findViewByPredicateTraversal(predicate, childToSkip);
     if (v == nullptr) {
         v = findViewByPredicateInHeadersOrFooters(mHeaderViewInfos, predicate, childToSkip);
@@ -2713,7 +2713,7 @@ View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>pre
 }
 
 View* ListView::findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
-    std::function<bool(const View*)>predicate, View* childToSkip)const{
+    std::function<bool(const View*)>predicate, View* childToSkip){
     const int len = where.size();
     View* v;
 

@@ -924,12 +924,12 @@ public:
     ViewGroup*getRootView()const;
     void bringToFront();
 
-    virtual View* findViewById(int id)const;
-    virtual View* findViewWithTag(void*)const;
-    virtual View* findViewByPredicateTraversal(std::function<bool(const View*)>,View* childToSkip)const;
-    virtual View* findViewWithTagTraversal(void* tag)const;
-    View* findViewByPredicate(std::function<bool(const View*)>)const;
-    View* findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>)const;
+    virtual View* findViewById(int id);
+    virtual View* findViewWithTag(void*);
+    virtual View* findViewByPredicateTraversal(std::function<bool(const View*)>,View* childToSkip);
+    virtual View* findViewWithTagTraversal(void* tag);
+    View* findViewByPredicate(std::function<bool(const View*)>);
+    View* findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>);
 
     virtual View*focusSearch(int direction)const;
     View*findUserSetNextFocus(View*root,int direction)const;

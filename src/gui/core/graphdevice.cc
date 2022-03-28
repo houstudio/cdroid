@@ -102,7 +102,7 @@ void GraphDevice::trackFPS() {
             mBannerContext->set_operator(oop);
             mBannerContext->set_source_rgb(1,1,1);
             mBannerContext->set_font_size(22);
-            mBannerContext->draw_text(mRectBanner,fpsText,DT_CENTER);
+            mBannerContext->draw_text(mRectBanner,fpsText,DT_CENTER|DT_VCENTER);
         }
     }
 }

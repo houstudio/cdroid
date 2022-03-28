@@ -5,6 +5,7 @@ namespace cdroid{
 
 Handler::Handler(){
     mLooper = Looper::getDefault();
+    mLooper->addHandler(this);
 }
 
 Handler::Handler(Callback callback):Handler(){
@@ -15,15 +16,36 @@ Handler::~Handler(){
     mLooper->removeMessages(this);
 }
 
+Message Handler::getPostMessage(Runnable& r){
+    Message m;// = Message.obtain();
+    r.newInstance();
+    m.callback = r;
+    return m;
+}
+
 void Handler::handleMessage(Message& msg) {
+}
+
+void Handler::handleIdle(){
 }
 
 bool Handler::hasMessages(int what,void*object){
     return false;
 }
 
+void Handler::removeMessages(int what){
+    mLooper->removeMessages(this,what);
+}
+
+void Handler::removeMessages(int what,void*object){
+    mLooper->removeMessages(this,what);
+}
+
 bool Handler::hasCallbacks(Runnable r){
-    return false;
+}
+
+void Handler::removeCallbacks(const Runnable& r){
+    mLooper->removeCallbacks(this,r);
 }
 
 Looper* Handler::getLooper(){
@@ -88,6 +110,21 @@ bool Handler::sendMessageAtTime(Message& msg, long uptimeMillis) {
     mLooper->sendMessageAtTime(uptimeMillis,this,msg);
 #endif
     return true;
+}
+
+bool Handler::post(Runnable r){
+    Message msg = getPostMessage(r);
+    return sendMessageDelayed(msg, 0);
+}
+
+bool Handler::postAtTime(Runnable r, long uptimeMillis){
+    Message msg = getPostMessage(r);
+    return sendMessageAtTime(msg, uptimeMillis);
+}
+
+bool Handler::postDelayed(Runnable r, long delayMillis){
+    Message msg = getPostMessage(r);
+    return sendMessageDelayed(msg, delayMillis);
 }
 
 }

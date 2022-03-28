@@ -32,7 +32,11 @@ constexpr int FINISH_NOT_HANDLED = 2;
 
 Window::Window(Context*ctx,const AttributeSet&atts)
   :ViewGroup(ctx,atts){
-    source=new UIEventSource(this,[this](){ doLayout(); });
+#if USE_UIEVENTHANDLER
+    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
+#else
+    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });     
+#endif
     setFrame(0,0,1280,720);
     setFocusable(true);
     mInLayout=false;
@@ -42,13 +46,17 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 }
 
 Window::Window(int x,int y,int width,int height,int type)
-  : ViewGroup(width,height),source(nullptr),window_type(type){
+  : ViewGroup(width,height),window_type(type){
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
-    source=new UIEventSource(this,[this](){ doLayout(); });
+#if USE_UIEVENTHANDLER   
+    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
+#else
+    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
+#endif
     mContext=&App::getInstance();
     mInLayout=false;
-    LOGV("%p source=%p visible=%d size=%dx%d",this,source,hasFlag(VISIBLE),width,height);
+    LOGV("%p Handler=%p visible=%d size=%dx%d",this,mUIEventHandler,hasFlag(VISIBLE),width,height);
     setFrame(x, y, width, height);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
@@ -296,11 +304,13 @@ void Window::onBackPressed(){
 }
 
 bool Window::postDelayed(Runnable& what,uint32_t delay){
-    return source && source->post(what,delay);
+    return mUIEventHandler && mUIEventHandler->postDelayed(what,delay);
 }
 
 bool Window::removeCallbacks(const Runnable& what){
-    return source && source->removeCallbacks(what);
+    if(mUIEventHandler)
+        mUIEventHandler->removeCallbacks((Runnable&)what);
+    return !(mUIEventHandler==nullptr);
 }
 
 bool Window::isInLayout()const{
@@ -450,6 +460,27 @@ void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
         mOwner->postDelayed(run,AnimationHandler::getFrameDelay());
         mPosted = true;
     }
+}
+
+Window::UIEventHandler::UIEventHandler(View*v,std::function<void()>r){
+    mAttachedView=v;
+    mLayoutRunner=r;
+}
+
+void Window::UIEventHandler::handleIdle(){
+    if (mAttachedView && mAttachedView->isAttachedToWindow()){
+        if(mAttachedView->isLayoutRequested())
+            mLayoutRunner();
+        if(mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
+            GraphDevice::getInstance().lock();
+            ((Window*)mAttachedView)->draw();
+            GraphDevice::getInstance().flip();
+            GraphDevice::getInstance().unlock();
+        }
+    }
+
+    if(GraphDevice::getInstance().needCompose())
+        GraphDevice::getInstance().requestCompose();
 }
 
 }  //endof namespace

@@ -23,7 +23,7 @@ public:
     bool processEvents();
     int checkEvents()override;
     int handleEvents()override;
-    bool post(Runnable& run,uint32_t delay=0);
+    bool postDelayed(Runnable& run,uint32_t delay=0);
     bool removeCallbacks(const Runnable& what);
 };
 
