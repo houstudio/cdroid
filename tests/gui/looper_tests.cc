@@ -6,6 +6,7 @@
 #include <cdlog.h>
 #include <functional>
 #include <core/uieventsource.h>
+#include <core/handler.h>
 
 class LOOPER:public testing::Test{
 
@@ -13,7 +14,7 @@ class LOOPER:public testing::Test{
    virtual void SetUp(){
    }
    virtual void TearDown(){
-      printf("\r\n\r\n");
+      LOGD("\r\n\r\n");
    }
 };
 
@@ -27,18 +28,18 @@ public:
        run=a;
    }
    void test(int i){
-       printf("i=%d\r\n",i);
+       LOGD("i=%d",i);
    }
    virtual void post(Runnable&){
-      printf("post(Runnable&)\r\n");
+      LOGD("post(Runnable&)");
    }
    void post(const Runnable&a){
-      printf("post(const Runnable&)\r\n");
+      LOGD("post(const Runnable&)");
       Runnable aa=a;
       post(aa);   
    }
    void post(const std::function<void()>&a){
-      printf("post(const const std::function<void()>&)\r\n");
+      LOGD("post(const const std::function<void()>&)");
       Runnable aaa;
       aaa=a;
       post(aaa);
@@ -116,16 +117,44 @@ TEST_F(LOOPER,removeMessage){
 TEST_F(LOOPER,eventhandler){
    
 }
-TEST_F(LOOPER,loop){
+/*TEST_F(LOOPER,loop){
    Looper loop(false);
    UIEventSource*handler=new UIEventSource(nullptr,nullptr);
    loop.addEventHandler(handler);
    Runnable run;
    int count=0;
    run=[&](){
-       printf("count=%d\r\n",count++);
+       LOGD("count=%d",count++);
        handler->post(run,count++);
    };
    handler->post(run,10);
    while(1)loop.pollAll(100);
+}*/
+
+class MyHandler:public Handler{
+public:
+    void handleMessage(Message&msg)override{
+        LOGD("rcv msg %d",msg.what);
+    }
+    void handleIdle(){
+        LOGD("idle");
+    }
+    ~MyHandler(){
+        LOGD("MyHandler destroied!");
+    }
+};
+
+TEST_F(LOOPER,handler){
+    Looper *loop= Looper::getDefault();
+    Handler *handler=new MyHandler();
+    handler->sendEmptyMessage(1);
+    handler->sendEmptyMessageDelayed(2,20);
+    Runnable cbk([](){LOGD("---");});
+    handler->postDelayed(cbk,30);
+    int count=0;
+    while(count++<3)
+        loop->pollAll(10);
+    loop->removeHandler(handler);
+    while(count++<6)loop->pollAll(10);
 }
+
