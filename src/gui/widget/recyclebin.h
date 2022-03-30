@@ -20,6 +20,7 @@ private:
     int mFirstActivePosition;
     std::vector<View*>mActiveViews;
     std::vector<std::vector<View*>>mScrapViews;
+    std::vector<View*>*mCurrentScrap;
     int mViewTypeCount;
     std::vector<View*>mSkippedScrap;
     SparseArray<View*,nullptr>mTransientStateViews;

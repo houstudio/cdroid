@@ -21,6 +21,7 @@ void RecycleBin::setViewTypeCount(int viewTypeCount) {
     for (int i = 0; i < viewTypeCount; i++) {
         mScrapViews.push_back(std::vector<View*>());
     }
+    mCurrentScrap=&mScrapViews.at(0);
     mViewTypeCount = viewTypeCount;
 }
 
@@ -131,7 +132,7 @@ View* RecycleBin::getScrapView(int position) {
         return nullptr;
     }
     if (mViewTypeCount == 1) {
-        return retrieveFromScrap(mScrapViews[0]/*mCurrentScrap*/, position);
+        return retrieveFromScrap(*mCurrentScrap, position);
     } else if (whichScrap < mScrapViews.size()) {
         return retrieveFromScrap(mScrapViews[whichScrap], position);
     }
@@ -188,7 +189,7 @@ void RecycleBin::addScrapView(View* scrap, int position) {
     } else {
         clearScrapForRebind(scrap);
         if (mViewTypeCount == 1) {
-            mScrapViews[0].push_back(scrap);//mCurrentScrap
+            mCurrentScrap->push_back(scrap);//mScrapViews[0].push_back(scrap);
         } else {
             mScrapViews[viewType].push_back(scrap);
         }
@@ -213,7 +214,7 @@ void RecycleBin::scrapActiveViews() {
     std::vector<View*>& activeViews = mActiveViews;
     bool multipleScraps = mViewTypeCount > 1;
 
-    std::vector<View*>& scrapViews =mScrapViews[0];// mCurrentScrap;
+    std::vector<View*>& scrapViews =*mCurrentScrap;
     int count = activeViews.size();
     for (int i = count - 1; i >= 0; i--) {
         View* victim = activeViews[i];

@@ -39,6 +39,14 @@ AnimationSet::AnimationSet(bool shareInterpolator){
     init();
 }
 
+AnimationSet::~AnimationSet(){
+    for(auto a:mAnimations){
+        if(mFlags&PROPERTY_SHARE_INTERPOLATOR_MASK)
+            a->mInterpolator =nullptr;
+        delete a;
+    }
+}
+
 Animation* AnimationSet::clone(){
     AnimationSet* animation =new AnimationSet(false);// (AnimationSet) super.clone();
     for (auto a:mAnimations){

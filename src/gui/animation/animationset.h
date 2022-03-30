@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __ANIMATIONSET_H__
+#define __ANIMATIONSET_H__
 #include <animation/animation.h>
 
 namespace cdroid{
@@ -17,6 +18,7 @@ private:
 public:
     AnimationSet(Context* context,const AttributeSet& attrs);
     AnimationSet(bool shareInterpolator);
+    ~AnimationSet()override;
     Animation* clone()override;
     void setFillAfter(bool fillAfter);
     void setFillBefore(bool fillBefore);
@@ -42,3 +44,4 @@ public:
 };
 
 }//endof namespace
+#endif //__ANIMATIONSET_H__

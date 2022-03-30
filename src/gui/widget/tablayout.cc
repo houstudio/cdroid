@@ -156,7 +156,6 @@ void TabLayout::addTabFromItemView(TabItem* item){
     Tab* tab = newTab();
     tab->setText(item->mText);
     
-    LOGD("item.Text=%s",item->mText.c_str());
     if (item->mIcon) {
         tab->setIcon(item->mIcon);
     }

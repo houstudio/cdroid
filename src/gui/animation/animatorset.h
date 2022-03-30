@@ -1,6 +1,7 @@
-#ifndef __AIMATOR_SET_H__
-#define __AIMATOR_SET_H__
-#include <animation/valueanimator.h>
+#ifndef __AIMATORSET_H__
+#define __AIMATORSET_H__
+#include <vector>
+#include <animation/animator.h>
 #include <animation/animationhandler.h>
 namespace cdroid{
 
@@ -87,7 +88,7 @@ private:
     long mStartDelay = 0;
 
     // Animator used for a nonzero startDelay
-    ValueAnimator* mDelayAnim;// = ValueAnimator.ofFloat(0f, 1f).setDuration(0);
+    class ValueAnimator* mDelayAnim;// = ValueAnimator.ofFloat(0f, 1f).setDuration(0);
 
     Node* mRootNode;// = new Node(mDelayAnim);
 
@@ -174,4 +175,4 @@ public:
 };
 
 }
-#endif
+#endif//__AIMATORSET_H__

@@ -31,6 +31,42 @@ struct TextWatcher{
     CallbackBase<void,std::wstring&>afterTextChanged;
 };
 class TextView : public View{
+public:
+    class Drawables {
+    public:
+        enum{
+            LEFT  = 0,
+            TOP   = 1,
+            RIGHT = 2,
+            BOTTOM= 3
+        };
+        enum{
+            DRAWABLE_NONE = -1,
+            DRAWABLE_RIGHT= 0,
+            DRAWABLE_LEFT = 1
+        };
+    private:
+        friend class TextView;
+        Drawable* mShowing[4];
+        Drawable* mDrawableStart, *mDrawableEnd, *mDrawableError, *mDrawableTemp;
+        Drawable* mDrawableLeftInitial, *mDrawableRightInitial;
+        bool mIsRtlCompatibilityMode;
+        bool mOverride;
+        bool mHasTint, mHasTintMode;
+        ColorStateList* mTintList;
+        int mTintMode;
+        int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
+        int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
+
+        int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
+        int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
+        int mDrawablePadding;
+        Rect mCompoundRect;
+    public:
+        Drawables(Context*ctx);
+        ~Drawables();
+        bool hasMetadata()const;
+    };
 private:
     static constexpr int LINES = 1;
     static constexpr int EMS = LINES;

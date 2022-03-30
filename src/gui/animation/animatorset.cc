@@ -19,6 +19,13 @@ AnimatorSet::AnimatorSet(){
 }
 
 AnimatorSet::~AnimatorSet(){
+    for(auto nd:mNodeMap){
+        delete nd.first;
+    }
+    for(auto nd:mNodes)
+        delete nd;
+    mNodeMap.clear();
+    mNodes.clear();
     delete mSeekState;
 }
 

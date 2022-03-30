@@ -136,7 +136,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     LOG(VERBOSE)<<std::setw(pd->views.size()*8)<<v<<":"<<v->getId()<<"["<<name<<"]"<<stname;
     if( parent){//(parent && (parent==pd->root) && pd->attachToRoot )||(parent!=pd->root)){
         LayoutParams*lp=parent->generateLayoutParams(atts);
-        parent->addViewInLayout(v,-1,lp,true);
+        parent->addView(v,lp);
     }else{
         LayoutParams*lp=((ViewGroup*)v)->generateLayoutParams(atts);
         ((ViewGroup*)v)->setLayoutParams(lp);

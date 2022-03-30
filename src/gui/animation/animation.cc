@@ -56,6 +56,10 @@ Animation::Animation(Context* context, const AttributeSet& attrs){
     if(!resid.empty())setInterpolator(context,resid);
 }
 
+Animation::~Animation(){
+    delete mInterpolator;
+}
+
 float Animation::getPivotType(const std::string&v,int &type){
     const float ret=std::strtof(v.c_str(),nullptr);
     if(v.find("%p")!=std::string::npos)type = RELATIVE_TO_PARENT;
@@ -81,6 +85,7 @@ void Animation::reset() {
     mRepeated = 0;
     mMore = true;
     mOneMoreTime = true;
+    delete mInterpolator;
     //mListenerHandler = nullptr;
 }
 
@@ -119,6 +124,7 @@ void Animation::setInterpolator(Context* context,const std::string&resID) {
 }
 
 void Animation::setInterpolator(Interpolator* i) {
+    delete mInterpolator;
     mInterpolator = i;
 }
 

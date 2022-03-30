@@ -284,7 +284,10 @@ void ValueAnimator::removeAllUpdateListeners(){
 
 void ValueAnimator::setInterpolator(TimeInterpolator* value){
     delete mInterpolator;
-    mInterpolator=value?value:new LinearInterpolator();
+    if(value)
+        mInterpolator = value;
+    else
+        mInterpolator = new LinearInterpolator();
 }
 
 TimeInterpolator* ValueAnimator::getInterpolator(){

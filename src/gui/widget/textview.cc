@@ -28,55 +28,27 @@ namespace cdroid {
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
 
-class Drawables{
-public:
-    enum{
-       LEFT  = 0,
-       TOP   = 1,
-       RIGHT = 2,
-       BOTTOM= 3
-    };
-    enum{
-        DRAWABLE_NONE = -1,
-        DRAWABLE_RIGHT= 0,
-        DRAWABLE_LEFT = 1
-    };
-    Drawable* mShowing[4];
-    Drawable* mDrawableStart, *mDrawableEnd, *mDrawableError, *mDrawableTemp;
-    Drawable* mDrawableLeftInitial, *mDrawableRightInitial;
-    bool mIsRtlCompatibilityMode;
-    bool mOverride;
-    bool mHasTint, mHasTintMode;
-    ColorStateList* mTintList;
-    int mTintMode;
-    int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
-    int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
-
-    int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
-    int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
-    int mDrawablePadding;
-    Rect mCompoundRect;
-public:
-    bool hasMetadata() {   return mDrawablePadding != 0 || mHasTintMode || mHasTint; }
-    Drawables(Context*ctx){
-        mIsRtlCompatibilityMode= false;
-        mHasTint = mHasTintMode= mOverride =false;
-        mTintList=nullptr;
-        mShowing[0]=mShowing[1]=mShowing[2]=mShowing[3]=nullptr;
-        mDrawableStart=mDrawableEnd=mDrawableError=mDrawableTemp=nullptr;
-        mDrawableLeftInitial=mDrawableRightInitial=nullptr;
-        mDrawableSizeTop=mDrawableSizeBottom=mDrawableSizeLeft=0;
-        mDrawableSizeRight=mDrawableSizeStart=mDrawableSizeEnd=0;
-        mDrawableSizeError=mDrawableSizeTemp=0;
-        mDrawableWidthTop=mDrawableWidthBottom=mDrawableHeightLeft=0;
-        mDrawableHeightRight=mDrawableHeightStart=mDrawableHeightEnd=0;
-        mDrawableHeightError=mDrawableHeightTemp=mDrawablePadding=0;
-        mCompoundRect.set(0,0,0,0);
-    }
-    ~Drawables(){
-        for(int i=0;i<3;i++)delete mShowing[i];
-    }
-};
+bool TextView::Drawables::hasMetadata()const{   
+    return mDrawablePadding != 0 || mHasTintMode || mHasTint; 
+}
+TextView::Drawables::Drawables(Context*ctx){
+    mIsRtlCompatibilityMode= false;
+    mHasTint = mHasTintMode= mOverride =false;
+    mTintList=nullptr;
+    mShowing[0]=mShowing[1]=mShowing[2]=mShowing[3]=nullptr;
+    mDrawableStart=mDrawableEnd=mDrawableError=mDrawableTemp=nullptr;
+    mDrawableLeftInitial=mDrawableRightInitial=nullptr;
+    mDrawableSizeTop=mDrawableSizeBottom=mDrawableSizeLeft=0;
+    mDrawableSizeRight=mDrawableSizeStart=mDrawableSizeEnd=0;
+    mDrawableSizeError=mDrawableSizeTemp=0;
+    mDrawableWidthTop=mDrawableWidthBottom=mDrawableHeightLeft=0;
+    mDrawableHeightRight=mDrawableHeightStart=mDrawableHeightEnd=0;
+    mDrawableHeightError=mDrawableHeightTemp=mDrawablePadding=0;
+    mCompoundRect.set(0,0,0,0);
+}
+TextView::Drawables::~Drawables(){
+    for(int i=0;i<3;i++)delete mShowing[i];
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Marquee {
@@ -1553,6 +1525,21 @@ void TextView::onDraw(Canvas& canvas) {
             dr->mShowing[Drawables::BOTTOM]->draw(canvas);
             canvas.restore();
         }
+        int animateCount=0;
+        for(int i=0;i<4;i++){
+            Drawable*d=dr->mShowing[i];
+            if(dynamic_cast<AnimatedRotateDrawable*>(d)){
+                AnimatedRotateDrawable*ad=(AnimatedRotateDrawable*)d;
+                if(ad->isRunning())animateCount++;
+            }
+            if(dynamic_cast<AnimationDrawable*>(d)){
+                AnimationDrawable*ad=(AnimationDrawable*)d;
+                if(ad->isRunning())animateCount++;
+                break;
+            }
+        }
+        if(animateCount)
+            postInvalidateOnAnimation();
     }
     // Text
     int extendedPaddingTop = getExtendedPaddingTop();

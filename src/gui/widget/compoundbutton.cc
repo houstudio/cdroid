@@ -23,6 +23,9 @@ CompoundButton::CompoundButton(const std::string&txt,int width,int height)
     mOnCheckedChangeWidgetListener=nullptr;
 }
 
+CompoundButton::~CompoundButton(){
+    delete mButtonDrawable;
+}
 std::vector<int>CompoundButton::onCreateDrawableState()const{
     std::vector<int>drawableState = Button::onCreateDrawableState();
     if (isChecked()) {

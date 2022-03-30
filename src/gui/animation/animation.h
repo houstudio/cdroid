@@ -72,6 +72,7 @@ protected:
 public:
     Animation();
     Animation(Context* context,const AttributeSet& attrs);
+    virtual ~Animation();
     virtual void reset();
     void cancel();
     void detach();

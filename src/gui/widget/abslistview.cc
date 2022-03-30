@@ -324,6 +324,7 @@ AbsListView::~AbsListView(){
     }
     delete mSelector;
     delete mFastScroll;
+    mRecycler->clear();
     delete mRecycler;
     delete mScroller;
     delete mEdgeGlowTop;
@@ -2087,7 +2088,7 @@ void AbsListView::onDetachedFromWindow() {
 
     if (mAdapter && mDataSetObserver) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
-		delete mDataSetObserver;
+        delete mDataSetObserver;
         mDataSetObserver = nullptr;
     }
 

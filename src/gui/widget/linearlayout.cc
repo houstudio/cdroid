@@ -86,10 +86,13 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
 
     mOrientation=attrs.getInt("orientation",orientationkvs,HORIZONTAL);
 
-    mGravity=attrs.getGravity("gravity",mGravity);
+    mGravity = attrs.getGravity("gravity",mGravity);
+    mDividerPadding = attrs.getInt("dividerPadding",0);
+    mDivider = context->getDrawable(attrs.getString("divider"));
 }
 
 LinearLayout::~LinearLayout() {
+    delete mDivider;
 }
 
 int LinearLayout::getBaseline(){

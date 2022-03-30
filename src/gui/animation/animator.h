@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __ANIMATOR_H__
+#define __ANIMATOR_H__
 #include <vector>
 #include <memory>
 #include <functional>
@@ -103,4 +104,5 @@ class AnimatorListenerAdapter:public Animator::AnimatorListener,Animator::Animat
 public:
     AnimatorListenerAdapter();
 };
-}
+}//endof namespace
+#endif //__ANIMATOR_H__

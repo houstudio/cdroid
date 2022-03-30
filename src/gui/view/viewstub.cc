@@ -50,13 +50,13 @@ View& ViewStub::setVisibility(int visibility){
 }
 
 View* ViewStub::inflateViewNoAdd(ViewGroup* parent) {
-        View* view = LayoutInflater::from(mContext)->inflate(mLayoutResource, parent, false);
+    View* view = LayoutInflater::from(mContext)->inflate(mLayoutResource, parent, false);
 
-        if (mInflatedId != NO_ID) {
-            view->setId(mInflatedId);
-        }
-        return view;
+    if (mInflatedId != NO_ID) {
+        view->setId(mInflatedId);
     }
+    return view;
+}
 
 void ViewStub::replaceSelfWithView(View* view, ViewGroup* parent) {
     int index = parent->indexOfChild(this);
@@ -79,7 +79,7 @@ void ViewStub::replaceSelfWithView(View* view, ViewGroup* parent) {
 View* ViewStub::inflate() {
     ViewGroup* parent = getParent();
     if (parent) {
-        if (mLayoutResource.size()) {
+        if (!mLayoutResource.empty()) {
             View* view = inflateViewNoAdd(parent);
             replaceSelfWithView(view, parent);
 

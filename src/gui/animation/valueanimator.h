@@ -1,6 +1,6 @@
-#ifndef __ANIMATOR_H__
-#define __ANIMATOR_H__
-#include <animation/animator.h>
+#ifndef __VALUEANIMATOR_H__
+#define __VALUEANIMATOR_H__
+#include <animation/animatorset.h>
 #include <animation/propertyvaluesholder.h>
 #include <animation/animationhandler.h>
 #include <map>
@@ -16,6 +16,7 @@ public:
     static constexpr int INFINITE= -1;
     typedef CallbackBase<void,ValueAnimator&>AnimatorUpdateListener;
 private:
+    friend class AnimatorSet;
     static float sDurationScale;
     //static TimeInterpolator sDefaultInterpolator = new AccelerateDecelerateInterpolator();
     long mPauseTime;
@@ -125,4 +126,4 @@ public:
 };
 
 }//endof namespace
-#endif//__ANIMATOR_H__
+#endif//__VALUEANIMATOR_H__

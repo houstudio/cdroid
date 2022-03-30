@@ -414,7 +414,7 @@ View::~View(){
     delete mRoundScrollbarRenderer;
     delete mCurrentAnimation;
     delete mTransformationInfo;
-    delete mOverlay;  
+    delete mOverlay;
 }
 
 bool View::debugDraw()const {
@@ -932,14 +932,15 @@ void View::clearAnimation() {
     if (mCurrentAnimation ) {
         mCurrentAnimation->detach();
     }
+    delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
     invalidateParentIfNeeded();
     invalidate();
 }
 
 void View::setAnimation(Animation* animation) {
+    delete mCurrentAnimation;
     mCurrentAnimation = animation;
-
     if (animation) {
         // If the screen is off assume the animation start time is now instead of
         // the next frame we draw. Keeping the START_ON_FIRST_FRAME start time
@@ -1347,6 +1348,7 @@ void View::onDetachedFromWindowInternal() {
     destroyDrawingCache();
 
     cleanupDraw();
+    delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
 
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {

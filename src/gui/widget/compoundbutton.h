@@ -22,6 +22,7 @@ protected:
 public:
     CompoundButton(const std::string&txt,int width,int height);
     CompoundButton(Context*ctx,const AttributeSet&attrs);
+    ~CompoundButton()override;
     void setButtonDrawable(const std::string&resid);
     void setButtonDrawable(Drawable*d);
     bool performClick()override;
