@@ -146,7 +146,7 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
 
     setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents"));
     if(atts.getBoolean("animateLayoutChanges",false))
-       setLayoutTransition(new LayoutTransition());
+        setLayoutTransition(new LayoutTransition());
     setLayoutMode(0);
     setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus",false));
 }

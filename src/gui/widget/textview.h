@@ -142,6 +142,7 @@ protected:
     void setEditable(bool b);
     int getFontSize()const;
     void drawableStateChanged()override;
+    bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual void onDraw(Canvas& canvas) override;
     virtual int getHorizontalOffsetForDrawables()const;
@@ -238,7 +239,8 @@ public:
     void drawableHotspotChanged(float x,float y)override;
     void setCompoundDrawableTintMode(int tintMode);
     int getCompoundDrawableTintMode();
-
+    void jumpDrawablesToCurrentState()override;
+    void invalidateDrawable(Drawable& drawable)override;
     void setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(const std::string& left, const std::string& top,

@@ -395,7 +395,7 @@ void View::initView(){
 }
 
 View::~View(){
-    if(mParent)onDetachedFromWindow();
+    if(isAttachedToWindow())onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
     delete mForegroundInfo;
     delete mPerformClick;

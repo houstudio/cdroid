@@ -4,7 +4,7 @@
 #include <widget/textview.h>
 #include <widget/imageview.h>
 #include <widget/viewpager.h>
-
+#include <animation/animator.h>
 namespace cdroid{
 
 class TabLayout:public HorizontalScrollView{

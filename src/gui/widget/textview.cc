@@ -34,20 +34,24 @@ bool TextView::Drawables::hasMetadata()const{
 TextView::Drawables::Drawables(Context*ctx){
     mIsRtlCompatibilityMode= false;
     mHasTint = mHasTintMode= mOverride =false;
-    mTintList=nullptr;
-    mShowing[0]=mShowing[1]=mShowing[2]=mShowing[3]=nullptr;
-    mDrawableStart=mDrawableEnd=mDrawableError=mDrawableTemp=nullptr;
-    mDrawableLeftInitial=mDrawableRightInitial=nullptr;
-    mDrawableSizeTop=mDrawableSizeBottom=mDrawableSizeLeft=0;
-    mDrawableSizeRight=mDrawableSizeStart=mDrawableSizeEnd=0;
-    mDrawableSizeError=mDrawableSizeTemp=0;
-    mDrawableWidthTop=mDrawableWidthBottom=mDrawableHeightLeft=0;
-    mDrawableHeightRight=mDrawableHeightStart=mDrawableHeightEnd=0;
-    mDrawableHeightError=mDrawableHeightTemp=mDrawablePadding=0;
+    mTintList= nullptr;
+    mShowing[0] = mShowing[1] = nullptr;
+    mShowing[2] = mShowing[3] = nullptr;
+    mDrawableStart = mDrawableEnd  = nullptr;
+    mDrawableError = mDrawableTemp = nullptr;
+    mDrawableLeftInitial= mDrawableRightInitial=nullptr;
+    mDrawableSizeTop = mDrawableSizeBottom = mDrawableSizeLeft=0;
+    mDrawableSizeRight  = mDrawableSizeStart = mDrawableSizeEnd=0;
+    mDrawableSizeError  = mDrawableSizeTemp  = 0;
+    mDrawableWidthTop   = mDrawableWidthBottom = mDrawableHeightLeft =0;
+    mDrawableHeightRight= mDrawableHeightStart = mDrawableHeightEnd =0;
+    mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding =0;
     mCompoundRect.set(0,0,0,0);
 }
 TextView::Drawables::~Drawables(){
-    for(int i=0;i<3;i++)delete mShowing[i];
+    for(int i=0;i<4;i++){
+        delete mShowing[i];
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -817,9 +821,8 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
 std::vector<Drawable*>TextView::getCompoundDrawables(){
     std::vector<Drawable*>ret;
-    for(int i=0;i<4;i++){
-        ret.push_back(mDrawables->mShowing[i]);
-    }
+    if(mDrawables)
+        ret.assign(mDrawables->mShowing,mDrawables->mShowing+4);
     return ret;
 }
 
@@ -1011,6 +1014,88 @@ void TextView::drawableHotspotChanged(float x,float y){
         Drawable* dr=mDrawables->mShowing[i];
         if(dr)dr->setHotspot(x,y);
     }    
+}
+
+bool TextView::verifyDrawable(Drawable* who)const {
+    bool verified = View::verifyDrawable(who);
+    if (!verified && mDrawables) {
+        for (int i=0;i<4;i++){
+            if (who == mDrawables->mShowing[i]) {
+                return true;
+            }
+        }
+    }
+    return verified;
+}
+
+void TextView::jumpDrawablesToCurrentState(){
+    View::jumpDrawablesToCurrentState();
+    if (mDrawables != nullptr) {
+        for (int i=0;i<4;i++){
+            Drawable* dr = mDrawables->mShowing[i];
+            if (dr != nullptr) {
+                dr->jumpToCurrentState();
+            }
+        }
+    }
+}
+
+void TextView::invalidateDrawable(Drawable& drawable){
+    bool handled = false;
+
+    if (verifyDrawable(&drawable)) {
+        Rect dirty = drawable.getBounds();
+        int scrollX = mScrollX;
+        int scrollY = mScrollY;
+
+        // IMPORTANT: The coordinates below are based on the coordinates computed
+        // for each compound drawable in onDraw(). Make sure to update each section
+        // accordingly.
+        if (mDrawables != nullptr) {
+            if (&drawable == mDrawables->mShowing[Drawables::LEFT]) {
+                int compoundPaddingTop = getCompoundPaddingTop();
+                int compoundPaddingBottom = getCompoundPaddingBottom();
+                int vspace = mBottom - mTop - compoundPaddingBottom - compoundPaddingTop;
+
+                scrollX += mPaddingLeft;
+                scrollY += compoundPaddingTop + (vspace - mDrawables->mDrawableHeightLeft) / 2;
+                handled = true;
+            } else if (&drawable == mDrawables->mShowing[Drawables::RIGHT]) {
+                int compoundPaddingTop = getCompoundPaddingTop();
+                int compoundPaddingBottom = getCompoundPaddingBottom();
+                int vspace = mBottom - mTop - compoundPaddingBottom - compoundPaddingTop;
+
+                scrollX += (mRight - mLeft - mPaddingRight - mDrawables->mDrawableSizeRight);
+                scrollY += compoundPaddingTop + (vspace - mDrawables->mDrawableHeightRight) / 2;
+                handled = true;
+            } else if (&drawable == mDrawables->mShowing[Drawables::TOP]) {
+                int compoundPaddingLeft = getCompoundPaddingLeft();
+                int compoundPaddingRight = getCompoundPaddingRight();
+                int hspace = mRight - mLeft - compoundPaddingRight - compoundPaddingLeft;
+
+                scrollX += compoundPaddingLeft + (hspace - mDrawables->mDrawableWidthTop) / 2;
+                scrollY += mPaddingTop;
+                handled = true;
+            } else if (&drawable == mDrawables->mShowing[Drawables::BOTTOM]) {
+                int compoundPaddingLeft = getCompoundPaddingLeft();
+                int compoundPaddingRight = getCompoundPaddingRight();
+                int hspace = mRight - mLeft - compoundPaddingRight - compoundPaddingLeft;
+
+                scrollX += compoundPaddingLeft + (hspace - mDrawables->mDrawableWidthBottom) / 2;
+                scrollY += (mBottom - mTop - mPaddingBottom - mDrawables->mDrawableSizeBottom);
+                handled = true;
+            }
+        }
+
+        if (handled) {
+            dirty.offset(scrollX,scrollY);
+            invalidate(dirty);
+        }
+    }
+
+    if (!handled) {
+        View::invalidateDrawable(drawable);
+    }
 }
 
 void TextView::updateTextColors(){
@@ -1525,21 +1610,6 @@ void TextView::onDraw(Canvas& canvas) {
             dr->mShowing[Drawables::BOTTOM]->draw(canvas);
             canvas.restore();
         }
-        int animateCount=0;
-        for(int i=0;i<4;i++){
-            Drawable*d=dr->mShowing[i];
-            if(dynamic_cast<AnimatedRotateDrawable*>(d)){
-                AnimatedRotateDrawable*ad=(AnimatedRotateDrawable*)d;
-                if(ad->isRunning())animateCount++;
-            }
-            if(dynamic_cast<AnimationDrawable*>(d)){
-                AnimationDrawable*ad=(AnimationDrawable*)d;
-                if(ad->isRunning())animateCount++;
-                break;
-            }
-        }
-        if(animateCount)
-            postInvalidateOnAnimation();
     }
     // Text
     int extendedPaddingTop = getExtendedPaddingTop();
