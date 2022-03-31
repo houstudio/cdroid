@@ -141,7 +141,7 @@ public:
     }
     void run(){
         long now = AnimationUtils::currentAnimationTimeMillis();
-        if (now >= fadeStartTime) {
+        if (host && (now >= fadeStartTime)) {
             // the animation fades the scrollbars out by changing
             // the opacity (alpha) from fully opaque to fully
             // transparent
@@ -1323,8 +1323,10 @@ void View::dispatchDetachedFromWindow(){
             conts.erase(it);
         mPrivateFlags &= ~PFLAG_SCROLL_CONTAINER_ADDED;
     }
-    if(mScrollCache&&mScrollCache->mRunner)
-       removeCallbacks(mScrollCache->mRunner);
+    if(mScrollCache&&mScrollCache->mRunner){
+        removeCallbacks(mScrollCache->mRunner);
+        mScrollCache->mRunner.reset();
+    }
     mAttachInfo = nullptr;
     if(mOverlay)
         mOverlay->getOverlayView()->dispatchDetachedFromWindow();

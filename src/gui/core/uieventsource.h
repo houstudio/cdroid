@@ -24,7 +24,7 @@ public:
     int checkEvents()override;
     int handleEvents()override;
     bool postDelayed(Runnable& run,uint32_t delay=0);
-    bool removeCallbacks(const Runnable& what);
+    int removeCallbacks(const Runnable& what);
 };
 
 }//end namespace

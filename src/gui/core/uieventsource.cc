@@ -76,14 +76,15 @@ bool UIEventSource::hasDelayedRunners()const{
     return runner.time<nowms;
 }
 
-bool UIEventSource::removeCallbacks(const Runnable& what){
+int UIEventSource::removeCallbacks(const Runnable& what){
+    int count=0;
     for(auto it=mRunnables.begin();it!=mRunnables.end();it++){ 
-        if(it->run==what){
+        if((it->run==what)&&(it->removed==false)){
             it->removed=true;
-            return true;
+            count++;
         }
     }
-    return false;
+    return count;
 }
 
 }//end namespace

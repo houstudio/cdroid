@@ -586,7 +586,7 @@ void ViewPager::populate(int newCurrentItem){
                 if (pos == ii->position && !ii->scrolling) {
                     mItems.erase(mItems.begin()+itemIndex);
                     mAdapter->destroyItem(this, pos, ii->object);
-                    LOGD("destroyItem() with pos:%d/%d view:%p curitem=%d/%d",pos,ii->position,ii->object,mCurItem,mItems.size());
+                    LOGV("destroyItem() with pos:%d/%d view:%p curitem=%d/%d",pos,ii->position,ii->object,mCurItem,mItems.size());
                     delete ii;
                     itemIndex--;
                     curIndex--;
