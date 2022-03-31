@@ -54,7 +54,7 @@ AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateSta
 
 AnimatedRotateDrawable::~AnimatedRotateDrawable(){
     stop();
-    mNextFrame = nullptr;
+    mNextFrame.reset();
 }
 
 std::shared_ptr<DrawableWrapper::DrawableWrapperState> AnimatedRotateDrawable::mutateConstantState(){

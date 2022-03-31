@@ -24,7 +24,7 @@ public:
         mFunctor = b.mFunctor;
     }
     CallbackBase&operator=(const Functor&a){
-        (*mFunctor) = a;
+        mFunctor = std::make_shared<Functor>(a);
         return *this;
     }
     CallbackBase&operator=(const CallbackBase&b){
@@ -42,6 +42,9 @@ public:
     }
     bool operator!=(std::nullptr_t)const{
         return (*mFunctor) != nullptr;
+    }
+    void reset(){
+        mFunctor = nullptr;
     }
     virtual R operator()(Args...args){
         return (*mFunctor)(std::forward<Args>(args)...);

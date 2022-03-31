@@ -28,6 +28,7 @@ protected:
     std::shared_ptr<DrawableContainerState> cloneConstantState()override;
 public:
     AnimationDrawable();
+    ~AnimationDrawable()override;
     bool setVisible(bool visible,bool restart)override;
     void start()override;
     void stop()override;

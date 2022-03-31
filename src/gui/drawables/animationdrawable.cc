@@ -17,6 +17,10 @@ AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::Animatio
     mRunnable=std::bind(&AnimationDrawable::run,this);
 }
 
+AnimationDrawable::~AnimationDrawable(){
+    mRunnable.reset();
+}
+
 void AnimationDrawable::setConstantState(std::shared_ptr<DrawableContainerState>state){
     DrawableContainer::setConstantState(state);
     mAnimationState=std::dynamic_pointer_cast<AnimationState>(state);
