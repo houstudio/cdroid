@@ -85,8 +85,7 @@ void Animation::reset() {
     mRepeated = 0;
     mMore = true;
     mOneMoreTime = true;
-    delete mInterpolator;
-    //mListenerHandler = nullptr;
+    mListenerHandler = nullptr;
 }
 
 void Animation::cancel() {

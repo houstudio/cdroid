@@ -330,6 +330,15 @@ TextView::~TextView() {
     delete mDrawables;
 }
 
+void TextView::onDetachedFromWindowInternal(){
+    for(int i=0;mDrawables && (i<4);i++){
+        Drawable*d=mDrawables->mShowing[i];
+        if(d==nullptr)continue;
+        unscheduleDrawable(*d);
+    }
+    View::onDetachedFromWindowInternal();
+}
+
 int TextView::getLayoutAlignment()const{
     int alignment;
     switch (getTextAlignment()) {

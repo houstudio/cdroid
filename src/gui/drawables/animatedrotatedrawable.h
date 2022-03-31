@@ -31,7 +31,7 @@ protected:
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:
     AnimatedRotateDrawable();
-
+    ~AnimatedRotateDrawable()override;
     float getPivotX()const;
     float getPivotY()const;
     void setPivotX(float pivotX);

@@ -87,7 +87,7 @@ protected:
     bool onLevelChange(int level)override;
 public:
     DrawableContainer();
-    ~DrawableContainer();
+    ~DrawableContainer()override;
     int getCurrentIndex()const;
     virtual void setCurrentIndex(int index);
     virtual bool selectDrawable(int index);

@@ -140,7 +140,6 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
                 return ident;
             }
         }
-
         if (result != 0) {
             LOGD_IF(DEBUG_POLL_AND_WAKE,"%p returning result %d", this, result);
             if (outFd != nullptr) *outFd = 0;
@@ -148,7 +147,6 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
             if (outData != nullptr) *outData = nullptr;
             return result;
         }
-
         result = pollInner(timeoutMillis);
     }
 }
@@ -603,14 +601,13 @@ void Looper::removeEventHandlers(){
      for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
           if((*it)->mRemoved){
               delete (*it);
-              mEventHandlers.erase(it);
+              it = mEventHandlers.erase(it);
           }
       }
 }
 
 void Looper::removeMessages(const MessageHandler* handler) {
     LOGD_IF(DEBUG_CALLBACKS,"%p  removeMessages - handler=%p", this, handler);
-
     { // acquire lock
         std::lock_guard<std::mutex>_l(mLock);
 
@@ -623,7 +620,6 @@ void Looper::removeMessages(const MessageHandler* handler) {
 
 void Looper::removeMessages(const MessageHandler* handler, int what) {
     LOGD_IF(DEBUG_CALLBACKS,"%p  removeMessages - handler=%p, what=%d size=%d", this, handler, what,mMessageEnvelopes.size());
-
     { // acquire lock
         std::lock_guard<std::mutex>_l(mLock);
         for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
@@ -663,7 +659,7 @@ int SimpleLooperCallback::handleEvent(int fd, int events, void* data) {
 }
 
 MessageHandler::MessageHandler(){
-   mFlags = 0;
+    mFlags = 0;
 }
 
 MessageHandler::~MessageHandler(){

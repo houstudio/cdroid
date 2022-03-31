@@ -379,6 +379,7 @@ void RecycleBin::clearScrap(std::vector<View*>& scrap) {
         View*v=scrap[scrapCount - 1 - j];
         scrap.erase(scrap.begin()+scrapCount - 1 - j);
         removeDetachedView(v, false);
+        delete v;
     }
 }
 

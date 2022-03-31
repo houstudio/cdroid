@@ -593,7 +593,7 @@ void TabLayout::animateToTab(int newPosition){
     }
 
     int startScrollX = getScrollX();
-    int targetScrollX = calculateScrollXForTab(newPosition, 0);
+    int targetScrollX= calculateScrollXForTab(newPosition, 0);
 
     if (startScrollX != targetScrollX) {
         ensureScrollAnimator();
@@ -1300,7 +1300,7 @@ void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
 
     if (selectedTitle && selectedTitle->getWidth() > 0) {
         left = selectedTitle->getLeft();
-        right = selectedTitle->getRight();
+        right= selectedTitle->getRight();
         if(!mParent->tabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(selectedTitle)){
             calculateTabViewContentBounds((TabLayout::TabView*)selectedTitle,mParent->tabViewContentBounds);
             left = mParent->tabViewContentBounds.left;
@@ -1318,7 +1318,7 @@ void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
             }
             left = (int) (mSelectionOffset * nextTitle->getLeft() +
                     (1.0f - mSelectionOffset) * left);
-            right = (int) (mSelectionOffset * nextTitle->getRight() +
+            right= (int) (mSelectionOffset * nextTitle->getRight() +
                     (1.0f - mSelectionOffset) * right);
         }
     } else {
@@ -1332,7 +1332,7 @@ void TabLayout::SlidingTabStrip::setIndicatorPosition(int left, int right) {
     if (left != mIndicatorLeft || right != mIndicatorRight) {
         // If the indicator's left/right has changed, invalidate
         mIndicatorLeft = left;
-        mIndicatorRight = right;
+        mIndicatorRight= right;
         postInvalidateOnAnimation();
     }
 }
@@ -1359,8 +1359,8 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
             targetLeft = mParent->tabViewContentBounds.left;
             targetRight= mParent->tabViewContentBounds.right();
         } 
-        int startLeft =mIndicatorLeft;
-        int startRight=mIndicatorRight;
+        int startLeft = mIndicatorLeft;
+        int startRight= mIndicatorRight;
 
         if( mIndicatorAnimator==nullptr){ 
             mIndicatorAnimator = new ValueAnimator();
@@ -1402,25 +1402,25 @@ void TabLayout::SlidingTabStrip::calculateTabViewContentBounds(TabLayout::TabVie
 void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
     LinearLayout::draw(canvas);
     // Thick colored underline below the current selection
-    int indicatorHeight=mSelectedIndicatorHeight;
-    int indicatorTop   =0;
-    int indicatorBottom=0;
+    int indicatorHeight= mSelectedIndicatorHeight;
+    int indicatorTop   = 0;
+    int indicatorBottom= 0;
     switch(mParent->getTabIndicatorGravity()&Gravity::VERTICAL_GRAVITY_MASK){
     case Gravity::BOTTOM: 
-        indicatorTop   =getHeight()-indicatorHeight;
-        indicatorBottom=getHeight();
+        indicatorTop   = getHeight()-indicatorHeight;
+        indicatorBottom= getHeight();
         break;
     case Gravity::CENTER_VERTICAL:
-        indicatorTop    =(getHeight()-indicatorHeight)/2;
-        indicatorBottom =(getHeight()+indicatorHeight)/2; 
+        indicatorTop    = (getHeight()-indicatorHeight)/2;
+        indicatorBottom = (getHeight()+indicatorHeight)/2; 
         break;
     case Gravity::TOP:
-        indicatorTop =0;
-        indicatorBottom =indicatorHeight;
+        indicatorTop = 0;
+        indicatorBottom = indicatorHeight;
         break;
     case Gravity::FILL_VERTICAL:
-        indicatorTop =0;
-        indicatorBottom=getHeight();
+        indicatorTop = 0;
+        indicatorBottom = getHeight();
         break;
     }
     if (mIndicatorLeft >= 0 && mIndicatorRight > mIndicatorLeft) {

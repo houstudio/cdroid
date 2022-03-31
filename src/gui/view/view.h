@@ -537,7 +537,7 @@ protected:
     virtual void onVisibilityChanged(View& changedView,int visibility);
     virtual void onAttachedToWindow();
     virtual void onDetachedFromWindow();
-    void onDetachedFromWindowInternal();
+    virtual void onDetachedFromWindowInternal();
     virtual void  onMeasure(int widthMeasureSpec, int heightMeasureSpec);
     virtual void dispatchDraw(Canvas&);
     virtual void onFocusChanged(bool,int,Rect*);

@@ -324,7 +324,6 @@ AbsListView::~AbsListView(){
     }
     delete mSelector;
     delete mFastScroll;
-    mRecycler->clear();
     delete mRecycler;
     delete mScroller;
     delete mEdgeGlowTop;
@@ -1867,7 +1866,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     int effectivePaddingBottom = 0;
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
         effectivePaddingTop = listPadding.top;
-        effectivePaddingBottom = listPadding.height;//bottom;
+        effectivePaddingBottom = listPadding.bottom();
     }
 
     // FIXME account for grid vertical spacing too?
@@ -1897,7 +1896,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
         mFirstPositionDistanceGuess += incrementalDeltaY;
     }
     if (firstPosition + childCount == mItemCount) {
-        mLastPositionDistanceGuess = lastBottom + listPadding.height;//bottom;
+        mLastPositionDistanceGuess = lastBottom + listPadding.bottom();
     } else {
         mLastPositionDistanceGuess += incrementalDeltaY;
     }
@@ -1905,7 +1904,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     bool cannotScrollDown = (firstPosition == 0 &&
                 firstTop >= listPadding.top && incrementalDeltaY >= 0);
     bool cannotScrollUp = (firstPosition + childCount == mItemCount &&
-                lastBottom <= getHeight() - listPadding.height && incrementalDeltaY <= 0);
+                lastBottom <= getHeight() - listPadding.bottom() && incrementalDeltaY <= 0);
     if (cannotScrollDown || cannotScrollUp) {
         return incrementalDeltaY != 0;
     }
@@ -1946,7 +1945,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     } else {
         int bottom = getHeight() - incrementalDeltaY;
         if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-            bottom -= listPadding.height;//bottom;
+            bottom -= listPadding.bottom();
         }
         for (int i = childCount - 1; i >= 0; i--) {
             View* child = getChildAt(i);

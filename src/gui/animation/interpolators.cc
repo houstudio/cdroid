@@ -1,4 +1,6 @@
 #include <animation/interpolators.h>
+#include <cairomm/context.h>
+#include <cairomm/surface.h>
 
 namespace cdroid{
 
@@ -127,61 +129,119 @@ float AccelerateDecelerateInterpolator::getInterpolation(float input) {
     return (float)(cos((input + 1) * M_PI) / 2.0f) + 0.5f;
 }
 
+PathInterpolator::PathInterpolator(float controlX, float controlY) {
+    initQuad(controlX, controlY);
+}
+
+PathInterpolator::PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2) {
+    initCubic(controlX1, controlY1, controlX2, controlY2);
+}
+
+PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
+    if(a.hasAttribute("pathData")){
+    }else{
+        if (!a.hasAttribute("controlX1")) {
+            throw "pathInterpolator requires the controlX1 attribute";
+        } else if (!a.hasAttribute("controlY1")) {
+            throw "pathInterpolator requires the controlY1 attribute";
+        }
+        const float x1 = a.getFloat("controlX1", 0);
+        const float y1 = a.getFloat("controlY1", 0);
+
+        bool hasX2 = a.hasAttribute("controlX2");
+        bool hasY2 = a.hasAttribute("controlY2");
+
+        if (hasX2 != hasY2) {
+            throw "pathInterpolator requires both controlX2 and controlY2 for cubic Beziers.";
+        }
+
+        if (!hasX2) {
+            initQuad(x1, y1);
+        } else {
+            float x2 = a.getFloat("controlX2", 0);
+            float y2 = a.getFloat("controlY2", 0);
+            initCubic(x1, y1, x2, y2);
+        }
+    }
+}
+
+PathInterpolator::~PathInterpolator(){
+
+}
+
+void PathInterpolator::initQuad(float controlX, float controlY) {
 #if 0
-   void PathInterpolator::initQuad(float controlX, float controlY) {
-        Path path = new Path();
-        path.moveTo(0, 0);
-        path.quadTo(controlX, controlY, 1f, 1f);
-        initPath(path);
-    }
-
-    void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
-        Path path = new Path();
-        path.moveTo(0, 0);
-        path.cubicTo(x1, y1, x2, y2, 1f, 1f);
-        initPath(path);
-    }
-    float PathInterpolator::getInterpolation(float t) {
-        if (t <= 0) {
-            return 0;
-        } else if (t >= 1) {
-            return 1;
-        }
-        // Do a binary search for the correct x to interpolate between.
-        int startIndex = 0;
-        int endIndex = mX.length - 1;
-
-        while (endIndex - startIndex > 1) {
-            int midIndex = (startIndex + endIndex) / 2;
-            if (t < mX[midIndex]) {
-                endIndex = midIndex;
-            } else {
-                startIndex = midIndex;
-            }
-        }
-
-        float xRange = mX[endIndex] - mX[startIndex];
-        if (xRange == 0) {
-            return mY[startIndex];
-        }
-
-        float tInRange = t - mX[startIndex];
-        float fraction = tInRange / xRange;
-
-        float startY = mY[startIndex];
-        float endY = mY[endIndex];
-        return startY + (fraction * (endY - startY));
-    }
+    Path path = new Path();
+    path.moveTo(0, 0);
+    path.quadTo(controlX, controlY, 1f, 1f);
+    initPath(path);
 #endif
-PathInterpolator::PathInterpolator(Context*,const AttributeSet&){
 }
 
-float PathInterpolator::getInterpolation(float){
+void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
+#if 0
+    Path path = new Path();
+    path.moveTo(0, 0);
+    path.cubicTo(x1, y1, x2, y2, 1f, 1f);
+    initPath(path);
+#else
+    unsigned char data[4];
+    double x,y;
+    Cairo::RefPtr<Cairo::ImageSurface>surface=Cairo::ImageSurface::create(data,Cairo::Surface::Format::A8,1,1,4);
+    Cairo::RefPtr<Cairo::Context>ctx=Cairo::Context::create(surface);
+    ctx->get_current_point(x,y);
+    ctx->curve_to( x  + 2.0/3.0 * (x1 - x),  y  + 2.0/3.0 * (y1 - y),
+                   x2 + 2.0/3.0 * (x1 - x2), y2 + 2.0/3.0 * (y1 - y2),
+                   x2, y2);
+#endif
 }
+
+void PathInterpolator::initPath(void*){
+}
+
+float PathInterpolator::getInterpolation(float t) {
+    if (t <= 0) {
+        return 0;
+    } else if (t >= 1) {
+        return 1;
+    }
+    // Do a binary search for the correct x to interpolate between.
+    int startIndex = 0;
+    int endIndex = mX.size() - 1;
+
+    while (endIndex - startIndex > 1) {
+        int midIndex = (startIndex + endIndex) / 2;
+        if (t < mX[midIndex]) {
+            endIndex = midIndex;
+        } else {
+            startIndex = midIndex;
+        }
+    }
+
+    float xRange = mX[endIndex] - mX[startIndex];
+    if (xRange == 0) {
+        return mY[startIndex];
+    }
+
+    float tInRange = t - mX[startIndex];
+    float fraction = tInRange / xRange;
+    float startY = mY[startIndex];
+    float endY = mY[endIndex];
+    return startY + (fraction * (endY - startY));
+}
+
 
 LookupTableInterpolator::LookupTableInterpolator(const std::vector<float>& values) {
     mValues = values;
     mStepSize = 1.f / (mValues.size() - 1);
+}
+
+LookupTableInterpolator::LookupTableInterpolator(const float*values,int count){
+    mValues.assign(values,values+count);
+}
+
+LookupTableInterpolator::~LookupTableInterpolator(){
+    mValues.clear();
 }
 
 float LookupTableInterpolator::getInterpolation(float input){
@@ -302,16 +362,16 @@ static float VALUES3[] ={
 };
 
 FastOutSlowInInterpolator::FastOutSlowInInterpolator()
- :LookupTableInterpolator(std::vector<float>(VALUES1,VALUES1+sizeof(VALUES1)/sizeof(float))){
+ :LookupTableInterpolator(VALUES1,sizeof(VALUES1)/sizeof(float)){
     
 }
 
 LinearOutSlowInInterpolator::LinearOutSlowInInterpolator()
- :LookupTableInterpolator(std::vector<float>(VALUES2,VALUES2+sizeof(VALUES2)/sizeof(float))){
+ :LookupTableInterpolator(VALUES2,sizeof(VALUES2)/sizeof(float)){
 }
 
 FastOutLinearInInterpolator::FastOutLinearInInterpolator()
- :LookupTableInterpolator(std::vector<float>(VALUES3,VALUES3+sizeof(VALUES3)/sizeof(float))){
+ :LookupTableInterpolator(VALUES3,sizeof(VALUES3)/sizeof(float)){
 }
 
 }//endof namespace

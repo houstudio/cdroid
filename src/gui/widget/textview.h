@@ -142,6 +142,7 @@ protected:
     void setEditable(bool b);
     int getFontSize()const;
     void drawableStateChanged()override;
+    void onDetachedFromWindowInternal()override;
     bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual void onDraw(Canvas& canvas) override;

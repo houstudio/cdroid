@@ -9,6 +9,7 @@ class Context;
 class TimeInterpolator{
 public:
     virtual float getInterpolation(float input)=0;
+    virtual ~TimeInterpolator(){}
 };
 
 class Interpolator:public TimeInterpolator{
@@ -107,19 +108,16 @@ class PathInterpolator:public BaseInterpolator{
 private:
     std::vector<float>mX;
     std::vector<float>mY;
-#if 0
-//https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/base/core/java/android/view/animation/PathInterpolator.java
-    PathInterpolator(float controlX, float controlY) {
-        initQuad(controlX, controlY);
-    }
-    PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2) {
-        initCubic(controlX1, controlY1, controlX2, controlY2);
-    }
+private:
+    //https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/base/core/java/android/view/animation/PathInterpolator.java
+    PathInterpolator(float controlX, float controlY);
+    PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2);
     void initQuad(float controlX, float controlY);
     void initCubic(float x1, float y1, float x2, float y2);
-#endif
+    void initPath(void*);
 public:
     PathInterpolator(Context*,const AttributeSet&);
+    ~PathInterpolator()override;
     float getInterpolation(float t)override;
 };
 
@@ -129,8 +127,10 @@ private:
     float mStepSize;
 protected:
     LookupTableInterpolator(const std::vector<float>&values);
+    LookupTableInterpolator(const float*values,int count);
 public:
     float getInterpolation(float input);
+    ~LookupTableInterpolator()override;
 };
 
 class FastOutSlowInInterpolator :public LookupTableInterpolator{

@@ -10,15 +10,15 @@ public:
     CallbackRecord* next;
     long dueTime;
     Runnable action; // Runnable or FrameCallback
-    long token;
-    CallbackRecord(long dtm,Runnable& r,long tk){
+    void* token;
+    CallbackRecord(long dtm,Runnable& r,void* tk){
         dueTime=dtm;
         action=r;
         token=tk;
         next=nullptr;
     }
     void run(long frameTimeNanos) {
-        if (token == FRAME_CALLBACK_TOKEN) {
+        if ((long int)token == FRAME_CALLBACK_TOKEN) {
             //((FrameCallback)action).doFrame(frameTimeNanos);
         } else {
             //((Runnable)action).run();
@@ -54,7 +54,7 @@ public:
         return callbacks;
     }
 
-    void addCallbackLocked(long dueTime, Runnable& action, long token) {
+    void addCallbackLocked(long dueTime, Runnable& action,void* token) {
         CallbackRecord* callback = new CallbackRecord(dueTime,action,token);//obtainCallbackLocked(dueTime, action, token);
         CallbackRecord* entry = mHead;
         if (entry == nullptr) {
@@ -76,12 +76,12 @@ public:
         entry->next = callback;
     }
 
-    void removeCallbacksLocked(const Runnable* action, long token) {
+    void removeCallbacksLocked(const Runnable* action, void* token) {
         CallbackRecord* predecessor = nullptr;
         for (CallbackRecord* callback = mHead; callback != nullptr;) {
             CallbackRecord* next = callback->next;
             if ((action == nullptr || callback->action == *action)
-                && (token == 0 || callback->token == token)) {
+                && (token == nullptr || callback->token == token)) {
                     if (predecessor != nullptr) {
                         predecessor->next = next;
                     } else {
@@ -163,7 +163,7 @@ void Choreographer::removeCallbacks(int callbackType,const Runnable* action, voi
 }
 
 void Choreographer::removeCallbacksInternal(int callbackType,const Runnable* action, void* token){
-    mCallbackQueues[callbackType]->removeCallbacksLocked(action,(long)token);
+    mCallbackQueues[callbackType]->removeCallbacksLocked(action,token);
 }
 
 void Choreographer::postCallback(int callbackType,Runnable& action, void* token){

@@ -71,7 +71,7 @@ protected:
     bool pulseAnimationFrame(long frameTime);
 public:
     ValueAnimator();
-    ~ValueAnimator();
+    ~ValueAnimator()override;
     static void setDurationScale(float durationScale);
     static float getDurationScale();
     static bool areAnimatorsEnabled();

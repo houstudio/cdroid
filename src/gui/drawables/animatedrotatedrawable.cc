@@ -40,6 +40,21 @@ AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateSta
     mRunning=false;
     mIncrement=.0;
     mCurrentDegrees=.0f;
+
+    mNextFrame=[this](){
+        mCurrentDegrees += mIncrement;
+        if (mCurrentDegrees > (360.0f - mIncrement)) {
+            mCurrentDegrees = 0.0f;
+        }
+        invalidateSelf();
+        nextFrame();
+    };
+
+}
+
+AnimatedRotateDrawable::~AnimatedRotateDrawable(){
+    stop();
+    mNextFrame = nullptr;
 }
 
 std::shared_ptr<DrawableWrapper::DrawableWrapperState> AnimatedRotateDrawable::mutateConstantState(){
@@ -80,7 +95,7 @@ void AnimatedRotateDrawable::setPivotYRelative(bool relative){
 }
 
 void AnimatedRotateDrawable::start() {
-    LOGD("AnimatedRotateDrawable.start %p, mRunning=%d",this,mRunning);
+    LOGV("AnimatedRotateDrawable.start %p, mRunning=%d",this,mRunning);
     if (!mRunning) {
         mRunning = true;
         nextFrame();
@@ -88,6 +103,7 @@ void AnimatedRotateDrawable::start() {
 }
 
 void AnimatedRotateDrawable::stop() {
+    LOGV("AnimatedRotateDrawable.stoped %p,running=%d",this,mRunning);
     mRunning = false;
     unscheduleSelf(mNextFrame);
 }
@@ -97,14 +113,6 @@ bool AnimatedRotateDrawable::isRunning() {
 }
 
 void AnimatedRotateDrawable::nextFrame() {
-    mNextFrame=[&](){
-        mCurrentDegrees += mIncrement;
-        if (mCurrentDegrees > (360.0f - mIncrement)) {
-            mCurrentDegrees = 0.0f;
-        }
-        invalidateSelf();
-        nextFrame();
-    };
     unscheduleSelf(mNextFrame);
     scheduleSelf(mNextFrame,SystemClock::uptimeMillis()+mState->mFrameDuration);
     mCurrentDegrees += mIncrement;

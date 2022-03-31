@@ -583,7 +583,6 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
         size_t pointerCount = other->getPointerCount();
         size_t historySize = other->getHistorySize();
 
-        //mSamplePointerCoords.appendArray(other->mSamplePointerCoords.array() + (historySize * pointerCount), pointerCount);
         mSamplePointerCoords.resize(pointerCount);    
         for(int i=0;i<pointerCount;i++)
             mSamplePointerCoords.push_back(other->mSamplePointerCoords.at(historySize*pointerCount+i));
@@ -628,12 +627,10 @@ MotionEvent*MotionEvent::split(int idBits){
             newAction = ACTION_MOVE;
         } else if (newPointerCount == 1) {
             // The first/last pointer went down/up.
-            newAction = oldActionMasked == ACTION_POINTER_DOWN
-                    ? ACTION_DOWN : ACTION_UP;
+            newAction = oldActionMasked == ACTION_POINTER_DOWN ? ACTION_DOWN : ACTION_UP;
         } else {
             // A secondary pointer went down/up.
-            newAction = oldActionMasked
-                    | (newActionPointerIndex << ACTION_POINTER_INDEX_SHIFT);
+            newAction = oldActionMasked | (newActionPointerIndex << ACTION_POINTER_INDEX_SHIFT);
         }
     } else {
         // Simple up/down/cancel/move or other motion action.
@@ -651,12 +648,11 @@ MotionEvent*MotionEvent::split(int idBits){
 
         long eventTimeNanos = getEventTime();//historyPos);
         if (h == 0) {
-            ev->initialize( getDeviceId(),getSource(),
-                    newAction, 0,getFlags(),   getEdgeFlags(), getMetaState(),
-                    getButtonState(),      getXOffset(), getYOffset(),
-                    getXPrecision(), getYPrecision(),
-                    mDownTime, eventTimeNanos,
-                    newPointerCount, pp, pc);
+            ev->initialize( getDeviceId(),getSource(),  newAction, 0,
+                    getFlags(),   getEdgeFlags(), getMetaState(),
+                    getButtonState(), getXOffset(), getYOffset(),
+                    getXPrecision(), getYPrecision(), mDownTime,
+                    eventTimeNanos,  newPointerCount, pp, pc);
         } else {
             //nativeAddBatch(ev.mNativePtr, eventTimeNanos, pc, 0);
         }
@@ -745,10 +741,10 @@ const std::string MotionEvent::actionToString(int action){
     case ACTION_OUTSIDE:return "ACTION_OUTSIDE";
     case ACTION_MOVE   :return "ACTION_MOVE";
     case ACTION_HOVER_MOVE: return "ACTION_HOVER_MOVE";
-    case ACTION_SCROLL:     return "ACTION_SCROLL";
+    case ACTION_SCROLL :    return "ACTION_SCROLL";
     case ACTION_HOVER_ENTER:return "ACTION_HOVER_ENTER";
     case ACTION_HOVER_EXIT :return "ACTION_HOVER_EXIT";
-    case ACTION_BUTTON_PRESS:return "ACTION_BUTTON_PRESS";
+    case ACTION_BUTTON_PRESS  :return "ACTION_BUTTON_PRESS";
     case ACTION_BUTTON_RELEASE:return "ACTION_BUTTON_RELEASE";
     }
     int index = (action & ACTION_POINTER_INDEX_MASK) >> ACTION_POINTER_INDEX_SHIFT;

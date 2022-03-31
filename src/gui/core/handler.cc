@@ -18,7 +18,6 @@ Handler::~Handler(){
 
 Message Handler::getPostMessage(Runnable& r){
     Message m;// = Message.obtain();
-    r.newInstance();
     m.callback = r;
     return m;
 }

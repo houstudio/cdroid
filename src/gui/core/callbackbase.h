@@ -12,44 +12,39 @@ template<typename R,typename... Args>
 class CallbackBase{
 private:
     using Functor=std::function<R(Args...)>;
-    Functor fun;
-    std::shared_ptr<int>mState;
+    std::shared_ptr<Functor>mFunctor;
 public:
     CallbackBase(){
-        fun=std::nullptr_t();
-        mState=std::make_shared<int>(0);
-    }
-    void newInstance(){//called by uieventsource
-        mState=std::make_shared<int>(0);
+        mFunctor = std::make_shared<Functor>();
     }
     CallbackBase(const Functor&a):CallbackBase(){
-        fun=a;
+        mFunctor = std::make_shared<Functor>(a);
     }
     CallbackBase(const CallbackBase&b){
-        mState=b.mState;
-        fun=b.fun;
+        mFunctor = b.mFunctor;
     }
     CallbackBase&operator=(const Functor&a){
-        fun=a;
+        (*mFunctor) = a;
         return *this;
     }
     CallbackBase&operator=(const CallbackBase&b){
-        mState=b.mState;
-        fun=b.fun;
+        mFunctor = b.mFunctor;
         return *this;
     }
-    bool operator==(const CallbackBase&b)const{
-        return mState.get()==b.mState.get();
+    bool operator == (const CallbackBase&b)const{
+        return mFunctor.get() == b.mFunctor.get();
     }
-    operator bool()const{ return fun!=nullptr;  }
+    operator bool()const{ 
+        return (*mFunctor)!=nullptr;
+    }
     bool operator==(std::nullptr_t)const{
-       return fun==nullptr;
+        return (*mFunctor) == nullptr;
     }
     bool operator!=(std::nullptr_t)const{
-       return fun!=nullptr;
+        return (*mFunctor) != nullptr;
     }
     virtual R operator()(Args...args){
-        return fun(std::forward<Args>(args)...);
+        return (*mFunctor)(std::forward<Args>(args)...);
     }
 };
 typedef CallbackBase<void>Runnable;

@@ -4177,12 +4177,14 @@ void View::setPressed(bool pressed){
         mPrivateFlags |= PFLAG_PRESSED;
     else 
         mPrivateFlags &= ~PFLAG_PRESSED;
-    if (needsRefresh) refreshDrawableState();
+    if (needsRefresh)
+        refreshDrawableState();
     dispatchSetPressed(pressed);
 }
 
 void View::setPressed(bool pressed,int x,int y){
-    if(pressed)drawableHotspotChanged(x,y);
+    if(pressed)
+        drawableHotspotChanged(x,y);
     setPressed(pressed);
 }
 
