@@ -16,6 +16,10 @@ ScrollView::ScrollView(Context*ctx,const AttributeSet&atts)
     initScrollView();
 }
 
+ScrollView::~ScrollView(){
+    delete mScroller;
+}
+
 float ScrollView::getTopFadingEdgeStrength() {
     if (getChildCount() == 0) {
         return 0.0f;
@@ -53,8 +57,8 @@ void ScrollView::initScrollView() {
     setFocusable(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
-    mFillViewport=false;
-    mVelocityTracker =nullptr;
+    mFillViewport = false;
+    mVelocityTracker = nullptr;
     mEdgeGlowTop = mEdgeGlowBottom =nullptr;
     ViewConfiguration& configuration = ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();

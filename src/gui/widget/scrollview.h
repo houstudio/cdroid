@@ -74,6 +74,7 @@ protected:
 public:
     ScrollView(int w,int h);
     ScrollView(Context*ctx,const AttributeSet&atts);
+    ~ScrollView()override;
     int getMaxScrollAmount();
     View& addView(View* child)override;
     View& addView(View* child, int index)override;

@@ -59,6 +59,16 @@ bool Adapter::isEmpty()const{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+PagerAdapter::PagerAdapter(){
+    mViewPagerObserver = nullptr;
+}
+
+PagerAdapter::~PagerAdapter(){
+}
+
+int PagerAdapter::getCount(){
+    return 0;
+}
 
 void PagerAdapter::startUpdate(ViewGroup* container){
 }

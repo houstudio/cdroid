@@ -134,7 +134,9 @@ public:
     static constexpr int POSITION_UNCHANGED =-1;
     static constexpr int POSITION_NONE = -2;
 public:
-    virtual int getCount(){return 0;}
+    PagerAdapter();
+    virtual ~PagerAdapter();
+    virtual int getCount();
     virtual void startUpdate(ViewGroup* container);
     virtual void*instantiateItem(ViewGroup* container, int position);
     virtual void destroyItem(ViewGroup* container, int position, void* object);
