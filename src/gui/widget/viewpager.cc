@@ -1641,7 +1641,7 @@ void ViewPager::onDraw(Canvas& canvas) {
 
             if (left + mPageMargin > scrollX) {
                 mMarginDrawable->setBounds((int) left, mTopPageBounds,
-                        (int) (left + mPageMargin + 0.5f), mBottomPageBounds);
+                     (int) (mPageMargin + 0.5f), mBottomPageBounds);
                 mMarginDrawable->draw(canvas);
             }
 

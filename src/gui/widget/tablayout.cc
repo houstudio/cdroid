@@ -38,6 +38,9 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 
     if(atts.hasAttribute("tabTextColor"))
         mTabTextColors=context->getColorStateList(atts.getString("tabTextColor"));
+    else 
+        mTabTextColors=ColorStateList::valueOf(0xFFFFFFFF);
+
     if(atts.hasAttribute("tabSelectedTextColor")){
         const int selected = context->getColor(atts.getString("tabSelectedTextColor"));
         const int defColor = mTabTextColors->getDefaultColor();

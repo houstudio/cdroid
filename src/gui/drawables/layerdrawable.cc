@@ -658,7 +658,7 @@ void LayerDrawable::updateLayerBoundsInternal(const Rect& bounds){
         d->setBounds(outRect);
         LOGV("paddingLTRB=%d,%d-%d,%d container=%d,%d-%d,%d resolvedSize=%dx%d",paddingL,paddingT,paddingR,paddingB,
                 container.left,container.top,container.width,container.height,resolvedW,resolvedH);
-        LOGV("r.mInsetLTRB=%d,%d-%d,%d insetLTRB=%d,%d-%d,%d r->mGravity=%d size=%dx%d",r->mInsetL,r->mInsetT,r->mInsetR,r->mInsetB,
+        LOGV("r.mInsetLTRB=%d,%d-%d,%d insetLTRB=%d,%d-%d,%d r->mGravity=%x size=%dx%d",r->mInsetL,r->mInsetT,r->mInsetR,r->mInsetB,
                 insetL,insetT,insetR,insetB,r->mGravity,r->mWidth,r->mHeight);
         LOGV("child[%d] bounds=%d,%d-%d,%d isPaddingNested=%d mPaddingLTRB=%d,%d-%d,%d",i, outRect.left,outRect.top,
                 outRect.width,outRect.height,isPaddingNested,mPaddingL[i], mPaddingT[i],mPaddingR[i],mPaddingB[i]);

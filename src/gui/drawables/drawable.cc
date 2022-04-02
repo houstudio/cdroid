@@ -431,11 +431,14 @@ static void endElement(void *userData, const XML_Char *name){
             const int idx=ld->addLayer(topchild);
             ld->setLayerInset(idx,atts.getDimensionPixelOffset("left"),atts.getDimensionPixelOffset("top"),
                   atts.getDimensionPixelOffset("right"),atts.getDimensionPixelOffset("bottom"));
-            ld->setLayerGravity(idx,atts.getGravity("gravity",0));
+            ld->setLayerGravity(idx,atts.getGravity("gravity",Gravity::NO_GRAVITY));
+            ld->setLayerWidth(idx,atts.getDimensionPixelOffset("width",-1));
+            ld->setLayerHeight(idx,atts.getDimensionPixelOffset("height",-1));
             const int id=atts.getInt("id",-1);
             const std::string src=atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
-            LOGV("add drawable %pi[%s] to LayerDrawable %p index=%d id=%d",topchild,src.c_str(),parent,idx,id);
+            LOGV("add drawable %pi[%s] to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",topchild,src.c_str(),
+               parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         }else if(dynamic_cast<AnimationDrawable*>(parent)){
             AnimationDrawable*ad=(AnimationDrawable*)parent;
             const int duration=atts.getInt("duration",0);

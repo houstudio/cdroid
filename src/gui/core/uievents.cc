@@ -106,6 +106,12 @@ void PointerProperties::copyFrom(const PointerProperties& other) {
 
 // --- InputEvent ---
 
+InputEvent::InputEvent(){
+}
+
+InputEvent::~InputEvent(){
+}
+
 void InputEvent::initialize(int32_t deviceId, int32_t source) {
     mDeviceId = deviceId;
     mSource = source;

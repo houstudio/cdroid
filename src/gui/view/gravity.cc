@@ -20,7 +20,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
     switch (gravity&((AXIS_PULL_BEFORE|AXIS_PULL_AFTER)<<AXIS_X_SHIFT)) {
     case 0:
             outRect.left = container.left + ((container.width - w)/2) + xAdj;
-            outRect.width=w;//outRect.right = outRect.left + w;
+            outRect.width= w;//outRect.right = outRect.left + w;
             if ((gravity&(AXIS_CLIP<<AXIS_X_SHIFT)) == (AXIS_CLIP<<AXIS_X_SHIFT)) {
                 if (outRect.left < container.left) {
                     outRect.left = container.left;//outRect.left = container.left;
@@ -32,7 +32,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             break;
     case AXIS_PULL_BEFORE<<AXIS_X_SHIFT:
             outRect.left = container.left + xAdj;
-            outRect.width=w;//outRect.right = outRect.left + w;
+            outRect.width= w;//outRect.right = outRect.left + w;
             if ((gravity&(AXIS_CLIP<<AXIS_X_SHIFT)) == (AXIS_CLIP<<AXIS_X_SHIFT)) {
                 if (outRect.right() > container.right()) {
                     outRect.width=container.right()-outRect.left;//outRect.right = container.right;
@@ -40,8 +40,8 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             }
             break;
     case AXIS_PULL_AFTER<<AXIS_X_SHIFT:
-            outRect.width=container.width-xAdj;//outRect.right = container.right - xAdj;
-            outRect.left=outRect.right()-w;//outRect.left = outRect.right - w;
+            outRect.width = container.width-xAdj;//outRect.right = container.right - xAdj;
+            outRect.left  = outRect.right()-w;//outRect.left = outRect.right - w;
             if ((gravity&(AXIS_CLIP<<AXIS_X_SHIFT))== (AXIS_CLIP<<AXIS_X_SHIFT)) {
                 if (outRect.left < container.left) {
                     outRect.left = container.left;
@@ -57,28 +57,28 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
     switch (gravity&((AXIS_PULL_BEFORE|AXIS_PULL_AFTER)<<AXIS_Y_SHIFT)) {
     case 0:
             outRect.top = container.top + ((container.height - h)/2) + yAdj;
-            outRect.height=h;//outRect.bottom = outRect.top + h;
+            outRect.height = h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
                 if (outRect.top < container.top) {
                     outRect.top = container.top;
                 }
                 if (outRect.bottom() > container.bottom()) {
-                    outRect.height=container.bottom()-outRect.top;//outRect.bottom = container.bottom;
+                    outRect.height=container.bottom()-outRect.top;
                 }
             }
             break;
     case AXIS_PULL_BEFORE<<AXIS_Y_SHIFT:
             outRect.top = container.top + yAdj;
-            outRect.width=h;//outRect.bottom = outRect.top + h;
+            outRect.height = h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
                 if (outRect.bottom() > container.bottom()) {
-                    outRect.width=container.bottom()-outRect.top;//outRect.bottom = container.bottom;
+                    outRect.width=container.bottom()-outRect.top;
                 }
             }
             break;
     case AXIS_PULL_AFTER<<AXIS_Y_SHIFT:
-            outRect.height=container.bottom() - yAdj;//outRect.bottom = container.bottom - yAdj;
-            outRect.top=outRect.height-h;//outRect.top = outRect.bottom - h;
+            outRect.height = container.bottom() - yAdj;
+            outRect.top = outRect.height-h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
                 if (outRect.top < container.top) {
                     outRect.top = container.top;
@@ -87,7 +87,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             break;
     default:
             outRect.top = container.top + yAdj;
-            outRect.height=container.bottom() + yAdj-outRect.top;//outRect.bottom = container.bottom + yAdj;
+            outRect.height=container.bottom() + yAdj-outRect.top;
             break;
     }
 }
