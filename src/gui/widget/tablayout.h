@@ -225,7 +225,7 @@ protected:
 
     void setPagerAdapter(PagerAdapter* adapter,bool addObserver);
     void populateFromPagerAdapter();
-    View& addViewInternal(View* child);
+    View& addViewInternal(View* child,ViewGroup::LayoutParams*);
     LinearLayout::LayoutParams* createLayoutParamsForTabs();
     void updateTabViewLayoutParams(LinearLayout::LayoutParams* lp);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;

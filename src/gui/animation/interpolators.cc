@@ -238,6 +238,7 @@ LookupTableInterpolator::LookupTableInterpolator(const std::vector<float>& value
 
 LookupTableInterpolator::LookupTableInterpolator(const float*values,int count){
     mValues.assign(values,values+count);
+    mStepSize = 1.f / (count - 1);
 }
 
 LookupTableInterpolator::~LookupTableInterpolator(){

@@ -798,7 +798,8 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
         // Check against our minimum width
         width = std::max(width, getSuggestedMinimumWidth());
-        if (widthMode == MeasureSpec::AT_MOST)width = std::min(widthSize, width);
+        if (widthMode == MeasureSpec::AT_MOST)
+            width = std::min(widthSize, width);
     }
 
     int want = width - getCompoundPaddingLeft() - getCompoundPaddingRight();

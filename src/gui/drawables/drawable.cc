@@ -437,7 +437,7 @@ static void endElement(void *userData, const XML_Char *name){
             const int id=atts.getInt("id",-1);
             const std::string src=atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
-            LOGV("add drawable %pi[%s] to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",topchild,src.c_str(),
+            LOGV("add drawable %p[%s] to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",topchild,src.c_str(),
                parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         }else if(dynamic_cast<AnimationDrawable*>(parent)){
             AnimationDrawable*ad=(AnimationDrawable*)parent;

@@ -152,9 +152,11 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
 }
 
 ViewGroup::~ViewGroup() {
-    for_each(mChildren.begin(),mChildren.end(),[](View*v){
+    while(mChildren.size()){
+        View*v=mChildren[0];
+        removeViewAt(0);
         delete v;
-    });
+    }
     mChildren.clear();
     delete mChildTransformation;
     delete mInvalidationTransformation;

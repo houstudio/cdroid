@@ -395,6 +395,8 @@ void View::initView(){
 }
 
 View::~View(){
+    if(mParent)
+        mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
     delete mForegroundInfo;

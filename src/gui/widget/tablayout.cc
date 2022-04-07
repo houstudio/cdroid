@@ -167,6 +167,7 @@ void TabLayout::addTabFromItemView(TabItem* item){
 
     tab->setContentDescription(item->getContentDescription());//getContentDescription inherited from View.
     addTab(tab);
+    delete item;//added by zhhou
 }
 
 void TabLayout::addOnTabSelectedListener(OnTabSelectedListener listener){
@@ -476,22 +477,23 @@ void TabLayout::addTabView(TabLayout::Tab* tab){
 }
 
 View& TabLayout::addView(View* child){
-    return addViewInternal(child);
+    return addViewInternal(child,nullptr);
 }
 
 View& TabLayout::addView(View* child, int index){
-    return addViewInternal(child);
+    return addViewInternal(child,nullptr);
 }
 
 View& TabLayout::addView(View* child, ViewGroup::LayoutParams* params){
-    return addViewInternal(child);
+    return addViewInternal(child,params);
 }
 
 View& TabLayout::addView(View* child, int index, ViewGroup::LayoutParams* params){
-    return addViewInternal(child);
+    return addViewInternal(child,params);
 }
 
-View& TabLayout::addViewInternal(View* child){
+View& TabLayout::addViewInternal(View* child,ViewGroup::LayoutParams*params){
+    delete params;//addTabFromItemView will create an other LayoutParams 
     if (dynamic_cast<TabItem*>(child)){
         child->setId(getTabCount()); 
         addTabFromItemView((TabItem*) child);
