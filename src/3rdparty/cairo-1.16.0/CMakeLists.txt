@@ -6,7 +6,7 @@ find_package(ZLIB REQUIRED)
 find_package(Freetype)
 find_package(Threads)
 find_package(Fontconfig)
-
+find_package(OpenGL)
 
 include(Configure_config.cmake)
 include(Configure_features.cmake)
@@ -33,6 +33,11 @@ if(FREETYPE_FOUND)
     include_directories(${FREETYPE_INCLUDE_DIRS})
     include_directories(${BZIP2_INCLUDE_DIR})
     list(APPEND CAIRO_LIBS ${FREETYPE_LIBRARIES} ${BZIP2_LIBRARIES})
+endif()
+
+if(OPENGL_FOUND)
+    list(APPEND CAIRO_LIBS ${OPENGL_LIBRARIES})
+    include_directories(OPENGL_INCLUDE_DIR)
 endif()
 
 include_directories(src)

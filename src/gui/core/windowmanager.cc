@@ -29,7 +29,7 @@ WindowManager* WindowManager::mInst = nullptr;
 
 WindowManager::WindowManager(){
      GraphDevice::getInstance();
-     activeWindow=nullptr;
+     mActiveWindow = nullptr;
 }
 
 WindowManager&WindowManager::getInstance(){
@@ -40,34 +40,34 @@ WindowManager&WindowManager::getInstance(){
 };
 
 WindowManager::~WindowManager() {
-    for(Window*w:windows){
-        View::AttachInfo*info=w->mAttachInfo;
+    for(Window*w:mWindows){
+        View::AttachInfo*info = w->mAttachInfo;
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
     };
-    windows.clear();
+    mWindows.clear();
     LOGD("%p Destroied",this);
 }
 
 void WindowManager::addWindow(Window*win){
-    windows.push_back(win);
-    std::sort(windows.begin(),windows.end(),[](Window*w1,Window*w2){
+    mWindows.push_back(win);
+    std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
         return (w2->window_type-w1->window_type)>0;
     });
     
-    for(int idx=0,type_idx=0;idx<windows.size();idx++){
-        Window*w=windows.at(idx);
-        if(w->window_type!=windows[type_idx]->window_type)
+    for(int idx=0,type_idx=0;idx<mWindows.size();idx++){
+        Window*w = mWindows.at(idx);
+        if(w->window_type != mWindows[type_idx]->window_type)
             type_idx=idx;
         w->mLayer=w->window_type*10000+(idx-type_idx)*5;
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
-    if(activeWindow)activeWindow->post(std::bind(&Window::onDeactive,activeWindow));
+    if(mActiveWindow)mActiveWindow->post(std::bind(&Window::onDeactive,mActiveWindow));
     
-    View::AttachInfo*info=new View::AttachInfo();
+    View::AttachInfo*info = new View::AttachInfo();
     info->mContentInsets.set(5,5,5,5);
-    info->mRootView=win;
+    info->mRootView = win;
     win->dispatchAttachedToWindow(info,win->getVisibility());
 #if USE_UIEVENTHANDLER    
     Looper::getDefault()->addHandler(win->mUIEventHandler);
@@ -75,20 +75,20 @@ void WindowManager::addWindow(Window*win){
     Looper::getDefault()->addEventHandler(win->mUIEventHandler);
 #endif
     win->post(std::bind(&Window::onActive,win));
-    activeWindow=win;
-    LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,windows.size());
+    mActiveWindow = win;
+    LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,mWindows.size());
 }
 
 void WindowManager::removeWindow(Window*w){
-    if(w==activeWindow)activeWindow=nullptr;
+    if(w == mActiveWindow)mActiveWindow = nullptr;
     if(w->hasFlag(View::FOCUSABLE))
         w->onDeactive();
-    auto itw=std::find(windows.begin(),windows.end(),w);
-    const Rect wrect=w->getBound();
-    windows.erase(itw);
-    for(auto itr=windows.begin();itr!=windows.end();itr++){
-        Window*w1=(*itr);
-        RECT rc=w1->getBound();
+    auto itw = std::find(mWindows.begin(),mWindows.end(),w);
+    const Rect wrect = w->getBound();
+    mWindows.erase(itw);
+    for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
+        Window*w1 = (*itr);
+        RECT rc = w1->getBound();
         rc.intersect(wrect);
         rc.offset(-w1->getX(),-w1->getY());
         w1->invalidate(&rc);
@@ -98,46 +98,49 @@ void WindowManager::removeWindow(Window*w){
 #else
    Looper::getDefault()->removeEventHandler(w->mUIEventHandler);
 #endif
-    View::AttachInfo*info=w->mAttachInfo;
+    View::AttachInfo*info = w->mAttachInfo;
     w->dispatchDetachedFromWindow();
     delete info;
     delete w;
-    for(auto it=windows.rbegin();it!=windows.rend();it++){
+    for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             (*it)->onActive();
-            activeWindow=(*it);
+            mActiveWindow=(*it);
             break;
         } 
     }
     GraphDevice::getInstance().invalidate(wrect);
     GraphDevice::getInstance().flip();
-    LOGV("w=%p windows.size=%d",w,windows.size());
+    LOGV("w=%p windows.size=%d",w,mWindows.size());
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){
-    if( (w->isAttachedToWindow()==false)||(w->getVisibility()!=View::VISIBLE))
-        return;
-    Rect rcw=w->getBound();
-    GraphDevice::getInstance().invalidate(rcw);
-    rcw.left=x;rcw.top=y;
-    GraphDevice::getInstance().invalidate(rcw);
-    GraphDevice::getInstance().flip();
+    Rect rcw = w->getBound();
+    Rect rcw2 =rcw;
+    rcw2.left = x;
+    rcw2.top = y;
+    w->setFrame(x,y,rcw.width,rcw.height);
+    if( w->isAttachedToWindow() && (w->getVisibility()==View::VISIBLE)){
+        GraphDevice::getInstance().invalidate(rcw);
+        GraphDevice::getInstance().invalidate(rcw2);
+        GraphDevice::getInstance().flip();
+    }
 }
 
 int WindowManager::enumWindows(WNDENUMPROC cbk){
-    int rc=0;
-    for(auto& w:windows)
+    int rc = 0;
+    for(auto& w:mWindows)
        rc+=cbk(w);
     return rc;
 }
 
 int WindowManager::getWindows(std::vector<Window*>&wins){
-    wins=windows;
-    return windows.size();
+    wins = mWindows;
+    return mWindows.size();
 }
 
 int WindowManager::getVisibleWindows(std::vector<Window*>&wins){
-    for(auto& w:windows){
+    for(auto& w:mWindows){
         if(w->getVisibility()==View::VISIBLE)
            wins.push_back(w);
     }
@@ -155,11 +158,11 @@ void WindowManager::processEvent(InputEvent&e){
 
 void WindowManager::onMotion(MotionEvent&event) {
    // Notify the focused child
-   const int x=event.getX();
-   const int y=event.getY();
-   for (auto itr=windows.rbegin();itr!=windows.rend();itr++) {
-       auto w=(*itr);
-       if ((w->getVisibility()==View::VISIBLE)&&w->getBound().contains(x,y)) {
+   const int x = event.getX();
+   const int y = event.getY();
+   for (auto itr = mWindows.rbegin();itr != mWindows.rend();itr++) {
+       auto w = (*itr);
+       if ((w->getVisibility()==View::VISIBLE) && w->getBound().contains(x,y)) {
            event.offsetLocation(-w->getX(),-w->getY());
            w->dispatchTouchEvent(event);
            event.offsetLocation(w->getX(),w->getY());
@@ -170,10 +173,10 @@ void WindowManager::onMotion(MotionEvent&event) {
 
 void WindowManager::onKeyEvent(KeyEvent&event) {
     // Notify the focused child
-    for (auto itr=windows.rbegin() ;itr!= windows.rend();itr++) {
-        Window*win=(*itr);
-        if ( win->hasFlag(View::FOCUSABLE)&&(win->getVisibility()==View::VISIBLE) ) {
-            int keyCode=event.getKeyCode();
+    for (auto itr = mWindows.rbegin() ;itr != mWindows.rend();itr++) {
+        Window*win = (*itr);
+        if ( win->hasFlag(View::FOCUSABLE) && (win->getVisibility()==View::VISIBLE) ) {
+            int keyCode = event.getKeyCode();
             LOGV("Window:%p Key:%s[%x] action=%d",win,event.getLabel(keyCode),keyCode,event.getAction());
             win->processKeyEvent(event);
             //dispatchKeyEvent(event);
@@ -183,11 +186,11 @@ void WindowManager::onKeyEvent(KeyEvent&event) {
 }
 
 void WindowManager::clip(Window*win){
-    RECT rcw=win->getBound();
-    for (auto wind=windows.rbegin() ;wind!= windows.rend();wind++){
+    RECT rcw = win->getBound();
+    for (auto wind = mWindows.rbegin() ;wind != mWindows.rend();wind++){
         if( (*wind)==win )break;
         if( (*wind)->getVisibility()!=View::VISIBLE)continue;
-        Rect rc=rcw;
+        Rect rc = rcw;
         rc.intersect((*wind)->getBound());
         if(rc.empty())continue;
         rc.offset(-win->getX(),-win->getY());

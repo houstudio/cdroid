@@ -1,4 +1,5 @@
 #include <app/dialog.h>
+#include <core/windowmanager.h>
 namespace cdroid{
 
 Dialog::Dialog(Context*context){
@@ -15,6 +16,9 @@ Dialog::Dialog(Context* context,const std::string&resId):Dialog(context){
 }
 
 Dialog::~Dialog(){
+    if(mWindow){
+        WindowManager::getInstance().removeWindow(mWindow);
+    }
 }
 
 Context*Dialog::getContext()const{
@@ -65,6 +69,7 @@ void Dialog::dismissDialog(){
     mShowing = false;
     if(mOnDismissListener)
         mOnDismissListener(*this);
+    mWindow->setVisibility(View::INVISIBLE);
 }
 
 void Dialog::dispatchOnCreate(void*buddle){

@@ -323,10 +323,12 @@ public:
     DECLARE_UIEVENT(bool,OnContextClickListener,View&);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
-    DECLARE_UIEVENT(void,OnLayoutChangeListener,View* v, int left, int top, int width, int height,
-            int oldLeft, int oldTop, int oldWidth, int oldHeight);
+    typedef CallbackBase<void,View&,int,int,int,int,int,int,int,int>OnLayoutChangeListener;
     typedef CallbackBase<bool,View&,KeyEvent&>OnUnhandledKeyEventListener;
-
+    typedef struct{
+        CallbackBase<void,View&>onViewAttachedToWindow;
+        CallbackBase<void,View&>onViewDetachedFromWindow;
+    }OnAttachStateChangeListener;
 private:
     friend ViewGroup;
     friend ViewPropertyAnimator;
@@ -767,6 +769,8 @@ public:
     virtual void setOnScrollChangeListener(OnScrollChangeListener l);
     void  addOnLayoutChangeListener(OnLayoutChangeListener listener);
     void  removeOnLayoutChangeListener(OnLayoutChangeListener listener);
+    void  addOnAttachStateChangeListener(OnAttachStateChangeListener listener);
+    void  removeOnAttachStateChangeListener(OnAttachStateChangeListener listener);
     virtual bool performClick();
     virtual bool performLongClick();
     virtual bool performLongClick(int x,int y);
@@ -911,6 +915,7 @@ public:
     virtual bool restoreFocusInCluster(int direction);
     virtual bool restoreFocusNotInCluster();
     virtual bool restoreDefaultFocus();
+    bool requestRectangleOnScreen(Rect& rectangle, bool immediate=false);
     void clearFocus();
     virtual View*findFocus();
     bool requestFocus(int direction=FOCUS_DOWN);
@@ -922,6 +927,10 @@ public:
     // Parent and children views
     virtual ViewGroup*getParent()const;
     ViewGroup*getRootView()const;
+    bool toGlobalMotionEvent(MotionEvent& ev);
+    bool toLocalMotionEvent(MotionEvent& ev);
+    void transformMatrixToGlobal(Matrix& matrix);
+    void transformMatrixToLocal(Matrix& matrix);
     void bringToFront();
 
     virtual View* findViewById(int id);

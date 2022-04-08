@@ -1,6 +1,6 @@
 #include <view/swipehelper.h>
 #include <core/systemclock.h>
-#include <private/windowmanager.h>
+#include <core/windowmanager.h>
 #include <cdlog.h>
 namespace cdroid{
 

@@ -49,14 +49,17 @@ public:
         AlertDialog* show();
     };
 protected:
+    friend Builder;
     class AlertController* mAlert;
+    AlertController::AlertParams*P;
 protected:
     AlertDialog(Context*ctx);
     AlertDialog(Context*ctx,const std::string&resid); 
     AlertDialog(Context*ctx,bool cancelable,OnCancelListener listener);
+	~AlertDialog()override;
     void onCreate()override;
 public:
-    Button*getButton(int whichButton);
+    Button* getButton(int whichButton);
     ListView* getListView();
     void setTitle(const std::string& title);
     void setCustomTitle(View*customTitleView);

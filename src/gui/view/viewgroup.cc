@@ -1697,7 +1697,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
              transformMatrix=childMatrix;
          }
          
-         transformMatrix.transform_rectangle((const RectangleInt&)dirty,(RectangleInt&)dirty);
+         transformMatrix.transform_rectangle((RectangleInt&)dirty);
          LOGV("(1.%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
                 dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation());
     }
@@ -1726,7 +1726,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         parent = parent->invalidateChildInParent(location, dirty);
         if ( view && !view->hasIdentityMatrix() ) { // Account for transform on current parent
             Matrix m = view->getMatrix();
-            m.transform_rectangle((const RectangleInt&)dirty,(RectangleInt&)dirty);
+            m.transform_rectangle((RectangleInt&)dirty);
         }
     } while (parent);
 

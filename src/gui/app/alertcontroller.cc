@@ -624,6 +624,7 @@ AlertController::AlertParams::AlertParams(Context*context){
     mCursor  = nullptr;
     mCustomTitleView= nullptr;
     mInflater= LayoutInflater::from(mContext);
+    LOGD("%p",this);
 }
 
 void AlertController::AlertParams::apply(AlertController* dialog){

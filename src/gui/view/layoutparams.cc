@@ -4,22 +4,22 @@
 namespace cdroid{
 
 LayoutParams::LayoutParams(){
+    layoutAnimationParameters =nullptr;
 }
 
-LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs){
+LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LayoutParams(){
     width =attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
     height=attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
-    layoutAnimationParameters=nullptr;
 }
 
-LayoutParams::LayoutParams(int w, int h):width(w),height(h){
-    layoutAnimationParameters=nullptr;
+LayoutParams::LayoutParams(int w, int h):LayoutParams(){
+    width = w;
+    height= h;
 }
 
-LayoutParams::LayoutParams(const LayoutParams& source){
-    width=source.width;
-    height=source.height;
-    layoutAnimationParameters=nullptr;
+LayoutParams::LayoutParams(const LayoutParams& source):LayoutParams(){
+    width = source.width;
+    height= source.height;
 }
 
 LayoutParams::~LayoutParams(){
@@ -27,8 +27,8 @@ LayoutParams::~LayoutParams(){
 }
 
 void LayoutParams::setBaseAttributes(const AttributeSet& a, int widthAttr, int heightAttr){
-    //width = a.getLayoutDimension(widthAttr, "layout_width");
-    //height= a.getLayoutDimension(heightAttr, "layout_height");
+    width = a.getLayoutDimension("layout_width",WRAP_CONTENT);
+    height= a.getLayoutDimension("layout_height",WRAP_CONTENT);
 }
 
 void LayoutParams::resolveLayoutDirection(int layoutDirection){

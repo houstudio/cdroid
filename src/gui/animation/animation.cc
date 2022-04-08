@@ -422,7 +422,7 @@ void Animation::getInvalidateRegion(int left, int top, int width, int height,
     Rect previousRegion = mPreviousRegion;
 
     invalidate.set(left, top, width, height);
-    transformation.getMatrix().transform_rectangle((const RectangleInt&)invalidate,(RectangleInt&)invalidate);
+    transformation.getMatrix().transform_rectangle((RectangleInt&)invalidate);
     // Enlarge the invalidate region to account for rounding errors
     invalidate.inflate(-1,-1);//inset(-1.0f, -1.0f);
     tempRegion=invalidate;//.set(invalidate);

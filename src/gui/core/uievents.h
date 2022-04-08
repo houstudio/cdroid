@@ -310,6 +310,7 @@ public:
         EDGE_RIGHT = 0x0008
     };
     enum{
+        INVALID_POINTER_ID = -1,
         AXIS_X = 0,
         AXIS_Y = 1,
         AXIS_PRESSURE = 2,

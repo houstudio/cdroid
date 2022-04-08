@@ -28,6 +28,14 @@ namespace cdroid {
 class WindowManager {
 public:
     DECLARE_UIEVENT(bool,WNDENUMPROC,Window*);
+    class LayoutParams:public ViewGroup::LayoutParams{
+    public:
+        int x,y;
+        int width,height;
+        int gravity;
+        int flags;
+    };
+public:
     static WindowManager& getInstance();
     void addWindow(Window*w);
     void removeWindow(Window*w);
@@ -45,8 +53,8 @@ private:
     friend class GraphDevice;
     WindowManager();
     virtual ~WindowManager();
-    Window*activeWindow;/*activeWindow*/
-    std::vector< Window* > windows;
+    Window*mActiveWindow;/*activeWindow*/
+    std::vector< Window* > mWindows;
     static WindowManager* mInst;
     DISALLOW_COPY_AND_ASSIGN(WindowManager);
 };

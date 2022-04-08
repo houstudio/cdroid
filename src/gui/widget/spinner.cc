@@ -1,6 +1,7 @@
 #include <widget/spinner.h>
 #include <widget/measurespec.h>
 #include <widget/listview.h>
+#include <app/alertdialog.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #define MAX_ITEMS_MEASURED  15
@@ -11,7 +12,7 @@ namespace cdroid{
 DECLARE_WIDGET2(Spinner,"cdroid:attr/spinnerStyle")
 
 Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
-    mPopupContext=nullptr;
+    mPopupContext=mContext;
     mGravity= Gravity::CENTER;
     mDisableChildrenWhenDisabled=true;
     mPopup=new DialogPopup(this);
@@ -57,10 +58,10 @@ int Spinner::getDropDownHorizontalOffset() {
 }
 
 void Spinner::setDropDownWidth(int pixels) {
-    /*if (dynamic_cast<DropdownPopup*>(mPopup)) {
+    if (dynamic_cast<DropdownPopup*>(mPopup)) {
         LOGE("Cannot set dropdown width for MODE_DIALOG, ignoring");
         return;
-    }*/
+    }
     mDropDownWidth = pixels;
 }
 
@@ -95,7 +96,7 @@ int Spinner::getGravity()const{
 
 void Spinner::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     AbsSpinner::onMeasure(widthMeasureSpec, heightMeasureSpec);
-    if (mPopup != nullptr && MeasureSpec::getMode(widthMeasureSpec) == MeasureSpec::AT_MOST) {
+    if (mPopup && MeasureSpec::getMode(widthMeasureSpec) == MeasureSpec::AT_MOST) {
         int measuredWidth = getMeasuredWidth();
         setMeasuredDimension(std::min(std::max(measuredWidth,
             measureContentWidth(getAdapter(), getBackground())),
@@ -450,15 +451,32 @@ Spinner::DialogPopup::DialogPopup(Spinner*spinner){
 }
 
 void Spinner::DialogPopup::setAdapter(Adapter*adapter){
-    mAdapter=adapter;
+    mListAdapter=adapter;
 }
 
 void Spinner::DialogPopup::show(int textDirection, int textAlignment){
+    if (mListAdapter == nullptr) {
+        return;
+    }
+    mPopup =AlertDialog::Builder(mSpinner->getPopupContext())
+        .setTitle(mPrompt)
+        .setSingleChoiceItems(mListAdapter,mSpinner->getSelectedItemPosition(),[this](DialogInterface& dialog,int which){
+             LOGD("Selection=%d",which);
+             mSpinner->setSelection(which);
+             /*if (mSpinner->mOnItemClickListener != nullptr) {
+                 mSpinner->performItemClick(mSpinner, which, mListAdapter->getItemId(which));
+             }*/
+             dismiss();
+        }).show();
+
+    ListView* listView = mPopup->getListView();
+    listView->setTextDirection(textDirection);
+    listView->setTextAlignment(textAlignment);
 }
 
 void Spinner::DialogPopup::dismiss(){
     mPopup->dismiss();
-    mPopup=nullptr;
+    mPopup = nullptr;
 }
 
 bool Spinner::DialogPopup::isShowing(){
@@ -478,6 +496,7 @@ int Spinner::DialogPopup::getVerticalOffset(){
 }
 
 void Spinner::DialogPopup::setVerticalOffset(int px){
+    LOGE("Cannot set vertical offset for MODE_DIALOG, ignoring");
 }
 
 int Spinner::DialogPopup::getHorizontalOffset(){
@@ -485,9 +504,11 @@ int Spinner::DialogPopup::getHorizontalOffset(){
 }
 
 void Spinner::DialogPopup::setHorizontalOffset(int px){
+    LOGE("Cannot set horizontal offset for MODE_DIALOG, ignoring");
 }
 
 void Spinner::DialogPopup::setBackgroundDrawable(Drawable* bg){
+    LOGE("Cannot set popup background for MODE_DIALOG, ignoring");
 }
 
 Drawable* Spinner::DialogPopup::getBackground(){

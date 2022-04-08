@@ -28,11 +28,11 @@ endif()
 
 if(THREADS_FOUND)
     set(CAIRO_HAR_REAL_PTHREAD 1)
-	set(CAIRO_HAS_PTHREAD 1)
+    set(CAIRO_HAS_PTHREAD 1)
 endif()
 
 if(VALGRIND_FOUND)
-	set(HAVE_VALGRIND 1)
+    set(HAVE_VALGRIND 1)
 endif()
 
 check_include_file( "byteswap.h" HAVE_BYTESWAP_H )

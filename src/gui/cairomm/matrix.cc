@@ -103,12 +103,12 @@ Matrix operator*(const Matrix& a, const Matrix& b)
   return m;
 }
 
-void Matrix::transform_rectangle(const RectangleInt& from,Rectangle&to)const{
+void Matrix::transform_rectangle(Rectangle& io)const{
     double pt[8];
-    pt[0] = pt[6] = from.x ;  
-    pt[1] = pt[3] = from.y ;
-    pt[2] = pt[4] = from.x + from.width; 
-    pt[5] = pt[7] = from.x + from.height;
+    pt[0] = pt[6] = io.x ;  
+    pt[1] = pt[3] = io.y ;
+    pt[2] = pt[4] = io.x + io.width; 
+    pt[5] = pt[7] = io.x + io.height;
     double x1=INT_MAX,y1=INT_MAX;
     double x2=INT_MIN,y2=INT_MIN;
     for(int i=0;i<8;i+=2){
@@ -118,19 +118,19 @@ void Matrix::transform_rectangle(const RectangleInt& from,Rectangle&to)const{
        x2 = std::max(x2,pt[i]);
        y2 = std::max(y2,pt[i+1]);
     }
-    to.x = (int)std::floor(x1);
-    to.y = (int)std::floor(y1);
-    to.width = (int)std::ceil(x2) - to.x;
-    to.height= (int)std::ceil(y2) - to.y; 
+    io.x = x1;//std::floor(x1);
+    io.y = y1;//std::floor(y1);
+    io.width = x2 - x1;//std::ceil(x2) - to.x;
+    io.height= y2 - y1;//std::ceil(y2) - to.y; 
 }
 
-void Matrix::transform_rectangle(const RectangleInt& from,RectangleInt&to)const{
-    Rectangle tof;
-    transform_rectangle(from,tof);
-    to.x= std::floor(tof.x);
-    to.y = (int)std::floor(tof.y);
-    to.width = (int)std::ceil(tof.width);
-    to.height= (int)std::ceil(tof.height);  
+void Matrix::transform_rectangle(RectangleInt& io)const{
+    Rectangle tmp={io.x,io.y,io.width,io.height};
+    transform_rectangle(tmp);
+    io.x = (int)std::floor(tmp.x);
+    io.y = (int)std::floor(tmp.y);
+    io.width = (int)std::ceil(tmp.width);
+    io.height= (int)std::ceil(tmp.height);  
 }
 
 } // namespace Cairo

@@ -161,8 +161,8 @@ public:
   void transform_point(double& x, double& y) const;
 
   /*added by zhhou*/
-  void transform_rectangle(const RectangleInt& from,Rectangle&to)const;
-  void transform_rectangle(const RectangleInt& from,RectangleInt&to)const;
+  void transform_rectangle(Rectangle& inout)const;
+  void transform_rectangle(RectangleInt& inout)const;
 };
 
 /** Returns a Matrix initialized to the identity matrix

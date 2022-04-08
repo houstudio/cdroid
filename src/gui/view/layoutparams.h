@@ -65,7 +65,7 @@ public:
     void setMarginEnd(int end);
     int getMarginEnd();
     bool isMarginRelative()const;
-    void setLayoutDirection(int layoutDirection);//override;
+    void setLayoutDirection(int layoutDirection);
     int getLayoutDirection()const;
     void resolveLayoutDirection(int layoutDirection)override;
     bool isLayoutRtl()const;

@@ -60,6 +60,9 @@ PopupWindow::PopupWindow(View* contentView, int width, int height, bool focusabl
 PopupWindow::PopupWindow(int width, int height):PopupWindow(nullptr,width,height){
 }
 
+PopupWindow::~PopupWindow(){
+}
+
 void PopupWindow::init(){
     mIsShowing = false;
     mIsDropdown= false;
@@ -73,6 +76,7 @@ void PopupWindow::init(){
     mLayoutInsetDecor = false;
     mAttachedInDecor  = false;
     mAttachedInDecorSet= false;
+    mEpicenterBounds.set(0,0,0,0);
 
     mParentRootView = nullptr;
     mAnchor = nullptr;
@@ -81,6 +85,15 @@ void PopupWindow::init(){
     mBackgroundView = nullptr;
     mAboveAnchorBackgroundDrawable = nullptr;
     mBelowAnchorBackgroundDrawable = nullptr;
+
+    mOnLayoutChangeListener=[this](View&v,int,int,int,int,int,int,int,int){
+        //alignToAnchor();
+    };
+
+    mOnAnchorRootDetachedListener.onViewAttachedToWindow=[](View&){/*nothing*/};
+    mOnAnchorRootDetachedListener.onViewDetachedFromWindow=[this](View&v){
+        mIsAnchorRootAttached = false;
+    };
 }
 
 void PopupWindow::setEpicenterBounds(const Rect& bounds) {
@@ -183,12 +196,45 @@ void PopupWindow::setOutsideTouchable(bool touchable){
     mOutsideTouchable=touchable;
 }
 
+bool PopupWindow::isClippingEnabled(){
+    return mClippingEnabled;
+}
+
+void PopupWindow::setClippingEnabled(bool enabled){
+    mClippingEnabled = enabled;
+}
+
+bool PopupWindow::isClippedToScreen(){
+    return mClipToScreen;
+}
+
+void PopupWindow::setIsClippedToScreen(bool enabled){
+    mClipToScreen = enabled;
+}
+
+bool PopupWindow::isSplitTouchEnabled(){
+    return mSplitTouchEnabled == 1;
+}
+
+void PopupWindow::setSplitTouchEnabled(bool enabled){
+    mSplitTouchEnabled = enabled ? 1 : 0;
+}
+
+
 bool PopupWindow::isLayoutInScreenEnabled()const{
     return mLayoutInScreen;
 }
 
 void PopupWindow::setLayoutInScreenEnabled(bool enabled){
     mLayoutInScreen=enabled;
+}
+
+bool PopupWindow::isLaidOutInScreen(){
+    return mLayoutInScreen;
+}
+
+void PopupWindow::setIsLaidOutInScreen(bool enabled){
+    mLayoutInScreen = enabled;
 }
 
 bool PopupWindow::isAttachedInDecor()const{
@@ -206,6 +252,18 @@ void PopupWindow::setLayoutInsetDecor(bool enabled) {
 
 bool PopupWindow::isLayoutInsetDecor()const{
     return mLayoutInsetDecor;
+}
+
+void PopupWindow::setWindowLayoutType(int layoutType){
+    mWindowLayoutType = layoutType;
+}
+
+int PopupWindow::getWindowLayoutType(){
+    return mWindowLayoutType;
+}
+
+bool PopupWindow::isTouchModal(){
+    return !mNotTouchModal;
 }
 
 void PopupWindow::setTouchModal(bool touchModal){
@@ -249,6 +307,23 @@ int PopupWindow::getWidth(){
 }
 
 void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){
+    if (isShowing() || mContentView == nullptr) {
+        return;
+    }
+    //TransitionManager.endTransitions(mDecorView);
+
+    detachFromAnchor();
+
+    mIsShowing = true;
+    mIsDropdown = false;
+    mGravity = gravity;
+
+    WindowManager::LayoutParams p=createPopupLayoutParams(0);
+    preparePopup(&p);
+
+    p.x = x;
+    p.y = y;
+    invokePopup(&p);
 }
 
 void PopupWindow::showAsDropDown(View* anchor){
@@ -271,19 +346,19 @@ void PopupWindow::showAsDropDown(View* anchor, int xoff, int yoff,int gravity){
     mIsShowing = true;
     mIsDropdown = true;
 
-    LayoutParams* p=nullptr;//=createPopupLayoutParams(anchor.getApplicationWindowToken());
-    preparePopup(p);
+    WindowManager::LayoutParams p=createPopupLayoutParams(0);//anchor.getApplicationWindowToken());
+    p.x = xoff;
+    p.y = yoff;
+    preparePopup(&p);
 
-    bool aboveAnchor =false;
-    mDecorView->setPos(xoff,yoff);
-    //findDropDownPosition(anchor, p, xoff, yoff,
-    //p.width, p.height, gravity, mAllowScrollingAnchorParent);
+    bool aboveAnchor = findDropDownPosition(anchor,&p, xoff, yoff,
+           p.width, p.height, gravity, mAllowScrollingAnchorParent);
     updateAboveAnchor(aboveAnchor);
     //p.accessibilityIdOfAnchor = (anchor) ? anchor->getAccessibilityViewId() : -1;
-    invokePopup(nullptr);
+    invokePopup(&p);
 }
 
-void PopupWindow::preparePopup(LayoutParams*p){
+void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
     //if (mDecorView)  mDecorView->cancelTransitions();
 
     // When a background is available, we embed the content view within
@@ -338,7 +413,7 @@ PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
     PopupDecorView* decorView = new PopupDecorView(mWidth,mHeight);
     decorView->addView(contentView, LayoutParams::MATCH_PARENT, height);
     //decorView->setClipChildren(false);
-    decorView->setClipToPadding(false);
+    //decorView->setClipToPadding(false);
     return decorView;
 }
 
@@ -363,8 +438,14 @@ void PopupWindow::updateAboveAnchor(bool aboveAnchor){
     }
 }
 
-void PopupWindow::invokePopup(LayoutParams* p){
-    
+void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
+    //mDecorView->setFitsSystemWindows(mLayoutInsetDecor);
+    setLayoutDirectionFromAnchor();
+    WindowManager::getInstance().moveWindow(mDecorView,p->x,p->y);
+    //mWindowManager->addView(mDecorView, p);
+    /*if (mEnterTransition != nullptr) {
+        mDecorView->requestEnterTransition(mEnterTransition);
+    }*/
 }
 
 void PopupWindow::setLayoutDirectionFromAnchor() {
@@ -391,6 +472,240 @@ int PopupWindow::computeGravity() {
 
 int PopupWindow::getMaxAvailableHeight(View* anchor){
     return getMaxAvailableHeight(anchor, 0,false);
+}
+
+WindowManager::LayoutParams PopupWindow::createPopupLayoutParams(long token){
+    WindowManager::LayoutParams p;// = new WindowManager.LayoutParams();
+
+    // These gravity settings put the view at the top left corner of the
+    // screen. The view is then positioned to the appropriate location by
+    // setting the x and y offsets to match the anchor's bottom-left
+    // corner.
+    p.gravity = computeGravity();
+    p.flags = computeFlags(p.flags);
+    /*p.type = mWindowLayoutType;
+    p.token = token;
+    p.softInputMode = mSoftInputMode;
+    p.windowAnimations = computeAnimationResource();
+
+    if (mBackground != nullptr) {
+        p.format = mBackground.getOpacity();
+    } else {
+        p.format = PixelFormat.TRANSLUCENT;
+    }*/
+
+    if (mHeightMode < 0) {
+        p.height = mLastHeight = mHeightMode;
+    } else {
+        p.height = mLastHeight = mHeight;
+    }
+
+    if (mWidthMode < 0) {
+        p.width = mLastWidth = mWidthMode;
+    } else {
+        p.width = mLastWidth = mWidth;
+    }
+
+    /*p.privateFlags = PRIVATE_FLAG_WILL_NOT_REPLACE_ON_RELAUNCH
+            | PRIVATE_FLAG_LAYOUT_CHILD_WINDOW_IN_PARENT_FRAME;
+
+    // Used for debugging.
+    p.setTitle("PopupWindow:" + Integer.toHexString(hashCode()));*/
+
+    return p;
+}
+
+int PopupWindow::computeFlags(int curFlags){
+    return curFlags;
+}
+
+bool PopupWindow::tryFitVertical(WindowManager::LayoutParams* outParams, int yOffset, int height,
+        int anchorHeight, int drawingLocationY, int screenLocationY, int displayFrameTop,
+        int displayFrameBottom, bool allowResize){
+    int winOffsetY = screenLocationY - drawingLocationY;
+    int anchorTopInScreen = outParams->y + winOffsetY;
+    int spaceBelow = displayFrameBottom - anchorTopInScreen;
+    if (anchorTopInScreen >= displayFrameTop && height <= spaceBelow) {
+        return true;
+    }
+
+    int spaceAbove = anchorTopInScreen - anchorHeight - displayFrameTop;
+    if (height <= spaceAbove) {
+        // Move everything up.
+        if (mOverlapAnchor) {
+            yOffset += anchorHeight;
+        }
+        outParams->y = drawingLocationY - height + yOffset;
+
+        return true;
+    }
+
+    if (positionInDisplayVertical(outParams, height, drawingLocationY, screenLocationY,
+            displayFrameTop, displayFrameBottom, allowResize)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool PopupWindow::positionInDisplayVertical(WindowManager::LayoutParams* outParams, int height,
+        int drawingLocationY, int screenLocationY, int displayFrameTop, int displayFrameBottom,
+        bool canResize){
+    bool fitsInDisplay = true;
+    int winOffsetY = screenLocationY - drawingLocationY;
+    outParams->y += winOffsetY;
+    outParams->height = height;
+
+    int bottom = outParams->y + height;
+    if (bottom > displayFrameBottom) {
+        // The popup is too far down, move it back in.
+        outParams->y -= bottom - displayFrameBottom;
+    }
+
+    if (outParams->y < displayFrameTop) {
+        // The popup is too far up, move it back in and clip if
+        // it's still too large.
+        outParams->y = displayFrameTop;
+
+        int displayFrameHeight = displayFrameBottom - displayFrameTop;
+        if (canResize && height > displayFrameHeight) {
+            outParams->height = displayFrameHeight;
+        } else {
+            fitsInDisplay = false;
+        }
+    }
+    outParams->y -= winOffsetY;
+    return fitsInDisplay;
+}
+
+bool PopupWindow::tryFitHorizontal(WindowManager::LayoutParams* outParams, int xOffset, int width,
+        int anchorWidth, int drawingLocationX, int screenLocationX, int displayFrameLeft,
+        int displayFrameRight, bool allowResize){
+    int winOffsetX = screenLocationX - drawingLocationX;
+    int anchorLeftInScreen = outParams->x + winOffsetX;
+    int spaceRight = displayFrameRight - anchorLeftInScreen;
+    if (anchorLeftInScreen >= displayFrameLeft && width <= spaceRight) {
+        return true;
+    }
+
+    if (positionInDisplayHorizontal(outParams, width, drawingLocationX, screenLocationX,
+            displayFrameLeft, displayFrameRight, allowResize)) {
+        return true;
+    }
+    return false;
+}
+
+bool PopupWindow::positionInDisplayHorizontal(WindowManager::LayoutParams* outParams, int width,
+        int drawingLocationX, int screenLocationX, int displayFrameLeft, int displayFrameRight,
+        bool canResize){
+    bool fitsInDisplay = true; 
+    // Use screen coordinates for comparison against display frame.
+    int winOffsetX = screenLocationX - drawingLocationX;
+    outParams->x += winOffsetX;
+
+    int right = outParams->x + width;
+    if (right > displayFrameRight) {
+        // The popup is too far right, move it back in.
+        outParams->x -= right - displayFrameRight;
+    }
+
+    if (outParams->x < displayFrameLeft) {
+        // The popup is too far left, move it back in and clip if it's
+        // still too large.
+        outParams->x = displayFrameLeft;
+
+        int displayFrameWidth = displayFrameRight - displayFrameLeft;
+        if (canResize && width > displayFrameWidth) {
+            outParams->width = displayFrameWidth;
+        } else {
+            fitsInDisplay = false;
+        }
+    }
+    outParams->x -= winOffsetX;
+    return fitsInDisplay;
+}
+
+bool PopupWindow::findDropDownPosition(View* anchor,WindowManager::LayoutParams* outParams,
+       int xOffset, int yOffset, int width, int height, int gravity, bool allowScroll){
+    int anchorHeight = anchor->getHeight();
+    int anchorWidth = anchor->getWidth();
+    if (mOverlapAnchor) {
+        yOffset -= anchorHeight;
+    }
+
+    // Initially, align to the bottom-left corner of the anchor plus offsets.
+    int appScreenLocation[2];
+    View* appRootView = anchor->getRootView();//getAppRootView(anchor);
+    appRootView->getLocationOnScreen(appScreenLocation);
+
+    int screenLocation[2];
+    anchor->getLocationOnScreen(screenLocation);
+
+    int drawingLocation[2];
+    drawingLocation[0] = screenLocation[0] - appScreenLocation[0];
+    drawingLocation[1] = screenLocation[1] - appScreenLocation[1];
+    outParams->x = drawingLocation[0] + xOffset;
+    outParams->y = drawingLocation[1] + anchorHeight + yOffset;
+
+    Rect displayFrame;
+    appRootView->getWindowVisibleDisplayFrame(displayFrame);
+    if (width == LayoutParams::MATCH_PARENT) {
+        width = displayFrame.width;
+    }
+    if (height == LayoutParams::MATCH_PARENT) {
+        height = displayFrame.height;
+    }
+
+    // Let the window manager know to align the top to y.
+    outParams->gravity = computeGravity();
+    outParams->width = width;
+    outParams->height = height;
+
+    // If we need to adjust for gravity RIGHT, align to the bottom-right
+    // corner of the anchor (still accounting for offsets).
+    int hgrav = Gravity::getAbsoluteGravity(gravity, anchor->getLayoutDirection())
+                & Gravity::HORIZONTAL_GRAVITY_MASK;
+    if (hgrav == Gravity::RIGHT) {
+        outParams->x -= width - anchorWidth;
+    }
+
+    // First, attempt to fit the popup vertically without resizing.
+    bool fitsVertical = tryFitVertical(outParams, yOffset, height,
+            anchorHeight, drawingLocation[1], screenLocation[1], displayFrame.top,
+            displayFrame.bottom(), false);
+
+    // Next, attempt to fit the popup horizontally without resizing.
+    bool fitsHorizontal = tryFitHorizontal(outParams, xOffset, width,
+            anchorWidth, drawingLocation[0], screenLocation[0], displayFrame.left,
+            displayFrame.right(), false);
+
+    // If the popup still doesn't fit, attempt to scroll the parent.
+    if (!fitsVertical || !fitsHorizontal) {
+        int scrollX = anchor->getScrollX();
+        int scrollY = anchor->getScrollY();
+        Rect r = {scrollX, scrollY,  width + xOffset,
+                    height + anchorHeight + yOffset};
+        if (allowScroll && anchor->requestRectangleOnScreen(r, true)) {
+            // Reset for the new anchor position.
+            anchor->getLocationOnScreen(screenLocation);
+            drawingLocation[0] = screenLocation[0] - appScreenLocation[0];
+            drawingLocation[1] = screenLocation[1] - appScreenLocation[1];
+            outParams->x = drawingLocation[0] + xOffset;
+            outParams->y = drawingLocation[1] + anchorHeight + yOffset;
+            // Preserve the gravity adjustment.
+            if (hgrav == Gravity::RIGHT) {
+                outParams->x -= width - anchorWidth;
+            }
+        }
+        // Try to fit the popup again and allowing resizing.
+        tryFitVertical(outParams, yOffset, height, anchorHeight, drawingLocation[1],
+                screenLocation[1], displayFrame.top, displayFrame.bottom(), mClipToScreen);
+        tryFitHorizontal(outParams, xOffset, width, anchorWidth, drawingLocation[0],
+                screenLocation[0], displayFrame.left, displayFrame.right(), mClipToScreen);
+    }
+
+    // Return whether the popup's top edge is above the anchor's top edge.
+    return outParams->y < drawingLocation[1];
 }
 
 int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBottomDecorations){
@@ -440,6 +755,94 @@ void PopupWindow::dismiss(){
     if (!isShowing() /*|| isTransitioningToDismiss()*/) {
         return;
     }
+    PopupDecorView* decorView = mDecorView;
+    View* contentView = mContentView;
+
+    ViewGroup* contentHolder;
+    ViewGroup* contentParent = contentView->getParent();
+    contentHolder = ((ViewGroup*) contentParent);
+
+    // Ensure any ongoing or pending transitions are canceled.
+    //decorView->cancelTransitions();
+
+    mIsShowing = false;
+    mIsTransitioningToDismiss = true;
+    // This method may be called as part of window detachment, in which
+    // case the anchor view (and its root) will still return true from
+    // isAttachedToWindow() during execution of this method; however, we
+    // can expect the OnAttachStateChangeListener to have been called prior
+    // to executing this method, so we can rely on that instead.
+    /*Transition exitTransition = mExitTransition;
+    if (exitTransition && decorView->isLaidOut()
+            && (mIsAnchorRootAttached || mAnchorRoot == nullptr)) {
+        // The decor view is non-interactive and non-IME-focusable during exit transitions.
+        LayoutParams p = (LayoutParams) decorView.getLayoutParams();
+        p.flags |= LayoutParams.FLAG_NOT_TOUCHABLE;
+        p.flags |= LayoutParams.FLAG_NOT_FOCUSABLE;
+        p.flags &= ~LayoutParams.FLAG_ALT_FOCUSABLE_IM;
+        mWindowManager.updateViewLayout(decorView, p);
+
+        View anchorRoot = mAnchorRoot != null ? mAnchorRoot.get() : null;
+        Rect epicenter = getTransitionEpicenter();
+
+        // Once we start dismissing the decor view, all state (including
+        // the anchor root) needs to be moved to the decor view since we
+        // may open another popup while it's busy exiting.
+        decorView.startExitTransition(exitTransition, anchorRoot, epicenter,
+                new TransitionListenerAdapter() {
+                    @Override
+                    public void onTransitionEnd(Transition transition) {
+                        dismissImmediate(decorView, contentHolder, contentView);
+                    }
+                });
+    } else */{
+        dismissImmediate(decorView, contentHolder, contentView);
+    }
+
+    // Clears the anchor view.
+    detachFromAnchor();
+    if (mOnDismissListener != nullptr) {
+        mOnDismissListener();
+    }
+}
+
+Rect PopupWindow::getTransitionEpicenter(){
+    if (mAnchor == nullptr || mDecorView == nullptr) {
+        return Rect::MakeWH(0,0);
+    }
+
+    int anchorLocation[2],popupLocation[2];
+    mAnchor->getLocationOnScreen(anchorLocation);
+    mDecorView->getLocationOnScreen(popupLocation);
+
+    // Compute the position of the anchor relative to the popup.
+    Rect bounds = {0, 0, mAnchor->getWidth(), mAnchor->getHeight()};
+    bounds.offset(anchorLocation[0] - popupLocation[0], anchorLocation[1] - popupLocation[1]);
+
+    // Use anchor-relative epicenter, if specified.
+    if (!mEpicenterBounds.empty()){// != null) {
+        int offsetX = bounds.left;
+        int offsetY = bounds.top;
+        bounds=mEpicenterBounds;//set(mEpicenterBounds);
+        bounds.offset(offsetX, offsetY);
+    }
+    return bounds;
+}
+
+void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, View* contentView){
+    if (decorView->getParent()!=nullptr) {
+        //mWindowManager.removeViewImmediate(decorView);
+    }
+
+    if (contentHolder != nullptr) {
+        contentHolder->removeView(contentView);
+    }
+
+    // This needs to stay until after all transitions have ended since we
+    // need the reference to cancel transitions in preparePopup().
+    mDecorView = nullptr;
+    mBackgroundView = nullptr;
+    mIsTransitioningToDismiss = false;
 }
 
 void PopupWindow::setOnDismissListener(OnDismissListener onDismissListener) {
@@ -455,36 +858,34 @@ void PopupWindow::update(){
     if (!isShowing() || !hasContentView()) {
         return;
     }
-#if 0
-    Window::LayoutParams* p = getDecorViewLayoutParams();
+    WindowManager::LayoutParams* p = getDecorViewLayoutParams();
 
     bool bUpdate = false;
 
-    int newAnim = computeAnimationResource();
+    /*int newAnim = computeAnimationResource();
     if (newAnim != p.windowAnimations) {
         p.windowAnimations = newAnim;
         bUpdate = true;
-    }
+    }*/
 
-    int newFlags = computeFlags(p.flags);
-    if (newFlags != p.flags) {
-        p.flags = newFlags;
+    int newFlags = computeFlags(p->flags);
+    if (newFlags != p->flags) {
+        p->flags = newFlags;
         bUpdate = true;
     }
 
     int newGravity = computeGravity();
-    if (newGravity != p.gravity) {
-        p.gravity = newGravity;
+    if (newGravity != p->gravity) {
+        p->gravity = newGravity;
         bUpdate = true;
     }
 
     if (bUpdate) {
         update(mAnchor, p);
     }
-#endif
 }
 
-void PopupWindow::update(View* anchor,LayoutParams* params) {
+void PopupWindow::update(View* anchor,WindowManager::LayoutParams* params) {
     setLayoutDirectionFromAnchor();
    // mWindowManager.updateViewLayout(mDecorView, params);
 }
@@ -493,7 +894,7 @@ void PopupWindow::update(int width, int height){
     update(0,0/*getLeft(), getTop()*/, width, height);
 }
 
-void PopupWindow::update(int x, int y, int width, int height){
+void PopupWindow::update(int x, int y, int width, int height,bool force){
     if (width >= 0) {
         mLastWidth = width;
         setWidth(width);
@@ -509,49 +910,48 @@ void PopupWindow::update(int x, int y, int width, int height){
     }
 
 
-    bool updated = true;//force;
-#if 0
-    WindowManager.LayoutParams p = getDecorViewLayoutParams();
+    bool updated = force;
+
+    WindowManager::LayoutParams* p = getDecorViewLayoutParams();
     int finalWidth = mWidthMode < 0 ? mWidthMode : mLastWidth;
-    if (width != -1 && p.width != finalWidth) {
-        p.width = mLastWidth = finalWidth;
+    if (width != -1 && p->width != finalWidth) {
+        p->width = mLastWidth = finalWidth;
         updated = true;
     }
 
     int finalHeight = mHeightMode < 0 ? mHeightMode : mLastHeight;
-    if (height != -1 && p.height != finalHeight) {
-        p.height = mLastHeight = finalHeight;
+    if (height != -1 && p->height != finalHeight) {
+        p->height = mLastHeight = finalHeight;
         updated = true;
     }
 
-    if (p.x != x) {
-        p.x = x;
+    if (p->x != x) {
+        p->x = x;
         updated = true;
     }
 
-    if (p.y != y) {
-        p.y = y;
+    if (p->y != y) {
+        p->y = y;
         updated = true;
     }
 
-    int newAnim = computeAnimationResource();
-    if (newAnim != p.windowAnimations) {
-        p.windowAnimations = newAnim;
+    /*int newAnim = computeAnimationResource();
+    if (newAnim != p->windowAnimations) {
+        p->windowAnimations = newAnim;
         updated = true;
-    }
+    }*/
 
-    const int newFlags = computeFlags(p.flags);
-    if (newFlags != p.flags) {
-        p.flags = newFlags;
+    const int newFlags = computeFlags(p->flags);
+    if (newFlags != p->flags) {
+        p->flags = newFlags;
         updated = true;
     }
 
     const int newGravity = computeGravity();
-    if (newGravity != p.gravity) {
-        p.gravity = newGravity;
+    if (newGravity != p->gravity) {
+        p->gravity = newGravity;
         updated = true;
     }
-#endif
     View* anchor = nullptr;
     int newAccessibilityIdOfAnchor = -1;
 
@@ -566,8 +966,57 @@ void PopupWindow::update(int x, int y, int width, int height){
     }*/
 
     if (updated) {
-        //update(anchor, p);
+        update(anchor, p);
     }
+}
+
+void PopupWindow::update(View* anchor, bool updateLocation, int xoff, int yoff, int width, int height){
+    if (!isShowing() || !hasContentView()) {
+        return;
+    }
+
+    View* oldAnchor = mAnchor;
+    int gravity = mAnchoredGravity;
+
+    bool needsUpdate = updateLocation && (mAnchorXoff != xoff || mAnchorYoff != yoff);
+    if (oldAnchor == nullptr || oldAnchor != anchor || (needsUpdate && !mIsDropdown)) {
+        attachToAnchor(anchor, xoff, yoff, gravity);
+    } else if (needsUpdate) {
+        // No need to register again if this is a DropDown, showAsDropDown already did.
+        mAnchorXoff = xoff;
+        mAnchorYoff = yoff;
+    }
+
+    WindowManager::LayoutParams* p = getDecorViewLayoutParams();
+    int oldGravity = p->gravity;
+    int oldWidth = p->width;
+    int oldHeight = p->height;
+    int oldX = p->x;
+    int oldY = p->y;
+
+    // If an explicit width/height has not specified, use the most recent
+    // explicitly specified value (either from setWidth/Height or update).
+    if (width < 0) {
+        width = mWidth;
+    }
+    if (height < 0) {
+        height = mHeight;
+    }
+
+    bool aboveAnchor = findDropDownPosition(anchor, p, mAnchorXoff, mAnchorYoff,
+                width, height, gravity, mAllowScrollingAnchorParent);
+    updateAboveAnchor(aboveAnchor);
+
+    bool paramsChanged = oldGravity != p->gravity || oldX != p->x || oldY != p->y
+                || oldWidth != p->width || oldHeight != p->height;
+
+    // If width and mWidth were both < 0 then we have a MATCH_PARENT or
+    // WRAP_CONTENT case. findDropDownPosition will have resolved this to
+    // absolute values, but we don't want to update mWidth/mHeight to these
+    // absolute values.
+    int newWidth = width < 0 ? width : p->width;
+    int newHeight = height < 0 ? height : p->height;
+    update(p->x, p->y, newWidth, newHeight, paramsChanged);
 }
 
 bool PopupWindow::hasContentView()const{
@@ -578,6 +1027,10 @@ bool PopupWindow::hasDecorView()const{
     return mDecorView!=nullptr;
 }
 
+WindowManager::LayoutParams* PopupWindow::getDecorViewLayoutParams() {
+    return (WindowManager::LayoutParams*) mDecorView->getLayoutParams();
+}
+
 void PopupWindow::detachFromAnchor(){
     View* anchor = mAnchor;//getAnchor();
     /*if (anchor) {
@@ -586,11 +1039,11 @@ void PopupWindow::detachFromAnchor(){
         anchor->removeOnAttachStateChangeListener(mOnAnchorDetachedListener);
     }*/
 
-    /*View* anchorRoot = mAnchorRoot != null ? mAnchorRoot.get() : null;
+    View* anchorRoot = mAnchorRoot;// != null ? mAnchorRoot.get() : null;
     if (anchorRoot != nullptr) {
         anchorRoot->removeOnAttachStateChangeListener(mOnAnchorRootDetachedListener);
         anchorRoot->removeOnLayoutChangeListener(mOnLayoutChangeListener);
-    }*/
+    }
 
     mAnchor = nullptr;
     mAnchorRoot = nullptr;
@@ -607,8 +1060,8 @@ void PopupWindow::attachToAnchor(View* anchor, int xoff, int yoff, int gravity){
     //anchor.addOnAttachStateChangeListener(mOnAnchorDetachedListener);
 
     View* anchorRoot = anchor->getRootView();
-    //anchorRoot->addOnAttachStateChangeListener(mOnAnchorRootDetachedListener);
-    //anchorRoot->addOnLayoutChangeListener(mOnLayoutChangeListener);
+    anchorRoot->addOnAttachStateChangeListener(mOnAnchorRootDetachedListener);
+    anchorRoot->addOnLayoutChangeListener(mOnLayoutChangeListener);
 
     mAnchor = anchor;//new WeakReference<>(anchor);
     mAnchorRoot = anchorRoot;//new WeakReference<>(anchorRoot);
@@ -618,6 +1071,15 @@ void PopupWindow::attachToAnchor(View* anchor, int xoff, int yoff, int gravity){
     mAnchorXoff = xoff;
     mAnchorYoff = yoff;
     mAnchoredGravity = gravity;
+}
+
+void PopupWindow::alignToAnchor() {
+    if (mAnchor && mAnchor->isAttachedToWindow() && hasDecorView()) {
+        WindowManager::LayoutParams* p = getDecorViewLayoutParams();
+        updateAboveAnchor(findDropDownPosition(mAnchor, p, mAnchorXoff, mAnchorYoff,
+                p->width, p->height, mAnchoredGravity, false));
+        update(p->x, p->y, -1, -1, true);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

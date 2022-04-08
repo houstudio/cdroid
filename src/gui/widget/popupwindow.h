@@ -2,6 +2,7 @@
 #define __POPUP_WINDOW_H__
 #include <widget/framelayout.h>
 #include <widget/cdwindow.h>
+#include <core/windowmanager.h>
 namespace cdroid{
 class PopupWindow{
 public:
@@ -88,6 +89,9 @@ private:
     int mGravity = Gravity::NO_GRAVITY;
     View* mAnchor;
     View* mAnchorRoot;
+    View::OnAttachStateChangeListener mOnAnchorRootDetachedListener;
+    //View::OnScrollChangedListener mOnScrollChangedListener; 
+    View::OnLayoutChangeListener mOnLayoutChangeListener;
     bool mIsAnchorRootAttached;
     int mAnchorXoff;
     int mAnchorYoff;
@@ -98,9 +102,21 @@ private:
 private:
     void init();
     int computeGravity();
+    int computeFlags(int curFlags);
     PopupDecorView* createDecorView(View* contentView);
-    void invokePopup(LayoutParams* p);
+    void invokePopup(WindowManager::LayoutParams* p);
     void setLayoutDirectionFromAnchor();
+    void update(View* anchor, bool updateLocation, int xoff, int yoff, int width, int height);
+    bool tryFitVertical(WindowManager::LayoutParams* outParams, int yOffset, int height, int anchorHeight,
+           int drawingLocationY, int screenLocationY, int displayFrameTop,int displayFrameBottom, bool allowResize);
+    bool positionInDisplayVertical(WindowManager::LayoutParams* outParams, int height, int drawingLocationY,
+           int screenLocationY, int displayFrameTop, int displayFrameBottom,  bool canResize);
+    bool tryFitHorizontal(WindowManager::LayoutParams* outParams, int xOffset, int width,int anchorWidth,
+           int drawingLocationX, int screenLocationX, int displayFrameLeft,int displayFrameRight, bool allowResize);
+    bool positionInDisplayHorizontal(WindowManager::LayoutParams* outParams, int width,int drawingLocationX,
+           int screenLocationX, int displayFrameLeft, int displayFrameRight, bool canResize);
+    void dismissImmediate(View* decorView, ViewGroup* contentHolder, View* contentView);
+    void alignToAnchor();
 protected:
     void setShowing(bool);
     void setDropDown(bool isDropDown);
@@ -109,16 +125,22 @@ protected:
     bool hasContentView()const;
     bool hasDecorView()const;
     void detachFromAnchor();
+    WindowManager::LayoutParams* getDecorViewLayoutParams();
+    WindowManager::LayoutParams createPopupLayoutParams(long token);
     void attachToAnchor(View* anchor, int xoff, int yoff, int gravity);
     
     bool isLayoutInScreenEnabled()const;
-    void preparePopup(LayoutParams*p);
+    void preparePopup(WindowManager::LayoutParams*p);
     PopupBackgroundView*createBackgroundView(View* contentView);
-    void update(View* anchor,LayoutParams* params);
+    void update(View* anchor,WindowManager::LayoutParams* params);
+    bool findDropDownPosition(View* anchor,WindowManager::LayoutParams* outParams,
+            int xOffset, int yOffset, int width, int height, int gravity, bool allowScroll);
+     Rect getTransitionEpicenter();
 public:
     PopupWindow(Context* context,const AttributeSet& attrs);
     PopupWindow(View* contentView, int width, int height,bool focusable=false);
     PopupWindow(int width, int height);
+    virtual ~PopupWindow();
     void setEpicenterBounds(const Rect& bounds);
     Drawable* getBackground();
     void  setBackgroundDrawable(Drawable* background);
@@ -131,11 +153,22 @@ public:
     void setFocusable(bool focusable);
     bool isOutsideTouchable()const;
     void setOutsideTouchable(bool);
+    bool isClippingEnabled();
+    void setClippingEnabled(bool enabled);
+    bool isClippedToScreen();
+    void setIsClippedToScreen(bool enabled);
+    bool isSplitTouchEnabled();
+    void setSplitTouchEnabled(bool enabled);
+    bool isLaidOutInScreen();
+    void setIsLaidOutInScreen(bool enabled);
     void setLayoutInScreenEnabled(bool);
     bool isAttachedInDecor()const;
     void setAttachedInDecor(bool);
     void setLayoutInsetDecor(bool enabled);
     bool isLayoutInsetDecor()const;
+    void setWindowLayoutType(int layoutType);
+    int  getWindowLayoutType();
+    bool isTouchModal();
     void setTouchModal(bool touchModal);
     bool getOverlapAnchor()const;
     void setOverlapAnchor(bool overlapAnchor);
@@ -156,7 +189,7 @@ public:
     void setOnDismissListener(OnDismissListener onDismissListener);
     void update();
     void update(int width, int height);
-    void update(int x, int y, int width, int height);
+    void update(int x, int y, int width, int height,bool force=false);
 };
 }
 #endif//__POPUP_WINDOW_H__

@@ -67,6 +67,7 @@ class ListenerInfo{
 public:
     View::OnFocusChangeListener  mOnFocusChangeListener;
     std::vector<View::OnLayoutChangeListener> mOnLayoutChangeListeners;
+    std::vector<View::OnAttachStateChangeListener> mOnAttachStateChangeListeners;
     View::OnScrollChangeListener mOnScrollChangeListener;
     View::OnClickListener mOnClickListener;
     View::OnLongClickListener mOnLongClickListener;
@@ -1214,7 +1215,33 @@ void View::transformFromViewToWindowSpace(int*inOutLocation){
 }
 
 void View::mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent){
+    if (!hasIdentityMatrix()) {
+        getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
+    }
+    rect.offset(mLeft, mTop);
 
+    View* parent = mParent;
+    while (parent){// instanceof View) {
+        View* parentView = (View*) parent;
+        rect.offset(-parentView->mScrollX, -parentView->mScrollY);
+
+        if (clipToParent) {
+            rect.left = std::max(rect.left, 0);
+            rect.top  = std::max(rect.top, 0);
+            rect.width= std::min(rect.width,parentView->getWidth());//rect.right = std::min(rect.right, parentView->getWidth());
+            rect.height=std::min(rect.height,parentView->getHeight());//rect.bottom = std::min(rect.bottom, parentView->getHeight());
+        }
+        if (!parentView->hasIdentityMatrix()) {
+            parentView->getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
+        }
+        rect.offset(parentView->mLeft, parentView->mTop);
+        parent = parentView->mParent;
+    }
+    /*if (parent instanceof ViewRootImpl) {
+        ViewRootImpl viewRootImpl = (ViewRootImpl) parent;
+        rect.offset(0, -viewRootImpl.mCurScrollY);
+    }*/
+    rect.offset(mAttachInfo->mWindowLeft, mAttachInfo->mWindowTop);
 }
 
 void View::getLocationOnScreen(int*outLocation){
@@ -1318,6 +1345,13 @@ void View::dispatchDetachedFromWindow(){
     onDetachedFromWindowInternal();
     InputMethodManager&imm=InputMethodManager::getInstance();
     imm.onViewDetachedFromWindow(this);
+
+    if(mListenerInfo){
+        for(auto l:mListenerInfo->mOnAttachStateChangeListeners){
+            if(l.onViewDetachedFromWindow)l.onViewDetachedFromWindow(*this);
+        }
+    }
+	
     if ((mPrivateFlags & PFLAG_SCROLL_CONTAINER_ADDED) != 0) {
         std::vector<View*>&conts=mAttachInfo->mScrollContainers;
         auto it=std::find(conts.begin(),conts.end(),this);
@@ -2274,7 +2308,35 @@ void View::addOnLayoutChangeListener(OnLayoutChangeListener listener){
 }
 
 void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
-    //mOnLayoutChangeListeners.push_back(listener);
+    if(mListenerInfo){
+        std::vector<View::OnLayoutChangeListener>&ls= mListenerInfo->mOnLayoutChangeListeners;
+        auto it= std::find(ls.begin(),ls.end(),listener);
+        ls.erase(it);
+    }
+}
+
+void View::addOnAttachStateChangeListener(OnAttachStateChangeListener listener) {
+    ListenerInfo* li = getListenerInfo();
+    if (li) {
+        std::vector<OnAttachStateChangeListener>&ls = li->mOnAttachStateChangeListeners;
+        ls.push_back(listener);
+    }
+}
+
+static bool operator == (const View::OnAttachStateChangeListener& left, const View::OnAttachStateChangeListener& right){
+    return (left.onViewAttachedToWindow==right.onViewAttachedToWindow) &&
+           (left.onViewDetachedFromWindow==right.onViewDetachedFromWindow);
+}
+
+void View::removeOnAttachStateChangeListener(OnAttachStateChangeListener listener) {
+    if (mListenerInfo == nullptr || mListenerInfo->mOnAttachStateChangeListeners.empty()) {
+        return;
+    }
+    std::vector<OnAttachStateChangeListener>&ls = mListenerInfo->mOnAttachStateChangeListeners;
+    auto it=std::find(ls.begin(),ls.end(),listener);
+    if(it!=ls.end()){
+        mListenerInfo->mOnAttachStateChangeListeners.erase(it);
+    }
 }
 
 void View::startActivityForResult(Intent intent, int requestCode){
@@ -4237,6 +4299,8 @@ void View::getWindowVisibleDisplayFrame(Rect& outRect){
         // XXX This is really broken, and probably all needs to be done
         // in the window manager, and we need to know more about whether
         // we want the area behind or in front of the IME.
+        const DisplayMetrics& metrics= mContext->getDisplayMetrics();
+        outRect.set(0,0,metrics.widthPixels,metrics.heightPixels);
         Rect insets = mAttachInfo->mVisibleInsets;
         outRect.left += insets.left;
         outRect.top += insets.top;
@@ -4623,10 +4687,100 @@ ViewGroup*View::getRootView()const{
     return dynamic_cast<ViewGroup*>(parent);
 }
 
+bool View::toGlobalMotionEvent(MotionEvent& ev){
+    if (mAttachInfo == nullptr) {
+        return false;
+    }
+
+    Matrix m = identity_matrix();
+    transformMatrixToGlobal(m);
+    //ev.transform(m);
+    return true;
+}
+
+bool View::toLocalMotionEvent(MotionEvent& ev){
+    if (mAttachInfo == nullptr) {
+        return false;
+    }
+
+    Matrix m = identity_matrix();
+    transformMatrixToLocal(m);
+    //ev.transform(m);
+    return true;
+}
+
+void View::transformMatrixToGlobal(Matrix& matrix){
+#if 0
+    ViewGroup* parent = mParent;
+    if (parent instanceof View) {
+        View* vp = (View) parent;
+        vp->transformMatrixToGlobal(matrix);
+        matrix.preTranslate(-vp.mScrollX, -vp.mScrollY);
+    } else if (parent instanceof ViewRootImpl) {
+        ViewRootImpl vr = (ViewRootImpl) parent;
+        vr->transformMatrixToGlobal(matrix);
+        matrix.preTranslate(0, -vr.mCurScrollY);
+    }
+    matrix.preTranslate(mLeft, mTop);
+    if (!hasIdentityMatrix()) {
+        matrix.preConcat(getMatrix());
+    }
+#endif
+}
+
+void View::transformMatrixToLocal(Matrix& matrix){
+#if 0
+    ViewGroup* parent = mParent;
+    if (parent instanceof View) {
+        View* vp = (View) parent;
+        vp->transformMatrixToLocal(matrix);
+        matrix.postTranslate(vp.mScrollX, vp.mScrollY);
+    } else if (parent instanceof ViewRootImpl) {
+        ViewRootImpl vr = (ViewRootImpl) parent;
+        vr->transformMatrixToLocal(matrix);
+        matrix.postTranslate(0, vr.mCurScrollY);
+    }
+
+    matrix.postTranslate(-mLeft, -mTop);
+
+    if (!hasIdentityMatrix()) {
+        matrix.postConcat(getInverseMatrix());
+    }
+#endif
+}
+
 View*View::focusSearch(int direction)const{
     if(mParent)
         mParent->focusSearch((View*)this,direction);
     return nullptr;
+}
+
+bool View::requestRectangleOnScreen(Rect& rectangle, bool immediate){
+    if (mParent == nullptr) {
+        return false;
+    }
+
+    View* child = this;
+
+    RectF position;
+    position.set(rectangle.left,rectangle.top,rectangle.width,rectangle.height);
+
+    ViewGroup* parent = mParent;
+    bool scrolled = false;
+    while (parent != nullptr) {
+        rectangle.set((int) position.left, (int) position.top,
+               (int) position.width, (int) position.height);
+
+        scrolled |= parent->requestChildRectangleOnScreen(child, rectangle, immediate);
+
+        //if (!(parent instanceof View)) { break; }
+        // move it from child's content coordinate space to parent's content coordinate space
+        position.offset(child->mLeft - child->getScrollX(), child->mTop -child->getScrollY());
+
+        child = parent;
+        parent = child->getParent();
+    }
+    return scrolled;
 }
 
 bool View::requestFocus(int direction){
@@ -5034,7 +5188,7 @@ void View::layout(int l, int t, int w, int h){
         }
         if(mListenerInfo){
             for(auto ls:mListenerInfo->mOnLayoutChangeListeners){
-                ls(this,l, t, w, h,oldL,oldT,oldW,oldH);
+                ls(*this,l, t, w, h,oldL,oldT,oldW,oldH);
             }
         }
     }

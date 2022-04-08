@@ -34,9 +34,9 @@ private:
 
     class DialogPopup:public SpinnerPopup{
     private:
-        PopupWindow*mPopup;
+        class AlertDialog*mPopup;
         Spinner *mSpinner; 
-        Adapter *mAdapter;
+        Adapter *mListAdapter;
         std::string mPrompt;
     public:
         DialogPopup(Spinner*spinner);

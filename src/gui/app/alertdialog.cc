@@ -6,12 +6,18 @@ AlertDialog::AlertDialog(Context*ctx):AlertDialog(ctx,false,nullptr){
 
 AlertDialog::AlertDialog(Context*ctx,const std::string&resid):Dialog(ctx,resid){
     mAlert = AlertController::create(getContext(), this, getWindow());
+    P = nullptr;
 }
 
 AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelListener listener)
    :AlertDialog(ctx,"@cdroid:layout/alert_dialog"){
     setCancelable(cancelable);
     setOnCancelListener(listener);
+}
+
+AlertDialog::~AlertDialog(){
+    delete mAlert;
+    delete P;
 }
 
 void AlertDialog::setTitle(const std::string& title){
@@ -38,6 +44,14 @@ void AlertDialog::setView(View* view, int viewSpacingLeft, int viewSpacingTop, i
 
 void AlertDialog::setButton(int whichButton,const std::string&text, OnClickListener listener) {
     mAlert->setButton(whichButton, text, listener);
+}
+
+Button* AlertDialog::getButton(int whichButton) {
+    return mAlert->getButton(whichButton);
+}
+
+ListView* AlertDialog::getListView() {
+    return mAlert->getListView();
 }
 
 void AlertDialog::setIcon(const std::string&iconId){
@@ -250,6 +264,7 @@ AlertDialog* AlertDialog::Builder::create(){
     if (P->mOnKeyListener != nullptr) {
         dialog->setOnKeyListener(P->mOnKeyListener);
     }
+	dialog->P=P;
     return dialog;
 }
 
