@@ -15,7 +15,6 @@
  */
 
 #include <view/viewgroup.h>
-#include <widget/measurespec.h>
 #include <view/viewoverlay.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
@@ -183,26 +182,6 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     clearTouchTargets();
 }
 
-
-static void Matrix2Float9(const Matrix&m,float *f9){
-    /*Matrix{
-      double xx; double yx;
-      double xy; double yy;
-      double x0; double y0;}*/
-    //x_new = xx * x + xy * y + x0;
-    //y_new = yx * x + yy * y + y0;
-    f9[0] = m.xx ; //scaleX
-    f9[1] = m.xy ;  //skewX
-    f9[2] = m.x0 ; //skewY
-
-    f9[3] = m.yx ;  
-    f9[4] = m.yy ;
-    f9[5] = m.y0 ;
-
-    f9[6] = f9[7] =.0f;
-    f9[8] = 1.f;
-}
-
 bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
        View* child, int desiredPointerIdBits){
     bool handled;
@@ -262,10 +241,8 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
         float offsetY = mScrollY - child->mTop;
         transformedEvent->offsetLocation(offsetX, offsetY);
         if (! child->hasIdentityMatrix()) {
-            float f9[9];
-            Matrix2Float9(child->getInverseMatrix(),f9);
             LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
-            transformedEvent->transform(f9);
+            transformedEvent->transform(child->getInverseMatrix());
             LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"XY=(%f,%f)",transformedEvent->getX(),transformedEvent->getY());
         }
 
@@ -2430,9 +2407,7 @@ MotionEvent* ViewGroup::getTransformedMotionEvent(MotionEvent& event, View* chil
     MotionEvent* transformedEvent = MotionEvent::obtain(event);
     transformedEvent->offsetLocation(offsetX, offsetY);
     if (!child->hasIdentityMatrix()) {
-        float f9[9]; 
-        Matrix2Float9(child->getInverseMatrix(),f9);
-        transformedEvent->transform(f9);
+        transformedEvent->transform(child->getInverseMatrix());
     }
     return transformedEvent;
 }
@@ -2616,6 +2591,13 @@ void ViewGroup::dispatchDetachedFromWindow(){
         view->dispatchDetachedFromWindow();
     }
     View::dispatchDetachedFromWindow();
+}
+
+void ViewGroup::dispatchCancelPendingInputEvents(){
+    View::dispatchCancelPendingInputEvents();
+    for (View*child:mChildren){
+        child->dispatchCancelPendingInputEvents();
+    }
 }
 
 void ViewGroup::internalSetPadding(int left, int top, int width, int height){
@@ -2804,7 +2786,7 @@ void ViewGroup::jumpDrawablesToCurrentState(){
     }
 }
 
-std::vector<int> ViewGroup::onCreateDrawableState()const{
+std::vector<int> ViewGroup::onCreateDrawableState(){
     if ((mGroupFlags & FLAG_ADD_STATES_FROM_CHILDREN) == 0) {
         return View::onCreateDrawableState();
     }

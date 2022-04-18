@@ -44,5 +44,7 @@ int main(int argc,const char*argv[]){
     tab->setTabTextColors(0xFFFF0000,0xFF00FF00);
     w->addView(layout);
     w->requestLayout();
-    app.exec();
+    int result = app.exec();
+    delete gpAdapter;
+    return result;
 }

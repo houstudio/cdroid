@@ -2,13 +2,15 @@
 #define __SPINNER_H__
 #include <widget/absspinner.h>
 #include <widget/listview.h>
-#include <widget/popupwindow.h>
+#include <widget/listpopupwindow.h>
+#include <widget/forwardinglistener.h>
 namespace cdroid{
 
 class Spinner:public AbsSpinner{
 private:
     class SpinnerPopup {
     public:
+        virtual ~SpinnerPopup()=default;
         virtual void setAdapter(Adapter* adapter)=0;
         /**Show the popup */
         virtual void show(int textDirection, int textAlignment)=0;
@@ -40,7 +42,7 @@ private:
         std::string mPrompt;
     public:
         DialogPopup(Spinner*spinner);
-        ~DialogPopup();
+        ~DialogPopup()override;
         void setAdapter(Adapter* adapter)override;
         void show(int textDirection, int textAlignment)override; 
         void dismiss()override;
@@ -57,15 +59,14 @@ private:
         void setContentWidth(int width)override;
     };
 
-    class DropdownPopup:public SpinnerPopup{
+    class DropdownPopup:public ListPopupWindow,public SpinnerPopup{
     private:
-        int mDropDownWidth;
+        std::string mHintText;
         Spinner *mSpinner;
         Adapter *mAdapter;
-        ListView*mListView;
     public:
-        DropdownPopup(Spinner*spinner);
-        ~DropdownPopup();
+        DropdownPopup(Context*context,Spinner*spinner);
+        ~DropdownPopup()override;
         void setAdapter(Adapter* adapter)override;
         void show(int textDirection, int textAlignment)override; 
         void dismiss()override;
@@ -80,7 +81,16 @@ private:
         Drawable* getBackground()override;
         void computeContentWidth()override;
         void setContentWidth(int width)override;
-        ListView*getListView()const;
+        ListView*getListView();
+    };
+    class SpinnerForwardingListener:public ForwardingListener{
+    private:
+        Spinner* mSpinner;
+        DropdownPopup*mDropDown;
+    public:
+        SpinnerForwardingListener(View*view,DropdownPopup*d);
+        ShowableListMenu getPopup()override;
+        bool onForwardingStarted()override;
     };
 public:
     static constexpr int  MODE_DIALOG   = 0;
@@ -88,10 +98,12 @@ public:
 private:
     int  mGravity;
     Context*mPopupContext;
+    ForwardingListener* mForwardingListener;
     bool mDisableChildrenWhenDisabled;
     void setUpChild(View* child, bool addChild);
     View* makeView(int position, bool addChild);
 protected:
+    friend class DropdownPopup;
     int mDropDownWidth;
     SpinnerPopup *mPopup;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;

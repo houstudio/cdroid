@@ -15,7 +15,7 @@
 #include <view/layoutinflater.h>
 #include <view/viewpropertyanimator.h>
 #include <view/viewconfiguration.h>
-#include <widget/measurespec.h>
+#include <view/measurespec.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <set>
@@ -143,6 +143,9 @@ protected:
         PFLAG3_VIEW_IS_ANIMATING_ALPHA     = 0x0002 ,
         PFLAG3_IS_LAID_OUT                 = 0x0004 ,
         PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT= 0x0008 ,
+        PFLAG3_CALLED_SUPER                = 0x0010 ,
+        PFLAG3_APPLYING_INSETS             = 0x0020 ,
+        PFLAG3_FITTING_SYSTEM_WINDOWS      = 0x0040 ,
         PFLAG3_NESTED_SCROLLING_ENABLED    = 0x0080 ,
         PFLAG3_SCROLL_INDICATOR_TOP        = 0x0100 ,
         PFLAG3_SCROLL_INDICATOR_BOTTOM     = 0x0200 ,
@@ -403,7 +406,6 @@ private:
     void applyForegroundTint();
     View* findViewInsideOutShouldExist(View* root, int id)const;
     bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
-    bool requestFocusFromTouch();
     bool hasAncestorThatBlocksDescendantFocus()const;
 	
     void debugDrawFocus(Canvas&canvas);
@@ -475,6 +477,7 @@ protected:
     /* Cache initial right padding*/
     int  mUserPaddingRightInitial;
     int  mTransientStateCount;
+    int  mWindowAttachCount;
     bool mLeftPaddingDefined;
     bool mRightPaddingDefined;
     bool mCachingFailed;
@@ -507,6 +510,7 @@ protected:
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
 
+    int getWindowAttachCount()const;
     void recomputePadding();
     bool isPaddingOffsetRequired();
     int getLeftPaddingOffset();
@@ -527,7 +531,7 @@ protected:
     virtual void resetResolvedDrawables();
     virtual bool verifyDrawable(Drawable*)const;
     virtual void drawableStateChanged();
-    virtual std::vector<int> onCreateDrawableState()const;
+    virtual std::vector<int> onCreateDrawableState();
     virtual View& setFlags(int flag,int mask);
     virtual bool hasFlag(int flag) const;
     virtual void dispatchSetSelected(bool selected);
@@ -560,6 +564,8 @@ protected:
     virtual void dispatchSetActivated(bool activated);
     virtual void dispatchAttachedToWindow(AttachInfo*info,int visibility);
     virtual void dispatchDetachedFromWindow();
+    virtual void dispatchCancelPendingInputEvents();
+    virtual void onCancelPendingInputEvents();
     bool canReceivePointerEvents()const;
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
@@ -774,6 +780,8 @@ public:
     virtual bool performClick();
     virtual bool performLongClick();
     virtual bool performLongClick(int x,int y);
+    void cancelPendingInputEvents();
+    void cancelLongPress();
     bool  performContextClick(int x, int y);
     bool  performContextClick();
     bool showContextMenu();
@@ -919,6 +927,7 @@ public:
     void clearFocus();
     virtual View*findFocus();
     bool requestFocus(int direction=FOCUS_DOWN);
+    bool requestFocusFromTouch();
     virtual bool requestFocus(int direction,Rect* previouslyFocusedRect);
     bool hasFocusable()const{ return hasFocusable(true, false); }
     virtual bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const;

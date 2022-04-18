@@ -114,22 +114,55 @@ TEST_F(LOOPER,removeMessage){
    ASSERT_EQ(ft.getCount(),1);
 }
 
+class TestRunner:public Runnable{
+private:
+   int mCount;
+public:
+   TestRunner():Runnable(){
+      mCount=0;
+      (*mFunctor)=std::bind(&TestRunner::doit,this);
+   }
+   void doit(){
+       mCount++;
+       LOGD("mCount=%d",mCount);
+   }
+};
 TEST_F(LOOPER,eventhandler){
-   
+    UIEventSource*handler=new UIEventSource(nullptr,nullptr);
+    Runnable run([]{});
+    handler->postDelayed(run,10);
+    bool rc=handler->removeCallbacks(run);
+    ASSERT_TRUE(rc);
+
+    Runnable run2(run);
+    Runnable run3;
+    run3=run;
+    handler->postDelayed(run2,10);
+    rc=handler->removeCallbacks(run2);
+    ASSERT_TRUE(rc);
+
+    handler->postDelayed(run,10);
+    rc=handler->removeCallbacks(run3);
+    ASSERT_TRUE(rc);
+
+    rc=handler->removeCallbacks(run3);
+    ASSERT_FALSE(rc);
 }
-/*TEST_F(LOOPER,loop){
+
+TEST_F(LOOPER,loop){
    Looper loop(false);
-   UIEventSource*handler=new UIEventSource(nullptr,nullptr);
-   loop.addEventHandler(handler);
-   Runnable run;
+   //UIEventSource*handler=new UIEventSource(nullptr,nullptr);
+   //loop.addEventHandler(handler);
+   Handler handler;
+   TestRunner  run;
    int count=0;
-   run=[&](){
-       LOGD("count=%d",count++);
-       handler->post(run,count++);
-   };
-   handler->post(run,10);
+   ASSERT_TRUE((bool)run);
+   ASSERT_FALSE(run==nullptr);
+   ASSERT_TRUE(run!=nullptr);
+   run();
+   handler.postDelayed(run,10);
    while(1)loop.pollAll(100);
-}*/
+}
 
 class MyHandler:public Handler{
 public:

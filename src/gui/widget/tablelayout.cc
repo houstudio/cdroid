@@ -1,5 +1,4 @@
 #include <widget/tablelayout.h>
-#include <widget/measurespec.h>
 #include <cdlog.h>
 
 

@@ -44,21 +44,18 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,800,600);
     MyAdapter*adapter=new MyAdapter(argc>1?atoi(argv[1]):0);
-    w->setId(10);
     for(int i=0;i<10;i++)adapter->add("");
+    LinearLayout*linear = new LinearLayout(0,0);
+    linear->setOrientation(LinearLayout::VERTICAL);
+    w->addView(linear);
     Spinner*spinner=new Spinner(300,40);
     spinner->setAdapter(adapter);
     spinner->setId(100);
-    w->addView(spinner).setPos(100,100).setBackgroundColor(0xFF222222);
+    linear->addView(new TextView("Hello world!",200,40));
+    LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
+    linear->addView(spinner,lp).setPos(100,100).setBackgroundColor(0xFF222222);
     spinner->requestFocus();
-    int idx=0;spinner->requestLayout();
-    Runnable rrr([&](){
-        idx=(idx+1)%adapter->getCount();
-        spinner->setSelection(idx);
-        w->postDelayed(rrr,200);
-        LOGV("setselection %d",idx); 
-        spinner->invalidate();
-    });
-    w->postDelayed(rrr,1000);
+    spinner->requestLayout();
+    spinner->setSelection(0);
     app.exec();
 }

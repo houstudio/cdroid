@@ -9,9 +9,6 @@ public:
     RadioButton(Context*ctx,const AttributeSet& attrs)
 	  :ToggleButton(ctx,attrs){
     }
-    void toggle()override{
-        if (!isChecked()) ToggleButton::toggle();
-    }
 };
 
 }//namespace

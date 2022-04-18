@@ -89,6 +89,7 @@ private:
     int mGravity = Gravity::NO_GRAVITY;
     View* mAnchor;
     View* mAnchorRoot;
+    View::OnAttachStateChangeListener mOnAnchorDetachedListener;
     View::OnAttachStateChangeListener mOnAnchorRootDetachedListener;
     //View::OnScrollChangedListener mOnScrollChangedListener; 
     View::OnLayoutChangeListener mOnLayoutChangeListener;
@@ -151,6 +152,8 @@ public:
     void setTouchInterceptor(View::OnTouchListener l);
     bool isFocusable();
     void setFocusable(bool focusable);
+    int  getInputMethodMode();
+    void setInputMethodMode(int mode);
     bool isOutsideTouchable()const;
     void setOutsideTouchable(bool);
     bool isClippingEnabled();
@@ -190,6 +193,7 @@ public:
     void update();
     void update(int width, int height);
     void update(int x, int y, int width, int height,bool force=false);
+    void update(View* anchor, int xoff, int yoff, int width, int height);
 };
 }
 #endif//__POPUP_WINDOW_H__

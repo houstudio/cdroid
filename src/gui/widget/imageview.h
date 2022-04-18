@@ -64,7 +64,7 @@ public:
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState();
     void invalidateDrawable(Drawable& dr)override;
-    std::vector<int> onCreateDrawableState()const override;
+    std::vector<int> onCreateDrawableState()override;
     int getScaleType()const;
     void setScaleType(int st);
     bool getCropToPadding()const;

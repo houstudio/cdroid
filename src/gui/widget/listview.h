@@ -13,6 +13,11 @@ public:
     bool isSelectable;
 };
 class ListView:public AbsListView{
+public:
+    static constexpr int NO_POSITION = -1;
+    static constexpr int MIN_SCROLL_PREVIEW_PIXELS = 2;
+    static constexpr float MAX_SCROLL_FACTOR = 0.33f;
+
 private:
     class ArrowScrollFocusResult {
     private:
@@ -140,8 +145,6 @@ protected:
 
     bool recycleOnMeasure();
     int lookForSelectablePositionAfter(int current, int position, bool lookDown);
-    int measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
-            int maxHeight, int disallowPartialChildPosition);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect)override;
@@ -165,6 +168,8 @@ public:
     Drawable*getOverscrollHeader()const;
     void setOverscrollFooter(Drawable*);
     Drawable* getOverscrollFooter()const;
+    int measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
+            int maxHeight, int disallowPartialChildPosition);
     void addHeaderView(View* v,void* data, bool isSelectable);
     void addHeaderView(View* v);
     int getHeaderViewsCount()const;

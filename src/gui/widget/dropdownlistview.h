@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __DROPDOWN_LISTVIEW_H__
+#define __DROPDOWN_LISTVIEW_H__
 #include <widget/listview.h>
 #include <widget/autoscrollhelper.h>
 namespace cdroid{
@@ -17,7 +18,8 @@ protected:
     bool touchModeDrawsInPressedState()override;
     View* obtainView(int position, bool* isScrap)override;
 public:
-    DropDownListView(Context*,bool hijackfoxus);
+    DropDownListView(Context*,bool hijackfocus);
+    ~DropDownListView()override;
     bool shouldShowSelector()override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool onHoverEvent(MotionEvent& ev)override;
@@ -27,10 +29,7 @@ public:
     bool hasWindowFocus()const override;
     bool isFocused()const override;
     bool hasFocus()const override;
-    virtual void scrollTargetBy(int deltaX, int deltaY)=0;
-    virtual bool canTargetScrollHorizontally(int direction)=0;   
-    virtual bool canTargetScrollVertically(int direction)=0;
 };
 
-}
-
+}//endof namespace
+#endif

@@ -1,5 +1,4 @@
 #include <widget/imageview.h>
-#include <widget/measurespec.h>
 #include <app.h>
 #include <cdlog.h>
 namespace cdroid{
@@ -285,7 +284,7 @@ bool ImageView::verifyDrawable(Drawable* dr)const{
 void ImageView::jumpDrawablesToCurrentState(){
 }
 
-std::vector<int> ImageView::onCreateDrawableState()const{
+std::vector<int> ImageView::onCreateDrawableState(){
     if (mState.size()==0) {
         return View::onCreateDrawableState();
     } else if (!mMergeState) {

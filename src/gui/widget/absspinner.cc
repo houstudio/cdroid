@@ -1,5 +1,4 @@
 #include <widget/absspinner.h>
-#include <widget/measurespec.h>
 #include <sparsearray.h>
 #include <cdlog.h>
 

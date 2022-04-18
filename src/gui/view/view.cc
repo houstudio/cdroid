@@ -1,7 +1,6 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
-#include <widget/measurespec.h>
 #include <widget/roundscrollbarrenderer.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
@@ -350,7 +349,8 @@ void View::initView(){
     mRenderNode  = new  RenderNode();
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
-    mLayerType = LAYER_TYPE_NONE;
+    mLayerType= LAYER_TYPE_NONE;
+    mWindowAttachCount = 0;
 
     mLeftPaddingDefined = mRightPaddingDefined =false;
     mUserPaddingLeftInitial = mUserPaddingRightInitial =0;
@@ -1313,6 +1313,7 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
     if(mOverlay)
         mOverlay->getOverlayView()->dispatchAttachedToWindow(info,visibility);
 
+    mWindowAttachCount++;
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     onAttachedToWindow();
     int vis = info->mWindowVisibility;
@@ -1392,6 +1393,24 @@ void View::onDetachedFromWindowInternal() {
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {
         //hideTooltip();
     }
+}
+
+void View::cancelPendingInputEvents(){
+    dispatchCancelPendingInputEvents();
+}
+
+void View::dispatchCancelPendingInputEvents() {
+    mPrivateFlags3 &= ~PFLAG3_CALLED_SUPER;
+    onCancelPendingInputEvents();
+    if ((mPrivateFlags3 & PFLAG3_CALLED_SUPER) != PFLAG3_CALLED_SUPER) {
+        "View did not call through to super.onCancelPendingInputEvents()";
+    }
+}
+
+void View::onCancelPendingInputEvents() {
+    removePerformClickCallback();
+    cancelLongPress();
+    mPrivateFlags3 |= PFLAG3_CALLED_SUPER;
 }
 
 void View::saveHierarchyState(std::map<int,Parcelable>& container){
@@ -3447,7 +3466,7 @@ void View::jumpDrawablesToCurrentState(){
     if (mForegroundInfo  && mForegroundInfo->mDrawable )mForegroundInfo->mDrawable->jumpToCurrentState();
 }
 
-std::vector<int>View::onCreateDrawableState()const{
+std::vector<int>View::onCreateDrawableState(){
     int viewStateIndex = 0;
 
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
@@ -4162,6 +4181,10 @@ bool View::isShown()const{
 View& View::setEnabled(bool enable) {
     setFlags(enable?ENABLED:DISABLED,ENABLED_MASK);
     refreshDrawableState();
+    invalidate(true);
+    if (!enable) {
+        cancelPendingInputEvents();
+    }
     return *this;
 }
 
@@ -4627,6 +4650,10 @@ void View::cleanupDraw(){
     }
 }
 
+int View::getWindowAttachCount()const{
+    return mWindowAttachCount;
+}
+
 void View::postInvalidateOnAnimation(){
     invalidate(true);
     ViewGroup*root=getRootView();
@@ -4694,7 +4721,7 @@ bool View::toGlobalMotionEvent(MotionEvent& ev){
 
     Matrix m = identity_matrix();
     transformMatrixToGlobal(m);
-    //ev.transform(m);
+    ev.transform(m);
     return true;
 }
 
@@ -4705,7 +4732,7 @@ bool View::toLocalMotionEvent(MotionEvent& ev){
 
     Matrix m = identity_matrix();
     transformMatrixToLocal(m);
-    //ev.transform(m);
+    ev.transform(m);
     return true;
 }
 
@@ -5655,6 +5682,14 @@ void View::removeTapCallback() {
         delete mPendingCheckForTap;
         mPendingCheckForTap=nullptr;
     }
+}
+
+void View::cancelLongPress() {
+    removeLongPressCallback();
+    /* The prepressed state handled by the tap callback is a display
+     * construct, but the tap callback will post a long press callback
+     * less its own timeout. Remove it here.*/
+    removeTapCallback();
 }
 
 void View::removeLongPressCallback() {

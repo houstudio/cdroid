@@ -9,5 +9,7 @@ int main(int argc,const char*argv[]){
         LOGD("click button %d",which);
     };
     ProgressDialog*dlg=ProgressDialog::show(&app,"Progress","download progress");
+    dlg->setProgress(16);
+    dlg->setButton(DialogInterface::BUTTON_POSITIVE,"OK",f);
     return app.exec();
 }

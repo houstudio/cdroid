@@ -21,7 +21,6 @@
 #include <uieventsource.h>
 #include <expat.h>
 #include <systemclock.h>
-#include <widget/measurespec.h>
 #include <view/swipehelper.h>
 #include <fstream>
 

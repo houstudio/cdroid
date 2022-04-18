@@ -4,6 +4,7 @@
 #include <core/eventcodes.h>
 #include <core/sparsearray.h>
 #include <core/bitset.h>
+#include <cairomm/matrix.h>
 #include <stdint.h>
 #include <vector>
 #include <queue>
@@ -468,6 +469,7 @@ public:
     // Apply 3x3 perspective matrix transformation.
     // Matrix is in row-major form and compatible with SkMatrix.
     void transform(const float matrix[9]);
+    void transform(const Cairo::Matrix & matrix);
     inline int32_t getPointerId(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex].id;
     }

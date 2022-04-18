@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include <widget/textview.h>
-#include <widget/measurespec.h>
 #include <app.h>
 #include <layout.h>
 #include <cdlog.h>

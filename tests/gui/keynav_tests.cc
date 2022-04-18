@@ -24,7 +24,7 @@ TEST_F(KEYNAV,btns){
    }
    View*fv=w->focusSearch(nullptr,View::FOCUS_DOWN);
    while(fv){
-      printf("focusedview=%p:%d direction=%d \r\n",fv,fv->getId(),View::FOCUS_DOWN);
+      LOGD("focusedview=%p:%d direction=%d \r\n",fv,fv->getId(),View::FOCUS_DOWN);
       fv=w->focusSearch(fv,View::FOCUS_DOWN);
    }
    app.exec();

@@ -6,9 +6,6 @@
 
 
 namespace cdroid {
-#define MAX_SCROLL_FACTOR 0.33f
-#define MIN_SCROLL_PREVIEW_PIXELS 2
-#define NO_POSITION (-1)
 
 DECLARE_WIDGET2(ListView,"cdroid:attr/listViewStyle")
 
@@ -2004,7 +2001,7 @@ void ListView::relayoutMeasuredItem(View* child) {
 }
 
 int ListView::getArrowScrollPreviewLength(){
-   return std::max(MIN_SCROLL_PREVIEW_PIXELS, getVerticalFadingEdgeLength());
+   return std::max((int)MIN_SCROLL_PREVIEW_PIXELS, getVerticalFadingEdgeLength());
 }
 
 int ListView::amountToScroll(int direction, int nextSelectedPosition){

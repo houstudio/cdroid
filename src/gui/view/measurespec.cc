@@ -1,4 +1,4 @@
-#include <widget/measurespec.h>
+#include <view/measurespec.h>
 #include <sstream>
 #include <cdtypes.h>
 #include <cdlog.h>

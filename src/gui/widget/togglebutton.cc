@@ -39,8 +39,8 @@ void ToggleButton::setTextOff(const std::string& textOff){
     syncTextState();
 }
 
-void ToggleButton::setChecked(bool checked) {
-    CompoundButton::setChecked(checked);
+void ToggleButton::doSetChecked(bool checked) {
+    CompoundButton::doSetChecked(checked);
     LOGV("%p :%d checked=%d",this,getId(),checked);	
     syncTextState();
 }

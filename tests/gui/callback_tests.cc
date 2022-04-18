@@ -41,3 +41,25 @@ TEST_F(CALLBACK,eq){
    ASSERT_TRUE(c2==c1);
    ASSERT_TRUE(c2==c0);
 }
+
+TEST_F(CALLBACK,runner){
+   Runnable r;
+   ASSERT_TRUE(r==nullptr);
+   r=[](){};
+   ASSERT_FALSE(r==nullptr);
+}
+
+class MyRunner:public Runnable{
+private:
+    int mData;
+public:
+    MyRunner(){mData =0;};
+    void operator()()override{
+        LOGD("mData=%d",mData++);
+    }
+};
+TEST_F(CALLBACK,inherited){
+    MyRunner run;
+    run();
+    run();
+}

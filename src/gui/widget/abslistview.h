@@ -5,6 +5,7 @@
 #include <widget/recyclebin.h>
 #include <widget/overscroller.h>
 #include <widget/edgeeffect.h>
+#include <widget/popupwindow.h>
 namespace cdroid{
 
 #define OVERSCROLL_LIMIT_DIVISOR 3
@@ -107,18 +108,71 @@ protected:
         void operator()();
     };
 private:
-     void FLY_start(int initialVelocity);
-     void FLY_startSpringback();
-     void FLY_startOverfling(int initialVelocity);
-     void FLY_edgeReached(int delta);
-     void FLY_startScroll(int distance, int duration, bool linear,
-              bool suppressEndFlingStateChangeCall);
-     void FLY_endFling();
-     void FLY_wheelTouch();
-     void FLY_Proc();
-     void FLY_CheckFlyWheelProc();
+
+    class AbsRunnable:public Runnable{
+    protected:
+        AbsListView*mLV;
+    public:
+        AbsRunnable();
+        virtual void setList(AbsListView*); 
+        virtual void run()=0;
+    };
+    class CheckForTap:public AbsRunnable{
+    public:
+        float x,y;
+        void run()override;
+    };
+    class WindowRunnable:public AbsRunnable{
+    protected:
+        int mOriginalAttachCount;
+    public:
+        WindowRunnable();
+        void rememberWindowAttachCount();
+        bool sameWindow();
+    };
+    class PerformClick:public WindowRunnable{
+    public:
+        int mClickMotionPosition;
+        void run()override;
+    };
+    class CheckForLongPress:public WindowRunnable{
+    private:
+        static constexpr int INVALID_COORD=-1;
+        float mX ,mY;
+    public:
+        void setCoords(float x, float y);
+        void run()override;
+    };
+    class CheckForKeyLongPress:public WindowRunnable{
+    public:
+        void run()override;
+    };
+    class FlingRunnable:public AbsRunnable{
+    public:
+        static constexpr int FLYWHEEL_TIMEOUT = 40;
+        OverScroller* mScroller;
+        int mLastFlingY;
+        bool mSuppressIdleStateChangeCall;
+        Runnable mCheckFlywheel;
+        void checkFlyWheel();
+    public:
+        FlingRunnable();
+        ~FlingRunnable()override;
+        void setList(AbsListView*)override;
+        void start(int initialVelocity);
+        void startSpringback();
+        void startOverfling(int initialVelocity);
+        void edgeReached(int delta);
+        void startScroll(int distance, int duration, bool linear,
+                bool suppressEndFlingStateChangeCall);
+        void endFling();
+        void flywheelTouch();
+        void run()override;
+    };
 private:
     constexpr static int FLYWHEEL_TIMEOUT =40;
+    constexpr static bool PROFILE_SCROLLING = false;
+    static const bool PROFILE_FLINGING = true;
     enum{
         INVALID_POINTER=-1,
         TOUCH_MODE_UNKNOWN = -1,
@@ -126,10 +180,6 @@ private:
         TOUCH_MODE_OFF = 1,
     };
     int mLastTouchMode = -1;
-    OverScroller* mScroller;
-    int mLastFlingY;
-    bool mSuppressIdleStateChangeCall;
-
     int mTranscriptMode;
     int mCacheColorHint;
     int mDirection;
@@ -146,13 +196,17 @@ private:
     int mLastScrollState;
     bool mIsChildViewEnabled;
     bool mForceTranscriptScroll;
+    CheckForLongPress mPendingCheckForLongPress;
+    CheckForTap mPendingCheckForTap;
+    CheckForKeyLongPress mPendingCheckForKeyLongPress;
+    AbsListView::PerformClick mPerformClick;
+    FlingRunnable mFlingRunnable;
     Runnable mTouchModeReset;
     Runnable mClearScrollingCache;
     bool mHasPerformedLongPress;
-    static const bool PROFILE_SCROLLING = false;
     bool mScrollProfilingStarted = false;
-    static const bool PROFILE_FLINGING = true;
     bool mFlingProfilingStarted =false;
+    PopupWindow*mPopup;
     OnScrollListener mOnScrollListener;
     void initAbsListView(const AttributeSet&atts);
     void useDefaultSelector();
@@ -186,6 +240,7 @@ private:
     void clearScrollingCache();
     void dismissPopup();
     void showPopup();
+    void positionPopup();
 protected:
     int mChoiceMode;
     int mCheckedItemCount;
@@ -232,8 +287,6 @@ protected:
     SparseBooleanArray mCheckStates;
     LongSparseArray mCheckedIdStates;
     Drawable* mSelector;
-    Runnable mPendingCheckForTap;
-    Runnable mPendingCheckForLongPress;
     int mMotionPosition;
     int mMotionViewOriginalTop;
     int mMotionViewNewTop;
@@ -244,8 +297,6 @@ protected:
     int mMotionCorrection;
     int mTouchMode;
     VelocityTracker* mVelocityTracker;
-    Runnable mFlingRunnable;
-    Runnable mCheckFlywheel;
     class ActionMode*mChoiceActionMode;
     MultiChoiceModeListener mMultiChoiceModeCallback;
     virtual void resetList();
@@ -269,6 +320,7 @@ protected:
     void dispatchDraw(Canvas& canvas)override;
     void dispatchSetPressed(bool pressed)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
+    void onCancelPendingInputEvents()override;
     void confirmCheckedPositionsById();
     void handleDataChanged()override;
     static int getDistance(const Rect& source,const Rect& dest, int direction);
@@ -300,10 +352,6 @@ protected:
     void positionSelectorLikeTouch(int position, View* sel, float x, float y);
     void positionSelectorLikeFocus(int position, View* sel);
     void keyPressed();
-    void checkTap(int x,int y);
-    void CheckForKeyLongPress();
-    void doClick(int position);
-    void checkLongPress(int ,int y);
     void invokeOnItemScrollListener();
     bool performLongPress(View* child,int longPressPosition,long longPressId);
     bool performLongPress(View* child,int longPressPosition,long longPressId,int x,int y);

@@ -1,5 +1,4 @@
 #include <widget/tablerow.h>
-#include <widget/measurespec.h>
 #include <cdlog.h>
 namespace cdroid{
 

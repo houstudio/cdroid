@@ -1,5 +1,4 @@
 #include <widget/gridlayout.h>
-#include <widget/measurespec.h>
 #include <cdlog.h>
 #include <sstream>
 

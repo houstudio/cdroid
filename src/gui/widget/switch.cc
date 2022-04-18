@@ -525,11 +525,7 @@ void Switch::setThumbPosition(float position){
     invalidate();
 }
 
-void Switch::toggle(){
-    setChecked(!isChecked());
-}
-
-std::string Switch::getButtonStateDescription()const{
+std::string Switch::getButtonStateDescription(){
     if (isChecked()) {
         return mTextOn;// == null ? getResources().getString(R.string.capital_on) : mTextOn;
     } else {
@@ -537,8 +533,8 @@ std::string Switch::getButtonStateDescription()const{
     }
 }
 
-void Switch::setChecked(bool checked){
-    CompoundButton::setChecked(checked);
+void Switch::doSetChecked(bool checked){
+    CompoundButton::doSetChecked(checked);
 
     // Calling the super method may result in setChecked() getting called
     // recursively with a different value, so load the REAL value...
@@ -787,7 +783,7 @@ int Switch::getThumbScrollRange() {
     }
 }
 
-std::vector<int> Switch::onCreateDrawableState()const {
+std::vector<int> Switch::onCreateDrawableState(){
     std::vector<int> drawableState = CompoundButton::onCreateDrawableState();
     if (isChecked()) {
         mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));

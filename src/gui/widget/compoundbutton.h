@@ -13,12 +13,14 @@ private:
     Drawable* mButtonDrawable;
     OnCheckedChangeListener mOnCheckedChangeListener;
     OnCheckedChangeListener mOnCheckedChangeWidgetListener;
+    void initCompoundButton();
 protected:
-    std::vector<int>onCreateDrawableState()const override;
+    std::vector<int>onCreateDrawableState()override;
     int getHorizontalOffsetForDrawables()const override;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
     void onDraw(Canvas&canvas)override;
+    virtual void doSetChecked(bool);
 public:
     CompoundButton(const std::string&txt,int width,int height);
     CompoundButton(Context*ctx,const AttributeSet&attrs);
@@ -29,9 +31,10 @@ public:
     Drawable* getButtonDrawable()const;
     void jumpDrawablesToCurrentState()override;
 
-    void setChecked(bool checked)override;
-    bool isChecked()const override;
-    virtual void toggle()override;
+    //inerited from Checkable
+    //void setChecked(bool checked)override;
+    //bool isChecked() override;
+    //void toggle()override;
 
     void setOnCheckedChangeListener(OnCheckedChangeListener listener);
     /*OnCheckedChangeWidgetListener internal use(for radiogroup...)*/

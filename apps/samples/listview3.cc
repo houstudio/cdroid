@@ -21,15 +21,9 @@ public:
         chk=new CheckBox("",0,0);
         lp= new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,1);
         addView(chk,lp);
-    }
-    void setChecked(bool checked)override{
-        chk->setChecked(checked);
-    }
-    bool isChecked()const override{
-        return chk->isChecked();
-    }
-    void toggle()override{
-        chk->toggle();
+        setChecked=[this](bool checked){ chk->setChecked(checked); };
+        isChecked=[this]()->bool{ return chk->isChecked(); };
+        toggle = [this](){ chk->toggle(); };
     }
     void setName(const std::string&txt){
         name->setText(txt);
@@ -58,7 +52,7 @@ public:
         if(convertView==nullptr){
             dv=new DataView();
         }
-        dv->setId(dt.id);
+        dv->setId(position);
         dv->startMarqueeIfNeed(position==10);
         dv->setName(dt.name);
         return dv;
@@ -85,6 +79,7 @@ int main(int argc,const char*argv[]){
     lv->setAdapter(adapter);
     adapter->notifyDataSetChanged();
     lv->setSelector(new ColorDrawable(0x8800FF00));
+    lv->setChoiceMode(ListView::CHOICE_MODE_SINGLE);
     lv->setSelection(2);
     lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);

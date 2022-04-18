@@ -59,17 +59,15 @@ protected:
     OnItemSelectedListener mOnItemSelectedListener;
     OnItemClickListener mOnItemClickListener;
     OnItemLongClickListener mOnItemLongClickListener;
+    void onDetachedFromWindow()override;
     void onDatasetChange(int );
     void onLayout(bool changed, int left, int top, int width, int height)override; 
     virtual void handleDataChanged();
-    void setNextSelectedPositionInt(int position);
-    virtual void setSelectedPositionInt(int position);
     void checkSelectionChanged();
     virtual void selectionChanged();
     void checkFocus();
     void rememberSyncState();
     int  findSyncPosition();
-    virtual int lookForSelectablePosition(int position, bool lookDown);
 public:
     AdapterView(int w,int h);
     AdapterView(Context*ctx,const AttributeSet&atts);
@@ -91,6 +89,9 @@ public:
     int getSelectedItemPosition();
     long getSelectedItemId();
     void*getSelectedItem();
+    void setNextSelectedPositionInt(int position);
+    virtual void setSelectedPositionInt(int position);
+    virtual int lookForSelectablePosition(int position, bool lookDown);
     virtual int getCount();
     bool isInFilterMode();
     void setFocusable(int focusable)override;

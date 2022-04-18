@@ -3,8 +3,12 @@
 
 namespace cdroid{
 
-DropDownListView::DropDownListView(Context*context,bool hijackfoxus):ListView(context,AttributeSet()){
+DropDownListView::DropDownListView(Context*context,bool hijackfocus):ListView(context,AttributeSet()){
+    mScrollHelper = nullptr;
+}
 
+DropDownListView::~DropDownListView(){
+    delete mScrollHelper;
 }
 
 bool DropDownListView::shouldShowSelector(){

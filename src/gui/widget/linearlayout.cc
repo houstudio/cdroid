@@ -1,5 +1,4 @@
 #include <widget/linearlayout.h>
-#include <widget/measurespec.h>
 #include <cdlog.h>
  
 #define INDEX_CENTER_VERTICAL 0

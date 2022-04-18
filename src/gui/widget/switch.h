@@ -94,9 +94,10 @@ private:
     int getThumbOffset();
     int getThumbScrollRange();
 protected:
+    void doSetChecked(bool checked)override;
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void onDraw(Canvas&)override;
-    std::vector<int>onCreateDrawableState()const override;
+    std::vector<int>onCreateDrawableState()override;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
 public:
@@ -137,9 +138,7 @@ public:
 
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     bool onTouchEvent(MotionEvent& ev)override;
-    void toggle()override;
-    std::string getButtonStateDescription()const;// override;
-    void setChecked(bool checked)override;
+    std::string getButtonStateDescription();//override;
     void draw(Canvas&)override;
 
     int getCompoundPaddingLeft() ;//override;

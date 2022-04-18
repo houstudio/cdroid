@@ -11,6 +11,7 @@ private:
     void syncTextState();
     void updateReferenceToIndicatorDrawable(Drawable* backgroundDrawable);
 protected:
+    void doSetChecked(bool checked)override;
     void drawableStateChanged()override;
 public:
     ToggleButton(int w,int h);
@@ -19,7 +20,6 @@ public:
     void setTextOn(const std::string& textOn);
     const std::string getTextOff()const;
     void setTextOff(const std::string& textOff);
-    void setChecked(bool checked)override;
     View& setBackground(Drawable* d)override;
 };
 }

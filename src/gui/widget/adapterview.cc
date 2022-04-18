@@ -47,6 +47,11 @@ AdapterView::~AdapterView(){
     //it's good idea to freed by the owner who created it
 }
 
+void AdapterView::onDetachedFromWindow(){
+    ViewGroup::onDetachedFromWindow();
+    removeCallbacks(mSelectionNotifier);
+}
+
 Adapter*AdapterView::getAdapter(){
     return mAdapter;
 }

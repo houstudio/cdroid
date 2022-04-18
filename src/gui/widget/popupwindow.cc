@@ -61,6 +61,7 @@ PopupWindow::PopupWindow(int width, int height):PopupWindow(nullptr,width,height
 }
 
 PopupWindow::~PopupWindow(){
+    LOGV("destroy PopupWindow %p",this);
 }
 
 void PopupWindow::init(){
@@ -87,9 +88,10 @@ void PopupWindow::init(){
     mBelowAnchorBackgroundDrawable = nullptr;
 
     mOnLayoutChangeListener=[this](View&v,int,int,int,int,int,int,int,int){
-        //alignToAnchor();
+        alignToAnchor();
     };
-
+    mOnAnchorDetachedListener.onViewAttachedToWindow=[this](View&){ alignToAnchor();};
+    mOnAnchorDetachedListener.onViewDetachedFromWindow=[](View&){};
     mOnAnchorRootDetachedListener.onViewAttachedToWindow=[](View&){/*nothing*/};
     mOnAnchorRootDetachedListener.onViewDetachedFromWindow=[this](View&v){
         mIsAnchorRootAttached = false;
@@ -186,6 +188,14 @@ bool PopupWindow::isFocusable() {
 
 void PopupWindow::setFocusable(bool focusable) {
     mFocusable = focusable;
+}
+
+int PopupWindow::getInputMethodMode(){
+    return mInputMethodMode;
+}
+
+void PopupWindow::setInputMethodMode(int mode) {
+    mInputMethodMode = mode;
 }
 
 bool PopupWindow::isOutsideTouchable()const{
@@ -442,6 +452,7 @@ void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
     //mDecorView->setFitsSystemWindows(mLayoutInsetDecor);
     setLayoutDirectionFromAnchor();
     WindowManager::getInstance().moveWindow(mDecorView,p->x,p->y);
+    LOGD("invokePopup(%d,%d)",p->x,p->y);
     //mWindowManager->addView(mDecorView, p);
     /*if (mEnterTransition != nullptr) {
         mDecorView->requestEnterTransition(mEnterTransition);
@@ -835,11 +846,19 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
     }
 
     if (contentHolder != nullptr) {
+        ViewGroup*vg=dynamic_cast<ViewGroup*>(contentView);
+        if(vg){
+            while(vg->getChildCount()){
+                View*v= vg->getChildAt(0);
+                delete v;
+            }
+        }
         contentHolder->removeView(contentView);
     }
 
     // This needs to stay until after all transitions have ended since we
     // need the reference to cancel transitions in preparePopup().
+    ((Window*)(mDecorView))->close();
     mDecorView = nullptr;
     mBackgroundView = nullptr;
     mIsTransitioningToDismiss = false;
@@ -887,11 +906,13 @@ void PopupWindow::update(){
 
 void PopupWindow::update(View* anchor,WindowManager::LayoutParams* params) {
     setLayoutDirectionFromAnchor();
-   // mWindowManager.updateViewLayout(mDecorView, params);
+    // mWindowManager.updateViewLayout(mDecorView, params);
+    LOGD("PopupWindow.pos=%d,%d",params->x,params->y);
 }
 
 void PopupWindow::update(int width, int height){
-    update(0,0/*getLeft(), getTop()*/, width, height);
+    WindowManager::LayoutParams*p=getDecorViewLayoutParams();
+    update(p->x,p->y, width, height);
 }
 
 void PopupWindow::update(int x, int y, int width, int height,bool force){
@@ -970,6 +991,10 @@ void PopupWindow::update(int x, int y, int width, int height,bool force){
     }
 }
 
+void PopupWindow::update(View* anchor, int xoff, int yoff, int width, int height){
+    update(anchor,false,xoff,yoff,width,height);
+}
+
 void PopupWindow::update(View* anchor, bool updateLocation, int xoff, int yoff, int width, int height){
     if (!isShowing() || !hasContentView()) {
         return;
@@ -1033,11 +1058,11 @@ WindowManager::LayoutParams* PopupWindow::getDecorViewLayoutParams() {
 
 void PopupWindow::detachFromAnchor(){
     View* anchor = mAnchor;//getAnchor();
-    /*if (anchor) {
-        ViewTreeObserver vto = anchor.getViewTreeObserver();
-        vto->removeOnScrollChangedListener(mOnScrollChangedListener);
+    if (anchor) {
+        //ViewTreeObserver vto = anchor.getViewTreeObserver();
+        //vto->removeOnScrollChangedListener(mOnScrollChangedListener);
         anchor->removeOnAttachStateChangeListener(mOnAnchorDetachedListener);
-    }*/
+    }
 
     View* anchorRoot = mAnchorRoot;// != null ? mAnchorRoot.get() : null;
     if (anchorRoot != nullptr) {
@@ -1057,7 +1082,7 @@ void PopupWindow::attachToAnchor(View* anchor, int xoff, int yoff, int gravity){
     if (vto) {
         vto.addOnScrollChangedListener(mOnScrollChangedListener);
     }*/
-    //anchor.addOnAttachStateChangeListener(mOnAnchorDetachedListener);
+    anchor->addOnAttachStateChangeListener(mOnAnchorDetachedListener);
 
     View* anchorRoot = anchor->getRootView();
     anchorRoot->addOnAttachStateChangeListener(mOnAnchorRootDetachedListener);
@@ -1085,9 +1110,7 @@ void PopupWindow::alignToAnchor() {
 /////////////////////////////////////////////////////////////////////////////////////
 PopupWindow::PopupDecorView::PopupDecorView(int w,int h)
    :Window(0,0,w,h){
-    mPop=nullptr;
-    setBackgroundColor(0xFFFF0000);
-    LOGD("create PopupWindow...");
+    mPop = nullptr;
 }
 
 bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){

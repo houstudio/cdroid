@@ -6,27 +6,37 @@ DECLARE_WIDGET(CompoundButton)
 
 CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs)
   :Button(ctx,attrs){
-    mButtonDrawable=nullptr;
-    mOnCheckedChangeListener=nullptr;
-    mOnCheckedChangeWidgetListener=nullptr;
+    initCompoundButton();
     setButtonDrawable(attrs.getString("button"));
     setChecked(attrs.getBoolean("checked"));
 }
 
 CompoundButton::CompoundButton(const std::string&txt,int width,int height)
     :Button(txt,width,height){
+    initCompoundButton();
+}
+
+void CompoundButton::initCompoundButton(){
     mChecked=false;
     mBroadcasting=false;
     mCheckedFromResource=false;
     mButtonDrawable=nullptr;
     mOnCheckedChangeListener=nullptr;
     mOnCheckedChangeWidgetListener=nullptr;
+    isChecked = [this]()->bool{
+        return mChecked;
+    };
+    toggle = [this](){
+        setChecked(!mChecked);
+    };
+    setChecked = std::bind(&CompoundButton::doSetChecked,this,std::placeholders::_1);
 }
 
 CompoundButton::~CompoundButton(){
     delete mButtonDrawable;
 }
-std::vector<int>CompoundButton::onCreateDrawableState()const{
+
+std::vector<int>CompoundButton::onCreateDrawableState(){
     std::vector<int>drawableState = Button::onCreateDrawableState();
     if (isChecked()) {
         mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));
@@ -49,10 +59,6 @@ void CompoundButton::drawableHotspotChanged(float x,float y){
 
 int CompoundButton::getHorizontalOffsetForDrawables()const{
     return (mButtonDrawable == nullptr) ?0: mButtonDrawable->getIntrinsicWidth();
-}
-
-void CompoundButton::toggle(){
-    setChecked(!mChecked);
 }
 
 bool CompoundButton::performClick(){
@@ -105,11 +111,7 @@ void CompoundButton::jumpDrawablesToCurrentState(){
     if (mButtonDrawable ) mButtonDrawable->jumpToCurrentState();
 }
 
-bool CompoundButton::isChecked()const{
-    return mChecked;
-}
-
-void CompoundButton::setChecked(bool checked){
+void CompoundButton::doSetChecked(bool checked){
     if (mChecked != checked) {
         mCheckedFromResource = false;
         mChecked = checked;

@@ -10,7 +10,7 @@ class Object{
 };
 template<typename R,typename... Args>
 class CallbackBase{
-private:
+protected:
     using Functor=std::function<R(Args...)>;
     std::shared_ptr<Functor>mFunctor;
 public:
@@ -23,6 +23,7 @@ public:
     CallbackBase(const CallbackBase&b){
         mFunctor = b.mFunctor;
     }
+    virtual ~CallbackBase(){}
     CallbackBase&operator=(const Functor&a){
         mFunctor = std::make_shared<Functor>(a);
         return *this;

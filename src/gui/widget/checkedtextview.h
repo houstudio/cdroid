@@ -31,7 +31,7 @@ protected:
     bool verifyDrawable(Drawable* who)const override;
     void internalSetPadding(int left, int top, int right, int bottom);
     void onDraw(Canvas& canvas)override;
-    std::vector<int>onCreateDrawableState()const override;
+    std::vector<int>onCreateDrawableState()override;
     void drawableStateChanged()override;
     void drawableHotspotChanged(float x, float y)override;
 public:

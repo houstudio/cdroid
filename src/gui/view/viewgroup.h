@@ -168,6 +168,7 @@ protected:
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     bool dispatchVisibilityAggregated(bool isVisible);
     void dispatchDetachedFromWindow()override;
+    void dispatchCancelPendingInputEvents()override;
     void internalSetPadding(int left, int top, int width, int height)override;
 
     void dispatchSaveInstanceState(std::map<int,Parcelable>& container)override;
@@ -225,7 +226,7 @@ protected:
     void transformPointToViewLocal(float pint[2],View&);
     bool isTransformedTouchPointInView(int x,int y,View& child,Point*outLocalPoint);
     void drawableStateChanged()override;
-    std::vector<int> onCreateDrawableState()const override;
+    std::vector<int> onCreateDrawableState()override;
     void dispatchSetPressed(bool pressed)override;
     void dispatchDrawableHotspotChanged(float x,float y)override;
     virtual int getChildDrawingOrder(int childCount, int i);

@@ -823,6 +823,31 @@ void MotionEvent::transform(const float matrix[9]){
 
 }
 
+static void Matrix2Float9(const Cairo::Matrix& m,float *f9){
+    /*Matrix{
+      double xx; double yx;
+      double xy; double yy;
+      double x0; double y0;}*/
+    //x_new = xx * x + xy * y + x0;
+    //y_new = yx * x + yy * y + y0;
+    f9[0] = m.xx ; //scaleX
+    f9[1] = m.xy ;  //skewX
+    f9[2] = m.x0 ; //skewY
+
+    f9[3] = m.yx ;
+    f9[4] = m.yy ;
+    f9[5] = m.y0 ;
+
+    f9[6] = f9[7] =.0f;
+    f9[8] = 1.f;
+}
+
+void MotionEvent::transform(const Cairo::Matrix& matrix){
+    float f9[9];
+    Matrix2Float9(matrix,f9);
+    transform(f9);
+}
+
 void MotionEvent::getHistoricalRawPointerCoords(
         size_t pointerIndex, size_t historicalIndex,PointerCoords*out) const {
     *out=mSamplePointerCoords[historicalIndex * getPointerCount() + pointerIndex];
