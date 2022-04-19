@@ -963,6 +963,7 @@ public:
     virtual void addKeyboardNavigationClusters(std::vector<View*>&views,int drection);
     virtual bool dispatchTouchEvent(MotionEvent& event);
     virtual bool dispatchGenericMotionEvent(MotionEvent& event);
+    bool dispatchPointerEvent(MotionEvent& event);
 
     KeyEvent::DispatcherState* getKeyDispatcherState()const;
     virtual bool dispatchKeyEvent(KeyEvent&event);

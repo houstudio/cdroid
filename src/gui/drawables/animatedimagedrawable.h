@@ -1,7 +1,7 @@
 #ifndef __ANIMATED_IMAGE_DRAWABLE_H__
 #define __ANIMATED_IMAGE_DRAWABLE_H__
 #include <drawables/drawable.h>
-
+#include <core/handler.h>
 namespace cdroid{
 /*for drawing animated images (like GIF)*/
 class AnimatedImageDrawable:public Drawable,public Animatable2{
@@ -20,11 +20,13 @@ private:
     int mIntrinsicWidth;
     int mIntrinsicHeight;
     bool mStarting;
+    Handler* mHandler;
     State mState;
     Runnable mRunnable;
     ColorFilter* mColorFilter;
     std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;
     int loadGIF(std::istream&);
+    Handler* getHandler();
     void postOnAnimationStart();
     void postOnAnimationEnd();
 public:

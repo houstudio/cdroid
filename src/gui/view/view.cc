@@ -5465,12 +5465,20 @@ bool View::dispatchGenericFocusedEvent(MotionEvent& event) {
     return false;
 }
 
+bool View::dispatchPointerEvent(MotionEvent& event){
+    if (event.isTouchEvent()) {
+        return dispatchTouchEvent(event);
+    } else {
+        return dispatchGenericMotionEvent(event);
+    }
+}
+
 bool View::dispatchHoverEvent(MotionEvent& event){
-    /*if (li != null && li.mOnHoverListener != null
+    if (mListenerInfo && mListenerInfo->mOnHoverListener
                 && (mViewFlags & ENABLED_MASK) == ENABLED
-                && li.mOnHoverListener.onHover(this, event)) {
+                && mListenerInfo->mOnHoverListener(*this, event)) {
             return true;
-    }*/
+    }
     return onHoverEvent(event);
 }
 

@@ -1436,6 +1436,13 @@ View*ViewGroup::findViewById(int id){
     return View::findViewById(id);
 }
 
+void ViewGroup::dispatchWindowFocusChanged(bool hasFocus) {
+    View::dispatchWindowFocusChanged(hasFocus);
+    for (View*child:mChildren){
+        child->dispatchWindowFocusChanged(hasFocus);
+    }
+}
+
 bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){
     return child->draw(canvas,this,drawingTime);
 }

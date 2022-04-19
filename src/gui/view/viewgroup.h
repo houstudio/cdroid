@@ -350,6 +350,7 @@ public:
     bool dispatchKeyEvent(KeyEvent&)override;
     bool dispatchUnhandledMove(View* focused, int direction)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
+    void dispatchWindowFocusChanged(bool hasFocus)override;
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt)override;
     virtual void onDescendantInvalidated(View* child,View* target);

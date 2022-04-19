@@ -21,8 +21,17 @@ AnimatedImageDrawable::State::State(){
 }
 AnimatedImageDrawable::State::~State(){
 }
-AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
 
+AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
+    mHandler = nullptr;
+
+}
+
+Handler* AnimatedImageDrawable::getHandler() {
+    if (mHandler == nullptr) {
+        mHandler = new Handler();//Looper.getMainLooper());
+    }
+    return mHandler;
 }
 
 void AnimatedImageDrawable::setRepeatCount(int repeatCount){
@@ -131,22 +140,44 @@ void AnimatedImageDrawable::registerAnimationCallback(Animatable2::AnimationCall
     mAnimationCallbacks.push_back(callback);
 }
 
+static bool operator==(const Animatable2::AnimationCallback&a,const Animatable2::AnimationCallback&b){
+    return (a.onAnimationStart==b.onAnimationStart) && (a.onAnimationEnd==b.onAnimationEnd);
+}
+
 bool AnimatedImageDrawable::unregisterAnimationCallback(Animatable2::AnimationCallback callback){
-    auto itr=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),nullptr);//callback);
-    bool rc=(itr!=mAnimationCallbacks.end());
+    auto it=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
+    bool rc=(it!=mAnimationCallbacks.end());
     if(rc)
-        mAnimationCallbacks.erase(itr);
+        mAnimationCallbacks.erase(it);
     return rc;
 }
 
 void AnimatedImageDrawable::postOnAnimationStart(){
-
+    if (mAnimationCallbacks.size() == 0) {
+        return;
+    }
+    Runnable r([this](){
+        for (Animatable2::AnimationCallback callback : mAnimationCallbacks) {
+            callback.onAnimationStart(*this);
+        }
+    });
+    getHandler()->post(r);
 }
 
 void AnimatedImageDrawable::postOnAnimationEnd(){
+    if (mAnimationCallbacks.size()==0) {
+        return;
+    }
+    Runnable r([this]{
+        for (Animatable2::AnimationCallback callback : mAnimationCallbacks) {
+            callback.onAnimationEnd(*this);
+        }
+    });
+    getHandler()->post(r);
 }
 
 void AnimatedImageDrawable::clearAnimationCallbacks(){
+    mAnimationCallbacks.clear();
 }
 
 #ifdef ENABLE_GIF

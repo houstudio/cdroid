@@ -3528,7 +3528,6 @@ void AbsListView::PerformClick::run(){
         View* view = mLV->getChildAt(motionPosition - mLV->mFirstPosition);
         // If there is no view, something bad happened (the view scrolled off the
         // screen, etc.) and we should cancel the click
-        LOGD("view=%p",view,motionPosition);
         if (view != nullptr) {
             mLV->performItemClick(view, motionPosition, adapter->getItemId(motionPosition));
         }
@@ -3541,11 +3540,10 @@ void AbsListView::CheckForLongPress::setCoords(float x, float y) {
 }
 
 void AbsListView::CheckForLongPress::run(){
-    int motionPosition = mLV->mMotionPosition;
-    View* child = mLV->getChildAt(motionPosition - mLV->mFirstPosition);
+    View* child = mLV->getChildAt(mLV->mMotionPosition - mLV->mFirstPosition);
     if (child != nullptr) {
-        int longPressPosition = mLV->mMotionPosition;
-        long longPressId = mLV->mAdapter->getItemId(mLV->mMotionPosition);
+        const int longPressPosition = mLV->mMotionPosition;
+        const long longPressId = mLV->mAdapter->getItemId(mLV->mMotionPosition);
 
         bool handled = false;
         if (sameWindow() && !mLV->mDataChanged) {

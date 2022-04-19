@@ -27,8 +27,10 @@ public:
 
 class Animatable2:public Animatable{
 public:
-    /*startorend true for startcallback,false for end callback*/
-    typedef std::function<void (Drawable&,bool startorend)>AnimationCallback;
+    typedef struct{
+        CallbackBase<void,Drawable&> onAnimationStart;
+        CallbackBase<void,Drawable&> onAnimationEnd;
+    }AnimationCallback;
     virtual void registerAnimationCallback(AnimationCallback callback)=0;
     virtual bool unregisterAnimationCallback(AnimationCallback callback)=0;
 };
