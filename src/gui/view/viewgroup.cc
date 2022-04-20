@@ -72,9 +72,56 @@ public:
         child = nullptr;
     }
 };
+class HoverTarget {
+private:
+    static constexpr int MAX_RECYCLED = 32;
+    static HoverTarget* sRecycleBin;
+    static int sRecycledCount;
+    HoverTarget() {
+    }
+public:
+    // The hovered child view.
+    View* child;
+    // The next target in the target list.
+    HoverTarget* next;
 
-TouchTarget*TouchTarget::sRecycleBin=nullptr;
-int TouchTarget::sRecycledCount=0;
+    static HoverTarget* obtain(View* child) {
+        if (child == nullptr) {
+            throw "child must be non-null";
+        }
+
+        HoverTarget* target;
+        if (sRecycleBin == nullptr) {
+            target = new HoverTarget();
+        } else {
+            target = sRecycleBin;
+            sRecycleBin = target->next;
+            sRecycledCount--;
+            target->next = nullptr;
+        }
+        target->child = child;
+        return target;
+    }
+
+    void recycle() {
+        if (child == nullptr) {
+            throw "already recycled once";
+        }
+        if (sRecycledCount < MAX_RECYCLED) {
+            next = sRecycleBin;
+            sRecycleBin = this;
+            sRecycledCount += 1;
+        } else {
+            next = nullptr;
+        }
+        child = nullptr;
+    }
+};
+TouchTarget*TouchTarget::sRecycleBin = nullptr;
+HoverTarget*HoverTarget::sRecycleBin = nullptr;
+int TouchTarget::sRecycledCount = 0;
+int HoverTarget::sRecycledCount = 0;
+
 bool ViewGroup::DEBUG_DRAW = false;
 
 ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
@@ -105,6 +152,7 @@ void ViewGroup::initGroup(){
     mDefaultFocus = nullptr;
     mFocusedInCluster = nullptr;
     mFirstTouchTarget = nullptr;
+    mFirstHoverTarget = nullptr;
     mOnHierarchyChangeListener = nullptr;
     mLayoutAnimationController = nullptr;
     mChildCountWithTransientState= 0;
@@ -340,7 +388,46 @@ void ViewGroup::cancelTouchTarget(View* view){
         target = next;
     }
 }
+
+bool ViewGroup::hasHoveredChild() {
+    return mFirstHoverTarget != nullptr;
+}
+
+void ViewGroup::exitHoverTargets(){
+    if (mHoveredSelf || mFirstHoverTarget) {
+        long now = SystemClock::uptimeMillis();
+        MotionEvent* event = MotionEvent::obtain(now, now,
+                MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
+        event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+        dispatchHoverEvent(*event);
+        event->recycle();
+    }
+}
+
 void ViewGroup::cancelHoverTarget(View*view){
+    HoverTarget* predecessor = nullptr;
+    HoverTarget* target = mFirstHoverTarget;
+    while (target != nullptr) {
+        HoverTarget* next = target->next;
+        if (target->child == view) {
+            if (predecessor == nullptr) {
+                mFirstHoverTarget = next;
+            } else {
+                predecessor->next = next;
+            }
+            target->recycle();
+
+            long now = SystemClock::uptimeMillis();
+            MotionEvent* event = MotionEvent::obtain(now, now,
+                    MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
+            event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+            view->dispatchHoverEvent(*event);
+            event->recycle();
+            return;
+        }
+        predecessor = target;
+        target = next;
+    }
 }
 
 bool ViewGroup::canViewReceivePointerEvents(View& child) {
@@ -372,6 +459,32 @@ void ViewGroup::dispatchAttachedToWindow(AttachInfo* info, int visibility){
      for (View*view:mTransientViews){
          view->dispatchAttachedToWindow(info, combineVisibility(visibility, view->getVisibility()));
      }
+}
+
+bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
+        // Send the event to the child under the pointer.
+    const int childrenCount = mChildren.size();
+    if (childrenCount != 0) {
+        const float x = event.getX();
+        const float y = event.getY();
+        std::vector<View*> preorderedList = buildOrderedChildList();
+        bool customOrder = preorderedList.empty()  && isChildrenDrawingOrderEnabled();
+        for (int i = childrenCount - 1; i >= 0; i--) {
+            int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+            View* child = getAndVerifyPreorderedView(preorderedList, mChildren, childIndex);
+            if (!canViewReceivePointerEvents(*child)
+                    || !isTransformedTouchPointInView(x, y, *child, nullptr)) {
+                continue;
+            }
+            if (dispatchTransformedGenericPointerEvent(event, child)) {
+                preorderedList.clear();
+                return true;
+            }
+        }
+        preorderedList.clear();
+    }
+    // No child handled the event.  Send it to this view group.
+    return View::dispatchGenericPointerEvent(event);
 }
 
 bool ViewGroup::dispatchGenericFocusedEvent(MotionEvent&event){
@@ -2566,6 +2679,192 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     return handled;
 }
 
+bool ViewGroup::dispatchHoverEvent(MotionEvent&event){
+    bool handled = false;
+    int action = event.getAction();
+    // First check whether the view group wants to intercept the hover event.
+    bool interceptHover = onInterceptHoverEvent(event);
+    event.setAction(action); // restore action in case it was changed
+
+    MotionEvent* eventNoHistory = &event;
+    // Send events to the hovered children and build a new list of hover targets until
+    // one is found that handles the event.
+    HoverTarget* firstOldHoverTarget = mFirstHoverTarget;
+    mFirstHoverTarget = nullptr;
+    if (!interceptHover && action != MotionEvent::ACTION_HOVER_EXIT) {
+        float x = event.getX();
+        float y = event.getY();
+        int childrenCount = mChildren.size();
+        if (childrenCount != 0) {
+            std::vector<View*> preorderedList = buildOrderedChildList();
+            bool customOrder = preorderedList.empty() && isChildrenDrawingOrderEnabled();
+            HoverTarget* lastHoverTarget = nullptr;
+            for (int i = childrenCount - 1; i >= 0; i--) {
+                int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+                View* child = getAndVerifyPreorderedView(preorderedList, mChildren, childIndex);
+                if (!child->canReceivePointerEvents() || !isTransformedTouchPointInView(x, y, *child, nullptr)) {
+                    continue;
+                }
+
+                // Obtain a hover target for this child.  Dequeue it from the
+                // old hover target list if the child was previously hovered.
+                HoverTarget* hoverTarget = firstOldHoverTarget;
+                bool wasHovered;
+                for (HoverTarget* predecessor = nullptr; ;) {
+                    if (hoverTarget == nullptr) {
+                        hoverTarget = HoverTarget::obtain(child);
+                        wasHovered = false;
+                        break;
+                    }
+
+                    if (hoverTarget->child == child) {
+                        if (predecessor != nullptr) {
+                            predecessor->next = hoverTarget->next;
+                        } else {
+                            firstOldHoverTarget = hoverTarget->next;
+                        }
+                        hoverTarget->next = nullptr;
+                        wasHovered = true;
+                        break;
+                    }
+
+                    predecessor = hoverTarget;
+                    hoverTarget = hoverTarget->next;
+                }
+
+                // Enqueue the hover target onto the new hover target list.
+                if (lastHoverTarget != nullptr) {
+                    lastHoverTarget->next = hoverTarget;
+                } else {
+                    mFirstHoverTarget = hoverTarget;
+                }
+                lastHoverTarget = hoverTarget;
+
+                // Dispatch the event to the child.
+                if (action == MotionEvent::ACTION_HOVER_ENTER) {
+                    if (!wasHovered) { // Send the enter as is.
+                        handled |= dispatchTransformedGenericPointerEvent(event, child); // enter
+                    }
+                } else if (action == MotionEvent::ACTION_HOVER_MOVE) {
+                    if (!wasHovered) { // Synthesize an enter from a move.
+                        eventNoHistory = obtainMotionEventNoHistoryOrSelf(eventNoHistory);
+                        eventNoHistory->setAction(MotionEvent::ACTION_HOVER_ENTER);
+                        handled |= dispatchTransformedGenericPointerEvent(*eventNoHistory, child); // enter
+                        eventNoHistory->setAction(action);
+
+                        handled |= dispatchTransformedGenericPointerEvent(*eventNoHistory, child); // move
+                    } else { // Send the move as is.
+                        handled |= dispatchTransformedGenericPointerEvent(event, child);
+                    }
+                }
+                if (handled) {
+                    break;
+                }
+            }
+            preorderedList.clear();
+        }
+    }
+
+    // Send exit events to all previously hovered children that are no longer hovered.
+    while (firstOldHoverTarget != nullptr) {
+        View* child = firstOldHoverTarget->child;
+
+        // Exit the old hovered child.
+        if (action == MotionEvent::ACTION_HOVER_EXIT) { // Send the exit as is.
+            handled |= dispatchTransformedGenericPointerEvent(event, child); // exit
+        } else {
+            // Synthesize an exit from a move or enter.
+            // Ignore the result because hover focus has moved to a different view.
+            if (action == MotionEvent::ACTION_HOVER_MOVE) {
+                bool hoverExitPending = event.isHoverExitPending();
+                event.setHoverExitPending(true);
+                dispatchTransformedGenericPointerEvent(event, child); // move
+                event.setHoverExitPending(hoverExitPending);
+            }
+            eventNoHistory = obtainMotionEventNoHistoryOrSelf(eventNoHistory);
+            eventNoHistory->setAction(MotionEvent::ACTION_HOVER_EXIT);
+            dispatchTransformedGenericPointerEvent(*eventNoHistory, child); // exit
+            eventNoHistory->setAction(action);
+        }
+
+        HoverTarget* nextOldHoverTarget = firstOldHoverTarget->next;
+        firstOldHoverTarget->recycle();
+        firstOldHoverTarget = nextOldHoverTarget;
+    }
+
+    // Send events to the view group itself if no children have handled it and the view group
+    // itself is not currently being hover-exited.
+    bool newHoveredSelf = !handled &&
+            (action != MotionEvent::ACTION_HOVER_EXIT) && !event.isHoverExitPending();
+    if (newHoveredSelf == mHoveredSelf) {
+        if (newHoveredSelf) {
+            // Send event to the view group as before.
+            handled |= View::dispatchHoverEvent(event);
+        }
+    } else {
+        if (mHoveredSelf) {
+            // Exit the view group.
+            if (action == MotionEvent::ACTION_HOVER_EXIT) {
+                // Send the exit as is.
+                handled |= View::dispatchHoverEvent(event); // exit
+            } else {
+                // Synthesize an exit from a move or enter.
+                // Ignore the result because hover focus is moving to a different view.
+                if (action == MotionEvent::ACTION_HOVER_MOVE) {
+                    View::dispatchHoverEvent(event); // move
+                }
+                eventNoHistory = obtainMotionEventNoHistoryOrSelf(eventNoHistory);
+                eventNoHistory->setAction(MotionEvent::ACTION_HOVER_EXIT);
+                View::dispatchHoverEvent(*eventNoHistory); // exit
+                eventNoHistory->setAction(action);
+            }
+            mHoveredSelf = false;
+        }
+
+        if (newHoveredSelf) {
+            // Enter the view group.
+            if (action == MotionEvent::ACTION_HOVER_ENTER) {
+                // Send the enter as is.
+                handled |= View::dispatchHoverEvent(event); // enter
+                mHoveredSelf = true;
+            } else if (action == MotionEvent::ACTION_HOVER_MOVE) {
+                // Synthesize an enter from a move.
+                eventNoHistory = obtainMotionEventNoHistoryOrSelf(eventNoHistory);
+                eventNoHistory->setAction(MotionEvent::ACTION_HOVER_ENTER);
+                handled |= View::dispatchHoverEvent(*eventNoHistory); // enter
+                eventNoHistory->setAction(action);
+
+                handled |= View::dispatchHoverEvent(*eventNoHistory); // move
+                mHoveredSelf = true;
+            }
+        }
+    }
+    // Recycle the copy of the event that we made.
+    if (eventNoHistory != &event) {
+        eventNoHistory->recycle();
+    }
+    return handled;
+}
+
+bool ViewGroup::onInterceptHoverEvent(MotionEvent& event) {
+    if (event.isFromSource(InputDevice::SOURCE_MOUSE)) {
+        const int action = event.getAction();
+        const float x = event.getX();
+        const float y = event.getY();
+        if ((action == MotionEvent::ACTION_HOVER_MOVE
+                || action == MotionEvent::ACTION_HOVER_ENTER) && isOnScrollbar(x, y)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+MotionEvent* ViewGroup::obtainMotionEventNoHistoryOrSelf(MotionEvent* event) {
+    if (event->getHistorySize() == 0) {
+        return event;
+    }
+    return MotionEvent::obtainNoHistory(*event);
+}
 void ViewGroup::dispatchDetachedFromWindow(){
     // If we still have a touch target, we are still in the process of
     // dispatching motion events to a child; we need to get rid of that
@@ -2575,8 +2874,8 @@ void ViewGroup::dispatchDetachedFromWindow(){
     cancelAndClearTouchTargets(nullptr);
 
     // Similarly, set ACTION_EXIT to all hover targets and clear them.
-    /*exitHoverTargets();
-    exitTooltipHoverTargets();
+    exitHoverTargets();
+    /*exitTooltipHoverTargets();
 
     // In case view is detached while transition is running
     mLayoutCalledWhileSuppressed = false;

@@ -570,6 +570,8 @@ protected:
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericFocusedEvent(MotionEvent& event);
+    virtual bool hasHoveredChild();
+    virtual bool pointInHoveredChild(MotionEvent& event);
 
     virtual void saveHierarchyState(std::map<int,Parcelable>& container);
     virtual void dispatchSaveInstanceState(std::map<int,Parcelable>& container);

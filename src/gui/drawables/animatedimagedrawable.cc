@@ -130,10 +130,23 @@ bool AnimatedImageDrawable::isRunning(){
 }
 
 void AnimatedImageDrawable::start(){
+    /*if (mState.mNativePtr == 0) {
+        throw "called start on empty AnimatedImageDrawable";
+    }
 
+    if (nStart(mState.mNativePtr))*/{
+        mStarting = true;
+        invalidateSelf();
+    }
 }
 
 void AnimatedImageDrawable::stop(){
+    /*if (mState.mNativePtr == 0) {
+        throw "called stop on empty AnimatedImageDrawable";
+    }
+    if (nStop(mState.mNativePtr))*/ {
+        postOnAnimationEnd();
+    }
 }
 
 void AnimatedImageDrawable::registerAnimationCallback(Animatable2::AnimationCallback callback){

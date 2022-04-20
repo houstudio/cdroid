@@ -414,6 +414,8 @@ public:
 
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState);
     static MotionEvent* obtain(const MotionEvent& other);
+    static MotionEvent* obtainNoHistory(MotionEvent& other);
+    static bool isTouchEvent(int32_t source, int32_t action);
     void copyFrom(const MotionEvent* other, bool keepHistory);
     MotionEvent*split(int idBits);
     virtual int getType(){return EV_ABS;}
@@ -429,6 +431,11 @@ public:
     inline void setFlags(int32_t flags) { mFlags = flags; }
     inline int32_t getEdgeFlags() const { return mEdgeFlags; }
     inline void setEdgeFlags(int32_t edgeFlags) { mEdgeFlags = edgeFlags; }
+    inline bool isHoverExitPending()const{return getFlags()&FLAG_HOVER_EXIT_PENDING!=0;}
+    inline void setHoverExitPending(bool hoverExitPending){
+        if(hoverExitPending)mFlags|=FLAG_HOVER_EXIT_PENDING;
+        else mFlags&=~FLAG_HOVER_EXIT_PENDING;
+    }
     inline int32_t getMetaState() const { return mMetaState; }
     inline void setMetaState(int32_t metaState) { mMetaState = metaState; }
     inline int32_t getButtonState() const { return mButtonState; }
@@ -441,13 +448,11 @@ public:
     inline float getXPrecision() const { return mXPrecision; }
     inline float getYPrecision() const { return mYPrecision; }
     inline size_t getHistorySize() const { return mSampleEventTimes.size() - 1; }
-    inline nsecs_t getHistoricalEventTime(size_t historicalIndex) const {
-        return mSampleEventTimes[historicalIndex];
-    }
-    void getPointerCoords(int pointerIndex, PointerCoords* outPointerCoords){
+    nsecs_t getHistoricalEventTime(size_t historicalIndex) const;
+    void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords){
         getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,outPointerCoords);
     }
-    void getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords* outPointerCoords) const;
+    void getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords& outPointerCoords) const;
     float getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,size_t historicalIndex) const;
     inline float getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const {
         return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);

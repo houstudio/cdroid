@@ -154,7 +154,7 @@ bool ForwardingListener::onTouchForwarded(MotionEvent& srcEvent){
     }
 
     // Convert event to destination-local coordinates.
-    MotionEvent* dstEvent = MotionEvent::obtain(srcEvent);//obtainNoHistory(srcEvent);
+    MotionEvent* dstEvent = MotionEvent::obtainNoHistory(srcEvent);
     mSrc->toGlobalMotionEvent(*dstEvent);
     dst->toLocalMotionEvent(*dstEvent);
 

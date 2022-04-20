@@ -47,8 +47,8 @@ public:
     bool setVisible(bool visible, bool restart)override;
     void start()override;
     void stop()override;
-    void nextFrame();
     bool isRunning()override;
+    void nextFrame();
     void draw(Canvas& canvas)override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };

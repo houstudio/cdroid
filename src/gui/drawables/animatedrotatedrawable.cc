@@ -49,7 +49,6 @@ AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateSta
         invalidateSelf();
         nextFrame();
     };
-
 }
 
 AnimatedRotateDrawable::~AnimatedRotateDrawable(){

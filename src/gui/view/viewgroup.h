@@ -106,6 +106,8 @@ private:
     LayoutTransition::TransitionListener mLayoutTransitionListener;
     class LayoutAnimationController* mLayoutAnimationController;
     class TouchTarget* mFirstTouchTarget;
+    class HoverTarget* mFirstHoverTarget;
+    bool mHoveredSelf;
     POINT animateTo;//save window boundray  while animating
     POINT animateFrom;//window animate from boundary
     Transformation* mChildTransformation;
@@ -128,9 +130,11 @@ private:
     void clearTouchTargets();
 
     static bool canViewReceivePointerEvents(View& child);
+    static MotionEvent* obtainMotionEventNoHistoryOrSelf(MotionEvent* event);
     void cancelAndClearTouchTargets(MotionEvent*);
     void removePointersFromTouchTargets(int pointerIdBits);
     void cancelTouchTarget(View* view);
+    void exitHoverTargets();
     void cancelHoverTarget(View*view);
     bool dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
             View* child, int desiredPointerIdBits);
@@ -176,6 +180,7 @@ protected:
     void dispatchRestoreInstanceState(std::map<int,Parcelable>& container)override;
     void dispatchThawSelfOnly(std::map<int,Parcelable>& container);
 
+    bool dispatchGenericPointerEvent(MotionEvent&event)override;
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
@@ -229,6 +234,7 @@ protected:
     std::vector<int> onCreateDrawableState()override;
     void dispatchSetPressed(bool pressed)override;
     void dispatchDrawableHotspotChanged(float x,float y)override;
+    bool hasHoveredChild()override;
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();
 
@@ -336,6 +342,7 @@ public:
     View* findViewWithTagTraversal(void*tag)override;
     virtual bool shouldDelayChildPressedState();
 
+    virtual bool onInterceptHoverEvent(MotionEvent& event);
     virtual bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
     virtual void onNestedScrollAccepted(View* child, View* target, int axes);
     virtual void onStopNestedScroll(View* child);
@@ -350,6 +357,7 @@ public:
     bool dispatchKeyEvent(KeyEvent&)override;
     bool dispatchUnhandledMove(View* focused, int direction)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
+    bool dispatchHoverEvent(MotionEvent&event)override;
     void dispatchWindowFocusChanged(bool hasFocus)override;
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt)override;

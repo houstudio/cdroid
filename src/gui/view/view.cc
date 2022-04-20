@@ -5482,6 +5482,14 @@ bool View::dispatchHoverEvent(MotionEvent& event){
     return onHoverEvent(event);
 }
 
+bool View::hasHoveredChild() {
+    return false;
+}
+
+bool View::pointInHoveredChild(MotionEvent& event) {
+    return false;
+}
+
 bool View::dispatchGenericMotionEvent(MotionEvent&event){
     int source = event.getSource();
     if ((source & InputEvent::SOURCE_CLASS_POINTER) != 0) {
@@ -5544,7 +5552,62 @@ bool View::onGenericMotionEvent(MotionEvent& event){
     return false;
 }
 
-bool View::onHoverEvent(MotionEvent& evt){
+bool View::onHoverEvent(MotionEvent& event){
+    /*if (mTouchDelegate != null && dispatchTouchExplorationHoverEvent(event)) {
+         return true;
+    }*/
+
+    // The root view may receive hover (or touch) events that are outside the bounds of
+    // the window.  This code ensures that we only send accessibility events for
+    // hovers that are actually within the bounds of the root view.
+    int action = event.getActionMasked();
+    /*if (!mSendingHoverAccessibilityEvents) {
+        if ((action == MotionEvent::ACTION_HOVER_ENTER
+                || action == MotionEvent::ACTION_HOVER_MOVE)
+                && !hasHoveredChild()
+                && pointInView(event.getX(), event.getY(),0)) {
+            //sendAccessibilityHoverEvent(AccessibilityEvent.TYPE_VIEW_HOVER_ENTER);
+            //mSendingHoverAccessibilityEvents = true;
+        }
+    } else {
+        if (action == MotionEvent::ACTION_HOVER_EXIT
+                || (action == MotionEvent::ACTION_HOVER_MOVE
+                        && !pointInView(event.getX(), event.getY(),0))) {
+            //mSendingHoverAccessibilityEvents = false;
+            //sendAccessibilityHoverEvent(AccessibilityEvent.TYPE_VIEW_HOVER_EXIT);
+        }
+    }*/
+
+    if ((action == MotionEvent::ACTION_HOVER_ENTER || action == MotionEvent::ACTION_HOVER_MOVE)
+            && event.isFromSource(InputDevice::SOURCE_MOUSE)
+            && isOnScrollbar(event.getX(), event.getY())) {
+        awakenScrollBars();
+    }
+
+    // If we consider ourself hoverable, or if we we're already hovered,
+    // handle changing state in response to ENTER and EXIT events.
+    if (isHoverable() || isHovered()) {
+        switch (action) {
+        case MotionEvent::ACTION_HOVER_ENTER:
+            setHovered(true);
+            break;
+        case MotionEvent::ACTION_HOVER_EXIT:
+            setHovered(false);
+            break;
+        }
+
+        // Dispatch the event to onGenericMotionEvent before returning true.
+        // This is to provide compatibility with existing applications that
+        // handled HOVER_MOVE events in onGenericMotionEvent and that would
+        // break because of the new default handling for hoverable views
+        // in onHoverEvent.
+        // Note that onGenericMotionEvent will be called by default when
+        // onHoverEvent returns false (refer to dispatchGenericMotionEvent).
+        dispatchGenericMotionEventInternal(event);
+        // The event was already handled by calling setHovered(), so always
+        // return true.
+        return true;
+    }
     return false;
 }
 

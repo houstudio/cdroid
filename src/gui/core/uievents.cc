@@ -522,6 +522,12 @@ MotionEvent* MotionEvent::obtain(const MotionEvent& other) {
     return ev;
 }
 
+MotionEvent* MotionEvent::obtainNoHistory(MotionEvent& other){
+    MotionEvent* ev = obtain();
+    ev->copyFrom(&other,false);
+    return ev;
+}
+
 void MotionEvent::initialize(
         int deviceId,
         int source,
@@ -596,7 +602,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
 }
 
 MotionEvent*MotionEvent::split(int idBits){
-    MotionEvent*ev=nullptr;
+    MotionEvent*ev = obtain();
     int oldPointerCount = getPointerCount();
     PointerProperties pp[oldPointerCount];// = gSharedTempPointerProperties;
     PointerCoords pc[oldPointerCount];// = gSharedTempPointerCoords;
@@ -628,18 +634,14 @@ MotionEvent*MotionEvent::split(int idBits){
 
     int newAction;
     if (oldActionMasked == ACTION_POINTER_DOWN || oldActionMasked == ACTION_POINTER_UP) {
-        if (newActionPointerIndex < 0) {
-            // An unrelated pointer changed.
+        if (newActionPointerIndex < 0) {   // An unrelated pointer changed.
             newAction = ACTION_MOVE;
-        } else if (newPointerCount == 1) {
-            // The first/last pointer went down/up.
+        } else if (newPointerCount == 1) { // The first/last pointer went down/up.
             newAction = oldActionMasked == ACTION_POINTER_DOWN ? ACTION_DOWN : ACTION_UP;
-        } else {
-            // A secondary pointer went down/up.
+        } else { // A secondary pointer went down/up.
             newAction = oldActionMasked | (newActionPointerIndex << ACTION_POINTER_INDEX_SHIFT);
         }
-    } else {
-        // Simple up/down/cancel/move or other motion action.
+    } else {    // Simple up/down/cancel/move or other motion action.
         newAction = oldAction;
     }
 
@@ -649,10 +651,10 @@ MotionEvent*MotionEvent::split(int idBits){
 
         for (int i = 0; i < newPointerCount; i++) {
             //getPointerCoords(map[i], historyPos, &pc[i]);
-	    getHistoricalRawPointerCoords(map[i], historyPos, &pc[i]);
+            getHistoricalRawPointerCoords(map[i], historyPos, pc[i]);
         }
 
-        long eventTimeNanos = getEventTime();//historyPos);
+        long eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
             ev->initialize( getDeviceId(),getSource(),  newAction, 0,
                     getFlags(),   getEdgeFlags(), getMetaState(),
@@ -661,6 +663,7 @@ MotionEvent*MotionEvent::split(int idBits){
                     eventTimeNanos,  newPointerCount, pp, pc);
         } else {
             //nativeAddBatch(ev.mNativePtr, eventTimeNanos, pc, 0);
+            ev->addSample(eventTimeNanos,pp[h],pc[h]);
         }
     }
     return ev;
@@ -704,6 +707,16 @@ float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
     return value;
 }
 
+nsecs_t MotionEvent::getHistoricalEventTime(size_t historyPos) const{
+    if(historyPos==HISTORY_CURRENT){
+         return getEventTime();
+    }else{
+        const size_t historySize = getHistorySize();
+        if(historyPos<0||historyPos>=historySize)return 0;
+         return mSampleEventTimes[historyPos];
+    }
+}
+
 ssize_t MotionEvent::findPointerIndex(int32_t pointerId) const {
     size_t pointerCount = mPointerProperties.size();
     for (size_t i = 0; i < pointerCount; i++) {
@@ -714,8 +727,25 @@ ssize_t MotionEvent::findPointerIndex(int32_t pointerId) const {
     return -1;
 }
 
+bool  MotionEvent::isTouchEvent(int32_t source, int32_t action){
+    if (source & SOURCE_CLASS_POINTER) {
+        // Specifically excludes HOVER_MOVE and SCROLL.
+        switch (action & ACTION_MASK) {
+        case ACTION_DOWN:
+        case ACTION_MOVE:
+        case ACTION_UP:
+        case ACTION_POINTER_DOWN:
+        case ACTION_POINTER_UP:
+        case ACTION_CANCEL:
+        case ACTION_OUTSIDE:
+            return true;
+        }
+    }
+    return false;
+}
+
 bool MotionEvent::isTouchEvent()const{
-    return true;
+    return isTouchEvent(mSource, mAction);
 }
 
 void MotionEvent::offsetLocation(float xOffset, float yOffset) {
@@ -849,14 +879,20 @@ void MotionEvent::transform(const Cairo::Matrix& matrix){
 }
 
 void MotionEvent::getHistoricalRawPointerCoords(
-        size_t pointerIndex, size_t historicalIndex,PointerCoords*out) const {
-    *out=mSamplePointerCoords[historicalIndex * getPointerCount() + pointerIndex];
+        size_t pointerIndex, size_t historicalIndex,PointerCoords&out) const {
+    const size_t pointerCount = getPointerCount();
+    if(pointerIndex<0||pointerIndex>=pointerCount)return;
+    if(historicalIndex==HISTORY_CURRENT){
+        out = mSamplePointerCoords[pointerIndex];
+    }else{
+        out = mSamplePointerCoords[historicalIndex * getPointerCount() + pointerIndex];
+    }
 }
 
 float MotionEvent::getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,
         size_t historicalIndex) const {
     PointerCoords pc;
-    getHistoricalRawPointerCoords(pointerIndex,historicalIndex,&pc);
+    getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
     return pc.getAxisValue(axis);
 }
 // --- PooledInputEventFactory ---
