@@ -9,6 +9,7 @@ DropDownListView::DropDownListView(Context*context,bool hijackfocus):ListView(co
 
 DropDownListView::~DropDownListView(){
     delete mScrollHelper;
+    removeCallbacks(mResolveHoverRunnable);
 }
 
 bool DropDownListView::shouldShowSelector(){
@@ -18,7 +19,7 @@ bool DropDownListView::shouldShowSelector(){
 bool DropDownListView::onTouchEvent(MotionEvent& ev){
     if(mResolveHoverRunnable){
         removeCallbacks(mResolveHoverRunnable);
-        mResolveHoverRunnable=nullptr;
+        mResolveHoverRunnable = nullptr;
     }
     return ListView::onTouchEvent(ev);
 }
@@ -29,7 +30,7 @@ bool DropDownListView::onHoverEvent(MotionEvent& ev){
         // This may be transitioning to TOUCH_DOWN. Postpone drawable state
         // updates until either the next frame or the next touch event.
         mResolveHoverRunnable = [this](){
-            mResolveHoverRunnable=nullptr;
+            mResolveHoverRunnable = nullptr;
             drawableStateChanged();
         };
         post(mResolveHoverRunnable);
@@ -39,7 +40,7 @@ bool DropDownListView::onHoverEvent(MotionEvent& ev){
     bool handled = ListView::onHoverEvent(ev);
 
     if (action == MotionEvent::ACTION_HOVER_ENTER || action == MotionEvent::ACTION_HOVER_MOVE) {
-        int position = pointToPosition((int) ev.getX(), (int) ev.getY());
+        const int position = pointToPosition((int) ev.getX(), (int) ev.getY());
         if (position != INVALID_POSITION && position != mSelectedPosition) {
             View* hoveredItem = getChildAt(position - getFirstVisiblePosition());
             if (hoveredItem->isEnabled()) {

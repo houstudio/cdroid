@@ -34,6 +34,7 @@ ListPopupWindow::~ListPopupWindow(){
 }
 
 void ListPopupWindow::initPopupWindow(){
+    mObserver = nullptr;
     mOverlapAnchor = 0xFF;
     mDropDownAlwaysVisible  = false;
     mForceIgnoreOutsideTouch= false;
@@ -330,7 +331,7 @@ void ListPopupWindow::dismiss() {
     removePromptView();
     mPopup->setContentView(nullptr);
     mDropDownList->setAdapter(nullptr);
-    delete mDropDownList;
+    //delete mDropDownList;
     mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
@@ -660,7 +661,7 @@ int ListPopupWindow::buildDropDown() {
 
         // If we don't have an explicit vertical offset, determine one from
         // the window background so that content will line up.
-        if (mDropDownVerticalOffset!=0){//!mDropDownVerticalOffsetSet) {
+        if (mDropDownVerticalOffset!=0){
             mDropDownVerticalOffset = -mTempRect.top;
         }
     } else {
