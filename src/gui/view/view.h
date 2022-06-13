@@ -720,7 +720,7 @@ public:
     int getNextFocusUpId()const{return mNextFocusUpId;}
     View& setNextFocusUpId(int id){mNextFocusUpId=id;return *this;}
     int getNextFocusDownId()const{return mNextFocusDownId;}
-    View& setNextFocusDownId(int id){mNextFocusUpId=id;return *this;}
+    View& setNextFocusDownId(int id){mNextFocusDownId=id;return *this;}
     int getNextFocusForwardId()const{return mNextFocusForwardId;}
     View& setNextFocusForwardId(int id){mNextFocusForwardId=id;return *this;}
 
