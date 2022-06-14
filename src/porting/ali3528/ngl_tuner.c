@@ -181,7 +181,7 @@ static DWORD  nglTunerLockInner(int tuneridx,NGLTunerParam*tp){
 	case NGL_NIM_BANDWIDTH_8_MHZ: pc->connect_param.ter.bandwidth = AUI_NIM_BANDWIDTH_8_MHZ; break;
 	default :return -1;
 	}
-	pc->connect_param.ter.std = AUI_STD_DVBT2_COMBO; /* automatic detection between DVBT and DVBT2, preferred DVBT2 */
+	pc->connect_param.ter.std = AUI_NIM_STD_ISDBT;//AUI_STD_DVBT2_COMBO(DVBT/DVBT2); /* automatic detection between DVBT and DVBT2, preferred DVBT2 */
 	pc->connect_param.ter.fec = AUI_NIM_FEC_AUTO;
 	pc->connect_param.ter.spectrum = AUI_NIM_SPEC_AUTO;
     default:

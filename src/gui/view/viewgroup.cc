@@ -2109,8 +2109,8 @@ void ViewGroup::offsetRectBetweenParentAndChild(View* descendant,Rect&rect,bool 
     while ((theParent != nullptr) && (theParent != this)) {
 
         if (offsetFromChildToParent) {
-            rect.offset(descendant->getX() - descendant->getScrollX(),
-                    descendant->getY() - descendant->getScrollY());
+            rect.offset(descendant->mLeft - descendant->mScrollX,
+                    descendant->mTop - descendant->mScrollY);
             if (clipToBounds) {
                View* p =  theParent;
                bool intersected = rect.intersect(0, 0,p->getWidth(),p->getHeight());
@@ -2122,8 +2122,8 @@ void ViewGroup::offsetRectBetweenParentAndChild(View* descendant,Rect&rect,bool 
                 bool intersected = rect.intersect(0, 0,p->getWidth(),p->getHeight());
                 if (!intersected) rect.setEmpty();
             }
-            rect.offset(descendant->getScrollX() - descendant->getX(),
-                        descendant->getScrollY() - descendant->getY());
+            rect.offset(descendant->mScrollX - descendant->mLeft,
+                        descendant->mScrollY - descendant->mTop);
        }
 
        descendant =theParent;
@@ -2134,11 +2134,11 @@ void ViewGroup::offsetRectBetweenParentAndChild(View* descendant,Rect&rect,bool 
    // to get into our coordinate space
    if (theParent == this) {
         if (offsetFromChildToParent) {
-            rect.offset(descendant->getX() - descendant->getScrollX(),
-                    descendant->getY() - descendant->getScrollY());
+            rect.offset(descendant->mLeft - descendant->mScrollX,
+                    descendant->mTop - descendant->mScrollY);
         } else {
-            rect.offset(descendant->getScrollX() - descendant->getX(),
-                    descendant->getScrollY() - descendant->getY());
+            rect.offset(descendant->mScrollX - descendant->mLeft,
+                    descendant->mScrollY - descendant->mTop);
         }
    } else {
          LOGE("parameter must be a descendant of this view");

@@ -3054,7 +3054,7 @@ View& View::setNextFocusUpId(int id){
 int View::getNextFocusDownId()const{
     return mNextFocusDownId;
 }
-View& setNextFocusDownId(int id){
+View& View::setNextFocusDownId(int id){
     mNextFocusDownId=id;
     return *this;
 }
