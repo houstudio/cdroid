@@ -713,16 +713,16 @@ public:
     bool isDefaultFocusHighlightNeeded(const Drawable* background,const Drawable* foreground)const;
     virtual const std::vector<int>getDrawableState();
 
-    int getNextFocusLeftId()const{return mNextFocusLeftId;}
-    View& setNextFocusLeftId(int id){mNextFocusLeftId=id;return *this;}
-    int getNextFocusRightId()const{return mNextFocusRightId;}
-    View& setNextFocusRightId(int id){mNextFocusRightId=id;return *this;}
-    int getNextFocusUpId()const{return mNextFocusUpId;}
-    View& setNextFocusUpId(int id){mNextFocusUpId=id;return *this;}
-    int getNextFocusDownId()const{return mNextFocusDownId;}
-    View& setNextFocusDownId(int id){mNextFocusDownId=id;return *this;}
-    int getNextFocusForwardId()const{return mNextFocusForwardId;}
-    View& setNextFocusForwardId(int id){mNextFocusForwardId=id;return *this;}
+    int getNextFocusLeftId()const;
+    View& setNextFocusLeftId(int id);
+    int getNextFocusRightId()const;
+    View& setNextFocusRightId(int id);
+    int getNextFocusUpId()const;
+    View& setNextFocusUpId(int id);
+    int getNextFocusDownId()const;
+    View& setNextFocusDownId(int id);
+    int getNextFocusForwardId()const;
+    View& setNextFocusForwardId(int id);
 
     int getScrollBarSize()const;
     View& setScrollBarSize(int scrollBarSize);

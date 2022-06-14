@@ -3029,6 +3029,43 @@ View& View::setId(int id){
 int View::getId() const{
     return mID;
 }
+
+int View::getNextFocusLeftId()const{
+    return mNextFocusLeftId;
+}
+View& View::setNextFocusLeftId(int id){
+    mNextFocusLeftId=id;
+    return *this;
+}
+int View::getNextFocusRightId()const{
+   return mNextFocusRightId;
+}
+View& View::setNextFocusRightId(int id){
+    mNextFocusRightId=id;
+    return *this;
+}
+int View::getNextFocusUpId()const{
+    return mNextFocusUpId;
+}
+View& View::setNextFocusUpId(int id){
+    mNextFocusUpId=id;
+    return *this;
+}
+int View::getNextFocusDownId()const{
+    return mNextFocusDownId;
+}
+View& setNextFocusDownId(int id){
+    mNextFocusDownId=id;
+    return *this;
+}
+int View::getNextFocusForwardId()const{
+    return mNextFocusForwardId;
+}
+View& View::setNextFocusForwardId(int id){
+    mNextFocusForwardId=id;
+    return *this;
+}
+
 static int sNextAccessibilityViewId=0;
 int View::getAccessibilityViewId(){
     if (mAccessibilityViewId == NO_ID) {

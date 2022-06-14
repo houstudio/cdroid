@@ -228,10 +228,10 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
 bool Window::performFocusNavigation(KeyEvent& event){
     int direction = -1;
     switch (event.getKeyCode()) {
-    case KEY_DPAD_LEFT: direction = View::FOCUS_LEFT;    break;
+    case KEY_DPAD_LEFT:  direction = View::FOCUS_LEFT;    break;
     case KEY_DPAD_RIGHT: direction = View::FOCUS_RIGHT;   break;
     case KEY_DPAD_UP:    direction = View::FOCUS_UP;      break;
-    case KEY_DPAD_DOWN:   direction = View::FOCUS_DOWN;    break;
+    case KEY_DPAD_DOWN:  direction = View::FOCUS_DOWN;    break;
     case KEY_TAB:
         if (event.hasNoModifiers()) {
             direction = View::FOCUS_FORWARD;

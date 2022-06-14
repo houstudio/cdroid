@@ -56,8 +56,19 @@ TEST_F(KEYNAV,edts1){
    View*fv=w->focusSearch(nullptr,View::FOCUS_DOWN);
    int loop=0;
    while(fv && loop++<=6){
-      LOGD("focusedview=%p:%d direction=%d \r\n",fv,fv->getId(),View::FOCUS_DOWN);
+      LOGD("focusedview=%p:%d FOCUS_DOWN \r\n",fv,fv->getId());
       fv=w->focusSearch(fv,View::FOCUS_DOWN);
+      ASSERT_EQ((fv->getId()+1)%6,fv->getNextFocusDownId());
    }
+   fv=w->focusSearch(nullptr,View::FOCUS_UP);
+   loop=0;
+   while(fv && loop++<=6){
+      LOGD("focusedview=%p:%d FOCUS_UP \r\n",fv,fv->getId());
+      fv=w->focusSearch(fv,View::FOCUS_UP);
+      ASSERT_EQ((fv->getId()+5)%6,fv->getNextFocusUpId());
+   }
+
+   app.exec();
+}
 
 
