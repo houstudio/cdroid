@@ -19,7 +19,7 @@ static std::map<const std::string,int>edgeFlagKVS={
 
 int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def){
     const std::string value=attrs.getAttributeValue(key);
-    if(value.find("%p")!=std::string::npos){
+    if(value.find("%")!=std::string::npos){
         return base*std::stof(value)/100;
     }else if(value.find("px")!=std::string::npos){
         return std::stoi(value);
