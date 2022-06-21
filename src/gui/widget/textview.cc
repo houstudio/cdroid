@@ -537,7 +537,7 @@ int TextView::getCaretPos()const{
 bool TextView::moveCaret2Line(int line){
     int curline = mLayout->getLineForOffset(mCaretPos);
     int curcolumns = mCaretPos - mLayout->getLineStart(curline);
-    if(line<getLineCount()){
+    if( (line<getLineCount()) && (line>=0) ){
         int newcolumns = mLayout->getLineEnd(line)-mLayout->getLineStart(line);
         newcolumns=std::min(newcolumns,curcolumns);
         setCaretPos(mLayout->getLineStart(line) + newcolumns);
