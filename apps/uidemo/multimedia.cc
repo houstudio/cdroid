@@ -43,7 +43,7 @@ public:
             ListView*lv=new ListView(800,480);
             lv->setDivider(new ColorDrawable(0x80224422));
             lv->setDividerHeight(1);
-            lv->setFastScrollEnabled(true);
+            //lv->setFastScrollEnabled(true);
             lv->setSelector(new ColorDrawable(0x8800FF00));
             lv->setVerticalScrollBarEnabled(true);
             lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 

@@ -61,6 +61,6 @@
         android:paddingRight="30dp"
         android:layout_marginLeft="20dp"
         android:layout_gravity="bottom"
-        android:background="#FF0000">
+        android:background="#111111">
     </androidx.viewpager.widget.ViewPager>
 </LinearLayout>

@@ -3,11 +3,12 @@
 
 # **Features:**
 * Multi Layer/Multi Window 
-* Integrated with 30+ UI Components and 15+ Drawables(compatibal with android)  
-* Full compatible with Android
-* Smooth Scrolling
-* Scrolling with SpringBack Support
+* Integrated with 30+ UI Components and 15+ Drawables(compatible with android)
+* All UI Components(Layouts,Drawables...)can be designed in AndroidStudio or Eclipse 
+* Vector Graph supported via Cairo
 # **Screen Shots**
+![demo1](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo1.gif)
+![demo2]((https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo2.gif)
 ![ListView](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/listview_springback.gif)
 ![ViewPager](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/viewpagerimg.gif)
 ![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)

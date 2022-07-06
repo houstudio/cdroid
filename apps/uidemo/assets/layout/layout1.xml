@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:background="#00FF00">
+        android:background="#111111">
         <Button android:id="@+id/BtnGo" 
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" 
