@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:text="30分钟后关闭"
+        android:layout_marginVertical="20dp"
+        android:layout_centerHorizontal="true"
+        android:drawableLeft="@mipmap/housele_kt_img_ds"/>
+    <ImageView
+        android:id="@+id/socket"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="id/timer"
+        android:layout_centerHorizontal="true"
+        android:src="@mipmap/housele_cz_switch_off" />
+
+    <TextView
+        android:id="@+id/devicename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/socket"
+        android:layout_marginVertical="20dp"
+        android:text="一楼客厅插座"
+        android:layout_above="@+id/detail"
+        android:layout_centerHorizontal="true"/>
+    <Button
+        android:id="@+id/detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="详情"
+        android:layout_marginHorizontal="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="20dp"
+        />
+</RelativeLayout>

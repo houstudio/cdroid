@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/right_panel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#442211" >
+    <TabLayout
+        android:id="@+id/sencetype"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#111111"
+        android:layout_gravity="center_horizontal"
+        android:tabIndicatorHeight="5dp"
+        android:tabSelectedTextColor="#00FF00"
+        android:tabIndicatorColor="#00FF00"
+        > 
+       <TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="一键情景"/> 
+       <TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="智能情景"/>
+    </TabLayout>
+    <GridView
+       android:id="@+id/gridview"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:layout_weight="1"
+       >
+    </GridView>
+</LinearLayout>

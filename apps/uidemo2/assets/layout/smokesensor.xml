@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/smokesensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:src="@mipmap/housele_img_yangan" />
+
+    <TextView
+        android:id="@+id/powerstate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/smokesensor"
+        android:layout_marginVertical="20dp"
+        android:text="电量"
+        android:layout_above="@+id/detail"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/powerstate"/>
+    <TextView
+        android:id="@+id/detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="智能烟感报警器"
+        android:layout_marginHorizontal="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="20dp"
+        />
+</RelativeLayout>

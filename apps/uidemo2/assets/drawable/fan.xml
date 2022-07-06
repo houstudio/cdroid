@@ -1,0 +1,8 @@
+<animated-rotate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromDegrees="0"
+    android:toDegrees="360"
+    android:pivotX="50%"
+    android:pivotY="50%"
+    android:framesCount="12"
+    android:frameDuration="100"
+    android:drawable="@mipmap/housele_kt_icon_fs_sel"/>

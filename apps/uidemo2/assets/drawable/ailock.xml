@@ -1,0 +1,16 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:level="50">
+    <item android:state_activated="false"
+        android:drawable="@mipmap/housele_znms_img_ms1"/>
+   <item android:width="30" android:gravity="top"
+          android:left="6dp" android:top="150dp">
+       <level-list android:id="@+id/power" android:level="66">
+           <item  android:minLevel="0" android:maxLevel="20"
+                android:drawable="@mipmap/housele_img_electric_less"/>
+           <item  android:minLevel="20" android:maxLevel="60"
+                android:drawable="@mipmap/housele_img_electric_medium"/>
+           <item  android:minLevel="60" android:maxLevel="100"
+                android:drawable="@mipmap/housele_img_electric_full"/>
+       </level-list>
+   </item>
+</layer-list>

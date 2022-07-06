@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:src="@mipmap/housele_cl_img1" />
+
+    <TextView
+        android:id="@+id/open"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/devicename"
+        android:layout_toLeftOf="@+id/pause"
+        android:layout_alignBottom="id/pause"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:drawablePadding="5dp"
+        android:text="打开"
+        android:drawableTop="@mipmap/housele_cl_switch_on_sel"/>
+    <TextView
+        android:id="@+id/pause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/devicename"
+        android:layout_margin="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:drawablePadding="5dp"
+        android:text="暂停"
+        android:drawableTop="@mipmap/housele_cl_switch_zt_sel" />
+    <TextView
+        android:id="@+id/close"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/devicename"
+        android:layout_alignBottom="@id/pause"
+        android:layout_toRightOf="@id/pause"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="关闭"
+        android:drawablePadding="5dp"
+        android:drawableTop="@mipmap/housele_cl_switch_off_del" />
+    <TextView
+        android:id="@+id/devicename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="一楼客厅窗帘"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="20dp"
+        />
+</RelativeLayout>

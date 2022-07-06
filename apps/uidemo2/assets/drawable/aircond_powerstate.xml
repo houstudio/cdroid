@@ -1,0 +1,5 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_activated="false"
+        android:drawable="@mipmap/housele_kts_switch_off"/>
+    <item android:drawable="@mipmap/housele_kts_switch_on"/>
+</selector>

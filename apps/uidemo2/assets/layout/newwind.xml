@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/power"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="40dp"
+        android:gravity="center"
+        android:background="@drawable/aircond_powerstate" />
+
+    <TextView
+        android:id="@+id/devicename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/power"
+        android:layout_marginVertical="20dp"
+        android:text="新风系统"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/powerstate"/>
+    <TextView
+        android:id="@+id/fanspeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="风速"
+        android:gravity="center"
+        android:layout_centerHorizontal="true"
+        android:layout_toRightOf="@id/coldfan"
+        android:layout_margin="40dp"
+        android:layout_alignParentBottom="true"
+        android:drawableTop="@drawable/fan"
+        />
+</RelativeLayout>

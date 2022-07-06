@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.8)
-project(uidemo C CXX)
+project(uidemo1 C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -16,20 +16,20 @@ include_directories(
 )
 aux_source_directory(./ DEMO_SRCS)
 link_directories(${DEPS_DIR}/lib)
-add_executable(uidemo ${DEMO_SRCS})
+add_executable(uidemo1 ${DEMO_SRCS})
 
-CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} uidemo)
+CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} uidemo1)
 
-CreatePAK(uidemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo.pak ${PROJECT_SOURCE_DIR}/R.h)
+CreatePAK(uidemo1 ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo1.pak ${PROJECT_SOURCE_DIR}/R.h)
 
-add_custom_target(uidemotranslate
+add_custom_target(uidemo1translate
   COMMAND python  ${CMAKE_SOURCE_DIR}/src/tools/po2json.py ${CMAKE_CURRENT_BINARY_DIR}/uidemo.po
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
   COMMENT "Translate strings resource..."
   )
 
 
-target_link_libraries(uidemo gui id3 tvhal)
+target_link_libraries(uidemo1 gui id3 tvhal)
 
-install(TARGETS uidemo DESTINATION bin)
+install(TARGETS uidemo1 DESTINATION bin)
 
