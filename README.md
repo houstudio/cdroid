@@ -4,8 +4,8 @@
 # **Features:**
 * Multi Layer/Multi Window 
 * Integrated with 40+ UI Components and 20+ Drawables(compatible with android)
-* All UI Components(Layouts,Drawables...)can be designed in AndroidStudio or Eclipse 
-* Vector Graph supported via Cairo
+* All UI Components(Layouts,Drawables...)can be designed in **AndroidStudio or Eclipse** 
+* Vector Graph supported via **Cairo**
 # **Screen Shots**
 ![demo1](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo1.gif)
 ![demo2](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo2.gif)
