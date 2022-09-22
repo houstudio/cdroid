@@ -1,8 +1,6 @@
 project (sigma C CXX)
 
 set(SIGMA_SRCS 
-     ngl_panel.c
-     ngl_mediaplayer.c
      input_linux.cc
     )
 
