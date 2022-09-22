@@ -19,7 +19,7 @@ SencePanel::SencePanel(Context*ctx,const AttributeSet&atts)
 }
 
 void SencePanel::init(){
-    mGridView= (GridView*)findViewById(uidemo::R::id::gridview);
+    mGridView= (GridView*)findViewById(uidemo2::R::id::gridview);
 }
 
 SencePanel::~SencePanel(){

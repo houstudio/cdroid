@@ -75,7 +75,7 @@ void AircondPagerAdapter::setDeviceProperties(View*v,Device&t){
     TextView*tv=(TextView*)v->findViewById(mDeviceId);
     if(tv)tv->setText(t.mName);
     /*set power state*/
-    tv =(TextView*)v->findViewById(uidemo::R::id::power);
+    tv =(TextView*)v->findViewById(uidemo2::R::id::power);
     tv->setText(t.mPowerOn?std::to_string(16+time(nullptr)%8):std::string());
 
     StateListDrawable*sd=(StateListDrawable*)tv->getBackground();
@@ -83,7 +83,7 @@ void AircondPagerAdapter::setDeviceProperties(View*v,Device&t){
     if(!t.mPowerOn)state[0]=-state[0];
     sd->setState(state);
 
-    tv=(TextView*)v->findViewById(uidemo::R::id::fanspeed);
+    tv=(TextView*)v->findViewById(uidemo2::R::id::fanspeed);
     std::vector<Drawable*>ads=tv->getCompoundDrawables();
     if(ads.size()==0)return;
     AnimatedRotateDrawable*ad=(AnimatedRotateDrawable*)ads.at(TextView::Drawables::TOP);

@@ -10,10 +10,10 @@ DevicePanel::DevicePanel(Context*ctx,const AttributeSet&atts)
 }
 
 void DevicePanel::init(){
-    mPager=(ViewPager*)findViewById(uidemo::R::id::viewpager);
+    mPager=(ViewPager*)findViewById(uidemo2::R::id::viewpager);
     mPager->setPageMargin(5);
     mPager->setPageMarginDrawable(new ColorDrawable(0xFF080808));
-    ViewGroup*vg=(ViewGroup*)findViewById(uidemo::R::id::buttonContainer);
+    ViewGroup*vg=(ViewGroup*)findViewById(uidemo2::R::id::buttonContainer);
     for(int i=0;i<vg->getChildCount();i++){
         View*v=vg->getChildAt(i);
         v->setOnClickListener(std::bind(&DevicePanel::onClick,this,std::placeholders::_1));
@@ -31,53 +31,53 @@ void DevicePanel::onClick(View&v){
     if(id==mLastDevice)
         return;
     switch(id){
-    case uidemo::R::id::lights:
+    case uidemo2::R::id::lights:
          if(adapter==nullptr){
              adapter = new LightPagerAdapter("@layout/light");
              adapter->setPageWidth(1.f/3);
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::curtains:
+    case uidemo2::R::id::curtains:
          if(adapter==nullptr){
              adapter = new CurtainPagerAdapter("@layout/curtain");
              adapter->setPageWidth(1.f/2);
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::sockets:
+    case uidemo2::R::id::sockets:
          if(adapter==nullptr){
              adapter = new SocketPagerAdapter("@layout/socket");
              adapter->setPageWidth(1.f/3);
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::airconds:
+    case uidemo2::R::id::airconds:
          if(adapter==nullptr){
-             adapter = new AircondPagerAdapter("@layout/aircond",uidemo::R::id::devicename);
+             adapter = new AircondPagerAdapter("@layout/aircond",uidemo2::R::id::devicename);
              adapter->setPageWidth(1.f/2);
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::tvsets:
+    case uidemo2::R::id::tvsets:
          if(adapter==nullptr){
-             adapter = new TVPagerAdapter("@layout/tvset",uidemo::R::id::devicename);
+             adapter = new TVPagerAdapter("@layout/tvset",uidemo2::R::id::devicename);
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::ailocks:
+    case uidemo2::R::id::ailocks:
          if(adapter==nullptr){
              adapter = new HangerPagerAdapter("@layout/ailock");
              adapter->setPageWidth(1.f/2);
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::hangers:
+    case uidemo2::R::id::hangers:
          if(adapter==nullptr){
              adapter = new HangerPagerAdapter("@layout/todo");
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::wind://新风系统
+    case uidemo2::R::id::wind://新风系统
          if(adapter==nullptr){
              adapter = new AircondPagerAdapter("@layout/newwind",-1);
              adapter->setPageWidth(1.f/2);
              mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
          }break;
-    case uidemo::R::id::acfan:
+    case uidemo2::R::id::acfan:
          if(adapter==nullptr){
              adapter = new AircondPagerAdapter("@layout/acfan",-1);
              adapter->setPageWidth(1.f/2);

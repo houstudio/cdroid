@@ -23,11 +23,11 @@ View*FileAdapter::getView(int position, View* convertView, ViewGroup* parent){
     if(convertView==nullptr){
         vp=(ViewGroup*)LayoutInflater::from(&App::getInstance())->inflate(mResource,nullptr);
     }
-    tv=(TextView*)vp->findViewById(uidemo::R::id::idno);
+    tv=(TextView*)vp->findViewById(uidemo1::R::id::idno);
     if(tv)tv->setText(std::to_string(position));
-    tv=(TextView*)vp->findViewById(uidemo::R::id::filename);
+    tv=(TextView*)vp->findViewById(uidemo1::R::id::filename);
     tv->setText(mi.fileName);
-    tv=(TextView*)vp->findViewById(uidemo::R::id::filesize);
+    tv=(TextView*)vp->findViewById(uidemo1::R::id::filesize);
     if(tv&&mi.isDir==false){
        struct stat st;
        int rc=stat(mi.fullpath.c_str(),&st);

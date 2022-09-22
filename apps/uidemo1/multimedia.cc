@@ -31,7 +31,7 @@ public:
             {View*v=LayoutInflater::from(container->getContext())->inflate(res[position-2],nullptr,false);
             container->addView(v);
             v->requestLayout();
-            View*btn=v->findViewById(uidemo::R::id::button1);
+            View*btn=v->findViewById(uidemo1::R::id::button1);
             if(btn)btn->setOnClickListener([](View&v){
                  Window*w=new Window(0,0,400,400);
                  w->setBackgroundColor(0x80FF0000);
@@ -130,8 +130,8 @@ public:
 MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate("layout/main.xml",this);
     mAdapter=new FileTypeAdapter();
-    mTabLayout=(TabLayout*)vg->findViewById(uidemo::R::id::tablayout);
-    mPager = (ViewPager*)vg->findViewById(uidemo::R::id::viewpager);
+    mTabLayout=(TabLayout*)vg->findViewById(uidemo1::R::id::tablayout);
+    mPager = (ViewPager*)vg->findViewById(uidemo1::R::id::viewpager);
     mTabLayout->setSelectedTabIndicatorColor(0x8000FF00);
     mTabLayout->setSelectedTabIndicatorHeight(5);
     mTabLayout->setTabTextColors(0xFFFF0000,0xFF00FF00);
@@ -144,7 +144,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mTabLayout->requestLayout();
     run = [this](){
         static int count=0;
-        TextView*tv=(TextView*)findViewById(uidemo::R::id::light);
+        TextView*tv=(TextView*)findViewById(uidemo1::R::id::light);
         if(tv)tv->setText(std::to_string(count++));
         postDelayed(run,1000);
     };

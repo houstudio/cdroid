@@ -4,7 +4,7 @@
 ControlCenter::ControlCenter(int x,int y,int w,int h):Window(x,y,w,h){
     mRightPanel = nullptr;
     ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate("layout/home.xml",this);
-    mListView=(ListView*)vg->findViewById(uidemo::R::id::listview);
+    mListView=(ListView*)vg->findViewById(uidemo2::R::id::listview);
     mListView->setOnItemClickListener([this](AdapterView&lv,View&v,int pos,long id){
         onItemClick(v,id);
     });
@@ -13,7 +13,7 @@ ControlCenter::ControlCenter(int x,int y,int w,int h):Window(x,y,w,h){
     mFunAdapter->load("");
     mListView->setAdapter(mFunAdapter);
     
-    vg= (ViewGroup*)findViewById(uidemo::R::id::container);
+    vg= (ViewGroup*)findViewById(uidemo2::R::id::container);
     mRightPanel=new DevicePanel(getContext(),AttributeSet());
     vg->addView(mRightPanel,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
     mLastButtonID = 1;
@@ -31,7 +31,7 @@ void ControlCenter::onItemClick(View&v,int pos){
     if(mLastButtonID == pos)
         return;
     mLastButtonID = pos;
-    ViewGroup*vg= (ViewGroup*)findViewById(uidemo::R::id::container);
+    ViewGroup*vg= (ViewGroup*)findViewById(uidemo2::R::id::container);
     //vg->removeView(mRightPanel);
     delete mRightPanel;
     switch(pos){
