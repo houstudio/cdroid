@@ -46,12 +46,13 @@ void AnalogClock::initAnalog(){
 
 void AnalogClock::setDial(Icon icon) {
     mDial = icon;//.loadDrawable(getContext());
-    mDialWidth  = mDial->getIntrinsicWidth();
-    mDialHeight = mDial->getIntrinsicHeight();
-    /*if (mDialTintInfo->mHasTintList || mDialTintInfo->mHasTintBlendMode) {
-        mDial = mDialTintInfo->apply(mDial);
-    }*/
-
+    if(mDial){
+        mDialWidth  = mDial->getIntrinsicWidth();
+        mDialHeight = mDial->getIntrinsicHeight();
+        /*if (mDialTintInfo->mHasTintList || mDialTintInfo->mHasTintBlendMode) {
+           mDial = mDialTintInfo->apply(mDial);
+        }*/
+    }
     mChanged = true;
     requestLayout();
 }
@@ -176,26 +177,28 @@ void AnalogClock::onDraw(Canvas&canvas){
     const int availableWidth = mRight - mLeft;
     const int availableHeight = mBottom - mTop;
 
-    int x = availableWidth / 2;
-    int y = availableHeight / 2;
-
-    int w = mDial->getIntrinsicWidth();
-    int h = mDial->getIntrinsicHeight();
-
+    int x,y,w,h;
     bool scaled = false;
-    LOGV("Dial.size=%dx%d  %p",w,h,mDial);
-    if (availableWidth < w || availableHeight < h) {
-        scaled = true;
-        float scale = std::min((float) availableWidth / (float) w,
-                              (float) availableHeight / (float) h);
-        canvas.save();
-        canvas.scale(scale, scale);
-    }
+    x = availableWidth / 2;
+    y = availableHeight / 2;
+    if(mDial){
+        w = mDial->getIntrinsicWidth();
+        h = mDial->getIntrinsicHeight();
 
-    if (changed) {
-        mDial->setBounds(x - (w / 2), y - (h / 2), w,h);
+        LOGV("Dial.size=%dx%d  %p",w,h,mDial);
+        if (availableWidth < w || availableHeight < h) {
+            scaled = true;
+            float scale = std::min((float) availableWidth / (float) w,
+                              (float) availableHeight / (float) h);
+            canvas.save();
+            canvas.scale(scale, scale);
+        }
+
+        if (changed) {
+            mDial->setBounds(x - (w / 2), y - (h / 2), w,h);
+        }
+        mDial->draw(canvas);
     }
-    mDial->draw(canvas);
 
     canvas.save();
     canvas.translate(x,y);
@@ -213,13 +216,14 @@ void AnalogClock::onDraw(Canvas&canvas){
     canvas.translate(x,y);
     canvas.rotate_degrees((mMinutes+mSeconds/60.f) / 60.0f * 360.0f);
 
-    if (changed) {
+    if (changed && mMinuteHand) {
         w = mMinuteHand->getIntrinsicWidth();
         h = mMinuteHand->getIntrinsicHeight();
         mMinuteHand->setBounds( - (w / 2), - (h / 2),w,h);
         LOGV("MinuteHand.size=%dx%d  %p",w,h,mMinuteHand);
     }
-    mMinuteHand->draw(canvas);
+    if(mMinuteHand)
+	mMinuteHand->draw(canvas);
     canvas.restore();
 
     if (mSecondHand  && mSecondsHandFps > 0) {
