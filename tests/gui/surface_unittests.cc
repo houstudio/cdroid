@@ -13,7 +13,7 @@
 #include <cdlog.h>
 #include <core/textutils.h>
 #include <fribidi.h>
-
+using namespace Cairo;
 using namespace cdroid;
 #define SLEEP(x) usleep((x)*1000)
 class CONTEXT:public testing::Test{

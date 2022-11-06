@@ -3,7 +3,6 @@
 #include <vector>
 #include <cairomm/refptr.h>
 #include <cairomm/surface.h>
-using namespace Cairo;
 namespace cdroid{
 
 class ColorVector{
@@ -35,7 +34,7 @@ public:
     void setRGB2YUV();
     void setYUV2RGB();
     unsigned int transform(unsigned int color);
-    RefPtr<ImageSurface>transform(const RefPtr<ImageSurface>&img);
+    Cairo::RefPtr<Cairo::ImageSurface>transform(const Cairo::RefPtr<Cairo::ImageSurface>&img);
 };
 
 ColorVector operator * (const ColorMatrix &m , const ColorVector &v);

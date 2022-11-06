@@ -15,6 +15,8 @@ include_directories(
    ${DEPS_DIR}/include/freetype2
 )
 aux_source_directory(./ DEMO_SRCS)
+add_definitions(--include cdtypes.h)
+add_definitions(--include cdlog.h)
 link_directories(${DEPS_DIR}/lib)
 add_executable(uidemo1 ${DEMO_SRCS})
 

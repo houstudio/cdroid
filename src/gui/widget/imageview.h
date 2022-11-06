@@ -82,7 +82,7 @@ public:
     void setAdjustViewBounds(bool adjustViewBounds);
     void setImageResource(const std::string&resid);
     void setImageDrawable(Drawable* drawable);
-    void setImageBitmap(RefPtr<ImageSurface>bitmap);
+    void setImageBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
     void setImageTintList(ColorStateList*tint);
     ColorStateList* getImageTintList();
     void setImageTintMode(int mode);

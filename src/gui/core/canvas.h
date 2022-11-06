@@ -5,8 +5,7 @@
 #include <cairomm/context.h>
 #include <cairomm/region.h>
 #include <core/graphdevice.h>
-#include <gui/gui_features.h>
-using namespace Cairo;
+#include <gui_features.h>
 
 namespace cdroid{
 
@@ -29,7 +28,7 @@ protected:
     friend class GraphDevice;
     friend class WindowManager;
 public:
-    Canvas(const RefPtr<Surface>&target);
+    Canvas(const Cairo::RefPtr<Cairo::Surface>&target);
     Canvas(unsigned int width,unsigned int height);
     ~Canvas();
     void get_text_size(const std::string&txt,int*w,int*h); 
@@ -38,11 +37,11 @@ public:
     void set_color(UINT color);
     void rectangle(int x,int y,int w,int h);
     void rectangle(const RECT &r);
-    void draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT*src);
+    void draw_image(const Cairo::RefPtr<Cairo::ImageSurface>&img,const RECT&dst,const RECT*src);
     void rotate(float degrees,float px,float py);
     void dump2png(const char*fname);
 };
-extern void DumpRegion(const std::string&label,RefPtr<Region>rgn);
+extern void DumpRegion(const std::string&label,Cairo::RefPtr<Cairo::Region>rgn);
 }//namspace
 #endif
 

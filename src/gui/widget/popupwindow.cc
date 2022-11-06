@@ -1,4 +1,5 @@
 #include <widget/popupwindow.h>
+#include <cdlog.h>
 namespace cdroid{
 
 PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){

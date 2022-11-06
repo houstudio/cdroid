@@ -5,6 +5,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 
+using namespace Cairo;
 namespace cdroid{
 
 Animation::Animation() {

@@ -9,6 +9,7 @@
 #include <sstream>
 #include <core/systemclock.h>
 
+using namespace Cairo;
 class MUTATE:public testing::Test{
 public:
     static void SetUpTestCase(){

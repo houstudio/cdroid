@@ -1,7 +1,7 @@
 #include <drawables/shape.h>
 #include <color.h>
 #include <cdlog.h>
-
+using namespace Cairo;
 namespace cdroid{
 
 Shape::Shape(){

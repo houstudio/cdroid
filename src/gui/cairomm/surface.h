@@ -39,7 +39,7 @@
 #include <cairomm/device.h>
 #include <cairomm/fontoptions.h>
 #include <cairomm/refptr.h>
-#include <gui/gui_features.h>
+#include <gui_features.h>
 
 //See xlib_surface.h for XlibSurface.
 //See win32_surface.h for Win32Surface.
@@ -271,9 +271,9 @@ public:
        * in the middle 6 bits, and blue in the lower 5 bits
        */
       RGB16_565 = CAIRO_FORMAT_RGB16_565,
-      RGB30   =CAIRO_FORMAT_RGB30  , /*like RGB24 but with 10bpc. (Since 1.12)*/
-      RGB96F  = CAIRO_FORMAT_RGB96F, /*3 floats, R, G, B. (Since 1.17.2)*/
-      RGB128F = CAIRO_FORMAT_RGBA128F/*4 floats, R, G, B, A. (Since 1.17.2)*/
+      //RGB30   =CAIRO_FORMAT_RGB30  , /*like RGB24 but with 10bpc. (Since 1.12)*/
+      //RGB96F  = CAIRO_FORMAT_RGB96F, /*3 floats, R, G, B. (Since 1.17.2)*/
+      //RGB128F = CAIRO_FORMAT_RGBA128F/*4 floats, R, G, B, A. (Since 1.17.2)*/
   };
   /** For example:
    * <code>

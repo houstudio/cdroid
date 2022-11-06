@@ -1,5 +1,6 @@
 #include <view/view.h>
 #include <view/viewpropertyanimator.h>
+#include "cdlog.h"
 
 namespace cdroid{
 

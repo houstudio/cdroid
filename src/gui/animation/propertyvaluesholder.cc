@@ -1,4 +1,5 @@
 #include <animation/propertyvaluesholder.h>
+#include "cdlog.h"
 namespace cdroid{
 
 PropertyValuesHolder::PropertyValuesHolder(){

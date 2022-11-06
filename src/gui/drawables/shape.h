@@ -18,7 +18,7 @@ protected:
     float mGradientCenterY;
     bool  bUseLevel;
     std::vector<uint32_t>mGradientColors;//size 0:nofill, 1:solid fill 2,3:gradient fill
-    RefPtr<Pattern>mPaint;//used to fill
+    Cairo::RefPtr<Cairo::Pattern>mPaint;//used to fill
     void rebuildPattern(int x,int y);
     virtual void onResize(int width,int height){}
     void fill_stroke(Canvas&canvas,int x,int y);
@@ -57,7 +57,7 @@ protected:
     std::vector<float>mInnerRadii;
     Rect mInset;
     Rect mInnerRect;
-    RefPtr<cdroid::Path>mPath;
+    Cairo::RefPtr<cdroid::Path>mPath;
 protected:
     RectShape(const RectShape&o);
     void onResize(int width,int height)override;

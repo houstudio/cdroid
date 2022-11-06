@@ -1,6 +1,7 @@
 #include <drawables/gradientdrawable.h>
 #include <color.h>
 #include <cdlog.h>
+using namespace Cairo;
 namespace cdroid{
 
 #define DEFAULT_INNER_RADIUS_RATIO 3.0f

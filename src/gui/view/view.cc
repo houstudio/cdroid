@@ -14,7 +14,7 @@
 #include <systemclock.h>
 
 #define UNDEFINED_PADDING INT_MIN
-
+using namespace Cairo;
 namespace cdroid{
 
 DECLARE_WIDGET(View)

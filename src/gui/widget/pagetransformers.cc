@@ -1,4 +1,5 @@
 #include <widget/pagetransformers.h>
+#include <cdlog.h>
 namespace cdroid{
 
 void ABaseTransformer::transformPage(View& page, float position) {

@@ -11,7 +11,7 @@
 #include <textutils.h>
 #include <expat.h>
 #include <limits.h>
-
+using namespace Cairo;
 namespace cdroid{
 
 Assets::Assets(){

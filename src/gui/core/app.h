@@ -8,7 +8,6 @@
 #include <core/context.h>
 #include <core/assets.h>
 struct option;
-using namespace Cairo;
 
 namespace cdroid{
 

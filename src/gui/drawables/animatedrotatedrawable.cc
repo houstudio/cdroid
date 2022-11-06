@@ -4,7 +4,7 @@
 #include <cdlog.h>
 #include <fstream>
 
-
+using namespace Cairo;
 namespace cdroid{
 
 AnimatedRotateDrawable::AnimatedRotateState::AnimatedRotateState(){

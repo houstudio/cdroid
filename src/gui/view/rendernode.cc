@@ -1,4 +1,5 @@
 #include <view/rendernode.h>
+using namespace Cairo;
 namespace cdroid{
 
 RenderNode::RenderNode(){

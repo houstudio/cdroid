@@ -1,4 +1,6 @@
 #include <view/menu.h>
+
+using namespace Cairo;
 namespace cdroid{
 
 MenuItem::MenuItem(){

@@ -6,8 +6,8 @@ namespace cdroid{
 
 class PlotView:public View{
 private:
-   RefPtr<ImageSurface>mImage;
-   RefPtr<Cairo::Context>mImageContext;
+   Cairo::RefPtr<Cairo::ImageSurface>mImage;
+   Cairo::RefPtr<Cairo::Context>mImageContext;
    plstream*pls;
 public:
    PlotView(int w,int h);

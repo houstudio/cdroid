@@ -189,7 +189,7 @@ protected:
         bool mKeepScreenOn;
         bool mDebugLayout;
         bool mDisplayState;/*true display is on*/
-        RefPtr<Canvas> mCanvas;
+	Cairo::RefPtr<Canvas> mCanvas;
         Drawable*mAutofilledDrawable;
         View* mTooltipHost;
         View* mViewRequestingLayout;
@@ -484,8 +484,8 @@ protected:
     bool mLastIsOpaque;
     std::string mHint;
     std::string mContentDescription;
-    RefPtr<ImageSurface> mDrawingCache;
-    RefPtr<ImageSurface> mUnscaledDrawingCache;
+    Cairo::RefPtr<Cairo::ImageSurface> mDrawingCache;
+    Cairo::RefPtr<Cairo::ImageSurface> mUnscaledDrawingCache;
     void * mTag;
     Context* mContext;
     LayoutParams* mLayoutParams;
@@ -524,7 +524,7 @@ protected:
     void invalidateParentIfNeededAndWasQuickRejected();
     virtual void invalidateInheritedLayoutMode(int);
     void destroyDrawingCache();
-    RefPtr<ImageSurface>getDrawingCache(bool autoScale);
+    Cairo::RefPtr<Cairo::ImageSurface>getDrawingCache(bool autoScale);
     virtual bool hasWindowFocus()const;
 
     virtual bool setFrame(int x,int y,int w,int h);

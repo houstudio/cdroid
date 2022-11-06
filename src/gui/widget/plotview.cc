@@ -1,5 +1,5 @@
 #include <widget/plotview.h>
-#include <gui/gui_features.h>
+#include <gui_features.h>
 #ifdef ENABLE_PLPLOT
 #include <plstream.h>
 #endif

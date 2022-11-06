@@ -13,7 +13,7 @@ private:
         int mCurrentFrame;
         int mFrameCount;
         void*mHandler;
-        RefPtr<ImageSurface>mImage;
+	Cairo::RefPtr<Cairo::ImageSurface>mImage;
         State();
         ~State();
     };

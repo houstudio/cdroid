@@ -3,7 +3,7 @@
 #include <textutils.h>
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <gui/gui_features.h>
+#include <gui_features.h>
 #ifndef ENABLE_PINYIN2HZ
 #include <pinyinime.h>
 #endif

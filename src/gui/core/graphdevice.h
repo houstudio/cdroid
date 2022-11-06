@@ -6,7 +6,6 @@
 #include <condition_variable>
 #include <map>
 
-using namespace Cairo;
 namespace cdroid{
 class GraphDevice{
 private:
@@ -27,12 +26,12 @@ private:
     HANDLE mBannerSurface;
     class Canvas*mPrimaryContext;
     Canvas *mBannerContext;
-    RefPtr<Region>mInvalidateRgn;
+    Cairo::RefPtr<Cairo::Region>mInvalidateRgn;
     static GraphDevice*mInst;
     GraphDevice(int format=-1);
     void trackFPS();
     void doCompose();
-    void computeVisibleRegion(std::vector<class Window*>&windows,std::vector<RefPtr<Region>>&regions);
+    void computeVisibleRegion(std::vector<class Window*>&windows,std::vector<Cairo::RefPtr<Cairo::Region>>&regions);
 public:
     static GraphDevice&getInstance();
     ~GraphDevice();

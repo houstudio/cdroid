@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #include <dirent.h>
-
+using namespace Cairo;
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,1280,600);

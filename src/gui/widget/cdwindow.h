@@ -49,7 +49,7 @@ private:
     static View*inflate(Context*ctx,std::istream&stream);
 protected:
     std::vector<View*>mLayoutRequesters;
-    RefPtr<Region>mVisibleRgn;
+    Cairo::RefPtr<Cairo::Region>mVisibleRgn;
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;
@@ -66,7 +66,7 @@ protected:
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);
-    RefPtr<Canvas>getCanvas();
+    Cairo::RefPtr<Canvas>getCanvas();
     ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
@@ -84,7 +84,7 @@ public:
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
     Window(Context*,const AttributeSet&);
     ~Window()override;
-    void setRegion(const RefPtr<Region>&region);
+    void setRegion(const Cairo::RefPtr<Cairo::Region>&region);
     void draw();
     virtual void setText(const std::string&);
     const std::string getText()const;

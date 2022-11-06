@@ -26,6 +26,7 @@
 #define CHILD_LEFT_INDEX 0
 #define CHILD_TOP_INDEX  1
 
+using namespace Cairo;
 namespace cdroid {
 
 DECLARE_WIDGET(ViewGroup)

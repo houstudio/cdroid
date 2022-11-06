@@ -3,7 +3,7 @@
 
 namespace cdroid{
 
-typedef RefPtr<RecordingSurface>Picture;
+typedef Cairo::RefPtr<Cairo::RecordingSurface>Picture;
 
 class PictureDrawable:public Drawable{
 private:

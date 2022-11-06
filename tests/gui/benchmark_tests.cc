@@ -4,7 +4,7 @@
 #include <ngl_os.h>
 
 using namespace cdroid;
-
+using namespace Cairo;
 class BENCHMARK:public testing::Test{
 
    public :

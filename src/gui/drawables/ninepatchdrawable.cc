@@ -1,7 +1,7 @@
 #include <drawables/ninepatchdrawable.h>
 #include <fstream>
 #include <cdlog.h>
-
+using namespace Cairo;
 namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 

@@ -1,6 +1,7 @@
 #include <widget/imageview.h>
 #include <app.h>
 #include <cdlog.h>
+using namespace Cairo;
 namespace cdroid{
 
 DECLARE_WIDGET(ImageView)

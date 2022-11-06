@@ -67,7 +67,6 @@ private:
         //If no custom field is assigned, assume the whole resource is a TextView
         //Otherwise, find the TextView field within the layout
         TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);
-        LOGD_IF(text==nullptr,"Failed to find view with ID %d in item layout",mFieldId);
         T& item = getItemAt(position);
         if(text&&onSetText)onSetText(*text,item);
         return view;

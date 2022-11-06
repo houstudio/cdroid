@@ -1,5 +1,6 @@
 #include <widget/tablayout.h>
 #include <widget/R.h>
+#include <cdlog.h>
 
 namespace cdroid{
 static constexpr int DEFAULT_HEIGHT_WITH_TEXT_ICON = 72;

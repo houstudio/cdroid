@@ -22,7 +22,7 @@
 #include <graphdevice.h>
 #include <uieventsource.h>
 
-
+using namespace Cairo;
 namespace cdroid {
 // Initialize the instance of the singleton to nullptr
 WindowManager* WindowManager::mInst = nullptr;

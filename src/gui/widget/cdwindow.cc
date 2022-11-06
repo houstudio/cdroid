@@ -24,6 +24,7 @@
 #include <view/swipehelper.h>
 #include <fstream>
 
+using namespace Cairo;
 namespace cdroid {
 constexpr int FORWARD = 0;
 constexpr int FINISH_HANDLED = 1;

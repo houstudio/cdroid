@@ -9,7 +9,7 @@
 #include<animations.h>
 #include<drawables.h>
 #include<cdlog.h>
-
+using namespace Cairo;
 class MyAdapter:public ArrayAdapter<std::string>{
 public:
    MyAdapter():ArrayAdapter(){

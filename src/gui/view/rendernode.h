@@ -12,12 +12,12 @@ private:
     float mRotationX,mRotationY,mRotation;
     float mPivotX,mPivotY;
     float mTranslationX,mTranslationY,mTranslationZ;
-    Matrix mMatrix;
+    Cairo::Matrix mMatrix;
 public:
     RenderNode();
     bool  hasIdentityMatrix()const;
-    Matrix getMatrix()const;
-    Matrix getInverseMatrix()const;
+    Cairo::Matrix getMatrix()const;
+    Cairo::Matrix getInverseMatrix()const;
     void  setAlpha(float);
     float getAlpha()const;
     void  setElevation(float);

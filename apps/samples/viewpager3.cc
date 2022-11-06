@@ -1,7 +1,7 @@
 #include <cdroid.h>
 #include <dirent.h>
 #include <widget/pagetransformers.h>
-
+using namespace Cairo;
 class MyPageAdapter:public PagerAdapter{
     std::vector<std::string>urls;
     std::map< int,RefPtr<Cairo::ImageSurface> >imgs;

@@ -157,7 +157,7 @@ endif()
 if(SIZEOF_UINT128_T)
     set(HAVE_UINT128_T 1)
 endif()
-if(SIZEOF_UINT64_T)
+if(TRUE)##SIZEOF_UINT64_T)
     set(HAVE_UINT64_T 1)
 endif()
 

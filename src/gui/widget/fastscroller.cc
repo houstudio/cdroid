@@ -3,6 +3,7 @@
 #include <widget/headerviewlistadapter.h>
 #include <core/mathutils.h>
 #include <float.h>
+#include <cdlog.h>
 
 namespace cdroid{
 

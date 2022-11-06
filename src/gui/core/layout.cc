@@ -5,7 +5,7 @@
 #include <fribidi.h>
 #include <cdlog.h>
 #include <textutils.h>
-
+using namespace Cairo;
 namespace cdroid{
 #define START   0
 #define TOP     1

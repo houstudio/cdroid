@@ -24,10 +24,10 @@ private:
         std::vector<DIV> mHorz;
         std::vector<DIV> mVert;
         ColorStateList*mTint;
-        RefPtr<ImageSurface>mNinePatch;
+	Cairo::RefPtr<Cairo::ImageSurface>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
-        NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding=nullptr);
+        NinePatchState(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr);
         Drawable*newDrawable()override;
         void draw(Canvas&canvas,const Rect&rect);
         int getChangingConfigurations()const override;
@@ -48,7 +48,7 @@ protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:
     NinePatchDrawable(Context*,const std::string&resid);
-    NinePatchDrawable(RefPtr<ImageSurface>bmp);
+    NinePatchDrawable(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     ~NinePatchDrawable();
     void setTargetDensity(int density);
     Insets getOpticalInsets()override;

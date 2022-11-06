@@ -44,7 +44,8 @@ if(NOT PNG_BUILD_ZLIB)
 endif()
 
 if(UNIX AND NOT APPLE AND NOT BEOS AND NOT HAIKU)
-  find_library(M_LIBRARY m)
+  set(M_LIBRARY "m")
+  #find_library(M_LIBRARY "m")
 else()
   # libm is not needed and/or not available
   set(M_LIBRARY "")
@@ -63,7 +64,6 @@ set(PNG_PREFIX "" CACHE STRING "Prefix to add to the API function names")
 set(DFA_XTRA "" CACHE FILEPATH "File containing extra configuration settings")
 
 if(PNG_HARDWARE_OPTIMIZATIONS)
-
 # set definitions and sources for arm
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm" OR
   CMAKE_SYSTEM_PROCESSOR MATCHES "^aarch64")
@@ -489,6 +489,8 @@ set(libpng_sources
   ${libpng_mips_sources}
   ${libpng_powerpc_sources}
 )
+
+if (FALSE)
 set(pngtest_sources
   pngtest.c
 )
@@ -510,6 +512,7 @@ set(pngfix_sources
 set(png_fix_itxt_sources
   contrib/tools/png-fix-itxt.c
 )
+endif()
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
@@ -746,13 +749,13 @@ if(BUILD_TESTS AND PNG_SHARED)
 endif()
 
 if(PNG_SHARED)
-  add_executable(pngfix ${pngfix_sources})
-  target_link_libraries(pngfix png)
-  set(PNG_BIN_TARGETS pngfix)
+  #add_executable(pngfix ${pngfix_sources})
+  #target_link_libraries(pngfix png)
+  #set(PNG_BIN_TARGETS pngfix)
 
-  add_executable(png-fix-itxt ${png_fix_itxt_sources})
-  target_link_libraries(png-fix-itxt ${ZLIB_LIBRARY} ${M_LIBRARY})
-  list(APPEND PNG_BIN_TARGETS png-fix-itxt)
+  #add_executable(png-fix-itxt ${png_fix_itxt_sources})
+  #target_link_libraries(png-fix-itxt ${ZLIB_LIBRARY} ${M_LIBRARY})
+  #list(APPEND PNG_BIN_TARGETS png-fix-itxt)
 endif()
 
 # Set a variable with CMake code which:

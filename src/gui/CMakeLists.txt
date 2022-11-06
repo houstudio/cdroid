@@ -26,6 +26,7 @@ include_directories(
     ./core/svg ./luabinding 
     ${CMAKE_BINARY_DIR}/include
     ${PNG_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIR} ${PLPLOT_INCLUDE_DIR}
+    ${CMAKE_BINARY_DIR}/include/gui
     ${CMAKE_BINARY_DIR}/include/pixman
     ${CMAKE_BINARY_DIR}/include/cairo
     ${CMAKE_BINARY_DIR}/include/porting
@@ -41,7 +42,8 @@ include_directories(
 )
 
 add_definitions(-DRAPIDJSON_HAS_STDSTRING)
-
+add_definitions(--include cdtypes.h)
+add_definitions(--include cdlog.h)
 
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_CAIROMM} ${SRCS_WIDGET} ${SRCS_DRAWABLES} 

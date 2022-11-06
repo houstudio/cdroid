@@ -158,7 +158,7 @@ protected:
     int mPersistentDrawingCache;
     std::vector<View*> mChildren;
     std::vector<View*>mDisappearingChildren;
-    RefPtr<Region>mInvalidRgn;
+    Cairo::RefPtr<Cairo::Region>mInvalidRgn;
     Transformation*mInvalidationTransformation;
     LONGLONG time_lastframe;
     OnHierarchyChangeListener mOnHierarchyChangeListener;

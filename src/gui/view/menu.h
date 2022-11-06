@@ -48,7 +48,7 @@ protected:
     bool mChecked;
     bool mVisible;
     bool mEnabled;
-    RefPtr<ImageSurface>mIcon;
+    Cairo::RefPtr<Cairo::ImageSurface>mIcon;
     SubMenu*mSubMenu;
     friend class Menu;
 public:

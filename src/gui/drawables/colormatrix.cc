@@ -2,6 +2,7 @@
 #include <color.h>
 #include <math.h>
 #include <algorithm>
+using namespace Cairo;
 namespace cdroid{
 
 ColorVector::ColorVector(){

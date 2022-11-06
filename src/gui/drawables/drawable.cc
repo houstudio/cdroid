@@ -6,6 +6,7 @@
 #include <string.h>
 #include <textutils.h>
 
+using namespace Cairo;
 namespace cdroid{
 
 Drawable::ConstantState::~ConstantState(){

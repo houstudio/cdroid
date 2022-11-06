@@ -1,7 +1,7 @@
 #include <drawables/rotatedrawable.h>
 #include <cdlog.h>
 
-
+using namespace Cairo;
 namespace cdroid{
 #define MAX_LEVEL 10000
 RotateDrawable::RotateState::RotateState()

@@ -7,6 +7,7 @@
 #include <core/systemclock.h>
 #include <core/path.h>
 #define SLEEP(x) usleep((x)*1000)
+using namespace Cairo;
 class DRAWABLE:public testing::Test{
 public:
     static Canvas*ctx;

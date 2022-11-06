@@ -1,5 +1,6 @@
 #include <widget/forwardinglistener.h>
 #include <widget/dropdownlistview.h>
+#include <cdlog.h>
 namespace cdroid{
 
 ForwardingListener::ForwardingListener(View* src){

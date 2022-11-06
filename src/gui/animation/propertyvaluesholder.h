@@ -7,7 +7,6 @@
 #include <cmath>
 #include <iostream>
 #include <cdtypes.h>
-#include <cdlog.h>
 #include <core/color.h>
 #include <core/variant.h>
 //reference:

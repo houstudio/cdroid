@@ -1,5 +1,6 @@
 #include <widget/listpopupwindow.h>
 #include <widget/linearlayout.h>
+#include <cdlog.h>
 namespace cdroid{
 
 class PopupDataSetObserver:public DataSetObserver{

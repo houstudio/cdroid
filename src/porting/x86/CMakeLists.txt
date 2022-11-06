@@ -63,6 +63,7 @@ endif()
 
 list(APPEND X86LIBS pthread)
 find_package(ZLIB)
+message("ZLIB_INCLUDE=${ZLIB_INCLUDE_DIR}")
 include_directories(./
     ../include
     ${CMAKE_SOURCE_DIR}/src/gui/

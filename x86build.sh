@@ -12,6 +12,7 @@ fi
 cmake -DCDROID_CHIPSET=x86  -DENABLE_RFB=ON  \
     -DCMAKE_INSTALL_PREFIX=./ \
     -DCMAKE_BUILD_TYPE=${TYPE} \
+    -DM_LIBRARY=m \
     ..
 popd
 

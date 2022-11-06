@@ -116,8 +116,8 @@ private:
     std::shared_ptr<GradientState>mGradientState;
     std::vector<double>mDashArray;
     double mStrokeWidth;
-    RefPtr<Cairo::Pattern>mStrokePaint;
-    RefPtr<Cairo::Pattern>mFillPaint;
+    Cairo::RefPtr<Cairo::Pattern>mStrokePaint;
+    Cairo::RefPtr<Cairo::Pattern>mFillPaint;
     bool ensureValidRect();
     void buildPathIfDirty();
     bool isOpaqueForState()const;

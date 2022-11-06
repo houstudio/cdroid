@@ -3,7 +3,6 @@
 #include <drawables/drawable.h>
 #include <cairomm/surface.h>
 #include <cairomm/refptr.h>
-using namespace Cairo;
 namespace cdroid{
 
 enum TileMode{
@@ -29,9 +28,9 @@ private:
         int mTileModeY;
         int mSrcDensityOverride;
         int mTargetDensity;
-        RefPtr<ImageSurface>mBitmap;
+	Cairo::RefPtr<Cairo::ImageSurface>mBitmap;
         BitmapState();
-        BitmapState(RefPtr<ImageSurface>bitmap);
+        BitmapState(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
         BitmapState(const BitmapState&bitmapState);
 		~BitmapState()override;
         Drawable* newDrawable()override;
@@ -52,12 +51,12 @@ protected:
     bool mDstRectAndInsetsDirty;
     void onBoundsChange(const Rect&r)override;
     bool onStateChange(const std::vector<int>&)override;
-    static int computeTransparency(RefPtr<ImageSurface>bmp);
+    static int computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
 public:
-    BitmapDrawable(RefPtr<ImageSurface>img);
+    BitmapDrawable(Cairo::RefPtr<Cairo::ImageSurface>img);
     BitmapDrawable(Context*ctx,const std::string&resname);
-    RefPtr<ImageSurface> getBitmap()const;
-    void setBitmap(RefPtr<ImageSurface>bmp);
+    Cairo::RefPtr<Cairo::ImageSurface> getBitmap()const;
+    void setBitmap(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     void setAlpha(int a)override;
     int getAlpha()const override;
     int getGravity()const;

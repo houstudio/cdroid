@@ -1,5 +1,6 @@
 #include <widget/relativelayout.h>
 #include <string.h>
+#include <cdlog.h>
 namespace cdroid{
 
 static constexpr int RULES_VERTICAL[] = {
