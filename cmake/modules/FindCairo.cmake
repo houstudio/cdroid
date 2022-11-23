@@ -32,9 +32,11 @@ find_package(PkgConfig)
 pkg_check_modules(PC_CAIRO QUIET cairo)
 
 find_path(CAIRO_INCLUDE_DIRS
-    NAMES cairo.h
-    HINTS ${PC_CAIRO_INCLUDEDIR}
+    NAMES cairo/cairo.h
+    HINTS ${CMAKE_INSTALL_PREFIX}/include 
+          ${PC_CAIRO_INCLUDEDIR}
           ${PC_CAIRO_INCLUDE_DIRS}
+	  NO_DEFAULT_PATH
     PATH_SUFFIXES cairo
 )
 
@@ -43,10 +45,10 @@ find_library(CAIRO_LIBRARIES
     HINTS ${PC_CAIRO_LIBDIR}
           ${PC_CAIRO_LIBRARY_DIRS}
 )
-
+#message(FATAL_ERROR ">>CAIRO_INCLUDE_DIRS=${CAIRO_INCLUDE_DIRS} CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 if (CAIRO_INCLUDE_DIRS)
-    if (EXISTS "${CAIRO_INCLUDE_DIRS}/cairo-version.h")
-        file(READ "${CAIRO_INCLUDE_DIRS}/cairo-version.h" CAIRO_VERSION_CONTENT)
+    if (EXISTS "${CAIRO_INCLUDE_DIRS}/cairo/cairo-version.h")
+        file(READ "${CAIRO_INCLUDE_DIRS}/cairo/cairo-version.h" CAIRO_VERSION_CONTENT)
 
         string(REGEX MATCH "#define +CAIRO_VERSION_MAJOR +([0-9]+)" _dummy "${CAIRO_VERSION_CONTENT}")
         set(CAIRO_VERSION_MAJOR "${CMAKE_MATCH_1}")

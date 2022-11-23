@@ -18,7 +18,7 @@
 #ifndef __CAIROMM_WIN32_FONT_H
 #define __CAIROMM_WIN32_FONT_H
 
-#include <cairo-features.h>
+#include <cairo/cairo-features.h>
 
 #ifdef CAIRO_HAS_WIN32_FONT
 #include <cairo-win32.h>

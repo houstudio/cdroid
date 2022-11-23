@@ -5,7 +5,7 @@
  *   Auto-fitter routines to compute global hinting values
  *   (specification).
  *
- * Copyright (C) 2003-2021 by
+ * Copyright (C) 2003-2022 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -105,7 +105,7 @@ FT_BEGIN_HEADER
   typedef struct  AF_FaceGlobalsRec_
   {
     FT_Face          face;
-    FT_Long          glyph_count;    /* same as face->num_glyphs */
+    FT_UInt          glyph_count;    /* unsigned face->num_glyphs */
     FT_UShort*       glyph_styles;
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ

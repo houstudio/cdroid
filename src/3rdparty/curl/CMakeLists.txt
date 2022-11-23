@@ -531,7 +531,7 @@ if(CURL_ZLIB)
     # Depend on ZLIB via imported targets if supported by the running
     # version of CMake.  This allows our dependents to get our dependencies
     # transitively.
-    if(NOT CMAKE_VERSION VERSION_LESS 3.4)
+    if(FALSE AND NOT CMAKE_VERSION VERSION_LESS 3.4)
       list(APPEND CURL_LIBS ZLIB::ZLIB)
     else()
       list(APPEND CURL_LIBS ${ZLIB_LIBRARIES})

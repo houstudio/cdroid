@@ -3,3 +3,31 @@ set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR})
 set(ZLIB_LIBRARY zlib)
 set(ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 set(ZLIB_FOUND TRUE)
+
+find_package(PkgConfig)
+pkg_check_modules(PC_ZLIB QUIET zlib)
+
+find_path(CAIRO_INCLUDE_DIRS
+    NAMES zlib.h
+    HINTS ${PC_ZLIB_INCLUDEDIR}
+    ${PC_ZLIB_INCLUDE_DIRS}
+    PATH_SUFFIXES cairo
+)
+
+find_library(ZLIB_LIBRARIES
+    NAMES zlib
+    HINTS ${PC_ZLIB_LIBDIR}
+    ${PC_ZLIB_LIBRARY_DIRS}
+          ${CMAKE_INSTALL_PREFIX}/include/
+)
+
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(zlib REQUIRED_VARS ZLIB_INCLUDE_DIRS ZLIB_LIBRARIES
+	VERSION_VAR ZLIB_VERSION)
+
+mark_as_advanced(
+	ZLIB_INCLUDE_DIRS
+	ZLIB_LIBRARIES
+)
+

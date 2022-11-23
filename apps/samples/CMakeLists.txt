@@ -3,6 +3,8 @@ project(gui_test C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 find_package(PLPLOT)
+find_package(CDROID)
+find_package(Freetype)
 include_directories(
    ${DEPS_DIR}/include
    ${DEPS_DIR}/include/gui
@@ -11,7 +13,9 @@ include_directories(
    ${DEPS_DIR}/include/epg
    ${DEPS_DIR}/include/freetype2
    ${PLPLOT_INCLUDE_DIR}
+   ${FREETYPE_INCLUDE_DIRS}
 )
+message("***CDROID_LIBRARIES=${CDROID_LIBRARIES}")
 set(CMAKE_CXX_FLAGS "-Wl,--copy-dt-needed-entries")  #prevent error adding symbols: DSO missing from command line
 link_directories(${DEPS_DIR}/lib)
 file(GLOB ExamplesFileList  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cc")
@@ -29,7 +33,7 @@ foreach(Example ${ExamplesFileList})
   # Define example executable
   add_executable(${ExampleName} ${Example})
   # Link example against curlpp
-  target_link_libraries(${ExampleName} gui)
+  target_link_libraries(${ExampleName} cdroid )
   # make the meta target depend on this example.
   add_dependencies(build_app_examples ${ExampleName})
   install(TARGETS ${ExampleName} DESTINATION bin/examples)

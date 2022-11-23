@@ -3,7 +3,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules )
 
 find_package( EXPAT REQUIRED )
 find_package( Freetype REQUIRED )
-
+find_package( Iconv)
 include_directories(
     ${EXPAT_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
@@ -29,7 +29,12 @@ add_subdirectory( conf.d )
 set(FCUTILS fc-cat fc-scan fc-cache fc-list fc-match fc-validate fc-pattern fc-query)
 foreach(util ${FCUTILS} )
   add_executable(${util} ${util}/${util}.c)
-  target_link_libraries(${util} fontconfig zlib)
+  target_link_libraries(${util} fontconfig zlib harfbuzz harfbuzz-subset)
   install(TARGETS ${util} DESTINATION bin)
 endforeach()
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/fontconfig.pc.in
+	${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig )

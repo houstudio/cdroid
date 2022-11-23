@@ -1,51 +1,67 @@
-add_subdirectory(zlib-1.2.11)
-add_subdirectory(libpng)
-add_subdirectory(expat)
-add_subdirectory(freetype-2.11.0)
-add_subdirectory(libjpeg-turbo)
-add_subdirectory(pixman)
-add_subdirectory(fontconfig)
+ADD_CMAKE_PACKAGE(zlib-1.2.11)
+ADD_CMAKE_PACKAGE(libpng)
+ADD_CMAKE_PACKAGE(expat)
+ADD_CMAKE_PACKAGE(libjpeg-turbo)
+ADD_CMAKE_PACKAGE(pixman)
 
+#1... build freetype (shared) without harfbuzz
+SET(FT_DISABLE_HARFBUZZ ON)
+SET(BUILD_SHARED_LIB ON)
+SET(FT_REQUIRE_BROTLI OFF)
+ADD_CMAKE_PACKAGE(freetype-2.11.0)
+
+#2...build harfbuzz(static)without fontconfig and cairo
 if(FT_WITH_HARFBUZZ)
-   add_subdirectory(harfbuzz)
-   add_subdirectory(graphite2-1.3.14)
+   ADD_CMAKE_PACKAGE(harfbuzz)
+   ADD_CMAKE_PACKAGE(graphite2-1.3.14)
 endif()
 
-add_subdirectory(cairo-1.16.0)
-add_subdirectory(libunibreak)
-add_subdirectory(libiconv)
-add_subdirectory(lzo-2.10)
+#3...build freetype (static) with harfbuzz
+SET(FT_DISABLE_HARFBUZZ OFF)
+SET(FT_REQUIRE_HARFBUZZ ON)
+BUILD_CMAKE_PACKAGE(freetype-2.11.0)
+
+#4...build fontconfig(static)
+ADD_CMAKE_PACKAGE(fontconfig)
+
+#5...build harfbuzz(
+find_package(Fontconfig)
+ADD_CMAKE_PACKAGE(cairo-1.16.0)
+ADD_CMAKE_PACKAGE(libunibreak)
+ADD_CMAKE_PACKAGE(libiconv)
+ADD_CMAKE_PACKAGE(lzo-2.10)
 
 if(ENABLE_CAIROSVG)
-   add_subdirectory(libsvg)
-   add_subdirectory(libsvg-cairo)
-   add_subdirectory(uriparser)
+   ADD_CMAKE_PACKAGE(libsvg)
+   ADD_CMAKE_PACKAGE(libsvg-cairo)
+   ADD_CMAKE_PACKAGE(uriparser)
 endif()
 
-if (ENABLE_CAIROSVG)
-   add_subdirectory(curl)
-endif()
+ADD_CMAKE_PACKAGE(curl)
 
-add_subdirectory(gtest)
-add_subdirectory(jsoncpp)
-add_subdirectory(id3)
-add_subdirectory(libgif)
-add_subdirectory(libzip)
-add_subdirectory(uuid)
-add_subdirectory(fribidi)
-add_subdirectory(pinyin)
+ADD_CMAKE_PACKAGE(gtest)
+ADD_CMAKE_PACKAGE(jsoncpp)
+ADD_CMAKE_PACKAGE(id3)
+ADD_CMAKE_PACKAGE(libgif)
+ADD_CMAKE_PACKAGE(libzip)
+ADD_CMAKE_PACKAGE(uuid)
+ADD_CMAKE_PACKAGE(fribidi)
+ADD_CMAKE_PACKAGE(pinyin)
 
 if(ENABLE_PLPLOT)
-   add_subdirectory(shapelib)
-   add_subdirectory(plplot)
+   ADD_CMAKE_PACKAGE(shapelib)
+   ADD_CMAKE_PACKAGE(plplot)
 endif()
 
 if(ENABLE_GESTURE)
-   add_subdirectory(grt/build)
+   ADD_CMAKE_PACKAGE(grt/build)
 endif(ENABLE_GESTURE)
 
-add_subdirectory(mbedtls)
+ADD_CMAKE_PACKAGE(mbedtls)
 
-add_subdirectory(libvncserver)
-add_subdirectory(xLua/build)
+ADD_CMAKE_PACKAGE(libvncserver)
 
+ADD_CUSTOM_TARGET(cdroiddeps
+    COMMENT "config done all dependency packages!"
+    )
+ADD_DEPENDENCIES(cdroiddeps  ${THIRDPARTY_BUILD_TARGETS})

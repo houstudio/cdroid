@@ -4,7 +4,7 @@
  *
  *   Auto-fitter types (specification only).
  *
- * Copyright (C) 2003-2021 by
+ * Copyright (C) 2003-2022 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -119,13 +119,13 @@ extern void*  _af_debug_hints;
 
   typedef struct  AF_ScalerRec_
   {
-    FT_Face         face;        /* source font face                        */
-    FT_Fixed        x_scale;     /* from font units to 1/64th device pixels */
-    FT_Fixed        y_scale;     /* from font units to 1/64th device pixels */
-    FT_Pos          x_delta;     /* in 1/64th device pixels                 */
-    FT_Pos          y_delta;     /* in 1/64th device pixels                 */
-    FT_Render_Mode  render_mode; /* monochrome, anti-aliased, LCD, etc.     */
-    FT_UInt32       flags;       /* additional control flags, see above     */
+    FT_Face         face;        /* source font face                      */
+    FT_Fixed        x_scale;     /* from font units to 1/64 device pixels */
+    FT_Fixed        y_scale;     /* from font units to 1/64 device pixels */
+    FT_Pos          x_delta;     /* in 1/64 device pixels                 */
+    FT_Pos          y_delta;     /* in 1/64 device pixels                 */
+    FT_Render_Mode  render_mode; /* monochrome, anti-aliased, LCD, etc.   */
+    FT_UInt32       flags;       /* additional control flags, see above   */
 
   } AF_ScalerRec, *AF_Scaler;
 
@@ -198,7 +198,6 @@ extern void*  _af_debug_hints;
    *   outline according to the results of the glyph analyzer.
    */
 
-#define AFWRTSYS_H_  /* don't load header files */
 #undef  WRITING_SYSTEM
 #define WRITING_SYSTEM( ws, WS )    \
           AF_WRITING_SYSTEM_ ## WS,
@@ -207,13 +206,11 @@ extern void*  _af_debug_hints;
   typedef enum  AF_WritingSystem_
   {
 
-#include "afwrtsys.h"
+#include "afws-iter.h"
 
     AF_WRITING_SYSTEM_MAX   /* do not remove */
 
   } AF_WritingSystem;
-
-#undef  AFWRTSYS_H_
 
 
   typedef struct  AF_WritingSystemClassRec_

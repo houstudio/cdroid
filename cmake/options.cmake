@@ -52,10 +52,6 @@ if(ENABLE_UPNP)
   list(APPEND APP_EXTLIBS upnp)
 endif()
 
-if(ENABLE_GESTURE)
-  list(APPEND OPTIONAL_LIBS grt)
-endif()
-
 if(ENABLE_TURBOJPEG)
   list(APPEND OPTIONAL_LIBS turbojpeg)
 endif()

@@ -364,7 +364,7 @@ void Window::close(){
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
     bool rc=SwipeHelper::get(mContext).onTouchEvent(event);
-    return rc||ViewGroup::dispatchTouchEvent(event);
+    return /*rc||*/ViewGroup::dispatchTouchEvent(event);
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){

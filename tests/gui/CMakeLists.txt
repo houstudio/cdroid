@@ -19,7 +19,7 @@ include_directories(
 link_directories(${DEPS_DIR}/lib)
 add_executable(gui_test ${SRCS_GUI_TESTS})
 
-target_link_libraries(gui_test gui gtest)
+target_link_libraries(gui_test PRIVATE cdroid gtest)
 
 install(TARGETS gui_test DESTINATION bin/tests)
 

@@ -1,12 +1,12 @@
 if [ $# -gt 0 ]
 then
-mkdir -p out-x86r
-pushd out-x86r
-TYPE=Release
+   mkdir -p out-x86r
+   pushd out-x86r
+   TYPE=Release
 else
-mkdir -p out-x86
-pushd out-x86
-TYPE=Debug
+   mkdir -p out-x86
+   pushd out-x86
+   TYPE=Debug
 fi
 
 cmake -DCDROID_CHIPSET=x86  -DENABLE_RFB=ON  \

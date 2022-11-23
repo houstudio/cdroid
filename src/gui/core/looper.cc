@@ -533,13 +533,13 @@ int Looper::removeFd(int fd, int seq) {
 }
 
 void Looper::sendMessage(const MessageHandler* handler, const Message& message) {
-    nsecs_t now = SystemClock::uptimeMillis();//systemTime(SYSTEM_TIME_MONOTONIC);
+    nsecs_t now = SystemClock::uptimeMillis();
     sendMessageAtTime(now, handler, message);
 }
 
 void Looper::sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler* handler,
         const Message& message) {
-    nsecs_t now = SystemClock::uptimeMillis();//systemTime(SYSTEM_TIME_MONOTONIC);
+    nsecs_t now = SystemClock::uptimeMillis();
     sendMessageAtTime(now + uptimeDelay, handler, message);
 }
 
@@ -622,6 +622,7 @@ void Looper::removeMessages(const MessageHandler* handler, int what) {
     LOGD_IF(DEBUG_CALLBACKS,"%p  removeMessages - handler=%p, what=%d size=%d", this, handler, what,mMessageEnvelopes.size());
     { // acquire lock
         std::lock_guard<std::mutex>_l(mLock);
+
         for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
             LOGD("what=%d,%d",it->message.what,what);
             if((it->handler==handler) && (it->message.what==what)){

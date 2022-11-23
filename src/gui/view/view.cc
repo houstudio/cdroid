@@ -4635,7 +4635,7 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
-              || (fullInvalidate && isOpaque() != mLastIsOpaque)) {
+              || (fullInvalidate ||1/*&& isOpaque() != mLastIsOpaque*/)) {
         if (fullInvalidate) {
             mLastIsOpaque = isOpaque();
             mPrivateFlags &= ~PFLAG_DRAWN;

@@ -34,3 +34,30 @@ endfunction()
 
 option(JSONCPP_WITH_TESTS "Compile and (for jsoncpp_check) run JsonCpp test executables" OFF)
 option(JSONCPP_WITH_POST_BUILD_UNITTEST "Automatically run unit-tests as a post build step" OFF)
+
+
+MACRO(BUILD_CMAKE_PACKAGE _pkg_name)
+    SET(PACKAGE_BINARY_PATH ${CMAKE_BINARY_DIR}/src/3rdparty/${_pkg_name})
+    ADD_CUSTOM_COMMAND(
+        TARGET ${_pkg_name}_3rd
+        COMMAND make -j8
+        COMMAND make install
+	WORKING_DIRECTORY ${PACKAGE_BINARY_PATH}
+	COMMENT ".......building ${_pkg_name} at ${PACKAGE_BINARY_PATH}"
+        )
+ENDMACRO(BUILD_CMAKE_PACKAGE)
+
+MACRO(ADD_CMAKE_PACKAGE _pkg_name)
+    add_subdirectory(${_pkg_name})
+    SET(THIRDPARTY_BUILD_TARGETS ${THIRDPARTY_BUILD_TARGETS} ${_pkg_name}_3rd)
+    ADD_CUSTOM_TARGET(${_pkg_name}_3rd)
+    BUILD_CMAKE_PACKAGE(${_pkg_name})
+ENDMACRO(ADD_CMAKE_PACKAGE)
+
+MACRO(BUILD_3RD)
+   execute_process(
+	COMMAND make cdroiddeps
+	COMMENT ".......building cdroiddeps $CMAKE_BINARY_DIR}"
+	WORKING_DIRECTORY $CMAKE_BINARY_DIR}/src/3rdparty 
+	    ) 
+ENDMACRO(BUILD_3RD)

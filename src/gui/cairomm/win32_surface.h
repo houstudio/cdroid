@@ -21,7 +21,7 @@
 
 #include <cairomm/surface.h>
 #include <cairomm/enums.h>
-#include <cairo-features.h>
+#include <cairo/cairo-features.h>
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
 #include <cairo-win32.h>

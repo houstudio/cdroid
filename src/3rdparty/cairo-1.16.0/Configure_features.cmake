@@ -75,8 +75,8 @@ if(X11_FOUND)
 endif()
 
 if(ZLIB_FOUND)
-	set(CAIRO_HAS_PS_SURFACE 1)
-	set(CAIRO_HAS_PDF_SURFACE 1)
+    set(CAIRO_HAS_PS_SURFACE 1)
+    set(CAIRO_HAS_PDF_SURFACE 1)
 endif()
 
 if(SKIA_FOUND)

@@ -31,7 +31,7 @@ add_custom_target(uidemotranslate
   )
 
 
-target_link_libraries(uidemo2 gui id3 tvhal)
+target_link_libraries(uidemo2 cdroid id3 tvhal)
 
 install(TARGETS uidemo2 DESTINATION bin)
 

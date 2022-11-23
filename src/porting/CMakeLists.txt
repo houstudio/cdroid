@@ -18,10 +18,9 @@ link_directories(${CMAKE_SOURCE_DIR}/deps/lib)
 add_library(tvhal SHARED ${SRCS_COMMON} )
 add_library(tvhal_static STATIC ${SRCS_COMMON} )
 
-target_link_libraries(tvhal ${CDROID_CHIPSET})
-target_link_libraries(tvhal_static ${CDROID_CHIPSET})
+target_link_libraries(tvhal PUBLIC ${CDROID_CHIPSET})
+target_link_libraries(tvhal_static PUBLIC ${CDROID_CHIPSET})
 set_target_properties(tvhal_static PROPERTIES OUTPUT_NAME "tvhal")
-
 file(GLOB HAL_HEADERS  ${PROJECT_SOURCE_DIR}/include/*.h)
 
 file(GLOB KEYCMAPS   ${PROJECT_SOURCE_DIR}/${CDROID_CHIPSET}/*.kcm)

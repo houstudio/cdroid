@@ -46,13 +46,13 @@
 //See quartz_surface.h for QuartzSurface (Mac OS X).
 
 #ifdef CAIRO_HAS_PDF_SURFACE
-#include <cairo-pdf.h>
+#include <cairo/cairo-pdf.h>
 #endif // CAIRO_HAS_PDF_SURFACE
 #ifdef CAIRO_HAS_PS_SURFACE
-#include <cairo-ps.h>
+#include <cairo/cairo-ps.h>
 #endif // CAIRO_HAS_PS_SURFACE
 #ifdef CAIRO_HAS_SVG_SURFACE
-#include <cairo-svg.h>
+#include <cairo/cairo-svg.h>
 #endif // CAIRO_HAS_SVG_SURFACE
 
 // Experimental surfaces

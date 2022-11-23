@@ -1,11 +1,10 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@CMAKE_INSTALL_LIBDIR@
+includedir=@CMAKE_INSTALL_INCLUDEDIR@
 
 Name: Pixman
 Description: The pixman library (version 1)
-Version: @PACKAGE_VERSION@
+Version: @PIXMAN_VERSION@
 Cflags: -I${includedir}/pixman-1
 Libs: -L${libdir} -lpixman-1
 

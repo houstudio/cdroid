@@ -1,7 +1,7 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@CMAKE_INSTALL_LIBDIR@
+includedir=@CMAKE_INSTALL_INCLUDEDIR@
 sysconfdir=@sysconfdir@
 localstatedir=@localstatedir@
 PACKAGE=@PACKAGE@
@@ -15,4 +15,4 @@ Requires: @PKGCONFIG_REQUIRES@
 Requires.private: @PKGCONFIG_REQUIRES_PRIVATELY@
 Libs: -L${libdir} -lfontconfig
 Libs.private: @ICONV_LIBS@ @PKG_EXPAT_LIBS@
-Cflags: -I${includedir} @ICONV_CFLAGS@ @PKG_EXPAT_CFLAGS@
+Cflags: -I${includedir}  -I@EXPAT_INCLUDE_DIR@

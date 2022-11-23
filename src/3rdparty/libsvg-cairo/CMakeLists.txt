@@ -1,8 +1,10 @@
 project(C CXX)
-
 aux_source_directory(src SRCS_CAIRO_SVG)
+find_Package(Cairo)
+
+message(FATAL_ERROR "CAIRO_INCLUDE_DIRS=${CAIRO_INCLUDE_DIR}")
 include_directories(include src
-	${CMAKE_SOURCE_DIR}/src/3rdparty/cairo-1.16.0/src
+	${CAIRO_INCLUDE_DIRS}/cairo
 	${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src
 	)
 set(CMAKE_C_FLAGS "-fPIC")

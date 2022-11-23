@@ -63,7 +63,7 @@ endif()
 
 list(APPEND X86LIBS pthread)
 find_package(ZLIB)
-message("ZLIB_INCLUDE=${ZLIB_INCLUDE_DIR}")
+message("ZLIB_INCLUDE=${ZLIB_INCLUDE_DIR} X86LIBS=${X86LIBS}")
 include_directories(./
     ../include
     ${CMAKE_SOURCE_DIR}/src/gui/
@@ -79,5 +79,5 @@ include_directories(./
 )
 
 add_library(x86 STATIC ${X86_SRCS} )
-target_link_libraries(x86 ${X86LIBS})
+target_link_libraries(x86 PRIVATE ${X86LIBS})
 

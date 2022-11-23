@@ -52,3 +52,10 @@ endif(BUILD_TESTS)
 
 include(${PROJECT_SOURCE_DIR}/cmake/cmake_package.cmake)
 
+configure_file(
+        "pixman-1.pc.in"
+        "pixman-1.pc"
+        @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pixman-1.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+

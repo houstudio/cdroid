@@ -4,7 +4,7 @@
  *
  *   AFM support for Type 1 fonts (body).
  *
- * Copyright (C) 1996-2021 by
+ * Copyright (C) 1996-2022 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -178,7 +178,6 @@
     /* temporarily.  If we find no PostScript charmap, then just use    */
     /* the default and hope it is the right one.                        */
     oldcharmap = t1_face->charmap;
-    charmap    = NULL;
 
     for ( n = 0; n < t1_face->num_charmaps; n++ )
     {
@@ -186,9 +185,7 @@
       /* check against PostScript pseudo platform */
       if ( charmap->platform_id == 7 )
       {
-        error = FT_Set_Charmap( t1_face, charmap );
-        if ( error )
-          goto Exit;
+        t1_face->charmap = charmap;
         break;
       }
     }
@@ -203,16 +200,13 @@
       kp->index1 = FT_Get_Char_Index( t1_face, p[0] );
       kp->index2 = FT_Get_Char_Index( t1_face, p[1] );
 
-      kp->x = (FT_Int)FT_PEEK_SHORT_LE(p + 2);
+      kp->x = (FT_Int)FT_PEEK_SHORT_LE( p + 2 );
       kp->y = 0;
 
       kp++;
     }
 
-    if ( oldcharmap )
-      error = FT_Set_Charmap( t1_face, oldcharmap );
-    if ( error )
-      goto Exit;
+    t1_face->charmap = oldcharmap;
 
     /* now, sort the kern pairs according to their glyph indices */
     ft_qsort( fi->KernPairs, fi->NumKernPair, sizeof ( AFM_KernPairRec ),

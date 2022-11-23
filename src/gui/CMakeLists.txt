@@ -13,10 +13,12 @@ aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 find_package(PNG)
+find_package(JPEG)
+find_package(ZIP)
 find_package(Freetype)
 find_package(EXPAT)
 find_package(PLPLOT)
-message("UI Lua script bindings is ${LUA_BINDINGS} guistatic=${GUI_STATIC}")
+find_package(Fontconfig)
 
 include_directories(
     ./ ./private 
@@ -29,34 +31,42 @@ include_directories(
     ${CMAKE_BINARY_DIR}/include/gui
     ${CMAKE_BINARY_DIR}/include/pixman
     ${CMAKE_BINARY_DIR}/include/cairo
+    ${FREETYPE_INCLUDE_DIRS}
     ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_BINARY_DIR}/include/pinyin
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include/fribidi
     ${CMAKE_SOURCE_DIR}/src/modules/vold
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/grt
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/src
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/include
 )
 
-add_definitions(-DRAPIDJSON_HAS_STDSTRING)
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
+set(CDROID_LIBS 
+	#${PIXMAN_LIBRARIES} ${CAIRO_LIBRARIES}
+	${FONTCONFIG_LIBRARIES}
+        ${ZIP_LIBRARIES}	
+	${PNG_LIBRARIES} ${JPEG_LIBRARIES}
+	${JSONCPP_LIBRARIES} ${EXPAT_LIBRARIES}
+	${ZIP_LIBRARIES}
+	)
 
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_CAIROMM} ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
     ${SRCS_APP} ${SRCS_DIALOG} 
     ${SRCS_ANIMATION} widget/R.h)
 
-add_library(gui_objs OBJECT ${SOURCES_GUI})
-add_library(gui_static STATIC $<TARGET_OBJECTS:gui_objs>)
-add_library(gui SHARED $<TARGET_OBJECTS:gui_objs>)
+message("FONTCONFIG_LIBRARIES=${FONTCONFIG_LIBRARIES} CDROID_LIBS=${CDROID_LIBS}")
 
-CreatePAK(gui ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
+add_library(cdroid_objs OBJECT ${SOURCES_GUI})
+add_library(cdroid_static STATIC $<TARGET_OBJECTS:cdroid_objs>)
+add_library(cdroid SHARED $<TARGET_OBJECTS:cdroid_objs>)
+CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
-set_target_properties(gui_static PROPERTIES OUTPUT_NAME "gui")
+set_target_properties(cdroid_static PROPERTIES OUTPUT_NAME "cdroid")
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
 list(REMOVE_ITEM allfiles "private/*.h")
@@ -70,13 +80,23 @@ foreach( each_file ${allfiles} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
-message("=======OPTIONAL_LIBS=${OPTIONAL_LIBS}")
+target_link_libraries(cdroid 
+	PRIVATE cairo png jpeg unibreak zip jsoncpp expat
+	${OPTIONAL_LIBS} 
+	PUBLIC tvhal )
+target_link_libraries(cdroid_static 
+	PRIVATE png jpeg cairo_static unibreak  zip jsoncpp expat
+	${OPTIONAL_LIBS}
+	PUBLIC tvhal_static )
+configure_file(
+        "cdroid.pc.in"
+        "cdroid.pc"
+        @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
-target_link_libraries(gui pixman-1 png jpeg cairo unibreak zip jsoncpp tvhal ${OPTIONAL_LIBS} expat)
-target_link_libraries(gui_static pixman-1 png jpeg cairo_static unibreak  zip jsoncpp tvhal_static ${OPTIONAL_LIBS})
-
-install (TARGETS gui  DESTINATION lib)
-install (TARGETS gui_static  DESTINATION lib)
+install (TARGETS cdroid  DESTINATION lib)
+install (TARGETS cdroid_static  DESTINATION lib)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "view" EXCLUDE 
     PATTERN "core" EXCLUDE)

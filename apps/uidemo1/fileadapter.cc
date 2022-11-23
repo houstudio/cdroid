@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cdlog.h>
 namespace cdroid{
 std::string SimplifyPath(const std::string & path) {
     char rpath[1024];
