@@ -6,7 +6,7 @@ option(BUILD_CDROID_TESTS "Build unit tests" ON)
 
 option(ENABLE_GIF "enable gif encode and decoder" OFF)
 option(ENABLE_CAIROSVG "enable svg decoder" OFF)
-option(ENABLE_MBEDTLS "enable mbedtls" OFF)
+option(ENABLE_MBEDTLS "enable mbedtls" ON)
 option(ENABLE_UPNP "enable upnp/dlna" OFF)
 option(ENABLE_GESTURE "enable gestrure" OFF)
 option(ENABLE_TURBOJPEG "enable turbo jpeg" ON)
@@ -19,6 +19,10 @@ option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" OFF)
 
+#set(USE_STATIC_MBEDTLS_LIBRARY OFF)
+#set(USE_SHARED_MBEDTLS_LIBRARY ON)
+set(CMAKE_USE_OPENSSL ON)
+set(ENABLE_IPV6 OFF)#for CURL
 add_definitions(-DPNG_ZLIB_VERNUM=0)#Make PNG compiled happy:)
 
 if( MINIMAL_SIZE_OPTIMIZED )

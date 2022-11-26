@@ -4,7 +4,7 @@
  * \brief SSL/TLS functions.
  */
 /*
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,8 +18,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_SSL_H
 #define MBEDTLS_SSL_H
@@ -44,7 +42,12 @@
 #include "mbedtls/dhm.h"
 #endif
 
-#if defined(MBEDTLS_ECDH_C)
+/* Adding guard for MBEDTLS_ECDSA_C to ensure no compile errors due
+ * to guards also being in ssl_srv.c and ssl_cli.c. There is a gap
+ * in functionality that access to ecdh_ctx structure is needed for
+ * MBEDTLS_ECDSA_C which does not seem correct.
+ */
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
 #include "mbedtls/ecdh.h"
 #endif
 
@@ -72,63 +75,122 @@
 /*
  * SSL Error codes
  */
-#define MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE               -0x7080  /**< The requested feature is not available. */
-#define MBEDTLS_ERR_SSL_BAD_INPUT_DATA                    -0x7100  /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_SSL_INVALID_MAC                       -0x7180  /**< Verification of the message MAC failed. */
-#define MBEDTLS_ERR_SSL_INVALID_RECORD                    -0x7200  /**< An invalid SSL record was received. */
-#define MBEDTLS_ERR_SSL_CONN_EOF                          -0x7280  /**< The connection indicated an EOF. */
-#define MBEDTLS_ERR_SSL_UNKNOWN_CIPHER                    -0x7300  /**< An unknown cipher was received. */
-#define MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN                  -0x7380  /**< The server has no ciphersuites in common with the client. */
-#define MBEDTLS_ERR_SSL_NO_RNG                            -0x7400  /**< No RNG was provided to the SSL module. */
-#define MBEDTLS_ERR_SSL_NO_CLIENT_CERTIFICATE             -0x7480  /**< No client certification received from the client, but required by the authentication mode. */
-#define MBEDTLS_ERR_SSL_CERTIFICATE_TOO_LARGE             -0x7500  /**< Our own certificate(s) is/are too large to send in an SSL message. */
-#define MBEDTLS_ERR_SSL_CERTIFICATE_REQUIRED              -0x7580  /**< The own certificate is not set, but needed by the server. */
-#define MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED              -0x7600  /**< The own private key or pre-shared key is not set, but needed. */
-#define MBEDTLS_ERR_SSL_CA_CHAIN_REQUIRED                 -0x7680  /**< No CA Chain is set, but required to operate. */
-#define MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE                -0x7700  /**< An unexpected message was received from our peer. */
-#define MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE               -0x7780  /**< A fatal alert message was received from our peer. */
-#define MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED                -0x7800  /**< Verification of our peer failed. */
-#define MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY                 -0x7880  /**< The peer notified us that the connection is going to be closed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO               -0x7900  /**< Processing of the ClientHello handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO               -0x7980  /**< Processing of the ServerHello handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE                -0x7A00  /**< Processing of the Certificate handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE_REQUEST        -0x7A80  /**< Processing of the CertificateRequest handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE        -0x7B00  /**< Processing of the ServerKeyExchange handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO_DONE          -0x7B80  /**< Processing of the ServerHelloDone handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE        -0x7C00  /**< Processing of the ClientKeyExchange handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE_RP     -0x7C80  /**< Processing of the ClientKeyExchange handshake message failed in DHM / ECDH Read Public. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE_CS     -0x7D00  /**< Processing of the ClientKeyExchange handshake message failed in DHM / ECDH Calculate Secret. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE_VERIFY         -0x7D80  /**< Processing of the CertificateVerify handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_CHANGE_CIPHER_SPEC         -0x7E00  /**< Processing of the ChangeCipherSpec handshake message failed. */
-#define MBEDTLS_ERR_SSL_BAD_HS_FINISHED                   -0x7E80  /**< Processing of the Finished handshake message failed. */
-#define MBEDTLS_ERR_SSL_ALLOC_FAILED                      -0x7F00  /**< Memory allocation failed */
-#define MBEDTLS_ERR_SSL_HW_ACCEL_FAILED                   -0x7F80  /**< Hardware acceleration function returned with error */
-#define MBEDTLS_ERR_SSL_HW_ACCEL_FALLTHROUGH              -0x6F80  /**< Hardware acceleration function skipped / left alone data */
-#define MBEDTLS_ERR_SSL_COMPRESSION_FAILED                -0x6F00  /**< Processing of the compression / decompression failed */
-#define MBEDTLS_ERR_SSL_BAD_HS_PROTOCOL_VERSION           -0x6E80  /**< Handshake protocol not within min/max boundaries */
-#define MBEDTLS_ERR_SSL_BAD_HS_NEW_SESSION_TICKET         -0x6E00  /**< Processing of the NewSessionTicket handshake message failed. */
-#define MBEDTLS_ERR_SSL_SESSION_TICKET_EXPIRED            -0x6D80  /**< Session ticket has expired. */
-#define MBEDTLS_ERR_SSL_PK_TYPE_MISMATCH                  -0x6D00  /**< Public key type mismatch (eg, asked for RSA key exchange and presented EC key) */
-#define MBEDTLS_ERR_SSL_UNKNOWN_IDENTITY                  -0x6C80  /**< Unknown identity received (eg, PSK identity) */
-#define MBEDTLS_ERR_SSL_INTERNAL_ERROR                    -0x6C00  /**< Internal error (eg, unexpected failure in lower-level module) */
-#define MBEDTLS_ERR_SSL_COUNTER_WRAPPING                  -0x6B80  /**< A counter would wrap (eg, too many messages exchanged). */
-#define MBEDTLS_ERR_SSL_WAITING_SERVER_HELLO_RENEGO       -0x6B00  /**< Unexpected message at ServerHello in renegotiation. */
-#define MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED             -0x6A80  /**< DTLS client must retry for hello verification */
-#define MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL                  -0x6A00  /**< A buffer is too small to receive or write a message */
-#define MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE             -0x6980  /**< None of the common ciphersuites is usable (eg, no suitable certificate, see debug messages). */
-#define MBEDTLS_ERR_SSL_WANT_READ                         -0x6900  /**< No data of requested type currently available on underlying transport. */
-#define MBEDTLS_ERR_SSL_WANT_WRITE                        -0x6880  /**< Connection requires a write call. */
-#define MBEDTLS_ERR_SSL_TIMEOUT                           -0x6800  /**< The operation timed out. */
-#define MBEDTLS_ERR_SSL_CLIENT_RECONNECT                  -0x6780  /**< The client initiated a reconnect from the same port. */
-#define MBEDTLS_ERR_SSL_UNEXPECTED_RECORD                 -0x6700  /**< Record header looks valid but is not expected. */
-#define MBEDTLS_ERR_SSL_NON_FATAL                         -0x6680  /**< The alert message received indicates a non-fatal error. */
-#define MBEDTLS_ERR_SSL_INVALID_VERIFY_HASH               -0x6600  /**< Couldn't set the hash for verifying CertificateVerify */
-#define MBEDTLS_ERR_SSL_CONTINUE_PROCESSING               -0x6580  /**< Internal-only message signaling that further message-processing should be done */
-#define MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS                 -0x6500  /**< The asynchronous operation is not completed yet. */
-#define MBEDTLS_ERR_SSL_EARLY_MESSAGE                     -0x6480  /**< Internal-only message signaling that a message arrived early. */
-#define MBEDTLS_ERR_SSL_UNEXPECTED_CID                    -0x6000  /**< An encrypted DTLS-frame with an unexpected CID was received. */
-#define MBEDTLS_ERR_SSL_VERSION_MISMATCH                  -0x5F00  /**< An operation failed due to an unexpected version or configuration. */
-#define MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS                -0x7000  /**< A cryptographic operation is in progress. Try again later. */
+/** The requested feature is not available. */
+#define MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE               -0x7080
+/** Bad input parameters to function. */
+#define MBEDTLS_ERR_SSL_BAD_INPUT_DATA                    -0x7100
+/** Verification of the message MAC failed. */
+#define MBEDTLS_ERR_SSL_INVALID_MAC                       -0x7180
+/** An invalid SSL record was received. */
+#define MBEDTLS_ERR_SSL_INVALID_RECORD                    -0x7200
+/** The connection indicated an EOF. */
+#define MBEDTLS_ERR_SSL_CONN_EOF                          -0x7280
+/** An unknown cipher was received. */
+#define MBEDTLS_ERR_SSL_UNKNOWN_CIPHER                    -0x7300
+/** The server has no ciphersuites in common with the client. */
+#define MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN                  -0x7380
+/** No RNG was provided to the SSL module. */
+#define MBEDTLS_ERR_SSL_NO_RNG                            -0x7400
+/** No client certification received from the client, but required by the authentication mode. */
+#define MBEDTLS_ERR_SSL_NO_CLIENT_CERTIFICATE             -0x7480
+/** Our own certificate(s) is/are too large to send in an SSL message. */
+#define MBEDTLS_ERR_SSL_CERTIFICATE_TOO_LARGE             -0x7500
+/** The own certificate is not set, but needed by the server. */
+#define MBEDTLS_ERR_SSL_CERTIFICATE_REQUIRED              -0x7580
+/** The own private key or pre-shared key is not set, but needed. */
+#define MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED              -0x7600
+/** No CA Chain is set, but required to operate. */
+#define MBEDTLS_ERR_SSL_CA_CHAIN_REQUIRED                 -0x7680
+/** An unexpected message was received from our peer. */
+#define MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE                -0x7700
+/** A fatal alert message was received from our peer. */
+#define MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE               -0x7780
+/** Verification of our peer failed. */
+#define MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED                -0x7800
+/** The peer notified us that the connection is going to be closed. */
+#define MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY                 -0x7880
+/** Processing of the ClientHello handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO               -0x7900
+/** Processing of the ServerHello handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO               -0x7980
+/** Processing of the Certificate handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE                -0x7A00
+/** Processing of the CertificateRequest handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE_REQUEST        -0x7A80
+/** Processing of the ServerKeyExchange handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE        -0x7B00
+/** Processing of the ServerHelloDone handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO_DONE          -0x7B80
+/** Processing of the ClientKeyExchange handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE        -0x7C00
+/** Processing of the ClientKeyExchange handshake message failed in DHM / ECDH Read Public. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE_RP     -0x7C80
+/** Processing of the ClientKeyExchange handshake message failed in DHM / ECDH Calculate Secret. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE_CS     -0x7D00
+/** Processing of the CertificateVerify handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE_VERIFY         -0x7D80
+/** Processing of the ChangeCipherSpec handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_CHANGE_CIPHER_SPEC         -0x7E00
+/** Processing of the Finished handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_FINISHED                   -0x7E80
+/** Memory allocation failed */
+#define MBEDTLS_ERR_SSL_ALLOC_FAILED                      -0x7F00
+/** Hardware acceleration function returned with error */
+#define MBEDTLS_ERR_SSL_HW_ACCEL_FAILED                   -0x7F80
+/** Hardware acceleration function skipped / left alone data */
+#define MBEDTLS_ERR_SSL_HW_ACCEL_FALLTHROUGH              -0x6F80
+/** Processing of the compression / decompression failed */
+#define MBEDTLS_ERR_SSL_COMPRESSION_FAILED                -0x6F00
+/** Handshake protocol not within min/max boundaries */
+#define MBEDTLS_ERR_SSL_BAD_HS_PROTOCOL_VERSION           -0x6E80
+/** Processing of the NewSessionTicket handshake message failed. */
+#define MBEDTLS_ERR_SSL_BAD_HS_NEW_SESSION_TICKET         -0x6E00
+/** Session ticket has expired. */
+#define MBEDTLS_ERR_SSL_SESSION_TICKET_EXPIRED            -0x6D80
+/** Public key type mismatch (eg, asked for RSA key exchange and presented EC key) */
+#define MBEDTLS_ERR_SSL_PK_TYPE_MISMATCH                  -0x6D00
+/** Unknown identity received (eg, PSK identity) */
+#define MBEDTLS_ERR_SSL_UNKNOWN_IDENTITY                  -0x6C80
+/** Internal error (eg, unexpected failure in lower-level module) */
+#define MBEDTLS_ERR_SSL_INTERNAL_ERROR                    -0x6C00
+/** A counter would wrap (eg, too many messages exchanged). */
+#define MBEDTLS_ERR_SSL_COUNTER_WRAPPING                  -0x6B80
+/** Unexpected message at ServerHello in renegotiation. */
+#define MBEDTLS_ERR_SSL_WAITING_SERVER_HELLO_RENEGO       -0x6B00
+/** DTLS client must retry for hello verification */
+#define MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED             -0x6A80
+/** A buffer is too small to receive or write a message */
+#define MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL                  -0x6A00
+/** None of the common ciphersuites is usable (eg, no suitable certificate, see debug messages). */
+#define MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE             -0x6980
+/** No data of requested type currently available on underlying transport. */
+#define MBEDTLS_ERR_SSL_WANT_READ                         -0x6900
+/** Connection requires a write call. */
+#define MBEDTLS_ERR_SSL_WANT_WRITE                        -0x6880
+/** The operation timed out. */
+#define MBEDTLS_ERR_SSL_TIMEOUT                           -0x6800
+/** The client initiated a reconnect from the same port. */
+#define MBEDTLS_ERR_SSL_CLIENT_RECONNECT                  -0x6780
+/** Record header looks valid but is not expected. */
+#define MBEDTLS_ERR_SSL_UNEXPECTED_RECORD                 -0x6700
+/** The alert message received indicates a non-fatal error. */
+#define MBEDTLS_ERR_SSL_NON_FATAL                         -0x6680
+/** Couldn't set the hash for verifying CertificateVerify */
+#define MBEDTLS_ERR_SSL_INVALID_VERIFY_HASH               -0x6600
+/** Internal-only message signaling that further message-processing should be done */
+#define MBEDTLS_ERR_SSL_CONTINUE_PROCESSING               -0x6580
+/** The asynchronous operation is not completed yet. */
+#define MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS                 -0x6500
+/** Internal-only message signaling that a message arrived early. */
+#define MBEDTLS_ERR_SSL_EARLY_MESSAGE                     -0x6480
+/** An encrypted DTLS-frame with an unexpected CID was received. */
+#define MBEDTLS_ERR_SSL_UNEXPECTED_CID                    -0x6000
+/** An operation failed due to an unexpected version or configuration. */
+#define MBEDTLS_ERR_SSL_VERSION_MISMATCH                  -0x5F00
+/** A cryptographic operation is in progress. Try again later. */
+#define MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS                -0x7000
+/** Invalid value in SSL config */
+#define MBEDTLS_ERR_SSL_BAD_CONFIG                        -0x5E80
 
 /*
  * Various constants
@@ -138,11 +200,15 @@
 #define MBEDTLS_SSL_MINOR_VERSION_1             1   /*!< TLS v1.0 */
 #define MBEDTLS_SSL_MINOR_VERSION_2             2   /*!< TLS v1.1 */
 #define MBEDTLS_SSL_MINOR_VERSION_3             3   /*!< TLS v1.2 */
+#define MBEDTLS_SSL_MINOR_VERSION_4             4   /*!< TLS v1.3 (experimental) */
 
 #define MBEDTLS_SSL_TRANSPORT_STREAM            0   /*!< TLS      */
 #define MBEDTLS_SSL_TRANSPORT_DATAGRAM          1   /*!< DTLS     */
 
 #define MBEDTLS_SSL_MAX_HOST_NAME_LEN           255 /*!< Maximum host name defined in RFC 1035 */
+#define MBEDTLS_SSL_MAX_ALPN_NAME_LEN           255 /*!< Maximum size in bytes of a protocol name in alpn ext., RFC 7301 */
+
+#define MBEDTLS_SSL_MAX_ALPN_LIST_LEN           65535 /*!< Maximum size in bytes of list in alpn ext., RFC 7301          */
 
 /* RFC 6066 section 4, see also mfl_code_to_length in ssl_tls.c
  * NONE must be zero so that memset()ing structure to zero works */
@@ -211,6 +277,9 @@
 #define MBEDTLS_SSL_CERT_REQ_CA_LIST_ENABLED       1
 #define MBEDTLS_SSL_CERT_REQ_CA_LIST_DISABLED      0
 
+#define MBEDTLS_SSL_DTLS_SRTP_MKI_UNSUPPORTED    0
+#define MBEDTLS_SSL_DTLS_SRTP_MKI_SUPPORTED      1
+
 /*
  * Default range for DTLS retransmission timer value, in milliseconds.
  * RFC 6347 4.2.4.1 says from 1 second to 60 seconds.
@@ -274,6 +343,10 @@
 
 #if !defined(MBEDTLS_SSL_CID_PADDING_GRANULARITY)
 #define MBEDTLS_SSL_CID_PADDING_GRANULARITY 16
+#endif
+
+#if !defined(MBEDTLS_SSL_TLS1_3_PADDING_GRANULARITY)
+#define MBEDTLS_SSL_TLS1_3_PADDING_GRANULARITY 1
 #endif
 
 /* \} name SECTION: Module settings */
@@ -386,6 +459,8 @@
 
 #define MBEDTLS_TLS_EXT_SIG_ALG                     13
 
+#define MBEDTLS_TLS_EXT_USE_SRTP                    14
+
 #define MBEDTLS_TLS_EXT_ALPN                        16
 
 #define MBEDTLS_TLS_EXT_ENCRYPT_THEN_MAC            22 /* 0x16 */
@@ -395,8 +470,14 @@
 
 /* The value of the CID extension is still TBD as of
  * draft-ietf-tls-dtls-connection-id-05
- * (https://tools.ietf.org/html/draft-ietf-tls-dtls-connection-id-05) */
+ * (https://tools.ietf.org/html/draft-ietf-tls-dtls-connection-id-05).
+ *
+ * A future minor revision of Mbed TLS may change the default value of
+ * this option to match evolving standards and usage.
+ */
+#if !defined(MBEDTLS_TLS_EXT_CID)
 #define MBEDTLS_TLS_EXT_CID                        254 /* TBD */
+#endif
 
 #define MBEDTLS_TLS_EXT_ECJPAKE_KKPP               256 /* experimental */
 
@@ -519,10 +600,11 @@ typedef int mbedtls_ssl_send_t( void *ctx,
  * \param buf      Buffer to write the received data to
  * \param len      Length of the receive buffer
  *
- * \return         The callback must return the number of bytes received,
- *                 or a non-zero error code.
- *                 If performing non-blocking I/O, \c MBEDTLS_ERR_SSL_WANT_READ
+ * \returns        If data has been received, the positive number of bytes received.
+ * \returns        \c 0 if the connection has been closed.
+ * \returns        If performing non-blocking I/O, \c MBEDTLS_ERR_SSL_WANT_READ
  *                 must be returned when the operation would block.
+ * \returns        Another negative error code on other kinds of failures.
  *
  * \note           The callback may receive fewer bytes than the length of the
  *                 buffer. It must always return the number of bytes actually
@@ -844,6 +926,41 @@ typedef void mbedtls_ssl_async_cancel_t( mbedtls_ssl_context *ssl );
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED &&
           !MBEDTLS_SSL_KEEP_PEER_CERTIFICATE */
 
+#if defined(MBEDTLS_SSL_DTLS_SRTP)
+
+#define MBEDTLS_TLS_SRTP_MAX_MKI_LENGTH             255
+#define MBEDTLS_TLS_SRTP_MAX_PROFILE_LIST_LENGTH    4
+/*
+ * For code readability use a typedef for DTLS-SRTP profiles
+ *
+ * Use_srtp extension protection profiles values as defined in
+ * http://www.iana.org/assignments/srtp-protection/srtp-protection.xhtml
+ *
+ * Reminder: if this list is expanded mbedtls_ssl_check_srtp_profile_value
+ * must be updated too.
+ */
+#define MBEDTLS_TLS_SRTP_AES128_CM_HMAC_SHA1_80     ( (uint16_t) 0x0001)
+#define MBEDTLS_TLS_SRTP_AES128_CM_HMAC_SHA1_32     ( (uint16_t) 0x0002)
+#define MBEDTLS_TLS_SRTP_NULL_HMAC_SHA1_80          ( (uint16_t) 0x0005)
+#define MBEDTLS_TLS_SRTP_NULL_HMAC_SHA1_32          ( (uint16_t) 0x0006)
+/* This one is not iana defined, but for code readability. */
+#define MBEDTLS_TLS_SRTP_UNSET                      ( (uint16_t) 0x0000)
+
+typedef uint16_t mbedtls_ssl_srtp_profile;
+
+typedef struct mbedtls_dtls_srtp_info_t
+{
+    /*! The SRTP profile that was negotiated. */
+    mbedtls_ssl_srtp_profile chosen_dtls_srtp_profile;
+    /*! The length of mki_value. */
+    uint16_t mki_len;
+    /*! The mki_value used, with max size of 256 bytes. */
+    unsigned char mki_value[MBEDTLS_TLS_SRTP_MAX_MKI_LENGTH];
+}
+mbedtls_dtls_srtp_info;
+
+#endif /* MBEDTLS_SSL_DTLS_SRTP */
+
 /*
  * This structure is used for storing current session data.
  *
@@ -857,6 +974,10 @@ typedef void mbedtls_ssl_async_cancel_t( mbedtls_ssl_context *ssl );
  */
 struct mbedtls_ssl_session
 {
+#if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
+    unsigned char mfl_code;     /*!< MaxFragmentLength negotiated by peer */
+#endif /* MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
+
 #if defined(MBEDTLS_HAVE_TIME)
     mbedtls_time_t start;       /*!< starting time      */
 #endif
@@ -885,10 +1006,6 @@ struct mbedtls_ssl_session
     uint32_t ticket_lifetime;   /*!< ticket lifetime hint    */
 #endif /* MBEDTLS_SSL_SESSION_TICKETS && MBEDTLS_SSL_CLI_C */
 
-#if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
-    unsigned char mfl_code;     /*!< MaxFragmentLength negotiated by peer */
-#endif /* MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
-
 #if defined(MBEDTLS_SSL_TRUNCATED_HMAC)
     int trunc_hmac;             /*!< flag for truncated hmac activation   */
 #endif /* MBEDTLS_SSL_TRUNCATED_HMAC */
@@ -903,7 +1020,98 @@ struct mbedtls_ssl_session
  */
 struct mbedtls_ssl_config
 {
-    /* Group items by size (largest first) to minimize padding overhead */
+    /* Group items by size and reorder them to maximize usage of immediate offset access.    */
+
+    /*
+     * Numerical settings (char)
+     */
+
+    unsigned char max_major_ver;    /*!< max. major version used            */
+    unsigned char max_minor_ver;    /*!< max. minor version used            */
+    unsigned char min_major_ver;    /*!< min. major version used            */
+    unsigned char min_minor_ver;    /*!< min. minor version used            */
+
+    /*
+     * Flags (could be bit-fields to save RAM, but separate bytes make
+     * the code smaller on architectures with an instruction for direct
+     * byte access).
+     */
+
+    uint8_t endpoint /*bool*/;      /*!< 0: client, 1: server               */
+    uint8_t transport /*bool*/;     /*!< stream (TLS) or datagram (DTLS)    */
+    uint8_t authmode /*2 bits*/;    /*!< MBEDTLS_SSL_VERIFY_XXX             */
+    /* needed even with renego disabled for LEGACY_BREAK_HANDSHAKE          */
+    uint8_t allow_legacy_renegotiation /*2 bits*/; /*!< MBEDTLS_LEGACY_XXX  */
+#if defined(MBEDTLS_ARC4_C)
+    uint8_t arc4_disabled /*bool*/; /*!< blacklist RC4 ciphersuites?        */
+#endif
+#if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
+    uint8_t mfl_code /*3 bits*/;    /*!< desired fragment length            */
+#endif
+#if defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
+    uint8_t encrypt_then_mac /*bool*/;  /*!< negotiate encrypt-then-mac?    */
+#endif
+#if defined(MBEDTLS_SSL_EXTENDED_MASTER_SECRET)
+    uint8_t extended_ms /*bool*/;   /*!< negotiate extended master secret?  */
+#endif
+#if defined(MBEDTLS_SSL_DTLS_ANTI_REPLAY)
+    uint8_t anti_replay /*bool*/;   /*!< detect and prevent replay?         */
+#endif
+#if defined(MBEDTLS_SSL_CBC_RECORD_SPLITTING)
+    uint8_t cbc_record_splitting /*bool*/;  /*!< do cbc record splitting    */
+#endif
+#if defined(MBEDTLS_SSL_RENEGOTIATION)
+    uint8_t disable_renegotiation /*bool*/; /*!< disable renegotiation?     */
+#endif
+#if defined(MBEDTLS_SSL_TRUNCATED_HMAC)
+    uint8_t trunc_hmac /*bool*/;    /*!< negotiate truncated hmac?          */
+#endif
+#if defined(MBEDTLS_SSL_SESSION_TICKETS)
+    uint8_t session_tickets /*bool*/;   /*!< use session tickets?           */
+#endif
+#if defined(MBEDTLS_SSL_FALLBACK_SCSV) && defined(MBEDTLS_SSL_CLI_C)
+    uint8_t fallback /*bool*/;      /*!< is this a fallback?                */
+#endif
+#if defined(MBEDTLS_SSL_SRV_C)
+    uint8_t cert_req_ca_list /*bool*/;  /*!< enable sending CA list in
+                                          Certificate Request messages?     */
+#endif
+#if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
+    uint8_t ignore_unexpected_cid /*bool*/; /*!< Determines whether DTLS
+                                             *   record with unexpected CID
+                                             *   should lead to failure.    */
+#endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
+#if defined(MBEDTLS_SSL_DTLS_SRTP)
+    uint8_t dtls_srtp_mki_support /*bool*/; /*!< support having mki_value
+                                                 in the use_srtp extension? */
+#endif
+
+    /*
+     * Numerical settings (int or larger)
+     */
+
+    uint32_t read_timeout;          /*!< timeout for mbedtls_ssl_read (ms)  */
+
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
+    uint32_t hs_timeout_min;        /*!< initial value of the handshake
+                                         retransmission timeout (ms)        */
+    uint32_t hs_timeout_max;        /*!< maximum value of the handshake
+                                         retransmission timeout (ms)        */
+#endif
+
+#if defined(MBEDTLS_SSL_RENEGOTIATION)
+    int renego_max_records;         /*!< grace period for renegotiation     */
+    unsigned char renego_period[8]; /*!< value of the record counters
+                                         that triggers renegotiation        */
+#endif
+
+#if defined(MBEDTLS_SSL_DTLS_BADMAC_LIMIT)
+    unsigned int badmac_limit;      /*!< limit of records with a bad MAC    */
+#endif
+
+#if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_SSL_CLI_C)
+    unsigned int dhm_min_bitlen;    /*!< min. bit length of the DHM prime   */
+#endif
 
     /*
      * Pointers
@@ -1016,11 +1224,12 @@ struct mbedtls_ssl_config
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-    psa_key_handle_t psk_opaque; /*!< PSA key slot holding opaque PSK.
-                                  *   This field should only be set via
-                                  *   mbedtls_ssl_conf_psk_opaque().
-                                  *   If either no PSK or a raw PSK have
-                                  *   been configured, this has value \c 0. */
+    psa_key_id_t psk_opaque; /*!< PSA key slot holding opaque PSK. This field
+                              *   should only be set via
+                              *   mbedtls_ssl_conf_psk_opaque().
+                              *   If either no PSK or a raw PSK have been
+                              *   configured, this has value \c 0.
+                              */
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     unsigned char *psk;      /*!< The raw pre-shared key. This field should
@@ -1050,88 +1259,13 @@ struct mbedtls_ssl_config
     const char **alpn_list;         /*!< ordered list of protocols          */
 #endif
 
-    /*
-     * Numerical settings (int then char)
-     */
-
-    uint32_t read_timeout;          /*!< timeout for mbedtls_ssl_read (ms)  */
-
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
-    uint32_t hs_timeout_min;        /*!< initial value of the handshake
-                                         retransmission timeout (ms)        */
-    uint32_t hs_timeout_max;        /*!< maximum value of the handshake
-                                         retransmission timeout (ms)        */
-#endif
-
-#if defined(MBEDTLS_SSL_RENEGOTIATION)
-    int renego_max_records;         /*!< grace period for renegotiation     */
-    unsigned char renego_period[8]; /*!< value of the record counters
-                                         that triggers renegotiation        */
-#endif
-
-#if defined(MBEDTLS_SSL_DTLS_BADMAC_LIMIT)
-    unsigned int badmac_limit;      /*!< limit of records with a bad MAC    */
-#endif
-
-#if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_SSL_CLI_C)
-    unsigned int dhm_min_bitlen;    /*!< min. bit length of the DHM prime   */
-#endif
-
-    unsigned char max_major_ver;    /*!< max. major version used            */
-    unsigned char max_minor_ver;    /*!< max. minor version used            */
-    unsigned char min_major_ver;    /*!< min. major version used            */
-    unsigned char min_minor_ver;    /*!< min. minor version used            */
-
-    /*
-     * Flags (bitfields)
-     */
-
-    unsigned int endpoint : 1;      /*!< 0: client, 1: server               */
-    unsigned int transport : 1;     /*!< stream (TLS) or datagram (DTLS)    */
-    unsigned int authmode : 2;      /*!< MBEDTLS_SSL_VERIFY_XXX             */
-    /* needed even with renego disabled for LEGACY_BREAK_HANDSHAKE          */
-    unsigned int allow_legacy_renegotiation : 2 ; /*!< MBEDTLS_LEGACY_XXX   */
-#if defined(MBEDTLS_ARC4_C)
-    unsigned int arc4_disabled : 1; /*!< blacklist RC4 ciphersuites?        */
-#endif
-#if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
-    unsigned int mfl_code : 3;      /*!< desired fragment length            */
-#endif
-#if defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
-    unsigned int encrypt_then_mac : 1 ; /*!< negotiate encrypt-then-mac?    */
-#endif
-#if defined(MBEDTLS_SSL_EXTENDED_MASTER_SECRET)
-    unsigned int extended_ms : 1;   /*!< negotiate extended master secret?  */
-#endif
-#if defined(MBEDTLS_SSL_DTLS_ANTI_REPLAY)
-    unsigned int anti_replay : 1;   /*!< detect and prevent replay?         */
-#endif
-#if defined(MBEDTLS_SSL_CBC_RECORD_SPLITTING)
-    unsigned int cbc_record_splitting : 1;  /*!< do cbc record splitting    */
-#endif
-#if defined(MBEDTLS_SSL_RENEGOTIATION)
-    unsigned int disable_renegotiation : 1; /*!< disable renegotiation?     */
-#endif
-#if defined(MBEDTLS_SSL_TRUNCATED_HMAC)
-    unsigned int trunc_hmac : 1;    /*!< negotiate truncated hmac?          */
-#endif
-#if defined(MBEDTLS_SSL_SESSION_TICKETS)
-    unsigned int session_tickets : 1;   /*!< use session tickets?           */
-#endif
-#if defined(MBEDTLS_SSL_FALLBACK_SCSV) && defined(MBEDTLS_SSL_CLI_C)
-    unsigned int fallback : 1;      /*!< is this a fallback?                */
-#endif
-#if defined(MBEDTLS_SSL_SRV_C)
-    unsigned int cert_req_ca_list : 1;  /*!< enable sending CA list in
-                                          Certificate Request messages?     */
-#endif
-#if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
-    unsigned int ignore_unexpected_cid : 1; /*!< Determines whether DTLS
-                                             *   record with unexpected CID
-                                             *   should lead to failure.    */
-#endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
+#if defined(MBEDTLS_SSL_DTLS_SRTP)
+    /*! ordered list of supported srtp profile */
+    const mbedtls_ssl_srtp_profile *dtls_srtp_profile_list;
+    /*! number of supported profiles */
+    size_t dtls_srtp_profile_list_len;
+#endif /* MBEDTLS_SSL_DTLS_SRTP */
 };
-
 
 struct mbedtls_ssl_context
 {
@@ -1290,6 +1424,13 @@ struct mbedtls_ssl_context
 #if defined(MBEDTLS_SSL_ALPN)
     const char *alpn_chosen;    /*!<  negotiated protocol                   */
 #endif /* MBEDTLS_SSL_ALPN */
+
+#if defined(MBEDTLS_SSL_DTLS_SRTP)
+    /*
+     * use_srtp extension
+     */
+    mbedtls_dtls_srtp_info dtls_srtp_info;
+#endif /* MBEDTLS_SSL_DTLS_SRTP */
 
     /*
      * Information for DTLS hello verify
@@ -1552,7 +1693,7 @@ void mbedtls_ssl_conf_dbg( mbedtls_ssl_config *conf,
  * \note           For DTLS, you need to provide either a non-NULL
  *                 f_recv_timeout callback, or a f_recv that doesn't block.
  *
- * \note           See the documentations of \c mbedtls_ssl_sent_t,
+ * \note           See the documentations of \c mbedtls_ssl_send_t,
  *                 \c mbedtls_ssl_recv_t and \c mbedtls_ssl_recv_timeout_t for
  *                 the conventions those callbacks must follow.
  *
@@ -2025,6 +2166,8 @@ void mbedtls_ssl_conf_export_keys_cb( mbedtls_ssl_config *conf,
  *                  (Default: none.)
  *
  * \note            See \c mbedtls_ssl_export_keys_ext_t.
+ * \warning         Exported key material must not be used for any purpose
+ *                  before the (D)TLS handshake is completed
  *
  * \param conf      SSL configuration context
  * \param f_export_keys_ext Callback for exporting keys
@@ -2682,6 +2825,9 @@ int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
  * \note           This is mainly useful for clients. Servers will usually
  *                 want to use \c mbedtls_ssl_conf_psk_cb() instead.
  *
+ * \note           A PSK set by \c mbedtls_ssl_set_hs_psk() in the PSK callback
+ *                 takes precedence over a PSK configured by this function.
+ *
  * \warning        Currently, clients can only register a single pre-shared key.
  *                 Calling this function or mbedtls_ssl_conf_psk_opaque() more
  *                 than once will overwrite values configured in previous calls.
@@ -2715,6 +2861,10 @@ int mbedtls_ssl_conf_psk( mbedtls_ssl_config *conf,
  * \note           This is mainly useful for clients. Servers will usually
  *                 want to use \c mbedtls_ssl_conf_psk_cb() instead.
  *
+ * \note           An opaque PSK set by \c mbedtls_ssl_set_hs_psk_opaque() in
+ *                 the PSK callback takes precedence over an opaque PSK
+ *                 configured by this function.
+ *
  * \warning        Currently, clients can only register a single pre-shared key.
  *                 Calling this function or mbedtls_ssl_conf_psk() more than
  *                 once will overwrite values configured in previous calls.
@@ -2741,7 +2891,7 @@ int mbedtls_ssl_conf_psk( mbedtls_ssl_config *conf,
  * \return         An \c MBEDTLS_ERR_SSL_XXX error code on failure.
  */
 int mbedtls_ssl_conf_psk_opaque( mbedtls_ssl_config *conf,
-                                 psa_key_handle_t psk,
+                                 psa_key_id_t psk,
                                  const unsigned char *psk_identity,
                                  size_t psk_identity_len );
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
@@ -2751,6 +2901,9 @@ int mbedtls_ssl_conf_psk_opaque( mbedtls_ssl_config *conf,
  *
  * \note           This should only be called inside the PSK callback,
  *                 i.e. the function passed to \c mbedtls_ssl_conf_psk_cb().
+ *
+ * \note           A PSK set by this function takes precedence over a PSK
+ *                 configured by \c mbedtls_ssl_conf_psk().
  *
  * \param ssl      The SSL context to configure a PSK for.
  * \param psk      The pointer to the pre-shared key.
@@ -2769,6 +2922,9 @@ int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *ssl,
  * \note           This should only be called inside the PSK callback,
  *                 i.e. the function passed to \c mbedtls_ssl_conf_psk_cb().
  *
+ * \note           An opaque PSK set by this function takes precedence over an
+ *                 opaque PSK configured by \c mbedtls_ssl_conf_psk_opaque().
+ *
  * \param ssl      The SSL context to configure a PSK for.
  * \param psk      The identifier of the key slot holding the PSK.
  *                 For the duration of the current handshake, the key slot
@@ -2781,7 +2937,7 @@ int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *ssl,
  * \return         An \c MBEDTLS_ERR_SSL_XXX error code on failure.
  */
 int mbedtls_ssl_set_hs_psk_opaque( mbedtls_ssl_context *ssl,
-                                   psa_key_handle_t psk );
+                                   psa_key_id_t psk );
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /**
@@ -2807,9 +2963,14 @@ int mbedtls_ssl_set_hs_psk_opaque( mbedtls_ssl_context *ssl,
  *                 on the SSL context to set the correct PSK and return \c 0.
  *                 Any other return value will result in a denied PSK identity.
  *
- * \note           If you set a PSK callback using this function, then you
- *                 don't need to set a PSK key and identity using
- *                 \c mbedtls_ssl_conf_psk().
+ * \note           A dynamic PSK (i.e. set by the PSK callback) takes
+ *                 precedence over a static PSK (i.e. set by
+ *                 \c mbedtls_ssl_conf_psk() or
+ *                 \c mbedtls_ssl_conf_psk_opaque()).
+ *                 This means that if you set a PSK callback using this
+ *                 function, you don't need to set a PSK using
+ *                 \c mbedtls_ssl_conf_psk() or
+ *                 \c mbedtls_ssl_conf_psk_opaque()).
  *
  * \param conf     The SSL configuration to register the callback with.
  * \param f_psk    The callback for selecting and setting the PSK based
@@ -2897,7 +3058,9 @@ void mbedtls_ssl_conf_dhm_min_bitlen( mbedtls_ssl_config *conf,
 #if defined(MBEDTLS_ECP_C)
 /**
  * \brief          Set the allowed curves in order of preference.
- *                 (Default: all defined curves.)
+ *                 (Default: all defined curves in order of decreasing size,
+ *                 except that Montgomery curves come last. This order
+ *                 is likely to change in a future version.)
  *
  *                 On server: this only affects selection of the ECDHE curve;
  *                 the curves used for ECDH and ECDSA are determined by the
@@ -2929,7 +3092,9 @@ void mbedtls_ssl_conf_curves( mbedtls_ssl_config *conf,
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 /**
  * \brief          Set the allowed hashes for signatures during the handshake.
- *                 (Default: all available hashes except MD5.)
+ *                 (Default: all SHA-2 hashes, largest first. Also SHA-1 if
+ *                 the compile-time option
+ *                 `MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_KEY_EXCHANGE` is enabled.)
  *
  * \note           This only affects which hashes are offered and can be used
  *                 for signatures during the handshake. Hashes for message
@@ -3094,6 +3259,105 @@ int mbedtls_ssl_conf_alpn_protocols( mbedtls_ssl_config *conf, const char **prot
  */
 const char *mbedtls_ssl_get_alpn_protocol( const mbedtls_ssl_context *ssl );
 #endif /* MBEDTLS_SSL_ALPN */
+
+#if defined(MBEDTLS_SSL_DTLS_SRTP)
+#if defined(MBEDTLS_DEBUG_C)
+static inline const char *mbedtls_ssl_get_srtp_profile_as_string( mbedtls_ssl_srtp_profile profile )
+{
+    switch( profile )
+    {
+        case MBEDTLS_TLS_SRTP_AES128_CM_HMAC_SHA1_80:
+            return( "MBEDTLS_TLS_SRTP_AES128_CM_HMAC_SHA1_80" );
+        case MBEDTLS_TLS_SRTP_AES128_CM_HMAC_SHA1_32:
+            return( "MBEDTLS_TLS_SRTP_AES128_CM_HMAC_SHA1_32" );
+        case MBEDTLS_TLS_SRTP_NULL_HMAC_SHA1_80:
+            return( "MBEDTLS_TLS_SRTP_NULL_HMAC_SHA1_80" );
+        case MBEDTLS_TLS_SRTP_NULL_HMAC_SHA1_32:
+            return( "MBEDTLS_TLS_SRTP_NULL_HMAC_SHA1_32" );
+        default: break;
+    }
+    return( "" );
+}
+#endif /* MBEDTLS_DEBUG_C */
+/**
+ * \brief                   Manage support for mki(master key id) value
+ *                          in use_srtp extension.
+ *                          MKI is an optional part of SRTP used for key management
+ *                          and re-keying. See RFC3711 section 3.1 for details.
+ *                          The default value is
+ *                          #MBEDTLS_SSL_DTLS_SRTP_MKI_UNSUPPORTED.
+ *
+ * \param conf              The SSL configuration to manage mki support.
+ * \param support_mki_value Enable or disable mki usage. Values are
+ *                          #MBEDTLS_SSL_DTLS_SRTP_MKI_UNSUPPORTED
+ *                          or #MBEDTLS_SSL_DTLS_SRTP_MKI_SUPPORTED.
+ */
+void mbedtls_ssl_conf_srtp_mki_value_supported( mbedtls_ssl_config *conf,
+                                                int support_mki_value );
+
+/**
+ * \brief                   Set the supported DTLS-SRTP protection profiles.
+ *
+ * \param conf              SSL configuration
+ * \param profiles          Pointer to a List of MBEDTLS_TLS_SRTP_UNSET terminated
+ *                          supported protection profiles
+ *                          in decreasing preference order.
+ *                          The pointer to the list is recorded by the library
+ *                          for later reference as required, so the lifetime
+ *                          of the table must be at least as long as the lifetime
+ *                          of the SSL configuration structure.
+ *                          The list must not hold more than
+ *                          MBEDTLS_TLS_SRTP_MAX_PROFILE_LIST_LENGTH elements
+ *                          (excluding the terminating MBEDTLS_TLS_SRTP_UNSET).
+ *
+ * \return                  0 on success
+ * \return                  #MBEDTLS_ERR_SSL_BAD_INPUT_DATA when the list of
+ *                          protection profiles is incorrect.
+ */
+int mbedtls_ssl_conf_dtls_srtp_protection_profiles
+                               ( mbedtls_ssl_config *conf,
+                                 const mbedtls_ssl_srtp_profile *profiles );
+
+/**
+ * \brief                  Set the mki_value for the current DTLS-SRTP session.
+ *
+ * \param ssl              SSL context to use.
+ * \param mki_value        The MKI value to set.
+ * \param mki_len          The length of the MKI value.
+ *
+ * \note                   This function is relevant on client side only.
+ *                         The server discovers the mki value during handshake.
+ *                         A mki value set on server side using this function
+ *                         is ignored.
+ *
+ * \return                 0 on success
+ * \return                 #MBEDTLS_ERR_SSL_BAD_INPUT_DATA
+ * \return                 #MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE
+ */
+int mbedtls_ssl_dtls_srtp_set_mki_value( mbedtls_ssl_context *ssl,
+                                         unsigned char *mki_value,
+                                         uint16_t mki_len );
+/**
+ * \brief                  Get the negotiated DTLS-SRTP informations:
+ *                         Protection profile and MKI value.
+ *
+ * \warning                This function must be called after the handshake is
+ *                         completed. The value returned by this function must
+ *                         not be trusted or acted upon before the handshake completes.
+ *
+ * \param ssl              The SSL context to query.
+ * \param dtls_srtp_info   The negotiated DTLS-SRTP informations:
+ *                         - Protection profile in use.
+ *                         A direct mapping of the iana defined value for protection
+ *                         profile on an uint16_t.
+                   http://www.iana.org/assignments/srtp-protection/srtp-protection.xhtml
+ *                         #MBEDTLS_TLS_SRTP_UNSET if the use of SRTP was not negotiated
+ *                         or peer's Hello packet was not parsed yet.
+ *                         - mki size and value( if size is > 0 ).
+ */
+void mbedtls_ssl_get_dtls_srtp_negotiation_result( const mbedtls_ssl_context *ssl,
+                                                   mbedtls_dtls_srtp_info *dtls_srtp_info );
+#endif /* MBEDTLS_SSL_DTLS_SRTP */
 
 /**
  * \brief          Set the maximum supported version sent from the client side
@@ -4138,7 +4402,7 @@ void mbedtls_ssl_session_free( mbedtls_ssl_session *session );
 /**
  * \brief          TLS-PRF function for key derivation.
  *
- * \param prf      The tls_prf type funtion type to be used.
+ * \param prf      The tls_prf type function type to be used.
  * \param secret   Secret for the key derivation function.
  * \param slen     Length of the secret.
  * \param label    String label for the key derivation function,
@@ -4148,7 +4412,7 @@ void mbedtls_ssl_session_free( mbedtls_ssl_session *session );
  * \param dstbuf   The buffer holding the derived key.
  * \param dlen     Length of the output buffer.
  *
- * \return         0 on sucess. An SSL specific error on failure.
+ * \return         0 on success. An SSL specific error on failure.
  */
 int  mbedtls_ssl_tls_prf( const mbedtls_tls_prf_types prf,
                           const unsigned char *secret, size_t slen,

@@ -4,7 +4,7 @@ libdir=@CMAKE_INSTALL_LIBDIR@
 includedir=@CMAKE_INSTALL_INCLUDEDIR@
 sysconfdir=@sysconfdir@
 localstatedir=@localstatedir@
-PACKAGE=@PACKAGE@
+PACKAGE=fontconfig
 confdir=@BASECONFIGDIR@
 cachedir=@fc_cachedir@
 
@@ -15,4 +15,4 @@ Requires: @PKGCONFIG_REQUIRES@
 Requires.private: @PKGCONFIG_REQUIRES_PRIVATELY@
 Libs: -L${libdir} -lfontconfig
 Libs.private: @ICONV_LIBS@ @PKG_EXPAT_LIBS@
-Cflags: -I${includedir}  -I@EXPAT_INCLUDE_DIR@
+Cflags: -I${includedir}  -I@FREETYPE_INCLUDE_DIR@ -I@EXPAT_INCLUDE_DIR@

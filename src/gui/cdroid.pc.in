@@ -7,7 +7,7 @@ Name: cdroid
 Description: Multi-platform 2D graphics library
 Version: @CDROID_VERSION@
 
-Requires: cairo fontconfig tvhal
+Requires: cairo fontconfig expat tvhal
 Libs: -L${libdir} -lcdroid
 Libs.private: @CDROID_LIBS@
 Cflags: -I${includedir}/gui -I${includedir}/porting -I${includedir}/cairo

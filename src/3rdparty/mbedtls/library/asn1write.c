@@ -1,7 +1,7 @@
 /*
  * ASN.1 buffer writing functionality
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,15 +15,9 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "common.h"
 
 #if defined(MBEDTLS_ASN1_WRITE_C)
 
@@ -66,8 +60,8 @@ int mbedtls_asn1_write_len( unsigned char **p, unsigned char *start, size_t len 
         if( *p - start < 3 )
             return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
-        *--(*p) = ( len       ) & 0xFF;
-        *--(*p) = ( len >>  8 ) & 0xFF;
+        *--(*p) = MBEDTLS_BYTE_0( len );
+        *--(*p) = MBEDTLS_BYTE_1( len );
         *--(*p) = 0x82;
         return( 3 );
     }
@@ -77,9 +71,9 @@ int mbedtls_asn1_write_len( unsigned char **p, unsigned char *start, size_t len 
         if( *p - start < 4 )
             return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
-        *--(*p) = ( len       ) & 0xFF;
-        *--(*p) = ( len >>  8 ) & 0xFF;
-        *--(*p) = ( len >> 16 ) & 0xFF;
+        *--(*p) = MBEDTLS_BYTE_0( len );
+        *--(*p) = MBEDTLS_BYTE_1( len );
+        *--(*p) = MBEDTLS_BYTE_2( len );
         *--(*p) = 0x83;
         return( 4 );
     }
@@ -91,10 +85,10 @@ int mbedtls_asn1_write_len( unsigned char **p, unsigned char *start, size_t len 
         if( *p - start < 5 )
             return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
-        *--(*p) = ( len       ) & 0xFF;
-        *--(*p) = ( len >>  8 ) & 0xFF;
-        *--(*p) = ( len >> 16 ) & 0xFF;
-        *--(*p) = ( len >> 24 ) & 0xFF;
+        *--(*p) = MBEDTLS_BYTE_0( len );
+        *--(*p) = MBEDTLS_BYTE_1( len );
+        *--(*p) = MBEDTLS_BYTE_2( len );
+        *--(*p) = MBEDTLS_BYTE_3( len );
         *--(*p) = 0x84;
         return( 5 );
     }

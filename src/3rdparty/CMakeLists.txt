@@ -1,5 +1,8 @@
 ADD_CMAKE_PACKAGE(zlib-1.2.11)
 ADD_CMAKE_PACKAGE(libpng)
+#ADD_CMAKE_PACKAGE(liblzma)
+ADD_CMAKE_PACKAGE(libxml2-v2.9.12)
+#ADD_CMAKE_PACKAGE(libxslt-1.1.37)
 ADD_CMAKE_PACKAGE(expat)
 ADD_CMAKE_PACKAGE(libjpeg-turbo)
 ADD_CMAKE_PACKAGE(pixman)
@@ -12,6 +15,7 @@ ADD_CMAKE_PACKAGE(freetype-2.11.0)
 
 #2...build harfbuzz(static)without fontconfig and cairo
 if(FT_WITH_HARFBUZZ)
+   ADD_CMAKE_PACKAGE(icu68)
    ADD_CMAKE_PACKAGE(harfbuzz)
    ADD_CMAKE_PACKAGE(graphite2-1.3.14)
 endif()
@@ -37,6 +41,8 @@ if(ENABLE_CAIROSVG)
    ADD_CMAKE_PACKAGE(uriparser)
 endif()
 
+ADD_CMAKE_PACKAGE(mbedtls-2.8.0)
+ADD_CMAKE_PACKAGE(openssl-1.1.1)
 ADD_CMAKE_PACKAGE(curl)
 
 ADD_CMAKE_PACKAGE(gtest)
@@ -57,7 +63,6 @@ if(ENABLE_GESTURE)
    ADD_CMAKE_PACKAGE(grt/build)
 endif(ENABLE_GESTURE)
 
-ADD_CMAKE_PACKAGE(mbedtls)
 
 ADD_CMAKE_PACKAGE(libvncserver)
 

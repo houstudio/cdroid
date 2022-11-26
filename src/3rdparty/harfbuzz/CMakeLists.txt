@@ -36,7 +36,7 @@ endif ()
 option(HB_HAVE_FREETYPE "Enable freetype interop helpers" OFF)
 option(HB_HAVE_GRAPHITE2 "Enable Graphite2 complementary shaper" OFF)
 option(HB_HAVE_GLIB "Enable glib unicode functions" OFF)
-option(HB_HAVE_ICU "Enable icu unicode functions" OFF)
+option(HB_HAVE_ICU "Enable icu unicode functions" ON)
 if (TARGET freetype)
   set (HB_HAVE_FREETYPE ON)
   add_definitions(-DHAVE_FREETYPE=1)
@@ -267,7 +267,7 @@ if (HB_HAVE_ICU)
   find_library(ICU_LIBRARY NAMES libicuuc cygicuuc cygicuuc32 icuuc HINTS ${PC_ICU_LIBRARY_DIRS} ${PC_ICU_LIBDIR})
 
   include_directories(${ICU_INCLUDE_DIR})
-
+  message(">>>>>ICU_INCLUDE_DIR=${ICU_INCLUDE_DIR} ICU_LIBRARY=${ICU_LIBRARY}")
   list(APPEND project_headers ${PROJECT_SOURCE_DIR}/src/hb-icu.h)
 
   list(APPEND THIRD_PARTY_LIBS ${ICU_LIBRARY})

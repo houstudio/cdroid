@@ -2,7 +2,7 @@
  *  SSL server demonstration program using pthread for handling multiple
  *  clients.
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,8 +16,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -54,7 +52,7 @@ int main( void )
            "MBEDTLS_CTR_DRBG_C and/or MBEDTLS_X509_CRT_PARSE_C and/or "
            "MBEDTLS_THREADING_C and/or MBEDTLS_THREADING_PTHREAD "
            "and/or MBEDTLS_PEM_PARSE_C not defined.\n");
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
 
@@ -144,7 +142,7 @@ static void *handle_ssl_connection( void *data )
     if( ( ret = mbedtls_ssl_setup( &ssl, thread_info->config ) ) != 0 )
     {
         mbedtls_printf( "  [ #%ld ]  failed: mbedtls_ssl_setup returned -0x%04x\n",
-                thread_id, -ret );
+                thread_id, ( unsigned int ) -ret );
         goto thread_exit;
     }
 
@@ -160,7 +158,7 @@ static void *handle_ssl_connection( void *data )
         if( ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE )
         {
             mbedtls_printf( "  [ #%ld ]  failed: mbedtls_ssl_handshake returned -0x%04x\n",
-                    thread_id, -ret );
+                    thread_id, ( unsigned int ) -ret );
             goto thread_exit;
         }
     }
@@ -197,7 +195,7 @@ static void *handle_ssl_connection( void *data )
 
                 default:
                     mbedtls_printf( "  [ #%ld ]  mbedtls_ssl_read returned -0x%04x\n",
-                            thread_id, -ret );
+                            thread_id, ( unsigned int ) -ret );
                     goto thread_exit;
             }
         }
@@ -231,7 +229,7 @@ static void *handle_ssl_connection( void *data )
         if( ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE )
         {
             mbedtls_printf( "  [ #%ld ]  failed: mbedtls_ssl_write returned -0x%04x\n",
-                    thread_id, ret );
+                    thread_id, ( unsigned int ) ret );
             goto thread_exit;
         }
     }
@@ -248,7 +246,7 @@ static void *handle_ssl_connection( void *data )
             ret != MBEDTLS_ERR_SSL_WANT_WRITE )
         {
             mbedtls_printf( "  [ #%ld ]  failed: mbedtls_ssl_close_notify returned -0x%04x\n",
-                    thread_id, ret );
+                    thread_id, ( unsigned int ) ret );
             goto thread_exit;
         }
     }
@@ -265,7 +263,7 @@ thread_exit:
         char error_buf[100];
         mbedtls_strerror( ret, error_buf, 100 );
         mbedtls_printf("  [ #%ld ]  Last error was: -0x%04x - %s\n\n",
-               thread_id, -ret, error_buf );
+               thread_id, ( unsigned int ) -ret, error_buf );
     }
 #endif
 
@@ -410,7 +408,7 @@ int main( void )
                                strlen( pers ) ) ) != 0 )
     {
         mbedtls_printf( " failed: mbedtls_ctr_drbg_seed returned -0x%04x\n",
-                -ret );
+                ( unsigned int ) -ret );
         goto exit;
     }
 
@@ -427,7 +425,7 @@ int main( void )
                     MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 )
     {
         mbedtls_printf( " failed: mbedtls_ssl_config_defaults returned -0x%04x\n",
-                -ret );
+                ( unsigned int ) -ret );
         goto exit;
     }
 
@@ -472,7 +470,8 @@ reset:
     {
         char error_buf[100];
         mbedtls_strerror( ret, error_buf, 100 );
-        mbedtls_printf( "  [ main ]  Last error was: -0x%04x - %s\n", -ret, error_buf );
+        mbedtls_printf( "  [ main ]  Last error was: -0x%04x - %s\n", ( unsigned int ) -ret,
+                        error_buf );
     }
 #endif
 
@@ -484,7 +483,8 @@ reset:
     if( ( ret = mbedtls_net_accept( &listen_fd, &client_fd,
                                     NULL, 0, NULL ) ) != 0 )
     {
-        mbedtls_printf( "  [ main ] failed: mbedtls_net_accept returned -0x%04x\n", ret );
+        mbedtls_printf( "  [ main ] failed: mbedtls_net_accept returned -0x%04x\n",
+                        ( unsigned int ) ret );
         goto exit;
     }
 
@@ -524,7 +524,7 @@ exit:
     fflush( stdout ); getchar();
 #endif
 
-    return( ret );
+    mbedtls_exit( ret );
 }
 
 #endif /* MBEDTLS_BIGNUM_C && MBEDTLS_CERTS_C && MBEDTLS_ENTROPY_C &&

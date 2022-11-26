@@ -66,7 +66,7 @@ include_directories(
 )
 
 add_definitions(-DXML_STATIC -DHAVE_CONFIG_H)
-add_library( fontconfig STATIC ${fontconfig_SRCS} )
+add_library( fontconfig SHARED ${fontconfig_SRCS} )
 set_target_properties(fontconfig PROPERTIES OUTPUT_NAME fontconfig )
 
 target_link_libraries( fontconfig ${FREETYPE_LIBRARIES} ${EXPAT_LIBRARY} uuid )

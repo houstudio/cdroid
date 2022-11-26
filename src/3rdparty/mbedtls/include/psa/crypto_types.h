@@ -14,7 +14,7 @@
  * This header file does not declare any function.
  */
 /*
- *  Copyright (C) 2018, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -28,12 +28,19 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 #ifndef PSA_CRYPTO_TYPES_H
 #define PSA_CRYPTO_TYPES_H
+
+#include "crypto_platform.h"
+
+/* If MBEDTLS_PSA_CRYPTO_C is defined, make sure MBEDTLS_PSA_CRYPTO_CLIENT
+ * is defined as well to include all PSA code.
+ */
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+#define MBEDTLS_PSA_CRYPTO_CLIENT
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 #include <stdint.h>
 
@@ -74,7 +81,7 @@ typedef uint16_t psa_key_type_t;
  * Values defined by this standard will never be in the range 0x80-0xff.
  * Vendors who define additional families must use an encoding in this range.
  */
-typedef uint8_t psa_ecc_curve_t;
+typedef uint8_t psa_ecc_family_t;
 
 /** The type of PSA Diffie-Hellman group family identifiers.
  *
@@ -85,7 +92,7 @@ typedef uint8_t psa_ecc_curve_t;
  * Values defined by this standard will never be in the range 0x80-0xff.
  * Vendors who define additional families must use an encoding in this range.
  */
-typedef uint8_t psa_dh_group_t;
+typedef uint8_t psa_dh_family_t;
 
 /** \brief Encoding of a cryptographic algorithm.
  *
@@ -108,36 +115,130 @@ typedef uint32_t psa_algorithm_t;
  * The lifetime of a key indicates where it is stored and what system actions
  * may create and destroy it.
  *
- * Keys with the lifetime #PSA_KEY_LIFETIME_VOLATILE are automatically
- * destroyed when the application terminates or on a power reset.
+ * Lifetime values have the following structure:
+ * - Bits 0-7 (#PSA_KEY_LIFETIME_GET_PERSISTENCE(\c lifetime)):
+ *   persistence level. This value indicates what device management
+ *   actions can cause it to be destroyed. In particular, it indicates
+ *   whether the key is _volatile_ or _persistent_.
+ *   See ::psa_key_persistence_t for more information.
+ * - Bits 8-31 (#PSA_KEY_LIFETIME_GET_LOCATION(\c lifetime)):
+ *   location indicator. This value indicates which part of the system
+ *   has access to the key material and can perform operations using the key.
+ *   See ::psa_key_location_t for more information.
  *
- * Keys with a lifetime other than #PSA_KEY_LIFETIME_VOLATILE are said
- * to be _persistent_.
- * Persistent keys are preserved if the application or the system restarts.
- * Persistent keys have a key identifier of type #psa_key_id_t.
+ * Volatile keys are automatically destroyed when the application instance
+ * terminates or on a power reset of the device. Persistent keys are
+ * preserved until the application explicitly destroys them or until an
+ * integration-specific device management event occurs (for example,
+ * a factory reset).
+ *
+ * Persistent keys have a key identifier of type #mbedtls_svc_key_id_t.
+ * This identifier remains valid throughout the lifetime of the key,
+ * even if the application instance that created the key terminates.
  * The application can call psa_open_key() to open a persistent key that
  * it created previously.
+ *
+ * The default lifetime of a key is #PSA_KEY_LIFETIME_VOLATILE. The lifetime
+ * #PSA_KEY_LIFETIME_PERSISTENT is supported if persistent storage is
+ * available. Other lifetime values may be supported depending on the
+ * library configuration.
  */
 typedef uint32_t psa_key_lifetime_t;
+
+/** Encoding of key persistence levels.
+ *
+ * What distinguishes different persistence levels is what device management
+ * events may cause keys to be destroyed. _Volatile_ keys are destroyed
+ * by a power reset. Persistent keys may be destroyed by events such as
+ * a transfer of ownership or a factory reset. What management events
+ * actually affect persistent keys at different levels is outside the
+ * scope of the PSA Cryptography specification.
+ *
+ * The PSA Cryptography specification defines the following values of
+ * persistence levels:
+ * - \c 0 = #PSA_KEY_PERSISTENCE_VOLATILE: volatile key.
+ *   A volatile key is automatically destroyed by the implementation when
+ *   the application instance terminates. In particular, a volatile key
+ *   is automatically destroyed on a power reset of the device.
+ * - \c 1 = #PSA_KEY_PERSISTENCE_DEFAULT:
+ *   persistent key with a default lifetime.
+ * - \c 2-254: currently not supported by Mbed TLS.
+ * - \c 255 = #PSA_KEY_PERSISTENCE_READ_ONLY:
+ *   read-only or write-once key.
+ *   A key with this persistence level cannot be destroyed.
+ *   Mbed TLS does not currently offer a way to create such keys, but
+ *   integrations of Mbed TLS can use it for built-in keys that the
+ *   application cannot modify (for example, a hardware unique key (HUK)).
+ *
+ * \note Key persistence levels are 8-bit values. Key management
+ *       interfaces operate on lifetimes (type ::psa_key_lifetime_t) which
+ *       encode the persistence as the lower 8 bits of a 32-bit value.
+ */
+typedef uint8_t psa_key_persistence_t;
+
+/** Encoding of key location indicators.
+ *
+ * If an integration of Mbed TLS can make calls to external
+ * cryptoprocessors such as secure elements, the location of a key
+ * indicates which secure element performs the operations on the key.
+ * Depending on the design of the secure element, the key
+ * material may be stored either in the secure element, or
+ * in wrapped (encrypted) form alongside the key metadata in the
+ * primary local storage.
+ *
+ * The PSA Cryptography API specification defines the following values of
+ * location indicators:
+ * - \c 0: primary local storage.
+ *   This location is always available.
+ *   The primary local storage is typically the same storage area that
+ *   contains the key metadata.
+ * - \c 1: primary secure element.
+ *   Integrations of Mbed TLS should support this value if there is a secure
+ *   element attached to the operating environment.
+ *   As a guideline, secure elements may provide higher resistance against
+ *   side channel and physical attacks than the primary local storage, but may
+ *   have restrictions on supported key types, sizes, policies and operations
+ *   and may have different performance characteristics.
+ * - \c 2-0x7fffff: other locations defined by a PSA specification.
+ *   The PSA Cryptography API does not currently assign any meaning to these
+ *   locations, but future versions of that specification or other PSA
+ *   specifications may do so.
+ * - \c 0x800000-0xffffff: vendor-defined locations.
+ *   No PSA specification will assign a meaning to locations in this range.
+ *
+ * \note Key location indicators are 24-bit values. Key management
+ *       interfaces operate on lifetimes (type ::psa_key_lifetime_t) which
+ *       encode the location as the upper 24 bits of a 32-bit value.
+ */
+typedef uint32_t psa_key_location_t;
 
 /** Encoding of identifiers of persistent keys.
  *
  * - Applications may freely choose key identifiers in the range
  *   #PSA_KEY_ID_USER_MIN to #PSA_KEY_ID_USER_MAX.
- * - Implementations may define additional key identifiers in the range
+ * - The implementation may define additional key identifiers in the range
  *   #PSA_KEY_ID_VENDOR_MIN to #PSA_KEY_ID_VENDOR_MAX.
  * - 0 is reserved as an invalid key identifier.
  * - Key identifiers outside these ranges are reserved for future use.
  */
-/* Implementation-specific quirk: The Mbed Crypto library can be built as
- * part of a multi-client service that exposes the PSA Crypto API in each
- * client and encodes the client identity in the key id argument of functions
- * such as psa_open_key(). In this build configuration, we define
- * psa_key_id_t in crypto_platform.h instead of here. */
-#if !defined(MBEDTLS_PSA_CRYPTO_KEY_FILE_ID_ENCODES_OWNER)
 typedef uint32_t psa_key_id_t;
-#define PSA_KEY_ID_INIT 0
-#endif
+
+#if !defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+typedef psa_key_id_t mbedtls_svc_key_id_t;
+
+#else /* MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */
+/* Implementation-specific: The Mbed Cryptography library can be built as
+ * part of a multi-client service that exposes the PSA Cryptograpy API in each
+ * client and encodes the client identity in the key identifier argument of
+ * functions such as psa_open_key().
+ */
+typedef struct
+{
+    psa_key_id_t key_id;
+    mbedtls_key_owner_id_t owner;
+} mbedtls_svc_key_id_t;
+
+#endif /* !MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */
 
 /**@}*/
 
@@ -163,23 +264,18 @@ typedef uint32_t psa_key_usage_t;
  * - The key's policy, comprising usage flags and a specification of
  *   the permitted algorithm(s).
  * - Information about the key itself: the key type and its size.
- * - Implementations may define additional attributes.
+ * - Additional implementation-defined attributes.
  *
  * The actual key material is not considered an attribute of a key.
  * Key attributes do not contain information that is generally considered
  * highly confidential.
  *
- * An attribute structure can be a simple data structure where each function
+ * An attribute structure works like a simple data structure where each function
  * `psa_set_key_xxx` sets a field and the corresponding function
  * `psa_get_key_xxx` retrieves the value of the corresponding field.
- * However, implementations may report values that are equivalent to the
- * original one, but have a different encoding. For example, an
- * implementation may use a more compact representation for types where
- * many bit-patterns are invalid or not supported, and store all values
- * that it does not support as a special marker value. In such an
- * implementation, after setting an invalid value, the corresponding
- * get function returns an invalid value which may not be the one that
- * was originally stored.
+ * However, a future version of the library  may report values that are
+ * equivalent to the original one, but have a different encoding. Invalid
+ * values may be mapped to different, also invalid values.
  *
  * An attribute structure may contain references to auxiliary resources,
  * for example pointers to allocated memory or indirect references to
@@ -244,7 +340,7 @@ typedef uint32_t psa_key_usage_t;
  * -# Call a key creation function: psa_import_key(), psa_generate_key(),
  *    psa_key_derivation_output_key() or psa_copy_key(). This function reads
  *    the attribute structure, creates a key with these attributes, and
- *    outputs a handle to the newly created key.
+ *    outputs a key identifier to the newly created key.
  * -# The attribute structure is now no longer necessary.
  *    You may call psa_reset_key_attributes(), although this is optional
  *    with the workflow presented here because the attributes currently

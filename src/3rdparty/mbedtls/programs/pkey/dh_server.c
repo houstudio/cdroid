@@ -1,7 +1,7 @@
 /*
  *  Diffie-Hellman-Merkle key exchange (server side)
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,8 +15,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -68,7 +66,7 @@ int main( void )
            "and/or MBEDTLS_NET_C and/or MBEDTLS_RSA_C and/or "
            "MBEDTLS_SHA256_C and/or MBEDTLS_FS_IO and/or "
            "MBEDTLS_CTR_DRBG_C not defined.\n");
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
 
@@ -297,9 +295,13 @@ int main( void )
     mbedtls_printf( "...\n  . Encrypting and sending the ciphertext" );
     fflush( stdout );
 
-    mbedtls_aes_setkey_enc( &aes, buf, 256 );
+    ret = mbedtls_aes_setkey_enc( &aes, buf, 256 );
+    if( ret != 0 )
+        goto exit;
     memcpy( buf, PLAINTEXT, 16 );
-    mbedtls_aes_crypt_ecb( &aes, MBEDTLS_AES_ENCRYPT, buf, buf );
+    ret = mbedtls_aes_crypt_ecb( &aes, MBEDTLS_AES_ENCRYPT, buf, buf );
+    if( ret != 0 )
+        goto exit;
 
     if( ( ret = mbedtls_net_send( &client_fd, buf, 16 ) ) != 16 )
     {
@@ -330,7 +332,7 @@ exit:
     fflush( stdout ); getchar();
 #endif
 
-    return( exit_code );
+    mbedtls_exit( exit_code );
 }
 #endif /* MBEDTLS_AES_C && MBEDTLS_DHM_C && MBEDTLS_ENTROPY_C &&
           MBEDTLS_NET_C && MBEDTLS_RSA_C && MBEDTLS_SHA256_C &&

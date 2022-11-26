@@ -5,7 +5,7 @@
 # Defines a Docker container suitable to build and run all tests (all.sh),
 # except for those that use a proprietary toolchain.
 
-# Copyright (C) 2006-2019, Arm Limited (or its affiliates), All Rights Reserved.
+# Copyright The Mbed TLS Contributors
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -19,8 +19,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# This file is part of Mbed TLS (https://tls.mbed.org)
 ARG MAKEFLAGS_PARALLEL=""
 ARG MY_REGISTRY=
 
@@ -162,7 +160,3 @@ RUN cd /tmp \
 
 ENV GNUTLS_NEXT_CLI=/usr/local/gnutls-3.6.5/bin/gnutls-cli
 ENV GNUTLS_NEXT_SERV=/usr/local/gnutls-3.6.5/bin/gnutls-serv
-
-RUN pip3 install --no-cache-dir \
-    mbed-host-tests \
-    mock

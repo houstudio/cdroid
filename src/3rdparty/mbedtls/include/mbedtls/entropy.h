@@ -4,7 +4,7 @@
  * \brief Entropy accumulator implementation
  */
 /*
- *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,8 +18,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_ENTROPY_H
 #define MBEDTLS_ENTROPY_H
@@ -50,11 +48,16 @@
 #include "mbedtls/havege.h"
 #endif
 
-#define MBEDTLS_ERR_ENTROPY_SOURCE_FAILED                 -0x003C  /**< Critical entropy source failure. */
-#define MBEDTLS_ERR_ENTROPY_MAX_SOURCES                   -0x003E  /**< No more sources can be added. */
-#define MBEDTLS_ERR_ENTROPY_NO_SOURCES_DEFINED            -0x0040  /**< No sources have been added to poll. */
-#define MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE              -0x003D  /**< No strong sources have been added to poll. */
-#define MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR                 -0x003F  /**< Read/write error in file. */
+/** Critical entropy source failure. */
+#define MBEDTLS_ERR_ENTROPY_SOURCE_FAILED                 -0x003C
+/** No more sources can be added. */
+#define MBEDTLS_ERR_ENTROPY_MAX_SOURCES                   -0x003E
+/** No sources have been added to poll. */
+#define MBEDTLS_ERR_ENTROPY_NO_SOURCES_DEFINED            -0x0040
+/** No strong sources have been added to poll. */
+#define MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE              -0x003D
+/** Read/write error in file. */
+#define MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR                 -0x003F
 
 /**
  * \name SECTION: Module settings
@@ -122,13 +125,15 @@ mbedtls_entropy_source_state;
  */
 typedef struct mbedtls_entropy_context
 {
-    int accumulator_started;
+    int accumulator_started; /* 0 after init.
+                              * 1 after the first update.
+                              * -1 after free. */
 #if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
     mbedtls_sha512_context  accumulator;
-#else
+#elif defined(MBEDTLS_ENTROPY_SHA256_ACCUMULATOR)
     mbedtls_sha256_context  accumulator;
 #endif
-    int             source_count;
+    int             source_count; /* Number of entries used in source. */
     mbedtls_entropy_source_state    source[MBEDTLS_ENTROPY_MAX_SOURCES];
 #if defined(MBEDTLS_HAVEGE_C)
     mbedtls_havege_state    havege_data;

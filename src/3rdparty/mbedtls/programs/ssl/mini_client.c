@@ -2,7 +2,7 @@
  *  Minimal SSL client, used for memory measurements.
  *  (meant to be used with config-suite-b.h or config-ccm-psk-tls1_2.h)
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,8 +16,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -60,7 +58,7 @@ int main( void )
     mbedtls_printf( "MBEDTLS_CTR_DRBG_C and/or MBEDTLS_ENTROPY_C and/or "
             "MBEDTLS_NET_C and/or MBEDTLS_SSL_CLI_C and/or UNIX "
             "not defined.\n");
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
 
@@ -296,6 +294,6 @@ exit:
     mbedtls_x509_crt_free( &ca );
 #endif
 
-    return( ret );
+    mbedtls_exit( ret );
 }
 #endif

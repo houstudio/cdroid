@@ -4,7 +4,7 @@
  * \brief Minimal configuration for TLS NSA Suite B Profile (RFC 6460)
  */
 /*
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,8 +18,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  * Minimal configuration for TLS NSA Suite B Profile (RFC 6460)
@@ -82,8 +80,7 @@
 #define MBEDTLS_AES_ROM_TABLES
 
 /* Save RAM by adjusting to our exact needs */
-#define MBEDTLS_ECP_MAX_BITS   384
-#define MBEDTLS_MPI_MAX_SIZE    48 // 384 bits is 48 bytes
+#define MBEDTLS_MPI_MAX_SIZE    48 // 48 bytes for a 384-bit elliptic curve
 
 /* Save RAM at the expense of speed, see ecp.h */
 #define MBEDTLS_ECP_WINDOW_SIZE        2

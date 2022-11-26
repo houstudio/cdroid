@@ -1,7 +1,7 @@
 /*
  *  NIST SP800-38C compliant CCM implementation
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,8 +15,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 /*
@@ -28,11 +26,7 @@
  * RFC 5116 "An Interface and Algorithms for Authenticated Encryption"
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "common.h"
 
 #if defined(MBEDTLS_CCM_C)
 
@@ -181,7 +175,7 @@ static int ccm_auth_crypt( mbedtls_ccm_context *ctx, int mode, size_t length,
     if( iv_len < 7 || iv_len > 13 )
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
-    if( add_len > 0xFF00 )
+    if( add_len >= 0xFF00 )
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
     q = 16 - 1 - (unsigned char) iv_len;
@@ -206,7 +200,7 @@ static int ccm_auth_crypt( mbedtls_ccm_context *ctx, int mode, size_t length,
     memcpy( b + 1, iv, iv_len );
 
     for( i = 0, len_left = length; i < q; i++, len_left >>= 8 )
-        b[15-i] = (unsigned char)( len_left & 0xFF );
+        b[15-i] = MBEDTLS_BYTE_0( len_left );
 
     if( len_left > 0 )
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
@@ -227,8 +221,7 @@ static int ccm_auth_crypt( mbedtls_ccm_context *ctx, int mode, size_t length,
         src = add;
 
         memset( b, 0, 16 );
-        b[0] = (unsigned char)( ( add_len >> 8 ) & 0xFF );
-        b[1] = (unsigned char)( ( add_len      ) & 0xFF );
+        MBEDTLS_PUT_UINT16_BE( add_len, b, 0 );
 
         use_len = len_left < 16 - 2 ? len_left : 16 - 2;
         memcpy( b + 2, src, use_len );

@@ -1,4 +1,4 @@
-set(EXE_NAME curl)
+set(EXE_NAME mcurl)
 
 if(USE_MANUAL)
   # Use the C locale to ensure that only ASCII characters appear in the
@@ -59,7 +59,7 @@ include_directories(
   )
 
 #Build curl executable
-target_link_libraries(${EXE_NAME} libcurl ${CURL_LIBS})
+target_link_libraries(${EXE_NAME} curl ${CURL_LIBS})
 
 ################################################################################
 

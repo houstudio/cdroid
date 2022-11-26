@@ -1,7 +1,7 @@
 
 SET(CMAKE_SYSTEM_NAME Linux)
 
-SET(TOOLCHAIN_DIR /home/swdev/common/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf/)
+SET(TOOLCHAIN_DIR /opt/cross/origin/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf/)
 set(CMAKE_CROSSCOMPILING true)
 
 SET(CMAKE_SYSTEM_PROCESSOR arm)
