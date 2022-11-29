@@ -1,5 +1,0 @@
-boolDefine = false
-if boolDefine:
-then
-	print("error")
-end

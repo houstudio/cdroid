@@ -1,5 +1,0 @@
-#!/bin/bash
-# Prepare bash argument_list variable as a semicolon-separated CMake list
-# of the arguments to this script.
-IFS=';'
-cmake -Dexecutable:FILEPATH=@XMLCATALOG_EXECUTABLE@ -Dargument_list:STRING="$*" -P @FILTER_ARGUMENTS_SCRIPT_LOCATION@

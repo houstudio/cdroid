@@ -27,7 +27,7 @@ class CDROIDHandler( xml.sax.ContentHandler ):
             if id not in new_ids:
                 new_ids.append(id)
         self.idlist=new_ids
-        print new_ids
+        print(new_ids)
         return new_ids
 
 class IDGenerater(object):
@@ -48,7 +48,7 @@ class IDGenerater(object):
         fr.write("%4sclass id {\n%4spublic: enum{\n"%('',''))
         dsize =len(self.Handler.idlist)
         i=0
-        print self.Handler.idlist
+        print(self.Handler.idlist)
         for k in self.Handler.idlist:
             fr.write("%8s %-24s= 0x%08X /*%10d*/"%('',k,self.idstart+i,self.idstart+i))
             if (i<dsize-1):
@@ -96,7 +96,7 @@ class IDGenerater(object):
 if ( __name__ == "__main__"):
     idstart=10000
     if len(sys.argv)<3:
-        print sys.argv[0]#+'assetspath R.h_path ID.xml'
+        print(sys.argv[0])#+'assetspath R.h_path ID.xml'
     validassetsdir=['assets','res','resources']
     segments=sys.argv[1].split('/')
     for i in range(0,len(segments)):
@@ -106,7 +106,7 @@ if ( __name__ == "__main__"):
     if sys.argv[2].find("widget/R.h")>=0 and (namespace=='gui'):
         namespace='cdroid'
         idstart=1000
-    print "namespace="+namespace
+    print("namespace="+namespace)
     lastmodifytime=0 
     if os.path.exists(sys.argv[2]):
         fstat=os.stat(sys.argv[2])
@@ -118,5 +118,5 @@ if ( __name__ == "__main__"):
        idgen.dict2RH(sys.argv[2],namespace)
        idgen.dict2ID(sys.argv[1]+"/values/ID.xml")
     else:
-        print sys.argv[2]+" is latest ,skipped."
+        print(sys.argv[2]+" is latest ,skipped.")
 

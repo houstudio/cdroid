@@ -33,7 +33,7 @@
 #
 
 find_package(PkgConfig)
-pkg_check_modules(PC_FONTCONFIG QUIET fontconfig)
+pkg_check_modules(PC_FONTCONFIG fontconfig)
 
 find_path(FONTCONFIG_INCLUDE_DIRS
     NAMES fontconfig.h
@@ -46,8 +46,9 @@ find_library(FONTCONFIG_LIBRARIES
     NAMES fontconfig
     HINTS ${PC_FONTCONFIG_LIBDIR}
     ${PC_FONTCONFIG_LIBRARY_DIRS}
+    NO_DEFAULT_PATH
 )
-message("FONTCONFIG_INCLUDE_DIRS=${FONTCONFIG_INCLUDE_DIRS} FONTCONFIG_LIBRARIES=${FONTCONFIG_LIBRARIES}")
+#message(FATAL_ERROR "FONTCONFIG_INCLUDE_DIRS=${FONTCONFIG_INCLUDE_DIRS} FONTCONFIG_LIBRARIES=${FONTCONFIG_LIBRARIES}")
 if (FONTCONFIG_LIBRARIES AND FONTCONFIG_INCLUDE_DIRS)
     if (NOT WIN32)
         # use pkg-config to get the directories and then use these values

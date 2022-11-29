@@ -22,7 +22,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 find_package(PkgConfig)
-pkg_check_modules(PC_FREETYPE2 REQUIRED freetype2)
+pkg_check_modules(PC_FREETYPE2 freetype2)
 
 find_path(FREETYPE2_HEADER_DIR
     NAMES freetype.h

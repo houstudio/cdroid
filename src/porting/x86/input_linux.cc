@@ -58,7 +58,7 @@ INT InputInit(){
     struct dirent **namelist=nullptr;
     LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,dev.nfd,rc,dev.fds[0],sizeof(struct input_event),sizeof(struct timeval));
     int nf=scandir("/dev/input",&namelist,[&dev](const struct dirent * ent)->int{
-        char fname[256];
+        char fname[268];
         int fd=-1; 
         snprintf(fname,sizeof(fname),"/dev/input/%s",ent->d_name);
         if(ent->d_type!=DT_DIR){

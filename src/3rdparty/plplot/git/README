@@ -1,9 +1,0 @@
-This directory contains scripts, documentation, and assorted miscellany
-intended to aide in the process of transitioning PLplot to git.
-
-
-Subdir             Description
-------------       --------------------------------------------------------
-case-1             Use git-svn to establish a git gateway to the PLplot svn
-                   repository.
-

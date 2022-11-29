@@ -1,6 +1,0 @@
-# Customize default values set by include(CTest).
-
-# The default limit on length of successful ctest results is only 1024
-# bytes which the examples_compare test normally exceeds.
-# Raise that default limit by an order of magnitude.
-set(CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE 10240)

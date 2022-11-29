@@ -12,14 +12,18 @@ aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
-find_package(PNG)
-find_package(JPEG)
-find_package(ZIP)
-find_package(Freetype)
-find_package(EXPAT)
-find_package(PLPLOT)
-find_package(Fontconfig)
-
+find_package(PNG REQUIRED)
+find_package(JPEG REQUIRED)
+find_package(JSONCPP REQUIRED)
+find_package(ZIP REQUIRED)
+find_package(Freetype2 REQUIRED)
+find_package(EXPAT REQUIRED)
+find_package(Pixman REQUIRED)
+find_package(Cairo REQUIRED)
+#find_package(unibreak REQUIRED)
+find_package(Fribidi REQUIRED)
+find_package(TurboJPEG REQUIRED)
+#find_package(PLPLOT)
 include_directories(
     ./ ./private 
     ./core 
@@ -27,14 +31,12 @@ include_directories(
     ./cairomm 
     ./core/svg ./luabinding 
     ${CMAKE_BINARY_DIR}/include
-    ${PNG_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIR} ${PLPLOT_INCLUDE_DIR}
+    ${CDROID_DEPINCLUDES}
+    ${PLPLOT_INCLUDE_DIR}
     ${CMAKE_BINARY_DIR}/include/gui
-    ${CMAKE_BINARY_DIR}/include/pixman
-    ${CMAKE_BINARY_DIR}/include/cairo
-    ${FREETYPE_INCLUDE_DIRS}
     ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_BINARY_DIR}/include/pinyin
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
+    ${LIBUNIBREAK_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include/fribidi
     ${CMAKE_SOURCE_DIR}/src/modules/vold
@@ -45,14 +47,6 @@ include_directories(
 
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
-set(CDROID_LIBS 
-	#${PIXMAN_LIBRARIES} ${CAIRO_LIBRARIES}
-	${FONTCONFIG_LIBRARIES}
-        ${ZIP_LIBRARIES}	
-	${PNG_LIBRARIES} ${JPEG_LIBRARIES}
-	${JSONCPP_LIBRARIES} ${EXPAT_LIBRARIES}
-	${ZIP_LIBRARIES}
-	)
 
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_CAIROMM} ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
@@ -81,13 +75,8 @@ foreach( each_file ${allfiles} )
 endforeach(each_file)
 
 target_link_libraries(cdroid 
-	PRIVATE cairo png jpeg unibreak zip jsoncpp expat
-	${OPTIONAL_LIBS} 
+	PRIVATE ${CDROID_DEPLIBS}
 	PUBLIC tvhal )
-target_link_libraries(cdroid_static 
-	PRIVATE png jpeg cairo_static unibreak  zip jsoncpp expat
-	${OPTIONAL_LIBS}
-	PUBLIC tvhal_static )
 configure_file(
         "cdroid.pc.in"
         "cdroid.pc"
@@ -96,7 +85,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 install (TARGETS cdroid  DESTINATION lib)
-install (TARGETS cdroid_static  DESTINATION lib)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "view" EXCLUDE 
     PATTERN "core" EXCLUDE)

@@ -1,1 +1,0 @@
-strValue = "D.lua"

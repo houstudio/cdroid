@@ -1,6 +1,5 @@
 
 option(MINIMAL_SIZE_OPTIMIZED "For IOT/Embedded size optimize" OFF)
-option(BUILD_DOCS "Build documents" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
 option(BUILD_CDROID_TESTS "Build unit tests" ON)
 
@@ -9,9 +8,6 @@ option(ENABLE_CAIROSVG "enable svg decoder" OFF)
 option(ENABLE_MBEDTLS "enable mbedtls" ON)
 option(ENABLE_UPNP "enable upnp/dlna" OFF)
 option(ENABLE_GESTURE "enable gestrure" OFF)
-option(ENABLE_TURBOJPEG "enable turbo jpeg" ON)
-option(ENABLE_MP3ID3 "enable mp3 ids" ON)
-option(ENABLE_FRIBIDI "BIDI Text Layout  support" ON)
 option(ENABLE_PLPLOT "Enable PLPLot" OFF)
 option(ENABLE_DTV "DTV modules support" OFF)
 option(WITH_JPEG8 "Emulate libjpeg v8 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)" ON)
@@ -19,67 +15,68 @@ option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" OFF)
 
-#set(USE_STATIC_MBEDTLS_LIBRARY OFF)
-#set(USE_SHARED_MBEDTLS_LIBRARY ON)
 set(CMAKE_USE_OPENSSL ON)
 set(ENABLE_IPV6 OFF)#for CURL
-add_definitions(-DPNG_ZLIB_VERNUM=0)#Make PNG compiled happy:)
-
-if( MINIMAL_SIZE_OPTIMIZED )
-    set(ENABLE_GIF OFF)
-    set(ENABLE_CAIROSVG OFF)
-    set(ENABLE_TURBOJPEG OFF)
-    set(ENABLE_JPEG OFF)
-    set(ENABLE_GESTURE OFF)
-    set(ENABLE_FRIBIDI OFF)
-    set(ENABLE_CAIROSVG OFF)
-    set(ENABLE_MBEDTLS OFF)
-    set(FT_WITH_HARFBUZZ OFF)
-    set(ENABLE_UPNP OFF)
-    set(ENABLE_MP3ID3 OFF)
-    set(ENABLE_PINYIN2HZ OFF)
-    set(ENABLE_PLPLOT OFF)
-endif( MINIMAL_SIZE_OPTIMIZED )
 
 if(ENABLE_GIF)
-  list(APPEND OPTIONAL_LIBS gif)
+   list(APPEND OPTIONAL_LIBS gif)
 endif()
 
-if(ENABLE_CAIROSVG)
-  list(APPEND OPTIONAL_LIBS svg-cairo)
-endif()
-
-if(ENABLE_MBEDTLS)
-endif()
-
-if(ENABLE_UPNP)
-  list(APPEND APP_EXTLIBS upnp)
-endif()
+find_package(PNG REQUIRED)
+find_package(JPEG REQUIRED)
 
 if(ENABLE_TURBOJPEG)
-  list(APPEND OPTIONAL_LIBS turbojpeg)
-endif()
+   find_package(TurboJPEG REQUIRED)
+   list(APPEND CDROID_DEPLIBS ${TURBOJPEG_LIBRARIES})
+endif(ENABLE_TURBOJPEG)
 
-if(ENABLE_MP3ID3)
-  list(APPEND APP_EXTLIBS id3)
-endif()
+find_package(JSONCPP REQUIRED)
+find_package(ZIP REQUIRED)
+find_package(Freetype2 REQUIRED)
+find_package(EXPAT REQUIRED)
+find_package(Pixman REQUIRED)
+find_package(Cairo REQUIRED)
+find_package(OpenSSL)
+#find_package(unibreak REQUIRED)
 
 if(ENABLE_FRIBIDI)
-  list(APPEND OPTIONAL_LIBS fribidi_static iconv)
-endif()
+  find_package(Fribidi REQUIRED)
+  list(APPEND CDROID_DEPLIBS ${FRIBIDI_LIBRARIES})
+endif(ENABLE_FRIBIDI)
 
-if(ENABLE_PLPLOT)
-  list(APPEND OPTIONAL_LIBS plplot plplotcxx)
-  set(NaNAwareCCompiler ON)#make plplot compile happy
-endif()
+list(APPEND CDROID_DEPLIBS 
+    ${PNG_LIBRARIES}
+    ${JPEG_LIBRARIES}
+    ${ZIP_LIBRARIES}
+    ${EXPAT_LIBRARIES}
+    ${JSONCPP_LIBRARIES}
+    ${CAIRO_LIBRARIES}
+    ${PIXMAN_LIBRARIES}
+)
+
+list(APPEND CDROID_DEPINCLUDES
+    ${PNG_INCLUDE_DIRS}
+    ${JPEG_INCLUDE_DIRSS}
+    ${ZIP_INCLUDE_DIRS}
+    ${EXPAT_INCLUDE_DIRS}
+    ${JSONCPP_INCLUDE_DIRS}
+    ${CAIRO_INCLUDE_DIRS}
+    ${CAIRO_INCLUDE_DIRS}/cairo
+    ${PIXMAN_INCLUDE_DIRS}
+    ${FRIBIDI_INCLUDE_DIRS}
+    ${TURBOJPEG_INCLUDE_DIRS}
+)
+
+if(OPENSSL_FOUND)
+    list(APPEND CDROID_DEPINCLUDES ${OPENSSL_INCLUDE_DIRS})
+    list(APPEND CDROID_DEPLIBS ${OPENSSL_LIBRARIES})
+endif(OPENSSL_FOUND)
 
 if(ENABLE_PINYIN2HZ)
   list(APPEND OPTIONAL_LIBS pinyin)
 endif()
 
-
-
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/gui/gui_features.h.cmake")
-configure_file(src/gui/gui_features.h.cmake  ${CMAKE_BINARY_DIR}/include/gui/gui_features.h)
+   configure_file(src/gui/gui_features.h.cmake  ${CMAKE_BINARY_DIR}/include/gui/gui_features.h)
 endif()
 set(SKIP_INSTALL_EXPORT TRUE)

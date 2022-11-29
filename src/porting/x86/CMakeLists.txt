@@ -17,6 +17,27 @@ check_include_file(poll.h HAVE_POLL_H)
 check_include_file(sys/epoll.h  HAVE_EPOLL_H)
 check_include_file(linux/input.h HAVE_INPUT_H)
 check_include_file(execinfo.h HAVE_EXECINFO_H)
+check_include_file(drm.h HAVE_DRM_H)
+find_package(PkgConfig)
+pkg_check_modules(PC_DRM dri)
+
+find_path(
+    DRM_INCLUDE_DIR
+    NAMES drm.h
+    HINTS ${PC_DRM_INCLUDEDIR}
+    ${PC_DRM_INCLUDE_DIRS}
+    DOC "Include directory for the drm library")
+
+find_library(DRM_LIBRARY
+    NAMES drm
+    HINTS ${PC_DRM_LIBDIR}
+    ${PC_DRM_LIBRARY_DIRS}
+)
+
+if(DRM_LIBRARY AND DRM_INCLUDE_DIR)
+    list(APPEND X86LIBS ${DRM_LIBRARY})
+endif()
+
 if(HAVE_POLL_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_POLL_H)
 endif()
@@ -43,15 +64,18 @@ if ( SYSNAME_LOWER MATCHES "linux" OR SYSNAME_LOWER MATCHES "cygwin" )
     find_package(X11)
     find_package(PkgConfig REQUIRED)
 	pkg_check_modules(GTK3 gtk+-3.0)
-    message("X11_INCLUDE_DIR=${X11_INCLUDE_DIR} ${X11_FOUND} ${GTK3_LIBRARIES} ${GTK3_FOUND}")
-    if (FALSE)
+    message("X11_INCLUDE_DIR=${X11_INCLUDE_DIR} ${X11_FOUND} ${GTK3_LIBRARIES} ${GTK3_FOUND} ${}")
+    if (FALSE AND DRM_LIBRARY)
+	list(APPEND X86_SRCS gfxdrm.cc graph_drm.cc)
+	list(APPEND X86LIBS ${DRM_LIBRARY})
+    elseif(FALSE)
         list(APPEND X86_SRCS graph_fb.c)
     elseif( X11_FOUND )
         list(APPEND X86_SRCS graph_xlib.c)
         list(APPEND X86LIBS ${X11_LIBRARIES})
     elseif( GTK3_FOUND )
         list(APPEND X86_SRCS graph_gtk.c)
-        list(APPEND X86LIBS ${GTK3_LIBRARIES})
+        list(APPEND X86LIBS ${GTK3_LIBRARIES} ${DRM_LIBRARY})
     else()
         list(APPEND X86_SRCS graph_rfb.c)
         list(APPEND X86LIBS vncserver)
@@ -66,6 +90,7 @@ find_package(ZLIB)
 message("ZLIB_INCLUDE=${ZLIB_INCLUDE_DIR} X86LIBS=${X86LIBS}")
 include_directories(./
     ../include
+    ${DRM_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${X11_INCLUDE_DIRS}
@@ -80,4 +105,5 @@ include_directories(./
 
 add_library(x86 STATIC ${X86_SRCS} )
 target_link_libraries(x86 PRIVATE ${X86LIBS})
+#message(FATAL_ERROR "PC_DRM=${DRM_INCLUDE_DIR}-${DRM_LIBRARY} X86LIBS=${X86LIBS}")
 

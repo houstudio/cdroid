@@ -44,9 +44,9 @@
 
 if (UNIX)
   find_package(PkgConfig QUIET)
-  pkg_check_modules(_OPENSSL QUIET openssl)
+  pkg_check_modules(_OPENSSL  openssl)
 endif ()
-
+message("_OPENSSL=${_OPENSSL_INCLUDEDIR} ${_OPENSSL_LIBDIR}")
 # Support preference of static libs by adjusting CMAKE_FIND_LIBRARY_SUFFIXES
 if(OPENSSL_USE_STATIC_LIBS)
   set(_openssl_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -82,45 +82,37 @@ else ()
     )
 endif ()
 
+#set(_OPENSSL_ROOT_PATHS ${CMAKE_SOURCE_DIR}/src/3rdparty/openssl-1.1.1)
 set(_OPENSSL_ROOT_HINTS_AND_PATHS
     HINTS ${_OPENSSL_ROOT_HINTS}
     PATHS ${_OPENSSL_ROOT_PATHS}
     )
 
 find_path(OPENSSL_INCLUDE_DIR
-  NAMES
-    openssl/ssl.h
+  NAMES   openssl/ssl.h
   ${_OPENSSL_ROOT_HINTS_AND_PATHS}
-  HINTS
-    ${_OPENSSL_INCLUDEDIR}
+  HINTS  ${_OPENSSL_INCLUDEDIR}
   PATH_SUFFIXES
     include
 )
 
 find_library(OPENSSL_SSL_LIBRARY
-    NAMES
-      ssl
-      ssleay32
-      ssleay32MD
+    NAMES  ssl   ssleay32  ssleay32MD
     NAMES_PER_DIR
     ${_OPENSSL_ROOT_HINTS_AND_PATHS}
-    HINTS
-      ${_OPENSSL_LIBDIR}
-    PATH_SUFFIXES
-      lib
+    HINTS     ${_OPENSSL_LIBDIR}
+    PATH_SUFFIXES    lib
   )
 
 find_library(OPENSSL_CRYPTO_LIBRARY
-    NAMES
-      crypto
+    NAMES   crypto
     NAMES_PER_DIR
     ${_OPENSSL_ROOT_HINTS_AND_PATHS}
-    HINTS
-      ${_OPENSSL_LIBDIR}
-    PATH_SUFFIXES
-      lib
+    HINTS    ${_OPENSSL_LIBDIR}
+    PATH_SUFFIXES    lib
   )
 
+message("OPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR} OPENSSL_SSL_LIBRARY=${OPENSSL_SSL_LIBRARY} OPENSSL_CRYPTO_LIBRARY=${OPENSSL_CRYPTO_LIBRARY}")
 mark_as_advanced(OPENSSL_CRYPTO_LIBRARY OPENSSL_SSL_LIBRARY)
 
   # compat defines

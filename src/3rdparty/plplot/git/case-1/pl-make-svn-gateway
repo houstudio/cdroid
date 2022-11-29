@@ -1,5 +1,0 @@
-#!/bin/sh
-
-git svn --authors-file=svn-authors \
-    clone https://plplot.svn.sourceforge.net/svnroot/plplot \
-        -s  --prefix=svn/

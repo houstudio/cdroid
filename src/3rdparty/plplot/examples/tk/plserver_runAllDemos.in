@@ -1,7 +1,0 @@
-#!@SH_EXECUTABLE@
-# Run plserver example for standard examples.
-# The following exec command reexecutes the script under wish.  This
-# is possible because all comment lines are ignored by wish including
-# continued ones with a trailing backslash like this one \
-exec "@plserver_LOCATION@" -f "$0" "$@"
-source runAllDemos.tcl
