@@ -22,7 +22,6 @@
 #include <cairomm/private.h>
 #include <cairomm/cairo_jpg.h>
 #include <cairomm/bitmap.h>
-#include <svg-cairo.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <chrono>

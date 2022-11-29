@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(CDROID REQUIRED)
 include_directories(
    ./
-   ${CDROID_INCLUDE_DIR}
+   ${CDROID_INCLUDE_DIRS}
+   ${CDROID_DEPINCLUDES}
    ${DEPS_DIR}/include
    ${DEPS_DIR}/include/gui
    ${DEPS_DIR}/include/porting
@@ -31,7 +32,7 @@ add_custom_target(uidemo1translate
   )
 
 
-target_link_libraries(uidemo1 cdroid tvhal)
+target_link_libraries(uidemo1 PRIVATE cdroid ${CDROID_DEPLIBS})
 
 install(TARGETS uidemo1 DESTINATION bin)
 

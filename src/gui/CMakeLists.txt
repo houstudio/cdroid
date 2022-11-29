@@ -74,9 +74,7 @@ foreach( each_file ${allfiles} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
-target_link_libraries(cdroid 
-	PRIVATE ${CDROID_DEPLIBS}
-	PUBLIC tvhal )
+target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal )
 configure_file(
         "cdroid.pc.in"
         "cdroid.pc"

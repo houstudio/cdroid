@@ -2,7 +2,9 @@
 #include <view/gravity.h>
 #include <wordbreak.h>
 #include <linebreak.h>
+#ifdef ENABLE_FRIBIDI
 #include <fribidi.h>
+#endif
 #include <cdlog.h>
 #include <textutils.h>
 using namespace Cairo;
