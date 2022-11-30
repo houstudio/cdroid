@@ -31,8 +31,8 @@ add_custom_target(uidemo1translate
   COMMENT "Translate strings resource..."
   )
 
-
-target_link_libraries(uidemo1 PRIVATE cdroid ${CDROID_DEPLIBS})
+message("CDROID_LIBRARIES=${CDROID_LIBRARIES}")
+target_link_libraries(uidemo1 PRIVATE ${CDROID_LIBRARIES})#${CDROID_DEPLIBS})
 
 install(TARGETS uidemo1 DESTINATION bin)
 

@@ -1,5 +1,6 @@
 #cmake_minimum_required (VERSION 3.8)
 project(haltest C CXX)
+find_package(GTEST REQUIRED)
 set(SRCS_NORMAL
    event_unittests.cc  
    mem_unittests.cc    
@@ -25,6 +26,7 @@ endif(ENABLE_DTV)
 
 include_directories(
    ./
+   ${GTEST_INCLUDE_DIRS}
    ${DEPS_DIR}/includegtest
    ${DEPS_DIR}/include
    ${DEPS_DIR}/include/gui
@@ -39,7 +41,7 @@ link_directories(${DEPS_DIR}/lib)
 add_executable(hal_tests ${SRCS_HAL}) 
 add_executable(hal_testsd ${SRCS_HAL}) 
 
-target_link_libraries(hal_tests tvhal_static gtest)
-target_link_libraries(hal_testsd tvhal gtest)
+target_link_libraries(hal_tests tvhal_static ${GTEST_LIBRARIES})
+target_link_libraries(hal_testsd tvhal $${GTEST_LIBRARIES})#GTest::gtest)
 
 install (TARGETS hal_tests  DESTINATION bin/tests)

@@ -6,16 +6,13 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 include(cmake/common_functions.cmake)
 include(cmake/options.cmake)
+message("====================================")
 
 set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 set(CMAKE_INSTALL_MANDIR ${CMAKE_PREFIX_PATH}/man)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_PREFIX_PATH})
 set(DISABLE_FORCE_DEBUG_POSTFIX ON)
-#set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_PREFIX_PATH}/data)
-#set(CMAKE_INSTALL_DATADIR ${CMAKE_PREFIX_PATH}/data CACHE PATH "General install location")
-#set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib)
-#set(CMAKE_INSTALL_INCLUDEDIR ${CMAKE_PREFIX_PATH}/include)
-#set(CMAKE_INSTALL_BINDIR ${CMAKE_PREFIX_PATH}/bin)
+
 set(ENV{PKG_CONFIG_PATH} "${CMAKE_INSTALL_LIBDIR}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
 
 if (EXISTS "${CMAKE_SOURCE_DIR}/src/gui/view/view.h" )
@@ -39,8 +36,8 @@ add_subdirectory(apps)
 add_subdirectory(tests)
 
 if(BUILD_DOCS)
-include(cmake/build_doxygen.cmake)
-build_doxygen()
+  include(cmake/build_doxygen.cmake)
+  build_doxygen()
 endif()
 
 add_custom_target(appdevops
