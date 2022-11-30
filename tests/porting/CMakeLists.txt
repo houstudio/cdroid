@@ -42,6 +42,6 @@ add_executable(hal_tests ${SRCS_HAL})
 add_executable(hal_testsd ${SRCS_HAL}) 
 
 target_link_libraries(hal_tests tvhal_static ${GTEST_LIBRARIES})
-target_link_libraries(hal_testsd tvhal $${GTEST_LIBRARIES})#GTest::gtest)
+target_link_libraries(hal_testsd tvhal ${GTEST_LIBRARIES})
 
 install (TARGETS hal_tests  DESTINATION bin/tests)

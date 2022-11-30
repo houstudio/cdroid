@@ -12,15 +12,8 @@ aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
-find_package(PNG REQUIRED)
-find_package(JPEG REQUIRED)
+
 find_package(JSONCPP REQUIRED)
-find_package(ZIP REQUIRED)
-find_package(Freetype2 REQUIRED)
-find_package(EXPAT REQUIRED)
-find_package(Pixman REQUIRED)
-find_package(Cairo REQUIRED)
-#find_package(unibreak REQUIRED)
 find_package(Fribidi REQUIRED)
 find_package(TurboJPEG REQUIRED)
 #find_package(PLPLOT)
@@ -81,7 +74,7 @@ configure_file(
         @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
-
+configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install (TARGETS cdroid  DESTINATION lib)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "view" EXCLUDE 

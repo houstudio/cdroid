@@ -58,11 +58,11 @@ list(APPEND CDROID_DEPLIBS
     ${UNIBREAK_LIBRARIES}
     ${EXPAT_LIBRARIES}
     ${PIXMAN_LIBRARIES}
-    -Wl,--start-group
+    #-Wl,--start-group
     ${FONTCONFIG_LIBRARIES}
     ${FREETYPE2_LIBRARIES}
     ${CAIRO_LIBRARIES}
-     -Wl,--end-group
+    # -Wl,--end-group
     ${JSONCPP_LIBRARIES}
 )
 

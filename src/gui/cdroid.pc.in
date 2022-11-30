@@ -1,13 +1,13 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-exec_prefix=@prefix@
-libdir=@CMAKE_INSTALL_LIBDIR@
-includedir=@CMAKE_INSTALL_INCLUDEDIR@
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+sharedlibdir=${prefix}/lib
+includedir=${prefix}/include
 
 Name: cdroid
-Description: Multi-platform 2D graphics library
-Version: @CDROID_VERSION@
+Description: C++ style Android UI component library
+Version: 1.0.0
 
-Requires: cairo fontconfig expat tvhal
-Libs: -L${libdir} -lcdroid
-Libs.private: @CDROID_LIBS@
-Cflags: -I${includedir}/gui -I${includedir}/porting -I${includedir}/cairo
+Requires:
+Libs: -L"${sharedlibdir}" -lcdroid @CDROID_DEPLIBS@
+Cflags: -I"${includedir}/gui" -I"${includedir}/porting" -I"@CAIRO_INCLUDE_DIRS@" -I"@FONTCONFIG_INCLUDE_DIRS@"

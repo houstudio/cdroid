@@ -6,6 +6,9 @@ find_package(PLPLOT)
 find_package(CDROID)
 find_package(Freetype)
 include_directories(
+   ${CDROID_INCLUDE_DIRS}
+   ${CAIRO_INCLUDE_DIRS}
+   ${FONTCONFIG_INCLUDE_DIRS}
    ${DEPS_DIR}/include
    ${DEPS_DIR}/include/gui
    ${DEPS_DIR}/include/porting
@@ -13,9 +16,10 @@ include_directories(
    ${DEPS_DIR}/include/epg
    ${DEPS_DIR}/include/freetype2
    ${PLPLOT_INCLUDE_DIR}
+   ${CAIRO_INCLUDE_DIRS}
    ${FREETYPE_INCLUDE_DIRS}
 )
-message("***CDROID_LIBRARIES=${CDROID_LIBRARIES}")
+
 set(CMAKE_CXX_FLAGS "-Wl,--copy-dt-needed-entries")  #prevent error adding symbols: DSO missing from command line
 link_directories(${DEPS_DIR}/lib)
 file(GLOB ExamplesFileList  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cc")

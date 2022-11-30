@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <svg-cairo.h>
+//#include <svg-cairo.h>
 #include <fstream>
 #include <gui/gui_features.h>
 #ifdef ENABLE_CAIROSVG

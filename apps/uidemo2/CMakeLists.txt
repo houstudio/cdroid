@@ -6,13 +6,9 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(CDROID REQUIRED)
 include_directories(
    ./
-   ${CDROID_INCLUDE_DIR}
-   ${DEPS_DIR}/include
-   ${DEPS_DIR}/include/gui
+   ${CDROID_INCLUDE_DIRS}
+   ${CDROID_DEPINCLUDES}
    ${DEPS_DIR}/include/porting
-   ${DEPS_DIR}/include/cairo
-   ${DEPS_DIR}/include/epg
-   ${DEPS_DIR}/include/freetype2
 )
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
@@ -31,7 +27,7 @@ add_custom_target(uidemotranslate
   )
 
 
-target_link_libraries(uidemo2 cdroid id3 tvhal)
+target_link_libraries(uidemo2 cdroid)
 
 install(TARGETS uidemo2 DESTINATION bin)
 
