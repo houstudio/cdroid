@@ -57,11 +57,6 @@ DWORD GFXInit(){
     dev.var.yoffset=0;//set first screen memory for display
     LOGI("FBIOPUT_VSCREENINFO=%d",ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var));
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev.var.xres,dev.var.yres,dev.var.accel_flags);
-#if ENABLE_RFB
-    rfbScreenInfoPtr rfbScreen = rfbGetScreen(NULL,NULL,800,600,8,3,3);
-    setupRFB(rfbScreen,"X5RFB",0);
-    dev.rfbScreen=rfbScreen;
-#endif
     return E_OK;
 }
 
@@ -113,9 +108,6 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
         memcpy(fb,fbtop,cpw);
         copied+=ngs->pitch;
     }
-#ifdef ENABLE_RFB
-    rfbMarkRectAsModified(dev.rfbScreen,rec.x,rec.y,rec.w,rec.h);
-#endif
     return E_OK;
 }
 
@@ -127,9 +119,6 @@ DWORD GFXFlip(HANDLE surface){
         dev.var.yoffset=0;
         int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
         LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
-#if ENABLE_RFB
-        rfbMarkRectAsModified(dev.rfbScreen,rect.x,rect.y,rect.w,rect.h);
-#endif
     }
     return 0;
 }
@@ -158,37 +147,9 @@ static int setfbinfo(FBSURFACE*surf){
     default:break; 
     }
     rc=ioctl(dev.fb,FBIOPUT_VSCREENINFO,v);
-#ifdef ENABLE_RFB
-    dev.rfbScreen->paddedWidthInBytes=surf->pitch;
-#endif
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }
-
-#ifdef ENABLE_RFB
-static void ResetScreenFormat(FBSURFACE*fb,int width,int height,int format){
-    rfbPixelFormat*fmt=&dev.rfbScreen->serverFormat;
-    fmt->trueColour=TRUE;
-    switch(format){
-    case GPF_ARGB:
-         fmt->bitsPerPixel=24;
-         fmt->redShift=16;//bitsPerSample*2
-         fmt->greenShift=8;
-         fmt->blueShift=0;
-         break;
-    case GPF_ABGR:
-         fmt->bitsPerPixel=32;
-         fmt->redShift=0;
-         fmt->greenShift=8;
-         fmt->blueShift=16;
-         break;
-    default:return;
-    }
-    LOGV("format=%d %dx%d:%d",format,width,height,fb->pitch);
-    rfbNewFramebuffer(dev.rfbScreen,fb->buffer,width,height,8,3,4);
-    dev.rfbScreen->paddedWidthInBytes=fb->pitch;
-}
-#endif
 
 DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
@@ -201,11 +162,6 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
         size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
         setfbinfo(surf);
         surf->buffer=(char*)mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
-#ifdef ENABLE_RFB
-        dev.rfbScreen->frameBuffer = surf->buffer;
-	surf->pitch=dev.fix.line_length;
-        ResetScreenFormat(surf,width,height,format);
-#endif
     }else{
         surf->buffer=(char*)malloc(width*surf->pitch);
     }
@@ -246,9 +202,6 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
         pbs+=nsrc->pitch;
         pbd+=ndst->pitch;
     }
-#ifdef ENABLE_RFB
-    if(ndst->ishw)rfbMarkRectAsModified(dev.rfbScreen,dx,dy,dx+rs.w,dy+rs.h);
-#endif
     return 0;
 }
 
