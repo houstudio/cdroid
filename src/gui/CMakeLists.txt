@@ -16,16 +16,14 @@ aux_source_directory(animation SRCS_ANIMATION)
 find_package(JSONCPP REQUIRED)
 find_package(Fribidi REQUIRED)
 find_package(TurboJPEG REQUIRED)
-#find_package(PLPLOT)
 include_directories(
     ./ ./private 
     ./core 
     ./view 
     ./cairomm 
-    ./core/svg ./luabinding 
+    ./core/svg 
     ${CMAKE_BINARY_DIR}/include
     ${CDROID_DEPINCLUDES}
-    ${PLPLOT_INCLUDE_DIR}
     ${CMAKE_BINARY_DIR}/include/gui
     ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_BINARY_DIR}/include/pinyin

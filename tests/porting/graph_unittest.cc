@@ -192,16 +192,19 @@ TEST_F(GRAPH,Alpha){
 TEST_F(GRAPH,Colors){
     HANDLE surface=0;
     UINT width,height;
-    GFXRect r={100,200,200,200};
+    GFXRect r={0,0,0,0};
     ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
     ASSERT_EQ(0,GFXCreateSurface(&surface,width,height,GPF_ARGB,1));
+    r.w=width/2;r.h=height/2;
     GFXFillRect(surface,&r,0xFFFF0000);
 
-    r.x+=200;
+    r.x+=width/2;
     GFXFillRect(surface,&r,0xFF00FF00);
 
-    r.x+=200;
+    r.y+=height/2;
     GFXFillRect(surface,&r,0xFF0000FF);
+    r.x=0;
+    GFXFillRect(surface,&r,0xFFFFFFFF);
     sleep(2); 
     ASSERT_EQ(0,GFXDestroySurface(surface));
 }
@@ -268,7 +271,7 @@ TEST_F(GRAPH,FillRect){
     GFXFlip(surface);
     ASSERT_EQ(0,GFXDestroySurface(surface));
 }
-#define TEST_TIMES 2000
+#define TEST_TIMES 400
 TEST_F(GRAPH,Benchmark_Fill){
    HANDLE surface=0;
    UINT width,height,pitch;

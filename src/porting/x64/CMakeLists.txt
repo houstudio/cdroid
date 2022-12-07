@@ -1,6 +1,7 @@
 project (x86 C CXX)
 
 set(X64_SRCS 
+     ../common/cdlog.cc
      ngl_panel.c
      ngl_mediaplayer.c
      input_linux.cc
@@ -89,7 +90,7 @@ list(APPEND X64LIBS pthread)
 find_package(ZLIB)
 message("ZLIB_INCLUDE=${ZLIB_INCLUDE_DIR} X64LIBS=${X64LIBS}" CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR})
 include_directories(./
-    ../include
+    ../common ../include
     ${DRM_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
@@ -98,7 +99,6 @@ include_directories(./
     ${ZLIB_INCLUDE_DIR}
 )
 
-add_library(x64 STATIC ${X64_SRCS} )
-target_link_libraries(x64 PRIVATE ${X64LIBS})
-#message(FATAL_ERROR "PC_DRM=${DRM_INCLUDE_DIR}-${DRM_LIBRARY} X64LIBS=${X64LIBS}")
-
+add_library(tvhal SHARED ${X64_SRCS} )
+target_link_libraries(tvhal PRIVATE ${X64LIBS})
+install (TARGETS tvhal  DESTINATION lib)

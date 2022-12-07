@@ -158,15 +158,16 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     surf->format=format;
     surf->ishw=hwsurface;
     surf->pitch=width*4;
+    const size_t screen_size=width*surf->pitch;
     if(hwsurface){
         size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
         setfbinfo(surf);
         surf->buffer=(char*)mmap( NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0 );
     }else{
-        surf->buffer=(char*)malloc(width*surf->pitch);
+        surf->buffer=(char*)malloc(screen_size);
     }
     surf->ishw=hwsurface;
-    LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
+    LOGI("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
 }

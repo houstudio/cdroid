@@ -96,13 +96,14 @@ void GraphDevice::trackFPS() {
             std::string fpsText = std::to_string(fps);
             Cairo::Context::Operator oop = mBannerContext->get_operator();
             mBannerContext->set_operator(Cairo::Context::Operator::SOURCE);
-            mBannerContext->set_source_rgba(0,0,0,.5);
+            mBannerContext->set_source_rgb(.02,.02,.02);
             mBannerContext->rectangle(0,0,mRectBanner.width,mRectBanner.height);
             mBannerContext->fill();
             mBannerContext->set_operator(oop);
             mBannerContext->set_source_rgb(1,1,1);
             mBannerContext->set_font_size(22);
             mBannerContext->draw_text(mRectBanner,fpsText,DT_CENTER|DT_VCENTER);
+	    LOGD("fps=%f",fps);
         }
     }
 }
@@ -223,8 +224,10 @@ void GraphDevice::composeSurfaces(){
         LOGD("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
-    if(mPrimarySurface){
-        //GFXBlit(mPrimarySurface,mScreenWidth-mRectBanner.width,mScreenHeight-mRectBanner.height,mBannerSurface,nullptr);
+    if(mPrimaryContext&&mBannerContext){
+	mPrimaryContext->set_source(mBannerContext->get_target(),0,0);
+	mPrimaryContext->rectangle(0,0,400,40);//mRectBanner.left,mRectBanner.top,mRectBanner.width,mRectBanner.height);
+	mPrimaryContext->fill();
     }
     GFXFlip(mPrimarySurface); 
     t2=SystemClock::uptimeMillis();

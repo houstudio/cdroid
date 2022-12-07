@@ -8,11 +8,9 @@
 #include <sys/stat.h>
 #include <core/layout.h>
 #include <dirent.h>
-//#include <svg-cairo.h>
 #include <fstream>
 #include <cdlog.h>
 #include <core/textutils.h>
-#include <fribidi.h>
 using namespace Cairo;
 using namespace cdroid;
 #define SLEEP(x) usleep((x)*1000)
