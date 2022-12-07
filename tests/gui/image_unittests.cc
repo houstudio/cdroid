@@ -70,7 +70,8 @@ public :
            size_t pt=path.rfind('.');
            if(pt!= std::string::npos){
               std::string ext=path.substr(pt+1);
-              if(filter.empty()||filter.compare(ext))images.push_back(path);
+	      pt=path.find(filter);
+              if(filter.empty()||pt!= std::string::npos)images.push_back(path);
            }
            return ;
        }
@@ -109,6 +110,7 @@ TEST_F(IMAGE,Bitmap){
 }
 TEST_F(IMAGE,Image_PNG){
     loadImages("./","png");
+    printf("%d image loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
         std::ifstream fs(images[i].c_str());
@@ -118,7 +120,10 @@ TEST_F(IMAGE,Image_PNG){
         ctx->rectangle(rect);
         ctx->fill();
         tmstart();
-        ctx->draw_image(img,rect,nullptr);
+        if(img){
+	   ctx->draw_image(img,rect,nullptr);
+	}
+	printf("image %s =%p size=%dx%d\r\n",images[i].c_str(),img.get(),(img?img->get_width():0),(img?img->get_height():0));
         tmend("drawimage");
         postCompose();
     }
@@ -128,15 +133,17 @@ TEST_F(IMAGE,Image_PNG){
 
 TEST_F(IMAGE,Image_JPG){
     loadImages("./","jpg");
+    printf("%d img loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
         std::ifstream fs(images[i].c_str());
-        RefPtr<ImageSurface>imgj=ImageSurface::create_from_stream(fs);
+        RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
         tmend("decodejpg");
         RECT rect={0,0,800,600};
         ctx->rectangle(rect);ctx->fill();
         tmstart();
-        ctx->draw_image(imgj,rect,nullptr);
+	printf("image %s =%p\r\n",images[i].c_str(),img.get());
+        if(img)ctx->draw_image(img,rect,nullptr);
         tmend("drawimage");
         postCompose();
         SLEEP(1000);

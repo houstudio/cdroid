@@ -19,7 +19,7 @@ include_directories(
 link_directories(${DEPS_DIR}/lib)
 add_executable(gui_test ${SRCS_GUI_TESTS})
 
-target_link_libraries(gui_test PRIVATE ${CDROID_DEPLIBS} ${CDROID_LIBRARIES} ${GTEST_LIBRARIES} tvhal)
+target_link_libraries(gui_test PRIVATE ${CDROID_DEPLIBS} ${GTEST_LIBRARIES} cdroid tvhal)
 
 install(TARGETS gui_test DESTINATION bin/tests)
 

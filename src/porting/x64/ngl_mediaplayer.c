@@ -1,6 +1,6 @@
 
 #include <cdtypes.h>
-#include <ngl_mediaplayer.h>
+#include <cdplayer.h>
 #include <cdlog.h>
 #include <ngl_os.h>
 #include <stdlib.h>

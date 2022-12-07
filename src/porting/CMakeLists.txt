@@ -16,20 +16,16 @@ add_subdirectory(${CDROID_CHIPSET})
 link_directories(${CMAKE_SOURCE_DIR}/deps/lib)
 
 add_library(tvhal SHARED ${SRCS_COMMON} )
-add_library(tvhal_static STATIC ${SRCS_COMMON} )
 
-target_link_libraries(tvhal PUBLIC ${CDROID_CHIPSET})
-target_link_libraries(tvhal_static PUBLIC ${CDROID_CHIPSET})
-set_target_properties(tvhal_static PROPERTIES OUTPUT_NAME "tvhal")
+target_link_libraries(tvhal PUBLIC ${CDROID_CHIPSET} PRIVATE)
 file(GLOB HAL_HEADERS  ${PROJECT_SOURCE_DIR}/include/*.h)
 
 file(GLOB KEYCMAPS   ${PROJECT_SOURCE_DIR}/${CDROID_CHIPSET}/*.kcm)
 if( NOT(${CDROID_CHIPSET} MATCHES "x86") )
-    file(GLOB KEYMAP   ${PROJECT_SOURCE_DIR}/${CDROID_CHIPSET}/*.kl)
+    file(GLOB KEYMAP ${PROJECT_SOURCE_DIR}/${CDROID_CHIPSET}/*.kl)
 endif()
 
 install (TARGETS tvhal  DESTINATION lib)
-install (TARGETS tvhal_static  DESTINATION lib)
 install (FILES ${HAL_HEADERS} DESTINATION include/porting/)
 
 file(COPY ${HAL_HEADERS} common/shared_queue.h  DESTINATION ${CMAKE_BINARY_DIR}/include/porting)

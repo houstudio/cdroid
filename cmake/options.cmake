@@ -6,11 +6,8 @@ option(BUILD_CDROID_TESTS "Build unit tests" ON)
 option(ENABLE_GIF "enable gif encode and decoder" OFF)
 option(ENABLE_CAIROSVG "enable svg decoder" OFF)
 option(ENABLE_MBEDTLS "enable mbedtls" ON)
-option(ENABLE_UPNP "enable upnp/dlna" OFF)
-option(ENABLE_GESTURE "enable gestrure" OFF)
 option(ENABLE_PLPLOT "Enable PLPLot" OFF)
 option(ENABLE_DTV "DTV modules support" OFF)
-option(WITH_JPEG8 "Emulate libjpeg v8 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)" ON)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" OFF)
@@ -25,11 +22,6 @@ endif()
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 
-if(ENABLE_TURBOJPEG)
-   find_package(TurboJPEG REQUIRED)
-   list(APPEND CDROID_DEPLIBS ${TURBOJPEG_LIBRARIES})
-endif(ENABLE_TURBOJPEG)
-
 find_package(ZLIB REQUIRED)
 find_package(JSONCPP REQUIRED)
 find_package(ZIP REQUIRED)
@@ -43,28 +35,31 @@ find_package(Brotli REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(UniBreak REQUIRED)
 
+
+list(APPEND CDROID_DEPLIBS 
+    ${PNG_LIBRARIES}
+    ${JPEG_LIBRARIES}
+    ${PIXMAN_LIBRARIES}
+    ${FONTCONFIG_LIBRARIES}
+    ${FREETYPE2_LIBRARIES}
+    ${CAIRO_LIBRARIES}
+    ${ZIP_LIBRARIES}
+    ${UNIBREAK_LIBRARIES}
+    ${EXPAT_LIBRARIES}
+    ${JSONCPP_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+    ${BROTLIDEC_LIBRARIES}
+    ${BZIP2_LIBRARIES}
+)
+#string(REPLACE ";" "  " CDROID_DEPLIBS ${CDROID_DEPLIBS})
 if(ENABLE_FRIBIDI)
   find_package(Fribidi REQUIRED)
   list(APPEND CDROID_DEPLIBS ${FRIBIDI_LIBRARIES})
 endif(ENABLE_FRIBIDI)
-
-list(APPEND CDROID_DEPLIBS 
-    ${ZLIB_LIBRARIES}
-    ${BROTLIDEC_LIBRARIES}
-    ${BZIP2_LIBRARIES}
-    ${PNG_LIBRARIES}
-    ${JPEG_LIBRARIES}
-    ${ZIP_LIBRARIES}
-    ${UNIBREAK_LIBRARIES}
-    ${EXPAT_LIBRARIES}
-    ${PIXMAN_LIBRARIES}
-    #-Wl,--start-group
-    ${FONTCONFIG_LIBRARIES}
-    ${FREETYPE2_LIBRARIES}
-    ${CAIRO_LIBRARIES}
-    # -Wl,--end-group
-    ${JSONCPP_LIBRARIES}
-)
+if(ENABLE_TURBOJPEG)
+   find_package(TurboJPEG REQUIRED)
+   list(APPEND CDROID_DEPLIBS ${TURBOJPEG_LIBRARIES})
+endif(ENABLE_TURBOJPEG)
 
 list(APPEND CDROID_DEPINCLUDES
     ${PNG_INCLUDE_DIRS}
@@ -79,7 +74,7 @@ list(APPEND CDROID_DEPINCLUDES
     ${FRIBIDI_INCLUDE_DIRS}
     ${TURBOJPEG_INCLUDE_DIRS}
 )
-#message("BROTLI_LIBRARIES
+message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 if(OPENSSL_FOUND)
     list(APPEND CDROID_DEPINCLUDES ${OPENSSL_INCLUDE_DIRS})
     list(APPEND CDROID_DEPLIBS ${OPENSSL_LIBRARIES})

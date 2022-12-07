@@ -46,14 +46,8 @@ set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS}
     ${SRCS_APP} ${SRCS_DIALOG} 
     ${SRCS_ANIMATION} widget/R.h)
 
-message("FONTCONFIG_LIBRARIES=${FONTCONFIG_LIBRARIES} CDROID_LIBS=${CDROID_LIBS}")
-
-add_library(cdroid_objs OBJECT ${SOURCES_GUI})
-add_library(cdroid_static STATIC $<TARGET_OBJECTS:cdroid_objs>)
-add_library(cdroid SHARED $<TARGET_OBJECTS:cdroid_objs>)
+add_library(cdroid SHARED ${SOURCES_GUI})
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
-
-set_target_properties(cdroid_static PROPERTIES OUTPUT_NAME "cdroid")
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
 list(REMOVE_ITEM allfiles "private/*.h")
@@ -67,13 +61,15 @@ foreach( each_file ${allfiles} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
-target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal )
+ADD_WHOLE_ARCHIVE_TO_LIBRARIES(CDROID_DEPLIBS)
+target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
+
 configure_file(
         "cdroid.pc.in"
         "cdroid.pc"
         @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+	DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install (TARGETS cdroid  DESTINATION lib)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"

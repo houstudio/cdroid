@@ -46,8 +46,8 @@ GraphDevice::GraphDevice(int fmt){
     mPrimaryContext = new Canvas(surf);
 
     mRectBanner.set(0,0,400,40);
-    mBannerContext = new Canvas(mRectBanner.width,mRectBanner.height);
-    mBannerSurface = mBannerContext->mHandle;
+    RefPtr<Surface>bannerSurf=ImageSurface::create(Surface::Format::ARGB32,400,40);
+    mBannerContext = new Canvas(bannerSurf);
     
     mLastComposeTime = SystemClock::uptimeMillis();
 
@@ -223,8 +223,8 @@ void GraphDevice::composeSurfaces(){
         LOGD("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
-    if(mPrimarySurface&&mBannerSurface){
-        GFXBlit(mPrimarySurface,mScreenWidth-mRectBanner.width,mScreenHeight-mRectBanner.height,mBannerSurface,nullptr);
+    if(mPrimarySurface){
+        //GFXBlit(mPrimarySurface,mScreenWidth-mRectBanner.width,mScreenHeight-mRectBanner.height,mBannerSurface,nullptr);
     }
     GFXFlip(mPrimarySurface); 
     t2=SystemClock::uptimeMillis();

@@ -23,7 +23,6 @@ private:
     std::mutex mMutex;
     std::condition_variable mCV;
     HANDLE mPrimarySurface;
-    HANDLE mBannerSurface;
     class Canvas*mPrimaryContext;
     Canvas *mBannerContext;
     Cairo::RefPtr<Cairo::Region>mInvalidateRgn;
