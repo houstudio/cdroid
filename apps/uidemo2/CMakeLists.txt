@@ -26,7 +26,6 @@ add_custom_target(uidemotranslate
   COMMENT "Translate strings resource..."
   )
 
-
 target_link_libraries(uidemo2 cdroid)
 
 install(TARGETS uidemo2 DESTINATION bin)

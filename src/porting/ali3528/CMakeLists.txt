@@ -29,8 +29,6 @@ include_directories(./
     ../include
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${CMAKE_BINARY_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver
-    ${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver
     ${CMAKE_SOURCE_DIR}/deps/include
     ${TOOLCHAIN_DIR}/target/mipsel-buildroot-linux-gnu/sysroot/usr/include/directfb
     ${TOOLCHAIN_DIR}/host/usr/mipsel-buildroot-linux-gnu/sysroot/usr/include/directfb

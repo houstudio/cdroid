@@ -29,11 +29,6 @@ include_directories(
     ${CMAKE_BINARY_DIR}/include/pinyin
     ${LIBUNIBREAK_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
-    ${CMAKE_BINARY_DIR}/include/fribidi
-    ${CMAKE_SOURCE_DIR}/src/modules/vold
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/src
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/include
 )
 
 add_definitions(--include cdtypes.h)

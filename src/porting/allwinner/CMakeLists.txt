@@ -46,8 +46,6 @@ include_directories(./
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${CMAKE_BINARY_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver
-    ${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver
     ${CMAKE_SOURCE_DIR}/deps/include
     ${CMAKE_SOURCE_DIR}/deps/include/gui #for eventcodes.h
 )

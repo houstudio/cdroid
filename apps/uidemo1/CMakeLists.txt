@@ -28,7 +28,7 @@ add_custom_target(uidemo1translate
   )
 
 message("CDROID_LIBRARIES=${CDROID_LIBRARIES} CDROID_INCLUDE_DIRS=${CDROID_INCLUDE_DIRS}")
-target_link_libraries(uidemo1 PRIVATE ${CDROID_LIBRARIES})#${CDROID_DEPLIBS})
+target_link_libraries(uidemo1 PRIVATE ${CDROID_LIBRARIES})
 
 install(TARGETS uidemo1 DESTINATION bin)
 
