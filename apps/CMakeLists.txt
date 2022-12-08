@@ -1,4 +1,5 @@
-
-add_subdirectory(samples)
-add_subdirectory(uidemo1)
-add_subdirectory(uidemo2)
+if(TRUE OR BUILD_EXAMPLES)
+    add_subdirectory(samples)
+    add_subdirectory(uidemo1)
+    add_subdirectory(uidemo2)
+endif(BUILD_EXAMPLES)

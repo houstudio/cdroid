@@ -183,6 +183,8 @@ static int setfbinfo(FBSURFACE*surf){
 #define ALIGN(x,y) ((x&~(y))|y)
 DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+    static int created=0;
+    char name[128];
     surf->width=width;
     surf->height=height;
     surf->format=format;
@@ -190,23 +192,16 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     surf->pitch=width*4;
     surf->kbuffer=NULL;
     surf->msize=(surf->pitch*height);//sizeof dword
-    if(hwsurface){
-        MI_S32 ret=0;
-        size_t mem_len=((dev.fix.smem_start) -((dev.fix.smem_start) & ~(getpagesize() - 1)));
-        setfbinfo(surf);
-	MI_PHY phaddr =dev.fix.smem_start;
-	surf->kbuffer=(char*)phaddr;
-        surf->buffer=mmap(NULL,dev.fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev.fb, 0);
-	MI_SYS_MemsetPa(phaddr,0xFFFFFFFF,surf->msize);
-    }else{
-        MI_PHY phaddr=0;
-	MI_S32 ret=ret=MI_SYS_MMA_Alloc(NULL,surf->msize,&phaddr);
-	if(ret==0){
-	    surf->kbuffer=(char*)phaddr;
-            MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
-	    MI_SYS_MemsetPa(phaddr,0xFFFF,surf->msize);
-	}
+    sprintf(name,"#mmap_name%d",created++);
+
+    MI_PHY phaddr;
+    MI_S32 ret=MI_SYS_MMA_Alloc(name,surf->msize,&phaddr);
+    if(ret==0){
+        surf->kbuffer=(char*)phaddr;
+        MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
+        MI_SYS_MemsetPa(phaddr,0xFFFFFFFF,surf->msize);
     }
+    if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
     LOGI("surface=%x buf=%p/%p size=%dx%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,hwsurface);
     *surface=surf;

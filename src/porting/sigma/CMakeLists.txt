@@ -32,15 +32,13 @@ link_directories(${PROJECT_SOURCE_DIR}/libs)
 list(APPEND SIGMA_LIBS pthread 
 	-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx)
 	#mi_common mi_sys mi_gfx)
-find_package(ZLIB)
 include_directories(./
     ../common ./inc ../include
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
-    ${ZLIB_INCLUDE_DIR}
-    ${CMAKE_BINARY_DIR}/include
 )
-message("PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 add_library(tvhal SHARED ${SIGMA_SRCS} )
 target_link_libraries(tvhal ${SIGMA_LIBS})
+file(GLOB MILIBS ${PROJECT_SOURCE_DIR}/libs/*)
 install (TARGETS tvhal  DESTINATION lib)
+install (FILES ${MILIBS} DESTINATION lib)
