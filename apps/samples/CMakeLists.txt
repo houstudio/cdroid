@@ -26,13 +26,12 @@ file(GLOB ExamplesFileList  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cc")
 add_custom_target(build_app_examples COMMENT A target that requires all the examples.)
 
 if(NOT ENABLE_PLPLOT)
-list(REMOVE_ITEM ExamplesFileList plot.cc)
+   list(REMOVE_ITEM ExamplesFileList plot.cc)
 endif()
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 foreach(Example ${ExamplesFileList})
   message(STATUS "\tCreating build rule for ${Example}")
-  # Get the name without extension or directory
   get_filename_component(ExampleName ${Example} NAME_WE)
   # Define example executable
   add_executable(${ExampleName} ${Example})

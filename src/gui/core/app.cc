@@ -157,7 +157,7 @@ void App::removeEventHandler(const EventHandler*handler){
 }
 
 int App::exec(){
-    while(!mQuitFlag)Looper::getDefault()->pollAll(5);
+    while(!mQuitFlag)Looper::getDefault()->pollAll(1);
     return mExitCode;
 }
 

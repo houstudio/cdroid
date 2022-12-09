@@ -88,7 +88,6 @@ endif()
 
 list(APPEND X64LIBS pthread)
 find_package(ZLIB)
-message("ZLIB_INCLUDE=${ZLIB_INCLUDE_DIR} X64LIBS=${X64LIBS}" CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR})
 include_directories(./
     ../common ../include
     ${DRM_INCLUDE_DIR}
