@@ -8,8 +8,13 @@ include_directories(
    ./
    ${CDROID_INCLUDE_DIRS}
    ${CDROID_DEPINCLUDES}
+   ${DEPS_DIR}/include
+   ${DEPS_DIR}/include/gui
    ${DEPS_DIR}/include/porting
+   ${DEPS_DIR}/include/cairo
    ${DEPS_DIR}/include/epg
+   ${DEPS_DIR}/include/freetype2
+   
 )
 aux_source_directory(./ DEMO_SRCS)
 add_definitions(--include cdtypes.h)
@@ -28,7 +33,7 @@ add_custom_target(uidemo1translate
   )
 
 message("CDROID_LIBRARIES=${CDROID_LIBRARIES} CDROID_INCLUDE_DIRS=${CDROID_INCLUDE_DIRS}")
-target_link_libraries(uidemo1 PRIVATE ${CDROID_LIBRARIES})
+target_link_libraries(uidemo1 PRIVATE cdroid)
 
 install(TARGETS uidemo1 DESTINATION bin)
 

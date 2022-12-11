@@ -8,8 +8,13 @@ include_directories(
    ./
    ${CDROID_INCLUDE_DIRS}
    ${CDROID_DEPINCLUDES}
+   ${DEPS_DIR}/include
+   ${DEPS_DIR}/include/gui
    ${DEPS_DIR}/include/porting
-)
+   ${DEPS_DIR}/include/cairo
+   ${DEPS_DIR}/include/epg
+   ${DEPS_DIR}/include/freetype2
+  )
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 aux_source_directory(./ DEMO_SRCS)

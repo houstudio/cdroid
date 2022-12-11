@@ -1,4 +1,4 @@
-if(TRUE OR BUILD_EXAMPLES)
+if(BUILD_EXAMPLES)
     add_subdirectory(samples)
     add_subdirectory(uidemo1)
     add_subdirectory(uidemo2)
