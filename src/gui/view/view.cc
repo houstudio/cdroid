@@ -1458,6 +1458,7 @@ Parcelable View::onSaveInstanceState(){
     }
     return BaseSavedState.EMPTY_STATE;
 #endif
+    return Parcelable();
 }
 
 void View::restoreHierarchyState(std::map<int,Parcelable>& container){

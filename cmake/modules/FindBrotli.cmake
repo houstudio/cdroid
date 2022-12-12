@@ -1,5 +1,5 @@
 find_package(PkgConfig)
-pkg_check_modules(PC_BROTLIDEC libbrotlidec)
+pkg_check_modules(PC_BROTLIDEC libbrotlicommon)
 
 find_path(BROTLIDEC_INCLUDE_DIRS
     NAMES brotli/decode.h
@@ -8,28 +8,29 @@ find_path(BROTLIDEC_INCLUDE_DIRS
 )
 
 find_library(BROTLIDEC_LIBRARIES
-    NAMES brotlidec
+    NAMES brotlidec brotlidec-static
     HINTS ${PC_BROTLIDEC_LIBDIR}
     ${PC_BROTLIDEC_LIBRARY_DIRS}
 )
 
-find_path(BROTLIDENC_INCLUDE_DIRS
+find_path(BROTLIENC_INCLUDE_DIRS
     NAMES brotli/encode.h
     HINTS ${PC_BROTLIDEC_INCLUDEDIR}
     ${PC_BROTLIDEC_INCLUDE_DIRS}
 )
 
 find_library(BROTLIENC_LIBRARIES
-    NAMES brotlienc
+    NAMES brotlienc brotlienc-static
     HINTS ${PC_BROTLIDEC_LIBDIR}
     ${PC_BROTLIDEC_LIBRARY_DIRS}
 )
 find_library(BROTLICOMMON_LIBRARIES
-    NAMES brotlicommon
+    NAMES brotlicommon brotlicommon-static
     HINTS ${PC_BROTLIDEC_LIBDIR}
     ${PC_BROTLIDEC_LIBRARY_DIRS}
 )
 include(FindPackageHandleStandardArgs)
+
 if(BROTLIDEC_INCLUDE_DIRS AND BROTLIDEC_LIBRARIES)
    set(BROTLIDEC_FOUND TRUE)
    set(BROTLIDEC_LIBRARIES ${BROTLIDEC_LIBRARIES} ${BROTLICOMMON_LIBRARIES})
