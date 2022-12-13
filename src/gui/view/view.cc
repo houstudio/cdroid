@@ -163,8 +163,10 @@ View::View(int w,int h){
     mLeft = mTop =0;
 
     setBackgroundColor(0xFF000000);
+#ifdef ENABLE_ROUNDSCROLLBAR    
     if(ViewConfiguration::isScreenRound())
        mRoundScrollbarRenderer=new RoundScrollbarRenderer(this);
+#endif    
 }
 
 View::View(Context*ctx,const AttributeSet&attrs){
@@ -340,7 +342,6 @@ void View::initView(){
     mOverlay  = nullptr;
     mAnimator = nullptr;
     mStateListAnimator = nullptr;
-
     mPerformClick = nullptr;
     mPendingCheckForTap = nullptr;
     mUnsetPressedState = nullptr;;
@@ -414,7 +415,9 @@ View::~View(){
     delete mBackgroundTint;
     if(mLayoutParams)
         delete mLayoutParams;
+#ifdef ENABLE_ROUNDSCROLLBAR    
     delete mRoundScrollbarRenderer;
+#endif    
     delete mCurrentAnimation;
     delete mTransformationInfo;
     delete mOverlay;
@@ -2249,6 +2252,7 @@ void View::onDrawScrollBars(Canvas& canvas){
     
     // Fork out the scroll bar drawing for round wearable devices.
     if (mRoundScrollbarRenderer != nullptr) {
+#ifdef ENABLE_ROUNDSCROLLBAR	    
         if (drawVerticalScrollBar) {
             Rect& bounds = mScrollCache->mScrollBarBounds;
             getVerticalScrollBarBounds(&bounds, nullptr);
@@ -2256,6 +2260,7 @@ void View::onDrawScrollBars(Canvas& canvas){
                 canvas, (float)mScrollCache->scrollBar->getAlpha() / 255.f, bounds);
             if (bInvalidate) invalidate(true);
         }
+#endif	
         // Do not draw horizontal scroll bars for round wearable devices.
     } else if ( drawVerticalScrollBar || drawHorizontalScrollBar) {
         Rect& bounds = mScrollCache->mScrollBarBounds;
@@ -3496,9 +3501,7 @@ bool View::verifyDrawable(Drawable*who)const{
 
 void View::jumpDrawablesToCurrentState(){
     if (mBackground) mBackground->jumpToCurrentState();
-
     if (mStateListAnimator) mStateListAnimator->jumpToCurrentState();
-
     if (mDefaultFocusHighlight)mDefaultFocusHighlight->jumpToCurrentState();
 
     if (mForegroundInfo  && mForegroundInfo->mDrawable )mForegroundInfo->mDrawable->jumpToCurrentState();
@@ -3550,9 +3553,7 @@ void View::drawableStateChanged(){
             changed |= d->setState(state) && mScrollCache->state!=ScrollabilityCache::OFF;
         } 
     }
-
     if (mStateListAnimator) mStateListAnimator->setState(state);
-
     if(changed)   invalidate(true);
 }
 
@@ -5246,8 +5247,10 @@ void View::layout(int l, int t, int w, int h){
     if(changed|| ((mPrivateFlags & PFLAG_LAYOUT_REQUIRED) == PFLAG_LAYOUT_REQUIRED)){
         onLayout(changed, l, t, w, h);
         if (shouldDrawRoundScrollbar()) {
+#ifdef ENABLE_ROUNDSCROLLBAR		
             if(mRoundScrollbarRenderer == nullptr)
                 mRoundScrollbarRenderer = new RoundScrollbarRenderer(this);
+#endif	    
         } else {
             mRoundScrollbarRenderer = nullptr;
         }

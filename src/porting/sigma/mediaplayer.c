@@ -1,12 +1,12 @@
 
 #include <cdtypes.h>
-#include <ngl_mediaplayer.h>
+#include <cdplayer.h>
 #include <cdlog.h>
 #include <ngl_os.h>
 #include <stdlib.h>
 #include <string.h>
+#include <interface.h>
 
-NGL_MODULE(NGLMP);
 
 typedef struct{
    void*hplayer;
@@ -14,47 +14,58 @@ typedef struct{
    void*userdata;
 }NGL_PLAYER;
 
-HANDLE nglMPOpen(const char*fname){
+HANDLE MPOpen(const char*fname){
     NGL_PLAYER *mp=(NGL_PLAYER*)malloc(sizeof(NGL_PLAYER));
     memset(mp,0,sizeof(NGL_PLAYER));
     char*p=strchr(fname,':');
+    mm_player_open(fname,0,0,0,0);// uint16_t x, uint16_t y, uint16_t width, uint16_t height)
     return mp;
 }
 
-DWORD nglMPPlay(HANDLE handle){
+DWORD MPPlay(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     return E_OK;
 }
 
-DWORD nglMPStop(HANDLE handle){
+DWORD MPStop(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     return E_OK;
 }
 
 DWORD nglMPResume(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
+    mm_player_resume();
     return E_OK;
 }
 
-DWORD nglMPPause(HANDLE handle){
+DWORD MPPause(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
+    mm_player_pause();
     return E_OK;
 }
 
-DWORD nglMPClose(HANDLE handle){
+DWORD MPClose(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
+    mm_player_close();
     return E_OK;
 }
 
-DWORD nglMPGetTime(HANDLE handle,UINT*curtime,UINT*timems){
+DWORD MPGetPosition(HANDLE handle,double*pos){
+    mm_player_getposition(pos);
     return E_OK;
 }
-DWORD nglMPSeek(HANDLE handle,UINT timems){
+
+DWORD MPGetDuration(HANDLE handle,double*dur){
+    mm_player_getduration(dur);
+}
+
+DWORD MPSeek(HANDLE handle,double pos){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     //mpg_cmd_set_speed
+    mm_player_seek2time(pos);
 }
 
-DWORD nglSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){
+DWORD SetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     mp->cbk=cbk;
     mp->userdata=userdata;

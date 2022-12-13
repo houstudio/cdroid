@@ -35,7 +35,6 @@ include_directories(
    ${DEPS_DIR}/include/pixman
 )
 
-message("HAL_EXTRA_LIBS=${HAL_EXTRA_LIBS}")
 link_directories(${DEPS_DIR}/lib)
 
 add_executable(hal_tests ${SRCS_HAL}) 

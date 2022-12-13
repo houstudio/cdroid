@@ -1051,7 +1051,6 @@ public:
     void  setRotationY(float);
     StateListAnimator* getStateListAnimator()const;
     void setStateListAnimator(StateListAnimator*);
-
     LayoutParams*getLayoutParams();
     int getRawLayoutDirection()const;
     bool isLayoutDirectionInherited()const;
