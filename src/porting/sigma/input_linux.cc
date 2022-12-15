@@ -136,6 +136,7 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout){
     return count;
 }
 
+#define ROTATE90 1
 INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
     int rc,count=0;
     struct timeval tv;
@@ -161,14 +162,24 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
            clock_gettime(CLOCK_MONOTONIC,&ts);
            rc=read(dev.fds[i],events, sizeof(events)/sizeof(struct input_event));
            for(int j=0;j<rc/sizeof(struct input_event)&&(count<max);j++,e++,count++){
-               e->tv_sec =events[j].time.tv_sec;
-               e->tv_usec=events[j].time.tv_usec;
+               e->tv_sec =ts.tv_sec;//events[j].time.tv_sec;
+               e->tv_usec=ts.tv_nsec/10000+j*100;//events[j].time.tv_usec;
                e->type = events[j].type;
                e->code = events[j].code;
                e->value= events[j].value;
                e->device=dev.fds[i];
-               LOGV_IF(e->type<EV_SW,"fd:%d [%s]%x,%x,%x ",dev.fds[i],
-                  type2name[e->type],e->type,e->code,e->value);
+#ifdef ROTATE90
+	       if(e->type==EV_ABS){
+                   if((e->code==0)||(e->code==53)){
+		       e->code++;
+		       e->value=600-e->value;
+	           }else if((e->code==54)||(e->code==1)){
+		       e->code--;
+	           }
+	       }
+#endif	  
+               LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%ld",dev.fds[i],
+                  type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec);
            }
         }else{//for pipe
            rc=read(dev.fds[i],e, (max-count)*sizeof(INPUTEVENT));

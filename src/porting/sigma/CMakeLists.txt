@@ -1,7 +1,8 @@
 project (sigma C CXX)
 
 set(SIGMA_SRCS ../common/cdlog.cc 
-	mediaplayer.c input_linux.cc  )
+	#mediaplayer.c 
+	input_linux.cc  )
 
 include(CheckIncludeFile)
 check_include_file(poll.h HAVE_POLL_H)
@@ -31,8 +32,8 @@ endif()
 link_directories(${PROJECT_SOURCE_DIR}/libs)
 list(APPEND SIGMA_LIBS pthread 
 	-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx 
-	-lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel
-	-lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
+	)#-lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel
+        #-lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
 	#mi_common mi_sys mi_gfx)
 include_directories(./
     ../common ./inc ../include

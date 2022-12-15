@@ -63,11 +63,16 @@ DWORD GFXInit(){
     LOGI("fb solution=%dx%d accel_flags=0x%x",dev.var.xres,dev.var.yres,dev.var.accel_flags);
     return E_OK;
 }
-
+#define ROTATE_90 1
 DWORD GFXGetScreenSize(UINT*width,UINT*height){
     LOGI_IF(width==NULL||height==NULL,"Params Error");
+#ifndef ROTATE_90    
     *width=dev.var.xres;
     *height=dev.var.yres;
+#else
+    *width=dev.var.yres;
+    *height=dev.var.xres;
+#endif    
     LOGI("screensize=%dx%d",*width,*height);
     return E_OK;
 }
@@ -183,8 +188,6 @@ static int setfbinfo(FBSURFACE*surf){
 #define ALIGN(x,y) ((x&~(y))|y)
 DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
-    static int created=0;
-    char name[128];
     surf->width=width;
     surf->height=height;
     surf->format=format;
@@ -192,10 +195,24 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     surf->pitch=width*4;
     surf->kbuffer=NULL;
     surf->msize=(surf->pitch*height);//sizeof dword
-    sprintf(name,"#mmap_name%d",created++);
 
-    MI_PHY phaddr;
-    MI_S32 ret=MI_SYS_MMA_Alloc(name,surf->msize,&phaddr);
+    MI_PHY phaddr=dev.fix.smem_start;
+    MI_S32 ret=0;
+    if(!hwsurface){
+	int i=0;
+	ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
+	while((i++<3)&&(phaddr==dev.fix.smem_start)){
+	    ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
+	    LOGI("[%d]=%x ret=%d",i,phaddr,ret);
+	}
+    }
+#ifdef ROTATE_90
+    if(hwsurface){
+	surf->width=height;
+        surf->height=width;
+        surf->pitch=height*4;
+    }
+#endif    
     if(ret==0){
         surf->kbuffer=(char*)phaddr;
         MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
@@ -203,7 +220,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     }
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
-    LOGI("surface=%x buf=%p/%p size=%dx%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,hwsurface);
+    LOGI("Surface=%x buf=%p/%p size=%dx%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -254,8 +271,11 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
         opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
         opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
         opt.eMirror = E_MI_GFX_MIRROR_NONE;
-        opt.eRotate = E_MI_GFX_ROTATE_0;
-
+#ifdef ROTATE_90	
+        opt.eRotate = E_MI_GFX_ROTATE_90;
+#else
+	opt.eRotate = E_MI_GFX_ROTATE_0;
+#endif	
         stSrcRect.s32Xpos = rs.x;
         stSrcRect.s32Ypos = rs.y;
         stSrcRect.u32Width = rs.w;
@@ -276,7 +296,8 @@ DWORD GFXDestroySurface(HANDLE surface){
     LOGI("GFXDestroySurface %p/%p",surf,surf->buffer);
     if(surf->kbuffer){
         MI_SYS_Munmap(surf->buffer,surf->msize);
-        MI_SYS_MMA_Free((MI_PHY)surf->kbuffer);
+        if(surf->ishw==0)
+	    MI_SYS_MMA_Free((MI_PHY)surf->kbuffer);
     }else if(surf->buffer){
         free(surf->buffer);
     }

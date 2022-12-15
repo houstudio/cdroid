@@ -1,6 +1,6 @@
 #include <cdtypes.h>
 #include <ngl_os.h>
-#include <ngl_graph.h>
+#include <cdgraph.h>
 #include <cdlog.h>
 #include <X11/Xlib.h>
 #include <gtk/gtk.h>
