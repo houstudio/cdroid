@@ -37,13 +37,8 @@ struct PointerCoords {
     void scale(float scale);
     void applyOffset(float xOffset, float yOffset);
 
-    inline float getX() const {
-        return getAxisValue(ABS_X);
-    }
-
-    inline float getY() const {
-        return getAxisValue(ABS_Y);
-    }
+    float getX() const; 
+    float getY() const;
 
     bool operator==(const PointerCoords& other) const;
     inline bool operator!=(const PointerCoords& other) const {
@@ -486,15 +481,15 @@ public:
     const PointerCoords* getRawPointerCoords(size_t pointerIndex) const;
     float getRawAxisValue(int32_t axis, size_t pointerIndex) const;
     inline float getRawX(size_t pointerIndex) const {
-        return getRawAxisValue(ABS_X, pointerIndex);
+        return getRawAxisValue(AXIS_X, pointerIndex);
     }
 
     inline float getRawY(size_t pointerIndex) const {
-        return getRawAxisValue(ABS_Y, pointerIndex);
+        return getRawAxisValue(AXIS_Y, pointerIndex);
     }
     float getAxisValue(int32_t axis, size_t pointerIndex)const;
-    float getX(size_t pointer=0)const{return getAxisValue(ABS_X,pointer);}
-    float getY(size_t pointer=0)const{return getAxisValue(ABS_Y,pointer);}
+    float getX(size_t pointer=0)const{return getAxisValue(AXIS_X,pointer);}
+    float getY(size_t pointer=0)const{return getAxisValue(AXIS_Y,pointer);}
     inline float getPressure(size_t pointerIndex) const {
         return getAxisValue(AXIS_PRESSURE, pointerIndex);
     }

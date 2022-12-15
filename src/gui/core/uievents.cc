@@ -44,6 +44,14 @@ int PointerCoords::setAxisValue(int32_t axis, float value) {
     return 0;//OK;
 }
 
+float PointerCoords::getX()const{
+    return getAxisValue(MotionEvent::AXIS_X);
+}
+
+float PointerCoords::getY()const{
+    return getAxisValue(MotionEvent::AXIS_Y);
+}
+
 static inline void scaleAxisValue(PointerCoords& c, int axis, float scaleFactor) {
     float value = c.getAxisValue(axis);
     if (value != 0) {
@@ -63,8 +71,8 @@ void PointerCoords::scale(float scaleFactor) {
 }
 
 void PointerCoords::applyOffset(float xOffset, float yOffset) {
-    setAxisValue(ABS_X, getX() + xOffset);
-    setAxisValue(ABS_Y, getY() + yOffset);
+    setAxisValue(MotionEvent::AXIS_X, getX() + xOffset);
+    setAxisValue(MotionEvent::AXIS_Y, getY() + yOffset);
 }
 
 void PointerCoords::tooManyAxes(int axis) {
@@ -502,8 +510,8 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
 
     PointerCoords pc;
     pc.clear();
-    pc.setAxisValue(ABS_X,x);
-    pc.setAxisValue(ABS_Y,y);
+    pc.setAxisValue(AXIS_X,x);
+    pc.setAxisValue(AXIS_Y,y);
     pc.setAxisValue(AXIS_PRESSURE,pressure);
     pc.setAxisValue(AXIS_SIZE,size);
     ev->initialize(deviceId, InputEvent::SOURCE_UNKNOWN, action, 0/*actionButton*/,0/*flags*/, edgeFlags, metaState, 0,
@@ -699,9 +707,9 @@ float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
     float value =getRawPointerCoords(pointerIndex)->getAxisValue(axis);
     switch (axis) {
-    case ABS_X://AMOTION_EVENT_AXIS_X:
+    case AXIS_X://AMOTION_EVENT_AXIS_X:
         return value + mXOffset;
-    case ABS_Y://AMOTION_EVENT_AXIS_Y:
+    case AXIS_Y://AMOTION_EVENT_AXIS_Y:
         return value + mYOffset;
     }
     return value;

@@ -41,7 +41,11 @@ TEST_F(INPUT,GetKey){
    int rc=0;
    while(i++<100){
       INPUTEVENT keys[16];
-      rc+=InputGetEvents(keys,16,500);
+      rc=InputGetEvents(keys,16,500);
+      for(int j=0;j<rc;j++){
+	  printf("%02d:[%3d,%3d,%3d]\r\n",j,keys[j].type,keys[j].code,keys[j].value);
+      }
+      if(rc)printf("\r\n");
    }
    ASSERT_GT(rc,0);
 }

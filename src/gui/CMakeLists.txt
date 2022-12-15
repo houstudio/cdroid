@@ -13,9 +13,6 @@ aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 
-find_package(JSONCPP REQUIRED)
-find_package(Fribidi REQUIRED)
-find_package(TurboJPEG REQUIRED)
 include_directories(
     ./ ./private 
     ./core 
@@ -55,7 +52,7 @@ foreach( each_file ${allfiles} )
 endforeach(each_file)
 
 ADD_WHOLE_ARCHIVE_TO_LIBRARIES(CDROID_DEPLIBS)
-target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
+target_link_libraries(cdroid ${CDROID_DEPLIBS} ${UNIBREAK_LIBRARIES} tvhal)
 
 configure_file(
         "cdroid.pc.in"

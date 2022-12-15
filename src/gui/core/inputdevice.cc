@@ -214,6 +214,27 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
 }
 
+static int ABS2AXIS(int absaxis){
+    switch(absaxis){
+    case ABS_MT_POSITION_X:
+    case ABS_X:/*REL_X*/ return MotionEvent::AXIS_X;
+
+    case ABS_MT_POSITION_Y:
+    case ABS_Y:/*REL_Y*/ return MotionEvent::AXIS_Y;
+
+    case ABS_Z:/*REL_Z*/ return MotionEvent::AXIS_Z;
+
+    case ABS_RX:/*REL_RX*/return MotionEvent::AXIS_RX;
+    case ABS_RY:/*REL_RY*/return MotionEvent::AXIS_RY;
+    case ABS_RZ:/*REL_RZ*/return MotionEvent::AXIS_RZ;
+
+    case ABS_MT_PRESSURE:
+    case ABS_PRESSURE:return MotionEvent::AXIS_PRESSURE;
+    
+    case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_PRESSURE; 
+    }
+}
+
 void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     auto it=mPointMAP.find(index);
     if(it==mPointMAP.end()){
@@ -223,6 +244,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
         auto it2=mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
         it=it2.first;
     }
+    axis=ABS2AXIS(axis);
     if(isRelative){
         value=it->second.coord.getAxisValue(axis)+value;
     }
