@@ -25,7 +25,7 @@ Canvas::Canvas(unsigned int width,unsigned int height):Context(nullptr,true){
     BYTE*buffer;
     INT format;
     UINT pitch;
-    GFXCreateSurface(&mHandle,width,height,GPF_ARGB,false);
+    GFXCreateSurface(0,&mHandle,width,height,GPF_ARGB,false);
     GFXLockSurface(mHandle,(void**)&buffer,&pitch);
     RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,width,height,pitch);
     m_cobject=cairo_create(surf->cobj());

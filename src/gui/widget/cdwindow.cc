@@ -57,7 +57,7 @@ Window::Window(int x,int y,int width,int height,int type)
     mContext=&App::getInstance();
     mInLayout=false;
     if((width<1)||(height<1))
-	 GFXGetScreenSize((UINT*)&width,(UINT*)&height);
+	 GFXGetScreenSize(0,(UINT*)&width,(UINT*)&height);
     printf("%p Handler=%p visible=%d size=%dx%d\r\n",this,mUIEventHandler,hasFlag(VISIBLE),width,height);
     setFrame(x, y, width, height);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);

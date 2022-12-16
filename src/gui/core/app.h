@@ -7,6 +7,7 @@
 #include <core/looper.h>
 #include <core/context.h>
 #include <core/assets.h>
+#include <core/cla.h>
 struct option;
 
 namespace cdroid{
@@ -14,10 +15,10 @@ namespace cdroid{
 class App:public Assets{
 private:
     const std::string getAssetsPath();
-    std::map<std::string,std::string>args;
     bool mQuitFlag;
     int mExitCode;
 protected:
+    CLA cla;
     static App*mInst;
 public:
      App(int argc=0,const char*argv[]=NULL,const option*extoptions=NULL);
@@ -28,11 +29,13 @@ public:
      virtual void setName(const std::string&appname);
      virtual const std::string&getName();
 
-     virtual void setArg(const std::string&key,const std::string&value);
-     virtual bool hasArg(const std::string&key)const;
-     virtual const std::string&getArg(const std::string&key,const std::string&def="")const;
-
-     virtual int getArgAsInt(const std::string&key,int def)const;
+     void setArg(const std::string&key,const std::string&value);
+     bool hasArg(const std::string&key)const;
+     bool hasSwitch(const std::string&key)const;
+     const std::string getArg(const std::string&key,const std::string&def="")const;
+     int getArgAsInt(const std::string&key,int def)const;
+     float getArgAsFloat(const std::string&key,float def)const;
+     double getArgAsDouble(const std::string&key,double def)const;
      virtual void addEventHandler(const EventHandler* handler);
      virtual void removeEventHandler(const EventHandler*handler);
      virtual int exec();

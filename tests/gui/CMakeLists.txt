@@ -12,8 +12,8 @@ include_directories(
    ${DEPS_DIR}/include/freetype2
    ${DEPS_DIR}/include/harfbuzz
    ${DEPS_DIR}/include/fribidi
-   ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src
-   ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/src
+   ${CMAKE_SOURCE_DIR}/src/gui
+   ${CMAKE_BINARY_DIR}/include/gui
    ${DEPS_DIR}/include/uriparser
 )
 link_directories(${DEPS_DIR}/lib)

@@ -67,7 +67,7 @@ static void onExit(){
     #endif
 }
 
-DWORD GFXInit(){
+INT GFXInit(){
     if(x11Display)return E_OK;
     #ifdef ENABLE_RFB
     if(rfbScreen) return E_OK;
@@ -99,20 +99,33 @@ DWORD GFXInit(){
     return E_OK;
 }
 
-DWORD GFXGetScreenSize(UINT*width,UINT*height){
+INT GFXGetScreenSize(int dispid,UINT*width,UINT*height){
     *width=1280;//dispCfg.width;
     *height=720;//dispCfg.height;
     return E_OK;
 }
 
-DWORD GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
+INT GFXGetDisplayCount(){
+    return 1;
+}
+static int rotations[2];
+INT GFXSetRotation(int dispid, GFX_ROTATION rotation){
+    rotations[dispid]=rotation;
+    return E_OK;
+}
+
+GFX_ROTATION GFXGetRotation(int dispid){
+    return rotations[dispid];
+}
+
+INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
     XImage*img=(XImage*)surface;
     *buffer=img->data;
     *pitch=img->bytes_per_line;
     return 0;
 }
 
-DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
+INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
 {
     XImage*img=(XImage*)surface;
     *width=img->width;
@@ -121,11 +134,11 @@ DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
     return E_OK;
 }
 
-DWORD GFXUnlockSurface(HANDLE surface){
+INT GFXUnlockSurface(HANDLE surface){
     return 0;
 }
 
-DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
+INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
@@ -145,7 +158,7 @@ static void  X11Expose(int x,int y,int w,int h){
          //XPutBackEvent(x11Display,(XEvent*)&e);
      }
 }
-DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
+INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     XImage*img=(XImage*)surface;
     UINT x,y;
     GFXRect rec={0,0,0,0};
@@ -169,7 +182,7 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     return E_OK;
 }
 
-DWORD GFXFlip(HANDLE surface){
+INT GFXFlip(HANDLE surface){
     XImage *img=(XImage*)surface;
     if(mainSurface==surface){
         GFXRect rect={0,0,img->width,img->height};
@@ -206,7 +219,7 @@ static void ResetScreenFormat(XImage*fb,int width,int height,int format){
 }
 #endif
 
-DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface)
+INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface)
 {
     XImage*img=NULL;
     if(x11Display){
@@ -233,7 +246,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
 }
 
 
-DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* srcrect)
+INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* srcrect)
 {
     XImage *ndst=(XImage*)dstsurface;
     XImage *nsrc=(XImage*)srcsurface;
@@ -271,7 +284,7 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* s
     return 0;
 }
 
-DWORD GFXDestroySurface(HANDLE surface)
+INT GFXDestroySurface(HANDLE surface)
 {
     XDestroyImage((XImage*)surface);
     return 0;

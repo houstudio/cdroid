@@ -17,7 +17,7 @@
 #include <cdinput.h>
 #include <inputeventsource.h>
 #include <mutex>
-
+#include <cla.h>
 
 void spt_init(int argc, char *argv[]);
 void setproctitle(const char *fmt, ...);
@@ -25,60 +25,37 @@ namespace cdroid{
 
 App*App::mInst=nullptr;
 
-static struct option app_options[]={
-   {"alpha"   ,required_argument,0,0},
-   {"data"    ,required_argument,0,0},
-   {"config"  ,required_argument,0,0},
-   {"language",required_argument,0,0},
-   {"record"  ,required_argument,0,0},
-   {"monkey"  ,required_argument,0,0},
-   {"debug"   ,no_argument      ,0,0},
-   {0,0,0,0}
+static CLA::Argument ARGS[]={
+   {CLA::EntryType::Option, "a", "alpha",  "UI layer global alpha[0,255]", CLA::ValueType::Int, (int)CLA::EntryFlags::Manditory},
+   {CLA::EntryType::Option, "", "data",   "app data path",        CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
+   {CLA::EntryType::Option, "m", "monkey", "events playback path",  CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
+   {CLA::EntryType::Option, "r", "record", "events record path", CLA::ValueType::String,   (int)CLA::EntryFlags::Optional},
+   {CLA::EntryType::Option, "R", "rotate", "display rotate ", CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
+   {CLA::EntryType::Switch, "h", "help", "display help info ", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
+   {CLA::EntryType::Switch, "d", "debug", "open debug", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
 };
 
 App::App(int argc,const char*argv[],const struct option*extoptions){
     int option_index=-1,c=-1;
     std::string optstring;
-    std::vector<struct option>all;
     LogParseModules(argc,argv);
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
 
     LOGD("App %s started",(argc&&argv)?argv[0]:"");
-    GFXInit();
-    all.insert(all.begin(),app_options,app_options+(sizeof(app_options)/sizeof(option)-1));
-    for(;extoptions&&extoptions->name;)all.push_back(*extoptions++);
-    for(auto o:all){//::optional :must has arg 
-        LOGV("%s hasarg=%d %c/%d",o.name,o.has_arg,o.val,o.val);
-        if(o.val==0)continue;
-        optstring.append(1,o.val);
-        if(o.has_arg)optstring.append(o.has_arg,':');
-    }
-
-    do{
-        c=getopt_long_only(argc,(char*const*)argv,optstring.c_str(),all.data(),&option_index);
-        LOGV_IF(c>=0,"option_index=%d  c=%c/%d",option_index,c,c);
-        if(c>0){
-            for(int i=0;i<all.size();i++)if(all[i].val==c){option_index=i;break;}
-            std::string key=all[option_index].name;
-            args[key]=optarg?:"";
-            LOGD("args[%d]%s:%s",option_index,key.c_str(),optarg);
-        }else if(c==0){
-            std::string key=all[option_index].name;
-            args[key]=optarg?:"";
-            LOGD("args[%d]%s:%s",option_index,key.c_str(),optarg);
-        }
-    }while(c>=0);
-
-    if(argc&&argv){
-        spt_init(argc,(char**)argv);
-        setName(argv[0]);
-    }
-    if(hasArg("debug")){
+    cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
+    cla.parse(argc,argv);
+    if(hasSwitch("debug")){
         ViewGroup::DEBUG_DRAW=true;
         View::DEBUG_DRAW=true;
     }
+    if(hasSwitch("help")){
+	std::cout<<cla.getUsageString()<<std::endl;
+	exit(0);
+    }
+    GFXInit();
+    GFXSetRotation(0,(GFX_ROTATION)((getArgAsInt("rotate",0)/90)%4));
     setOpacity(getArgAsInt("alpha",255));
     InputEventSource*inputsource=new InputEventSource(getArg("record",""));
     addEventHandler(inputsource);
@@ -104,34 +81,46 @@ const std::string App::getDataPath()const{
     return path;
 }
 
-App&App::getInstance(){
+App& App::getInstance(){
     if(mInst==nullptr)
         mInst=new App;
     return *mInst;
 }
 
-const std::string&App::getArg(const std::string&key,const std::string&def)const{
-    auto itr=args.find(key);
-    if(itr==args.end()||itr->second.empty())
-        return def;
-    return itr->second;
+const std::string App::getArg(const std::string&key,const std::string&def)const{
+    std::string value=def;
+    cla.find(key,value);
+    return value;
 }
 
 bool App::hasArg(const std::string&key)const{
-    auto itr=args.find(key);
-    return itr!=args.end();
+    return cla.find(key);
+}
+
+bool App::hasSwitch(const std::string&key)const{
+    return cla.findSwitch(key);
 }
 
 void App::setArg(const std::string&key,const std::string&value){
-    args[key]=value;
+    cla.setArgument(key,value);
 }
 
 int App::getArgAsInt(const std::string&key,int def)const{
-    auto itr=args.find(key);
-    if(itr==args.end()||itr->second.empty())
-        return def;
-    const char*arg=itr->second.c_str();
-    return strtoul(arg,NULL,(strpbrk(arg,"xX")?16:10));
+    int value=def;
+    cla.find(key,value);
+    return value;
+}
+
+float App::getArgAsFloat(const std::string&key,float def)const{
+    float value=def;
+    cla.find(key,value);
+    return value;
+}
+
+double App::getArgAsDouble(const std::string&key,double def)const{
+    double value=def;
+    cla.find(key,value);
+    return value;
 }
 
 void App::setOpacity(unsigned char alpha){

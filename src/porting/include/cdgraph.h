@@ -13,23 +13,27 @@
  @{
 */
 
-
 BEGIN_DECLS
 /**
  @defgroup graphFormat PIXEL Format
  @brief This enum list the surface format .
  @{ */
 typedef enum {
-  GPF_UNKNOWN,
-  GPF_ARGB4444,
-  GPF_ARGB1555,
-  GPF_RGB565,
-  GPF_ARGB,
-  GPF_ABGR,
-  GPF_RGB32
+    GPF_UNKNOWN,
+    GPF_ARGB4444,
+    GPF_ARGB1555,
+    GPF_RGB565,
+    GPF_ARGB,
+    GPF_ABGR,
+    GPF_RGB32
 }GFXPIXELFORMAT;
 /** @} */
-
+typedef enum{
+    ROTATE_0,
+    ROTATE_90,
+    ROTATE_180,
+    ROTATE_270
+}GFX_ROTATION;
 /**
  @defgroup graphStruct Structs
  @brief .
@@ -57,16 +61,23 @@ typedef struct _GFXRect{
 
     For more information refer to @ref nglCreateSurface.*/
 
-DWORD GFXInit();
-/**This function get the graph resolution 
+INT GFXInit();
+/**This function get the graph resolution
+ *  @param [in]dispid displayid ,count as 0,1,2...
     @param [out]width                         The value return screen width in pixels.
     @param [out]height                        The value return screen height in pixels.
     @retval E_OK                            
     @retval E_ERROR
      For more information refer to @ref nglCreateSurface and @ref nglGetSurfaceInfo.
 */
-DWORD GFXGetScreenSize(UINT*width,UINT*height);
+/**GFXGetDisplayCount get display count>=1 */
+INT GFXGetDisplayCount();
 
+/**GFXGetScreenSize return phisical device size in no rotation*/
+INT GFXGetScreenSize(int dispid,UINT*width,UINT*height);
+/**this function set rotation of display*/
+INT GFXSetRotation(int dispid, GFX_ROTATION roatation);
+GFX_ROTATION GFXGetRotation(int dispid);
 /**This function create an OSD Surface which we can used to draw sth.
     @param [out]surface                      The value used to return surface handle.
     @param [in]width                         The value give the surface width in pixels.
@@ -78,7 +89,7 @@ DWORD GFXGetScreenSize(UINT*width,UINT*height);
     For more information refer to @ref nglCreateSurface and @ref nglGetSurfaceInfo.
 */
 
-DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface);
+INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface);
 
 /**This function create an OSD Surface which we can used to draw sth.
     @param [in]surface                       The surface handle which is created by @ref nglCreateSurface.
@@ -90,10 +101,10 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     For more information refer to @ref nglCreateSurface and @ref nglGetSurfaceInfo.
 */
 
-DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format);
-DWORD GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch);
-DWORD GFXUnlockSurface(HANDLE surface);
-DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha);
+INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format);
+INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch);
+INT GFXUnlockSurface(HANDLE surface);
+INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha);
 /**Thie function fill the surface area with color 
   @param [in]surface         
   @param [in]rect            if rect is NULL fill whole surface area
@@ -101,7 +112,7 @@ DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha);
   @retval E_OK
   @retval E_ERROR
 */
-DWORD GFXFillRect(HANDLE dstsurface,const GFXRect*rect,UINT color);
+INT GFXFillRect(HANDLE dstsurface,const GFXRect*rect,UINT color);
 
 /**This function Blit source surface to dest surface .
     @param [in]dstsurface                     The dest surface which used to blit to.
@@ -113,8 +124,8 @@ DWORD GFXFillRect(HANDLE dstsurface,const GFXRect*rect,UINT color);
     @retval E_ERROR
     For more information refer to @ref nglCreateSurface .
 */
-DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect);
-DWORD GFXFlip(HANDLE dstsurface);
+INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect);
+INT GFXFlip(HANDLE dstsurface);
 
 /**This functionDestroy the surface
     @param [in]dstsurface                     The dest surface we want to destroied
@@ -122,7 +133,7 @@ DWORD GFXFlip(HANDLE dstsurface);
     @retval E_ERROR
     For more information refer to @ref nglCreateSurface
 */
-DWORD GFXDestroySurface(HANDLE surface);
+INT GFXDestroySurface(HANDLE surface);
 
 /**}*///raphfunctions
 

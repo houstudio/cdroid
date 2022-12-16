@@ -17,11 +17,13 @@
 
 typedef struct{
     int fb;
+    int rotation;
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
 }FBDEVICE;
 
 typedef struct{
+   int dispid;
    UINT width;
    UINT height;
    UINT pitch;
@@ -32,59 +34,74 @@ typedef struct{
    char*kbuffer;/*kernel buffer address*/
 }FBSURFACE;
 
-static FBDEVICE dev={-1};
+static FBDEVICE devs[2]={-1};
 
 static void gfxexit(){
    LOGI("gfxexit");
    MI_GFX_Close();
    MI_SYS_Exit();
 }
-DWORD GFXInit(){
+
+int GFXInit(){
     int ret;
-    if(dev.fb>=0)return E_OK;
+    FBDEVICE*dev=&devs[0];
+    if(dev->fb>=0)return E_OK;
+    memset(devs,0,sizeof(devs));
     ret=MI_SYS_Init();   LOGI("SYS_Init=%d",ret);
     ret=MI_GFX_Open();   LOGI("MI_GFX_Open=%d",ret);
-    dev.fb=open("/dev/fb0", O_RDWR);
+    devs[0].fb=open("/dev/fb0", O_RDWR);
      // Get fixed screen information
-    if(ioctl(dev.fb, FBIOGET_FSCREENINFO, &dev.fix) == -1) {
-        LOGE("Error reading fixed information fd=%d",dev.fb);
+    if(ioctl(dev->fb, FBIOGET_FSCREENINFO, &dev->fix) == -1) {
+        LOGE("Error reading fixed information fd=%d",dev->fb);
         return E_ERROR;
     }
     atexit(gfxexit);
-    LOGI("fb %d mem.addr=%x fbmem.size=%d pitch=%d",dev.fb,dev.fix.smem_start,dev.fix.smem_len,dev.fix.line_length);
+    LOGI("fb %d mem.addr=%x fbmem.size=%d pitch=%d",dev->fb,devs[0].fix.smem_start,dev->fix.smem_len,dev->fix.line_length);
     // Get variable screen information
-    if(ioctl(dev.fb, FBIOGET_VSCREENINFO, &dev.var) == -1) {
+    if(ioctl(dev->fb, FBIOGET_VSCREENINFO, &dev->var) == -1) {
         LOGE("Error reading variable information");
         return E_ERROR;
     }
-    dev.var.yoffset=0;//set first screen memory for display
-    ret=ioctl(dev.fb,FBIOPUT_VSCREENINFO,&dev.var);
+    devs[0].var.yoffset=0;//set first screen memory for display
+    ret=ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);
     LOGI("FBIOPUT_VSCREENINFO=%d",ret);
-    LOGI("fb solution=%dx%d accel_flags=0x%x",dev.var.xres,dev.var.yres,dev.var.accel_flags);
+    LOGI("fb solution=%dx%d accel_flags=0x%x",dev->var.xres,dev->var.yres,dev->var.accel_flags);
     return E_OK;
 }
-#define ROTATE_90 1
-DWORD GFXGetScreenSize(UINT*width,UINT*height){
+
+INT GFXGetDisplayCount(){
+    return 1;
+}
+
+INT GFXGetScreenSize(int dispid,UINT*width,UINT*height){
+    if(dispid<0||dispid>=GFXGetDisplayCount())
+	 return E_ERROR;
     LOGI_IF(width==NULL||height==NULL,"Params Error");
-#ifndef ROTATE_90    
-    *width=dev.var.xres;
-    *height=dev.var.yres;
-#else
-    *width=dev.var.yres;
-    *height=dev.var.xres;
-#endif    
+    FBDEVICE*dev=&devs[dispid];
+    *width=dev->var.xres;
+    *height=dev->var.yres;
     LOGI("screensize=%dx%d",*width,*height);
     return E_OK;
 }
 
-DWORD GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
+INT GFXSetRotation(int dispid, GFX_ROTATION roatation){
+    if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
+    devs[dispid].rotation=roatation; 
+}
+
+GFX_ROTATION GFXGetRotation(int dispid){
+    if(dispid<0||dispid>=sizeof(devs)/sizeof(FBDEVICE))return E_ERROR;
+    return devs[dispid].rotation;
+}
+
+INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *buffer=ngs->buffer;
     *pitch=ngs->pitch;
     return 0;
 }
 
-DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format){
+INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format){
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *width = ngs->width;
     *height= ngs->height;
@@ -92,12 +109,12 @@ DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format){
     return E_OK;
 }
 
-DWORD GFXUnlockSurface(HANDLE surface){
-    return 0;
+INT GFXUnlockSurface(HANDLE surface){
+    return E_OK;
 }
 
-DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
-    return 0;//dispLayer->SetOpacity(dispLayer,alpha);
+INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
+    return E_OK;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
 static void toMIGFX(const FBSURFACE*fb,MI_GFX_Surface_t*gfx){
@@ -108,7 +125,7 @@ static void toMIGFX(const FBSURFACE*fb,MI_GFX_Surface_t*gfx){
     gfx->phyAddr  = (MI_PHY)fb->kbuffer;
 }
 
-DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
+INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     FBSURFACE*ngs=(FBSURFACE*)surface;
     UINT x,y;
     MI_S32 ret;
@@ -145,21 +162,23 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     return E_OK;
 }
 
-DWORD GFXFlip(HANDLE surface){
+INT GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
         GFXRect rect={0,0,surf->width,surf->height};
+	FBDEVICE*dev=&devs[surf->dispid];
         //if(rc)rect=*rc;
-        dev.var.yoffset=0;
-        int ret=ioctl(dev.fb, FBIOPAN_DISPLAY, &dev.var);
-        LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev.var.yoffset);
+        dev->var.yoffset=0;
+        int ret=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
+        LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev->var.yoffset);
     }
     return 0;
 }
 
 static int setfbinfo(FBSURFACE*surf){
     int rc=-1;
-    struct fb_var_screeninfo*v=&dev.var;
+    FBDEVICE*dev=&devs[surf->dispid];
+    struct fb_var_screeninfo*v=&dev->var;
     v->xres=surf->width;
     v->yres=surf->height;
     v->xres_virtual=surf->width;
@@ -180,14 +199,16 @@ static int setfbinfo(FBSURFACE*surf){
 	 break;
     default:break; 
     }
-    rc=ioctl(dev.fb,FBIOPUT_VSCREENINFO,v);
+    rc=ioctl(dev->fb,FBIOPUT_VSCREENINFO,v);
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }
 
 #define ALIGN(x,y) ((x&~(y))|y)
-DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
+INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+    FBDEVICE*dev=&devs[dispid];
+    surf->dispid=dispid;
     surf->width=width;
     surf->height=height;
     surf->format=format;
@@ -196,12 +217,12 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     surf->kbuffer=NULL;
     surf->msize=(surf->pitch*height);//sizeof dword
 
-    MI_PHY phaddr=dev.fix.smem_start;
+    MI_PHY phaddr=dev->fix.smem_start;
     MI_S32 ret=0;
     if(!hwsurface){
 	int i=0;
 	ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
-	while((i++<3)&&(phaddr==dev.fix.smem_start)){
+	while((i++<3)&&(phaddr==dev->fix.smem_start)){
 	    ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
 	    LOGI("[%d]=%x ret=%d",i,phaddr,ret);
 	}
@@ -225,7 +246,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     return E_OK;
 }
 
-DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
+INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
     unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
@@ -291,7 +312,7 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
     return 0;
 }
 
-DWORD GFXDestroySurface(HANDLE surface){
+INT GFXDestroySurface(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     LOGI("GFXDestroySurface %p/%p",surf,surf->buffer);
     if(surf->kbuffer){

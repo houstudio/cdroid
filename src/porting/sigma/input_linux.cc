@@ -168,16 +168,6 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
                e->code = events[j].code;
                e->value= events[j].value;
                e->device=dev.fds[i];
-#ifdef ROTATE90
-	       if(e->type==EV_ABS){
-                   if((e->code==0)||(e->code==53)){
-		       e->code++;
-		       e->value=600-e->value;
-	           }else if((e->code==54)||(e->code==1)){
-		       e->code--;
-	           }
-	       }
-#endif	  
                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%ld",dev.fds[i],
                   type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec);
            }

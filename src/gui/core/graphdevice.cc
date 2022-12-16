@@ -35,10 +35,10 @@ GraphDevice::GraphDevice(int fmt){
     mFpsStartTime = mFpsPrevTime = 0;
     mFpsNumFrames = 0;
     GFXInit();
-    GFXGetScreenSize((UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
+    GFXGetScreenSize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
 
     mFormat = fmt<0?GPF_ARGB:fmt;
-    GFXCreateSurface(&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
+    GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
     GFXLockSurface(mPrimarySurface,(void**)&buffer,&pitch);
 
     LOGD("PrimarySurface=%p size=%dx%d",mPrimarySurface,mScreenWidth,mScreenHeight);
@@ -103,7 +103,6 @@ void GraphDevice::trackFPS() {
             mBannerContext->set_source_rgb(1,1,1);
             mBannerContext->set_font_size(22);
             mBannerContext->draw_text(mRectBanner,fpsText,DT_CENTER|DT_VCENTER);
-	    LOGD("fps=%f",fps);
         }
     }
 }
@@ -224,11 +223,11 @@ void GraphDevice::composeSurfaces(){
         LOGD("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
-    if(mPrimaryContext&&mBannerContext){
+    /*if(mPrimaryContext&&mBannerContext){
 	mPrimaryContext->set_source(mBannerContext->get_target(),0,0);
 	mPrimaryContext->rectangle(0,0,400,40);//mRectBanner.left,mRectBanner.top,mRectBanner.width,mRectBanner.height);
 	mPrimaryContext->fill();
-    }
+    }*/
     GFXFlip(mPrimarySurface); 
     t2=SystemClock::uptimeMillis();
     mLastComposeTime = SystemClock::uptimeMillis();

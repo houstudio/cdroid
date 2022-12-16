@@ -236,17 +236,33 @@ static int ABS2AXIS(int absaxis){
 }
 
 void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
+    const GFX_ROTATION rot=GFXGetRotation(0);
+    unsigned int width,height;
     auto it=mPointMAP.find(index);
+    axis=ABS2AXIS(axis);
+    GFXGetScreenSize(0,&width,&height);//ScreenSize is screen size in no roration
+    switch(axis){
+    case MotionEvent::AXIS_X:
+       switch(rot){
+       case ROTATE_0  : break;
+       case ROTATE_90 : axis=MotionEvent::AXIS_Y;value=width-value;break;
+       case ROTATE_270: axis=MotionEvent::AXIS_Y;value=value;break;
+       case ROTATE_180: value=width-value;break;
+       }break;
+    case MotionEvent::AXIS_Y:
+       switch(rot){
+       case ROTATE_0  : break;
+       case ROTATE_90 : axis=MotionEvent::AXIS_X;value=value;break;
+       case ROTATE_270: axis=MotionEvent::AXIS_X;value=height-value;break;
+       case ROTATE_180: value=height=value;break;
+       }break;
+    }
     if(it==mPointMAP.end()){
         TouchPoint tp;
         tp.coord.clear();
         tp.prop.id=mPointMAP.size();
         auto it2=mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
         it=it2.first;
-    }
-    axis=ABS2AXIS(axis);
-    if(isRelative){
-        value=it->second.coord.getAxisValue(axis)+value;
     }
     it->second.coord.setAxisValue(axis,value);
 }
@@ -307,7 +323,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_REPORT:
         case SYN_MT_REPORT:
-            LOGV_IF(mPointMAP.size(),"%s time:%lld pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
+            LOGD("%s time:%lld pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
                mMoveTime,mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
                0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() , 0/*xOffset*/,0/*yOffset*/,

@@ -126,7 +126,7 @@ class GRAPH:public testing::Test{
 
 TEST_F(GRAPH,Graph_GetScreen){
     UINT w,h;
-    ASSERT_EQ(0,GFXGetScreenSize(&w,&h));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&w,&h));
     ASSERT_GT(w,0);
     ASSERT_GT(h,0);
 }
@@ -134,8 +134,8 @@ TEST_F(GRAPH,Graph_GetScreen){
 TEST_F(GRAPH,CreateSurface_1){
     HANDLE surface=0;
     UINT width,height;
-    ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
-    ASSERT_EQ(0,GFXCreateSurface(&surface,width,height,GPF_ARGB,1));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&width,&height));
+    ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1));
     ASSERT_NE((HANDLE)nullptr,surface);
 
     GFXRect r={100,100,400,400};
@@ -150,13 +150,13 @@ TEST_F(GRAPH,CreateSurface_2){
     UINT width,height,pitch;
     int fmts[]={GPF_ARGB4444,GPF_ARGB1555,GPF_ARGB,GPF_ABGR,GPF_RGB32};
     int bps[] ={         2,         2    ,  4     ,    4   ,    4    }; 
-    ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&width,&height));
     ASSERT_GT(width*height,0);
     for(int i=0;i<sizeof(fmts)/sizeof(int);i++){
         UINT w=0,h=0,fmt=0;
         HANDLE surface=NULL;
         void*buffer=NULL;
-        INT  rc=GFXCreateSurface(&surface,width,height,fmts[i],0);
+        INT  rc=GFXCreateSurface(0,&surface,width,height,fmts[i],0);
         ASSERT_TRUE((rc==E_NOT_SUPPORT)||(rc==E_OK));
         if(rc==E_NOT_SUPPORT)
             continue;
@@ -177,8 +177,8 @@ TEST_F(GRAPH,Alpha){
     HANDLE surface=0;
     UINT width,height,pitch;
     UINT *buffer;
-    ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
-    ASSERT_EQ(0,GFXCreateSurface(&surface,width,height,GPF_ARGB,1));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&width,&height));
+    ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1));
     GFXLockSurface(surface,(void**)&buffer,&pitch);
     GFXFillRect(surface,NULL,0xFFFFFFFF);
     for(int i=0;i<256;i++){
@@ -193,8 +193,8 @@ TEST_F(GRAPH,Colors){
     HANDLE surface=0;
     UINT width,height;
     GFXRect r={0,0,0,0};
-    ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
-    ASSERT_EQ(0,GFXCreateSurface(&surface,width,height,GPF_ARGB,1));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&width,&height));
+    ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1));
     r.w=width/2;r.h=height/2;
     GFXFillRect(surface,&r,0xFFFF0000);
 
@@ -213,9 +213,9 @@ TEST_F(GRAPH,Blit){
     HANDLE mainsurface=0,surface;
     UINT width,height;
     GFXRect r={0,0,0,0};
-    ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
-    ASSERT_EQ(0,GFXCreateSurface(&mainsurface,width,height,GPF_ARGB,1));
-    ASSERT_EQ(0,GFXCreateSurface(&surface,width,height,GPF_ARGB,0));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&width,&height));
+    ASSERT_EQ(0,GFXCreateSurface(0,&mainsurface,width,height,GPF_ARGB,1));
+    ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,0));
     r.w=width/2;r.h=height/2;
     GFXFillRect(surface,&r,0xFFFF0000);
 
@@ -237,11 +237,11 @@ TEST_F(GRAPH,Multilayer){
     UINT width,height;
     HANDLE layers[4]={NULL,NULL,NULL,NULL};
     struct timeval tv;
-    ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
-    ASSERT_EQ(0,GFXCreateSurface(&hwsurface,width,height,GPF_ARGB,1));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&width,&height));
+    ASSERT_EQ(0,GFXCreateSurface(0,&hwsurface,width,height,GPF_ARGB,1));
     
     for(int i=0;i<4;i++){
-        GFXCreateSurface(&layers[i],width-i*100,height-i*50,GPF_ARGB,0);
+        GFXCreateSurface(0,&layers[i],width-i*100,height-i*50,GPF_ARGB,0);
     }
     for(int k=0;k<1500;k++){
         GFXFillRect(hwsurface,NULL,0);
@@ -274,8 +274,8 @@ TEST_F(GRAPH,FillRect){
     HANDLE surface=0;
     GFXRect r;
     UINT width,height;
-    ASSERT_EQ(0,GFXGetScreenSize(&width,&height));
-    ASSERT_EQ(0,GFXCreateSurface(&surface,width,height,GPF_ARGB,1));
+    ASSERT_EQ(0,GFXGetScreenSize(0,&width,&height));
+    ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1));
     ASSERT_NE((HANDLE)nullptr,surface);
 
     ASSERT_EQ(0xFFFF,FillCheckColor(surface,NULL,0));
@@ -301,8 +301,8 @@ TEST_F(GRAPH,Benchmark_Fill){
    UINT *buffer;
    struct timeval t1,t2;
    GFXRect r={0,0};
-   GFXGetScreenSize(&width,&height);
-   GFXCreateSurface(&surface,width,height,GPF_ARGB,1);
+   GFXGetScreenSize(0,&width,&height);
+   GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1);
    r.w=width;r.h=height;
    gettimeofday(&t1,NULL);
    for(int i=0;i<TEST_TIMES;i++){
@@ -322,9 +322,9 @@ TEST_F(GRAPH,Benchmark_Blit){
    UINT width,height,pitch;
    struct timeval t1,t2;
 
-   GFXGetScreenSize(&width,&height);
-   GFXCreateSurface(&mainsurface,width,height,GPF_ARGB,1);//1-->main surface
-   GFXCreateSurface(&surface2,width,height,GPF_ARGB,0);//soft layer
+   GFXGetScreenSize(0,&width,&height);
+   GFXCreateSurface(0,&mainsurface,width,height,GPF_ARGB,1);//1-->main surface
+   GFXCreateSurface(0,&surface2,width,height,GPF_ARGB,0);//soft layer
 
    GFXFillRect(surface2,NULL,0xFFFF0000);
    gettimeofday(&t1,NULL);
@@ -382,14 +382,14 @@ TEST_F(GRAPH,Blit_Normal){
     HANDLE hwsurface;
     HANDLE swsurface;
     unsigned int width,height;
-    GFXGetScreenSize(&width,&height);
-    GFXCreateSurface(&hwsurface,width,height,GPF_ARGB,1);
+    GFXGetScreenSize(0,&width,&height);
+    GFXCreateSurface(0,&hwsurface,width,height,GPF_ARGB,1);
     GFXRect r1={0,0,width,height};
     GFXFillRect(hwsurface,&r1,0xFF0000FF);
     GFXFlip(hwsurface);
     sleep(1);
 
-    GFXCreateSurface(&swsurface,800,600,GPF_ARGB,0);
+    GFXCreateSurface(0,&swsurface,800,600,GPF_ARGB,0);
     GFXRect r={0,0,800,600};
     GFXFillRect(swsurface,&r,0xFFFF0000);
     GFXBlit(hwsurface,0,0,swsurface,NULL);
@@ -410,9 +410,9 @@ TEST_F(GRAPH,Blit_CheckColor){
     GFXRect r;
 #define FILLCOLOR 0xFFFF0000
     setRect(r,0,0,200,200);
-    GFXGetScreenSize(&width,&height);
-    GFXCreateSurface(&hwsurface,width,height,GPF_ARGB,1);
-    GFXCreateSurface(&swsurface,r.w,r.h,GPF_ARGB,0);
+    GFXGetScreenSize(0,&width,&height);
+    GFXCreateSurface(0,&hwsurface,width,height,GPF_ARGB,1);
+    GFXCreateSurface(0,&swsurface,r.w,r.h,GPF_ARGB,0);
     GFXFillRect(hwsurface,NULL,0);
     GFXFillRect(swsurface,NULL,FILLCOLOR);
     
@@ -445,9 +445,9 @@ TEST_F(GRAPH,Blit_Range){
     unsigned int width,height;
     GFXRect r;
     setRect(r,0,0,320,240);
-    GFXGetScreenSize(&width,&height);
-    GFXCreateSurface(&hwsurface,width,height,GPF_ARGB,1);
-    GFXCreateSurface(&swsurface,r.w,r.h,GPF_ARGB,0);
+    GFXGetScreenSize(0,&width,&height);
+    GFXCreateSurface(0,&hwsurface,width,height,GPF_ARGB,1);
+    GFXCreateSurface(0,&swsurface,r.w,r.h,GPF_ARGB,0);
     GFXFillRect(hwsurface,NULL,0);
      
     for(int x=-10-(int)r.w;x<(int)width+10;x+=10){

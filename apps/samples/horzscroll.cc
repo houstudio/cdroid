@@ -14,7 +14,7 @@ int main(int argc,const char*argv[]){
     DIR*dir=opendir(path.c_str());
     struct dirent*ent;
     int count=0;
-    while(ent=readdir(dir)){
+    while(dir&&(ent=readdir(dir))){
         std::string fullpath=path+"/"+ent->d_name;
         if(ent->d_type!=DT_REG)continue;
         RefPtr<Cairo::ImageSurface>img=app.getImage(fullpath);
@@ -22,6 +22,7 @@ int main(int argc,const char*argv[]){
         ImageView*iv=new ImageView(150,30);
         iv->setImageBitmap(img);
         iv->setId(++count);
+	LOGI("img:%s",fullpath.c_str());
         layout->addView(iv,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT));
     }
     hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
