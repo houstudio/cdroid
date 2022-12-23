@@ -9,19 +9,19 @@ include_directories(
    ${CDROID_INCLUDE_DIRS}
    ${CAIRO_INCLUDE_DIRS}
    ${FONTCONFIG_INCLUDE_DIRS}
-   ${DEPS_DIR}/include
-   ${DEPS_DIR}/include/gui
-   ${DEPS_DIR}/include/porting
-   ${DEPS_DIR}/include/cairo
-   ${DEPS_DIR}/include/epg
-   ${DEPS_DIR}/include/freetype2
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/gui
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/cairo
+   ${CMAKE_BINARY_DIR}/include/epg
+   ${CMAKE_BINARY_DIR}/include/freetype2
    ${PLPLOT_INCLUDE_DIR}
    ${CAIRO_INCLUDE_DIRS}
    ${FREETYPE_INCLUDE_DIRS}
 )
 
 set(CMAKE_CXX_FLAGS "-Wl,--copy-dt-needed-entries")  #prevent error adding symbols: DSO missing from command line
-link_directories(${DEPS_DIR}/lib)
+link_directories(${CMAKE_BINARY_DIR}/lib)
 file(GLOB ExamplesFileList  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cc")
 add_custom_target(build_app_examples COMMENT A target that requires all the examples.)
 

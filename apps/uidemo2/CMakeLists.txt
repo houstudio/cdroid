@@ -8,17 +8,17 @@ include_directories(
    ./
    ${CDROID_INCLUDE_DIRS}
    ${CDROID_DEPINCLUDES}
-   ${DEPS_DIR}/include
-   ${DEPS_DIR}/include/gui
-   ${DEPS_DIR}/include/porting
-   ${DEPS_DIR}/include/cairo
-   ${DEPS_DIR}/include/epg
-   ${DEPS_DIR}/include/freetype2
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/gui
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/cairo
+   ${CMAKE_BINARY_DIR}/include/epg
+   ${CMAKE_BINARY_DIR}/include/freetype2
   )
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 aux_source_directory(./ DEMO_SRCS)
-link_directories(${DEPS_DIR}/lib)
+link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(uidemo2 ${DEMO_SRCS})
 
 CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} uidemo2)

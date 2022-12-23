@@ -9,21 +9,14 @@ include(cmake/options.cmake)
 
 set(DISABLE_FORCE_DEBUG_POSTFIX ON)
 
-if (EXISTS "${CMAKE_SOURCE_DIR}/src/gui/view/view.h" )
-   set(DEPS_DIR ${CMAKE_BINARY_DIR})
-else()
-   set(DEPS_DIR ${CMAKE_SOURCE_DIR}/deps)
-endif()
-
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
    add_definitions(-DDEBUG) 
 endif()
 
 add_subdirectory(src/porting)
-if (EXISTS "${CMAKE_SOURCE_DIR}/src/gui" )
-  add_subdirectory(src/gui)
-  add_subdirectory(src/modules)
-endif()
+add_subdirectory(src/gui)
+add_subdirectory(src/modules)
+
 add_subdirectory(apps)
 
 add_subdirectory(tests)

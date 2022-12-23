@@ -27,15 +27,15 @@ endif(ENABLE_DTV)
 include_directories(
    ./
    ${GTEST_INCLUDE_DIRS}
-   ${DEPS_DIR}/includegtest
-   ${DEPS_DIR}/include
-   ${DEPS_DIR}/include/gui
-   ${DEPS_DIR}/include/porting
-   ${DEPS_DIR}/include/rfb
-   ${DEPS_DIR}/include/pixman
+   ${CMAKE_BINARY_DIR}/includegtest
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/gui
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/rfb
+   ${CMAKE_BINARY_DIR}/include/pixman
 )
 
-link_directories(${DEPS_DIR}/lib)
+link_directories(${CMAKE_BINARY_DIR}/lib)
 
 add_executable(hal_tests ${SRCS_HAL}) 
 

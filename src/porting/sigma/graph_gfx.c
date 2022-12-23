@@ -292,6 +292,70 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
         opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
         opt.eMirror = E_MI_GFX_MIRROR_NONE;
+        opt.eRotate = E_MI_GFX_ROTATE_0;
+	opt.eRotate = GFXGetRotation(nsrc->dispid);//E_MI_GFX_ROTATE_90;
+        stSrcRect.s32Xpos = rs.x;
+        stSrcRect.s32Ypos = rs.y;
+        stSrcRect.u32Width = rs.w;
+        stSrcRect.u32Height= rs.h;
+
+        stDstRect.s32Xpos = dx;
+        stDstRect.s32Ypos = dy;
+        stDstRect.u32Width = rs.w;
+        stDstRect.u32Height= rs.h;
+        ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
+	MI_GFX_WaitAllDone(FALSE,fence);
+    }    
+    return 0;
+}
+
+INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,const GFXRect*srcrects){
+#if 0	
+    unsigned int x,y,sw,sh;
+    FBSURFACE*ndst=(FBSURFACE*)dstsurface;
+    FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
+    GFXRect rs={0,0};
+    BYTE*pbs=(BYTE*)nsrc->buffer;
+    BYTE*pbd=(BYTE*)ndst->buffer;
+    rs.w=nsrc->width;rs.h=nsrc->height;
+    if(srcrect)rs=*srcrect;
+    if((nsrc->kbuffer==NULL)||(ndst->kbuffer==NULL)){
+        if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
+            LOGV("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
+            return E_INVALID_PARA;
+        }
+
+        LOGV("Blit %p[%dx%d] %d,%d-%d,%d -> %p[%dx%d] %d,%d",nsrc,nsrc->width,nsrc->height,
+             rs.x,rs.y,rs.w,rs.h,ndst,ndst->width,ndst->height,dx,dy);
+        if(dx<0){rs.x-=dx;rs.w=(int)rs.w+dx; dx=0;}
+        if(dy<0){rs.y-=dy;rs.h=(int)rs.h+dy;dy=0;}
+        if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
+        if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
+
+        LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
+        pbs+=rs.y*nsrc->pitch+rs.x*4;
+        pbd+=dy*ndst->pitch+dx*4;
+        const int cpw=rs.w*4;
+        for(y=0;y<rs.h;y++){
+            memcpy(pbd,pbs,cpw);
+            pbs+=nsrc->pitch;
+            pbd+=ndst->pitch;
+        }
+    }else{
+	int ret;
+	MI_U16 fence;
+	MI_GFX_Opt_t opt;
+	MI_GFX_Surface_t gfxsrc,gfxdst;
+        MI_GFX_Rect_t stSrcRect, stDstRect;
+	toMIGFX(nsrc,&gfxsrc);
+	toMIGFX(ndst,&gfxdst);
+	bzero(&opt,sizeof(opt));
+
+        opt.u32GlobalSrcConstColor = 0xFF000000;
+        opt.u32GlobalDstConstColor = 0xFF000000;
+        opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
+        opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
+        opt.eMirror = E_MI_GFX_MIRROR_NONE;
 #ifdef ROTATE_90	
         opt.eRotate = E_MI_GFX_ROTATE_90;
 #else
@@ -308,7 +372,8 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         stDstRect.u32Height= rs.h;
         ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
 	MI_GFX_WaitAllDone(FALSE,fence);
-    }    
+    }
+#endif    
     return 0;
 }
 

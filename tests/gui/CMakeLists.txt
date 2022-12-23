@@ -7,16 +7,16 @@ include_directories(
    ${CDROID_INCLUDE_DIRS}
    ${CDROID_DEPINCLUDES}
    ${GTEST_INCLUDE_DIRS}
-   ${DEPS_DIR}/include/porting
-   ${DEPS_DIR}/include
-   ${DEPS_DIR}/include/freetype2
-   ${DEPS_DIR}/include/harfbuzz
-   ${DEPS_DIR}/include/fribidi
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/freetype2
+   ${CMAKE_BINARY_DIR}/include/harfbuzz
+   ${CMAKE_BINARY_DIR}/include/fribidi
    ${CMAKE_SOURCE_DIR}/src/gui
    ${CMAKE_BINARY_DIR}/include/gui
-   ${DEPS_DIR}/include/uriparser
+   ${CMAKE_BINARY_DIR}/include/uriparser
 )
-link_directories(${DEPS_DIR}/lib)
+link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(gui_test ${SRCS_GUI_TESTS})
 
 target_link_libraries(gui_test PRIVATE ${CDROID_DEPLIBS} ${GTEST_LIBRARIES} cdroid tvhal)

@@ -38,7 +38,10 @@ typedef enum{
  @defgroup graphStruct Structs
  @brief .
  @{ */
-
+typedef struct _GFXPoint{
+    INT x;
+    INT y;
+}GFXPoint;
 typedef struct _GFXRect{
     INT x;
     INT y;
@@ -125,6 +128,7 @@ INT GFXFillRect(HANDLE dstsurface,const GFXRect*rect,UINT color);
     For more information refer to @ref nglCreateSurface .
 */
 INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect);
+INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,const GFXRect*srcrects);
 INT GFXFlip(HANDLE dstsurface);
 
 /**This functionDestroy the surface
