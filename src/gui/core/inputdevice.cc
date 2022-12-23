@@ -254,7 +254,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        case ROTATE_0  : break;
        case ROTATE_90 : axis=MotionEvent::AXIS_X;value=value;break;
        case ROTATE_270: axis=MotionEvent::AXIS_X;value=height-value;break;
-       case ROTATE_180: value=height=value;break;
+       case ROTATE_180: value=height-value;break;
        }break;
     }
     if(it==mPointMAP.end()){

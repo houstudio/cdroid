@@ -37,6 +37,11 @@ GraphDevice::GraphDevice(int fmt){
     GFXInit();
     GFXGetScreenSize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
 
+    if((GFXGetRotation(0)==ROTATE_90)||(GFXGetRotation(0)==ROTATE_270)){
+	 int tmp = mScreenWidth;
+	 mScreenWidth = mScreenHeight;
+	 mScreenHeight= tmp;
+    }
     mFormat = fmt<0?GPF_ARGB:fmt;
     GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
     GFXLockSurface(mPrimarySurface,(void**)&buffer,&pitch);

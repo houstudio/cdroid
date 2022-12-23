@@ -227,13 +227,11 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 	    LOGI("[%d]=%x ret=%d",i,phaddr,ret);
 	}
     }
-#ifdef ROTATE_90
-    if(hwsurface){
+    if(hwsurface&&((GFXGetRotation(0)==ROTATE_90)||(GFXGetRotation(0)==ROTATE_270))){
 	surf->width=height;
         surf->height=width;
         surf->pitch=height*4;
     }
-#endif    
     if(ret==0){
         surf->kbuffer=(char*)phaddr;
         MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
