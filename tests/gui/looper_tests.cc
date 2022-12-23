@@ -208,10 +208,12 @@ static int fdcallback(int fd, int events, void* data){
    if(loops>20){
       struct itimerspec new_value={{0,0},{0,0}};
       timerfd_settime(fd,0,&new_value, NULL);
+      Looper::getDefault()->removeFd(fd);
    }
+   return 1;
 }
 TEST_F(LOOPER,timerfd){
-    #define INTERVAL 500 //ms
+    #define INTERVAL 200 //ms
     Looper*loop= Looper::getDefault();
     struct itimerspec new_value={{0,0},{0,0}};
     ms2timespec(INTERVAL,&new_value.it_value);

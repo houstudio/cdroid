@@ -55,7 +55,7 @@ void Looper::Looper::Request::initEventItem(struct epoll_event* eventItem) const
 Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks), mSendingMessage(false),
         mPolling(false), mEpollFd(-1), mEpollRebuildRequired(false),
-        mNextRequestSeq(0), mResponseIndex(0), mNextMessageUptime(LONG_MAX) {
+        mNextRequestSeq(0), mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
     mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     LOGE_IF(mWakeEventFd < 0, "Could not make wake event fd: %s",strerror(errno));
     std::lock_guard<std::mutex>_l(mLock);
@@ -260,8 +260,8 @@ Done:
 
 int Looper::pollInner(int timeoutMillis) {
     int result = POLL_WAKE;
-    LOGD_IF(DEBUG_POLL_AND_WAKE,"%p waiting: timeoutMillis=%d mNextMessageUptime=%lld",
-            this,timeoutMillis,mNextMessageUptime);
+    LOGD_IF(DEBUG_POLL_AND_WAKE,"%p waiting: timeoutMillis=%d mNextMessageUptime=%lld/%lld",
+            this,timeoutMillis,mNextMessageUptime,LLONG_MAX);
 
     // Adjust the timeout based on when the next message is due.
     if (timeoutMillis != 0 && mNextMessageUptime != LLONG_MAX) {

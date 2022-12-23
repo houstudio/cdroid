@@ -90,14 +90,13 @@ list(APPEND X64LIBS pthread)
 find_package(ZLIB)
 include_directories(./
     ../common ../include
-    ${DRM_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
+    ${DRM_INCLUDE_DIR}
     ${X11_INCLUDE_DIRS}
-    ${GTK3_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
 )
-
+message("CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 add_library(tvhal SHARED ${X64_SRCS} )
 target_link_libraries(tvhal PRIVATE ${X64LIBS})
 install (TARGETS tvhal  DESTINATION lib)

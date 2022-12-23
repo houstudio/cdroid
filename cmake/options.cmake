@@ -32,7 +32,7 @@ find_package(Cairo REQUIRED)
 find_package(OpenSSL)
 find_package(Fontconfig REQUIRED)
 find_package(Brotli)
-find_package(BZip2 REQUIRED)
+#find_package(BZip2 REQUIRED)
 find_package(UniBreak REQUIRED)
 
 
