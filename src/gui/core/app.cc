@@ -32,8 +32,7 @@ static CLA::Argument ARGS[]={
    {CLA::EntryType::Option, "R", "rotate", "display rotate ", CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "h", "help", "display help info ", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "d", "debug", "open debug", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Switch, "", "fps"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Parameter,"","filename","filename",CLA::ValueType::String,(int)CLA::EntryFlags::Manditory}
+   {CLA::EntryType::Switch, "", "fps"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
 };
 
 App::App(int argc,const char*argv[],const struct option*extoptions){
@@ -58,13 +57,11 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     GFXInit();
     GFXSetRotation(0,(GFX_ROTATION)((getArgAsInt("rotate",0)/90)%4));
     setOpacity(getArgAsInt("alpha",255));
+    GraphDevice::getInstance().showFPS(hasSwitch("fps"));
     InputEventSource*inputsource=new InputEventSource(getArg("record",""));
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
 
-    std::string  filename;
-    cla.getParam(0,filename);
-    LOGD("ParamCount=%d %s",cla.getParamCount(),filename.c_str());
     signal(SIGINT,[](int sig){
         LOGD("SIG %d...",sig);
         App::mInst->mQuitFlag = true;

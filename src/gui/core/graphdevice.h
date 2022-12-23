@@ -15,6 +15,7 @@ private:
     int mComposing;
     int mPendingCompose;
     bool mQuitFlag;
+    bool mShowFPS;
     uint64_t mLastComposeTime;
     uint64_t mFpsStartTime;
     uint64_t mFpsPrevTime;
@@ -44,6 +45,7 @@ public:
     void composeSurfaces();
     bool needCompose();
     Canvas*getPrimaryContext();
+    void showFPS(bool);
     void invalidate(const Rect&);
     HANDLE getPrimarySurface()const;
 };

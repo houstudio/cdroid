@@ -54,6 +54,7 @@ GraphDevice::GraphDevice(int fmt){
     mInvalidateRgn = Region::create();
     mComposing = 0;
     mQuitFlag  = false;
+    mShowFPS = false;
     std::thread t([this](){doCompose();});
     t.detach();
 }
@@ -130,6 +131,10 @@ bool GraphDevice::needCompose(){
 
 Canvas*GraphDevice::getPrimaryContext(){
     return mPrimaryContext;
+}
+
+void GraphDevice::showFPS(bool value){
+    mShowFPS=value;
 }
 
 void GraphDevice::doCompose(){
@@ -223,11 +228,11 @@ void GraphDevice::composeSurfaces(){
         LOGD("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
-    /*if(mPrimaryContext&&mBannerContext){
+    if(mShowFPS && mPrimaryContext && mBannerContext){
 	mPrimaryContext->set_source(mBannerContext->get_target(),0,0);
 	mPrimaryContext->rectangle(0,0,400,40);//mRectBanner.left,mRectBanner.top,mRectBanner.width,mRectBanner.height);
 	mPrimaryContext->fill();
-    }*/
+    }
     GFXFlip(mPrimarySurface); 
     t2=SystemClock::uptimeMillis();
     mLastComposeTime = SystemClock::uptimeMillis();
