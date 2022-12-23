@@ -80,7 +80,7 @@ INT GFXGetScreenSize(int dispid,UINT*width,UINT*height){
     FBDEVICE*dev=&devs[dispid];
     *width=dev->var.xres;
     *height=dev->var.yres;
-    LOGI("screensize=%dx%d",*width,*height);
+    LOGD("screensize=%dx%d",*width,*height);
     return E_OK;
 }
 

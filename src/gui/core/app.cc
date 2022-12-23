@@ -18,7 +18,6 @@
 #include <inputeventsource.h>
 #include <mutex>
 #include <cla.h>
-
 void spt_init(int argc, char *argv[]);
 void setproctitle(const char *fmt, ...);
 namespace cdroid{
@@ -32,7 +31,9 @@ static CLA::Argument ARGS[]={
    {CLA::EntryType::Option, "r", "record", "events record path", CLA::ValueType::String,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Option, "R", "rotate", "display rotate ", CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "h", "help", "display help info ", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Switch, "d", "debug", "open debug", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
+   {CLA::EntryType::Switch, "d", "debug", "open debug", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
+   {CLA::EntryType::Switch, "", "fps"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
+   {CLA::EntryType::Parameter,"","filename","filename",CLA::ValueType::String,(int)CLA::EntryFlags::Manditory}
 };
 
 App::App(int argc,const char*argv[],const struct option*extoptions){
@@ -61,6 +62,9 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
 
+    std::string  filename;
+    cla.getParam(0,filename);
+    LOGD("ParamCount=%d %s",cla.getParamCount(),filename.c_str());
     signal(SIGINT,[](int sig){
         LOGD("SIG %d...",sig);
         App::mInst->mQuitFlag = true;
@@ -123,6 +127,15 @@ double App::getArgAsDouble(const std::string&key,double def)const{
     return value;
 }
 
+int App::getParamCount()const{
+    return cla.getParamCount();
+}
+
+std::string App::getParam(int idx,const std::string&def)const{
+    std::string value=def;
+    cla.getParam(idx,value);
+    return value;
+}
 void App::setOpacity(unsigned char alpha){
     GFXSurfaceSetOpacity(GraphDevice::getInstance().getPrimarySurface(),alpha);
     LOGD("alpha=%d",alpha);
