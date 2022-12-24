@@ -76,7 +76,7 @@ INT InputInit(){
     return 0;
 }
 
-#define set_bit(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
+#define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     int rc1,rc2;
@@ -86,11 +86,14 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     rc2=ioctl(device, EVIOCGID, &id);
     for(int i=0;i<ABS_CNT;i++){
        struct input_absinfo info;
-       AXISINFO*axis=devinfo->axis+i;
+       INPUTAXISINFO*a = devinfo->axis+i;
        if(0==ioctl(device, EVIOCGABS(i),&info)){
-           axis->minimum=info.minimum;
-           axis->maximum=info.maximum;
-           axis->resolution=info.resolution;
+	   a->fuzz   =info.fuzz;
+	   a->flat   =info.flat;
+           a->minimum=info.minimum;
+           a->maximum=info.maximum;
+           a->resolution=info.resolution;
+	   LOGD_IF(a->maximum-a->minimum,"axis[%d]=[%d,%d]",i, a->minimum,a->maximum);
        }
     }
     LOGD_IF(rc2,"fd=%d[%s] rc1=%d,rc2=%d x=[%d,%d] y=[%d,%d]",device,devinfo->name,rc1,rc2);
@@ -108,23 +111,23 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
         strcpy(devinfo->name,"Touch-Inject");
         devinfo->vendor=INJECTDEV_TOUCH>>16;
         devinfo->product=INJECTDEV_TOUCH&0xFF;
-        set_bit(devinfo->absBitMask,ABS_X);
-        set_bit(devinfo->absBitMask,ABS_Y);
-        set_bit(devinfo->keyBitMask,BTN_TOUCH); 
+        SET_BIT(devinfo->absBitMask,ABS_X);
+        SET_BIT(devinfo->absBitMask,ABS_Y);
+        SET_BIT(devinfo->keyBitMask,BTN_TOUCH); 
         break;
     case INJECTDEV_MOUSE:
         strcpy(devinfo->name,"Touch-Inject");
         devinfo->vendor=INJECTDEV_MOUSE>>16;
         devinfo->product=INJECTDEV_MOUSE&0xFF;
-        set_bit(devinfo->relBitMask,REL_X);
-        set_bit(devinfo->relBitMask,REL_Y);
+        SET_BIT(devinfo->relBitMask,REL_X);
+        SET_BIT(devinfo->relBitMask,REL_Y);
         break;
     case INJECTDEV_KEY:
         strcpy(devinfo->name,"qwerty");
         devinfo->vendor=INJECTDEV_KEY>>16;
         devinfo->product=INJECTDEV_KEY&0xFF;
-        set_bit(devinfo->keyBitMask,BTN_MISC); 
-        set_bit(devinfo->keyBitMask,KEY_OK);     
+        SET_BIT(devinfo->keyBitMask,BTN_MISC); 
+        SET_BIT(devinfo->keyBitMask,KEY_OK);     
         break;
     default:break;
     }

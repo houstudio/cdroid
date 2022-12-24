@@ -25,8 +25,20 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
     }
     return false;
 }
+
 #define TEST_BIT(bit, array)    ((array)[(bit)/8] & (1<<((bit)%8)))
 #define SIZEOF_BITS(bits)  (((bits) + 7) / 8)
+
+static int getMotionRanges(InputDeviceInfo&info,INPUTDEVICEINFO&dev){
+   for(int i=0;i<sizeof(dev.axis)/sizeof(INPUTAXISINFO);i++){
+      INPUTAXISINFO*axis=dev.axis+i;
+      if(std::abs(axis->maximum-axis->minimum)>0){
+	  info.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
+	  LOGD("axis %2d :(%d,%d)",i,axis->minimum,axis->maximum);
+      }
+   }
+}
+
 InputDevice::InputDevice(int fdev):listener(nullptr){
     INPUTDEVICEINFO info;
     InputDeviceIdentifier di;
@@ -37,7 +49,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     di.product=info.product;
     di.vendor=info.vendor;
     mDeviceInfo.initialize(fdev,0,0,di,std::string(),0,0);
-
+    getMotionRanges(mDeviceInfo,info);
     // See if this is a keyboard.  Ignore everything in the button range except for
     // joystick and gamepad buttons which are handled like keyboards for the most part.
     bool haveKeyboardKeys = containsNonZeroByte(info.keyBitMask, 0, SIZEOF_BITS(BTN_MISC))
@@ -238,11 +250,13 @@ static int ABS2AXIS(int absaxis){
 void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     const GFX_ROTATION rot=GFXGetRotation(0);
     unsigned int width,height;
+    const InputDeviceInfo::MotionRange*range = mDeviceInfo.getMotionRange(axis,0);
     auto it=mPointMAP.find(index);
-    axis=ABS2AXIS(axis);
     GFXGetDisplaySize(0,&width,&height);//ScreenSize is screen size in no roration
+    axis=ABS2AXIS(axis);
     switch(axis){
     case MotionEvent::AXIS_X:
+       if(range)value = value*width/(range->max-range->min);
        switch(rot){
        case ROTATE_0  : break;
        case ROTATE_90 : axis=MotionEvent::AXIS_Y;value=width-value;break;
@@ -250,6 +264,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        case ROTATE_180: value=width-value;break;
        }break;
     case MotionEvent::AXIS_Y:
+       if(range)value = value*height/(range->max-range->min);
        switch(rot){
        case ROTATE_0  : break;
        case ROTATE_90 : axis=MotionEvent::AXIS_X;value=value;break;
@@ -386,9 +401,9 @@ void InputDeviceInfo::initialize(int32_t id, int32_t generation, int32_t control
 const InputDeviceInfo::MotionRange* InputDeviceInfo::getMotionRange(int32_t axis, uint32_t source) const {
     size_t numRanges = mMotionRanges.size();
     for (size_t i = 0; i < numRanges; i++) {
-        const MotionRange& range = mMotionRanges.at(i);
-        if (range.axis == axis && range.source == source) {
-            return &range;
+        const MotionRange* range = mMotionRanges.data()+i;
+        if (range->axis == axis && range->source == source) {
+            return range;
         }
     }
     return NULL;
@@ -398,9 +413,13 @@ void InputDeviceInfo::addSource(uint32_t source) {
     mSources |= source;
 }
 
-void InputDeviceInfo::addMotionRange(int32_t axis, uint32_t source, float min, float max,
+void InputDeviceInfo::addMotionRange(int32_t axis, uint32_t source, float vmin, float vmax,
         float flat, float fuzz, float resolution) {
-    MotionRange range = { axis, source, min, max, flat, fuzz, resolution };
+    MotionRange range;// = { axis, source, vmin, vmax, flat, fuzz, resolution };
+    range.axis=axis; range.source=source;
+    range.min =vmin; range.max=vmax;
+    range.flat=flat; range.fuzz=fuzz;
+    range.resolution=resolution;
     mMotionRanges.push_back(range);
 }
 

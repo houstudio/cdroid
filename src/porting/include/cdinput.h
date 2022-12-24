@@ -29,10 +29,13 @@ typedef struct{
 #define INJECTDEV_TOUCH 0x101081
 #define INJECTDEV_MOUSE 0x101082
 typedef struct{
+    int axis;
     int minimum;
     int maximum;
+    int fuzz;
+    int flat;
     int resolution;
-}AXISINFO;
+}INPUTAXISINFO;
 typedef struct{
     USHORT bustype;
     USHORT vendor;
@@ -45,7 +48,7 @@ typedef struct{
     BYTE ledBitMask[4];
     BYTE ffBitMask [16];
     BYTE propBitMask[4];
-    AXISINFO axis[64];
+    INPUTAXISINFO axis[32];
     char name[MAX_DEVICE_NAME];
 }INPUTDEVICEINFO;
 

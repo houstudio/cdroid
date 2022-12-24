@@ -49,3 +49,21 @@ TEST_F(INPUT,GetKey){
    }
    ASSERT_GT(rc,0);
 }
+TEST_F(INPUT,AxisInfo){
+    int axises=0,i=0;
+    while(i++<10){
+      INPUTEVENT keys[16];
+      INPUTDEVICEINFO info;
+      if(0<InputGetEvents(keys,16,500)){
+	   InputGetDeviceInfo(keys[0].device,&info);
+	   for(int j=0;j<ABS_CNT;j++){
+	       INPUTAXISINFO*a=info.axis+j;
+	       if(std::abs(a->maximum-a->minimum)>0){
+		  axises++;
+	          printf("axis[%d] range=[%d,%d]\r\n",j,a->minimum,a->maximum);
+	       }
+	   }
+      }
+   }
+    ASSERT_GT(axises,0);
+}
