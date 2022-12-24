@@ -240,7 +240,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     unsigned int width,height;
     auto it=mPointMAP.find(index);
     axis=ABS2AXIS(axis);
-    GFXGetScreenSize(0,&width,&height);//ScreenSize is screen size in no roration
+    GFXGetDisplaySize(0,&width,&height);//ScreenSize is screen size in no roration
     switch(axis){
     case MotionEvent::AXIS_X:
        switch(rot){

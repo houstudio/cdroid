@@ -73,7 +73,7 @@ INT GFXGetDisplayCount(){
     return 1;
 }
 
-INT GFXGetScreenSize(int dispid,UINT*width,UINT*height){
+INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
     if(dispid<0||dispid>=GFXGetDisplayCount())
 	 return E_ERROR;
     LOGI_IF(width==NULL||height==NULL,"Params Error");

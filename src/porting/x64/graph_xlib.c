@@ -99,7 +99,7 @@ INT GFXInit(){
     return E_OK;
 }
 
-INT GFXGetScreenSize(int dispid,UINT*width,UINT*height){
+INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
     *width=1280;//dispCfg.width;
     *height=720;//dispCfg.height;
     return E_OK;

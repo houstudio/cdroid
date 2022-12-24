@@ -76,8 +76,8 @@ INT GFXInit();
 /**GFXGetDisplayCount get display count>=1 */
 INT GFXGetDisplayCount();
 
-/**GFXGetScreenSize return phisical device size in no rotation*/
-INT GFXGetScreenSize(int dispid,UINT*width,UINT*height);
+/**GFXGetDisplaySize return phisical display  size in no rotation*/
+INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height);
 /**this function set rotation of display*/
 INT GFXSetRotation(int dispid, GFX_ROTATION roatation);
 GFX_ROTATION GFXGetRotation(int dispid);

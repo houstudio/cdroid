@@ -60,7 +60,7 @@ DWORD GFXInit(){
     return E_OK;
 }
 
-DWORD GFXGetScreenSize(UINT*width,UINT*height){
+DWORD GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
     *width=dev.var.xres;
     *height=dev.var.yres;
     LOGD("screensize=%dx%d",*width,*height);

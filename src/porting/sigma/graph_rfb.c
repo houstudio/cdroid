@@ -45,7 +45,7 @@ DWORD GFXInit(){
     return E_OK;
 }
 
-DWORD GFXGetScreenSize(UINT*width,UINT*height){
+DWORD GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
     *width = rfbScreen->width;
     *height = rfbScreen->height;
     LOGD("size=%dx%d",*width,*height);

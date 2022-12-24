@@ -35,7 +35,7 @@ GraphDevice::GraphDevice(int fmt){
     mFpsStartTime = mFpsPrevTime = 0;
     mFpsNumFrames = 0;
     GFXInit();
-    GFXGetScreenSize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
+    GFXGetDisplaySize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
 
     if((GFXGetRotation(0)==ROTATE_90)||(GFXGetRotation(0)==ROTATE_270)){
 	 int tmp = mScreenWidth;

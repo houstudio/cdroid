@@ -1,6 +1,6 @@
 
 option(MINIMAL_SIZE_OPTIMIZED "For IOT/Embedded size optimize" OFF)
-option(BUILD_EXAMPLES "Build examples" OFF)
+option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_CDROID_TESTS "Build unit tests" ON)
 
 option(ENABLE_GIF "enable gif encode and decoder" OFF)
@@ -32,7 +32,7 @@ find_package(Cairo REQUIRED)
 find_package(OpenSSL)
 find_package(Fontconfig REQUIRED)
 find_package(Brotli)
-#find_package(BZip2 REQUIRED)
+find_package(BZip2 REQUIRED)
 find_package(UniBreak REQUIRED)
 
 
