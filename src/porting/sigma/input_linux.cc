@@ -84,7 +84,16 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
-    LOGD_IF(rc2,"fd=%d[%s] rc1=%d,rc2=%d",device,devinfo->name,rc1,rc2);
+    for(int i=0;i<ABS_CNT;i++){
+       struct input_absinfo info;
+       AXISINFO*axis=devinfo->axis+i;
+       if(0==ioctl(device, EVIOCGABS(i),&info)){
+           axis->minimum=info.minimum;
+           axis->maximum=info.maximum;
+           axis->resolution=info.resolution;
+       }
+    }
+    LOGD_IF(rc2,"fd=%d[%s] rc1=%d,rc2=%d x=[%d,%d] y=[%d,%d]",device,devinfo->name,rc1,rc2);
     devinfo->product=id.product;
     devinfo->vendor=id.vendor;
     ioctl(device, EVIOCGBIT(EV_KEY, sizeof(devinfo->keyBitMask)), devinfo->keyBitMask);
@@ -136,7 +145,6 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout){
     return count;
 }
 
-#define ROTATE90 1
 INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
     int rc,count=0;
     struct timeval tv;
