@@ -38,7 +38,7 @@ find_path(FREETYPE2_ROOT_INCLUDE_DIR
 )
 
 find_library(FREETYPE2_LIBRARIES
-    NAMES freetype
+    NAMES freetype freetyped
     HINTS ${PC_FREETYPE2_LIBDIR}
           ${PC_FREETYPE2_LIBRARY_DIRS}
 )

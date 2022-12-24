@@ -18,7 +18,7 @@ find_path(
     DOC "Include directory for the CURL library")
 
 find_library(CURL_LIBRARY
-    NAMES curl
+    NAMES curl curl-d curld
     HINTS ${PC_CURL_LIBDIR}
     ${PC_CURL_LIBRARY_DIRS}
 )
