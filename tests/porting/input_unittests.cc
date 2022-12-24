@@ -56,11 +56,11 @@ TEST_F(INPUT,AxisInfo){
       INPUTDEVICEINFO info;
       if(0<InputGetEvents(keys,16,500)){
 	   InputGetDeviceInfo(keys[0].device,&info);
-	   for(int j=0;j<ABS_CNT;j++){
+	   for(int j=0;(j<ABS_CNT)&&(j<sizeof(info.axis)/sizeof(INPUTAXISINFO));j++){
 	       INPUTAXISINFO*a=info.axis+j;
 	       if(std::abs(a->maximum-a->minimum)>0){
 		  axises++;
-	          printf("axis[%d] range=[%d,%d]\r\n",j,a->minimum,a->maximum);
+	          printf("axis[%d] range=[%d,%d]\r\n",a->axis,a->minimum,a->maximum);
 	       }
 	   }
       }

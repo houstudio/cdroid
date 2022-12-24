@@ -30,7 +30,7 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 #define SIZEOF_BITS(bits)  (((bits) + 7) / 8)
 
 static int getMotionRanges(InputDeviceInfo&info,INPUTDEVICEINFO&dev){
-   for(int i=0;i<sizeof(dev.axis)/sizeof(INPUTAXISINFO);i++){
+   for(int i=0;(i<ABS_CNT) && (i<sizeof(dev.axis)/sizeof(INPUTAXISINFO));i++){
       INPUTAXISINFO*axis=dev.axis+i;
       if(std::abs(axis->maximum-axis->minimum)>0){
 	  info.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
