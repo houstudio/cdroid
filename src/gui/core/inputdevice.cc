@@ -256,7 +256,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     axis=ABS2AXIS(axis);
     switch(axis){
     case MotionEvent::AXIS_X:
-       if(range)value = value*width/(range->max-range->min);
+       if(range)value = (value-range->min)*width/(range->max-range->min);
        switch(rot){
        case ROTATE_0  : break;
        case ROTATE_90 : axis=MotionEvent::AXIS_Y;value=width-value;break;
@@ -264,7 +264,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        case ROTATE_180: value=width-value;break;
        }break;
     case MotionEvent::AXIS_Y:
-       if(range)value = value*height/(range->max-range->min);
+       if(range)value = (value-range->min)*height/(range->max-range->min);
        switch(rot){
        case ROTATE_0  : break;
        case ROTATE_90 : axis=MotionEvent::AXIS_X;value=value;break;
@@ -338,7 +338,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_REPORT:
         case SYN_MT_REPORT:
-            LOGD("%s time:%lld pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
+            LOGV("%s time:%lld pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
                mMoveTime,mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
                0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() , 0/*xOffset*/,0/*yOffset*/,
