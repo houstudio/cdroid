@@ -155,6 +155,7 @@ uint32_t getAbsAxisUsage(int32_t axis, uint32_t mDeviceClasses) {
     // Joystick devices get the rest.
     return mDeviceClasses & INPUT_DEVICE_CLASS_JOYSTICK;
 }
+
 int InputDevice::isValidEvent(int type,int code,int value){
     return true;
 }
@@ -162,12 +163,15 @@ int InputDevice::isValidEvent(int type,int code,int value){
 int InputDevice::getId()const{
     return mDeviceInfo.getId();
 }
+
 int InputDevice::getSource()const{
     return mDeviceInfo.getSources();
 }
+
 int InputDevice::getVendor()const{
     return mDeviceInfo.getIdentifier().vendor;
 }
+
 int InputDevice::getProduct()const{
     return mDeviceInfo.getIdentifier().product;
 }
@@ -364,6 +368,7 @@ int MouseDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 InputDeviceInfo::InputDeviceInfo() {
     initialize(-1, 0, -1, InputDeviceIdentifier(), std::string(), false, false);
 }
@@ -469,11 +474,11 @@ std::string getInputDeviceConfigurationFilePathByName(const std::string& name,co
     // Not found.
     return std::string();
 }
+
 std::string getInputDeviceConfigurationFilePathByDeviceIdentifier(
         const InputDeviceIdentifier& deviceIdentifier,const std::string& type) {
     if (deviceIdentifier.vendor !=0 && deviceIdentifier.product != 0) {
-        if (deviceIdentifier.version != 0) {
-            // Try vendor product version.
+        if (deviceIdentifier.version != 0) {// Try vendor product version.
             std::ostringstream name;
             name<<"Vendor_"<<hex<<setfill('0')<<setw(4)<<deviceIdentifier.vendor
                  <<"_Product_"<<deviceIdentifier.product<<"_Version_"<<deviceIdentifier.version;
@@ -482,7 +487,6 @@ std::string getInputDeviceConfigurationFilePathByDeviceIdentifier(
                 return versionPath;
             }
         }
-
         // Try vendor product.
         std::ostringstream name;
         name<<"Vendor_"<<std::ios::hex<<setfill('0')<<setw(4)<<deviceIdentifier.vendor<<"_Product_"<<deviceIdentifier.product;
@@ -491,7 +495,6 @@ std::string getInputDeviceConfigurationFilePathByDeviceIdentifier(
             return productPath;
         }
     }
-
     // Try device name.
     return getInputDeviceConfigurationFilePathByName(deviceIdentifier.name, type);
 }

@@ -223,7 +223,7 @@ void GraphDevice::composeSurfaces(){
         if(hdlSurface==nullptr){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
-        } 
+        }
     }
     const RectangleInt rectScreen={0,0,mScreenWidth,mScreenHeight};
     mInvalidateRgn->intersect(rectScreen);
