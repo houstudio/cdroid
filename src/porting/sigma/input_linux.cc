@@ -84,6 +84,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
+
     for(int i=0,j=0;i<ABS_CNT;i++){
        struct input_absinfo info;
        if((0==ioctl(device, EVIOCGABS(i),&info))&&(info.minimum!=info.maximum)){
@@ -94,10 +95,9 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
            a->minimum=info.minimum;
            a->maximum=info.maximum;
            a->resolution=info.resolution;
-	   LOGI_IF(a->maximum-a->minimum,"axis[%d]=[%d,%d]",a->axis, a->minimum,a->maximum);
+	   LOGI_IF(a->maximum-a->minimum,"dev %d axis[%d]=[%d,%d,%d]",device,a->axis, a->minimum,a->maximum,a->resolution);
        }
     }
-    LOGD_IF(rc2,"fd=%d[%s] rc1=%d,rc2=%d x=[%d,%d] y=[%d,%d]",device,devinfo->name,rc1,rc2);
     devinfo->product=id.product;
     devinfo->vendor=id.vendor;
     ioctl(device, EVIOCGBIT(EV_KEY, sizeof(devinfo->keyBitMask)), devinfo->keyBitMask);

@@ -62,12 +62,12 @@ static inline void scaleAxisValue(PointerCoords& c, int axis, float scaleFactor)
 void PointerCoords::scale(float scaleFactor) {
     // No need to scale pressure or size since they are normalized.
     // No need to scale orientation since it is meaningless to do so.
-    /*scaleAxisValue(*this, AMOTION_EVENT_AXIS_X, scaleFactor);
-    scaleAxisValue(*this, AMOTION_EVENT_AXIS_Y, scaleFactor);
-    scaleAxisValue(*this, AMOTION_EVENT_AXIS_TOUCH_MAJOR, scaleFactor);
-    scaleAxisValue(*this, AMOTION_EVENT_AXIS_TOUCH_MINOR, scaleFactor);
-    scaleAxisValue(*this, AMOTION_EVENT_AXIS_TOOL_MAJOR, scaleFactor);
-    scaleAxisValue(*this, AMOTION_EVENT_AXIS_TOOL_MINOR, scaleFactor);*/
+    scaleAxisValue(*this, MotionEvent::AXIS_X, scaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_Y, scaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOUCH_MAJOR, scaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOUCH_MINOR, scaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOOL_MAJOR, scaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOOL_MINOR, scaleFactor);
 }
 
 void PointerCoords::applyOffset(float xOffset, float yOffset) {

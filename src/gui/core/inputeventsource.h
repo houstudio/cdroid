@@ -10,12 +10,6 @@
 #include <unordered_map>
 #include <mutex>
 
-#if ENABLED_GESTURE
-namespace GRT{
-   class GestureRecognitionPipeline;
-}
-#endif
-
 namespace cdroid{
 
 class InputEventSource:public EventHandler{
@@ -26,9 +20,6 @@ protected:
     std::ofstream frecord;
     std::queue<InputEvent*>mInputEvents;
     std::queue<INPUTEVENT>mRawEvents;
-#if ENABLED_GESTURE
-    std::unique_ptr<GRT::GestureRecognitionPipeline>pipeline;
-#endif
     std::unordered_map<int,std::shared_ptr<InputDevice>>devices;
     std::shared_ptr<InputDevice>getdevice(int fd);
     int pushEvent(InputEvent*evt);

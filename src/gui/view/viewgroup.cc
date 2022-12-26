@@ -156,6 +156,7 @@ void ViewGroup::initGroup(){
     mFirstHoverTarget = nullptr;
     mOnHierarchyChangeListener = nullptr;
     mLayoutAnimationController = nullptr;
+    mHoveredSelf=false;
     mChildCountWithTransientState= 0;
     mChildUnhandledKeyListeners  = 0;
     mInvalidRgn=Region::create();

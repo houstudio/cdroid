@@ -46,8 +46,8 @@ typedef struct{
     BYTE relBitMask[4];
     BYTE swBitMask [4];
     BYTE ledBitMask[4];
-    BYTE ffBitMask [16];
     BYTE propBitMask[4];
+    BYTE ffBitMask [16];
     INPUTAXISINFO axis[64/*ABS_CNT*/];
     char name[MAX_DEVICE_NAME];
 }INPUTDEVICEINFO;

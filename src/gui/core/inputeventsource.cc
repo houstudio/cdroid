@@ -8,10 +8,6 @@
 #include <chrono>
 #include<tokenizer.h>
 #include <systemclock.h>
-#if ENABLED_GESTURE
-#include <GRT/GRT.h>
-#endif
-
 
 namespace cdroid{
 
@@ -42,19 +38,7 @@ InputEventSource::~InputEventSource(){
 }
 
 bool InputEventSource::initGesture(const std::string&fname){
-#if ENABLED_GESTURE
-    GRT::ClassificationData trainingData;
-    if(!trainingData.load(fname))return false;
-    trainingData.printStats();
-    pipeline.reset(new GRT::GestureRecognitionPipeline);//std::make_unique< GRT::GestureRecognitionPipeline >();
-    *pipeline << GRT::ANBC();
-    if( !pipeline->train( trainingData ) ){
-       LOGD("ERROR: Failed to train the pipeline!");
-    } 
-    return true;
-#else
     return false;
-#endif
 }
 
 std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){

@@ -29,52 +29,48 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 #define TEST_BIT(bit, array)    ((array)[(bit)/8] & (1<<((bit)%8)))
 #define SIZEOF_BITS(bits)  (((bits) + 7) / 8)
 
-static int getMotionRanges(InputDeviceInfo&info,INPUTDEVICEINFO&dev){
-   for(int i=0;(i<ABS_CNT) && (i<sizeof(dev.axis)/sizeof(INPUTAXISINFO));i++){
-      INPUTAXISINFO*axis=dev.axis+i;
-      if(std::abs(axis->maximum-axis->minimum)>0){
-	  info.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
-	  LOGD("axis %2d :(%d,%d)",i,axis->minimum,axis->maximum);
-      }
-   }
-}
-
 InputDevice::InputDevice(int fdev):listener(nullptr){
-    INPUTDEVICEINFO info;
+    INPUTDEVICEINFO devInfos;
     InputDeviceIdentifier di;
 
     mDeviceClasses=0;
-    InputGetDeviceInfo(fdev,&info);
-    di.name=info.name;
-    di.product=info.product;
-    di.vendor=info.vendor;
-    mDeviceInfo.initialize(fdev,0,0,di,std::string(),0,0);
-    getMotionRanges(mDeviceInfo,info);
+    InputGetDeviceInfo(fdev,&devInfos);
+    di.name=devInfos.name;
+    di.product=devInfos.product;
+    di.vendor=devInfos.vendor;
+    mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
+
+    for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
+	 const INPUTAXISINFO*axis=devInfos.axis+j;
+	 if(axis->maximum!=axis->minimum)
+  	    mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
+    }
+
     // See if this is a keyboard.  Ignore everything in the button range except for
     // joystick and gamepad buttons which are handled like keyboards for the most part.
-    bool haveKeyboardKeys = containsNonZeroByte(info.keyBitMask, 0, SIZEOF_BITS(BTN_MISC))
-            || containsNonZeroByte(info.keyBitMask, SIZEOF_BITS(KEY_OK), SIZEOF_BITS(KEY_MAX + 1));
-    bool haveGamepadButtons = containsNonZeroByte(info.keyBitMask, SIZEOF_BITS(BTN_MISC), SIZEOF_BITS(BTN_MOUSE))
-            || containsNonZeroByte(info.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
+    bool haveKeyboardKeys = containsNonZeroByte(devInfos.keyBitMask, 0, SIZEOF_BITS(BTN_MISC))
+            || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(KEY_OK), SIZEOF_BITS(KEY_MAX + 1));
+    bool haveGamepadButtons = containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_MISC), SIZEOF_BITS(BTN_MOUSE))
+            || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
     if (haveKeyboardKeys || haveGamepadButtons) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
     }
 
-    if(TEST_BIT(BTN_MOUSE,info.keyBitMask) &&TEST_BIT(REL_X,info.relBitMask) &&TEST_BIT(REL_Y,info.relBitMask))
+    if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask))
         mDeviceClasses=INPUT_DEVICE_CLASS_CURSOR;
-    if(TEST_BIT(ABS_MT_POSITION_X, info.absBitMask) && TEST_BIT(ABS_MT_POSITION_Y, info.absBitMask)) {
+    if(TEST_BIT(ABS_MT_POSITION_X, devInfos.absBitMask) && TEST_BIT(ABS_MT_POSITION_Y, devInfos.absBitMask)) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is a touch screen.
-        if (TEST_BIT(BTN_TOUCH, info.keyBitMask) || !haveGamepadButtons) {
+        if (TEST_BIT(BTN_TOUCH, devInfos.keyBitMask) || !haveGamepadButtons) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
         }
         // Is this an old style single-touch driver?
-    } else if (TEST_BIT(BTN_TOUCH, info.keyBitMask)
-            && TEST_BIT(ABS_X, info.absBitMask) && TEST_BIT(ABS_Y, info.absBitMask)) {
+    } else if (TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)
+            && TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask)) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
         // Is this a BT stylus?
-    } else if ((TEST_BIT(ABS_PRESSURE, info.absBitMask) || TEST_BIT(BTN_TOUCH, info.keyBitMask))
-            && !TEST_BIT(ABS_X, info.absBitMask) && !TEST_BIT(ABS_Y, info.absBitMask)) {
+    } else if ((TEST_BIT(ABS_PRESSURE, devInfos.absBitMask) || TEST_BIT(BTN_TOUCH, devInfos.keyBitMask))
+            && !TEST_BIT(ABS_X, devInfos.absBitMask) && !TEST_BIT(ABS_Y, devInfos.absBitMask)) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_EXTERNAL_STYLUS;
         // Keyboard will try to claim some of the buttons but we really want to reserve those so we
         // can fuse it with the touch screen data, so just take them back. Note this means an
@@ -88,7 +84,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     if (haveGamepadButtons) {
         uint32_t assumedClasses = mDeviceClasses | INPUT_DEVICE_CLASS_JOYSTICK;
         for (int i = 0; i <= ABS_MAX; i++) {
-            if (TEST_BIT(i, info.absBitMask)
+            if (TEST_BIT(i, devInfos.absBitMask)
                     && (getAbsAxisUsage(i, assumedClasses) & INPUT_DEVICE_CLASS_JOYSTICK)) {
                 mDeviceClasses = assumedClasses;
                 break;
@@ -98,14 +94,14 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
 
     // Check whether this device has switches.
     for (int i = 0; i <= SW_MAX; i++) {
-        if (TEST_BIT(i, info.swBitMask)) {
+        if (TEST_BIT(i, devInfos.swBitMask)) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_SWITCH;
             break;
         }
     }
 
     // Check whether this device supports the vibrator.
-    if (TEST_BIT(FF_RUMBLE, info.ffBitMask)) {
+    if (TEST_BIT(FF_RUMBLE, devInfos.ffBitMask)) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_VIBRATOR;
     }
 
@@ -243,7 +239,8 @@ static int ABS2AXIS(int absaxis){
     case ABS_MT_PRESSURE:
     case ABS_PRESSURE:return MotionEvent::AXIS_PRESSURE;
     
-    case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_PRESSURE; 
+    case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_PRESSURE;
+    default:return  -1; 
     }
 }
 
@@ -271,6 +268,8 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        case ROTATE_270: axis=MotionEvent::AXIS_X;value=height-value;break;
        case ROTATE_180: value=height-value;break;
        }break;
+    case MotionEvent::AXIS_Z:break;
+    default:return;
     }
     if(it==mPointMAP.end()){
         TouchPoint tp;
