@@ -65,10 +65,12 @@ set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
 #set(NONPKG_LIBS "-lcairo")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal -ljsoncpp")
 
-target_link_libraries(cdroid ${CDROID_DEPLIBS} ${UNIBREAK_LIBRARIES} tvhal)
+target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
 
 configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install (TARGETS cdroid  DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "view" EXCLUDE 
     PATTERN "core" EXCLUDE)
