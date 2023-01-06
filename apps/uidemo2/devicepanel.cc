@@ -27,7 +27,7 @@ void DevicePanel::onClick(View&v){
     if(it!=mDevices.end()){
         adapter=(DevicePagerAdapter<Device>*)it->second;
     }
-    LOGD("click %d",id);
+    //LOGD("click %d",id);
     if(id==mLastDevice)
         return;
     switch(id){
@@ -103,7 +103,7 @@ void DevicePanel::loadDevice(const std::string&deviceitem){
 }
 
 DevicePanel::~DevicePanel(){
-    LOGD("%d deviceadapters",mDevices.size());
+    //LOGD("%d deviceadapters",mDevices.size());
     for(auto d:mDevices){
         PagerAdapter*adapter = d.second;
         delete adapter;

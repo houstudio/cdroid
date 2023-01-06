@@ -51,8 +51,7 @@ foreach( each_file ${allfiles} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
-ADD_WHOLE_ARCHIVE_TO_LIBRARIES(CDROID_DEPLIBS)
-target_link_libraries(cdroid ${CDROID_DEPLIBS} ${UNIBREAK_LIBRARIES} tvhal)
+#ADD_WHOLE_ARCHIVE_TO_LIBRARIES(CDROID_DEPLIBS)
 
 configure_file(
         "cdroid.pc.in"
@@ -60,6 +59,14 @@ configure_file(
         @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
 	DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
+
+set(PKGCONFIG_LIBS "cairo")#do not use -l
+set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
+#set(NONPKG_LIBS "-lcairo")#non pkgconfig libraries
+set(NONPKG_LIBS_PRIVATE "-ltvhal -ljsoncpp")
+
+target_link_libraries(cdroid ${CDROID_DEPLIBS} ${UNIBREAK_LIBRARIES} tvhal)
+
 configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install (TARGETS cdroid  DESTINATION lib)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"

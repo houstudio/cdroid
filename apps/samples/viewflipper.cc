@@ -11,9 +11,9 @@ int main(int argc,const char*argv[]){
     ScaleAnimation*anim=new ScaleAnimation(0,1.f,0.f,1.f,200,300);
     anim->setDuration(1000);
     vfp->setInAnimation(anim);
-    anim= new ScaleAnimation(0,1.f,0.f,1.f,200,300);
-    anim->setDuration(1000);
-    vfp->setOutAnimation(anim); 
+    ScaleAnimation*anim2= new ScaleAnimation(0,1.f,0.f,1.f,200,300);
+    anim2->setDuration(1000);
+    vfp->setOutAnimation(anim2); 
     for(int i=0;i<10;i++){
         TextView*tv=new TextView(std::to_string(i),400,600);
         tv->setTextSize(120);

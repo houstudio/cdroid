@@ -27,7 +27,7 @@ ControlCenter::~ControlCenter(){
 }
 
 void ControlCenter::onItemClick(View&v,int pos){
-    LOGD("clicked %d",pos);
+    //LOGD("clicked %d",pos);
     if(mLastButtonID == pos)
         return;
     mLastButtonID = pos;

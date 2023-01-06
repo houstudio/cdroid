@@ -14,6 +14,7 @@
 #include "mi_common.h"
 #include "mi_sys.h"
 #include "mi_gfx.h"
+#include "pixman.h"
 
 typedef struct{
     int fb;
@@ -32,6 +33,7 @@ typedef struct{
    size_t msize;
    char*buffer;
    char*kbuffer;/*kernel buffer address*/
+   pixman_image_t*image;
 }FBSURFACE;
 
 static FBDEVICE devs[2]={-1};
@@ -146,6 +148,7 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
        ret=MI_GFX_QuickFill(&gfxsurf,&mirec,color,&fence);
        MI_GFX_WaitAllDone(FALSE,fence);
        LOGV("Fill(%d,%d,%d,%d) with %x",rec.x,rec.y,rec.w,rec.h,color);
+       //pixman_fill(ngs->buffer,ngs->pitch/sizeof(uint32_t),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rec.x,rec.y,rec.w,rec.h,color);
     }else{
        UINT*fb=(UINT*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
        UINT*fbtop=fb;
@@ -156,7 +159,8 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
            fb+=(ngs->pitch>>2);
            memcpy(fb,fbtop,cpw);
            copied+=ngs->pitch;
-       }	    
+       }
+       pixman_fill(ngs->buffer,ngs->pitch/sizeof (uint32_t),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rec.x,rec.y,rec.w,rec.h,color);       
     }
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d ret=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch,ret);
     return E_OK;
@@ -239,6 +243,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     }
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
+    surf->image = pixman_image_create_bits_no_clear(PIXMAN_a8r8g8b8,surf->width,surf->height,surf->buffer,surf->pitch);
     LOGI("Surface=%x buf=%p/%p size=%dx%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
@@ -267,14 +272,8 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
 
         LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-        pbs+=rs.y*nsrc->pitch+rs.x*4;
-        pbd+=dy*ndst->pitch+dx*4;
-        const int cpw=rs.w*4;
-        for(y=0;y<rs.h;y++){
-            memcpy(pbd,pbs,cpw);
-            pbs+=nsrc->pitch;
-            pbd+=ndst->pitch;
-        }
+	pixman_blt(nsrc->buffer,ndst->buffer,nsrc->pitch/sizeof (uint32_t),ndst->pitch/sizeof (uint32_t),
+		PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rs.x,rs.y,dx,dy,rs.w,rs.h);
     }else{
 	int ret;
 	MI_U16 fence;
@@ -301,7 +300,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         stDstRect.s32Ypos = dy;
         stDstRect.u32Width = rs.w;
         stDstRect.u32Height= rs.h;
-        ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
+	/*if(GFXGetRotation(nsrc->dispid)==ROTATE_0)
+	    pixman_image_composite32(PIXMAN_OP_SRC,nsrc->image, NULL, ndst->image,rs.x,rs.y,0,0,dx,dy,rs.w,rs.h);
+	else*/
+            ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
 	MI_GFX_WaitAllDone(FALSE,fence);
     }    
     return 0;
@@ -385,6 +387,7 @@ INT GFXDestroySurface(HANDLE surface){
     }else if(surf->buffer){
         free(surf->buffer);
     }
+    pixman_image_unref(surf->image);
     free(surf);
     return 0;
 }

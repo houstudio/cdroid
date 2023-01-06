@@ -45,6 +45,7 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
 
     LOGD("App %s started",(argc&&argv)?argv[0]:"");
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
+    cla.setSwitchChars("-");
     cla.parse(argc,argv);
     if(hasSwitch("debug")){
         ViewGroup::DEBUG_DRAW=true;
@@ -52,6 +53,7 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     }
     if(hasSwitch("help")){
 	std::cout<<cla.getUsageString()<<std::endl;
+	std::cout<<"params.count="<<getParamCount()<<std::endl;
 	exit(0);
     }
     GFXInit();

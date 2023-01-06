@@ -57,7 +57,7 @@ public:
             lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
                 FileItem f=adp->getItemAt(pos);
-                LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
+                //LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
                 if(f.isDir){
                     adp->clear();
                     adp->loadFiles(f.fullpath);
@@ -65,17 +65,17 @@ public:
                     lv.setSelection(0);
                 }
             });
-            LOGV("instantiateItem %d to %p",position,lv);
+            //LOGV("instantiateItem %d to %p",position,lv);
             return lv;
             }   
-        case 1:{LOGD("===========1111");
+        case 1:{//LOGD("===========1111");
             GridView*gv=new GridView(800,480);
             if(adapter2==nullptr)
                 adapter2=new FileAdapter("@layout/fileitem2.xml");
             gv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
                 FileItem f=adp->getItemAt(pos);
-                LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
+                //LOG(DEBUG)<<"clicked "<<pos<<" "<<f.fileName;
                 if(f.isDir){
                     adp->clear();
                     adp->loadFiles(f.fullpath);
@@ -98,7 +98,7 @@ public:
     }
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
-        LOGV("destroyItem[%d]: %p",position,object);
+        //LOGV("destroyItem[%d]: %p",position,object);
         delete (View*)object;
     }
     std::string getPageTitle(int position)override{
@@ -136,7 +136,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mTabLayout->setSelectedTabIndicatorHeight(5);
     mTabLayout->setTabTextColors(0xFFFF0000,0xFF00FF00);
     mTabLayout->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
-    LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
+    //LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
     mPager->setAdapter(mAdapter);
     mPager->setOffscreenPageLimit(1);//mAdapter->getCount());
     mPager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
@@ -154,6 +154,6 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
 Window*CreateMultiMedia(){
     MediaWindow*w=new MediaWindow(0,0,800,640);
     w->setText("Media");
-    LOGD("CreateMultiMedia");
+    //LOGD("CreateMultiMedia");
     return w;
 }

@@ -10,7 +10,6 @@
 #include <cdlog.h>
 using namespace std::chrono;
 
-
 namespace cdroid{
 
 ZIPArchive::ZIPArchive(const std::string&fname){

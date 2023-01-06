@@ -48,7 +48,7 @@ int FileAdapter::loadFiles(const std::string&filepath){
         FileItem mi;
         mi.fileName=ent->d_name;
         mi.fullpath=SimplifyPath(path+"/"+mi.fileName);
-        LOGV("%s",mi.fullpath.c_str());
+        //LOGV("%s",mi.fullpath.c_str());
         switch(ent->d_type){
         case DT_DIR:
         case DT_REG:
@@ -60,7 +60,7 @@ int FileAdapter::loadFiles(const std::string&filepath){
         }
     }
     if(dir)closedir(dir);
-    LOGV("%s scaned=%d",filepath.c_str(),count);
+    //LOGV("%s scaned=%d",filepath.c_str(),count);
     return count;
 }
 

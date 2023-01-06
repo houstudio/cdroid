@@ -12,6 +12,7 @@ public:
         while(dir&&(ent=readdir(dir))){
             std::string fullpath=path+"/"+ent->d_name;
             if(ent->d_type==DT_REG)  urls.push_back(fullpath);
+	    printf("%s\r\n",fullpath.c_str());
         }
         if(dir)closedir(dir);
     }
@@ -54,8 +55,8 @@ int main(int argc,const char*argv[]){
     layout->setOrientation(LinearLayout::VERTICAL);
     TabLayout* tab=new TabLayout(1280,36);
     layout->addView(tab);
-     
-    MyPageAdapter*gpAdapter=new MyPageAdapter(app.hasArg("path")?app.getArg("path"):std::string("/home/houzh/images"));
+    printf("params=%d params[0]=%s\r\n",app.getParamCount(),app.getParam(0,"/home/houzh/images").c_str()); 
+    MyPageAdapter*gpAdapter=new MyPageAdapter(app.getParam(0,"/home/houzh/images"));
     ViewPager*pager=new ViewPager(800,560);
     pager->setOffscreenPageLimit(gpAdapter->getCount());
     pager->setAdapter(gpAdapter);
