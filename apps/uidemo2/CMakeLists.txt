@@ -3,7 +3,6 @@ project(uidemo2 C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(CDROID REQUIRED)
 include_directories(
    ./
    ${CDROID_INCLUDE_DIRS}

@@ -1,5 +1,6 @@
 #include <cdroid.h>
 #include <dirent.h>
+#include <fstream>
 using namespace Cairo;
 int main(int argc,const char*argv[]){
     App app(argc,argv);
@@ -17,7 +18,9 @@ int main(int argc,const char*argv[]){
     while(dir&&(ent=readdir(dir))){
         std::string fullpath=path+"/"+ent->d_name;
         if(ent->d_type!=DT_REG)continue;
-        RefPtr<Cairo::ImageSurface>img=app.getImage(fullpath);
+	std::ifstream fs(fullpath.c_str(),std::ios::binary|std::ios::in);
+	if(strstr(fullpath.c_str(),".png")==nullptr)continue;
+        RefPtr<Cairo::ImageSurface>img=ImageSurface::create_from_stream(fs);
         if(img==nullptr)continue;
         ImageView*iv=new ImageView(150,30);
         iv->setImageBitmap(img);

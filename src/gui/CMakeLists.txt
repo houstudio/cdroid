@@ -1,4 +1,4 @@
-project(gui C CXX)
+project(cdroid C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -60,9 +60,9 @@ configure_file(
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
 	DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 
-set(PKGCONFIG_LIBS "cairo")#do not use -l
+set(PKGCONFIG_LIBS "cairo bzip2 libzip")#do not use -l
 set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
-#set(NONPKG_LIBS "-lcairo")#non pkgconfig libraries
+set(NONPKG_LIBS "-l${PROJECT_NAME} -ljsoncpp -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal -ljsoncpp")
 
 target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)

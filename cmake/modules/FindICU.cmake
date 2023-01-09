@@ -49,6 +49,7 @@ if (ICU_INCLUDE_DIR AND ICU_LIBRARY)
     find_library(
         ICU_I18N_LIBRARY
         NAMES icuin icui18n cygicuin cygicuin32
+	HINTS ${PC_ICU_LIBRARY_DIRS} ${PC_ICU_LIBDIR}
         DOC "Libraries to link against for ICU internationalization")
     mark_as_advanced(ICU_I18N_LIBRARY)
     if (ICU_I18N_LIBRARY)
@@ -58,6 +59,12 @@ if (ICU_INCLUDE_DIR AND ICU_LIBRARY)
         set(ICU_I18N_FOUND 0)
         set(ICU_I18N_LIBRARIES)
     endif ()
+    find_library(ICU_DATA_LIBRARY
+	NAMES icudata cygicudata HINTS ${PC_ICU_LIBRARY_DIRS} ${PC_ICU_LIBDIR})
+    if(ICU_DATA_LIBRARY)
+	set(ICU_DATA_LIBRARIES ${ICU_DATA_LIBRARY})
+	set(ICU_DATA_FOUND 1)
+    endif(ICU_DATA_LIBRARY)
 else ()
     set(ICU_FOUND 0)
     set(ICU_I18N_FOUND 0)

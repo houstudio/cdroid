@@ -42,7 +42,7 @@ include_directories(./
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
 )
-set(PREFIX ${CMAKE_INSTALL_PREFIX}/lib)
+set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(NONPKG_LIBS "-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx \
  -lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel \
  -lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale")

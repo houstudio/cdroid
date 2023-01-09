@@ -1,22 +1,29 @@
 
 find_package(PkgConfig)
-pkg_check_modules(PC_CDROID QUIET cdroid)
+pkg_check_modules(PC_CDROID cdroid)
+pkg_check_modules(PC_CDHAL cdroidhal)
 
 find_path(CDROID_INCLUDE_DIRS
     NAMES view/view.h
     HINTS ${PC_CDROID_INCLUDEDIR}
           ${PC_CDROID_INCLUDE_DIRS}
-    PATH_SUFFIXES gui
+    PATH_SUFFIXES gui porting
+)
+find_path(CDROID_PORTING_DIRS
+    NAMES porting/cdgraph.h
+    HINTS ${PC_CDROID_INCLUDEDIR}
+          ${PC_CDROID_INCLUDE_DIRS}
 )
 
 find_library(CDROID_LIBRARIES
     NAMES cdroid
     HINTS ${PC_CDROID_LIBDIR}
           ${PC_CDROID_LIBRARY_DIRS}
-	  ${CMAKE_BINARY_DIR}/src/gui
 )
-message("...CDROID_LIBRARIES=${CDROID_LIBRARIES}")
-set(CDROID_LIBRARIES cdroid)
+
+set(CDROID_INCLUDE_DIRS ${CDROID_INCLUDE_DIRS} ${CDROID_PORTING_DIRS}/porting)
+list(APPEND CDROID_LIBRARIES ${PC_CDROID_LDFLAGS} ${CDHAL_LDFLAGS} ${PC_CDHAL_LDFLAGS})
+message("...CDROID_LIBRARIES=${CDROID_LIBRARIES} CDROID_INCLUDE_DIRS=${CDROID_INCLUDE_DIRS} ${CDROID_PORTING_DIRS}\n PC_CDROID_LIBDIR=${PC_CDROID_LIBDIR}")
 
 if (CDROID_INCLUDE_DIRS)
     if (EXISTS "${CDROID_INCLUDE_DIRS}/cdroid-version.h")
