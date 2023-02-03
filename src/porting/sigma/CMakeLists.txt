@@ -22,7 +22,7 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
-list(APPEND SIGMA_LIBS ${PIXMAN_LIBRARY})
+#list(APPEND SIGMA_LIBS ${PIXMAN_LIBRARY})
 if(TRUE)
     list(APPEND SIGMA_SRCS graph_gfx.c)
 else()
@@ -43,6 +43,7 @@ include_directories(./
     ${CMAKE_SOURCE_DIR}/src/gui/core
 )
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
+#set(PKGCONFIG_LIBS pixman)
 set(NONPKG_LIBS "-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx \
  -lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel \
  -lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale")

@@ -80,10 +80,13 @@
 * 7,after step 4,makefile is created in directory outxxx where you can type make to build your program.
 * 8,you can export USE_RFB_GRAPH=ON before cmake is executed to to use remote framebuffer for test.
 
-# **X86 Emulator:**
-* 1.Ubuntu 18(64bit)Desktop
-* 2.install dependencs: sudo apt install build-essential cmake gdb pkg-config zip gettext libx11-dev
-* 3.Window'user can use MobaXterm's x11 display(or VNCViewer)
+# **Building CDROID:**
+* 1.install dependencs: sudo apt install build-essential cmake gdb pkg-config zip gettext libx11-dev
+* 2.install vcpkg
+* 3.install cdroid deplibs:  vcpkg install libzip cairo
+* 4.create buildings:./build.sh --port=x64
+* 5.enter buildout directory and make the cdroid project
+  
  
 
 

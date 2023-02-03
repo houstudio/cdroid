@@ -111,7 +111,7 @@ public:
     };
     InputEvent();
     virtual ~InputEvent();
-    virtual int getType()=0;
+    virtual int getType()const=0;
     void initialize(int32_t deviceId, int32_t source);
     void initialize(const InputEvent& from);
     void setSource(int source){mSource=source;}
@@ -241,14 +241,14 @@ public:
     static KeyEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
                    int deviceId, int scancode, int flags, int source/*,std::string characters*/);
     static KeyEvent* obtain(const KeyEvent& other);
-    virtual int getType(){return EV_KEY;}
-    int getKeyCode() {return mKeyCode;}
+    virtual int getType()const {return EV_KEY;}
+    int getKeyCode()const {return mKeyCode;}
     void setKeyCode(int k){mKeyCode=k;}
-    int getFlags(){return mFlags;}
+    int getFlags()const{return mFlags;}
     inline int32_t getScanCode() const { return mScanCode; }
     inline int32_t getMetaState() const { return mMetaState; } 
-    int getAction(){return mAction;}//key up-->0 down-->1
-    int getRepeatCount(){return mRepeatCount;}
+    int getAction()const{return mAction;}//key up-->0 down-->1
+    int getRepeatCount()const {return mRepeatCount;}
     inline nsecs_t getDownTime() const { return mDownTime; }
     bool hasNoModifiers()const;
     bool hasModifiers(int modifiers)const;
@@ -413,7 +413,7 @@ public:
     static bool isTouchEvent(int32_t source, int32_t action);
     void copyFrom(const MotionEvent* other, bool keepHistory);
     MotionEvent*split(int idBits);
-    virtual int getType(){return EV_ABS;}
+    virtual int getType()const{return EV_ABS;}
     inline int32_t getAction() const { return mAction;}  
     inline void setAction(int32_t action) { mAction = action; }
     inline int32_t getActionMasked() const { return mAction &ACTION_MASK; }

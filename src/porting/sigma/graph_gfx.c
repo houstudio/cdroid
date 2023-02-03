@@ -160,7 +160,7 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
            memcpy(fb,fbtop,cpw);
            copied+=ngs->pitch;
        }
-       pixman_fill(ngs->buffer,ngs->pitch/sizeof (uint32_t),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rec.x,rec.y,rec.w,rec.h,color);       
+       //pixman_fill(ngs->buffer,ngs->pitch/sizeof (uint32_t),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rec.x,rec.y,rec.w,rec.h,color);       
     }
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d ret=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch,ret);
     return E_OK;
@@ -243,7 +243,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     }
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
-    surf->image = pixman_image_create_bits_no_clear(PIXMAN_a8r8g8b8,surf->width,surf->height,surf->buffer,surf->pitch);
+    //surf->image = pixman_image_create_bits_no_clear(PIXMAN_a8r8g8b8,surf->width,surf->height,surf->buffer,surf->pitch);
     LOGI("Surface=%x buf=%p/%p size=%dx%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
@@ -272,8 +272,8 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
 
         LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-	pixman_blt(nsrc->buffer,ndst->buffer,nsrc->pitch/sizeof (uint32_t),ndst->pitch/sizeof (uint32_t),
-		PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rs.x,rs.y,dx,dy,rs.w,rs.h);
+	//pixman_blt(nsrc->buffer,ndst->buffer,nsrc->pitch/sizeof (uint32_t),ndst->pitch/sizeof (uint32_t),
+	//	PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rs.x,rs.y,dx,dy,rs.w,rs.h);
     }else{
 	int ret;
 	MI_U16 fence;
@@ -387,7 +387,7 @@ INT GFXDestroySurface(HANDLE surface){
     }else if(surf->buffer){
         free(surf->buffer);
     }
-    pixman_image_unref(surf->image);
+    //pixman_image_unref(surf->image);
     free(surf);
     return 0;
 }

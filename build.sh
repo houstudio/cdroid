@@ -73,7 +73,7 @@ if [ SHOWHELP ];then
     echo ""
     echo "Usage: $0 [options] $#"
     echo "-P|--product [x64,sigma]"
-    echo "-b|--build[Debug,Release,RelWithDebInfo]"
+    echo "-b|--build[Debug,Release,RelWithDebInfo,MinSizeRel]"
     echo "-h|--help Show Help Info,Usage"
     echo ""
 fi
