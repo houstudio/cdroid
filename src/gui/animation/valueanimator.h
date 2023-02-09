@@ -97,8 +97,8 @@ public:
     void setStartDelay(long startDelay);
     static long getFrameDelay();
     static void setFrameDelay(long frameDelay);
-    Variant getAnimatedValue();
-    Variant getAnimatedValue(const std::string&propertyName);
+    AnimateValue getAnimatedValue();
+    AnimateValue getAnimatedValue(const std::string&propertyName);
     void setRepeatCount(int value);
     int  getRepeatCount()const;
     void setRepeatMode(int value);

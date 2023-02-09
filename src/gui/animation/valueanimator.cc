@@ -237,16 +237,16 @@ void ValueAnimator::setFrameDelay(long frameDelay){
     AnimationHandler::getInstance().setFrameDelay(frameDelay);
 }
 
-Variant ValueAnimator::getAnimatedValue(){
+AnimateValue ValueAnimator::getAnimatedValue(){
     if(mValues.size())return mValues[0]->getAnimatedValue();
-    return Variant(0);
+    return AnimateValue(0);
 }
 
-Variant ValueAnimator::getAnimatedValue(const std::string&propertyName){
+AnimateValue ValueAnimator::getAnimatedValue(const std::string&propertyName){
     auto it=mValuesMap.find(propertyName);
     if(it!=mValuesMap.end())
         return it->second->getAnimatedValue();
-    return Variant(0);
+    return AnimateValue(0);
 }
 
 void ValueAnimator::setRepeatCount(int value) {
