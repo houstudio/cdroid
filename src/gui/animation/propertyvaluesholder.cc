@@ -35,7 +35,7 @@ Property*PropertyValuesHolder::getProperty(){
     return mProperty;
 }
 
-void PropertyValuesHolder::evaluate(Variant& out, const Variant& from, const Variant& to,
+void PropertyValuesHolder::evaluate(AnimateValue& out, const AnimateValue& from, const AnimateValue& to,
            float fraction) const{
     switch(from.index()){
     case 0:
@@ -85,7 +85,7 @@ void PropertyValuesHolder::setFraction(void*target,float fraction){
     }
     if(mProperty)mProperty->set(target,fraction);
 }
-const Variant& PropertyValuesHolder::getAnimatedValue()const{
+const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
     return mAnimateValue;
 }
 

@@ -5,7 +5,6 @@
 #include <string>
 #include <functional>
 #include <drawables/drawable.h>
-#include <core/variant.h>
 
 namespace cdroid{
 
@@ -21,8 +20,8 @@ private:
     std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
     std::map<const std::string,class ZIPArchive*>mResources;
     std::map<const std::string,AttributeSet>mStyles;
-    typedef nonstd::variant<int,ColorStateList*>COMPLEXCOLOR;
-    std::map<const std::string,COMPLEXCOLOR>mColors;
+    struct COMPLEXCOLOR;
+    std::map<const std::string,std::unique_ptr<COMPLEXCOLOR>>mColors;
     void parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;

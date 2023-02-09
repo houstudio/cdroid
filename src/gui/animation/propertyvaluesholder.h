@@ -12,7 +12,7 @@
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{
-typedef nonstd::variant<int,uint32_t,float>Variant;
+typedef nonstd::variant<int,uint32_t,float>AnimateValue;
 
 inline constexpr float lerp(float fromValue, float toValue, float fraction) {
     return float(fromValue * (1.f - fraction) + toValue * fraction);
@@ -37,11 +37,11 @@ class PropertyValuesHolder{
 protected:
     std::string mPropertyName;
     Property*mProperty;
-    std::vector<Variant>mDataSource;
-    Variant mStartValue;
-    Variant mEndValue;
-    Variant mAnimateValue;
-    virtual void evaluate(Variant& out, const Variant& from, const Variant& to, float fraction)const;
+    std::vector<AnimateValue>mDataSource;
+    AnimateValue mStartValue;
+    AnimateValue mEndValue;
+    AnimateValue mAnimateValue;
+    virtual void evaluate(AnimateValue& out, const AnimateValue& from, const AnimateValue& to, float fraction)const;
 public:
     PropertyValuesHolder();
     virtual ~PropertyValuesHolder();
@@ -56,7 +56,7 @@ public:
     void setValues(const std::vector<uint32_t>&values);
     void setValues(const std::vector<float>&values);
     virtual void setFraction(void*target,float fraction);
-    const Variant& getAnimatedValue()const;
+    const AnimateValue& getAnimatedValue()const;
 
     static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
     static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);
@@ -64,9 +64,7 @@ public:
     static PropertyValuesHolder*ofFloat(Property*prop,const std::vector<float>&);
 };
 
-#if 1
 typedef PropertyValuesHolder  IntPropertyValuesHolder;
 typedef PropertyValuesHolder  FloatPropertyValuesHolder;
-#endif
 
 }//endof namespace

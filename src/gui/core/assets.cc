@@ -14,6 +14,18 @@
 using namespace Cairo;
 namespace cdroid{
 
+struct Assets::COMPLEXCOLOR{
+    int icolor;
+    ColorStateList*colors;
+    COMPLEXCOLOR(int c){
+	icolor=c;
+	colors=nullptr;
+    }
+    COMPLEXCOLOR(ColorStateList*c){
+	colors=c;
+    }
+};
+
 Assets::Assets(){
     addResource("cdroid.pak","cdroid");
 }
@@ -24,9 +36,8 @@ Assets::Assets(const std::string&path):Assets(){
 
 Assets::~Assets(){
     for(auto it = mColors.begin() ;it != mColors.end() ; it++){
-        if(it->second.index()==1){
-            ColorStateList*c=nonstd::get<ColorStateList*>(it->second);
-            delete c;
+        if(it->second->colors){
+            delete it->second->colors;
         }
     }
     mColors.clear();
@@ -75,9 +86,9 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             LOGV("%s=%s",name.c_str(),value.c_str());
         }else if(tag0.compare("color")==0){
             const std::string name=atts[0].getString("name");
-            COMPLEXCOLOR cl=Color::parseColor(value);
+	    std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(Color::parseColor(value)));
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
-            mColors.insert(std::pair<const std::string,COMPLEXCOLOR>(package+":color/"+name,cl));
+            mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>(package+":color/"+name,std::move(cl)));
         }
     }else  if(atts.size()==2){int i=0;
         if(tag0.compare("style")==0){
@@ -133,8 +144,8 @@ int Assets::addResource(const std::string&path,const std::string&name){
         if((res.size()>6)&&TextUtils::startWith(res,"color")){ 
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             std::string resid=package+":"+res.substr(0,res.find(".xml"));
-            COMPLEXCOLOR cl=ColorStateList::inflate(this,resid);
-            mColors.insert(std::pair<const std::string,COMPLEXCOLOR>(resid,cl));
+	    std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(ColorStateList::inflate(this,resid)));
+            mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>(resid,std::move(cl)));
         }
         return 0;
     });
@@ -332,7 +343,7 @@ int Assets::getColor(const std::string&refid){
     name=AttributeSet::normalize(pkg,name);
     auto it = mColors.find(name);
     if(it!=mColors.end()){
-        return nonstd::get<int>(it->second);
+        return it->second->icolor;
     }
     else if((refid[0]=='#')||refid.find(':')==std::string::npos){
         return Color::parseColor(refid);
@@ -366,13 +377,11 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
             it=mColors.find(realName); 
         }
     }
-    LOGV_IF(it!=mColors.end(),"%s type=%d",fullresid.c_str(),it->second.index());
+    LOGV_IF(it!=mColors.end(),"%s type=%s",fullresid.c_str(),(it->second->colors?"color":"colorstatelist"));
     LOGV_IF(it==mColors.end(),"%s not found",fullresid.c_str());
     if(it!=mColors.end()){
-        switch(it->second.index()){
-        case 0: return ColorStateList::valueOf(nonstd::get<int>(it->second));
-        case 1: return new ColorStateList(*nonstd::get<ColorStateList*>(it->second));
-        }
+        if(it->second->colors)return new ColorStateList(*it->second->colors);
+	else return ColorStateList::valueOf(it->second->icolor);
     }
     return nullptr;
 }
