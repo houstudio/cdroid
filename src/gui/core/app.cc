@@ -42,7 +42,10 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
-
+    if(argc>0){
+	const char*p = strrchr(argv[0],'/');
+	if(p)setName(p+1);
+    }
     LOGD("App %s started",(argc&&argv)?argv[0]:"");
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.setSwitchChars("-");

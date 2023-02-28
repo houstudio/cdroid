@@ -124,7 +124,6 @@ private:
     std::vector<Response> mResponses;
     size_t mResponseIndex;
     nsecs_t mNextMessageUptime;
-    static Looper*mInst;
 private:
     int pollEvents(int timeoutMillis);
     int pollInner(int timeoutMillis);

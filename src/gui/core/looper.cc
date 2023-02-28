@@ -72,9 +72,12 @@ Looper::~Looper() {
         delete hdl;
     }mEventHandlers.clear();
 }
-Looper*Looper::mInst=nullptr;
 Looper*Looper::getDefault(){
-    if(mInst==nullptr)mInst=new Looper(false);
+    static thread_local Looper*mInst=nullptr;
+    if(mInst==nullptr){
+	mInst=new Looper(false);
+        //LOGI("*Looper::getDefault=%p",mInst);
+    }
     return mInst;
 }
 
