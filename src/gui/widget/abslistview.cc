@@ -2850,7 +2850,6 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
         mEdgeGlowTop->onRelease();
         mEdgeGlowBottom->onRelease();
     }
-    finishGlows();
     // Need to redraw since we probably aren't drawing the selector anymore
     invalidate();
     removeCallbacks(mPendingCheckForLongPress);
