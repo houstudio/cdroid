@@ -78,22 +78,25 @@ void AircondPagerAdapter::setDeviceProperties(View*v,Device&t){
     tv =(TextView*)v->findViewById(uidemo2::R::id::power);
     tv->setText(t.mPowerOn?std::to_string(16+time(nullptr)%8):std::string());
 
-    StateListDrawable*sd=(StateListDrawable*)tv->getBackground();
-    std::vector<int>state=StateSet::get(StateSet::VIEW_STATE_ACTIVATED);
-    if(!t.mPowerOn)state[0]=-state[0];
-    sd->setState(state);
+    tv->setActivated(t.mPowerOn);
 
-    tv=(TextView*)v->findViewById(uidemo2::R::id::fanspeed);
-    std::vector<Drawable*>ads=tv->getCompoundDrawables();
-    if(ads.size()==0)return;
-    AnimatedRotateDrawable*ad=(AnimatedRotateDrawable*)ads.at(TextView::Drawables::TOP);
-    if(t.mPowerOn){
-        ad->setFramesCount(16);
-        ad->setFramesDuration(100);
-        ad->start();
-    }else{
-        ad->stop();
-    }
+    tv->setOnClickListener([v](View&pwr){
+       StateListDrawable*sd=(StateListDrawable*)pwr.getBackground();
+       std::vector<int>state=sd->getState();
+       pwr.setActivated(!pwr.isActivated());
+       TextView*tv=(TextView*)v->findViewById(uidemo2::R::id::fanspeed);
+
+       std::vector<Drawable*>ads=tv->getCompoundDrawables();
+       if(ads.size()==0)return;
+       AnimatedRotateDrawable*ad=(AnimatedRotateDrawable*)ads.at(TextView::Drawables::TOP);
+       if(pwr.isActivated()){
+           ad->setFramesCount(16);
+           ad->setFramesDuration(100);
+           ad->start();
+       }else{
+           ad->stop();
+       }
+   });
 }
 
 }//endof namespace
