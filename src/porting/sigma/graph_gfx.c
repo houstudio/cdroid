@@ -304,7 +304,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 	    pixman_image_composite32(PIXMAN_OP_SRC,nsrc->image, NULL, ndst->image,rs.x,rs.y,0,0,dx,dy,rs.w,rs.h);
 	else*/
             ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
-	MI_GFX_WaitAllDone(FALSE,fence);
+	MI_GFX_WaitAllDone(TRUE,fence);
     }    
     return 0;
 }

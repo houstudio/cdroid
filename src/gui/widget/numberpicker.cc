@@ -162,6 +162,7 @@ void NumberPicker::initView(){
     mFlingScroller = new Scroller(getContext(), nullptr, true);
     mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
+    mHideWheelUntilFocused=false;
     setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT,-1);
 }
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){

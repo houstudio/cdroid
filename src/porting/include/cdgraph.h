@@ -32,7 +32,8 @@ typedef enum{
     ROTATE_0,
     ROTATE_90,
     ROTATE_180,
-    ROTATE_270
+    ROTATE_270,
+    ROTATE_NUM
 }GFX_ROTATION;
 /**
  @defgroup graphStruct Structs
