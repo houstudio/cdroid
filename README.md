@@ -83,7 +83,7 @@
 # **Building CDROID:**
 * 1.install dependencs: sudo apt install build-essential cmake gdb pkg-config zip gettext libx11-dev
 * 2.install vcpkg
-* 3.install cdroid deplibs:  vcpkg install libzip cairo
+* 3.install cdroid deplibs:  vcpkg install gtest jsoncpp libunibreak libjpeg-turbo[jpeg8] libzip cairo
 * 4.create buildings:./build.sh --port=x64
 * 5.enter buildout directory and make the cdroid project
   

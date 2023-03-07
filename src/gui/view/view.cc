@@ -2264,31 +2264,33 @@ void View::onDrawScrollBars(Canvas& canvas){
 #endif	
         // Do not draw horizontal scroll bars for round wearable devices.
     } else if ( drawVerticalScrollBar || drawHorizontalScrollBar) {
-        Rect& bounds = mScrollCache->mScrollBarBounds;
         ScrollBarDrawable* scrollBar = mScrollCache->scrollBar;
         if (drawHorizontalScrollBar) {
             scrollBar->setParameters(computeHorizontalScrollRange(),
                computeHorizontalScrollOffset(),computeHorizontalScrollExtent(), false);
+            Rect& bounds = mScrollCache->mScrollBarBounds;
             getHorizontalScrollBarBounds(&bounds, nullptr);
-            onDrawHorizontalScrollBar(canvas,scrollBar, bounds.left, bounds.top,bounds.width, bounds.height);
+            onDrawHorizontalScrollBar(canvas,scrollBar, bounds);
+            if (bInvalidate) invalidate(bounds);
         }
         if (drawVerticalScrollBar) {
             scrollBar->setParameters(computeVerticalScrollRange(),
                 computeVerticalScrollOffset(),computeVerticalScrollExtent(), true);
+            Rect& bounds = mScrollCache->mScrollBarBounds;
             getVerticalScrollBarBounds(&bounds, nullptr);
-            onDrawVerticalScrollBar(canvas, scrollBar, bounds.left, bounds.top,bounds.width, bounds.height);
+            onDrawVerticalScrollBar(canvas, scrollBar, bounds);
+            if (bInvalidate) invalidate(bounds);
         }
-        if (bInvalidate) invalidate(mScrollCache->mScrollBarBounds);
     }
 }
 
-void View::onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,int l, int t, int w, int h){
-    scrollBar->setBounds(l, t, w, h);
-    scrollBar->draw(canvas);
+void View::onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&rect){
+    scrollBar->setBounds(rect);
+    scrollBar->draw(canvas);LOGD("onDrawHorizontalScrollBar(%d,%d,%d,%d)",rect.left,rect.top,rect.width,rect.height);
 }
 
-void View::onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,int l, int t, int w, int h){
-    scrollBar->setBounds(l, t, w, h);
+void View::onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&rect){
+    scrollBar->setBounds(rect);
     scrollBar->draw(canvas);
 }
 
@@ -5879,8 +5881,8 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
         }
         if (mScrollCache->mScrollBarDraggingState
                 == ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR) {
-            Rect bounds = mScrollCache->mScrollBarBounds;
-                    getHorizontalScrollBarBounds(&bounds, nullptr);
+            Rect& bounds = mScrollCache->mScrollBarBounds;
+            getHorizontalScrollBarBounds(&bounds, nullptr);
             int range = computeHorizontalScrollRange();
             int offset = computeHorizontalScrollOffset();
             int extent = computeHorizontalScrollExtent();

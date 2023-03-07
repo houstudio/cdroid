@@ -614,8 +614,8 @@ protected:
     virtual void getScrollIndicatorBounds(Rect&);
     virtual void onDrawScrollIndicators(Canvas& canvas);
     virtual void onDrawScrollBars(Canvas& canvas);
-    void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,int l, int t, int w, int h);
-    void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,int l, int t, int w, int h);
+    void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&);
+    void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
 
     void ensureTransformationInfo();
 public:
