@@ -125,7 +125,6 @@ void CompoundButton::doSetChecked(bool checked){
         if (mOnCheckedChangeWidgetListener ) mOnCheckedChangeWidgetListener(*this, mChecked);
         //final AutofillManager afm = mContext.getSystemService(AutofillManager.class);
         //if (afm != null)  afm.notifyValueChanged(this);
-        
         mBroadcasting = false;
     }    
 }

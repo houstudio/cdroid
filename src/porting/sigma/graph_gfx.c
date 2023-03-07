@@ -30,8 +30,10 @@ typedef struct{
    UINT pitch;
    int format;
    int ishw;
+   int current;
    size_t msize;
-   char*buffer;
+   char*buffer;//drawbuffer
+   char*orig_buffer;//used only in double buffer*/
    char*kbuffer;/*kernel buffer address*/
    pixman_image_t*image;
 }FBSURFACE;
@@ -168,13 +170,27 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
 
 INT GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
-    if(surf->ishw){
-        GFXRect rect={0,0,surf->width,surf->height};
+    const size_t screen_size=surf->msize/2;
+    if( surf->ishw && (surf->msize>screen_size) ){
 	FBDEVICE*dev=&devs[surf->dispid];
-        //if(rc)rect=*rc;
-        dev->var.yoffset=0;
+	LOGI_IF(screen_size!=dev->var.xres * dev->var.yres * dev->var.bits_per_pixel / 8,
+	   "screensize=%dx%dx%dbpp",dev->var.xres,dev->var.yres,dev->var.bits_per_pixel);
+	if(surf->current==0){
+	    LOGI_IF(dev->fix.smem_start!=surf->kbuffer,"kbuffer error1");
+    	    MI_SYS_MemcpyPa(surf->kbuffer+screen_size,surf->kbuffer,screen_size);//drawbuffer->screenbuffer
+	    surf->buffer=surf->orig_buffer+screen_size;
+	    surf->kbuffer+=screen_size;
+	    dev->var.yoffset=0;//dev->var.yres;
+	}else{
+	    LOGI_IF(dev->fix.smem_start!=surf->kbuffer-screen_size,"kbuffer error2");
+	    MI_SYS_MemcpyPa(surf->kbuffer-screen_size,surf->kbuffer,screen_size);//drawbuffer->screenbuffer
+	    surf->buffer=surf->orig_buffer;
+	    dev->var.yoffset=dev->var.yres;
+	    surf->kbuffer-=screen_size;
+	}
+	surf->current=(surf->current+1)%2;
         int ret=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
-        LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev->var.yoffset);
+        LOGI_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d res=%dx%d dev=%p fb=%d",ret,dev->var.yoffset,dev->var.xres,dev->var.yres,dev,dev->fb);
     }
     return 0;
 }
@@ -208,7 +224,6 @@ static int setfbinfo(FBSURFACE*surf){
     return rc;
 }
 
-#define ALIGN(x,y) ((x&~(y))|y)
 INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     FBDEVICE*dev=&devs[dispid];
@@ -219,32 +234,40 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->ishw=hwsurface;
     surf->pitch=width*4;
     surf->kbuffer=NULL;
-    surf->msize=(surf->pitch*height);//sizeof dword
+    surf->orig_buffer=NULL;
+    surf->current = 0;
+    surf->msize= surf->pitch*height;
 
     MI_PHY phaddr=dev->fix.smem_start;
     MI_S32 ret=0;
-    if(!hwsurface){
+    if(hwsurface){
+	surf->msize*=2;
+        surf->buffer=mmap(dev->fix.smem_start,surf->msize,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0);
+        dev->var.yoffset=0;
+        LOGI("ioctl offset(0)=%d",ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var));
+        dev->var.yoffset=1280;
+        LOGI("ioctl offset(0)=%d dev=%p",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev);	
+    }else{
 	int i=0;
 	ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
 	while((i++<3)&&(phaddr==dev->fix.smem_start)){
 	    ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
 	    LOGI("[%d]=%x ret=%d",i,phaddr,ret);
 	}
+        MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
     }
+    surf->kbuffer=(char*)phaddr;
     if(hwsurface&&((GFXGetRotation(0)==ROTATE_90)||(GFXGetRotation(0)==ROTATE_270))){
 	surf->width=height;
         surf->height=width;
         surf->pitch=height*4;
     }
-    if(ret==0){
-        surf->kbuffer=(char*)phaddr;
-        MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
-        MI_SYS_MemsetPa(phaddr,0xFFFFFFFF,surf->msize);
-    }
+    MI_SYS_MemsetPa(phaddr,0xFFFFFFFF,surf->msize);
+    surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
     //surf->image = pixman_image_create_bits_no_clear(PIXMAN_a8r8g8b8,surf->width,surf->height,surf->buffer,surf->pitch);
-    LOGI("Surface=%x buf=%p/%p size=%dx%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,hwsurface);
+    LOGI("Surface=%x buf=%p/%p size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -289,78 +312,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
         opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
         opt.eMirror = E_MI_GFX_MIRROR_NONE;
-        opt.eRotate = E_MI_GFX_ROTATE_0;
-	opt.eRotate = GFXGetRotation(nsrc->dispid);//E_MI_GFX_ROTATE_90;
-        stSrcRect.s32Xpos = rs.x;
-        stSrcRect.s32Ypos = rs.y;
-        stSrcRect.u32Width = rs.w;
-        stSrcRect.u32Height= rs.h;
-
-        stDstRect.s32Xpos = dx;
-        stDstRect.s32Ypos = dy;
-        stDstRect.u32Width = rs.w;
-        stDstRect.u32Height= rs.h;
-	/*if(GFXGetRotation(nsrc->dispid)==ROTATE_0)
-	    pixman_image_composite32(PIXMAN_OP_SRC,nsrc->image, NULL, ndst->image,rs.x,rs.y,0,0,dx,dy,rs.w,rs.h);
-	else*/
-            ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
-	MI_GFX_WaitAllDone(TRUE,fence);
-    }    
-    return 0;
-}
-
-INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,const GFXRect*srcrects){
-#if 0	
-    unsigned int x,y,sw,sh;
-    FBSURFACE*ndst=(FBSURFACE*)dstsurface;
-    FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
-    GFXRect rs={0,0};
-    BYTE*pbs=(BYTE*)nsrc->buffer;
-    BYTE*pbd=(BYTE*)ndst->buffer;
-    rs.w=nsrc->width;rs.h=nsrc->height;
-    if(srcrect)rs=*srcrect;
-    if((nsrc->kbuffer==NULL)||(ndst->kbuffer==NULL)){
-        if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
-            LOGV("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
-            return E_INVALID_PARA;
-        }
-
-        LOGV("Blit %p[%dx%d] %d,%d-%d,%d -> %p[%dx%d] %d,%d",nsrc,nsrc->width,nsrc->height,
-             rs.x,rs.y,rs.w,rs.h,ndst,ndst->width,ndst->height,dx,dy);
-        if(dx<0){rs.x-=dx;rs.w=(int)rs.w+dx; dx=0;}
-        if(dy<0){rs.y-=dy;rs.h=(int)rs.h+dy;dy=0;}
-        if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
-        if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
-
-        LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-        pbs+=rs.y*nsrc->pitch+rs.x*4;
-        pbd+=dy*ndst->pitch+dx*4;
-        const int cpw=rs.w*4;
-        for(y=0;y<rs.h;y++){
-            memcpy(pbd,pbs,cpw);
-            pbs+=nsrc->pitch;
-            pbd+=ndst->pitch;
-        }
-    }else{
-	int ret;
-	MI_U16 fence;
-	MI_GFX_Opt_t opt;
-	MI_GFX_Surface_t gfxsrc,gfxdst;
-        MI_GFX_Rect_t stSrcRect, stDstRect;
-	toMIGFX(nsrc,&gfxsrc);
-	toMIGFX(ndst,&gfxdst);
-	bzero(&opt,sizeof(opt));
-
-        opt.u32GlobalSrcConstColor = 0xFF000000;
-        opt.u32GlobalDstConstColor = 0xFF000000;
-        opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
-        opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
-        opt.eMirror = E_MI_GFX_MIRROR_NONE;
-#ifdef ROTATE_90	
-        opt.eRotate = E_MI_GFX_ROTATE_90;
-#else
-	opt.eRotate = E_MI_GFX_ROTATE_0;
-#endif	
+	opt.eRotate=ndst->ishw?GFXGetRotation(nsrc->dispid):E_MI_GFX_ROTATE_0;
         stSrcRect.s32Xpos = rs.x;
         stSrcRect.s32Ypos = rs.y;
         stSrcRect.u32Width = rs.w;
@@ -371,8 +323,13 @@ INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,c
         stDstRect.u32Width = rs.w;
         stDstRect.u32Height= rs.h;
         ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
-	MI_GFX_WaitAllDone(FALSE,fence);
-    }
+	MI_GFX_WaitAllDone(TRUE,fence);
+    }    
+    return 0;
+}
+
+INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,const GFXRect*srcrects){
+#if 0	
 #endif    
     return 0;
 }

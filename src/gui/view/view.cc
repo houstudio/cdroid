@@ -213,6 +213,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setLongClickable(attrs.getBoolean("longclickable",false));
     setFocusableInTouchMode(attrs.getBoolean("focusableInTouchMode",false));
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    setRotation(attrs.getInt("rotation",0));
     setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster",false));
  
     if(attrs.getBoolean("focusableInTouchMode",false)){

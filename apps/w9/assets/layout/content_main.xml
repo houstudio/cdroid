@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HorizontalScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/horizontalScroll"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:scrollbarSize="10dp">
+<LinearLayout
+	android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+	<RelativeLayout
+	    android:id="@+id/relativeLayout"
+            android:layout_width="320dp"
+            android:layout_height="320dp"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp">
+            <TextView
+                android:id="@+id/temp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:text="气温28"
+                android:textSize="40dp"/>
+            <TextView
+                android:id="@id/tips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/temp"
+		    android:text="@string/weathertips"/>
+            <Button
+                android:id="@+id/often"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tips"
+		    android:layout_alignParentLeft="true"
+                android:text="常用"/>
+            <Button
+                android:id="@+id/care"
+                android:layout_alignParentRight="true"
+                android:layout_below="@id/tips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="护理"/>
+            <Button
+                android:id="+id/favorite"
+                android:layout_below="@id/care"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="收藏"/>
+        </RelativeLayout>
+    </LinearLayout>
+</HorizontalScrollView>
+

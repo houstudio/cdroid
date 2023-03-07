@@ -18,6 +18,7 @@
 #define __CDROID_WINDOWMANAGER_H__
 
 #include <widget/cdwindow.h>
+#include <core/display.h>
 #include <vector>
 #include <stdint.h>
 #include <queue>
@@ -37,6 +38,7 @@ public:
     };
 public:
     static WindowManager& getInstance();
+    Display&getDefaultDisplay();
     void addWindow(Window*w);
     void removeWindow(Window*w);
     void moveWindow(Window*w,int x,int y);
@@ -55,6 +57,7 @@ private:
     virtual ~WindowManager();
     Window*mActiveWindow;/*activeWindow*/
     std::vector< Window* > mWindows;
+    std::vector<Display>mDisplays;
     static WindowManager* mInst;
     DISALLOW_COPY_AND_ASSIGN(WindowManager);
 };

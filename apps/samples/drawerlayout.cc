@@ -25,12 +25,19 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,1280,720);
+    Point size;
+    WindowManager::getInstance().getDefaultDisplay().getSize(size);
+    if(GFXGetRotation(0)==ROTATE_90||GFXGetRotation(0)==ROTATE_270){
+	int tmp=size.x;
+	size.x=size.y;
+	size.y=tmp;
+    } 
+    Window*w=new Window(0,0,size.x,size.y);
 
-    DrawerLayout*dl=new DrawerLayout(1280,720);
+    DrawerLayout*dl=new DrawerLayout(size.x,size.y);
 
     /*content area*/
-    LinearLayout*content=new LinearLayout(1280,720);
+    LinearLayout*content=new LinearLayout(size.x,size.y);
     content->setOrientation(LinearLayout::VERTICAL);
     TextView*tv=new TextView("TextView",40,40);
     content->setBackgroundColor(0xFFFF0000);
@@ -73,8 +80,9 @@ int main(int argc,const char*argv[]){
     left->setZ(100);
 
     MyAdapter*adapter=new MyAdapter();
-    ListView*lv=(ListView*)&left->addView(new ListView(460,500));
-    lv->setPos(10,10);
+    ListView*lv=new ListView(460,500);
+    left->addView(lv,new LinearLayout::LayoutParams(-1,-1));
+    lv->setId(1000);
     for(int i=0;i<56;i++){
         adapter->add("");
     }
@@ -87,7 +95,7 @@ int main(int argc,const char*argv[]){
     lv->setDivider(new ColorDrawable(0x80224422));
     lv->setDividerHeight(1);
 
-    dl->addView(left,1,lp);
+    dl->addView(left,1,lp).setId(100);
 
     /*right slider*/ 
     LinearLayout*right=new LinearLayout(300,720);

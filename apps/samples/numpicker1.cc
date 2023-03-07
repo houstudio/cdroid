@@ -3,9 +3,11 @@
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,1280,600);
+    Point size;
+    WindowManager::getInstance().getDefaultDisplay().getSize(size);
+    Window*w=new Window(0,0,size.x,size.y);
 
-    LinearLayout*layout=new LinearLayout(1280,600);
+    LinearLayout*layout=new LinearLayout(size.x,size.y);
     for(int i=0;i<3;i++){
         NumberPicker*np1=new NumberPicker(200,600);
         EditText*edt =(EditText*)np1->findViewById(cdroid::R::id::numberpicker_input);
@@ -19,13 +21,18 @@ int main(int argc,const char*argv[]){
         np1->setSelector(7,-1);
         np1->setMinHeight(220);
         np1->setBackgroundColor(0xFF111100+(i*33));
-        if(i==2)
+        if(i==2){
            np1->setFormatter([](int v)->std::string{
                return std::to_string(v)+"月";
-           });	
+           });
+	}
+	np1->setOnValueChangedListener([](NumberPicker&np,int prev,int value){
+            LOGI("numberpicker:%p value %d->%d",&np,prev,value);
+        });
         layout->addView(np1,new LinearLayout::LayoutParams(-1,-1,0.3f)).setId(100+i);
     }
     w->addView(layout,new LinearLayout::LayoutParams(-1,-1));
+    layout->requestLayout();
     w->requestLayout();
     app.exec();
 }

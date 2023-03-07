@@ -1626,7 +1626,7 @@ void ViewGroup::onDebugDraw(Canvas& canvas){
     // Draw margins
     canvas.set_source_rgba(1.f ,.0f, 1.f,.25f);
     onDebugDrawMargins(canvas);
-    canvas.fill();;
+    canvas.fill();
 
     // Draw clip bounds
     canvas.set_color(DEBUG_CORNERS_COLOR); 

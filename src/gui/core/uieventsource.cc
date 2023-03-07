@@ -17,7 +17,9 @@ UIEventSource::~UIEventSource(){
 
 int UIEventSource::checkEvents(){
     return hasDelayedRunners()||(mAttachedView&&mAttachedView->isDirty())
-           ||mAttachedView->isLayoutRequested()||GraphDevice::getInstance().needCompose();
+           ||mAttachedView->isLayoutRequested()
+	   //||mAttachInfo->mViewRequestingLayout
+	   ||GraphDevice::getInstance().needCompose();
 }
 
 int UIEventSource::handleEvents(){

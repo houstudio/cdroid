@@ -50,6 +50,19 @@ WindowManager::~WindowManager() {
     LOGD("%p Destroied",this);
 }
 
+Display&WindowManager::getDefaultDisplay(){
+    if(mDisplays.size()==0){
+	size_t dc=GFXGetDisplayCount();
+	for(size_t i=0;i<dc;i++){
+	    DisplayInfo info;
+	    GFXGetDisplaySize(i,(UINT*)&info.logicalWidth,(UINT*)&info.logicalHeight);
+	    Display d(i,info);
+	    mDisplays.push_back(d);
+	}
+    }
+    return mDisplays.at(Display::DEFAULT_DISPLAY); 
+}
+
 void WindowManager::addWindow(Window*win){
     mWindows.push_back(win);
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){

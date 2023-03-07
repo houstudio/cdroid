@@ -32,7 +32,7 @@ int main(int argc,const char*argv[]){
     btn->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
     ((ToggleButton*)btn)->setTextOn("ON");
     ((ToggleButton*)btn)->setTextOff("Off");
-    w->addView(btn).setId(101).setPos(200,70).setKeyboardNavigationCluster(true);
+    w->addView(btn).setId(101).setPos(200,70).setClickable(true);//setKeyboardNavigationCluster(true);
 
     chk=new CheckBox("CheckME",200,60);
     d=ctx->getDrawable("cdroid:drawable/btn_check.xml");

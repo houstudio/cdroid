@@ -34,7 +34,7 @@ find_package(Fontconfig REQUIRED)
 find_package(Brotli)
 find_package(BZip2 REQUIRED)
 find_package(UniBreak REQUIRED)
-
+find_package(LiteHtml)
 list(APPEND CDROID_DEPLIBS
     ${CAIRO_LIBRARIES}
     ${PIXMAN_LIBRARIES}
@@ -49,6 +49,11 @@ list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
 )
+
+if (LITEHTML_FOUND)
+    list( APPEND CDROID_DEPLIBS ${LITEHTML_LIBRARIES})
+    list(APPEND CDROID_DEPINCLUDES ${LITEHTML_INCLUDE_DIRS})
+endif()
 
 if(ENABLE_FRIBIDI)
   find_package(Fribidi REQUIRED)

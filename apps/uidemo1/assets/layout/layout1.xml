@@ -13,11 +13,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" 
             android:layout_alignParentRight="true"
-            android:text="Go"/>        
+	    android:text="@string/Go"/>        
         <EditText android:id="@+id/TextUrl" 
             android:layout_width="match_parent"
             android:layout_height="wrap_content" 
-            android:hint="请输入网址"
+	    android:hint="@string/请输入网址"
             android:layout_alignTop="@id/BtnGo" 
             android:layout_toLeftOf="@id/BtnGo"/>
     </RelativeLayout>
@@ -25,7 +25,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/address"
-        android:text="Text view ..."/> 
+	android:text="@string/Text view ..."/> 
     <AnalogClock
         android:layout_width="320dp"
         android:layout_height="320dp"
