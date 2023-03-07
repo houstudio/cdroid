@@ -2286,7 +2286,7 @@ void View::onDrawScrollBars(Canvas& canvas){
 
 void View::onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&rect){
     scrollBar->setBounds(rect);
-    scrollBar->draw(canvas);LOGD("onDrawHorizontalScrollBar(%d,%d,%d,%d)",rect.left,rect.top,rect.width,rect.height);
+    scrollBar->draw(canvas);
 }
 
 void View::onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&rect){
