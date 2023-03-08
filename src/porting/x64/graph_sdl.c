@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,18 +26,23 @@ typedef struct{
 }FBSURFACE;
 
 static int SDLProc(void*params);
-static void SendKeyEvent(int type,SDL_KeyboardEvent*event);
-static void SendMouseEvent(int type,SDL_MouseMotionEvent*event);
+static void SendKeyEvent(SDL_Event*event);
+static void SendMouseEvent(SDL_Event*event);
 
 INT GFXInit(){
     if(sdlWindow)return E_OK;
     SDL_Init(SDL_INIT_EVERYTHING);
     sdlWindow = SDL_CreateWindow("CDROID Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                              640,  480,  SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
+                  1280,  480,  SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
+    LOGI("SDL_CreateWindow =%p",sdlWindow);
     if (!sdlWindow) return E_ERROR;
 
     sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);//基于窗口创建渲染器
+    SDL_SetRenderDrawColor(sdlRenderer, 255, 0, 0, 255);
+    SDL_RenderClear(sdlRenderer);
+    SDL_RenderPresent(sdlRenderer);
     LOGI("sdlWindow=%p sdlRenderer=%p",sdlWindow,sdlRenderer);
+    SDL_Delay(100);
     SDL_CreateThread(SDLProc,NULL,NULL);
     return E_OK;
 }
@@ -48,7 +54,7 @@ INT GFXGetDisplayCount(){
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
     if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
     SDL_GetWindowSize(sdlWindow,(int*)width,(int*)height);
-    LOGD("screensize=%dx%d",*width,*height);
+    LOGV("screensize=%dx%d",*width,*height);
     return E_OK;
 }
 
@@ -96,11 +102,6 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
 }
 
 INT GFXFlip(HANDLE surface){
-    FBSURFACE*surf=(FBSURFACE*)surface;
-    if(surf->ishw){
-        GFXRect rect={0,0,surf->width,surf->height};
-        //if(rc)rect=*rc;
-    }
     return 0;
 }
 
@@ -114,16 +115,16 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->pitch=width*4;
     size_t buffer_size=surf->height*surf->pitch;
     UINT rmask, gmask, bmask, amask;
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if 0//SDL_BYTEORDER == SDL_BIG_ENDIAN
     rmask = 0xff000000;
     gmask = 0x00ff0000;
     bmask = 0x0000ff00;
     amask = 0x000000ff;
 #else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
     amask = 0xff000000;
+    rmask = 0x00ff0000;
+    gmask = 0x0000ff00;
+    bmask = 0x000000ff;
 #endif
     surf->surface=SDL_CreateRGBSurface(SDL_SWSURFACE,width, height, 32,rmask, gmask, bmask, amask);
     surf->texture=SDL_CreateTextureFromSurface(sdlRenderer,surf->surface);
@@ -138,8 +139,6 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs={0,0};
-    BYTE*pbs=(BYTE*)nsrc->surface->pixels;//buffer;
-    BYTE*pbd=(BYTE*)ndst->surface->pixels;//buffer;
     rs.w=nsrc->width;rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
@@ -154,18 +153,13 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
     if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
 
-    LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-    pbs+=rs.y*nsrc->pitch+rs.x*4;
-    pbd+=dy*ndst->pitch+dx*4;
-    const int cpw=rs.w*4;
-    for(y=0;y<rs.h;y++){
-        memcpy(pbd,pbs,cpw);
-        pbs+=nsrc->pitch;
-        pbd+=ndst->pitch;
-    }
+    LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy);
     SDL_BlitSurface(nsrc->surface,(const SDL_Rect *)&rs,ndst->surface,(const SDL_Rect *)&rs);
-    if(ndst->ishw)
-	 SDL_RenderCopy(sdlRenderer,ndst->texture,(const SDL_Rect *)&rs,(const SDL_Rect *)&rs);
+    if(ndst->ishw){
+	SDL_UpdateTexture(ndst->texture,(const SDL_Rect *)&rs,ndst->surface->pixels,ndst->pitch);
+        SDL_RenderCopy(sdlRenderer,ndst->texture,(const SDL_Rect *)&rs,(const SDL_Rect *)&rs);
+        SDL_RenderPresent(sdlRenderer);
+    }
     return 0;
 }
 
@@ -176,50 +170,70 @@ INT GFXDestroySurface(HANDLE surface){
     return 0;
 }
 
-#define SENDMOUSE(x,y)  {InjectABS(EV_ABS,0,x);\
-            InjectABS(EV_ABS,1,y);InjectABS(EV_SYN,SYN_REPORT,0);}
 static int SDLProc(void*params){
    int running=1;
    while(running){
        SDL_Event event;
-       if(SDL_WaitEventTimeout(&event,5)==0)continue;
+       if(SDL_WaitEventTimeout(&event,5000)==0)continue;
        switch(event.type){
        case SDL_QUIT:running=0;break;
        case SDL_KEYDOWN:
-       case SDL_KEYUP  :SendKeyEvent(event.type,&event.key); break;
-       case SDL_MOUSEMOTION://SendMouseEvent(event.type,&event.motion);break;
+       case SDL_KEYUP  :        SendKeyEvent(&event); break;
+       case SDL_MOUSEMOTION:    SendMouseEvent(&event);break;
        case SDL_MOUSEBUTTONDOWN:
-       case SDL_MOUSEBUTTONUP:SendMouseEvent(event.type,&event.motion);break;
+       case SDL_MOUSEBUTTONUP  :SendMouseEvent(&event);break;
        case SDL_MOUSEWHEEL:event.wheel;break;
        case SDL_FINGERDOWN:event.tfinger;break;
        case SDL_FINGERUP  :event.tfinger;break;
        case SDL_FINGERMOTION:event.tfinger;break;
-       case SDL_DISPLAYEVENT:break;
+       case SDL_DISPLAYEVENT:LOGD("SDL_DISPLAYEVENT");break;
        } 
    }
 }
 
-static void SendMouseEvent(int type,SDL_MouseMotionEvent*event){
-   InjectEvent(EV_ABS,0,event->x);
-   InjectEvent(EV_ABS,1,event->y);
-   if((type==SDL_MOUSEBUTTONDOWN)||(type==SDL_MOUSEBUTTONUP))
-       InjectABS(EV_KEY,BTN_TOUCH,0);
-   InjectABS(EV_SYN,SYN_REPORT,0);
+static void InjectEvent(int type,int code,int value,int dev){
+    INPUTEVENT i={0};
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC,&ts);
+    i.tv_sec=ts.tv_sec;
+    i.tv_usec=ts.tv_nsec/1000;
+    i.type=type;
+    i.code=code;
+    i.value=value;
+    i.device=dev;//INJECTDEV_TOUCH;
+    InputInjectEvents(&i,1,1);
 }
 
-static void SendKeyEvent(int type,SDL_KeyboardEvent*event){
-   int keycode=event->keysym.sym;
-   switch(event->keysym.sym){
-   case SDLK_0:keycode=KEY_0;break;
-   case SDLK_1:keycode=KEY_1;break;
-   case SDLK_2:keycode=KEY_2;break;
-   case SDLK_3:keycode=KEY_3;break;
-   case SDLK_4:keycode=KEY_4;break;
-   case SDLK_5:keycode=KEY_5;break;
-   case SDLK_6:keycode=KEY_6;break;
-   case SDLK_7:keycode=KEY_7;break;
-   case SDLK_8:keycode=KEY_8;break;
-   case SDLK_9:keycode=KEY_9;break;
+static void SendMouseEvent(SDL_Event*event){
+   switch(event->type){
+   case SDL_MOUSEBUTTONUP:
+   case SDL_MOUSEBUTTONDOWN:
+      InjectEvent(EV_ABS,0,event->button.x,INJECTDEV_TOUCH);
+      InjectEvent(EV_ABS,1,event->button.y,INJECTDEV_TOUCH);
+      InjectEvent(EV_KEY,BTN_TOUCH,event->button.state,INJECTDEV_TOUCH);
+      break;
+   case SDL_MOUSEMOTION:
+      InjectEvent(EV_ABS,0,event->motion.x,INJECTDEV_TOUCH);
+      InjectEvent(EV_ABS,1,event->motion.y,INJECTDEV_TOUCH);
+      break;
+   default:return;
+   }
+   InjectEvent(EV_SYN,SYN_REPORT,0,INJECTDEV_TOUCH);
+}
+
+static void SendKeyEvent(SDL_Event*event){
+   int keycode=event->key.keysym.sym;
+   switch(event->key.keysym.sym){
+   case SDLK_0 : keycode=KEY_0 ;break;
+   case SDLK_1 : keycode=KEY_1 ;break;
+   case SDLK_2 : keycode=KEY_2 ;break;
+   case SDLK_3 : keycode=KEY_3 ;break;
+   case SDLK_4 : keycode=KEY_4 ;break;
+   case SDLK_5 : keycode=KEY_5 ;break;
+   case SDLK_6 : keycode=KEY_6 ;break;
+   case SDLK_7 : keycode=KEY_7 ;break;
+   case SDLK_8 : keycode=KEY_8 ;break;
+   case SDLK_9 : keycode=KEY_9 ;break;
 
    case SDLK_F1 :keycode=KEY_F1 ;break;
    case SDLK_F2 :keycode=KEY_F2 ;break;
@@ -279,6 +293,6 @@ static void SendKeyEvent(int type,SDL_KeyboardEvent*event){
    case SDLK_z:keycode=KEY_Z;break;
    default:return;       
    }
-   InjectKey(EV_KEY,keycode,(type==SDL_KEYDOWN));
+   InjectEvent(EV_KEY,keycode,(event->type==SDL_KEYDOWN),INJECTDEV_KEY);
 }
 

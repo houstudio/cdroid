@@ -39,7 +39,7 @@ HomeWindow::HomeWindow():Window(0,0,1280,480){
        v.setTranslationY(-160);
        LOGD("LayoutChangeListener size=%dx%d",width,height);
    }};
-   rl->addOnLayoutChangeListener(layoutlistener);
+   //rl->addOnLayoutChangeListener(layoutlistener);
 }
 
 void HomeWindow::onClick(View&v){
