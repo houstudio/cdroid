@@ -70,22 +70,18 @@
 
 # **Porting guide:**
 
-* 1, A new porting must be placed to src/porting/xxx(where xxx is you chipset name)
+* 1, A new product porting should be placed to src/porting/xxx(where xxx is you chipset name)
 * 2, implement your porting api to xxx directory
-* 3, enter source root directory 
-* 4, make a dir named outxxx,enter outxxx)
-* 5, cmake -DCMAKE_TOOLCHAN_FILE="your cmake toolchain path" \
-        -DCDROID_CHIPSET=xxx \
-        ..
-* 7,after step 4,makefile is created in directory outxxx where you can type make to build your program.
-* 8,you can export USE_RFB_GRAPH=ON before cmake is executed to to use remote framebuffer for test.
+* 3, modify build.sh to support your port(you should configure sysroot toolchain...).
+* 4, call build.sh --product=xxx
+* 5, make you project(SeeAlso **Building CDROID**) 
 
 # **Building CDROID:**
 * 1.install dependencs: sudo apt install build-essential cmake gdb pkg-config zip gettext libx11-dev
 * 2.install vcpkg
-* 3.install cdroid deplibs:  vcpkg install gtest jsoncpp libunibreak libjpeg-turbo[jpeg8] libzip cairo
-* 4.create buildings:./build.sh --port=x64
-* 5.enter buildout directory and make the cdroid project
+* 3.install cdroid deplibs:  vcpkg install gtest sdl2 jsoncpp libunibreak libjpeg-turbo[jpeg8] libzip cairo
+* 4.create buildings:./build.sh --product=x64 --build=debug
+* 5.enter directory out${product}-${build} and make the cdroid project
   
  
 
