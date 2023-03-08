@@ -1,5 +1,5 @@
 #处理参数，规范化参数
-ARGS=`getopt -a -o p:b:h:: --long port:,product:,build::,help:: -- "$@"`
+ARGS=`getopt -a -o p:b:h:: --long product:,build::,help:: -- "$@"`
 #echo $ARGS
 #将规范化后的命令行参数分配至位置参数（$1,$2,...)
 eval set -- "${ARGS}"
@@ -72,7 +72,7 @@ fi
 if [ SHOWHELP ];then
     echo ""
     echo "Usage: $0 [options] $#"
-    echo "-P|--product [x64,sigma]"
+    echo "-P|--product [x64,sigma] default is x64"
     echo "-b|--build[Debug,Release,RelWithDebInfo,MinSizeRel]"
     echo "-h|--help Show Help Info,Usage"
     echo ""

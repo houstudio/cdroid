@@ -104,33 +104,17 @@ Matrix operator*(const Matrix& a, const Matrix& b)
 }
 
 void Matrix::transform_rectangle(Rectangle& io)const{
-    double pt[8];
-    pt[0] = pt[6] = io.x ;  
-    pt[1] = pt[3] = io.y ;
-    pt[2] = pt[4] = io.x + io.width; 
-    pt[5] = pt[7] = io.x + io.height;
-    double x1=INT_MAX,y1=INT_MAX;
-    double x2=INT_MIN,y2=INT_MIN;
-    for(int i=0;i<8;i+=2){
-       transform_point(pt[i],pt[i+1]);
-       x1 = std::min(x1,pt[i]);
-       y1 = std::min(y1,pt[i+1]);
-       x2 = std::max(x2,pt[i]);
-       y2 = std::max(y2,pt[i+1]);
-    }
-    io.x = x1;//std::floor(x1);
-    io.y = y1;//std::floor(y1);
-    io.width = x2 - x1;//std::ceil(x2) - to.x;
-    io.height= y2 - y1;//std::ceil(y2) - to.y; 
+    transform_point(io.x,io.y);
+    transform_distance(io.width,io.height);
 }
 
 void Matrix::transform_rectangle(RectangleInt& io)const{
     Rectangle tmp={io.x,io.y,io.width,io.height};
     transform_rectangle(tmp);
-    io.x = (int)std::floor(tmp.x);
-    io.y = (int)std::floor(tmp.y);
-    io.width = (int)std::ceil(tmp.width);
-    io.height= (int)std::ceil(tmp.height);  
+    io.x=tmp.x;
+    io.y=tmp.y;
+    io.width=tmp.width;
+    io.height=tmp.height;
 }
 
 } // namespace Cairo

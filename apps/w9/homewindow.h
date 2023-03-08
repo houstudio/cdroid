@@ -4,5 +4,5 @@ class HomeWindow:public Window{
 private:
    void onClick(View&);
 public:
-   HomeWindow();
+   HomeWindow(int mode);
 };

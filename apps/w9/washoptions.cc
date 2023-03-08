@@ -2,11 +2,12 @@
 #include <cdroid.h>
 #include <R.h>
 
-WashOptionsWindow::WashOptionsWindow(int options):Window(0,0,1280,480){
+WashOptionsWindow::WashOptionsWindow(int options):Window(0,0,1280,800){
     LayoutInflater::from(getContext())->inflate("@layout/options",this);
     NumberPicker*np=(NumberPicker*)findViewById(w9::R::id::options);
     np->setMinValue(0);
     np->setMaxValue(4);
+    np->setSelector(5,-1);
     LinearLayout*ll=(LinearLayout*)findViewById(w9::R::id::optionsContainer);
     const char*labels[]={
 	"Button0",

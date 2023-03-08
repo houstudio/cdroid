@@ -265,6 +265,7 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     // dispatch as long as we are careful to revert any changes we make.
     // Otherwise we need to make a copy.
     MotionEvent* transformedEvent;
+#if 0//android orignal code,
     if (newPointerIdBits == oldPointerIdBits) {
         if (child == nullptr || child->hasIdentityMatrix()) {
             if (child == nullptr) {
@@ -295,10 +296,24 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
             transformedEvent->transform(child->getInverseMatrix());
             LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"XY=(%f,%f)",transformedEvent->getX(),transformedEvent->getY());
         }
-
         handled = child->dispatchTouchEvent(*transformedEvent);
     }
-
+#else//zhhou
+    transformedEvent = MotionEvent::obtain(event);
+    if (child == nullptr) {
+        handled = View::dispatchTouchEvent(*transformedEvent);
+    } else {
+        float offsetX = mScrollX - child->mLeft;
+        float offsetY = mScrollY - child->mTop;
+        transformedEvent->offsetLocation(offsetX, offsetY);
+        if (! child->hasIdentityMatrix()) {
+            LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
+            transformedEvent->transform(child->getInverseMatrix());
+            LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"XY=(%f,%f)",transformedEvent->getX(),transformedEvent->getY());
+        }
+        handled = child->dispatchTouchEvent(*transformedEvent);
+    }
+#endif
     // Done. 
     transformedEvent->recycle();
     return handled;
@@ -1787,11 +1802,11 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
              Transformation t;
              bool transformed = getChildStaticTransformation(child,&t);
              if(transformed){
-                  transformMatrix=t.getMatrix();
-                  if(!child->hasIdentityMatrix())
-                       transformMatrix.multiply(transformMatrix,childMatrix);
+                 transformMatrix=t.getMatrix();
+                 if(!child->hasIdentityMatrix())
+                      transformMatrix.multiply(transformMatrix,childMatrix);
              }else
-                  transformMatrix=childMatrix;
+                 transformMatrix=childMatrix;
          }else{
              transformMatrix=childMatrix;
          }

@@ -2,14 +2,24 @@
 #include <washoptions.h>
 #include <cdroid.h>
 #include <R.h>
-HomeWindow::HomeWindow():Window(0,0,1280,480){
-   LayoutInflater::from(getContext())->inflate("@layout/content_main",this);
+HomeWindow::HomeWindow(int mode):Window(0,0,1280,800){
+   if(mode==0)
+      LayoutInflater::from(getContext())->inflate("@layout/content_main",this);
+   else 
+      LayoutInflater::from(getContext())->inflate("@layout/main2",this);
+
    RelativeLayout*rl=(RelativeLayout*)findViewById(w9::R::id::relativeLayout);
    View*v=findViewById(w9::R::id::horizontalScroll);
    v->setHorizontalScrollBarEnabled(true);
    v->setOnScrollChangeListener([](View& view, int x, int y, int oldX, int oldY){
       //LOGD("x=%d->%d",oldX,x);
    });
+   v=findViewById(w9::R::id::often);
+   if(v){
+	v->setOnClickListener([](View& ){
+	   LOGD("click often");
+        });
+   }
    LinearLayout*ll=(LinearLayout*)findViewById(w9::R::id::linearLayout);
    const char* res[]={
 	   "@mipmap/zhinengxi",
@@ -39,7 +49,7 @@ HomeWindow::HomeWindow():Window(0,0,1280,480){
        v.setTranslationY(-160);
        LOGD("LayoutChangeListener size=%dx%d",width,height);
    }};
-   //rl->addOnLayoutChangeListener(layoutlistener);
+   rl->addOnLayoutChangeListener(layoutlistener);
 }
 
 void HomeWindow::onClick(View&v){
