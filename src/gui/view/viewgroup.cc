@@ -2372,10 +2372,14 @@ void ViewGroup::setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus) 
 }
 
 void ViewGroup::transformPointToViewLocal(float point[2],View&child) {
-     point[0] += mScrollX - child.getX();
-     point[1] += mScrollY - child.getY();
+     point[0] += mScrollX - child.getLeft();
+     point[1] += mScrollY - child.getTop();
+     double x= point[0];
+     double y= point[1];
      if (!child.hasIdentityMatrix()) {
-         //child.getInverseMatrix().mapPoints(point);
+         child.getInverseMatrix().transform_point(x,y);
+	 point[0]=x;
+	 point[1]=y;
      }
 }
 
@@ -2606,7 +2610,6 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                 for(int i=childrenCount-1;i>=0;i--){
                     const int childIndex=getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
                     View*child = getAndVerifyPreorderedView(preorderedList, children, childIndex);
-
 		    if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
                         ev.setTargetAccessibilityFocus(false);
                         continue;
