@@ -1,0 +1,15 @@
+<strings lang="zh_CN">
+	<string name="Go">Go</string>
+	<string name="address">address</string>
+	<string name="webview">webview</string>
+	<string name="red">red</string>
+	<string name="green">green</string>
+	<string name="blue">blue</string>
+	<string name="yellow">yellow</string>
+	<string name="row1">row1</string>
+	<string name="row2">row2</string>
+	<string name="row3">row3</string>
+	<string name="row4">row4</string>
+	<string name="inputnum">inputnum</string>
+	<string name="inputcolumns">inputcolumns</string>
+</strings>

@@ -20,7 +20,7 @@ namespace R{
     };/*namespace id*/
 
     namespace strings{
-          static constexpr int optionsContainer        = 0x00002710 ;/*10000*/
+          static constexpr int weathertips             = 0x00002710 ;/*10000*/
     };/*namespace strings*/
 
 };//endof namespace R

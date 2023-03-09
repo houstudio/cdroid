@@ -114,10 +114,10 @@ public:
     int getNestedScrollAxes();
     bool shouldDelayChildPressedState();
     int getMaxScrollAmount();
-    View& addView(View* child);
-    View& addView(View* child, int index);
-    View& addView(View* child, ViewGroup::LayoutParams* params);
-    View& addView(View* child, int index, ViewGroup::LayoutParams* params);
+    View& addView(View* child)override;
+    View& addView(View* child, int index)override;
+    View& addView(View* child, ViewGroup::LayoutParams* params)override;
+    View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     void setOnScrollChangeListener(OnScrollChangeListener l);
     bool isFillViewport();
     void setFillViewport(bool fillViewport);
@@ -145,11 +145,11 @@ public:
     void computeScroll();
     void requestChildFocus(View* child, View* focused);
     bool requestChildRectangleOnScreen(View* child, Rect rectangle, bool immediate);
-    void requestLayout();
-    void onAttachedToWindow();
+    void requestLayout()override;
+    void onAttachedToWindow()override;
     void fling(int velocityY);
-    void scrollTo(int x, int y);
-    void draw(Canvas& canvas);
+    void scrollTo(int x, int y)override;
+    void draw(Canvas& canvas)override;
 };
 }/*endof namespace*/
 #endif//__NESTED_SCROLLVIEW_H__

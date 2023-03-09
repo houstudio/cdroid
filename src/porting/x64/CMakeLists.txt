@@ -40,7 +40,7 @@ endif()
 
 find_package(PkgConfig)
 find_package(SDL2 REQUIRED)
-if (SDL2_FOUND)
+if (FALSE AND SDL2_FOUND)
     list(APPEND X64_INCLUDE_DIRS ${SDL2_INCLUDE_DIRS})
     list(APPEND X64_LIBRARIES ${SDL2_LIBRARIES})
     list(APPEND GRAPH_SRCS graph_sdl.c)

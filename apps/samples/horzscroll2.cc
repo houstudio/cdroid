@@ -11,7 +11,7 @@ int main(int argc,const char*argv[]){
     auto click=[](View&v){
        LOGD("You clicked Button %d",v.getId());
     };
-    for(int i=0;i<10;i++){
+    for(int i=0;i<30;i++){
         TextView*tv=new Button(0,0);//TextView(150,30);
         tv->setText("Hello"+std::to_string(i));
         tv->setBackgroundColor(0xFF000000|i*632);

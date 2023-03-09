@@ -35,7 +35,7 @@ int main(int argc,const char*argv[]){
     LinearLayout*layout=new LinearLayout(800,600);
     layout->setOrientation(LinearLayout::VERTICAL);
     scroller->addView(layout,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::MATCH_PARENT)));
-    for(int i=0;i<10;i++){
+    for(int i=0;i<50;i++){
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT));
         lp->setMargins(5,2,5,2);
         EditText*edit=new EditText("Hello world! This value is positive for typical fonts that include",680,200);

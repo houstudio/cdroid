@@ -4,8 +4,9 @@
 #define TYPE_NON_TOUCH 1
 
 namespace cdroid{
-#if 10 
+
 NestedScrollingParentHelper::NestedScrollingParentHelper(ViewGroup* viewGroup) {
+    mNestedScrollAxes=0;
     mViewGroup = viewGroup;
 }
  
@@ -229,5 +230,4 @@ void NestedScrollingChildHelper::setNestedScrollingParentForType(int type, ViewG
             break;
     }
 }
-#endif
 }/*endof namespace*/

@@ -11,10 +11,12 @@ DECLARE_WIDGET2(NestedScrollView,"cdroid:attr/scrollViewStyle")
 
 NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();
+    LOGD("NestedScrollView cant scroll,do not use it");
 }
 
 NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):FrameLayout(context,attrs){
     initScrollView();
+    LOGE("NestedScrollView cant scroll,do not use it");
 }
 
 bool NestedScrollView::startNestedScroll(int axes, int type){
@@ -206,6 +208,7 @@ int NestedScrollView::getMaxScrollAmount() {
 void NestedScrollView::initScrollView() {
     mScroller = new OverScroller(getContext());
     setFocusable(true);
+    mFillViewport =true;
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     ViewConfiguration& configuration = ViewConfiguration::get(getContext());
@@ -213,7 +216,7 @@ void NestedScrollView::initScrollView() {
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
     mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
 
-    mParentHelper = new NestedScrollingParentHelper(this);
+    mParentHelper= new NestedScrollingParentHelper(this);
     mChildHelper = new NestedScrollingChildHelper(this);
     setNestedScrollingEnabled(true); 
 }
@@ -675,17 +678,17 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
             }
             }break;
         case MotionEvent::ACTION_UP:{
-            VelocityTracker* velocityTracker = mVelocityTracker;
-            velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
-            int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
-            if ((std::abs(initialVelocity) > mMinimumVelocity)) {
-                flingWithNestedDispatch(-initialVelocity);
-            } else if (mScroller->springBack(getScrollX(), getScrollY(), 0, 0, 0,
-                    getScrollRange())) {
-                this->postInvalidateOnAnimation();
-            }
-            mActivePointerId = INVALID_POINTER;
-            endDrag();
+                VelocityTracker* velocityTracker = mVelocityTracker;
+                velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
+                int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
+                if ((std::abs(initialVelocity) > mMinimumVelocity)) {
+                    flingWithNestedDispatch(-initialVelocity);
+                } else if (mScroller->springBack(getScrollX(), getScrollY(), 0, 0, 0,
+                        getScrollRange())) {
+                    this->postInvalidateOnAnimation();
+                }
+                mActivePointerId = INVALID_POINTER;
+                endDrag();
 	    }break;
         case MotionEvent::ACTION_CANCEL:
             if (mIsBeingDragged && getChildCount() > 0) {
@@ -1406,6 +1409,7 @@ void NestedScrollView::fling(int velocityY) {
                 INT_MIN, INT_MAX, // y
                 0, 0); // overscroll
         mLastScrollerY = getScrollY();
+	LOGD("mLastScrollerY=%d",mLastScrollerY);
         this->postInvalidateOnAnimation();
     }
 }
@@ -1415,7 +1419,7 @@ void NestedScrollView::flingWithNestedDispatch(int velocityY) {
     bool canFling = (scrollY > 0 || velocityY > 0)
             && (scrollY < getScrollRange() || velocityY < 0);
     if (!dispatchNestedPreFling(0, velocityY)) {
-        dispatchNestedFling(0, velocityY, canFling);
+         dispatchNestedFling(0, velocityY, canFling);
          fling(velocityY);
     }
 }
@@ -1464,6 +1468,7 @@ void NestedScrollView::ensureGlows() {
 
 void NestedScrollView::draw(Canvas& canvas) {
     FrameLayout::draw(canvas);
+    LOGD("mEdgeGlowTop=%p",mEdgeGlowTop);
     if (mEdgeGlowTop != nullptr) {
         int scrollY = getScrollY();
         if (!mEdgeGlowTop->isFinished()) {
