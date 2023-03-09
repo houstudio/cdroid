@@ -46,6 +46,7 @@ private:
     void smoothScrollBy(int dx, int dy);
     void scrollToChild(View* child);
     bool scrollToChildRect(Rect& rect, bool immediate);
+    bool shouldDisplayEdgeEffects()const;
     static bool isViewDescendantOf(View* child, View* parent);
     static int clamp(int n, int my, int child);
     void flingWithNestedDispatch(int velocityY);
@@ -56,6 +57,11 @@ protected:
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     float getTopFadingEdgeStrength();
     float getBottomFadingEdgeStrength();
+    void setEdgeEffectColor(int color);
+    void setBottomEdgeEffectColor(int color);
+    void setTopEdgeEffectColor(int color);
+    int  getTopEdgeEffectColor()const;
+    int getBottomEdgeEffectColor()const;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec);
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
     int computeVerticalScrollRange();
@@ -84,6 +90,7 @@ public:
     void setFillViewport(bool fillViewport);
     bool isSmoothScrollingEnabled()const;
     void setSmoothScrollingEnabled(bool smoothScrollingEnabled);
+    bool dispatchKeyEvent(KeyEvent& event);
     bool executeKeyEvent(KeyEvent& event);
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;

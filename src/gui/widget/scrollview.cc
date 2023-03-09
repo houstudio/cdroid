@@ -7,13 +7,18 @@ DECLARE_WIDGET2(ScrollView,"cdroid:attr/scrollViewStyle")
 
 ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();
+    AttributeSet attrs;
+    mEdgeGlowTop = new EdgeEffect(mContext);
+    mEdgeGlowBottom = new EdgeEffect(mContext);
     mIsBeingDragged=false;
     mActivePointerId=INVALID_POINTER;
 }
 
-ScrollView::ScrollView(Context*ctx,const AttributeSet&atts)
-  :FrameLayout(ctx,atts){
+ScrollView::ScrollView(Context*context,const AttributeSet&atts)
+  :FrameLayout(context,atts){
     initScrollView();
+    mEdgeGlowTop = new EdgeEffect(context);
+    mEdgeGlowBottom = new EdgeEffect(context);
 }
 
 ScrollView::~ScrollView(){
@@ -48,6 +53,27 @@ float ScrollView::getBottomFadingEdgeStrength() {
     return 1.0f;
 }
 
+void ScrollView::setEdgeEffectColor(int color){
+    setTopEdgeEffectColor(color);
+    setBottomEdgeEffectColor(color);
+}
+
+void ScrollView::setBottomEdgeEffectColor(int color){
+    mEdgeGlowBottom->setColor(color);
+}
+
+void ScrollView::setTopEdgeEffectColor(int color){
+    mEdgeGlowTop->setColor(color);
+}
+
+int  ScrollView::getTopEdgeEffectColor()const{
+    return mEdgeGlowTop->getColor();
+}
+
+int ScrollView::getBottomEdgeEffectColor()const{
+    return mEdgeGlowBottom->getColor();
+}
+
 int ScrollView::getMaxScrollAmount() {
     return (int) (MAX_SCROLL_FACTOR * (mBottom-mTop));
 }
@@ -58,7 +84,9 @@ void ScrollView::initScrollView() {
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     mFillViewport = false;
+    mSmoothScrollingEnabled = true;
     mVelocityTracker = nullptr;
+    mLastScroll = 0;
     mEdgeGlowTop = mEdgeGlowBottom =nullptr;
     ViewConfiguration& configuration = ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
@@ -154,6 +182,11 @@ void ScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
     }
+}
+
+bool ScrollView::dispatchKeyEvent(KeyEvent& event) {
+    // Let the focused view and/or our descendants get the key first
+    return FrameLayout::dispatchKeyEvent(event) || executeKeyEvent(event);
 }
 
 bool ScrollView::executeKeyEvent(KeyEvent& event) {
@@ -298,7 +331,15 @@ bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
          * isFinished() is correct.
         */
         mScroller->computeScrollOffset();
-        mIsBeingDragged = !mScroller->isFinished();
+        mIsBeingDragged = !mScroller->isFinished()|| !mEdgeGlowBottom->isFinished()
+                   || !mEdgeGlowTop->isFinished();
+	// Catch the edge effect if it is active.
+        if (!mEdgeGlowTop->isFinished()) {
+             mEdgeGlowTop->onPullDistance(0.f, ev.getX() / getWidth());
+        }
+        if (!mEdgeGlowBottom->isFinished()) {
+             mEdgeGlowBottom->onPullDistance(0.f, 1.f - ev.getX() / getWidth());
+        }
         /*if (mIsBeingDragged && mScrollStrictSpan == nullptr) {
             mScrollStrictSpan = StrictMode.enterCriticalSpan("ScrollView-scroll");
         }*/
@@ -324,6 +365,10 @@ bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
 
     /* The only time we want to intercept motion events is if we are in the drag mode. */
     return mIsBeingDragged;
+}
+
+bool ScrollView::shouldDisplayEdgeEffects()const{
+    return getOverScrollMode() != OVER_SCROLL_NEVER;
 }
 
 bool ScrollView::onTouchEvent(MotionEvent& ev) {
@@ -399,6 +444,20 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
             bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
                                  (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
+	    float displacement =ev.getX(activePointerIndex)/getWidth();
+	    if(canOverscroll){
+		int consumed = 0;
+  	        if (deltaY < 0 && mEdgeGlowBottom->getDistance() != 0.f) {
+                    consumed = std::round(getHeight()
+                               * mEdgeGlowBottom->onPullDistance((float) deltaY / getHeight(),
+                               1 - displacement));
+                } else if (deltaY > 0 && mEdgeGlowTop->getDistance() != 0.f) {
+                     consumed = std::round(-getHeight()
+                               * mEdgeGlowTop->onPullDistance((float) -deltaY / getHeight(),
+                                displacement));
+                }
+                deltaY -= consumed;
+	    }
             // Calling overScrollBy will call onOverScrolled, which
             // calls onScrollChanged if applicable.
             if (overScrollBy(0, deltaY, 0, mScrollY, 0, range, 0, mOverscrollDistance, true)
@@ -416,13 +475,13 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
             } else if (canOverscroll) {
                 int pulledToY = oldY + deltaY;
                 if (pulledToY < 0) {
-                    mEdgeGlowTop->onPull((float) deltaY / getHeight(),ev.getX(activePointerIndex) / getWidth());
+                    mEdgeGlowTop->onPullDistance((float) -deltaY / getHeight(),displacement);
                     if (!mEdgeGlowBottom->isFinished()) mEdgeGlowBottom->onRelease();
                 } else if (pulledToY > range) {
-                    mEdgeGlowBottom->onPull((float) deltaY / getHeight(),1.f - ev.getX(activePointerIndex) / getWidth());
+                    mEdgeGlowBottom->onPullDistance((float) deltaY / getHeight(),1.f-displacement);
                     if(!mEdgeGlowTop->isFinished()) mEdgeGlowTop->onRelease();
                 }
-                if (mEdgeGlowTop && (!mEdgeGlowTop->isFinished() || !mEdgeGlowBottom->isFinished())) {
+                if (shouldDisplayEdgeEffects() && (!mEdgeGlowTop->isFinished() || !mEdgeGlowBottom->isFinished())) {
                     postInvalidateOnAnimation();
                 }
             }
@@ -1034,7 +1093,7 @@ void ScrollView::endDrag() {
 
     recycleVelocityTracker();
 
-    if (mEdgeGlowTop != nullptr) {
+    if (shouldDisplayEdgeEffects()) {
         mEdgeGlowTop->onRelease();
         mEdgeGlowBottom->onRelease();
     }
@@ -1058,7 +1117,7 @@ void ScrollView::scrollTo(int x, int y){
 
 void ScrollView::draw(Canvas& canvas){
     FrameLayout::draw(canvas);
-    if (mEdgeGlowTop != nullptr) {
+    if (shouldDisplayEdgeEffects()) {
         int scrollY = mScrollY;
         bool clipToPadding = getClipToPadding();
         if (!mEdgeGlowTop->isFinished()) {

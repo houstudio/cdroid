@@ -877,7 +877,7 @@ void HorizontalScrollView::computeScroll(){
     }
 }
 
- void HorizontalScrollView::scrollToChild(View* child) {
+void HorizontalScrollView::scrollToChild(View* child) {
         child->getDrawingRect(mTempRect);
 
         /* Offset from child's local coordinates to ScrollView coordinates */
