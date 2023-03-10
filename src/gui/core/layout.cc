@@ -91,15 +91,13 @@ void Layout::setEllipsis(int ellipsis){
     }
 }
 
+static unsigned char sData[4];
+static RefPtr<ImageSurface>sImage=ImageSurface::create(sData,Surface::Format::ARGB32,1,1,4);
+static RefPtr<Cairo::Context>sContext=Cairo::Context::create(sImage);
+
 float Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
     std::string utext=TextUtils::unicode2utf8(text);
-#if 1
-    Cairo::Context*ctx=GraphDevice::getInstance().getPrimaryContext();
-#else
-    unsigned char data[128];
-    RefPtr<ImageSurface>surf=ImageSurface::create(data,Surface::Format::ARGB32,16,2,64);
-    RefPtr<Cairo::Context>ctx=Cairo::Context::create(surf);
-#endif
+    RefPtr<Cairo::Context>ctx=sContext;
     ctx->save();
     ctx->set_font_size(mFontSize);
     ctx->get_text_extents(utext,te);
@@ -307,7 +305,7 @@ static int bsearch(int *widths,int size,int find){
             lo=mid+1;
 	else break;
     }
-    LOGD("char %d/%d atpos %d",lo,size,find);
+    LOGV("char %d/%d atpos %d",lo,size,find);
     return lo;
 }
 
@@ -471,8 +469,7 @@ void Layout::relayout(bool force){
     double total_width=0;
     int start=0,ytop=0;
     std::wstring word;
-    if(force==false&&mLayout==0)
-        return;
+    if(!(force||mLayout)) return;
     mLineCount=0;
     mLines.clear();
     measureSize(L"",extents,&fontextents);

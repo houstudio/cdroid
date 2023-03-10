@@ -1142,7 +1142,7 @@ void HorizontalScrollView::scrollTo(int x, int y){
 void HorizontalScrollView::setOverScrollMode(int mode) {
     if (mode != OVER_SCROLL_NEVER) {
         if (mEdgeGlowLeft == nullptr) {
-	        Context* context = getContext();
+            Context* context = getContext();
             mEdgeGlowLeft = new EdgeEffect(context);
             mEdgeGlowRight = new EdgeEffect(context);
         }

@@ -1,18 +1,13 @@
 #ifndef __NINEPATCH_DRAWABLE_H__
 #define __NINEPATCH_DRAWABLE_H__
 #include <drawables/drawable.h>
-namespace cdroid{
+#include <drawables/ninepatch.h>
 
+namespace cdroid{
+class NinePatch;
 class NinePatchDrawable:public Drawable{
 private:
-    struct DIV{
-        int pos;
-        int len;
-        bool stretchable;
-    };
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{
-    private:
-        int get_ninepatch(std::vector<DIV>&divHorz,std::vector<DIV>&divVert,bool padding);
     public:
         float mBaseAlpha;// = 1.0f;
         bool mDither;// = DEFAULT_DITHER;
@@ -20,11 +15,9 @@ private:
         Rect mPadding;
         Insets mOpticalInsets;
         int mTintMode;
-		int mChangingConfigurations;
-        std::vector<DIV> mHorz;
-        std::vector<DIV> mVert;
+        int mChangingConfigurations;
         ColorStateList*mTint;
-	Cairo::RefPtr<Cairo::ImageSurface>mNinePatch;
+	Cairo::RefPtr<NinePatch>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
         NinePatchState(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr);

@@ -176,6 +176,8 @@ public:
     typedef std::function<void(const InputEvent&)>EventListener;
 protected:
     int mDeviceClasses;
+    unsigned int mScreenWidth;
+    unsigned int mScreenHeight;
     InputDeviceInfo mDeviceInfo;
     EventListener listener;
     class KeyLayoutMap*kmap;

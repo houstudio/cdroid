@@ -1,4 +1,5 @@
 #include <drawables/ninepatchdrawable.h>
+#include <drawables/ninepatch.h>
 #include <fstream>
 #include <cdlog.h>
 using namespace Cairo;
@@ -34,7 +35,7 @@ NinePatchDrawable::~NinePatchDrawable(){
 }
 
 void NinePatchDrawable::computeBitmapSize(){
-    const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch;
+    const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch->mImage;
     if (ninePatch == nullptr) return;
     const int sourceDensity =160;// ninePatch.getDensity();
     const int targetDensity =160;// mTargetDensity;
@@ -208,38 +209,24 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
 
 NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding)
   :NinePatchDrawable::NinePatchState(){
-    mNinePatch=bitmap;
-    get_ninepatch(mHorz,mVert,true);
-    
-    mPadding.set(0,0,0,0);
-    if(mHorz.size()){
-        if(!mHorz[0].stretchable)mPadding.left=mHorz[0].len;
-        if(!mHorz.back().stretchable)mPadding.width=mHorz.back().len;
-    } 
-    if(mVert.size()){
-        if(!mVert[0].stretchable)mPadding.top=mVert[0].len;
-        if(!mVert.back().stretchable)mPadding.height=mVert.back().len;
-    } 
+    mNinePatch = RefPtr<NinePatch>(new NinePatch(bitmap));
+    mPadding=mNinePatch->getPadding();
     if(padding)mPadding=*padding;
-    get_ninepatch(mHorz,mVert,false);
     LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d)",this,bitmap->get_width(),bitmap->get_height(),
-         mPadding.left,mPadding.top,mPadding.width,mPadding.height);
-    for(auto h:mHorz)LOGV("%p HORZ %d,%d,%d)",this,h.pos,h.len,h.stretchable);
-    for(auto v:mVert)LOGV("%p VERT %d,%d,%d)",this,v.pos,v.len,v.stretchable);
+        mPadding.left,mPadding.top,mPadding.width,mPadding.height);
 }
 
 NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
     mTint = orig.mTint;
-    mNinePatch=orig.mNinePatch;
+    mNinePatch= orig.mNinePatch;
     mTintMode = orig.mTintMode;
     mPadding = orig.mPadding;
     mOpticalInsets = orig.mOpticalInsets;
     mBaseAlpha = orig.mBaseAlpha;
     mDither = orig.mDither;
-    mHorz =orig.mHorz;
-    mVert =orig.mVert;
     mChangingConfigurations=orig.mChangingConfigurations;
     mAutoMirrored = orig.mAutoMirrored;
+    mNinePatch = orig.mNinePatch;
     //mThemeAttrs = orig.mThemeAttrs;
 }
 
@@ -251,113 +238,9 @@ int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{
    return mChangingConfigurations|(mTint ? mTint->getChangingConfigurations() : 0);
 }
 
-static unsigned int get_pixel(RefPtr<ImageSurface>img,int x,int y){
-    unsigned int*data=(unsigned int*)(img->get_data()+y*img->get_stride());
-    return data[x];
-}
-static bool isStretchableMarker(unsigned int px){
-    return (px>>24)==0xFF;
-}
-
-int NinePatchDrawable::NinePatchState::get_ninepatch(std::vector<DIV>&divHorz,std::vector<DIV>&divVert,bool padding){
-    int i;
-    const int width = mNinePatch->get_width();
-    const int height= mNinePatch->get_height();
-    divHorz.clear();
-    divVert.clear();
-#define check_pixel(x,y) if(get_pixel(mNinePatch,x,y)>>24!=0) return 0;
-    if(width<3||height<3)return 0;
-    check_pixel(0,0);
-    check_pixel(width-1,0);
-    check_pixel(0,height-1);
-    check_pixel(width-1,height-1);
-    //horz stretch infos
-    int pos = 1;
-    int horz_stretch=0;
-    int vert_stretch=0;
-    unsigned int last,next;
-    int edge=padding?(height-1):0;
-    last=get_pixel(mNinePatch,pos,edge);
-    for(int x=1;x<width-1;x++){
-        next=get_pixel(mNinePatch,x+1,edge);
-        if(isStretchableMarker(last)!=isStretchableMarker(next)||(x==width-2)){
-            bool stretchable=isStretchableMarker(last);
-            int len=x + 1 - pos;
-            DIV d={pos,len,stretchable};
-            divHorz.push_back(d);
-            if(stretchable)horz_stretch+=len;
-            last=next; pos=x+1;
-        }
-    }
-    //vert streatch infos
-    pos = 1;
-    edge=padding?(width-1):0;
-    last=get_pixel(mNinePatch,edge,pos);
-    for(int y=1;y<height-1;y++){
-        next=get_pixel(mNinePatch,edge,y+1);
-        if(isStretchableMarker(last)!=isStretchableMarker(next)||(y==height-2)){
-            bool stretchable = isStretchableMarker(last);
-            int len = y + 1 - pos;
-            DIV d={pos,len,stretchable};
-            divVert.push_back(d);
-            if (stretchable)vert_stretch += len;
-            last = next;   pos = y+1;
-        }
-    }
-    return horz_stretch<<16|vert_stretch;
-}
-
 void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect){
-    int dw=rect.width;
-    int dh=rect.height;
-    int sw=mNinePatch->get_width();
-    int sh=mNinePatch->get_height();
-    float horz_stretch=0;
-    float vert_stretch=0;
-
-    float horz_mul=0,vert_mul =0;
-    int dy0=0, dy1=0;
-    float vstretch=0;
-    for_each(mHorz.begin(),mHorz.end(),[&](const DIV&v){if(v.stretchable)horz_stretch+=v.len;});
-    for_each(mVert.begin(),mVert.end(),[&](const DIV&v){if(v.stretchable)vert_stretch+=v.len;});
-
-    if (horz_stretch > 0) horz_mul = (float)(dw - (sw - 2 - horz_stretch)) / horz_stretch;
-    if (vert_stretch > 0) vert_mul = (float)(dh - (sh - 2 - vert_stretch)) / vert_stretch;
-    for(int i=0;i<(int)mVert.size();i++){
-        int sy0=mVert[i].pos;
-        if(i+1==(int)mVert.size()){
-            dy1=dh;
-        }else if(mVert[i].stretchable){
-            vstretch=(float)mVert[i].len*vert_mul;
-            float s=floor(vstretch);
-            vstretch-=s;
-            dy1+=(int)s;
-        }else{
-            dy1+=mVert[i].len;
-        }
-        int dx0=0,dx1=0;
-        float hstretch=0;
-        for(int j=0;j<(int)mHorz.size();j++){
-            int sx0=mHorz[j].pos;
-            if(j+1==(int)mHorz.size()){
-                dx1=dw;
-            }else if(mHorz[j].stretchable){
-                hstretch+=(float)mHorz[j].len*horz_mul;
-                float s=floor(hstretch);
-                hstretch-=s;
-                dx1+=(int)s;
-            }else{
-                dx1+=mHorz[j].len;
-            }
-            RECT rd={dx0,dy0,dx1-dx0+1,dy1-dy0+1};
-            RECT rs={sx0, sy0,mHorz[j].len,mVert[i].len};
-            LOGV("%p rs=(%d,%d,%d,%d)->(%d,%d,%d,%d)",this,rs.left,rs.top,rs.width,rs.height,rd.left,rd.top,rd.width,rd.height);
-            rd.offset(rect.left,rect.top);
-            canvas.draw_image(mNinePatch,rd,&rs);
-            dx0=dx1;
-        }
-        dy0=dy1;
-    }
+    mNinePatch->setImageSize(rect.width,rect.height);
+    mNinePatch->draw(canvas,rect.left,rect.top);
 }
 
 }

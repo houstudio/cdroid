@@ -471,7 +471,7 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
             scale = 1.0f;
         } else {
             scale = (x - mPaddingLeft) / (float) availableWidth;
-                progress = mTouchProgressOffset;
+            progress = mTouchProgressOffset;
         }
     }
 
