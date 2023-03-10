@@ -95,8 +95,8 @@ void ScrollView::initScrollView() {
     mOverscrollDistance= configuration.getScaledOverscrollDistance();
     mOverflingDistance = configuration.getScaledOverflingDistance();
     mVerticalScrollFactor= configuration.getScaledVerticalScrollFactor();
-    mScrollOffset[0]   = mScrollOffset[1] = 0;
-    mScrollConsumed[0] = mScrollConsumed[1] = 0;
+    mScrollOffset [0]  = mScrollOffset [1] = 0;
+    mScrollConsumed[0] = mScrollConsumed[1]= 0;
 }
 
 View& ScrollView::addView(View* child) {
@@ -279,19 +279,19 @@ bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
         * whether the user has moved far enough from his original down touch. */
 
         /* Locally do absolute value. mLastMotionY is set to the y value of the down event.*/
-        int activePointerId = mActivePointerId;
+        const int activePointerId = mActivePointerId;
         if (activePointerId == INVALID_POINTER) {
             // If we don't have a valid id, the touch down wasn't on content.
             break;
         }
 
-        int pointerIndex = ev.findPointerIndex(activePointerId);
+        const int pointerIndex = ev.findPointerIndex(activePointerId);
         if (pointerIndex == -1) {
             LOGE("Invalid pointerId=%d  in onInterceptTouchEvent",activePointerId);
             break;
         }
-        int y = (int) ev.getY(pointerIndex);
-        int yDiff = std::abs(y - mLastMotionY);
+        const int y = (int) ev.getY(pointerIndex);
+        const int yDiff = std::abs(y - mLastMotionY);
         if (yDiff > mTouchSlop && (getNestedScrollAxes() & SCROLL_AXIS_VERTICAL) == 0) {
             mIsBeingDragged = true;
             mLastMotionY = y;

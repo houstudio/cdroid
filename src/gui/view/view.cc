@@ -2763,7 +2763,7 @@ void View::draw(Canvas&canvas){
 
 bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     const bool hardwareAcceleratedCanvas=false;
-    bool drawingWithRenderNode= mAttachInfo && mAttachInfo->mHardwareAccelerated  && hardwareAcceleratedCanvas;;
+    bool drawingWithRenderNode= mAttachInfo && mAttachInfo->mHardwareAccelerated  && hardwareAcceleratedCanvas;
     bool more = false;
     const bool childHasIdentityMatrix = hasIdentityMatrix();
     int parentFlags = parent->mGroupFlags;
@@ -2987,11 +2987,11 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         canvas.save();
         canvas.reset_clip();
         canvas.set_source(cache,0,0);
-        if(alpha<1)canvas.paint_with_alpha(alpha);
+        if(alpha<1.f)canvas.paint_with_alpha(alpha);
         else canvas.paint();
         canvas.restore();
     }
-    while(restoreTo-->0) {
+    while(restoreTo-- >0) {
         canvas.restore();//ToCount(restoreTo);
     }
 
@@ -3042,34 +3042,43 @@ int View::getId() const{
 int View::getNextFocusLeftId()const{
     return mNextFocusLeftId;
 }
+
 View& View::setNextFocusLeftId(int id){
     mNextFocusLeftId=id;
     return *this;
 }
+
 int View::getNextFocusRightId()const{
    return mNextFocusRightId;
 }
+
 View& View::setNextFocusRightId(int id){
     mNextFocusRightId=id;
     return *this;
 }
+
 int View::getNextFocusUpId()const{
     return mNextFocusUpId;
 }
+
 View& View::setNextFocusUpId(int id){
     mNextFocusUpId=id;
     return *this;
 }
+
 int View::getNextFocusDownId()const{
     return mNextFocusDownId;
 }
+
 View& View::setNextFocusDownId(int id){
     mNextFocusDownId=id;
     return *this;
 }
+
 int View::getNextFocusForwardId()const{
     return mNextFocusForwardId;
 }
+
 View& View::setNextFocusForwardId(int id){
     mNextFocusForwardId=id;
     return *this;
@@ -4779,43 +4788,29 @@ bool View::toLocalMotionEvent(MotionEvent& ev){
 }
 
 void View::transformMatrixToGlobal(Matrix& matrix){
-#if 0
-    ViewGroup* parent = mParent;
-    if (parent instanceof View) {
-        View* vp = (View) parent;
+    if (mParent){
+        View* vp = (View*) mParent;
         vp->transformMatrixToGlobal(matrix);
-        matrix.preTranslate(-vp.mScrollX, -vp.mScrollY);
-    } else if (parent instanceof ViewRootImpl) {
-        ViewRootImpl vr = (ViewRootImpl) parent;
-        vr->transformMatrixToGlobal(matrix);
-        matrix.preTranslate(0, -vr.mCurScrollY);
+        matrix.translate(-vp->mScrollX, -vp->mScrollY);
     }
-    matrix.preTranslate(mLeft, mTop);
+    matrix.translate(mLeft, mTop);
     if (!hasIdentityMatrix()) {
-        matrix.preConcat(getMatrix());
+	Matrix mtx=getMatrix();
+	matrix.multiply(matrix,mtx);
     }
-#endif
 }
 
 void View::transformMatrixToLocal(Matrix& matrix){
-#if 0
-    ViewGroup* parent = mParent;
-    if (parent instanceof View) {
-        View* vp = (View) parent;
+    if (mParent){
+        View* vp = (View*) mParent;
         vp->transformMatrixToLocal(matrix);
-        matrix.postTranslate(vp.mScrollX, vp.mScrollY);
-    } else if (parent instanceof ViewRootImpl) {
-        ViewRootImpl vr = (ViewRootImpl) parent;
-        vr->transformMatrixToLocal(matrix);
-        matrix.postTranslate(0, vr.mCurScrollY);
+        matrix.translate(vp->mScrollX, vp->mScrollY);
     }
-
-    matrix.postTranslate(-mLeft, -mTop);
-
+    matrix.translate(-mLeft, -mTop);
     if (!hasIdentityMatrix()) {
-        matrix.postConcat(getInverseMatrix());
+	 Matrix inv=getInverseMatrix();
+	 matrix.multiply(matrix,inv);
     }
-#endif
 }
 
 View*View::focusSearch(int direction)const{

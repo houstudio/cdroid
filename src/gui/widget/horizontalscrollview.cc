@@ -305,7 +305,14 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
         /*If being flinged and user touches the screen, initiate drag;
         * otherwise don't.  mScroller.isFinished should be false when
         * being flinged. */
-        mIsBeingDragged = !mScroller->isFinished();
+        mIsBeingDragged = !mScroller->isFinished()||!mEdgeGlowLeft->isFinished()
+		||!mEdgeGlowRight->isFinished();
+        if (!mEdgeGlowLeft->isFinished()) {
+            mEdgeGlowLeft->onPullDistance(0.f, 1.f - ev.getY() / getHeight());
+        }
+        if (!mEdgeGlowRight->isFinished()) {
+            mEdgeGlowRight->onPullDistance(0.f, ev.getY() / getHeight());
+        }
         break;
     }
 
@@ -396,18 +403,28 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
                     (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
+	    const float displacement= ev.getY(activePointerIndex)/getHeight();
+           if (canOverscroll) {
+               int consumed = 0;
+               if (deltaX < 0 && mEdgeGlowRight->getDistance() != .0f) {
+                    consumed = std::round(getWidth()
+                          * mEdgeGlowRight->onPullDistance((float) deltaX / getWidth(),
+                            displacement));
+                } else if (deltaX > 0 && mEdgeGlowLeft->getDistance() != .0f) {
+                    consumed = std::round(-getWidth()
+                           * mEdgeGlowLeft->onPullDistance((float) -deltaX / getWidth(),
+                             1 - displacement));
+                }
+                deltaX -= consumed;
+            }
             // Calling overScrollBy will call onOverScrolled, which
             // calls onScrollChanged if applicable.
-            if (overScrollBy(deltaX, 0, mScrollX, 0, range, 0,
-                    mOverscrollDistance, 0, true)) {
-                // Break our velocity if we hit a scroll barrier.
-                mVelocityTracker->clear();
-            }
+            overScrollBy(deltaX, 0, mScrollX, 0, range, 0, mOverscrollDistance, 0, true);
 
-            if (canOverscroll) {
+            if (canOverscroll && deltaX!=.0f) {
                 int pulledToX = oldX + deltaX;
                 if (pulledToX < 0) {
-                    mEdgeGlowLeft->onPull((float) deltaX / getWidth(),
+                    mEdgeGlowLeft->onPullDistance((float) deltaX / getWidth(),
                             1.f - ev.getY(activePointerIndex) / getHeight());
                     if (!mEdgeGlowRight->isFinished()) {
                         mEdgeGlowRight->onRelease();
