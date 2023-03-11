@@ -46,14 +46,13 @@ void NinePatchDrawable::computeBitmapSize(){
         const int top   = Drawable::scaleFromDensity( sourceOpticalInsets.top    , sourceDensity, targetDensity, true);
         const int right = Drawable::scaleFromDensity( sourceOpticalInsets.right  , sourceDensity, targetDensity, true);
         const int bottom= Drawable::scaleFromDensity( sourceOpticalInsets.bottom , sourceDensity, targetDensity, true);
-        mOpticalInsets.set(left, top, right, bottom);// = Insets.of(left, top, right, bottom);
+        mOpticalInsets = Insets::of(left, top, right, bottom);
     } else {
-        mOpticalInsets.set(0,0,0,0);// = Insets.NONE;
+        mOpticalInsets = Insets::NONE;
     }
 
     const Rect sourcePadding = mNinePatchState->mPadding;
-    if (1/*sourcePadding != nullptr*/) {
-        
+    if (!sourcePadding.empty()){
         mPadding.left  = Drawable::scaleFromDensity( sourcePadding.left  , sourceDensity, targetDensity, false);
         mPadding.top   = Drawable::scaleFromDensity( sourcePadding.top   , sourceDensity, targetDensity, false);
         mPadding.width = Drawable::scaleFromDensity( sourcePadding.width , sourceDensity, targetDensity, false);
@@ -210,7 +209,7 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
 NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding)
   :NinePatchDrawable::NinePatchState(){
     mNinePatch = RefPtr<NinePatch>(new NinePatch(bitmap));
-    mPadding=mNinePatch->getPadding();
+    mPadding = mNinePatch->getPadding();
     if(padding)mPadding=*padding;
     LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d)",this,bitmap->get_width(),bitmap->get_height(),
         mPadding.left,mPadding.top,mPadding.width,mPadding.height);
@@ -239,8 +238,14 @@ int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{
 }
 
 void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect){
-    mNinePatch->setImageSize(rect.width,rect.height);
+#if 0
+    mNinePatch->setImageSize(rect.width+mPadding.left+mPadding.width,
+		    rect.height+mPadding.top+mPadding.height);
     mNinePatch->draw(canvas,rect.left,rect.top);
+#else
+    mNinePatch->setImageSize(rect.width, rect.height);
+    mNinePatch->draw(canvas,rect.left,rect.top);
+#endif
 }
 
 }

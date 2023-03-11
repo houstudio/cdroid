@@ -70,6 +70,8 @@ void HorizontalScrollView::initScrollView() {
     setFocusable(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
+    mEdgeGlowLeft = new EdgeEffect(mContext);
+    mEdgeGlowRight = new EdgeEffect(mContext);
     ViewConfiguration&configuration=ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
@@ -404,16 +406,16 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
                     (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
 	    const float displacement= ev.getY(activePointerIndex)/getHeight();
-           if (canOverscroll) {
-               int consumed = 0;
-               if (deltaX < 0 && mEdgeGlowRight->getDistance() != .0f) {
+            if (canOverscroll) {
+                int consumed = 0;
+                if (deltaX < 0 && mEdgeGlowRight->getDistance() != .0f) {
                     consumed = std::round(getWidth()
                           * mEdgeGlowRight->onPullDistance((float) deltaX / getWidth(),
                             displacement));
                 } else if (deltaX > 0 && mEdgeGlowLeft->getDistance() != .0f) {
                     consumed = std::round(-getWidth()
                            * mEdgeGlowLeft->onPullDistance((float) -deltaX / getWidth(),
-                             1 - displacement));
+                             1.f - displacement));
                 }
                 deltaX -= consumed;
             }
@@ -421,7 +423,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             // calls onScrollChanged if applicable.
             overScrollBy(deltaX, 0, mScrollX, 0, range, 0, mOverscrollDistance, 0, true);
 
-            if (canOverscroll && deltaX!=.0f) {
+            if (canOverscroll && deltaX!=0.f) {
                 int pulledToX = oldX + deltaX;
                 if (pulledToX < 0) {
                     mEdgeGlowLeft->onPullDistance((float) deltaX / getWidth(),
@@ -1137,20 +1139,6 @@ void HorizontalScrollView::scrollTo(int x, int y){
             FrameLayout::scrollTo(x, y);
         }
     }
-}
-
-void HorizontalScrollView::setOverScrollMode(int mode) {
-    if (mode != OVER_SCROLL_NEVER) {
-        if (mEdgeGlowLeft == nullptr) {
-            Context* context = getContext();
-            mEdgeGlowLeft = new EdgeEffect(context);
-            mEdgeGlowRight = new EdgeEffect(context);
-        }
-    } else {
-        mEdgeGlowLeft = nullptr;
-        mEdgeGlowRight = nullptr;
-    }
-    FrameLayout::setOverScrollMode(mode);
 }
 
 void HorizontalScrollView::draw(Canvas& canvas){

@@ -98,7 +98,6 @@ public:
     void requestLayout();
     void fling(int velocityX);
     void scrollTo(int x, int y);
-    void setOverScrollMode(int mode);
 };
 
 }

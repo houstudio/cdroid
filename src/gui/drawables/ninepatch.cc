@@ -17,11 +17,12 @@ NinePatch::~NinePatch() {
 }
 
 void NinePatch::draw(Canvas& painter, int  x, int  y) {
-    //painter.drawImage(x, y, mCachedImage);
     painter.save();
+    painter.translate(x,y);
     painter.set_source(mCachedImage,0,0);
-    painter.rectangle(x,y,mCachedImage->get_width(),mCachedImage->get_height());
-    painter.fill();
+    painter.rectangle(0,0,mCachedImage->get_width(),mCachedImage->get_height());
+    painter.clip();
+    painter.paint();
     painter.restore();
 }
 
@@ -36,13 +37,13 @@ void NinePatch::setImageSize(int width, int height) {
         resizeHeight += mResizeDistancesY[i].second;
     }
     if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
-        //throw new ExceptionIncorrectWidthAndHeight(mImage->get_width() - 2 , mImage->get_height() - 2 );
+        throw "IncorrectWidthAndHeight(mImage->get_width() - 2 , mImage->get_height() - 2";
     }
     if (width < (mImage->get_width() - 2 - resizeWidth)) {
-        //throw new ExceptionIncorrectWidth(mImage->get_width() - 2 , mImage->get_height() - 2 );
+        throw "IncorrectWidth(mImage->get_width() - 2 , mImage->get_height() - 2 ";
     }
      if (height < (mImage->get_height() - 2 - resizeHeight)) {
-        //throw new ExceptionIncorrectHeight(mImage->get_width() - 2 , mImage->get_height() - 2 );
+        throw "IncorrectHeight(mImage->get_width() - 2 , mImage->get_height() - 2";
     }
     if (width != mWidth || height != mHeight) {
         mWidth = width;
@@ -60,46 +61,49 @@ RECT NinePatch::getPadding()const{
     return mPadding;
 }
 
-void NinePatch::drawScaledPart(const RECT& oldRect, const RECT& newRect,RefPtr<Cairo::Context> painter) {
+void NinePatch::drawScaledPart(const RECT& oldRect, const RECT& newRect,Cairo::Context&painter) {
     if (newRect.width && newRect.height) {
-        /*QImage img = mImage->copy(oldRect);
-        img = img.scaled(newRect.width, newRect.height);
-        painter.drawImage(newRect.x(), newRect.y(), img, 0, 0, newRect.width, newRect.height);
-	*/
-	painter->save();
-	painter->set_source(mImage,oldRect.left,oldRect.top);
-	painter->scale((double)newRect.width/oldRect.width,(double)newRect.height/oldRect.height);
-	painter->rectangle(newRect.left,newRect.top,newRect.width,newRect.height);
-	painter->fill();
-	painter->restore();
+	const double scaleX=(double)newRect.width/oldRect.width;
+	const double scaleY=(double)newRect.height/oldRect.height;
+	double dx = newRect.left;
+	double dy = newRect.top;
+	painter.save();
+	painter.rectangle(dx,dy,newRect.width,newRect.height);
+	if( (newRect.width!=oldRect.width) || (newRect.height!=oldRect.height) ){
+     	    painter.scale(scaleX,scaleY);
+	    dx/=scaleX;
+	    dy/=scaleY;
+	}
+	painter.clip();
+	painter.set_source(mImage,dx-oldRect.left,dy-oldRect.top);
+	painter.paint_with_alpha(1.0f);
+	painter.restore();
     }
 }
 
-void NinePatch::drawConstPart(const RECT& oldRect, const RECT& newRect,RefPtr<Cairo::Context> painter) {
-    //QImage img = mImage->copy(oldRect);
-    //painter.drawImage(newRect.x(), newRect.y(), img, 0, 0, newRect.width(), newRect.height());
-    painter->save();
-    painter->set_source(mImage,oldRect.left,oldRect.top);
-    painter->rectangle(newRect.left,newRect.top,newRect.width,newRect.height);
-    painter->fill();
-    painter->restore();
+void NinePatch::drawConstPart(const RECT& oldRect, const RECT& newRect,Cairo::Context&painter) {
+    painter.save();
+    painter.rectangle(newRect.left,newRect.top,newRect.width,newRect.height);
+    painter.clip();
+    painter.set_source(mImage,newRect.left-oldRect.left,newRect.top-oldRect.top);
+    painter.paint_with_alpha(1.f);
+    painter.restore();
 }
 
-inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
+static inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
     unsigned char*data=img->get_data()+img->get_stride()*j+i*4;
-    uint8_t a = data[3];
     uint8_t r = data[0];
     uint8_t g = data[1];
     uint8_t b = data[2];
-    //if (a < 128) return false;
-    //return (r < 128 && g < 128 && b < 128);
-    return a==255;
+    uint8_t a = data[3];
+    if (a < 128) return false;
+    return (r < 128 && g < 128 && b < 128);
 }
 
 RECT NinePatch::getContentArea(bool padding) {
     int  j = padding?0:(mImage->get_height() - 1);
-    int  left = 0;
-    int  right = 0;
+    int  left = 0 ,  right = 0;
+
     for(int  i = 0; i < mImage->get_width() ; i++) {
         if (IsColorBlack(mImage,i, j) && left == 0) {
             left = i;
@@ -111,9 +115,9 @@ RECT NinePatch::getContentArea(bool padding) {
     }
     if (left && !right)right = left;
     left -= 1;
+
     int  i = padding?0:(mImage->get_width() - 1);
-    int  top = 0;
-    int  bot = 0;
+    int  top =0 ,  bot = 0;
     for(int  j = 0; j < mImage->get_height() ; j++) {
         if (IsColorBlack(mImage,i, j)&& top == 0) {
             top = j;
@@ -125,13 +129,13 @@ RECT NinePatch::getContentArea(bool padding) {
     }
     if (top && !bot) bot = top;
     top -= 1;
+
     return RECT{left, top, right - left, bot - top};
 }
 
 void NinePatch::getResizeArea() {
     int  j = 0;
-    int  left = 0;
-    int  right = 0;
+    int  left = 0, right = 0;
     for(int  i = 0; i < mImage->get_width(); i++) {
         if (IsColorBlack(mImage,i, j) && left == 0) {
             left = i;
@@ -145,8 +149,7 @@ void NinePatch::getResizeArea() {
         }
     }
     int  i = 0;
-    int  top = 0;
-    int  bot = 0;
+    int  top = 0, bot = 0;
     for(int  j = 0; j < mImage->get_height(); j++) {
         if (IsColorBlack(mImage,i, j) && top == 0) {
             top = j;
@@ -185,10 +188,13 @@ void NinePatch::updateCachedImage(int width, int height) {
     int offsetX = 0 , offsetY = 0;
 
     mCachedImage =  ImageSurface::create(Surface::Format::ARGB32,width,height);
-    RefPtr<Cairo::Context> painter=Cairo::Context::create(mCachedImage);
-    painter->set_source_rgb(0,0,0);
-    painter->rectangle(0,0,width,height);
-    painter->fill();
+    RefPtr<Cairo::Context> ppainter=Cairo::Context::create(mCachedImage);
+    Cairo::Context&painter=*ppainter;
+    painter.save();
+    painter.set_operator(Context::Operator::CLEAR);
+    painter.rectangle(0,0,width,height);
+    painter.fill();
+    painter.restore();
     getFactor(width, height, factorX, factorY);
     for (int  i = 0; i < mResizeDistancesX.size(); i++) {
         y1 = 0;

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <widget/textview.h>
+#include <cairomm/fontface.h>
 #include <app.h>
 #include <layout.h>
 #include <cdlog.h>
@@ -179,9 +180,10 @@ public:
     ColorStateList* mTextColorLink = nullptr;
     int mTextSize = 0;
     std::string mFontFamily;
-    //Typeface mFontTypeface;
+    Cairo::RefPtr<Cairo::ToyFontFace> mFontTypeface;
     bool mFontFamilyExplicit = false;
     int mTypefaceIndex = -1;
+    int mTextStyle  = 0;
     int mStyleIndex = -1;
     int mFontWeight = -1;
     bool mAllCaps = false;
@@ -219,9 +221,14 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mShadowDx = atts.getInt("shadowDx",mShadowDx);
     mShadowDy = atts.getInt("shadowDy",mShadowDy);
     mShadowRadius = atts.getInt("shadowRadius",mShadowRadius);
+    mTypefaceIndex= atts.getInt("typeface",-1);
     mFontFamily   = atts.getString("fontFamily");
+    mTextStyle = atts.getInt("textStyle",-1);
+    mFontWeight= atts.getInt("textFontWeight",-1);
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
@@ -378,11 +385,11 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attributes){
 
     if (attributes->mTextSize != 0) setRawTextSize(attributes->mTextSize, true /* shouldRequestLayout */);
 
-    /*if (attributes.mTypefaceIndex != -1 && !attributes.mFontFamilyExplicit) {
+    /*if (attributes->mTypefaceIndex != -1 && !attributes.mFontFamilyExplicit) {
         attributes.mFontFamily = nullptr;
     }
-    setTypefaceFromAttrs(attributes.mFontTypeface, attributes.mFontFamily,
-            attributes.mTypefaceIndex, attributes.mStyleIndex, attributes.mFontWeight);*/
+    setTypefaceFromAttrs(attributes->mFontTypeface, attributes->mFontFamily,
+            attributes.mTypefaceIndex, attributes->mStyleIndex, attributes->mFontWeight);*/
 
     if (attributes->mShadowColor != 0) {
         setShadowLayer(attributes->mShadowRadius, attributes->mShadowDx, attributes->mShadowDy,

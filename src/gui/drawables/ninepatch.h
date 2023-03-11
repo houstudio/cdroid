@@ -20,12 +20,12 @@ private:
     void getResizeArea();
     void getFactor(int width, int height, double& factorX, double& factorY);
     void updateCachedImage(int width, int height);
-    void drawScaledPart(const RECT& oldRect,const RECT& newRect, Cairo::RefPtr<Cairo::Context> painter);
-    void drawConstPart (const RECT& oldRect,const RECT& newRect, Cairo::RefPtr<Cairo::Context> painter);
 public:
     NinePatch(Cairo::RefPtr<Cairo::ImageSurface> image);
     ~NinePatch();
     void draw(Canvas& painter, int x, int y);
+    void drawScaledPart(const RECT& oldRect,const RECT& newRect,Cairo::Context&painter);
+    void drawConstPart (const RECT& oldRect,const RECT& newRect,Cairo::Context&painter);
     void setImageSize(int width, int height);
     RECT getContentArea(int  widht, int  height);
     RECT getPadding()const;
