@@ -85,6 +85,7 @@ void Preferences::load(const std::string&fname){
 
 void Preferences::save(const std::string&fname){
     std::ofstream ofs(fname);
+    ofs<<"<sections>"<<std::endl;
     for(auto sec:mPrefs){
 	ofs<<"<section name=\""<<sec.first<<"\">"<<std::endl;
 	for(auto kv:sec.second){
@@ -92,6 +93,7 @@ void Preferences::save(const std::string&fname){
 	}
 	ofs<<"</section>"<<std::endl;
     }
+    ofs<<"</sections>"<<std::endl;
     updates=0;
 }
 
@@ -115,9 +117,9 @@ bool Preferences::getBool(const std::string&section,const std::string&key,bool d
     if(sec==mPrefs.end())return def;
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())return def;
-    std::stringstream ss(kv->second); 
-    ss>>def;
-    return def;
+    std::string s=kv->second;
+    LOGD("%s:%s=%s",section.c_str(),key.c_str(),s.c_str());
+    return (s[0]=='t')||(s[0]=='T');
 }
 
 int Preferences::getInt(const std::string&section,const std::string&key,int def){
@@ -155,6 +157,7 @@ std::string Preferences::getString(const std::string&section,const std::string&k
     if(sec==mPrefs.end())return def;
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())return def;
+    LOGD("%s:%s=%s",section.c_str(),key.c_str(),kv->second.c_str());
     return kv->second;
 }
 
@@ -166,7 +169,8 @@ void Preferences::setValue(const std::string&section,const std::string&key,bool 
     }
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())
-	sec->second.insert({key,std::to_string(v)});
+	sec->second.insert({key,(v?"true":"false")});
+    else kv->second=(v?"true":"false");
     updates++;
 }
 
@@ -179,6 +183,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,int v
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
+    else kv->second=std::to_string(v);
     LOGD("%s %s %d",section.c_str(),key.c_str(),v);
     updates++;
 }
@@ -190,6 +195,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,float
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
+    else kv->second=std::to_string(v);
     LOGD("%s %s %d",section.c_str(),key.c_str(),v);
     updates++;
 }
@@ -201,6 +207,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,const
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())
 	sec->second.insert({key,v});
+    else kv->second=v;
     LOGD("%s %s %d",section.c_str(),key.c_str(),v);
     updates++;
 }
@@ -212,6 +219,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,doubl
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
+    else kv->second=std::to_string(v);
     LOGD("%s %s %d",section.c_str(),key.c_str(),v);
     updates++;
 }

@@ -21,6 +21,7 @@ TEST_F(PREFERENCES,setbool){
    pref.setValue("Video","width",true);
    pref.setValue("Video","height",true);
    ASSERT_EQ(true,pref.getBool("Video","width",false));
+   ASSERT_EQ(true,pref.getBool("Video","height",false));
    pref.save("tesbool.pref");
 }
 
@@ -53,8 +54,8 @@ TEST_F(PREFERENCES,setdouble){
 
 TEST_F(PREFERENCES,setstring){
    Preferences pref;
-   pref.setValue("Video","url","url1");
-   pref.setValue("Video","url","url2");
+   pref.setValue("Video","url",std::string("url1"));
+   pref.setValue("Video","url",std::string("url2"));
    EXPECT_STREQ("url2",pref.getString("Video","url","").c_str());
    pref.save("teststr.pref");
 }
@@ -65,10 +66,10 @@ TEST_F(PREFERENCES,strings){
    std::string ip("ip");
    std::string port("port");
    pref.setValue(server,port,1234);
-   pref.setValue(server,ip,"192.168.1.150");
+   pref.setValue(server,ip,std::string("192.168.1.150"));
    
    pref.setValue("server2",port,1234);
-   pref.setValue("server2",ip,"192.168.1.150");
+   pref.setValue("server2",ip,std::string("192.168.1.150"));
    pref.save("server.pref");
  
    pld.load("server.pref");
