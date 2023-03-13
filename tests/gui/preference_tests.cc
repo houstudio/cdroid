@@ -15,7 +15,6 @@ public :
    virtual void TearDown(){
    }
 };
-
 TEST_F(PREFERENCES,setbool){
    Preferences pref;
    pref.setValue("Video","width",false);
@@ -51,13 +50,15 @@ TEST_F(PREFERENCES,setdouble){
    ASSERT_DOUBLE_EQ(1800.123,pref.getDouble("Video","width",0.f));
    pref.save("testdouble.pref");
 }
+
 TEST_F(PREFERENCES,setstring){
    Preferences pref;
    pref.setValue("Video","url","url1");
    pref.setValue("Video","url","url2");
-   EXPECT_STREQ("url2",pref.getString("Video","url",""));
+   EXPECT_STREQ("url2",pref.getString("Video","url","").c_str());
    pref.save("teststr.pref");
 }
+
 TEST_F(PREFERENCES,strings){
    Preferences pref,pld;
    std::string server("videoserver");
@@ -72,8 +73,8 @@ TEST_F(PREFERENCES,strings){
  
    pld.load("server.pref");
    ASSERT_EQ(1234,pref.getInt(server,port,0));
-   EXPECT_STREQ("192.168.1.150",pref.getString(server,ip,""));
+   EXPECT_STREQ("192.168.1.150",pref.getString(server,ip).c_str());
    ASSERT_EQ(1234,pref.getInt("server2",port,0));
-   EXPECT_STREQ("192.168.1.150",pref.getString("server2",ip,""));
+   EXPECT_STREQ("192.168.1.150",pref.getString("server2",ip).c_str());
 }
 

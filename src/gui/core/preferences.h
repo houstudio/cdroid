@@ -23,7 +23,7 @@ public:
    int getInt(const std::string&section,const std::string&key,int def=0);
    float getFloat(const std::string&section,const std::string&key,float def=.0);
    double getDouble(const std::string&section,const std::string&key,double def=.0);
-   std::string getString(const std::string&section,const std::string&key,const char*);
+   std::string getString(const std::string&section,const std::string&key,const std::string&def="");
 
    void setValue(const std::string&section,const std::string&key,bool v);
    void setValue(const std::string&section,const std::string&key,int v);

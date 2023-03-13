@@ -150,11 +150,11 @@ double Preferences::getDouble(const std::string&section,const std::string&key,do
     return def;
 }
 
-std::string Preferences::getString(const std::string&section,const std::string&key,const char*def){
+std::string Preferences::getString(const std::string&section,const std::string&key,const std::string&def){
     auto sec=mPrefs.find(section);
     if(sec==mPrefs.end())return def;
     auto kv=sec->second.find(key);
-    if(kv==sec->second.end())return std::string(def);
+    if(kv==sec->second.end())return def;
     return kv->second;
 }
 
