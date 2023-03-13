@@ -33,10 +33,12 @@ int UIEventSource::handleEvents(){
         }
     }
     GraphDevice::getInstance().unlock();
-
+#if COMPOSE_ASYNC
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().requestCompose();
-
+#else
+    GraphDevice::getInstance().composeSurfaces();
+#endif
     GraphDevice::getInstance().lock();
     mRunnables.remove_if([](const RUNNER&r)->bool{
         return r.removed;

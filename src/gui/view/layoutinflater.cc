@@ -99,10 +99,9 @@ typedef struct{
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     WindowParserData*pd=(WindowParserData*)userData;
-    AttributeSet atts;
+    AttributeSet atts(pd->ctx,pd->package);
     LayoutInflater::ViewInflater inflater=LayoutInflater::getInflater(name);
     ViewGroup*parent=pd->root;
-    atts.setContext(pd->ctx,pd->package);
     atts.set(satts);
     if(pd->views.size())
         parent=dynamic_cast<ViewGroup*>(pd->views.back());

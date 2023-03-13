@@ -60,8 +60,10 @@ GraphDevice::GraphDevice(int fmt){
     mComposing = 0;
     mQuitFlag  = false;
     mShowFPS = false;
+#if COMPOSE_ASYNC
     std::thread t([this](){doCompose();});
     t.detach();
+#endif
 }
 
 GraphDevice::~GraphDevice(){

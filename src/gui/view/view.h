@@ -8,6 +8,7 @@
 #include <core/systemclock.h>
 #include <core/attributeset.h>
 #include <core/context.h>
+#include <core/intent.h>
 #include <view/gravity.h>
 #include <view/layoutparams.h>
 #include <view/rendernode.h>
@@ -35,7 +36,7 @@ namespace cdroid{
 
 class ViewGroup;
 class ViewOverlay;
-typedef const std::string Intent;
+
 typedef std::string Parcelable;
 
 class View:public Drawable::Callback,public KeyEvent::Callback{

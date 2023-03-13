@@ -23,7 +23,7 @@ find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 
 find_package(ZLIB REQUIRED)
-find_package(JSONCPP REQUIRED)
+find_package(JSONCPP)
 find_package(ZIP REQUIRED)
 find_package(Freetype2 REQUIRED)
 find_package(EXPAT REQUIRED)
@@ -43,11 +43,11 @@ list(APPEND CDROID_DEPLIBS
     ${BZIP2_LIBRARIES}
     ${ZIP_LIBRARIES}
     ${PNG_LIBRARIES}
-    ${JSONCPP_LIBRARIES}
     ${JPEG_LIBRARIES}
     ${EXPAT_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
+    #${JSONCPP_LIBRARIES}
 )
 
 if (LITEHTML_FOUND)

@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <json/json.h>
 #include <ziparchive.h>
 #include <iostreams.h>
 #include <iostream>
@@ -89,8 +88,11 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
 	    std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(Color::parseColor(value)));
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
             mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>(package+":color/"+name,std::move(cl)));
-        }
-    }else  if(atts.size()==2){int i=0;
+        }else if(tag0.compare("string")==0){
+	    //LOGD_IF(!value.empty(),"tag0=%s:%s =%s",package.c_str(),tag0.c_str(),value.c_str());
+	    //if(value.empty()==false||atts.size())atts[0].dump();
+	}
+    }else  if(atts.size()==2){
         if(tag0.compare("style")==0){
             AttributeSet&attStyle=atts[0];
             const std::string styleName  =package+":style/"+attStyle.getString("name");
@@ -108,10 +110,24 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             auto it=mArraies.find(name);
             if(it==mArraies.end()){
                 it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(name,std::vector<std::string>()));
-                LOGI("array:%s",name.c_str());
+                LOGD("array:%s",name.c_str());
             }
             it->second.push_back(value);
-        }
+        }else if(tags[0].compare("string-array")==0){
+	    const std::string name=atts[0].getString("name");
+	    const std::string key=package+":string/"+name;
+	    auto it=mArraies.find(name);
+	    if(it==mArraies.end()){
+                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(name,std::vector<std::string>()));
+                LOGD("string-array:%s",name.c_str());
+            }
+	    it->second.push_back(value);
+	}else if(tags[1].compare("string")==0){
+	    const std::string name=atts[1].getString("name");
+	    const std::string key=package+":string/"+name;
+	    mStrings[key]=value;
+	    LOGD("%s=%s",key.c_str(),value.c_str());
+	}
     }
 }
 
@@ -132,7 +148,7 @@ int Assets::addResource(const std::string&path,const std::string&name){
     pak->forEachEntry([this,package,&count](const std::string&res){
         count++;
         if((res.size()>7)&&TextUtils::startWith(res,"values")){
-            LOGV("LoadKeyValues from:%s ...",res.c_str());
+            LOGD("LoadKeyValues from:%s ...",res.c_str());
             const std::string resid=package+":"+res;
             loadKeyValues(resid,std::bind(&Assets::parseItem,this,package,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
         }
@@ -149,7 +165,7 @@ int Assets::addResource(const std::string&path,const std::string&name){
         }
         return 0;
     });
-    LOGD("%s %d resource,[id:%d arraies:%d Styles:%d]",name.c_str(),count,mIDS.size(),mArraies.size(),mStyles.size());
+    LOGD("%s %d resource,[id:%d arraies:%d Styles:%d Strings:%d]",name.c_str(),count,mIDS.size(),mArraies.size(),mStyles.size(),mStrings.size());
     return pak?0:-1;
 }
 
@@ -214,21 +230,10 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
 }
 
 void Assets::loadStrings(const std::string&lan){
-    const std::string fname="strings/strings-"+lan+".json";
-    Json::CharReaderBuilder builder;
-    Json::String errs;
-    Json::Value root;
-    ZIPArchive*pak=getResource(std::string(),nullptr,nullptr);
-    std::istream*zipis=pak->getInputStream(fname);
-    LOGD("%s zip=%p good=%d",fname.c_str(),zipis,zipis?zipis->good():-2);
-    if(zipis==nullptr||zipis->good()==false)
-        return;
-    Json::parseFromStream(builder,*zipis,&root,&errs);
-    Json::Value::Members mems=root.getMemberNames();
-    for(auto m:mems){
-        mStrings[m]=root[m].asString();
+    for(auto a:mResources){
+        const std::string fname="strings/strings-"+lan+".xml";
+        loadKeyValues(fname,std::bind(&Assets::parseItem,this,a.first,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
     }
-    delete zipis;
 }
 
 RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid){
@@ -273,14 +278,9 @@ const std::string& Assets::getString(const std::string& id,const std::string&lan
 }
 
 std::vector<std::string>Assets::getStringArray(const std::string&resname,const std::string&arrayname)const{
-    Json::Value d;
-    Json::CharReaderBuilder builder;
-    Json::String errs;
     std::vector<std::string>sarray;
-    ZIPArchive*pak=getResource(std::string(),nullptr,nullptr);
-    std::shared_ptr<std::istream>zipis(pak->getInputStream(resname));
-    bool rc=Json::parseFromStream(builder,*zipis,&d,&errs);
-    LOGE_IF(rc,"%s Error %s at %d",resname.c_str(),errs.c_str());
+    auto it=mArraies.find(resname);
+    if(it!=mArraies.end())sarray=it->second;
     return sarray;
 }
 
@@ -377,12 +377,12 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
             it=mColors.find(realName); 
         }
     }
-    LOGV_IF(it!=mColors.end(),"%s type=%s",fullresid.c_str(),(it->second->colors?"color":"colorstatelist"));
-    LOGV_IF(it==mColors.end(),"%s not found",fullresid.c_str());
     if(it!=mColors.end()){
+        LOGV("%s type=%s",fullresid.c_str(),(it->second->colors?"color":"colorstatelist"));
         if(it->second->colors)return new ColorStateList(*it->second->colors);
 	else return ColorStateList::valueOf(it->second->icolor);
     }
+    LOGV("%s not found",fullresid.c_str());
     return nullptr;
 }
 

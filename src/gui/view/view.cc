@@ -25,9 +25,10 @@ bool View::sPreserveMarginParamsInLayoutParamConversion = true;
 class TintInfo{
 public:
     ColorStateList*mTintList;
+    int mBlendMode;
+    int mTintMode;
     bool mHasTintMode;
     bool mHasTintList;
-    int mTintMode;
     TintInfo(){
         mTintList=nullptr;
         mHasTintList=mHasTintMode=false;
@@ -213,13 +214,33 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setLongClickable(attrs.getBoolean("longclickable",false));
     setFocusableInTouchMode(attrs.getBoolean("focusableInTouchMode",false));
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
-    setRotation(attrs.getInt("rotation",0));
+  
+    mNextFocusLeftId =ctx->getId(attrs.getString("nextFocusLeft"));
+    mNextFocusRightId=ctx->getId(attrs.getString("nextFocusRight"));
+    mNextFocusUpId   =ctx->getId(attrs.getString("nextFocusUp"));
+    mNextFocusDownId =ctx->getId(attrs.getString("nextFocusDown"));
+    mNextFocusForwardId = ctx->getId(attrs.getString("nextFocusForward"));
+    mNextClusterForwardId=ctx->getId(attrs.getString("nextClusterFoward"));
+
+    setRotation(attrs.getFloat("rotation",0));
+    setTranslationX(attrs.getFloat("translationX",0));
+    setTranslationY(attrs.getFloat("translationY",0));
+    setTranslationZ(attrs.getFloat("translationZ",0));
+    setRotationX(attrs.getFloat("rotationX",0));
+    setRotationY(attrs.getFloat("rotationY",0));
+    setScaleX(attrs.getFloat("scaleX",1.f));
+    setScaleY(attrs.getFloat("scaleY",1.f));
+
     setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster",false));
  
     if(attrs.getBoolean("focusableInTouchMode",false)){
         viewFlagValues &= ~FOCUSABLE_AUTO;
         viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
         viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
+    }
+    if(attrs.hasAttribute("focusable")){
+	viewFlagValues|=attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
+	viewFlagMasks |=FOCUSABLE_MASK;
     }
     if(attrs.getBoolean("clickable",false)){
         viewFlagValues |= CLICKABLE;
@@ -229,6 +250,19 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagValues |= LONG_CLICKABLE;
         viewFlagMasks  |= LONG_CLICKABLE;
     }
+    const int fadingEdges=attrs.getInt("requiresFadingEdge",std::map<const std::string,int>({
+	   {"none",FADING_EDGE_NONE},
+	   {"horizontal",FADING_EDGE_HORIZONTAL},
+	   {"vertical",FADING_EDGE_VERTICAL}
+	}),FADING_EDGE_NONE);
+    if(fadingEdges!=FADING_EDGE_NONE){
+	viewFlagValues |= fadingEdges;
+	viewFlagMasks |= FADING_EDGE_MASK;
+	initScrollCache();
+	mScrollCache->fadingEdgeLength=attrs.getInt("fadingEdgeLength",ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
+    }
+
+
     const int scrollbars=attrs.getInt("scrollBars",std::map<const std::string,int>({
         {"none",0},{"horizontal",(int)SCROLLBARS_HORIZONTAL},{"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
     if(scrollbars!=SCROLLBARS_NONE){
@@ -247,8 +281,27 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
 
+    const int scrollIndicators=(attrs.getInt("scrollIndicators",std::map<const std::string,int>({
+	{"top",SCROLL_INDICATOR_TOP}, 	  {"left",SCROLL_INDICATOR_LEFT},
+	{"right",SCROLL_INDICATOR_RIGHT}, {"bottom",SCROLL_INDICATOR_BOTTOM}
+    }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
+    if(scrollIndicators)mPrivateFlags3|=scrollIndicators;
+
     setBackground(ctx->getDrawable(attrs,"background"));
-    
+    ColorStateList*csl =ctx->getColorStateList(attrs.getString("backgroundTint"));
+    if(mBackgroundTint==nullptr){
+	 mBackgroundTint = new TintInfo;
+	 mBackgroundTint->mTintList=csl;
+    }
+    const int blendMode=attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
+    }),-1);
+    if(blendMode!=-1){
+	if(mBackgroundTint==nullptr)mBackgroundTint=new TintInfo;
+	mBackgroundTint->mBlendMode = blendMode;
+	mBackgroundTint->mHasTintMode =true;
+    }
+
+
     int leftPadding,topPadding,rightPadding,bottomPadding;
     int padding=attrs.getDimensionPixelSize("padding",-1);
     bool leftPaddingDefined = false;
@@ -327,6 +380,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     const int y=attrs.getInt("scrollY",0);
     if(x||y)scrollTo(x,y);
     if(scrollbars!=SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
+    if(scrollIndicators)initializeScrollIndicatorsInternal();
     if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
     computeOpaqueFlags();
 }
