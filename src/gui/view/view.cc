@@ -263,8 +263,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
         leftPaddingDefined = true;
         rightPaddingDefined = true;
     }else{
-        int horz=attrs.getDimensionPixelSize("paddingHorizontal",0);
-        int vert=attrs.getDimensionPixelSize("paddingVertical",0);
+        int horz=attrs.getDimensionPixelSize("paddingHorizontal",-1);
+        int vert=attrs.getDimensionPixelSize("paddingVertical",-1);
         if(horz>=0){
             leftPadding = rightPadding = horz;
             leftPaddingDefined = rightPaddingDefined = true;
