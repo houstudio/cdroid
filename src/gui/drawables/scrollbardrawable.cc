@@ -71,17 +71,12 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
     }
 
     Rect r = getBounds();
-    /**
-     * Return true if the region is empty, or if the specified rectangle does
-     * not intersect the region. Returning false is not a guarantee that they
-     * intersect, but returning true is a guarantee that they do not. */
-    //if (canvas.quickReject(r.left, r.top, r.right, r.bottom, Canvas.EdgeType.AA))  return;
     std::vector<Cairo::Rectangle>rects;
     canvas.copy_clip_rectangle_list(rects);
     Cairo::RefPtr<Cairo::Region> regions=Cairo::Region::create();
     for(Cairo::Rectangle r:rects)
 	regions->do_union(Cairo::RectangleInt{r.x,r.y,r.width,r.height});
-    if(regions->contains_rectangle((Cairo::RectangleInt&)r)!=Cairo::Region::Overlap::OUT)return;
+    if(regions->contains_rectangle((Cairo::RectangleInt&)r)==Cairo::Region::Overlap::OUT)return;
 
     if (bdrawTrack)drawTrack(canvas, r, vertical);
 
