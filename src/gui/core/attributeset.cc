@@ -198,7 +198,8 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
     const std::string v=getString(key);
     if(v.empty())return def;
-    return std::strtol(v.c_str(),nullptr,10);
+    def=std::strtol(v.c_str(),nullptr,10);
+    return def;
 }
 
 int AttributeSet::getDimensionPixelOffset(const std::string&key,int def)const{

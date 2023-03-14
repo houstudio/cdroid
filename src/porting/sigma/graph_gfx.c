@@ -272,6 +272,25 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     return E_OK;
 }
 
+static int DMABlit(FBSURFACE*ndst,MI_GFX_Rect_t*recDst,FBSURFACE*nsrc,MI_GFX_Rect_t*recSrc){
+    MI_SYS_FrameData_t stSrcFrame, stDstFrame;
+    memset(&stSrcFrame,0,sizeof(stSrcFrame));
+    memset(&stDstFrame,0,sizeof(stDstFrame));
+    stSrcFrame.ePixelFormat = E_MI_SYS_PIXEL_FRAME_ARGB8888;
+    stSrcFrame.phyAddr[0]= nsrc->kbuffer;
+    stSrcFrame.u16Width  = nsrc->width;
+    stSrcFrame.u16Height = nsrc->height;
+    stSrcFrame.u32Stride[0] = nsrc->pitch/4;
+    stDstFrame.ePixelFormat = E_MI_SYS_PIXEL_FRAME_ARGB8888;//E_MI_SYS_PIXEL_FRAME_I8;
+
+    stDstFrame.phyAddr[0]= ndst->kbuffer;
+    stDstFrame.u16Width  = ndst->width;
+    stDstFrame.u16Height = ndst->height;
+    stDstFrame.u32Stride[0] = ndst->pitch/4;
+
+    return MI_SYS_BufBlitPa(&stDstFrame,(MI_SYS_WindowRect_t*)recDst , &stSrcFrame, (MI_SYS_WindowRect_t*)recSrc);    
+}
+
 INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
     unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
@@ -307,6 +326,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 	toMIGFX(ndst,&gfxdst);
 	bzero(&opt,sizeof(opt));
 
+        LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
         opt.u32GlobalSrcConstColor = 0xFF000000;
         opt.u32GlobalDstConstColor = 0xFF000000;
         opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
@@ -317,13 +337,41 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         stSrcRect.s32Ypos = rs.y;
         stSrcRect.u32Width = rs.w;
         stSrcRect.u32Height= rs.h;
-
+	if(ndst->ishw){
+	    int tmp;
+      	    switch(GFXGetRotation(nsrc->dispid)){
+	    case ROTATE_0 :break;
+	    case ROTATE_90:
+		 tmp=dx;
+	         dx=ndst->width-dy-rs.h;
+		 dy=tmp;
+		 break;
+	    case ROTATE_180:
+		 dx=ndst->width-dx-rs.w;
+		 dy=ndst->height-dy-rs.h;
+		 if(dx<0){
+		     rs.w+=dx;
+		     stSrcRect.u32Width+=dx;
+		     dx=0;
+		 }
+		 break;
+	    case ROTATE_270:
+		 tmp=dx;
+		 dx=dy;
+		 dy=ndst->height-tmp-rs.w;
+		 break;
+	    }
+	}
         stDstRect.s32Xpos = dx;
         stDstRect.s32Ypos = dy;
         stDstRect.u32Width = rs.w;
         stDstRect.u32Height= rs.h;
-        ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
-	MI_GFX_WaitAllDone(TRUE,fence);
+	/*if(opt.eRotate==0){
+	    ret= DMABlit(ndst,&stDstRect,nsrc,&stSrcRect);
+	}else*/{ 
+	    ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
+	    MI_GFX_WaitAllDone(FALSE,fence);
+	}
     }    
     return 0;
 }
