@@ -216,15 +216,21 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     if(atts.hasAttribute("textColorLink"))
         mTextColorLink = ctx->getColorStateList(atts.getString("textColorLink"));
     mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
-
+    mTextStyle= atts.getInt("textStyle",std::map<const std::string,int>{
+	   {"normal",0},{"bold",1},{"italic",2}
+	},0);
+    mFontWeight=atts.getInt("textfontWeight",-1);
     mShadowColor = atts.getInt("shadowColor",mShadowColor);
-    mShadowDx = atts.getInt("shadowDx",mShadowDx);
-    mShadowDy = atts.getInt("shadowDy",mShadowDy);
-    mShadowRadius = atts.getInt("shadowRadius",mShadowRadius);
+    mShadowDx = atts.getFloat("shadowDx",mShadowDx);
+    mShadowDy = atts.getFloat("shadowDy",mShadowDy);
+    mShadowRadius = atts.getFloat("shadowRadius",mShadowRadius);
     mTypefaceIndex= atts.getInt("typeface",-1);
-    mFontFamily   = atts.getString("fontFamily");
+    mFontFamily   = atts.getString("fontFamily","Lato");
+    mFontTypeface =Cairo::ToyFontFace::create(mFontFamily,Cairo::ToyFontFace::Slant::NORMAL,Cairo::ToyFontFace::Weight::NORMAL);
+    LOGD("mFontFamily=%s face=%p family=%s",mFontFamily.c_str(),mFontTypeface.get(),mFontTypeface->get_family().c_str());
     mTextStyle = atts.getInt("textStyle",-1);
     mFontWeight= atts.getInt("textFontWeight",-1);
+    mAllCaps=atts.getBoolean("textAllCaps",false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +290,7 @@ TextView::TextView(const std::string& text, int width, int height)
     mHintLayout->setWidth(width);
     mLayout->setWidth(width);
     mLayout->setText(text);
-    //setTextColor(mContext->getColorStateList("cdroid:color/textview.xml"));
+    setTextColor(mContext->getColorStateList("cdroid:color/textview.xml"));
 }
 
 void TextView::initView(){
@@ -374,42 +380,41 @@ int TextView::getLayoutAlignment()const{
     return alignment;
 }
 
-void TextView::applyTextAppearance(class TextAppearanceAttributes *attributes){
-    if (attributes->mTextColor) setTextColor(attributes->mTextColor);
+void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
+    if (attr->mTextColor) setTextColor(attr->mTextColor);
 
-    if (attributes->mTextColorHint) setHintTextColor(attributes->mTextColorHint);
+    if (attr->mTextColorHint) setHintTextColor(attr->mTextColorHint);
 
-    if (attributes->mTextColorLink) setLinkTextColor(attributes->mTextColorLink);
+    if (attr->mTextColorLink) setLinkTextColor(attr->mTextColorLink);
 
-    if (attributes->mTextColorHighlight) setHighlightColor(attributes->mTextColorHighlight);
+    if (attr->mTextColorHighlight) setHighlightColor(attr->mTextColorHighlight);
 
-    if (attributes->mTextSize != 0) setRawTextSize(attributes->mTextSize, true /* shouldRequestLayout */);
+    if (attr->mTextSize != 0) setRawTextSize(attr->mTextSize, true /* shouldRequestLayout */);
 
-    /*if (attributes->mTypefaceIndex != -1 && !attributes.mFontFamilyExplicit) {
-        attributes.mFontFamily = nullptr;
+    /*if (attr->mTypefaceIndex != -1 && !attr.mFontFamilyExplicit) {
+        attr.mFontFamily = nullptr;
     }
-    setTypefaceFromAttrs(attributes->mFontTypeface, attributes->mFontFamily,
-            attributes.mTypefaceIndex, attributes->mStyleIndex, attributes->mFontWeight);*/
+    setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
+            attr.mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);*/
 
-    if (attributes->mShadowColor != 0) {
-        setShadowLayer(attributes->mShadowRadius, attributes->mShadowDx, attributes->mShadowDy,
-                attributes->mShadowColor);
-    }
-
-    /*if (attributes.mAllCaps) setTransformationMethod(new AllCapsTransformationMethod(getContext()));
-
-    if (attributes.mHasElegant) setElegantTextHeight(attributes.mElegant);
-
-    if (attributes.mHasFallbackLineSpacing) {
-        setFallbackLineSpacing(attributes.mFallbackLineSpacing);
+    if (attr->mShadowColor != 0) {
+        setShadowLayer(attr->mShadowRadius, attr->mShadowDx, attr->mShadowDy, attr->mShadowColor);
     }
 
-    if (attributes.mHasLetterSpacing) {
-        setLetterSpacing(attributes.mLetterSpacing);
+    /*if (attr->mAllCaps) setTransformationMethod(new AllCapsTransformationMethod(getContext()));
+
+    if (attr->mHasElegant) setElegantTextHeight(attr->mElegant);
+
+    if (attr->mHasFallbackLineSpacing) {
+        setFallbackLineSpacing(attr->mFallbackLineSpacing);
     }
 
-    if (attributes.mFontFeatureSettings != null) {
-        setFontFeatureSettings(attributes.mFontFeatureSettings);
+    if (attr->mHasLetterSpacing) {
+        setLetterSpacing(attr.mLetterSpacing);
+    }
+
+    if (attr->mFontFeatureSettings != null) {
+        setFontFeatureSettings(attr->mFontFeatureSettings);
     }*/    
 }
 

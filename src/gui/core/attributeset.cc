@@ -1,5 +1,6 @@
 #include <attributeset.h>
 #include <widget/linearlayout.h>
+#include <core/windowmanager.h>
 #include <color.h>
 #include <string.h>
 #include <vector>
@@ -19,13 +20,13 @@ static std::vector<std::string> split(const std::string & path) {
     return vec;
 }
 
-AttributeSet::AttributeSet(){
-    mContext = nullptr;
+AttributeSet::AttributeSet():AttributeSet(nullptr,std::string()){
 }
 
 AttributeSet::AttributeSet(Context*ctx,const std::string&package){
     mContext = ctx;
     mPackage = package;
+    WindowManager::getInstance().getDefaultDisplay().getMetrics(mDisplayMetrics);
 }
 
 void AttributeSet::setContext(Context*ctx,const std::string&package){
@@ -196,9 +197,17 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
 }
 
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
+    const char*p;
     const std::string v=getString(key);
     if(v.empty())return def;
     def=std::strtol(v.c_str(),nullptr,10);
+    p=strpbrk(v.c_str(),"sdp");
+    if(p){
+       if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
+	   def=(mDisplayMetrics.density*def+0.5f);
+       if(strncmp(p,"sp",2)==0)
+	   def=(mDisplayMetrics.scaledDensity*def+0.5f);
+    }
     return def;
 }
 

@@ -183,8 +183,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
            {"software",LAYER_TYPE_SOFTWARE},{"hardware",LAYER_TYPE_HARDWARE}
         },LAYER_TYPE_NONE));
     const int quality=attrs.getInt("drawingCacheQuality",std::map<const std::string,int>{
-           {"auto",(int)DRAWING_CACHE_QUALITY_AUTO,},
-           {"low" ,(int)DRAWING_CACHE_QUALITY_LOW},
+           {"auto",(int)DRAWING_CACHE_QUALITY_AUTO},
+           {"low" ,(int)DRAWING_CACHE_QUALITY_LOW },
            {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
     },DRAWING_CACHE_QUALITY_AUTO);
     if(quality){
@@ -194,10 +194,6 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mContentDescription=attrs.getString("contentDescription");
     setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
-    mOverScrollMode=attrs.getInt("overScrollMode",std::map<const std::string,int>{
-           {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
-           {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}
-         },mOverScrollMode);
 
     const int textAlignment=attrs.getInt("textAlignment",std::map<const std::string,int>{
         {"inherit" , TEXT_ALIGNMENT_INHERIT},
@@ -263,8 +259,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
     }
 
 
-    const int scrollbars=attrs.getInt("scrollBars",std::map<const std::string,int>({
-        {"none",0},{"horizontal",(int)SCROLLBARS_HORIZONTAL},{"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
+    const int scrollbars=attrs.getInt("scrollbars",std::map<const std::string,int>({
+        {"none",(int)SCROLLBARS_NONE},
+	{"horizontal",(int)SCROLLBARS_HORIZONTAL},
+	{"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
     if(scrollbars!=SCROLLBARS_NONE){
         viewFlagValues |= scrollbars;
         viewFlagMasks  |= SCROLLBARS_MASK;
@@ -274,18 +272,32 @@ View::View(Context*ctx,const AttributeSet&attrs){
         {"insideInset"   ,(int)SCROLLBARS_INSIDE_OVERLAY },
         {"outsideOverlay",(int)SCROLLBARS_OUTSIDE_OVERLAY},
         {"outsideInset"  ,(int)SCROLLBARS_OUTSIDE_OVERLAY} }),SCROLLBARS_INSIDE_OVERLAY);
+
+    mOverScrollMode=attrs.getInt("overScrollMode",std::map<const std::string,int>{
+           {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
+           {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}
+         },mOverScrollMode);
+
+    mVerticalScrollbarPosition=attrs.getInt("verticalScrollbarPosition",std::map<const std::string,int>{
+           {"defaultPosition",SCROLLBAR_POSITION_DEFAULT},
+	   {"left",SCROLLBAR_POSITION_LEFT},
+	   {"right",SCROLLBAR_POSITION_RIGHT}
+         },SCROLLBAR_POSITION_DEFAULT);
+
     if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
         viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
         viewFlagMasks |= SCROLLBARS_STYLE_MASK;
     }
-    if(viewFlagMasks)
-        setFlags(viewFlagValues, viewFlagMasks);
 
     const int scrollIndicators=(attrs.getInt("scrollIndicators",std::map<const std::string,int>({
 	{"top",SCROLL_INDICATOR_TOP}, 	  {"left",SCROLL_INDICATOR_LEFT},
 	{"right",SCROLL_INDICATOR_RIGHT}, {"bottom",SCROLL_INDICATOR_BOTTOM}
     }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
     if(scrollIndicators)mPrivateFlags3|=scrollIndicators;
+
+    if(viewFlagMasks)
+        setFlags(viewFlagValues, viewFlagMasks);
+
 
     setBackground(ctx->getDrawable(attrs,"background"));
     ColorStateList*csl =ctx->getColorStateList(attrs.getString("backgroundTint"));
@@ -301,6 +313,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
 	mBackgroundTint->mHasTintMode =true;
     }
 
+    setForeground(ctx->getDrawable(attrs,"foreground"));
+    setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
 
     int leftPadding,topPadding,rightPadding,bottomPadding;
     int padding=attrs.getDimensionPixelSize("padding",-1);
@@ -2170,7 +2184,7 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
 
 void View::initializeScrollIndicatorsInternal(){
     if (mScrollIndicatorDrawable == nullptr) {
-        mScrollIndicatorDrawable = mContext?mContext->getDrawable("cdroid:drawable/scroll_indicator_material"):nullptr;
+        mScrollIndicatorDrawable = mContext->getDrawable("cdroid:drawable/scroll_indicator_material");
     }
     if( mScrollIndicatorDrawable == nullptr){
         Shape*sp=new RectShape();

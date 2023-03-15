@@ -136,6 +136,7 @@ protected:
     int mCaretPos;
     bool mBlinkOn;
     Rect mCaretRect;
+    Cairo::RefPtr<Cairo::FontFace>mTypeFace;
     Layout* mLayout;
     Layout* mHintLayout;
     std::wstring& getEditable();

@@ -2,11 +2,14 @@
 #define __ATTRIBUTESET_H__
 #include <string>
 #include <map>
+#include <core/displaymetrics.h>
+
 namespace cdroid{
 class AttributeSet{
 private:
     std::string mPackage;
     class Context*mContext;
+    DisplayMetrics mDisplayMetrics;
     std::map<std::string,std::string>mAttrs;
 public:
     AttributeSet();

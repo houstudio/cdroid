@@ -1,7 +1,9 @@
 #include <core/displaymetrics.h>
 namespace cdroid{
+
 int DisplayMetrics::DENSITY_DEVICE=DENSITY_DEFAULT;
 int DisplayMetrics::DENSITY_DEVICEE_STABLE=DENSITY_DEFAULT;
+
 DisplayMetrics::DisplayMetrics(){
     setToDefaults();
 }
