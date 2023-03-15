@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
+<HorizontalScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
 	android:id="@+id/horizontalScroll"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:scrollbarSize="10dp"
 	android:scrollbars="vertical"
         android:overScrollMode="always"
-        android:scrollIndicators="right">
+        android:scrollIndicators="top">
     <LinearLayout
 	android:id="@+id/linearLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
 	<RelativeLayout
 	    android:id="@+id/relativeLayout"
             android:layout_width="320dp"
@@ -53,5 +53,5 @@
                 android:text="收藏"/>
         </RelativeLayout>
     </LinearLayout>
-</ScrollView>
+</HorizontalScrollView>
 

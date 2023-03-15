@@ -3,10 +3,8 @@
 #include <cdroid.h>
 #include <R.h>
 HomeWindow::HomeWindow(int mode):Window(0,0,1280,800){
-   if(mode==0)
-      LayoutInflater::from(getContext())->inflate("@layout/content_main",this);
-   else 
-      LayoutInflater::from(getContext())->inflate("@layout/main2",this);
+   LayoutInflater::from(getContext())->inflate("@layout/content_main",this);
+   //LayoutInflater::from(getContext())->inflate("@layout/main2",this);
 
    RelativeLayout*rl=(RelativeLayout*)findViewById(w9::R::id::relativeLayout);
    View*v=findViewById(w9::R::id::horizontalScroll);
@@ -15,11 +13,14 @@ HomeWindow::HomeWindow(int mode):Window(0,0,1280,800){
       //LOGD("x=%d->%d",oldX,x);
    });
    v=findViewById(w9::R::id::often);
-   if(v){
-	v->setOnClickListener([](View& ){
-	   LOGD("click often");
-        });
-   }
+   View::OnClickListener ls=[](View&v ){
+           LOGD("click %d",v.getId());
+        };
+   if(v)v->setOnClickListener(ls);
+   v=findViewById(w9::R::id::care);
+   if(v)v->setOnClickListener(ls);
+   v=findViewById(w9::R::id::favorite);
+   if(v)v->setOnClickListener(ls); 
    LinearLayout*ll=(LinearLayout*)findViewById(w9::R::id::linearLayout);
    const char* res[]={
 	   "@mipmap/zhinengxi",

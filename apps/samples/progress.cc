@@ -5,10 +5,11 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     cdroid::Context*ctx=&app;
-    Window*w=new Window(0,0,1280,720);
+    Window*w=new Window(0,0,1280,800);
     w->setId(1);
     Drawable*d=nullptr;
 ///////////////////////////////////////////////////////////
+
     ProgressBar*pb = new ProgressBar(600,40);
     ProgressBar*pb2= new ProgressBar(600,40);
     d=ctx->getDrawable("cdroid:drawable/progress_horizontal.xml");

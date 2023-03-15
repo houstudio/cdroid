@@ -6,7 +6,9 @@
 #include <condition_variable>
 #include <map>
 
+#ifndef COMPOSE_ASYNC
 #define COMPOSE_ASYNC 1
+#endif
 
 namespace cdroid{
 class GraphDevice{

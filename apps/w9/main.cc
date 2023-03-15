@@ -5,7 +5,7 @@
 #include <homewindow.h>
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new HomeWindow();
+    Window*w=new HomeWindow(argc%2);
     return app.exec();
 }
 
