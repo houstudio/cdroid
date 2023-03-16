@@ -1331,7 +1331,7 @@ void DrawerLayout::ViewDragCallback::peekDrawer(){
         //childLeft = mDL->getWidth()- peekDistance;
         childLeft = mDL->getWidth()- (toCapture?toCapture->getWidth():peekDistance);
     }
-    LOGV("isleft?=%d toCapture=%p (%d) %d->%d",leftEdge,toCapture,toCapture->getWidth(),toCapture->getLeft(),childLeft);
+    LOGV_IF(toCapture,"isleft?=%d toCapture=%p (%d) %d->%d",leftEdge,toCapture,toCapture->getWidth(),toCapture->getLeft(),childLeft);
     // Only peek if it would mean making the drawer more visible and the drawer isn't locked
     if (toCapture && ((leftEdge && toCapture->getLeft() < childLeft)
             || (!leftEdge && toCapture->getLeft() > childLeft))
