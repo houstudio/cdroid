@@ -26,7 +26,8 @@ void AnimationHandler::MyFrameCallbackProvider::setFrameDelay(long delay) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+#pragma GCC push_options
+#pragma GCC optimize("O0")
 AnimationHandler*AnimationHandler::mInst=nullptr;
 
 AnimationHandler::AnimationHandler(){
@@ -82,6 +83,7 @@ bool AnimationHandler::isCallbackDue(AnimationFrameCallback* callback, long curr
 }
 
 void AnimationHandler::commitAnimationFrame(AnimationFrameCallback* callback, long frameTime){
+LOGI("callback=%p",callback);
     auto it=mDelayedCallbackStartTime.find(callback);
     auto itc=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
     if (it==mDelayedCallbackStartTime.end() && itc!=mCommitCallbacks.end()) {
@@ -105,6 +107,7 @@ AnimationHandler&AnimationHandler::getInstance(){
     if(mInst==nullptr){
         mInst=new AnimationHandler();
         Looper::getDefault()->addEventHandler(mInst);
+	LOGI("AnimationHandler=%p",mInst);
     }
     return *mInst;
 }
@@ -179,4 +182,5 @@ void AnimationHandler::autoCancelBasedOn(ObjectAnimator* objectAnimator){
             dynamic_cast<Animator*>(cb)->cancel();
     }
 }
+#pragma GCC pop_options
 }//endof namespace
