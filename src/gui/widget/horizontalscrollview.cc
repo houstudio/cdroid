@@ -1049,14 +1049,14 @@ void HorizontalScrollView::onLayout(bool changed, int l, int t, int w, int h){
     }
     mChildToScrollTo = nullptr;
 
-    /*if (!isLaidOut()) {
+    if (!isLaidOut()) {
         int scrollRange = std::max(0, childWidth - (w - mPaddingLeft - mPaddingRight));
-        if (mSavedState != nullptr) {
+        /*if (mSavedState != nullptr) {
             mScrollX = isLayoutRtl()
                     ? scrollRange - mSavedState.scrollOffsetFromStart
                     : mSavedState.scrollOffsetFromStart;
             mSavedState = nullptr;
-        } else {
+        } else*/ {
             if (isLayoutRtl()) {
                 mScrollX = scrollRange - mScrollX;
             } // mScrollX default value is "0" for LTR
@@ -1067,7 +1067,7 @@ void HorizontalScrollView::onLayout(bool changed, int l, int t, int w, int h){
         } else if (mScrollX < 0) {
             mScrollX = 0;
         }
-    }*/
+    }
 
     // Calling this with the present values causes it to re-claim them
     scrollTo(mScrollX, mScrollY);
@@ -1101,22 +1101,28 @@ bool HorizontalScrollView::isViewDescendantOf(View* child, View* parent){
 
 void HorizontalScrollView::fling(int velocityX){
     if (getChildCount() > 0) {
-        int width = getWidth() - mPaddingRight - mPaddingLeft;
-        int right = getChildAt(0)->getWidth();
+        const int width = getWidth() - mPaddingRight - mPaddingLeft;
+        const int right = getChildAt(0)->getWidth();
 
-        mScroller->fling(mScrollX, mScrollY, velocityX, 0, 0,std::max(0, right - width), 0, 0, width/2, 0);
+	const int maxScroll =std::max(0,right-width);
+	if(mScrollX==0 && !mEdgeGlowLeft->isFinished())
+	    mEdgeGlowLeft->onAbsorb(-velocityX);
+	else if(mScrollX==maxScroll && mEdgeGlowRight->isFinished())
+	    mEdgeGlowRight->onAbsorb(velocityX);
+	else{
+            mScroller->fling(mScrollX, mScrollY, velocityX, 0, 0,std::max(0, right - width), 0, 0, width/2, 0);
 
-        bool movingRight = velocityX > 0;
+            bool movingRight = velocityX > 0;
 
-        View* currentFocused = findFocus();
-        View* newFocused = findFocusableViewInMyBounds(movingRight, mScroller->getFinalX(), currentFocused);
+            View* currentFocused = findFocus();
+            View* newFocused = findFocusableViewInMyBounds(movingRight, mScroller->getFinalX(), currentFocused);
 
-        if (newFocused == nullptr) newFocused = this;
-
-        if (newFocused != currentFocused) {
-            newFocused->requestFocus(movingRight ? View::FOCUS_RIGHT : View::FOCUS_LEFT);
+            if (newFocused == nullptr) newFocused = this;
+            if (newFocused != currentFocused) {
+                newFocused->requestFocus(movingRight ? View::FOCUS_RIGHT : View::FOCUS_LEFT);
+            }
+            postInvalidateOnAnimation();
         }
-        postInvalidateOnAnimation();
     }
 }
 

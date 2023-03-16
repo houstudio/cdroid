@@ -59,14 +59,10 @@ void ScrollBarDrawable::setParameters(int range, int offset, int extent, bool ve
 }
 
 void ScrollBarDrawable::draw(Canvas&canvas) {
-    bool vertical = mVertical;
-    int extent = mExtent;
-    int range = mRange;
-
     bool bdrawTrack = true;
     bool bdrawThumb = true;
-    if (extent <= 0 || range <= extent) {
-        bdrawTrack = vertical ? mAlwaysDrawVerticalTrack : mAlwaysDrawHorizontalTrack;
+    if (mExtent <= 0 || mRange <= mExtent) {
+        bdrawTrack = mVertical ? mAlwaysDrawVerticalTrack : mAlwaysDrawHorizontalTrack;
         bdrawThumb = false;
     }
 
@@ -78,14 +74,14 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
 	regions->do_union(Cairo::RectangleInt{r.x,r.y,r.width,r.height});
     if(regions->contains_rectangle((Cairo::RectangleInt&)r)==Cairo::Region::Overlap::OUT)return;
 
-    if (bdrawTrack)drawTrack(canvas, r, vertical);
+    if (bdrawTrack)drawTrack(canvas, r, mVertical);
 
     if (bdrawThumb) {
-        int scrollBarLength = vertical ? r.height : r.width;
-        int thickness   = vertical ? r.width : r.height;
-        int thumbLength = ViewConfiguration::getThumbLength(scrollBarLength, thickness, extent, range);
-        int thumbOffset = ViewConfiguration::getThumbOffset(scrollBarLength, thumbLength, extent, range,mOffset);
-        drawThumb(canvas, r, thumbOffset, thumbLength, vertical);
+        int scrollBarLength = mVertical ? r.height : r.width;
+        int thickness   = mVertical ? r.width : r.height;
+        int thumbLength = ViewConfiguration::getThumbLength(scrollBarLength, thickness, mExtent, mRange);
+        int thumbOffset = ViewConfiguration::getThumbOffset(scrollBarLength, thumbLength, mExtent, mRange,mOffset);
+        drawThumb(canvas, r, thumbOffset, thumbLength, mVertical);
     }
 }
 

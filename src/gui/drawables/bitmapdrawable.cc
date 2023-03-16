@@ -77,12 +77,12 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
 
 BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
   :BitmapDrawable(std::make_shared<BitmapState>()){
-    std::ifstream fs(resname);
+    std::ifstream fs(resname,std::ios::binary);
     RefPtr<ImageSurface>b;
     LOGV("%s",resname.c_str());
-    if((ctx==nullptr)||fs.good())
+    if((ctx==nullptr)||fs.good()){
         b=ImageSurface::create_from_stream(fs);
-    else {
+    }else {
         b=ctx->getImage(resname);
     }
     setBitmap(b);
