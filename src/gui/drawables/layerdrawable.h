@@ -14,7 +14,6 @@ protected:
         int mGravity;
         int mDensity;
         int mId;
-        int mPaddingMode;
         std::vector<int>mThemeAttrs;
         ChildDrawable(int density);
         ChildDrawable(ChildDrawable* orig,LayerDrawable*owner);

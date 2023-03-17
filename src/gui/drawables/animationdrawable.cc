@@ -2,7 +2,8 @@
 #include <core/systemclock.h>
 #include <cdlog.h>
 namespace cdroid{
-
+#pragma GCC push_options
+#pragma GCC optimize("O0")
 AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr){
 }
 
@@ -163,5 +164,5 @@ void AnimationDrawable::AnimationState::addFrame(Drawable*dr,int dur){
        mDurations.resize(getChildCount());
     mDurations[pos]=dur;
 }
-
+#pragma GCC pop_options
 }

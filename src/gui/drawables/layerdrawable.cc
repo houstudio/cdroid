@@ -8,12 +8,13 @@ namespace cdroid{
 #define INSET_UNDEFINED INT_MIN
 
 LayerDrawable::ChildDrawable::ChildDrawable(int density){
-    mDensity=density;
-    mInsetL=mInsetT=0;
-    mInsetR=mInsetB=0;
-    mInsetS=mInsetE=INSET_UNDEFINED;
-    mGravity=Gravity::NO_GRAVITY;
-    mWidth=mHeight=-1;
+    mDensity= density;
+    mInsetL = mInsetT =0;
+    mInsetR = mInsetB =0;
+    mInsetS = mInsetE =INSET_UNDEFINED;
+    mGravity= Gravity::NO_GRAVITY;
+    mWidth  = mHeight = -1;
+    mDrawable= nullptr;
     mId=-1;
 }
 
@@ -208,6 +209,7 @@ LayerDrawable::LayerState* LayerDrawable::createConstantState(LayerState* state)
 }
 
 LayerDrawable::LayerDrawable(std::shared_ptr<LayerState>state){
+    mMutated = false;
     mLayerState.reset(createConstantState(state.get()));
     if (mLayerState->mChildren.size()) {
         ensurePadding();

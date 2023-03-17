@@ -1,6 +1,6 @@
 #ifndef __ANIMATION_HANDLER__
 #define __ANIMATION_HANDLER__
-#include <map>
+#include <unordered_map>
 #include <core/looper.h>
 #include <view/choreographer.h>
 
@@ -36,7 +36,7 @@ private:
     static AnimationHandler*mInst;
     std::list<AnimationFrameCallback*> mAnimationCallbacks;
     std::list<AnimationFrameCallback*> mCommitCallbacks;
-    std::map<AnimationFrameCallback*,long>mDelayedCallbackStartTime;
+    std::unordered_map<AnimationFrameCallback* ,long>mDelayedCallbackStartTime;
 private:
     AnimationFrameCallbackProvider* getProvider();
     AnimationHandler();
@@ -53,9 +53,9 @@ protected:
 public:
     static AnimationHandler& getInstance();
     void setProvider(const AnimationFrameCallbackProvider* provider);
-    void addAnimationFrameCallback(const AnimationFrameCallback* callback, long delay);
-    void addOneShotCommitCallback(const AnimationFrameCallback* callback);
-    void removeCallback(const AnimationFrameCallback* callback);
+    void addAnimationFrameCallback(AnimationFrameCallback* callback, long delay);
+    void addOneShotCommitCallback(AnimationFrameCallback* callback);
+    void removeCallback(AnimationFrameCallback* callback);
     static int getAnimationCount();
     static void setFrameDelay(long delay);
     static long getFrameDelay();

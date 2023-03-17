@@ -4,7 +4,6 @@
 
 namespace cdroid{
 
-
 void AnimationHandler::MyFrameCallbackProvider::postFrameCallback(const Choreographer::FrameCallback& callback) {
     Choreographer::getInstance().postFrameCallback(callback);
 }
@@ -26,8 +25,6 @@ void AnimationHandler::MyFrameCallbackProvider::setFrameDelay(long delay) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma GCC push_options
-#pragma GCC optimize("O0")
 AnimationHandler*AnimationHandler::mInst=nullptr;
 
 AnimationHandler::AnimationHandler(){
@@ -41,29 +38,30 @@ AnimationHandler::~AnimationHandler(){
 }
 
 int AnimationHandler::checkEvents(){
-    return  mAnimationCallbacks.size();
+    return mAnimationCallbacks.size();
 }
 
 int AnimationHandler::handleEvents(){
-    doAnimationFrame(SystemClock::uptimeMillis());
+    const long currentTime=getProvider()->getFrameTime();
+    doAnimationFrame(currentTime);
+    return 1;
 }
 
 void AnimationHandler::doFrame(long){
 }
 
 void AnimationHandler::doAnimationFrame(long frameTime){
-    long currentTime = SystemClock::uptimeMillis();
-    int size = mAnimationCallbacks.size();
+    const int size = mAnimationCallbacks.size();
     for (auto callback:mAnimationCallbacks) {
         if (callback == nullptr) continue;
 
-        if (isCallbackDue(callback, currentTime)) {
-            callback->doAnimationFrame(frameTime);
+        if (isCallbackDue(callback, frameTime)) {
+            callback->doAnimationFrame(frameTime);/*doAnimationFrame mybe call removeCallback!!!*/
             auto it=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
             if (it!=mCommitCallbacks.end()){
                 Runnable runner;
-                runner=[this,callback](){
-                    commitAnimationFrame(callback, getProvider()->getFrameTime());
+                runner=[this,callback,frameTime](){
+                    commitAnimationFrame(callback, frameTime);
                 };
                 getProvider()->postCommitCallback(runner);
             }
@@ -83,11 +81,10 @@ bool AnimationHandler::isCallbackDue(AnimationFrameCallback* callback, long curr
 }
 
 void AnimationHandler::commitAnimationFrame(AnimationFrameCallback* callback, long frameTime){
-LOGI("callback=%p",callback);
     auto it=mDelayedCallbackStartTime.find(callback);
     auto itc=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
     if (it==mDelayedCallbackStartTime.end() && itc!=mCommitCallbacks.end()) {
-        callback->commitAnimationFrame(frameTime);
+        callback->commitAnimationFrame(frameTime);/*commitAnimationFrame mybe call removeCallback!!!*/
         mCommitCallbacks.erase(itc);
     }
 }
@@ -107,7 +104,6 @@ AnimationHandler&AnimationHandler::getInstance(){
     if(mInst==nullptr){
         mInst=new AnimationHandler();
         Looper::getDefault()->addEventHandler(mInst);
-	LOGI("AnimationHandler=%p",mInst);
     }
     return *mInst;
 }
@@ -125,31 +121,32 @@ void AnimationHandler::setProvider(const AnimationFrameCallbackProvider* provide
         mProvider=(AnimationFrameCallbackProvider*)provider;
 }
 
-void AnimationHandler::addAnimationFrameCallback(const AnimationFrameCallback* callback, long delay){
+void AnimationHandler::addAnimationFrameCallback(AnimationFrameCallback* callback, long delay){
     if(mAnimationCallbacks.size()==0)
        getProvider()->postFrameCallback(mFrameCallback);
-    auto it=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),(AnimationFrameCallback*)callback);
+    auto it=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
+
     if(it==mAnimationCallbacks.end())
         mAnimationCallbacks.push_back((AnimationFrameCallback*)callback);
-    if(delay>0)
-        mDelayedCallbackStartTime.insert(std::pair<AnimationFrameCallback*,long>
-            ((AnimationFrameCallback*)callback,SystemClock::uptimeMillis()+delay));
+    if(delay>0){
+        mDelayedCallbackStartTime.insert({callback,SystemClock::uptimeMillis()+delay});
+    }
 }
 
-void AnimationHandler::addOneShotCommitCallback(const AnimationFrameCallback* callback){
-    auto it=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),(AnimationFrameCallback*)callback);
+void AnimationHandler::addOneShotCommitCallback(AnimationFrameCallback* callback){
+    auto it=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
     if (it==mCommitCallbacks.end()) {
         mCommitCallbacks.push_back((AnimationFrameCallback*)callback);
     } 
 }
 
-void AnimationHandler::removeCallback(const AnimationFrameCallback* callback){
-    auto it1=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),(AnimationFrameCallback*)callback);
+void AnimationHandler::removeCallback(AnimationFrameCallback* callback){
+    auto it1=std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
     auto it2=mDelayedCallbackStartTime.find((AnimationFrameCallback*)callback);
     if(it1!=mCommitCallbacks.end())mCommitCallbacks.erase(it1);
     if(it2!=mDelayedCallbackStartTime.end())mDelayedCallbackStartTime.erase(it2);
     
-    auto it3=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),(AnimationFrameCallback*)callback);
+    auto it3=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
     if (it3!=mAnimationCallbacks.end()) {
         (*it3)=nullptr;
         mListDirty = true;
@@ -182,5 +179,4 @@ void AnimationHandler::autoCancelBasedOn(ObjectAnimator* objectAnimator){
             dynamic_cast<Animator*>(cb)->cancel();
     }
 }
-#pragma GCC pop_options
 }//endof namespace

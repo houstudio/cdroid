@@ -11,13 +11,16 @@ ShapeDrawable::ShapeState::ShapeState(){
     mPadding.set(0,0,0,0);
 }
 
-ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig){
+ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig)
+      :ShapeDrawable::ShapeState::ShapeState(){
     mIntrinsicWidth = orig.mIntrinsicWidth;
     mIntrinsicHeight = orig.mIntrinsicHeight;
     mPadding=orig.mPadding;
     mAlpha  = orig.mAlpha;
-    mShape  = orig.mShape?orig.mShape->clone():nullptr;
-    mTint   = new ColorStateList(*orig.mTint);
+    if(mShape)
+        mShape  = orig.mShape->clone();
+    if(orig.mTint)
+        mTint   = new ColorStateList(*orig.mTint);
     mTintMode =orig.mTintMode;
 }
 
@@ -38,11 +41,13 @@ int ShapeDrawable::ShapeState::getChangingConfigurations()const{
 
 ShapeDrawable::ShapeDrawable(std::shared_ptr<ShapeState>state){
     mShapeState=state;
+    mMutated=false;
     mTintFilter=nullptr;
 }
 
 ShapeDrawable::ShapeDrawable(){
     mShapeState=std::make_shared<ShapeState>();
+    mMutated=false;
     mTintFilter=nullptr;
 }
 
