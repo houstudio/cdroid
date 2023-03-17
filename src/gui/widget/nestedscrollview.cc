@@ -206,18 +206,26 @@ int NestedScrollView::getMaxScrollAmount() {
 }
 
 void NestedScrollView::initScrollView() {
-    mScroller = new OverScroller(getContext());
+    mScroller = new OverScroller(mContext);
     setFocusable(true);
-    mFillViewport =true;
+    mFillViewport  = true;
+    mIsBeingDragged= false;
+    mLastMotionY   = 0;
+    mLastScrollerY = 0;
+    mNestedYOffset = 0;
+    mLastScroll    = 0;
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     ViewConfiguration& configuration = ViewConfiguration::get(getContext());
     mTouchSlop = configuration.getScaledTouchSlop();
+    mVelocityTracker = nullptr;
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
     mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
 
     mParentHelper= new NestedScrollingParentHelper(this);
     mChildHelper = new NestedScrollingChildHelper(this);
+    mEdgeGlowTop = new EdgeEffect(mContext);
+    mEdgeGlowBottom = new EdgeEffect(mContext);
     setNestedScrollingEnabled(true); 
 }
 
@@ -1468,7 +1476,6 @@ void NestedScrollView::ensureGlows() {
 
 void NestedScrollView::draw(Canvas& canvas) {
     FrameLayout::draw(canvas);
-    LOGD("mEdgeGlowTop=%p",mEdgeGlowTop);
     if (mEdgeGlowTop != nullptr) {
         int scrollY = getScrollY();
         if (!mEdgeGlowTop->isFinished()) {

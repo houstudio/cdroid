@@ -212,22 +212,16 @@ void NestedScrollingChildHelper::onStopNestedScroll( View* child) {
 
 ViewGroup* NestedScrollingChildHelper::getNestedScrollingParentForType(int type) {
     switch (type) {
-    case TYPE_TOUCH:
-            return mNestedScrollingParentTouch;
-    case TYPE_NON_TOUCH:
-            return mNestedScrollingParentNonTouch;
+    case TYPE_TOUCH:    return mNestedScrollingParentTouch;
+    case TYPE_NON_TOUCH:return mNestedScrollingParentNonTouch;
     }
     return nullptr;
 }
 
 void NestedScrollingChildHelper::setNestedScrollingParentForType(int type, ViewGroup* p) {
     switch (type) {
-    case TYPE_TOUCH:
-            mNestedScrollingParentTouch = p;
-            break;
-    case TYPE_NON_TOUCH:
-            mNestedScrollingParentNonTouch = p;
-            break;
+    case TYPE_TOUCH:     mNestedScrollingParentTouch = p;     break;
+    case TYPE_NON_TOUCH: mNestedScrollingParentNonTouch = p;  break;
     }
 }
 }/*endof namespace*/

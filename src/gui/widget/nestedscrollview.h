@@ -41,8 +41,8 @@ private:
     int mScrollConsumed[2];
     int mNestedYOffset;
     int mLastScrollerY;
-     NestedScrollingParentHelper* mParentHelper;
-     NestedScrollingChildHelper* mChildHelper;
+    NestedScrollingParentHelper* mParentHelper;
+    NestedScrollingChildHelper* mChildHelper;
     float mVerticalScrollFactor;
     OnScrollChangeListener mOnScrollChangeListener;
 private:
