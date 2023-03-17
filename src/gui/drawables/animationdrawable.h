@@ -13,7 +13,7 @@ private:
         Drawable*newDrawable()override;
         void addFrame(Drawable*,int dur);
     };
-     std::shared_ptr<AnimationState>mAnimationState;
+    std::shared_ptr<AnimationState>mAnimationState;
     int  mCurFrame;
     bool mRunning;
     bool mAnimating;
