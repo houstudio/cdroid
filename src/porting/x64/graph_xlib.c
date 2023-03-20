@@ -100,8 +100,17 @@ INT GFXInit(){
 }
 
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
-    *width=1280;//dispCfg.width;
-    *height=720;//dispCfg.height;
+    const char*env= getenv("SCREENSIZE");
+    if(env==nullptr){
+        *width=1280;//dispCfg.width;
+        *height=720;//dispCfg.height;
+    }else{
+	*width=atoi(env);
+	env=strpbrk(env,"x*,");
+	if((*width<=0)||(env==nullptr))exit(-1);
+	*height=atoi(env+1);
+	if(*height<=0)exit(-1);
+    }
     return E_OK;
 }
 
