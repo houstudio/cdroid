@@ -2176,6 +2176,69 @@ bool ViewGroup::showContextMenuForChild(View* originalView, float x, float y){
     return false;
 }
 
+bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset){
+    return getChildVisibleRect(child,r,offset,false);
+}
+
+bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forceParentCheck){
+    // It doesn't make a whole lot of sense to call this on a view that isn't attached,
+    // but for some simple tests it can be useful. If we don't have attach info this
+    // will allocate memory.
+    RectF rect;
+    rect.set(r.left,r.top,r.width,r.height);
+
+    if (!child->hasIdentityMatrix()) {
+        child->getMatrix().transform_rectangle((Cairo::Rectangle&)rect);
+    }
+
+    const int dx = child->mLeft - mScrollX;
+    const int dy = child->mTop - mScrollY;
+
+    rect.offset(dx, dy);
+
+    if (offset != nullptr) {
+        if (!child->hasIdentityMatrix()) {
+            double position[2];
+            position[0] = offset->x;
+            position[1] = offset->y;
+            child->getMatrix().transform_point(position[0],position[1]);
+            offset->x = std::round(position[0]);
+            offset->y = std::round(position[1]);
+        }
+        offset->x += dx;
+        offset->y += dy;
+    }
+
+    const int width = mRight - mLeft;
+    const int height = mBottom - mTop;
+
+    bool rectIsVisible = true;
+    if (mParent == nullptr || mParent->getClipChildren()) {
+        // Clip to bounds.
+        rectIsVisible = rect.intersect(0, 0, width, height);
+    }
+
+    if ((forceParentCheck || rectIsVisible)  && (mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
+        // Clip to padding.
+        rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop,  width - mPaddingRight, height - mPaddingBottom);
+    }
+
+    if ((forceParentCheck || rectIsVisible) && (mClipBounds.empty()==false)) {
+        // Clip to clipBounds.
+        rectIsVisible = rect.intersect(mClipBounds.left, mClipBounds.top, mClipBounds.width, mClipBounds.height);
+    }
+    r.set((int) floor(rect.left), (int) floor(rect.top), (int) ceil(rect.width), (int) ceil(rect.height));
+
+    if ((forceParentCheck || rectIsVisible) && mParent) {
+        if (1/*mParent instanceof ViewGroup*/) {
+            rectIsVisible = mParent->getChildVisibleRect(this, r, offset, forceParentCheck);
+        } else {
+            rectIsVisible = mParent->getChildVisibleRect(this, r, offset);
+        }
+    }
+    return rectIsVisible;
+}
+
 bool ViewGroup::canAnimate()const{
     return mLayoutAnimationController!=nullptr;
 }

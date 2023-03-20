@@ -483,6 +483,7 @@ protected:
     bool mRightPaddingDefined;
     bool mCachingFailed;
     bool mLastIsOpaque;
+    Rect mClipBounds;
     std::string mHint;
     std::string mContentDescription;
     Cairo::RefPtr<Cairo::ImageSurface> mDrawingCache;
@@ -521,6 +522,8 @@ protected:
     int getFadeTop(bool offsetRequired);
     int getFadeHeight(bool offsetRequired);
     bool isHardwareAccelerated()const;
+    void setClipBounds(const Rect*clipBounds);
+    bool getClipBounds(Rect&outRect);
 
     void invalidateParentIfNeededAndWasQuickRejected();
     virtual void invalidateInheritedLayoutMode(int);
@@ -655,6 +658,9 @@ public:
     virtual View& setPos(int x,int y);
     virtual View& setSize(int x,int y);
     void getDrawingRect(Rect& outRect);
+    bool getGlobalVisibleRect(Rect& r,Point*globalOffet);
+    bool getLocalVisibleRect(Rect&r);
+
     void offsetTopAndBottom(int offset);
     void offsetLeftAndRight(int offset);
     void setLeft(int left);

@@ -421,6 +421,7 @@ void View::initView(){
     mMinWidth = mMinHeight = 0;
     mLayerType= LAYER_TYPE_NONE;
     mWindowAttachCount = 0;
+    mClipBounds.setEmpty();
 
     mLeftPaddingDefined = mRightPaddingDefined =false;
     mUserPaddingLeftInitial = mUserPaddingRightInitial =0;
@@ -2569,6 +2570,24 @@ bool View::isHardwareAccelerated()const{
     return mAttachInfo && mAttachInfo->mHardwareAccelerated;
 }
 
+void View::setClipBounds(const Rect*clipBounds){
+    if (clipBounds != nullptr) {
+        mClipBounds=*clipBounds;
+    } else {
+        mClipBounds.setEmpty();
+    }
+    //mRenderNode->setClipRect(mClipBounds);
+    invalidateViewProperty(false, false);
+}
+
+bool View::getClipBounds(Rect&outRect){
+    if(!mClipBounds.empty()){
+	outRect=mClipBounds;
+	return true;
+    }
+    return false;
+}
+
 void View::dispatchDraw(Canvas&){
     //for inherited view(container) to draw children...
 }
@@ -3030,10 +3049,10 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
             }
         }
 
-        /*if (mClipBounds != nullptr) {
+        if (!mClipBounds.empty()) {
             // clip bounds ignore scroll
-            canvas.rectangle(mClipBounds);//clipRect(mClipBounds);
-        }*/
+            canvas.rectangle(mClipBounds.left,mClipBounds.top,mClipBounds.width,mClipBounds.height);
+        }
         canvas.clip();//cant clip here ,for rotation animator(the view will be cutted)*/
     }
 
@@ -3274,6 +3293,28 @@ int View::getWidth()const{
 
 int View::getHeight()const{
     return mBottom-mTop;
+}
+
+bool View::getGlobalVisibleRect(Rect& r, Point* globalOffset) {
+    int width = mRight - mLeft;
+    int height = mBottom - mTop;
+    if (width > 0 && height > 0) {
+        r.set(0, 0, width, height);
+        if (globalOffset) {
+            globalOffset->set(-mScrollX, -mScrollY);
+        }
+        return mParent == nullptr || mParent->getChildVisibleRect(this, r, globalOffset);
+    }
+    return false;
+}
+
+bool View::getLocalVisibleRect(Rect& r) {
+    Point offset;
+    if (getGlobalVisibleRect(r,&offset)) {
+        r.offset(-offset.x, -offset.y); // make r local
+        return true;
+    }
+    return false;
 }
 
 void View::offsetTopAndBottom(int offset){
