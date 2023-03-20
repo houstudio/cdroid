@@ -8,8 +8,10 @@
   <id name="often">0x00002715</id>
   <id name="care">0x00002716</id>
   <id name="favorite">0x00002717</id>
-  <id name="content">0x00002718</id>
-  <id name="options">0x00002719</id>
-  <id name="optionsContainer">0x0000271a</id>
+  <id name="options">0x00002718</id>
+  <id name="text1">0x00002719</id>
+  <id name="text2">0x0000271a</id>
+  <id name="content">0x0000271b</id>
+  <id name="optionsContainer">0x0000271c</id>
 </resources>
 

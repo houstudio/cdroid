@@ -2,9 +2,8 @@
 #include <washoptions.h>
 #include <cdroid.h>
 #include <R.h>
-HomeWindow::HomeWindow(int mode):Window(0,0,1280,800){
-   LayoutInflater::from(getContext())->inflate("@layout/content_main",this);
-   //LayoutInflater::from(getContext())->inflate("@layout/main2",this);
+HomeWindow::HomeWindow(int mode):Window(0,0,-1,-1){
+   LayoutInflater::from(getContext())->inflate("@layout/main",this);
 
    RelativeLayout*rl=(RelativeLayout*)findViewById(w9::R::id::relativeLayout);
    View*v=findViewById(w9::R::id::horizontalScroll);
@@ -12,53 +11,45 @@ HomeWindow::HomeWindow(int mode):Window(0,0,1280,800){
    v->setOnScrollChangeListener([](View& view, int x, int y, int oldX, int oldY){
       //LOGD("x=%d->%d",oldX,x);
    });
+
    v=findViewById(w9::R::id::often);
-   View::OnClickListener ls=[](View&v ){
-           LOGD("click %d",v.getId());
-        };
-   if(v)v->setOnClickListener(ls);
+   auto btn_listener=std::bind(&HomeWindow::onButtonClick,this,std::placeholders::_1);
+   v->setOnClickListener(btn_listener);
    v=findViewById(w9::R::id::care);
-   if(v)v->setOnClickListener(ls);
+   v->setOnClickListener(btn_listener);
    v=findViewById(w9::R::id::favorite);
-   if(v)v->setOnClickListener(ls); 
+   if(v)v->setOnClickListener(btn_listener);
+
    LinearLayout*ll=(LinearLayout*)findViewById(w9::R::id::linearLayout);
    const char* res[]={
-	   "@mipmap/zhinengxi",
-	   "@mipmap/chenshan",
-	   "@mipmap/chujun",
-	   "@mipmap/husexi",
-	   "@mipmap/mianma",
-	   "@mipmap/niuzai",
-	   "@mipmap/tuoshui",
-	   "@mipmap/zhenqihuli",
-	   "@mipmap/zhensi",
-	   "@mipmap/zhiyanqinxin",
-	   nullptr
+	   "@mipmap/zhinengxi",	   "@mipmap/chenshan",	   "@mipmap/chujun",	   "@mipmap/husexi",
+	   "@mipmap/mianma",	   "@mipmap/niuzai",	   "@mipmap/tuoshui",	   "@mipmap/zhenqihuli",
+	   "@mipmap/zhensi",	   "@mipmap/zhiyanqinxin",   nullptr
    };
+   const char* texts[]={"智能洗","衬衫","除菌","护色洗","棉麻","牛仔","脱水","蒸汽护理","真丝","智氧清洗"};
    for(int i=0;res[i];i++){
-	ImageView*img=new ImageView(100,100);
 	LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
 	lp->gravity=Gravity::CENTER_VERTICAL;
-	ll->addView(img,lp).setId(100+i);
-	img->setImageResource(res[i]);
-	img->setOnClickListener(std::bind(&HomeWindow::onClick,this,std::placeholders::_1));
+	TextView*txt=new TextView(texts[i],100,100);
+	txt->setGravity(Gravity::BOTTOM|Gravity::CENTER_HORIZONTAL);
+	txt->setTextSize(36);
+	ll->addView(txt,lp).setId(100+i);
+	txt->setBackgroundResource(res[i]);
+	txt->setOnClickListener(std::bind(&HomeWindow::onWashOptionClick,this,std::placeholders::_1));
    }
-   View::OnLayoutChangeListener layoutlistener={[](View& v, int left, int top, int width, int height,
-		   int oldLeft, int oldTop, int oldwidth, int oldheight){
-       v.setRotation(270.0f);
-       v.setTranslationX(-0);
-       v.setTranslationY(-160);
-       LOGD("LayoutChangeListener size=%dx%d",width,height);
-   }};
-   rl->addOnLayoutChangeListener(layoutlistener);
+   ll->requestLayout();
 }
 
-void HomeWindow::onClick(View&v){
-   switch(v.getId()){
-   case 100:
+void HomeWindow::onButtonClick(View&v){
+    LOGD("click %d",v.getId());
+}
+
+void HomeWindow::onWashOptionClick(View&v){
+    switch(v.getId()){
+    case 100:
 	   new WashOptionsWindow(-1);
 	   break;
-   default:
+    default:
 	   LOGD("TODO for %d",v.getId());
 	   break;
    }

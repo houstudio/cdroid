@@ -43,6 +43,7 @@ private:
     int mMaxWidth;
     bool mComputeMaxWidth;
     int mTextSize;
+    int mTextColor;
     int mSelectorTextGapHeight;
     std::vector<std::string> mDisplayedValues;
     int mMinValue;
@@ -136,7 +137,6 @@ protected:
     int computeVerticalScrollRange();
     int computeVerticalScrollExtent();
     void drawableStateChanged();
-    void jumpDrawablesToCurrentState();
     void onDraw(Canvas&canvas)override;
 public:
     NumberPicker(int w,int h);
@@ -171,6 +171,13 @@ public:
     void setWrapSelectorWheel(bool);
     void setOnLongPressUpdateInterval(long);
     void setSelector(int items,int focused=-1);
+
+    void jumpDrawablesToCurrentState();
+    void onResolveDrawables(int layoutDirection)override;
+    void setTextColor(int color);
+    int  getTextColor()const;
+    void setTextSize(int size);
+    int  getTextSize()const;
 };
     
 }//namespace

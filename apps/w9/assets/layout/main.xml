@@ -4,8 +4,8 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:scrollbarSize="10dp"
-	android:scrollbars="vertical"
-        android:overScrollMode="always"
+	android:scrollbars="horizontal"
+        android:overScrollMode="never"
         android:scrollIndicators="top">
     <LinearLayout
 	android:id="@+id/linearLayout"
@@ -15,25 +15,28 @@
 	    android:id="@+id/relativeLayout"
             android:layout_width="320dp"
             android:layout_height="320dp"
-            android:layout_gravity="center"
+	    android:layout_gravity="center"
+	    android:background="#111111"
             android:layout_marginHorizontal="10dp"
             android:layout_marginVertical="10dp">
             <TextView
                 android:id="@+id/temp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
+		android:layout_alignParentTop="true"
+		android:layout_marginVertical="10dp"
                 android:text="气温28"
                 android:textSize="40dp"/>
             <TextView
                 android:id="@id/tips"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+		android:layout_marginVertical="10dp"
                 android:layout_below="@id/temp"
-		    android:text="@string/weathertips"/>
+		android:text="@string/weathertips"/>
             <Button
                 android:id="@+id/often"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tips"
 		    android:layout_alignParentLeft="true"
@@ -42,14 +45,15 @@
                 android:id="@+id/care"
                 android:layout_alignParentRight="true"
                 android:layout_below="@id/tips"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:text="护理"/>
             <Button
                 android:id="+id/favorite"
                 android:layout_below="@id/care"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginVertical="5dp"
                 android:text="收藏"/>
         </RelativeLayout>
     </LinearLayout>

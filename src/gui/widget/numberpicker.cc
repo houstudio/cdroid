@@ -97,9 +97,9 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     ViewConfiguration configuration = ViewConfiguration::get(context);
     mTextSize = (int) mInputText->getTextSize();
-
+    ColorStateList*colors=mInputText->getTextColors();
+    mTextColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),Color::WHITE);
     updateInputTextView();
-
 }
 
 NumberPicker::~NumberPicker(){
@@ -516,13 +516,53 @@ bool NumberPicker::performLongClick() {
 }
 
 void NumberPicker::showSoftInput(){
+
 }
 
 void NumberPicker::hideSoftInput(){
+    if (mHasSelectorWheel) {
+        mInputText->setVisibility(View::INVISIBLE);
+    }
 }
 
 void NumberPicker::tryComputeMaxWidth(){
-
+    if (!mComputeMaxWidth) {
+        return;
+    }; 
+    int maxTextWidth = 0;
+    if (mDisplayedValues.size()==0) {
+        float maxDigitWidth = 0;
+        for (int i = 0; i <= 9; i++) {
+            const float digitWidth = mTextSize;//mSelectorWheelPaint.measureText(formatNumberWithLocale(i));
+            if (digitWidth > maxDigitWidth) {
+                maxDigitWidth = digitWidth;
+            }
+        }
+        int numberOfDigits = 0;
+        int current = mMaxValue;
+        while (current > 0) {
+            numberOfDigits++;
+            current = current / 10;
+        }
+        maxTextWidth = (int) (numberOfDigits * maxDigitWidth);
+    } else {
+        const int valueCount = mDisplayedValues.size();
+        for (int i = 0; i < valueCount; i++) {
+            const float textWidth = mTextSize;//mSelectorWheelPaint.measureText(mDisplayedValues[i]);
+            if (textWidth > maxTextWidth) {
+                maxTextWidth = (int) textWidth;
+            }
+        }
+    }
+    maxTextWidth += mInputText->getPaddingLeft() + mInputText->getPaddingRight();
+    if (mMaxWidth != maxTextWidth) {
+        if (maxTextWidth > mMinWidth) {
+            mMaxWidth = maxTextWidth;
+        } else {
+            mMaxWidth = mMinWidth;
+        }
+        invalidate();
+    }
 }
 
 bool NumberPicker::getWrapSelectorWheel()const{
@@ -600,12 +640,15 @@ void NumberPicker::setMaxValue(int maxValue) {
 void NumberPicker::setMinHeight(int h){
     mMinHeight = h;
 }
+
 void NumberPicker::setMaxHeight(int h){
     mMaxHeight = h;
 }
+
 int NumberPicker::getMinHeight()const{
     return mMinHeight;
 }
+
 int NumberPicker::getMaxHeight()const{
     return mMaxHeight;
 }
@@ -637,6 +680,31 @@ void NumberPicker::jumpDrawablesToCurrentState() {
     if (mSelectionDivider != nullptr) {
         mSelectionDivider->jumpToCurrentState();
     }
+}
+
+void NumberPicker::onResolveDrawables(int layoutDirection){
+    ViewGroup::onResolveDrawables(layoutDirection);
+    if (mSelectionDivider) {
+        mSelectionDivider->setLayoutDirection(layoutDirection);
+    }
+}
+
+void NumberPicker::setTextColor(int color){
+    mInputText->setTextColor(color);
+    mTextColor = color;
+    invalidate();
+}
+
+int  NumberPicker::getTextColor()const{
+    return mTextColor;
+}
+
+void NumberPicker::setTextSize(int size){
+    mInputText->setTextSize(size);
+}
+
+int  NumberPicker::getTextSize()const{
+    return mInputText->getTextSize();
 }
 
 void NumberPicker::onDraw(Canvas&canvas){
@@ -690,7 +758,8 @@ void NumberPicker::onDraw(Canvas&canvas){
              if((i!=mMiddleItemIndex-1)&&(i!=mMiddleItemIndex))
                  alpha=(255-500.*std::abs(i-mMiddleItemIndex+(i>mMiddleItemIndex?1:0))/(selectorIndices.size()+1));
              mSelectionDivider->setAlpha(alpha);
-             mSelectionDivider->setBounds(0,y+mTextSize-mCurrentScrollOffset+mSelectorTextGapHeight,mRight-mLeft,std::min(mSelectorTextGapHeight,mSelectionDividerHeight));
+             mSelectionDivider->setBounds(0,y+mTextSize-mCurrentScrollOffset+mSelectorTextGapHeight,mRight-mLeft,
+			     std::min(mSelectorTextGapHeight,mSelectionDividerHeight));
              mSelectionDivider->draw(canvas);
              canvas.restore();
         }
@@ -992,8 +1061,8 @@ void NumberPicker::pshCancel(){
     mPSHMode =0; 
     mPSHManagedButton=0;
     if(mPressedStateHelpers!=nullptr){
-         removeCallbacks(mPressedStateHelpers);
-         invalidate(0, mBottomSelectionDividerBottom, mRight-mLeft, mBottom-mTop);
+        removeCallbacks(mPressedStateHelpers);
+        invalidate(0, mBottomSelectionDividerBottom, mRight-mLeft, mBottom-mTop);
     }
     mPressedStateHelpers =[this](){
         pshRun();

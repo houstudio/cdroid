@@ -2,7 +2,8 @@
 #include <widget/cdwindow.h>
 class HomeWindow:public Window{
 private:
-   void onClick(View&);
+   void onButtonClick(View&);
+   void onWashOptionClick(View&);
 public:
    HomeWindow(int mode);
 };
