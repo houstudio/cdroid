@@ -7,6 +7,7 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
+#include <X11/Xutil.h>
 #include <pthread.h>
 #include <string.h>
 #include <core/eventcodes.h>
@@ -82,12 +83,20 @@ INT GFXInit(){
         pthread_t tid;
         XSetWindowAttributes winattrs;
 	XGCValues values;
+	XSizeHints sizehints;
 	int width,height;
         int screen=DefaultScreen(x11Display);
         x11Visual = DefaultVisual(x11Display, screen);
 	GFXGetDisplaySize(0,&width,&height);
         x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height, 1,
                 BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
+
+        sizehints.flags = PMinSize | PMaxSize;
+        sizehints.min_width = width;
+        sizehints.max_width = width;
+        sizehints.min_height = height;
+        sizehints.max_height = height;
+	XSetWMNormalHints(x11Display,x11Window,&sizehints);
 
         WM_DELETE_WINDOW = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
         XSetWMProtocols(x11Display,x11Window, &WM_DELETE_WINDOW, 1);
