@@ -13,6 +13,7 @@ class Window : public ViewGroup {
 protected:
     friend class WindowManager;
     friend class GraphDevice;
+    friend class UIEventSource;
      struct InvalidateInfo{
          View* target;
          Rect rect;

@@ -99,10 +99,10 @@ void NestedScrollView::onStopNestedScroll(View* target, int type) {
 
 void NestedScrollView::onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed,
         int dyUnconsumed, int type) {
-    int oldScrollY = getScrollY();
+    const int oldScrollY = getScrollY();
     scrollBy(0, dyUnconsumed);
-    int myConsumed = getScrollY() - oldScrollY;
-    int myUnconsumed = dyUnconsumed - myConsumed;
+    const int myConsumed = getScrollY() - oldScrollY;
+    const int myUnconsumed = dyUnconsumed - myConsumed;
     dispatchNestedScroll(0, myConsumed, 0, myUnconsumed, nullptr, type);
 }
 
@@ -278,14 +278,13 @@ void NestedScrollView::setOnScrollChangeListener(NestedScrollView::OnScrollChang
  * @return Returns true this ScrollView can be scrolled
  */
 bool NestedScrollView::canScroll() {
-    if (getChildCount() > 0) {
-        View* child = getChildAt(0);
-	NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-        int childSize = child->getHeight() + lp->topMargin + lp->bottomMargin;
-        int parentSpace = getHeight() - getPaddingTop() - getPaddingBottom();
-        return childSize > parentSpace;
-    }
-    return false;
+    if (getChildCount() ==0)return false;
+
+    View* child = getChildAt(0);
+    LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+    const int childSize = child->getHeight() + lp->topMargin + lp->bottomMargin;
+    const int parentSpace = getHeight() - getPaddingTop() - getPaddingBottom();
+    return childSize > parentSpace;
 }
 
 /**
@@ -402,23 +401,23 @@ bool NestedScrollView::executeKeyEvent(KeyEvent& event) {
     bool handled = false;
     if (event.getAction() == KeyEvent::ACTION_DOWN) {
         switch (event.getKeyCode()) {
-            case KEY_DPAD_UP:
-                if (!event.isAltPressed()) {
-                    handled = arrowScroll(View::FOCUS_UP);
-                } else {
-                    handled = fullScroll(View::FOCUS_UP);
-                }
-                break;
-            case KEY_DPAD_DOWN:
-                if (!event.isAltPressed()) {
-                    handled = arrowScroll(View::FOCUS_DOWN);
-                } else {
-                    handled = fullScroll(View::FOCUS_DOWN);
-                }
-                break;
-            case KEY_SPACE:
-                pageScroll(event.isShiftPressed() ? View::FOCUS_UP : View::FOCUS_DOWN);
-                break;
+        case KEY_DPAD_UP:
+            if (!event.isAltPressed()) {
+                handled = arrowScroll(View::FOCUS_UP);
+            } else {
+                handled = fullScroll(View::FOCUS_UP);
+            }
+            break;
+        case KEY_DPAD_DOWN:
+            if (!event.isAltPressed()) {
+                handled = arrowScroll(View::FOCUS_DOWN);
+            } else {
+                handled = fullScroll(View::FOCUS_DOWN);
+            }
+            break;
+        case KEY_SPACE:
+            pageScroll(event.isShiftPressed() ? FOCUS_UP : FOCUS_DOWN);
+            break;
         }
     }
 

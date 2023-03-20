@@ -2220,7 +2220,9 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
 
     if ((forceParentCheck || rectIsVisible)  && (mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
         // Clip to padding.
-        rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop,  width - mPaddingRight, height - mPaddingBottom);
+        rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop,  
+			width - mPaddingRight-mPaddingLeft, 
+			height - mPaddingBottom-mPaddingTop);
     }
 
     if ((forceParentCheck || rectIsVisible) && (mClipBounds.empty()==false)) {

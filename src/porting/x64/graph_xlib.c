@@ -81,10 +81,12 @@ INT GFXInit(){
     if(x11Display){
         pthread_t tid;
         XSetWindowAttributes winattrs;
-	    XGCValues values;
+	XGCValues values;
+	int width,height;
         int screen=DefaultScreen(x11Display);
         x11Visual = DefaultVisual(x11Display, screen);
-        x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,1280,720, 1,
+	GFXGetDisplaySize(0,&width,&height);
+        x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height, 1,
                 BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
 
         WM_DELETE_WINDOW = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
@@ -101,13 +103,13 @@ INT GFXInit(){
 
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
     const char*env= getenv("SCREENSIZE");
-    if(env==nullptr){
+    if(env==NULL){
         *width=1280;//dispCfg.width;
         *height=720;//dispCfg.height;
     }else{
 	*width=atoi(env);
 	env=strpbrk(env,"x*,");
-	if((*width<=0)||(env==nullptr))exit(-1);
+	if((*width<=0)||(env==NULL))exit(-1);
 	*height=atoi(env+1);
 	if(*height<=0)exit(-1);
     }
