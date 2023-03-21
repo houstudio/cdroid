@@ -131,7 +131,7 @@ class IDGenerater(object):
     def strings2XML(self,filename):
         print self.Handler.strings
         if not os.path.exists(filename):
-            dom=parseString('<?xml version="1.0" encoding="utf-8"?>\n<strings lang="zh_CN"></strings>')
+            dom=parseString('<?xml version="1.0" encoding="utf-8"?>\n<resources lang="zh_CN"></resources>')
         else:
             dom=parse(filename)
         root = dom.documentElement

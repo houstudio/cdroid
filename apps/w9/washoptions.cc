@@ -13,6 +13,11 @@ WashOptionsWindow::WashOptionsWindow(int options):Window(0,0,-1,-1){
 
 void WashOptionsWindow::onOptionClick(View&v){
     ViewGroup*vg=v.getParent();
+    std::vector<int>values;
+    std::vector<std::string>array;
+    getContext()->getArray("w9:array/cleverwash",array);
+    LOGD("array.size=%d",array.size());
+    dynamic_cast<OptionPicker&>(v).setValuedName(values,array);
     for(int i=0;i<vg->getChildCount();i++){
         OptionPicker*op=dynamic_cast<OptionPicker*>(vg->getChildAt(i));
         op->showOptions(op==&v);

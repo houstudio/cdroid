@@ -1,3 +1,11 @@
-<strings lang="zh_CN">
+<resources lang="zh_CN">
 	<string name="weathertips">weathertips</string>
-</strings>
+	<string-array name="cleverwash">
+	    <item>10分钟</item>
+	    <item>20分钟</item>
+	    <item>30分钟</item>
+	    <item>40分钟</item>
+	    <item>50分钟</item>
+	    <item>60分钟</item>
+	</string-array>
+</resources>

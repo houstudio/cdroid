@@ -14,8 +14,7 @@ OptionPicker::OptionPicker(Context*ctx,const AttributeSet&attr):RelativeLayout(c
     mNumberPicker = (NumberPicker*)findViewById(w9::R::id::numpicker);
     mNumberPicker->setVisibility(View::GONE);
     mNumberPicker->setMinValue(0);
-    mNumberPicker->setMaxValue(10);
-    mNumberPicker->setSelector(5,-1);
+    mNumberPicker->setMaxValue(5);
     mText1=(TextView*)findViewById(w9::R::id::text1);
     mText2=(TextView*)findViewById(w9::R::id::text2);
     mText1->setText(attr.getString("text1"));
@@ -54,9 +53,10 @@ void OptionPicker::setOnValueChangedListener(NumberPicker::OnValueChangeListener
 }
 
 void OptionPicker::setValuedName(const std::vector<int>&values,const std::vector<std::string>&names){
+    const int count=std::max(values.size(),names.size());
     mValues=values;
     mNumberPicker->setMinValue(0);
-    mNumberPicker->setMaxValue(values.size());
+    mNumberPicker->setMaxValue(count-1);
     mNumberPicker->setDisplayedValues(names);
 }
 

@@ -107,26 +107,27 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             it->second.add(atts[1].getString("name"),normalizedValue);
         }else if(tag0.compare("array")==0){
             const std::string name=atts[0].getString("name");
-            auto it=mArraies.find(name);
+	    const std::string key=package+":array/"+name;
+            auto it=mArraies.find(key);
             if(it==mArraies.end()){
-                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(name,std::vector<std::string>()));
-                LOGD("array:%s",name.c_str());
+                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(key,std::vector<std::string>()));
+                LOGV("array:%s",key.c_str());
             }
             it->second.push_back(value);
         }else if(tags[0].compare("string-array")==0){
 	    const std::string name=atts[0].getString("name");
-	    const std::string key=package+":string/"+name;
-	    auto it=mArraies.find(name);
+	    const std::string key=package+":array/"+name;
+	    auto it=mArraies.find(key);
 	    if(it==mArraies.end()){
-                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(name,std::vector<std::string>()));
-                LOGD("string-array:%s",name.c_str());
+                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(key,std::vector<std::string>()));
+                LOGV("string-array:%s",key.c_str());
             }
 	    it->second.push_back(value);
 	}else if(tags[1].compare("string")==0){
 	    const std::string name=atts[1].getString("name");
 	    const std::string key=package+":string/"+name;
 	    mStrings[key]=value;
-	    LOGD("%s=%s",key.c_str(),value.c_str());
+	    LOGV("%s=%s",key.c_str(),value.c_str());
 	}
     }
 }
@@ -148,7 +149,7 @@ int Assets::addResource(const std::string&path,const std::string&name){
     pak->forEachEntry([this,package,&count](const std::string&res){
         count++;
         if((res.size()>7)&&TextUtils::startWith(res,"values")){
-            LOGD("LoadKeyValues from:%s ...",res.c_str());
+            LOGV("LoadKeyValues from:%s ...",res.c_str());
             const std::string resid=package+":"+res;
             loadKeyValues(resid,std::bind(&Assets::parseItem,this,package,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
         }
