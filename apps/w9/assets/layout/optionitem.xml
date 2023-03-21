@@ -1,29 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-     android:id="@+id/relativeLayout"
-     android:layout_width="wrap_content"
-     android:layout_height="match_parent"
-     android:layout_gravity="center"
-     android:background="#111111"
-     android:layout_marginHorizontal="10dp"
-     android:layout_marginVertical="10dp">
-     <NumberPicker
-           android:id="@+id/options"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:layout_above="@id/text1"/>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+  <NumberPicker
+       android:id="@+id/numpicker"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_above="@id/text1"/>
      <TextView
-           android:id="@+id/text1"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:layout_above="@id/text2"
-           android:text="护理"/>
+        android:id="@+id/text1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+	android:layout_marginTop="1dp"
+	android:layout_above="@id/text2"
+	android:gravity="center"
+	android:textSize="32dp"
+	android:textColor="white"
+	android:paddingVertical="5dp"
+        android:background="#121212"/>
      <TextView
-           android:id="@+id/text2"
-           android:layout_width="match_parent"
-	   android:layout_height="wrap_content"
-	   android:layout_alignParentBottom="true"
-	   android:layout_marginVertical="5dp"
-           android:text="收藏"/>
- </RelativeLayout>
+        android:id="@+id/text2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+	android:layout_marginTop="1dp"
+	android:paddingVertical="5dp"
+	android:gravity="center"
+        android:textSize="32dp"
+        android:background="#181818"/>
+</merge>
 

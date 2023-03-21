@@ -14,11 +14,12 @@ namespace R{
          static constexpr int often                   = 0x00002715 ;/*10005*/
          static constexpr int care                    = 0x00002716 ;/*10006*/
          static constexpr int favorite                = 0x00002717 ;/*10007*/
-         static constexpr int options                 = 0x00002718 ;/*10008*/
+         static constexpr int numpicker               = 0x00002718 ;/*10008*/
          static constexpr int text1                   = 0x00002719 ;/*10009*/
          static constexpr int text2                   = 0x0000271A ;/*10010*/
-         static constexpr int content                 = 0x0000271B ;/*10011*/
-         static constexpr int optionsContainer        = 0x0000271C ;/*10012*/
+         static constexpr int option1                 = 0x0000271B ;/*10011*/
+         static constexpr int option2                 = 0x0000271C ;/*10012*/
+         static constexpr int option3                 = 0x0000271D ;/*10013*/
     };/*namespace id*/
 
     namespace strings{
