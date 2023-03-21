@@ -9,11 +9,10 @@ int main(int argc,const char*argv[]){
     w->setId(1);
     Drawable*d=nullptr;
 ///////////////////////////////////////////////////////////
-
     ProgressBar*pb = new ProgressBar(600,40);
     ProgressBar*pb2= new ProgressBar(600,40);
     d=ctx->getDrawable("cdroid:drawable/progress_horizontal.xml");
-    LOGD("progress_horizontal drawable=%p",d);
+    LOGI("progress_horizontal drawable=%p",d);
     pb->setProgressDrawable(d);
     pb->setProgress(34);
     pb2->setProgressDrawable(d->getConstantState()->newDrawable());
@@ -35,10 +34,9 @@ int main(int argc,const char*argv[]){
     ProgressBar*pb3=new ProgressBar(72,72);
     d=ctx->getDrawable("cdroid:drawable/progress_large");
     pb3->setIndeterminateDrawable(d);
-    LOGD("Indeterminate drawable=%p",d);
+    LOGI("Indeterminate drawable=%p",d);
     w->addView(pb3).setId(104).setPos(680,60);
     pb3->setProgressDrawable(new ColorDrawable(0xFF112233));
-    pb3->setIndeterminate(true);
 
     ProgressBar*pb4=new ProgressBar(256,256);
     AnimationDrawable*ad=new AnimationDrawable();
@@ -48,17 +46,20 @@ int main(int argc,const char*argv[]){
     BitmapDrawable*bd=(BitmapDrawable*)ctx->getDrawable("cdroid:mipmap/ic_launcher");
     bd->setTileModeXY(TileMode::MIRROR,TileMode::MIRROR);
     ad->addFrame(bd,1000);
+    ad->addFrame(ctx->getDrawable("cdroid:drawable/progress_horizontal.xml"),1000);
     w->addView(pb4).setId(105).setPos(800,10);
     pb4->setIndeterminateDrawable(ad);
     pb4->setIndeterminate(true);
-    pb4->setProgressDrawable(new ColorDrawable(0xFF111111));
+    //pb4->setProgressDrawable(new ColorDrawable(0xFF111111));
 
     ProgressBar*pb5=new ProgressBar(600,20);
-    pb5->setIndeterminateDrawable(ctx->getDrawable("cdroid:drawable/progress_indeterminate_horizontal_holo.xml"));
-    pb5->setIndeterminate(true);pb5->setProgress(40);
+    pb5->setIndeterminateDrawable(ctx->getDrawable("cdroid:drawable/progress_indeterminate_horizontal_holo"));
+    pb5->setIndeterminate(true);
+    pb5->setProgress(40);
     //pb5->setProgressDrawable(new ColorDrawable(0xFF111111));   
     w->addView(pb5).setId(105).setPos(50,150);
-//////////////////////////////////////////////////////////    
+//////////////////////////////////////////////////////////
+#if 1
     SeekBar*sb = new SeekBar(800,50);
     SeekBar*sb2= new SeekBar(800,50);
 
@@ -75,5 +76,6 @@ int main(int argc,const char*argv[]){
     sb2->setMirrorForRtl(true);
     w->addView(sb).setId(200).setPos(50,300).setKeyboardNavigationCluster(true);
     w->addView(sb2).setId(201).setPos(50,380).setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+#endif
     return app.exec();
 }

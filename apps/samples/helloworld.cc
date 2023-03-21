@@ -17,6 +17,7 @@ int main(int argc,const char*argv[]){
     edit->setBackgroundColor(0xFFFF0000);
     w->addView(edit).setPos(100,0);
     edit->setTextSize(60);
+    w->setBackgroundResource("/home/houzh/bg.jpg");
     #endif
 #if 0
     LayerDrawable*ld=(LayerDrawable*)app.getDrawable("cdroid:drawable/analog.xml");

@@ -25,19 +25,12 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Point size;
-    WindowManager::getInstance().getDefaultDisplay().getSize(size);
-    if(GFXGetRotation(0)==ROTATE_90||GFXGetRotation(0)==ROTATE_270){
-	int tmp=size.x;
-	size.x=size.y;
-	size.y=tmp;
-    } 
-    Window*w=new Window(0,0,size.x,size.y);
+    Window*w=new Window(0,0,-1,-1);
 
-    DrawerLayout*dl=new DrawerLayout(size.x,size.y);
+    DrawerLayout*dl=new DrawerLayout(100,100);
 
     /*content area*/
-    LinearLayout*content=new LinearLayout(size.x,size.y);
+    LinearLayout*content=new LinearLayout(100,100);
     content->setOrientation(LinearLayout::VERTICAL);
     TextView*tv=new TextView("TextView",40,40);
     content->setBackgroundColor(0xFFFF0000);

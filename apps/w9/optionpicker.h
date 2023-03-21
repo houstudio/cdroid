@@ -9,10 +9,6 @@ protected:
     TextView* mText1,*mText2;
     std::vector<int>mValues;
     NumberPicker::OnValueChangeListener mOnValueChangedListener;
-protected:
-    int resolveSizeAndStateRespectingMinSize(int minSize, int measuredSize, int measureSpec);
-    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    void onLayout(bool changed, int left, int top, int width, int height)override;
 public:
     OptionPicker(int,int);
     OptionPicker(Context*,const AttributeSet&attr);

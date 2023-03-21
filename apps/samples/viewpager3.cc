@@ -11,7 +11,7 @@ public:
         struct dirent*ent;
         while(dir&&(ent=readdir(dir))){
             std::string fullpath=path+"/"+ent->d_name;
-            if(ent->d_type==DT_REG)  urls.push_back(fullpath);
+            if(ent->d_type==DT_REG/*||ent->d_type!=DT_DIR*/)  urls.push_back(fullpath);
 	    printf("%s\r\n",fullpath.c_str());
         }
         if(dir)closedir(dir);
@@ -66,7 +66,7 @@ int main(int argc,const char*argv[]){
     };
     pager->addOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    if(argc>1){
+    if(argc>2){
         ViewPager::PageTransformer*pt=nullptr;
         switch(atoi(argv[1])){
         case  0:pt=new ScaleInOutTransformer(); break;

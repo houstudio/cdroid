@@ -15,10 +15,10 @@ ScrollBarDrawable::ScrollBarDrawable(){
     mRangeChanged=false;
     mAlwaysDrawHorizontalTrack=false;
     mAlwaysDrawVerticalTrack=false;
-    mVerticalTrack = new ColorDrawable(0x80222222);
-    mVerticalThumb = new ColorDrawable(0x80aaaaaa);
-    mHorizontalTrack = nullptr;
-    mHorizontalThumb = nullptr;
+    mVerticalTrack = new ColorDrawable(0xFF222222);
+    mVerticalThumb = new ColorDrawable(0xFFaaaaaa);
+    mHorizontalTrack=new ColorDrawable(0xFF222222);
+    mHorizontalThumb=new ColorDrawable(0xFFaaaaaa);
 }
 
 ScrollBarDrawable::~ScrollBarDrawable(){

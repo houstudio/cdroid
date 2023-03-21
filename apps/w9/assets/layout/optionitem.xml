@@ -3,7 +3,7 @@
   <NumberPicker
        android:id="@+id/numpicker"
        android:layout_width="match_parent"
-       android:layout_height="wrap_content"
+       android:layout_height="match_parent"
        android:layout_above="@id/text1"/>
      <TextView
         android:id="@+id/text1"

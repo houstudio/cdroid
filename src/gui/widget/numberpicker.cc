@@ -9,16 +9,17 @@
 namespace cdroid{
 
 DECLARE_WIDGET2(NumberPicker,"cdroid:attr/numberPickerStyle")
+const std::string DEFAULT_LAYOUT_RESOURCE_ID="cdroid:layout/number_picker";
 
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
     setOrientation(VERTICAL);//HORIZONTAL);
 
-    LayoutInflater*inflater=LayoutInflater::from(mContext);
     AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/numberPickerStyle");
-    std::string layoutres=atts.getString("internalLayout","cdroid:layout/number_picker.xml");
-    inflater->inflate(layoutres,this,true);
-   
+    std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
+    LayoutInflater::from(mContext)->inflate(layoutres,this,true);
+    mHasSelectorWheel = (layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
+ 
     if(!mHasSelectorWheel){
         mDecrementButton=(ImageButton*)findViewById(R::id::decrement);
         mDecrementButton->setMinimumHeight(20);
@@ -71,9 +72,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         throw "minWidth > maxWidth";
     }
     mVirtualButtonPressedDrawable = context->getDrawable(atts,"virtualButtonPressedDrawable");
-    LayoutInflater*inflater=LayoutInflater::from(mContext);
-    std::string layoutres=atts.getString("internalLayout","cdroid:layout/number_picker.xml");
-    inflater->inflate(layoutres,this);
+
+    std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
+    LayoutInflater::from(mContext)->inflate(layoutres,this);
+    mHasSelectorWheel = true;//(layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     setWillNotDraw(!mHasSelectorWheel);
 
@@ -528,7 +530,7 @@ void NumberPicker::hideSoftInput(){
 void NumberPicker::tryComputeMaxWidth(){
     if (!mComputeMaxWidth) {
         return;
-    }; 
+    }
     int maxTextWidth = 0;
     if (mDisplayedValues.size()==0) {
         float maxDigitWidth = 0;
@@ -586,6 +588,9 @@ void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
 void NumberPicker::setSelector(int items,int focused){
     mSelectorIndices.resize(items);
     if(focused<0)focused=items/2;
+    if(mHasSelectorWheel==false&&mSelectorIndices.size()!=DEFAULT_SELECTOR_WHEEL_ITEM_COUNT){
+	mHasSelectorWheel=true;
+    }
     mMiddleItemIndex=focused;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
@@ -701,6 +706,7 @@ int  NumberPicker::getTextColor()const{
 
 void NumberPicker::setTextSize(int size){
     mInputText->setTextSize(size);
+    mTextSize=size;
 }
 
 int  NumberPicker::getTextSize()const{
@@ -712,7 +718,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         LinearLayout::onDraw(canvas);
         return;
     }
-    bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
+    const bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
     float x = (mRight-mLeft) / 2;
     float y = mCurrentScrollOffset;
     Rect rc=mInputText->getBound();

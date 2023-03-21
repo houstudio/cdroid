@@ -19,14 +19,14 @@ public:
         tv->setId(position);
         tv->setText("position :"+std::to_string(position));
         tv->setTextColor(0xFFFFFFFF);
-        tv->setTextSize(30);
+        tv->setTextSize(60);
         return tv;
     }
 };
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(50,50,1200,640);
+    Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
     ListView*lv=(ListView*)&w->addView(new ListView(460,500));
     lv->setPos(10,10);
@@ -52,8 +52,9 @@ int main(int argc,const char*argv[]){
         if(d->getLevel()<10000)
            d->setLevel(d->getLevel()+1000);
         else{d->setLevel(0); index=(index+1)%10;}
-        w->postDelayed(run,100);
+        //w->postDelayed(run,100);
     });
+    w->requestLayout();
     w->postDelayed(run,100);
     app.exec();
     return 0;

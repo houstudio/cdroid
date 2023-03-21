@@ -56,8 +56,17 @@ Window::Window(int x,int y,int width,int height,int type)
 #endif
     mContext=&App::getInstance();
     mInLayout=false;
-    if((width<1)||(height<1))
-	 GFXGetDisplaySize(0,(UINT*)&width,(UINT*)&height);
+    Point size;
+    WindowManager::getInstance().getDefaultDisplay().getSize(size);
+    if((width<0)||(height<0)){
+	width=size.x;
+        height=size.y;
+    }
+    if(GFXGetRotation(0)==ROTATE_90||GFXGetRotation(0)==ROTATE_270){
+	int tmp=height;
+	height=width;
+	width=tmp;
+    }
     printf("%p Handler=%p visible=%d size=%dx%d\r\n",this,mUIEventHandler,hasFlag(VISIBLE),width,height);
     setFrame(x, y, width, height);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);

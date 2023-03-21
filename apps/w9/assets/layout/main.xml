@@ -4,7 +4,7 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:scrollbarSize="10dp"
-	android:scrollbars="horizontal"
+	android:scrollbars="none"
         android:overScrollMode="never"
         android:scrollIndicators="top">
     <LinearLayout

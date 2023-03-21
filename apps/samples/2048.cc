@@ -21,9 +21,9 @@ class GameWindow :public Window {
     TextView*tfscore;
   public:
     GameWindow(int x,int y,int w,int h):Window(x,y,w,h) {
-        tfscore=new TextView("0",200,40);
+        /*tfscore=new TextView("0",200,40);
         tfscore->setTextSize(30);
-        addView(tfscore).setPos(800,50);
+        addView(tfscore).setPos(800,50);*/
     }
     void getColor(uint8_t value, char *color, size_t length);
     void initBoard(uint16_t size);
@@ -176,7 +176,7 @@ bool GameWindow::moveUp() {
     for (x=0; x<SIZE; x++) {
         bool slid= slideArray(board[x]);
         success |= slid;
-        LOGD_IF(slid,"slide[%d]",x); 
+        LOGV_IF(slid,"slide[%d]",x); 
     }
     return success;
 }
@@ -281,7 +281,7 @@ void GameWindow::setScore(int s) {
     char  buf[64];
     sprintf(buf,"SCORE:%d",s);
     score=s;
-    tfscore->setText(buf);
+    //tfscore->setText(buf);
 }
 void GameWindow::initBoard(uint16_t size) {
     uint16_t x,y;

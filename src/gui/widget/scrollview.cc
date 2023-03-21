@@ -560,7 +560,7 @@ void ScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool cl
             mScroller->springBack(mScrollX, mScrollY, 0, 0, 0, getScrollRange());
         }
     } else {
-	    FrameLayout::scrollTo(scrollX, scrollY);
+        FrameLayout::scrollTo(scrollX, scrollY);
     }
     awakenScrollBars();
 }

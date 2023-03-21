@@ -2308,7 +2308,6 @@ void View::onDrawScrollBars(Canvas& canvas){
             const int alpha=255-255*(now-cache->fadeStartTime)/cache->scrollBarFadeDuration;
             cache->scrollBar->mutate()->setAlpha(alpha);
         }
-
         // This will make the scroll bars inval themselves after drawing. We only 
         // want this when we're fading so that we prevent excessive redraws
         bInvalidate = true;
@@ -2336,7 +2335,7 @@ void View::onDrawScrollBars(Canvas& canvas){
         ScrollBarDrawable* scrollBar = mScrollCache->scrollBar;
         if (drawHorizontalScrollBar) {
             scrollBar->setParameters(computeHorizontalScrollRange(),
-               computeHorizontalScrollOffset(),computeHorizontalScrollExtent(), false);
+                computeHorizontalScrollOffset(),computeHorizontalScrollExtent(), false);
             Rect& bounds = mScrollCache->mScrollBarBounds;
             getHorizontalScrollBarBounds(&bounds, nullptr);
             onDrawHorizontalScrollBar(canvas,scrollBar, bounds);
