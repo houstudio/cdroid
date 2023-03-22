@@ -15,7 +15,11 @@ EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){
     initEditText();
     mHint = ctx->getString(attrs.getString("hint"));
-    mInputType = attrs.getInt("inputType",TYPE_ANY);
+    mInputType = attrs.getInt("inputType",std::map<const std::string,int>{
+		    {"none",TYPE_NONE} , {"any", TYPE_ANY},
+		    {"number",TYPE_NUMBER},{"text",TYPE_TEXT},
+		    {"password",TYPE_PASSWORD},{"ip",TYPE_IP}
+	  },TYPE_NONE);
     setEditable(true);
 }
 
@@ -33,7 +37,7 @@ void EditText::initEditText(){
     mPasswordChar='*';
     mBlinkOn=true;
     mEditMode=INSERT;
-    mInputType=TYPE_ANY;
+    mInputType=TYPE_NONE;
     afterChanged=nullptr;
     mCaretRect.set(0,0,1,1);
     mBlinkOn=false;

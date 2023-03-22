@@ -226,6 +226,16 @@ int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
     }
 }
 
+ColorStateList*AttributeSet::getColorStateList(const std::string&key)const{
+    const std::string resid=getString(key);
+    return mContext->getColorStateList(resid);
+}
+
+Drawable* AttributeSet::getDrawable(const std::string&key)const{
+    const std::string resid=getString(key);
+    return mContext->getDrawable(resid);
+}
+
 void AttributeSet::dump()const{
     for(auto it=mAttrs.begin();it!=mAttrs.end();it++){
        LOGD("%s = %s",it->first.c_str(),it->second.c_str());

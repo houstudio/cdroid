@@ -278,12 +278,30 @@ const std::string& Assets::getString(const std::string& id,const std::string&lan
     return id;
 }
 
-std::vector<std::string>Assets::getStringArray(const std::string&resname,const std::string&arrayname)const{
-    std::vector<std::string>sarray;
-    auto it=mArraies.find(resname);
-    if(it!=mArraies.end())sarray=it->second;
-    return sarray;
+int Assets::getArray(const std::string&resid,std::vector<int>&out){
+    std::string pkg,name=resid;
+    parseResource(resid,&name,&pkg);
+    name=AttributeSet::normalize(pkg,name);
+    auto it=mArraies.find(name);
+    if(it!=mArraies.end()){
+        //out=it->second;
+        return out.size();
+    }
+    return  0;
 }
+
+int Assets::getArray(const std::string&resid,std::vector<std::string>&out){
+    std::string pkg,name=resid;
+    parseResource(resid,&name,&pkg);
+    name=AttributeSet::normalize(pkg,name);
+    auto it=mArraies.find(name);
+    if(it!=mArraies.end()){
+        out=it->second;
+        return out.size();
+    }
+    return 0;
+}
+
 
 Drawable* Assets::getDrawable(const std::string&fullresid){
     Drawable* d = nullptr;
@@ -345,8 +363,7 @@ int Assets::getColor(const std::string&refid){
     auto it = mColors.find(name);
     if(it!=mColors.end()){
         return it->second->icolor;
-    }
-    else if((refid[0]=='#')||refid.find(':')==std::string::npos){
+    }else if((refid[0]=='#')||refid.find(':')==std::string::npos){
         return Color::parseColor(refid);
     }else if(refid.find("color/")==std::string::npos){//refid is defined as an color reference
         parseResource(refid,&name,nullptr);
@@ -355,23 +372,15 @@ int Assets::getColor(const std::string&refid){
     }
 }
 
-int Assets::getArray(const std::string&resname,std::vector<std::string>&out){
-    auto it=mArraies.find(resname);
-    if(it!=mArraies.end()){
-        out=it->second;
-        return out.size();
-    }
-    return 0;
-}
-
 ColorStateList* Assets::getColorStateList(const std::string&fullresid){
     auto it=mColors.find(fullresid);
     if( it==mColors.end() ){
-        if(fullresid[0]=='#'){
+	size_t slashpos=fullresid.find("/");
+        if((fullresid[0]=='#')||(slashpos==std::string::npos) ){
             int color = Color::parseColor(fullresid);
             return ColorStateList::valueOf(color);
         }
-        if(fullresid.find("/")==std::string::npos ){
+        if(slashpos==std::string::npos ){
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             realName=mTheme.getString(realName);
@@ -383,7 +392,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
         if(it->second->colors)return new ColorStateList(*it->second->colors);
 	else return ColorStateList::valueOf(it->second->icolor);
     }
-    LOGV_IF(!fullresid.empty(),"%s not found",fullresid.c_str());
+    LOGD_IF(!fullresid.empty(),"%s not found",fullresid.c_str());
     return nullptr;
 }
 
@@ -475,6 +484,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&refname){
     if(it!=mStyles.end())atts=it->second;
     const std::string parent=atts.getString("parent");
     parseResource(name,nullptr,&pkg);
+    atts.setContext(this,pkg);
     if(parent.length()){
         AttributeSet parentAtts=obtainStyledAttributes(parent);
         atts.inherit(parentAtts);

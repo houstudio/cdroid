@@ -5,6 +5,9 @@
 #include <core/displaymetrics.h>
 
 namespace cdroid{
+class Drawable;
+class ColorStateList;
+
 class AttributeSet{
 private:
     std::string mPackage;
@@ -35,6 +38,9 @@ public:
     int  getDimensionPixelOffset(const std::string&key,int def=0)const;
     int  getLayoutDimension(const std::string&key,int def)const;
     float getFraction(const std::string&key,int base,int pbase,float def=.0)const;
+
+    ColorStateList*getColorStateList(const std::string&key)const;
+    Drawable*getDrawable(const std::string&key)const;
     void dump()const;
 };
 }

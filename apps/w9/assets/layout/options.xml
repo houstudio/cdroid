@@ -3,31 +3,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <OptionPicker 
+    <OptionPicker
         android:id="@+id/option1"
         android:layout_width="240dp"
         android:layout_height="match_parent"
 	android:layout_alignParentBottom="true"
 	android:layout_alignParentLeft="true"
-	android:background="#112233"
 	android:text2="温度"
     />
-    <OptionPicker 
+    <OptionPicker
         android:id="@+id/option2"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option1"
-	android:background="#332211"
 	android:text2="漂洗"
     />
-    <OptionPicker 
+    <OptionPicker
         android:id="@+id/option3"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option2"
 	android:text2="转速"
-
+    />
+    <OptionPicker
+        android:id="@+id/option4"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@id/option3"
+	android:text2="烘干"
+    />
+    <OptionPicker
+        android:id="@+id/option5"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@id/option4"
+	android:text2="特渍"
     />
 </RelativeLayout>

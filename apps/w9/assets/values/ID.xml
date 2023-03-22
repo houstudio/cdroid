@@ -14,5 +14,7 @@
   <id name="option1">0x0000271b</id>
   <id name="option2">0x0000271c</id>
   <id name="option3">0x0000271d</id>
+  <id name="option4">0x0000271e</id>
+  <id name="option5">0x0000271f</id>
 </resources>
 

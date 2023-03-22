@@ -48,7 +48,8 @@ public:
     std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
     Drawable * getDrawable(const std::string&resid)override;
     int getColor(const std::string&resid)override;
-    int getArray(const std::string&resname,std::vector<std::string>&)override;
+    int getArray(const std::string&resid,std::vector<int>&)override;
+    int getArray(const std::string&resid,std::vector<std::string>&)override;
     ColorStateList* getColorStateList(const std::string&resid)override;
     AttributeSet obtainStyledAttributes(const std::string&)override;
 };
