@@ -174,12 +174,9 @@ if ( __name__ == "__main__"):
     idstart=10000
     if len(sys.argv)<3:
         print(sys.argv[0])#+'assetspath R.h_path ID.xml'
-    validassetsdir=['assets','res','resources']
+    print("arg1="+sys.argv[1])
     segments=sys.argv[1].split('/')
-    for i in range(0,len(segments)):
-        if segments[i] in validassetsdir:
-            break
-        namespace=segments[i]
+    namespace=segments[len(segments)-2]
     if sys.argv[2].find("widget/R.h")>=0 and (namespace=='gui'):
         namespace='cdroid'
         idstart=1000

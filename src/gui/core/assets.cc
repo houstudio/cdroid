@@ -383,7 +383,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
         if(it->second->colors)return new ColorStateList(*it->second->colors);
 	else return ColorStateList::valueOf(it->second->icolor);
     }
-    LOGV("%s not found",fullresid.c_str());
+    LOGV_IF(!fullresid.empty(),"%s not found",fullresid.c_str());
     return nullptr;
 }
 
