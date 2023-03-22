@@ -2,14 +2,37 @@
 #include <washoptions.h>
 #include <cdroid.h>
 #include <R.h>
+
 HomeWindow::HomeWindow(int mode):Window(0,0,-1,-1){
    LayoutInflater::from(getContext())->inflate("@layout/main",this);
 
-   RelativeLayout*rl=(RelativeLayout*)findViewById(w9::R::id::relativeLayout);
+   HorizontalScrollView*sv=(HorizontalScrollView*)findViewById(w9::R::id::horizontalScroll);
    View*v=findViewById(w9::R::id::horizontalScroll);
    v->setHorizontalScrollBarEnabled(true);
    v->setOnScrollChangeListener([](View& view, int x, int y, int oldX, int oldY){
       //LOGD("x=%d->%d",oldX,x);
+   });
+   screenWidth=getWidth();
+   mCurScrollX=mOldScrollX=0;
+   v->setOnTouchListener([this](View&v, MotionEvent&event){
+         switch (event.getAction()) {
+	 case MotionEvent::ACTION_DOWN:
+               mOldScrollX = v.getScrollX();
+               break;
+	 case MotionEvent::ACTION_UP:
+               mCurScrollX = v.getScrollX();
+               //每次手滑动距离大于200或者小于-200才可以触发ScrolView滚动一屏幕距离，否则恢复原位
+	       LOGD("distance=%d mCurScrollX=%d",std::abs(mCurScrollX - mOldScrollX),mCurScrollX);
+               if ((mCurScrollX - mOldScrollX) > 200) {
+                   v.scrollTo(mOldScrollX + screenWidth, 0);
+               } else if ((mCurScrollX - mOldScrollX) < -200) {
+                   v.scrollTo(mOldScrollX - screenWidth, 0);
+               } else {
+                   v.scrollTo(mOldScrollX, 0);
+               }
+               break;
+         }
+         return false;
    });
 
    v=findViewById(w9::R::id::often);

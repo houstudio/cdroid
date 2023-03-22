@@ -22,8 +22,6 @@ add_definitions(--include cdlog.h)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(uidemo1 ${DEMO_SRCS})
 
-CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} uidemo1)
-
 CreatePAK(uidemo1 ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo1.pak ${PROJECT_SOURCE_DIR}/R.h)
 
 add_custom_target(uidemo1translate

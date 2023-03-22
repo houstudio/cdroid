@@ -129,11 +129,13 @@ class IDGenerater(object):
             writer.write("/>%s" % (newl))
 
     def strings2XML(self,filename):
-        print self.Handler.strings
-        if not os.path.exists(filename):
-            dom=parseString('<?xml version="1.0" encoding="utf-8"?>\n<resources lang="zh_CN"></resources>')
-        else:
+        print(self.Handler.strings)
+        try:
             dom=parse(filename)
+        except:#(xml.parsers.expat.ExpatError)
+            print(filename+" open failed or syntax error")
+            dom=parseString('<?xml version="1.0" encoding="utf-8"?>\n<resources lang="zh_CN"></resources>')
+
         root = dom.documentElement
         stringsNodeInFile=root.getElementsByTagName('string')
         for str in self.Handler.strings:
@@ -171,27 +173,29 @@ class IDGenerater(object):
         return lastmodifytime
 
 if ( __name__ == "__main__"):
+    #arg0 is myname(idgen.py)
+    #arg1 is namespace
+    #arg2 is resource directory
+    #arg3 is directory which R.h generate to
     idstart=10000
     if len(sys.argv)<3:
-        print(sys.argv[0])#+'assetspath R.h_path ID.xml'
-    print("arg1="+sys.argv[1])
-    segments=sys.argv[1].split('/')
-    namespace=segments[len(segments)-2]
-    if sys.argv[2].find("widget/R.h")>=0 and (namespace=='gui'):
-        namespace='cdroid'
+        print(sys.argv[0])
+    print(sys.argv)
+    namespace=sys.argv[1]
+    if namespace=='cdroid':
         idstart=1000
     print("namespace="+namespace)
     lastmodifytime=0 
-    if os.path.exists(sys.argv[2]):
-        fstat=os.stat(sys.argv[2])
+    if os.path.exists(sys.argv[3]):
+        fstat=os.stat(sys.argv[3])
         lastmodifytime=fstat.st_mtime
     idgen=IDGenerater(idstart,namespace)
-    if not os.path.exists(sys.argv[1]+"/values"):
-        os.makedirs(sys.argv[1]+"/values")
-    if idgen.scanxml(sys.argv[1])>lastmodifytime:
-       idgen.dict2RH(sys.argv[2])
-       idgen.dict2ID(sys.argv[1]+"/values/ID.xml")
-       idgen.strings2XML(sys.argv[1]+"/values/strings.xml")
+    if not os.path.exists(sys.argv[2]+"/values"):
+        os.makedirs(sys.argv[2]+"/values")
+    if idgen.scanxml(sys.argv[2])>lastmodifytime:
+       idgen.dict2RH(sys.argv[3])
+       idgen.dict2ID(sys.argv[2]+"/values/ID.xml")
+       idgen.strings2XML(sys.argv[2]+"/values/strings.xml")
     else:
-        print(sys.argv[2]+" is latest ,skipped.")
+        print(sys.argv[3]+" is latest ,skipped.")
 

@@ -21,8 +21,6 @@ add_definitions(--include cdlog.h)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(w9 ${W9_SRCS})
 
-CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} w9)
-
 CreatePAK(w9 ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/w9.pak ${PROJECT_SOURCE_DIR}/R.h)
 
 add_custom_target(w9translate

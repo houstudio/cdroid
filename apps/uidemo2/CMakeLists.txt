@@ -20,8 +20,6 @@ aux_source_directory(./ DEMO_SRCS)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(uidemo2 ${DEMO_SRCS})
 
-CreatePO(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} uidemo2)
-
 CreatePAK(uidemo2 ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo2.pak ${PROJECT_SOURCE_DIR}/R.h)
 
 add_custom_target(uidemotranslate

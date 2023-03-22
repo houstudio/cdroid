@@ -21,7 +21,7 @@ OptionPicker::OptionPicker(Context*ctx,const AttributeSet&attr):RelativeLayout(c
     mText2->setText(attr.getString("text2"));
     TextView*v=dynamic_cast<EditText*>(findViewById(cdroid::R::id::numberpicker_input));
     if(v){
-	 v->setEnabled(false);//Visibility(View::GONE);
+	 v->setVisibility(View::GONE);
 	 v->setTextSize(48);
     }
     mNumberPicker->setTextSize(40);
