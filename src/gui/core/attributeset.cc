@@ -20,7 +20,7 @@ static std::vector<std::string> split(const std::string & path) {
     return vec;
 }
 
-AttributeSet::AttributeSet():AttributeSet(nullptr,std::string()){
+AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 }
 
 AttributeSet::AttributeSet(Context*ctx,const std::string&package){

@@ -38,6 +38,7 @@ public:
     ~Assets();
     int loadStyles(const std::string&resid);
     void clearStyles();
+    const std::string getPackageName()const override;
     const std::string getTheme()const override;
     void setTheme(const std::string&theme)override;
     const DisplayMetrics&getDisplayMetrics()override;

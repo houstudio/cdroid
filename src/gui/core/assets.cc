@@ -59,6 +59,10 @@ const DisplayMetrics& Assets::getDisplayMetrics(){
     return mDisplayMetrics;
 }
 
+const std::string Assets::getPackageName()const{
+    return mName;
+}
+
 const std::string Assets::getTheme()const{
     return mThemeName;
 }
