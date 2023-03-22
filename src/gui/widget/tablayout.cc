@@ -69,7 +69,7 @@ TabLayout::~TabLayout(){
 }
 
 void TabLayout::initTabLayout(){
-    AttributeSet atts;
+    AttributeSet atts(getContext(),"cdroid");
     mMode = MODE_SCROLLABLE;
     mInlineLabel =false;
     mTabPaddingStart= mTabPaddingTop   = 0;
@@ -455,7 +455,7 @@ void TabLayout::updateAllTabs(){
 TabLayout::TabView*TabLayout::createTabView(TabLayout::Tab* tab){
     TabView* tabView =nullptr;// mTabViewPool != null ? mTabViewPool.acquire() : null;
     if (tabView == nullptr) {
-        tabView = new TabView(getContext(),AttributeSet(),this);
+        tabView = new TabView(getContext(),AttributeSet(getContext(),"cdroid"),this);
     }
     tabView->setTab(tab);
     tabView->setFocusable(true);

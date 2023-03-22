@@ -112,14 +112,14 @@ void FastScroller::updateAppearance() {
 void FastScroller::setStyle(const std::string&styleResId){
     Context* context = mList->getContext();
     AttributeSet ta=context->obtainStyledAttributes(styleResId);//R.styleable.FastScroll, R.attr.fastScrollStyle, resId);
-
+   
     mOverlayPosition = ta.getInt("position", OVERLAY_FLOATING);
     mPreviewResId[PREVIEW_LEFT] = ta.getString("backgroundLeft");
     mPreviewResId[PREVIEW_RIGHT] = ta.getString("backgroundRight");
-    mThumbDrawable = context->getDrawable(ta,"thumbDrawable");
-    mTrackDrawable = context->getDrawable(ta,"trackDrawable");
+    mThumbDrawable = ta.getDrawable("thumbDrawable");
+    mTrackDrawable = ta.getDrawable("trackDrawable");
     mTextAppearance = ta.getString("textAppearance");//R.styleable.FastScroll_textAppearance
-    mTextColor = context->getColorStateList(ta.getString("textColor"));
+    mTextColor = ta.getColorStateList("textColor");
     mTextSize  = ta.getDimensionPixelSize("textSize", 0);
     mPreviewMinWidth = ta.getDimensionPixelSize("minWidth", 0);
     mPreviewMinHeight= ta.getDimensionPixelSize("minHeight", 0);

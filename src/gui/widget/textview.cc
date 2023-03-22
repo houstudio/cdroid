@@ -225,9 +225,9 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mShadowDy = atts.getFloat("shadowDy",mShadowDy);
     mShadowRadius = atts.getFloat("shadowRadius",mShadowRadius);
     mTypefaceIndex= atts.getInt("typeface",-1);
-    mFontFamily   = atts.getString("fontFamily","Lato");
+    mFontFamily   = atts.getString("fontFamily","Droid Sans Fallback");
     mFontTypeface =Cairo::ToyFontFace::create(mFontFamily,Cairo::ToyFontFace::Slant::NORMAL,Cairo::ToyFontFace::Weight::NORMAL);
-    LOGD("mFontFamily=%s face=%p family=%s",mFontFamily.c_str(),mFontTypeface.get(),mFontTypeface->get_family().c_str());
+    LOGV("mFontFamily=%s face=%p family=%s",mFontFamily.c_str(),mFontTypeface.get(),mFontTypeface->get_family().c_str());
     mTextStyle = atts.getInt("textStyle",-1);
     mFontWeight= atts.getInt("textFontWeight",-1);
     mAllCaps=atts.getBoolean("textAllCaps",false);
@@ -240,12 +240,12 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     initView();
     setText(attrs.getString("text"));
     
-    Drawable* left =ctx->getDrawable(attrs,"drawableLeft");
-    Drawable*right =ctx->getDrawable(attrs,"drawableRight");
-    Drawable*  top =ctx->getDrawable(attrs,"drawableTop");
-    Drawable*bottom=ctx->getDrawable(attrs,"drawableBottom");
-    Drawable*start =ctx->getDrawable(attrs,"drawableStart");
-    Drawable*  end =ctx->getDrawable(attrs,"drawableEnd");
+    Drawable* left =attrs.getDrawable("drawableLeft");
+    Drawable*right =attrs.getDrawable("drawableRight");
+    Drawable*  top =attrs.getDrawable("drawableTop");
+    Drawable*bottom=attrs.getDrawable("drawableBottom");
+    Drawable*start =attrs.getDrawable("drawableStart");
+    Drawable*  end =attrs.getDrawable("drawableEnd");
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     setRelativeDrawablesIfNeeded(start, end);

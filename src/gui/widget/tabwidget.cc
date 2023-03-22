@@ -15,15 +15,15 @@ TabWidget::TabWidget(Context*ctx,const AttributeSet&atts)
     initTab();
     const bool hasExplicitLeft = atts.hasAttribute("tabStripLeft");
     if(hasExplicitLeft)
-        mLeftStrip = ctx->getDrawable(atts,"tabStripLeft");
+        mLeftStrip = atts.getDrawable("tabStripLeft");
     else
-        mLeftStrip = ctx->getDrawable(atts,"tab_bottom_left");
+        mLeftStrip = atts.getDrawable("tab_bottom_left");
 
     const bool hasExplicitRight = atts.hasAttribute("tabStripRight");
     if(hasExplicitRight)
-        mRightStrip = ctx->getDrawable(atts,"tabStripRight");
+        mRightStrip = atts.getDrawable("tabStripRight");
     else
-        mRightStrip = ctx->getDrawable(atts,"tab_bottom_right");
+        mRightStrip = atts.getDrawable("tab_bottom_right");
     setChildrenDrawingOrderEnabled(true);
 }
 

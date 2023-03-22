@@ -1,0 +1,54 @@
+<resources lang="zh_CN">
+	<string-array name="cleverwash">
+		<item>60</item>
+		<item>50</item>
+		<item>40</item>
+		<item>30</item>
+		<item>20</item>
+		<item>常温</item>
+	</string-array>
+	<string-array name="potch">
+		<item>4</item>
+		<item>3</item>
+		<item>2</item>
+		<item>1</item>
+		<item>免漂洗</item>
+	</string-array>
+	<string-array name="speed">
+		<item>1000</item>
+		<item>800</item>
+		<item>600</item>
+		<item>400</item>
+		<item>不脱水</item>
+	</string-array>
+	<string-array name="dry">
+		<item>关闭</item>
+		<item>240</item>
+		<item>180</item>
+		<item>120</item>
+		<item>90</item>
+		<item>60</item>
+		<item>50</item>
+		<item>30</item>
+		<item>储藏</item>
+		<item>熨烫</item>
+		<item>低温</item>
+		<item>标准</item>
+	</string-array>
+	<string-array name="stain">
+		<item>油渍</item>
+		<item>咖啡</item>
+		<item>汗渍</item>
+		<item>草渍</item>
+		<item>红酒</item>
+		<item>妆渍</item>
+		<item>泥渍</item>
+		<item>果汁</item>
+		<item>餐渍</item>
+		<item>水彩</item>
+		<item>酱汁</item>
+		<item>锈渍</item>
+		<item>血渍</item>
+		<item>关闭</item>
+	</string-array>
+</resources>

@@ -13,8 +13,8 @@ DECLARE_WIDGET(AbsSeekBar)
 AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,attrs){
     initSeekBar();
 
-    setThumb(ctx->getDrawable(attrs,"thumb"));
-    setTickMark(ctx->getDrawable(attrs,"tickMark"));
+    setThumb(attrs.getDrawable("thumb"));
+    setTickMark(attrs.getDrawable("tickMark"));
     const int thumbOffset=attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
     setThumbOffset(thumbOffset);
 

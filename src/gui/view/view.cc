@@ -299,8 +299,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
         setFlags(viewFlagValues, viewFlagMasks);
 
 
-    setBackground(ctx->getDrawable(attrs,"background"));
-    ColorStateList*csl =ctx->getColorStateList(attrs.getString("backgroundTint"));
+    setBackground(attrs.getDrawable("background"));
+    ColorStateList*csl =attrs.getColorStateList("backgroundTint");
     if(mBackgroundTint==nullptr){
 	 mBackgroundTint = new TintInfo;
 	 mBackgroundTint->mTintList=csl;
@@ -313,7 +313,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
 	mBackgroundTint->mHasTintMode =true;
     }
 
-    setForeground(ctx->getDrawable(attrs,"foreground"));
+    setForeground(attrs.getDrawable("foreground"));
     setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
 
     int leftPadding,topPadding,rightPadding,bottomPadding;
@@ -1717,10 +1717,10 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
  
     scrollabilityCache->scrollBarSize = a.getDimensionPixelSize("scrollbarSize",ViewConfiguration::get(mContext).getScaledScrollBarSize());
  
-    Drawable* track = mContext->getDrawable(a,"scrollbarTrackHorizontal");
+    Drawable* track = a.getDrawable("scrollbarTrackHorizontal");
     scrollabilityCache->scrollBar->setHorizontalTrackDrawable(track);
  
-    Drawable* thumb = mContext->getDrawable(a,"scrollbarThumbHorizontal");
+    Drawable* thumb = a.getDrawable("scrollbarThumbHorizontal");
     if (thumb) {
         scrollabilityCache->scrollBar->setHorizontalThumbDrawable(thumb);
     }
@@ -1730,10 +1730,10 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
         scrollabilityCache->scrollBar->setAlwaysDrawHorizontalTrack(true);
     }
  
-    track = mContext->getDrawable(a,"scrollbarTrackVertical");
+    track = a.getDrawable("scrollbarTrackVertical");
     scrollabilityCache->scrollBar->setVerticalTrackDrawable(track);
  
-    thumb = mContext->getDrawable(a,"scrollbarThumbVertical");
+    thumb = a.getDrawable("scrollbarThumbVertical");
     if (thumb) {
         scrollabilityCache->scrollBar->setVerticalThumbDrawable(thumb);
     }

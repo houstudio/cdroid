@@ -27,9 +27,12 @@ OptionPicker::OptionPicker(Context*ctx,const AttributeSet&attr):RelativeLayout(c
     mNumberPicker->setTextSize(40);
     LOGD("mNumberPicker=%p text=%p/%p",mNumberPicker,mText1,mText2);
     mNumberPicker->setOnValueChangedListener([this](NumberPicker&v,int ov,int nv){
-        mText1->setText(std::to_string(nv));
+        std::string txt=std::to_string(nv);
+	std::vector<std::string>displayNames=v.getDisplayedValues();
 	if(ov<mValues.size()&&ov>=0)  ov=mValues.at(ov);
 	if(nv<mValues.size()&&nv>=0)  nv=mValues.at(nv);
+	if(nv<displayNames.size()&&nv>=0)  txt=v.getDisplayedValues().at(nv);
+        mText1->setText(txt);
         if(mOnValueChangedListener)
 	    mOnValueChangedListener(v,ov,nv);
     });

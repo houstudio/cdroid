@@ -51,7 +51,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     initView();
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mSolidColor =atts.getColor("solidColor",0);
-    mSelectionDivider =context->getDrawable(atts,"selectionDivider");
+    mSelectionDivider =atts.getDrawable("selectionDivider");
     if (mSelectionDivider) {
         mSelectionDivider->setCallback(this);
         mSelectionDivider->setLayoutDirection(getLayoutDirection());
@@ -71,7 +71,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
                 && mMinWidth > mMaxWidth) {
         throw "minWidth > maxWidth";
     }
-    mVirtualButtonPressedDrawable = context->getDrawable(atts,"virtualButtonPressedDrawable");
+    mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
 
     std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
     LayoutInflater::from(mContext)->inflate(layoutres,this);

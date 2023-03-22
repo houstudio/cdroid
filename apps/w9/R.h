@@ -20,6 +20,8 @@ namespace R{
          static constexpr int option1                 = 0x0000271B ;/*10011*/
          static constexpr int option2                 = 0x0000271C ;/*10012*/
          static constexpr int option3                 = 0x0000271D ;/*10013*/
+         static constexpr int option4                 = 0x0000271E ;/*10014*/
+         static constexpr int option5                 = 0x0000271F ;/*10015*/
     };/*namespace id*/
 
     namespace strings{

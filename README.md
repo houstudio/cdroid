@@ -77,8 +77,8 @@
 * 5, make you project(SeeAlso **Building CDROID**) 
 
 # **Building CDROID:**
-* 1.install dependencs: sudo apt install build-essential cmake gdb pkg-config zip gettext libx11-dev
-* 2.install vcpkg
+* 1.install dependencs: sudo apt install build-essential cmake gdb pkg-config zip gettext libx11-dev python>=3.7
+* 2.install vcpkg (git clone https://github.com/microsoft/vcpkg.git)
 * 3.install cdroid deplibs:  vcpkg install gtest sdl2 libunibreak libjpeg-turbo[jpeg8] libzip cairo --triplet=x64-linux-dynamic 
   (Recommand you use dynamic triplet(static is not tested)
 * 4.create buildings:./build.sh --product=x64 --build=debug
