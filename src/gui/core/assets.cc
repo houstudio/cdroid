@@ -395,6 +395,11 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid){
         LOGV("%s type=%s",fullresid.c_str(),(it->second->colors?"color":"colorstatelist"));
         if(it->second->colors)return new ColorStateList(*it->second->colors);
 	else return ColorStateList::valueOf(it->second->icolor);
+    }else if(fullresid.find("attr")!=std::string::npos){
+        size_t slashpos=fullresid.find("/");
+	std::string name=fullresid.substr(slashpos+1);
+	name=mTheme.getString(name);
+	if(!name.empty())return getColorStateList(name);
     }
     LOGD_IF(!fullresid.empty(),"%s not found",fullresid.c_str());
     return nullptr;

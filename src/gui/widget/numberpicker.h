@@ -170,7 +170,7 @@ public:
     bool getWrapSelectorWheel()const;
     void setWrapSelectorWheel(bool);
     void setOnLongPressUpdateInterval(long);
-    void setSelector(int items,int focused=-1);
+    void setSelector(int items);
 
     void jumpDrawablesToCurrentState();
     void onResolveDrawables(int layoutDirection)override;

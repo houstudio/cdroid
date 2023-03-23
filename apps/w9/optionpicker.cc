@@ -21,10 +21,11 @@ OptionPicker::OptionPicker(Context*ctx,const AttributeSet&attr):RelativeLayout(c
     mText2->setText(attr.getString("text2"));
     TextView*v=dynamic_cast<EditText*>(findViewById(cdroid::R::id::numberpicker_input));
     if(v){
-	 v->setVisibility(View::GONE);
+	 v->setEnabled(false);
 	 v->setTextSize(48);
     }
     mNumberPicker->setTextSize(40);
+    mNumberPicker->setSelector(5);
     LOGD("mNumberPicker=%p text=%p/%p",mNumberPicker,mText1,mText2);
     mNumberPicker->setOnValueChangedListener([this](NumberPicker&v,int ov,int nv){
         std::string txt=std::to_string(nv);
@@ -61,6 +62,14 @@ void OptionPicker::setValuedName(const std::vector<int>&values,const std::vector
     mNumberPicker->setMinValue(0);
     mNumberPicker->setMaxValue(count-1);
     mNumberPicker->setDisplayedValues(names);
+}
+
+void OptionPicker::setValue(int v){
+    mNumberPicker->setValue(v);
+}
+
+int  OptionPicker::getValue()const{
+    return mNumberPicker->getValue();
 }
 
 void OptionPicker::showOptions(bool on){

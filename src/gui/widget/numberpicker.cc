@@ -75,7 +75,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 
     std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
     LayoutInflater::from(mContext)->inflate(layoutres,this);
-    mHasSelectorWheel = true;//(layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
+    mHasSelectorWheel = (layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     setWillNotDraw(!mHasSelectorWheel);
 
@@ -165,7 +165,7 @@ void NumberPicker::initView(){
     mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mHideWheelUntilFocused=false;
-    setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT,-1);
+    setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT);
 }
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
     if (!mHasSelectorWheel) {
@@ -518,11 +518,12 @@ bool NumberPicker::performLongClick() {
 }
 
 void NumberPicker::showSoftInput(){
-
+    if(mHasSelectorWheel)
+	mInputText->setVisibility(View::VISIBLE);
 }
 
 void NumberPicker::hideSoftInput(){
-    if (mHasSelectorWheel) {
+    if (mHasSelectorWheel&&mInputText->getInputType()!=EditText::TYPE_NONE) {
         mInputText->setVisibility(View::INVISIBLE);
     }
 }
@@ -585,13 +586,9 @@ void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
     mLongPressUpdateInterval = intervalMillis;
 }
 
-void NumberPicker::setSelector(int items,int focused){
+void NumberPicker::setSelector(int items){
     mSelectorIndices.resize(items);
-    if(focused<0)focused=items/2;
-    if(mHasSelectorWheel==false&&mSelectorIndices.size()!=DEFAULT_SELECTOR_WHEEL_ITEM_COUNT){
-	mHasSelectorWheel=true;
-    }
-    mMiddleItemIndex=focused;
+    mMiddleItemIndex=items/2;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
     //updateInputTextView();
@@ -742,7 +739,6 @@ void NumberPicker::onDraw(Canvas&canvas){
     ColorStateList* colors = mInputText->getTextColors();
     const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     canvas.set_color(selectorWheelColor);
-    canvas.set_font_size(mTextSize);
     Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
     Layout txtlayout(mTextSize,mRight-mLeft);
     //txtlayout.setAlignment(mInputText->getLayoutAlignment());
@@ -752,24 +748,20 @@ void NumberPicker::onDraw(Canvas&canvas){
         // Do not draw the middle item if input is visible since the input is shown only if the wheel
         // is static and it covers the middle item. Otherwise, if the user starts editing the text 
         // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
+        canvas.set_font_size(i==mMiddleItemIndex?mTextSize:(mTextSize*.8));
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
             canvas.draw_text(rctxt,scrollSelectorValue,DT_CENTER|DT_VCENTER);
         }
         rctxt.offset(0,mSelectorElementHeight);
-        // draw the selector dividers
-        if(mSelectionDivider && (mSelectorTextGapHeight>0) && (i!=selectorIndices.size()-1)){
-             canvas.save();
-             int alpha=255;
-             if((i!=mMiddleItemIndex-1)&&(i!=mMiddleItemIndex))
-                 alpha=(255-500.*std::abs(i-mMiddleItemIndex+(i>mMiddleItemIndex?1:0))/(selectorIndices.size()+1));
-             mSelectionDivider->setAlpha(alpha);
-             mSelectionDivider->setBounds(0,y+mTextSize-mCurrentScrollOffset+mSelectorTextGapHeight,mRight-mLeft,
-			     std::min(mSelectorTextGapHeight,mSelectionDividerHeight));
-             mSelectionDivider->draw(canvas);
-             canvas.restore();
-        }
-        y += mSelectorElementHeight;
+    }
+    // draw the selector dividers
+    if(showSelectorWheel&&mSelectionDivider){
+	 const int width=getWidth();
+         mSelectionDivider->setBounds(0,mTopSelectionDividerTop,width,mSelectionDividerHeight);
+	 mSelectionDivider->draw(canvas);
+         mSelectionDivider->setBounds(0,mBottomSelectionDividerBottom,width,mSelectionDividerHeight);
+         mSelectionDivider->draw(canvas);
     }
 }
 

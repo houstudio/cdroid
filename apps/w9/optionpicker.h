@@ -19,5 +19,7 @@ public:
     /*values used for uart commandid,names used for display,values.size==names.size*/
     void setValuedName(const std::vector<int>&values,const std::vector<std::string>&names);
     void showOptions(bool on);
+    void setValue(int value);
+    int getValue()const;
 };
 

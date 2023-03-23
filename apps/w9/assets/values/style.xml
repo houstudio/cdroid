@@ -1,0 +1,6 @@
+<resources>
+    <style name="optionPicker">
+	    <item name="internalLayout">@layout/optionpicker</item>
+	    <item name="selectionDivider">#332211</item>
+    </style>
+</resources>

@@ -18,7 +18,7 @@ int main(int argc,const char*argv[]){
         }
         np1->setMinValue(1);
         np1->setMaxValue(12);
-        np1->setSelector(7,-1);
+        np1->setSelector(7);
         np1->setMinHeight(220);
         np1->setBackgroundColor(0xFF111100+(i*33));
         if(i==2){

@@ -1,3 +1,5 @@
 <resources lang="zh_CN">
 	<string name="weathertips">weathertips</string>
+	<string name="number_picker_increment_button">number_picker_increment_button</string>
+	<string name="number_picker_decrement_button">number_picker_decrement_button</string>
 </resources>

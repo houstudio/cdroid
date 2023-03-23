@@ -4,6 +4,7 @@
        android:id="@+id/numpicker"
        android:layout_width="match_parent"
        android:layout_height="match_parent"
+       android:style="@style/optionPicker" 
        android:layout_above="@id/text1"/>
      <TextView
         android:id="@+id/text1"
@@ -15,7 +16,7 @@
 	android:textSize="32dp"
 	android:textColor="white"
 	android:paddingVertical="5dp"
-        android:background="#121212"/>
+        android:background="#80121212"/>
      <TextView
         android:id="@+id/text2"
         android:layout_width="match_parent"
@@ -25,6 +26,6 @@
 	android:paddingVertical="5dp"
 	android:gravity="center"
         android:textSize="32dp"
-        android:background="#181818"/>
+        android:background="#80181818"/>
 </merge>
 

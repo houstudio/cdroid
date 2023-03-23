@@ -112,16 +112,19 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
             throw "<merge /> can be used only with a valid ViewGroup root and attachToRoot=true";
         return ;
     }
+
     if(strcmp(name,"include")==0){
         const std::string layout=atts.getString("layout");
         LayoutInflater::from(pd->ctx)->inflate(layout,parent,true);
         return;
     }
+
     if(inflater==nullptr){
         pd->views.push_back(nullptr);
         LOGE("Unknown Parser for %s",name);
         return;
     }
+
     std::string stname=atts.getString("style");
     if(!stname.empty()){
         AttributeSet style=pd->ctx->obtainStyledAttributes(stname);
@@ -132,6 +135,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         AttributeSet defstyle=pd->ctx->obtainStyledAttributes(stname);
         atts.inherit(defstyle);
     }
+
     View*v=inflater(pd->ctx,atts);
     pd->parsedView++;
     pd->flags.push_back(0);

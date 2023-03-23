@@ -135,7 +135,7 @@ int Scroller::getFinalY()const{
 bool Scroller::computeScrollOffset() {
     int index;
     float x,t,distanceCoef,velocityCoef;
-    if (mFinished)     return false;
+    if (mFinished) return false;
 
     int timePassed = (int)(AnimationUtils::currentAnimationTimeMillis() - mStartTime);
     
