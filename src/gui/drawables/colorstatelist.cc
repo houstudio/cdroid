@@ -31,9 +31,13 @@ ColorStateList::ColorStateList(const std::vector<std::vector<int>>&states,const 
 void ColorStateList::dump()const{
     std::ostringstream oss;
     for(int i=0;i<mColors.size();i++){
+	const std::vector<int>&state=mStateSpecs[i];
         oss<<"[";
-        for(auto s:mStateSpecs[i])oss<<s<<",";
-        oss<<"]="<<std::hex<<(unsigned int)mColors.at(i)<<std::endl;
+        for(auto s=state.begin();s!=state.end();s++){
+	    oss<<*s;
+	    if(s<state.end()-1)oss<<",";
+	}
+        oss<<"]="<<std::hex<<(unsigned int)mColors.at(i)<<" ";
     }
     LOG(DEBUG)<<oss.str();
 }

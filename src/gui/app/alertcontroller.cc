@@ -32,7 +32,7 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mButtonPanelLayoutHint  = AlertDialog::LAYOUT_HINT_NONE;
     AttributeSet atts=context->obtainStyledAttributes("cdroid:style/AlertDialog");
 
-    mAlertDialogLayout = atts.getString("layout","");
+    mAlertDialogLayout = atts.getString("layout","@cdroid:layout/alert_dialog");
     mButtonPanelSideLayout = atts.getString("buttonPanelSideLayout");
     mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog");
 

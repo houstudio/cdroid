@@ -4,7 +4,7 @@
        android:id="@+id/numpicker"
        android:layout_width="match_parent"
        android:layout_height="match_parent"
-       android:style="@style/optionPicker" 
+       android:style="@style/optionPicker"
        android:layout_above="@id/text1"/>
      <TextView
         android:id="@+id/text1"
@@ -14,7 +14,7 @@
 	android:layout_above="@id/text2"
 	android:gravity="center"
 	android:textSize="32dp"
-	android:textColor="white"
+	android:textColor="@color/textcolors"
 	android:paddingVertical="5dp"
         android:background="#80121212"/>
      <TextView

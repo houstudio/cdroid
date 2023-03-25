@@ -165,7 +165,6 @@ void ScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     if (heightMode == MeasureSpec::UNSPECIFIED) {
         return;
     }
-
     if (getChildCount() > 0) {
         View* child = getChildAt(0);
         int widthPadding;

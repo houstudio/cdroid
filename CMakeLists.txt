@@ -21,6 +21,13 @@ add_subdirectory(apps)
 
 add_subdirectory(tests)
 
+include (InstallRequiredSystemLibraries)
+#set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+set (CPACK_COMPONENT_LIBRARIES_DEPENDS ${CDROID_DEPLIBS})
+set (CPACK_PACKAGE_VERSION_MAJOR "1")
+set (CPACK_PACKAGE_VERSION_MINOR "0")
+include (CPack)
+
 if(BUILD_DOCS)
   include(cmake/build_doxygen.cmake)
   build_doxygen()

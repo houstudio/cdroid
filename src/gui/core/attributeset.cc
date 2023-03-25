@@ -81,8 +81,7 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
     std::string ks = key;
     size_t pos =ks.find(' ');
     if(pos!=std::string::npos)ks=ks.substr(pos+1);
-    mAttrs.insert(std::pair<std::string,std::string>
-       ((std::string)ks,normalize(mPackage,value)));
+    mAttrs.insert({(std::string)ks,normalize(mPackage,value)});
     return true;
 }
 

@@ -76,7 +76,8 @@ void Assets::setTheme(const std::string&theme){
         parseResource(theme,nullptr,&pkg);
         LOGD("set Theme to %s",theme.c_str());
     }else{
-        LOGE("Theme %s not found",theme.c_str());
+        LOGE("Theme %s not found,[cdroid.pak %s] must be copied to your work directory!",theme.c_str(),
+			mName.empty()?"":(mName+".pak").c_str());
     }
 }
 

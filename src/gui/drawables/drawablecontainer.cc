@@ -232,13 +232,13 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
        if (dr->getPadding(t)) {
            if (t.left > r.left) r.left = t.left;
            if (t.top > r.top) r.top = t.top;
-           if (t.right() > r.right()) r.width = t.right()-r.left;
-           if (t.bottom() > r.bottom()) r.height = t.bottom()-r.top;
+           if (t.right() > r.right()) r.width = t.right() - t.left;
+           if (t.bottom() > r.bottom()) r.height= t.bottom()- r.top;
        }
     }
     mCheckedPadding = true;
-    rect=mConstantPadding;
-    return true;;
+    rect = mConstantPadding;
+    return true;
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> DrawableContainer::cloneConstantState(){
@@ -388,19 +388,18 @@ bool DrawableContainer::getPadding(Rect&padding){
 }
 
 Insets DrawableContainer::getOpticalInsets(){
-
     return  mCurrDrawable?mCurrDrawable->getOpticalInsets():Insets();
 }
 
 int DrawableContainer::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations()
-                | mDrawableContainerState->getChangingConfigurations();
+             | mDrawableContainerState->getChangingConfigurations();
 }
 
 void DrawableContainer::onBoundsChange(const Rect&bounds){
     if (mLastDrawable != nullptr) {
         mLastDrawable->setBounds(bounds);
-        }
+    }
     if (mCurrDrawable != nullptr) {
         mCurrDrawable->setBounds(bounds);
     }

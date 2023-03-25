@@ -14,11 +14,18 @@ class ASSETS:public testing::Test{
 };
 
 
-TEST_F(ASSETS,arrsy){
+TEST_F(ASSETS,array){
    App app(0,NULL);
    std::vector<std::string>array;
    app.getArray("cdroid:array/resolver_target_actions_unpin",array);
    for(auto a:array)printf("%s\r\n",a.c_str());
    ASSERT_TRUE(array.size()>0);
 }
-
+TEST_F(ASSETS,color){
+    App app(0,NULL);
+    ColorStateList*cl=app.getColorStateList("cdroid:attr/editTextColor");
+    ASSERT_TRUE(cl!=NULL);
+    cl=app.getColorStateList("cdroid:color/textview");
+    ASSERT_TRUE(cl!=NULL);
+    cl->dump();
+}

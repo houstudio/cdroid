@@ -13,6 +13,7 @@
         cdroid:layout_height="wrap_content"
         cdroid:textAppearance="@style/TextAppearance.Large.Inverse.NumberPickerInputText"
 	cdroid:gravity="center"
+	cdroid:textColor="@color/textcolors"
 	cdroid:background="#40112233"
         cdroid:singleLine="true"/>
     <ImageButton cdroid:id="@+id/decrement"

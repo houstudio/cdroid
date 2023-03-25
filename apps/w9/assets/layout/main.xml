@@ -39,7 +39,8 @@
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tips"
-		    android:layout_alignParentLeft="true"
+		android:layout_alignParentLeft="true"
+		android:background="@drawable/btn_normal"
                 android:text="常用"/>
             <Button
                 android:id="@+id/care"

@@ -10,12 +10,16 @@ namespace cdroid{
 GradientDrawable::GradientState::GradientState(){
    mShape  = RECTANGLE;
    mGradient = LINEAR_GRADIENT;
+   mTint = nullptr;
+   mSolidColors = nullptr;
+   mStrokeColors= nullptr;
    mAngle = 0;
    mStrokeWidth = -1;//if >= 0 use stroking
    mStrokeDashWidth = 0.0f;
    mStrokeDashGap = 0.0f;
    mRadius = 0.0f;
-   mWidth =mHeight= -1;
+   mWidth = mHeight = -1;
+   mPadding.setEmpty();
    mInnerRadiusRatio = DEFAULT_INNER_RADIUS_RATIO;
    mThicknessRatio = DEFAULT_THICKNESS_RATIO;
    mInnerRadius = -1;
@@ -50,8 +54,8 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig){
     mStrokeDashGap = orig.mStrokeDashGap;
     mRadius = orig.mRadius;
     mRadiusArray = orig.mRadiusArray;
-    mPadding=orig.mPadding;
-    mWidth = orig.mWidth;
+    mPadding= orig.mPadding;
+    mWidth  = orig.mWidth;
     mHeight = orig.mHeight;
     mInnerRadiusRatio = orig.mInnerRadiusRatio;
     mThicknessRatio = orig.mThicknessRatio;
@@ -77,7 +81,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig){
     mAttrCorners = orig.mAttrCorners;
     mAttrPadding = orig.mAttrPadding;
 
-    mDensity =orig.mDensity;// Drawable::resolveDensity(/*res,*/orig.mDensity);
+    mDensity = orig.mDensity;// Drawable::resolveDensity(/*res,*/orig.mDensity);
     if (orig.mDensity != mDensity) {
         applyDensityScaling(orig.mDensity, mDensity);
     }
@@ -253,7 +257,7 @@ void GradientDrawable::clearMutated() {
 }
 
 bool GradientDrawable::getPadding(Rect& padding) {
-    if (1){//mPadding != null) {
+    if ((mPadding.left>0)||(mPadding.top>0)||(mPadding.width>0)||(mPadding.height>0)){
         padding=mPadding;
         return true;
     } else {
@@ -311,6 +315,52 @@ void GradientDrawable::setStrokeInternal(int width, int color, float dashWidth, 
     mStrokePaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     mStrokeWidth =width;
     mDashArray=std::vector<double>{dashWidth,dashGap};
+    invalidateSelf();
+}
+
+void GradientDrawable::setInnerRadiusRatio(float innerRadiusRatio){
+    mGradientState->mInnerRadiusRatio = innerRadiusRatio;
+    mPathIsDirty=true;
+    invalidateSelf();    
+}
+
+float GradientDrawable::getInnerRadiusRatio()const{
+    return mGradientState->mInnerRadiusRatio;
+}
+
+void GradientDrawable::setInnerRadius(int innerRadius){
+    mGradientState->mInnerRadius = innerRadius;
+    mPathIsDirty=true;
+    invalidateSelf();    
+}
+
+int  GradientDrawable::getInnerRadius()const{
+    return mGradientState->mInnerRadius;
+}
+
+void GradientDrawable::setThicknessRatio(float thicknessRatio){
+    mGradientState->mThicknessRatio = thicknessRatio;
+    mPathIsDirty=true;
+    invalidateSelf();
+}
+
+float GradientDrawable::getThicknessRatio()const{
+    return mGradientState->mThicknessRatio;
+}
+
+void GradientDrawable::setThickness(int thickness){
+    mGradientState->mThickness = thickness;
+    mPathIsDirty=true;
+    invalidateSelf();
+}
+
+int  GradientDrawable::getThickness()const{
+    return mGradientState->mThickness;
+}
+
+void GradientDrawable::setPadding(int left,int top,int right,int bottom){
+    mGradientState->mPadding.set(left, top, right, bottom);
+    mPadding = mGradientState->mPadding;
     invalidateSelf();
 }
 
@@ -408,6 +458,11 @@ void GradientDrawable::setOrientation(Orientation orientation) {
 
 void GradientDrawable::setColors(const std::vector<int>& colors) {
     mGradientState->setGradientColors(colors);
+    switch(colors.size()){
+    case 1:LOGE("gradient must has at least 2 color");break;
+    case 2:mGradientState->mPositions=std::vector<float>{.0f,1.f}; break;
+    case 3:mGradientState->mPositions=std::vector<float>{.0f,1.f/3.f,1.f}; break;
+    }
     mGradientIsDirty = true;
     invalidateSelf();
 }

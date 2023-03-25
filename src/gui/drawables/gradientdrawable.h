@@ -143,6 +143,15 @@ public:
     void setStroke(int width, ColorStateList* colorStateList);
     void setStroke(int width,int color, float dashWidth, float dashGap);
     void setStroke(int width, ColorStateList* colorStateList, float dashWidth, float dashGap);
+    void setInnerRadiusRatio(float innerRadiusRatio);
+    float getInnerRadiusRatio()const;
+    void setInnerRadius(int innerRadius);
+    int  getInnerRadius()const;
+    void setThicknessRatio(float thicknessRatio);
+    float getThicknessRatio()const;
+    void setThickness(int thickness);
+    int  getThickness()const;
+    void setPadding(int left,int top,int right,int bottom);
     void setShape(int shape);
     int getShape()const;
     int getIntrinsicWidth()const;
