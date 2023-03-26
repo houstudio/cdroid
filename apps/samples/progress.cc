@@ -36,6 +36,7 @@ int main(int argc,const char*argv[]){
     pb3->setIndeterminateDrawable(d);
     LOGI("Indeterminate drawable=%p",d);
     w->addView(pb3).setId(104).setPos(680,60);
+    pb3->setIndeterminate(true);
     pb3->setProgressDrawable(new ColorDrawable(0xFF112233));
 
     ProgressBar*pb4=new ProgressBar(256,256);
@@ -46,7 +47,7 @@ int main(int argc,const char*argv[]){
     BitmapDrawable*bd=(BitmapDrawable*)ctx->getDrawable("cdroid:mipmap/ic_launcher");
     bd->setTileModeXY(TileMode::MIRROR,TileMode::MIRROR);
     ad->addFrame(bd,1000);
-    ad->addFrame(ctx->getDrawable("cdroid:drawable/progress_horizontal.xml"),1000);
+    ad->addFrame(ctx->getDrawable("cdroid:drawable/progress_horizontal"),1000);
     w->addView(pb4).setId(105).setPos(800,10);
     pb4->setIndeterminateDrawable(ad);
     pb4->setIndeterminate(true);

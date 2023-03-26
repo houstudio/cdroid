@@ -58,7 +58,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,1280,640);
+    Window*w=new Window(0,0,-1,-1);
     MyAdapter* adapter=new MyAdapter();
     MyPageAdapter*gpAdapter=new MyPageAdapter();
     w->setId(0);

@@ -28,7 +28,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,800,600);
+    Window*w=new Window(0,0,-1,-1);
     HorizontalScrollView* hs=new HorizontalScrollView(800,400);
     LinearLayout*layout=new LinearLayout(400,100);
     ColorStateList*cl =app.getColorStateList("cdroid::color/textview");

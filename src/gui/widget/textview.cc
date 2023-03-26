@@ -658,7 +658,7 @@ int TextView::getLineHeight()const{
 }
 
 void TextView::setLineHeight(int h){
-    
+    setLineSpacing(h-getLineHeight(),1.f); 
 }
 
 int TextView::getDesiredHeight(){

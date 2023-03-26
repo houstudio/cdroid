@@ -277,6 +277,29 @@ public:
 	item->props = atts;
 	items.push_back(item);
     }
+    bool upperIsItem()const{
+	return (items.size()>1) && (items.at(items.size()-2)->name.compare("item")==0);
+    }
+    bool upperIsShape()const{
+	return (items.size()>1) && (items.at(items.size()-2)->name.compare("shape")==0);
+    }
+    bool upperIsWrapper()const{
+	if(items.size()<=1)return false;
+	auto upper = items.at(items.size()-2);
+	return upper->drawable && dynamic_cast<DrawableWrapper*>(upper->drawable);
+    }
+    bool _upperIsContainer(){
+	if(items.size()<=1)return false;
+	auto upper = items.at(items.size()-2);
+    }
+    void pop2Upper(Drawable*d){
+	auto upper=items.at(items.size()-2);
+	if(upperIsItem()) upper->drawable=d;
+	else if(upperIsWrapper()){
+	    DrawableWrapper* dwrap = dynamic_cast<DrawableWrapper*>(upper->drawable);
+	    dwrap->setDrawable(d);
+	}
+    }
 };
 
 
@@ -423,29 +446,30 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
 
 static void endElement(void *userData, const XML_Char *name){
     ParseData*pd = (ParseData*)userData;
-    auto pitem   = pd->items.back();
 
     auto it = drawableParsers.find(name);
     if(it == drawableParsers.end()){
+        auto pitem   = pd->items.back();
 	pd->attrs.push_back(pitem->props);
 	pd->names.push_back(pitem->name);
-        pd->items.pop_back();
     }else if(pd->attrs.size()){/*here coming shape drawable*/
 	Drawable*leaf = parseShapeDrawable(pd->items.back()->props,pd->attrs,pd->names);
 	pd->attrs.clear();
 	pd->names.clear();
-	if(pd->items.size()>1){
-           pd->items.pop_back();
-	   pitem = pd->items.back();
-	   pitem->drawable = leaf;
-	}else pd->drawable= leaf;
-	LOGV("coming drawable %s %p %p",name,leaf,dynamic_cast<GradientDrawable*>(leaf));
+	if(pd->upperIsItem()||pd->upperIsWrapper()){
+           pd->pop2Upper(leaf);
+	}
+	pd->drawable= leaf;
+	LOGV("coming drawable %s %p upperIsShape=%d",name,leaf,pd->upperIsShape());
     }else{/*item (stub drawable) or other drawable*/
 	LOGV("coming drawable %s",name);
 	Drawable* topchild = nullptr ,*parent = nullptr;
         const AttributeSet atts = pd->items.back()->props;
-        if(strcmp(name,"item")==0){
-	    pitem = pd->items.back();
+        if(pd->upperIsItem()||pd->upperIsWrapper()){
+	    pd->pop2Upper(pd->items.back()->drawable);
+	}
+	if(pd->items.size()>1){
+	    auto pitem = pd->items.back();
 	    topchild = pitem->drawable;
             pitem  = pd->items[pd->items.size()-2];
             parent = pitem->drawable;
@@ -474,19 +498,18 @@ static void endElement(void *userData, const XML_Char *name){
             const int id = atts.getInt("id",-1);
             const std::string src = atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
-            LOGV("add drawable %p[%s] to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",topchild,src.c_str(),
+            LOGV("add drawable %p to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",topchild,
                parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         }else if(dynamic_cast<AnimationDrawable*>(parent)){
             AnimationDrawable* ad = (AnimationDrawable*)parent;
             const int duration = atts.getInt("duration",0);
             const std::string src = atts.getString("drawable");
             ad->addFrame(topchild,duration);
-            LOGV("add drawable %p[%s] to AnimationDrawable %p duration=%d",topchild,src.c_str(),parent,duration);
+            LOGV("add drawable %p to AnimationDrawable %p duration=%d",topchild,parent,duration);
         }
-	if(pd->items.size()==1)
-	    pd->drawable=pd->items.back()->drawable;
-        pd->items.pop_back();//popup item
+	if(pd->items.size()==1)  pd->drawable=pd->items.back()->drawable;
     }
+    pd->items.pop_back();//popup item
 }
 
 Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string& resname,const std::string&package){

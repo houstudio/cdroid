@@ -50,7 +50,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,800,600);
+    Window*w=new Window(0,0,-1,-1);
     LinearLayout*layout=new LinearLayout(800,600);
     layout->setOrientation(LinearLayout::VERTICAL);
     TabLayout* tab=new TabLayout(1280,36);
