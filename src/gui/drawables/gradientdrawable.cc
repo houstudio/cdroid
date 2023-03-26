@@ -220,22 +220,22 @@ void GradientDrawable::GradientState::setGradientRadius(float gradientRadius,int
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-GradientDrawable::GradientDrawable(){
-    mGradientState=std::make_shared<GradientState>();
-    mPadding.set(0,0,0,0);
-    mAlpha = 255;
+GradientDrawable::GradientDrawable()
+  :GradientDrawable(std::make_shared<GradientState>()){
 }
 
 GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state){
+    mPathIsDirty = mGradientIsDirty =false;
     mPadding.set(0,0,0,0);
     mGradientState=state;
+    mMutated = false;
+    mGradientRadius=0;
+    mStrokeWidth =1.f;
     mAlpha = 255;
 }
 
-GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors){
-    mGradientState=std::make_shared<GradientState>(orientation,colors);
-    mPadding.set(0,0,0,0);
-    mAlpha = 255;
+GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors)
+  :GradientDrawable(std::make_shared<GradientState>(orientation,colors)){
 }
 
 std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState(){

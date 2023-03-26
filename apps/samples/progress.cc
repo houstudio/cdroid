@@ -22,6 +22,7 @@ int main(int argc,const char*argv[]){
     pb->setSecondaryProgress(15);
     w->addView(pb).setPos(50,50);
     w->addView(pb2).setPos(50,100);
+
     Runnable progress;
     progress=[w,pb,pb2,&progress](){
         pb->setSecondaryProgress((pb->getSecondaryProgress()+1)%100);
@@ -60,7 +61,6 @@ int main(int argc,const char*argv[]){
     //pb5->setProgressDrawable(new ColorDrawable(0xFF111111));   
     w->addView(pb5).setId(105).setPos(50,150);
 //////////////////////////////////////////////////////////
-#if 1
     SeekBar*sb = new SeekBar(800,50);
     SeekBar*sb2= new SeekBar(800,50);
 
@@ -77,6 +77,5 @@ int main(int argc,const char*argv[]){
     sb2->setMirrorForRtl(true);
     w->addView(sb).setId(200).setPos(50,300).setKeyboardNavigationCluster(true);
     w->addView(sb2).setId(201).setPos(50,380).setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
-#endif
     return app.exec();
 }
