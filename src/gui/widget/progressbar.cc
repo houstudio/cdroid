@@ -649,11 +649,11 @@ void ProgressBar::updateDrawableBounds(int w,int h){
     h -= mPaddingTop + mPaddingBottom;
     int right = w;
     int bottom = h;
+    int top = 0;
+    int left = 0;
 
     LOGV("mIndeterminateDrawable=%p,mOnlyIndeterminate=%d",mIndeterminateDrawable,mOnlyIndeterminate);
     if (mIndeterminateDrawable) {
-        int top = 0;
-        int left = 0;
         // Aspect ratio logic does not apply to AnimationDrawables
         if (mOnlyIndeterminate && !(dynamic_cast<AnimationDrawable*>(mIndeterminateDrawable))) {
             // Maintain aspect ratio. Certain kinds of animated drawables
@@ -687,7 +687,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
     }
 
     if (mProgressDrawable != nullptr) {
-        mProgressDrawable->setBounds(0, 0, right, bottom);
+        mProgressDrawable->setBounds(0, 0, right-left, bottom-top);
     }
 }
 

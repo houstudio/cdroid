@@ -5,9 +5,10 @@
 namespace cdroid{
 
 DrawableWrapper::DrawableWrapperState::DrawableWrapperState(){
-    mDrawableState=nullptr;
     mDensity = DisplayMetrics::DENSITY_DEFAULT;
-    mSrcDensityOverride =0;
+    mDrawableState = nullptr;
+    mSrcDensityOverride = 0;
+    mChangingConfigurations =0;
 }
 
 DrawableWrapper::DrawableWrapperState::DrawableWrapperState(const DrawableWrapperState& orig){

@@ -495,7 +495,7 @@ static void endElement(void *userData, const XML_Char *name){
             ld->setLayerGravity(idx,atts.getGravity("gravity",Gravity::NO_GRAVITY));
             ld->setLayerWidth(idx,atts.getDimensionPixelOffset("width",-1));
             ld->setLayerHeight(idx,atts.getDimensionPixelOffset("height",-1));
-            const int id = atts.getInt("id",-1);
+            const int id = atts.getResourceId("id",-1);
             const std::string src = atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
             LOGV("add drawable %p to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",topchild,

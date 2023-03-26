@@ -138,7 +138,13 @@ int AttributeSet::getInt(const std::string&key,const std::map<const std::string,
 }
 
 int AttributeSet::getResourceId(const std::string&key,int def)const{
-    return getInt(key,def);
+    const std::string str=getString(key);
+    int value = def;
+    if(!str.empty()){
+	value = mContext->getId(str);
+	return value==-1?def:value;
+    }
+    return value;
 }
 
 int AttributeSet::getColor(const std::string&key,int def)const{
