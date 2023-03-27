@@ -221,6 +221,7 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
     if (mVariablePadding)return false;
 
     if (!mConstantPadding.empty()|| mCheckedPadding) {
+        rect= mConstantPadding;
         return mConstantPadding.left>=0&&mConstantPadding.top>=0&&mConstantPadding.width>=0&&mConstantPadding.height>=0;
     }
 
@@ -237,7 +238,8 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
        }
     }
     mCheckedPadding = true;
-    rect = mConstantPadding;
+    mConstantPadding =r;
+    rect= r;
     return true;
 }
 
@@ -370,7 +372,7 @@ bool DrawableContainer::getPadding(Rect&padding){
     bool result;
     if (mDrawableContainerState->getConstantPadding(r)){//r!=null) {
        padding=r;
-       result = (r.left | r.top | r.width | r.height) != 0;
+       result = (r.left>0) ||(r.top>0)||(r.width>0)||(r.height>0);
     } else {
        if (mCurrDrawable != nullptr) {
            result = mCurrDrawable->getPadding(padding);

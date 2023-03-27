@@ -134,7 +134,7 @@ public:
     GradientDrawable();
     GradientDrawable(Orientation orientation,const std::vector<int>&colors);
     static bool isOpaque(int color){return ((color>>24)&0xFF)==0xFF;}
-    bool getPadding(Rect& padding);
+    bool getPadding(Rect& padding)override;
     void setCornerRadii(const std::vector<float>& radii);
     const std::vector<float>&getCornerRadii()const;
     void setCornerRadius(float radius);
