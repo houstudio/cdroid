@@ -233,8 +233,8 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
        if (dr->getPadding(t)) {
            if (t.left > r.left) r.left = t.left;
            if (t.top > r.top) r.top = t.top;
-           if (t.right() > r.right()) r.width = t.right() - t.left;
-           if (t.bottom() > r.bottom()) r.height= t.bottom()- r.top;
+	   if(t.width > r.width ) r.width = t.width;
+	   if(t.height> r.height) r.height= t.height;
        }
     }
     mCheckedPadding = true;
