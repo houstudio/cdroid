@@ -349,7 +349,7 @@ static int parseColor(const std::string&value){
 static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const AttributeSet&atts){
     std::vector<int32_t> cls;
     PointF center;
-    GradientDrawable::Orientation orientation;
+    GradientDrawable::Orientation orientation= GradientDrawable::TOP_BOTTOM/*DEFAULT_ORIENTATION*/;
     cls.push_back(atts.getColor("startColor"));
     if(atts.hasAttribute("centerColor"))
         cls.push_back(atts.getColor("centerColor"));
@@ -362,8 +362,18 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
     },GradientDrawable::LINEAR_GRADIENT);
 
     center.set( atts.getFloat("centerX") , atts.getFloat("centerY") );
-    orientation=(GradientDrawable::Orientation)(atts.getInt("angle",0)/90);
-
+    const int angle = (atts.getInt("angle",0)%360+360)%360;
+    
+    switch(angle){
+    case 0 :  orientation = GradientDrawable::LEFT_RIGHT; break;
+    case 45:  orientation = GradientDrawable::BL_TR     ; break;
+    case 90:  orientation = GradientDrawable::BOTTOM_TOP; break;	     
+    case 135: orientation = GradientDrawable::BR_TL     ; break;
+    case 180: orientation = GradientDrawable::RIGHT_LEFT; break;
+    case 225: orientation = GradientDrawable::TR_BL     ; break;	      
+    case 270: orientation = GradientDrawable::TOP_BOTTOM; break;
+    case 315: orientation = GradientDrawable::TL_BR     ; break;	      
+    }
     if(gd){
 	gd->setColors(cls);
 	gd->setGradientType(gradientType);
