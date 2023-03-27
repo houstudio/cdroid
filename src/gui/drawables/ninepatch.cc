@@ -1,12 +1,13 @@
 #include <drawables/ninepatch.h>
 using namespace Cairo;
+
+/*https://github.com/Roninsc2/NinePatchQt/blob/master/ninepatch.cpp*/
 namespace cdroid{
 
 NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
-    mContentArea = getContentArea(false);
+    mContentArea = getContentArea();
     getResizeArea();
-    mPadding = getContentArea(true);
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
 	throw "Not ninepatch image!";
@@ -100,8 +101,8 @@ static inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
     return (r < 128 && g < 128 && b < 128);
 }
 
-RECT NinePatch::getContentArea(bool padding) {
-    int  j = padding?0:(mImage->get_height() - 1);
+RECT NinePatch::getContentArea() {
+    int  j = mImage->get_height() - 1;
     int  left = 0 ,  right = 0;
 
     for(int  i = 0; i < mImage->get_width() ; i++) {
@@ -116,7 +117,7 @@ RECT NinePatch::getContentArea(bool padding) {
     if (left && !right)right = left;
     left -= 1;
 
-    int  i = padding?0:(mImage->get_width() - 1);
+    int  i = mImage->get_width() - 1;
     int  top =0 ,  bot = 0;
     for(int  j = 0; j < mImage->get_height() ; j++) {
         if (IsColorBlack(mImage,i, j)&& top == 0) {
@@ -162,6 +163,10 @@ void NinePatch::getResizeArea() {
             bot = 0;
         }
     }
+    mPadding.left = mResizeDistancesX.front().first;
+    mPadding.top  = mResizeDistancesY.front().first;
+    mPadding.width= mImage->get_width() - mResizeDistancesX.back().first - mResizeDistancesX.back().second;
+    mPadding.height=mImage->get_height()- mResizeDistancesY.back().first - mResizeDistancesY.back().second;
 }
 
 void NinePatch::getFactor(int width, int height, double& factorX, double& factorY) {
