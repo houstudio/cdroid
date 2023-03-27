@@ -16,7 +16,7 @@ private:
 public:
     Cairo::RefPtr<Cairo::ImageSurface> mImage;
 private:
-    RECT getContentArea(bool padding);
+    RECT getContentArea();
     void getResizeArea();
     void getFactor(int width, int height, double& factorX, double& factorY);
     void updateCachedImage(int width, int height);
