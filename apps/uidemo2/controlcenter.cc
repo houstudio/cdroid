@@ -14,7 +14,7 @@ ControlCenter::ControlCenter(int x,int y,int w,int h):Window(x,y,w,h){
     mListView->setAdapter(mFunAdapter);
     
     vg= (ViewGroup*)findViewById(uidemo2::R::id::container);
-    mRightPanel=new DevicePanel(getContext(),AttributeSet());
+    mRightPanel=new DevicePanel(getContext(),AttributeSet(getContext(),""));
     vg->addView(mRightPanel,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
     mLastButtonID = 1;
 
