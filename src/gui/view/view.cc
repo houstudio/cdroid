@@ -388,8 +388,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
         }
     }
 
-    internalSetPadding( mUserPaddingLeftInitial, topPadding >= 0 ? topPadding : mPaddingTop,
-                mUserPaddingRightInitial, bottomPadding >= 0 ? bottomPadding : mPaddingBottom);
+    internalSetPadding( mUserPaddingLeftInitial, topPadding > 0 ? topPadding : mPaddingTop,
+                mUserPaddingRightInitial, bottomPadding > 0 ? bottomPadding : mPaddingBottom);
     const int x=attrs.getInt("scrollX",0);
     const int y=attrs.getInt("scrollY",0);
     if(x||y)scrollTo(x,y);
@@ -4847,7 +4847,6 @@ void View::unscheduleDrawable(Drawable& who,Runnable what){
 }
 
 void View::unscheduleDrawable(Drawable& who){
-    LOGV(" %p ",&who);
     Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,&who);
 }
 
