@@ -150,8 +150,10 @@ void GradientDrawable::GradientState::setShape( int shape) {
     computeOpacity();
 }
 
-void GradientDrawable::GradientState::setSolidColors(ColorStateList*tint){
-
+void GradientDrawable::GradientState::setSolidColors(ColorStateList*colors){
+    mGradientColors.clear();;
+    mSolidColors = colors;
+    computeOpacity();
 }
 
 void GradientDrawable::GradientState::setGradientType(int gradient) {
@@ -165,7 +167,7 @@ void GradientDrawable::GradientState::setGradientCenter(float x, float y) {
 
 void GradientDrawable::GradientState::setGradientColors(const std::vector<int>& colors) {
     mGradientColors = colors;
-    mSolidColors=nullptr;
+    mSolidColors = nullptr;
     computeOpacity();
 }
 
@@ -232,6 +234,7 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state){
     mGradientRadius=0;
     mStrokeWidth =1.f;
     mAlpha = 255;
+    updateLocalState();
 }
 
 GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors)
@@ -243,6 +246,8 @@ std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState(){
 }
 
 void GradientDrawable::updateLocalState(){
+    mPathIsDirty = true;
+    mGradientIsDirty = true;
 }
 
 Drawable* GradientDrawable::mutate() {
@@ -524,14 +529,14 @@ bool GradientDrawable::isStateful()const{
     return Drawable::isStateful()
         || (s.mSolidColors  && s.mSolidColors->isStateful())
         || (s.mStrokeColors && s.mStrokeColors->isStateful())
-        || (s.mTint != nullptr && s.mTint->isStateful());
+        || (s.mTint && s.mTint->isStateful());
 }
 
 bool GradientDrawable::hasFocusStateSpecified()const{
     GradientState& s = *mGradientState;
     return (s.mSolidColors && s.mSolidColors->hasFocusStateSpecified())
         || (s.mStrokeColors&& s.mStrokeColors->hasFocusStateSpecified())
-        || (s.mTint != nullptr && s.mTint->hasFocusStateSpecified());
+        || (s.mTint && s.mTint->hasFocusStateSpecified());
 }
 
 int  GradientDrawable::getChangingConfigurations()const{
@@ -582,7 +587,7 @@ bool GradientDrawable::ensureValidRect(){
         Rect bounds = getBounds();
         float inset = 0;
 
-        //if (mStrokePaint != nullptr)inset = mStrokePaint.getStrokeWidth() * 0.5f;
+        if (mStrokePaint)inset = mStrokeWidth;//mStrokePaint.getStrokeWidth() * 0.5f;
 
         GradientState&st =*mGradientState;
         mRect.set(bounds.left + inset, bounds.top + inset, bounds.width - 2*inset, bounds.height - 2*inset);
@@ -671,7 +676,18 @@ bool GradientDrawable::ensureValidRect(){
             // maxed out so that alpha modulation works correctly.
             //if (st.mSolidColors == nullptr) 
             //    mFillPaint=SolidPattern::create_rgb(0,0,0);//setColor(Color.BLACK);
-        }
+        }else{//gradientColors.size()
+	    int color=Color::BLACK;
+	    if(st.mSolidColors){
+		 if(st.mSolidColors->isStateful())
+		     color = st.mSolidColors->getColorForState(getState(),color);
+		 else
+		     color = st.mSolidColors->getDefaultColor();
+	    }
+	    Color c(color);
+	    mFillPaint = SolidPattern::create_rgb(c.red(),c.green(),c.blue());
+	}
+	LOGE_IF((mFillPaint==nullptr)&&(mStrokePaint==nullptr),"stroke and solid must be setted one or both of them");
     }
     return !mRect.empty();
 }
