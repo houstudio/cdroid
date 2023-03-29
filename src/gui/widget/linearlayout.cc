@@ -81,11 +81,23 @@ static std::map<const std::string,int>orientationkvs={
 LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
   :ViewGroup(context,attrs){
     initView();
-    mUseLargestChild=attrs.getBoolean("measureWithLargestChild",false);
 
     mOrientation=attrs.getInt("orientation",orientationkvs,HORIZONTAL);
-
     mGravity = attrs.getGravity("gravity",mGravity);
+
+    const bool baselineAligned=attrs.getBoolean("baselineAligned",true);
+    if(baselineAligned)setBaselineAligned(baselineAligned);
+
+    mWeightSum = attrs.getFloat("weightSum",-1.f);
+    mBaselineAlignedChildIndex=attrs.getInt("baselineAlignedChildIndex",-1);
+    mUseLargestChild=attrs.getBoolean("measureWithLargestChild",false);
+
+    mShowDividers = attrs.getInt("showDividers",std::map<const std::string,int>{
+	   {"none",SHOW_DIVIDER_NONE},
+	   {"beginning",SHOW_DIVIDER_BEGINNING},
+	   {"middle",SHOW_DIVIDER_MIDDLE},
+	   {"end",SHOW_DIVIDER_END}
+        },SHOW_DIVIDER_NONE);
     mDividerPadding = attrs.getInt("dividerPadding",0);
     mDivider = context->getDrawable(attrs.getString("divider"));
 }
