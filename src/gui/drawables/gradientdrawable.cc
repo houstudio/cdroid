@@ -685,7 +685,7 @@ bool GradientDrawable::ensureValidRect(){
 		     color = st.mSolidColors->getDefaultColor();
 	    }
 	    Color c(color);
-	    mFillPaint = SolidPattern::create_rgb(c.red(),c.green(),c.blue());
+	    mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
 	}
 	LOGE_IF((mFillPaint==nullptr)&&(mStrokePaint==nullptr),"stroke and solid must be setted one or both of them");
     }
