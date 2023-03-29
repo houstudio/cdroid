@@ -419,6 +419,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<AttributeSet>&props,const std::vector<std::string>&names){
     const AttributeSet* corners = nullptr,*gradient = nullptr,*padding = nullptr;
     const AttributeSet* size = nullptr, *stroke = nullptr,*solid = nullptr;
+
     for(auto  i = 0 ; i < props.size() ; i++){
 	const AttributeSet& p = props.at(i);
         std::string tag = names.at(i);
@@ -429,22 +430,31 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
 	if(tag.compare("solid") ==0)  solid= &p;
 	if(tag.compare("padding")==0) padding= &p;
     }
+
     const int shapeType = atts.getInt("shape",std::map<const std::string,int>{
 	{"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval" ,GradientDrawable::Shape::OVAL},
 	{"line"     ,GradientDrawable::Shape::LINE} ,  	 {"ring" ,GradientDrawable::Shape::RING}
     },GradientDrawable::Shape::RECTANGLE);
-    if(gradient){
+    
+    LOGE_IF((gradient&&solid)||(!gradient&&!solid),"gradient and solid can/must occurs only one!");
+    if(gradient||solid){
 	GradientDrawable*d=new GradientDrawable();
 	d->setShape(shapeType);
+
 	if(corners)parseCorners(d ,nullptr, *corners);
+
+
 	if(gradient)parseShapeGradient(d,nullptr, *gradient);
+	else if(solid) d->setColor(solid->getColor("color"));
+
 	if(size)d->setSize(size->getDimensionPixelSize("width",-1),size->getDimensionPixelSize("height",-1));
+
 	if(stroke){
 	    d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColor("color"),
-	         stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
+	        stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
 	}
-	if(solid)d->setColor(solid->getColor("color"));
-	if(padding)d->setPadding(padding->getInt("left"),padding->getInt("top"),padding->getInt("right"),padding->getInt("bottom"));
+	if(padding)d->setPadding(padding->getInt("left"),padding->getInt("top"),
+		padding->getInt("right"),padding->getInt("bottom"));
 	return d;
     }else{
 	ShapeDrawable*sd=new ShapeDrawable();
