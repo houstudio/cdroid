@@ -571,15 +571,11 @@ private:
    double m_cy;
    double m_radius;
 protected:
-   SweepGradient(double,double,double);
+   SweepGradient(double,double,double,double angleRadius,const std::vector<ColorStop>&);
 public:
    explicit SweepGradient(cairo_pattern_t* cobject, bool has_reference = false);
-   void add_sector_patch( double angle_A,double A_r, double A_g, double A_b,double A_a,
-         double angle_B,double B_r, double B_g, double B_b,double B_a);
-   void add_sector_patch( double angle_A,double A_r, double A_g, double A_b,
-         double angle_B,double B_r, double B_g, double B_b);
-   void add_sector_patch(double angleA,uint32_t colorA,double angleB,uint32_t colorB);
-   static RefPtr<SweepGradient> create(double cx,double cy,double r);
+   void add_sector(double x,double y,double r,double angleRadius,const ColorStop& from,const ColorStop&to); 
+   static RefPtr<SweepGradient> create(double cx,double cy,double r,double angleRadius,const std::vector<ColorStop>&stopColors);
 };
 } // namespace Cairo
 

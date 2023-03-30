@@ -148,9 +148,9 @@ int AttributeSet::getResourceId(const std::string&key,int def)const{
 }
 
 int AttributeSet::getColor(const std::string&key,int def)const{
-    const std::string v=getAttributeValue(key);
-    if(v.empty())return def;
-    return Color::parseColor(v);
+    const std::string resid=getString(key);
+    return mContext->getColor(resid);
+
 }
 
 float AttributeSet::getFloat(const std::string&key,float def)const{

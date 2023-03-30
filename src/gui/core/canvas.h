@@ -19,8 +19,8 @@ typedef enum TextAlignment{
     DT_MULTILINE=0x100
 }TEXTALIGNMENT;
 
-#define RGBA(r,g,b) (((a)<<24)|((r)<<16)|((g)<<8)|(b))
-#define RGB(r,g,b,a) RGBA(r,g,b,0xFF)
+#define RGBA(r,g,b,a) (((a)<<24)|((r)<<16)|((g)<<8)|(b))
+#define RGB(r,g,b) RGBA(r,g,b,0xFF)
 
 class Canvas:public Cairo::Context{
 protected:

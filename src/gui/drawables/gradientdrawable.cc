@@ -151,7 +151,7 @@ void GradientDrawable::GradientState::setShape( int shape) {
 }
 
 void GradientDrawable::GradientState::setSolidColors(ColorStateList*colors){
-    mGradientColors.clear();;
+    mGradientColors.clear();
     mSolidColors = colors;
     computeOpacity();
 }
@@ -594,28 +594,28 @@ bool GradientDrawable::ensureValidRect(){
 
         std::vector<int>&gradientColors = st.mGradientColors; 
         if (gradientColors.size()) {
-             const RectF r = mRect;
-             float x0, x1, y0, y1;
+            const RectF r = mRect;
+            float x0, x1, y0, y1;
 
-             if (st.mGradient == LINEAR_GRADIENT) {
-                 const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
-                 switch (st.mOrientation) {
-                 case TOP_BOTTOM: x0 = r.left;  y0 = r.top;    x1 = x0;                y1 = level *r.height; break;
-                 case TR_BL:      x0 = r.width; y0 = r.top;    x1 = level * r.left;    y1 = level *r.height; break;
-                 case RIGHT_LEFT: x0 = r.width; y0 = r.top;    x1 = level * r.left;    y1 = y0;              break;
-                 case BR_TL:      x0 = r.width; y0 = r.height; x1 = level * r.left;    y1 = level * r.top;   break;
-                 case BOTTOM_TOP: x0 = r.left;  y0 = r.height; x1 = x0;                y1 = level * r.top;   break;
-                 case BL_TR:      x0 = r.left;  y0 = r.height; x1 = level * r.width;   y1 = level * r.top;   break;
-                 case LEFT_RIGHT: x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = y0;              break;
-                 default:/*TL_BR*/x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = level *r.height; break;
-                 }
-                 RefPtr<Cairo::LinearGradient>pat=LinearGradient::create(x0, y0, x1, y1);
-                 //gradientColors, st.mPositions, Shader.TileMode.CLAMP));
-                 for(int i=0;i<gradientColors.size();i++){
+            if (st.mGradient == LINEAR_GRADIENT) {
+                const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
+                switch (st.mOrientation) {
+                case TOP_BOTTOM: x0 = r.left;  y0 = r.top;    x1 = x0;                y1 = level *r.height; break;
+                case TR_BL:      x0 = r.width; y0 = r.top;    x1 = level * r.left;    y1 = level *r.height; break;
+                case RIGHT_LEFT: x0 = r.width; y0 = r.top;    x1 = level * r.left;    y1 = y0;              break;
+                case BR_TL:      x0 = r.width; y0 = r.height; x1 = level * r.left;    y1 = level * r.top;   break;
+                case BOTTOM_TOP: x0 = r.left;  y0 = r.height; x1 = x0;                y1 = level * r.top;   break;
+                case BL_TR:      x0 = r.left;  y0 = r.height; x1 = level * r.width;   y1 = level * r.top;   break;
+                case LEFT_RIGHT: x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = y0;              break;
+                default:/*TL_BR*/x0 = r.left;  y0 = r.top;    x1 = level * r.width;   y1 = level *r.height; break;
+                }
+                RefPtr<Cairo::LinearGradient>pat=LinearGradient::create(x0, y0, x1, y1);
+                //gradientColors, st.mPositions, Shader.TileMode.CLAMP));
+                for(int i=0;i<gradientColors.size();i++){
                      Color c((uint32_t)gradientColors[i]);
                      pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),c.alpha());
-                 }
-                 mFillPaint=pat;
+                }
+                mFillPaint=pat;
             } else if (st.mGradient == RADIAL_GRADIENT) {
                 x0 = r.left + r.width* st.mCenterX;
                 y0 = r.top + r.height * st.mCenterY;
@@ -642,33 +642,31 @@ bool GradientDrawable::ensureValidRect(){
                 for(int i=0;i<gradientColors.size();i++){
                     Color c((uint32_t)gradientColors[i]);
                     pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),c.alpha());
-                }// , gradientColors, null, Shader.TileMode.CLAMP));
+                }//gradientColors, null, Shader.TileMode.CLAMP));
                 mFillPaint=pat;
             } else if (st.mGradient == SWEEP_GRADIENT) {
-                x0 = r.left + r.width * st.mCenterX;
+		const double RADIUS = std::min(mRect.width,mRect.height);
+		std::vector<Cairo::ColorStop>stops;
+		for(int i=0;i<gradientColors.size();i++){
+	            Color c = gradientColors[i];
+	            stops.push_back({0,c.red(),c.green(),c.blue(),c.alpha()});
+		}
+                RefPtr<SweepGradient>pat=SweepGradient::create(x0, y0,RADIUS,M_PI*2.f,stops);
+		double c = RADIUS*0.5f;
+                x0 = r.left+ r.width * st.mCenterX;
                 y0 = r.top + r.height * st.mCenterY;
-                std::vector<int> tempColors = gradientColors;
-                std::vector<float> tempPositions ;
-
-                if (st.mUseLevel) {
-                    const int length = gradientColors.size();
-                    /*if (tempColors == null || tempColors.length != length + 1) {
-                        tempColors = st.mTempColors = new int[length + 1];
-                    }
-                    System.arraycopy(gradientColors, 0, tempColors, 0, length);*/
-                    
-                    tempColors.push_back( gradientColors[length - 1]);
-                    tempPositions.resize(length);
-                    const float fraction = 1.0f / (length - 1);
-
-                    const float level = getLevel() / 10000.0f;
-                    for (int i = 0; i < length; i++) {
-                         tempPositions[i] = i * fraction * level;
-                    }
-                    tempPositions.push_back(1.f);//[length] = 1.0f;
-                }
-                RefPtr<SweepGradient>pat=SweepGradient::create(x0, y0,200);
-                //tempColors, tempPositions));
+		pat->begin_patch();
+		pat->move_to(x0+RADIUS,y0);
+		pat->curve_to(x0+RADIUS, y0 +c, x0 + c,y0 + RADIUS,x0 ,y0+RADIUS);
+		pat->curve_to(x0-c, y0 +RADIUS, x0 -RADIUS,y0 +c,x0-RADIUS,y0);
+		pat->curve_to(x0-RADIUS, y0-c, x0 - c,y0-RADIUS,x0 ,y0-RADIUS);
+		pat->curve_to(x0+c, y0 -RADIUS, x0 + RADIUS,y0 -c,x0+RADIUS ,y0);
+		for(int i=0;i < gradientColors.size();i++){
+		    Color c = gradientColors[i];
+		    pat->set_corner_color_rgba(i,c.red(),c.green(),c.blue(),c.alpha());
+		    LOGD("color[%d]=%x",i,gradientColors[i]);
+		}
+		pat->end_patch();
                 mFillPaint=pat;
             }
 
@@ -737,20 +735,23 @@ void GradientDrawable::draw(Canvas&canvas){
     if (!ensureValidRect())return; // nothing to draw
     auto st = mGradientState;
     const bool haveStroke = /*currStrokeAlpha > 0 &&*/ mStrokePaint &&  mStrokeWidth> 0;
-    float rad=.0f,innerRadius=.0f;
+    const float sweep = st->mUseLevelForShape ? (360.f*getLevel()/10000.f) : 360.f;
+    float rad = .0f , innerRadius = .0f;
+    
     std::vector<float>radii;
     switch (st->mShape) {
     case RECTANGLE:
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
         if(st->mRadiusArray.size())radii=st->mRadiusArray;
         if(st->mRadius > 0.0f)radii={rad,rad,rad,rad};
-        canvas.set_source(mFillPaint);
+        if(mFillPaint)
+	    canvas.set_source(mFillPaint);
         drawRound(canvas,mRect,radii);
         if (haveStroke) {
             canvas.fill_preserve();
             prepareStrokeProps(canvas);
             canvas.stroke();
-        }else{
+        }else if(mFillPaint){
             canvas.fill();
         } 
         break;
@@ -765,43 +766,69 @@ void GradientDrawable::draw(Canvas&canvas){
         break;
     case OVAL:
         canvas.save();
-        canvas.translate(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
-        canvas.scale(1.f,mRect.height/mRect.width);
-        canvas.arc(0,0,mRect.width/2.f,0,M_PI*2.f);
+#if 0
+	canvas.translate(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
+	canvas.move_to(0,0);
+        canvas.arc(0,0,std::min(mRect.width,mRect.height)/2.f,
+              0,M_PI*2.f*(st->mUseLevel?(float)getLevel()/10000.f:1));
+	canvas.line_to(0,0);LOGD("useLevel=%d lvl=%d",st->mUseLevel,getLevel());
+#else
+	LOGD("radius=%f",(float)st->mRadius);
+	canvas.move_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
+        canvas.arc(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f,
+			std::min(mRect.width,mRect.height)/2.f,
+			0,M_PI*2.f*(st->mUseLevel?(float)getLevel()/10000.f:1));
+	canvas.line_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
+#endif
+	canvas.fill_preserve();
+	if(mFillPaint) canvas.set_source(mFillPaint);
         if (haveStroke) {
             canvas.fill_preserve(); 
             prepareStrokeProps(canvas);
             canvas.stroke();
-        }else canvas.fill();
+        }else if(mFillPaint)canvas.fill();
+
         canvas.restore();
         break;
-    case RING:
+    case RING:{
         canvas.save();
-        canvas.translate(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
-        //outer
-        canvas.scale(1.,(float)mRect.height/mRect.width);
-        canvas.arc(0,0,mRect.width/2.f,0,M_PI*2.f);
-        canvas.scale(1.,(float)mRect.width/mRect.height);
         //inner
-        innerRadius=st->mInnerRadius;
-        if(innerRadius==.0f)
-            innerRadius=mRect.width/2.f-st->mThickness;
-        if(innerRadius>.0f){
-            float ratio = mRect.width/mRect.height;
-            if(st->mInnerRadiusRatio>.0f)ratio=st->mInnerRadiusRatio;
-            canvas.scale(ratio,1.f);
-            canvas.arc(0,0,innerRadius,0,M_PI*2);
+        innerRadius = st->mInnerRadius;
+        if(innerRadius==0.f)
+            innerRadius=std::min(mRect.width,mRect.height)/2.f-st->mThickness;
+        RectF bounds={mRect.left,mRect.top,mRect.width,mRect.height};
+	float thickness = st->mThickness!=-1 ? st->mThickness:bounds.width/st->mThicknessRatio;
+	float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :bounds.width/st->mInnerRadiusRatio;
+	RectF innerBounds = bounds;
+	float x= bounds.width/2.f;
+	float y= bounds.height/2.f;
+	LOGD("innerRadius=%f radius=%f",innerRadius,radius);
+        //canvas.translate(x,y);x=y=0;
+	thickness=20;
+        if( sweep<360.f && sweep>-360.f ){
+	    innerBounds.inflate(x-radius,y-radius);
+	    bounds = innerBounds;
+	    bounds.inflate(-thickness,-thickness);
+	    canvas.move_to(x + radius,y);
+	    canvas.line_to(x+radius+thickness,y);
+            canvas.arc(x,y,innerRadius,0,M_PI*2*sweep/360);
+	    canvas.arc_negative(x,y,innerRadius+thickness,sweep*M_PI*2.f/360,0.f);
+        }else{
             canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
-        }
-        canvas.set_source(mFillPaint);
+	    canvas.move_to(x + radius,y);
+            canvas.arc(x,y,innerRadius,0,M_PI*2.f);
+	    canvas.arc_negative(x,y,innerRadius+thickness,M_PI*2.f,0.f);
+	}
+        if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
             canvas.fill_preserve();
             prepareStrokeProps(canvas);
             canvas.stroke();
-        }else
+        }else if(mFillPaint){
             canvas.fill();
+	}
         canvas.restore();
-        break;
+	}break;
     }
 }
 

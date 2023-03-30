@@ -361,7 +361,6 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
          {"sweep" ,GradientDrawable::SWEEP_GRADIENT}
     },GradientDrawable::LINEAR_GRADIENT);
 
-    center.set( atts.getFloat("centerX") , atts.getFloat("centerY") );
     const int angle = (atts.getInt("angle",0)%360+360)%360;
     
     switch(angle){
@@ -377,12 +376,20 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
     if(gd){
 	gd->setColors(cls);
 	gd->setGradientType(gradientType);
-        if(gradientType!=Shape::Gradient::LINEAR){
+        switch(gradientType){
+	case GradientDrawable::LINEAR_GRADIENT:
+            gd->setOrientation(orientation);  break;
+	case GradientDrawable::RADIAL_GRADIENT:
+            center.set( atts.getFloat("centerX") , atts.getFloat("centerY") );
             gd->setGradientCenter(center.x,center.y);
-            gd->setOrientation(orientation);
-	}
-        if(atts.hasAttribute("gradientRadius"))
             gd->setGradientRadius(atts.getDimensionPixelSize("gradientRadius"));
+	    break;
+	case GradientDrawable::SWEEP_GRADIENT:
+            center.set( atts.getFloat("centerX") , atts.getFloat("centerY") );
+	    LOGD("center=(%f,%f)",center.x,center.y);
+            gd->setGradientCenter(center.x,center.y);
+	    break;
+	}
     }else if(sd){
 	//sd->setGradientColors(cls);
 	//sd->setGradientCenterX(center.x);
@@ -436,13 +443,20 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
 	{"line"     ,GradientDrawable::Shape::LINE} ,  	 {"ring" ,GradientDrawable::Shape::RING}
     },GradientDrawable::Shape::RECTANGLE);
     
-    LOGE_IF((gradient&&solid)||(!gradient&&!solid),"gradient and solid can/must occurs only one!");
-    if(gradient||solid){
+    LOGE_IF(!(gradient||solid||stroke),"stroke solid gradient property error!");
+    if(gradient||solid||stroke){
 	GradientDrawable*d=new GradientDrawable();
 	d->setShape(shapeType);
 
 	if(corners)parseCorners(d ,nullptr, *corners);
-
+        if(shapeType == GradientDrawable::Shape::RING){
+	    d->setInnerRadius(atts.getDimensionPixelSize("innerRadius"));
+	    d->setInnerRadiusRatio(atts.getDimensionPixelSize("innerRadiusRatio"));
+	    d->setThickness(atts.getDimensionPixelSize("thickness"));
+	    d->setThicknessRatio(atts.getDimensionPixelSize("thicknessRatio"));
+	    d->setUseLevel(atts.getBoolean("useLevel"));
+	    
+	}
 
 	if(gradient)parseShapeGradient(d,nullptr, *gradient);
 	else if(solid) d->setColor(solid->getColor("color"));

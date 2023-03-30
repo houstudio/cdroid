@@ -344,66 +344,155 @@ RefPtr<MeshPattern>MeshPattern::create(){
     return make_refptr_for_instance<MeshPattern>(new MeshPattern());
 }
 
-SweepGradient::SweepGradient(double cx,double cy,double radius)
+///////////////////////////////////////////////////////////////////////////////////////////
+#define blend(a,b,c) (a+(b-a)*c)
+#define blendWithoutPremultiply blend
+SweepGradient::SweepGradient(double cx,double cy,double r,double angleRadians,const std::vector<ColorStop>&stopColors)
   :MeshPattern(){
-    m_cx=cx;
-    m_cy=cy;
-    m_radius=radius; 
-    printf("(%.2f,%.2f:%.2f):%p %p\r\n",m_cx,m_cy,m_radius,this,m_cobject);
+    std::vector<ColorStop>stops=stopColors;
+    auto interpolatedStop = [&] (double fraction) -> ColorStop {
+            auto offset = blend(stops.front().offset, stops.back().offset, fraction);
+            auto r = blendWithoutPremultiply(stops.front().red, stops.back().red, fraction);
+            auto g = blendWithoutPremultiply(stops.front().green, stops.back().green, fraction);
+            auto b = blendWithoutPremultiply(stops.front().blue, stops.back().blue, fraction);
+            auto a = blendWithoutPremultiply(stops.front().alpha, stops.back().alpha, fraction);
+            return { offset, r,g,b,a };
+        };
+    if (stops.size() == 1)
+        stops = { stops.front(), stops.front() };
+
+    // It's not possible to paint an entire circle with a single Bezier curve.
+    // To have a good approximation to a circle it's necessary to use at least four Bezier curves.
+    // So add three additional interpolated stops, allowing for four Bezier curves.
+    if (stops.size() == 2) {
+        // The first two checks avoid degenerated interpolations. These interpolations
+        // may cause Cairo to enter really slow operations with huge bezier parameters.
+        if (stops.front().offset == 1.0) {
+            auto first = stops.front();
+            for(int i=0;i<3;i++)stops.push_back(first);
+            for(int i=0;i<4;i++)stops.at(i).offset=.25f*i;
+        } else if (stops.back().offset == 0.0) {
+            auto last = stops.back();
+            for(int i=0;i<3;i++)stops.push_back(last);
+            for(int i=1;i<5;i++)stops.at(i).offset=.25f*i;
+        } else {
+            for(int i=0;i<3;i++)stops.push_back(stops.back());
+            for(int i=1;i<5;i++){
+                auto s= interpolatedStop(.25f*i);
+                stops.at(i)=s;
+            }
+            //stops = { stops.first(), interpolatedStop(0.25), interpolatedStop(0.5), interpolatedStop(0.75), stops.last() };
+        }
+    }else{
+        //stops.insert(stops.begin()+3);
+        //stops.insert(stops.begin()+1,stops.front());
+        for(int i=0;i<stops.size();i++)
+           stops.at(i).offset=0.25f*i;
+    }
+
+    auto first=stops.front();
+    auto last =stops.back();
+    if (first.offset > 0.0f)
+        stops.insert(stops.begin(), { 0.0f, first.red,first.green,first.blue,first.alpha });
+    if (last.offset < 1.0f)
+        stops.push_back({ 1.0f, last.red,last.green,last.blue,last.alpha });
+
+    //auto gradient = adoptRef(cairo_pattern_create_mesh());
+    for (size_t i = 0; i < stops.size() - 1; i++)
+        add_sector(cx, cy, r, angleRadians, stops[i], stops[i + 1]);//, globalAlpha);*/
 }
 
 SweepGradient::SweepGradient(cairo_pattern_t* cobject, bool has_reference)
  :MeshPattern(cobject, has_reference){
 }
 
-RefPtr<SweepGradient>SweepGradient::create(double cx,double cy,double radius){
-    return make_refptr_for_instance<SweepGradient>(new SweepGradient(cx,cy,radius));
+RefPtr<SweepGradient>SweepGradient::create(double cx,double cy,double r,double angleRadians,const std::vector<ColorStop>&stopColors){
+    return make_refptr_for_instance<SweepGradient>(new SweepGradient(cx,cy,r,angleRadians,stopColors));
 }
 
-void SweepGradient::add_sector_patch( double angle_A,double A_r, double A_g, double A_b,double A_a,
-         double angle_B,double B_r, double B_g, double B_b,double B_a){
-    double r_sin_A, r_cos_A; 
-    double r_sin_B, r_cos_B; 
-    double h; 
-    r_sin_A = m_radius * sin (angle_A); 
-    r_cos_A = m_radius * cos (angle_A); 
-    r_sin_B = m_radius * sin (angle_B); 
-    r_cos_B = m_radius * cos (angle_B); 
+static constexpr double deg0 = 0;
+static constexpr double deg90 = M_PI / 2;
+static constexpr double deg180 = M_PI;
+static constexpr double deg270 = 3 * M_PI / 2;
+static constexpr double deg360 = 2 * M_PI;
 
-    h = 4.0/3.0 * tan ((angle_B - angle_A)/4.0); 
-
-    begin_patch(); 
-
-    move_to (m_cx, m_cy); 
-    line_to (m_cx + r_cos_A,  m_cy + r_sin_A); 
-
-    curve_to(m_cx + r_cos_A - h * r_sin_A, m_cy + r_sin_A + h * r_cos_A, 
-         m_cx + r_cos_B + h * r_sin_B, m_cy + r_sin_B - h * r_cos_B, 
-         m_cx + r_cos_B, m_cy + r_sin_B); 
-
-    set_corner_color_rgba (0, 1, 1, 1,A_a); 
-    set_corner_color_rgba (1, A_r, A_g, A_b,A_a); 
-    set_corner_color_rgba (2, B_r, B_g, B_b,B_a); 
-    end_patch ();
+static double normalizeAngle(double angle){
+    double tmp = std::fmod(angle, deg360);
+    if (tmp < 0)
+        tmp += deg360;
+    return tmp;
 }
 
-void SweepGradient::add_sector_patch( double angle_A,double A_r, double A_g, double A_b,
-         double angle_B,double B_r, double B_g, double B_b){
-   add_sector_patch(angle_A,A_r,A_g,A_b,1.f,angle_B,B_r,B_g,B_b,1.f);
-}
+void SweepGradient::add_sector(double cx,double cy,double r,double angleRadians,const ColorStop& from,const ColorStop&to){
+    const double angOffset = 0.25; // 90 degrees.
 
-static void color2rgba(uint32_t c,float&r,float&g,float&b,float&a){
-    a=(c>>24)/255.;
-    r=((c>>16)&0xFF)/255.;
-    g=((c>>8)&0xFF)/255.;
-    b=(c&0xFF)/255;
-}
+    // Substract 90 degrees so angles start from top left.
+    // Convert to radians and add angleRadians offset.
+    double angleStart = ((from.offset - angOffset) * 2 * M_PI) + angleRadians;
+    double angleEnd = ((to.offset - angOffset) * 2 * M_PI) + angleRadians;
 
-void SweepGradient::add_sector_patch(double angleA,uint32_t colorA,double angleB, uint32_t colorB){
-    float r1,g1,b1,a1,r2,g2,b2,a2;
-    color2rgba(colorA,r1,g1,b1,a1);
-    color2rgba(colorB,r2,g2,b2,a2);
-    add_sector_patch(angleA,r1,g1,b1,a1,angleB,r2,g2,b2,a2);
+    // Calculate center offset depending on quadrant.
+    //
+    // All sections belonging to the same quadrant share a common center. As we move
+    // along the circle, sections belonging to a new quadrant will have a different
+    // center. If all sections had the same center, the center will get overridden as
+    // the sections get painted.
+    double cxOffset, cyOffset;
+    auto actualAngleStart = normalizeAngle(angleStart);
+    if (actualAngleStart >= deg0 && actualAngleStart < deg90) {
+        cxOffset = 0;
+        cyOffset = 0;
+    } else if (actualAngleStart >= deg90 && actualAngleStart < deg180) {
+        cxOffset = -1;
+        cyOffset = 0;
+    } else if (actualAngleStart >= deg180 && actualAngleStart < deg270) {
+        cxOffset = -1;
+        cyOffset = -1;
+    } else if (actualAngleStart >= deg270 && actualAngleStart < deg360) {
+        cxOffset = 0;
+        cyOffset = -1;
+    } else {
+        cxOffset = 0;
+        cyOffset = 0;
+    }
+    // The center offset for each of the sections is 1 pixel, since in theory nothing
+    // can be smaller than 1 pixel. However, in high-resolution displays 1 pixel is
+    // too wide, and that makes the separation between sections clearly visible by a
+    // straight white line. To fix this issue, I set the size of the offset not to
+    // 1 pixel but 0.10. This has proved to work OK both in low-resolution displays
+    // as well as high-resolution displays.
+    const double offsetWidth = 0.1;
+    cx = cx + cxOffset * offsetWidth;
+    cy = cy + cyOffset * offsetWidth;
+
+    // Calculate starting point, ending point and control points of Bezier curve.
+    double f = 4 * tan((angleEnd - angleStart) / 4) / 3;
+    double x0 =  cx + (r * cos(angleStart));
+    double y0 =  cy + (r * sin(angleStart));
+   
+    double x1 =  cx + (r * cos(angleStart)) - f * (r * sin(angleStart));
+    double y1 =  cy + (r * sin(angleStart)) + f * (r * cos(angleStart));
+    
+    double x2 =  cx + (r * cos(angleEnd)) + f * (r * sin(angleEnd));
+    double y2 =  cy + (r * sin(angleEnd)) - f * (r * cos(angleEnd));
+   
+    double x3 =  cx + (r * cos(angleEnd));
+    double y3 =  cy + (r * sin(angleEnd));
+    double globalAlpha =1.f;
+    // Add patch with shape of the sector and gradient colors.
+    begin_patch();
+    move_to( cx, cy);
+    line_to(x0, y0);
+    curve_to(x1, y1, x2, y2, x3, y3);
+    /*setCornerColorRGBA(gradient, 0, from, globalAlpha);
+    setCornerColorRGBA(gradient, 1, from, globalAlpha);
+    setCornerColorRGBA(gradient, 2, to, globalAlpha);
+    setCornerColorRGBA(gradient, 3, to, globalAlpha);*/
+    set_corner_color_rgba(0, from.red, from.green, from.blue, from.alpha * globalAlpha);
+    set_corner_color_rgba(1, from.red, from.green, from.blue, from.alpha * globalAlpha);
+    set_corner_color_rgba(2, to.red, to.green, to.blue, to.alpha * globalAlpha);
+    set_corner_color_rgba(3, to.red, to.green, to.blue, to.alpha * globalAlpha);
+    end_patch();
 }
 
 } //namespace Cairo

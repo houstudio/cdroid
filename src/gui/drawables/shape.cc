@@ -124,7 +124,7 @@ void Shape::applyGradients(){
         const size_t ccnum=mGradientColors.size();
         double angle=0;
         for(int i=0;i<ccnum;i++){
-            swp->add_sector_patch(angle,mGradientColors[i],angle+M_PI*2./ccnum,mGradientColors[(i+1)%ccnum]);
+            //swp->add_sector(angle,mGradientColors[i],angle+M_PI*2./ccnum,mGradientColors[(i+1)%ccnum]);
             LOGV("add_sector_patch(%.2f) color:%x->%x",angle,mGradientColors[i],mGradientColors[(i+1)%ccnum]);
             angle+=M_PI*2./ccnum;
         }
@@ -161,7 +161,8 @@ void Shape::rebuildPattern(int x,int y){
            applyGradients();
         }break;
     case Gradient::SWEEP:{
-           mPaint=SweepGradient::create(mGradientCenterX*mWidth,mGradientCenterY*mHeight,mGradientRadius);
+	   std::vector<Cairo::ColorStop>stops;
+           mPaint=SweepGradient::create(mGradientCenterX*mWidth,mGradientCenterY*mHeight,mGradientRadius,M_PI*2.f,stops);
            LOGV("SWEEP(%.2f,%.2f:%.2f",mGradientCenterX*mWidth,mGradientCenterY*mHeight,mGradientRadius);
            applyGradients();
         }break;
