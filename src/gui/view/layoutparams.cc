@@ -48,15 +48,15 @@ const std::string LayoutParams::sizeToString(int size) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
+    const int margin=attrs.getDimensionPixelSize("layout_margin",-1);
     mMarginFlags = 0;
-    int margin=attrs.getDimensionPixelSize("layout_margin",-1);
     if(margin>=0){
-        leftMargin=topMargin=rightMargin=bottomMargin=margin;
+        leftMargin = topMargin = rightMargin = bottomMargin = margin;
     }else{
-        int horzMargin = attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
-        int vertMargin = attrs.getDimensionPixelSize("layout_marginVertical",-1);
-        if(horzMargin>=0){
-            leftMargin= rightMargin =horzMargin;
+        int horizontalMargin = attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
+        int verticalMargin = attrs.getDimensionPixelSize("layout_marginVertical",-1);
+        if(horizontalMargin>=0){
+            leftMargin= rightMargin = horizontalMargin;
         }else{
             leftMargin = attrs.getDimensionPixelSize("layout_marginLeft", UNDEFINED_MARGIN);
             rightMargin= attrs.getDimensionPixelSize("layout_marginRight",UNDEFINED_MARGIN);
@@ -71,8 +71,8 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
         }
         startMargin = attrs.getDimensionPixelSize("layout_marginStart",DEFAULT_MARGIN_RELATIVE);
         endMargin   = attrs.getDimensionPixelSize("layout_marginEnd",DEFAULT_MARGIN_RELATIVE);
-        if(vertMargin>=0){
-            topMargin = bottomMargin = vertMargin;
+        if(verticalMargin >=0 ){
+            topMargin = bottomMargin = verticalMargin;
         }else{
             topMargin   = attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
             bottomMargin= attrs.getDimensionPixelSize("layout_marginBottom",DEFAULT_MARGIN_RESOLVED);
@@ -81,6 +81,7 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
             mMarginFlags |= NEED_RESOLUTION_MASK;
         }
     }
+    mMarginFlags |= RTL_COMPATIBILITY_MODE_MASK;
     mMarginFlags |= View::LAYOUT_DIRECTION_LTR;
 }
 

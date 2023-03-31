@@ -175,10 +175,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
     int viewFlagMasks = 0;
     initView();
 
-    mContext=ctx;
+    mContext = ctx;
     mID = ctx->getId(attrs.getString("id"));
-    mMinWidth = attrs.getDimensionPixelSize("minWidth",0);
-    mMinHeight= attrs.getDimensionPixelSize("minHeight",0);
+    mMinWidth  = attrs.getDimensionPixelSize("minWidth",0);
+    mMinHeight = attrs.getDimensionPixelSize("minHeight",0);
     setLayerType(attrs.getInt("layerType",std::map<const std::string,int>{
            {"software",LAYER_TYPE_SOFTWARE},{"hardware",LAYER_TYPE_HARDWARE}
         },LAYER_TYPE_NONE));
@@ -188,14 +188,14 @@ View::View(Context*ctx,const AttributeSet&attrs){
            {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
     },DRAWING_CACHE_QUALITY_AUTO);
     if(quality){
-        viewFlagValues|=quality;
-        viewFlagMasks|=DRAWING_CACHE_QUALITY_MASK;
+        viewFlagValues |= quality;
+        viewFlagMasks  |= DRAWING_CACHE_QUALITY_MASK;
     }
-    mContentDescription=attrs.getString("contentDescription");
+    mContentDescription = attrs.getString("contentDescription");
     setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
 
-    const int textAlignment=attrs.getInt("textAlignment",std::map<const std::string,int>{
+    const int textAlignment = attrs.getInt("textAlignment",std::map<const std::string,int>{
         {"inherit" , TEXT_ALIGNMENT_INHERIT},
         {"gravity" , TEXT_ALIGNMENT_GRAVITY},
         {"textStart",TEXT_ALIGNMENT_TEXT_START},
@@ -204,81 +204,81 @@ View::View(Context*ctx,const AttributeSet&attrs){
         {"viewStart",TEXT_ALIGNMENT_VIEW_START},
         {"viewEnd"  ,TEXT_ALIGNMENT_VIEW_END}
     },TEXT_ALIGNMENT_DEFAULT);
-    setTextAlignment(textAlignment);
-    setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
-    setClickable(attrs.getBoolean("clickable",false));
-    setLongClickable(attrs.getBoolean("longclickable",false));
-    setFocusableInTouchMode(attrs.getBoolean("focusableInTouchMode",false));
-    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    setTextAlignment( textAlignment );
+    setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
+    setClickable( attrs.getBoolean("clickable",false) );
+    setLongClickable( attrs.getBoolean("longclickable",false) );
+    setFocusableInTouchMode( attrs.getBoolean("focusableInTouchMode",false) );
+    setFocusedByDefault( attrs.getBoolean("focusedByDefault",false) );
   
-    mNextFocusLeftId =ctx->getId(attrs.getString("nextFocusLeft"));
-    mNextFocusRightId=ctx->getId(attrs.getString("nextFocusRight"));
-    mNextFocusUpId   =ctx->getId(attrs.getString("nextFocusUp"));
-    mNextFocusDownId =ctx->getId(attrs.getString("nextFocusDown"));
-    mNextFocusForwardId = ctx->getId(attrs.getString("nextFocusForward"));
-    mNextClusterForwardId=ctx->getId(attrs.getString("nextClusterFoward"));
+    mNextFocusLeftId = ctx->getId( attrs.getString("nextFocusLeft") );
+    mNextFocusRightId= ctx->getId( attrs.getString("nextFocusRight") );
+    mNextFocusUpId   = ctx->getId( attrs.getString("nextFocusUp") );
+    mNextFocusDownId = ctx->getId( attrs.getString("nextFocusDown") );
+    mNextFocusForwardId  = ctx->getId( attrs.getString("nextFocusForward") );
+    mNextClusterForwardId= ctx->getId( attrs.getString("nextClusterFoward") );
 
-    setRotation(attrs.getFloat("rotation",0));
-    setTranslationX(attrs.getFloat("translationX",0));
-    setTranslationY(attrs.getFloat("translationY",0));
-    setTranslationZ(attrs.getFloat("translationZ",0));
-    setRotationX(attrs.getFloat("rotationX",0));
-    setRotationY(attrs.getFloat("rotationY",0));
-    setScaleX(attrs.getFloat("scaleX",1.f));
-    setScaleY(attrs.getFloat("scaleY",1.f));
+    setRotation( attrs.getFloat("rotation",0) );
+    setTranslationX( attrs.getFloat("translationX",0) );
+    setTranslationY( attrs.getFloat("translationY",0) );
+    setTranslationZ( attrs.getFloat("translationZ",0) );
+    setRotationX( attrs.getFloat("rotationX",0) );
+    setRotationY( attrs.getFloat("rotationY",0) );
+    setScaleX( attrs.getFloat("scaleX",1.f) );
+    setScaleY( attrs.getFloat("scaleY",1.f) );
 
-    setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster",false));
+    setKeyboardNavigationCluster( attrs.getBoolean("keyboardNavigationCluster",false) );
  
-    if(attrs.getBoolean("focusableInTouchMode",false)){
+    if( attrs.getBoolean( "focusableInTouchMode" , false ) ){
         viewFlagValues &= ~FOCUSABLE_AUTO;
         viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
         viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
     }
-    if(attrs.hasAttribute("focusable")){
-	viewFlagValues|=attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
-	viewFlagMasks |=FOCUSABLE_MASK;
+    if( attrs.hasAttribute("focusable") ){
+	viewFlagValues|= attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
+	viewFlagMasks |= FOCUSABLE_MASK;
     }
-    if(attrs.getBoolean("clickable",false)){
+    if( attrs.getBoolean("clickable",false) ){
         viewFlagValues |= CLICKABLE;
         viewFlagMasks  |= CLICKABLE;
     }
-    if(attrs.getBoolean("longClickable",false)){
+    if( attrs.getBoolean("longClickable",false) ){
         viewFlagValues |= LONG_CLICKABLE;
         viewFlagMasks  |= LONG_CLICKABLE;
     }
-    const int fadingEdges=attrs.getInt("requiresFadingEdge",std::map<const std::string,int>({
+    const int fadingEdges = attrs.getInt("requiresFadingEdge",std::map<const std::string,int>({
 	   {"none",FADING_EDGE_NONE},
 	   {"horizontal",FADING_EDGE_HORIZONTAL},
 	   {"vertical",FADING_EDGE_VERTICAL}
 	}),FADING_EDGE_NONE);
-    if(fadingEdges!=FADING_EDGE_NONE){
+    if( fadingEdges != FADING_EDGE_NONE ){
 	viewFlagValues |= fadingEdges;
 	viewFlagMasks |= FADING_EDGE_MASK;
 	initScrollCache();
-	mScrollCache->fadingEdgeLength=attrs.getInt("fadingEdgeLength",ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
+	mScrollCache->fadingEdgeLength = attrs.getInt("fadingEdgeLength",ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
     }
 
 
-    const int scrollbars=attrs.getInt("scrollbars",std::map<const std::string,int>({
+    const int scrollbars = attrs.getInt("scrollbars",std::map<const std::string,int>({
         {"none",(int)SCROLLBARS_NONE},
 	{"horizontal",(int)SCROLLBARS_HORIZONTAL},
 	{"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
-    if(scrollbars!=SCROLLBARS_NONE){
+    if(scrollbars != SCROLLBARS_NONE){
         viewFlagValues |= scrollbars;
         viewFlagMasks  |= SCROLLBARS_MASK;
     }
-    const int scrollbarStyle=attrs.getInt("scrollbarStyle",std::map<const std::string,int>({ 
+    const int scrollbarStyle = attrs.getInt("scrollbarStyle",std::map<const std::string,int>({ 
         {"insideOverlay" ,(int)SCROLLBARS_INSIDE_OVERLAY },
         {"insideInset"   ,(int)SCROLLBARS_INSIDE_OVERLAY },
         {"outsideOverlay",(int)SCROLLBARS_OUTSIDE_OVERLAY},
         {"outsideInset"  ,(int)SCROLLBARS_OUTSIDE_OVERLAY} }),SCROLLBARS_INSIDE_OVERLAY);
 
-    mOverScrollMode=attrs.getInt("overScrollMode",std::map<const std::string,int>{
+    mOverScrollMode = attrs.getInt("overScrollMode",std::map<const std::string,int>{
            {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
            {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}
          },mOverScrollMode);
 
-    mVerticalScrollbarPosition=attrs.getInt("verticalScrollbarPosition",std::map<const std::string,int>{
+    mVerticalScrollbarPosition = attrs.getInt("verticalScrollbarPosition",std::map<const std::string,int>{
            {"defaultPosition",SCROLLBAR_POSITION_DEFAULT},
 	   {"left",SCROLLBAR_POSITION_LEFT},
 	   {"right",SCROLLBAR_POSITION_RIGHT}
@@ -286,29 +286,28 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
     if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
         viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
-        viewFlagMasks |= SCROLLBARS_STYLE_MASK;
+        viewFlagMasks  |= SCROLLBARS_STYLE_MASK;
     }
 
-    const int scrollIndicators=(attrs.getInt("scrollIndicators",std::map<const std::string,int>({
+    const int scrollIndicators = (attrs.getInt("scrollIndicators",std::map<const std::string,int>({
 	{"top",SCROLL_INDICATOR_TOP}, 	  {"left",SCROLL_INDICATOR_LEFT},
 	{"right",SCROLL_INDICATOR_RIGHT}, {"bottom",SCROLL_INDICATOR_BOTTOM}
     }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
-    if(scrollIndicators)mPrivateFlags3|=scrollIndicators;
+    if(scrollIndicators)mPrivateFlags3 |= scrollIndicators;
 
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
 
-
     setBackground(attrs.getDrawable("background"));
-    ColorStateList*csl =attrs.getColorStateList("backgroundTint");
-    if(mBackgroundTint==nullptr){
+    ColorStateList*csl = attrs.getColorStateList("backgroundTint");
+    if(mBackgroundTint == nullptr){
 	 mBackgroundTint = new TintInfo;
 	 mBackgroundTint->mTintList=csl;
     }
-    const int blendMode=attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
-    }),-1);
-    if(blendMode!=-1){
-	if(mBackgroundTint==nullptr)mBackgroundTint=new TintInfo;
+    const int blendMode = attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
+        }),-1);
+    if( blendMode != -1 ){
+	if(mBackgroundTint == nullptr)mBackgroundTint=new TintInfo;
 	mBackgroundTint->mBlendMode = blendMode;
 	mBackgroundTint->mHasTintMode =true;
     }
@@ -317,10 +316,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
 
     int leftPadding,topPadding,rightPadding,bottomPadding;
-    int padding=attrs.getDimensionPixelSize("padding",-1);
-    bool startPaddingDefined= false;
-    bool endPaddingDefined  = false;
-    if(padding>=0){
+    const int padding = attrs.getDimensionPixelSize("padding",-1);
+    if( padding >= 0 ){
         leftPadding= rightPadding = padding;
         topPadding = bottomPadding= padding;
         mUserPaddingLeftInitial   = padding;
@@ -328,22 +325,22 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mLeftPaddingDefined = true;
         mRightPaddingDefined = true;
     }else{
-        int horz=attrs.getDimensionPixelSize("paddingHorizontal",-1);
-        int vert=attrs.getDimensionPixelSize("paddingVertical",-1);
-        if(horz>=0){
-            leftPadding = rightPadding = horz;
+        const int paddingHorizontal = attrs.getDimensionPixelSize("paddingHorizontal",-1);
+        const int paddingVertical   = attrs.getDimensionPixelSize("paddingVertical",-1);
+        if( paddingHorizontal >= 0){
+            leftPadding = rightPadding = paddingHorizontal;
             mLeftPaddingDefined = mRightPaddingDefined = true;
-            mUserPaddingLeftInitial = mUserPaddingRightInitial = horz;
+            mUserPaddingLeftInitial = mUserPaddingRightInitial = paddingHorizontal;
         }else{
-            leftPadding = attrs.getDimensionPixelSize("paddingLeft",0);
-            rightPadding= attrs.getDimensionPixelSize("paddingRight",0);
-            mLeftPaddingDefined = (leftPadding != 0);
-            mRightPaddingDefined= (rightPadding != 0);
-            mUserPaddingLeftInitial =mLeftPaddingDefined?leftPadding:0;
-            mUserPaddingRightInitial=mRightPaddingDefined?rightPadding:0;
+            leftPadding  = attrs.getDimensionPixelSize("paddingLeft",0);
+            rightPadding = attrs.getDimensionPixelSize("paddingRight",0);
+            mLeftPaddingDefined  = (leftPadding != 0);
+            mRightPaddingDefined = (rightPadding != 0);
+            mUserPaddingLeftInitial = mLeftPaddingDefined?leftPadding:0;
+            mUserPaddingRightInitial= mRightPaddingDefined?rightPadding:0;
         }
-        if(vert>=0){
-            topPadding = bottomPadding = vert;
+        if( paddingVertical >= 0){
+            topPadding = bottomPadding = paddingVertical;
         }else{
             topPadding   = attrs.getDimensionPixelSize("paddingTop",0);
             bottomPadding= attrs.getDimensionPixelSize("paddingBottom",0);
@@ -352,8 +349,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
     mUserPaddingStart= attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
     mUserPaddingEnd  = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
-    startPaddingDefined= (mUserPaddingStart != UNDEFINED_PADDING);
-    endPaddingDefined  = (mUserPaddingEnd != UNDEFINED_PADDING);
+    const bool startPaddingDefined= (mUserPaddingStart != UNDEFINED_PADDING);
+    const bool endPaddingDefined  = (mUserPaddingEnd != UNDEFINED_PADDING);
     if (isRtlCompatibilityMode()) {
         // RTL compatibility mode: pre Jelly Bean MR1 case OR no RTL support case.
         // left / right padding are used if defined (meaning here nothing to do). If they are not
@@ -388,11 +385,11 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
     internalSetPadding( mUserPaddingLeftInitial, topPadding > 0 ? topPadding : mPaddingTop,
                 mUserPaddingRightInitial, bottomPadding > 0 ? bottomPadding : mPaddingBottom);
-    const int x=attrs.getInt("scrollX",0);
-    const int y=attrs.getInt("scrollY",0);
-    if(x||y)scrollTo(x,y);
-    if(scrollbars!=SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
-    if(scrollIndicators)initializeScrollIndicatorsInternal();
+    const int x = attrs.getInt("scrollX",0);
+    const int y = attrs.getInt("scrollY",0);
+    if( x || y ) scrollTo(x,y);
+    if(scrollbars != SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
+    if(scrollIndicators) initializeScrollIndicatorsInternal();
     if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
     computeOpaqueFlags();
 }

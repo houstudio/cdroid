@@ -664,7 +664,6 @@ bool GradientDrawable::ensureValidRect(){
 		for(int i=0;i < gradientColors.size();i++){
 		    Color c = gradientColors[i];
 		    pat->set_corner_color_rgba(i,c.red(),c.green(),c.blue(),c.alpha());
-		    LOGD("color[%d]=%x",i,gradientColors[i]);
 		}
 		pat->end_patch();
                 mFillPaint=pat;
@@ -802,8 +801,6 @@ void GradientDrawable::draw(Canvas&canvas){
 	RectF innerBounds = bounds;
 	float x= bounds.width/2.f;
 	float y= bounds.height/2.f;
-	LOGD("innerRadius=%f radius=%f",innerRadius,radius);
-        //canvas.translate(x,y);x=y=0;
 	thickness=20;
         if( sweep<360.f && sweep>-360.f ){
 	    innerBounds.inflate(x-radius,y-radius);
