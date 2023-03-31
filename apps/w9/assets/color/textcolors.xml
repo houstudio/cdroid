@@ -1,0 +1,8 @@
+<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+    <item cdroid:state_enabled="false" cdroid:color="#ff000000"/>
+    <item cdroid:state_window_focused="false" cdroid:color="#ff0000ff"/>
+    <item cdroid:state_pressed="true" cdroid:color="#ff00ff00"/>
+    <item cdroid:state_selected="true" cdroid:color="#ffff0000"/>
+    <item cdroid:state_activated="true" cdroid:color="#ffffff00"/>
+    <item cdroid:color="#ffffffff"/> <!-- not selected -->
+</selector>

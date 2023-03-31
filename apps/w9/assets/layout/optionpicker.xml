@@ -24,4 +24,3 @@
         cdroid:paddingBottom="22dip"
         cdroid:contentDescription="@string/number_picker_decrement_button" />
 </merge>
-

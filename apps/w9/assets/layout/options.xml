@@ -2,46 +2,45 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@mipmap/optionbg"
-    >
+    android:background="@mipmap/optionbg">
     <OptionPicker
         android:id="@+id/option1"
         android:layout_width="240dp"
         android:layout_height="match_parent"
 	android:layout_alignParentBottom="true"
 	android:layout_alignParentLeft="true"
-	android:text2="温度"
-    />
+	android:style="@style/optionPicker"
+	android:text2="温度"/>
     <OptionPicker
         android:id="@+id/option2"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option1"
-	android:text2="漂洗"
-    />
+	android:style="@style/optionPicker"
+	android:text2="漂洗"/>
     <OptionPicker
         android:id="@+id/option3"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option2"
-	android:text2="转速"
-    />
+	android:style="@style/optionPicker"
+	android:text2="转速"/>
     <OptionPicker
         android:id="@+id/option4"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option3"
-	android:text2="烘干"
-    />
+	android:style="@style/optionPicker"
+	android:text2="烘干"/>
     <OptionPicker
         android:id="@+id/option5"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option4"
-	android:text2="特渍"
-    />
+	android:style="@style/optionPicker"
+	android:text2="特渍"/>
 </RelativeLayout>

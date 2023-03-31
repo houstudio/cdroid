@@ -17,18 +17,32 @@
             android:layout_height="320dp"
 	    android:layout_gravity="center"
 	    android:background="#111111"
-            android:layout_marginHorizontal="10dp"
-            android:layout_marginVertical="10dp">
+	    android:paddingTop="10dp"
+  	    android:paddingBottom="20dp"
+            android:paddingLeft="50dp"
+            android:paddingRight="40dp">
             <TextView
                 android:id="@+id/temp"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
 		android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true"
 		android:layout_marginVertical="10dp"
-                android:text="气温28"
-                android:textSize="40dp"/>
+		    android:text="气温28"
+		android:gravity="left|bottom"
+	        android:drawableRight="@mipmap/yd"
+		android:textSize="40dp"/>
             <TextView
-                android:id="@id/tips"
+		    android:id="@+id/weather"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentTop="true"
+		    android:layout_alignParentRight="true"
+		    android:drawableTop="@mipmap/yd"
+		    android:text="多云"
+		    android:textColor="#ff0000"/> 
+            <TextView
+                android:id="@+id/tips"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
 		android:layout_marginVertical="10dp"
@@ -40,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tips"
 		android:layout_alignParentLeft="true"
-		android:background="@drawable/btn_normal"
+		android:background="@drawable/test"
                 android:text="常用"/>
             <Button
                 android:id="@+id/care"
@@ -50,7 +64,7 @@
                 android:layout_height="wrap_content"
                 android:text="护理"/>
             <Button
-                android:id="+id/favorite"
+                android:id="@+id/favorite"
                 android:layout_below="@id/care"
                 android:layout_width="match_parent"
 		android:layout_height="wrap_content"

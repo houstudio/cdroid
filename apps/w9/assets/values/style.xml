@@ -1,6 +1,7 @@
 <resources>
     <style name="optionPicker">
 	    <item name="internalLayout">@layout/optionpicker</item>
-	    <item name="selectionDivider">#332211</item>
+	    <item name="selectionDivider">@drawable/option_divider</item>
+	    <item name="selectionDividerHeight">2</item>
     </style>
 </resources>

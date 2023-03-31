@@ -10,21 +10,22 @@ namespace R{
          static constexpr int linearLayout            = 0x00002711 ;/*10001*/
          static constexpr int relativeLayout          = 0x00002712 ;/*10002*/
          static constexpr int temp                    = 0x00002713 ;/*10003*/
-         static constexpr int tips                    = 0x00002714 ;/*10004*/
-         static constexpr int often                   = 0x00002715 ;/*10005*/
-         static constexpr int care                    = 0x00002716 ;/*10006*/
-         static constexpr int favorite                = 0x00002717 ;/*10007*/
-         static constexpr int numpicker               = 0x00002718 ;/*10008*/
-         static constexpr int text1                   = 0x00002719 ;/*10009*/
-         static constexpr int text2                   = 0x0000271A ;/*10010*/
-         static constexpr int increment               = 0x0000271B ;/*10011*/
-         static constexpr int numberpicker_input      = 0x0000271C ;/*10012*/
-         static constexpr int decrement               = 0x0000271D ;/*10013*/
-         static constexpr int option1                 = 0x0000271E ;/*10014*/
-         static constexpr int option2                 = 0x0000271F ;/*10015*/
-         static constexpr int option3                 = 0x00002720 ;/*10016*/
-         static constexpr int option4                 = 0x00002721 ;/*10017*/
-         static constexpr int option5                 = 0x00002722 ;/*10018*/
+         static constexpr int weather                 = 0x00002714 ;/*10004*/
+         static constexpr int tips                    = 0x00002715 ;/*10005*/
+         static constexpr int often                   = 0x00002716 ;/*10006*/
+         static constexpr int care                    = 0x00002717 ;/*10007*/
+         static constexpr int favorite                = 0x00002718 ;/*10008*/
+         static constexpr int numpicker               = 0x00002719 ;/*10009*/
+         static constexpr int text1                   = 0x0000271A ;/*10010*/
+         static constexpr int text2                   = 0x0000271B ;/*10011*/
+         static constexpr int increment               = 0x0000271C ;/*10012*/
+         static constexpr int numberpicker_input      = 0x0000271D ;/*10013*/
+         static constexpr int decrement               = 0x0000271E ;/*10014*/
+         static constexpr int option1                 = 0x0000271F ;/*10015*/
+         static constexpr int option2                 = 0x00002720 ;/*10016*/
+         static constexpr int option3                 = 0x00002721 ;/*10017*/
+         static constexpr int option4                 = 0x00002722 ;/*10018*/
+         static constexpr int option5                 = 0x00002723 ;/*10019*/
     };/*namespace id*/
 
     namespace strings{
