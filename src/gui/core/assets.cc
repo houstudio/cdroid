@@ -94,8 +94,10 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
             mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>(package+":color/"+name,std::move(cl)));
         }else if(tag0.compare("string")==0){
-	    //LOGD_IF(!value.empty(),"tag0=%s:%s =%s",package.c_str(),tag0.c_str(),value.c_str());
-	    //if(value.empty()==false||atts.size())atts[0].dump();
+ 	    const std::string name= atts[0].getString("name");
+	    const std::string key = package+":string/"+name;
+	    LOGD_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
+	    mStrings[key]=value;
 	}
     }else  if(atts.size()==2){
         if(tag0.compare("style")==0){
@@ -272,15 +274,18 @@ int Assets::getId(const std::string&key)const{
     return it==mIDS.end()?-1:it->second;
 }
 
-const std::string& Assets::getString(const std::string& id,const std::string&lan){
+const std::string& Assets::getString(const std::string& resid,const std::string&lan){
     if((!lan.empty())&&(mLanguage!=lan)){
         loadStrings(lan);
     }
-    auto itr=mStrings.find(id);
+    std::string pkg,name=resid;
+    parseResource(resid,&name,&pkg);
+    name=AttributeSet::normalize(pkg,resid);
+    auto itr=mStrings.find(name);
     if(itr !=mStrings.end()&&!itr->second.empty()){
          return itr->second;
     }
-    return id;
+    return resid;
 }
 
 int Assets::getArray(const std::string&resid,std::vector<int>&out){
