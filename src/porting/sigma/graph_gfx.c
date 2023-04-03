@@ -120,7 +120,7 @@ INT GFXUnlockSurface(HANDLE surface){
 
 INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
     FBSURFACE*ngs=(FBSURFACE*)surface;
-    ngs->alpha=alpha;
+    if(ngs)ngs->alpha=alpha;
     return E_OK;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
@@ -271,7 +271,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->ishw=hwsurface;
     surf->alpha=255;
     //surf->image = pixman_image_create_bits_no_clear(PIXMAN_a8r8g8b8,surf->width,surf->height,surf->buffer,surf->pitch);
-    LOGI("Surface=%x buf=%p/%p size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,surf->msize,hwsurface);
+    //LOGI("Surface=%p buf=%p/%p size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -331,12 +331,13 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 	bzero(&opt,sizeof(opt));
 
         LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-	//nsrc->alpha=0x80;
         opt.u32GlobalSrcConstColor = nsrc->alpha<<24;
         opt.u32GlobalDstConstColor = 0xFF000000;
         opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
         opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
-        opt.eDFBBlendFlag = (nsrc->alpha==255)?E_MI_GFX_DFB_BLEND_NOFX:E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
+	opt.eDFBBlendFlag= E_MI_GFX_DFB_BLEND_NOFX;
+	if(nsrc->alpha!=255)
+            opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
 
         opt.eMirror = E_MI_GFX_MIRROR_NONE;
 	opt.eRotate=ndst->ishw?GFXGetRotation(nsrc->dispid):E_MI_GFX_ROTATE_0;

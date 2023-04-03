@@ -2,6 +2,7 @@
 #include <cdroid.h>
 #include <R.h>
 #include <optionpicker.h>
+#include <cdlog.h>
 
 WashOptionsWindow::WashOptionsWindow(int options):Window(0,0,-1,-1){
     const char*arraynames[]={
@@ -28,5 +29,5 @@ void WashOptionsWindow::onOptionClick(View&v){
         OptionPicker*op=dynamic_cast<OptionPicker*>(vg->getChildAt(i));
         op->showOptions(op==&v);
     }
-    invalidate();
+    //invalidate();
 }

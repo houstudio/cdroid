@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@mipmap/optionbg">
+    android:background="#ff0000">
     <OptionPicker
         android:id="@+id/option1"
         android:layout_width="240dp"
@@ -10,7 +10,7 @@
 	android:layout_alignParentBottom="true"
 	android:layout_alignParentLeft="true"
 	android:style="@style/optionPicker"
-	android:text2="温度"/>
+	android:text2="wendu"/>
     <OptionPicker
         android:id="@+id/option2"
         android:layout_width="240dp"
@@ -18,7 +18,7 @@
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option1"
 	android:style="@style/optionPicker"
-	android:text2="漂洗"/>
+	android:text2="piaoxi"/>
     <OptionPicker
         android:id="@+id/option3"
         android:layout_width="240dp"
@@ -26,7 +26,7 @@
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option2"
 	android:style="@style/optionPicker"
-	android:text2="转速"/>
+	android:text2="zhuansu"/>
     <OptionPicker
         android:id="@+id/option4"
         android:layout_width="240dp"
@@ -34,7 +34,7 @@
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option3"
 	android:style="@style/optionPicker"
-	android:text2="烘干"/>
+	android:text2="honggan"/>
     <OptionPicker
         android:id="@+id/option5"
         android:layout_width="240dp"
@@ -42,5 +42,5 @@
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@id/option4"
 	android:style="@style/optionPicker"
-	android:text2="特渍"/>
+	android:text2="tezi"/>
 </RelativeLayout>

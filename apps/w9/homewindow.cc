@@ -2,8 +2,9 @@
 #include <washoptions.h>
 #include <cdroid.h>
 #include <R.h>
+#include <cdlog.h>
 
-HomeWindow::HomeWindow(int mode):Window(0,0,-1,-1){
+HomeWindow::HomeWindow():Window(0,0,-1,-1){
    LayoutInflater::from(getContext())->inflate("@layout/main",this);
 
    HorizontalScrollView*sv=(HorizontalScrollView*)findViewById(w9::R::id::horizontalScroll);
@@ -34,7 +35,7 @@ HomeWindow::HomeWindow(int mode):Window(0,0,-1,-1){
          }
          return false;
    });
-
+   
    v=findViewById(w9::R::id::often);
    auto btn_listener=std::bind(&HomeWindow::onButtonClick,this,std::placeholders::_1);
    v->setOnClickListener(btn_listener);
@@ -61,17 +62,31 @@ HomeWindow::HomeWindow(int mode):Window(0,0,-1,-1){
 	txt->setOnClickListener(std::bind(&HomeWindow::onWashOptionClick,this,std::placeholders::_1));
    }
    ll->requestLayout();
+
+   anim=ValueAnimator::ofFloat({1.f,0.f});
+   anim->setDuration(2000);
+   LOGD("anim=%p",anim);
 }
 
+HomeWindow::~HomeWindow(){
+   delete anim;
+}
 void HomeWindow::onButtonClick(View&v){
     LOGD("click %d",v.getId());
 }
 
 void HomeWindow::onWashOptionClick(View&v){
     switch(v.getId()){
-    case 100:
-	   new WashOptionsWindow(-1);
-	   break;
+    case 100:{
+	       Window*w=new WashOptionsWindow(-1);
+	       anim->removeAllUpdateListeners();
+               anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([w,this](ValueAnimator&anim){
+                    const float t=anim.getAnimatedValue().get<float>();
+                    w->setPos(0,w->getHeight()*(t));
+		    w->setAlpha(1.f-t);this->setAlpha(t);
+               }));
+               anim->start();
+	   }break;
     default:
 	   LOGD("TODO for %d",v.getId());
 	   break;

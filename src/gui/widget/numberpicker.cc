@@ -155,6 +155,9 @@ void NumberPicker::initView(){
     mMaxHeight = SIZE_UNSPECIFIED;
     mMinWidth  = SIZE_UNSPECIFIED;
     mMaxWidth  = SIZE_UNSPECIFIED;
+    mValue    = 0;
+    mMinValue = 0;
+    mMaxValue = 0;
     mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
     mVelocityTracker=nullptr;
 

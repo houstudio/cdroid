@@ -25,6 +25,7 @@ typedef enum TextAlignment{
 class Canvas:public Cairo::Context{
 protected:
     void*mHandle;
+    friend class Window;
     friend class GraphDevice;
     friend class WindowManager;
 public:
@@ -38,7 +39,7 @@ public:
     void rectangle(int x,int y,int w,int h);
     void rectangle(const RECT &r);
     void draw_image(const Cairo::RefPtr<Cairo::ImageSurface>&img,const RECT&dst,const RECT*src);
-    void rotate(float degrees,float px,float py);
+    //void rotate(float degrees,float px,float py);
     void dump2png(const char*fname);
 };
 extern void DumpRegion(const std::string&label,Cairo::RefPtr<Cairo::Region>rgn);

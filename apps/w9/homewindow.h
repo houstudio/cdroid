@@ -5,9 +5,11 @@ private:
     int mCurScrollX;
     int mOldScrollX;
     int screenWidth;
+    ValueAnimator*anim;
 protected:
    void onButtonClick(View&);
    void onWashOptionClick(View&);
 public:
-   HomeWindow(int mode);
+   HomeWindow();
+   ~HomeWindow();
 };

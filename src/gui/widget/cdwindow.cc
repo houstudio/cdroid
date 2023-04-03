@@ -67,7 +67,6 @@ Window::Window(int x,int y,int width,int height,int type)
 	height=width;
 	width=tmp;
     }
-    printf("%p Handler=%p visible=%d size=%dx%d\r\n",this,mUIEventHandler,hasFlag(VISIBLE),width,height);
     setFrame(x, y, width, height);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
@@ -119,6 +118,15 @@ View& Window::setPos(int x,int y){
         ViewGroup::setPos(x,y);
     }
     GraphDevice::getInstance().flip();
+    return *this;
+}
+
+View& Window::setAlpha(float alpha){
+    if(isAttachedToWindow()){
+        RefPtr<Canvas> canvas=getCanvas();
+	LOGV("setAlpha(%p,%d)",this,(int)(alpha*255));
+	GFXSurfaceSetOpacity(canvas->mHandle, (alpha*255));
+    }
     return *this;
 }
 

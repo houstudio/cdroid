@@ -19,19 +19,18 @@
 	    android:background="#111111"
 	    android:paddingTop="10dp"
   	    android:paddingBottom="20dp"
-            android:paddingLeft="50dp"
-            android:paddingRight="40dp">
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp">
             <TextView
                 android:id="@+id/temp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
 		android:layout_alignParentTop="true"
 		android:layout_alignParentLeft="true"
-		android:layout_marginVertical="10dp"
-		    android:text="气温28"
+		android:text="气温28"
 		android:gravity="left|bottom"
-	        android:drawableRight="@mipmap/yd"
-		android:textSize="40dp"/>
+	        android:drawableRight="@mipmap/degree"
+		android:textSize="32dp"/>
             <TextView
 		    android:id="@+id/weather"
 		    android:layout_width="wrap_content"
@@ -47,7 +46,7 @@
                 android:layout_height="wrap_content"
 		android:layout_marginVertical="10dp"
                 android:layout_below="@id/temp"
-		android:text="@string/weathertips"/>
+		android:text="w9:string/weathertips"/>
             <Button
                 android:id="@+id/often"
                 android:layout_width="100dp"

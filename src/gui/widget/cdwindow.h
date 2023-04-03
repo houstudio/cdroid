@@ -90,6 +90,7 @@ public:
     virtual void setText(const std::string&);
     const std::string getText()const;
     virtual View& setPos(int x,int y)override;
+    View& setAlpha(float a);
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();

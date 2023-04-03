@@ -52,7 +52,7 @@ void Canvas::rectangle(const RECT &r){
     rectangle((double)r.left,(double)r.top,(double)r.width,(double)r.height);
 }
 
-static inline float sdot(float a,float b,float c,float d){
+/*static inline float sdot(float a,float b,float c,float d){
     return a * b + c * d;
 }
 
@@ -66,7 +66,7 @@ void Canvas::rotate(float degrees,float px,float py){
     Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px),  sdot(-fsin,px,1-fcos,py));
 #endif
     transform(mtx);
-}
+}*/
 
 void Canvas::get_text_size(const std::string&text,int*width,int *height){
     TextExtents te;
