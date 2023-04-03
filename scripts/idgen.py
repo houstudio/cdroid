@@ -34,7 +34,8 @@ class CDROIDHandler( xml.sax.ContentHandler ):
         if pos<0 :
             return
         value=value[pos+1:].strip()
-        self.strings.append(value)
+        if(value[0].isalpha() or (value[0]=='_')) and (value not in self.strings):
+            self.strings.append(value)
 
     def groupby(self):
         new_ids = []
