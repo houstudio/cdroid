@@ -1513,7 +1513,7 @@ void NestedScrollView::draw(Canvas& canvas) {
                 yTranslation -= getPaddingBottom();
             }
             canvas.translate(xTranslation - width, yTranslation);
-            canvas.rotate(180, width, 0);
+            //canvas.rotate(180, width, 0);
             mEdgeGlowBottom->setSize(width, height);
             if (mEdgeGlowBottom->draw(canvas)) {
                 this->postInvalidateOnAnimation();

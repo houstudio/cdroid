@@ -4,6 +4,7 @@ set(SIGMA_SRCS ../common/cdlog.cc
 	#mediaplayer.c 
 	input_linux.cc  )
 find_package(Pixman)
+find_package(DirectFB)
 include(CheckIncludeFile)
 check_include_file(poll.h HAVE_POLL_H)
 check_include_file(sys/epoll.h  HAVE_EPOLL_H)
@@ -22,12 +23,16 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
-#list(APPEND SIGMA_LIBS ${PIXMAN_LIBRARY})
-if(TRUE)
+list(APPEND SIGMA_INCLUDE_DIRS ../common)
+list(APPEND SIGMA_INCLUDE_DIRS ../include)
+
+if(DIRECTFB_FOUND)
+    list(APPEND SIGMA_SRCS ../common/graph_dfb.c)
+    list(APPEND SIGMA_INCLUDE_DIRS ${DIRECTFB_INCLUDE_DIRS})
+    list(APPEND SIGMA_LIBS ${DIRECTFB_LIBRARIES})
+else()    
     list(APPEND SIGMA_SRCS graph_gfx.c)
-else()
-    list(APPEND SIGMA_SRCS graph_rfb.c)
-    list(APPEND SIGMA_LIBS vncserver)
+    list(APPEND SIGMA_INCLUDE_DIRS ./inc)
 endif()
 
 link_directories(${PROJECT_SOURCE_DIR}/libs)
@@ -37,13 +42,13 @@ list(APPEND SIGMA_LIBS pthread
         #-lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
 
 include_directories(./
-    ../common ./inc ../include
+    ../common ../include
     ${PIXMAN_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
+    ${SIGMA_INCLUDE_DIRS}
 )
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
-#set(PKGCONFIG_LIBS pixman)
 set(NONPKG_LIBS "-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx \
  -lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel \
  -lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale")
