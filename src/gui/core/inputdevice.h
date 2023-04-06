@@ -213,6 +213,10 @@ protected:
     nsecs_t mDownTime;
     nsecs_t mMoveTime;
     int mPointSlot;
+    int mTPWidth;
+    int mTPHeight;
+    int mRangeXMin;
+    int mRangeYMin;
     typedef struct{
         PointerCoords coord;
         PointerProperties prop; 

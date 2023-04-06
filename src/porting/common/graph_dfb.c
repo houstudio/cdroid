@@ -101,7 +101,7 @@ INT GFXUnlockSurface(HANDLE surface){
 }
 
 INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
-    LOGD("==setopacity=%x",alpha);
+    LOGV("setopacity=%d",alpha);
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     IDirectFBDisplayLayer *dispLayer;
     directfb->GetDisplayLayer( directfb, DLID_PRIMARY, &dispLayer );
@@ -165,7 +165,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
      IDirectFBSurface*dfbsrc=(IDirectFBSurface*)srcsurface;
      IDirectFBSurface*dfbdst=(IDirectFBSurface*)dstsurface;
 
-     dfbdst=primarySurface;
+     dfbdst = primarySurface;
      dfbdst->GetSize(dfbdst,&dstwidth,&dstheight);
      dfbsrc->GetSize(dfbsrc,(int*)&rs.w,(int*)&rs.h);
 

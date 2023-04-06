@@ -25,15 +25,17 @@ typedef struct{
    SDL_Texture*texture;
 }FBSURFACE;
 
+#define REFRESH_EVENT 0x4321
 static int SDLProc(void*params);
 static void SendKeyEvent(SDL_Event*event);
 static void SendMouseEvent(SDL_Event*event);
+static FBSURFACE*PrimarySurface;
 
 INT GFXInit(){
     if(sdlWindow)return E_OK;
     SDL_Init(SDL_INIT_EVERYTHING);
     sdlWindow = SDL_CreateWindow("CDROID Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                  1280,  480,  SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
+                  1280,  800,  SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
     LOGI("SDL_CreateWindow =%p",sdlWindow);
     if (!sdlWindow) return E_ERROR;
 
@@ -130,9 +132,10 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->texture=SDL_CreateTextureFromSurface(sdlRenderer,surf->surface);
     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->surface->pixels,width,height,hwsurface);
     *surface=surf;
+    if(hwsurface)PrimarySurface=surf;
+    LOGD("surfaceCount=%d",++surfaceCount);
     return E_OK;
 }
-
 
 INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
     unsigned int x,y,sw,sh;
@@ -166,7 +169,9 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 INT GFXDestroySurface(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     SDL_FreeSurface(surf->surface);
+    SDL_DestroyTexture(surf->texture);
     free(surf);
+    LOGD("surfaceCount=%d",surfaceCount);
     return 0;
 }
 
@@ -174,7 +179,7 @@ static int SDLProc(void*params){
    int running=1;
    while(running){
        SDL_Event event;
-       if(SDL_WaitEventTimeout(&event,5000)==0)continue;
+       if(SDL_WaitEventTimeout(&event,0)==0)continue;
        switch(event.type){
        case SDL_QUIT:running=0;break;
        case SDL_KEYDOWN:
@@ -187,6 +192,7 @@ static int SDLProc(void*params){
        case SDL_FINGERUP  :event.tfinger;break;
        case SDL_FINGERMOTION:event.tfinger;break;
        case SDL_DISPLAYEVENT:LOGD("SDL_DISPLAYEVENT");break;
+       default:break;
        } 
    }
 }

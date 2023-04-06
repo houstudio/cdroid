@@ -226,6 +226,15 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
 
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
+    const InputDeviceInfo::MotionRange*range = mDeviceInfo.getMotionRange(ABS_X,0);
+    if(range==nullptr)range= mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
+    mTPWidth  = range?(range->max-range->min):mScreenWidth;
+    mRangeXMin= range?range->min:0;
+
+    range = mDeviceInfo.getMotionRange(ABS_Y,0);
+    if(range==nullptr)range=mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
+    mTPHeight = range?(range->max-range->min):mScreenHeight;
+    mRangeYMin= range?range->min:0;
 }
 
 static int ABS2AXIS(int absaxis){
@@ -252,34 +261,28 @@ static int ABS2AXIS(int absaxis){
 
 void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     const GFX_ROTATION rot=GFXGetRotation(0);
-    unsigned int tpsize;
-    const InputDeviceInfo::MotionRange*range = mDeviceInfo.getMotionRange(axis,0);
     auto it=mPointMAP.find(index);
     axis=ABS2AXIS(axis);
     switch(axis){
     case MotionEvent::AXIS_X:
-       tpsize = range?(range->max-range->min):mScreenWidth;
        switch(rot){
        case ROTATE_0  : break;
-       case ROTATE_90 : 
-		axis=MotionEvent::AXIS_Y;value=tpsize-value;
-		break;
-       case ROTATE_270: axis=MotionEvent::AXIS_Y;value=value;break;
-       case ROTATE_180: value=tpsize-value;break;
+       case ROTATE_90 : axis = MotionEvent::AXIS_Y; break; /*value=value;*/
+       case ROTATE_180: value= mTPWidth-value; break;
+       case ROTATE_270: axis = MotionEvent::AXIS_Y; value = mTPWidth - value; break;
        }
-       if(range&&(mScreenWidth!=tpsize)) 
-	   value = (value-range->min)*mScreenWidth/tpsize;
+       if(mScreenWidth!=mTPWidth)
+	   value = (value-mRangeXMin)*mScreenWidth/mTPWidth;
        break;
     case MotionEvent::AXIS_Y:
-       tpsize= range?(range->max-range->min):mScreenHeight;
        switch(rot){
        case ROTATE_0  : break;
-       case ROTATE_90 : axis=MotionEvent::AXIS_X;value=value;break;
-       case ROTATE_270: axis=MotionEvent::AXIS_X;value=tpsize-value;break;
-       case ROTATE_180: value=tpsize-value;break;
+       case ROTATE_90 : axis=MotionEvent::AXIS_X; value = mTPHeight - value; break;
+       case ROTATE_180: value=mTPHeight-value; break;
+       case ROTATE_270: axis=MotionEvent::AXIS_X; break; /*value=value;*/
        }
-       if(range&&(mScreenHeight!=tpsize))
-	   value = (value-range->min)*mScreenHeight/tpsize;
+       if(mScreenHeight!=mTPHeight)
+	   value = (value-mRangeYMin)*mScreenHeight/mTPHeight;
        break;
     case MotionEvent::AXIS_Z:break;
     default:return;

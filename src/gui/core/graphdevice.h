@@ -7,7 +7,7 @@
 #include <map>
 
 #ifndef COMPOSE_ASYNC
-#define COMPOSE_ASYNC 1
+#define COMPOSE_ASYNC 0
 #endif
 
 namespace cdroid{

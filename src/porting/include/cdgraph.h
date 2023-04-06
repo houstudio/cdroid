@@ -28,6 +28,7 @@ typedef enum {
     GPF_RGB32
 }GFXPIXELFORMAT;
 /** @} */
+/*roation in anticlockwise*/
 typedef enum{
     ROTATE_0,
     ROTATE_90,

@@ -232,7 +232,7 @@ void GraphDevice::composeSurfaces(){
     for(int i=0;i<mInvalidateRgn->get_num_rectangles();i++){
         RectangleInt r=mInvalidateRgn->get_rectangle(i);
         GFXFillRect(mPrimarySurface,(const GFXRect*)&r,0);
-        LOGD("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
+        LOGV("%d:(%d,%d,%d,%d)",i,r.x,r.y,r.width,r.height);
     }
     mInvalidateRgn->do_xor(mInvalidateRgn);
     if(mShowFPS && mPrimaryContext && mBannerContext){
