@@ -90,10 +90,10 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo){
        if((0==ioctl(device, EVIOCGABS(i),&info))&&(info.minimum!=info.maximum)){
            INPUTAXISINFO*a = devinfo->axis+j++;
 	   a->axis   = i;
-	   a->fuzz   =info.fuzz;
-	   a->flat   =info.flat;
-           a->minimum=info.minimum;
-           a->maximum=info.maximum;
+           a->fuzz   = info.fuzz;
+           a->flat   = info.flat;
+           a->minimum= info.minimum;
+           a->maximum= info.maximum;
            a->resolution=info.resolution;
 	   LOGI_IF(a->maximum-a->minimum,"dev %d axis[%d]=[%d,%d,%d]",device,a->axis, a->minimum,a->maximum,a->resolution);
        }
@@ -186,7 +186,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
         }else{//for pipe
            rc=read(dev.fds[i],e, (max-count)*sizeof(INPUTEVENT));
            e+=rc/sizeof(INPUTEVENT);
-		   count+=rc/sizeof(INPUTEVENT);
+           count+=rc/sizeof(INPUTEVENT);
         }
         LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",dev.fds[i],rc,dev.fds[i]==dev.pipe[0]);
     }

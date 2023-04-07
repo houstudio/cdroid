@@ -383,7 +383,10 @@ int Assets::getColor(const std::string&refid){
 }
 
 ColorStateList* Assets::getColorStateList(const std::string&fullresid){
-    auto it=mColors.find(fullresid);
+    std::string pkg,name = fullresid;
+    parseResource(name,nullptr,&pkg);
+    name=AttributeSet::normalize(pkg,name);
+    auto it=mColors.find(name);
     if( it==mColors.end() ){
 	size_t slashpos=fullresid.find("/");
         if((fullresid[0]=='#')||(slashpos==std::string::npos) ){

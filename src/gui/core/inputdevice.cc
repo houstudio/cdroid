@@ -46,13 +46,14 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
 	 const INPUTAXISINFO*axis=devInfos.axis+j;
 	 if(axis->maximum!=axis->minimum)
   	    mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
+	 LOGI_IF(axis->maximum!=axis->minimum,"axis[%d] range=%d,%d",axis->axis,axis->minimum,axis->maximum);
     }
 
     // See if this is a keyboard.  Ignore everything in the button range except for
     // joystick and gamepad buttons which are handled like keyboards for the most part.
-    bool haveKeyboardKeys = containsNonZeroByte(devInfos.keyBitMask, 0, SIZEOF_BITS(BTN_MISC))
+    const bool haveKeyboardKeys = containsNonZeroByte(devInfos.keyBitMask, 0, SIZEOF_BITS(BTN_MISC))
             || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(KEY_OK), SIZEOF_BITS(KEY_MAX + 1));
-    bool haveGamepadButtons = containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_MISC), SIZEOF_BITS(BTN_MOUSE))
+    const bool haveGamepadButtons = containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_MISC), SIZEOF_BITS(BTN_MOUSE))
             || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
     if (haveKeyboardKeys || haveGamepadButtons) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
@@ -227,14 +228,14 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
     const InputDeviceInfo::MotionRange*range = mDeviceInfo.getMotionRange(ABS_X,0);
-    if(range==nullptr)range= mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
-    mTPWidth  = range?(range->max-range->min):mScreenWidth;
-    mRangeXMin= range?range->min:0;
+    if(range==nullptr) range= mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
+    mTPWidth  = range ? (range->max-range->min) : mScreenWidth;
+    mRangeXMin= range ? range->min : 0;
 
     range = mDeviceInfo.getMotionRange(ABS_Y,0);
-    if(range==nullptr)range=mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
-    mTPHeight = range?(range->max-range->min):mScreenHeight;
-    mRangeYMin= range?range->min:0;
+    if(range==nullptr) range = mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
+    mTPHeight = range ? (range->max-range->min) : mScreenHeight;
+    mRangeYMin= range ? range->min : 0;
 }
 
 static int ABS2AXIS(int absaxis){
@@ -353,11 +354,12 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_REPORT:
         case SYN_MT_REPORT:
-            LOGV("%s time:%lld pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
-               mMoveTime,mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
+            LOGV("%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
+                mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
-               0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() , 0/*xOffset*/,0/*yOffset*/,
-               0/*xPrecision*/, 0/*yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
+                0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,
+                0/*xOffset*/,0/*yOffset*/ , 0/*xPrecision*/, 0/*yPrecision*/ ,
+                mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
@@ -415,7 +417,7 @@ void InputDeviceInfo::initialize(int32_t id, int32_t generation, int32_t control
 }
 
 const InputDeviceInfo::MotionRange* InputDeviceInfo::getMotionRange(int32_t axis, uint32_t source) const {
-    size_t numRanges = mMotionRanges.size();
+    const size_t numRanges = mMotionRanges.size();
     for (size_t i = 0; i < numRanges; i++) {
         const MotionRange* range = mMotionRanges.data()+i;
         if (range->axis == axis && range->source == source) {
@@ -431,11 +433,14 @@ void InputDeviceInfo::addSource(uint32_t source) {
 
 void InputDeviceInfo::addMotionRange(int32_t axis, uint32_t source, float vmin, float vmax,
         float flat, float fuzz, float resolution) {
-    MotionRange range;// = { axis, source, vmin, vmax, flat, fuzz, resolution };
-    range.axis=axis; range.source=source;
-    range.min =vmin; range.max=vmax;
-    range.flat=flat; range.fuzz=fuzz;
-    range.resolution=resolution;
+    MotionRange range;
+    range.axis = axis;
+    range.source = source;
+    range.min  = vmin;
+    range.max  = vmax;
+    range.flat = flat;
+    range.fuzz = fuzz;
+    range.resolution = resolution;
     mMotionRanges.push_back(range);
 }
 

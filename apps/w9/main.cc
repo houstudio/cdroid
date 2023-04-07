@@ -16,17 +16,16 @@ public:
 };
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    //Window*w=new Window(0,0,-1,-1);//HomeWindow(argc%2);
+    //Window*w=new Window(0,0,-1,-1);
     Window*w=new HomeWindow();
     std::string str=app.getString("@string/weathertips");
     LOGD("str=%s",str.c_str());
-    /*GradientDrawable*d=(GradientDrawable*)app.getDrawable("@drawable/test");
-    d->setUseLevel(true);
-    d->setInnerRadius(20);
-    d->setThickness(20);
-    d->setColor(0xff00ff);
-    d->setLevel(argc==1?10000:atoi(argv[1]));//.f*359.f/360);
-    w->setBackground(d);*/
+    /*ColorStateList*cls=app.getColorStateList("@w9:color/btn_mode_text");
+    TextView*tv=new TextView("Hello world!",200,200);
+    w->addView(tv);
+    tv->setTextColor(cls);
+    tv->setEnabled(argc%2);
+    LOGD("cls=%p",cls);*/
     return app.exec();
 }
 
