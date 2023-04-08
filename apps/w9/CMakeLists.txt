@@ -23,12 +23,6 @@ add_executable(w9 ${W9_SRCS})
 
 CreatePAK(w9 ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/w9.pak ${PROJECT_SOURCE_DIR}/R.h)
 
-add_custom_target(w9translate
-  COMMAND python  ${CMAKE_SOURCE_DIR}/src/tools/po2json.py ${CMAKE_CURRENT_BINARY_DIR}/w9.po
-  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-  COMMENT "Translate strings resource..."
-  )
-
 message("CDROID_LIBRARIES=${CDROID_LIBRARIES} CDROID_INCLUDE_DIRS=${CDROID_INCLUDE_DIRS}")
 target_link_libraries(w9 PRIVATE cdroid)
 

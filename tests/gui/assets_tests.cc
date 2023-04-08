@@ -13,7 +13,11 @@ class ASSETS:public testing::Test{
    }
 };
 
-
+TEST_F(ASSETS,string){
+   App app(0,NULL);
+   std::string str=app.getString("cdroid:string/number_picker_decrement_button");
+   printf("str=%s\n",str.c_str());
+}
 TEST_F(ASSETS,array){
    App app(0,NULL);
    std::vector<std::string>array;

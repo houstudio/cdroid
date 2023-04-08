@@ -30,6 +30,7 @@ static CLA::Argument ARGS[]={
    {CLA::EntryType::Option, "m", "monkey", "events playback path",  CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
    {CLA::EntryType::Option, "r", "record", "events record path", CLA::ValueType::String,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Option, "R", "rotate", "display rotate ", CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
+   {CLA::EntryType::Option, "f", "framedelay","animation frame delay",CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "h", "help", "display help info ", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "d", "debug", "open debug", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "", "fps"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
@@ -38,6 +39,7 @@ static CLA::Argument ARGS[]={
 App::App(int argc,const char*argv[],const struct option*extoptions){
     int option_index=-1,c=-1;
     std::string optstring;
+    Choreographer&chograph= Choreographer::getInstance();
     LogParseModules(argc,argv);
     mQuitFlag = false;
     mExitCode = 0;
@@ -59,6 +61,7 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
 	std::cout<<"params.count="<<getParamCount()<<std::endl;
 	exit(0);
     }
+    chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     GFXInit();
     GFXSetRotation(0,(GFX_ROTATION)((getArgAsInt("rotate",0)/90)%4));
     setOpacity(getArgAsInt("alpha",255));

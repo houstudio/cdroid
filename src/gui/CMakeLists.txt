@@ -12,7 +12,7 @@ aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
-
+aux_source_directory(private SRCS_PRIVATE)
 include_directories(
     ./ ./private 
     ./core 
@@ -33,7 +33,8 @@ add_definitions(--include cdlog.h)
 
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_CAIROMM} ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
-    ${SRCS_APP} ${SRCS_DIALOG} 
+    ${SRCS_APP} ${SRCS_DIALOG}
+    #${SRCS_PRIVATE}
     ${SRCS_ANIMATION} widget/R.h)
 
 add_library(cdroid SHARED ${SOURCES_GUI})
@@ -51,8 +52,6 @@ foreach( each_file ${allfiles} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
-#ADD_WHOLE_ARCHIVE_TO_LIBRARIES(CDROID_DEPLIBS)
-
 configure_file(
         "cdroid.pc.in"
         "cdroid.pc"
@@ -62,9 +61,9 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
 
 set(PKGCONFIG_LIBS "cairo bzip2 libzip")#do not use -l
 set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
-set(NONPKG_LIBS "-l${PROJECT_NAME} -ljsoncpp -ltvhal")#non pkgconfig libraries
-set(NONPKG_LIBS_PRIVATE "-ltvhal -ljsoncpp")
-
+set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
+set(NONPKG_LIBS_PRIVATE "-ltvhal")
+message("==CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
 
 configure_file(cdroid.pc.in cdroid.pc @ONLY)

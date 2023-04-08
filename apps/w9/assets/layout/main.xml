@@ -6,7 +6,8 @@
 	android:scrollbarSize="10dp"
 	android:scrollbars="none"
         android:overScrollMode="never"
-        android:scrollIndicators="top">
+	android:scrollIndicators="top"
+	android:background="@mipmap/optionbg">
     <LinearLayout
 	android:id="@+id/linearLayout"
         android:layout_width="wrap_content"

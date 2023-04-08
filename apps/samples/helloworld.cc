@@ -10,7 +10,10 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(100,100,800,600);
    #if 10 
     EditText*edit=new EditText("Hello world! This value is positive for typical fonts that include",680,200);
-    edit->setTextColor(0xFFFFFFFF);
+    ColorStateList*cl=app.getColorStateList("cdroid:attr/editTextColor");
+    if(cl){edit->setTextColor(cl);cl->dump();}
+    else edit->setTextColor(0xFFFFFFFF);
+    LOGD("clist=%p",cl);
     edit->setSingleLine(false);
     edit->setInputType(EditText::TYPE_ANY);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);

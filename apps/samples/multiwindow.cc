@@ -50,7 +50,6 @@ int main(int argc,const char*argv[]){
     printf("lv1=%p lv2=%p\r\n",lv1,lv2);
     w1->addView(lv1).setId(0);
     w2->addView(lv2).setId(0);
-    
     if(argc>5){
         //w1->sendMessage(1000,0,2000,100);w1->setDir(50,40);
         //w2->sendMessage(1000,0,1000,80);w2->setDir(66,53);
