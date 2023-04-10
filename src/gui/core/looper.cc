@@ -58,7 +58,7 @@ Looper::Looper(bool allowNonCallbacks) :
         mNextRequestSeq(0), mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
     mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     LOGE_IF(mWakeEventFd < 0, "Could not make wake event fd: %s",strerror(errno));
-    std::lock_guard<std::mutex>_l(mLock);
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     rebuildEpollLocked();
 }
 
@@ -417,7 +417,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
     }
 
     { // acquire lock
-        std::lock_guard<std::mutex> _l(mLock);
+        std::lock_guard<std::recursive_mutex> _l(mLock);
 
         Request request;
         request.fd = fd;
@@ -487,7 +487,7 @@ int Looper::removeFd(int fd, int seq) {
     LOGD_IF(DEBUG_CALLBACKS,"%p  removeFd - fd=%d, seq=%d", this, fd, seq);
 
     { // acquire lock
-        std::lock_guard<std::mutex> _l(mLock);
+        std::lock_guard<std::recursive_mutex>  _l(mLock);
         auto itr= mRequests.find(fd);//indexOfKey(fd);
         if (itr==mRequests.end()) {
             return 0;
@@ -552,7 +552,7 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
 
     size_t i = 0;
     { // acquire lock
-        std::lock_guard<std::mutex> _l(mLock);
+        std::lock_guard<std::recursive_mutex> _l(mLock);
 
         std::list<MessageEnvelope>::iterator it;
         for(it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
@@ -612,7 +612,7 @@ void Looper::removeEventHandlers(){
 void Looper::removeMessages(const MessageHandler* handler) {
     LOGD_IF(DEBUG_CALLBACKS,"%p  removeMessages - handler=%p", this, handler);
     { // acquire lock
-        std::lock_guard<std::mutex>_l(mLock);
+        std::lock_guard<std::recursive_mutex> _l(mLock);
 
         for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
             if(it->handler==handler)
@@ -624,7 +624,7 @@ void Looper::removeMessages(const MessageHandler* handler) {
 void Looper::removeMessages(const MessageHandler* handler, int what) {
     LOGD_IF(DEBUG_CALLBACKS,"%p  removeMessages - handler=%p, what=%d size=%d", this, handler, what,mMessageEnvelopes.size());
     { // acquire lock
-        std::lock_guard<std::mutex>_l(mLock);
+        std::lock_guard<std::recursive_mutex> _l(mLock);
 
         for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
             LOGD("what=%d,%d",it->message.what,what);
@@ -636,7 +636,7 @@ void Looper::removeMessages(const MessageHandler* handler, int what) {
 }
 
 void Looper::removeCallbacks(const MessageHandler* handler,Runnable r){
-    std::lock_guard<std::mutex>_l(mLock);
+    std::lock_guard<std::recursive_mutex> _l(mLock);
     for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
         if((it->handler==handler) && (it->message.callback==r)){
             it=mMessageEnvelopes.erase(it);

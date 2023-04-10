@@ -101,7 +101,7 @@ private:
     bool mAllowNonCallbacks; // immutable
 
     int mWakeEventFd;  // immutable
-    std::mutex mLock;
+    std::recursive_mutex mLock;
 
     std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
     bool mSendingMessage; // guarded by mLock
