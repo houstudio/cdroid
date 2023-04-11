@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import xml.sax
 from xml.dom import minidom
 import xml.etree.ElementTree as xmltree

@@ -1,5 +1,4 @@
 project(gui_test C CXX)
-set(CMAKE_CXX_STANDARD 11)
 aux_source_directory(./ SRCS_GUI_TESTS)
 find_package(GTEST REQUIRED)
 include_directories(
