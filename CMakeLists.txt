@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.2)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 include(cmake/common_functions.cmake)
 include(cmake/options.cmake)
 
@@ -27,6 +27,14 @@ set (CPACK_COMPONENT_LIBRARIES_DEPENDS ${CDROID_DEPLIBS})
 set (CPACK_PACKAGE_VERSION_MAJOR "1")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
 include (CPack)
+
+set(APPS ${CMAKE_INSTALL_PREFIX}/bin/uidemo2)  # paths to executables
+set(DIRS "$ENV{HOME}/vcpkg/installed/arm-linux-dynamic"
+	"${CMAKE_INSTALL_PREFIX}/lib")   # directories to search for prerequisites
+INSTALL(CODE "
+   include(BundleUtilities)
+   fixup_bundle(\"${APPS}\"   \"\"   \"${DIRS}\")
+   " COMPONENT Runtime)
 
 if(BUILD_DOCS)
   include(cmake/build_doxygen.cmake)

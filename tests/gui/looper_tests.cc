@@ -193,36 +193,69 @@ TEST_F(LOOPER,handler){
     loop->removeHandler(handler);
     while(count++<6)loop->pollAll(10);
 }
+
 static void ms2timespec(int ms, struct timespec *ts){
     ts->tv_sec = ms / 1000;
     ts->tv_nsec = (ms % 1000) * 1000000;
 }
+
 static int fdcallback(int fd, int events, void* data){
    uint64_t count;
-   static int loops=0;
+   int *loops=(int*)data;
    struct timespec cur;
    clock_gettime(CLOCK_MONOTONIC,&cur);
+   printf("fdcallback fd=%d\r\n",fd);
    if(events&Looper::EVENT_INPUT)
       ::read(fd, &count, sizeof(uint64_t));
-   printf("fd=%d evnets=%d [%4d] time=%lld.%lld\r\n",fd,events,loops++,cur.tv_sec,cur.tv_nsec/1000000);
-   if(loops>20){
+   printf("fd=%d evnets=%d [%4d/%lld] time=%lld.%lld\r\n",fd,events,(*loops)++,count,cur.tv_sec,cur.tv_nsec/1000000);
+   if(*loops>20){
       struct itimerspec new_value={{0,0},{0,0}};
       timerfd_settime(fd,0,&new_value, NULL);
       Looper::getDefault()->removeFd(fd);
    }
    return 1;
 }
+
 TEST_F(LOOPER,timerfd){
     #define INTERVAL 200 //ms
     Looper*loop= Looper::getDefault();
+    int loops=0;
     struct itimerspec new_value={{0,0},{0,0}};
-    ms2timespec(INTERVAL,&new_value.it_value);
+
+    ms2timespec(INTERVAL,&new_value.it_interval);
+    int fd=timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+
+    int rc=timerfd_settime(fd, 0/*TFD_TIMER_ABSTIME*/, &new_value,NULL);
+    printf("fd= %d rc=%d\r\n",fd,rc);
+    loop->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
+    while(1)loop->pollAll(10);
+}
+
+TEST_F(LOOPER,timerfd2){
+    #define INTERVAL 200 //ms
+    App app;
+    int loops=0;
+    Looper*loop= Looper::getDefault();
+    struct itimerspec new_value={{0,0},{0,0}};
 
     ms2timespec(INTERVAL,&new_value.it_interval);
     int fd=timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
 
     int rc=timerfd_settime(fd, 0/*TFD_TIMER_ABSTIME*/, &new_value, NULL);
     printf("fd= %d rc=%d\r\n",fd,rc);
-    loop->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,nullptr);
-    while(1)loop->pollAll(10);
+    loop->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
+    Window*w  = new Window(0,0,-1,-1);
+    Button*btn= new Button("Test",200,200);
+    w->addView(btn);
+    int color=11,color2=0;
+    Runnable run={[&](){
+	btn->setBackgroundColor(0xFF000000|color|(color2<<8));
+	color+=8;color2+=4;
+	w->postDelayed(run,100);
+    }};
+    w->postDelayed(run,100);
+    btn->setOnClickListener([](View&v){
+        printf("button clicked \r\n");
+    });
+    app.exec();
 }
