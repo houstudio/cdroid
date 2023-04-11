@@ -44,7 +44,7 @@ find_package(DirectFB)
 find_package(X11)
 
 if(FALSE AND DIRECTFB_FOUND)
-    list(APPEND X64_INCLUDE_DIRS ${DIRECTFB_INCLUDE_DIRS}/directfb)
+    list(APPEND X64_INCLUDE_DIRS ${DIRECTFB_INCLUDE_DIRS})
     list(APPEND X64_LIBRARIES ${DIRECTFB_LIBRARIES})
     list(APPEND GRAPH_SRCS ../common/graph_dfb.c)
 elseif (X11_FOUND)

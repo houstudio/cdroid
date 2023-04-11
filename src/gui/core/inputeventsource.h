@@ -13,21 +13,28 @@
 namespace cdroid{
 
 class InputEventSource:public EventHandler{
-protected:
+public:	
+    typedef std::function<void(bool)>ScreenSaver;
+private:
     std::mutex mtxEvents;
-    bool isplayback;
-    nsecs_t lasteventTime;
+    ScreenSaver mScreenSaver;
+    int mScreenSaveTimeOut;
+    bool mIsPlayback;
+    bool mIsScreenSaveActived;
+    nsecs_t mLastEventTime;
     std::ofstream frecord;
     std::queue<InputEvent*>mInputEvents;
     std::queue<INPUTEVENT>mRawEvents;
     std::unordered_map<int,std::shared_ptr<InputDevice>>devices;
     std::shared_ptr<InputDevice>getdevice(int fd);
+protected:
     int pushEvent(InputEvent*evt);
     int process();
+    InputEventSource();
 public:
-    InputEventSource(const std::string&recordfile=std::string() );
+    static InputEventSource& getInstance();
     ~InputEventSource();
-    bool initGesture(const std::string&fname);
+    void setScreenSaver(ScreenSaver func,int timeout);
     void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;

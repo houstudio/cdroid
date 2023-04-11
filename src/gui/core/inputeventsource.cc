@@ -12,11 +12,12 @@
 namespace cdroid{
 
 
-InputEventSource::InputEventSource(const std::string&file){
+InputEventSource::InputEventSource(){
     InputInit();
-    frecord.open(file);
-    isplayback=false;
-    lasteventTime=SystemClock::uptimeMillis();
+    mScreenSaveTimeOut = -1;
+    mIsPlayback = false;
+    mIsScreenSaveActived = false;
+    mLastEventTime=SystemClock::uptimeMillis();
     auto func=[this](){
         while(1){
             INPUTEVENT es[32];
@@ -37,8 +38,15 @@ InputEventSource::~InputEventSource(){
     LOGD("%p Destroied",this);
 }
 
-bool InputEventSource::initGesture(const std::string&fname){
-    return false;
+InputEventSource& InputEventSource::getInstance(){
+    static InputEventSource* mInst = nullptr;
+    if(mInst == nullptr)mInst=new InputEventSource();
+    return *mInst;
+}
+
+void InputEventSource::setScreenSaver(ScreenSaver func,int timeout){
+    mScreenSaver = func;
+    mScreenSaveTimeOut = timeout;
 }
 
 std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
@@ -67,7 +75,16 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
 
 int InputEventSource::checkEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
+    nsecs_t now = SystemClock::uptimeMillis();
+    if( (now - mLastEventTime) > mScreenSaveTimeOut && (mScreenSaveTimeOut>0) && mScreenSaver){
+	mScreenSaver(true);
+	mIsScreenSaveActived = true;
+    }
     process();
+    if(mInputEvents.size()&& mIsScreenSaveActived){
+	mIsScreenSaveActived = false;
+	mScreenSaver(false);
+    }
     return mInputEvents.size()>0;
 }
 
@@ -77,13 +94,13 @@ int InputEventSource::handleEvents(){
     while(mInputEvents.size()){
         InputEvent* e=mInputEvents.front();
         WindowManager::getInstance().processEvent(*e);
-        if((!isplayback)&& frecord.is_open() && dynamic_cast<KeyEvent*>(e) ){
+        if((!mIsPlayback)&& frecord.is_open() && dynamic_cast<KeyEvent*>(e) ){
             nsecs_t eventTime=SystemClock::uptimeMillis();
             KeyEvent*key=dynamic_cast<KeyEvent*>(e);
-            frecord<<"delay("<<eventTime-lasteventTime<<")"<<std::endl;
+            frecord<<"delay("<<eventTime-mLastEventTime<<")"<<std::endl;
             frecord<<"key("<<KeyEvent::actionToString(key->getAction())<<","
                   <<KeyEvent::getLabel(key->getKeyCode())<<")"<<std::endl;
-            lasteventTime=eventTime;
+            mLastEventTime=eventTime;
         }
         e->recycle();
         mInputEvents.pop();
@@ -120,10 +137,10 @@ void InputEventSource::playback(const std::string&fname){
          std::this_thread::sleep_for(std::chrono::milliseconds(10000));
          LOGD_IF(in.good(),"play key from %s",fname.c_str());
          if(!in.good())return ;
-         isplayback=true;
+         mIsPlayback = true;
          while(1){
-             char *ps=nullptr;
-             char line[256]={0};
+             char *ps= nullptr;
+             char line[256] = { 0 };
              Tokenizer *tok;
              in.getline(line,255);
              Tokenizer::fromContents("",line,&tok);

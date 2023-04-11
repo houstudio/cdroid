@@ -66,7 +66,7 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     GFXSetRotation(0,(GFX_ROTATION)((getArgAsInt("rotate",0)/90)%4));
     setOpacity(getArgAsInt("alpha",255));
     GraphDevice::getInstance().showFPS(hasSwitch("fps"));
-    InputEventSource*inputsource=new InputEventSource(getArg("record",""));
+    InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
 
