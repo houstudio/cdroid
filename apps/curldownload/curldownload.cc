@@ -17,7 +17,8 @@ CurlDownloader::CurlDownloader(){
 
     struct itimerspec new_value={{0,0},{1,0}};
     mTimerFD = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-    timerfd_settime(mTimerFD, 0, &new_value,nullptr);
+    const int rc=timerfd_settime(mTimerFD, 0, &new_value,nullptr);
+    LOGD("timerfd_settime(%d) error:%d",mTimerFD,rc);
     Looper::getDefault()->addFd(mTimerFD,0,Looper::EVENT_INPUT,TimerFDCallback,this);
 }
 

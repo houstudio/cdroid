@@ -12,6 +12,7 @@ NGL_MODULE(GRAPH);
 static IDirectFB *directfb=NULL;
 static IDirectFBSurface*primarySurface;
 static IDirectFBDisplayLayer *primaryLayer;
+static GFXRect screenMargin={60,0,60,0};
 
 static void DFBDisplayLayerCBK(DFBDisplayLayerID layer_id, DFBDisplayLayerDescription  desc, void *callbackdata){
     LOGD("Layer %d[%s] type:%x surface.caps=%x accessor=%x",layer_id,desc.name,desc.type,desc.surface_caps,desc.surface_accessor);
@@ -51,9 +52,10 @@ INT GFXGetDisplaySize(INT disp,UINT*width,UINT*height){
     DFBDisplayLayerConfig dispCfg;
     GFXInit();
     primaryLayer->GetConfiguration(primaryLayer, &dispCfg );
-    *width=dispCfg.width;
-    *height=dispCfg.height;
-    LOGV("screensize=%d,%d",*width,*height);
+    *width=dispCfg.width  - screenMargin.x - screenMargin.w;
+    *height=dispCfg.height- screenMargin.y - screenMargin.h;
+    LOGV("screensize=%d,%d margin=(%d,%d,%d,%d)",*width,*height,
+		    screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
     return E_OK;
 }
 
@@ -175,17 +177,19 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
      const int ox=dx,oy=dy;
      switch(GFXGetRotation(0)){/*directfb's rotation is clockwise*/
      case ROTATE_0 : dfbdst->SetBlittingFlags(dfbdst,DSBLIT_NOFX);
+		     dx += screenMargin.x;
+		     dy += screenMargin.y;
 		     break;
-     case ROTATE_90: dx = oy; 
-		     dy = dstheight -ox - rs.w;  
+     case ROTATE_90: dx = oy + screenMargin.x; 
+		     dy = dstheight -ox - rs.w -screenMargin.h;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE90);
 		     break;
-     case ROTATE_180:dx = dstwidth -ox -rs.w;
-                     dy = dstheight-oy -rs.h;
+     case ROTATE_180:dx = dstwidth -ox -rs.w - screenMargin.w;
+                     dy = dstheight-oy -rs.h - screenMargin.h;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE180);
 		     break;
-     case ROTATE_270:dx = dstwidth -oy -rs.h ;
-		     dy = ox;
+     case ROTATE_270:dx = dstwidth -oy -rs.h -screenMargin.w;
+		     dy = ox - screenMargin.y;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE270);
 		     break;
      default: return E_ERROR;
