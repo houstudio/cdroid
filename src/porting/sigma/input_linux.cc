@@ -168,20 +168,18 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
         return E_ERROR;
     }
     for(int i=0;i<dev.nfd;i++){
-        struct timespec ts;
         if(!FD_ISSET(dev.fds[i],&rfds))continue;
         if(dev.fds[i]!=dev.pipe[0]){
-           clock_gettime(CLOCK_MONOTONIC,&ts);
            rc=read(dev.fds[i],events, sizeof(events)/sizeof(struct input_event));
            for(int j=0;j<rc/sizeof(struct input_event)&&(count<max);j++,e++,count++){
-               e->tv_sec =ts.tv_sec;//events[j].time.tv_sec;
-               e->tv_usec=ts.tv_nsec/10000+j*100;//events[j].time.tv_usec;
+               e->tv_sec = events[j].time.tv_sec;
+               e->tv_usec= events[j].time.tv_usec;
                e->type = events[j].type;
                e->code = events[j].code;
                e->value= events[j].value;
                e->device=dev.fds[i];
-               LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%ld",dev.fds[i],
-                  type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec);
+               LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%ld time2=%ld.%ld",dev.fds[i],
+                  type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec,events[j].time.tv_sec,events[j].time.tv_usec);
            }
         }else{//for pipe
            rc=read(dev.fds[i],e, (max-count)*sizeof(INPUTEVENT));

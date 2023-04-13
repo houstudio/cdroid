@@ -316,9 +316,8 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
             removeBeginSoftInputCommand();
             removeChangeCurrentByOneFromLongPress();
             pshCancel();//mPressedStateHelper.cancel();
-            //VelocityTracker* velocityTracker = mVelocityTracker;
             mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
-            int initialVelocity = (int) mVelocityTracker->getYVelocity();
+            const int initialVelocity = (int) mVelocityTracker->getYVelocity();
             if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
                 fling(initialVelocity);
                 onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);

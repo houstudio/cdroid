@@ -168,10 +168,8 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout){
         return E_ERROR;
     }
     for(int i=0;i<dev.nfd;i++){
-        struct timespec ts;
         if(!FD_ISSET(dev.fds[i],&rfds))continue;
         if(dev.fds[i]!=dev.pipe[0]){
-           clock_gettime(CLOCK_MONOTONIC,&ts);
            rc=read(dev.fds[i],events, sizeof(events)/sizeof(struct input_event));
            for(int j=0;j<rc/sizeof(struct input_event)&&(count<max);j++,e++,count++){
                e->tv_sec =events[j].time.tv_sec;

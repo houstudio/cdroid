@@ -46,7 +46,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
 	 const INPUTAXISINFO*axis=devInfos.axis+j;
 	 if(axis->maximum!=axis->minimum)
   	    mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
-	 LOGI_IF(axis->maximum!=axis->minimum,"axis[%d] range=%d,%d",axis->axis,axis->minimum,axis->maximum);
+	 LOGI_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
     }
 
     // See if this is a keyboard.  Ignore everything in the button range except for
@@ -213,7 +213,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
             mRepeatCount=0;
 
         mEvent.initialize(getId(),getSource(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
-              keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeNanos()/*eventtime*/);
+              keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
         if(listener)listener(mEvent); 
         break;
@@ -309,10 +309,10 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
             mEvent.setAction(value?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
             if(value){
-                mMoveTime = mDownTime =tv.tv_sec*1000+tv.tv_usec/1000;
+                mMoveTime = mDownTime =tv.tv_sec*1000000+tv.tv_usec;
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
             }else{
-                mMoveTime =tv.tv_sec*1000+tv.tv_usec/1000;
+                mMoveTime =tv.tv_sec*1000000+tv.tv_usec;;
                 mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_PRIMARY));
             }
             break;
@@ -329,7 +329,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     case EV_ABS:
         switch(code){
         case ABS_X ... ABS_Z : 
-            mMoveTime =tv.tv_sec*1000+tv.tv_usec/1000;
+            mMoveTime =tv.tv_sec*1000000+tv.tv_usec;
             setAxisValue(0,code,value,false) ; break;
         //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
         case ABS_MT_SLOT    : mPointSlot=value ; break;
@@ -354,6 +354,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_REPORT:
         case SYN_MT_REPORT:
+	    mMoveTime =(tv.tv_sec*1000000+tv.tv_usec);
             LOGV("%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
                 mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),

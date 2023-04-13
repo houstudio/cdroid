@@ -12,7 +12,7 @@ namespace cdroid{
 // stopped.  We need to detect this case so that we can accurately predict the
 // velocity after the pointer starts moving again.
 
-static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40;/*Millisecond*/
+static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40*1000;/*Millisecond*/
 
 static float vectorDot(const float* a, const float* b, uint32_t m) {
     float r = 0;
@@ -411,14 +411,14 @@ void IntegratingVelocityTrackerStrategy::initState(State& state,
 
 void IntegratingVelocityTrackerStrategy::updateState(State& state,
         nsecs_t eventTime, float xpos, float ypos) const {
-    const nsecs_t MIN_TIME_DELTA = 2 ;
+    const nsecs_t MIN_TIME_DELTA = 2*1000 ;
     const float FILTER_TIME_CONSTANT = 0.010f; // 10 milliseconds
 
     if (eventTime <= state.updateTime + MIN_TIME_DELTA) {
         return;
     }
 
-    float dt = (eventTime - state.updateTime) *0.001f;//0.000000001f;
+    float dt = (eventTime - state.updateTime) *0.000001f;//0.000000001f;
     state.updateTime = eventTime;
 
     float xvel = (xpos - state.xpos) / dt;
@@ -507,7 +507,7 @@ static float kineticEnergyToVelocity(float work) {
 static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t count) {
     // The input should be in reversed time order (most recent sample at index i=0)
     // t[i] is in nanoseconds, but due to FP arithmetic, convert to seconds inside this function
-    static constexpr float SECONDS_PER_NANO = 1E-3;//android use nanosecond used value 1E-9;
+    static constexpr float SECONDS_PER_MICRO = 1E-6;//android use nanosecond used value 1E-9;
 
     if (count < 2) {
         return 0; // if 0 or 1 points, velocity is zero
@@ -520,7 +520,7 @@ static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t c
             LOGE("Events have identical time stamps t=%lld, setting velocity = 0", t[0]);
             return 0;
         }
-        return (x[1] - x[0]) / (SECONDS_PER_NANO * (t[1] - t[0]));
+        return (x[1] - x[0]) / (SECONDS_PER_MICRO * (t[1] - t[0]));
     }
     // Guaranteed to have at least 3 points here
     float work = 0;
@@ -530,7 +530,7 @@ static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t c
             continue;
         }
         float vprev = kineticEnergyToVelocity(work); // v[i-1]
-        float vcurr = (x[i] - x[i-1]) / (SECONDS_PER_NANO * (t[i] - t[i-1])); // v[i]
+        float vcurr = (x[i] - x[i-1]) / (SECONDS_PER_MICRO * (t[i] - t[i-1])); // v[i]
         work += (vcurr - vprev) * fabsf(vcurr);
         if (i == count - 1) {
             work *= 0.5; // initial condition, case 2) above
@@ -544,16 +544,16 @@ bool ImpulseVelocityTrackerStrategy::getEstimator(uint32_t id,
     outEstimator->clear();
 
     // Iterate over movement samples in reverse time order and collect samples.
-    float x[HISTORY_SIZE];
-    float y[HISTORY_SIZE];
-    nsecs_t time[HISTORY_SIZE];
+    float x[HISTORY_SIZE]={.0f};
+    float y[HISTORY_SIZE]={.0f};
+    nsecs_t time[HISTORY_SIZE]={0};
     size_t m = 0; // number of points that will be used for fitting
     size_t index = mIndex;
     const Movement& newestMovement = mMovements[mIndex];
     do {
         const Movement& movement = mMovements[index];
         if (!movement.idBits.hasBit(id)) {
-            break;
+            LOGD("hasbit(%d)failed",id);break;
         }
 
         nsecs_t age = newestMovement.eventTime - movement.eventTime;
@@ -808,7 +808,7 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(uint32_t id,
         x[m] = position.x;
         y[m] = position.y;
         w[m] = chooseWeight(index);
-        time[m] = -age * 0.001f;//android nanosecond use 0.000000001f;
+        time[m] = -age * 0.000001f;//android nanosecond use 0.000000001f;
         index = (index == 0 ? HISTORY_SIZE : index) - 1;
     } while (++m < HISTORY_SIZE);
 
@@ -873,7 +873,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
 
         uint32_t nextIndex = (index + 1) % HISTORY_SIZE;
         float deltaMillis = (mMovements[nextIndex].eventTime- mMovements[index].eventTime)
-                * 0.000001f;
+                *0.001f;/*cdroid use us android usens 0.000001f*/;
         if (deltaMillis < 0 ) return 0.5f;
         if (deltaMillis < 10) return 0.5f + deltaMillis * 0.05;
         return 1.0f;
@@ -885,7 +885,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
         //   age 10ms: 1.0
         //   age 50ms: 1.0
         //   age 60ms: 0.5
-        float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime) * 0.000001f;
+        float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime) * 0.001f;/*android us ns 0.000001f*/;
         if (ageMillis < 0 ) return 0.5f;
         if (ageMillis < 10) return 0.5f + ageMillis * 0.05;
         if (ageMillis < 50) return 1.0f;
@@ -897,7 +897,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
         // Weight points based on their age, weighing older points less.
         // age   0ms: 1.0  , age  50ms: 1.0 ,  age 100ms: 0.5
         float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime)
-                * 0.000001f;
+                *0.001f;/*android use ns 0.000001f*/;
         if (ageMillis < 50) {
             return 1.0f;
         }
@@ -934,7 +934,6 @@ void VelocityTracker::clear() {
 
 void VelocityTracker::addMovement(const MotionEvent& event) {
     mVelocityTracker->addMovement(event);
-    LOGV("%f,%f",event.getX(),event.getY());
 }
 
 void VelocityTracker::computeCurrentVelocity(int32_t units){
