@@ -11,6 +11,7 @@ void TimeAnimator::start(){
     mPreviousTime = -1;
     ValueAnimator::start();
 }
+
 bool TimeAnimator::animateBasedOnTime(long currentTime){
     if(mListener != nullptr){
         long totalTime = currentTime - mStartTime;
@@ -18,6 +19,7 @@ bool TimeAnimator::animateBasedOnTime(long currentTime){
         mPreviousTime  = currentTime;
         mListener(*this,totalTime,detaTime);
     }
+    return true;
 }
 
 void TimeAnimator::setCurrentPlayTime(long playTime){

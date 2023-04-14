@@ -355,8 +355,6 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_REPORT:
         case SYN_MT_REPORT:
 	    mMoveTime =(tv.tv_sec*1000000+tv.tv_usec);
-            LOGV("%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
-                mPointMAP.begin()->second.coord.getX(),mPointMAP.begin()->second.coord.getY() ); 
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
                 0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,
                 0/*xOffset*/,0/*yOffset*/ , 0/*xPrecision*/, 0/*yPrecision*/ ,
@@ -364,6 +362,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             for(auto p:mPointMAP){
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
+            LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
+                mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
             if(listener)listener(mEvent);
             if(mEvent.getAction()==MotionEvent::ACTION_UP)
                 mPointMAP.clear();

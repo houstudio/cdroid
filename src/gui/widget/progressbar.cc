@@ -67,7 +67,6 @@ ProgressBar::ProgressBar(int width, int height):View(width,height){
     indeterminatePos=0;
     mHasAnimation=false;
     mAttached=false;
-    mRefreshIsPosted=false;
     mShouldStartAnimationDrawable=false;
     setProgressDrawable(mContext->getDrawable("cdroid:drawable/progress_horizontal.xml"));
 }
@@ -353,21 +352,7 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     rd.progress=progress;
     rd.fromUser=fromUser;
     rd.animate=animate;
-    //doRefreshProgress(id, progress, fromUser, true, animate);
-    //return ;
-    if(!mRefreshIsPosted){
-        if(mAttached&&!mRefreshIsPosted){
-            mRefreshProgressRunnable =[this](){
-                for(auto d:mDatas){
-                    RefreshData&rd=d.second; 
-                    doRefreshProgress(d.first,rd.progress, rd.fromUser, true, rd.animate);
-                }
-                mRefreshIsPosted=false;
-            };
-            post(mRefreshProgressRunnable);
-            mRefreshIsPosted=true;
-        }
-    }
+    doRefreshProgress(id, progress, fromUser, true, animate);
 }
 
 bool ProgressBar::setProgressInternal(int value, bool fromUser,bool animate){
