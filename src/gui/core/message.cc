@@ -5,6 +5,7 @@ std::mutex Message::mLock;
 Message* Message::sPool = nullptr;
 int Message::sPoolSize =0;
 Message::Message(int what){
+   this->what=what;
 }
 
 void Message::sendToTarget(){

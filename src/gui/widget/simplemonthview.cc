@@ -38,7 +38,11 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
 
 SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
    :View(ctx,atts){
-    
+    mDesiredMonthHeight = atts.getDimensionPixelSize("month_height");
+    mDesiredDayOfWeekHeight =atts.getDimensionPixelSize("day_of_week_height");
+    mDesiredDayHeight = atts.getDimensionPixelSize("day_height");
+    mDesiredCellWidth  = atts.getDimensionPixelSize("day_width");
+    mDesiredDaySelectorRadius=atts.getDimensionPixelSize("day_selector_radius");
 }
 
 void SimpleMonthView::updateMonthYearLabel(){

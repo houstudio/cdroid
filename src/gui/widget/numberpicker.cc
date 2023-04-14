@@ -318,6 +318,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
             pshCancel();//mPressedStateHelper.cancel();
             mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
             const int initialVelocity = (int) mVelocityTracker->getYVelocity();
+            LOGV("initialVelocity=%d",initialVelocity);
             if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
                 fling(initialVelocity);
                 onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);

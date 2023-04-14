@@ -490,9 +490,8 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
         if (mIsBeingDragged) {
             VelocityTracker* velocityTracker = mVelocityTracker;
             velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
-            int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
-
-            if ((std::abs(initialVelocity) > mMinimumVelocity)) {
+            const int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
+            if ((std::abs(initialVelocity) > mMinimumVelocity/2)) {
                 flingWithNestedDispatch(-initialVelocity);
             } else if (mScroller->springBack(mScrollX, mScrollY, 0, 0, 0,getScrollRange())) {
                 postInvalidateOnAnimation();
@@ -1077,7 +1076,7 @@ void ScrollView::fling(int velocityY) {
 }
 
 void ScrollView::flingWithNestedDispatch(int velocityY) {
-    bool canFling = (mScrollY > 0 || velocityY > 0) &&
+    const bool canFling = (mScrollY > 0 || velocityY > 0) &&
         (mScrollY < getScrollRange() || velocityY < 0);
     if (!dispatchNestedPreFling(0, velocityY)) {
         dispatchNestedFling(0, velocityY, canFling);

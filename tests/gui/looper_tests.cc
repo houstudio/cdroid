@@ -67,7 +67,7 @@ class TestHandler:public MessageHandler{
 public:
    TestHandler(){count=0;}
    void handleMessage(Message&msg)override{
-       count++;
+       count++;printf("handleMessage(%d)\r\n",msg.what);
    }
    int getCount()const{return count;}
 };
@@ -204,10 +204,8 @@ static int fdcallback(int fd, int events, void* data){
    int *loops=(int*)data;
    struct timespec cur;
    clock_gettime(CLOCK_MONOTONIC,&cur);
-   printf("fdcallback fd=%d\r\n",fd);
    if(events&Looper::EVENT_INPUT)
       ::read(fd, &count, sizeof(uint64_t));
-   printf("fd=%d evnets=%d [%4d/%lld] time=%lld.%lld\r\n",fd,events,(*loops)++,count,cur.tv_sec,cur.tv_nsec/1000000);
    if(*loops>20){
       struct itimerspec new_value={{0,0},{0,0}};
       timerfd_settime(fd,0,&new_value, NULL);
@@ -221,12 +219,11 @@ TEST_F(LOOPER,timerfd){
     Looper*loop= Looper::getDefault();
     int loops=0;
     struct itimerspec new_value={{0,0},{0,0}};
-
+    ms2timespec(INTERVAL,&new_value.it_value);
     ms2timespec(INTERVAL,&new_value.it_interval);
     int fd=timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
 
     int rc=timerfd_settime(fd, 0/*TFD_TIMER_ABSTIME*/, &new_value,NULL);
-    printf("fd= %d rc=%d\r\n",fd,rc);
     loop->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
     while(1)loop->pollAll(10);
 }
@@ -238,11 +235,11 @@ TEST_F(LOOPER,timerfd2){
     Looper*loop= Looper::getDefault();
     struct itimerspec new_value={{0,0},{0,0}};
 
+    ms2timespec(INTERVAL,&new_value.it_value);
     ms2timespec(INTERVAL,&new_value.it_interval);
     int fd=timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
 
     int rc=timerfd_settime(fd, 0/*TFD_TIMER_ABSTIME*/, &new_value, NULL);
-    printf("fd= %d rc=%d\r\n",fd,rc);
     loop->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
     Window*w  = new Window(0,0,-1,-1);
     Button*btn= new Button("Test",200,200);
