@@ -1,6 +1,7 @@
 #ifndef __PLOT_VIEW_H__
 #define __PLOT_VIEW_H__
 #include <view/view.h>
+#if ENABLE_PLPLOT
 class plstream;
 namespace cdroid{
 
@@ -16,5 +17,5 @@ public:
 };
 
 }
-
+#endif/*ENABLE_PLPLOT*/
 #endif

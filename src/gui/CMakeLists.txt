@@ -8,6 +8,7 @@ option( GUI_STATIC "UI is static link" ON)
 aux_source_directory(core SRCS_GUICORE)
 aux_source_directory(view SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)
+aux_source_directory(ext_widget SRCS_EXTWIDGET)
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
@@ -32,7 +33,8 @@ add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
-    ${SRCS_CAIROMM} ${SRCS_WIDGET} ${SRCS_DRAWABLES} 
+    ${SRCS_CAIROMM} ${SRCS_WIDGET}
+    ${SRCS_EXTWIDGET} ${SRCS_DRAWABLES}
     ${SRCS_APP} ${SRCS_DIALOG}
     #${SRCS_PRIVATE}
     ${SRCS_ANIMATION} widget/R.h)

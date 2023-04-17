@@ -1,13 +1,9 @@
-#include <widget/plotview.h>
-#include <gui_features.h>
-#ifdef ENABLE_PLPLOT
+#if ENABLE_PLPLOT
+#include <ext_widget/plotview.h>
 #include <plstream.h>
-#endif
 namespace cdroid{
 
 PlotView::PlotView(int w,int h):View(w,h){
-    pls=nullptr;
-#ifdef ENABLE_PLPLOT
     pls=new plstream();
     //int argc=0;
     //char*argv[]={nullptr};
@@ -17,20 +13,15 @@ PlotView::PlotView(int w,int h):View(w,h){
     mImageContext=Cairo::Context::create(mImage);
     pls->init();
     pls->cmd(PLESC_DEVINIT,mImageContext->cobj());
-#endif
 }
 
 void PlotView::onDraw(Canvas&canvas){
-#ifdef ENABLE_PLPLOT
     canvas.save();
     canvas.set_operator(Cairo::Context::Operator::OVER);
     canvas.set_source(mImage,.0f,.0f);
     canvas.rectangle(0,0,getWidth(),getHeight());
     canvas.fill();
     canvas.restore();
-#else
-    View::onDraw(canvas);
-#endif
 }
 
 plstream*PlotView::getStream()const{
@@ -38,4 +29,4 @@ plstream*PlotView::getStream()const{
 }
 
 }
-
+#endif/*ENABLE_PLPLOT*/

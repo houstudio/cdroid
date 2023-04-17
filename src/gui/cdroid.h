@@ -1,3 +1,4 @@
+#include <gui_features.h>
 #include <cdtypes.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>

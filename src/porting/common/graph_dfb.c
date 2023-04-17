@@ -175,27 +175,30 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 
      dfbdst->SetPorterDuff(dfbdst,DSPD_SRC_OVER);
      const int ox=dx,oy=dy;
-     switch(GFXGetRotation(0)){/*directfb's rotation is clockwise*/
-     case ROTATE_0 : dfbdst->SetBlittingFlags(dfbdst,DSBLIT_NOFX);
+     if(dfbdst == primarySurface){
+         switch(GFXGetRotation(0)){/*directfb's rotation is clockwise*/
+         case ROTATE_0 : dfbdst->SetBlittingFlags(dfbdst,DSBLIT_NOFX);
 		     dx += screenMargin.x;
 		     dy += screenMargin.y;
 		     break;
-     case ROTATE_90: dx = oy + screenMargin.x; 
+         case ROTATE_90: dx = oy + screenMargin.x;
 		     dy = dstheight -ox - rs.w -screenMargin.h;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE90);
 		     break;
-     case ROTATE_180:dx = dstwidth -ox -rs.w - screenMargin.w;
+         case ROTATE_180:dx = dstwidth -ox -rs.w - screenMargin.w;
                      dy = dstheight-oy -rs.h - screenMargin.h;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE180);
 		     break;
-     case ROTATE_270:dx = dstwidth -oy -rs.h -screenMargin.w;
+         case ROTATE_270:dx = dstwidth -oy -rs.h -screenMargin.w;
 		     dy = ox - screenMargin.y;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE270);
 		     break;
-     default: return E_ERROR;
+         default: return E_ERROR;
+         }
      }
      dfbdst->Blit(dfbdst,dfbsrc,&rs,dx,dy);
-     LOGV("dstsurface=%p srcsurface=%p (%d,%d,%d,%d) to pos(%d,%d)/(%d,%d)",dstsurface,srcsurface,rs.x,rs.y,rs.w,rs.h,ox,oy,dx,dy);
+     LOGV("dstsurface=%p/primarySurface=%p srcsurface=%p (%d,%d,%d,%d) to pos(%d,%d)/(%d,%d)",
+		     dstsurface,primarySurface,srcsurface,rs.x,rs.y,rs.w,rs.h,ox,oy,dx,dy);
      return ret;
 }
 

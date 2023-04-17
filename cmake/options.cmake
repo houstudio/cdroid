@@ -23,7 +23,6 @@ find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(TurboJPEG)
 find_package(ZLIB REQUIRED)
-find_package(JSONCPP)
 find_package(ZIP REQUIRED)
 find_package(Freetype2 REQUIRED)
 find_package(EXPAT REQUIRED)
@@ -34,8 +33,10 @@ find_package(Fontconfig REQUIRED)
 find_package(Brotli)
 find_package(BZip2 REQUIRED)
 find_package(UniBreak REQUIRED)
-find_package(LiteHtml)
+find_package(litehtml CONFIG REQUIRED)
 find_package(PLPLOT)
+find_package(zint CONFIG) #barcode generater
+
 list(APPEND CDROID_DEPLIBS
     ${CAIRO_LIBRARIES}
     ${PIXMAN_LIBRARIES}
@@ -48,8 +49,9 @@ list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
 )
+
 if ( BROTLIDEC_FOUND )
-   list(APPEND CDROID_DEPLIBS ${BROTLIDEC_LIBRARIES})
+   #list(APPEND CDROID_DEPLIBS ${BROTLIDEC_LIBRARIES})
 endif()
 
 if (JPEG_FOUND)
@@ -62,15 +64,22 @@ if (TURBOJPEG_FOUND)
    list(APPEND CDROID_DEPLIBS ${TURBOJPEG_LIBRARIES})
 endif()
 
-if (LITEHTML_FOUND)
-    list( APPEND CDROID_DEPLIBS ${LITEHTML_LIBRARIES})
-    list(APPEND CDROID_DEPINCLUDES ${LITEHTML_INCLUDE_DIRS})
+if (litehtml_FOUND)
+    list( APPEND CDROID_DEPLIBS litehtml)
+    #list(APPEND CDROID_DEPINCLUDES ${LITEHTML_INCLUDE_DIRS})
+    add_definitions(-DENABLE_LITEHTML=1)
 endif()
 
 if (PLPLOT_FOUND)
     list( APPEND CDROID_DEPLIBS ${PLPLOT_LIBRARIES})
     list(APPEND CDROID_DEPINCLUDES ${PLPLOT_INCLUDE_DIRS})
     add_definitions(-DENABLE_PLPLOT=1)
+endif()
+
+if (zint_FOUND)
+    list( APPEND CDROID_DEPLIBS zint::zint)
+    #list(APPEND CDROID_DEPINCLUDES ${ZINT_INCLUDE_DIRS})
+    add_definitions(-DENABLE_BARCODE=1)
 endif()
 
 if(ENABLE_FRIBIDI)

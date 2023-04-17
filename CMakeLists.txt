@@ -21,20 +21,6 @@ add_subdirectory(apps)
 
 add_subdirectory(tests)
 
-include (InstallRequiredSystemLibraries)
-#set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
-set (CPACK_COMPONENT_LIBRARIES_DEPENDS ${CDROID_DEPLIBS})
-set (CPACK_PACKAGE_VERSION_MAJOR "1")
-set (CPACK_PACKAGE_VERSION_MINOR "0")
-include (CPack)
-
-set(APPS ${CMAKE_INSTALL_PREFIX}/bin/uidemo2)  # paths to executables
-set(DIRS "$ENV{HOME}/vcpkg/installed/arm-linux-dynamic"
-	"${CMAKE_INSTALL_PREFIX}/lib")   # directories to search for prerequisites
-INSTALL(CODE "
-   include(BundleUtilities)
-   fixup_bundle(\"${APPS}\"   \"\"   \"${DIRS}\")
-   " COMPONENT Runtime)
 
 if(BUILD_DOCS)
   include(cmake/build_doxygen.cmake)
