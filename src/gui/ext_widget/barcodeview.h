@@ -143,18 +143,49 @@ public:
         LAST  = BARCODE_LAST               /*146Max barcode number marker, not barcode */
     };
 private:
-    void initView();    
+    int mErrorNo;
+    int mRotateAngle;
+    int mFgColor;
+    std::string mErrorStr;
+    void initView();
 protected:
     struct zint_symbol *mSymbol;
     std::string mText;
+    void encode();
+    /*Test capabilities*/
+    bool hasHRT()const;
+    bool isStackable()const;
+    bool isExtendable()const;
+    bool isComposite()const;
+    bool supportsECI()const;
+    bool supportsGS1()const;
+    bool isDotty()const;
+    bool hasDefaultQuietZones()const;
+    bool isFixedRatio()const;
+    bool supportsReaderInit()const;
+    bool supportsFullMultibyte()const;
+    bool hasMask()const;
+    bool supportsStructApp()const;
+    bool hasCompliantHeight()const;
+    bool getWidthHeightXdim(float x_dim, float &width_x_dim, float &height_x_dim) const;
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
     BarcodeView(int w,int h);
     ~BarcodeView();
     BarcodeView(Context*ctx,const AttributeSet&attrs);
     void setText(const std::string&text);
+    void setBarcodeColor(int color);
+    int getBarcodeColor()const;
     int  getSymbology()const; 
     void setSymbology(int );
     std::string getBarcodeName();
+    void setZoom(float);
+    float getZoom()const;
+    void setSHRT(bool hrt);
+    bool getSHRT()const;
+    void setRotateAngle(int angle);
+    int  getRotateAngle()const;
+    void onDraw(Canvas&canvas)override;
 public:
 
 };
