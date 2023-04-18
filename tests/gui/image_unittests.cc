@@ -110,7 +110,7 @@ TEST_F(IMAGE,Bitmap){
 }
 TEST_F(IMAGE,Image_PNG){
     loadImages("./","png");
-    printf("%d image loaded\r\n",images.size());
+    printf("%lu image loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
         std::ifstream fs(images[i].c_str());
@@ -133,7 +133,7 @@ TEST_F(IMAGE,Image_PNG){
 
 TEST_F(IMAGE,Image_JPG){
     loadImages("./","jpg");
-    printf("%d img loaded\r\n",images.size());
+    printf("%lu img loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
         std::ifstream fs(images[i].c_str());

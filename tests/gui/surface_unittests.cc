@@ -170,7 +170,7 @@ TEST_F(CONTEXT,Clip2){
     ctx->get_clip_extents(x1,y1,x2,y2);
     std::vector<Rectangle>lst;
     ctx->copy_clip_rectangle_list(lst);
-    printf("CLIPS(%f,%f,%f,%f) lst.size=%d\r\n",x1,y1,x2,y2,lst.size());
+    printf("CLIPS(%f,%f,%f,%f) lst.size=%lu\r\n",x1,y1,x2,y2,lst.size());
 }
 
 TEST_F(CONTEXT,Clip3){
