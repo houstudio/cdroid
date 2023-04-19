@@ -166,7 +166,7 @@ protected:
 
     class AttachInfo{
     public:
-        View*mRootView;
+        ViewGroup*mRootView;
         bool mHardwareAccelerated;
         float mApplicationScale;
         int mWindowLeft;

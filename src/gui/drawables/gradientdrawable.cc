@@ -772,7 +772,7 @@ void GradientDrawable::draw(Canvas&canvas){
               0,M_PI*2.f*(st->mUseLevel?(float)getLevel()/10000.f:1));
 	canvas.line_to(0,0);LOGD("useLevel=%d lvl=%d",st->mUseLevel,getLevel());
 #else
-	LOGD("radius=%f",(float)st->mRadius);
+	LOGV("radius=%f",(float)st->mRadius);
 	canvas.move_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
         canvas.arc(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f,
 			std::min(mRect.width,mRect.height)/2.f,

@@ -1,9 +1,8 @@
 #include <widget/togglebutton.h>
 #include <cdlog.h>
-
+#include <widget/R.h>
 
 namespace cdroid{
-#define TOGGLE 1
 #define NO_ALPHA 0xFF
 
 DECLARE_WIDGET2(ToggleButton,"cdroid:attr/buttonStyleToggle")
@@ -64,7 +63,7 @@ void ToggleButton::drawableStateChanged() {
 void ToggleButton::updateReferenceToIndicatorDrawable(Drawable* backgroundDrawable) {
     if (dynamic_cast<LayerDrawable*>(backgroundDrawable)) {
         LayerDrawable* layerDrawable = (LayerDrawable*) backgroundDrawable;
-        mIndicatorDrawable =layerDrawable->findDrawableByLayerId(TOGGLE);//com.android.internal.R.id.toggle);
+        mIndicatorDrawable =layerDrawable->findDrawableByLayerId(R::id::toggle);//com.android.internal.R.id.toggle);
     } else {
         mIndicatorDrawable = nullptr;
     }
