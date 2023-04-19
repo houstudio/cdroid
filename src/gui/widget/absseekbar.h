@@ -11,11 +11,11 @@ private:
     bool mHasThumbTintMode;
     float mDisabledAlpha;
     float mTouchDownX;
-    int mScaledTouchSlop;
-    bool mIsDragging;
-
+    int  mScaledTouchSlop;
+    int  mTouchThumbOffset;
+    int  mTickMarkTintMode;
     ColorStateList* mTickMarkTintList;
-    int mTickMarkTintMode;
+    bool mIsDragging;
     bool mHasTickMarkTint = false;
     bool mHasTickMarkTintMode = false;
 

@@ -44,6 +44,7 @@ void AbsSeekBar::initSeekBar(){
     mHasThumbTintMode =false;
     mDisabledAlpha=1.f;
     mTouchProgressOffset =.0f;
+    mTouchThumbOffset =.0f;
     mScaledTouchSlop=ViewConfiguration::get(mContext).getScaledTouchSlop();
     setFocusable(true);
 }
@@ -461,7 +462,8 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
         } else if (x < mPaddingLeft) {
             scale = 1.0f;
         } else {
-            scale = (availableWidth - x + mPaddingLeft) / (float) availableWidth;
+            scale = (availableWidth - x + mPaddingLeft) / (float) availableWidth
+		    +mTouchThumbOffset;
             progress = mTouchProgressOffset;
         }
     } else {
@@ -470,7 +472,7 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
         } else if (x > width - mPaddingRight) {
             scale = 1.0f;
         } else {
-            scale = (x - mPaddingLeft) / (float) availableWidth;
+            scale = (x - mPaddingLeft) / (float) availableWidth + mTouchThumbOffset;
             progress = mTouchProgressOffset;
         }
     }
@@ -487,10 +489,17 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
 
     switch (event.getAction()) {
     case MotionEvent::ACTION_DOWN:
+	if(mThumb){
+             const int availableWidth = getWidth() - mPaddingLeft - mPaddingRight;
+             mTouchThumbOffset = (getProgress() - getMin()) / (float) (getMax()
+                    - getMin()) - (event.getX() - mPaddingLeft) / availableWidth;
+             if (std::abs(mTouchThumbOffset * availableWidth) > getThumbOffset()) {
+                 mTouchThumbOffset = 0;
+             }
+	}
         if (isInScrollingContainer()) {
             mTouchDownX = event.getX();
         } else {
-            mTouchDownX = event.getX();
             startDrag(event);
         }
         break;
@@ -499,7 +508,7 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
         if (mIsDragging) {
             trackTouchEvent(event);
         } else {
-            float x = event.getX();
+            const float x = event.getX();
             if (std::abs(x - mTouchDownX) > mScaledTouchSlop) {
                 startDrag(event);
             }
