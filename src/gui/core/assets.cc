@@ -210,7 +210,8 @@ void Assets::parseResource(const std::string&fullResId,std::string*res,std::stri
             pkg = mName.substr(pos+1);
         relname = fullid;
     }
-    if(ns) *ns = pkg;
+    if(pkg=="android") pkg="cdroid";
+    if( ns) *ns = pkg;
     if(res)*res= relname;
 }
 

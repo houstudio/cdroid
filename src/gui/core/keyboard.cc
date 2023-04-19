@@ -191,6 +191,7 @@ typedef struct{
     Keyboard* keyboard;
     Keyboard::Row*row;
     Keyboard::Key*key;
+    std::string package;
     int x,y;
     int displayWidth,displayHeight;
     int keyboardMode;
@@ -199,7 +200,7 @@ typedef struct{
 
 static void startTag(void *userData, const XML_Char *name, const XML_Char **satts){
     KeyboardData*pd=(KeyboardData*)userData;
-    AttributeSet atts;
+    AttributeSet atts(pd->context,pd->package);
     Context*context=pd->context;
     Keyboard* keyboard=pd->keyboard;
     Keyboard::Row*row =pd->row;
@@ -251,14 +252,17 @@ static void endTag(void *userData, const XML_Char *name){
 }
 
 void Keyboard::loadKeyboard(Context*context,const std::string&resid){
-    XML_Parser parser=XML_ParserCreateNS(NULL,':');
-    KeyboardData pd={&rows,&mKeys,context,this,nullptr,0,0};
+    std::string package;
     ULONGLONG tstart=SystemClock::uptimeMillis();
+    XML_Parser parser=XML_ParserCreateNS(NULL,':');
+
+    context->getInputStream(resid,&package);
+    KeyboardData pd={&rows,&mKeys,context,this,nullptr,nullptr,package,0,0};
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startTag, endTag);
-    pd.displayWidth=mDisplayWidth;
-    pd.displayHeight=mDisplayHeight;
-    pd.keyboardMode=mKeyboardMode;
+    pd.displayWidth = mDisplayWidth;
+    pd.displayHeight= mDisplayHeight;
+    pd.keyboardMode = mKeyboardMode;
     int len = 0;
     std::unique_ptr<std::istream>stream=context->getInputStream(resid);
     if(stream){
