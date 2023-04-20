@@ -16,9 +16,10 @@ EditText::EditText(Context*ctx,const AttributeSet& attrs)
     initEditText();
     mHint = ctx->getString(attrs.getString("hint"));
     mInputType = attrs.getInt("inputType",std::map<const std::string,int>{
-		    {"none",TYPE_NONE} , {"any", TYPE_ANY},
-		    {"number",TYPE_NUMBER},{"text",TYPE_TEXT},
-		    {"password",TYPE_PASSWORD},{"ip",TYPE_IP}
+		    {"none",TYPE_NONE}    , {"any", TYPE_ANY},
+		    {"number",TYPE_NUMBER}, {"text",TYPE_TEXT},
+		    {"textPassword",TYPE_PASSWORD},{"ip",TYPE_IP},
+		    {"textVisiblePassword",TYPE_PASSWORD}
 	  },TYPE_NONE);
     setEditable(true);
 }
@@ -273,7 +274,7 @@ void EditText::onDraw(Canvas&canvas){
     if(wText.empty()||(mInputType==TYPE_PASSWORD) ){
         Layout hpl(*mLayout);
         Layout* tmp=mLayout;
-        if((mInputType==TYPE_PASSWORD))
+        if((mInputType==TYPE_PASSWORD)&&wText.length())
             hpl.setText(std::string(wText.length(),'*'));
         else
             hpl.setText(mHint);
