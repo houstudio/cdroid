@@ -92,6 +92,8 @@ void NinePatch::drawScaledPart(const RECT& oldRect, const RECT& newRect,Cairo::C
 	}
 	painter.clip();
 	painter.set_source(mImage,dx-oldRect.left,dy-oldRect.top);
+	/*default filtertype:Good cannot be use here*/
+	painter.get_source_for_surface()->set_filter(SurfacePattern::Filter::NEAREST);
 	painter.paint_with_alpha(1.0f);
 	painter.restore();
     }
@@ -102,6 +104,7 @@ void NinePatch::drawConstPart(const RECT& oldRect, const RECT& newRect,Cairo::Co
     painter.rectangle(newRect.left,newRect.top,newRect.width,newRect.height);
     painter.clip();
     painter.set_source(mImage,newRect.left-oldRect.left,newRect.top-oldRect.top);
+    painter.get_source_for_surface()->set_filter(SurfacePattern::Filter::FAST);
     painter.paint_with_alpha(1.f);
     painter.restore();
 }
