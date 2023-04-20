@@ -10,8 +10,15 @@ struct zint_symbol *symbol;
 namespace cdroid{
 class BarcodeView:public View{
 public:
-    enum BorderType{NO_BORDER=0, BIND=2, BOX=4};
+    enum BorderType{NO_BORDER=0, TOP=1 , BIND=2, BOX=4};
     enum AspectRatioMode{IgnoreAspectRatio=0, KeepAspectRatio=1, CenterBarCode=2};
+    class ZintSeg {
+    public:
+	std::string mText;//`seg->source` and `seg->length`
+        int mECI; //`seg->eci`
+        ZintSeg();
+        ZintSeg(const std::string& text, const int ECIIndex = 0); // `ECIIndex` is comboBox index (not ECI value)
+    };
     enum Symbologies{
 	Code11   = BARCODE_CODE11,      /*1 Code 11 */ 
 	C25Standard=BARCODE_C25STANDARD,/*2 2 of 5 Standard (Matrix) */
@@ -36,9 +43,9 @@ public:
         Flat     = BARCODE_FLAT ,       /*28 Flattermarken */
         DBAR_OMN = BARCODE_DBAR_OMN,    /*29 GS1 DataBar Omnidirectional */
         RSS14    = BARCODE_RSS14,       /*29 Legacy */
-        DBAR_LTD  = BARCODE_DBAR_LTD,   /*30 GS1 DataBar Limited */
-        RSS_LTD   = BARCODE_RSS_LTD,    /*30 Legacy */
-        DBAR_EXP  = BARCODE_DBAR_EXP,   /*31 GS1 DataBar Expanded */
+        DBAR_LTD = BARCODE_DBAR_LTD,    /*30 GS1 DataBar Limited */
+        RSS_LTD  = BARCODE_RSS_LTD,     /*30 Legacy */
+        DBAR_EXP = BARCODE_DBAR_EXP,    /*31 GS1 DataBar Expanded */
         RSSEXP   = BARCODE_RSS_EXP,     /*31 Legacy */
         Telepen  = BARCODE_TELEPEN,     /*32 Telepen Alpha */
         UPCA     = BARCODE_UPCA,        /*34  UPC-A */
@@ -146,8 +153,44 @@ private:
     int mErrorNo;
     int mRotateAngle;
     int mFgColor;
+    int mSymbology;
+    bool mDotty;
+    bool mShowHRT;
+    bool mCmyk;
+    bool mGssep;
+    bool mQuietZones;
+    bool mNoQuietZones;
+    bool mCompliantHeight;
+    bool mReaderInit;
+    bool mDebug;
+    bool mGS1Parens;
+    bool mGS1NoCheck;
+    int mBorderType;
+    int mOption1;
+    int mOption2;
+    int mOption3;
+    int mDotSize;
+    int mBorderWidth;
+    int mWhiteSpace;
+    int mVWhiteSpace;
+    int mWarnLevel;
+    int mECI;
+    int mInputMode;
+    int mEncodedRows;
+    int mEncodedWidth;
+    int mEncodedHeight;
+    int mChanged;
+    float mZoom;
+    float mDpmm;
+    float mGuardDescent;
+    float mVectorWidth;
+    float mVectorHeight;
     std::string mErrorStr;
+    std::string mPrimaryMessage;
+    std::vector<ZintSeg>mSegs;
     void initView();
+    int convertSegs(struct zint_seg* zsegs, std::vector<std::string>& bstrs);
+    bool resetSymbol();
 protected:
     struct zint_symbol *mSymbol;
     std::string mText;
@@ -171,14 +214,18 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
     BarcodeView(int w,int h);
-    ~BarcodeView();
     BarcodeView(Context*ctx,const AttributeSet&attrs);
+    ~BarcodeView()override;
     void setText(const std::string&text);
+    std::vector<ZintSeg> getSegs()const;
+    void setSegs(const std::vector<ZintSeg>& segs);
     void setBarcodeColor(int color);
-    int getBarcodeColor()const;
+    int  getBarcodeColor()const;
     int  getSymbology()const; 
+    void setBorderType(int borderTypeIndex/*enum BorderType*/);
+    int  getBorderType()const;
     void setSymbology(int );
-    std::string getBarcodeName();
+    std::string getBarcodeName()const;
     void setZoom(float);
     float getZoom()const;
     void setSHRT(bool hrt);

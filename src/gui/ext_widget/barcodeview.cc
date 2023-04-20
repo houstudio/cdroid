@@ -14,7 +14,6 @@ BarcodeView::BarcodeView(int w,int h):View(w,h){
 
 BarcodeView::BarcodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     initView();
-
 }
 
 BarcodeView::~BarcodeView(){
@@ -23,30 +22,146 @@ BarcodeView::~BarcodeView(){
 }
 
 void BarcodeView::initView(){
+    mErrorNo = 0;
     mRotateAngle = 0;
+    mFgColor = 0xFF000000;
+    mSymbology = QRCode;
+    mDotty  = false;
+    mShowHRT= true;
+    mCmyk = true;
+    mGssep= true;
+    mQuietZones  = true;
+    mNoQuietZones= true;
+    mCompliantHeight= true;
+    mReaderInit = true;
+    mDebug = false;
+    mGS1Parens = true;
+    mGS1NoCheck= true;
+    mBorderType= BOX;
+    mOption1 = 0;
+    mOption2 = 0;
+    mOption3 = 0;
+    mDotSize =1;
+    mBorderWidth= 0;
+    mWhiteSpace = 0;
+    mVWhiteSpace= 0;
+    mWarnLevel  = 0;
+    mECI=0;
+    mInputMode=DATA_MODE;
+    mZoom = 1.f;
+    mDpmm =.0f;
+    mGuardDescent=.0f;
+ 
     setBackgroundColor(Color::WHITE);
     mFgColor = Color::BLACK;
-    mSymbol = ZBarcode_Create();
-    mSymbol->outfile[0]=0;
-    mSymbol->symbology = QRCode;
-    mSymbol->whitespace_width =2;
-    mSymbol->whitespace_height=2;
+    mSymbol  = ZBarcode_Create();
+    mSymbol->outfile[0]= 0;
+    mSymbol->show_hrt  = 1;
+    mSymbol->border_width=2;
+    mSymbol->whitespace_width = 2;
+    mSymbol->whitespace_height= 2;
+    mSymbol->scale = 2.f;
+    mChanged = 0;
+}
+
+bool BarcodeView::resetSymbol(){
+    mErrorNo = 0;
+    mErrorStr.clear();
+
+    if (mSymbol) {
+        ZBarcode_Clear(mSymbol);
+    } else if (!(mSymbol = ZBarcode_Create())) {
+        mErrorNo = ZINT_ERROR_MEMORY;
+        mErrorStr ="Insufficient memory for Zint structure";
+        return false;
+    }
+    mSymbol->symbology = mSymbology;
+    //mSymbol->height = m_height;
+    mSymbol->scale = mZoom;
+    mSymbol->whitespace_width = mWhiteSpace;
+    mSymbol->whitespace_height= mVWhiteSpace;
+    mSymbol->border_width = mBorderWidth;
+    mSymbol->output_options = mBorderType;// | m_fontSetting;
+    if (mDotty) {
+        mSymbol->output_options |= BARCODE_DOTTY_MODE;
+    }
+    if (mCmyk) {
+        mSymbol->output_options |= CMYK_COLOUR;
+    }
+    if (mGssep) {
+        mSymbol->output_options |= GS1_GS_SEPARATOR;
+    }
+    if (mQuietZones) {
+        mSymbol->output_options |= BARCODE_QUIET_ZONES;
+    }
+    if (mNoQuietZones) {
+        mSymbol->output_options |= BARCODE_NO_QUIET_ZONES;
+    }
+    if (mCompliantHeight) {
+        mSymbol->output_options |= COMPLIANT_HEIGHT;
+    }
+    if (mReaderInit) {
+        mSymbol->output_options |= READER_INIT;
+    }
+    /*strcpy(mSymbol->fgcolour, mFgColor.name().toLatin1().right(6));
+    if (m_fgColor.alpha() != 0xFF) {
+        strcat(mSymbol->fgcolour, m_fgColor.name(QColor::HexArgb).toLatin1().mid(1,2));
+    }
+    strcpy(mSymbol->bgcolour, m_bgColor.name().toLatin1().right(6));
+    if (m_bgColor.alpha() != 0xFF) {
+        strcat(mSymbol->bgcolour, m_bgColor.name(QColor::HexArgb).toLatin1().mid(1,2));
+    }*/
+    //strcpy(mSymbol->primary, mPrimaryMessage.toLatin1().left(127));
+    mSymbol->option_1 = mOption1;
+    mSymbol->option_2 = mOption2;
+    mSymbol->option_3 = mOption3;
+    mSymbol->show_hrt = mShowHRT ? 1 : 0;
+    mSymbol->input_mode = mInputMode;
+    if (mGS1Parens) {
+        mSymbol->input_mode |= GS1PARENS_MODE;
+    }
+    if (mGS1NoCheck) {
+        mSymbol->input_mode |= GS1NOCHECK_MODE;
+    }
+    mSymbol->eci = mECI;
+    mSymbol->dpmm = mDpmm;
+    mSymbol->dot_size = mDotSize;
+    mSymbol->guard_descent = mGuardDescent;
+    //mSymbol->structapp = m_structapp;
+    mSymbol->warn_level = mWarnLevel;
+    mSymbol->debug = mDebug ? ZINT_DEBUG_PRINT : 0;
+    return true;
+}
+
+
+void BarcodeView::setBorderType(int borderTypeIndex){
+    if(mBorderType!=borderTypeIndex){
+        mBorderType = borderTypeIndex;
+        mSymbol->output_options=borderTypeIndex;
+	mChanged++;
+    }
+}
+
+int  BarcodeView::getBorderType()const{
+     return mBorderType;
 }
 
 int BarcodeView::getSymbology()const{
+    
     return mSymbol->symbology;
 }
 
 void BarcodeView::setSymbology(int code){
     const int rc=ZBarcode_ValidID(code);
-    LOGE_IF(rc,"%d is not an valid Symbologies",code);
-    if(rc==0){
+    LOGE_IF(!rc,"%d is not an valid Symbologies",code);
+    if(rc!=0){
+	mSymbology = code;
         mSymbol->symbology = code;
         if(!mText.empty()) invalidate();
     }
 }
 
-std::string BarcodeView::getBarcodeName(){
+std::string BarcodeView::getBarcodeName()const{
     char name[32];
     ZBarcode_BarcodeName(mSymbol->symbology,name);
     return std::string(name);
@@ -55,12 +170,16 @@ std::string BarcodeView::getBarcodeName(){
 void BarcodeView::setText(const std::string&text){
     if(mText!=text){
 	mText = text;
-        invalidate(true);
+	mSegs.clear();
 	encode();
+        invalidate(true);
     }
-    LOGD("xdim=%f size=%.fx%.f %.fx%.f",ZBarcode_Default_Xdim(mSymbol->symbology),
-		    mSymbol->width,mSymbol->height,
-		    mSymbol->vector->width,mSymbol->vector->height);
+    float w,h;
+    getWidthHeightXdim(2.f,w,h);
+    LOGD("%p symbology=%d size=%.fx%.f /%.fx%.f/%.fx%.f",this,mSymbol->symbology,
+		    mSymbol->width,mSymbol->height,w,h,
+		    (mSymbol->vector?mSymbol->vector->width:0),
+		    (mSymbol->vector?mSymbol->vector->height:0));
 }
 
 void BarcodeView::setBarcodeColor(int color){
@@ -107,6 +226,16 @@ void BarcodeView::setRotateAngle(int angle){
 
 int  BarcodeView::getRotateAngle()const{
     return mRotateAngle;
+}
+
+/* Input segments. */
+std::vector<BarcodeView::ZintSeg> BarcodeView::getSegs() const{
+    return mSegs;
+}
+
+/* Set segments. Note: clears text and sets eci */
+void BarcodeView::setSegs(const std::vector<ZintSeg>& segs){
+    mSegs= segs;
 }
 
 bool BarcodeView::hasHRT()const{
@@ -197,16 +326,62 @@ void  BarcodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if(widthMode == MeasureSpec::EXACTLY){
 	 width = widthSize;
 	 height= heightSize;
-    }else{
-	 width = mSymbol->bitmap_width *mSymbol->scale;
-	 height= mSymbol->bitmap_height*mSymbol->scale;;
+    }else{	    
+	 if(mSymbol->vector){ 
+	     width = mSymbol->vector->width * mSymbol->scale;
+	     height= mSymbol->vector->height* mSymbol->scale;
+	 }else{
+	     width = mSymbol->width * mSymbol->scale;
+	     height= mSymbol->height* mSymbol->scale;
+	 }
     }
+    LOGD("setMeasuredDimension(%d,%d)",width,height);
     setMeasuredDimension(width, height);
 }
 
+#define MAX_SEGS 256
+int BarcodeView::convertSegs(struct zint_seg zsegs[], std::vector<std::string>& bstrs) {
+    int i = 0;
+    for (i = 0; i < (int) mSegs.size() && i < MAX_SEGS && !mSegs[i].mText.empty(); i++) {
+        zsegs[i].eci = mSegs[i].mECI;
+        bstrs.push_back(mSegs[i].mText);
+        zsegs[i].source = (unsigned char *)mSegs[i].mText.c_str();
+        zsegs[i].length = mSegs[i].mText.length();
+    }
+    return i;
+}
+
 void BarcodeView::encode(){
-    mErrorNo = ZBarcode_Encode_and_Buffer_Vector(mSymbol,(const unsigned char*)mText.c_str(),mText.length(),0);
-    mErrorStr=std::string(mSymbol->errtxt);
+    if(resetSymbol()){
+        if (mSegs.empty()) {
+            /* Note do our own rotation */
+            mErrorNo = ZBarcode_Encode_and_Buffer_Vector(mSymbol, (unsigned char*) mText.c_str(), mText.length(), 0);
+        } else {
+            struct zint_seg segs[MAX_SEGS];
+            std::vector<std::string> bstrs;
+            const int seg_count = convertSegs(segs, bstrs);
+            /* Note do our own rotation */
+            mErrorNo = ZBarcode_Encode_Segs_and_Buffer_Vector(mSymbol, segs, seg_count, 0);
+        }
+        mErrorStr = mSymbol->errtxt;
+    }
+    if (mErrorNo < ZINT_ERROR) {
+        mBorderType = mSymbol->output_options & (BARCODE_BIND | BARCODE_BOX | BARCODE_BIND_TOP);
+        //m_height = mSymbol->height;
+        mBorderWidth = mSymbol->border_width;
+        mWhiteSpace  = mSymbol->whitespace_width;
+        mVWhiteSpace = mSymbol->whitespace_height;
+        mEncodedWidth = mSymbol->width;
+        mEncodedRows  = mSymbol->rows;
+        mEncodedHeight= mSymbol->height;
+        mVectorWidth  = mSymbol->vector->width;
+        mVectorHeight = mSymbol->vector->height;
+        //emit encoded();
+    } else {
+        mEncodedWidth = mEncodedRows = 0;
+        mEncodedHeight= mVectorWidth = mVectorHeight = 0.0f;
+        //emit errored();
+    }
 }
 
 /* Convert `zint_vector_rect->colour` to Qt color */
@@ -225,9 +400,9 @@ static int colourToCDColor(int colour) {
 
 /* Helper to calculate max right and bottom of elements for fudging render() */
 static void getMaxRectsRightBottom(struct zint_vector *vector, int &maxRight, int &maxBottom) {
-    struct zint_vector_rect *rect;
-    struct zint_vector_hexagon *hex;
-    struct zint_vector_circle *circle;
+    const struct zint_vector_rect *rect;
+    const struct zint_vector_hexagon *hex;
+    const struct zint_vector_circle *circle;
 
     maxRight = maxBottom = -1;
 
@@ -272,18 +447,18 @@ void  BarcodeView::onDraw(Canvas&canvas){
     if (mErrorNo >= ZINT_ERROR) {
         canvas.set_font_size(14);
         canvas.show_text(mErrorStr);//drawText(paintRect, Qt::AlignCenter | Qt::TextWordWrap, m_lastError);
+	canvas.fill();
         canvas.restore();
-	LOGE("error [%d] %s",mErrorNo,mErrorStr.c_str());
-        //return;
+        return;
     }
 
     float xtr = paintRect.left;
     float ytr = paintRect.top;
-    float scale;
+    float scale = mSymbol->scale;
 
     const float gwidth = mSymbol->vector->width;
-    const float gheight = mSymbol->vector->height;
-
+    const float gheight= mSymbol->vector->height;
+#if 0
     if (mRotateAngle == 90 || mRotateAngle == 270) {
         if (paintRect.width / gheight < paintRect.height / gwidth) {
             scale = paintRect.width / gheight;
@@ -303,13 +478,13 @@ void  BarcodeView::onDraw(Canvas&canvas){
 
     if (mRotateAngle) {
         canvas.translate(paintRect.width / 2.0, paintRect.height / 2.0); // Need to rotate around centre
-        canvas.rotate(mRotateAngle);
+        canvas.rotate_degreenis(mRotateAngle);
         canvas.translate(-paintRect.width / 2.0, -paintRect.height / 2.0); // Undo
     }
 
     canvas.translate(xtr, ytr);
     canvas.scale(scale, scale);
-
+#endif
     const int m_fgColor=0xFF000000;
 
     //QBrush bgBrush(m_bgColor);

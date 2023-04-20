@@ -33,7 +33,7 @@ find_package(Fontconfig REQUIRED)
 find_package(Brotli)
 find_package(BZip2 REQUIRED)
 find_package(UniBreak REQUIRED)
-find_package(litehtml CONFIG REQUIRED)
+find_package(litehtml CONFIG)
 find_package(PLPLOT)
 find_package(zint CONFIG) #barcode generater
 

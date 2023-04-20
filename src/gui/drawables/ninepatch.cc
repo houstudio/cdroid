@@ -1,4 +1,5 @@
 #include <drawables/ninepatch.h>
+#include <core/context.h>
 using namespace Cairo;
 
 /*https://github.com/Roninsc2/NinePatchQt/blob/master/ninepatch.cpp*/
@@ -11,6 +12,16 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
 	throw "Not ninepatch image!";
+    }
+}
+
+NinePatch::NinePatch(Context*ctx,const std::string&resid){
+    mImage= ctx->getImage(resid);
+    mContentArea = getContentArea();
+    getResizeArea();
+    if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
+        //throw new ExceptionNot9Patch;
+        throw "Not ninepatch image!";
     }
 }
 
@@ -30,6 +41,7 @@ void NinePatch::draw(Canvas& painter, int  x, int  y) {
 void NinePatch::setImageSize(int width, int height) {
     int resizeWidth = 0;
     int resizeHeight = 0;
+    char sError[256]={0};
     if((mWidth == width) && (mHeight==height))return;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
         resizeWidth += mResizeDistancesX[i].second;
@@ -38,14 +50,17 @@ void NinePatch::setImageSize(int width, int height) {
         resizeHeight += mResizeDistancesY[i].second;
     }
     if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
-        throw "IncorrectWidthAndHeight(mImage->get_width() - 2 , mImage->get_height() - 2";
+        sprintf(sError,"IncorrectWidth(%d) must>=%d(image.width)-2-%d(resizeWidth) && incorrectHeight(%d)>=%d(image.height)-2-%d(resizeHeight))",
+		width, mImage->get_width(),resizeWidth,height,mImage->get_height(),resizeHeight);
     }
     if (width < (mImage->get_width() - 2 - resizeWidth)) {
-        throw "IncorrectWidth(mImage->get_width() - 2 , mImage->get_height() - 2 ";
+        sprintf(sError,"IncorrectWidth(%d) must>=%d(image.width)-2-%d(resizeWidth)",width,mImage->get_width(),resizeWidth);
     }
-     if (height < (mImage->get_height() - 2 - resizeHeight)) {
-        throw "IncorrectHeight(mImage->get_width() - 2 , mImage->get_height() - 2";
+    if (height < (mImage->get_height() - 2 - resizeHeight)) {
+        sprintf(sError,"IncorrectHeight(%d) must>=(%d(image.height)-2-%d(resizeHeight)",height,mImage->get_height(),resizeHeight);
     }
+    if(sError[0])
+	throw std::invalid_argument(sError);
     if (width != mWidth || height != mHeight) {
         mWidth = width;
         mHeight = height;
@@ -131,6 +146,8 @@ RECT NinePatch::getContentArea() {
     if (top && !bot) bot = top;
     top -= 1;
 
+    mPadding.set(left, top , mImage->get_width()-right-2, mImage->get_height()-2-bot);
+    LOGV("%p padding=(%d,%d,%d,%d)",this,left, top,mPadding.width,mPadding.height);
     return RECT{left, top, right - left, bot - top};
 }
 
@@ -163,10 +180,6 @@ void NinePatch::getResizeArea() {
             bot = 0;
         }
     }
-    mPadding.left = mResizeDistancesX.front().first;
-    mPadding.top  = mResizeDistancesY.front().first;
-    mPadding.width= mImage->get_width() - mResizeDistancesX.back().first - mResizeDistancesX.back().second;
-    mPadding.height=mImage->get_height()- mResizeDistancesY.back().first - mResizeDistancesY.back().second;
 }
 
 void NinePatch::getFactor(int width, int height, double& factorX, double& factorY) {
@@ -196,7 +209,7 @@ void NinePatch::updateCachedImage(int width, int height) {
     RefPtr<Cairo::Context> ppainter=Cairo::Context::create(mCachedImage);
     Cairo::Context&painter=*ppainter;
     painter.save();
-    painter.set_operator(Context::Operator::CLEAR);
+    painter.set_operator(Cairo::Context::Operator::CLEAR);
     painter.rectangle(0,0,width,height);
     painter.fill();
     painter.restore();

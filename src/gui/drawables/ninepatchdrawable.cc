@@ -15,7 +15,7 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
 }
 
 NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
-    mNinePatchState=std::make_shared<NinePatchState>(ctx->getImage(resid));
+    mNinePatchState=std::make_shared<NinePatchState>(ctx,resid);//->getImage(resid));
     mAlpha=255;
     mMutated =false;
     mTintFilter=nullptr;
@@ -204,6 +204,12 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mAutoMirrored =false;
     mPadding.set(0,0,0,0);
     mOpticalInsets.set(0,0,0,0);
+}
+
+NinePatchDrawable::NinePatchState::NinePatchState(Context*ctx,const std::string&resid)
+	:NinePatchDrawable::NinePatchState(){
+    mNinePatch =RefPtr<NinePatch>(new NinePatch(ctx,resid));
+    mPadding = mNinePatch->getPadding();
 }
 
 NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding)

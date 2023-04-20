@@ -3,13 +3,13 @@
 #include <core/canvas.h>
 
 namespace cdroid{
-
+class Context;
 class NinePatch {
 private:
     int mWidth = -1;/*CacheImage.Width*/
     int mHeight= -1;/*CacheImage.Height*/
-    RECT mContentArea;
-    RECT mPadding;
+    Rect mContentArea;
+    Rect mPadding;
     std::vector<std::pair< int, int >>mResizeDistancesY;
     std::vector<std::pair< int, int >>mResizeDistancesX;
     Cairo::RefPtr<Cairo::ImageSurface> mCachedImage;
@@ -22,6 +22,7 @@ private:
     void updateCachedImage(int width, int height);
 public:
     NinePatch(Cairo::RefPtr<Cairo::ImageSurface> image);
+    NinePatch(cdroid::Context*ctx,const std::string&resid);
     ~NinePatch();
     void draw(Canvas& painter, int x, int y);
     void drawScaledPart(const RECT& oldRect,const RECT& newRect,Cairo::Context&painter);

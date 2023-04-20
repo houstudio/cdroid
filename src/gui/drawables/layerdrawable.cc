@@ -261,7 +261,7 @@ void LayerDrawable::setLayerInsetInternal(int index, int l, int t, int r, int b,
     childDrawable->mInsetB = b;
     childDrawable->mInsetS = s;
     childDrawable->mInsetE = e;
-    LOGV("%d:(%d,%d,%d,%d,%d,%d)",index,l,t,r,b,s,e);
+    LOGV("%d:(%d,%d,%d,%d,0x%x,0x%x)",index,l,t,r,b,s,e);
 }
 
 void LayerDrawable::setLayerInset(int index, int l, int t, int r, int b){
@@ -532,6 +532,7 @@ bool LayerDrawable::refreshChildPadding(int i, ChildDrawable* r) {
             mPaddingT[i] = rect.top;
             mPaddingR[i] = rect.width;
             mPaddingB[i] = rect.height;
+	    LOGV("layer[%d].padding=(%d,%d,%d,%d)",i,rect.left,rect.top,rect.width,rect.height);
             return true;
         }
     }
@@ -625,7 +626,7 @@ void LayerDrawable::updateLayerBoundsInternal(const Rect& bounds){
     const bool isPaddingNested = mLayerState->mPaddingMode == PADDING_MODE_NEST;
 
     for (int i = 0, count = mLayerState->mChildren.size(); i < count; i++) {
-        LayerDrawable::ChildDrawable*r=mLayerState->mChildren[i];
+        ChildDrawable*r=mLayerState->mChildren[i];
         Drawable* d = r->mDrawable;
         if (d == nullptr)  continue;
 
@@ -642,7 +643,7 @@ void LayerDrawable::updateLayerBoundsInternal(const Rect& bounds){
         // requested insets for the current layer.
         Rect container;
         container.set(bounds.left + insetL + paddingL, bounds.top + insetT + paddingT,
-                    bounds.width - insetL -insetR - paddingL -paddingR, bounds.height - insetT -insetB -paddingT -paddingB);
+            bounds.width - insetL -insetR - paddingL -paddingR, bounds.height - insetT -insetB -paddingT -paddingB);
 
         // Compute a reasonable default gravity based on the intrinsic and
         // explicit dimensions, if specified.

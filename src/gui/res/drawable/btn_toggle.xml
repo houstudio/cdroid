@@ -1,4 +1,4 @@
 <selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_checked="false" cdroid:drawable="cdroid:mipmap/btn_toggle_off" />
-    <item cdroid:state_checked="true"  cdroid:drawable="cdroid:mipmap/btn_toggle_on" />
+	<item cdroid:state_checked="false" cdroid:drawable="@mipmap/btn_toggle_off" />
+	<item cdroid:state_checked="true"  cdroid:drawable="@mipmap/btn_toggle_on" />
 </selector>
