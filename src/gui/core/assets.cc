@@ -110,8 +110,11 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
                 if(styleParent.length())it->second.add("parent",styleParent);
                 LOGV("style:%s",styleName.c_str());
             }
-            const std::string normalizedValue = AttributeSet::normalize(package,value); 
-            it->second.add(atts[1].getString("name"),normalizedValue);
+            std::string keyname=atts[1].getString("name");
+            size_t pos =keyname.find(':');
+            if(pos!=std::string::npos)keyname=keyname.substr(pos+1);
+            const std::string normalizedValue = AttributeSet::normalize(package,value);
+            it->second.add(keyname,normalizedValue);
         }else if(tag0.compare("array")==0){
             const std::string name=atts[0].getString("name");
 	    const std::string key=package+":array/"+name;
