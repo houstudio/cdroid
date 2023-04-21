@@ -76,6 +76,26 @@ const std::wstring TextUtils::utf8tounicode(const std::string&utf8){
     return u32s;
 }
 
+const std::u16string TextUtils::utf8Toutf16(const std::string&utf8){
+    size_t u8len=utf8.size()+8;
+    char16_t *out=new char16_t[utf8.size()+8];
+    #ifdef USE_ICONV
+    int rc=convert("UTF-8",UCSWCHAR(),utf8.c_str(),utf8.size(),(char*)out,sizeof(wchar_t)*u8len);
+    #else
+    char16_t*pout=out;
+    for(int i=0;i<utf8.length();){
+	wchar_t oc;
+        int n=UTF2UCS((utf8.c_str()+i),&oc);
+	*pout++=oc;
+        i+=n;
+    }
+    *pout=0;
+    #endif
+    std::u16string u16s(out);//,wcslen(out));
+    delete[] out;
+    return u16s;
+}
+
 const std::string TextUtils::unicode2utf8(const std::wstring&u32s){
     int u8len=u32s.length()*4+8;
     char*out=new char[u8len];

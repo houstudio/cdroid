@@ -10,7 +10,7 @@ option(ENABLE_PLPLOT "Enable PLPLot" OFF)
 option(ENABLE_DTV "DTV modules support" OFF)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
-option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" OFF)
+option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" ON)
 
 set(CMAKE_USE_OPENSSL ON)
 set(ENABLE_IPV6 OFF)#for CURL
@@ -116,6 +116,7 @@ endif(OPENSSL_FOUND)
 
 if(ENABLE_PINYIN2HZ)
   list(APPEND OPTIONAL_LIBS pinyin)
+  list(APPEND CDROID_DEPLIBS pinyin)
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/gui/gui_features.h.cmake")

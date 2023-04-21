@@ -16,6 +16,7 @@ endif()
 add_subdirectory(src/porting)
 add_subdirectory(src/gui)
 add_subdirectory(src/modules)
+add_subdirectory(src/3rdparty/pinyin)
 
 add_subdirectory(apps)
 

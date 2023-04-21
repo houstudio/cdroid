@@ -4,7 +4,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <gui_features.h>
-#ifndef ENABLE_PINYIN2HZ
+#ifdef ENABLE_PINYIN2HZ
 #include <pinyinime.h>
 #endif
 using namespace ime_pinyin;
@@ -47,11 +47,11 @@ int InputMethod::get_predicts(const std::string&,std::vector<std::string>&predic
 }
 
 #ifdef ENABLE_PINYIN2HZ
-ChinesePinyin::ChinesePinyin(const std::string&layout)
+GooglePinyin::GooglePinyin(const std::string&layout)
  :InputMethod(layout){
 }
 
-int ChinesePinyin::load_dicts(const std::string&sys,const std::string&user){
+int GooglePinyin::load_dicts(const std::string&sys,const std::string&user){
     sysdict=sys;
     userdict=user;
     handle=im_open_decoder(sysdict.c_str(),userdict.c_str());
@@ -59,7 +59,7 @@ int ChinesePinyin::load_dicts(const std::string&sys,const std::string&user){
     return handle!=nullptr;
 }
 
-int ChinesePinyin::search(const std::string&pinyin,std::vector<std::string>&candidates){
+int GooglePinyin::search(const std::string&pinyin,std::vector<std::string>&candidates){
     char16 canbuf[64];
     int num=im_search(handle,pinyin.c_str(),pinyin.length());
     for(int i=0;i<num;i++){/*拼音转汉字*/
@@ -71,17 +71,17 @@ int ChinesePinyin::search(const std::string&pinyin,std::vector<std::string>&cand
     return num;
 }
 
-void ChinesePinyin::close_search(){
+void GooglePinyin::close_search(){
     im_reset_search(handle);
 }
 
-int ChinesePinyin::get_predicts(const std::string&txt,std::vector<std::string>&predicts){
-    char16 uctxt[128];
+int GooglePinyin::get_predicts(const std::string&txt,std::vector<std::string>&predicts){
     char16 pb[256][kMaxPredictSize+1];
     char16 (*predict_buf)[kMaxPredictSize + 1];
     predict_buf=pb;
-    TextUtils::convert("UTF-8",TextUtils::UCS16(),txt.c_str(),txt.length(),(char*)uctxt,sizeof(uctxt)*2);
-    int num=im_get_predicts(handle,uctxt,predict_buf);
+    //TextUtils::convert("UTF-8",TextUtils::UCS16(),txt.c_str(),txt.length(),(char*)uctxt,sizeof(uctxt)*2);
+    const std::u16string u16txt=TextUtils::utf8Toutf16(txt);
+    int num=im_get_predicts(handle,(const char16*)u16txt.c_str(),predict_buf);
     for(int i=0;i<num;i++){
         std::string u8s=TextUtils::utf162string(predict_buf[i],utf16_strlen(predict_buf[i]));
         if(u8s.size())predicts.push_back(u8s);
@@ -89,7 +89,7 @@ int ChinesePinyin::get_predicts(const std::string&txt,std::vector<std::string>&p
     return num;
 }
 
-int ChinesePinyin::get_spellings(std::vector<int>&vp){
+int GooglePinyin::get_spellings(std::vector<int>&vp){
 //only can be called between im_search and im_reset_search
     const unsigned short *pos;
     int num=im_get_spl_start_pos(handle,pos);
@@ -99,7 +99,7 @@ int ChinesePinyin::get_spellings(std::vector<int>&vp){
     return num;
 }
 
-int ChinesePinyin::get_spellings(std::vector<std::string>&sps){
+int GooglePinyin::get_spellings(std::vector<std::string>&sps){
     size_t slen=0;
     const char*str=im_get_sps_str(handle,&slen);
     const unsigned short*pos;

@@ -507,6 +507,7 @@ void TextView::setText(const std::string&txt){
         if(mCaretPos<ws.length())
             mCaretPos=ws.length()-1;
         mLayout->setCaretPos(mCaretPos);
+        invalidate();
         requestLayout();
     }
 }

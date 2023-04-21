@@ -25,12 +25,12 @@ public:
    virtual int get_spellings(std::vector<std::string>&){return 0;}
 };
 
-#ifdef ENABLE_PINYIN2HZ
-class ChinesePinyin:public InputMethod{
+
+class GooglePinyin:public InputMethod{
 protected:
    void*handle;
 public:
-   ChinesePinyin(const std::string&layout);
+   GooglePinyin(const std::string&layout);
    int load_dicts(const std::string&sys,const std::string&user)override;
    int search(const std::string&,std::vector<std::string>&candidates)override;
    void close_search()override;
@@ -38,7 +38,7 @@ public:
    int get_spellings(std::vector<int>&)override;
    int get_spellings(std::vector<std::string>&)override;
 };
-#endif //ENABLE_PINYIN2HZ
+
 };
 #endif
 

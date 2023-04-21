@@ -202,9 +202,14 @@ InputMethodManager&InputMethodManager::getInstance(){
             mInst->setKeyCharacterMap("qwerty.kcm");
     }
     if(imemethods.size()==0){
-        InputMethod*m=new InputMethod("cdroid:values/qwerty.xml");
+        InputMethod*m;
+	//m = new InputMethod("cdroid:values/qwerty.xml");
+	//registeMethod("English",m);
+#ifdef ENABLE_PINYIN2HZ
+	m = new GooglePinyin("cdroid:values/qwerty.xml");
         m->load_dicts("dict_pinyin.dat","userdict.dat");
         registeMethod("ChinesePinyin26",m);
+#endif
     }
     return *mInst;
 }
