@@ -62,6 +62,7 @@ protected:
     std::shared_ptr<LayerState> mLayerState;
 private:
     bool mMutated;
+    Rect mHotspotBounds;
     std::vector<int>mPaddingL;
     std::vector<int>mPaddingT;
     std::vector<int>mPaddingR;
@@ -133,9 +134,20 @@ public:
     void setDrawable(int index, Drawable* drawable);
     bool getPadding(Rect& padding)override;
     void setPadding(int left, int top, int right, int bottom);
+    void setPaddingRelative(int start,int top,int end,int bottom);
+    int getLeftPadding()const;
+    int getRightPadding()const;
+    int getStartPadding()const;
+    int getEndPadding()const;
+    int getTopPadding()const;
+    int getBottomPadding()const;
     virtual void setPaddingMode(int mode);
     int getPaddingMode()const;
-
+    void setHotspot(float x,float y)override;
+    void setHotspotBounds(int left,int top,int width,int height)override;
+    void getHotspotBounds(Rect& outRect)override;
+    void setTintList(ColorStateList* tint)override;
+    void setTintMode(int tintMode)override;
     bool setVisible(bool visible,bool restart)override;
     void setAlpha(int alpha)override;
     int  getAlpha()const override;

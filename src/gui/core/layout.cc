@@ -7,8 +7,11 @@
 #endif
 #include <cdlog.h>
 #include <textutils.h>
+
 using namespace Cairo;
+
 namespace cdroid{
+
 #define START   0
 #define TOP     1
 #define DESCENT 2
@@ -111,8 +114,10 @@ float Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)
 int Layout::getEllipsizedWidth() const{
     return mEllipsizedWidth;
 }
+
 int  Layout::getHeight(bool cap)const{
-    return getLineTop(getLineCount());
+    const int lc=getLineCount();
+    return lc?getLineTop(lc):0;
 }
 
 int Layout::getLineCount()const{

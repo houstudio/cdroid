@@ -9,6 +9,6 @@ public:
 	TEMPRATURE=0,
 
    };
-   WashOptionsWindow(int options);
+   WashOptionsWindow(int,int,int,int);
 };
 

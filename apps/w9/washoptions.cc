@@ -4,7 +4,7 @@
 #include <optionpicker.h>
 #include <cdlog.h>
 
-WashOptionsWindow::WashOptionsWindow(int options):Window(0,0,-1,-1){
+WashOptionsWindow::WashOptionsWindow(int x,int y,int w,int h):Window(x,y,w,h){
     const char*arraynames[]={
 	 "@array/cleverwash", "@array/potch",
 	 "@array/speed"     , "@array/dry",

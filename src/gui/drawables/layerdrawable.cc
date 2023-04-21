@@ -506,6 +506,85 @@ void LayerDrawable::setPadding(int left, int top, int right, int bottom){
     mLayerState->mPaddingEnd = -1;
 }
 
+void LayerDrawable::setPaddingRelative(int start, int top, int end, int bottom) {
+    mLayerState->mPaddingStart = start;
+    mLayerState->mPaddingTop = top;
+    mLayerState->mPaddingEnd = end;
+    mLayerState->mPaddingBottom = bottom;
+    // Clear absolute padding values.
+    mLayerState->mPaddingLeft = -1;
+    mLayerState->mPaddingRight = -1;
+}
+
+int LayerDrawable::getLeftPadding()const{
+    return mLayerState->mPaddingLeft;
+}
+
+int LayerDrawable::getRightPadding()const{
+    return mLayerState->mPaddingRight;
+}
+
+int LayerDrawable::getStartPadding()const{
+    return mLayerState->mPaddingStart;
+}
+
+int LayerDrawable::getEndPadding()const{
+    return mLayerState->mPaddingEnd;
+}
+
+int LayerDrawable::getTopPadding()const{
+    return mLayerState->mPaddingTop;
+}
+
+int LayerDrawable::getBottomPadding()const{
+    return mLayerState->mPaddingBottom;
+}
+
+void LayerDrawable::setHotspot(float x,float y){
+    for (ChildDrawable*child:mLayerState->mChildren){
+       Drawable* dr = child->mDrawable;
+       if (dr != nullptr) {
+           dr->setHotspot(x, y);
+       }
+    }
+}
+
+void LayerDrawable::setHotspotBounds(int left,int top,int width,int height){
+    for (ChildDrawable*child:mLayerState->mChildren) {
+        Drawable* dr = child->mDrawable;
+        if (dr != nullptr) {
+            dr->setHotspotBounds(left, top, width,height);
+        }
+    }
+    mHotspotBounds.set(left, top, width,height);
+}
+
+void LayerDrawable::getHotspotBounds(Rect& outRect){
+    if (!mHotspotBounds.empty()) {
+         outRect = mHotspotBounds;
+    } else {
+	 Drawable::getHotspotBounds(outRect);
+    }
+}
+
+void LayerDrawable::setTintList(ColorStateList* tint){
+    for (ChildDrawable*child:mLayerState->mChildren) {
+        Drawable* dr = child->mDrawable;
+        if (dr != nullptr) {
+            dr->setTintList(tint);
+        }
+    }
+}
+
+void LayerDrawable::setTintMode(int tintMode){
+    for (ChildDrawable*child:mLayerState->mChildren) {
+        Drawable* dr = child->mDrawable;
+        if (dr != nullptr) {
+            dr->setTintMode(tintMode);
+        }
+    }
+}
+
 void LayerDrawable::ensurePadding() {
     const int N = mLayerState->mChildren.size();
     if (mPaddingL.size()>N) return;
