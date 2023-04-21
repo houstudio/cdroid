@@ -214,12 +214,12 @@ void GraphDevice::composeSurfaces(){
         mInvalidateRgn->subtract((const RectangleInt&)rcw);
         rects+=rgn->get_num_rectangles();
 	rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
-	LOGV("surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
+	LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc=rgn->get_rectangle(j);
             Rect rcc={rc.x,rc.y,rc.width,rc.height};
             rcc.offset(rcw.left,rcw.top);
-            rcc.intersect(0,0,mScreenWidth,mScreenHeight);
+            //rcc.intersect(0,0,mScreenWidth,mScreenHeight);
             if(rcc.empty())continue;
             LOGV("blit surface[%d](%d,%d,%d,%d) %d invalidrect",j,rc.x,rc.y,rc.width,rc.height,wins[i]->mPendingRgn->get_num_rectangles());
             if(hdlSurface)GFXBlit(mPrimarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
