@@ -170,8 +170,9 @@ void GraphDevice::unlock(){
 }
 
 void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<RefPtr<Region>>&regions){
+    /*visibleregion is windowbased*/
     for (auto w=windows.begin() ;w!= windows.end();w++){
-        Rect rcw=(*w)->getBound();
+        const Rect rcw=(*w)->getBound();
         RefPtr<Region>newrgn=Region::create((RectangleInt&)rcw);
         if((*w)->getVisibility()!=View::VISIBLE||(*w)->isAttachedToWindow()==false)continue;
 
@@ -212,13 +213,15 @@ void GraphDevice::composeSurfaces(){
         if(rgn->empty())continue; 
         mInvalidateRgn->subtract((const RectangleInt&)rcw);
         rects+=rgn->get_num_rectangles();
+	rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
+	LOGV("surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc=rgn->get_rectangle(j);
             Rect rcc={rc.x,rc.y,rc.width,rc.height};
             rcc.offset(rcw.left,rcw.top);
             rcc.intersect(0,0,mScreenWidth,mScreenHeight);
             if(rcc.empty())continue;
-
+            LOGV("blit surface[%d](%d,%d,%d,%d) %d invalidrect",j,rc.x,rc.y,rc.width,rc.height,wins[i]->mPendingRgn->get_num_rectangles());
             if(hdlSurface)GFXBlit(mPrimarySurface , rcw.left+rc.x , rcw.top+rc.y , hdlSurface,(const GFXRect*)&rc);
             else mPrimaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y, rc.width , rc.height);
         }
@@ -226,6 +229,7 @@ void GraphDevice::composeSurfaces(){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
         }
+	wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
     }
     const RectangleInt rectScreen={0,0,mScreenWidth,mScreenHeight};
     mInvalidateRgn->intersect(rectScreen);

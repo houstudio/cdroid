@@ -51,6 +51,7 @@ private:
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
+    Cairo::RefPtr<Cairo::Region>mPendingRgn;
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;

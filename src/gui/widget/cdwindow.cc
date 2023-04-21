@@ -43,6 +43,7 @@ Window::Window(Context*ctx,const AttributeSet&atts)
     setKeyboardNavigationCluster(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     WindowManager::getInstance().addWindow(this);
+    mPendingRgn=Cairo::Region::create();
 }
 
 Window::Window(int x,int y,int width,int height,int type)
@@ -54,6 +55,7 @@ Window::Window(int x,int y,int width,int height,int type)
 #else
     mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
 #endif
+    mPendingRgn=Cairo::Region::create();
     mContext=&App::getInstance();
     mInLayout=false;
     Point size;
@@ -107,6 +109,7 @@ void Window::draw(){
     mAttachInfo->mDrawingTime=SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);
     if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
+    mPendingRgn->do_union(mInvalidRgn);
     mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();
 }
