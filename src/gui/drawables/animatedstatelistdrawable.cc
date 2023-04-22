@@ -39,7 +39,7 @@ void AnimatedStateListDrawable::addTransition(int fromId, int toId,AnimatedState
         throw "Transition drawable must not be null";
     }
 
-    //mState->addTransition(fromId, toId, transition, reversible);
+    mState->addTransition(fromId, toId, dynamic_cast<Drawable*>(transition), reversible);
 }
 
 bool AnimatedStateListDrawable::isStateful()const {

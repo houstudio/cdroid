@@ -28,7 +28,7 @@ typedef struct{
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     PREFPARSER*kvp=(PREFPARSER*)userData;
-    if(strcmp(name,"section")){//root node is not in KVPARSER::attrs
+    if(strcmp(name,"section")==0){//root node is not in KVPARSER::attrs
         AttributeSet atts;
         atts.set(satts);
         kvp->section=atts.getString("name");
@@ -47,7 +47,7 @@ static void CharacterHandler(void *userData,const XML_Char *s, int len){
 
 static void endElement(void *userData, const XML_Char *name){
     PREFPARSER*kvp=(PREFPARSER*)userData;
-    if(strcmp(name,"item")){//root node is not in KVPARSER::attrs
+    if(strcmp(name,"item")==0){//root node is not in KVPARSER::attrs
         TextUtils::trim(kvp->value);
 	kvp->pref->setValue(kvp->section,kvp->key,kvp->value);
     }

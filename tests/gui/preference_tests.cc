@@ -73,9 +73,9 @@ TEST_F(PREFERENCES,strings){
    pref.save("server.pref");
  
    pld.load("server.pref");
-   ASSERT_EQ(1234,pref.getInt(server,port,0));
-   EXPECT_STREQ("192.168.1.150",pref.getString(server,ip).c_str());
-   ASSERT_EQ(1234,pref.getInt("server2",port,0));
-   EXPECT_STREQ("192.168.1.150",pref.getString("server2",ip).c_str());
+   ASSERT_EQ(1234,pld.getInt(server,port,0));
+   EXPECT_STREQ("192.168.1.150",pld.getString(server,ip).c_str());
+   ASSERT_EQ(1234,pld.getInt("server2",port,0));
+   EXPECT_STREQ("192.168.1.150",pld.getString("server2",ip).c_str());
 }
 
