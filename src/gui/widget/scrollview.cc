@@ -491,7 +491,8 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
             VelocityTracker* velocityTracker = mVelocityTracker;
             velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
             const int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
-            if ((std::abs(initialVelocity) > mMinimumVelocity/2)) {
+            LOGV("initialVelocity=%d/%d",initialVelocity,mMinimumVelocity);
+            if ((std::abs(initialVelocity) > mMinimumVelocity)) {
                 flingWithNestedDispatch(-initialVelocity);
             } else if (mScroller->springBack(mScrollX, mScrollY, 0, 0, 0,getScrollRange())) {
                 postInvalidateOnAnimation();
@@ -513,7 +514,7 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
         int index = ev.getActionIndex();
         mLastMotionY = (int) ev.getY(index);
         mActivePointerId = ev.getPointerId(index);
-        LOGD("POINTER_DOWN mActivePointerId=%d",mActivePointerId);
+        LOGV("POINTER_DOWN mActivePointerId=%d",mActivePointerId);
         break;
     }
     case MotionEvent::ACTION_POINTER_UP:
@@ -543,13 +544,41 @@ void ScrollView::onSecondaryPointerUp(MotionEvent& ev) {
 }
 
 bool ScrollView::onGenericMotionEvent(MotionEvent& event) {
-    return false;
+    int  delta;
+    float axisValue ;
+    switch (event.getAction()) {
+    case MotionEvent::ACTION_SCROLL:
+        if (event.isFromSource(InputDevice::SOURCE_CLASS_POINTER)) {
+            axisValue = event.getAxisValue((int)MotionEvent::AXIS_VSCROLL,0);
+        } else if (event.isFromSource(InputDevice::SOURCE_ROTARY_ENCODER)) {
+            axisValue = event.getAxisValue((int)MotionEvent::AXIS_SCROLL,0);
+        } else {
+            axisValue = 0;
+        }
+        delta = std::round(axisValue * mVerticalScrollFactor);
+        if (delta != 0) {
+            int range = getScrollRange();
+            int oldScrollY = mScrollY;
+            int newScrollY = oldScrollY - delta;
+            if (newScrollY < 0) {
+                newScrollY = 0;
+            } else if (newScrollY > range) {
+                newScrollY = range;
+            }
+            if (newScrollY != oldScrollY) {
+		FrameLayout::scrollTo(mScrollX, newScrollY);
+                return true;
+            }
+        }
+        break;
+    }
+    return FrameLayout::onGenericMotionEvent(event);
 }
 
 void ScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY) {
     if (mScroller->isFinished()) {
-        int oldX = mScrollX;
-        int oldY = mScrollY;
+        const int oldX = mScrollX;
+        const int oldY = mScrollY;
         mScrollX = scrollX;
         mScrollY = scrollY;
         invalidateParentIfNeeded();

@@ -283,7 +283,8 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     mTotalWidth = pd.minWidth;
     mProximityThreshold =mDefaultWidth*.6f;//SEARCH_DISTANCE;
     mProximityThreshold*=mProximityThreshold;
-    LOGD("endof loadkeyboard %d rows %d keys gaps=%d,%d parsed size=%dx%d",rows.size(),mKeys.size(),
+    LOGD("%s endof loadkeyboard %d rows %d keys gaps=%d,%d parsed size=%dx%d",
+	resid.c_str(),rows.size(),mKeys.size(),
         getHorizontalGap(),getVerticalGap(),mTotalWidth,mTotalHeight);
 }
 

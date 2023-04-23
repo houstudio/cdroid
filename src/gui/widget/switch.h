@@ -101,6 +101,7 @@ protected:
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
 public:
+    Switch(int w,int h);
     Switch(Context* context,const AttributeSet& attrs);
     void setSwitchTextAppearance(Context* context,const std::string&resid);
     void setSwitchTypeface(Typeface tf, int style);

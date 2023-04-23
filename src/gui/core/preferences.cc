@@ -196,7 +196,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,float
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
     else kv->second=std::to_string(v);
-    LOGD("%s %s %d",section.c_str(),key.c_str(),v);
+    LOGD("%s %s %f",section.c_str(),key.c_str(),v);
     updates++;
 }
 
@@ -208,7 +208,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,const
     if(kv==sec->second.end())
 	sec->second.insert({key,v});
     else kv->second=v;
-    LOGD("%s %s %d",section.c_str(),key.c_str(),v);
+    LOGD("%s %s %s",section.c_str(),key.c_str(),v.c_str());
     updates++;
 }
 
@@ -220,7 +220,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,doubl
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
     else kv->second=std::to_string(v);
-    LOGD("%s %s %d",section.c_str(),key.c_str(),v);
+    LOGD("%s %s %f",section.c_str(),key.c_str(),v);
     updates++;
 }
 

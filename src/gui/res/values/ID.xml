@@ -32,8 +32,12 @@
   <id name="increment">0x00000405</id>
   <id name="numberpicker_input">0x00000406</id>
   <id name="decrement">0x00000407</id>
-  <id name="body">0x00000408</id>
-  <id name="select_dialog_listview">0x00000409</id>
-  <id name="text1">0x0000040a</id>
+  <id name="predictContainer">0x00000408</id>
+  <id name="predict2">0x00000409</id>
+  <id name="predict1">0x0000040a</id>
+  <id name="keyboardview">0x0000040b</id>
+  <id name="body">0x0000040c</id>
+  <id name="select_dialog_listview">0x0000040d</id>
+  <id name="text1">0x0000040e</id>
 </resources>
 

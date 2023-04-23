@@ -7,6 +7,10 @@ namespace cdroid{
 
 DECLARE_WIDGET2(Switch,"cdroid:attr/switchStyle")
 
+Switch::Switch(int w,int h):CompoundButton(std::string(),w,h){
+    init();
+}
+
 Switch::Switch(Context* context,const AttributeSet& a)
   :CompoundButton(context,a){
     init();
@@ -80,7 +84,8 @@ void Switch::init(){
     mTrackDrawable = nullptr;
     mTrackTintList = nullptr;
     mPositionAnimator = nullptr;
-    mOnLayout = mOffLayout = nullptr;
+    mOnLayout  = makeLayout("");
+    mOffLayout = makeLayout("");
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
     mVelocityTracker  = VelocityTracker::obtain();
@@ -323,10 +328,10 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         // Cached thumb width does not include padding.
         mThumbDrawable->getPadding(padding);
         thumbWidth = mThumbDrawable->getIntrinsicWidth() - padding.left - padding.width;
-        thumbHeight = mThumbDrawable->getIntrinsicHeight();
+        thumbHeight= mThumbDrawable->getIntrinsicHeight();
     } else {
         thumbWidth = 0;
-        thumbHeight = 0;
+        thumbHeight= 0;
     }
 
     int maxTextWidth;
@@ -350,18 +355,18 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
     // Adjust left and right padding to ensure there's enough room for the
     // thumb's padding (when present).
-    int paddingLeft = padding.left;
+    int paddingLeft  = padding.left;
     int paddingRight = padding.width;
     if (mThumbDrawable) {
         Insets inset = mThumbDrawable->getOpticalInsets();
-        paddingLeft = std::max(paddingLeft, inset.left);
+        paddingLeft  = std::max(paddingLeft, inset.left);
         paddingRight = std::max(paddingRight, inset.right);
     }
 
     int switchWidth = std::max(mSwitchMinWidth,
             2 * mThumbWidth + paddingLeft + paddingRight);
     int switchHeight = std::max(trackHeight, thumbHeight);
-    mSwitchWidth = switchWidth;
+    mSwitchWidth  = switchWidth;
     mSwitchHeight = switchHeight;
     CompoundButton::onMeasure(widthMeasureSpec, heightMeasureSpec);
 
