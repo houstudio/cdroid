@@ -298,7 +298,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
             if (mIgnoreMoveEvents) {
                  break;
             }
-            float currentMoveY = event.getY();
+            const float currentMoveY = event.getY();
             if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
                 int deltaDownY = (int) std::abs(currentMoveY - mLastDownEventY);
                 if (deltaDownY > mTouchSlop) {
@@ -325,7 +325,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
             } else {
                 int eventY = (int) event.getY();
                 int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
-                long deltaTime = event.getEventTime() - mLastDownEventTime;
+                long deltaTime = (event.getEventTime() - mLastDownEventTime)/1000;
                 if (deltaMoveY <= mTouchSlop && deltaTime < ViewConfiguration::getTapTimeout()) {
                     if (mPerformClickOnTap) {
                         mPerformClickOnTap = false;
@@ -433,7 +433,7 @@ View& NumberPicker::setEnabled(bool enabled) {
 
 void NumberPicker::scrollBy(int x, int y){
     std::vector<int>&selectorIndices = mSelectorIndices;
-    int startScrollOffset = mCurrentScrollOffset;
+    const int startScrollOffset = mCurrentScrollOffset;
     if (!mWrapSelectorWheel && y > 0
             && selectorIndices[mMiddleItemIndex] <= mMinValue) {
         mCurrentScrollOffset = mInitialScrollOffset;
@@ -462,6 +462,7 @@ void NumberPicker::scrollBy(int x, int y){
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
+    LOGV("%d,%d:(%d->%d)",x,y,startScrollOffset,mCurrentScrollOffset);
     if (startScrollOffset != mCurrentScrollOffset) {
         onScrollChanged(0, mCurrentScrollOffset, 0, startScrollOffset);
     }
@@ -664,6 +665,7 @@ std::vector<std::string>  NumberPicker::getDisplayedValues()const{
 
 void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedValues){
     mDisplayedValues = displayedValues;
+    mSelectorIndexToStringCache.clear();
     updateInputTextView();
     initializeSelectorWheelIndices();
     tryComputeMaxWidth();
@@ -792,16 +794,18 @@ int NumberPicker::resolveSizeAndStateRespectingMinSize(int minSize, int measured
 }
 
 void NumberPicker::initializeSelectorWheelIndices(){
-    mSelectorIndexToStringCache.clear();
-    std::vector<int>& selectorIndices = mSelectorIndices;
-    int current = getValue();
+    const int valueCount= (mMaxValue-mMinValue+1);
+    if(mSelectorIndices.size() > valueCount){
+        mSelectorIndices.resize( valueCount );
+        mMiddleItemIndex = (mMaxValue-mMinValue)/2;
+    }
     for (int i = 0; i < mSelectorIndices.size(); i++) {
-        int selectorIndex = current + (i - mMiddleItemIndex);
+        int selectorIndex = (valueCount + mValue + (i - mMiddleItemIndex) ) % valueCount;
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
-        selectorIndices[i] = selectorIndex;
-        ensureCachedScrollSelectorValue(selectorIndices[i]);
+        mSelectorIndices[i] = selectorIndex;
+        ensureCachedScrollSelectorValue(mSelectorIndices[i]);
     }
 }
 
@@ -850,10 +854,9 @@ void NumberPicker::changeValueByOne(bool increment){
 
 void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
-    std::vector<int>&selectorIndices = mSelectorIndices;
-    int totalTextHeight = selectorIndices.size() * mTextSize;
+    int totalTextHeight = mSelectorIndices.size() * mTextSize;
     float totalTextGapHeight = mBottom-mTop - totalTextHeight;
-    float textGapCount = selectorIndices.size();
+    float textGapCount  = mSelectorIndices.size();
     mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount + 0.5f);
     mSelectorElementHeight = mTextSize + mSelectorTextGapHeight;
     // Ensure that the middle item is positioned the same as the text in mInputText
@@ -946,7 +949,8 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
             scrollSelectorValue = formatNumber(selectorIndex);
         }
     }
-    cache[selectorIndex]=scrollSelectorValue;
+    LOGD("%d=%s displaynames=%d",selectorIndex,scrollSelectorValue.c_str(),mDisplayedValues.size());
+    cache[selectorIndex] = scrollSelectorValue;
 }
 
 std::string NumberPicker::formatNumber(int value){
