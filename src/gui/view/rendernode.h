@@ -16,8 +16,8 @@ private:
 public:
     RenderNode();
     bool  hasIdentityMatrix()const;
-    Cairo::Matrix getMatrix()const;
-    Cairo::Matrix getInverseMatrix()const;
+    void  getMatrix(Cairo::Matrix&)const;
+    void  getInverseMatrix(Cairo::Matrix&)const;
     void  setAlpha(float);
     float getAlpha()const;
     void  setElevation(float);

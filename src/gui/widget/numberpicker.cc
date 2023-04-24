@@ -168,6 +168,7 @@ void NumberPicker::initView(){
     mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mHideWheelUntilFocused=false;
+    mMaxSelectorIndices = DEFAULT_SELECTOR_WHEEL_ITEM_COUNT;
     setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT);
 }
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
@@ -591,7 +592,8 @@ void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
 }
 
 void NumberPicker::setSelector(int items){
-    mSelectorIndices.resize(items);
+    mMaxSelectorIndices=items;
+    //mSelectorIndices.resize(items);
     mMiddleItemIndex=items/2;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
@@ -715,11 +717,7 @@ int  NumberPicker::getTextSize()const{
     return mInputText->getTextSize();
 }
 
-void NumberPicker::onDraw(Canvas&canvas){
-    if (!mHasSelectorWheel) {
-        LinearLayout::onDraw(canvas);
-        return;
-    }
+void NumberPicker::drawVertical(Canvas&canvas){
     const bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
     float x = (mRight-mLeft) / 2;
     float y = mCurrentScrollOffset;
@@ -770,6 +768,68 @@ void NumberPicker::onDraw(Canvas&canvas){
     }
 }
 
+void NumberPicker::drawHorizontal(Canvas&canvas){
+    const bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
+    float x = (mRight-mLeft) / 2;
+    float y = mCurrentScrollOffset;
+    Rect rc=mInputText->getBound();
+    // draw the virtual buttons pressed state if needed
+    if (showSelectorWheel && mVirtualButtonPressedDrawable != nullptr
+            && mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
+        if (mDecrementVirtualButtonPressed) {
+            mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
+            mVirtualButtonPressedDrawable->setBounds(0, 0, mRight-mLeft, mTopSelectionDividerTop);
+            mVirtualButtonPressedDrawable->draw(canvas);
+        }
+        if (mIncrementVirtualButtonPressed) {
+            mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
+            mVirtualButtonPressedDrawable->setBounds(0, mBottomSelectionDividerBottom, mRight-mLeft,mBottom-mTop);
+            mVirtualButtonPressedDrawable->draw(canvas);
+        }
+    }
+
+    // draw the selector wheel
+    std::vector<int>& selectorIndices = mSelectorIndices;
+    ColorStateList* colors = mInputText->getTextColors();
+    const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
+    canvas.set_color(selectorWheelColor);
+    Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
+    Layout txtlayout(mTextSize,mRight-mLeft);
+    //txtlayout.setAlignment(mInputText->getLayoutAlignment());
+    for (int i = 0; i < selectorIndices.size(); i++) {
+        int selectorIndex = selectorIndices[i];
+        std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
+        // Do not draw the middle item if input is visible since the input is shown only if the wheel
+        // is static and it covers the middle item. Otherwise, if the user starts editing the text 
+        // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
+        canvas.set_font_size(i==mMiddleItemIndex?mTextSize:(mTextSize*.8));
+        if ((showSelectorWheel && i != mMiddleItemIndex) ||
+            (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
+            canvas.draw_text(rctxt,scrollSelectorValue,DT_CENTER|DT_VCENTER);
+        }
+        rctxt.offset(0,mSelectorElementHeight);
+    }
+    // draw the selector dividers
+    if(showSelectorWheel&&mSelectionDivider){
+	 const int width=getWidth();
+         mSelectionDivider->setBounds(0,mTopSelectionDividerTop,width,mSelectionDividerHeight);
+	 mSelectionDivider->draw(canvas);
+         mSelectionDivider->setBounds(0,mBottomSelectionDividerBottom,width,mSelectionDividerHeight);
+         mSelectionDivider->draw(canvas);
+    }
+}
+
+void NumberPicker::onDraw(Canvas&canvas){
+    if (!mHasSelectorWheel) {
+        LinearLayout::onDraw(canvas);
+        return;
+    }
+    if(getOrientation()==LinearLayout::VERTICAL)
+	drawVertical(canvas);
+    else
+	drawHorizontal(canvas);
+}
+
 int NumberPicker::makeMeasureSpec(int measureSpec, int maxSize){
     if (maxSize == SIZE_UNSPECIFIED) {
         return measureSpec;
@@ -794,13 +854,11 @@ int NumberPicker::resolveSizeAndStateRespectingMinSize(int minSize, int measured
 }
 
 void NumberPicker::initializeSelectorWheelIndices(){
-    const int valueCount= (mMaxValue-mMinValue+1);
-    if(mSelectorIndices.size() > valueCount){
-        mSelectorIndices.resize( valueCount );
-        mMiddleItemIndex = (mMaxValue-mMinValue)/2;
-    }
-    for (int i = 0; i < mSelectorIndices.size(); i++) {
-        int selectorIndex = (valueCount + mValue + (i - mMiddleItemIndex) ) % valueCount;
+    const int count= (int)mSelectorIndices.size(); 
+    mSelectorIndices.resize(std::min((mMaxValue-mMinValue+1),mMaxSelectorIndices));
+    mMiddleItemIndex = mSelectorIndices.size()/2;
+    for (int i = 0; i < count; i++) {
+        int selectorIndex = ( count + mValue + (i - mMiddleItemIndex) ) % count;
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
@@ -854,9 +912,10 @@ void NumberPicker::changeValueByOne(bool increment){
 
 void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
-    int totalTextHeight = mSelectorIndices.size() * mTextSize;
+    const int indicesCount = std::max((int)mSelectorIndices.size(),mMaxSelectorIndices);
+    int totalTextHeight = indicesCount * mTextSize;
     float totalTextGapHeight = mBottom-mTop - totalTextHeight;
-    float textGapCount  = mSelectorIndices.size();
+    float textGapCount  = indicesCount;
     mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount + 0.5f);
     mSelectorElementHeight = mTextSize + mSelectorTextGapHeight;
     // Ensure that the middle item is positioned the same as the text in mInputText
@@ -949,7 +1008,7 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
             scrollSelectorValue = formatNumber(selectorIndex);
         }
     }
-    LOGD("%d=%s displaynames=%d",selectorIndex,scrollSelectorValue.c_str(),mDisplayedValues.size());
+    LOGV("%d=%s displaynames=%d",selectorIndex,scrollSelectorValue.c_str(),mDisplayedValues.size());
     cache[selectorIndex] = scrollSelectorValue;
 }
 

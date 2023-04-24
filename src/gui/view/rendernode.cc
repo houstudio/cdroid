@@ -29,23 +29,21 @@ static inline float sdot(float a,float b,float c,float d){
     return a * b + c * d;
 }
 
-Matrix RenderNode::getMatrix()const{
-    Matrix matrix= identity_matrix();
-    matrix.translate(mTranslationX,mTranslationY);
-    matrix.scale(mScaleX,mScaleY);
+void RenderNode::getMatrix(Matrix&outMatrix)const{
+    outMatrix= identity_matrix();
+    outMatrix.translate(mTranslationX,mTranslationY);
+    outMatrix.scale(mScaleX,mScaleY);
 
     const float radians=mRotation*M_PI/180.f;
     const float fsin=sin(radians);
     const float fcos=cos(radians);
     Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1.f-fcos,mPivotX),sdot(fsin,mPivotX,1.f-fcos,mPivotY));
-    matrix.multiply(matrix,rt);
-    return matrix;
+    outMatrix.multiply(outMatrix,rt);
 }
 
-Matrix RenderNode::getInverseMatrix()const{
-    Matrix matrix=getMatrix();
-    matrix.invert();
-    return matrix;
+void RenderNode::getInverseMatrix(Matrix&outMatrix)const{
+    getMatrix(outMatrix);
+    outMatrix.invert();
 }
 
 void RenderNode::setAlpha(float alpha){

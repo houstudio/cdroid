@@ -53,10 +53,12 @@ private:
     Formatter mFormatter;
     OnScrollListener mOnScrollListener;
     int mMiddleItemIndex;
+    int mMaxSelectorIndices;
     std::vector<int>mSelectorIndices;
     long mLongPressUpdateInterval;
     std::map<int,std::string> mSelectorIndexToStringCache;
     int mSelectorElementHeight;
+    int mSelectorElementWidth;
     int mInitialScrollOffset=INT_MIN;
     int mCurrentScrollOffset;
     Scroller* mFlingScroller;
@@ -137,6 +139,8 @@ protected:
     int computeVerticalScrollRange();
     int computeVerticalScrollExtent();
     void drawableStateChanged();
+    void drawVertical(Canvas&);
+    void drawHorizontal(Canvas&);
     void onDraw(Canvas&canvas)override;
 public:
     NumberPicker(int w,int h);

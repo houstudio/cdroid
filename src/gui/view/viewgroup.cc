@@ -1810,9 +1810,8 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
          }else{
              transformMatrix=childMatrix;
          }
-         
          transformMatrix.transform_rectangle((RectangleInt&)dirty);
-         LOGV("(1.%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
+         LOGV("(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
                 dirty.left,dirty.top,dirty.width,dirty.height,child->getRotation());
     }
 	

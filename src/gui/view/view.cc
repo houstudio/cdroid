@@ -6551,14 +6551,15 @@ bool View::hasIdentityMatrix()const{
 
 Matrix View::getMatrix() {
     ensureTransformationInfo();
-    //mRenderNode.getMatrix(matrix);
-    Matrix matrix=mTransformationInfo->mMatrix;
-    return mRenderNode->getMatrix();
+    Matrix& matrix=mTransformationInfo->mMatrix;
+    mRenderNode->getMatrix(matrix);
+    return matrix;
 }
 
 Matrix View::getInverseMatrix() {
     ensureTransformationInfo();
-    Matrix matrix = mRenderNode->getInverseMatrix();
+    Matrix matrix;
+    mRenderNode->getInverseMatrix(matrix);
     return matrix;
 }
 

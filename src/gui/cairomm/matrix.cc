@@ -104,8 +104,33 @@ Matrix operator*(const Matrix& a, const Matrix& b)
 }
 
 void Matrix::transform_rectangle(Rectangle& io)const{
-    transform_point(io.x,io.y);
-    transform_distance(io.width,io.height);
+    double x1,y1,x2,y2,x3,y3,x4,y4,min_x,min_y,max_x,max_y;
+    x1 =io.x;
+    y1 = io.y;
+    
+    x2 =io.x+io.width;
+    y2=io.y;
+    
+    x3 =io.x+io.width;
+    y3=io.y+io.height;
+    
+    x4 =io.x;
+    y4=io.y+io.height;
+    
+    transform_point(x1,y1);
+    transform_point(x2,y2);
+    transform_point(x3,y3);
+    transform_point(x4,y4);
+
+    min_x = fmin(fmin(x1, x2), fmin(x3, x4));
+    max_x = fmax(fmax(x1, x2), fmax(x3, x4));
+    min_y = fmin(fmin(y1, y2), fmin(y3, y4));
+    max_y = fmax(fmax(y1, y2), fmax(y3, y4));
+
+    io.x = min_x;
+    io.y = min_y;
+    io.width = max_x - min_x;
+    io.height= max_y - min_y;
 }
 
 void Matrix::transform_rectangle(RectangleInt& io)const{
