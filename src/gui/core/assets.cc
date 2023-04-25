@@ -384,6 +384,7 @@ int Assets::getColor(const std::string&refid){
         name=mTheme.getString(name);
         return getColor(name);
     }
+    return 0xFF000000;
 }
 
 ColorStateList* Assets::getColorStateList(const std::string&fullresid){

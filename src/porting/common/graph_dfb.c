@@ -37,10 +37,10 @@ INT GFXInit()
     DFBSurfaceDescription   desc;
     memset(&desc,0,sizeof(DFBSurfaceDescription));
     desc.flags=DSDESC_CAPS;
-    desc.caps=DSCAPS_PRIMARY;
+    desc.caps=DSCAPS_PRIMARY|DSCAPS_FLIPPING;
     LOGI("DirectFB ScreenSize %dx%d",dispCfg.width,dispCfg.height);
+    directfb->SetCooperativeLevel( directfb, DFSCL_FULLSCREEN );
     directfb->CreateSurface( directfb, &desc,&primarySurface);
-
     return E_OK;
 }
 static int displayRotations[8];
@@ -77,6 +77,7 @@ GFX_ROTATION GFXGetRotation(int dispid){
 	return displayRotations[dispid];
     return 0;
 }
+
 INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Lock(surf,DSLF_READ | DSLF_WRITE,buffer,pitch);
@@ -124,8 +125,11 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rec,UINT color){
 }
 
 INT GFXFlip(HANDLE surface){
-    IDirectFBSurface*surf=(IDirectFBSurface*)surface;
-    int ret=surf->Flip( surf, NULL, DSFLIP_NONE);//ONSYNC);
+    IDirectFBSurface*dfbsrc=(IDirectFBSurface*)surface;
+    IDirectFBSurface*dfbdst=primarySurface;
+    DFBRegion clip;
+    primarySurface->GetClip(primarySurface,&clip);
+    int ret=primarySurface->Flip(primarySurface,&clip, DSFLIP_ONSYNC);
     return ret;
 }
 
@@ -163,9 +167,10 @@ INT GFXSetSurfaceColorKey(HANDLE surface,UINT color){
 INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect)
 {
      int ret,dstwidth,dstheight;
-     GFXRect rs={0,0};
+     GFXRect rs={0,0},rd;
      IDirectFBSurface*dfbsrc=(IDirectFBSurface*)srcsurface;
      IDirectFBSurface*dfbdst=(IDirectFBSurface*)dstsurface;
+     DFBRegion region;
 
      dfbdst = primarySurface;
      dfbdst->GetSize(dfbdst,&dstwidth,&dstheight);
@@ -175,7 +180,8 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 
      dfbdst->SetPorterDuff(dfbdst,DSPD_SRC_OVER);
      const int ox=dx,oy=dy;
-     if(dfbdst == primarySurface){
+     rd=rs;
+     if(dfbdst == primarySurface){//LOGE("-----cant reatch");
          switch(GFXGetRotation(0)){/*directfb's rotation is clockwise*/
          case ROTATE_0 : dfbdst->SetBlittingFlags(dfbdst,DSBLIT_NOFX);
 		     dx += screenMargin.x;
@@ -184,6 +190,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
          case ROTATE_90: dx = oy + screenMargin.x;
 		     dy = dstheight -ox - rs.w -screenMargin.h;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE90);
+		     rd.w = rs.h; rd.h=rs.w;
 		     break;
          case ROTATE_180:dx = dstwidth -ox -rs.w - screenMargin.w;
                      dy = dstheight-oy -rs.h - screenMargin.h;
@@ -192,11 +199,17 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
          case ROTATE_270:dx = dstwidth -oy -rs.h -screenMargin.w;
 		     dy = ox - screenMargin.y;
 		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE270);
+		     rd.w = rs.h; rd.h=rs.w;
 		     break;
          default: return E_ERROR;
          }
      }
      dfbdst->Blit(dfbdst,dfbsrc,&rs,dx,dy);
+     region.x1= dx;
+     region.y1= dy;
+     region.x2= dx+rd.w;
+     region.y2= dy+rd.h;
+     dfbdst->SetClip(dfbdst, &region);
      LOGV("dstsurface=%p/primarySurface=%p srcsurface=%p (%d,%d,%d,%d) to pos(%d,%d)/(%d,%d)",
 		     dstsurface,primarySurface,srcsurface,rs.x,rs.y,rs.w,rs.h,ox,oy,dx,dy);
      return ret;

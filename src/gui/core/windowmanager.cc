@@ -124,7 +124,7 @@ void WindowManager::removeWindow(Window*w){
     }
     GraphDevice::getInstance().invalidate(wrect);
     GraphDevice::getInstance().flip();
-    LOGV("w=%p windows.size=%d",w,mWindows.size());
+    LOGI("w=%p windows.size=%d",w,mWindows.size());
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){

@@ -690,14 +690,19 @@ bool GradientDrawable::ensureValidRect(){
 }
 
 bool GradientDrawable::isOpaqueForState()const{
-    if (mGradientState->mStrokeWidth >= 0 /*&& mStrokePaint != nullptr
-                && !isOpaque(mStrokePaint.getColor())*/) {
-        return false;
+    if (mGradientState->mStrokeWidth >= 0 && mStrokePaint ){
+	double r,g,b,a;
+	RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
+	pat->get_rgba(r,g,b,a);
+        if(a!=1.f)return false;
      }
      // Don't check opacity if we're using a gradient, as we've already
      // checked the gradient opacity in mOpaqueOverShape.
-    if (mGradientState->mGradientColors.size() == 0/* && !isOpaque(mFillPaint.getColor())*/) {
-        return false;
+    if (mGradientState->mGradientColors.size() == 0){
+	double r,g,b,a;
+	RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mFillPaint);
+	pat->get_rgba(r,g,b,a);
+        if(a!=1.f)return false;
     }
     return true;
 }
