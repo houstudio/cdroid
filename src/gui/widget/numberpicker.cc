@@ -463,7 +463,6 @@ void NumberPicker::scrollBy(int x, int y){
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
-    LOGV("%d,%d:(%d->%d)",x,y,startScrollOffset,mCurrentScrollOffset);
     if (startScrollOffset != mCurrentScrollOffset) {
         onScrollChanged(0, mCurrentScrollOffset, 0, startScrollOffset);
     }
@@ -854,11 +853,11 @@ int NumberPicker::resolveSizeAndStateRespectingMinSize(int minSize, int measured
 }
 
 void NumberPicker::initializeSelectorWheelIndices(){
-    const int count= (int)mSelectorIndices.size(); 
-    mSelectorIndices.resize(std::min((mMaxValue-mMinValue+1),mMaxSelectorIndices));
+    const int valueCount= (mMaxValue-mMinValue+1);
+    mSelectorIndices.resize(std::min(valueCount,mMaxSelectorIndices));
     mMiddleItemIndex = mSelectorIndices.size()/2;
-    for (int i = 0; i < count; i++) {
-        int selectorIndex = ( count + mValue + (i - mMiddleItemIndex) ) % count;
+    for (int i = 0; i < mMaxSelectorIndices; i++) {
+        int selectorIndex = ( valueCount + mValue + (i - mMiddleItemIndex) ) % valueCount;
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
