@@ -19,6 +19,7 @@
 
 #include <view/view.h>
 #include <core/layout.h>
+#include <core/typeface.h>
 
 namespace cdroid {
 
@@ -31,6 +32,11 @@ struct TextWatcher{
     CallbackBase<void,std::wstring&>afterTextChanged;
 };
 class TextView : public View{
+private:
+    static constexpr int DEFAULT_TYPEFACE = -1;
+    static constexpr int SANS = 1;
+    static constexpr int SERIF= 2;
+    static constexpr int MONOSPACE = 3;
 public:
     class Drawables {
     public:
@@ -85,12 +91,17 @@ private:
     int mMinWidthMode;
     int mDesiredHeightAtMeasure;
     int mShadowColor;
-    bool mSingleLine;
     int mDeferScroll;
     float mShadowRadius, mShadowDx, mShadowDy;
     float mSpacingMult;
     float mSpacingAdd;
+    bool mSingleLine;
     bool mHorizontallyScrolling;
+    // This is used to reflect the current user preference for changing font weight and making text
+    // more bold.
+    int mFontWeightAdjustment;
+    Typeface* mOriginalTypeface;
+
     ColorStateList *mTextColor;
     ColorStateList *mHintTextColor;
     ColorStateList *mLinkTextColor;
@@ -123,6 +134,9 @@ private:
     void startMarquee();
     void stopMarquee();
     void startStopMarquee(bool start);
+    void setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
+           int typefaceIndex,int style,int weight);
+    void resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight);
     void restartMarqueeIfNeeded();
     void setRawTextSize(float size, bool shouldRequestLayout);
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
@@ -160,7 +174,9 @@ public:
     TextView(int width, int height);
     TextView(const std::string& text, int width, int height);
     virtual ~TextView();
-    
+    void setTypeface(Typeface* tf);
+    void setTypeface(Typeface* tf,int style);
+    Typeface* getTypeface();
     virtual void setText(const std::string&txt);
     const std::string getText()const;
     void  setTextAppearance(const std::string&);

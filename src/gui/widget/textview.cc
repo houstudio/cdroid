@@ -297,6 +297,7 @@ void TextView::initView(){
     mDrawables=nullptr;
     mMarquee=nullptr;
     mSavedMarqueeModeLayout=nullptr;
+    mOriginalTypeface = nullptr;
     mMaxWidth =INT_MAX;
     mMinWidth =0;
     mMaximum  =INT_MAX;
@@ -970,6 +971,84 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, 
     Context* context = getContext();
     setCompoundDrawablesWithIntrinsicBounds(context->getDrawable(left),context->getDrawable(top),
             context->getDrawable(right),context->getDrawable(bottom));    
+}
+
+void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
+       int typefaceIndex,int style,int weight){
+    if (typeface == nullptr && familyName.empty()==false) {
+         // Lookup normal Typeface from system font map.
+         Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
+         resolveStyleAndSetTypeface(normalTypeface, style, weight);
+     } else if (typeface != nullptr) {
+         resolveStyleAndSetTypeface(typeface, style, weight);
+     } else {  // both typeface and familyName is null.
+         switch (typefaceIndex) {
+         case SANS:  resolveStyleAndSetTypeface(Typeface::SANS_SERIF, style, weight); break;
+         case SERIF: resolveStyleAndSetTypeface(Typeface::SERIF, style, weight); break;
+         case MONOSPACE:  resolveStyleAndSetTypeface(Typeface::MONOSPACE, style, weight);  break;
+         case DEFAULT_TYPEFACE:
+         default: resolveStyleAndSetTypeface(nullptr, style, weight);  break;
+        }
+    }
+}
+
+void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight){
+    if (weight >= 0) {
+        weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
+        bool italic = (style & Typeface::ITALIC) != 0;
+        setTypeface(Typeface::create(typeface, weight, italic));
+    } else {
+        setTypeface(typeface, style);
+    }
+}
+
+void TextView::setTypeface(Typeface* tf,int style){
+    if (style > 0) {
+        if (tf == nullptr) {
+            tf = Typeface::defaultFromStyle(style);
+        } else {
+            tf = Typeface::create(tf, style);
+        }
+        setTypeface(tf);
+        // now compute what (if any) algorithmic styling is needed
+        int typefaceStyle = tf ? tf->getStyle() : 0;
+        int need = style & ~typefaceStyle;
+        //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
+        //mTextPaint.setTextSkewX((need & Typeface::ITALIC) != 0 ? -0.25f : 0);
+    } else {
+        //mTextPaint.setFakeBoldText(false);
+        //mTextPaint.setTextSkewX(0);
+        setTypeface(tf);
+    }
+}
+
+void TextView::setTypeface(Typeface* tf){
+    mOriginalTypeface = tf;
+    if (mFontWeightAdjustment != 0
+            && mFontWeightAdjustment != INT_MAX/*Configuration::FONT_WEIGHT_ADJUSTMENT_UNDEFINED*/) {
+        if (tf == nullptr) {
+            tf = Typeface::DEFAULT;
+        } else {
+            int newWeight = std::min(
+                    std::max(tf->getWeight() + mFontWeightAdjustment, (int)FontStyle::FONT_WEIGHT_MIN),
+                    (int)FontStyle::FONT_WEIGHT_MAX);
+            int typefaceStyle = tf ? tf->getStyle() : 0;
+            bool italic = (typefaceStyle & Typeface::ITALIC) != 0;
+            tf = Typeface::create(tf, newWeight, italic);
+        }
+    }
+    if (mOriginalTypeface!=tf){//mTextPaint.getTypeface() != tf) {
+        //mTextPaint.setTypeface(tf);
+        if (mLayout != nullptr) {
+            //nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+Typeface*TextView::getTypeface(){
+    return mOriginalTypeface;
 }
 
 void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {

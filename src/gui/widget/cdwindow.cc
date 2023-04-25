@@ -385,8 +385,8 @@ void Window::close(){
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
-    bool rc=SwipeHelper::get(mContext).onTouchEvent(event);
-    return /*rc||*/ViewGroup::dispatchTouchEvent(event);
+    //const bool rc=SwipeHelper::get(mContext).onTouchEvent(event);
+    return ViewGroup::dispatchTouchEvent(event);
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){

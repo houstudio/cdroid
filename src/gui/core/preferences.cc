@@ -118,7 +118,7 @@ bool Preferences::getBool(const std::string&section,const std::string&key,bool d
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())return def;
     std::string s=kv->second;
-    LOGD("%s:%s=%s",section.c_str(),key.c_str(),s.c_str());
+    LOGV("%s:%s=%s",section.c_str(),key.c_str(),s.c_str());
     return (s[0]=='t')||(s[0]=='T');
 }
 
@@ -157,7 +157,7 @@ std::string Preferences::getString(const std::string&section,const std::string&k
     if(sec==mPrefs.end())return def;
     auto kv=sec->second.find(key);
     if(kv==sec->second.end())return def;
-    LOGD("%s:%s=%s",section.c_str(),key.c_str(),kv->second.c_str());
+    LOGV("%s:%s=%s",section.c_str(),key.c_str(),kv->second.c_str());
     return kv->second;
 }
 
@@ -184,7 +184,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,int v
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
     else kv->second=std::to_string(v);
-    LOGD("%s %s %d",section.c_str(),key.c_str(),v);
+    LOGV("%s %s %d",section.c_str(),key.c_str(),v);
     updates++;
 }
 
@@ -196,7 +196,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,float
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
     else kv->second=std::to_string(v);
-    LOGD("%s %s %f",section.c_str(),key.c_str(),v);
+    LOGV("%s %s %f",section.c_str(),key.c_str(),v);
     updates++;
 }
 
@@ -208,7 +208,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,const
     if(kv==sec->second.end())
 	sec->second.insert({key,v});
     else kv->second=v;
-    LOGD("%s %s %s",section.c_str(),key.c_str(),v.c_str());
+    LOGV("%s %s %s",section.c_str(),key.c_str(),v.c_str());
     updates++;
 }
 
@@ -220,7 +220,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,doubl
     if(kv==sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
     else kv->second=std::to_string(v);
-    LOGD("%s %s %f",section.c_str(),key.c_str(),v);
+    LOGV("%s %s %f",section.c_str(),key.c_str(),v);
     updates++;
 }
 

@@ -135,6 +135,12 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
 void Switch::setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex){
 }
 
+void Switch::setSwitchTypeface(Typeface* tf, int style){
+}
+
+void Switch::setSwitchTypeface(Typeface* tf){
+}
+
 void Switch::setSwitchPadding(int pixels) {
     mSwitchPadding = pixels;
     requestLayout();

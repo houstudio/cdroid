@@ -4,8 +4,6 @@
 
 namespace cdroid{
 
-typedef void* Typeface;
-
 class Switch:public CompoundButton{
 private:
     static constexpr int THUMB_ANIMATION_DURATION = 250;
@@ -104,8 +102,8 @@ public:
     Switch(int w,int h);
     Switch(Context* context,const AttributeSet& attrs);
     void setSwitchTextAppearance(Context* context,const std::string&resid);
-    void setSwitchTypeface(Typeface tf, int style);
-    void setSwitchTypeface(Typeface tf);
+    void setSwitchTypeface(Typeface* tf, int style);
+    void setSwitchTypeface(Typeface* tf);
     void setSwitchPadding(int pixels);
     int  getSwitchPadding()const;
     void setSwitchMinWidth(int pixels);
