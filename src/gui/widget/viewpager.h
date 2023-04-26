@@ -227,7 +227,7 @@ public:
     View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     void removeView(View* view)override;
     void* getCurrent()const;
-    void computeScroll();//override;
+    void computeScroll()override;
     bool executeKeyEvent(KeyEvent& event);
     bool dispatchKeyEvent(KeyEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev);

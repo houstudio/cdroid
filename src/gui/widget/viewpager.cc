@@ -677,14 +677,14 @@ void ViewPager::populate(int newCurrentItem){
 
 void ViewPager::sortChildDrawingOrder(){
     if (mDrawingOrder != DRAW_ORDER_DEFAULT) {
-        mDrawingOrderedChildren=mChildren;
+        mDrawingOrderedChildren = mChildren;
         std::sort(mDrawingOrderedChildren.begin(),mDrawingOrderedChildren.end(), [](View*lhs,View*rhs)->int{
             LayoutParams* llp = (LayoutParams*) lhs->getLayoutParams();
             LayoutParams* rlp = (LayoutParams*) rhs->getLayoutParams();
             if (llp->isDecor != rlp->isDecor) {
                 return llp->isDecor ? 1 : -1;
             }
-            return llp->position - rlp->position;
+            return (llp->position > rlp->position);
         });
    }
 }
