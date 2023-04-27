@@ -21,10 +21,9 @@ public:
     void* instantiateItem(ViewGroup* container, int position)override {
         ImageView*iv=new  ImageView(200,200);
         ViewPager::LayoutParams*lp=new ViewPager::LayoutParams();
-        //lp->isDecor=true;
-        lp->gravity=Gravity::LEFT;
-        container->addView(iv,lp).setId(position);
-        iv->setScaleType(FIT_XY);
+        lp->gravity=Gravity::CENTER;
+        container->addView(iv).setId(position);
+        //iv->setScaleType(FIT_XY);
         RefPtr<Cairo::ImageSurface>img;
         if(imgs.find(position)==imgs.end()){
             img=container->getContext()->getImage(urls[position]);
@@ -39,7 +38,7 @@ public:
         container->removeView((View*)object);
         delete (View*)object;
     }
-    float getPageWidth(int position)override{return 1.f;}
+    float getPageWidth(int position)override{return .2f;}
 
     std::string getPageTitle(int position){
         std::string url=urls[position];
@@ -48,6 +47,57 @@ public:
     }
 };
 
+class ScalePageTransformer:public ViewPager::PageTransformer {
+public:
+    static constexpr float MAX_SCALE = 1.2f;
+    static constexpr float MIN_SCALE = 0.6f;
+    cdroid::ViewPager*mVP;
+    ScalePageTransformer(cdroid::ViewPager*vp){mVP=vp;}
+    void transformPage(View& page, float position) {
+
+        if (position < -1) {
+            position = -1;
+        } else if (position > 1) {
+            position = 1;
+        }
+
+        float tempScale = position < 0 ? 1 + position : 1 - position;
+
+        float slope = (MAX_SCALE - MIN_SCALE) / 1;
+        //一个公式
+	int dist=page.getId()>mVP->getCurrentItem();
+        float scaleValue = 1.3f - 0.3f*position;
+        page.setScaleX(scaleValue);
+        page.setScaleY(scaleValue);
+	page.setTranslationY(40*std::abs(dist));
+	page.setTranslationX(dist>0?(-10*dist):(10*dist));
+	ViewPager::LayoutParams*lp=(ViewPager::LayoutParams*)page.getLayoutParams();
+	lp->childIndex=(position<1.f)?((1.f-position)*mVP->getChildCount()-1):page.getId();
+
+        //mVP->requestLayout();
+	LOGD("page:%p:%d position=%f",&page,page.getId(),position);
+    }
+};
+
+class CascadeZoomPageTransformer:public ViewPager::PageTransformer {
+public:
+   void transformPage(View& page, float position) {
+        if (position < -1) { /* [-Infinity,-1)*/
+        /*页面已经在屏幕左侧且不可视*/
+        } else if (position <= 0) { /* [-1,0]*/
+            /*页面从左侧进入或者向左侧滑出的状态*/
+            page.setAlpha(1 + position);
+        } else if (position <= 1) {/* (0,1]*/
+            /*页面从右侧进入或者向右侧滑出的状态*/
+            page.setTranslationX(page.getWidth() * -position);
+            page.setScaleX(1-position*0.5f);
+            page.setScaleY(1-position*0.5f);
+            page.setAlpha(1 - position);
+        }else if (position >1){
+        /*页面已经在屏幕右侧且不可视*/
+        }
+    }
+};
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
@@ -58,17 +108,18 @@ int main(int argc,const char*argv[]){
     printf("params=%d params[0]=%s\r\n",app.getParamCount(),app.getParam(0,"/home/houzh/images").c_str()); 
     MyPageAdapter*gpAdapter=new MyPageAdapter(app.getParam(0,"/home/houzh/images"));
     ViewPager*pager=new ViewPager(800,560);
-    pager->setOffscreenPageLimit(gpAdapter->getCount());
+    pager->setOffscreenPageLimit(15);//gpAdapter->getCount());
     pager->setAdapter(gpAdapter);
     ViewPager::OnPageChangeListener listener;
+    pager->setPageMargin(5);
     listener.onPageSelected=[&](int position){
         LOGD("Page %d Selected",position);
     };
     pager->addOnPageChangeListener(listener);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    if(argc>2){
+    if(app.getParamCount()>1){
         ViewPager::PageTransformer*pt=nullptr;
-        switch(atoi(argv[1])){
+        switch(atoi(app.getParam(1,"0").c_str())){
         case  0:pt=new ScaleInOutTransformer(); break;
         case  1:pt=new AccordionTransformer();  break;
         case  2:pt=new CubeInTransformer();break;
@@ -83,7 +134,9 @@ int main(int argc,const char*argv[]){
         case 11:pt=new ZoomInTransformer();break;
         case 12:pt=new ZoomOutTransformer();break;
         case 13:pt=new ZoomOutSlideTransformer();break;
-        }  
+	case 14:pt=new ScalePageTransformer(pager);break;
+	case 15:pt=new CascadeZoomPageTransformer();break;
+        } 
         if(pt)pager->setPageTransformer(true,pt);
     }
     layout->addView(pager);

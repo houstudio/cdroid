@@ -105,6 +105,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 }
 
 NumberPicker::~NumberPicker(){
+    delete mFontSizeInterpolator;
     LOGD("mChildren.size=%d",mChildren.size());
 }
 
@@ -131,14 +132,14 @@ bool NumberPicker::onIncDecLongClick(View&v){
 
 void NumberPicker::initView(){
     ViewConfiguration&config=ViewConfiguration::get(mContext);
-    mIncrementButton=nullptr;
-    mDecrementButton=nullptr;
-    mInputText=nullptr;
-    mOnValueChangeListener=nullptr;
-    mFormatter=nullptr;
+    mIncrementButton = nullptr;
+    mDecrementButton = nullptr;
+    mInputText = nullptr;
+    mOnValueChangeListener = nullptr;
+    mFormatter = nullptr;
     mOnScrollListener.onScrollStateChange = nullptr;
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
-    mTextSize = 24;
+    mTextSize   = 24;
     mSolidColor =0xFF222222;
     mSelectionDivider = nullptr;
     mVirtualButtonPressedDrawable =nullptr;
@@ -159,12 +160,13 @@ void NumberPicker::initView(){
     mMinValue = 0;
     mMaxValue = 0;
     mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
-    mVelocityTracker=nullptr;
+    mVelocityTracker = nullptr;
+    mFontSizeInterpolator = nullptr;
 
     mTouchSlop = config.getScaledTouchSlop();
     mMinimumFlingVelocity = config.getScaledMinimumFlingVelocity();
     mMaximumFlingVelocity = config.getScaledMaximumFlingVelocity()/ SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT;
-    mFlingScroller = new Scroller(getContext(), nullptr, true);
+    mFlingScroller  = new Scroller(getContext(), nullptr, true);
     mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mHideWheelUntilFocused=false;
@@ -716,6 +718,13 @@ int  NumberPicker::getTextSize()const{
     return mInputText->getTextSize();
 }
 
+void NumberPicker::setTextSizeInterpolator(Interpolator*interpolator){
+    if(mFontSizeInterpolator)
+	delete  mFontSizeInterpolator;
+    mFontSizeInterpolator = interpolator;
+    invalidate();
+}
+
 void NumberPicker::drawVertical(Canvas&canvas){
     const bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
     float x = (mRight-mLeft) / 2;
@@ -740,17 +749,24 @@ void NumberPicker::drawVertical(Canvas&canvas){
     std::vector<int>& selectorIndices = mSelectorIndices;
     ColorStateList* colors = mInputText->getTextColors();
     const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
-    canvas.set_color(selectorWheelColor);
+    Color color(selectorWheelColor);
     Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
     Layout txtlayout(mTextSize,mRight-mLeft);
     //txtlayout.setAlignment(mInputText->getLayoutAlignment());
+    canvas.set_color(selectorWheelColor);
+    canvas.set_font_size(mTextSize);
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
         // Do not draw the middle item if input is visible since the input is shown only if the wheel
         // is static and it covers the middle item. Otherwise, if the user starts editing the text 
         // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
-        canvas.set_font_size(i==mMiddleItemIndex?mTextSize:(mTextSize*.8));
+	if(mFontSizeInterpolator){
+	    const float interpolator = 1.f -(float)std::abs(i-mMiddleItemIndex)/mMaxSelectorIndices;
+            const float t = mFontSizeInterpolator->getInterpolation(interpolator);
+	    canvas.set_font_size(t*mTextSize);
+	    canvas.set_source_rgba(color.red(),color.green(),color.blue(),color.alpha()*t);
+	}
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
             canvas.draw_text(rctxt,scrollSelectorValue,DT_CENTER|DT_VCENTER);

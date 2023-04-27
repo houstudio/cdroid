@@ -34,6 +34,7 @@ private:
     ImageButton* mIncrementButton;
     ImageButton* mDecrementButton;
     EditText* mInputText;
+    Interpolator*mFontSizeInterpolator;
     Runnable mChangeCurrentByOneFromLongPressCommand;
     Runnable mBeginSoftInputOnLongPressCommand;
     int mSelectionDividersDistance;
@@ -182,6 +183,7 @@ public:
     int  getTextColor()const;
     void setTextSize(int size);
     int  getTextSize()const;
+    void setTextSizeInterpolator(Interpolator*);
 };
     
 }//namespace
