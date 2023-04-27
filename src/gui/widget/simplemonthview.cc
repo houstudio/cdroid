@@ -374,7 +374,7 @@ void SimpleMonthView::drawMonth(Canvas& canvas){
     // Vertically centered within the month header height.
     canvas.set_color(0xFFFFFFFF);
     Rect rctxt={0,0,mPaddedWidth,mMonthHeight};
-    canvas.draw_text(rctxt,mMonthYearLabel,DT_CENTER|DT_VCENTER);
+    canvas.draw_text(rctxt,mMonthYearLabel,Gravity::CENTER);
 }
 
 const std::string SimpleMonthView::getMonthYearLabel(){
@@ -404,7 +404,7 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
         }
 
         std::string label = mDayOfWeekLabels[col];
-        canvas.draw_text(rctxt,label,DT_CENTER|DT_VCENTER);
+        canvas.draw_text(rctxt,label,Gravity::CENTER);
         rctxt.offset(mCellWidth,0);
     }
     canvas.move_to(0,headerHeight+rowHeight);
@@ -465,7 +465,7 @@ void SimpleMonthView::drawDays(Canvas& canvas){
         }
         canvas.set_color(dayTextColor);
         rctxt.left=colWidth * col;
-        canvas.draw_text(rctxt,std::to_string(day),DT_CENTER|DT_VCENTER);
+        canvas.draw_text(rctxt,std::to_string(day),Gravity::CENTER);
         col++;
 
         if (col == DAYS_IN_WEEK) {
