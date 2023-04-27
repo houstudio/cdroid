@@ -818,7 +818,7 @@ void NumberPicker::drawHorizontal(Canvas&canvas){
         canvas.set_font_size(i==mMiddleItemIndex?mTextSize:(mTextSize*.8));
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
-            canvas.draw_text(rctxt,scrollSelectorValue,DT_CENTER|DT_VCENTER);
+            canvas.draw_text(rctxt,scrollSelectorValue,mInputText->getGravity());
         }
         rctxt.offset(0,mSelectorElementHeight);
     }

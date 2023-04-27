@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <wordbreak.h>
-#include <linebreak.h>
 #include <textutils.h>
 #include <view/gravity.h>
 #include <windowmanager.h>
@@ -76,79 +74,25 @@ void Canvas::get_text_size(const std::string&text,int*width,int *height){
 }
 
 void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment){
-     char*brks=(char*)malloc(text.length()) ;//WORDBREAK_BREAK, #WORDBREAK_NOBREAK,#WORDBREAK_INSIDEACHAR
-     set_wordbreaks_utf8((const utf8_t*)text.c_str(),text.length(),"",brks);
-     const char*ptxt=text.c_str();
-     const char*pword=ptxt;
-     TextExtents extents,te;
-     FontExtents ftext;
-     std::vector<std::string>lines;
-     std::string line;
-     double x,y;
-     double total_width=0, total_height=0;
-     get_font_extents(ftext);
-     //LOGV("ascent=%.3f descent=%.3f height=%.3f xy_advance=%.3f/%.3f",ftext.ascent,ftext.descent,ftext.height,ftext.max_x_advance,ftext.max_y_advance);
-     for(int i=0; i<text.length();i++){
-         switch(brks[i]){
-         case WORDBREAK_BREAK:{
-                 std::string word(pword,ptxt+i-pword+1);
-                 get_text_extents(word,extents);
-                 if( ((total_width+extents.width > rect.width) || (text[i]=='\n')) && (text_alignment&DT_MULTILINE) ){
-                     lines.push_back(line);
-                     total_height+=ftext.height;
-                     line="";total_width=0;
-                     size_t ps=word.find('\n');
-                     if(ps!=std::string::npos)word.erase(ps,1);
-                 }
-                 total_width+=extents.x_advance;
-                 line.append(word);
-                 pword=ptxt+i+1;
-             }
-             break;
-        case WORDBREAK_NOBREAK:    break;
-        case WORDBREAK_INSIDEACHAR:break;
-        default:break;
-        }
+    TextExtents te;
+    FontExtents ftext;
+    double x,y;
+    get_font_extents(ftext);
+    get_text_extents(text,te);
+    switch(text_alignment & Gravity::VERTICAL_GRAVITY_MASK){
+    default:
+    case Gravity::TOP    : y = rect.top + ftext.ascent-ftext.descent;break;
+    case Gravity::CENTER_VERTICAL: y = rect.top+rect.height/2+(ftext.ascent-ftext.descent)/2;break;
+    case Gravity::BOTTOM : y = rect.top+rect.height; break;
     }
-    free(brks);
-    total_height+=extents.height;
-    lines.push_back(line);
-    total_height=lines.size()*ftext.height;
-
-    if((text_alignment&DT_MULTILINE)==0){
-        get_text_extents(lines[0],te);
-        y=rect.top;
-        switch(text_alignment&0xF0){
-        case DT_TOP:y=rect.top + ftext.ascent-ftext.descent;break;
-        case DT_VCENTER:y=rect.top+rect.height/2+(ftext.ascent-ftext.descent)/2;break;
-        case DT_BOTTOM:y=rect.top+rect.height;break;
-        }
-        switch(text_alignment&0x0F){
-        case DT_LEFT:x=rect.left;break;
-        case DT_CENTER:x=rect.left+(rect.width-te.x_advance)/2;break;
-        case DT_RIGHT:x=rect.left+rect.width-te.x_advance;break;
-        }
-        move_to(x,y);
-        show_text(text);
-    }else {
-        y=rect.top;
-        switch(text_alignment&0xF0){
-        case DT_TOP:y=rect.top + ftext.descent;break;
-        case DT_VCENTER:y=rect.top +(rect.height-total_height)/2+ftext.descent;break;
-        case DT_BOTTOM:y=rect.top+rect.height-total_height+ftext.descent;break;
-        }
-        for(auto line:lines){
-            get_text_extents(line,te);
-            switch(text_alignment&0x0F){
-            case DT_LEFT:x=rect.left ; break;
-            case DT_CENTER:x=rect.left + (rect.width-te.x_advance)/2;break;
-            case DT_RIGHT:x=rect.left + rect.width-te.x_advance;break;
-            }
-            move_to(x,y-te.y_bearing);
-            y+=ftext.height;
-            show_text(line);
-        }
+    switch(text_alignment & Gravity::HORIZONTAL_GRAVITY_MASK){
+    default:
+    case Gravity::LEFT  : x = rect.left ; break;
+    case Gravity::CENTER_HORIZONTAL:x = rect.left+(rect.width-te.x_advance)/2;break;
+    case Gravity::RIGHT : x = rect.left+rect.width-te.x_advance;break;
     }
+    move_to(x,y);
+    show_text(text);
 }
 void Canvas::draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT*srcRect){
     Rect src=srcRect==nullptr?Rect::Make(0,0,img->get_width(),img->get_height()):*srcRect;

@@ -235,7 +235,7 @@ void KeyboardView::onDraw(Canvas& canvas) {
             //paint.setShadowLayer(mShadowRadius, 0, 0, mShadowColor);
             // Draw the text
             Rect rctxt={padding.left,padding.top,key->width-padding.left - padding.width,key->height-padding.top - padding.height};
-            canvas.draw_text(rctxt,label,DT_CENTER|DT_VCENTER);
+            canvas.draw_text(rctxt,label,Gravity::CENTER);
             // Turn off drop shadow
         } else if (key->icon) {
             const int drawableX = (key->width - padding.left - padding.width
