@@ -751,8 +751,6 @@ void NumberPicker::drawVertical(Canvas&canvas){
     const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     Color color(selectorWheelColor);
     Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
-    Layout txtlayout(mTextSize,mRight-mLeft);
-    //txtlayout.setAlignment(mInputText->getLayoutAlignment());
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
     for (int i = 0; i < selectorIndices.size(); i++) {
@@ -762,14 +760,14 @@ void NumberPicker::drawVertical(Canvas&canvas){
         // is static and it covers the middle item. Otherwise, if the user starts editing the text 
         // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
 	if(mFontSizeInterpolator){
-	    const float interpolator = 1.f -(float)std::abs(i-mMiddleItemIndex)/mMaxSelectorIndices;
+	    const float interpolator = (float)(i+1)/selectorIndices.size();
             const float t = mFontSizeInterpolator->getInterpolation(interpolator);
 	    canvas.set_font_size(t*mTextSize);
 	    canvas.set_source_rgba(t*color.red(),t*color.green(),t*color.blue(),t*color.alpha());
 	}
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
-            canvas.draw_text(rctxt,scrollSelectorValue,DT_CENTER|DT_VCENTER);
+            canvas.draw_text(rctxt,scrollSelectorValue,mInputText->getGravity());
         }
         rctxt.offset(0,mSelectorElementHeight);
     }
