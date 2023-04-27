@@ -88,7 +88,7 @@ void GameWindow::drawBoard(Canvas&canvas) {
                 int v=pow2[board[x][y]-1];
                 canvas.set_font_size(CW/getwb(v));
                 sprintf(CC,"%d",v);
-                canvas.draw_text(r,CC,DT_CENTER|DT_VCENTER);
+                canvas.draw_text(r,CC,Gravity::CENTER);
             }
         }
     }

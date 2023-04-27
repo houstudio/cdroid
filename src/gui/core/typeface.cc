@@ -8,6 +8,7 @@ Typeface* Typeface::SERIF;
 Typeface* Typeface::DEFAULT;
 Typeface* Typeface::DEFAULT_BOLD;
 Typeface* Typeface::sDefaultTypeface;
+std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
 
 Typeface::Typeface(Cairo::RefPtr<Cairo::FtFontFace>face){
     mFontFace = face;
@@ -47,23 +48,26 @@ Typeface* Typeface::create(Typeface*family, int style){
 }
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName){
-    Typeface* tf =nullptr;// sSystemFontMap.get(familyName);
-    return tf == nullptr ? Typeface::DEFAULT : tf;
+    auto it=sSystemFontMap.find(familyName);
+    return (it==sSystemFontMap.end())? Typeface::DEFAULT : it->second;
 }
 
 Typeface* Typeface::create(cdroid::Typeface*family, int weight, bool italic){
     if (family == nullptr) {
+	loadPreinstalledSystemFontMap();
         family = getDefault();
     }
     return createWeightStyle(family, weight, italic);
 }
 
 Typeface* Typeface::create(const std::string& familyName,int style){
-    return create(getSystemDefaultTypeface(familyName), style);;
+    if(sSystemFontMap.empty())
+        loadPreinstalledSystemFontMap();
+    return create(getSystemDefaultTypeface(familyName), style);
 }
 
 Typeface* Typeface::defaultFromStyle(int style){
-    return nullptr;
+    return getDefault();
 }
 
 Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic){
@@ -100,10 +104,36 @@ Typeface* Typeface::getDefault(){
     return sDefaultTypeface;
 }
 
-void Typeface::buildSystemFallback(const std::string xmlPath,const std::string fontDir,
-        std::unordered_map<std::string, Typeface>& fontMap,
+void Typeface::buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
+        std::unordered_map<std::string, Typeface*>& fontMap,
 	std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap){
+}
 
+void Typeface::setSystemFontMap(const std::unordered_map<std::string, Typeface*>&systemFontMap){
+    sSystemFontMap = systemFontMap;
+    auto it=sSystemFontMap.find(DEFAULT_FAMILY);
+    if (it!=sSystemFontMap.end()) {
+        setDefault(it->second);
+    }
+}
+
+void Typeface::loadPreinstalledSystemFontMap(){
+    const char*families[]={"serif","sans-serif","monospace"};
+    std::unordered_map<std::string, Typeface*>fonts;
+    for(int i=0;i<3;i++){
+	FcPattern* fontPattern = FcPatternCreate();
+        FcResult fontResult = FcResultMatch;
+        int fontSize = 74;
+        FcPatternAddString(fontPattern, FC_FAMILY,(const FcChar8*)families[i]);
+	Typeface*tf = new Typeface(Cairo::FtFontFace::create(fontPattern));
+	fonts.insert({families[i],tf});
+	FcPatternDestroy(fontPattern);
+	LOGD("typeface %p=%s",tf,families[i]);
+        //FcPatternAddDouble(fontPattern, FC_SIZE, fontSize);
+        //FcPatternAddString(fontPattern, FC_SPACING,(const FcChar8*) fontSpacing);
+        //FcPatternAddString(fontPattern, FC_STYLE,(const FcChar8*) fontStyle);
+    }
+    setSystemFontMap(fonts);
 }
 
 void Typeface::init(){

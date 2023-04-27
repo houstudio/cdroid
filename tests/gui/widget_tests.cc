@@ -39,7 +39,6 @@ TEST_F(WIDGET,TextView){
     App app;
     Window*w=new Window(0,0,1280,720);
     const char*strings[]={"LEFT","CENTER","RIGHT","LEFT|TOP","CENTER|TOP","RIGHT|TOP"};
-    const int align[]={DT_LEFT,DT_CENTER,DT_RIGHT,DT_LEFT|DT_TOP,DT_CENTER|DT_TOP,DT_RIGHT|DT_TOP};
     TextView*t1=new TextView("",400,200);
     TextView*t2=new TextView(std::string(),400,300);
     w->addView(t1);

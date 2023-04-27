@@ -398,8 +398,8 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
     if (attr->mTypefaceIndex != -1 && !attr->mFontFamilyExplicit) {
         attr->mFontFamily = nullptr;
     }
-    //setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
-    //        attr->mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);
+    setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
+            attr->mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);
 
     if (attr->mShadowColor != 0) {
         setShadowLayer(attr->mShadowRadius, attr->mShadowDx, attr->mShadowDy, attr->mShadowColor);
@@ -978,6 +978,7 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, 
 
 void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
        int typefaceIndex,int style,int weight){
+    LOGV("familyName=%s style=%d weight=%d",familyName.c_str(),style,weight);
     if (typeface == nullptr && familyName.empty()==false) {
          // Lookup normal Typeface from system font map.
          Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
