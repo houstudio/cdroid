@@ -765,7 +765,7 @@ void NumberPicker::drawVertical(Canvas&canvas){
 	    const float interpolator = 1.f -(float)std::abs(i-mMiddleItemIndex)/mMaxSelectorIndices;
             const float t = mFontSizeInterpolator->getInterpolation(interpolator);
 	    canvas.set_font_size(t*mTextSize);
-	    canvas.set_source_rgba(color.red(),color.green(),color.blue(),color.alpha()*t);
+	    canvas.set_source_rgba(t*color.red(),t*color.green(),t*color.blue(),t*color.alpha());
 	}
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {

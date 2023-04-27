@@ -2,9 +2,11 @@
 #define __TYPEFACE_H__
 #include <string>
 #include <core/callbackbase.h>
+#include <cairomm/fontface.h>
+#include <unordered_map>
 
 namespace cdroid{
-
+class FontFamily{};  
 class Typeface{
 public:
     static constexpr bool ENABLE_LAZY_TYPEFACE_INITIALIZATION=true;
@@ -15,6 +17,7 @@ public:
     static constexpr int BOLD = 1;
     static constexpr int ITALIC = 2;
     static constexpr int BOLD_ITALIC = 3;
+    static constexpr int STYLE_MASK = 0x03;
     /** The default NORMAL typeface object */
     static Typeface* DEFAULT;
 
@@ -31,11 +34,19 @@ private:
     int mStyle;
     int mWeight;
     int mItalic;
+    Cairo::RefPtr<Cairo::FtFontFace>mFontFace;
+    static Typeface* sDefaultTypeface;
+    static std::unordered_map<std::string,Typeface>sSystemFontMap;
+    static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
+    static std::unordered_map<void*,Typeface>sStyledTypefaceCache;
 private:
+    static void init();
     static void setDefault(Typeface* t);
     static Typeface* getDefault();
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
+    static Typeface* getSystemDefaultTypeface(const std::string& familyName);
+    Typeface(Cairo::RefPtr<Cairo::FtFontFace>face);
 public:
     int getWeight()const{
         return mWeight;
@@ -50,6 +61,9 @@ public:
         return (mStyle & ITALIC) != 0;
     }
     //static Typeface* createFromResources(FamilyResourceEntry entry, AssetManager mgr,const std::string& path)
+    static void buildSystemFallback(const std::string xmlPath,const std::string fontDir,
+           std::unordered_map<std::string, Typeface>& fontMap, 
+	   std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap);
     static Typeface* findFromCache(/*AssetManager mgr,*/const std::string& path);
     static Typeface* create(const std::string& familyName,int style);
     static Typeface* create(Typeface* family,int style);
@@ -60,18 +74,18 @@ public:
 
 class FontStyle {
 public:
-    static constexpr int FONT_WEIGHT_MIN = 1;
+    static constexpr int FONT_WEIGHT_MIN  = 1;
     static constexpr int FONT_WEIGHT_THIN = 100;
     static constexpr int FONT_WEIGHT_EXTRA_LIGHT = 200;
-    static constexpr int FONT_WEIGHT_LIGHT = 300;
+    static constexpr int FONT_WEIGHT_LIGHT  = 300;
     static constexpr int FONT_WEIGHT_NORMAL = 400;
     static constexpr int FONT_WEIGHT_MEDIUM = 500;
     static constexpr int FONT_WEIGHT_SEMI_BOLD = 600;
     static constexpr int FONT_WEIGHT_BOLD = 700;
     static constexpr int FONT_WEIGHT_EXTRA_BOLD = 800;
     static constexpr int FONT_WEIGHT_BLACK = 900;
-    static constexpr int FONT_WEIGHT_MAX = 1000;
-    static constexpr int FONT_SLANT_UPRIGHT = 0;
+    static constexpr int FONT_WEIGHT_MAX   = 1000;
+    static constexpr int FONT_SLANT_UPRIGHT= 0;
     static constexpr int FONT_SLANT_ITALIC = 1;
 private:
     int mWeight;

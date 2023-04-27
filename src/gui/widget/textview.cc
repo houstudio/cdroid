@@ -180,7 +180,7 @@ public:
     ColorStateList* mTextColorLink = nullptr;
     int mTextSize = 0;
     std::string mFontFamily;
-    Cairo::RefPtr<Cairo::ToyFontFace> mFontTypeface;
+    Typeface* mFontTypeface;
     bool mFontFamilyExplicit = false;
     int mTypefaceIndex = -1;
     int mTextStyle  = 0;
@@ -217,8 +217,10 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
         mTextColorLink = ctx->getColorStateList(atts.getString("textColorLink"));
     mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
     mTextStyle= atts.getInt("textStyle",std::map<const std::string,int>{
-	   {"normal",0},{"bold",1},{"italic",2}
-	},0);
+	   {"normal",(int)Typeface::NORMAL},
+	   {"bold"  ,(int)Typeface::BOLD},
+	   {"italic",(int)Typeface::ITALIC}
+	},Typeface::NORMAL);
     mFontWeight=atts.getInt("textfontWeight",-1);
     mShadowColor = atts.getInt("shadowColor",mShadowColor);
     mShadowDx = atts.getFloat("shadowDx",mShadowDx);
@@ -226,8 +228,9 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mShadowRadius = atts.getFloat("shadowRadius",mShadowRadius);
     mTypefaceIndex= atts.getInt("typeface",-1);
     mFontFamily   = atts.getString("fontFamily","Droid Sans Fallback");
-    mFontTypeface =Cairo::ToyFontFace::create(mFontFamily,Cairo::ToyFontFace::Slant::NORMAL,Cairo::ToyFontFace::Weight::NORMAL);
-    LOGV("mFontFamily=%s face=%p family=%s",mFontFamily.c_str(),mFontTypeface.get(),mFontTypeface->get_family().c_str());
+    //mFontTypeface = nullptr;//Cairo::ToyFontFace::create(mFontFamily,Cairo::ToyFontFace::Slant::NORMAL,Cairo::ToyFontFace::Weight::NORMAL);
+    mFontTypeface = nullptr;
+    LOGV("mFontFamily=%s face=%p family=%s",mFontFamily.c_str(),mFontTypeface);
     mTextStyle = atts.getInt("textStyle",-1);
     mFontWeight= atts.getInt("textFontWeight",-1);
     mAllCaps=atts.getBoolean("textAllCaps",false);
@@ -392,11 +395,11 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
 
     if (attr->mTextSize != 0) setRawTextSize(attr->mTextSize, true /* shouldRequestLayout */);
 
-    /*if (attr->mTypefaceIndex != -1 && !attr.mFontFamilyExplicit) {
-        attr.mFontFamily = nullptr;
+    if (attr->mTypefaceIndex != -1 && !attr->mFontFamilyExplicit) {
+        attr->mFontFamily = nullptr;
     }
-    setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
-            attr.mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);*/
+    //setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
+    //        attr->mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);
 
     if (attr->mShadowColor != 0) {
         setShadowLayer(attr->mShadowRadius, attr->mShadowDx, attr->mShadowDy, attr->mShadowColor);
