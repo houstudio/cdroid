@@ -162,6 +162,7 @@ Drawable*RotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
     //rd->setPivotYRelative();
     rd->setFromDegrees(atts.getFloat("fromDegrees",0));
     rd->setToDegrees(atts.getFloat("toDegrees",360.0));
+    rd->onLevelChange(0);
     return rd;
 }
 
