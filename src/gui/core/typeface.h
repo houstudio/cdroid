@@ -31,6 +31,7 @@ public:
 private:
     Runnable mCleaner;
     std::string mFallbackFamilyName;
+    std::string mFamily;
     int mStyle;
     int mWeight;
     int mItalic;
@@ -40,13 +41,13 @@ private:
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
     static std::unordered_map<void*,Typeface*>sStyledTypefaceCache;
 private:
-    static void init();
     static void setDefault(Typeface* t);
     static Typeface* getDefault();
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     Typeface(Cairo::RefPtr<Cairo::FtFontFace>face);
+    Typeface(FcPattern&);
 public:
     int getWeight()const{
         return mWeight;
@@ -60,6 +61,12 @@ public:
     bool isItalic() const{
         return (mStyle & ITALIC) != 0;
     }
+    std::string getFamily()const{
+	return mFamily;
+    }
+    Cairo::RefPtr<Cairo::FtFontFace>getFontFace()const{
+	return mFontFace;
+    }
     //static Typeface* createFromResources(FamilyResourceEntry entry, AssetManager mgr,const std::string& path)
     static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
            std::unordered_map<std::string, Typeface*>& fontMap, 
@@ -70,8 +77,8 @@ public:
     static Typeface* create(Typeface* family,int weight, bool italic);
     static Typeface* defaultFromStyle(int style);
     static Typeface* createFromAsset(const std::string path);
-    static void setSystemFontMap(const std::unordered_map<std::string, Typeface*>&systemFontMap);
     static void loadPreinstalledSystemFontMap();
+    static int loadByFontConfig();
 };
 
 class FontStyle {

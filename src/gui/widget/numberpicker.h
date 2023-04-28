@@ -34,7 +34,6 @@ private:
     ImageButton* mIncrementButton;
     ImageButton* mDecrementButton;
     EditText* mInputText;
-    Interpolator*mFontSizeInterpolator;
     Runnable mChangeCurrentByOneFromLongPressCommand;
     Runnable mBeginSoftInputOnLongPressCommand;
     int mSelectionDividersDistance;
@@ -44,7 +43,9 @@ private:
     int mMaxWidth;
     bool mComputeMaxWidth;
     int mTextSize;
+    int mTextSize2;
     int mTextColor;
+    int mTextColor2;
     int mSelectorTextGapHeight;
     std::vector<std::string> mDisplayedValues;
     int mMinValue;
@@ -179,11 +180,10 @@ public:
 
     void jumpDrawablesToCurrentState();
     void onResolveDrawables(int layoutDirection)override;
-    void setTextColor(int color);
+    void setTextColor(int color,int color2=0);
     int  getTextColor()const;
-    void setTextSize(int size);
+    void setTextSize(int size,int size2=0);
     int  getTextSize()const;
-    void setTextSizeInterpolator(Interpolator*);
 };
     
 }//namespace

@@ -21,41 +21,47 @@ namespace cdroid{
 #define COLUMNS_NORMAL  4
 #define COLUMNS_ELLIPSIZE 6
 
+static unsigned char sData[4];
+static RefPtr<ImageSurface>sImage=ImageSurface::create(sData,Surface::Format::ARGB32,1,1,4);
 Layout::Layout(int fontSize,int width){
-    mFontSize=fontSize;
-    mWidth=width;
-    mLineCount=0;
-    mAlignment=ALIGN_LEFT;
-    mColumns=COLUMNS_NORMAL;
-    mEllipsis=ELLIPSIS_NONE;
+    mFontSize= fontSize;
+    mTypeface= Typeface::DEFAULT;
+    mWidth  = width;
+    mLineCount = 0;
+    mAlignment = ALIGN_LEFT;
+    mColumns = COLUMNS_NORMAL;
+    mEllipsis= ELLIPSIS_NONE;
     mEllipsizedWidth=0;
-    mSpacingMult=1.0;
-    mSpacingAdd=0;
-    mLayout=0;
-    mCaretPos=0;
+    mSpacingMult = 1.0;
+    mSpacingAdd  = 0;
+    mLayout  = 0;
+    mCaretPos= 0;
     mMultiline=false;
     mBreakStrategy=BREAK_STRATEGY_SIMPLE ;
-    mEditable=false;
+    mEditable = false;
+    mContext=Cairo::Context::create(sImage);
 }
 
 Layout::Layout(const Layout&l){
-    mFontSize=l.mFontSize;
-    mWidth=l.mWidth;
-    mLineCount=l.mLineCount;
-    mAlignment=l.mAlignment;
-    mColumns=l.mColumns;
-    mEllipsis=l.mEllipsis;
-    mEllipsizedWidth=l.mEllipsizedWidth;
-    mSpacingMult=l.mSpacingMult;
-    mSpacingAdd=l.mSpacingAdd;
-    mLayout=l.mLayout;
-    mCaretPos=l.mCaretPos;
-    mMultiline=l.mMultiline;
+    mTypeface = l.mTypeface;
+    mFontSize = l.mFontSize;
+    mWidth = l.mWidth;
+    mLineCount = l.mLineCount;
+    mAlignment = l.mAlignment;
+    mColumns = l.mColumns;
+    mEllipsis= l.mEllipsis;
+    mEllipsizedWidth= l.mEllipsizedWidth;
+    mSpacingMult= l.mSpacingMult;
+    mSpacingAdd = l.mSpacingAdd;
+    mMultiline  = l.mMultiline;
+    mLineHeight = l.mLineHeight;
+    mLayout  = l.mLayout;
+    mCaretPos= l.mCaretPos;
     mBreakStrategy=l.mBreakStrategy;
-    mEditable=l.mEditable;
-    mText=l.mText;
-    mLines=l.mLines;
-    mLineHeight=l.mLineHeight;
+    mEditable = l.mEditable;
+    mText = l.mText;
+    mLines= l.mLines;
+    mContext=Cairo::Context::create(sImage);
 }
 
 void Layout::setWidth(int width){
@@ -63,14 +69,20 @@ void Layout::setWidth(int width){
     mLayout++;
 }
 
-void Layout::setFontSize(int size){
+void Layout::setFont(Typeface*tf){
+    mTypeface = tf ;
+    mContext->set_font_face(mTypeface->getFontFace());
+}
+
+void Layout::setFontSize(double size){
     if(mFontSize!=size){
         mFontSize=size;
         mLayout++;
+        mContext->set_font_size(mFontSize);
     }
 }
 
-int Layout::getFontSize()const{
+double Layout::getFontSize()const{
     return mFontSize;
 }
 
@@ -94,20 +106,12 @@ void Layout::setEllipsis(int ellipsis){
     }
 }
 
-static unsigned char sData[4];
-static RefPtr<ImageSurface>sImage=ImageSurface::create(sData,Surface::Format::ARGB32,1,1,4);
-static RefPtr<Cairo::Context>sContext=Cairo::Context::create(sImage);
-
-float Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
+double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
     std::string utext=TextUtils::unicode2utf8(text);
-    RefPtr<Cairo::Context>ctx=sContext;
-    ctx->save();
-    ctx->set_font_size(mFontSize);
-    ctx->get_text_extents(utext,te);
+    mContext->get_text_extents(utext,te);
     if(fe){
-        ctx->get_font_extents(*fe);
+        mContext->get_font_extents(*fe);
     }
-    ctx->restore();
     return te.x_advance;
 }
 

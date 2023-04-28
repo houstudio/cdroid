@@ -1,15 +1,19 @@
 #ifndef __LAYOUT_H__
 #define __LAYOUT_H__
 #include <core/canvas.h>
+#include <core/typeface.h>
+
 namespace cdroid{
 class Layout{
 private:
     std::wstring mText;
     std::vector<int>mLines;
+    Cairo::RefPtr<Cairo::Context>mContext;
+    Typeface *mTypeface;
     int mWidth;
     float mLineHeight;
     int mLineCount;
-    int mFontSize;
+    double mFontSize;
     int mEllipsizedWidth;
     int mColumns;
     int mEllipsis;
@@ -23,7 +27,7 @@ private:
     int mLayout;        //mLayout>0 need relayout
     Rect mCaretRect;
     void pushLineData(int start,int ytop,int descent,int width);
-    float measureSize(const std::wstring&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
+    double measureSize(const std::wstring&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
     void calculateEllipsis(int line,int linewidth);
     void setEllipse(int line,int start,int count);
     const std::wstring getLineText(int line,bool expandSllipsis=false)const;
@@ -52,8 +56,9 @@ public:
     Layout(const Layout&l);
     void setAlignment(int alignment);
     void setWidth(int width);
-    void setFontSize(int size);
-    int getFontSize()const;
+    void setFont(Typeface*tf);
+    void setFontSize(double size);
+    double getFontSize()const;
     bool setText(const std::string&);
     bool setText(const std::wstring&);
     void setEditable(bool);

@@ -99,13 +99,14 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     ViewConfiguration configuration = ViewConfiguration::get(context);
     mTextSize = (int) mInputText->getTextSize();
+    mTextSize2 = mTextSize;
     ColorStateList*colors=mInputText->getTextColors();
     mTextColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),Color::WHITE);
+    mTextColor2= mTextColor;
     updateInputTextView();
 }
 
 NumberPicker::~NumberPicker(){
-    delete mFontSizeInterpolator;
     LOGD("mChildren.size=%d",mChildren.size());
 }
 
@@ -140,6 +141,8 @@ void NumberPicker::initView(){
     mOnScrollListener.onScrollStateChange = nullptr;
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mTextSize   = 24;
+    mTextSize2  = 24;
+    mTextColor2 = 0 ;
     mSolidColor =0xFF222222;
     mSelectionDivider = nullptr;
     mVirtualButtonPressedDrawable =nullptr;
@@ -161,7 +164,6 @@ void NumberPicker::initView(){
     mMaxValue = 0;
     mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
     mVelocityTracker = nullptr;
-    mFontSizeInterpolator = nullptr;
 
     mTouchSlop = config.getScaledTouchSlop();
     mMinimumFlingVelocity = config.getScaledMinimumFlingVelocity();
@@ -699,9 +701,11 @@ void NumberPicker::onResolveDrawables(int layoutDirection){
     }
 }
 
-void NumberPicker::setTextColor(int color){
+void NumberPicker::setTextColor(int color,int color2){
     mInputText->setTextColor(color);
     mTextColor = color;
+    if(color2)
+        mTextColor2= color2;
     invalidate();
 }
 
@@ -709,20 +713,16 @@ int  NumberPicker::getTextColor()const{
     return mTextColor;
 }
 
-void NumberPicker::setTextSize(int size){
+void NumberPicker::setTextSize(int size,int size2){
     mInputText->setTextSize(size);
-    mTextSize=size;
+    mTextSize = size;
+    if(size2)
+        mTextSize2= size2;
+    invalidate();
 }
 
 int  NumberPicker::getTextSize()const{
     return mInputText->getTextSize();
-}
-
-void NumberPicker::setTextSizeInterpolator(Interpolator*interpolator){
-    if(mFontSizeInterpolator)
-	delete  mFontSizeInterpolator;
-    mFontSizeInterpolator = interpolator;
-    invalidate();
 }
 
 void NumberPicker::drawVertical(Canvas&canvas){
@@ -759,11 +759,16 @@ void NumberPicker::drawVertical(Canvas&canvas){
         // Do not draw the middle item if input is visible since the input is shown only if the wheel
         // is static and it covers the middle item. Otherwise, if the user starts editing the text 
         // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
-	if(mFontSizeInterpolator){
-	    const float interpolator = (float)(i+1)/selectorIndices.size();
-            const float t = mFontSizeInterpolator->getInterpolation(interpolator);
-	    canvas.set_font_size(t*mTextSize);
-	    canvas.set_source_rgba(t*color.red(),t*color.green(),t*color.blue(),t*color.alpha());
+	if((mTextSize!=mTextSize2)||(mTextColor!=mTextColor2)){
+	    const float harfHeight = getHeight()/2.f;
+	    const float fraction   = (float)std::abs(rctxt.top+mSelectorElementHeight/2- harfHeight)/harfHeight;
+	    const Color end(mTextColor2);
+	    const float r = lerp(color.red(),end.red(), fraction);
+	    const float g = lerp(color.green(),end.green(), fraction);
+	    const float b = lerp(color.blue(),end.blue(), fraction);
+	    const float a = lerp(color.alpha(),end.alpha(), fraction);
+	    canvas.set_font_size( lerp(mTextSize,mTextSize2,fraction) );
+	    canvas.set_source_rgba(r,g,b,a);
 	}
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
