@@ -163,7 +163,7 @@ void GridLayout::setAlignmentMode(int alignmentMode){
 }
 
 bool GridLayout::isRowOrderPreserved()const{
-    mVerticalAxis->isOrderPreserved();
+    return mVerticalAxis->isOrderPreserved();
 }
 
 void GridLayout::setRowOrderPreserved(bool rowOrderPreserved){

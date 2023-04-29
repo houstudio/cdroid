@@ -44,8 +44,8 @@ unsigned int Color::toArgb(float r, float g, float b, float a){
            ((int)(b * 255.0f + 0.5f));
 }
 
-unsigned int Color::toArgb(int r,int g,int b,int a){
-    return((unsigned int)r<<24)|(r<<16)|(g<<8)|b;
+unsigned int Color::toArgb(uint8_t r,uint8_t g,uint8_t b,uint8_t a){
+    return((unsigned int)a<<24)|(r<<16)|(g<<8)|b;
 }
 
 unsigned int Color::toArgb()const{
