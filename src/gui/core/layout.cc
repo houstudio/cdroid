@@ -22,7 +22,8 @@ namespace cdroid{
 #define COLUMNS_ELLIPSIZE 6
 
 static unsigned char sData[4];
-static RefPtr<ImageSurface>sImage=ImageSurface::create(sData,Surface::Format::ARGB32,1,1,4);
+static RefPtr<ImageSurface>sImage = ImageSurface::create(sData,Surface::Format::ARGB32,1,1,4);
+
 Layout::Layout(int fontSize,int width){
     mFontSize= fontSize;
     mTypeface= Typeface::DEFAULT;
@@ -100,14 +101,14 @@ int Layout::getEllipsis()const{
 
 void Layout::setEllipsis(int ellipsis){
     if((mEllipsis!=ellipsis)&&(ellipsis>=ELLIPSIS_NONE)&&(ellipsis<=ELLIPSIS_MARQUEE)){
-        mEllipsis=ellipsis;
-        mColumns=(ellipsis==ELLIPSIS_NONE||ellipsis==ELLIPSIS_MARQUEE)?COLUMNS_NORMAL:COLUMNS_ELLIPSIZE;
+        mEllipsis= ellipsis;
+        mColumns = (ellipsis==ELLIPSIS_NONE||ellipsis==ELLIPSIS_MARQUEE)?COLUMNS_NORMAL:COLUMNS_ELLIPSIZE;
         mLayout++;
     }
 }
 
 double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
-    std::string utext=TextUtils::unicode2utf8(text);
+    std::string utext = TextUtils::unicode2utf8(text);
     mContext->get_text_extents(utext,te);
     if(fe){
         mContext->get_font_extents(*fe);
@@ -120,7 +121,7 @@ int Layout::getEllipsizedWidth() const{
 }
 
 int  Layout::getHeight(bool cap)const{
-    const int lc=getLineCount();
+    const int lc = getLineCount();
     return lc?getLineTop(lc):0;
 }
 
@@ -133,7 +134,7 @@ int Layout::getParagraphDirection(int line)const{
 }
 
 int Layout::getLineTop(int line)const{
-    if(line<0)line=mLineCount-1;
+    if(line<0)line = mLineCount-1;
     return mLines[line*mColumns+TOP];
 }
 
@@ -158,17 +159,17 @@ int Layout::getLineEnd(int line)const{
 }
 
 int Layout::getLineWidth(int line,bool expandEllipsis)const{
-    int width=mLines[line*mColumns+LAYOUT_WIDTH];
+    int width = mLines[line*mColumns+LAYOUT_WIDTH];
     if( expandEllipsis && (mColumns==COLUMNS_ELLIPSIZE) && (width>mWidth) )
-        width=mWidth;
+        width = mWidth;
     return width;
 }
 
 int Layout::getMaxLineWidth()const{
-    int maxW=0;
-    int cnt=getLineCount();
+    int maxW = 0;
+    int cnt  = getLineCount();
     for(int i=0;i<cnt;i++)
-        maxW=std::max(maxW,getLineWidth(i,true));
+        maxW = std::max(maxW,getLineWidth(i,true));
     return maxW;
 }
 
@@ -246,7 +247,7 @@ int Layout::getOffsetToLeftRightOf(int caret, bool toLeft)const{
     //TextLine tl = TextLine.obtain();
     // XXX: we don't care about tabs
     //tl.set(mPaint, mText, lineStart, lineEnd, lineDir, directions, false, null);
-    std::wstring subtxt=mText.substr(lineStart,caret-lineStart);
+    std::wstring subtxt = mText.substr(lineStart,caret-lineStart);
     TextExtents extents;
     measureSize(subtxt,extents) ;
     int x = (int)extents.x_advance;

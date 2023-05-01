@@ -748,27 +748,30 @@ void NumberPicker::drawVertical(Canvas&canvas){
     // draw the selector wheel
     std::vector<int>& selectorIndices = mSelectorIndices;
     ColorStateList* colors = mInputText->getTextColors();
-    const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
+    const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(
+		    StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     Color color(selectorWheelColor);
     Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
+    if(mTextColor!=mTextColor2){
+	 Color c1(mTextColor), c2(mTextColor2);
+	 Cairo::RefPtr<Cairo::LinearGradient> pat=Cairo::LinearGradient::create(0,mCurrentScrollOffset,0,mCurrentScrollOffset+getHeight());
+	 pat->add_color_stop_rgba(.0f,c2.red(),c2.green(),c2.blue(),c2.alpha());
+	 pat->add_color_stop_rgba(.5f,c1.red(),c1.green(),c1.blue(),c1.alpha());
+	 pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
+	 canvas.set_source(pat);
+    }else canvas.set_color(mTextColor);
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
         // Do not draw the middle item if input is visible since the input is shown only if the wheel
         // is static and it covers the middle item. Otherwise, if the user starts editing the text 
         // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
-	if((mTextSize!=mTextSize2)||(mTextColor!=mTextColor2)){
+	if((mTextSize!=mTextSize2)){
 	    const float harfHeight = getHeight()/2.f;
 	    const float fraction   = (float)std::abs(rctxt.top+mSelectorElementHeight/2- harfHeight)/harfHeight;
-	    const Color end(mTextColor2);
-	    const float r = lerp(color.red(),end.red(), fraction);
-	    const float g = lerp(color.green(),end.green(), fraction);
-	    const float b = lerp(color.blue(),end.blue(), fraction);
-	    const float a = lerp(color.alpha(),end.alpha(), fraction);
 	    canvas.set_font_size( lerp(mTextSize,mTextSize2,fraction) );
-	    canvas.set_source_rgba(r,g,b,a);
 	}
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
