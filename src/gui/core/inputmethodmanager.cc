@@ -5,6 +5,8 @@
 #include <fstream>
 #include <keycharactermap.h>
 #include <textutils.h>
+#include <widget/candidateview.h> 
+#include <widget/R.h>
 
 namespace cdroid{
 
@@ -13,7 +15,7 @@ class IMEWindow:public Window{
 protected:
    friend InputMethodManager;
    View*mBuddy;
-   //ToolBar*candidateView;
+   CandidateView*candidateView;
    KeyboardView*kbdView;
    std::wstring text2IM;
 public:
@@ -23,8 +25,9 @@ public:
       InputMethodManager::getInstance().imeWindow=nullptr;
    }
    void updatePredicts(std::vector<std::string>candidates){
-       //candidateView->clear();
-       //for(auto c:candidates)     candidateView->addButton(c);
+       candidateView->setSuggestions(candidates,true,true);
+       LOGD("%d sugguestions",candidates.size());
+       candidateView->invalidate(true);
    }
    void onSizeChanged(int w,int h,int ow,int oh)override{
        kbdView->onSizeChanged(w,h,ow,oh);
@@ -53,12 +56,11 @@ public:
 IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     InputMethodManager&imm=InputMethodManager::getInstance();
     KeyboardView::OnKeyboardActionListener listener;
-    //candidateView=new ToolBar(w,28);
-    kbdView=new KeyboardView(w,h-30);
-    setText("IME");
-    //addView(candidateView).setPos(0,1);
-    addView(kbdView).setPos(0,30);
-    setVisibility(INVISIBLE);
+    LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this);
+    kbdView = (KeyboardView*)findViewById(cdroid::R::id::keyboardview);
+    candidateView=(CandidateView*)findViewById(cdroid::R::id::predict2);
+    requestLayout();
+    //setVisibility(INVISIBLE);
     listener.onPress=[this](int primaryCode){
         LOGD("primaryCode=%d %x",primaryCode,primaryCode);
         KeyEvent keyEvent;
@@ -81,8 +83,14 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
             }break;
         }
     };
-    listener.onRelease=[](int primaryCode){
-        LOGD("primaryCode=%x",primaryCode);
+    listener.onRelease=[this](int primaryCode){
+	std::vector<std::string>candidates;
+	text2IM.append(1,primaryCode);
+	InputMethod*im=InputMethodManager::getInstance().im;
+	std::string u8txt=TextUtils::unicode2utf8(text2IM);
+	int rc=im->search(u8txt,candidates);
+	updatePredicts(candidates);
+        LOGD("txt=%s primaryCode=%x/%c",u8txt.c_str(),primaryCode,primaryCode);
     };
     listener.onText=[](std::string&text){
         LOGD("onText(%s)",text.c_str());
@@ -141,7 +149,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         text2IM=std::wstring();
         im->close_search();
         im->get_predicts(imm.predictsource,candidates);
-        updatePredicts(candidates);;
+        updatePredicts(candidates);
     });*/
 }
 
@@ -203,12 +211,12 @@ InputMethodManager&InputMethodManager::getInstance(){
     }
     if(imemethods.size()==0){
         InputMethod*m;
-	//m = new InputMethod("cdroid:values/qwerty.xml");
+	//m = new InputMethod("@cdroid:xml/qwerty.xml");
 	//registeMethod("English",m);
 #ifdef ENABLE_PINYIN2HZ
-	m = new GooglePinyin("cdroid:values/qwerty.xml");
+        m = new GooglePinyin("@cdroid:xml/qwerty.xml");
         m->load_dicts("dict_pinyin.dat","userdict.dat");
-        registeMethod("ChinesePinyin26",m);
+        registeMethod("GooglePinyin26",m);
 #endif
     }
     return *mInst;

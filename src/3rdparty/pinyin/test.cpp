@@ -28,7 +28,7 @@ int  main(int argc,char*argv[]){
         int len=utf16_strlen(predict_buf[i]);
         printf("predict[%d] len=%d ",i,len);
         for(int j=0;j<len;j++)printf("%04x ",predict_buf[i][j]);
-        printf("\r\n");
+        printf("[%s]\r\n",predict_buf[i]);
    }
    return 0;
 }

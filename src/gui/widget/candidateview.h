@@ -5,6 +5,8 @@
 namespace cdroid{
 
 class CandidateView:public View{
+public:
+
 private:
     static constexpr int OUT_OF_BOUNDS = -1;
     static constexpr int MAX_SUGGESTION=32;
@@ -35,6 +37,7 @@ protected:
     void onDrawInternal(Canvas* canvas);
     void onDraw(Canvas& canvas)override;
 public:
+    CandidateView(int,int);
     CandidateView(Context*ctx,const AttributeSet&atts);
     int computeHorizontalScrollRange()override;
     void setMaxSuggestion(int max);

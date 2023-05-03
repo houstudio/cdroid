@@ -64,7 +64,7 @@ int GooglePinyin::search(const std::string&pinyin,std::vector<std::string>&candi
     int num=im_search(handle,pinyin.c_str(),pinyin.length());
     for(int i=0;i<num;i++){/*拼音转汉字*/
         char16*scan=im_get_candidate(handle,i,canbuf,32);
-        std::string u8s=TextUtils::utf162string(scan,utf16_strlen(scan));
+        std::string u8s=TextUtils::utf16_utf8(scan,utf16_strlen(scan));
         if(u8s.size())candidates.push_back(u8s);
     }
     LOGD("search %s=%d",pinyin.c_str(),num);
@@ -76,14 +76,12 @@ void GooglePinyin::close_search(){
 }
 
 int GooglePinyin::get_predicts(const std::string&txt,std::vector<std::string>&predicts){
-    char16 pb[256][kMaxPredictSize+1];
     char16 (*predict_buf)[kMaxPredictSize + 1];
-    predict_buf=pb;
-    //TextUtils::convert("UTF-8",TextUtils::UCS16(),txt.c_str(),txt.length(),(char*)uctxt,sizeof(uctxt)*2);
-    const std::u16string u16txt=TextUtils::utf8Toutf16(txt);
+    const std::u16string u16txt=TextUtils::utf8_utf16(txt);
     int num=im_get_predicts(handle,(const char16*)u16txt.c_str(),predict_buf);
+    LOGV("kMaxPredictSize=%d num=%d",kMaxPredictSize,num);
     for(int i=0;i<num;i++){
-        std::string u8s=TextUtils::utf162string(predict_buf[i],utf16_strlen(predict_buf[i]));
+        std::string u8s = TextUtils::utf16_utf8(predict_buf[i],utf16_strlen(predict_buf[i]));
         if(u8s.size())predicts.push_back(u8s);
     }
     return num;

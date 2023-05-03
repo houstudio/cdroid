@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
-    keyWidth="10%p"
-    horizontalGap="2%p"
+    keyWidth="9.%p"
+    horizontalGap=".3%p"
     verticalGap="5%p"
-    keyHeight="20%p"
+    keyHeight="21%p"
     >
     <Row>
         <Key codes="113" keyLabel="q" keyEdgeFlags="left"/>
@@ -19,7 +19,7 @@
     </Row>
     
     <Row>
-        <Key codes="97" keyLabel="a" horizontalGap="5%p" 
+        <Key codes="97" keyLabel="a" horizontalGap="4%p"
                 keyEdgeFlags="left"/>
         <Key codes="115" keyLabel="s"/>
         <Key codes="100" keyLabel="d"/>

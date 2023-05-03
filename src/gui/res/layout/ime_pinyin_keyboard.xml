@@ -2,23 +2,19 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <LinearLayout
-        android:id="@+id/predictContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_alignParentTop="true">
-        <Button
+    <CandidateView
             android:id="@+id/predict2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="test"/>
-    </LinearLayout>
+            android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:candidate_background="#112233"
+	    android:candidate_normal="#FFFFFF"
+	    android:candidate_recommand="#FF0000"/>
     <ListView
         android:id="@+id/predict1"
         android:layout_width="200dp"
         android:layout_height="match_parent"
-        android:layout_below="@id/predictContainer"
+        android:layout_below="@id/predict2"
         android:layout_alignParentStart="true"
         android:background="#80223344"/>
    <android.inputmethodservice.KeyboardView
@@ -27,5 +23,7 @@
        android:layout_height="match_parent"
        android:layout_toEndOf="@id/predict1"
        android:layout_alignTop="@+id/predict1"
-       android:layout_alignBottom="@id/predict1"/>
+       android:layout_alignBottom="@id/predict1"
+       android:keyBackground="#332211"
+       android:keyTextColor="black"/>
 </RelativeLayout>

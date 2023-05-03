@@ -8,8 +8,8 @@
 namespace cdroid{
 
 UIEventSource::UIEventSource(View*v,std::function<void()>r){
-    mAttachedView=v;
-    mLayoutRunner=r;
+    mAttachedView = dynamic_cast<ViewGroup*>(v);
+    mLayoutRunner = r;
 }
 
 UIEventSource::~UIEventSource(){

@@ -15,7 +15,7 @@ private:
     }RUNNER;
     std::list<RUNNER>mRunnables;
     std::function<void()> mLayoutRunner;
-    View*mAttachedView;
+    ViewGroup*mAttachedView;
     bool hasDelayedRunners()const;
 public:
     UIEventSource(View*,std::function<void()>run);

@@ -3,6 +3,17 @@ namespace cdroid{
 
 DECLARE_WIDGET(CandidateView)
 
+CandidateView::CandidateView(int w,int h):View(w,h){
+    mSelectionHighlight = nullptr;
+    mColorNormal= 0xFFFFFFFF;
+    mColorRecommended =0xFFFF0000;
+    mColorOther =0xFF00FF00;
+    mVerticalPadding=0;
+    mTextSize=20;
+    mBgPadding.set(5,5,5,5);
+    setMinimumHeight(mTextSize+8);
+}
+
 CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
      mSelectionHighlight = atts.getDrawable("list_selector_background");
      setBackgroundColor(atts.getColor("candidate_background"));
@@ -16,6 +27,8 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts)
      setHorizontalScrollBarEnabled(false);
      setVerticalScrollBarEnabled(false);
      setMaxSuggestion(MAX_SUGGESTION);
+     mBgPadding.set(5,5,5,5);
+     setMinimumHeight(mTextSize+8);
 }
 
 int CandidateView::computeHorizontalScrollRange(){
@@ -27,19 +40,19 @@ void CandidateView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         
     // Get the desired height of the icon menu view (last row of items does
     // not have a divider below)
-    Rect padding;
+    Rect padding={0,0,0,0};
     if(mSelectionHighlight)
         mSelectionHighlight->getPadding(padding);
-    const int desiredHeight = mTextSize + mVerticalPadding + padding.top + padding.height;
-      
+    int desiredHeight = mTextSize + mVerticalPadding + padding.top + padding.height;
+    if(getBackground())desiredHeight =std::max(desiredHeight,getSuggestedMinimumHeight());
     // Maximum possible width and desired height
+    LOGV("size=%dx%d",measuredWidth,resolveSize(desiredHeight, heightMeasureSpec));
     setMeasuredDimension(measuredWidth, resolveSize(desiredHeight, heightMeasureSpec));
 }
 
 void CandidateView::onDrawInternal(Canvas* canvas) {
-    if(canvas)View::onDraw(*canvas);
-    mTotalWidth = 0;
     if (mSuggestions.empty()) return;
+    LOGV("%d suggestion canvas=%p",mSuggestions.size(),canvas);
 
     if (getBackground() ) {
         getBackground()->getPadding(mBgPadding);
@@ -56,6 +69,8 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
     Cairo::RefPtr<Cairo::ImageSurface>image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,1,1);
     Cairo::RefPtr<Cairo::Context>mContext = Cairo::Context::create(image);
     mContext->set_font_size(mTextSize);
+    mTotalWidth = 0;
+    if(canvas)canvas->set_font_size(mTextSize);
     for (int i = 0; i < count; i++) {
 	Cairo::TextExtents te;
 	std::string suggestion = mSuggestions.at(i);
@@ -64,9 +79,11 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
 
         mWordX[i] = x;
         mWordWidth[i] = wordWidth;
+	if(x+wordWidth<scrollX)continue;
+	if(x>=scrollX+getWidth())break;
 	suggestionRect.set(x,bgPadding.top,wordWidth,height);
         if (touchX + scrollX >= x && touchX + scrollX < x + wordWidth && !scrolled) {
-            if (canvas) {
+            if (canvas && mSelectionHighlight) {
                 canvas->translate(x, 0);
                 mSelectionHighlight->setBounds(0, bgPadding.top, wordWidth, height);
                 mSelectionHighlight->draw(*canvas);
@@ -85,10 +102,9 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
             }
 	    canvas->draw_text(suggestionRect,suggestion,Gravity::CENTER);
 	    if(fakeBold){
-		canvas->save();
 		canvas->translate(.5f,.5f);
 		canvas->draw_text(suggestionRect,suggestion,Gravity::CENTER);
-		canvas->restore();
+		canvas->translate(-.5f,-.5f);
 	    }
             canvas->set_color(mColorOther);
 	    canvas->move_to(x + wordWidth + 0.5f, bgPadding.top);
@@ -135,18 +151,19 @@ void CandidateView::setSuggestions(const std::vector<std::string>& suggestions, 
     clear();
     mTypedWordValid = typedWordValid;
     scrollTo(0, 0);
+    setMaxSuggestion(suggestions.size());
+    mSuggestions = suggestions;
     mTargetScrollX = 0;
     // Compute the total width
     onDrawInternal(nullptr);
-    invalidate();
     requestLayout();
 }
 
 void CandidateView::clear() {
-    mSuggestions.clear();// = EMPTY_LIST;
+    mSuggestions.clear();
     mTouchX = OUT_OF_BOUNDS;
     mSelectedIndex = -1;
-    invalidate();
+    invalidate(true);
 }
 
 bool CandidateView::onTouchEvent(MotionEvent& me) {

@@ -46,12 +46,17 @@ const char*TextUtils::UCS16(){
     return "UCS-2BE";
 }
 
-const std::string TextUtils::utf162string(const unsigned short*utf16,int len){
+const std::string TextUtils::utf16_utf8(const unsigned short*utf16,int len){
     char*out=new char[len*4];
     #ifdef USE_ICONV
     convert(UCS16(),"UTF-8",(const char*)utf16,len*2,out,len*4);
     #else
-
+    char*pout=out;
+    for(int i=0;i<len;i++){
+        int n=UCS2UTF(utf16[i],pout,4);
+        pout+=n;
+    }
+    *pout=0;
     #endif
     std::string u8s=out;
     delete[] out;
@@ -76,7 +81,7 @@ const std::wstring TextUtils::utf8tounicode(const std::string&utf8){
     return u32s;
 }
 
-const std::u16string TextUtils::utf8Toutf16(const std::string&utf8){
+const std::u16string TextUtils::utf8_utf16(const std::string&utf8){
     size_t u8len=utf8.size()+8;
     char16_t *out=new char16_t[utf8.size()+8];
     #ifdef USE_ICONV
