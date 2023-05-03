@@ -5,6 +5,7 @@
 #include <core/systemclock.h>
 #include <cdlog.h>
 #include <functional>
+#include <thread>
 #include <core/uieventsource.h>
 #include <core/handler.h>
 #include <sys/timerfd.h>
@@ -192,6 +193,26 @@ TEST_F(LOOPER,handler){
         loop->pollAll(10);
     loop->removeHandler(handler);
     while(count++<6)loop->pollAll(10);
+}
+
+TEST_F(LOOPER,asyncmsg){
+    Looper *loop= Looper::getDefault();
+    Handler *handler=new MyHandler();
+    handler->sendEmptyMessage(1);
+    handler->sendEmptyMessageDelayed(2,20);
+    Runnable cbk([](){LOGD("---");});
+    handler->postDelayed(cbk,30);
+    std::thread th([&](){
+	Message msg;
+	msg.what=0;
+	while(1){
+	   loop->sendMessageDelayed(10,handler,msg);
+	   msg.what++;
+	   usleep(100);
+	}
+    });
+    th.detach();
+    while(1)loop->pollAll(10);
 }
 
 static void ms2timespec(int ms, struct timespec *ts){

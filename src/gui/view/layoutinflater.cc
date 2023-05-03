@@ -76,7 +76,7 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool att
         if(stream && stream->good()){
             v = inflate(package,*stream,root,attachToRoot && (root!=nullptr));
         }else{
-            LOGE("faild to load resource %s,[cdroid.pak %s.pak] must be copied to your work directory",resource.c_str(),package.c_str());
+            LOGE("faild to load resource %s [cdroid.pak %s.pak] must be copied to your work directory",resource.c_str(),package.c_str());
         }
     }else{
         std::ifstream fin(resource);

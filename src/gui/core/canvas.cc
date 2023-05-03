@@ -50,22 +50,6 @@ void Canvas::rectangle(const RECT &r){
     rectangle((double)r.left,(double)r.top,(double)r.width,(double)r.height);
 }
 
-/*static inline float sdot(float a,float b,float c,float d){
-    return a * b + c * d;
-}
-
-void Canvas::rotate(float degrees,float px,float py){
-    const float radians=M_PI*2.f*degrees/360.f;
-    const float fsin=sin(radians);
-    const float fcos=cos(radians);
-#if 0//Anti clockwise
-    Matrix mtx(fcos,-fsin, fsin,fcos, sdot(-fsin,py,1-fcos,px), sdot(fsin,px,1-fcos,py));
-#else//Clockwise
-    Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px),  sdot(-fsin,px,1-fcos,py));
-#endif
-    transform(mtx);
-}*/
-
 void Canvas::get_text_size(const std::string&text,int*width,int *height){
     TextExtents te;
     get_text_extents(text,te);
@@ -94,6 +78,7 @@ void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment
     move_to(x,y);
     show_text(text);
 }
+
 void Canvas::draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT*srcRect){
     Rect src=srcRect==nullptr?Rect::Make(0,0,img->get_width(),img->get_height()):*srcRect;
     

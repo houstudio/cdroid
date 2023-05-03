@@ -86,6 +86,7 @@ public:
     static bool DEBUG_DRAW;
 private:
     friend class View;
+    friend class UIEventSource;
     int mLayoutMode;
     int mNestedScrollAxes;
     int mLastTouchDownX,mLastTouchDownY;

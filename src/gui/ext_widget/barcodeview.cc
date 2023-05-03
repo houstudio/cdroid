@@ -24,7 +24,6 @@ BarcodeView::~BarcodeView(){
 void BarcodeView::initView(){
     mErrorNo = 0;
     mRotateAngle = 0;
-    mFgColor = 0xFF000000;
     mSymbology = QRCode;
     mDotty  = false;
     mShowHRT= true;
@@ -104,12 +103,12 @@ bool BarcodeView::resetSymbol(){
         mSymbol->output_options |= READER_INIT;
     }
     /*strcpy(mSymbol->fgcolour, mFgColor.name().toLatin1().right(6));
-    if (m_fgColor.alpha() != 0xFF) {
-        strcat(mSymbol->fgcolour, m_fgColor.name(QColor::HexArgb).toLatin1().mid(1,2));
+    if (mFgColor.alpha() != 0xFF) {
+        strcat(mSymbol->fgcolour, mFgColor.name(QColor::HexArgb).toLatin1().mid(1,2));
     }
     strcpy(mSymbol->bgcolour, m_bgColor.name().toLatin1().right(6));
     if (m_bgColor.alpha() != 0xFF) {
-        strcat(mSymbol->bgcolour, m_bgColor.name(QColor::HexArgb).toLatin1().mid(1,2));
+        strcat(mSymbol->bgcolour, mFgColor.name(QColor::HexArgb).toLatin1().mid(1,2));
     }*/
     //strcpy(mSymbol->primary, mPrimaryMessage.toLatin1().left(127));
     mSymbol->option_1 = mOption1;
@@ -204,11 +203,12 @@ bool BarcodeView::getSHRT()const{
 
 void  BarcodeView::setZoom(float zoom){
     mSymbol->scale = zoom;
+    mZoom = zoom;
     invalidate();
 }
 
 float  BarcodeView::getZoom()const{
-    return mSymbol->scale;
+    return mZoom;
 }
 
 void BarcodeView::setRotateAngle(int angle){
@@ -482,11 +482,9 @@ void  BarcodeView::onDraw(Canvas&canvas){
         canvas.translate(-paintRect.width / 2.0, -paintRect.height / 2.0); // Undo
     }
 
+#endif
     canvas.translate(xtr, ytr);
     canvas.scale(scale, scale);
-#endif
-    const int m_fgColor=0xFF000000;
-
     //QBrush bgBrush(m_bgColor);
     //canvas.rectangle(0, 0, gwidth, gheight);//, bgBrush);
     //background ic drawed by View
@@ -498,7 +496,7 @@ void  BarcodeView::onDraw(Canvas&canvas){
         getMaxRectsRightBottom(mSymbol->vector, maxRight, maxBottom);
         canvas.set_antialias(Cairo::ANTIALIAS_NONE);
         while (rect) {
-	    Color fgc(rect->colour == -1?m_fgColor:colourToCDColor(rect->colour));
+	    Color fgc(rect->colour == -1?mFgColor:colourToCDColor(rect->colour));
 	    LOGV("rect %p color=%x",rect,rect->colour);
 	    canvas.set_source_rgb(fgc.red(),fgc.green(),fgc.blue());
             // Allow for rounding errors on translation/scaling TODO: proper calc
@@ -515,7 +513,7 @@ void  BarcodeView::onDraw(Canvas&canvas){
     hex = mSymbol->vector->hexagons;
     canvas.set_antialias(Cairo::ANTIALIAS_DEFAULT);
     if (hex) {
-        Color fgc(m_fgColor);
+        Color fgc(mFgColor);
         float previous_diameter = 0.0, radius = 0.0, half_radius = 0.0, half_sqrt3_radius = 0.0;
 	canvas.set_source_rgb(fgc.red(),fgc.green(),fgc.blue());
         while (hex) {
@@ -542,7 +540,7 @@ void  BarcodeView::onDraw(Canvas&canvas){
     // Plot dots (circles)
     circle = mSymbol->vector->circles;
     if (circle) {
-        Color fgc(m_fgColor);
+        Color fgc(mFgColor);
         float previous_diameter = 0.0, radius = 0.0;
 	canvas.set_source_rgb(fgc.red(),fgc.green(),fgc.blue());
         while (circle) {
@@ -561,7 +559,7 @@ void  BarcodeView::onDraw(Canvas&canvas){
                 //canvas.setPen(p);
                 //canvas.setBrush(circle->width ? Qt::NoBrush : bgBrush);
             } else {
-                //p.setColor(m_fgColor);
+                //p.setColor(mFgColor);
                 //p.setWidthF(circle->width);
                 //canvas.setPen(p);
                 //canvas.setBrush(circle->width ? Qt::NoBrush : fgBrush);
@@ -574,8 +572,8 @@ void  BarcodeView::onDraw(Canvas&canvas){
     // Plot text
     string = mSymbol->vector->strings;
     if (string) {
-        Color fgc(m_fgColor);
-        canvas.set_source_rgb(fgc.red(),fgc.green(),fgc.blue());//p.setColor(m_fgColor);
+        Color fgc(mFgColor);
+        canvas.set_source_rgb(fgc.red(),fgc.green(),fgc.blue());//p.setColor(mFgColor);
         bool bold = (mSymbol->output_options & BOLD_TEXT) && (!isExtendable() || (mSymbol->output_options & SMALL_TEXT));
         while (string) {
             canvas.set_font_size(string->fsize);

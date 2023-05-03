@@ -18,14 +18,13 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
 KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
   :View(ctx,atts){
     init();
-    std::string resid  = atts.getString("keyBackground");
-    mKeyBackground     = ctx->getDrawable(resid);
-    mVerticalCorrection= atts.getDimensionPixelOffset("verticalCoreection",0);
+    mKeyBackground     = ctx->getDrawable("keyBackground");
+    mVerticalCorrection= atts.getDimensionPixelOffset("verticalCorrection",0);
     mPreviewOffset     = atts.getDimensionPixelOffset("keyPreviewOffset",0);
     mPreviewHeight     = atts.getDimensionPixelOffset("keyPreviewHeight",0);
-    mKeyTextSize       = atts.getDimensionPixelOffset("keyTextSize",0);
+    mKeyTextSize       = atts.getDimensionPixelOffset("keyTextSize",20);
     mKeyTextColor      = atts.getColor("keyTextColor",0xFF000000);
-    mLabelTextSize     = atts.getDimensionPixelOffset("labelTextSize",14);
+    mLabelTextSize     = atts.getDimensionPixelOffset("labelTextSize",20);
     resetMultiTap();
 }
 
@@ -183,8 +182,9 @@ void KeyboardView::onSizeChanged(int w, int h, int oldw, int oldh) {
 }
 
 void KeyboardView::onDraw(Canvas& canvas) {
-    View::onDraw(canvas);
+    canvas.save();
     canvas.rectangle(mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
+    mDirtyRect.setEmpty();
     canvas.clip();
 
     Drawable* keyBackground = mKeyBackground;
@@ -255,9 +255,7 @@ void KeyboardView::onDraw(Canvas& canvas) {
         canvas.rectangle(0, 0, getWidth(), getHeight());
         canvas.fill();
     }
-
     canvas.restore();
-    mDirtyRect.setEmpty();
 }
 
 void KeyboardView::invalidateAllKeys() {

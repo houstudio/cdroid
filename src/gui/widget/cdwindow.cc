@@ -155,16 +155,16 @@ void Window::onFinishInflate(){
 
 RefPtr<Canvas>Window::getCanvas(){
     //for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
-    if(mAttachInfo==nullptr)return nullptr;
-    RefPtr<Canvas> canvas=mAttachInfo->mCanvas;
+    if(mAttachInfo == nullptr) return nullptr;
+    RefPtr<Canvas> canvas = mAttachInfo->mCanvas;
     if((canvas==nullptr)&&(getVisibility()==VISIBLE)){
-        canvas=make_refptr_for_instance<Canvas>(new Canvas(getWidth(),getHeight()));		
+        canvas = make_refptr_for_instance<Canvas>(new Canvas(getWidth(),getHeight()));
         mAttachInfo->mCanvas=canvas;
     }
-    const int num=mInvalidRgn->get_num_rectangles();
+    const int num = mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
     for(int i=0;i<num;i++){
-        RectangleInt r=mInvalidRgn->get_rectangle(i);
+        RectangleInt r = mInvalidRgn->get_rectangle(i);
         canvas->rectangle(r.x,r.y,r.width,r.height);
     }
     if(num>0)canvas->clip();
@@ -460,13 +460,9 @@ void Window::InvalidateOnAnimationRunnable::removeView(View* view){
 }
 
 void Window::InvalidateOnAnimationRunnable::run(){
-    int viewCount;
-    int viewRectCount;
     mPosted = false;
-
-    std::vector<InvalidateInfo>temp=mInvalidateViews; 
+    std::vector<InvalidateInfo>temp = mInvalidateViews;
     mInvalidateViews.clear();
-
     for (auto i:temp){
         Rect&r = i.rect;
         View*v = i.target;
