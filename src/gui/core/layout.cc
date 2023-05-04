@@ -570,10 +570,7 @@ static const std::string processBidi(const std::wstring&logstr){
 
 void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     mCaretRect.setEmpty();
-    canvas.save();
-    canvas.set_font_face(mTypeface->getFontFace());
     canvas.set_font_size(mFontSize);
-    canvas.set_source_rgb(1,0,0);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
         int x=0,lw=getLineWidth(lineNum,true);
         TextExtents te;
@@ -603,7 +600,6 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
             mCaretRect.width = te.x_advance;
         }
     }
-    canvas.restore();
 }
 
 void  Layout::draw(Canvas&canvas){
