@@ -78,7 +78,8 @@ public:
     static Typeface* defaultFromStyle(int style);
     static Typeface* createFromAsset(const std::string path);
     static void loadPreinstalledSystemFontMap();
-    static int loadByFontConfig();
+    static int loadFromFontConfig();
+    static int loadFromPath(const std::string&path);
 };
 
 class FontStyle {

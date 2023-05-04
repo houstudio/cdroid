@@ -26,7 +26,6 @@ static RefPtr<ImageSurface>sImage = ImageSurface::create(sData,Surface::Format::
 
 Layout::Layout(int fontSize,int width){
     mFontSize= fontSize;
-    mTypeface= Typeface::DEFAULT;
     mWidth  = width;
     mLineCount = 0;
     mAlignment = ALIGN_LEFT;
@@ -41,10 +40,12 @@ Layout::Layout(int fontSize,int width){
     mBreakStrategy=BREAK_STRATEGY_SIMPLE ;
     mEditable = false;
     mContext=Cairo::Context::create(sImage);
+    if(Typeface::DEFAULT==nullptr)
+	Typeface::loadPreinstalledSystemFontMap();
+    mTypeface = Typeface::DEFAULT;
 }
 
 Layout::Layout(const Layout&l){
-    mTypeface = l.mTypeface;
     mFontSize = l.mFontSize;
     mWidth = l.mWidth;
     mLineCount = l.mLineCount;
@@ -63,6 +64,7 @@ Layout::Layout(const Layout&l){
     mText = l.mText;
     mLines= l.mLines;
     mContext=Cairo::Context::create(sImage);
+    setFont(l.mTypeface);
 }
 
 void Layout::setWidth(int width){
@@ -109,6 +111,8 @@ void Layout::setEllipsis(int ellipsis){
 
 double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
     std::string utext = TextUtils::unicode2utf8(text);
+    mContext->set_font_face(mTypeface->getFontFace());
+    mContext->set_font_size(mFontSize);
     mContext->get_text_extents(utext,te);
     if(fe){
         mContext->get_font_extents(*fe);
@@ -566,6 +570,10 @@ static const std::string processBidi(const std::wstring&logstr){
 
 void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     mCaretRect.setEmpty();
+    canvas.save();
+    canvas.set_font_face(mTypeface->getFontFace());
+    canvas.set_font_size(mFontSize);
+    canvas.set_source_rgb(1,0,0);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
         int x=0,lw=getLineWidth(lineNum,true);
         TextExtents te;
@@ -582,7 +590,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         case ALIGN_OPPOSITE:
         case ALIGN_RIGHT : x=mWidth-lw     ; break;
         }
-        LOGV("line[%d] xy=%d,%d mWidth=%d [%s]'s TextWidth=%d fontsize=%d alignment=%x",
+        LOGV("line[%d] xy=%d,%d mWidth=%d [%s]'s TextWidth=%d fontsize=%.f alignment=%x",
              lineNum,x,y,mWidth,TextUtils::unicode2utf8(line).c_str(),lw,mFontSize,mAlignment);
         canvas.move_to(x,y);
         canvas.show_text(processBidi(line));
@@ -595,11 +603,11 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
             mCaretRect.width = te.x_advance;
         }
     }
+    canvas.restore();
 }
 
 void  Layout::draw(Canvas&canvas){
     relayout();
-    canvas.set_font_size(mFontSize);
     drawText(canvas,0,mLineCount);
 }
 

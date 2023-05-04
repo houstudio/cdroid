@@ -1,5 +1,7 @@
 #include <core/typeface.h>
 #include <regex>
+#include <freetype/freetype.h>
+#include <dirent.h>
 namespace cdroid{
 
 Typeface* Typeface::MONOSPACE;
@@ -140,7 +142,9 @@ void Typeface::buildSystemFallback(const std::string xmlPath,const std::string& 
 }
 
 void Typeface::loadPreinstalledSystemFontMap(){
-    loadByFontConfig();
+    if(sSystemFontMap.size())
+	return;
+    loadFromFontConfig();
     auto it=sSystemFontMap.find(DEFAULT_FAMILY);
     if (it!=sSystemFontMap.end()) {
         setDefault(it->second);
@@ -158,7 +162,38 @@ void Typeface::loadPreinstalledSystemFontMap(){
     LOGD("MONOSPACE=%p [%s]",MONOSPACE,MONOSPACE?MONOSPACE->mFamily.c_str():"");
 }
 
-int Typeface::loadByFontConfig(){
+static FT_Library ftLibrary = nullptr;
+int Typeface::loadFromPath(const std::string&path){
+    FT_Init_FreeType(&ftLibrary);
+    FcConfig *config= FcInitLoadConfigAndFonts ();
+    FcStrList *dirs = FcConfigGetFontDirs (config);
+    FcStrListFirst(dirs);
+    FcChar8* ps;
+    while(ps=FcStrListNext(dirs)){
+        struct dirent*ent;
+        DIR*dir=opendir((const char*)ps);
+        while(dir&&(ent=readdir(dir))){
+            FT_Face ftFace = nullptr;
+            std::string fullpath=std::string((char*)ps)+"/"+ent->d_name;
+            FT_Error err = FT_New_Face(ftLibrary,fullpath.c_str(),0,&ftFace);
+	    if(ftFace==nullptr||err)continue;
+            LOGE_IF(ftFace->family_name==nullptr,"%s missing familyname",fullpath.c_str());
+            if(ftFace->family_name){
+                Typeface *typeface = new Typeface(Cairo::FtFontFace::create(ftFace,0));
+                sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
+                LOGD("family=%s style=%s",ftFace->family_name,ftFace->style_name);
+            }else{
+                FT_Done_Face(ftFace);
+            }
+	}
+        if(dir)closedir(dir);
+	LOGD("path=%s",ps);
+    }
+    FcStrListDone(dirs);
+    return sSystemFontMap.size();
+}
+
+int Typeface::loadFromFontConfig(){
     FcConfig *config = FcInitLoadConfigAndFonts ();
     if(!config) return false;
  
@@ -166,12 +201,7 @@ int Typeface::loadByFontConfig(){
     FcObjectSet*os = FcObjectSetBuild (FC_FAMILY,NULL);
     FcFontSet  *fs = FcFontList(config, p, os);
     FcPatternDestroy(p);
-
-    /*FcChar8 *s;
-    FcStrList *fntdirs = FcConfigGetFontDirs (config);
-    while (( s = FcStrListNext (fntdirs)) != NULL) LOGD("fontdir=%s",s);
-    FcStrListDone (fntdirs);*/
-
+    return loadFromPath("");
     LOGI("Total fonts: %d", fs->nfont);
     const std::regex patSerif( "(?=.*\\bserif\\b)" , std::regex_constants::icase);
     const std::regex patSans( "(?=.*\\bsans\\b)" , std::regex_constants::icase);

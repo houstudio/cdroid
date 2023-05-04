@@ -91,7 +91,7 @@ void Drawable::setColorFilter(ColorFilter*cf){
     delete mColorFilter;
     mColorFilter=cf;
     invalidateSelf();
-    LOGD("setColorFilter %p:%p",this,cf);
+    LOGV("setColorFilter %p:%p",this,cf);
 }
 
 void Drawable::setColorFilter(int color,PorterDuffMode mode){
