@@ -50,6 +50,8 @@ Typeface* Typeface::create(Typeface*family, int style){
     }
     if (family == nullptr) {
         family = getDefault();
+        if(family == nullptr)
+            family = sSystemFontMap.begin()->second;
     }
 
     // Return early if we're asked for the same face/style
