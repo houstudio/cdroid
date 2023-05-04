@@ -14,15 +14,15 @@ namespace cdroid{
 class IMEWindow:public Window{
 protected:
    friend InputMethodManager;
-   View*mBuddy;
-   CandidateView*candidateView;
-   KeyboardView*kbdView;
-   std::wstring text2IM;
+   View* mBuddy;
+   KeyboardView* kbdView;
+   CandidateView* candidateView;
+   std::wstring mText2IM;
 public:
    IMEWindow(int w,int h);
    ~IMEWindow(){
-      LOGD("delete IMEWindow %p",this);
-      InputMethodManager::getInstance().imeWindow=nullptr;
+       LOGD("delete IMEWindow %p",this);
+       InputMethodManager::getInstance().imeWindow=nullptr;
    }
    void updatePredicts(std::vector<std::string>candidates){
        candidateView->setSuggestions(candidates,true,true);
@@ -40,27 +40,40 @@ public:
        default: return Window::onKeyDown(keyCode,evt);
        }
    }
+   void commitText(const std::string&txt){
+       const std::wstring uniTxt = TextUtils::utf8tounicode(txt);
+       if(mBuddy)mBuddy->commitText(uniTxt);
+   }
    void changeCapital(){
-       /*Keyboard&keyboard=kbdView->getKeyboard();
-       for(int i=0;i<keyboard.getRows();i++){
-           Keyboard::KeyRow&row=keyboard.getKeyRow(i);
-           for(int j=0;j<row.size();j++){
-               Keyboard::Key&k=row[j];
-               if((isalpha(k.codes[0])==false)||k.modifier||k.sticky)continue;
-               k.codes[0]=islower(k.codes[0])?toupper(k.codes[0]):tolower(k.codes[0]);
-           }
-       }*/
+       Keyboard*keyboard = kbdView->getKeyboard();
+       std::vector<Keyboard::Key*>&keys = keyboard->getKeys();
+       for(int i=0;i<keys.size();i++){
+           Keyboard::Key k = keys[i];
+           if((isalpha(k.codes[0])==false)||k.modifier||k.sticky)continue;
+           k.codes[0]=islower(k.codes[0])?toupper(k.codes[0]):tolower(k.codes[0]);
+       }
+   }
+   void onPredict(CandidateView&v,const std::string&s,int id){
+       std::vector<std::string> predicts;
+       LOGD("predict '%s' selected",s.c_str(),id);
+       v.clear();
+       InputMethod* im = InputMethodManager::getInstance().im;
+       im->get_predicts(s,predicts);
+       commitText(s);
+       candidateView->setSuggestions(predicts,true,true);
    }
 };
 
 IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
-    InputMethodManager&imm=InputMethodManager::getInstance();
     KeyboardView::OnKeyboardActionListener listener;
+    InputMethodManager&imm = InputMethodManager::getInstance();
     LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this);
     kbdView = (KeyboardView*)findViewById(cdroid::R::id::keyboardview);
-    candidateView=(CandidateView*)findViewById(cdroid::R::id::predict2);
+    candidateView = (CandidateView*)findViewById(cdroid::R::id::predict2);
+    candidateView->setPredictListener(std::bind(&IMEWindow::onPredict,this,std::placeholders::_1,
+	   std::placeholders::_2,std::placeholders::_3));
     requestLayout();
-    //setVisibility(INVISIBLE);
+    setVisibility(INVISIBLE);
     listener.onPress=[this](int primaryCode){
         LOGD("primaryCode=%d %x",primaryCode,primaryCode);
         KeyEvent keyEvent;
@@ -77,20 +90,20 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              /*sendKeyEvent(keyEvent);*/break;
         case -101:break;
         default:
-            if(mBuddy){
-                const wchar_t text[2]={primaryCode,0};
-                mBuddy->commitText(text);
-            }break;
+	    if(primaryCode>0){
+                int rc;
+   	        std::string u8txt;
+	        std::vector<std::string> candidates;
+	        InputMethod* im = InputMethodManager::getInstance().im;
+	        mText2IM.append(1,primaryCode);
+	        u8txt = TextUtils::unicode2utf8(mText2IM);
+	        rc = im->search(u8txt,candidates);
+	        updatePredicts(candidates);
+                LOGD("txt=%s primaryCode=%x/%c",u8txt.c_str(),primaryCode,primaryCode);
+	    }break;
         }
     };
     listener.onRelease=[this](int primaryCode){
-	std::vector<std::string>candidates;
-	text2IM.append(1,primaryCode);
-	InputMethod*im=InputMethodManager::getInstance().im;
-	std::string u8txt=TextUtils::unicode2utf8(text2IM);
-	int rc=im->search(u8txt,candidates);
-	updatePredicts(candidates);
-        LOGD("txt=%s primaryCode=%x/%c",u8txt.c_str(),primaryCode,primaryCode);
     };
     listener.onText=[](std::string&text){
         LOGD("onText(%s)",text.c_str());

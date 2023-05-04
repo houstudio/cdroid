@@ -12,6 +12,7 @@ CandidateView::CandidateView(int w,int h):View(w,h){
     mTextSize=20;
     mBgPadding.set(5,5,5,5);
     setMinimumHeight(mTextSize+8);
+    mOnPredict = nullptr;
 }
 
 CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
@@ -28,6 +29,7 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts)
      setVerticalScrollBarEnabled(false);
      setMaxSuggestion(MAX_SUGGESTION);
      mBgPadding.set(5,5,5,5);
+     mOnPredict = nullptr;
      setMinimumHeight(mTextSize+8);
 }
 
@@ -166,6 +168,10 @@ void CandidateView::clear() {
     invalidate(true);
 }
 
+void CandidateView::setPredictListener(CandidateView::OnPredictChange ls){
+    mOnPredict = ls;
+}
+
 bool CandidateView::onTouchEvent(MotionEvent& me) {
     int action = me.getAction();
     int x = (int) me.getX();
@@ -190,6 +196,7 @@ bool CandidateView::onTouchEvent(MotionEvent& me) {
     case MotionEvent::ACTION_UP:
         if (!mScrolled) {
             if (mSelectedIndex >= 0) {
+		mOnPredict(*this,mSuggestions[mSelectedIndex],mSelectedIndex);
                 //mService.pickSuggestionManually(mSelectedIndex);
             }
         }

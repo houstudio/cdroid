@@ -183,9 +183,9 @@ void KeyboardView::onSizeChanged(int w, int h, int oldw, int oldh) {
 
 void KeyboardView::onDraw(Canvas& canvas) {
     canvas.save();
-    canvas.rectangle(mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
+    //canvas.rectangle(mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
     mDirtyRect.setEmpty();
-    canvas.clip();
+    //canvas.clip();
 
     Drawable* keyBackground = mKeyBackground;
     Rect clipRegion = mClipRegion;

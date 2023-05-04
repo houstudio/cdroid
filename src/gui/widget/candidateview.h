@@ -6,7 +6,7 @@ namespace cdroid{
 
 class CandidateView:public View{
 public:
-
+    DECLARE_UIEVENT(void,OnPredictChange,CandidateView&,const std::string&,int candidateId);
 private:
     static constexpr int OUT_OF_BOUNDS = -1;
     static constexpr int MAX_SUGGESTION=32;
@@ -26,6 +26,7 @@ private:
     bool mTypedWordValid;
     std::vector<std::string>mSuggestions;
     Drawable*mSelectionHighlight;
+    OnPredictChange mOnPredict;
     Rect mBgPadding;
     std::vector<int>mWordWidth;
     std::vector<int>mWordX;
@@ -44,6 +45,7 @@ public:
     void setSuggestions(const std::vector<std::string>&suggestions, 
 		    bool completions,bool typedWordValid);
     void clear();
+    void setPredictListener(OnPredictChange ls);
     bool onTouchEvent(MotionEvent& me)override;
     void takeSuggestionAt(float x);
 };

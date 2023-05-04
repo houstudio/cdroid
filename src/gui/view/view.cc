@@ -3046,8 +3046,8 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         if (!mClipBounds.empty()) {
             // clip bounds ignore scroll
             canvas.rectangle(mClipBounds.left,mClipBounds.top,mClipBounds.width,mClipBounds.height);
-            //canvas.clip();//cant clip here ,for rotation animator(the view will be cutted)
         }
+        canvas.clip();//cant clip here ,for rotation animator(the view will be cutted)
     }
 
     if (!drawingWithDrawingCache) {

@@ -59,6 +59,7 @@ int GooglePinyin::load_dicts(const std::string&sys,const std::string&user){
     return handle!=nullptr;
 }
 
+/*pinyin to chinese words*/
 int GooglePinyin::search(const std::string&pinyin,std::vector<std::string>&candidates){
     char16 canbuf[64];
     int num=im_search(handle,pinyin.c_str(),pinyin.length());
@@ -75,6 +76,7 @@ void GooglePinyin::close_search(){
     im_reset_search(handle);
 }
 
+//eg:如输入"大"，会返回 "家","学","概"等
 int GooglePinyin::get_predicts(const std::string&txt,std::vector<std::string>&predicts){
     char16 (*predict_buf)[kMaxPredictSize + 1];
     const std::u16string u16txt=TextUtils::utf8_utf16(txt);
