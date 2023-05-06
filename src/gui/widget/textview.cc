@@ -1738,6 +1738,8 @@ void TextView::onDraw(Canvas& canvas) {
         clipTop += std::min(.0f, mShadowDy - mShadowRadius);
         clipBottom += std::max(.0f, mShadowDy + mShadowRadius);
     }
+    canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
+    canvas.clip();
     int voffsetText = 0;
     int voffsetCursor = 0;
 

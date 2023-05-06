@@ -713,7 +713,7 @@ void TabLayout::applyModeAndGravity(){
         // If we're scrollable, or fixed at start, inset using padding
         paddingStart = std::max(0, mContentInsetStart - mTabPaddingStart);
     }
-    //ViewCompat.setPaddingRelative(mTabStrip, paddingStart, 0, 0, 0);
+    mTabStrip->setPaddingRelative(paddingStart, 0, 0, 0);
 
     switch (mMode) {
     case MODE_FIXED:
@@ -1071,7 +1071,7 @@ void TabLayout::TabView::update() {
             mTextView = textView;
             mDefaultMaxLines = mTextView->getMaxLines();
         }
-        //TextViewCompat.setTextAppearance(mTextView, mTabTextAppearance);
+        //mTextView->setTextAppearance(mTabTextAppearance);
         if (mParent->mTabTextColors) {
             mTextView->setTextColor(new ColorStateList(*mParent->mTabTextColors));
         }

@@ -480,7 +480,7 @@ void Layout::pushLineData(int start,int ytop,int descent,int width){
 void Layout::relayout(bool force){
     TextExtents extents;
     FontExtents fontextents;
-    double total_width=0;
+    double total_width = 0;
     int start=0,ytop=0;
     std::wstring word;
     if(!(force||mLayout)) return;
@@ -500,21 +500,21 @@ void Layout::relayout(bool force){
         case WORDBREAK_NOBREAK:
             word.append(1,mText[i]);
             measureSize(word,extents);
-            if(mBreakStrategy && (total_width+extents.x_advance>mWidth)){
+            if(mBreakStrategy && (total_width + extents.x_advance > mWidth)){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount++;
                 word.erase();
                 total_width=0 ; start=i;
             }else if(mBreakStrategy){
-                total_width+=extents.x_advance;
+                total_width += extents.x_advance;
             }
             if(mBreakStrategy)word.erase();
             break;
         case WORDBREAK_BREAK:{
             word.append(1,mText[i]);
             measureSize(word,extents);
-            int outofwidth=(total_width+extents.x_advance>mWidth);
+            int outofwidth=(total_width + extents.x_advance >mWidth);
             if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && (mBreakStrategy==0) ))||(linebreak==LINEBREAK_MUSTBREAK))){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
@@ -524,7 +524,7 @@ void Layout::relayout(bool force){
                 if(outofwidth)//char[i] is wordbreak char must be in old lines
                     start=i-(word.length()-1);
             }
-            total_width+=extents.x_advance;
+            total_width += extents.x_advance;
             word.erase();
             }
             break;
@@ -535,7 +535,7 @@ void Layout::relayout(bool force){
 
     if(start<=mText.length()){
         measureSize(mText.substr(start),extents);
-        total_width=extents.x_advance;
+        total_width = extents.x_advance;
         pushLineData(start,ytop,fontextents.descent,ceil(total_width));
         ytop += mLineHeight;
         if( (mColumns==COLUMNS_ELLIPSIZE) && (total_width>mWidth) ){
@@ -603,6 +603,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
 }
 
 void  Layout::draw(Canvas&canvas){
+    canvas.set_font_size(mFontSize);
     relayout();
     drawText(canvas,0,mLineCount);
 }

@@ -19,6 +19,7 @@ static std::map<const std::string,int>edgeFlagKVS={
 int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def){
     const std::string value=attrs.getAttributeValue(key);
     if(value.find("%")!=std::string::npos){
+	LOGD("%d %s[%.f]=%.2f",base,value.c_str(),std::stof(value),base*std::stof(value)/100);
         return base*std::stof(value)/100;
     }else if(value.find("px")!=std::string::npos){
         return std::stoi(value);
@@ -175,7 +176,16 @@ Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,i
     loadKeyboard(context,xmlLayoutResId);
 }
 
-Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId):Keyboard(context,xmlLayoutResId,0,0,modeId){
+Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId){
+    DisplayMetrics dm = context->getDisplayMetrics();
+    mDisplayWidth = dm.widthPixels;
+    mDisplayHeight= dm.heightPixels;
+    mDefaultHorizontalGap = 0;
+    mDefaultWidth = mDisplayWidth / 10;
+    mDefaultVerticalGap = 0;
+    mDefaultHeight = mDefaultWidth;
+    mKeyboardMode = modeId;
+    loadKeyboard(context,xmlLayoutResId);
 }
 
 Keyboard::~Keyboard(){
@@ -194,34 +204,37 @@ typedef struct{
     std::string package;
     int x,y;
     int displayWidth,displayHeight;
+    int defaultKeyWidth;
     int keyboardMode;
     int minWidth;//min width for keyboard's key row
 }KeyboardData;
 
 static void startTag(void *userData, const XML_Char *name, const XML_Char **satts){
-    KeyboardData*pd=(KeyboardData*)userData;
+    KeyboardData*pd = (KeyboardData*)userData;
     AttributeSet atts(pd->context,pd->package);
-    Context*context=pd->context;
-    Keyboard* keyboard=pd->keyboard;
-    Keyboard::Row*row =pd->row;
+    Context*context = pd->context;
+    Keyboard* keyboard= pd->keyboard;
+    Keyboard::Row*row = pd->row;
     int sz;
     atts.set(satts);
-    if(0==strcmp(name,"Keyboard")){
-        sz= getDimensionOrFraction(atts,"horizontalGap",pd->displayWidth,keyboard->getHorizontalGap());
+    if(0 == strcmp(name,"Keyboard")){
+	sz = getDimensionOrFraction(atts,"keyWidth",pd->displayWidth,pd->defaultKeyWidth);
+	keyboard->setKeyWidth(sz);
+        sz = getDimensionOrFraction(atts,"horizontalGap",pd->displayWidth,keyboard->getHorizontalGap());
         keyboard->setHorizontalGap(sz);
-        sz= getDimensionOrFraction(atts,"verticalGap",pd->displayHeight,keyboard->getVerticalGap());
+        sz = getDimensionOrFraction(atts,"verticalGap",pd->displayHeight,keyboard->getVerticalGap());
         keyboard->setVerticalGap(sz);
-        sz= getDimensionOrFraction(atts,"keyHeight",pd->displayHeight,0);
+        sz = getDimensionOrFraction(atts,"keyHeight",pd->displayHeight,0);
         keyboard->setKeyHeight(sz);
-        pd->minWidth=pd->y=0;
-    }else if(0==strcmp(name,"Row")){
-        pd->row=row=new Keyboard::Row(keyboard,context,atts);
+        pd->minWidth = pd->y = 0;
+    }else if(0 == strcmp(name,"Row")){
+        pd->row = row = new Keyboard::Row(keyboard,context,atts);
         row->rowEdgeFlags = atts.getInt("rowEdgeFlags",0);
-        pd->x=0;
-    }else if(0==strcmp(name,"Key")){
-        if(row->mode==pd->keyboardMode){
+        pd->x = 0;
+    }else if(0 == strcmp(name,"Key")){
+        if(row->mode == pd->keyboardMode){
             Keyboard::Key*key=new Keyboard::Key(row,pd->x,pd->y,context,atts);
-            if(row->mode==pd->keyboardMode)
+            if(row->mode == pd->keyboardMode)
                 row->mKeys.push_back(key);
             pd->key=key;
         }
@@ -229,23 +242,23 @@ static void startTag(void *userData, const XML_Char *name, const XML_Char **satt
 }
 
 static void endTag(void *userData, const XML_Char *name){
-    KeyboardData*pd=(KeyboardData*)userData;
-    Context*context=pd->context;
-    Keyboard* keyboard=pd->keyboard;
-    Keyboard::Row*row =pd->row;
-    if(0==strcmp(name,"Key")){
-        if(row->mode==pd->keyboardMode){
-            Keyboard::Key*key=pd->key;
+    KeyboardData*pd = (KeyboardData*)userData;
+    Context*context = pd->context;
+    Keyboard* keyboard= pd->keyboard;
+    Keyboard::Row*row = pd->row;
+    if(0 == strcmp(name,"Key")){
+        if(row->mode == pd->keyboardMode){
+            Keyboard::Key*key = pd->key;
             pd->keys->push_back(key);
-            pd->x+=key->width+key->gap;
+            pd->x += key->width+key->gap;
             if(key->codes[0]==Keyboard::KEYCODE_SHIFT||key->codes[0]==Keyboard::KEYCODE_ALT)
                 keyboard->getModifierKeys().push_back(key);
         }
     }else if(0==strcmp(name,"Row")){
-        pd->y+=row->defaultHeight+row->verticalGap;
-        pd->minWidth=std::max(pd->x,pd->minWidth);
-        pd->x=0;
-        if(row->mode==pd->keyboardMode)
+        pd->y += row->defaultHeight+row->verticalGap;
+        pd->minWidth = std::max(pd->x,pd->minWidth);
+        pd->x = 0;
+        if(row->mode == pd->keyboardMode)
             pd->rows->push_back(pd->row);
         else delete pd->row;
     }
@@ -253,16 +266,17 @@ static void endTag(void *userData, const XML_Char *name){
 
 void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     std::string package;
-    ULONGLONG tstart=SystemClock::uptimeMillis();
-    XML_Parser parser=XML_ParserCreateNS(NULL,':');
+    ULONGLONG tstart = SystemClock::uptimeMillis();
+    XML_Parser parser= XML_ParserCreateNS(NULL,' ');
 
     context->getInputStream(resid,&package);
-    KeyboardData pd={&rows,&mKeys,context,this,nullptr,nullptr,package,0,0};
+    KeyboardData pd = {&rows,&mKeys,context,this,nullptr,nullptr,package,0,0};
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startTag, endTag);
     pd.displayWidth = mDisplayWidth;
     pd.displayHeight= mDisplayHeight;
     pd.keyboardMode = mKeyboardMode;
+    pd.defaultKeyWidth=mDefaultWidth;
     int len = 0;
     std::unique_ptr<std::istream>stream=context->getInputStream(resid);
     if(stream){
@@ -281,15 +295,16 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     XML_ParserFree(parser);
     mTotalHeight= pd.y-mDefaultVerticalGap;
     mTotalWidth = pd.minWidth;
-    mProximityThreshold =mDefaultWidth*.6f;//SEARCH_DISTANCE;
-    mProximityThreshold*=mProximityThreshold;
-    LOGD("%s endof loadkeyboard %d rows %d keys gaps=%d,%d parsed size=%dx%d",
-	resid.c_str(),rows.size(),mKeys.size(),
-        getHorizontalGap(),getVerticalGap(),mTotalWidth,mTotalHeight);
+    mProximityThreshold = mDefaultWidth*.6f;//SEARCH_DISTANCE;
+    mProximityThreshold*= mProximityThreshold;
+    LOGD("%s endof loadkeyboard %d rows %d keys gaps=%d,%d parsed size=%dx%d display=%dx%d",
+	resid.c_str(),rows.size(),mKeys.size(), getHorizontalGap(),getVerticalGap(),
+	mTotalWidth,mTotalHeight,mDisplayWidth,mDisplayHeight);
 }
 
 void Keyboard::resize(int newWidth,int newHeight){
     int numRows = rows.size();
+    LOGD("%dx%d",newWidth,newHeight);
     for (int rowIndex = 0; rowIndex < numRows; ++rowIndex) {
         Row* row = rows.at(rowIndex);
         int numKeys = row->mKeys.size();

@@ -60,6 +60,7 @@ public:
        InputMethod* im = InputMethodManager::getInstance().im;
        im->get_predicts(s,predicts);
        commitText(s);
+       mText2IM.clear();
        candidateView->setSuggestions(predicts,true,true);
    }
 };
@@ -310,7 +311,7 @@ void InputMethodManager::commitText(const std::wstring&text,int newCursorPos){
 int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name){
     im=method;
     std::string layout =method->getKeyboardLayout(mInputType);
-    Keyboard*kbd=new Keyboard(imeWindow->getContext(),layout,1280,240);
+    Keyboard*kbd=new Keyboard(imeWindow->getContext(),layout,imeWindow->getWidth(),240);
     imeWindow->kbdView->setKeyboard(kbd);
     LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd);
     return 0;
