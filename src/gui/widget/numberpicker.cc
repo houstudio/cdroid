@@ -594,6 +594,23 @@ void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
     mLongPressUpdateInterval = intervalMillis;
 }
 
+void NumberPicker::setSelectionDivider(Drawable*d){
+    delete mSelectionDivider;
+    mSelectionDivider = d;
+    if (mSelectionDivider) {
+        mSelectionDivider->setCallback(this);
+        mSelectionDivider->setLayoutDirection(getLayoutDirection());
+        if (mSelectionDivider->isStateful()) {
+            mSelectionDivider->setState(getDrawableState());
+        }
+    }
+    invalidate();
+}
+
+Drawable*NumberPicker::getSelectionDivider()const{
+    return mSelectionDivider;
+}
+
 void NumberPicker::setSelector(int items){
     mMaxSelectorIndices=items;
     //mSelectorIndices.resize(items);
