@@ -107,13 +107,13 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
 }
 
 Drawable*InsetDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string src=atts.getString("src");;
-    int inset =atts.getInt("inset");
-    int insetLeft =atts.getInt("insetLeft");
-    int insetTop  =atts.getInt("insetTop");
-    int insetRight =atts.getInt("insetRight");
-    int insetBottom =atts.getInt("insetBottom");
-    Drawable*d=Drawable::inflate(ctx,src);
+    const std::string res = atts.getString("drawable");
+    int inset = atts.getInt("inset");
+    int insetLeft = atts.getInt("insetLeft");
+    int insetTop  = atts.getInt("insetTop");
+    int insetRight = atts.getInt("insetRight");
+    int insetBottom= atts.getInt("insetBottom");
+    Drawable*d = Drawable::inflate(ctx,res);
     if(inset>0)
         return new InsetDrawable(d,inset);
     else
