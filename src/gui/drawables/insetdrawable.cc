@@ -81,9 +81,11 @@ Insets InsetDrawable::getOpticalInsets() {
 }
 
 int InsetDrawable::getOpacity() {
-    int opacity = getDrawable()->getOpacity();
+    int opacity = TRANSLUCENT;
     Rect tmp;
     getInsets(tmp);
+    if(getDrawable())
+	opacity = getDrawable()->getOpacity();
     if (opacity == OPAQUE && (tmp.left > 0 || tmp.top > 0 || tmp.width > 0 || tmp.height > 0)) {
         return TRANSLUCENT;
     }
