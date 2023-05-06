@@ -291,7 +291,7 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
 
     if (track) {
         const int trackWidth = w - mPaddingRight - mPaddingLeft;
-        track->setBounds(0, trackOffset, trackWidth, trackOffset + trackHeight);
+        track->setBounds(0, trackOffset, trackWidth, trackHeight);
     }
 
     if (thumb) {

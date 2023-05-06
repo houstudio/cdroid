@@ -719,9 +719,7 @@ static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii
         pts[4]=r.right()-radii[2];   pts[5]=r.bottom()-radii[2];
         pts[6]=r.left + radii[3];    pts[7]=r.bottom()-radii[3];
         for(int i=0,j=0;i<8;i+=2,j++){
-            canvas.translate(pts[i],pts[i+1]);
-            canvas.arc(0,0,radii[j],db*degree,(db+90)*degree);
-            canvas.translate(-pts[i],-pts[i+1]);
+            canvas.arc(pts[i],pts[i+1],radii[j],db*degree,(db+90)*degree);
             db+=90.f;
         }canvas.line_to(pts[0]-radii[0],pts[1]);
     }
@@ -757,7 +755,7 @@ void GradientDrawable::draw(Canvas&canvas){
             canvas.stroke();
         }else if(mFillPaint){
             canvas.fill();
-        } 
+        }
         break;
     case LINE:
         if (haveStroke) {

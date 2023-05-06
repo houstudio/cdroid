@@ -672,7 +672,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
     }
 
     if (mProgressDrawable != nullptr) {
-        mProgressDrawable->setBounds(0, 0, right-left, bottom-top);
+        mProgressDrawable->setBounds(0, 0, right, bottom);
     }
 }
 
