@@ -19,6 +19,7 @@ public:
     static constexpr int KEYCODE_DELETE   = -5;
     static constexpr int KEYCODE_BACKSPACE= -6;
     static constexpr int KEYCODE_MODE_CHANGE=-7;/*used change number/letter keyboardlayout*/
+    static constexpr int KEYCODE_IME_CHANGE =-8;/*used to change inputmethod*/
     class Key{
     private:
         void*parent;

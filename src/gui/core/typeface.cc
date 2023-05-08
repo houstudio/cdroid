@@ -1,6 +1,7 @@
 #include <core/typeface.h>
 #include <regex>
 #include <freetype/freetype.h>
+#include <cairomm/matrix.h>
 #include <dirent.h>
 namespace cdroid{
 
@@ -13,37 +14,51 @@ Typeface* Typeface::sDefaultTypeface;
 
 std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
 
-Typeface::Typeface(Cairo::RefPtr<Cairo::FtFontFace>face){
+Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face){
     mFontFace = face;
 }
 
 Typeface::Typeface(FcPattern & font){
     int weight=0;
+    double pixelSize=.0f;
     FcChar8* s = FcNameUnparse(&font);
-    LOGD("Font= %s",s);
-    free(s); s = nullptr; 
+    LOGV("Font= %s",s);
+    //free(s); 
+    s = nullptr; 
 
     if(FcPatternGetString(&font, FC_FAMILY, 0, &s)==FcResultMatch){
         LOGD("Family=%s",s);
         mFamily = (const char*)s;
-        free(s); s= nullptr;
+        //free(s); 
+	s= nullptr;
     }
 
     if(FcPatternGetString(&font, FC_STYLE, 0, &s)==FcResultMatch){
         LOGD("Style=%s",s);
-        free(s); s = nullptr;
+        //free(s); 
+	s = nullptr;
     }
 
     if(FcPatternGetString(&font,FC_SLANT,0,&s)==FcResultMatch){
         LOGD("Slant=%s",s);
-        free(s); s = nullptr;
+        //free(s); 
+	s = nullptr;
 	mStyle|=ITALIC;
     }
     if(FcPatternGetInteger(&font,FC_WEIGHT,0,&weight)==FcResultMatch){
 	LOGD("weight =%d",weight);
 	mWeight = weight;
     }
-    mFontFace = Cairo::FtFontFace::create(&font);
+    if(FcPatternGetDouble(&font,FC_PIXEL_SIZE,0,&pixelSize)==FcResultMatch){
+	 LOGD("pixelSize =%f",pixelSize);
+    }
+    if(FcPatternGetDouble(&font,FC_DPI,0,&pixelSize)==FcResultMatch){
+	 LOGD("dpi =%f",pixelSize);
+    }
+    Cairo::Matrix matrix = Cairo::identity_matrix();
+    Cairo::Matrix ctm = Cairo::identity_matrix();
+    Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(&font);
+    mFontFace = Cairo::FtScaledFont::create(face,matrix,ctm);
 }
 
 Typeface* Typeface::create(Typeface*family, int style){
@@ -179,9 +194,16 @@ int Typeface::loadFromPath(const std::string&path){
 	    if(ftFace==nullptr||err)continue;
             LOGE_IF(ftFace->family_name==nullptr,"%s missing familyname",fullpath.c_str());
             if(ftFace->family_name){
-                Typeface *typeface = new Typeface(Cairo::FtFontFace::create(ftFace,0));
+		const double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;///ftFace->height;//>max_advance_width;
+		Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(ftFace,FT_LOAD_DEFAULT);//NO_SCALE|FT_LOAD_TARGET_NORMAL);
+		Cairo::Matrix matrix = Cairo::scaling_matrix(scale,scale);
+                Cairo::Matrix ctm = Cairo::identity_matrix();
+                auto autoft= Cairo::FtScaledFont::create(face,matrix,ctm);
+                Typeface *typeface = new Typeface(autoft);
+		typeface->mScale = scale;
                 sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
-                LOGD("family=%s style=%s",ftFace->family_name,ftFace->style_name);
+                LOGD("family=%s style=%s %d glyphs face.height=%x units_per_EM=%x scale=%f",ftFace->family_name,
+			ftFace->style_name,ftFace->num_glyphs, ftFace->max_advance_width,ftFace->units_per_EM,scale);
             }else{
                 FT_Done_Face(ftFace);
             }
@@ -198,7 +220,7 @@ int Typeface::loadFromFontConfig(){
     if(!config) return false;
  
     FcPattern  *p  = FcPatternCreate();
-    FcObjectSet*os = FcObjectSetBuild (FC_FAMILY,NULL);
+    FcObjectSet*os = FcObjectSetBuild (FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE,NULL);
     FcFontSet  *fs = FcFontList(config, p, os);
     FcPatternDestroy(p);
     return loadFromPath("");
@@ -211,7 +233,9 @@ int Typeface::loadFromFontConfig(){
 	Typeface   *tf = new Typeface(*pat);
 	const std::string family = tf->getFamily();
 	sSystemFontMap.insert({family,tf});
-
+	//FT_Face ftFace ftFace = tf->mFontFace->;
+	//const double scale = (double)ftFace->height/ftFace->units_per_EM;//
+	tf->mScale = 1.f;//scale;
         if(std::regex_search(family,patSans)){
             std::string ms=std::regex_search(family,patMono)?"mono":"serif";
             ms ="sans-"+ms;
@@ -244,7 +268,7 @@ int Typeface::loadFromFontConfig(){
 	    }
 	}
     }
-    FcFontSetDestroy(fs);
+    if(fs)FcFontSetDestroy(fs);
     FcConfigDestroy(config);
     return 0;
 }

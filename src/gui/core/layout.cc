@@ -74,7 +74,7 @@ void Layout::setWidth(int width){
 
 void Layout::setFont(Typeface*tf){
     mTypeface = tf ;
-    mContext->set_font_face(mTypeface->getFontFace());
+    mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
 }
 
 void Layout::setFontSize(double size){
@@ -111,11 +111,24 @@ void Layout::setEllipsis(int ellipsis){
 
 double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
     std::string utext = TextUtils::unicode2utf8(text);
-    mContext->set_font_face(mTypeface->getFontFace());
+    mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
     mContext->set_font_size(mFontSize);
     mContext->get_text_extents(utext,te);
+    auto face = mTypeface->getFontFace();
+    const double scale= mTypeface->getScale();
+    te.x_advance *= scale;
+    te.y_advance *= scale;
+    te.x_bearing *= scale;
+    te.y_bearing *= scale;
+    te.width *= scale;
+    te.height*= scale;
     if(fe){
         mContext->get_font_extents(*fe);
+	fe->max_x_advance *= scale;
+	fe->max_y_advance *= scale;
+	fe->height *= scale;
+	fe->ascent *= scale;
+	fe->descent*= scale;
     }
     return te.x_advance;
 }
@@ -587,8 +600,8 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         case ALIGN_OPPOSITE:
         case ALIGN_RIGHT : x=mWidth-lw     ; break;
         }
-        LOGV("line[%d] xy=%d,%d mWidth=%d [%s]'s TextWidth=%d fontsize=%.f alignment=%x",
-             lineNum,x,y,mWidth,TextUtils::unicode2utf8(line).c_str(),lw,mFontSize,mAlignment);
+        LOGV("line[%d] xy=%d,%d mWidth=%d [%s](%d)'s TextWidth=%d fontsize=%.f alignment=%x",
+             lineNum,x,y,mWidth,TextUtils::unicode2utf8(line).c_str(),line.size(),lw,mFontSize,mAlignment);
         canvas.move_to(x,y);
         canvas.show_text(processBidi(line));
         if(mCaretPos>=lineStart&&mCaretPos<lineEnd){

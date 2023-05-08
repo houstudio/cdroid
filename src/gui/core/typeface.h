@@ -3,6 +3,7 @@
 #include <string>
 #include <core/callbackbase.h>
 #include <cairomm/fontface.h>
+#include <cairomm/scaledfont.h>
 #include <unordered_map>
 
 namespace cdroid{
@@ -35,7 +36,8 @@ private:
     int mStyle;
     int mWeight;
     int mItalic;
-    Cairo::RefPtr<Cairo::FtFontFace>mFontFace;
+    double mScale;
+    Cairo::RefPtr<Cairo::FtScaledFont>mFontFace;
     static Typeface* sDefaultTypeface;
     static std::unordered_map<std::string,Typeface*>sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
@@ -46,7 +48,7 @@ private:
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
-    Typeface(Cairo::RefPtr<Cairo::FtFontFace>face);
+    Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face);
     Typeface(FcPattern&);
 public:
     int getWeight()const{
@@ -64,8 +66,11 @@ public:
     std::string getFamily()const{
 	return mFamily;
     }
-    Cairo::RefPtr<Cairo::FtFontFace>getFontFace()const{
+    Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const{
 	return mFontFace;
+    }
+    double getScale()const{
+	return mScale;
     }
     //static Typeface* createFromResources(FamilyResourceEntry entry, AssetManager mgr,const std::string& path)
     static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
