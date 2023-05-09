@@ -644,9 +644,11 @@ void TextView::setMaxWidth(int maxPixels){
 int TextView::getMaxWidth()const{
     return mMaxWidthMode == PIXELS ? mMaxWidth : -1;
 }
+
 int TextView::getLineCount()const{
     return mLayout? mLayout->getLineCount() : 0;
 }
+
 int TextView::getLineBounds(int line, Rect&bounds) {
     int baseline = mLayout->getLineBounds(line, bounds);
 
@@ -656,6 +658,21 @@ int TextView::getLineBounds(int line, Rect&bounds) {
     }
     bounds.offset(getCompoundPaddingLeft(), voffset);
     return baseline + voffset;
+}
+
+int TextView::getBaseline(){
+    if(mLayout == nullptr)
+        return View::getBaseline();
+    return getBaselineOffset() + mLayout->getLineBaseline(0);
+}
+
+int TextView::getBaselineOffset(){
+    int voffset = 0;
+    if((mGravity&Gravity::VERTICAL_GRAVITY_MASK)!=Gravity::TOP)
+	voffset = getVerticalOffset(true);
+    if(isLayoutModeOptical((View*)mParent))
+	voffset -= getOpticalInsets().top;
+    return getExtendedPaddingTop()+voffset;
 }
 
 int TextView::getLineHeight()const{
@@ -1720,7 +1737,7 @@ void TextView::onDraw(Canvas& canvas) {
     int extendedPaddingBottom = getExtendedPaddingBottom();
 
     const int vspace = getHeight() - compoundPaddingBottom - compoundPaddingTop;
-    const int maxScrollY = 0;//mLayout.getHeight() - vspace;
+    const int maxScrollY = mLayout->getHeight() - vspace;
 
     int clipLeft  = compoundPaddingLeft + mScrollX;
     int clipTop   = (mScrollY == 0) ? 0 : extendedPaddingTop + mScrollY;
@@ -1733,13 +1750,13 @@ void TextView::onDraw(Canvas& canvas) {
 
     if (mShadowRadius != 0) {
         clipLeft += std::min(.0f, mShadowDx - mShadowRadius);
-        clipRight += std::max(.0f, mShadowDx + mShadowRadius);
+        clipRight+= std::max(.0f, mShadowDx + mShadowRadius);
 
-        clipTop += std::min(.0f, mShadowDy - mShadowRadius);
-        clipBottom += std::max(.0f, mShadowDy + mShadowRadius);
+        clipTop   += std::min(.0f, mShadowDy - mShadowRadius);
+        clipBottom+= std::max(.0f, mShadowDy + mShadowRadius);
     }
-    canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
-    canvas.clip();
+    //canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
+    //canvas.clip();
     int voffsetText = 0;
     int voffsetCursor = 0;
 
@@ -1752,8 +1769,8 @@ void TextView::onDraw(Canvas& canvas) {
     int color=mCurTextColor;
     Layout*layout=mLayout;
     if(getText().empty()&&mHint.length()){
-        color=mCurHintTextColor;
-        layout = mHintLayout;
+        color = mCurHintTextColor;
+        layout= mHintLayout;
         mHintLayout->relayout();
     }
     
@@ -1783,9 +1800,6 @@ void TextView::onDraw(Canvas& canvas) {
         }
     }
 
-    /*LOGV("text:%s maxlinewidth=%d lines=%d size=%dx%d marquee=%d mSingleLine=%d",getText().c_str(),
-          layout->getMaxLineWidth(),layout->getLineCount(),clipRight-clipLeft, clipBottom-clipTop,
-          isMarqueeFadeEnabled(),mSingleLine);*/
     canvas.set_color(color);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);

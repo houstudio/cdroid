@@ -298,7 +298,11 @@ void Layout::getCaretRect(RECT&rect)const{
 }
 
 int Layout::getLineBaseline(int line)const {
-    return getLineTop(line+1) - getLineDescent(line);
+    TextExtents te;
+    FontExtents fe;
+    if(getLineCount())return getLineTop(line+1) - getLineDescent(line);
+    measureSize(L" ",te,&fe);
+    return fe.height - fe.descent;
 }
 
 int Layout::getEllipsisStart(int line)const{

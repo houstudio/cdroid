@@ -232,7 +232,8 @@ public:
     void setMaxHeight(int maxPixels);
     int getLineCount()const;
     int getLineBounds(int line, Rect&bounds);
-
+    int getBaseline();
+    int getBaselineOffset();
     void setCaretPos(int pos);
     bool moveCaret2Line(int line);
     int getCaretPos()const;

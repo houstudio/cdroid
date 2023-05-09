@@ -99,6 +99,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     ViewConfiguration configuration = ViewConfiguration::get(context);
     mTextSize = (int) mInputText->getTextSize();
+    //mInputText->setVisibility(View::INVISIBLE);
     mTextSize2 = mTextSize;
     ColorStateList*colors=mInputText->getTextColors();
     mTextColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),Color::WHITE);
@@ -477,7 +478,7 @@ int NumberPicker::computeVerticalScrollOffset() {
 }
 
 int NumberPicker::computeVerticalScrollRange() {
-    return (mMaxValue - mMinValue + 1) * mSelectorElementHeight;
+    return std::max(mMaxValue - mMinValue + 1,mMaxSelectorIndices) * mSelectorElementHeight;
 }
 
 int NumberPicker::computeVerticalScrollExtent() {
@@ -637,7 +638,8 @@ void NumberPicker::setMinValue(int minValue){
 
     mMinValue = minValue;
     if (mMinValue > mValue) mValue = mMinValue;
-
+    if(mMinValue > mMaxValue)
+         mMaxValue = mMinValue;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
     updateInputTextView();
@@ -657,7 +659,8 @@ void NumberPicker::setMaxValue(int maxValue) {
 
     mMaxValue = maxValue;
     if (mMaxValue < mValue) mValue = mMaxValue;
-
+    if(mMaxValue < mMinValue)
+	mMinValue = mMaxValue;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
     updateInputTextView();
@@ -731,11 +734,15 @@ int  NumberPicker::getTextColor()const{
 }
 
 void NumberPicker::setTextSize(int size,int size2){
-    mInputText->setTextSize(size);
-    mTextSize = size;
-    if(size2)
+    if(mTextSize!=size){
+	mInputText->setTextSize(size);
+        mTextSize = size;
+        requestLayout();
+    }
+    if((mTextSize2!=size2)&&size2){
         mTextSize2= size2;
-    invalidate();
+        invalidate();
+    }
 }
 
 int  NumberPicker::getTextSize()const{
@@ -746,7 +753,7 @@ void NumberPicker::drawVertical(Canvas&canvas){
     const bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
     float x = (mRight-mLeft) / 2;
     float y = mCurrentScrollOffset;
-    Rect rc=mInputText->getBound();
+    Rect rc = mInputText->getBound();
     // draw the virtual buttons pressed state if needed
     if (showSelectorWheel && mVirtualButtonPressedDrawable != nullptr
             && mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
@@ -768,33 +775,46 @@ void NumberPicker::drawVertical(Canvas&canvas){
     const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(
 		    StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     Color color(selectorWheelColor);
-    Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
     if(mTextColor!=mTextColor2){
 	 Color c1(mTextColor), c2(mTextColor2);
-	 Cairo::RefPtr<Cairo::LinearGradient> pat=Cairo::LinearGradient::create(0,mCurrentScrollOffset,0,mCurrentScrollOffset+getHeight());
+	 Cairo::RefPtr<Cairo::LinearGradient> pat=Cairo::LinearGradient::create(0,0,0,getHeight());
 	 pat->add_color_stop_rgba(.0f,c2.red(),c2.green(),c2.blue(),c2.alpha());
 	 pat->add_color_stop_rgba(.5f,c1.red(),c1.green(),c1.blue(),c1.alpha());
 	 pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
 	 canvas.set_source(pat);
     }else canvas.set_color(mTextColor);
+    LOGV("inputtext.baseline=%d mCurrentScrollOffset=%.f",mInputText->getBaseline(),mCurrentScrollOffset);
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
         // Do not draw the middle item if input is visible since the input is shown only if the wheel
         // is static and it covers the middle item. Otherwise, if the user starts editing the text 
         // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
+        Cairo::FontExtents fe;
 	if((mTextSize!=mTextSize2)){
 	    const float harfHeight = getHeight()/2.f;
-	    const float fraction   = (float)std::abs(rctxt.top+mSelectorElementHeight/2- harfHeight)/harfHeight;
+	    const float fraction   = (float)std::abs(y - harfHeight)/harfHeight;
 	    canvas.set_font_size( lerp(mTextSize,mTextSize2,fraction) );
 	}
+	canvas.get_font_extents(fe);
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
-            canvas.draw_text(rctxt,scrollSelectorValue,mInputText->getGravity());
+	    Cairo::TextExtents ext;
+	    canvas.get_text_extents(scrollSelectorValue,ext);
+	    switch(mInputText->getGravity()&Gravity::HORIZONTAL_GRAVITY_MASK){
+	    case Gravity::LEFT: x = 0; break;
+	    case Gravity::CENTER_HORIZONTAL:x = (getWidth()-ext.x_advance)/2; break;
+	    case Gravity::RIGHT:x = getWidth() - ext.x_advance; break; 
+	    }
+	    canvas.move_to(x+ext.x_bearing,y);// + ext.y_bearing);
+	    canvas.show_text(scrollSelectorValue);
         }
-        rctxt.offset(0,mSelectorElementHeight);
+	y+= mSelectorElementHeight;
+	/*canvas.move_to(0,mSelectorElementHeight*i);
+	canvas.line_to(getWidth(),mSelectorElementHeight*i);
+	canvas.stroke();*/
     }
     // draw the selector dividers
     if(showSelectorWheel&&mSelectionDivider){
@@ -831,8 +851,6 @@ void NumberPicker::drawHorizontal(Canvas&canvas){
     ColorStateList* colors = mInputText->getTextColors();
     const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
     canvas.set_color(selectorWheelColor);
-    Rect rctxt={0,mCurrentScrollOffset,mRight-mLeft,mSelectorElementHeight-mSelectorTextGapHeight/2};
-    Layout txtlayout(mTextSize,mRight-mLeft);
     //txtlayout.setAlignment(mInputText->getLayoutAlignment());
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
@@ -843,9 +861,9 @@ void NumberPicker::drawHorizontal(Canvas&canvas){
         canvas.set_font_size(i==mMiddleItemIndex?mTextSize:(mTextSize*.8));
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
-            canvas.draw_text(rctxt,scrollSelectorValue,mInputText->getGravity());
+            //canvas.draw_text(rctxt,scrollSelectorValue,mInputText->getGravity());
         }
-        rctxt.offset(0,mSelectorElementHeight);
+        y+=mSelectorElementHeight;
     }
     // draw the selector dividers
     if(showSelectorWheel&&mSelectionDivider){
