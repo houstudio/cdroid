@@ -99,7 +99,6 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     ViewConfiguration configuration = ViewConfiguration::get(context);
     mTextSize = (int) mInputText->getTextSize();
-    //mInputText->setVisibility(View::INVISIBLE);
     mTextSize2 = mTextSize;
     ColorStateList*colors=mInputText->getTextColors();
     mTextColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),Color::WHITE);
@@ -532,7 +531,7 @@ void NumberPicker::showSoftInput(){
 }
 
 void NumberPicker::hideSoftInput(){
-    if (mHasSelectorWheel&&mInputText->getInputType()!=EditText::TYPE_NONE) {
+    if ( mHasSelectorWheel && mInputText->getInputType() != EditText::TYPE_NONE) {
         mInputText->setVisibility(View::INVISIBLE);
     }
 }
@@ -542,10 +541,14 @@ void NumberPicker::tryComputeMaxWidth(){
         return;
     }
     int maxTextWidth = 0;
-    if (mDisplayedValues.size()==0) {
+    if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
+        Layout l(mTextSize,-1);
+        l.setFont(mInputText->getTypeface());
         for (int i = 0; i <= 9; i++) {
-            const float digitWidth = mTextSize;//mSelectorWheelPaint.measureText(formatNumberWithLocale(i));
+            l.setText(std::to_string(i));
+            l.relayout();
+            const float digitWidth = l.getMaxLineWidth();
             if (digitWidth > maxDigitWidth) {
                 maxDigitWidth = digitWidth;
             }
@@ -559,8 +562,12 @@ void NumberPicker::tryComputeMaxWidth(){
         maxTextWidth = (int) (numberOfDigits * maxDigitWidth);
     } else {
         const int valueCount = mDisplayedValues.size();
+        Layout l(mTextSize,-1);
+        l.setFont(mInputText->getTypeface());
         for (int i = 0; i < valueCount; i++) {
-            const float textWidth = mTextSize;//mSelectorWheelPaint.measureText(mDisplayedValues[i]);
+            l.setText(mDisplayedValues[i]);
+            l.relayout();
+            const float textWidth = l.getMaxLineWidth();
             if (textWidth > maxTextWidth) {
                 maxTextWidth = (int) textWidth;
             }
@@ -785,7 +792,8 @@ void NumberPicker::drawVertical(Canvas&canvas){
 	 pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
 	 canvas.set_source(pat);
     }else canvas.set_color(mTextColor);
-    LOGV("inputtext.baseline=%d mCurrentScrollOffset=%.f",mInputText->getBaseline(),mCurrentScrollOffset);
+    canvas.set_line_width(0.4);
+    LOGD("inputtext.baseline=%d mCurrentScrollOffset=%.f itemheigh=%d",mInputText->getBaseline(),mCurrentScrollOffset,mSelectorElementHeight);
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
@@ -808,7 +816,7 @@ void NumberPicker::drawVertical(Canvas&canvas){
 	    case Gravity::CENTER_HORIZONTAL:x = (getWidth()-ext.x_advance)/2; break;
 	    case Gravity::RIGHT:x = getWidth() - ext.x_advance; break; 
 	    }
-	    canvas.move_to(x+ext.x_bearing,y);// + ext.y_bearing);
+	    canvas.move_to(x+ext.x_bearing,y + ext.y_bearing);
 	    canvas.show_text(scrollSelectorValue);
         }
 	y+= mSelectorElementHeight;
@@ -975,9 +983,11 @@ void NumberPicker::initializeSelectorWheel(){
     mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount + 0.5f);
     mSelectorElementHeight = mTextSize + mSelectorTextGapHeight;
     // Ensure that the middle item is positioned the same as the text in mInputText
-    int editTextTextPosition = mInputText->getBaseline() + mInputText->getTop();
+    const int editTextTextPosition = mInputText->getBaseline() + mInputText->getTop();
     mInitialScrollOffset = editTextTextPosition  - (mSelectorElementHeight * mMiddleItemIndex);
     mCurrentScrollOffset = mInitialScrollOffset;
+    LOGD("baseline=%d top=%d initscrolloffset=%d selectors=%d/%d",mInputText->getBaseline(),mInputText->getTop(),
+         mInitialScrollOffset,mMiddleItemIndex,mMaxSelectorIndices);
     updateInputTextView();
 }
 

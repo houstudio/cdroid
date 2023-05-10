@@ -28,6 +28,17 @@ public:
     float green()const{return mComponents[1];}
     float blue() const{return mComponents[2];}
     float alpha()const{return mComponents[3];}
+
+    void setRed(float r){mComponents[0]=r;}
+    void setGreen(float g){mComponents[1]=g;}
+    void setBlue(float b){mComponents[2]=b;}
+    void setAlpha(float a){mComponents[3]=a;}
+
+    void setRed(uint8_t r){mComponents[0]=float(r)/255.f;}
+    void setGreen(uint8_t g){mComponents[1]=float(g)/255.f;}
+    void setBlue(uint8_t b){mComponents[2]=float(b)/255.f;}
+    void setAlpha(uint8_t a){mComponents[3]=float(a)/255.f;}
+
     unsigned int toArgb()const;
 
     static uint8_t red ( int c){return (c>>16)&0xFF;}

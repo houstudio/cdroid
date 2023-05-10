@@ -194,7 +194,7 @@ int Typeface::loadFromPath(const std::string&path){
 	    if(ftFace==nullptr||err)continue;
             LOGE_IF(ftFace->family_name==nullptr,"%s missing familyname",fullpath.c_str());
             if(ftFace->family_name){
-		const double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;//ftFace->height;//>max_advance_width
+		const double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;
 		Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(ftFace,FT_LOAD_DEFAULT);
 		Cairo::Matrix matrix = Cairo::scaling_matrix(scale,scale);
                 Cairo::Matrix ctm = Cairo::identity_matrix();
@@ -202,8 +202,9 @@ int Typeface::loadFromPath(const std::string&path){
                 Typeface *typeface = new Typeface(autoft);
 		typeface->mScale = scale;
                 sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
-                LOGD("family=%s style=%s %d glyphs face.height=%x units_per_EM=%x scale=%f",ftFace->family_name,
-			ftFace->style_name,ftFace->num_glyphs, ftFace->max_advance_height,ftFace->units_per_EM,scale);
+                LOGI("[%s] style=%s/%x %d glyphs face.height=%x units_per_EM=%x scale=%f",
+			ftFace->family_name,ftFace->style_name,ftFace->style_flags,ftFace->num_glyphs,
+			ftFace->max_advance_height,ftFace->units_per_EM,scale);
             }else{
                 FT_Done_Face(ftFace);
             }

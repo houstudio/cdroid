@@ -1520,8 +1520,11 @@ int TextView::getCompoundDrawableTintMode(){
 }
 
 int TextView::getBoxHeight(Layout* l){
-    int padding = getExtendedPaddingTop() + getExtendedPaddingBottom();
-    return getMeasuredHeight()?(getMeasuredHeight() - padding):getHeight();
+    Insets opticalInsets = isLayoutModeOptical((View*)mParent) ? getOpticalInsets() : Insets::NONE;
+    const int padding = (l ==mHintLayout)
+	    ?getCompoundPaddingTop() + getCompoundPaddingBottom()
+            :getExtendedPaddingTop() + getExtendedPaddingBottom();
+    return getMeasuredHeight() - padding +opticalInsets.top + opticalInsets.bottom;
 }
 
 int TextView::getVerticalOffset(bool forceNormal){
