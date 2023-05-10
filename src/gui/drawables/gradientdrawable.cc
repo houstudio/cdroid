@@ -399,6 +399,7 @@ void GradientDrawable::setSize(int width, int height) {
     mGradientState->setSize(width, height);
     mPathIsDirty = true;
     invalidateSelf();
+    LOGV("%p setSize(%d,%d)",this,width,height);
 }
 
 void GradientDrawable::setGradientType(int gradient) {
@@ -587,7 +588,7 @@ bool GradientDrawable::ensureValidRect(){
         Rect bounds = getBounds();
         float inset = 0;
 
-        if (mStrokePaint)inset = mStrokeWidth;//mStrokePaint.getStrokeWidth() * 0.5f;
+        if (mStrokePaint)inset = mStrokeWidth*0.5f;
 
         GradientState&st =*mGradientState;
         mRect.set(bounds.left + inset, bounds.top + inset, bounds.width - 2*inset, bounds.height - 2*inset);
@@ -775,7 +776,7 @@ void GradientDrawable::draw(Canvas&canvas){
               0,M_PI*2.f*(st->mUseLevel?(float)getLevel()/10000.f:1));
 	canvas.line_to(0,0);LOGD("useLevel=%d lvl=%d",st->mUseLevel,getLevel());
 #else
-	LOGV("radius=%f",(float)st->mRadius);
+	LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
 	canvas.move_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
         canvas.arc(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f,
 			std::min(mRect.width,mRect.height)/2.f,
