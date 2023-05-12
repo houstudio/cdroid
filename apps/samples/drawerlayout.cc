@@ -48,7 +48,7 @@ int main(int argc,const char*argv[]){
     content->addView(btn);
     btn->setOnClickListener([dl](View&){
         LOGD("openDrawer");
-        //dl->openDrawer(Gravity::START);
+        dl->openDrawer(Gravity::START);
     });
 
     btn=new Button("Close",100,64);

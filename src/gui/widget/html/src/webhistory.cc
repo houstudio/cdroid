@@ -1,0 +1,66 @@
+#include <webhistory.h>
+
+namespace cdroid{
+
+WebHistory::WebHistory() {
+    m_current_item = 0;
+}
+
+WebHistory::~WebHistory() {
+
+}
+
+void WebHistory::url_opened( const std::string& url ) {
+    if(!m_items.empty()) {
+        if(m_current_item != m_items.size() - 1) {
+            if(m_current_item > 0 && m_items[m_current_item - 1] == url) {
+                m_current_item--;
+            } else if(m_current_item < m_items.size() - 1 && m_items[m_current_item + 1] == url) {
+                m_current_item++;
+            } else {
+                m_items.erase(m_items.begin() + m_current_item + 1, m_items.end());
+                m_items.push_back(url);
+                m_current_item = m_items.size() - 1;
+            }
+        } else {
+            if(m_current_item > 0 && m_items[m_current_item - 1] == url) {
+                m_current_item--;
+            } else {
+                m_items.push_back(url);
+                m_current_item = m_items.size() - 1;
+            }
+        }
+    } else {
+        m_items.push_back(url);
+        m_current_item = m_items.size() - 1;
+    }
+}
+
+bool WebHistory::back( std::string& url ) {
+    if(m_items.empty())	return false;
+
+    if(m_current_item > 0) {
+        url = m_items[m_current_item - 1];
+        return true;
+    }
+    return false;
+}
+
+bool WebHistory::forward( std::string& url ) {
+    if(m_items.empty())	return false;
+
+    if(m_current_item < m_items.size() - 1) {
+        url = m_items[m_current_item + 1];
+        return true;
+    }
+    return false;
+}
+
+std::string WebHistory::current() const {
+    if(m_current_item >= 0 && m_current_item < m_items.size()) {
+        return m_items[m_current_item];
+    }
+    return "";
+}
+}//endof namespace
+

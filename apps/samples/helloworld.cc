@@ -1,5 +1,7 @@
-#include<cdroid.h>
-#include<cdlog.h>
+#include <cdroid.h>
+#include <cdlog.h>
+#include <widget/candidateview.h>
+
 int main(int argc,const char*argv[]){
     setenv("LANG","zh_CN.UTF-8",1);
     App app(argc,argv);
@@ -8,6 +10,8 @@ int main(int argc,const char*argv[]){
          sizeof(View),sizeof(std::function<void()>),sizeof(Runnable),sizeof(Insets),
          sizeof(std::shared_ptr<int>),sizeof(std::vector<int>),sizeof(std::map<int,int>));
     Window*w=new Window(100,100,800,600);
+    w->setId(10000);
+    w->setBackgroundColor(0xFF111111);
    #if 10 
     EditText*edit=new EditText("Hello world! This value is positive for typical fonts that include",680,200);
     ColorStateList*cl=app.getColorStateList("cdroid:attr/editTextColor");
@@ -18,9 +22,8 @@ int main(int argc,const char*argv[]){
     edit->setInputType(EditText::TYPE_ANY);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     edit->setBackgroundColor(0xFFFF0000);
-    w->addView(edit).setPos(100,0);
+    w->addView(edit).setPos(100,300);
     edit->setTextSize(60);
-    w->setBackgroundResource("/home/houzh/bg.jpg");
     #endif
 #if 0
     LayerDrawable*ld=(LayerDrawable*)app.getDrawable("cdroid:drawable/analog.xml");

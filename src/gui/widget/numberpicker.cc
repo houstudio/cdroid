@@ -793,7 +793,7 @@ void NumberPicker::drawVertical(Canvas&canvas){
 	 canvas.set_source(pat);
     }else canvas.set_color(mTextColor);
     canvas.set_line_width(0.4);
-    LOGD("inputtext.baseline=%d mCurrentScrollOffset=%.f itemheigh=%d",mInputText->getBaseline(),mCurrentScrollOffset,mSelectorElementHeight);
+    LOGV("inputtext.baseline=%d mCurrentScrollOffset=%.f itemheigh=%d",mInputText->getBaseline(),mCurrentScrollOffset,mSelectorElementHeight);
     for (int i = 0; i < selectorIndices.size(); i++) {
         int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];

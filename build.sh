@@ -53,7 +53,7 @@ CDROID_DIR=$HOME/cdroid/out${PRODUCT}-${BUILD_TYPE}
 
 echo "product=$PRODUCT ${PRODUCT,,}"
 echo "showhelp=$SHOWHELP"
-echo "build=${BUILD_TYPE}"
+echo "build=${BUILD_TYPE}/${BUILD_TYPE,,}"
 
 if [ "$PRODUCT" = "X64" ]; then
     echo "x64"
@@ -67,6 +67,10 @@ DEPLIBS_DIR=${DEPLIBS[$PRODUCT]}
 
 if [ "$PRODUCT" != "X64" ]; then
     echo "TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
+fi
+
+if [ "${BUILD_TYPE,,}"="debug" ];then
+   DEPLIBS_DIR="${DEPLIBS_DIR}/debug"
 fi
 
 if [ SHOWHELP ];then

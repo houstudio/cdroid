@@ -259,7 +259,6 @@ public:
 private:
     class Private;
     Private *const d;
-
 };
 }//endof namespace
 #endif
