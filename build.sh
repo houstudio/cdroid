@@ -69,6 +69,8 @@ if [ "$PRODUCT" != "X64" ]; then
     echo "TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
 fi
 
+export PATH=$PATH:$DEPLIBS_DIR
+
 if [ "${BUILD_TYPE,,}"="debug" ];then
    DEPLIBS_DIR="${DEPLIBS_DIR}/debug"
 fi

@@ -61,7 +61,7 @@ int main (int argc, char *argv[]){
     cdroid::HtmlView*html=new cdroid::HtmlView(400,400);
     w->addView(html);
     if(app.getParamCount())
-        html->open_page(getParam(0,htmlbody));
+        html->open_page(app.getParam(0,htmlbody),"");
     else 
 	html->open_page(htmlbody,"");
     return app.exec();
