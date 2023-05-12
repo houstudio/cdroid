@@ -54,6 +54,7 @@ void HtmlView::get_client_rect(litehtml::position& client) const {
 
 
 void HtmlView::on_anchor_click(const char* url, const litehtml::element::ptr& el) {
+    LOGD("%s",url);
     if(url) {
         make_url(url, m_base_url.c_str(), m_clicked_url);
     }
