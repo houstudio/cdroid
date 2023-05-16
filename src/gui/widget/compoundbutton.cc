@@ -149,9 +149,10 @@ void CompoundButton::onDraw(Canvas&canvas){
         case Gravity::CENTER_VERTICAL: top = (getHeight() - drawableHeight) / 2;   break;
         default:           top = 0;
         }
-        const int left = isLayoutRtl() ? getWidth() - drawableWidth : 0;
-
-        mButtonDrawable->setBounds(left, top, drawableWidth,drawableHeight);//right, bottom);
+        int left = isLayoutRtl() ? getWidth() - drawableWidth : 0;
+        int right= isLayoutRtl() ? getWidth() : drawableWidth;
+        mButtonDrawable->setBounds(std::min(left,right), top,
+	    std::abs(right-left),drawableHeight);//right, bottom);
         Drawable* background = getBackground();
         if (background != nullptr) {
             background->setHotspotBounds(left, top,drawableWidth,drawableHeight);//right, bottom);
