@@ -227,11 +227,11 @@ GradientDrawable::GradientDrawable()
 }
 
 GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state){
-    mPathIsDirty = mGradientIsDirty =false;
+    mPathIsDirty = mGradientIsDirty = false;
     mPadding.set(0,0,0,0);
-    mGradientState=state;
+    mGradientState = state;
     mMutated = false;
-    mGradientRadius=0;
+    mGradientRadius = 0;
     mStrokeWidth =1.f;
     mAlpha = 255;
     updateLocalState();
@@ -248,6 +248,27 @@ std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState(){
 void GradientDrawable::updateLocalState(){
     mPathIsDirty = true;
     mGradientIsDirty = true;
+    auto state = mGradientState;
+    if(state->mSolidColors){
+	const std::vector<int> currentState = getState();
+	const int stateColor = state->mSolidColors->getColorForState(currentState,0);
+	Color c(stateColor);
+	mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
+    }else if(state->mGradientColors.size()==0){
+	mFillPaint = SolidPattern::create_rgba(0,0,0,0);
+    }else{
+    }
+    mPadding = state->mPadding;
+    if(state->mStrokeWidth>=0){
+	int strokeStateColor = 0;
+	if(state->mStrokeColors){
+	    const std::vector<int>currentState = getState();
+	    auto cls = state->mStrokeColors;
+	    strokeStateColor = cls->getColorForState(currentState,cls->getDefaultColor());
+	}
+	setStroke(state->mStrokeWidth,state->mStrokeColors,state->mStrokeDashWidth,state->mStrokeDashGap);
+    }
+    state->computeOpacity();
 }
 
 Drawable* GradientDrawable::mutate() {
@@ -313,7 +334,7 @@ void GradientDrawable::setStroke(int width,ColorStateList* colorStateList, float
         color = Color::TRANSPARENT;
     } else {
         const std::vector<int>& stateSet = getState();
-        color = colorStateList->getColorForState(stateSet, 0);
+        color = colorStateList->getColorForState(stateSet, colorStateList->getDefaultColor());
     }
     setStrokeInternal(width, color, dashWidth, dashGap);
 }
@@ -321,14 +342,14 @@ void GradientDrawable::setStroke(int width,ColorStateList* colorStateList, float
 void GradientDrawable::setStrokeInternal(int width, int color, float dashWidth, float dashGap) {
     Color c(color);
     mStrokePaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
-    mStrokeWidth =width;
-    mDashArray=std::vector<double>{dashWidth,dashGap};
+    mStrokeWidth = width;
+    mDashArray = std::vector<double>{dashWidth,dashGap};
     invalidateSelf();
 }
 
 void GradientDrawable::setInnerRadiusRatio(float innerRadiusRatio){
     mGradientState->mInnerRadiusRatio = innerRadiusRatio;
-    mPathIsDirty=true;
+    mPathIsDirty = true;
     invalidateSelf();    
 }
 
@@ -338,7 +359,7 @@ float GradientDrawable::getInnerRadiusRatio()const{
 
 void GradientDrawable::setInnerRadius(int innerRadius){
     mGradientState->mInnerRadius = innerRadius;
-    mPathIsDirty=true;
+    mPathIsDirty = true;
     invalidateSelf();    
 }
 
@@ -348,7 +369,7 @@ int  GradientDrawable::getInnerRadius()const{
 
 void GradientDrawable::setThicknessRatio(float thicknessRatio){
     mGradientState->mThicknessRatio = thicknessRatio;
-    mPathIsDirty=true;
+    mPathIsDirty = true;
     invalidateSelf();
 }
 
@@ -358,7 +379,7 @@ float GradientDrawable::getThicknessRatio()const{
 
 void GradientDrawable::setThickness(int thickness){
     mGradientState->mThickness = thickness;
-    mPathIsDirty=true;
+    mPathIsDirty = true;
     invalidateSelf();
 }
 
@@ -499,7 +520,7 @@ void GradientDrawable::buildPathIfDirty() {
 void GradientDrawable::setColor(int argb) {
     Color c(argb);
     mGradientState->setSolidColors(ColorStateList::valueOf(argb));
-    mFillPaint=SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
+    mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     invalidateSelf();
 }
 
