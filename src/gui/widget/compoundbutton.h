@@ -31,6 +31,8 @@ public:
     Drawable* getButtonDrawable()const;
     void jumpDrawablesToCurrentState()override;
 
+    int getCompoundPaddingLeft()override;
+    int getCompoundPaddingRight()override;
     //inerited from Checkable
     //void setChecked(bool checked)override;
     //bool isChecked() override;

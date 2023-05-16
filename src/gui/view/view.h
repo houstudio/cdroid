@@ -264,10 +264,11 @@ public:
         FOCUSABLES_TOUCH_MODE=1 ,
   
         LAYOUT_DIRECTION_UNDEFINED = LayoutDirection::UNDEFINED ,
-        LAYOUT_DIRECTION_LTR=LayoutDirection::LTR ,
-        LAYOUT_DIRECTION_RTL=LayoutDirection::RTL ,
-        LAYOUT_DIRECTION_INHERIT=LayoutDirection::INHERIT ,
-        LAYOUT_DIRECTION_LOCALE=LayoutDirection::LOCAL ,
+        LAYOUT_DIRECTION_LTR = LayoutDirection::LTR ,
+        LAYOUT_DIRECTION_RTL = LayoutDirection::RTL ,
+        LAYOUT_DIRECTION_INHERIT= LayoutDirection::INHERIT ,
+        LAYOUT_DIRECTION_LOCALE = LayoutDirection::LOCAL ,
+        LAYOUT_DIRECTION_DEFAULT= LAYOUT_DIRECTION_INHERIT ,
   
        //ScrollBarPosition
         SCROLLBAR_POSITION_DEFAULT= 0 ,

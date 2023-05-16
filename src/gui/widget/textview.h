@@ -239,14 +239,14 @@ public:
     int getCaretPos()const;
     int getGravity()const;
     void setGravity(int gravity);
-    int getCompoundPaddingLeft();
-    int getCompoundPaddingRight();
-    int getCompoundPaddingTop();
-    int getCompoundPaddingBottom();
+    virtual int getCompoundPaddingLeft();
+    virtual int getCompoundPaddingRight();
+    virtual int getCompoundPaddingTop();
+    virtual int getCompoundPaddingBottom();
     int getExtendedPaddingTop();
     int getExtendedPaddingBottom();
-    int getCompoundPaddingStart();
-    int getCompoundPaddingEnd();
+    virtual int getCompoundPaddingStart();
+    virtual int getCompoundPaddingEnd();
     int getTotalPaddingTop();
     int getTotalPaddingBottom();
 

@@ -137,6 +137,22 @@ void CompoundButton::setOnCheckedChangeWidgetListener(OnCheckedChangeListener li
     mOnCheckedChangeWidgetListener = listener;
 }
 
+int CompoundButton::getCompoundPaddingLeft() {
+    int padding = Button::getCompoundPaddingLeft();
+    if ((false==isLayoutRtl()) && mButtonDrawable) {
+        padding += mButtonDrawable->getIntrinsicWidth();
+    }
+    return padding;
+}
+
+int CompoundButton::getCompoundPaddingRight() {
+    int padding = Button::getCompoundPaddingRight();
+    if (isLayoutRtl() && mButtonDrawable) {
+        padding += mButtonDrawable->getIntrinsicWidth();
+    }
+    return padding;
+}
+
 void CompoundButton::onDraw(Canvas&canvas){
     if (mButtonDrawable != nullptr) {
         const int verticalGravity = getGravity() & Gravity::VERTICAL_GRAVITY_MASK;
@@ -149,13 +165,12 @@ void CompoundButton::onDraw(Canvas&canvas){
         case Gravity::CENTER_VERTICAL: top = (getHeight() - drawableHeight) / 2;   break;
         default:           top = 0;
         }
-        int left = isLayoutRtl() ? getWidth() - drawableWidth : 0;
-        int right= isLayoutRtl() ? getWidth() : drawableWidth;
-        mButtonDrawable->setBounds(std::min(left,right), top,
-	    std::abs(right-left),drawableHeight);//right, bottom);
+
+        const int left = isLayoutRtl() ? getWidth() - drawableWidth : 0;
+        mButtonDrawable->setBounds(left,top, drawableWidth ,drawableHeight);
         Drawable* background = getBackground();
         if (background != nullptr) {
-            background->setHotspotBounds(left, top,drawableWidth,drawableHeight);//right, bottom);
+            background->setHotspotBounds(left, top,drawableWidth,drawableHeight);
         }
     }
 

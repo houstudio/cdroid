@@ -195,6 +195,13 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
 
+    mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
+    const int layoutDirection = attrs.getInt("layoutDirection",std::map<const std::string,int>{
+           {"ltr", (int)LAYOUT_DIRECTION_LTR},{"rtl",(int)LAYOUT_DIRECTION_RTL},
+	   {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
+	},LAYOUT_DIRECTION_DEFAULT);
+    mPrivateFlags2 |= (layoutDirection << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
+
     const int textAlignment = attrs.getInt("textAlignment",std::map<const std::string,int>{
         {"inherit" , TEXT_ALIGNMENT_INHERIT},
         {"gravity" , TEXT_ALIGNMENT_GRAVITY},
