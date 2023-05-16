@@ -62,7 +62,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig){
     mInnerRadius = orig.mInnerRadius;
     mThickness = orig.mThickness;
     mDither = orig.mDither;
-    //mOpticalInsets = orig.mOpticalInsets;
+    mOpticalInsets = orig.mOpticalInsets;
     mCenterX = orig.mCenterX;
     mCenterY = orig.mCenterY;
     mGradientRadius = orig.mGradientRadius;

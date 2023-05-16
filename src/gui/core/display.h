@@ -57,13 +57,13 @@ private:
     void updateDisplayInfoLocked();   
 public:
     Display(int id,DisplayInfo&displayInfo);
-    int getDisplayId();
+    int  getDisplayId();
     bool isValid();
     bool getDisplayInfo(DisplayInfo&);
-    int getType();
+    int  getType();
     void getSize(Point&outSize);
     void getRealSize(Point&outSize);
-    int getRotation();
+    int  getRotation();
     void getMetrics(DisplayMetrics&outMetrics);
     void getRealMetrics(DisplayMetrics&outMetrics);
 };

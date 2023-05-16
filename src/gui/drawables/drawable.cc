@@ -350,10 +350,11 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
     std::vector<int32_t> cls;
     PointF center;
     GradientDrawable::Orientation orientation= GradientDrawable::TOP_BOTTOM/*DEFAULT_ORIENTATION*/;
-    cls.push_back(atts.getColor("startColor"));
+    cls.push_back(atts.getColor("startColor",0));
     if(atts.hasAttribute("centerColor"))
         cls.push_back(atts.getColor("centerColor"));
-    cls.push_back(atts.getColor("endColor"));
+    if(atts.hasAttribute("endColor"))
+	cls.push_back(atts.getColor("endColor",0));
 
     const int gradientType=atts.getInt("type",std::map<const std::string,int>{
          {"linear",GradientDrawable::LINEAR_GRADIENT},
@@ -433,7 +434,7 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
 	if(tag.compare("corners") ==0) corners = &p;
 	if(tag.compare("gradient")==0) gradient= &p;
 	if(tag.compare("size") ==0)   size = &p;
-	if(tag.compare("stroke")==0) stroke= &p;
+	if(tag.compare("stroke") ==0) stroke= &p;
 	if(tag.compare("solid") ==0)  solid= &p;
 	if(tag.compare("padding")==0) padding= &p;
     }
@@ -445,7 +446,7 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
     
     LOGE_IF(!(gradient||solid||stroke),"stroke solid gradient property error!");
     if(gradient||solid||stroke){
-	GradientDrawable*d=new GradientDrawable();
+	GradientDrawable*d = new GradientDrawable();
 	d->setShape(shapeType);
 
 	if(corners)parseCorners(d ,nullptr, *corners);
@@ -459,12 +460,12 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
 	}
 
 	if(gradient)parseShapeGradient(d,nullptr, *gradient);
-	else if(solid) d->setColor(solid->getColor("color"));
+	else d->setColor(solid?solid->getColor("color",0):0);
 
 	if(size)d->setSize(size->getDimensionPixelSize("width",-1),size->getDimensionPixelSize("height",-1));
 
 	if(stroke){
-	    d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColor("color"),
+	    d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColor("color",0),
 	        stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
 	}
 	if(padding)d->setPadding(padding->getInt("left"),padding->getInt("top"),

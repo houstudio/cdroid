@@ -218,12 +218,12 @@ int InputMethodManager::setKeyCharacterMap(const std::string&filename){
 }
 
 InputMethodManager&InputMethodManager::getInstance(){
-    if(mInst==nullptr){
-        mInst=new InputMethodManager();
+    if(mInst == nullptr){
+        mInst = new InputMethodManager();
         if(mInst->setKeyCharacterMap("Generic.kcm"))
             mInst->setKeyCharacterMap("qwerty.kcm");
     }
-    if(imemethods.size()==0){
+    if(imemethods.size() == 0){
         InputMethod*m;
 	//m = new InputMethod("@cdroid:xml/qwerty.xml");
 	//registeMethod("English",m);
@@ -238,12 +238,12 @@ InputMethodManager&InputMethodManager::getInstance(){
 
 int InputMethodManager::getCharacter(int keycode,int metaState)const{
     LOGE_IF(kcm==nullptr,"KeyCharacterMap(kcm) not setted,cant map keycode to character!!!");
-    if(kcm==nullptr)return keycode;
+    if(kcm == nullptr)return keycode;
     return kcm->getCharacter(keycode,metaState);
 }
 
 void InputMethodManager::focusIn(View*view){
-    if(imeWindow)imeWindow->mBuddy=view;
+    if(imeWindow)imeWindow->mBuddy = view;
     LOGV("imeWindow=%d buddy=%p %d",imeWindow,view,view->getId());
 }
 
@@ -266,8 +266,8 @@ void InputMethodManager::sendKeyEvent(KeyEvent&k){
 
 void InputMethodManager::setInputType(int inputType){
     LOGV("type=%d",inputType);
-    if( mInst->imeWindow==nullptr){
-        mInst->imeWindow=new IMEWindow(1280,300);
+    if( mInst->imeWindow == nullptr){
+        mInst->imeWindow = new IMEWindow(1280,300);
         mInst->imeWindow->setPos(0,420);
     }
     if(mInputType!=inputType){
@@ -279,26 +279,26 @@ void InputMethodManager::setInputType(int inputType){
         break;
     default:
         if(imemethods.size()){
-            auto it=imemethods.begin();
+            auto it = imemethods.begin();
             setInputMethod(it->second,it->first);
         }break;
     }
     if(mInst->imeWindow){
         //imeWindow->kbdView->setKeyboard(kbd);
-        imeWindow->mBuddy=nullptr;
+        imeWindow->mBuddy = nullptr;
     }
 }
 
 int InputMethodManager::setInputMethod(const std::string&name){
-    auto it=imemethods.find(name);
-    LOGE_IF(it==imemethods.end(),"Inputmethod \"%s\" not found!",name.c_str());
-    if(it!=imemethods.end())
+    auto it = imemethods.find(name);
+    LOGE_IF(it == imemethods.end(),"Inputmethod \"%s\" not found!",name.c_str());
+    if(it != imemethods.end())
         return setInputMethod(it->second,it->first);
     return -1;
 }
 
 void InputMethodManager::onViewDetachedFromWindow(View*view){
-    if(imeWindow)imeWindow->mBuddy=nullptr;
+    if(imeWindow)imeWindow->mBuddy = nullptr;
     LOGV("view=%p  %d",view,view->getId());
 }
 
@@ -309,9 +309,9 @@ void InputMethodManager::commitText(const std::wstring&text,int newCursorPos){
 }
 
 int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name){
-    im=method;
-    std::string layout =method->getKeyboardLayout(mInputType);
-    Keyboard*kbd=new Keyboard(imeWindow->getContext(),layout,imeWindow->getWidth(),240);
+    im = method;
+    std::string layout = method->getKeyboardLayout(mInputType);
+    Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,imeWindow->getWidth(),240);
     imeWindow->kbdView->setKeyboard(kbd);
     LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd);
     return 0;

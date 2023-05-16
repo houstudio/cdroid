@@ -203,7 +203,7 @@ void Assets::parseResource(const std::string&fullResId,std::string*res,std::stri
     size_t pos=fullid.find_last_of("@+");
     if(pos!=std::string::npos)fullid =fullid.erase(0,pos+1);
 
-    pos=fullid.find(":");
+    pos= fullid.find(":");
     if(pos != std::string::npos){
         pkg = fullid.substr(0,pos);
         relname= fullid.substr(pos+1);
@@ -267,11 +267,15 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid){
     return img;
 }
 
-int Assets::getId(const std::string&key)const{
+int Assets::getId(const std::string&resname)const{
     std::string resid,pkg;
+    std::string key = resname;
     if(key.empty())return -1;
     if(key.length()&&(key.find('/')==std::string::npos))
        return TextUtils::strtol(key);
+    auto pos =key.find('+');
+    if(pos!=std::string::npos)
+	key.erase(pos,1);
     parseResource(key,&resid,&pkg);
     
     auto it=mIDS.find(pkg+":"+resid);

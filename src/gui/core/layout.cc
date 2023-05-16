@@ -589,20 +589,20 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     mCaretRect.setEmpty();
     canvas.set_font_size(mFontSize);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
-        int x=0,lw=getLineWidth(lineNum,true);
+        int x = 0,lw = getLineWidth(lineNum,true);
         TextExtents te;
-        int y=getLineBaseline(lineNum);
-        int lineStart=getLineStart(lineNum);
-        int lineEnd=getLineEnd(lineNum);
-        std::wstring line=getLineText(lineNum);
+        int y = getLineBaseline(lineNum);
+        int lineStart = getLineStart(lineNum);
+        int lineEnd = getLineEnd(lineNum);
+        std::wstring line = getLineText(lineNum);
         measureSize(line.substr(0,1),te,nullptr);
         switch(mAlignment){
         case ALIGN_NORMAL:
         case ALIGN_LEFT  : 
-        default          : x=std::abs(te.x_bearing)+0.5f;  break; 
-        case ALIGN_CENTER: x=(mWidth-lw)/2 ; break;
+        default          : x = te.x_bearing  ; break;
+        case ALIGN_CENTER: x = (mWidth-lw)/2 ; break;
         case ALIGN_OPPOSITE:
-        case ALIGN_RIGHT : x=mWidth-lw     ; break;
+        case ALIGN_RIGHT : x = mWidth-lw ; break;
         }
         LOGV("line[%d] xy=%d,%d mWidth=%d [%s](%d)'s TextWidth=%d fontsize=%.f alignment=%x",
              lineNum,x,y,mWidth,TextUtils::unicode2utf8(line).c_str(),line.size(),lw,mFontSize,mAlignment);
@@ -610,8 +610,8 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         canvas.show_text(processBidi(line));
         if(mCaretPos>=lineStart&&mCaretPos<lineEnd){
             measureSize(line.substr(0,mCaretPos-lineStart),te,nullptr);
-            mCaretRect.left = x+te.x_advance;
-            mCaretRect.top = lineNum*mLineHeight;
+            mCaretRect.left= x + te.x_advance;
+            mCaretRect.top = lineNum * mLineHeight;
             mCaretRect.height= mLineHeight;
             measureSize(line.substr(mCaretPos-lineStart,1),te,nullptr);
             mCaretRect.width = te.x_advance;

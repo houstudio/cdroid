@@ -37,9 +37,10 @@ void AttributeSet::setContext(Context*ctx,const std::string&package){
 /*@android:+id/title ,?android:attr/windowContentOverlay*/
 std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
     std::string value= property;
-    size_t pos=value.find('?');
-    while( (pos=value.find_first_of("@?+")) != std::string::npos ){
-        value.erase(pos,1); 
+    size_t pos;
+    const bool isRes = (value.find('/')!=std::string::npos);
+    while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
+	value.erase(pos,1);
     }
     
     if( (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
