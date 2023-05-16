@@ -160,6 +160,11 @@ protected:
     void onDetachedFromWindowInternal()override;
     bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    bool isPaddingOffsetRequired()override;
+    int getLeftPaddingOffset()override;
+    int getTopPaddingOffset()override;
+    int getBottomPaddingOffset()override;
+    int getRightPaddingOffset()override;
     virtual void onDraw(Canvas& canvas) override;
     virtual int getHorizontalOffsetForDrawables()const;
     void onSizeChanged(int w,int h,int ow,int oh)override;

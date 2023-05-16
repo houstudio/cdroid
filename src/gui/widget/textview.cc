@@ -618,6 +618,7 @@ void TextView::setGravity(int gravity){
     if (gravity != mGravity)  invalidate(true);
 
     mGravity = gravity;
+    mLayout->setWidth(mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
     mLayout->setAlignment(getLayoutAlignment());
 }
 
@@ -1135,6 +1136,28 @@ void TextView::drawableHotspotChanged(float x,float y){
         Drawable* dr=mDrawables->mShowing[i];
         if(dr)dr->setHotspot(x,y);
     }    
+}
+
+bool TextView::isPaddingOffsetRequired() {
+    return mShadowRadius != 0 || mDrawables != nullptr;
+}
+
+int TextView::getLeftPaddingOffset() {
+    return getCompoundPaddingLeft() - mPaddingLeft
+            + (int) std::min(.0f, mShadowDx - mShadowRadius);
+}
+
+int TextView::getTopPaddingOffset() {
+    return (int) std::min(.0f, mShadowDy - mShadowRadius);
+}
+
+int TextView::getBottomPaddingOffset() {
+    return (int) std::max(.0f, mShadowDy + mShadowRadius);
+}
+
+int TextView::getRightPaddingOffset() {
+    return -(getCompoundPaddingRight() - mPaddingRight)
+            + (int) std::max(.0f, mShadowDx + mShadowRadius);
 }
 
 bool TextView::verifyDrawable(Drawable* who)const {
@@ -1803,6 +1826,7 @@ void TextView::onDraw(Canvas& canvas) {
         }
     }
 
+    const int cursorOffsetVertical = voffsetCursor - voffsetText;
     canvas.set_color(color);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);

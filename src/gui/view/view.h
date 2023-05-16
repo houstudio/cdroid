@@ -515,11 +515,11 @@ protected:
 
     int getWindowAttachCount()const;
     void recomputePadding();
-    bool isPaddingOffsetRequired();
-    int getLeftPaddingOffset();
-    int getRightPaddingOffset();
-    int getTopPaddingOffset();
-    int getBottomPaddingOffset();
+    virtual bool isPaddingOffsetRequired();
+    virtual int getLeftPaddingOffset();
+    virtual int getRightPaddingOffset();
+    virtual int getTopPaddingOffset();
+    virtual int getBottomPaddingOffset();
     int getFadeTop(bool offsetRequired);
     int getFadeHeight(bool offsetRequired);
     bool isHardwareAccelerated()const;
