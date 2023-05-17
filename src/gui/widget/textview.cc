@@ -221,19 +221,17 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
 	   {"bold"  ,(int)Typeface::BOLD},
 	   {"italic",(int)Typeface::ITALIC}
 	},Typeface::NORMAL);
-    mFontWeight=atts.getInt("textfontWeight",-1);
+    mFontWeight  = atts.getInt("textfontWeight",-1);
     mShadowColor = atts.getInt("shadowColor",mShadowColor);
     mShadowDx = atts.getFloat("shadowDx",mShadowDx);
     mShadowDy = atts.getFloat("shadowDy",mShadowDy);
     mShadowRadius = atts.getFloat("shadowRadius",mShadowRadius);
     mTypefaceIndex= atts.getInt("typeface",-1);
-    mFontFamily   = atts.getString("fontFamily","Droid Sans Fallback");
-    //mFontTypeface = nullptr;//Cairo::ToyFontFace::create(mFontFamily,Cairo::ToyFontFace::Slant::NORMAL,Cairo::ToyFontFace::Weight::NORMAL);
-    mFontTypeface = nullptr;
-    LOGV("mFontFamily=%s face=%p family=%s",mFontFamily.c_str(),mFontTypeface);
+    mFontFamily   = atts.getString("fontFamily","");
+    mFontTypeface = Typeface::create(mFontFamily,0);
     mTextStyle = atts.getInt("textStyle",-1);
     mFontWeight= atts.getInt("textFontWeight",-1);
-    mAllCaps=atts.getBoolean("textAllCaps",false);
+    mAllCaps   = atts.getBoolean("textAllCaps",false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +259,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
-    setGravity(attrs.getGravity("gravity",Gravity::NO_GRAVITY));
+    setGravity(attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
 
     TextAppearanceAttributes attributes;
     const std::string appearance=attrs.getString("textAppearance");
@@ -297,42 +295,42 @@ TextView::TextView(const std::string& text, int width, int height)
 }
 
 void TextView::initView(){
-    mDrawables=nullptr;
-    mMarquee=nullptr;
+    mDrawables= nullptr;
+    mMarquee  = nullptr;
     mSavedMarqueeModeLayout=nullptr;
     mOriginalTypeface = nullptr;
-    mMaxWidth =INT_MAX;
-    mMinWidth =0;
-    mMaximum  =INT_MAX;
-    mMinimum  =0;
-    mSpacingMult=1.0;
-    mSpacingAdd =0.f;
-    mBlinkOn  =false;
-    mRestartMarquee =true;
-    mCaretPos =0;
+    mMaxWidth = INT_MAX;
+    mMinWidth = 0;
+    mMaximum  = INT_MAX;
+    mMinimum  = 0;
+    mSpacingMult= 1.0;
+    mSpacingAdd = 0.f;
+    mBlinkOn  = false;
+    mRestartMarquee = true;
+    mCaretPos = 0;
     mCaretRect.set(0,0,0,0);
-    mMaxWidthMode =PIXELS;
+    mMaxWidthMode = PIXELS;
     mMinWidthMode = PIXELS;
-    mMaxMode =LINES;
-    mMinMode =LINES;
+    mMaxMode = LINES;
+    mMinMode = LINES;
     mDeferScroll = -1;
     mMarqueeRepeatLimit =3;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
-    mEllipsize =Layout::ELLIPSIS_NONE;
-    mLayout=new Layout(18,1);
+    mEllipsize = Layout::ELLIPSIS_NONE;
+    mLayout = new Layout(18,1);
     mHintLayout = new Layout(mLayout->getFontSize(),1);
-    mGravity=Gravity::NO_GRAVITY;
-    setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
-    mTextColor =mHintTextColor =mLinkTextColor =nullptr;
-    mHighlightColor=0x6633B5E5;
+    mGravity = Gravity::NO_GRAVITY;
+    setGravity(Gravity::TOP|Gravity::START);
+    mTextColor = mHintTextColor = mLinkTextColor =nullptr;
+    mHighlightColor= 0x6633B5E5;
     mShadowRadius = .0;
     mShadowDx = .0;
     mShadowDy = .0;
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
     mSingleLine = false;
-    mEditMode =READONLY;
+    mEditMode   = READONLY;
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
 }
@@ -396,7 +394,7 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
     if (attr->mTextSize != 0) setRawTextSize(attr->mTextSize, true /* shouldRequestLayout */);
 
     if (attr->mTypefaceIndex != -1 && !attr->mFontFamilyExplicit) {
-        attr->mFontFamily = nullptr;
+        attr->mFontFamily.clear();
     }
     setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
             attr->mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);
@@ -514,6 +512,7 @@ void TextView::setText(const std::string&txt){
         invalidate();
         requestLayout();
     }
+    mLayout->relayout();//use to fix getBaselineError for empty text
 }
 
 const std::string TextView::getText()const{
@@ -618,8 +617,8 @@ void TextView::setGravity(int gravity){
     if (gravity != mGravity)  invalidate(true);
 
     mGravity = gravity;
-    mLayout->setWidth(mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
     mLayout->setAlignment(getLayoutAlignment());
+    mLayout->setWidth(mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
 }
 
 int TextView::getGravity()const{
@@ -806,16 +805,16 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (widthMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         width = widthSize;
-        mLayout->setWidth(width);
+        mLayout->setWidth(width- getCompoundPaddingLeft() - getCompoundPaddingRight());
     } else {
         int txtWidth,txtHeight;
-        mLayout->setWidth(INT_MAX);
+        mLayout->setWidth(INT_MAX);//mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
         mLayout->relayout();
         mHintLayout->relayout();
-        txtWidth=desired(mLayout);
-        txtHeight=mLayout->getHeight();
-        LOGV("%p Measuredsize=%dx%d fontsize=%d",this,txtWidth,txtHeight,getFontSize());
-        width=txtWidth+getPaddingLeft()+getPaddingRight();;
+        txtWidth = desired(mLayout);
+        txtHeight= mLayout->getHeight();
+        LOGV("%p:%d Measuredsize=%dx%d fontsize=%d",this,mID,txtWidth,txtHeight,getFontSize());
+        width = txtWidth+getPaddingLeft()+getPaddingRight();;
         Drawables* dr = mDrawables;
         if (dr != nullptr) {
             width = std::max(width, dr->mDrawableWidthTop);
@@ -1017,7 +1016,7 @@ void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weigh
     if (weight >= 0) {
         weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
         bool italic = (style & Typeface::ITALIC) != 0;
-        setTypeface(Typeface::create(typeface, weight, italic));
+        setTypeface(typeface,0);//Typeface::create(typeface, weight, italic));
     } else {
         setTypeface(typeface, style);
     }
@@ -1058,10 +1057,11 @@ void TextView::setTypeface(Typeface* tf){
             tf = Typeface::create(tf, newWeight, italic);
         }
     }
-    if (mOriginalTypeface!=tf){//mTextPaint.getTypeface() != tf) {
+    if (mOriginalTypeface!=tf||true){//mTextPaint.getTypeface() != tf) {
         //mTextPaint.setTypeface(tf);
         if (mLayout != nullptr) {
             //nullLayouts();
+	    mLayout->setFont(tf);
             requestLayout();
             invalidate();
         }
@@ -1710,14 +1710,13 @@ void TextView::onDraw(Canvas& canvas) {
     const int offset =  getHorizontalOffsetForDrawables();
     const int leftOffset = isLayoutRtl() ? 0 : offset;
     const int rightOffset = isLayoutRtl() ? offset : 0;
+    const int vspace = getHeight()- compoundPaddingBottom - compoundPaddingTop;
+    const int hspace = getWidth() - compoundPaddingRight - compoundPaddingLeft;
     Drawables* dr = mDrawables;
-    mLayout->setAlignment(getLayoutAlignment());
+    mLayout->setAlignment(getLayoutAlignment());//getRawTextAlignment());
     mLayout->relayout();
     if (dr != nullptr) {
         /* Compound, not extended, because the icon is not clipped if the text height is smaller. */
-
-        int vspace = getHeight()- compoundPaddingBottom - compoundPaddingTop;
-        int hspace = getWidth() - compoundPaddingRight - compoundPaddingLeft;
 
         // IMPORTANT: The coordinates computed are also used in invalidateDrawable()
         // Make sure to update invalidateDrawable() when changing this code.
@@ -1759,10 +1758,10 @@ void TextView::onDraw(Canvas& canvas) {
         }
     }
     // Text
-    int extendedPaddingTop = getExtendedPaddingTop();
-    int extendedPaddingBottom = getExtendedPaddingBottom();
+    //canvas.save();
+    const int extendedPaddingTop = getExtendedPaddingTop();
+    const int extendedPaddingBottom = getExtendedPaddingBottom();
 
-    const int vspace = getHeight() - compoundPaddingBottom - compoundPaddingTop;
     const int maxScrollY = mLayout->getHeight() - vspace;
 
     int clipLeft  = compoundPaddingLeft + mScrollX;
@@ -1799,14 +1798,13 @@ void TextView::onDraw(Canvas& canvas) {
         layout= mHintLayout;
         mHintLayout->relayout();
     }
-    
     canvas.save();
     if(getRotation()==.0f){
         canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
         canvas.clip();//the content will be cutted in rotation 
     }
 
-    canvas.translate(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
+    canvas.translate(compoundPaddingLeft + offset, extendedPaddingTop + voffsetText);
 
     const int layoutDirection = getLayoutDirection();
     const int absoluteGravity = Gravity::getAbsoluteGravity(mGravity, layoutDirection);
@@ -1828,6 +1826,7 @@ void TextView::onDraw(Canvas& canvas) {
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
     canvas.set_color(color);
+    if(isLayoutRtl())canvas.translate(-compoundPaddingRight-cursorOffsetVertical,0);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);
     mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);

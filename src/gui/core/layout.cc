@@ -68,8 +68,12 @@ Layout::Layout(const Layout&l){
 }
 
 void Layout::setWidth(int width){
-    mWidth=width;
+    mWidth = width;
     mLayout++;
+}
+
+int  Layout::getWidth()const{
+    return mWidth;
 }
 
 void Layout::setFont(Typeface*tf){
@@ -294,7 +298,7 @@ int Layout::getLineBounds(int line, RECT& bounds)const{
 }
 
 void Layout::getCaretRect(RECT&rect)const{
-    rect=mCaretRect;
+    rect = mCaretRect;
 }
 
 int Layout::getLineBaseline(int line)const {
@@ -302,7 +306,7 @@ int Layout::getLineBaseline(int line)const {
     FontExtents fe;
     if(getLineCount())return getLineTop(line+1) - getLineDescent(line);
     measureSize(L" ",te,&fe);
-    return fe.height - fe.descent;
+    return fe.height*mSpacingMult+mSpacingAdd + fe.descent;
 }
 
 int Layout::getEllipsisStart(int line)const{

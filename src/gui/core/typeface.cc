@@ -1,4 +1,5 @@
 #include <core/typeface.h>
+#include <core/textutils.h>
 #include <regex>
 #include <freetype/freetype.h>
 #include <cairomm/matrix.h>
@@ -19,19 +20,19 @@ Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face){
 }
 
 Typeface::Typeface(FcPattern & font){
-    int weight=0;
+    int i,weight=0;
     double pixelSize=.0f;
     FcChar8* s = FcNameUnparse(&font);
     LOGV("Font= %s",s);
     //free(s); 
     s = nullptr; 
 
-    if(FcPatternGetString(&font, FC_FAMILY, 0, &s)==FcResultMatch){
-        LOGD("Family=%s",s);
-        mFamily = (const char*)s;
-        //free(s); 
+    for(int i=0;FcPatternGetString(&font, FC_FAMILY,i, &s)==FcResultMatch;i++){
+        mFamily +=std::string((const char*)s);
+	mFamily +=";";
 	s= nullptr;
     }
+    LOGD("family=%s",mFamily.c_str());
 
     if(FcPatternGetString(&font, FC_STYLE, 0, &s)==FcResultMatch){
         LOGD("Style=%s",s);
@@ -76,7 +77,7 @@ Typeface* Typeface::create(Typeface*family, int style){
        return family;
     }
 
-    Typeface* typeface = nullptr;
+    Typeface* typeface = family;
     /*long ni = family->native_instance;
     SparseArray<Typeface> styles = sStyledTypefaceCache.get(ni);
 
@@ -98,8 +99,18 @@ Typeface* Typeface::create(Typeface*family, int style){
 }
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName){
-    auto it=sSystemFontMap.find(familyName);
-    return (it==sSystemFontMap.end())? Typeface::DEFAULT : it->second;
+    Typeface*face = Typeface::DEFAULT;
+    for(auto i= sSystemFontMap.begin();familyName.size()&&(i!= sSystemFontMap.end());i++){
+	 Typeface*tf = i->second;
+         std::string family=tf->getFamily();
+	 std::vector<std::string>families = TextUtils::split(family,";");
+	 if(std::find(families.begin(),families.end(),familyName)!=families.end()){
+	     face = tf;
+	     break;
+	 }
+    }
+    LOGD_IF(face&&familyName.size(),"want %s got %s",familyName.c_str(),face->getFamily().c_str());
+    return face;
 }
 
 Typeface* Typeface::create(cdroid::Typeface*family, int weight, bool italic){
@@ -123,7 +134,7 @@ Typeface* Typeface::defaultFromStyle(int style){
 Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic){
     int key = (weight << 1) | (italic ? 1 : 0);
 
-    Typeface* typeface = nullptr;
+    Typeface* typeface = base;
     /*synchronized(sWeightCacheLock) {
     SparseArray<Typeface> innerCache = sWeightTypefaceCache.get(base.native_instance);
     if (innerCache == null) {
@@ -196,7 +207,11 @@ int Typeface::loadFromPath(const std::string&path){
             if(ftFace->family_name){
 		const double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;
 		Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(ftFace,FT_LOAD_DEFAULT);
-		Cairo::Matrix matrix = Cairo::scaling_matrix(scale,scale);
+		Cairo::Matrix matrix;
+		if(scale)
+		    matrix = Cairo::scaling_matrix(scale,scale);
+		else 
+		    matrix = Cairo::identity_matrix();
                 Cairo::Matrix ctm = Cairo::identity_matrix();
                 auto autoft= Cairo::FtScaledFont::create(face,matrix,ctm);
                 Typeface *typeface = new Typeface(autoft);
@@ -224,7 +239,7 @@ int Typeface::loadFromFontConfig(){
     FcObjectSet*os = FcObjectSetBuild (FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE,NULL);
     FcFontSet  *fs = FcFontList(config, p, os);
     FcPatternDestroy(p);
-    return loadFromPath("");
+    //return loadFromPath("");
     LOGI("Total fonts: %d", fs->nfont);
     const std::regex patSerif("(?=.*\\bserif\\b)" , std::regex_constants::icase);
     const std::regex patSans( "(?=.*\\bsans\\b)" , std::regex_constants::icase);
@@ -234,6 +249,7 @@ int Typeface::loadFromFontConfig(){
 	Typeface   *tf = new Typeface(*pat);
 	const std::string family = tf->getFamily();
 	sSystemFontMap.insert({family,tf});
+	LOGD("font %s %p",family.c_str(),tf);
 	//FT_Face ftFace ftFace = tf->mFontFace->;
 	//const double scale = (double)ftFace->height/ftFace->units_per_EM;//
 	tf->mScale = 1.f;//scale;

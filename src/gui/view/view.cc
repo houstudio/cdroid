@@ -203,15 +203,15 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mPrivateFlags2 |= (layoutDirection << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
 
     const int textAlignment = attrs.getInt("textAlignment",std::map<const std::string,int>{
-        {"inherit" , TEXT_ALIGNMENT_INHERIT},
-        {"gravity" , TEXT_ALIGNMENT_GRAVITY},
-        {"textStart",TEXT_ALIGNMENT_TEXT_START},
-        {"textEnd" , TEXT_ALIGNMENT_TEXT_END},
-        {"center"  , TEXT_ALIGNMENT_CENTER},
-        {"viewStart",TEXT_ALIGNMENT_VIEW_START},
-        {"viewEnd"  ,TEXT_ALIGNMENT_VIEW_END}
-    },TEXT_ALIGNMENT_DEFAULT);
-    setTextAlignment( textAlignment );
+        {"inherit" , TEXT_ALIGNMENT_INHERIT},    {"gravity" , TEXT_ALIGNMENT_GRAVITY},
+        {"textStart",TEXT_ALIGNMENT_TEXT_START}, {"textEnd" , TEXT_ALIGNMENT_TEXT_END},
+        {"center"  , TEXT_ALIGNMENT_CENTER},     {"viewStart",TEXT_ALIGNMENT_VIEW_START},
+        {"viewEnd"  ,TEXT_ALIGNMENT_VIEW_END}    },TEXT_ALIGNMENT_DEFAULT);
+    // Clear any text alignment flag already set
+    mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
+    // Set the text alignment flag depending on the value of the attribute
+    mPrivateFlags2 |= (textAlignment<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
+    //setTextAlignment( textAlignment );
     setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
     setClickable( attrs.getBoolean("clickable",false) );
     setLongClickable( attrs.getBoolean("longclickable",false) );
