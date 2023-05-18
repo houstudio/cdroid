@@ -269,6 +269,7 @@ public:
         LAYOUT_DIRECTION_INHERIT= LayoutDirection::INHERIT ,
         LAYOUT_DIRECTION_LOCALE = LayoutDirection::LOCAL ,
         LAYOUT_DIRECTION_DEFAULT= LAYOUT_DIRECTION_INHERIT ,
+	LAYOUT_DIRECTION_RESOLVED_DEFAULT = LAYOUT_DIRECTION_LTR,
   
        //ScrollBarPosition
         SCROLLBAR_POSITION_DEFAULT= 0 ,
@@ -691,8 +692,8 @@ public:
     virtual void resolvePadding();
     virtual void onRtlPropertiesChanged(int layoutDirection);
     bool resolveLayoutDirection();
-    bool canResolveTextDirection();
-    bool canResolveLayoutDirection();
+    virtual bool canResolveTextDirection()const;
+    virtual bool canResolveLayoutDirection()const;
     int getMinimumHeight();
     void setMinimumHeight(int minHeight);
     int getMinimumWidth();
@@ -707,8 +708,8 @@ public:
     
     void setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled);
     bool getDefaultFocusHighlightEnabled()const;
-    bool isLayoutDirectionResolved()const;
-    int getLayoutDirection()const;
+    virtual bool isLayoutDirectionResolved()const;
+    virtual int getLayoutDirection()const;
     virtual bool isOpaque()const;
     View&setLayoutDirection(int layoutDirection);
     bool isLayoutRtl()const;
@@ -877,15 +878,15 @@ public:
     bool dispatchNestedPreFling(float velocityX, float velocityY);
     int  getRawTextDirection()const;
     void setTextDirection(int textDirection);
-    int  getTextDirection()const;
-    bool canResolveTextAlignment()const;
+    virtual int  getTextDirection()const;
+    virtual bool canResolveTextAlignment()const;
     void resetResolvedTextAlignment();
     bool isTextAlignmentInherited()const;
-    bool isTextAlignmentResolved()const;
+    virtual bool isTextAlignmentResolved()const;
     virtual bool resolveTextAlignment();
     int  getRawTextAlignment()const;
     void setTextAlignment(int textAlignment);
-    int  getTextAlignment()const;
+    virtual int  getTextAlignment()const;
 
    // Attribute
     virtual View& clearFlag(int flag);
@@ -1070,7 +1071,7 @@ public:
     bool hasRtlSupport()const;
     bool isRtlCompatibilityMode()const;
     bool isTextDirectionInherited()const;
-    bool isTextDirectionResolved()const;
+    virtual bool isTextDirectionResolved()const;
     bool resolveTextDirection();
     virtual void requestLayout();
     void forceLayout();

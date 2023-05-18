@@ -57,10 +57,6 @@ void CompoundButton::drawableHotspotChanged(float x,float y){
     if(mButtonDrawable)mButtonDrawable->setHotspot(x,y);
 }
 
-int CompoundButton::getHorizontalOffsetForDrawables()const{
-    return (mButtonDrawable == nullptr) ?0: mButtonDrawable->getIntrinsicWidth();
-}
-
 bool CompoundButton::performClick(){
     toggle();
     const bool handled = Button::performClick();
@@ -151,6 +147,10 @@ int CompoundButton::getCompoundPaddingRight() {
         padding += mButtonDrawable->getIntrinsicWidth();
     }
     return padding;
+}
+
+int CompoundButton::getHorizontalOffsetForDrawables()const{
+    return (mButtonDrawable == nullptr) ? 0 : mButtonDrawable->getIntrinsicWidth();
 }
 
 void CompoundButton::onDraw(Canvas&canvas){

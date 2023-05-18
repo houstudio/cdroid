@@ -49,7 +49,7 @@ private:
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face);
-    Typeface(FcPattern&);
+    Typeface(FcPattern&,const std::string&);
 public:
     int getWeight()const{
         return mWeight;

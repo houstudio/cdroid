@@ -213,6 +213,42 @@ ViewGroup::~ViewGroup() {
     delete mTransition;
 }
 
+bool ViewGroup::canResolveLayoutDirection()const{
+    return true;
+}
+
+bool ViewGroup::isLayoutDirectionResolved()const{
+    return true;
+}
+
+int ViewGroup::getLayoutDirection()const{
+    return View::LAYOUT_DIRECTION_RESOLVED_DEFAULT;
+}
+
+bool ViewGroup::canResolveTextDirection()const{
+    return true;
+}
+
+bool ViewGroup::isTextDirectionResolved()const{
+    return true;
+}
+
+int ViewGroup::getTextDirection()const{
+    return View::TEXT_DIRECTION_RESOLVED_DEFAULT;
+}
+
+bool ViewGroup::canResolveTextAlignment()const{
+    return true;
+}
+
+bool ViewGroup::isTextAlignmentResolved()const{
+    return true;
+}
+
+int ViewGroup::getTextAlignment()const{
+    return View::TEXT_ALIGNMENT_RESOLVED_DEFAULT;
+}
+
 void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     if (mFirstTouchTarget==nullptr)return;
  

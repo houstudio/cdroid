@@ -441,6 +441,12 @@ void View::initView(){
     mOldWidthMeasureSpec = mOldHeightMeasureSpec = INT_MIN;
     mViewFlags = ENABLED|VISIBLE|FOCUSABLE_AUTO;
     mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 = 0;
+    mPrivateFlags2 = (LAYOUT_DIRECTION_DEFAULT << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT) |
+                 (TEXT_DIRECTION_DEFAULT << PFLAG2_TEXT_DIRECTION_MASK_SHIFT) |
+                 (PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT) |
+                 (TEXT_ALIGNMENT_DEFAULT << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT) |
+                 (PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT) ;
+                 //(IMPORTANT_FOR_ACCESSIBILITY_DEFAULT << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT);
     mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
     mTop = mLeft = mRight = mBottom = 0;
@@ -3377,7 +3383,7 @@ void View::resetResolvedTextAlignment() {
     mPrivateFlags2 |= PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT;
 }
 
-bool View::canResolveTextDirection(){
+bool View::canResolveTextDirection()const{
    switch (getRawTextDirection()) {
    case TEXT_DIRECTION_INHERIT:
        if (mParent != nullptr)
@@ -3434,8 +3440,7 @@ bool View::resolveTextAlignment() {
             case TEXT_ALIGNMENT_CENTER:
             case TEXT_ALIGNMENT_VIEW_START:
             case TEXT_ALIGNMENT_VIEW_END:
-                // Resolved text alignment is the same as the parent resolved
-                // text alignment
+                // Resolved text alignment is the same as the parent resolved text alignment
                 mPrivateFlags2 |=(parentResolvedTextAlignment << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT);
                 break;
             default: // Use default resolved text alignment
@@ -3471,8 +3476,10 @@ int View::getRawTextAlignment()const{
 void View::setTextAlignment(int textAlignment){
     if(textAlignment != getRawTextAlignment()){
         mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
+        resetResolvedTextAlignment();
         mPrivateFlags2 |= ((textAlignment << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT) & PFLAG2_TEXT_ALIGNMENT_MASK);
         resolveTextAlignment();
+        onRtlPropertiesChanged(getLayoutDirection());
         requestLayout();
     }
 }
@@ -6365,7 +6372,7 @@ bool View::resolveLayoutDirection(){
     return true;
 }
 
-bool View::canResolveLayoutDirection(){
+bool View::canResolveLayoutDirection()const{
     switch (getRawLayoutDirection()) {
     case LAYOUT_DIRECTION_INHERIT:
         if (mParent != nullptr) {

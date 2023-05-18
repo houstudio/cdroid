@@ -19,43 +19,46 @@ Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face){
     mFontFace = face;
 }
 
-Typeface::Typeface(FcPattern & font){
-    int i,weight=0;
+Typeface::Typeface(FcPattern & font,const std::string&family){
+    int i,ret, weight=0;
     double pixelSize=.0f;
     FcChar8* s = FcNameUnparse(&font);
     LOGV("Font= %s",s);
-    //free(s); 
     s = nullptr; 
 
+    if(family.empty()){
+	ret = FcPatternGetString(&font,FC_FAMILY,0,&s);
+        if(ret == FcResultMatch){
+	    mFamily = std::string((const char*)s);
+	    s = nullptr;
+	}
+    }
     for(int i=0;FcPatternGetString(&font, FC_FAMILY,i, &s)==FcResultMatch;i++){
         mFamily +=std::string((const char*)s);
 	mFamily +=";";
-	s= nullptr;
+	s = nullptr;
     }
     LOGD("family=%s",mFamily.c_str());
 
-    if(FcPatternGetString(&font, FC_STYLE, 0, &s)==FcResultMatch){
-        LOGD("Style=%s",s);
-        //free(s); 
-	s = nullptr;
-    }
+    ret = FcPatternGetString(&font, FC_STYLE, 0, &s);
+    LOGD_IF(ret==FcResultMatch,"Style=%s",s);
+    s = nullptr;
 
-    if(FcPatternGetString(&font,FC_SLANT,0,&s)==FcResultMatch){
-        LOGD("Slant=%s",s);
-        //free(s); 
-	s = nullptr;
-	mStyle|=ITALIC;
-    }
-    if(FcPatternGetInteger(&font,FC_WEIGHT,0,&weight)==FcResultMatch){
-	LOGD("weight =%d",weight);
-	mWeight = weight;
-    }
-    if(FcPatternGetDouble(&font,FC_PIXEL_SIZE,0,&pixelSize)==FcResultMatch){
-	 LOGD("pixelSize =%f",pixelSize);
-    }
-    if(FcPatternGetDouble(&font,FC_DPI,0,&pixelSize)==FcResultMatch){
-	 LOGD("dpi =%f",pixelSize);
-    }
+    ret = FcPatternGetString(&font,FC_SLANT,0,&s);
+    LOGD_IF(ret == FcResultMatch,"Slant=%s",s);
+    s = nullptr;
+    mStyle|=ITALIC;
+
+    ret = FcPatternGetInteger(&font,FC_WEIGHT,0,&weight);
+    LOGD_IF(ret == FcResultMatch,"weight =%d",weight);
+    mWeight = weight;
+
+    ret = FcPatternGetDouble(&font,FC_PIXEL_SIZE,0,&pixelSize);
+    LOGD_IF(ret == FcResultMatch,"pixelSize =%f",pixelSize);
+
+    ret = FcPatternGetDouble(&font,FC_DPI,0,&pixelSize);
+    LOGD_IF(ret == FcResultMatch,"dpi =%f",pixelSize);
+
     Cairo::Matrix matrix = Cairo::identity_matrix();
     Cairo::Matrix ctm = Cairo::identity_matrix();
     Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(&font);
@@ -246,8 +249,9 @@ int Typeface::loadFromFontConfig(){
     const std::regex patMono( "(?=.*\\bmono\\b)" , std::regex_constants::icase);
     for (int i=0; fs && i < fs->nfont; i++) {
 	FcPattern *pat = fs->fonts[i];//FcPatternDuplicate(fs->fonts[i]);
-	Typeface   *tf = new Typeface(*pat);
+	Typeface   *tf = new Typeface(*pat,"");
 	const std::string family = tf->getFamily();
+
 	sSystemFontMap.insert({family,tf});
 	LOGD("font %s %p",family.c_str(),tf);
 	//FT_Face ftFace ftFace = tf->mFontFace->;

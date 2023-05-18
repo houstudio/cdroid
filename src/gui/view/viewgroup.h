@@ -313,7 +313,17 @@ public:
     bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addTransientView(View*view,int index);
     void removeTransientView(View*);
-   
+
+    bool canResolveLayoutDirection()const override;
+    bool isLayoutDirectionResolved()const override;
+    int getLayoutDirection()const override;
+    bool canResolveTextDirection()const override;
+    bool isTextDirectionResolved()const override;
+    int getTextDirection()const override;
+    bool canResolveTextAlignment()const override;
+    bool isTextAlignmentResolved()const override;
+    int getTextAlignment()const override;
+
     void startLayoutAnimation(); 
     void scheduleLayoutAnimation();
     void setLayoutAnimation(LayoutAnimationController*);

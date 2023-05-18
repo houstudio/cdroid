@@ -591,7 +591,6 @@ static const std::string processBidi(const std::wstring&logstr){
 
 void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     mCaretRect.setEmpty();
-    canvas.set_font_size(mFontSize);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
         int x = 0,lw = getLineWidth(lineNum,true);
         TextExtents te;
@@ -624,8 +623,9 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
 }
 
 void  Layout::draw(Canvas&canvas){
-    canvas.set_font_size(mFontSize);
     relayout();
+    canvas.set_font_size(mFontSize);
+    canvas.set_font_face(mTypeface->getFontFace()->get_font_face());
     drawText(canvas,0,mLineCount);
 }
 

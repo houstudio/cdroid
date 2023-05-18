@@ -321,7 +321,6 @@ void TextView::initView(){
     mLayout = new Layout(18,1);
     mHintLayout = new Layout(mLayout->getFontSize(),1);
     mGravity = Gravity::NO_GRAVITY;
-    setGravity(Gravity::TOP|Gravity::START);
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
     mShadowRadius = .0;
