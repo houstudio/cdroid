@@ -1712,7 +1712,8 @@ void TextView::onDraw(Canvas& canvas) {
     const int vspace = getHeight()- compoundPaddingBottom - compoundPaddingTop;
     const int hspace = getWidth() - compoundPaddingRight - compoundPaddingLeft;
     Drawables* dr = mDrawables;
-    mLayout->setAlignment(getLayoutAlignment());//getRawTextAlignment());
+    mLayout->setWidth(hspace);
+    mLayout->setAlignment(getLayoutAlignment());
     mLayout->relayout();
     if (dr != nullptr) {
         /* Compound, not extended, because the icon is not clipped if the text height is smaller. */
