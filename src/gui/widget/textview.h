@@ -67,11 +67,16 @@ public:
         int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
         int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
         int mDrawablePadding;
+	int mDrawableSaved = DRAWABLE_NONE;
         Rect mCompoundRect;
+    private:
+	void applyErrorDrawableIfNeeded(int layoutDirection);
     public:
         Drawables(Context*ctx);
         ~Drawables();
         bool hasMetadata()const;
+	bool resolveWithLayoutDirection(int layoutDirection);
+	void setErrorDrawable(Drawable* dr, TextView* tv);
     };
 private:
     static constexpr int LINES = 1;
@@ -112,22 +117,24 @@ private:
 
     class Drawables*mDrawables;
     class Marquee*mMarquee;
-    int mEllipsize;
+    int  mEllipsize;
     bool mRestartMarquee;
-    int mMarqueeFadeMode;
-    int mMarqueeRepeatLimit;
+    int  mMarqueeFadeMode;
+    int  mMarqueeRepeatLimit;
+    int  mLastLayoutDirection;
     Layout* mSavedMarqueeModeLayout;
 
     void initView();
-    int getLayoutAlignment()const;
+    int  getLayoutAlignment()const;
     void applyCompoundDrawableTint();
-    int getVerticalOffset(bool forceNormal);
-    int getBottomVerticalOffset(bool forceNormal);
+    int  getVerticalOffset(bool forceNormal);
+    int  getBottomVerticalOffset(bool forceNormal);
     void updateTextColors();
-    int getDesiredHeight();
-    int getDesiredHeight( Layout* layout, bool cap);
+    int  getDesiredHeight();
+    int  getDesiredHeight( Layout* layout, bool cap);
     static int desired(Layout*);
-    int getBoxHeight(Layout* l);
+    int  getBoxHeight(Layout* l);
+    void prepareDrawableForDisplay(Drawable*d);
 
     bool isMarqueeFadeEnabled();
     bool canMarquee();
@@ -169,6 +176,7 @@ protected:
     virtual int getHorizontalOffsetForDrawables()const;
     void onSizeChanged(int w,int h,int ow,int oh)override;
     void onLayout(bool changed, int left, int top, int w, int h)override;
+    void resetResolvedDrawables()override;
 public:
     enum EDITMODE{
        READONLY,
@@ -274,6 +282,7 @@ public:
 
     void addTextChangedListener(TextWatcher watcher);
     void removeTextChangedListener(TextWatcher watcher);
+    void onResolveDrawables(int layoutDirection)override;
 };
 
 }  // namespace cdroid

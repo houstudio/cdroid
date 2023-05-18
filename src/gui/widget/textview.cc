@@ -28,9 +28,6 @@ namespace cdroid {
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
 
-bool TextView::Drawables::hasMetadata()const{   
-    return mDrawablePadding != 0 || mHasTintMode || mHasTint; 
-}
 TextView::Drawables::Drawables(Context*ctx){
     mIsRtlCompatibilityMode= false;
     mHasTint = mHasTintMode= mOverride =false;
@@ -48,12 +45,140 @@ TextView::Drawables::Drawables(Context*ctx){
     mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding =0;
     mCompoundRect.set(0,0,0,0);
 }
+
 TextView::Drawables::~Drawables(){
     for(int i=0;i<4;i++){
         delete mShowing[i];
     }
 }
 
+bool TextView::Drawables::hasMetadata()const{
+    return mDrawablePadding != 0 || mHasTintMode || mHasTint;
+}
+
+bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
+    Drawable* previousLeft = mShowing[Drawables::LEFT];
+    Drawable* previousRight = mShowing[Drawables::RIGHT];
+
+    // First reset "left" and "right" drawables to their initial values
+    mShowing[Drawables::LEFT] = mDrawableLeftInitial;
+    mShowing[Drawables::RIGHT] = mDrawableRightInitial;
+
+    if (mIsRtlCompatibilityMode) {
+        // Use "start" drawable as "left" drawable if the "left" drawable was not defined
+        if (mDrawableStart && mShowing[Drawables::LEFT] == nullptr) {
+            mShowing[Drawables::LEFT] = mDrawableStart;
+            mDrawableSizeLeft = mDrawableSizeStart;
+            mDrawableHeightLeft = mDrawableHeightStart;
+        }
+        // Use "end" drawable as "right" drawable if the "right" drawable was not defined
+        if (mDrawableEnd  && mShowing[Drawables::RIGHT] == nullptr) {
+            mShowing[Drawables::RIGHT] = mDrawableEnd;
+            mDrawableSizeRight = mDrawableSizeEnd;
+            mDrawableHeightRight = mDrawableHeightEnd;
+        }
+    } else {
+        // JB-MR1+ normal case: "start" / "end" drawables are overriding "left" / "right"
+        // drawable if and only if they have been defined
+        switch(layoutDirection) {
+        case LAYOUT_DIRECTION_RTL:
+            if (mOverride) {
+                mShowing[Drawables::RIGHT] = mDrawableStart;
+                mDrawableSizeRight = mDrawableSizeStart;
+                mDrawableHeightRight = mDrawableHeightStart;
+
+                mShowing[Drawables::LEFT] = mDrawableEnd;
+                mDrawableSizeLeft = mDrawableSizeEnd;
+                mDrawableHeightLeft = mDrawableHeightEnd;
+            }
+            break;
+
+        case LAYOUT_DIRECTION_LTR:
+        default:
+            if (mOverride) {
+                mShowing[Drawables::LEFT] = mDrawableStart;
+                mDrawableSizeLeft = mDrawableSizeStart;
+                mDrawableHeightLeft = mDrawableHeightStart;
+
+                mShowing[Drawables::RIGHT] = mDrawableEnd;
+                mDrawableSizeRight = mDrawableSizeEnd;
+                mDrawableHeightRight = mDrawableHeightEnd;
+            }
+            break;
+        }
+    }
+
+    applyErrorDrawableIfNeeded(layoutDirection);
+
+    return mShowing[Drawables::LEFT] != previousLeft
+            || mShowing[Drawables::RIGHT] != previousRight;
+}
+
+void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
+    if (mDrawableError != dr && mDrawableError != nullptr) {
+        mDrawableError->setCallback(nullptr);
+    }
+    mDrawableError = dr;
+
+    if (mDrawableError != nullptr) {
+        Rect compoundRect = mCompoundRect;
+	std::vector<int> state = tv->getDrawableState();
+
+        mDrawableError->setState(state);
+        compoundRect = mDrawableError->getBounds();
+        mDrawableError->setCallback(tv);
+        mDrawableSizeError = compoundRect.width;
+        mDrawableHeightError = compoundRect.height;
+    } else {
+        mDrawableSizeError = mDrawableHeightError = 0;
+    }
+}
+
+void TextView::Drawables::applyErrorDrawableIfNeeded(int layoutDirection) {
+    // first restore the initial state if needed
+    switch (mDrawableSaved) {
+    case DRAWABLE_LEFT:
+        mShowing[Drawables::LEFT] = mDrawableTemp;
+        mDrawableSizeLeft = mDrawableSizeTemp;
+        mDrawableHeightLeft = mDrawableHeightTemp;
+        break;
+    case DRAWABLE_RIGHT:
+        mShowing[Drawables::RIGHT] = mDrawableTemp;
+        mDrawableSizeRight = mDrawableSizeTemp;
+        mDrawableHeightRight = mDrawableHeightTemp;
+        break;
+    case DRAWABLE_NONE:
+        default:break;
+    }
+    // then, if needed, assign the Error drawable to the correct location
+    if (mDrawableError != nullptr) {
+        switch(layoutDirection) {
+        case LAYOUT_DIRECTION_RTL:
+            mDrawableSaved = DRAWABLE_LEFT;
+
+            mDrawableTemp = mShowing[Drawables::LEFT];
+            mDrawableSizeTemp = mDrawableSizeLeft;
+            mDrawableHeightTemp = mDrawableHeightLeft;
+
+            mShowing[Drawables::LEFT] = mDrawableError;
+            mDrawableSizeLeft = mDrawableSizeError;
+            mDrawableHeightLeft = mDrawableHeightError;
+            break;
+        case LAYOUT_DIRECTION_LTR:
+        default:
+            mDrawableSaved = DRAWABLE_RIGHT;
+
+            mDrawableTemp = mShowing[Drawables::RIGHT];
+            mDrawableSizeTemp = mDrawableSizeRight;
+            mDrawableHeightTemp = mDrawableHeightRight;
+
+            mShowing[Drawables::RIGHT] = mDrawableError;
+            mDrawableSizeRight = mDrawableSizeError;
+            mDrawableHeightRight = mDrawableHeightError;
+            break;
+        }
+    }
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Marquee {
 private:
@@ -315,6 +440,7 @@ void TextView::initView(){
     mMinMode = LINES;
     mDeferScroll = -1;
     mMarqueeRepeatLimit =3;
+    mLastLayoutDirection = -1;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
     mEllipsize = Layout::ELLIPSIS_NONE;
@@ -990,6 +1116,38 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, 
     Context* context = getContext();
     setCompoundDrawablesWithIntrinsicBounds(context->getDrawable(left),context->getDrawable(top),
             context->getDrawable(right),context->getDrawable(bottom));    
+}
+
+void TextView::onResolveDrawables(int layoutDirection){
+    if (mLastLayoutDirection == layoutDirection) {
+        return;
+    }
+    mLastLayoutDirection = layoutDirection;
+
+    // Resolve drawables
+    if (mDrawables != nullptr) {
+        if (mDrawables->resolveWithLayoutDirection(layoutDirection)) {
+            prepareDrawableForDisplay(mDrawables->mShowing[Drawables::LEFT]);
+            prepareDrawableForDisplay(mDrawables->mShowing[Drawables::RIGHT]);
+            applyCompoundDrawableTint();
+        }
+    }
+}
+
+void TextView::prepareDrawableForDisplay(Drawable* dr) {
+    if (dr == nullptr) {
+        return;
+    }
+    dr->setLayoutDirection(getLayoutDirection());
+    if (dr->isStateful()) {
+        dr->setState(getDrawableState());
+        dr->jumpToCurrentState();
+    }
+}
+
+void TextView::resetResolvedDrawables(){
+    View::resetResolvedDrawables();
+    mLastLayoutDirection = -1;
 }
 
 void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
@@ -1826,7 +1984,7 @@ void TextView::onDraw(Canvas& canvas) {
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
     canvas.set_color(color);
-    if(isLayoutRtl())canvas.translate(-compoundPaddingRight-cursorOffsetVertical,0);
+    if(isLayoutRtl())canvas.translate(-compoundPaddingRight,0);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);
     mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
