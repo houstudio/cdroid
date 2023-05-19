@@ -17,8 +17,8 @@
 namespace cdroid{
 
 using cdroid::PointF;
-typedef uint32_t QBrush;
-typedef uint32_t QPen;
+using Cairo::RefPtr;
+using Cairo::Pattern;
 class PlotView;
 class PlotPoint;
 
@@ -141,68 +141,68 @@ public:
      * If no other pens are set, this pen will be used for
      * points, lines, bars and labels (this pen is always used for points).
      */
-    const QPen &pen() const;
+    const RefPtr<Pattern> &pen() const;
 
     /**
      * Set the default pen for this object
      * @p The pen to use
      */
-    void setPen(const QPen &p);
+    void setPen(const RefPtr<Pattern> &p);
 
     /**
      * @return the pen to use for drawing lines for this Object.
      */
-    const QPen &linePen() const;
+    const RefPtr<Pattern> &linePen() const;
 
     /**
      * Set the pen to use for drawing lines for this object
      * @p The pen to use
      */
-    void setLinePen(const QPen &p);
+    void setLinePen(const RefPtr<Pattern> &p);
 
     /**
      * @return the pen to use for drawing bars for this Object.
      */
-    const QPen &barPen() const;
+    const RefPtr<Pattern> &barPen() const;
 
     /**
      * Set the pen to use for drawing bars for this object
      * @p The pen to use
      */
-    void setBarPen(const QPen &p);
+    void setBarPen(const RefPtr<Pattern> &p);
 
     /**
      * @return the pen to use for drawing labels for this Object.
      */
-    const QPen &labelPen() const;
+    const RefPtr<Pattern> &labelPen() const;
 
     /**
      * Set the pen to use for labels for this object
      * @p The pen to use
      */
-    void setLabelPen(const QPen &p);
+    void setLabelPen(const RefPtr<Pattern> &p);
 
     /**
      * @return the default Brush to use for this Object.
      */
-    const QBrush brush() const;
+    const RefPtr<Pattern> brush() const;
 
     /**
      * Set the default brush to use for this object
      * @b The brush to use
      */
-    void setBrush(const QBrush &b);
+    void setBrush(const RefPtr<Pattern> &b);
 
     /**
      * @return the brush to use for filling bars for this Object.
      */
-    const QBrush barBrush() const;
+    const RefPtr<Pattern> barBrush() const;
 
     /**
      * Set the brush to use for drawing bars for this object
      * @b The brush to use
      */
-    void setBarBrush(const QBrush &b);
+    void setBarBrush(const RefPtr<Pattern> &b);
 
     /**
      * @return the list of PlotPoints that make up this object

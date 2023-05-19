@@ -4,7 +4,7 @@
 
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
-
+#include <cairomm/pattern.h>
 #include <widget/plotobject.h>
 #include <widget/plotpoint.h>
 #include <widget/plotview.h>
@@ -33,20 +33,22 @@ public:
     int type;
     PointStyle pointStyle;
     double size;
-    uint32_t pen, linePen, barPen, labelPen;
-    uint32_t brush, barBrush;
+    RefPtr<Pattern> pen, linePen, barPen, labelPen;
+    RefPtr<Pattern> brush, barBrush;
 };
 
 PlotObject::PlotObject(const uint32_t &c, PlotType t, double size, PointStyle ps)
     : d(new Private(this))
 {
     // By default, all pens and brushes are set to the given color
-    setBrush(c);
-    setBarBrush(c);
-    setPen(c);//QPen(brush(), 1));
-    setLinePen(pen());
-    setBarPen(pen());
-    setLabelPen(pen());
+    Color clr(c);
+    RefPtr<Pattern> brush = Cairo::SolidPattern::create_rgba(clr.red(),clr.green(),clr.blue(),clr.alpha());
+    setBrush(brush);
+    setBarBrush(brush);
+    setPen(brush);
+    setLinePen(brush);
+    setBarPen(brush);
+    setLabelPen(brush);
 
     d->type |= t;
     setSize(size);
@@ -110,62 +112,62 @@ void PlotObject::setPointStyle(PointStyle p)
     d->pointStyle = p;
 }
 
-const QPen &PlotObject::pen() const
+const RefPtr<Pattern> &PlotObject::pen() const
 {
     return d->pen;
 }
 
-void PlotObject::setPen(const QPen &p)
+void PlotObject::setPen(const RefPtr<Pattern> &p)
 {
     d->pen = p;
 }
 
-const QPen &PlotObject::linePen() const
+const RefPtr<Pattern> &PlotObject::linePen() const
 {
     return d->linePen;
 }
 
-void PlotObject::setLinePen(const QPen &p)
+void PlotObject::setLinePen(const RefPtr<Pattern> &p)
 {
     d->linePen = p;
 }
 
-const QPen &PlotObject::barPen() const
+const RefPtr<Pattern> &PlotObject::barPen() const
 {
     return d->barPen;
 }
 
-void PlotObject::setBarPen(const QPen &p)
+void PlotObject::setBarPen(const RefPtr<Pattern> &p)
 {
     d->barPen = p;
 }
 
-const QPen &PlotObject::labelPen() const
+const RefPtr<Pattern> &PlotObject::labelPen() const
 {
     return d->labelPen;
 }
 
-void PlotObject::setLabelPen(const QPen &p)
+void PlotObject::setLabelPen(const RefPtr<Pattern> &p)
 {
     d->labelPen = p;
 }
 
-const QBrush PlotObject::brush() const
+const RefPtr<Pattern> PlotObject::brush() const
 {
     return d->brush;
 }
 
-void PlotObject::setBrush(const QBrush &b)
+void PlotObject::setBrush(const RefPtr<Pattern> &b)
 {
     d->brush = b;
 }
 
-const QBrush PlotObject::barBrush() const
+const RefPtr<Pattern> PlotObject::barBrush() const
 {
     return d->barBrush;
 }
 
-void PlotObject::setBarBrush(const QBrush &b)
+void PlotObject::setBarBrush(const RefPtr<Pattern> &b)
 {
     d->barBrush = b;
 }
@@ -240,9 +242,9 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 
             RectF barRect = RectF::Make(sp1.x, sp1.y, sp2.x - sp1.x, sp2.y - sp1.y);//.normalized();
             painter.rectangle(sp1.x, sp1.y, sp2.x - sp1.x, sp2.y - sp1.y);//drawRect(barRect);
-	    painter.set_color(barBrush());
+	    painter.set_source(barBrush());
 	    painter.fill_preserve();
-	    painter.set_color(barPen());
+	    painter.set_source(barPen());
 	    painter.stroke();
             pw->maskRect(barRect, 0.25);
         }
@@ -251,7 +253,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
     // Draw lines:
     if (d->type & Lines) {
 	bool bPrevious = false;
-        painter.set_color(linePen());
+        painter.set_source(linePen());
         PointF Previous; // Initialize to null
         for (const PlotPoint *pp : d->pList) {
             // q is the position of the point in screen pixel coordinates
@@ -294,23 +296,23 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
                     break;
 
                 case Triangle: {
-		    painter.set_color(brush());
+		    painter.set_source(brush());
 		    painter.move_to(q.x - size(), q.y + size());
 		    painter.line_to(q.x, q.y - size());
 		    painter.line_to(q.x + size(), q.y + size());
 		    painter.line_to(q.x - size(), q.y + size());
 		    painter.line_to(q.x - size(), q.y + size());//line to 1st point(closepath)
 		    painter.fill_preserve();
-		    painter.set_color(pen());
+		    painter.set_source(pen());
 		    painter.stroke();
                     break;
                 }
 
                 case Square:
 		    painter.rectangle(qr.left,qr.top,qr.width,qr.height);
-		    painter.set_color(brush());
+		    painter.set_source(brush());
 		    painter.fill_preserve();
-		    painter.set_color(pen());
+		    painter.set_source(pen());
 		    painter.stroke();
                     break;
 
@@ -322,9 +324,9 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 		    painter.line_to(q.x - size(), q.y - 0.309 * size());
 		    painter.line_to(q.x, q.y - size());//line to 1st point(closepath)
 
-		    painter.set_color(brush());
+		    painter.set_source(brush());
 		    painter.fill_preserve();
-		    painter.set_color(pen());
+		    painter.set_source(pen());
 		    painter.stroke();		    
                     break;
                 }
@@ -338,7 +340,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 		    painter.line_to(q.x - size(), q.y - 0.5 * size());
 		    painter.line_to(q.x, q.y + size());//line to 1st point(closepath)
 		    painter.fill_preserve();
-		    painter.set_color(pen());
+		    painter.set_source(pen());
 		    painter.stroke();
                     break;
                 }
@@ -357,9 +359,9 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 		    painter.move_to(q.x,q.y);
 		    painter.line_to(q.x - size(), q.y - 0.5 * size());
 		    painter.line_to(q.x,q.y);//line to 1st point(closepath)
-		    painter.set_color(brush());
+		    painter.set_source(brush());
 		    painter.fill_preserve();
-		    painter.set_color(pen());
+		    painter.set_source(pen());
 		    painter.stroke();
                     break;
 
@@ -375,9 +377,9 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 		    painter.line_to(q.x - size(), q.y - 0.309 * size());
 		    painter.line_to(q.x - 0.2245 * size(), q.y - 0.309 * size());
 		    painter.line_to(q.x, q.y - size());//line to 1st point(closepath)
-		    painter.set_color(brush());
+		    painter.set_source(brush());
 		    painter.fill_preserve();
-		    painter.set_color(pen());
+		    painter.set_source(pen());
 		    painter.stroke();
                     break;
                 }
@@ -390,7 +392,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
     }
 
     // Draw labels
-    painter.set_color(labelPen());
+    painter.set_source(labelPen());
 
     for (PlotPoint *pp : d->pList) {
         PointF q = pw->mapToWidget(pp->position());//.toPoint();

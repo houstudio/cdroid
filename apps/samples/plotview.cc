@@ -66,7 +66,7 @@ void slotSelectPlot(PlotView*plot,int n)
         plot->setLimits(-7.0, 7.0, -5.0, 105.0);
 
         po1 = new PlotObject(0xFFFFFFFF, PlotObject::Bars, 2);
-        po1->setBarBrush(0xFF00FF00);//QBrush(Qt::green, Qt::Dense4Pattern));
+        //po1->setBarBrush(0xFF00FF00);//QBrush(Qt::green, Qt::Dense4Pattern));
 
         for (float x = -6.5; x <= 6.5; x += 0.5) {
             po1->addPoint(x, 100 * exp(-0.5 * x * x), std::string(""), 0.5);
@@ -82,7 +82,7 @@ void slotSelectPlot(PlotView*plot,int n)
         plot->setLimits(-1.1, 1.1, -1.1, 1.1);
 
         po1 = new PlotObject(Color::YELLOW, PlotObject::Points, 10, PlotObject::Star);
-        po1->setLabelPen(0xFF00FF00);//QPen(Qt::green));
+        //po1->setLabelPen(0xFF00FF00);//QPen(Qt::green));
 
         po1->addPoint(0.0, 0.8, std::string("North"));
         po1->addPoint(0.57, 0.57, std::string("Northeast"));
@@ -106,9 +106,9 @@ void slotSelectPlot(PlotView*plot,int n)
 
         po1->setShowLines(true);
         po1->setShowBars(true);
-        po1->setLabelPen(0xFFAA8800);//QPen(QColor("#AA8800")));
-        po1->setLinePen(0xFFFF0000);//QPen(Qt::red, 3.0, Qt::DashDotLine));
-        po1->setBarBrush(0xFF0000FF);//QBrush(Qt::blue, Qt::BDiagPattern));
+        //po1->setLabelPen(0xFFAA8800);//QPen(QColor("#AA8800")));
+        //po1->setLinePen(0xFFFF0000);//QPen(Qt::red, 3.0, Qt::DashDotLine));
+        //po1->setBarBrush(0xFF0000FF);//QBrush(Qt::blue, Qt::BDiagPattern));
 
         po1->addPoint(-1.75, 0.5);
         po1->addPoint(-1.25, 1.0);
@@ -132,9 +132,9 @@ void slotSelectPlot(PlotView*plot,int n)
 
         po1->setShowLines(true);
         po1->setShowBars(true);
-        po1->setLabelPen(0xFFAA8800);
-        po1->setLinePen(0xFFFF0000);//, 3.0, Qt::DashDotLine));
-        po1->setBarBrush(0xFF0000FF);//QBrush(Qt::blue, Qt::BDiagPattern));
+        //po1->setLabelPen(0xFFAA8800);
+        //po1->setLinePen(0xFFFF0000);//, 3.0, Qt::DashDotLine));
+        //po1->setBarBrush(0xFF0000FF);//QBrush(Qt::blue, Qt::BDiagPattern));
 
         po1->addPoint(-1.75, 0.5, std::string("A"));
         po1->addPoint(-1.25, 1.0, std::string("B"));
