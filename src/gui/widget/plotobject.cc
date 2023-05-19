@@ -276,7 +276,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
         for (const PlotPoint *pp : d->pList) {
             // q is the position of the point in screen pixel coordinates
             PointF q = pw->mapToWidget(pp->position());
-            if (pw->pointInView(q.x,q.y,1)) {
+            if (pw->pixRect().contains(q.x,q.y)) {
                 double x1 = q.x - size();
                 double y1 = q.y - size();
                 RectF qr = RectF::Make(x1, y1, 2 * size(), 2 * size());
@@ -292,7 +292,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 
                 case Letter:
                     //painter->drawText(qr, Qt::AlignCenter, pp->label().left(1));
-		    painter.draw_text(Rect::Make(x1, y1, 2 * size(), 2 * size()),pp->label(),cdroid::Gravity::CENTER);
+                    painter.draw_text(Rect::Make(qr.left, qr.top, 2 * size(), 2 * size()),pp->label(),cdroid::Gravity::CENTER);
                     break;
 
                 case Triangle: {

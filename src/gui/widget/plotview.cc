@@ -659,7 +659,7 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
             if (TriedPathIndex.size() < 4) {
                 iter = -1; // anticipating the ++iter below
                 //bestRect = fm.boundingRect(QRectF(pos.x, pos.y, 1, 1), textFlags, pp->label());
-		bestRect={int(pos.x),int(pos.y), pp->label().size()*32,32};
+		bestRect = {int(pos.x),int(pos.y), pp->label().size()*32,32};
                 bestCost = d->rectCost(RectF::Make(bestRect.left,bestRect.top,bestRect.width,bestRect.height));
             }
             break;
@@ -689,7 +689,7 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
         // pen.setStyle( Qt::DotLine );
         // painter->setPen( pen );
         //painter.drawRoundedRect(bestRect, 25, 25, Qt::RelativeSize);
-	double radius=25;
+	double radius = 25;
         painter.move_to(bestRect.left+radius,bestRect.top);//x + radius, y)
         painter.line_to(bestRect.right() - radius, bestRect.top);
         painter.arc(bestRect.right() - radius, bestRect.top + radius, radius, -M_PI /2., 0);
@@ -717,7 +717,6 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
             yline = bestRect.bottom();
         }
 
-        //painter->drawLine(PointF(xline, yline), pos);
 	painter.move_to(xline,yline);
 	painter.line_to(pos.x,pos.y);
 	painter.stroke();
@@ -729,7 +728,7 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
 
 float PlotView::Private::rectCost(const RectF &r) const
 {
-    RectF pmrc={0,0,plotMask->get_width(),plotMask->get_height()};
+    RectF pmrc = {0,0,plotMask->get_width(),plotMask->get_height()};
     if(pmrc.contains(r)) return 10000.;
     //if (!plotMask.rect().contains(r.toRect())) return 10000.;
 
@@ -749,7 +748,7 @@ void PlotView::onDraw(cdroid::Canvas&p)
 {
     // let QFrame draw its default stuff (like the frame)
     //p.setRenderHint(QPainter::Antialiasing, d->useAntialias);
-    Rect r=getBound();
+    Rect r = getBound();
     p.set_color(backgroundColor());
     p.rectangle(r.left,r.top,r.width,r.height);
     p.fill();
@@ -786,7 +785,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         const std::list<double>& majMarks = axis(BottomAxis)->majorTickMarks();
         for (const double xx : majMarks) {
             double px = d->pixRect.width * (xx - d->dataRect.left) / d->dataRect.width;
-            //p->drawLine(PointF(px, 0.0), PointF(px, double(d->pixRect.height)));
 	    p.move_to(px,0);
 	    p.line_to(px,d->pixRect.height);
         }
@@ -794,7 +792,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         const std::list<double>&leftTickMarks = axis(LeftAxis)->majorTickMarks();
         for (const double yy : leftTickMarks) {
             double py = d->pixRect.height * (1.0 - (yy - d->dataRect.top) / d->dataRect.height);
-            //p->drawLine(PointF(0.0, py), PointF(double(d->pixRect.width), py));
 	    p.move_to(0,py);
 	    p.line_to(double(d->pixRect.width), py);
         }
@@ -814,7 +811,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     PlotAxis *a = axis(BottomAxis);
     if (a->isVisible()) {
         // Draw axis line
-        //p->drawLine(0, d->pixRect.height, d->pixRect.width, d->pixRect.height);
 	p.move_to(0, d->pixRect.height);
 	p.line_to(d->pixRect.width,d->pixRect.height);
 
@@ -823,10 +819,8 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double xx : majMarks) {
             double px = d->pixRect.width * (xx - d->dataRect.left) / d->dataRect.width;
             if (px > 0 && px < d->pixRect.width) {
-                //p->drawLine(PointF(px, double(d->pixRect.height - TICKOFFSET)), //
-                //            PointF(px, double(d->pixRect.height - BIGTICKSIZE - TICKOFFSET)));
-		p.move_to(px, double(d->pixRect.height - TICKOFFSET));
-		p.line_to(px, double(d->pixRect.height - BIGTICKSIZE - TICKOFFSET));
+		p.move_to(px, d->pixRect.height - TICKOFFSET);
+		p.line_to(px, d->pixRect.height - BIGTICKSIZE - TICKOFFSET);
 		p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
@@ -841,8 +835,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double xx : minTickMarks) {
             double px = d->pixRect.width * (xx - d->dataRect.left) / d->dataRect.width;
             if (px > 0 && px < d->pixRect.width) {
-                //p->drawLine(PointF(px, double(d->pixRect.height() - TICKOFFSET)), //
-                //       PointF(px, double(d->pixRect.height() - SMALLTICKSIZE - TICKOFFSET)));
 		p.move_to(px,d->pixRect.height - TICKOFFSET);
 		p.line_to(px,d->pixRect.height - SMALLTICKSIZE - TICKOFFSET);
             }
@@ -850,7 +842,7 @@ void PlotView::drawAxes(cdroid::Canvas&p)
 	p.stroke();
         // Draw BottomAxis Label
         if (!a->label().empty()) {
-            Rect r={0, d->pixRect.height + 2 * YPADDING, d->pixRect.width, YPADDING};
+            Rect r = {0, d->pixRect.height + 2 * YPADDING, d->pixRect.width, YPADDING};
             p.draw_text(r,a->label(),cdroid::Gravity::CENTER);
         }
     } // End of BottomAxis
@@ -868,13 +860,12 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double yy : majMarks) {
             double py = d->pixRect.height * (1.0 - (yy - d->dataRect.top) / d->dataRect.height);
             if (py > 0 && py < d->pixRect.height) {
-                //p->drawLine(PointF(TICKOFFSET, py), PointF(double(TICKOFFSET + BIGTICKSIZE), py));
 		p.move_to(TICKOFFSET,py);
 		p.line_to(TICKOFFSET + BIGTICKSIZE,py);
 		p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
-                    Rect r={-2 * BIGTICKSIZE - SMALLTICKSIZE, int(py) - SMALLTICKSIZE, 2 * BIGTICKSIZE, 2 * SMALLTICKSIZE};
+                    Rect r = {-2 * BIGTICKSIZE - SMALLTICKSIZE, int(py) - SMALLTICKSIZE, 2 * BIGTICKSIZE, 2 * SMALLTICKSIZE};
                     p.draw_text(r, a->tickLabel(yy),Gravity::RIGHT|Gravity::CENTER_VERTICAL);
                 }
             }
@@ -885,7 +876,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double yy : minTickMarks) {
             double py = d->pixRect.height * (1.0 - (yy - d->dataRect.top) / d->dataRect.height);
             if (py > 0 && py < d->pixRect.height) {
-                //p->drawLine(PointF(TICKOFFSET, py), PointF(double(TICKOFFSET + SMALLTICKSIZE), py));
 		p.move_to(TICKOFFSET,py);
 		p.line_to(TICKOFFSET + SMALLTICKSIZE,py);
             }
@@ -900,7 +890,7 @@ void PlotView::drawAxes(cdroid::Canvas&p)
             p.translate(-3 * XPADDING, d->pixRect.height);
             p.rotate_degrees(-90.0);
 
-            Rect r={0, 0, d->pixRect.height, XPADDING};
+            Rect r = {0, 0, d->pixRect.height, XPADDING};
             p.draw_text(r,a->label(),Gravity::CENTER); // draw the label, now that we are sideways
 
             p.restore(); // restore translation/rotation state
@@ -923,7 +913,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     a = axis(TopAxis);
     if (a->isVisible()) {
         // Draw axis line
-        //p->drawLine(0, 0, d->pixRect.width, 0);
 	p.move_to(0,0);
 	p.line_to(d->pixRect.width, 0);
         // Draw major tickmarks
@@ -931,13 +920,12 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double xx : majMarks) {
             double px = d->pixRect.width * (xx - x0) / dw;
             if (px > 0 && px < d->pixRect.width) {
-                //p->drawLine(PointF(px, TICKOFFSET), PointF(px, double(BIGTICKSIZE + TICKOFFSET)));
 		p.move_to(px, TICKOFFSET);
 		p.line_to(px,double(BIGTICKSIZE + TICKOFFSET));
 		p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
-                    Rect r={int(px) - BIGTICKSIZE, (int)-1.5 * BIGTICKSIZE, 2 * BIGTICKSIZE, BIGTICKSIZE};
+                    Rect r = {int(px) - BIGTICKSIZE, (int)-1.5 * BIGTICKSIZE, 2 * BIGTICKSIZE, BIGTICKSIZE};
                     p.draw_text(r,a->tickLabel(xx),Gravity::CENTER);// Qt::AlignCenter | Qt::TextDontClip, a->tickLabel(xx));
                 }
             }
@@ -948,7 +936,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double xx : minMarks) {
             double px = d->pixRect.width * (xx - x0) / dw;
             if (px > 0 && px < d->pixRect.width) {
-                //p->drawLine(PointF(px, TICKOFFSET), PointF(px, double(SMALLTICKSIZE + TICKOFFSET)));
 		p.move_to(px, TICKOFFSET);
 		p.line_to(px,SMALLTICKSIZE + TICKOFFSET);
             }
@@ -957,7 +944,7 @@ void PlotView::drawAxes(cdroid::Canvas&p)
 
         // Draw TopAxis Label
         if (!a->label().empty()) {
-            Rect r={0, 0 - 3 * YPADDING, d->pixRect.width, YPADDING};
+            Rect r = {0, 0 - 3 * YPADDING, d->pixRect.width, YPADDING};
             p.draw_text(r, a->label(),Gravity::CENTER);
         }
     } // End of TopAxis
@@ -966,7 +953,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     a = axis(RightAxis);
     if (a->isVisible()) {
         // Draw axis line
-        //p->drawLine(d->pixRect.width, 0, d->pixRect.width, d->pixRect.height);
 	p.move_to(d->pixRect.width, 0);
 	p.line_to(d->pixRect.width, d->pixRect.height);
 
@@ -975,14 +961,12 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double yy : majMarks) {
             double py = d->pixRect.height * (1.0 - (yy - y0) / dh);
             if (py > 0 && py < d->pixRect.height) {
-                //p->drawLine(PointF(double(d->pixRect.width - TICKOFFSET), py), //
-                //            PointF(double(d->pixRect.width - TICKOFFSET - BIGTICKSIZE), py));
 		p.move_to(d->pixRect.width - TICKOFFSET,py);
 		p.line_to(d->pixRect.width - TICKOFFSET - BIGTICKSIZE,py);
 		p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
-                    Rect r={d->pixRect.width + SMALLTICKSIZE, int(py) - SMALLTICKSIZE, 2 * BIGTICKSIZE, 2 * SMALLTICKSIZE};
+                    Rect r = {d->pixRect.width + SMALLTICKSIZE, int(py) - SMALLTICKSIZE, 2 * BIGTICKSIZE, 2 * SMALLTICKSIZE};
                     p.draw_text(r,a->tickLabel(yy),Gravity::LEFT|Gravity::CENTER_VERTICAL);
                 }
             }
@@ -993,9 +977,8 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double yy : minMarks) {
             double py = d->pixRect.height * (1.0 - (yy - y0) / dh);
             if (py > 0 && py < d->pixRect.height) {
-                //p->drawLine(PointF(double(d->pixRect.width - 0.0), py), PointF(double(d->pixRect.width - 0.0 - SMALLTICKSIZE), py));
 		p.move_to(d->pixRect.width ,py);
-		p.line_to(d->pixRect.width-SMALLTICKSIZE,py);
+		p.line_to(d->pixRect.width - SMALLTICKSIZE,py);
             }
         }
 	p.stroke();
@@ -1009,7 +992,7 @@ void PlotView::drawAxes(cdroid::Canvas&p)
             p.translate(d->pixRect.width + 2 * XPADDING, d->pixRect.height);
             p.rotate_degrees(-90.0);
 
-            Rect r={0, 0, d->pixRect.height, XPADDING};
+            Rect r = {0, 0, d->pixRect.height, XPADDING};
             p.draw_text(r,a->label(),Gravity::CENTER); // draw the label, now that we are sideways
 
             p.restore(); // restore translation/rotation state
