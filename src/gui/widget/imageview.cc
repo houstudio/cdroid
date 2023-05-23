@@ -12,17 +12,19 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     mBaselineAlignBottom =attrs.getBoolean("baselineAlignBottom",false);
     mBaseline =attrs.getDimensionPixelSize("baseline",-1);
     setAdjustViewBounds(attrs.getBoolean("adjustViewBounds",false));
-    mScaleType=attrs.getInt("scaleType",std::map<const std::string,int>{
+    const int scaleType = attrs.getInt("scaleType",std::map<const std::string,int>{
             {"matrix",ScaleType::MATRIX}, {"fitXY",ScaleType::FIT_XY},
             {"fitStart",ScaleType::FIT_START},{"fitCenter",ScaleType::FIT_CENTER},
             {"fitEnd",ScaleType::FIT_END},   {"center",ScaleType::CENTER},
             {"centerCrop",ScaleType::CENTER_CROP},{"centerInside",ScaleType::CENTER_INSIDE}
          },mScaleType);
+    setScaleType(scaleType);
     setImageResource(attrs.getString("src"));
     setMaxWidth (attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight",INT_MAX));
     setImageAlpha(attrs.getInt("alpha",255));
     mCropToPadding =attrs.getBoolean("cropToPadding",false);
+    configureBounds();
 }
 
 ImageView::ImageView(int w, int h)
@@ -207,8 +209,11 @@ int ImageView::getScaleType()const{
 }
 
 void ImageView::setScaleType(int st){
-    mScaleType=st;
-    invalidate(true);
+    if(mScaleType != st){
+        mScaleType = st;
+        requestLayout();
+        invalidate(true);
+    }
 }
 
 bool ImageView::getCropToPadding()const{
@@ -338,7 +343,7 @@ void ImageView::configureBounds(){
     
 
     const bool fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
-    LOGV("drawables.setBounds(%d,%d) fits=%d mScaleType=%d",vwidth,vheight,fits,mScaleType);
+    LOGV("%p:%d drawables.setBounds(%d,%d) fits=%d mScaleType=%d",this,mID,vwidth,vheight,fits,mScaleType);
 
     mDrawable->setBounds(0, 0, vwidth, vheight);
     
@@ -370,13 +375,14 @@ void ImageView::configureBounds(){
             float scale;
             float dx = 0, dy = 0;
 
-            if (dwidth * vheight > vwidth * dheight) {
-                scale = (float) vheight / (float) dheight;
-                dx = (vwidth - dwidth * scale) * 0.5f;
+            if (dwidth < vwidth && dheight <=vheight) {
+                scale = 1.0f;
             } else {
-                scale = (float) vwidth / (float) dwidth;
-                dy = (vheight - dheight * scale) * 0.5f;
+                scale = std::min(float(vwidth) /float(dwidth),
+				float(vheight)/float(dheight));
             }
+            dx = (vwidth - dwidth*scale) *0.5f;
+            dy = (vheight- dheight * scale) * 0.5f;
 
             mDrawMatrix.scale(scale, scale);
             mDrawMatrix.translate(round(dx), round(dy));
@@ -395,8 +401,8 @@ void ImageView::configureBounds(){
             dx = round((vwidth - dwidth * scale) * 0.5f);
             dy = round((vheight- dheight * scale) * 0.5f);
 
-            mDrawMatrix.scale(scale, scale);
             mDrawMatrix.translate(dx, dy);
+            mDrawMatrix.scale(scale, scale);
         } else {
             // Generate the required transform.
             Rect src={0, 0, dwidth, dheight};
@@ -676,7 +682,7 @@ void ImageView::onDraw(Canvas& canvas) {
                     mScrollY  + getHeight()- mPaddingBottom);
             canvas.clip();
         }
-        LOGV("DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",mDrawMatrix.xx,mDrawMatrix.yx,
+        LOGD("%p:%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mDrawMatrix.xx,mDrawMatrix.yx,
 		mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
         canvas.translate(mPaddingLeft, mPaddingTop);
         canvas.transform(mDrawMatrix);
