@@ -1443,7 +1443,8 @@ void View::dispatchDetachedFromWindow(){
     }
     if(mScrollCache&&mScrollCache->mRunner){
         removeCallbacks(mScrollCache->mRunner);
-        mScrollCache->mRunner.reset();
+        //mScrollCache->mRunner.reset();
+        /*reset will caused crash on remove views in some case*/
     }
     mAttachInfo = nullptr;
     if(mOverlay)

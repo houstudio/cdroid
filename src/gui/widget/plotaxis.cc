@@ -7,7 +7,8 @@
 
 #include <widget/plotaxis.h>
 #include <math.h> 
-
+#include <iostream>
+#include <iomanip>
 namespace cdroid{
 
 class PlotAxis::Private
@@ -166,6 +167,7 @@ void PlotAxis::setTickMarks(double x0, double length)
 
 std::string PlotAxis::tickLabel(double val) const
 {
+    char sbuf[32];
     if (d->m_labelFmt == 't') {
         while (val < 0.0) {
             val += 24.0;
@@ -173,14 +175,18 @@ std::string PlotAxis::tickLabel(double val) const
         while (val >= 24.0) {
             val -= 24.0;
         }
-
-        int h = int(val);
-        int m = int(60. * (val - h));
-	return std::to_string(h)+":"+std::to_string(m);
-        //return std::string();//QStringLiteral("%1:%2").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0'));
+        const int h = int(val);
+        const int m = int(60. * (val - h));
+	sprintf(sbuf,"%02d:%02d",h,m);
+	return std::string(sbuf);
     }
-    return std::to_string(val);
-    return std::string();//QStringLiteral("%1").arg(val, d->m_labelFieldWidth, d->m_labelFmt, d->m_labelPrec);
+    switch(d->m_labelFmt){
+    case 'g':sprintf(sbuf,"%g",val); break;
+    case 'G':sprintf(sbuf,"%G",val); break;//precision(10) ; break;
+    case 'e':sprintf(sbuf,"%e",val); break;
+    case 'E':sprintf(sbuf,"%E",val); break;
+    }
+    return std::string(sbuf);//QStringLiteral("%1").arg(val, d->m_labelFieldWidth, d->m_labelFmt, d->m_labelPrec);
 }
 
 std::list<double> PlotAxis::majorTickMarks() const

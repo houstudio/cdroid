@@ -551,12 +551,13 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
     int textFlags = Gravity::CENTER;//Qt::TextSingleLine | Qt::AlignCenter;
 
     PointF pos = mapToWidget(pp->position());
-    if (!d->pixRect.contains({pos.x,pos.y}/*pos*/)) {
+    if (!d->pixRect.contains(int(pos.x),int(pos.y))) {
         return;
     }
 
     //QFontMetricsF fm(painter->font(), painter->device());
-    RectF bestRect={int(pos.x),int(pos.y),pp->label().size()*32,32} ;// pp->label().size()*32;//fm.boundingRect(QRectF(pos.x(), pos.y(), 1, 1), textFlags, pp->label());
+    RectF bestRect;
+    bestRect.set(int(pos.x),int(pos.y),pp->label().size()*32,32) ;// pp->label().size()*32;//fm.boundingRect(QRectF(pos.x(), pos.y(), 1, 1), textFlags, pp->label());
     float xStep = 0.5 * bestRect.width;
     float yStep = 0.5 * bestRect.height;
     float maxCost = 0.05 * bestRect.width * bestRect.height;
@@ -659,7 +660,7 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
             if (TriedPathIndex.size() < 4) {
                 iter = -1; // anticipating the ++iter below
                 //bestRect = fm.boundingRect(QRectF(pos.x, pos.y, 1, 1), textFlags, pp->label());
-		bestRect = {int(pos.x),int(pos.y), pp->label().size()*32,32};
+		bestRect.set(int(pos.x),int(pos.y), pp->label().size()*32,32);
                 bestCost = d->rectCost(RectF::Make(bestRect.left,bestRect.top,bestRect.width,bestRect.height));
             }
             break;
@@ -728,7 +729,7 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
 
 float PlotView::Private::rectCost(const RectF &r) const
 {
-    RectF pmrc = {0,0,plotMask->get_width(),plotMask->get_height()};
+    RectF pmrc = {0,0,float(plotMask->get_width()),float(plotMask->get_height())};
     if(pmrc.contains(r)) return 10000.;
     //if (!plotMask.rect().contains(r.toRect())) return 10000.;
 
@@ -851,7 +852,6 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     a = axis(LeftAxis);
     if (a->isVisible()) {
         // Draw axis line
-        //p->drawLine(0, 0, 0, d->pixRect.height);
 	p.move_to(0,0);
 	p.line_to(0,d->pixRect.height);
 

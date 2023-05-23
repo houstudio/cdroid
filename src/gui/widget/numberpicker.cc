@@ -620,9 +620,9 @@ Drawable*NumberPicker::getSelectionDivider()const{
 }
 
 void NumberPicker::setSelector(int items){
-    mMaxSelectorIndices=items;
+    mMaxSelectorIndices = items;
     //mSelectorIndices.resize(items);
-    mMiddleItemIndex=items/2;
+    mMiddleItemIndex = items/2;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
     //updateInputTextView();
@@ -795,34 +795,29 @@ void NumberPicker::drawVertical(Canvas&canvas){
     canvas.set_line_width(0.4);
     LOGV("inputtext.baseline=%d mCurrentScrollOffset=%.f itemheigh=%d",mInputText->getBaseline(),mCurrentScrollOffset,mSelectorElementHeight);
     for (int i = 0; i < selectorIndices.size(); i++) {
-        int selectorIndex = selectorIndices[i];
+        const int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
         // Do not draw the middle item if input is visible since the input is shown only if the wheel
         // is static and it covers the middle item. Otherwise, if the user starts editing the text 
         // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
-        Cairo::FontExtents fe;
-	if((mTextSize!=mTextSize2)){
+        Cairo::TextExtents ext;
+        if((mTextSize!=mTextSize2)){
 	    const float harfHeight = getHeight()/2.f;
-	    const float fraction   = (float)std::abs(y - harfHeight)/harfHeight;
-	    canvas.set_font_size( lerp(mTextSize,mTextSize2,fraction) );
-	}
-	canvas.get_font_extents(fe);
+	    const float fraction   = std::abs(y-harfHeight)/harfHeight;
+	    canvas.set_font_size(lerp(mTextSize,mTextSize2,fraction));
+        }
+        canvas.get_text_extents(scrollSelectorValue,ext);
         if ((showSelectorWheel && i != mMiddleItemIndex) ||
             (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
-	    Cairo::TextExtents ext;
-	    canvas.get_text_extents(scrollSelectorValue,ext);
 	    switch(mInputText->getGravity()&Gravity::HORIZONTAL_GRAVITY_MASK){
 	    case Gravity::LEFT: x = 0; break;
 	    case Gravity::CENTER_HORIZONTAL:x = (getWidth()-ext.x_advance)/2; break;
 	    case Gravity::RIGHT:x = getWidth() - ext.x_advance; break; 
 	    }
-	    canvas.move_to(x+ext.x_bearing,y + ext.y_bearing);
+	    canvas.move_to(x,y);
 	    canvas.show_text(scrollSelectorValue);
         }
 	y+= mSelectorElementHeight;
-	/*canvas.move_to(0,mSelectorElementHeight*i);
-	canvas.line_to(getWidth(),mSelectorElementHeight*i);
-	canvas.stroke();*/
     }
     // draw the selector dividers
     if(showSelectorWheel&&mSelectionDivider){
@@ -1188,32 +1183,32 @@ bool NumberPicker::ensureScrollWheelAdjusted() {
 }
 
 void NumberPicker::pshCancel(){
-    mPSHMode =0; 
-    mPSHManagedButton=0;
-    if(mPressedStateHelpers!=nullptr){
+    mPSHMode = 0; 
+    mPSHManagedButton = 0;
+    if(mPressedStateHelpers != nullptr){
         removeCallbacks(mPressedStateHelpers);
         invalidate(0, mBottomSelectionDividerBottom, mRight-mLeft, mBottom-mTop);
     }
-    mPressedStateHelpers =[this](){
+    mPressedStateHelpers = [this](){
         pshRun();
     };
-    mDecrementVirtualButtonPressed =false;
+    mDecrementVirtualButtonPressed = false;
     if(mDecrementVirtualButtonPressed)
          invalidate(0,0,mRight-mLeft,mTopSelectionDividerTop);
 }
 
 void NumberPicker::pshButtonPressDelayed(int button){
     pshCancel();
-    mPSHMode =MODE_PRESS;
-    mPSHManagedButton =button;
+    mPSHMode = MODE_PRESS;
+    mPSHManagedButton = button;
     
     postDelayed(mPressedStateHelpers,ViewConfiguration::getTapTimeout());
 }
 
 void NumberPicker::pshButtonTapped(int button){
     pshCancel();
-    mPSHMode =MODE_TAPPED;
-    mPSHManagedButton=button;
+    mPSHMode = MODE_TAPPED;
+    mPSHManagedButton = button;
     post(mPressedStateHelpers);
 }
 

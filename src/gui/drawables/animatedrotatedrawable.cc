@@ -36,12 +36,12 @@ AnimatedRotateDrawable::AnimatedRotateDrawable()
 }
 
 AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateState> state):DrawableWrapper(state){
-    mState=state;
-    mRunning=false;
-    mIncrement=.0;
-    mCurrentDegrees=.0f;
+    mState  = state;
+    mRunning= false;
+    mIncrement= 360./state->mFramesCount;
+    mCurrentDegrees = .0f;
 
-    mNextFrame=[this](){
+    mNextFrame = [this](){
         mCurrentDegrees += mIncrement;
         if (mCurrentDegrees > (360.0f - mIncrement)) {
             mCurrentDegrees = 0.0f;
