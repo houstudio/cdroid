@@ -709,8 +709,8 @@ float TextView::getLineSpacingExtra()const{
 
 void TextView::onSizeChanged(int w,int h,int ow,int oh){
     View::onSizeChanged(w,h,ow,oh);
-    mLayout->setWidth(w-mPaddingLeft-mPaddingRight);
-    mHintLayout->setWidth(w-mPaddingLeft-mPaddingRight);
+    //mLayout->setWidth(w-mPaddingLeft-mPaddingRight);
+    //mHintLayout->setWidth(w-mPaddingLeft-mPaddingRight);
 }
 
 void TextView::onLayout(bool changed, int left, int top, int width, int height){
@@ -930,7 +930,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (widthMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         width = widthSize;
-        mLayout->setWidth(width- getCompoundPaddingLeft() - getCompoundPaddingRight());
+        //mLayout->setWidth(width- getCompoundPaddingLeft() - getCompoundPaddingRight());
     } else {
         int txtWidth,txtHeight;
         mLayout->setWidth(INT_MAX);//mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
@@ -1871,6 +1871,8 @@ void TextView::onDraw(Canvas& canvas) {
     const int hspace = getWidth() - compoundPaddingRight - compoundPaddingLeft;
     Drawables* dr = mDrawables;
     mLayout->setWidth(hspace);
+    mHintLayout->setWidth(hspace);
+    mHintLayout->setAlignment(getLayoutAlignment());
     mLayout->setAlignment(getLayoutAlignment());
     mLayout->relayout();
     if (dr != nullptr) {
@@ -1962,7 +1964,7 @@ void TextView::onDraw(Canvas& canvas) {
         canvas.clip();//the content will be cutted in rotation 
     }
 
-    canvas.translate(compoundPaddingLeft + offset, extendedPaddingTop + voffsetText);
+    canvas.translate(compoundPaddingLeft , extendedPaddingTop + voffsetText);
 
     const int layoutDirection = getLayoutDirection();
     const int absoluteGravity = Gravity::getAbsoluteGravity(mGravity, layoutDirection);
@@ -1984,7 +1986,6 @@ void TextView::onDraw(Canvas& canvas) {
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
     canvas.set_color(color);
-    if(isLayoutRtl())canvas.translate(-compoundPaddingRight,0);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);
     mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
