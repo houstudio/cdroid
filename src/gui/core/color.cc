@@ -61,7 +61,7 @@ Color* Color::valueOf(float r,float g,float b,float a){
 
 unsigned int Color::parseColor(const std::string& colorString){
     if(colorString[0]=='#'){
-        unsigned int cc=std::strtoll(colorString.c_str()+1,nullptr,16);
+        unsigned int cc=std::strtoul(colorString.c_str()+1,nullptr,16);
         if(colorString.length()<=7)
             cc|=0xFF000000;
         return cc;
