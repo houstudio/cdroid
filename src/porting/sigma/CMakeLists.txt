@@ -1,7 +1,7 @@
 project (sigma C CXX)
 
 set(SIGMA_SRCS ../common/cdlog.cc 
-	#mediaplayer.c 
+	mediaplayer.c 
 	input_linux.cc  )
 find_package(Pixman)
 find_package(DirectFB)
@@ -32,8 +32,8 @@ if(DIRECTFB_FOUND)
     list(APPEND SIGMA_LIBS ${DIRECTFB_LIBRARIES})
 else()    
     list(APPEND SIGMA_SRCS graph_gfx.c)
-    list(APPEND SIGMA_INCLUDE_DIRS ./inc)
 endif()
+list(APPEND SIGMA_INCLUDE_DIRS ./inc)
 
 link_directories(${PROJECT_SOURCE_DIR}/libs)
 list(APPEND SIGMA_LIBS pthread
