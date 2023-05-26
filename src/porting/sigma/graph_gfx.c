@@ -14,7 +14,6 @@
 #include "mi_common.h"
 #include "mi_sys.h"
 #include "mi_gfx.h"
-#include "pixman.h"
 
 typedef struct {
     int fb;
@@ -36,11 +35,11 @@ typedef struct {
     char*buffer;//drawbuffer
     char*orig_buffer;//used only in double buffer*/
     char*kbuffer;/*kernel buffer address*/
-    pixman_image_t*image;
 } FBSURFACE;
 
 static FBDEVICE devs[2]= {-1};
 static FBSURFACE *primarySurface;
+static GFXRect screenMargin={60,0,60,0};
 static void gfxexit() {
     LOGI("gfxexit");
     MI_GFX_Close();
@@ -85,20 +84,10 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
         return E_ERROR;
     LOGI_IF(width==NULL||height==NULL,"Params Error");
     FBDEVICE*dev=&devs[dispid];
-    *width=dev->var.xres;
-    *height=dev->var.yres;
+    *width =dev->var.xres - screenMargin.x - screenMargin.w;
+    *height=dev->var.yres - screenMargin.y - screenMargin.h;
     LOGV("screensize=%dx%d",*width,*height);
     return E_OK;
-}
-
-INT GFXSetRotation(int dispid, GFX_ROTATION roatation) {
-    if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
-    devs[dispid].rotation=roatation;
-}
-
-GFX_ROTATION GFXGetRotation(int dispid) {
-    if(dispid<0||dispid>=sizeof(devs)/sizeof(FBDEVICE))return E_ERROR;
-    return devs[dispid].rotation;
 }
 
 INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch) {
@@ -155,7 +144,6 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
         ret=MI_GFX_QuickFill(&gfxsurf,&mirec,color,&fence);
         MI_GFX_WaitAllDone(FALSE,fence);
         LOGV("Fill(%d,%d,%d,%d) with %x",rec.x,rec.y,rec.w,rec.h,color);
-        //pixman_fill(ngs->buffer,ngs->pitch/sizeof(uint32_t),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rec.x,rec.y,rec.w,rec.h,color);
     } else {
         UINT*fb=(UINT*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
         UINT*fbtop=fb;
@@ -167,7 +155,6 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
             memcpy(fb,fbtop,cpw);
             copied+=ngs->pitch;
         }
-        //pixman_fill(ngs->buffer,ngs->pitch/sizeof (uint32_t),PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8),rec.x,rec.y,rec.w,rec.h,color);
     }
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d ret=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch,ret);
     return E_OK;
@@ -176,7 +163,7 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
 INT GFXFlip(HANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     const size_t screen_size=surf->msize/2;
-    if( surf->ishw && (surf->msize>screen_size) ) {
+    if(surf->ishw && (surf->msize>screen_size) ) {
         FBDEVICE*dev=&devs[surf->dispid];
         LOGI_IF(screen_size!=dev->var.xres * dev->var.yres * dev->var.bits_per_pixel / 8,
                 "screensize=%dx%dx%dbpp",dev->var.xres,dev->var.yres,dev->var.bits_per_pixel);
@@ -237,31 +224,33 @@ static int setfbinfo(FBSURFACE*surf) {
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }
-
+#define DOUBLE_BUFFER 10
 INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     FBDEVICE*dev=&devs[dispid];
     surf->dispid=dispid;
-    surf->width=width;
-    surf->height=height;
+    surf->width =hwsurface?dev->var.xres:width;
+    surf->height=hwsurface?dev->var.yres:height;
     surf->format=format;
     surf->ishw=hwsurface;
-    surf->pitch=width*4;
+    surf->pitch=surf->width*4;
     surf->kbuffer=NULL;
     surf->orig_buffer=NULL;
     surf->current = 0;
-    surf->msize= surf->pitch*height;
+    surf->msize= surf->pitch*surf->height;
 
     MI_PHY phaddr=dev->fix.smem_start;
     MI_S32 ret=0;
     if(hwsurface) {
+#if DOUBLE_BUFFER
         surf->msize*=2;
+#endif
         surf->buffer=mmap(dev->fix.smem_start,surf->msize,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0);
-        dev->var.yoffset=0;
-        LOGI("ioctl offset(0)=%d",ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var));
+#if DOUBLE_BUFFER
         dev->var.yoffset=1280;
-        primarySurface = surf;
         LOGI("ioctl offset(0)=%d dev=%p",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev);
+#endif
+        primarySurface = surf;
     } else {
         int i=0;
         ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
@@ -272,34 +261,16 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
     }
     surf->kbuffer=(char*)phaddr;
-    if(hwsurface&&((GFXGetRotation(0)==ROTATE_90)||(GFXGetRotation(0)==ROTATE_270))) {
-        surf->width=height;
-        surf->height=width;
-        surf->pitch=height*4;
-    }
     MI_SYS_MemsetPa(phaddr,0x000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
     surf->alpha=255;
-    //surf->image = pixman_image_create_bits_no_clear(PIXMAN_a8r8g8b8,surf->width,surf->height,surf->buffer,surf->pitch);
     LOGI("Surface=%p buf=%p/%p size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
 }
 
-static Rotation2GFX(GFX_ROTATION r) {
-    switch(r) {
-    case ROTATE_0  :
-        return E_MI_GFX_ROTATE_0;
-    case ROTATE_90 :
-        return E_MI_GFX_ROTATE_270;
-    case ROTATE_180:
-        return E_MI_GFX_ROTATE_180;
-    case ROTATE_270:
-        return E_MI_GFX_ROTATE_90;
-    }
-}
 #define MIN(x,y) ((x)>(y)?(y):(x))
 INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
     unsigned int x,y,sw,sh;
@@ -333,37 +304,17 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
 
     opt.eMirror = E_MI_GFX_MIRROR_NONE;
-    opt.eRotate = ndst->ishw?Rotation2GFX(GFXGetRotation(nsrc->dispid)):E_MI_GFX_ROTATE_0;
+    opt.eRotate = E_MI_GFX_ROTATE_0;
 
     stSrcRect.s32Xpos = rs.x;
     stSrcRect.s32Ypos = rs.y;
     stSrcRect.u32Width = rs.w;
     stSrcRect.u32Height= rs.h;
-    int ox = dx,oy = dy;
-    if(ndst->ishw) {
-        switch(opt.eRotate) {
-        case E_MI_GFX_ROTATE_0 :
-            break;
-        case E_MI_GFX_ROTATE_90:
-            dx = oy;
-            dy = ndst->height - ox -rs.w;
-            break;
-        case E_MI_GFX_ROTATE_180:
-            dx = ndst->width - ox - rs.w;
-            dy = ndst->height - oy - rs.h;
-	    if(dy<0)rs.h+=(dy);
-            break;
-        case E_MI_GFX_ROTATE_270:
-            dx = oy;
-            dy = ndst->height - ox -rs.w;
-	    if(dx+rs.h>ndst->width)rs.h-=(dx+rs.h-ndst->width);
-            break;
-        }
-        LOGD("..Blit %p(%d,%d-%d,%d)-> %p(%d,%d):(%d,%d) h=%d rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,ox,oy,dx,dy,rs.h,opt.eRotate);
-    }
 
-    stDstRect.s32Xpos = dx;
-    stDstRect.s32Ypos = dy;
+    LOGD("..Blit %p(%d,%d-%d,%d)-> %p(%d,%d):(%d,%d) h=%d rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,ox,oy,dx,dy,rs.h,opt.eRotate);
+
+    stDstRect.s32Xpos = dx+screenMargin.x;
+    stDstRect.s32Ypos = dy+screenMargin.y;
     stDstRect.u32Width = rs.w;
     stDstRect.u32Height= rs.h;
     ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);

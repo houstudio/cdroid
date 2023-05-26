@@ -43,16 +43,15 @@ INT GFXInit()
     directfb->CreateSurface( directfb, &desc,&primarySurface);
     return E_OK;
 }
-static int displayRotations[8];
+
 INT GFXGetDisplayCount(){
     return 1;
 }
 
 INT GFXGetDisplaySize(INT disp,UINT*width,UINT*height){
     DFBDisplayLayerConfig dispCfg;
-    GFXInit();
     primaryLayer->GetConfiguration(primaryLayer, &dispCfg );
-    *width=dispCfg.width  - screenMargin.x - screenMargin.w;
+    *width =dispCfg.width  - screenMargin.x - screenMargin.w;
     *height=dispCfg.height- screenMargin.y - screenMargin.h;
     LOGV("screensize=%d,%d margin=(%d,%d,%d,%d)",*width,*height,
 		    screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
@@ -124,8 +123,12 @@ INT GFXCreateSurface(INT dispid,HANDLE*surface,UINT width,UINT height,INT format
      int pitch;
      memset(&desc,0,sizeof(DFBSurfaceDescription));
      if(hwsurface){
+         DFBDisplayLayerConfig dispCfg;
+         primaryLayer->GetConfiguration(primaryLayer, &dispCfg );
          desc.flags=(DSDESC_CAPS|DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT);//|DSDESC_PREALLOCATED);
          desc.caps=DSCCAPS_NONE;//DSCAPS_FLIPPING;
+	 width = dispCfg.width;
+	 height= dispCfg.height;
      }else{
          desc.flags=(DSDESC_CAPS| DSDESC_WIDTH | DSDESC_HEIGHT|DSDESC_PIXELFORMAT);
          desc.caps =DSCAPS_NONE;
