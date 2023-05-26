@@ -38,8 +38,8 @@ list(APPEND SIGMA_INCLUDE_DIRS ./inc)
 link_directories(${PROJECT_SOURCE_DIR}/libs)
 list(APPEND SIGMA_LIBS pthread
 	-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx 
-	)#-lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel
-        #-lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
+	-lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel
+        -lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
 
 include_directories(./
     ../common ../include
