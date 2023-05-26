@@ -7,6 +7,9 @@ int DisplayMetrics::DENSITY_DEVICE=DENSITY_DEFAULT;
 int DisplayMetrics::DENSITY_DEVICEE_STABLE=DENSITY_DEFAULT;
 
 DisplayMetrics::DisplayMetrics(){
+    static int grap_Inited =-1;
+    if(grap_Inited!=E_OK)
+	grap_Inited = GFXInit();
     setToDefaults();
 }
 

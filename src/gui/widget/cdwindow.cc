@@ -60,15 +60,10 @@ Window::Window(int x,int y,int width,int height,int type)
     mInLayout= false;
     Point size;
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
-    const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
     if(width<0)  width = size.x;
     if(height<0) height= size.y;
    
-    if((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270)){
-        std::swap(width,height);  
-    }
     setFrame(x, y, width, height);
-    LOGD("rotation=%d %p rect=(%d,%d,%d,%d) screen.size=%dx%d",rotation,this,x,y,width,height,size.x,size.y);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     setKeyboardNavigationCluster(true);

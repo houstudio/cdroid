@@ -33,6 +33,7 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 InputDevice::InputDevice(int fdev):listener(nullptr){
     INPUTDEVICEINFO devInfos;
     InputDeviceIdentifier di;
+    Point sz;
 
     mDeviceClasses=0;
     InputGetDeviceInfo(fdev,&devInfos);
@@ -41,7 +42,9 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     di.vendor=devInfos.vendor;
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
-    GFXGetDisplaySize(0,&mScreenWidth,&mScreenHeight);//ScreenSize is screen size in no roration
+    WindowManager::getInstance().getDefaultDisplay().getRealSize(sz);
+    mScreenWidth  = sz.x;
+    mScreenHeight = sz.y;//ScreenSize is screen size in no roration
 
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
 	 const INPUTAXISINFO*axis=devInfos.axis+j;
