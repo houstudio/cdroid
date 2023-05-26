@@ -226,13 +226,15 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mNextClusterForwardId= ctx->getId( attrs.getString("nextClusterFoward") );
 
     setRotation( attrs.getFloat("rotation",0) );
-    setTranslationX( attrs.getFloat("translationX",0) );
-    setTranslationY( attrs.getFloat("translationY",0) );
-    setTranslationZ( attrs.getFloat("translationZ",0) );
+    setTranslationX( attrs.getDimensionPixelSize("translationX",0) );
+    setTranslationY( attrs.getDimensionPixelSize("translationY",0) );
+    setTranslationZ( attrs.getDimensionPixelSize("translationZ",0) );
     setRotationX( attrs.getFloat("rotationX",0) );
     setRotationY( attrs.getFloat("rotationY",0) );
     setScaleX( attrs.getFloat("scaleX",1.f) );
     setScaleY( attrs.getFloat("scaleY",1.f) );
+    setPivotX( attrs.getDimensionPixelSize("transformPivotX",0));
+    setPivotY( attrs.getDimensionPixelSize("transformPivotY",0));
 
     setKeyboardNavigationCluster( attrs.getBoolean("keyboardNavigationCluster",false) );
  
