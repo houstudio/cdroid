@@ -19,6 +19,8 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
     setThumbOffset(thumbOffset);
 
     const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
+    mOrientation = attrs.getInt("orientation",std::map<const std::string,int>{
+		    {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}},mOrientation);
     mDisabledAlpha = useDisabledAlpha?attrs.getFloat("disabledAlpha", 0.5f):1.f;
 
     applyThumbTint();
@@ -32,20 +34,21 @@ AbsSeekBar::AbsSeekBar(int w,int h):ProgressBar(w,h){
 }
 
 void AbsSeekBar::initSeekBar(){
-    mKeyProgressIncrement=5;
-    mSplitTrack=false;
-    mThumb=nullptr;
-    mThumbOffset=0;
+    mKeyProgressIncrement = 5;
+    mSplitTrack = false;
+    mThumb = nullptr;
+    mThumbOffset= 0;
+    mOrientation= HORIZONTAL;
     mTickMark = nullptr;
     mIsUserSeekable=true;
     mIsDragging = false;
     mTouchDownX = .0;
     mHasThumbTint = false;
-    mHasThumbTintMode =false;
-    mDisabledAlpha=1.f;
+    mHasThumbTintMode = false;
+    mDisabledAlpha = 1.f;
     mTouchProgressOffset =.0f;
-    mTouchThumbOffset =.0f;
-    mScaledTouchSlop=ViewConfiguration::get(mContext).getScaledTouchSlop();
+    mTouchThumbOffset = .0f;
+    mScaledTouchSlop  = ViewConfiguration::get(mContext).getScaledTouchSlop();
     setFocusable(true);
 }
 
@@ -449,31 +452,54 @@ void AbsSeekBar::setHotspot(float x,float y){
 }
 
 void AbsSeekBar::trackTouchEvent(MotionEvent&event){
-    int x = event.getX();
-    int y = event.getY();
-    int width = getWidth();
-    int availableWidth = width - mPaddingLeft - mPaddingRight;
+    const int x = event.getX();
+    const int y = event.getY();
+    const int width = getWidth();
+    const int height= getHeight();
+    const int availableWidth = width - mPaddingLeft - mPaddingRight;
+    const int availableHeight= height- mPaddingTop - mPaddingBottom;
 
     float scale;
     float progress = 0.0f;
-    if (isLayoutRtl() && mMirrorForRtl) {
-        if (x > width - mPaddingRight) {
-            scale = 0.0f;
-        } else if (x < mPaddingLeft) {
-            scale = 1.0f;
+    if(mOrientation==HORIZONTAL){
+        if (isLayoutRtl() && mMirrorForRtl) {
+            if (x > width - mPaddingRight) {
+                scale = 0.0f;
+            } else if (x < mPaddingLeft) {
+                scale = 1.0f;
+            } else {
+                scale = (availableWidth - x + mPaddingLeft) / (float) availableWidth + mTouchThumbOffset;
+                progress = mTouchProgressOffset;
+            }
         } else {
-            scale = (availableWidth - x + mPaddingLeft) / (float) availableWidth
-		    +mTouchThumbOffset;
-            progress = mTouchProgressOffset;
+            if (x < mPaddingLeft) {
+                scale = 0.0f;
+            } else if (x > width - mPaddingRight) {
+                scale = 1.0f;
+            } else {
+                scale = (x - mPaddingLeft) / (float) availableWidth + mTouchThumbOffset;
+                progress = mTouchProgressOffset;
+            }
         }
-    } else {
-        if (x < mPaddingLeft) {
-            scale = 0.0f;
-        } else if (x > width - mPaddingRight) {
-            scale = 1.0f;
+    }else{
+        if (isLayoutRtl() && mMirrorForRtl) {
+            if (y > height - mPaddingBottom) {
+                scale = 0.0f;
+            } else if (y < mPaddingTop) {
+                scale = 1.0f;
+            } else {
+                scale = (availableHeight - y + mPaddingLeft) / (float) availableHeight  + mTouchThumbOffset;
+                progress = mTouchProgressOffset;
+            }
         } else {
-            scale = (x - mPaddingLeft) / (float) availableWidth + mTouchThumbOffset;
-            progress = mTouchProgressOffset;
+            if (y < mPaddingTop) {
+                scale = 1.0f;
+            } else if (y > height - mPaddingBottom) {
+                scale = .0f;
+            } else {
+                scale = (height-y - mPaddingTop) / (float) availableHeight + mTouchThumbOffset;
+                progress = mTouchProgressOffset;
+            }
         }
     }
 
@@ -499,6 +525,7 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
 	}
         if (isInScrollingContainer()) {
             mTouchDownX = event.getX();
+            mTouchDownY = event.getY();
         } else {
             startDrag(event);
         }
@@ -509,7 +536,9 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
             trackTouchEvent(event);
         } else {
             const float x = event.getX();
-            if (std::abs(x - mTouchDownX) > mScaledTouchSlop) {
+	    const float y = event.getY();
+            if (((mOrientation==HORIZONTAL)&&(std::abs(x - mTouchDownX) > mScaledTouchSlop))||
+	        ((mOrientation==VERTICAL)&&(std::abs(y - mTouchDownY) > mScaledTouchSlop))) {
                 startDrag(event);
             }
         }

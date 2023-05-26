@@ -37,7 +37,7 @@ INT GFXInit()
     DFBSurfaceDescription   desc;
     memset(&desc,0,sizeof(DFBSurfaceDescription));
     desc.flags=DSDESC_CAPS;
-    desc.caps=DSCAPS_PRIMARY|DSCAPS_FLIPPING;
+    desc.caps=DSCAPS_PRIMARY;//|DSCAPS_FLIPPING;
     LOGI("DirectFB ScreenSize %dx%d",dispCfg.width,dispCfg.height);
     directfb->SetCooperativeLevel( directfb, DFSCL_FULLSCREEN );
     directfb->CreateSurface( directfb, &desc,&primarySurface);
@@ -57,25 +57,6 @@ INT GFXGetDisplaySize(INT disp,UINT*width,UINT*height){
     LOGV("screensize=%d,%d margin=(%d,%d,%d,%d)",*width,*height,
 		    screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
     return E_OK;
-}
-
-INT GFXSetRotation(int dispid,GFX_ROTATION rotation){
-    switch(rotation){
-    case ROTATE_0  : primaryLayer->SetRotation(primaryLayer, 0) ; break;
-    case ROTATE_90 : primaryLayer->SetRotation(primaryLayer, 90); break;
-    case ROTATE_180: primaryLayer->SetRotation(primaryLayer,180); break;
-    case ROTATE_270: primaryLayer->SetRotation(primaryLayer,270); break;		     
-    }
-    if( (rotation>=ROTATE_0) && (rotation<=ROTATE_270) &&
-        (dispid>=0) && (dispid<GFXGetDisplayCount()) )
-        displayRotations[dispid]=rotation;
-    return E_OK;
-}
-
-GFX_ROTATION GFXGetRotation(int dispid){
-    if((dispid>=0)&&(dispid<GFXGetDisplayCount()))
-	return displayRotations[dispid];
-    return 0;
 }
 
 INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
@@ -129,7 +110,7 @@ INT GFXFlip(HANDLE surface){
     IDirectFBSurface*dfbdst=primarySurface;
     DFBRegion clip;
     primarySurface->GetClip(primarySurface,&clip);
-    int ret=primarySurface->Flip(primarySurface,&clip, DSFLIP_ONSYNC);
+    int ret=0;//primarySurface->Flip(primarySurface,&clip, DSFLIP_ONSYNC);
     return ret;
 }
 
@@ -181,35 +162,12 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
      dfbdst->SetPorterDuff(dfbdst,DSPD_SRC_OVER);
      const int ox=dx,oy=dy;
      rd=rs;
-     if(dfbdst == primarySurface){//LOGE("-----cant reatch");
-         switch(GFXGetRotation(0)){/*directfb's rotation is clockwise*/
-         case ROTATE_0 : dfbdst->SetBlittingFlags(dfbdst,DSBLIT_NOFX);
-		     dx += screenMargin.x;
-		     dy += screenMargin.y;
-		     break;
-         case ROTATE_90: dx = oy + screenMargin.x;
-		     dy = dstheight -ox - rs.w -screenMargin.h;
-		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE90);
-		     rd.w = rs.h; rd.h=rs.w;
-		     break;
-         case ROTATE_180:dx = dstwidth -ox -rs.w - screenMargin.w;
-                     dy = dstheight-oy -rs.h - screenMargin.h;
-		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE180);
-		     break;
-         case ROTATE_270:dx = dstwidth -oy -rs.h -screenMargin.w;
-		     dy = ox - screenMargin.y;
-		     dfbdst->SetBlittingFlags(dfbdst,DSBLIT_ROTATE270);
-		     rd.w = rs.h; rd.h=rs.w;
-		     break;
-         default: return E_ERROR;
-         }
-     }
-     dfbdst->Blit(dfbdst,dfbsrc,&rs,dx,dy);
+     dfbdst->Blit(dfbdst,dfbsrc,&rs,dx+screenMargin.x,dy+screenMargin.y);
      region.x1= dx;
      region.y1= dy;
      region.x2= dx+rd.w;
      region.y2= dy+rd.h;
-     dfbdst->SetClip(dfbdst, &region);
+     //dfbdst->SetClip(dfbdst, &region);
      LOGV("dstsurface=%p/primarySurface=%p srcsurface=%p (%d,%d,%d,%d) to pos(%d,%d)/(%d,%d)",
 		     dstsurface,primarySurface,srcsurface,rs.x,rs.y,rs.w,rs.h,ox,oy,dx,dy);
      return ret;

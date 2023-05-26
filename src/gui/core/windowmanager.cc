@@ -28,7 +28,6 @@ namespace cdroid {
 WindowManager* WindowManager::mInst = nullptr;
 
 WindowManager::WindowManager(){
-     GraphDevice::getInstance();
      mActiveWindow = nullptr;
 }
 
@@ -50,11 +49,21 @@ WindowManager::~WindowManager() {
     LOGD("%p Destroied",this);
 }
 
-Display&WindowManager::getDefaultDisplay(){
+void WindowManager::setDisplayRotation(int rot){
+    mDisplayRotation = rot;
+    LOGD("rotation = %d",rot);
+}
+
+int WindowManager::getDisplayRotation()const{
+    return mDisplayRotation;
+}
+
+Display& WindowManager::getDefaultDisplay(){
     if(mDisplays.size()==0){
 	size_t dc=GFXGetDisplayCount();
 	for(size_t i=0;i<dc;i++){
 	    DisplayInfo info;
+	    info.rotation = mDisplayRotation;
 	    GFXGetDisplaySize(i,(UINT*)&info.logicalWidth,(UINT*)&info.logicalHeight);
 	    Display d(i,info);
 	    mDisplays.push_back(d);
@@ -87,6 +96,7 @@ void WindowManager::addWindow(Window*win){
 #else
     Looper::getDefault()->addEventHandler(win->mUIEventHandler);
 #endif
+    win->post(std::bind(&Window::onCreate,win));
     win->post(std::bind(&Window::onActive,win));
     mActiveWindow = win;
     LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,mWindows.size());
@@ -133,9 +143,21 @@ void WindowManager::moveWindow(Window*w,int x,int y){
     rcw2.left = x;
     rcw2.top = y;
     w->setFrame(x,y,rcw.width,rcw.height);
+    auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     if( w->isAttachedToWindow() && (w->getVisibility()==View::VISIBLE)){
         GraphDevice::getInstance().invalidate(rcw);
         GraphDevice::getInstance().invalidate(rcw2);
+	for(auto it = mWindows.begin();it<itw;it++){
+	   Rect rc = w->getBound();
+	   RefPtr<Region>newrgn = Region::create((RectangleInt&)rc);
+	   for( auto it2 = it+1 ; it2 < itw ; it2++){
+	       Rect r = (*it)->getBound();
+	       newrgn->subtract((const RectangleInt&)r);
+	   }
+	   newrgn->translate(-rcw.left,-rcw.top);
+	   (*it)->mPendingRgn->do_union((RectangleInt&)rcw);
+	   (*it)->mPendingRgn->subtract((RectangleInt&)rcw2);
+	}
         GraphDevice::getInstance().flip();
     }
 }

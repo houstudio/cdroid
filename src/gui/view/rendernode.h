@@ -52,6 +52,7 @@ public:
     void  setTop(float);
     void  setRight(float);
     void  setBottom(float);
+    void  setLeftTopRightBottom(float,float,float,float);
 };
 
 }

@@ -55,6 +55,7 @@ public:
     Layout(int fontSize,int width);
     Layout(const Layout&l);
     void setAlignment(int alignment);
+    int  getAlignment()const;
     void setWidth(int width);
     int  getWidth()const;
     void setFont(Typeface*tf);

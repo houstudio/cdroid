@@ -3,13 +3,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <CandidateView
-            android:id="@+id/predict2"
-            android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_alignParentTop="true"
-	    android:candidate_background="#112233"
-	    android:candidate_normal="#FFFFFF"
-	    android:candidate_recommand="#FF0000"/>
+        android:id="@+id/predict2"
+        android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:layout_alignParentTop="true"
+	android:candidate_background="#112233"
+	android:candidate_normal="#FFFFFF"
+	android:candidate_recommand="#FF0000"/>
+    <Button
+	android:id="@+id/closekeyboard"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:layout_alignParentTop="true"
+	android:layout_alignParentRight="true"
+	android:layout_alignEnd="@id/predict2"
+	android:layout_alignBottom="@id/predict2"
+	android:background="#ff2233"
+	android:text="+"/>
     <ListView
         android:id="@+id/predict1"
         android:layout_width="200dp"

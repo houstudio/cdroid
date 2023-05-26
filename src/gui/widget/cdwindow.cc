@@ -39,11 +39,11 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 #endif
     setFrame(0,0,1280,720);
     setFocusable(true);
-    mInLayout=false;
+    mInLayout = false;
     setKeyboardNavigationCluster(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     WindowManager::getInstance().addWindow(this);
-    mPendingRgn=Cairo::Region::create();
+    mPendingRgn = Cairo::Region::create();
 }
 
 Window::Window(int x,int y,int width,int height,int type)
@@ -55,21 +55,20 @@ Window::Window(int x,int y,int width,int height,int type)
 #else
     mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
 #endif
-    mPendingRgn=Cairo::Region::create();
-    mContext=&App::getInstance();
-    mInLayout=false;
+    mPendingRgn = Cairo::Region::create();
+    mContext = &App::getInstance();
+    mInLayout= false;
     Point size;
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
-    if((width<0)||(height<0)){
-	width=size.x;
-        height=size.y;
-    }
-    if(GFXGetRotation(0)==ROTATE_90||GFXGetRotation(0)==ROTATE_270){
-	int tmp=height;
-	height=width;
-	width=tmp;
+    const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
+    if(width<0)  width = size.x;
+    if(height<0) height= size.y;
+   
+    if((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270)){
+        std::swap(width,height);  
     }
     setFrame(x, y, width, height);
+    LOGD("rotation=%d %p rect=(%d,%d,%d,%d) screen.size=%dx%d",rotation,this,x,y,width,height,size.x,size.y);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     setKeyboardNavigationCluster(true);
@@ -105,8 +104,8 @@ const std::string Window::getText()const{
 }
 
 void Window::draw(){
-    RefPtr<Canvas>canvas=getCanvas();
-    mAttachInfo->mDrawingTime=SystemClock::uptimeMillis();
+    RefPtr<Canvas>canvas = getCanvas();
+    mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);
     if(DEBUG_DRAW)drawInvalidateRegion(*canvas);
     mPendingRgn->do_union(mInvalidRgn);
@@ -126,7 +125,7 @@ View& Window::setPos(int x,int y){
 
 View& Window::setAlpha(float alpha){
     if(isAttachedToWindow()){
-        RefPtr<Canvas> canvas=getCanvas();
+        RefPtr<Canvas> canvas = getCanvas();
 	LOGV("setAlpha(%p,%d)",this,(int)(alpha*255));
 	GFXSurfaceSetOpacity(canvas->mHandle, (alpha*255));
     }
@@ -154,12 +153,39 @@ void Window::onFinishInflate(){
 }
 
 RefPtr<Canvas>Window::getCanvas(){
+    RefPtr<Canvas> canvas;
     //for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
-    if(mAttachInfo == nullptr) return nullptr;
-    RefPtr<Canvas> canvas = mAttachInfo->mCanvas;
-    if((canvas==nullptr)&&(getVisibility()==VISIBLE)){
-        canvas = make_refptr_for_instance<Canvas>(new Canvas(getWidth(),getHeight()));
-        mAttachInfo->mCanvas=canvas;
+    if(mAttachInfo == nullptr)
+	return nullptr;
+    canvas = mAttachInfo->mCanvas;
+    if((canvas==nullptr)&&(getVisibility()==VISIBLE)){	
+	const int rotation  = WindowManager::getInstance().getDefaultDisplay().getRotation();
+	const int swapeWH = (rotation == Display::ROTATION_90)||(rotation == Display::ROTATION_270);
+	const int canvasWidth = swapeWH?getHeight():getWidth();
+	const int canvasHeight= swapeWH?getWidth():getHeight();
+
+	canvas = make_refptr_for_instance<Canvas>(new Canvas(canvasWidth,canvasHeight));
+        mAttachInfo->mCanvas = canvas;
+	Cairo::Matrix matrix = Cairo::identity_matrix();
+	LOGD("rotation=%d window.size=%dx%d canvas.size=%dx%d",rotation*90,getWidth(),getHeight(),canvasWidth,canvasHeight);
+	switch(rotation){
+        case Display::ROTATION_0:break;
+        case Display::ROTATION_90:
+	   matrix.rotate(-90.*M_PI/180.);
+           matrix.translate(-canvasHeight,0);
+	   canvas->transform(matrix);
+	   break;
+        case Display::ROTATION_180:
+	   matrix.translate(canvasWidth,canvasHeight);
+	   matrix.scale(-1,-1);
+	   canvas->transform(matrix);
+	   break;
+        case Display::ROTATION_270:
+	   matrix.translate(canvasWidth,0);
+	   matrix.rotate(90.*M_PI/180.);
+	   canvas->transform(matrix);
+	   break;
+	}
     }
     const int num = mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
@@ -171,12 +197,15 @@ RefPtr<Canvas>Window::getCanvas(){
     return canvas;
 }
 
+void Window::onCreate(){
+    LOGV("%p[%s]:%d",this,getText().c_str(),mID);
+}
 void Window::onActive(){
-    LOGV("%p[%s]",this,getText().c_str());
+    LOGV("%p[%s]:%d",this,getText().c_str(),mID);
 }
 
 void Window::onDeactive(){
-    LOGV("%p[%s]",this,getText().c_str());
+    LOGV("%p[%s]:%d",this,getText().c_str(),mID);
 }
 
 int Window::processInputEvent(InputEvent&event){
@@ -192,7 +221,7 @@ int Window::processPointerEvent(MotionEvent&event){
 int Window::processKeyEvent(KeyEvent&event){
     int handled = FINISH_NOT_HANDLED;
     int groupNavigationDirection = 0;
-    const int action=event.getAction();
+    const int action = event.getAction();
     LOGV_IF(action==KeyEvent::ACTION_DOWN,"key:0x%x %s %x",event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KEY_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
@@ -204,8 +233,8 @@ int Window::processKeyEvent(KeyEvent&event){
             groupNavigationDirection = View::FOCUS_BACKWARD;
         }
     }
-    if(action==KeyEvent::ACTION_DOWN){
-        if(groupNavigationDirection!=0){
+    if(action == KeyEvent::ACTION_DOWN){
+        if(groupNavigationDirection != 0){
             if(performKeyboardGroupNavigation(groupNavigationDirection))
                 return FINISH_HANDLED;
         }else {
@@ -218,9 +247,9 @@ int Window::processKeyEvent(KeyEvent&event){
 }
 
 bool Window::dispatchKeyEvent(KeyEvent&event){
-    View* focused =getFocusedChild();
-    bool handled=false;
-    const int action=event.getAction();
+    View* focused = getFocusedChild();
+    bool handled  = false;
+    const int action = event.getAction();
     if(focused && focused->dispatchKeyEvent(event))
         return true;
     int groupNavigationDirection = 0;
@@ -232,15 +261,15 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
             groupNavigationDirection = View::FOCUS_BACKWARD;
         }
     }
-    if(action==KeyEvent::ACTION_DOWN){
+    if(action == KeyEvent::ACTION_DOWN){
         if(groupNavigationDirection!=0)
             return performKeyboardGroupNavigation(groupNavigationDirection);
-        handled=performFocusNavigation(event);
+        handled = performFocusNavigation(event);
     }
     if(!handled){
         switch(action){
-        case KeyEvent::ACTION_UP  : 
-        case KeyEvent::ACTION_DOWN: 
+        case KeyEvent::ACTION_UP  :handled = onKeyUp(event.getKeyCode(),event);break; 
+        case KeyEvent::ACTION_DOWN:handled = onKeyDown(event.getKeyCode(),event);break;
              handled = ViewGroup::dispatchKeyEvent(event);break;
         default:break;
         }
@@ -265,9 +294,9 @@ bool Window::performFocusNavigation(KeyEvent& event){
     }
 
     if (direction != -1){
-        ViewGroup*mView=(ViewGroup*)this;
-        View* focused = mView->findFocus();
-        Rect& mTempRect=mRectOfFocusedView;
+        ViewGroup*mView= (ViewGroup*)this;
+        View* focused  = mView->findFocus();
+        Rect& mTempRect= mRectOfFocusedView;
         if (focused != nullptr) {
             View* v = mView->focusSearch(focused,direction);
             LOGV("mView=%p focused=%p:%d v=%p",mView,focused,focused->getId(),v);
@@ -310,9 +339,9 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
 }
 
 bool Window::onKeyUp(int keyCode,KeyEvent& evt){
+    LOGD("recv %d %s flags=%x track=%d cance=%d",keyCode,evt.getLabel(),evt.getFlags(),evt.isTracking(),evt.isCanceled());
     switch(keyCode){
     case KEY_ESCAPE:
-        LOGD("recv %d %s flags=%x track=%d cance=%d",keyCode,evt.getLabel(),evt.getFlags(),evt.isTracking(),evt.isCanceled());
         if(evt.isTracking()&&!evt.isCanceled()){
             onBackPressed();
             return true;
@@ -322,6 +351,7 @@ bool Window::onKeyUp(int keyCode,KeyEvent& evt){
 }
 
 void Window::onBackPressed(){
+    LOGD("recv BackPressed");
     post([this](){WindowManager::getInstance().removeWindow(this);} );
 }
 
@@ -347,34 +377,11 @@ void Window::doLayout(){
         const MarginLayoutParams*lp= (const MarginLayoutParams*)view->getLayoutParams();
         const int horzMargin = lp->leftMargin+lp->rightMargin;
         const int vertMargin = lp->topMargin+lp->bottomMargin;
-        const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth()-horzMargin,MeasureSpec::EXACTLY);
-        const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()-vertMargin,MeasureSpec::EXACTLY);
+        const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth() - horzMargin,MeasureSpec::EXACTLY);
+        const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()- vertMargin,MeasureSpec::EXACTLY);
         view->measure(widthSpec, heightSpec);
-        view->layout(lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
+        view->layout (lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
     }
-#if 0//for multi children ,treat as absolute layout,do nothing
-    for(auto c:mChildren){
-        ViewGroup*vg=dynamic_cast<ViewGroup*>(c);
-        if(vg==nullptr)continue;
-        MarginLayoutParams*lp= (MarginLayoutParams*)vg->getLayoutParams();
-        const int horzMargin = lp->leftMargin+lp->rightMargin;
-        const int vertMargin = lp->topMargin+lp->bottomMargin;
-        int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth()-horzMargin,MeasureSpec::EXACTLY);
-        int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()-vertMargin,MeasureSpec::EXACTLY);
-        LOGV("lp=%p  layoutsize=%d,%d",lp,lp->width,lp->height);
-
-        if(vg->getWidth()>0) widthSpec =MeasureSpec::makeMeasureSpec(vg->getWidth(),MeasureSpec::EXACTLY);
-        else if(vg->getWidth()<0)widthSpec=MeasureSpec::makeMeasureSpec(lp->width,MeasureSpec::AT_MOST);
-        else widthSpec=MeasureSpec::makeMeasureSpec(mRight-mLeft,MeasureSpec::EXACTLY);
-    
-        if(vg->getHeight()>0) heightSpec =MeasureSpec::makeMeasureSpec(vg->getHeight(),MeasureSpec::EXACTLY);
-        else if(vg->getHeight()<0)heightSpec=MeasureSpec::makeMeasureSpec(lp->height,MeasureSpec::AT_MOST);
-        else heightSpec=MeasureSpec::makeMeasureSpec(mBottom-mTop,MeasureSpec::EXACTLY);
-
-        vg->measure(widthSpec, heightSpec);
-        vg->layout(lp->leftMargin,lp->topMargin,vg->getWidth(),vg->getHeight());
-    }
-#endif
     mPrivateFlags&=~PFLAG_FORCE_LAYOUT;
     mInLayout=false;
 }

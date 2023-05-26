@@ -1,4 +1,6 @@
 #include <core/displaymetrics.h>
+#include <porting/cdgraph.h>
+
 namespace cdroid{
 
 int DisplayMetrics::DENSITY_DEVICE=DENSITY_DEFAULT;
@@ -30,6 +32,7 @@ void DisplayMetrics::setTo(const DisplayMetrics& o) {
 void DisplayMetrics::setToDefaults() {
     widthPixels = 1280;
     heightPixels = 720;
+    GFXGetDisplaySize(0,(UINT*)&widthPixels,(UINT*)&heightPixels);
     density =  DENSITY_DEVICE / (float) DENSITY_DEFAULT;
     densityDpi =  DENSITY_DEVICE;
     scaledDensity = density;

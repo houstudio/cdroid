@@ -11,6 +11,7 @@
 #include <sstream>
 #include <keylayoutmap.h>
 #include <core/app.h>
+#include <core/windowmanager.h>
 
 using namespace std;
 namespace cdroid{
@@ -261,39 +262,39 @@ static int ABS2AXIS(int absaxis){
 }
 
 void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
-    const GFX_ROTATION rot=GFXGetRotation(0);
-    auto it=mPointMAP.find(index);
-    axis=ABS2AXIS(axis);
+    const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
+    auto it = mPointMAP.find(index);
+    axis = ABS2AXIS(axis);
     switch(axis){
     case MotionEvent::AXIS_X:
-       switch(rot){
-       case ROTATE_0  : break;
-       case ROTATE_90 : axis = MotionEvent::AXIS_Y; break; /*value=value;*/
-       case ROTATE_180: value= mTPWidth-value; break;
-       case ROTATE_270: axis = MotionEvent::AXIS_Y; value = mTPWidth - value; break;
+       switch(rotation){
+       case Display::ROTATION_0  : break;
+       case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; break; /*value=value;*/
+       case Display::ROTATION_180: value= mTPWidth-value; break;
+       case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mTPWidth - value; break;
        }
-       if(mScreenWidth!=mTPWidth)
-	   value = (value-mRangeXMin)*mScreenWidth/mTPWidth;
+       if(mScreenWidth != mTPWidth)
+	   value = (value-mRangeXMin) * mScreenWidth/mTPWidth;
        break;
     case MotionEvent::AXIS_Y:
-       switch(rot){
-       case ROTATE_0  : break;
-       case ROTATE_90 : axis=MotionEvent::AXIS_X; value = mTPHeight - value; break;
-       case ROTATE_180: value=mTPHeight-value; break;
-       case ROTATE_270: axis=MotionEvent::AXIS_X; break; /*value=value;*/
+       switch(rotation){
+       case Display::ROTATION_0  : break;
+       case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mTPHeight - value; break;
+       case Display::ROTATION_180: value= mTPHeight-value; break;
+       case Display::ROTATION_270: axis = MotionEvent::AXIS_X; break; /*value=value;*/
        }
-       if(mScreenHeight!=mTPHeight)
-	   value = (value-mRangeYMin)*mScreenHeight/mTPHeight;
+       if(mScreenHeight != mTPHeight)
+	   value = (value-mRangeYMin) * mScreenHeight/mTPHeight;
        break;
     case MotionEvent::AXIS_Z:break;
     default:return;
     }
-    if(it==mPointMAP.end()){
+    if(it == mPointMAP.end()){
         TouchPoint tp;
         tp.coord.clear();
-        tp.prop.id=mPointMAP.size();
-        auto it2=mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
-        it=it2.first;
+        tp.prop.id= mPointMAP.size();
+        auto it2 = mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
+        it = it2.first;
     }
     it->second.coord.setAxisValue(axis,value);
 }

@@ -682,7 +682,7 @@ void ImageView::onDraw(Canvas& canvas) {
                     mScrollY  + getHeight()- mPaddingBottom);
             canvas.clip();
         }
-        LOGD("%p:%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mDrawMatrix.xx,mDrawMatrix.yx,
+        LOGV("%p:%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mDrawMatrix.xx,mDrawMatrix.yx,
 		mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
         canvas.translate(mPaddingLeft, mPaddingTop);
         canvas.transform(mDrawMatrix);

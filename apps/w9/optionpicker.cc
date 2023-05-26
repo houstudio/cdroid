@@ -21,7 +21,6 @@ OptionPicker::OptionPicker(Context*ctx,const AttributeSet&attr):RelativeLayout(c
     mNumberPicker->setVisibility(View::GONE);
     mNumberPicker->setMinValue(0);
     mNumberPicker->setMaxValue(5);
-    mNumberPicker->setTextSizeInterpolator(new PickerInterpolator());
     mText1=(TextView*)findViewById(w9::R::id::text1);
     mText2=(TextView*)findViewById(w9::R::id::text2);
     mText1->setText(attr.getString("text1"));

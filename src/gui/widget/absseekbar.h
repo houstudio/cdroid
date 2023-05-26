@@ -5,12 +5,17 @@
 namespace cdroid{
 
 class AbsSeekBar:public ProgressBar{
+public:
+    static constexpr int HORIZONTAL =0;
+    static constexpr int VERTICAL =1;
 private:
     bool mSplitTrack;
     bool mHasThumbTint;
     bool mHasThumbTintMode;
     float mDisabledAlpha;
     float mTouchDownX;
+    float mTouchDownY;
+    int  mOrientation;
     int  mScaledTouchSlop;
     int  mTouchThumbOffset;
     int  mTickMarkTintMode;

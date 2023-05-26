@@ -44,5 +44,5 @@ target_link_libraries(${PROJECT_NAME} litehtml )#CURL::libcurl ${LB_LIBS_LIBRARI
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11  C_STANDARD 99)
 
-add_executable(htmltest main.cpp)
-target_link_libraries(htmltest litebrowser cdroid)
+#add_executable(htmltest main.cpp)
+#target_link_libraries(htmltest litebrowser cdroid)

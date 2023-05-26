@@ -49,7 +49,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     mNoInvalidate = false;
     setIndeterminate(mOnlyIndeterminate||attrs.getBoolean("indeterminate",false));
 
-    mMirrorForRtl =attrs.getBoolean("mirrorForRtl",false); 
+    mMirrorForRtl = attrs.getBoolean("mirrorForRtl",false); 
 
     setMin(attrs.getInt("min",mMin));
     setMax(attrs.getInt("max",mMax));
@@ -63,11 +63,11 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
 ProgressBar::ProgressBar(int width, int height):View(width,height){
     initProgressBar();
-    mMirrorForRtl=false;
-    indeterminatePos=0;
-    mHasAnimation=false;
-    mAttached=false;
-    mShouldStartAnimationDrawable=false;
+    mMirrorForRtl = false;
+    mHasAnimation = false;
+    indeterminatePos = 0;
+    mAttached = false;
+    mShouldStartAnimationDrawable = false;
     setProgressDrawable(mContext->getDrawable("cdroid:drawable/progress_horizontal.xml"));
 }
 

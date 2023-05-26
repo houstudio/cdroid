@@ -51,6 +51,8 @@ private:
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
+    /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window 
+     *is resized or moved*/
     Cairo::RefPtr<Cairo::Region>mPendingRgn;
     int window_type;/*window type*/
     int mLayer;/*surface layer*/
@@ -95,6 +97,7 @@ public:
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();
+    virtual void onCreate();
     virtual void onActive();
     virtual void onDeactive();
     bool dispatchKeyEvent(KeyEvent&event)override;

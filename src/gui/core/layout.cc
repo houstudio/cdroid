@@ -467,19 +467,22 @@ std::wstring&Layout::getText(){
 }
 
 void Layout::setAlignment(int align){
-    mAlignment=align;
+    mAlignment = align;
+}
+int Layout::getAlignment()const{
+    return mAlignment;
 }
 
 void Layout::setMultiline(bool enable){
-    mMultiline=enable;
+    mMultiline = enable;
 }
 
 void Layout::setCaretPos(int pos){
-    mCaretPos=pos;
+    mCaretPos = pos;
 }
 
 void Layout::setBreakStrategy(int breakStrategy){
-    mBreakStrategy=breakStrategy;
+    mBreakStrategy = breakStrategy;
     mLayout++;
 }
 

@@ -3538,10 +3538,10 @@ bool View::setFrame(int left,int top,int width,int height){
         invalidate(sizeChanged);
 
         mLeft = left;
-        mTop = top;
-        mRight  = left+width;
-        mBottom = top+height;
-
+        mTop  = top;
+        mRight  = left+ width;
+        mBottom = top + height;
+        mRenderNode->setLeftTopRightBottom(mLeft, mTop, mRight, mBottom);
         LOGV("%p:%d (%d,%d %d,%d)",this,mID,left,top,width,height);
         mPrivateFlags |= PFLAG_HAS_BOUNDS;
 

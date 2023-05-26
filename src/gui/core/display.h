@@ -53,6 +53,12 @@ public:
         TYPE_OVERLAY,
         TYPE_VIRTUAL
     };
+    enum Rotation{
+        ROTATION_0,
+        ROTATION_90,
+        ROTATION_180,
+        ROTATION_270
+    };
 private:
     void updateDisplayInfoLocked();   
 public:

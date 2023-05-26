@@ -84,7 +84,7 @@ void HomeWindow::onButtonClick(View&v){
 void HomeWindow::onWashOptionClick(View&v){
     switch(v.getId()){
     case 100:{
-	       Window*w=new WashOptionsWindow(-1);
+	       Window*w=new WashOptionsWindow(0,0,-1,-1);
 	       anim->removeAllUpdateListeners();
                anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([w,this](ValueAnimator&anim){
                     const float t=anim.getAnimatedValue().get<float>();

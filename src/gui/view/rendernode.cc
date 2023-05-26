@@ -30,13 +30,13 @@ static inline float sdot(float a,float b,float c,float d){
 }
 
 void RenderNode::getMatrix(Matrix&outMatrix)const{
-    outMatrix= identity_matrix();
+    outMatrix = identity_matrix();
     outMatrix.translate(mTranslationX,mTranslationY);
     outMatrix.scale(mScaleX,mScaleY);
 
-    const float radians=mRotation*M_PI/180.f;
-    const float fsin=sin(radians);
-    const float fcos=cos(radians);
+    const float radians = mRotation*M_PI/180.f;
+    const float fsin = sin(radians);
+    const float fcos = cos(radians);
     Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1.f-fcos,mPivotX),sdot(fsin,mPivotX,1.f-fcos,mPivotY));
     outMatrix.multiply(outMatrix,rt);
 }
@@ -157,6 +157,9 @@ void RenderNode::setRight(float){
 }
 
 void RenderNode::setBottom(float){
+}
+
+void RenderNode::setLeftTopRightBottom(float left,float top,float right,float bottom){
 }
 
 }

@@ -63,6 +63,12 @@ public:
        mText2IM.clear();
        candidateView->setSuggestions(predicts,true,true);
    }
+   void onCloseKeyboard(View&v){
+       LOGD("close IME'sKeyboard");
+       Point sz;
+       WindowManager::getInstance().getDefaultDisplay().getSize(sz);
+       setPos(0,sz.y);
+   }
 };
 
 IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
@@ -73,6 +79,8 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     candidateView = (CandidateView*)findViewById(cdroid::R::id::predict2);
     candidateView->setPredictListener(std::bind(&IMEWindow::onPredict,this,std::placeholders::_1,
 	   std::placeholders::_2,std::placeholders::_3));
+    View* closeKbd = findViewById(cdroid::R::id::closekeyboard);
+    closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
     requestLayout();
     setVisibility(INVISIBLE);
     listener.onPress=[this](int primaryCode){
@@ -104,13 +112,25 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
 	    }break;
         }
     };
-    listener.onRelease=[this](int primaryCode){
+    listener.onRelease = [this](int primaryCode){
     };
-    listener.onText=[](std::string&text){
+    listener.onText= [](std::string&text){
         LOGD("onText(%s)",text.c_str());
     };
-    listener.onKey=[](int primaryCode,const std::vector<int>&keyCodes){
+    listener.onKey = [this](int primaryCode,const std::vector<int>&keyCodes){
+        KeyEvent keyEvent;
+        InputMethodManager&imm = InputMethodManager::getInstance();
         LOGV("primaryCode=%x %d keys",primaryCode,keyCodes.size());
+        switch(primaryCode){
+        case Keyboard::KEYCODE_MODE_CHANGE://changeMode();break;
+        case Keyboard::KEYCODE_SHIFT    :  changeCapital();break;
+        case Keyboard::KEYCODE_DONE     :  break;
+        case Keyboard::KEYCODE_DELETE:
+        case Keyboard::KEYCODE_BACKSPACE:
+             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,KEY_BACK,
+		   0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
+             imm.sendKeyEvent(keyEvent);break;
+	}
     };
     kbdView->setOnKeyboardActionListener(listener);
 #if 0
@@ -267,8 +287,14 @@ void InputMethodManager::sendKeyEvent(KeyEvent&k){
 void InputMethodManager::setInputType(int inputType){
     LOGV("type=%d",inputType);
     if( mInst->imeWindow == nullptr){
-        mInst->imeWindow = new IMEWindow(1280,300);
-        mInst->imeWindow->setPos(0,420);
+        Point dspSize;
+        mInst->imeWindow = new IMEWindow(-1,300);
+	Display& dp = WindowManager::getInstance().getDefaultDisplay();
+        const int rotation = dp.getRotation();
+        dp.getRealSize(dspSize);
+	const int screenHeight=((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270))?dspSize.x:dspSize.y;
+        mInst->imeWindow->setPos(0,screenHeight-mInst->imeWindow->getHeight());
+	LOGD("screenHeight=%d imewin.height=%d",screenHeight,mInst->imeWindow->getHeight());
     }
     if(mInputType!=inputType){
         mInputType=inputType;

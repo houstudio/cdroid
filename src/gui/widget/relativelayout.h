@@ -110,7 +110,7 @@ private:
     // Compatibility hack. Old versions of the platform would not take
     // margins and padding into account when generating the height measure spec
     // for children during the horizontal measure pass.
-    bool mMeasureVerticalWithPaddingMargin = false;
+    bool mMeasureVerticalWithPaddingMargin = true;
 
     // A default width used for RTL measure pass
     /** Value reduced so as not to interfere with View's measurement spec. flags. See:

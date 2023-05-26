@@ -63,7 +63,7 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     }
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     GFXInit();
-    GFXSetRotation(0,(GFX_ROTATION)((getArgAsInt("rotate",0)/90)%4));
+    WindowManager::getInstance().setDisplayRotation((getArgAsInt("rotate",0)/90)%4);
     setOpacity(getArgAsInt("alpha",255));
     GraphDevice::getInstance().showFPS(hasSwitch("fps"));
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));

@@ -41,6 +41,7 @@ AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateSta
     mIncrement= 360./state->mFramesCount;
     mCurrentDegrees = .0f;
 
+    updateLocalState();
     mNextFrame = [this](){
         mCurrentDegrees += mIncrement;
         if (mCurrentDegrees > (360.0f - mIncrement)) {

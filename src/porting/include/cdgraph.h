@@ -28,14 +28,6 @@ typedef enum {
     GPF_RGB32
 }GFXPIXELFORMAT;
 /** @} */
-/*roation in anticlockwise*/
-typedef enum{
-    ROTATE_0,
-    ROTATE_90,
-    ROTATE_180,
-    ROTATE_270,
-    ROTATE_NUM
-}GFX_ROTATION;
 /**
  @defgroup graphStruct Structs
  @brief .
@@ -80,9 +72,6 @@ INT GFXGetDisplayCount();
 
 /**GFXGetDisplaySize return phisical display  size in no rotation*/
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height);
-/**this function set rotation of display*/
-INT GFXSetRotation(int dispid, GFX_ROTATION roatation);
-GFX_ROTATION GFXGetRotation(int dispid);
 /**This function create an OSD Surface which we can used to draw sth.
     @param [out]surface                      The value used to return surface handle.
     @param [in]width                         The value give the surface width in pixels.

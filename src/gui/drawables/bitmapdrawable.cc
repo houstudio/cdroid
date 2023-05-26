@@ -361,7 +361,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         }
         canvas.set_source(mBitmapState->mBitmap, dx, dy );
         Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
-        if(spat)spat->set_filter(SurfacePattern::Filter::FAST);
+        if(spat)spat->set_filter(SurfacePattern::Filter::GOOD);
         canvas.paint_with_alpha(alpha);
     }
     canvas.restore();

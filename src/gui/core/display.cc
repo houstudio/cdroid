@@ -4,9 +4,9 @@ namespace cdroid{
 
 Display::Display(int id,DisplayInfo&displayInfo)
 	:mDisplayId(id),mIsValid(true){
-   mDisplayInfo=displayInfo;
-   mType=TYPE_BUILT_IN;
-   displayInfo.type=mType;
+   mDisplayInfo = displayInfo;
+   mType = TYPE_BUILT_IN;
+   displayInfo.type = mType;
 }
 
 void Display::updateDisplayInfoLocked(){
@@ -33,6 +33,9 @@ bool Display::getDisplayInfo(DisplayInfo&info){
 void Display::getSize(Point&outSize){
     updateDisplayInfoLocked();
     GFXGetDisplaySize(mDisplayId,(UINT*)&outSize.x,(UINT*)&outSize.y);
+    const int rotation = mDisplayInfo.rotation;
+    if((rotation==ROTATION_90)||(mDisplayInfo.rotation==ROTATION_270))
+        std::swap(outSize.x,outSize.y);
 }
 
 void Display::getRealSize(Point&outSize){
@@ -42,7 +45,7 @@ void Display::getRealSize(Point&outSize){
 
 int Display::getRotation(){
     updateDisplayInfoLocked();
-    return GFXGetRotation(mDisplayId);
+    return mDisplayInfo.rotation;
 }
 
 void Display::getMetrics(DisplayMetrics&outMetrics){

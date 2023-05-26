@@ -27,6 +27,16 @@
 namespace cdroid {
 
 class WindowManager {
+private:
+    int mDisplayRotation;
+    Window*mActiveWindow;/*activeWindow*/
+    std::vector< Window* > mWindows;
+    std::vector<Display>mDisplays;
+    static WindowManager* mInst;
+private:
+    friend class GraphDevice;
+    WindowManager();
+    virtual ~WindowManager();
 public:
     DECLARE_UIEVENT(bool,WNDENUMPROC,Window*);
     class LayoutParams:public ViewGroup::LayoutParams{
@@ -38,6 +48,8 @@ public:
     };
 public:
     static WindowManager& getInstance();
+    void setDisplayRotation(int);
+    int  getDisplayRotation()const;
     Display&getDefaultDisplay();
     void addWindow(Window*w);
     void removeWindow(Window*w);
@@ -51,14 +63,6 @@ public:
 protected:
     virtual void onKeyEvent(KeyEvent&key);
     virtual void onMotion(MotionEvent&event);
-private:
-    friend class GraphDevice;
-    WindowManager();
-    virtual ~WindowManager();
-    Window*mActiveWindow;/*activeWindow*/
-    std::vector< Window* > mWindows;
-    std::vector<Display>mDisplays;
-    static WindowManager* mInst;
     DISALLOW_COPY_AND_ASSIGN(WindowManager);
 };
 

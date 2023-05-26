@@ -128,15 +128,6 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
 INT GFXGetDisplayCount(){
     return 1;
 }
-static int rotations[2];
-INT GFXSetRotation(int dispid, GFX_ROTATION rotation){
-    rotations[dispid]=rotation;
-    return E_OK;
-}
-
-GFX_ROTATION GFXGetRotation(int dispid){
-    return rotations[dispid];
-}
 
 INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
     XImage*img=(XImage*)surface;
