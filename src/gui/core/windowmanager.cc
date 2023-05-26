@@ -143,21 +143,21 @@ void WindowManager::moveWindow(Window*w,int x,int y){
     rcw2.left = x;
     rcw2.top = y;
     w->setFrame(x,y,rcw.width,rcw.height);
-    auto itw = std::find(mWindows.begin(),mWindows.end(),w);
+    const auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     if( w->isAttachedToWindow() && (w->getVisibility()==View::VISIBLE)){
         GraphDevice::getInstance().invalidate(rcw);
         GraphDevice::getInstance().invalidate(rcw2);
-	for(auto it = mWindows.begin();it<itw;it++){
-	   Rect rc = w->getBound();
-	   RefPtr<Region>newrgn = Region::create((RectangleInt&)rc);
-	   for( auto it2 = it+1 ; it2 < itw ; it2++){
-	       Rect r = (*it)->getBound();
-	       newrgn->subtract((const RectangleInt&)r);
-	   }
-	   newrgn->translate(-rcw.left,-rcw.top);
-	   (*it)->mPendingRgn->do_union((RectangleInt&)rcw);
-	   (*it)->mPendingRgn->subtract((RectangleInt&)rcw2);
-	}
+        for(auto it = mWindows.begin();it<itw;it++){
+           Rect rc = w->getBound();
+           RefPtr<Region>newrgn = Region::create((RectangleInt&)rc);
+           for( auto it2 = it+1 ; it2 < itw ; it2++){
+	           Rect r = (*it)->getBound();
+	           newrgn->subtract((const RectangleInt&)r);
+           }
+           newrgn->translate(-rcw.left,-rcw.top);
+           (*it)->mPendingRgn->do_union((RectangleInt&)rcw);
+           (*it)->mPendingRgn->subtract((RectangleInt&)rcw2);
+        }
         GraphDevice::getInstance().flip();
     }
 }
