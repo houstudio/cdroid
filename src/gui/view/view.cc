@@ -1947,7 +1947,6 @@ void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
         touchBounds->left -= adjust;
         touchBounds->width =  minTouchTarget;
     }
-    LOGD("scrollbar's drawbound=%d,%d-%d,%d",bounds->left,bounds->top,bounds->width,bounds->height);
 }
 
 bool View::isHorizontalFadingEdgeEnabled()const{

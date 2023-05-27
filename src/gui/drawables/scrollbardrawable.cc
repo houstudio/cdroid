@@ -72,7 +72,7 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
     Cairo::RefPtr<Cairo::Region> regions=Cairo::Region::create();
     for(Cairo::Rectangle r:rects)
 	regions->do_union(Cairo::RectangleInt{r.x,r.y,r.width,r.height});
-    if(regions->contains_rectangle((Cairo::RectangleInt&)r)==Cairo::Region::Overlap::OUT)return;
+    if(regions->get_num_rectangles()&&regions->contains_rectangle((Cairo::RectangleInt&)r)==Cairo::Region::Overlap::OUT)return;
 
     if (bdrawTrack)drawTrack(canvas, r, mVertical);
 

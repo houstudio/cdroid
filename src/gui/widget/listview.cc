@@ -547,7 +547,6 @@ View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childre
 
     int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, selectedPosition);
     int bottomSelectionPixel = getBottomSelectionPixel(childrenTop, fadingEdgeLength,  selectedPosition);
-    LOGD("-----Scrolling %s  delta=%d childen top/bottom=%d/%d",(delta>0?"Down":"Up"),delta,childrenTop,childrenBottom);
     if (delta > 0) {//Scrolling Down.
         // Put oldSel (A) where it belongs
         oldSel = makeAndAddView(selectedPosition - 1, oldSel->getTop(), true, mListPadding.left, false);

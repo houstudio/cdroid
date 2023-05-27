@@ -162,7 +162,7 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
 
 INT GFXFlip(HANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
-    const size_t screen_size=surf->msize/2;
+    const size_t screen_size=surf->height*surf->pitch;
     if(surf->ishw && (surf->msize>screen_size) ) {
         FBDEVICE*dev=&devs[surf->dispid];
         LOGI_IF(screen_size!=dev->var.xres * dev->var.yres * dev->var.bits_per_pixel / 8,
@@ -224,7 +224,7 @@ static int setfbinfo(FBSURFACE*surf) {
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }
-#define DOUBLE_BUFFER 10
+#define DOUBLE_BUFFER 0
 INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     FBDEVICE*dev=&devs[dispid];
@@ -246,6 +246,8 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         surf->msize*=2;
 #endif
         surf->buffer=mmap(dev->fix.smem_start,surf->msize,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0);
+	dev->var.yoffset=0;
+        LOGI("ioctl offset(0)=%d dev=%p",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev);
 #if DOUBLE_BUFFER
         dev->var.yoffset=1280;
         LOGI("ioctl offset(0)=%d dev=%p",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev);
