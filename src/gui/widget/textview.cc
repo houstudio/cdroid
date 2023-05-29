@@ -1173,7 +1173,7 @@ void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weigh
     if (weight >= 0) {
         weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
         bool italic = (style & Typeface::ITALIC) != 0;
-        setTypeface(typeface,0);//Typeface::create(typeface, weight, italic));
+        setTypeface(Typeface::create(typeface, weight, italic));
     } else {
         setTypeface(typeface, style);
     }

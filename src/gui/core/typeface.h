@@ -15,10 +15,10 @@ public:
     static constexpr const char*DEFAULT_FAMILY = "sans-serif";
     // Style
     static constexpr int NORMAL = 0;
-    static constexpr int BOLD = 1;
+    static constexpr int BOLD   = 1;
     static constexpr int ITALIC = 2;
     static constexpr int BOLD_ITALIC = 3;
-    static constexpr int STYLE_MASK = 0x03;
+    static constexpr int STYLE_MASK  = 0x03;
     /** The default NORMAL typeface object */
     static Typeface* DEFAULT;
 
@@ -51,28 +51,15 @@ private:
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face);
     Typeface(FcPattern&,const std::string&);
+    static int parseStyle(const std::string&stylename);
 public:
-    int getWeight()const{
-        return mWeight;
-    }
-    int getStyle() const{
-        return mStyle;
-    } 
-    bool isBold() const{
-        return (mStyle & BOLD) != 0;
-    }
-    bool isItalic() const{
-        return (mStyle & ITALIC) != 0;
-    }
-    std::string getFamily()const{
-	return mFamily;
-    }
-    Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const{
-	return mFontFace;
-    }
-    double getScale()const{
-	return mScale;
-    }
+    int getWeight()const;
+    int getStyle() const;
+    bool isBold() const;
+    bool isItalic() const;
+    std::string getFamily()const;
+    Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const;
+    double getScale()const;
     //static Typeface* createFromResources(FamilyResourceEntry entry, AssetManager mgr,const std::string& path)
     static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
            std::unordered_map<std::string, Typeface*>& fontMap, 

@@ -604,13 +604,14 @@ void ImageView::updateDrawable(Drawable*d){
     bool sameDrawable = false;
 
     if (mDrawable != nullptr) {
-        delete mDrawable;
-        sameDrawable = mDrawable == d;
+        sameDrawable = (mDrawable == d);
         mDrawable->setCallback(nullptr);
         unscheduleDrawable(*mDrawable);
         if ( !sameDrawable && isAttachedToWindow()) {
             mDrawable->setVisible(false, false);
         }
+	if(!sameDrawable)
+           delete mDrawable;
     }
 
     mDrawable = d;

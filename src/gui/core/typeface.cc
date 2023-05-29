@@ -42,15 +42,16 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
 	s = nullptr;
     }
     LOGD("family=%s",mFamily.c_str());
-
+    mStyle = 0 ;
     ret = FcPatternGetString(&font, FC_STYLE, 0, &s);
-    LOGD_IF(ret==FcResultMatch,"Style=%s",s);
+    if(ret==FcResultMatch)
+        mStyle = parseStyle(std::string((const char*)s));
+    LOGD_IF(ret==FcResultMatch,"Style=%s/%d",s,mStyle);
     s = nullptr;
 
     ret = FcPatternGetString(&font,FC_SLANT,0,&s);
     LOGD_IF(ret == FcResultMatch,"Slant=%s",s);
     s = nullptr;
-    mStyle|=ITALIC;
 
     ret = FcPatternGetInteger(&font,FC_WEIGHT,0,&weight);
     LOGD_IF(ret == FcResultMatch,"weight =%d",weight);
@@ -68,6 +69,8 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
     ret = FcLangSetHasLang(langset,(const FcChar8*)mSystemLang.c_str());
     if(ret==0)
 	mStyle|=SYSLANG_MATCHED;
+    //FcLangSetDestroy(langset);
+    //it seems langset is destroied by FcPattern iteself,destroied  here willc aused crash
     LOGD("has %s=%d",mSystemLang.c_str(),ret);
     s = nullptr;
 
@@ -75,6 +78,54 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
     Cairo::Matrix ctm = Cairo::identity_matrix();
     Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(&font);
     mFontFace = Cairo::FtScaledFont::create(face,matrix,ctm);
+}
+
+int Typeface::parseStyle(const std::string&styleName){
+    static const struct{
+	const char*styleName;
+	int styleProp;
+    }stlMAP[]={
+	{"(?=.*\\bregular\\b)", NORMAL},
+	{"(?=.*\\bnormal\\b)" , NORMAL},
+	{"(?=.*\\bitalic\\b)" , ITALIC},
+	{"(?=.*\\bbold\\b)", BOLD},
+	{NULL,0}
+    };
+    int style = NORMAL;
+    for(int i=0; stlMAP[i].styleName;i++){
+       const std::regex pat(stlMAP[i].styleName , std::regex_constants::icase);
+       if(std::regex_search(styleName,pat))
+	   style|=stlMAP[i].styleProp;
+    }
+    return style;
+}
+
+int Typeface::getWeight()const{
+    return mWeight;
+}
+
+int Typeface::getStyle() const{
+    return mStyle;
+}
+
+bool Typeface::isBold() const{
+    return (mStyle & BOLD) != 0;
+}
+
+bool Typeface::isItalic() const{
+    return (mStyle & ITALIC) != 0;
+}
+
+std::string Typeface::getFamily()const{
+    return mFamily;
+}
+
+Cairo::RefPtr<Cairo::FtScaledFont>Typeface::getFontFace()const{
+    return mFontFace;
+}
+
+double Typeface::getScale()const{
+    return mScale;
 }
 
 Typeface* Typeface::create(Typeface*family, int style){
@@ -93,22 +144,15 @@ Typeface* Typeface::create(Typeface*family, int style){
     }
 
     Typeface* typeface = family;
-    /*long ni = family->native_instance;
-    SparseArray<Typeface> styles = sStyledTypefaceCache.get(ni);
-
-    if (styles == null) {
-        styles = new SparseArray<Typeface>(4);
-        sStyledTypefaceCache.put(ni, styles);
-    } else {
-        typeface = styles.get(style);
-        if (typeface != null) {
-            return typeface;
+    int bestMactched=0;
+    for(auto it= sSystemFontMap.begin();it!= sSystemFontMap.end();it++){
+        Typeface* face = it->second;
+        const int match= it->second->getStyle()==family->getStyle();
+        if((it->second->getStyle()==style)&&(match>bestMactched)){
+           typeface = face;
+           bestMactched=match;
         }
-    }
-
-    typeface = new Typeface(nativeCreateFromTypeface(ni, style));
-    styles.put(style, typeface);
-    }*/
+    }    
     LOGV("typeface=%p family=%p",typeface,family);
     return typeface?typeface:family;
 }
@@ -153,22 +197,15 @@ Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic){
     int key = (weight << 1) | (italic ? 1 : 0);
 
     Typeface* typeface = base;
-    /*synchronized(sWeightCacheLock) {
-    SparseArray<Typeface> innerCache = sWeightTypefaceCache.get(base.native_instance);
-    if (innerCache == null) {
-        innerCache = new SparseArray<>(4);
-        sWeightTypefaceCache.put(base.native_instance, innerCache);
-    } else {
-        typeface = innerCache.get(key);
-        if (typeface != null) {
-            return typeface;
-        }
+    int bestMactched=0;
+    for(auto it= sSystemFontMap.begin();it!= sSystemFontMap.end();it++){
+	Typeface* face = it->second;
+	const int match= base->getFamily()==it->first;
+	if((it->second->isItalic()==italic)&&(match>bestMactched)){
+	   typeface = face;
+	   bestMactched=match;
+	}
     }
-
-    typeface = new Typeface(
-            nativeCreateFromTypefaceWithExactStyle(base.native_instance, weight, italic));
-    innerCache.put(key, typeface);
-    }*/
     return typeface;
 }
 
@@ -223,18 +260,21 @@ int Typeface::loadFromPath(const std::string&path){
 	    if(ftFace==nullptr||err)continue;
             LOGE_IF(ftFace->family_name==nullptr,"%s missing familyname",fullpath.c_str());
             if(ftFace->family_name){
-		const double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;
+		double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;
 		Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(ftFace,FT_LOAD_DEFAULT);
 		Cairo::Matrix matrix;
-		if(scale)
+		if(scale!=.0f)
 		    matrix = Cairo::scaling_matrix(scale,scale);
-		else 
+		else{
 		    matrix = Cairo::identity_matrix();
+		    scale  = 1.f;
+		}
                 Cairo::Matrix ctm = Cairo::identity_matrix();
                 auto autoft= Cairo::FtScaledFont::create(face,matrix,ctm);
                 Typeface *typeface = new Typeface(autoft);
 		typeface->mScale = scale;
                 sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
+		typeface->mStyle = parseStyle(ftFace->style_name);
                 FT_SfntLangTag lang_tag;
                 FT_UInt lang_index = 0;
                 while(FT_Get_Sfnt_LangTag(ftFace/*, FT_Sfnt_LangTag_Preferred*/, lang_index, &lang_tag)==FT_Err_Ok){
@@ -263,7 +303,7 @@ int Typeface::loadFromFontConfig(){
     FcObjectSet*os = FcObjectSetBuild (FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE,NULL);
     FcFontSet  *fs = FcFontList(config, p, os);
     FcPatternDestroy(p);
-    //return loadFromPath("");
+    return loadFromPath("");
     LOGI("Total fonts: %d", fs->nfont);
     const std::regex patSerif("(?=.*\\bserif\\b)" , std::regex_constants::icase);
     const std::regex patSans( "(?=.*\\bsans\\b)" , std::regex_constants::icase);
