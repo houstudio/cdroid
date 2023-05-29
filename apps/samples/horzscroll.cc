@@ -4,7 +4,7 @@
 using namespace Cairo;
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(100,50,1080,600);
+    Window*w=new Window(0,0,-1,-1);
     HorizontalScrollView* hs=new HorizontalScrollView(1280,400);
 
     LinearLayout*layout=new LinearLayout(1280,100);

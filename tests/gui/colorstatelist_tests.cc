@@ -20,6 +20,11 @@ class COLORSTATESET:public testing::Test{
    }
 };
 
+TEST_F(COLORSTATESET,color){
+    unsigned int cc= Color::parseColor("#ff112233");
+    ASSERT_EQ(cc,0xFF112233);
+    printf("color=0x%x\r\n",cc);
+}
 TEST_F(COLORSTATESET,match){
     std::vector<int>stateEmpty;
     std::vector<int>state1={StateSet::PRESSED,StateSet::FOCUSED,StateSet::FOCUSED};

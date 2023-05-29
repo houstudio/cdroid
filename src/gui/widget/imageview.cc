@@ -604,6 +604,7 @@ void ImageView::updateDrawable(Drawable*d){
     bool sameDrawable = false;
 
     if (mDrawable != nullptr) {
+        delete mDrawable;
         sameDrawable = mDrawable == d;
         mDrawable->setCallback(nullptr);
         unscheduleDrawable(*mDrawable);

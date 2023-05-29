@@ -61,7 +61,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(50,50,1200,640);
+    Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
     ListView*lv=(ListView*)&w->addView(new ListView(460,500));
     lv->setPos(10,10);

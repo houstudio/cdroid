@@ -2,6 +2,7 @@
 #include <core/textutils.h>
 #include <regex>
 #include <freetype/freetype.h>
+#include <freetype/ftsnames.h>
 #include <cairomm/matrix.h>
 #include <dirent.h>
 namespace cdroid{
@@ -12,6 +13,8 @@ Typeface* Typeface::SERIF;
 Typeface* Typeface::DEFAULT;
 Typeface* Typeface::DEFAULT_BOLD;
 Typeface* Typeface::sDefaultTypeface;
+std::string Typeface::mSystemLang;
+static constexpr int SYSLANG_MATCHED = 0x80000000;
 
 std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
 
@@ -59,6 +62,15 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
     ret = FcPatternGetDouble(&font,FC_DPI,0,&pixelSize);
     LOGD_IF(ret == FcResultMatch,"dpi =%f",pixelSize);
 
+    FcLangSet *langset=nullptr;
+    ret = FcPatternGetLangSet(&font, FC_LANG,0,&langset);
+    //FcChar8 *lang = FcLangSetGetString(langset, 0);
+    ret = FcLangSetHasLang(langset,(const FcChar8*)mSystemLang.c_str());
+    if(ret==0)
+	mStyle|=SYSLANG_MATCHED;
+    LOGD("has %s=%d",mSystemLang.c_str(),ret);
+    s = nullptr;
+
     Cairo::Matrix matrix = Cairo::identity_matrix();
     Cairo::Matrix ctm = Cairo::identity_matrix();
     Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(&font);
@@ -103,16 +115,19 @@ Typeface* Typeface::create(Typeface*family, int style){
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName){
     Typeface*face = Typeface::DEFAULT;
-    for(auto i= sSystemFontMap.begin();familyName.size()&&(i!= sSystemFontMap.end());i++){
+    int supportLangs = 0;
+    for(auto i= sSystemFontMap.begin();i!= sSystemFontMap.end();i++){
 	 Typeface*tf = i->second;
          std::string family=tf->getFamily();
 	 std::vector<std::string>families = TextUtils::split(family,";");
-	 if(std::find(families.begin(),families.end(),familyName)!=families.end()){
+	 auto it = std::find(families.begin(),families.end(),familyName);
+	 const int ttfLangs = families.size();
+	 if((it!=families.end()||familyName.empty())&&(tf->mStyle&SYSLANG_MATCHED) && (ttfLangs>supportLangs)){
 	     face = tf;
-	     break;
+	     supportLangs = families.size();
 	 }
     }
-    LOGD_IF(face&&familyName.size(),"want %s got %s",familyName.c_str(),face->getFamily().c_str());
+    LOGD_IF(face&&familyName.size(),"want %s got %s style=%x",familyName.c_str(),face->getFamily().c_str(),face->mStyle);
     return face;
 }
 
@@ -220,6 +235,12 @@ int Typeface::loadFromPath(const std::string&path){
                 Typeface *typeface = new Typeface(autoft);
 		typeface->mScale = scale;
                 sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
+                FT_SfntLangTag lang_tag;
+                FT_UInt lang_index = 0;
+                while(FT_Get_Sfnt_LangTag(ftFace/*, FT_Sfnt_LangTag_Preferred*/, lang_index, &lang_tag)==FT_Err_Ok){
+                    printf("Supported language:%d %s\n",lang_tag.string_len, lang_tag.string);
+		    lang_index++;
+                }
                 LOGI("[%s] style=%s/%x %d glyphs face.height=%x units_per_EM=%x scale=%f",
 			ftFace->family_name,ftFace->style_name,ftFace->style_flags,ftFace->num_glyphs,
 			ftFace->max_advance_height,ftFace->units_per_EM,scale);
@@ -247,6 +268,15 @@ int Typeface::loadFromFontConfig(){
     const std::regex patSerif("(?=.*\\bserif\\b)" , std::regex_constants::icase);
     const std::regex patSans( "(?=.*\\bsans\\b)" , std::regex_constants::icase);
     const std::regex patMono( "(?=.*\\bmono\\b)" , std::regex_constants::icase);
+    const char*langenv=getenv("LANG");
+    std::string lang = langenv;
+    size_t pos = lang.find('.');
+    if(pos!=std::string::npos)
+        lang=lang.substr(0,pos);
+    pos = lang.find('_');
+    if(pos!=std::string::npos)
+        lang[pos]='-';
+    mSystemLang = lang;
     for (int i=0; fs && i < fs->nfont; i++) {
 	FcPattern *pat = fs->fonts[i];//FcPatternDuplicate(fs->fonts[i]);
 	Typeface   *tf = new Typeface(*pat,"");

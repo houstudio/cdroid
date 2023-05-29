@@ -38,6 +38,7 @@ private:
     int mItalic;
     double mScale;
     Cairo::RefPtr<Cairo::FtScaledFont>mFontFace;
+    static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
     static std::unordered_map<std::string,Typeface*>sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
