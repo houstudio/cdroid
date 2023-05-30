@@ -306,8 +306,9 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     int range = mMax - mMin;
     const float scale = range > 0 ? (float)(progress - mMin) / (float) range : 0;
     const bool isPrimary = id == R::id::progress;
-
+    if(isPrimary)mStoppedProgress = scale;
     if (isPrimary && animate) {
+        Animator::AnimatorListener animListener;
         if(mAnimator==nullptr){
             mAnimator = ObjectAnimator::ofFloat(this,"progress",{mVisualProgress,scale});
             mAnimator->setAutoCancel(true);
@@ -316,6 +317,10 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
                 setVisualProgress(R::id::progress,anim.getAnimatedValue().get<float>());
             }));
+	    mAnimtorListener.onAnimationEnd=[this](Animator&anim,bool reverse){
+		setVisualProgress(R::id::progress,mStoppedProgress);
+	    };
+	    mAnimator->addListener(mAnimtorListener);
         }
         mAnimator->getValues(0)->setValues(std::vector<float>({mVisualProgress,scale}));
         mAnimator->start();

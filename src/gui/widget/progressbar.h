@@ -24,6 +24,7 @@ private:
     
     bool mAttached;
     float mVisualProgress;
+    float mStoppedProgress;
     int mBehavior;
     int mDuration;
     bool mOnlyIndeterminate;
@@ -34,6 +35,7 @@ private:
     bool mRefreshIsPosted;
     std::map<int,RefreshData>mDatas;
     Runnable mRefreshProgressRunnable;
+    Animator::AnimatorListener mAnimtorListener;
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
     ObjectAnimator*mAnimator;
