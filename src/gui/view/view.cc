@@ -255,6 +255,11 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagValues |= LONG_CLICKABLE;
         viewFlagMasks  |= LONG_CLICKABLE;
     }
+    if(attrs.getBoolean("duplicateParentState",false)){
+        viewFlagValues |= DUPLICATE_PARENT_STATE;
+        viewFlagMasks  |= DUPLICATE_PARENT_STATE;
+    }
+
     const int fadingEdges = attrs.getInt("requiresFadingEdge",std::map<const std::string,int>({
 	   {"none",FADING_EDGE_NONE},
 	   {"horizontal",FADING_EDGE_HORIZONTAL},
@@ -2908,7 +2913,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     Rect rcc=Rect::MakeLTRB(cx1,cy1,cx2,cy2);
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
                     ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
-            false ==rcc.intersect(mLeft, mTop, mRight-mLeft, mBottom-mTop) && 
+            (false ==rcc.intersect(mLeft, mTop, mRight-mLeft, mBottom-mTop)) &&
             //canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&
             (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
         mPrivateFlags2 |= PFLAG2_VIEW_QUICK_REJECTED;
@@ -3046,6 +3051,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
 
     if (!drawingWithRenderNode) {
         // apply clips directly, since RenderNode won't do it for this draw
+	int clips=0;
         if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) != 0 && cache == nullptr) {
             if (offsetForScroll){
                 canvas.rectangle(sx,sy,getWidth(),getHeight());
@@ -3056,13 +3062,15 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                     canvas.rectangle(0, 0, cache->get_width(), cache->get_height());
                 }
             }
+	    clips++;
         }
 
         if (!mClipBounds.empty()) {
             // clip bounds ignore scroll
             canvas.rectangle(mClipBounds.left,mClipBounds.top,mClipBounds.width,mClipBounds.height);
+	    clips++;
         }
-        canvas.clip();//cant clip here ,for rotation animator(the view will be cutted)
+        if(clips)canvas.clip();//cant clip here ,for rotation animator(the view will be cutted)
     }
 
     if (!drawingWithDrawingCache) {

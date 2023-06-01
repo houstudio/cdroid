@@ -1888,7 +1888,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
-    if (TRUE||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
+    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
             dirty.offset(location[CHILD_LEFT_INDEX]-mScrollX,location[CHILD_TOP_INDEX]-mScrollY);
