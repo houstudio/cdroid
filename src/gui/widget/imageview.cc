@@ -610,8 +610,8 @@ void ImageView::updateDrawable(Drawable*d){
         if ( !sameDrawable && isAttachedToWindow()) {
             mDrawable->setVisible(false, false);
         }
-	if(!sameDrawable)
-           delete mDrawable;
+        if(!sameDrawable)
+            delete mDrawable;
     }
 
     mDrawable = d;

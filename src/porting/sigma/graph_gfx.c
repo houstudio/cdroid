@@ -246,7 +246,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         surf->msize*=2;
 #endif
         surf->buffer=mmap(dev->fix.smem_start,surf->msize,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0);
-	dev->var.yoffset=0;
+        dev->var.yoffset=0;
         LOGI("ioctl offset(0)=%d dev=%p",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev);
 #if DOUBLE_BUFFER
         dev->var.yoffset=1280;
@@ -291,7 +291,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
     LOGD_IF(ndst!=primarySurface&&ndst->ishw,"dst is not primarySurface");
-    ndst = primarySurface;
+    //ndst = primarySurface;
 
     toMIGFX(nsrc,&gfxsrc);
     toMIGFX(ndst,&gfxdst);
@@ -302,6 +302,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
     opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
     opt.eDFBBlendFlag= E_MI_GFX_DFB_BLEND_NOFX;
+    opt.stClipRect.s32Xpos=0;
+    opt.stClipRect.s32Ypos=0;
+    opt.stClipRect.u32Width=ndst->width;
+    opt.stClipRect.u32Height=ndst->height;
     if(nsrc->alpha!=255)
         opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
 
@@ -313,7 +317,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     stSrcRect.u32Width = rs.w;
     stSrcRect.u32Height= rs.h;
 
-    LOGD("..Blit %p(%d,%d-%d,%d)-> %p(%d,%d):(%d,%d) h=%d rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,ox,oy,dx,dy,rs.h,opt.eRotate);
+    LOGV("..Blit %p(%d,%d-%d,%d)-> %p(%d,%d)copied wh=%d,%d rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,rs.w,rs.h,opt.eRotate);
 
     stDstRect.s32Xpos = dx+screenMargin.x;
     stDstRect.s32Ypos = dy+screenMargin.y;
