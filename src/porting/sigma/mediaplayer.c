@@ -86,3 +86,28 @@ DWORD MPSetWindow(HANDLE handle,int x,int y,int width,int height){
     r->h = height;
     return 0;
 }
+
+DWORD MPRotate(HANDLE handle, int type) {
+    MP_PLAYER *mp =(MP_PLAYER*)handle;
+    GFXRect   *r  = &mp->viewPort;
+
+    switch (type)
+    {
+    case 1/*顺时针旋转90:AV_ROTATE_90*/:{
+        int t;
+        t = r->x;
+        r->x = r->y;
+        r->y = t;
+        t = r->w;
+        r->w = r->h;
+        r->h = t;
+    }break;
+
+    default:
+        return -1;
+    }
+
+    mm_player_set_opts("video_rotate", "", type);
+
+    return 0;
+}

@@ -28,6 +28,7 @@ DWORD  MPSeek(HANDLE handle,double seektime);
 DWORD  MPSetCallback(HANDLE,MP_CALLBACK,void*userdata);
 DWORD  MPSetVolume(HANDLE,int colume);
 DWORD  MPSetWindow(HANDLE,int x,int y,int width,int height);
+DWORD  MPRotate(HANDLE handle, int type);
 END_DECLS
 
 #endif
