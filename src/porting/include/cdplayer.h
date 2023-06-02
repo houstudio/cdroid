@@ -30,7 +30,7 @@ DWORD  MPSeek(HANDLE handle,double seektime);
 DWORD  MPSetCallback(HANDLE,MP_CALLBACK,void*userdata);
 DWORD  MPSetVolume(HANDLE,int colume);
 DWORD  MPSetWindow(HANDLE,int x,int y,int width,int height);
-int MPRotate(HANDLE handle, int type);
+DWORD  MPRotate(HANDLE handle, int type);
 int MPGetStatus(HANDLE handle);
 int MPFlushScreen(bool enable);
 
