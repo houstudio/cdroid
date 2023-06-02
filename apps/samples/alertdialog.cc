@@ -3,9 +3,9 @@
 #include <getopt.h>
 #include <app/alertdialog.h>
 
-static struct option app_options[]={
-    {"dialog",required_argument,0,0},
-    {"items" ,required_argument,0,0}
+std::vector<CLA::Argument> app_options={
+    {CLA::EntryType::Switch, "", "dialog"  ,"Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
+    {CLA::EntryType::Switch, "", "items"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
 };
 
 int main(int argc,const char*argv[]){

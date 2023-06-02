@@ -39,9 +39,9 @@ public:
         ViewGroup::onDraw(canvas);
     }
 };
-static struct option appargs[]={
-   {"type"   ,1,0,0},
-   {0,0,0,0}
+
+std::vector<CLA::Argument> appargs={
+   {CLA::EntryType::Switch, "", "type"  , "animation type ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
 };
 int main(int argc,const char*argv[]){
 
