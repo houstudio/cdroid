@@ -35,7 +35,7 @@ typedef struct {
     size_t msize;
     char*buffer;//drawbuffer
     char*orig_buffer;//used only in double buffer*/
-    char*kbuffer;/*kernel buffer address*/
+    MI_PHY kbuffer;/*kernel buffer address*/
 } FBSURFACE;
 
 static FBDEVICE devs[2]= {-1};
@@ -246,9 +246,11 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 #if DOUBLE_BUFFER
         surf->msize*=2;
 #endif
-        surf->buffer=mmap(dev->fix.smem_start,surf->msize,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0);
+        surf->buffer=mmap(0/*dev->fix.smem_start*/,surf->msize,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0);
+	//MI_SYS_MMA_Alloc(NULL/*"mma_heap_name0"*/,surf->msize,&phaddr);
+	//ret=MI_SYS_Mmap(phaddr,surf->msize, (void**)&surf->buffer, FALSE);
         dev->var.yoffset=0;
-        LOGI("ioctl offset(0)=%d dev=%p",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev);
+        LOGI("ioctl offset(0)=%d dev=%p ret=%d",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev,ret);
 #if DOUBLE_BUFFER
         dev->var.yoffset=1280;
         LOGI("ioctl offset(0)=%d dev=%p",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev);
@@ -257,19 +259,20 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     } else {
 	int i=0;
 	char name[32];
+	sprintf(name,"surf_%p",surf);
 	//while((i++<3)&&(phaddr==dev->fix.smem_start)){
-            ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
+            ret=MI_SYS_MMA_Alloc(NULL/*"mma_heap_name0"*/,surf->msize,&phaddr);
 	//}
         LOGI("surface %p phyaddr=%x ret=%d",surf,phaddr,ret);
         MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
     }
-    surf->kbuffer=(char*)phaddr;
+    surf->kbuffer = phaddr;
     MI_SYS_MemsetPa(phaddr,0x000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
     surf->alpha=255;
-    LOGI("Surface=%p buf=%p/%p size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,surf->width,surf->height,surf->msize,hwsurface);
+    LOGI("Surface=%p buf=%p/%llx/%llu size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,phaddr,surf->kbuffer,surf->width,surf->height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -292,7 +295,6 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
     LOGD_IF(ndst!=primarySurface&&ndst->ishw,"dst is not primarySurface");
-    ndst = primarySurface;
 
     toMIGFX(nsrc,&gfxsrc);
     toMIGFX(ndst,&gfxdst);
@@ -341,8 +343,7 @@ INT GFXDestroySurface(HANDLE surface) {
     LOGI("GFXDestroySurface %p/%p",surf,surf->buffer);
     if(surf->kbuffer) {
         MI_SYS_Munmap(surf->buffer,surf->msize);
-        if(surf->ishw==0)
-            MI_SYS_MMA_Free((MI_PHY)surf->kbuffer);
+        MI_SYS_MMA_Free((MI_PHY)surf->kbuffer);
     } else if(surf->buffer) {
         free(surf->buffer);
     }

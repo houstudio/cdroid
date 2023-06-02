@@ -36,7 +36,7 @@ static CLA::Argument ARGS[]={
    {CLA::EntryType::Switch, "", "fps"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
 };
 
-App::App(int argc,const char*argv[],const struct option*extoptions){
+App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions){
     int option_index=-1,c=-1;
     std::string optstring;
     Choreographer&chograph= Choreographer::getInstance();
@@ -50,6 +50,7 @@ App::App(int argc,const char*argv[],const struct option*extoptions){
     }
     LOGD("App %s started",(argc&&argv)?argv[0]:"");
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
+    cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
     cla.parse(argc,argv);
     if(hasSwitch("debug")){

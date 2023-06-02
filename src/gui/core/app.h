@@ -21,14 +21,13 @@ protected:
     CLA cla;
     static App*mInst;
 public:
-     App(int argc=0,const char*argv[]=NULL,const option*extoptions=NULL);
+     App(int argc=0,const char*argv[]=NULL,const std::vector<CLA::Argument>&extoptions={});
      ~App();
      static App&getInstance();
      const std::string getDataPath()const;
      virtual void setOpacity(unsigned char alpha);
      virtual void setName(const std::string&appname);
      virtual const std::string&getName();
-
      void setArg(const std::string&key,const std::string&value);
      bool hasArg(const std::string&key)const;
      bool hasSwitch(const std::string&key)const;
