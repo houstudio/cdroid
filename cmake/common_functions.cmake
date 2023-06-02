@@ -9,6 +9,18 @@ macro(ADD_WHOLE_ARCHIVE_TO_LIBRARIES _list_name)
     set(${_list_name} "${${_list_name}_TMP}")
 endmacro()
 
+MACRO(SUBDIRLIST result curdir)
+    FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+    SET(dirlist "")
+    FOREACH(child ${children})
+        IF(IS_DIRECTORY ${curdir}/${child} AND
+            EXISTS ${curdir}/${child}/CMakeLists.txt)
+                LIST(APPEND dirlist ${child})
+        ENDIF()
+    ENDFOREACH()
+    SET(${result} ${dirlist})
+ENDMACRO()
+
 function(CreatePAK project ResourceDIR PakPath rhpath)
     add_custom_target(${project}_assets
         COMMAND ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
