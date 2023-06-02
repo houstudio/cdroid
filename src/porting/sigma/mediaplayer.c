@@ -36,7 +36,7 @@ DWORD MPStop(HANDLE handle){
     return E_OK;
 }
 
-DWORD nglMPResume(HANDLE handle){
+DWORD MPResume(HANDLE handle){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     mm_player_resume();
     return E_OK;
@@ -87,7 +87,7 @@ DWORD MPSetWindow(HANDLE handle,int x,int y,int width,int height){
     return 0;
 }
 
-DWORD MPRotate(HANDLE handle, int type) {
+int MPRotate(HANDLE handle, int type) {
     MP_PLAYER *mp =(MP_PLAYER*)handle;
     GFXRect   *r  = &mp->viewPort;
 
@@ -109,5 +109,14 @@ DWORD MPRotate(HANDLE handle, int type) {
 
     mm_player_set_opts("video_rotate", "", type);
 
+    return 0;
+}
+
+int MPGetStatus(HANDLE handle) {
+    return mm_player_get_status();
+}
+
+int MPFlushScreen(bool enable) {
+    mm_player_flush_screen(enable);
     return 0;
 }
