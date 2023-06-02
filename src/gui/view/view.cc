@@ -6904,6 +6904,8 @@ View::AttachInfo::AttachInfo(){
     mDisplayState = true;
     mTooltipHost  = nullptr;
     mViewRequestingLayout = nullptr;
+    mWindowLeft = 0;
+    mWindowTop  = 0;
 }
 
 }//endof namespace

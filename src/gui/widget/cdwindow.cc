@@ -113,6 +113,8 @@ View& Window::setPos(int x,int y){
     if( changed && isAttachedToWindow()){
         WindowManager::getInstance().moveWindow(this,x,y);
         ViewGroup::setPos(x,y);
+        mAttachInfo->mWindowLeft= x;
+        mAttachInfo->mWindowTop = y;
     }
     GraphDevice::getInstance().flip();
     return *this;

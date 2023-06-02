@@ -11,6 +11,7 @@
 #include <core/eventcodes.h>
 #include <cdinput.h>
 #include <memory.h>
+#include <stdio.h>
 #include "mi_common.h"
 #include "mi_sys.h"
 #include "mi_gfx.h"
@@ -254,12 +255,12 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 #endif
         primarySurface = surf;
     } else {
-        int i=0;
-        ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
-        while((i++<3)&&(phaddr==dev->fix.smem_start)) {
+	int i=0;
+	char name[32];
+	//while((i++<3)&&(phaddr==dev->fix.smem_start)){
             ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
-            LOGI("[%d]=%x ret=%d",i,phaddr,ret);
-        }
+	//}
+        LOGI("surface %p phyaddr=%x ret=%d",surf,phaddr,ret);
         MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
     }
     surf->kbuffer=(char*)phaddr;
@@ -268,7 +269,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
     surf->alpha=255;
-    LOGI("Surface=%p buf=%p/%p size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,width,height,surf->msize,hwsurface);
+    LOGI("Surface=%p buf=%p/%p size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,surf->width,surf->height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -291,7 +292,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
     LOGD_IF(ndst!=primarySurface&&ndst->ishw,"dst is not primarySurface");
-    //ndst = primarySurface;
+    ndst = primarySurface;
 
     toMIGFX(nsrc,&gfxsrc);
     toMIGFX(ndst,&gfxdst);
@@ -302,10 +303,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
     opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
     opt.eDFBBlendFlag= E_MI_GFX_DFB_BLEND_NOFX;
-    opt.stClipRect.s32Xpos=0;
-    opt.stClipRect.s32Ypos=0;
-    opt.stClipRect.u32Width=ndst->width;
-    opt.stClipRect.u32Height=ndst->height;
+    opt.stClipRect.s32Xpos = dx + screenMargin.x;
+    opt.stClipRect.s32Ypos = dy + screenMargin.y;
+    opt.stClipRect.u32Width= rs.w;//ndst->width;
+    opt.stClipRect.u32Height=rs.h;//ndst->height;
     if(nsrc->alpha!=255)
         opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
 
@@ -317,7 +318,8 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     stSrcRect.u32Width = rs.w;
     stSrcRect.u32Height= rs.h;
 
-    LOGV("..Blit %p(%d,%d-%d,%d)-> %p(%d,%d)copied wh=%d,%d rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,rs.w,rs.h,opt.eRotate);
+    LOGV("..Blit %p(%d,%d-%d,%d)-> %p(%d,%d)(%d,%d)copied wh=%d,%d rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,
+		ndst->width,ndst->height,dx,dy,rs.w,rs.h,opt.eRotate);
 
     stDstRect.s32Xpos = dx+screenMargin.x;
     stDstRect.s32Ypos = dy+screenMargin.y;
