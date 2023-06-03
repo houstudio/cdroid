@@ -2481,10 +2481,8 @@ void ListView::dispatchDraw(Canvas&canvas) {
                         // Draw dividers between enabled items, headers
                         // and/or footers when enabled and requested, and
                         // after the last enabled item.
-                        if (adapter->isEnabled(itemIndex) && (headerDividers || !isHeader
-                                                              && (nextIndex >= headerCount)) && (isLastItem
-                                                                      || adapter->isEnabled(nextIndex) && (footerDividers || !isFooter
-                                                                              && (nextIndex < footerLimit)))) {
+                        if (adapter->isEnabled(itemIndex) && (headerDividers || !isHeader && (nextIndex >= headerCount)) 
+			    && (isLastItem || adapter->isEnabled(nextIndex) && (footerDividers || !isFooter && (nextIndex < footerLimit)))) {
                             bounds.top = bottom;
                             bounds.height = dividerHeight;
                             drawDivider(canvas, bounds, i);

@@ -2638,8 +2638,8 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
         layoutChildren();
     }
     View* motionView;
-    int x;
-    int y = (int) ev.getY(pointerIndex);
+    const int x = (int) ev.getX(pointerIndex);
+    const int y = (int) ev.getY(pointerIndex);
     switch (mTouchMode) {
     case TOUCH_MODE_DOWN:/*0*/
     case TOUCH_MODE_TAP :/*1*/ 
@@ -2652,7 +2652,6 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
         // Otherwise, check containment within list bounds. If we're
         // outside bounds, cancel any active presses.
         motionView = getChildAt(mMotionPosition - mFirstPosition);
-        x = ev.getX(pointerIndex);
         if (!pointInView(x, y, mTouchSlop)) {
             setPressed(false);
             if (motionView) motionView->setPressed(false);
@@ -2664,7 +2663,7 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
             // Still within bounds, update the hotspot.
             float point[2]= {(float)x,(float)y};
             transformPointToViewLocal(point, *motionView);
-            //motionView->drawableHotspotChanged(point[0], point[1]);
+            motionView->drawableHotspotChanged(point[0], point[1]);
         }
         break;
     case TOUCH_MODE_SCROLL:/*3*/

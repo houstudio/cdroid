@@ -1,7 +1,6 @@
 #ifndef __LAYOUT_INFLATE_H__
 #define __LAYOUT_INFLATE_H__
 #include <core/attributeset.h>
-#include <core/attributeset.h>
 #include <core/context.h>
 
 namespace cdroid{
