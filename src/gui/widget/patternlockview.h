@@ -169,8 +169,8 @@ public:
     PatternLockView(int,int);
     PatternLockView(Context* context,const AttributeSet& attrs);
     ~PatternLockView();
-    bool onHoverEvent(MotionEvent& event);
-    bool onTouchEvent(MotionEvent& event);
+    bool onHoverEvent(MotionEvent& event)override;
+    bool onTouchEvent(MotionEvent& event)override;
     std::vector<Dot*> getPattern();
     int getPatternViewMode();
     bool isInStealthMode();

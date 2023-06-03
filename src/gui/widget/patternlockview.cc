@@ -181,6 +181,10 @@ void PatternLockView::onSizeChanged(int width, int height, int oldWidth, int old
     mViewHeight = adjustedHeight / (float) mDotCount;
 }
 
+bool PatternLockView::onHoverEvent(MotionEvent& event){
+    return View::onHoverEvent(event);
+}
+
 bool PatternLockView::onTouchEvent(MotionEvent& event) {
     if (!mInputEnabled || !isEnabled()) {
         return false;

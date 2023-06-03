@@ -43,10 +43,13 @@ void Dialog::show(){
 
     ViewGroup*frm=(ViewGroup*)mWindow->getChildAt(0);
     MarginLayoutParams*lp=(MarginLayoutParams*)frm->getLayoutParams();
-    const int horzMargin = lp->leftMargin+lp->rightMargin;
-    const int vertMargin = lp->topMargin+lp->bottomMargin;
-    int widthSpec  = MeasureSpec::makeMeasureSpec(1280-horzMargin,MeasureSpec::EXACTLY);
-    int heightSpec = MeasureSpec::makeMeasureSpec(720-vertMargin,MeasureSpec::AT_MOST);
+    const int horzMargin = lp->leftMargin+ lp->rightMargin;
+    const int vertMargin = lp->topMargin + lp->bottomMargin;
+    Point pt;
+    WindowManager::getInstance().getDefaultDisplay().getSize(pt);
+    LOGD("size=%dx%d margin=%d,%d",pt.x,pt.y,horzMargin,vertMargin);
+    int widthSpec  = MeasureSpec::makeMeasureSpec(pt.x-horzMargin,MeasureSpec::EXACTLY);
+    int heightSpec = MeasureSpec::makeMeasureSpec(pt.y-vertMargin,MeasureSpec::AT_MOST);
     
     widthSpec  = frm->getChildMeasureSpec(widthSpec ,0,lp->width);
     heightSpec = frm->getChildMeasureSpec(heightSpec,0,lp->height);

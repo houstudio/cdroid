@@ -37,7 +37,9 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 #else
     mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });     
 #endif
-    setFrame(0,0,1280,720);
+    Point pt;
+    WindowManager::getInstance().getDefaultDisplay().getSize(pt);
+    setFrame(0,0,pt.x,pt.y);
     setFocusable(true);
     mInLayout = false;
     setKeyboardNavigationCluster(true);
