@@ -1196,6 +1196,7 @@ void View::setScrollY(int y){
 int View::getOverScrollMode()const{
     return mOverScrollMode;
 }
+
 void View::setOverScrollMode(int overScrollMode){
     bool rc=overScrollMode != OVER_SCROLL_ALWAYS &&
             overScrollMode != OVER_SCROLL_IF_CONTENT_SCROLLS &&
