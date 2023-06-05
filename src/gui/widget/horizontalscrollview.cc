@@ -16,6 +16,7 @@ HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
 HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
   :FrameLayout(ctx,atts){
     initScrollView();
+    setFillViewport(atts.getBoolean("fillViewport", false));
 }
 
 HorizontalScrollView::~HorizontalScrollView(){
@@ -27,6 +28,7 @@ HorizontalScrollView::~HorizontalScrollView(){
     delete mEdgeGlowLeft;
     delete mEdgeGlowRight;
 }
+
 float HorizontalScrollView::getLeftFadingEdgeStrength() {
     if (getChildCount() == 0) {
         return 0.0f;
@@ -62,23 +64,22 @@ void HorizontalScrollView::initScrollView() {
     mVelocityTracker = nullptr;
     mChildToScrollTo = nullptr;
     mIsLayoutDirty= false;
-    mEdgeGlowLeft = mEdgeGlowRight =nullptr;
     mFillViewport = false;
     mIsBeingDragged = false;
     mActivePointerId = INVALID_POINTER;
-    mSmoothScrollingEnabled =true;
+    mSmoothScrollingEnabled = true;
     setFocusable(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     mEdgeGlowLeft = new EdgeEffect(mContext);
-    mEdgeGlowRight = new EdgeEffect(mContext);
+    mEdgeGlowRight= new EdgeEffect(mContext);
     ViewConfiguration&configuration=ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
     mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
     mOverscrollDistance= configuration.getScaledOverscrollDistance();
     mOverflingDistance = configuration.getScaledOverflingDistance();
-    mHorizontalScrollFactor =configuration.getScaledHorizontalScrollFactor();
+    mHorizontalScrollFactor = configuration.getScaledHorizontalScrollFactor();
 }
 
 View& HorizontalScrollView::addView(View* child){
@@ -438,8 +439,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
                         mEdgeGlowLeft->onRelease();
                     }
                 }
-                if (mEdgeGlowLeft != nullptr
-                        && (!mEdgeGlowLeft->isFinished() || !mEdgeGlowRight->isFinished())) {
+                if (shouldDisplayEdgeEffects() && (!mEdgeGlowLeft->isFinished() || !mEdgeGlowRight->isFinished())) {
                     postInvalidateOnAnimation();
                 }
             }
@@ -467,7 +467,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             mIsBeingDragged = false;
             recycleVelocityTracker();
 
-            if (mEdgeGlowLeft != nullptr) {
+            if (shouldDisplayEdgeEffects()) {
                 mEdgeGlowLeft->onRelease();
                 mEdgeGlowRight->onRelease();
             }
@@ -482,7 +482,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             mIsBeingDragged = false;
             recycleVelocityTracker();
 
-            if (mEdgeGlowLeft != nullptr) {
+            if (shouldDisplayEdgeEffects()) {
                 mEdgeGlowLeft->onRelease();
                 mEdgeGlowRight->onRelease();
             }
@@ -1102,7 +1102,7 @@ bool HorizontalScrollView::isViewDescendantOf(View* child, View* parent){
 void HorizontalScrollView::fling(int velocityX){
     if (getChildCount() > 0) {
         const int width = getWidth() - mPaddingRight - mPaddingLeft;
-        const int right = getChildAt(0)->getWidth();
+        const int right = getChildAt(0)->getWidth() - mPaddingLeft;
 
 	const int maxScroll =std::max(0,right-width);
 	if(mScrollX==0 && !mEdgeGlowLeft->isFinished())
@@ -1112,7 +1112,7 @@ void HorizontalScrollView::fling(int velocityX){
 	else{
             mScroller->fling(mScrollX, mScrollY, velocityX, 0, 0,std::max(0, right - width), 0, 0, width/2, 0);
 
-            bool movingRight = velocityX > 0;
+            const bool movingRight = velocityX > 0;
 
             View* currentFocused = findFocus();
             View* newFocused = findFocusableViewInMyBounds(movingRight, mScroller->getFinalX(), currentFocused);
@@ -1147,9 +1147,13 @@ void HorizontalScrollView::scrollTo(int x, int y){
     }
 }
 
+bool HorizontalScrollView::shouldDisplayEdgeEffects()const{
+    return getOverScrollMode() != OVER_SCROLL_NEVER;
+}
+
 void HorizontalScrollView::draw(Canvas& canvas){
     FrameLayout::draw(canvas);
-    if (mEdgeGlowLeft != nullptr) {
+    if (shouldDisplayEdgeEffects()){
         int scrollX = mScrollX;
         if (!mEdgeGlowLeft->isFinished()) {
             int height = getHeight() - mPaddingTop - mPaddingBottom;

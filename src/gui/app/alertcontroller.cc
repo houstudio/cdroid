@@ -623,6 +623,7 @@ AlertController::AlertParams::AlertParams(Context*context){
     mAdapter = nullptr;
     mCursor  = nullptr;
     mCustomTitleView= nullptr;
+    mForceInverseBackground = false;
     mInflater= LayoutInflater::from(mContext);
     LOGD("%p",this);
 }

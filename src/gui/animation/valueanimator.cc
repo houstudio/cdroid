@@ -24,6 +24,7 @@ void ValueAnimator::setDurationScale(float durationScale) {
 }
 
 float ValueAnimator::sDurationScale = 1.f;
+
 float ValueAnimator::getDurationScale() {
     return sDurationScale;
 }

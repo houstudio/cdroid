@@ -25,6 +25,7 @@ EdgeEffect::EdgeEffect(Context* context){
     mGlowScaleYStart = mGlowScaleYFinish = .0f;
     mStartTime= 0;
     mColor = 0x4000FF00;
+    mEdgeEffectType = TYPE_GLOW;
     mDuration = PULL_DECAY_TIME;
     mDistance = 0;
     mVelocity = .0f;
@@ -49,7 +50,7 @@ void EdgeEffect::setSize(int width, int height){
 }
 
 int EdgeEffect::getCurrentEdgeEffectBehavior() {
-    if (0/*!ValueAnimator::areAnimatorsEnabled()*/) {
+    if (!ValueAnimator::areAnimatorsEnabled()) {
         return TYPE_NONE;
     } else {
         return mEdgeEffectType;

@@ -5,14 +5,16 @@
 namespace cdroid{
 
 ScrollBarDrawable::ScrollBarDrawable(){
-    mAlpha=255;
+    mAlpha = 255;
     mMutated=false;
-    mRange=0;
-    mOffset=0;
-    mExtent=0;
-    mVertical=true;
-    mBoundsChanged=false;
-    mRangeChanged=false;
+    mRange = 0;
+    mOffset= 0;
+    mExtent= 0;
+    mVertical = true;
+    mHasSetAlpha  = false;
+    mBoundsChanged= false;
+    mRangeChanged = false;
+    mHasSetColorFilter = false;
     mAlwaysDrawHorizontalTrack=false;
     mAlwaysDrawVerticalTrack=false;
     mVerticalTrack = new ColorDrawable(0xFF222222);
@@ -183,7 +185,7 @@ void ScrollBarDrawable::propagateCurrentState(Drawable* d) {
         if (mHasSetAlpha)d->setAlpha(mAlpha);
 
         if (mHasSetColorFilter) {
-            //d->setColorFilter(mColorFilter);
+            d->setColorFilter(mColorFilter);
         }
     }
 }

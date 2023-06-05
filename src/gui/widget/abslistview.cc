@@ -3633,6 +3633,7 @@ void AbsListView::CheckForTap::run(){
 AbsListView::FlingRunnable::FlingRunnable(){
     mLV = nullptr;
     mScroller = nullptr;
+    mSuppressIdleStateChangeCall = false;
 }
 
 void AbsListView::FlingRunnable::setList(AbsListView*lv){

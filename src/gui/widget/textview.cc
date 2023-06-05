@@ -441,6 +441,7 @@ void TextView::initView(){
     mDeferScroll = -1;
     mMarqueeRepeatLimit =3;
     mLastLayoutDirection = -1;
+    mFontWeightAdjustment= INT_MAX;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
     mEllipsize = Layout::ELLIPSIS_NONE;

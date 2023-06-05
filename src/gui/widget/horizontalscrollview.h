@@ -52,6 +52,7 @@ private:
     void scrollToChild(View* child);
     bool scrollToChildRect(Rect rect, bool immediate);
     bool isViewDescendantOf(View* child, View* parent);
+    bool shouldDisplayEdgeEffects()const;
 protected:
     float getLeftFadingEdgeStrength();
     float getRightFadingEdgeStrength();

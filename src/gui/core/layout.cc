@@ -384,22 +384,22 @@ void Layout::calculateEllipsis(int line,int nChars){
         delete []widths;return ;
     case Layout::ELLIPSIS_START:
         ellipsisX +=mLines[line*mColumns+LAYOUT_WIDTH]-mWidth;
-        start=bsearch(widths,nChars, ellipsisX)+1;
-	count=nChars-start;
+        start = bsearch(widths,nChars, ellipsisX)+1;
+        count = nChars-start;
         LOGD("ELLIP_START ellipsisX=%d:%d startAt %d:%d els=%d",ellipsisX,nChars,start,count,els);
         setEllipse(line,start,nChars-start);
         break;
     case Layout::ELLIPSIS_MIDDLE:
-        ellipsisX =(mWidth-ellipsisX)/2;
-        start=bsearch(widths,nChars,ellipsisX);
-        count=nChars-(start+start);
+        ellipsisX = (mWidth-ellipsisX)/2;
+        start = bsearch(widths,nChars,ellipsisX);
+        count = nChars - (start+start);
         setEllipse(line,start,count);
         LOGV("ELLIP_MIDDLE ellipsisX=%d:%d startAt %d:%d",ellipsisX,nChars,start,count);
         break;
     case Layout::ELLIPSIS_END:
-	ellipsisX=mWidth-ellipsisX;
-        start= bsearch(widths,nChars,ellipsisX)-1;
-        count=nChars-start;
+        ellipsisX = mWidth - ellipsisX;
+        start = bsearch(widths,nChars,ellipsisX) - 1;
+        count = nChars - start;
         setEllipse(line,start,count);
         LOGV("ELLIP_END ellipsisX=%d:%d startAt %d:%d",ellipsisX,nChars,start,count);
         break;
