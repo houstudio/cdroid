@@ -17,14 +17,14 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
             {"fitStart",ScaleType::FIT_START},{"fitCenter",ScaleType::FIT_CENTER},
             {"fitEnd",ScaleType::FIT_END},   {"center",ScaleType::CENTER},
             {"centerCrop",ScaleType::CENTER_CROP},{"centerInside",ScaleType::CENTER_INSIDE}
-         },mScaleType);
-    setScaleType(scaleType);
-    setImageResource(attrs.getString("src"));
+         },-1);
+    if(scaleType>=0)setScaleType(scaleType);
+    Drawable*d=attrs.getDrawable("src");
+    if(d)setImageDrawable(d);
     setMaxWidth (attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight",INT_MAX));
     setImageAlpha(attrs.getInt("alpha",255));
     mCropToPadding =attrs.getBoolean("cropToPadding",false);
-    configureBounds();
 }
 
 ImageView::ImageView(int w, int h)
@@ -44,7 +44,7 @@ void ImageView::initImageView(){
     mViewAlphaScale= 256;
     mDrawableWidth = mDrawableHeight = -1;
     mScaleType  = FIT_CENTER;
-    mHaveFrame  = true;
+    mHaveFrame  = false;
     mMergeState = false;
     mCropToPadding = false;
     mAdjustViewBounds = false;
@@ -322,18 +322,19 @@ static void SetRect2Rect(Matrix&m,const Rect&src,const Rect&dst,int align){
         if (xLarger) tx += diff;
         else  ty += diff;
     }
-    m.scale(sx,sy); m.translate(tx,ty);//this->setScaleTranslate(sx, sy, tx, ty);
+    m.scale(sx,sy);
+    m.translate(tx,ty);//this->setScaleTranslate(sx, sy, tx, ty);
 }
 
 bool ImageView::setFrame(int l, int t, int w, int h){
-    bool changed = View::setFrame(l, t, w, h);
+    const bool changed = View::setFrame(l, t, w, h);
     mHaveFrame = true;
     configureBounds();
     return changed;
 }
 
 void ImageView::configureBounds(){
-    if (mDrawable == nullptr /*|| !mHaveFrame*/) return;
+    if (mDrawable == nullptr || !mHaveFrame) return;
     const int mPaddingLeft=0,mPaddingRight=0,mPaddingTop=0,mPaddingBottom=0;
     const int dwidth = mDrawableWidth;
     const int dheight = mDrawableHeight;
@@ -345,8 +346,6 @@ void ImageView::configureBounds(){
     const bool fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
     LOGV("%p:%d drawables.setBounds(%d,%d) fits=%d mScaleType=%d",this,mID,vwidth,vheight,fits,mScaleType);
 
-    mDrawable->setBounds(0, 0, vwidth, vheight);
-    
     if (dwidth <= 0 || dheight <= 0 || ScaleType::FIT_XY == mScaleType) {
         /* If the drawable has no intrinsic size, or we're told to
             scaletofit, then we just fill our entire view.*/
@@ -545,7 +544,7 @@ ColorFilter* ImageView::getColorFilter(){
 }
 
 void ImageView::setImageAlpha(int alpha){
-    mAlpha=alpha&0xFF;
+    mAlpha = alpha & 0xFF;
 }
 int  ImageView::getImageAlpha()const{
     return mAlpha;
@@ -623,7 +622,7 @@ void ImageView::updateDrawable(Drawable*d){
             d->setState(getDrawableState());
         }
         if (!sameDrawable ) {
-            const bool visible =getVisibility() == VISIBLE;
+            const bool visible = getVisibility() == VISIBLE;
             d->setVisible(visible, true);
         }
         d->setLevel(mLevel);
@@ -668,7 +667,6 @@ void ImageView::setSelected(bool selected){
 }
 
 void ImageView::onDraw(Canvas& canvas) {
-    View::onDraw(canvas);
     const int mPaddingLeft=0,mPaddingTop=0,mPaddingRight=0,mPaddingBottom=0;
     LOGV("%p'mDrawable %p pos:%d,%d Size=%dx%d alpha=%f",this,mDrawable,mLeft,mTop,mDrawableWidth,mDrawableHeight,getAlpha());
     if (mDrawable == nullptr||mDrawableWidth == 0 || mDrawableHeight == 0) return;

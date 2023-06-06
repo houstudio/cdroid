@@ -275,12 +275,6 @@ int Typeface::loadFromPath(const std::string&path){
 		typeface->mScale = scale;
                 sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
 		typeface->mStyle = parseStyle(ftFace->style_name);
-                FT_SfntLangTag lang_tag;
-                FT_UInt lang_index = 0;
-                while(FT_Get_Sfnt_LangTag(ftFace/*, FT_Sfnt_LangTag_Preferred*/, lang_index, &lang_tag)==FT_Err_Ok){
-                    printf("Supported language:%d %s\n",lang_tag.string_len, lang_tag.string);
-		    lang_index++;
-                }
                 LOGI("[%s] style=%s/%x %d glyphs face.height=%x units_per_EM=%x scale=%f",
 			ftFace->family_name,ftFace->style_name,ftFace->style_flags,ftFace->num_glyphs,
 			ftFace->max_advance_height,ftFace->units_per_EM,scale);
@@ -303,7 +297,7 @@ int Typeface::loadFromFontConfig(){
     FcObjectSet*os = FcObjectSetBuild (FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE,NULL);
     FcFontSet  *fs = FcFontList(config, p, os);
     FcPatternDestroy(p);
-    return loadFromPath("");
+    //return loadFromPath("");
     LOGI("Total fonts: %d", fs->nfont);
     const std::regex patSerif("(?=.*\\bserif\\b)" , std::regex_constants::icase);
     const std::regex patSans( "(?=.*\\bsans\\b)" , std::regex_constants::icase);
