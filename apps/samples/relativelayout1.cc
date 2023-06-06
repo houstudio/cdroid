@@ -2,7 +2,7 @@
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,1280,600);
+    Window*w=new Window(0,0,-1,-1);
 
     w->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
     RelativeLayout* layout=new RelativeLayout(800,480);

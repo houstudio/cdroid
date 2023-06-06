@@ -72,6 +72,11 @@ public:
     HorizontalScrollView(int w,int h);
     HorizontalScrollView(Context*ctx,const AttributeSet&atts);
     ~HorizontalScrollView();
+    void setEdgeEffectColor(int color);
+    void setLeftEdgeEffectColor(int color);
+    void setRightEdgeEffectColor(int color);
+    int getLeftEdgeEffectColor()const;
+    int getRightEdgeEffectColor()const;
     int getMaxScrollAmount();
     View& addView(View* child);
     View& addView(View* child, int index);

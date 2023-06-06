@@ -39,10 +39,10 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include/freetype2	
 )
 
-target_link_options(${PROJECT_NAME} PRIVATE ${LB_LIBS_LDFLAGS})
-target_link_libraries(${PROJECT_NAME} litehtml )#CURL::libcurl ${LB_LIBS_LIBRARIES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11  C_STANDARD 99)
-
-#add_executable(htmltest main.cpp)
-#target_link_libraries(htmltest litebrowser cdroid)
+if(litehtml_FOUND)
+   target_link_options(${PROJECT_NAME} PRIVATE ${LB_LIBS_LDFLAGS})
+   target_link_libraries(${PROJECT_NAME} litehtml )#CURL::libcurl ${LB_LIBS_LIBRARIES})
+   set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11  C_STANDARD 99)
+   add_executable(htmltest main.cpp)
+   target_link_libraries(htmltest litebrowser cdroid)
+endif()

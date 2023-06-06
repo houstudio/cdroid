@@ -344,13 +344,12 @@ void ImageView::configureBounds(){
     
 
     const bool fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
-    LOGV("%p:%d drawables.setBounds(%d,%d) fits=%d mScaleType=%d",this,mID,vwidth,vheight,fits,mScaleType);
 
     if (dwidth <= 0 || dheight <= 0 || ScaleType::FIT_XY == mScaleType) {
         /* If the drawable has no intrinsic size, or we're told to
             scaletofit, then we just fill our entire view.*/
         mDrawable->setBounds(0, 0, vwidth, vheight);
-        mDrawMatrix =identity_matrix();//nullptr
+        mDrawMatrix = identity_matrix();
     } else {
         // We need to do the scaling ourself, so have the drawable
         // use its native size.

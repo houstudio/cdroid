@@ -33,7 +33,7 @@ float HorizontalScrollView::getLeftFadingEdgeStrength() {
     if (getChildCount() == 0) {
         return 0.0f;
     }
-    int length = getHorizontalFadingEdgeLength();
+    const int length = getHorizontalFadingEdgeLength();
     if (mScrollX < length) {
         return mScrollX / (float) length;
     }
@@ -45,14 +45,35 @@ float HorizontalScrollView::getRightFadingEdgeStrength() {
         return 0.0f;
     }
 
-    int length = getHorizontalFadingEdgeLength();
-    int rightEdge = getWidth() - mPaddingRight;
-    int span = getChildAt(0)->getRight() - mScrollX - rightEdge;
+    const int length = getHorizontalFadingEdgeLength();
+    const int rightEdge = getWidth() - mPaddingRight;
+    const int span = getChildAt(0)->getRight() - mScrollX - rightEdge;
     if (span < length) {
         return span / (float) length;
     }
 
     return 1.0f;
+}
+
+void HorizontalScrollView::setEdgeEffectColor(int color) {
+    setLeftEdgeEffectColor(color);
+    setRightEdgeEffectColor(color);
+}
+
+void HorizontalScrollView::setLeftEdgeEffectColor(int color) {
+    mEdgeGlowLeft->setColor(color);
+}
+
+void HorizontalScrollView::setRightEdgeEffectColor(int color) {
+    mEdgeGlowRight->setColor(color);
+}
+
+int HorizontalScrollView::getLeftEdgeEffectColor()const{
+    return mEdgeGlowLeft->getColor();
+}
+
+int HorizontalScrollView::getRightEdgeEffectColor()const{
+    return mEdgeGlowRight->getColor();
 }
 
 int HorizontalScrollView::getMaxScrollAmount() {
@@ -251,7 +272,7 @@ void HorizontalScrollView::requestDisallowInterceptTouchEvent(bool disallowInter
 }
 
 bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
-    int action = ev.getAction();
+    const int action = ev.getAction();
     if ((action == MotionEvent::ACTION_MOVE) && (mIsBeingDragged)) {
         return true;
     }
@@ -265,20 +286,20 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
 
         /*Locally do absolute value. mLastMotionX is set to the x value
         * of the down event.*/
-        int activePointerId = mActivePointerId;
+        const int activePointerId = mActivePointerId;
         if (activePointerId == INVALID_POINTER) {
             // If we don't have a valid id, the touch down wasn't on content.
             break;
         }
 
-        int pointerIndex = ev.findPointerIndex(activePointerId);
+        const int pointerIndex = ev.findPointerIndex(activePointerId);
         if (pointerIndex == -1) {
             LOGE("Invalid pointerId=%d in onInterceptTouchEvent",activePointerId);
             break;
         }
 
-        int x = (int) ev.getX(pointerIndex);
-        int xDiff = (int) std::abs(x - mLastMotionX);
+        const int x = (int) ev.getX(pointerIndex);
+        const int xDiff = (int) std::abs(x - mLastMotionX);
         if (xDiff > mTouchSlop) {
             mIsBeingDragged = true;
             mLastMotionX = x;
@@ -290,7 +311,7 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
     }
 
     case MotionEvent::ACTION_DOWN: {
-        int x = (int) ev.getX();
+        const int x = (int) ev.getX();
         if (!inChild((int) x, (int) ev.getY())) {
             mIsBeingDragged = false;
             recycleVelocityTracker();
@@ -324,12 +345,12 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
         /* Release the drag */
         mIsBeingDragged = false;
         mActivePointerId = INVALID_POINTER;
-        if (mScroller->springBack(mScrollX, mScrollY, 0, getScrollRange(), 0, 0)) {
+        if (mScroller->springBack(mScrollX, mScrollY, 0, getScrollRange(), 0, 0)||true) {
             postInvalidateOnAnimation();
         }
         break;
     case MotionEvent::ACTION_POINTER_DOWN: {
-        int index = ev.getActionIndex();
+        const int index = ev.getActionIndex();
         mLastMotionX = (int) ev.getX(index);
         mActivePointerId = ev.getPointerId(index);
         break;
@@ -349,14 +370,14 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
     initVelocityTrackerIfNotExists();
     mVelocityTracker->addMovement(ev);
 
-    int action = ev.getAction();
+    const int action = ev.getAction();
 
     switch (action & MotionEvent::ACTION_MASK) {
     case MotionEvent::ACTION_DOWN: {
         if (getChildCount() == 0) {
             return false;
         }
-        if ((mIsBeingDragged = !mScroller->isFinished())) {
+        if (!mScroller->isFinished()) {
             ViewGroup* parent = getParent();
             if (parent != nullptr) {
                 parent->requestDisallowInterceptTouchEvent(true);
@@ -375,13 +396,13 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
         break;
     }
     case MotionEvent::ACTION_MOVE:{
-        int activePointerIndex = ev.findPointerIndex(mActivePointerId);
+        const int activePointerIndex = ev.findPointerIndex(mActivePointerId);
         if (activePointerIndex == -1) {
             LOGE("Invalid pointerId=%d in onTouchEvent" , mActivePointerId);
             break;
         }
 
-        int x = (int) ev.getX(activePointerIndex);
+        const int x = (int) ev.getX(activePointerIndex);
         int deltaX = mLastMotionX - x;
         if (!mIsBeingDragged && std::abs(deltaX) > mTouchSlop) {
             ViewGroup* parent = getParent();
@@ -399,14 +420,14 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             // Scroll to follow the motion event
             mLastMotionX = x;
 
-            int oldX = mScrollX;
-            int oldY = mScrollY;
-            int range = getScrollRange();
-            int overscrollMode = getOverScrollMode();
-            bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
+            const int oldX = mScrollX;
+            const int oldY = mScrollY;
+            const int range = getScrollRange();
+            const int overscrollMode = getOverScrollMode();
+            const bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
                     (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
-	    const float displacement= ev.getY(activePointerIndex)/getHeight();
+            const float displacement = ev.getY(activePointerIndex)/getHeight();
             if (canOverscroll) {
                 int consumed = 0;
                 if (deltaX < 0 && mEdgeGlowRight->getDistance() != .0f) {
@@ -425,7 +446,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             overScrollBy(deltaX, 0, mScrollX, 0, range, 0, mOverscrollDistance, 0, true);
 
             if (canOverscroll && deltaX!=0.f) {
-                int pulledToX = oldX + deltaX;
+                const int pulledToX = oldX + deltaX;
                 if (pulledToX < 0) {
                     mEdgeGlowLeft->onPullDistance((float) deltaX / getWidth(),
                             1.f - ev.getY(activePointerIndex) / getHeight());
@@ -450,7 +471,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
         if (mIsBeingDragged) {
             VelocityTracker* velocityTracker = mVelocityTracker;
             velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
-            int initialVelocity = (int)velocityTracker->getXVelocity(mActivePointerId);
+            const int initialVelocity = (int)velocityTracker->getXVelocity(mActivePointerId);
 
             if (getChildCount() > 0) {
                 if ((std::abs(initialVelocity) > mMinimumVelocity)) {
@@ -496,14 +517,14 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
 }
 
 void HorizontalScrollView::onSecondaryPointerUp(MotionEvent& ev) {
-    int pointerIndex = (ev.getAction() & MotionEvent::ACTION_POINTER_INDEX_MASK) >>
+    const int pointerIndex = (ev.getAction() & MotionEvent::ACTION_POINTER_INDEX_MASK) >>
             MotionEvent::ACTION_POINTER_INDEX_SHIFT;
-    int pointerId = ev.getPointerId(pointerIndex);
+    const int pointerId = ev.getPointerId(pointerIndex);
     if (pointerId == mActivePointerId) {
         // This was our active pointer going up. Choose a new
         // active pointer and adjust accordingly.
         // TODO: Make this decision more intelligent.
-        int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+        const int newPointerIndex = pointerIndex == 0 ? 1 : 0;
         mLastMotionX = (int) ev.getX(newPointerIndex);
         mActivePointerId = ev.getPointerId(newPointerIndex);
         if (mVelocityTracker != nullptr) mVelocityTracker->clear();
@@ -554,18 +575,17 @@ bool HorizontalScrollView::shouldDelayChildPressedState(){
 
 void HorizontalScrollView::onOverScrolled(int scrollX, int scrollY,bool clampedX, bool clampedY){
     if (!mScroller->isFinished()) {
-        int oldX = mScrollX;
-        int oldY = mScrollY;
+        const int oldX = mScrollX;
+        const int oldY = mScrollY;
         mScrollX = scrollX;
         mScrollY = scrollY;
-        //invalidateParentIfNeeded();
+        invalidateParentIfNeeded();
         onScrollChanged(mScrollX, mScrollY, oldX, oldY);
         if (clampedX) {
             mScroller->springBack(mScrollX, mScrollY, 0, getScrollRange(), 0, 0);
         }
     } else {
         FrameLayout::scrollTo(scrollX, scrollY);
-	    if(mParent)mParent->invalidate(true);
     }
     awakenScrollBars();
 }
@@ -580,9 +600,9 @@ int HorizontalScrollView::getScrollRange() {
 }
 
 View* HorizontalScrollView::findFocusableViewInMyBounds(bool leftFocus,int left, View* preferredFocusable){
-    int fadingEdgeLength = getHorizontalFadingEdgeLength() / 2;
-    int leftWithoutFadingEdge = left + fadingEdgeLength;
-    int rightWithoutFadingEdge = left + getWidth() - fadingEdgeLength;
+    const int fadingEdgeLength = getHorizontalFadingEdgeLength() / 2;
+    const int leftWithoutFadingEdge = left + fadingEdgeLength;
+    const int rightWithoutFadingEdge = left + getWidth() - fadingEdgeLength;
 
     if ((preferredFocusable != nullptr)
             && (preferredFocusable->getLeft() < rightWithoutFadingEdge)
@@ -613,14 +633,14 @@ View* HorizontalScrollView::findFocusableViewInBounds(bool leftFocus, int left, 
         if (left < viewRight && viewLeft < right) {
             /* the focusable is in the target area, it is a candidate for focusing */
 
-            bool viewIsFullyContained = (left < viewLeft) &&  (viewRight < right);
+            const bool viewIsFullyContained = (left < viewLeft) &&  (viewRight < right);
 
             if (focusCandidate == nullptr) {
                 /* No candidate, take this one */
                 focusCandidate = view;
                 foundFullyContainedFocusable = viewIsFullyContained;
             } else {
-                bool viewIsCloserToBoundary =(leftFocus && viewLeft < focusCandidate->getLeft()) ||
+                const bool viewIsCloserToBoundary =(leftFocus && viewLeft < focusCandidate->getLeft()) ||
                                     (!leftFocus && viewRight > focusCandidate->getRight());
 
                 if (foundFullyContainedFocusable) {
@@ -682,7 +702,7 @@ bool HorizontalScrollView::fullScroll(int direction) {
         if (count > 0) {
             View* view = getChildAt(0);
             mTempRect.width = width;//view->getRight();
-            mTempRect.left = view->getRight()-width;//mTempRect.right - width;
+            mTempRect.left = view->getRight() - width;//mTempRect.right - width;
         }
     }
 
