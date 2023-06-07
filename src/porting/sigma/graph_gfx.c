@@ -87,7 +87,6 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
     FBDEVICE*dev=&devs[dispid];
     *width =dev->var.xres - screenMargin.x - screenMargin.w;
     *height=dev->var.yres - screenMargin.y - screenMargin.h;
-    LOGV("screensize=%dx%d",*width,*height);
     return E_OK;
 }
 
@@ -305,10 +304,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
     opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
     opt.eDFBBlendFlag= E_MI_GFX_DFB_BLEND_NOFX;
-    opt.stClipRect.s32Xpos = dx + screenMargin.x;
-    opt.stClipRect.s32Ypos = dy + screenMargin.y;
-    opt.stClipRect.u32Width= rs.w;//ndst->width;
-    opt.stClipRect.u32Height=rs.h;//ndst->height;
+    opt.stClipRect.s32Xpos = dx + screenMargin.x*(ndst->ishw?1:0);
+    opt.stClipRect.s32Ypos = dy + screenMargin.y*(ndst->ishw?1:0);
+    opt.stClipRect.u32Width= rs.w;//rs.w;//ndst->width;
+    opt.stClipRect.u32Height=rs.h;//rs.h;//ndst->height;
     if(nsrc->alpha!=255)
         opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
 
@@ -320,11 +319,11 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     stSrcRect.u32Width = rs.w;
     stSrcRect.u32Height= rs.h;
 
-    LOGV("..Blit %p(%d,%d-%d,%d)-> %p(%d,%d)(%d,%d)copied wh=%d,%d rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,
-		ndst->width,ndst->height,dx,dy,rs.w,rs.h,opt.eRotate);
-
-    stDstRect.s32Xpos = dx+screenMargin.x;
-    stDstRect.s32Ypos = dy+screenMargin.y;
+    LOGV("..Blit %p(%d,%d-%d,%d)-> (%d,%d)copied rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,
+		dx,dy,opt.eRotate);
+    
+    stDstRect.s32Xpos = opt.stClipRect.s32Xpos;//dx+screenMargin.x*(ndst->ishw?1:0);
+    stDstRect.s32Ypos = opt.stClipRect.s32Ypos;//dy+screenMargin.y*(ndst->ishw?1:0);
     stDstRect.u32Width = rs.w;
     stDstRect.u32Height= rs.h;
     ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
