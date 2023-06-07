@@ -30,7 +30,7 @@ private:
     HANDLE mPrimarySurface;
     class Canvas*mPrimaryContext;
     Canvas *mBannerContext;
-    Cairo::RefPtr<Cairo::Region>mInvalidateRgn;
+    //Cairo::RefPtr<Cairo::Region>mInvalidateRgn;
     static GraphDevice*mInst;
     GraphDevice(int format=-1);
     void trackFPS();

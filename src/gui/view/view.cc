@@ -4515,17 +4515,23 @@ void View::getWindowVisibleDisplayFrame(Rect& outRect){
     // Make a best guess about the display size.
     //Display d = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
     //d.getRectSize(outRect);
+    Point sz;
+    WindowManager::getInstance().getDefaultDisplay().getSize(sz);
+    outRect.set(0,0,sz.x,sz.y);
 }
 
 void View::getWindowDisplayFrame(Rect& outRect) {
     if (mAttachInfo) {
         //mAttachInfo.mSession.getDisplayFrame(mAttachInfo.mWindow, outRect);
-        return;
+        //return;
     }
     // The view is not attached to a display so we don't have a context.
     // Make a best guess about the display size.
     //Display d = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
     //d.getRectSize(outRect);
+    Point sz;
+    WindowManager::getInstance().getDefaultDisplay().getSize(sz);
+    outRect.set(0,0,sz.x,sz.y);
 }
 void View::dispatchVisibilityChanged(View& changedView,int visibility){
     onVisibilityChanged(changedView, visibility); 

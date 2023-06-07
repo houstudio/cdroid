@@ -100,6 +100,14 @@ const std::string Window::getText()const{
     return mText;
 }
 
+void Window::sendToBack(){
+    WindowManager::getInstance().sendToBack(this);
+}
+
+void Window::bringToFront(){
+    WindowManager::getInstance().bringToFront(this);
+}
+
 void Window::draw(){
     RefPtr<Canvas>canvas = getCanvas();
     mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
@@ -166,7 +174,7 @@ RefPtr<Canvas>Window::getCanvas(){
 	canvas = make_refptr_for_instance<Canvas>(new Canvas(canvasWidth,canvasHeight));
         mAttachInfo->mCanvas = canvas;
 	Cairo::Matrix matrix = Cairo::identity_matrix();
-	LOGD("rotation=%d window.size=%dx%d canvas.size=%dx%d",rotation*90,getWidth(),getHeight(),canvasWidth,canvasHeight);
+	LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d",rotation*90,getWidth(),getHeight(),canvasWidth,canvasHeight);
 	switch(rotation){
         case Display::ROTATION_0:break;
         case Display::ROTATION_90:
@@ -267,8 +275,8 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     }
     if(!handled){
         switch(action){
-        case KeyEvent::ACTION_UP  :handled = onKeyUp(event.getKeyCode(),event);break; 
-        case KeyEvent::ACTION_DOWN:handled = onKeyDown(event.getKeyCode(),event);break;
+        case KeyEvent::ACTION_UP  ://handled = onKeyUp(event.getKeyCode(),event);break;
+        case KeyEvent::ACTION_DOWN://handled = onKeyDown(event.getKeyCode(),event);break;
              handled = ViewGroup::dispatchKeyEvent(event);break;
         default:break;
         }

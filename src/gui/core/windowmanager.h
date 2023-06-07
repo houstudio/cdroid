@@ -54,6 +54,8 @@ public:
     void addWindow(Window*w);
     void removeWindow(Window*w);
     void moveWindow(Window*w,int x,int y);
+    void sendToBack(Window*w);
+    void bringToFront(Window*w);
     void processEvent(InputEvent&e);
     void clip(Window*win);
     int enumWindows(WNDENUMPROC cbk);

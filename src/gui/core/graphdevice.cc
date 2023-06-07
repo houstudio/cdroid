@@ -50,7 +50,7 @@ GraphDevice::GraphDevice(int fmt){
     
     mLastComposeTime = SystemClock::uptimeMillis();
 
-    mInvalidateRgn = Region::create();
+    //mInvalidateRgn = Region::create();
     mComposing = 0;
     mQuitFlag  = false;
     mShowFPS = false;
@@ -77,8 +77,8 @@ HANDLE GraphDevice::getPrimarySurface()const{
 }
 
 void GraphDevice::invalidate(const Rect&r){
-    mInvalidateRgn->do_union((const RectangleInt&)r);
-    LOGD("(%d,%d,%d,%d)",r.left,r.top,r.width,r.height);
+    //mInvalidateRgn->do_union((const RectangleInt&)r);
+    LOGV("(%d,%d,%d,%d)",r.left,r.top,r.width,r.height);
 }
 
 void GraphDevice::trackFPS() {
@@ -208,7 +208,7 @@ void GraphDevice::composeSurfaces(){
         RefPtr<Region> rgn = wins[i]->mVisibleRgn;//winVisibleRgns[i];
         HANDLE hdlSurface  = wSurfaces[i]->mHandle;
         if(rgn->empty())continue; 
-        mInvalidateRgn->subtract((const RectangleInt&)rcw);
+        //mInvalidateRgn->subtract((const RectangleInt&)rcw);
         rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
         for(int j=0;j<rgn->get_num_rectangles();j++){
@@ -285,8 +285,8 @@ void GraphDevice::composeSurfaces(){
 	}
         GFXFillRect(mPrimarySurface,(const GFXRect*)&rd,0);
         LOGD("%d:(%d,%d,%d,%d)->(%d,%d,%d,%d)",i,rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height);
-    }*/
-    mInvalidateRgn->do_xor(mInvalidateRgn);
+    }
+    mInvalidateRgn->do_xor(mInvalidateRgn);*/
     if(mShowFPS && mPrimaryContext && mBannerContext){
 	mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
 	mPrimaryContext->set_source(mBannerContext->get_target(),0,0);

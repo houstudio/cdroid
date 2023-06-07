@@ -2704,12 +2704,12 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                 const int x = ev.getX(actionIndex);
                 const int y = ev.getY(actionIndex);
 
-                std::vector<View*>preorderedList= buildTouchDispatchChildList();
-                const bool customOrder=preorderedList.empty() && isChildrenDrawingOrderEnabled();
-                std::vector<View*>&children=mChildren;
-                for(int i=childrenCount-1;i>=0;i--){
-                    const int childIndex=getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
-                    View*child = getAndVerifyPreorderedView(preorderedList, children, childIndex);
+                std::vector<View*>preorderedList = buildTouchDispatchChildList();
+                const bool customOrder = preorderedList.empty() && isChildrenDrawingOrderEnabled();
+                std::vector<View*>&children = mChildren;
+                for(int i = childrenCount-1;i >= 0;i--){
+                    const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+                    View* child = getAndVerifyPreorderedView(preorderedList, children, childIndex);
 		    if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
                         ev.setTargetAccessibilityFocus(false);
                         continue;

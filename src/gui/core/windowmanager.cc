@@ -74,21 +74,20 @@ Display& WindowManager::getDefaultDisplay(){
 
 void WindowManager::addWindow(Window*win){
     mWindows.push_back(win);
+    win->mLayer = (win->window_type<<16)||0x7FFF;
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
-        return (w2->window_type-w1->window_type)>0;
+        return (w1->mLayer - w2->mLayer)>0;
     });
-    
-    for(int idx=0,type_idx=0;idx<mWindows.size();idx++){
-        Window*w = mWindows.at(idx);
-        if(w->window_type != mWindows[type_idx]->window_type)
-            type_idx=idx;
-        w->mLayer=w->window_type*10000+(idx-type_idx)*5;
+
+    for(int idx = 0 ;idx < mWindows.size();idx++){
+        Window *w = mWindows.at(idx);
+        w->mLayer = (w->window_type<<16)|(idx+1);
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
     if(mActiveWindow)mActiveWindow->post(std::bind(&Window::onDeactive,mActiveWindow));
-    
+
     View::AttachInfo*info = new View::AttachInfo();
-    info->mContentInsets.set(5,5,5,5);
+    info->mContentInsets.setEmpty();
     info->mRootView = win;
     win->dispatchAttachedToWindow(info,win->getVisibility());
 #if USE_UIEVENTHANDLER    
@@ -151,8 +150,8 @@ void WindowManager::moveWindow(Window*w,int x,int y){
            Rect rc = w->getBound();
            RefPtr<Region>newrgn = Region::create((RectangleInt&)rc);
            for( auto it2 = it+1 ; it2 < itw ; it2++){
-	           Rect r = (*it)->getBound();
-	           newrgn->subtract((const RectangleInt&)r);
+               Rect r = (*it)->getBound();
+               newrgn->subtract((const RectangleInt&)r);
            }
            newrgn->translate(-rcw.left,-rcw.top);
            (*it)->mPendingRgn->do_union((RectangleInt&)rcw);
@@ -160,6 +159,34 @@ void WindowManager::moveWindow(Window*w,int x,int y){
         }
         GraphDevice::getInstance().flip();
     }
+}
+
+void WindowManager::sendToBack(Window*win){
+    win->mLayer = (win->window_type<<16);
+    std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
+        return (w1->mLayer - w2->mLayer)>0;
+    });
+
+    for(int idx = 0 ; idx < mWindows.size();idx++){
+        Window *w = mWindows.at(idx);
+        w->mLayer = (w->window_type<<16)|(idx+1);
+    }
+    win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
+    GraphDevice::getInstance().flip();
+}
+
+void WindowManager::bringToFront(Window*win){
+    win->mLayer = (win->window_type<<16)||0x7FFF;
+    std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
+        return (w1->mLayer - w2->mLayer)>0;
+    });
+
+    for(int idx = 0 ; idx < mWindows.size();idx++){
+        Window *w = mWindows.at(idx);
+        w->mLayer = (w->window_type<<16)|(idx+1);
+    }
+    win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
+    GraphDevice::getInstance().flip();
 }
 
 int WindowManager::enumWindows(WNDENUMPROC cbk){

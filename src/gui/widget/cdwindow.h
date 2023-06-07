@@ -76,14 +76,14 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
     typedef enum{
-        TYPE_WALLPAPER    =1,
-        TYPE_APPLICATION  =2,
-        TYPE_SYSTEM_WINDOW=2000,
-        TYPE_STATUS_BAR   =2001,
-        TYPE_SEARCH_BAR   =2002,
-        TYPE_SYSTEM_ALERT =2003,
-        TYPE_KEYGUARD     =2004,
-        TYPE_TOAST        =2005,
+        TYPE_WALLPAPER    = 1,
+        TYPE_APPLICATION  = 2,
+        TYPE_SYSTEM_WINDOW= 2000,
+        TYPE_STATUS_BAR   = 2001,
+        TYPE_SEARCH_BAR   = 2002,
+        TYPE_SYSTEM_ALERT = 2003,
+        TYPE_KEYGUARD     = 2004,
+        TYPE_TOAST        = 2005,
     }WindowType;
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
     Window(Context*,const AttributeSet&);
@@ -94,6 +94,8 @@ public:
     const std::string getText()const;
     virtual View& setPos(int x,int y)override;
     View& setAlpha(float a);
+    void sendToBack();
+    void bringToFront();
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();
