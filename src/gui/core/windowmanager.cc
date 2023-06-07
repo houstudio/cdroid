@@ -74,9 +74,9 @@ Display& WindowManager::getDefaultDisplay(){
 
 void WindowManager::addWindow(Window*win){
     mWindows.push_back(win);
-    win->mLayer = (win->window_type<<16)||0x7FFF;
+    win->mLayer = (win->window_type<<16)|0x7FFF;
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
-        return (w1->mLayer - w2->mLayer)>0;
+        return (w2->mLayer - w1->mLayer)>0;
     });
 
     for(int idx = 0 ;idx < mWindows.size();idx++){
@@ -107,18 +107,20 @@ void WindowManager::removeWindow(Window*w){
         w->onDeactive();
     auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     const Rect wrect = w->getBound();
+    const int wc=mWindows.size();
     mWindows.erase(itw);
     for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
         Window*w1 = (*itr);
-        RECT rc = w1->getBound();
+        Rect rc = w1->getBound();
         rc.intersect(wrect);
-        rc.offset(-w1->getX(),-w1->getY());
+        rc.offset(-w1->getLeft(),-w1->getTop());
         w1->invalidate(&rc);
+	w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
     }
 #if USE_UIEVENTHANDLER
     Looper::getDefault()->removeHandler(w->mUIEventHandler);
 #else
-   Looper::getDefault()->removeEventHandler(w->mUIEventHandler);
+    Looper::getDefault()->removeEventHandler(w->mUIEventHandler);
 #endif
     View::AttachInfo*info = w->mAttachInfo;
     w->dispatchDetachedFromWindow();
@@ -133,7 +135,7 @@ void WindowManager::removeWindow(Window*w){
     }
     GraphDevice::getInstance().invalidate(wrect);
     GraphDevice::getInstance().flip();
-    LOGI("w=%p windows.size=%d",w,mWindows.size());
+    LOGI("w=%p windows.size=%d->%d",w,wc,mWindows.size());
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){
@@ -164,7 +166,7 @@ void WindowManager::moveWindow(Window*w,int x,int y){
 void WindowManager::sendToBack(Window*win){
     win->mLayer = (win->window_type<<16);
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
-        return (w1->mLayer - w2->mLayer)>0;
+        return (w2->mLayer - w1->mLayer)>0;
     });
 
     for(int idx = 0 ; idx < mWindows.size();idx++){
@@ -176,9 +178,9 @@ void WindowManager::sendToBack(Window*win){
 }
 
 void WindowManager::bringToFront(Window*win){
-    win->mLayer = (win->window_type<<16)||0x7FFF;
+    win->mLayer = (win->window_type<<16)|0x7FFF;
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
-        return (w1->mLayer - w2->mLayer)>0;
+        return (w2->mLayer - w1->mLayer)>0;
     });
 
     for(int idx = 0 ; idx < mWindows.size();idx++){
