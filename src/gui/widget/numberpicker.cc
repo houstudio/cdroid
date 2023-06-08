@@ -44,6 +44,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     layout(0,0,getMeasuredWidth(),getMeasuredHeight());
     LOGD("%d,%d-%d,%d (%dx%d)",mInputText->getLeft(),mInputText->getTop(),mInputText->getWidth(),mInputText->getHeight(),w,h);
     updateInputTextView();
+    setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT);
 }
 
 NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
@@ -104,6 +105,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mTextColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),Color::WHITE);
     mTextColor2= mTextColor;
     updateInputTextView();
+    setSelector(atts.getInt("maxSelector",DEFAULT_SELECTOR_WHEEL_ITEM_COUNT));
 }
 
 NumberPicker::~NumberPicker(){
@@ -162,6 +164,7 @@ void NumberPicker::initView(){
     mValue    = 0;
     mMinValue = 0;
     mMaxValue = 0;
+    mSelectorTextGapHeight = 0;
     mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
     mVelocityTracker = nullptr;
 
@@ -173,7 +176,6 @@ void NumberPicker::initView(){
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mHideWheelUntilFocused=false;
     mMaxSelectorIndices = DEFAULT_SELECTOR_WHEEL_ITEM_COUNT;
-    setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT);
 }
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
     if (!mHasSelectorWheel) {
@@ -320,10 +322,10 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
     case MotionEvent::ACTION_UP: {
             removeBeginSoftInputCommand();
             removeChangeCurrentByOneFromLongPress();
-            pshCancel();//mPressedStateHelper.cancel();
+            pshCancel();
             mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
             const int initialVelocity = (int) mVelocityTracker->getYVelocity();
-            LOGV("initialVelocity=%d",initialVelocity);
+            LOGV("initialVelocity=%d min=%d",initialVelocity,mMinimumFlingVelocity);
             if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
                 fling(initialVelocity);
                 onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
@@ -477,7 +479,8 @@ int NumberPicker::computeVerticalScrollOffset() {
 }
 
 int NumberPicker::computeVerticalScrollRange() {
-    return std::max(mMaxValue - mMinValue + 1,mMaxSelectorIndices) * mSelectorElementHeight;
+    //return std::min(mMaxValue - mMinValue + 1,mMaxSelectorIndices) * mSelectorElementHeight;
+    return (mMaxValue - mMinValue + 1) * mSelectorElementHeight;
 }
 
 int NumberPicker::computeVerticalScrollExtent() {
@@ -544,7 +547,7 @@ void NumberPicker::tryComputeMaxWidth(){
     if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
         Layout l(mTextSize,-1);
-        l.setFont(mInputText->getTypeface());
+        l.setTypeface(mInputText->getTypeface());
         for (int i = 0; i <= 9; i++) {
             l.setText(std::to_string(i));
             l.relayout();
@@ -563,7 +566,7 @@ void NumberPicker::tryComputeMaxWidth(){
     } else {
         const int valueCount = mDisplayedValues.size();
         Layout l(mTextSize,-1);
-        l.setFont(mInputText->getTypeface());
+        l.setTypeface(mInputText->getTypeface());
         for (int i = 0; i < valueCount; i++) {
             l.setText(mDisplayedValues[i]);
             l.relayout();
@@ -792,8 +795,7 @@ void NumberPicker::drawVertical(Canvas&canvas){
 	 pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
 	 canvas.set_source(pat);
     }else canvas.set_color(mTextColor);
-    canvas.set_line_width(0.4);
-    LOGV("inputtext.baseline=%d mCurrentScrollOffset=%.f itemheigh=%d",mInputText->getBaseline(),mCurrentScrollOffset,mSelectorElementHeight);
+
     for (int i = 0; i < selectorIndices.size(); i++) {
         const int selectorIndex = selectorIndices[i];
         std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
@@ -883,6 +885,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         LinearLayout::onDraw(canvas);
         return;
     }
+    if(mSelectorTextGapHeight==0)initializeSelectorWheel();
     if(getOrientation()==LinearLayout::VERTICAL)
 	drawVertical(canvas);
     else
@@ -973,7 +976,7 @@ void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
     const int indicesCount = std::max((int)mSelectorIndices.size(),mMaxSelectorIndices);
     int totalTextHeight = indicesCount * mTextSize;
-    float totalTextGapHeight = mBottom-mTop - totalTextHeight;
+    float totalTextGapHeight = mBottom - mTop - totalTextHeight;
     float textGapCount  = indicesCount;
     mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount + 0.5f);
     mSelectorElementHeight = mTextSize + mSelectorTextGapHeight;
@@ -981,14 +984,13 @@ void NumberPicker::initializeSelectorWheel(){
     const int editTextTextPosition = mInputText->getBaseline() + mInputText->getTop();
     mInitialScrollOffset = editTextTextPosition  - (mSelectorElementHeight * mMiddleItemIndex);
     mCurrentScrollOffset = mInitialScrollOffset;
-    LOGD("baseline=%d top=%d initscrolloffset=%d selectors=%d/%d",mInputText->getBaseline(),mInputText->getTop(),
-         mInitialScrollOffset,mMiddleItemIndex,mMaxSelectorIndices);
+    LOGV("%p:%d textsize=%d gap=%d count=%d mInitialScrollOffset=%d",this,mID,mTextSize,mSelectorTextGapHeight,indicesCount,mInitialScrollOffset);
     updateInputTextView();
 }
 
 void NumberPicker::initializeFadingEdges(){
     setVerticalFadingEdgeEnabled(true);
-    setFadingEdgeLength((mRight-mLeft - mTextSize) / 2);
+    setFadingEdgeLength((mBottom - mTop - mTextSize) / 2);
 }
 
 void NumberPicker::onScrollerFinished(Scroller* scroller) {
