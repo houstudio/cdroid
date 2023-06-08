@@ -262,6 +262,10 @@ int InputMethodManager::getCharacter(int keycode,int metaState)const{
     return kcm->getCharacter(keycode,metaState);
 }
 
+void InputMethodManager::viewClicked(View*view){
+    if(imeWindow)imeWindow->mBuddy = view;
+}
+
 void InputMethodManager::focusIn(View*view){
     if(imeWindow)imeWindow->mBuddy = view;
     LOGV("imeWindow=%d buddy=%p %d",imeWindow,view,view->getId());

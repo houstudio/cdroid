@@ -31,6 +31,7 @@ struct TextWatcher{
     //void afterTextChanged(Editable s);
     CallbackBase<void,std::wstring&>afterTextChanged;
 };
+
 class TextView : public View{
 private:
     static constexpr int DEFAULT_TYPEFACE = -1;
@@ -176,6 +177,10 @@ protected:
     virtual int getHorizontalOffsetForDrawables()const;
     void onSizeChanged(int w,int h,int ow,int oh)override;
     void onLayout(bool changed, int left, int top, int w, int h)override;
+    void onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect)override;
+    void onWindowFocusChanged(bool hasWindowFocus)override;
+    void onVisibilityChanged(View& changedView, int visibility)override;
+    void viewClicked(class InputMethodManager*);
     void resetResolvedDrawables()override;
 public:
     enum EDITMODE{
@@ -252,6 +257,7 @@ public:
     int getCaretPos()const;
     int getGravity()const;
     void setGravity(int gravity);
+    void setSelected(bool selected)override;
     virtual int getCompoundPaddingLeft();
     virtual int getCompoundPaddingRight();
     virtual int getCompoundPaddingTop();
@@ -283,6 +289,7 @@ public:
     void addTextChangedListener(TextWatcher watcher);
     void removeTextChangedListener(TextWatcher watcher);
     void onResolveDrawables(int layoutDirection)override;
+    bool onTouchEvent(MotionEvent& event)override;
 };
 
 }  // namespace cdroid

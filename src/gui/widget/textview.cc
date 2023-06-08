@@ -15,6 +15,7 @@
  */
 #include <widget/textview.h>
 #include <cairomm/fontface.h>
+#include <core/inputmethodmanager.h>
 #include <app.h>
 #include <layout.h>
 #include <cdlog.h>
@@ -725,6 +726,44 @@ void TextView::onLayout(bool changed, int left, int top, int width, int height){
    //autoSizeText();
 }
 
+void TextView::onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect){
+    if (isTemporarilyDetached()) {
+        // If we are temporarily in the detach state, then do nothing.
+        View::onFocusChanged(focused, direction, previouslyFocusedRect);
+        return;
+    }
+    startStopMarquee(focused);
+    View::onFocusChanged(focused, direction, previouslyFocusedRect);
+}
+
+void TextView::onWindowFocusChanged(bool hasWindowFocus) {
+    View::onWindowFocusChanged(hasWindowFocus);
+    //if (mEditor != null) mEditor.onWindowFocusChanged(hasWindowFocus);
+    startStopMarquee(hasWindowFocus);
+}
+
+void TextView::onVisibilityChanged(View& changedView, int visibility) {
+    View::onVisibilityChanged(changedView, visibility);
+    if (/*mEditor != null &&*/ visibility != VISIBLE) {
+        //mEditor.hideCursorAndSpanControllers();
+        //stopTextActionMode();
+    }
+}
+
+void TextView::setSelected(bool selected){
+    const bool wasSelected = isSelected();
+
+    View::setSelected(selected);
+
+    if (selected != wasSelected && mEllipsize == Layout::ELLIPSIS_MARQUEE) {
+        if (selected) {
+            startMarquee();
+        } else {
+            stopMarquee();
+        }
+    }
+}
+
 void TextView::setGravity(int gravity){
     if ((gravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) == 0) {
         gravity |= Gravity::START;
@@ -1133,6 +1172,37 @@ void TextView::onResolveDrawables(int layoutDirection){
             applyCompoundDrawableTint();
         }
     }
+}
+
+void TextView::viewClicked(InputMethodManager*imm){
+    if(imm)imm->viewClicked(this);
+    LOGV("%p:%d",this,mID);
+}
+
+bool TextView::onTouchEvent(MotionEvent& event){
+    const int action = event.getActionMasked();
+    const bool superResult = View::onTouchEvent(event);
+    if(action == MotionEvent::ACTION_UP){
+        return superResult;
+    }
+    bool handled = false;
+    const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused();
+           //&& (mEditor == null || !mEditor.mIgnoreActionUpEvent);
+    if (touchIsFinished && isFocusable() && isEnabled()){//isTextEditable()){
+        InputMethodManager& imm = InputMethodManager::getInstance();
+        viewClicked(&imm);
+        /*if (isTextEditable() && mEditor.mShowSoftInputOnFocus && imm != null
+                && !showAutofillDialog()) {
+            imm.showSoftInput(this, 0);
+        }*/
+
+        // The above condition ensures that the mEditor is not null
+        //mEditor.onTouchUpEvent(event);
+
+        handled = true;
+    }
+    if(handled)return true;
+    return superResult;
 }
 
 void TextView::prepareDrawableForDisplay(Drawable* dr) {

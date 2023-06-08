@@ -29,6 +29,7 @@ public:
     void shutDown(){delete mInst;}
     int setKeyCharacterMap(const std::string&kcm);
     int getCharacter(int keycode,int metaState)const;
+    void viewClicked(View*v);
     void focusIn(View*);
     void focusOut(View*);
     void sendKeyEvent(KeyEvent&k);

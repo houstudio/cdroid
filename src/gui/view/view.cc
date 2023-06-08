@@ -6065,8 +6065,8 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
 bool View::onTouchEvent(MotionEvent& event){
     const int x = event.getX();
     const int y = event.getY();
-    const int action=event.getAction();
-    const bool clickable=((mViewFlags&CLICKABLE) == CLICKABLE  || (mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE);
+    const int action = event.getAction();
+    const bool clickable = ((mViewFlags&CLICKABLE) == CLICKABLE  || (mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE);
     bool prepressed;
 
     if ((mViewFlags & ENABLED_MASK) == DISABLED) {
@@ -6088,8 +6088,8 @@ bool View::onTouchEvent(MotionEvent& event){
         if (!clickable){
             removeTapCallback();
             removeLongPressCallback();
-            mHasPerformedLongPress=false;
-            mIgnoreNextUpEvent=false;
+            mHasPerformedLongPress = false;
+            mIgnoreNextUpEvent = false;
             break;
         }
 

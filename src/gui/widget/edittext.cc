@@ -6,7 +6,6 @@
 #include <textutils.h>
 #include <layout.h>
 
-
 namespace cdroid{
 
 DECLARE_WIDGET2(EditText,"cdroid:attr/editTextStyle")
@@ -145,16 +144,15 @@ View& EditText::setHint(const std::string&txt){
 }
 
 void EditText::onFocusChanged(bool focus,int direction,Rect*prevfocusrect){
-    InputMethodManager&imm=InputMethodManager::getInstance();
+    InputMethodManager & imm = InputMethodManager::getInstance();
     if(focus){
 	imm.setInputType(mInputType);
         imm.focusIn((View*)this);
     }else{
         imm.focusOut((View*)this);
     }
-
     TextView::onFocusChanged(focus,direction,prevfocusrect);
-    mBlinkOn=focus;
+    mBlinkOn = focus;
     if(mBlinkOn){
         if(mCaretRect.empty())
             mCaretRect=getClientRect();
