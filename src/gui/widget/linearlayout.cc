@@ -99,7 +99,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
 	   {"end",SHOW_DIVIDER_END}
         },SHOW_DIVIDER_NONE);
     mDividerPadding = attrs.getInt("dividerPadding",0);
-    mDivider = context->getDrawable(attrs.getString("divider"));
+    setDividerDrawable(attrs.getDrawable("divider"));
 }
 
 LinearLayout::~LinearLayout() {
@@ -346,13 +346,13 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
 
 void LinearLayout::drawHorizontalDivider(Canvas& canvas, int top){
     mDivider->setBounds(getPaddingLeft() + mDividerPadding, top,
-            getWidth() - getPaddingRight() - mDividerPadding, top + mDividerHeight);
+            getWidth() - getPaddingRight() - mDividerPadding, mDividerHeight);
     mDivider->draw(canvas);
 }
 
 void LinearLayout::drawVerticalDivider(Canvas& canvas, int left){
     mDivider->setBounds(left, getPaddingTop() + mDividerPadding,
-            mDividerWidth, getHeight() - getPaddingBottom() - mDividerPadding);
+            mDividerWidth, getHeight() - getPaddingBottom() -  getPaddingTop() /*mDividerPadding*/);
     mDivider->draw(canvas);
 }
 
