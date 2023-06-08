@@ -1289,7 +1289,7 @@ void TextView::setTypeface(Typeface* tf){
         //mTextPaint.setTypeface(tf);
         if (mLayout != nullptr) {
             //nullLayouts();
-	    mLayout->setFont(tf);
+	    mLayout->setTypeface(tf);
             requestLayout();
             invalidate();
         }

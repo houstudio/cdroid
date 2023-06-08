@@ -64,7 +64,7 @@ Layout::Layout(const Layout&l){
     mText = l.mText;
     mLines= l.mLines;
     mContext=Cairo::Context::create(sImage);
-    setFont(l.mTypeface);
+    setTypeface(l.mTypeface);
 }
 
 void Layout::setWidth(int width){
@@ -76,7 +76,11 @@ int  Layout::getWidth()const{
     return mWidth;
 }
 
-void Layout::setFont(Typeface*tf){
+Typeface*Layout::getTypeface()const{
+    return mTypeface;
+}
+
+void Layout::setTypeface(Typeface*tf){
     mTypeface = tf ;
     mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
 }

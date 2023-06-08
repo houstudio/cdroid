@@ -11,6 +11,10 @@ private:
     static constexpr int TOUCH_MODE_IDLE = 0;
     static constexpr int TOUCH_MODE_DOWN = 1;
     static constexpr int TOUCH_MODE_DRAGGING = 2;
+    // Enum for the "typeface" XML parameter.
+    static constexpr int SANS = 1;
+    static constexpr int SERIF = 2;
+    static constexpr int MONOSPACE = 3;
     Drawable* mThumbDrawable;
     ColorStateList* mThumbTintList;
     //BlendMode mThumbBlendMode = null;
@@ -101,6 +105,7 @@ protected:
 public:
     Switch(int w,int h);
     Switch(Context* context,const AttributeSet& attrs);
+    ~Switch();
     void setSwitchTextAppearance(Context* context,const std::string&resid);
     void setSwitchTypeface(Typeface* tf, int style);
     void setSwitchTypeface(Typeface* tf);

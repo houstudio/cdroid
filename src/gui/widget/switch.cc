@@ -91,13 +91,22 @@ void Switch::init(){
     mVelocityTracker  = VelocityTracker::obtain();
 }
 
+Switch::~Switch(){
+    delete mTextColors;
+    delete mThumbDrawable;
+    delete mTrackTintList;
+    delete mOnLayout;
+    delete mOffLayout;
+    mVelocityTracker->recycle();
+}
+
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
-    AttributeSet atts=context->obtainStyledAttributes(resid);//com.android.internal.R.styleable.TextAppearance);
+    AttributeSet atts = context->obtainStyledAttributes(resid);//com.android.internal.R.styleable.TextAppearance);
 
     int ts;
-    ColorStateList* colors=nullptr;
+    ColorStateList* colors = nullptr;
 
-    //colors = appearance.getColorStateList(com.android.internal.R.styleable.TextAppearance_textColor);
+    colors = atts.getColorStateList("textColor");//com.android.internal.R.styleable.TextAppearance_textColor);
     if (colors) {
         mTextColors = colors;
     } else {
@@ -105,25 +114,24 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         mTextColors = getTextColors();
     }
 
-    /*ts = appearance.getDimensionPixelSize(com.android.internal.R.styleable.TextAppearance_textSize, 0);
+    ts = atts.getDimensionPixelSize("textSize", 0);
     if (ts != 0) {
-        if (ts != mTextPaint.getTextSize()) {
-            mTextPaint.setTextSize(ts);
+        if (ts != mOnLayout->getFontSize()){//mTextPaint.getTextSize()) {
+            //mTextPaint.setTextSize(ts);
+            mOnLayout->setFontSize(ts);
+            mOffLayout->setFontSize(ts);
             requestLayout();
         }
     }
 
     int typefaceIndex, styleIndex;
 
-    typefaceIndex = appearance.getInt(com.android.internal.R.styleable.
-            TextAppearance_typeface, -1);
-    styleIndex = appearance.getInt(com.android.internal.R.styleable.
-            TextAppearance_textStyle, -1);
+    typefaceIndex = atts.getInt("typeface",-1);//com.android.internal.R.styleable.TextAppearance_typeface, -1);
+    styleIndex = atts.getInt("textStyle",-1);//com.android.internal.R.styleable.TextAppearance_textStyle, -1);
 
     setSwitchTypefaceByIndex(typefaceIndex, styleIndex);
 
-    bool allCaps = appearance.getBoolean(com.android.internal.R.styleable.
-                TextAppearance_textAllCaps, false);
+    /*bool allCaps = appearance.getBoolean(com.android.internal.R.styleable.TextAppearance_textAllCaps, false);
     if (allCaps) {
         mSwitchTransformationMethod = new AllCapsTransformationMethod(getContext());
         mSwitchTransformationMethod.setLengthChangesAllowed(true);
@@ -133,12 +141,52 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
 }
 
 void Switch::setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex){
+    Typeface* tf = nullptr;
+    switch (typefaceIndex) {
+    case SANS:
+        tf = Typeface::SANS_SERIF;
+        break;
+
+    case SERIF:
+        tf = Typeface::SERIF;
+        break;
+
+    case MONOSPACE:
+        tf = Typeface::MONOSPACE;
+        break;
+    }
+    setSwitchTypeface(tf, styleIndex);
 }
 
 void Switch::setSwitchTypeface(Typeface* tf, int style){
+    if (style > 0) {
+        if (tf == nullptr) {
+            tf = Typeface::defaultFromStyle(style);
+        } else {
+            tf = Typeface::create(tf, style);
+        }
+
+        setSwitchTypeface(tf);
+        // now compute what (if any) algorithmic styling is needed
+        int typefaceStyle = tf ? tf->getStyle() : 0;
+        int need = style & ~typefaceStyle;
+        //mTextPaint.setFakeBoldText((need & Typeface.BOLD) != 0);
+        //mTextPaint.setTextSkewX((need & Typeface.ITALIC) != 0 ? -0.25f : 0);
+    } else {
+        //mTextPaint.setFakeBoldText(false);
+        //mTextPaint.setTextSkewX(0);
+        setSwitchTypeface(tf);
+    }
 }
 
 void Switch::setSwitchTypeface(Typeface* tf){
+    if (mOnLayout->getTypeface() != tf) {
+        //mTextPaint.setTypeface(tf);
+        mOnLayout->setTypeface(tf);
+        mOffLayout->setTypeface(tf);
+        requestLayout();
+        invalidate();
+    }
 }
 
 void Switch::setSwitchPadding(int pixels) {
@@ -383,7 +431,7 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 Layout* Switch::makeLayout(const std::string& text){
-    Layout*layout=new Layout(18,getWidth());
+    Layout*layout = new Layout(getTextSize(),getWidth());
     layout->setText(text);
     return layout;
 }

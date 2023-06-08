@@ -58,7 +58,8 @@ public:
     int  getAlignment()const;
     void setWidth(int width);
     int  getWidth()const;
-    void setFont(Typeface*tf);
+    Typeface*getTypeface()const;
+    void setTypeface(Typeface*tf);
     void setFontSize(double size);
     double getFontSize()const;
     bool setText(const std::string&);

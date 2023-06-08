@@ -696,7 +696,7 @@ bool GradientDrawable::ensureValidRect(){
             //if (st.mSolidColors == nullptr) 
             //    mFillPaint=SolidPattern::create_rgb(0,0,0);//setColor(Color.BLACK);
         }else{//gradientColors.size()
-	    int color=Color::BLACK;
+	    int color = Color::BLACK;
 	    if(st.mSolidColors){
 		 if(st.mSolidColors->isStateful())
 		     color = st.mSolidColors->getColorForState(getState(),color);
