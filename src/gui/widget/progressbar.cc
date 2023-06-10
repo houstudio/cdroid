@@ -306,7 +306,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     int range = mMax - mMin;
     const float scale = range > 0 ? (float)(progress - mMin) / (float) range : 0;
     const bool isPrimary = id == R::id::progress;
-    if(isPrimary)mStoppedProgress = scale;
+    LOGV_IF(isPrimary,"setProgress %d->%d animate=%d",id,progress,animate);
     if (isPrimary && animate) {
         Animator::AnimatorListener animListener;
         if(mAnimator==nullptr){
@@ -317,11 +317,9 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
                 setVisualProgress(R::id::progress,anim.getAnimatedValue().get<float>());
             }));
-	    mAnimtorListener.onAnimationEnd=[this](Animator&anim,bool reverse){
-		setVisualProgress(R::id::progress,mStoppedProgress);
-	    };
 	    mAnimator->addListener(mAnimtorListener);
         }
+	mAnimator->end();
         mAnimator->getValues(0)->setValues(std::vector<float>({mVisualProgress,scale}));
         mAnimator->start();
     } else {
@@ -362,11 +360,11 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
 
 bool ProgressBar::setProgressInternal(int value, bool fromUser,bool animate){
     if(mIndeterminate)return false;
-    if(value<mMin)value=mMin;
-    if(value>mMax)value=mMax;
-    if(mProgress==value)return false;
-    mProgress=value;
-    refreshProgress(R::id::progress,mProgress,fromUser,value);
+    if(value <mMin)value = mMin;
+    if(value > mMax)value = mMax;
+    if(mProgress == value)return false;
+    mProgress = value;
+    refreshProgress(R::id::progress,mProgress,fromUser,animate);
     return true;
 }
 

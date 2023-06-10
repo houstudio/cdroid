@@ -24,7 +24,6 @@ private:
     
     bool mAttached;
     float mVisualProgress;
-    float mStoppedProgress;
     int mBehavior;
     int mDuration;
     bool mOnlyIndeterminate;
