@@ -6,6 +6,9 @@ from xml.dom.minidom import parse, parseString
 import os
 import sys
 import time
+import tempfile
+import filecmp
+import shutil
 
 class CDROIDHandler( xml.sax.ContentHandler ):
     def __init__(self,namespace):
@@ -193,10 +196,15 @@ if ( __name__ == "__main__"):
     idgen=IDGenerater(idstart,namespace)
     if not os.path.exists(sys.argv[2]+"/values"):
         os.makedirs(sys.argv[2]+"/values")
-    if idgen.scanxml(sys.argv[2])>lastmodifytime:
-       idgen.dict2RH(sys.argv[3])
-       idgen.dict2ID(sys.argv[2]+"/values/ID.xml")
-       idgen.strings2XML(sys.argv[2]+"/values/strings.xml")
-    else:
-        print(sys.argv[3]+" is latest ,skipped.")
 
+    idgen.scanxml(sys.argv[2])
+    fd,ftempids=tempfile.mkstemp(prefix=namespace+"_ID", suffix=".xml")
+    idgen.dict2ID(ftempids)
+    fidxml = sys.argv[2]+"/values/ID.xml"
+    if not filecmp.cmp(ftempids,fidxml):
+        #content is changed,we must copy ftempids to fidxml(sys.argv[2]+"/values/ID.xml)
+        shutil.copyfile(ftempids,fidxml)
+        idgen.dict2RH(sys.argv[3])
+        os.remove(ftempids)
+    else:
+        print(sys.argv[1]+"'s IDs it not changed")
