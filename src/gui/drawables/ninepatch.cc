@@ -41,7 +41,7 @@ void NinePatch::draw(Canvas& painter, int  x, int  y) {
 void NinePatch::setImageSize(int width, int height) {
     int resizeWidth = 0;
     int resizeHeight = 0;
-    char sError[256]={0};
+    std::ostringstream oss;
     if((mWidth == width) && (mHeight==height))return;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
         resizeWidth += mResizeDistancesX[i].second;
@@ -50,17 +50,17 @@ void NinePatch::setImageSize(int width, int height) {
         resizeHeight += mResizeDistancesY[i].second;
     }
     if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
-        sprintf(sError,"IncorrectWidth(%d) must>=%d(image.width)-2-%d(resizeWidth) && incorrectHeight(%d)>=%d(image.height)-2-%d(resizeHeight))",
-		width, mImage->get_width(),resizeWidth,height,mImage->get_height(),resizeHeight);
+        oss<<"IncorrectWidth("<<width<<") must>="<<mImage->get_width()<<"(image.width)-2-"<<resizeWidth<<"(resizeWidth) && incorrectHeight("
+		<<height<<")>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight))";
     }
     if (width < (mImage->get_width() - 2 - resizeWidth)) {
-        sprintf(sError,"IncorrectWidth(%d) must>=%d(image.width)-2-%d(resizeWidth)",width,mImage->get_width(),resizeWidth);
+	oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
     }
     if (height < (mImage->get_height() - 2 - resizeHeight)) {
-        sprintf(sError,"IncorrectHeight(%d) must>=(%d(image.height)-2-%d(resizeHeight)",height,mImage->get_height(),resizeHeight);
+        oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
     }
-    if(sError[0])
-	throw std::invalid_argument(sError);
+    if(oss.str().empty()==false)
+        LOG(ERROR)<<oss.str();
     if (width != mWidth || height != mHeight) {
         mWidth = width;
         mHeight = height;

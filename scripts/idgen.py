@@ -203,8 +203,9 @@ if ( __name__ == "__main__"):
     fidxml = sys.argv[2]+"/values/ID.xml"
     if not filecmp.cmp(ftempids,fidxml):
         #content is changed,we must copy ftempids to fidxml(sys.argv[2]+"/values/ID.xml)
+        print(namespace+"'s IDs is changed "+ftempids)
         shutil.copyfile(ftempids,fidxml)
         idgen.dict2RH(sys.argv[3])
         os.remove(ftempids)
     else:
-        print(sys.argv[1]+"'s IDs it not changed")
+        print(namespace+"'s IDs it not changed")
