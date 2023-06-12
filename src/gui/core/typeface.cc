@@ -159,16 +159,20 @@ Typeface* Typeface::create(Typeface*family, int style){
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName){
     Typeface*face = Typeface::DEFAULT;
-    int supportLangs = 0;
+    int familyMatched = 0;
+    int supportLangs  = 0;
     for(auto i= sSystemFontMap.begin();i!= sSystemFontMap.end();i++){
 	 Typeface*tf = i->second;
-         std::string family=tf->getFamily();
+         const std::string family=tf->getFamily();
 	 std::vector<std::string>families = TextUtils::split(family,";");
 	 auto it = std::find(families.begin(),families.end(),familyName);
 	 const int ttfLangs = families.size();
-	 if((it!=families.end()||familyName.empty())&&(tf->mStyle&SYSLANG_MATCHED) && (ttfLangs>supportLangs)){
+	 if(it!=families.end()){
 	     face = tf;
-	     supportLangs = families.size();
+	     familyMatched++;
+	     break;
+	 }else if((familyMatched==0)&&(tf->mStyle&SYSLANG_MATCHED)){// && (ttfLangs>supportLangs)){
+             face = tf;
 	 }
     }
     LOGD_IF(face&&familyName.size(),"want %s got %s style=%x",familyName.c_str(),face->getFamily().c_str(),face->mStyle);

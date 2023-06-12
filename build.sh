@@ -7,10 +7,12 @@ eval set -- "${ARGS}"
 declare -A TOOLCHAINS #key/value dict ,key is platform,value is toolchain,key must be uppercase
 TOOLCHAINS["SIGMA"]=$HOME/cdroid/cmake/ssd202-mtitoolchain.cmake
 TOOLCHAINS["ALI3528"]=$HOME/cdroid/cmake/ali3528-mtitoolchain.cmake
+TOOLCHAINS["RISCVD211"]=$HOME/cdroid/cmake/riscv64-d211-toolchain.cmake
 
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 DEPLIBS["X64"]=$HOME/vcpkg/installed/x64-linux-dynamic
 DEPLIBS["SIGMA"]=$HOME/vcpkg/installed/arm-linux-dynamic
+DEPLIBS["RISCVD211"]=$HOME/vcpkg/installed/riscv64-linux-dynamic
 
 SHOWHELP=false
 PRODUCT="x64"
@@ -58,7 +60,7 @@ echo "build=${BUILD_TYPE}/${BUILD_TYPE,,}"
 if [ "$PRODUCT" = "X64" ]; then
     echo "x64"
     TOOLCHAIN_FILE=""
-elif [ "$PRODUCT" = "SIGMA" ]; then
+elif [ "$PRODUCT" != "X64" ]; then
     TOOLCHAIN_FILE="-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAINS[${PRODUCT}]}"
 fi
 
