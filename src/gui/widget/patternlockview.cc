@@ -4,6 +4,8 @@ namespace cdroid{
 static constexpr float FLOAT_MIN = std::numeric_limits<float>::min();
 
 PatternLockView::PatternLockView(int w,int h):View(w,h){
+    initView();
+    setDotCount(DEFAULT_PATTERN_DOT_COUNT);
 }
 
 PatternLockView::PatternLockView(Context* context,const AttributeSet& attrs)
@@ -11,12 +13,12 @@ PatternLockView::PatternLockView(Context* context,const AttributeSet& attrs)
     mDotCount = attrs.getInt("dotCount",DEFAULT_PATTERN_DOT_COUNT);
     mAspectRatioEnabled = attrs.getBoolean("aspectRatioEnabled",false);
     mAspectRatio = attrs.getInt("aspectRatio",ASPECT_RATIO_SQUARE);
-    mPathWidth = (int) attrs.getDimensionPixelSize("pathWidth",4);//sourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_path_width));
+    mPathWidth = (int) attrs.getDimensionPixelSize("pathWidth",3);//sourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_path_width));
     mNormalStateColor = attrs.getColor("normalStateColor",Color::WHITE);//ResourceUtils.getColor(getContext(), R.color.white));
     mCorrectStateColor = attrs.getColor("correctStateColor",Color::WHITE);//ResourceUtils.getColor(getContext(), R.color.white));
     mWrongStateColor = attrs.getColor("wrongStateColor",Color::RED); //ResourceUtils.getColor(getContext(), R.color.pomegranate));
-    mDotNormalSize = (int) attrs.getDimensionPixelSize("dotNormalSize",2); //ResourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_dot_size));
-    mDotSelectedSize = (int) attrs.getDimensionPixelSize("dotSelectedSize",2);//ResourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_dot_selected_size));
+    mDotNormalSize = (int) attrs.getDimensionPixelSize("dotNormalSize",10); //ResourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_dot_size));
+    mDotSelectedSize = (int) attrs.getDimensionPixelSize("dotSelectedSize",24);//ResourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_dot_selected_size));
     mDotAnimationDuration = attrs.getInt("dotAnimationDuration",DEFAULT_DOT_ANIMATION_DURATION);
     mPathEndAnimationDuration = attrs.getInt("pathEndAnimationDuration",DEFAULT_PATH_END_ANIMATION_DURATION);
 }
@@ -28,12 +30,12 @@ void PatternLockView::initView(){
     mDotCount = DEFAULT_PATTERN_DOT_COUNT;
     mAspectRatioEnabled = false;
     mAspectRatio = ASPECT_RATIO_SQUARE;
-    mPathWidth =4;
+    mPathWidth = 3;
     mNormalStateColor = Color::WHITE;
     mCorrectStateColor= Color::WHITE;
     mWrongStateColor  = Color::RED;
-    mDotNormalSize = 2;
-    mDotSelectedSize= 4;
+    mDotNormalSize = 10;
+    mDotSelectedSize= 24;
     mDotAnimationDuration= DEFAULT_DOT_ANIMATION_DURATION;
     mPathEndAnimationDuration= DEFAULT_PATH_END_ANIMATION_DURATION;
 }
@@ -337,6 +339,7 @@ void PatternLockView::setDotCount(int dotCount) {
 	    mPatternDrawLookup[i][j] = false;
             mDotStates[i][j] = new DotState();
             mDotStates[i][j]->mSize = mDotNormalSize;
+            mPattern[i*mDotCount+j]=new Dot(this,i,j);
         }
     }
 

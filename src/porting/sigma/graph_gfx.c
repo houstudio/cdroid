@@ -18,7 +18,6 @@
 
 typedef struct {
     int fb;
-    int rotation;
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
 } FBDEVICE;

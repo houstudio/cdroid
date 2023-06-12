@@ -303,7 +303,8 @@ int Typeface::loadFromFontConfig(){
     const std::regex patSans( "(?=.*\\bsans\\b)" , std::regex_constants::icase);
     const std::regex patMono( "(?=.*\\bmono\\b)" , std::regex_constants::icase);
     const char*langenv=getenv("LANG");
-    std::string lang = langenv;
+    std::string lang = "en_US.UTF-8";
+    if(langenv)lang = langenv;
     size_t pos = lang.find('.');
     if(pos!=std::string::npos)
         lang=lang.substr(0,pos);

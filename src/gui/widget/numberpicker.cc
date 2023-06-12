@@ -479,8 +479,8 @@ int NumberPicker::computeVerticalScrollOffset() {
 }
 
 int NumberPicker::computeVerticalScrollRange() {
-    //return std::min(mMaxValue - mMinValue + 1,mMaxSelectorIndices) * mSelectorElementHeight;
-    return (mMaxValue - mMinValue + 1) * mSelectorElementHeight;
+    return std::min(mMaxValue - mMinValue + 1,mMaxSelectorIndices) * mSelectorElementHeight;
+    //return (mMaxValue - mMinValue + 1) * mSelectorElementHeight;
 }
 
 int NumberPicker::computeVerticalScrollExtent() {
@@ -885,7 +885,6 @@ void NumberPicker::onDraw(Canvas&canvas){
         LinearLayout::onDraw(canvas);
         return;
     }
-    if(mSelectorTextGapHeight==0)initializeSelectorWheel();
     if(getOrientation()==LinearLayout::VERTICAL)
 	drawVertical(canvas);
     else

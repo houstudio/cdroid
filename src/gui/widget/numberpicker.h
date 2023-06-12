@@ -182,9 +182,9 @@ public:
 
     void jumpDrawablesToCurrentState();
     void onResolveDrawables(int layoutDirection)override;
-    void setTextColor(int color,int color2=0);
+    virtual void setTextColor(int color,int color2=0);
     int  getTextColor()const;
-    void setTextSize(int size,int size2=0);
+    virtual void setTextSize(int size,int size2=0);
     int  getTextSize()const;
 };
     

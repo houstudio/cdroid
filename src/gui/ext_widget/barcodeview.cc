@@ -8,6 +8,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(BarcodeView)
+
 BarcodeView::BarcodeView(int w,int h):View(w,h){
     initView();
 };
