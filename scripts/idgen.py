@@ -16,11 +16,26 @@ class CDROIDHandler( xml.sax.ContentHandler ):
         self.strings=[]
         self.namespace=namespace
 
+    def isMyNS(self,idname):#parse @android:id/ @+id/ @id/
+        ns=""
+        if idname.find(":")>0:
+            ns = idname.split(":")
+            ns =ns[0]
+        else:
+            pos = idname.find("id/")
+            ns = idname[0:pos]
+        ns= ns.replace("@","")
+        ns= ns.replace("+","")
+        #print(idname+"==>"+ns)
+        if ns.strip():#not empty
+            return (ns==namespace) or (ns=="android" and namespace=="cdroid") or (ns=="cdroid" and namespace=="android")
+        return  True
     def startElement(self, tag, attributes):
         for attr in attributes.getNames():
             value = attributes.get(attr)
             if ':id' in attr:
-                self.addID(value)
+                if self.isMyNS(value):
+                    self.addID(value)
             if 'string/' in value:
                 self.addString(value)
 
@@ -205,9 +220,8 @@ if ( __name__ == "__main__"):
     msg = "not changed "
     if not isIDSame:#True if same,otherwise False
         #content is changed,we must copy ftempids to fidxml(sys.argv[2]+"/values/ID.xml)
-        print(namespace+"'s IDs is changed "+ftempids+":"+fidxml)
         shutil.copyfile(ftempids,fidxml)
         idgen.dict2RH(sys.argv[3])
         msg="changed "
-    print(namespace+"'s IDs is:"+msg+ftempids+":"+fidxml)
+    print(namespace+"'s IDs is:"+msg+ftempids+" : "+fidxml)
     os.remove(ftempids)

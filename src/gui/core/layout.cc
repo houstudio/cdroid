@@ -609,7 +609,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         switch(mAlignment){
         case ALIGN_NORMAL:
         case ALIGN_LEFT  : 
-        default          : x = te.x_bearing  ; break;
+        default          : x = 0 ; break;
         case ALIGN_CENTER: x = (mWidth-lw)/2 ; break;
         case ALIGN_OPPOSITE:
         case ALIGN_RIGHT : x = mWidth-lw ; break;
