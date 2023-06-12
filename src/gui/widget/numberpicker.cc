@@ -787,6 +787,8 @@ void NumberPicker::drawVertical(Canvas&canvas){
     Color color(selectorWheelColor);
     canvas.set_color(selectorWheelColor);
     canvas.set_font_size(mTextSize);
+    if(mInputText && mInputText->getTypeface())
+         canvas.set_font_face(mInputText->getTypeface()->getFontFace()->get_font_face());
     if(mTextColor!=mTextColor2){
 	 Color c1(mTextColor), c2(mTextColor2);
 	 Cairo::RefPtr<Cairo::LinearGradient> pat=Cairo::LinearGradient::create(0,0,0,getHeight());
