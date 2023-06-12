@@ -175,7 +175,7 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName){
              face = tf;
 	 }
     }
-    LOGD_IF(face&&familyName.size(),"want %s got %s style=%x",familyName.c_str(),face->getFamily().c_str(),face->mStyle);
+    LOGV_IF(face&&familyName.size(),"want %s got %s style=%x",familyName.c_str(),face->getFamily().c_str(),face->mStyle);
     return face;
 }
 
