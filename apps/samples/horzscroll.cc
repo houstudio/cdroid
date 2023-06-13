@@ -22,10 +22,10 @@ int main(int argc,const char*argv[]){
         std::string fullpath=path+"/"+ent->d_name;
 	//LOGI("img:%s ",fullpath.c_str());
         if(ent->d_type==DT_DIR)continue;
-	std::ifstream fs(fullpath.c_str(),std::ios::binary|std::ios::in);
-	if(strstr(fullpath.c_str(),".png")==nullptr)continue;
+        std::ifstream fs(fullpath.c_str(),std::ios::binary|std::ios::in);
+        if(strstr(fullpath.c_str(),".png")==nullptr&&strstr(fullpath.c_str(),".jpg")==nullptr)continue;
         RefPtr<Cairo::ImageSurface>img=ImageSurface::create_from_stream(fs);
-	//LOGI("img:%s =%p",fullpath.c_str(),img.get());
+        LOGI("img:%s =%p",fullpath.c_str(),img.get());
         if(img==nullptr)continue;
         ImageView*iv=new ImageView(150,30);
         iv->setImageBitmap(img);

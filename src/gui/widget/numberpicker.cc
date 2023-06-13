@@ -818,7 +818,7 @@ void NumberPicker::drawVertical(Canvas&canvas){
 	    case Gravity::CENTER_HORIZONTAL:x = (getWidth()-ext.x_advance)/2; break;
 	    case Gravity::RIGHT:x = getWidth() - ext.x_advance; break; 
 	    }
-	    canvas.move_to(x,y);
+	    canvas.move_to(x-ext.x_bearing,y);
 	    canvas.show_text(scrollSelectorValue);
         }
 	y+= mSelectorElementHeight;
