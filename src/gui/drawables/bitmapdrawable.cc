@@ -361,7 +361,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         }
         if(alpha==1.f){
 	    canvas.set_source(mBitmapState->mBitmap, dx, dy);
-	    canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+	    canvas.rectangle(dx,dy,dw,dh);
 	    canvas.fill();
         }else{
             canvas.set_source(mBitmapState->mBitmap, dx, dy );
