@@ -216,7 +216,7 @@ if ( __name__ == "__main__"):
     fd,ftempids=tempfile.mkstemp(prefix=namespace+"_ID", suffix=".xml")
     idgen.dict2ID(ftempids)
     fidxml = sys.argv[2]+"/values/ID.xml"
-    isIDSame = filecmp.cmp(ftempids,fidxml);
+    isIDSame = os.path.exists(fidxml) and filecmp.cmp(ftempids,fidxml)
     msg = "not changed "
     if not isIDSame:#True if same,otherwise False
         #content is changed,we must copy ftempids to fidxml(sys.argv[2]+"/values/ID.xml)
