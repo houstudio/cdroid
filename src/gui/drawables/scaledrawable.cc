@@ -88,11 +88,12 @@ void ScaleDrawable::draw(Canvas& canvas) {
     }
 }
 
+extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 Drawable*ScaleDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    int sw=atts.getInt("scaleWidth",0);
-    int sh=atts.getInt("scaleHeight",0);
-    int gravity=atts.getGravity("scaleGravity",0);
+    const int sw = getDimensionOrFraction(atts,"scaleWidth",100,0);
+    const int sh = getDimensionOrFraction(atts,"scaleHeight",100,0);
+    int gravity=atts.getGravity("scaleGravity",Gravity::LEFT);
     Drawable*d=Drawable::inflate(ctx,atts.getString("drawable"));
-    return new ScaleDrawable(d,gravity,sw,sh);
+    return new ScaleDrawable(d,gravity,float(sw)/100.f,float(sh)/100.f);
 }
 }
