@@ -359,10 +359,16 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
-        canvas.set_source(mBitmapState->mBitmap, dx, dy );
-        Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
-        if(spat)spat->set_filter(SurfacePattern::Filter::GOOD);
-        canvas.paint_with_alpha(alpha);
+        if(alpha==1.f){
+	    canvas.set_source(mBitmapState->mBitmap, dx, dy);
+	    canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+	    canvas.fill();
+        }else{
+            canvas.set_source(mBitmapState->mBitmap, dx, dy );
+            Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
+            if(spat)spat->set_filter(SurfacePattern::Filter::GOOD);
+            canvas.paint_with_alpha(alpha);
+        }
     }
     canvas.restore();
     if(mTintFilter)mTintFilter->apply(canvas,mBounds);
