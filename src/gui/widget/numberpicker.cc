@@ -920,8 +920,9 @@ void NumberPicker::initializeSelectorWheelIndices(){
     const int valueCount= (mMaxValue-mMinValue+1);
     mSelectorIndices.resize(std::min(valueCount,mMaxSelectorIndices));
     mMiddleItemIndex = mSelectorIndices.size()/2;
-    for (int i = 0; i < mMaxSelectorIndices; i++) {
-        int selectorIndex = ( valueCount + mValue + (i - mMiddleItemIndex) ) % valueCount;
+    const int current = getValue();
+    for (int i = 0; i < mSelectorIndices.size()/*mMaxSelectorIndices*/; i++) {
+        int selectorIndex = ( /*valueCount +*/ current + (i - mMiddleItemIndex) );// % valueCount;
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
@@ -1072,7 +1073,7 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
             scrollSelectorValue = formatNumber(selectorIndex);
         }
     }
-    LOGV("%d=%s displaynames=%d",selectorIndex,scrollSelectorValue.c_str(),mDisplayedValues.size());
+    LOGV("%p:%d (%d,%d)[%d]=%s displaynames=%d",this,mID,mMinValue,mMaxValue,selectorIndex,scrollSelectorValue.c_str(),mDisplayedValues.size());
     cache[selectorIndex] = scrollSelectorValue;
 }
 
