@@ -130,7 +130,7 @@ View& HorizontalScrollView::addView(View* child, int index,ViewGroup::LayoutPara
 bool HorizontalScrollView::canScroll() {
     View* child = getChildAt(0);
     if (child != nullptr) {
-        int childWidth = child->getWidth();
+        const int childWidth = child->getWidth();
         return getWidth() < childWidth + mPaddingLeft + mPaddingRight ;
     }
     return false;
@@ -173,7 +173,7 @@ void HorizontalScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec
         widthPadding = mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin;
         heightPadding = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin;
 
-        int desiredWidth = getMeasuredWidth() - widthPadding;
+        const int desiredWidth = getMeasuredWidth() - widthPadding;
         if (child->getMeasuredWidth() < desiredWidth) {
             int childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(
                 desiredWidth, MeasureSpec::EXACTLY);
@@ -233,12 +233,11 @@ bool HorizontalScrollView::executeKeyEvent(KeyEvent& event) {
 
 bool HorizontalScrollView::inChild(int x, int y) {
     if (getChildCount() > 0) {
-        int scrollX = mScrollX;
         View* child = getChildAt(0);
         return !(y < child->getTop()
                 || y >= child->getBottom()
-                || x < child->getLeft() - scrollX
-                || x >= child->getRight() - scrollX);
+                || x < child->getLeft() - mScrollX
+                || x >= child->getRight() - mScrollX);
     }
     return false;
 }
@@ -337,6 +336,7 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
         if (!mEdgeGlowRight->isFinished()) {
             mEdgeGlowRight->onPullDistance(0.f, ev.getY() / getHeight());
         }
+	LOGD("mIsBeingDragged=%d edgefinished=%d/%d",mIsBeingDragged,mEdgeGlowLeft->isFinished(),mEdgeGlowRight->isFinished());
         break;
     }
 
@@ -448,14 +448,12 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             if (canOverscroll && deltaX!=0.f) {
                 const int pulledToX = oldX + deltaX;
                 if (pulledToX < 0) {
-                    mEdgeGlowLeft->onPullDistance((float) deltaX / getWidth(),
-                            1.f - ev.getY(activePointerIndex) / getHeight());
+                    mEdgeGlowLeft->onPullDistance((float) deltaX / getWidth(),1.f - displacement);
                     if (!mEdgeGlowRight->isFinished()) {
                         mEdgeGlowRight->onRelease();
                     }
                 } else if (pulledToX > range) {
-                    mEdgeGlowRight->onPull((float) deltaX / getWidth(),
-                            ev.getY(activePointerIndex) / getHeight());
+                    mEdgeGlowRight->onPull((float) deltaX / getWidth(),displacement);
                     if (!mEdgeGlowLeft->isFinished()) {
                         mEdgeGlowLeft->onRelease();
                     }
@@ -624,7 +622,7 @@ View* HorizontalScrollView::findFocusableViewInBounds(bool leftFocus, int left, 
      * focusable is preferred to a partially contained focusable.*/
     bool foundFullyContainedFocusable = false;
 
-    int count = focusables.size();
+    const int count = focusables.size();
     for (int i = 0; i < count; i++) {
         View* view = focusables[i];
         int viewLeft = view->getLeft();
@@ -1141,8 +1139,8 @@ void HorizontalScrollView::fling(int velocityX){
             if (newFocused != currentFocused) {
                 newFocused->requestFocus(movingRight ? View::FOCUS_RIGHT : View::FOCUS_LEFT);
             }
-            postInvalidateOnAnimation();
         }
+        postInvalidateOnAnimation();
     }
 }
 
