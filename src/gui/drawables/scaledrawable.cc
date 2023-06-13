@@ -92,7 +92,7 @@ Drawable*ScaleDrawable::inflate(Context*ctx,const AttributeSet&atts){
     int sw=atts.getInt("scaleWidth",0);
     int sh=atts.getInt("scaleHeight",0);
     int gravity=atts.getGravity("scaleGravity",0);
-    Drawable*d=Drawable::inflate(ctx,atts.getString("src"));
+    Drawable*d=Drawable::inflate(ctx,atts.getString("drawable"));
     return new ScaleDrawable(d,gravity,sw,sh);
 }
 }
