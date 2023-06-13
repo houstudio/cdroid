@@ -330,12 +330,14 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
         * being flinged. */
         mIsBeingDragged = !mScroller->isFinished()||!mEdgeGlowLeft->isFinished()
 		||!mEdgeGlowRight->isFinished();
-        if (!mEdgeGlowLeft->isFinished()) {
-            mEdgeGlowLeft->onPullDistance(0.f, 1.f - ev.getY() / getHeight());
-        }
-        if (!mEdgeGlowRight->isFinished()) {
-            mEdgeGlowRight->onPullDistance(0.f, ev.getY() / getHeight());
-        }
+	if(shouldDisplayEdgeEffects()){
+            if (!mEdgeGlowLeft->isFinished()) {
+                mEdgeGlowLeft->onPullDistance(0.f, 1.f - ev.getY() / getHeight());
+            }
+            if (!mEdgeGlowRight->isFinished()) {
+               mEdgeGlowRight->onPullDistance(0.f, ev.getY() / getHeight());
+            }
+	}
 	LOGD("mIsBeingDragged=%d edgefinished=%d/%d",mIsBeingDragged,mEdgeGlowLeft->isFinished(),mEdgeGlowRight->isFinished());
         break;
     }
@@ -345,7 +347,7 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
         /* Release the drag */
         mIsBeingDragged = false;
         mActivePointerId = INVALID_POINTER;
-        if (mScroller->springBack(mScrollX, mScrollY, 0, getScrollRange(), 0, 0)||true) {
+        if (mScroller->springBack(mScrollX, mScrollY, 0, getScrollRange(), 0, 0)) {
             postInvalidateOnAnimation();
         }
         break;
@@ -428,7 +430,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
                     (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
             const float displacement = ev.getY(activePointerIndex)/getHeight();
-            if (canOverscroll) {
+            if (canOverscroll && shouldDisplayEdgeEffects()) {
                 int consumed = 0;
                 if (deltaX < 0 && mEdgeGlowRight->getDistance() != .0f) {
                     consumed = std::round(getWidth()
@@ -445,10 +447,10 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             // calls onScrollChanged if applicable.
             overScrollBy(deltaX, 0, mScrollX, 0, range, 0, mOverscrollDistance, 0, true);
 
-            if (canOverscroll && deltaX!=0.f) {
+            if (canOverscroll && (deltaX!=0) && shouldDisplayEdgeEffects()) {
                 const int pulledToX = oldX + deltaX;
                 if (pulledToX < 0) {
-                    mEdgeGlowLeft->onPullDistance((float) deltaX / getWidth(),1.f - displacement);
+                    mEdgeGlowLeft->onPullDistance((float) -deltaX / getWidth(),1.f - displacement);
                     if (!mEdgeGlowRight->isFinished()) {
                         mEdgeGlowRight->onRelease();
                     }
@@ -1123,11 +1125,13 @@ void HorizontalScrollView::fling(int velocityX){
         const int right = getChildAt(0)->getWidth() - mPaddingLeft;
 
 	const int maxScroll =std::max(0,right-width);
-	if(mScrollX==0 && !mEdgeGlowLeft->isFinished())
-	    mEdgeGlowLeft->onAbsorb(-velocityX);
-	else if(mScrollX==maxScroll && mEdgeGlowRight->isFinished())
-	    mEdgeGlowRight->onAbsorb(velocityX);
-	else{
+	if(mScrollX==0 && !mEdgeGlowLeft->isFinished()){
+	    if(shouldDisplayEdgeEffects())
+		mEdgeGlowLeft->onAbsorb(-velocityX);
+	}else if(mScrollX==maxScroll && mEdgeGlowRight->isFinished()){
+	    if(shouldDisplayEdgeEffects())
+		mEdgeGlowRight->onAbsorb(velocityX);
+	}else{
             mScroller->fling(mScrollX, mScrollY, velocityX, 0, 0,std::max(0, right - width), 0, 0, width/2, 0);
 
             const bool movingRight = velocityX > 0;
