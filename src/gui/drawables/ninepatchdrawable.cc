@@ -7,26 +7,27 @@ namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 
 NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
-    mNinePatchState=state;
-    mAlpha=255;
+    mNinePatchState = state;
+    mAlpha = 255;
     mMutated =false;
-    mTintFilter=nullptr;
+    mTintFilter = nullptr;
+    mPadding.setEmpty();
     computeBitmapSize();
 }
 
 NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
-    mNinePatchState=std::make_shared<NinePatchState>(ctx,resid);//->getImage(resid));
-    mAlpha=255;
-    mMutated =false;
-    mTintFilter=nullptr;
+    mNinePatchState = std::make_shared<NinePatchState>(ctx,resid);//->getImage(resid));
+    mAlpha = 255;
+    mMutated = false;
+    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
 NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp){
-    mNinePatchState=std::make_shared<NinePatchState>(bmp);
-    mAlpha=255;
-    mTintFilter=nullptr;
-    mMutated =false;
+    mNinePatchState = std::make_shared<NinePatchState>(bmp);
+    mAlpha = 255;
+    mTintFilter = nullptr;
+    mMutated = false;
     computeBitmapSize();
 }
 
@@ -36,6 +37,7 @@ NinePatchDrawable::~NinePatchDrawable(){
 
 void NinePatchDrawable::computeBitmapSize(){
     const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch->mImage;
+    mPadding.setEmpty();
     if (ninePatch == nullptr) return;
     const int sourceDensity =160;// ninePatch.getDensity();
     const int targetDensity =160;// mTargetDensity;
@@ -96,13 +98,13 @@ Insets NinePatchDrawable::getOpticalInsets(){
 
 void NinePatchDrawable::setAlpha(int alpha) {
     if(mAlpha!=alpha){
-        mAlpha=alpha;
+        mAlpha = alpha;
         invalidateSelf();
     }
 }
 
 bool NinePatchDrawable::getPadding(Rect& padding){
-    padding=mPadding;
+    padding = mPadding;
     return (padding.left | padding.top | padding.width | padding.height) != 0;
 }
 
