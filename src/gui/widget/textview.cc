@@ -367,12 +367,12 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     initView();
     setText(ctx->getString(attrs.getString("text")));
     
-    Drawable* left =attrs.getDrawable("drawableLeft");
-    Drawable*right =attrs.getDrawable("drawableRight");
-    Drawable*  top =attrs.getDrawable("drawableTop");
-    Drawable*bottom=attrs.getDrawable("drawableBottom");
-    Drawable*start =attrs.getDrawable("drawableStart");
-    Drawable*  end =attrs.getDrawable("drawableEnd");
+    Drawable* left = attrs.getDrawable("drawableLeft");
+    Drawable*right = attrs.getDrawable("drawableRight");
+    Drawable*  top = attrs.getDrawable("drawableTop");
+    Drawable*bottom= attrs.getDrawable("drawableBottom");
+    Drawable*start = attrs.getDrawable("drawableStart");
+    Drawable*  end = attrs.getDrawable("drawableEnd");
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     setRelativeDrawablesIfNeeded(start, end);
@@ -1073,26 +1073,33 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
 
         if (dr->mShowing[Drawables::LEFT] != left && dr->mShowing[Drawables::LEFT] != nullptr) {
             dr->mShowing[Drawables::LEFT]->setCallback(nullptr);
+	    delete dr->mShowing[Drawables::LEFT];
         }
         dr->mShowing[Drawables::LEFT] = left;
+
         if (dr->mShowing[Drawables::TOP] != top && dr->mShowing[Drawables::TOP] != nullptr) {
             dr->mShowing[Drawables::TOP]->setCallback(nullptr);
+	    delete dr->mShowing[Drawables::TOP];
         }
         dr->mShowing[Drawables::TOP] = top;
 
         if (dr->mShowing[Drawables::RIGHT] != right && dr->mShowing[Drawables::RIGHT] != nullptr) {
             dr->mShowing[Drawables::RIGHT]->setCallback(nullptr);
+	    delete dr->mShowing[Drawables::RIGHT];
         }
         dr->mShowing[Drawables::RIGHT] = right;
-        if (dr->mShowing[Drawables::BOTTOM] != bottom && dr->mShowing[Drawables::BOTTOM] != nullptr) {
+
+	if (dr->mShowing[Drawables::BOTTOM] != bottom && dr->mShowing[Drawables::BOTTOM] != nullptr) {
             dr->mShowing[Drawables::BOTTOM]->setCallback(nullptr);
+	    delete dr->mShowing[Drawables::BOTTOM];
         }
         dr->mShowing[Drawables::BOTTOM] = bottom;
-        Rect compoundRect = dr->mCompoundRect;
+
+	Rect compoundRect = dr->mCompoundRect;
         std::vector<int>state = getDrawableState();
         if (left != nullptr) {
             left->setState(state);
-            compoundRect=left->getBounds();
+            compoundRect = left->getBounds();
             left->setCallback(this);
             dr->mDrawableSizeLeft  = compoundRect.width;
             dr->mDrawableHeightLeft= compoundRect.height;
@@ -1101,30 +1108,30 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
         }
         if (right != nullptr) {
             right->setState(state);
-            compoundRect=right->getBounds();
+            compoundRect = right->getBounds();
             right->setCallback(this);
-            dr->mDrawableSizeRight = compoundRect.width;
-            dr->mDrawableHeightRight=compoundRect.height;
+            dr->mDrawableSizeRight  = compoundRect.width;
+            dr->mDrawableHeightRight= compoundRect.height;
         } else {
             dr->mDrawableSizeRight = dr->mDrawableHeightRight = 0;
         }
 
         if (top != nullptr) {
             top->setState(state);
-            compoundRect=top->getBounds();
+            compoundRect = top->getBounds();
             top->setCallback(this);
             dr->mDrawableSizeTop = compoundRect.height;
-            dr->mDrawableWidthTop = compoundRect.width;
+            dr->mDrawableWidthTop= compoundRect.width;
         } else {
             dr->mDrawableSizeTop = dr->mDrawableWidthTop = 0;
         }
 
         if (bottom != nullptr) {
             bottom->setState(state);
-            compoundRect=bottom->getBounds();
+            compoundRect = bottom->getBounds();
             bottom->setCallback(this);
             dr->mDrawableSizeBottom = compoundRect.height;
-            dr->mDrawableWidthBottom = compoundRect.width;
+            dr->mDrawableWidthBottom= compoundRect.width;
         } else {
             dr->mDrawableSizeBottom = dr->mDrawableWidthBottom = 0;
         }
@@ -1133,7 +1140,7 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
     // Save initial left/right drawables
     if (dr != nullptr) {
         dr->mDrawableLeftInitial = left;
-        dr->mDrawableRightInitial = right;
+        dr->mDrawableRightInitial= right;
     }
 
     resetResolvedDrawables();
@@ -1312,7 +1319,7 @@ void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
         if (start) {
             start->setBounds(0, 0, start->getIntrinsicWidth(), start->getIntrinsicHeight());
             start->setState(state);
-            compoundRect=start->getBounds();
+            compoundRect = start->getBounds();
             start->setCallback(this);
 
             dr->mDrawableStart = start;
@@ -1324,7 +1331,7 @@ void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
         if (end){
             end->setBounds(0, 0, end->getIntrinsicWidth(), end->getIntrinsicHeight());
             end->setState(state);
-            compoundRect=end->getBounds();
+            compoundRect = end->getBounds();
             end->setCallback(this);
 
             dr->mDrawableEnd = end;
