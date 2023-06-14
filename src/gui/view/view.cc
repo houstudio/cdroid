@@ -6494,11 +6494,11 @@ void View::setMeasuredDimensionRaw(int measuredWidth, int measuredHeight) {
 }
 
 void View::setMeasuredDimension(int measuredWidth, int measuredHeight){
-    bool optical = isLayoutModeOptical(this);
+    const bool optical = isLayoutModeOptical(this);
     if (optical != isLayoutModeOptical(mParent)) {
         Insets insets = getOpticalInsets();
-        int opticalWidth  = insets.left + insets.right;
-        int opticalHeight = insets.top  + insets.bottom;
+        const int opticalWidth  = insets.left + insets.right;
+        const int opticalHeight = insets.top  + insets.bottom;
 
         measuredWidth  += optical ? opticalWidth  : -opticalWidth;
         measuredHeight += optical ? opticalHeight : -opticalHeight;

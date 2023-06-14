@@ -218,7 +218,7 @@ if ( __name__ == "__main__"):
     fidxml = sys.argv[2]+"/values/ID.xml"
     isIDSame = os.path.exists(fidxml) and filecmp.cmp(ftempids,fidxml)
     msg = "not changed "
-    if not isIDSame:#True if same,otherwise False
+    if not isIDSame or not os.path.exists(sys.argv[3]):#True if same,otherwise False
         #content is changed,we must copy ftempids to fidxml(sys.argv[2]+"/values/ID.xml)
         shutil.copyfile(ftempids,fidxml)
         idgen.dict2RH(sys.argv[3])

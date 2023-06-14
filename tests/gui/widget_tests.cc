@@ -21,7 +21,7 @@ static void onClick(View&v){
     std::string txt="You clicked:";
     txt+=((TextView&)v).getText();
     txt+="   id:"+std::to_string(v.getId());
-    Toast::makeText(txt,2000)->setPos(200,v.getId()*20);
+    Toast::makeText(v.getContext(),txt,2000);
 }
 
 TEST_F(WIDGET,View){
@@ -58,7 +58,7 @@ TEST_F(WIDGET,Button){
        std::string txt="You clicked:";
        txt+=((TextView&)v).getText();
        txt+="   id:"+std::to_string(v.getId());
-       Toast::makeText(txt,2000)->setPos(200,v.getId()*20);
+       Toast::makeText(v.getContext(),txt,2000);
    });
    //btn2->setOnClickListener(click);//it click listener is not set ,view's parent will recv WM_CLICK message
    layout->addView(btn1);

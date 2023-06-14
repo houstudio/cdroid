@@ -166,7 +166,7 @@ AlertDialog::Builder& AlertDialog::Builder::setOnKeyListener(DialogInterface::On
 
 AlertDialog::Builder& AlertDialog::Builder::setItems(const std::string& itemsId,OnClickListener listener){
     P->mContext->getArray(itemsId,P->mItems);
-    //P->mItems=P->Context.getResources().getTextArray(itemsId);
+    P->mContext->getArray(itemsId,P->mItems);
     P->mOnClickListener = listener;
     return *this;
 }
@@ -185,7 +185,6 @@ AlertDialog::Builder& AlertDialog::Builder::setAdapter(ListAdapter* adapter,Dial
 
 AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::string&itemsId,
       const std::vector<bool>& checkedItems,DialogInterface::OnMultiChoiceClickListener listener){
-    //P.mItems = P.mContext.getResources().getTextArray(itemsId);
     P->mContext->getArray(itemsId,P->mItems);
     P->mOnCheckboxClickListener = listener;
     P->mCheckedItems = checkedItems;
@@ -204,7 +203,6 @@ AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::vecto
 
 AlertDialog::Builder& AlertDialog::Builder::setSingleChoiceItems(const std::string&itemsId, 
       int checkedItem, DialogInterface::OnClickListener listener){
-    //P.mItems = P.mContext.getResources().getTextArray(itemsId);
     P->mContext->getArray(itemsId,P->mItems);
     P->mOnClickListener = listener;
     P->mCheckedItem = checkedItem;

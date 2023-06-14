@@ -213,20 +213,9 @@ TEST_F(WINDOW,TOAST){
     int cnt=sizeof(texts)/sizeof(texts[0]);
     for(int i=0;i<8;i++){
        printf("toast text:%s\r\n",texts[i%cnt]);
-       Toast::makeText(std::string(texts[i%cnt]),600+200*i)->setPos(i*80,i*40);
+       Toast::makeText(w1->getContext(),std::string(texts[i%cnt]),600+200*i);
     }
     app.exec();
-}
-
-static ToastWindow*createCustomToast(const std::string&txt,int w,int h,int timeout){
-    return Toast::makeWindow([&]()->ToastWindow*{
-            ToastWindow*win=new ToastWindow(500,100);
-            TextView*tv=new TextView(txt,w-20,h-20);
-            tv->setTextSize(20);
-            tv->setSingleLine(false);
-            win->addView(tv).setPos(10,10);
-            return win;
-     },timeout);
 }
 
 TEST_F(WINDOW,TOAST_MAKEWINDOW){
@@ -237,7 +226,7 @@ TEST_F(WINDOW,TOAST_MAKEWINDOW){
        "Innovation in China","Innovation by Shenzhen"};
     int cnt=sizeof(texts)/sizeof(texts[0]);
     for(int i=0;i<cnt;i++){
-       createCustomToast(texts[i],300,80,10000-i*1000)->setPos(i*50,i*50);
+       //createCustomToast(texts[i],300,80,10000-i*1000)->setPos(i*50,i*50);
     }
     /*TimerFD *tfd=new TimerFD(800,false);
     app.addEventSource(tfd,[&](EventSource&s)->bool{
@@ -247,37 +236,6 @@ TEST_F(WINDOW,TOAST_MAKEWINDOW){
     });*/
     app.exec();
 }
-
-class PopWindow{
-protected:
-  ToastWindow*mt;
-  static PopWindow*mInst;
-  friend class MyToast;
-  PopWindow(){mt=nullptr;}
-public:
-  static PopWindow*getInstance(){
-      if(mInst==nullptr)
-        mInst=new PopWindow();
-      return mInst;
-  }
-  void pop(){
-      mt=Toast::makeText("Test Message",2000);
-  }
-  void hide(){
-      if(mt)
-      mt->close();
-      mt=nullptr;
-  }
-};
-PopWindow*PopWindow::mInst=nullptr;
-
-class MyToast:public Toast{
-public:
-   MyToast(int w,int h):Toast(w,h){}
-   ~MyToast(){
-       PopWindow::getInstance()->mt=nullptr;
-   }
-};
 
 TEST_F(WINDOW,TOAST_SINGLE){
    App app;

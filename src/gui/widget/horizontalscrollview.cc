@@ -330,15 +330,14 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
         * being flinged. */
         mIsBeingDragged = !mScroller->isFinished()||!mEdgeGlowLeft->isFinished()
 		||!mEdgeGlowRight->isFinished();
-	if(shouldDisplayEdgeEffects()){
+        if(shouldDisplayEdgeEffects()){
             if (!mEdgeGlowLeft->isFinished()) {
                 mEdgeGlowLeft->onPullDistance(0.f, 1.f - ev.getY() / getHeight());
             }
             if (!mEdgeGlowRight->isFinished()) {
                mEdgeGlowRight->onPullDistance(0.f, ev.getY() / getHeight());
             }
-	}
-	LOGD("mIsBeingDragged=%d edgefinished=%d/%d",mIsBeingDragged,mEdgeGlowLeft->isFinished(),mEdgeGlowRight->isFinished());
+        }
         break;
     }
 

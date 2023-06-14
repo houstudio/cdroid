@@ -17,27 +17,25 @@ protected:
     int mDuration;
     View*mNextView;
 public:
-    enum{
-        LENGTH_SHORT,
-        LENGTH_LONG
-    };
+    static constexpr int LENGTH_SHORT= 2000;
+    static constexpr int LENGTH_LONG = 4000;
 public:
     Toast(Context*context);
     void show();
     void cancel();
-    void setView(View*);
+    Toast& setView(View*);
     View*getView()const;
-    void setDuration(int duration);
+    Toast& setDuration(int duration);
     int getDuration()const;
-    void setMargin(int horizontalMargin,int verticalMargin);
+    Toast& setMargin(int horizontalMargin,int verticalMargin);
     int getHorizontalMargin()const;
     int getVerticalMargin()const;
-    void setGravity(int gravity,int xoffset,int yoffset);
+    Toast& setGravity(int gravity,int xoffset,int yoffset);
     int getGravity()const;
     int getXOffset()const;
     int getYOffset()const;
-    static Toast*makeText(Context*,const std::string&text,int duration);
-    void setText(const std::string&);
+    Toast& setText(const std::string&);
+    static Toast*makeText(Context*,const std::string&text,int duration= LENGTH_SHORT);
 };
 }//endof namespace
 

@@ -38,7 +38,7 @@
 #include <widget/horizontalscrollview.h>
 #include <widget/progressbar.h>
 #include <widget/cdwindow.h>
-#include <view/toastwindow.h>
+#include <widget/toast.h>
 #include <core/app.h>
 #include <widget/seekbar.h>
 using namespace cdroid;

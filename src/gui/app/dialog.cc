@@ -50,10 +50,11 @@ void Dialog::show(){
     LOGD("size=%dx%d margin=%d,%d",pt.x,pt.y,horzMargin,vertMargin);
     int widthSpec  = MeasureSpec::makeMeasureSpec(pt.x-horzMargin,MeasureSpec::EXACTLY);
     int heightSpec = MeasureSpec::makeMeasureSpec(pt.y-vertMargin,MeasureSpec::AT_MOST);
-    
+
     widthSpec  = frm->getChildMeasureSpec(widthSpec ,0,lp->width);
     heightSpec = frm->getChildMeasureSpec(heightSpec,0,lp->height);
     frm->measure(widthSpec,heightSpec);
+    LOGD("spec=%x/%x measured=%dx%d",widthSpec,heightSpec,frm->getMeasuredWidth(),frm->getMeasuredHeight());
     mWindow->setSize(frm->getMeasuredWidth()+horzMargin,frm->getMeasuredHeight()+vertMargin);
     LOGD("size=%dx%d %d,%d",frm->getMeasuredWidth(),frm->getMeasuredHeight(),mWindow->getWidth(),mWindow->getHeight());
     frm->layout(lp->leftMargin,lp->topMargin,mWindow->getWidth()-horzMargin, mWindow->getHeight()-vertMargin);
