@@ -1058,6 +1058,7 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
                     if (dr->mShowing[i] != nullptr) {
                         dr->mShowing[i]->setCallback(nullptr);
                     }
+                    delete dr->mShowing[i];
                     dr->mShowing[i] = nullptr;
                 }
                 dr->mDrawableSizeLeft  = dr->mDrawableHeightLeft  = 0;
@@ -1073,25 +1074,25 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
 
         if (dr->mShowing[Drawables::LEFT] != left && dr->mShowing[Drawables::LEFT] != nullptr) {
             dr->mShowing[Drawables::LEFT]->setCallback(nullptr);
-	    delete dr->mShowing[Drawables::LEFT];
+            delete dr->mShowing[Drawables::LEFT];
         }
         dr->mShowing[Drawables::LEFT] = left;
 
         if (dr->mShowing[Drawables::TOP] != top && dr->mShowing[Drawables::TOP] != nullptr) {
             dr->mShowing[Drawables::TOP]->setCallback(nullptr);
-	    delete dr->mShowing[Drawables::TOP];
+            delete dr->mShowing[Drawables::TOP];
         }
         dr->mShowing[Drawables::TOP] = top;
 
         if (dr->mShowing[Drawables::RIGHT] != right && dr->mShowing[Drawables::RIGHT] != nullptr) {
             dr->mShowing[Drawables::RIGHT]->setCallback(nullptr);
-	    delete dr->mShowing[Drawables::RIGHT];
+            delete dr->mShowing[Drawables::RIGHT];
         }
         dr->mShowing[Drawables::RIGHT] = right;
 
 	if (dr->mShowing[Drawables::BOTTOM] != bottom && dr->mShowing[Drawables::BOTTOM] != nullptr) {
             dr->mShowing[Drawables::BOTTOM]->setCallback(nullptr);
-	    delete dr->mShowing[Drawables::BOTTOM];
+            delete dr->mShowing[Drawables::BOTTOM];
         }
         dr->mShowing[Drawables::BOTTOM] = bottom;
 
