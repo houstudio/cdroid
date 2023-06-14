@@ -13,13 +13,13 @@ private:
     Runnable mTimer;
     Toast* mToast;
 public:
-    ToastWindow(Toast*t,int w,int h);
+    ToastWindow(Toast*t,int,int,int ,int);
     ~ToastWindow();
     void timeElapsed();
     void setDuration(int dur);
 };
 
-ToastWindow::ToastWindow(Toast*toast,int w,int h):Window(0,0,w,h){
+ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h):Window(x,y,w,h){
     mDuration = INT_MAX;
     mTimeElapsed = 100;
     mToast = toast;
@@ -52,6 +52,8 @@ Toast::Toast(Context*context){
     mX = mY  = 0;
     mGravity = Gravity::NO_GRAVITY;
     mWindow  = nullptr;
+    mVerticalMargin = 0;
+    mHorizontalMargin = 0;
 }
 
 void Toast::show(){
@@ -69,7 +71,10 @@ void Toast::show(){
     heightSpec = frame->getChildMeasureSpec(heightSpec,0,lp->height);
     frame->measure(widthSpec,heightSpec);
     LOGD("size=%dx%d window=%p duration=%d",frame->getMeasuredWidth(),frame->getMeasuredHeight(),mDuration);
-    ToastWindow*w = new ToastWindow(this,frame->getMeasuredWidth(),frame->getMeasuredHeight());
+    Rect outRect;
+    Rect displayRect = Rect::MakeWH(pt.x,pt.y);
+    Gravity::apply(mGravity,frame->getMeasuredWidth(),frame->getMeasuredHeight(),displayRect,outRect);
+    ToastWindow*w = new ToastWindow(this,outRect.left+mX,outRect.top+mY,frame->getMeasuredWidth(),frame->getMeasuredHeight());
     mWindow = w;
     mWindow->addView(mNextView);
     mWindow->requestLayout();
@@ -100,6 +105,8 @@ int  Toast::getDuration()const{
 }
 
 Toast& Toast::setMargin(int horizontalMargin,int verticalMargin){
+    mHorizontalMargin = horizontalMargin;
+    mVerticalMargin = verticalMargin;
     return *this;
 }
 
