@@ -4,8 +4,8 @@
 #include <app/alertdialog.h>
 
 std::vector<CLA::Argument> app_options={
-    {CLA::EntryType::Switch, "", "dialog"  ,"dialog type",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
-    {CLA::EntryType::Switch, "", "items"  , "item count",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
+    {CLA::EntryType::Option, "d", "dialog"  ,"dialog type",CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
+    {CLA::EntryType::Option, "", "items"  , "item count",CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional}
 };
 
 int main(int argc,const char*argv[]){
@@ -19,7 +19,7 @@ int main(int argc,const char*argv[]){
     const int itemCount=app.getArgAsInt("items",10);
     for(int i=0;i<itemCount;i++)
         list.push_back(std::string("item")+std::to_string(i));
-    switch(app.getArgAsInt("dialog",0)){
+    switch(app.getArgAsInt(std::string("dialog"),0)){
     case 0:
          dlg=AlertDialog::Builder(&app)
            .setPositiveButton("OK",f)

@@ -324,7 +324,7 @@ bool GameWindow::onKeyUp(int keyCode,KeyEvent&k) {
     if(success){
         addRandom();
         if(gameEnded()) {
-            Toast::makeText("Game Over! Press OK to Restart");
+            Toast::makeText(getContext(),"Game Over! Press OK to Restart");
         }
         return true;
     }

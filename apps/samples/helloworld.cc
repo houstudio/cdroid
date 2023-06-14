@@ -9,7 +9,7 @@ int main(int argc,const char*argv[]){
          " shared_ptr.size=%d vector.size=%d map.size=%d",  sizeof(bool),sizeof(float),sizeof(void*),sizeof(std::string),
          sizeof(View),sizeof(std::function<void()>),sizeof(Runnable),sizeof(Insets),
          sizeof(std::shared_ptr<int>),sizeof(std::vector<int>),sizeof(std::map<int,int>));
-    Window*w=new Window(100,100,800,600);
+    Window*w=new Window(0,0,-1,-1);
     w->setId(10000);
     w->setBackgroundColor(0xFF111111);
    #if 10 
@@ -17,8 +17,10 @@ int main(int argc,const char*argv[]){
     ColorStateList*cl=app.getColorStateList("cdroid:attr/editTextColor");
     if(cl){edit->setTextColor(cl);cl->dump();}
     else edit->setTextColor(0xFFFFFFFF);
+    edit->setFocusableInTouchMode(true);
     LOGD("clist=%p",cl);
     edit->setSingleLine(false);
+    edit->setClickable(true);
     edit->setInputType(EditText::TYPE_ANY);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     edit->setBackgroundColor(0xFFFF0000);

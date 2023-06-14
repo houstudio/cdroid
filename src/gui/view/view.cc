@@ -3745,6 +3745,8 @@ View& View::setBackground(Drawable*background){
         if(isAttachedToWindow()) mBackground->setVisible(false,false);
         mBackground->setCallback(this);
         unscheduleDrawable(*mBackground);
+        delete mBackground;
+        mBackground = nullptr;
     }
     if(background){        
         Rect padding;
@@ -3784,7 +3786,7 @@ View& View::setBackground(Drawable*background){
             bRequestLayout=true;
         }
     }else{
-        mBackground =nullptr;
+        mBackground = nullptr;
         if ((mViewFlags & WILL_NOT_DRAW) != 0  && (mDefaultFocusHighlight == nullptr)
               && (mForegroundInfo == nullptr || mForegroundInfo->mDrawable == nullptr)) {
           mPrivateFlags |= PFLAG_SKIP_DRAW;
