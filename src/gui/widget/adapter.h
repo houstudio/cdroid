@@ -63,7 +63,7 @@ protected:
     int  mFieldId;
 private:
      View* createViewFromResource(int position,View* convertView,ViewGroup* parent,const std::string& resource) {
-        View*view =convertView?convertView:LayoutInflater::from(mContext)->inflate(resource, parent, false);
+        View*view =convertView?convertView:LayoutInflater::from(mContext)->inflate(resource,nullptr/*parent*/, false);
         //If no custom field is assigned, assume the whole resource is a TextView
         //Otherwise, find the TextView field within the layout
         TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);

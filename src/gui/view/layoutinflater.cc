@@ -144,7 +144,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     if( parent){//(parent && (parent==pd->root) && pd->attachToRoot )||(parent!=pd->root)){
         LayoutParams*lp=parent->generateLayoutParams(atts);
         parent->addView(v,lp);
-    }else{
+    }else if (dynamic_cast<ViewGroup*>(v)){
         LayoutParams*lp=((ViewGroup*)v)->generateLayoutParams(atts);
         ((ViewGroup*)v)->setLayoutParams(lp);
     }
