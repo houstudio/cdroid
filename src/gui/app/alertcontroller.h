@@ -5,6 +5,8 @@
 
 namespace cdroid{
 
+class Cursor;
+
 class AlertController{
 public:
     DECLARE_UIEVENT(void,OnPrepareListViewListener,ListView&);
@@ -56,7 +58,7 @@ public:
         bool mIsSingleChoice;
         int  mCheckedItem = -1;
         DialogInterface::OnMultiChoiceClickListener mOnCheckboxClickListener;
-        /*Cursor*/void* mCursor;
+        Cursor* mCursor;
         std::string mLabelColumn;
         std::string mIsCheckedColumn;
         bool mForceInverseBackground;
@@ -71,7 +73,7 @@ public:
     };
 private:
     Context*mContext;
-    DialogInterface* mDialogInterface;
+    Dialog* mDialogInterface;
     Window* mWindow;
 
     std::string mTitle;
@@ -136,13 +138,13 @@ protected:
     ListView *  mListView;
     ScrollView* mScrollView;
     TextView *  mMessageView;
-    AlertController(Context* context, DialogInterface* di, Window* window);
+    AlertController(Context* context, Dialog* di, Window* window);
     static bool canTextInput(View* v);
     void setupTitle(ViewGroup* topPanel);
     void setupContent(ViewGroup*);
     void setupButtons(ViewGroup*);
 public:
-    static AlertController* create(Context* context, DialogInterface* di, Window* window);
+    static AlertController* create(Context* context, Dialog* di, Window* window);
     void installContent(AlertParams* params);
     void installContent();
     void setTitle(const std::string& title);

@@ -2,7 +2,7 @@
 #define __DIALOG_INTERFACE_H__
 #include <view/view.h>
 namespace cdroid{
-
+class Dialog;
 class DialogInterface{
 public:
     enum{
@@ -13,12 +13,12 @@ public:
        /** The identifier for the neutral button. */
        BUTTON_NEUTRAL  = -3
     };
-    DECLARE_UIEVENT(void,OnCancelListener,DialogInterface&);
-    DECLARE_UIEVENT(void,OnDismissListener,DialogInterface&);
-    DECLARE_UIEVENT(void,OnShowListener,DialogInterface&);
-    DECLARE_UIEVENT(void,OnClickListener,DialogInterface&,int);
-    DECLARE_UIEVENT(void,OnMultiChoiceClickListener,DialogInterface&,int ,bool);
-    DECLARE_UIEVENT(void,OnKeyListener,DialogInterface&,int, KeyEvent&);
+    DECLARE_UIEVENT(void,OnCancelListener,Dialog&);
+    DECLARE_UIEVENT(void,OnDismissListener,Dialog&);
+    DECLARE_UIEVENT(void,OnShowListener,Dialog&);
+    DECLARE_UIEVENT(void,OnClickListener,Dialog&,int);
+    DECLARE_UIEVENT(void,OnMultiChoiceClickListener,Dialog&,int ,bool);
+    DECLARE_UIEVENT(void,OnKeyListener,Dialog&,int, KeyEvent&);
 public:
     virtual void cancel()=0;
     virtual void dismiss()=0;

@@ -8,11 +8,11 @@ bool AlertController::shouldCenterSingleButton(Context* context){
     return true;
 }
 
-AlertController* AlertController::create(Context* context, DialogInterface* di, Window* window){
+AlertController* AlertController::create(Context* context, Dialog* di, Window* window){
     return new AlertController(context, di, window);
 }
 
-AlertController::AlertController(Context* context, DialogInterface* di, Window* window){
+AlertController::AlertController(Context* context, Dialog* di, Window* window){
     mContext = context;
     mDialogInterface = di;
     mWindow = window;
@@ -28,6 +28,10 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mButtonPositive  = nullptr;
     mButtonNegative  = nullptr;
     mButtonNeutral   = nullptr;
+    mViewSpacingTop  = 0;
+    mViewSpacingBottom=0;
+    mViewSpacingLeft = 0;
+    mViewSpacingRight= 0;
     mForceInverseBackground = false;
     mButtonPanelLayoutHint  = AlertDialog::LAYOUT_HINT_NONE;
     AttributeSet atts=context->obtainStyledAttributes("cdroid:style/AlertDialog");
@@ -41,6 +45,7 @@ AlertController::AlertController(Context* context, DialogInterface* di, Window* 
     mListItemLayout = atts.getString("listItemLayout","cdroid:layout/select_dialog_item");
     mShowTitle = atts.getBoolean("showTitle", true);
 
+    //mDialogInterface.OnCancelListener=nullptr;
     /* We use a custom title so never request a window title */
     //window.requestFeature(Window.FEATURE_NO_TITLE);
 }
@@ -714,17 +719,14 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
                       mLabelIndex = cursor.getColumnIndexOrThrow(mLabelColumn);
                       mIsCheckedIndex = cursor.getColumnIndexOrThrow(mIsCheckedColumn);
                  }
-
                  void bindView(View view, Context context, Cursor cursor) {
                       CheckedTextView text = (CheckedTextView) view->findViewById(R::id::text1);
                       text.setText(cursor.getString(mLabelIndex));
                       listView.setItemChecked(cursor.getPosition(), cursor.getInt(mIsCheckedIndex) == 1);
                  }
-
                  View* newView(Context context, Cursor cursor, ViewGroup parent) {
                      return mInflater.inflate(dialog.mMultiChoiceItemLayout,parent, false);
                  }
-
              };*/
         }
     } else {
@@ -750,19 +752,21 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
     dialog->mAdapter = adapter;
     dialog->mCheckedItem = mCheckedItem;
 
+    AlertDialog* IDlg = (AlertDialog*)dialog->mDialogInterface;
     if (mOnClickListener) {
-        listView->setOnItemClickListener([&](AdapterView& parent, View& v, int position, long id) {
-            mOnClickListener(*dialog->mDialogInterface, position);
+        listView->setOnItemClickListener([this,IDlg](AdapterView& parent, View& v, int position, long id) {
+            mOnClickListener(*IDlg, position);
             if (!mIsSingleChoice) {
-                dialog->mDialogInterface->dismiss();
+                IDlg->dismiss();
             }
         });
     } else if (mOnCheckboxClickListener) {
-        listView->setOnItemClickListener([&](AdapterView& parent, View& v, int position, long id) {
+        listView->setOnItemClickListener([this,IDlg](AdapterView& parent, View& v, int position, long id) {
+	    AbsListView*listView=dynamic_cast<AbsListView*>(&parent);
             if (mCheckedItems.size()) {
                 mCheckedItems[position] = listView->isItemChecked(position);
             }
-            mOnCheckboxClickListener(*dialog->mDialogInterface, position, listView->isItemChecked(position));
+            mOnCheckboxClickListener(*IDlg, position, listView->isItemChecked(position));
         });
     }
 

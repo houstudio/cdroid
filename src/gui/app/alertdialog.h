@@ -50,13 +50,14 @@ public:
     };
 protected:
     friend Builder;
+    friend class AlertController::AlertParams;
     class AlertController* mAlert;
     AlertController::AlertParams*P;
 protected:
     AlertDialog(Context*ctx);
     AlertDialog(Context*ctx,const std::string&resid); 
     AlertDialog(Context*ctx,bool cancelable,OnCancelListener listener);
-	~AlertDialog()override;
+    ~AlertDialog()override;
     void onCreate()override;
 public:
     Button* getButton(int whichButton);

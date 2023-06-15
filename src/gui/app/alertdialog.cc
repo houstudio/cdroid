@@ -262,7 +262,7 @@ AlertDialog* AlertDialog::Builder::create(){
     if (P->mOnKeyListener != nullptr) {
         dialog->setOnKeyListener(P->mOnKeyListener);
     }
-	dialog->P=P;
+    dialog->P=P;
     return dialog;
 }
 
