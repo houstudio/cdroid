@@ -223,5 +223,5 @@ if ( __name__ == "__main__"):
         shutil.copyfile(ftempids,fidxml)
         idgen.dict2RH(sys.argv[3])
         msg="changed "
-    print(namespace+"'s IDs is:"+msg+ftempids+" : "+fidxml)
+    print(namespace+"'s IDs is "+msg+ftempids+" : "+fidxml)
     os.remove(ftempids)

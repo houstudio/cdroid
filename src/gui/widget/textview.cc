@@ -31,19 +31,19 @@ DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
 
 TextView::Drawables::Drawables(Context*ctx){
     mIsRtlCompatibilityMode= false;
-    mHasTint = mHasTintMode= mOverride =false;
+    mHasTintMode= mOverride = false;
     mTintList= nullptr;
     mShowing[0] = mShowing[1] = nullptr;
     mShowing[2] = mShowing[3] = nullptr;
     mDrawableStart = mDrawableEnd  = nullptr;
     mDrawableError = mDrawableTemp = nullptr;
-    mDrawableLeftInitial= mDrawableRightInitial=nullptr;
-    mDrawableSizeTop = mDrawableSizeBottom = mDrawableSizeLeft=0;
-    mDrawableSizeRight  = mDrawableSizeStart = mDrawableSizeEnd=0;
+    mDrawableLeftInitial= mDrawableRightInitial = nullptr;
+    mDrawableSizeTop = mDrawableSizeBottom = mDrawableSizeLeft = 0;
+    mDrawableSizeRight  = mDrawableSizeStart = mDrawableSizeEnd= 0;
     mDrawableSizeError  = mDrawableSizeTemp  = 0;
-    mDrawableWidthTop   = mDrawableWidthBottom = mDrawableHeightLeft =0;
-    mDrawableHeightRight= mDrawableHeightStart = mDrawableHeightEnd =0;
-    mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding =0;
+    mDrawableWidthTop   = mDrawableWidthBottom = mDrawableHeightLeft= 0;
+    mDrawableHeightRight= mDrawableHeightStart = mDrawableHeightEnd = 0;
+    mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding   = 0;
     mCompoundRect.set(0,0,0,0);
 }
 
@@ -51,10 +51,11 @@ TextView::Drawables::~Drawables(){
     for(int i=0;i<4;i++){
         delete mShowing[i];
     }
+    delete mTintList;
 }
 
 bool TextView::Drawables::hasMetadata()const{
-    return mDrawablePadding != 0 || mHasTintMode || mHasTint;
+    return mDrawablePadding != 0 || mHasTintMode || (mTintList!=nullptr);
 }
 
 bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
@@ -1036,7 +1037,7 @@ std::vector<Drawable*>TextView::getCompoundDrawables(){
 
 void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom){
     // We're switching to absolute, discard relative.
-    Drawables*dr=mDrawables;
+    Drawables*dr = mDrawables;
     if (dr != nullptr) {
         if (dr->mDrawableStart != nullptr)dr->mDrawableStart->setCallback(nullptr);
         dr->mDrawableStart = nullptr;
@@ -1049,23 +1050,21 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
     if (!drawables) {
         // Clearing drawables...  can we free the data structure?
         if (dr != nullptr) {
-            if (!dr->hasMetadata()) {
-                mDrawables = nullptr;
-            } else {
-                // We need to retain the last set padding, so just clear
-                // out all of the fields in the existing structure.
-                for (int i = 3/*dr->mShowing.length - 1*/; i >= 0; i--) {
-                    if (dr->mShowing[i] != nullptr) {
-                        dr->mShowing[i]->setCallback(nullptr);
-                    }
+            // We need to retain the last set padding, so just clear
+            // out all of the fields in the existing structure.
+            for (int i = 3/*dr->mShowing.length - 1*/; i >= 0; i--) {
+                if (dr->mShowing[i] != nullptr) {
+                    dr->mShowing[i]->setCallback(nullptr);
                     delete dr->mShowing[i];
-                    dr->mShowing[i] = nullptr;
                 }
-                dr->mDrawableSizeLeft  = dr->mDrawableHeightLeft  = 0;
-                dr->mDrawableSizeRight = dr->mDrawableHeightRight = 0;
-                dr->mDrawableSizeTop   = dr->mDrawableWidthTop    = 0;
-                dr->mDrawableSizeBottom= dr->mDrawableWidthBottom = 0;
+                dr->mShowing[i] = nullptr;
             }
+            dr->mDrawableSizeLeft  = dr->mDrawableHeightLeft  = 0;
+            dr->mDrawableSizeRight = dr->mDrawableHeightRight = 0;
+            dr->mDrawableSizeTop   = dr->mDrawableWidthTop    = 0;
+            dr->mDrawableSizeBottom= dr->mDrawableWidthBottom = 0;
+            delete mDrawables;
+            mDrawables = nullptr;
         }
     } else {
         if (dr == nullptr)  mDrawables = dr = new Drawables(getContext());
@@ -1617,11 +1616,11 @@ ColorStateList* TextView::getLinkTextColors()const{
 
 void TextView::applyCompoundDrawableTint(){
     if (mDrawables == nullptr) return;
-    if ( (mDrawables->mHasTint==false)&&(mDrawables->mHasTintMode==false) )return ;
+    if ( (mDrawables->mTintList==nullptr)&&(mDrawables->mHasTintMode==false) )return ;
 
     ColorStateList* tintList = mDrawables->mTintList;
     const int tintMode = mDrawables->mTintMode;
-    const bool hasTint = mDrawables->mHasTint;
+    const bool hasTint = (mDrawables->mTintList!=nullptr);
     const bool hasTintMode = mDrawables->mHasTintMode;
     const std::vector<int>state = getDrawableState();
 
@@ -1653,7 +1652,7 @@ void TextView::setCompoundDrawablePadding(int pad){
            mDrawables->mDrawablePadding = pad;
     } else {
          if (mDrawables == nullptr) 
-             mDrawables =new Drawables(getContext());
+             mDrawables = new Drawables(getContext());
          mDrawables->mDrawablePadding = pad;
     }
     invalidate(true);
@@ -1755,7 +1754,6 @@ void TextView::setCompoundDrawableTintList(ColorStateList* tint){
         mDrawables = new Drawables(getContext());
     }
     mDrawables->mTintList = tint;
-    mDrawables->mHasTint = true;
 
     applyCompoundDrawableTint();
 }

@@ -109,7 +109,6 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 }
 
 NumberPicker::~NumberPicker(){
-    LOGD("mChildren.size=%d",mChildren.size());
 }
 
 void NumberPicker::onIncDecClick(View&v){
