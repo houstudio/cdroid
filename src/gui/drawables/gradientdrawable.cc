@@ -491,7 +491,7 @@ void GradientDrawable::setColors(const std::vector<int>& colors) {
     switch(colors.size()){
     case 1:LOGE("gradient must has at least 2 color");break;
     case 2:mGradientState->mPositions=std::vector<float>{.0f,1.f}; break;
-    case 3:mGradientState->mPositions=std::vector<float>{.0f,1.f/3.f,1.f}; break;
+    case 3:mGradientState->mPositions=std::vector<float>{.0f,.5f,1.f}; break;
     }
     mGradientIsDirty = true;
     invalidateSelf();

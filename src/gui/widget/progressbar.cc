@@ -220,22 +220,22 @@ void ProgressBar::initProgressBar(){
 
 void ProgressBar::setMin(int value){
     if(mMin!=value){
-        mMin=value;
+        mMin = value;
         invalidate(true);
     }
 }
 
 void ProgressBar::setMax(int value){
     if(mMax!=value){
-        mMax=value;
+        mMax = value;
         invalidate(true);
     }
 }
 
 void ProgressBar::setRange(int vmin,int vmax){
     if( (mMin!=vmin)||(mMax!=vmax)){
-        mMin=vmin;
-        mMax=vmax;
+        mMin = vmin;
+        mMax = vmax;
         invalidate(true);
     }
 }
@@ -294,6 +294,7 @@ void ProgressBar::setVisualProgress(int id, float progress){
             // the level of the entire drawable. This will break if
             // progress is set on multiple elements, but the theme-default
             // drawable will always have all layer IDs present.
+	    LOGD_IF((d==nullptr)&&(id==R::id::progress),"LayerDrawable lost layer id=%d",id);
             d = mCurrentDrawable;
         }
     }
@@ -345,22 +346,22 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     dw += mPaddingLeft + mPaddingRight;
     dh += mPaddingTop + mPaddingBottom;
 
-    int measuredWidth = resolveSizeAndState(dw, widthMeasureSpec, 0);
-    int measuredHeight = resolveSizeAndState(dh, heightMeasureSpec, 0);
+    const int measuredWidth  = resolveSizeAndState(dw, widthMeasureSpec, 0);
+    const int measuredHeight = resolveSizeAndState(dh, heightMeasureSpec, 0);
     setMeasuredDimension(measuredWidth, measuredHeight);
 }
 
 void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate){
-    RefreshData&rd=mDatas[id];
-    rd.progress=progress;
-    rd.fromUser=fromUser;
-    rd.animate=animate;
+    RefreshData&rd= mDatas[id];
+    rd.progress = progress;
+    rd.fromUser = fromUser;
+    rd.animate  = animate;
     doRefreshProgress(id, progress, fromUser, true, animate);
 }
 
 bool ProgressBar::setProgressInternal(int value, bool fromUser,bool animate){
     if(mIndeterminate)return false;
-    if(value <mMin)value = mMin;
+    if(value < mMin)value = mMin;
     if(value > mMax)value = mMax;
     if(mProgress == value)return false;
     mProgress = value;
