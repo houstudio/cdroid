@@ -36,6 +36,7 @@ private:
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT =2;
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE =48;
     static constexpr int SIZE_UNSPECIFIED =-1;
+    static constexpr int DEFAULT_DIVIDER_COLOR = 0x0;
     static constexpr int DEFAULT_MAX_HEIGHT= 180;
     static constexpr int DEFAULT_MIN_WIDTH = 64;
     static constexpr float DEFAULT_FADING_EDGE_STRENGTH = .9f;
@@ -62,7 +63,7 @@ private:
     int mMinValue;
     int mMaxValue;
     int mValue;
-    OnValueChangeListener mOnClickListener;
+    OnClickListener mOnClickListener;
     OnValueChangeListener mOnValueChangeListener;
     Formatter mFormatter;
     OnScrollListener mOnScrollListener;
@@ -91,6 +92,7 @@ private:
     int mWheelMiddleItemIndex;
     bool mHasSelectorWheel;
     Drawable* mDividerDrawable;
+    int mDividerColor;
     int mDividerType;
     int mDividerDistance;
     int mDividerLength;
@@ -154,6 +156,7 @@ private:
     void validateInputTextView(View* v);
     bool updateInputTextView();
     void notifyChange(int previous, int current);
+    void postChangeCurrentByOneFromLongPress(bool increment);
     void postChangeCurrentByOneFromLongPress(bool increment, long delayMillis);
     void removeChangeCurrentByOneFromLongPress();
     void removeBeginSoftInputCommand();
@@ -199,13 +202,26 @@ public:
     void computeScroll()override;
     View& setEnabled(bool enabled)override;
     void scrollBy(int x, int y)override;
+    void setOnClickListener(OnClickListener onClickListener);
     void setOnValueChangedListener(OnValueChangeListener onValueChangedListener);
     void setOnScrollListener(const OnScrollListener& onScrollListener);
     void setFormatter(Formatter formatter);
     void setFadingEdgeEnabled(bool fadingEdgeEnabled);
     void setFadingEdgeStrength(float strength);
+
+    Drawable* getDivider()const;
+    void setDivider(Drawable*d);
     void setSelectionDivider(Drawable*d);
     Drawable* getSelectionDivider()const;
+
+    int  getDividerColor()const;
+    void setDividerColor(int);
+    int  getDividerType()const;
+    void setDividerType(int);
+    int  getDividerThickness()const;
+    void setDividerThickness(int thickness);
+    int  getOrder()const;
+    void setOrder(int);
     void setValue(int value);
     int  getValue()const;
     void setMinValue(int value);

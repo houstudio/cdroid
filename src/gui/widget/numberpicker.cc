@@ -46,6 +46,8 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         if (mDividerDrawable->isStateful()) {
             mDividerDrawable->setState(getDrawableState());
         }
+    }else{
+        setDividerColor(atts.getColor("dividerColor",mDividerColor));
     }
     mDividerDistance = atts.getDimensionPixelSize("dividerDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     mDividerLength = atts.getDimensionPixelSize("dividerLength",0);
@@ -104,6 +106,7 @@ bool NumberPicker::isHorizontalMode()const{
 bool NumberPicker::isAscendingOrder()const{
     return mOrder == ASCENDING;
 }
+
 static float pxToSp(float px){
     return px;
 }
@@ -152,6 +155,7 @@ void NumberPicker::initView(){
     mItemSpacing= 0;
     mSelectedTextSize = 24;
     mSelectedTextColor = 0xFFFFFFFF;
+    mDividerColor =DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
     mDividerLength =2;
@@ -268,36 +272,39 @@ bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
             }
             amountToScroll += overshootAdjustment;
             scrollBy(0, amountToScroll);
-        return true;
+            return true;
         }
     }
     return false;
 }
 bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
-    if (!mHasSelectorWheel || !isEnabled()) {
+    const int action = event.getActionMasked();
+    if (!mHasSelectorWheel || !isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
         return false;
     }
-    int action = event.getActionMasked();
-    switch (action) {
-    case MotionEvent::ACTION_DOWN:
-        removeAllCallbacks();
-        hideSoftInput();
-        mLastDownOrMoveEventY = mLastDownEventY = event.getY();
-        mLastDownEventTime = event.getEventTime();
-        mIgnoreMoveEvents  = false;
-        mPerformClickOnTap = false;
-        // Handle pressed state before any state change.
-        if (mLastDownEventY < mTopSelectionDividerTop) {
-            if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-                pshButtonPressDelayed(R::id::decrement);
+    if(isHorizontalMode()){
+        mLastDownOrMoveEventX = mLastDownEventX = event.getX();
+        if (!mFlingScroller->isFinished()) {
+            mFlingScroller->forceFinished(true);
+            mAdjustScroller->forceFinished(true);
+            onScrollerFinished(mFlingScroller);
+            onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
+        } else if (!mAdjustScroller->isFinished()) {
+            mFlingScroller->forceFinished(true);
+            mAdjustScroller->forceFinished(true);
+            onScrollerFinished(mAdjustScroller);
+        } else if (mLastDownEventX >= mLeftDividerLeft
+                && mLastDownEventX <= mRightDividerRight) {
+            if (mOnClickListener) {
+                mOnClickListener(*this);
             }
-        } else if (mLastDownEventY > mBottomSelectionDividerBottom) {
-            if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-                pshButtonPressDelayed(R::id::increment);
-            }
+        } else if (mLastDownEventX < mLeftDividerLeft) {
+            postChangeCurrentByOneFromLongPress(false);
+        } else if (mLastDownEventX > mRightDividerRight) {
+            postChangeCurrentByOneFromLongPress(true);
         }
-        // Make sure we support flinging inside scrollables.
-        getParent()->requestDisallowInterceptTouchEvent(true);
+    }else{
+        mLastDownOrMoveEventY = mLastDownEventY = event.getY();
         if (!mFlingScroller->isFinished()) {
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
@@ -305,18 +312,17 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
         } else if (!mAdjustScroller->isFinished()) {
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
-        } else if (mLastDownEventY < mTopSelectionDividerTop) {
-            postChangeCurrentByOneFromLongPress(
-                false, ViewConfiguration::getLongPressTimeout());
-        } else if (mLastDownEventY > mBottomSelectionDividerBottom) {
-            postChangeCurrentByOneFromLongPress(
-                true, ViewConfiguration::getLongPressTimeout());
-        } else {
-            mPerformClickOnTap = true;
-            postBeginSoftInputOnLongPressCommand();
-        }
-        return true;
-    }//endswitch action
+        } else if (mLastDownEventY >= mTopDividerTop
+                && mLastDownEventY <= mBottomDividerBottom) {
+            if (mOnClickListener) {
+                mOnClickListener(*this);
+            }
+        } else if (mLastDownEventY < mTopDividerTop) {
+            postChangeCurrentByOneFromLongPress(false);
+        } else if (mLastDownEventY > mBottomDividerBottom) {
+            postChangeCurrentByOneFromLongPress(true);
+        }        
+    }//endif isHorizontalMode
     return false;
 }
 
@@ -594,6 +600,9 @@ int NumberPicker::computeVerticalScrollExtent() {
     return isHorizontalMode()?0:getHeight();
 }
 
+void NumberPicker::setOnClickListener(OnClickListener onClickListener){
+    mOnClickListener = onClickListener;
+}
 void NumberPicker::setOnValueChangedListener(OnValueChangeListener onValueChangedListener){
     mOnValueChangeListener=onValueChangedListener;
 }
@@ -720,7 +729,11 @@ void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
     mLongPressUpdateInterval = intervalMillis;
 }
 
-void NumberPicker::setSelectionDivider(Drawable*d){
+Drawable*NumberPicker::getDivider()const{
+    return mDividerDrawable;
+}
+
+void NumberPicker::setDivider(Drawable*d){
     delete mDividerDrawable;
     mDividerDrawable = d;
     if (mDividerDrawable) {
@@ -733,8 +746,48 @@ void NumberPicker::setSelectionDivider(Drawable*d){
     invalidate();
 }
 
+void NumberPicker::setSelectionDivider(Drawable*d){
+    setDivider(d);
+}
+
 Drawable*NumberPicker::getSelectionDivider()const{
     return mDividerDrawable;
+}
+
+int  NumberPicker::getDividerColor()const{
+    return mDividerColor;
+}
+
+void NumberPicker::setDividerColor(int color){
+    mDividerColor = color;
+    mDividerDrawable = new ColorDrawable(color);
+}
+
+int NumberPicker::getDividerType()const{
+    return mDividerType;
+}
+
+void NumberPicker::setDividerType(int type){
+    mDividerType = type;
+    invalidate();
+}
+
+int NumberPicker::getDividerThickness()const{
+    return mDividerThickness;
+}
+
+void NumberPicker::setDividerThickness(int thickness) {
+    mDividerThickness = thickness;
+    invalidate();
+}
+
+int NumberPicker::getOrder()const{
+    return mOrder;
+}
+
+void NumberPicker::setOrder(int order) {
+    mOrder = order;
+    invalidate();
 }
 
 int NumberPicker::getValue()const{
@@ -1192,8 +1245,15 @@ void NumberPicker::initializeSelectorWheel(){
 }
 
 void NumberPicker::initializeFadingEdges(){
-    setVerticalFadingEdgeEnabled(true);
-    setFadingEdgeLength((mBottom - mTop - mTextSize) / 2);
+    if(isHorizontalMode()){
+        setHorizontalFadingEdgeEnabled(true);
+        setVerticalFadingEdgeEnabled(false);
+        setFadingEdgeLength((getWidth() - mTextSize)/2);
+    }else{
+        setHorizontalFadingEdgeEnabled(false);
+        setVerticalFadingEdgeEnabled(true);
+        setFadingEdgeLength((getHeight() - mTextSize)/2);
+    }
 }
 
 void NumberPicker::onScrollerFinished(Scroller* scroller) {
@@ -1326,6 +1386,9 @@ void NumberPicker::postChangeCurrentByOneFromLongPress(bool increment, long dela
     postDelayed(mChangeCurrentByOneFromLongPressCommand, delayMillis);
 }
 
+void NumberPicker::postChangeCurrentByOneFromLongPress(bool increment){
+    postChangeCurrentByOneFromLongPress(increment, ViewConfiguration::getLongPressTimeout());
+}
 void NumberPicker::removeChangeCurrentByOneFromLongPress(){
     if (mChangeCurrentByOneFromLongPressCommand != nullptr) {
         removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
