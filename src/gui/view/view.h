@@ -592,6 +592,7 @@ protected:
     static int resolveSizeAndState(int size, int measureSpec, int childMeasuredState);
     static int getDefaultSize(int size, int measureSpec);
     void damageInParent();
+    void transformRect(Rect&rect);
     bool hasDefaultFocus()const;
     int getSuggestedMinimumWidth();
     int getSuggestedMinimumHeight();
@@ -1020,8 +1021,8 @@ public:
     int  getMeasuredState()const;
     int  getMeasuredHeightAndState()const;
 
-    Matrix getMatrix();
-    Matrix getInverseMatrix();
+    Matrix& getMatrix();
+    Matrix& getInverseMatrix();
     bool hasIdentityMatrix()const;
 
     void setX(float);

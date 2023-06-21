@@ -10,6 +10,10 @@ namespace cdroid{
 
 class NumberPicker:public LinearLayout{
 public:
+    static constexpr int ASCENDING = 0;
+    static constexpr int DESCENDING = 1;
+    static constexpr int SIDE_LINES = 0;
+    static constexpr int UNDERLINE = 1;
     DECLARE_UIEVENT(void,OnValueChangeListener,NumberPicker&,int,int);
     DECLARE_UIEVENT(const std::string,Formatter,int);
     struct OnScrollListener {
@@ -23,6 +27,7 @@ private:
     static constexpr int MODE_PRESS =1;
     static constexpr int MODE_TAPPED=2;
     static constexpr int DEFAULT_SELECTOR_WHEEL_ITEM_COUNT =3;
+    static constexpr int DEFAULT_WHEEL_ITEM_COUNT = 3;
     static constexpr int DEFAULT_LONG_PRESS_UPDATE_INTERVAL =300;
     static constexpr int SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT =8;
     static constexpr int SELECTOR_ADJUSTMENT_DURATION_MILLIS =800;
@@ -31,11 +36,14 @@ private:
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT =2;
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE =48;
     static constexpr int SIZE_UNSPECIFIED =-1;
-    ImageButton* mIncrementButton;
-    ImageButton* mDecrementButton;
-    EditText* mInputText;
+    static constexpr int DEFAULT_MAX_HEIGHT= 180;
+    static constexpr int DEFAULT_MIN_WIDTH = 64;
+    static constexpr float DEFAULT_FADING_EDGE_STRENGTH = .9f;
+    EditText* mSelectedText;
     Runnable mChangeCurrentByOneFromLongPressCommand;
     Runnable mBeginSoftInputOnLongPressCommand;
+    float mSelectedTextCenterX;
+    float mSelectedTextCenterY;
     int mSelectionDividersDistance;
     int mMinHeight;
     int mMaxHeight;
@@ -43,43 +51,61 @@ private:
     int mMaxWidth;
     bool mComputeMaxWidth;
     int mTextSize;
-    int mTextSize2;
+    int mSelectedTextSize;
     int mTextColor;
-    int mTextColor2;
+    int mSelectedTextColor;
+    int mSelectorTextGapWidth;
     int mSelectorTextGapHeight;
+    int mTextAlign;
+    Typeface*mTypeface;
     std::vector<std::string> mDisplayedValues;
     int mMinValue;
     int mMaxValue;
     int mValue;
+    OnValueChangeListener mOnClickListener;
     OnValueChangeListener mOnValueChangeListener;
     Formatter mFormatter;
     OnScrollListener mOnScrollListener;
-    int mMiddleItemIndex;
-    int mMaxSelectorIndices;
     std::vector<int>mSelectorIndices;
     long mLongPressUpdateInterval;
     std::map<int,std::string> mSelectorIndexToStringCache;
-    int mSelectorElementHeight;
-    int mSelectorElementWidth;
+    int mSelectorElementSize;
     int mInitialScrollOffset=INT_MIN;
     int mCurrentScrollOffset;
     Scroller* mFlingScroller;
     Scroller* mAdjustScroller;
+    int mPreviousScrollerX;
     int mPreviousScrollerY;
+    float mLastDownEventX;
     float mLastDownEventY;
     long mLastDownEventTime;
+    float mLastDownOrMoveEventX;
     float mLastDownOrMoveEventY;
     VelocityTracker* mVelocityTracker;
     int mTouchSlop;
     int mMinimumFlingVelocity;
     int mMaximumFlingVelocity;
     bool mWrapSelectorWheel;
-    int mSolidColor;
+    int mWheelItemCount;
+    int mRealWheelItemCount;
+    int mWheelMiddleItemIndex;
     bool mHasSelectorWheel;
-    Drawable* mSelectionDivider;
-    Drawable* mVirtualButtonPressedDrawable;
+    Drawable* mDividerDrawable;
+    int mDividerType;
+    int mDividerDistance;
+    int mDividerLength;
+    int mDividerThickness;
+    int mTopDividerTop;
+    int mBottomDividerBottom;
+    int mLeftDividerLeft;
+    int mRightDividerRight;
+    int mOrder;
+    int mItemSpacing;
     int mSelectionDividerHeight;
     int mScrollState=OnScrollListener::SCROLL_STATE_IDLE;
+    bool mFadingEdgeEnabled;
+    bool mScrollerEnabled;
+    float mFadingEdgeStrength;
     bool mIgnoreMoveEvents;
     bool mPerformClickOnTap;
     int mTopSelectionDividerTop;
@@ -102,6 +128,13 @@ private:
     void pshRun();
 private:
     void initView();
+    float getMaxTextSize()const;
+    float getFadingEdgeStrength(bool isHorizontalMode)const;
+    void setWidthAndHeight();
+    bool isHorizontalMode()const;
+    void drawHorizontalDividers(Canvas& canvas);
+    void drawVerticalDividers(Canvas& canvas);
+    void drawText(const std::string& text, float x, float y,Canvas& canvas);
     int makeMeasureSpec(int measureSpec, int maxSize);
     int resolveSizeAndStateRespectingMinSize(int minSize, int measuredSize, int measureSpec);
     void initializeSelectorWheelIndices();
@@ -131,23 +164,34 @@ private:
     void hideSoftInput();
     void tryComputeMaxWidth();
     void updateWrapSelectorWheel();
-    bool ensureScrollWheelAdjusted();
-    void onIncDecClick(View&v);
-    bool onIncDecLongClick(View&v);
+    void ensureScrollWheelAdjusted();
 protected:
     void onLayout(bool changed, int left, int top, int right, int bottom)override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    int computeVerticalScrollOffset();
-    int computeVerticalScrollRange();
-    int computeVerticalScrollExtent();
+    int computeHorizontalScrollOffset()override;
+    int computeHorizontalScrollRange()override;
+    int computeHorizontalScrollExtent()override;
+    int computeVerticalScrollOffset()override;
+    int computeVerticalScrollRange()override;
+    int computeVerticalScrollExtent()override;
+    float getTopFadingEdgeStrength()override;
+    float getBottomFadingEdgeStrength()override;
+    float getLeftFadingEdgeStrength()override;
+    float getRightFadingEdgeStrength()override;
     void drawableStateChanged();
-    void drawVertical(Canvas&);
-    void drawHorizontal(Canvas&);
     void onDraw(Canvas&canvas)override;
 public:
     NumberPicker(int w,int h);
     NumberPicker(Context* context,const AttributeSet& attrs);
     ~NumberPicker();
+    void setOrientation(int orientation)override;
+    void setWheelItemCount(int count);
+    void setSelector(int count){setWheelItemCount(count);}
+    bool isAscendingOrder()const;
+    int  getSelectedTextColor()const;
+    void setSelectedTextColor(int);
+    int  getSelectedTextSize()const;
+    void setSelectedTextSize(int);
     bool onInterceptTouchEvent(MotionEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
@@ -155,10 +199,11 @@ public:
     void computeScroll()override;
     View& setEnabled(bool enabled)override;
     void scrollBy(int x, int y)override;
-    int  getSolidColor()const;
     void setOnValueChangedListener(OnValueChangeListener onValueChangedListener);
     void setOnScrollListener(const OnScrollListener& onScrollListener);
     void setFormatter(Formatter formatter);
+    void setFadingEdgeEnabled(bool fadingEdgeEnabled);
+    void setFadingEdgeStrength(float strength);
     void setSelectionDivider(Drawable*d);
     Drawable* getSelectionDivider()const;
     void setValue(int value);
@@ -178,14 +223,17 @@ public:
     bool getWrapSelectorWheel()const;
     void setWrapSelectorWheel(bool);
     void setOnLongPressUpdateInterval(long);
-    void setSelector(int items);
 
     void jumpDrawablesToCurrentState();
     void onResolveDrawables(int layoutDirection)override;
-    virtual void setTextColor(int color,int color2=0);
+    void setTextColor(int color);
+    virtual void setTextColor(int color,int color2);
     int  getTextColor()const;
-    virtual void setTextSize(int size,int size2=0);
+    void setTextSize(int);
+    virtual void setTextSize(int size,int size2);
     int  getTextSize()const;
+    void smoothScrollToPosition(int position);
+    void smoothScroll(bool increment, int steps);
 };
     
 }//namespace

@@ -274,7 +274,7 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
 
     // Canceling motions is a special case.  We don't need to perform any transformations
     // or filtering.  The important part is the action, not the contents.
-    int oldAction = event.getAction();
+    const int oldAction = event.getAction();
     if (cancel || oldAction == MotionEvent::ACTION_CANCEL) {
         event.setAction(MotionEvent::ACTION_CANCEL);
         if (child == nullptr) {
@@ -471,7 +471,7 @@ void ViewGroup::cancelHoverTarget(View*view){
             }
             target->recycle();
 
-            long now = SystemClock::uptimeMillis();
+            const long now = SystemClock::uptimeMillis();
             MotionEvent* event = MotionEvent::obtain(now, now,
                     MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
             event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
@@ -2473,14 +2473,14 @@ void ViewGroup::setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus) 
 }
 
 void ViewGroup::transformPointToViewLocal(float point[2],View&child) {
-     point[0] += mScrollX - child.getLeft();
-     point[1] += mScrollY - child.getTop();
+     point[0] += mScrollX - child.mLeft;
+     point[1] += mScrollY - child.mTop;
      double x= point[0];
      double y= point[1];
      if (!child.hasIdentityMatrix()) {
          child.getInverseMatrix().transform_point(x,y);
-	 point[0]=x;
-	 point[1]=y;
+         point[0]=x;
+         point[1]=y;
      }
 }
 
@@ -2711,7 +2711,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                 for(int i = childrenCount-1;i >= 0;i--){
                     const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
                     View* child = getAndVerifyPreorderedView(preorderedList, children, childIndex);
-		    if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
+                    if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
                         ev.setTargetAccessibilityFocus(false);
                         continue;
                     }

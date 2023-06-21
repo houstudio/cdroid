@@ -20,46 +20,36 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     LayoutInflater::from(mContext)->inflate(layoutres,this,true);
     mHasSelectorWheel = (layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
  
-    if(!mHasSelectorWheel){
-        mDecrementButton=(ImageButton*)findViewById(R::id::decrement);
-        mDecrementButton->setMinimumHeight(20);
-        mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
-        mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
-    }
-   
-    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
-    if(mInputText){
-        mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        mInputText->setText("123");
-        mInputText->setTextSize(24);
+    mSelectedText =(EditText*)findViewById(R::id::numberpicker_input);
+    if(mSelectedText){
+        mSelectedText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
+        mSelectedText->setText("123");
+        mSelectedText->setTextSize(24);
     }
 
-    if(!mHasSelectorWheel){
-        mIncrementButton=(ImageButton*)findViewById(R::id::increment);
-        mIncrementButton->setMinimumHeight(20);
-        mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
-        mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
-    }
     measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
     layout(0,0,getMeasuredWidth(),getMeasuredHeight());
-    LOGD("%d,%d-%d,%d (%dx%d)",mInputText->getLeft(),mInputText->getTop(),mInputText->getWidth(),mInputText->getHeight(),w,h);
+    LOGD("%d,%d-%d,%d (%dx%d)",mSelectedText->getLeft(),mSelectedText->getTop(),mSelectedText->getWidth(),mSelectedText->getHeight(),w,h);
     updateInputTextView();
-    setSelector(DEFAULT_SELECTOR_WHEEL_ITEM_COUNT);
 }
 
 NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
   :LinearLayout(context,atts){
     initView();
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
-    mSolidColor =atts.getColor("solidColor",0);
-    mSelectionDivider =atts.getDrawable("selectionDivider");
-    if (mSelectionDivider) {
-        mSelectionDivider->setCallback(this);
-        mSelectionDivider->setLayoutDirection(getLayoutDirection());
-        if (mSelectionDivider->isStateful()) {
-            mSelectionDivider->setState(getDrawableState());
+    mWrapSelectorWheel= atts.getBoolean("wrapSelectorWheel",false); 
+    mDividerDrawable = atts.getDrawable("selectionDivider");
+    mSelectedTextSize = atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize);
+    if (mDividerDrawable) {
+        mDividerDrawable->setCallback(this);
+        mDividerDrawable->setLayoutDirection(getLayoutDirection());
+        if (mDividerDrawable->isStateful()) {
+            mDividerDrawable->setState(getDrawableState());
         }
     }
+    mDividerDistance = atts.getDimensionPixelSize("dividerDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
+    mDividerLength = atts.getDimensionPixelSize("dividerLength",0);
+    mOrder = ASCENDING;
     mSelectionDividerHeight = atts.getDimensionPixelSize("selectionDividerHeight",UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
     mSelectionDividersDistance=atts.getDimensionPixelSize("selectionDividersDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     mMinHeight = atts.getDimensionPixelSize("internalMinHeight",SIZE_UNSPECIFIED);
@@ -70,84 +60,106 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 
     if (mMinWidth != SIZE_UNSPECIFIED && mMaxWidth != SIZE_UNSPECIFIED
                 && mMinWidth > mMaxWidth) {
-        throw "minWidth > maxWidth";
+        throw "minWidth  > maxWidth";
     }
-    mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
 
     std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
     LayoutInflater::from(mContext)->inflate(layoutres,this);
     mHasSelectorWheel = (layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
+    setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     setWillNotDraw(!mHasSelectorWheel);
 
-    if (!mHasSelectorWheel) {
-        mIncrementButton = (ImageButton*)findViewById(cdroid::R::id::increment);
-        mIncrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
-        mIncrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
-    } else {
-        mIncrementButton = nullptr;
-    }
-
-    // decrement button
-    if (!mHasSelectorWheel) {
-        mDecrementButton = (ImageButton*)findViewById(cdroid::R::id::decrement);
-        mDecrementButton->setOnClickListener(std::bind(&NumberPicker::onIncDecClick,this,std::placeholders::_1));
-        mDecrementButton->setOnLongClickListener(std::bind(&NumberPicker::onIncDecLongClick,this,std::placeholders::_1));
-    } else {
-        mDecrementButton = nullptr;
-    }
-
-    mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
+    mSelectedText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
+    mSelectedText->setEnabled(false);
+    mSelectedText->setFocusable(false);
     ViewConfiguration configuration = ViewConfiguration::get(context);
-    mTextSize = (int) mInputText->getTextSize();
-    mTextSize2 = mTextSize;
-    ColorStateList*colors=mInputText->getTextColors();
+    setTextSize( atts.getDimensionPixelSize("textSize",mTextSize));//mTextSize = (int) mSelectedText->getTextSize();
+    setSelectedTextSize(atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize));
+    setTextColor(atts.getColor("textColor"));
+    setSelectedTextColor(atts.getColor("selectedTextColor"));
+    ColorStateList*colors=mSelectedText->getTextColors();
     mTextColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),Color::WHITE);
-    mTextColor2= mTextColor;
     updateInputTextView();
-    setSelector(atts.getInt("maxSelector",DEFAULT_SELECTOR_WHEEL_ITEM_COUNT));
+
+    setValue(atts.getInt("value",0));
+    setMinValue(atts.getInt("min",0));
+    setMaxValue(atts.getInt("max",0));
+    setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
+
+    LOGV("%p:%d textSize=%d,%d",this,mID,mSelectedTextSize,mTextSize);
+    if(getFocusable()==View::FOCUSABLE_AUTO){
+        setFocusable(int(View::FOCUSABLE));
+        setFocusableInTouchMode(true);
+    }
 }
 
 NumberPicker::~NumberPicker(){
 }
 
-void NumberPicker::onIncDecClick(View&v){
-    hideSoftInput();
-    mInputText->clearFocus();
-    if (&v == mIncrementButton) {
-        changeValueByOne(true);
+bool NumberPicker::isHorizontalMode()const{
+    return getOrientation() == HORIZONTAL;
+}
+
+bool NumberPicker::isAscendingOrder()const{
+    return mOrder == ASCENDING;
+}
+static float pxToSp(float px){
+    return px;
+}
+
+static float dpToPx(float dp){
+    return dp;
+}
+
+void NumberPicker::setWidthAndHeight() {
+    if (isHorizontalMode()) {
+        mMinHeight = SIZE_UNSPECIFIED;
+        mMaxHeight = (int) dpToPx(DEFAULT_MIN_WIDTH);
+        mMinWidth = (int) dpToPx(DEFAULT_MAX_HEIGHT);
+        mMaxWidth = SIZE_UNSPECIFIED;
     } else {
-        changeValueByOne(false);
+        mMinHeight = SIZE_UNSPECIFIED;
+        mMaxHeight = (int) dpToPx(DEFAULT_MAX_HEIGHT);
+        mMinWidth = (int) dpToPx(DEFAULT_MIN_WIDTH);
+        mMaxWidth = SIZE_UNSPECIFIED;
     }
 }
 
-bool NumberPicker::onIncDecLongClick(View&v){
-    hideSoftInput();
-    mInputText->clearFocus();
-    if (&v == mIncrementButton){
-        postChangeCurrentByOneFromLongPress(true, 0);
-    } else {
-        postChangeCurrentByOneFromLongPress(false, 0);
-    }
-    return true;
+void NumberPicker::setOrientation(int orientation) {
+    //if(orientation!=getOrientation())
+    LinearLayout::setOrientation(orientation);
+    setWidthAndHeight();
+    requestLayout();
+}
+
+void NumberPicker::setWheelItemCount(int count) {
+    LOGE_IF(count<1,"Wheel item count must be >= 1");
+    mRealWheelItemCount = count;
+    mWheelItemCount = std::max(count, (int)DEFAULT_WHEEL_ITEM_COUNT);
+    mWheelMiddleItemIndex = mWheelItemCount / 2;
+    mSelectorIndices.resize(mWheelItemCount);
 }
 
 void NumberPicker::initView(){
     ViewConfiguration&config=ViewConfiguration::get(mContext);
-    mIncrementButton = nullptr;
-    mDecrementButton = nullptr;
-    mInputText = nullptr;
+    mSelectedText = nullptr;
     mOnValueChangeListener = nullptr;
     mFormatter = nullptr;
     mOnScrollListener.onScrollStateChange = nullptr;
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mTextSize   = 24;
-    mTextSize2  = 24;
-    mTextColor2 = 0 ;
-    mSolidColor =0xFF222222;
-    mSelectionDivider = nullptr;
-    mVirtualButtonPressedDrawable =nullptr;
+    mItemSpacing= 0;
+    mSelectedTextSize = 24;
+    mSelectedTextColor = 0xFFFFFFFF;
+    mWheelMiddleItemIndex = 0;
+    mDividerDrawable  = nullptr;
+    mDividerLength =2;
+    mDividerThickness =2;
+    mDividerType = SIDE_LINES;
     mLastHandledDownDpadKeyCode =-1;
+    mFadingEdgeEnabled= true;
+    mFadingEdgeStrength= DEFAULT_FADING_EDGE_STRENGTH;
     mHasSelectorWheel = true;
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred =true;
@@ -174,51 +186,51 @@ void NumberPicker::initView(){
     mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mHideWheelUntilFocused=false;
-    mMaxSelectorIndices = DEFAULT_SELECTOR_WHEEL_ITEM_COUNT;
+    mWheelItemCount = DEFAULT_WHEEL_ITEM_COUNT;
+    mRealWheelItemCount= DEFAULT_WHEEL_ITEM_COUNT;
+    mSelectorIndices.resize(mWheelItemCount);
 }
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
-    if (!mHasSelectorWheel) {
-        LinearLayout::onLayout(changed, left, top, width, height);
-        return;
-    }
     const int msrdWdth = getMeasuredWidth();
     const int msrdHght = getMeasuredHeight();
 
     // Input text centered horizontally.
-    const int inptTxtMsrdWdth = mInputText->getMeasuredWidth();
-    const int inptTxtMsrdHght = mInputText->getMeasuredHeight();
-    if(getOrientation()==LinearLayout::HORIZONTAL){
-        int inptTxtLeft= (msrdWdth - inptTxtMsrdWdth) / 2;
-        mInputText->layout(inptTxtLeft, 0, inptTxtMsrdWdth, inptTxtMsrdHght);
-    }else{
-        int inptTxtTop= (msrdHght - inptTxtMsrdHght)/2;
-        mInputText->layout(0,inptTxtTop,inptTxtMsrdWdth,inptTxtMsrdHght);
-    }
-
+    const int inptTxtMsrdWdth = mSelectedText->getMeasuredWidth();
+    const int inptTxtMsrdHght = mSelectedText->getMeasuredHeight();
+    const int inptTxtLeft= (msrdWdth - inptTxtMsrdWdth) / 2;
+    const int inptTxtTop = (msrdHght -inptTxtMsrdHght)/2;
+    const int inptTxtRight= inptTxtLeft+inptTxtMsrdWdth;
+    const int inptTxtBottom=inptTxtTop+inptTxtMsrdHght;
+    mSelectedText->layout(inptTxtLeft, inptTxtTop, inptTxtMsrdWdth, inptTxtMsrdHght);
+    mSelectedTextCenterX = mSelectedText->getX()+mSelectedText->getMeasuredWidth()/2.f-2.f;
+    mSelectedTextCenterY = mSelectedText->getY()+mSelectedText->getMeasuredHeight()/2.f -5.f;
     if (changed) { // need to do all this when we know our size
         initializeSelectorWheel();
         initializeFadingEdges();
-        mTopSelectionDividerTop = (getHeight() - mSelectionDividersDistance) / 2
-                - mSelectionDividerHeight;
-        mBottomSelectionDividerBottom = mTopSelectionDividerTop + 2 * mSelectionDividerHeight
-                + mSelectionDividersDistance;
+        const int dividerDistence = 2*mDividerThickness + mDividerDistance;
+        if(isHorizontalMode()){
+            mLeftDividerLeft = (getWidth()-mDividerDistance)/2 - mDividerThickness;
+            mRightDividerRight= mLeftDividerLeft + dividerDistence;
+            mBottomDividerBottom = getHeight();
+        }else{
+            mTopDividerTop = (getHeight() - mDividerDistance)/2 - mDividerThickness;
+            mBottomDividerBottom = mTopDividerTop + dividerDistence;
+        }
+        mTopSelectionDividerTop = (getHeight() - mSelectionDividersDistance) / 2 - mSelectionDividerHeight;
+        mBottomSelectionDividerBottom = mTopSelectionDividerTop + 2 * mSelectionDividerHeight + mSelectionDividersDistance;
     }
 }
 
 
 void NumberPicker::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    if (!mHasSelectorWheel) {
-        LinearLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
-        return;
-    }
     // Try greedily to fit the max width and height.
-    int newWidthMeasureSpec = makeMeasureSpec(widthMeasureSpec, mMaxWidth);
-    int newHeightMeasureSpec = makeMeasureSpec(heightMeasureSpec, mMaxHeight);
+    const int newWidthMeasureSpec = makeMeasureSpec(widthMeasureSpec, mMaxWidth);
+    const int newHeightMeasureSpec = makeMeasureSpec(heightMeasureSpec, mMaxHeight);
     LinearLayout::onMeasure(newWidthMeasureSpec, newHeightMeasureSpec);
     // Flag if we are measured with width or height less than the respective min.
-    int widthSize = resolveSizeAndStateRespectingMinSize(mMinWidth, getMeasuredWidth(),
+    const int widthSize = resolveSizeAndStateRespectingMinSize(mMinWidth, getMeasuredWidth(),
                 widthMeasureSpec);
-    int heightSize = resolveSizeAndStateRespectingMinSize(mMinHeight, getMeasuredHeight(),
+    const int heightSize = resolveSizeAndStateRespectingMinSize(mMinHeight, getMeasuredHeight(),
                 heightMeasureSpec);
     setMeasuredDimension(widthSize, heightSize);
 }
@@ -226,20 +238,38 @@ void NumberPicker::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
 bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
     scroller->forceFinished(true);
-    int amountToScroll = scroller->getFinalY() - scroller->getCurrY();
-    int futureScrollOffset = (mCurrentScrollOffset + amountToScroll) % mSelectorElementHeight;
-    int overshootAdjustment = mInitialScrollOffset - futureScrollOffset;
-    if (overshootAdjustment != 0) {
-        if (std::abs(overshootAdjustment) > mSelectorElementHeight / 2) {
-            if (overshootAdjustment > 0) {
-                overshootAdjustment -= mSelectorElementHeight;
-            } else {
-                overshootAdjustment += mSelectorElementHeight;
+    if(isHorizontalMode()){
+        int amountToScroll = scroller->getFinalX() - scroller->getCurrX();
+        int futureScrollOffset = (mCurrentScrollOffset + amountToScroll) % mSelectorElementSize;
+        int overshootAdjustment = mInitialScrollOffset - futureScrollOffset;
+        if (overshootAdjustment != 0) {
+            if (std::abs(overshootAdjustment) > mSelectorElementSize / 2) {
+                if (overshootAdjustment > 0) {
+                    overshootAdjustment -= mSelectorElementSize;
+                } else {
+                    overshootAdjustment += mSelectorElementSize;
+                }
             }
+            amountToScroll += overshootAdjustment;
+            scrollBy(amountToScroll, 0);
+            return true;
         }
-        amountToScroll += overshootAdjustment;
-        scrollBy(0, amountToScroll);
+    }else{
+        int amountToScroll = scroller->getFinalY() - scroller->getCurrY();
+        int futureScrollOffset = (mCurrentScrollOffset + amountToScroll) % mSelectorElementSize;
+        int overshootAdjustment = mInitialScrollOffset - futureScrollOffset;
+        if (overshootAdjustment != 0) {
+            if (std::abs(overshootAdjustment) > mSelectorElementSize / 2) {
+                if (overshootAdjustment > 0) {
+                    overshootAdjustment -= mSelectorElementSize;
+                } else {
+                    overshootAdjustment += mSelectorElementSize;
+                }
+            }
+            amountToScroll += overshootAdjustment;
+            scrollBy(0, amountToScroll);
         return true;
+        }
     }
     return false;
 }
@@ -300,24 +330,37 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
     int action = event.getActionMasked();
     switch (action) {
     case MotionEvent::ACTION_CANCEL:LOGD("ACTION_CANCEL");break;
-    case MotionEvent::ACTION_MOVE: {
-            if (mIgnoreMoveEvents) {
-                 break;
-            }
-            const float currentMoveY = event.getY();
-            if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
-                int deltaDownY = (int) std::abs(currentMoveY - mLastDownEventY);
-                if (deltaDownY > mTouchSlop) {
-                    removeAllCallbacks();
-                    onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
+    case MotionEvent::ACTION_MOVE:
+            if (isHorizontalMode()) {
+                float currentMoveX = event.getX();
+                if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
+                    int deltaDownX = (int) std::abs(currentMoveX - mLastDownEventX);
+                    if (deltaDownX > mTouchSlop) {
+                        removeAllCallbacks();
+                        onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
+                    }
+                } else {
+                    int deltaMoveX = (int) ((currentMoveX - mLastDownOrMoveEventX));
+                    scrollBy(deltaMoveX, 0);
+                    invalidate();
                 }
-            } else {
-                int deltaMoveY = (int) ((currentMoveY - mLastDownOrMoveEventY));
-                scrollBy(0, deltaMoveY);
-                invalidate();
-            }
-            mLastDownOrMoveEventY = currentMoveY;
-        } break;
+                mLastDownOrMoveEventX = currentMoveX;                
+            }else{
+                const float currentMoveY = event.getY();
+                if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
+                    int deltaDownY = (int) std::abs(currentMoveY - mLastDownEventY);
+                    if (deltaDownY > mTouchSlop) {
+                        removeAllCallbacks();
+                        onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
+                    }
+                } else {
+                    int deltaMoveY = (int) ((currentMoveY - mLastDownOrMoveEventY));
+                    scrollBy(0, deltaMoveY);
+                    invalidate();
+                }
+                mLastDownOrMoveEventY = currentMoveY;
+            }   
+          break;
     case MotionEvent::ACTION_UP: {
             removeBeginSoftInputCommand();
             removeChangeCurrentByOneFromLongPress();
@@ -337,7 +380,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                         mPerformClickOnTap = false;
                         performClick();
                     } else {
-                        int selectorIndexOffset = (eventY / mSelectorElementHeight) - mMiddleItemIndex;
+                        int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
                         if (selectorIndexOffset > 0) {
                             changeValueByOne(true);
                             pshButtonTapped(R::id::increment);
@@ -412,82 +455,143 @@ void NumberPicker::computeScroll() {
         }
     }
     scroller->computeScrollOffset();
-    int currentScrollerY = scroller->getCurrY();
-    if (mPreviousScrollerY == 0) {
-        mPreviousScrollerY = scroller->getStartY();
+    if(isHorizontalMode()){
+        int currentScrollerX = scroller->getCurrX();
+        if (mPreviousScrollerX == 0) {
+            mPreviousScrollerX = scroller->getStartX();
+        }
+        scrollBy(currentScrollerX - mPreviousScrollerX, 0);
+        mPreviousScrollerX = currentScrollerX;
+    }else{
+        int currentScrollerY = scroller->getCurrY();
+        if (mPreviousScrollerY == 0) {
+            mPreviousScrollerY = scroller->getStartY();
+        }
+        scrollBy(0, currentScrollerY - mPreviousScrollerY);
+        mPreviousScrollerY = currentScrollerY;
     }
-    scrollBy(0, currentScrollerY - mPreviousScrollerY);
-    mPreviousScrollerY = currentScrollerY;
     if (scroller->isFinished()) {
         onScrollerFinished(scroller);
     } else {
         invalidate();
     }
+    
 }
 
 View& NumberPicker::setEnabled(bool enabled) {
     ViewGroup::setEnabled(enabled);
-    if (!mHasSelectorWheel) {
-        mIncrementButton->setEnabled(enabled);
-    }
-    if (!mHasSelectorWheel) {
-        mDecrementButton->setEnabled(enabled);
-    }
-    mInputText->setEnabled(enabled);
+    mSelectedText->setEnabled(enabled);
     return *this;
 }
 
 void NumberPicker::scrollBy(int x, int y){
     std::vector<int>&selectorIndices = mSelectorIndices;
     const int startScrollOffset = mCurrentScrollOffset;
-    if (!mWrapSelectorWheel && y > 0
-            && selectorIndices[mMiddleItemIndex] <= mMinValue) {
-        mCurrentScrollOffset = mInitialScrollOffset;
-        return;
+    const int gap = getMaxTextSize();
+    if (isHorizontalMode()) {
+        if (isAscendingOrder()) {
+            if (!mWrapSelectorWheel && x > 0
+                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+            if (!mWrapSelectorWheel && x < 0
+                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+        } else {
+            if (!mWrapSelectorWheel && x > 0
+                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+            if (!mWrapSelectorWheel && x < 0
+                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+        }
+
+        mCurrentScrollOffset += x;
+    } else {
+        if (isAscendingOrder()) {
+            if (!mWrapSelectorWheel && y > 0
+                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+            if (!mWrapSelectorWheel && y < 0
+                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+        } else {
+            if (!mWrapSelectorWheel && y > 0
+                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+            if (!mWrapSelectorWheel && y < 0
+                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                mCurrentScrollOffset = mInitialScrollOffset;
+                return;
+            }
+        }
+
+        mCurrentScrollOffset += y;
     }
-    if (!mWrapSelectorWheel && y < 0
-            && selectorIndices[mMiddleItemIndex] >= mMaxValue) {
-        mCurrentScrollOffset = mInitialScrollOffset;
-        return;
-    }
-    mCurrentScrollOffset += y;
-    while (mCurrentScrollOffset - mInitialScrollOffset > mSelectorTextGapHeight) {
-        mCurrentScrollOffset -= mSelectorElementHeight;
-        decrementSelectorIndices(selectorIndices);
-        setValueInternal(selectorIndices[mMiddleItemIndex], true);
-        if (!mWrapSelectorWheel && selectorIndices[mMiddleItemIndex] <= mMinValue) {
+    while (mCurrentScrollOffset - mInitialScrollOffset > gap) {
+        mCurrentScrollOffset -= mSelectorElementSize;
+        if(isAscendingOrder())
+            decrementSelectorIndices(selectorIndices);
+        else
+            incrementSelectorIndices(selectorIndices);
+        setValueInternal(selectorIndices[mWheelMiddleItemIndex], true);
+        if (!mWrapSelectorWheel && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
 
-    while (mCurrentScrollOffset - mInitialScrollOffset < -mSelectorTextGapHeight) {
-        mCurrentScrollOffset += mSelectorElementHeight;
-        incrementSelectorIndices(selectorIndices);
-        setValueInternal(selectorIndices[mMiddleItemIndex], true);
-        if (!mWrapSelectorWheel && selectorIndices[mMiddleItemIndex] >= mMaxValue) {
+    while (mCurrentScrollOffset - mInitialScrollOffset < -gap) {
+        mCurrentScrollOffset += mSelectorElementSize;
+        if(isAscendingOrder())
+            incrementSelectorIndices(selectorIndices);
+        else
+            decrementSelectorIndices(selectorIndices);
+        setValueInternal(selectorIndices[mWheelMiddleItemIndex], true);
+        if (!mWrapSelectorWheel && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
     if (startScrollOffset != mCurrentScrollOffset) {
-        onScrollChanged(0, mCurrentScrollOffset, 0, startScrollOffset);
+        if(isHorizontalMode())
+            onScrollChanged(mCurrentScrollOffset,0,startScrollOffset,0);
+        else
+            onScrollChanged(0, mCurrentScrollOffset, 0, startScrollOffset);
     }
 }
 
+int NumberPicker::computeHorizontalScrollOffset(){
+    return isHorizontalMode()?mCurrentScrollOffset:0;
+}
+int NumberPicker::computeHorizontalScrollRange(){
+    return isHorizontalMode()?(mMaxValue - mMinValue +1)*mSelectorElementSize:0;
+}
+int NumberPicker::computeHorizontalScrollExtent(){
+    return isHorizontalMode()?getWidth():0;
+}
 int NumberPicker::computeVerticalScrollOffset() {
-    return mCurrentScrollOffset;
+    return isHorizontalMode()?0:mCurrentScrollOffset;
 }
 
 int NumberPicker::computeVerticalScrollRange() {
-    return std::min(mMaxValue - mMinValue + 1,mMaxSelectorIndices) * mSelectorElementHeight;
-    //return (mMaxValue - mMinValue + 1) * mSelectorElementHeight;
+    //return std::min(mMaxValue - mMinValue + 1,mMaxSelectorIndices) * mSelectorElementSize;
+    return isHorizontalMode()?0:(mMaxValue - mMinValue + 1) * mSelectorElementSize;
 }
 
 int NumberPicker::computeVerticalScrollExtent() {
-    return getHeight();
-}
-
-int NumberPicker::getSolidColor()const{
-    return mSolidColor;
+    return isHorizontalMode()?0:getHeight();
 }
 
 void NumberPicker::setOnValueChangedListener(OnValueChangeListener onValueChangedListener){
@@ -504,8 +608,20 @@ void NumberPicker::setFormatter(Formatter formatter){
     updateInputTextView();
 }
 
+void NumberPicker::setFadingEdgeEnabled(bool fadingEdgeEnabled) {
+    mFadingEdgeEnabled = fadingEdgeEnabled;
+}
+
+void NumberPicker::setFadingEdgeStrength(float strength) {
+    mFadingEdgeStrength = strength;
+}
+
 void NumberPicker::setValue(int value) {
     setValueInternal(value, false);
+}
+
+float NumberPicker::getMaxTextSize()const {
+    return std::max(mTextSize, mSelectedTextSize);
 }
 
 bool NumberPicker::performClick() {
@@ -529,12 +645,12 @@ bool NumberPicker::performLongClick() {
 
 void NumberPicker::showSoftInput(){
     if(mHasSelectorWheel)
-	mInputText->setVisibility(View::VISIBLE);
+	mSelectedText->setVisibility(View::VISIBLE);
 }
 
 void NumberPicker::hideSoftInput(){
-    if ( mHasSelectorWheel && mInputText->getInputType() != EditText::TYPE_NONE) {
-        mInputText->setVisibility(View::INVISIBLE);
+    if ( mHasSelectorWheel && mSelectedText->getInputType() != EditText::TYPE_NONE) {
+        mSelectedText->setVisibility(View::INVISIBLE);
     }
 }
 
@@ -546,7 +662,7 @@ void NumberPicker::tryComputeMaxWidth(){
     if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
         Layout l(mTextSize,-1);
-        l.setTypeface(mInputText->getTypeface());
+        l.setTypeface(mSelectedText->getTypeface());
         for (int i = 0; i <= 9; i++) {
             l.setText(std::to_string(i));
             l.relayout();
@@ -565,7 +681,7 @@ void NumberPicker::tryComputeMaxWidth(){
     } else {
         const int valueCount = mDisplayedValues.size();
         Layout l(mTextSize,-1);
-        l.setTypeface(mInputText->getTypeface());
+        l.setTypeface(mSelectedText->getTypeface());
         for (int i = 0; i < valueCount; i++) {
             l.setText(mDisplayedValues[i]);
             l.relayout();
@@ -575,7 +691,7 @@ void NumberPicker::tryComputeMaxWidth(){
             }
         }
     }
-    maxTextWidth += mInputText->getPaddingLeft() + mInputText->getPaddingRight();
+    maxTextWidth += mSelectedText->getPaddingLeft() + mSelectedText->getPaddingRight();
     if (mMaxWidth != maxTextWidth) {
         if (maxTextWidth > mMinWidth) {
             mMaxWidth = maxTextWidth;
@@ -596,7 +712,7 @@ void NumberPicker::setWrapSelectorWheel(bool wrapSelectorWheel) {
 }
 
 void NumberPicker::updateWrapSelectorWheel() {
-    bool wrappingAllowed = (mMaxValue - mMinValue) >= mSelectorIndices.size();
+    const bool wrappingAllowed = (mMaxValue - mMinValue + 1) >= mSelectorIndices.size();
     mWrapSelectorWheel = wrappingAllowed && mWrapSelectorWheelPreferred;
 }
 
@@ -605,30 +721,20 @@ void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
 }
 
 void NumberPicker::setSelectionDivider(Drawable*d){
-    delete mSelectionDivider;
-    mSelectionDivider = d;
-    if (mSelectionDivider) {
-        mSelectionDivider->setCallback(this);
-        mSelectionDivider->setLayoutDirection(getLayoutDirection());
-        if (mSelectionDivider->isStateful()) {
-            mSelectionDivider->setState(getDrawableState());
+    delete mDividerDrawable;
+    mDividerDrawable = d;
+    if (mDividerDrawable) {
+        mDividerDrawable->setCallback(this);
+        mDividerDrawable->setLayoutDirection(getLayoutDirection());
+        if (mDividerDrawable->isStateful()) {
+            mDividerDrawable->setState(getDrawableState());
         }
     }
     invalidate();
 }
 
 Drawable*NumberPicker::getSelectionDivider()const{
-    return mSelectionDivider;
-}
-
-void NumberPicker::setSelector(int items){
-    mMaxSelectorIndices = items;
-    //mSelectorIndices.resize(items);
-    mMiddleItemIndex = items/2;
-    updateWrapSelectorWheel();
-    initializeSelectorWheelIndices();
-    //updateInputTextView();
-    invalidate();
+    return mDividerDrawable;
 }
 
 int NumberPicker::getValue()const{
@@ -640,15 +746,8 @@ int NumberPicker::getMinValue()const{
 }
 
 void NumberPicker::setMinValue(int minValue){
-
-    if (mMinValue == minValue)return;
-
-    if (minValue < 0) throw "minValue must be >= 0";
-
     mMinValue = minValue;
     if (mMinValue > mValue) mValue = mMinValue;
-    if(mMinValue > mMaxValue)
-         mMaxValue = mMinValue;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
     updateInputTextView();
@@ -661,15 +760,8 @@ int NumberPicker::getMaxValue()const{
 }
 
 void NumberPicker::setMaxValue(int maxValue) {
-
-    if (mMaxValue == maxValue) return;
-
-    if (maxValue < 0) throw "maxValue must be >= 0";
-
     mMaxValue = maxValue;
     if (mMaxValue < mValue) mValue = mMaxValue;
-    if(mMaxValue < mMinValue)
-	mMinValue = mMaxValue;
     updateWrapSelectorWheel();
     initializeSelectorWheelIndices();
     updateInputTextView();
@@ -705,36 +797,57 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     tryComputeMaxWidth();
 }
 
+float NumberPicker::getFadingEdgeStrength(bool isHorizontalMode)const{
+    return isHorizontalMode && mFadingEdgeEnabled ? mFadingEdgeStrength : 0;
+}
+
+float NumberPicker::getTopFadingEdgeStrength() {
+     return getFadingEdgeStrength(!isHorizontalMode());
+}
+
+float NumberPicker::getBottomFadingEdgeStrength() {
+     return getFadingEdgeStrength(!isHorizontalMode());
+}
+
+float NumberPicker::getLeftFadingEdgeStrength() {
+    return getFadingEdgeStrength(isHorizontalMode());
+}
+
+float NumberPicker::getRightFadingEdgeStrength() {
+    return getFadingEdgeStrength(isHorizontalMode());
+}
+
 void NumberPicker::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
 
-    Drawable* selectionDivider = mSelectionDivider;
-    if (selectionDivider!=nullptr  && selectionDivider->isStateful()
-        && selectionDivider->setState(getDrawableState())) {
-        invalidateDrawable(*selectionDivider);
+    if (mDividerDrawable!=nullptr  && mDividerDrawable->isStateful()
+        && mDividerDrawable->setState(getDrawableState())) {
+        invalidateDrawable(*mDividerDrawable);
     }
 }
 
 void NumberPicker::jumpDrawablesToCurrentState() {
     ViewGroup::jumpDrawablesToCurrentState();
 
-    if (mSelectionDivider != nullptr) {
-        mSelectionDivider->jumpToCurrentState();
+    if (mDividerDrawable != nullptr) {
+        mDividerDrawable->jumpToCurrentState();
     }
 }
 
 void NumberPicker::onResolveDrawables(int layoutDirection){
     ViewGroup::onResolveDrawables(layoutDirection);
-    if (mSelectionDivider) {
-        mSelectionDivider->setLayoutDirection(layoutDirection);
+    if (mDividerDrawable) {
+        mDividerDrawable->setLayoutDirection(layoutDirection);
     }
 }
 
-void NumberPicker::setTextColor(int color,int color2){
-    mInputText->setTextColor(color);
+void NumberPicker::setTextColor(int color){
     mTextColor = color;
-    if(color2)
-        mTextColor2= color2;
+    invalidate();
+}
+void NumberPicker::setTextColor(int color,int color2){
+    setSelectedTextColor(color);
+    mTextColor = color2;
     invalidate();
 }
 
@@ -742,154 +855,234 @@ int  NumberPicker::getTextColor()const{
     return mTextColor;
 }
 
+void NumberPicker::setTextSize(int size){
+    mTextSize = size;
+    invalidate();
+}
 void NumberPicker::setTextSize(int size,int size2){
-    if(mTextSize!=size){
-	mInputText->setTextSize(size);
-        mTextSize = size;
-        requestLayout();
-    }
-    if((mTextSize2!=size2)&&size2){
-        mTextSize2= size2;
-        invalidate();
-    }
+    setSelectedTextSize(size);
+    mTextSize = size2;
+    requestLayout();
+    invalidate();
 }
 
 int  NumberPicker::getTextSize()const{
-    return mInputText->getTextSize();
+    return mTextSize;
 }
 
-void NumberPicker::drawVertical(Canvas&canvas){
-    const bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
-    float x = (mRight-mLeft) / 2;
-    float y = mCurrentScrollOffset;
-    Rect rc = mInputText->getBound();
-    // draw the virtual buttons pressed state if needed
-    if (showSelectorWheel && mVirtualButtonPressedDrawable != nullptr
-            && mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-        if (mDecrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
-            mVirtualButtonPressedDrawable->setBounds(0, 0, mRight-mLeft, mTopSelectionDividerTop);
-            mVirtualButtonPressedDrawable->draw(canvas);
-        }
-        if (mIncrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
-            mVirtualButtonPressedDrawable->setBounds(0, mBottomSelectionDividerBottom, mRight-mLeft,mBottom-mTop);
-            mVirtualButtonPressedDrawable->draw(canvas);
-        }
-    }
-
-    // draw the selector wheel
-    std::vector<int>& selectorIndices = mSelectorIndices;
-    ColorStateList* colors = mInputText->getTextColors();
-    const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(
-		    StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
-    Color color(selectorWheelColor);
-    canvas.set_color(selectorWheelColor);
-    canvas.set_font_size(mTextSize);
-    if(mInputText && mInputText->getTypeface())
-         canvas.set_font_face(mInputText->getTypeface()->getFontFace()->get_font_face());
-    if(mTextColor!=mTextColor2){
-	 Color c1(mTextColor), c2(mTextColor2);
-	 Cairo::RefPtr<Cairo::LinearGradient> pat=Cairo::LinearGradient::create(0,0,0,getHeight());
-	 pat->add_color_stop_rgba(.0f,c2.red(),c2.green(),c2.blue(),c2.alpha());
-	 pat->add_color_stop_rgba(.5f,c1.red(),c1.green(),c1.blue(),c1.alpha());
-	 pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
-	 canvas.set_source(pat);
-    }else canvas.set_color(mTextColor);
-
-    for (int i = 0; i < selectorIndices.size(); i++) {
-        const int selectorIndex = selectorIndices[i];
-        std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
-        // Do not draw the middle item if input is visible since the input is shown only if the wheel
-        // is static and it covers the middle item. Otherwise, if the user starts editing the text 
-        // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
-        Cairo::TextExtents ext;
-        if((mTextSize!=mTextSize2)){
-	    const float harfHeight = getHeight()/2.f;
-	    const float fraction   = std::abs(y-harfHeight)/harfHeight;
-	    canvas.set_font_size(lerp(mTextSize,mTextSize2,fraction));
-        }
-        canvas.get_text_extents(scrollSelectorValue,ext);
-        if ((showSelectorWheel && i != mMiddleItemIndex) ||
-            (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
-	    switch(mInputText->getGravity()&Gravity::HORIZONTAL_GRAVITY_MASK){
-	    case Gravity::LEFT: x = 0; break;
-	    case Gravity::CENTER_HORIZONTAL:x = (getWidth()-ext.x_advance)/2; break;
-	    case Gravity::RIGHT:x = getWidth() - ext.x_advance; break; 
-	    }
-	    canvas.move_to(x-ext.x_bearing,y);
-	    canvas.show_text(scrollSelectorValue);
-        }
-	y+= mSelectorElementHeight;
-    }
-    // draw the selector dividers
-    if(showSelectorWheel&&mSelectionDivider){
-	 const int width=getWidth();
-         mSelectionDivider->setBounds(0,mTopSelectionDividerTop,width,mSelectionDividerHeight);
-	 mSelectionDivider->draw(canvas);
-         mSelectionDivider->setBounds(0,mBottomSelectionDividerBottom,width,mSelectionDividerHeight);
-         mSelectionDivider->draw(canvas);
-    }
+int  NumberPicker::getSelectedTextColor()const{
+    return mSelectedTextColor;
 }
 
-void NumberPicker::drawHorizontal(Canvas&canvas){
-    const bool showSelectorWheel = mHideWheelUntilFocused ? hasFocus() : true;
-    float x = (mRight-mLeft) / 2;
-    float y = mCurrentScrollOffset;
-    Rect rc=mInputText->getBound();
-    // draw the virtual buttons pressed state if needed
-    if (showSelectorWheel && mVirtualButtonPressedDrawable != nullptr
-            && mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
-        if (mDecrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
-            mVirtualButtonPressedDrawable->setBounds(0, 0, mRight-mLeft, mTopSelectionDividerTop);
-            mVirtualButtonPressedDrawable->draw(canvas);
-        }
-        if (mIncrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::get(StateSet::VIEW_STATE_PRESSED));
-            mVirtualButtonPressedDrawable->setBounds(0, mBottomSelectionDividerBottom, mRight-mLeft,mBottom-mTop);
-            mVirtualButtonPressedDrawable->draw(canvas);
-        }
-    }
+void NumberPicker::setSelectedTextColor(int textColor){
+    mSelectedTextColor = textColor;
+    mSelectedText->setTextColor(textColor);
+}
 
-    // draw the selector wheel
-    std::vector<int>& selectorIndices = mSelectorIndices;
-    ColorStateList* colors = mInputText->getTextColors();
-    const int selectorWheelColor = (colors==nullptr)? Color::WHITE:colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), Color::WHITE);
-    canvas.set_color(selectorWheelColor);
-    //txtlayout.setAlignment(mInputText->getLayoutAlignment());
-    for (int i = 0; i < selectorIndices.size(); i++) {
-        int selectorIndex = selectorIndices[i];
-        std::string scrollSelectorValue = mSelectorIndexToStringCache[selectorIndex];
-        // Do not draw the middle item if input is visible since the input is shown only if the wheel
-        // is static and it covers the middle item. Otherwise, if the user starts editing the text 
-        // via the/ IME he may see a dimmed version of the old value intermixed with the new one.
-        canvas.set_font_size(i==mMiddleItemIndex?mTextSize:(mTextSize*.8));
-        if ((showSelectorWheel && i != mMiddleItemIndex) ||
-            (i == mMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
-            //canvas.draw_text(rctxt,scrollSelectorValue,mInputText->getGravity());
-        }
-        y+=mSelectorElementHeight;
-    }
-    // draw the selector dividers
-    if(showSelectorWheel&&mSelectionDivider){
-	 const int width=getWidth();
-         mSelectionDivider->setBounds(0,mTopSelectionDividerTop,width,mSelectionDividerHeight);
-	 mSelectionDivider->draw(canvas);
-         mSelectionDivider->setBounds(0,mBottomSelectionDividerBottom,width,mSelectionDividerHeight);
-         mSelectionDivider->draw(canvas);
-    }
+int  NumberPicker::getSelectedTextSize()const{
+    return mSelectedTextSize;
+}
+
+void NumberPicker::setSelectedTextSize(int textSize) {
+    mSelectedTextSize = textSize;
+    mSelectedText->setTextSize(textSize);
 }
 
 void NumberPicker::onDraw(Canvas&canvas){
-    if (!mHasSelectorWheel) {
-        LinearLayout::onDraw(canvas);
-        return;
+    canvas.save();
+
+    const bool showSelectorWheel = !mHideWheelUntilFocused || hasFocus();
+    float x, y;
+    if (isHorizontalMode()) {
+        x = mCurrentScrollOffset;
+        y = mSelectedText->getBaseline() + mSelectedText->getTop();
+        if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
+            canvas.rectangle(mLeftDividerLeft, 0, mRightDividerRight-mLeftDividerLeft, getHeight());
+            canvas.clip();
+        }
+    } else {
+        x = 0;//getWidth() / 2.f;
+        y = mCurrentScrollOffset;
+        if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
+            canvas.rectangle(0, mTopDividerTop, getWidth(), mBottomDividerBottom-mTopDividerTop);
+            canvas.clip();
+        }
     }
-    if(getOrientation()==LinearLayout::VERTICAL)
-	drawVertical(canvas);
-    else
-	drawHorizontal(canvas);
+    Cairo::RefPtr<Cairo::LinearGradient> pat;
+    if(mSelectedTextColor!=mTextColor){
+        Color c1(mSelectedTextColor), c2(mTextColor);
+        pat=Cairo::LinearGradient::create(0,0,0,getHeight());
+  	    pat->add_color_stop_rgba(.0f,c2.red(),c2.green(),c2.blue(),c2.alpha());
+	    pat->add_color_stop_rgba(.5f,c1.red(),c1.green(),c1.blue(),c1.alpha());
+	    pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
+        canvas.set_source(pat);
+    }else{
+        canvas.set_color(mSelectedTextColor);
+    }
+    canvas.set_font_size(mSelectedTextSize);
+    // draw the selector wheel
+    std::vector<int>& selectorIndices = mSelectorIndices;
+    for (int i = 0; i < selectorIndices.size(); i++) {
+        float font_size = mSelectedTextSize;
+        if(mSelectedTextSize!=mTextSize){
+            const float harfHeight = getHeight()/2.f;
+            const float fraction = std::abs(y-harfHeight)/harfHeight;
+            font_size = lerp(mSelectedTextSize,mTextSize,fraction);
+            canvas.set_font_size(lerp(mSelectedTextSize,mTextSize,fraction));
+        }
+
+        int selectorIndex = selectorIndices[isAscendingOrder() ? i : selectorIndices.size() - i - 1];
+        std::string scrollSelectorValue = mSelectorIndexToStringCache.at(selectorIndex);
+        if (scrollSelectorValue.empty()) {
+            continue;
+        }
+        // Do not draw the middle item if input is visible since the input
+        // is shown only if the wheel is static and it covers the middle
+        // item. Otherwise, if the user starts editing the text via the
+        // IME he may see a dimmed version of the old value intermixed
+        // with the new one.
+        if ((showSelectorWheel && i != mWheelMiddleItemIndex)
+                || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
+            float textY = y;
+            if (!isHorizontalMode()) {
+                Cairo::FontExtents fe;
+                canvas.get_font_extents(fe);
+                textY += fe.height/2.f ;//- fe.descent;
+            }
+
+            int xOffset = 0;
+            int yOffset = 0;
+
+            if (i != mWheelMiddleItemIndex && mItemSpacing != 0) {
+                if (isHorizontalMode()) {
+                    if (i > mWheelMiddleItemIndex) {
+                        xOffset = mItemSpacing;
+                    } else {
+                        xOffset = -mItemSpacing;
+                    }
+                } else {
+                    if (i > mWheelMiddleItemIndex) {
+                        yOffset = mItemSpacing;
+                    } else {
+                        yOffset = -mItemSpacing;
+                    }
+                }
+            }
+            Cairo::TextExtents ext;
+            canvas.get_text_extents(scrollSelectorValue,ext);
+            x = (getWidth() - ext.x_advance)/2.f;
+            drawText(scrollSelectorValue, x + xOffset - ext.x_bearing, textY + yOffset,canvas);
+        }
+
+        if (isHorizontalMode()) {
+            x += mSelectorElementSize;
+        } else {
+            y += mSelectorElementSize;
+        }
+    }
+
+    // restore canvas
+    canvas.restore();
+
+    // draw the dividers
+    if (showSelectorWheel && mDividerDrawable) {
+        if (isHorizontalMode())
+            drawHorizontalDividers(canvas);
+        else
+            drawVerticalDividers(canvas);
+    }
+}
+
+void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
+    int top,bottom,left,right;
+    int leftOfLeftDivider,rightOfLeftDivider;
+    int bottomOfUnderlineDivider,topOfUnderlineDivider;
+    int rightOfRightDivider,leftOfRightDivider;
+
+    switch (mDividerType) {
+    case SIDE_LINES:
+        if (mDividerLength > 0 && mDividerLength <= mMaxHeight) {
+            top = (mMaxHeight - mDividerLength) / 2;
+            bottom = top + mDividerLength;
+        } else {
+            top = 0;
+            bottom = getBottom();
+        }
+        // draw the left divider
+        leftOfLeftDivider = mLeftDividerLeft;
+        rightOfLeftDivider = leftOfLeftDivider + mDividerThickness;
+        mDividerDrawable->setBounds(leftOfLeftDivider, top, mDividerThickness, bottom-top);
+        mDividerDrawable->draw(canvas);
+        // draw the right divider
+        rightOfRightDivider = mRightDividerRight;
+        leftOfRightDivider = rightOfRightDivider - mDividerThickness;
+        mDividerDrawable->setBounds(leftOfRightDivider, top, mDividerThickness, bottom-top);
+        mDividerDrawable->draw(canvas);
+        break;
+    case UNDERLINE:
+        if (mDividerLength > 0 && mDividerLength <= mMaxWidth) {
+            left = (mMaxWidth - mDividerLength) / 2;
+            right = left + mDividerLength;
+        } else {
+            left = mLeftDividerLeft;
+            right = mRightDividerRight;
+        }
+        bottomOfUnderlineDivider = mBottomDividerBottom;
+        mDividerDrawable->setBounds(left,topOfUnderlineDivider,right - left,mDividerThickness);
+        mDividerDrawable->draw(canvas);
+        break;
+   }
+}
+
+void NumberPicker::drawVerticalDividers(Canvas& canvas) {
+    int left, right;
+    int topOfTopDivider,bottomOfTopDivider;
+    int bottomOfUnderlineDivider,topOfUnderlineDivider;
+    int topOfBottomDivider,bottomOfBottomDivider;
+    if (mDividerLength > 0 && mDividerLength <= mMaxWidth) {
+        left = (mMaxWidth - mDividerLength) / 2;
+        right = left + mDividerLength;
+    } else {
+        left = 0;
+        right = getRight();
+    }
+    switch (mDividerType) {
+    case SIDE_LINES:
+        // draw the top divider
+        topOfTopDivider = mTopDividerTop;
+        bottomOfTopDivider = topOfTopDivider + mDividerThickness;
+        mDividerDrawable->setBounds(left, topOfTopDivider, right-left, mDividerThickness);
+        mDividerDrawable->draw(canvas);
+        // draw the bottom divider
+        bottomOfBottomDivider = mBottomDividerBottom;
+        topOfBottomDivider = bottomOfBottomDivider - mDividerThickness;
+        mDividerDrawable->setBounds(left,topOfBottomDivider,right-left, mDividerThickness);
+        mDividerDrawable->draw(canvas);
+        break;
+    case UNDERLINE:
+        bottomOfUnderlineDivider = mBottomDividerBottom;
+        topOfUnderlineDivider = bottomOfUnderlineDivider - mDividerThickness;
+        mDividerDrawable->setBounds(left,topOfUnderlineDivider,right-left, mDividerThickness);
+        mDividerDrawable->draw(canvas);
+        break;
+    }
+}
+
+void NumberPicker::drawText(const std::string& text, float x, float y,Canvas& canvas) {
+    /*if (text.contains("\n")) {
+        std::string[] lines = text.split("\n");
+        float height = Math.abs(paint.descent() + paint.ascent())
+                * mLineSpacingMultiplier;
+        float diff = (lines.length - 1) * height / 2;
+        y -= diff;
+        for (String line : lines) {
+            canvas.drawText(line, x, y, paint);
+            y += height;
+        }
+    } else */{
+        canvas.move_to(x,y);
+        canvas.show_text(text);
+    }
 }
 
 int NumberPicker::makeMeasureSpec(int measureSpec, int maxSize){
@@ -916,12 +1109,10 @@ int NumberPicker::resolveSizeAndStateRespectingMinSize(int minSize, int measured
 }
 
 void NumberPicker::initializeSelectorWheelIndices(){
-    const int valueCount= (mMaxValue-mMinValue+1);
-    mSelectorIndices.resize(std::min(valueCount,mMaxSelectorIndices));
-    mMiddleItemIndex = mSelectorIndices.size()/2;
+    mSelectorIndexToStringCache.clear();
     const int current = getValue();
-    for (int i = 0; i < mSelectorIndices.size()/*mMaxSelectorIndices*/; i++) {
-        int selectorIndex = ( /*valueCount +*/ current + (i - mMiddleItemIndex) );// % valueCount;
+    for (int i = 0; i < mSelectorIndices.size(); i++) {
+        int selectorIndex = current + (i - mWheelMiddleItemIndex);
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
@@ -944,48 +1135,59 @@ void NumberPicker::setValueInternal(int current, bool notifyChng){
     int previous = mValue;
     mValue = current;
     // If we're flinging, we'll update the text view at the end when it becomes visible
-    if (mScrollState != OnScrollListener::SCROLL_STATE_FLING)updateInputTextView();
-    if (notifyChng) notifyChange(previous, current);
+    if (mScrollState != OnScrollListener::SCROLL_STATE_FLING)
+        updateInputTextView();
+    if (notifyChng)
+        notifyChange(previous, current);
 
     initializeSelectorWheelIndices();
     invalidate();
 }
 
 void NumberPicker::changeValueByOne(bool increment){
-    if (mHasSelectorWheel) {
-        hideSoftInput();
-        if (!moveToFinalScrollerPosition(mFlingScroller)) {
-            moveToFinalScrollerPosition(mAdjustScroller);
-        }
-        mPreviousScrollerY = 0;
-        if (increment) {
-            mFlingScroller->startScroll(0, 0, 0, -mSelectorElementHeight, SNAP_SCROLL_DURATION);
-        } else {
-            mFlingScroller->startScroll(0, 0, 0, mSelectorElementHeight, SNAP_SCROLL_DURATION);
-        }
-        invalidate();
-    } else {
-        if (increment) {
-            setValueInternal(mValue + 1, true);
-        } else {
-            setValueInternal(mValue - 1, true);
-        }
+    if (!moveToFinalScrollerPosition(mFlingScroller)) {
+        moveToFinalScrollerPosition(mAdjustScroller);
     }
+    smoothScroll(increment,1);
+}
+
+void NumberPicker::smoothScrollToPosition(int position) {
+    const int currentPosition = mSelectorIndices[mWheelMiddleItemIndex];
+    if (currentPosition == position) {
+        return;
+    }
+    smoothScroll(position > currentPosition, std::abs(position - currentPosition));
+}
+
+void NumberPicker::smoothScroll(bool increment, int steps) {
+    const int diffSteps = (increment ? -mSelectorElementSize : mSelectorElementSize) * steps;
+    if (isHorizontalMode()) {
+        mPreviousScrollerX = 0;
+        mFlingScroller->startScroll(0, 0, diffSteps, 0, SNAP_SCROLL_DURATION);
+    } else {
+        mPreviousScrollerY = 0;
+        mFlingScroller->startScroll(0, 0, 0, diffSteps, SNAP_SCROLL_DURATION);
+    }
+    invalidate();
 }
 
 void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
-    const int indicesCount = std::max((int)mSelectorIndices.size(),mMaxSelectorIndices);
-    int totalTextHeight = indicesCount * mTextSize;
-    float totalTextGapHeight = mBottom - mTop - totalTextHeight;
-    float textGapCount  = indicesCount;
-    mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount + 0.5f);
-    mSelectorElementHeight = mTextSize + mSelectorTextGapHeight;
-    // Ensure that the middle item is positioned the same as the text in mInputText
-    const int editTextTextPosition = mInputText->getBaseline() + mInputText->getTop();
-    mInitialScrollOffset = editTextTextPosition  - (mSelectorElementHeight * mMiddleItemIndex);
+    std::vector<int>& selectorIndices = mSelectorIndices;
+    const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + mSelectedTextSize);
+    const float textGapCount = selectorIndices.size();
+    if (isHorizontalMode()) {
+        float totalTextGapWidth = (getRight() - getLeft()) - totalTextSize;
+        mSelectorTextGapWidth = (int) (totalTextGapWidth / textGapCount);
+        mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapWidth;
+        mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex);
+    } else {
+        float totalTextGapHeight = (getBottom() - getTop()) - totalTextSize;
+        mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount);
+        mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
+        mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex);
+    }
     mCurrentScrollOffset = mInitialScrollOffset;
-    LOGV("%p:%d textsize=%d gap=%d count=%d mInitialScrollOffset=%d",this,mID,mTextSize,mSelectorTextGapHeight,indicesCount,mInitialScrollOffset);
     updateInputTextView();
 }
 
@@ -1056,17 +1258,21 @@ void NumberPicker::decrementSelectorIndices(std::vector<int>&selectorIndices) {
 }
 
 void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
+    std::string scrollSelectorValue;
     std::map<int,std::string>& cache = mSelectorIndexToStringCache;
     auto itr= cache.find(selectorIndex);
 
-    std::string scrollSelectorValue;
     if (itr != cache.end()) return;
 
     if (selectorIndex < mMinValue || selectorIndex > mMaxValue) {
         scrollSelectorValue = "";
     } else {
         if (mDisplayedValues.size()){
-            int displayedValueIndex = selectorIndex - mMinValue;
+            const int displayedValueIndex = selectorIndex - mMinValue;
+            if(displayedValueIndex >=mDisplayedValues.size()){
+                cache.erase(itr);
+                return;
+            }
             scrollSelectorValue = mDisplayedValues[displayedValueIndex];
         } else {
             scrollSelectorValue = formatNumber(selectorIndex);
@@ -1093,9 +1299,9 @@ void NumberPicker::validateInputTextView(View* v){
 bool NumberPicker::updateInputTextView(){
     std::string text = (mDisplayedValues.size() == 0) ? formatNumber(mValue) : mDisplayedValues[mValue - mMinValue];
     if (!text.empty() ){
-        std::string beforeText = mInputText->getText();
+        std::string beforeText = mSelectedText->getText();
         if (text != beforeText){//!text.equals(beforeText.toString())) {
-            mInputText->setText(text);
+            mSelectedText->setText(text);
             return true;
         }
     }
@@ -1170,19 +1376,23 @@ int NumberPicker::getSelectedPos(const std::string& value){
     return mMinValue;
 }
 
-bool NumberPicker::ensureScrollWheelAdjusted() {
+void  NumberPicker::ensureScrollWheelAdjusted() {
     // adjust to the closest value
-    int deltaY = mInitialScrollOffset - mCurrentScrollOffset;
-    if (deltaY != 0) {
-        mPreviousScrollerY = 0;
-        if (std::abs(deltaY) > mSelectorElementHeight / 2) {
-            deltaY += (deltaY > 0) ? -mSelectorElementHeight : mSelectorElementHeight;
-        }
-        mAdjustScroller->startScroll(0, 0, 0, deltaY, SELECTOR_ADJUSTMENT_DURATION_MILLIS);
-        invalidate();
-        return true;
+    int delta = mInitialScrollOffset - mCurrentScrollOffset;
+    if (delta == 0) return;
+
+    if(std::abs(delta)>mSelectorElementSize/2){
+        delta += (delta > 0) ? -mSelectorElementSize : mSelectorElementSize;
     }
-    return false;
+    if(isHorizontalMode()){
+        mPreviousScrollerX = 0;
+        mAdjustScroller->startScroll(0, 0,delta,0, SELECTOR_ADJUSTMENT_DURATION_MILLIS);
+    }else{
+        mPreviousScrollerY = 0;
+        mAdjustScroller->startScroll(0, 0, 0, delta, SELECTOR_ADJUSTMENT_DURATION_MILLIS);
+        LOGV("delta=%d finished=%d time=%d",delta,mAdjustScroller->isFinished(),SELECTOR_ADJUSTMENT_DURATION_MILLIS);
+    }
+    invalidate();
 }
 
 void NumberPicker::pshCancel(){
@@ -1197,7 +1407,7 @@ void NumberPicker::pshCancel(){
     };
     mDecrementVirtualButtonPressed = false;
     if(mDecrementVirtualButtonPressed)
-         invalidate(0,0,mRight-mLeft,mTopSelectionDividerTop);
+        invalidate(0,0,mRight-mLeft,mTopSelectionDividerTop);
 }
 
 void NumberPicker::pshButtonPressDelayed(int button){

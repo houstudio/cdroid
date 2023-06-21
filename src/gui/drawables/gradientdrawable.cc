@@ -811,7 +811,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     if (!ensureValidRect())return; // nothing to draw
     auto st = mGradientState;
     const bool haveStroke = /*currStrokeAlpha > 0 &&*/ mStrokePaint &&  mStrokeWidth> 0;
-    const float sweep = st->mUseLevelForShape ? (360.f*getLevel()/10000.f) : 360.f;
+    const float sweep = getUseLevel()/*st->mUseLevelForShape*/ ? (360.f*getLevel()/10000.f) : 360.f;
     float rad = .0f, innerRadius = .0f;
 
     std::vector<float>radii;
@@ -854,7 +854,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.move_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
         canvas.arc(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f,
                    std::min(mRect.width,mRect.height)/2.f,
-                   0,M_PI*2.f*(st->mUseLevel?(float)getLevel()/10000.f:1));
+                   0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
         canvas.line_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
 #endif
         canvas.fill_preserve();

@@ -60,7 +60,6 @@ private:
     double getSplineDeceleration(float velocity);
     int getSplineFlingDuration(float velocity);
     double getSplineFlingDistance(float velocity);
-    
 public:
     Scroller(Context* context);
     Scroller(Context* context, Interpolator* interpolator,bool flywheel=true);

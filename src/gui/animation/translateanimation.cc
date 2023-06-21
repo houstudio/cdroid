@@ -104,6 +104,7 @@ void TranslateYAnimation::applyTransformation(float interpolatedTime, Transforma
     Matrix& m = t.getMatrix();
     float dy = mFromYDelta + ((mToYDelta - mFromYDelta) * interpolatedTime);
     m.translate(/*mTmpValues[Matrix.MTRANS_X]*/m.x0, dy);
+    LOGV("time= %f y=%.f",interpolatedTime,dy);
 }
 
 }

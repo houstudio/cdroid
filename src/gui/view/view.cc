@@ -2654,7 +2654,7 @@ bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* 
     if (!initialized) {
         a->initialize(mRight-mLeft, mBottom-mTop, parent->getWidth(), parent->getHeight());
         a->initializeInvalidateRegion(0, 0, mRight-mLeft, mBottom-mTop);
-        //if (mAttachInfo != null) a.setListenerHandler(mAttachInfo.mHandler);
+        //if (mAttachInfo != nullptr) a->setListenerHandler(mAttachInfo->mHandler);
         onAnimationStart();
     }
 
@@ -2930,10 +2930,10 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     }
 
     RefPtr<ImageSurface> cache = nullptr;
-    //RenderNode renderNode = nullptr;
+    RenderNode* renderNode = nullptr;
     int layerType = getLayerType(); // TODO: signify cache state with just 'cache' local
     if (layerType == LAYER_TYPE_SOFTWARE || !drawingWithRenderNode) {
-         if (layerType != LAYER_TYPE_NONE) {
+        if (layerType != LAYER_TYPE_NONE) {
              // If not drawing with RenderNode, treat HW layers as SW
              layerType = LAYER_TYPE_SOFTWARE;
              buildDrawingCache(true);
@@ -3000,7 +3000,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
             if (transformToApply != nullptr) {
                 if (concatMatrix) {
                     if (drawingWithRenderNode) {
-                        //renderNode.setAnimationMatrix(transformToApply.getMatrix());
+                        //renderNode->setAnimationMatrix(transformToApply->getMatrix());
                     } else {
                         // Undo the scroll translation, apply the transformation matrix,
                         // then redo the scroll translate to get the correct result.
@@ -4760,6 +4760,11 @@ void View::damageInParent() {
     }
 }
 
+void View::transformRect(Rect&rect){
+    if(hasIdentityMatrix()){
+        getMatrix().transform_rectangle((Cairo::RectangleInt&)rect);
+    }
+}
 void View::invalidateParentCaches(){
     if(mParent)mParent->mPrivateFlags |= PFLAG_INVALIDATED;
 }
@@ -4936,8 +4941,8 @@ void View::transformMatrixToGlobal(Matrix& matrix){
     }
     matrix.translate(mLeft, mTop);
     if (!hasIdentityMatrix()) {
-	Matrix mtx=getMatrix();
-	matrix.multiply(matrix,mtx);
+        Matrix mtx=getMatrix();
+        matrix.multiply(matrix,mtx);
     }
 }
 
@@ -4949,8 +4954,8 @@ void View::transformMatrixToLocal(Matrix& matrix){
     }
     matrix.translate(-mLeft, -mTop);
     if (!hasIdentityMatrix()) {
-	 Matrix inv=getInverseMatrix();
-	 matrix.multiply(matrix,inv);
+        Matrix inv=getInverseMatrix();
+        matrix.multiply(matrix,inv);
     }
 }
 
@@ -6583,16 +6588,16 @@ bool View::hasIdentityMatrix()const{
     return mRenderNode->hasIdentityMatrix();
 }
 
-Matrix View::getMatrix() {
+Matrix& View::getMatrix() {
     ensureTransformationInfo();
     Matrix& matrix=mTransformationInfo->mMatrix;
     mRenderNode->getMatrix(matrix);
     return matrix;
 }
 
-Matrix View::getInverseMatrix() {
+Matrix& View::getInverseMatrix() {
     ensureTransformationInfo();
-    Matrix matrix;
+    Matrix& matrix=mTransformationInfo->mInverseMatrix;
     mRenderNode->getInverseMatrix(matrix);
     return matrix;
 }

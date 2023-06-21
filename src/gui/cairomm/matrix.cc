@@ -136,10 +136,10 @@ void Matrix::transform_rectangle(Rectangle& io)const{
 void Matrix::transform_rectangle(RectangleInt& io)const{
     Rectangle tmp={io.x,io.y,io.width,io.height};
     transform_rectangle(tmp);
-    io.x=tmp.x;
-    io.y=tmp.y;
-    io.width=tmp.width;
-    io.height=tmp.height;
+    io.x = std::floor(tmp.x);
+    io.y = std::floor(tmp.y);
+    io.width = std::ceil(tmp.width);
+    io.height= std::ceil(tmp.height);
 }
 
 } // namespace Cairo

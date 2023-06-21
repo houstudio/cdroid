@@ -92,7 +92,7 @@ public:
     void setGravity(int gravity);
     void setHorizontalGravity(int horizontalGravity);
     void setVerticalGravity(int verticalGravity);
-    void setOrientation(int orientation);
+    virtual void setOrientation(int orientation);
     int getOrientation()const;
     bool shouldDelayChildPressedState()override;
     void setWeightSum(float weightSum);
