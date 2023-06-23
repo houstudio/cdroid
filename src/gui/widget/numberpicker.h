@@ -58,7 +58,8 @@ private:
     int mSelectorTextGapWidth;
     int mSelectorTextGapHeight;
     int mTextAlign;
-    Typeface*mTypeface;
+    Typeface *mTypeface;
+    Typeface *mSelectedTypeface; 
     std::vector<std::string> mDisplayedValues;
     int mMinValue;
     int mMaxValue;
@@ -248,6 +249,12 @@ public:
     void setTextSize(int);
     virtual void setTextSize(int size,int size2);
     int  getTextSize()const;
+    void setSelectedTypeface(Typeface* typeface);
+    void setSelectedTypeface(const std::string& string, int style);
+    Typeface* getSelectedTypeface()const;
+    void setTypeface(Typeface* typeface);
+    void setTypeface(const std::string& string, int style);
+    Typeface* getTypeface()const;
     void smoothScrollToPosition(int position);
     void smoothScroll(bool increment, int steps);
 };

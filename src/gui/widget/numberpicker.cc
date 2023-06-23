@@ -65,7 +65,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         throw "minWidth  > maxWidth";
     }
 
-    std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
+    const std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
     LayoutInflater::from(mContext)->inflate(layoutres,this);
     mHasSelectorWheel = (layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
     setWidthAndHeight();
@@ -77,8 +77,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mSelectedText->setFocusable(false);
     mTextAlign = mSelectedText->getGravity();
     mSelectedTextSize = mSelectedText->getTextSize();
+    mTypeface = Typeface::create(atts.getString("typeface"),Typeface::NORMAL);
+    mSelectedTypeface = Typeface::create(atts.getString("selectedTypeface"),Typeface::NORMAL);
     ViewConfiguration configuration = ViewConfiguration::get(context);
-    setTextSize( atts.getDimensionPixelSize("textSize",mTextSize));
+    setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     setSelectedTextSize(atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize));
     setTextColor(atts.getColor("textColor"));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
@@ -99,6 +101,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 }
 
 NumberPicker::~NumberPicker(){
+    delete mDividerDrawable;
 }
 
 bool NumberPicker::isHorizontalMode()const{
@@ -157,6 +160,8 @@ void NumberPicker::initView(){
     mItemSpacing= 0;
     mSelectedTextSize = 24;
     mSelectedTextColor = 0xFFFFFFFF;
+    mSelectedTypeface = nullptr;
+    mTypeface = nullptr;
     mDividerColor =DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
@@ -943,6 +948,43 @@ void NumberPicker::setSelectedTextSize(int textSize) {
     mSelectedText->setTextSize(textSize);
     requestLayout();
     invalidate();
+}
+
+void NumberPicker::setSelectedTypeface(Typeface* typeface){
+    mSelectedTypeface = typeface;
+    if (mSelectedTypeface != nullptr) {
+        //do nothing mSelectorWheelPaint.setTypeface(mSelectedTypeface);
+    } else if (mTypeface != nullptr) {
+        mSelectedTypeface = mTypeface;
+    } else {
+        mSelectedTypeface = Typeface::MONOSPACE;
+    }
+}
+
+void NumberPicker::setSelectedTypeface(const std::string& string, int style){
+    setSelectedTypeface(Typeface::create(string, style));
+}
+
+Typeface* NumberPicker::getSelectedTypeface()const{
+    return mSelectedTypeface;
+}
+
+void NumberPicker::setTypeface(Typeface* typeface){
+    mTypeface = typeface;
+    if (mTypeface != nullptr) {
+        mSelectedText->setTypeface(mTypeface);
+        setSelectedTypeface(mSelectedTypeface);
+    } else {
+        mSelectedText->setTypeface(Typeface::MONOSPACE);
+    }
+}
+
+void NumberPicker::setTypeface(const std::string& string, int style){
+    setTypeface(Typeface::create(string, style));
+}
+
+Typeface* NumberPicker::getTypeface()const{
+    return mTypeface;
 }
 
 void NumberPicker::onDraw(Canvas&canvas){
