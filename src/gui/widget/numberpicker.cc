@@ -75,8 +75,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mSelectedText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     mSelectedText->setEnabled(false);
     mSelectedText->setFocusable(false);
+    mTextAlign = mSelectedText->getGravity();
+    mSelectedTextSize = mSelectedText->getTextSize();
     ViewConfiguration configuration = ViewConfiguration::get(context);
-    setTextSize( atts.getDimensionPixelSize("textSize",mTextSize));//mTextSize = (int) mSelectedText->getTextSize();
+    setTextSize( atts.getDimensionPixelSize("textSize",mTextSize));
     setSelectedTextSize(atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize));
     setTextColor(atts.getColor("textColor"));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
@@ -939,23 +941,27 @@ int  NumberPicker::getSelectedTextSize()const{
 void NumberPicker::setSelectedTextSize(int textSize) {
     mSelectedTextSize = textSize;
     mSelectedText->setTextSize(textSize);
+    requestLayout();
+    invalidate();
 }
 
 void NumberPicker::onDraw(Canvas&canvas){
-    canvas.save();
-
     const bool showSelectorWheel = !mHideWheelUntilFocused || hasFocus();
     float x, y;
+    Rect recText;
+    canvas.save();
     if (isHorizontalMode()) {
         x = mCurrentScrollOffset;
         y = mSelectedText->getBaseline() + mSelectedText->getTop();
+        recText = Rect::Make(x,y,mSelectorElementSize,getHeight());
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
             canvas.rectangle(mLeftDividerLeft, 0, mRightDividerRight-mLeftDividerLeft, getHeight());
             canvas.clip();
         }
     } else {
         x = 0;//getWidth() / 2.f;
-        y = mCurrentScrollOffset;
+        y = mCurrentScrollOffset - mSelectorElementSize/2;
+        recText = Rect::Make(0,y,getWidth(),mSelectorElementSize);
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
             canvas.rectangle(0, mTopDividerTop, getWidth(), mBottomDividerBottom-mTopDividerTop);
             canvas.clip();
@@ -964,7 +970,8 @@ void NumberPicker::onDraw(Canvas&canvas){
     Cairo::RefPtr<Cairo::LinearGradient> pat;
     if(mSelectedTextColor!=mTextColor){
         Color c1(mSelectedTextColor), c2(mTextColor);
-        pat=Cairo::LinearGradient::create(0,0,0,getHeight());
+        pat=Cairo::LinearGradient::create(0,0,(isHorizontalMode()?getWidth():0),
+                                          (isHorizontalMode()?0:getHeight()));
   	    pat->add_color_stop_rgba(.0f,c2.red(),c2.green(),c2.blue(),c2.alpha());
 	    pat->add_color_stop_rgba(.5f,c1.red(),c1.green(),c1.blue(),c1.alpha());
 	    pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
@@ -996,16 +1003,8 @@ void NumberPicker::onDraw(Canvas&canvas){
         // with the new one.
         if ((showSelectorWheel && i != mWheelMiddleItemIndex)
                 || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
-            float textY = y;
-            if (!isHorizontalMode()) {
-                Cairo::FontExtents fe;
-                canvas.get_font_extents(fe);
-                textY += fe.height/2.f ;//- fe.descent;
-            }
-
             int xOffset = 0;
             int yOffset = 0;
-
             if (i != mWheelMiddleItemIndex && mItemSpacing != 0) {
                 if (isHorizontalMode()) {
                     if (i > mWheelMiddleItemIndex) {
@@ -1021,16 +1020,19 @@ void NumberPicker::onDraw(Canvas&canvas){
                     }
                 }
             }
-            Cairo::TextExtents ext;
-            canvas.get_text_extents(scrollSelectorValue,ext);
-            x = (getWidth() - ext.x_advance)/2.f;
-            drawText(scrollSelectorValue, x + xOffset - ext.x_bearing, textY + yOffset,canvas);
+            canvas.draw_text(recText,scrollSelectorValue,Gravity::CENTER);//mTextAlign);
         }
-
+        LOGV("%p:%d[%d](%d,%d,%d,%d).%d/%d %dx%d items[%d] %s",this,mID,i,recText.left,recText.top,recText.width,recText.height,
+             mSelectedText->getHeight(),getHeight(),selectorIndices.size(),mSelectorElementSize,i,scrollSelectorValue.c_str());
         if (isHorizontalMode()) {
             x += mSelectorElementSize;
+            recText.offset(mSelectorElementSize,0);
         } else {
             y += mSelectorElementSize;
+            recText.offset(0,mSelectorElementSize);
+            /*canvas.move_to(0,y);
+            canvas.line_to(getWidth(),y);
+            canvas.stroke();*/
         }
     }
 
@@ -1227,7 +1229,7 @@ void NumberPicker::smoothScroll(bool increment, int steps) {
 void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
     std::vector<int>& selectorIndices = mSelectorIndices;
-    const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + mSelectedTextSize);
+    const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + mSelectedTextSize);
     const float textGapCount = selectorIndices.size();
     if (isHorizontalMode()) {
         float totalTextGapWidth = (getRight() - getLeft()) - totalTextSize;
@@ -1338,7 +1340,6 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
             scrollSelectorValue = formatNumber(selectorIndex);
         }
     }
-    LOGV("%p:%d (%d,%d)[%d]=%s displaynames=%d",this,mID,mMinValue,mMaxValue,selectorIndex,scrollSelectorValue.c_str(),mDisplayedValues.size());
     cache[selectorIndex] = scrollSelectorValue;
 }
 
