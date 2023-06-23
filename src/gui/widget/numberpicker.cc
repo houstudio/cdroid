@@ -13,24 +13,28 @@ const std::string DEFAULT_LAYOUT_RESOURCE_ID="cdroid:layout/number_picker";
 
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
-    setOrientation(VERTICAL);//HORIZONTAL);
+    setOrientation(VERTICAL);
 
     AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/numberPickerStyle");
     std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
     LayoutInflater::from(mContext)->inflate(layoutres,this,true);
-    mHasSelectorWheel = (layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
  
     mSelectedText =(EditText*)findViewById(R::id::numberpicker_input);
     if(mSelectedText){
         mSelectedText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        mSelectedText->setText("123");
-        mSelectedText->setTextSize(24);
+        mSelectedTextSize = mSelectedText->getTextSize();
+        mTextSize = mSelectedTextSize;
+        mSelectorElementSize = mSelectedTextSize;
+        mSelectedText->getLayoutParams()->width=std::max(mMinWidth,mSelectorElementSize);
     }
-
+    setWidthAndHeight();
+    mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
     layout(0,0,getMeasuredWidth(),getMeasuredHeight());
     LOGD("%d,%d-%d,%d (%dx%d)",mSelectedText->getLeft(),mSelectedText->getTop(),mSelectedText->getWidth(),mSelectedText->getHeight(),w,h);
     updateInputTextView();
+    setFocusable(int(View::FOCUSABLE));
+    setFocusableInTouchMode(true);
 }
 
 NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
@@ -67,10 +71,9 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 
     const std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
     LayoutInflater::from(mContext)->inflate(layoutres,this);
-    mHasSelectorWheel = (layoutres != DEFAULT_LAYOUT_RESOURCE_ID);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    setWillNotDraw(!mHasSelectorWheel);
+    setWillNotDraw(false);
 
     mSelectedText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     mSelectedText->setEnabled(false);
@@ -171,7 +174,6 @@ void NumberPicker::initView(){
     mLastHandledDownDpadKeyCode =-1;
     mFadingEdgeEnabled= true;
     mFadingEdgeStrength= DEFAULT_FADING_EDGE_STRENGTH;
-    mHasSelectorWheel = true;
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred =true;
     mSelectionDividerHeight = UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
@@ -208,13 +210,13 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
     // Input text centered horizontally.
     const int inptTxtMsrdWdth = mSelectedText->getMeasuredWidth();
     const int inptTxtMsrdHght = mSelectedText->getMeasuredHeight();
-    const int inptTxtLeft= (msrdWdth - inptTxtMsrdWdth) / 2;
-    const int inptTxtTop = (msrdHght -inptTxtMsrdHght)/2;
-    const int inptTxtRight= inptTxtLeft+inptTxtMsrdWdth;
-    const int inptTxtBottom=inptTxtTop+inptTxtMsrdHght;
+    const int inptTxtLeft= (msrdWdth - inptTxtMsrdWdth) /2;
+    const int inptTxtTop = (msrdHght - inptTxtMsrdHght)/2;
+    const int inptTxtRight= inptTxtLeft + inptTxtMsrdWdth;
+    const int inptTxtBottom=inptTxtTop + inptTxtMsrdHght;
     mSelectedText->layout(inptTxtLeft, inptTxtTop, inptTxtMsrdWdth, inptTxtMsrdHght);
-    mSelectedTextCenterX = mSelectedText->getX()+mSelectedText->getMeasuredWidth()/2.f-2.f;
-    mSelectedTextCenterY = mSelectedText->getY()+mSelectedText->getMeasuredHeight()/2.f -5.f;
+    mSelectedTextCenterX = mSelectedText->getX() + mSelectedText->getMeasuredWidth()/2.f -2.f;
+    mSelectedTextCenterY = mSelectedText->getY() + mSelectedText->getMeasuredHeight()/2.f -5.f;
     if (changed) { // need to do all this when we know our size
         initializeSelectorWheel();
         initializeFadingEdges();
@@ -227,8 +229,6 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
             mTopDividerTop = (getHeight() - mDividerDistance)/2 - mDividerThickness;
             mBottomDividerBottom = mTopDividerTop + dividerDistence;
         }
-        mTopSelectionDividerTop = (getHeight() - mSelectionDividersDistance) / 2 - mSelectionDividerHeight;
-        mBottomSelectionDividerBottom = mTopSelectionDividerTop + 2 * mSelectionDividerHeight + mSelectionDividersDistance;
     }
 }
 
@@ -286,7 +286,7 @@ bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
 }
 bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
-    if (!mHasSelectorWheel || !isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
+    if (!isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
         return false;
     }
     if(isHorizontalMode()){
@@ -330,11 +330,11 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
             postChangeCurrentByOneFromLongPress(true);
         }        
     }//endif isHorizontalMode
-    return false;
+    return true;
 }
 
 bool NumberPicker::onTouchEvent(MotionEvent& event){
-    if (!isEnabled() || !mHasSelectorWheel) {
+    if (!isEnabled()) {
         return false;
     }
     if (mVelocityTracker==nullptr) mVelocityTracker = VelocityTracker::obtain();
@@ -379,33 +379,58 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
             removeChangeCurrentByOneFromLongPress();
             pshCancel();
             mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
-            const int initialVelocity = (int) mVelocityTracker->getYVelocity();
-            LOGV("initialVelocity=%d min=%d",initialVelocity,mMinimumFlingVelocity);
-            if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
-                fling(initialVelocity);
-                onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
-            } else {
-                int eventY = (int) event.getY();
-                int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
-                long deltaTime = (event.getEventTime() - mLastDownEventTime)/1000;
-                if (deltaMoveY <= mTouchSlop && deltaTime < ViewConfiguration::getTapTimeout()) {
-                    if (mPerformClickOnTap) {
-                        mPerformClickOnTap = false;
-                        performClick();
-                    } else {
-                        int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
+            if(isHorizontalMode()){
+                int initialVelocity = (int) mVelocityTracker->getXVelocity();
+                if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
+                    fling(initialVelocity);
+                    onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
+                } else {
+                    int eventX = (int) event.getX();
+                    int deltaMoveX = (int) std::abs(eventX - mLastDownEventX);
+                    if (deltaMoveX <= mTouchSlop) {
+                        int selectorIndexOffset = (eventX / mSelectorElementSize)
+                                - mWheelMiddleItemIndex;
                         if (selectorIndexOffset > 0) {
                             changeValueByOne(true);
-                            pshButtonTapped(R::id::increment);
                         } else if (selectorIndexOffset < 0) {
                             changeValueByOne(false);
-                            pshButtonTapped(R::id::decrement);
+                        } else {
+                            ensureScrollWheelAdjusted();
                         }
+                    } else {
+                        ensureScrollWheelAdjusted();
                     }
-                } else {
-                    ensureScrollWheelAdjusted();
+                    onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
                 }
-                onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
+            }else{
+                const int initialVelocity = (int) mVelocityTracker->getYVelocity();
+                LOGV("initialVelocity=%d min=%d",initialVelocity,mMinimumFlingVelocity);
+                if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
+                    fling(initialVelocity);
+                    onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
+                } else {
+                    int eventY = (int) event.getY();
+                    int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
+                    long deltaTime = (event.getEventTime() - mLastDownEventTime)/1000;
+                    if (deltaMoveY <= mTouchSlop && deltaTime < ViewConfiguration::getTapTimeout()) {
+                        if (mPerformClickOnTap) {
+                            mPerformClickOnTap = false;
+                            performClick();
+                        } else {
+                            int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
+                            if (selectorIndexOffset > 0) {
+                                changeValueByOne(true);
+                                pshButtonTapped(R::id::increment);
+                            } else if (selectorIndexOffset < 0) {
+                                changeValueByOne(false);
+                                pshButtonTapped(R::id::decrement);
+                            }
+                        }
+                    } else {
+                        ensureScrollWheelAdjusted();
+                    }
+                    onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
+                }
             }
             mVelocityTracker->recycle();
             mVelocityTracker = nullptr;
@@ -434,9 +459,6 @@ bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
         break;
     case KEY_DPAD_DOWN:
     case KEY_DPAD_UP:
-        if (!mHasSelectorWheel) {
-            break;
-        }
         switch (event.getAction()) {
         case KeyEvent::ACTION_DOWN:
             if (mWrapSelectorWheel || ((keyCode == KEY_DPAD_DOWN)
@@ -641,7 +663,7 @@ float NumberPicker::getMaxTextSize()const {
 }
 
 bool NumberPicker::performClick() {
-    if (!mHasSelectorWheel) {
+    if (true/*!mHasSelectorWheel*/) {
         return ViewGroup::performClick();
     } else if (!ViewGroup::performClick()) {
         showSoftInput();
@@ -650,7 +672,7 @@ bool NumberPicker::performClick() {
 }
 
 bool NumberPicker::performLongClick() {
-    if (!mHasSelectorWheel) {
+    if (true/*!mHasSelectorWheel*/) {
         return ViewGroup::performLongClick();
     } else if (!ViewGroup::performLongClick()) {
         showSoftInput();
@@ -660,12 +682,12 @@ bool NumberPicker::performLongClick() {
 }
 
 void NumberPicker::showSoftInput(){
-    if(mHasSelectorWheel)
+    //if(mHasSelectorWheel)
 	mSelectedText->setVisibility(View::VISIBLE);
 }
 
 void NumberPicker::hideSoftInput(){
-    if ( mHasSelectorWheel && mSelectedText->getInputType() != EditText::TYPE_NONE) {
+    if (mSelectedText->getInputType() != EditText::TYPE_NONE) {
         mSelectedText->setVisibility(View::INVISIBLE);
     }
 }
@@ -709,11 +731,7 @@ void NumberPicker::tryComputeMaxWidth(){
     }
     maxTextWidth += mSelectedText->getPaddingLeft() + mSelectedText->getPaddingRight();
     if (mMaxWidth != maxTextWidth) {
-        if (maxTextWidth > mMinWidth) {
-            mMaxWidth = maxTextWidth;
-        } else {
-            mMaxWidth = mMinWidth;
-        }
+        mMaxWidth = std::max(mMinWidth,maxTextWidth);
         invalidate();
     }
 }
@@ -993,15 +1011,15 @@ void NumberPicker::onDraw(Canvas&canvas){
     Rect recText;
     canvas.save();
     if (isHorizontalMode()) {
-        x = mCurrentScrollOffset;
-        y = mSelectedText->getBaseline() + mSelectedText->getTop();
+        x = mCurrentScrollOffset - mSelectorElementSize/2;
+        y = 0;
         recText = Rect::Make(x,y,mSelectorElementSize,getHeight());
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
             canvas.rectangle(mLeftDividerLeft, 0, mRightDividerRight-mLeftDividerLeft, getHeight());
             canvas.clip();
         }
     } else {
-        x = 0;//getWidth() / 2.f;
+        x = 0;
         y = mCurrentScrollOffset - mSelectorElementSize/2;
         recText = Rect::Make(0,y,getWidth(),mSelectorElementSize);
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
@@ -1027,10 +1045,16 @@ void NumberPicker::onDraw(Canvas&canvas){
     for (int i = 0; i < selectorIndices.size(); i++) {
         float font_size = mSelectedTextSize;
         if(mSelectedTextSize!=mTextSize){
-            const float harfHeight = getHeight()/2.f;
-            const float fraction = std::abs(y-harfHeight)/harfHeight;
-            font_size = lerp(mSelectedTextSize,mTextSize,fraction);
-            canvas.set_font_size(lerp(mSelectedTextSize,mTextSize,fraction));
+            if(isHorizontalMode()){
+                const float harfWidth = getWidth()/2.f;
+                const float fraction = std::abs(x-harfWidth)/harfWidth;
+                font_size = lerp(mSelectedTextSize,mTextSize,fraction);
+            }else{
+                const float harfHeight = getHeight()/2.f;
+                const float fraction = std::abs(y-harfHeight)/harfHeight;
+                font_size = lerp(mSelectedTextSize,mTextSize,fraction);
+            }
+            canvas.set_font_size(font_size);
         }
 
         int selectorIndex = selectorIndices[isAscendingOrder() ? i : selectorIndices.size() - i - 1];
@@ -1072,9 +1096,6 @@ void NumberPicker::onDraw(Canvas&canvas){
         } else {
             y += mSelectorElementSize;
             recText.offset(0,mSelectorElementSize);
-            /*canvas.move_to(0,y);
-            canvas.line_to(getWidth(),y);
-            canvas.stroke();*/
         }
     }
 
@@ -1274,12 +1295,14 @@ void NumberPicker::initializeSelectorWheel(){
     const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + mSelectedTextSize);
     const float textGapCount = selectorIndices.size();
     if (isHorizontalMode()) {
-        float totalTextGapWidth = (getRight() - getLeft()) - totalTextSize;
+        float totalTextGapWidth = getWidth() - totalTextSize;
         mSelectorTextGapWidth = (int) (totalTextGapWidth / textGapCount);
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapWidth;
+        mSelectedText->setMinWidth(mSelectorElementSize);
+        mSelectedText->getLayoutParams()->width=mSelectorElementSize;
         mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex);
     } else {
-        float totalTextGapHeight = (getBottom() - getTop()) - totalTextSize;
+        float totalTextGapHeight = getHeight() - totalTextSize;
         mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount);
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
         mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex);
@@ -1318,14 +1341,22 @@ void NumberPicker::onScrollStateChange(int scrollState) {
     if (mOnScrollListener.onScrollStateChange) mOnScrollListener.onScrollStateChange(*this, scrollState);
 }
 
-void NumberPicker::fling(int velocityY) {
-    mPreviousScrollerY = 0;
-    if (velocityY > 0) {
-        mFlingScroller->fling(0, 0, 0, velocityY, 0, 0, 0,INT_MAX);
-    } else {
-        mFlingScroller->fling(0, INT_MAX, 0, velocityY, 0, 0, 0,INT_MAX);
+void NumberPicker::fling(int velocity) {
+    if (isHorizontalMode()){
+        mPreviousScrollerX = 0;
+        if (velocity > 0) {
+            mFlingScroller->fling(0, 0, velocity, 0, 0, INT_MAX, 0, 0);
+        } else {
+            mFlingScroller->fling(INT_MAX, 0, velocity, 0, 0, INT_MAX, 0, 0);
+        }
+    }else{
+        mPreviousScrollerY = 0;
+        if (velocity > 0) {
+            mFlingScroller->fling(0, 0, 0, velocity, 0, 0, 0,INT_MAX);
+        } else {
+            mFlingScroller->fling(0, INT_MAX, 0, velocity, 0, 0, 0,INT_MAX);
+        }
     }
-    invalidate();
 }
 
 int NumberPicker::getWrappedSelectorIndex(int selectorIndex){

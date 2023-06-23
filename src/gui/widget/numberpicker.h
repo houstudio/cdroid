@@ -91,7 +91,6 @@ private:
     int mWheelItemCount;
     int mRealWheelItemCount;
     int mWheelMiddleItemIndex;
-    bool mHasSelectorWheel;
     Drawable* mDividerDrawable;
     int mDividerColor;
     int mDividerType;
