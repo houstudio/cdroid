@@ -9,14 +9,14 @@
 namespace cdroid{
 
 DECLARE_WIDGET2(NumberPicker,"cdroid:attr/numberPickerStyle")
-const std::string DEFAULT_LAYOUT_RESOURCE_ID="cdroid:layout/number_picker";
+const std::string DEFAULT_LAYOUT_VERT="cdroid:layout/number_picker";
+const std::string DEFAULT_LAYOUT_HORZ="cdroid:layout/number_picker_horz";
 
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
-    setOrientation(VERTICAL);
+    setOrientation(h>w?VERTICAL:HORIZONTAL);
 
-    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/numberPickerStyle");
-    std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
+    const std::string layoutres = (getOrientation()==VERTICAL)?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ;
     LayoutInflater::from(mContext)->inflate(layoutres,this,true);
  
     mSelectedText =(EditText*)findViewById(R::id::numberpicker_input);
@@ -25,13 +25,11 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
         mSelectedTextSize = mSelectedText->getTextSize();
         mTextSize = mSelectedTextSize;
         mSelectorElementSize = mSelectedTextSize;
-        mSelectedText->getLayoutParams()->width=std::max(mMinWidth,mSelectorElementSize);
     }
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
     layout(0,0,getMeasuredWidth(),getMeasuredHeight());
-    LOGD("%d,%d-%d,%d (%dx%d)",mSelectedText->getLeft(),mSelectedText->getTop(),mSelectedText->getWidth(),mSelectedText->getHeight(),w,h);
     updateInputTextView();
     setFocusable(int(View::FOCUSABLE));
     setFocusableInTouchMode(true);
@@ -69,7 +67,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         throw "minWidth  > maxWidth";
     }
 
-    const std::string layoutres=atts.getString("internalLayout",DEFAULT_LAYOUT_RESOURCE_ID);
+    const std::string layoutres=atts.getString("internalLayout",(getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ));
     LayoutInflater::from(mContext)->inflate(layoutres,this);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
@@ -1298,8 +1296,6 @@ void NumberPicker::initializeSelectorWheel(){
         float totalTextGapWidth = getWidth() - totalTextSize;
         mSelectorTextGapWidth = (int) (totalTextGapWidth / textGapCount);
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapWidth;
-        mSelectedText->setMinWidth(mSelectorElementSize);
-        mSelectedText->getLayoutParams()->width=mSelectorElementSize;
         mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex);
     } else {
         float totalTextGapHeight = getHeight() - totalTextSize;
