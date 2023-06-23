@@ -383,8 +383,8 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                     fling(initialVelocity);
                     onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
                 } else {
-                    int eventX = (int) event.getX();
-                    int deltaMoveX = (int) std::abs(eventX - mLastDownEventX);
+                    const int eventX = (int) event.getX();
+                    const int deltaMoveX = (int) std::abs(eventX - mLastDownEventX);
                     if (deltaMoveX <= mTouchSlop) {
                         int selectorIndexOffset = (eventX / mSelectorElementSize)
                                 - mWheelMiddleItemIndex;
@@ -402,29 +402,24 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                 }
             }else{
                 const int initialVelocity = (int) mVelocityTracker->getYVelocity();
-                LOGV("initialVelocity=%d min=%d",initialVelocity,mMinimumFlingVelocity);
                 if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
                     fling(initialVelocity);
                     onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
                 } else {
-                    int eventY = (int) event.getY();
-                    int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
-                    long deltaTime = (event.getEventTime() - mLastDownEventTime)/1000;
-                    if (deltaMoveY <= mTouchSlop && deltaTime < ViewConfiguration::getTapTimeout()) {
-                        if (mPerformClickOnTap) {
-                            mPerformClickOnTap = false;
-                            performClick();
-                        } else {
-                            int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
-                            if (selectorIndexOffset > 0) {
-                                changeValueByOne(true);
-                                pshButtonTapped(R::id::increment);
-                            } else if (selectorIndexOffset < 0) {
-                                changeValueByOne(false);
-                                pshButtonTapped(R::id::decrement);
-                            }
+                    const int eventY = (int) event.getY();
+                    const int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
+                    if (deltaMoveY <= mTouchSlop){
+                        int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
+                        if (selectorIndexOffset > 0) {
+                            changeValueByOne(true);
+                            pshButtonTapped(R::id::increment);
+                        } else if (selectorIndexOffset < 0) {
+                            changeValueByOne(false);
+                            pshButtonTapped(R::id::decrement);
+                        }else{
+                            ensureScrollWheelAdjusted();
                         }
-                    } else {
+                    }else{
                         ensureScrollWheelAdjusted();
                     }
                     onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
@@ -674,7 +669,6 @@ bool NumberPicker::performLongClick() {
         return ViewGroup::performLongClick();
     } else if (!ViewGroup::performLongClick()) {
         showSoftInput();
-        mIgnoreMoveEvents = true;
     }
     return true;
 }

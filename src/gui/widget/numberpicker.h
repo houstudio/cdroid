@@ -108,8 +108,6 @@ private:
     bool mFadingEdgeEnabled;
     bool mScrollerEnabled;
     float mFadingEdgeStrength;
-    bool mIgnoreMoveEvents;
-    bool mPerformClickOnTap;
     int mTopSelectionDividerTop;
     int mBottomSelectionDividerBottom;
     int mLastHoveredChildVirtualViewId;
