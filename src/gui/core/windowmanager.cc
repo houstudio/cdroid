@@ -95,6 +95,7 @@ void WindowManager::addWindow(Window*win){
 #else
     Looper::getDefault()->addEventHandler(win->mUIEventHandler);
 #endif
+    win->invalidate();
     win->post(std::bind(&Window::onCreate,win));
     win->post(std::bind(&Window::onActive,win));
     mActiveWindow = win;
@@ -227,9 +228,9 @@ void WindowManager::onMotion(MotionEvent&event) {
    for (auto itr = mWindows.rbegin();itr != mWindows.rend();itr++) {
        auto w = (*itr);
        if ((w->getVisibility()==View::VISIBLE) && w->getBound().contains(x,y)) {
-           event.offsetLocation(-w->getX(),-w->getY());
+           event.offsetLocation(-w->getLeft(),-w->getTop());
            w->dispatchTouchEvent(event);
-           event.offsetLocation(w->getX(),w->getY());
+           event.offsetLocation(w->getLeft(),w->getTop());
            break;
        }
    }
