@@ -1036,7 +1036,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     std::vector<int>& selectorIndices = mSelectorIndices;
     for (int i = 0; i < selectorIndices.size(); i++) {
         float font_size = mSelectedTextSize;
-        int selectedHeight = mSelectorElementSize;
+        int selectedSize = mSelectorElementSize;
         if(mSelectedTextSize!=mTextSize){
             if(isHorizontalMode()){
                 const float harfWidth = getWidth()/2.f;
@@ -1055,9 +1055,17 @@ void NumberPicker::onDraw(Canvas&canvas){
         if (scrollSelectorValue.empty()) {
             continue;
         }
-        if(i==mWheelMiddleItemIndex)
-            selectedHeight = std::max(mSelectorElementSize,mSelectedText->getHeight());
-        recText.height = selectedHeight;
+        if(mSelectedText->getVisibility()==View::VISIBLE){
+            if(isHorizontalMode()==false){
+                if(i==mWheelMiddleItemIndex)
+                    selectedSize = std::max(mSelectorElementSize,mSelectedText->getHeight());
+                recText.height = selectedSize;
+            }else{
+                if(i==mWheelMiddleItemIndex)
+                    selectedSize =  std::max(mSelectorElementSize,mSelectedText->getWidth());
+                recText.width = selectedSize;
+            }
+        }
         // Do not draw the middle item if input is visible since the input
         // is shown only if the wheel is static and it covers the middle
         // item. Otherwise, if the user starts editing the text via the
@@ -1085,13 +1093,12 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.draw_text(recText,scrollSelectorValue,Gravity::CENTER);//mTextAlign);
         }
         if (isHorizontalMode()) {
-            x += mSelectorElementSize;
-            recText.offset(mSelectorElementSize,0);
+            x += selectedSize;
+            recText.offset(selectedSize,0);
         } else {
-            int selectedHeight = mSelectorElementSize;
-            if(i==mWheelMiddleItemIndex)selectedHeight = std::max(mSelectorElementSize,mSelectedText->getHeight());
-            y += selectedHeight;
-            recText.offset(0,selectedHeight);
+            y += selectedSize;
+            canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
+            recText.offset(0,selectedSize);
         }
     }
 
@@ -1288,16 +1295,18 @@ void NumberPicker::smoothScroll(bool increment, int steps) {
 void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
     std::vector<int>& selectorIndices = mSelectorIndices;
-    const int selectedHeight= std::max(mSelectedTextSize,mSelectedText->getHeight());
-    const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedHeight);
     const float textGapCount = selectorIndices.size();
     if (isHorizontalMode()) {
+        const int selectedWidth= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getWidth()):mSelectedTextSize;
+        const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedWidth);
         float totalTextGapWidth = getWidth() - totalTextSize;
         mSelectorTextGapWidth = (int) (totalTextGapWidth / textGapCount);
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapWidth;
-        mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex);
+        mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex-(selectedWidth-mSelectorElementSize)/2);
     } else {
-        float totalTextGapHeight = getHeight() - totalTextSize;
+        const int selectedHeight= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getHeight()):mSelectedTextSize;
+        const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedHeight);
+        float totalTextGapHeight= getHeight() - totalTextSize;
         mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount);
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
         mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
