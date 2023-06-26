@@ -1097,7 +1097,7 @@ void NumberPicker::onDraw(Canvas&canvas){
             recText.offset(selectedSize,0);
         } else {
             y += selectedSize;
-            canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
+            //canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
             recText.offset(0,selectedSize);
         }
     }
