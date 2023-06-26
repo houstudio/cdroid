@@ -213,8 +213,8 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
     const int inptTxtRight= inptTxtLeft + inptTxtMsrdWdth;
     const int inptTxtBottom=inptTxtTop + inptTxtMsrdHght;
     mSelectedText->layout(inptTxtLeft, inptTxtTop, inptTxtMsrdWdth, inptTxtMsrdHght);
-    mSelectedTextCenterX = mSelectedText->getX() + mSelectedText->getMeasuredWidth()/2.f -2.f;
-    mSelectedTextCenterY = mSelectedText->getY() + mSelectedText->getMeasuredHeight()/2.f -5.f;
+    mSelectedTextCenterX = getWidth()/2;//mSelectedText->getX() + mSelectedText->getMeasuredWidth()/2.f -2.f;
+    mSelectedTextCenterY = getHeight()/2;//mSelectedText->getY() + mSelectedText->getMeasuredHeight()/2.f -5.f;
     if (changed) { // need to do all this when we know our size
         initializeSelectorWheel();
         initializeFadingEdges();
@@ -515,7 +515,7 @@ View& NumberPicker::setEnabled(bool enabled) {
 void NumberPicker::scrollBy(int x, int y){
     std::vector<int>&selectorIndices = mSelectorIndices;
     const int startScrollOffset = mCurrentScrollOffset;
-    const int gap = getMaxTextSize();
+    const int gap = std::min((int)getMaxTextSize(),mSelectorElementSize)/2;
     if (isHorizontalMode()) {
         if (isAscendingOrder()) {
             if (!mWrapSelectorWheel && x > 0
@@ -1096,8 +1096,10 @@ void NumberPicker::onDraw(Canvas&canvas){
             x += selectedSize;
             recText.offset(selectedSize,0);
         } else {
+            LOGV("%p:%d[%d] %s pos=(%d,%d,%d,%d) itemsize=%d,ScrollOffset=%d,%d",this,mID,i,scrollSelectorValue.c_str(),recText.left,recText.top,recText.width,recText.height,
+                 selectedSize,mInitialScrollOffset,mCurrentScrollOffset);
             y += selectedSize;
-            //canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
+            canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
             recText.offset(0,selectedSize);
         }
     }
@@ -1311,6 +1313,7 @@ void NumberPicker::initializeSelectorWheel(){
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
         mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
+    LOGD("mInitialScrollOffset=%d %d/%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight());
     mCurrentScrollOffset = mInitialScrollOffset;
     updateInputTextView();
 }
@@ -1531,7 +1534,7 @@ void  NumberPicker::ensureScrollWheelAdjusted() {
     }else{
         mPreviousScrollerY = 0;
         mAdjustScroller->startScroll(0, 0, 0, delta, SELECTOR_ADJUSTMENT_DURATION_MILLIS);
-        LOGV("delta=%d finished=%d time=%d",delta,mAdjustScroller->isFinished(),SELECTOR_ADJUSTMENT_DURATION_MILLIS);
+        LOGV("delta=%d scrollOffset=%d/%d ",delta,mInitialScrollOffset,mCurrentScrollOffset);
     }
     invalidate();
 }
