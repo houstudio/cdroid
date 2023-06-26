@@ -1044,7 +1044,7 @@ void NumberPicker::onDraw(Canvas&canvas){
                 font_size = lerp(mSelectedTextSize,mTextSize,fraction);
             }else{
                 const float harfHeight = getHeight()/2.f;
-                const float fraction = std::abs(y-harfHeight)/harfHeight;
+                const float fraction = std::abs(y-harfHeight+mSelectorElementSize/2)/harfHeight;
                 font_size = lerp(mSelectedTextSize,mTextSize,fraction);
             }
             canvas.set_font_size(font_size);
@@ -1096,10 +1096,10 @@ void NumberPicker::onDraw(Canvas&canvas){
             x += selectedSize;
             recText.offset(selectedSize,0);
         } else {
-            LOGV("%p:%d[%d] %s pos=(%d,%d,%d,%d) itemsize=%d,ScrollOffset=%d,%d",this,mID,i,scrollSelectorValue.c_str(),recText.left,recText.top,recText.width,recText.height,
-                 selectedSize,mInitialScrollOffset,mCurrentScrollOffset);
+            LOGV("%p:%d[%d] %s pos=(%d,%d,%d,%d) itemsize=%d,ScrollOffset=%d,%d fontsize=%d,%d,%.f",this,mID,i,scrollSelectorValue.c_str(),recText.left,recText.top,recText.width,recText.height,
+                 selectedSize,mInitialScrollOffset,mCurrentScrollOffset,mSelectedTextSize,mTextSize,font_size);
             y += selectedSize;
-            canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
+            //canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
             recText.offset(0,selectedSize);
         }
     }
@@ -1313,7 +1313,7 @@ void NumberPicker::initializeSelectorWheel(){
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
         mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
-    LOGD("mInitialScrollOffset=%d %d/%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight());
+    LOGD("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight(),mSelectedTextSize,mTextSize);
     mCurrentScrollOffset = mInitialScrollOffset;
     updateInputTextView();
 }
