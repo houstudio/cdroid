@@ -23,7 +23,7 @@ public:
     Canvas(unsigned int width,unsigned int height);
     ~Canvas();
     void get_text_size(const std::string&txt,int*w,int*h); 
-    void draw_text(const RECT&rect,const std::string&text,int text_alignment=0);
+    void draw_text(const Rect&rect,const std::string&text,int text_alignment=0);
     void set_color(BYTE r,BYTE g, BYTE b,BYTE a=255);
     void set_color(UINT color);
     void rectangle(int x,int y,int w,int h);

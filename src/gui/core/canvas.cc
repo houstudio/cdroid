@@ -57,7 +57,7 @@ void Canvas::get_text_size(const std::string&text,int*width,int *height){
     if(height)*height=te.height;
 }
 
-void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment){
+void Canvas::draw_text(const Rect&rect,const std::string&text,int text_alignment){
     TextExtents te;
     FontExtents ftext;
     double x,y;
@@ -75,7 +75,7 @@ void Canvas::draw_text(const RECT&rect,const std::string&text,int text_alignment
     case Gravity::CENTER_HORIZONTAL:x = rect.left+(rect.width-te.x_advance)/2;break;
     case Gravity::RIGHT : x = rect.left+rect.width-te.x_advance;break;
     }
-    move_to(x,y);
+    move_to(x - te.x_bearing,y);
     show_text(text);
 }
 

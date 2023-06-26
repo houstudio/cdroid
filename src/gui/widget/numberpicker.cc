@@ -1036,6 +1036,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     std::vector<int>& selectorIndices = mSelectorIndices;
     for (int i = 0; i < selectorIndices.size(); i++) {
         float font_size = mSelectedTextSize;
+        int selectedHeight = mSelectorElementSize;
         if(mSelectedTextSize!=mTextSize){
             if(isHorizontalMode()){
                 const float harfWidth = getWidth()/2.f;
@@ -1054,6 +1055,9 @@ void NumberPicker::onDraw(Canvas&canvas){
         if (scrollSelectorValue.empty()) {
             continue;
         }
+        if(i==mWheelMiddleItemIndex)
+            selectedHeight = std::max(mSelectorElementSize,mSelectedText->getHeight());
+        recText.height = selectedHeight;
         // Do not draw the middle item if input is visible since the input
         // is shown only if the wheel is static and it covers the middle
         // item. Otherwise, if the user starts editing the text via the
@@ -1080,14 +1084,14 @@ void NumberPicker::onDraw(Canvas&canvas){
             }
             canvas.draw_text(recText,scrollSelectorValue,Gravity::CENTER);//mTextAlign);
         }
-        LOGV("%p:%d[%d](%d,%d,%d,%d).%d/%d %dx%d items[%d] %s",this,mID,i,recText.left,recText.top,recText.width,recText.height,
-             mSelectedText->getHeight(),getHeight(),selectorIndices.size(),mSelectorElementSize,i,scrollSelectorValue.c_str());
         if (isHorizontalMode()) {
             x += mSelectorElementSize;
             recText.offset(mSelectorElementSize,0);
         } else {
-            y += mSelectorElementSize;
-            recText.offset(0,mSelectorElementSize);
+            int selectedHeight = mSelectorElementSize;
+            if(i==mWheelMiddleItemIndex)selectedHeight = std::max(mSelectorElementSize,mSelectedText->getHeight());
+            y += selectedHeight;
+            recText.offset(0,selectedHeight);
         }
     }
 
@@ -1284,7 +1288,8 @@ void NumberPicker::smoothScroll(bool increment, int steps) {
 void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
     std::vector<int>& selectorIndices = mSelectorIndices;
-    const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + mSelectedTextSize);
+    const int selectedHeight= std::max(mSelectedTextSize,mSelectedText->getHeight());
+    const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedHeight);
     const float textGapCount = selectorIndices.size();
     if (isHorizontalMode()) {
         float totalTextGapWidth = getWidth() - totalTextSize;
@@ -1295,7 +1300,7 @@ void NumberPicker::initializeSelectorWheel(){
         float totalTextGapHeight = getHeight() - totalTextSize;
         mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount);
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
-        mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex);
+        mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
     mCurrentScrollOffset = mInitialScrollOffset;
     updateInputTextView();
