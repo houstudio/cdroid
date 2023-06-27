@@ -1020,13 +1020,24 @@ void NumberPicker::onDraw(Canvas&canvas){
         }
     }
     Cairo::RefPtr<Cairo::LinearGradient> pat;
-    if(mSelectedTextColor!=mTextColor){
-        Color c1(mSelectedTextColor), c2(mTextColor);
+    if( mSelectedTextColor != mTextColor){
+        Color c1(mSelectedTextColor), c2(mTextColor&0x0);
+        CycleInterpolator ci(0.5f);
         pat=Cairo::LinearGradient::create(0,0,(isHorizontalMode()?getWidth():0),
                                           (isHorizontalMode()?0:getHeight()));
-  	    pat->add_color_stop_rgba(.0f,c2.red(),c2.green(),c2.blue(),c2.alpha());
-	    pat->add_color_stop_rgba(.5f,c1.red(),c1.green(),c1.blue(),c1.alpha());
-	    pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
+        const int cStops = mSelectorIndices.size()*3;
+        for(int i = 0; i < cStops ;i++){
+            const float offset = (i<cStops/2)?cos(M_PI*i/cStops)/2.f:(1.f+cos(M_PI*i/cStops)/2.f);//float(i)/cStops;
+            const float fraction = ci.getInterpolation(offset);
+            pat->add_color_stop_rgba(offset,lerp(c2.red(),c1.red(),fraction),
+                                     lerp(c2.green(),c1.green(),fraction),
+                                     lerp(c2.blue(),c1.blue(),fraction),
+                                     lerp(c2.alpha(),c1.alpha(),fraction));
+            LOGV("[%d]=%f",i,offset);
+        }
+        //pat->add_color_stop_rgba(.0f,c2.red(),c2.green(),c2.blue(),c2.alpha());
+        //pat->add_color_stop_rgba(.5f,c1.red(),c1.green(),c1.blue(),c1.alpha());
+        //pat->add_color_stop_rgba(1.f,c2.red(),c2.green(),c2.blue(),c2.alpha());
         canvas.set_source(pat);
     }else{
         canvas.set_color(mSelectedTextColor);
