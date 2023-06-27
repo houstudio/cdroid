@@ -168,7 +168,7 @@ public:
     }
     void wake();
     int addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
-    int addFd(int fd, int ident, int events,const LooperCallback* callback, void* data);
+    int addFd(int fd, int ident, int events, const LooperCallback* callback, void* data);
     int removeFd(int fd);
     void sendMessage(const MessageHandler* handler, const Message& message);
     void sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler* handler,const Message& message);

@@ -1321,7 +1321,7 @@ void NumberPicker::initializeSelectorWheel(){
         mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
         mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
-    LOGD("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight(),mSelectedTextSize,mTextSize);
+    LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight(),mSelectedTextSize,mTextSize);
     mCurrentScrollOffset = mInitialScrollOffset;
     updateInputTextView();
 }
