@@ -116,7 +116,7 @@ private:
     int mLastHandledDownDpadKeyCode = -1;
     bool mHideWheelUntilFocused; 
     bool mWrapSelectorWheelPreferred=true;
-
+    Cairo::RefPtr<Cairo::LinearGradient>mPat;
 
     //PressedStateHelper's members
     Runnable mPressedStateHelpers;
