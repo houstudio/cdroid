@@ -25,6 +25,7 @@ set(HEADERS
      containers/linux/container_linux.h
 )
 
+if(litehtml_FOUND)
 add_library(${PROJECT_NAME} ${SOURCE} ${HEADERS})
 include_directories(
    ./ src containers 
@@ -39,7 +40,6 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include/freetype2	
 )
 
-if(litehtml_FOUND)
    target_link_options(${PROJECT_NAME} PRIVATE ${LB_LIBS_LDFLAGS})
    target_link_libraries(${PROJECT_NAME} litehtml )#CURL::libcurl ${LB_LIBS_LIBRARIES})
    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11  C_STANDARD 99)

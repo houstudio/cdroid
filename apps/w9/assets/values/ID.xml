@@ -13,12 +13,11 @@
   <id name="text1">0x0000271a</id>
   <id name="text2">0x0000271b</id>
   <id name="increment">0x0000271c</id>
-  <id name="numberpicker_input">0x0000271d</id>
-  <id name="decrement">0x0000271e</id>
-  <id name="option1">0x0000271f</id>
-  <id name="option2">0x00002720</id>
-  <id name="option3">0x00002721</id>
-  <id name="option4">0x00002722</id>
-  <id name="option5">0x00002723</id>
+  <id name="decrement">0x0000271d</id>
+  <id name="option1">0x0000271e</id>
+  <id name="option2">0x0000271f</id>
+  <id name="option3">0x00002720</id>
+  <id name="option4">0x00002721</id>
+  <id name="option5">0x00002722</id>
 </resources>
 
