@@ -292,7 +292,20 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     rs.w=nsrc->width;
     rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
+
     LOGD_IF(ndst!=primarySurface&&ndst->ishw,"dst is not primarySurface");
+    if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
+        LOGD("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
+        return E_INVALID_PARA;
+    }
+
+    LOGV("Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d)",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,rs.w,rs.h);
+    if(dx<0){ rs.x-=dx; rs.w = (int)rs.w+dx; dx = 0;}
+    if(dy<0){ rs.y-=dy; rs.h = (int)rs.h+dy; dy = 0;}
+    if(dx + rs.w > ndst->width - screenMargin.x - screenMargin.w)
+	 rs.w = ndst->width -s creenMargin.x - screenMargin.w - dx;
+    if(dy + rs.h > ndst->height - screenMargin.y- screenMargin.h)
+	 rs.h = ndst->height - screenMargin.y - screenMargin.h - dy;
 
     toMIGFX(nsrc,&gfxsrc);
     toMIGFX(ndst,&gfxdst);
@@ -318,14 +331,18 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     stSrcRect.u32Width = rs.w;
     stSrcRect.u32Height= rs.h;
 
-    LOGV("..Blit %p(%d,%d-%d,%d)-> (%d,%d)copied rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,
-		dx,dy,opt.eRotate);
+    LOGV("Blit %p(%d,%d-%d,%d)-> (%d,%d)copied rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,
+		dx,dy);
     
-    stDstRect.s32Xpos = opt.stClipRect.s32Xpos;//dx+screenMargin.x*(ndst->ishw?1:0);
-    stDstRect.s32Ypos = opt.stClipRect.s32Ypos;//dy+screenMargin.y*(ndst->ishw?1:0);
+    stDstRect.s32Xpos = opt.stClipRect.s32Xpos;
+    stDstRect.s32Ypos = opt.stClipRect.s32Ypos;
     stDstRect.u32Width = rs.w;
     stDstRect.u32Height= rs.h;
     ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
+    LOGV("*Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d) pos:%d,%d->%d,%d gfx.src=%dx%dx%d@%llx gfx.dst=%dx%dx%d@%llx",
+        nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,rs.w,rs.h,
+	stSrcRect.s32Xpos,stSrcRect.s32Ypos,stDstRect.s32Xpos,stDstRect.s32Ypos,
+	nsrc->width,nsrc->height,nsrc->pitch,nsrc->kbuffer, ndst->width,ndst->height,ndst->pitch,ndst->kbuffer);
     MI_GFX_WaitAllDone(FALSE,fence);
     return 0;
 }

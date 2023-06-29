@@ -162,7 +162,7 @@ View::View(int w,int h){
     mRight  = w;
     mBottom = h;
     mLeft = mTop =0;
-
+    setBackgroundColor(0xFF000000);
 #ifdef ENABLE_ROUNDSCROLLBAR    
     if(ViewConfiguration::isScreenRound())
        mRoundScrollbarRenderer=new RoundScrollbarRenderer(this);

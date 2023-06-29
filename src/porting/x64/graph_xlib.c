@@ -12,11 +12,6 @@
 #include <string.h>
 #include <core/eventcodes.h>
 #include <time.h>
-#ifdef ENABLE_RFB
-#include <rfb/rfb.h>
-#include <rfb/keysym.h>
-#include <rfb/rfbproto.h>
-#endif
 
 static Display*x11Display=NULL;
 static Window x11Window=0;
@@ -25,9 +20,7 @@ static Atom WM_DELETE_WINDOW;
 static GC mainGC=0;
 static XImage*mainSurface=NULL;
 static void* X11EventProc(void*p);
-#ifdef ENABLE_RFB
-static rfbScreenInfoPtr rfbScreen=NULL;
-#endif
+static GFXRect screenMargin={60,0,60,0};
 
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
 #define SENDMOUSE(time,x,y)  {InjectABS(time,EV_ABS,0,x);\
@@ -62,20 +55,10 @@ static void onExit(){
         XCloseDisplay(x11Display);
         x11Display=NULL;
     }
-    #ifdef ENABLE_RFB
-    rfbShutdownServer(rfbScreen,1);
-    rfbScreenCleanup(rfbScreen);
-    #endif
 }
 
 INT GFXInit(){
     if(x11Display)return E_OK;
-    #ifdef ENABLE_RFB
-    if(rfbScreen) return E_OK;
-    rfbScreen = rfbGetScreen(NULL,NULL,1280,720,8,3,3);
-	setupRFB(rfbScreen,"XLIBRFB",0);
-    LOGD("VNC Server Inited rfbScreen=%p port=%d framebuffer=%p",rfbScreen,rfbScreen->port,rfbScreen->frameBuffer);
-    #endif 
     XInitThreads(); 
     x11Display=XOpenDisplay(NULL);
     LOGE_IF(x11Display==NULL,"x11Display init failed,RFB(VNC Viewer) is mandatoried ");
@@ -88,8 +71,10 @@ INT GFXInit(){
         int screen=DefaultScreen(x11Display);
         x11Visual = DefaultVisual(x11Display, screen);
 	GFXGetDisplaySize(0,&width,&height);
-        x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height, 1,
-                BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
+	width += screenMargin.x + screenMargin.w;
+	height+= screenMargin.y + screenMargin.h;
+        x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height, 
+		1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
 
         sizehints.flags = PMinSize | PMaxSize;
         sizehints.min_width = width;
@@ -116,10 +101,10 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
         *width=1280;//dispCfg.width;
         *height=720;//dispCfg.height;
     }else{
-	*width=atoi(env);
+	*width=atoi(env)- screenMargin.x - screenMargin.w;
 	env=strpbrk(env,"x*,");
 	if((*width<=0)||(env==NULL))exit(-1);
-	*height=atoi(env+1);
+	*height=atoi(env+1)- screenMargin.y - screenMargin.h;
 	if(*height<=0)exit(-1);
     }
     return E_OK;
@@ -186,9 +171,6 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     }
     if(surface==mainSurface){
         X11Expose(rec.x,rec.y,rec.w,rec.h);
-#if ENABLE_RFB
-       rfbMarkRectAsModified(rfbScreen,rec.x,rec.y,rec.w,rec.h);
-#endif
     }
     return E_OK;
 }
@@ -198,43 +180,19 @@ INT GFXFlip(HANDLE surface){
     if(mainSurface==surface){
         GFXRect rect={0,0,img->width,img->height};
         //X11Expose(0,0,img->width,img->height);
-#if ENABLE_RFB
-        //rfbMarkRectAsModified(rfbScreen,rect.x,rect.y,rect.w,rect.h);
-#endif
-
     }
     return 0;
 }
-#ifdef ENABLE_RFB
-static void ResetScreenFormat(XImage*fb,int width,int height,int format){
-    rfbPixelFormat*fmt=&rfbScreen->serverFormat;
-    fmt->trueColour=TRUE;
-    switch(format){
-    case GPF_ARGB:
-         fmt->bitsPerPixel=24;
-         fmt->redShift=16;//bitsPerSample*2
-         fmt->greenShift=8;
-         fmt->blueShift=0;
-         break;
-    case GPF_ABGR:
-         fmt->bitsPerPixel=32;
-         fmt->redShift=0;
-         fmt->greenShift=8;
-         fmt->blueShift=16;
-         break;
-    default:return;
-    }
-    LOGD("format=%d",format);
-    rfbNewFramebuffer(rfbScreen,fb->data,width,height,8,3,4);
-    rfbScreen->paddedWidthInBytes=fb->bytes_per_line;
-}
-#endif
 
 INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface)
 {
     XImage*img=NULL;
     if(x11Display){
         int imagedepth = DefaultDepth(x11Display,DefaultScreen(x11Display));
+	if(hwsurface){
+	    width += screenMargin.x + screenMargin.w;
+	    height+= screenMargin.y + screenMargin.h;
+	}
         img=XCreateImage(x11Display,x11Visual, imagedepth,ZPixmap,0,NULL,width,height,32,0);
     }else{
         img=(XImage*)malloc(sizeof(XImage));
@@ -248,10 +206,6 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     LOGD("%p  size=%dx%dx%d %db",img,width,height,img->bytes_per_line,img->bits_per_pixel);
     if(hwsurface){
         mainSurface=img;
-        #ifdef ENABLE_RFB
-        rfbScreen->frameBuffer = img->data;
-        ResetScreenFormat(img,width,height,format);
-        #endif
     }
     return E_OK;
 }
@@ -273,12 +227,15 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* src
 
     if(dx<0){ rs.x-=dx; rs.w=(int)rs.w+dx; dx=0;}
     if(dy<0){ rs.y-=dy; rs.h=(int)rs.h+dy; dy=0;}
-    if(dx+rs.w > ndst->width ) rs.w=ndst->width-dx;
-    if(dy+rs.h > ndst->height) rs.h=ndst->height-dy;
+    if(dx+rs.w > ndst->width -screenMargin.x - screenMargin.w) rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
+    if(dy+rs.h > ndst->height-screenMargin.y - screenMargin.h) rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
 
     //LOGV_IF(ndst==mainSurface,"Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     pbs += rs.y*nsrc->bytes_per_line+rs.x*4;
     pbd += dy*ndst->bytes_per_line+dx*4;
+    if(ndst==mainSurface){
+	pbd += (screenMargin.x*4 + screenMargin.h*ndst->bytes_per_line);
+    }
     LOGV("rs(%dx%d)=copyarea(%d,%d,%d,%d)->(%d,%d)",nsrc->width,nsrc->height,rs.x,rs.y,rs.w,rs.h,dx,dy);
     for(unsigned int y=0;y<rs.h;y++){
         memcpy(pbd,pbs,rs.w*4);
@@ -287,10 +244,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* src
     }
     LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.x+rs.w,rs.y+rs.h,dx,dy,dx+rs.w,dy+rs.h);
     if(ndst==mainSurface){
-        if(x11Display) X11Expose(dx,dy,rs.w,rs.h);
-        #ifdef ENABLE_RFB
-        rfbMarkRectAsModified(rfbScreen,dx,dy,dx+rs.w,dy+rs.h);
-        #endif
+        if(x11Display) X11Expose(dx+screenMargin.x,dy+screenMargin.h,rs.w,rs.h);
     }
     return 0;
 }
@@ -375,11 +329,11 @@ static void* X11EventProc(void*p){
         case ButtonRelease:
             if(1==event.xbutton.button){
                 InjectABS(event.xbutton.time,EV_KEY,BTN_TOUCH,(event.type==ButtonPress)?1:0);
-                SENDMOUSE(event.xbutton.time,event.xbutton.x,event.xbutton.y);
+                SENDMOUSE(event.xbutton.time,event.xbutton.x - screenMargin.x , event.xbutton.y - screenMargin.y);
             }break;
         case MotionNotify:
             if(event.xmotion.state==0x100){
-               SENDMOUSE(event.xmotion.time,event.xmotion.x,event.xmotion.y);
+                SENDMOUSE(event.xmotion.time,event.xmotion.x - screenMargin.x , event.xmotion.y - screenMargin.y);
             }
             break;
         case DestroyNotify:
@@ -398,7 +352,4 @@ static void* X11EventProc(void*p){
         };
     }
 }
-
-
-
 
