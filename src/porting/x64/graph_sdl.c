@@ -32,10 +32,12 @@ static void SendMouseEvent(SDL_Event*event);
 static FBSURFACE*PrimarySurface;
 
 INT GFXInit(){
+    UINT width,height;
     if(sdlWindow)return E_OK;
     SDL_Init(SDL_INIT_EVERYTHING);
+    GFXGetDisplaySize(0,&width,&height);
     sdlWindow = SDL_CreateWindow("CDROID Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                  1280,  800,  SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
+                  width,height,  SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
     LOGI("SDL_CreateWindow =%p",sdlWindow);
     if (!sdlWindow) return E_ERROR;
 
@@ -54,18 +56,20 @@ INT GFXGetDisplayCount(){
 }
 
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height){
+    const char*env= getenv("SCREENSIZE");
     if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
-    SDL_GetWindowSize(sdlWindow,(int*)width,(int*)height);
+    if(env==NULL){
+	*width=1280;
+	*height=720;
+    }else{
+        *width=atoi(env);//- screenMargin.x - screenMargin.w;
+        env=strpbrk(env,"x*,");
+        if((*width<=0)||(env==NULL))exit(-1);
+        *height=atoi(env+1);//- screenMargin.y - screenMargin.h;
+        if(*height<=0)exit(-1);
+    }
     LOGV("screensize=%dx%d",*width,*height);
     return E_OK;
-}
-
-GFX_ROTATION GFXGetRotation(int dispid){
-    return ROTATE_0;
-}
-
-INT GFXSetRotation(int dispid,GFX_ROTATION r){
-    return 0;
 }
 
 INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
@@ -133,7 +137,6 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->surface->pixels,width,height,hwsurface);
     *surface=surf;
     if(hwsurface)PrimarySurface=surf;
-    LOGD("surfaceCount=%d",++surfaceCount);
     return E_OK;
 }
 
@@ -142,8 +145,9 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs={0,0};
-    rs.w=nsrc->width;rs.h=nsrc->height;
-    if(srcrect)rs=*srcrect;
+    rs.w = nsrc->width;
+    rs.h = nsrc->height;
+    if(srcrect)rs = *srcrect;
     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
         LOGV("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
         return E_INVALID_PARA;
@@ -152,15 +156,15 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     LOGV("Blit %p[%dx%d] %d,%d-%d,%d -> %p[%dx%d] %d,%d",nsrc,nsrc->width,nsrc->height,
          rs.x,rs.y,rs.w,rs.h,ndst,ndst->width,ndst->height,dx,dy);
     if(dx<0){rs.x-=dx;rs.w=(int)rs.w+dx; dx=0;}
-    if(dy<0){rs.y-=dy;rs.h=(int)rs.h+dy;dy=0;}
-    if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
-    if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
+    if(dy<0){rs.y-=dy;rs.h=(int)rs.h+dy; dy=0;}
+    if(dx + rs.w > ndst->width )rs.w = ndst->width - dx;
+    if(dy + rs.h > ndst->height)rs.h = ndst->height- dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy);
     SDL_BlitSurface(nsrc->surface,(const SDL_Rect *)&rs,ndst->surface,(const SDL_Rect *)&rs);
     if(ndst->ishw){
-	SDL_UpdateTexture(ndst->texture,(const SDL_Rect *)&rs,ndst->surface->pixels,ndst->pitch);
-        SDL_RenderCopy(sdlRenderer,ndst->texture,(const SDL_Rect *)&rs,(const SDL_Rect *)&rs);
+        SDL_UpdateTexture(ndst->texture,(const SDL_Rect *)NULL/*&rs*/,ndst->surface->pixels,ndst->pitch);
+        SDL_RenderCopy(sdlRenderer,ndst->texture,(const SDL_Rect *)NULL/*&rs*/,(const SDL_Rect *)NULL/*&rs*/);
         SDL_RenderPresent(sdlRenderer);
     }
     return 0;
@@ -171,7 +175,6 @@ INT GFXDestroySurface(HANDLE surface){
     SDL_FreeSurface(surf->surface);
     SDL_DestroyTexture(surf->texture);
     free(surf);
-    LOGD("surfaceCount=%d",surfaceCount);
     return 0;
 }
 
