@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.8)
 project(curldownload C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
-find_package(CURL REQUIRED)
+find_package(CURL)
 include_directories(
    ./
    ${CDROID_INCLUDE_DIRS}
@@ -19,12 +19,10 @@ aux_source_directory(./ CURLDLD_SRCS)
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 link_directories(${CMAKE_BINARY_DIR}/lib)
-add_executable(curldownload ${CURLDLD_SRCS})
 
-#CreatePAK(w9 ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/w9.pak ${PROJECT_SOURCE_DIR}/R.h)
-
-message("CDROID_LIBRARIES=${CDROID_LIBRARIES} CDROID_INCLUDE_DIRS=${CDROID_INCLUDE_DIRS}")
-target_link_libraries(curldownload PRIVATE cdroid ${CURL_LIBRARIES})
-
-install(TARGETS curldownload DESTINATION bin)
+if(CURL_DOUND)
+  add_executable(curldownload ${CURLDLD_SRCS})
+  target_link_libraries(curldownload PRIVATE cdroid ${CURL_LIBRARIES})
+  install(TARGETS curldownload DESTINATION bin)
+endif()
 

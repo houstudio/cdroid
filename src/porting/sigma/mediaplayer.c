@@ -87,7 +87,7 @@ DWORD MPSetWindow(HANDLE handle,int x,int y,int width,int height){
     return 0;
 }
 
-int MPRotate(HANDLE handle, int type) {
+DWORD MPRotate(HANDLE handle, int type) {
     MP_PLAYER *mp =(MP_PLAYER*)handle;
     GFXRect   *r  = &mp->viewPort;
 
