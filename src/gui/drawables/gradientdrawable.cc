@@ -784,12 +784,12 @@ static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii
         float pts[8];
         pts[0]=r.left + radii[0];
         pts[1]=r.top + radii[0];
-        pts[2]=r.right()-radii[1];
+        pts[2]=r.right() - radii[1];
         pts[3]=r.top + radii[1];
-        pts[4]=r.right()-radii[2];
-        pts[5]=r.bottom()-radii[2];
+        pts[4]=r.right() - radii[2];
+        pts[5]=r.bottom()- radii[2];
         pts[6]=r.left + radii[3];
-        pts[7]=r.bottom()-radii[3];
+        pts[7]=r.bottom()- radii[3];
         canvas.begin_new_sub_path();
         for(int i=0,j=0; i<8; i+=2,j++) {
             canvas.arc(pts[i],pts[i+1],radii[j],db*degree,(db+90)*degree);

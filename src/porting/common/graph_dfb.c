@@ -164,17 +164,19 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 
      if(dx<0){ rs.x-=dx; rs.w=(int)rs.w+dx; dx=0;}
      if(dy<0){ rs.y-=dy; rs.h=(int)rs.h+dy; dy=0;}
-     if(dx+rs.w > ndst->width -screenMargin.x - screenMargin.w) rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
-     if(dy+rs.h > ndst->height-screenMargin.y - screenMargin.h) rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
+     if(dx+rs.w > ndst->width - screenMargin.x - screenMargin.w)
+	   rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
+     if(dy+rs.h > ndst->height- screenMargin.y - screenMargin.h)
+	   rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
 
-     dfbdst->SetPorterDuff(dfbdst,DSPD_SRC_OVER);
+     //dfbdst->SetPorterDuff(dfbdst,DSPD_SRC_OVER);
      const int ox=dx,oy=dy;
-     rd=rs;
+     rd = rs;
      dfbdst->Blit(dfbdst,dfbsrc,&rs,dx,dy);
      region.x1= dx;
      region.y1= dy;
-     region.x2= dx+rd.w;
-     region.y2= dy+rd.h;
+     region.x2= dx + rd.w;
+     region.y2= dy + rd.h;
      //dfbdst->SetClip(dfbdst, &region);
      LOGV("dstsurface=%p/primarySurface=%p srcsurface=%p (%d,%d,%d,%d) to pos(%d,%d)/(%d,%d)",
 		     dstsurface,primarySurface,srcsurface,rs.x,rs.y,rs.w,rs.h,ox,oy,dx,dy);

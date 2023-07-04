@@ -50,7 +50,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
 	 const INPUTAXISINFO*axis=devInfos.axis+j;
 	 if(axis->maximum!=axis->minimum)
   	    mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
-	 LOGI_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
+	 LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
     }
 
     // See if this is a keyboard.  Ignore everything in the button range except for

@@ -71,7 +71,8 @@ int GFXInit() {
     devs[0].var.yoffset=0;//set first screen memory for display
     ret=ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);
     LOGI("FBIOPUT_VSCREENINFO=%d",ret);
-    LOGI("fb solution=%dx%d accel_flags=0x%x",dev->var.xres,dev->var.yres,dev->var.accel_flags);
+    LOGI("fb solution=%dx%d accel_flags=0x%x ScreenMargin=(%d,%d,%d,%d)",dev->var.xres,dev->var.yres,dev->var.accel_flags,
+		    screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
     return E_OK;
 }
 
@@ -119,7 +120,7 @@ static void toMIGFX(const FBSURFACE*fb,MI_GFX_Surface_t*gfx) {
     gfx->u32Width = fb->width;
     gfx->u32Height= fb->height;
     gfx->u32Stride= fb->pitch;
-    gfx->phyAddr  = (MI_PHY)fb->kbuffer;
+    gfx->phyAddr  = fb->kbuffer;
 }
 
 INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
@@ -259,7 +260,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 	char name[32];
 	sprintf(name,"surf_%p",surf);
 	//while((i++<3)&&(phaddr==dev->fix.smem_start)){
-            ret=MI_SYS_MMA_Alloc(NULL/*"mma_heap_name0"*/,surf->msize,&phaddr);
+            ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
 	//}
         LOGI("surface %p phyaddr=%x ret=%d",surf,phaddr,ret);
         MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
@@ -289,8 +290,8 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     MI_GFX_Surface_t gfxsrc,gfxdst;
     MI_GFX_Rect_t stSrcRect, stDstRect;
 
-    rs.w=nsrc->width;
-    rs.h=nsrc->height;
+    rs.w = nsrc->width;
+    rs.h = nsrc->height;
     if(srcrect)rs=*srcrect;
 
     LOGD_IF(ndst!=primarySurface&&ndst->ishw,"dst is not primarySurface");
@@ -300,10 +301,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     }
 
     LOGV("Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d)",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,rs.w,rs.h);
-    if(dx<0){ rs.x-=dx; rs.w = (int)rs.w+dx; dx = 0;}
-    if(dy<0){ rs.y-=dy; rs.h = (int)rs.h+dy; dy = 0;}
+    if(dx<0){ rs.x -= dx; rs.w = (int)rs.w + dx; dx = 0;}
+    if(dy<0){ rs.y -= dy; rs.h = (int)rs.h + dy; dy = 0;}
     if(dx + rs.w > ndst->width - screenMargin.x - screenMargin.w)
-	 rs.w = ndst->width -screenMargin.x - screenMargin.w - dx;
+	 rs.w = ndst->width - screenMargin.x - screenMargin.w - dx;
     if(dy + rs.h > ndst->height - screenMargin.y- screenMargin.h)
 	 rs.h = ndst->height - screenMargin.y - screenMargin.h - dy;
 
@@ -311,7 +312,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     toMIGFX(ndst,&gfxdst);
     bzero(&opt,sizeof(opt));
 
-    opt.u32GlobalSrcConstColor = nsrc->alpha<<24;
+    opt.u32GlobalSrcConstColor = 0xFF000000;//nsrc->alpha<<24;
     opt.u32GlobalDstConstColor = 0xFF000000;
     opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
     opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
@@ -320,8 +321,8 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.stClipRect.s32Ypos = dy + screenMargin.y*(ndst->ishw?1:0);
     opt.stClipRect.u32Width= rs.w;//rs.w;//ndst->width;
     opt.stClipRect.u32Height=rs.h;//rs.h;//ndst->height;
-    if(nsrc->alpha!=255)
-        opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
+    //if(nsrc->alpha!=255)
+    //    opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
 
     opt.eMirror = E_MI_GFX_MIRROR_NONE;
     opt.eRotate = E_MI_GFX_ROTATE_0;
@@ -331,18 +332,17 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     stSrcRect.u32Width = rs.w;
     stSrcRect.u32Height= rs.h;
 
-    LOGV("Blit %p(%d,%d-%d,%d)-> (%d,%d)copied rotate=%d",nsrc,rs.x,rs.y,rs.w,rs.h,
-		dx,dy);
+    LOGV("Blit %p(%d,%d-%d,%d)-> (%d,%d)copied",nsrc,rs.x,rs.y,rs.w,rs.h,dx,dy);
     
-    stDstRect.s32Xpos = opt.stClipRect.s32Xpos;
-    stDstRect.s32Ypos = opt.stClipRect.s32Ypos;
+    stDstRect.s32Xpos = dx + screenMargin.x*(ndst->ishw?1:0);//opt.stClipRect.s32Xpos;
+    stDstRect.s32Ypos = dy + screenMargin.y*(ndst->ishw?1:0);//opt.stClipRect.s32Ypos;
     stDstRect.u32Width = rs.w;
     stDstRect.u32Height= rs.h;
     ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
-    LOGV("*Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d) pos:%d,%d->%d,%d gfx.src=%dx%dx%d@%llx gfx.dst=%dx%dx%d@%llx",
-        nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,rs.w,rs.h,
-	stSrcRect.s32Xpos,stSrcRect.s32Ypos,stDstRect.s32Xpos,stDstRect.s32Ypos,
-	nsrc->width,nsrc->height,nsrc->pitch,nsrc->kbuffer, ndst->width,ndst->height,ndst->pitch,ndst->kbuffer);
+    LOGV("*Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d) gfx.src=%dx%dx%d@%llx gfx.dst=%dx%dx%d@%llx ret=%d",
+	nsrc,stSrcRect.s32Xpos,stSrcRect.s32Ypos, stSrcRect.u32Width, stSrcRect.u32Height,
+	ndst,stDstRect.s32Xpos,stDstRect.s32Ypos, stDstRect.u32Width,stDstRect.u32Height,
+	nsrc->width,nsrc->height,nsrc->pitch,nsrc->kbuffer, ndst->width,ndst->height,ndst->pitch,ndst->kbuffer,ret);
     MI_GFX_WaitAllDone(FALSE,fence);
     return 0;
 }

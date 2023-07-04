@@ -20,7 +20,7 @@ static Atom WM_DELETE_WINDOW;
 static GC mainGC=0;
 static XImage*mainSurface=NULL;
 static void* X11EventProc(void*p);
-static GFXRect screenMargin={60,0,60,0};
+static GFXRect screenMargin={0};//{60,0,60,0};
 
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
 #define SENDMOUSE(time,x,y)  {InjectABS(time,EV_ABS,0,x);\
@@ -225,10 +225,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* src
         return E_INVALID_PARA;
     }
 
-    if(dx<0){ rs.x-=dx; rs.w=(int)rs.w+dx; dx=0;}
-    if(dy<0){ rs.y-=dy; rs.h=(int)rs.h+dy; dy=0;}
-    if(dx+rs.w > ndst->width -screenMargin.x - screenMargin.w) rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
-    if(dy+rs.h > ndst->height-screenMargin.y - screenMargin.h) rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
+    if(dx<0){ rs.x -= dx; rs.w = (int)rs.w+dx; dx=0;}
+    if(dy<0){ rs.y -= dy; rs.h = (int)rs.h+dy; dy=0;}
+    if(dx + rs.w > ndst->width -screenMargin.x - screenMargin.w) rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
+    if(dy + rs.h > ndst->height-screenMargin.y - screenMargin.h) rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
 
     //LOGV_IF(ndst==mainSurface,"Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     pbs += rs.y*nsrc->bytes_per_line+rs.x*4;
@@ -236,7 +236,6 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* src
     if(ndst==mainSurface){
 	pbd += (screenMargin.x*4 + screenMargin.h*ndst->bytes_per_line);
     }
-    LOGV("rs(%dx%d)=copyarea(%d,%d,%d,%d)->(%d,%d)",nsrc->width,nsrc->height,rs.x,rs.y,rs.w,rs.h,dx,dy);
     for(unsigned int y=0;y<rs.h;y++){
         memcpy(pbd,pbs,rs.w*4);
         pbs+=nsrc->bytes_per_line;

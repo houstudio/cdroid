@@ -41,16 +41,16 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
 	mFamily +=";";
 	s = nullptr;
     }
-    LOGD("family=%s",mFamily.c_str());
+    LOGV("family=%s",mFamily.c_str());
     mStyle = 0 ;
     ret = FcPatternGetString(&font, FC_STYLE, 0, &s);
     if(ret==FcResultMatch)
         mStyle = parseStyle(std::string((const char*)s));
-    LOGD_IF(ret==FcResultMatch,"Style=%s/%d",s,mStyle);
+    LOGV_IF(ret==FcResultMatch,"Style=%s/%d",s,mStyle);
     s = nullptr;
 
     ret = FcPatternGetString(&font,FC_SLANT,0,&s);
-    LOGD_IF(ret == FcResultMatch,"Slant=%s",s);
+    LOGV_IF(ret == FcResultMatch,"Slant=%s",s);
     s = nullptr;
 
     ret = FcPatternGetInteger(&font,FC_WEIGHT,0,&weight);
@@ -58,10 +58,10 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
     mWeight = weight;
 
     ret = FcPatternGetDouble(&font,FC_PIXEL_SIZE,0,&pixelSize);
-    LOGD_IF(ret == FcResultMatch,"pixelSize =%f",pixelSize);
+    LOGV_IF(ret == FcResultMatch,"pixelSize =%f",pixelSize);
 
     ret = FcPatternGetDouble(&font,FC_DPI,0,&pixelSize);
-    LOGD_IF(ret == FcResultMatch,"dpi =%f",pixelSize);
+    LOGV_IF(ret == FcResultMatch,"dpi =%f",pixelSize);
 
     FcLangSet *langset=nullptr;
     ret = FcPatternGetLangSet(&font, FC_LANG,0,&langset);
@@ -71,7 +71,7 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
 	mStyle|=SYSLANG_MATCHED;
     //FcLangSetDestroy(langset);
     //it seems langset is destroied by FcPattern iteself,destroied  here willc aused crash
-    LOGD("has %s=%d",mSystemLang.c_str(),ret);
+    LOGV("has %s=%d",mSystemLang.c_str(),ret);
     s = nullptr;
 
     Cairo::Matrix matrix = Cairo::identity_matrix();
@@ -322,7 +322,7 @@ int Typeface::loadFromFontConfig(){
 	const std::string family = tf->getFamily();
 
 	sSystemFontMap.insert({family,tf});
-	LOGD("font %s %p",family.c_str(),tf);
+	LOGV("font %s %p",family.c_str(),tf);
 	//FT_Face ftFace ftFace = tf->mFontFace->;
 	//const double scale = (double)ftFace->height/ftFace->units_per_EM;//
 	tf->mScale = 1.f;//scale;
@@ -332,20 +332,20 @@ int Typeface::loadFromFontConfig(){
             auto it = sSystemFontMap.find(ms);
             if( it == sSystemFontMap.end()){
 		sSystemFontMap.insert({std::string(ms),tf});
-                LOGD("family:[%s] is marked as [%s]",family.c_str(),ms.c_str());
+                LOGV("family:[%s] is marked as [%s]",family.c_str(),ms.c_str());
 	    }
 	    if(ms.find("mono")!=std::string::npos){
 		it = sSystemFontMap.find("monospace");
 		if(it == sSystemFontMap.end()){
 	            sSystemFontMap.insert({std::string("monospace"),tf});
-		    LOGD("family [%s] is marked as [monospace]",family.c_str());
+		    LOGV("family [%s] is marked as [monospace]",family.c_str());
 		}
 	    }
         }else if(std::regex_search(family,patMono)){
             auto it = sSystemFontMap.find("monospace");
             if( it == sSystemFontMap.end()){
 		sSystemFontMap.insert({std::string("monospace"),tf});
-		LOGD("family [%s] is marked as [monospace]",family.c_str());
+		LOGV("family [%s] is marked as [monospace]",family.c_str());
 	    }
         }
 	if(std::regex_search(family,patSerif)){
@@ -353,7 +353,7 @@ int Typeface::loadFromFontConfig(){
 		auto it = sSystemFontMap.find("serif");
 		if(it == sSystemFontMap.end()){
 		    sSystemFontMap.insert({std::string("serif"),tf});
-		     LOGD("family [%s] is marked as [serif]",family.c_str());
+		     LOGV("family [%s] is marked as [serif]",family.c_str());
 		}
 	    }
 	}

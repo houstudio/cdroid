@@ -1624,7 +1624,7 @@ void ViewGroup::drawInvalidateRegion(Canvas&canvas){
     int num=mInvalidRgn->get_num_rectangles();
     canvas.set_source_rgb(0,1,0);
     for(int i=0;i<num;i++){
-        RectangleInt r=mInvalidRgn->get_rectangle(i);
+        RectangleInt r = mInvalidRgn->get_rectangle(i);
         canvas.rectangle(r.x,r.y,r.width,r.height);
     }
     canvas.stroke();
@@ -1839,13 +1839,13 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
              Transformation t;
              bool transformed = getChildStaticTransformation(child,&t);
              if(transformed){
-                 transformMatrix=t.getMatrix();
+                 transformMatrix = t.getMatrix();
                  if(!child->hasIdentityMatrix())
                       transformMatrix.multiply(transformMatrix,childMatrix);
              }else
-                 transformMatrix=childMatrix;
+                 transformMatrix = childMatrix;
          }else{
-             transformMatrix=childMatrix;
+             transformMatrix = childMatrix;
          }
          transformMatrix.transform_rectangle((RectangleInt&)dirty);
          LOGV("(%d,%d,%d,%d)-->(%d,%d,%d,%d) rotation=%f",boundingRect.left,boundingRect.top,boundingRect.width,boundingRect.height,
@@ -1882,7 +1882,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 
     //set invalidate region to rootview
     if(child->isTemporarilyDetached()==false){
-        ViewGroup*root= getRootView();
+        ViewGroup*root = getRootView();
         dirty.intersect(0,0,root->getWidth(),root->getHeight());
         root->mInvalidRgn->do_union((const RectangleInt&)dirty);
     }
@@ -1894,7 +1894,7 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
             dirty.offset(location[CHILD_LEFT_INDEX]-mScrollX,location[CHILD_TOP_INDEX]-mScrollY);
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == 0) {
-                dirty.Union(0, 0, mRight-mLeft,mBottom-mTop);
+                dirty.Union(0, 0, mRight - mLeft,mBottom - mTop);
             }
 
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
