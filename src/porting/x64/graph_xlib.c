@@ -61,7 +61,7 @@ INT GFXInit(){
     if(x11Display)return E_OK;
     XInitThreads(); 
     x11Display=XOpenDisplay(NULL);
-    LOGE_IF(x11Display==NULL,"x11Display init failed,RFB(VNC Viewer) is mandatoried ");
+    LOGI("x11Display init =%p",x11Display);
     if(x11Display){
         pthread_t tid;
         XSetWindowAttributes winattrs;
@@ -151,7 +151,7 @@ static void  X11Expose(int x,int y,int w,int h){
      if(x11Display&&mainSurface){
          XPutImage(x11Display,x11Window,mainGC,mainSurface,x,y,x,y,w,h);
          //XSendEvent(x11Display,x11Window,False,0,(XEvent*)&e);
-         //XPutBackEvent(x11Display,(XEvent*)&e);
+         XPutBackEvent(x11Display,(XEvent*)&e);
      }
 }
 INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
@@ -242,9 +242,9 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* src
         pbs+=nsrc->bytes_per_line;
         pbd+=ndst->bytes_per_line;
     }
-    LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.x+rs.w,rs.y+rs.h,dx,dy,dx+rs.w,dy+rs.h);
-    if(ndst==mainSurface){
-        if(x11Display) X11Expose(dx+screenMargin.x,dy+screenMargin.h,rs.w,rs.h);
+    LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.w,rs.h,dx,dy,rs.w,rs.h);
+    if((ndst==mainSurface)&&x11Display){
+        X11Expose(dx+screenMargin.x,dy+screenMargin.h,rs.w,rs.h);
     }
     return 0;
 }
@@ -262,9 +262,8 @@ static void* X11EventProc(void*p){
         int rc=XNextEvent(x11Display, &event);
         switch(event.type){
         case Expose:if(mainSurface){
-            XExposeEvent e=event.xexpose;
-            LOGV("event.xexpose=%d,%d-%d,%d",e.x,e.y,e.width,e.height);
-            XPutImage(x11Display,x11Window,mainGC,mainSurface,e.x,e.y,e.x,e.y,e.width,e.height);
+                XExposeEvent e=event.xexpose;
+                XPutImage(x11Display,x11Window,mainGC,mainSurface,e.x,e.y,e.x,e.y,e.width,e.height);
             }break;
         case ConfigureNotify:
             XPutImage(x11Display,x11Window,mainGC,mainSurface,0,0,0,0,mainSurface->width,mainSurface->height);

@@ -13,24 +13,25 @@ DECLARE_WIDGET(AbsSeekBar)
 AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,attrs){
     initSeekBar();
 
+    mOrientation = attrs.getInt("orientation",std::map<const std::string,int>{
+	    {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}},mOrientation);
     setThumb(attrs.getDrawable("thumb"));
     setTickMark(attrs.getDrawable("tickMark"));
-    const int thumbOffset=attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
+    const int thumbOffset = attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
     setThumbOffset(thumbOffset);
 
     const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
-    mOrientation = attrs.getInt("orientation",std::map<const std::string,int>{
-		    {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}},mOrientation);
     mDisabledAlpha = useDisabledAlpha?attrs.getFloat("disabledAlpha", 0.5f):1.f;
 
     applyThumbTint();
     applyTickMarkTint();
-
-    mScaledTouchSlop = ViewConfiguration::get(ctx).getScaledTouchSlop();
 }
 
 AbsSeekBar::AbsSeekBar(int w,int h):ProgressBar(w,h){
     initSeekBar();
+    mOrientation = (w>h)?HORIZONTAL:VERTICAL;
+    applyThumbTint();
+    applyTickMarkTint();
 }
 
 void AbsSeekBar::initSeekBar(){
@@ -83,7 +84,7 @@ void AbsSeekBar::onVisualProgressChanged(int id, float scale){
     ProgressBar::onVisualProgressChanged(id,scale);
     if (id ==R::id::progress) {
         if (mThumb != nullptr) {
-            setThumbPos(getWidth(),mThumb, scale, INT_MIN);
+            setThumbPos((mOrientation==HORIZONTAL)?getWidth():getHeight(),mThumb, scale, INT_MIN);
             // Since we draw translated, the drawable's bounds that it signals
             // for invalidation won't be the actual bounds we want invalidated,
             // so just invalidate this whole view.
@@ -196,7 +197,10 @@ void AbsSeekBar::setThumb(Drawable*thumb){
         // Assuming the thumb drawable is symmetric, set the thumb offset
         // such that the thumb will hang halfway off either edge of the
         // progress bar.
-        mThumbOffset = thumb->getIntrinsicWidth() / 2;
+	if(mOrientation==HORIZONTAL)
+            mThumbOffset = thumb->getIntrinsicWidth() / 2;
+	else
+            mThumbOffset = thumb->getIntrinsicHeight() / 2;
         // If we're updating get the new states
         if (needUpdate && (thumb->getIntrinsicWidth() != mThumb->getIntrinsicWidth()
                 || thumb->getIntrinsicHeight() != mThumb->getIntrinsicHeight())) {
@@ -270,35 +274,54 @@ int AbsSeekBar::getThumbOffset()const{
 }
 
 void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
-    const int mPaddingTop=0,mPaddingLeft=0,mPaddingRight=0,mPaddingBottom=0;
     const int paddedHeight = h - mPaddingTop - mPaddingBottom;
+    const int paddedWidth  = w - mPaddingLeft- mPaddingRight;
     Drawable* track = getCurrentDrawable();
     Drawable* thumb = mThumb;
     // The max height does not incorporate padding, whereas the height
     // parameter does.
     const int trackHeight = std::min(mMaxHeight, paddedHeight);
+    const int trackWidth  = std::min(mMaxWidth, paddedWidth);
     const int thumbHeight = thumb == nullptr ? 0 : thumb->getIntrinsicHeight();
+    const int thumbWidth  = thumb == nullptr ? 0 : thumb->getIntrinsicWidth();
 
     // Apply offset to whichever item is taller.
     int trackOffset;
     int thumbOffset;
-    if (thumbHeight > trackHeight) {
-        const int offsetHeight = (paddedHeight - thumbHeight) / 2;
-        trackOffset = offsetHeight + (thumbHeight - trackHeight) / 2;
-        thumbOffset = offsetHeight;
-    } else {
-        const int offsetHeight = (paddedHeight - trackHeight) / 2;
-        trackOffset = offsetHeight;
-        thumbOffset = offsetHeight + (trackHeight - thumbHeight) / 2;
+    if(mOrientation==HORIZONTAL){
+        if (thumbHeight > trackHeight) {
+            const int offsetHeight = (paddedHeight - thumbHeight) / 2;
+            trackOffset = offsetHeight + (thumbHeight - trackHeight) / 2;
+            thumbOffset = offsetHeight;
+        } else {
+            const int offsetHeight = (paddedHeight - trackHeight) / 2;
+            trackOffset = offsetHeight;
+            thumbOffset = offsetHeight + (trackHeight - thumbHeight) / 2;
+        }
+    }else{
+        if (thumbWidth > trackWidth) {
+            const int offsetWidth = (paddedWidth - thumbWidth) / 2;
+            trackOffset = offsetWidth + (thumbWidth - trackWidth) / 2;
+            thumbOffset = offsetWidth;
+        } else {
+            const int offsetWidth = (paddedWidth - trackWidth) / 2;
+            trackOffset = offsetWidth;
+            thumbOffset = offsetWidth + (trackWidth - thumbWidth) / 2;
+        }
     }
 
     if (track) {
-        const int trackWidth = w - mPaddingRight - mPaddingLeft;
-        track->setBounds(0, trackOffset, trackWidth, trackHeight);
+	if(mOrientation==HORIZONTAL){
+            const int trackWidth = w - mPaddingRight - mPaddingLeft;
+            track->setBounds(0, trackOffset, trackWidth, trackHeight);
+	}else{
+            const int trackHeight = h - mPaddingTop - mPaddingBottom;
+            track->setBounds(0, trackOffset, trackWidth, trackHeight);
+	}
     }
 
     if (thumb) {
-        setThumbPos(w, thumb, getScale(), thumbOffset);
+        setThumbPos((mOrientation == HORIZONTAL)?w:h, thumb, getScale(), thumbOffset);
     }
 }
 
@@ -309,50 +332,83 @@ float AbsSeekBar::getScale()const{
     return range > 0 ? (getProgress() - min) / (float) range : 0;
 }
 
-void AbsSeekBar::setThumbPos(int w, Drawable* thumb, float scale, int offset){
+void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
 
-    int available = w -mPaddingLeft - mPaddingRight;
     const int thumbWidth = thumb->getIntrinsicWidth();
     const int thumbHeight= thumb->getIntrinsicHeight();
-    available -= thumbWidth;
+    int available = (mOrientation==HORIZONTAL)?(wh - mPaddingLeft - mPaddingRight):(wh- mPaddingTop - mPaddingBottom);
+    available -= (mOrientation==HORIZONTAL)?thumbWidth:thumbHeight;
 
     // The extra space for the thumb to move on the track
     available += mThumbOffset * 2;
 
     const int thumbPos = (int) (scale * available + 0.5f);
 
-    int top, bottom;
-    if (offset == INT_MIN) {
-        const Rect oldBounds = thumb->getBounds();
-        top = oldBounds.top;
-        bottom = oldBounds.bottom();
-    } else {
-        top = offset;
-        bottom = offset + thumbHeight;
+    int left,top,right,bottom;
+    if(mOrientation==HORIZONTAL){
+        if (offset == INT_MIN) {
+            const Rect oldBounds = thumb->getBounds();
+            top = oldBounds.top;
+            bottom = oldBounds.bottom();
+        } else {
+            top = offset;
+            bottom = offset + thumbHeight;
+        }
+
+        left = (isLayoutRtl() && mMirrorForRtl) ? available - thumbPos : thumbPos;
+        right = left + thumbWidth;
+
+	Drawable* background = getBackground();
+        if (background != nullptr) {
+            const int offsetX = mPaddingLeft - mThumbOffset;
+            const int offsetY = mPaddingTop;
+            background->setHotspotBounds(left + offsetX, top + offsetY,thumbWidth,thumbHeight);
+        }
+        LOGV("thumb.size=%dx%d scale=%f thumbPos=%d/%d",thumbWidth,thumbHeight,scale,thumbPos,wh);
+        // Canvas will be translated, so 0,0 is where we start drawing
+        thumb->setBounds(left, top,thumbWidth,thumbHeight);
+    }else{
+        if(offset == INT_MIN){
+            const Rect oldBounds = thumb->getBounds();
+	    left = oldBounds.left;
+	    right= oldBounds.right();
+        }else{
+            left = offset;
+	    right= offset +thumbWidth;
+        }
+	top =  available - thumbPos;
+	bottom =top + thumbHeight;
+        Drawable* background = getBackground();
+        if (background != nullptr) {
+            const int offsetX = mPaddingLeft; - mThumbOffset;
+            const int offsetY = mPaddingTop + mThumbOffset;
+            background->setHotspotBounds(left , top + offsetY,thumbWidth,thumbHeight);
+        }
+	thumb->setBounds(left, top,thumbWidth,thumbHeight);
+	LOGV("thumb.pos=(%d,%d) scale=%f thumbPos=%d/%d",left,top,scale,thumbPos,wh);
     }
 
-    const int left = (isLayoutRtl() && mMirrorForRtl) ? available - thumbPos : thumbPos;
-    const int right = left + thumbWidth;
-
-    Drawable* background = getBackground();
+    /*Drawable* background = getBackground();
     if (background != nullptr) {
         const int offsetX = mPaddingLeft - mThumbOffset;
         const int offsetY = mPaddingTop;
         background->setHotspotBounds(left + offsetX, top + offsetY,thumbWidth,thumbHeight);
     }
-    LOGV("thumb.size=%dx%d (%d,%d-%d,%d)",thumbWidth,thumbHeight,left,right,top,bottom);
     // Canvas will be translated, so 0,0 is where we start drawing
-    thumb->setBounds(left, top,thumbWidth,thumbHeight);
+    thumb->setBounds(left, top,thumbWidth,thumbHeight);*/
 }
 
 
 void AbsSeekBar::drawThumb(Canvas&canvas) {
     if (mThumb != nullptr) {
-        Rect r=mThumb->getBounds();
+        Rect r = mThumb->getBounds();
         canvas.save();
         // Translate the padding. For the x, we need to allow the thumb to
         // draw in its extra space
-        canvas.translate( mPaddingLeft - mThumbOffset, mPaddingTop);
+	if(mOrientation==HORIZONTAL)
+            canvas.translate( mPaddingLeft - mThumbOffset, mPaddingTop);
+        else
+            canvas.translate( mPaddingLeft, mPaddingTop - mThumbOffset);
         mThumb->draw(canvas);
         canvas.restore();
     }
@@ -367,12 +423,18 @@ void  AbsSeekBar::drawTickMarks(Canvas&canvas){
         int halfH = h >= 0 ? h / 2 : 1;
         mTickMark->setBounds(-halfW, -halfH, halfW, halfH);
 
-        float spacing = getWidth()/ (float) count;
+        float spacing = (mOrientation==HORIZONTAL?getWidth():getHeight())/ (float) count;
         canvas.save();
-        canvas.translate(0, getHeight() / 2);
+        if(mOrientation==HORIZONTAL)
+            canvas.translate(0, getHeight() / 2);
+        else
+            canvas.translate(getWidth()/2,0);
         for (int i = 0; i <= count; i++) {
             mTickMark->draw(canvas);
-            canvas.translate(spacing, 0);
+	    if(mOrientation==HORIZONTAL)
+                canvas.translate(spacing, 0);
+	    else
+                canvas.translate(0, spacing);
         }
         canvas.restore();
     }
@@ -488,7 +550,7 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
             } else if (y < mPaddingTop) {
                 scale = 1.0f;
             } else {
-                scale = (availableHeight - y + mPaddingLeft) / (float) availableHeight  + mTouchThumbOffset;
+                scale = float(availableHeight - y + mPaddingTop) / availableHeight  + mTouchThumbOffset;
                 progress = mTouchProgressOffset;
             }
         } else {
@@ -497,14 +559,13 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
             } else if (y > height - mPaddingBottom) {
                 scale = .0f;
             } else {
-                scale = (height-y - mPaddingTop) / (float) availableHeight + mTouchThumbOffset;
+                scale = float(availableHeight - y - mPaddingBottom) / availableHeight - mTouchThumbOffset;
                 progress = mTouchProgressOffset;
             }
         }
     }
 
-    int range = getMax() - getMin();
-    progress += scale * range + getMin();
+    progress += scale * (getMax() - getMin()) + getMin();
 
     setHotspot(x, y);
     setProgressInternal((int)std::round(progress), true, false);
@@ -517,11 +578,20 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
     case MotionEvent::ACTION_DOWN:
 	if(mThumb){
              const int availableWidth = getWidth() - mPaddingLeft - mPaddingRight;
-             mTouchThumbOffset = (getProgress() - getMin()) / (float) (getMax()
+	     const int availableHeight = getHeight() - mPaddingTop - mPaddingBottom;
+	     if(mOrientation==HORIZONTAL){
+                 mTouchThumbOffset = (getProgress() - getMin()) / (float) (getMax()
                     - getMin()) - (event.getX() - mPaddingLeft) / availableWidth;
-             if (std::abs(mTouchThumbOffset * availableWidth) > getThumbOffset()) {
-                 mTouchThumbOffset = 0;
-             }
+                 if (std::abs(mTouchThumbOffset * availableWidth) > getThumbOffset()) {
+                     mTouchThumbOffset = 0;
+                 }
+	     }else{
+                 mTouchThumbOffset = (getProgress() - getMin()) / (float) (getMax()
+                    - getMin()) - (event.getY() - mPaddingTop) / availableHeight;
+                 if (std::abs(mTouchThumbOffset * availableHeight) > getThumbOffset()) {
+                     mTouchThumbOffset = 0;
+                 }
+	     }
 	}
         if (isInScrollingContainer()) {
             mTouchDownX = event.getX();
