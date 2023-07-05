@@ -109,7 +109,7 @@ INT GFXFlip(HANDLE surface){
     IDirectFBSurface*dfbdst=primarySurface;
     DFBRegion clip;
     primarySurface->GetClip(primarySurface,&clip);
-    int ret=0;//primarySurface->Flip(primarySurface,&clip, DSFLIP_ONSYNC);
+    const int ret=0;//primarySurface->Flip(primarySurface,&clip, DSFLIP_ONSYNC);
     return ret;
 }
 
@@ -165,13 +165,15 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
      if(dx<0){ rs.x-=dx; rs.w=(int)rs.w+dx; dx=0;}
      if(dy<0){ rs.y-=dy; rs.h=(int)rs.h+dy; dy=0;}
      if(dx+rs.w > dstwidth - screenMargin.x - screenMargin.w)
-	   rs.w = dstwidth -screenMargin.x - screenMargin.w -dx;
+	   rs.w = dstwidth - screenMargin.x - screenMargin.w -dx;
      if(dy+rs.h > dstheight- screenMargin.y - screenMargin.h)
-	   rs.h = dstheight-screenMargin.y - screenMargin.h -dy;
+	   rs.h = dstheight- screenMargin.y - screenMargin.h -dy;
 
-     //dfbdst->SetPorterDuff(dfbdst,DSPD_SRC_OVER);
+     dfbdst->SetPorterDuff(dfbdst,DSPD_SRC);
      const int ox=dx,oy=dy;
      rd = rs;
+     dx += screenMargin.x;
+     dy += screenMargin.y;
      dfbdst->Blit(dfbdst,dfbsrc,&rs,dx,dy);
      region.x1= dx;
      region.y1= dy;
