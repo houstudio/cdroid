@@ -32,9 +32,9 @@ Switch::Switch(Context* context,const AttributeSet& a)
 
     mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
-    ColorStateList* thumbTintList = context->getColorStateList(a.getString("thumbTint"));
-    if (thumbTintList) {
-        mThumbTintList = thumbTintList;
+    const std::string thumbTint = a.getString("thumbTint");
+    if (!thumbTint.empty()) {
+        mThumbTintList = context->getColorStateList(thumbTint);
         mHasThumbTint = true;
     }
     /*BlendMode thumbTintMode = Drawable.parseBlendMode( a.getInt(com.android.internal.R.styleable.Switch_thumbTintMode, -1),null);

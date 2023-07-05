@@ -66,7 +66,7 @@ void RelativeLayout::setGravity(int gravity) {
 }
 
 void RelativeLayout::setHorizontalGravity(int horizontalGravity) {
-    int gravity = horizontalGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
+    const int gravity = horizontalGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK;
     if ((mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) != gravity) {
         mGravity = (mGravity & ~Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) | gravity;
         requestLayout();
@@ -74,7 +74,7 @@ void RelativeLayout::setHorizontalGravity(int horizontalGravity) {
 }
 
 void RelativeLayout::setVerticalGravity(int verticalGravity) {
-    int gravity = verticalGravity & Gravity::VERTICAL_GRAVITY_MASK;
+    const int gravity = verticalGravity & Gravity::VERTICAL_GRAVITY_MASK;
     if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != gravity) {
         mGravity = (mGravity & ~Gravity::VERTICAL_GRAVITY_MASK) | gravity;
         requestLayout();
@@ -137,10 +137,10 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
     bool verticalGravity = gravity != Gravity::TOP && gravity != 0;
 
-    int left = INT_MAX;//Integer.MAX_VALUE;
-    int top  = INT_MAX;//Integer.MAX_VALUE;
-    int right = INT_MIN;//Integer.MIN_VALUE;
-    int bottom= INT_MIN;//Integer.MIN_VALUE;
+    int left = INT_MAX;
+    int top  = INT_MAX;
+    int right = INT_MIN;
+    int bottom= INT_MIN;
 
     bool offsetHorizontalAxis = false;
     bool offsetVerticalAxis = false;
@@ -156,7 +156,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     // So, instead of running the code twice, we just set the width to a "default display width"
     // before the computation and then, as a last pass, we will update their real position with
     // an offset equals to "DEFAULT_WIDTH - width".
-    int layoutDirection = getLayoutDirection();
+    const int layoutDirection = getLayoutDirection();
     if (isLayoutRtl() && myWidth == -1) {
         myWidth = DEFAULT_WIDTH;
     }
@@ -188,6 +188,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
             applyVerticalSizeRules(params, myHeight, child->getBaseline());
             measureChild(child, params, myWidth, myHeight);
+
             if (positionChildVertical(child, params, myHeight, isWrapContentHeight)) {
                 offsetVerticalAxis = true;
             }

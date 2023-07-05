@@ -164,10 +164,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 
      if(dx<0){ rs.x-=dx; rs.w=(int)rs.w+dx; dx=0;}
      if(dy<0){ rs.y-=dy; rs.h=(int)rs.h+dy; dy=0;}
-     if(dx+rs.w > ndst->width - screenMargin.x - screenMargin.w)
-	   rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
-     if(dy+rs.h > ndst->height- screenMargin.y - screenMargin.h)
-	   rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
+     if(dx+rs.w > dfbdst->width - screenMargin.x - screenMargin.w)
+	   rs.w = dfbdst->width -screenMargin.x - screenMargin.w -dx;
+     if(dy+rs.h > dfbdst->height- screenMargin.y - screenMargin.h)
+	   rs.h = dfbdst->height-screenMargin.y - screenMargin.h -dy;
 
      //dfbdst->SetPorterDuff(dfbdst,DSPD_SRC_OVER);
      const int ox=dx,oy=dy;

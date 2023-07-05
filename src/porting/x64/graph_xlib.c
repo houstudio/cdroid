@@ -151,7 +151,7 @@ static void  X11Expose(int x,int y,int w,int h){
      if(x11Display&&mainSurface){
          XPutImage(x11Display,x11Window,mainGC,mainSurface,x,y,x,y,w,h);
          //XSendEvent(x11Display,x11Window,False,0,(XEvent*)&e);
-         XPutBackEvent(x11Display,(XEvent*)&e);
+         //XPutBackEvent(x11Display,(XEvent*)&e);
      }
 }
 INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){

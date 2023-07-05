@@ -136,13 +136,20 @@ void AbsSeekBar::onProgressRefresh(float scale, bool fromUser, int progress){
 
 void AbsSeekBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     Drawable* d = getCurrentDrawable();
-    int thumbHeight = mThumb == nullptr ? 0 : mThumb->getIntrinsicHeight();
+    const int thumbHeight = mThumb == nullptr ? 0 : mThumb->getIntrinsicHeight();
+    const int thumbWidth  = mThumb == nullptr ? 0 : mThumb->getIntrinsicWidth();
     int dw = 0;
     int dh = 0;
     if (d != nullptr) {
-        dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
-        dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
-        dh = std::max(thumbHeight, dh);
+	if(mOrientation==HORIZONTAL){
+            dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
+            dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
+            dh = std::max(thumbHeight, dh);
+	}else{
+            dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
+            dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
+            dw = std::max(thumbWidth, dw);
+	}
     }
     dw += mPaddingLeft + mPaddingRight;
     dh += mPaddingTop + mPaddingBottom;
@@ -280,8 +287,8 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
     Drawable* thumb = mThumb;
     // The max height does not incorporate padding, whereas the height
     // parameter does.
-    const int trackHeight = std::min(mMaxHeight, paddedHeight);
-    const int trackWidth  = std::min(mMaxWidth, paddedWidth);
+    int trackHeight = std::min(mMaxHeight, paddedHeight);
+    int trackWidth  = std::min(mMaxWidth, paddedWidth);
     const int thumbHeight = thumb == nullptr ? 0 : thumb->getIntrinsicHeight();
     const int thumbWidth  = thumb == nullptr ? 0 : thumb->getIntrinsicWidth();
 
@@ -312,11 +319,13 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
 
     if (track) {
 	if(mOrientation==HORIZONTAL){
-            const int trackWidth = w - mPaddingRight - mPaddingLeft;
+            trackWidth = w - mPaddingRight - mPaddingLeft;
             track->setBounds(0, trackOffset, trackWidth, trackHeight);
+            LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,0, trackOffset, trackWidth, trackHeight,mMaxHeight);
 	}else{
-            const int trackHeight = h - mPaddingTop - mPaddingBottom;
-            track->setBounds(0, trackOffset, trackWidth, trackHeight);
+            trackHeight = h - mPaddingTop - mPaddingBottom;
+            track->setBounds(trackOffset,0, trackWidth, trackHeight);
+            LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,trackOffset,0,trackWidth, trackHeight,mMaxWidth);
 	}
     }
 
@@ -364,7 +373,6 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
             const int offsetY = mPaddingTop;
             background->setHotspotBounds(left + offsetX, top + offsetY,thumbWidth,thumbHeight);
         }
-        LOGV("thumb.size=%dx%d scale=%f thumbPos=%d/%d",thumbWidth,thumbHeight,scale,thumbPos,wh);
         // Canvas will be translated, so 0,0 is where we start drawing
         thumb->setBounds(left, top,thumbWidth,thumbHeight);
     }else{
@@ -385,7 +393,6 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
             background->setHotspotBounds(left , top + offsetY,thumbWidth,thumbHeight);
         }
 	thumb->setBounds(left, top,thumbWidth,thumbHeight);
-	LOGV("thumb.pos=(%d,%d) scale=%f thumbPos=%d/%d",left,top,scale,thumbPos,wh);
     }
 
     /*Drawable* background = getBackground();

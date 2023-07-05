@@ -371,7 +371,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         }
     }
     canvas.restore();
-    //if(mTintFilter)mTintFilter->apply(canvas,mBounds);
+    if(mTintFilter)mTintFilter->apply(canvas,mBounds);
 }
 
 Insets BitmapDrawable::getOpticalInsets() {

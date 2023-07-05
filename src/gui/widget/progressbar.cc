@@ -198,9 +198,9 @@ void ProgressBar::initProgressBar(){
     mDuration = 4000;
     mProgressTintInfo= nullptr;
     mBehavior = AlphaAnimation::RESTART;
-    mMinWidth  = 48;
+    mMinWidth  = 24;
     mMaxWidth  = 96;
-    mMinHeight = 48;
+    mMinHeight = 24;
     mMaxHeight = 96;
     mNoInvalidate = true;
     mCurrentDrawable = nullptr;
@@ -339,7 +339,7 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (d != nullptr) {
         dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
         dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
-        LOGV("%p drawable.size=%dx%d",this,d->getIntrinsicWidth(),d->getIntrinsicHeight());
+        LOGV("%p:%d drawable.size=%dx%d",this,mID,d->getIntrinsicWidth(),d->getIntrinsicHeight());
     }
     updateDrawableState();
 
@@ -439,7 +439,7 @@ void ProgressBar::setProgressDrawable(Drawable*d){
             if (d->isStateful())d->setState(getDrawableState());
 
             // Make sure the ProgressBar is always tall enough
-            int drawableHeight = d->getMinimumHeight();
+            const int drawableHeight = d->getMinimumHeight();
             if (mMaxHeight < drawableHeight) {
                 mMaxHeight = drawableHeight;
                 requestLayout();
@@ -681,7 +681,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
 }
 
 void ProgressBar::onSizeChanged(int w,int h,int ow,int oh){
-    LOGV("%p sizechanged->(%d,%d)",w,h);
+    LOGV("%p:%d sizechanged->(%d,%d)",this,mID,w,h);
     updateDrawableBounds(w,h);
 }
 
