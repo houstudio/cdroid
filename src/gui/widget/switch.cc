@@ -781,7 +781,6 @@ void Switch::onDraw(Canvas& canvas) {
         canvas.translate(left, 0);//top);
         switchText->draw(canvas);
     }
-
     canvas.restore();
 }
 

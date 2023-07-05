@@ -1023,7 +1023,10 @@ void NumberPicker::onDraw(Canvas&canvas){
         if( mPat == nullptr ) {
             Color c1(mSelectedTextColor), c2(mTextColor);
             CycleInterpolator ci(0.5f);
-            mPat = Cairo::LinearGradient::create(0,0,(isHorizontalMode()?getWidth():0),(isHorizontalMode()?0:getHeight()));
+	    if(isHorizontalMode())
+                mPat = Cairo::LinearGradient::create(mSelectorElementSize/2,0,getWidth(),0);
+	    else
+                mPat = Cairo::LinearGradient::create(0,mSelectorElementSize/2,0,getHeight());
             const int cStops = mSelectorIndices.size()*3;
             for(int i = 0; i < cStops ;i++){
                 const float offset = (i<cStops/2)?sin(M_PI*i/(cStops-1))/2.f:(1.f+sin(M_PI*i/(cStops-1))/2.f);//float(i)/cStops;
