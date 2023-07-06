@@ -95,7 +95,6 @@ void WindowManager::addWindow(Window*win){
 #else
     Looper::getDefault()->addEventHandler(win->mUIEventHandler);
 #endif
-    win->invalidate();
     win->post(std::bind(&Window::onCreate,win));
     win->post(std::bind(&Window::onActive,win));
     mActiveWindow = win;
