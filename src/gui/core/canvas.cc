@@ -113,6 +113,7 @@ void Canvas::dump2png(const char*fname){
 
 void DumpRegion(const std::string&label,RefPtr<Region>rgn){
     RectangleInt re=rgn->get_extents();
+    LOGV("%s:%d retcs",label.c_str(),rgn->get_num_rectangles());
     for(int i=0;i<rgn->get_num_rectangles();i++){
        RectangleInt rr=rgn->get_rectangle(i);
        LOGV("%s[%d]=%d,%d-%d,%d)",label.c_str(),i,rr.x,rr.y,rr.width,rr.height);

@@ -142,6 +142,10 @@ ViewGroup::ViewGroup(int x,int y,int w,int h)
 }
 
 void ViewGroup::initGroup(){
+    // ViewGroup doesn't draw by default
+    if (!DEBUG_DRAW/*isShowingLayoutBounds()*/) {
+        setFlags(WILL_NOT_DRAW, DRAW_MASK);
+    }
     mGroupFlags = FLAG_CLIP_CHILDREN; 
     mGroupFlags|= FLAG_CLIP_TO_PADDING;
     mGroupFlags|= FLAG_ANIMATION_DONE;
@@ -1832,7 +1836,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
     }
 
-    Rect boundingRect=dirty;
+    Rect boundingRect = dirty;
     if(!child->hasIdentityMatrix()||(mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0){
          Matrix transformMatrix;
          if((mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS)!=0){
@@ -1889,16 +1893,16 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 }
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
-    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {//0x20 0x8000
+    if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0||1) {//0x20 0x8000
         // either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
-            dirty.offset(location[CHILD_LEFT_INDEX]-mScrollX,location[CHILD_TOP_INDEX]-mScrollY);
+            dirty.offset(location[CHILD_LEFT_INDEX] - mScrollX,location[CHILD_TOP_INDEX] - mScrollY);
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == 0) {
                 dirty.Union(0, 0, mRight - mLeft,mBottom - mTop);
             }
 
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
-                if (!dirty.intersect(0, 0, mRight-mLeft,mBottom-mTop)) {
+                if (!dirty.intersect(0, 0, mRight - mLeft,mBottom - mTop)) {
                     dirty.setEmpty();
                 }
             }
@@ -1907,10 +1911,10 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
             location[CHILD_TOP_INDEX] = mTop;
         } else {
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) {
-                dirty.set(0, 0, mRight-mLeft,mBottom-mTop);
+                dirty.set(0, 0, mRight - mLeft,mBottom - mTop);
             } else {
                 // in case the dirty rect extends outside the bounds of this container
-                dirty.Union(0, 0, mRight-mLeft,mBottom-mTop);
+                dirty.Union(0, 0, mRight - mLeft,mBottom - mTop);
             }
             location[CHILD_LEFT_INDEX]= mLeft;
             location[CHILD_TOP_INDEX] = mTop;

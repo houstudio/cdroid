@@ -4071,7 +4071,8 @@ View& View::setFlags(int flags,int mask) {
             if (mParent) {
                 //ViewRootImpl viewRootImpl = getViewRootImpl();
                 if (//!sAutoFocusableOffUIThreadWontNotifyParents||
-                         focusableChangedByAuto == 0)
+		    ((mAttachInfo==nullptr)||(mAttachInfo->mRootView==nullptr))
+		    ||focusableChangedByAuto == 0)
                     shouldNotifyFocusableAvailable = canTakeFocus();
             }
         }
@@ -4790,7 +4791,7 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
-              || (fullInvalidate ||1/*&& isOpaque() != mLastIsOpaque*/)) {
+              || (fullInvalidate || isOpaque() != mLastIsOpaque)) {
         if (fullInvalidate) {
             mLastIsOpaque = isOpaque();
             mPrivateFlags &= ~PFLAG_DRAWN;

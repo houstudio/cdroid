@@ -205,18 +205,19 @@ void GraphDevice::composeSurfaces(){
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw = wBounds[i];
-        RefPtr<Region> rgn = wins[i]->mVisibleRgn;//winVisibleRgns[i];
+        RefPtr<Region>& rgn = wins[i]->mPendingRgn;//wins[i]->mVisibleRgn;//winVisibleRgns[i];
         HANDLE hdlSurface  = wSurfaces[i]->mHandle;
         if(rgn->empty())continue; 
         //mInvalidateRgn->subtract((const RectangleInt&)rcw);
-        rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
+        //rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
+	DumpRegion("Region",rgn);
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc = rgn->get_rectangle(j);
-            Rect rcc = {rc.x,rc.y,rc.width,rc.height};
-            rcc.offset(rcw.left,rcw.top);
+            //Rect rcc = {rc.x,rc.y,rc.width,rc.height};
+            //rcc.offset(rcw.left,rcw.top);
             //rcc.intersect(0,0,mScreenWidth,mScreenHeight);
-            if(rcc.empty())continue;
+            //if(rcc.empty())continue;
             int dx = rcw.left+rc.x;
             int dy = rcw.top+rc.y;
             const int ox = dx,oy=dy;
@@ -247,7 +248,7 @@ void GraphDevice::composeSurfaces(){
                 rd.y = rs.x;
                 break;
             }
-            LOGV("blit surface[%d](%d,%d,%d,%d)/(%d,%d,%d,%d) to (%d,%d)/(%d,%d) rotation=%d",j,
+            LOGV("blit surface[%d:%d](%d,%d,%d,%d)/(%d,%d,%d,%d) to (%d,%d)/(%d,%d) rotation=%d",i,j,
 	         rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height,ox,oy,dx,dy,rotation);
             if(hdlSurface)GFXBlit(mPrimarySurface ,/* rcw.left+rc.x , rcw.top+rc.y*/dx,dy , hdlSurface,(const GFXRect*)&rd);//rc);
             else mPrimaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y , rc.width , rc.height);
@@ -256,7 +257,8 @@ void GraphDevice::composeSurfaces(){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
         }
-        wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
+        rgn->subtract(rgn);
+        //wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
     }
     /*const RectangleInt rectScreen = {0,0,mScreenWidth,mScreenHeight};
     mInvalidateRgn->intersect(rectScreen);
