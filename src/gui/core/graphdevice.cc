@@ -205,10 +205,9 @@ void GraphDevice::composeSurfaces(){
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw = wBounds[i];
-        RefPtr<Region> rgn = wins[i]->mVisibleRgn;//winVisibleRgns[i];
+        RefPtr<Region> rgn = wins[i]->mVisibleRgn;
         HANDLE hdlSurface  = wSurfaces[i]->mHandle;
         if(rgn->empty())continue; 
-        //mInvalidateRgn->subtract((const RectangleInt&)rcw);
         rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
 	DumpRegion("Region",rgn);
@@ -259,35 +258,6 @@ void GraphDevice::composeSurfaces(){
         }
         wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
     }
-    /*const RectangleInt rectScreen = {0,0,mScreenWidth,mScreenHeight};
-    mInvalidateRgn->intersect(rectScreen);
-    LOGD_IF(mInvalidateRgn->get_num_rectangles(),"mInvalidateRgn.size=%d",mInvalidateRgn->get_num_rectangles());
-    for(int i = 0;i < mInvalidateRgn->get_num_rectangles() ;i++){
-        const RectangleInt rc = mInvalidateRgn->get_rectangle(i);
-        RectangleInt rd = rc;
-	switch(rotation){
-	case Display::ROTATION_0:break;
-	case Display::ROTATION_90:
-	    //rd.x = rc.y;
-	    //rd.y = mScreenWidth-rc.x-rc.width;
-	    rd.width = rc.height;
-	    rd.height= rc.width;
-	    break;
-	case Display::ROTATION_180:
-	    rd.x = mScreenWidth - rc.x;
-	    rd.y = mScreenHeight- rc.y;
-	    break;
-	case Display::ROTATION_270:
-	    rd.y = rc.x;
-	    rd.x = mScreenHeight- rc.y -rc.height;
-            rd.width = rc.height;
-            rd.height= rc.width;
-	    break;
-	}
-        GFXFillRect(mPrimarySurface,(const GFXRect*)&rd,0);
-        LOGD("%d:(%d,%d,%d,%d)->(%d,%d,%d,%d)",i,rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height);
-    }
-    mInvalidateRgn->do_xor(mInvalidateRgn);*/
     if(mShowFPS && mPrimaryContext && mBannerContext){
 	mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
 	mPrimaryContext->set_source(mBannerContext->get_target(),0,0);

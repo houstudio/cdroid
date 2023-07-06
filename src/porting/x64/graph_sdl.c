@@ -132,8 +132,13 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     gmask = 0x0000ff00;
     bmask = 0x000000ff;
 #endif
-    surf->surface=SDL_CreateRGBSurface(SDL_SWSURFACE,width, height, 32,rmask, gmask, bmask, amask);
-    surf->texture=SDL_CreateTextureFromSurface(sdlRenderer,surf->surface);
+    if(hwsurface){
+	surf->surface=SDL_GetWindowSurface(sdlWindow);
+	surf->texture=SDL_CreateTextureFromSurface(sdlRenderer,surf->surface);
+    }else{
+        surf->surface=SDL_CreateRGBSurface(SDL_SWSURFACE,width, height, 32,rmask, gmask, bmask, amask);
+        surf->texture=SDL_CreateTextureFromSurface(sdlRenderer,surf->surface);
+    }
     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->surface->pixels,width,height,hwsurface);
     *surface=surf;
     if(hwsurface)PrimarySurface=surf;
@@ -155,18 +160,18 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 
     LOGV("Blit %p[%dx%d] %d,%d-%d,%d -> %p[%dx%d] %d,%d",nsrc,nsrc->width,nsrc->height,
          rs.x,rs.y,rs.w,rs.h,ndst,ndst->width,ndst->height,dx,dy);
-    if(dx<0){rs.x-=dx;rs.w=(int)rs.w+dx; dx=0;}
-    if(dy<0){rs.y-=dy;rs.h=(int)rs.h+dy; dy=0;}
+    if(dx<0){rs.x -= dx;rs.w = (int)rs.w + dx; dx = 0;}
+    if(dy<0){rs.y -= dy;rs.h = (int)rs.h + dy; dy = 0;}
     if(dx + rs.w > ndst->width )rs.w = ndst->width - dx;
     if(dy + rs.h > ndst->height)rs.h = ndst->height- dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy);
-    SDL_BlitSurface(nsrc->surface,(const SDL_Rect *)&rs,ndst->surface,(const SDL_Rect *)&rs);
-    if(ndst->ishw){
-        SDL_UpdateTexture(ndst->texture,(const SDL_Rect *)NULL/*&rs*/,ndst->surface->pixels,ndst->pitch);
-        SDL_RenderCopy(sdlRenderer,ndst->texture,(const SDL_Rect *)NULL/*&rs*/,(const SDL_Rect *)NULL/*&rs*/);
-        SDL_RenderPresent(sdlRenderer);
-    }
+    GFXRect rd=rs;
+    rd.x = dx;
+    rd.y = dy;
+    SDL_BlitSurface(nsrc->surface,(const SDL_Rect *)&rs,ndst->surface,(const SDL_Rect *)&rd);
+    if(ndst->ishw)
+	SDL_UpdateWindowSurface(sdlWindow);
     return 0;
 }
 
