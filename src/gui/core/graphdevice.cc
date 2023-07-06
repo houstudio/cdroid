@@ -205,11 +205,11 @@ void GraphDevice::composeSurfaces(){
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i=0;i<wSurfaces.size();i++){
         Rect rcw = wBounds[i];
-        RefPtr<Region>& rgn = wins[i]->mPendingRgn;//wins[i]->mVisibleRgn;//winVisibleRgns[i];
+        RefPtr<Region> rgn = wins[i]->mVisibleRgn;//winVisibleRgns[i];
         HANDLE hdlSurface  = wSurfaces[i]->mHandle;
         if(rgn->empty())continue; 
         //mInvalidateRgn->subtract((const RectangleInt&)rcw);
-        //rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
+        rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
 	DumpRegion("Region",rgn);
         for(int j=0;j<rgn->get_num_rectangles();j++){
@@ -257,8 +257,7 @@ void GraphDevice::composeSurfaces(){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
         }
-        rgn->subtract(rgn);
-        //wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
+        wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
     }
     /*const RectangleInt rectScreen = {0,0,mScreenWidth,mScreenHeight};
     mInvalidateRgn->intersect(rectScreen);
