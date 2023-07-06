@@ -45,8 +45,6 @@ GraphDevice::GraphDevice(int fmt){
     mPrimaryContext = new Canvas(surf);
 
     mRectBanner.set(0,0,400,40);
-    RefPtr<Surface>bannerSurf=ImageSurface::create(Surface::Format::ARGB32,400,40);
-    mBannerContext = new Canvas(bannerSurf);
     
     mLastComposeTime = SystemClock::uptimeMillis();
 
@@ -66,7 +64,6 @@ GraphDevice::~GraphDevice(){
     mCV.notify_all();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     delete mPrimaryContext;
-    delete mBannerContext;
     GFXDestroySurface(mPrimarySurface);
     //mBannerSufrace is destroied by Canvas,GFXDestroySurface(mBannerSurface);
     LOGD("%p Destroied",this);
@@ -81,11 +78,11 @@ void GraphDevice::invalidate(const Rect&r){
     LOGV("(%d,%d,%d,%d)",r.left,r.top,r.width,r.height);
 }
 
-void GraphDevice::trackFPS() {
+void GraphDevice::trackFPS(Canvas& canvas) {
     // Tracks frames per second drawn. First value in a series of draws may be bogus
     // because it down not account for the intervening idle time
     long nowTime = SystemClock::currentTimeMillis();
-    if (mFpsStartTime <= 0) {
+    if (mFpsStartTime <=0) {
         mFpsStartTime = mFpsPrevTime = nowTime;
         mFpsNumFrames = 0;
     } else {
@@ -97,19 +94,20 @@ void GraphDevice::trackFPS() {
             const float fps = (float) mFpsNumFrames * 1000 / totalTime;
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
-            std::string fpsText = std::to_string(fps);
-            Cairo::Context::Operator oop = mBannerContext->get_operator();
-            mBannerContext->set_operator(Cairo::Context::Operator::CLEAR);
-            mBannerContext->set_source_rgb(.02,.02,.02);
-            mBannerContext->rectangle(0,0,mRectBanner.width,mRectBanner.height);
-            mBannerContext->fill();
-            mBannerContext->set_operator(oop);
-            mBannerContext->set_source_rgb(1,1,1);
-            mBannerContext->set_font_size(22);
-	    mBannerContext->move_to(10,8);
-	    //mBannerContext->show_text(fpsText);
-            mBannerContext->draw_text(mRectBanner,fpsText,Gravity::CENTER);
-        }
+       	    mFPSText = std::to_string(fps);
+	}
+	canvas.save();
+	Cairo::Context::Operator oop = canvas.get_operator();
+        canvas.set_operator(Cairo::Context::Operator::CLEAR);
+        canvas.set_source_rgb(.02,.02,.02);
+        canvas.rectangle(0,0,mRectBanner.width,mRectBanner.height);
+        canvas.fill();
+        canvas.set_operator(oop);
+        canvas.set_source_rgb(1,1,1);
+        canvas.set_font_size(22);
+	canvas.move_to(10,8);
+        canvas.draw_text(mRectBanner,mFPSText,Gravity::CENTER);
+	canvas.restore();
     }
 }
 
@@ -185,6 +183,36 @@ void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<
     }
 }
 
+void GraphDevice::rotateRectInWindow(const Rect&rcw,const Rect&rs,Rect&rd,int&dx,int&dy,int rotation){
+    const int ox =dx;
+    const int oy= dy;
+    switch(rotation){
+    case Display::ROTATION_0 : rd = rs;break;
+    case Display::ROTATION_90:
+        dx = oy;
+        dy = mScreenHeight -ox - rs.width;
+        rd.width  = rs.height;
+        rd.height = rs.width;
+        rd.left = rs.top;
+        rd.top = rcw.width -rs.left -rs.width;
+        break;
+    case Display::ROTATION_180:
+        dx = mScreenWidth - ox - rs.width;
+        dy = mScreenHeight- oy - rs.height;
+        rd.left = rcw.width  - rd.left - rs.width;
+        rd.top = rcw.height - rd.top - rs.height;
+        break;
+    case Display::ROTATION_270:
+        dy = ox;
+        dx = mScreenWidth - oy - rs.height;	
+        rd.width = rs.height;
+        rd.height= rs.width;
+        rd.left = rcw.height- rs.top -rs.height;
+        rd.top = rs.left;
+        break;
+    }
+}
+
 void GraphDevice::composeSurfaces(){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
     std::vector<Rect>wBounds;
@@ -200,28 +228,29 @@ void GraphDevice::composeSurfaces(){
         }
         return false;
     });
-    trackFPS();
     computeVisibleRegion(wins,winVisibleRgns);
+    bool fpsBlited = false;
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
-    for(int i=0;i<wSurfaces.size();i++){
+    for(int i=0;i< wSurfaces.size();i++){
         Rect rcw = wBounds[i];
-        RefPtr<Region> rgn = wins[i]->mVisibleRgn;
+        RefPtr<Region> rgn = wins[i]->mPendingRgn;//winVisibleRgns[i];//wins[i]->mVisibleRgn;
         HANDLE hdlSurface  = wSurfaces[i]->mHandle;
         if(rgn->empty())continue; 
-        rgn->intersect(wins[i]->mPendingRgn);/*it is already empty*/
+        rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
-	DumpRegion("Region",rgn);
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc = rgn->get_rectangle(j);
             //Rect rcc = {rc.x,rc.y,rc.width,rc.height};
             //rcc.offset(rcw.left,rcw.top);
             //rcc.intersect(0,0,mScreenWidth,mScreenHeight);
             //if(rcc.empty())continue;
-            int dx = rcw.left+rc.x;
-            int dy = rcw.top+rc.y;
-            const int ox = dx,oy=dy;
+            int dx = rcw.left+ rc.x;
+            int dy = rcw.top + rc.y;
+            const int ox = dx,oy = dy;
             RectangleInt rd = rc;
-            RectangleInt &rs= rc; 
+            const RectangleInt &rs= rc;
+	    rotateRectInWindow(rcw,(const Rect&)rs,(Rect&)rd,dx,dy,rotation);
+#if 0
             switch(rotation){
             case Display::ROTATION_0 :break;
             case Display::ROTATION_90:
@@ -247,23 +276,31 @@ void GraphDevice::composeSurfaces(){
                 rd.y = rs.x;
                 break;
             }
+#endif
             LOGV("blit surface[%d:%d](%d,%d,%d,%d)/(%d,%d,%d,%d) to (%d,%d)/(%d,%d) rotation=%d",i,j,
 	         rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height,ox,oy,dx,dy,rotation);
-            if(hdlSurface)GFXBlit(mPrimarySurface ,/* rcw.left+rc.x , rcw.top+rc.y*/dx,dy , hdlSurface,(const GFXRect*)&rd);//rc);
-            else mPrimaryContext->rectangle(rcw.left+rc.x , rcw.top+rc.y , rc.width , rc.height);
+            if(hdlSurface)GFXBlit(mPrimarySurface , dx , dy , hdlSurface,(const GFXRect*)&rd);
+            else mPrimaryContext->rectangle(rcw.left + rc.x , rcw.top + rc.y , rc.width , rc.height);
+        }/*endof rg->get_num_rectangles*/
+        if(mShowFPS && (fpsBlited ==false) && mPrimaryContext){
+            Rect recFPS = mRectBanner;
+            recFPS.offset(-rcw.left,-rcw.top);
+            RefPtr<Cairo::Region>wvr =  wins[i]->mVisibleRgn;
+            if(wvr->contains_rectangle((Cairo::RectangleInt&)recFPS)==Cairo::Region::Overlap::IN){
+		int dx =0,dy =0;
+		trackFPS(*wSurfaces[i]);
+		LOGV("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
+		rotateRectInWindow(rcw,mRectBanner,recFPS,dx,dy,rotation);
+		if( hdlSurface)GFXBlit(mPrimarySurface , dx,dy, hdlSurface,(const GFXRect*)&recFPS);
+		fpsBlited = true;
+            }
         }
         if(hdlSurface==nullptr){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
         }
         wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
-    }
-    if(mShowFPS && mPrimaryContext && mBannerContext){
-	mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
-	mPrimaryContext->set_source(mBannerContext->get_target(),0,0);
-	mPrimaryContext->rectangle(mRectBanner.left,mRectBanner.top,mRectBanner.width,mRectBanner.height);
-	mPrimaryContext->fill();
-    }
+    }/*endif for wSurfaces.size*/
     GFXFlip(mPrimarySurface); 
     mLastComposeTime = SystemClock::uptimeMillis();
     mPendingCompose = 0;

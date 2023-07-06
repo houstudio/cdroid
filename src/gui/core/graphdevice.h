@@ -27,15 +27,16 @@ private:
     Rect mRectBanner;
     std::mutex mMutex;
     std::condition_variable mCV;
+    std::string mFPSText;
     HANDLE mPrimarySurface;
     class Canvas*mPrimaryContext;
-    Canvas *mBannerContext;
     //Cairo::RefPtr<Cairo::Region>mInvalidateRgn;
     static GraphDevice*mInst;
     GraphDevice(int format=-1);
-    void trackFPS();
+    void trackFPS(Canvas&);
     void doCompose();
     void computeVisibleRegion(std::vector<class Window*>&windows,std::vector<Cairo::RefPtr<Cairo::Region>>&regions);
+    void rotateRectInWindow(const Rect&rcw,const Rect&rs,Rect&rd,int&dx,int&dy,int rotation);
 public:
     static GraphDevice&getInstance();
     ~GraphDevice();
