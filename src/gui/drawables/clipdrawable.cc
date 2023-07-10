@@ -41,12 +41,12 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> ClipDrawable::mutateConst
     return std::make_shared<ClipState>(*mState);
 }
 
-void ClipDrawable::setGravity(int gravity){
-    mState->mGravity = gravity;
+int ClipDrawable::getGravity()const{
+    return mState->mGravity;
 }
 
-void ClipDrawable::setOrientation(int orientation){
-    mState->mOrientation = orientation;
+int ClipDrawable::getOrientation()const{
+    return mState->mOrientation;
 }
 
 int ClipDrawable::getOpacity(){
@@ -101,12 +101,12 @@ void ClipDrawable::draw(Canvas& canvas){
 }
 
 Drawable*ClipDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string src=atts.getString("drawable");
-    Drawable*d=Drawable::inflate(ctx,src);
-    int gravity=atts.getGravity("gravity",Gravity::LEFT);
-    const std::string sOrientation=atts.getString("clipOrientation");
-    int orientation=(sOrientation.compare("vertical")==0)?VERTICAL:HORIZONTAL;
-    d=new ClipDrawable(d,gravity,orientation);
+    const std::string src = atts.getString("drawable");
+    Drawable*d = Drawable::inflate(ctx,src);
+    const int gravity= atts.getGravity("gravity",Gravity::LEFT);
+    const std::string sOrientation = atts.getString("clipOrientation");
+    const int orientation = (sOrientation.compare("vertical")==0)?VERTICAL:HORIZONTAL;
+    d = new ClipDrawable(d,gravity,orientation);
     LOGV("%p gravity=%d orientation=%d",d,gravity,orientation);
     return d;
 }

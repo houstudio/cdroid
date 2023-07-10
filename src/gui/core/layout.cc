@@ -422,21 +422,21 @@ const std::wstring Layout::getLineText(int line,bool expandEllipsis)const{
         ellipsis=ELLIPSIS_NONE;
     switch(ellipsis){
     case ELLIPSIS_NONE:
-        start=getLineStart(line);
-        count=getLineEnd(line)-start;
-        result=mText.substr(start,count);
+        start = getLineStart(line);
+        count = getLineEnd(line) - start;
+        result= mText.substr(start,count);
         break;
     case ELLIPSIS_START:
-        start=getEllipsisStart(line);
-        count=getLineEnd(line)-start;
-        result=L"..."+mText.substr(start,count);
+        start = getEllipsisStart(line);
+        count = getLineEnd(line) - start;
+        result = L"..."+mText.substr(start,count);
         break;
     case ELLIPSIS_MIDDLE:
-        start=getLineStart(line);
-        result=mText.substr(start,getEllipsisStart(line)-start); //first string before ellipsis
+        start = getLineStart(line);
+        result= mText.substr(start,getEllipsisStart(line)-start); //first string before ellipsis
         result.append(L"...");
-        count=getLineEnd(line) - getEllipsisStart(line)+getEllipsisCount(line);//the second string.size after ellipsis
-        result+=mText.substr(getEllipsisStart(line)+getEllipsisCount(line),count);
+        count = getLineEnd(line) - getEllipsisStart(line) + getEllipsisCount(line);//the second string.size after ellipsis
+        result += mText.substr(getEllipsisStart(line) + getEllipsisCount(line),count);
         break;
     case ELLIPSIS_END:
         start=getLineStart(line);
@@ -522,7 +522,7 @@ void Layout::relayout(bool force){
         wch[0]=mText[i];
         wch[1]=mText[i+1]; 
         set_wordbreaks_utf32((utf32_t*)wch,2,"",breaks);
-        int linebreak=is_line_breakable(wch[0],wch[1],"");
+        int linebreak = is_line_breakable(wch[0],wch[1],"");
         wch[1]=0;
         switch(breaks[0]){
         case WORDBREAK_NOBREAK:
@@ -546,11 +546,11 @@ void Layout::relayout(bool force){
             if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && (mBreakStrategy==0) ))||(linebreak==LINEBREAK_MUSTBREAK))){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
-                mLineCount++;
-                total_width=0;
-                start=i+1;
+                mLineCount ++;
+                total_width = 0;
+                start = i+1;
                 if(outofwidth)//char[i] is wordbreak char must be in old lines
-                    start=i-(word.length()-1);
+                    start = i - (word.length() - 1);
             }
             total_width += extents.x_advance;
             word.erase();
@@ -561,12 +561,12 @@ void Layout::relayout(bool force){
         }
     }
 
-    if(start<=mText.length()){
+    if(start <= mText.length()){
         measureSize(mText.substr(start),extents);
         total_width = extents.x_advance;
         pushLineData(start,ytop,fontextents.descent,ceil(total_width));
         ytop += mLineHeight;
-        if( (mColumns==COLUMNS_ELLIPSIZE) && (total_width>mWidth) ){
+        if( (mColumns == COLUMNS_ELLIPSIZE) && (total_width > mWidth) ){
             calculateEllipsis(mLineCount,mText.length());
         }
         mLineCount++;

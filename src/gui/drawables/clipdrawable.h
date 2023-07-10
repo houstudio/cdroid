@@ -26,8 +26,8 @@ public:
     ClipDrawable();
     ClipDrawable(Drawable* drawable, int gravity, int orientation);
     int getOpacity()override;
-    void setGravity(int gravity);
-    void setOrientation(int orientation);
+    int getGravity()const;
+    int getOrientation()const;
     void draw(Canvas& canvas)override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };

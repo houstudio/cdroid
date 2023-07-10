@@ -426,8 +426,8 @@ void ProgressBar::setProgressDrawable(Drawable*d){
         if (mProgressDrawable != nullptr) {
             mProgressDrawable->setCallback(nullptr);
             unscheduleDrawable(*mProgressDrawable);
-            if(mProgressDrawable==mCurrentDrawable)
-                mCurrentDrawable=nullptr;
+            if(mProgressDrawable == mCurrentDrawable)
+                mCurrentDrawable = nullptr;
             delete mProgressDrawable;
         }
 
@@ -444,6 +444,10 @@ void ProgressBar::setProgressDrawable(Drawable*d){
                 mMaxHeight = drawableHeight;
                 requestLayout();
             }
+	    if(dynamic_cast<LayerDrawable*>(d)){
+		 ClipDrawable*cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)d)->findDrawableByLayerId(R::id::progress));
+		 LOGD("Orientation=%d",cd->getOrientation());
+	    }
             applyProgressTints();
         }
 
@@ -462,6 +466,27 @@ void ProgressBar::setProgressDrawable(Drawable*d){
 
 Drawable*ProgressBar::getProgressDrawable()const{
     return mProgressDrawable;
+}
+
+int ProgressBar::getProgressGravity()const{
+    if(dynamic_cast<LayerDrawable*>(mProgressDrawable)){
+        ClipDrawable*cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::progress));
+	if(cd ==nullptr)
+            cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::secondaryProgress));
+	return cd->getGravity();
+    }
+    return Gravity::NO_GRAVITY;
+}
+
+
+int ProgressBar::getProgressOrientation()const{
+    if(dynamic_cast<LayerDrawable*>(mProgressDrawable)){
+        ClipDrawable*cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::progress));
+	if(cd ==nullptr)
+            cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::secondaryProgress));
+	return cd->getOrientation();
+    }
+    return (getWidth()>getHeight())?ClipDrawable::HORIZONTAL:ClipDrawable::VERTICAL;
 }
 
 void ProgressBar::setIndeterminateDrawable(Drawable*d){

@@ -16,9 +16,10 @@ private:
         bool fromUser;
         bool animate;
         RefreshData(){
-            id=0;progress=0;
-            animate=false;
-            fromUser=false;
+            id = 0;
+            progress = 0;
+            animate  = false;
+            fromUser = false;
         }
     };
     
@@ -76,6 +77,8 @@ protected:
     void startAnimation();
     void stopAnimation();
     Drawable*getCurrentDrawable()const;
+    int  getProgressGravity()const;
+    int  getProgressOrientation()const;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
     virtual void drawTrack(Canvas&canvas);

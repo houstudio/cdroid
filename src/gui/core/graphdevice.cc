@@ -65,7 +65,6 @@ GraphDevice::~GraphDevice(){
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     delete mPrimaryContext;
     GFXDestroySurface(mPrimarySurface);
-    //mBannerSufrace is destroied by Canvas,GFXDestroySurface(mBannerSurface);
     LOGD("%p Destroied",this);
 }
 
@@ -95,20 +94,20 @@ void GraphDevice::trackFPS(Canvas& canvas) {
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
        	    mFPSText = std::to_string(fps);
-	}
-	canvas.save();
-	Cairo::Context::Operator oop = canvas.get_operator();
-        canvas.set_operator(Cairo::Context::Operator::CLEAR);
-        canvas.set_source_rgb(.02,.02,.02);
-        canvas.rectangle(0,0,mRectBanner.width,mRectBanner.height);
-        canvas.fill();
-        canvas.set_operator(oop);
-        canvas.set_source_rgb(1,1,1);
-        canvas.set_font_size(22);
-	canvas.move_to(10,8);
-        canvas.draw_text(mRectBanner,mFPSText,Gravity::CENTER);
-	canvas.restore();
+        }
     }
+    canvas.save();
+    Cairo::Context::Operator oop = canvas.get_operator();
+    canvas.set_operator(Cairo::Context::Operator::CLEAR);
+    canvas.set_source_rgb(.02,.02,.02);
+    canvas.rectangle(0,0,mRectBanner.width,mRectBanner.height);
+    canvas.fill();
+    canvas.set_operator(oop);
+    canvas.set_source_rgb(1,1,1);
+    canvas.set_font_size(22);
+    canvas.move_to(10,8);
+    canvas.draw_text(mRectBanner,mFPSText,Gravity::CENTER);
+    canvas.restore(); 
 }
 
 void GraphDevice::getScreenSize(int &w,int&h){
