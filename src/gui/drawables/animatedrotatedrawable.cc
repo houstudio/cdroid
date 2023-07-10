@@ -189,14 +189,14 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
 }
 
 Drawable*AnimatedRotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    AnimatedRotateDrawable*ad=new AnimatedRotateDrawable();
+    AnimatedRotateDrawable*ad = new AnimatedRotateDrawable();
     ad->setPivotX(atts.getFraction("pivotX",1,1,0));
     ad->setPivotY(atts.getFraction("pivotY",1,1,0));
     ad->setPivotXRelative(true);
     ad->setPivotYRelative(true);
     ad->setFramesCount(atts.getInt("framesCount"));
     ad->setFramesDuration(atts.getInt("frameDuration"));
-    Drawable*child=createItemDrawable(ctx,atts);
+    Drawable*child = createItemDrawable(ctx,atts);
     ad->setDrawable(child);
     return ad;
     

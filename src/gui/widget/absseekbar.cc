@@ -301,6 +301,8 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
             trackOffset = offsetHeight;
             thumbOffset = offsetHeight + (trackHeight - thumbHeight) / 2;
         }
+        if(thumb)
+	    setThumbPos(w,thumb,getScale(), thumbOffset);
     }else{
         if (thumbWidth > trackWidth) {
             const int offsetWidth = (paddedWidth - thumbWidth) / 2;
@@ -311,6 +313,8 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
             trackOffset = offsetWidth;
             thumbOffset = offsetWidth + (trackWidth - thumbWidth) / 2;
         }
+        if(thumb)
+            setThumbPos(h,thumb, getScale(), thumbOffset);
     }
 
     if (track) {
@@ -323,10 +327,6 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
             track->setBounds(trackOffset,0, trackWidth, trackHeight);
             LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,trackOffset,0,trackWidth, trackHeight,mMaxWidth);
 	}
-    }
-
-    if (thumb) {
-        setThumbPos((getProgressOrientation() == ClipDrawable::HORIZONTAL)?w:h, thumb, getScale(), thumbOffset);
     }
 }
 

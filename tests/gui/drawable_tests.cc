@@ -283,10 +283,9 @@ TEST_F(DRAWABLE,clipdrawable){
     cd->setDrawable(d);
     cd->setBounds(50,50,400,400);
 
-    ClipDrawable *cd2=new ClipDrawable();
     ShapeDrawable*sd=new ShapeDrawable();
     Shape*sp=new RectShape();
-    cd2->setGravity(Gravity::CENTER);
+    ClipDrawable *cd2=new ClipDrawable(sd,Gravity::CENTER,ClipDrawable::HORIZONTAL);
     sd->setShape(sp);
     cd2->setDrawable(sd);
     sp->setSolidColor(0xFFFF0000);
@@ -488,7 +487,7 @@ TEST_F(DRAWABLE,inflatelayer){
    ASSERT_EQ(ld->getId(1),456);
    ASSERT_EQ(2,ld->getNumberOfLayers());
    ClipDrawable*cd=dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(456));
-   cd->setGravity(Gravity::CENTER);
+   //cd->setGravity(Gravity::CENTER);
    for(int i=0;i<10000;i+=100){
        ctx->set_source_rgba(0,0,0,1);
        ctx->rectangle(0,0,800,600);

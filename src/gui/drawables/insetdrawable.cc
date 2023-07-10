@@ -93,7 +93,7 @@ int InsetDrawable::getOpacity() {
 }
 
 void InsetDrawable::onBoundsChange(const Rect&bounds){
-    Rect r=bounds;
+    Rect r = bounds;
   
     r.left  += mState->mInsetLeft.getDimension(bounds.width);
     r.top   += mState->mInsetTop.getDimension(bounds.height);
@@ -107,17 +107,13 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
 }
 
 Drawable*InsetDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string res = atts.getString("drawable");
-    int inset = atts.getInt("inset");
-    int insetLeft = atts.getInt("insetLeft");
-    int insetTop  = atts.getInt("insetTop");
-    int insetRight = atts.getInt("insetRight");
-    int insetBottom= atts.getInt("insetBottom");
-    Drawable*d = Drawable::inflate(ctx,res);
-    if(inset>0)
-        return new InsetDrawable(d,inset);
-    else
-        return new InsetDrawable(d,insetLeft,insetTop,insetRight,insetBottom);
+    const int inset = atts.getInt("inset",0);
+    const int insetLeft = atts.getInt("insetLeft",inset);
+    const int insetTop  = atts.getInt("insetTop",inset);
+    const int insetRight = atts.getInt("insetRight",inset);
+    const int insetBottom= atts.getInt("insetBottom",inset);
+    Drawable*d = createItemDrawable(ctx,atts);
+    return new InsetDrawable(d,insetLeft,insetTop,insetRight,insetBottom);
 }
 
 }

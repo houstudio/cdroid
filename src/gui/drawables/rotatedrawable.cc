@@ -154,8 +154,8 @@ void RotateDrawable::draw(Canvas& canvas) {
 }
 
 Drawable*RotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    Drawable*d=Drawable::createItemDrawable(ctx,atts);
-    RotateDrawable*rd=new RotateDrawable(d);
+    Drawable*d = createItemDrawable(ctx,atts);
+    RotateDrawable*rd = new RotateDrawable(d);
     rd->setPivotX(atts.getFraction("pivotX",1,1,0));
     rd->setPivotY(atts.getFraction("pivotY",1,1,0));
     //rd->setPivotXRelative();

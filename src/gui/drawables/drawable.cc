@@ -602,9 +602,10 @@ Drawable*Drawable::inflate(Context*ctx,const std::string& resname) {
         std::ifstream fs(resname);
         if(fs.good())d = fromStream(ctx,fs,resname,"");
     } else if(!resname.empty()) {
-        std::string package;
+        /*std::string package;
         std::unique_ptr<std::istream> is = ctx->getInputStream(resname,&package);
-        d = fromStream(ctx,*is,resname,package);
+        d = fromStream(ctx,*is,resname,package);*/
+        d = ctx->getDrawable(resname);
         LOGE_IF(d==nullptr,"%s load failed",resname.c_str());
     }
     return d;
