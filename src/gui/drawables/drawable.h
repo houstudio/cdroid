@@ -133,7 +133,7 @@ public:
     static int resolveOpacity(int op1,int op2);
     static float scaleFromDensity(float pixels, int sourceDensity, int targetDensity);
     static int scaleFromDensity(int pixels, int sourceDensity, int targetDensity, bool isSize);
-    static Drawable*createItemDrawable(Context* ctx,const AttributeSet&atts);
+    static Drawable*createWrappedDrawable(Context* ctx,const AttributeSet&atts);
     static Drawable*fromStream(Context*ctx,std::istream&stream,const std::string& basePath=std::string(),
 	              const std::string&package=std::string());
     static Drawable*inflate(Context* ctx,const std::string& pathName);

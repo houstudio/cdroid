@@ -196,7 +196,7 @@ Drawable*AnimatedRotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
     ad->setPivotYRelative(true);
     ad->setFramesCount(atts.getInt("framesCount"));
     ad->setFramesDuration(atts.getInt("frameDuration"));
-    Drawable*child = createItemDrawable(ctx,atts);
+    Drawable*child = createWrappedDrawable(ctx,atts);
     ad->setDrawable(child);
     return ad;
     

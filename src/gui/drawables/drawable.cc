@@ -303,7 +303,7 @@ class ParseData {
 };
 
 
-Drawable*Drawable::createItemDrawable(Context*ctx,const AttributeSet&atts) {
+Drawable*Drawable::createWrappedDrawable(Context*ctx,const AttributeSet&atts) {
     RefPtr<ImageSurface> img;
     std::string resname = atts.getString("color");
     if(!resname.empty()) {
@@ -335,7 +335,7 @@ static std::map<const std::string,DrawableParser>drawableParsers= {
     {"layer-list", LayerDrawable::inflate},
     {"level-list", LevelListDrawable::inflate},
     {"selector", StateListDrawable::inflate},
-    {"item", Drawable::createItemDrawable },
+    {"item", Drawable::createWrappedDrawable },
     {"ripple", RippleDrawable::inflate},
     {"animated-rotate", AnimatedRotateDrawable::inflate},
     {"animation-list", AnimationDrawable::inflate}

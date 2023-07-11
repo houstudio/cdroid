@@ -112,7 +112,7 @@ Drawable*InsetDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const int insetTop  = atts.getInt("insetTop",inset);
     const int insetRight = atts.getInt("insetRight",inset);
     const int insetBottom= atts.getInt("insetBottom",inset);
-    Drawable*d = createItemDrawable(ctx,atts);
+    Drawable*d = createWrappedDrawable(ctx,atts);
     return new InsetDrawable(d,insetLeft,insetTop,insetRight,insetBottom);
 }
 

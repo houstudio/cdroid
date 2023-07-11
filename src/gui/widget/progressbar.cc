@@ -444,10 +444,6 @@ void ProgressBar::setProgressDrawable(Drawable*d){
                 mMaxHeight = drawableHeight;
                 requestLayout();
             }
-	    if(dynamic_cast<LayerDrawable*>(d)){
-		 ClipDrawable*cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)d)->findDrawableByLayerId(R::id::progress));
-		 LOGD("Orientation=%d",cd->getOrientation());
-	    }
             applyProgressTints();
         }
 

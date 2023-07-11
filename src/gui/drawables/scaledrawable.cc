@@ -94,7 +94,7 @@ Drawable*ScaleDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const int sw = getDimensionOrFraction(atts,"scaleWidth",100,0);
     const int sh = getDimensionOrFraction(atts,"scaleHeight",100,0);
     const int gravity = atts.getGravity("scaleGravity",Gravity::LEFT);
-    Drawable*d = createItemDrawable(ctx,atts);
+    Drawable*d = createWrappedDrawable(ctx,atts);
     return new ScaleDrawable(d,gravity,float(sw)/100.f,float(sh)/100.f);
 }
 }
