@@ -209,12 +209,12 @@ bool EdgeEffect::draw(Canvas& canvas){
     const int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
     if (edgeEffectBehavior == TYPE_GLOW){
         update();
-        float centerX = mBounds.centerX();
-        float centerY = mBounds.height - mRadius;
+        const float centerX = mBounds.centerX();
+        const float centerY = mBounds.height - mRadius;
         canvas.save();
 
-        float displacement = std::max(0.f, std::min(mDisplacement, 1.f)) - 0.5f;
-        float translateX = mBounds.width * displacement / 2;
+        const float displacement = std::max(0.f, std::min(mDisplacement, 1.f)) - 0.5f;
+        const float translateX = mBounds.width * displacement / 2;
    
         canvas.rectangle(mBounds);
         canvas.clip();
