@@ -2208,6 +2208,12 @@ void ViewGroup::offsetChildrenTopAndBottom(int offset){
     }
 }
 
+void ViewGroup::offsetChildrenLeftAndRight(int offset){
+    for (auto v:mChildren) {
+        v->setPos(v->mLeft + offset,v->mTop);
+    }
+}
+
 bool ViewGroup::showContextMenuForChild(View* originalView){
     return false;
 }

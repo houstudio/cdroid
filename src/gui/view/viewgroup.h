@@ -286,6 +286,7 @@ public:
     void offsetRectIntoDescendantCoords(View* descendant, Rect& rect)const;
     void offsetRectBetweenParentAndChild(View* descendant,Rect& rect,bool offsetFromChildToParent, bool clipToBounds)const;
     void offsetChildrenTopAndBottom(int offset);
+    void offsetChildrenLeftAndRight(int offset);
     virtual bool getChildVisibleRect(View*child,Rect&r,Point*offset);
 
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;

@@ -1367,6 +1367,7 @@ bool View::startNestedScroll(int axes){
     }
     return false;
 }
+
 void View::stopNestedScroll() {
     if (mNestedScrollingParent != nullptr) {
         mNestedScrollingParent->onStopNestedScroll(this);
@@ -1377,6 +1378,7 @@ void View::stopNestedScroll() {
 bool View::hasNestedScrollingParent()const {
     return mNestedScrollingParent != nullptr;
 }
+
 void View::setNestedScrollingEnabled(bool benabled) {
     if (benabled) {
         mPrivateFlags3 |= PFLAG3_NESTED_SCROLLING_ENABLED;
