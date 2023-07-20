@@ -28,11 +28,11 @@ public:
     void set_color(UINT color);
     void rectangle(int x,int y,int w,int h);
     void rectangle(const RECT &r);
-    void draw_image(const Cairo::RefPtr<Cairo::ImageSurface>&img,const RECT&dst,const RECT*src);
+    void draw_image(const Cairo::RefPtr<Cairo::ImageSurface>&img,const Rect& dst,const Rect* src);
     //void rotate(float degrees,float px,float py);
     void dump2png(const char*fname);
 };
-extern void DumpRegion(const std::string&label,Cairo::RefPtr<Cairo::Region>rgn);
+extern void DumpRegion(const std::string&label,const Cairo::RefPtr<Cairo::Region>&rgn);
 }//namspace
 #endif
 

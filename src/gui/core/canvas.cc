@@ -46,7 +46,7 @@ void Canvas::rectangle(int x,int y,int w,int h){
     Context::rectangle((double)x,(double)y,(double)w,(double)h);
 }
 
-void Canvas::rectangle(const RECT &r){
+void Canvas::rectangle(const Rect &r){
     rectangle((double)r.left,(double)r.top,(double)r.width,(double)r.height);
 }
 
@@ -57,7 +57,7 @@ void Canvas::get_text_size(const std::string&text,int*width,int *height){
     if(height)*height=te.height;
 }
 
-void Canvas::draw_text(const Rect&rect,const std::string&text,int text_alignment){
+void Canvas::draw_text(const Rect& rect,const std::string& text,int text_alignment){
     TextExtents te;
     FontExtents ftext;
     double x,y;
@@ -79,14 +79,14 @@ void Canvas::draw_text(const Rect&rect,const std::string&text,int text_alignment
     show_text(text);
 }
 
-void Canvas::draw_image(const RefPtr<ImageSurface>&img,const RECT&dst,const RECT*srcRect){
-    Rect src=srcRect==nullptr?Rect::Make(0,0,img->get_width(),img->get_height()):*srcRect;
+void Canvas::draw_image(const RefPtr<ImageSurface>& img,const Rect& dst,const Rect* srcRect){
+    Rect src= (srcRect==nullptr) ? Rect::Make(0,0,img->get_width(),img->get_height()) : *srcRect;
     
-    const float sx=src.left  , sy=src.top;
-    const float sw=src.width , sh=src.height;
-    float dx =dst.left     , dy = dst.top;
-    float dw =dst.width , dh = dst.height;
-    float fx = dw / sw  , fy = dh / sh;
+    const float sx = src.left  , sy = src.top;
+    const float sw = src.width , sh = src.height;
+    float dx = dst.left     , dy = dst.top;
+    float dw = dst.width , dh = dst.height;
+    float fx = dw / sw   , fy = dh / sh;
 
     save();
 
@@ -111,7 +111,7 @@ void Canvas::dump2png(const char*fname){
 #endif
 }
 
-void DumpRegion(const std::string&label,RefPtr<Region>rgn){
+void DumpRegion(const std::string&label,const RefPtr<Region>& rgn){
     RectangleInt re=rgn->get_extents();
     LOGV("%s:%d retcs",label.c_str(),rgn->get_num_rectangles());
     for(int i=0;i<rgn->get_num_rectangles();i++){

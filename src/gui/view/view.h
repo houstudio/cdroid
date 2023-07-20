@@ -612,7 +612,7 @@ protected:
     bool isOnScrollbar(int x,int y);
     bool isOnScrollbarThumb(int x,int y);
     bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, 
-    int  scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
+              int  scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
     virtual void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY);
     virtual float getTopFadingEdgeStrength();
     virtual float getBottomFadingEdgeStrength();
@@ -965,7 +965,7 @@ public:
     View*findUserSetNextFocus(View*root,int direction)const;
     View*findUserSetNextKeyboardNavigationCluster(View*root,int direction)const;
     View*findKeyboardNavigationCluster()const;
-    void addTouchables(std::vector<View*>& views)const;
+    virtual void addTouchables(std::vector<View*>& views);
     virtual void addFocusables(std::vector<View*>& views,int direction);
     virtual void addFocusables(std::vector<View*>& views,int direction,int focusableMode);
 

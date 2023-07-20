@@ -235,7 +235,7 @@ public:
     bool arrowScroll(int direction);
     bool canScrollHorizontally(int direction)override;
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode);
-    void addTouchables(std::vector<View*>& views);
+    void addTouchables(std::vector<View*>& views)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs);
     void onRtlPropertiesChanged(int layoutDirection)override;
 };

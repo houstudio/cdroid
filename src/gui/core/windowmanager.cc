@@ -60,8 +60,8 @@ int WindowManager::getDisplayRotation()const{
 
 Display& WindowManager::getDefaultDisplay(){
     if(mDisplays.size()==0){
-	size_t dc=GFXGetDisplayCount();
-	for(size_t i=0;i<dc;i++){
+	size_t dc = GFXGetDisplayCount();
+	for(size_t i = 0;i < dc ;i++){
 	    DisplayInfo info;
 	    info.rotation = mDisplayRotation;
 	    GFXGetDisplaySize(i,(UINT*)&info.logicalWidth,(UINT*)&info.logicalHeight);

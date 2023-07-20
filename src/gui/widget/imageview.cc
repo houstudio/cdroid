@@ -347,14 +347,13 @@ void ImageView::configureBounds(){
 
     if (dwidth <= 0 || dheight <= 0 || ScaleType::FIT_XY == mScaleType) {
         /* If the drawable has no intrinsic size, or we're told to
-            scaletofit, then we just fill our entire view.*/
+           scaletofit, then we just fill our entire view.*/
         mDrawable->setBounds(0, 0, vwidth, vheight);
         mDrawMatrix = identity_matrix();
     } else {
         // We need to do the scaling ourself, so have the drawable
         // use its native size.
         mDrawable->setBounds(0, 0, dwidth, dheight);
-
         if (ScaleType::MATRIX == mScaleType) {
             // Use the specified matrix as-is.
             if (!IsIdentity(mMatrix)){
@@ -368,10 +367,8 @@ void ImageView::configureBounds(){
             mDrawMatrix = mMatrix;
             mDrawMatrix.translate(round((vwidth - dwidth) * 0.5f),  round((vheight - dheight) * 0.5f));
         } else if (ScaleType::CENTER_CROP == mScaleType) {
+            float scale , dx = 0, dy = 0;
             mDrawMatrix = mMatrix;
-
-            float scale;
-            float dx = 0, dy = 0;
 
             if (dwidth < vwidth && dheight <=vheight) {
                 scale = 1.0f;
@@ -385,11 +382,8 @@ void ImageView::configureBounds(){
             mDrawMatrix.scale(scale, scale);
             mDrawMatrix.translate(round(dx), round(dy));
         } else if (ScaleType::CENTER_INSIDE == mScaleType) {
+            float scale , dx, dy;
             mDrawMatrix = mMatrix;
-            float scale;
-            float dx;
-            float dy;
-
             if (dwidth <= vwidth && dheight <= vheight) {
                 scale = 1.0f;
             } else {

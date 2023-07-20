@@ -1160,11 +1160,11 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
 }
 
 void View::scrollTo(int x,int y){
-    if( (mScrollX!=x)|| (mScrollY!=y) ){
-        int oX=mScrollX;
-        int oY=mScrollY;
-        mScrollX=x;
-        mScrollY=y;
+    if( (mScrollX!=x) || (mScrollY!=y) ){
+        const int oX = mScrollX;
+        const int oY = mScrollY;
+        mScrollX = x;
+        mScrollY = y;
         onScrollChanged(mScrollX, mScrollY, oX, oY);
         invalidate(true);
         if(!awakenScrollBars(0,true))
@@ -5177,7 +5177,7 @@ void View::updateFocusedInCluster(View* oldFocus,int direction){
     }
 }
 
-void View::addTouchables(std::vector<View*>& views)const {
+void View::addTouchables(std::vector<View*>& views){
     const int viewFlags = mViewFlags;
     if (((viewFlags & CLICKABLE) == CLICKABLE || (viewFlags & LONG_CLICKABLE) == LONG_CLICKABLE
             || (viewFlags & CONTEXT_CLICKABLE) == CONTEXT_CLICKABLE)

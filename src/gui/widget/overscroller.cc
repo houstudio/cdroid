@@ -100,21 +100,21 @@ void OverScroller::SplineOverScroller::setFinalPosition(int position) {
 }
 
 double OverScroller::SplineOverScroller::getSplineFlingDistance(int velocity) {
-    double l = getSplineDeceleration(velocity);
-    double decelMinusOne = DECELERATION_RATE - 1.0;
+    const double l = getSplineDeceleration(velocity);
+    const double decelMinusOne = DECELERATION_RATE - 1.0;
     return mFlingFriction * mPhysicalCoeff * exp(DECELERATION_RATE / decelMinusOne * l);
 }
 int OverScroller::SplineOverScroller::getSplineFlingDuration(int velocity) {
-    double l = getSplineDeceleration(velocity);
-    double decelMinusOne = DECELERATION_RATE - 1.0;
+    const double l = getSplineDeceleration(velocity);
+    const double decelMinusOne = DECELERATION_RATE - 1.0;
     return (int) (1000.0 * exp(l / decelMinusOne));
 }
 
 void OverScroller::SplineOverScroller::adjustDuration(int start, int oldFinal, int newFinal) {
-    int oldDistance = oldFinal - start;
-    int newDistance = newFinal - start;
-    float x = abs((float) newDistance / oldDistance);
-    int index = (int) (NB_SAMPLES * x);
+    const int oldDistance = oldFinal - start;
+    const int newDistance = newFinal - start;
+    const float x = abs((float) newDistance / oldDistance);
+    const int index = (int) (NB_SAMPLES * x);
     if (index < NB_SAMPLES) {
        float x_inf = (float) index / NB_SAMPLES;
        float x_sup = (float) (index + 1) / NB_SAMPLES;
@@ -126,8 +126,7 @@ void OverScroller::SplineOverScroller::adjustDuration(int start, int oldFinal, i
 }
 
 void OverScroller::SplineOverScroller::extendDuration(int extend) {
-    long time = SystemClock::uptimeMillis();
-    int elapsedTime = (int) (time - mStartTime);
+    int elapsedTime = (int) (SystemClock::uptimeMillis() - mStartTime);
     mDuration = elapsedTime + extend;
     mFinished = false;
 }
@@ -201,12 +200,12 @@ void OverScroller::SplineOverScroller::fling(int start, int velocity, int min, i
 }
 void OverScroller::SplineOverScroller::fitOnBounceCurve(int start, int end, int velocity) {
     // Simulate a bounce that started from edge
-    float durationToApex = - velocity / mDeceleration;
+    const float durationToApex = - velocity / mDeceleration;
     // The float cast below is necessary to avoid integer overflow.
-    float velocitySquared = (float) velocity * velocity;
-    float distanceToApex = velocitySquared / 2.0f / abs(mDeceleration);
-    float distanceToEdge = std::abs(end - start);
-    float totalDuration = (float) sqrt(2.0 * (distanceToApex + distanceToEdge) / abs(mDeceleration));
+    const float velocitySquared = (float) velocity * velocity;
+    const float distanceToApex = velocitySquared / 2.0f / abs(mDeceleration);
+    const float distanceToEdge = std::abs(end - start);
+    const float totalDuration = (float) sqrt(2.0 * (distanceToApex + distanceToEdge) / abs(mDeceleration));
     mStartTime -= (int) (1000.0f * (totalDuration - durationToApex));
     mCurrentPosition = mStart = end;
     mVelocity = (int) (- mDeceleration * totalDuration);
@@ -232,7 +231,7 @@ void OverScroller::SplineOverScroller::startAfterEdge(int start, int min, int ma
         // Will result in a bounce or a to_boundary depending on velocity.
         startBounceAfterEdge(start, edge, velocity);
     } else {
-        double totalDistance = getSplineFlingDistance(velocity);
+        const double totalDistance = getSplineFlingDistance(velocity);
         if (totalDistance > std::abs(overDistance)) {
             fling(start, velocity, positive ? min : start, positive ? start : max, mOver);
         } else {
@@ -253,9 +252,9 @@ void OverScroller::SplineOverScroller::notifyEdgeReached(int start, int end, int
 }
 
 void OverScroller::SplineOverScroller::onEdgeReached(){
-    float velocitySquared = (float) mVelocity * mVelocity;
+    const float velocitySquared = (float) mVelocity * mVelocity;
     float distance = velocitySquared / (2.0f * abs(mDeceleration));
-    float sign = signum(mVelocity);
+    const float sign = signum(mVelocity);
 
     if (distance > mOver) {
         // Default deceleration is not sufficient to slow us down before boundary
@@ -300,8 +299,7 @@ bool OverScroller::SplineOverScroller::continueWhenFinished() {
 }
 
 bool OverScroller::SplineOverScroller::update(){
-    long time = SystemClock::uptimeMillis();
-    long currentTime = time - mStartTime;
+    const long currentTime = SystemClock::uptimeMillis() - mStartTime;
 
     if (currentTime == 0) {
         // Skip work but report that we're still going if we have a nonzero duration.
@@ -314,8 +312,8 @@ bool OverScroller::SplineOverScroller::update(){
     double distance = 0.0;
     switch (mState) {
     case SPLINE: {
-         float t = (float) currentTime / mSplineDuration;
-         int index = (int) (NB_SAMPLES * t);
+         const float t = (float) currentTime / mSplineDuration;
+         const int index = (int) (NB_SAMPLES * t);
          float distanceCoef = 1.f;
          float velocityCoef = 0.f;
          if (index < NB_SAMPLES) {
@@ -333,16 +331,16 @@ bool OverScroller::SplineOverScroller::update(){
          }
 
     case BALLISTIC: {
-         float t = currentTime / 1000.0f;
+         const float t = currentTime / 1000.0f;
          mCurrVelocity = mVelocity + mDeceleration * t;
          distance = mVelocity * t + mDeceleration * t * t / 2.0f;
          break;
          }
 
     case CUBIC: {
-         float t = (float) (currentTime) / mDuration;
-         float t2 = t * t;
-         float sign = signum(mVelocity);
+         const float t = (float) (currentTime) / mDuration;
+         const float t2 = t * t;
+         const float sign = signum(mVelocity);
          distance = sign * mOver * (3.0f * t2 - 2.0f * t * t2); 
          mCurrVelocity = sign * mOver * 6.0f * (- t + t2); 
          break;
@@ -432,12 +430,10 @@ bool OverScroller::computeScrollOffset() {
 
     switch (mMode) {
     case SCROLL_MODE:{
-           long time = SystemClock::uptimeMillis();
            // Any scroller can be used for time, since they were started
            // together in scroll mode. We use X here.
-           long elapsedTime = time - mScrollerX->mStartTime;
-
-           int duration = mScrollerX->mDuration;
+           const long elapsedTime = SystemClock::uptimeMillis() - mScrollerX->mStartTime;
+           const int duration = mScrollerX->mDuration;
            if (elapsedTime < duration) {
                float q = mInterpolator->getInterpolation(elapsedTime / (float) duration);
                mScrollerX->updateScroll(q);

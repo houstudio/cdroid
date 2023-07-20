@@ -8,7 +8,7 @@ public:
     enum{
         MODE_SHIFT = 30,
         MODE_MASK  = 3 << MODE_SHIFT,
-        UNSPECIFIED=0,
+        UNSPECIFIED= 0,
         EXACTLY = 1 << MODE_SHIFT,
         AT_MOST = 2 << MODE_SHIFT
     };

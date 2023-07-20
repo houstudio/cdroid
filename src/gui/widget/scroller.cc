@@ -169,7 +169,6 @@ bool Scroller::computeScrollOffset() {
                 
             mCurrY = mStartY + (int)round(distanceCoef * (mFinalY - mStartY));
             //round must converto int ,otherwise willcause NumberPicker::scrollBy enter infinity in its while loop
-            // Pin to mMinX <= mCurrX <= mMaxX
             // Pin to mMinY <= mCurrY <= mMaxY
             mCurrY = std::min(mCurrY, mMaxY);
             mCurrY = std::max(mCurrY, mMinY);

@@ -36,12 +36,11 @@ GraphDevice::GraphDevice(int fmt){
     mFpsNumFrames = 0;
     GFXInit();
     GFXGetDisplaySize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
-    const int rotation =WindowManager::getInstance().getDefaultDisplay().getRotation();
-    mFormat = fmt<0?GPF_ARGB:fmt;
+    mFormat = fmt < 0 ? GPF_ARGB : fmt;
     GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
     GFXLockSurface(mPrimarySurface,(void**)&buffer,&pitch);
-    LOGD("PrimarySurface=%p size=%dx%d rotation=%d",mPrimarySurface,mScreenWidth,mScreenHeight,rotation*90);
-    RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
+    LOGD("PrimarySurface=%p size=%dx%d",mPrimarySurface,mScreenWidth,mScreenHeight);
+    RefPtr<Surface>surf = ImageSurface::create(buffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
     mPrimaryContext = new Canvas(surf);
 
     mRectBanner.set(0,0,400,40);

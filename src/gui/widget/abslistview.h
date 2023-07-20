@@ -215,8 +215,8 @@ private:
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
     void recycleVelocityTracker();
-    bool canScrollUp();
-    bool canScrollDown();
+    bool canScrollUp()const;
+    bool canScrollDown()const;
     void drawSelector(Canvas&canvas);
     void updateOnScreenCheckedViews();
     void onTouchUp(MotionEvent& ev);

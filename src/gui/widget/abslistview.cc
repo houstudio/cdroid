@@ -1471,7 +1471,7 @@ void AbsListView::recycleVelocityTracker() {
     }
 }
 
-bool AbsListView::canScrollUp() {
+bool AbsListView::canScrollUp()const {
     bool canScrollUp=mFirstPosition > 0;
     // 0th element is not visible
     // ... Or top of 0th element is not visible
@@ -1484,7 +1484,7 @@ bool AbsListView::canScrollUp() {
     return canScrollUp;
 }
 
-bool AbsListView::canScrollDown() {
+bool AbsListView::canScrollDown()const {
     bool canScrollDown;
     int count = getChildCount();
     // Last item is not visible
