@@ -38,6 +38,7 @@ protected:
     int mMaxHeight;
     int mDrawableWidth;
     int mDrawableHeight;
+    int mRadii[4];
     bool mAdjustViewBounds;
     bool mMergeState;
     bool mHaveFrame;
@@ -96,6 +97,8 @@ public:
     int getImageAlpha()const;
     void setImageLevel(int level);
     void setSelected(bool selected)override;
+    void setCornerRadii(int radius);
+    void setCornerRadii(int topLeftRadius,int topRightRadius,int bottomRightRadius,int bottomLeftRadius);
     void setImageState(const std::vector<int>&state, bool merge);
     void drawableHotspotChanged(float x, float y)override;
 };

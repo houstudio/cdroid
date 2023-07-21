@@ -1,4 +1,5 @@
 #include <widget/adapterview.h>
+#include <core/soundeffect.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <systemclock.h>
@@ -461,7 +462,7 @@ void AdapterView::fireOnSelected() {
 bool AdapterView::performItemClick(View* view, int position, long id){
     bool result=false;
     if (mOnItemClickListener != nullptr) {
-        //playSoundEffect(SoundEffectConstants.CLICK);
+        playSoundEffect(SoundEffectConstants::CLICK);
         mOnItemClickListener(*this,*view, position, id);
         result = true;
     }

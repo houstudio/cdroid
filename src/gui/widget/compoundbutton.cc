@@ -1,4 +1,5 @@
 #include <widget/compoundbutton.h>
+#include <core/soundeffect.h>
 #include <cdlog.h>
 namespace cdroid{
 
@@ -23,6 +24,7 @@ void CompoundButton::initCompoundButton(){
     mButtonDrawable=nullptr;
     mOnCheckedChangeListener=nullptr;
     mOnCheckedChangeWidgetListener=nullptr;
+#if FUNCTION_AS_CHECKABLE
     isChecked = [this]()->bool{
         return mChecked;
     };
@@ -30,6 +32,19 @@ void CompoundButton::initCompoundButton(){
         setChecked(!mChecked);
     };
     setChecked = std::bind(&CompoundButton::doSetChecked,this,std::placeholders::_1);
+#endif
+}
+
+void CompoundButton::setChecked(bool checked){
+    CompoundButton::doSetChecked(checked);
+}
+
+bool CompoundButton::isChecked()const{
+    return mChecked;
+}
+
+void CompoundButton::toggle(){
+    setChecked(!mChecked); 
 }
 
 CompoundButton::~CompoundButton(){
@@ -63,7 +78,7 @@ bool CompoundButton::performClick(){
     if (!handled) {
         // View only makes a sound effect if the onClickListener was
         // called, so we'll need to make one here instead.
-        //playSoundEffect(SoundEffectConstants.CLICK);
+        playSoundEffect(SoundEffectConstants::CLICK);
     }
     return handled;
 }

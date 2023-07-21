@@ -21,10 +21,25 @@ public:
         chk=new CheckBox("",0,0);
         lp= new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,1);
         addView(chk,lp);
+#ifdef FUNCTION_AS_CHECKABLE 
         setChecked=[this](bool checked){ chk->setChecked(checked); };
         isChecked=[this]()->bool{ return chk->isChecked(); };
         toggle = [this](){ chk->toggle(); };
+#endif
     }
+#ifndef FUNCTION_AS_CHECKABLE
+    void setChecked(bool checked)override{
+	chk->setChecked(checked);
+	LOGD_IF(checked,"setChecked(%d)",checked);
+    }
+    bool isChecked()const{
+	return chk->isChecked();
+    }
+    void toggle()override{
+	chk->toggle();
+	LOGD("toggle");
+    }
+#endif
     void setName(const std::string&txt){
         name->setText(txt);
     }

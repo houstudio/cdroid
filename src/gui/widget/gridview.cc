@@ -1,5 +1,6 @@
 #include <widget/gridview.h>
 #include <widget/checkable.h>
+#include <core/soundeffect.h>
 #include <cdlog.h>
 
 namespace cdroid {
@@ -1437,7 +1438,7 @@ bool GridView::arrowScroll(int direction){
    }
 
    if (moved) {
-        //playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));
+        playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
         invokeOnItemScrollListener();
    }
    if (moved) awakenScrollBars();
@@ -1488,7 +1489,7 @@ bool GridView::sequenceScroll(int direction){
     }
 
     if (moved) {
-        //playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));
+        playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
         invokeOnItemScrollListener();
     }
 

@@ -34,10 +34,11 @@ public:
     int getCompoundPaddingLeft()override;
     int getCompoundPaddingRight()override;
     //inerited from Checkable
-    //void setChecked(bool checked)override;
-    //bool isChecked() override;
-    //void toggle()override;
-
+#ifndef FUNCTION_AS_CHECKABLE
+    void setChecked(bool checked)override;
+    bool isChecked()const override;
+    void toggle()override;
+#endif
     void setOnCheckedChangeListener(OnCheckedChangeListener listener);
     /*OnCheckedChangeWidgetListener internal use(for radiogroup...)*/
     void setOnCheckedChangeWidgetListener(OnCheckedChangeListener listener);

@@ -1,4 +1,5 @@
 #include <widget/viewpager.h>
+#include <core/soundeffect.h>
 #include <focusfinder.h>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -1821,7 +1822,7 @@ bool ViewPager::arrowScroll(int direction){
         handled = pageRight();
     }
     if (handled) {
-        //playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
+        playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
     }
     return handled;
 }

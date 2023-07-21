@@ -24,7 +24,12 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     setMaxWidth (attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight",INT_MAX));
     setImageAlpha(attrs.getInt("alpha",255));
-    mCropToPadding =attrs.getBoolean("cropToPadding",false);
+    const int radii = attrs.getInt("radius",0);
+    mRadii[0] = attrs.getInt("topLeftRadius",radii);
+    mRadii[1] = attrs.getInt("topRightRadius",radii);
+    mRadii[2] = attrs.getInt("bottomRightRadius",radii);
+    mRadii[3] = attrs.getInt("bottomLeftRadius",radii);
+    mCropToPadding = attrs.getBoolean("cropToPadding",false);
 }
 
 ImageView::ImageView(int w, int h)
@@ -56,6 +61,8 @@ void ImageView::initImageView(){
     mDrawableTintList = nullptr;
     mColorFilter = nullptr;
     mDrawableTintMode = -1;
+    mRadii[0] = mRadii[1] = 0;
+    mRadii[2] = mRadii[3] = 0;
 }
 
 ImageView::~ImageView() {
@@ -397,8 +404,8 @@ void ImageView::configureBounds(){
             mDrawMatrix.scale(scale, scale);
         } else {
             // Generate the required transform.
-            Rect src={0, 0, dwidth, dheight};
-            Rect dst={0, 0, vwidth, vheight};
+            Rect src = {0, 0, dwidth, dheight};
+            Rect dst = {0, 0, vwidth, vheight};
             mDrawMatrix = mMatrix;
 	    SetRect2Rect(mDrawMatrix,src,dst,mScaleType);
             //mDrawMatrix.setRectToRect(mTempSrc, mTempDst, scaleTypeToScaleToFit(mScaleType));
@@ -659,8 +666,36 @@ void ImageView::setSelected(bool selected){
     resizeFromDrawable();
 }
 
+void ImageView::setCornerRadii(int radius){
+    mRadii[0] = mRadii[1] = radius;
+    mRadii[2] = mRadii[3] = radius;
+    invalidate();
+}
+
+void ImageView::setCornerRadii(int topLeftRadius,int topRightRadius,int bottomRightRadius,int bottomLeftRadius){
+    mRadii[0] = topLeftRadius;
+    mRadii[1] = topRightRadius;
+    mRadii[2] = bottomRightRadius;
+    mRadii[3] = bottomLeftRadius;
+    invalidate();
+}
+
 void ImageView::onDraw(Canvas& canvas) {
     if (mDrawable == nullptr||mDrawableWidth == 0 || mDrawableHeight == 0) return;
+ 
+    const double degrees = M_PI / 180.f;
+
+    const int width = getWidth();
+    const int height =getHeight();
+    if(mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3]){
+	canvas.begin_new_sub_path();
+        canvas.arc( width - mRadii[1], mRadii[1], mRadii[1], -90 * degrees, 0 * degrees);
+        canvas.arc( width - mRadii[2], height - mRadii[2], mRadii[2], 0 * degrees, 90 * degrees);
+        canvas.arc( mRadii[3], height - mRadii[3], mRadii[3], 90 * degrees, 180 * degrees);
+        canvas.arc( mRadii[0], mRadii[0], mRadii[0], 180 * degrees, 270 * degrees);
+        canvas.close_path();
+	canvas.clip();
+    }
 
     if (IsIdentity(mDrawMatrix) && mPaddingTop == 0 && mPaddingLeft == 0) {
         mDrawable->setAlpha(getAlpha()*255);

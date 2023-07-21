@@ -1,4 +1,5 @@
 #include <widget/tablayout.h>
+#include <core/soundeffect.h>
 #include <widget/R.h>
 #include <cdlog.h>
 
@@ -920,7 +921,7 @@ bool TabLayout::TabView::performClick(){
     bool handled = LinearLayout::performClick();
 
     if (mTab) {
-        //if (!handled)playSoundEffect(SoundEffectConstants::CLICK);
+        if (!handled)playSoundEffect(SoundEffectConstants::CLICK);
         mTab->select();
         return true;
     } else {
