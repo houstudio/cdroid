@@ -407,7 +407,7 @@ void ImageView::configureBounds(){
             Rect src = {0, 0, dwidth, dheight};
             Rect dst = {0, 0, vwidth, vheight};
             mDrawMatrix = mMatrix;
-	    SetRect2Rect(mDrawMatrix,src,dst,mScaleType);
+            SetRect2Rect(mDrawMatrix,src,dst,mScaleType);
             //mDrawMatrix.setRectToRect(mTempSrc, mTempDst, scaleTypeToScaleToFit(mScaleType));
         }
     }
@@ -694,7 +694,7 @@ void ImageView::onDraw(Canvas& canvas) {
         canvas.arc( mRadii[3], height - mRadii[3], mRadii[3], 90 * degrees, 180 * degrees);
         canvas.arc( mRadii[0], mRadii[0], mRadii[0], 180 * degrees, 270 * degrees);
         canvas.close_path();
-	canvas.clip();
+        canvas.clip();
     }
 
     if (IsIdentity(mDrawMatrix) && mPaddingTop == 0 && mPaddingLeft == 0) {

@@ -88,9 +88,12 @@ GridLayout::GridLayout(int w,int h)
 GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
     :ViewGroup(ctx,attrs){
     initGridLayout();
+    setOrientation(attrs.getInt("orientation",std::map<const std::string,int>{
+        {"horizontal",(int)HORIZONTAL},
+        {"vertical",(int)VERTICAL}//
+    },DEFAULT_ORIENTATION));
     setRowCount(attrs.getInt("rowCount", DEFAULT_COUNT));
     setColumnCount(attrs.getInt("columnCount", DEFAULT_COUNT));
-    setOrientation(attrs.getInt("orientation", DEFAULT_ORIENTATION));
     setUseDefaultMargins(attrs.getBoolean("useDefaultMargin", DEFAULT_USE_DEFAULT_MARGINS));
     setAlignmentMode(attrs.getInt("alignmentMode", DEFAULT_ALIGNMENT_MODE));
     setRowOrderPreserved(attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
