@@ -94,7 +94,9 @@ void PagerAdapter::setPrimaryItem(ViewGroup* container, int position,void*object
 }
 
 void PagerAdapter::notifyDataSetChanged(){
-    int sz=mObservers.size()-1;
+    const int sz=mObservers.size()-1;
+    if(mViewPagerObserver)
+        mViewPagerObserver->onChanged();
     for(int i=sz;i>=0;i--){
         DataSetObserver*obs=mObservers[i];
         obs->onChanged();

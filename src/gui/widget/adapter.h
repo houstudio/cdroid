@@ -143,7 +143,7 @@ public:
     virtual void finishUpdate(ViewGroup* container);
     virtual bool isViewFromObject(View* view, void* object)=0;
     virtual int getItemPosition(void* object);
-    void notifyDataSetChanged();
+    virtual void notifyDataSetChanged();
     void registerDataSetObserver(DataSetObserver* observer);
     void unregisterDataSetObserver(DataSetObserver* observer);
     void setViewPagerObserver(DataSetObserver* observer);
