@@ -116,8 +116,8 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     if(strcmp(name,"include")==0){
         const std::string layout = atts.getString("layout");
         View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,false);
-	LayoutParams* lp = parent->generateLayoutParams(atts);
-	parent->addView(includedView,lp);
+        LayoutParams* lp = parent->generateLayoutParams(atts);
+        parent->addView(includedView,lp);
         return;
     }
 

@@ -52,7 +52,8 @@ private:
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face);
     Typeface(FcPattern&,const std::string&);
-    static int parseStyle(const std::string&stylename);
+    static int parseStyle(const std::string&style);
+    void fetchProps(FT_Face);
 public:
     int getWeight()const;
     int getStyle() const;
@@ -61,7 +62,7 @@ public:
     std::string getFamily()const;
     Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const;
     double getScale()const;
-    static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
+    //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
     static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
            std::unordered_map<std::string, Typeface*>& fontMap, 
 	   std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap);
@@ -74,6 +75,7 @@ public:
     static void loadPreinstalledSystemFontMap();
     static int loadFromFontConfig();
     static int loadFromPath(const std::string&path);
+    static int loadFaceFromResource(cdroid::Context*context);
 };
 
 class FontStyle {

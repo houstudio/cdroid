@@ -1,12 +1,12 @@
 #include <core/typeface.h>
 #include <core/textutils.h>
 #include <regex>
-#include <ft2build.h>
 #include <freetype/freetype.h>
 #include <freetype/ftsystem.h>
 #include <freetype/ftsnames.h>
 #include <cairomm/matrix.h>
 #include <core/context.h>
+#include <core/app.h>
 #include <dirent.h>
 namespace cdroid{
 
@@ -23,6 +23,7 @@ std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
 
 Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face){
     mFontFace = face;
+    mScale = 1.f;
 }
 
 Typeface::Typeface(FcPattern & font,const std::string&family){
@@ -39,7 +40,7 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
 	    s = nullptr;
 	}
     }
-    for(int i=0;FcPatternGetString(&font, FC_FAMILY,i, &s)==FcResultMatch;i++){
+    for(int i = 0;FcPatternGetString(&font, FC_FAMILY,i, &s) == FcResultMatch;i++){
         mFamily +=std::string((const char*)s);
 	mFamily +=";";
 	s = nullptr;
@@ -47,9 +48,9 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
     LOGV("family=%s",mFamily.c_str());
     mStyle = 0 ;
     ret = FcPatternGetString(&font, FC_STYLE, 0, &s);
-    if(ret==FcResultMatch)
+    if(ret == FcResultMatch)
         mStyle = parseStyle(std::string((const char*)s));
-    LOGV_IF(ret==FcResultMatch,"Style=%s/%d",s,mStyle);
+    LOGV_IF(ret == FcResultMatch,"Style=%s/%d",s,mStyle);
     s = nullptr;
 
     ret = FcPatternGetString(&font,FC_SLANT,0,&s);
@@ -70,8 +71,8 @@ Typeface::Typeface(FcPattern & font,const std::string&family){
     ret = FcPatternGetLangSet(&font, FC_LANG,0,&langset);
     //FcChar8 *lang = FcLangSetGetString(langset, 0);
     ret = FcLangSetHasLang(langset,(const FcChar8*)mSystemLang.c_str());
-    if(ret==0)
-	mStyle|=SYSLANG_MATCHED;
+    if(ret == 0)
+	    mStyle |= SYSLANG_MATCHED;
     //FcLangSetDestroy(langset);
     //it seems langset is destroied by FcPattern iteself,destroied  here willc aused crash
     LOGV("has %s=%d",mSystemLang.c_str(),ret);
@@ -101,6 +102,11 @@ int Typeface::parseStyle(const std::string&styleName){
 	   style|=stlMAP[i].styleProp;
     }
     return style;
+}
+
+void Typeface::fetchProps(FT_Face face){
+    mStyle = parseStyle(face->style_name);
+    mFamily= std::string(face->family_name);
 }
 
 int Typeface::getWeight()const{
@@ -162,23 +168,31 @@ Typeface* Typeface::create(Typeface*family, int style){
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName){
     Typeface*face = Typeface::DEFAULT;
+    std::string wantFamily = familyName;
     int familyMatched = 0;
     int supportLangs  = 0;
-    for(auto i= sSystemFontMap.begin();i!= sSystemFontMap.end();i++){
-	 Typeface*tf = i->second;
-         const std::string family=tf->getFamily();
-	 std::vector<std::string>families = TextUtils::split(family,";");
-	 auto it = std::find(families.begin(),families.end(),familyName);
-	 const int ttfLangs = families.size();
-	 if(it!=families.end()){
-	     face = tf;
-	     familyMatched++;
-	     break;
-	 }else if((familyMatched==0)&&(tf->mStyle&SYSLANG_MATCHED)){// && (ttfLangs>supportLangs)){
-             face = tf;
-	 }
+    if(!wantFamily.empty()){
+         if(wantFamily[0]=='@')
+             wantFamily = wantFamily.substr(1);
+         if(wantFamily.find(":")==std::string::npos)
+	     wantFamily = App::getInstance().getPackageName()+":"+wantFamily;
     }
-    LOGV_IF(face&&familyName.size(),"want %s got %s style=%x",familyName.c_str(),face->getFamily().c_str(),face->mStyle);
+    for(auto i= sSystemFontMap.begin();i!= sSystemFontMap.end();i++){
+         Typeface*tf = i->second;
+         const std::string fontKey= i->first;
+         const std::string family = tf->getFamily();
+         std::vector<std::string>families = TextUtils::split(family,";");
+         auto it = std::find(families.begin(),families.end(),familyName);
+         const int ttfLangs = families.size();
+         if( (it != families.end())||(fontKey.compare(wantFamily) == 0)){
+	         face = tf;
+	         familyMatched++;
+	         break;
+	     }else if((familyMatched==0)&&(tf->mStyle&SYSLANG_MATCHED)){// && (ttfLangs>supportLangs)){
+             face = tf;
+	     }
+    }
+    LOGD_IF(face&&familyName.size(),"want %s got %s style=%x",familyName.c_str(),face->getFamily().c_str(),face->mStyle);
     return face;
 }
 
@@ -233,6 +247,8 @@ void Typeface::loadPreinstalledSystemFontMap(){
     if(sSystemFontMap.size())
 	return;
     loadFromFontConfig();
+    loadFaceFromResource(&App::getInstance());
+    //loadFromPath("");
     auto it=sSystemFontMap.find(DEFAULT_FAMILY);
     if (it!=sSystemFontMap.end()) {
         setDefault(it->second);
@@ -252,7 +268,8 @@ void Typeface::loadPreinstalledSystemFontMap(){
 
 static FT_Library ftLibrary = nullptr;
 int Typeface::loadFromPath(const std::string&path){
-    FT_Init_FreeType(&ftLibrary);
+    if(ftLibrary==nullptr)
+        FT_Init_FreeType(&ftLibrary);
     FcConfig *config= FcInitLoadConfigAndFonts ();
     FcStrList *dirs = FcConfigGetFontDirs (config);
     FcStrListFirst(dirs);
@@ -279,7 +296,6 @@ int Typeface::loadFromPath(const std::string&path){
                 Cairo::Matrix ctm = Cairo::identity_matrix();
                 auto autoft = Cairo::FtScaledFont::create(face,matrix,ctm);
                 Typeface *typeface = new Typeface(autoft);
-		typeface->mScale = scale;
                 sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
 		typeface->mStyle = parseStyle(ftFace->style_name);
                 LOGI("[%s] style=%s/%x %d glyphs face.height=%x units_per_EM=%x scale=%f",
@@ -304,7 +320,6 @@ int Typeface::loadFromFontConfig(){
     FcObjectSet*os = FcObjectSetBuild (FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE,NULL);
     FcFontSet  *fs = FcFontList(config, p, os);
     FcPatternDestroy(p);
-    //return loadFromPath("");
     LOGI("Total fonts: %d", fs->nfont);
     const std::regex patSerif("(?=.*\\bserif\\b)" , std::regex_constants::icase);
     const std::regex patSans( "(?=.*\\bsans\\b)" , std::regex_constants::icase);
@@ -371,6 +386,7 @@ static unsigned long my_stream_io(FT_Stream stream, unsigned long offset, unsign
     std::istream*istream = (std::istream*)stream->descriptor.pointer;
     istream->read((char*)buffer,count);
     size_t len = istream->gcount();
+    //LOGD("read offset=%ld count=%d",offset,count);
     return len;
 }
 
@@ -379,25 +395,55 @@ static void my_stream_close(FT_Stream stream) {
     // Implement your custom close function here
 }
 
-FT_Face loadFaceFromResource(cdroid::Context*context,const std::string&url){
-    FT_Face face;
-    FT_Open_Args args;
-    FT_StreamRec stream;
-    //FT_Memory memory = ftLibrary->memory;
-    std::unique_ptr<std::istream> istream =context->getInputStream(url);
-    stream.read  = my_stream_io;
-    stream.close = my_stream_close;
-    stream.descriptor.pointer = istream.get();
-    /*In case of compressed streams where the size is unknown before
-     *actually doing the decompression, the value is set to 0x7FFFFFFF.
-     *(Note that this size value can occur for normal streams also; it is
-     *thus just a hint.)*/
-    stream.size = 0x7FFFFFFF;
-    args.flags  = FT_OPEN_STREAM;
-    args.stream = &stream;
-    int err = FT_Open_Face(ftLibrary, &args, 0, &face);
-    LOGD("open fontresource %s=%d face=%p",url.c_str(),err,face);
-    return face;
+int Typeface::loadFaceFromResource(cdroid::Context*context){
+    std::vector<std::string> fonts;
+    context->getArray("@font",fonts);
+    if(ftLibrary == nullptr)
+        FT_Init_FreeType(&ftLibrary);
+    for(auto fontUrl:fonts){
+        FT_Face face = nullptr;
+        FT_Open_Args args;
+        FT_StreamRec stream;
+	FT_Byte*buffer;
+        std::unique_ptr<std::istream> istream =context->getInputStream(fontUrl);
+	memset(&stream,0,sizeof(FT_StreamRec));
+        stream.read  = my_stream_io;
+        stream.close = my_stream_close;
+        stream.descriptor.pointer = istream.get();
+        /*In case of compressed streams where the size is unknown before
+        *actually doing the decompression, the value is set to 0x7FFFFFFF.
+        *(Note that this size value can occur for normal streams also; it is
+        *thus just a hint.)*/
+	istream->seekg(0,std::ios::end);
+        stream.size = istream->tellg();
+	istream->seekg(0,std::ios::beg);
+        args.flags  = FT_OPEN_STREAM;
+        args.stream = &stream;
+#if 0
+        int err = FT_Open_Face(ftLibrary, &args, 0, &face);
+#else
+	buffer = (FT_Byte*)malloc(stream.size);
+	istream->read((char*)buffer,stream.size);
+	int err = FT_New_Memory_Face(ftLibrary,buffer,stream.size,0,&face);
+	free(buffer);
+#endif
+        LOGD("Open fontResource %s=%d face=%p size=%ld",fontUrl.c_str(),err,face,stream.size);
+#ifdef CAIRO_HAS_FT_FONT
+        Cairo::RefPtr<Cairo::FtFontFace> ftface = Cairo::FtFontFace::create(face, FT_LOAD_DEFAULT);
+        Cairo::Matrix matrix = Cairo::identity_matrix();
+        Cairo::Matrix ctm = Cairo::identity_matrix();
+
+        Cairo::RefPtr<Cairo::FtScaledFont>scaledFont = Cairo::FtScaledFont::create(ftface,matrix,ctm);
+	Typeface* typeface = new Typeface(scaledFont);
+	typeface->fetchProps(face);
+        const size_t dotPos = fontUrl.find_last_of(".");
+	if(dotPos != std::string::npos)
+            fontUrl = fontUrl.substr(0 , dotPos);
+	sSystemFontMap.insert({fontUrl,typeface});
+	sSystemFontMap.insert({typeface->getFamily(),typeface});
+#endif
+    }
+    return fonts.size();
 }
 
 }

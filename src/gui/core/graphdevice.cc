@@ -240,7 +240,7 @@ void GraphDevice::composeSurfaces(){
             const int ox = dx,oy = dy;
             RectangleInt rd = rc;
             const RectangleInt &rs= rc;
-	    rotateRectInWindow(rcw,(const Rect&)rs,(Rect&)rd,dx,dy,rotation);
+            rotateRectInWindow(rcw,(const Rect&)rs,(Rect&)rd,dx,dy,rotation);
             LOGV("blit surface[%d:%d](%d,%d,%d,%d)/(%d,%d,%d,%d) to (%d,%d)/(%d,%d) rotation=%d",i,j,
 	         rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height,ox,oy,dx,dy,rotation);
             if(hdlSurface)GFXBlit(mPrimarySurface , dx , dy , hdlSurface,(const GFXRect*)&rd);
@@ -250,14 +250,14 @@ void GraphDevice::composeSurfaces(){
             Rect recFPS = mRectBanner;
             recFPS.offset(-rcw.left,-rcw.top);
             int dx =0,dy =0;
-	    wSurfaces[i]->reset_clip();
-	    mPrimaryContext->reset_clip();
-	    //trackFPS(*mPrimaryContext);
-	    trackFPS(*wSurfaces[i]);
-	    LOGI("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
-	    rotateRectInWindow(rcw,mRectBanner,recFPS,dx,dy,rotation);
-	    if( hdlSurface)GFXBlit(mPrimarySurface , dx,dy, hdlSurface,(const GFXRect*)&recFPS);
-	}
+            wSurfaces[i]->reset_clip();
+            mPrimaryContext->reset_clip();
+            //trackFPS(*mPrimaryContext);
+            trackFPS(*wSurfaces[i]);
+            LOGI("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
+            rotateRectInWindow(rcw,mRectBanner,recFPS,dx,dy,rotation);
+            if( hdlSurface)GFXBlit(mPrimarySurface , dx,dy, hdlSurface,(const GFXRect*)&recFPS);
+        }
         if(hdlSurface==nullptr){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
