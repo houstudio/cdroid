@@ -14,6 +14,24 @@ GridView::GridView(int w,int h):AbsListView(w,h){
 GridView::GridView(Context*ctx,const AttributeSet&atts)
   :AbsListView(ctx,atts){
     initGridView();
+    setHorizontalSpacing(atts.getDimensionPixelOffset("horizontalSpacing",10));
+    setVerticalSpacing(atts.getDimensionPixelOffset("verticalSpacing",0));
+    int index = atts.getInt("strechMode",std::map<const std::string,int>{
+             {"none", NO_STRETCH},
+	     {"spacingWidth",STRETCH_SPACING},
+	     {"columnWidth", STRETCH_COLUMN_WIDTH},
+	     {"spacingWidthUniform",STRETCH_SPACING_UNIFORM}
+	  },STRETCH_COLUMN_WIDTH);
+    if(index>=0)setStretchMode(index);
+    const int columnWidth = atts.getDimensionPixelOffset("columnWidth", -1);
+    if (columnWidth > 0)
+        setColumnWidth(columnWidth);
+    const int numColumns = atts.getInt("numColumns", 1);
+    setNumColumns(numColumns);
+    index = atts.getGravity("gravity", -1);
+    if (index >= 0) {
+        setGravity(index);
+    }
 }
 
 void GridView::initGridView(){

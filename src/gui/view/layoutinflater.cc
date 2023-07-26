@@ -107,13 +107,13 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     if(pd->views.size())
         parent = dynamic_cast<ViewGroup*>(pd->views.back());
     else if(pd->atts){
-	pd->atts->inherit(atts);
+        pd->atts->inherit(atts);
     }
     if(strcmp(name,"merge")==0){
         pd->views.push_back(parent);
         pd->flags.push_back(1);
         if(pd->root == nullptr|| !pd->attachToRoot)
-            throw "<merge /> can be used only with a valid ViewGroup root and attachToRoot=true";
+            throw "<merge/> can be used only with a valid ViewGroup root and attachToRoot=true";
         return ;
     }
 
