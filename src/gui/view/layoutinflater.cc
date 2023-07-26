@@ -113,14 +113,16 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         pd->views.push_back(parent);
         pd->flags.push_back(1);
         if(pd->root == nullptr|| !pd->attachToRoot)
-            throw "<merge/> can be used only with a valid ViewGroup root and attachToRoot=true";
+            FATAL("<merge /> can be used only with a valid ViewGroup root(%p) and attachToRoot=true",pd->root);
         return ;
     }
 
     if(strcmp(name,"include")==0){
+	/**the included layout's root node maybe merge,so we must use attachToRoot =true*/
         const std::string layout = atts.getString("layout");
-        View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,false,&atts);
-        parent->addView(includedView,parent->generateLayoutParams(atts));
+        View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,true,&atts);
+        LayoutParams*lp = parent->generateLayoutParams(atts);
+        includedView->setLayoutParams(lp);
         return;
     }
 
