@@ -17,13 +17,13 @@ private:
     static INFLATERMAPPER& getInflaterMap();
     static STYLEMAPPER& getStyleMap();
 protected:
-    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot);
+    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
     static bool registInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
-    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true);
+    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
 };
 
 template<typename T>
