@@ -1,9 +1,12 @@
 #include <core/typeface.h>
 #include <core/textutils.h>
 #include <regex>
+#include <ft2build.h>
 #include <freetype/freetype.h>
+#include <freetype/ftsystem.h>
 #include <freetype/ftsnames.h>
 #include <cairomm/matrix.h>
+#include <core/context.h>
 #include <dirent.h>
 namespace cdroid{
 
@@ -254,16 +257,16 @@ int Typeface::loadFromPath(const std::string&path){
     FcStrList *dirs = FcConfigGetFontDirs (config);
     FcStrListFirst(dirs);
     FcChar8* ps;
-    while(ps=FcStrListNext(dirs)){
+    while(ps = FcStrListNext(dirs)){
         struct dirent*ent;
-        DIR*dir=opendir((const char*)ps);
-        while(dir&&(ent=readdir(dir))){
+        DIR*dir = opendir((const char*)ps);
+        while(dir && ( ent = readdir(dir) ) ){
             FT_Face ftFace = nullptr;
-            std::string fullpath=std::string((char*)ps)+"/"+ent->d_name;
+            std::string fullpath = std::string((char*)ps) + "/" + ent->d_name;
             FT_Error err = FT_New_Face(ftLibrary,fullpath.c_str(),0,&ftFace);
-	    if(ftFace==nullptr||err)continue;
-            LOGE_IF(ftFace->family_name==nullptr,"%s missing familyname",fullpath.c_str());
-            if(ftFace->family_name){
+	    if(ftFace == nullptr || err )continue;
+            LOGE_IF(ftFace->family_name == nullptr,"%s missing familyname",fullpath.c_str());
+            if( ftFace->family_name ){
 		double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;
 		Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(ftFace,FT_LOAD_DEFAULT);
 		Cairo::Matrix matrix;
@@ -274,7 +277,7 @@ int Typeface::loadFromPath(const std::string&path){
 		    scale  = 1.f;
 		}
                 Cairo::Matrix ctm = Cairo::identity_matrix();
-                auto autoft= Cairo::FtScaledFont::create(face,matrix,ctm);
+                auto autoft = Cairo::FtScaledFont::create(face,matrix,ctm);
                 Typeface *typeface = new Typeface(autoft);
 		typeface->mScale = scale;
                 sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
@@ -361,6 +364,40 @@ int Typeface::loadFromFontConfig(){
     if(fs)FcFontSetDestroy(fs);
     FcConfigDestroy(config);
     return 0;
+}
+
+static unsigned long my_stream_io(FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count) {
+    // Implement your custom read function here
+    std::istream*istream = (std::istream*)stream->descriptor.pointer;
+    istream->read((char*)buffer,count);
+    size_t len = istream->gcount();
+    return len;
+}
+
+// Your custom close function
+static void my_stream_close(FT_Stream stream) {
+    // Implement your custom close function here
+}
+
+FT_Face loadFaceFromResource(cdroid::Context*context,const std::string&url){
+    FT_Face face;
+    FT_Open_Args args;
+    FT_StreamRec stream;
+    //FT_Memory memory = ftLibrary->memory;
+    std::unique_ptr<std::istream> istream =context->getInputStream(url);
+    stream.read  = my_stream_io;
+    stream.close = my_stream_close;
+    stream.descriptor.pointer = istream.get();
+    /*In case of compressed streams where the size is unknown before
+     *actually doing the decompression, the value is set to 0x7FFFFFFF.
+     *(Note that this size value can occur for normal streams also; it is
+     *thus just a hint.)*/
+    stream.size = 0x7FFFFFFF;
+    args.flags  = FT_OPEN_STREAM;
+    args.stream = &stream;
+    int err = FT_Open_Face(ftLibrary, &args, 0, &face);
+    LOGD("open fontresource %s=%d face=%p",url.c_str(),err,face);
+    return face;
 }
 
 }

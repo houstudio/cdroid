@@ -57,7 +57,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mSelector  = nullptr;
     mDirection = 0;
     mCacheColorHint = 0;
-    mWidthMeasureSpec = 0;
+    mWidthMeasureSpec = MeasureSpec::UNSPECIFIED;
     mResurrectToPosition = INVALID_POSITION;
     mLayoutMode = LAYOUT_FORCE_TOP;
     mTouchMode  = TOUCH_MODE_REST ;
@@ -90,7 +90,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setStackFromBottom(atts.getBoolean("stackFromBottom",false));
     setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
     setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
-    setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int>{
+    setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int> {
         {"none",CHOICE_MODE_NONE},
         {"singleChoice",CHOICE_MODE_SINGLE},
         {"multipleChoice",CHOICE_MODE_MULTIPLE}
@@ -100,8 +100,8 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
 }
 
-AbsListView::~AbsListView(){
-    if(mVelocityTracker){
+AbsListView::~AbsListView() {
+    if(mVelocityTracker) {
         mVelocityTracker->recycle();
         mVelocityTracker = nullptr;
     }
@@ -114,12 +114,12 @@ AbsListView::~AbsListView(){
     delete mDataSetObserver;
 }
 
-void AbsListView::updateScrollIndicators(){
+void AbsListView::updateScrollIndicators() {
     if ( mScrollUp ) mScrollUp->setVisibility(canScrollUp() ? View::VISIBLE : View::INVISIBLE);
     if (mScrollDown) mScrollDown->setVisibility(canScrollDown() ? View::VISIBLE : View::INVISIBLE);
 }
 
-void AbsListView::setScrollIndicatorViews(View* up, View* down){
+void AbsListView::setScrollIndicatorViews(View* up, View* down) {
     mScrollUp = up;
     mScrollDown = down;
 }
@@ -165,12 +165,12 @@ bool AbsListView::isSmoothScrollbarEnabled()const {
     return mSmoothScrollbarEnabled;
 }
 
-void AbsListView::invokeOnItemScrollListener(){
+void AbsListView::invokeOnItemScrollListener() {
     if (mFastScroll != nullptr) {
         mFastScroll->onScroll(mFirstPosition, getChildCount(), mItemCount);
     }
     if(mOnScrollListener.onScroll)
-       mOnScrollListener.onScroll(*this,mFirstPosition,getChildCount(),mItemCount);
+        mOnScrollListener.onScroll(*this,mFirstPosition,getChildCount(),mItemCount);
     onScrollChanged(0,0,0,0);
 }
 
@@ -179,14 +179,14 @@ void AbsListView::setOnScrollListener(OnScrollListener l) {
     invokeOnItemScrollListener();
 }
 
-void AbsListView::setScrollingCacheEnabled(bool enabled){
+void AbsListView::setScrollingCacheEnabled(bool enabled) {
     if (mScrollingCacheEnabled && !enabled) {
         clearScrollingCache();
     }
     mScrollingCacheEnabled = enabled;
 }
 
-bool AbsListView::isScrollingCacheEnabled()const{
+bool AbsListView::isScrollingCacheEnabled()const {
     return mScrollingCacheEnabled;
 }
 
@@ -205,23 +205,23 @@ void AbsListView::setFastScrollerEnabledUiThread(bool enabled) {
 }
 
 void AbsListView::setFastScrollerAlwaysVisibleUiThread(bool alwaysShow) {
-     if (mFastScroll != nullptr) {
-         mFastScroll->setAlwaysShow(alwaysShow);
-     }
+    if (mFastScroll != nullptr) {
+        mFastScroll->setAlwaysShow(alwaysShow);
+    }
 }
 
-static bool isOwnerThread(){
-   return true;
+static bool isOwnerThread() {
+    return true;
 }
 
-void AbsListView::setFastScrollEnabled(bool enabled){
+void AbsListView::setFastScrollEnabled(bool enabled) {
     if (mFastScrollEnabled != enabled) {
         mFastScrollEnabled = enabled;
-   
+
         if (isOwnerThread()) {
             setFastScrollerEnabledUiThread(enabled);
         } else {
-            post([this,enabled](){
+            post([this,enabled]() {
                 setFastScrollerEnabledUiThread(enabled);
             });
         }
@@ -229,7 +229,7 @@ void AbsListView::setFastScrollEnabled(bool enabled){
 }
 
 
-void AbsListView::setFastScrollStyle(const std::string& styleResId){
+void AbsListView::setFastScrollStyle(const std::string& styleResId) {
     if (mFastScroll == nullptr) {
         mFastScrollStyle = styleResId;
     } else {
@@ -237,7 +237,7 @@ void AbsListView::setFastScrollStyle(const std::string& styleResId){
     }
 }
 
-void AbsListView::setFastScrollAlwaysVisible(bool alwaysShow){
+void AbsListView::setFastScrollAlwaysVisible(bool alwaysShow) {
     if (mFastScrollAlwaysVisible != alwaysShow) {
         if (alwaysShow && !mFastScrollEnabled) {
             setFastScrollEnabled(true);
@@ -248,14 +248,14 @@ void AbsListView::setFastScrollAlwaysVisible(bool alwaysShow){
         if (isOwnerThread()) {
             setFastScrollerAlwaysVisibleUiThread(alwaysShow);
         } else {
-            post([this,alwaysShow](){
+            post([this,alwaysShow]() {
                 setFastScrollerAlwaysVisibleUiThread(alwaysShow);
             });
         }
     }
 }
 
-bool AbsListView::isFastScrollAlwaysVisible()const{
+bool AbsListView::isFastScrollAlwaysVisible()const {
     if (mFastScroll == nullptr) {
         return mFastScrollEnabled && mFastScrollAlwaysVisible;
     } else {
@@ -263,14 +263,14 @@ bool AbsListView::isFastScrollAlwaysVisible()const{
     }
 }
 
-int AbsListView::getVerticalScrollbarWidth()const{
+int AbsListView::getVerticalScrollbarWidth()const {
     if (mFastScroll && mFastScroll->isEnabled()) {
         return std::max(AdapterView::getVerticalScrollbarWidth(), mFastScroll->getWidth());
     }
     return AdapterView::getVerticalScrollbarWidth();
 }
 
-bool AbsListView::isFastScrollEnabled()const{
+bool AbsListView::isFastScrollEnabled()const {
     if (mFastScroll == nullptr) {
         return mFastScrollEnabled;
     } else {
@@ -309,11 +309,11 @@ int AbsListView::getListPaddingRight()const {
     return mListPadding.width;
 }
 
-void AbsListView::setTranscriptMode(int mode){
-    mTranscriptMode=mode;
+void AbsListView::setTranscriptMode(int mode) {
+    mTranscriptMode = mode;
 }
 
-int AbsListView::getTranscriptMode()const{
+int AbsListView::getTranscriptMode()const {
     return mTranscriptMode;
 }
 
@@ -324,7 +324,7 @@ int AbsListView::getCacheColorHint()const {
 void AbsListView::setCacheColorHint(int color) {
     if (color != mCacheColorHint) {
         mCacheColorHint = color;
-        int count = getChildCount();
+        const int count = getChildCount();
         for (int i = 0; i < count; i++) {
             getChildAt(i)->setDrawingCacheBackgroundColor(color);
         }
@@ -392,14 +392,14 @@ int AbsListView::getCheckedItemPosition()const {
     return INVALID_POSITION;
 }
 
-int AbsListView::getCheckedItemPositions(SparseBooleanArray&array){
+int AbsListView::getCheckedItemPositions(SparseBooleanArray&array) {
     if (mChoiceMode != CHOICE_MODE_NONE) {
         return mCheckStates.size();
     }
     return 0;
 }
 
-int AbsListView::getCheckedItemIds(std::vector<long>&ids)const{
+int AbsListView::getCheckedItemIds(std::vector<long>&ids)const {
     if (mChoiceMode == CHOICE_MODE_NONE || mCheckedIdStates.size() == 0 || mAdapter == nullptr) {
         return 0;
     }
@@ -412,7 +412,7 @@ int AbsListView::getCheckedItemIds(std::vector<long>&ids)const{
 
 
 void AbsListView::positionSelector(int position, View* sel, bool manageHotspot, float x, float y) {
-    bool positionChanged = position != mSelectorPosition;
+    const bool positionChanged = (position != mSelectorPosition);
     if (position != INVALID_POSITION) {
         mSelectorPosition = position;
     }
@@ -425,9 +425,9 @@ void AbsListView::positionSelector(int position, View* sel, bool manageHotspot, 
 
     // Adjust for selection padding.
     selectorRect.left -= mSelectionLeftPadding;
-    selectorRect.top -= mSelectionTopPadding;
-    selectorRect.width += mSelectionLeftPadding+mSelectionRightPadding;
-    selectorRect.height+= mSelectionTopPadding+mSelectionBottomPadding;
+    selectorRect.top  -= mSelectionTopPadding;
+    selectorRect.width += mSelectionLeftPadding + mSelectionRightPadding;
+    selectorRect.height+= mSelectionTopPadding + mSelectionBottomPadding;
 
     // Update the child enabled state prior to updating the selector.
     bool isChildViewEnabled = sel->isEnabled();
@@ -465,9 +465,9 @@ void AbsListView::positionSelectorLikeTouch(int position, View* sel, float x, fl
 
 void AbsListView::positionSelectorLikeFocus(int position, View* sel) {
     if (mSelector != nullptr && mSelectorPosition != position && position != INVALID_POSITION) {
-        Rect bounds = mSelectorRect;
-        float x = (bounds.left+bounds.width)/2;//exactCenterX();
-        float y = (bounds.top +bounds.height)/2;//exactCenterY();
+        const Rect& bounds = mSelectorRect;
+        const float x = (bounds.left + bounds.width)/2;
+        const float y = (bounds.top  + bounds.height)/2;
         positionSelector(position, sel, true, x, y);
     } else {
         positionSelector(position, sel);
@@ -481,15 +481,15 @@ void AbsListView::setItemChecked(int position, bool value) {
     if (value && mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL /*&& mChoiceActionMode == nullptr*/) {
         if (mMultiChoiceModeCallback == nullptr /*|| !mMultiChoiceModeCallback.hasWrappedCallback()*/) {
             LOGE("AbsListView: attempted to start selection mode "
-                    "for CHOICE_MODE_MULTIPLE_MODAL but no choice mode callback was "
-                    "supplied. Call setMultiChoiceModeListener to set a callback.");
+                 "for CHOICE_MODE_MULTIPLE_MODAL but no choice mode callback was "
+                 "supplied. Call setMultiChoiceModeListener to set a callback.");
         }
         //mChoiceActionMode = startActionMode(mMultiChoiceModeCallback);
     }
 
     bool itemCheckChanged;
     if (mChoiceMode == CHOICE_MODE_MULTIPLE || mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL) {
-        bool oldValue = mCheckStates.get(position);
+        const bool oldValue = mCheckStates.get(position);
         mCheckStates.put(position,value);
         if (mCheckedIdStates.size() && mAdapter->hasStableIds()) {
             if (value) {
@@ -507,12 +507,12 @@ void AbsListView::setItemChecked(int position, bool value) {
             }
         }
         if (mMultiChoiceModeCallback/*mChoiceActionMode != nullptr*/) {
-            long id = mAdapter->getItemId(position);
+            const long id = mAdapter->getItemId(position);
             mMultiChoiceModeCallback(/*mChoiceActionMode*/ position, id, value);
             //mMultiChoiceModeCallback.onItemCheckedStateChanged
         }
     } else {
-        bool updateIds = mCheckedIdStates.size() && mAdapter->hasStableIds();
+        const bool updateIds = mCheckedIdStates.size() && mAdapter->hasStableIds();
         // Clear all values if we're checking something, or unchecking the currently selected item
         itemCheckChanged = isItemChecked(position) != value;
         if (value || isItemChecked(position)) {
@@ -575,7 +575,7 @@ void AbsListView::setChoiceMode(int choiceMode) {
     }
 }
 
-void AbsListView::setMultiChoiceModeListener(MultiChoiceModeListener listener){
+void AbsListView::setMultiChoiceModeListener(MultiChoiceModeListener listener) {
     mMultiChoiceModeCallback=listener;
 }
 
@@ -607,15 +607,15 @@ int AbsListView::computeVerticalScrollExtent() {
     if (count ==0)return 0;
     if (mSmoothScrollbarEnabled) {
         int extent = count * 100;
-        View* view = getChildAt(0);
-        int top = view->getTop();
+        const View* view = getChildAt(0);
+        const int top = view->getTop();
         int height = view->getHeight();
         if (height > 0) {
             extent += (top * 100) / height;
         }
 
         view = getChildAt(count - 1);
-        int bottom = view->getBottom();
+        const int bottom = view->getBottom();
         height = view->getHeight();
         if (height > 0) {
             extent -= ((bottom - getHeight()) * 100) / height;
@@ -631,9 +631,9 @@ int AbsListView::computeVerticalScrollOffset() {
     int childCount = getChildCount();
     if (firstPosition >= 0 && childCount > 0) {
         if (mSmoothScrollbarEnabled) {
-            View* view = getChildAt(0);
-            int top = view->getTop();
-            int height = view->getHeight();
+            const View* view = getChildAt(0);
+            const int top = view->getTop();
+            const int height = view->getHeight();
             if (height > 0) {
                 return std::max(firstPosition * 100 - (top * 100) / height +
                                 (int)((float)mScrollY / getHeight() * mItemCount * 100), 0);
@@ -693,7 +693,7 @@ void AbsListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyF
             mItemCount = mAdapter->getCount();
         }
         resurrectSelection();
-   }
+    }
 }
 
 void AbsListView::requestLayoutIfNecessary() {
@@ -732,7 +732,7 @@ void AbsListView::setSelector(const std::string&resid) {
     setSelector(mContext->getDrawable(resid));
 }
 
-void AbsListView::getFocusedRect(Rect& r){
+void AbsListView::getFocusedRect(Rect& r) {
     View* view = getSelectedView();
     if (view && view->getParent() == this) {
         // the focused rectangle of the selected view offset into the
@@ -755,21 +755,21 @@ bool AbsListView::touchModeDrawsInPressedState() {
     }
 }
 
-void AbsListView::internalSetPadding(int left, int top, int width, int height){
+void AbsListView::internalSetPadding(int left, int top, int width, int height) {
     AdapterView::internalSetPadding(left, top, width, height);
     if (isLayoutRequested()) {
-         handleBoundsChange();
+        handleBoundsChange();
     }
 }
 
-void AbsListView::onSizeChanged(int w, int h, int oldw, int oldh){
+void AbsListView::onSizeChanged(int w, int h, int oldw, int oldh) {
     handleBoundsChange();
     if (mFastScroll) {
         mFastScroll->onSizeChanged(w, h, oldw, oldh);
     }
 }
 
-void AbsListView::handleBoundsChange(){
+void AbsListView::handleBoundsChange() {
     if (mInLayout) {
         return;
     }
@@ -778,12 +778,12 @@ void AbsListView::handleBoundsChange(){
         mDataChanged = true;
         rememberSyncState();
         for (int i = 0; i < childCount; i++) {
-             View* child = getChildAt(i);
-             ViewGroup::LayoutParams* lp = child->getLayoutParams();
-             // force layout child unless it has exact specs
-             if (lp == nullptr || lp->width < 1 || lp->height < 1) {
-                 child->forceLayout();
-             }
+            View* child = getChildAt(i);
+            ViewGroup::LayoutParams* lp = child->getLayoutParams();
+            // force layout child unless it has exact specs
+            if (lp == nullptr || lp->width < 1 || lp->height < 1) {
+                child->forceLayout();
+            }
         }
     }
 }
@@ -817,7 +817,7 @@ std::vector<int>AbsListView::getDrawableStateForSelector() {
     // state arrays, and clearing the enabled state on those arrays is a
     // bad thing! If we specify we need extra space, it will create+copy
     // into a new array that is safely mutable.
-    std::vector<int>state = onCreateDrawableState();
+    std::vector<int> state = onCreateDrawableState();
 
     int enabledPos = -1;
     for (int i = state.size() - 1; i >= 0; i--) {
@@ -829,7 +829,7 @@ std::vector<int>AbsListView::getDrawableStateForSelector() {
 
     // Remove the enabled state
     if (enabledPos >= 0) {
-        state.erase(state.begin()+enabledPos);
+        state.erase(state.begin() + enabledPos);
         //System.arraycopy(state, enabledPos + 1, state, enabledPos,
         //        state.length - enabledPos - 1);
     }
@@ -861,9 +861,9 @@ void AbsListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     if (mSelector == nullptr) {
         useDefaultSelector();
     }
-    Rect& listPadding= mListPadding;
-    listPadding.left = mSelectionLeftPadding + mPaddingLeft;
-    listPadding.top  = mSelectionTopPadding + mPaddingTop;
+    Rect& listPadding = mListPadding;
+    listPadding.left  = mSelectionLeftPadding + mPaddingLeft;
+    listPadding.top   = mSelectionTopPadding + mPaddingTop;
     listPadding.width = mSelectionRightPadding + mPaddingRight;
     listPadding.height= mSelectionBottomPadding + mPaddingBottom;
 
@@ -1073,11 +1073,11 @@ bool AbsListView::resurrectSelection() {
     return selectedPos >= 0;
 }
 
-bool AbsListView::performLongPress(View* child,int longPressPosition,long longPressId){
+bool AbsListView::performLongPress(View* child,int longPressPosition,long longPressId) {
     return performLongPress(child,longPressPosition,longPressId,-1,-1);
 }
 
-bool AbsListView::performLongPress(View* child,int longPressPosition,long longPressId,int x,int y){
+bool AbsListView::performLongPress(View* child,int longPressPosition,long longPressId,int x,int y) {
     if (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL) {
         /*if (mChoiceActionMode == nullptr &&
             (mChoiceActionMode = startActionMode(mMultiChoiceModeCallback)) != null)*/ {
@@ -1122,7 +1122,7 @@ void AbsListView::keyPressed() {
         }
         setPressed(true);
 
-        bool longClickable = isLongClickable();
+        const bool longClickable = isLongClickable();
         Drawable* d = selector->getCurrent();
         if (d != nullptr && dynamic_cast<TransitionDrawable*>(d)) {
             if (longClickable) {
@@ -1139,8 +1139,8 @@ void AbsListView::keyPressed() {
 }
 
 void AbsListView::handleDataChanged() {
-    int count = mItemCount;
-    int lastHandledItemCount = mLastHandledItemCount;
+    const int count = mItemCount;
+    const int lastHandledItemCount = mLastHandledItemCount;
     mLastHandledItemCount = mItemCount;
 
     if (mChoiceMode != CHOICE_MODE_NONE && mAdapter  && mAdapter->hasStableIds()) {
@@ -1278,7 +1278,7 @@ void AbsListView::handleDataChanged() {
     checkSelectionChanged();
 }
 
-int AbsListView::getDistance(const Rect& source,const Rect& dest, int direction){
+int AbsListView::getDistance(const Rect& source,const Rect& dest, int direction) {
     int sX, sY; // source x, y
     int dX, dY; // dest x, y
     switch (direction) {
@@ -1315,14 +1315,14 @@ int AbsListView::getDistance(const Rect& source,const Rect& dest, int direction)
         break;
     default:
         throw "direction must be one of {FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, "
-                    "FOCUS_FORWARD, FOCUS_BACKWARD}.";
+        "FOCUS_FORWARD, FOCUS_BACKWARD}.";
     }
     int deltaX = dX - sX;
     int deltaY = dY - sY;
     return deltaY * deltaY + deltaX * deltaX;
 }
 
-void AbsListView::reclaimViews(std::vector<View*>& views){
+void AbsListView::reclaimViews(std::vector<View*>& views) {
     const int childCount = getChildCount();
     RecycleBin::RecyclerListener listener = mRecycler->mRecyclerListener;
 
@@ -1351,7 +1351,7 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
     // data and discard the view if we fail.
     View* transientView = mRecycler->getTransientStateView(position);
     if (transientView != nullptr) {
-        LayoutParams* params = (LayoutParams*) transientView->getLayoutParams();
+        const LayoutParams* params = (LayoutParams*) transientView->getLayoutParams();
 
         // If the view type hasn't changed, attempt to re-bind the data.
         if (params->viewType == mAdapter->getItemViewType(position)) {
@@ -1498,11 +1498,11 @@ bool AbsListView::canScrollDown()const {
     return canScrollDown;
 }
 
-void AbsListView::scrollListBy(int y){
+void AbsListView::scrollListBy(int y) {
     trackMotionScroll(-y,-y);
 }
 
-bool  AbsListView::canScrollList(int direction){
+bool  AbsListView::canScrollList(int direction) {
     const int childCount = getChildCount();
     if (childCount == 0) return false;
 
@@ -1679,7 +1679,6 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
 
     mBlockLayoutRequests = false;
     invokeOnItemScrollListener();
-
     return false;
 }
 
@@ -1835,7 +1834,7 @@ void AbsListView::onWindowFocusChanged(bool hasWindowFocus){
             if (touchMode == TOUCH_MODE_OFF) {
                 // This will trigger a layout
                 resurrectSelection();
-               // If we come back in touch mode, then we want to hide the selector
+                // If we come back in touch mode, then we want to hide the selector
             } else {
                 hideSelector();
                 mLayoutMode = LAYOUT_NORMAL;
@@ -1870,13 +1869,13 @@ void AbsListView::onRtlPropertiesChanged(int layoutDirection) {
     }
 }
 
-void AbsListView::dismissPopup(){
+void AbsListView::dismissPopup() {
     if (mPopup != nullptr) {
         mPopup->dismiss();
     }
 }
 
-void AbsListView::showPopup(){
+void AbsListView::showPopup() {
     if (getWindowVisibility() == View::VISIBLE) {
         //createTextFilter(true);
         positionPopup();
@@ -1894,7 +1893,7 @@ void AbsListView::positionPopup() {
     int bottomGap = screenHeight - xy[1] - getHeight() + (int) (mDensityScale * 20);
     if (!mPopup->isShowing()) {
         mPopup->showAtLocation(this, Gravity::BOTTOM | Gravity::CENTER_HORIZONTAL,
-                xy[0], bottomGap);
+                               xy[0], bottomGap);
     } else {
         mPopup->update(xy[0], bottomGap, -1, -1);
     }
@@ -1942,7 +1941,7 @@ bool AbsListView::performItemClick(View* view, int position, long id) {
             } else {
                 mCheckedItemCount--;
             }
-            if (mMultiChoiceModeCallback){//mChoiceActionMode != null) {
+            if (mMultiChoiceModeCallback) { //mChoiceActionMode != null) {
                 mMultiChoiceModeCallback(position,id,checked);
                 //mMultiChoiceModeCallback.onItemCheckedStateChanged(mChoiceActionMode,position, id, checked);
                 dispatchItemClick = false;
@@ -2002,7 +2001,7 @@ void AbsListView::dispatchSetPressed(bool pressed) {
     // get the selector in the right state, but we don't want to press each child.
 }
 
-void AbsListView::dispatchDrawableHotspotChanged(float x, float y){
+void AbsListView::dispatchDrawableHotspotChanged(float x, float y) {
     // Don't dispatch hotspot changes to children. We'll manually handle
     // calling drawableHotspotChanged on the correct child.
 }
@@ -2023,7 +2022,7 @@ int AbsListView::pointToPosition(int x, int y) {
 }
 
 long AbsListView::pointToRowId(int x, int y) {
-    int position = pointToPosition(x, y);
+    const int position = pointToPosition(x, y);
     if (position >= 0) {
         return mAdapter->getItemId(position);
     }
@@ -2031,18 +2030,18 @@ long AbsListView::pointToRowId(int x, int y) {
 }
 
 int AbsListView::findClosestMotionRow(int y) {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     if (childCount == 0) {
         return INVALID_POSITION;
     }
 
-    int motionRow = findMotionRow(y);
+    const int motionRow = findMotionRow(y);
     return motionRow != INVALID_POSITION ? motionRow : mFirstPosition + childCount - 1;
 }
 
 bool AbsListView::onInterceptTouchEvent(MotionEvent& ev) {
     View* v;
-    int x,y;
+    int x, y;
     int actionMasked = ev.getActionMasked();
     if (mPositionScroller)  mPositionScroller->stop();
 
@@ -2141,7 +2140,7 @@ void AbsListView::onSecondaryPointerUp(MotionEvent& ev) {
     }
 }
 
-void AbsListView::onTouchModeChanged(bool isInTouchMode){
+void AbsListView::onTouchModeChanged(bool isInTouchMode) {
     if (isInTouchMode) {
         // Get rid of the selection when we enter touch mode
         hideSelector();
@@ -2177,7 +2176,8 @@ bool AbsListView::onTouchEvent(MotionEvent& ev) {
         return isClickable() || isLongClickable();
     }
 
-    if (mPositionScroller)  mPositionScroller->stop();
+    if (mPositionScroller)
+        mPositionScroller->stop();
 
 
     if (mIsDetaching || !isAttachedToWindow()) {
@@ -2254,7 +2254,7 @@ void AbsListView::reportScrollStateChange(int newState) {
             mLastScrollState = newState;
             mOnScrollListener.onScrollStateChanged(*this, newState);
         }
-    }    
+    }
 }
 
 bool AbsListView::contentFits() {
@@ -2505,22 +2505,22 @@ void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
 }
 
 int AbsListView::releaseGlow(int deltaY, int x) {
-        // First allow releasing existing overscroll effect:
+    // First allow releasing existing overscroll effect:
     float consumed = .0f;
     if (mEdgeGlowTop->getDistance() != .0f) {
         consumed = mEdgeGlowTop->onPullDistance((float) deltaY / getHeight(),
-                (float) x / getWidth());
+                                                (float) x / getWidth());
         if (consumed != .0f) {
             invalidateTopGlow();
         }
     } else if (mEdgeGlowBottom->getDistance() != .0f) {
         consumed = -mEdgeGlowBottom->onPullDistance((float) -deltaY / getHeight(),
-                1.f - (float) x / getWidth());
+                   1.f - (float) x / getWidth());
         if (consumed != .0f) {
             invalidateBottomGlow();
         }
     }
-    int pixelsConsumed = round(consumed * getHeight());
+    const int pixelsConsumed = round(consumed * getHeight());
     return deltaY - pixelsConsumed;
 }
 
@@ -2528,7 +2528,7 @@ int AbsListView::releaseGlow(int deltaY, int x) {
  * @return <code>true</code> if either the top or bottom edge glow is currently active or
  * <code>false</code> if it has no value to release.
  */
-bool AbsListView::isGlowActive()const{
+bool AbsListView::isGlowActive()const {
     return mEdgeGlowBottom->getDistance() != 0 || mEdgeGlowTop->getDistance() != 0;
 }
 
@@ -2591,8 +2591,8 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
                 motionPosition = findMotionRow(y);
                 mFlingRunnable.flywheelTouch();
             } else if ((motionPosition >= 0) && getAdapter()->isEnabled(motionPosition)) {
-                // User clicked on an actual view (and was not stopping a
-                // fling). It might be a click or a scroll. Assume it is a
+                // User clicked on an actual view (and was not stopping a fling).
+                // It might be a click or a scroll. Assume it is a
                 // click until proven otherwise.
                 mTouchMode = TOUCH_MODE_DOWN;
 
@@ -2642,7 +2642,7 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
     const int y = (int) ev.getY(pointerIndex);
     switch (mTouchMode) {
     case TOUCH_MODE_DOWN:/*0*/
-    case TOUCH_MODE_TAP :/*1*/ 
+    case TOUCH_MODE_TAP :/*1*/
     case TOUCH_MODE_DONE_WAITING:/*2*/
         // Check if we have moved far enough that it looks more like a
         // scroll than a tap. If so, we'll enter scrolling mode.
@@ -2702,14 +2702,14 @@ void AbsListView::setTopEdgeEffectColor(int color) {
 /**
  * Returns the top edge effect color.
  */
-int AbsListView::getTopEdgeEffectColor()const{
+int AbsListView::getTopEdgeEffectColor()const {
     return mEdgeGlowTop->getColor();
 }
 
 /**
  * @return The bottom edge effect color.
  */
-int AbsListView::getBottomEdgeEffectColor()const{
+int AbsListView::getBottomEdgeEffectColor()const {
     return mEdgeGlowBottom->getColor();
 }
 
@@ -2754,14 +2754,14 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                         if (mTouchModeReset != nullptr) {
                             removeCallbacks(mTouchModeReset);
                         }
-                        mTouchModeReset =[this,child](){
-                             mTouchModeReset = nullptr;
-                             mTouchMode = TOUCH_MODE_REST;
-                             child->setPressed(false);
-                             setPressed(false);
-                             if (!mDataChanged && !mIsDetaching && isAttachedToWindow()) {
-                                 mPerformClick();//doClick(mMotionPosition);//performClick.run();
-                             }
+                        mTouchModeReset =[this,child]() {
+                            mTouchModeReset = nullptr;
+                            mTouchMode = TOUCH_MODE_REST;
+                            child->setPressed(false);
+                            setPressed(false);
+                            if (!mDataChanged && !mIsDetaching && isAttachedToWindow()) {
+                                mPerformClick();//doClick(mMotionPosition);//performClick.run();
+                            }
                         };
                         postDelayed(mTouchModeReset,ViewConfiguration::getPressedStateDuration());
                     } else {
@@ -2868,7 +2868,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
     }*/
 }
 
-bool AbsListView::shouldDisplayEdgeEffects()const{
+bool AbsListView::shouldDisplayEdgeEffects()const {
     return getOverScrollMode() != OVER_SCROLL_NEVER;
 }
 
@@ -2908,7 +2908,7 @@ void AbsListView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool c
     }
 }
 
-void AbsListView::setFriction(float friction){
+void AbsListView::setFriction(float friction) {
     if(mFlingRunnable.mScroller)
         mFlingRunnable.mScroller->setFriction(friction);
 }
@@ -2917,43 +2917,43 @@ void AbsListView::setVelocityScale(float scale) {
     mVelocityScale = scale;
 }
 
-void AbsListView::smoothScrollToPosition(int position){
+void AbsListView::smoothScrollToPosition(int position) {
     if (mPositionScroller == nullptr) {
         mPositionScroller = createPositionScroller();
     }
     mPositionScroller->start(position);
 }
 
-AbsListView::AbsPositionScroller* AbsListView::createPositionScroller(){
+AbsListView::AbsPositionScroller* AbsListView::createPositionScroller() {
     return new PositionScroller(this);
 }
 
-void AbsListView::smoothScrollToPositionFromTop(int position, int offset, int duration){
+void AbsListView::smoothScrollToPositionFromTop(int position, int offset, int duration) {
     if (mPositionScroller == nullptr) {
         mPositionScroller = createPositionScroller();
     }
     mPositionScroller->startWithOffset(position, offset, duration);
 }
 
-void AbsListView::smoothScrollToPositionFromTop(int position, int offset){
+void AbsListView::smoothScrollToPositionFromTop(int position, int offset) {
     if (mPositionScroller == nullptr) {
         mPositionScroller = createPositionScroller();
     }
     mPositionScroller->startWithOffset(position, offset);
 }
 
-void AbsListView::smoothScrollToPosition(int position, int boundPosition){
+void AbsListView::smoothScrollToPosition(int position, int boundPosition) {
     if (mPositionScroller == nullptr) {
         mPositionScroller = createPositionScroller();
     }
     mPositionScroller->start(position, boundPosition);
 }
 
-void AbsListView::smoothScrollBy(int distance, int duration){
+void AbsListView::smoothScrollBy(int distance, int duration) {
     smoothScrollBy(distance, duration, false, false);
 }
 
-void AbsListView::smoothScrollBy(int distance, int duration, bool linear,bool suppressEndFlingStateChangeCall){
+void AbsListView::smoothScrollBy(int distance, int duration, bool linear,bool suppressEndFlingStateChangeCall) {
     // No sense starting to scroll if we're not going anywhere
     int firstPos = mFirstPosition;
     int childCount = getChildCount();
@@ -2975,7 +2975,7 @@ void AbsListView::smoothScrollBy(int distance, int duration, bool linear,bool su
     }
 }
 
-void AbsListView::smoothScrollByOffset(int position){
+void AbsListView::smoothScrollByOffset(int position) {
     int index = -1;
     if (position < 0) {
         index = getFirstVisiblePosition();
@@ -2987,7 +2987,7 @@ void AbsListView::smoothScrollByOffset(int position){
         View* child = getChildAt(index - getFirstVisiblePosition());
         if (child != nullptr) {
             Rect visibleRect;
-            if (1){//child->getGlobalVisibleRect(visibleRect)) {
+            if (1) { //child->getGlobalVisibleRect(visibleRect)) {
                 // the child is partially visible
                 int childRectArea = child->getWidth() * child->getHeight();
                 int visibleRectArea = visibleRect.width * visibleRect.height;
@@ -3008,7 +3008,7 @@ void AbsListView::smoothScrollByOffset(int position){
     }
 }
 
-void AbsListView::createScrollingCache(){
+void AbsListView::createScrollingCache() {
     if (mScrollingCacheEnabled && !mCachingStarted /*&& !isHardwareAccelerated()*/) {
         setChildrenDrawnWithCacheEnabled(true);
         setChildrenDrawingCacheEnabled(true);
@@ -3016,7 +3016,7 @@ void AbsListView::createScrollingCache(){
     }
 }
 
-void AbsListView::clearScrollingCache(){
+void AbsListView::clearScrollingCache() {
     if (mClearScrollingCache == nullptr) {
         mClearScrollingCache =[this]() {
             if (mCachingStarted) {
@@ -3029,7 +3029,7 @@ void AbsListView::clearScrollingCache(){
                     invalidate();
                 }
             }
-       };
+        };
     }
     post(mClearScrollingCache);
 }
@@ -3046,7 +3046,7 @@ void AbsListView::PositionScroller::start(int position) {
 
     if (mLV->mDataChanged) {
         // Wait until we're back in a stable state to try this.
-        mLV->mPositionScrollAfterLayout =[this,position](){
+        mLV->mPositionScrollAfterLayout =[this,position]() {
             start(position);
         };
         return;
@@ -3096,7 +3096,7 @@ void AbsListView::PositionScroller::start(int position, int boundPosition) {
 
     if (mLV->mDataChanged) {
         // Wait until we're back in a stable state to try this.
-        mLV->mPositionScrollAfterLayout =[this,position,boundPosition](){
+        mLV->mPositionScrollAfterLayout =[this,position,boundPosition]() {
             start(position, boundPosition);
         };
         return;
@@ -3171,13 +3171,13 @@ void AbsListView::PositionScroller::startWithOffset(int position, int offset, in
 
     if (mLV->mDataChanged) {
         // Wait until we're back in a stable state to try this.
-        mLV->mPositionScrollAfterLayout =[this,position,offset,duration](){
+        mLV->mPositionScrollAfterLayout =[this,position,offset,duration]() {
             startWithOffset(position, offset, duration);
         };
         return;
     }
 
-    int childCount = mLV->getChildCount();
+    const int childCount = mLV->getChildCount();
     if (childCount == 0) {
         // Can't scroll without children.
         return;
@@ -3191,8 +3191,8 @@ void AbsListView::PositionScroller::startWithOffset(int position, int offset, in
     mLastSeenPos = INVALID_POSITION;
     mMode = MOVE_OFFSET;
 
-    int firstPos = mLV->mFirstPosition;
-    int lastPos = firstPos + childCount - 1;
+    const int firstPos = mLV->mFirstPosition;
+    const int lastPos = firstPos + childCount - 1;
 
     int viewTravelCount;
     if (mTargetPos < firstPos) {
@@ -3201,15 +3201,14 @@ void AbsListView::PositionScroller::startWithOffset(int position, int offset, in
         viewTravelCount = mTargetPos - lastPos;
     } else {
         // On-screen, just scroll.
-        int targetTop = mLV->getChildAt(mTargetPos - firstPos)->getTop();
+        const int targetTop = mLV->getChildAt(mTargetPos - firstPos)->getTop();
         mLV->smoothScrollBy(targetTop - offset, duration, true, false);
         return;
     }
 
     // Estimate how many screens we should travel
-    float screenTravelCount = (float) viewTravelCount / childCount;
-    mScrollDuration = screenTravelCount < 1 ?
-            duration : (int) (duration / screenTravelCount);
+    const float screenTravelCount = (float) viewTravelCount / childCount;
+    mScrollDuration = (screenTravelCount < 1) ?  duration : (int) (duration / screenTravelCount);
     mLastSeenPos = INVALID_POSITION;
 
     mLV->postOnAnimation(*this);
@@ -3224,7 +3223,7 @@ void AbsListView::PositionScroller::scrollToVisible(int targetPos, int boundPos,
     int childCount = mLV->getChildCount();
     int lastPos = firstPos + childCount - 1;
     int paddedTop = mLV->mListPadding.top;
-    int paddedBottom = mLV->getHeight() - mLV->mListPadding.bottom();
+    int paddedBottom = mLV->getHeight() - mLV->mListPadding.height;
 
     if (targetPos < firstPos || targetPos > lastPos) {
         LOGW("scrollToVisible called with targetPos %d not visible[%d,%d]",targetPos,firstPos,lastPos);
@@ -3272,7 +3271,7 @@ void AbsListView::PositionScroller::stop() {
     mLV->removeCallbacks(*this);
 }
 
-void AbsListView::PositionScroller::operator()() {
+void AbsListView::PositionScroller::operator()() {//todo for horizontal
     int listHeight = mLV->getHeight();
     int firstPos = mLV->mFirstPosition;
     switch (mMode) {
@@ -3330,7 +3329,7 @@ void AbsListView::PositionScroller::operator()() {
         int extraScroll = std::max(mLV->mListPadding.bottom(), mExtraScroll);
         if (nextPos < mBoundPos) {
             mLV->smoothScrollBy(std::max(0, nextViewHeight + nextViewTop - extraScroll),
-                    mScrollDuration, true, true);
+                                mScrollDuration, true, true);
 
             mLastSeenPos = nextPos;
 
@@ -3358,10 +3357,10 @@ void AbsListView::PositionScroller::operator()() {
         }
         int firstViewTop = firstView->getTop();
         int extraScroll = firstPos > 0 ?
-              std::max(mExtraScroll, mLV->mListPadding.top) : mLV->mListPadding.top;
+                                std::max(mExtraScroll, mLV->mListPadding.top) : mLV->mListPadding.top;
 
         mLV->smoothScrollBy(firstViewTop - extraScroll, mScrollDuration, true,
-                firstPos > mTargetPos);
+                            firstPos > mTargetPos);
 
         mLastSeenPos = firstPos;
 
@@ -3391,12 +3390,11 @@ void AbsListView::PositionScroller::operator()() {
         int extraScroll = std::max(mLV->mListPadding.top, mExtraScroll);
         mLastSeenPos = lastPos;
         if (lastPos > mBoundPos) {
-            mLV->smoothScrollBy(-(lastViewPixelsShowing - extraScroll), mScrollDuration, true,
-                    true);
+            mLV->smoothScrollBy(-(lastViewPixelsShowing - extraScroll), mScrollDuration, true,true);
             mLV->postOnAnimation(*this);
         } else {
-            int bottom = listHeight - extraScroll;
-            int lastViewBottom = lastViewTop + lastViewHeight;
+            const int bottom = listHeight - extraScroll;
+            const int lastViewBottom = lastViewTop + lastViewHeight;
             if (bottom > lastViewBottom) {
                 mLV->smoothScrollBy(-(bottom - lastViewBottom), mScrollDuration, true, false);
             } else {
@@ -3471,7 +3469,7 @@ AbsListView::LayoutParams::LayoutParams():ViewGroup::LayoutParams() {
     init();
 }
 
-void AbsListView::LayoutParams::init(){
+void AbsListView::LayoutParams::init() {
     itemId=-1;
     viewType=0;
     recycledHeaderFooter=false;
@@ -3492,19 +3490,19 @@ AbsListView::LayoutParams::LayoutParams(int w, int h, int vt):ViewGroup::LayoutP
     viewType = vt;
 }
 
-AbsListView::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):ViewGroup::LayoutParams(ctx,atts){
+AbsListView::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):ViewGroup::LayoutParams(ctx,atts) {
     init();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-AbsListView::AbsRunnable::AbsRunnable():Runnable(){
+AbsListView::AbsRunnable::AbsRunnable():Runnable() {
     (*mFunctor)=std::bind(&AbsRunnable::run,this);
 }
-void AbsListView::AbsRunnable::setList(AbsListView*lv){
+void AbsListView::AbsRunnable::setList(AbsListView*lv) {
     mLV = lv;
 }
 
-AbsListView::WindowRunnable::WindowRunnable():AbsRunnable(){
+AbsListView::WindowRunnable::WindowRunnable():AbsRunnable() {
     mOriginalAttachCount=0;
     mLV= nullptr;
 }
@@ -3516,7 +3514,7 @@ bool AbsListView::WindowRunnable::sameWindow() {
     return mLV->getWindowAttachCount() == mOriginalAttachCount;
 }
 
-void AbsListView::PerformClick::run(){
+void AbsListView::PerformClick::run() {
     if (mLV->mDataChanged) return;
     ListAdapter* adapter = mLV->mAdapter;
     int motionPosition = mClickMotionPosition;
@@ -3537,7 +3535,7 @@ void AbsListView::CheckForLongPress::setCoords(float x, float y) {
     mY = y;
 }
 
-void AbsListView::CheckForLongPress::run(){
+void AbsListView::CheckForLongPress::run() {
     View* child = mLV->getChildAt(mLV->mMotionPosition - mLV->mFirstPosition);
     if (child != nullptr) {
         const int longPressPosition = mLV->mMotionPosition;
@@ -3563,9 +3561,9 @@ void AbsListView::CheckForLongPress::run(){
     }
 }
 
-void AbsListView::CheckForKeyLongPress::run(){
+void AbsListView::CheckForKeyLongPress::run() {
     if (mLV->isPressed() && mLV->mSelectedPosition >= 0) {
-        int index = mLV->mSelectedPosition - mLV->mFirstPosition;
+        const int index = mLV->mSelectedPosition - mLV->mFirstPosition;
         View* v = mLV->getChildAt(index);
         if (!mLV->mDataChanged) {
             bool handled = false;
@@ -3583,7 +3581,7 @@ void AbsListView::CheckForKeyLongPress::run(){
     }
 }
 
-void AbsListView::CheckForTap::run(){
+void AbsListView::CheckForTap::run() {
     if (mLV->mTouchMode != TOUCH_MODE_DOWN)return;
     mLV->mTouchMode = TOUCH_MODE_TAP;
     View* child = mLV->getChildAt(mLV->mMotionPosition - mLV->mFirstPosition);
@@ -3630,19 +3628,19 @@ void AbsListView::CheckForTap::run(){
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
-AbsListView::FlingRunnable::FlingRunnable(){
+AbsListView::FlingRunnable::FlingRunnable() {
     mLV = nullptr;
     mScroller = nullptr;
     mSuppressIdleStateChangeCall = false;
 }
 
-void AbsListView::FlingRunnable::setList(AbsListView*lv){
+void AbsListView::FlingRunnable::setList(AbsListView*lv) {
     mLV = lv;
     mScroller = new OverScroller(mLV->getContext());
     mCheckFlywheel = std::bind(&FlingRunnable::checkFlyWheel,this);
 }
 
-AbsListView::FlingRunnable::~FlingRunnable(){
+AbsListView::FlingRunnable::~FlingRunnable() {
     delete mScroller;
 }
 
@@ -3720,7 +3718,7 @@ void AbsListView::FlingRunnable::endFling() {
     mLV->removeCallbacks(*this);//mFlingRunnable);
     mLV->removeCallbacks(mCheckFlywheel);
 
-    if (!mSuppressIdleStateChangeCall) 
+    if (!mSuppressIdleStateChangeCall)
         mLV->reportScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
 
     mLV->clearScrollingCache();
@@ -3736,43 +3734,43 @@ void AbsListView::FlingRunnable::flywheelTouch() {
     mLV->postDelayed(mCheckFlywheel, FLYWHEEL_TIMEOUT);
 }
 
-void AbsListView::FlingRunnable::run(){
+void AbsListView::FlingRunnable::run() {
     switch (mLV->mTouchMode) {
     default:  endFling(); return ;
     case TOUCH_MODE_SCROLL://3
-         if (mScroller->isFinished()) return ;
-           // Fall through
+        if (mScroller->isFinished()) return ;
+    // Fall through
     case TOUCH_MODE_FLING: {//4
-         if (mLV->mDataChanged) mLV->layoutChildren();
+        if (mLV->mDataChanged) mLV->layoutChildren();
 
-         if (mLV->mItemCount == 0 || mLV->getChildCount() == 0) {
-             endFling();
-             return ;
-         }
+        if (mLV->mItemCount == 0 || mLV->getChildCount() == 0) {
+            endFling();
+            return ;
+        }
 
          bool more = mScroller->computeScrollOffset();
          int y = mScroller->getCurrY();
 
-         // Flip sign to convert finger direction to list items direction
-         // (e.g. finger moving down means list is moving towards the top)
-         int delta = mLastFlingY - y;
+        // Flip sign to convert finger direction to list items direction
+        // (e.g. finger moving down means list is moving towards the top)
+        int delta = mLastFlingY - y;
 
-         // Pretend that each frame of a fling scroll is a touch scroll
-         if (delta > 0) {
-             // List is moving towards the top. Use first view as mMotionPosition
-             mLV->mMotionPosition = mLV->mFirstPosition;
-             View* firstView = mLV->getChildAt(0);
-             mLV->mMotionViewOriginalTop = firstView->getTop();
-             // Don't fling more than 1 screen
-             delta = std::min(mLV->getHeight() - mLV->mPaddingBottom - mLV->mPaddingTop - 1, delta);
-         } else {
-             // List is moving towards the bottom. Use last view as mMotionPosition
-             int offsetToLast = mLV->getChildCount() - 1;
-             mLV->mMotionPosition = mLV->mFirstPosition + offsetToLast;
-             View* lastView = mLV->getChildAt(offsetToLast);
-             mLV->mMotionViewOriginalTop = lastView->getTop();
-             // Don't fling more than 1 screen
-             delta = std::max(-(mLV->getHeight() - mLV->mPaddingBottom - mLV->mPaddingTop - 1), delta);
+        // Pretend that each frame of a fling scroll is a touch scroll
+        if (delta > 0) {
+            // List is moving towards the top. Use first view as mMotionPosition
+            mLV->mMotionPosition = mLV->mFirstPosition;
+            View* firstView = mLV->getChildAt(0);
+            mLV->mMotionViewOriginalTop = firstView->getTop();
+            // Don't fling more than 1 screen
+            delta = std::min(mLV->getHeight() - mLV->mPaddingBottom - mLV->mPaddingTop - 1, delta);
+        } else {
+            // List is moving towards the bottom. Use last view as mMotionPosition
+            int offsetToLast = mLV->getChildCount() - 1;
+            mLV->mMotionPosition = mLV->mFirstPosition + offsetToLast;
+            View* lastView = mLV->getChildAt(offsetToLast);
+            mLV->mMotionViewOriginalTop = lastView->getTop();
+            // Don't fling more than 1 screen
+            delta = std::max(-(mLV->getHeight() - mLV->mPaddingBottom - mLV->mPaddingTop - 1), delta);
         }
 
         // Check to see if we have bumped into the scroll limit
@@ -3807,7 +3805,6 @@ void AbsListView::FlingRunnable::run(){
                 if (mLV->mFlingProfilingStarted) {
                     mLV->mFlingProfilingStarted = false;
                 }
-
                 /*if (mFlingStrictSpan != nullptr) {
                     mFlingStrictSpan.finish();
                     mFlingStrictSpan = nullptr;
@@ -3817,7 +3814,7 @@ void AbsListView::FlingRunnable::run(){
         break;
     }
     case TOUCH_MODE_OVERFLING: {//6
-         if (mScroller->computeScrollOffset()) {
+        if (mScroller->computeScrollOffset()) {
             int scrollY = mLV->mScrollY;
             int currY = mScroller->getCurrY();
             int deltaY = currY - scrollY;
@@ -3827,25 +3824,25 @@ void AbsListView::FlingRunnable::run(){
                 if (crossDown || crossUp) {
                     int velocity = (int) mScroller->getCurrVelocity();
                     if (crossUp) velocity = -velocity;
-                        // Don't flywheel from this; we're just continuing things.
-                        mScroller->abortAnimation();
-                        start(velocity);
-                    } else {
-                        startSpringback();
-                    }
+                    // Don't flywheel from this; we're just continuing things.
+                    mScroller->abortAnimation();
+                    start(velocity);
+                } else {
+                    startSpringback();
+                }
             } else {
                 mLV->invalidate();
                 mLV->postOnAnimation(*this);//mFlingRunnable);
             }
-         } else {
-             endFling();
-         }
-         break;
-      }
-   }
+        } else {
+            endFling();
+        }
+        break;
+    }
+    }
 }
 
-void AbsListView::FlingRunnable::checkFlyWheel(){
+void AbsListView::FlingRunnable::checkFlyWheel() {
     int activeId = mLV->mActivePointerId;
     VelocityTracker* vt = mLV->mVelocityTracker;
     OverScroller* scroller = mScroller;

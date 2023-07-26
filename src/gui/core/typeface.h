@@ -7,7 +7,8 @@
 #include <unordered_map>
 
 namespace cdroid{
-class FontFamily{};  
+class Context;
+class FontFamily{};
 class Typeface{
 public:
     static constexpr bool ENABLE_LAZY_TYPEFACE_INITIALIZATION=true;
@@ -60,11 +61,11 @@ public:
     std::string getFamily()const;
     Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const;
     double getScale()const;
-    //static Typeface* createFromResources(FamilyResourceEntry entry, AssetManager mgr,const std::string& path)
+    static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
     static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
            std::unordered_map<std::string, Typeface*>& fontMap, 
 	   std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap);
-    static Typeface* findFromCache(/*AssetManager mgr,*/const std::string& path);
+    //static Typeface* findFromCache(AssetManager mgr, const std::string& path);
     static Typeface* create(const std::string& familyName,int style);
     static Typeface* create(Typeface* family,int style);
     static Typeface* create(Typeface* family,int weight, bool italic);

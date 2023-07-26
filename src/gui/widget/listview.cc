@@ -120,15 +120,15 @@ void ListView::addHeaderView(View* v,void* data, bool isSelectable){
     }
 }
 
-void ListView::addHeaderView(View* v){
+void ListView::addHeaderView(View* v) {
     addHeaderView(v, nullptr, true);
 }
 
-int ListView::getHeaderViewsCount()const{
+int ListView::getHeaderViewsCount()const {
     return mHeaderViewInfos.size();
 }
 
-bool ListView::removeHeaderView(View* v){
+bool ListView::removeHeaderView(View* v) {
     if (mHeaderViewInfos.size()) {
         bool result = false;
         if (mAdapter != nullptr && ((HeaderViewListAdapter*) mAdapter)->removeHeader(v)) {
@@ -140,11 +140,11 @@ bool ListView::removeHeaderView(View* v){
         removeFixedViewInfo(v, mHeaderViewInfos);
         return result;
     }
-    return false;    
+    return false;
 }
 
-void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where){
-    int len = where.size();
+void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where) {
+    const int len = where.size();
     for (int i = 0; i < len; ++i) {
         FixedViewInfo* info = where[i];
         if (info->view == v) {
@@ -154,7 +154,7 @@ void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where){
     }
 }
 
-void ListView::addFooterView(View* v,void* data, bool isSelectable){
+void ListView::addFooterView(View* v,void* data, bool isSelectable) {
     if (v->getParent() != nullptr && v->getParent() != this) {
         throw "The specified child already has a parent.You must call removeView() on the child's parent first.";
     }
@@ -178,11 +178,11 @@ void ListView::addFooterView(View* v,void* data, bool isSelectable){
     }
 }
 
-void ListView::addFooterView(View* v){
+void ListView::addFooterView(View* v) {
     addFooterView(v,nullptr,true);
 }
 
-int ListView::getFooterViewsCount()const{
+int ListView::getFooterViewsCount()const {
     return mFooterViewInfos.size();
 }
 
@@ -263,7 +263,7 @@ void ListView::resetList() {
 }
 
 void ListView::clearRecycledState(std::vector<FixedViewInfo*>& infos) {
-    for (auto info:infos){//int i = 0; i < count; i++) {
+    for (auto info:infos) { //int i = 0; i < count; i++) {
         View* child = info->view;
         ViewGroup::LayoutParams* params = child->getLayoutParams();
         if (checkLayoutParams(params)) {
@@ -277,7 +277,7 @@ bool ListView::showingTopFadingEdge() {
     return (mFirstPosition > 0) || (getChildAt(0)->getTop() > listTop);
 }
 
-bool ListView::showingBottomFadingEdge(){
+bool ListView::showingBottomFadingEdge() {
     int childCount = getChildCount();
     int bottomOfBottomChild = getChildAt(childCount - 1)->getBottom();
     int lastVisiblePosition = mFirstPosition + childCount - 1;
@@ -287,7 +287,7 @@ bool ListView::showingBottomFadingEdge(){
     return (lastVisiblePosition < mItemCount - 1)|| (bottomOfBottomChild < listBottom);
 }
 
-bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate){
+bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate) {
     int rectTopWithinChild = rect.top;
 
     // offset so rect is in coordinates of the this view
@@ -329,7 +329,7 @@ bool ListView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immed
             scrollYDelta += (rect.top - listUnfadedTop);
         } else {
             // get entire rect at bottom of screen
-             scrollYDelta += (rect.bottom() - listUnfadedBottom);
+            scrollYDelta += (rect.bottom() - listUnfadedBottom);
         }
 
         // make sure we aren't scrolling beyond the end of our children
@@ -640,18 +640,18 @@ View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childre
     return sel;
 }
 
-ListView::FocusSelector::FocusSelector(ListView*lv){
+ListView::FocusSelector::FocusSelector(ListView*lv) {
     mLV=lv;
 }
 
-ListView::FocusSelector&ListView::FocusSelector::setupForSetSelection(int position, int top){
+ListView::FocusSelector&ListView::FocusSelector::setupForSetSelection(int position, int top) {
     mPosition = position;
     mPositionTop = top;
     mAction = STATE_SET_SELECTION;
     return *this;
 }
 
-void ListView::FocusSelector::operator()(){
+void ListView::FocusSelector::operator()() {
     if (mAction == STATE_SET_SELECTION) {
         mLV->setSelectionFromTop(mPosition, mPositionTop);
         mAction = STATE_WAIT_FOR_LAYOUT;
@@ -677,7 +677,7 @@ void ListView::FocusSelector::onLayoutComplete() {
     }
 }
 
-void ListView::onDetachedFromWindow(){
+void ListView::onDetachedFromWindow() {
     if (mFocusSelector) {
         removeCallbacks(*mFocusSelector);
         delete mFocusSelector;
@@ -686,7 +686,7 @@ void ListView::onDetachedFromWindow(){
     AbsListView::onDetachedFromWindow();
 }
 
-void ListView::onSizeChanged(int w, int h, int oldw, int oldh){
+void ListView::onSizeChanged(int w, int h, int oldw, int oldh) {
     if (getChildCount() > 0) {
         View* focusedChild = getFocusedChild();
         if (focusedChild) {
@@ -694,7 +694,7 @@ void ListView::onSizeChanged(int w, int h, int oldw, int oldh){
             int childBottom = focusedChild->getBottom();
             int offset = std::max(0, childBottom - (h - mPaddingTop));
             int top = focusedChild->getTop() - offset;
-            
+
             if (mFocusSelector == nullptr)  mFocusSelector = new FocusSelector(this);
 
             post(mFocusSelector->setupForSetSelection(childPosition, top));
@@ -707,9 +707,9 @@ void ListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     AbsListView::onMeasure(widthMeasureSpec, heightMeasureSpec);
 
     int widthMode = MeasureSpec::getMode(widthMeasureSpec);
-    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    int heightMode= MeasureSpec::getMode(heightMeasureSpec);
     int widthSize = MeasureSpec::getSize(widthMeasureSpec);
-    int heightSize = MeasureSpec::getSize(heightMeasureSpec);
+    int heightSize= MeasureSpec::getSize(heightMeasureSpec);
 
     int childWidth = 0;
     int childHeight = 0;
@@ -1065,10 +1065,10 @@ void ListView::layoutChildren() {
         return;
     } else if (mItemCount != mAdapter->getCount()) {
         LOGE("The content of the adapter has changed but "
-                    "ListView did not receive a notification. Make sure the content of "
-                    "your adapter is not modified from a background thread, but only from "
-                    "the UI thread. Make sure your adapter calls notifyDataSetChanged() "
-                    "when its content changes. [in ListView( %p) with Adapter( %p )]",getId(),mAdapter);
+             "ListView did not receive a notification. Make sure the content of "
+             "your adapter is not modified from a background thread, but only from "
+             "the UI thread. Make sure your adapter calls notifyDataSetChanged() "
+             "when its content changes. [in ListView( %p) with Adapter( %p )]",getId(),mAdapter);
     }
 
     setSelectedPositionInt(mNextSelectedPosition);
@@ -1176,7 +1176,7 @@ void ListView::layoutChildren() {
             if(mFocusSelector->setupFocusIfValid(selectedPosition))
                 post(*mFocusSelector);
         }
-        }
+    }
     break;
     case LAYOUT_MOVE_SELECTION:
         sel = moveSelection(oldSel, newSel, delta, childrenTop, childrenBottom);
@@ -1319,14 +1319,14 @@ void ListView::layoutChildren() {
     if (!blockLayoutRequests) mBlockLayoutRequests =false;
 }
 
-bool ListView::trackMotionScroll(int deltaY, int incrementalDeltaY){
-    bool result = AbsListView::trackMotionScroll(deltaY, incrementalDeltaY);
+bool ListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
+    const bool result = AbsListView::trackMotionScroll(deltaY, incrementalDeltaY);
     removeUnusedFixedViews(mHeaderViewInfos);
     removeUnusedFixedViews(mFooterViewInfos);
     return result;
 }
 
-void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList){
+void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList) {
     for (int i = infoList.size() - 1; i >= 0; i--) {
         FixedViewInfo* fixedViewInfo = infoList[i];
         View* view = fixedViewInfo->view;
@@ -1338,7 +1338,7 @@ void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList){
     }
 }
 
-bool ListView::isDirectChildHeaderOrFooter(View* child){
+bool ListView::isDirectChildHeaderOrFooter(View* child) {
     for (auto h:mHeaderViewInfos) {
         if (child == h->view) {
             return true;
@@ -1455,7 +1455,7 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
     if (mCachingStarted && !child->isDrawingCacheEnabled()) child->setDrawingCacheEnabled(true);
 }
 
-bool ListView::canAnimate()const{
+bool ListView::canAnimate()const {
     return AbsListView::canAnimate() && mItemCount > 0;
 }
 
@@ -1483,11 +1483,11 @@ void ListView::setSelectionInt(int position) {
     if (awakeScrollbars) awakenScrollBars();
 }
 
-static int constrain(int amount, int low, int high) {//get the 
+static int constrain(int amount, int low, int high) {//get the
     return amount < low ? low : (amount > high ? high : amount);
 }
 
-int ListView::lookForSelectablePositionAfter(int current, int position, bool lookDown){
+int ListView::lookForSelectablePositionAfter(int current, int position, bool lookDown) {
     Adapter* adapter = mAdapter;
     if (adapter == nullptr || isInTouchMode()) {
         return INVALID_POSITION;
@@ -1550,7 +1550,7 @@ bool ListView::onKeyDown(int keyCode,KeyEvent& event) {
     return commonKey(keyCode, 1, event);
 }
 
-bool ListView::onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event){
+bool ListView::onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event) {
     return commonKey(keyCode, repeatCount, event);
 }
 
@@ -1678,43 +1678,43 @@ bool ListView::commonKey(int keyCode, int count, KeyEvent& event) {
     }
 }
 
-bool ListView::pageScroll(int direction){
-   int nextPage;
-   bool down;
+bool ListView::pageScroll(int direction) {
+    int nextPage;
+    bool down;
 
-   if (direction == FOCUS_UP) {
-       nextPage = std::max(0, mSelectedPosition - getChildCount() - 1);
-       down = false;
-   } else if (direction == FOCUS_DOWN) {
-       nextPage = std::min(mItemCount - 1, mSelectedPosition + getChildCount() - 1);
-       down = true;
-   } else {
-       return false;
-   }
+    if (direction == FOCUS_UP) {
+        nextPage = std::max(0, mSelectedPosition - getChildCount() - 1);
+        down = false;
+    } else if (direction == FOCUS_DOWN) {
+        nextPage = std::min(mItemCount - 1, mSelectedPosition + getChildCount() - 1);
+        down = true;
+    } else {
+        return false;
+    }
 
-   if (nextPage >= 0) {
-       int position = lookForSelectablePositionAfter(mSelectedPosition, nextPage, down);
-       if (position >= 0) {
-           mLayoutMode = LAYOUT_SPECIFIC;
+    if (nextPage >= 0) {
+        int position = lookForSelectablePositionAfter(mSelectedPosition, nextPage, down);
+        if (position >= 0) {
+            mLayoutMode = LAYOUT_SPECIFIC;
            mSpecificTop = mPaddingTop + getVerticalFadingEdgeLength();
-           if (down && (position > (mItemCount - getChildCount()))) {
-               mLayoutMode = LAYOUT_FORCE_BOTTOM;
-           }
+            if (down && (position > (mItemCount - getChildCount()))) {
+                mLayoutMode = LAYOUT_FORCE_BOTTOM;
+            }
 
-           if (!down && (position < getChildCount())) {
-               mLayoutMode = LAYOUT_FORCE_TOP;
-           }
+            if (!down && (position < getChildCount())) {
+                mLayoutMode = LAYOUT_FORCE_TOP;
+            }
 
-           setSelectionInt(position);
-           invokeOnItemScrollListener();
-           if (!awakenScrollBars()) {
-               invalidate();
-           }
+            setSelectionInt(position);
+            invokeOnItemScrollListener();
+            if (!awakenScrollBars()) {
+                invalidate();
+            }
 
-           return true;
-       }
-   }
-   return false;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool ListView::fullScroll(int direction) {
@@ -1756,7 +1756,7 @@ bool ListView::fullScroll(int direction) {
 * @param direction one of {View.FOCUS_LEFT, View.FOCUS_RIGHT}
 * @return Whether this consumes the key event.
 */
-bool ListView::handleHorizontalFocusWithinListItem(int direction){
+bool ListView::handleHorizontalFocusWithinListItem(int direction) {
     if (direction != View::FOCUS_LEFT && direction != View::FOCUS_RIGHT)  {
         LOGD("direction must be one of{View.FOCUS_LEFT, View.FOCUS_RIGHT}");
     }
@@ -1765,11 +1765,11 @@ bool ListView::handleHorizontalFocusWithinListItem(int direction){
     if (mItemsCanFocus && numChildren > 0 && mSelectedPosition != INVALID_POSITION) {
         View* selectedView = getSelectedView();
         if (selectedView && selectedView->hasFocus() &&
-                 dynamic_cast<ViewGroup*>(selectedView)) {
+                dynamic_cast<ViewGroup*>(selectedView)) {
 
             View* currentFocus = selectedView->findFocus();
             View* nextFocus = FocusFinder::getInstance().findNextFocus(
-                        (ViewGroup*) selectedView, currentFocus, direction);
+                                  (ViewGroup*) selectedView, currentFocus, direction);
             if (nextFocus != nullptr) {
                 // do the math to get interesting rect in next focus' coordinates
                 Rect focusedRect ;
@@ -1789,7 +1789,7 @@ bool ListView::handleHorizontalFocusWithinListItem(int direction){
             // list.  this is to acheive the overall goal of having
             // horizontal d-pad navigation remain in the current item.
             View* globalNextFocus = FocusFinder::getInstance().findNextFocus(
-                        (ViewGroup*) getRootView(), currentFocus, direction);
+                                        (ViewGroup*) getRootView(), currentFocus, direction);
             if (globalNextFocus != nullptr) {
                 return isViewAncestorOf(globalNextFocus, this);
             }
@@ -1799,21 +1799,21 @@ bool ListView::handleHorizontalFocusWithinListItem(int direction){
 }
 
 
-bool  ListView::arrowScroll(int direction){
-   mInLayout = true;
-   bool handled=arrowScrollImpl(direction);
-   mInLayout=false;
-   return handled;
+bool  ListView::arrowScroll(int direction) {
+    mInLayout = true;
+    bool handled=arrowScrollImpl(direction);
+    mInLayout=false;
+    return handled;
 }
 
-int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedPos, int direction){
+int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedPos, int direction) {
     int nextSelected;
 
     if (direction == View::FOCUS_DOWN) {
         int listBottom = getHeight() - mListPadding.height;
         if (selectedView && selectedView->getBottom() <= listBottom) {
             nextSelected = selectedPos != INVALID_POSITION && selectedPos >= mFirstPosition ?
-                selectedPos + 1 :mFirstPosition;
+                           selectedPos + 1 :mFirstPosition;
         } else {
             return INVALID_POSITION;
         }
@@ -1822,7 +1822,7 @@ int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedP
         if (selectedView && selectedView->getTop() >= listTop) {
             int lastPos = mFirstPosition + getChildCount() - 1;
             nextSelected = selectedPos != INVALID_POSITION && selectedPos <= lastPos ?
-                        selectedPos - 1 :lastPos;
+                           selectedPos - 1 :lastPos;
         } else {
             return INVALID_POSITION;
         }
@@ -1844,7 +1844,7 @@ bool  ListView::arrowScrollImpl(int direction) {
 
     int nextSelectedPosition = nextSelectedPositionForDirection(selectedView, selectedPos, direction);
     int amtToScroll = amountToScroll(direction, nextSelectedPosition);
-    
+
     // if we are moving focus, we may OVERRIDE the default behavior
     ArrowScrollFocusResult* focusResult = mItemsCanFocus ? arrowScrollFocused(direction) : nullptr;
     if (focusResult != nullptr) {
@@ -1914,7 +1914,7 @@ bool  ListView::arrowScrollImpl(int direction) {
     return false;
 }
 
-void ListView::handleNewSelectionChange(View* selectedView, int direction, int newSelectedPosition, bool newFocusAssigned){
+void ListView::handleNewSelectionChange(View* selectedView, int direction, int newSelectedPosition, bool newFocusAssigned) {
     LOGE_IF(newSelectedPosition == INVALID_POSITION,"newSelectedPosition %d needs to be valid",newSelectedPosition);
 
     // whether or not we are moving down or up, we want to preserve the
@@ -1999,11 +1999,11 @@ void ListView::relayoutMeasuredItem(View* child) {
     child->layout(childLeft, childTop, childRight, childBottom);
 }
 
-int ListView::getArrowScrollPreviewLength(){
-   return std::max((int)MIN_SCROLL_PREVIEW_PIXELS, getVerticalFadingEdgeLength());
+int ListView::getArrowScrollPreviewLength() {
+    return std::max((int)MIN_SCROLL_PREVIEW_PIXELS, getVerticalFadingEdgeLength());
 }
 
-int ListView::amountToScroll(int direction, int nextSelectedPosition){
+int ListView::amountToScroll(int direction, int nextSelectedPosition) {
     const int listBottom = getHeight() - mListPadding.height;
     const int listTop = mListPadding.top;
 
@@ -2084,7 +2084,7 @@ int ListView::amountToScroll(int direction, int nextSelectedPosition){
     }
 }
 
-int ListView::lookForSelectablePositionOnScreen(int direction){
+int ListView::lookForSelectablePositionOnScreen(int direction) {
     int firstPosition = mFirstPosition;
     if (direction == View::FOCUS_DOWN) {
         int startPos = (mSelectedPosition != INVALID_POSITION) ? mSelectedPosition + 1 :firstPosition;
@@ -2098,14 +2098,14 @@ int ListView::lookForSelectablePositionOnScreen(int direction){
         int lastVisiblePos = getLastVisiblePosition();
         for (int pos = startPos; pos <= lastVisiblePos; pos++) {
             if (mAdapter->isEnabled(pos)
-                        && getChildAt(pos - firstPosition)->getVisibility() == View::VISIBLE) {
+                    && getChildAt(pos - firstPosition)->getVisibility() == View::VISIBLE) {
                 return pos;
             }
         }
     } else {
         int last = firstPosition + getChildCount() - 1;
         int startPos = (mSelectedPosition != INVALID_POSITION) ?
-                    mSelectedPosition - 1 :firstPosition + getChildCount() - 1;
+                       mSelectedPosition - 1 :firstPosition + getChildCount() - 1;
         if (startPos < 0 || startPos >= mAdapter->getCount()) {
             return INVALID_POSITION;
         }
@@ -2123,67 +2123,67 @@ int ListView::lookForSelectablePositionOnScreen(int direction){
     return INVALID_POSITION;
 }
 
-ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction){
+ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction) {
     View* selectedView = getSelectedView();
     View* newFocus=nullptr;
     Rect mTempRect;
     if (selectedView != nullptr && selectedView->hasFocus()) {
-       View* oldFocus = selectedView->findFocus();
-       newFocus = FocusFinder::getInstance().findNextFocus(this, oldFocus, direction);
+        View* oldFocus = selectedView->findFocus();
+        newFocus = FocusFinder::getInstance().findNextFocus(this, oldFocus, direction);
     } else {
-       if (direction == View::FOCUS_DOWN) {
-           bool topFadingEdgeShowing = (mFirstPosition > 0);
-           int listTop = mListPadding.top + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
-           int ySearchPoint =(selectedView != nullptr  && selectedView->getTop() > listTop) ?
-                                selectedView->getTop() : listTop;
-                mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
-       } else {
-           bool bottomFadingEdgeShowing = (mFirstPosition + getChildCount() - 1) < mItemCount;
-           int listBottom = getHeight() - mListPadding.height -
-                    (bottomFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
-           int ySearchPoint = (selectedView != nullptr && selectedView->getBottom() < listBottom) ?
-                                selectedView->getBottom() : listBottom;
-           mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
-       }
-       newFocus = FocusFinder::getInstance().findNextFocusFromRect(this, &mTempRect, direction);
+        if (direction == View::FOCUS_DOWN) {
+            bool topFadingEdgeShowing = (mFirstPosition > 0);
+            int listTop = mListPadding.top + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
+            int ySearchPoint =(selectedView != nullptr  && selectedView->getTop() > listTop) ?
+                              selectedView->getTop() : listTop;
+            mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+        } else {
+            bool bottomFadingEdgeShowing = (mFirstPosition + getChildCount() - 1) < mItemCount;
+            int listBottom = getHeight() - mListPadding.height -
+                             (bottomFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
+            int ySearchPoint = (selectedView != nullptr && selectedView->getBottom() < listBottom) ?
+                               selectedView->getBottom() : listBottom;
+            mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+        }
+        newFocus = FocusFinder::getInstance().findNextFocusFromRect(this, &mTempRect, direction);
     }
 
     if (newFocus != nullptr) {
-       int posOfNewFocus = positionOfNewFocus(newFocus);
+        int posOfNewFocus = positionOfNewFocus(newFocus);
 
-       // if the focus change is in a different new position, make sure
-       // we aren't jumping over another selectable position
-       if (mSelectedPosition != INVALID_POSITION && posOfNewFocus != mSelectedPosition) {
-           int selectablePosition = lookForSelectablePositionOnScreen(direction);
-           if (selectablePosition != INVALID_POSITION &&
-                   ((direction == View::FOCUS_DOWN && selectablePosition < posOfNewFocus) ||
-                   (direction == View::FOCUS_UP && selectablePosition > posOfNewFocus))) {
-               return nullptr;
-           }
-       }
+        // if the focus change is in a different new position, make sure
+        // we aren't jumping over another selectable position
+        if (mSelectedPosition != INVALID_POSITION && posOfNewFocus != mSelectedPosition) {
+            int selectablePosition = lookForSelectablePositionOnScreen(direction);
+            if (selectablePosition != INVALID_POSITION &&
+                    ((direction == View::FOCUS_DOWN && selectablePosition < posOfNewFocus) ||
+                     (direction == View::FOCUS_UP && selectablePosition > posOfNewFocus))) {
+                return nullptr;
+            }
+        }
 
-       int focusScroll = amountToScrollToNewFocus(direction, newFocus, posOfNewFocus);
+        int focusScroll = amountToScrollToNewFocus(direction, newFocus, posOfNewFocus);
 
-       int maxScrollAmount = getMaxScrollAmount();
-       if (focusScroll < maxScrollAmount) {
-           // not moving too far, safe to give next view focus
-           newFocus->requestFocus(direction);
-           mArrowScrollFocusResult.populate(posOfNewFocus, focusScroll);
-           return &mArrowScrollFocusResult;
-       } else if (distanceToView(newFocus) < maxScrollAmount){
-           // Case to consider:
-           // too far to get entire next focusable on screen, but by going
-           // max scroll amount, we are getting it at least partially in view,
-           // so give it focus and scroll the max ammount.
-           newFocus->requestFocus(direction);
-           mArrowScrollFocusResult.populate(posOfNewFocus, maxScrollAmount);
-           return &mArrowScrollFocusResult;
+        int maxScrollAmount = getMaxScrollAmount();
+        if (focusScroll < maxScrollAmount) {
+            // not moving too far, safe to give next view focus
+            newFocus->requestFocus(direction);
+            mArrowScrollFocusResult.populate(posOfNewFocus, focusScroll);
+            return &mArrowScrollFocusResult;
+        } else if (distanceToView(newFocus) < maxScrollAmount) {
+            // Case to consider:
+            // too far to get entire next focusable on screen, but by going
+            // max scroll amount, we are getting it at least partially in view,
+            // so give it focus and scroll the max ammount.
+            newFocus->requestFocus(direction);
+            mArrowScrollFocusResult.populate(posOfNewFocus, maxScrollAmount);
+            return &mArrowScrollFocusResult;
         }
     }
     return nullptr;
 }
 
-int ListView::positionOfNewFocus(View* newFocus){
+int ListView::positionOfNewFocus(View* newFocus) {
     int numChildren = getChildCount();
     for (int i = 0; i < numChildren; i++) {
         View* child = getChildAt(i);
@@ -2195,16 +2195,16 @@ int ListView::positionOfNewFocus(View* newFocus){
     return 0;
 }
 
-bool ListView::isViewAncestorOf(View* child, View* parent){
+bool ListView::isViewAncestorOf(View* child, View* parent) {
     if (child == parent) return true;
 
     ViewGroup* theParent = child->getParent();
     return theParent&&isViewAncestorOf(theParent, parent);
 }
 
-int ListView::amountToScrollToNewFocus(int direction, View* newFocus, int positionOfNewFocus){
+int ListView::amountToScrollToNewFocus(int direction, View* newFocus, int positionOfNewFocus) {
     int amountToScroll = 0;
-    Rect mTempRect; 
+    Rect mTempRect;
     newFocus->getDrawingRect(mTempRect);
     offsetDescendantRectToMyCoords(newFocus, mTempRect);
     if (direction == View::FOCUS_UP) {
@@ -2240,7 +2240,7 @@ int ListView::distanceToView(View* descendant) {
     return distance;
 }
 
-void ListView::scrollListItemsBy(int amount){
+void ListView::scrollListItemsBy(int amount) {
     offsetChildrenTopAndBottom(amount);
 
     int listBottom = mBottom-mTop - mListPadding.height;
@@ -2311,10 +2311,10 @@ void ListView::scrollListItemsBy(int amount){
     }
     mRecycler->fullyDetachScrapViews();
     removeUnusedFixedViews(mHeaderViewInfos);
-    removeUnusedFixedViews(mFooterViewInfos);    
+    removeUnusedFixedViews(mFooterViewInfos);
 }
 
-View* ListView::addViewAbove(View* theView, int position){
+View* ListView::addViewAbove(View* theView, int position) {
     int abovePosition = position - 1;
     View* view = obtainView(abovePosition, mIsScrap);
     int edgeOfNewChild = theView->getTop() - mDividerHeight;
@@ -2323,7 +2323,7 @@ View* ListView::addViewAbove(View* theView, int position){
     return view;
 }
 
-View* ListView::addViewBelow(View* theView, int position){
+View* ListView::addViewBelow(View* theView, int position) {
     int belowPosition = position + 1;
     View* view = obtainView(belowPosition, mIsScrap);
     int edgeOfNewChild = theView->getBottom() + mDividerHeight;
@@ -2332,20 +2332,20 @@ View* ListView::addViewBelow(View* theView, int position){
     return view;
 }
 
-void ListView::setItemsCanFocus(bool itemsCanFocus){
+void ListView::setItemsCanFocus(bool itemsCanFocus) {
     mItemsCanFocus = itemsCanFocus;
     if (!itemsCanFocus) {
         setDescendantFocusability(ViewGroup::FOCUS_BLOCK_DESCENDANTS);
     }
 }
 
-bool ListView::getItemsCanFocus()const{
+bool ListView::getItemsCanFocus()const {
     return mItemsCanFocus;
 }
 
 bool ListView::isOpaque()const {
-    bool retValue = (mCachingActive && mIsCacheColorOpaque && mDividerIsOpaque 
-           /*&&hasOpaqueScrollbars()*/) || AbsListView::isOpaque();
+    bool retValue = (mCachingActive && mIsCacheColorOpaque && mDividerIsOpaque
+                     /*&&hasOpaqueScrollbars()*/) || AbsListView::isOpaque();
     if (retValue) {
         // only return true if the list items cover the entire area of the view
         /*int listTop = mListPadding != null ? mListPadding.top : mPaddingTop;
@@ -2582,7 +2582,7 @@ void ListView::drawDivider(Canvas&canvas,const Rect&bounds, int childIndex) {
     mDivider->draw(canvas);
 }
 
-Drawable*ListView::getDevider(){
+Drawable*ListView::getDevider() {
     return mDivider;
 }
 
@@ -2646,7 +2646,7 @@ Drawable* ListView::getOverscrollFooter()const {
     return mOverScrollFooter;
 }
 
-void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect){
+void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect) {
     AbsListView::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 
     ListAdapter* adapter = mAdapter;
@@ -2695,7 +2695,7 @@ void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocu
     }
 }
 
-View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip){
+View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip) {
     View* v = AbsListView::findViewByPredicateTraversal(predicate, childToSkip);
     if (v == nullptr) {
         v = findViewByPredicateInHeadersOrFooters(mHeaderViewInfos, predicate, childToSkip);
@@ -2707,7 +2707,7 @@ View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>pre
 }
 
 View* ListView::findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
-    std::function<bool(const View*)>predicate, View* childToSkip){
+        std::function<bool(const View*)>predicate, View* childToSkip) {
     const int len = where.size();
     View* v;
 
@@ -2725,10 +2725,9 @@ View* ListView::findViewByPredicateInHeadersOrFooters(const std::vector<FixedVie
 View* ListView::findViewWithTagInHeadersOrFooters(std::vector<FixedViewInfo*>& where, void* tag) {
     // Look in the passed in list of headers or footers for the view with the tag.
     const int len = where.size();
-    View* v;
 
     for (int i = 0; i < len; i++) {
-       v = where.at(i)->view;
+        View* v = where.at(i)->view;
 
         if (!v->isRootNamespace()) {
             v = v->findViewWithTag(tag);
@@ -2737,6 +2736,7 @@ View* ListView::findViewWithTagInHeadersOrFooters(std::vector<FixedViewInfo*>& w
     }
     return nullptr;
 }
+
 int ListView::getHeightForPosition(int position) {
     int height = AbsListView::getHeightForPosition(position);
     if (shouldAdjustHeightForDivider(position)) {
@@ -2767,12 +2767,12 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
                 bool isLastItem = (itemIndex == (itemCount - 1));
                 if (!drawOverscrollFooter || !isLastItem) {
                     int nextIndex = itemIndex + 1;
-                    /* Draw dividers between enabled items, headers and/or footers 
+                    /* Draw dividers between enabled items, headers and/or footers
                      *when enabled and requested, and after the last enabled item.*/
                     if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader
-                                    && (nextIndex >= headerCount)) && (isLastItem
-                                    || mAdapter->isEnabled(nextIndex) && (footerDividers || !isFooter
-                                    && (nextIndex < footerLimit)))) {
+                                                           && (nextIndex >= headerCount)) && (isLastItem
+                                                                   || mAdapter->isEnabled(nextIndex) && (footerDividers || !isFooter
+                                                                           && (nextIndex < footerLimit)))) {
                         return true;
                     } else if (fillForMissingDividers) {
                         return true;
@@ -2803,12 +2803,12 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
 }
 
 HeaderViewListAdapter* ListView::wrapHeaderListAdapterInternal(
-         const std::vector<FixedViewInfo*>& headerViewInfos,
-         const std::vector<FixedViewInfo*>& footerViewInfos,Adapter* adapter){
-     return new HeaderViewListAdapter(headerViewInfos, footerViewInfos, adapter);
+    const std::vector<FixedViewInfo*>& headerViewInfos,
+    const std::vector<FixedViewInfo*>& footerViewInfos,Adapter* adapter) {
+    return new HeaderViewListAdapter(headerViewInfos, footerViewInfos, adapter);
 }
 
-void ListView::wrapHeaderListAdapterInternal(){
+void ListView::wrapHeaderListAdapterInternal() {
     mAdapter = wrapHeaderListAdapterInternal(mHeaderViewInfos, mFooterViewInfos, mAdapter);
 }
 

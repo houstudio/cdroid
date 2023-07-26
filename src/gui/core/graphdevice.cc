@@ -79,14 +79,14 @@ void GraphDevice::invalidate(const Rect&r){
 void GraphDevice::trackFPS(Canvas& canvas) {
     // Tracks frames per second drawn. First value in a series of draws may be bogus
     // because it down not account for the intervening idle time
-    long nowTime = SystemClock::currentTimeMillis();
+    const long nowTime = SystemClock::currentTimeMillis();
     if (mFpsStartTime <=0) {
         mFpsStartTime = mFpsPrevTime = nowTime;
         mFpsNumFrames = 0;
     } else {
         ++mFpsNumFrames;
-        long frameTime = nowTime - mFpsPrevTime;
-        long totalTime = nowTime - mFpsStartTime;
+        const long frameTime = nowTime - mFpsPrevTime;
+        const long totalTime = nowTime - mFpsStartTime;
         mFpsPrevTime = nowTime;
         if (totalTime > 1000) {
             const float fps = (float) mFpsNumFrames * 1000 / totalTime;
@@ -96,12 +96,9 @@ void GraphDevice::trackFPS(Canvas& canvas) {
         }
     }
     canvas.save();
-    Cairo::Context::Operator oop = canvas.get_operator();
-    canvas.set_operator(Cairo::Context::Operator::CLEAR);
     canvas.set_source_rgb(.02,.02,.02);
     canvas.rectangle(0,0,mRectBanner.width,mRectBanner.height);
     canvas.fill();
-    canvas.set_operator(oop);
     canvas.set_source_rgb(1,1,1);
     canvas.set_font_size(22);
     canvas.move_to(10,8);
@@ -238,61 +235,29 @@ void GraphDevice::composeSurfaces(){
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
         for(int j=0;j<rgn->get_num_rectangles();j++){
             RectangleInt rc = rgn->get_rectangle(j);
-            //Rect rcc = {rc.x,rc.y,rc.width,rc.height};
-            //rcc.offset(rcw.left,rcw.top);
-            //rcc.intersect(0,0,mScreenWidth,mScreenHeight);
-            //if(rcc.empty())continue;
             int dx = rcw.left+ rc.x;
             int dy = rcw.top + rc.y;
             const int ox = dx,oy = dy;
             RectangleInt rd = rc;
             const RectangleInt &rs= rc;
 	    rotateRectInWindow(rcw,(const Rect&)rs,(Rect&)rd,dx,dy,rotation);
-#if 0
-            switch(rotation){
-            case Display::ROTATION_0 :break;
-            case Display::ROTATION_90:
-                dx = oy;
-                dy = mScreenHeight -ox - rs.width;
-                rd.width  = rs.height;
-                rd.height = rs.width;
-                rd.x = rs.y;
-                rd.y = rcw.width -rs.x -rs.width;
-                break;
-            case Display::ROTATION_180:
-                dx = mScreenWidth - ox - rs.width;
-                dy = mScreenHeight- oy - rs.height;
-                rd.x = rcw.width  - rd.x - rs.width;
-                rd.y = rcw.height - rd.y - rs.height;
-                break;
-            case Display::ROTATION_270:
-                dy = ox;
-                dx = mScreenWidth - oy - rs.height;
-                rd.width = rs.height;
-                rd.height= rs.width;
-                rd.x = rcw.height- rs.y -rs.height;
-                rd.y = rs.x;
-                break;
-            }
-#endif
             LOGV("blit surface[%d:%d](%d,%d,%d,%d)/(%d,%d,%d,%d) to (%d,%d)/(%d,%d) rotation=%d",i,j,
 	         rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height,ox,oy,dx,dy,rotation);
             if(hdlSurface)GFXBlit(mPrimarySurface , dx , dy , hdlSurface,(const GFXRect*)&rd);
             else mPrimaryContext->rectangle(rcw.left + rc.x , rcw.top + rc.y , rc.width , rc.height);
-        }/*endof rg->get_num_rectangles*/
-        if(mShowFPS && (fpsBlited ==false) && mPrimaryContext){
+        }
+        if(mShowFPS && (i==wSurfaces.size()-1) && mPrimaryContext){
             Rect recFPS = mRectBanner;
             recFPS.offset(-rcw.left,-rcw.top);
-            RefPtr<Cairo::Region>wvr =  wins[i]->mVisibleRgn;
-            if(wvr->contains_rectangle((Cairo::RectangleInt&)recFPS)==Cairo::Region::Overlap::IN){
-		int dx =0,dy =0;
-		trackFPS(*wSurfaces[i]);
-		LOGV("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
-		rotateRectInWindow(rcw,mRectBanner,recFPS,dx,dy,rotation);
-		if( hdlSurface)GFXBlit(mPrimarySurface , dx,dy, hdlSurface,(const GFXRect*)&recFPS);
-		fpsBlited = true;
-            }
-        }
+            int dx =0,dy =0;
+	    wSurfaces[i]->reset_clip();
+	    mPrimaryContext->reset_clip();
+	    //trackFPS(*mPrimaryContext);
+	    trackFPS(*wSurfaces[i]);
+	    LOGI("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
+	    rotateRectInWindow(rcw,mRectBanner,recFPS,dx,dy,rotation);
+	    if( hdlSurface)GFXBlit(mPrimarySurface , dx,dy, hdlSurface,(const GFXRect*)&recFPS);
+	}
         if(hdlSurface==nullptr){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
