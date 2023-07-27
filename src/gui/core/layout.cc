@@ -122,22 +122,6 @@ double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe
     mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
     mContext->set_font_size(mFontSize);
     mContext->get_text_extents(utext,te);
-    auto face = mTypeface->getFontFace();
-    const double scale= mTypeface->getScale();
-    te.x_advance *= scale;
-    te.y_advance *= scale;
-    te.x_bearing *= scale;
-    te.y_bearing *= scale;
-    te.width *= scale;
-    te.height*= scale;
-    if(fe){
-        mContext->get_font_extents(*fe);
-	fe->max_x_advance *= scale;
-	fe->max_y_advance *= scale;
-	fe->height *= scale;
-	fe->ascent *= scale;
-	fe->descent*= scale;
-    }
     return te.x_advance;
 }
 

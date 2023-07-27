@@ -29,7 +29,6 @@ std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
 
 Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face) {
     mFontFace = face;
-    mScale = 1.f;
 }
 
 Typeface::Typeface(FcPattern & font,const std::string&family) {
@@ -64,7 +63,7 @@ Typeface::Typeface(FcPattern & font,const std::string&family) {
     s = nullptr;
 
     ret = FcPatternGetInteger(&font,FC_WEIGHT,0,&weight);
-    LOGD_IF(ret == FcResultMatch,"weight =%d",weight);
+    LOGV_IF(ret == FcResultMatch,"weight =%d",weight);
     mWeight = weight;
 
     ret = FcPatternGetDouble(&font,FC_PIXEL_SIZE,0,&pixelSize);
@@ -139,10 +138,6 @@ Cairo::RefPtr<Cairo::FtScaledFont>Typeface::getFontFace()const {
     return mFontFace;
 }
 
-double Typeface::getScale()const {
-    return mScale;
-}
-
 Typeface* Typeface::create(Typeface*family, int style) {
     if ((style & ~STYLE_MASK) != 0) {
         style = NORMAL;
@@ -194,11 +189,11 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
             face = tf;
             familyMatched++;
             break;
-        } else if((familyMatched==0)&&(tf->mStyle&SYSLANG_MATCHED)) { // && (ttfLangs>supportLangs)){
+        } else if((familyMatched==0)&&(tf->mStyle&SYSLANG_MATCHED)) {
             face = tf;
         }
     }
-    LOGD_IF(face&&familyName.size(),"want %s got %s/%s style=%x",familyName.c_str(),
+    LOGV_IF(face&&familyName.size(),"want %s got %s/%s style=%x",familyName.c_str(),
             face->getFamily().c_str(),wantFamily.c_str(),face->mStyle);
     return face;
 }
@@ -222,7 +217,7 @@ Typeface* Typeface::defaultFromStyle(int style) {
 }
 
 Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic) {
-    int key = (weight << 1) | (italic ? 1 : 0);
+    const int key = (weight << 1) | (italic ? 1 : 0);
 
     Typeface* typeface = base;
     int bestMactched=0;
@@ -255,7 +250,7 @@ void Typeface::loadPreinstalledSystemFontMap() {
         return;
     loadFromFontConfig();
     loadFaceFromResource(&App::getInstance());
-    //loadFromPath("");
+    loadFromPath("");
     auto it=sSystemFontMap.find(DEFAULT_FAMILY);
     if (it!=sSystemFontMap.end()) {
         setDefault(it->second);
@@ -280,40 +275,28 @@ int Typeface::loadFromPath(const std::string&path) {
     FcConfig *config= FcInitLoadConfigAndFonts ();
     FcStrList *dirs = FcConfigGetFontDirs (config);
     FcStrListFirst(dirs);
-    FcChar8* ps;
-    while(ps = FcStrListNext(dirs)) {
+    while(FcChar8*ps = FcStrListNext(dirs)) {
         struct dirent*ent;
         DIR*dir = opendir((const char*)ps);
         while(dir && ( ent = readdir(dir) ) ) {
-            FT_Face ftFace = nullptr;
+            FT_Face ftFace = nullptr,font_face = nullptr;
             std::string fullpath = std::string((char*)ps) + "/" + ent->d_name;
             FT_Error err = FT_New_Face(ftLibrary,fullpath.c_str(),0,&ftFace);
             if(ftFace == nullptr || err )continue;
-            LOGE_IF(ftFace->family_name == nullptr,"%s missing familyname",fullpath.c_str());
-            if( ftFace->family_name ) {
-                double scale = (double)ftFace->max_advance_height/ftFace->units_per_EM;
-                Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create(ftFace,FT_LOAD_DEFAULT);
-                Cairo::Matrix matrix;
-                if(scale!=.0f)
-                    matrix = Cairo::scaling_matrix(scale,scale);
-                else {
-                    matrix = Cairo::identity_matrix();
-                    scale  = 1.f;
-                }
-                Cairo::Matrix ctm = Cairo::identity_matrix();
-                auto autoft = Cairo::FtScaledFont::create(face,matrix,ctm);
-                Typeface *typeface = new Typeface(autoft);
-                sSystemFontMap.insert({std::string(ftFace->family_name),typeface});
-                typeface->mStyle = parseStyle(ftFace->style_name);
-                LOGI("[%s] style=%s/%x %d glyphs face.height=%x units_per_EM=%x scale=%f",
-                     ftFace->family_name,ftFace->style_name,ftFace->style_flags,ftFace->num_glyphs,
-                     ftFace->max_advance_height,ftFace->units_per_EM,scale);
-            } else {
-                FT_Done_Face(ftFace);
+            FcPattern*pat = FcFreeTypeQueryFace(ftFace,nullptr,0,nullptr);
+            if(pat){
+                err = FcPatternGetFTFace (pat, FC_FT_FACE, 0, &font_face);
+                LOGE_IF(!ftFace->family_name,"%s missing familyname",fullpath.c_str());
+
+                Typeface* typeface = new Typeface(*pat,"");
+                const std::string family = typeface->getFamily();
+                sSystemFontMap.insert({family,typeface});
+                LOGV("[%s] style=%s/%x %d glyphs",family.c_str(),ftFace->style_name,ftFace->style_flags,ftFace->num_glyphs);
             }
+            FT_Done_Face(ftFace);
         }
         if(dir)closedir(dir);
-        LOGD("path=%s",ps);
+        LOGV("path=%s",ps);
     }
     FcStrListDone(dirs);
     return sSystemFontMap.size();
@@ -348,9 +331,6 @@ int Typeface::loadFromFontConfig() {
 
         sSystemFontMap.insert({family,tf});
         LOGV("font %s %p",family.c_str(),tf);
-        //FT_Face ftFace ftFace = tf->mFontFace->;
-        //const double scale = (double)ftFace->height/ftFace->units_per_EM;//
-        tf->mScale = 1.f;//scale;
         if(std::regex_search(family,patSans)) {
             std::string ms=std::regex_search(family,patMono)?"mono":"serif";
             ms ="sans-"+ms;
@@ -389,17 +369,11 @@ int Typeface::loadFromFontConfig() {
 }
 
 static unsigned long my_stream_io(FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count) {
-    // Implement your custom read function here
     std::istream*istream = (std::istream*)stream->descriptor.pointer;
     istream->seekg(offset,std::ios::beg);
     istream->read((char*)buffer,count);
-    size_t len = istream->gcount();
+    const size_t len = istream->gcount();
     return len;
-}
-
-// Your custom close function
-static void my_stream_close(FT_Stream stream) {
-    // Implement your custom close function here
 }
 
 int Typeface::loadFaceFromResource(cdroid::Context*context) {
@@ -415,7 +389,7 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
         std::unique_ptr<std::istream> istream =context->getInputStream(fontUrl);
         memset(&stream,0,sizeof(FT_StreamRec));
         stream.read  = my_stream_io;
-        stream.close = my_stream_close;
+        stream.close = nullptr;
         stream.descriptor.pointer = istream.get();
         /*In case of compressed streams where the size is unknown before
         *actually doing the decompression, the value is set to 0x7FFFFFFF.
@@ -440,7 +414,7 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
         Cairo::RefPtr<Cairo::FtFontFace> ftface = Cairo::FtFontFace::create(face,0);//FT_LOAD_NO_SCALE:1 FT_LOAD_DEFAULT:0;
         double scale =1.f;//(double)face->max_advance_height/face->units_per_EM/64.f;
 #if 10
-        FcPattern*pat = FcFreeTypeQueryFace(face,nullptr,0,nullptr);
+        FcPattern* pat = FcFreeTypeQueryFace(face,nullptr,0,nullptr);
         err = FcPatternGetFTFace (pat, FC_FT_FACE, 0, &font_face);
         Typeface* typeface = new Typeface(*pat,"");
         FT_Done_Face(face);
@@ -453,9 +427,8 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
         Typeface* typeface = new Typeface(scaledFont);
         typeface->fetchProps(face);
 #endif
-        typeface->mScale = scale;//(double)face->max_advance_height/face->units_per_EM;
-        LOGD("Open fontResource %s=%d family=%s face=%p scale=%f pat=%p face=%p/%p=%d",fontUrl.c_str(),
-             err,typeface->getFamily().c_str(),face,scale,pat,face,font_face,err);
+        LOGD("Open fontResource %s=%d family=%s pat=%p face=%p/%p=%d",fontUrl.c_str(),
+             err,typeface->getFamily().c_str(),pat,face,font_face,err);
         sSystemFontMap.insert({fontUrl,typeface});
         sSystemFontMap.insert({typeface->getFamily(),typeface});
 #endif
