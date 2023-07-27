@@ -7,27 +7,27 @@
 #include <fstream>
 #include <iomanip>
 
-namespace cdroid{
+namespace cdroid {
 
-LayoutInflater::LayoutInflater(Context*context){
+LayoutInflater::LayoutInflater(Context*context) {
     mContext=context;
 }
 
-LayoutInflater*LayoutInflater::from(Context*context){
+LayoutInflater*LayoutInflater::from(Context*context) {
     static std::map<Context*,LayoutInflater*>mMaps;
     auto it = mMaps.find(context);
-    if(it == mMaps.end()){
+    if(it == mMaps.end()) {
         LayoutInflater*flater = new LayoutInflater(context);
         it = mMaps.insert(std::pair<Context*,LayoutInflater*>(context,flater)).first;
-        if( mMaps.size() ==1){
-            atexit([](){
+        if( mMaps.size() ==1) {
+            atexit([]() {
                 INFLATERMAPPER& fmap = LayoutInflater::getInflaterMap();
                 STYLEMAPPER& smap = getStyleMap();
                 fmap.clear();
                 smap.clear();
                 for(auto m:mMaps)
                     delete m.second;
-                mMaps.clear(); 
+                mMaps.clear();
                 std::cout<<"LayoutInflater::Destroied!"<<std::endl;
             });
         }
@@ -35,23 +35,23 @@ LayoutInflater*LayoutInflater::from(Context*context){
     return it->second;
 }
 
-LayoutInflater::INFLATERMAPPER& LayoutInflater::getInflaterMap(){
+LayoutInflater::INFLATERMAPPER& LayoutInflater::getInflaterMap() {
     static LayoutInflater::INFLATERMAPPER mFlateMapper;
     return mFlateMapper;
 }
 
-LayoutInflater::STYLEMAPPER& LayoutInflater::getStyleMap(){
+LayoutInflater::STYLEMAPPER& LayoutInflater::getStyleMap() {
     static LayoutInflater::STYLEMAPPER mDefaultStyle;
     return mDefaultStyle;
 }
 
-const std::string LayoutInflater::getDefaultStyle(const std::string&name)const{
+const std::string LayoutInflater::getDefaultStyle(const std::string&name)const {
     LayoutInflater::STYLEMAPPER& maps = getStyleMap();
     auto it = maps.find(name);
     return it==maps.end()?std::string():it->second;
 }
 
-LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name){
+LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
     const size_t  pt = name.rfind('.');
     LayoutInflater::INFLATERMAPPER &maps =getInflaterMap();
     const std::string sname = (pt!=std::string::npos)?name.substr(pt+1):name;
@@ -59,7 +59,7 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
     return (it!=maps.end())?it->second:nullptr;
 }
 
-bool LayoutInflater::registInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater){
+bool LayoutInflater::registInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
     LayoutInflater::INFLATERMAPPER& maps = getInflaterMap();
     if(maps.find(name) != maps.end() )
         return false;
@@ -68,24 +68,24 @@ bool LayoutInflater::registInflater(const std::string&name,const std::string&def
     return true;
 }
 
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool attachToRoot,AttributeSet*atts){
+View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool attachToRoot,AttributeSet*atts) {
     View*v=nullptr;
-    if(mContext){
+    if(mContext) {
         std::string package;
         std::unique_ptr<std::istream>stream = mContext->getInputStream(resource,&package);
-        if(stream && stream->good()){
+        if(stream && stream->good()) {
             v = inflate(package,*stream,root,attachToRoot && (root!=nullptr),atts);
-        }else{
+        } else {
             LOGE("faild to load resource %s [cdroid.pak %s.pak] must be copied to your work directory",resource.c_str(),package.c_str());
         }
-    }else{
+    } else {
         std::ifstream fin(resource);
         v=inflate(resource,fin,root,root!=nullptr,nullptr);
     }
     return v;
 }
 
-typedef struct{
+typedef struct {
     Context*ctx;
     std::string package;
     XML_Parser parser;
@@ -96,9 +96,9 @@ typedef struct{
     AttributeSet* atts;
     View*returnedView;
     int parsedView;
-}WindowParserData;
+} WindowParserData;
 
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
+static void startElement(void *userData, const XML_Char *name, const XML_Char **satts) {
     WindowParserData*pd = (WindowParserData*)userData;
     AttributeSet atts(pd->ctx,pd->package);
     LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
@@ -106,10 +106,10 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     atts.set(satts);
     if(pd->views.size())
         parent = dynamic_cast<ViewGroup*>(pd->views.back());
-    else if(pd->atts){
+    else if(pd->atts) {
         pd->atts->inherit(atts);
     }
-    if(strcmp(name,"merge")==0){
+    if(strcmp(name,"merge")==0) {
         pd->views.push_back(parent);
         pd->flags.push_back(1);
         if(pd->root == nullptr|| !pd->attachToRoot)
@@ -117,8 +117,8 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         return ;
     }
 
-    if(strcmp(name,"include")==0){
-	/**the included layout's root node maybe merge,so we must use attachToRoot =true*/
+    if(strcmp(name,"include")==0) {
+        /**the included layout's root node maybe merge,so we must use attachToRoot =true*/
         const std::string layout = atts.getString("layout");
         View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,true,&atts);
         LayoutParams*lp = parent->generateLayoutParams(atts);
@@ -126,19 +126,19 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         return;
     }
 
-    if( inflater == nullptr ){
+    if( inflater == nullptr ) {
         pd->views.push_back(nullptr);
         LOGE("Unknown Parser for %s",name);
         return;
     }
 
     std::string stname = atts.getString("style");
-    if(!stname.empty()){
+    if(!stname.empty()) {
         AttributeSet style = pd->ctx->obtainStyledAttributes(stname);
         atts.inherit(style);
     }
     stname = LayoutInflater::from(pd->ctx)->getDefaultStyle(name);
-    if(!stname.empty()){
+    if(!stname.empty()) {
         AttributeSet defstyle = pd->ctx->obtainStyledAttributes(stname);
         atts.inherit(defstyle);
     }
@@ -148,26 +148,26 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     pd->flags.push_back(0);
     pd->views.push_back(v);
     LOG(VERBOSE)<<std::setw(pd->views.size()*8)<<v<<":"<<v->getId()<<"["<<name<<"]"<<stname;
-    if( ( parent && ( parent != pd->root )) || ( pd->attachToRoot && pd->root ) ){
+    if( ( parent && ( parent != pd->root )) || ( pd->attachToRoot && pd->root ) ) {
         LayoutParams*lp = parent->generateLayoutParams(atts);
         parent->addView(v,lp);
-    }else if (dynamic_cast<ViewGroup*>(v)){
+    } else if (dynamic_cast<ViewGroup*>(v)) {
         LayoutParams*lp = ((ViewGroup*)v)->generateLayoutParams(atts);
         ((ViewGroup*)v)->setLayoutParams(lp);
     }
 }
 
-static void endElement(void *userData, const XML_Char *name){
+static void endElement(void *userData, const XML_Char *name) {
     WindowParserData*pd = (WindowParserData*)userData;
     if(strcmp(name,"include")==0) return;
-    
+
     if((pd->views.size()==1) && (pd->flags.back()==0))
-        pd->returnedView = pd->views.back(); 
+        pd->returnedView = pd->views.back();
     pd->flags.pop_back();
     pd->views.pop_back();
 }
 
-View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*atts){
+View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*atts) {
     int len = 0;
     char buf[256];
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
@@ -194,12 +194,12 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
         }
     } while( len != 0 );
     XML_ParserFree(parser);
-    if(root && attachToRoot){
-       //if(pd.returnedView)root->addView(pd.returnedView);already added in startElementd
-       root->requestLayout();
-       root->startLayoutAnimation();
+    if(root && attachToRoot) {
+        //if(pd.returnedView)root->addView(pd.returnedView);already added in startElementd
+        root->requestLayout();
+        root->startLayoutAnimation();
     }
-    LOGV("usedtime %dms parsed %d views",SystemClock::uptimeMillis() - tstart , pd.parsedView);
+    LOGV("usedtime %dms parsed %d views",SystemClock::uptimeMillis() - tstart, pd.parsedView);
     return pd.returnedView;
 }
 
