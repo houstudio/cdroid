@@ -121,8 +121,10 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         /**the included layout's root node maybe merge,so we must use attachToRoot =true*/
         const std::string layout = atts.getString("layout");
         View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,true,&atts);
-        LayoutParams*lp = parent->generateLayoutParams(atts);
-        includedView->setLayoutParams(lp);
+        if(includedView) { //for merge as rootnode,the includedView will be null.
+            LayoutParams*lp = parent->generateLayoutParams(atts);
+            includedView->setLayoutParams(lp);
+        }
         return;
     }
 
