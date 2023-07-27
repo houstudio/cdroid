@@ -198,7 +198,7 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
             face = tf;
         }
     }
-    LOGV_IF(face&&familyName.size(),"want %s got %s/%s style=%x",familyName.c_str(),
+    LOGD_IF(face&&familyName.size(),"want %s got %s/%s style=%x",familyName.c_str(),
             face->getFamily().c_str(),wantFamily.c_str(),face->mStyle);
     return face;
 }
@@ -404,6 +404,7 @@ static void my_stream_close(FT_Stream stream) {
 
 int Typeface::loadFaceFromResource(cdroid::Context*context) {
     std::vector<std::string> fonts;
+    context->getArray("@fonts",fonts);
     context->getArray("@font",fonts);
     if(ftLibrary == nullptr)
         FT_Init_FreeType(&ftLibrary);
@@ -428,9 +429,12 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
 
         int err = FT_Open_Face(ftLibrary, &args, 0, &face);
 
-        const size_t dotPos = fontUrl.find_last_of(".");
+        size_t dotPos = fontUrl.find_last_of(".");
         if(dotPos != std::string::npos)
             fontUrl = fontUrl.substr(0, dotPos);
+        dotPos = fontUrl.find("fonts");
+        if(dotPos != std::string::npos)
+            fontUrl.replace(dotPos,5,"font");    
 #ifdef CAIRO_HAS_FT_FONT
         FT_Face font_face;
         Cairo::RefPtr<Cairo::FtFontFace> ftface = Cairo::FtFontFace::create(face,0);//FT_LOAD_NO_SCALE:1 FT_LOAD_DEFAULT:0;
@@ -450,8 +454,8 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
         typeface->fetchProps(face);
 #endif
         typeface->mScale = scale;//(double)face->max_advance_height/face->units_per_EM;
-        LOGD("Open fontResource %s=%d family=%s/%s face=%p size=%ld scale=%f pat=%p face=%p/%p=%d",fontUrl.c_str(),
-             err,face->family_name,typeface->getFamily().c_str(),face,stream.size,scale,pat,face,font_face,err);
+        LOGD("Open fontResource %s=%d family=%s face=%p scale=%f pat=%p face=%p/%p=%d",fontUrl.c_str(),
+             err,typeface->getFamily().c_str(),face,scale,pat,face,font_face,err);
         sSystemFontMap.insert({fontUrl,typeface});
         sSystemFontMap.insert({typeface->getFamily(),typeface});
 #endif
