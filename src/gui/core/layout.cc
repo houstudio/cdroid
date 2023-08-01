@@ -592,9 +592,9 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         int lineStart = getLineStart(lineNum);
         int lineEnd = getLineEnd(lineNum);
         std::wstring line = getLineText(lineNum);
-        const size_t posn = line.find_last_of(L"\n");
-        if(posn!=std::string::npos)
-           line.replace(posn,1,L" ");
+        const size_t last = line.length()-1;
+        if(line[last]=='\n')
+           line[last] =' ';
         measureSize(line.substr(0,1),te,nullptr);
         switch(mAlignment){
         case ALIGN_NORMAL:
