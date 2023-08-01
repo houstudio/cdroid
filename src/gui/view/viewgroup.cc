@@ -633,7 +633,7 @@ void ViewGroup::detachViewsFromParent(int start, int count){
 }
 
 void ViewGroup::removeFromArray(int index){
-    if (isViewTransitioning(mChildren[index])){
+    if (!isViewTransitioning(mChildren[index])){
         mChildren[index]->mParent = nullptr;
     }
     if (index>=0&&index<mChildren.size()) {
