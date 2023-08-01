@@ -407,6 +407,8 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
         {"end" ,Layout::ELLIPSIS_END},{"marquee",Layout::ELLIPSIS_MARQUEE}
       },Layout::ELLIPSIS_NONE));
+    if(attrs.hasAttribute("textHintColor"))
+        setHintTextColor(attrs.getColorStateList("textHintColor"));
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){
