@@ -140,9 +140,9 @@ int AbsListView::getFooterViewsCount()const {
 }
 
 int AbsListView::getHeightForPosition(int position) {
-    int firstVisiblePosition = getFirstVisiblePosition();
-    int childCount = getChildCount();
-    int index = position - firstVisiblePosition;
+    const int firstVisiblePosition = getFirstVisiblePosition();
+    const int childCount = getChildCount();
+    const int index = position - firstVisiblePosition;
     if (index >= 0 && index < childCount) {
         // Position is on-screen, use existing view.
         View* view = getChildAt(index);
@@ -151,7 +151,7 @@ int AbsListView::getHeightForPosition(int position) {
         // Position is off-screen, obtain & recycle view.
         View* view = obtainView(position, mIsScrap);
         view->measure(mWidthMeasureSpec, MeasureSpec::UNSPECIFIED);
-        int height = view->getMeasuredHeight();
+        const int height = view->getMeasuredHeight();
         mRecycler->addScrapView(view, position);
         return height;
     }
@@ -603,7 +603,7 @@ void AbsListView::clearChoices() {
 }
 
 int AbsListView::computeVerticalScrollExtent() {
-    int count = getChildCount();
+    const int count = getChildCount();
     if (count ==0)return 0;
     if (mSmoothScrollbarEnabled) {
         int extent = count * 100;
@@ -627,35 +627,33 @@ int AbsListView::computeVerticalScrollExtent() {
 }
 
 int AbsListView::computeVerticalScrollOffset() {
-    int firstPosition = mFirstPosition;
-    int childCount = getChildCount();
-    if (firstPosition >= 0 && childCount > 0) {
+    const int childCount = getChildCount();
+    if (mFirstPosition >= 0 && childCount > 0) {
         if (mSmoothScrollbarEnabled) {
             const View* view = getChildAt(0);
             const int top = view->getTop();
             const int height = view->getHeight();
             if (height > 0) {
-                return std::max(firstPosition * 100 - (top * 100) / height +
+                return std::max(mFirstPosition * 100 - (top * 100) / height +
                                 (int)((float)mScrollY / getHeight() * mItemCount * 100), 0);
             }
         } else {
             int index;
-            int count = mItemCount;
-            if (firstPosition == 0) {
+            if (mFirstPosition == 0) {
                 index = 0;
-            } else if (firstPosition + childCount == count) {
-                index = count;
+            } else if (mFirstPosition + childCount == mItemCount) {
+                index = mItemCount;
             } else {
-                index = firstPosition + childCount / 2;
+                index = mFirstPosition + childCount / 2;
             }
-            return (int) (firstPosition + childCount * (index / (float) count));
+            return (int) (mFirstPosition + childCount * (index / (float) mItemCount));
         }
     }
     return 0;
 }
 
 int AbsListView::computeVerticalScrollRange() {
-    int result;
+    int result =0;
     if (mSmoothScrollbarEnabled) {
         result = std::max(mItemCount * 100, 0);
         if (mScrollY != 0) {
@@ -870,10 +868,10 @@ void AbsListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
     // Check if our previous measured size was at a point where we should scroll later.
     if (mTranscriptMode == TRANSCRIPT_MODE_NORMAL) {
-        int childCount = getChildCount();
-        int listBottom = getHeight() - getPaddingBottom();
-        View* lastChild = getChildAt(childCount - 1);
-        int lastBottom = lastChild ? lastChild->getBottom() : listBottom;
+        const int childCount = getChildCount();
+        const int listBottom = getHeight() - getPaddingBottom();
+        const View* last = getChildAt(childCount - 1);
+        const int lastBottom = last ? last->getBottom() : listBottom;
         mForceTranscriptScroll = mFirstPosition + childCount >= mLastHandledItemCount &&
                                  lastBottom <= listBottom;
     }
@@ -881,7 +879,7 @@ void AbsListView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 void AbsListView::onLayout(bool changed, int l, int t, int w, int h) {
     AdapterView::onLayout(changed, l, t, w, h);
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     mInLayout = true;
     if (changed) {
         for (int i = 0; i < childCount; i++) {
@@ -974,7 +972,7 @@ bool AbsListView::resurrectSelectionIfNeeded() {
 }
 
 bool AbsListView::resurrectSelection() {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
 
     if (childCount <= 0) {
         return false;
@@ -1007,7 +1005,7 @@ bool AbsListView::resurrectSelection() {
             // Default to selecting whatever is first
             selectedPos = firstPosition;
             for (int i = 0; i < childCount; i++) {
-                View* v = getChildAt(i);
+                const View* v = getChildAt(i);
                 int top = v->getTop();
 
                 if (i == 0) {
@@ -1033,9 +1031,9 @@ bool AbsListView::resurrectSelection() {
             selectedPos = firstPosition + childCount - 1;
 
             for (int i = childCount - 1; i >= 0; i--) {
-                View* v = getChildAt(i);
-                int top = v->getTop();
-                int bottom = v->getBottom();
+                const View* v = getChildAt(i);
+                const int top = v->getTop();
+                const int bottom = v->getBottom();
 
                 if (i == childCount - 1) {
                     selectedTop = top;
@@ -1169,10 +1167,10 @@ void AbsListView::handleDataChanged() {
                     mLayoutMode = LAYOUT_FORCE_BOTTOM;
                     return;
                 }
-                int childCount = getChildCount();
+                const int childCount = getChildCount();
                 int listBottom = getHeight() - getPaddingBottom();
-                View* lastChild = getChildAt(childCount - 1);
-                int lastBottom = lastChild ? lastChild->getBottom() : listBottom;
+                const View* last = getChildAt(childCount - 1);
+                int lastBottom = last ? last->getBottom() : listBottom;
                 if (mFirstPosition + childCount >= lastHandledItemCount &&
                         lastBottom <= listBottom) {
                     mLayoutMode = LAYOUT_FORCE_BOTTOM;
@@ -1411,12 +1409,12 @@ void AbsListView::draw(Canvas& canvas) {
         int translateY;
 
         if (clipToPadding) {
-            width = getWidth() - mPaddingLeft - mPaddingRight;
+            width  = getWidth() - mPaddingLeft - mPaddingRight;
             height = getHeight() - mPaddingTop - mPaddingBottom;
             translateX = mPaddingLeft;
             translateY = mPaddingTop;
         } else {
-            width = getWidth();
+            width  = getWidth();
             height = getHeight();
             translateX = 0;
             translateY = 0;
@@ -1478,7 +1476,7 @@ bool AbsListView::canScrollUp()const {
     // ... Or top of 0th element is not visible
     if (!canScrollUp) {
         if (getChildCount() > 0) {
-            View* child = getChildAt(0);
+            const View* child = getChildAt(0);
             canScrollUp = child->getTop() < mListPadding.top;
         }
     }
@@ -1487,12 +1485,12 @@ bool AbsListView::canScrollUp()const {
 
 bool AbsListView::canScrollDown()const {
     bool canScrollDown;
-    int count = getChildCount();
+    const int count = getChildCount();
     // Last item is not visible
     canScrollDown = (mFirstPosition + count) < mItemCount;
     // ... Or bottom of the last element is not visible
     if (!canScrollDown && count > 0) {
-        View* child = getChildAt(count - 1);
+        const View* child = getChildAt(count - 1);
         canScrollDown = child->getBottom() > getBottom() - mListPadding.height;
     }
 
@@ -1507,16 +1505,15 @@ bool  AbsListView::canScrollList(int direction) {
     const int childCount = getChildCount();
     if (childCount == 0) return false;
 
-    int firstPosition = mFirstPosition;
-    Rect listPadding = mListPadding;
+    const Rect listPadding = mListPadding;
     if (direction > 0) {
-       const int lastBottom = getChildAt(childCount - 1)->getBottom();
-       const int lastPosition = firstPosition + childCount;
-       return lastPosition < mItemCount || lastBottom > getHeight() - listPadding.height;
-   } else {
-       const int firstTop = getChildAt(0)->getTop();
-       return firstPosition > 0 || firstTop < listPadding.top;
-   }
+        const int lastBottom = getChildAt(childCount - 1)->getBottom();
+        const int lastPosition = mFirstPosition + childCount;
+        return lastPosition < mItemCount || lastBottom > getHeight() - listPadding.height;
+    } else {
+        const int firstTop = getChildAt(0)->getTop();
+        return mFirstPosition > 0 || firstTop < listPadding.top;
+    }
 }
 
 bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
@@ -1525,8 +1522,8 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
         return true;
     }
 
-    int firstTop = getChildAt(0)->getTop();
-    int lastBottom = getChildAt(childCount - 1)->getBottom();
+    const int firstTop = getChildAt(0)->getTop();
+    const int lastBottom = getChildAt(childCount - 1)->getBottom();
 
     Rect listPadding = mListPadding;
 
@@ -1541,11 +1538,11 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     }
 
     // FIXME account for grid vertical spacing too?
-    int spaceAbove = effectivePaddingTop - firstTop;
-    int end = getHeight() - effectivePaddingBottom;
-    int spaceBelow = lastBottom - end;
+    const int spaceAbove = effectivePaddingTop - firstTop;
+    const int end = getHeight() - effectivePaddingBottom;
+    const int spaceBelow = lastBottom - end;
 
-    int height = getHeight() - mPaddingBottom - mPaddingTop;
+    const int height = getHeight() - mPaddingBottom - mPaddingTop;
     if (deltaY < 0) {
         deltaY = std::max(-(height - 1), deltaY);
     } else {
@@ -1558,8 +1555,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
         incrementalDeltaY = std::min(height - 1, incrementalDeltaY);
     }
 
-    int firstPosition = mFirstPosition;
-
+    const int firstPosition = mFirstPosition;
     // Update our guesses for where the first and last views are
     if (firstPosition == 0) {
         mFirstPositionDistanceGuess = firstTop - listPadding.top;
@@ -1580,15 +1576,15 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
         return incrementalDeltaY != 0;
     }
 
-    bool down = incrementalDeltaY < 0;
+    const bool down = incrementalDeltaY < 0;
 
-    bool inTouchMode = isInTouchMode();
+    const bool inTouchMode = isInTouchMode();
     if (inTouchMode) {
         hideSelector();
     }
 
-    int headerViewsCount = getHeaderViewsCount();
-    int footerViewsStart = mItemCount - getFooterViewsCount();
+    const int headerViewsCount = getHeaderViewsCount();
+    const int footerViewsStart = mItemCount - getFooterViewsCount();
 
     int start = 0;
     int count = 0;
@@ -1625,7 +1621,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
             } else {
                 start = i;
                 count++;
-                int position = firstPosition + i;
+                const int position = firstPosition + i;
                 if (position >= headerViewsCount && position < footerViewsStart) {
                     // The view will be rebound to new data, clear any
                     // system-managed transient state.
@@ -1662,13 +1658,13 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     mRecycler->fullyDetachScrapViews();
     bool selectorOnScreen = false;
     if (!inTouchMode && mSelectedPosition != INVALID_POSITION) {
-        int childIndex = mSelectedPosition - mFirstPosition;
+        const int childIndex = mSelectedPosition - mFirstPosition;
         if (childIndex >= 0 && childIndex < getChildCount()) {
             positionSelector(mSelectedPosition, getChildAt(childIndex));
             selectorOnScreen = true;
         }
     } else if (mSelectorPosition != INVALID_POSITION) {
-        int childIndex = mSelectorPosition - mFirstPosition;
+        const int childIndex = mSelectorPosition - mFirstPosition;
         if (childIndex >= 0 && childIndex < getChildCount()) {
             positionSelector(mSelectorPosition, getChildAt(childIndex));
             selectorOnScreen = true;
@@ -1684,14 +1680,12 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
 }
 
 void AbsListView::dispatchDraw(Canvas& canvas) {
-    bool clipToPadding = (mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK;
+    const bool clipToPadding = (mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK;
     if (clipToPadding) {
         canvas.save();
-        int scrollX = mScrollX;
-        int scrollY = mScrollY;
-        canvas.rectangle(scrollX + mPaddingLeft, scrollY + mPaddingTop,
-                         scrollX + getWidth() - mPaddingRight,
-                         scrollY + getHeight() - mPaddingBottom);
+        canvas.rectangle(mScrollX + mPaddingLeft, mScrollY + mPaddingTop,
+                         getWidth() - mPaddingLeft - mPaddingRight,
+                         getHeight() - mPaddingTop - mPaddingBottom);
         mGroupFlags &= ~CLIP_TO_PADDING_MASK;
         canvas.clip();
     }
@@ -2157,7 +2151,8 @@ void AbsListView::onTouchModeChanged(bool isInTouchMode) {
     } else {
         if (mTouchMode == TOUCH_MODE_OVERSCROLL || mTouchMode == TOUCH_MODE_OVERFLING) {
             mFlingRunnable.endFling();
-            if (mPositionScroller)mPositionScroller->stop();
+            if (mPositionScroller)
+                mPositionScroller->stop();
 
             if (mScrollY != 0) {
                 mScrollY = 0;
@@ -2202,19 +2197,23 @@ bool AbsListView::onTouchEvent(MotionEvent& ev) {
     vtev->offsetLocation(0, mNestedYOffset);
     switch (actionMasked) {
     case MotionEvent::ACTION_DOWN:
-        onTouchDown(ev);        break;
+        onTouchDown(ev);
+        break;
     case MotionEvent::ACTION_MOVE:
-        onTouchMove(ev, *vtev); break;
+        onTouchMove(ev, *vtev);
+        break;
     case MotionEvent::ACTION_UP:
-        onTouchUp(ev);          break;
+        onTouchUp(ev);
+        break;
     case MotionEvent::ACTION_CANCEL:
-        onTouchCancel();        break;
+        onTouchCancel();
+        break;
     case MotionEvent::ACTION_POINTER_UP: {
         onSecondaryPointerUp(ev);
-        int motionPosition = pointToPosition(mMotionX, mMotionY);
+        const int motionPosition = pointToPosition(mMotionX, mMotionY);
         if (motionPosition >= 0) {
             // Remember where the motion event started
-            View* child = getChildAt(motionPosition - mFirstPosition);
+            const View* child = getChildAt(motionPosition - mFirstPosition);
             mMotionViewOriginalTop = child->getTop();
             mMotionPosition = motionPosition;
         }
@@ -2242,7 +2241,8 @@ bool AbsListView::onTouchEvent(MotionEvent& ev) {
     }
 
     vtev->recycle();
-    if (mVelocityTracker) mVelocityTracker->addMovement(*vtev);
+    if (mVelocityTracker)
+        mVelocityTracker->addMovement(*vtev);
     return true;
 }
 
@@ -2256,7 +2256,7 @@ void AbsListView::reportScrollStateChange(int newState) {
 }
 
 bool AbsListView::contentFits() {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     if (childCount == 0) return true;
     if (childCount != mItemCount) return false;
 
@@ -2289,9 +2289,9 @@ int AbsListView::reconcileSelectedPosition() {
 }
 
 bool AbsListView::startScrollIfNeeded(int x, int y, MotionEvent* vtev) {
-    int deltaY = y - mMotionY;
-    int distance = std::abs(deltaY);
-    bool overscroll = mScrollY != 0;
+    const int deltaY = y - mMotionY;
+    const int distance = std::abs(deltaY);
+    const bool overscroll = mScrollY != 0;
     if ((overscroll || distance > mTouchSlop) &&
             (getNestedScrollAxes() & SCROLL_AXIS_VERTICAL) == 0) {
         createScrollingCache();
@@ -2386,7 +2386,7 @@ void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
             if (motionView != nullptr) {
                 // Check if the top of the motion view is where it is
                 // supposed to be
-                int motionViewRealTop = motionView->getTop();
+                const int motionViewRealTop = motionView->getTop();
                 if (atEdge) {
                     // Apply overscroll
 
@@ -2603,7 +2603,7 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
 
         if (motionPosition >= 0) {
             // Remember where the motion event started
-            View* v = getChildAt(motionPosition - mFirstPosition);
+            const View* v = getChildAt(motionPosition - mFirstPosition);
             mMotionViewOriginalTop = v->getTop();
         }
 
@@ -2726,7 +2726,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
 
             const float x = ev.getX();
             const float y = ev.getY();
-            bool inList = x > mListPadding.left && x < getWidth() - mListPadding.width;
+            const bool inList = x > mListPadding.left && x < getWidth() - mListPadding.width;
             if (inList && !child->hasExplicitFocusable()) {
                 mPerformClick.mClickMotionPosition = mMotionPosition;
                 mPerformClick.rememberWindowAttachCount();
@@ -2955,10 +2955,10 @@ void AbsListView::smoothScrollBy(int distance, int duration) {
 void AbsListView::smoothScrollBy(int distance, int duration, bool linear,bool suppressEndFlingStateChangeCall) {
     // No sense starting to scroll if we're not going anywhere
     int firstPos = mFirstPosition;
-    int childCount = getChildCount();
-    int lastPos = firstPos + childCount;
-    int topLimit = getPaddingTop();
-    int bottomLimit = getHeight() - getPaddingBottom();
+    const int childCount = getChildCount();
+    const int lastPos = firstPos + childCount;
+    const int topLimit = getPaddingTop();
+    const int bottomLimit = getHeight() - getPaddingBottom();
 
     if (distance == 0 || mItemCount == 0 || childCount == 0 ||
             (firstPos == 0 && getChildAt(0)->getTop() == topLimit && distance < 0) ||
@@ -3289,14 +3289,14 @@ void AbsListView::PositionScroller::operator()() {//todo for horizontal
             return;
         }
 
-        View* lastView = mLV->getChildAt(lastViewIndex);
-        int lastViewHeight = lastView->getHeight();
-        int lastViewTop = lastView->getTop();
-        int lastViewPixelsShowing = listHeight - lastViewTop;
-        int extraScroll = lastPos < childCount - 1 ?
+        const View* lastView = mLV->getChildAt(lastViewIndex);
+        const int lastViewHeight = lastView->getHeight();
+        const int lastViewTop = lastView->getTop();
+        const int lastViewPixelsShowing = listHeight - lastViewTop;
+        const int extraScroll = lastPos < childCount - 1 ?
              std::max(mLV->mListPadding.height, mExtraScroll) : mLV->mListPadding.height;
 
-        int scrollBy = lastViewHeight - lastViewPixelsShowing + extraScroll;
+        const int scrollBy = lastViewHeight - lastViewPixelsShowing + extraScroll;
         mLV->smoothScrollBy(scrollBy, mScrollDuration, true, lastPos < mTargetPos);
 
         mLastSeenPos = lastPos;
@@ -3314,7 +3314,7 @@ void AbsListView::PositionScroller::operator()() {//todo for horizontal
             mLV->reportScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
             return;
         }
-        int nextPos = firstPos + nextViewIndex;
+        const int nextPos = firstPos + nextViewIndex;
 
         if (nextPos == mLastSeenPos) {
             // No new views, let things keep going.
@@ -3322,10 +3322,10 @@ void AbsListView::PositionScroller::operator()() {//todo for horizontal
             return;
         }
 
-        View* nextView = mLV->getChildAt(nextViewIndex);
-        int nextViewHeight = nextView->getHeight();
-        int nextViewTop = nextView->getTop();
-        int extraScroll = std::max(mLV->mListPadding.height, mExtraScroll);
+        const View* nextView = mLV->getChildAt(nextViewIndex);
+        const int nextViewHeight = nextView->getHeight();
+        const int nextViewTop = nextView->getTop();
+        const int extraScroll = std::max(mLV->mListPadding.height, mExtraScroll);
         if (nextPos < mBoundPos) {
             mLV->smoothScrollBy(std::max(0, nextViewHeight + nextViewTop - extraScroll),
                                 mScrollDuration, true, true);
@@ -3354,8 +3354,8 @@ void AbsListView::PositionScroller::operator()() {//todo for horizontal
         if (firstView == nullptr) {
             return;
         }
-        int firstViewTop = firstView->getTop();
-        int extraScroll = firstPos > 0 ?
+        const int firstViewTop = firstView->getTop();
+        const int extraScroll = firstPos > 0 ?
                                 std::max(mExtraScroll, mLV->mListPadding.top) : mLV->mListPadding.top;
 
         mLV->smoothScrollBy(firstViewTop - extraScroll, mScrollDuration, true,
@@ -3382,11 +3382,11 @@ void AbsListView::PositionScroller::operator()() {//todo for horizontal
             return;
         }
 
-        View* lastView = mLV->getChildAt(lastViewIndex);
-        int lastViewHeight = lastView->getHeight();
-        int lastViewTop = lastView->getTop();
-        int lastViewPixelsShowing = listHeight - lastViewTop;
-        int extraScroll = std::max(mLV->mListPadding.top, mExtraScroll);
+        const View* lastView = mLV->getChildAt(lastViewIndex);
+        const int lastViewHeight = lastView->getHeight();
+        const int lastViewTop = lastView->getTop();
+        const int lastViewPixelsShowing = listHeight - lastViewTop;
+        const int extraScroll = std::max(mLV->mListPadding.top, mExtraScroll);
         mLastSeenPos = lastPos;
         if (lastPos > mBoundPos) {
             mLV->smoothScrollBy(-(lastViewPixelsShowing - extraScroll), mScrollDuration, true,true);
@@ -3412,20 +3412,20 @@ void AbsListView::PositionScroller::operator()() {//todo for horizontal
 
         mLastSeenPos = firstPos;
 
-        int position = mTargetPos;
-        int lastPos = firstPos + childCount - 1;
+        const int position = mTargetPos;
+        const int lastPos = firstPos + childCount - 1;
 
         // Account for the visible "portion" of the first / last child when we estimate
         // how many screens we should travel to reach our target
-        View* firstChild = mLV->getChildAt(0);
-        int firstChildHeight = firstChild->getHeight();
-        View* lastChild = mLV->getChildAt(childCount - 1);
-        int lastChildHeight = lastChild->getHeight();
-        float firstPositionVisiblePart = (firstChildHeight == 0.0f) ? 1.0f
-                : (float) (firstChildHeight + firstChild->getTop()) / firstChildHeight;
-        float lastPositionVisiblePart = (lastChildHeight == 0.0f) ? 1.0f
-                : (float) (lastChildHeight + mLV->getHeight() - lastChild->getBottom())
-                        / lastChildHeight;
+        const View* firstChild = mLV->getChildAt(0);
+        const int firstChildHeight = firstChild->getHeight();
+        const View* lastChild = mLV->getChildAt(childCount - 1);
+        const int lastChildHeight = lastChild->getHeight();
+        const float firstPositionVisiblePart = (firstChildHeight == 0.0f) ? 1.0f
+                                         : (float) (firstChildHeight + firstChild->getTop()) / firstChildHeight;
+        const float lastPositionVisiblePart = (lastChildHeight == 0.0f) ? 1.0f
+                                        : (float) (lastChildHeight + mLV->getHeight() - lastChild->getBottom())
+                                        / lastChildHeight;
 
         float viewTravelCount = 0;
         if (position < firstPos) {
@@ -3439,26 +3439,27 @@ void AbsListView::PositionScroller::operator()() {//todo for horizontal
 
         float modifier = std::min(std::abs(screenTravelCount), 1.f);
         if (position < firstPos) {
-            int distance = (int) (-mLV->getHeight() * modifier);
-            int duration = (int) (mScrollDuration * modifier);
+            const int distance = (int) (-mLV->getHeight() * modifier);
+            const int duration = (int) (mScrollDuration * modifier);
             mLV->smoothScrollBy(distance, duration, true, true);
             mLV->postOnAnimation(*this);
         } else if (position > lastPos) {
-            int distance = (int) (mLV->getHeight() * modifier);
-            int duration = (int) (mScrollDuration * modifier);
+            const int distance = (int) (mLV->getHeight() * modifier);
+            const int duration = (int) (mScrollDuration * modifier);
             mLV->smoothScrollBy(distance, duration, true, true);
             mLV->postOnAnimation(*this);
         } else {
             // On-screen, just scroll.
-            int targetTop = mLV->getChildAt(position - firstPos)->getTop();
-            int distance = targetTop - mOffsetFromTop;
-            int duration = (int) (mScrollDuration *
-                        ((float) std::abs(distance) / mLV->getHeight()));
+            const int targetTop = mLV->getChildAt(position - firstPos)->getTop();
+            const int distance = targetTop - mOffsetFromTop;
+            const int duration = (int) (mScrollDuration *
+                                        ((float) std::abs(distance) / mLV->getHeight()));
             mLV->smoothScrollBy(distance, duration, true, false);
         }
         break;
     }
-    default:  break;
+    default:
+        break;
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3643,7 +3644,7 @@ AbsListView::FlingRunnable::~FlingRunnable() {
 }
 
 void AbsListView::FlingRunnable::start(int initialVelocity) {
-    int initialY = initialVelocity < 0 ? INT_MAX : 0;
+    const int initialY = initialVelocity < 0 ? INT_MAX : 0;
     mLastFlingY = initialY;
     mScroller->setInterpolator(nullptr);
     mScroller->fling(0, initialY, 0, initialVelocity, 0, INT_MAX, 0, INT_MAX);
@@ -3700,7 +3701,7 @@ void AbsListView::FlingRunnable::edgeReached(int delta) {
 }
 
 void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool linear, bool suppressEndFlingStateChangeCall) {
-    int initialY = distance < 0 ? INT_MAX : 0;
+    const int initialY = distance < 0 ? INT_MAX : 0;
     mLastFlingY = initialY;
     mScroller->setInterpolator(linear ? new LinearInterpolator() : nullptr);
     mScroller->startScroll(0, initialY, 0, distance, duration);
@@ -3812,9 +3813,9 @@ void AbsListView::FlingRunnable::run() {
     }
     case TOUCH_MODE_OVERFLING: {//6
         if (mScroller->computeScrollOffset()) {
-            int scrollY = mLV->mScrollY;
-            int currY = mScroller->getCurrY();
-            int deltaY = currY - scrollY;
+            const int scrollY = mLV->mScrollY;
+            const int currY = mScroller->getCurrY();
+            const int deltaY = currY - scrollY;
             if (mLV->overScrollBy(0, deltaY, 0, scrollY, 0, 0, 0, mLV->mOverflingDistance, false)) {
                 bool crossDown = scrollY <= 0 && currY > 0;
                 bool crossUp = scrollY >= 0 && currY < 0;
@@ -3840,17 +3841,16 @@ void AbsListView::FlingRunnable::run() {
 }
 
 void AbsListView::FlingRunnable::checkFlyWheel() {
-    int activeId = mLV->mActivePointerId;
+    const int activeId = mLV->mActivePointerId;
     VelocityTracker* vt = mLV->mVelocityTracker;
-    OverScroller* scroller = mScroller;
     if (vt == nullptr || activeId == INVALID_POINTER) {
         return;
     }
 
     vt->computeCurrentVelocity(1000, mLV->mMaximumVelocity);
-    float yvel = -vt->getYVelocity(activeId);
+    const float yvel = -vt->getYVelocity(activeId);
 
-    if ( (std::abs(yvel) >= mLV->mMinimumVelocity) && scroller->isScrollingInDirection(0, yvel)) {
+    if ( (std::abs(yvel) >= mLV->mMinimumVelocity) && mScroller->isScrollingInDirection(0, yvel)) {
         // Keep the fling alive a little longer
         mLV->postDelayed(mCheckFlywheel, FLYWHEEL_TIMEOUT);
     } else {

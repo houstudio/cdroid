@@ -429,7 +429,6 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
 #ifdef CAIRO_HAS_FT_FONT
         FT_Face font_face;
         Cairo::RefPtr<Cairo::FtFontFace> ftface = Cairo::FtFontFace::create(face,0);//FT_LOAD_NO_SCALE:1 FT_LOAD_DEFAULT:0;
-        double scale =1.f;//(double)face->max_advance_height/face->units_per_EM/64.f;
 #if 10
         FcPattern* pat = FcFreeTypeQueryFace(face,nullptr,0,nullptr);
         err = FcPatternGetFTFace (pat, FC_FT_FACE, 0, &font_face);

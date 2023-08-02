@@ -19,7 +19,8 @@ namespace cdroid{
 
 DECLARE_WIDGET(View)
 
-bool View::sIgnoreMeasureCache = false;
+bool View::sIgnoreMeasureCache = false;//targetSdkVersion < Build.VERSION_CODES.KITKAT;
+bool View::sAlwaysRemeasureExactly = false;//targetSdkVersion <= Build.VERSION_CODES.M;
 bool View::sPreserveMarginParamsInLayoutParamConversion = true;
 
 class TintInfo{
@@ -6867,7 +6868,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
                 && MeasureSpec::getMode(heightMeasureSpec) == MeasureSpec::EXACTLY;
     const bool matchesSpecSize = getMeasuredWidth() == MeasureSpec::getSize(widthMeasureSpec)
                 && getMeasuredHeight() == MeasureSpec::getSize(heightMeasureSpec);
-    const bool needsLayout = specChanged  && (/*sAlwaysRemeasureExactly ||*/ !isSpecExactly || !matchesSpecSize);
+    const bool needsLayout = specChanged  && ( sAlwaysRemeasureExactly || !isSpecExactly || !matchesSpecSize);
 
     if (forceLayout || needsLayout) {
         // first clears the measured dimension flag
@@ -6875,7 +6876,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
         resolveRtlPropertiesIfNeeded();
         auto itc = mMeasureCache.find(key);
-        if (itc== mMeasureCache.end() || forceLayout/*sIgnoreMeasureCache*/) {
+        if ( (itc == mMeasureCache.end()) || sIgnoreMeasureCache) {
             // measure ourselves, this should set the measured dimension flag back
             onMeasure(widthMeasureSpec, heightMeasureSpec);
             mPrivateFlags3 &= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
@@ -6897,8 +6898,8 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
     mOldWidthMeasureSpec = widthMeasureSpec;
     mOldHeightMeasureSpec = heightMeasureSpec;
-    Size szMeasured={mMeasuredWidth,mMeasuredHeight};
-    mMeasureCache[key]=szMeasured;//
+    Size szMeasured = { mMeasuredWidth , mMeasuredHeight };
+    mMeasureCache[key] = szMeasured;//
     //mMeasureCache.insert(std::pair<Size,Size>(key,szMeasured)); // suppress sign extension
 }
 

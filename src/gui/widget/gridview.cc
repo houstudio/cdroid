@@ -7,21 +7,21 @@ namespace cdroid {
 
 DECLARE_WIDGET2(GridView,"cdroid:attr/gridViewStyle")
 
-GridView::GridView(int w,int h):AbsListView(w,h){
+GridView::GridView(int w,int h):AbsListView(w,h) {
     initGridView();
 }
 
 GridView::GridView(Context*ctx,const AttributeSet&atts)
-  :AbsListView(ctx,atts){
+    :AbsListView(ctx,atts) {
     initGridView();
     setHorizontalSpacing(atts.getDimensionPixelOffset("horizontalSpacing",10));
     setVerticalSpacing(atts.getDimensionPixelOffset("verticalSpacing",0));
-    int index = atts.getInt("strechMode",std::map<const std::string,int>{
-             {"none", NO_STRETCH},
-	     {"spacingWidth",STRETCH_SPACING},
-	     {"columnWidth", STRETCH_COLUMN_WIDTH},
-	     {"spacingWidthUniform",STRETCH_SPACING_UNIFORM}
-	  },STRETCH_COLUMN_WIDTH);
+    int index = atts.getInt("strechMode",std::map<const std::string,int> {
+        {"none", NO_STRETCH},
+        {"spacingWidth",STRETCH_SPACING},
+        {"columnWidth", STRETCH_COLUMN_WIDTH},
+        {"spacingWidthUniform",STRETCH_SPACING_UNIFORM}
+    },STRETCH_COLUMN_WIDTH);
     if(index>=0)setStretchMode(index);
     const int columnWidth = atts.getDimensionPixelOffset("columnWidth", -1);
     if (columnWidth > 0)
@@ -34,16 +34,16 @@ GridView::GridView(Context*ctx,const AttributeSet&atts)
     }
 }
 
-void GridView::initGridView(){
+void GridView::initGridView() {
     mNumColumns = AUTO_FIT;
-    mRequestedNumColumns =0;
-    mRequestedColumnWidth=0;
-    mHorizontalSpacing=0;
-    mVerticalSpacing=0;
+    mRequestedNumColumns = 0;
+    mRequestedColumnWidth= 0;
+    mHorizontalSpacing = 0;
+    mVerticalSpacing   = 0;
     mRequestedHorizontalSpacing = 0;
-    mStretchMode = STRETCH_COLUMN_WIDTH;
-    mReferenceView=nullptr;
-    mReferenceViewInSelectedRow=nullptr;
+    mStretchMode   = STRETCH_COLUMN_WIDTH;
+    mReferenceView = nullptr;
+    mReferenceViewInSelectedRow = nullptr;
     mGravity = Gravity::START;
 }
 
@@ -55,7 +55,7 @@ void GridView::setAdapter(Adapter* adapter) {
     if (mAdapter  && mDataSetObserver ) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
         delete mDataSetObserver;
-        mDataSetObserver = nullptr; 
+        mDataSetObserver = nullptr;
     }
 
     resetList();
@@ -147,7 +147,7 @@ View* GridView::fillDown(int pos, int nextTop) {
 
     int end = (mBottom - mTop);
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-        end -= mListPadding.height;//bottom;
+        end -= mListPadding.height;
     }
 
     while (nextTop < end && pos < mItemCount) {
@@ -168,19 +168,15 @@ View* GridView::fillDown(int pos, int nextTop) {
 }
 
 View* GridView::makeRow(int startPos, int y, bool flow) {
-    int columnWidth = mColumnWidth;
-    int horizontalSpacing = mHorizontalSpacing;
+    const bool bIsLayoutRtl = isLayoutRtl();
 
-    bool bIsLayoutRtl = isLayoutRtl();
-
-    int last;
-    int nextLeft;
+    int last , nextLeft;
 
     if (bIsLayoutRtl) {
-        nextLeft = getWidth() - mListPadding.width/*right*/ - columnWidth -
-                   ((mStretchMode == STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
+        nextLeft = getWidth() - mListPadding.width - mColumnWidth -
+                   ((mStretchMode == STRETCH_SPACING_UNIFORM) ? mHorizontalSpacing : 0);
     } else {
-        nextLeft = mListPadding.left + ((mStretchMode == STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
+        nextLeft = mListPadding.left + ((mStretchMode == STRETCH_SPACING_UNIFORM) ? mHorizontalSpacing : 0);
     }
 
     if (!mStackFromBottom) {
@@ -190,30 +186,30 @@ View* GridView::makeRow(int startPos, int y, bool flow) {
         startPos = std::max(0, startPos - mNumColumns + 1);
 
         if (last - startPos < mNumColumns) {
-            int deltaLeft = (mNumColumns - (last - startPos)) * (columnWidth + horizontalSpacing);
+            int deltaLeft = (mNumColumns - (last - startPos)) * (mColumnWidth + mHorizontalSpacing);
             nextLeft += (bIsLayoutRtl ? -1 : +1) * deltaLeft;
         }
     }
 
     View* selectedView = nullptr;
 
-    bool hasFocus = shouldShowSelector();
-    bool inClick = touchModeDrawsInPressedState();
-    int selectedPosition = mSelectedPosition;
+    const bool hasFocus = shouldShowSelector();
+    const bool inClick = touchModeDrawsInPressedState();
+    const int selectedPosition = mSelectedPosition;
 
     View* child = nullptr;
-    int nextChildDir = bIsLayoutRtl ? -1 : +1;
+    const int nextChildDir = bIsLayoutRtl ? -1 : +1;
     for (int pos = startPos; pos < last; pos++) {
         // is this the selected item?
         bool selected = pos == selectedPosition;
         // does the list view have focus or contain focus
 
-        int where = flow ? -1 : pos - startPos;
+        const int where = flow ? -1 : pos - startPos;
         child = makeAndAddView(pos, y, flow, nextLeft, selected, where);
 
-        nextLeft += nextChildDir * columnWidth;
+        nextLeft += nextChildDir * mColumnWidth;
         if (pos < last - 1) {
-            nextLeft += nextChildDir * horizontalSpacing;
+            nextLeft += nextChildDir * mHorizontalSpacing;
         }
         if (selected && (hasFocus || inClick)) {
             selectedView = child;
@@ -221,11 +217,9 @@ View* GridView::makeRow(int startPos, int y, bool flow) {
     }
 
     mReferenceView = child;
-
     if (selectedView != nullptr) {
         mReferenceViewInSelectedRow = mReferenceView;
     }
-
     return selectedView;
 }
 
@@ -242,11 +236,8 @@ View* GridView::fillUp(int pos, int nextBottom) {
         if (temp != nullptr) {
             selectedView = temp;
         }
-
         nextBottom = mReferenceView->getTop() - mVerticalSpacing;
-
         mFirstPosition = pos;
-
         pos -= mNumColumns;
     }
 
@@ -750,31 +741,30 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     // Sets up mListPadding
     AbsListView::onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-    int widthMode = MeasureSpec::getMode(widthMeasureSpec);
-    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
-    int widthSize = MeasureSpec::getSize(widthMeasureSpec);
+    const int widthMode  = MeasureSpec::getMode(widthMeasureSpec);
+    const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
     int heightSize = MeasureSpec::getSize(heightMeasureSpec);
 
     if (widthMode == MeasureSpec::UNSPECIFIED) {
         if (mColumnWidth > 0) {
-            widthSize = mColumnWidth + mListPadding.left + mListPadding.width;//right;
+            widthSize = mColumnWidth + mListPadding.left + mListPadding.width;
         } else {
-            widthSize = mListPadding.left + mListPadding.width;//right;
+            widthSize = mListPadding.left + mListPadding.width;
         }
         widthSize += getVerticalScrollbarWidth();
     }
 
-    int childWidth = widthSize - mListPadding.left - mListPadding.width;//right;
-    bool didNotInitiallyFit = determineColumns(childWidth);
+    const int childWidth = widthSize - mListPadding.left - mListPadding.width;
+    const bool didNotInitiallyFit = determineColumns(childWidth);
 
     int childHeight = 0;
     int childState = 0;
 
-    mItemCount = mAdapter?mAdapter->getCount():0;
-    int count = mItemCount;
+    mItemCount = mAdapter ? mAdapter->getCount():0;
+    const int count = mItemCount;
     if (count > 0) {
         View* child = obtainView(0, mIsScrap);
-
         AbsListView::LayoutParams* p = (AbsListView::LayoutParams*) child->getLayoutParams();
         if (p == nullptr) {
             p = (AbsListView::LayoutParams*) generateDefaultLayoutParams();
@@ -784,10 +774,10 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         p->isEnabled= mAdapter->isEnabled(0);
         p->forceAdd = true;
 
-        int childHeightSpec = getChildMeasureSpec(
-                                  MeasureSpec::makeSafeMeasureSpec(MeasureSpec::getSize(heightMeasureSpec),
-                                          MeasureSpec::UNSPECIFIED), 0, p->height);
-        int childWidthSpec = getChildMeasureSpec(
+        const int childHeightSpec= getChildMeasureSpec(
+                                 MeasureSpec::makeSafeMeasureSpec(MeasureSpec::getSize(heightMeasureSpec), 
+								 MeasureSpec::UNSPECIFIED), 0, p->height);
+        const int childWidthSpec = getChildMeasureSpec(
                                  MeasureSpec::makeMeasureSpec(mColumnWidth, MeasureSpec::EXACTLY), 0, p->width);
         child->measure(childWidthSpec, childHeightSpec);
 
@@ -806,11 +796,9 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
     if (heightMode == MeasureSpec::AT_MOST) {
         int ourSize =  mListPadding.top + mListPadding.height;
-
-        int numColumns = mNumColumns;
-        for (int i = 0; i < count; i += numColumns) {
+        for (int i = 0; i < count; i += mNumColumns) {
             ourSize += childHeight;
-            if (i + numColumns < count) {
+            if (i + mNumColumns < count) {
                 ourSize += mVerticalSpacing;
             }
             if (ourSize >= heightSize) {
@@ -1013,7 +1001,7 @@ void GridView::layoutChildren() {
         mSelectedTop = sel->getTop();
     } else {
         bool inTouchMode = mTouchMode > TOUCH_MODE_DOWN
-                              && mTouchMode < TOUCH_MODE_SCROLL;
+                           && mTouchMode < TOUCH_MODE_SCROLL;
         if (inTouchMode) {
             // If the user's finger is down, select the motion position.
             View* child = getChildAt(mMotionPosition - mFirstPosition);
@@ -1104,14 +1092,13 @@ View* GridView::makeAndAddView(int position, int y, bool flow, int childrenLeft,
 
 void GridView::setupChild(View* child, int position, int y, bool flowDown, int childrenLeft,
                           bool selected, bool isAttachedToWindow, int where) {
-    bool isSelected = selected && shouldShowSelector();
-    bool updateChildSelected = isSelected != child->isSelected();
-    int mode = mTouchMode;
-    bool isPressed = mode > TOUCH_MODE_DOWN && mode < TOUCH_MODE_SCROLL
-                              && mMotionPosition == position;
-    bool updateChildPressed = isPressed != child->isPressed();
-    bool needToMeasure = !isAttachedToWindow || updateChildSelected
-                                  || child->isLayoutRequested();
+    const bool isSelected = selected && shouldShowSelector();
+    const bool updateChildSelected = isSelected != child->isSelected();
+    const bool isPressed = mTouchMode > TOUCH_MODE_DOWN && mTouchMode < TOUCH_MODE_SCROLL
+                     && mMotionPosition == position;
+    const bool updateChildPressed = isPressed != child->isPressed();
+    const bool needToMeasure = !isAttachedToWindow || updateChildSelected
+                         || child->isLayoutRequested();
 
     // Respect layout params that are already in the view. Otherwise make
     // some up...
@@ -1139,7 +1126,7 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
     if (mChoiceMode != CHOICE_MODE_NONE && mCheckStates.size()) {
         if (dynamic_cast<Checkable*>(child)) {
             ((Checkable*) child)->setChecked(mCheckStates.get(position));
-        }else{
+        } else {
             child->setActivated(mCheckStates.get(position));
         }
     }
@@ -1160,14 +1147,12 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
     }
 
     if (needToMeasure) {
-        int childHeightSpec = ViewGroup::getChildMeasureSpec(
-                                  MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED), 0, p->height);
+        int childHeightSpec = ViewGroup::getChildMeasureSpec(MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED), 0, p->height);
 
-        int childWidthSpec = ViewGroup::getChildMeasureSpec(
-                                 MeasureSpec::makeMeasureSpec(mColumnWidth, MeasureSpec::EXACTLY), 0, p->width);
+        int childWidthSpec = ViewGroup::getChildMeasureSpec(MeasureSpec::makeMeasureSpec(mColumnWidth, MeasureSpec::EXACTLY), 0, p->width);
         child->measure(childWidthSpec, childHeightSpec);
     } else {
-        //cleanupLayoutState(child);
+        cleanupLayoutState(child);
     }
 
     int w = child->getMeasuredWidth();
@@ -1194,8 +1179,6 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
     }
 
     if (needToMeasure) {
-        int childRight = childLeft + w;
-        int childBottom = childTop + h;
         child->layout(childLeft, childTop, w, h);
     } else {
         child->offsetLeftAndRight(childLeft - child->getLeft());
@@ -1226,7 +1209,7 @@ void GridView::setSelectionInt(int position) {
     setNextSelectedPositionInt(position);
     layoutChildren();
 
-    int next = mStackFromBottom ? mItemCount - 1  - mNextSelectedPosition :mNextSelectedPosition;
+    int next = mStackFromBottom ? mItemCount - 1  - mNextSelectedPosition : mNextSelectedPosition;
     int previous = mStackFromBottom ? mItemCount - 1 - previousSelectedPosition : previousSelectedPosition;
 
     int nextRow = next / mNumColumns;
@@ -1389,7 +1372,7 @@ bool GridView::pageScroll(int direction) {
     return false;
 }
 
-bool GridView::fullScroll(int direction){
+bool GridView::fullScroll(int direction) {
     bool moved = false;
     if (direction == FOCUS_UP) {
         mLayoutMode = LAYOUT_SET_SELECTION;
@@ -1407,7 +1390,7 @@ bool GridView::fullScroll(int direction){
     return moved;
 }
 
-bool GridView::arrowScroll(int direction){
+bool GridView::arrowScroll(int direction) {
     int selectedPosition = mSelectedPosition;
     int numColumns = mNumColumns;
 
@@ -1440,31 +1423,31 @@ bool GridView::arrowScroll(int direction){
             moved = true;
         }
         break;
-   }
+    }
 
-   bool isLayoutRtl = false;//isLayoutRtl();
-   if (selectedPosition > startOfRowPos && ((direction == FOCUS_LEFT && !isLayoutRtl) ||
+    const bool isLayoutRtl = false;//isLayoutRtl();
+    if (selectedPosition > startOfRowPos && ((direction == FOCUS_LEFT && !isLayoutRtl) ||
             (direction == FOCUS_RIGHT && isLayoutRtl))) {
         mLayoutMode = LAYOUT_MOVE_SELECTION;
         setSelectionInt(std::max(0, selectedPosition - 1));
         moved = true;
-   } else if (selectedPosition < endOfRowPos && ((direction == FOCUS_LEFT && isLayoutRtl) ||
-           (direction == FOCUS_RIGHT && !isLayoutRtl))) {
+    } else if (selectedPosition < endOfRowPos && ((direction == FOCUS_LEFT && isLayoutRtl) ||
+               (direction == FOCUS_RIGHT && !isLayoutRtl))) {
         mLayoutMode = LAYOUT_MOVE_SELECTION;
         setSelectionInt(std::min(selectedPosition + 1, mItemCount - 1));
         moved = true;
-   }
+    }
 
-   if (moved) {
+    if (moved) {
         playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
         invokeOnItemScrollListener();
-   }
-   if (moved) awakenScrollBars();
+    }
+    if (moved) awakenScrollBars();
 
-   return moved;
+    return moved;
 }
 
-bool GridView::sequenceScroll(int direction){
+bool GridView::sequenceScroll(int direction) {
     int selectedPosition = mSelectedPosition;
     int numColumns = mNumColumns;
     int count = mItemCount;
@@ -1523,7 +1506,7 @@ void GridView::setGravity(int gravity) {
     }
 }
 
-int GridView::getGravity()const{
+int GridView::getGravity()const {
     return mGravity;
 }
 
@@ -1534,11 +1517,11 @@ void GridView::setHorizontalSpacing(int horizontalSpacing) {
     }
 }
 
-int GridView::getHorizontalSpacing()const{
+int GridView::getHorizontalSpacing()const {
     return mHorizontalSpacing;
 }
 
-int GridView::getRequestedHorizontalSpacing() const{
+int GridView::getRequestedHorizontalSpacing() const {
     return mRequestedHorizontalSpacing;
 }
 
@@ -1549,7 +1532,7 @@ void GridView::setVerticalSpacing(int verticalSpacing) {
     }
 }
 
-int GridView::getVerticalSpacing()const{
+int GridView::getVerticalSpacing()const {
     return mVerticalSpacing;
 }
 
@@ -1571,11 +1554,11 @@ void GridView::setColumnWidth(int columnWidth) {
     }
 }
 
-int GridView::getColumnWidth()const{
+int GridView::getColumnWidth()const {
     return mColumnWidth;
 }
 
-int GridView::getRequestedColumnWidth() const{
+int GridView::getRequestedColumnWidth() const {
     return mRequestedColumnWidth;
 }
 
@@ -1586,94 +1569,84 @@ void GridView::setNumColumns(int numColumns) {
     }
 }
 
-int GridView::getNumColumns()const{
+int GridView::getNumColumns()const {
     return mNumColumns;
 }
 
 void GridView::adjustViewsUpOrDown(){
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
+    int delta;
+    View* child;
 
-    if (childCount > 0) {
-        int delta;
-        View* child;
-
-        if (!mStackFromBottom) {
-            // Uh-oh -- we came up short. Slide all views up to make them
-            // align with the top
-            child = getChildAt(0);
-            delta = child->getTop() - mListPadding.top;
-            if (mFirstPosition != 0) {
-                // It's OK to have some space above the first item if it is
-                // part of the vertical spacing
-                delta -= mVerticalSpacing;
-            }
-            if (delta < 0) {
-                // We only are looking to see if we are too low, not too high
-                delta = 0;
-            }
-        } else {
-            // we are too high, slide all views down to align with bottom
-            child = getChildAt(childCount - 1);
-            delta = child->getBottom() - (getHeight() - mListPadding.height);
-
-	    if (mFirstPosition + childCount < mItemCount) {
-                // It's OK to have some space below the last item if it is
-                // part of the vertical spacing
-                delta += mVerticalSpacing;
-            }
-
-            if (delta > 0) {
-                // We only are looking to see if we are too high, not too low
-                delta = 0;
-            }
+    if (childCount == 0)
+        return;
+    if (!mStackFromBottom) {
+        // Uh-oh -- we came up short. Slide all views up to make them
+        // align with the top
+        child = getChildAt(0);
+        delta = child->getTop() - mListPadding.top;
+        if (mFirstPosition != 0) {
+            // It's OK to have some space above the first item if it is
+            // part of the vertical spacing
+            delta -= mVerticalSpacing;
         }
-
-        if (delta != 0) {
-            offsetChildrenTopAndBottom(-delta);
+        if (delta < 0) {
+            // We only are looking to see if we are too low, not too high
+            delta = 0;
         }
-   }
+    } else {
+        // we are too high, slide all views down to align with bottom
+        child = getChildAt(childCount - 1);
+        delta = child->getBottom() - (getHeight() - mListPadding.height);
+
+        if (mFirstPosition + childCount < mItemCount) {
+            // It's OK to have some space below the last item if it is
+            // part of the vertical spacing
+            delta += mVerticalSpacing;
+        }
+        if (delta > 0) {
+            // We only are looking to see if we are too high, not too low
+            delta = 0;
+        }
+    }
+    if (delta != 0) {
+        offsetChildrenTopAndBottom(-delta);
+    }
 }
 
-int GridView::computeVerticalScrollExtent(){
-    int count = getChildCount();
-    if (count > 0) {
-        int numColumns = mNumColumns;
-        int rowCount = (count + numColumns - 1) / numColumns;
-
-        int extent = rowCount * 100;
-
-        View* view = getChildAt(0);
-        int top = view->getTop();
-        int height = view->getHeight();
-        if (height > 0) {
-            extent += (top * 100) / height;
-        }
-
-        view = getChildAt(count - 1);
-        int bottom = view->getBottom();
-        height = view->getHeight();
-        if (height > 0) {
-            extent -= ((bottom - getHeight()) * 100) / height;
-        }
-
-        return extent;
+int GridView::computeVerticalScrollExtent() {
+    const int count = getChildCount();
+    if (count == 0) return 0;
+    const int rowCount = (count + mNumColumns - 1) / mNumColumns;
+    int extent = rowCount * 100;
+    const View* view = getChildAt(0);
+    const int top = view->getTop();
+    int height = view->getHeight();
+    if (height > 0) {
+        extent += (top * 100) / height;
     }
-    return 0;
+
+    view = getChildAt(count - 1);
+    const int bottom = view->getBottom();
+    height = view->getHeight();
+    if (height > 0) {
+        extent -= ((bottom - getHeight()) * 100) / height;
+    }
+    return extent;
 }
 
 int GridView::computeVerticalScrollOffset() {
     if (mFirstPosition >= 0 && getChildCount() > 0) {
-        View* view = getChildAt(0);
-        int top = view->getTop();
-        int height = view->getHeight();
+        const View* view = getChildAt(0);
+        const int top = view->getTop();
+        const int height = view->getHeight();
         if (height > 0) {
-            int numColumns = mNumColumns;
-            int rowCount = (mItemCount + numColumns - 1) / numColumns;
+            const int rowCount = (mItemCount + mNumColumns - 1) / mNumColumns;
             // In case of stackFromBottom the calculation of whichRow needs
             // to take into account that counting from the top the first row
             // might not be entirely filled.
-            int oddItemsOnFirstRow = isStackFromBottom() ? ((rowCount * numColumns) - mItemCount) : 0;
-            int whichRow = (mFirstPosition + oddItemsOnFirstRow) / numColumns;
+            const int oddItemsOnFirstRow = isStackFromBottom() ? ((rowCount * mNumColumns) - mItemCount) : 0;
+            const int whichRow = (mFirstPosition + oddItemsOnFirstRow) / mNumColumns;
             return std::max(whichRow * 100 - (top * 100) / height +
                     (int) ((float) mScrollY / getHeight() * rowCount * 100), 0);
         }
@@ -1683,8 +1656,7 @@ int GridView::computeVerticalScrollOffset() {
 
 int GridView::computeVerticalScrollRange() {
     // TODO: Account for vertical spacing too
-    int numColumns = mNumColumns;
-    int rowCount = (mItemCount + numColumns - 1) / numColumns;
+    const int rowCount = (mItemCount + mNumColumns - 1) / mNumColumns;
     int result = std::max(rowCount * 100, 0);
     if (mScrollY != 0) {
         // Compensate for overscroll

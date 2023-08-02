@@ -448,6 +448,7 @@ private:
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
 protected:
     static bool sIgnoreMeasureCache;
+    static bool sAlwaysRemeasureExactly;
     static bool sPreserveMarginParamsInLayoutParamConversion;
     int mID;
     int mLayerType;

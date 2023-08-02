@@ -42,16 +42,146 @@ void Path::move_to(double x,double y){
     mCTX->move_to(x,y);
 }
 
+void Path::rel_move_to(double x,double y){
+    mCTX->rel_move_to(x,y);
+}
+
 void Path::line_to(double x,double y){
     mCTX->line_to(x,y);
+}
+
+void Path::rel_line_to(double x,double y){
+    mCTX->rel_line_to(x,y);
 }
 
 void Path::curve_to(double x1, double y1, double x2, double y2, double x3, double y3){
     mCTX->curve_to(x1,y1,x2,y2,x3,y3);
 }
 
+void Path::rel_curve_to(double x1, double y1, double x2, double y2, double x3, double y3){
+    mCTX->rel_curve_to(x1,y1,x2,y2,x3,y3);
+}
+
+void Path::quad_to(double x1, double y1, double x2, double y2){
+    double x0, y0;
+    mCTX->get_current_point(x0,y0);
+
+    //Control points for cubic bezier curve
+    double cp1x = x0 + 2.f / 3.f * (x1 - x0);
+    double cp1y = y0 + 2.f / 3.f * (y1 - y0);
+    double cp2x = cp1x + (x2 - x0) / 3.f;
+    double cp2y = cp1y + (y2 - y0) / 3.f;
+
+    mCTX->curve_to(cp1x, cp1y, cp2x, cp2y, x2, y2);
+}
+
+void Path::rel_quad_to(double dx1, double dy1, double dx2, double dy2){
+    double x0, y0;
+    mCTX->get_current_point(x0,y0);
+    double x1 = x0 + dx1;
+    double y1 = y0 + dy1;
+    double x2 = x0 + dx2;
+    double y2 = y0 + dy2;
+
+    double cp1x = x0 + 2.f / 3.f * (x1 - x0);
+    double cp1y = y0 + 2.f / 3.f * (y1 - y0);
+    double cp2x = cp1x + (x2 - x0) / 3.f;
+    double cp2y = cp1y + (y2 - y0) / 3.f;
+
+    mCTX->curve_to(cp1x, cp1y, cp2x, cp2y, x2, y2);
+}
+
 void Path::arc(double xc, double yc, double radius, double angle1, double angle2){
     mCTX->arc(xc,yc,radius,angle1,angle2);
+}
+
+void Path::arc_to(double x1, double y1, double x2, double y2, double radius) {
+    // Current point
+    double x0, y0;
+    mCTX->get_current_point(x0, y0);
+
+    // Calculate the angles
+    double angle1 = atan2(y1 - y0, x1 - x0);
+    double angle2 = atan2(y2 - y1, x2 - x1);
+
+    // Calculate the center of the circle
+    double centerX = x1 + radius * cos((angle1 + angle2) / 2);
+    double centerY = y1 + radius * sin((angle1 + angle2) / 2);
+
+    // Draw the arc
+    mCTX->arc(centerX, centerY, radius, angle1, angle2);
+}
+
+void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepFlag, double x, double y) {
+    // Current point
+    double x0, y0;
+    mCTX->get_current_point(x0, y0);
+
+    // Convert angle from degrees to radians
+    angle *= M_PI / 180.0;
+
+    // Calculate the middle point of the line from the current point to the end point
+    double dx2 = (x0 - x) / 2.0;
+    double dy2 = (y0 - y) / 2.0;
+
+    // Calculate the coordinates in the rotated system
+    double x1 = cos(angle) * dx2 + sin(angle) * dy2;
+    double y1 = -sin(angle) * dx2 + cos(angle) * dy2;
+
+    // Ensure radii are large enough
+    double lambda = (x1 * x1) / (rx * rx) + (y1 * y1) / (ry * ry);
+    if (lambda > 1) {
+        rx *= sqrt(lambda);
+        ry *= sqrt(lambda);
+    }
+
+    // Calculate the center in the rotated system
+    double sign = (largeArc == sweepFlag) ? -1 : 1;
+    double sq = ((rx * rx * ry * ry) - (rx * rx * y1 * y1) - (ry * ry * x1 * x1)) / ((rx * rx * y1 * y1) + (ry * ry * x1 * x1));
+    sq = (sq < 0) ? 0 : sq;
+    double coef = sign * sqrt(sq);
+    double cx1 = coef * ((rx * y1) / ry);
+    double cy1 = coef * -((ry * x1) / rx);
+
+    // Calculate the center in the original system
+    double sx2 = (x0 + x) / 2.0;
+    double sy2 = (y0 + y) / 2.0;
+    double cx = sx2 + (cos(angle) * cx1 - sin(angle) * cy1);
+    double cy = sy2 + (sin(angle) * cx1 + cos(angle) * cy1);
+
+    // Calculate the start and end angles
+    double ux = (x1 - cx1) / rx;
+    double uy = (y1 - cy1) / ry;
+    double vx = (-x1 - cx1) / rx;
+    double vy = (-y1 - cy1) / ry;
+    double n = sqrt((ux * ux) + (uy * uy));
+    double p = ux; // (1 * ux) + (0 * uy)
+    sign = (uy < 0) ? -1.0 : 1.0;
+    double startAng = sign * acos(p / n); // in radians
+
+    n = sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy));
+    p = ux * vx + uy * vy;
+    sign = (ux * vy - uy * vx < 0) ? -1.0 : 1.0;
+    double sweepAng = sign * acos(p / n); // in radians
+    if (!sweepFlag && sweepAng > 0) {
+        sweepAng -= 2 * M_PI;
+    } else if (sweepFlag && sweepAng < 0) {
+        sweepAng += 2 * M_PI;
+    }
+
+    // Save the current transformation matrix
+    mCTX->save();
+
+    // Translate and scale to match the ellipse
+    mCTX->translate(cx, cy);
+    mCTX->scale(rx, ry);
+    mCTX->rotate(angle);
+
+    // Draw the arc
+    mCTX->arc(0, 0, 1, startAng, startAng + sweepAng);
+
+    // Restore the transformation matrix
+    mCTX->restore();
 }
 
 void Path::rectangle(double x, double y, double width, double height){
