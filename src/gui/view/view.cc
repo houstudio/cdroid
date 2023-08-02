@@ -988,6 +988,10 @@ void View::computeOpaqueFlags(){
     }
 }
 
+bool View::hasOpaqueScrollbars()const{
+    return (mPrivateFlags & PFLAG_OPAQUE_SCROLLBARS) == PFLAG_OPAQUE_SCROLLBARS;
+}
+
 int View::getLayerType()const{
     return mLayerType;
 }

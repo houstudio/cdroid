@@ -4,7 +4,6 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 
-
 namespace cdroid {
 
 DECLARE_WIDGET2(ListView,"cdroid:attr/listViewStyle")
@@ -2354,9 +2353,9 @@ View* ListView::addViewAbove(View* theView, int position) {
 }
 
 View* ListView::addViewBelow(View* theView, int position) {
-    int belowPosition = position + 1;
+    const int belowPosition = position + 1;
     View* view = obtainView(belowPosition, mIsScrap);
-    int edgeOfNewChild = theView->getBottom() + mDividerHeight;
+    const int edgeOfNewChild = theView->getBottom() + mDividerHeight;
     setupChild(view, belowPosition, edgeOfNewChild, true, mListPadding.left,
                false, mIsScrap[0]);
     return view;
@@ -2374,8 +2373,8 @@ bool ListView::getItemsCanFocus()const {
 }
 
 bool ListView::isOpaque()const {
-    bool retValue = (mCachingActive && mIsCacheColorOpaque && mDividerIsOpaque
-                     /*&&hasOpaqueScrollbars()*/) || AbsListView::isOpaque();
+    const bool retValue = (mCachingActive && mIsCacheColorOpaque && mDividerIsOpaque
+                     && hasOpaqueScrollbars()) || AbsListView::isOpaque();
     if (retValue) {
         // only return true if the list items cover the entire area of the view
         const int listTop = mListPadding.top;

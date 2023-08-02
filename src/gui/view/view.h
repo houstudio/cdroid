@@ -510,6 +510,7 @@ protected:
     bool debugDraw()const;
     int dipsToPixels(int dips)const;
     void computeOpaqueFlags();
+    bool hasOpaqueScrollbars()const;
     virtual void resolveDrawables();
     bool areDrawablesResolved()const;
     void setDuplicateParentStateEnabled(bool);
