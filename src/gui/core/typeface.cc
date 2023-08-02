@@ -342,7 +342,7 @@ int Typeface::loadFromFontConfig() {
                 font = font.substr(0,pos);
             pos = font.find_last_of(PATH_SEPARATOR);
             if(pos!=std::string::npos)
-                font = font.substr(pos+1);
+                font = std::string("font/") + font.substr(pos+1);
             LOGD("filename=%s/%s  family=%s",fontFile,font.c_str(),family.c_str());
             sSystemFontMap.insert({font,tf});
         }
