@@ -302,6 +302,12 @@ int Typeface::loadFromPath(const std::string&path) {
     return sSystemFontMap.size();
 }
 
+#ifdef _WIN32
+#define PATH_SEPARATOR "\\"
+#else
+#define PATH_SEPARATOR "/"
+#endif
+
 int Typeface::loadFromFontConfig() {
     FcConfig *config = FcInitLoadConfigAndFonts ();
     if(!config) return false;
@@ -327,8 +333,19 @@ int Typeface::loadFromFontConfig() {
     for (int i=0; fs && i < fs->nfont; i++) {
         FcPattern *pat = fs->fonts[i];//FcPatternDuplicate(fs->fonts[i]);
         Typeface   *tf = new Typeface(*pat,"");
+        FcChar8* fontFile = nullptr;
         const std::string family = tf->getFamily();
-
+        if(FcPatternGetString(pat, FC_FILE, 0, &fontFile) == FcResultMatch){
+            std::string font((char*)fontFile);
+            size_t pos = font.find_last_of(".");
+            if(pos!=std::string::npos)
+                font = font.substr(0,pos);
+            pos = font.find_last_of(PATH_SEPARATOR);
+            if(pos!=std::string::npos)
+                font = font.substr(pos+1);
+            LOGD("filename=%s/%s  family=%s",fontFile,font.c_str(),family.c_str());
+            sSystemFontMap.insert({font,tf});
+        }
         sSystemFontMap.insert({family,tf});
         LOGV("font %s %p",family.c_str(),tf);
         if(std::regex_search(family,patSans)) {

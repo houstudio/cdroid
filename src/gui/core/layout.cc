@@ -604,7 +604,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         case ALIGN_OPPOSITE:
         case ALIGN_RIGHT : x = mWidth-lw ; break;
         }
-        LOGV("line[%d] xy=%d,%d mWidth=%d [%s](%d)'s TextWidth=%d fontsize=%.f alignment=%x abearing=%f",
+        LOGV("line[%d](%d,%d) layoutWidth=%d [%s](%d).width=%d fontsize=%.f alignment=%x abearing=%f",
              lineNum,x,y,mWidth,TextUtils::unicode2utf8(line).c_str(),line.size(),lw,mFontSize,mAlignment,te.x_bearing);
         canvas.move_to(x - te.x_bearing,y);
         canvas.show_text(processBidi(line));

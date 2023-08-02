@@ -82,7 +82,7 @@ void ListView::adjustViewsUpOrDown() {
         } else {
             // we are too high, slide all views down to align with bottom
             child = getChildAt(childCount - 1);
-            delta = child->getBottom() - (getHeight() - mListPadding.height);//bottom);
+            delta = child->getBottom() - (getHeight() - mListPadding.height);
 
             if (mFirstPosition + childCount < mItemCount) {
                 // It's OK to have some space below the last item if it is
@@ -548,6 +548,22 @@ View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childre
     int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, selectedPosition);
     int bottomSelectionPixel = getBottomSelectionPixel(childrenTop, fadingEdgeLength,  selectedPosition);
     if (delta > 0) {//Scrolling Down.
+            /*
+             * Case 1: Scrolling down.
+             *     Before           After
+             *    |       |        |       |
+             *    +-------+        +-------+
+             *    |   A   |        |   A   |
+             *    |   1   |   =>   +-------+
+             *    +-------+        |   B   |
+             *    |   B   |        |   2   |
+             *    +-------+        +-------+
+             *    |       |        |       |
+             *
+             *    Try to keep the top of the previously selected item where it was.
+             *    oldSel = A
+             *    sel = B
+             */
         // Put oldSel (A) where it belongs
         oldSel = makeAndAddView(selectedPosition - 1, oldSel->getTop(), true, mListPadding.left, false);
 
@@ -587,6 +603,23 @@ View* ListView::moveSelection(View* oldSel, View* newSel, int delta, int childre
             fillUp(mSelectedPosition - 2, sel->getTop() - dividerHeight);
         }
     } else if (delta < 0) {//Scrolling up.
+            /*
+            * Case 2: Scrolling up.
+            *     Before           After
+            *    |       |        |       |
+            *    +-------+        +-------+
+            *    |   A   |        |   A   |
+            *    +-------+   =>   |   1   |
+            *    |   B   |        +-------+
+            *    |   2   |        |   B   |
+            *    +-------+        +-------+
+            *    |       |        |       |
+            *
+            *    Try to keep the top of the item about to become selected where it was.
+            *    newSel = A
+            *    olSel = B
+            */
+
         if (newSel != nullptr) {
             // Try to position the top of newSel (A) where it was before it was selected
             sel = makeAndAddView(selectedPosition, newSel->getTop(), true, mListPadding.left,true);
@@ -1983,8 +2016,7 @@ void ListView::measureItem(View* child) {
     if (lpHeight > 0) {
         childHeightSpec = MeasureSpec::makeMeasureSpec(lpHeight, MeasureSpec::EXACTLY);
     } else {
-        childHeightSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(),
-                                                          MeasureSpec::UNSPECIFIED);
+        childHeightSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(),MeasureSpec::UNSPECIFIED);
     }
     child->measure(childWidthSpec, childHeightSpec);
 }

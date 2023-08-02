@@ -1499,7 +1499,7 @@ void TextView::updateTextColors(){
         color = mHintTextColor->getColorForState(drawableState, mHintTextColor->getDefaultColor());
         if (color != mCurHintTextColor) {
             mCurHintTextColor = color;
-            //if (mText.length() == 0) inval = true;
+            inval = !mLayout->getText().empty();
         }
     }
     if (inval) {
