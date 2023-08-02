@@ -1472,20 +1472,19 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
         cleanupLayoutState(child);
     }
 
-    int w = child->getMeasuredWidth();
-    int h = child->getMeasuredHeight();
-    int childTop = flowDown ? y : y - h;
+    const int w = child->getMeasuredWidth();
+    const int h = child->getMeasuredHeight();
+    const int childTop = flowDown ? y : y - h;
 
     if (needToMeasure) {
-        int childRight = childrenLeft + w;
-        int childBottom = childTop + h;
         child->layout(childrenLeft, childTop, w, h);
     } else {
         child->offsetLeftAndRight(childrenLeft - child->getLeft());
         child->offsetTopAndBottom(childTop - child->getTop());
     }
 
-    if (mCachingStarted && !child->isDrawingCacheEnabled()) child->setDrawingCacheEnabled(true);
+    if (mCachingStarted && !child->isDrawingCacheEnabled())
+        child->setDrawingCacheEnabled(true);
 }
 
 bool ListView::canAnimate()const {
@@ -2694,16 +2693,15 @@ void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocu
         // focused rect
         Rect otherRect;
         int minDistance = INT_MAX;
-        int childCount = getChildCount();
-        int firstPosition = mFirstPosition;
+        const int childCount = getChildCount();
 
         for (int i = 0; i < childCount; i++) {
             // only consider selectable views
-            if (!adapter->isEnabled(firstPosition + i)) {
+            if (!adapter->isEnabled(mFirstPosition + i)) {
                 continue;
             }
 
-            View* other = getChildAt(i);
+            const View* other = getChildAt(i);
             other->getDrawingRect(otherRect);
             offsetDescendantRectToMyCoords(other, otherRect);
             int distance = getDistance(*previouslyFocusedRect, otherRect, direction);

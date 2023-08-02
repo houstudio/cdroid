@@ -282,9 +282,9 @@ public:
     bool hasTransientState()override;
     void childHasTransientStateChanged(View* child, bool childHasTransientState);
 
-    void offsetDescendantRectToMyCoords(View* descendant, Rect& rect)const;
-    void offsetRectIntoDescendantCoords(View* descendant, Rect& rect)const;
-    void offsetRectBetweenParentAndChild(View* descendant,Rect& rect,bool offsetFromChildToParent, bool clipToBounds)const;
+    void offsetDescendantRectToMyCoords(const View* descendant, Rect& rect)const;
+    void offsetRectIntoDescendantCoords(const View* descendant, Rect& rect)const;
+    void offsetRectBetweenParentAndChild(const View* descendant, Rect& rect,bool offsetFromChildToParent, bool clipToBounds)const;
     void offsetChildrenTopAndBottom(int offset);
     void offsetChildrenLeftAndRight(int offset);
     virtual bool getChildVisibleRect(View*child,Rect&r,Point*offset);

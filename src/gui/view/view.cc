@@ -6520,7 +6520,7 @@ int View::getBaseline(){
     return 0;
 }
 
-void View::getDrawingRect(Rect& outRect) {
+void View::getDrawingRect(Rect& outRect) const {
     outRect.left  = mScrollX;
     outRect.top   = mScrollY;
     outRect.width = getWidth();

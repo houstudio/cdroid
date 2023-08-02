@@ -2148,15 +2148,15 @@ View* ViewGroup::focusSearch(View* focused, int direction)const{
     return nullptr;
 }
 
-void ViewGroup::offsetDescendantRectToMyCoords(View* descendant,Rect& rect)const{
+void ViewGroup::offsetDescendantRectToMyCoords(const View* descendant,Rect& rect)const{
     offsetRectBetweenParentAndChild(descendant, rect, true, false);
 }
 
-void ViewGroup::offsetRectIntoDescendantCoords(View* descendant, Rect& rect)const{
+void ViewGroup::offsetRectIntoDescendantCoords(const View* descendant, Rect& rect)const{
     offsetRectBetweenParentAndChild(descendant, rect, false, false);
 }
 
-void ViewGroup::offsetRectBetweenParentAndChild(View* descendant,Rect&rect,bool offsetFromChildToParent, bool clipToBounds)const{
+void ViewGroup::offsetRectBetweenParentAndChild(const View* descendant,Rect&rect,bool offsetFromChildToParent, bool clipToBounds)const{
     // already in the same coord system :)
     if (descendant == this) return;
 
@@ -2183,7 +2183,7 @@ void ViewGroup::offsetRectBetweenParentAndChild(View* descendant,Rect&rect,bool 
                         descendant->mScrollY - descendant->mTop);
        }
 
-       descendant =theParent;
+       descendant = theParent;
        theParent = descendant->getParent();
    }
 
