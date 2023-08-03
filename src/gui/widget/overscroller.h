@@ -11,7 +11,7 @@ class SplineOverScroller{
 private://constexprs  
     // Constant gravity value, used in the deceleration phase.
     static constexpr float GRAVITY = 2000.0f;
-    static constexpr float DECELERATION_RATE = (float) (log(0.78) / log(0.9));
+    static constexpr float DECELERATION_RATE = 2.35967668204509f/*(float) (log(0.78) / log(0.9))*/;
     static constexpr float INFLEXION = 0.35f; // Tension lines cross at (INFLEXION, 1)
     static constexpr float START_TENSION = 0.5f;
     static constexpr float END_TENSION = 1.0f;

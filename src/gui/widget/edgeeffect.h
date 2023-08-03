@@ -86,8 +86,8 @@ private:
     static constexpr float EPSILON = 0.001f;
 
     static constexpr double ANGLE = M_PI / 6.f;
-    static constexpr float SIN = (float) std::sin(ANGLE);
-    static constexpr float COS = (float) std::cos(ANGLE);
+    static constexpr float SIN = 0.5f/*(float) std::sin(ANGLE)*/;
+    static constexpr float COS = 0.86602540378f/*(float) std::cos(ANGLE)*/;
     static constexpr float RADIUS_FACTOR = 0.6f;
     float mGlowAlpha;
     float mGlowScaleY;

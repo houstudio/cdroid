@@ -108,10 +108,10 @@ int GridView::lookForSelectablePosition(int position, bool lookDown) {
 }
 
 void GridView::fillGap(bool down) {
-    int numColumns = mNumColumns;
-    int verticalSpacing = mVerticalSpacing;
+    const int numColumns = mNumColumns;
+    const int verticalSpacing = mVerticalSpacing;
 
-    int count = getChildCount();
+    const int count = getChildCount();
 
     if (down) {
         int paddingTop = 0;
@@ -145,12 +145,12 @@ void GridView::fillGap(bool down) {
 View* GridView::fillDown(int pos, int nextTop) {
     View* selectedView = nullptr;
 
-    int end = (mBottom - mTop);
+    int listEnd = (mBottom - mTop);
     if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
-        end -= mListPadding.height;
+        listEnd -= mListPadding.height;
     }
 
-    while (nextTop < end && pos < mItemCount) {
+    while (nextTop < listEnd && pos < mItemCount) {
         View* temp = makeRow(pos, nextTop, true);
         if (temp != nullptr) {
             selectedView = temp;
