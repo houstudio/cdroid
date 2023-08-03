@@ -3,10 +3,10 @@
 <selector xmlns:cdroid="http://schemas.cdroid.com/apk/res/cdroid">
     <item cdroid:state_window_focused="false" cdroid:drawable="@color/transparent" />
     <!-- Even though these two point to the same resource, have two states so the drawable will invalidate itself when coming out of pressed state. -->
-    <item cdroid:state_focused="true"  cdroid:state_enabled="false" cdroid:state_pressed="true" cdroid:drawable="@drawable/list_selector_background_disabled" />
-    <item cdroid:state_focused="true"  cdroid:state_enabled="false"                              cdroid:drawable="@drawable/list_selector_background_disabled" />
-    <item cdroid:state_focused="true"  cdroid:state_pressed="true" cdroid:drawable="@drawable/list_selector_background_transition" />
-    <item cdroid:state_focused="false" cdroid:state_pressed="true" cdroid:drawable="@drawable/list_selector_background_transition" />
-    <item cdroid:state_focused="true"  cdroid:drawable="@drawable/list_selector_background_focus" />
+    <item cdroid:state_focused="true"  cdroid:state_enabled="false" cdroid:state_pressed="true" cdroid:drawable="@cdroid:mipmap/list_selector_background_disabled" />
+    <item cdroid:state_focused="true"  cdroid:state_enabled="false"                              cdroid:drawable="@cdroid:mipmap/list_selector_background_disabled" />
+    <item cdroid:state_focused="true"  cdroid:state_pressed="true" cdroid:drawable="@cdroid:drawable/list_selector_background_transition" />
+    <item cdroid:state_focused="false" cdroid:state_pressed="true" cdroid:drawable="@cdroid:drawable/list_selector_background_transition" />
+    <item cdroid:state_focused="true"  cdroid:drawable="@cdroid:mipmap/list_selector_background_focus" />
     
 </selector>

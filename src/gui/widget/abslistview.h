@@ -353,6 +353,7 @@ protected:
     void positionSelectorLikeFocus(int position, View* sel);
     void keyPressed();
     void invokeOnItemScrollListener();
+    bool performStylusButtonPressAction(MotionEvent& ev);
     bool performLongPress(View* child,int longPressPosition,long longPressId);
     bool performLongPress(View* child,int longPressPosition,long longPressId,int x,int y);
     ViewGroup::LayoutParams*generateDefaultLayoutParams()const override;
@@ -414,6 +415,14 @@ public:
     bool onTouchEvent(MotionEvent& ev)override;
     void onRtlPropertiesChanged(int layoutDirection)override;
     void onTouchModeChanged(bool isInTouchMode);//called by ViewTreeObserver
+    bool onGenericMotionEvent(MotionEvent& event)override;
+    void fling(int velocity);
+    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
+    void onNestedScrollAccepted(View* child, View* target, int axes);
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed);
+    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
+    void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
+    void addTouchables(std::vector<View*>& views)override;
     View* getSelectedView()override;
     ViewGroup::LayoutParams*generateLayoutParams(const AttributeSet& attrs)const override;
     void setSelectionFromTop(int position, int y);

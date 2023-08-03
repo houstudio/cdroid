@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_focused="true"   cdroid:state_checked="true" cdroid:drawable="cdroid:drawable/list_selector_background_focused_selected" />
-    <item cdroid:state_focused="false"  cdroid:state_checked="true" cdroid:drawable="cdroid:drawable/list_selector_background_selected" />
+    <item cdroid:state_focused="true"   cdroid:state_checked="true" cdroid:drawable="cdroid:mipmap/list_selector_background_focused_selected" />
+    <item cdroid:state_focused="false"  cdroid:state_checked="true" cdroid:drawable="cdroid:mipmap/list_selector_background_selected" />
 </selector>
