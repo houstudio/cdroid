@@ -18,25 +18,28 @@ CompoundButton::CompoundButton(const std::string&txt,int width,int height)
 }
 
 void CompoundButton::initCompoundButton(){
-    mChecked=false;
-    mBroadcasting=false;
-    mCheckedFromResource=false;
-    mButtonDrawable=nullptr;
-    mOnCheckedChangeListener=nullptr;
-    mOnCheckedChangeWidgetListener=nullptr;
+    mChecked = false;
+    mBroadcasting = false;
+    mCheckedFromResource = false;
+    mButtonDrawable = nullptr;
+    mOnCheckedChangeListener = nullptr;
+    mOnCheckedChangeWidgetListener = nullptr;
+    mButtonTintMode = TintMode::NONOP;
+    mButtonTintList = nullptr;
 #if FUNCTION_AS_CHECKABLE
     isChecked = [this]()->bool{
         return mChecked;
     };
     toggle = [this](){
-        setChecked(!mChecked);
+        doSetChecked(!mChecked);
     };
     setChecked = std::bind(&CompoundButton::doSetChecked,this,std::placeholders::_1);
 #endif
 }
 
+#ifndef FUNCTION_AS_CHECKABLE
 void CompoundButton::setChecked(bool checked){
-    CompoundButton::doSetChecked(checked);
+    doSetChecked(checked);
 }
 
 bool CompoundButton::isChecked()const{
@@ -44,8 +47,9 @@ bool CompoundButton::isChecked()const{
 }
 
 void CompoundButton::toggle(){
-    setChecked(!mChecked); 
+    doSetChecked(!mChecked); 
 }
+#endif
 
 CompoundButton::~CompoundButton(){
     delete mButtonDrawable;
@@ -73,7 +77,7 @@ void CompoundButton::drawableHotspotChanged(float x,float y){
 }
 
 bool CompoundButton::performClick(){
-    toggle();
+    doSetChecked(!mChecked);//toggle();
     const bool handled = Button::performClick();
     if (!handled) {
         // View only makes a sound effect if the onClickListener was
@@ -104,7 +108,7 @@ void CompoundButton::setButtonDrawable(Drawable*drawable){
 
             drawable->setVisible(getVisibility() == VISIBLE, false);
             setMinHeight(drawable->getIntrinsicHeight());
-            //applyButtonTint();
+            applyButtonTint();
         }
     } 
 }
@@ -120,6 +124,50 @@ bool CompoundButton::verifyDrawable(Drawable* who)const{
 void CompoundButton::jumpDrawablesToCurrentState(){
     Button::jumpDrawablesToCurrentState();
     if (mButtonDrawable ) mButtonDrawable->jumpToCurrentState();
+}
+
+void CompoundButton::setButtonTintList(ColorStateList* tint) {
+    mButtonTintList = tint;
+    applyButtonTint();
+}
+
+/**
+ * @return the tint applied to the button drawable
+ * @attr ref android.R.styleable#CompoundButton_buttonTint
+ * @see #setButtonTintList(ColorStateList)
+ */
+ColorStateList* CompoundButton::getButtonTintList() const{
+    return mButtonTintList;
+}
+
+void CompoundButton::setButtonTintMode(PorterDuffMode tintMode){
+    mButtonTintMode = tintMode;
+    //mHasButtonTintMode = true;
+    applyButtonTint();
+}
+
+PorterDuffMode CompoundButton::getButtonTintMode() const {
+    return (PorterDuffMode)mButtonTintMode;
+}
+
+void CompoundButton::applyButtonTint() {
+    if (mButtonDrawable  && (mButtonTintList || mButtonTintMode!=TintMode::NONOP)) {
+        mButtonDrawable = mButtonDrawable->mutate();
+
+        if (mButtonTintList) {
+            mButtonDrawable->setTintList(mButtonTintList);
+        }
+
+        if (mButtonTintMode!=TintMode::NONOP) {
+            mButtonDrawable->setTintMode(mButtonTintMode);
+        }
+
+        // The drawable (or one of its children) may not have been
+        // stateful before applying the tint, so let's try again.
+        if (mButtonDrawable->isStateful()) {
+            mButtonDrawable->setState(getDrawableState());
+        }
+    }
 }
 
 void CompoundButton::doSetChecked(bool checked){

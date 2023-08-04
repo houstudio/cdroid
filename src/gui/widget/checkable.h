@@ -2,13 +2,13 @@
 #define __CHECKABLE_H__
 #include <core/callbackbase.h>
 namespace cdroid{
-//#define FUNCTION_AS_CHECKABLE
+//#define FUNCTION_AS_CHECKABLE 1
 class Checkable{
 public:
 #ifdef FUNCTION_AS_CHECKABLE
-    CallbackBase<void,bool>setChecked;//virtual void setChecked(bool checked)=0;
-    CallbackBase<bool>isChecked;//virtual bool isChecked()const=0;
-    CallbackBase<void>toggle;//virtual void toggle()=0;
+    CallbackBase<void,bool>setChecked;
+    CallbackBase<bool>isChecked;
+    CallbackBase<void>toggle;
 #else
     virtual void setChecked(bool checked)=0;
     virtual bool isChecked()const=0;

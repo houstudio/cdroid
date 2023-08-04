@@ -10,10 +10,13 @@ private:
     bool mChecked;
     bool mBroadcasting;
     bool mCheckedFromResource;
+    int  mButtonTintMode;
     Drawable* mButtonDrawable;
+    ColorStateList*mButtonTintList;
     OnCheckedChangeListener mOnCheckedChangeListener;
     OnCheckedChangeListener mOnCheckedChangeWidgetListener;
     void initCompoundButton();
+    void applyButtonTint();
 protected:
     std::vector<int>onCreateDrawableState()override;
     int getHorizontalOffsetForDrawables()const override;
@@ -30,7 +33,10 @@ public:
     bool performClick()override;
     Drawable* getButtonDrawable()const;
     void jumpDrawablesToCurrentState()override;
-
+    void setButtonTintList(ColorStateList* tint);
+    ColorStateList* getButtonTintList()const;
+    void setButtonTintMode(PorterDuffMode tintMode);
+    PorterDuffMode getButtonTintMode()const;
     int getCompoundPaddingLeft()override;
     int getCompoundPaddingRight()override;
     //inerited from Checkable

@@ -1538,7 +1538,7 @@ int ListView::lookForSelectablePositionAfter(int current, int position, bool loo
 }
 
 void ListView::setSelectionAfterHeaderView() {
-    int count = getHeaderViewsCount();
+    const int count = getHeaderViewsCount();
     if (count > 0) {
         mNextSelectedPosition = 0;
         return;

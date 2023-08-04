@@ -1538,7 +1538,7 @@ bool  AbsListView::canScrollList(int direction) {
 }
 
 bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     if (childCount == 0) {
         return true;
     }
@@ -3765,7 +3765,7 @@ void AbsListView::FlingRunnable::start(int initialVelocity) {
 
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = false;
-    mLV->postOnAnimation(*this);//mFlingRunnable);
+    mLV->postOnAnimation(*this);
     if (PROFILE_FLINGING) {
         if (!mLV->mFlingProfilingStarted) {
             mLV->mFlingProfilingStarted = true;
@@ -3781,7 +3781,7 @@ void AbsListView::FlingRunnable::startSpringback() {
     if (mScroller->springBack(0, mLV->mScrollY, 0, 0, 0, 0)) {
         mLV->mTouchMode = TOUCH_MODE_OVERFLING;
         mLV->invalidate();
-        mLV->postOnAnimation(*this);//mFlingRunnable);
+        mLV->postOnAnimation(*this);
     } else {
         mLV->mTouchMode = TOUCH_MODE_REST;
         mLV->reportScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
@@ -3794,7 +3794,7 @@ void AbsListView::FlingRunnable::startOverfling(int initialVelocity) {
     mLV->mTouchMode = TOUCH_MODE_OVERFLING;
     mSuppressIdleStateChangeCall = false;
     mLV->invalidate();
-    mLV->postOnAnimation(*this);//mFlingRunnable);
+    mLV->postOnAnimation(*this);
 }
 
 void AbsListView::FlingRunnable::edgeReached(int delta) {
@@ -3811,7 +3811,7 @@ void AbsListView::FlingRunnable::edgeReached(int delta) {
             mLV->mPositionScroller->stop();
     }
     mLV->invalidate();
-    mLV->postOnAnimation(*this);//mFlingRunnable);
+    mLV->postOnAnimation(*this);
 }
 
 void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool linear, bool suppressEndFlingStateChangeCall) {
@@ -3821,13 +3821,13 @@ void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool li
     mScroller->startScroll(0, initialY, 0, distance, duration);
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = suppressEndFlingStateChangeCall;
-    mLV->postOnAnimation(*this);//mFlingRunnable);
+    mLV->postOnAnimation(*this);
 }
 
 void AbsListView::FlingRunnable::endFling() {
     mLV->mTouchMode = TOUCH_MODE_REST;
 
-    mLV->removeCallbacks(*this);//mFlingRunnable);
+    mLV->removeCallbacks(*this);
     mLV->removeCallbacks(mCheckFlywheel);
 
     if (!mSuppressIdleStateChangeCall)
@@ -3872,7 +3872,7 @@ void AbsListView::FlingRunnable::run() {
             View* firstView = mLV->getChildAt(0);
             mLV->mMotionViewOriginalTop = firstView->getTop();
             // Don't fling more than 1 screen
-            delta = std::min(mLV->getHeight() - mLV->mPaddingBottom - mLV->mPaddingTop - 1, delta);
+            delta = std::min(mLV->getHeight() - mLV->mPaddingTop - mLV->mPaddingBottom - 1, delta);
         } else {
             // List is moving towards the bottom. Use last view as mMotionPosition
             int offsetToLast = mLV->getChildCount() - 1;
@@ -3880,7 +3880,7 @@ void AbsListView::FlingRunnable::run() {
             View* lastView = mLV->getChildAt(offsetToLast);
             mLV->mMotionViewOriginalTop = lastView->getTop();
             // Don't fling more than 1 screen
-            delta = std::max(-(mLV->getHeight() - mLV->mPaddingBottom - mLV->mPaddingTop - 1), delta);
+            delta = std::max(-(mLV->getHeight() - mLV->mPaddingTop - mLV->mPaddingBottom - 1), delta);
         }
 
         // Check to see if we have bumped into the scroll limit
@@ -3908,7 +3908,7 @@ void AbsListView::FlingRunnable::run() {
         if (more && !atEnd) {
             if (atEdge) mLV->invalidate();
             mLastFlingY = y;
-            mLV->postOnAnimation(*this);//mFlingRunnable);
+            mLV->postOnAnimation(*this);
         } else {
             endFling();
             if (PROFILE_FLINGING) {
@@ -3942,7 +3942,7 @@ void AbsListView::FlingRunnable::run() {
                 }
             } else {
                 mLV->invalidate();
-                mLV->postOnAnimation(*this);//mFlingRunnable);
+                mLV->postOnAnimation(*this);
             }
         } else {
             endFling();
