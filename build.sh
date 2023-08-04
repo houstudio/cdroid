@@ -13,7 +13,7 @@ declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg
 DEPLIBS["X64"]=$HOME/vcpkg/installed/x64-linux-dynamic
 DEPLIBS["SIGMA"]=$HOME/vcpkg/installed/arm-linux-dynamic
 DEPLIBS["RISCVD211"]=$HOME/vcpkg/installed/riscv64-linux-dynamic
-
+DEPLIBS["R818"]=$HOME/vcpkg/installed/arm64-linux-dynamic
 SHOWHELP=false
 PRODUCT="x64"
 BUILD_TYPE="Release"

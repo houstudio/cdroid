@@ -53,6 +53,7 @@ void CompoundButton::toggle(){
 
 CompoundButton::~CompoundButton(){
     delete mButtonDrawable;
+    delete mButtonTintList;
 }
 
 std::vector<int>CompoundButton::onCreateDrawableState(){
@@ -127,6 +128,8 @@ void CompoundButton::jumpDrawablesToCurrentState(){
 }
 
 void CompoundButton::setButtonTintList(ColorStateList* tint) {
+    delete mButtonTintList;
+    mButtonTintList = nullptr;
     mButtonTintList = tint;
     applyButtonTint();
 }
@@ -142,7 +145,6 @@ ColorStateList* CompoundButton::getButtonTintList() const{
 
 void CompoundButton::setButtonTintMode(PorterDuffMode tintMode){
     mButtonTintMode = tintMode;
-    //mHasButtonTintMode = true;
     applyButtonTint();
 }
 
