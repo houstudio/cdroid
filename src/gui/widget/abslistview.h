@@ -6,12 +6,13 @@
 #include <widget/overscroller.h>
 #include <widget/edgeeffect.h>
 #include <widget/popupwindow.h>
+#include <widget/filterable.h>
 namespace cdroid{
 
 #define OVERSCROLL_LIMIT_DIVISOR 3
 #define CHECK_POSITION_SEARCH_DISTANCE 20
 
-class AbsListView:public AdapterView{
+class AbsListView:public AdapterView,Filter::FilterListener{
 public:
     friend RecycleBin;
     enum ChoiceMode{
@@ -207,6 +208,7 @@ private:
     bool mScrollProfilingStarted = false;
     bool mFlingProfilingStarted =false;
     PopupWindow*mPopup;
+    class EditText* mTextFilter;
     OnScrollListener mOnScrollListener;
     void initAbsListView(const AttributeSet&atts);
     void useDefaultSelector();
@@ -241,6 +243,9 @@ private:
     void dismissPopup();
     void showPopup();
     void positionPopup();
+    bool acceptFilter()const;
+    void createTextFilter(bool animateEntrance);
+    EditText* getTextFilterInput();
 protected:
     int mChoiceMode;
     int mCheckedItemCount;
@@ -252,6 +257,7 @@ protected:
     bool mFastScrollEnabled;
     bool mFastScrollAlwaysVisible;
     std::string mFastScrollStyle;
+    bool mGlobalLayoutListenerAddedFilter;
     int mSelectorPosition;
     int mResurrectToPosition;
     int mMinimumVelocity;
@@ -403,6 +409,15 @@ public:
     void setStackFromBottom(bool stackFromBottom);
     bool isStackFromBottom()const;
 
+    bool isTextFilterEnabled()const;
+    void setTextFilterEnabled(bool);
+    void setFilterText(const std::string& filterText);
+    void clearTextFilter();
+    bool hasTextFilter()const;
+    const std::string getTextFilter()const;
+    void beforeTextChanged(const std::string& s, int start, int count, int after);//override textwatcher
+    void onTextChanged(const std::string& s, int start, int before, int count);//override textwatcher
+    void onFilterComplete(int count)override;
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState()override;
     void dispatchDrawableHotspotChanged(float x, float y)override;

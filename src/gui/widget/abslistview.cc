@@ -2,6 +2,7 @@
 #include <widget/checkable.h>
 #include <widget/recyclebin.h>
 #include <widget/fastscroller.h>
+#include <widget/edittext.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 
@@ -31,6 +32,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mPositionScroller= nullptr;
     mFastScroll = nullptr;
     mPopup = nullptr;
+    mTextFilter = nullptr;
     mStackFromBottom = false;
     mIsChildViewEnabled =false;
     mFiltered    = false;
@@ -702,8 +704,138 @@ void AbsListView::requestLayoutIfNecessary() {
     }
 }
 
+bool AbsListView::acceptFilter() const {
+    Filterable*filter = dynamic_cast<Filterable*>(mAdapter);
+    return mTextFilterEnabled && filter &&  filter->getFilter() != nullptr;
+}
+
+void AbsListView::createTextFilter(bool animateEntrance) {
+    /*if (mPopup == nullptr) {
+        PopupWindow* p = new PopupWindow(getContext());
+        p->setFocusable(false);
+        p->setTouchable(false);
+        p->setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+        p->setContentView(getTextFilterInput());
+        p->setWidth(LayoutParams.WRAP_CONTENT);
+        p->setHeight(LayoutParams.WRAP_CONTENT);
+        p->setBackgroundDrawable(null);
+        mPopup = p;
+        //getViewTreeObserver().addOnGlobalLayoutListener(this);
+        mGlobalLayoutListenerAddedFilter = true;
+    }
+    if (animateEntrance) {
+        mPopup->setAnimationStyle(com.android.internal.R.style.Animation_TypingFilter);
+    } else {
+        mPopup->setAnimationStyle(com.android.internal.R.style.Animation_TypingFilterRestore);
+    }*/
+}
+
+EditText* AbsListView::getTextFilterInput() {
+    if (mTextFilter == nullptr) {
+        LayoutInflater* layoutInflater = LayoutInflater::from(getContext());
+        mTextFilter = (EditText*) layoutInflater->inflate("cdroid:layout/typing_filter", nullptr);
+        // For some reason setting this as the "real" input type changes
+        // the text view in some way that it doesn't work, and I don't
+        // want to figure out why this is.
+        //mTextFilter->setRawInputType(EditorInfo.TYPE_CLASS_TEXT  | EditorInfo.TYPE_TEXT_VARIATION_FILTER);
+        //mTextFilter->setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+        //mTextFilter->addTextChangedListener(this);
+    }
+    return mTextFilter;
+}
+
+bool AbsListView::isTextFilterEnabled() const{
+    return mTextFilterEnabled;
+}
+
+void AbsListView::setTextFilterEnabled(bool textFilterEnabled) {
+    mTextFilterEnabled = textFilterEnabled;
+}
+
+void AbsListView::setFilterText(const std::string& filterText){
+    // TODO: Should we check for acceptFilter()?
+    if (mTextFilterEnabled && !filterText.empty()){//TextUtils.isEmpty(filterText)) {
+        createTextFilter(false);
+        // This is going to call our listener onTextChanged, but we might not
+        // be ready to bring up a window yet
+        mTextFilter->setText(filterText);
+        //mTextFilter->setSelection(filterText.length());
+        if (dynamic_cast<Filterable*>(mAdapter)) {
+            // if mPopup is non-null, then onTextChanged will do the filtering
+            if (mPopup == nullptr) {
+                Filter* f = ((Filterable*) mAdapter)->getFilter();
+                f->filter(filterText);
+            }
+            // Set filtered to true so we will display the filter window when our main
+            // window is ready
+            mFiltered = true;
+            mDataSetObserver->clearSavedState();
+        }
+    }    
+}
+
+void AbsListView::clearTextFilter() {
+    if (mFiltered) {
+        getTextFilterInput()->setText("");
+        mFiltered = false;
+        if (mPopup && mPopup->isShowing()) {
+            dismissPopup();
+        }
+    }
+}
+
+bool AbsListView::hasTextFilter() const{
+    return mFiltered;
+}
+
+const std::string AbsListView::getTextFilter()const{
+    if (mTextFilterEnabled && mTextFilter) {
+        return mTextFilter->getText();
+    }
+    return std::string();
+}
+
+void AbsListView::beforeTextChanged(const std::string& s, int start, int count, int after){
+
+}
+
+void AbsListView::onTextChanged(const std::string& s, int start, int before, int count){
+    if (isTextFilterEnabled()) {
+        createTextFilter(true);
+        const int length = s.length();
+        const bool showing = mPopup->isShowing();
+        if (!showing && length > 0) {
+            // Show the filter popup if necessary
+            showPopup();
+            mFiltered = true;
+        } else if (showing && length == 0) {
+            // Remove the filter popup if the user has cleared all text
+            dismissPopup();
+            mFiltered = false;
+        }
+        if (dynamic_cast<Filterable*>(mAdapter)){
+            Filter* f = ((Filterable*)mAdapter)->getFilter();
+            // Filter should not be null when we reach this part
+            if (f != nullptr) {
+                f->filter(s, this);//todo EditText must impl FilterListener
+            } else {
+                FATAL("You cannot call onTextChanged with a non filterable adapter");
+            }
+        }
+    }
+}
+
+//void AbsListView::afterTextChanged(Editable s) {}
+
+void AbsListView::onFilterComplete(int count) {
+    if (mSelectedPosition < 0 && count > 0) {
+        mResurrectToPosition = INVALID_POSITION;
+        resurrectSelection();
+    }
+}
+
 void AbsListView::setDrawSelectorOnTop(bool onTop) {
-    mDrawSelectorOnTop=onTop;
+    mDrawSelectorOnTop = onTop;
 }
 
 Drawable*AbsListView::getSelector() {
@@ -1735,12 +1867,11 @@ void AbsListView::jumpDrawablesToCurrentState() {
 void AbsListView::onAttachedToWindow() {
     AdapterView::onAttachedToWindow();
 
-    /*ViewTreeObserver treeObserver = getViewTreeObserver();
-    treeObserver.addOnTouchModeChangeListener(this);
-    if (mTextFilterEnabled && mPopup != null && !mGlobalLayoutListenerAddedFilter) {
-        treeObserver.addOnGlobalLayoutListener(this);
-    }*/
-
+    //ViewTreeObserver* treeObserver = getViewTreeObserver();
+    //treeObserver->addOnTouchModeChangeListener(this);
+    if (mTextFilterEnabled && mPopup  && !mGlobalLayoutListenerAddedFilter) {
+        //treeObserver->addOnGlobalLayoutListener(this);
+    }
     if (mAdapter && mDataSetObserver==nullptr) {
         mDataSetObserver = new AdapterDataSetObserver(this);
         mAdapter->registerDataSetObserver(mDataSetObserver);
@@ -1763,12 +1894,12 @@ void AbsListView::onDetachedFromWindow() {
     // Detach any view left in the scrap heap
     mRecycler->clear();
 
-    /*ViewTreeObserver treeObserver = getViewTreeObserver();
-    treeObserver.removeOnTouchModeChangeListener(this);
+    //ViewTreeObserver treeObserver = getViewTreeObserver();
+    //treeObserver.removeOnTouchModeChangeListener(this);
     if (mTextFilterEnabled && mPopup != nullptr) {
-        treeObserver.removeOnGlobalLayoutListener(this);
+        //treeObserver.removeOnGlobalLayoutListener(this);
         mGlobalLayoutListenerAddedFilter = false;
-    }*/
+    }
 
     if (mAdapter && mDataSetObserver) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);

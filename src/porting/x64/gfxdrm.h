@@ -26,7 +26,7 @@ public:
 	uint32_t stride;
 	uint32_t handle;
 	uint32_t fb;
-	uint8_t*map;
+	uint8_t* map;
     }GFXFB;
 private:
     int fd;
