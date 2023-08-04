@@ -1,6 +1,6 @@
 project (sigma C CXX)
 
-set(SIGMA_SRCS ../common/cdlog.cc 
+set(R818_SRCS ../common/cdlog.cc 
 	mediaplayer.c 
 	input_linux.cc  )
 find_package(DirectFB)
@@ -22,30 +22,25 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
-list(APPEND SIGMA_INCLUDE_DIRS ../common)
-list(APPEND SIGMA_INCLUDE_DIRS ../include)
+list(APPEND R818_INCLUDE_DIRS ../common)
+list(APPEND R818_INCLUDE_DIRS ../include)
 
 if(DIRECTFB_FOUND)
-    list(APPEND SIGMA_SRCS ../common/graph_dfb.c)
-    list(APPEND SIGMA_INCLUDE_DIRS ${DIRECTFB_INCLUDE_DIRS})
-    list(APPEND SIGMA_LIBS ${DIRECTFB_LIBRARIES})
-else()    
-    list(APPEND SIGMA_SRCS graph_gfx.c)
+    list(APPEND R818_SRCS ../common/graph_dfb.c)
+    list(APPEND R818_INCLUDE_DIRS ${DIRECTFB_INCLUDE_DIRS})
+    list(APPEND R818_LIBS ${DIRECTFB_LIBRARIES})
 endif()
-list(APPEND SIGMA_INCLUDE_DIRS ./inc)
+list(APPEND R818_INCLUDE_DIRS ./inc)
 
 link_directories(${PROJECT_SOURCE_DIR}/libs)
-list(APPEND SIGMA_LIBS pthread
-	-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx 
-	-lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel
-        -lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
+list(APPEND R818_LIBS pthread)
 
 include_directories(./
     ../common ../include
     ${PIXMAN_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
-    ${SIGMA_INCLUDE_DIRS}
+    ${R818_INCLUDE_DIRS}
 )
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(NONPKG_LIBS "-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx \
@@ -55,8 +50,8 @@ set(NONPKG_LIBS "-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx \
 configure_file(cdroidhal.pc.in cdroidhal.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroidhal.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
-add_library(tvhal SHARED ${SIGMA_SRCS} )
-target_link_libraries(tvhal ${SIGMA_LIBS})
+add_library(tvhal SHARED ${R818_SRCS} )
+target_link_libraries(tvhal ${R818_LIBS})
 file(GLOB MILIBS ${PROJECT_SOURCE_DIR}/libs/*.so)
 install (TARGETS tvhal  DESTINATION lib)
 install (FILES ${MILIBS} DESTINATION lib)
