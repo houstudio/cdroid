@@ -28,9 +28,10 @@ find_package(Freetype2 REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(Pixman REQUIRED)
 find_package(Cairo REQUIRED)
-find_package(OpenSSL)
+find_package(MBEDTLS)
+#find_package(OpenSSL)
 find_package(Fontconfig REQUIRED)
-find_package(Brotli)
+#find_package(Brotli)
 find_package(BZip2 REQUIRED)
 find_package(UniBreak REQUIRED)
 find_package(litehtml CONFIG)
@@ -47,6 +48,7 @@ list(APPEND CDROID_DEPLIBS
     ${PNG_LIBRARIES}
     ${EXPAT_LIBRARIES}
     ${ZLIB_LIBRARIES}
+    ${MBEDTLS_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
 )
 
