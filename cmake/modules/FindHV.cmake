@@ -1,0 +1,27 @@
+
+find_package(PkgConfig)
+pkg_check_modules(PC_HV mbedtls)
+
+find_path(HV_INCLUDE_DIR
+    NAMES hv/hv.h
+    HINTS ${PC_HV_INCLUDE_DIRS}
+    ${PC_HV_INCLUDEDIR}
+)
+
+find_library(HV_LIBRARY
+    NAMES hv hv_static
+    HINTS ${PC_HV_LIBDIR}
+    ${PC_HV_LIBRARY_DIRS}
+)
+
+if(HV_INCLUDE_DIR AND HV_LIBRARY)
+    set(HV_FOUND TRUE)
+    set(HV_INCLUDE_DIRS ${HV_INCLUDE_DIR})
+    set(HV_LIBRARIES ${HV_LIBRARY})
+    set(HV_VERSION ${PC_HV_VERSION})
+    include(FindPackageHandleStandardArgs)
+    FIND_PACKAGE_HANDLE_STANDARD_ARGS(hv  FOUND_VAR HV_FOUND VERSION_VAR HV_VERSION 
+	    REQUIRED_VARS HV_LIBRARIES HV_LIBRARY HV_INCLUDE_DIRS HV_INCLUDE_DIR)
+    mark_as_advanced(HV_LIBRARIES HV_LIBRARY HV_INCLUDE_DIRS HV_INCLUDE_DIR)
+endif()
+
