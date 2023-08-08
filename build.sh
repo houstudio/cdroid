@@ -8,13 +8,13 @@ declare -A TOOLCHAINS #key/value dict ,key is platform,value is toolchain,key mu
 TOOLCHAINS["SIGMA"]=$HOME/cdroid/cmake/ssd202-mtitoolchain.cmake
 TOOLCHAINS["ALI3528"]=$HOME/cdroid/cmake/ali3528-mtitoolchain.cmake
 TOOLCHAINS["RISCVD211"]=$HOME/cdroid/cmake/riscv64-d211-toolchain.cmake
-TOOLCHAINS["R818"]=$HOME/cdroid/cmake/aarch64-toolchain.cmake
+TOOLCHAINS["R818"]=$HOME/cdroid/cmake/r818-toolchain.cmake
 
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 DEPLIBS["X64"]=$HOME/vcpkg/installed/x64-linux-dynamic
 DEPLIBS["SIGMA"]=$HOME/vcpkg/installed/arm-linux-dynamic
 DEPLIBS["RISCVD211"]=$HOME/vcpkg/installed/riscv64-linux-dynamic
-DEPLIBS["R818"]=$HOME/vcpkg/installed/arm64-linux-dynamic
+DEPLIBS["R818"]=/opt/vcpkg/installed/r818-linux
 SHOWHELP=false
 PRODUCT="x64"
 BUILD_TYPE="Release"

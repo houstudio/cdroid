@@ -399,9 +399,6 @@ View* ListView::fillDown(int pos, int nextTop) {
         bool selected = pos == mSelectedPosition;
         View* child = makeAndAddView(pos, nextTop, true, mListPadding.left, selected);
         nextTop = child->getBottom() + mDividerHeight;
-        LOGV("[%d]%p:%d pos=(%d,%d) nextStart=%d end=%d size=%dx%d listsize=%dx%d",pos,child,child->getId(),
-             child->getLeft(),child->getBottom(),nextTop,listEnd,
-             child->getWidth(),child->getHeight(),getWidth(),getHeight());
         if (selected) {
             selectedView = child;
         }
@@ -1470,7 +1467,6 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
         child->offsetLeftAndRight(childrenLeft - child->getLeft());
         child->offsetTopAndBottom(childTop - child->getTop());
     }
-    LOGD("%p:%d start=%d size=%dx%d ,pos=%d,%d needmeasure=%d flowDown=%d",child,child->getId(),childrenLeft,w,h, child->getLeft(),child->getTop(),needToMeasure,flowDown);
     if (mCachingStarted && !child->isDrawingCacheEnabled())
         child->setDrawingCacheEnabled(true);
 }

@@ -422,14 +422,14 @@ void GridView::correctTooHigh(int numColumns, int verticalSpacing, int childCoun
         // ... and its bottom edge
         int lastBottom = lastChild->getBottom();
         // This is bottom of our drawable area
-        int end = mBottom-mTop - mListPadding.height;//bottom;
+        int end = mBottom-mTop - mListPadding.height;
 
         // This is how far the bottom edge of the last view is from the bottom of the
         // drawable area
         int bottomOffset = end - lastBottom;
 
         View* firstChild = getChildAt(0);
-        int firstTop = firstChild->getTop();
+        const int firstTop = firstChild->getTop();
 
         // Make sure we are 1) Too high, and 2) Either there are more rows above the
         // first row or the first row is scrolled off the top of the drawable area
@@ -464,7 +464,7 @@ void GridView::correctTooLow(int numColumns, int verticalSpacing, int childCount
         int start = mListPadding.top;
 
         // This is bottom of our drawable area
-        int end = mBottom-mTop - mListPadding.height;//bottom;
+        int end = mBottom-mTop - mListPadding.height;
 
         // This is how far the top edge of the first view is from the top of the
         // drawable area
@@ -775,10 +775,10 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         p->forceAdd = true;
 
         const int childHeightSpec= getChildMeasureSpec(
-                                 MeasureSpec::makeSafeMeasureSpec(MeasureSpec::getSize(heightMeasureSpec), 
-								 MeasureSpec::UNSPECIFIED), 0, p->height);
+                                       MeasureSpec::makeSafeMeasureSpec(MeasureSpec::getSize(heightMeasureSpec),
+                                               MeasureSpec::UNSPECIFIED), 0, p->height);
         const int childWidthSpec = getChildMeasureSpec(
-                                 MeasureSpec::makeMeasureSpec(mColumnWidth, MeasureSpec::EXACTLY), 0, p->width);
+                                       MeasureSpec::makeMeasureSpec(mColumnWidth, MeasureSpec::EXACTLY), 0, p->width);
         child->measure(childWidthSpec, childHeightSpec);
 
         childHeight = child->getMeasuredHeight();
@@ -839,10 +839,10 @@ void GridView::layoutChildren() {
         return;
     }
 
-    int childrenTop = mListPadding.top;
-    int childrenBottom = mBottom-mTop - mListPadding.height;
+    const int childrenTop = mListPadding.top;
+    const int childrenBottom = getHeight() - mListPadding.height;
 
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     int index;
     int delta = 0;
 
@@ -1095,10 +1095,10 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
     const bool isSelected = selected && shouldShowSelector();
     const bool updateChildSelected = isSelected != child->isSelected();
     const bool isPressed = mTouchMode > TOUCH_MODE_DOWN && mTouchMode < TOUCH_MODE_SCROLL
-                     && mMotionPosition == position;
+                           && mMotionPosition == position;
     const bool updateChildPressed = isPressed != child->isPressed();
     const bool needToMeasure = !isAttachedToWindow || updateChildSelected
-                         || child->isLayoutRequested();
+                               || child->isLayoutRequested();
 
     // Respect layout params that are already in the view. Otherwise make
     // some up...

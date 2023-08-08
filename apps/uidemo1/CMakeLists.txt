@@ -24,12 +24,6 @@ add_executable(uidemo1 ${DEMO_SRCS})
 
 CreatePAK(uidemo1 ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/uidemo1.pak ${PROJECT_SOURCE_DIR}/R.h)
 
-add_custom_target(uidemo1translate
-  COMMAND python  ${CMAKE_SOURCE_DIR}/src/tools/po2json.py ${CMAKE_CURRENT_BINARY_DIR}/uidemo.po
-  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-  COMMENT "Translate strings resource..."
-  )
-
 message("CDROID_LIBRARIES=${CDROID_LIBRARIES} CDROID_INCLUDE_DIRS=${CDROID_INCLUDE_DIRS}")
 target_link_libraries(uidemo1 PRIVATE cdroid)
 

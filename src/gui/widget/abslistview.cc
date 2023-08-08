@@ -744,7 +744,7 @@ EditText* AbsListView::getTextFilterInput() {
     return mTextFilter;
 }
 
-bool AbsListView::isTextFilterEnabled() const{
+bool AbsListView::isTextFilterEnabled() const {
     return mTextFilterEnabled;
 }
 
@@ -752,9 +752,9 @@ void AbsListView::setTextFilterEnabled(bool textFilterEnabled) {
     mTextFilterEnabled = textFilterEnabled;
 }
 
-void AbsListView::setFilterText(const std::string& filterText){
+void AbsListView::setFilterText(const std::string& filterText) {
     // TODO: Should we check for acceptFilter()?
-    if (mTextFilterEnabled && !filterText.empty()){//TextUtils.isEmpty(filterText)) {
+    if (mTextFilterEnabled && !filterText.empty()) { //TextUtils.isEmpty(filterText)) {
         createTextFilter(false);
         // This is going to call our listener onTextChanged, but we might not
         // be ready to bring up a window yet
@@ -771,7 +771,7 @@ void AbsListView::setFilterText(const std::string& filterText){
             mFiltered = true;
             mDataSetObserver->clearSavedState();
         }
-    }    
+    }
 }
 
 void AbsListView::clearTextFilter() {
@@ -784,22 +784,22 @@ void AbsListView::clearTextFilter() {
     }
 }
 
-bool AbsListView::hasTextFilter() const{
+bool AbsListView::hasTextFilter() const {
     return mFiltered;
 }
 
-const std::string AbsListView::getTextFilter()const{
+const std::string AbsListView::getTextFilter()const {
     if (mTextFilterEnabled && mTextFilter) {
         return mTextFilter->getText();
     }
     return std::string();
 }
 
-void AbsListView::beforeTextChanged(const std::string& s, int start, int count, int after){
+void AbsListView::beforeTextChanged(const std::string& s, int start, int count, int after) {
 
 }
 
-void AbsListView::onTextChanged(const std::string& s, int start, int before, int count){
+void AbsListView::onTextChanged(const std::string& s, int start, int before, int count) {
     if (isTextFilterEnabled()) {
         createTextFilter(true);
         const int length = s.length();
@@ -813,11 +813,11 @@ void AbsListView::onTextChanged(const std::string& s, int start, int before, int
             dismissPopup();
             mFiltered = false;
         }
-        if (dynamic_cast<Filterable*>(mAdapter)){
+        if (dynamic_cast<Filterable*>(mAdapter)) {
             Filter* f = ((Filterable*)mAdapter)->getFilter();
             // Filter should not be null when we reach this part
             if (f != nullptr) {
-                f->filter(s, this);//todo EditText must impl FilterListener
+                f->filter(s, this);
             } else {
                 FATAL("You cannot call onTextChanged with a non filterable adapter");
             }
@@ -1158,7 +1158,6 @@ bool AbsListView::resurrectSelection() {
                 }
             }
         } else {
-            int itemCount = mItemCount;
             down = false;
             selectedPos = firstPosition + childCount - 1;
 
@@ -1169,7 +1168,7 @@ bool AbsListView::resurrectSelection() {
 
                 if (i == childCount - 1) {
                     selectedTop = top;
-                    if (firstPosition + childCount < itemCount || bottom > childrenBottom) {
+                    if (firstPosition + childCount < mItemCount || bottom > childrenBottom) {
                         childrenBottom -= getVerticalFadingEdgeLength();
                     }
                 }
@@ -1551,8 +1550,8 @@ void AbsListView::draw(Canvas& canvas) {
     AdapterView::draw(canvas);
     if (shouldDisplayEdgeEffects()) {
         const bool clipToPadding = getClipToPadding();
-        int width , height;
-        int translateX , translateY;
+        int width, height;
+        int translateX, translateY;
 
         if (clipToPadding) {
             width  = getWidth() - mPaddingLeft - mPaddingRight;
@@ -2047,8 +2046,8 @@ void AbsListView::positionPopup() {
 }
 
 void AbsListView::updateOnScreenCheckedViews() {
-    int firstPos = mFirstPosition;
-    int count = getChildCount();
+    const int firstPos = mFirstPosition;
+    const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         int position = firstPos + i;
@@ -3231,7 +3230,7 @@ void AbsListView::smoothScrollByOffset(int position) {
         View* child = getChildAt(index - getFirstVisiblePosition());
         if (child != nullptr) {
             Rect visibleRect;
-            if (1) { //child->getGlobalVisibleRect(visibleRect)) {
+            if (child->getGlobalVisibleRect(visibleRect,nullptr)) {
                 // the child is partially visible
                 int childRectArea = child->getWidth() * child->getHeight();
                 int visibleRectArea = visibleRect.width * visibleRect.height;
@@ -4013,7 +4012,6 @@ void AbsListView::FlingRunnable::run() {
             // Don't fling more than 1 screen
             delta = std::max(-(mLV->getHeight() - mLV->mPaddingTop - mLV->mPaddingBottom - 1), delta);
         }
-
         // Check to see if we have bumped into the scroll limit
         View* motionView = mLV->getChildAt(mLV->mMotionPosition - mLV->mFirstPosition);
         int oldTop = 0;
