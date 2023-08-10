@@ -9,10 +9,18 @@ find_path(HV_INCLUDE_DIR
 )
 
 find_library(HV_LIBRARY
-    NAMES hv hv_static
+    NAMES hv_static
     HINTS ${PC_HV_LIBDIR}
     ${PC_HV_LIBRARY_DIRS}
 )
+
+if(NOT HV_LIBRARY)
+  find_library(HV_LIBRARY
+      NAMES hv_static
+      HINTS ${PC_HV_LIBDIR}
+      ${PC_HV_LIBRARY_DIRS}
+  )
+endif()
 
 if(HV_INCLUDE_DIR AND HV_LIBRARY)
     set(HV_FOUND TRUE)
