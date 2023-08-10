@@ -6,7 +6,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 
-GFXDrm::GFXDrm(const char*devnode){
+GFXDrm::GFXDrm(const char*devnode) {
     int i,ret;
     uint64_t has_dumb;
     drmModeRes *res;
@@ -19,29 +19,29 @@ GFXDrm::GFXDrm(const char*devnode){
     modeRes = drmModeGetResources(fd);
 }
 
-GFXDrm::~GFXDrm(){
+GFXDrm::~GFXDrm() {
     /* free resources again */
     drmModeFreeResources(modeRes);
 }
 
-int GFXDrm::fetchModes(std::vector<GFXDrm::GFXMode>&modes){
-   for (int i = 0; i < modeRes->count_connectors;i++){ 
-       drmModeConnector*conn=drmModeGetConnector(fd, modeRes->connectors[i]);
-       if((conn->connection != DRM_MODE_CONNECTED)||(conn->count_modes == 0)){
-	   LOGD("ignoring unused connector %u",conn->connector_id);
-	   continue;
-       }
-       for(int j=0;j<conn->count_modes;j++){
-           GFXMode md;
-           md.width=conn->modes[j].hdisplay;
-           md.height=conn->modes[j].vdisplay;
-           md.mode=conn->modes[j];
-	   find_crtc(conn,md);
-           gfxModes.push_back(md); 
-       }
-   }
-   modes=gfxModes;
-   return gfxModes.size();
+int GFXDrm::fetchModes(std::vector<GFXDrm::GFXMode>&modes) {
+    for (int i = 0; i < modeRes->count_connectors; i++) {
+        drmModeConnector*conn=drmModeGetConnector(fd, modeRes->connectors[i]);
+        if((conn->connection != DRM_MODE_CONNECTED)||(conn->count_modes == 0)) {
+            LOGD("ignoring unused connector %u",conn->connector_id);
+            continue;
+        }
+        for(int j=0; j<conn->count_modes; j++) {
+            GFXMode md;
+            md.width=conn->modes[j].hdisplay;
+            md.height=conn->modes[j].vdisplay;
+            md.mode=conn->modes[j];
+            find_crtc(conn,md);
+            gfxModes.push_back(md);
+        }
+    }
+    modes=gfxModes;
+    return gfxModes.size();
 }
 
 

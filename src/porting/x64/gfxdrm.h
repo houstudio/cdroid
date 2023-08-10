@@ -13,29 +13,29 @@
 #include <xf86drmMode.h>
 #include <vector>
 
-class GFXDrm{
-public:
-    typedef struct{
-	uint32_t width;
-	uint32_t height;
-	uint32_t crtc;
-	drmModeModeInfo mode;
-    }GFXMode;
-    typedef struct{
-	uint32_t size;
-	uint32_t stride;
-	uint32_t handle;
-	uint32_t fb;
-	uint8_t* map;
-    }GFXFB;
-private:
+class GFXDrm {
+  public:
+    typedef struct {
+        uint32_t width;
+        uint32_t height;
+        uint32_t crtc;
+        drmModeModeInfo mode;
+    } GFXMode;
+    typedef struct {
+        uint32_t size;
+        uint32_t stride;
+        uint32_t handle;
+        uint32_t fb;
+        uint8_t* map;
+    } GFXFB;
+  private:
     int fd;
     drmModeRes*modeRes;
     drmModeConnector*modeConnector;
     std::vector<GFXMode>gfxModes;
-private:
+  private:
     int find_crtc(drmModeConnector *conn,GFXDrm::GFXMode&dev);
-public:
+  public:
     GFXDrm(const char*dev);
     ~GFXDrm();
     int fetchModes(std::vector<GFXMode>&);

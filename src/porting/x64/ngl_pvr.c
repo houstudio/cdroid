@@ -4,53 +4,53 @@
 #include <ngl_timer.h>
 
 static unsigned char*pvr_buffer=NULL;
-typedef struct{
-   char *path;
-}NGLPVR;
+typedef struct {
+    char *path;
+} NGLPVR;
 
-DWORD nglPvrInit(){
-   return 0;
-}
-
-
-DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
+DWORD nglPvrInit() {
     return 0;
 }
 
-DWORD nglPvrRecordPause(DWORD handler){
+
+DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param) {
+    return 0;
+}
+
+DWORD nglPvrRecordPause(DWORD handler) {
     return E_OK;
 }
 
-DWORD nglPvrRecordResume(DWORD handler){
+DWORD nglPvrRecordResume(DWORD handler) {
     return E_OK;
 }
 
-DWORD nglPvrRecordClose(DWORD handler){
+DWORD nglPvrRecordClose(DWORD handler) {
     return E_OK;
 }
 
-void nglGetPvrPath(DWORD handler,char*path){
+void nglGetPvrPath(DWORD handler,char*path) {
 }
 
 ///////////////////////////////PVR PLAYER////////////////////////////
 
-DWORD nglPvrPlayerOpen(const char*pvrpath){
+DWORD nglPvrPlayerOpen(const char*pvrpath) {
     return 0;
 }
 
-DWORD nglPvrPlayerPlay(DWORD handle){
+DWORD nglPvrPlayerPlay(DWORD handle) {
     return E_OK;
 }
 
-DWORD nglPvrPlayerStop(DWORD handle){
+DWORD nglPvrPlayerStop(DWORD handle) {
     return E_OK;
 }
 
-DWORD nglPvrPlayerPause(DWORD handle){
+DWORD nglPvrPlayerPause(DWORD handle) {
     return E_OK;
 }
 
-DWORD nglPvrPlayerClose(DWORD handle){
+DWORD nglPvrPlayerClose(DWORD handle) {
     return E_OK;
 }
 

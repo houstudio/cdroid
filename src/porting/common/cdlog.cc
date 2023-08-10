@@ -1,6 +1,6 @@
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <stdarg.h> 
+#include <stdarg.h>
 #include <ngl_os.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +32,7 @@ static std::string splitFileName(const std::string& str) {
     found = result.find_last_of(".");
     if(found!=std::string::npos)
         return result.substr(0,found);
-    return result; 
+    return result;
 }
 
 static std::map<const std::string,int>sModules;
@@ -40,41 +40,42 @@ static shared_queue<std::string>dbgMessages;
 static char *msgBoddy=nullptr;
 static constexpr int kMaxMessageSize=2048;
 
-static void LogInit(){
+static void LogInit() {
     static std::once_flag sInit;
-    std::call_once(sInit,[&](){
+    std::call_once(sInit,[&]() {
         msgBoddy =new char[kMaxMessageSize];
-        std::thread th([](){
-            while(1){
+        std::thread th([]() {
+            while(1) {
                 std::string msg;
                 if(dbgMessages.size()==0)dbgMessages.wait_and_pop(msg,INT_MAX);
                 else dbgMessages.try_and_pop(msg);
                 printf("%s",msg.c_str());
             }
-        });th.detach();
+        });
+        th.detach();
     });
 }
-void LogPrintf(int level,const char*file,const char*func,int line,const char*format,...){
+void LogPrintf(int level,const char*file,const char*func,int line,const char*format,...) {
     va_list args;
     const std::string tag=splitFileName(file);
     auto it=sModules.find(tag);
     int module_loglevel=(it==sModules.end())?sLogLevel:it->second;
 #if 1
-    const char*colors[]={"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[5;31m"};
+    const char*colors[]= {"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[5;31m"};
     if(level<module_loglevel||level<0||level>LOG_FATAL)
         return;
     LogInit();
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     int len1=snprintf(msgBoddy,kMaxMessageSize,"%010ld.%06ld \033[0;32m[%s]\033[0;34m \%s:%d %s",
-             ts.tv_sec,ts.tv_nsec/1000, tag.c_str(),func,line, colors[level]);
+                      ts.tv_sec,ts.tv_nsec/1000, tag.c_str(),func,line, colors[level]);
     va_start(args, format);
     len1+=vsnprintf(msgBoddy+len1,kMaxMessageSize-len1,format, args);
     va_end(args);
     strcat(msgBoddy+len1,"\033[0m\r\n");
     dbgMessages.push(msgBoddy);
 #else
-    if(level<module_loglevel){
+    if(level<module_loglevel) {
         va_list args;
         cdlog::LogMessage log(tag,line,func,level);
         va_start(args, format);
@@ -84,69 +85,78 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
 #endif
 }
 
-void LogDump(int level,const char*tag,const char*func,int line,const char*label,const BYTE*data,int len){
+void LogDump(int level,const char*tag,const char*func,int line,const char*label,const BYTE*data,int len) {
     char buff[128];
     int i,j,taglen=0;
     taglen=sprintf(buff,"%s[%d]",label,len);
     cdlog::LogMessage log(tag,line,func,level);
     std::ostringstream &oss=log.messageStream();
     oss<<buff;
-    for(int i=0;i<len;i++){
+    for(int i=0; i<len; i++) {
         if(len>32&&i%32==0)oss<<std::endl;
         oss<<' '<<std::hex<<std::setfill('0')<<std::setw(2)<<(int)data[i];
     }
 }
 
-void LogSetModuleLevel(const char*module,int level){
-    if(module==NULL){
+void LogSetModuleLevel(const char*module,int level) {
+    if(module==NULL) {
         int i;
         sLogLevel=(LogLevel)level;
-        for(auto it=sModules.begin();it!=sModules.end();it++){
+        for(auto it=sModules.begin(); it!=sModules.end(); it++) {
             it->second=level;
         }
-    }else {
+    } else {
         std::string tag=splitFileName(module);
         sModules[tag]=level;
     }
 }
 
-void LogParseModule(const char*log){
-   char module[128];
-   const char*p=strchr(log,':');
-   if(p==NULL)return;
-   strncpy(module,log,p-log);
-   module[p-log]=0;
-   LogLevel l=LOG_DEBUG;
-   switch(p[1]){
-   case 'v':
-   case 'V':l=LOG_VERBOSE;break;
-   case 'd':
-   case 'D':l=LOG_DEBUG;break;
-   case 'i':
-   case 'I':l=LOG_INFO;break;
-   case 'w':
-   case 'W':l=LOG_WARN;break;
-   case 'e':
-   case 'E':l=LOG_ERROR;break;
-   }
-   LogSetModuleLevel( ((strcmp(module,"*")==0)?NULL:module),l);
+void LogParseModule(const char*log) {
+    char module[128];
+    const char*p=strchr(log,':');
+    if(p==NULL)return;
+    strncpy(module,log,p-log);
+    module[p-log]=0;
+    LogLevel l=LOG_DEBUG;
+    switch(p[1]) {
+    case 'v':
+    case 'V':
+        l=LOG_VERBOSE;
+        break;
+    case 'd':
+    case 'D':
+        l=LOG_DEBUG;
+        break;
+    case 'i':
+    case 'I':
+        l=LOG_INFO;
+        break;
+    case 'w':
+    case 'W':
+        l=LOG_WARN;
+        break;
+    case 'e':
+    case 'E':
+        l=LOG_ERROR;
+        break;
+    }
+    LogSetModuleLevel( ((strcmp(module,"*")==0)?NULL:module),l);
 }
 
-void LogParseModules(int argc,const char*argv[]){
-   int i;
-   for ( i = 1; i <argc; i++) {
-       if(strchr(argv[i],':')){
-          LogParseModule(argv[i]);
-       }
-   }
+void LogParseModules(int argc,const char*argv[]) {
+    int i;
+    for ( i = 1; i <argc; i++) {
+        if(strchr(argv[i],':')) {
+            LogParseModule(argv[i]);
+        }
+    }
 }
 
 
-namespace cdlog{
+namespace cdlog {
 static const std::string kTruncatedWarningText = "[...truncated...]";
 LogMessage::LogMessage(const std::string& file, const int line, const std::string& function,int level)
-   : file_(splitFileName(file)),function_(function) , line_(line),level_message(level)
-{
+    : file_(splitFileName(file)),function_(function), line_(line),level_message(level) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     timestamp_ =ts.tv_sec;
@@ -159,9 +169,9 @@ LogMessage::LogMessage(const std::string& file, const int line, const std::strin
 
 LogMessage::~LogMessage() {
     std::ostringstream oss;
-    static const char*colors[]={"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[0;31m"};
+    static const char*colors[]= {"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[0;31m"};
 
-    if(level_message>=level_module){
+    if(level_message>=level_module) {
         oss << std::setw(10) <<std::setfill('0')<< (timestamp_) << "." << std::setw(6) << (timeusec_);
         oss << " \033[0;32m[" << file_<<"]\033[0;34m ";
         oss << function_<<":" << line_ <<" "<<colors[level_message];
@@ -170,13 +180,13 @@ LogMessage::~LogMessage() {
         if (!str.empty()) oss << str ;
         log_entry_ += oss.str();
         log_entry_ +="\033[0m\n";
-    
+
         dbgMessages.push(log_entry_);
     }
 }
 
-void LogMessage::messageSave(const char* format, ...){
-    if(level_message>=level_module){
+void LogMessage::messageSave(const char* format, ...) {
+    if(level_message>=level_module) {
         va_list arglist;
         char message[kMaxMessageSize];
         va_start(arglist, format);
@@ -192,27 +202,27 @@ void LogMessage::messageSave(const char* format, ...){
     }
 }
 FatalMessage::FatalMessage(const std::string& file, const int line, const std::string& function,int signal)
- :LogMessage(file,line,function,LOG_FATAL),signal_(signal){
-   const size_t max_dump_size = 50;
-   void* dump[max_dump_size];
+    :LogMessage(file,line,function,LOG_FATAL),signal_(signal) {
+    const size_t max_dump_size = 50;
+    void* dump[max_dump_size];
 #ifdef HAVE_EXECINFO_H
-   size_t size = backtrace(dump, max_dump_size);
-   char** messages = backtrace_symbols(dump, size); // overwrite sigaction with caller's address
+    size_t size = backtrace(dump, max_dump_size);
+    char** messages = backtrace_symbols(dump, size); // overwrite sigaction with caller's address
 
-   std::ostringstream oss;
-   if(signal_)oss << "Received fatal signal: " << signal_<<std::endl;//g2::internal::signalName(signal_number);
-   oss << " PID: " << getpid() << std::endl;
+    std::ostringstream oss;
+    if(signal_)oss << "Received fatal signal: " << signal_<<std::endl;//g2::internal::signalName(signal_number);
+    oss << " PID: " << getpid() << std::endl;
 
-   // dump stack: skip first frame, since that is here
-   for (size_t idx = 1; idx < size && messages != nullptr; ++idx) {
-       oss<<"\t["<<idx<<"]"<<messages[idx]<<std::endl;
-   } // END: for(size_t idx = 1; idx < size && messages != nullptr; ++idx)
-   free(messages);
-   stream_<<oss.str();
+    // dump stack: skip first frame, since that is here
+    for (size_t idx = 1; idx < size && messages != nullptr; ++idx) {
+        oss<<"\t["<<idx<<"]"<<messages[idx]<<std::endl;
+    } // END: for(size_t idx = 1; idx < size && messages != nullptr; ++idx)
+    free(messages);
+    stream_<<oss.str();
 #endif
-   //std::cout<<log_entry_<<std::endl;
+    //std::cout<<log_entry_<<std::endl;
 }
-FatalMessage::~FatalMessage(){
+FatalMessage::~FatalMessage() {
 }
 }//endof namespace
 
