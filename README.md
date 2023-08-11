@@ -94,7 +94,7 @@
 &emsp;&emsp;make -j
 * 6.prepare system and app resource<br>
 &emsp;&emsp;cp src/gui/cdroid.pak ./<br>
-&emsp;&emsp;cp apps/${app}/${app}/pak ./<br>
+&emsp;&emsp;cp apps/${app}/${app}.pak ./<br>
 * 7.run samples(in directory outX64-Debug<br>
 &emsp;&emsp;apps/samples/helloworld<br>
 &emsp;&emsp;apps/uidemo1/uidemo1<br>

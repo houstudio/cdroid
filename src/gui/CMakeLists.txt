@@ -68,7 +68,9 @@ set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("==CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
 
-add_subdirectory(widget/html)
+if(litehtml_FOUND)
+   add_subdirectory(widget/html)
+endif()
 
 configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install (TARGETS cdroid  DESTINATION lib)

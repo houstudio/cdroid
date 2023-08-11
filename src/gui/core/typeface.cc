@@ -25,6 +25,7 @@ std::string Typeface::mSystemLang;
 static constexpr int SYSLANG_MATCHED = 0x80000000;
 
 std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
+cdroid::Context* Typeface::mContext;
 
 void Typeface::setContext(cdroid::Context*ctx){
     mContext = ctx;

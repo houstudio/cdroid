@@ -1,10 +1,11 @@
 project (sigma C CXX)
 
-set(SIGMA_SRCS ../common/cdlog.cc 
-	mediaplayer.c 
-	input_linux.cc  )
+set(SIGMA_SRCS ../common/cdlog.cc
+        ../common/input_linux.cc 
+	mediaplayer.c)
 find_package(DirectFB)
 include(CheckIncludeFile)
+
 check_include_file(poll.h HAVE_POLL_H)
 check_include_file(sys/epoll.h  HAVE_EPOLL_H)
 check_include_file(linux/input.h HAVE_INPUT_H)
