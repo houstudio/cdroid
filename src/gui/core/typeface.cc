@@ -6,7 +6,6 @@
 #include <freetype/ftsnames.h>
 #include <cairomm/matrix.h>
 #include <core/context.h>
-#include <core/app.h>
 #include <dirent.h>
 namespace cdroid {
 extern "C" {
@@ -26,6 +25,10 @@ std::string Typeface::mSystemLang;
 static constexpr int SYSLANG_MATCHED = 0x80000000;
 
 std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
+
+void Typeface::setContext(cdroid::Context*ctx){
+    mContext = ctx;
+}
 
 Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face) {
     mFontFace = face;
@@ -176,7 +179,7 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
         if(wantFamily[0]=='@')
             wantFamily = wantFamily.substr(1);
         if(wantFamily.find(":")==std::string::npos)
-            wantFamily = App::getInstance().getPackageName()+":"+wantFamily;
+            wantFamily = mContext->getPackageName()+":"+wantFamily;
     }
     for(auto i= sSystemFontMap.begin(); i!= sSystemFontMap.end(); i++) {
         Typeface*tf = i->second;
@@ -249,7 +252,7 @@ void Typeface::loadPreinstalledSystemFontMap() {
     if(sSystemFontMap.size())
         return;
     loadFromFontConfig();
-    loadFaceFromResource(&App::getInstance());
+    loadFaceFromResource(mContext);
     loadFromPath("");
     auto it=sSystemFontMap.find(DEFAULT_FAMILY);
     if (it!=sSystemFontMap.end()) {
@@ -344,7 +347,8 @@ int Typeface::loadFromFontConfig() {
             if(pos!=std::string::npos)
                 font = font.substr(pos+1);
             LOGV("filename=%s/%s  family=%s",fontFile,font.c_str(),family.c_str());
-            sSystemFontMap.insert({std::string("font/") + font,tf});
+            std::string fontKey = mContext->getPackageName()+":font/"+font;
+            sSystemFontMap.insert({fontKey,tf});
         }
         sSystemFontMap.insert({family,tf});
         LOGV("font %s %p",family.c_str(),tf);

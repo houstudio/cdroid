@@ -41,6 +41,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     std::string optstring;
     Choreographer&chograph= Choreographer::getInstance();
     LogParseModules(argc,argv);
+    Typeface::setContext(this);
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;

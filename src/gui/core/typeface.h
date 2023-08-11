@@ -38,6 +38,7 @@ private:
     int mWeight;
     int mItalic;
     Cairo::RefPtr<Cairo::FtScaledFont>mFontFace;
+    static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
     static std::unordered_map<std::string,Typeface*>sSystemFontMap;
@@ -60,6 +61,7 @@ public:
     bool isItalic() const;
     std::string getFamily()const;
     Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const;
+    static void setContext(cdroid::Context*);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
     static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
            std::unordered_map<std::string, Typeface*>& fontMap, 
