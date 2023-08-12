@@ -16,6 +16,11 @@ class CDROIDHandler( xml.sax.ContentHandler ):
         self.strings=[]
         self.namespace=namespace
 
+    def normalizeXMLString(self,xmlStr):
+        xmlStr.replace("\n", "&#10;")
+        xmlStr.replace("\r", "&#0d;")
+        return xmlStr
+
     def isMyNS(self,idname):#parse @android:id/ @+id/ @id/
         ns=""
         if idname.find(":")>0:
@@ -37,6 +42,7 @@ class CDROIDHandler( xml.sax.ContentHandler ):
                 if self.isMyNS(value):
                     self.addID(value)
             if 'string/' in value:
+                value = self.normalizeXMLString(value)
                 self.addString(value)
 
     def addID(self,name):
@@ -51,7 +57,7 @@ class CDROIDHandler( xml.sax.ContentHandler ):
         pos=value.find('/')
         if pos<0 :
             return
-        value=value[pos+1:].strip()
+        #value=value[pos+1:].strip()
         if(value[0].isalpha() or (value[0]=='_')) and (value not in self.strings):
             self.strings.append(value)
 

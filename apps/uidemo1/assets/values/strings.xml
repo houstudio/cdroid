@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <strings lang="zh_CN">
 	<string name="Go">Go</string>
 	<string name="address">address</string>
@@ -12,4 +13,5 @@
 	<string name="row4">row4</string>
 	<string name="inputnum">inputnum</string>
 	<string name="inputcolumns">inputcolumns</string>
+	<string name="teststring1">     1/4</string>
 </strings>

@@ -37,12 +37,13 @@ void AttributeSet::setContext(Context*ctx,const std::string&package){
 std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
     std::string value= property;
     size_t pos;
-    const bool isRes = (value.find('/')!=std::string::npos);
+    const bool hasAT = value.size() && (property[0]=='@');
+    const bool isRes = hasAT && ( value.find('/') != std::string::npos );
     while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
 	value.erase(pos,1);
     }
     
-    if( (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
+    if( isRes && (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
         return std::string(pkg+":"+value);
     }
     return value;

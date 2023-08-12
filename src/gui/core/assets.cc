@@ -96,7 +96,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;
-            LOGV_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
+            LOGD_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
             mStrings[key]=value;
         }
     } else  if(atts.size()==2) {
@@ -137,7 +137,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string name=atts[1].getString("name");
             const std::string key=package+":string/"+name;
             mStrings[key]=value;
-            LOGV("%s=%s",key.c_str(),value.c_str());
+            LOGD("%s=%s",key.c_str(),value.c_str());
         }
     }
 }
@@ -290,7 +290,7 @@ const std::string& Assets::getString(const std::string& resid,const std::string&
     parseResource(resid,&name,&pkg);
     name = AttributeSet::normalize(pkg,resid);
     auto itr = mStrings.find(name);
-    if(itr != mStrings.end() && ! itr->second.empty()) {
+    if(itr != mStrings.end()/* && ! itr->second.empty()*/) {
         return itr->second;
     }
     return resid;
@@ -459,7 +459,7 @@ static void CharacterHandler(void *userData,const XML_Char *s, int len) {
 static void endElement(void *userData, const XML_Char *name) {
     KVPARSER*kvp = (KVPARSER*)userData;
     if(strcmp(name,"resources")) { //root node is not in KVPARSER::attrs
-        TextUtils::trim(kvp->content);
+	//we need to keep whitespace in xml's textarea,so we cant strip space(TextUtils::trim(kvp->content)
         kvp->func(kvp->tags,kvp->attrs,kvp->content);
         kvp->attrs.pop_back();
         kvp->tags.pop_back();

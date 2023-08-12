@@ -47,14 +47,24 @@
     <LinearLayout 
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal" 
+	    android:orientation="horizontal"
+	    android:id="@id/textcontainer"
             >
             <Button 
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/button1"
-                android:text="一键自动生成表格"
-                />
+                android:text="一键自动生成表格"/>
+	    <TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/textview1"
+	        android:text="1\n4"/>
+	    <TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/textview1"
+  	        android:text="@string/teststring1"/>
     </LinearLayout>
 
 
