@@ -72,9 +72,11 @@ if [ "$PRODUCT" != "X64" ]; then
     echo "TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
 fi
 
+#Debug version'sDEPLIB seems has some trouble in some platform(r818)
 if [ "${BUILD_TYPE,,}" = "debug" ]; then
-   DEPLIBS_DIR="${DEPLIBS_DIR}/debug:${DEPLIBS_DIR}"
+   DEPLIBS_DIR="${DEPLIBS_DIR}" #/debug:${DEPLIBS_DIR}"
 fi
+
 echo "========DEPLIBS_DIR=${DEPLIBS_DIR} BUILDTYPE=${BUILD_TYPE}"
 export PATH=$DEPLIBS_DIR:$PATH
 

@@ -16,7 +16,7 @@ find_library(HV_LIBRARY
 
 if(NOT HV_LIBRARY)
   find_library(HV_LIBRARY
-      NAMES hv_static
+      NAMES hv
       HINTS ${PC_HV_LIBDIR}
       ${PC_HV_LIBRARY_DIRS}
   )
