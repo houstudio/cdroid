@@ -79,7 +79,7 @@ void Preferences::load(const std::string&fname){
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    
+    updates = 0; 
     LOGV("parse=%s",fname.c_str());
 }
 
