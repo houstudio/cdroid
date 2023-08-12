@@ -152,7 +152,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
 }
 
 Window*CreateMultiMedia(){
-    MediaWindow*w=new MediaWindow(0,0,800,640);
+    MediaWindow*w=new MediaWindow(0,0,-1,-1);
     w->setText("Media");
     //LOGD("CreateMultiMedia");
     return w;
