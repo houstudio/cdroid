@@ -355,7 +355,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
     if(TextUtils::startWith(resname,"attr")) { //for reference resource
         resname = mTheme.getString(resname.substr(5));
         d = getDrawable(resname);
-    } else if(TextUtils::startWith(resname,"color")) {
+    } else if(resname.find(":color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(getColor(resname));
     } else if(TextUtils::endWith(resname,".9.png")) {
