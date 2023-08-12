@@ -38,7 +38,7 @@ INT GFXInit() {
     GFXGetDisplaySize(0,&width,&height);
     sdlWindow = SDL_CreateWindow("CDROID Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                  width,height, SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
-    LOGI("SDL_CreateWindow =%p screensize=%dx%d",sdlWindow,width,height);
+    LOGI("SDL ScreenSize =%dx%d sdlWindow=%p driver=%s",width,height,sdlWindow,SDL_GetCurrentVideoDriver());
     if (!sdlWindow) return E_ERROR;
 
     sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);//基于窗口创建渲染器

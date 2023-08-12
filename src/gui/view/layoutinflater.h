@@ -21,7 +21,7 @@ protected:
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
-    static bool registInflater(const std::string&name,const std::string&,ViewInflater fun);
+    static bool registe(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
     View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
 };
@@ -30,7 +30,7 @@ template<typename T>
 class InflaterRegister{
 public:
     InflaterRegister(const std::string&name,const std::string&defstyle){
-        LayoutInflater::registInflater(name,defstyle,[](Context*ctx,const AttributeSet&attr)->View*{return new T(ctx,attr);});
+        LayoutInflater::registe(name,defstyle,[](Context*ctx,const AttributeSet&attr)->View*{return new T(ctx,attr);});
     }
 };
 

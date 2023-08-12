@@ -6880,7 +6880,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
         resolveRtlPropertiesIfNeeded();
         auto itc = mMeasureCache.find(key);
-        if ( (itc == mMeasureCache.end()) || sIgnoreMeasureCache) {
+        if ( (itc == mMeasureCache.end()) || forceLayout || sIgnoreMeasureCache ) {
             // measure ourselves, this should set the measured dimension flag back
             onMeasure(widthMeasureSpec, heightMeasureSpec);
             mPrivateFlags3 &= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
@@ -6894,8 +6894,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
         // flag not set, setMeasuredDimension() was not invoked, we raise
         // an exception to warn the developer
         if ((mPrivateFlags & PFLAG_MEASURED_DIMENSION_SET) != PFLAG_MEASURED_DIMENSION_SET) {
-            LOGE("View with id %d : #onMeasure() did not set the"
-                        " measured dimension by calling setMeasuredDimension()",mID);
+            LOGE("View with id %d : #onMeasure() did not set the measured dimension by calling setMeasuredDimension()",mID);
         }
         mPrivateFlags |= PFLAG_LAYOUT_REQUIRED;
     }

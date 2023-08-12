@@ -35,7 +35,7 @@ class shared_queue {
     bool wait_and_pop(T& popped_item,int timeout=-1) {
         std::unique_lock<std::mutex> lock(m_); // note: unique_lock is needed for std::condition_variable::wait
         if(data_cond_.wait_for(lock,std::chrono::milliseconds(timeout),[this]() {
-        return !queue_.empty();
+            return !queue_.empty();
         })) {
             popped_item=std::move(queue_.front());
             queue_.pop();
