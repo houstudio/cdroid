@@ -96,7 +96,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;
-            LOGD_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
+            LOGV_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
             mStrings[key]=value;
         }
     } else  if(atts.size()==2) {
@@ -137,7 +137,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string name=atts[1].getString("name");
             const std::string key=package+":string/"+name;
             mStrings[key]=value;
-            LOGD("%s=%s",key.c_str(),value.c_str());
+            LOGV("%s=%s",key.c_str(),value.c_str());
         }
     }
 }
