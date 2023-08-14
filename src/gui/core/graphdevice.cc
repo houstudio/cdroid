@@ -254,7 +254,7 @@ void GraphDevice::composeSurfaces(){
             mPrimaryContext->reset_clip();
             //trackFPS(*mPrimaryContext);
             trackFPS(*wSurfaces[i]);
-            LOGI("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
+            LOGV("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
             rotateRectInWindow(rcw,mRectBanner,recFPS,dx,dy,rotation);
             if( hdlSurface)GFXBlit(mPrimarySurface , dx,dy, hdlSurface,(const GFXRect*)&recFPS);
         }

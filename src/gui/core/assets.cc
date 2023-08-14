@@ -357,7 +357,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         d = getDrawable(resname);
     } else if(fullresid.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
-        return new ColorDrawable(getColor(resname));
+        return new ColorDrawable(cc);
     } else if(TextUtils::endWith(resname,".9.png")) {
         d = new NinePatchDrawable(this,fullresid);
     } else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")) {
