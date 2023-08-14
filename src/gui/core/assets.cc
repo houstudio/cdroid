@@ -352,10 +352,10 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         return new ColorDrawable(Color::parseColor(resname));
     }
 
-    if(TextUtils::startWith(resname,"attr")) { //for reference resource
+    if(fullresid.find(":attr/")!=std::string::npos) {//for reference resource
         resname = mTheme.getString(resname.substr(5));
         d = getDrawable(resname);
-    } else if(resname.find(":color/")!=std::string::npos) {
+    } else if(fullresid.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(getColor(resname));
     } else if(TextUtils::endWith(resname,".9.png")) {
