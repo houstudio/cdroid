@@ -92,7 +92,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string name=atts[0].getString("name");
             std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(Color::parseColor(value)));
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
-            mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>(package+":color/"+name,std::move(cl)));
+            mColors.insert({package+":color/"+name,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))});
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;
@@ -106,7 +106,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string styleParent=attStyle.getString("parent");
             auto it=mStyles.find(styleName);
             if(it==mStyles.end()) {
-                it=mStyles.insert(it,std::pair<const std::string,AttributeSet>(styleName,AttributeSet()));
+                it=mStyles.insert(it,{styleName,AttributeSet()});
                 if(styleParent.length())it->second.add("parent",styleParent);
                 LOGV("style:%s",styleName.c_str());
             }
@@ -120,7 +120,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string key=package+":array/"+name;
             auto it=mArraies.find(key);
             if(it==mArraies.end()) {
-                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(key,std::vector<std::string>()));
+                it=mArraies.insert(it,{key,std::vector<std::string>()});
                 LOGV("array:%s",key.c_str());
             }
             it->second.push_back(value);
@@ -129,7 +129,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string key=package+":array/"+name;
             auto it=mArraies.find(key);
             if(it==mArraies.end()) {
-                it=mArraies.insert(it,std::pair<const std::string,std::vector<std::string>>(key,std::vector<std::string>()));
+                it=mArraies.insert(it,{key,std::vector<std::string>()});
                 LOGV("string-array:%s",key.c_str());
             }
             it->second.push_back(value);
@@ -153,7 +153,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         if( pos != std::string::npos)
             package = package.substr(0,pos);
     }
-    mResources.insert(std::pair<const std::string,ZIPArchive*>(package,pak));
+    mResources.insert({package,pak});
 
     int count=0;
     pak->forEachEntry([this,package,&count](const std::string&res) {
@@ -172,7 +172,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             std::string resid=package+":"+res.substr(0,res.find(".xml"));
             std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(ColorStateList::inflate(this,resid)));
-            mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>(resid,std::move(cl)));
+            mColors.insert({resid,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))});
         }
         return 0;
     });
@@ -352,10 +352,10 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         return new ColorDrawable(Color::parseColor(resname));
     }
 
-    if(fullresid.find(":attr/")!=std::string::npos) {//for reference resource
+    if(resname.find("attr/")!=std::string::npos) {//for reference resource
         resname = mTheme.getString(resname.substr(5));
         d = getDrawable(resname);
-    } else if(fullresid.find("color/")!=std::string::npos) {
+    } else if(resname.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
     } else if(TextUtils::endWith(resname,".9.png")) {
@@ -375,8 +375,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         LOGD_IF(zfile==nullptr,"drawable %s load failed",fullresid.c_str());
     }
     if(d) {
-        mDrawables.insert(std::pair<const std::string,
-                          std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
+        mDrawables.insert({fullresid,std::weak_ptr<Drawable::ConstantState>(d->getConstantState())});
     }
     return d;
 }

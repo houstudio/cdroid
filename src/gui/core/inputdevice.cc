@@ -210,7 +210,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     switch(type){
     case EV_KEY:
         if(kmap)kmap->mapKey(code/*scancode*/,0,&keycode/*keycode*/,(uint32_t*)&flags);
-        mLastDownKey=(value?keycode:-1);//key down
+        mLastDownKey = (value ? keycode : -1);//key down
         if(mLastDownKey==keycode)
             mRepeatCount+=(value==0);
         else
@@ -273,21 +273,21 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        switch(rotation){
        case Display::ROTATION_0  : break;
        case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; break; /*value=value;*/
-       case Display::ROTATION_180: value= mTPWidth-value; break;
+       case Display::ROTATION_180: value= mTPWidth - value; break;
        case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mTPWidth - value; break;
        }
        if(mScreenWidth != mTPWidth)
-	   value = (value-mRangeXMin) * mScreenWidth/mTPWidth;
+	   value = (value - mRangeXMin) * mScreenWidth/mTPWidth;
        break;
     case MotionEvent::AXIS_Y:
        switch(rotation){
        case Display::ROTATION_0  : break;
        case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mTPHeight - value; break;
-       case Display::ROTATION_180: value= mTPHeight-value; break;
+       case Display::ROTATION_180: value= mTPHeight - value; break;
        case Display::ROTATION_270: axis = MotionEvent::AXIS_X; break; /*value=value;*/
        }
        if(mScreenHeight != mTPHeight)
-	   value = (value-mRangeYMin) * mScreenHeight/mTPHeight;
+	   value = (value - mRangeYMin) * mScreenHeight/mTPHeight;
        break;
     case MotionEvent::AXIS_Z:break;
     default:return;
@@ -311,12 +311,12 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case BTN_TOUCH :
         case BTN_STYLUS:
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
-            mEvent.setAction(value?MotionEvent::ACTION_DOWN:MotionEvent::ACTION_UP);
+            mEvent.setAction(value ? MotionEvent::ACTION_DOWN : MotionEvent::ACTION_UP);
             if(value){
-                mMoveTime = mDownTime =tv.tv_sec*1000000+tv.tv_usec;
+                mMoveTime = mDownTime = tv.tv_sec * 1000000 + tv.tv_usec;
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
             }else{
-                mMoveTime =tv.tv_sec*1000000+tv.tv_usec;;
+                mMoveTime = tv.tv_sec * 1000000 + tv.tv_usec;;
                 mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_PRIMARY));
             }
             break;
@@ -333,10 +333,10 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     case EV_ABS:
         switch(code){
         case ABS_X ... ABS_Z : 
-            mMoveTime =tv.tv_sec*1000000+tv.tv_usec;
+            mMoveTime =tv.tv_sec * 1000000 + tv.tv_usec;
             setAxisValue(0,code,value,false) ; break;
         //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
-        case ABS_MT_SLOT    : mPointSlot=value ; break;
+        case ABS_MT_SLOT    : mPointSlot = value ; break;
         case ABS_MT_TRACKING_ID:
         case ABS_MT_TOUCH_MAJOR:
         case ABS_MT_POSITION_X :
@@ -358,7 +358,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_REPORT:
         case SYN_MT_REPORT:
-	    mMoveTime =(tv.tv_sec*1000000+tv.tv_usec);
+            mMoveTime =(tv.tv_sec * 1000000 + tv.tv_usec);
             mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
                 0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,
                 0/*xOffset*/,0/*yOffset*/ , 0/*xPrecision*/, 0/*yPrecision*/ ,
@@ -369,8 +369,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
                 mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
             if(listener)listener(mEvent);
-            if(mEvent.getAction()==MotionEvent::ACTION_UP)
-                mPointMAP.clear();
+            //if(mEvent.getAction()==MotionEvent::ACTION_UP)
+			//mPointMAP.clear();
             mEvent.setAction(MotionEvent::ACTION_MOVE);
         }break;
     }
