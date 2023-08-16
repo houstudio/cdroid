@@ -479,6 +479,7 @@ void View::initView(){
     mCurrentAnimation = nullptr;
     mTransformationInfo = nullptr;
     mNestedScrollingParent = nullptr;
+    mFloatingTreeObserver = nullptr;
 }
 
 View::~View(){
@@ -506,6 +507,7 @@ View::~View(){
     delete mCurrentAnimation;
     delete mTransformationInfo;
     delete mOverlay;
+    delete mFloatingTreeObserver;
 }
 
 bool View::debugDraw()const {
@@ -1410,6 +1412,11 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
 
     mWindowAttachCount++;
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
+    if(mFloatingTreeObserver){
+        info->mTreeObserver->merge(*mFloatingTreeObserver);
+        delete mFloatingTreeObserver;
+        mFloatingTreeObserver = nullptr;
+    }
     onAttachedToWindow();
     int vis = info->mWindowVisibility;
     if (vis != GONE) {
@@ -4908,6 +4915,13 @@ void View::assignParent(ViewGroup*parent){
     }
 }
 
+ViewTreeObserver*View::getViewTreeObserver(){
+    if(mAttachInfo)return mAttachInfo->mTreeObserver;
+    if(mFloatingTreeObserver)
+	mFloatingTreeObserver = new ViewTreeObserver(mContext);
+    return mFloatingTreeObserver;
+}
+
 ViewGroup*View::getRootView()const{
     if( mAttachInfo && mAttachInfo->mRootView)
         return dynamic_cast<ViewGroup*>(mAttachInfo->mRootView);
@@ -6906,7 +6920,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     //mMeasureCache.insert(std::pair<Size,Size>(key,szMeasured)); // suppress sign extension
 }
 
-View::AttachInfo::AttachInfo(){
+View::AttachInfo::AttachInfo(Context*ctx){
     mHardwareAccelerated =false;
     mWindowVisibility = VISIBLE;
     mHasWindowFocus   = true;
@@ -6924,8 +6938,15 @@ View::AttachInfo::AttachInfo(){
     mDisplayState = true;
     mTooltipHost  = nullptr;
     mViewRequestingLayout = nullptr;
+    mAutofilledDrawable = nullptr;
+    mTreeObserver = new ViewTreeObserver(ctx);
     mWindowLeft = 0;
     mWindowTop  = 0;
+}
+
+View::AttachInfo::~AttachInfo(){
+    delete mTreeObserver;
+    delete mAutofilledDrawable; 
 }
 
 }//endof namespace

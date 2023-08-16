@@ -41,6 +41,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mTextFilterEnabled = false;
     mFastScrollEnabled = false;
     mVelocityScale = 1.0f;
+    mHasPerformedLongPress = false;
     mLastScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mScrollConsumed[0]= mScrollConsumed[1] = 0;
     mScrollOffset[0] = mScrollOffset[1] = 0;

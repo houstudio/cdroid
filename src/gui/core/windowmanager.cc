@@ -86,7 +86,7 @@ void WindowManager::addWindow(Window*win){
     }
     if(mActiveWindow)mActiveWindow->post(std::bind(&Window::onDeactive,mActiveWindow));
 
-    View::AttachInfo*info = new View::AttachInfo();
+    View::AttachInfo*info = new View::AttachInfo(win->getContext());
     info->mContentInsets.setEmpty();
     info->mRootView = win;
     win->dispatchAttachedToWindow(info,win->getVisibility());

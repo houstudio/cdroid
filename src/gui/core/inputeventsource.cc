@@ -112,7 +112,7 @@ int  InputEventSource::process(){
     LOGV_IF(mRawEvents.size(),"%p  recv %d events ",this,mRawEvents.size());
     while(mRawEvents.size()){
         const INPUTEVENT e=mRawEvents.front();
-        struct timeval tv={e.tv_sec,e.tv_usec};
+        struct timeval tv={(time_t)e.tv_sec,e.tv_usec};
         std::shared_ptr<InputDevice>dev=getdevice(e.device);
         mRawEvents.pop();
         if(dev==nullptr){

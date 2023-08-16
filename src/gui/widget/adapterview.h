@@ -37,6 +37,7 @@ private:
 protected:
     bool mDataChanged;
     bool mInLayout;
+    bool mIsVertical;
     int mLayoutHeight;
     int mFirstPosition;
     int mSpecificTop;
@@ -110,9 +111,10 @@ public:
 
 class AdapterDataSetObserver:public DataSetObserver{
 protected:
-    AdapterView*adv;
+    AdapterView*mAdapterView;
 public:
     AdapterDataSetObserver(AdapterView*adv);
+    AdapterView*getAdapterView()const;
     void onChanged()override;
     void onInvalidated()override;
     void clearSavedState()override;

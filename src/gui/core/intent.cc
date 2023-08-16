@@ -17,6 +17,7 @@ bool Intent::operator==(const Intent&other)const{
 }
 
 int Intent::registIntent(const std::string&intentName,WindowFactory factory){
+    return 0;
 }
 
 }

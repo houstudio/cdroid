@@ -134,7 +134,7 @@ void Matrix::transform_rectangle(Rectangle& io)const{
 }
 
 void Matrix::transform_rectangle(RectangleInt& io)const{
-    Rectangle tmp={io.x,io.y,io.width,io.height};
+    Rectangle tmp={(double)io.x,(double)io.y,(double)io.width,(double)io.height};
     transform_rectangle(tmp);
     io.x = std::floor(tmp.x);
     io.y = std::floor(tmp.y);

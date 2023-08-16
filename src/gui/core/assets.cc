@@ -494,6 +494,7 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
         }
     } while(len!=0);
     XML_ParserFree(parser);
+    return 0;
 }
 #pragma GCC pop_options
 

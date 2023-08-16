@@ -11,6 +11,7 @@ AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
 
 void AdapterView::initAdapterView(){
     mFirstPosition=0;
+    mIsVertical = true;
     mOldItemCount= mItemCount =0;
     mSelectedPosition=INVALID_POSITION;
     mNextSelectedPosition = INVALID_POSITION;
@@ -87,7 +88,7 @@ void AdapterView::rememberSyncState() {
             View* v = getChildAt(mSelectedPosition - mFirstPosition);
             mSyncRowId = mNextSelectedRowId;
             mSyncPosition = mNextSelectedPosition;
-            if (v)mSpecificTop = v->getTop();
+            if (v) mSpecificTop = v->getTop();
             mSyncMode = SYNC_SELECTED_POSITION;
         } else {
             // Sync the based on the offset of the first view
@@ -499,10 +500,15 @@ AdapterView::OnItemLongClickListener AdapterView::getOnItemLongClickListener() c
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 AdapterDataSetObserver::AdapterDataSetObserver(AdapterView*lv){
-    adv=lv;
+    mAdapterView = lv;
+}
+
+AdapterView* AdapterDataSetObserver::getAdapterView()const{
+    return mAdapterView;
 }
 
 void AdapterDataSetObserver::onChanged() {
+    AdapterView* adv = mAdapterView;
     adv->mDataChanged = true;
     adv->mOldItemCount= adv->mItemCount;
     adv->mItemCount   = adv->getAdapter()->getCount();
@@ -520,6 +526,7 @@ void AdapterDataSetObserver::onChanged() {
 }
 
 void AdapterDataSetObserver::onInvalidated() {
+    AdapterView* adv = mAdapterView;
     adv->mDataChanged = true;
 
     if (adv->getAdapter()->hasStableIds()) {

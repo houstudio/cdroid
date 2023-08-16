@@ -198,6 +198,7 @@ int Layout::getLineRight(int line)const{
     case ALIGN_CENTER:
     case ALIGN_RIGHT: return mWidth;
     }
+    return 0;
 }
 
 int Layout::getLineForOffset(int offset)const{

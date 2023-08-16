@@ -122,6 +122,7 @@ bool Menu::hasVisibleItems()const{
 }
 
 MenuItem*Menu::findItem(int id)const{
+    return nullptr;
 }
 
 int Menu::size()const{

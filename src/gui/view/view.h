@@ -17,6 +17,7 @@
 #include <view/viewpropertyanimator.h>
 #include <view/viewconfiguration.h>
 #include <view/measurespec.h>
+#include <view/viewtreeobserver.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <set>
@@ -194,8 +195,10 @@ protected:
         Drawable*mAutofilledDrawable;
         View* mTooltipHost;
         View* mViewRequestingLayout;
+        ViewTreeObserver* mTreeObserver;
         std::vector<View*> mScrollContainers;
-        AttachInfo(); 
+        AttachInfo(Context*ctx);
+        ~AttachInfo();	
     };
 public:
     enum ViewFlags{//public common View Flags
@@ -364,6 +367,7 @@ private:
     bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
     ViewOverlay* mOverlay;
+    ViewTreeObserver* mFloatingTreeObserver;
     StateListAnimator* mStateListAnimator;
     ViewPropertyAnimator* mAnimator;
     ViewGroup* mNestedScrollingParent;
@@ -949,7 +953,8 @@ public:
     virtual View*keyboardNavigationClusterSearch(View* currentCluster,int direction);
     // Parent and children views
     virtual ViewGroup*getParent()const;
-    ViewGroup*getRootView()const;
+    ViewTreeObserver* getViewTreeObserver();
+    ViewGroup* getRootView()const;
     bool toGlobalMotionEvent(MotionEvent& ev);
     bool toLocalMotionEvent(MotionEvent& ev);
     void transformMatrixToGlobal(Matrix& matrix);

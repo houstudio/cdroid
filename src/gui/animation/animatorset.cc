@@ -792,7 +792,7 @@ void AnimatorSet::addAnimationCallback(long delay) {
 }
 
 Animator*AnimatorSet::clone(){
-
+    return nullptr;
 }
 
 bool AnimatorSet::canReverse() {

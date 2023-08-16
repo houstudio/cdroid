@@ -41,6 +41,7 @@ void Handler::removeMessages(int what,void*object){
 }
 
 bool Handler::hasCallbacks(Runnable r){
+    return true;
 }
 
 void Handler::removeCallbacks(const Runnable& r){

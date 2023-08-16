@@ -28,6 +28,7 @@ bool Display::isValid(){
 bool Display::getDisplayInfo(DisplayInfo&info){
     updateDisplayInfoLocked();
     info=mDisplayInfo;
+    return true;
 }
 
 void Display::getSize(Point&outSize){

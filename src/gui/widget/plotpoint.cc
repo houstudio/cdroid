@@ -35,7 +35,7 @@ PlotPoint::PlotPoint()
 }
 
 PlotPoint::PlotPoint(double x, double y, const std::string &label, double barWidth)
-    : d(new Private(this, PointF{x, y}, label, barWidth))
+    : d(new Private(this, PointF{(float)x, (float)y}, label, barWidth))
 {
 }
 
