@@ -23,6 +23,7 @@ namespace cdroid {
 template<typename T> class wp;
 
 // ---------------------------------------------------------------------------
+#define sp_report_race()
 
 #define COMPARE(_op_)                                           \
 inline bool operator _op_ (const sp<T>& o) const {              \
@@ -104,7 +105,7 @@ private:
 };
 
 // For code size reasons, we do not want this inlined or templated.
-void sp_report_race();
+//void sp_report_race();
 
 #undef COMPARE
 

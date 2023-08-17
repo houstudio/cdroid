@@ -131,7 +131,7 @@ int ShapeDrawable::getOpacity(){
 
 void ShapeDrawable::setTintList(ColorStateList*tint){
     mShapeState->mTint = tint;
-    mTintFilter=updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
+    mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
     invalidateSelf();
 }
 
@@ -185,7 +185,13 @@ void ShapeDrawable::draw(Canvas&canvas){
     const Rect&r = getBounds();
     if(mShapeState->mShape!=nullptr){
         canvas.translate(r.left,r.top);
+        if(mTintFilter)canvas.push_group();
         mShapeState->mShape->draw(canvas,r.left,r.top);
+        if(mTintFilter){
+            mTintFilter->apply(canvas,r);
+            canvas.pop_group_to_source();
+            canvas.paint();
+        }
         canvas.translate(-r.left,-r.top);
     }
 }

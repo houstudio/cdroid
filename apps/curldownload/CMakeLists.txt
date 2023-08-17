@@ -19,7 +19,7 @@ add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 
-if(CURL_DOUND)
+if(CURL_FOUND)
   add_executable(curldownload ${CURLDLD_SRCS})
   target_link_libraries(curldownload PRIVATE cdroid ${CURL_LIBRARIES})
   install(TARGETS curldownload DESTINATION bin)

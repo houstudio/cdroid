@@ -217,6 +217,10 @@ void BitmapDrawable::setTintMode(int tintMode) {
     }
 }
 
+int BitmapDrawable::getTintMode()const{
+    return mBitmapState->mTintMode;
+}
+
 std::shared_ptr<Drawable::ConstantState>BitmapDrawable::getConstantState(){
     return mBitmapState;
 }
@@ -304,8 +308,9 @@ void BitmapDrawable::draw(Canvas&canvas){
 
     LOGD_IF(mBounds.empty(),"%p's(%d,%d) bounds is empty,skip drawing,otherwise will caused crash",this,mBitmapWidth,mBitmapHeight);
     if(mBounds.empty())return;
-    canvas.save();
 
+    if(mTintFilter)canvas.push_group();
+    canvas.save();
     if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
         RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
         if(mBitmapState->mTileModeX!=TileMode::DISABLED){
@@ -359,19 +364,23 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
+        canvas.set_source(mBitmapState->mBitmap, dx, dy);
         if(alpha==1.f){
-	    canvas.set_source(mBitmapState->mBitmap, dx, dy);
-	    canvas.rectangle(dx,dy,dw,dh);
-	    canvas.fill();
+            canvas.rectangle(dx,dy,dw,dh);
+            canvas.fill();
         }else{
-            canvas.set_source(mBitmapState->mBitmap, dx, dy );
             Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
             if(spat)spat->set_filter(SurfacePattern::Filter::GOOD);
             canvas.paint_with_alpha(alpha);
         }
     }
     canvas.restore();
-    if(mTintFilter)mTintFilter->apply(canvas,mBounds);
+
+    if(mTintFilter){
+	    mTintFilter->apply(canvas,mBounds);
+	    canvas.pop_group_to_source();
+	    canvas.paint();
+    }
 }
 
 Insets BitmapDrawable::getOpticalInsets() {

@@ -3,12 +3,12 @@ ARGS=`getopt -a -o p:b:h:: --long product:,build::,help:: -- "$@"`
 #echo $ARGS
 #将规范化后的命令行参数分配至位置参数（$1,$2,...)
 eval set -- "${ARGS}"
-
+TOPDIR=$(dirname "$(readlink -f "$0")")
 declare -A TOOLCHAINS #key/value dict ,key is platform,value is toolchain,key must be uppercase
-TOOLCHAINS["SIGMA"]=$HOME/cdroid/cmake/ssd202-mtitoolchain.cmake
-TOOLCHAINS["ALI3528"]=$HOME/cdroid/cmake/ali3528-mtitoolchain.cmake
-TOOLCHAINS["RISCVD211"]=$HOME/cdroid/cmake/riscv64-d211-toolchain.cmake
-TOOLCHAINS["R818"]=$HOME/cdroid/cmake/r818-toolchain.cmake
+TOOLCHAINS["SIGMA"]=${TOPDIR}/cmake/ssd202-mtitoolchain.cmake
+TOOLCHAINS["ALI3528"]=${TOPDIR}/cmake/ali3528-mtitoolchain.cmake
+TOOLCHAINS["RISCVD211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
+TOOLCHAINS["R818"]=${TOPDIR}/cmake/r818-toolchain.cmake
 
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 DEPLIBS["X64"]=$HOME/vcpkg/installed/x64-linux-dynamic
@@ -52,7 +52,7 @@ PORT=${PORT^^}
 PRODUCT=${PRODUCT^^}
 BUILD_TYPE=${BUILD_TYPE,,}
 BUILD_TYPE=${BUILD_TYPE^}
-CDROID_DIR=$HOME/cdroid/out${PRODUCT}-${BUILD_TYPE}
+CDROID_DIR=${TOPDIR}/out${PRODUCT}-${BUILD_TYPE}
 
 echo "product=$PRODUCT ${PRODUCT,,}"
 echo "showhelp=$SHOWHELP"

@@ -205,6 +205,24 @@ int DrawableWrapper::getAlpha()const{
     return mDrawable ? mDrawable->getAlpha() : 255;
 }
 
+void DrawableWrapper::setColorFilter(ColorFilter*colorFilter){
+    if(mDrawable)mDrawable->setColorFilter(colorFilter);
+}
+
+ColorFilter*DrawableWrapper::getColorFilter(){
+    Drawable*dr = getDrawable();
+    if(dr)return dr->getColorFilter();
+    return Drawable::getColorFilter(); 
+}
+
+void DrawableWrapper::setTintList(ColorStateList*tint){
+    if(mDrawable)mDrawable->setTintList(tint);
+}
+
+void DrawableWrapper::setTintMode(int tintMode){
+    if(mDrawable)mDrawable->setTintMode(tintMode);
+}
+
 void DrawableWrapper::draw(Canvas&canvas){
     if (mDrawable != nullptr) {
         mDrawable->draw(canvas);

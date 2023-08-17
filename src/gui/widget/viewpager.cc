@@ -26,8 +26,9 @@ ViewPager::~ViewPager(){
     delete mRightEdge;
     delete mMarginDrawable;
     delete mScroller;
-    for(auto item: mItems)
-        delete item;
+    for(auto item: mItems){
+        if(item != &mTempItem)delete item;
+    }
     if(mVelocityTracker){
         mVelocityTracker->recycle();
         mVelocityTracker = nullptr;
@@ -116,7 +117,7 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
         for (int i = 0; i < mItems.size(); i++) {
             ItemInfo* ii = mItems[i];
             mAdapter->destroyItem(this, ii->position, ii->object);
-            delete ii;
+            if(ii != &mTempItem)delete ii;
         }
         mAdapter->finishUpdate(this);
         mItems.clear();
@@ -470,7 +471,9 @@ void ViewPager::dataSetChanged(){
         }
 
         if (newPos == PagerAdapter::POSITION_NONE) {
-            delete *mItems.erase(mItems.begin()+i);
+            ItemInfo*item = mItems.at(i);
+            mItems.erase(mItems.begin()+i);
+            if(item != &mTempItem)delete item;
             i--;
 
             if (!isUpdating) {
@@ -588,7 +591,7 @@ void ViewPager::populate(int newCurrentItem){
                     mItems.erase(mItems.begin()+itemIndex);
                     mAdapter->destroyItem(this, pos, ii->object);
                     LOGV("destroyItem() with pos:%d/%d view:%p curitem=%d/%d",pos,ii->position,ii->object,mCurItem,mItems.size());
-                    delete ii;
+                    if(ii != &mTempItem)delete ii;
                     itemIndex--;
                     curIndex--;
                     ii = itemIndex >= 0 ? mItems[itemIndex] : nullptr;
@@ -619,7 +622,7 @@ void ViewPager::populate(int newCurrentItem){
                     if (pos == ii->position && !ii->scrolling) {
                         mItems.erase(mItems.begin()+itemIndex);
                         mAdapter->destroyItem(this, pos, ii->object);
-                        delete ii; 
+                        if(ii != &mTempItem)delete ii;
                         ii = itemIndex < mItems.size() ? mItems[itemIndex] : nullptr;
                     }
                 } else if (ii != nullptr && pos == ii->position) {
@@ -1505,14 +1508,13 @@ ViewPager::ItemInfo* ViewPager::infoForCurrentScrollPosition() {
     float lastWidth = 0.f;
     bool first = true;
 
-    ItemInfo tmpItem;
     ItemInfo* lastItem = nullptr;
     for (int i = 0; i < mItems.size(); i++) {
         ItemInfo* ii = mItems.at(i);
         float offset;
         if (!first && ii->position != lastPos + 1) {
             // Create a synthetic item for a missing page.
-            ii = &tmpItem;
+            ii = &mTempItem;
             ii->offset = lastOffset + lastWidth + marginOffset;
             ii->position = lastPos + 1;
             ii->widthFactor = mAdapter->getPageWidth(ii->position);

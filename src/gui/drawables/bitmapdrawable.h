@@ -73,6 +73,7 @@ public:
     bool isAutoMirrored()override;
     void setTintList(ColorStateList*lst)override;
     void setTintMode(int mode)override;
+    int getTintMode()const;
     Drawable*mutate()override;
     void clearMutated()override;
     std::shared_ptr<ConstantState>getConstantState()override;

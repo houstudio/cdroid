@@ -34,6 +34,8 @@ protected:
         int mLayoutDirection;
         int mEnterFadeDuration,mExitFadeDuration;
         bool mAutoMirrored;
+        int mTintMode;
+        ColorFilter*mColorFilter;
         ColorStateList*mTintList;
         std::vector<Drawable* >mDrawables;
         std::map<int,std::shared_ptr<ConstantState> >mDrawableFutures;
@@ -103,6 +105,11 @@ public:
     int getMinimumWidth() const override;
     int getMinimumHeight()const override;
 
+    void setColorFilter(ColorFilter*colorFilter)override;
+    void setTintList(ColorStateList*tint)override;
+    void setTintMode(int)override;
+    void setEnterFadeDuration(int ms);
+    void setExitFadeDuration(int ms);
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     void setAutoMirrored(bool mirrored)override;

@@ -85,7 +85,9 @@ public:
     virtual Drawable*mutate();
     virtual void clearMutated();
     virtual void setColorFilter(ColorFilter*);
+    virtual ColorFilter*getColorFilter();
     void setColorFilter(int color,PorterDuffMode mode);
+    void clearColorFilter();
     void setTint(int color);
     virtual void setTintList(ColorStateList* tint);
     virtual void setTintMode(int);

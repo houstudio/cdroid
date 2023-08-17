@@ -2,8 +2,10 @@ project(cdroid C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-option( LUA_BINDINGS "UI Lua script bindings" OFF)
 option( GUI_STATIC "UI is static link" ON)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 
 aux_source_directory(core SRCS_GUICORE)
 aux_source_directory(view SRCS_VIEWS)
@@ -14,6 +16,7 @@ aux_source_directory(cairomm   SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
+aux_source_directory(utils SRCS_UTILS)
 include_directories(
     ./ ./private 
     ./core 
@@ -37,7 +40,9 @@ set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS}
     ${SRCS_EXTWIDGET} ${SRCS_DRAWABLES}
     ${SRCS_APP} ${SRCS_DIALOG}
     #${SRCS_PRIVATE}
-    ${SRCS_ANIMATION} widget/R.h)
+    ${SRCS_UTILS}
+    ${SRCS_ANIMATION}
+)
 
 add_library(cdroid SHARED ${SOURCES_GUI})
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)

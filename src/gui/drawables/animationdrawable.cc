@@ -38,6 +38,7 @@ bool AnimationDrawable::setVisible(bool visible,bool restart){
     }else{
          unscheduleSelf(mRunnable);
     }
+    return changed;
 }
 
 void AnimationDrawable::start(){

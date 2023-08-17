@@ -52,6 +52,10 @@ public:
     bool setVisible(bool visible, bool restart)override;
     void setAlpha(int alpha)override;
     int getAlpha()const override;
+    void setColorFilter(ColorFilter*)override;
+    ColorFilter*getColorFilter()override;
+    void setTintList(ColorStateList*)override;
+    void setTintMode(int)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
 };

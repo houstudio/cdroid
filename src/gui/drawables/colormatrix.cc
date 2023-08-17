@@ -103,8 +103,7 @@ void ColorMatrix::setConcat(ColorMatrix& matA,ColorMatrix& matB){
                       a[j + 2] * b[i + 10] + a[j + 3] * b[i + 15];
          }
          tmp[index++] = a[j + 0] * b[4] +  a[j + 1] * b[9] +
-                   a[j + 2] * b[14] + a[j + 3] * b[19] +
-                        a[j + 4];
+                   a[j + 2] * b[14] + a[j + 3] * b[19] +  a[j + 4];
      }
 
      if (tmp != mArray) {

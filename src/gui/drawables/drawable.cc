@@ -87,11 +87,20 @@ void Drawable::setAutoMirrored(bool mirrored) {
 bool Drawable::isAutoMirrored() {
     return false;
 }
+
 void Drawable::setColorFilter(ColorFilter*cf) {
     delete mColorFilter;
-    mColorFilter=cf;
+    mColorFilter = cf;
     invalidateSelf();
     LOGV("setColorFilter %p:%p",this,cf);
+}
+
+ColorFilter*Drawable::getColorFilter(){
+    return nullptr;
+}
+
+void Drawable::clearColorFilter(){
+    setColorFilter(nullptr);
 }
 
 void Drawable::setColorFilter(int color,PorterDuffMode mode) {
@@ -106,7 +115,7 @@ PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFil
         return nullptr;
     }
 
-    int color = tint->getColorForState(getState(), Color::TRANSPARENT);
+    const int color = tint->getColorForState(getState(), Color::TRANSPARENT);
     if (tintFilter == nullptr) {
         return new PorterDuffColorFilter(color, tintMode);
     }

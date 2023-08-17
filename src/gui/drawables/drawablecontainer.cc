@@ -398,6 +398,50 @@ int DrawableContainer::getChangingConfigurations()const{
              | mDrawableContainerState->getChangingConfigurations();
 }
 
+void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
+    //mDrawableContainerState->mHasColorFilter = true;
+
+    if (mDrawableContainerState->mColorFilter != colorFilter) {
+        mDrawableContainerState->mColorFilter = colorFilter;
+
+        if (mCurrDrawable) {
+            mCurrDrawable->setColorFilter(colorFilter);
+        }
+    }
+}
+
+void DrawableContainer::setTintList(ColorStateList*tint){
+    //mDrawableContainerState->mHasTintList = true;
+
+    if (mDrawableContainerState->mTintList != tint) {
+        mDrawableContainerState->mTintList = tint;
+
+        if (mCurrDrawable) {
+            mCurrDrawable->setTintList(tint);
+        }
+    }
+}
+
+void DrawableContainer::setTintMode(int tintMode){
+    //mDrawableContainerState->mHasTintMode = true;
+
+    if (mDrawableContainerState->mTintMode != tintMode) {
+        mDrawableContainerState->mTintMode = tintMode;
+
+        if (mCurrDrawable) {
+            mCurrDrawable->setTintMode(tintMode);
+        }
+    }
+}
+
+void DrawableContainer::setEnterFadeDuration(int ms) {
+    mDrawableContainerState->mEnterFadeDuration = ms;
+}
+
+void DrawableContainer::setExitFadeDuration(int ms) {
+    mDrawableContainerState->mExitFadeDuration = ms;
+}
+
 void DrawableContainer::onBoundsChange(const Rect&bounds){
     if (mLastDrawable != nullptr) {
         mLastDrawable->setBounds(bounds);
