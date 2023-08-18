@@ -84,6 +84,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     setSelectedTextSize(atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize));
     setTextColor(atts.getColor("textColor"));
+    setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
     ColorStateList*colors=mSelectedText->getTextColors();
     mTextColor = colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),Color::WHITE);
@@ -913,11 +914,12 @@ void NumberPicker::onResolveDrawables(int layoutDirection){
 
 void NumberPicker::setTextColor(int color){
     mTextColor = color;
+    mTextColor2= color;
     invalidate();
 }
 void NumberPicker::setTextColor(int color,int color2){
-    setSelectedTextColor(color);
-    mTextColor = color2;
+    mTextColor  = color;
+    mTextColor2 = color2;
     invalidate();
 }
 
@@ -1019,13 +1021,13 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.clip();
         }
     }
-    if( mSelectedTextColor != mTextColor ){
+    if( mTextColor != mTextColor2 ){
         if( mPat == nullptr ) {
-            Color c1(mSelectedTextColor), c2(mTextColor);
+            Color c1(mTextColor), c2(mTextColor);
             CycleInterpolator ci(0.5f);
-	    if(isHorizontalMode())
+	        if(isHorizontalMode())
                 mPat = Cairo::LinearGradient::create(x + mSelectorElementSize/2,0,x + mSelectorElementSize/2 + getWidth(),0);
-	    else
+	        else
                 mPat = Cairo::LinearGradient::create(0,y + mSelectorElementSize/2,0,y + mSelectorElementSize/2 + getHeight());
             const int cStops = mSelectorIndices.size()*3;
             for(int i = 0; i < cStops ;i++){
@@ -1040,7 +1042,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         }
         canvas.set_source(mPat);
     }else{
-        canvas.set_color(mSelectedTextColor);
+        canvas.set_color(mTextColor);
     }
     canvas.set_font_size(mSelectedTextSize);
     // draw the selector wheel

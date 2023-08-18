@@ -53,7 +53,7 @@ private:
     bool mComputeMaxWidth;
     int mTextSize;
     int mSelectedTextSize;
-    int mTextColor;
+    int mTextColor,mTextColor2;
     int mSelectedTextColor;
     int mSelectorTextGapWidth;
     int mSelectorTextGapHeight;
