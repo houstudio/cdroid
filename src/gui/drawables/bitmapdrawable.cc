@@ -60,18 +60,18 @@ int BitmapDrawable::BitmapState::getChangingConfigurations()const{
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 BitmapDrawable::BitmapDrawable(RefPtr<ImageSurface>img){
-    mBitmapState=std::make_shared<BitmapState>(img);
-    mDstRectAndInsetsDirty=true;
-    mMutated=false;
-    mTintFilter=nullptr;
+    mBitmapState = std::make_shared<BitmapState>(img);
+    mDstRectAndInsetsDirty = true;
+    mMutated = false;
+    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
 BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
-    mBitmapState=state;
-    mDstRectAndInsetsDirty=true;
-    mMutated=false;
-    mTintFilter=nullptr;
+    mBitmapState = state;
+    mDstRectAndInsetsDirty = true;
+    mMutated = false;
+    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
@@ -81,11 +81,15 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
     RefPtr<ImageSurface>b;
     LOGV("%s",resname.c_str());
     if((ctx==nullptr)||fs.good()){
-        b=ImageSurface::create_from_stream(fs);
+        b = ImageSurface::create_from_stream(fs);
     }else {
-        b=ctx->getImage(resname);
+        b = ctx->getImage(resname);
     }
     setBitmap(b);
+}
+
+BitmapDrawable::~BitmapDrawable(){
+    delete  mTintFilter;
 }
 
 RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{
@@ -202,11 +206,24 @@ int BitmapDrawable::getOpacity(){
 }
 
 void BitmapDrawable::setTintList(ColorStateList*tint){
-    if (mBitmapState->mTint != tint) {
-        mBitmapState->mTint = tint;
+    if( tint == nullptr ){
+	    delete mBitmapState->mTint;
+	    mBitmapState->mTint = nullptr;
+	    delete mTintFilter;
+	    mTintFilter = nullptr;
+    }else{
+	if(mBitmapState->mTint)
+	    *mBitmapState->mTint = *tint;
+	else
+	    mBitmapState->mTint = new ColorStateList(*tint);
+	mTintFilter = updateTintFilter(mTintFilter, tint, mBitmapState->mTintMode);
+    }LOGD("%p tint=%p",this,tint);
+    invalidateSelf();
+    /*if (*mBitmapState->mTint != *tint) {
+        *mBitmapState->mTint = new ColorStateList(*tint);//must deep copy
         mTintFilter = updateTintFilter(mTintFilter, tint, mBitmapState->mTintMode);
         invalidateSelf();
-    }
+    }*/
 }
 
 void BitmapDrawable::setTintMode(int tintMode) {

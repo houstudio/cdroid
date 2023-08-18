@@ -32,6 +32,8 @@ public:
     bool hasFocusStateSpecified()const;
     ColorStateList*withAlpha(int alpha)const;
     ColorStateList&operator=(const ColorStateList&other);
+    bool operator!=(const ColorStateList&other)const;
+    bool operator==(const ColorStateList&other)const;
     int getChangingConfigurations()const;
     int getColorForState(const std::vector<int>&stateSet, int defaultColor)const;
 

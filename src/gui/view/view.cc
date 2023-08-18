@@ -33,7 +33,7 @@ public:
     TintInfo(){
         mTintList=nullptr;
         mHasTintList=mHasTintMode=false;
-        mTintMode=0;
+        mTintMode = SRC_IN;
     };
     ~TintInfo(){
         delete mTintList;
@@ -314,16 +314,17 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
     setBackground(attrs.getDrawable("background"));
     ColorStateList*csl = attrs.getColorStateList("backgroundTint");
-    if(mBackgroundTint == nullptr){
-	 mBackgroundTint = new TintInfo;
-	 mBackgroundTint->mTintList=csl;
+    if( (mBackgroundTint == nullptr) && csl){
+        mBackgroundTint = new TintInfo;
+        mBackgroundTint->mTintList = csl;
+        mBackgroundTint->mHasTintList = true;
     }
     const int blendMode = attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
         }),-1);
     if( blendMode != -1 ){
-	if(mBackgroundTint == nullptr)mBackgroundTint=new TintInfo;
-	mBackgroundTint->mBlendMode = blendMode;
-	mBackgroundTint->mHasTintMode =true;
+        if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
+        mBackgroundTint->mBlendMode = blendMode;
+        mBackgroundTint->mHasTintMode = true;
     }
 
     setForeground(attrs.getDrawable("foreground"));
@@ -3726,6 +3727,9 @@ void View::dispatchDrawableHotspotChanged(float x,float y){
 void View::refreshDrawableState(){
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     drawableStateChanged();
+    if (mParent) {
+        mParent->childDrawableStateChanged(this);
+    }
 }
 
 const std::vector<int>View::getDrawableState(){

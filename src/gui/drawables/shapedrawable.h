@@ -34,7 +34,7 @@ protected:
     bool onStateChange(const std::vector<int>&stateset)override;
 public:
     ShapeDrawable();
-
+    ~ShapeDrawable();
     void setShape(Shape*shape);
     Shape*getShape()const;
     bool getPadding(Rect&rect)override;

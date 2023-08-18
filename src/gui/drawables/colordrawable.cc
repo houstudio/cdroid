@@ -40,6 +40,10 @@ ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
     mMutated = false;
 }
 
+ColorDrawable::~ColorDrawable(){
+    delete mTintFilter;
+}
+
 std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
     return std::dynamic_pointer_cast<ConstantState>(mColorState);
 }
@@ -96,9 +100,19 @@ int ColorDrawable::getChangingConfigurations()const{
 }
 
 void ColorDrawable::setTintList(ColorStateList* tint){
-    mColorState->mTint = tint;
-    mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);
+    if( tint ==nullptr){
+        delete mColorState->mTint;
+        mColorState->mTint = nullptr;
+        delete mTintFilter;
+    }else{
+	    if(mColorState->mTint) *mColorState->mTint = *tint;
+        else mColorState->mTint =new ColorStateList(*tint);
+        mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);
+    }
     invalidateSelf();
+    /*mColorState->mTint = tint;
+    mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);
+    invalidateSelf();*/
 }
 
 void ColorDrawable::setTintMode(int tintMode) {

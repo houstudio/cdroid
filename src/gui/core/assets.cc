@@ -405,7 +405,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
     parseResource(name,nullptr,&pkg);
     name = AttributeSet::normalize(pkg,name);
     auto it = mColors.find(name);
-    if( it == mColors.end() ) {
+    if( (it == mColors.end()) && (name.empty()==false)) {
         size_t slashpos = fullresid.find("/");
         if((fullresid[0]=='#')||(slashpos==std::string::npos) ) {
             int color = Color::parseColor(fullresid);
@@ -414,8 +414,8 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
         if(slashpos==std::string::npos ) {
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
-            realName=mTheme.getString(realName);
-            it=mColors.find(realName);
+            realName = mTheme.getString(realName);
+            it = mColors.find(realName);
         }
     }
     if(it != mColors.end()) {

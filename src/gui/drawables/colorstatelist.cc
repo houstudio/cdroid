@@ -18,13 +18,13 @@ ColorStateList::ColorStateList(){
 
 ColorStateList::ColorStateList(const ColorStateList&other)
 	:ColorStateList(other.mStateSpecs,other.mColors){
-    mIsOpaque=other.mIsOpaque;
+    mIsOpaque = other.mIsOpaque;
 }
 
 ColorStateList::ColorStateList(const std::vector<std::vector<int>>&states,const std::vector<int>&colors){
-    mStateSpecs =states;
-    mColors =colors;
-    mChangingConfigurations=0;
+    mStateSpecs = states;
+    mColors = colors;
+    mChangingConfigurations = 0;
     onColorsChanged();
 }
 
@@ -62,18 +62,26 @@ int ColorStateList::modulateColorAlpha(int baseColor, float alphaMod)const{
 }
 
 ColorStateList*ColorStateList::withAlpha(int alpha)const{
-    std::vector<int>colors=mColors;
-    for(int i=0;i<colors.size();i++)
-        colors[i]=(colors[i]&0x00FFFFFF)|(alpha&0xFF000000);
+    std::vector<int>colors = mColors;
+    for(int i = 0 ; i < colors.size();i++)
+        colors[i] = (colors[i] & 0x00FFFFFF) | ( alpha & 0xFF000000 );
     return new ColorStateList(mStateSpecs,colors);
 }
 
 ColorStateList&ColorStateList::operator=(const ColorStateList&other){
-    mStateSpecs=other.mStateSpecs;
-    mColors=other.mColors;
-    mIsOpaque=other.mIsOpaque;
+    mStateSpecs = other.mStateSpecs;
+    mColors = other.mColors;
+    mIsOpaque = other.mIsOpaque;
     onColorsChanged();
     return *this;
+}
+
+bool ColorStateList::operator!=(const ColorStateList&other)const{
+    return (mColors != other.mColors) || (mStateSpecs != other.mStateSpecs);
+}
+
+bool ColorStateList::operator==(const ColorStateList&other)const{
+    return (mColors == other.mColors) && (mStateSpecs != other.mStateSpecs);
 }
 
 bool ColorStateList::isOpaque()const{
@@ -113,7 +121,7 @@ void ColorStateList::onColorsChanged(){
             }
         }
     }else if (mColors.size()){
-        defaultColor=mColors[0];
+        defaultColor = mColors[0];
     }
     mDefaultColor = defaultColor;
     mIsOpaque = isOpaque;	
@@ -130,8 +138,8 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 ColorStateList*ColorStateList::valueOf(int color){
-    std::vector<std::vector<int>>emptyStates;
-    std::vector<int>colors={color};
+    std::vector<std::vector<int>> emptyStates;
+    std::vector<int>colors = {color};
     return new ColorStateList(emptyStates,colors);
 }
 
@@ -154,12 +162,12 @@ struct ColorsParserData{
 };
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **props){
-    ColorsParserData*cd=(ColorsParserData*)userData;
+    ColorsParserData*cd = (ColorsParserData*)userData;
     AttributeSet atts(cd->ctx,cd->package);
     atts.set(props);
-    if(strcmp(name,"item")==0){
+    if(strcmp(name,"item") == 0){
         std::vector<int>states;
-        int color=cd->ctx->getColor(atts.getString("color"));
+        int color = cd->ctx->getColor(atts.getString("color"));
         StateSet::parseState(states,atts);
         cd->colors.addStateColor(states,color);
     }
@@ -168,15 +176,15 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const std::string&resname,const std::string&package){
     int done=0;
     char buf[256];
-    XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
+    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     ColorsParserData cd;
-    cd.ctx=ctx;
+    cd.ctx = ctx;
     XML_SetUserData(parser,&cd);
     XML_SetElementHandler(parser, startElement, nullptr/*endElement*/);
     do {
        stream.read(buf,sizeof(buf));
-       int rdlen=stream.gcount();
-       done=rdlen==0;
+       int rdlen = stream.gcount();
+       done = (rdlen==0);
        if (XML_Parse(parser, buf,rdlen,done) == XML_STATUS_ERROR) {
            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
@@ -190,14 +198,14 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
 }
 
 ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){
-    ColorStateList*cs=nullptr;
-    if(ctx==nullptr){
+    ColorStateList*cs = nullptr;
+    if(ctx == nullptr){
         std::ifstream fs(resname);
-        cs=fromStream(ctx,fs,resname);
+        cs = fromStream(ctx,fs,resname);
     }else{
         std::string package;
-        std::unique_ptr<std::istream>is=ctx->getInputStream(resname,&package);
-        cs=fromStream(ctx,*is,resname,package);
+        std::unique_ptr<std::istream>is = ctx->getInputStream(resname,&package);
+        cs = fromStream(ctx,*is,resname,package);
     }
     return cs;
 }

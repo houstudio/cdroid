@@ -52,7 +52,9 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mLayoutDirection  = LayoutDirection::LTR;
     mEnterFadeDuration= 0;
     mExitFadeDuration = 0;
-    if(orig==nullptr)
+    mTintList = nullptr;
+    mColorFilter = nullptr;
+    if(orig == nullptr)
         return;
 
     mChangingConfigurations = orig->mChangingConfigurations;
@@ -119,6 +121,8 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
 DrawableContainer::DrawableContainerState::~DrawableContainerState(){
     for_each( mDrawables.begin(), mDrawables.end(),[](Drawable*d){delete d;});
     mDrawables.clear();
+    delete mTintList;
+    delete mColorFilter;
 }
 
 int DrawableContainer::DrawableContainerState::getChangingConfigurations()const{
@@ -399,7 +403,6 @@ int DrawableContainer::getChangingConfigurations()const{
 }
 
 void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
-    //mDrawableContainerState->mHasColorFilter = true;
 
     if (mDrawableContainerState->mColorFilter != colorFilter) {
         mDrawableContainerState->mColorFilter = colorFilter;
@@ -411,19 +414,27 @@ void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
 }
 
 void DrawableContainer::setTintList(ColorStateList*tint){
-    //mDrawableContainerState->mHasTintList = true;
-
-    if (mDrawableContainerState->mTintList != tint) {
+    if( tint == nullptr ){
+        delete mDrawableContainerState->mTintList;
+        mDrawableContainerState->mTintList = nullptr;
+    }else{
+        if(mDrawableContainerState->mTintList)
+            *mDrawableContainerState->mTintList = *tint;
+        else
+            mDrawableContainerState->mTintList = new ColorStateList(*tint);
+        if(mCurrDrawable)
+	    mCurrDrawable->setTintList(tint);
+    }
+    /*if (mDrawableContainerState->mTintList != tint) {
         mDrawableContainerState->mTintList = tint;
 
         if (mCurrDrawable) {
             mCurrDrawable->setTintList(tint);
         }
-    }
+    }*/
 }
 
 void DrawableContainer::setTintMode(int tintMode){
-    //mDrawableContainerState->mHasTintMode = true;
 
     if (mDrawableContainerState->mTintMode != tintMode) {
         mDrawableContainerState->mTintMode = tintMode;

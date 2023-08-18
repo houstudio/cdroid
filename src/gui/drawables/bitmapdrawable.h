@@ -55,6 +55,7 @@ protected:
 public:
     BitmapDrawable(Cairo::RefPtr<Cairo::ImageSurface>img);
     BitmapDrawable(Context*ctx,const std::string&resname);
+    ~BitmapDrawable();
     Cairo::RefPtr<Cairo::ImageSurface> getBitmap()const;
     void setBitmap(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     void setAlpha(int a)override;

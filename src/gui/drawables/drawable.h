@@ -89,6 +89,10 @@ public:
     void setColorFilter(int color,PorterDuffMode mode);
     void clearColorFilter();
     void setTint(int color);
+    /*
+     * To make memory manager simple,
+     * The Drawable must deep copy from the tint,and own the new instance 
+     * */
     virtual void setTintList(ColorStateList* tint);
     virtual void setTintMode(int);
     bool setState(const std::vector<int>&state);

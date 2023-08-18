@@ -40,15 +40,19 @@ int ShapeDrawable::ShapeState::getChangingConfigurations()const{
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 ShapeDrawable::ShapeDrawable(std::shared_ptr<ShapeState>state){
-    mShapeState=state;
-    mMutated=false;
-    mTintFilter=nullptr;
+    mShapeState = state;
+    mMutated = false;
+    mTintFilter = nullptr;
 }
 
 ShapeDrawable::ShapeDrawable(){
-    mShapeState=std::make_shared<ShapeState>();
-    mMutated=false;
-    mTintFilter=nullptr;
+    mShapeState = std::make_shared<ShapeState>();
+    mMutated = false;
+    mTintFilter = nullptr;
+}
+
+ShapeDrawable::~ShapeDrawable(){
+    delete mTintFilter;
 }
 
 std::shared_ptr<Drawable::ConstantState>ShapeDrawable::getConstantState(){
@@ -130,9 +134,19 @@ int ShapeDrawable::getOpacity(){
 }
 
 void ShapeDrawable::setTintList(ColorStateList*tint){
-    mShapeState->mTint = tint;
-    mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
+    if( tint ==nullptr){
+        delete mShapeState->mTint;
+        mShapeState->mTint = nullptr;
+        delete mTintFilter;
+    }else{
+        if(mShapeState->mTint)*mShapeState->mTint=*tint;
+        else mShapeState->mTint = new ColorStateList(*tint);
+        mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
+    }
     invalidateSelf();
+    /*mShapeState->mTint = tint;
+    mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
+    invalidateSelf();*/
 }
 
 void ShapeDrawable::setTintMode(int tintMode){
