@@ -92,7 +92,8 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string name=atts[0].getString("name");
             std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(Color::parseColor(value)));
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
-            mColors.insert({package+":color/"+name,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))});
+            mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>
+		(package+":color/"+name,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))));
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;
@@ -172,7 +173,8 @@ int Assets::addResource(const std::string&path,const std::string&name) {
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             std::string resid=package+":"+res.substr(0,res.find(".xml"));
             std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(ColorStateList::inflate(this,resid)));
-            mColors.insert({resid,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))});
+            mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>
+			   (resid,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))));
         }
         return 0;
     });
