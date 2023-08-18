@@ -15,7 +15,6 @@ public:
             if(itemType==0) tv=new TextView("",600,20);
             else tv=new CheckBox("",600,20);
             tv->setPadding(20,0,0,0);
-            tv->setFocusable(false);
         }
         if(itemType==1)tv->setLayoutDirection(position<10?View::LAYOUT_DIRECTION_RTL:View::LAYOUT_DIRECTION_LTR);
         tv->setId(position);
@@ -29,7 +28,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(100,50,1200,620);
+    Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter(0);
 
     Animation *anim= new ScaleAnimation(0.5,1,0.1,1,Animation::RELATIVE_TO_PARENT,.5,Animation::RELATIVE_TO_SELF,.5);
