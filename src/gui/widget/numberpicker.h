@@ -51,7 +51,7 @@ private:
     int mMinWidth;
     int mMaxWidth;
     bool mComputeMaxWidth;
-    int mTextSize;
+    int mTextSize,mTextSize2;
     int mSelectedTextSize;
     int mTextColor,mTextColor2;
     int mSelectedTextColor;

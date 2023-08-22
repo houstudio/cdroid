@@ -82,6 +82,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mSelectedTypeface = Typeface::create(atts.getString("selectedTypeface"),Typeface::NORMAL);
     ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
+    mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
     setSelectedTextSize(atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize));
     setTextColor(atts.getColor("textColor"));
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
@@ -928,12 +929,13 @@ int  NumberPicker::getTextColor()const{
 }
 
 void NumberPicker::setTextSize(int size){
-    mTextSize = size;
+    mTextSize  = size;
+    mTextSize2 = size;
     invalidate();
 }
 void NumberPicker::setTextSize(int size,int size2){
-    setSelectedTextSize(size);
-    mTextSize = size2;
+    mTextSize  = size;
+    mTextSize2 = size2;
     requestLayout();
     invalidate();
 }
@@ -1023,7 +1025,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     }
     if( mTextColor != mTextColor2 ){
         if( mPat == nullptr ) {
-            Color c1(mTextColor), c2(mTextColor);
+            Color c1(mTextColor), c2(mTextColor2);
             CycleInterpolator ci(0.5f);
 	        if(isHorizontalMode())
                 mPat = Cairo::LinearGradient::create(x + mSelectorElementSize/2,0,x + mSelectorElementSize/2 + getWidth(),0);
@@ -1044,21 +1046,21 @@ void NumberPicker::onDraw(Canvas&canvas){
     }else{
         canvas.set_color(mTextColor);
     }
-    canvas.set_font_size(mSelectedTextSize);
+    canvas.set_font_size(mTextSize);
     // draw the selector wheel
     std::vector<int>& selectorIndices = mSelectorIndices;
     for (int i = 0; i < selectorIndices.size(); i++) {
-        float font_size = mSelectedTextSize;
+        float font_size  = mTextSize;
         int selectedSize = mSelectorElementSize;
-        if(mSelectedTextSize!=mTextSize){
+        if(mTextSize!=mTextSize2){
             if(isHorizontalMode()){
                 const float harfWidth = getWidth()/2.f;
                 const float fraction = std::abs(x-harfWidth)/harfWidth;
-                font_size = lerp(mSelectedTextSize,mTextSize,fraction);
+                font_size = lerp(mTextSize,mTextSize2,fraction);
             }else{
                 const float harfHeight = getHeight()/2.f;
                 const float fraction = std::abs(y-harfHeight+mSelectorElementSize/2)/harfHeight;
-                font_size = lerp(mSelectedTextSize,mTextSize,fraction);
+                font_size = lerp(mTextSize,mTextSize2,fraction);
             }
             canvas.set_font_size(font_size);
         }

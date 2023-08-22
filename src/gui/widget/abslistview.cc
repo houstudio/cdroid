@@ -3326,8 +3326,8 @@ void AbsListView::PositionScroller::start(int position) {
     mTargetPos = clampedPosition;
     mBoundPos = INVALID_POSITION;
     mLastSeenPos = INVALID_POSITION;
-
-    mLV->postOnAnimation(*this);
+    Runnable run([this](){(*this)();});
+    mLV->postOnAnimation(run);
 }
 
 void AbsListView::PositionScroller::start(int position, int boundPosition) {
