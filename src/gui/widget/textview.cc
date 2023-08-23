@@ -420,7 +420,6 @@ TextView::TextView(const std::string& text, int width, int height)
     mHintLayout->setWidth(width);
     mLayout->setWidth(width);
     mLayout->setText(text);
-    setTextColor(mContext->getColorStateList("cdroid:color/textview"));
 }
 
 void TextView::initView(){

@@ -5,7 +5,7 @@ ShapeDrawable::ShapeState::ShapeState(){
     mAlpha=255;
     mShape=nullptr;
     mTint =nullptr;
-    mTintMode =TintMode::NONOP;
+    mTintMode =TintMode::NOOP;
     mIntrinsicWidth=0;
     mIntrinsicHeight=0;
     mPadding.set(0,0,0,0);
@@ -72,7 +72,7 @@ void ShapeDrawable::onBoundsChange(const Rect&bounds){
 }
 
 bool ShapeDrawable::onStateChange(const std::vector<int>&stateset){
-    if(mShapeState->mTint&&mShapeState->mTintMode!=TintMode::NONOP){
+    if(mShapeState->mTint && mShapeState->mTintMode != TintMode::NOOP){
         mTintFilter= updateTintFilter(mTintFilter,mShapeState->mTint,mShapeState->mTintMode);
         return true;
     }

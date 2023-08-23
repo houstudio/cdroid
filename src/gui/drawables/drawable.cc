@@ -114,7 +114,7 @@ void Drawable::setTint(int color) {
 }
 
 PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFilter,ColorStateList* tint,int tintMode) {
-    if ( (tint == nullptr) || (tintMode == TintMode::NONOP) ) {
+    if ( (tint == nullptr) || (tintMode == TintMode::NOOP) ) {
         return nullptr;
     }
 

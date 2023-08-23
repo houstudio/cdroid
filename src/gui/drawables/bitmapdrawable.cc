@@ -287,7 +287,7 @@ void BitmapDrawable::onBoundsChange(const Rect&r){
 }
 
 bool BitmapDrawable::onStateChange(const std::vector<int>&){
-    if (mBitmapState->mTint  && mBitmapState->mTintMode != TintMode::NONOP) {
+    if (mBitmapState->mTint  && mBitmapState->mTintMode != TintMode::NOOP) {
         mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
         return true;
     }

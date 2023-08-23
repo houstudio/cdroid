@@ -32,7 +32,8 @@ public:
     bool mHasTintList;
     TintInfo(){
         mTintList=nullptr;
-        mHasTintList=mHasTintMode=false;
+        mHasTintList = false;
+		mHasTintMode = false;
         mTintMode = SRC_IN;
     };
     ~TintInfo(){
@@ -320,7 +321,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mHasTintList = true;
     }
     const int blendMode = attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
-        }),-1);
+           {"add",TintMode::ADD},          {"multiply",TintMode::MULTIPLY},
+           {"screen",TintMode::SCREEN},    {"src_atop",TintMode::SRC_ATOP},
+           {"src_in",TintMode::SRC_IN},    {"src_over",TintMode::SRC_OVER} 
+        }),TintMode::NOOP);
     if( blendMode != -1 ){
         if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
         mBackgroundTint->mBlendMode = blendMode;
@@ -3666,7 +3670,7 @@ std::vector<int>View::onCreateDrawableState(){
     int viewStateIndex = 0;
 
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
-    if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex =StateSet::VIEW_STATE_PRESSED;
+    if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex = StateSet::VIEW_STATE_PRESSED;
     if(mPrivateFlags & PFLAG_SELECTED) viewStateIndex |= StateSet::VIEW_STATE_SELECTED;
     if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
     if((mPrivateFlags & PFLAG_ACTIVATED) != 0) viewStateIndex |= StateSet::VIEW_STATE_ACTIVATED;

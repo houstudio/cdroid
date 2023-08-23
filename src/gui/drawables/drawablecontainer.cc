@@ -597,6 +597,7 @@ bool DrawableContainer::selectDrawable(int index){
         initializeDrawableForDisplay(mCurrDrawable);
         return true;
     }
+    invalidateSelf();
     return false;
 }
 

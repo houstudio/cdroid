@@ -107,10 +107,13 @@ int StateListDrawable::getStateDrawableIndex(const std::vector<int>&stateSet)con
 }
 
 bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
-    const bool changed =DrawableContainer::onStateChange(stateSet);
-    const int  idx=getStateDrawableIndex(stateSet);
+    bool changed = DrawableContainer::onStateChange(stateSet);
+    int  idx = mStateListState->indexOfStateSet(stateSet);
+    if(idx<0)idx = mStateListState->indexOfStateSet(StateSet::WILD_CARD);
     LOGV("%p set stateIndex=%d/%d ",this,idx,getChildCount(),idx>=0?getChild(idx):nullptr);
-    return selectDrawable(idx) || changed;
+    changed |= selectDrawable(idx);
+    if(mCurrDrawable)mCurrDrawable->setState(stateSet);
+    return  changed;
 }
 
 Drawable*StateListDrawable::inflate(Context*ctx,const AttributeSet&atts){

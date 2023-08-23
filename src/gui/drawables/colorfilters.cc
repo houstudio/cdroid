@@ -4,7 +4,7 @@ namespace cdroid{
 
 int ColorFilter::tintMode2CairoOperator(int tintMode){
     switch(tintMode){
-    case NONOP   :/*=-1*/ return CAIRO_OPERATOR_CLEAR;
+    case NOOP    :/*=-1*/ return CAIRO_OPERATOR_CLEAR;
     case CLEAR   :/*= 0*/ return CAIRO_OPERATOR_CLEAR;
     case SRC     :/*= 1*/ return CAIRO_OPERATOR_SOURCE;
     case DST     :/*= 2*/ return CAIRO_OPERATOR_DEST;

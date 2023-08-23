@@ -88,7 +88,7 @@ void ColorDrawable::setAlpha(int alpha){
 }
 
 bool ColorDrawable::onStateChange(const std::vector<int>&stateSet){
-    if (mColorState->mTint && mColorState->mTintMode != TintMode::NONOP) {
+    if (mColorState->mTint && mColorState->mTintMode != TintMode::NOOP) {
         mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, mColorState->mTintMode);
         return true;
     }

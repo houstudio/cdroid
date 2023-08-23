@@ -93,7 +93,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             std::unique_ptr<COMPLEXCOLOR>cl(new COMPLEXCOLOR(Color::parseColor(value)));
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
             mColors.insert(std::pair<const std::string,std::unique_ptr<COMPLEXCOLOR>>
-		(package+":color/"+name,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))));
+                   (package+":color/"+name,std::unique_ptr<COMPLEXCOLOR>(std::move(cl))));
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;

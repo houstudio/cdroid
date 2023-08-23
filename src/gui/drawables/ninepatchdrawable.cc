@@ -165,7 +165,7 @@ Drawable* NinePatchDrawable::mutate() {
 }
 
 bool NinePatchDrawable::onStateChange(const std::vector<int>& stateSet){
-    if (mNinePatchState->mTint && mNinePatchState->mTintMode != TintMode::NONOP) {
+    if (mNinePatchState->mTint && mNinePatchState->mTintMode != TintMode::NOOP) {
         mTintFilter = updateTintFilter(mTintFilter, mNinePatchState->mTint, mNinePatchState->mTintMode);
         return true;
     }
