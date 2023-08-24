@@ -618,7 +618,8 @@ std::shared_ptr<Drawable::ConstantState>DrawableContainer::getConstantState(){
 }
 
 Drawable*DrawableContainer::getChild(int index){
-    return mDrawableContainerState->mDrawables.at(index);
+    auto &drs=mDrawableContainerState->mDrawables;
+    return ((index>=0)&&(index<drs.size())) ? drs[index] : nullptr;
 }
 
 void DrawableContainer::invalidateDrawable(Drawable& who){
