@@ -316,13 +316,17 @@ int Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
     std::string fullname=parseResource(resid,&name,&pkg);
     auto it = mArraies.find(fullname);
     if(it != mArraies.end()) {
-        out = it->second;
+        for(auto itm:it->second){
+            itm = AttributeSet::normalize(pkg,itm);
+            out.push_back(itm);
+        }
         return out.size();
     }
     ZIPArchive * pak = getResource(resid,&name,nullptr);
     pak->forEachEntry([&out,pkg](const std::string&res){
         if(TextUtils::startWith(res,"font")){
-            out.push_back(pkg+":"+res);
+            std::string fullres = AttributeSet::normalize(pkg,res);
+            out.push_back(fullres);
         }
         return out.size();
     });
