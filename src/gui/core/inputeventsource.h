@@ -14,7 +14,7 @@ namespace cdroid{
 
 class InputEventSource:public EventHandler{
 public:	
-    typedef std::function<void(bool)>ScreenSaver;
+    typedef std::function<bool(bool)>ScreenSaver;
 private:
     std::mutex mtxEvents;
     ScreenSaver mScreenSaver;

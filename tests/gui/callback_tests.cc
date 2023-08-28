@@ -43,10 +43,29 @@ TEST_F(CALLBACK,eq){
 }
 
 TEST_F(CALLBACK,runner){
-   Runnable r;
-   ASSERT_TRUE(r==nullptr);
-   r=[](){};
-   ASSERT_FALSE(r==nullptr);
+    Runnable r;
+    ASSERT_TRUE(r==nullptr);
+    r=[](){};
+    ASSERT_FALSE(r==nullptr);
+}
+
+class EventA:public virtual EventSet{};
+class EventB:public virtual EventSet{};
+class EventC:public virtual EventA,virtual EventB{
+};
+TEST_F(CALLBACK,EventSet){
+    EventSet a;
+    EventSet b=a;
+    ASSERT_TRUE(a==b);
+    ASSERT_TRUE(b==a);
+    ASSERT_FALSE(a!=b);
+    ASSERT_FALSE(b!=a);
+    EventC cc;
+    EventSet aa=cc;
+    EventSet bb=cc;
+    ASSERT_TRUE(cc==aa);
+    ASSERT_TRUE(cc==bb);
+    ASSERT_TRUE(aa==bb);
 }
 
 class MyRunner:public Runnable{

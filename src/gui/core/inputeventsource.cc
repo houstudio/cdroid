@@ -77,13 +77,12 @@ int InputEventSource::checkEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     nsecs_t now = SystemClock::uptimeMillis();
     if( (now - mLastEventTime) > mScreenSaveTimeOut && (mScreenSaveTimeOut>0) && mScreenSaver){
-	mScreenSaver(true);
-	mIsScreenSaveActived = true;
+        mScreenSaver(true);
+        mIsScreenSaveActived = true;
     }
     process();
     if(mInputEvents.size()&& mIsScreenSaveActived){
-	mIsScreenSaveActived = false;
-	mScreenSaver(false);
+        mIsScreenSaveActived = mScreenSaver(false);
     }
     return mInputEvents.size()>0;
 }
