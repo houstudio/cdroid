@@ -197,7 +197,7 @@ static bool guessExtension(ZIPArchive*pak,std::string&ioname) {
 }
 
 //"@[package:][+]id/filname"
-void Assets::parseResource(const std::string&fullResId,std::string*res,std::string*ns)const {
+const std::string Assets::parseResource(const std::string&fullResId,std::string*res,std::string*ns)const {
     std::string pkg = mName;
     std::string relname= fullResId;
     std::string fullid = fullResId;
@@ -218,6 +218,7 @@ void Assets::parseResource(const std::string&fullResId,std::string*res,std::stri
     if(pkg=="android") pkg="cdroid";
     if( ns) *ns = pkg;
     if(res)*res= relname;
+    return pkg+":"+relname;
 }
 
 ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeResID,std::string*outPackage)const {
@@ -300,11 +301,11 @@ const std::string& Assets::getString(const std::string& resid,const std::string&
 
 int Assets::getArray(const std::string&resid,std::vector<int>&out) {
     std::string pkg,name = resid;
-    parseResource(resid,&name,&pkg);
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mArraies.find(name);
+    std::string fullname = parseResource(resid,&name,&pkg);
+    auto it = mArraies.find(fullname);
     if(it != mArraies.end()) {
-        //out=it->second;
+        for(auto itm:it->second)
+           out.push_back(std::stoi(itm));
         return out.size();
     }
     return  0;
@@ -312,9 +313,8 @@ int Assets::getArray(const std::string&resid,std::vector<int>&out) {
 
 int Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
     std::string pkg,name = resid;
-    parseResource(resid,&name,&pkg);
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mArraies.find(name);
+    std::string fullname=parseResource(resid,&name,&pkg);
+    auto it = mArraies.find(fullname);
     if(it != mArraies.end()) {
         out = it->second;
         return out.size();

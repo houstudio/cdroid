@@ -51,6 +51,30 @@ public:
         return (*mFunctor)(std::forward<Args>(args)...);
     }
 };
+
+class EventSet{
+/*The Event(Listener)'s container to hold multi Evnet(Listener)*/
+protected:
+    std::shared_ptr<void*>mID;
+public:
+    EventSet(){
+        mID=std::make_shared<void*>(this);
+    }
+    EventSet(const EventSet&other){
+        mID = other.mID;
+    }
+    EventSet& operator=(const EventSet&other){
+	mID = other.mID;
+	return *this;
+    }
+    bool operator == (const EventSet&other){
+        return mID == other.mID;
+    }
+    bool operator != (const EventSet&other){
+        return mID != other.mID;
+    }
+};
+
 typedef CallbackBase<void>Runnable;
 
 }//endof namespace

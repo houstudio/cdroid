@@ -256,11 +256,16 @@ static int constrain(int amount, int low, int high) {//get the
     return amount < low ? low : (amount > high ? high : amount);
 }
 
-void ViewPager::addOnPageChangeListener(OnPageChangeListener listener){
-    mOnPageChangeListeners.push_back(listener);
+void ViewPager::addOnPageChangeListener(const OnPageChangeListener& listener){
+    auto it = std::find(mOnPageChangeListeners.begin(),mOnPageChangeListeners.end(),listener);
+    if(it == mOnPageChangeListeners.end())
+        mOnPageChangeListeners.push_back(listener);
 }
 
-void ViewPager::removeOnPageChangeListener(OnPageChangeListener listener){
+void ViewPager::removeOnPageChangeListener(const OnPageChangeListener& listener){
+    auto it = std::find(mOnPageChangeListeners.begin(),mOnPageChangeListeners.end(),listener);
+    if(it !=mOnPageChangeListeners.end())
+       mOnPageChangeListeners.erase(it);
 }
 
 void ViewPager::clearOnPageChangeListeners() {

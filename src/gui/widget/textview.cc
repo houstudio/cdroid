@@ -549,19 +549,16 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
     }*/    
 }
 
-void TextView::addTextChangedListener(TextWatcher watcher){
-    mListeners.push_back(watcher);
+void TextView::addTextChangedListener(const TextWatcher& watcher){
+    auto it = std::find(mListeners.begin(),mListeners.end(),watcher);
+    if(it==mListeners.end())
+        mListeners.push_back(watcher);
 }
 
-void TextView::removeTextChangedListener(TextWatcher watcher){
-    for(auto i= mListeners.begin();i!= mListeners.end();i++){
-        TextWatcher w=(*i);
-        if( (w.onTextChanged==watcher.onTextChanged)
-            &&(w.beforeTextChanged==watcher.beforeTextChanged) ){
-            mListeners.erase(i);
-            break;
-        }
-    } 
+void TextView::removeTextChangedListener(const TextWatcher& watcher){
+    auto it = std::find(mListeners.begin(),mListeners.end(),watcher);
+    if( it !=mListeners.end())
+	mListeners.erase(it);
 }
 
 void TextView::sendBeforeTextChanged(const std::wstring& text, int start, int before, int after){

@@ -9,7 +9,8 @@ class View;
 class Context;
 class ViewTreeObserver{
 public:
-    struct OnWindowAttachListener{
+    class OnWindowAttachListener:public EventSet{
+    public:
        CallbackBase <void> onWindowAttached;
        CallbackBase <void> onWindowDetached;
     };
@@ -41,7 +42,7 @@ public:
 	bool equals(Object*)const;
 	void set(const InternalInsetsInfo& other);
     };
-    typedef CallbackBase <void,InternalInsetsInfo> OnComputeInternalInsetsListener;
+    typedef CallbackBase <void,InternalInsetsInfo&> OnComputeInternalInsetsListener;
     typedef CallbackBase <void> OnEnterAnimationCompleteListener;
 private:
     std::vector <OnWindowFocusChangeListener> mOnWindowFocusListeners;
@@ -64,8 +65,8 @@ private:
 public:
     ViewTreeObserver(cdroid::Context* context);
     void merge(ViewTreeObserver& observer);
-    void addOnWindowAttachListener(OnWindowAttachListener);
-    void removeOnWindowAttachListener(OnWindowAttachListener victim);
+    void addOnWindowAttachListener(const OnWindowAttachListener& victim);
+    void removeOnWindowAttachListener(const OnWindowAttachListener& victim);
     void addOnWindowFocusChangeListener(OnWindowFocusChangeListener listener);
     void removeOnWindowFocusChangeListener(OnWindowFocusChangeListener victim);
     void addOnGlobalFocusChangeListener(OnGlobalFocusChangeListener listener);
@@ -101,7 +102,7 @@ public:
     void dispatchOnTouchModeChanged(bool inTouchMode);
     void dispatchOnScrollChanged();
     bool hasComputeInternalInsetsListeners();
-    void dispatchOnComputeInternalInsets(InternalInsetsInfo inoutInfo);
+    void dispatchOnComputeInternalInsets(InternalInsetsInfo& inoutInfo);
     void dispatchOnEnterAnimationComplete();
 };
 }//endof namespace

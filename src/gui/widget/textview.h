@@ -20,17 +20,9 @@
 #include <view/view.h>
 #include <core/layout.h>
 #include <core/typeface.h>
+#include <widget/textwatcher.h>
 
 namespace cdroid {
-
-struct TextWatcher{
-    //void beforeTextChanged(CharSequence s,int start,int count, int after)
-    CallbackBase<void,const std::wstring&,int,int,int>beforeTextChanged;
-    //void onTextChanged(CharSequence s, int start, int before, int count);
-    CallbackBase<void,const std::wstring&,int,int,int>onTextChanged;
-    //void afterTextChanged(Editable s);
-    CallbackBase<void,std::wstring&>afterTextChanged;
-};
 
 class TextView : public View{
 private:
@@ -286,8 +278,8 @@ public:
     int computeHorizontalScrollRange()override;
     int computeVerticalScrollRange()override;
 
-    void addTextChangedListener(TextWatcher watcher);
-    void removeTextChangedListener(TextWatcher watcher);
+    void addTextChangedListener(const TextWatcher& watcher);
+    void removeTextChangedListener(const TextWatcher& watcher);
     void onResolveDrawables(int layoutDirection)override;
     bool onTouchEvent(MotionEvent& event)override;
 };

@@ -107,7 +107,7 @@ void WindowManager::removeWindow(Window*w){
         w->onDeactive();
     auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     const Rect wrect = w->getBound();
-    const int wc=mWindows.size();
+    const int wc = mWindows.size();
     mWindows.erase(itw);
     for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
         Window*w1 = (*itr);
@@ -173,6 +173,7 @@ void WindowManager::sendToBack(Window*win){
         Window *w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
     }
+    mActiveWindow = mWindows.back();
     win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
     GraphDevice::getInstance().flip();
 }
@@ -187,6 +188,7 @@ void WindowManager::bringToFront(Window*win){
         Window *w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
     }
+    mActiveWindow = win;
     win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
     GraphDevice::getInstance().flip();
 }

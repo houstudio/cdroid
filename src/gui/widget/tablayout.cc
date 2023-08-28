@@ -917,6 +917,49 @@ TabLayout::TabView::~TabView(){
     delete mTab;
 }
 
+void TabLayout::TabView::updateBackgroundDrawable(Context* context) {
+    if (mParent->mTabBackgroundResId.size()) {
+        mBaseBackgroundDrawable = context->getDrawable(mParent->mTabBackgroundResId);
+        if (mBaseBackgroundDrawable && mBaseBackgroundDrawable->isStateful()) {
+          mBaseBackgroundDrawable->setState(getDrawableState());
+        }
+    } else {
+        mBaseBackgroundDrawable = nullptr;
+    }
+
+    Drawable* background;
+    Drawable* contentDrawable = new GradientDrawable();
+    ((GradientDrawable*) contentDrawable)->setColor(Color::TRANSPARENT);
+
+    if (0/*tabRippleColorStateList*/) {
+        GradientDrawable* maskDrawable = new GradientDrawable();
+        // TODO: Find a workaround for this. Currently on certain devices/versions,
+        // LayerDrawable will draw a black background underneath any layer with a non-opaque color,
+        // (e.g. ripple) unless we set the shape to be something that's not a perfect rectangle.
+        maskDrawable->setCornerRadius(0.00001F);
+        maskDrawable->setColor(Color::WHITE);
+
+        //ColorStateList* rippleColor =  RippleUtils.convertToRippleDrawableColor(tabRippleColorStateList);
+
+        // TODO: Add support to RippleUtils.compositeRippleColorStateList for different ripple color
+        // for selected items vs non-selected items
+        /*if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+            background =new RippleDrawable(
+                  rippleColor,
+                  unboundedRipple ? null : contentDrawable,
+                  unboundedRipple ? null : maskDrawable);
+        } else {
+           Drawable* rippleDrawable = DrawableCompat.wrap(maskDrawable);
+           rippleDrawable->setTintList(rippleColor);
+           background = new LayerDrawable(new Drawable[] {contentDrawable, rippleDrawable});
+        }*/
+    } else {
+        background = contentDrawable;
+    }
+    setBackground(background);
+    mParent->invalidate();
+}
+
 bool TabLayout::TabView::performClick(){
     bool handled = LinearLayout::performClick();
 
@@ -1047,7 +1090,7 @@ void TabLayout::TabView::update() {
 
         mCustomTextView = (TextView*) custom->findViewById(cdroid::R::id::text1);
         if (mCustomTextView != nullptr) {
-            mDefaultMaxLines = mCustomTextView->getMaxLines();// TextViewCompat.getMaxLines(mCustomTextView);
+            mDefaultMaxLines = mCustomTextView->getMaxLines();
         }
         mCustomIconView = (ImageView*) custom->findViewById(cdroid::R::id::icon);
     } else {

@@ -119,7 +119,7 @@ void ViewTreeObserver::merge(ViewTreeObserver& observer) {
     observer.kill();
 }
 
-void ViewTreeObserver::addOnWindowAttachListener(ViewTreeObserver::OnWindowAttachListener listener) {
+void ViewTreeObserver::addOnWindowAttachListener(const OnWindowAttachListener& listener) {
     checkIsAlive();
 
     /*if (mOnWindowAttachListeners == nullptr) {
@@ -129,7 +129,7 @@ void ViewTreeObserver::addOnWindowAttachListener(ViewTreeObserver::OnWindowAttac
     mOnWindowAttachListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnWindowAttachListener(ViewTreeObserver::OnWindowAttachListener victim) {
+void ViewTreeObserver::removeOnWindowAttachListener(const OnWindowAttachListener& victim) {
     checkIsAlive();
     for(auto it = mOnWindowAttachListeners.begin();it!=mOnWindowAttachListeners.end();it++){
         if(it->onWindowDetached==victim.onWindowDetached){
@@ -139,7 +139,7 @@ void ViewTreeObserver::removeOnWindowAttachListener(ViewTreeObserver::OnWindowAt
     }
 }
 
-void ViewTreeObserver::addOnWindowFocusChangeListener(ViewTreeObserver::OnWindowFocusChangeListener listener) {
+void ViewTreeObserver::addOnWindowFocusChangeListener(OnWindowFocusChangeListener listener) {
     checkIsAlive();
 
     /*if (mOnWindowFocusListeners == nullptr) {
@@ -149,7 +149,7 @@ void ViewTreeObserver::addOnWindowFocusChangeListener(ViewTreeObserver::OnWindow
     mOnWindowFocusListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnWindowFocusChangeListener(ViewTreeObserver::OnWindowFocusChangeListener victim) {
+void ViewTreeObserver::removeOnWindowFocusChangeListener(OnWindowFocusChangeListener victim) {
     checkIsAlive();
     if (mOnWindowFocusListeners.empty()) {
         return;
@@ -169,7 +169,7 @@ void ViewTreeObserver::addOnGlobalFocusChangeListener(OnGlobalFocusChangeListene
     mOnGlobalFocusListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnGlobalFocusChangeListener(ViewTreeObserver::OnGlobalFocusChangeListener victim) {
+void ViewTreeObserver::removeOnGlobalFocusChangeListener(OnGlobalFocusChangeListener victim) {
     checkIsAlive();
     if (mOnGlobalFocusListeners.empty()) {
         return;
@@ -179,7 +179,7 @@ void ViewTreeObserver::removeOnGlobalFocusChangeListener(ViewTreeObserver::OnGlo
         mOnGlobalFocusListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnGlobalLayoutListener(ViewTreeObserver::OnGlobalLayoutListener listener) {
+void ViewTreeObserver::addOnGlobalLayoutListener(OnGlobalLayoutListener listener) {
     checkIsAlive();
 
     /*if (mOnGlobalLayoutListeners == nullptr) {
@@ -266,7 +266,7 @@ void ViewTreeObserver::addOnDrawListener(OnDrawListener listener) {
     mOnDrawListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnDrawListener(ViewTreeObserver::OnDrawListener victim) {
+void ViewTreeObserver::removeOnDrawListener(OnDrawListener victim) {
     checkIsAlive();
     if (mOnDrawListeners.size()) {
         return;
@@ -294,7 +294,7 @@ void ViewTreeObserver::addOnScrollChangedListener(OnScrollChangedListener listen
     mOnScrollChangedListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnScrollChangedListener(ViewTreeObserver::OnScrollChangedListener victim) {
+void ViewTreeObserver::removeOnScrollChangedListener(OnScrollChangedListener victim) {
     checkIsAlive();
     if (mOnScrollChangedListeners.size()) {
         return;
@@ -304,7 +304,7 @@ void ViewTreeObserver::removeOnScrollChangedListener(ViewTreeObserver::OnScrollC
         mOnScrollChangedListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnTouchModeChangeListener(ViewTreeObserver::OnTouchModeChangeListener listener) {
+void ViewTreeObserver::addOnTouchModeChangeListener(OnTouchModeChangeListener listener) {
     checkIsAlive();
 
     /*if (mOnTouchModeChangeListeners == nullptr) {
@@ -314,7 +314,7 @@ void ViewTreeObserver::addOnTouchModeChangeListener(ViewTreeObserver::OnTouchMod
     mOnTouchModeChangeListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnTouchModeChangeListener(ViewTreeObserver::OnTouchModeChangeListener victim) {
+void ViewTreeObserver::removeOnTouchModeChangeListener(OnTouchModeChangeListener victim) {
     checkIsAlive();
     if (mOnTouchModeChangeListeners.size()) {
         return;
@@ -324,7 +324,7 @@ void ViewTreeObserver::removeOnTouchModeChangeListener(ViewTreeObserver::OnTouch
        mOnTouchModeChangeListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnComputeInternalInsetsListener(ViewTreeObserver::OnComputeInternalInsetsListener listener) {
+void ViewTreeObserver::addOnComputeInternalInsetsListener(OnComputeInternalInsetsListener listener) {
     checkIsAlive();
 
     if (mOnComputeInternalInsetsListeners.size()) {
@@ -334,7 +334,7 @@ void ViewTreeObserver::addOnComputeInternalInsetsListener(ViewTreeObserver::OnCo
     mOnComputeInternalInsetsListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnComputeInternalInsetsListener(ViewTreeObserver::OnComputeInternalInsetsListener victim) {
+void ViewTreeObserver::removeOnComputeInternalInsetsListener(OnComputeInternalInsetsListener victim) {
     checkIsAlive();
     if (mOnComputeInternalInsetsListeners.size()) {
         return;
@@ -344,7 +344,7 @@ void ViewTreeObserver::removeOnComputeInternalInsetsListener(ViewTreeObserver::O
         mOnComputeInternalInsetsListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnEnterAnimationCompleteListener(ViewTreeObserver::OnEnterAnimationCompleteListener listener) {
+void ViewTreeObserver::addOnEnterAnimationCompleteListener(OnEnterAnimationCompleteListener listener) {
     checkIsAlive();
     if (mOnEnterAnimationCompleteListeners.size()) {
         //mOnEnterAnimationCompleteListeners =  new CopyOnWriteArrayList<OnEnterAnimationCompleteListener>();
@@ -352,7 +352,7 @@ void ViewTreeObserver::addOnEnterAnimationCompleteListener(ViewTreeObserver::OnE
     mOnEnterAnimationCompleteListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnEnterAnimationCompleteListener(ViewTreeObserver::OnEnterAnimationCompleteListener listener) {
+void ViewTreeObserver::removeOnEnterAnimationCompleteListener(OnEnterAnimationCompleteListener listener) {
     checkIsAlive();
     if (mOnEnterAnimationCompleteListeners.size()) {
         return;
@@ -461,7 +461,7 @@ bool ViewTreeObserver::hasComputeInternalInsetsListeners() {
     return listeners.size() > 0;
 }
 
-void ViewTreeObserver::dispatchOnComputeInternalInsets(ViewTreeObserver::InternalInsetsInfo inoutInfo) {
+void ViewTreeObserver::dispatchOnComputeInternalInsets(InternalInsetsInfo& inoutInfo) {
     auto  listeners = mOnComputeInternalInsetsListeners;
     for (auto listener:listeners){
         listener(inoutInfo);//onComputeInternalInsets(inoutInfo);

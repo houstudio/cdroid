@@ -20,7 +20,8 @@ public:
     public:
         virtual void transformPage(View& page, float position)=0;//typedef std::function<void(View&v,float position)>PageTransformer; 
     };
-    struct OnPageChangeListener{
+    class OnPageChangeListener:public virtual EventSet{
+    public:
         CallbackBase<void,int,float,int>onPageScrolled;//void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
         CallbackBase<void,int>onPageSelected;//void onPageSelected(int position);
         CallbackBase<void,int>onPageScrollStateChanged;//void onPageScrollStateChanged(int state);
@@ -209,8 +210,8 @@ public:
     void addOnAdapterChangeListener(OnAdapterChangeListener listener);
     void removeOnAdapterChangeListener(OnAdapterChangeListener listener);
 
-    void addOnPageChangeListener(OnPageChangeListener listener);
-    void removeOnPageChangeListener(OnPageChangeListener listener);
+    void addOnPageChangeListener(const OnPageChangeListener& listener);
+    void removeOnPageChangeListener(const OnPageChangeListener& listener);
     void clearOnPageChangeListeners();
     OnPageChangeListener setInternalPageChangeListener(OnPageChangeListener listener);
     int getCurrentItem()const;

@@ -64,11 +64,12 @@ public:
         View* mCustomView;
         TextView* mCustomTextView;
         ImageView* mCustomIconView;
-
+        Drawable* mBaseBackgroundDrawable;
         int mDefaultMaxLines = 2;
         int getContentWidth(); 
         void updateTextAndIcon(TextView* textView,ImageView* iconView);
         float approximateLineWidth(Layout* layout, int line, float textSize);
+        void updateBackgroundDrawable(Context* context);
     public:
         TabView(Context* context,const AttributeSet&atts,TabLayout*parent);
         ~TabView();
