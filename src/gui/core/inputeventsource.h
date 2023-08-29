@@ -21,7 +21,8 @@ private:
     int mScreenSaveTimeOut;
     bool mIsPlayback;
     bool mIsScreenSaveActived;
-    nsecs_t mLastEventTime;
+    nsecs_t mLastPlaybackEventTime;/*for event record and playback*/
+    nsecs_t mLastInputEventTime;/*for screensaver*/
     std::ofstream frecord;
     std::queue<InputEvent*>mInputEvents;
     std::queue<INPUTEVENT>mRawEvents;

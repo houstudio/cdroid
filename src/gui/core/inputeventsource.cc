@@ -17,12 +17,14 @@ InputEventSource::InputEventSource(){
     mScreenSaveTimeOut = -1;
     mIsPlayback = false;
     mIsScreenSaveActived = false;
-    mLastEventTime=SystemClock::uptimeMillis();
+    mLastPlaybackEventTime = SystemClock::uptimeMillis();
+    mLastInputEventTime = mLastPlaybackEventTime;
     auto func=[this](){
         while(1){
             INPUTEVENT es[32];
-            int count=InputGetEvents(es,32,10);
+            const int count=InputGetEvents(es,32,10);
             std::lock_guard<std::mutex> lock(mtxEvents);
+            if(count)mLastInputEventTime = SystemClock::uptimeMillis();
             LOGV_IF(count,"rcv %d rawEvents",count);
             for(int i=0;i<count;i++)
                 mRawEvents.push(es[i]);
@@ -76,7 +78,7 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
 int InputEventSource::checkEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     nsecs_t now = SystemClock::uptimeMillis();
-    if( ((now - mLastEventTime) > mScreenSaveTimeOut) && (mScreenSaveTimeOut>0)
+    if( ((now - mLastInputEventTime) > mScreenSaveTimeOut) && (mScreenSaveTimeOut>0)
             && ( mIsScreenSaveActived == false ) && mScreenSaver){
         mScreenSaver(true);
         mIsScreenSaveActived = true;
@@ -84,7 +86,7 @@ int InputEventSource::checkEvents(){
     process();
     if(mInputEvents.size() && mIsScreenSaveActived && mScreenSaver){
         mScreenSaver(false);
-        mLastEventTime = now;
+        mLastInputEventTime = now;
     }
     return mInputEvents.size()>0;
 }
@@ -101,15 +103,15 @@ int InputEventSource::handleEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     if(mInputEvents.size()==0)return false;
     while(mInputEvents.size()){
-        InputEvent* e=mInputEvents.front();
+        InputEvent* e = mInputEvents.front();
         WindowManager::getInstance().processEvent(*e);
         if((!mIsPlayback)&& frecord.is_open() && dynamic_cast<KeyEvent*>(e) ){
             nsecs_t eventTime=SystemClock::uptimeMillis();
             KeyEvent*key=dynamic_cast<KeyEvent*>(e);
-            frecord<<"delay("<<eventTime-mLastEventTime<<")"<<std::endl;
+            frecord<<"delay("<<eventTime - mLastPlaybackEventTime<<")"<<std::endl;
             frecord<<"key("<<KeyEvent::actionToString(key->getAction())<<","
                   <<KeyEvent::getLabel(key->getKeyCode())<<")"<<std::endl;
-            mLastEventTime=eventTime;
+            mLastPlaybackEventTime = eventTime;
         }
         e->recycle();
         mInputEvents.pop();
