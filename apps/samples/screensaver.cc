@@ -9,10 +9,9 @@ int main(int argc,const char*argv[]){
 
     w->setId(10000);
     w->setBackgroundColor(0xFF111111);
-    EditText*edit=new EditText("ScreenSaver test",680,200);
+    TextView*edit=new TextView("ScreenSaver test",680,200);
     edit->setSingleLine(false);
     edit->setClickable(true);
-    edit->setInputType(EditText::TYPE_ANY);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     edit->setBackgroundColor(0xFFFF0000);
     w->addView(edit).setPos(100,300);
