@@ -1,12 +1,12 @@
 #ifndef __INPUT_EVENT_SOURCE_H__
 #define __INPUT_EVENT_SOURCE_H__
 #include <cdinput.h>
-#include <core/looper.h>
 #include <queue>
 #include <string>
 #include <fstream>
-#include <uievents.h>
-#include <inputdevice.h>
+#include <core/looper.h>
+#include <core/uievents.h>
+#include <core/inputdevice.h>
 #include <unordered_map>
 #include <mutex>
 
@@ -14,7 +14,7 @@ namespace cdroid{
 
 class InputEventSource:public EventHandler{
 public:	
-    typedef std::function<bool(bool)>ScreenSaver;
+    typedef std::function<void(bool)>ScreenSaver;
 private:
     std::mutex mtxEvents;
     ScreenSaver mScreenSaver;
@@ -35,6 +35,8 @@ public:
     static InputEventSource& getInstance();
     ~InputEventSource();
     void setScreenSaver(ScreenSaver func,int timeout);
+    void closeScreenSaver();
+    bool isScreenSaverActived()const;
     void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;

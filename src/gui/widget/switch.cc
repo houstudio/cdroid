@@ -459,12 +459,12 @@ bool Switch::onTouchEvent(MotionEvent& ev){
     const float y = ev.getY();
     switch (action) {
     case MotionEvent::ACTION_DOWN:
-            if (isEnabled() && hitThumb(x, y)) {
-                mTouchMode = TOUCH_MODE_DOWN;
-                mTouchX = x;
-                mTouchY = y;
-            }
-            break;
+        if (isEnabled() && hitThumb(x, y)) {
+            mTouchMode = TOUCH_MODE_DOWN;
+            mTouchX = x;
+            mTouchY = y;
+        }
+        break;
 
     case MotionEvent::ACTION_MOVE:
         switch (mTouchMode) {
