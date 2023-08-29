@@ -5,7 +5,7 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     cdroid::Context*ctx=&app;
-    Window*w=new Window(0,0,1280,720);
+    Window*w=new Window(0,0,-1,-1);
     w->setId(1);
 	Drawable*d=nullptr;
     StateListDrawable*sd;
@@ -13,26 +13,24 @@ int main(int argc,const char*argv[]){
     LOGD("test LOGF %d",__LINE__);
     LOG(DEBUG)<<"Test Stream(DEBUG)";
 #if 10
-    w->setIsRootNamespace(true);
-    w->setKeyboardNavigationCluster(true);
     Button *btn=new Button("Button",120,60);
     d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
     sd=dynamic_cast<StateListDrawable*>(d);
     LOGD("%p statecount=%d",sd,sd->getStateCount());
     btn->setBackground(d);
+    btn->setBackgroundTintList(ctx->getColorStateList("cdroid:color/textview"));
     btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
     btn->setOnClickListener([](View&v){LOGD(" Button Clicked ");});
     btn->setOnLongClickListener([](View&v)->bool{LOGD(" Button LongClicked ");return true;});
-    btn->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
-    w->addView(btn).setId(100).setPos(50,60).setKeyboardNavigationCluster(true);
+    w->addView(btn).setId(100).setPos(50,60);
 
     btn=new ToggleButton(120,40);
     d=ctx->getDrawable("cdroid:drawable/btn_toggle_bg.xml");
     btn->setBackground(d);
-    btn->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
+    btn->setTextColor(ctx->getColorStateList("cdroid:color/textview"));
     ((ToggleButton*)btn)->setTextOn("ON");
     ((ToggleButton*)btn)->setTextOff("Off");
-    w->addView(btn).setId(101).setPos(200,70).setClickable(true);//setKeyboardNavigationCluster(true);
+    w->addView(btn).setId(101).setPos(200,70).setClickable(true);
 
     chk=new CheckBox("CheckME",200,60);
     d=ctx->getDrawable("cdroid:drawable/btn_check.xml");

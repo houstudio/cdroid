@@ -72,12 +72,12 @@ TestString testStrings[]={
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
+    Window*w=new Window(0,0,-1,-1);
 
     LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     layout->setOrientation(LinearLayout::VERTICAL);
     layout->setBackgroundColor(0xFF111111);
-    w->addView(layout).setSize(800,600);//we recommand set size for top container(layout)
+    w->addView(layout).setSize(0,0);//we recommand set size for top container(layout)
 
     for(int i=0;i<sizeof(testStrings)/sizeof(testStrings[0]);i++){
         TestString*ts=testStrings+i;

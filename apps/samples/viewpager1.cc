@@ -26,40 +26,30 @@ public:
     float getPageWidth(int position){return 0.2f;}//if returned calue <1 OffscreenPageLimit must be larger to workfine 
 };
 
+class MyWindow:public Window,public ViewPager::OnPageChangeListener{
+public:
+     MyWindow(int x,int y,int w,int h):Window(x,y,w,h){
+	 onPageSelected =std::bind(&MyWindow::onViewPageSelected,this,std::placeholders::_1);
+	 onPageScrolled =std::bind(&MyWindow::onViewPageScrolled,this,std::placeholders::_1,
+			 std::placeholders::_2,std::placeholders::_3);
+     }
+     void onViewPageSelected(int position){
+         LOGD("selected %d",position);
+     }
+     void onViewPageScrolled(int position, float positionOffset, int positionOffsetPixels){
+         LOGD("position=%d positionOffset=%f positionOffsetPixels=%d",position,positionOffset,positionOffsetPixels);
+     }
+};
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,-1,-1);
-    HorizontalScrollView* hs=new HorizontalScrollView(800,400);
-    LinearLayout*layout=new LinearLayout(400,100);
-    ColorStateList*cl =app.getColorStateList("cdroid::color/textview");
-    layout->setId(10);
-    hs->addView(layout);
-    hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    w->addView(hs).setId(1);
+    MyWindow*w=new MyWindow(0,0,-1,-1);
 
     if(argc>1)mPageCount=std::max(5L,std::strtol(argv[1],nullptr,10));
-    for(int i=0;i<16;i++){
-        Button*btn=new Button("Hello Button"+std::to_string(i),150,30);
-        btn->setPadding(5,5,5,5);
-        btn->setTextColor(cl);
-        btn->setTextSize(30);
-        btn->setBackgroundColor(0xFF000000|i*20<<8|i*8);
-        btn->setId(100+i);
-        btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        layout->addView(btn,new LinearLayout::LayoutParams(800,LayoutParams::WRAP_CONTENT));
-    }
     ViewPager*pager=new ViewPager(800,560);
     MyPageAdapter*gpAdapter=new MyPageAdapter();
     pager->setOffscreenPageLimit(8);
     pager->setAdapter(gpAdapter);
-    ViewPager::OnPageChangeListener listener;
-    listener.onPageSelected=[&](int position){
-        //hs->
-    };
-    listener.onPageScrolled=[&](int position, float positionOffset, int positionOffsetPixels){
-        hs->scrollTo(position*pager->getWidth()+positionOffsetPixels,0);
-    };
-    pager->addOnPageChangeListener(listener);
+    pager->addOnPageChangeListener(*w);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(pager).setPos(0,40);
     gpAdapter->notifyDataSetChanged();
