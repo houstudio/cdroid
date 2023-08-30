@@ -105,6 +105,7 @@ public:
     void setRange(int vmin,int vmax);
 
     void setProgress(int value);
+    void setProgress(int progress, bool animate);
     int getProgress()const;
     void setSecondaryProgress(int secondaryProgress);
     int getSecondaryProgress()const;

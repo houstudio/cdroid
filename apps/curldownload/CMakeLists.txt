@@ -1,6 +1,7 @@
 project(curldownload C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
+find_package(MBEDTLS)
 find_package(CURL)
 include_directories(
    ./
@@ -21,7 +22,7 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 
 if(CURL_FOUND)
   add_executable(curldownload ${CURLDLD_SRCS})
-  target_link_libraries(curldownload PRIVATE cdroid ${CURL_LIBRARIES})
+  target_link_libraries(curldownload PRIVATE cdroid -Wl,--start-group ${MBEDTLS_LIBRARIES} ${CURL_LIBRARIES} -Wl,--end-group)
   install(TARGETS curldownload DESTINATION bin)
 endif()
 

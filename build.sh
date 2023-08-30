@@ -9,12 +9,15 @@ TOOLCHAINS["SIGMA"]=${TOPDIR}/cmake/ssd202-mtitoolchain.cmake
 TOOLCHAINS["ALI3528"]=${TOPDIR}/cmake/ali3528-mtitoolchain.cmake
 TOOLCHAINS["RISCVD211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
 TOOLCHAINS["R818"]=${TOPDIR}/cmake/r818-toolchain.cmake
+TOOLCHAINS["D211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
 
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
-DEPLIBS["X64"]=$HOME/vcpkg/installed/x64-linux-dynamic
-DEPLIBS["SIGMA"]=$HOME/vcpkg/installed/arm-linux-dynamic
-DEPLIBS["RISCVD211"]=$HOME/vcpkg/installed/riscv64-linux-dynamic
-DEPLIBS["R818"]=/opt/vcpkg/installed/r818-linux
+DEPLIBS["X64"]=${HOME}/vcpkg/installed/x64-linux-dynamic
+DEPLIBS["SIGMA"]=${HOME}/vcpkg/installed/arm-linux-dynamic
+DEPLIBS["RISCVD211"]=${HOME}/vcpkg/installed/riscv64-linux-dynamic
+DEPLIBS["R818"]=${HOME}/vcpkg/installed/r818-linux
+DEPLIBS["D211"]=${HOME}/vcpkg/installed/riscv64-d211-linux
+
 SHOWHELP=false
 PRODUCT="x64"
 BUILD_TYPE="Release"

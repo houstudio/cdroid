@@ -74,7 +74,7 @@ class IDGenerater(object):
     def __init__(self,idstart,namespace):
         self.idstart=idstart
         self.namespace=namespace
-        self.processDirs=['layout','drawable']
+        self.processDirs=['layout','drawable','navigation']
         self.parser = xml.sax.make_parser()
         self.parser.setFeature(xml.sax.handler.feature_namespaces, 0)
         self.Handler = CDROIDHandler(namespace)
@@ -97,9 +97,9 @@ class IDGenerater(object):
         
         fr.write("    namespace strings{\n")
         i=0
-        for ss in self.Handler.strings:
-            fr.write("%8s  static constexpr int %-24s= 0x%08X ;/*%d*/\n"%('',ss,self.idstart+i,self.idstart+i))
-            i+=1
+        #for ss in self.Handler.strings:
+        #    fr.write("%8s  static constexpr int %-24s= 0x%08X ;/*%d*/\n"%('',ss,self.idstart+i,self.idstart+i))
+        #    i+=1
         fr.write("%4s};/*namespace strings*/\n\n"%(''))
 
         fr.write("};//endof namespace R\n\n")

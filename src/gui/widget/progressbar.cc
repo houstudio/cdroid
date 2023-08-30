@@ -370,7 +370,11 @@ bool ProgressBar::setProgressInternal(int value, bool fromUser,bool animate){
 }
 
 void ProgressBar::setProgress(int value){
-    setProgressInternal(value,FALSE);
+    setProgressInternal(value,false,false);
+}
+
+void ProgressBar::setProgress(int progress, bool animate){
+    setProgressInternal(progress, false, animate);
 }
 
 void ProgressBar::setSecondaryProgress(int secondaryProgress) {

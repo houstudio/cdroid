@@ -4,6 +4,7 @@ find_path(DIRECTFB_INCLUDE_DIRS
     NAMES directfb.h
     HINTS ${PC_DIRECTFB_INCLUDEDIR}
     ${PC_DIRECTFB_INCLUDE_DIRS}
+    PATH_SUFFIXES directfb
 )
 
 find_library(DIRECTFB_LIBRARIES
