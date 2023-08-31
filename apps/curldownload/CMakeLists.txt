@@ -1,7 +1,6 @@
 project(curldownload C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
-find_package(MBEDTLS)
 find_package(CURL)
 include_directories(
    ./
@@ -13,7 +12,6 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include/cairo
    ${CMAKE_BINARY_DIR}/include/epg
    ${CMAKE_BINARY_DIR}/include/freetype2
-   ${CURL_LIBRARIES}
 )
 aux_source_directory(./ CURLDLD_SRCS)
 add_definitions(--include cdtypes.h)

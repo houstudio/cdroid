@@ -22,6 +22,24 @@ add_subdirectory(apps)
 
 add_subdirectory(tests)
 
+execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+    COMMAND git rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_BRANCH_NAME
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(TIMESTAMP COMPILE_TIME "%Y%m%d_%H%M%S")
+set(CPACK_PACKAGE_NAME "CDROID-${COMPILE_TIME}-${GIT_COMMIT_HASH}")
+set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_GENERATOR "ZIP")  # Choose the desired generator (e.g., ZIP, TGZ, NSIS, etc.)
+include(CPack)
 
 if(BUILD_DOCS)
   include(cmake/build_doxygen.cmake)
