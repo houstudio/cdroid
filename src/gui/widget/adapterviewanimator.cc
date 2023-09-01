@@ -394,8 +394,8 @@ bool AdapterViewAnimator::onTouchEvent(MotionEvent& ev){
                     showTapFeedback(v);
                     postDelayed([this,viewData,v](){
                         if (viewData != nullptr)
-                            performItemClick(v, viewData->adapterPosition,viewData->itemId);
-                        else performItemClick(v, 0, 0);
+                            performItemClick(*v, viewData->adapterPosition,viewData->itemId);
+                        else performItemClick(*v, 0, 0);
                     },ViewConfiguration::getPressedStateDuration());
                     handled = true;
                 }

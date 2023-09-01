@@ -2063,11 +2063,11 @@ void AbsListView::updateOnScreenCheckedViews() {
 }
 
 
-bool AbsListView::performItemClick(View* view, int position, long id) {
+bool AbsListView::performItemClick(View& view, int position, long id) {
     bool handled = false;
     bool dispatchItemClick = true;
 
-    LOGV("view=%p,posid=%d,%ld",view,position,id);
+    LOGV("view=%p,posid=%d,%ld",&view,position,id);
     if (mChoiceMode != CHOICE_MODE_NONE) {
         handled = true;
         bool checkedStateChanged = false;
@@ -2133,7 +2133,7 @@ bool AbsListView::onKeyUp(int keyCode, KeyEvent& event) {
                 && mAdapter && (mSelectedPosition < mAdapter->getCount()) ) {
             View* view = getChildAt(mSelectedPosition - mFirstPosition);
             if (view) {
-                performItemClick(view, mSelectedPosition, mSelectedRowId);
+                performItemClick(*view, mSelectedPosition, mSelectedRowId);
                 view->setPressed(false);
             }
             setPressed(false);
@@ -3769,7 +3769,7 @@ void AbsListView::PerformClick::run() {
         // If there is no view, something bad happened (the view scrolled off the
         // screen, etc.) and we should cancel the click
         if (view != nullptr) {
-            mLV->performItemClick(view, motionPosition, adapter->getItemId(motionPosition));
+            mLV->performItemClick(*view, motionPosition, adapter->getItemId(motionPosition));
         }
     }
 }

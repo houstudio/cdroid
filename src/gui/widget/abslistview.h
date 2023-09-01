@@ -423,7 +423,7 @@ public:
     void dispatchDrawableHotspotChanged(float x, float y)override;
     int pointToPosition(int x, int y);
     long pointToRowId(int x, int y);
-    bool performItemClick(View* view, int position, long id)override;
+    bool performItemClick(View& view, int position, long id)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;

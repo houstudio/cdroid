@@ -99,7 +99,7 @@ public:
     void setFocusableInTouchMode(bool focusable)override;
     virtual View* getSelectedView()=0;
     virtual void setSelection(int position)=0;
-    virtual bool performItemClick(View* view, int position, long id);
+    virtual bool performItemClick(View& view, int position, long id);
     
     void setOnItemClickListener(OnItemClickListener listener);
     OnItemClickListener getOnItemClickListener() const;

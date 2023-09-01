@@ -460,11 +460,11 @@ void AdapterView::fireOnSelected() {
     }
 }
 
-bool AdapterView::performItemClick(View* view, int position, long id){
+bool AdapterView::performItemClick(View& view, int position, long id){
     bool result=false;
     if (mOnItemClickListener != nullptr) {
         playSoundEffect(SoundEffectConstants::CLICK);
-        mOnItemClickListener(*this,*view, position, id);
+        mOnItemClickListener(*this,view, position, id);
         result = true;
     }
 

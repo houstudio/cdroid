@@ -105,7 +105,7 @@ bool DropDownListView::onForwardedEvent(MotionEvent& event, int activePointerId)
 
             if (actionMasked == MotionEvent::ACTION_UP) {
                 long id = getItemIdAtPosition(position);
-                performItemClick(child, position, id);
+                performItemClick(*child, position, id);
             }
             break;
     }
