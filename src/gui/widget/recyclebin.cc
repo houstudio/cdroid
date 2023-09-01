@@ -16,7 +16,7 @@ Adapter*RecycleBin::getAdapter(){
     return LV->mAdapter;
 }
 void RecycleBin::setViewTypeCount(int viewTypeCount) {
-    LOGE_IF(viewTypeCount < 1,"Can't have a viewTypeCount < 1");
+    LOGE_IF(viewTypeCount < 1,"Can't have a viewTypeCount(%d) < 1",viewTypeCount);
     //noinspection unchecked
     for (int i = 0; i < viewTypeCount; i++) {
         mScrapViews.push_back(std::vector<View*>());
