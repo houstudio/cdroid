@@ -281,6 +281,7 @@ void ExpandableListView::drawDivider(Canvas& canvas, Rect bounds, int childIndex
     ListView::setOnItemClickListener(l);
 }*/
 void ExpandableListView::setAdapter(ExpandableListAdapter* adapter){
+    mAdapter = adapter;
     if (adapter != nullptr) {
         // Create the connector
         mConnector = new ExpandableListConnector(adapter);

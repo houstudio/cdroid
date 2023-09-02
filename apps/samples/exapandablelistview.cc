@@ -53,6 +53,7 @@ public:
         }
 	LOGD("groupPosition=%d",groupPosition);
         tv->setText(gData.at(groupPosition));
+	tv->setBackgroundColor(0xFF112233);
         return convertView;
     }
 
@@ -80,7 +81,7 @@ int main(int argc,const char*argv[]){
     MyBaseExpandableListAdapter*adapter=new MyBaseExpandableListAdapter(&app);
     std::vector<std::string>data;
     for(int i=0;i<6;i++)data.push_back(std::string("subitem")+std::to_string(i));
-    for(int j=0;j<3;j++)
+    for(int j=0;j<30;j++)
        adapter->addGroupData(std::to_string(j),data);
     expLV->setAdapter(adapter);
     w->addView(expLV);
