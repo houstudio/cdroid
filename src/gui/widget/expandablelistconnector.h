@@ -89,6 +89,7 @@ private:
     void refreshExpGroupMetadataList(bool forceChildrenCountRefresh, bool syncGroupPositions);
 public:
     ExpandableListConnector(ExpandableListAdapter* expandableListAdapter);
+    ~ExpandableListConnector();
     void setExpandableListAdapter(ExpandableListAdapter* expandableListAdapter);
     PositionMetadata* getUnflattenedPos( int flPos)const;/*protected*/
     PositionMetadata* getFlattenedPos(const ExpandableListPosition& pos);/*proteced*/

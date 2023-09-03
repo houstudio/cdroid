@@ -5,8 +5,13 @@ namespace cdroid{
 
 ExpandableListConnector::ExpandableListConnector(ExpandableListAdapter* expandableListAdapter){
     mExpandableListAdapter = nullptr;
-    mDataSetObserver =new MyDataSetObserver(this); 
+    mTotalExpChildrenCount = 0;
+    mDataSetObserver = new MyDataSetObserver(this); 
     setExpandableListAdapter(expandableListAdapter);
+}
+
+ExpandableListConnector::~ExpandableListConnector(){
+    delete mDataSetObserver;
 }
 
 void ExpandableListConnector::setExpandableListAdapter(ExpandableListAdapter* expandableListAdapter) {

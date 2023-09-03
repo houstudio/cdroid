@@ -10,12 +10,15 @@ public:
     public:
         virtual void onFilterComplete(int count)=0;
     };
+protected:
     class FilterResults{
+    public:
+        void*values;
+        int count;
     }; 
 protected:
     virtual FilterResults performFiltering(const std::string& constraint) = 0;
     virtual void publishResults(const std::string& constraint, FilterResults results) = 0;
-
 public:
     Filter();
     void filter(const std::string& constraint);

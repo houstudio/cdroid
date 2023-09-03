@@ -10,6 +10,7 @@ ExpandableListView::ExpandableListView(int w,int h):ListView(w,h){
 
 ExpandableListView::ExpandableListView(Context* context,const AttributeSet& attrs)
   :ListView(context,attrs){
+    initView();
     mGroupIndicator = attrs.getDrawable("groupIndicator");
     mChildIndicator = attrs.getDrawable("childIndicator");
     mIndicatorLeft = attrs.getDimensionPixelSize("indicatorLeft", 0);
@@ -31,6 +32,10 @@ ExpandableListView::ExpandableListView(Context* context,const AttributeSet& attr
 }
 
 ExpandableListView::~ExpandableListView(){
+    delete mConnector;
+    delete mGroupIndicator;
+    delete mChildIndicator;
+    delete mChildDivider;
 }
 
 void ExpandableListView::initView(){
@@ -84,19 +89,19 @@ void ExpandableListView::resolveIndicator() {
 void ExpandableListView::resolveChildIndicator() {
     const bool bIsLayoutRtl = isLayoutRtl();
     if (bIsLayoutRtl) {
-            if (mChildIndicatorStart >= CHILD_INDICATOR_INHERIT) {
-                mChildIndicatorRight = mChildIndicatorStart;
-            }
-            if (mChildIndicatorEnd >= CHILD_INDICATOR_INHERIT) {
-                mChildIndicatorLeft = mChildIndicatorEnd;
-            }
+        if (mChildIndicatorStart >= CHILD_INDICATOR_INHERIT) {
+            mChildIndicatorRight = mChildIndicatorStart;
+        }
+        if (mChildIndicatorEnd >= CHILD_INDICATOR_INHERIT) {
+            mChildIndicatorLeft = mChildIndicatorEnd;
+        }
     } else {
-            if (mChildIndicatorStart >= CHILD_INDICATOR_INHERIT) {
-                mChildIndicatorLeft = mChildIndicatorStart;
-            }
-            if (mChildIndicatorEnd >= CHILD_INDICATOR_INHERIT) {
-                mChildIndicatorRight = mChildIndicatorEnd;
-            }
+        if (mChildIndicatorStart >= CHILD_INDICATOR_INHERIT) {
+            mChildIndicatorLeft = mChildIndicatorStart;
+        }
+        if (mChildIndicatorEnd >= CHILD_INDICATOR_INHERIT) {
+            mChildIndicatorRight = mChildIndicatorEnd;
+        }
     }
 }
 
@@ -227,7 +232,7 @@ Drawable* ExpandableListView::getIndicator(ExpandableListConnector::PositionMeta
             // Empty check based on availability of data.  If the groupMetadata isn't null,
             // we do a check on it. Otherwise, the group is collapsed so we consider it
             // empty for performance reasons.
-            bool isEmpty = (pos.groupMetadata == nullptr) ||
+            const bool isEmpty = (pos.groupMetadata == nullptr) ||
                     (pos.groupMetadata->lastChildFlPos == pos.groupMetadata->flPos);
 
             const int stateSetIndex = (pos.isExpanded() ? 1 : 0) | // Expanded?
