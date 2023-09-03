@@ -80,9 +80,13 @@ int main(int argc,const char*argv[]){
     ExpandableListView*expLV = new ExpandableListView(0,0);
     MyBaseExpandableListAdapter*adapter=new MyBaseExpandableListAdapter(&app);
     std::vector<std::string>data;
-    for(int i=0;i<6;i++)data.push_back(std::string("subitem")+std::to_string(i));
+    for(int i=0;i<8;i++)data.push_back(std::string("subitem")+std::to_string(i));
     for(int j=0;j<30;j++)
        adapter->addGroupData(std::to_string(j),data);
+ 
+    expLV->setVerticalScrollBarEnabled(true);
+    expLV->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
+
     expLV->setAdapter(adapter);
     w->addView(expLV);
     expLV->setOnChildClickListener([](ExpandableListView& parent, View& v, int groupPosition, int childPosition, long id){

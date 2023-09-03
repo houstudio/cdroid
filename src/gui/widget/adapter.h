@@ -49,7 +49,7 @@ private:
     std::vector<DataSetObserver*> mObservers;
 };
 
-typedef Adapter ListAdapter,SpinnerAdapter;
+typedef Adapter ListAdapter,SpinnerAdapter,BaseAdapter;
 template<class T>
 class ArrayAdapter:public Adapter{
 public:

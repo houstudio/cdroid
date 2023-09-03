@@ -107,7 +107,37 @@ public:
      * @return the data child for the specified group
      */
     virtual void* getGroup(int groupPosition)=0;
+    /**
+     * Get the type of group View that will be created by
+     * {@link android.widget.ExpandableListAdapter#getGroupView(int, boolean, View, ViewGroup)}
+     * . for the specified group item.
+     *
+     * @param groupPosition the position of the group for which the type should be returned.
+     * @return An integer representing the type of group View. Two group views should share the same
+     *         type if one can be converted to the other in
+     *         {@link android.widget.ExpandableListAdapter#getGroupView(int, boolean, View, ViewGroup)}
+     *         . Note: Integers must be in the range 0 to {@link #getGroupTypeCount} - 1.
+     *         {@link android.widget.Adapter#IGNORE_ITEM_VIEW_TYPE} can also be returned.
+     * @see android.widget.Adapter#IGNORE_ITEM_VIEW_TYPE
+     * @see #getGroupTypeCount()
+     */
     virtual int getGroupType(int groupPosition)=0;/*====*/
+    /**
+     * <p>
+     * Returns the number of types of group Views that will be created by
+     * {@link android.widget.ExpandableListAdapter#getGroupView(int, boolean, View, ViewGroup)}
+     * . Each type represents a set of views that can be converted in
+     * {@link android.widget.ExpandableListAdapter#getGroupView(int, boolean, View, ViewGroup)}
+     * . If the adapter always returns the same type of View for all group items, this method should
+     * return 1.
+     * </p>
+     * This method will only be called when the adapter is set on the {@link AdapterView}.
+     *
+     * @return The number of types of group Views that will be created by this adapter.
+     * @see #getChildTypeCount()
+     * @see #getGroupType(int)
+     */
+
     virtual int getGroupTypeCount()=0;/*====*/
     /**
      * Gets the data associated with the given child within the given group.
@@ -118,7 +148,38 @@ public:
      * @return the data of the child
      */
     virtual void* getChild(int groupPosition, int childPosition)=0;
+    /**
+     * Get the type of child View that will be created by
+     * {@link android.widget.ExpandableListAdapter#getChildView(int, int, boolean, View, ViewGroup)}
+     * for the specified child item.
+     *
+     * @param groupPosition the position of the group that the child resides in
+     * @param childPosition the position of the child with respect to other children in the group
+     * @return An integer representing the type of child View. Two child views should share the same
+     *         type if one can be converted to the other in
+     *         {@link android.widget.ExpandableListAdapter#getChildView(int, int, boolean, View, ViewGroup)}
+     *         Note: Integers must be in the range 0 to {@link #getChildTypeCount} - 1.
+     *         {@link android.widget.Adapter#IGNORE_ITEM_VIEW_TYPE} can also be returned.
+     * @see android.widget.Adapter#IGNORE_ITEM_VIEW_TYPE
+     * @see #getChildTypeCount()
+     */
     virtual int getChildType(int groupPosition, int childPosition)=0;/*===*/
+    /**
+     * <p>
+     * Returns the number of types of child Views that will be created by
+     * {@link android.widget.ExpandableListAdapter#getChildView(int, int, boolean, View, ViewGroup)}
+     * . Each type represents a set of views that can be converted in
+     * {@link android.widget.ExpandableListAdapter#getChildView(int, int, boolean, View, ViewGroup)}
+     * , for any group. If the adapter always returns the same type of View for
+     * all child items, this method should return 1.
+     * </p>
+     * This method will only be called when the adapter is set on the {@link AdapterView}.
+     *
+     * @return The total number of types of child Views that will be created by this adapter.
+     * @see #getGroupTypeCount()
+     * @see #getChildType(int, int)
+     */
+    
     virtual int getChildTypeCount()=0;/*===*/
     /**
      * Gets the ID for the group at the given position. This group ID must be
