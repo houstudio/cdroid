@@ -81,6 +81,18 @@ void Assets::setTheme(const std::string&theme) {
     }
 }
 
+static std::string convertXmlToCString(const std::string& xml) {
+    size_t pos;
+    std::string result = xml;
+    while((pos=result.find("\\n"))!=std::string::npos)
+	result.replace(pos,2,"\n");
+    while((pos=result.find("\\'"))!=std::string::npos)
+	result.replace(pos,2,"\'");
+    while((pos=result.find("\\\""))!=std::string::npos)
+        result.replace(pos,2,"\"");
+    return result;
+}
+
 void Assets::parseItem(const std::string&package,const std::vector<std::string>&tags,std::vector<AttributeSet>atts,const std::string&value) {
     const std::string&tag0=tags[0];
     if(atts.size()==1) {
@@ -98,7 +110,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;
             LOGV_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
-            mStrings[key]=value;
+            mStrings[key] = convertXmlToCString(value);
         }
     } else  if(atts.size()==2) {
         if(tag0.compare("style")==0) {
