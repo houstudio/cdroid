@@ -481,10 +481,15 @@ int ProgressBar::getProgressGravity()const{
 
 int ProgressBar::getProgressOrientation()const{
     if(dynamic_cast<LayerDrawable*>(mProgressDrawable)){
-        ClipDrawable*cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::progress));
-	if(cd ==nullptr)
-            cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::secondaryProgress));
-	return cd->getOrientation();
+	LayerDrawable*ld = (LayerDrawable*)mProgressDrawable;
+        ClipDrawable*cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::progress));
+	ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::progress));
+	if(cd == nullptr && sd==nullptr){
+            cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
+	    sd = dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
+	}
+	if(cd)return cd->getOrientation();
+	if(sd)return Gravity::isHorizontal(sd->getGravity())?ClipDrawable::HORIZONTAL:ClipDrawable::VERTICAL;
     }
     return (getWidth()>getHeight())?ClipDrawable::HORIZONTAL:ClipDrawable::VERTICAL;
 }

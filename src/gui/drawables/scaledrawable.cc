@@ -8,7 +8,7 @@ ScaleDrawable::ScaleState::ScaleState():DrawableWrapperState(){
     mScaleWidth = DO_NOT_SCALE;
     mScaleHeight= DO_NOT_SCALE;
     mGravity = Gravity::LEFT;
-    mUseIntrinsicSizeAsMin=false;
+    mUseIntrinsicSizeAsMin = false;
 }
 
 ScaleDrawable::ScaleState::ScaleState(const ScaleState& orig)
@@ -27,15 +27,15 @@ Drawable* ScaleDrawable::ScaleState::newDrawable(){
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state):DrawableWrapper(state){
-    mState=state;
+    mState = state;
 }
 
 ScaleDrawable::ScaleDrawable(Drawable* drawable, int gravity,int scaleWidth,int scaleHeight)
     :ScaleDrawable(std::make_shared<ScaleState>()){
-    mState->mGravity=gravity;
-    mState->mScaleWidth=scaleWidth;
-    mState->mScaleHeight=scaleHeight;
-    mState->mUseIntrinsicSizeAsMin=false;
+    mState->mGravity    = gravity;
+    mState->mScaleWidth = scaleWidth;
+    mState->mScaleHeight= scaleHeight;
+    mState->mUseIntrinsicSizeAsMin = false;
     setDrawable(drawable);
 }
 
@@ -79,6 +79,22 @@ void ScaleDrawable::onBoundsChange(const Rect& bounds){
     if (w > 0 && h > 0) {
         d->setBounds(r);
     }
+}
+
+int ScaleDrawable::getGravity()const{
+    return mState->mGravity;
+}
+
+int ScaleDrawable::getOpacity(){
+    Drawable* d = getDrawable();
+    if (d->getLevel() == 0) {
+        return PixelFormat::TRANSPARENT;
+    }
+    const int opacity = d->getOpacity();
+    if (opacity == PixelFormat::OPAQUE && d->getLevel() < MAX_LEVEL) {
+        return PixelFormat::TRANSLUCENT;
+    }
+    return opacity;
 }
 
 void ScaleDrawable::draw(Canvas& canvas) {
