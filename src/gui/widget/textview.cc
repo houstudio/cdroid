@@ -1840,6 +1840,14 @@ int TextView::getShadowColor()const{
     return mShadowColor;
 }
 
+bool TextView::canSelectAllText()const{
+    return false;
+}
+
+bool TextView::selectAllText(){
+    return false;
+}
+
 int TextView::getTotalPaddingTop(){
     return getExtendedPaddingTop() + getVerticalOffset(true);
 }
@@ -1848,18 +1856,46 @@ int TextView::getTotalPaddingBottom(){
     return getExtendedPaddingBottom() + getBottomVerticalOffset(true);
 }
 
+int TextView::getSelectionStart()const{
+    return 0;
+}
+
+int TextView::getSelectionEnd()const{
+    return 0;
+}
+
+bool TextView::hasSelection()const{
+    const int selectionStart = getSelectionStart();
+    const int selectionEnd = getSelectionEnd();
+    return selectionStart >= 0 && selectionEnd > 0 && selectionStart != selectionEnd;
+}
+
+std::string TextView::getSelectedText()const{
+     if (!hasSelection()) {
+         return std::string();
+     }
+     const int start = getSelectionStart();
+     const int end = getSelectionEnd();
+     const std::wstring &text =mLayout->getText();
+     std::wstring ret = text.substr(std::min(start, end),std::abs(start-end+1));
+     return TextUtils::unicode2utf8(ret);
+}
+
 void TextView::setSingleLine(bool single){
     mSingleLine=single;
     mLayout->setMultiline(!single);
     mLayout->relayout();
     invalidate(true);
 }
+
 void TextView::setBreakStrategy(int breakStrategy){
     mLayout->setBreakStrategy(breakStrategy);
 }
+
 int TextView::getBreakStrategy()const{
     return mLayout->getBreakStrategy();
 }
+
 bool TextView::isSingleLine()const{
     return mSingleLine;
 }

@@ -207,15 +207,15 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
 
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
     const char*p;
-    const std::string v=getString(key);
-    if(v.empty())return def;
-    def=std::strtol(v.c_str(),nullptr,10);
-    p=strpbrk(v.c_str(),"sdp");
+    const std::string v = getString(key);
+    if( v.empty() ) return def;
+    def = std::strtol(v.c_str(),nullptr,10);
+    p   = strpbrk(v.c_str(),"sdp");
     if(p){
         if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
-	    def=(mDisplayMetrics.density*def+0.5f);
+	    def = (mDisplayMetrics.density * def /*+0.5f*/);
         if(strncmp(p,"sp",2)==0)
-	    def=(mDisplayMetrics.scaledDensity*def+0.5f);
+	    def = (mDisplayMetrics.scaledDensity * def /*+0.5f*/);
     }
     return def;
 }

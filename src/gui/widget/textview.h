@@ -191,6 +191,12 @@ public:
     const std::string getText()const;
     void  setTextAppearance(const std::string&);
     View& setHint(const std::string&txt)override;
+    bool canSelectAllText()const;
+    bool selectAllText();
+    int getSelectionStart()const;
+    int getSelectionEnd()const;
+    bool hasSelection()const;
+    std::string getSelectedText()const;
     virtual void setSingleLine(bool single);
     bool isSingleLine()const;
     void setBreakStrategy(int breakStrategy);
