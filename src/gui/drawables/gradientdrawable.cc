@@ -851,13 +851,12 @@ void GradientDrawable::draw(Canvas&canvas) {
         LOGD("useLevel=%d lvl=%d",st->mUseLevel,getLevel());
 #else
         LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
-        canvas.move_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
+        //canvas.move_to(mRect.left+mRect.width/1.f,mRect.top+mRect.height/2.f);
         canvas.arc(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f,
                    std::min(mRect.width,mRect.height)/2.f,
                    0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
-        canvas.line_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
+        //canvas.line_to(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
 #endif
-        canvas.fill_preserve();
         if(mFillPaint) canvas.set_source(mFillPaint);
         if (haveStroke) {
             canvas.fill_preserve();
