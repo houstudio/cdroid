@@ -424,6 +424,7 @@ void View::initView(){
     mListenerInfo= nullptr;
     mOverlay  = nullptr;
     mAnimator = nullptr;
+    mTag = nullptr;
     mStateListAnimator = nullptr;
     mPerformClick = nullptr;
     mPendingCheckForTap = nullptr;
