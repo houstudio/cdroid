@@ -39,7 +39,7 @@ void PropertyValuesHolder::evaluate(AnimateValue& out, const AnimateValue& from,
            float fraction) const{
     switch(from.index()){
     case 0:
-        out = (1.f - fraction)*from.get<int>() +  fraction * to.get<int>();
+        out = (int)((1.f - fraction)*from.get<int>() +  fraction * to.get<int>());
         break;
     case 1:{
         float a=lerp((from.get<uint32_t>()>>24)/255.f,(to.get<uint32_t>()>>24)/255.f,fraction);
