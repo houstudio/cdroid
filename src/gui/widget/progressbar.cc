@@ -489,14 +489,14 @@ int ProgressBar::getProgressOrientation()const{
             cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
             sd = dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
         }
-        if(cd)return gravity = cd->getGravity();
-        if(sd)return gravity = sd->getGravity();
+        if(cd)gravity = cd->getGravity();
+        if(sd)gravity = sd->getGravity();
         return Gravity::isHorizontal(gravity)?HORIZONTAL:VERTICAL;
     }else{
         ClipDrawable*cd = dynamic_cast<ClipDrawable*>(mProgressDrawable);
         ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(mProgressDrawable);
-        if(cd)return gravity = cd->getGravity();
-        if(sd)return gravity = sd->getGravity();
+        if(cd)gravity = cd->getGravity();
+        if(sd)gravity = sd->getGravity();
         return gravity;
     }
     return (getWidth()>getHeight())?HORIZONTAL:VERTICAL;
