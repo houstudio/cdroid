@@ -491,9 +491,9 @@ int ProgressBar::getProgressGravity()const{
 
 
 int ProgressBar::getProgressOrientation()const{
-    int gravity = getProgressGravity();
+    const int gravity = getProgressGravity();
     if(gravity==Gravity::NO_GRAVITY)
-	return (getWidth()>getHeight())?HORIZONTAL:VERTICAL;
+        return (getWidth()>getHeight())?HORIZONTAL:VERTICAL;
     return Gravity::isHorizontal(gravity)?HORIZONTAL:VERTICAL;
 }
 

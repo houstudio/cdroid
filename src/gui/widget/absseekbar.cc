@@ -349,21 +349,20 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
 
     const int thumbPos = (int) (scale * available + 0.5f);
 
-    int left,top,right,bottom;
+    int left,top;
+    const int progressGravity = Gravity::getAbsoluteGravity(getProgressGravity(),getLayoutDirection());
     if(getProgressOrientation()==HORIZONTAL){
+        const int absGravity = progressGravity & Gravity::HORIZONTAL_GRAVITY_MASK;
         if (offset == INT_MIN) {
             const Rect oldBounds = thumb->getBounds();
             top = oldBounds.top;
-            bottom = oldBounds.bottom();
         } else {
             top = offset;
-            bottom = offset + thumbHeight;
         }
 
-        left = (isLayoutRtl() && mMirrorForRtl) ? available - thumbPos : thumbPos;
-        right = left + thumbWidth;
+        left = ((isLayoutRtl() && mMirrorForRtl)||(absGravity==Gravity::RIGHT)) ? available - thumbPos : thumbPos;
 
-	Drawable* background = getBackground();
+        Drawable* background = getBackground();
         if (background != nullptr) {
             const int offsetX = mPaddingLeft - mThumbOffset;
             const int offsetY = mPaddingTop;
@@ -372,23 +371,21 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
         // Canvas will be translated, so 0,0 is where we start drawing
         thumb->setBounds(left, top,thumbWidth,thumbHeight);
     }else{
+        const int absGravity = progressGravity & Gravity::VERTICAL_GRAVITY_MASK;
         if(offset == INT_MIN){
             const Rect oldBounds = thumb->getBounds();
 	    left = oldBounds.left;
-	    right= oldBounds.right();
         }else{
             left = offset;
-	    right= offset +thumbWidth;
         }
-	top =  available - thumbPos;
-	bottom = top + thumbHeight;
+        top =  (absGravity==Gravity::BOTTOM)?(available - thumbPos):thumbPos;
         Drawable* background = getBackground();
         if (background != nullptr) {
             const int offsetX = mPaddingLeft; - mThumbOffset;
             const int offsetY = mPaddingTop + mThumbOffset;
             background->setHotspotBounds(left , top + offsetY,thumbWidth,thumbHeight);
         }
-	thumb->setBounds(left, top,thumbWidth,thumbHeight);
+        thumb->setBounds(left, top,thumbWidth,thumbHeight);
     }
 
     /*Drawable* background = getBackground();
