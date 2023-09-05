@@ -488,7 +488,9 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
         }
 
         if(gradient)parseShapeGradient(d,nullptr, *gradient);
-        else d->setColor(solid?solid->getColor("color",0):0);
+        else if(solid){
+            d->setColor(solid->getColorStateList("color"));
+        }
 
         if(size)d->setSize(size->getDimensionPixelSize("width",-1),size->getDimensionPixelSize("height",-1));
 
