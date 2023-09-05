@@ -469,18 +469,7 @@ Drawable*ProgressBar::getProgressDrawable()const{
 }
 
 int ProgressBar::getProgressGravity()const{
-    if(dynamic_cast<LayerDrawable*>(mProgressDrawable)){
-        ClipDrawable*cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::progress));
-	if(cd ==nullptr)
-            cd = dynamic_cast<ClipDrawable*>(((LayerDrawable*)mProgressDrawable)->findDrawableByLayerId(R::id::secondaryProgress));
-	return cd->getGravity();
-    }
-    return Gravity::NO_GRAVITY;
-}
-
-
-int ProgressBar::getProgressOrientation()const{
-    int gravity = Gravity::LEFT;
+    int gravity = Gravity::NO_GRAVITY; 
     if(dynamic_cast<LayerDrawable*>(mProgressDrawable)){
         LayerDrawable*ld = (LayerDrawable*)mProgressDrawable;
         ClipDrawable*cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::progress));
@@ -491,15 +480,21 @@ int ProgressBar::getProgressOrientation()const{
         }
         if(cd)gravity = cd->getGravity();
         if(sd)gravity = sd->getGravity();
-        return Gravity::isHorizontal(gravity)?HORIZONTAL:VERTICAL;
     }else{
         ClipDrawable*cd = dynamic_cast<ClipDrawable*>(mProgressDrawable);
         ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(mProgressDrawable);
         if(cd)gravity = cd->getGravity();
         if(sd)gravity = sd->getGravity();
-        return gravity;
     }
-    return (getWidth()>getHeight())?HORIZONTAL:VERTICAL;
+    return gravity;
+}
+
+
+int ProgressBar::getProgressOrientation()const{
+    int gravity = getProgressGravity();
+    if(gravity==Gravity::NO_GRAVITY)
+	return (getWidth()>getHeight())?HORIZONTAL:VERTICAL;
+    return Gravity::isHorizontal(gravity)?HORIZONTAL:VERTICAL;
 }
 
 void ProgressBar::setIndeterminateDrawable(Drawable*d){

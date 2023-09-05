@@ -7,7 +7,26 @@
 namespace cdroid{
 
 ValueAnimator::ValueAnimator(){
-    mReversing=false;
+    mReversing = false;
+    mRepeatMode = RESTART;
+    mSelfPulse = true;
+    mRunning = false;
+    mResumed = false;
+    mStarted = false;
+    mStartTime = -1;
+    mLastFrameTime = -1;
+    mFirstFrameTime = -1;
+    mSeekFraction = -1;
+    mOverallFraction = 0.f;
+    mCurrentFraction = 0.f;
+    mSuppressSelfPulseRequested = false;
+    mStartListenersCalled = false;
+    mAnimationEndRequested = false;
+    mInitialized = false;
+    mDuration = 300;
+    mStartDelay = 0;
+    mRepeatCount = 0;
+    mDurationScale = -1.f;
     mInterpolator=new AccelerateDecelerateInterpolator();
 }
 

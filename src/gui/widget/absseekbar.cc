@@ -526,8 +526,10 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
 
     float scale;
     float progress = 0.0f;
+    const int progressGravity = Gravity::getAbsoluteGravity(getProgressGravity(),getLayoutDirection());
     if(getProgressOrientation()==HORIZONTAL){
-        if (isLayoutRtl() && mMirrorForRtl) {
+        const int absGravity = progressGravity & Gravity::HORIZONTAL_GRAVITY_MASK;
+        if ((isLayoutRtl() && mMirrorForRtl)||(absGravity==Gravity::RIGHT)) {
             if (x > width - mPaddingRight) {
                 scale = 0.0f;
             } else if (x < mPaddingLeft) {
@@ -547,13 +549,14 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
             }
         }
     }else{
-        if (isLayoutRtl() && mMirrorForRtl) {
+        const int absGravity = progressGravity & Gravity::VERTICAL_GRAVITY_MASK;
+        if ((/*isLayoutRtl() &&*/ mMirrorForRtl)&&(absGravity==Gravity::TOP)) {
             if (y > height - mPaddingBottom) {
-                scale = 0.0f;
-            } else if (y < mPaddingTop) {
                 scale = 1.0f;
+            } else if (y < mPaddingTop) {
+                scale = 0.f;
             } else {
-                scale = float(availableHeight - y + mPaddingTop) / availableHeight  + mTouchThumbOffset;
+                scale = float(y - mPaddingTop) / availableHeight  + mTouchThumbOffset;
                 progress = mTouchProgressOffset;
             }
         } else {

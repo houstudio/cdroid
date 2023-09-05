@@ -44,7 +44,7 @@ std::shared_ptr<Drawable::ConstantState>ScaleDrawable::getConstantState(){
 }
 
 std::shared_ptr<DrawableWrapper::DrawableWrapperState>ScaleDrawable::mutateConstantState(){
-    mState=std::make_shared<ScaleState>(*mState);
+    mState = std::make_shared<ScaleState>(*mState);
     return mState;
 }
 
@@ -99,7 +99,7 @@ int ScaleDrawable::getOpacity(){
 
 void ScaleDrawable::draw(Canvas& canvas) {
     Drawable*d = getDrawable();
-    if (d != nullptr && d->getLevel() != 0) {
+    if (d && d->getLevel() != 0) {
         d->draw(canvas);
     }
 }
