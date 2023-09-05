@@ -49,11 +49,12 @@ Typeface::Typeface(FcPattern & font,const std::string&family) {
             s = nullptr;
         }
     }
+    std::ostringstream oss;
     for(int i = 0; FcPatternGetString(&font, FC_FAMILY,i, &s) == FcResultMatch; i++) {
-        mFamily +=std::string((const char*)s);
-        mFamily +=";";
+        oss<<(const char*)s<<";";
         s = nullptr;
     }
+    mFamily = oss.str();
     LOGV("family=%s",mFamily.c_str());
     mStyle = 0 ;
     ret = FcPatternGetString(&font, FC_STYLE, 0, &s);
