@@ -1218,7 +1218,7 @@ void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&ar
             removed.push_back(arc);
         }
     }
-    LOG(ERROR)<<axisName + " constraints: "<<arcsToString(horizontal,culprits)<<
+    LOG(DEBUG)<<axisName + " constraints: "<<arcsToString(horizontal,culprits)<<
              " are inconsistent; permanently removing: " << arcsToString(horizontal,removed);
 }
 

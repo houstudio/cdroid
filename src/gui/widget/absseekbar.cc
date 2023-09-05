@@ -80,7 +80,7 @@ void AbsSeekBar::onVisualProgressChanged(int id, float scale){
     ProgressBar::onVisualProgressChanged(id,scale);
     if (id ==R::id::progress) {
         if (mThumb != nullptr) {
-            setThumbPos((getProgressOrientation()==ClipDrawable::HORIZONTAL)?getWidth():getHeight(),mThumb, scale, INT_MIN);
+            setThumbPos((getProgressOrientation()==HORIZONTAL)?getWidth():getHeight(),mThumb, scale, INT_MIN);
             // Since we draw translated, the drawable's bounds that it signals
             // for invalidation won't be the actual bounds we want invalidated,
             // so just invalidate this whole view.
@@ -137,7 +137,7 @@ void AbsSeekBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int dw = 0;
     int dh = 0;
     if (d != nullptr) {
-	if(getProgressOrientation()==ClipDrawable::HORIZONTAL){
+	if(getProgressOrientation()==HORIZONTAL){
             dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
             dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
             dh = std::max(thumbHeight, dh);
@@ -200,7 +200,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
         // Assuming the thumb drawable is symmetric, set the thumb offset
         // such that the thumb will hang halfway off either edge of the
         // progress bar.
-	if(getProgressOrientation()==ClipDrawable::HORIZONTAL)
+	if(getProgressOrientation()==HORIZONTAL)
             mThumbOffset = thumb->getIntrinsicWidth() / 2;
 	else
             mThumbOffset = thumb->getIntrinsicHeight() / 2;
@@ -291,7 +291,7 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
     // Apply offset to whichever item is taller.
     int trackOffset;
     int thumbOffset;
-    if(getProgressOrientation()==ClipDrawable::HORIZONTAL){
+    if(getProgressOrientation()==HORIZONTAL){
         if (thumbHeight > trackHeight) {
             const int offsetHeight = (paddedHeight - thumbHeight) / 2;
             trackOffset = offsetHeight + (thumbHeight - trackHeight) / 2;
@@ -318,7 +318,7 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
     }
 
     if (track) {
-	if(getProgressOrientation()==ClipDrawable::HORIZONTAL){
+	if(getProgressOrientation()==HORIZONTAL){
             trackWidth = w - mPaddingRight - mPaddingLeft;
             track->setBounds(0, trackOffset, trackWidth, trackHeight);
             LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,0, trackOffset, trackWidth, trackHeight,mMaxHeight);
@@ -341,8 +341,8 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
 
     const int thumbWidth = thumb->getIntrinsicWidth();
     const int thumbHeight= thumb->getIntrinsicHeight();
-    int available = (getProgressOrientation()==ClipDrawable::HORIZONTAL)?(wh - mPaddingLeft - mPaddingRight):(wh- mPaddingTop - mPaddingBottom);
-    available -= (getProgressOrientation()==ClipDrawable::HORIZONTAL)?thumbWidth:thumbHeight;
+    int available = (getProgressOrientation()==HORIZONTAL)?(wh - mPaddingLeft - mPaddingRight):(wh- mPaddingTop - mPaddingBottom);
+    available -= (getProgressOrientation()==HORIZONTAL)?thumbWidth:thumbHeight;
 
     // The extra space for the thumb to move on the track
     available += mThumbOffset * 2;
@@ -350,7 +350,7 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
     const int thumbPos = (int) (scale * available + 0.5f);
 
     int left,top,right,bottom;
-    if(getProgressOrientation()==ClipDrawable::HORIZONTAL){
+    if(getProgressOrientation()==HORIZONTAL){
         if (offset == INT_MIN) {
             const Rect oldBounds = thumb->getBounds();
             top = oldBounds.top;
@@ -408,7 +408,7 @@ void AbsSeekBar::drawThumb(Canvas&canvas) {
         canvas.save();
         // Translate the padding. For the x, we need to allow the thumb to
         // draw in its extra space
-	if(getProgressOrientation()==ClipDrawable::HORIZONTAL)
+	if(getProgressOrientation()==HORIZONTAL)
             canvas.translate( mPaddingLeft - mThumbOffset, mPaddingTop);
         else
             canvas.translate( mPaddingLeft, mPaddingTop - mThumbOffset);
@@ -426,15 +426,15 @@ void  AbsSeekBar::drawTickMarks(Canvas&canvas){
         int halfH = h >= 0 ? h / 2 : 1;
         mTickMark->setBounds(-halfW, -halfH, halfW, halfH);
 
-        float spacing = (getProgressOrientation()==ClipDrawable::HORIZONTAL?getWidth():getHeight())/ (float) count;
+        float spacing = (getProgressOrientation()==HORIZONTAL?getWidth():getHeight())/ (float) count;
         canvas.save();
-        if(getProgressOrientation()==ClipDrawable::HORIZONTAL)
+        if(getProgressOrientation()==HORIZONTAL)
             canvas.translate(0, getHeight() / 2);
         else
             canvas.translate(getWidth()/2,0);
         for (int i = 0; i <= count; i++) {
             mTickMark->draw(canvas);
-	    if(getProgressOrientation()==ClipDrawable::HORIZONTAL)
+	    if(getProgressOrientation()==HORIZONTAL)
                 canvas.translate(spacing, 0);
 	    else
                 canvas.translate(0, spacing);
@@ -526,7 +526,7 @@ void AbsSeekBar::trackTouchEvent(MotionEvent&event){
 
     float scale;
     float progress = 0.0f;
-    if(getProgressOrientation()==ClipDrawable::HORIZONTAL){
+    if(getProgressOrientation()==HORIZONTAL){
         if (isLayoutRtl() && mMirrorForRtl) {
             if (x > width - mPaddingRight) {
                 scale = 0.0f;
@@ -582,7 +582,7 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
 	if(mThumb){
              const int availableWidth = getWidth() - mPaddingLeft - mPaddingRight;
 	     const int availableHeight = getHeight() - mPaddingTop - mPaddingBottom;
-	     if(getProgressOrientation()==ClipDrawable::HORIZONTAL){
+	     if(getProgressOrientation()==HORIZONTAL){
                  mTouchThumbOffset = (getProgress() - getMin()) / (float) (getMax()
                     - getMin()) - (event.getX() - mPaddingLeft) / availableWidth;
                  if (std::abs(mTouchThumbOffset * availableWidth) > getThumbOffset()) {
@@ -611,8 +611,8 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
             const float x = event.getX();
 	    const float y = event.getY();
 	    const int orientation = getProgressOrientation();
-            if (((orientation==ClipDrawable::HORIZONTAL)&&(std::abs(x - mTouchDownX) > mScaledTouchSlop))||
-	        ((orientation==ClipDrawable::VERTICAL)&&(std::abs(y - mTouchDownY) > mScaledTouchSlop))) {
+            if (((orientation==HORIZONTAL)&&(std::abs(x - mTouchDownX) > mScaledTouchSlop))||
+	        ((orientation==VERTICAL)&&(std::abs(y - mTouchDownY) > mScaledTouchSlop))) {
                 startDrag(event);
             }
         }

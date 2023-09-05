@@ -6,13 +6,11 @@ namespace cdroid{
 #define MAX_LEVEL 10000
 
 ClipDrawable::ClipState::ClipState():DrawableWrapperState(){
-    mOrientation = HORIZONTAL;
     mGravity = Gravity::LEFT;
 }
 
 ClipDrawable::ClipState::ClipState(const ClipState& state)
     :DrawableWrapperState(state){
-    mOrientation =state.mOrientation;
     mGravity = state.mGravity;
 }
 
@@ -30,10 +28,9 @@ ClipDrawable::ClipDrawable(std::shared_ptr<ClipState>state):DrawableWrapper(stat
     mState=state;
 }
 
-ClipDrawable::ClipDrawable(Drawable* drawable, int gravity, int orientation)
+ClipDrawable::ClipDrawable(Drawable* drawable, int gravity)
     :ClipDrawable(std::make_shared<ClipState>()){
     mState->mGravity = gravity;
-    mState->mOrientation = orientation;
     setDrawable(drawable);
 }
 
@@ -43,10 +40,6 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> ClipDrawable::mutateConst
 
 int ClipDrawable::getGravity()const{
     return mState->mGravity;
-}
-
-int ClipDrawable::getOrientation()const{
-    return mState->mOrientation;
 }
 
 int ClipDrawable::getOpacity(){
@@ -77,20 +70,20 @@ void ClipDrawable::draw(Canvas& canvas){
 
     int w = bounds.width;
     const int iw = 0;
-    if ((mState->mOrientation & HORIZONTAL) != 0) {
+    if (Gravity::isHorizontal(mState->mGravity)){//Orientation & HORIZONTAL) != 0) {
         w -= (w - iw) * (MAX_LEVEL - level) / MAX_LEVEL;
     }
 
     int h = bounds.height;
     const int ih = 0;
-    if ((mState->mOrientation & VERTICAL) != 0) {
+    if (Gravity::isVertical(mState->mGravity)){//mOrientation & VERTICAL) != 0) {
         h -= (h - ih) * (MAX_LEVEL - level) / MAX_LEVEL;
     }
 
     const int layoutDirection = getLayoutDirection();
     Gravity::apply(mState->mGravity, w, h, bounds, r, layoutDirection);
-    LOGV("%p lvl=%d rect=%d,%d-%d,%d gravity=%d orient=%d bounds=%d,%d-%d,%d  wh=%d,%d",
-            this,level,r.left,r.top,r.width,r.height, mState->mGravity,mState->mOrientation,bounds.left,bounds.top,bounds.width,bounds.height,w,h);
+    LOGV("%p lvl=%d rect=%d,%d-%d,%d gravity=%d bounds=%d,%d-%d,%d  wh=%d,%d",
+            this,level,r.left,r.top,r.width,r.height, mState->mGravity,bounds.left,bounds.top,bounds.width,bounds.height,w,h);
     if (w > 0 && h > 0) {
         canvas.save();
         canvas.rectangle(r.left,r.top,r.width,r.height);
@@ -104,9 +97,8 @@ Drawable*ClipDrawable::inflate(Context*ctx,const AttributeSet&atts){
     Drawable*d = Drawable::createWrappedDrawable(ctx,atts);
     const int gravity= atts.getGravity("gravity",Gravity::LEFT);
     const std::string sOrientation = atts.getString("clipOrientation");
-    const int orientation = (sOrientation.compare("vertical")==0)?VERTICAL:HORIZONTAL;
-    d = new ClipDrawable(d,gravity,orientation);
-    LOGV("%p gravity=%d orientation=%d",d,gravity,orientation);
+    d = new ClipDrawable(d,gravity);
+    LOGV("%p gravity=%d horizontal=%d",d,gravity,Gravity::isHorizontal(gravity));
     return d;
 }
 

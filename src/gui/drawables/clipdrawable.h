@@ -7,7 +7,6 @@ class ClipDrawable:public DrawableWrapper{
 private:
     class ClipState:public DrawableWrapperState{
     public:
-        int mOrientation;
         int mGravity;
         ClipState();
         ClipState(const ClipState& state);
@@ -19,15 +18,10 @@ protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:
-    enum Orientation{
-        HORIZONTAL=1,
-        VERTICAL  =2
-    };
     ClipDrawable();
-    ClipDrawable(Drawable* drawable, int gravity, int orientation);
+    ClipDrawable(Drawable* drawable, int gravity);
     int getOpacity()override;
     int getGravity()const;
-    int getOrientation()const;
     void draw(Canvas& canvas)override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };

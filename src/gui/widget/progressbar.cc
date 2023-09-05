@@ -162,7 +162,7 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
             mSampleWidth = clone->getIntrinsicWidth();
         }
         if (clip) {
-            return new ClipDrawable(clone, Gravity::LEFT, ClipDrawable::HORIZONTAL);
+            return new ClipDrawable(clone, Gravity::LEFT);
         } else {
             return clone;
         }
@@ -480,18 +480,26 @@ int ProgressBar::getProgressGravity()const{
 
 
 int ProgressBar::getProgressOrientation()const{
+    int gravity = Gravity::LEFT;
     if(dynamic_cast<LayerDrawable*>(mProgressDrawable)){
-	LayerDrawable*ld = (LayerDrawable*)mProgressDrawable;
+        LayerDrawable*ld = (LayerDrawable*)mProgressDrawable;
         ClipDrawable*cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::progress));
-	ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::progress));
-	if(cd == nullptr && sd==nullptr){
+        ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::progress));
+        if(cd == nullptr && sd==nullptr){
             cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
-	    sd = dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
-	}
-	if(cd)return cd->getOrientation();
-	if(sd)return Gravity::isHorizontal(sd->getGravity())?ClipDrawable::HORIZONTAL:ClipDrawable::VERTICAL;
+            sd = dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
+        }
+        if(cd)return gravity = cd->getGravity();
+        if(sd)return gravity = sd->getGravity();
+        return Gravity::isHorizontal(gravity)?HORIZONTAL:VERTICAL;
+    }else{
+        ClipDrawable*cd = dynamic_cast<ClipDrawable*>(mProgressDrawable);
+        ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(mProgressDrawable);
+        if(cd)return gravity = cd->getGravity();
+        if(sd)return gravity = sd->getGravity();
+        return gravity;
     }
-    return (getWidth()>getHeight())?ClipDrawable::HORIZONTAL:ClipDrawable::VERTICAL;
+    return (getWidth()>getHeight())?HORIZONTAL:VERTICAL;
 }
 
 void ProgressBar::setIndeterminateDrawable(Drawable*d){

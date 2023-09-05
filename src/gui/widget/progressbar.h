@@ -57,7 +57,8 @@ private:
     void applyProgressBackgroundTint();
     void applySecondaryProgressTint();
 protected:
-
+    static constexpr int HORIZONTAL= 0;
+    static constexpr int VERTICAL  = 1;
     int mMin;
     int mMax;
     int mMinWidth;
