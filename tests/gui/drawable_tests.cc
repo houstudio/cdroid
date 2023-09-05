@@ -285,7 +285,7 @@ TEST_F(DRAWABLE,clipdrawable){
 
     ShapeDrawable*sd=new ShapeDrawable();
     Shape*sp=new RectShape();
-    ClipDrawable *cd2=new ClipDrawable(sd,Gravity::CENTER,ClipDrawable::HORIZONTAL);
+    ClipDrawable *cd2=new ClipDrawable(sd,Gravity::CENTER);
     sd->setShape(sp);
     cd2->setDrawable(sd);
     sp->setSolidColor(0xFFFF0000);

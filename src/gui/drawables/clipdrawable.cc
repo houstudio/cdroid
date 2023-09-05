@@ -70,13 +70,13 @@ void ClipDrawable::draw(Canvas& canvas){
 
     int w = bounds.width;
     const int iw = 0;
-    if (Gravity::isHorizontal(mState->mGravity)){//Orientation & HORIZONTAL) != 0) {
+    if (Gravity::isHorizontal(mState->mGravity)){
         w -= (w - iw) * (MAX_LEVEL - level) / MAX_LEVEL;
     }
 
     int h = bounds.height;
     const int ih = 0;
-    if (Gravity::isVertical(mState->mGravity)){//mOrientation & VERTICAL) != 0) {
+    if (Gravity::isVertical(mState->mGravity)){
         h -= (h - ih) * (MAX_LEVEL - level) / MAX_LEVEL;
     }
 

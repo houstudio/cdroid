@@ -73,7 +73,7 @@ TEST_F(MUTATE,ninepatch){
 
 TEST_F(MUTATE,clip){
     ColorDrawable*c=new ColorDrawable(0xFFFF0000);
-    ClipDrawable*d1=new ClipDrawable(c,0,0);
+    ClipDrawable*d1=new ClipDrawable(c,0);
     ClipDrawable*d2=(ClipDrawable*)d1->getConstantState()->newDrawable();
     ASSERT_NE(d2->getDrawable(),(void*)nullptr);
     ASSERT_NE(dynamic_cast<ClipDrawable*>(d2),(void*)nullptr);
@@ -83,7 +83,7 @@ TEST_F(MUTATE,clip){
 
 TEST_F(MUTATE,clipshape){
     ShapeDrawable*c=new ShapeDrawable();
-    ClipDrawable*d1=new ClipDrawable(c,0,0);
+    ClipDrawable*d1=new ClipDrawable(c,0);
     ClipDrawable*d2=(ClipDrawable*)d1->getConstantState()->newDrawable();
     ASSERT_NE(d2->getDrawable(),(void*)nullptr);
     ASSERT_NE(dynamic_cast<ShapeDrawable*>(d2->getDrawable()),(void*)nullptr);
