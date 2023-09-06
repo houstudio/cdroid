@@ -350,7 +350,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
     Drawable* d = nullptr;
     std::string resname,package;
     ZIPArchive* pak = getResource(fullresid,&resname,&package);
-    if(fullresid.empty()) {
+    if(fullresid.empty()||(fullresid.compare("null")==0)) {
         return d;
     } else {
         auto it = mDrawables.find(fullresid);

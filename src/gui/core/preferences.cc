@@ -8,6 +8,7 @@
 #include <string.h>
 #include <textutils.h>
 #include <core/attributeset.h>
+#include <core/iostreams.h>
 
 namespace cdroid{
 
@@ -58,7 +59,14 @@ void Preferences::load(const std::string&fname){
     if(fin.good()){
         mFileName=fname;
         load(fin);
+    }else{
+        load(fname.c_str(),fname.length());
     }
+}
+
+void Preferences::load(const char*buf,size_t len){
+    MemoryInputStream stream(buf,len);
+    load(stream);
 }
 
 void Preferences::load(std::istream&istream){
@@ -73,7 +81,7 @@ void Preferences::load(std::istream&istream){
     XML_SetCharacterDataHandler(parser,CharacterHandler);
     do {
         std::string str;
-        std::getline(istream,str);//fin.read(buf,sizeof(buf));
+        std::getline(istream,str);
         len=str.length();
         if (XML_Parse(parser, str.c_str(),len,len==0) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
