@@ -57,11 +57,14 @@ void Preferences::load(const std::string&fname){
     std::ifstream fin(fname);
     if(fin.good()){
         mFileName=fname;
+        load(fin);
     }
+}
+
+void Preferences::load(std::istream&istream){
     XML_Parser parser=XML_ParserCreate(nullptr);
     std::string curKey;
     std::string curValue;
-    char buf[128];
     int len=0;
     PREFPARSER kvp;
     kvp.pref=this;
@@ -69,31 +72,35 @@ void Preferences::load(const std::string&fname){
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetCharacterDataHandler(parser,CharacterHandler);
     do {
-        fin.read(buf,sizeof(buf));
-        len=fin.gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
+        std::string str;
+        std::getline(istream,str);//fin.read(buf,sizeof(buf));
+        len=str.length();
+        if (XML_Parse(parser, str.c_str(),len,len==0) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s:%s at line %ld",fname.c_str(),es, XML_GetCurrentLineNumber(parser));
+            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
             return;
         }
     } while(len!=0);
     XML_ParserFree(parser);
     updates = 0; 
-    LOGV("parse=%s",fname.c_str());
 }
 
 void Preferences::save(const std::string&fname){
     std::ofstream ofs(fname);
-    ofs<<"<sections>"<<std::endl;
+    save(ofs);
+}
+
+void Preferences::save(std::ostream&os){
+    os<<"<sections>"<<std::endl;
     for(auto sec:mPrefs){
-	ofs<<"<section name=\""<<sec.first<<"\">"<<std::endl;
-	for(auto kv:sec.second){
-	   ofs<<"<item name=\""<<kv.first<<"\">"<<kv.second<<"</item>"<<std::endl;
-	}
-	ofs<<"</section>"<<std::endl;
+	    os<<"<section name=\""<<sec.first<<"\">"<<std::endl;
+	    for(auto kv:sec.second){
+	        os<<"<item name=\""<<kv.first<<"\">"<<kv.second<<"</item>"<<std::endl;
+	    }
+	    os<<"</section>"<<std::endl;
     }
-    ofs<<"</sections>"<<std::endl;
+    os<<"</sections>"<<std::endl;
     updates=0;
 }
 

@@ -16,6 +16,8 @@ public:
    ~Preferences();
    void load(const std::string&fname);
    void save(const std::string&fname);
+   void load(std::istream&istream);
+   void save(std::ostream&ostream);
    int getSectionCount()const;
    int getSections(std::vector<std::string>&mbs);
    int getUpdates()const;
