@@ -31,15 +31,20 @@
 find_package(PkgConfig)
 pkg_check_modules(PC_CAIRO QUIET cairo)
 
-find_path(CAIRO_INCLUDE_DIRS
-    NAMES cairo.h
-    HINTS ${PC_CAIRO_INCLUDEDIR}
+if(CMAKE_HOST_WIN32)
+   find_path(CAIRO_INCLUDE_DIRS
+       NAMES cairo.h
+       HINTS ${PC_CAIRO_INCLUDEDIR}
           ${PC_CAIRO_INCLUDE_DIRS}
-if(NOT CMAKE_HOST_WIN32)
-    NO_DEFAULT_PATH
+       PATH_SUFFIXES cairo)
+else()
+   find_path(CAIRO_INCLUDE_DIRS
+       NAMES cairo.h
+       HINTS ${PC_CAIRO_INCLUDEDIR}
+          ${PC_CAIRO_INCLUDE_DIRS}
+       NO_DEFAULT_PATH
+       PATH_SUFFIXES cairo)
 endif()
-    PATH_SUFFIXES cairo
-)
 
 find_library(CAIRO_LIBRARIES
     NAMES cairo

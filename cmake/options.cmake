@@ -144,7 +144,7 @@ foreach(lib ${CDROID_DEPLIBS})
 	   get_filename_component(fromfile ${linkfile} NAME)
 	   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	       ${fromfile} ${libname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/lib)")
-       endif(linkfile STREQUAL lib)
+       endif("${linkfile" STREQUAL "")
        set(lib ${linkpath}/${linkname})
        if("${linkfile}" STREQUAL "")
 	   set(linkdone TRUE)
