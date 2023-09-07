@@ -164,9 +164,9 @@ void TabLayout::addTabFromItemView(TabItem* item){
     if (item->mIcon) {
         tab->setIcon(item->mIcon);
     }
-
-    tab->setCustomView(item->mCustomLayout);
-
+    if (item->mCustomLayout.size()){
+        tab->setCustomView(item->mCustomLayout);
+    }
     tab->setContentDescription(item->getContentDescription());//getContentDescription inherited from View.
     addTab(tab);
     delete item;//added by zhhou

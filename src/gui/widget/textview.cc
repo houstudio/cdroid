@@ -388,6 +388,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
     setGravity(attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
 
+    setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
+             attrs.getFloat("lineSpacingMultiplier",1.f) );
+
     TextAppearanceAttributes attributes;
     const std::string appearance=attrs.getString("textAppearance");
     if(appearance.empty()==false){

@@ -881,6 +881,15 @@ int ViewGroup::getDescendantFocusability()const{
 }
 
 void ViewGroup::setDescendantFocusability(int focusability){
+    switch (focusability) {
+    case FOCUS_BEFORE_DESCENDANTS:
+    case FOCUS_AFTER_DESCENDANTS:
+    case FOCUS_BLOCK_DESCENDANTS:
+        break;
+    default:
+        FATAL("must be one of FOCUS_BEFORE_DESCENDANTS, "
+              "FOCUS_AFTER_DESCENDANTS, FOCUS_BLOCK_DESCENDANTS");
+    }
     mGroupFlags &= ~FLAG_MASK_FOCUSABILITY;
     mGroupFlags |= (focusability & FLAG_MASK_FOCUSABILITY);
 }

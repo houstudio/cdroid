@@ -9,7 +9,7 @@ find_path(EXPAT_INCLUDE_DIR
 )
 
 find_library(EXPAT_LIBRARY
-    NAMES expat
+    NAMES expat expatd
     HINTS ${PC_EXPAT_LIBDIR}
     ${PC_EXPAT_LIBRARY_DIRS}
 )

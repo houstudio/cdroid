@@ -8,7 +8,7 @@ find_path(ZLIB_INCLUDE_DIRS
 )
 
 find_library(ZLIB_LIBRARIES
-    NAMES z
+    NAMES z zlib
     HINTS ${PC_ZLIB_LIBDIR}
     ${PC_ZLIB_LIBRARY_DIRS}
 )
