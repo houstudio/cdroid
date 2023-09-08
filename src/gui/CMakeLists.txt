@@ -81,7 +81,7 @@ configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install(TARGETS cdroid  DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
-install(FILES ${CDROID_DEPLIBS} DESTINATION lib)
+install(FILES ${CDROID_DEPLIBS} DESTINATION lib OPTIONAL)
 install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
     PATTERN "view" EXCLUDE 
     PATTERN "core" EXCLUDE)

@@ -15,6 +15,6 @@ if( NOT(${CDROID_CHIPSET} MATCHES "x64") )
 endif()
 
 file(GLOB HAL_HEADERS  ${PROJECT_SOURCE_DIR}/include/*.h)
+install(FILES ${HAL_HEADERS} common/shared_queue.h DESTINATION include/porting)
 file(COPY ${HAL_HEADERS} common/shared_queue.h  DESTINATION ${CMAKE_BINARY_DIR}/include/porting)
 file(COPY ${KEYCMAPS} ${KEYMAP} DESTINATION ${CMAKE_BINARY_DIR} PATTERN "*.k*")
-
