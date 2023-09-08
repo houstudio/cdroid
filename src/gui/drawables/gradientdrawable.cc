@@ -255,7 +255,7 @@ void GradientDrawable::updateLocalState() {
         Color c(stateColor);
         mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     } else if(state->mGradientColors.size()==0) {
-        mFillPaint = SolidPattern::create_rgba(0,0,0,0);
+        //mFillPaint = SolidPattern::create_rgba(0,0,0,0);
     } else {
     }
     mPadding = state->mPadding;
@@ -537,7 +537,7 @@ void GradientDrawable::setColor(ColorStateList* colorStateList) {
         color = Color::TRANSPARENT;
     } else {
         std::vector< int>stateSet = getState();
-        color = colorStateList->getColorForState(stateSet, 0);
+        color = colorStateList->getColorForState(stateSet, colorStateList->getDefaultColor());
     }
     Color c(color);
     mFillPaint=SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
@@ -741,16 +741,8 @@ bool GradientDrawable::ensureValidRect() {
             // maxed out so that alpha modulation works correctly.
             //if (st.mSolidColors == nullptr)
             //    mFillPaint=SolidPattern::create_rgb(0,0,0);//setColor(Color.BLACK);
-        } else { //gradientColors.size()
-            int color = Color::BLACK;
-            if(st.mSolidColors) {
-                if(st.mSolidColors->isStateful())
-                    color = st.mSolidColors->getColorForState(getState(),color);
-                else
-                    color = st.mSolidColors->getDefaultColor();
-            }
-            Color c(color);
-            mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
+        } else{ //gradientColors.size()==0
+            //transparent ,mFillPaint=nullptr
         }
         LOGE_IF((mFillPaint==nullptr)&&(mStrokePaint==nullptr),"stroke and solid must be setted one or both of them");
     }
@@ -820,14 +812,13 @@ void GradientDrawable::draw(Canvas&canvas) {
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
         if(st->mRadiusArray.size())radii=st->mRadiusArray;
         if(st->mRadius > 0.0f)radii= {rad,rad,rad,rad};
-        if(mFillPaint)
-            canvas.set_source(mFillPaint);
         drawRound(canvas,mRect,radii);
         if (haveStroke) {
-            canvas.fill_preserve();
+            if(mFillPaint)canvas.fill_preserve();
             prepareStrokeProps(canvas);
             canvas.stroke();
         } else if(mFillPaint) {
+            canvas.set_source(mFillPaint);
             canvas.fill();
         }
         break;
