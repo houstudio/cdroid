@@ -834,19 +834,12 @@ void GradientDrawable::draw(Canvas&canvas) {
         break;
     case OVAL:
         canvas.save();
-#if 0
-        canvas.translate(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f);
-        canvas.move_to(0,0);
-        canvas.arc(0,0,std::min(mRect.width,mRect.height)/2.f,
-                   0,M_PI*2.f*(st->mUseLevel?(float)getLevel()/10000.f:1));
-        canvas.line_to(0,0);
-        LOGD("useLevel=%d lvl=%d",st->mUseLevel,getLevel());
-#else
+        rad =std::min(mRect.width,mRect.height)/2.f;
+	canvas.translate(mRect.left + mRect.width/2.f ,mRect.top+mRect.height/2.f);
+	canvas.scale(float(mRect.width)/mRect.height,1.f);
         LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
-        canvas.move_to(mRect.left+mRect.width/1.f,mRect.top+mRect.height/2.f);
-        canvas.arc(mRect.left+mRect.width/2.f,mRect.top+mRect.height/2.f,
-                   std::min(mRect.width,mRect.height)/2.f,
-                   0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
+        canvas.move_to(mRect.left+mRect.width/2.f +rad,mRect.top+mRect.height/2.f);
+        canvas.arc(0,0,rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
 #endif
         if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
@@ -857,7 +850,6 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.set_source(mFillPaint);
             canvas.fill();
         }
-
         canvas.restore();
         break;
     case RING: {
