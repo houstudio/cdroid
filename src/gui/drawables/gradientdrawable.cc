@@ -813,12 +813,13 @@ void GradientDrawable::draw(Canvas&canvas) {
         if(st->mRadiusArray.size())radii=st->mRadiusArray;
         if(st->mRadius > 0.0f)radii= {rad,rad,rad,rad};
         drawRound(canvas,mRect,radii);
+
+        if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
             if(mFillPaint)canvas.fill_preserve();
             prepareStrokeProps(canvas);
             canvas.stroke();
         } else if(mFillPaint) {
-            canvas.set_source(mFillPaint);
             canvas.fill();
         }
         break;
@@ -847,12 +848,15 @@ void GradientDrawable::draw(Canvas&canvas) {
                    std::min(mRect.width,mRect.height)/2.f,
                    0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
 #endif
-        if(mFillPaint) canvas.set_source(mFillPaint);
+        if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
-            canvas.fill_preserve();
+            if(mFillPaint)canvas.fill_preserve();
             prepareStrokeProps(canvas);
             canvas.stroke();
-        } else if(mFillPaint)canvas.fill();
+        } else if(mFillPaint){
+            canvas.set_source(mFillPaint);
+            canvas.fill();
+        }
 
         canvas.restore();
         break;
@@ -885,7 +889,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         }
         if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
-            canvas.fill_preserve();
+            if(mFillPaint)canvas.fill_preserve();
             prepareStrokeProps(canvas);
             canvas.stroke();
         } else if(mFillPaint) {
