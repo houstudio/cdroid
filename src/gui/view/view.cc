@@ -4687,10 +4687,12 @@ void View::buildDrawingCacheImpl(bool autoScale){
     RefPtr<Canvas> oldCanvas=mAttachInfo?mAttachInfo->mCanvas:nullptr;
     RefPtr<Canvas> canvas=std::make_shared<Canvas>(bitmap);
     if (clear) {
+        canvas->save();
         canvas->rectangle(0,0,width,height);
         canvas->set_operator(Cairo::Context::Operator::SOURCE);
         canvas->set_color(mDrawingCacheBackgroundColor); 
         canvas->fill();
+        canvas->restore();
     }
 
     computeScroll();
