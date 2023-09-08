@@ -7,6 +7,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 include(cmake/common_functions.cmake)
 include(cmake/options.cmake)
 
+if(COMMAND cmake_policy)
+   cmake_policy(SET CMP0003 NEW)
+   #make vcpkg happy:)
+endif(COMMAND cmake_policy)
+
 set(DISABLE_FORCE_DEBUG_POSTFIX ON)
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)

@@ -78,7 +78,7 @@ if(litehtml_FOUND)
 endif()
 
 configure_file(cdroid.pc.in cdroid.pc @ONLY)
-install (TARGETS cdroid  DESTINATION lib)
+install(TARGETS cdroid  DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
 install(FILES ${CDROID_DEPLIBS} DESTINATION lib)
