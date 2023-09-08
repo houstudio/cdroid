@@ -736,12 +736,13 @@ float PlotView::Private::rectCost(const RectF &r) const
     // Compute sum of mask values in the rect r
     Cairo::RefPtr<Cairo::ImageSurface> subMask ;//= plotMask.copy(r.toRect());
     int cost = 0;
+#if 0
     for (int ix = 0; ix < subMask->get_width(); ++ix) {
         for (int iy = 0; iy < subMask->get_height(); ++iy) {
             //cost += uint32_t(subMask.pixel(ix, iy)).red();
         }
     }
-
+#endif
     return float(cost);
 }
 
