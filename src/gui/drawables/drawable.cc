@@ -5,6 +5,7 @@
 #include <cdlog.h>
 #include <string.h>
 #include <textutils.h>
+#include <core/windowmanager.h>
 
 using namespace Cairo;
 namespace cdroid {
@@ -235,6 +236,29 @@ void Drawable::jumpToCurrentState() {
 
 Drawable*Drawable::getCurrent() {
     return this;
+}
+
+int Drawable::resolveOpacity(int op1,int op2){
+    if (op1 == op2) {
+        return op1;
+    }
+    if (op1 == PixelFormat::UNKNOWN || op2 == PixelFormat::UNKNOWN) {
+        return PixelFormat::UNKNOWN;
+    }
+    if (op1 == PixelFormat::TRANSLUCENT || op2 == PixelFormat::TRANSLUCENT) {
+        return PixelFormat::TRANSLUCENT;
+    }
+    if (op1 == PixelFormat::TRANSPARENT || op2 == PixelFormat::TRANSPARENT) {
+        return PixelFormat::TRANSPARENT;
+    }
+    return PixelFormat::OPAQUE;
+}
+
+int Drawable::resolveDensity(int parentDensity){
+    DisplayMetrics metrics;
+    WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
+    const int densityDpi = /*r == null ? parentDensity :*/metrics.densityDpi;
+    return densityDpi == 0 ? DisplayMetrics::DENSITY_DEFAULT : densityDpi;
 }
 
 float Drawable::scaleFromDensity(float pixels, int sourceDensity, int targetDensity) {

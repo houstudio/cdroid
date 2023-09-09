@@ -40,7 +40,7 @@ int RippleDrawable::RippleState::getChangingConfigurations()const{
 RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     mState.reset(new RippleState(state.get(), this));
     mLayerState = mState;
-    mDensity = 160;//Drawable::resolveDensity(res, mState.mDensity);
+    mDensity = Drawable::resolveDensity(mState->mDensity);
     mRipple  = nullptr;
     mBackground = nullptr;
     mRippleActive   = false;

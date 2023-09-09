@@ -81,7 +81,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mAttrCorners = orig.mAttrCorners;
     mAttrPadding = orig.mAttrPadding;
 
-    mDensity = orig.mDensity;// Drawable::resolveDensity(/*res,*/orig.mDensity);
+    mDensity = Drawable::resolveDensity(/*res,*/orig.mDensity);
     if (orig.mDensity != mDensity) {
         applyDensityScaling(orig.mDensity, mDensity);
     }
@@ -834,13 +834,13 @@ void GradientDrawable::draw(Canvas&canvas) {
         break;
     case OVAL:
         canvas.save();
-        rad =std::min(mRect.width,mRect.height)/2.f;
-	canvas.translate(mRect.left + mRect.width/2.f ,mRect.top+mRect.height/2.f);
-	canvas.scale(float(mRect.width)/mRect.height,1.f);
+        rad = mRect.height/2.f;
+        canvas.translate(mRect.left + mRect.width/2.f ,mRect.top+mRect.height/2.f);
+        canvas.scale(float(mRect.width)/mRect.height,1.f);
         LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
         canvas.move_to(mRect.left+mRect.width/2.f +rad,mRect.top+mRect.height/2.f);
         canvas.arc(0,0,rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
-#endif
+		
         if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
             if(mFillPaint)canvas.fill_preserve();

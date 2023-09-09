@@ -87,7 +87,7 @@ LayerDrawable::LayerState::LayerState(){
 }
 
 LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner):LayerState(){
-    //mDensity = Drawable::resolveDensity( orig != nullptr ? orig->mDensity : 0);
+    mDensity = Drawable::resolveDensity( orig ? orig->mDensity : 0);
     if (orig == nullptr) return;
 
     mChangingConfigurations = orig->mChangingConfigurations;

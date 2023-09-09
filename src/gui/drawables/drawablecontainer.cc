@@ -38,7 +38,7 @@ public:
 
 DrawableContainer::DrawableContainerState::DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own){
     mOwner = own;
-    mDensity = 160;//Drawable.resolveDensity(res, orig != null ? orig.mDensity : 0);
+    mDensity = Drawable::resolveDensity(orig? orig->mDensity : 0);
     mVariablePadding = false;
     mConstantSize = false;
     mCheckedConstantState = true;

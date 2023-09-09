@@ -137,6 +137,7 @@ public:
 
     virtual void draw(Canvas&ctx)=0;
     static int resolveOpacity(int op1,int op2);
+    static int resolveDensity(int parentDensity);
     static float scaleFromDensity(float pixels, int sourceDensity, int targetDensity);
     static int scaleFromDensity(int pixels, int sourceDensity, int targetDensity, bool isSize);
     static Drawable*createWrappedDrawable(Context* ctx,const AttributeSet&atts);

@@ -233,12 +233,12 @@ void TabLayout::removeAllTabs(){
         removeTabViewAt(i);
     }
 
-    /*for (Iterator<Tab> i = mTabs.iterator(); i.hasNext();) {
-        Tab tab = i.next();
-        i.remove();
-        tab.reset();
-        //sTabPool.release(tab);
-    }*/
+    while (!mTabs.empty()){
+        auto it= mTabs.begin();
+        Tab* tab = (*it);
+        delete tab;
+        mTabs.erase(it);
+    }
     mSelectedTab = nullptr;
 }
 
