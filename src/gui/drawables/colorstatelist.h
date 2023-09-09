@@ -14,6 +14,7 @@ public:
 
 class ColorStateList:public ComplexColor{
 private:
+    static std::vector<std::vector<int>>EMPTY;
     int mDefaultColor;
     bool mIsOpaque;
     int mChangingConfigurations;

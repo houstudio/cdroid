@@ -251,8 +251,7 @@ void GradientDrawable::updateLocalState() {
     auto state = mGradientState;
     if(state->mSolidColors) {
         const std::vector<int> currentState = getState();
-        const int defColor = state->mSolidColors->getDefaultColor();
-        const int stateColor = state->mSolidColors->getColorForState(currentState,defColor);
+        const int stateColor = state->mSolidColors->getColorForState(currentState,0);
         Color c(stateColor);
         mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     } else if(state->mGradientColors.size()==0) {
@@ -264,7 +263,7 @@ void GradientDrawable::updateLocalState() {
         if(state->mStrokeColors) {
             const std::vector<int>currentState = getState();
             auto cls = state->mStrokeColors;
-            strokeStateColor = cls->getColorForState(currentState,cls->getDefaultColor());
+            strokeStateColor = cls->getColorForState(currentState,0);
         }
         setStroke(state->mStrokeWidth,state->mStrokeColors,state->mStrokeDashWidth,state->mStrokeDashGap);
     }
@@ -334,7 +333,7 @@ void GradientDrawable::setStroke(int width,ColorStateList* colorStateList, float
         color = Color::TRANSPARENT;
     } else {
         const std::vector<int>& stateSet = getState();
-        color = colorStateList->getColorForState(stateSet, colorStateList->getDefaultColor());
+        color = colorStateList->getColorForState(stateSet,0);
     }
     setStrokeInternal(width, color, dashWidth, dashGap);
 }
@@ -536,8 +535,8 @@ void GradientDrawable::setColor(ColorStateList* colorStateList) {
     if (colorStateList == nullptr) {
         color = Color::TRANSPARENT;
     } else {
-        std::vector< int>stateSet = getState();
-        color = colorStateList->getColorForState(stateSet, colorStateList->getDefaultColor());
+        const std::vector<int>& stateSet = getState();
+        color = colorStateList->getColorForState(stateSet,0);
     }
     Color c(color);
     mFillPaint=SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());

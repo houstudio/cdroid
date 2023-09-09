@@ -1,6 +1,5 @@
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <stdarg.h>
 #include <ngl_os.h>
 #include <stdio.h>
 #include <string.h>

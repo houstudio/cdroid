@@ -1481,21 +1481,21 @@ void TextView::invalidateDrawable(Drawable& drawable){
 void TextView::updateTextColors(){
     bool inval = false;
     const std::vector<int>&drawableState = getDrawableState();
-    int color = mTextColor->getColorForState(drawableState,mTextColor->getDefaultColor());
+    int color = mTextColor->getColorForState(drawableState,0);
     if (color != mCurTextColor) {
         LOGV("%p:%d change color %x->%x",this,mID,color,mCurTextColor);
         mCurTextColor = color;
         inval = true;
     }
     if (mLinkTextColor != nullptr) {
-        color = mLinkTextColor->getColorForState(drawableState, mLinkTextColor->getDefaultColor());
+        color = mLinkTextColor->getColorForState(drawableState,0);
         //if (color != mTextPaint.linkColor) {
           //  mTextPaint.linkColor = color;
             inval = true;
         //}
     }
     if (mHintTextColor != nullptr) {
-        color = mHintTextColor->getColorForState(drawableState, mHintTextColor->getDefaultColor());
+        color = mHintTextColor->getColorForState(drawableState,0);
         if (color != mCurHintTextColor) {
             mCurHintTextColor = color;
             inval = !mLayout->getText().empty();

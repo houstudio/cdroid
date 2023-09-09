@@ -12,6 +12,8 @@
 
 namespace cdroid{
 
+std::vector<std::vector<int>> ColorStateList::EMPTY={{0}};
+
 ColorStateList::ColorStateList(){
     mChangingConfigurations=0;
 }
@@ -138,9 +140,8 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 ColorStateList*ColorStateList::valueOf(int color){
-    std::vector<std::vector<int>> emptyStates;
     std::vector<int>colors = {color};
-    return new ColorStateList(emptyStates,colors);
+    return new ColorStateList(EMPTY,colors);
 }
 
 const std::vector<int> ColorStateList::getColors()const{
