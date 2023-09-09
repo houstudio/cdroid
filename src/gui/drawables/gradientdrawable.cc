@@ -251,12 +251,12 @@ void GradientDrawable::updateLocalState() {
     auto state = mGradientState;
     if(state->mSolidColors) {
         const std::vector<int> currentState = getState();
-        const int stateColor = state->mSolidColors->getColorForState(currentState,0);
+        const int defColor = state->mSolidColors->getDefaultColor();
+        const int stateColor = state->mSolidColors->getColorForState(currentState,defColor);
         Color c(stateColor);
         mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     } else if(state->mGradientColors.size()==0) {
         //mFillPaint = SolidPattern::create_rgba(0,0,0,0);
-    } else {
     }
     mPadding = state->mPadding;
     if(state->mStrokeWidth>=0) {
