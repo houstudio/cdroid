@@ -12,11 +12,19 @@ GFXDrm::GFXDrm(const char*devnode) {
     drmModeRes *res;
     drmModeConnector *conn;
     struct modeset_dev *dev;
+    GFXFB buf;
     fd=open(devnode, O_RDWR | O_CLOEXEC);
     if (drmGetCap(fd, DRM_CAP_DUMB_BUFFER, &has_dumb) < 0 || !has_dumb) {
         LOGE("drm device  does not support dumb buffers");
     }
     modeRes = drmModeGetResources(fd);
+    create_fb(1024,768,buf);
+    crtc_id = modeRes->crtcs[0];
+    conn_id = modeRes->connectors[0]; 
+    LOGD("crtc_id=%d conn_id=%d buf",crtc_id,conn_id);
+    LOGD("BUFFER.size=%dx%dx%d=%d fb_id=%d",buf.width,buf.height,buf.stride,buf.size,buf.fb_id);
+    //ret =drmModeSetCrtc(fd, crtc_id, buf.fb_id,0, 0, &conn_id, 1,&gfxModes[0]);
+    //LOGD("drmModeSetCrtc=%d",ret);
 }
 
 GFXDrm::~GFXDrm() {
@@ -25,22 +33,23 @@ GFXDrm::~GFXDrm() {
 }
 
 int GFXDrm::fetchModes(std::vector<GFXDrm::GFXMode>&modes) {
-    for (int i = 0; i < modeRes->count_connectors; i++) {
-        drmModeConnector*conn=drmModeGetConnector(fd, modeRes->connectors[i]);
+    LOGD_IF(gfxModes.size()==0,"connectors=%d",modeRes->count_connectors);
+    for (int i = 0; (gfxModes.size()==0)||(i < modeRes->count_connectors); i++) {
+        drmModeConnector*conn = drmModeGetConnector(fd, modeRes->connectors[i]);
         if((conn->connection != DRM_MODE_CONNECTED)||(conn->count_modes == 0)) {
             LOGD("ignoring unused connector %u",conn->connector_id);
             continue;
         }
         for(int j=0; j<conn->count_modes; j++) {
             GFXMode md;
-            md.width=conn->modes[j].hdisplay;
-            md.height=conn->modes[j].vdisplay;
-            md.mode=conn->modes[j];
+            md.width = conn->modes[j].hdisplay;
+            md.height= conn->modes[j].vdisplay;
+            md.mode  = conn->modes[j];
             find_crtc(conn,md);
             gfxModes.push_back(md);
         }
     }
-    modes=gfxModes;
+    modes   = gfxModes;
     return gfxModes.size();
 }
 
@@ -127,11 +136,13 @@ int GFXDrm::create_fb(int width,int height,GFXDrm::GFXFB&fb) {
         return -errno;
     }
     fb.stride = creq.pitch;
-    fb.size = creq.size;
+    fb.size  = creq.size;
+    fb.width = width;
+    fb.height= height;
     fb.handle = creq.handle;
 
     /* create framebuffer object for the dumb-buffer */
-    ret = drmModeAddFB(fd, width, height, 24, 32, fb.stride,fb.handle, &fb.fb);
+    ret = drmModeAddFB(fd, width, height, 24, 32, fb.stride,fb.handle, &fb.fb_id);
     if (ret) {
         LOGE("cannot create framebuffer (%d): %m",errno);
         ret = -errno;
@@ -158,7 +169,7 @@ int GFXDrm::create_fb(int width,int height,GFXDrm::GFXFB&fb) {
     return 0;
 
 err_fb:
-    drmModeRmFB(fd, fb.fb);
+    drmModeRmFB(fd, fb.fb_id);
 err_destroy:
     memset(&dreq, 0, sizeof(dreq));
     dreq.handle = fb.handle;

@@ -14,7 +14,7 @@
 #include <vector>
 
 class GFXDrm {
-  public:
+public:
     typedef struct {
         uint32_t width;
         uint32_t height;
@@ -22,20 +22,24 @@ class GFXDrm {
         drmModeModeInfo mode;
     } GFXMode;
     typedef struct {
+        uint32_t width;
+        uint32_t height;
         uint32_t size;
         uint32_t stride;
         uint32_t handle;
-        uint32_t fb;
+        uint32_t fb_id;
         uint8_t* map;
     } GFXFB;
-  private:
+private:
     int fd;
+    uint32_t crtc_id;/*identifier for display/hdmi/display port ...*/
+    uint32_t conn_id;
     drmModeRes*modeRes;
     drmModeConnector*modeConnector;
     std::vector<GFXMode>gfxModes;
-  private:
+private:
     int find_crtc(drmModeConnector *conn,GFXDrm::GFXMode&dev);
-  public:
+public:
     GFXDrm(const char*dev);
     ~GFXDrm();
     int fetchModes(std::vector<GFXMode>&);
