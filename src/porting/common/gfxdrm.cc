@@ -23,8 +23,8 @@ GFXDrm::GFXDrm(const char*devnode) {
     conn_id = modeRes->connectors[0]; 
     LOGD("crtc_id=%d conn_id=%d buf",crtc_id,conn_id);
     LOGD("BUFFER.size=%dx%dx%d=%d fb_id=%d",buf.width,buf.height,buf.stride,buf.size,buf.fb_id);
-    //ret =drmModeSetCrtc(fd, crtc_id, buf.fb_id,0, 0, &conn_id, 1,&gfxModes[0]);
-    //LOGD("drmModeSetCrtc=%d",ret);
+    ret =drmModeSetCrtc(fd, crtc_id, buf.fb_id,0, 0, &conn_id, 1,&gfxModes[0].mode);
+    LOGD("drmModeSetCrtc=%d",ret);
 }
 
 GFXDrm::~GFXDrm() {
