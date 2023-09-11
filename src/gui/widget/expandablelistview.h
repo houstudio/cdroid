@@ -9,13 +9,13 @@ namespace cdroid{
 
 class ExpandableListView:public ListView{
 private:
-    static constexpr long PACKED_POSITION_MASK_CHILD = 0x00000000FFFFFFFFL;
+    static constexpr int64_t PACKED_POSITION_MASK_CHILD = 0x00000000FFFFFFFFL;
 
     /** The mask (in packed position representation) for the group */
-    static constexpr long PACKED_POSITION_MASK_GROUP = 0x7FFFFFFF00000000L;
+    static constexpr int64_t PACKED_POSITION_MASK_GROUP = 0x7FFFFFFF00000000L;
 
     /** The mask (in packed position representation) for the type */
-    static constexpr long PACKED_POSITION_MASK_TYPE  = 0x8000000000000000L;
+    static constexpr int64_t PACKED_POSITION_MASK_TYPE  = 0x8000000000000000L;
 
     /** The shift amount (in packed position representation) for the group */
     static constexpr long PACKED_POSITION_SHIFT_GROUP = 32;

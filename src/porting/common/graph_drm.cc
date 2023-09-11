@@ -20,6 +20,10 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
     return 0;
 }
 
+INT GFXGetDisplayCount(){
+    return 1;
+}
+
 INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch) {
     return 0;
 }

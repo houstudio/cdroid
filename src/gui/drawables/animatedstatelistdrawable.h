@@ -11,8 +11,8 @@ class AnimatedStateListDrawable:public StateListDrawable{
 protected:
     class AnimatedStateListState:public StateListState{
     private:
-        static constexpr long REVERSED_BIT = 0x100000000l;
-        static constexpr long REVERSIBLE_FLAG_BIT = 0x200000000l;
+        static constexpr int64_t REVERSED_BIT = 0x100000000l;
+        static constexpr int64_t REVERSIBLE_FLAG_BIT = 0x200000000l;
     protected:
         LongSparseArray mTransitions;
         SparseIntArray mStateIds;
@@ -27,7 +27,7 @@ protected:
         bool isTransitionReversed(int fromId, int toId);
         bool transitionHasReversibleFlag(int fromId, int toId);
         Drawable* newDrawable()override;
-        static long generateTransitionKey(int fromId, int toId);
+        static int64_t generateTransitionKey(int fromId, int toId);
     };
     class FrameInterpolator:public TimeInterpolator {
     private:

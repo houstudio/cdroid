@@ -189,7 +189,7 @@ void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
 int AnimatedStateListDrawable::AnimatedStateListState::addTransition(int fromId, int toId,Drawable* anim, bool reversible){
     const int pos = addChild(anim);
     const long keyFromTo = generateTransitionKey(fromId, toId);
-    long reversibleBit = 0;
+    int64_t reversibleBit = 0;
     if (reversible) {
         reversibleBit = REVERSIBLE_FLAG_BIT;
     }
@@ -241,8 +241,8 @@ Drawable* AnimatedStateListDrawable::AnimatedStateListState::newDrawable() {
     return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()));
 }
 
-long AnimatedStateListDrawable::AnimatedStateListState::generateTransitionKey(int fromId, int toId) {
-    return (long) fromId << 32 | toId;
+int64_t AnimatedStateListDrawable::AnimatedStateListState::generateTransitionKey(int fromId, int toId) {
+    return (int64_t) fromId << 32 | toId;
 }
 
 //---------------------------------------------------------------------------------------------------------------

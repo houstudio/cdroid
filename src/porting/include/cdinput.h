@@ -17,7 +17,7 @@ BEGIN_DECLS
 #define SOURCECLASS_JOYSTICK 0x08
 typedef struct{
     unsigned long tv_sec;
-    unsigned int tv_usec;
+    long int tv_usec;
     unsigned short type;
     unsigned short code;
     unsigned int value;

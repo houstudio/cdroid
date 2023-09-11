@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
+#include <stdlib.h>
 
 typedef struct {
     int maxfd;

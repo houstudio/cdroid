@@ -301,7 +301,7 @@ public:
      * @return The unique (and possibly stable) ID of the child across all
      *         groups and children in this list.
      */
-    virtual long getCombinedChildId(long groupId, long childId)=0;
+    virtual int64_t getCombinedChildId(long groupId, long childId)=0;
 
     /**
      * Gets an ID for a group that is unique across any item (either group or
@@ -315,7 +315,7 @@ public:
      * @return The unique (and possibly stable) ID of the group across all
      *         groups and children in this list.
      */
-    virtual long getCombinedGroupId(long groupId)=0;
+    virtual int64_t getCombinedGroupId(long groupId)=0;
 };
 }/*endof namespace*/
 

@@ -556,15 +556,15 @@ int ExpandableListView::getPackedPositionChild(long packedPosition) {
 }
 
 long ExpandableListView::getPackedPositionForChild(int groupPosition, int childPosition) {
-    return (((long)PACKED_POSITION_TYPE_CHILD) << PACKED_POSITION_SHIFT_TYPE)
-            | ((((long)groupPosition) & PACKED_POSITION_INT_MASK_GROUP)
+    return (((int64_t)PACKED_POSITION_TYPE_CHILD) << PACKED_POSITION_SHIFT_TYPE)
+            | ((((int64_t)groupPosition) & PACKED_POSITION_INT_MASK_GROUP)
                     << PACKED_POSITION_SHIFT_GROUP)
             | (childPosition & PACKED_POSITION_INT_MASK_CHILD);
 }
 
 long ExpandableListView::getPackedPositionForGroup(int groupPosition) {
      // No need to OR a type in because PACKED_POSITION_GROUP == 0
-     return ((((long)groupPosition) & PACKED_POSITION_INT_MASK_GROUP)
+     return ((((int64_t)groupPosition) & PACKED_POSITION_INT_MASK_GROUP)
                      << PACKED_POSITION_SHIFT_GROUP);
 }
 

@@ -24,13 +24,13 @@ public:
     void onGroupExpanded(int groupPosition)override{
     }
 
-    long getCombinedChildId(long groupId, long childId)override{
-        return 0x8000000000000000L | ((groupId & 0x7FFFFFFF) << 32) | (childId & 0xFFFFFFFF);
+    int64_t getCombinedChildId(long groupId, long childId)override{
+        return 0x8000000000000000L | (int64_t((groupId & 0x7FFFFFFF)) << 32) | (childId & 0xFFFFFFFF);
     }
 
 
-    long getCombinedGroupId(long groupId)override{
-        return (groupId & 0x7FFFFFFF) << 32;
+    int64_t getCombinedGroupId(long groupId)override{
+        return int64_t((groupId & 0x7FFFFFFF)) << 32;
     }
 
     bool isEmpty()override{
