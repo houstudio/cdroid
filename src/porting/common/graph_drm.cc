@@ -21,7 +21,7 @@ typedef struct buffer_object {
     uint32_t *vaddr;
     uint32_t fb_id;
 }SURFACE;
-buffer_object buf;
+
 static int modeset_create_fb(int fd, struct buffer_object *bo, uint32_t color){
     struct drm_mode_create_dumb create = {};
     struct drm_mode_map_dumb map = {};
@@ -59,7 +59,8 @@ INT GFXInit() {
     crtc_id = drmModeres->crtcs[0];
     conn_id = drmModeres->connectors[0];
     drmConn = drmModeGetConnector(drmFD, conn_id);
-#if 10
+#if 0
+    buffer_object buf;
     buf.width = drmConn->modes[0].hdisplay;
     buf.height= drmConn->modes[0].vdisplay;
     modeset_create_fb(drmFD, &buf, 0x0000ff);
@@ -128,7 +129,7 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
 INT GFXFlip(HANDLE surface) {
     SURFACE*gfx=(SURFACE*)surface;
     int ret= drmModePageFlip(drmFD,crtc_id,gfx->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &crtc_id);
-    LOGD("drmModePageFlip=%d",ret);
+    LOGV("drmModePageFlip=%d",ret);
     return 0;
 }
 
@@ -140,10 +141,9 @@ INT GFXCreateSurface(int,HANDLE*surface,UINT width,UINT height,INT format,BOOL h
     *surface=gfx;
     LOGD("surface %p size=%dx%dx%d buffer=%p fb_id=%d hw=%d",gfx,width,height,gfx->pitch,gfx->vaddr,gfx->fb_id,hwsurface);
     if(hwsurface){
-	*surface =&buf;
-	/*int ret=drmModeSetCrtc(drmFD,crtc_id,gfx->fb_id,0,0,&conn_id,1,&drmConn->modes[0]);
+        int ret=drmModeSetCrtc(drmFD,crtc_id,gfx->fb_id,0,0,&conn_id,1,&drmConn->modes[0]);
         int ret1=drmModePageFlip(drmFD,crtc_id,gfx->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &crtc_id);
-	LOGD("drmModeSetCrtc=%d %d",ret,ret1);*/
+        LOGD("drmModeSetCrtc=%d %d",ret,ret1);
     }
     return 0;
 }
