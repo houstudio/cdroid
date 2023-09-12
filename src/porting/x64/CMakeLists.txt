@@ -77,8 +77,8 @@ include_directories(./
     ${X64_INCLUDE_DIRS}
 )
 message("CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} GRAPH_SRCS=${GRAPH_SRCS}")
-add_library(tvhal SHARED ${X64_SRCS} ${GRAPH_SRCS})
-target_link_libraries(tvhal PRIVATE ${X64_LIBRARIES})
+add_library(tvhal SHARED ${X64_SRCS} ../common/graph_xlib.c)
+target_link_libraries(tvhal PRIVATE ${X11_LIBRARIES})
 
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(NONPKG_LIBS "-L${CMAKE_INSTALL_PREFIX}/lib")

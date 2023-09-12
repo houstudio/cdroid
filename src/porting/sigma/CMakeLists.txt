@@ -57,7 +57,7 @@ set(NONPKG_LIBS "-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx \
 configure_file(cdroidhal.pc.in cdroidhal.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroidhal.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
-add_library(tvhal SHARED ${SIGMA_SRCS} )
+add_library(tvhal SHARED ${SIGMA_SRCS} graph_gfx.c)
 target_link_libraries(tvhal ${SIGMA_LIBS})
 file(GLOB MILIBS ${PROJECT_SOURCE_DIR}/libs/*.so)
 install (TARGETS ${SIGMATARGET}  DESTINATION lib)
