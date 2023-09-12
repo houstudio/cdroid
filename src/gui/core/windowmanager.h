@@ -61,6 +61,7 @@ public:
     int enumWindows(WNDENUMPROC cbk);
     int getWindows(std::vector<Window*>&);
     int getVisibleWindows(std::vector<Window*>&);
+    Window*getActiveWindow()const;
     void shutDown(){delete mInst;}
 protected:
     virtual void onKeyEvent(KeyEvent&key);

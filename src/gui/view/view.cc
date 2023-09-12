@@ -5142,7 +5142,7 @@ void View::handleFocusGainInternal(int direction,Rect*previouslyFocusedRect){
             updateFocusedInCluster(oldFocus, direction);
         }
 
-        //if (mAttachInfo != null) mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, this);
+        if (mAttachInfo) mAttachInfo->mTreeObserver->dispatchOnGlobalFocusChange(oldFocus, this);
 
         onFocusChanged(true, direction, previouslyFocusedRect);
         invalidate(true);

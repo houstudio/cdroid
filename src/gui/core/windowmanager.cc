@@ -84,7 +84,10 @@ void WindowManager::addWindow(Window*win){
         w->mLayer = (w->window_type<<16)|(idx+1);
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
-    if(mActiveWindow)mActiveWindow->post(std::bind(&Window::onDeactive,mActiveWindow));
+    if(mActiveWindow){
+        mActiveWindow->post(std::bind(&Window::onDeactive,mActiveWindow));
+        mActiveWindow->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
+    }
 
     View::AttachInfo*info = new View::AttachInfo(win->getContext());
     info->mContentInsets.setEmpty();
@@ -97,12 +100,18 @@ void WindowManager::addWindow(Window*win){
 #endif
     win->post(std::bind(&Window::onCreate,win));
     win->post(std::bind(&Window::onActive,win));
+    win->post([info](){
+        info->mTreeObserver->dispatchOnWindowFocusChange(true);
+    });
     mActiveWindow = win;
     LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,mWindows.size());
 }
 
 void WindowManager::removeWindow(Window*w){
-    if(w == mActiveWindow)mActiveWindow = nullptr;
+    if(w == mActiveWindow){
+        mActiveWindow = nullptr;
+        w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
+    }
     if(w->hasFlag(View::FOCUSABLE))
         w->onDeactive();
     auto itw = std::find(mWindows.begin(),mWindows.end(),w);
@@ -129,7 +138,7 @@ void WindowManager::removeWindow(Window*w){
     for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             (*it)->onActive();
-            mActiveWindow=(*it);
+            mActiveWindow = (*it);
             break;
         } 
     }
@@ -161,6 +170,10 @@ void WindowManager::moveWindow(Window*w,int x,int y){
         }
         GraphDevice::getInstance().flip();
     }
+}
+
+Window*WindowManager::getActiveWindow()const{
+    return mActiveWindow;
 }
 
 void WindowManager::sendToBack(Window*win){

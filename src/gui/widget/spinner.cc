@@ -482,8 +482,8 @@ void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
     // Make sure we hide if our anchor goes away.
     // TODO: This might be appropriate to push all the way down to PopupWindow,
     // but it may have other side effects to investigate first. (Text editing handles, etc.)
-    /*final ViewTreeObserver vto = getViewTreeObserver();
-    if (vto != null) {
+    ViewTreeObserver* vto = mSpinner->getViewTreeObserver();
+    /*if (vto != nullptr) {
         OnGlobalLayoutListener layoutListener = new OnGlobalLayoutListener() {
         @Override
         public void onGlobalLayout() {
@@ -497,12 +497,12 @@ void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
                         }
             }
         };
-        vto.addOnGlobalLayoutListener(layoutListener);
+        vto->addOnGlobalLayoutListener(layoutListener);
         setOnDismissListener(new OnDismissListener() {
             @Override public void onDismiss() {
-                final ViewTreeObserver vto = getViewTreeObserver();
+                ViewTreeObserver* vto = getViewTreeObserver();
                 if (vto != null) {
-                    vto.removeOnGlobalLayoutListener(layoutListener);
+                    vto->removeOnGlobalLayoutListener(layoutListener);
                 }
             }
         });

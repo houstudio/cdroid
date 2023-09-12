@@ -1,12 +1,16 @@
-#include "gfxdrm.h"
 #include "cdgraph.h"
 #include "cdtypes.h"
 #include "cdlog.h"
 #include <signal.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 
-static GFXDrm *drm=nullptr;//("/dev/dri/card0");
 static int drmFD=-1;
 static drmModeConnector *drmConn;
 static drmModeRes *drmModeres;

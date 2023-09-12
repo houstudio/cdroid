@@ -291,7 +291,7 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
     // reset the inter-animation delay, in case we use it later
     staggerDelay = 0;
 
-    //ViewTreeObserver observer = parent.getViewTreeObserver();
+    ViewTreeObserver* observer = parent->getViewTreeObserver();
     //if (!observer.isAlive())return;
     // If the observer's not in a good state, skip the transition
     int numChildren = parent->getChildCount();
@@ -318,8 +318,8 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
     // the appropriate animations have been set up and run. Now we can clear out the
     // layout listeners.
     /*CleanupCallback callback = new CleanupCallback(layoutChangeListenerMap, parent);
-    observer.addOnPreDrawListener(callback);
-    parent.addOnAttachStateChangeListener(callback);*/
+    observer->addOnPreDrawListener(callback);
+    parent->addOnAttachStateChangeListener(callback);*/
 }
 
 void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,long duration, View* child){

@@ -21,7 +21,7 @@ DEPLIBS["D211"]=${HOME}/vcpkg/installed/riscv64-d211-linux
 DEPLIBS["HI3536"]=${HOME}/vcpkg/installed/hisi3536-linux
 
 CDROID_VALID_PORTS="x64"
-SHOWHELP=false
+SHOWHELP=0
 PRODUCT="x64"
 BUILD_TYPE="Release"
 
@@ -45,7 +45,7 @@ do
                 shift
                 ;;
         -h|--help)
-                SHOWHELP=true
+                SHOWHELP=1
                 echo "showhelp"
                 shift
                 ;;
@@ -67,7 +67,6 @@ BUILD_TYPE=${BUILD_TYPE^}
 CDROID_DIR=${TOPDIR}/out${PRODUCT}-${BUILD_TYPE}
 echo "VALID_PORTS=${CDROID_VALID_PORTS}"
 echo "product=$PRODUCT ${PRODUCT,,}"
-echo "showhelp=$SHOWHELP"
 echo "build=${BUILD_TYPE}/${BUILD_TYPE,,}"
 
 if [ "$PRODUCT" = "X64" ]; then
@@ -75,8 +74,8 @@ if [ "$PRODUCT" = "X64" ]; then
     TOOLCHAIN_FILE=""
 elif [ "$PRODUCT" != "X64" ]; then
     TOOLCHAIN_FILE="-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAINS[${PRODUCT}]}"
-    if [ -z "${TOOLCHAIN_FILE}" ]; then
-       SHOWHELP=true
+    if [ "$TOOLCHAIN_FILE" = "-DCMAKE_TOOLCHAIN_FILE=" ]; then
+       SHOWHELP=1
     fi
 fi
 
@@ -89,12 +88,12 @@ if [ "${BUILD_TYPE,,}" = "debug" ]; then
    DEPLIBS_DIR="${DEPLIBS_DIR}" #/debug:${DEPLIBS_DIR}"
 fi
 
-echo "DEPLIBS_DIR=${DEPLIBS_DIR} product=$PRODUCT TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
+echo "DEPLIBS_DIR=${DEPLIBS_DIR} product=$PRODUCT"
+echo "TOOLCHAIN_FILE=${TOOLCHAIN_FILE} SHOWHELP=${SHOWHELP}"
 echo "========DEPLIBS_DIR=${DEPLIBS_DIR} BUILDTYPE=${BUILD_TYPE}"
 export PATH=$DEPLIBS_DIR:$PATH
 
-if [ SHOWHELP ];then
-    echo ""
+if [ $SHOWHELP -gt 0 ] ;then
     echo "Usage: $0 [options] $#"
     echo "-P|--product [${CDROID_VALID_PORTS}] default is x64"
     echo "-b|--build[Debug,Release,RelWithDebInfo,MinSizeRel]"
