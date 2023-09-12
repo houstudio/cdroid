@@ -20,9 +20,16 @@ DEPLIBS["R818"]=${HOME}/vcpkg/installed/r818-linux
 DEPLIBS["D211"]=${HOME}/vcpkg/installed/riscv64-d211-linux
 DEPLIBS["HI3536"]=${HOME}/vcpkg/installed/hisi3536-linux
 
+CDROID_VALID_PORTS="x64"
 SHOWHELP=false
 PRODUCT="x64"
 BUILD_TYPE="Release"
+
+for key in "${!TOOLCHAINS[@]}"
+do
+  CDROID_VALID_PORTS="${CDROID_VALID_PORTS},$key"
+done
+
 
 while :
 do
@@ -58,7 +65,7 @@ PRODUCT=${PRODUCT^^}
 BUILD_TYPE=${BUILD_TYPE,,}
 BUILD_TYPE=${BUILD_TYPE^}
 CDROID_DIR=${TOPDIR}/out${PRODUCT}-${BUILD_TYPE}
-
+echo "VALID_PORTS=${CDROID_VALID_PORTS}"
 echo "product=$PRODUCT ${PRODUCT,,}"
 echo "showhelp=$SHOWHELP"
 echo "build=${BUILD_TYPE}/${BUILD_TYPE,,}"
@@ -68,33 +75,33 @@ if [ "$PRODUCT" = "X64" ]; then
     TOOLCHAIN_FILE=""
 elif [ "$PRODUCT" != "X64" ]; then
     TOOLCHAIN_FILE="-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAINS[${PRODUCT}]}"
+    if [ -z "${TOOLCHAIN_FILE}" ]; then
+       SHOWHELP=true
+    fi
 fi
 
 OUTDIR=out${PRODUCT}-${BUILD_TYPE}
 DEPLIBS_DIR=${DEPLIBS[$PRODUCT]}
 
-if [ "$PRODUCT" != "X64" ]; then
-    echo "TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
-fi
 
 #Debug version'sDEPLIB seems has some trouble in some platform(r818)
 if [ "${BUILD_TYPE,,}" = "debug" ]; then
    DEPLIBS_DIR="${DEPLIBS_DIR}" #/debug:${DEPLIBS_DIR}"
 fi
 
+echo "DEPLIBS_DIR=${DEPLIBS_DIR} product=$PRODUCT TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
 echo "========DEPLIBS_DIR=${DEPLIBS_DIR} BUILDTYPE=${BUILD_TYPE}"
 export PATH=$DEPLIBS_DIR:$PATH
 
 if [ SHOWHELP ];then
     echo ""
     echo "Usage: $0 [options] $#"
-    echo "-P|--product [x64,sigma] default is x64"
+    echo "-P|--product [${CDROID_VALID_PORTS}] default is x64"
     echo "-b|--build[Debug,Release,RelWithDebInfo,MinSizeRel]"
     echo "-h|--help Show Help Info,Usage"
     echo ""
+    exit
 fi
-echo "DEPLIBS_DIR=${DEPLIBS_DIR} product=$PRODUCT TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
-#exit
 
 mkdir -p ${OUTDIR}
 pushd ${OUTDIR}

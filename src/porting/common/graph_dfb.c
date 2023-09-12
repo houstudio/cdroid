@@ -20,7 +20,7 @@ static void DFBDisplayLayerCBK(DFBDisplayLayerID layer_id, DFBDisplayLayerDescri
 
 INT GFXInit() {
     DFBDisplayLayerConfig dispCfg;
-    char*cfg=getenv("DIRECTFB_CONFIGFILE");
+    const char*cfg=getenv("DIRECTFB_CONFIGFILE");
     if(directfb!=NULL)return E_OK;
     DirectFBInit (NULL,NULL);
     if(cfg) {

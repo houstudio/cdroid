@@ -26,13 +26,7 @@ endif()
 list(APPEND SIGMA_INCLUDE_DIRS ../common)
 list(APPEND SIGMA_INCLUDE_DIRS ../include)
 
-if(DIRECTFB_FOUND)
-    list(APPEND SIGMA_SRCS ../common/graph_dfb.c)
-    list(APPEND SIGMA_INCLUDE_DIRS ${DIRECTFB_INCLUDE_DIRS})
-    list(APPEND SIGMA_LIBS ${DIRECTFB_LIBRARIES})
-else()    
-    list(APPEND SIGMA_SRCS graph_gfx.c)
-endif()
+
 list(APPEND SIGMA_INCLUDE_DIRS ./inc)
 
 link_directories(${PROJECT_SOURCE_DIR}/libs)
@@ -40,6 +34,13 @@ list(APPEND SIGMA_LIBS pthread dl
 	-L${PROJECT_SOURCE_DIR}/libs -lmi_common -lmi_sys -lmi_gfx 
 	-lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel
         -lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
+list(APPEND SIGMATARGET tvhal)
+if(DIRECTFB_FOUND)
+    add_library(tvhal-dfb SHARED ${SIGMA_SRCS} ../common/graph_dfb.c)
+    include_directories(${DIRECTFB_INCLUDE_DIRS})
+    target_link_libraries(tvhal-dfb ${DIRECTFB_LIBRARIES} ${SIGMA_LIBS})
+    list(APPEND SIGMATARGET tvhal-dfb)
+endif(DIRECTFB_FOUND)
 
 include_directories(./
     ../common ../include
@@ -59,5 +60,5 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroidhal.pc
 add_library(tvhal SHARED ${SIGMA_SRCS} )
 target_link_libraries(tvhal ${SIGMA_LIBS})
 file(GLOB MILIBS ${PROJECT_SOURCE_DIR}/libs/*.so)
-install (TARGETS tvhal  DESTINATION lib)
+install (TARGETS ${SIGMATARGET}  DESTINATION lib)
 install (FILES ${MILIBS} DESTINATION lib)

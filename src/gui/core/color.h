@@ -1,6 +1,7 @@
 #ifndef __COLOR_H__
 #define __COLOR_H__
 #include <string>
+#include <cstdint>
 
 namespace cdroid{
 class Color{

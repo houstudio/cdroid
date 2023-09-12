@@ -2,6 +2,7 @@
 #include "cdgraph.h"
 #include "cdtypes.h"
 #include "cdlog.h"
+#include <signal.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
@@ -11,6 +12,7 @@ static drmModeConnector *drmConn;
 static drmModeRes *drmModeres;
 static uint32_t conn_id;
 static uint32_t crtc_id;
+static int terminate=0;
 
 typedef struct buffer_object {
     int32_t width;
@@ -21,7 +23,7 @@ typedef struct buffer_object {
     uint32_t *vaddr;
     uint32_t fb_id;
 }SURFACE;
-
+static SURFACE*primary;
 static int modeset_create_fb(int fd, struct buffer_object *bo, uint32_t color){
     struct drm_mode_create_dumb create = {};
     struct drm_mode_map_dumb map = {};
@@ -39,9 +41,6 @@ static int modeset_create_fb(int fd, struct buffer_object *bo, uint32_t color){
     map.handle = create.handle;
     drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &map);
     bo->vaddr = (uint32_t*)mmap(0, create.size, PROT_READ | PROT_WRITE,MAP_SHARED, fd, map.offset);
-    //printf("createfb %dx%dx%d=%p\r\n",create.width,create.height,create.pitch,bo->vaddr);
-    for (i = 0; i < (bo->size / 4); i++)
-	bo->vaddr[i] = color;
     return 0;
 }
 static void modeset_destroy_fb(int fd, struct buffer_object *bo){
@@ -52,23 +51,18 @@ static void modeset_destroy_fb(int fd, struct buffer_object *bo){
     drmIoctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroy);
 }
 
+static void sigint_handler(int arg){
+    terminate = 1;
+}
+
 INT GFXInit() {
-   if(drmFD>0)return 0;
+    if(drmFD>0)return 0;
     drmFD = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
     drmModeres = drmModeGetResources(drmFD);
     crtc_id = drmModeres->crtcs[0];
     conn_id = drmModeres->connectors[0];
     drmConn = drmModeGetConnector(drmFD, conn_id);
-#if 0
-    buffer_object buf;
-    buf.width = drmConn->modes[0].hdisplay;
-    buf.height= drmConn->modes[0].vdisplay;
-    modeset_create_fb(drmFD, &buf, 0x0000ff);
-    int ret1=drmModeSetCrtc(drmFD,crtc_id,buf.fb_id,0,0,&conn_id,1,&drmConn->modes[0]);
-    int ret2=drmModePageFlip(drmFD,crtc_id, buf.fb_id,DRM_MODE_PAGE_FLIP_EVENT, &crtc_id);
-    printf("buff.fb_id=%d drmModeSetCrtc=%d,%d\n",buf.fb_id,ret1,ret2);
-    sleep(1);
-#endif
+    //signal(SIGINT, sigint_handler);
     return 0;
 }
 
@@ -126,10 +120,28 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
     return 0;
 }
 
+static void modeset_flip_handler(int fd, uint32_t frame,
+              uint32_t sec, uint32_t usec, void *data){
+    static int i = 0;
+    uint32_t crtc_id = *(uint32_t *)data;
+    i += 1;
+
+    int ret = drmModePageFlip(drmFD, crtc_id, primary->fb_id,
+	DRM_MODE_PAGE_FLIP_EVENT, data);
+    LOGD_IF(i%200==0,"crtcid=%d time %d.%d flip=%d",crtc_id,sec,usec,ret);
+}
+
 INT GFXFlip(HANDLE surface) {
     SURFACE*gfx=(SURFACE*)surface;
-    int ret= drmModePageFlip(drmFD,crtc_id,gfx->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &crtc_id);
-    LOGV("drmModePageFlip=%d",ret);
+    /*drmEventContext ev = {};
+    ev.version = DRM_EVENT_CONTEXT_VERSION;
+    ev.page_flip_handler = modeset_flip_handler;
+    while (!terminate) {
+        drmHandleEvent(drmFD, &ev);
+    }
+    terminate=0;*/
+    const int ret= drmModePageFlip(drmFD,crtc_id,gfx->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &crtc_id);
+    //LOGD("drmModePageFlip=%d crtc_id=%d",ret,crtc_id);
     return 0;
 }
 
@@ -143,7 +155,8 @@ INT GFXCreateSurface(int,HANDLE*surface,UINT width,UINT height,INT format,BOOL h
     if(hwsurface){
         int ret=drmModeSetCrtc(drmFD,crtc_id,gfx->fb_id,0,0,&conn_id,1,&drmConn->modes[0]);
         int ret1=drmModePageFlip(drmFD,crtc_id,gfx->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &crtc_id);
-        LOGD("drmModeSetCrtc=%d %d",ret,ret1);
+        primary = gfx;
+        LOGD("drmModeSetCrtc=%d %d crtc_id=%d",ret,ret1,crtc_id);
     }
     return 0;
 }

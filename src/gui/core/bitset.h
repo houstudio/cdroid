@@ -1,5 +1,6 @@
 #ifndef __BITSET_H__
 #define __BITSET_H__
+#include <cstdint>
 struct BitSet32 {
     uint32_t value;
 
