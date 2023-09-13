@@ -7,8 +7,8 @@ class ScaleDrawable:public DrawableWrapper{
 private:
     class ScaleState:public DrawableWrapperState{
     public:
-        int mScaleWidth;
-        int mScaleHeight;
+        float mScaleWidth;
+        float mScaleHeight;
         int mGravity;
         int mInitialLevel;
         bool mUseIntrinsicSizeAsMin;
@@ -23,7 +23,7 @@ protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:
-    ScaleDrawable(Drawable* drawable, int gravity,int scaleWidth,int scaleHeight);
+    ScaleDrawable(Drawable* drawable, int gravity,float scaleWidth,float scaleHeight);
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas& canvas);
     int getOpacity()override;

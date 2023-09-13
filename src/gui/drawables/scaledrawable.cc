@@ -30,7 +30,7 @@ ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state):DrawableWrapper(
     mState = state;
 }
 
-ScaleDrawable::ScaleDrawable(Drawable* drawable, int gravity,int scaleWidth,int scaleHeight)
+ScaleDrawable::ScaleDrawable(Drawable* drawable, int gravity,float scaleWidth,float scaleHeight)
     :ScaleDrawable(std::make_shared<ScaleState>()){
     mState->mGravity    = gravity;
     mState->mScaleWidth = scaleWidth;
@@ -62,13 +62,13 @@ void ScaleDrawable::onBoundsChange(const Rect& bounds){
     const int level = getLevel();
 
     int w = bounds.width;
-    if (mState->mScaleWidth > 0) {
+    if (mState->mScaleWidth > 0.f) {
         const int iw = min ? d->getIntrinsicWidth() : 0;
         w -= (int) ((w - iw) * (MAX_LEVEL - level) * mState->mScaleWidth / MAX_LEVEL);
     }
 
     int h = bounds.height;
-    if (mState->mScaleHeight > 0) {
+    if (mState->mScaleHeight > 0.f) {
         const int ih = min ? d->getIntrinsicHeight() : 0;
         h -= (int) ((h - ih) * (MAX_LEVEL - level) * mState->mScaleHeight / MAX_LEVEL);
     }

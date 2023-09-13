@@ -11,7 +11,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,RECT& outRec
 }
 
 void Gravity::apply(int gravity, int w, int h,const RECT& container,RECT& outRect, int layoutDirection){
-    int absGravity = getAbsoluteGravity(gravity, layoutDirection);
+    const int absGravity = getAbsoluteGravity(gravity, layoutDirection);
     apply(absGravity, w, h, container, 0, 0, outRect);
 }
 
@@ -63,7 +63,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
                     outRect.top = container.top;
                 }
                 if (outRect.bottom() > container.bottom()) {
-                    outRect.height=container.bottom()-outRect.top;
+                    outRect.height = container.bottom() - outRect.top;
                 }
             }
             break;
@@ -72,7 +72,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             outRect.height = h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
                 if (outRect.bottom() > container.bottom()) {
-                    outRect.width=container.bottom()-outRect.top;
+                    outRect.height = container.bottom() - outRect.top;
                 }
             }
             break;

@@ -310,7 +310,7 @@ void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
     }
 
     nsecs_t eventTime;
-    VelocityTracker::Position positions[128];//pointerCount];
+    VelocityTracker::Position positions[pointerCount];
 
     size_t historySize = event.getHistorySize();
     memset(positions,0,sizeof(positions));
@@ -632,7 +632,7 @@ static bool solveLeastSquares(const float* x, const float* y,
 #endif
 
     // Expand the X vector to a matrix A, pre-multiplied by the weights.
-    float a[128][128];//[n][m]; // column-major order
+    float a[n][m]; // column-major order
     for (uint32_t h = 0; h < m; h++) {
         a[0][h] = w[h];
         for (uint32_t i = 1; i < n; i++) {
@@ -644,8 +644,8 @@ static bool solveLeastSquares(const float* x, const float* y,
 #endif
 
     // Apply the Gram-Schmidt process to A to obtain its QR decomposition.
-    float q[128][128];//[n][m]; // orthonormal basis, column-major order
-    float r[128][128];//[n][n]; // upper triangular matrix, row-major order
+    float q[n][m]; // orthonormal basis, column-major order
+    float r[n][n]; // upper triangular matrix, row-major order
     for (uint32_t j = 0; j < n; j++) {
         for (uint32_t h = 0; h < m; h++) {
             q[j][h] = a[j][h];
