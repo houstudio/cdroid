@@ -767,12 +767,12 @@ bool GradientDrawable::isOpaqueForState()const {
 }
 
 static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii) {
-    constexpr double degree = M_PI/180.f;
     if(radii.size()==0)
         canvas.rectangle(r.left,r.top,r.width,r.height);
     else {
         float db=180.f;
         float pts[8];
+        double radian = M_PI;
         pts[0]=r.left + radii[0];
         pts[1]=r.top + radii[0];
         pts[2]=r.right() - radii[1];
@@ -783,8 +783,8 @@ static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii
         pts[7]=r.bottom()- radii[3];
         canvas.begin_new_sub_path();
         for(int i=0,j=0; i<8; i+=2,j++) {
-            canvas.arc(pts[i],pts[i+1],radii[j],db*degree,(db+90)*degree);
-            db+=90.f;
+            canvas.arc(pts[i],pts[i+1],radii[j],radian,radian+M_PI/2.0);
+            radian += M_PI/2.0;
         }
         canvas.close_path();
     }

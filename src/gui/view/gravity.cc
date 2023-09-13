@@ -87,7 +87,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             break;
     default:
             outRect.top = container.top + yAdj;
-            outRect.height = h;
+            outRect.height = container.height;
             break;
     }
 }
