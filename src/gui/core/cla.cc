@@ -1,5 +1,5 @@
 #include "cla.h"
-
+#include <stdio.h>
 #include <algorithm> // std::min
 #include <sstream>   // std::stringstream
 #include <iomanip>   // std::left, std::setw
@@ -25,7 +25,7 @@ static std::string FormatString(const char *format, ...) {
     va_list args;
     va_start(args, format);
     char strBuffer[1024];
-    std::vsnprintf(strBuffer, sizeof(strBuffer), format, args);
+    vsnprintf(strBuffer, sizeof(strBuffer), format, args);
     va_end(args);
     std::string returnValue(strBuffer);
     return std::move(returnValue);

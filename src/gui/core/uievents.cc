@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream> 
 #include <inputeventlabels.h>
+#include <inputdevice.h>
 #include <cdtypes.h>
 #include <cdinput.h>
 #include <cdlog.h>
@@ -115,6 +116,7 @@ void PointerProperties::copyFrom(const PointerProperties& other) {
 // --- InputEvent ---
 
 InputEvent::InputEvent(){
+   mSource = InputDevice::SOURCE_UNKNOWN;
 }
 
 InputEvent::~InputEvent(){
@@ -123,6 +125,10 @@ InputEvent::~InputEvent(){
 void InputEvent::initialize(int32_t deviceId, int32_t source) {
     mDeviceId = deviceId;
     mSource = source;
+}
+
+bool InputEvent::isFromSource(int source)const{
+    return (getSource() & source) == source;
 }
 
 void InputEvent::initialize(const InputEvent& from) {
@@ -514,7 +520,7 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
     pc.setAxisValue(AXIS_Y,y);
     pc.setAxisValue(AXIS_PRESSURE,pressure);
     pc.setAxisValue(AXIS_SIZE,size);
-    ev->initialize(deviceId, InputEvent::SOURCE_UNKNOWN, action, 0/*actionButton*/,0/*flags*/, edgeFlags, metaState, 0,
+    ev->initialize(deviceId, InputDevice::SOURCE_UNKNOWN, action, 0/*actionButton*/,0/*flags*/, edgeFlags, metaState, 0,
             0, 0, xPrecision, yPrecision, downTime , eventTime, 1, &pp,&pc);
     return ev;
 }
@@ -736,7 +742,7 @@ ssize_t MotionEvent::findPointerIndex(int32_t pointerId) const {
 }
 
 bool  MotionEvent::isTouchEvent(int32_t source, int32_t action){
-    if (source & SOURCE_CLASS_POINTER) {
+    if (source & InputDevice::SOURCE_CLASS_POINTER) {
         // Specifically excludes HOVER_MOVE and SCROLL.
         switch (action & ACTION_MASK) {
         case ACTION_DOWN:

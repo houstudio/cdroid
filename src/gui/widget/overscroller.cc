@@ -3,7 +3,7 @@
 #include <core/systemclock.h>
 #include <widget/scroller.h>
 #include <cdlog.h>
-
+#include <cstdlib>
 
 namespace cdroid{
 template <typename T> int signum(T val) {

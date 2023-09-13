@@ -6,7 +6,6 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 
-
 namespace cdroid {
 
 AbsListView::AbsListView(int w,int h):AdapterView(w,h) {

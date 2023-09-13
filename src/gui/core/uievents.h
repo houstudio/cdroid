@@ -84,31 +84,6 @@ public:
         EVENT_TYPE_MOTION = 2,
         EVENT_TYPE_FOCUS = 3
     };
-    enum{
-        SOURCE_CLASS_MASK   = 0x000000ff,
-        SOURCE_CLASS_NONE   = 0x00000000,
-        SOURCE_CLASS_BUTTON = 0x00000001,
-        SOURCE_CLASS_POINTER= 0x00000002,
-        SOURCE_CLASS_TRACKBALL= 0x00000004,
-        SOURCE_CLASS_POSITION = 0x00000008,
-        SOURCE_CLASS_JOYSTICK = 0x00000010,
-        SOURCE_UNKNOWN  = 0x00000000,
-        SOURCE_KEYBOARD = 0x00000100 | SOURCE_CLASS_BUTTON,
-        SOURCE_DPAD    = 0x00000200 | SOURCE_CLASS_BUTTON,
-        SOURCE_GAMEPAD = 0x00000400 | SOURCE_CLASS_BUTTON,
-        SOURCE_TOUCHSCREEN = 0x00001000 | SOURCE_CLASS_POINTER,
-        SOURCE_MOUSE  = 0x00002000 | SOURCE_CLASS_POINTER,
-        SOURCE_STYLUS = 0x00004000 | SOURCE_CLASS_POINTER,
-        SOURCE_BLUETOOTH_STYLUS = 0x00008000 | SOURCE_STYLUS,
-        SOURCE_TRACKBALL = 0x00010000 | SOURCE_CLASS_TRACKBALL,
-        SOURCE_MOUSE_RELATIVE = 0x00020000 | SOURCE_CLASS_TRACKBALL,
-        SOURCE_TOUCHPAD = 0x00100000 | SOURCE_CLASS_POSITION,
-        SOURCE_TOUCH_NAVIGATION = 0x00200000 | SOURCE_CLASS_NONE,
-        SOURCE_ROTARY_ENCODER = 0x00400000 | SOURCE_CLASS_NONE,
-        SOURCE_JOYSTICK = 0x01000000 | SOURCE_CLASS_JOYSTICK,
-        SOURCE_HDMI = 0x02000000 | SOURCE_CLASS_BUTTON,
-        SOURCE_ANY = 0xffffff00
-    };
     InputEvent();
     virtual ~InputEvent();
     virtual int getType()const=0;
@@ -116,7 +91,7 @@ public:
     void initialize(const InputEvent& from);
     void setSource(int source){mSource=source;}
     int getSource()const{return mSource;}
-    bool isFromSource(int s)const{return mSource==s;}
+    bool isFromSource(int s)const;
     int getDeviceId(){return mDeviceId;}
     long getSequenceNumber()const{return mSeq;}
     virtual nsecs_t getEventTime() const { return mEventTime; }

@@ -1,7 +1,7 @@
 #ifndef __ZIP_STREAM_H__
 #define __ZIP_STREAM_H__
 #include <istream>
-
+#include <stdio.h>/*BUFSIZ*/
 namespace cdroid{
 
 class ZipStreamBuf : public std::streambuf {

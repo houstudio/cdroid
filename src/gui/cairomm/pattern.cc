@@ -19,7 +19,7 @@
 #include <cairomm/pattern.h>
 #include <cairomm/private.h>
 #include <cairomm/matrix.h>
-#include <math.h>
+#include <cmath>
 
 namespace Cairo
 {

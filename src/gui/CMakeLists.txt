@@ -34,6 +34,7 @@ include_directories(
 
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
+add_definitions(--include stdpatch.h)
 
 set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
     ${SRCS_CAIROMM} ${SRCS_WIDGET}

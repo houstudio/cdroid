@@ -5710,7 +5710,7 @@ bool View::pointInHoveredChild(MotionEvent& event) {
 
 bool View::dispatchGenericMotionEvent(MotionEvent&event){
     int source = event.getSource();
-    if ((source & InputEvent::SOURCE_CLASS_POINTER) != 0) {
+    if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
         int action = event.getAction();
         if (action == MotionEvent::ACTION_HOVER_ENTER
                 || action == MotionEvent::ACTION_HOVER_MOVE

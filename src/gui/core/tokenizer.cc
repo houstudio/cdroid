@@ -4,7 +4,7 @@
 #include <string.h>
 #include <cdtypes.h>
 #include <cdlog.h>
-
+#include <errno.h>
 #define DEBUG_TOKENIZER 0
 
 namespace cdroid {

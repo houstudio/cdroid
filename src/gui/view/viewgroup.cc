@@ -437,7 +437,7 @@ void ViewGroup::cancelTouchTarget(View* view){
             target->recycle();
             long now = SystemClock::uptimeMillis();
             MotionEvent* event=MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
-            event->setSource(InputEvent::SOURCE_TOUCHSCREEN);
+            event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
             view->dispatchTouchEvent(*event);
             event->recycle();
             return;

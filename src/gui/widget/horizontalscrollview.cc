@@ -535,13 +535,13 @@ bool HorizontalScrollView::onGenericMotionEvent(MotionEvent& event){
     case MotionEvent::ACTION_SCROLL: {
         if (!mIsBeingDragged) {
             float axisValue;
-            if (event.isFromSource(InputEvent::SOURCE_CLASS_POINTER)) {
+            if (event.isFromSource(InputDevice::SOURCE_CLASS_POINTER)) {
                 if ((event.getMetaState() & KeyEvent::META_SHIFT_ON) != 0) {
                     axisValue = -event.getAxisValue((int)MotionEvent::AXIS_VSCROLL,0);
                 } else {
                     axisValue = event.getAxisValue((int)MotionEvent::AXIS_HSCROLL,0);
                 }
-            } else if (event.isFromSource(InputEvent::SOURCE_ROTARY_ENCODER)) {
+            } else if (event.isFromSource(InputDevice::SOURCE_ROTARY_ENCODER)) {
                 axisValue = event.getAxisValue((int)MotionEvent::AXIS_SCROLL,0);
             } else {
                 axisValue = 0;

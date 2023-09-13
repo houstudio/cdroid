@@ -2,6 +2,7 @@
 #define __GRAPH_CONTEXT_H__
 #include <cdtypes.h>
 #include <cdgraph.h>
+#include <cmath>
 #include <cairomm/context.h>
 #include <cairomm/region.h>
 #include <core/graphdevice.h>
