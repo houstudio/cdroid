@@ -77,8 +77,8 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             }
             break;
     case AXIS_PULL_AFTER<<AXIS_Y_SHIFT:
-            outRect.height = container.bottom() - yAdj;
-            outRect.top = outRect.height-h;
+            outRect.height = h;
+            outRect.top = container.bottom() - yAdj - h;
             if ((gravity&(AXIS_CLIP<<AXIS_Y_SHIFT)) == (AXIS_CLIP<<AXIS_Y_SHIFT)) {
                 if (outRect.top < container.top) {
                     outRect.top = container.top;
@@ -87,7 +87,7 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             break;
     default:
             outRect.top = container.top + yAdj;
-            outRect.height=container.bottom() + yAdj-outRect.top;
+            outRect.height = h;
             break;
     }
 }
