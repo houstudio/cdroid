@@ -9,7 +9,9 @@
 #define BEGIN_DECLS
 #define END_DECLS
 #endif
-
+#ifdef _WIN32
+#include<Windows.h>
+#else
 #ifndef __VOID
 #define __VOID
 typedef void VOID;
@@ -118,6 +120,6 @@ typedef int BOOL;
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
-
+#endif/*_WIN32*/
 
 #endif

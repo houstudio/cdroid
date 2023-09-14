@@ -1,24 +1,13 @@
-#include <cdtypes.h>
+#include <Windows.h>
 #include <cdlog.h>
-#include <ngl_os.h>
-#include <stdio.h>
+
 #include <string.h>
 #include <time.h>
 #include <string>
 #include <map>
 #include <shared_queue.h>
 #include <iomanip>
-#include <unistd.h>
-#include <limits.h>
-#ifdef HAVE_EXECINFO_H
-#include <execinfo.h>
-#endif
-#include <cxxabi.h>
-#if defined(__clang__) || defined(__APPLE__)
-#include <sys/ucontext.h>
-#else
-#include <ucontext.h>
-#endif
+
 
 static LogLevel sLogLevel=LOG_DEBUG;
 
@@ -65,7 +54,7 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
         return;
     LogInit();
     struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC,&ts);
+    timespec_get(&ts,0);//clock_gettime(CLOCK_MONOTONIC,&ts);
     int len1=snprintf(msgBoddy,kMaxMessageSize,"%010ld.%06ld \033[0;32m[%s]\033[0;34m \%s:%d %s",
                       ts.tv_sec,ts.tv_nsec/1000, tag.c_str(),func,line, colors[level]);
     va_start(args, format);
@@ -73,7 +62,6 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
     va_end(args);
     strcat(msgBoddy+len1,"\033[0m\r\n");
     dbgMessages.push(msgBoddy);
-    }
 #endif
 }
 
@@ -150,7 +138,7 @@ static const std::string kTruncatedWarningText = "[...truncated...]";
 LogMessage::LogMessage(const std::string& file, const int line, const std::string& function,int level)
     : file_(splitFileName(file)),function_(function), line_(line),level_message(level) {
     struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC,&ts);
+    timespec_get(&ts, 0);// clock_gettime(CLOCK_MONOTONIC, &ts);
     timestamp_ =ts.tv_sec;
     timeusec_ =ts.tv_nsec/1000 ;
     LogInit();

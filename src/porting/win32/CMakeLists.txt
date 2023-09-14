@@ -1,4 +1,4 @@
-project (x86 C CXX)
+project (win32 C CXX)
 
 set(WIN32_SRCS
      winlog.cc
@@ -46,10 +46,10 @@ include_directories(./
 )
 
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
-set(NONPKG_LIBS "-L${CMAKE_INSTALL_PREFIX}/lib")
-configure_file(cdroidhal.pc.in cdroidhal.pc @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroidhal.pc
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
+#set(NONPKG_LIBS "-L${CMAKE_INSTALL_PREFIX}/lib")
+#configure_file(cdroidhal.pc.in cdroidhal.pc @ONLY)
+#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroidhal.pc
+#        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
 if( WIN32PORTS )
 install (TARGETS ${WIN32PORTS}  DESTINATION lib)
 endif()

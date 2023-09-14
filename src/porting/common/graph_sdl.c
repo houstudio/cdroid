@@ -3,9 +3,7 @@
 #include <cdlog.h>
 #include <SDL.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <time.h>
-#include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
 #include <core/eventcodes.h>
@@ -236,7 +234,11 @@ static int SDLProc(void*params) {
 static void InjectEvent(int type,int code,int value,int dev) {
     INPUTEVENT i= {0};
     struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC,&ts);
+#ifdef _WIN32
+    timespec_get(&ts, 0);
+#else
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+#endif
     i.tv_sec=ts.tv_sec;
     i.tv_usec=ts.tv_nsec/1000;
     i.type=type;

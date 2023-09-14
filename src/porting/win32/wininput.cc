@@ -1,4 +1,4 @@
-#if 1//ndef HAVE_INPUT_H
+#ifdef HAVE_INPUT_H
 #include<linux/input.h>
 #else
 #define EV_SYN                  0x00
@@ -12,28 +12,40 @@
 #define EV_REP                  0x14
 #define EV_FF                   0x15
 #endif
+
 #ifdef HAVE_POLL_H
 #include<poll.h>
 #endif
 #ifdef HAVE_EPOLL_H
 #include<sys/epoll.h>
 #endif
+
 #include<cdtypes.h>
+#include<cdlog.h>
 #include<cdinput.h>
 #include<map>
 #include<iostream>
 #include<fstream>
 #include<vector>
-#include<cdlog.h>
+//#include<cdlog.h>
 #include<ngl_msgq.h>
 #include<ngl_timer.h>
 #include<string.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <sys/stat.h>
+
+#ifndef _WIN32
+#include <dirent.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <poll.h>
+#else
+#include <io.h>
+#include <fcntl.h>
+#define write _write
+#define open _open
+#endif
+
+#include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
 
@@ -51,6 +63,7 @@ static INPUTDEVICE dev= {0,0};
 INT InputInit() {
     if(dev.pipe[0]>0)
         return 0;
+#if 0
     pipe(dev.pipe);
     dev.nfd=0;
     dev.fds[dev.nfd++]=dev.pipe[0];
@@ -74,6 +87,7 @@ INT InputInit() {
     },nullptr);
     free(namelist);
     LOGD("maxfd=%d numfd=%d\r\n",dev.maxfd,nf+1);
+#endif
     return 0;
 }
 
@@ -82,6 +96,7 @@ INT InputInit() {
 INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     int rc1,rc2;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
+#if 0
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
@@ -134,6 +149,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     default:
         break;
     }
+#endif
     return 0;
 }
 
@@ -154,6 +170,7 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout) {
 INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
     int rc,count=0;
     struct timeval tv;
+#if 0
     struct input_event events[64];
     INPUTEVENT*e=outevents;
     fd_set rfds;
@@ -191,5 +208,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
         LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",dev.fds[i],rc,dev.fds[i]==dev.pipe[0]);
     }
     return e-outevents;
+#endif
+    return 0;
 }
 
