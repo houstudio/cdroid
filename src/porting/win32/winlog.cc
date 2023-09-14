@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <cdtypes.h>
 #include <cdlog.h>
 
 #include <string.h>
@@ -7,7 +7,6 @@
 #include <map>
 #include <shared_queue.h>
 #include <iomanip>
-
 
 static LogLevel sLogLevel=LOG_DEBUG;
 
@@ -37,7 +36,7 @@ static void LogInit() {
                 std::string msg;
                 if(dbgMessages.size()==0)dbgMessages.wait_and_pop(msg,INT_MAX);
                 else dbgMessages.try_and_pop(msg);
-		std::cout<<msg.c_str();
+                std::cout<<msg.c_str();
             }
         });
         th.detach();
@@ -54,7 +53,7 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
         return;
     LogInit();
     struct timespec ts;
-    timespec_get(&ts,0);//clock_gettime(CLOCK_MONOTONIC,&ts);
+    (void)timespec_get(&ts,0);//clock_gettime(CLOCK_MONOTONIC,&ts);
     int len1=snprintf(msgBoddy,kMaxMessageSize,"%010ld.%06ld \033[0;32m[%s]\033[0;34m \%s:%d %s",
                       ts.tv_sec,ts.tv_nsec/1000, tag.c_str(),func,line, colors[level]);
     va_start(args, format);
@@ -67,7 +66,7 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
 
 void LogDump(int level,const char*tag,const char*func,int line,const char*label,const BYTE*data,int len) {
     char buff[128];
-    int i,j,taglen=0;
+    int taglen=0;
     taglen=sprintf(buff,"%s[%d]",label,len);
     cdlog::LogMessage log(tag,line,func,level);
     std::ostringstream &oss=log.messageStream();
@@ -80,7 +79,6 @@ void LogDump(int level,const char*tag,const char*func,int line,const char*label,
 
 void LogSetModuleLevel(const char*module,int level) {
     if(module==NULL) {
-        int i;
         sLogLevel=(LogLevel)level;
         for(auto it=sModules.begin(); it!=sModules.end(); it++) {
             it->second=level;
@@ -138,7 +136,7 @@ static const std::string kTruncatedWarningText = "[...truncated...]";
 LogMessage::LogMessage(const std::string& file, const int line, const std::string& function,int level)
     : file_(splitFileName(file)),function_(function), line_(line),level_message(level) {
     struct timespec ts;
-    timespec_get(&ts, 0);// clock_gettime(CLOCK_MONOTONIC, &ts);
+    (void)timespec_get(&ts, 0);// clock_gettime(CLOCK_MONOTONIC, &ts);
     timestamp_ =ts.tv_sec;
     timeusec_ =ts.tv_nsec/1000 ;
     LogInit();

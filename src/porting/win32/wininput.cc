@@ -94,9 +94,10 @@ INT InputInit() {
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
+#if 0
     int rc1,rc2;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
-#if 0
+
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
@@ -155,22 +156,22 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
 
 INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout) {
     const char*evtnames[]= {"SYN","KEY","REL","ABS","MSC","SW"};
-    struct timespec tv;
     INPUTEVENT*events=(INPUTEVENT*)malloc(count*sizeof(INPUTEVENT));
-    memcpy(events,es,count*sizeof(INPUTEVENT));
+    if(events)memcpy(events,es,count*sizeof(INPUTEVENT));
 
-    if(dev.pipe[1]>0) {
+    if(events && (dev.pipe[1]>0)) {
         int rc=write(dev.pipe[1],events,count*sizeof(INPUTEVENT));
         LOGV_IF(count&&(es->type<=EV_SW),"pipe=%d %s,%x,%x write=%d",dev.pipe[1],evtnames[es->type],es->code,es->value,rc);
     }
-    free(events);
+    if(events)free(events);
     return count;
 }
 
 INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
+#if 0
     int rc,count=0;
     struct timeval tv;
-#if 0
+
     struct input_event events[64];
     INPUTEVENT*e=outevents;
     fd_set rfds;

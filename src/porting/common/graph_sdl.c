@@ -96,7 +96,6 @@ INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha) {
 
 INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
-    UINT x,y;
     GFXRect rec= {0,0,0,0};
     rec.w=ngs->width;
     rec.h=ngs->height;
@@ -145,7 +144,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 }
 
 INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
-    unsigned int x,y,sw,sh;
+    //unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs= {0,0};
@@ -235,7 +234,7 @@ static void InjectEvent(int type,int code,int value,int dev) {
     INPUTEVENT i= {0};
     struct timespec ts;
 #ifdef _WIN32
-    timespec_get(&ts, 0);
+    (void)timespec_get(&ts, 0);
 #else
     clock_gettime(CLOCK_MONOTONIC, &ts);
 #endif
