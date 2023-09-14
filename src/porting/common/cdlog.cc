@@ -1,7 +1,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <ngl_os.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string.h>
 #include <time.h>
 #include <string>
@@ -48,7 +48,7 @@ static void LogInit() {
                 std::string msg;
                 if(dbgMessages.size()==0)dbgMessages.wait_and_pop(msg,INT_MAX);
                 else dbgMessages.try_and_pop(msg);
-                printf("%s",msg.c_str());
+                std::cout<<msg;
             }
         });
         th.detach();

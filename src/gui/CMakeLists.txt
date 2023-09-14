@@ -18,11 +18,11 @@ aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
 aux_source_directory(utils SRCS_UTILS)
 include_directories(
-    ./ ./private 
-    ./core 
-    ./view 
-    ./cairomm 
-    ./core/svg 
+    ${PROJECT_SOURCE_DIR}/
+    ${PROJECT_SOURCE_DIR}/private
+    ${PROJECT_SOURCE_DIR}/core
+    ${PROJECT_SOURCE_DIR}/view
+    ${PROJECT_SOURCE_DIR}/cairomm
     ${CMAKE_BINARY_DIR}/include
     ${CDROID_DEPINCLUDES}
     ${CMAKE_BINARY_DIR}/include/gui

@@ -5,6 +5,7 @@ find_path(PIXMAN_INCLUDE_DIRS
     NAMES pixman.h
     HINTS ${PC_PIXMAN_INCLUDEDIR}
     ${PC_PIXMAN_INCLUDE_DIRS}
+    PATH_SUFFIXES pixman-1
 )
 
 find_library(PIXMAN_LIBRARIES

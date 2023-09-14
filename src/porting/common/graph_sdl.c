@@ -3,7 +3,6 @@
 #include <cdlog.h>
 #include <SDL.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 #include <time.h>
 #include <sys/mman.h>
