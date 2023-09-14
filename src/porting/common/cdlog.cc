@@ -65,7 +65,11 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
         return;
     LogInit();
     struct timespec ts;
+#ifdef _WIN32
+    (void)timespec_get(&ts,0);
+#else
     clock_gettime(CLOCK_MONOTONIC,&ts);
+#endif
     int len1=snprintf(msgBoddy,kMaxMessageSize,"%010ld.%06ld \033[0;32m[%s]\033[0;34m \%s:%d %s",
                       ts.tv_sec,ts.tv_nsec/1000, tag.c_str(),func,line, colors[level]);
     va_start(args, format);
@@ -157,7 +161,11 @@ static const std::string kTruncatedWarningText = "[...truncated...]";
 LogMessage::LogMessage(const std::string& file, const int line, const std::string& function,int level)
     : file_(splitFileName(file)),function_(function), line_(line),level_message(level) {
     struct timespec ts;
+#ifdef _WIN32
+    (void)timespec_get(&ts,0);
+#else
     clock_gettime(CLOCK_MONOTONIC,&ts);
+#endif
     timestamp_ =ts.tv_sec;
     timeusec_ =ts.tv_nsec/1000 ;
     LogInit();
