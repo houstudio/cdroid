@@ -834,10 +834,10 @@ void GradientDrawable::draw(Canvas&canvas) {
     case OVAL:
         canvas.save();
         rad = mRect.height/2.f;
-        canvas.translate(mRect.left + mRect.width/2.f ,mRect.top+mRect.height/2.f);
+        canvas.translate(mRect.centerX(),mRect.centerY());
         canvas.scale(float(mRect.width)/mRect.height,1.f);
         LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
-        canvas.move_to(mRect.left+mRect.width/2.f +rad,mRect.top+mRect.height/2.f);
+        canvas.begin_new_sub_path();
         canvas.arc(0,0,rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
 		
         if(mFillPaint)canvas.set_source(mFillPaint);
@@ -863,7 +863,6 @@ void GradientDrawable::draw(Canvas&canvas) {
         RectF innerBounds = bounds;
         float x= bounds.width/2.f;
         float y= bounds.height/2.f;
-        //thickness=20;
         if( sweep<360.f && sweep>-360.f ) {
             innerBounds.inflate(x-radius,y-radius);
             bounds = innerBounds;

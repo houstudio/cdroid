@@ -8,8 +8,8 @@ namespace cdroid{
     const int MAX_SCROLLBAR_ANGLE_SWIPE = 16;
     const int MIN_SCROLLBAR_ANGLE_SWIPE = 6;
     const float WIDTH_PERCENTAGE = 0.02f;
-    const int DEFAULT_THUMB_COLOR = 0x4CFFFFFF;
-    const int DEFAULT_TRACK_COLOR = 0x26FFFFFF;
+    const int DEFAULT_THUMB_COLOR = 0xFFE8EAED;
+    const int DEFAULT_TRACK_COLOR = 0x4CFFFFFF;
 
     RoundScrollbarRenderer::RoundScrollbarRenderer(View*parent) {
         // Paints for the round scrollbar.
@@ -23,14 +23,14 @@ namespace cdroid{
     void RoundScrollbarRenderer::drawRoundScrollbars(Canvas&canvas, float alpha,const Rect&bounds) {
         if (alpha == 0)return;
         // Get information about the current scroll state of the parent view.
-        float maxScroll = mParent->computeVerticalScrollRange();
-        float scrollExtent = mParent->computeVerticalScrollExtent();
+        const float maxScroll = mParent->computeVerticalScrollRange();
+        const float scrollExtent = mParent->computeVerticalScrollExtent();
         if (scrollExtent <= 0 || maxScroll <= scrollExtent) {
             return;
         }
-        float currentScroll = std::max(0, mParent->computeVerticalScrollOffset());
-        float linearThumbLength = mParent->computeVerticalScrollExtent();
-        float thumbWidth = mParent->getWidth() * WIDTH_PERCENTAGE;
+        const float currentScroll = std::max(0, mParent->computeVerticalScrollOffset());
+        const float linearThumbLength = mParent->computeVerticalScrollExtent();
+        const float thumbWidth = mParent->getWidth() * WIDTH_PERCENTAGE;
 
         setThumbColor(applyAlpha(DEFAULT_THUMB_COLOR, alpha));
         setTrackColor(applyAlpha(DEFAULT_TRACK_COLOR, alpha));
@@ -47,20 +47,24 @@ namespace cdroid{
         mRect = bounds;
         mRect.inflate(-thumbWidth /2,0);
 
-        LOGV("alpha=%.2f thumbWidth=%f angle=%f/%f bounds=(%d,%d,%d,%d)",alpha,thumbWidth,
-                    startAngle,sweepAngle,mRect.left,mRect.top,mRect.width,mRect.height);
+        const double radius = double(mRect.width)/2.0;
+        canvas.save();
         canvas.set_line_width(thumbWidth);
-        canvas.set_color(mThumbColor);
-        canvas.set_antialias(Cairo::ANTIALIAS_SUBPIXEL);
+        canvas.set_color(mTrackColor);
+        canvas.set_antialias(Cairo::ANTIALIAS_DEFAULT);
         canvas.set_line_cap(Cairo::Context::LineCap::ROUND);
-        canvas.arc(mRect.left+mRect.width/2,mRect.top+mRect.height/2,mRect.width/2.,
-                    0,M_PI*SCROLLBAR_ANGLE_RANGE/180.);
+        canvas.translate(mRect.centerX(),mRect.centerY());
+
+        canvas.scale(1.f,double(mRect.height)/mRect.width);
+        canvas.begin_new_sub_path();
+        canvas.arc(0,0,radius, -M_PI*SCROLLBAR_ANGLE_RANGE/360.f,M_PI*SCROLLBAR_ANGLE_RANGE/360.f);
         canvas.stroke();
 
-        canvas.set_color(mTrackColor);
-        canvas.arc(mRect.left+mRect.width/2,mRect.top+mRect.height/2,mRect.width/2.,
-            startAngle*M_PI/180.,(startAngle+sweepAngle)*M_PI/180.);
+        canvas.set_color(mThumbColor);
+        canvas.begin_new_sub_path();
+        canvas.arc(0,0,radius, startAngle*M_PI/180.f,(startAngle+sweepAngle)*M_PI/180.f);
         canvas.stroke();
+        canvas.restore();
     }
  
     float RoundScrollbarRenderer::clamp(float val, float min, float max) {
@@ -74,15 +78,15 @@ namespace cdroid{
     }
 
     int RoundScrollbarRenderer::applyAlpha(int color, float alpha) {
-        int alphaByte = (int) (Color::alpha(color) * alpha);
-        return Color::toArgb(alphaByte, Color::red(color), Color::green(color), Color::blue(color));
+        const int alphaByte = (int) (Color::alpha(color) * alpha);
+        return Color::toArgb(Color::red(color), Color::green(color), Color::blue(color),alphaByte);
     }
 
     void RoundScrollbarRenderer::setThumbColor(int thumbColor) {
-        mThumbColor=thumbColor;
+        mThumbColor = thumbColor;
     }
 
     void RoundScrollbarRenderer::setTrackColor(int trackColor) {
-        mTrackColor=trackColor;
+        mTrackColor = trackColor;
     }
 }
