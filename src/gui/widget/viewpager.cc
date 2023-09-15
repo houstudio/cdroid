@@ -1789,8 +1789,7 @@ bool ViewPager::arrowScroll(int direction){
             for (ViewGroup* parent = currentFocused->getParent(); parent;parent = parent->getParent()) {
                 sb<<" => "<<typeid(parent).name();
             }
-            LOGD("arrowScroll tried to find focus based on non-child "
-                  "current focused view ",sb.str());
+            LOGD("arrowScroll tried to find focus based on non-child current focused view %s",sb.str().c_str());
             currentFocused = nullptr;
         }
     }

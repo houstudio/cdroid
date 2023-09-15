@@ -1,5 +1,7 @@
 /*gui_features.h.cmake  Generated from configure.ac by autoheader.*/
 #cmakedefine ENABLE_GIF       
+#cmakedefine ENABLE_JPEG
+#cmakedefine ENABLE_TURBOJPEG
 #cmakedefine ENABLE_CAIROSVG  
 #cmakedefine ENABLE_MBEDTLS   
 #cmakedefine ENABLE_UPNP      
