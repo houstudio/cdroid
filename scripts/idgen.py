@@ -233,4 +233,4 @@ if ( __name__ == "__main__"):
     try:
         os.remove(ftempids)
     except OSError as e:
-        print("删除文件失败: {e}")
+        print("Remove File:{e}")
