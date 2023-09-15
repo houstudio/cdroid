@@ -230,4 +230,7 @@ if ( __name__ == "__main__"):
         idgen.dict2RH(sys.argv[3])
         msg="changed "
     print(namespace+"'s IDs is "+msg+ftempids+" : "+fidxml)
-    os.remove(ftempids)
+    try:
+        os.remove(ftempids)
+    except OSError as e:
+        print("删除文件失败: {e}")
