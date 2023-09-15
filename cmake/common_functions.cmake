@@ -21,9 +21,11 @@ MACRO(SUBDIRLIST result curdir)
     SET(${result} ${dirlist})
 ENDMACRO()
 
+find_package(Python)
+
 function(CreatePAK project ResourceDIR PakPath rhpath)
     add_custom_target(${project}_assets
-        COMMAND python ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
         COMMAND zip -q -r -D -1 ${PakPath} ./  -x "*.swp" ".*" "*.png" "*.jpg" "*.jpeg"
         COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg"
         WORKING_DIRECTORY ${ResourceDIR}
@@ -45,7 +47,7 @@ endfunction()
 function(Translate pofile transtopath)
    add_custom_target(translate
       #po2json translate   pofile to string_xx.json
-      COMMAND python  ${CMAKE_SOURCE_DIR}/scripts/po2json.py ${pofile} 
+      COMMAND ${Python_EXECUTABLE}  ${CMAKE_SOURCE_DIR}/scripts/po2json.py ${pofile}
       # convert xls (after your custom finished translate) to string_xx.json for pak 
       #COMMAND python  ${CMAKE_SOURCE_DIR}/src/tools/po2json.py ${CMAKE_CURRENT_BINARY_DIR}/newglee.po.xls
       COMMAND cp  ${PROJECT_BINARY_DIR}/string*.json ${PROJECT_SOURCE_DIR}/assets/strings
