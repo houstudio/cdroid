@@ -13,8 +13,10 @@ TOOLCHAINS["D211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
 TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
 
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
-VCPKGROOT=/opt/vcpkg
-#VCPKGROOT=${HOME}/vcpkg
+
+#VCPKGROOT=/opt/vcpkg
+VCPKGROOT=${HOME}/vcpkg
+
 DEPLIBS["X64"]=${VCPKGROOT}/installed/x64-linux-dynamic
 DEPLIBS["SIGMA"]=${VCPKGROOT}/installed/arm-linux-dynamic
 DEPLIBS["RISCVD211"]=${VCPKGROOT}/installed/riscv64-linux-dynamic
