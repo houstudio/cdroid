@@ -13,12 +13,14 @@ TOOLCHAINS["D211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
 TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
 
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
-DEPLIBS["X64"]=${HOME}/vcpkg/installed/x64-linux-dynamic
-DEPLIBS["SIGMA"]=${HOME}/vcpkg/installed/arm-linux-dynamic
-DEPLIBS["RISCVD211"]=${HOME}/vcpkg/installed/riscv64-linux-dynamic
-DEPLIBS["R818"]=${HOME}/vcpkg/installed/r818-linux
-DEPLIBS["D211"]=${HOME}/vcpkg/installed/riscv64-d211-linux
-DEPLIBS["HI3536"]=${HOME}/vcpkg/installed/hisi3536-linux
+VCPKGROOT=/opt/vcpkg
+#VCPKGROOT=${HOME}/vcpkg
+DEPLIBS["X64"]=${VCPKGROOT}/installed/x64-linux-dynamic
+DEPLIBS["SIGMA"]=${VCPKGROOT}/installed/arm-linux-dynamic
+DEPLIBS["RISCVD211"]=${VCPKGROOT}/installed/riscv64-linux-dynamic
+DEPLIBS["R818"]=${VCPKGROOT}/installed/r818-linux
+DEPLIBS["D211"]=${VCPKGROOT}/installed/riscv64-d211-linux
+DEPLIBS["HI3536"]=${VCPKGROOT}/installed/hisi3536-linux
 
 CDROID_VALID_PORTS="x64"
 SHOWHELP=0

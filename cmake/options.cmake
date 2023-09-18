@@ -33,6 +33,7 @@ find_package(Cairo REQUIRED)
 find_package(MBEDTLS)
 #find_package(OpenSSL)
 find_package(Fontconfig REQUIRED)
+find_package(BZip2)
 find_package(UniBreak REQUIRED)
 find_package(litehtml CONFIG)
 find_package(PLPLOT)
@@ -49,7 +50,9 @@ list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
 )
-
+if (BZIP2_FOUND)
+   list(APPEND CDROID_DEPLIBS ${BZIP2_LIBRARIES})
+endif()
 if (TURBOJPEG_FOUND)
    add_definitions(-DENABLE_TURBOJPEG=1)
    list(APPEND CDROID_DEPLIBS ${TURBOJPEG_LIBRARIES})
