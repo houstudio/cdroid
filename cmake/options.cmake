@@ -33,6 +33,7 @@ find_package(Cairo REQUIRED)
 find_package(MBEDTLS)
 #find_package(OpenSSL)
 find_package(Fontconfig REQUIRED)
+find_package(Brotli)
 find_package(BZip2)
 find_package(UniBreak REQUIRED)
 find_package(litehtml CONFIG)
@@ -50,6 +51,9 @@ list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
 )
+if ( BROTLIDEC_FOUND )
+   #list(APPEND CDROID_DEPLIBS ${BROTLIDEC_LIBRARIES})
+endif()
 if (BZIP2_FOUND)
    list(APPEND CDROID_DEPLIBS ${BZIP2_LIBRARIES})
 endif()

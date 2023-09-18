@@ -5,6 +5,8 @@ apps/*
 *.pak
 *.swp
 .*
+!.gitigmore
+!.gitmodules
 *~
 src/test4ext/porting
 src/test4ext/*.gz
