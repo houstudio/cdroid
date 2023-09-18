@@ -4,8 +4,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 option( GUI_STATIC "UI is static link" ON)
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 endif()
 aux_source_directory(core SRCS_GUICORE)
 aux_source_directory(view SRCS_VIEWS)
@@ -24,11 +24,11 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/view
     ${PROJECT_SOURCE_DIR}/cairomm
     ${PROJECT_SOURCE_DIR}/../porting/include
+    ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_BINARY_DIR}/include/gui
     ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_BINARY_DIR}/include/pinyin
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CDROID_DEPINCLUDES}
     ${LIBUNIBREAK_INCLUDE_DIRS}
 )

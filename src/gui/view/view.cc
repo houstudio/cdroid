@@ -4378,7 +4378,7 @@ bool View::isShown()const{
 }
 
 View& View::setEnabled(bool enable) {
-    if( enable != isEnabled() ) return *this;
+    if( enable == isEnabled() ) return *this;
     setFlags(enable?ENABLED:DISABLED,ENABLED_MASK);
     refreshDrawableState();
     invalidate(true);

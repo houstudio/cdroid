@@ -71,7 +71,7 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
         *width=800;
         *height=640;
     }
-    LOGD("screensize=%dx%d",*width,*height);
+    LOGV("screensize=%dx%d",*width,*height);
     return E_OK;
 }
 

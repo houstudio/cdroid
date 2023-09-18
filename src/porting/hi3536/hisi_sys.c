@@ -308,18 +308,18 @@ HI_S32 HISI_VO_Init() {
     HI_U32 u32VoFrmRate;
     VO_PUB_ATTR_S stPubAttr;
     VO_VIDEO_LAYER_ATTR_S stLayerAttr;
-    s32Ret=HI_MPI_VO_BindGraphicLayer(GRAPHICS_LAYER_HC0, VoDev);
+    /*s32Ret=HI_MPI_VO_BindGraphicLayer(GRAPHICS_LAYER_HC0, VoDev);
     if(HI_SUCCESS != s32Ret) {
         LOGE("HI_MPI_VO_BindGraphicLayer failed");
-        return HI_FAILURE;
-    }
+        //return HI_FAILURE;
+    }*/
     stPubAttr.enIntfSync = VO_OUTPUT_720P50;
-    stPubAttr.enIntfType = VO_INTF_VGA;
+    stPubAttr.enIntfType = VO_INTF_HDMI;//VGA;
     stPubAttr.u32BgColor = 0x0000FF;
 
     stLayerAttr.bClusterMode = HI_FALSE;
     stLayerAttr.bDoubleFrame = HI_FALSE;
-    stLayerAttr.enPixFormat = PIXEL_FORMAT_YUV_SEMIPLANAR_420;
+    stLayerAttr.enPixFormat = PIXEL_FORMAT_RGB_8888;//PIXEL_FORMAT_YUV_SEMIPLANAR_420;
     s32Ret = VO_GetWH(stPubAttr.enIntfSync,&stSize.u32Width, &stSize.u32Height,&u32VoFrmRate);
     LOGE_IF(s32Ret!=HI_SUCCESS,"get vo wh failed with %d!", s32Ret);
 
