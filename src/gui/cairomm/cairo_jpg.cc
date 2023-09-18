@@ -52,8 +52,7 @@
 #include <cairo.h>
 #include <jpeglib.h>
 #include <turbojpeg.h>
-#include "cairo_jpg.h"
-#include <gui_features.h>
+#include <cairo_jpg.h>
 #include <istream>
 #include <cdtypes.h>
 #include <cdlog.h>

@@ -30,6 +30,7 @@ if(NOT ENABLE_PLPLOT)
 endif()
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
+add_definitions(--include core/stdpatch.h)
 
 if(BUILD_EXAMPLES)
 foreach(Example ${ExamplesFileList})

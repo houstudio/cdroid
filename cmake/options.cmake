@@ -1,6 +1,7 @@
 
 option(MINIMAL_SIZE_OPTIMIZED "For IOT/Embedded size optimize" OFF)
 option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_APPS "Build cdroid custom apps" ON)
 option(BUILD_CDROID_TESTS "Build unit tests" ON)
 
 option(ENABLE_GIF "enable gif encode and decoder" OFF)
@@ -32,8 +33,6 @@ find_package(Cairo REQUIRED)
 find_package(MBEDTLS)
 #find_package(OpenSSL)
 find_package(Fontconfig REQUIRED)
-find_package(Brotli)
-find_package(BZip2)
 find_package(UniBreak REQUIRED)
 find_package(litehtml CONFIG)
 find_package(PLPLOT)
@@ -51,21 +50,15 @@ list(APPEND CDROID_DEPLIBS
     ${UNIBREAK_LIBRARIES}
 )
 
-if ( BROTLIDEC_FOUND )
-   #list(APPEND CDROID_DEPLIBS ${BROTLIDEC_LIBRARIES})
-endif()
-
-if (BZIP2_FOUND)
-   list(APPEND CDROID_DEPLIBS ${BZIP2_LIBRARIES})
-endif()
-
 if (TURBOJPEG_FOUND)
    add_definitions(-DENABLE_TURBOJPEG=1)
    list(APPEND CDROID_DEPLIBS ${TURBOJPEG_LIBRARIES})
-   #endif()
-elseif(JPEG_FOUND)
+   list(APPEND CDROID_DEPINCLUDES ${TURBOJPEG_INCLUDE_DIRS})
+endif()
+if(JPEG_FOUND)
    add_definitions(-DENABLE_JPEG=1)
    list(APPEND CDROID_DEPLIBS ${JPEG_LIBRARIES})
+   list(APPEND CDROID_DEPINCLUDES ${JPEG_INCLUDE_DIRSS})
 endif()
 
 if (litehtml_FOUND)
@@ -93,15 +86,12 @@ endif(ENABLE_FRIBIDI)
 
 list(APPEND CDROID_DEPINCLUDES
     ${PNG_INCLUDE_DIRS}
-    ${JPEG_INCLUDE_DIRSS}
     ${ZIP_INCLUDE_DIRS}
     ${EXPAT_INCLUDE_DIRS}
-    ${JSONCPP_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}/cairo
     ${PIXMAN_INCLUDE_DIRS}
     ${FRIBIDI_INCLUDE_DIRS}
-    ${TURBOJPEG_INCLUDE_DIRS}
 )
 if(BROTLI_FOUND)
    list(APPEND CDROID_DEPLIBS ${BROTLIDEC_LIBRARIES})
@@ -120,6 +110,7 @@ message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 if(ENABLE_PINYIN2HZ)
   list(APPEND OPTIONAL_LIBS pinyin)
   list(APPEND CDROID_DEPLIBS pinyin)
+  list(APPEND CDROID_DEPINCLUDES ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include)
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/gui/gui_features.h.cmake")

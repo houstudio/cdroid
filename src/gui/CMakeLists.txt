@@ -23,13 +23,14 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/core
     ${PROJECT_SOURCE_DIR}/view
     ${PROJECT_SOURCE_DIR}/cairomm
+    ${PROJECT_SOURCE_DIR}/../porting/include
     ${CMAKE_BINARY_DIR}/include
-    ${CDROID_DEPINCLUDES}
     ${CMAKE_BINARY_DIR}/include/gui
     ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_BINARY_DIR}/include/pinyin
-    ${LIBUNIBREAK_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
+    ${CDROID_DEPINCLUDES}
+    ${LIBUNIBREAK_INCLUDE_DIRS}
 )
 
 add_definitions(--include cdtypes.h)

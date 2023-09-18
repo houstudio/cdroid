@@ -39,7 +39,6 @@
 #include <cairomm/device.h>
 #include <cairomm/fontoptions.h>
 #include <cairomm/refptr.h>
-#include <gui_features.h>
 
 //See xlib_surface.h for XlibSurface.
 //See win32_surface.h for Win32Surface.

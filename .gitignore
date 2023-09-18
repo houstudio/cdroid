@@ -1,4 +1,6 @@
 out*
+apps/*
+!apps/samples
 *.bak
 *.pak
 *.swp

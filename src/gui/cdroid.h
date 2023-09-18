@@ -1,5 +1,5 @@
-#include <gui_features.h>
 #include <cdtypes.h>
+#include <gui_features.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
 #include <widget/viewpager.h>
