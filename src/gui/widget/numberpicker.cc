@@ -338,99 +338,99 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
     if (!isEnabled()) {
         return false;
     }
-    if (mVelocityTracker==nullptr) mVelocityTracker = VelocityTracker::obtain();
+    if (mVelocityTracker == nullptr) mVelocityTracker = VelocityTracker::obtain();
 
     mVelocityTracker->addMovement(event);
     int action = event.getActionMasked();
     switch (action) {
     case MotionEvent::ACTION_CANCEL:LOGD("ACTION_CANCEL");break;
     case MotionEvent::ACTION_MOVE:
-            if (isHorizontalMode()) {
-                float currentMoveX = event.getX();
-                if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
-                    int deltaDownX = (int) std::abs(currentMoveX - mLastDownEventX);
-                    if (deltaDownX > mTouchSlop) {
-                        removeAllCallbacks();
-                        onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
-                    }
-                } else {
-                    int deltaMoveX = (int) ((currentMoveX - mLastDownOrMoveEventX));
-                    scrollBy(deltaMoveX, 0);
-                    invalidate();
+        if (isHorizontalMode()) {
+            float currentMoveX = event.getX();
+            if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
+                int deltaDownX = (int) std::abs(currentMoveX - mLastDownEventX);
+                if (deltaDownX > mTouchSlop) {
+                    removeAllCallbacks();
+                    onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
                 }
-                mLastDownOrMoveEventX = currentMoveX;                
-            }else{
-                const float currentMoveY = event.getY();
-                if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
-                    int deltaDownY = (int) std::abs(currentMoveY - mLastDownEventY);
-                    if (deltaDownY > mTouchSlop) {
-                        removeAllCallbacks();
-                        onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
-                    }
-                } else {
-                    int deltaMoveY = (int) ((currentMoveY - mLastDownOrMoveEventY));
-                    scrollBy(0, deltaMoveY);
-                    invalidate();
+            } else {
+                int deltaMoveX = (int) ((currentMoveX - mLastDownOrMoveEventX));
+                scrollBy(deltaMoveX, 0);
+                invalidate();
+            }
+            mLastDownOrMoveEventX = currentMoveX;
+        }else{
+            const float currentMoveY = event.getY();
+            if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
+                int deltaDownY = (int) std::abs(currentMoveY - mLastDownEventY);
+                if (deltaDownY > mTouchSlop) {
+                    removeAllCallbacks();
+                    onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
                 }
-                mLastDownOrMoveEventY = currentMoveY;
-            }   
-          break;
-    case MotionEvent::ACTION_UP: {
-            removeBeginSoftInputCommand();
-            removeChangeCurrentByOneFromLongPress();
-            pshCancel();
-            mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
-            if(isHorizontalMode()){
-                int initialVelocity = (int) mVelocityTracker->getXVelocity();
-                if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
-                    fling(initialVelocity);
-                    onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
-                } else {
-                    const int eventX = (int) event.getX();
-                    const int deltaMoveX = (int) std::abs(eventX - mLastDownEventX);
-                    if (deltaMoveX <= mTouchSlop) {
-                        int selectorIndexOffset = (eventX / mSelectorElementSize)
-                                - mWheelMiddleItemIndex;
-                        if (selectorIndexOffset > 0) {
-                            changeValueByOne(true);
-                        } else if (selectorIndexOffset < 0) {
-                            changeValueByOne(false);
-                        } else {
-                            ensureScrollWheelAdjusted();
-                        }
+            } else {
+                int deltaMoveY = (int) ((currentMoveY - mLastDownOrMoveEventY));
+                scrollBy(0, deltaMoveY);
+                invalidate();
+            }
+            mLastDownOrMoveEventY = currentMoveY;
+        }
+        break;
+    case MotionEvent::ACTION_UP:
+        removeBeginSoftInputCommand();
+        removeChangeCurrentByOneFromLongPress();
+        pshCancel();
+        mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
+        if(isHorizontalMode()){
+            int initialVelocity = (int) mVelocityTracker->getXVelocity();
+            if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
+                fling(initialVelocity);
+                onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
+            } else {
+                const int eventX = (int) event.getX();
+                const int deltaMoveX = (int) std::abs(eventX - mLastDownEventX);
+                if (deltaMoveX <= mTouchSlop) {
+                    int selectorIndexOffset = (eventX / mSelectorElementSize)
+                            - mWheelMiddleItemIndex;
+                    if (selectorIndexOffset > 0) {
+                        changeValueByOne(true);
+                    } else if (selectorIndexOffset < 0) {
+                        changeValueByOne(false);
                     } else {
                         ensureScrollWheelAdjusted();
                     }
-                    onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
-                }
-            }else{
-                const int initialVelocity = (int) mVelocityTracker->getYVelocity();
-                if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
-                    fling(initialVelocity);
-                    onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
                 } else {
-                    const int eventY = (int) event.getY();
-                    const int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
-                    if (deltaMoveY <= mTouchSlop){
-                        int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
-                        if (selectorIndexOffset > 0) {
-                            changeValueByOne(true);
-                            pshButtonTapped(R::id::increment);
-                        } else if (selectorIndexOffset < 0) {
-                            changeValueByOne(false);
-                            pshButtonTapped(R::id::decrement);
-                        }else{
-                            ensureScrollWheelAdjusted();
-                        }
+                    ensureScrollWheelAdjusted();
+                }
+                onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
+            }
+         }else{
+            const int initialVelocity = (int) mVelocityTracker->getYVelocity();
+            if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
+                fling(initialVelocity);
+                onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
+            } else {
+                const int eventY = (int) event.getY();
+                const int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
+                if (deltaMoveY <= mTouchSlop){
+                    int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
+                    if (selectorIndexOffset > 0) {
+                        changeValueByOne(true);
+                        pshButtonTapped(R::id::increment);
+                    } else if (selectorIndexOffset < 0) {
+                        changeValueByOne(false);
+                        pshButtonTapped(R::id::decrement);
                     }else{
                         ensureScrollWheelAdjusted();
                     }
-                    onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
+                }else{
+                    ensureScrollWheelAdjusted();
                 }
+                onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
             }
-            mVelocityTracker->recycle();
-            mVelocityTracker = nullptr;
-        } break;
+        }
+        mVelocityTracker->recycle();
+        mVelocityTracker = nullptr;
+        break;
     }//end switch
     return true;
 }
@@ -548,7 +548,7 @@ void NumberPicker::scrollBy(int x, int y){
     } else {
         if (isAscendingOrder()) {
             if (!mWrapSelectorWheel && y > 0
-                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {//changed from >=-->=,make items wrapable
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
@@ -559,7 +559,7 @@ void NumberPicker::scrollBy(int x, int y){
             }
         } else {
             if (!mWrapSelectorWheel && y > 0
-                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {//changed from >=-->=,make items wrapable
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
@@ -1260,11 +1260,14 @@ int NumberPicker::resolveSizeAndStateRespectingMinSize(int minSize, int measured
 void NumberPicker::initializeSelectorWheelIndices(){
     mSelectorIndexToStringCache.clear();
     const int current = getValue();
+    const int count = (mMaxValue - mMinValue);
     for (int i = 0; i < mSelectorIndices.size(); i++) {
         int selectorIndex = current + (i - mWheelMiddleItemIndex);
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
+        if(mSelectorIndices.size() > count && count > 0 )
+		    selectorIndex = (selectorIndex + count)%count;/*make wrapable*/
         mSelectorIndices[i] = selectorIndex;
         ensureCachedScrollSelectorValue(mSelectorIndices[i]);
     }
