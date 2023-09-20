@@ -1006,6 +1006,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     const bool showSelectorWheel = !mHideWheelUntilFocused || hasFocus();
     float x, y;
     Rect recText;
+    const int textGravity = mSelectedText?mSelectedText->getGravity():Gravity::CENTER;
     canvas.save();
     if (isHorizontalMode()) {
         x = mCurrentScrollOffset - mSelectorElementSize/2;
@@ -1028,9 +1029,9 @@ void NumberPicker::onDraw(Canvas&canvas){
         if( mPat == nullptr ) {
             Color c1(mTextColor), c2(mTextColor2);
             CycleInterpolator ci(0.5f);
-	        if(isHorizontalMode())
+            if(isHorizontalMode())
                 mPat = Cairo::LinearGradient::create(x + mSelectorElementSize/2,0,x + mSelectorElementSize/2 + getWidth(),0);
-	        else
+            else
                 mPat = Cairo::LinearGradient::create(0,y + mSelectorElementSize/2,0,y + mSelectorElementSize/2 + getHeight());
             const int cStops = mSelectorIndices.size()*3;
             for(int i = 0; i < cStops ;i++){
@@ -1053,7 +1054,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     for (int i = 0; i < selectorIndices.size(); i++) {
         float font_size  = mTextSize;
         int selectedSize = mSelectorElementSize;
-        if(mTextSize!=mTextSize2){
+        if(mTextSize != mTextSize2){
             if(isHorizontalMode()){
                 const float harfWidth = getWidth()/2.f;
                 const float fraction = std::abs(x-harfWidth)/harfWidth;
@@ -1089,8 +1090,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         // with the new one.
         if ((showSelectorWheel && i != mWheelMiddleItemIndex)
                 || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
-            int xOffset = 0;
-            int yOffset = 0;
+            int xOffset = 0 , yOffset = 0;
             if (i != mWheelMiddleItemIndex && mItemSpacing != 0) {
                 if (isHorizontalMode()) {
                     if (i > mWheelMiddleItemIndex) {
@@ -1106,13 +1106,22 @@ void NumberPicker::onDraw(Canvas&canvas){
                     }
                 }
             }
-            canvas.draw_text(recText,scrollSelectorValue,Gravity::CENTER);//mTextAlign);
+            Drawable*dr = mContext->getDrawable(scrollSelectorValue);
+            if(dr){
+                Rect outRect;
+                Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
+                dr->setBounds(outRect);
+                dr->draw(canvas);
+            }else{
+                canvas.draw_text(recText,scrollSelectorValue,textGravity);
+            }
         }
         if (isHorizontalMode()) {
             x += selectedSize;
             recText.offset(selectedSize,0);
         } else {
-            LOGV("%p:%d[%d] %s pos=(%d,%d,%d,%d) itemsize=%d,ScrollOffset=%d,%d fontsize=%d,%d,%.f",this,mID,i,scrollSelectorValue.c_str(),recText.left,recText.top,recText.width,recText.height,
+            LOGV("%p:%d[%d] %s pos=(%d,%d,%d,%d) itemsize=%d,ScrollOffset=%d,%d fontsize=%d,%d,%.f",
+                 this,mID,i,scrollSelectorValue.c_str(),recText.left,recText.top,recText.width,recText.height,
                  selectedSize,mInitialScrollOffset,mCurrentScrollOffset,mSelectedTextSize,mTextSize,font_size);
             y += selectedSize;
             //canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
