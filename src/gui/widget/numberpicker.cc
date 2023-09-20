@@ -1106,9 +1106,10 @@ void NumberPicker::onDraw(Canvas&canvas){
                     }
                 }
             }
-            Drawable*dr = mContext->getDrawable(scrollSelectorValue);
-            if(dr){
+            const bool isResURL = strpbrk(scrollSelectorValue.c_str(),"@:/")!=nullptr;
+            if(isResURL){
                 Rect outRect;
+                Drawable*dr = mContext->getDrawable(scrollSelectorValue);
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
                 dr->setBounds(outRect);
                 dr->draw(canvas);

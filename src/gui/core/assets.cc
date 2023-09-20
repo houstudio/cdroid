@@ -365,7 +365,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         }
     }
     //wrap png to drawable,make app develop simply
-    if(resname[0]=='#'||resname[1]=='x'|| resname[1]=='X'||resname.find('/')==std::string::npos) {
+    if(resname[0]=='#'||resname[1]=='x'|| resname[1]=='X'){
         LOGV("color %s",fullresid.c_str());
         return new ColorDrawable(Color::parseColor(resname));
     }
@@ -390,7 +390,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
             std::ifstream fs(fullresid);
             d = Drawable::fromStream(nullptr,fs,resname,package);
         }
-        LOGD_IF(zfile==nullptr,"drawable %s load failed",fullresid.c_str());
+        LOGD_IF(zfile==nullptr&&fullresid.find("/")!=std::string::npos,"drawable %s load failed",fullresid.c_str());
     }
     if(d) {
         mDrawables.insert({fullresid,std::weak_ptr<Drawable::ConstantState>(d->getConstantState())});
