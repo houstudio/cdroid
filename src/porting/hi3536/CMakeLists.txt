@@ -29,9 +29,7 @@ list(APPEND HI3536_INCLUDE_DIRS ../include)
     
 list(APPEND HI3536_SRCS hisi_sys.c graph_hisi.c)
 list(APPEND HI3536_INCLUDE_DIRS ./include)
-list(APPEND HI3536_LIBS hdmi tde jpeg jpeg6b VoiceEngine dnvqe upvqe mpi)
-
-#add_link_options("LINKER:-rpath-link,${CMAKE_CURRENT_SOURCE_DIR}/lib")
+list(APPEND HI3536_LIBS -Wl,--start-group hdmi tde jpeg6b VoiceEngine dnvqe upvqe mpi -Wl,--end-group)
 
 link_directories(${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 list(APPEND HI3536_LIBS pthread)

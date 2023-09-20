@@ -1,5 +1,4 @@
 #include <widget/tablayout.h>
-#include <core/soundeffect.h>
 #include <widget/R.h>
 #include <cdlog.h>
 

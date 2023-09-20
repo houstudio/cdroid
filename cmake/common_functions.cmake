@@ -26,7 +26,7 @@ find_package(Python)
 function(CreatePAK project ResourceDIR PakPath rhpath)
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
-        COMMAND zip -q -r -D -1 ${PakPath} ./  -x "*.swp" ".*" "*.png" "*.jpg" "*.jpeg"
+        COMMAND zip -q -r -D -1 ${PakPath} ./  -i "*.xml"
         COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.ttf" "*.otf" "*.ttc"
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")

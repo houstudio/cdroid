@@ -18,6 +18,8 @@
 #include <view/viewconfiguration.h>
 #include <view/measurespec.h>
 #include <view/viewtreeobserver.h>
+#include <view/soundeffectconstants.h>
+#include <view/hapticfeedbackconstants.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <set>
@@ -191,7 +193,9 @@ protected:
         bool mKeepScreenOn;
         bool mDebugLayout;
         bool mDisplayState;/*true display is on*/
-	Cairo::RefPtr<Canvas> mCanvas;
+        std::function<void(int)>mPlaySoundEffect;
+        std::function<bool(int,bool)>mPerformHapticFeedback;
+        Cairo::RefPtr<Canvas> mCanvas;
         Drawable*mAutofilledDrawable;
         View* mTooltipHost;
         View* mViewRequestingLayout;
@@ -604,7 +608,11 @@ protected:
     int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
     bool handleScrollBarDragging(MotionEvent& event);
+    void setSoundEffectsEnabled(bool soundEffectsEnabled);
+    bool isSoundEffectsEnabled()const;
     void playSoundEffect(int soundConstant);
+    void setHapticFeedbackEnabled(bool hapticFeedbackEnabled);
+    bool isHapticFeedbackEnabled()const;
     bool performHapticFeedback(int feedbackConstant, int flags=0);
     bool performButtonActionOnTouchDown(MotionEvent&);
 

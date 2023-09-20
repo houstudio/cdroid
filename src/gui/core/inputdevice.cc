@@ -35,11 +35,12 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     InputDeviceIdentifier di;
     Point sz;
 
-    mDeviceClasses=0;
+    mDeviceClasses= 0;
+    mKeyboardType = KEYBOARD_TYPE_NONE;
     InputGetDeviceInfo(fdev,&devInfos);
-    di.name=devInfos.name;
-    di.product=devInfos.product;
-    di.vendor=devInfos.vendor;
+    di.name = devInfos.name;
+    di.product = devInfos.product;
+    di.vendor = devInfos.vendor;
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
     WindowManager::getInstance().getDefaultDisplay().getRealSize(sz);
@@ -47,8 +48,8 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     mScreenHeight = sz.y;//ScreenSize is screen size in no roration
 
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
-	 const INPUTAXISINFO*axis=devInfos.axis+j;
-	 if(axis->maximum!=axis->minimum)
+	 const INPUTAXISINFO*axis = devInfos.axis+j;
+	 if(axis->maximum != axis->minimum)
   	    mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
 	 LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
     }
@@ -64,7 +65,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     }
 
     if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask))
-        mDeviceClasses=INPUT_DEVICE_CLASS_CURSOR;
+        mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
     if(TEST_BIT(ABS_MT_POSITION_X, devInfos.absBitMask) && TEST_BIT(ABS_MT_POSITION_Y, devInfos.absBitMask)) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is a touch screen.
@@ -121,7 +122,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
             mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
         }
     } 
-    kmap=nullptr;
+    kmap = nullptr;
 }
 
 uint32_t getAbsAxisUsage(int32_t axis, uint32_t mDeviceClasses) {
@@ -171,16 +172,29 @@ int InputDevice::getId()const{
     return mDeviceInfo.getId();
 }
 
-int InputDevice::getSource()const{
+int InputDevice::getSources()const{
     return mDeviceInfo.getSources();
 }
 
-int InputDevice::getVendor()const{
+int InputDevice::getVendorId()const{
     return mDeviceInfo.getIdentifier().vendor;
 }
 
-int InputDevice::getProduct()const{
+int InputDevice::getProductId()const{
     return mDeviceInfo.getIdentifier().product;
+}
+
+bool InputDevice::isVirtual()const{
+    return getId()<0;
+}
+
+bool InputDevice::isFullKeyboard()const{
+    return ((getSources() & SOURCE_KEYBOARD) == SOURCE_KEYBOARD)
+	    && (mKeyboardType == KEYBOARD_TYPE_ALPHABETIC);
+}
+
+bool InputDevice::supportsSource(int source)const{
+    return (getSources() & source) == source;
 }
 
 int InputDevice::getClasses()const{
@@ -216,7 +230,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
         else
             mRepeatCount=0;
 
-        mEvent.initialize(getId(),getSource(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
+        mEvent.initialize(getId(),getSources(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
               keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
         if(listener)listener(mEvent); 
@@ -224,7 +238,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     case EV_SYN:
         LOGV("fd[%d].SYN value=%d code=%d",getId(),value,code);
         break;
-    default:LOGD("event type %x source=%x",type,getSource());break;
+    default:LOGD("event type %x source=%x",type,getSources());break;
     }
     return 0;
 }
@@ -351,7 +365,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     case EV_REL:
         switch(code){
         case REL_X:
-        case REL_Y:
+        case REL_Y://LOGD("EV_REL code %x,%x",code,value);
         case REL_Z:setAxisValue(0,code,value,true);break;
         }break;
     case EV_SYN:
@@ -359,7 +373,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_REPORT:
         case SYN_MT_REPORT:
             mMoveTime =(tv.tv_sec * 1000000 + tv.tv_usec);
-            mEvent.initialize(getId(),getSource(),mEvent.getAction(),mEvent.getActionButton(),
+            mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton(),
                 0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,
                 0/*xOffset*/,0/*yOffset*/ , 0/*xPrecision*/, 0/*yPrecision*/ ,
                 mDownTime , mMoveTime , 0 , nullptr , nullptr);

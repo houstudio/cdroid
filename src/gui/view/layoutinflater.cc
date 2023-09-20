@@ -73,7 +73,7 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool att
     if(mContext) {
         std::string package;
         std::unique_ptr<std::istream>stream = mContext->getInputStream(resource,&package);
-        LOGD("inflate from %s",resource.c_str());
+        LOGV("inflate from %s",resource.c_str());
         if(stream && stream->good()) {
             v = inflate(package,*stream,root,attachToRoot && (root!=nullptr),atts);
         } else {

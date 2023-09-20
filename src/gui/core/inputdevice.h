@@ -100,7 +100,7 @@ private:
 };
 
 /* Input device classes. */
-enum {
+enum InputDeviceClass{
     /* The input device is a keyboard or has buttons. */
     INPUT_DEVICE_CLASS_KEYBOARD      = 0x00000001,
 
@@ -173,9 +173,14 @@ public:
     static constexpr int SOURCE_JOYSTICK = 0x01000000 | SOURCE_CLASS_JOYSTICK;
     static constexpr int SOURCE_HDMI = 0x02000000 | SOURCE_CLASS_BUTTON;
     static constexpr int SOURCE_ANY = 0xffffff00;
+
+    static constexpr int KEYBOARD_TYPE_NONE = 0;
+    static constexpr int KEYBOARD_TYPE_NON_ALPHABETIC = 1;
+    static constexpr int KEYBOARD_TYPE_ALPHABETIC = 2;
     typedef std::function<void(const InputEvent&)>EventListener;
 protected:
     int mDeviceClasses;
+    int mKeyboardType;
     unsigned int mScreenWidth;
     unsigned int mScreenHeight;
     InputDeviceInfo mDeviceInfo;
@@ -187,9 +192,12 @@ public:
     virtual int putRawEvent(const struct timeval&tv,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
     void setEventConsumeListener(EventListener ls){listener=ls;}
     int getId()const;
-    int getSource()const;
-    int getVendor()const;
-    int getProduct()const;
+    int getProductId()const;
+    int getVendorId()const;
+    bool isVirtual()const;
+    bool isFullKeyboard()const;
+    bool supportsSource(int source)const;
+    int getSources()const;
     int getClasses()const;
     const std::string&getName()const;
 };

@@ -1,6 +1,5 @@
 #include <widget/gridview.h>
 #include <widget/checkable.h>
-#include <core/soundeffect.h>
 #include <cdlog.h>
 
 namespace cdroid {

@@ -1,0 +1,19 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+sharedlibdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: tvhal
+Description: cdroid porting layer
+Version: 1.0.0
+
+#Requires Requires.private libs that supported by pkgconfig
+Requires: @PKGCONFIG_LIBS@
+Requires.private: @PKGCONFIG_LIBS_PRIVATE@
+
+#Libs& Libs.private libs that pkg-config cant support
+Libs: @NONPKG_LIBS@
+Libs.private: @NONPKG_LIBS_PRIVATE@
+
+Cflags: -I"${includedir}/porting" 

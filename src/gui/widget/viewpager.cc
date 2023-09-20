@@ -1,5 +1,4 @@
 #include <widget/viewpager.h>
-#include <core/soundeffect.h>
 #include <focusfinder.h>
 #include <cdtypes.h>
 #include <cdlog.h>

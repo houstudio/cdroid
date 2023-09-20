@@ -28,6 +28,11 @@ typedef struct{
 #define INJECTDEV_KEY   0x101080
 #define INJECTDEV_TOUCH 0x101081
 #define INJECTDEV_MOUSE 0x101082
+
+#ifndef EV_ADD
+   #define EV_ADD          0xFE/*used by INPUTEVENT's type, for device add*/
+   #define EV_REMOVE       0xFF/*used by INPUTEVENT's type, for device remove*/
+#endif
 typedef struct{
     int axis;
     int minimum;

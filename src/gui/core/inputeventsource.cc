@@ -22,12 +22,17 @@ InputEventSource::InputEventSource(){
     auto func=[this](){
         while(1){
             INPUTEVENT es[32];
-            const int count=InputGetEvents(es,32,10);
+            const int count = InputGetEvents(es,32,10);
             std::lock_guard<std::mutex> lock(mtxEvents);
             if(count)mLastInputEventTime = SystemClock::uptimeMillis();
             LOGV_IF(count,"rcv %d rawEvents",count);
-            for(int i=0;i<count;i++)
+            for(int i = 0 ; i < count ; i ++){
+                if(es[i].type > EV_CNT){
+                    onDeviceChanged(es+i);
+                    continue;
+                }
                 mRawEvents.push(es[i]);
+            }
         }
     };
     std::thread th(func);
@@ -40,9 +45,26 @@ InputEventSource::~InputEventSource(){
     LOGD("%p Destroied",this);
 }
 
+void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
+    auto itr = mDevices.find(es->device);
+    std::shared_ptr<InputDevice>dev = nullptr;
+    switch(es->type){
+    case EV_ADD:
+        /*noting todo*/
+        LOGI("device %d is added",es->device);
+        break;
+    case EV_REMOVE:
+        if(itr!=mDevices.end())dev = itr->second;
+        LOGI("device %s:%d/%d is removed",
+        dev->getName().c_str(), es->device,dev->getId());
+        mDevices.erase(itr);
+	break;
+    }
+}
+
 InputEventSource& InputEventSource::getInstance(){
     static InputEventSource* mInst = nullptr;
-    if(mInst == nullptr)mInst=new InputEventSource();
+    if(mInst == nullptr)mInst = new InputEventSource();
     return *mInst;
 }
 
@@ -53,8 +75,8 @@ void InputEventSource::setScreenSaver(ScreenSaver func,int timeout){
 
 std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
     std::shared_ptr<InputDevice>dev;
-    auto itr=devices.find(fd);
-    if(itr==devices.end()){
+    auto itr = mDevices.find(fd);
+    if(itr == mDevices.end()){
         InputDevice tmpdev(fd);LOGD("device %d classes=%x",fd,tmpdev.getClasses());
         if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
             dev.reset(new MouseDevice(fd));
@@ -69,7 +91,7 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
                mInputEvents.push(key);
             });
         }
-        devices.emplace(fd,dev);
+        mDevices.emplace(fd,dev);
         return dev;
     }
     return itr->second;
@@ -122,11 +144,11 @@ int InputEventSource::handleEvents(){
 int  InputEventSource::process(){
     LOGV_IF(mRawEvents.size(),"%p  recv %d events ",this,mRawEvents.size());
     while(mRawEvents.size()){
-        const INPUTEVENT e=mRawEvents.front();
-        struct timeval tv={(time_t)e.tv_sec,e.tv_usec};
-        std::shared_ptr<InputDevice>dev=getdevice(e.device);
+        const INPUTEVENT e = mRawEvents.front();
+        struct timeval  tv = {(time_t)e.tv_sec,e.tv_usec};
+        std::shared_ptr<InputDevice>dev = getdevice(e.device);
         mRawEvents.pop();
-        if(dev==nullptr){
+        if(dev == nullptr){
             LOGD("%d,%d,%d device=%d ",e.type,e.code,e.value,e.device);
             continue;
         }
@@ -143,7 +165,7 @@ int InputEventSource::pushEvent(InputEvent*evt){
 
 void InputEventSource::playback(const std::string&fname){
     #define DELIMITERS "(),"
-    auto func=[this](const std::string&fname){
+    auto func = [this](const std::string&fname){
          std::fstream in(fname);
          std::this_thread::sleep_for(std::chrono::milliseconds(10000));
          LOGD_IF(in.good(),"play key from %s",fname.c_str());
@@ -156,25 +178,25 @@ void InputEventSource::playback(const std::string&fname){
              in.getline(line,255);
              Tokenizer::fromContents("",line,&tok);
 
-             std::string word=tok->nextToken(DELIMITERS);  
+             std::string word = tok->nextToken(DELIMITERS);
              tok->skipDelimiters(DELIMITERS);
              if(word.compare("delay")==0){
-                 word=tok->nextToken(DELIMITERS);
+                 word = tok->nextToken(DELIMITERS);
                  std::chrono::milliseconds dur(strtoul(word.c_str(),&ps,10));
                  std::this_thread::sleep_for(dur);
              }else if(word.compare("key")==0){
-                 word =tok->nextToken(DELIMITERS);  
-                 int action =(word.find("DOWN")!=std::string::npos)?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP;
+                 word = tok->nextToken(DELIMITERS);
+                 int action = (word.find("DOWN")!=std::string::npos)?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP;
 
                  tok->skipDelimiters(DELIMITERS);
-                 word =tok->nextToken(DELIMITERS);
-                 nsecs_t evttime=SystemClock::uptimeMillis();  
-                 int keycode=KeyEvent::getKeyCodeFromLabel(word.c_str());
-                 KeyEvent*key=KeyEvent::obtain(evttime,evttime,action,keycode,1,0/*metastate*/,
+                 word = tok->nextToken(DELIMITERS);
+                 nsecs_t evttime = SystemClock::uptimeMillis();
+                 int keycode = KeyEvent::getKeyCodeFromLabel(word.c_str());
+                 KeyEvent*key= KeyEvent::obtain(evttime,evttime,action,keycode,1,0/*metastate*/,
                        0/*deviceid*/,keycode/*scancode*/,0/*flags*/,0/*source*/);
                  mInputEvents.push(key);
              }
-             if(in.gcount()==0){
+             if(in.gcount() == 0){
                  in.close();
                  in.open(fname);
              }

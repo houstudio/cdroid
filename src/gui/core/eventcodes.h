@@ -49,6 +49,10 @@
 #define EV_MAX          0x1f
 #define EV_CNT          (EV_MAX+1)
 
+#ifndef EV_ADD
+    #define EV_ADD          0xFE/*added by zhhou,used by INPUTEVENT's type, for device add*/
+    #define EV_REMOVE       0xFF/*added by zhhou,used by INPUTEVENT's type, for device remove*/
+#endif
 /*
  * Synchronization events.
  */

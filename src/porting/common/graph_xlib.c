@@ -198,7 +198,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         img=(XImage*)malloc(sizeof(XImage));
         img->width=width;
         img->height=height;
-        img->bits_per_pixel=24;
+        img->bits_per_pixel=32;
         img->bytes_per_line=width*4;
     }
     img->data=(char*)malloc(width*height*img->bytes_per_line);

@@ -33,7 +33,7 @@ public:
     TintInfo(){
         mTintList=nullptr;
         mHasTintList = false;
-		mHasTintMode = false;
+        mHasTintMode = false;
         mTintMode = SRC_IN;
     };
     ~TintInfo(){
@@ -5895,9 +5895,9 @@ bool View::performContextClick() {
     if (mListenerInfo && mListenerInfo->mOnContextClickListener) {
         handled = mListenerInfo->mOnContextClickListener(*this);
     }
-    /*if (handled) {
-        performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK);
-    }*/
+    if (handled) {
+        performHapticFeedback(HapticFeedbackConstants::CONTEXT_CLICK);
+    }
     return handled;
 }
 
@@ -6513,10 +6513,39 @@ void View::setMinimumWidth(int minWidth) {
     requestLayout();
 }
 
-void View::playSoundEffect(int soundConstant){
+void View::setSoundEffectsEnabled(bool soundEffectsEnabled) {
+    setFlags(soundEffectsEnabled ? SOUND_EFFECTS_ENABLED: 0, SOUND_EFFECTS_ENABLED);
 }
+
+bool View::isSoundEffectsEnabled()const{
+    return SOUND_EFFECTS_ENABLED == (mViewFlags & SOUND_EFFECTS_ENABLED);
+}
+
+void View::playSoundEffect(int soundConstant){
+    if(mAttachInfo==nullptr||mAttachInfo->mPlaySoundEffect==nullptr||isSoundEffectsEnabled()==false)
+	return ;
+    mAttachInfo->mPlaySoundEffect(soundConstant);
+}
+
 bool View::performHapticFeedback(int feedbackConstant, int flags){
-    return false;
+    if (mAttachInfo == nullptr) {
+        return false;
+    }
+    //noinspection SimplifiableIfStatement
+    if ((flags & HapticFeedbackConstants::FLAG_IGNORE_VIEW_SETTING) == 0
+            && !isHapticFeedbackEnabled()) {
+        return false;
+    }
+    return mAttachInfo->mPerformHapticFeedback(feedbackConstant,
+            (flags & HapticFeedbackConstants::FLAG_IGNORE_GLOBAL_SETTING) != 0);
+}
+
+void View::setHapticFeedbackEnabled(bool hapticFeedbackEnabled) {
+    setFlags(hapticFeedbackEnabled ? HAPTIC_FEEDBACK_ENABLED: 0, HAPTIC_FEEDBACK_ENABLED);
+}
+
+bool View::isHapticFeedbackEnabled() const{
+    return HAPTIC_FEEDBACK_ENABLED == (mViewFlags & HAPTIC_FEEDBACK_ENABLED);
 }
 
 void View::setMeasuredDimensionRaw(int measuredWidth, int measuredHeight) {

@@ -1,5 +1,4 @@
 #include <widget/expandablelistview.h>
-#include <core/soundeffect.h>
 namespace cdroid{
 
 DECLARE_WIDGET(ExpandableListView)

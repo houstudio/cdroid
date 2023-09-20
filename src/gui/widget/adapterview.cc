@@ -1,5 +1,4 @@
 #include <widget/adapterview.h>
-#include <core/soundeffect.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <systemclock.h>

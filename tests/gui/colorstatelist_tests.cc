@@ -19,7 +19,13 @@ class COLORSTATESET:public testing::Test{
        return -1;
    }
 };
-
+   
+TEST_F(COLORSTATESET,set){
+   std::vector<int> v1={4};
+   std::vector<int> v2={4,5};
+   int idx=StateSet::stateSetMatches(v1,v2);
+   printf("idx=%d\r\n",idx);
+}
 TEST_F(COLORSTATESET,color){
     unsigned int cc= Color::parseColor("#ff112233");
     ASSERT_EQ(cc,0xFF112233);

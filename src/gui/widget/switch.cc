@@ -1,5 +1,4 @@
 #include <widget/switch.h>
-#include <core/soundeffect.h>
 #include <core/mathutils.h>
 #include <view/viewgroup.h>
 

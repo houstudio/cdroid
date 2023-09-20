@@ -58,18 +58,14 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
     va_list args;
     const std::string tag=splitFileName(file);
     auto it=sModules.find(tag);
-    int module_loglevel=(it==sModules.end())?sLogLevel:it->second;
+    const int module_loglevel=(it==sModules.end())?sLogLevel:it->second;
 #if 1
     const char*colors[]= {"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[5;31m"};
     if(level<module_loglevel||level<0||level>LOG_FATAL)
         return;
     LogInit();
     struct timespec ts;
-#ifdef _WIN32
-    (void)timespec_get(&ts,0);
-#else
     clock_gettime(CLOCK_MONOTONIC,&ts);
-#endif
     int len1=snprintf(msgBoddy,kMaxMessageSize,"%010ld.%06ld \033[0;32m[%s]\033[0;34m \%s:%d %s",
                       ts.tv_sec,ts.tv_nsec/1000, tag.c_str(),func,line, colors[level]);
     va_start(args, format);
@@ -90,8 +86,8 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
 
 void LogDump(int level,const char*tag,const char*func,int line,const char*label,const BYTE*data,int len) {
     char buff[128];
-    int i,j,taglen=0;
-    taglen=sprintf(buff,"%s[%d]",label,len);
+    int i,taglen=0;
+    taglen = sprintf(buff,"%s[%d]",label,len);
     cdlog::LogMessage log(tag,line,func,level);
     std::ostringstream &oss=log.messageStream();
     oss<<buff;
@@ -103,7 +99,6 @@ void LogDump(int level,const char*tag,const char*func,int line,const char*label,
 
 void LogSetModuleLevel(const char*module,int level) {
     if(module==NULL) {
-        int i;
         sLogLevel=(LogLevel)level;
         for(auto it=sModules.begin(); it!=sModules.end(); it++) {
             it->second=level;
@@ -116,7 +111,7 @@ void LogSetModuleLevel(const char*module,int level) {
 
 void LogParseModule(const char*log) {
     char module[128];
-    const char*p=strchr(log,':');
+    const char*p = strchr(log,':');
     if(p==NULL)return;
     strncpy(module,log,p-log);
     module[p-log]=0;
@@ -147,8 +142,7 @@ void LogParseModule(const char*log) {
 }
 
 void LogParseModules(int argc,const char*argv[]) {
-    int i;
-    for ( i = 1; i <argc; i++) {
+    for (int i = 1; i <argc; i++) {
         if(strchr(argv[i],':')) {
             LogParseModule(argv[i]);
         }
@@ -161,16 +155,12 @@ static const std::string kTruncatedWarningText = "[...truncated...]";
 LogMessage::LogMessage(const std::string& file, const int line, const std::string& function,int level)
     : file_(splitFileName(file)),function_(function), line_(line),level_message(level) {
     struct timespec ts;
-#ifdef _WIN32
-    (void)timespec_get(&ts,0);
-#else
     clock_gettime(CLOCK_MONOTONIC,&ts);
-#endif
-    timestamp_ =ts.tv_sec;
-    timeusec_ =ts.tv_nsec/1000 ;
+    timestamp_ = ts.tv_sec;
+    timeusec_ = ts.tv_nsec/1000 ;
     LogInit();
     const std::string tag=splitFileName(file);
-    auto it=sModules.find(tag);
+    auto it = sModules.find(tag);
     level_module=(it==sModules.end())?sLogLevel:it->second;
 }
 

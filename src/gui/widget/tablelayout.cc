@@ -1,7 +1,6 @@
 #include <widget/tablelayout.h>
 #include <cdlog.h>
 
-
 namespace cdroid{
 
 DECLARE_WIDGET(TableLayout)
