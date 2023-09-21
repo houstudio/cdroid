@@ -136,8 +136,8 @@ public:
         mScrollBarBounds.set(0,0,0,0);
         mScrollBarTouchBounds.set(0,0,0,0);
         shader = LinearGradient::create(0,0,0,1);
-        shader->add_color_stop_rgba(0.f,1.0,0,0,.8f);
-        shader->add_color_stop_rgba(1.f,0,0,0,.0f);
+        shader->add_color_stop_rgba(0.f,0,0,0,1.f);
+        shader->add_color_stop_rgba(1.f,0,0,0,0.f);
         this->host=host;
         mRunner =[this](){
            run();
@@ -2850,8 +2850,9 @@ void View::draw(Canvas&canvas){
 
     if (drawBottom) {
         canvas.save();
-        canvas.translate(left,bottom);
-        canvas.scale(1,-fadeHeight * bottomFadeStrength);
+        canvas.translate(right,bottom);
+        canvas.rotate_degrees(-180);
+        canvas.scale(1,fadeHeight * bottomFadeStrength);
         canvas.set_source(fade);
         canvas.rectangle(0,0,right-left,length);
         canvas.fill();
@@ -2860,21 +2861,23 @@ void View::draw(Canvas&canvas){
 
     if (drawLeft) {
         canvas.save();
-        canvas.translate(left, top);
-        canvas.scale(fadeHeight * leftFadeStrength,1);
+        canvas.translate(left, bottom);
         canvas.rotate_degrees(90);
+        canvas.scale(1,fadeHeight * leftFadeStrength);
         canvas.set_source(fade);
-        canvas.rectangle(0,0, length, bottom);
+        canvas.rectangle(0,0,bottom - top, length + 200);
+        canvas.fill();
         canvas.restore();
     }
 
     if (drawRight) {
         canvas.save();
-        canvas.scale(1, fadeHeight * rightFadeStrength);
-        canvas.rotate_degrees(90);
         canvas.translate(right, top);
+        canvas.rotate_degrees(-90);
+        canvas.scale(1, fadeHeight * rightFadeStrength);
         canvas.set_source(fade);
-        canvas.rectangle(right - length, top, right, bottom);
+        canvas.rectangle(0,0,bottom - top,length);
+        canvas.fill();
         canvas.restore();
     }
     // Step 6, draw decorations (foreground, scrollbars)
