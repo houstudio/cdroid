@@ -10,8 +10,9 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initImageView();
     mBaselineAlignBottom =attrs.getBoolean("baselineAlignBottom",false);
-    mBaseline =attrs.getDimensionPixelSize("baseline",-1);
+    mBaseline = attrs.getDimensionPixelSize("baseline",-1);
     setAdjustViewBounds(attrs.getBoolean("adjustViewBounds",false));
+    mCropToPadding = attrs.getBoolean("cropToPadding",false);
     const int scaleType = attrs.getInt("scaleType",std::map<const std::string,int>{
             {"matrix",ScaleType::MATRIX}, {"fitXY",ScaleType::FIT_XY},
             {"fitStart",ScaleType::FIT_START},{"fitCenter",ScaleType::FIT_CENTER},
@@ -21,6 +22,8 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     if(scaleType>=0)setScaleType(scaleType);
     Drawable*d=attrs.getDrawable("src");
     if(d)setImageDrawable(d);
+    mDrawableTintList = attrs.getColorStateList("tint");
+    mHasDrawableTint = mDrawableTintList!=nullptr;
     setMaxWidth (attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight",INT_MAX));
     setImageAlpha(attrs.getInt("alpha",255));
@@ -30,6 +33,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     mRadii[2] = attrs.getInt("bottomRightRadius",radii);
     mRadii[3] = attrs.getInt("bottomLeftRadius",radii);
     mCropToPadding = attrs.getBoolean("cropToPadding",false);
+    applyImageTint();
 }
 
 ImageView::ImageView(int w, int h)
