@@ -25,8 +25,11 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mScrollCompleted = true;
     mState = STATE_VISIBLE;
     mMatchDragPosition =true;// context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.HONEYCOMB;
+    mCurrentSection =-1;
+    mScrollbarPosition=-1;
 
     AttributeSet atts;
+    atts.setContext(listView->getContext(),"");
     mTrackImage = new ImageView(context,atts);
     mTrackImage->setScaleType(ScaleType::FIT_XY);
     mThumbImage = new ImageView(context,atts);
@@ -37,7 +40,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mPrimaryText = createPreviewTextView(context);
     mSecondaryText = createPreviewTextView(context);
 
-    mMinimumTouchTarget = 20;//listView.getResources().getDimensionPixelSize(
+    mMinimumTouchTarget = 16;//listView.getResources().getDimensionPixelSize(
             //com.android.internal.R.dimen.fast_scroller_minimum_touch_target);
 
     setStyle(styleResId);
@@ -249,7 +252,7 @@ void FastScroller::updateLongList(int childCount, int itemCount) {
 
 TextView* FastScroller::createPreviewTextView(Context* context) {
     LayoutParams* params = new LayoutParams( LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
-    AttributeSet atts;
+    AttributeSet atts(context,"");
     TextView* textView = new TextView(context,atts);
     textView->setLayoutParams(params);
     textView->setSingleLine(true);
@@ -604,8 +607,8 @@ void FastScroller::getSectionsFromIndexer() {
         adapter = ((HeaderViewListAdapter*) adapter)->getWrappedAdapter();
     }
 
-    /*if (adapter instanceof ExpandableListConnector) {
-        ExpandableListAdapter expAdapter = ((ExpandableListConnector) adapter)
+    /*if (dynamic_cast<ExpandableListConnector*>(adapter)){
+        ExpandableListAdapter* expAdapter = ((ExpandableListConnector*) adapter)
                 .getAdapter();
         if (expAdapter instanceof SectionIndexer) {
             mSectionIndexer = (SectionIndexer) expAdapter;
@@ -1140,7 +1143,7 @@ bool FastScroller::isPointInsideY(float y) {
 
    // Apply the minimum touch target size.
    float targetSizeDiff = mMinimumTouchTarget - (bottom - top);
-   float adjust = targetSizeDiff > 0 ? targetSizeDiff / 2 : 0;
+   float adjust = targetSizeDiff > 0 ? targetSizeDiff / 2.f : 0;
 
    return y >= (top - adjust) && y <= (bottom + adjust);
 }

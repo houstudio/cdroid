@@ -121,10 +121,10 @@ private:
     int mHeaderCount;
 
     /** The index of the current section. */
-    int mCurrentSection = -1;
+    int mCurrentSection;
 
     /** The current scrollbar position. */
-    int mScrollbarPosition = -1;
+    int mScrollbarPosition;
 
     /** Whether the list is long enough to need a fast scroller. */
     bool mLongList;
