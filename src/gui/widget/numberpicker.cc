@@ -1057,11 +1057,11 @@ void NumberPicker::onDraw(Canvas&canvas){
         if(mTextSize != mTextSize2){
             if(isHorizontalMode()){
                 const float harfWidth = getWidth()/2.f;
-                const float fraction = std::abs(x-harfWidth)/harfWidth;
+                const float fraction = std::abs(x - harfWidth)/harfWidth;
                 font_size = lerp(mTextSize,mTextSize2,fraction);
             }else{
                 const float harfHeight = getHeight()/2.f;
-                const float fraction = std::abs(y-harfHeight+mSelectorElementSize/2)/harfHeight;
+                const float fraction = std::abs(y - harfHeight + mSelectorElementSize/2)/harfHeight;
                 font_size = lerp(mTextSize,mTextSize2,fraction);
             }
             canvas.set_font_size(font_size);
@@ -1266,8 +1266,8 @@ void NumberPicker::initializeSelectorWheelIndices(){
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
-        if(mSelectorIndices.size() > count && count > 0 )
-		    selectorIndex = (selectorIndex + count)%count;/*make wrapable*/
+        if(mSelectorIndices.size() > count && count)
+            selectorIndex = (selectorIndex + count)%count;/*make wrapable*/
         mSelectorIndices[i] = selectorIndex;
         ensureCachedScrollSelectorValue(mSelectorIndices[i]);
     }

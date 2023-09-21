@@ -520,10 +520,10 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
 
         if(stroke) {
             d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColor("color",0),
-                         stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
+                        stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
         }
         if(padding)d->setPadding(padding->getInt("left"),padding->getInt("top"),
-                                     padding->getInt("right"),padding->getInt("bottom"));
+                        padding->getInt("right"),padding->getInt("bottom"));
         return d;
     } else {
         ShapeDrawable*sd=new ShapeDrawable();

@@ -40,14 +40,14 @@ private:
 public: 
     static constexpr long DURATION_INFINITE = -1;
     
-    class AnimatorListener{
+    class AnimatorListener:public EventSet{
     public:
         CallbackBase<void,Animator& /*animation*/, bool/*isReverse*/>onAnimationStart;
         CallbackBase<void,Animator& /*animation*/, bool/*isReverse*/>onAnimationEnd;
         CallbackBase<void,Animator& /*animation*/>onAnimationCancel;
         CallbackBase<void,Animator& /*animation*/>onAnimationRepeat;
     };
-    class AnimatorPauseListener{
+    class AnimatorPauseListener:public EventSet{
     public:
          CallbackBase<void,Animator&> onAnimationPause;
          CallbackBase<void,Animator&> onAnimationResume;
@@ -83,11 +83,11 @@ public:
     virtual TimeInterpolator* getInterpolator();
     virtual bool isRunning()=0;
     virtual bool isStarted();
-    void addListener(AnimatorListener listener);
-    void removeListener(AnimatorListener listener);
+    void addListener(const AnimatorListener& listener);
+    void removeListener(const AnimatorListener& listener);
     std::vector<AnimatorListener> getListeners();
-    void addPauseListener(AnimatorPauseListener listener);
-    void removePauseListener(AnimatorPauseListener listener);
+    void addPauseListener(const AnimatorPauseListener& listener);
+    void removePauseListener(const AnimatorPauseListener& listener);
     void removeAllListeners();
     int getChangingConfigurations();
     void setChangingConfigurations(int configs);

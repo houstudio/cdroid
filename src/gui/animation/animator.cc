@@ -1,5 +1,5 @@
 #include <animation/animator.h>
-
+#include <algorithm>
 namespace cdroid{
 Animator::~Animator(){
 }
@@ -60,22 +60,26 @@ std::shared_ptr<ConstantState<Animator*>> Animator::createConstantState(){
     return nullptr;//new AnimatorConstantState(this);
 }
 
-void Animator::addListener(AnimatorListener listener) {
+void Animator::addListener(const AnimatorListener& listener) {
     mListeners.push_back(listener);
 }
 
-void Animator::removeListener(AnimatorListener listener){
+void Animator::removeListener(const AnimatorListener& listener){
+    auto it = std::find(mListeners.begin(), mListeners.end(),listener);
+    if( it!=mListeners.end() ) mListeners.erase(it);
 }
 
 std::vector<Animator::AnimatorListener> Animator::getListeners() {
     return mListeners;
 }
 
-void Animator::addPauseListener(AnimatorPauseListener listener) {
+void Animator::addPauseListener(const AnimatorPauseListener& listener) {
     mPauseListeners.push_back(listener);
 }
 
-void Animator::removePauseListener(AnimatorPauseListener listener){
+void Animator::removePauseListener(const AnimatorPauseListener& listener){
+    auto it = std::find(mPauseListeners.begin(),mPauseListeners.end(),listener);
+    if( it != mPauseListeners.end() ) mPauseListeners.erase(it);
 }
 
 void Animator::removeAllListeners() {

@@ -122,6 +122,7 @@ public:
 
     int mScrollBarDraggingState = NOT_DRAGGING;
     int mScrollBarDraggingPos;
+    Cairo::RefPtr<LinearGradient> shader;
 public:
     ScrollabilityCache(ViewConfiguration&configuration,View*host){//int sz){
         fadingEdgeLength = configuration.getScaledFadingEdgeLength();
@@ -134,6 +135,9 @@ public:
         mScrollBarDraggingPos = 0;
         mScrollBarBounds.set(0,0,0,0);
         mScrollBarTouchBounds.set(0,0,0,0);
+        shader = LinearGradient::create(0,0,0,1);
+        shader->add_color_stop_rgba(0.f,1.0,0,0,.8f);
+        shader->add_color_stop_rgba(1.f,0,0,0,.0f);
         this->host=host;
         mRunner =[this](){
            run();
@@ -2790,7 +2794,7 @@ void View::draw(Canvas&canvas){
     }
 
     int left = mScrollX + paddingLeft;
-    int right = left + (mRight-mLeft) - mPaddingRight - paddingLeft;
+    int right = left + (mRight - mLeft) - mPaddingRight - paddingLeft;
     int top = mScrollY + getFadeTop(offsetRequired);
     int bottom = top + getFadeHeight(offsetRequired);
 
@@ -2834,40 +2838,45 @@ void View::draw(Canvas&canvas){
     dispatchDraw(canvas);
 
     // Step 5, draw the fade effect and restore layers
-    /*if (drawTop) {
-        matrix.setScale(1, fadeHeight * topFadeStrength);
-        matrix.postTranslate(left, top);
-        fade.setLocalMatrix(matrix);
-        p.setShader(fade);
-        canvas.drawRect(left, top, right, top + length, p);
+    Cairo::RefPtr<LinearGradient>fade = getScrollCache()->shader;
+    if (drawTop) {
+        canvas.save();
+        canvas.scale(1,fadeHeight * topFadeStrength);
+        canvas.set_source(fade);
+        canvas.rectangle(left, top,right-left,length);
+        canvas.fill();
+        canvas.restore();
     }
 
     if (drawBottom) {
-        matrix.setScale(1, fadeHeight * bottomFadeStrength);
-        matrix.postRotate(180);
-        matrix.postTranslate(left, bottom);
-        fade.setLocalMatrix(matrix);
-        p.setShader(fade);
-        canvas.drawRect(left, bottom - length, right, bottom, p);
+        canvas.save();
+        canvas.translate(left,bottom);
+        canvas.scale(1,-fadeHeight * bottomFadeStrength);
+        canvas.set_source(fade);
+        canvas.rectangle(0,0,right-left,length);
+        canvas.fill();
+        canvas.restore();
     }
 
     if (drawLeft) {
-        matrix.setScale(1, fadeHeight * leftFadeStrength);
-        matrix.postRotate(-90);
-        matrix.postTranslate(left, top);
-        fade.setLocalMatrix(matrix);
-        p.setShader(fade);
-        canvas.drawRect(left, top, left + length, bottom, p);
+        canvas.save();
+        canvas.translate(left, top);
+        canvas.scale(fadeHeight * leftFadeStrength,1);
+        canvas.rotate_degrees(90);
+        canvas.set_source(fade);
+        canvas.rectangle(0,0, length, bottom);
+        canvas.restore();
     }
 
     if (drawRight) {
-        matrix.setScale(1, fadeHeight * rightFadeStrength);
-        matrix.postRotate(90);
-        matrix.postTranslate(right, top);
-        fade.setLocalMatrix(matrix);
-        p.setShader(fade);
-        canvas.drawRect(right - length, top, right, bottom, p);
-    }*/
+        canvas.save();
+        canvas.scale(1, fadeHeight * rightFadeStrength);
+        canvas.rotate_degrees(90);
+        canvas.translate(right, top);
+        canvas.set_source(fade);
+        canvas.rectangle(right - length, top, right, bottom);
+        canvas.restore();
+    }
     // Step 6, draw decorations (foreground, scrollbars)
     drawAutofilledHighlight(canvas);
     if(mOverlay && !mOverlay->isEmpty())
