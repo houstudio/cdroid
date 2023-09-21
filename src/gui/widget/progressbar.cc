@@ -598,6 +598,9 @@ void ProgressBar::stopAnimation() {
     if (dynamic_cast<AnimatedRotateDrawable*>(mIndeterminateDrawable)) {
         ((AnimatedRotateDrawable*) mIndeterminateDrawable)->stop();
         mShouldStartAnimationDrawable = false;
+    }else if(dynamic_cast<AnimatedImageDrawable*>(mIndeterminateDrawable)){
+        ((AnimatedImageDrawable*) mIndeterminateDrawable)->stop();
+        mShouldStartAnimationDrawable = false;
     }
     postInvalidate();
 }

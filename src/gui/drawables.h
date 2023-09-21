@@ -15,6 +15,7 @@
 #include <drawables/rotatedrawable.h>
 #include <drawables/clipdrawable.h>
 #include <drawables/animatedrotatedrawable.h>
+#include <drawables/animatedimagedrawable.h>
 #include <drawables/drawablecontainer.h>
 #include <drawables/levellistdrawable.h>
 #include <drawables/layerdrawable.h>
