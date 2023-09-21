@@ -1306,18 +1306,22 @@ void NumberPicker::initializeSelectorWheel(){
     std::vector<int>& selectorIndices = mSelectorIndices;
     const float textGapCount = selectorIndices.size();
     if (isHorizontalMode()) {
-        const int selectedWidth= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getWidth()):mSelectedTextSize;
+        int selectedWidth= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getWidth()):mSelectedTextSize;
         const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedWidth);
         float totalTextGapWidth = getWidth() - totalTextSize;
         mSelectorTextGapWidth = (int) (totalTextGapWidth / textGapCount);
-        mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapWidth;
+        mSelectorElementSize = std::min(getMaxTextSize() + mSelectorTextGapWidth,getWidth()/textGapCount);
+        if(mSelectedText->getVisibility()==View::INVISIBLE)
+            selectedWidth=mSelectorElementSize;
         mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex-(selectedWidth-mSelectorElementSize)/2);
     } else {
-        const int selectedHeight= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getHeight()):mSelectedTextSize;
+        int selectedHeight= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getHeight()):mSelectedTextSize;
         const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedHeight);
         float totalTextGapHeight= getHeight() - totalTextSize;
         mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount);
-        mSelectorElementSize = (int) getMaxTextSize() + mSelectorTextGapHeight;
+        mSelectorElementSize = std::min(getMaxTextSize() + mSelectorTextGapHeight,getHeight()/textGapCount);
+        if(mSelectedText->getVisibility()==View::INVISIBLE)
+            selectedHeight=mSelectorElementSize;
         mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
     LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight(),mSelectedTextSize,mTextSize);
