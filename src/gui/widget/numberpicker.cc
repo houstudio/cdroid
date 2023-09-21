@@ -1024,8 +1024,29 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.clip();
         }
     }
-
-    canvas.set_color(mTextColor);
+    if( mTextColor != mTextColor2 ){
+        if( mPat == nullptr ) {
+            Color c1(mTextColor), c2(mTextColor2);
+            CycleInterpolator ci(0.5f);
+            if(isHorizontalMode())
+                mPat = Cairo::LinearGradient::create(0/*x + mSelectorElementSize/2*/,0,/*x + mSelectorElementSize/2 +*/ getWidth(),0);
+            else
+                mPat = Cairo::LinearGradient::create(0,0/*y + mSelectorElementSize/2*/,0,/*y + mSelectorElementSize/2 +*/ getHeight());
+            const int cStops = mSelectorIndices.size()*3;
+            for(int i = 0; i < cStops ;i++){
+                const float offset = (i<cStops/2)?sin(M_PI*i/(cStops-1))/2.f:(1.f+sin(M_PI*i/(cStops-1))/2.f);//float(i)/cStops;
+                const float fraction = ci.getInterpolation(offset);
+                mPat->add_color_stop_rgba(offset,lerp(c2.red(),c1.red(),fraction),
+                                     lerp(c2.green(),c1.green(),fraction),
+                                     lerp(c2.blue(),c1.blue(),fraction),
+                                     std::abs(lerp(c2.alpha(),c1.alpha(),fraction)));
+                LOGV("[%d] offset=%.2f/%f fraction=%f alpha=%f",i,float(i)/cStops,offset,fraction,lerp(c2.alpha(),c1.alpha(),fraction));
+            }
+        }
+        canvas.set_source(mPat);
+    }else{
+        canvas.set_color(mTextColor);
+    }
     canvas.set_font_size(mTextSize);
     // draw the selector wheel
     std::vector<int>& selectorIndices = mSelectorIndices;
@@ -1330,6 +1351,8 @@ void NumberPicker::initializeSelectorWheel(){
 }
 
 void NumberPicker::initializeFadingEdges(){
+    if(mTextColor!=mTextColor2)
+	return;
     if(isHorizontalMode()){
         setHorizontalFadingEdgeEnabled(true);
         setVerticalFadingEdgeEnabled(false);

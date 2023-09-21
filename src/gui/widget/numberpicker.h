@@ -53,7 +53,7 @@ private:
     bool mComputeMaxWidth;
     int mTextSize,mTextSize2;
     int mSelectedTextSize;
-    int mTextColor;
+    int mTextColor,mTextColor2;
     int mSelectedTextColor;
     int mSelectorTextGapWidth;
     int mSelectorTextGapHeight;
@@ -113,10 +113,10 @@ private:
     int mLastHoveredChildVirtualViewId;
     bool mIncrementVirtualButtonPressed;
     bool mDecrementVirtualButtonPressed;
-    int mLastHandledDownDpadKeyCode = -1;
+    int mLastHandledDownDpadKeyCode;
     bool mHideWheelUntilFocused; 
-    bool mWrapSelectorWheelPreferred=true;
-
+    bool mWrapSelectorWheelPreferred;
+    Cairo::RefPtr<Cairo::LinearGradient>mPat;
     //PressedStateHelper's members
     Runnable mPressedStateHelpers;
     int mPSHManagedButton;
