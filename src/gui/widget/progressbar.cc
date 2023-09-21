@@ -418,8 +418,10 @@ void ProgressBar::setIndeterminate(bool indeterminate){
             // swap between indeterminate and regular backgrounds
             swapCurrentDrawable(mIndeterminateDrawable);
             startAnimation();
-        } else {
+        } else if(mProgressDrawable){
             swapCurrentDrawable(mProgressDrawable);
+            stopAnimation();
+        }else{
             stopAnimation();
         }
     }
@@ -593,8 +595,8 @@ void ProgressBar::startAnimation() {
 }
 
 void ProgressBar::stopAnimation() {
-    if (dynamic_cast<Animatable*>(mIndeterminateDrawable)) {
-        ((Animatable*) mIndeterminateDrawable)->stop();
+    if (dynamic_cast<AnimatedRotateDrawable*>(mIndeterminateDrawable)) {
+        ((AnimatedRotateDrawable*) mIndeterminateDrawable)->stop();
         mShouldStartAnimationDrawable = false;
     }
     postInvalidate();

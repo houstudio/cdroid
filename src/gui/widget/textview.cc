@@ -376,6 +376,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     Drawable*  end = attrs.getDrawable("drawableEnd");
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
+    if(mDrawables){
+	 mDrawables->mTintList =attrs.getColorStateList("drawableTint");
+    }
     setRelativeDrawablesIfNeeded(start, end);
 
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
