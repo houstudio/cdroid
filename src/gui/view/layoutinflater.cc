@@ -124,6 +124,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,true,&atts);
         if(includedView) { //for merge as rootnode,the includedView will be null.
             LayoutParams*lp = parent->generateLayoutParams(atts);
+            includedView->setId(pd->ctx->getId(atts.getString("id")));
             includedView->setLayoutParams(lp);
         }
         return;
