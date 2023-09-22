@@ -916,12 +916,12 @@ void NumberPicker::onResolveDrawables(int layoutDirection){
 
 void NumberPicker::setTextColor(int color){
     mTextColor = color;
- //   mTextColor2= color;
+    mTextColor2= color;
     invalidate();
 }
 void NumberPicker::setTextColor(int color,int color2){
     mTextColor  = color;
-    //mTextColor2 = color2;
+    mTextColor2 = color2;
     invalidate();
 }
 
