@@ -1046,6 +1046,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     }else{
         canvas.set_color(mTextColor);
     }
+    canvas.set_font_face(mSelectedText->getTypeface()->getFontFace()->get_font_face());
     canvas.set_font_size(mTextSize);
     // draw the selector wheel
     for (int i = 0; i < mSelectorIndices.size(); i++) {
@@ -1244,7 +1245,7 @@ int NumberPicker::resolveSizeAndStateRespectingMinSize(int minSize, int measured
 void NumberPicker::initializeSelectorWheelIndices(){
     mSelectorIndexToStringCache.clear();
     const int current = getValue();
-    const int count = (mMaxValue - mMinValue+1);
+    const int count = (mMaxValue - mMinValue + 1);
     for (int i = 0; i < mSelectorIndices.size(); i++) {
         int selectorIndex = current + (i - mWheelMiddleItemIndex);
         if (mWrapSelectorWheel) {
