@@ -85,6 +85,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
     setSelectedTextSize(atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize));
     setTextColor(atts.getColor("textColor"));
+    setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
     ColorStateList*colors=mSelectedText->getTextColors();
     if(colors->isStateful())
