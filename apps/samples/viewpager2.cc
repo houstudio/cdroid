@@ -76,6 +76,9 @@ int main(int argc,const char*argv[]){
     };
 
     ViewPager*pager=new ViewPager(800,400);
+    pager->setHorizontalFadingEdgeEnabled(true);
+    pager->setFadingEdgeLength(200);
+
     pager->setOffscreenPageLimit(5);//must >1(This value must >=(the visible view count)+2)
     pager->setAdapter(gpAdapter);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);

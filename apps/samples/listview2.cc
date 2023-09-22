@@ -34,6 +34,9 @@ int main(int argc,const char*argv[]){
     lv->setVerticalScrollBarEnabled(true);
     lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv->setDividerHeight(1);
+    lv->setFastScrollEnabled(true);
+    lv->setVerticalFadingEdgeEnabled(true);
+    lv->setFadingEdgeLength(200);
     for(int i=0;i<56;i++){
         adapter->add("");
     }

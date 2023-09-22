@@ -2865,7 +2865,7 @@ void View::draw(Canvas&canvas){
         canvas.rotate_degrees(90);
         canvas.scale(1,fadeHeight * leftFadeStrength);
         canvas.set_source(fade);
-        canvas.rectangle(0,0,bottom - top, length + 200);
+        canvas.rectangle(0,0,bottom - top, length);
         canvas.fill();
         canvas.restore();
     }
@@ -2893,7 +2893,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     bool drawingWithRenderNode= mAttachInfo && mAttachInfo->mHardwareAccelerated  && hardwareAcceleratedCanvas;
     bool more = false;
     const bool childHasIdentityMatrix = hasIdentityMatrix();
-    int parentFlags = parent->mGroupFlags;
+    const int parentFlags = parent->mGroupFlags;
 
     if ((parentFlags & ViewGroup::FLAG_CLEAR_TRANSFORMATION) != 0) {
         parent->getChildTransformation()->clear();
@@ -2920,9 +2920,9 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         if (!drawingWithRenderNode
                 && (parentFlags & ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
             Transformation* t = parent->getChildTransformation();
-            bool hasTransform = parent->getChildStaticTransformation(this, t);
+            const bool hasTransform = parent->getChildStaticTransformation(this, t);
             if (hasTransform) {
-                int transformType = t->getTransformationType();
+                const int transformType = t->getTransformationType();
                 transformToApply = transformType != Transformation::TYPE_IDENTITY ? t : nullptr;
                 concatMatrix = (transformType & Transformation::TYPE_MATRIX) != 0;
             }

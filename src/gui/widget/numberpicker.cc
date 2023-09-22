@@ -1034,12 +1034,10 @@ void NumberPicker::onDraw(Canvas&canvas){
                 mPat = Cairo::LinearGradient::create(0,0/*y + mSelectorElementSize/2*/,0,/*y + mSelectorElementSize/2 +*/ getHeight());
             const int cStops = mSelectorIndices.size()*3;
             for(int i = 0; i < cStops ;i++){
-                const float offset = (i<cStops/2)?sin(M_PI*i/(cStops-1))/2.f:(1.f+sin(M_PI*i/(cStops-1))/2.f);//float(i)/cStops;
+                const float offset = float(i)/cStops;
                 const float fraction = ci.getInterpolation(offset);
-                mPat->add_color_stop_rgba(offset,lerp(c2.red(),c1.red(),fraction),
-                                     lerp(c2.green(),c1.green(),fraction),
-                                     lerp(c2.blue(),c1.blue(),fraction),
-                                     std::abs(lerp(c2.alpha(),c1.alpha(),fraction)));
+                mPat->add_color_stop_rgba(offset,lerp(c2.red(),c1.red(),fraction),lerp(c2.green(),c1.green(),fraction),
+                                 lerp(c2.blue(),c1.blue(),fraction), std::abs(lerp(c2.alpha(),c1.alpha(),fraction)));
                 LOGV("[%d] offset=%.2f/%f fraction=%f alpha=%f",i,float(i)/cStops,offset,fraction,lerp(c2.alpha(),c1.alpha(),fraction));
             }
         }
@@ -1049,8 +1047,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     }
     canvas.set_font_size(mTextSize);
     // draw the selector wheel
-    std::vector<int>& selectorIndices = mSelectorIndices;
-    for (int i = 0; i < selectorIndices.size(); i++) {
+    for (int i = 0; i < mSelectorIndices.size(); i++) {
         float font_size  = mTextSize;
         int selectedSize = mSelectorElementSize;
         if(mTextSize != mTextSize2){
@@ -1066,7 +1063,7 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.set_font_size(font_size);
         }
 
-        int selectorIndex = selectorIndices[isAscendingOrder() ? i : selectorIndices.size() - i - 1];
+        int selectorIndex = mSelectorIndices[isAscendingOrder() ? i : mSelectorIndices.size() - i - 1];
         std::string scrollSelectorValue = mSelectorIndexToStringCache.at(selectorIndex);
         if (scrollSelectorValue.empty()) {
             continue;
@@ -1083,30 +1080,20 @@ void NumberPicker::onDraw(Canvas&canvas){
             }
         }
         // Do not draw the middle item if input is visible since the input
-        // is shown only if the wheel is static and it covers the middle
-        // item. Otherwise, if the user starts editing the text via the
-        // IME he may see a dimmed version of the old value intermixed
-        // with the new one.
+        // is shown only if the wheel is static and it covers the middle item.
+        // Otherwise, if the user starts editing the text via the IME he may 
+        // see a dimmed version of the old value intermixed with the new one.
         if ((showSelectorWheel && i != mWheelMiddleItemIndex)
                 || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
             int xOffset = 0 , yOffset = 0;
             if (i != mWheelMiddleItemIndex && mItemSpacing != 0) {
                 if (isHorizontalMode()) {
-                    if (i > mWheelMiddleItemIndex) {
-                        xOffset = mItemSpacing;
-                    } else {
-                        xOffset = -mItemSpacing;
-                    }
+                    xOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
                 } else {
-                    if (i > mWheelMiddleItemIndex) {
-                        yOffset = mItemSpacing;
-                    } else {
-                        yOffset = -mItemSpacing;
-                    }
+                    yOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
                 }
             }
-            const bool isResURL = strpbrk(scrollSelectorValue.c_str(),"@:/")!=nullptr;
-            if(isResURL){
+            if(strpbrk(scrollSelectorValue.c_str(),"@:/")){
                 Rect outRect;
                 Drawable*dr = mContext->getDrawable(scrollSelectorValue);
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
@@ -1124,12 +1111,9 @@ void NumberPicker::onDraw(Canvas&canvas){
                  this,mID,i,scrollSelectorValue.c_str(),recText.left,recText.top,recText.width,recText.height,
                  selectedSize,mInitialScrollOffset,mCurrentScrollOffset,mSelectedTextSize,mTextSize,font_size);
             y += selectedSize;
-            //canvas.move_to(0,y);canvas.line_to(getWidth(),y);canvas.stroke();
             recText.offset(0,selectedSize);
         }
     }
-
-    // restore canvas
     canvas.restore();
 
     // draw the dividers

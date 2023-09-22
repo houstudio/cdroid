@@ -9,8 +9,8 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     HorizontalScrollView* hs=new HorizontalScrollView(1280,400);
     hs->setOverScrollMode(app.hasSwitch("scroll")?View::OVER_SCROLL_ALWAYS:View::OVER_SCROLL_NEVER);
-    hs->setHorizontalScrollBarEnabled(true);
     hs->setHorizontalFadingEdgeEnabled(true);
+    hs->setFadingEdgeLength(200);
 
     LinearLayout*layout=new LinearLayout(1280,100);
     layout->setOrientation(LinearLayout::HORIZONTAL);

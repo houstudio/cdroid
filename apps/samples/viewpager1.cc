@@ -46,6 +46,8 @@ int main(int argc,const char*argv[]){
 
     if(argc>1)mPageCount=std::max(5L,std::strtol(argv[1],nullptr,10));
     ViewPager*pager=new ViewPager(800,560);
+    pager->setHorizontalFadingEdgeEnabled(true);
+    pager->setFadingEdgeLength(200);
     MyPageAdapter*gpAdapter=new MyPageAdapter();
     pager->setOffscreenPageLimit(8);
     pager->setAdapter(gpAdapter);

@@ -35,6 +35,8 @@ int main(int argc,const char*argv[]){
     hs->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     hs->setHorizontalScrollBarEnabled(true);
     hs->setVerticalScrollBarEnabled(true);
+    hs->setHorizontalFadingEdgeEnabled(true);
+    hs->setFadingEdgeLength(200);
     hs->addView(layout,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT));
     //w->addView(layout);
     w->addView(hs);
