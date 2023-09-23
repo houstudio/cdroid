@@ -522,23 +522,23 @@ void NumberPicker::scrollBy(int x, int y){
     if (isHorizontalMode()) {
         if (isAscendingOrder()) {
             if (!mWrapSelectorWheel && x > 0
-                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
             if (!mWrapSelectorWheel && x < 0
-                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
         } else {
             if (!mWrapSelectorWheel && x > 0
-                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
             if (!mWrapSelectorWheel && x < 0
-                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
@@ -553,7 +553,7 @@ void NumberPicker::scrollBy(int x, int y){
                 return;
             }
             if (!mWrapSelectorWheel && y < 0
-                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
@@ -564,7 +564,7 @@ void NumberPicker::scrollBy(int x, int y){
                 return;
             }
             if (!mWrapSelectorWheel && y < 0
-                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }

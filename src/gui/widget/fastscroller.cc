@@ -608,8 +608,7 @@ void FastScroller::getSectionsFromIndexer() {
     }
 
     /*if (dynamic_cast<ExpandableListConnector*>(adapter)){
-        ExpandableListAdapter* expAdapter = ((ExpandableListConnector*) adapter)
-                .getAdapter();
+        ExpandableListAdapter* expAdapter = ((ExpandableListConnector*) adapter)->getAdapter();
         if (expAdapter instanceof SectionIndexer) {
             mSectionIndexer = (SectionIndexer) expAdapter;
             mListAdapter = adapter;
