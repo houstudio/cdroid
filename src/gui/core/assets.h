@@ -10,6 +10,7 @@ namespace cdroid{
 
 class Assets:public Context{
 private:
+    int mNextAutofillViewId;
     std::string mLanguage;
     std::string mDefault;//default resource
     std::string mThemeName;
@@ -43,6 +44,7 @@ public:
     void setTheme(const std::string&theme)override;
     const DisplayMetrics&getDisplayMetrics()override;
     int getId(const std::string&)const override;
+    int getNextAutofillId()override;
     const std::string& getString(const std::string&id,const std::string&lan="")override;
     Cairo::RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)override;
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;

@@ -26,6 +26,7 @@ struct Assets::COMPLEXCOLOR {
 };
 
 Assets::Assets() {
+    mNextAutofillViewId=100000;
     addResource("cdroid.pak","cdroid");
 }
 
@@ -295,6 +296,10 @@ int Assets::getId(const std::string&resname)const {
 
     auto it=mIDS.find(pkg+":"+resid);
     return it==mIDS.end()?-1:it->second;
+}
+
+int Assets::getNextAutofillId(){
+    return mNextAutofillViewId++;
 }
 
 const std::string& Assets::getString(const std::string& resid,const std::string&lan) {

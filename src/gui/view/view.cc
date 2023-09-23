@@ -198,13 +198,29 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
 
+    if(attrs.getBoolean("soundEffectsEnabled",true)){
+        viewFlagValues &= ~SOUND_EFFECTS_ENABLED;
+        viewFlagMasks |= SOUND_EFFECTS_ENABLED;
+    }
+    if(attrs.getBoolean("hapticFeedbackEnabled",true)){
+        viewFlagValues &= ~HAPTIC_FEEDBACK_ENABLED;
+        viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED;
+    }
     mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
     const int layoutDirection = attrs.getInt("layoutDirection",std::map<const std::string,int>{
            {"ltr", (int)LAYOUT_DIRECTION_LTR},{"rtl",(int)LAYOUT_DIRECTION_RTL},
-	   {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
+           {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
 	},LAYOUT_DIRECTION_DEFAULT);
     mPrivateFlags2 |= (layoutDirection << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
 
+    const int textDirection = attrs.getInt("textDirection",std::map<const std::string,int>{
+		 {"inherit",TEXT_DIRECTION_INHERIT}, {"locale",TEXT_DIRECTION_LOCALE},
+		 {"anyRtl",TEXT_DIRECTION_ANY_RTL},  {"ltr",TEXT_DIRECTION_LTR},  {"rtl",TEXT_DIRECTION_RTL},
+		 {"firstStrong",TEXT_DIRECTION_FIRST_STRONG}, {"fisrtStringLtr",TEXT_DIRECTION_FIRST_STRONG_LTR},
+		 {"firstStrongRtl",TEXT_DIRECTION_FIRST_STRONG_RTL}},-1);
+    if (textDirection != -1) {
+        mPrivateFlags2 |= textDirection<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
+    }
     const int textAlignment = attrs.getInt("textAlignment",std::map<const std::string,int>{
         {"inherit" , TEXT_ALIGNMENT_INHERIT},    {"gravity" , TEXT_ALIGNMENT_GRAVITY},
         {"textStart",TEXT_ALIGNMENT_TEXT_START}, {"textEnd" , TEXT_ALIGNMENT_TEXT_END},
@@ -216,6 +232,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mPrivateFlags2 |= (textAlignment<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
     //setTextAlignment( textAlignment );
     setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
+    setForegroundTintList(attrs.getColorStateList("foregroundTint"));
+
     setClickable( attrs.getBoolean("clickable",false) );
     setLongClickable( attrs.getBoolean("longclickable",false) );
     setFocusableInTouchMode( attrs.getBoolean("focusableInTouchMode",false) );
@@ -269,17 +287,16 @@ View::View(Context*ctx,const AttributeSet&attrs){
 	   {"vertical",FADING_EDGE_VERTICAL}
 	}),FADING_EDGE_NONE);
     if( fadingEdges != FADING_EDGE_NONE ){
-	viewFlagValues |= fadingEdges;
-	viewFlagMasks |= FADING_EDGE_MASK;
-	initScrollCache();
-	mScrollCache->fadingEdgeLength = attrs.getInt("fadingEdgeLength",ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
+        viewFlagValues |= fadingEdges;
+        viewFlagMasks |= FADING_EDGE_MASK;
+        initScrollCache();
+        mScrollCache->fadingEdgeLength = attrs.getInt("fadingEdgeLength",ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
     }
 
 
     const int scrollbars = attrs.getInt("scrollbars",std::map<const std::string,int>({
-        {"none",(int)SCROLLBARS_NONE},
-	{"horizontal",(int)SCROLLBARS_HORIZONTAL},
-	{"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
+           {"none",(int)SCROLLBARS_NONE}, {"horizontal",(int)SCROLLBARS_HORIZONTAL},
+           {"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
     if(scrollbars != SCROLLBARS_NONE){
         viewFlagValues |= scrollbars;
         viewFlagMasks  |= SCROLLBARS_MASK;
@@ -296,10 +313,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
          },mOverScrollMode);
 
     mVerticalScrollbarPosition = attrs.getInt("verticalScrollbarPosition",std::map<const std::string,int>{
-           {"defaultPosition",SCROLLBAR_POSITION_DEFAULT},
-	   {"left",SCROLLBAR_POSITION_LEFT},
-	   {"right",SCROLLBAR_POSITION_RIGHT}
-         },SCROLLBAR_POSITION_DEFAULT);
+           {"defaultPosition",SCROLLBAR_POSITION_DEFAULT}, {"left",SCROLLBAR_POSITION_LEFT},
+           {"right",SCROLLBAR_POSITION_RIGHT} },SCROLLBAR_POSITION_DEFAULT);
 
     if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
         viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
@@ -307,9 +322,9 @@ View::View(Context*ctx,const AttributeSet&attrs){
     }
 
     const int scrollIndicators = (attrs.getInt("scrollIndicators",std::map<const std::string,int>({
-	{"top",SCROLL_INDICATOR_TOP}, 	  {"left",SCROLL_INDICATOR_LEFT},
-	{"right",SCROLL_INDICATOR_RIGHT}, {"bottom",SCROLL_INDICATOR_BOTTOM}
-    }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
+           {"top",SCROLL_INDICATOR_TOP}, 	  {"left",SCROLL_INDICATOR_LEFT},
+           {"right",SCROLL_INDICATOR_RIGHT}, {"bottom",SCROLL_INDICATOR_BOTTOM}
+           }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
     if(scrollIndicators)mPrivateFlags3 |= scrollIndicators;
 
     if(viewFlagMasks)
@@ -3014,8 +3029,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     if (transformToApply != nullptr || alpha < 1 || !hasIdentityMatrix()
             || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
         if (transformToApply != nullptr || !childHasIdentityMatrix) {
-            int transX = 0;
-            int transY = 0;
+            int transX = 0 , transY = 0;
 
             if (offsetForScroll) {
                 transX = -sx;
@@ -3077,7 +3091,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
 
     if (!drawingWithRenderNode) {
         // apply clips directly, since RenderNode won't do it for this draw
-	int clips=0;
+        int clips=0;
         if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) != 0 && cache == nullptr) {
             if (offsetForScroll){
                 canvas.rectangle(sx,sy,getWidth(),getHeight());
@@ -3088,13 +3102,13 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                     canvas.rectangle(0, 0, cache->get_width(), cache->get_height());
                 }
             }
-	    clips++;
+            clips++;
         }
 
         if (!mClipBounds.empty()) {
             // clip bounds ignore scroll
             canvas.rectangle(mClipBounds.left,mClipBounds.top,mClipBounds.width,mClipBounds.height);
-	    clips++;
+            clips++;
         }
         if(clips)canvas.clip();//cant clip here ,for rotation animator(the view will be cutted)
     }
@@ -3225,7 +3239,7 @@ int View::getAccessibilityViewId(){
 
 int View::getAutoFillViewId(){
     if (mAutofillViewId == NO_ID) {
-        //mAutofillViewId = mContext->getNextAutofillId();
+        mAutofillViewId = mContext->getNextAutofillId();
     }
     return mAutofillViewId;
 }

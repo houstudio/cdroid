@@ -377,7 +377,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     if(mDrawables){
-	 mDrawables->mTintList =attrs.getColorStateList("drawableTint");
+        mDrawables->mTintList =attrs.getColorStateList("drawableTint");
     }
     setRelativeDrawablesIfNeeded(start, end);
 

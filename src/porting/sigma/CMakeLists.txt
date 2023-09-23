@@ -35,12 +35,6 @@ list(APPEND SIGMA_LIBS pthread dl
 	-lmi_disp -lmi_ai -lmi_ao -lmi_vdec -lmi_divp -lmi_panel
         -lhvplayer -lavformat -lavcodec -lavutil -lswresample -lswscale)
 list(APPEND SIGMATARGET tvhal)
-if(DIRECTFB_FOUND)
-    add_library(tvhal-dfb SHARED ${SIGMA_SRCS} ../common/graph_dfb.c)
-    include_directories(${DIRECTFB_INCLUDE_DIRS})
-    target_link_libraries(tvhal-dfb ${DIRECTFB_LIBRARIES} ${SIGMA_LIBS})
-    list(APPEND SIGMATARGET tvhal-dfb)
-endif(DIRECTFB_FOUND)
 
 include_directories(./
     ../common ../include
@@ -59,6 +53,15 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroidhal.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
 add_library(tvhal SHARED ${SIGMA_SRCS} graph_gfx.c)
 target_link_libraries(tvhal ${SIGMA_LIBS})
+
+if(DIRECTFB_FOUND)
+    add_library(tvhal-dfb SHARED ${SIGMA_SRCS} ../common/graph_dfb.c)
+    include_directories(${DIRECTFB_INCLUDE_DIRS})
+    target_link_libraries(tvhal-dfb ${DIRECTFB_LIBRARIES} ${SIGMA_LIBS})
+    list(APPEND SIGMATARGET tvhal-dfb)
+    add_dependencies(tvhal tvhal-dfb)
+endif(DIRECTFB_FOUND)
+
 file(GLOB MILIBS ${PROJECT_SOURCE_DIR}/libs/*.so)
 install (TARGETS ${SIGMATARGET}  DESTINATION lib)
 install (FILES ${MILIBS} DESTINATION lib)
