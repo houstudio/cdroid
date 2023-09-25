@@ -39,7 +39,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
   :LinearLayout(context,atts){
     initView();
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
-    mWrapSelectorWheel= atts.getBoolean("wrapSelectorWheel",false); 
+    mWrapSelectorWheelPreferred= atts.getBoolean("wrapSelectorWheel",mWrapSelectorWheelPreferred);
     mDividerDrawable = atts.getDrawable("selectionDivider");
     mSelectedTextSize = atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize);
     if (mDividerDrawable) {
@@ -92,11 +92,13 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mSelectedTextColor));
     updateInputTextView();
 
-    setValue(atts.getInt("value",0));
+    setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
     setMinValue(atts.getInt("min",0));
     setMaxValue(atts.getInt("max",0));
-    setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
-
+    setValue(atts.getInt("value",0));
+    //const int wheelCount=atts.getInt("wheelItemCount",3);
+    //if(wheelCount!=-1)setWheelItemCount(wheelCount);
+    updateWrapSelectorWheel();
     LOGV("%p:%d textSize=%d,%d",this,mID,mSelectedTextSize,mTextSize);
     if(getFocusable()==View::FOCUSABLE_AUTO){
         setFocusable(int(View::FOCUSABLE));
@@ -743,6 +745,8 @@ void NumberPicker::setWrapSelectorWheel(bool wrapSelectorWheel) {
 void NumberPicker::updateWrapSelectorWheel() {
     const bool wrappingAllowed = (mMaxValue - mMinValue + 1) >= mSelectorIndices.size();
     mWrapSelectorWheel = wrappingAllowed && mWrapSelectorWheelPreferred;
+    LOGV("%p:%d range(%d->%d)indices.size=%d mWheelItemCount=%d prefwrapped=%d",this,mID,
+        mMinValue,mMaxValue,mSelectorIndices.size(),mWheelItemCount,mWrapSelectorWheelPreferred);
 }
 
 void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
@@ -1039,7 +1043,6 @@ void NumberPicker::onDraw(Canvas&canvas){
                 const float fraction = ci.getInterpolation(offset);
                 mPat->add_color_stop_rgba(offset,lerp(c2.red(),c1.red(),fraction),lerp(c2.green(),c1.green(),fraction),
                                  lerp(c2.blue(),c1.blue(),fraction), std::abs(lerp(c2.alpha(),c1.alpha(),fraction)));
-                LOGV("[%d] offset=%.2f/%f fraction=%f alpha=%f",i,float(i)/cStops,offset,fraction,lerp(c2.alpha(),c1.alpha(),fraction));
             }
         }
         canvas.set_source(mPat);
@@ -1247,12 +1250,12 @@ void NumberPicker::initializeSelectorWheelIndices(){
     const int current = getValue();
     const int count = (mMaxValue - mMinValue + 1);
     for (int i = 0; i < mSelectorIndices.size(); i++) {
-        int selectorIndex = current + (i - mWheelMiddleItemIndex);
+        int selectorIndex = (current + (i - mWheelMiddleItemIndex)+count)%count;
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
-        if(mSelectorIndices.size() > count && count)
-            selectorIndex = (selectorIndex + count)%count;/*make wrapable*/
+        if(mSelectorIndices.size() > count)
+            selectorIndex = (selectorIndex + count)%count;
         mSelectorIndices[i] = selectorIndex;
         ensureCachedScrollSelectorValue(mSelectorIndices[i]);
     }
