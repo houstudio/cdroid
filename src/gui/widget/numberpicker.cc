@@ -96,8 +96,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     setMinValue(atts.getInt("min",0));
     setMaxValue(atts.getInt("max",0));
     setValue(atts.getInt("value",0));
-    //const int wheelCount=atts.getInt("wheelItemCount",3);
-    //if(wheelCount!=-1)setWheelItemCount(wheelCount);
+
     updateWrapSelectorWheel();
     LOGV("%p:%d textSize=%d,%d",this,mID,mSelectedTextSize,mTextSize);
     if(getFocusable()==View::FOCUSABLE_AUTO){
@@ -1250,7 +1249,7 @@ void NumberPicker::initializeSelectorWheelIndices(){
     const int current = getValue();
     const int count = (std::abs(mMaxValue - mMinValue) + 1);
     for (int i = 0; i < mSelectorIndices.size(); i++) {
-        int selectorIndex = (current + (i - mWheelMiddleItemIndex)+count)%count;
+        int selectorIndex = current + (i - mWheelMiddleItemIndex);
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
