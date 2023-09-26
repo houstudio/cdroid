@@ -93,9 +93,9 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     updateInputTextView();
 
     setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
+    setValue(atts.getInt("value",0));
     setMinValue(atts.getInt("min",0));
     setMaxValue(atts.getInt("max",0));
-    setValue(atts.getInt("value",0));
 
     updateWrapSelectorWheel();
     LOGV("%p:%d textSize=%d,%d",this,mID,mSelectedTextSize,mTextSize);
@@ -549,23 +549,23 @@ void NumberPicker::scrollBy(int x, int y){
     } else {
         if (isAscendingOrder()) {
             if (!mWrapSelectorWheel && y > 0
-                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {//changed from >=-->=,make items wrapable
+                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {//changed from <=--><,make items wrapable
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
             if (!mWrapSelectorWheel && y < 0
-                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
         } else {
             if (!mWrapSelectorWheel && y > 0
-                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {//changed from >=-->=,make items wrapable
+                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {//changed from >=-->>,make items wrapable
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
             if (!mWrapSelectorWheel && y < 0
-                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {
+                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
                 mCurrentScrollOffset = mInitialScrollOffset;
                 return;
             }
@@ -744,8 +744,8 @@ void NumberPicker::setWrapSelectorWheel(bool wrapSelectorWheel) {
 void NumberPicker::updateWrapSelectorWheel() {
     const bool wrappingAllowed = (mMaxValue - mMinValue + 1) >= mSelectorIndices.size();
     mWrapSelectorWheel = wrappingAllowed && mWrapSelectorWheelPreferred;
-    LOGV("%p:%d range(%d->%d)indices.size=%d mWheelItemCount=%d prefwrapped=%d",this,mID,
-        mMinValue,mMaxValue,mSelectorIndices.size(),mWheelItemCount,mWrapSelectorWheelPreferred);
+    LOGD("%p:%d range(%d->%d)indices.size=%d mWheelItemCount=%d prefwrapped=%d/%d",this,mID,
+        mMinValue,mMaxValue,mSelectorIndices.size(),mWheelItemCount,mWrapSelectorWheelPreferred,wrappingAllowed);
 }
 
 void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
