@@ -53,6 +53,7 @@ public:
     Display&getDefaultDisplay();
     void addWindow(Window*w);
     void removeWindow(Window*w);
+    void removeWindows(const std::vector<Window*>&);
     void moveWindow(Window*w,int x,int y);
     void sendToBack(Window*w);
     void bringToFront(Window*w);

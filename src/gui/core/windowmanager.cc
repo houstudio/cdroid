@@ -116,7 +116,6 @@ void WindowManager::removeWindow(Window*w){
         w->onDeactive();
     auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     const Rect wrect = w->getBound();
-    const int wc = mWindows.size();
     mWindows.erase(itw);
     for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
         Window*w1 = (*itr);
@@ -144,7 +143,50 @@ void WindowManager::removeWindow(Window*w){
     }
     GraphDevice::getInstance().invalidate(wrect);
     GraphDevice::getInstance().flip();
-    LOGI("w=%p windows.size=%d->%d",w,wc,mWindows.size());
+    LOGI("w=%p windows.size=%d",w,mWindows.size());
+}
+
+void WindowManager::removeWindows(const std::vector<Window*>&ws){
+    Cairo::RefPtr<Cairo::Region>rgn=Cairo::Region::create();
+    for(auto w:ws){
+        if(w == mActiveWindow){
+            mActiveWindow = nullptr;
+            w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
+        }
+        if(w->hasFlag(View::FOCUSABLE))
+            w->onDeactive();
+        auto itw = std::find(mWindows.begin(),mWindows.end(),w);
+        const Rect rw = w->getBound();
+        mWindows.erase(itw);
+	rgn->do_union({rw.left,rw.top,rw.width,rw.height});
+        for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
+            Window*w1 = (*itr);
+            Rect rc = w1->getBound();
+            rc.intersect(rw);
+            rc.offset(-w1->getLeft(),-w1->getTop());
+            w1->invalidate(&rc);
+            w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
+        }
+    #if USE_UIEVENTHANDLER
+        Looper::getDefault()->removeHandler(w->mUIEventHandler);
+    #else
+        Looper::getDefault()->removeEventHandler(w->mUIEventHandler);
+    #endif
+        View::AttachInfo*info = w->mAttachInfo;
+        w->dispatchDetachedFromWindow();
+        delete info;
+        delete w;
+    }
+    for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
+        if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
+            (*it)->onActive();
+            mActiveWindow = (*it);
+            break;
+        }
+    }
+    const Cairo::RectangleInt re = rgn->get_extents();
+    GraphDevice::getInstance().invalidate({re.x,re.y,re.width,re.height});
+    GraphDevice::getInstance().flip();
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){
