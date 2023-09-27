@@ -744,8 +744,6 @@ void NumberPicker::setWrapSelectorWheel(bool wrapSelectorWheel) {
 void NumberPicker::updateWrapSelectorWheel() {
     const bool wrappingAllowed = (mMaxValue - mMinValue + 1) >= mSelectorIndices.size();
     mWrapSelectorWheel = wrappingAllowed && mWrapSelectorWheelPreferred;
-    LOGD("%p:%d range(%d->%d)indices.size=%d mWheelItemCount=%d prefwrapped=%d/%d",this,mID,
-        mMinValue,mMaxValue,mSelectorIndices.size(),mWheelItemCount,mWrapSelectorWheelPreferred,wrappingAllowed);
 }
 
 void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
