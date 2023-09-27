@@ -458,6 +458,90 @@ void ViewGroup::exitTooltipHoverTargets() {
     }
 }
 
+bool ViewGroup::dispatchTooltipHoverEvent(MotionEvent& event) {
+    const int action = event.getAction();
+    View* newTarget = nullptr;
+    const int childrenCount = mChildren.size();
+    switch (action) {
+    case MotionEvent::ACTION_HOVER_ENTER:
+        break;
+
+    case MotionEvent::ACTION_HOVER_MOVE:
+
+        // Check what the child under the pointer says about the tooltip.
+        if (childrenCount != 0) {
+            const float x = event.getX();
+            const float y = event.getY();
+
+            std::vector<View*> preorderedList = buildOrderedChildList();
+            const bool customOrder = preorderedList.size()==0 && isChildrenDrawingOrderEnabled();
+            auto children = mChildren;
+            for (int i = childrenCount - 1; i >= 0; i--) {
+                const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+                View* child = getAndVerifyPreorderedView(preorderedList, children, childIndex);
+                if (!child->canReceivePointerEvents()
+                        || !isTransformedTouchPointInView(x, y, *child, nullptr)) {
+                    continue;
+                }
+                if (dispatchTooltipHoverEvent(event, child)) {
+                    newTarget = child;
+                    break;
+                }
+            }
+            preorderedList.clear();
+        }
+
+        if (mTooltipHoverTarget != newTarget) {
+            if (mTooltipHoverTarget != nullptr) {
+                event.setAction(MotionEvent::ACTION_HOVER_EXIT);
+                mTooltipHoverTarget->dispatchTooltipHoverEvent(event);
+                event.setAction(action);
+            }
+            mTooltipHoverTarget = newTarget;
+        }
+
+        if (mTooltipHoverTarget != nullptr) {
+            if (mTooltipHoveredSelf) {
+                mTooltipHoveredSelf = false;
+                event.setAction(MotionEvent::ACTION_HOVER_EXIT);
+		View::dispatchTooltipHoverEvent(event);
+                event.setAction(action);
+             }
+             return true;
+         }
+
+         mTooltipHoveredSelf = View::dispatchTooltipHoverEvent(event);
+         return mTooltipHoveredSelf;
+
+    case MotionEvent::ACTION_HOVER_EXIT:
+         if (mTooltipHoverTarget != nullptr) {
+             mTooltipHoverTarget->dispatchTooltipHoverEvent(event);
+             mTooltipHoverTarget = nullptr;
+         } else if (mTooltipHoveredSelf) {
+             View::dispatchTooltipHoverEvent(event);
+             mTooltipHoveredSelf = false;
+         }
+         break;
+    }
+    return false;
+}
+
+bool ViewGroup::dispatchTooltipHoverEvent(MotionEvent& event, View* child) {
+    bool result;
+    if (!child->hasIdentityMatrix()) {
+        MotionEvent* transformedEvent = getTransformedMotionEvent(event, child);
+        result = child->dispatchTooltipHoverEvent(*transformedEvent);
+        transformedEvent->recycle();
+    } else {
+        const float offsetX = mScrollX - child->mLeft;
+        const float offsetY = mScrollY - child->mTop;
+        event.offsetLocation(offsetX, offsetY);
+        result = child->dispatchTooltipHoverEvent(event);
+        event.offsetLocation(-offsetX, -offsetY);
+    }
+    return result;
+}
+
 bool ViewGroup::hasHoveredChild() {
     return mFirstHoverTarget != nullptr;
 }
