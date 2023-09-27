@@ -158,6 +158,7 @@ void ViewGroup::initGroup(){
     mFocusedInCluster = nullptr;
     mFirstTouchTarget = nullptr;
     mFirstHoverTarget = nullptr;
+    mTooltipHoverTarget = nullptr;
     mOnHierarchyChangeListener = nullptr;
     mLayoutAnimationController = nullptr;
     mHoveredSelf=false;
