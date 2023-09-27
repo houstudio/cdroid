@@ -208,7 +208,7 @@ void Window::onCreate(){
     LOGV("%p[%s]:%d",this,getText().c_str(),mID);
 }
 void Window::onActive(){
-    LOGV("%p[%s]:%d",this,getText().c_str(),mID);
+    LOGD("%p[%s]:%d",this,getText().c_str(),mID);
 }
 
 void Window::onDeactive(){
