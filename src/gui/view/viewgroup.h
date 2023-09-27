@@ -109,6 +109,8 @@ private:
     class TouchTarget* mFirstTouchTarget;
     class HoverTarget* mFirstHoverTarget;
     bool mHoveredSelf;
+    bool mTooltipHoveredSelf;
+    View* mTooltipHoverTarget;
     POINT animateTo;//save window boundray  while animating
     POINT animateFrom;//window animate from boundary
     Transformation* mChildTransformation;
@@ -135,12 +137,13 @@ private:
     void cancelAndClearTouchTargets(MotionEvent*);
     void removePointersFromTouchTargets(int pointerIdBits);
     void cancelTouchTarget(View* view);
+    void exitTooltipHoverTargets();
     void exitHoverTargets();
     void cancelHoverTarget(View*view);
     bool dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
             View* child, int desiredPointerIdBits);
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
-
+    bool dispatchTooltipHoverEvent(MotionEvent& event, View* child);
     void setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus);
 
     void addInArray(View* child, int index);
@@ -168,6 +171,7 @@ protected:
     void setDefaultFocus(View* child);
     View*getDeepestFocusedChild();
     void clearDefaultFocus(View* child);
+    bool hasDefaultFocus()const override;
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
@@ -184,6 +188,7 @@ protected:
 
     bool dispatchGenericPointerEvent(MotionEvent&event)override;
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
+    bool dispatchTooltipHoverEvent(MotionEvent& event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
     bool performKeyboardGroupNavigation(int direction);
@@ -231,7 +236,7 @@ protected:
 
     bool hasActiveAnimations();
     void transformPointToViewLocal(float pint[2],View&);
-    bool isTransformedTouchPointInView(int x,int y,View& child,Point*outLocalPoint);
+    bool isTransformedTouchPointInView(float x,float y,View& child,Point*outLocalPoint);
     void drawableStateChanged()override;
     std::vector<int> onCreateDrawableState()override;
     void dispatchSetPressed(bool pressed)override;
@@ -246,6 +251,7 @@ protected:
     bool isViewTransitioning(View* view);
     void attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count);
     virtual void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
+    void resetResolvedDrawables()override;
 public:
     ViewGroup(int w,int h);
     ViewGroup(int x,int y,int w,int h);
@@ -354,6 +360,7 @@ public:
     virtual View* findViewById(int id);
     View* findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)override;
     View* findViewWithTagTraversal(void*tag)override;
+    virtual void resetResolvedPadding()override;
     virtual bool shouldDelayChildPressedState();
 
     virtual bool onInterceptHoverEvent(MotionEvent& event);

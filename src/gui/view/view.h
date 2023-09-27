@@ -540,6 +540,7 @@ protected:
     void invalidateParentIfNeededAndWasQuickRejected();
     virtual void invalidateInheritedLayoutMode(int);
     void destroyDrawingCache();
+    void resetResolvedDrawablesInternal();
     Cairo::RefPtr<Cairo::ImageSurface>getDrawingCache(bool autoScale);
     virtual bool hasWindowFocus()const;
 
@@ -555,6 +556,7 @@ protected:
     virtual void dispatchVisibilityChanged(View& changedView,int visiblity);
     virtual bool dispatchVisibilityAggregated(bool isVisible);
     virtual void dispatchWindowFocusChanged(bool);
+    virtual bool dispatchTooltipHoverEvent(MotionEvent& event);
     virtual void onWindowFocusChanged(bool hasWindowFocus);
     virtual void onVisibilityChanged(View& changedView,int visibility);
     virtual void onAttachedToWindow();
@@ -603,7 +605,7 @@ protected:
     static int getDefaultSize(int size, int measureSpec);
     void damageInParent();
     void transformRect(Rect&rect);
-    bool hasDefaultFocus()const;
+    virtual bool hasDefaultFocus()const;
     int getSuggestedMinimumWidth();
     int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
@@ -1028,7 +1030,7 @@ public:
     void resetRtlProperties();
     void resetResolvedTextDirection();
     void resetResolvedLayoutDirection();
-    void resetResolvedPadding();
+    virtual void resetResolvedPadding();
     void measure(int widthMeasureSpec, int heightMeasureSpec);
     int  getMeasuredWidth()const;
     int  getMeasuredWidthAndState()const;

@@ -447,13 +447,24 @@ void ViewGroup::cancelTouchTarget(View* view){
     }
 }
 
+void ViewGroup::exitTooltipHoverTargets() {
+    if (mTooltipHoveredSelf || mTooltipHoverTarget) {
+        const long now = SystemClock::uptimeMillis();
+        MotionEvent* event = MotionEvent::obtain(now, now,
+                MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
+        event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+        dispatchTooltipHoverEvent(*event);
+        event->recycle();
+    }
+}
+
 bool ViewGroup::hasHoveredChild() {
     return mFirstHoverTarget != nullptr;
 }
 
 void ViewGroup::exitHoverTargets(){
     if (mHoveredSelf || mFirstHoverTarget) {
-        long now = SystemClock::uptimeMillis();
+        const long now = SystemClock::uptimeMillis();
         MotionEvent* event = MotionEvent::obtain(now, now,
                 MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
         event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
@@ -1939,6 +1950,26 @@ ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
     return nullptr;
 }
 
+void ViewGroup::resetResolvedPadding() {
+    View::resetResolvedPadding();
+
+    for (View*child:mChildren) {
+        if (child->isLayoutDirectionInherited()) {
+            child->resetResolvedPadding();
+        }
+    }
+}
+
+void ViewGroup::resetResolvedDrawables() {
+    View::resetResolvedDrawables();
+
+    for (View*child:mChildren) {
+        if (child->isLayoutDirectionInherited()) {
+            child->resetResolvedDrawables();
+        }
+    }
+}
+
 bool ViewGroup::shouldDelayChildPressedState(){
     return true;
 }
@@ -2048,6 +2079,10 @@ void ViewGroup::clearDefaultFocus(View* child){
     }
 
     if (mParent)mParent->clearDefaultFocus(this);
+}
+
+bool ViewGroup::hasDefaultFocus()const{
+    return mDefaultFocus || View::hasDefaultFocus();
 }
 
 bool ViewGroup::onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect){
@@ -2537,8 +2572,8 @@ void ViewGroup::invalidateInheritedLayoutMode(int layoutModeOfRoot){
     }
 }
 
-bool ViewGroup::isTransformedTouchPointInView(int x,int y, View& child,POINT*outLocalPoint) {
-    float point[2] ={(float)x,(float)y};
+bool ViewGroup::isTransformedTouchPointInView(float x,float y, View& child,POINT*outLocalPoint) {
+    float point[2] ={x,y};
     transformPointToViewLocal(point,child);
     const bool isInView=child.pointInView(point[0],point[1],0);
     if(isInView && outLocalPoint != nullptr) {
@@ -2706,7 +2741,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
          ev.setTargetAccessibilityFocus(false);
     }
     // Check for cancelation.
-   const  bool canceled = resetCancelNextUpFlag(this)|| actionMasked == MotionEvent::ACTION_CANCEL;
+    const  bool canceled = resetCancelNextUpFlag(this)|| actionMasked == MotionEvent::ACTION_CANCEL;
 
     const bool split = (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) != 0;
     TouchTarget* newTouchTarget = nullptr;
@@ -3015,13 +3050,13 @@ void ViewGroup::dispatchDetachedFromWindow(){
 
     // Similarly, set ACTION_EXIT to all hover targets and clear them.
     exitHoverTargets();
-    /*exitTooltipHoverTargets();
+    exitTooltipHoverTargets();
 
     // In case view is detached while transition is running
     mLayoutCalledWhileSuppressed = false;
 
     // Tear down our drag tracking
-    mChildrenInterestedInDrag = null;
+    /*mChildrenInterestedInDrag = null;
     mIsInterestedInDrag = false;
     if (mCurrentDragStartEvent != null) {
         mCurrentDragStartEvent.recycle();

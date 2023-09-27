@@ -636,7 +636,7 @@ int TextView::getHorizontalOffsetForDrawables()const{
 }
 
 void TextView::setText(const std::string&txt){
-    if(mLayout->setText(txt)){
+    if(mLayout->setText(txt)||isDirty()){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
             mCaretPos=ws.length()-1;

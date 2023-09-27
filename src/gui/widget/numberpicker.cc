@@ -1090,6 +1090,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         if ((showSelectorWheel && i != mWheelMiddleItemIndex)
                 || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
             int xOffset = 0 , yOffset = 0;
+            Drawable*dr = nullptr;
             if (i != mWheelMiddleItemIndex && mItemSpacing != 0) {
                 if (isHorizontalMode()) {
                     xOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
@@ -1097,12 +1098,12 @@ void NumberPicker::onDraw(Canvas&canvas){
                     yOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
                 }
             }
-            if(strpbrk(scrollSelectorValue.c_str(),"@:/")){
+            if(strpbrk(scrollSelectorValue.c_str(),"@:/") && (dr = mContext->getDrawable(scrollSelectorValue))){
                 Rect outRect;
-                Drawable*dr = mContext->getDrawable(scrollSelectorValue);
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
                 dr->setBounds(outRect);
                 dr->draw(canvas);
+                delete dr;
             }else{
                 canvas.draw_text(recText,scrollSelectorValue,textGravity);
             }

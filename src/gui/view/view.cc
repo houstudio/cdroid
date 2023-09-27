@@ -3673,6 +3673,11 @@ void View::resolveDrawables(){
 }
 
 void View::resetResolvedDrawables(){
+    resetResolvedDrawablesInternal();
+}
+
+void View::resetResolvedDrawablesInternal() {
+    mPrivateFlags2 &= ~PFLAG2_DRAWABLE_RESOLVED;
 }
 
 bool View::verifyDrawable(Drawable*who)const{
@@ -3693,7 +3698,7 @@ std::vector<int>View::onCreateDrawableState(){
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
     if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex = StateSet::VIEW_STATE_PRESSED;
     if(mPrivateFlags & PFLAG_SELECTED) viewStateIndex |= StateSet::VIEW_STATE_SELECTED;
-     if(hasWindowFocus() ) viewStateIndex|=StateSet::VIEW_STATE_WINDOW_FOCUSED;
+    if(hasWindowFocus() ) viewStateIndex|=StateSet::VIEW_STATE_WINDOW_FOCUSED;
     if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
     if((mPrivateFlags & PFLAG_ACTIVATED) != 0) viewStateIndex |= StateSet::VIEW_STATE_ACTIVATED;
     //LOGV("**** %p:%d isFocused=%d enabled=%d pressed=%d",this,getId(),isFocused(),isEnabled(),isPressed());
@@ -3793,11 +3798,11 @@ View& View::setBackground(Drawable*background){
     }
     if(background){        
         Rect padding;
-        resetResolvedDrawables();//Internal();
+        resetResolvedDrawablesInternal();
         background->setLayoutDirection(getLayoutDirection());  
        
         if(background->getPadding(padding)){
-            resetResolvedDrawables();//Internal();
+            resetResolvedDrawablesInternal();
             switch (background->getLayoutDirection()) {
             case LAYOUT_DIRECTION_RTL:
                 mUserPaddingLeftInitial = padding.width;
@@ -5548,6 +5553,10 @@ bool View::dispatchKeyEvent(KeyEvent&event){
     const bool result = event.dispatch(this,(mAttachInfo? &mAttachInfo->mKeyDispatchState : nullptr),this);
     LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),result);
     return result;
+}
+
+bool View::dispatchTooltipHoverEvent(MotionEvent& event){
+    return false;
 }
 
 View* View::dispatchUnhandledKeyEvent(KeyEvent& evt) {
