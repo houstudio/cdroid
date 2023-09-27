@@ -114,7 +114,7 @@ void WindowManager::removeWindow(Window*w){
         w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
     }
     if(w->hasFlag(View::FOCUSABLE)){
-        w->setActivated(false);
+        //w->setActivated(false);
         w->onDeactive();
     }
     auto itw = std::find(mWindows.begin(),mWindows.end(),w);
@@ -140,7 +140,7 @@ void WindowManager::removeWindow(Window*w){
     for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             if((*it)!=mActiveWindow){
-                 (*it)->setActivated(true);
+                 //(*it)->setActivated(true);
 		 (*it)->onActive();
 	    }
             mActiveWindow = (*it);
@@ -160,7 +160,7 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
         }
         if(w->hasFlag(View::FOCUSABLE)){
-            w->setActivated(false);
+            //w->setActivated(false);
             w->onDeactive();
 	}
         auto itw = std::find(mWindows.begin(),mWindows.end(),w);
@@ -188,7 +188,7 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
     for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             if((*it)!=mActiveWindow){
-		(*it)->setActivated(true);
+		//(*it)->setActivated(true);
 		(*it)->onActive();
 	    }
             mActiveWindow = (*it);
