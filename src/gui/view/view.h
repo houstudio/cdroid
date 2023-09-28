@@ -351,7 +351,7 @@ private:
     int mOldWidthMeasureSpec;
     int mOldHeightMeasureSpec;
     int mVerticalScrollbarPosition;
-    int mLongClickX ,mLongClickY;
+    float mLongClickX ,mLongClickY;
     int mNextFocusLeftId;
     int mNextFocusRightId;
     int mNextFocusUpId;
@@ -407,10 +407,13 @@ private:
 
     void checkForLongClick(int delayOffset,int x,int y);
     bool performClickInternal();
-    bool performLongClickInternal(int x,int y);
-    void setPressed(bool pressed,int x,int y);
-
+    bool performLongClickInternal(float x,float y);
+    void setPressed(bool pressed,float x,float y);
     void resetPressedState();
+    void hideTooltip();
+    bool showHoverTooltip();
+    bool showTooltip(int x, int y, bool fromLongClick);
+    bool showLongClickTooltip(int x, int y);
     void initView();
     void drawBackground(Canvas&canvas);
     void applyBackgroundTint();
@@ -428,6 +431,7 @@ private:
     void sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight);
     void setMeasuredDimensionRaw(int measuredWidth, int measuredHeight);
     void initializeScrollbarsInternal(const AttributeSet&attrs);
+    void initializeScrollBarDrawable();
     void initScrollCache();
     ScrollabilityCache* getScrollCache();
     bool initialAwakenScrollBars();
@@ -511,6 +515,7 @@ protected:
     AttachInfo* mAttachInfo;
     RenderNode* mRenderNode;
     class ListenerInfo* mListenerInfo;
+    class TooltipInfo* mTooltipInfo;
     ListenerInfo*getListenerInfo();
 protected:
     virtual void internalSetPadding(int left, int top, int right, int bottom);
@@ -645,6 +650,8 @@ public:
     View(Context*ctx,const AttributeSet&attrs);
     View(int w,int h);
     virtual ~View();
+    bool isShowingLayoutBounds()const;
+    void setShowingLayoutBounds(bool debugLayout);
     virtual void draw(Canvas&canvas);
     bool draw(Canvas&canvas,ViewGroup*parent,long drawingTime);
 
@@ -706,6 +713,8 @@ public:
     void setPadding(int left, int top, int right, int bottom);
     void setPaddingRelative(int start,int top,int end,int bottom);
     bool isPaddingResolved()const;
+    void setTooltipText(const std::string& tooltipText);
+    std::string getTooltipText()const;
     virtual void resolvePadding();
     virtual void onRtlPropertiesChanged(int layoutDirection);
     bool resolveLayoutDirection();
@@ -769,7 +778,14 @@ public:
     void setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled);
 
     virtual View& setVerticalScrollbarPosition(int position);
-
+    void setVerticalScrollbarThumbDrawable(Drawable* drawable);
+    void setVerticalScrollbarTrackDrawable(Drawable* drawable);
+    void setHorizontalScrollbarThumbDrawable(Drawable* drawable);
+    void setHorizontalScrollbarTrackDrawable(Drawable* drawable);
+    Drawable* getVerticalScrollbarThumbDrawable()const;
+    Drawable* getVerticalScrollbarTrackDrawable()const;
+    Drawable* getHorizontalScrollbarThumbDrawable()const;
+    Drawable* getHorizontalScrollbarTrackDrawable()const;
     void setScrollbarFadingEnabled(bool fadeScrollbars);
     bool isScrollbarFadingEnabled();
     int  getScrollBarDefaultDelayBeforeFade();
@@ -807,10 +823,10 @@ public:
     void  removeOnAttachStateChangeListener(OnAttachStateChangeListener listener);
     virtual bool performClick();
     virtual bool performLongClick();
-    virtual bool performLongClick(int x,int y);
+    virtual bool performLongClick(float x,float y);
     void cancelPendingInputEvents();
     void cancelLongPress();
-    bool  performContextClick(int x, int y);
+    bool  performContextClick(float x, float y);
     bool  performContextClick();
     bool showContextMenu();
     bool showContextMenu(float x, float y);

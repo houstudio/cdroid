@@ -173,6 +173,22 @@ void ScrollBarDrawable::setHorizontalTrackDrawable(Drawable* track) {
     mHorizontalTrack = track;
 }
 
+Drawable*ScrollBarDrawable::getVerticalThumbDrawable()const{
+    return mVerticalThumb;
+}
+
+Drawable*ScrollBarDrawable::getVerticalTrackDrawable()const{
+    return mHorizontalThumb;
+}
+
+Drawable*ScrollBarDrawable::getHorizontalThumbDrawable()const{
+    return mHorizontalThumb;
+}
+
+Drawable*ScrollBarDrawable::getHorizontalTrackDrawable()const{
+    return mHorizontalTrack;
+}
+
 void ScrollBarDrawable::propagateCurrentState(Drawable* d) {
     if (d != nullptr) {
         if (mMutated) {

@@ -45,6 +45,10 @@ public:
     void setVerticalTrackDrawable(Drawable* track);
     void setHorizontalThumbDrawable(Drawable* thumb);
     void setHorizontalTrackDrawable(Drawable* track);
+    Drawable*getVerticalThumbDrawable()const;
+    Drawable*getVerticalTrackDrawable()const;
+    Drawable*getHorizontalThumbDrawable()const;
+    Drawable*getHorizontalTrackDrawable()const;
     int getSize(bool vertical);
     ScrollBarDrawable* mutate();
     void setAlpha(int alpha)override;

@@ -83,6 +83,31 @@ public:
     //View::OnDragListener mOnDragListener;
 };
 
+class TooltipInfo{
+public:
+    std::string mTooltipText;
+    int mAnchorX,mAnchorY;
+    /*TooltipPopup*/void* mTooltipPopup;
+    bool mTooltipFromLongClick;
+    Runnable mShowTooltipRunnable;
+    Runnable mHideTooltipRunnable;
+    int mHoverSlop;
+public:
+    bool updateAnchorPos(MotionEvent&event){
+        const int newAnchorX = event.getX();
+        const int newAnchorY = event.getY();
+        if((std::abs(newAnchorX-mAnchorX)<=mHoverSlop)&& (std::abs(newAnchorY-mAnchorY)<=mHoverSlop))
+            return false;
+	mAnchorX = newAnchorX;
+	mAnchorY = newAnchorY;
+	return true;
+    }
+    void clearAnchorPos(){
+        mAnchorX = INT_MAX;
+	mAnchorY = INT_MAX;
+    }
+};
+
 View::TransformationInfo::TransformationInfo(){
     mMatrix=identity_matrix();
     mInverseMatrix=identity_matrix();
@@ -439,6 +464,7 @@ void View::initView(){
     mParent   = nullptr;
     mAttachInfo  = nullptr;
     mListenerInfo= nullptr;
+    mTooltipInfo = nullptr;
     mOverlay  = nullptr;
     mAnimator = nullptr;
     mTag = nullptr;
@@ -517,6 +543,7 @@ View::~View(){
     delete mPendingCheckForLongPress;
     delete mRenderNode;
     delete mListenerInfo;
+    delete mTooltipInfo;
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
     delete mScrollCache;
@@ -529,6 +556,16 @@ View::~View(){
     delete mTransformationInfo;
     delete mOverlay;
     delete mFloatingTreeObserver;
+}
+
+bool View::isShowingLayoutBounds()const{
+    return DEBUG_DRAW || mAttachInfo && mAttachInfo->mDebugLayout;
+}
+
+void View::setShowingLayoutBounds(bool debugLayout){
+    if (mAttachInfo) {
+        mAttachInfo->mDebugLayout = debugLayout;
+    }
 }
 
 bool View::debugDraw()const {
@@ -1808,8 +1845,18 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
 }
 
 void View::initScrollCache(){
-    if(mScrollCache==nullptr)
-        mScrollCache=new ScrollabilityCache(ViewConfiguration::get(mContext),this);
+    if(mScrollCache == nullptr)
+        mScrollCache = new ScrollabilityCache(ViewConfiguration::get(mContext),this);
+}
+
+void View::initializeScrollBarDrawable(){
+    initScrollCache();
+
+    if (mScrollCache->scrollBar == nullptr) {
+        mScrollCache->scrollBar = new ScrollBarDrawable();
+        mScrollCache->scrollBar->setState(getDrawableState());
+        mScrollCache->scrollBar->setCallback(this);
+    }
 }
 
 ScrollabilityCache*View::getScrollCache(){
@@ -1873,6 +1920,42 @@ int View::getScrollBarFadeDuration() {
 
 void View::setScrollBarFadeDuration(int scrollBarFadeDuration) {
     getScrollCache()->scrollBarFadeDuration = scrollBarFadeDuration;
+}
+
+void View::setVerticalScrollbarThumbDrawable(Drawable* drawable){
+    initializeScrollBarDrawable();
+    mScrollCache->scrollBar->setVerticalThumbDrawable(drawable);
+}
+
+void View::setVerticalScrollbarTrackDrawable(Drawable* drawable){
+    initializeScrollBarDrawable();
+    mScrollCache->scrollBar->setVerticalTrackDrawable(drawable);
+}
+
+void View::setHorizontalScrollbarThumbDrawable(Drawable* drawable){
+    initializeScrollBarDrawable();
+    mScrollCache->scrollBar->setHorizontalThumbDrawable(drawable);
+}
+
+void View::setHorizontalScrollbarTrackDrawable(Drawable* drawable){
+    initializeScrollBarDrawable();
+    mScrollCache->scrollBar->setHorizontalTrackDrawable(drawable);
+}
+
+Drawable* View::getVerticalScrollbarThumbDrawable()const{
+    return mScrollCache ? mScrollCache->scrollBar->getVerticalThumbDrawable() : nullptr;
+}
+
+Drawable* View::getVerticalScrollbarTrackDrawable()const{
+    return mScrollCache  ? mScrollCache->scrollBar->getVerticalTrackDrawable() : nullptr;
+}
+
+Drawable* View::getHorizontalScrollbarThumbDrawable()const{
+    return mScrollCache ? mScrollCache->scrollBar->getHorizontalThumbDrawable() : nullptr;
+}
+
+Drawable* View::getHorizontalScrollbarTrackDrawable()const{
+    return mScrollCache ? mScrollCache->scrollBar->getHorizontalTrackDrawable() : nullptr;
 }
 
 void View::computeScroll(){
@@ -4503,7 +4586,7 @@ void View::setPressed(bool pressed){
     dispatchSetPressed(pressed);
 }
 
-void View::setPressed(bool pressed,int x,int y){
+void View::setPressed(bool pressed,float x,float y){
     if(pressed)
         drawableHotspotChanged(x,y);
     setPressed(pressed);
@@ -5432,7 +5515,86 @@ void View::onLayout(bool change,int l,int t,int w,int h){
 }
 
 bool View::shouldDrawRoundScrollbar()const{
-    return ViewConfiguration::isScreenRound();
+    if(!ViewConfiguration::isScreenRound()||(mAttachInfo==nullptr)) return false;
+    View* rootView = getRootView();
+    const int height = getHeight();
+    const int width  = getWidth();
+    const int displayHeight = rootView->getHeight();
+    const int displayWidth  = rootView->getWidth();
+    if((height!=displayHeight)||(width!=displayWidth)) return false;
+    return true;
+}
+
+void View::setTooltipText(const std::string& tooltipText) {
+    if (tooltipText.empty()){//TextUtils::isEmpty(tooltipText)) {
+        setFlags(0, TOOLTIP);
+        hideTooltip();
+        mTooltipInfo = nullptr;
+    } else {
+        setFlags(TOOLTIP, TOOLTIP);
+        if (mTooltipInfo == nullptr) {
+            mTooltipInfo = new TooltipInfo();
+            mTooltipInfo->mShowTooltipRunnable = std::bind(&View::showHoverTooltip,this);
+            mTooltipInfo->mHideTooltipRunnable = std::bind(&View::hideTooltip,this);
+            mTooltipInfo->mHoverSlop = ViewConfiguration::get(mContext).getScaledHoverSlop();
+            mTooltipInfo->clearAnchorPos();
+        }
+        mTooltipInfo->mTooltipText = tooltipText;
+    }
+}
+
+std::string View::getTooltipText()const{
+    return mTooltipInfo?mTooltipInfo->mTooltipText:std::string("");
+}
+
+void View::hideTooltip(){
+    if (mTooltipInfo == nullptr) {
+        return;
+    }
+    removeCallbacks(mTooltipInfo->mShowTooltipRunnable);
+    if (mTooltipInfo->mTooltipPopup == nullptr) {
+        return;
+    }
+    //mTooltipInfo->mTooltipPopup->hide();
+    //mTooltipInfo->mTooltipPopup = nullptr;
+    mTooltipInfo->mTooltipFromLongClick = false;
+    mTooltipInfo->clearAnchorPos();
+    if (mAttachInfo != nullptr) {
+        mAttachInfo->mTooltipHost = nullptr;
+    }
+    // The available accessibility actions have changed
+    //notifyViewAccessibilityStateChangedIfNeeded(CONTENT_CHANGE_TYPE_UNDEFINED);
+}
+
+bool View::showLongClickTooltip(int x, int y) {
+    removeCallbacks(mTooltipInfo->mShowTooltipRunnable);
+    removeCallbacks(mTooltipInfo->mHideTooltipRunnable);
+    return showTooltip(x, y, true);
+}
+
+bool View::showHoverTooltip() {
+    return showTooltip(mTooltipInfo->mAnchorX, mTooltipInfo->mAnchorY, false);
+}
+
+bool View::showTooltip(int x, int y, bool fromLongClick){
+    if (mAttachInfo == nullptr || mTooltipInfo == nullptr) {
+        return false;
+    }
+    if (fromLongClick && (mViewFlags & ENABLED_MASK) != ENABLED) {
+        return false;
+    }
+    if (true){//TextUtils::isEmpty(mTooltipInfo->mTooltipText)) {
+        return false;
+    }
+    hideTooltip();
+    mTooltipInfo->mTooltipFromLongClick = fromLongClick;
+    //mTooltipInfo->mTooltipPopup = new TooltipPopup(getContext());
+    const bool fromTouch = (mPrivateFlags3 & PFLAG3_FINGER_DOWN) == PFLAG3_FINGER_DOWN;
+    //mTooltipInfo->mTooltipPopup->show(this, x, y, fromTouch, mTooltipInfo.mTooltipText);
+    mAttachInfo->mTooltipHost = this;
+    // The available accessibility actions have changed
+    //notifyViewAccessibilityStateChangedIfNeeded(CONTENT_CHANGE_TYPE_UNDEFINED);
+    return true;
 }
 
 void View::layout(int l, int t, int w, int h){
@@ -5556,7 +5718,39 @@ bool View::dispatchKeyEvent(KeyEvent&event){
 }
 
 bool View::dispatchTooltipHoverEvent(MotionEvent& event){
-    return false;
+    if (mTooltipInfo == nullptr) {
+            return false;
+    }
+    switch(event.getAction()) {
+    case MotionEvent::ACTION_HOVER_MOVE:
+        if ((mViewFlags & TOOLTIP) != TOOLTIP) {
+            break;
+        }
+        if (!mTooltipInfo->mTooltipFromLongClick && mTooltipInfo->updateAnchorPos(event)) {
+            if (mTooltipInfo->mTooltipPopup == nullptr) {
+                // Schedule showing the tooltip after a timeout.
+                removeCallbacks(mTooltipInfo->mShowTooltipRunnable);
+                postDelayed(mTooltipInfo->mShowTooltipRunnable,
+                    ViewConfiguration::getHoverTooltipShowTimeout());
+            }
+
+            // Hide hover-triggered tooltip after a period of inactivity.
+            // Match the timeout used by NativeInputManager to hide the mouse pointer
+            // (depends on SYSTEM_UI_FLAG_LOW_PROFILE being set).
+            const int  timeout = ViewConfiguration::getHoverTooltipHideTimeout();
+            removeCallbacks(mTooltipInfo->mHideTooltipRunnable);
+            postDelayed(mTooltipInfo->mHideTooltipRunnable, timeout);
+        }
+        return true;
+
+    case MotionEvent::ACTION_HOVER_EXIT:
+        mTooltipInfo->clearAnchorPos();
+        if (!mTooltipInfo->mTooltipFromLongClick) {
+            hideTooltip();
+        }
+        break;
+    }
+    return false;    
 }
 
 View* View::dispatchUnhandledKeyEvent(KeyEvent& evt) {
@@ -5897,10 +6091,13 @@ bool View::performClick(){
     return mListenerInfo!=nullptr && mListenerInfo->mOnClickListener!=nullptr;
 }
 
-bool View::performLongClickInternal(int x, int y){
-    bool handled=false;
+bool View::performLongClickInternal(float x, float y){
+    bool handled = false;
     if(mListenerInfo && mListenerInfo->mOnLongClickListener)
-        handled=mListenerInfo->mOnLongClickListener(*this);
+        handled = mListenerInfo->mOnLongClickListener(*this);
+    if((mViewFlags & TOOLTIP)==TOOLTIP){
+        if(!handled)handled = showLongClickTooltip((int) x, (int) y);
+    }
     return handled;
 }
 
@@ -5908,7 +6105,7 @@ bool View::performLongClick(){
    return performLongClickInternal(mLongClickX,mLongClickY);
 }
 
-bool View::performLongClick(int x,int y){
+bool View::performLongClick(float x,float y){
     mLongClickX = x;
     mLongClickY = y;
     const bool handled = performLongClick();
@@ -5921,7 +6118,7 @@ bool View::performClickInternal(){
     return performClick();
 }
 
-bool View::performContextClick(int x, int y) {
+bool View::performContextClick(float x, float y) {
     return performContextClick();
 }
 

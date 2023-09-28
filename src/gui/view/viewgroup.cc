@@ -143,7 +143,7 @@ ViewGroup::ViewGroup(int x,int y,int w,int h)
 
 void ViewGroup::initGroup(){
     // ViewGroup doesn't draw by default
-    if (!DEBUG_DRAW/*isShowingLayoutBounds()*/) {
+    if (!isShowingLayoutBounds()) {
         setFlags(WILL_NOT_DRAW, DRAW_MASK);
     }
     mGroupFlags = FLAG_CLIP_CHILDREN;
@@ -1898,7 +1898,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     }
     //if (usingRenderNodeProperties) canvas.insertInorderBarrier();
     
-    if (DEBUG_DRAW) onDebugDraw(canvas);
+    if (isShowingLayoutBounds()) onDebugDraw(canvas);
 
     if (clipToPadding) {
         while(clipSaveCount--)canvas.restore();
