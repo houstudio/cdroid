@@ -24,7 +24,7 @@ typedef struct {
     int format;
     int ishw;
     char*buffer;
-    char*bkbuffer;/*kernel buffer address*/
+    char*kbuffer;/*kernel buffer address*/
 } FBSURFACE;
 
 static FBDEVICE devs[2]= {-1};
@@ -71,13 +71,6 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
     return E_OK;
 }
 
-GFX_ROTATION GFXGetRotation(int dispid) {
-    return ROTATE_0;
-}
-
-INT GFXSetRotation(int dispid,GFX_ROTATION r) {
-    return 0;
-}
 
 INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
@@ -189,13 +182,15 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         size_t mem_len=((dev->fix.smem_start) -((dev->fix.smem_start) & ~(getpagesize() - 1)));
         buffer_size=surf->height*dev->fix.line_length;
         setfbinfo(surf);
+	surf->kbuffer=(dev->fix.smem_start);
         surf->buffer=(char*)mmap( NULL,buffer_size,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
         surf->pitch=dev->fix.line_length;
     } else {
+	surf->kbuffer=0;
         surf->buffer=(char*)malloc(buffer_size);
     }
     surf->ishw=hwsurface;
-    LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
+    LOGV("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
 }

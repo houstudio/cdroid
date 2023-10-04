@@ -32,14 +32,20 @@ typedef struct {
     int current;
     int alpha;
     size_t msize;
+    size_t alloced;/*pre allocated memory size*/
     char*buffer;//drawbuffer
-    char*orig_buffer;//used only in double buffer*/
-    MI_PHY kbuffer;/*kernel buffer address*/
+    char*orig_buffer;/*used only in double buffer*/
+    MI_PHY kbuffer;/*kernel buffer address,MI_PHY unsigned long long*/
 } FBSURFACE;
+
+#define DOUBLE_BUFFER 0
+#define USE_PREALLOC_SURFACE 1
 
 static FBDEVICE devs[2]= {-1};
 static FBSURFACE *primarySurface;
-static GFXRect screenMargin={60,0,60,0};
+static FBSURFACE devSurfaces[32];
+/*if screensize it not macthed the driver size,margins is required*/
+static GFXRect screenMargin={0,0,0,0};
 static void gfxexit() {
     LOGI("gfxexit");
     MI_GFX_Close();
@@ -73,6 +79,23 @@ int GFXInit() {
     LOGI("FBIOPUT_VSCREENINFO=%d",ret);
     LOGI("fb solution=%dx%d accel_flags=0x%x ScreenMargin=(%d,%d,%d,%d)",dev->var.xres,dev->var.yres,dev->var.accel_flags,
 		    screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
+    memset(devSurfaces,0,sizeof(devSurfaces));
+    MI_PHY memstart = devs[0].fix.smem_start;
+    size_t i , offset =0;
+    for(i=0;offset<dev->fix.smem_len;i++){
+        size_t alloced;
+        devSurfaces[i].kbuffer = memstart +offset;
+        if(i==0)
+            alloced = (dev->var.yres*dev->fix.line_length);
+        else
+            alloced = (dev->var.yres-screenMargin.y-screenMargin.h)*dev->fix.line_length;
+        if(devSurfaces[i].kbuffer+alloced>memstart+dev->fix.smem_len)
+            alloced = memstart+dev->fix.smem_len-devSurfaces[i].kbuffer;
+        devSurfaces[i].alloced = alloced;
+        offset += alloced;
+        LOGD("surface[%d] addr=%llx size=%d",i,devSurfaces[i].kbuffer,alloced);
+    }
+    LOGI("%d surfaces is configured for app usage",i);
     return E_OK;
 }
 
@@ -224,9 +247,21 @@ static int setfbinfo(FBSURFACE*surf) {
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }
-#define DOUBLE_BUFFER 0
+
+static FBSURFACE*getFreeFace(){
+    for(int i=0;i<sizeof(devSurfaces)/sizeof(FBSURFACE);i++){
+        if(devSurfaces[i].kbuffer&&devSurfaces[i].buffer==NULL)
+	    return devSurfaces+i; 
+    }
+    return NULL;
+}
+
 INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
+#ifdef USE_PREALLOC_SURFACE
+    FBSURFACE*surf=getFreeFace();
+#else
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+#endif
     FBDEVICE*dev=&devs[dispid];
     surf->dispid=dispid;
     surf->width =hwsurface?dev->var.xres:width;
@@ -239,15 +274,15 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->current = 0;
     surf->msize= surf->pitch*surf->height;
 
-    MI_PHY phaddr=dev->fix.smem_start;
     MI_S32 ret=0;
     if(hwsurface) {
 #if DOUBLE_BUFFER
         surf->msize*=2;
 #endif
-        surf->buffer=mmap(0/*dev->fix.smem_start*/,surf->msize,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0);
-	//MI_SYS_MMA_Alloc(NULL/*"mma_heap_name0"*/,surf->msize,&phaddr);
-	//ret=MI_SYS_Mmap(phaddr,surf->msize, (void**)&surf->buffer, FALSE);
+#ifndef USE_PREALLOC_SURFACE
+        surf->kbuffer = dev->fix.smem_start;
+#endif
+        ret=MI_SYS_Mmap(surf->kbuffer,surf->msize,(void**)&surf->buffer,FALSE);
         dev->var.yoffset=0;
         LOGI("ioctl offset(0)=%d dev=%p ret=%d",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev,ret);
 #if DOUBLE_BUFFER
@@ -256,22 +291,20 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 #endif
         primarySurface = surf;
     } else {
-	int i=0;
-	char name[32];
-	sprintf(name,"surf_%p",surf);
-	//while((i++<3)&&(phaddr==dev->fix.smem_start)){
-            ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&phaddr);
-	//}
-        LOGI("surface %p phyaddr=%x ret=%d",surf,phaddr,ret);
-        MI_SYS_Mmap(phaddr, surf->msize, (void**)&surf->buffer, FALSE);
+#ifdef USE_PREALLOC_SURFACE
+        ret=MI_SYS_Mmap(surf->kbuffer,surf->msize,(void**)&surf->buffer,FALSE);
+#else	
+        ret=MI_SYS_MMA_Alloc("mma_heap_name0",surf->msize,&surf->kbuffer);
+        LOGI("surface %p phyaddr=%x ret=%d",surf,surf->kbuffer,ret);
+        MI_SYS_Mmap(surf->kbuffer, surf->msize, (void**)&surf->buffer, FALSE);
+#endif
     }
-    surf->kbuffer = phaddr;
-    MI_SYS_MemsetPa(phaddr,0x000000,surf->msize);
+    MI_SYS_MemsetPa(surf->kbuffer,0x000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
     surf->alpha=255;
-    LOGI("Surface=%p buf=%p/%llx/%llu size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,phaddr,surf->kbuffer,surf->width,surf->height,surf->msize,hwsurface);
+    LOGI("Surface=%p buf=%p/%llx size=%dx%d/%d hw=%d\r\n",surf,surf->buffer,surf->kbuffer,surf->width,surf->height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -358,9 +391,14 @@ INT GFXDestroySurface(HANDLE surface) {
     LOGI("GFXDestroySurface %p/%p",surf,surf->buffer);
     if(surf->kbuffer) {
         MI_SYS_Munmap(surf->buffer,surf->msize);
+#ifndef USE_PREALLOC_SURFACE
         MI_SYS_MMA_Free((MI_PHY)surf->kbuffer);
+#endif
+        surf->buffer = NULL;
     } else if(surf->buffer) {
+#ifndef USE_PREALLOC_SURFACE
         free(surf->buffer);
+#endif
     }
     free(surf);
     return 0;
