@@ -11,6 +11,7 @@ TOOLCHAINS["RISCVD211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
 TOOLCHAINS["R818"]=${TOPDIR}/cmake/r818-toolchain.cmake
 TOOLCHAINS["D211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
 TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
+TOOLCHAINS["INGENIC"]=${TOPDIR}/cmake/ingenic-x2600-toolchain.cmake
 
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 
@@ -23,6 +24,7 @@ DEPLIBS["RISCVD211"]=${VCPKGROOT}/installed/riscv64-linux-dynamic
 DEPLIBS["R818"]=${VCPKGROOT}/installed/r818-linux
 DEPLIBS["D211"]=${VCPKGROOT}/installed/riscv64-d211-linux
 DEPLIBS["HI3536"]=${VCPKGROOT}/installed/hisi3536-linux
+DEPLIBS["INGENIC"]=${VCPKGROOT}/installed/ingenic-linux
 
 CDROID_VALID_PORTS="x64"
 SHOWHELP=0
