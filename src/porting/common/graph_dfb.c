@@ -12,7 +12,7 @@ NGL_MODULE(GRAPH);
 static IDirectFB *directfb=NULL;
 static IDirectFBSurface*primarySurface;
 static IDirectFBDisplayLayer *primaryLayer;
-static GFXRect screenMargin= {60,0,60,0};
+static GFXRect screenMargin= {0,0,0,0};
 
 static void DFBDisplayLayerCBK(DFBDisplayLayerID layer_id, DFBDisplayLayerDescription  desc, void *callbackdata) {
     LOGD("Layer %d[%s] type:%x surface.caps=%x accessor=%x",layer_id,desc.name,desc.type,desc.surface_caps,desc.surface_accessor);

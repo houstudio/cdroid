@@ -11,6 +11,7 @@
 #include <core/eventcodes.h>
 #include <cdinput.h>
 #include <ingenic2d.h>
+#include <libhardware2/fb.h>
 
 typedef struct {
     int fb;
@@ -37,6 +38,7 @@ INT GFXInit() {
     if(devs[0].fb>=0)return E_OK;
     memset(devs,0,sizeof(devs));
     FBDEVICE*dev=&devs[0];
+#if 0
     dev->fb=open("/dev/fb0", O_RDWR);
     // Get fixed screen information
     if(ioctl(dev->fb, FBIOGET_FSCREENINFO, &dev->fix) == -1) {
@@ -50,8 +52,14 @@ INT GFXInit() {
         LOGE("Error reading variable information");
         return E_ERROR;
     }
-
+#else
+    struct fb_device_info fb_info;
+    dev->fb=fb_open("/dev/fb0",&fb_info);
+    dev->fix=fb_info.fix;
+    dev->var=fb_info.var;
+#endif
     dev->var.yoffset=0;//set first screen memory for display
+    LOGI("fb_open fd =%d fb_enabled=%d",dev->fb,fb_enable(dev->fb));
     g2d = ingenic_2d_open();
     LOGI("FBIOPUT_VSCREENINFO=%d g2d=%p",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),g2d);
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags);

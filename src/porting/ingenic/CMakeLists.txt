@@ -32,6 +32,7 @@ link_directories(${PROJECT_SOURCE_DIR} ./lib2d)
 list(APPEND INGENIC_LIBS pthread hardware2)
 include_directories(./
     ../common ../include
+    lib2d/include
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${INGENIC_INCLUDE_DIRS}
