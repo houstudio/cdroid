@@ -564,7 +564,7 @@ void Switch::animateThumbToCheckedState(bool newCheckedState){
     mPositionAnimator->setAutoCancel(true);
     mPositionAnimator->start();
     mPositionAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-         setThumbPosition(anim.getAnimatedValue().get<float>());
+         setThumbPosition(GET_VARIANT(anim.getAnimatedValue(),float));
     }));
 }
 

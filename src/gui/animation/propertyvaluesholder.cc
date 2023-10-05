@@ -39,17 +39,17 @@ void PropertyValuesHolder::evaluate(AnimateValue& out, const AnimateValue& from,
            float fraction) const{
     switch(from.index()){
     case 0:
-        out = (int)((1.f - fraction)*from.get<int>() +  fraction * to.get<int>());
+        out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
         break;
     case 1:{
-        float a=lerp((from.get<uint32_t>()>>24)/255.f,(to.get<uint32_t>()>>24)/255.f,fraction);
-        float r=lerp(((from.get<uint32_t>()>>16)&0xFF)/255.f,((to.get<uint32_t>()>>16)&0xFF)/255.f,fraction);
-        float g=lerp(((from.get<uint32_t>()>>8)&0xFF)/255.f,((to.get<uint32_t>()>>8)&0xFF)/255.f,fraction);
-        float b=lerp((from.get<uint32_t>()&0xFF)/255.f,(to.get<uint32_t>()&0xFF)/255.f,fraction);
+        float a=lerp((GET_VARIANT(from,uint32_t)>>24)/255.f,(GET_VARIANT(to,uint32_t)>>24)/255.f,fraction);
+        float r=lerp(((GET_VARIANT(from,uint32_t)>>16)&0xFF)/255.f,((GET_VARIANT(to,uint32_t)>>16)&0xFF)/255.f,fraction);
+        float g=lerp(((GET_VARIANT(from,uint32_t)>>8)&0xFF)/255.f,((GET_VARIANT(to,uint32_t)>>8)&0xFF)/255.f,fraction);
+        float b=lerp((GET_VARIANT(from,uint32_t)&0xFF)/255.f,(GET_VARIANT(to,uint32_t)&0xFF)/255.f,fraction);
         out=((uint32_t)(a*255.f)<<24)|((uint32_t)(r*255)<<16)|((uint32_t)(g*255)<<8)|((uint32_t)(b*255));
         }break;
     case 2:
-        out = from.get<float>() * (1.f - fraction) + to.get<float>() * fraction;
+        out = GET_VARIANT(from,float) * (1.f - fraction) + GET_VARIANT(to,float) * fraction;
         break;
     }
 }

@@ -102,7 +102,7 @@ void RippleForeground::startSoftwareEnter() {
     tweenRadius->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
     tweenRadius->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         LOGV("mTweenRadius=%f [%f,%f,%f] opacity=%f",getCurrentRadius(),mStartRadius,mTargetRadius,mOpacity);
-        mTweenRadius=anim.getAnimatedValue().get<float>();
+        mTweenRadius = GET_VARIANT(anim.getAnimatedValue(),float);
         onAnimationPropertyChanged();
     }));
     tweenRadius->start();
@@ -112,7 +112,7 @@ void RippleForeground::startSoftwareEnter() {
     tweenOrigin->setDuration(RIPPLE_ORIGIN_DURATION);
     tweenOrigin->setInterpolator(new DecelerateInterpolator());//DECELERATE_INTERPOLATOR);
     tweenOrigin->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        mTweenX=mTweenY=anim.getAnimatedValue().get<float>();
+        mTweenX=mTweenY=GET_VARIANT(anim.getAnimatedValue(),float);
         onAnimationPropertyChanged();
     }));
     tweenOrigin->start();
@@ -122,7 +122,7 @@ void RippleForeground::startSoftwareEnter() {
     opacity->setDuration(OPACITY_ENTER_DURATION);
     opacity->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
     opacity->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        mOpacity=anim.getAnimatedValue().get<float>();
+        mOpacity=GET_VARIANT(anim.getAnimatedValue(),float);
         onAnimationPropertyChanged();
     }));
     opacity->start();
@@ -136,7 +136,7 @@ void RippleForeground::startSoftwareExit() {
     opacity->addListener(mAnimationListener);
     opacity->setStartDelay(computeFadeOutDelay());
     opacity->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        mOpacity=anim.getAnimatedValue().get<float>();
+        mOpacity=GET_VARIANT(anim.getAnimatedValue(),float);
     }));
 
     opacity->start();

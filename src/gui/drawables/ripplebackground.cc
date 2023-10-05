@@ -91,8 +91,7 @@ void RippleBackground::onStateChanged(){
     mAnimator->setInterpolator(new LinearInterpolator());//LINEAR_INTERPOLATOR);
     mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         PropertyValuesHolder*fp=anim.getValues(0);
-        LOGD("mOpacity=%f",fp->getAnimatedValue().get<float>());
-        mOpacity=fp->getAnimatedValue().get<float>();
+        mOpacity = GET_VARIANT(fp->getAnimatedValue(),float);
         invalidateSelf();
     }));
 

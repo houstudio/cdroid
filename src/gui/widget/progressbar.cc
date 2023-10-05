@@ -316,7 +316,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
             mAnimator->setInterpolator(new  DecelerateInterpolator());
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-                setVisualProgress(R::id::progress,anim.getAnimatedValue().get<float>());
+                setVisualProgress(R::id::progress,GET_VARIANT(anim.getAnimatedValue(),float));
             }));
 	    mAnimator->addListener(mAnimtorListener);
         }

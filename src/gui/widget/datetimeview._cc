@@ -1,0 +1,363 @@
+namespace cdroid{
+
+DateTimeView::DateTimeView(Context context,const AttributeSet& attrs) {
+   :TextView(context, attrs);
+    setShowRelativeTime(attrs.getBoolean("showRelative",false);
+}
+
+void DateTimeView::onAttachedToWindow() {
+    TextView::onAttachedToWindow();
+    ReceiverInfo ri = sReceiverInfo.get();
+    if (ri == null) {
+        ri = new ReceiverInfo();
+        sReceiverInfo.set(ri);
+    }
+    ri.addView(this);
+    // The view may not be added to the view hierarchy immediately right after setTime()
+    // is called which means it won't get any update from intents before being added.
+    // In such case, the view might show the incorrect relative time after being added to the
+    // view hierarchy until the next update intent comes.
+    // So we update the time here if mShowRelativeTime is enabled to prevent this case.
+    if (mShowRelativeTime) {
+        update();
+    }
+}
+
+void DateTimeView::onDetachedFromWindow() {
+    TextView::onDetachedFromWindow();
+    final ReceiverInfo ri = sReceiverInfo.get();
+    if (ri != null) {
+        ri.removeView(this);
+    }
+}
+
+void DateTimeView::setTime(long timeMillis) {
+    mTimeMillis = timeMillis;
+    LocalDateTime dateTime = toLocalDateTime(timeMillis, ZoneId.systemDefault());
+    mLocalTime = dateTime.withSecond(0);
+    update();
+}
+
+void DateTimeView::setShowRelativeTime(bool showRelativeTime) {
+    mShowRelativeTime = showRelativeTime;
+    updateNowText();
+    update();
+}
+
+bool DateTimeView::isShowRelativeTime() const{
+    return mShowRelativeTime;
+}
+
+void DateTimeView::setVisibility(int visibility) {
+    bool gotVisible = visibility != GONE && getVisibility() == GONE;
+    TextView::setVisibility(visibility);
+    if (gotVisible) {
+        update();
+    }
+}
+
+void DateTimeView::update() {
+    if (mLocalTime == null || getVisibility() == GONE) {
+        return;
+    }
+    if (mShowRelativeTime) {
+        updateRelativeTime();
+        return;
+    }
+
+    int display;
+    ZoneId zoneId = ZoneId.systemDefault();
+
+    // localTime is the local time for mTimeMillis but at zero seconds past the minute.
+    LocalDateTime localTime = mLocalTime;
+    LocalDateTime localStartOfDay =
+            LocalDateTime.of(localTime.toLocalDate(), LocalTime.MIDNIGHT);
+    LocalDateTime localTomorrowStartOfDay = localStartOfDay.plusDays(1);
+    // now is current local time but at zero seconds past the minute.
+    LocalDateTime localNow = LocalDateTime.now(zoneId).withSecond(0);
+
+    long twelveHoursBefore = toEpochMillis(localTime.minusHours(12), zoneId);
+    long twelveHoursAfter = toEpochMillis(localTime.plusHours(12), zoneId);
+    long midnightBefore = toEpochMillis(localStartOfDay, zoneId);
+    long midnightAfter = toEpochMillis(localTomorrowStartOfDay, zoneId);
+    long time = toEpochMillis(localTime, zoneId);
+    long now = toEpochMillis(localNow, zoneId);
+
+    // Choose the display mode
+    choose_display: {
+        if ((now >= midnightBefore && now < midnightAfter)
+                || (now >= twelveHoursBefore && now < twelveHoursAfter)) {
+            display = SHOW_TIME;
+            break choose_display;
+        }
+        // Else, show month day and year.
+        display = SHOW_MONTH_DAY_YEAR;
+        break choose_display;
+    }
+
+    // Choose the format
+    DateFormat format;
+    if (display == mLastDisplay && mLastFormat != null) {
+        // use cached format
+        format = mLastFormat;
+    } else {
+        switch (display) {
+        case SHOW_TIME:
+            format = getTimeFormat();
+            break;
+        case SHOW_MONTH_DAY_YEAR:
+            format = DateFormat.getDateInstance(DateFormat.SHORT);
+            break;
+        default:
+            throw new RuntimeException("unknown display value: " + display);
+       }
+       mLastFormat = format;
+    }
+
+    // Set the text
+    String text = format.format(new Date(time));
+    maybeSetText(text);
+
+    // Schedule the next update
+    if (display == SHOW_TIME) {
+        // Currently showing the time, update at the later of twelve hours after or midnight.
+        mUpdateTimeMillis = twelveHoursAfter > midnightAfter ? twelveHoursAfter : midnightAfter;
+    } else {
+        // Currently showing the date
+        if (mTimeMillis < now) {
+            // If the time is in the past, don't schedule an update
+            mUpdateTimeMillis = 0;
+        } else {
+            // If hte time is in the future, schedule one at the earlier of twelve hours
+            // before or midnight before.
+            mUpdateTimeMillis = twelveHoursBefore < midnightBefore
+                    ? twelveHoursBefore : midnightBefore;
+        }
+    }
+}
+
+void DateTimeView::updateRelativeTime() {
+    long now = System.currentTimeMillis();
+    long duration = Math.abs(now - mTimeMillis);
+    int count;
+    long millisIncrease;
+    boolean past = (now >= mTimeMillis);
+    String result;
+    if (duration < MINUTE_IN_MILLIS) {
+        maybeSetText(mNowText);
+        mUpdateTimeMillis = mTimeMillis + MINUTE_IN_MILLIS + 1;
+        return;
+    } else if (duration < HOUR_IN_MILLIS) {
+        count = (int)(duration / MINUTE_IN_MILLIS);
+        result = getContext().getResources().getString(past
+                ? com.android.internal.R.string.duration_minutes_shortest
+                : com.android.internal.R.string.duration_minutes_shortest_future,
+                count);
+        millisIncrease = MINUTE_IN_MILLIS;
+    } else if (duration < DAY_IN_MILLIS) {
+        count = (int)(duration / HOUR_IN_MILLIS);
+        result = getContext().getResources().getString(past
+                        ? com.android.internal.R.string.duration_hours_shortest
+                        : com.android.internal.R.string.duration_hours_shortest_future,
+                        count);
+        millisIncrease = HOUR_IN_MILLIS;
+    } else if (duration < YEAR_IN_MILLIS) {
+        // In weird cases it can become 0 because of daylight savings
+        LocalDateTime localDateTime = mLocalTime;
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalDateTime localNow = toLocalDateTime(now, zoneId);
+
+        count = Math.max(Math.abs(dayDistance(localDateTime, localNow)), 1);
+        result = getContext().getResources().getString(past
+                ? com.android.internal.R.string.duration_days_shortest
+                : com.android.internal.R.string.duration_days_shortest_future,
+                count);
+        if (past || count != 1) {
+            mUpdateTimeMillis = computeNextMidnight(localNow, zoneId);
+            millisIncrease = -1;
+        } else {
+            millisIncrease = DAY_IN_MILLIS;
+        }
+
+    } else {
+        count = (int)(duration / YEAR_IN_MILLIS);
+        result = getContext().getResources().getString(past
+                ? com.android.internal.R.string.duration_years_shortest
+                : com.android.internal.R.string.duration_years_shortest_future,
+                count);
+        millisIncrease = YEAR_IN_MILLIS;
+    }
+    if (millisIncrease != -1) {
+        if (past) {
+            mUpdateTimeMillis = mTimeMillis + millisIncrease * (count + 1) + 1;
+        } else {
+            mUpdateTimeMillis = mTimeMillis - millisIncrease * count + 1;
+        }
+    }
+    maybeSetText(result);
+}
+
+void DateTimeView::maybeSetText(const std::string& text) {
+    if (TextUtils.equals(getText(), text)) {
+        return;
+    }
+    setText(text);
+}
+
+long DateTimeView::computeNextMidnight(LocalDateTime time, ZoneId zoneId) {
+    // This ignores the chance of overflow: it should never happen.
+    LocalDate tomorrow = time.toLocalDate().plusDays(1);
+    LocalDateTime nextMidnight = LocalDateTime.of(tomorrow, LocalTime.MIDNIGHT);
+    return toEpochMillis(nextMidnight, zoneId);
+}
+
+void DateTimeView::onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+    updateNowText();
+    update();
+}
+
+void DateTimeView::updateNowText() {
+    if (!mShowRelativeTime) {
+        return;
+    }
+    mNowText = getContext().getResources().getString(
+            com.android.internal.R.string.now_string_shortest);
+}
+
+int DateTimeView::dayDistance(LocalDateTime start, LocalDateTime end) {
+    return (int) (end.getLong(JulianFields.JULIAN_DAY)
+            - start.getLong(JulianFields.JULIAN_DAY));
+}
+
+DateFormat DateTimeView::getTimeFormat() {
+    return android.text.format.DateFormat.getTimeFormat(getContext());
+}
+
+void DateTimeView::clearFormatAndUpdate() {
+    mLastFormat = null;
+    update();
+}
+
+void DateTimeView::setReceiverHandler(Handler handler) {
+    ReceiverInfo ri = sReceiverInfo.get();
+    if (ri == null) {
+        ri = new ReceiverInfo();
+        sReceiverInfo.set(ri);
+    }
+    ri.setHandler(handler);
+}
+
+LocalDateTime DateTimeView::toLocalDateTime(long timeMillis, ZoneId zoneId) {
+    // java.time types like LocalDateTime / Instant can support the full range of "long millis"
+    // with room to spare so we do not need to worry about overflow / underflow and the rsulting
+    // exceptions while the input to this class is a long.
+    Instant instant = Instant.ofEpochMilli(timeMillis);
+    return LocalDateTime.ofInstant(instant, zoneId);
+}
+
+long DateTimeView::toEpochMillis(LocalDateTime time, ZoneId zoneId) {
+    Instant instant = time.toInstant(zoneId.getRules().getOffset(time));
+    return instant.toEpochMilli();
+}
+
+private static class ReceiverInfo {
+    private final ArrayList<DateTimeView> mAttachedViews = new ArrayList<DateTimeView>();
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    public void onReceive(Context context, Intent intent) {
+        String action = intent.getAction();
+        if (Intent.ACTION_TIME_TICK.equals(action)) {
+            if (System.currentTimeMillis() < getSoonestUpdateTime()) {
+                // The update() function takes a few milliseconds to run because of
+                // all of the time conversions it needs to do, so we can't do that
+                // every minute.
+                return;
+            }
+        }
+        // ACTION_TIME_CHANGED can also signal a change of 12/24 hr. format.
+        updateAll();
+    }
+};
+
+ContentObserver mObserver = new ContentObserver(new Handler()) {
+    void onChange(boolean selfChange) {
+        updateAll();
+    }
+};
+
+Handler mHandler = new Handler();
+
+void addView(DateTimeView v) {
+    synchronized (mAttachedViews) {
+        bool register = mAttachedViews.isEmpty();
+        mAttachedViews.add(v);
+        if (register) {
+            register(getApplicationContextIfAvailable(v.getContext()));
+        }
+    }
+}
+
+void removeView(DateTimeView v) {
+    synchronized (mAttachedViews) {
+        final bool removed = mAttachedViews.remove(v);
+        // Only unregister once when we remove the last view in the list otherwise we risk
+        // trying to unregister a receiver that is no longer registered.
+        if (removed && mAttachedViews.isEmpty()) {
+             unregister(getApplicationContextIfAvailable(v.getContext()));
+        }
+    }
+}
+
+void updateAll() {
+    synchronized (mAttachedViews) {
+        final int count = mAttachedViews.size();
+        for (int i = 0; i < count; i++) {
+            DateTimeView view = mAttachedViews.get(i);
+            view.post(() -> view.clearFormatAndUpdate());
+        }
+    }
+}
+
+long getSoonestUpdateTime() {
+    long result = Long.MAX_VALUE;
+    synchronized (mAttachedViews) {
+        final int count = mAttachedViews.size();
+        for (int i = 0; i < count; i++) {
+            final long time = mAttachedViews.get(i).mUpdateTimeMillis;
+            if (time < result) {
+                result = time;
+            }
+        }
+    }
+    return result;
+}
+
+        static final Context getApplicationContextIfAvailable(Context context) {
+            final Context ac = context.getApplicationContext();
+            return ac != null ? ac : ActivityThread.currentApplication().getApplicationContext();
+        }
+
+        void register(Context context) {
+            final IntentFilter filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_TIME_TICK);
+            filter.addAction(Intent.ACTION_TIME_CHANGED);
+            filter.addAction(Intent.ACTION_CONFIGURATION_CHANGED);
+            filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+            context.registerReceiver(mReceiver, filter, null, mHandler);
+        }
+
+        void unregister(Context context) {
+            context.unregisterReceiver(mReceiver);
+        }
+
+        public void setHandler(Handler handler) {
+            mHandler = handler;
+            synchronized (mAttachedViews) {
+                if (!mAttachedViews.isEmpty()) {
+                    unregister(mAttachedViews.get(0).getContext());
+                    register(mAttachedViews.get(0).getContext());
+                }
+            }
+        }
+    }
+}/*endof namespace*/

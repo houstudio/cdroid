@@ -1,7 +1,5 @@
 project(cdroid C CXX)
 
-set(CMAKE_CXX_STANDARD 11)
-
 option( GUI_STATIC "UI is static link" ON)
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")

@@ -213,7 +213,7 @@ void ExpandableLayout::animateSize(int targetExpansion) {
         mAnimator->setDuration(mDuration);
 
         mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim) {
-            setExpansion((float) anim.getAnimatedValue().get<float>());
+            setExpansion(GET_VARIANT(anim.getAnimatedValue(),float));
         }));
 
         Animator::AnimatorListener ls;

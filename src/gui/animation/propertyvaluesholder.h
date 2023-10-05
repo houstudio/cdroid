@@ -11,6 +11,11 @@
 #include <core/variant.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
+#if variant_CPP17_OR_GREATER
+   #define GET_VARIANT(vt,type) std::get<type>(vt)
+#else
+   #define GET_VARIANT(vt,type) vt.get<type>()
+#endif
 namespace cdroid{
 typedef nonstd::variant<int,uint32_t,float>AnimateValue;
 

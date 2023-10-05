@@ -25,7 +25,7 @@ TEST_F(ANIMATOR,callback){
 TEST_F(ANIMATOR,ofInt1){
     ValueAnimator*anim=ValueAnimator::ofInt({0,100});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        LOGD("value=%d",anim.getAnimatedValue().get<int>());
+        LOGD("value=%d",GET_VARIANT(anim.getAnimatedValue(),int));
     }));
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
@@ -37,7 +37,7 @@ TEST_F(ANIMATOR,ofInt2){
     iprop.setValues(std::vector<int>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&iprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        LOGD("value=%d",anim.getAnimatedValue().get<int>());
+        LOGD("value=%d",GET_VARIANT(anim.getAnimatedValue(),int));
     })); 
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
@@ -49,7 +49,7 @@ TEST_F(ANIMATOR,ofFloat){
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        LOGD("value=%f",anim.getAnimatedValue().get<float>());
+        LOGD("value=%f",GET_VARIANT(anim.getAnimatedValue(),float));
     })); 
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
@@ -62,7 +62,7 @@ TEST_F(ANIMATOR,start){
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        LOGD("value=%f",anim.getAnimatedValue().get<float>());
+        LOGD("value=%f",GET_VARIANT(anim.getAnimatedValue(),float));
     }));
     anim->setDuration(200);
     anim->start();
@@ -75,7 +75,7 @@ TEST_F(ANIMATOR,startDelay){
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        LOGD("value=%f",anim.getAnimatedValue().get<float>());
+        LOGD("value=%f",GET_VARIANT(anim.getAnimatedValue(),float));
     }));
     anim->setDuration(200);
     anim->setStartDelay(1000);
@@ -107,7 +107,7 @@ TEST_F(ANIMATOR,loopdrivered){
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&iprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        LOGD("value=%d",anim.getAnimatedValue().get<int>());
+        LOGD("value=%d",GET_VARIANT(anim.getAnimatedValue(),int));
     })); 
     anim->setDuration(2000);
     anim->start();
@@ -137,8 +137,8 @@ TEST_F(ANIMATOR,translate){
         PropertyValuesHolder*xp=anim.getValues(0);
         PropertyValuesHolder*yp=anim.getValues(1);
         PropertyValuesHolder*cp=anim.getValues(2);
-        tv->setPos(xp->getAnimatedValue().get<int>(),yp->getAnimatedValue().get<int>());
-        tv->setBackgroundColor(cp->getAnimatedValue().get<uint32_t>());
+        tv->setPos(GET_VARIANT(xp->getAnimatedValue(),int),GET_VARIANT(yp->getAnimatedValue(),int));
+        tv->setBackgroundColor(GET_VARIANT(cp->getAnimatedValue(),uint32_t));
     }));
 
     anim->setDuration(5000);
@@ -158,7 +158,7 @@ TEST_F(ANIMATOR,scale){
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([tv](ValueAnimator&anim){
-        const float scale=anim.getAnimatedValue().get<float>();
+        const float scale=GET_VARIANT(anim.getAnimatedValue(),float);
         tv->setScaleX(scale);
         tv->setScaleY(scale);
     }));

@@ -18,7 +18,7 @@ SwipeHelper::SwipeHelper(Context*ctx) {
     mPreContentViewAnimator = ValueAnimator::ofFloat({.0f, 1.f});
     mPreContentViewAnimator->setInterpolator(new AccelerateDecelerateInterpolator());
     mPreContentViewAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        const float value = anim.getAnimatedValue().get<float>();
+        const float value = GET_VARIANT(anim.getAnimatedValue(),float);
         const int xx = mPrevStartX+(mPrevEndX-mPrevStartX)*value;
         Window* prev = (Window*)getPreContentView();
         LOGV("move PrevWindow(%p) to %d cancel=%d",prev,xx,mCancel);
@@ -28,7 +28,7 @@ SwipeHelper::SwipeHelper(Context*ctx) {
     mCurContentViewAnimator = ValueAnimator::ofFloat({.0f, 1.f});
     mCurContentViewAnimator->setInterpolator(new AccelerateDecelerateInterpolator());
     mCurContentViewAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-        const float value = anim.getAnimatedValue().get<float>();
+        const float value = GET_VARIANT(anim.getAnimatedValue(),float);
         const int xx = mCurrentStartX+(mCurrentEndX-mCurrentStartX)*value;
         Window* cur = (Window*)getCurContentView();
         LOGV("move CurrentWindow(%p) to %d cancel=%d",cur,xx,mCancel);
