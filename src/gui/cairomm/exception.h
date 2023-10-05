@@ -19,29 +19,24 @@
 #ifndef __CAIRO_EXCEPTION_H
 #define __CAIRO_EXCEPTION_H
 
-#include <cairomm/cairommconfig.h>
+#include <cairommconfig.h>
 
 #include <cairomm/enums.h>
 #include <stdexcept>
-
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-#define _ALLOW_KEYWORD_MACROS 1
-#define noexcept _NOEXCEPT
-#endif
 
 namespace Cairo
 {
 
 /** 
  */
-class CAIROMM_API logic_error: public std::logic_error
+class logic_error: public std::logic_error
 {
 public:
-  explicit logic_error(ErrorStatus status);
-  ~logic_error() noexcept override;
+  CAIROMM_API explicit logic_error(ErrorStatus status);
+  CAIROMM_API ~logic_error() noexcept override;
 
   //virtual const char* what() const noexcept;
-  ErrorStatus get_status_code() const;
+  CAIROMM_API ErrorStatus get_status_code() const;
 
 private:
   ErrorStatus m_status;

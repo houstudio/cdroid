@@ -80,6 +80,17 @@ cairo_status_t device_write_func_wrapper(void* closure, const unsigned char* dat
   return static_cast<cairo_status_t>((*write_func)(data, length));
 }
 
+//TODO: When we can break ABI, move the code from device_write_func_wrapper()
+// to c_device_write_func_wrapper() and remove device_write_func_wrapper().
+extern "C"
+{
+static cairo_status_t c_device_write_func_wrapper(
+  void* closure, const unsigned char* data, unsigned int length)
+{
+  return device_write_func_wrapper(closure, data, length);
+}
+} // extern "C"
+
 static void set_write_slot(cairo_device_t* surface,
                            Surface::SlotWriteFunc* slot) {
   // the slot will automatically be freed by device_free_slot() when the
@@ -91,8 +102,7 @@ static void set_write_slot(cairo_device_t* surface,
 RefPtr<Script> Script::create_for_stream(const Surface::SlotWriteFunc& write_func)
 {
   auto slot_copy = new Surface::SlotWriteFunc(write_func);
-  auto cobject = cairo_script_create_for_stream(device_write_func_wrapper,
-                                                           slot_copy);
+  auto cobject = cairo_script_create_for_stream(c_device_write_func_wrapper, slot_copy);
   check_status_and_throw_exception(cairo_device_status(cobject));
   set_write_slot(cobject, slot_copy);
   return make_refptr_for_instance<Script>(new Script(cobject, true /* has reference */));

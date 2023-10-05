@@ -21,7 +21,7 @@
 
 #include <cairomm/surface.h>
 #include <cairomm/enums.h>
-#include <cairo/cairo-features.h>
+#include <cairo-features.h>
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
 #include <cairo-win32.h>
@@ -120,7 +120,7 @@ public:
  *
  * @since 1.8
  */
-class Win32PrintingSurface : public Surface
+class CAIROMM_API Win32PrintingSurface : public Surface
 {
 public:
   explicit Win32PrintingSurface(cairo_surface_t* cobject, bool has_reference = false);

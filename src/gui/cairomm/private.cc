@@ -16,7 +16,7 @@
  * 02110-1301, USA.
  */
 
-#include <cairomm/cairommconfig.h> //For CAIROMM_EXCEPTIONS_ENABLED
+#include <cairommconfig.h> //For CAIROMM_EXCEPTIONS_ENABLED
 #include <cairomm/private.h>
 #include <cairomm/exception.h>
 #include <stdexcept>

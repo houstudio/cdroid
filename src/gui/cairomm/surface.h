@@ -45,13 +45,13 @@
 //See quartz_surface.h for QuartzSurface (Mac OS X).
 
 #ifdef CAIRO_HAS_PDF_SURFACE
-#include <cairo/cairo-pdf.h>
+#include <cairo-pdf.h>
 #endif // CAIRO_HAS_PDF_SURFACE
 #ifdef CAIRO_HAS_PS_SURFACE
-#include <cairo/cairo-ps.h>
+#include <cairo-ps.h>
 #endif // CAIRO_HAS_PS_SURFACE
 #ifdef CAIRO_HAS_SVG_SURFACE
-#include <cairo/cairo-svg.h>
+#include <cairo-svg.h>
 #endif // CAIRO_HAS_SVG_SURFACE
 
 // Experimental surfaces
@@ -79,7 +79,7 @@ class CAIROMM_API Surface
 {
 public:
   /**
-   * Type is used to describe the type of a given surface. The
+   * %Cairo::Surface::Type is used to describe the type of a given surface. The
    * surface types are also known as "backends" or "surface backends" within
    * cairo.
    *
@@ -131,10 +131,19 @@ public:
        */
       QUARTZ = CAIRO_SURFACE_TYPE_QUARTZ,
 
+#if !defined(WIN32) && !defined(CAIROMM_DISABLE_DEPRECATED)
       /**
        * The surface is of type win32
+       *
+       * @deprecated Use WIN32_SURFACE instead.
        */
       WIN32 = CAIRO_SURFACE_TYPE_WIN32,
+#endif // !WIN32 && !CAIROMM_DISABLE_DEPRECATED
+      /**
+       * The surface is of type win32
+       * @since 1.16.1
+       */
+      WIN32_SURFACE = CAIRO_SURFACE_TYPE_WIN32,
 
       /**
        * The surface is of type beos
@@ -225,8 +234,7 @@ public:
        * Surface::create()
        * @since 1.10
        */
-      SUBSURFACE = CAIRO_SURFACE_TYPE_SUBSURFACE,
-      COGL=CAIRO_SURFACE_TYPE_COGL
+      SUBSURFACE = CAIRO_SURFACE_TYPE_SUBSURFACE
   };
 
   /**
@@ -269,10 +277,7 @@ public:
        * Each fixel is a 16-bit quantity with red in the upper 5 bits, then green
        * in the middle 6 bits, and blue in the lower 5 bits
        */
-      RGB16_565 = CAIRO_FORMAT_RGB16_565,
-      //RGB30   =CAIRO_FORMAT_RGB30  , /*like RGB24 but with 10bpc. (Since 1.12)*/
-      //RGB96F  = CAIRO_FORMAT_RGB96F, /*3 floats, R, G, B. (Since 1.17.2)*/
-      //RGB128F = CAIRO_FORMAT_RGBA128F/*4 floats, R, G, B, A. (Since 1.17.2)*/
+      RGB16_565 = CAIRO_FORMAT_RGB16_565
   };
   /** For example:
    * <code>
@@ -367,7 +372,7 @@ public:
   /** Retrieves the default font rendering options for the surface. This allows
    * display surfaces to report the correct subpixel order for rendering on
    * them, print surfaces to disable hinting of metrics and so forth. The
-   * result can then be used with cairo_scaled_font_create().
+   * result can then be used with Cairo::ScaledFont::create().
    *
    * @param options 	a FontOptions object into which to store the retrieved
    * options. All existing values are overwritten
@@ -418,10 +423,10 @@ public:
 
   /** Sets an offset that is added to the device coordinates determined by the
    * CTM when drawing to surface. One use case for this function is when we
-   * want to create a Surface that redirects drawing for a portion of
+   * want to create a %Surface that redirects drawing for a portion of
    * an onscreen surface to an offscreen surface in a way that is completely
    * invisible to the user of the cairo API. Setting a transformation via
-   * cairo_translate() isn't sufficient to do this, since functions like
+   * Cairo::Context::translate() isn't sufficient to do this, since functions like
    * Cairo::Context::device_to_user() will expose the hidden offset.
    *
    * Note that the offset only affects drawing to the surface, not using the
@@ -436,9 +441,45 @@ public:
    */
   void get_device_offset(double& x_offset, double& y_offset) const;
 
-  void set_device_scale(double x_scale,double y_scale);
+  /** Sets a scale that is multiplied to the device coordinates determined by
+   * the CTM when drawing to surface. One common use for this is to render to
+   * very high resolution display devices at a scale factor, so that code that
+   * assumes 1 pixel will be a certain size will still work. Setting a
+   * transformation via Cairo::Context::scale() isn't sufficient to do this, since
+   * functions like Cairo::Context::device_to_user() will expose the hidden scale.
+   *
+   * Note that the scale affects drawing to the surface as well as using the
+   * surface in a source pattern.
+   *
+   * @param x_scale 	a scale factor in the X direction
+   * @param y_scale 	a scale factor in the Y direction
+   *
+   * @newin{1,18}
+   */
+  void set_device_scale(double x_scale, double y_scale);
 
-  void get_device_scale(double&x_scale,double&y_scale)const;
+  /** Sets x and y scale to the same value.
+   * See set_device_scale(double, double) for details.
+   *
+   * @param scale 	a scale factor in the X and Y direction
+   *
+   * @newin{1,18}
+   */
+  inline void set_device_scale(double scale) { set_device_scale(scale, scale); }
+
+  /** Returns a previous device scale set by set_device_scale().
+   *
+   * @newin{1,18}
+   */
+  void get_device_scale(double& x_scale, double& y_scale) const;
+
+  /** Returns the x and y average of a previous device scale set by
+   * set_device_scale().
+   *
+   * @newin{1,18}
+   */
+  double get_device_scale() const;
+
   /**
    * Set the horizontal and vertical resolution for image fallbacks.
    *
@@ -623,17 +664,17 @@ protected:
  * allocated by cairo or by the calling code. The supported image formats are
  * those defined in Format
  *
- * An ImageSurface is the most generic type of Surface and the only one that is
- * available by default.  You can either create an ImageSurface whose data is
- * managed by Cairo, or you can create an ImageSurface with a data buffer that
+ * An %ImageSurface is the most generic type of Surface and the only one that is
+ * available by default.  You can either create an %ImageSurface whose data is
+ * managed by Cairo, or you can create an %ImageSurface with a data buffer that
  * you allocated yourself so that you can have full access to the data.
  *
- * When you create an ImageSurface with your own data buffer, you are free to
+ * When you create an %ImageSurface with your own data buffer, you are free to
  * examine the results at any point and do whatever you want with it.  Note that
  * if you modify anything and later want to continue to draw to the surface
  * with cairo, you must let cairo know via Cairo::Surface::mark_dirty()
  *
- * Note that like all surfaces, an ImageSurface is a reference-counted object that should be used via Cairo::RefPtr.
+ * Note that like all surfaces, an %ImageSurface is a reference-counted object that should be used via Cairo::RefPtr.
  */
 class CAIROMM_API ImageSurface : public Surface
 {
@@ -641,6 +682,7 @@ protected:
   //TODO?: Surface(cairo_surface_t *target);
 
 public:
+
   /** Create a C++ wrapper for the C instance. This C++ instance should then be
    * given to a RefPtr.
    * @param cobject The C instance.
@@ -744,7 +786,9 @@ public:
    * @param format the format of pixels in the buffer
    * @param width the width of the image to be stored in the buffer
    * @param height the height of the image to be stored in the buffer
-   * @param stride the number of bytes between the start of rows in the buffer as allocated. This value should always be computed by cairo_format_stride_for_width() before allocating the data buffer.
+   * @param stride the number of bytes between the start of rows in the buffer as allocated.
+   *        This value should always be computed by format_stride_for_width()
+   *        before allocating the data buffer.
    * @return a RefPtr to the newly created surface.
    */
   static RefPtr<ImageSurface> create(unsigned char* data, Format format, int width, int height, int stride);
@@ -811,7 +855,7 @@ public:
  * necessary objects (paths, patterns, etc.), in order to achieve accurate
  * replay.
  *
- * Note that like all surfaces, a RecordingSurface is a reference-counted object
+ * Note that like all surfaces, a %RecordingSurface is a reference-counted object
  * that should be used via Cairo::RefPtr.
  */
 class CAIROMM_API RecordingSurface : public Surface
@@ -899,7 +943,7 @@ typedef enum
   PDF_VERSION_1_5 = CAIRO_PDF_VERSION_1_5
 } PdfVersion;
 
-/** A PdfSurface provides a way to render PDF documents from cairo.  This
+/** A %PdfSurface provides a way to render PDF documents from cairo.  This
  * surface is not rendered to the screen but instead renders the drawing to a
  * PDF file on disk.
  *
@@ -1000,7 +1044,7 @@ typedef enum {
     PS_LEVEL_3 = CAIRO_PS_LEVEL_3
 } PsLevel;
 
-/** A PsSurface provides a way to render PostScript documents from cairo.  This
+/** A %PsSurface provides a way to render PostScript documents from cairo.  This
  * surface is not rendered to the screen but instead renders the drawing to a
  * PostScript file on disk.
  *
@@ -1153,7 +1197,7 @@ typedef enum
   SVG_VERSION_1_2 = CAIRO_SVG_VERSION_1_2
 } SvgVersion;
 
-/** A SvgSurface provides a way to render Scalable Vector Graphics (SVG) images
+/** A %SvgSurface provides a way to render Scalable Vector Graphics (SVG) images
  * from cairo.  This surface is not rendered to the screen but instead renders
  * the drawing to an SVG file on disk.
  *
@@ -1233,7 +1277,7 @@ public:
 
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 
-/** A GlitzSurface provides a way to render to the X Window System using Glitz.
+/** A %GlitzSurface provides a way to render to the X Window System using Glitz.
  * This provides a way to use OpenGL-accelerated graphics from cairo.  If you
  * want to use hardware-accelerated graphics within the X Window system, you
  * should use this Surface type.

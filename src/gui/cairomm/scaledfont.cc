@@ -62,6 +62,18 @@ void ScaledFont::get_extents(FontExtents& extents) const
   check_object_status_and_throw_exception(*this);
 }
 
+void ScaledFont::get_text_extents(const std::string& utf8, TextExtents& extents) const
+{
+  cairo_scaled_font_text_extents(m_cobject, utf8.c_str(), static_cast<cairo_text_extents_t*>(&extents));
+  check_object_status_and_throw_exception(*this);
+}
+
+void ScaledFont::get_glyph_extents(const std::vector<Glyph>& glyphs, TextExtents& extents) const
+{
+  cairo_scaled_font_glyph_extents(m_cobject, glyphs.data(), glyphs.size(), static_cast<cairo_text_extents_t*>(&extents));
+  check_object_status_and_throw_exception(*this);
+}
+
 RefPtr<FontFace> ScaledFont::get_font_face() const
 {
   auto face = cairo_scaled_font_get_font_face(m_cobject);

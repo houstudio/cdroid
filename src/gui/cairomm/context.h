@@ -191,12 +191,12 @@ public:
       BUTT = CAIRO_LINE_CAP_BUTT,
 
       /**
-       * Use a round ending, the center of teh circle is teh end point
+       * Use a round ending, the center of the circle is the end point
        */
       ROUND = CAIRO_LINE_CAP_ROUND,
 
       /**
-       * Use squared ending, the center of teh square is the end point
+       * Use a squared ending, the center of the square is the end point
        */
       SQUARE = CAIRO_LINE_CAP_SQUARE
   };
@@ -214,7 +214,7 @@ public:
       MITER = CAIRO_LINE_JOIN_MITER,
 
       /**
-       * Use a rounded join, the center of teh circle is the joint point
+       * Use a rounded join, the center of the circle is the joint point
        */
       ROUND = CAIRO_LINE_JOIN_ROUND,
 
@@ -250,14 +250,14 @@ public:
    * It isn't necessary to clear all saved states before a cairo_t is freed.
    * Any saved states will be freed when the Context is destroyed.
    *
-   * @sa restore()
+   * @sa restore(), SaveGuard
    */
   void save();
 
   /** Restores cr to the state saved by a preceding call to save() and removes
    * that state from the stack of saved states.
    *
-   * @sa save()
+   * @sa save(), SaveGuard
    */
   void restore();
 
@@ -1703,8 +1703,43 @@ protected:
   cobject* m_cobject;
 };
 
+/** RAII-style context save/restore class.
+ * Cairo::Context::save() is called automatically when the object is created,
+ * and Cairo::Context::restore() is called when the object is destroyed.
+ * This allows you to write code such as:
+ * @code
+ * // context initial state
+ * {
+ *   Cairo::SaveGuard saver(context);
+ *   ... // manipulate context
+ * }
+ * // context is restored to initial state
+ * @endcode
+ *
+ * @newin{1,18}
+ */
+class SaveGuard final
+{
+public:
+  /// Constructor, the context is saved.
+  CAIROMM_API explicit SaveGuard(const RefPtr<Context>& context);
+
+#ifndef DOXYGEN_IGNORE_THIS
+  // noncopyable
+  SaveGuard(const SaveGuard&) = delete;
+  SaveGuard& operator=(const SaveGuard&) = delete;
+  // nonmovable
+  SaveGuard(SaveGuard&&) = delete;
+  SaveGuard& operator=(SaveGuard&&) = delete;
+#endif //DOXYGEN_IGNORE_THIS
+
+  /// Destructor, the context is restored.
+  CAIROMM_API ~SaveGuard();
+
+private:
+  RefPtr<Context> ctx_;
+};
+
 } // namespace Cairo
 
 #endif //__CAIROMM_CONTEXT_H
-
-// vim: ts=2 sw=2 et

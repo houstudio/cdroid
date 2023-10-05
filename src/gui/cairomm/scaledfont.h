@@ -137,7 +137,7 @@ public:
    *
    * @since 1.8
    **/
-  void get_glyph_extents(const std::vector<Glyph>& glyphs, TextExtents& extents);
+  void get_glyph_extents(const std::vector<Glyph>& glyphs, TextExtents& extents) const;
 
   /** The FontFace with which this ScaledFont was created.
    * @since 1.2

@@ -16,7 +16,7 @@
  * 02110-1301, USA.
  */
 
-#include <cairomm/cairommconfig.h>
+#include <cairommconfig.h>
 #include <cairomm/context_private.h>
 #include <cairomm/xlib_surface.h>
 

@@ -21,7 +21,7 @@
 #include <cairomm/script.h>
 #include <cairomm/private.h>
 #include <cairomm/cairo_jpg.h>
-#include <cairomm/bitmap.h>
+//#include <cairomm/bitmap.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <chrono>
@@ -75,6 +75,21 @@ cairo_status_t write_func_wrapper(void* closure, const unsigned char* data, unsi
   auto write_func = static_cast<Surface::SlotWriteFunc*>(closure);
   return static_cast<cairo_status_t>((*write_func)(data, length));
 }
+
+//TODO: When we can break ABI, move the code from [read,write]_func_wrapper()
+// to c_[read,write]_func_wrapper() and remove [read,write]_func_wrapper().
+extern "C"
+{
+static cairo_status_t c_read_func_wrapper(void* closure, unsigned char* data, unsigned int length)
+{
+  return read_func_wrapper(closure, data, length);
+}
+
+static cairo_status_t c_write_func_wrapper(void* closure, const unsigned char* data, unsigned int length)
+{
+  return write_func_wrapper(closure, data, length);
+}
+} // extern "C"
 
 Surface::Surface(cairo_surface_t* cobject, bool has_reference)
 : m_cobject(nullptr)
@@ -169,12 +184,22 @@ void Surface::get_device_offset(double& x_offset, double& y_offset) const
   cairo_surface_get_device_offset(const_cast<cobject*>(cobj()), &x_offset, &y_offset);
 }
 
-void Surface::set_device_scale(double x_scale,double y_scale){
-  cairo_surface_set_device_scale(const_cast<cobject*>(cobj()),x_scale,y_scale);
+void Surface::set_device_scale(double x_scale, double y_scale)
+{
+  cairo_surface_set_device_scale(cobj(), x_scale, y_scale);
+  check_object_status_and_throw_exception(*this);
 }
 
-void Surface::get_device_scale(double&x_scale,double&y_scale)const{
-  cairo_surface_get_device_scale(const_cast<cobject*>(cobj()),&x_scale,&y_scale);
+void Surface::get_device_scale(double& x_scale, double& y_scale) const
+{
+  cairo_surface_get_device_scale(const_cast<cobject*>(cobj()), &x_scale, &y_scale);
+}
+
+double Surface::get_device_scale() const
+{
+  double x_scale = 1, y_scale = 1;
+  get_device_scale(x_scale, y_scale);
+  return (x_scale + y_scale) / 2;
 }
 
 void Surface::set_fallback_resolution(double x_pixels_per_inch, double y_pixels_per_inch)
@@ -358,11 +383,11 @@ RefPtr<ImageSurface>ImageSurface:: create_from_stream(std::istream& stream){
        img=RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
     }else if(memcmp("png",ftype,3)==0){
         img=create_from_png(stream_read,&stream);
-    }else if(memcmp("bmp",ftype,3)==0){
+    }/*else if(memcmp("bmp",ftype,3)==0){
         Bitmap bmp;;
         bmp.ReadFromStream(stream);
         img=(RefPtr<ImageSurface>)bmp;
-    }else if(memcmp("svg",ftype,3)==0){
+    }*/else if(memcmp("svg",ftype,3)==0){
 #ifdef ENABLE_CAIROSVG
          svg_cairo_t *svg;
          unsigned int width,height;

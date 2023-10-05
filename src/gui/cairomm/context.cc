@@ -18,7 +18,7 @@
 
 /* M_PI is defined in math.h in the case of Microsoft Visual C++ */
 
-#include <cairomm/cairommconfig.h>
+#include <cairommconfig.h>
 #include <cairomm/context.h>
 #include <cairomm/context_private.h>
 #include <cairomm/private.h>
@@ -886,6 +886,17 @@ RefPtr<const Surface> Context::get_group_target() const
   return get_surface_wrapper(surface);
 }
 
-} //namespace Cairo
+SaveGuard::SaveGuard(const RefPtr<Context>& context)
+: ctx_{context}
+{
+  if (ctx_)
+    ctx_->save();
+}
 
-// vim: ts=2 sw=2 et
+SaveGuard::~SaveGuard()
+{
+  if (ctx_)
+    ctx_->restore();
+}
+
+} //namespace Cairo

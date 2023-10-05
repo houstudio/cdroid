@@ -19,7 +19,7 @@
 #ifndef __CAIROMM_PATH_H
 #define __CAIROMM_PATH_H
 
-#include <cairomm/cairommconfig.h>
+#include <cairommconfig.h>
 
 #include <cairomm/enums.h>
 #include <string>

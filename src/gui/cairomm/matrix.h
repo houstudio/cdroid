@@ -18,7 +18,7 @@
 #ifndef __CAIROMM_MATRIX_H
 #define __CAIROMM_MATRIX_H
 
-#include <cairomm/cairommconfig.h>
+#include <cairommconfig.h>
 #include <cairomm/types.h>
 #include <cairo.h>
 
@@ -49,7 +49,7 @@ namespace Cairo
  * @sa Context::get_matrix()
  * @sa Context::set_matrix()
  */
-class Matrix : public cairo_matrix_t
+class CAIROMM_API Matrix : public cairo_matrix_t
 {
 public:
   /** Creates an uninitialized matrix.  If you want a matrix initialized to a
@@ -169,6 +169,7 @@ public:
  *
  * @relates Matrix
  */
+CAIROMM_API
 Matrix identity_matrix();
 
 /** Returns a Matrix initialized to a transformation that translates by tx and
@@ -179,6 +180,7 @@ Matrix identity_matrix();
  *
  * @relates Matrix
  */
+CAIROMM_API
 Matrix translation_matrix(double tx, double ty);
 
 /** Returns a Matrix initialized to a transformation that scales by sx and sy in
@@ -189,6 +191,7 @@ Matrix translation_matrix(double tx, double ty);
  *
  * @relates Matrix
  */
+CAIROMM_API
 Matrix scaling_matrix(double sx, double sy);
 
 /** Returns a Matrix initialized to a transformation that rotates by radians.
@@ -200,6 +203,7 @@ Matrix scaling_matrix(double sx, double sy);
  *
  * @relates Matrix
  */
+CAIROMM_API
 Matrix rotation_matrix(double radians);
 
 /** Multiplies the affine transformations in a and b together and returns the
@@ -214,6 +218,7 @@ Matrix rotation_matrix(double radians);
  *
  * @relates Matrix
  */
+CAIROMM_API
 Matrix operator*(const Matrix& a, const Matrix& b);
 
 } // namespace Cairo

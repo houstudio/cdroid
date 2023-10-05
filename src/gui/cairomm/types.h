@@ -18,7 +18,7 @@
 #ifndef __CAIROMM_TYPES_H
 #define __CAIROMM_TYPES_H
 
-#include <cairomm/cairommconfig.h>
+#include <cairommconfig.h>
 
 #include <cairo.h>
 
