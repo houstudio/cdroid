@@ -574,7 +574,7 @@ void NumberPicker::scrollBy(int x, int y){
         mCurrentScrollOffset += y;
     }
     while (mCurrentScrollOffset - mInitialScrollOffset > gap) {
-        mCurrentScrollOffset -= mSelectorElementSize;
+        mCurrentScrollOffset -= gap*2;//mSelectorElementSize;
         if(isAscendingOrder())
             decrementSelectorIndices(selectorIndices);
         else
@@ -586,7 +586,7 @@ void NumberPicker::scrollBy(int x, int y){
     }
 
     while (mCurrentScrollOffset - mInitialScrollOffset < -gap) {
-        mCurrentScrollOffset += mSelectorElementSize;
+        mCurrentScrollOffset += gap*2;//mSelectorElementSize;
         if(isAscendingOrder())
             incrementSelectorIndices(selectorIndices);
         else
