@@ -9,7 +9,10 @@
 * Vector Graph supported via **Cairo**
 # **Quick Start**
 * Start experimenting now with X86 Simulator https://gitee.com/jiangcheng/cdroidX64
-# **Screen Shots**
+# **IDE(AndroidStudio/Eclipse)** 
+![IDE](https://gitee.com/jiangcheng/cdroidX64/raw/master/apps/images/asd61236_ide.png)
+
+# **ScreenShots**
 ![demo0](https://gitee.com/jiangcheng/cdroidX64/raw/master/apps/images/asd61236.gif)
 ![demo1](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo1.gif)
 ![demo2](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo2.gif)
