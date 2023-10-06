@@ -50,10 +50,12 @@ int Display::getRotation(){
 }
 
 void Display::getMetrics(DisplayMetrics&outMetrics){
+    outMetrics.setToDefaults();
     GFXGetDisplaySize(mDisplayId,(UINT*)&outMetrics.widthPixels,(UINT*)&outMetrics.heightPixels);
 }
 
 void Display::getRealMetrics(DisplayMetrics&outMetrics){
+    outMetrics.setToDefaults();
     GFXGetDisplaySize(mDisplayId,(UINT*)&outMetrics.widthPixels,(UINT*)&outMetrics.heightPixels);
 }
 

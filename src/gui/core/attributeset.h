@@ -12,7 +12,6 @@ class AttributeSet{
 private:
     std::string mPackage;
     class Context*mContext;
-    DisplayMetrics mDisplayMetrics;
     std::map<std::string,std::string>mAttrs;
 public:
     AttributeSet();

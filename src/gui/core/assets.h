@@ -29,6 +29,7 @@ private:
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
+    virtual void onInit();
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
     int loadKeyValues(const std::string&resid,
@@ -42,7 +43,7 @@ public:
     const std::string getPackageName()const override;
     const std::string getTheme()const override;
     void setTheme(const std::string&theme)override;
-    const DisplayMetrics&getDisplayMetrics()override;
+    const DisplayMetrics&getDisplayMetrics()const override;
     int getId(const std::string&)const override;
     int getNextAutofillId()override;
     const std::string& getString(const std::string&id,const std::string&lan="")override;

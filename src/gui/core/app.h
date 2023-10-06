@@ -20,6 +20,7 @@ private:
 protected:
     CLA cla;
     static App*mInst;
+    void onInit()override;
 public:
      App(int argc=0,const char*argv[]=NULL,const std::vector<CLA::Argument>&extoptions={});
      ~App();

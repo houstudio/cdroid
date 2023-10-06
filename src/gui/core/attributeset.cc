@@ -26,7 +26,6 @@ AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 AttributeSet::AttributeSet(Context*ctx,const std::string&package){
     mContext = ctx;
     mPackage = package;
-    mDisplayMetrics.setToDefaults();
 }
 
 void AttributeSet::setContext(Context*ctx,const std::string&package){
@@ -213,10 +212,11 @@ int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
     def = std::strtol(v.c_str(),nullptr,10);
     p   = strpbrk(v.c_str(),"sdp");
     if(p){
+        const DisplayMetrics& dm=mContext->getDisplayMetrics();
         if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
-	    def = (mDisplayMetrics.density * def /*+0.5f*/);
+	    def = (dm.density * def /*+0.5f*/);
         if(strncmp(p,"sp",2)==0)
-	    def = (mDisplayMetrics.scaledDensity * def /*+0.5f*/);
+	    def = (dm.scaledDensity * def /*+0.5f*/);
     }
     return def;
 }

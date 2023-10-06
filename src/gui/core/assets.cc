@@ -26,6 +26,8 @@ struct Assets::COMPLEXCOLOR {
 };
 
 Assets::Assets() {
+    onInit();
+    mDisplayMetrics.setToDefaults();
     mNextAutofillViewId=100000;
     addResource("cdroid.pak","cdroid");
 }
@@ -56,7 +58,10 @@ Assets::~Assets() {
     std::cout<<" Assets destroied!"<<std::endl;
 }
 
-const DisplayMetrics& Assets::getDisplayMetrics() {
+void Assets::onInit(){
+}
+
+const DisplayMetrics& Assets::getDisplayMetrics()const{
     return mDisplayMetrics;
 }
 

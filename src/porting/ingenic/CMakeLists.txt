@@ -29,7 +29,6 @@ list(APPEND INGENIC_INCLUDE_DIRS ../include)
 
 add_subdirectory(lib2d)
 link_directories(${PROJECT_SOURCE_DIR} ./lib2d)
-list(APPEND INGENIC_LIBS pthread hardware2)
 include_directories(./
     ../common ../include
     lib2d/include
@@ -42,6 +41,6 @@ set(PREFIX ${CMAKE_INSTALL_PREFIX})
 add_library(tvhal SHARED ${INGENIC_SRCS} ../common/graph_fb.c)
 add_library(tvhal-g2d SHARED ${INGENIC_SRCS} ./graph_g2d.c)
 target_link_libraries(tvhal ${INGENIC_LIBS} dl)
-target_link_libraries(tvhal-g2d ${INGENIC_LIBS} ingenic2d dl)
+target_link_libraries(tvhal-g2d ${INGENIC_LIBS} ingenic2d)
 add_dependencies(tvhal tvhal-g2d)
 install (TARGETS tvhal tvhal-g2d  DESTINATION lib)

@@ -47,29 +47,26 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     mExitCode = 0;
     mInst = this;
     if(argc>0){
-	const char*p = strrchr(argv[0],'/');
-	if(p)setName(p+1);
+        const char*p = strrchr(argv[0],'/');
+        if(p)setName(p+1);
     }
-    LOGD("App %s started",(argc&&argv)?argv[0]:"");
+    LOGI("App [%s] started c++=%d",(argc&&argv)?argv[0]:"",__cplusplus);
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
     cla.parse(argc,argv);
-    if(hasSwitch("debug")){
-        ViewGroup::DEBUG_DRAW=true;
-        View::DEBUG_DRAW=true;
-    }
+	
+    ViewGroup::DEBUG_DRAW = View::DEBUG_DRAW = hasSwitch("debug");
     if(hasSwitch("help")){
-	std::cout<<cla.getUsageString()<<std::endl;
-	std::cout<<"params.count="<<getParamCount()<<std::endl;
-	exit(0);
+        std::cout<<cla.getUsageString()<<std::endl;
+        std::cout<<"params.count="<<getParamCount()<<std::endl;
+        exit(0);
     }
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
-    GFXInit();
-    DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::DENSITY_DEVICE);
     WindowManager::getInstance().setDisplayRotation((getArgAsInt("rotate",0)/90)%4);
     setOpacity(getArgAsInt("alpha",255));
     GraphDevice::getInstance().showFPS(hasSwitch("fps"));
+    DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::getDeviceDensity());
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
@@ -86,6 +83,10 @@ App::~App(){
     InputMethodManager::getInstance().shutDown();
     delete Looper::getDefault();
     delete &GraphDevice::getInstance();
+}
+
+void App::onInit(){
+    GFXInit();
 }
 
 const std::string App::getDataPath()const{
