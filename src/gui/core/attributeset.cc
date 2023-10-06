@@ -26,6 +26,7 @@ AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 AttributeSet::AttributeSet(Context*ctx,const std::string&package){
     mContext = ctx;
     mPackage = package;
+    mDisplayMetrics.setToDefaults();
 }
 
 void AttributeSet::setContext(Context*ctx,const std::string&package){

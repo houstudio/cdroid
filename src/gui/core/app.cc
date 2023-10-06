@@ -26,6 +26,7 @@ App*App::mInst=nullptr;
 
 static CLA::Argument ARGS[]={
    {CLA::EntryType::Option, "a", "alpha",  "UI layer global alpha[0,255]", CLA::ValueType::Int, (int)CLA::EntryFlags::Manditory},
+   {CLA::EntryType::Option, "" , "density","UI Density"  ,    CLA::ValueType::Int , (int)CLA::EntryFlags::Optional },
    {CLA::EntryType::Option, "", "data",   "app data path",        CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
    {CLA::EntryType::Option, "m", "monkey", "events playback path",  CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
    {CLA::EntryType::Option, "r", "record", "events record path", CLA::ValueType::String,   (int)CLA::EntryFlags::Optional},
@@ -65,6 +66,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     }
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     GFXInit();
+    DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::DENSITY_DEVICE);
     WindowManager::getInstance().setDisplayRotation((getArgAsInt("rotate",0)/90)%4);
     setOpacity(getArgAsInt("alpha",255));
     GraphDevice::getInstance().showFPS(hasSwitch("fps"));

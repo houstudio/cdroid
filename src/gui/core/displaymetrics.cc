@@ -3,14 +3,14 @@
 
 namespace cdroid{
 
-int DisplayMetrics::DENSITY_DEVICE=DENSITY_DEFAULT;
-int DisplayMetrics::DENSITY_DEVICEE_STABLE=DENSITY_DEFAULT;
+int DisplayMetrics::DENSITY_DEVICE = getDeviceDensity();//DENSITY_DEFAULT;
+int DisplayMetrics::DENSITY_DEVICEE_STABLE = getDeviceDensity();//DENSITY_DEFAULT;
 
 DisplayMetrics::DisplayMetrics(){
-    static int grap_Inited =-1;
+    /*static int grap_Inited =-1;
     if(grap_Inited!=E_OK)
 	grap_Inited = GFXInit();
-    setToDefaults();
+    setToDefaults();*/
 }
 
 void DisplayMetrics::setTo(const DisplayMetrics& o) {
@@ -33,8 +33,6 @@ void DisplayMetrics::setTo(const DisplayMetrics& o) {
 }
 
 void DisplayMetrics::setToDefaults() {
-    widthPixels = 1280;
-    heightPixels = 720;
     GFXGetDisplaySize(0,(UINT*)&widthPixels,(UINT*)&heightPixels);
     density =  DENSITY_DEVICE / (float) DENSITY_DEFAULT;
     densityDpi =  DENSITY_DEVICE;
@@ -49,4 +47,32 @@ void DisplayMetrics::setToDefaults() {
     noncompatXdpi = xdpi;
     noncompatYdpi = ydpi;
 }
+
+bool DisplayMetrics::equals(const DisplayMetrics& other)const{
+    return equalsPhysical(other)
+                && scaledDensity == other.scaledDensity
+                && noncompatScaledDensity == other.noncompatScaledDensity;
+}
+
+bool DisplayMetrics::equalsPhysical(const DisplayMetrics& other)const{
+    return widthPixels == other.widthPixels  && heightPixels == other.heightPixels
+                && density == other.density  && densityDpi == other.densityDpi
+                && xdpi == other.xdpi  && ydpi == other.ydpi
+                && noncompatWidthPixels == other.noncompatWidthPixels
+                && noncompatHeightPixels == other.noncompatHeightPixels
+                && noncompatDensity == other.noncompatDensity
+                && noncompatDensityDpi == other.noncompatDensityDpi
+                && noncompatXdpi == other.noncompatXdpi
+                && noncompatYdpi == other.noncompatYdpi;
+}
+
+int DisplayMetrics::getDeviceDensity() {
+    // qemu.sf.lcd_density can be used to override ro.sf.lcd_density
+    // when running in the emulator, allowing for dynamic configurations.
+    // The reason for this is that ro.sf.lcd_density is write-once and is
+    // set by the init process when it parses build.prop before anything else.
+    const char* sdensity=getenv("LCD_DENSITY");
+    return sdensity ? std::atoi(sdensity) : DENSITY_DEFAULT;
+}
+
 }
