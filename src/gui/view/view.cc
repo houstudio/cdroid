@@ -2960,7 +2960,7 @@ void View::draw(Canvas&canvas){
     if (drawLeft) {
         canvas.save();
         canvas.translate(left, bottom);
-        canvas.rotate_degrees(90);
+        canvas.rotate_degrees(-90);
         canvas.scale(1,fadeHeight * leftFadeStrength);
         canvas.set_source(fade);
         canvas.rectangle(0,0,bottom - top, length);
@@ -2971,7 +2971,7 @@ void View::draw(Canvas&canvas){
     if (drawRight) {
         canvas.save();
         canvas.translate(right, top);
-        canvas.rotate_degrees(-90);
+        canvas.rotate_degrees(90);
         canvas.scale(1, fadeHeight * rightFadeStrength);
         canvas.set_source(fade);
         canvas.rectangle(0,0,bottom - top,length);
