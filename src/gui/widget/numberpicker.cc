@@ -107,6 +107,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 
 NumberPicker::~NumberPicker(){
     delete mDividerDrawable;
+    for(auto d:mDisplayedDrawables)delete d;
 }
 
 bool NumberPicker::isHorizontalMode()const{
@@ -156,6 +157,8 @@ void NumberPicker::setWheelItemCount(int count) {
 
 void NumberPicker::initView(){
     ViewConfiguration&config=ViewConfiguration::get(mContext);
+    mDisplayedDrawableCount = 0;
+    mDisplayedDrawableSize = 0;
     mSelectedText = nullptr;
     mOnValueChangeListener = nullptr;
     mFormatter = nullptr;
@@ -519,7 +522,8 @@ View& NumberPicker::setEnabled(bool enabled) {
 void NumberPicker::scrollBy(int x, int y){
     std::vector<int>&selectorIndices = mSelectorIndices;
     const int startScrollOffset = mCurrentScrollOffset;
-    const int gap = std::min((int)getMaxTextSize(),mSelectorElementSize)/2;
+    const int selectedTextSize = mDisplayedDrawableSize ? mDisplayedDrawableSize : getMaxTextSize();
+    const int gap = std::min(selectedTextSize,mSelectorElementSize)/2;
     if (isHorizontalMode()) {
         if (isAscendingOrder()) {
             if (!mWrapSelectorWheel && x > 0
@@ -869,6 +873,23 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     updateInputTextView();
     initializeSelectorWheelIndices();
     tryComputeMaxWidth();
+    for(auto d:mDisplayedDrawables)delete d;
+    mDisplayedDrawables.clear();
+    mDisplayedDrawableCount = 0;
+    mDisplayedDrawableSize = 0;
+    int drsize=0;
+    for(auto s:mDisplayedValues){
+	Drawable*dr = mContext->getDrawable(s);
+        mDisplayedDrawables.push_back(dr);
+	if(dr){
+	    drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());
+	    mDisplayedDrawableCount++;
+	}
+    }
+    if(mDisplayedDrawableCount==mDisplayedValues.size())
+        mSelectedText->setVisibility(View::INVISIBLE); 
+    if(mDisplayedDrawableCount)
+        mDisplayedDrawableSize = drsize/mDisplayedDrawableCount;
 }
 
 float NumberPicker::getFadingEdgeStrength(bool isHorizontalMode)const{
@@ -1087,8 +1108,8 @@ void NumberPicker::onDraw(Canvas&canvas){
         // see a dimmed version of the old value intermixed with the new one.
         if ((showSelectorWheel && i != mWheelMiddleItemIndex)
                 || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
-            int xOffset = 0 , yOffset = 0;
             Drawable*dr = nullptr;
+            int xOffset = 0 , yOffset = 0;
             if (i != mWheelMiddleItemIndex && mItemSpacing != 0) {
                 if (isHorizontalMode()) {
                     xOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
@@ -1096,12 +1117,11 @@ void NumberPicker::onDraw(Canvas&canvas){
                     yOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
                 }
             }
-            if(strpbrk(scrollSelectorValue.c_str(),"@:/") && (dr = mContext->getDrawable(scrollSelectorValue))){
+            if(selectorIndex<mDisplayedDrawables.size() && (dr = mDisplayedDrawables.at(selectorIndex))){
                 Rect outRect;
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
                 dr->setBounds(outRect);
                 dr->draw(canvas);
-                delete dr;
             }else{
                 canvas.draw_text(recText,scrollSelectorValue,textGravity);
             }
@@ -1463,7 +1483,7 @@ bool NumberPicker::updateInputTextView(){
     if (!text.empty() ){
         std::string beforeText = mSelectedText->getText();
         if (text != beforeText){//!text.equals(beforeText.toString())) {
-            mSelectedText->setText(text);
+            mSelectedText->setText(text);LOGD("%p:%d %d==>%s",this,mID,mValue,text.c_str());
             return true;
         }
     }
@@ -1473,7 +1493,7 @@ bool NumberPicker::updateInputTextView(){
 
 void NumberPicker::notifyChange(int previous, int current){
     if (mOnValueChangeListener) {
-        mOnValueChangeListener(*this, previous, mValue);
+        mOnValueChangeListener(*this, previous, mValue);LOGD("%p:%d %d->%d",this,mID,previous,current);
     }
 }
 

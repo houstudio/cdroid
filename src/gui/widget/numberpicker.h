@@ -61,6 +61,9 @@ private:
     Typeface *mTypeface;
     Typeface *mSelectedTypeface; 
     std::vector<std::string> mDisplayedValues;
+    std::vector<Drawable*>mDisplayedDrawables;
+    int mDisplayedDrawableCount;
+    int mDisplayedDrawableSize;
     int mMinValue;
     int mMaxValue;
     int mValue;
