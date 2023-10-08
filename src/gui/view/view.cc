@@ -23,47 +23,30 @@ bool View::sIgnoreMeasureCache = false;//targetSdkVersion < Build.VERSION_CODES.
 bool View::sAlwaysRemeasureExactly = false;//targetSdkVersion <= Build.VERSION_CODES.M;
 bool View::sPreserveMarginParamsInLayoutParamConversion = true;
 
-class TintInfo{
-public:
-    ColorStateList*mTintList;
-    int mBlendMode;
-    int mTintMode;
-    bool mHasTintMode;
-    bool mHasTintList;
-    TintInfo(){
-        mTintList=nullptr;
-        mHasTintList = false;
-        mHasTintMode = false;
-        mTintMode = SRC_IN;
-    };
-    ~TintInfo(){
-        delete mTintList;
-    };
-};
+View::TintInfo::TintInfo(){
+    mTintList = nullptr;
+    mHasTintList = false;
+    mHasTintMode = false;
+    mTintMode = SRC_IN;
+}
 
-class ForegroundInfo {
-public:
-    Drawable* mDrawable;
-    TintInfo* mTintInfo;
-    int mGravity;
-    bool mInsidePadding;
-    bool mBoundsChanged;
-    Rect mSelfBounds;
-    Rect mOverlayBounds;
-public:
-    ForegroundInfo(){
-        mInsidePadding=mBoundsChanged=true;
-        mGravity=Gravity::FILL;
-        mSelfBounds.set(0,0,0,0);
-        mOverlayBounds.set(0,0,0,0);
-        mTintInfo=nullptr;
-        mDrawable=nullptr;
-    }
-    ~ForegroundInfo(){
-        delete mDrawable;
-        delete mTintInfo;
-    }
-};
+View::TintInfo::~TintInfo(){
+    delete mTintList;
+}
+
+View::ForegroundInfo::ForegroundInfo(){
+    mInsidePadding = mBoundsChanged = true;
+    mGravity = Gravity::FILL;
+    mSelfBounds.set(0,0,0,0);
+    mOverlayBounds.set(0,0,0,0);
+    mTintInfo = nullptr;
+    mDrawable = nullptr;
+}
+
+View::ForegroundInfo::~ForegroundInfo(){
+    delete mDrawable;
+    delete mTintInfo;
+}
 
 class ListenerInfo{
 public:

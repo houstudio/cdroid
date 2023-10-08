@@ -31,6 +31,10 @@ AnalogClock::~AnalogClock(){
     delete mHourHand;
     delete mMinuteHand;
     delete mSecondHand;
+    delete mDialTintInfo;
+    delete mHourHandTintInfo;
+    delete mMinuteHandTintInfo;
+    delete mSecondHandTintInfo;
 }
 
 void AnalogClock::initAnalog(){
@@ -40,8 +44,30 @@ void AnalogClock::initAnalog(){
     mDialWidth = mDialHeight =0;
     mSecondsHandFps = 1;
     mVisible = false;
-    mHourHandTintInfo = mMinuteHandTintInfo = nullptr;
-    mSecondHandTintInfo = mDialTintInfo = nullptr;
+    mDialTintInfo = new TintInfo;
+    mHourHandTintInfo = new TintInfo;
+    mMinuteHandTintInfo = new TintInfo;
+    mSecondHandTintInfo = new TintInfo;
+}
+
+Drawable* AnalogClock::apply(TintInfo*ti,Drawable*drawable){
+    if (drawable == nullptr) return nullptr;
+
+    Drawable* newDrawable = drawable->mutate();
+
+    if (ti->mHasTintList) {
+        newDrawable->setTintList(ti->mTintList);
+    }
+
+    /*if (ti->mHasTintBlendMode) {
+        newDrawable->setTintBlendMode(ti->mTintBlendMode);
+    }*/
+
+    // All drawables should have the same state as the View itself.
+    if (drawable->isStateful()) {
+        newDrawable->setState(getDrawableState());
+    }
+    return newDrawable;
 }
 
 void AnalogClock::setDial(Icon icon) {
@@ -49,29 +75,49 @@ void AnalogClock::setDial(Icon icon) {
     if(mDial){
         mDialWidth  = mDial->getIntrinsicWidth();
         mDialHeight = mDial->getIntrinsicHeight();
-        /*if (mDialTintInfo->mHasTintList || mDialTintInfo->mHasTintBlendMode) {
-           mDial = mDialTintInfo->apply(mDial);
-        }*/
+        if (mDialTintInfo->mHasTintList /*|| mDialTintInfo->mHasTintBlendMode*/) {
+           mDial = apply(mDialTintInfo,mDial);
+        }
     }
     mChanged = true;
     requestLayout();
 }
 
+void AnalogClock::setDialTintList(ColorStateList* tint) {
+    mDialTintInfo->mTintList = tint;
+    mDialTintInfo->mHasTintList = true;
+    mDial = apply(mDialTintInfo,mDial);
+}
+
+ColorStateList* AnalogClock::getDialTintList()const {
+    return mDialTintInfo->mTintList;
+}
+
 void AnalogClock::setHourHand(Icon icon) {
     mHourHand = icon;//.loadDrawable(getContext());
-    /*if (mHourHandTintInfo.mHasTintList || mHourHandTintInfo.mHasTintBlendMode) {
-        mHourHand = mHourHandTintInfo.apply(mHourHand);
-    }*/
+    if (mHourHandTintInfo->mHasTintList/* || mHourHandTintInfo->mHasTintBlendMode*/) {
+        mHourHand = apply(mHourHandTintInfo,mHourHand);
+    }
 
     mChanged = true;
     requestLayout();
 }
 
+void AnalogClock::setHourHandTintList(ColorStateList* tint) {
+    mHourHandTintInfo->mTintList = tint;
+    mHourHandTintInfo->mHasTintList = true;
+    mHourHand = apply(mHourHandTintInfo,mHourHand);
+}
+
+ColorStateList* AnalogClock::getHourHandTintList()const{
+    return mHourHandTintInfo->mTintList;
+}
+
 void AnalogClock::setMinuteHand(Icon icon) {
     mMinuteHand = icon;//.loadDrawable(getContext());
-    /*if (mHourHandTintInfo.mHasTintList || mHourHandTintInfo.mHasTintBlendMode) {
-        mHourHand = mHourHandTintInfo.apply(mHourHand);
-    }*/
+    if (mHourHandTintInfo->mHasTintList /*|| mHourHandTintInfo.mHasTintBlendMode*/) {
+        mHourHand = apply(mHourHandTintInfo,mHourHand);
+    }
 
     mChanged = true;
     requestLayout();
@@ -79,14 +125,23 @@ void AnalogClock::setMinuteHand(Icon icon) {
 
 void AnalogClock::setSecondHand(Icon icon) {
     mSecondHand = icon;//.loadDrawable(getContext());
-    /*if (mHourHandTintInfo.mHasTintList || mHourHandTintInfo.mHasTintBlendMode) {
-        mHourHand = mHourHandTintInfo.apply(mHourHand);
-    }*/
+    if (mHourHandTintInfo->mHasTintList /*|| mHourHandTintInfo.mHasTintBlendMode*/) {
+        mHourHand = apply(mHourHandTintInfo,mHourHand);
+    }
 
     mChanged = true;
     invalidate();
 }
 
+void AnalogClock::setMinuteHandTintList(ColorStateList* tint) {
+    mMinuteHandTintInfo->mTintList = tint;
+    mMinuteHandTintInfo->mHasTintList = true;
+    mMinuteHand = apply(mMinuteHandTintInfo,mMinuteHand);
+}
+
+ColorStateList* AnalogClock::getMinuteHandTintList()const{
+    return mMinuteHandTintInfo->mTintList;
+}
 
 void AnalogClock::onVisibilityAggregated(bool isVisible) {
     View::onVisibilityAggregated(isVisible);

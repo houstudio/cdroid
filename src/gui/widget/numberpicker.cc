@@ -879,12 +879,12 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     mDisplayedDrawableSize = 0;
     int drsize=0;
     for(auto s:mDisplayedValues){
-	Drawable*dr = mContext->getDrawable(s);
+        Drawable*dr = mContext->getDrawable(s);
         mDisplayedDrawables.push_back(dr);
-	if(dr){
-	    drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());
-	    mDisplayedDrawableCount++;
-	}
+        if(dr){
+	        drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());
+	        mDisplayedDrawableCount++;
+        }
     }
     if(mDisplayedDrawableCount==mDisplayedValues.size())
         mSelectedText->setVisibility(View::INVISIBLE); 
@@ -1483,7 +1483,7 @@ bool NumberPicker::updateInputTextView(){
     if (!text.empty() ){
         std::string beforeText = mSelectedText->getText();
         if (text != beforeText){//!text.equals(beforeText.toString())) {
-            mSelectedText->setText(text);LOGD("%p:%d %d==>%s",this,mID,mValue,text.c_str());
+            mSelectedText->setText(text);
             return true;
         }
     }
@@ -1493,7 +1493,7 @@ bool NumberPicker::updateInputTextView(){
 
 void NumberPicker::notifyChange(int previous, int current){
     if (mOnValueChangeListener) {
-        mOnValueChangeListener(*this, previous, mValue);LOGD("%p:%d %d->%d",this,mID,previous,current);
+        mOnValueChangeListener(*this, previous, mValue);
     }
 }
 

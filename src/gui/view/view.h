@@ -73,14 +73,6 @@ public:
         TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_FIRST_STRONG
     };
 
-    class TransformationInfo{
-    public:
-        Matrix mMatrix;
-        Matrix mInverseMatrix;
-        float mAlpha = 1.f;
-        float mTransitionAlpha = 1.f;
-        TransformationInfo();
-    };
 protected:
     enum PFLAGS{//FLAGS in mPrivateFlags
         PFLAG_WANTS_FOCUS      = 0x01 ,
@@ -167,6 +159,38 @@ protected:
         PFLAG3_AGGREGATED_VISIBLE      = 0x20000000
     };
 
+    class TransformationInfo{
+    public:
+        Matrix mMatrix;
+        Matrix mInverseMatrix;
+        float mAlpha = 1.f;
+        float mTransitionAlpha = 1.f;
+        TransformationInfo();
+    };
+
+    class TintInfo{
+    public:
+        ColorStateList*mTintList;
+        int mBlendMode;
+        int mTintMode;
+        bool mHasTintMode;
+        bool mHasTintList;
+        TintInfo();
+        ~TintInfo();
+    };
+    class ForegroundInfo {
+    public:
+        Drawable* mDrawable;
+        TintInfo* mTintInfo;
+        int mGravity;
+        bool mInsidePadding;
+        bool mBoundsChanged;
+        Rect mSelfBounds;
+        Rect mOverlayBounds;
+    public:
+        ForegroundInfo();
+        ~ForegroundInfo();
+    };    
     class AttachInfo{
     public:
         ViewGroup*mRootView;

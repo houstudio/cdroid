@@ -29,6 +29,7 @@ private:
     void initAnalog();
     void onVisible();
     void onInvisible();
+    Drawable* apply(TintInfo*,Drawable*);
 protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
@@ -40,20 +41,20 @@ public:
     AnalogClock(Context*ctx,const AttributeSet& attrs);
     ~AnalogClock();
     void setDial(Icon icon);
-    //void setDialTintList(ColorStateList*);
-    //ColorStateList*getDialTintList();
+    void setDialTintList(ColorStateList*);
+    ColorStateList*getDialTintList()const;
 
     void setHourHand(Icon icon);
-    //void setHourHandTintList(ColorStateList*);
-    //ColorStateList* getHourHandTintList();
+    void setHourHandTintList(ColorStateList*);
+    ColorStateList* getHourHandTintList()const;
 
     void setMinuteHand(Icon icon);
-    //void setMinuteHandTintList(ColorStateList*);
-    //ColorStateList* getMinuteHandTintList();
+    void setMinuteHandTintList(ColorStateList*);
+    ColorStateList* getMinuteHandTintList()const;
 
     void setSecondHand(Icon icon);
-    //void setSecondHandTintList(ColorStateList*);
-    //ColorStateList* getSecondHandTintList();
+    void setSecondHandTintList(ColorStateList*);
+    ColorStateList* getSecondHandTintList()const;
 
     void onVisibilityAggregated(bool isVisible)override;
 }; 
