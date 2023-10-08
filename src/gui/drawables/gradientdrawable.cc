@@ -347,6 +347,8 @@ void GradientDrawable::setStrokeInternal(int width, int color, float dashWidth, 
 }
 
 void GradientDrawable::setInnerRadiusRatio(float innerRadiusRatio) {
+    if(innerRadiusRatio<=0)
+        return ;
     mGradientState->mInnerRadiusRatio = innerRadiusRatio;
     mPathIsDirty = true;
     invalidateSelf();
@@ -367,6 +369,8 @@ int  GradientDrawable::getInnerRadius()const {
 }
 
 void GradientDrawable::setThicknessRatio(float thicknessRatio) {
+    if(thicknessRatio<=0)
+        return ;
     mGradientState->mThicknessRatio = thicknessRatio;
     mPathIsDirty = true;
     invalidateSelf();
@@ -855,26 +859,24 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.save();
         //inner
         innerRadius = st->mInnerRadius;
-        if(innerRadius==0.f)
-            innerRadius=std::min(mRect.width,mRect.height)/2.f-st->mThickness;
         RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
         float thickness = st->mThickness!=-1 ? st->mThickness:bounds.width/st->mThicknessRatio;
         float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :bounds.width/st->mInnerRadiusRatio;
         RectF innerBounds = bounds;
         float x= bounds.width/2.f;
         float y= bounds.height/2.f;
+        if(innerRadius<=0.f)
+            innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
+        //canvas.translate(x,y);
+        canvas.begin_new_sub_path();
         if( sweep<360.f && sweep>-360.f ) {
-            innerBounds.inflate(x-radius,y-radius);
-            bounds = innerBounds;
-            bounds.inflate(-thickness,-thickness);
-            canvas.move_to(x + radius,y);
-            canvas.line_to(x+radius+thickness,y);
             canvas.arc(x,y,innerRadius,0,M_PI*2*sweep/360.f);
+            canvas.begin_new_sub_path();
             canvas.arc_negative(x,y,innerRadius+thickness,sweep*M_PI*2.f/360.f,0.f);
         } else {
-            canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
-            canvas.move_to(x + radius,y);
+            //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
             canvas.arc(x,y,innerRadius,0,M_PI*2.f);
+            canvas.begin_new_sub_path();
             canvas.arc_negative(x,y,innerRadius+thickness,M_PI*2.f,0.f);
         }
         if(mFillPaint)canvas.set_source(mFillPaint);

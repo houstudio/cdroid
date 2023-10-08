@@ -505,9 +505,9 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
 
         if(corners)parseCorners(d,nullptr, *corners);
         if(shapeType == GradientDrawable::Shape::RING) {
-            d->setInnerRadius(atts.getDimensionPixelSize("innerRadius"));
-            d->setInnerRadiusRatio(atts.getDimensionPixelSize("innerRadiusRatio"));
-            d->setThickness(atts.getDimensionPixelSize("thickness"));
+            d->setInnerRadius(atts.getDimensionPixelSize("innerRadius",-1));
+            d->setInnerRadiusRatio(atts.getDimensionPixelSize("innerRadiusRatio",-1));
+            d->setThickness(atts.getDimensionPixelSize("thickness",-1));
             d->setThicknessRatio(atts.getDimensionPixelSize("thicknessRatio"));
         }
 
