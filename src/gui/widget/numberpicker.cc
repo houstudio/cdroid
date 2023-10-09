@@ -1317,15 +1317,10 @@ void NumberPicker::initializeSelectorWheel(){
 void NumberPicker::initializeFadingEdges(){
     if(mTextColor!=mTextColor2)
 	return;
-    if(isHorizontalMode()){
-        setHorizontalFadingEdgeEnabled(true);
-        setVerticalFadingEdgeEnabled(false);
-        setFadingEdgeLength((getWidth() - mTextSize)/2);
-    }else{
-        setHorizontalFadingEdgeEnabled(false);
-        setVerticalFadingEdgeEnabled(true);
-        setFadingEdgeLength((getHeight() - mTextSize)/2);
-    }
+    setHorizontalFadingEdgeEnabled(isHorizontalFadingEdgeEnabled());
+    setVerticalFadingEdgeEnabled(isVerticalFadingEdgeEnabled());
+    const int size = isHorizontalMode()?getWidth():getHeight();
+    setFadingEdgeLength((size - mTextSize)/2);
 }
 
 void NumberPicker::onScrollerFinished(Scroller* scroller) {

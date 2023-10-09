@@ -1353,7 +1353,7 @@ void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
 void TextView::drawableStateChanged(){
     View::drawableStateChanged();
 
-    if (mTextColor && mTextColor->isStateful()
+    if ((mTextColor && mTextColor->isStateful())
             || (mHintTextColor && mHintTextColor->isStateful())
             || (mLinkTextColor && mLinkTextColor->isStateful())) {
         updateTextColors();
@@ -1492,10 +1492,7 @@ void TextView::updateTextColors(){
     }
     if (mLinkTextColor != nullptr) {
         color = mLinkTextColor->getColorForState(drawableState,0);
-        //if (color != mTextPaint.linkColor) {
-          //  mTextPaint.linkColor = color;
-            inval = true;
-        //}
+        inval = true;
     }
     if (mHintTextColor != nullptr) {
         color = mHintTextColor->getColorForState(drawableState,0);
