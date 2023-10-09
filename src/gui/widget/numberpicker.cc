@@ -83,11 +83,15 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
-    setSelectedTextSize(atts.getDimensionPixelSize("selectedTextSize",mSelectedTextSize));
+    if(atts.hasAttribute("selectedTextSize"))
+        mSelectedTextSize = atts.getDimensionPixelSize("selectedTextSize");
+    else if(!atts.hasAttribute("internalLayout"))
+        mSelectedTextSize =std::max(mSelectedTextSize,mTextSize);
+    setSelectedTextSize(mSelectedTextSize);
     setTextColor(atts.getColor("textColor"));
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
-    ColorStateList*colors=mSelectedText->getTextColors();
+    ColorStateList*colors = mSelectedText->getTextColors();
     if(colors->isStateful())
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mSelectedTextColor));
     updateInputTextView();
@@ -177,8 +181,6 @@ void NumberPicker::initView(){
     mDividerThickness =2;
     mDividerType = SIDE_LINES;
     mLastHandledDownDpadKeyCode =-1;
-    mFadingEdgeEnabled= true;
-    mFadingEdgeStrength= DEFAULT_FADING_EDGE_STRENGTH;
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred =true;
     mSelectionDividerHeight = UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
@@ -220,8 +222,7 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
     const int inptTxtRight= inptTxtLeft + inptTxtMsrdWdth;
     const int inptTxtBottom=inptTxtTop + inptTxtMsrdHght;
     mSelectedText->layout(inptTxtLeft, inptTxtTop, inptTxtMsrdWdth, inptTxtMsrdHght);
-    mSelectedTextCenterX = getWidth()/2;//mSelectedText->getX() + mSelectedText->getMeasuredWidth()/2.f -2.f;
-    mSelectedTextCenterY = getHeight()/2;//mSelectedText->getY() + mSelectedText->getMeasuredHeight()/2.f -5.f;
+    mSelectedTextCenter = (isHorizontalMode()?getWidth():getHeight())/2;
     if (changed) { // need to do all this when we know our size
         initializeSelectorWheel();
         initializeFadingEdges();
@@ -619,14 +620,6 @@ void NumberPicker::setFormatter(Formatter formatter){
     updateInputTextView();
 }
 
-void NumberPicker::setFadingEdgeEnabled(bool fadingEdgeEnabled) {
-    mFadingEdgeEnabled = fadingEdgeEnabled;
-}
-
-void NumberPicker::setFadingEdgeStrength(float strength) {
-    mFadingEdgeStrength = strength;
-}
-
 void NumberPicker::setValue(int value) {
     setValueInternal(value, false);
 }
@@ -868,25 +861,6 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
         mDisplayedDrawableSize = drsize/mDisplayedDrawableCount;
 }
 
-float NumberPicker::getFadingEdgeStrength(bool isHorizontalMode)const{
-    return isHorizontalMode && mFadingEdgeEnabled ? mFadingEdgeStrength : 0;
-}
-
-float NumberPicker::getTopFadingEdgeStrength() {
-     return getFadingEdgeStrength(!isHorizontalMode());
-}
-
-float NumberPicker::getBottomFadingEdgeStrength() {
-     return getFadingEdgeStrength(!isHorizontalMode());
-}
-
-float NumberPicker::getLeftFadingEdgeStrength() {
-    return getFadingEdgeStrength(isHorizontalMode());
-}
-
-float NumberPicker::getRightFadingEdgeStrength() {
-    return getFadingEdgeStrength(isHorizontalMode());
-}
 
 void NumberPicker::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
@@ -1289,25 +1263,25 @@ void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
     std::vector<int>& selectorIndices = mSelectorIndices;
     const float textGapCount = selectorIndices.size();
-	const int inputEdit_Size = isHorizontalMode()?mSelectedText->getWidth():mSelectedText->getHeight();
+    const int inputEdit_Size = isHorizontalMode()?mSelectedText->getWidth():mSelectedText->getHeight();
     if (isHorizontalMode()) {
         int selectedWidth= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,inputEdit_Size):mSelectedTextSize;
         const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedWidth);
-        float totalTextGapWidth = getWidth() - totalTextSize;
+        const float totalTextGapWidth = getWidth() - totalTextSize;
         mSelectorTextGapWidth = (int) (totalTextGapWidth / textGapCount);
         mSelectorElementSize = std::min(getMaxTextSize() + mSelectorTextGapWidth,getWidth()/textGapCount);
         if(mSelectedText->getVisibility()==View::INVISIBLE)
             selectedWidth = mSelectorElementSize;
-        mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex-(selectedWidth-mSelectorElementSize)/2);
+        mInitialScrollOffset = (int) (mSelectedTextCenter - mSelectorElementSize * mWheelMiddleItemIndex-(selectedWidth-mSelectorElementSize)/2);
     } else {
         int selectedHeight= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,inputEdit_Size):mSelectedTextSize;
-        const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + mSelectedTextSize);//selectedHeight);
-        float totalTextGapHeight= getHeight() - totalTextSize;
+        const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedHeight);
+        const float totalTextGapHeight= getHeight() - totalTextSize;
         mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount);
         mSelectorElementSize = std::min(getMaxTextSize() + mSelectorTextGapHeight,getHeight()/textGapCount);
         if(mSelectedText->getVisibility()==View::INVISIBLE)
             selectedHeight = mSelectorElementSize;
-        mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
+        mInitialScrollOffset = (int) (mSelectedTextCenter - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
     LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight(),mSelectedTextSize,mTextSize);
     mCurrentScrollOffset = mInitialScrollOffset;
@@ -1316,9 +1290,7 @@ void NumberPicker::initializeSelectorWheel(){
 
 void NumberPicker::initializeFadingEdges(){
     if(mTextColor!=mTextColor2)
-	return;
-    setHorizontalFadingEdgeEnabled(isHorizontalFadingEdgeEnabled());
-    setVerticalFadingEdgeEnabled(isVerticalFadingEdgeEnabled());
+	    return;
     const int size = isHorizontalMode()?getWidth():getHeight();
     setFadingEdgeLength((size - mTextSize)/2);
 }

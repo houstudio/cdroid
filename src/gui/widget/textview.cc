@@ -1558,7 +1558,6 @@ Layout* TextView::getLayout()const{
     return mLayout;
 }
 
-
 Layout* TextView::getHintLayout()const{
     return mHintLayout;
 }

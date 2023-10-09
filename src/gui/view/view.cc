@@ -6784,7 +6784,7 @@ void View::setMeasuredDimension(int measuredWidth, int measuredHeight){
 }
 
 int View::getBaseline(){
-    return 0;
+    return -1;
 }
 
 void View::getDrawingRect(Rect& outRect) const {

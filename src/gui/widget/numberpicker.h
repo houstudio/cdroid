@@ -43,8 +43,7 @@ private:
     EditText* mSelectedText;
     Runnable mChangeCurrentByOneFromLongPressCommand;
     Runnable mBeginSoftInputOnLongPressCommand;
-    float mSelectedTextCenterX;
-    float mSelectedTextCenterY;
+    float mSelectedTextCenter;
     int mSelectionDividersDistance;
     int mMinHeight;
     int mMaxHeight;
@@ -108,9 +107,7 @@ private:
     int mItemSpacing;
     int mSelectionDividerHeight;
     int mScrollState=OnScrollListener::SCROLL_STATE_IDLE;
-    bool mFadingEdgeEnabled;
     bool mScrollerEnabled;
-    float mFadingEdgeStrength;
     int mTopSelectionDividerTop;
     int mBottomSelectionDividerBottom;
     int mLastHoveredChildVirtualViewId;
@@ -131,7 +128,6 @@ private:
 private:
     void initView();
     float getMaxTextSize()const;
-    float getFadingEdgeStrength(bool isHorizontalMode)const;
     void setWidthAndHeight();
     bool isHorizontalMode()const;
     void drawHorizontalDividers(Canvas& canvas);
@@ -177,10 +173,6 @@ protected:
     int computeVerticalScrollOffset()override;
     int computeVerticalScrollRange()override;
     int computeVerticalScrollExtent()override;
-    float getTopFadingEdgeStrength()override;
-    float getBottomFadingEdgeStrength()override;
-    float getLeftFadingEdgeStrength()override;
-    float getRightFadingEdgeStrength()override;
     void drawableStateChanged();
     void onDraw(Canvas&canvas)override;
 public:
@@ -206,8 +198,6 @@ public:
     void setOnValueChangedListener(OnValueChangeListener onValueChangedListener);
     void setOnScrollListener(const OnScrollListener& onScrollListener);
     void setFormatter(Formatter formatter);
-    void setFadingEdgeEnabled(bool fadingEdgeEnabled);
-    void setFadingEdgeStrength(float strength);
 
     EditText*getSelectedText()const;
     Drawable* getDivider()const;

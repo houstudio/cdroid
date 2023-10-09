@@ -291,6 +291,7 @@ bool ImageView::getBaselineAlignBottom()const{
 }
 
 int ImageView::getBaseline(){
+    if(mBaselineAlignBottom)return getMeasuredHeight();
     return mBaseline;
 }
 
