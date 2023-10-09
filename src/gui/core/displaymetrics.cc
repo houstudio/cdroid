@@ -1,6 +1,6 @@
+#include <stdlib.h>
 #include <core/displaymetrics.h>
-#include <porting/cdgraph.h>
-
+#include <cdgraph.h>
 namespace cdroid{
 
 int DisplayMetrics::DENSITY_DEVICE = getDeviceDensity();//DENSITY_DEFAULT;
