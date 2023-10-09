@@ -522,63 +522,35 @@ View& NumberPicker::setEnabled(bool enabled) {
 void NumberPicker::scrollBy(int x, int y){
     std::vector<int>&selectorIndices = mSelectorIndices;
     const int startScrollOffset = mCurrentScrollOffset;
-    const int selectedTextSize = mDisplayedDrawableSize ? mDisplayedDrawableSize : getMaxTextSize();
-    const int gap = std::min(selectedTextSize,mSelectorElementSize)/2;
-    if (isHorizontalMode()) {
-        if (isAscendingOrder()) {
-            if (!mWrapSelectorWheel && x > 0
-                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
-            if (!mWrapSelectorWheel && x < 0
-                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
-        } else {
-            if (!mWrapSelectorWheel && x > 0
-                    && selectorIndices[mWheelMiddleItemIndex] > mMaxValue) {
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
-            if (!mWrapSelectorWheel && x < 0
-                    && selectorIndices[mWheelMiddleItemIndex] < mMinValue) {
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
+    const int gap = mSelectorElementSize/2;
+    const int xy = isHorizontalMode() ? x : y;
+    if (isAscendingOrder()) {
+        if (!mWrapSelectorWheel && xy > 0
+                && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {//changed from <=--><,make items wrapable
+            mCurrentScrollOffset = mInitialScrollOffset;
+            return;
         }
-
-        mCurrentScrollOffset += x;
+        if (!mWrapSelectorWheel && xy < 0
+                && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+            mCurrentScrollOffset = mInitialScrollOffset;
+            return;
+        }
     } else {
-        if (isAscendingOrder()) {
-            if (!mWrapSelectorWheel && y > 0
-                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {//changed from <=--><,make items wrapable
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
-            if (!mWrapSelectorWheel && y < 0
-                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
-        } else {
-            if (!mWrapSelectorWheel && y > 0
-                    && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {//changed from >=-->>,make items wrapable
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
-            if (!mWrapSelectorWheel && y < 0
-                    && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
-                mCurrentScrollOffset = mInitialScrollOffset;
-                return;
-            }
+        if (!mWrapSelectorWheel && xy > 0
+                && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {//changed from >=-->>,make items wrapable
+            mCurrentScrollOffset = mInitialScrollOffset;
+            return;
         }
-
-        mCurrentScrollOffset += y;
+        if (!mWrapSelectorWheel && xy < 0
+                && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+            mCurrentScrollOffset = mInitialScrollOffset;
+            return;
+        }
     }
-    while (mCurrentScrollOffset - mInitialScrollOffset > gap) {
-        mCurrentScrollOffset -= gap*2;//mSelectorElementSize;
+    mCurrentScrollOffset += xy;
+
+    while (mCurrentScrollOffset - mInitialScrollOffset >  gap) {
+        mCurrentScrollOffset -= mSelectorElementSize;
         if(isAscendingOrder())
             decrementSelectorIndices(selectorIndices);
         else
@@ -589,8 +561,8 @@ void NumberPicker::scrollBy(int x, int y){
         }
     }
 
-    while (mCurrentScrollOffset - mInitialScrollOffset < -gap) {
-        mCurrentScrollOffset += gap*2;//mSelectorElementSize;
+    while (mCurrentScrollOffset - mInitialScrollOffset < - gap) {
+        mCurrentScrollOffset += mSelectorElementSize;
         if(isAscendingOrder())
             incrementSelectorIndices(selectorIndices);
         else
@@ -1026,20 +998,18 @@ Typeface* NumberPicker::getTypeface()const{
 
 void NumberPicker::onDraw(Canvas&canvas){
     const bool showSelectorWheel = !mHideWheelUntilFocused || hasFocus();
-    float x, y;
+    float x=0, y=0;
     Rect recText;
     const int textGravity = mSelectedText?mSelectedText->getGravity():Gravity::CENTER;
     canvas.save();
     if (isHorizontalMode()) {
         x = mCurrentScrollOffset - mSelectorElementSize/2;
-        y = 0;
         recText = Rect::Make(x,y,mSelectorElementSize,getHeight());
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
             canvas.rectangle(mLeftDividerLeft, 0, mRightDividerRight-mLeftDividerLeft, getHeight());
             canvas.clip();
         }
     } else {
-        x = 0;
         y = mCurrentScrollOffset - mSelectorElementSize/2;
         recText = Rect::Make(0,y,getWidth(),mSelectorElementSize);
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
@@ -1052,9 +1022,9 @@ void NumberPicker::onDraw(Canvas&canvas){
             Color c1(mTextColor), c2(mTextColor2);
             CycleInterpolator ci(0.5f);
             if(isHorizontalMode())
-                mPat = Cairo::LinearGradient::create(0/*x + mSelectorElementSize/2*/,0,/*x + mSelectorElementSize/2 +*/ getWidth(),0);
+                mPat = Cairo::LinearGradient::create( 0 , 0 , getWidth() , 0);
             else
-                mPat = Cairo::LinearGradient::create(0,0/*y + mSelectorElementSize/2*/,0,/*y + mSelectorElementSize/2 +*/ getHeight());
+                mPat = Cairo::LinearGradient::create( 0 , 0 , 0, getHeight());
             const int cStops = mSelectorIndices.size()*3;
             for(int i = 0; i < cStops ;i++){
                 const float offset = float(i)/cStops;
@@ -1074,15 +1044,9 @@ void NumberPicker::onDraw(Canvas&canvas){
         float font_size  = mTextSize;
         int selectedSize = mSelectorElementSize;
         if(mTextSize != mTextSize2){
-            if(isHorizontalMode()){
-                const float harfWidth = getWidth()/2.f;
-                const float fraction = std::abs(x - harfWidth)/harfWidth;
-                font_size = lerp(mTextSize,mTextSize2,fraction);
-            }else{
-                const float harfHeight = getHeight()/2.f;
-                const float fraction = std::abs(y - harfHeight + mSelectorElementSize/2)/harfHeight;
-                font_size = lerp(mTextSize,mTextSize2,fraction);
-            }
+            const float harfSize = (isHorizontalMode()?getWidth():getHeight())/2.f;
+            const float fraction = std::abs( (isHorizontalMode()?x:y) - harfSize + mSelectorElementSize/2)/harfSize;
+            font_size = lerp(mTextSize,mTextSize2,fraction);
             canvas.set_font_size(font_size);
         }
 
@@ -1106,17 +1070,8 @@ void NumberPicker::onDraw(Canvas&canvas){
         // is shown only if the wheel is static and it covers the middle item.
         // Otherwise, if the user starts editing the text via the IME he may 
         // see a dimmed version of the old value intermixed with the new one.
-        if ((showSelectorWheel && i != mWheelMiddleItemIndex)
-                || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
+        if ((showSelectorWheel && i != mWheelMiddleItemIndex) || (i == mWheelMiddleItemIndex && mSelectedText->getVisibility() != VISIBLE)) {
             Drawable*dr = nullptr;
-            int xOffset = 0 , yOffset = 0;
-            if (i != mWheelMiddleItemIndex && mItemSpacing != 0) {
-                if (isHorizontalMode()) {
-                    xOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
-                } else {
-                    yOffset = i > mWheelMiddleItemIndex ? mItemSpacing : -mItemSpacing;
-                }
-            }
             if(selectorIndex<mDisplayedDrawables.size() && (dr = mDisplayedDrawables.at(selectorIndex))){
                 Rect outRect;
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
@@ -1130,9 +1085,6 @@ void NumberPicker::onDraw(Canvas&canvas){
             x += selectedSize;
             recText.offset(selectedSize,0);
         } else {
-            LOGV("%p:%d[%d] %s pos=(%d,%d,%d,%d) itemsize=%d,ScrollOffset=%d,%d fontsize=%d,%d,%.f",
-                 this,mID,i,scrollSelectorValue.c_str(),recText.left,recText.top,recText.width,recText.height,
-                 selectedSize,mInitialScrollOffset,mCurrentScrollOffset,mSelectedTextSize,mTextSize,font_size);
             y += selectedSize;
             recText.offset(0,selectedSize);
         }
@@ -1333,23 +1285,24 @@ void NumberPicker::initializeSelectorWheel(){
     initializeSelectorWheelIndices();
     std::vector<int>& selectorIndices = mSelectorIndices;
     const float textGapCount = selectorIndices.size();
+	const int inputEdit_Size = isHorizontalMode()?mSelectedText->getWidth():mSelectedText->getHeight();
     if (isHorizontalMode()) {
-        int selectedWidth= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getWidth()):mSelectedTextSize;
-        const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedWidth);
+        int selectedWidth= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,inputEdit_Size):mSelectedTextSize;
+        const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedWidth);
         float totalTextGapWidth = getWidth() - totalTextSize;
         mSelectorTextGapWidth = (int) (totalTextGapWidth / textGapCount);
         mSelectorElementSize = std::min(getMaxTextSize() + mSelectorTextGapWidth,getWidth()/textGapCount);
         if(mSelectedText->getVisibility()==View::INVISIBLE)
-            selectedWidth=mSelectorElementSize;
+            selectedWidth = mSelectorElementSize;
         mInitialScrollOffset = (int) (mSelectedTextCenterX - mSelectorElementSize * mWheelMiddleItemIndex-(selectedWidth-mSelectorElementSize)/2);
     } else {
-        int selectedHeight= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,mSelectedText->getHeight()):mSelectedTextSize;
-        const int totalTextSize = int ((selectorIndices.size() - 1) * mSelectedTextSize + selectedHeight);
+        int selectedHeight= (mSelectedText->getVisibility()==View::VISIBLE)?std::max(mSelectedTextSize,inputEdit_Size):mSelectedTextSize;
+        const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + mSelectedTextSize);//selectedHeight);
         float totalTextGapHeight= getHeight() - totalTextSize;
         mSelectorTextGapHeight = (int) (totalTextGapHeight / textGapCount);
         mSelectorElementSize = std::min(getMaxTextSize() + mSelectorTextGapHeight,getHeight()/textGapCount);
         if(mSelectedText->getVisibility()==View::INVISIBLE)
-            selectedHeight=mSelectorElementSize;
+            selectedHeight = mSelectorElementSize;
         mInitialScrollOffset = (int) (mSelectedTextCenterY - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
     LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mSelectedText->getHeight(),mSelectedTextSize,mTextSize);
