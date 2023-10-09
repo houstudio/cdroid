@@ -726,6 +726,10 @@ void NumberPicker::setOnLongPressUpdateInterval(long intervalMillis) {
     mLongPressUpdateInterval = intervalMillis;
 }
 
+EditText*NumberPicker::getSelectedText()const{
+    return mSelectedText;
+}
+
 Drawable*NumberPicker::getDivider()const{
     return mDividerDrawable;
 }

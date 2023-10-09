@@ -209,6 +209,7 @@ public:
     void setFadingEdgeEnabled(bool fadingEdgeEnabled);
     void setFadingEdgeStrength(float strength);
 
+    EditText*getSelectedText()const;
     Drawable* getDivider()const;
     void setDivider(Drawable*d);
     void setSelectionDivider(Drawable*d);
