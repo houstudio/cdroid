@@ -20,6 +20,7 @@
 #define SMALLTICKSIZE 4
 #define TICKOFFSET 0
 
+//kf5plotting: https://invent.kde.org/frameworks/kplotting
 namespace cdroid{
 
 class PlotView::Private

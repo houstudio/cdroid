@@ -3,7 +3,6 @@ project(uidemo1 C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-#find_package(CDROID REQUIRED)
 include_directories(
    ./
    ${CDROID_INCLUDE_DIRS}
@@ -11,10 +10,6 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include
    ${CMAKE_BINARY_DIR}/include/gui
    ${CMAKE_BINARY_DIR}/include/porting
-   ${CMAKE_BINARY_DIR}/include/cairo
-   ${CMAKE_BINARY_DIR}/include/epg
-   ${CMAKE_BINARY_DIR}/include/freetype2
-   
 )
 aux_source_directory(./ DEMO_SRCS)
 add_definitions(--include cdtypes.h)

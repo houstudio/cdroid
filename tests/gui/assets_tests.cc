@@ -23,7 +23,7 @@ TEST_F(ASSETS,array){
    std::vector<std::string>array;
    app.getArray("cdroid:array/resolver_target_actions_unpin",array);
    for(auto a:array)printf("%s\r\n",a.c_str());
-   printf("size=%d\r\n",array.size());
+   printf("size=%lu\r\n",array.size());
    ASSERT_TRUE(array.size()>0);
 }
 
@@ -32,7 +32,7 @@ TEST_F(ASSETS,array2){
    std::vector<std::string>array;
    app.getArray("@cdroid:array/preloaded_drawables",array);
    for(auto a:array)printf("%s\r\n",a.c_str());
-   printf("size=%d\r\n",array.size());
+   printf("size=%lu\r\n",array.size());
    ASSERT_TRUE(array.size()>0);
 }
 TEST_F(ASSETS,color){

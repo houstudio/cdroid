@@ -49,12 +49,6 @@ add_definitions(
     -DCONFIG_TLS_DEFAULT_CIPHERS="DEFAULT:!EXP:!LOW:3DES")
 
 add_library(wpa_ctrl wpa_ctrl.c utils/os_unix.c utils/wpabuf.c)
-target_include_directories(wpa_ctrl PUBLIC 
-   "utils"   "./"
-   ${CDROID_INCLUDE_DIRS}
-   ${CDROID_DEPINCLUDES}
-   ${CMAKE_BINARY_DIR}/include/porting)
+target_include_directories(wpa_ctrl PUBLIC "utils")
+target_include_directories(wpa_ctrl PUBLIC "./")
 target_compile_options(wpa_ctrl PUBLIC -Wall -Wextra -Wno-variadic-macros)
-
-add_executable(wpatest main.cc wpasockclient.cc)
-target_link_libraries(wpatest wpa_ctrl cdroid)

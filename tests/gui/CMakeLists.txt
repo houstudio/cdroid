@@ -8,9 +8,6 @@ include_directories(
    ${GTEST_INCLUDE_DIRS}
    ${CMAKE_BINARY_DIR}/include/porting
    ${CMAKE_BINARY_DIR}/include
-   ${CMAKE_BINARY_DIR}/include/freetype2
-   ${CMAKE_BINARY_DIR}/include/harfbuzz
-   ${CMAKE_BINARY_DIR}/include/fribidi
    ${CMAKE_SOURCE_DIR}/src/gui
    ${CMAKE_BINARY_DIR}/include/gui
    ${CMAKE_BINARY_DIR}/include/uriparser

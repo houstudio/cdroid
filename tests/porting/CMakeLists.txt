@@ -26,12 +26,9 @@ endif(ENABLE_DTV)
 include_directories(
    ./
    ${GTEST_INCLUDE_DIRS}
-   ${CMAKE_BINARY_DIR}/includegtest
    ${CMAKE_BINARY_DIR}/include
    ${CMAKE_BINARY_DIR}/include/gui
    ${CMAKE_BINARY_DIR}/include/porting
-   ${CMAKE_BINARY_DIR}/include/rfb
-   ${CMAKE_BINARY_DIR}/include/pixman
 )
 
 link_directories(${CMAKE_BINARY_DIR}/lib)

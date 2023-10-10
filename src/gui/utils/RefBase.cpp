@@ -181,7 +181,7 @@ public:
             ref_entry* refs = mStrongRefs;
             while (refs) {
                 char inc = refs->ref >= 0 ? '+' : '-';
-                ALOGD("\t%c ID %p (ref %d):", inc, refs->id, refs->ref);
+                LOGD("\t%c ID %p (ref %d):", inc, refs->id, refs->ref);
 #if DEBUG_REFS_CALLSTACK_ENABLED
                 refs->stack.log(LOG_TAG);
 #endif
@@ -191,11 +191,11 @@ public:
 
         if (!mRetain && mWeakRefs != NULL) {
             dumpStack = true;
-            ALOGE("Weak references remain!");
+            LOGE("Weak references remain!");
             ref_entry* refs = mWeakRefs;
             while (refs) {
                 char inc = refs->ref >= 0 ? '+' : '-';
-                ALOGD("\t%c ID %p (ref %d):", inc, refs->id, refs->ref);
+                LOGD("\t%c ID %p (ref %d):", inc, refs->id, refs->ref);
 #if DEBUG_REFS_CALLSTACK_ENABLED
                 refs->stack.log(LOG_TAG);
 #endif
@@ -203,20 +203,18 @@ public:
             }
         }
         if (dumpStack) {
-            ALOGE("above errors at:");
+            LOGE("above errors at:");
             //CallStack stack(LOG_TAG);
         }
     }
 
     void addStrongRef(const void* id) {
-        //ALOGD_IF(mTrackEnabled,
-        //        "addStrongRef: RefBase=%p, id=%p", mBase, id);
+        LOGD_IF(mTrackEnabled,"addStrongRef: RefBase=%p, id=%p", mBase, id);
         addRef(&mStrongRefs, id, mStrong.load(std::memory_order_relaxed));
     }
 
     void removeStrongRef(const void* id) {
-        //ALOGD_IF(mTrackEnabled,
-        //        "removeStrongRef: RefBase=%p, id=%p", mBase, id);
+        LOGD_IF(mTrackEnabled, "removeStrongRef: RefBase=%p, id=%p", mBase, id);
         if (!mRetain) {
             removeRef(&mStrongRefs, id);
         } else {
@@ -225,9 +223,7 @@ public:
     }
 
     void renameStrongRefId(const void* old_id, const void* new_id) {
-        //ALOGD_IF(mTrackEnabled,
-        //        "renameStrongRefId: RefBase=%p, oid=%p, nid=%p",
-        //        mBase, old_id, new_id);
+        LOGD_IF(mTrackEnabled, "renameStrongRefId: RefBase=%p, oid=%p, nid=%p", mBase, old_id, new_id);
         renameRefsId(mStrongRefs, old_id, new_id);
     }
 
@@ -278,9 +274,9 @@ public:
             if (rc >= 0) {
                 write(rc, text.string(), text.length());
                 close(rc);
-                ALOGD("STACK TRACE for %p saved in %s", this, name);
+                LOGD("STACK TRACE for %p saved in %s", this, name);
             }
-            else ALOGE("FAILED TO PRINT STACK TRACE for %p in %s: %s", this,
+            else LOGE("FAILED TO PRINT STACK TRACE for %p in %s: %s", this,
                       name, strerror(errno));
         }
     }
@@ -329,14 +325,14 @@ private:
                 ref = *refs;
             }
 
-            ALOGE("RefBase: removing id %p on RefBase %p"
+            LOGE("RefBase: removing id %p on RefBase %p"
                     "(weakref_type %p) that doesn't exist!",
                     id, mBase, this);
 
             ref = head;
             while (ref) {
                 char inc = ref->ref >= 0 ? '+' : '-';
-                ALOGD("\t%c ID %p (ref %d):", inc, ref->id, ref->ref);
+                LOGD("\t%c ID %p (ref %d):", inc, ref->id, ref->ref);
                 ref = ref->next;
             }
 
@@ -446,8 +442,7 @@ void RefBase::forceIncStrong(const void* id) const{
     
     refs->addStrongRef(id);
     const int32_t c = refs->mStrong.fetch_add(1, std::memory_order_relaxed);
-    LOGE_IF(c >= 0, "forceIncStrong called on %p after ref count underflow",
-               refs);
+    LOGE_IF(c >= 0, "forceIncStrong called on %p after ref count underflow", refs);
 #if PRINT_REFS
     LOGD("forceIncStrong of %p from %p: cnt=%d\n", this, id, c);
 #endif
@@ -506,7 +501,7 @@ void RefBase::weakref_type::decWeak(const void* id){
             LOGW("RefBase: Object at %p lost last weak reference "
                     "before it had a strong reference", impl->mBase);
         } else {
-            // ALOGV("Freeing refs %p of old RefBase %p\n", this, impl->mBase);
+            LOGV("Freeing refs %p of old RefBase %p\n", this, impl->mBase);
             delete impl;
         }
     } else {
@@ -676,8 +671,7 @@ RefBase::~RefBase(){
             == INITIAL_STRONG_VALUE) {
         // We never acquired a strong reference on this object.
         LOGE_IF(mRefs->mWeak.load() != 0,
-                "RefBase: Explicit destruction with non-zero weak "
-                "reference count");
+                "RefBase: Explicit destruction with non-zero weak reference count");
         // TODO: Always report if we get here. Currently MediaMetadataRetriever
         // C++ objects are inconsistently managed and sometimes get here.
         // There may be other cases, but we believe they should all be fixed.

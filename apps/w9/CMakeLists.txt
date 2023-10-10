@@ -10,10 +10,6 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include
    ${CMAKE_BINARY_DIR}/include/gui
    ${CMAKE_BINARY_DIR}/include/porting
-   ${CMAKE_BINARY_DIR}/include/cairo
-   ${CMAKE_BINARY_DIR}/include/epg
-   ${CMAKE_BINARY_DIR}/include/freetype2
-   
 )
 aux_source_directory(./ W9_SRCS)
 add_definitions(--include cdtypes.h)

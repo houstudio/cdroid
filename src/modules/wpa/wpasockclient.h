@@ -1,3 +1,6 @@
+#ifndef __WPA_SOCKET_H__
+#define __WPA_SOCKET_H__
+#include <stddef.h>
 #include <wpa_ctrl.h>
 
 namespace cdroid{
@@ -25,4 +28,5 @@ public:
     int write(const char *command, char *reply, size_t *reply_len);
 };
 
-}
+}/*endof namespace*/
+#endif/*__WPA_SOCKET_H__*/
