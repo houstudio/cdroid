@@ -103,6 +103,7 @@ public:
     void requestChildFocus(View* child, View* focused)override;
     void requestLayout()override;
     void scrollTo(int x, int y)override;
+    void scrollToDescendant(View* child);
     void setOverScrollMode(int mode);
     bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
     void onNestedScrollAccepted(View* child, View* target, int axes)override;

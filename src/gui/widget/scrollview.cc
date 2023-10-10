@@ -938,6 +938,22 @@ bool ScrollView::onNestedFling(View* target, float velocityX, float velocityY, b
     return false;
 }
 
+void ScrollView::scrollToDescendant(View* child) {
+    if(child == nullptr) return;
+    if (!mIsLayoutDirty) {
+        child->getDrawingRect(mTempRect);
+        /* Offset from child's local coordinates to ScrollView coordinates */
+        offsetDescendantRectToMyCoords(child, mTempRect);
+        const int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+
+        if (scrollDelta != 0) {
+            scrollBy(0, scrollDelta);
+        }
+    } else {
+        mChildToScrollTo = child;
+    }
+}
+
 bool ScrollView::scrollToChildRect(Rect& rect, bool immediate){
     int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
      bool scroll = delta != 0;
@@ -1012,7 +1028,7 @@ int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
 void ScrollView::requestChildFocus(View* child, View* focused){
     if (focused != nullptr && focused->getRevealOnFocusHint()) {
         if (!mIsLayoutDirty) {
-            scrollToChild(focused);
+            scrollToDescendant(focused);//scrollToChild(focused);
         } else {
             // The child may not be laid out yet, we can't compute the scroll yet
             mChildToScrollTo = focused;
