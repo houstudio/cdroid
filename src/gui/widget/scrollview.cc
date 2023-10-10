@@ -8,8 +8,6 @@ DECLARE_WIDGET2(ScrollView,"cdroid:attr/scrollViewStyle")
 ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();
     AttributeSet attrs;
-    mEdgeGlowTop = new EdgeEffect(mContext);
-    mEdgeGlowBottom = new EdgeEffect(mContext);
     mIsBeingDragged=false;
     mActivePointerId=INVALID_POINTER;
 }
@@ -17,12 +15,14 @@ ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
 ScrollView::ScrollView(Context*context,const AttributeSet&atts)
   :FrameLayout(context,atts){
     initScrollView();
-    mEdgeGlowTop = new EdgeEffect(context);
-    mEdgeGlowBottom = new EdgeEffect(context);
+    setFillViewport(atts.getBoolean("fillViewport", false));
 }
 
 ScrollView::~ScrollView(){
+    recycleVelocityTracker();
     delete mScroller;
+	delete mEdgeGlowTop;
+	delete mEdgeGlowBottom;
 }
 
 float ScrollView::getTopFadingEdgeStrength() {
@@ -87,7 +87,8 @@ void ScrollView::initScrollView() {
     mSmoothScrollingEnabled = true;
     mVelocityTracker = nullptr;
     mLastScroll = 0;
-    mEdgeGlowTop = mEdgeGlowBottom =nullptr;
+    mEdgeGlowTop = new EdgeEffect(mContext);
+    mEdgeGlowBottom = new EdgeEffect(mContext);
     ViewConfiguration& configuration = ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
@@ -251,11 +252,11 @@ void ScrollView::initVelocityTrackerIfNotExists() {
 }
 
 void ScrollView::recycleVelocityTracker() {
-        if (mVelocityTracker != nullptr) {
-            mVelocityTracker->recycle();
-            mVelocityTracker = nullptr;
-        }
+    if (mVelocityTracker != nullptr) {
+        mVelocityTracker->recycle();
+        mVelocityTracker = nullptr;
     }
+}
 
 bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
     int action = ev.getAction();

@@ -20,10 +20,7 @@ HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
 }
 
 HorizontalScrollView::~HorizontalScrollView(){
-    if(mVelocityTracker){
-        mVelocityTracker->recycle();
-        mVelocityTracker = nullptr;
-    }
+    recycleVelocityTracker();
     delete mScroller;
     delete mEdgeGlowLeft;
     delete mEdgeGlowRight;
