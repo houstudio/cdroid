@@ -40,8 +40,8 @@ private:
     int getScrollRange();
     View* findFocusableViewInBounds(bool topFocus, int top, int bottom);
     bool scrollAndFocus(int direction, int top, int bottom);
-    bool isOffScreen(View* descendant);
-    bool isWithinDeltaOfScreen(View* descendant, int delta, int height);
+    bool isOffScreen(const View* descendant);
+    bool isWithinDeltaOfScreen(const View* descendant, int delta, int height);
     void doScrollY(int delta);
     void smoothScrollBy(int dx, int dy);
     int consumeFlingInStretch(int unconsumed);
