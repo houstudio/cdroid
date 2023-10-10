@@ -25,6 +25,10 @@ ScrollView::~ScrollView(){
 	delete mEdgeGlowBottom;
 }
 
+bool ScrollView::shouldDelayChildPressedState(){
+    return true;
+}
+
 float ScrollView::getTopFadingEdgeStrength() {
     if (getChildCount() == 0) {
         return 0.0f;
@@ -256,6 +260,13 @@ void ScrollView::recycleVelocityTracker() {
         mVelocityTracker->recycle();
         mVelocityTracker = nullptr;
     }
+}
+
+void ScrollView::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
+    if (disallowIntercept) {
+        recycleVelocityTracker();
+    }
+    FrameLayout::requestDisallowInterceptTouchEvent(disallowIntercept);
 }
 
 bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
@@ -660,12 +671,12 @@ View* ScrollView::findFocusableViewInBounds(bool topFocus, int top, int bottom) 
 }
 
 bool ScrollView::pageScroll(int direction) {
-    bool down = direction == View::FOCUS_DOWN;
-    int height = getHeight();
+    const bool down = direction == View::FOCUS_DOWN;
+    const int height = getHeight();
 
     if (down) {
         mTempRect.top = getScrollY() + height;
-        int count = getChildCount();
+        const int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(count - 1);
             if (mTempRect.top + height > view->getBottom()) {
@@ -878,7 +889,41 @@ void ScrollView::measureChildWithMargins(View* child, int parentWidthMeasureSpec
 }
 
 void ScrollView::computeScroll() {
+    if (mScroller->computeScrollOffset()) {
+        const int oldX = mScrollX;
+        const int oldY = mScrollY;
+        const int x = mScroller->getCurrX();
+        const int y = mScroller->getCurrY();
+        const int deltaY = consumeFlingInStretch(y - oldY);
 
+        if (oldX != x || deltaY != 0) {
+            const int range = getScrollRange();
+            const int overscrollMode = getOverScrollMode();
+            const bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
+                    (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
+
+            overScrollBy(x - oldX, deltaY, oldX, oldY, 0, range, 0, mOverflingDistance, false);
+            onScrollChanged(mScrollX, mScrollY, oldX, oldY);
+
+            if (canOverscroll && deltaY != 0) {
+                if (y < 0 && oldY >= 0) {
+                    mEdgeGlowTop->onAbsorb((int) mScroller->getCurrVelocity());
+                } else if (y > range && oldY <= range) {
+                    mEdgeGlowBottom->onAbsorb((int) mScroller->getCurrVelocity());
+                }
+            }
+        }
+
+        if (!awakenScrollBars()) {
+            // Keep on drawing until the animation has finished.
+            postInvalidateOnAnimation();
+        }
+    }/* else {
+        if (mFlingStrictSpan != nullptr) {
+            mFlingStrictSpan->finish();
+            mFlingStrictSpan = nullptr;
+        }
+    }*/
 }
 
 void ScrollView::scrollToChild(View* child) {
@@ -936,6 +981,32 @@ bool ScrollView::onNestedFling(View* target, float velocityX, float velocityY, b
         return true;
     }
     return false;
+}
+
+int ScrollView::consumeFlingInStretch(int unconsumed) {
+    if (unconsumed > 0 && mEdgeGlowTop && mEdgeGlowTop->getDistance() != 0.f) {
+         const int size = getHeight();
+         const float deltaDistance = -unconsumed * FLING_DESTRETCH_FACTOR / size;
+         const int consumed = std::round(-size / FLING_DESTRETCH_FACTOR
+                 * mEdgeGlowTop->onPullDistance(deltaDistance, 0.5f));
+         mEdgeGlowTop->onRelease();
+         if (consumed != unconsumed) {
+             mEdgeGlowTop->finish();
+         }
+         return unconsumed - consumed;
+     }
+     if (unconsumed < 0 && mEdgeGlowBottom && mEdgeGlowBottom->getDistance() != 0.f) {
+         const int size = getHeight();
+         const float deltaDistance = unconsumed * FLING_DESTRETCH_FACTOR / size;
+         const int consumed = std::round(size / FLING_DESTRETCH_FACTOR
+                 * mEdgeGlowBottom->onPullDistance(deltaDistance, 0.5f));
+         mEdgeGlowBottom->onRelease();
+         if (consumed != unconsumed) {
+             mEdgeGlowBottom->finish();
+         }
+         return unconsumed - consumed;
+     }
+     return unconsumed;
 }
 
 void ScrollView::scrollToDescendant(View* child) {
@@ -1063,6 +1134,7 @@ bool ScrollView::requestChildRectangleOnScreen(View* child, Rect& rectangle, boo
             child->getTop() - child->getScrollY());
     return scrollToChildRect(rectangle, immediate);
 }
+
 void ScrollView::requestLayout() {
     mIsLayoutDirty = true;
     FrameLayout::requestLayout();

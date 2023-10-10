@@ -44,6 +44,7 @@ private:
     bool isWithinDeltaOfScreen(View* descendant, int delta, int height);
     void doScrollY(int delta);
     void smoothScrollBy(int dx, int dy);
+    int consumeFlingInStretch(int unconsumed);
     void scrollToChild(View* child);
     bool scrollToChildRect(Rect& rect, bool immediate);
     bool shouldDisplayEdgeEffects()const;
@@ -52,11 +53,12 @@ private:
     void flingWithNestedDispatch(int velocityY);
     void endDrag();
 protected:
-    static constexpr float MAX_SCROLL_FACTOR =0.5f;
-    static constexpr int INVALID_POINTER=-1;
+    static constexpr float MAX_SCROLL_FACTOR = 0.5f;
+    static constexpr int INVALID_POINTER = -1;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
-    float getTopFadingEdgeStrength();
-    float getBottomFadingEdgeStrength();
+    static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
+    float getTopFadingEdgeStrength()override;
+    float getBottomFadingEdgeStrength()override;
     void setEdgeEffectColor(int color);
     void setBottomEdgeEffectColor(int color);
     void setTopEdgeEffectColor(int color);
@@ -82,6 +84,7 @@ public:
     ScrollView(Context*ctx,const AttributeSet&atts);
     ~ScrollView()override;
     int getMaxScrollAmount();
+    bool shouldDelayChildPressedState()override;
     View& addView(View* child)override;
     View& addView(View* child, int index)override;
     View& addView(View* child, ViewGroup::LayoutParams* params)override;
@@ -92,6 +95,7 @@ public:
     void setSmoothScrollingEnabled(bool smoothScrollingEnabled);
     bool dispatchKeyEvent(KeyEvent& event);
     bool executeKeyEvent(KeyEvent& event);
+    void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool onGenericMotionEvent(MotionEvent& event);

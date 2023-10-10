@@ -881,35 +881,64 @@ void HorizontalScrollView::measureChildWithMargins(View* child, int parentWidthM
 }
 
 void HorizontalScrollView::computeScroll(){
-   if (mScroller->computeScrollOffset()) {
-       int oldX = mScrollX;
-        int oldY = mScrollY;
-        int x = mScroller->getCurrX();
-        int y = mScroller->getCurrY();
-
+    if (mScroller->computeScrollOffset()) {
+        const int oldX = mScrollX;
+        const int oldY = mScrollY;
+        const int x = mScroller->getCurrX();
+        const int y = mScroller->getCurrY();
+        const int deltaX = consumeFlingInStretch(x-oldX);
         if (oldX != x || oldY != y) {
-            int range = getScrollRange();
-            int overscrollMode = getOverScrollMode();
-            bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
+            const int range = getScrollRange();
+            const int overscrollMode = getOverScrollMode();
+            const bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
                         (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
-            overScrollBy(x - oldX, y - oldY, oldX, oldY, range, 0,
-                        mOverflingDistance, 0, false);
+            overScrollBy(x - oldX, y - oldY, oldX, oldY, range, 0, mOverflingDistance, 0, false);
             onScrollChanged(mScrollX, mScrollY, oldX, oldY);
 
-            if (canOverscroll) {
+            if (canOverscroll && deltaX !=0) {
                 if (x < 0 && oldX >= 0) {
                     mEdgeGlowLeft->onAbsorb((int) mScroller->getCurrVelocity());
                 } else if (x > range && oldX <= range) {
                     mEdgeGlowRight->onAbsorb((int) mScroller->getCurrVelocity());
                 }
-            }
+             }
         }
 
         if (!awakenScrollBars()) {
             postInvalidateOnAnimation();
         }
     }
+}
+
+/**
+     * Used by consumeFlingInHorizontalStretch() and consumeFlinInVerticalStretch() for
+     * consuming deltas from EdgeEffects
+     * @param unconsumed The unconsumed delta that the EdgeEffets may consume
+     * @return The unconsumed delta after the EdgeEffects have had an opportunity to consume.
+     */
+int HorizontalScrollView::consumeFlingInStretch(int unconsumed) {
+    if (unconsumed > 0 && mEdgeGlowLeft && mEdgeGlowLeft->getDistance() != 0.f) {
+        const int size = getWidth();
+        const float deltaDistance = -unconsumed * FLING_DESTRETCH_FACTOR / size;
+        const int consumed = std::round(-size / FLING_DESTRETCH_FACTOR
+                * mEdgeGlowLeft->onPullDistance(deltaDistance, 0.5f));
+        if (consumed != unconsumed) {
+            mEdgeGlowLeft->finish();
+         }
+        return unconsumed - consumed;
+    }
+    if (unconsumed < 0 && mEdgeGlowRight && mEdgeGlowRight->getDistance() != .0f) {
+        const int size = getWidth();
+        const float deltaDistance = unconsumed * FLING_DESTRETCH_FACTOR / size;
+        const int consumed = std::round(size / FLING_DESTRETCH_FACTOR
+                * mEdgeGlowRight->onPullDistance(deltaDistance, 0.5f));
+        if (consumed != unconsumed) {
+            mEdgeGlowRight->finish();
+        }
+        return unconsumed - consumed;
+    }
+    return unconsumed;
 }
 
 void HorizontalScrollView::scrollToChild(View* child) {

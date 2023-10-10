@@ -33,8 +33,9 @@ private:
     int mActivePointerId;
     Rect mTempRect;
 private:
-    static constexpr float MAX_SCROLL_FACTOR =0.5f;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
+    static constexpr float MAX_SCROLL_FACTOR =0.5f;
+    static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
     void initScrollView();
     bool canScroll();
     bool inChild(int x, int y);
@@ -49,6 +50,7 @@ private:
     bool isOffScreen(View* descendant);
     bool isWithinDeltaOfScreen(View* descendant, int delta);
     void doScrollX(int delta);
+    int  consumeFlingInStretch(int unconsumed);
     void scrollToChild(View* child);
     bool scrollToChildRect(Rect rect, bool immediate);
     bool isViewDescendantOf(View* child, View* parent);
@@ -88,7 +90,7 @@ public:
     void setSmoothScrollingEnabled(bool smoothScrollingEnabled);
     bool dispatchKeyEvent(KeyEvent& event)override;
     bool executeKeyEvent(KeyEvent& event);
-    void requestDisallowInterceptTouchEvent(bool disallowIntercept);
+    void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool onGenericMotionEvent(MotionEvent& event);

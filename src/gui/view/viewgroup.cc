@@ -198,7 +198,7 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     },FOCUS_BEFORE_DESCENDANTS);
     setDescendantFocusability(flags);
 
-    setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents"));
+    setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents",false));
     if(atts.getBoolean("animateLayoutChanges",false))
         setLayoutTransition(new LayoutTransition());
     setLayoutMode(0);
@@ -3054,7 +3054,7 @@ bool ViewGroup::dispatchHoverEvent(MotionEvent&event){
 
     // Send events to the view group itself if no children have handled it and the view group
     // itself is not currently being hover-exited.
-    bool newHoveredSelf = !handled && (action != MotionEvent::ACTION_HOVER_EXIT) && !event.isHoverExitPending();
+    const bool newHoveredSelf = !handled && (action != MotionEvent::ACTION_HOVER_EXIT) && !event.isHoverExitPending();
     if (newHoveredSelf == mHoveredSelf) {
         if (newHoveredSelf) {
             // Send event to the view group as before.
