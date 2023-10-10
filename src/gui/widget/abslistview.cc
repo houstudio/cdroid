@@ -88,15 +88,24 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mIsScrap[0] = mIsScrap[1] = 0;
     mDensityScale = getContext()->getDisplayMetrics().density;
 
+    Drawable* selector = atts.getDrawable("listSelector");
+    if (selector != nullptr) {
+        setSelector(selector);
+    }
     mDrawSelectorOnTop = atts.getBoolean("drawSelectorOnTop",false);
     setStackFromBottom(atts.getBoolean("stackFromBottom",false));
     setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
     setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
+    setTextFilterEnabled(atts.getBoolean("textFilterEnabled",false));
     setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int> {
         {"none",CHOICE_MODE_NONE},
         {"singleChoice",CHOICE_MODE_SINGLE},
         {"multipleChoice",CHOICE_MODE_MULTIPLE}
     },CHOICE_MODE_NONE));
+    setTranscriptMode(atts.getInt("transcriptMode",std::map<const std::string,int>{
+        {"disabled",TRANSCRIPT_MODE_DISABLED},
+        {"normal",TRANSCRIPT_MODE_NORMAL},
+        {"alwaysScroll",TRANSCRIPT_MODE_ALWAYS_SCROLL}},TRANSCRIPT_MODE_DISABLED));
     setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
     setFastScrollStyle(atts.getString("fastScrollStyle"));
     setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
