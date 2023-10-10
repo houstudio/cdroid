@@ -134,9 +134,9 @@ View& ScrollView::addView(View* child, int index, ViewGroup::LayoutParams* param
 }
 
 bool ScrollView::canScroll() {
-    View* child = getChildAt(0);
+    const View* child = getChildAt(0);
     if (child != nullptr) {
-        int childHeight = child->getHeight();
+        const int childHeight = child->getHeight();
         return getHeight() < childHeight + mPaddingTop + mPaddingBottom;
     }
     return false;
@@ -166,18 +166,16 @@ void ScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
     if (!mFillViewport)  return;
 
-    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
     if (heightMode == MeasureSpec::UNSPECIFIED) {
         return;
     }
     if (getChildCount() > 0) {
         View* child = getChildAt(0);
-        int widthPadding;
-        int heightPadding;
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
-        widthPadding = mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin;
-        heightPadding = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin;
+        const int widthPadding = mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin;
+        const int heightPadding = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin;
 
         int desiredHeight = getMeasuredHeight() - heightPadding;
         if (child->getMeasuredHeight() < desiredHeight) {
@@ -605,12 +603,11 @@ void ScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool cl
 }
 
 int ScrollView::getScrollRange() {
-    int scrollRange = 0;
     if (getChildCount() > 0) {
         View* child = getChildAt(0);
-        scrollRange = std::max(0,child->getHeight() - (getHeight() - mPaddingBottom - mPaddingTop));
+        return std::max(0,child->getHeight() - (getHeight() - mPaddingBottom - mPaddingTop));
     }
-    return scrollRange;
+    return 0;
 }
 
 View* ScrollView::findFocusableViewInBounds(bool topFocus, int top, int bottom) {
@@ -859,15 +856,12 @@ int ScrollView::computeVerticalScrollOffset() {
 }
 
 void ScrollView::measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec) {
-    LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
+    const LayoutParams* lp = (const LayoutParams*)child->getLayoutParams();
 
-    int childWidthMeasureSpec;
-    int childHeightMeasureSpec;
-
-    childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec, mPaddingLeft
+    const int verticalPadding = mPaddingTop + mPaddingBottom;
+    const int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec, mPaddingLeft
                             + mPaddingRight, lp->width);
-    int verticalPadding = mPaddingTop + mPaddingBottom;
-    childHeightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
+    const int childHeightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
                                  std::max(0, MeasureSpec::getSize(parentHeightMeasureSpec) - verticalPadding),
                                  MeasureSpec::UNSPECIFIED);
     child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
@@ -875,13 +869,13 @@ void ScrollView::measureChild(View* child, int parentWidthMeasureSpec,int parent
 
 void ScrollView::measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
         int parentHeightMeasureSpec, int heightUsed) {
-    MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
+    const MarginLayoutParams* lp = (const MarginLayoutParams*) child->getLayoutParams();
 
-    int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
+    const int usedTotal = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin +  heightUsed;
+    const int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
                                mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin
                                + widthUsed, lp->width);
-    int usedTotal = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin +  heightUsed;
-    int childHeightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
+    const int childHeightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
                                 std::max(0, MeasureSpec::getSize(parentHeightMeasureSpec) - usedTotal),
                                 MeasureSpec::UNSPECIFIED);
 
@@ -1277,9 +1271,9 @@ void ScrollView::draw(Canvas& canvas){
                 translateX = 0;
                 translateY = 0;
             }
-            canvas.translate(-width + translateX,
+            canvas.translate(width + translateX,
                     std::max(getScrollRange(), scrollY) + height + translateY);
-            canvas.rotate_degrees(180);//, width, 0);
+            canvas.rotate_degrees(180);
             mEdgeGlowBottom->setSize(width, height);
             if (mEdgeGlowBottom->draw(canvas)) {
                 postInvalidateOnAnimation();

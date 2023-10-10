@@ -103,7 +103,7 @@ public:
     bool fullScroll(int direction);
     bool arrowScroll(int direction);
     void smoothScrollTo(int x, int y);
-    void computeScroll();
+    void computeScroll()override;
     void requestChildFocus(View* child, View* focused)override;
     void requestLayout()override;
     void scrollTo(int x, int y)override;

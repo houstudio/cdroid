@@ -30,13 +30,13 @@ class MyAdapter:public ArrayAdapter<std::string>{
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    ScrollView*scroller=new ScrollView(800,600);
+    ScrollView*scroller=new ScrollView(-1,-1);
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
     scroller->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(scroller).setId(100);
 
-    LinearLayout*layout=new LinearLayout(800,600);
+    LinearLayout*layout=new LinearLayout(-1,-1);
     layout->setOrientation(LinearLayout::VERTICAL);
     scroller->addView(layout,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT)));
     layout->setId(200);
@@ -44,7 +44,7 @@ int main(int argc,const char*argv[]){
     for(int i=0;i<50;i++){
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,100);//(LayoutParams::WRAP_CONTENT));
         lp->setMargins(5,2,5,2);
-        EditText*edit=new EditText("Hello world!"/*" This value is positive for typical fonts that include"*/,680,200);
+        EditText*edit=new EditText(std::string("Hello world!")+std::to_string(i),680,200);
         edit->setTextColor(0xFFFFFFFF);//app.getColorStateList("cdroid:color/textview.xml"));
         //edit->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
         edit->setSingleLine(true);
