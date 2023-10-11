@@ -25,13 +25,13 @@ private:
 	
     int mLastMotionY;
 	
-    bool mIsLayoutDirty = true;
-    bool mIsLaidOut = false;
-    View* mChildToScrollTo = nullptr;
-    bool mIsBeingDragged = false;
+    bool mIsLayoutDirty;
+    bool mIsLaidOut;
+    View* mChildToScrollTo;
+    bool mIsBeingDragged;
     VelocityTracker* mVelocityTracker;
     bool mFillViewport;
-    bool mSmoothScrollingEnabled = true;
+    bool mSmoothScrollingEnabled;
 	
     int mTouchSlop;
     int mMinimumVelocity;
@@ -104,9 +104,9 @@ public:
     void onStopNestedScroll(View* target, int type);
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type);
     void onNestedPreScroll(View* target, int dx, int dy,int consumed[], int type);
-    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
-    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes);
-    void onStopNestedScroll(View* target);
+    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
+    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes)override;
+    void onStopNestedScroll(View* target)override;
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed);
     void onNestedPreScroll(View* target, int dx, int dy, int consumed[]);
     bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);

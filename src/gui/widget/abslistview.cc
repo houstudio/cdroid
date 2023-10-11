@@ -2625,22 +2625,19 @@ void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
             }
 
             if (overScrollDistance != 0) {
-                overScrollBy(0, overScrollDistance, 0, mScrollY, 0, 0,
-                             0, mOverscrollDistance, true);
+                overScrollBy(0, overScrollDistance, 0, mScrollY, 0, 0, 0, mOverscrollDistance, true);
                 const int overscrollMode = getOverScrollMode();
-                if (overscrollMode == OVER_SCROLL_ALWAYS ||
-                        (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS &&
-                         !contentFits())) {
+                if ((overscrollMode == OVER_SCROLL_ALWAYS) || (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && !contentFits())) {
+                    const float displacement =(float(x)/ getWidth());
+					const float deltaDistance= float(overScrollDistance)/getHeight();
                     if (rawDeltaY > 0) {
-                        mEdgeGlowTop->onPullDistance((float) overScrollDistance / getHeight(),
-                                            (float) x / getWidth());
+                        mEdgeGlowTop->onPullDistance(deltaDistance,displacement);
                         if (!mEdgeGlowBottom->isFinished()) {
                             mEdgeGlowBottom->onRelease();
                         }
                         invalidateTopGlow();
                     } else if (rawDeltaY < 0) {
-                        mEdgeGlowBottom->onPullDistance((float) overScrollDistance / getHeight(),
-                                               1.f - (float) x / getWidth());
+                        mEdgeGlowBottom->onPullDistance(deltaDistance,1.f - displacement);
                         if (!mEdgeGlowTop->isFinished()) {
                             mEdgeGlowTop->onRelease();
                         }
@@ -2655,7 +2652,7 @@ void AbsListView::scrollIfNeeded(int x, int y, MotionEvent* vtev) {
                     mScrollY = 0;
                     invalidateParentIfNeeded();
                 }
-                
+
                 trackMotionScroll(incrementalDeltaY, incrementalDeltaY);
 
                 mTouchMode = TOUCH_MODE_SCROLL;
@@ -2706,24 +2703,20 @@ bool AbsListView::isGlowActive()const {
 
 void AbsListView::invalidateTopGlow() {
     if (mEdgeGlowTop == nullptr) return;
-
     const bool clipToPadding = getClipToPadding();
-    const int top = clipToPadding ? mPaddingTop : 0;
+    const int top  = clipToPadding ? mPaddingTop : 0;
     const int left = clipToPadding ? mPaddingLeft : 0;
-    const int width = clipToPadding ? getWidth() - mPaddingRight - mPaddingLeft : getWidth();
-    Rect rect=Rect::Make(left,top,width,mEdgeGlowTop->getMaxHeight());
-    invalidate(&rect);
+    const int width= clipToPadding ? getWidth() - mPaddingRight - mPaddingLeft : getWidth();
+    invalidate(left,top,width,mEdgeGlowTop->getMaxHeight());
 }
 
 void AbsListView::invalidateBottomGlow() {
     if (mEdgeGlowBottom == nullptr) return;
-
     const bool clipToPadding = getClipToPadding();
-    const int bottom = clipToPadding ? getHeight() - mPaddingBottom : getHeight();
-    const int left = clipToPadding ? mPaddingLeft : 0;
+    const int bottom= clipToPadding ? getHeight() - mPaddingBottom : getHeight();
+    const int left  = clipToPadding ? mPaddingLeft : 0;
     const int width = clipToPadding ? getWidth() - mPaddingRight - mPaddingLeft : getWidth();
-    Rect rect=Rect::Make(left,bottom-mEdgeGlowBottom->getMaxHeight(),width,mEdgeGlowBottom->getMaxHeight());
-    invalidate(&rect);
+    invalidate(left,bottom-mEdgeGlowBottom->getMaxHeight(),width,mEdgeGlowBottom->getMaxHeight());
 }
 
 void AbsListView::finishGlows() {
@@ -2737,7 +2730,7 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
     mHasPerformedLongPress = false;
     mActivePointerId = ev.getPointerId(0);
     hideSelector();
-    
+
     if (mTouchMode == TOUCH_MODE_OVERFLING) {
         // Stopped the fling. It is a scroll.
         mFlingRunnable.endFling();

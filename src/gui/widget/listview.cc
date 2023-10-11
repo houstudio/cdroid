@@ -68,8 +68,7 @@ void ListView::adjustViewsUpOrDown() {
     if (childCount == 0)return;
 
     if (!mStackFromBottom) {
-        // Uh-oh -- we came up short. Slide all views up to make them
-        // align with the top
+        // Uh-oh -- we came up short. Slide all views up to make them align with the top
         const View* child = getChildAt(0);
         delta = child->getTop() - mListPadding.top;
         if (mFirstPosition != 0) {
@@ -91,7 +90,6 @@ void ListView::adjustViewsUpOrDown() {
             // part of the vertical spacing
             delta += mDividerHeight;
         }
-
         if (delta > 0) delta = 0;
     }
 
@@ -1711,7 +1709,7 @@ bool ListView::pageScroll(int direction) {
         int position = lookForSelectablePositionAfter(mSelectedPosition, nextPage, down);
         if (position >= 0) {
             mLayoutMode = LAYOUT_SPECIFIC;
-           mSpecificTop = mPaddingTop + getVerticalFadingEdgeLength();
+            mSpecificTop = mPaddingTop + getVerticalFadingEdgeLength();
             if (down && (position > (mItemCount - getChildCount()))) {
                 mLayoutMode = LAYOUT_FORCE_BOTTOM;
             }
@@ -1784,7 +1782,7 @@ bool ListView::handleHorizontalFocusWithinListItem(int direction) {
 
             View* currentFocus = selectedView->findFocus();
             View* nextFocus = FocusFinder::getInstance().findNextFocus(
-                                  (ViewGroup*) selectedView, currentFocus, direction);
+                       (ViewGroup*) selectedView, currentFocus, direction);
             if (nextFocus != nullptr) {
                 // do the math to get interesting rect in next focus' coordinates
                 Rect focusedRect ;
@@ -1804,7 +1802,7 @@ bool ListView::handleHorizontalFocusWithinListItem(int direction) {
             // list.  this is to acheive the overall goal of having
             // horizontal d-pad navigation remain in the current item.
             View* globalNextFocus = FocusFinder::getInstance().findNextFocus(
-                                        (ViewGroup*) getRootView(), currentFocus, direction);
+                       (ViewGroup*) getRootView(), currentFocus, direction);
             if (globalNextFocus != nullptr) {
                 return isViewAncestorOf(globalNextFocus, this);
             }
@@ -2373,21 +2371,21 @@ bool ListView::isOpaque()const {
     return retValue;
 }
 
-/*void ListView::setCacheColorHint(int color) {
-    final boolean opaque = (color >>> 24) == 0xFF;
+void ListView::setCacheColorHint(int color) {
+    const bool opaque = (color >> 24) == 0xFF;
     mIsCacheColorOpaque = opaque;
     if (opaque) {
-        if (mDividerPaint == null) {
+        /*if (mDividerPaint == null) {
             mDividerPaint = new Paint();
         }
-        mDividerPaint.setColor(color);
+        mDividerPaint.setColor(color);*/
     }
-    super.setCacheColorHint(color);
-}*/
+    AbsListView::setCacheColorHint(color);
+}
 
 
 void ListView::drawOverscrollHeader(Canvas&canvas, Drawable* drawable,Rect& bounds) {
-    int height = drawable->getMinimumHeight();
+    const int height = drawable->getMinimumHeight();
 
     canvas.save();
     canvas.rectangle(bounds);
@@ -2404,7 +2402,7 @@ void ListView::drawOverscrollHeader(Canvas&canvas, Drawable* drawable,Rect& boun
 }
 
 void ListView::drawOverscrollFooter(Canvas&canvas, Drawable* drawable,Rect& bounds) {
-    int height = drawable->getMinimumHeight();
+    const int height = drawable->getMinimumHeight();
 
     canvas.save();
     canvas.rectangle(bounds);
@@ -2534,10 +2532,9 @@ void ListView::dispatchDraw(Canvas&canvas) {
                         // Draw dividers between enabled items, headers
                         // and/or footers when enabled and requested, and
                         // before the first enabled item.
-                        if ( adapter->isEnabled(itemIndex) &&
-                             (headerDividers || !isHeader && (previousIndex >= headerCount)) &&
-                             (isFirstItem ||adapter->isEnabled(previousIndex) && (footerDividers || !isFooter
-                                       && (previousIndex < footerLimit)))) {
+                        if ( adapter->isEnabled(itemIndex) && (headerDividers || !isHeader && (previousIndex >= headerCount))
+						    && (isFirstItem ||adapter->isEnabled(previousIndex)
+							     && (footerDividers || !isFooter && (previousIndex < footerLimit)))) {
                             bounds.top = top - dividerHeight;
                             bounds.height = dividerHeight;
                             // Give the method the child ABOVE the divider,
@@ -2769,9 +2766,9 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
                     int nextIndex = itemIndex + 1;
                     /* Draw dividers between enabled items, headers and/or footers
                      *when enabled and requested, and after the last enabled item.*/
-                    if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader && (nextIndex >= headerCount)) 
-					            && (isLastItem || mAdapter->isEnabled(nextIndex) 
-								&& (footerDividers || !isFooter && (nextIndex < footerLimit)))) {
+                    if (mAdapter->isEnabled(itemIndex) && (headerDividers || !isHeader && (nextIndex >= headerCount))
+                            && (isLastItem || mAdapter->isEnabled(nextIndex)
+                            && (footerDividers || !isFooter && (nextIndex < footerLimit)))) {
                         return true;
                     } else if (fillForMissingDividers) {
                         return true;

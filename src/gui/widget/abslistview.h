@@ -442,7 +442,7 @@ public:
     ViewGroup::LayoutParams*generateLayoutParams(const AttributeSet& attrs)const override;
     void setSelectionFromTop(int position, int y);
     int getCacheColorHint()const;
-    void setCacheColorHint(int color);
+    virtual void setCacheColorHint(int color);
     int getListPaddingTop()const;
     int getListPaddingBottom()const;
     int getListPaddingLeft()const;

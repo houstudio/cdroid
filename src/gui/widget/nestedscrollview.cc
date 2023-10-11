@@ -209,7 +209,10 @@ void NestedScrollView::initScrollView() {
     mScroller = new OverScroller(mContext);
     setFocusable(true);
     mFillViewport  = true;
+    mSmoothScrollingEnabled = true;
     mIsBeingDragged= false;
+    mIsLayoutDirty = true;
+    mIsLaidOut = false;
     mLastMotionY   = 0;
     mLastScrollerY = 0;
     mNestedYOffset = 0;
@@ -219,6 +222,7 @@ void NestedScrollView::initScrollView() {
     ViewConfiguration& configuration = ViewConfiguration::get(getContext());
     mTouchSlop = configuration.getScaledTouchSlop();
     mVelocityTracker = nullptr;
+    mChildToScrollTo = nullptr;
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
     mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
 

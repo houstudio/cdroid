@@ -159,6 +159,7 @@ public:
     bool getItemsCanFocus()const;
     void setItemsCanFocus(bool itemsCanFocus);
     bool isOpaque()const override;
+    void setCacheColorHint(int color)override;
     void setDividerHeight(int);
     int getDividerHeight()const;
     Drawable*getDevider();
