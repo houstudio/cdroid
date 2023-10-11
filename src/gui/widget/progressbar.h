@@ -82,6 +82,8 @@ protected:
     int  getProgressOrientation()const;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
+    void jumpDrawablesToCurrentState()override;
+    void onResolveDrawables(int layoutDirection)override;
     virtual void drawTrack(Canvas&canvas);
     void refreshProgress(int id, int progress, bool from,bool animate);
     void doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate);

@@ -107,7 +107,7 @@ private:
     bool arrowScrollImpl(int direction);
     bool commonKey(int keyCode, int count, KeyEvent& event);
 protected:
-    int  mDividerHeight;
+    int mDividerHeight;
     Drawable * mDivider;
     Drawable * mOverScrollHeader;
     Drawable * mOverScrollFooter;

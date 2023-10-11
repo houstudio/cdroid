@@ -259,6 +259,25 @@ bool ProgressBar::verifyDrawable(Drawable* who)const{
     return who == mProgressDrawable || who == mIndeterminateDrawable|| View::verifyDrawable(who);
 }
 
+void ProgressBar::jumpDrawablesToCurrentState() {
+    View::jumpDrawablesToCurrentState();
+    if (mProgressDrawable) mProgressDrawable->jumpToCurrentState();
+    if (mIndeterminateDrawable) mIndeterminateDrawable->jumpToCurrentState();
+}
+
+void ProgressBar::onResolveDrawables(int layoutDirection){
+    Drawable* d = mCurrentDrawable;
+    if (d != nullptr) {
+        d->setLayoutDirection(layoutDirection);
+    }
+    if (mIndeterminateDrawable != nullptr) {
+        mIndeterminateDrawable->setLayoutDirection(layoutDirection);
+    }
+    if (mProgressDrawable != nullptr) {
+        mProgressDrawable->setLayoutDirection(layoutDirection);
+    }
+}
+
 void ProgressBar::onVisualProgressChanged(int id, float progress){
 }
 

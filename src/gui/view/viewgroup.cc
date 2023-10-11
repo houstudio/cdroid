@@ -2333,7 +2333,7 @@ void ViewGroup::offsetRectBetweenParentAndChild(const View* descendant,Rect&rect
 
 void ViewGroup::offsetChildrenTopAndBottom(int offset){
     for (auto v:mChildren) {
-        v->setPos(v->mLeft,v->mTop+offset);
+        v->setPos(v->mLeft,v->mTop + offset);
     }
 }
 

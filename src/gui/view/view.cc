@@ -3767,7 +3767,7 @@ std::vector<int>View::onCreateDrawableState(){
     if(hasWindowFocus() ) viewStateIndex|=StateSet::VIEW_STATE_WINDOW_FOCUSED;
     if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
     if((mPrivateFlags & PFLAG_ACTIVATED) != 0) viewStateIndex |= StateSet::VIEW_STATE_ACTIVATED;
-    //LOGV("**** %p:%d isFocused=%d enabled=%d pressed=%d",this,getId(),isFocused(),isEnabled(),isPressed());
+    //LOGV("**** %p:%d isFocused=%d enabled=%d pressed=%d activated=%d",this,getId(),isFocused(),isEnabled(),isPressed(),isActivated());
     
     if(mPrivateFlags & PFLAG_HOVERED ) viewStateIndex |= StateSet::VIEW_STATE_HOVERED;
 

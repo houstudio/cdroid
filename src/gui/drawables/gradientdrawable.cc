@@ -552,7 +552,49 @@ ColorStateList* GradientDrawable::getColor() {
 }
 
 bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
-    return true;
+    bool bInvalidateSelf = false;
+
+    GradientState& s = *mGradientState;
+    ColorStateList* solidColors = s.mSolidColors;
+    double r,g,b,a;
+    if (solidColors != nullptr) {
+        RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mFillPaint);
+        pat->get_rgba(r,g,b,a);
+        const int newColor = solidColors->getColorForState(stateSet, 0);
+        const int oldColor = Color::toArgb((float)r,(float)g,(float)b,(float)a);
+        if (oldColor != newColor) {
+            Color cc(newColor);
+            mFillPaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
+            bInvalidateSelf = true;
+        }
+    }
+
+    if (mStrokePaint != nullptr) {
+        ColorStateList* strokeColors = s.mStrokeColors;
+        if (strokeColors ) {
+            RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
+            pat->get_rgba(r,g,b,a);
+            const int newColor = strokeColors->getColorForState(stateSet, 0);
+            const int oldColor = Color::toArgb((float)r,(float)g,(float)b,(float)a);//mStrokePaint->getColor();
+            if (oldColor != newColor) {
+                Color cc(newColor);
+                mStrokePaint =SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
+                bInvalidateSelf = true;
+            }
+        }
+    }
+
+    /*if (s->mTint != nullptr && s.mBlendMode != null) {
+        mBlendModeColorFilter = updateBlendModeFilter(mBlendModeColorFilter, s.mTint, s.mBlendMode);
+        invalidateSelf = true;
+    }*/
+
+    if (bInvalidateSelf) {
+        invalidateSelf();
+        return true;
+    }
+
+    return false;
 }
 
 bool GradientDrawable::isStateful()const {
