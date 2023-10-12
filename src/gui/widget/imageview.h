@@ -81,6 +81,7 @@ public:
     bool getBaselineAlignBottom()const;
     bool getAdjustViewBounds()const;
     void setAdjustViewBounds(bool adjustViewBounds);
+    /*resid can be assets's resource or local filepath*/
     void setImageResource(const std::string&resid);
     void setImageDrawable(Drawable* drawable);
     void setImageBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);

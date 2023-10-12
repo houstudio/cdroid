@@ -84,10 +84,17 @@ void ImageView::resolveUri(){
     Drawable* d = nullptr;
     if (!mResource.empty()) {
         d = getContext()->getDrawable(mResource);
-        LOGW_IF(d==nullptr,"Unable to find resource: %s",mResource.c_str());
+	int loaded = d!=nullptr;
+	if(d==nullptr){
+	    RefPtr<Cairo::ImageSurface>bitmap = getContext()->getImage(mResource);
+	    setImageBitmap(bitmap);
+	    loaded +=(bitmap!=nullptr);
+	}
+        LOGW_IF(loaded,"Unable to find resource: %s",mResource.c_str());
     }
     updateDrawable(d);
 }
+
 int ImageView::resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec){
     int result = desiredSize;
     int specMode = MeasureSpec::getMode(measureSpec);
