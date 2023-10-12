@@ -54,6 +54,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroidhal.pc
 add_library(tvhal SHARED ${SIGMA_SRCS} graph_gfx.c)
 target_link_libraries(tvhal ${SIGMA_LIBS})
 
+add_library(tvhal-fb SHARED ${SIGMA_SRCS} ../common/graph_fb.c)
+target_link_libraries(tvhal-fb ${SIGMA_LIBS})
+add_dependencies(tvhal tvhal-fb)
+
 if(DIRECTFB_FOUND)
     add_library(tvhal-dfb SHARED ${SIGMA_SRCS} ../common/graph_dfb.c)
     include_directories(${DIRECTFB_INCLUDE_DIRS})

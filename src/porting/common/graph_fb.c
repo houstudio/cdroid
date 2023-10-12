@@ -182,11 +182,11 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         size_t mem_len=((dev->fix.smem_start) -((dev->fix.smem_start) & ~(getpagesize() - 1)));
         buffer_size=surf->height*dev->fix.line_length;
         setfbinfo(surf);
-	surf->kbuffer=(dev->fix.smem_start);
+        surf->kbuffer=(dev->fix.smem_start);
         surf->buffer=(char*)mmap( NULL,buffer_size,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
         surf->pitch=dev->fix.line_length;
     } else {
-	surf->kbuffer=0;
+        surf->kbuffer=0;
         surf->buffer=(char*)malloc(buffer_size);
     }
     surf->ishw=hwsurface;

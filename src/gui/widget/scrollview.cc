@@ -21,8 +21,8 @@ ScrollView::ScrollView(Context*context,const AttributeSet&atts)
 ScrollView::~ScrollView(){
     recycleVelocityTracker();
     delete mScroller;
-	delete mEdgeGlowTop;
-	delete mEdgeGlowBottom;
+    delete mEdgeGlowTop;
+    delete mEdgeGlowBottom;
 }
 
 bool ScrollView::shouldDelayChildPressedState(){
