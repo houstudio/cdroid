@@ -90,7 +90,7 @@ void ImageView::resolveUri(){
 	    setImageBitmap(bitmap);
 	    loaded +=(bitmap!=nullptr);
 	}
-        LOGW_IF(loaded,"Unable to find resource: %s",mResource.c_str());
+        LOGW_IF(loaded==0,"Unable to find resource: %s",mResource.c_str());
     }
     updateDrawable(d);
 }
