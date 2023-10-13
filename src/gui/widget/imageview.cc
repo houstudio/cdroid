@@ -85,11 +85,11 @@ void ImageView::resolveUri(){
     if (!mResource.empty()) {
         d = getContext()->getDrawable(mResource);
         int loaded = d!=nullptr;
-	if(d==nullptr){
-	    RefPtr<Cairo::ImageSurface>bitmap = getContext()->getImage(mResource);
-	    setImageBitmap(bitmap);
-	    loaded +=(bitmap!=nullptr);
-	}
+        if(d==nullptr){
+            RefPtr<Cairo::ImageSurface>bitmap = getContext()->getImage(mResource);
+            setImageBitmap(bitmap);
+            loaded +=(bitmap!=nullptr);
+        }
         LOGW_IF(loaded==0,"Unable to find resource: %s",mResource.c_str());
     }
     updateDrawable(d);
