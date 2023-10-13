@@ -345,8 +345,7 @@ typedef struct FileType {
 
 static const FileType FILE_TYPES[] = {
     PAK_GEN_FILE_TYPE("png", "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"),
-    PAK_GEN_FILE_TYPE("jpg", "\xff\xd8\xff\xe0"),
-    PAK_GEN_FILE_TYPE("jpg", "\xff\xd8\xff\xe1"),
+    PAK_GEN_FILE_TYPE("jpg", "\xff\xd8\xff"),//the 4th bytes can be \xdb\xe0\xe1"),
     PAK_GEN_FILE_TYPE("bmp", "\x42\x4d"),
     PAK_GEN_FILE_TYPE("bmp", "\x4d\x42"),
     PAK_GEN_FILE_TYPE("svg", "<svg "),

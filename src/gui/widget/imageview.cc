@@ -84,7 +84,7 @@ void ImageView::resolveUri(){
     Drawable* d = nullptr;
     if (!mResource.empty()) {
         d = getContext()->getDrawable(mResource);
-	int loaded = d!=nullptr;
+        int loaded = d!=nullptr;
 	if(d==nullptr){
 	    RefPtr<Cairo::ImageSurface>bitmap = getContext()->getImage(mResource);
 	    setImageBitmap(bitmap);

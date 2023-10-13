@@ -382,7 +382,7 @@ void ViewPager::drawableStateChanged(){
     }
 }
 
-float distanceInfluenceForSnapDuration(float f) {
+static float distanceInfluenceForSnapDuration(float f) {
     f -= 0.5f; // center the values about 0.
     f *= 0.3f * (float) M_PI / 2.0f;
     return (float) std::sin(f);
