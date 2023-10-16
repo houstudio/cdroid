@@ -273,7 +273,6 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->format = format;
     surf->ishw = hwsurface;
     surf->pitch= surf->width*4;
-    surf->kbuffer = NULL;
     surf->orig_buffer = NULL;
     surf->current = 0;
     surf->msize= surf->pitch*surf->height;
