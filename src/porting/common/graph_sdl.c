@@ -3,7 +3,9 @@
 #include <cdlog.h>
 #include <SDL.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <time.h>
+#include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
 #include <core/eventcodes.h>
@@ -144,7 +146,6 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 }
 
 INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
-    //unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs= {0,0};
