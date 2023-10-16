@@ -123,6 +123,12 @@ int Preferences::getSections(std::vector<std::string>&mbs){
     return mbs.size();
 }
 
+void Preferences::removeSection(const std::string&section){
+    auto sec = mPrefs.find(section);
+    if(sec!=mPrefs.end())
+        mPrefs.erase(sec);
+}
+
 int Preferences::getUpdates()const{
     return updates;
 }
