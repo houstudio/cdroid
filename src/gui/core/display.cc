@@ -1,5 +1,7 @@
 #include <display.h>
 #include <cdgraph.h>
+#include <utility>
+
 namespace cdroid{
 
 Display::Display(int id,DisplayInfo&displayInfo)

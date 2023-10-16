@@ -7,6 +7,8 @@
 #include <cairomm/matrix.h>
 #include <core/context.h>
 #include <dirent.h>
+#include <cdlog.h>
+
 namespace cdroid {
 extern "C" {
     FcPattern *FcFreeTypeQueryFace (const FT_Face  face,

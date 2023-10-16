@@ -1,5 +1,7 @@
 #include <drawables/rippleforeground.h>
 #include <core/systemclock.h>
+#include <cdlog.h>
+
 namespace cdroid{
 
 RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, float startingX, float startingY,

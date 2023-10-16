@@ -1,9 +1,14 @@
 #ifndef __CDLOG_H__
 #define __CDLOG_H__
 
+#include <stdio.h>
+#include <sys/types.h>
+
+typedef unsigned char BYTE;
+
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 typedef enum{
   LOG_VERBOSE,

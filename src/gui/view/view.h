@@ -28,6 +28,7 @@
 #include <functional>
 #include <core/rect.h>
 #include <drawables.h>
+#include <cdlog.h>
 
 #ifndef _GLIBCXX_FUNCTIONAL
 #define DECLARE_UIEVENT(type,name,...) typedef type(*name)(__VA_ARGS__)

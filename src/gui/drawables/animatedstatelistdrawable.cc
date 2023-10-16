@@ -1,4 +1,6 @@
 #include <drawables/animatedstatelistdrawable.h>
+#include <cdlog.h>
+
 namespace cdroid{
 
 AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){

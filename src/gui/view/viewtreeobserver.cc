@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <view/viewtreeobserver.h>
+#include <cdlog.h>
 namespace cdroid {
 
 bool ViewTreeObserver::sIllegalOnDrawModificationIsFatal = false;

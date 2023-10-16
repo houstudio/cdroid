@@ -6,6 +6,7 @@
 #include <cairomm/context.h>
 #include <cairomm/region.h>
 #include <core/graphdevice.h>
+#include <cdlog.h>
 
 namespace cdroid{
 

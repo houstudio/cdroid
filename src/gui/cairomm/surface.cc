@@ -282,7 +282,7 @@ void Surface::write_to_png(cairo_write_func_t write_func, void *closure)
 
 void Surface::write_to_jpg(const std::string& filename){
      //auto status = cairo_surface_write_to_jpeg(cobj(),filename.c_str());
-     //check_status_and_throw_exception(status);    
+     //check_status_and_throw_exception(status);
 }
 
 void Surface::write_to_jpg_stream(const SlotWriteFunc& write_func){
@@ -360,7 +360,7 @@ static const char*pakGetFileType(const char*filebuf) {
 }
 
 using namespace std::chrono;
-RefPtr<ImageSurface>ImageSurface:: create_from_stream(std::istream& stream){
+RefPtr<ImageSurface> ImageSurface::create_from_stream(std::istream& stream){
     unsigned char head[8]={0};
     RefPtr<ImageSurface>img;
     steady_clock::time_point t2,t1=steady_clock::now();

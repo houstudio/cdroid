@@ -3,7 +3,7 @@
 #include <algorithm> // std::min
 #include <sstream>   // std::stringstream
 #include <iomanip>   // std::left, std::setw
-
+#include <stdarg.h>
 #include <assert.h>
 #define error_if(x, err, msg, ...) do { if((x)) { mError = FormatString(msg, ## __VA_ARGS__); return err; } } while (false)
 
