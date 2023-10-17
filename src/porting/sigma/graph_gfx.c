@@ -291,7 +291,8 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         primarySurface = surf;
     } else {
         if(surf->kbuffer==0){
-            surf->buffer = (char*)malloc(surf->height*surf->pitch);
+            surf->buffer = (char*)malloc(surf->msize);
+            memset(surf->buffer,0,surf->msize);
         }
     }
     if(surf->kbuffer)MI_SYS_MemsetPa(surf->kbuffer,0x000000,surf->msize);
@@ -331,12 +332,13 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     LOGV("Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d)",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,rs.w,rs.h);
     if(dx<0){ rs.x -= dx; rs.w = (int)rs.w + dx; dx = 0;}
     if(dy<0){ rs.y -= dy; rs.h = (int)rs.h + dy; dy = 0;}
-    if(dx + rs.w > ndst->width - screenMargin.x - screenMargin.w)
-	    rs.w = ndst->width - screenMargin.x - screenMargin.w - dx;
-    if(dy + rs.h > ndst->height - screenMargin.y- screenMargin.h)
-	    rs.h = ndst->height - screenMargin.y - screenMargin.h - dy;
+
     dx += screenMargin.x;
     dy += screenMargin.y;
+    if(dx + rs.w > ndst->width - screenMargin.x - screenMargin.w)
+        rs.w = ndst->width/*- screenMargin.x*/ - screenMargin.w - dx;
+    if(dy + rs.h > ndst->height - screenMargin.y- screenMargin.h)
+        rs.h = ndst->height/*- screenMargin.y*/ - screenMargin.h - dy;
 	
     toMIGFX(nsrc,&gfxsrc);
     toMIGFX(ndst,&gfxdst);
