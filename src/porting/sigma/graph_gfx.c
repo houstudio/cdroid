@@ -381,7 +381,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     if(nsrc->kbuffer && ndst->kbuffer){
         ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
         MI_GFX_WaitAllDone(TRUE,fence);
-    }else{LOGD("memcpy");
+    }else{
         pbs+=rs.y*nsrc->pitch+rs.x*4;
         pbd+=dy*ndst->pitch+dx*4;
         const int cpw=rs.w*4;
