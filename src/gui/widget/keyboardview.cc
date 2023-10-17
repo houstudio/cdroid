@@ -18,7 +18,8 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
 KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
   :View(ctx,atts){
     init();
-    mKeyBackground     = ctx->getDrawable("keyBackground");
+    Drawable *dr = ctx->getDrawable("keyBackground");
+    mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
     mVerticalCorrection= atts.getDimensionPixelOffset("verticalCorrection",0);
     mPreviewOffset     = atts.getDimensionPixelOffset("keyPreviewOffset",0);
     mPreviewHeight     = atts.getDimensionPixelOffset("keyPreviewHeight",0);

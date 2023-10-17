@@ -87,28 +87,33 @@ int GFXInit() {
 
     MI_PHY preallocedMem;
     ret = MI_SYS_MMA_Alloc("mma_heap_name0",allocedSize,&preallocedMem);
-    LOGI("surfaces is configured for app usage ing allocedmem=%llx size=%lu***",preallocedMem,allocedSize);
     int index =1;
     devSurfaces[0].kbuffer = devs[0].fix.smem_start;
+    devSurfaces[0].msize=displayScreenSize;
     if((devs[0].fix.smem_start>preallocedMem)&&(devs[0].fix.smem_start<=preallocedMem+allocedSize)){
         for(size_t mem = devs[0].fix.smem_start ; mem - screenSize > preallocedMem ; mem -= screenSize){
             devSurfaces[index].kbuffer = mem;
+            devSurfaces[index].msize=screenSize;
             index ++;
         }
         for(size_t mem = devs[0].fix.smem_start + displayScreenSize ; mem < preallocedMem+ allocedSize; mem += screenSize){
             devSurfaces[index].kbuffer = mem;
+            devSurfaces[index].msize=screenSize;
             index ++;
         }
     }else{
+        LOGD("fbmem %x,%x is not in prealocted memory's range",devs[0].fix.smem_start,devs[0].fix.smem_start+displayScreenSize);
         for(int i=0;i<MAX_HWSURFACE+1;i++){
             devSurfaces[i+1].kbuffer=preallocedMem+screenSize*i;
+            devSurfaces[i+1].msize=screenSize;
             index++;
         }
     }
+    LOGI("%d surfaces is configured for app mem=%llx size=%lu screensize=%d/%d***",index,preallocedMem,allocedSize,displayScreenSize,screenSize);
     for(int i =0;i<index;i++){
         MI_PHY phySrcBufAddr = devSurfaces[i].kbuffer;
-        MI_SYS_Mmap(phySrcBufAddr,(i==0?displayScreenSize:screenSize), (void**)&devSurfaces[i].buffer, TRUE);
-        LOGI("Surface[%d]buffer=%llx/%p",phySrcBufAddr,devSurfaces[i].buffer);
+        MI_SYS_Mmap(phySrcBufAddr,devSurfaces[i].msize, (void**)&devSurfaces[i].buffer, FALSE);
+        LOGI("Surface[%d]buffer=%llx/%p %d",i,phySrcBufAddr,devSurfaces[i].buffer,devSurfaces[i].msize);
     }
     LOGI("%d surfaces is configured for app usage",index);
     return E_OK;
@@ -333,12 +338,12 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     if(dx<0){ rs.x -= dx; rs.w = (int)rs.w + dx; dx = 0;}
     if(dy<0){ rs.y -= dy; rs.h = (int)rs.h + dy; dy = 0;}
 
-    dx += screenMargin.x;
-    dy += screenMargin.y;
+    //dx += screenMargin.x;
+    //dy += screenMargin.y;
     if(dx + rs.w > ndst->width - screenMargin.x - screenMargin.w)
-        rs.w = ndst->width/*- screenMargin.x*/ - screenMargin.w - dx;
+        rs.w = ndst->width - screenMargin.x - screenMargin.w - dx;
     if(dy + rs.h > ndst->height - screenMargin.y- screenMargin.h)
-        rs.h = ndst->height/*- screenMargin.y*/ - screenMargin.h - dy;
+        rs.h = ndst->height- screenMargin.y - screenMargin.h - dy;
 	
     toMIGFX(nsrc,&gfxsrc);
     toMIGFX(ndst,&gfxdst);
@@ -349,10 +354,10 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
     opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
     opt.eDFBBlendFlag= E_MI_GFX_DFB_BLEND_NOFX;
-    opt.stClipRect.s32Xpos = dx;
-    opt.stClipRect.s32Ypos = dy;
-    opt.stClipRect.u32Width= rs.w;//rs.w;//ndst->width;
-    opt.stClipRect.u32Height=rs.h;//rs.h;//ndst->height;
+    opt.stClipRect.s32Xpos = dx+screenMargin.x*(ndst->ishw?1:0);
+    opt.stClipRect.s32Ypos = dy+screenMargin.y*(ndst->ishw?1:0);
+    opt.stClipRect.u32Width= rs.w;
+    opt.stClipRect.u32Height=rs.h;
     //if(nsrc->alpha!=255)
     //    opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
 
@@ -364,20 +369,19 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     stSrcRect.u32Width = rs.w;
     stSrcRect.u32Height= rs.h;
 
-    LOGV("Blit %p(%d,%d-%d,%d)-> (%d,%d)copied",nsrc,rs.x,rs.y,rs.w,rs.h,dx,dy);
-    
-    stDstRect.s32Xpos = dx;//opt.stClipRect.s32Xpos;
-    stDstRect.s32Ypos = dy;//opt.stClipRect.s32Ypos;
+    stDstRect.s32Xpos = dx+screenMargin.x*(ndst->ishw?1:0);
+    stDstRect.s32Ypos = dy+screenMargin.y*(ndst->ishw?1:0);
     stDstRect.u32Width = rs.w;
     stDstRect.u32Height= rs.h;
+    LOGV("*Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d) gfx.src=%dx%dx%d/%d@%llx gfx.dst=%dx%dx%d/%d@%llx",
+        nsrc,stSrcRect.s32Xpos,stSrcRect.s32Ypos, stSrcRect.u32Width, stSrcRect.u32Height,
+        ndst,stDstRect.s32Xpos,stDstRect.s32Ypos, stDstRect.u32Width,stDstRect.u32Height,
+        nsrc->width,nsrc->height,nsrc->pitch,gfxsrc.u32Stride,nsrc->kbuffer,
+        ndst->width,ndst->height,ndst->pitch,gfxdst.u32Stride,ndst->kbuffer);
     if(nsrc->kbuffer && ndst->kbuffer){
         ret = MI_GFX_BitBlit(&gfxsrc,&stSrcRect,&gfxdst, &stDstRect,&opt,&fence);
-        LOGV("*Blit %p(%d,%d,%d,%d)->%p(%d,%d,%d,%d) gfx.src=%dx%dx%d@%llx gfx.dst=%dx%dx%d@%llx ret=%d",
-            nsrc,stSrcRect.s32Xpos,stSrcRect.s32Ypos, stSrcRect.u32Width, stSrcRect.u32Height,
-            ndst,stDstRect.s32Xpos,stDstRect.s32Ypos, stDstRect.u32Width,stDstRect.u32Height,
-            nsrc->width,nsrc->height,nsrc->pitch,nsrc->kbuffer, ndst->width,ndst->height,ndst->pitch,ndst->kbuffer,ret);
-        MI_GFX_WaitAllDone(FALSE,fence);
-    }else{
+        MI_GFX_WaitAllDone(TRUE,fence);
+    }else{LOGD("memcpy");
         pbs+=rs.y*nsrc->pitch+rs.x*4;
         pbd+=dy*ndst->pitch+dx*4;
         const int cpw=rs.w*4;
@@ -391,8 +395,6 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
 }
 
 INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,const GFXRect*srcrects) {
-#if 0
-#endif
     return 0;
 }
 
